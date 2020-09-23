@@ -1,0 +1,235 @@
+\documentclass[fontset=none]{article} %取消CTeX的默认字体设置
+
+\usepackage[UTF8]{ctex}
+\usepackage{fancyhdr}
+\usepackage{extramarks}
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage{tikz}
+\usepackage[plain]{algorithm}
+\usepackage{algpseudocode}
+\usepackage{lmodern}
+
+% 处理
+\usepackage[english]{babel}
+
+\newtheorem{theorem}{Theorem}
+
+%
+% Basic Document Settings
+%
+\setCJKmainfont{SourceHanSansCN-Light}
+
+
+
+\topmargin=-0.45in
+\evensidemargin=0in
+\oddsidemargin=0in
+\textwidth=6.5in
+\textheight=9.0in
+\headsep=0.25in
+
+\linespread{1.1}
+
+\pagestyle{fancy}
+\lhead{\hmwkAuthorName}
+\rhead{\firstxmark}
+\lfoot{\lastxmark}
+\cfoot{\thepage}
+
+\renewcommand\headrulewidth{0.4pt}
+\renewcommand\footrulewidth{0.4pt}
+
+\setlength\parindent{0pt}
+
+%
+% Create Problem Sections
+%
+
+\newcommand{\enterProblemHeader}[1]{
+    \nobreak\extramarks{}{Problem \arabic{#1} continued on next page\ldots}\nobreak{}
+    \nobreak\extramarks{Problem \arabic{#1} (continued)}{Problem \arabic{#1} continued on next page\ldots}\nobreak{}
+}
+
+\newcommand{\exitProblemHeader}[1]{
+    \nobreak\extramarks{Problem \arabic{#1} (continued)}{Problem \arabic{#1} continued on next page\ldots}\nobreak{}
+    \stepcounter{#1}
+    \nobreak\extramarks{Problem \arabic{#1}}{}\nobreak{}
+}
+
+\setcounter{secnumdepth}{0}
+\newcounter{partCounter}
+\newcounter{homeworkProblemCounter}
+\setcounter{homeworkProblemCounter}{1}
+\nobreak\extramarks{Problem \arabic{homeworkProblemCounter}}{}\nobreak{}
+
+%
+% Homework Problem Environment
+%
+% This environment takes an optional argument. When given, it will adjust the
+% problem counter. This is useful for when the problems given for your
+% assignment aren't sequential. See the last 3 problems of this template for an
+% example.
+%
+\newenvironment{homeworkProblem}[1][-1]{
+    \ifnum#1>0
+        \setcounter{homeworkProblemCounter}{#1}
+    \fi
+    \section{Note \arabic{homeworkProblemCounter}}
+    \setcounter{partCounter}{1}
+    \enterProblemHeader{homeworkProblemCounter}
+}{
+    \exitProblemHeader{homeworkProblemCounter}
+}
+
+%
+% Homework Details
+%   - Title
+%   - Due date
+%   - Class
+%   - Section/Time
+%   - Instructor
+%   - Author
+%
+
+\newcommand{\hmwkTitle}{笔记}
+\newcommand{\hmwkDueDate}{2020.5.11}
+\newcommand{\hmwkClass}{高级算法}
+\newcommand{\hmwkClassInstructor}{Professor xiaoming sun}
+\newcommand{\hmwkAuthorName}{\textbf{hu bachelar}}
+
+%
+% Title Page
+%
+
+\title{
+    \vspace{2in}
+    \textmd{\textbf{\hmwkClass:\ \hmwkTitle}}\\
+    \vspace{3in}
+}
+
+\author{\hmwkAuthorName}
+\date{}
+
+\renewcommand{\part}[1]{\textbf{\large Part \Alph{partCounter}}\stepcounter{partCounter}\\}
+
+%
+% Various Helper Commands
+%
+
+% Useful for algorithms
+\newcommand{\alg}[1]{\textsc{\bfseries \footnotesize #1}}
+
+% For derivatives
+\newcommand{\deriv}[1]{\frac{\mathrm{d}}{\mathrm{d}x} (#1)}
+
+% For partial derivatives
+\newcommand{\pderiv}[2]{\frac{\partial}{\partial #1} (#2)}
+
+% Integral dx
+\newcommand{\dx}{\mathrm{d}x}
+
+% Alias for the Solution section header
+\newcommand{\solution}{\textbf{\large Solution}}
+
+% Probability commands: Expectation, Variance, Covariance, Bias
+\newcommand{\E}{\mathrm{E}}
+\newcommand{\Var}{\mathrm{Var}}
+\newcommand{\Cov}{\mathrm{Cov}}
+\newcommand{\Bias}{\mathrm{Bias}}
+
+\begin{document}
+
+\maketitle
+
+\pagebreak
+
+\begin{homeworkProblem}
+
+  介绍了几个类型: RP coRP Bpp Zpp，单边错，双边错，不出错的，它们的之间关系。运用 切比雪夫 不等式。
+
+\end{homeworkProblem}
+
+\begin{homeworkProblem}
+
+  Balls \& Bins : 类似于生日悖论
+
+  将Balls = m Bins = n 
+  当 $m \sim \theta(\sqrt n)$  的时候, $\exists x_i \ge 2 $ 的概率很高了，也可以表述为 $Y = \max\limits_{1 \leq i \leq m}x_i \ge 2$.
+
+\noindent\rule[0.25\baselineskip]{\textwidth}{1pt}
+
+  Load Balancing: 分布式算法，将 request 随机放到一个机器上 ?
+
+  一个特殊情况，$m = n$的时候，那么$Y$的取值是多少 ?
+  \begin{itemize}
+    \item 平均情况，负载为$1$ 
+    \item 当 $m = n$ ，那么 $Y \sim \theta(\frac{\ln{n}}{\ln\ln{n}})$ W.H.P
+    \item Proof : 
+      转化为两个部分:
+      $Pr(Y \le 4 \times \frac{\ln{n}}{\ln\ln{n}})$ 和
+      $Pr(Y \ge \frac{1}{4} \times \frac{\ln{n}}{\ln\ln{n}})$
+    \item 第一部分的证明，首先设$ t = \frac{\ln{n}}{\ln\ln{n}}$
+
+    首先分析 $Pr(x_i \ge 4 \times t)$ 的含义: 所有4t+1个球在$x_i$中间的概率，那么这些组合个球在其中的概念之和。
+  \[
+    Pr(x_i \ge 4 \times t) \le \sum\limits_{1 \leq j_1 \le ... \le j_{4t+1} \leq n }^{j_i ... j_{4t+1}} Pr(j_i ... j_{4t+1} \in bin) = \binom{n}{4t + 1}(\frac{1}{n})^{4t+1}
+  \]
+  
+  存在公式:
+  \[
+    (\frac{n}{m})^m \leq  \binom{n}{m} = \frac{n!}{m!(n-m)!} \leq (\frac{ne}{m})^m
+  \]
+
+  所以:
+  \[
+    Pr(x_i \ge 4 \times t) \leq (\frac{ne}{4t+1})^{4t+1}(\frac{1}{n})^{4t+1} 
+    < (\frac{1}{t})^{4t+1} 
+    = (\frac{\ln{\ln{n}}}{\ln{n}})^{4t+1} 
+    < (\frac{\sqrt{\ln{n}}}{\ln{n}})^{4t+1} 
+    = (\frac{1}{\ln{n}})^{\frac{4t+1}{2}} 
+  \]
+
+  \[
+    < (\ln{n})^{-2\frac{\ln{n}}{\ln{\ln{n}}}} = ({e}^{\ln{\ln{n}}})^{-2\frac{\ln{n}}{\ln{\ln{n}}}} = \frac{1}{n^2}
+  \]
+
+  上面说明了，对于任意的一个bin的大于，那么对于含有bin的大于 4t+1 的概率是:
+
+  \[
+   Pr(\max\limits_{1 \leq i \leq m}x_i \ge 4 \times t) = Pr(x_1 \ge 4 \times t) ... \cup Pr(x_i \ge 4 \times t) ... \cup Pr(x_n \ge 4 \times t) < n \times \frac{1}{n^2} = \frac{1}{n}
+  \]
+
+  到此第一部分的证明，现在证明第二个部分:$Pr(Y \ge \frac{1}{4} \times \frac{\ln{n}}{\ln\ln{n}})$
+
+  \[
+    Pr(x_i < \frac{1}{4} \times t) = \sum\nolimits_{k \ge \frac{t+1}{4} } Pr(x_i = k) \ge Pr(x_i = \frac{t}{4} + 1) = \binom{n}{\frac{t}{4} + 1}({\frac{1}{n}})^{\frac{t}{4}+1}(1- \frac{1}{n})^{n - \frac{t}{4} - 1}
+  \]
+
+  其中:
+  \[
+    (1- \frac{1}{n})^{n - \frac{t}{4} - 1} \ge (1- \frac{1}{n})^n \sim \frac{1}{e}
+  \]
+  所以:
+
+  \[
+    Pr(x_i < \frac{1}{4} \times t) \ge \frac{1}{e} (\frac{n}{\frac{t}{4} +1 })^{\frac{t}{4} +1}(\frac{1}{n})^{\frac{t}{4} +1} \ge \frac{1}{e}\frac{1}{\ln{n}}\frac{1}{n^{\frac{1}{4}}} \ge \frac{1}{n^\frac{1}{3}}
+  \]
+
+  也就是
+
+  \[
+     Pr(x_i < \frac{1}{4}
+  \]
+  
+
+% 如果不懂，阅读 2:25:44 的截图吧!
+
+\end{itemize}
+
+
+
+\end{homeworkProblem}
+
+
+\end{document}

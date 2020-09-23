@@ -1,0 +1,6 @@
+[submodule "tech"]
+	path = tech
+	url = git@github.com:Martins3/tech-post.git
+[submodule "hack"]
+	path = hack
+	url = git@github.com:Martins3/linux-kernel-hack.git

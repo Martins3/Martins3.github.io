@@ -1,0 +1,275 @@
+\documentclass[fontset=none]{article} %取消CTeX的默认字体设置
+
+\usepackage[UTF8]{ctex}
+\usepackage{fancyhdr}
+\usepackage{extramarks}
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage{tikz}
+\usepackage[plain]{algorithm}
+\usepackage{algpseudocode}
+\usepackage{lmodern}
+
+% 处理
+\usepackage[english]{babel}
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,      
+    urlcolor=cyan,
+}
+
+\newtheorem{theorem}{Theorem}
+
+%
+% Basic Document Settings
+%
+\setCJKmainfont{SourceHanSansCN-Light}
+
+
+
+\topmargin=-0.45in
+\evensidemargin=0in
+\oddsidemargin=0in
+\textwidth=6.5in
+\textheight=9.0in
+\headsep=0.25in
+
+\linespread{1.1}
+
+\pagestyle{fancy}
+\lhead{\hmwkAuthorName}
+\rhead{\firstxmark}
+\lfoot{\lastxmark}
+\cfoot{\thepage}
+
+\renewcommand\headrulewidth{0.4pt}
+\renewcommand\footrulewidth{0.4pt}
+
+\setlength\parindent{0pt}
+
+%
+% Create Problem Sections
+%
+
+\newcommand{\enterProblemHeader}[1]{
+    \nobreak\extramarks{}{Problem \arabic{#1} continued on next page\ldots}\nobreak{}
+    \nobreak\extramarks{Problem \arabic{#1} (continued)}{Problem \arabic{#1} continued on next page\ldots}\nobreak{}
+}
+
+\newcommand{\exitProblemHeader}[1]{
+    \nobreak\extramarks{Problem \arabic{#1} (continued)}{Problem \arabic{#1} continued on next page\ldots}\nobreak{}
+    \stepcounter{#1}
+    \nobreak\extramarks{Problem \arabic{#1}}{}\nobreak{}
+}
+
+\setcounter{secnumdepth}{0}
+\newcounter{partCounter}
+\newcounter{homeworkProblemCounter}
+\setcounter{homeworkProblemCounter}{1}
+\nobreak\extramarks{Problem \arabic{homeworkProblemCounter}}{}\nobreak{}
+
+%
+% Homework Problem Environment
+%
+% This environment takes an optional argument. When given, it will adjust the
+% problem counter. This is useful for when the problems given for your
+% assignment aren't sequential. See the last 3 problems of this template for an
+% example.
+%
+\newenvironment{homeworkProblem}[1][-1]{
+    \ifnum#1>0
+        \setcounter{homeworkProblemCounter}{#1}
+    \fi
+    \section{Exercise \arabic{homeworkProblemCounter}}
+    \setcounter{partCounter}{1}
+    \enterProblemHeader{homeworkProblemCounter}
+}{
+    \exitProblemHeader{homeworkProblemCounter}
+}
+
+%
+% Homework Details
+%   - Title
+%   - Due date
+%   - Class
+%   - Section/Time
+%   - Instructor
+%   - Author
+%
+
+\newcommand{\hmwkTitle}{Homework One}
+\newcommand{\hmwkDueDate}{2020.5.11}
+\newcommand{\hmwkClass}{高级算法}
+\newcommand{\hmwkClassInstructor}{Professor xiaoming sun}
+\newcommand{\hmwkAuthorName}{\textbf{xueshi hu}}
+
+%
+% Title Page
+%
+
+\title{
+    \vspace{2in}
+    \textmd{\textbf{\hmwkClass:\ \hmwkTitle}}\\
+    \vspace{3in}
+}
+
+\author{\hmwkAuthorName}
+\date{}
+
+\renewcommand{\part}[1]{\textbf{\large Part \Alph{partCounter}}\stepcounter{partCounter}\\}
+
+%
+% Various Helper Commands
+%
+
+% Useful for algorithms
+\newcommand{\alg}[1]{\textsc{\bfseries \footnotesize #1}}
+
+% For derivatives
+\newcommand{\deriv}[1]{\frac{\mathrm{d}}{\mathrm{d}x} (#1)}
+
+% For partial derivatives
+\newcommand{\pderiv}[2]{\frac{\partial}{\partial #1} (#2)}
+
+% Integral dx
+\newcommand{\dx}{\mathrm{d}x}
+
+% Alias for the Solution section header
+\newcommand{\solution}{\textbf{\large Solution}}
+
+% Probability commands: Expectation, Variance, Covariance, Bias
+\newcommand{\E}{\mathrm{E}}
+\newcommand{\Var}{\mathrm{Var}}
+\newcommand{\Cov}{\mathrm{Cov}}
+\newcommand{\Bias}{\mathrm{Bias}}
+
+\begin{document}
+\maketitle
+\pagebreak
+\begin{homeworkProblem}
+1. 左侧证明: 
+
+由
+\[
+  n > m > 0 => \frac{n}{m} < \frac{n - 1}{m - 1}
+\]
+可得
+\[
+  \binom{n}{m} = \frac{n!}{m!(n-m)!} = \frac{n(n-1)..(n-m+1)}{m(m-1)..1} > \frac{n}{m}\frac{n}{m}...\frac{n}{m} = (\frac{n}{m})^m
+\]
+左侧证明结束
+
+2. 右侧证明:
+已知$e^x$的级数展开
+\[
+  e^x = 1 + x + \frac{x^2}{2!} + ...
+\]
+则:
+
+\[
+  (\frac{ne}{m})^m = (\frac{n}{m})^m * e^m > (\frac{n}{m})^m * \frac{m^m}{m!} = \frac{n^m}{m!} > \frac{n(n-1)..(n-m+1)}{m!}
+\]
+右侧证明结束。
+
+综上，该不等式成立。
+
+\end{homeworkProblem}
+
+\begin{homeworkProblem}
+第$i$次抛掷得到正面的概率为:
+\[
+  Pr(X=i) = (1 -p)^{i-1}*p
+\]
+所以期望为:
+\[
+  E(X) = \sum_{i=1,2,3..}{(1 -p)^{i-1}*p*i} = p * \sum_{i=1,2,3..}{(1 -p)^{i-1} * i} = \frac{1}{p}
+\]
+\end{homeworkProblem}
+
+\begin{homeworkProblem}
+此处证明Chernoff's Bound的第二部分。
+
+\[
+  Pr(X < (1 - \delta)\mu) \leq [\frac{e^{-\delta}}{(1-\delta)^{1-\delta}}]^\mu
+\]
+取$\lambda=\ln{(1-\delta)}$，由于$f(x)=e^{\ln{(1-\delta)}x}$的单调递减函数，所以:
+\[
+  Pr(X < (1 - \delta)\mu) = Pr(e^{\lambda{X}} > e^{(1 - \delta)\mu})
+\]
+由于Markov不等式:
+\[
+  Pr(e^{\lambda{X}} > e^{(1 - \delta)\mu}) \leq \frac{\E(e^{\lambda{X})}}{e^{\lambda(1 - \delta)\mu}} = e^{(1 - \delta)\mu} = \frac{\E(e^{\lambda{(X_1+X_2+...+X_n)}})}{e^{\lambda(1 - \delta)\mu}}
+\]
+因为$X_i$是独立的随机变量，所以:
+\[
+  \frac{\E(e^{\lambda{(X_1+X_2+...+X_n)}})}{e^{\lambda(1 - \delta)\mu}} = \frac{\E(e^{\lambda{X_1}}) * \E(e^{\lambda{X_2}}) * ... * \E(e^{\lambda{X_n}}) }{e^{\lambda(1 - \delta)\mu}}
+\]
+由于$X_i$是$0-1$随机变量，所以:
+\[
+  \E(e^{\lambda{X_i}}) = 1-p_i+p_ie^\lambda
+\]
+由$e^x>x+1$的放缩，以及条件 $\sum{p_i} = \mu$
+\[
+  \frac{e^{p_1(e^\lambda - 1)} * e^{p_2(e^\lambda - 1)} *...* e^{p_n(e^\lambda - 1)} }{e^{\lambda(1 - \delta)\mu}} 
+  = \frac{e^{(p_1+p_2+...+p_n)(e^\lambda - 1)} }{e^{\lambda(1 - \delta)\mu}}
+  = \frac{e^{(e^\lambda - 1)\mu} }{e^{\lambda(1 - \delta)\mu}}
+\]
+带入$\lambda=\ln{(1-\delta)}$，即为
+\[
+  Pr(X < (1 - \delta)\mu) \leq [\frac{e^{-\delta}}{(1-\delta)^{1-\delta}}]^\mu
+\]
+证明结束。
+
+\end{homeworkProblem}
+
+\begin{homeworkProblem}
+使用LazySelect算法，对于一个输入$S$和$k$，从其中随机选择出来一个子串$R$，然后在子串中间挑选出来$k$的两个范围$l$和$h$，利用$l$和$h$取出$S$的子区间$P$，然后对于子区间$P$使用$n\log(n)$的算法排序，便可以确定$kth$元素。
+下面，说明其中的部分，为什么$kth$元素会高概率落入到$l$和$h$中间?\\
+给出一下条件:
+\begin{itemize}
+  \item 从$S$中间一共$n$个元素，即$S$的大小为$n$
+  \item 从$S$中间挑选出来$n^{\frac{3}{4}}$个元素，即$S$的大小为$n^{\frac{3}{4}}$
+  \item $l$是$R$中间的$max\{kn^{-\frac{1}{4}} - \sqrt{n}, 1\}$，而$h$是$min\{kn^{-\frac{1}{4}} + \sqrt{n}, n^{\frac{3}{4}}\}$元素
+\end{itemize}
+
+设$X_i=1$表示在$S$中间随机选择一个元素，其比$kth$小，那么$Pr(X_i=1) = \frac{k}{n}$，$Pr(X_i=0) = 1-\frac{k}{n}$，设$X=\sum_{i}^{n^\frac{3}{4}}{X_i}$表示$R$中间大于$kth$元素的数量，因为$X_i$互相独立，并且是$0-1$分布的，$X$符合二项分布，由Chebyshev 不等式:
+\[
+  Pr(|X-\E(X)| \ge \sqrt{n}) < \frac{Var(X)}{n} = O(n^{-\frac{1}{4}})
+\]
+而
+\[
+  Pr(|X-\E(X)| \ge \sqrt{n}) = Pr(|X-kn^{-\frac{1}{4}}| \ge \sqrt{n})
+\]
+上式表示，在$S$中间，$(kn^{-\frac{1}{4}} + \sqrt{n})$的元素是小于$kth$元素的，也就是元素未能进入到子区间$P$中间的概率为$O(n^{-\frac{1}{4}})$，同理可以说明另一侧。
+
+综上，LazySelect算法可以在$1-O(n^{-\frac{1}{4}})$的概率下获得$\Theta(n)$的复杂度。
+
+
+\begin{itemize}
+  \item \href{https://www.cs.cornell.edu/courses/cs2110/2009su/Lectures/examples/MedianFinding.pdf}{参考1}
+  \item \href{https://cs.stackexchange.com/questions/27685/can-someone-explain-lazyselect}{参考2}
+\end{itemize}
+
+\end{homeworkProblem}
+
+\begin{homeworkProblem}
+根据二分图构造一个矩阵为:
+\[
+  A(i,j) = 
+   \begin{cases} 
+      1 & if(i,j)\in \E\:and\:is\:blue \\
+      y & if(i,j)\in \E\:and\:is\:red  \\
+      0 & otherwise
+   \end{cases}
+\]
+当存在唯一的完美的红蓝匹配的时候，那么等价于:
+\[
+  det(A) = p(y) = \sum_{i=0}^{n}{a_i{y^i}}
+\]
+对于多项式$p(y)$的指数$k$的系数不为0的时候，存在红蓝最佳匹配，判断指数$k$的系数存在可以使用拉格朗日插值的方法。
+选择$n+1$个不同的数值，$a_0$，$a_1$，，$a_n$，然后以及对应的$p(a_0)$，$p(a_1)$，，$p(a_n)$。
+
+\end{homeworkProblem}
+\end{document}

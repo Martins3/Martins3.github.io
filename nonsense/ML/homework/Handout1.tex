@@ -1,0 +1,167 @@
+\documentclass{article}
+\usepackage{blindtext}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+
+\title{Homework one}
+\author{U201514545 Bachelar Hu}
+\date{\today}
+
+\begin{document}
+\maketitle
+\section{}
+Porve is a cycle.\newline
+Assuming $Mv = {\lambda}v$
+
+\begin{itemize}
+    \item
+        $1 \implies 3$\newline
+        $\forall{x} \quad x^{T}Mx\geq0  \implies\forall{x} \quad x^{T}{\lambda}vx \geq 0
+        \implies\forall{x} \quad {\lambda}x^{T}vx \geq a$\newline
+        so all eigenvalue of M is non-negtive
+    \item
+        $2 \implies 1$\newline
+        $M=BB^{T}\implies x^{T}Mx=x^{T}BB^{T}x \implies x^{T}Mx=(B^{T}x)^{T}B^{T}x\geq0$
+    \item
+        $3 \implies 2$\newline
+        The matrix $M$ is symmetric matrix.so there exists an on
+        orthogonal matrix $Q$ such that $Q^{T}MQ=D$, where $D$ is the
+        diagonal matrix
+
+        \[D=\begin{bmatrix}
+            \lambda_1 & 0 & 0 & 0 \\
+            0 & \lambda_2 & 0 & 0 \\
+            \vdots & \cdots & \ddots & \vdots \\
+            0 & 0 & \cdots & \lambda_n
+        \end{bmatrix}\]
+
+        \[
+            M = {Q^{-1}}^{T}
+            \begin{bmatrix}
+            \lambda_1 & 0 & 0 & 0 \\
+            0 & \lambda_2 & 0 & 0 \\
+            \vdots & \cdots & \ddots & \vdots \\
+            0 & 0 & \cdots & \lambda_n
+            \end{bmatrix}
+            Q^{-1}
+        \]
+
+        \[
+            M = {Q^{-1}}^{T}
+            \begin{bmatrix}
+                \sqrt{\lambda_1} & 0 & 0 & 0 \\
+                0 & \sqrt{\lambda_2} & 0 & 0 \\
+                \vdots & \cdots & \ddots & \vdots \\
+                0 & 0 & \cdots & \sqrt{\lambda_n}
+            \end{bmatrix}
+            \begin{bmatrix}
+                \sqrt{\lambda_1} & 0 & 0 & 0 \\
+                0 & \sqrt{\lambda_2} & 0 & 0 \\
+                \vdots & \cdots & \ddots & \vdots \\
+                0 & 0 & \cdots & \sqrt{\lambda_n}
+            \end{bmatrix}
+            Q^{-1}
+        \]
+        Let
+        \[
+            B = {Q^{-1}}^{T}
+            \begin{bmatrix}
+                \sqrt{\lambda_1} & 0 & 0 & 0 \\
+                0 & \sqrt{\lambda_2} & 0 & 0 \\
+                \vdots & \cdots & \ddots & \vdots \\
+                0 & 0 & \cdots & \sqrt{\lambda_n}
+            \end{bmatrix}
+        \]
+
+        So
+        \[
+            M=BB^{T}
+        \]
+
+
+\end{itemize}
+
+\section{}
+For a sample of vectors $x_i=(x_{i1},\dots,x_{ik})^\top$, with $i=1,\dots,n$, the sample mean vector is
+\[ \bar{x}=\frac{1}{n} \sum_{i=1}^n x_i \, , \]
+and the sample covariance matrix is
+\[ Q = \frac{1}{n} \sum_{i=1}^n (x_i-\bar{x})(x_i-\bar{x})^\top \, .  \]
+For a nonzero vector $y$, we have
+\[ y^\top Qy = y^\top\left(\frac{1}{n} \sum_{i=1}^n (x_i-\bar{x})(x_i-\bar{x})^\top\right) y \]
+\[ = \frac{1}{n} \sum_{i=1}^n y^\top (x_i-\bar{x})(x_i-\bar{x})^\top y \]
+\[ = \frac{1}{n} \sum_{i=1}^n ((x_i-\bar{x})^\top y)^\top ((x_i-\bar{x})^\top y) \]
+\[ = \frac{1}{n} \sum_{i=1}^n \left( (x_i-\bar{x})^\top y \right)^2 \geq 0 \, . \quad (*) \]
+Therefore, $Q$ is always positive semi-definite
+
+\section{}
+\subsection{}
+\begin{itemize}
+    \item
+        $Cu_i = (A + B)u_i = Au_i + Bu_i = {\alpha}_iu_i + {\beta}_iu_i =
+        ({\alpha}_i + {\beta}_i )u_i$
+    \item
+        $Du_i = (A - B)u_i = Au_i - Bu_i = {\alpha}_iu_i - {\beta}_iu_i =
+        ({\alpha}_i - {\beta}_i )u_i$
+    \item
+        matrix multiplication is associative\newline
+        $Eu_i = (AB)u_i = A(Bu_i) = {\beta}_iAu_i = {\alpha}_i{\beta}_iu_i$
+    \item
+        $A\mathbf{v} = \lambda\mathbf{v} \implies A^{-1}A\mathbf{v} = \lambda
+    A^{-1}\mathbf{v} \implies A^{-1}\mathbf{v} = \frac{1}{\lambda}\mathbf{v}$
+    $Fu_i=A^{-1}B={\alpha}_i^{-1}\beta_iu_i$
+\end{itemize}
+\subsection{}
+    \[
+        F=
+        \begin{bmatrix}
+            \mathbf{A} & 0 \\
+            0 & \mathbf{B}
+        \end{bmatrix}
+    \]
+
+    \[
+        M=\begin{bmatrix}
+            \mathbf{u_i}\\
+            0
+        \end{bmatrix}
+    \]
+
+    ${\lambda}_i$ and
+    $
+    \begin{bmatrix}
+        \mathbf{u_i}\\
+        0
+    \end{bmatrix}
+    $
+    is one answer, here is the prove
+    \[
+        FM=
+        \begin{bmatrix}
+            \mathbf{A} & 0 \\
+            0 & \mathbf{B}
+        \end{bmatrix}
+        \begin{bmatrix}
+            \mathbf{u_i}\\
+            0
+        \end{bmatrix}
+        =
+        \begin{bmatrix}
+            A\mathbf{u_i}\\
+            0
+        \end{bmatrix}
+        =
+        \lambda_i
+        \begin{bmatrix}
+            \mathbf{u_i}\\
+            0
+        \end{bmatrix}
+        =
+        {\lambda_i}
+        M
+    \]
+
+    Similarly, ${\beta}_i$ and $ \begin{bmatrix}  0 \\ \mathbf{u_i} \end{bmatrix}$ is one
+    answer
+
+\end{document}
+
