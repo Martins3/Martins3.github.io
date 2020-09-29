@@ -10,9 +10,4 @@
   </p>
 </p>
 
-My notes
-
-[Polished Articles](http://music.163.com/#/m/song?id=556220425)
----
-- [Jianshu](https://www.jianshu.com/u/1a078e249c88)
-- [Github](https://github.com/Martins3)
+This is my notes about everything, all notes here are draft and not worthy a glance.

@@ -1,7 +1,18 @@
-# 汇编
-> TMD 本来以为自己学习过汇编，才发现，自己学习的是 16bit 的汇编，简直搞笑的不得了
+# x86
 
+<!-- vim-markdown-toc GitLab -->
 
+- [syntax](#syntax)
+- [long mode](#long-mode)
+- [control register](#control-register)
+- [fpu](#fpu)
+    - [fpu signal](#fpu-signal)
+    - [fpu xstate](#fpu-xstate)
+- [TODO](#todo)
+- [call convention](#call-convention)
+- [syscall](#syscall)
+
+<!-- vim-markdown-toc -->
 ## syntax
 1. ~/Core/x86-64-assembly 似乎非常不错:
 
@@ -31,7 +42,6 @@ https://wiki.odev.org/CPU_Registers_x86-64#IA32_EFERs : x86 到底有多少 regi
 ## fpu
 
 arch/x86/include/asm/fpu/types.h
-
 ```c
 /*
  * This is our most modern FPU state format, as saved by the XSAVE
@@ -66,6 +76,11 @@ union fpregs_state {
 };
 ```
 
+#### fpu signal
+I guess it's mainly used for enter user mode and return from user mode whne handling sigaction
+
+#### fpu xstate
+- [ ] why `copy_xstate_to_kernel` and `copy_user_to_xstate` are so complex ?
 
 ## TODO
 2. 可以参考的资源:
@@ -84,6 +99,8 @@ union fpregs_state {
 
 5. check code in uaccess.c
   - for example, understand `get_fs`
+
+
 
 ## call convention
 1. syscall ?
@@ -185,13 +202,6 @@ caller():                             # @caller()
 ```
 1. 这个结果明显不对啊，怎么可能解析出来两个 call 指令啊 !
     1. 到底是 gcc 的问题还是 objdump 的问题
-    2. 
-
-
-
-
-
-
 
 [^1]
 Calling conventions describe the interface of called code:
@@ -203,6 +213,17 @@ Calling conventions describe the interface of called code:
 Calling conventions, type representations, and name mangling are all part of what is known as an application binary interface (ABI).
 
 > TODO
+
+
+## syscall
+arch/x86/entry/common.c
+
+`__prepare_exit_to_usermode` => exit_to_usermode_loop
+
+currently, exit_to_usermode_loop has tell really important two thing:
+- schdule()
+- do_signal()
+
 
 
 

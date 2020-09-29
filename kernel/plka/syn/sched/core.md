@@ -872,6 +872,7 @@ struct sched_avg {
 考虑 `static void entity_tick(struct cfs_rq *cfs_rq, struct sched_entity *curr, int queued)` 中间的调用
 内容，为什么是 se 不断查找其 parent 的过程呀，所以到时候还可以知道谁需要被调用离开吗 ?
 
+
 ```c
 /*
  * resched_curr - mark rq's current task 'to be rescheduled now'.
@@ -904,6 +905,8 @@ void resched_curr(struct rq *rq)
 		trace_sched_wake_idle_without_ipi(cpu);
 }
 ```
+
+
 
 
 
@@ -1344,3 +1347,4 @@ static void dequeue_entity(struct cfs_rq *cfs_rq, struct sched_entity *se, int f
         static void __return_cfs_rq_runtime(struct cfs_rq *cfs_rq)
             static void start_cfs_slack_bandwidth(struct cfs_bandwidth *cfs_b)
 ```
+

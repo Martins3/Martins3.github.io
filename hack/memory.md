@@ -61,7 +61,7 @@
 - [dmapool](#dmapool)
 - [mempool](#mempool)
 - [virtual machine](#virtual-machine)
-    - [mmu notifier](#mmu-notifier)
+- [mmu notifier](#mmu-notifier)
     - [userfault fd](#userfault-fd)
     - [balloon compaction](#balloon-compaction)
 - [hmm](#hmm)
@@ -1451,6 +1451,8 @@ https://www.cs.utexas.edu/~bornholt/post/memory-models.html
 https://www.linuxjournal.com/article/8211
 https://www.linuxjournal.com/article/8212
 
+- [ ] READ_ONCE and WRITE_ONCE
+
 ## pmem
 DAX 设置 : 到时候在分析吧!
 1. https://www.intel.co.uk/content/www/uk/en/it-management/cloud-analytic-hub/pmem-next-generation-storage.html
@@ -1964,8 +1966,22 @@ The purpose of mempools is to help out in situations where a memory allocation m
 ## virtual machine
 https://lwn.net/Kernel/Index/#Memory_management-Virtualization
 
-#### mmu notifier
-[^24]
+## mmu notifier
+[^24] is worth reading !
+
+- [ ] how mmu notifier works ?
+- [ ] how kvm work with mmu notifier ?
+
+
+- [ ] comments
+- [ ] mmu_notifier.rst
+
+
+- [ ] mmu_interval_notifier is another 
+
+
+
+
 
 #### userfault fd
 https://lwn.net/Articles/718198/

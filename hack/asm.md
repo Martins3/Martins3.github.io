@@ -25,4 +25,10 @@ int main(){
 }
 ```
 why change to `=m` `m` failed ?
-- [ ] check the asm
+- [ ] check the assembly line by line, please !
+
+
+- [ ] understand it ?
+```c
+	asm volatile ("call preempt_schedule_thunk" : ASM_CALL_CONSTRAINT)
+```

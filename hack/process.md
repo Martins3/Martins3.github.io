@@ -4,16 +4,21 @@
 
 - [introduction](#introduction)
 - [preemption](#preemption)
+    - [preempt count](#preempt-count)
+    - [preempt locking](#preempt-locking)
+    - [preempt notes](#preempt-notes)
 - [context switch](#context-switch)
     - [context switch fpu](#context-switch-fpu)
     - [context switch stack](#context-switch-stack)
     - [context switch TSS](#context-switch-tss)
     - [context switch TLS](#context-switch-tls)
+- [vfork](#vfork)
 - [TLS](#tls)
 - [thread_struct](#thread_struct)
 - [signal](#signal)
     - [send signal](#send-signal)
     - [wait signal](#wait-signal)
+    - [do signal](#do-signal)
 - [idle](#idle)
     - [ptrace](#ptrace)
 - [workqueue](#workqueue)
@@ -21,13 +26,19 @@
 - [design](#design)
 - [fork](#fork)
     - [copy_process](#copy_process)
-    - [stack 的拷贝](#stack-的拷贝)
+    - [stack's copy](#stacks-copy)
+- [stack](#stack)
+    - [x86 stack](#x86-stack)
 - [exec](#exec)
 - [exit.c](#exitc)
     - [do_exit](#do_exit)
 - [pidfd](#pidfd)
 - [pid](#pid)
     - [getpid](#getpid)
+- [thread_info](#thread_info)
+    - [TIF](#tif)
+      - [TIF_NEED_RESCHED](#tif_need_resched)
+      - [TIF_NEED_FPU_LOAD](#tif_need_fpu_load)
 - [green thread](#green-thread)
 - [cpp thread keyword](#cpp-thread-keyword)
 - [cpu](#cpu)
@@ -36,6 +47,7 @@
 - [daemon](#daemon)
 - [user group](#user-group)
 - [smp](#smp)
+- [`__schedule`](#__schedule)
 - [TODO](#todo)
 
 <!-- vim-markdown-toc -->
@@ -75,6 +87,45 @@ n. preemption !
 
 
 ## preemption
+- [x] So what's the difference between preempt and disable interrupt ?
+
+this [ans](https://stackoverflow.com/questions/9473301/are-there-any-difference-between-kernel-preemption-and-interrupt)
+summaries incisively, and we can check the comment of `__schedule`
+
+
+[^7]
+However, in nonpreemptive kernels, the current process cannot be replaced unless it is about to switch
+to User Mode.
+
+Therefore, the main characteristic of a preemptive kernel is that a process running in
+Kernel Mode can be replaced by another process while in the middle of a kernel
+function.
+
+[^7]:
+it is greater than zero when any of the following cases occurs:
+1. The kernel is executing an interrupt service routine.
+2. The deferrable functions are disabled (always true when the kernel is executing a
+softirq or tasklet).
+3. The kernel preemption has been explicitly disabled by setting the preemption
+counter to a positive value.
+
+huxueshi: this is correct
+
+
+- [x] I can't find anything about CONFIG_PREEMPT_NONE when tracing `scheduler_tick` ?
+
+task_tick_fair => entity_tick => check_preempt_tick
+
+As `__schedule`'s comment says, scheduler_tick only set TIF_NEED_RESCHED flags on the thread.
+
+- [x] check_preempt_tick and check_preempt_wakeup
+
+former used by timer, latter by kernel code like ttwu
+```c
+const struct sched_class fair_sched_class = {
+	.check_preempt_curr	= check_preempt_wakeup,
+```
+
 在 64bit 中间 kmap 和 kmap_atomic 的区别:
 
 1. 为什么这保证了 atomic ?
@@ -87,6 +138,90 @@ static inline void *kmap_atomic(struct page *page)
 	return page_address(page);
 }
 ```
+
+- [ ] In fact there are three types of preemption !
+
+detail `kernel/Kconfig.preempt`
+- No Forced Preemption (Server)
+- Voluntary Kernel Preemption (Desktop) `CONFIG_PREEMPT_VOLUNTARY`
+- Preemptible Kernel (Low-Latency Desktop) `CONFIG_PREEMPT`
+
+This's only place that `CONFIG_PREEMPT_VOLUNTARY` used !
+```c
+#ifdef CONFIG_PREEMPT_VOLUNTARY
+extern int _cond_resched(void);
+# define might_resched() _cond_resched()
+#else
+# define might_resched() do { } while (0)
+#endif
+```
+
+#### preempt count
+`CONFIG_PREEMPT` will select `CONFIG_PREEMPT_COUNT`
+
+https://lwn.net/Articles/831678/ : valuable 
+
+- [ ] why preempt need a counter ?
+
+- [ ] I need a more clear and strong reason : why if the process disasble interrupt, it shouldn't be preempted ?
+
+
+- [ ] preempt.h : where preempt meets need_resched
+
+- [ ] how `__preempt_count` enable ?
+
+- [ ] how to explain `preemptible()` ?
+
+```c
+#define preemptible()	(preempt_count() == 0 && !irqs_disabled())
+```
+
+- [ ] set_preempt_need_resched
+```c
+/*
+ * We fold the NEED_RESCHED bit into the preempt count such that
+ * preempt_enable() can decrement and test for needing to reschedule with a
+ * single instruction.
+ *
+ * We invert the actual bit, so that when the decrement hits 0 we know we both
+ * need to resched (the bit is cleared) and can resched (no preempt count).
+ */
+
+static __always_inline void set_preempt_need_resched(void)
+{
+	raw_cpu_and_4(__preempt_count, ~PREEMPT_NEED_RESCHED);
+}
+```
+
+- [ ] when will preempt happens ?
+```c
+asmlinkage __visible void __sched notrace preempt_schedule(void)
+```
+
+
+#### preempt locking
+https://www.kernel.org/doc/html/latest/locking/preempt-locking.html
+
+https://stackoverflow.com/questions/18254713/why-linux-disables-kernel-preemption-after-the-kernel-code-holds-a-spinlock
+
+
+
+
+#### preempt notes
+
+https://stackoverflow.com/questions/5283501/what-does-it-mean-to-say-linux-kernel-is-preemptive
+> If the system allows that task to be preempted while it is running kernel code, then we have what is called a "preemptive kernel." 
+
+https://stackoverflow.com/questions/49414559/linux-kernel-why-preemption-is-disabled-when-use-per-cpu-variable
+> There are preemption points throughout the kernel (might_sleep). Forcible preemption = each interrupt (including timer interrupts when time slices run out) is a possible preemption point. 
+> 
+> *when you finish your business and about to go back to user space your time slice is checked and if its done you go to another process instead of back to user space, so Im trying to understand how this dynamic work now*
+
+really interesting : if one process is about to switch to user space and it's time slice is used up, just switch to another process.
+
+
+
+
 
 ## context switch
 2. vdso 是怎么回事 ?
@@ -127,48 +262,6 @@ The short list context switching tasks:
 - Swapping memory address spaces: Updating page directory (CR3)
 - ...and more: FPUs, OS data structures, debug registers, hardware workarounds, etc.
 
-```c
-/*
- * __schedule() is the main scheduler function.
- *
- * The main means of driving the scheduler and thus entering this function are:
- *
- *   1. Explicit blocking: mutex, semaphore, waitqueue, etc.
- *
- *   2. TIF_NEED_RESCHED flag is checked on interrupt and userspace return
- *      paths. For example, see arch/x86/entry_64.S.
- *
- *      To drive preemption between tasks, the scheduler sets the flag in timer
- *      interrupt handler scheduler_tick().
- *
- *   3. Wakeups don't really cause entry into schedule(). They add a
- *      task to the run-queue and that's it.
- *
- *      Now, if the new task added to the run-queue preempts the current
- *      task, then the wakeup sets TIF_NEED_RESCHED and schedule() gets
- *      called on the nearest possible occasion:
- *
- *       - If the kernel is preemptible (CONFIG_PREEMPTION=y):
- *
- *         - in syscall or exception context, at the next outmost
- *           preempt_enable(). (this might be as soon as the wake_up()'s
- *           spin_unlock()!)
- *
- *         - in IRQ context, return from interrupt-handler to
- *           preemptible context
- *
- *       - If the kernel is not preemptible (CONFIG_PREEMPTION is not set)
- *         then at the next:
- *
- *          - cond_resched() call
- *          - explicit schedule() call
- *          - return from syscall or exception to user-space
- *          - return from interrupt-handler to user-space
- *
- * WARNING: must be called with preemption disabled!
- */
-static void __sched notrace __schedule(bool preempt)
-```
 TODO
 1. 调查一下第二种状况的原因，这不是 ucore 的方法
     1. interrupt 和 userspace return 分别对应什么
@@ -252,6 +345,10 @@ SYM_FUNC_START(__switch_to_asm)
 #### context switch TLS
 process_64.c:`__switch_to` call `load_TLS` to load `ldt` from `thread_struct->tls_array` 
 
+## vfork
+- [ ] it's easy, it's simple, but it's necessary to understand clearly.
+
+
 ## TLS
 // TODO
 https://chao-tic.github.io/blog/2018/12/25/tls
@@ -268,6 +365,16 @@ answered the difference between GDT and LDT
 ## thread_struct
 1. `tls_array`
 2. `fsbase` and `fsindex`
+
+[^7]
+At every process switch, the hardware context of the process being replaced must be
+saved somewhere. It cannot be saved on the TSS, as in the original Intel design,
+because Linux uses a single TSS for each processor, instead of one for every process.
+
+Thus, each process descriptor includes a field called thread of type thread_struct, in
+which the kernel saves the hardware context whenever the process is being switched
+out. As we’ll see later, this data structure includes fields for most of the CPU registers, except the general-purpose registers such as eax, ebx, etc., which are stored in
+the Kernel Mode stack.
 
 
 ## signal
@@ -298,9 +405,6 @@ Man 分析的很清楚[^2] :
   - [ ] 好吧，CNM, 居然在 x86/kernel/signal 中间
 
 
-这个图片有点老，当时的设计思想差不多:
-![](http://liujunming.top/images/2018/12/76.png)
-
 
 实际上的代码在 kernel/entry/
 irqentry_exit_to_user_mode 和 syscall_exit_to_user_mode
@@ -313,7 +417,17 @@ do_send_sig_info : 万恶之源
 `__send_signal`
 
 #### wait signal
-检查一下 pause syscall, 算是知道 signal_pending 的含义了
+
+#### do signal
+exit_to_usermode_loop => do_signal() => handle_signal()
+
+![](http://liujunming.top/images/2018/12/76.png)
+
+- [x] sigreturn rt_sigreturn
+
+- https://man7.org/linux/man-pages/man2/sigreturn.2.html
+- https://stackoverflow.com/questions/31267825/rt-sigreturn-and-linux-kernels
+
 
 
 ## idle
@@ -392,7 +506,7 @@ https://stackoverflow.com/questions/4856255/the-difference-between-fork-vfork-ex
 
 #### copy_process
 
-#### stack 的拷贝
+#### stack's copy
 
 - [ ] 两个 thread 共享地址空间，如何防止 stack 互相覆盖 ?
 
@@ -405,6 +519,119 @@ https://stackoverflow.com/questions/33104091/how-are-system-calls-stored-in-pt-r
 - [ ] task_stack_page : 才发现 `task->stack` 是用于指向 stack 的指针，这个变量的 ref 并不多，好好 check 一下.
   - [ ] fork 的时候，如何从 parent 的拷贝 stack 的
   - [ ] fork 的返回值为什么是两个的原因定位一下代码
+
+## stack
+notes from questions [^6]:
+
+- [x] when is `task_stack` allocated and destroied ?
+
+```c
+static unsigned long *alloc_thread_stack_node(struct task_struct *tsk, int node)
+
+static void release_task_stack(struct task_struct *tsk)
+```
+it's simple, allocate page and assign to `task->stack`
+
+- [x] why `task_struct` has to access `stack` ?
+
+because kernel put `task_pt_regs` on the stack
+
+```c
+static inline void *task_stack_page(const struct task_struct *task)
+{
+  return task->stack;
+}
+
+
+#ifndef current_pt_regs
+#define current_pt_regs() task_pt_regs(current)
+#endif
+
+/*
+ * unlike current_pt_regs(), this one is equal to task_pt_regs(current)
+ * on *all* architectures; the only reason to have a per-arch definition
+ * is optimisation.
+ */
+#ifndef signal_pt_regs
+#define signal_pt_regs() task_pt_regs(current)
+#endif
+
+#define task_pt_regs(task) \
+({									\
+	unsigned long __ptr = (unsigned long)task_stack_page(task);	\
+	__ptr += THREAD_SIZE - TOP_OF_KERNEL_STACK_PADDING;		\
+	((struct pt_regs *)__ptr) - 1;					\
+})
+```
+
+- [x] current_top_of_stack()
+
+stored in the 'soft' TSS
+
+```c
+static inline unsigned long current_top_of_stack(void)
+{
+	/*
+	 *  We can't read directly from tss.sp0: sp0 on x86_32 is special in
+	 *  and around vm86 mode and sp0 on x86_64 is special because of the
+	 *  entry trampoline.
+	 */
+	return this_cpu_read_stable(cpu_current_top_of_stack);
+}
+
+/*
+ * per-CPU TSS segments. Threads are completely 'soft' on Linux,
+ * no more per-task TSS's. The TSS size is kept cacheline-aligned
+ * so they are allowed to end up in the .data..cacheline_aligned
+ * section. Since TSS's are completely CPU-local, we want them
+ * on exact cacheline boundaries, to eliminate cacheline ping-pong.
+ */
+__visible DEFINE_PER_CPU_PAGE_ALIGNED(struct tss_struct, cpu_tss_rw) = {
+	.x86_tss = {
+		/*
+		 * .sp0 is only used when entering ring 0 from a lower
+		 * privilege level.  Since the init task never runs anything
+		 * but ring 0 code, there is no need for a valid value here.
+		 * Poison it.
+		 */
+		.sp0 = (1UL << (BITS_PER_LONG-1)) + 1,
+
+		/*
+		 * .sp1 is cpu_current_top_of_stack.  The init task never
+		 * runs user code, but cpu_current_top_of_stack should still
+		 * be well defined before the first context switch.
+		 */
+		.sp1 = TOP_OF_INIT_STACK,
+
+#ifdef CONFIG_X86_32
+		.ss0 = __KERNEL_DS,
+		.ss1 = __KERNEL_CS,
+#endif
+		.io_bitmap_base	= IO_BITMAP_OFFSET_INVALID,
+	 },
+};
+```
+check the code in the `__switch_to`
+```c
+	/*
+	 * Switch the PDA and FPU contexts.
+	 */
+	this_cpu_write(current_task, next_p);
+	this_cpu_write(cpu_current_top_of_stack, task_top_of_stack(next_p));
+```
+
+- [ ] so, what's difference between sp0 and sp1 ?
+
+
+#### x86 stack
+some x86 kernel notes:[^5]
+
+*Switching to the kernel interrupt stack is done by software based on a per CPU interrupt nest counter. This is needed because x86-64 “IST” hardware stacks cannot nest without races.*
+
+*x86_64 also has a feature which is not available on i386, the ability to automatically switch to a new stack for designated events such as double fault or NMI, which makes it easier to handle these unusual events on x86_64. This feature is called the Interrupt Stack Table (IST). There can be up to 7 IST entries per CPU. The IST code is an index into the Task State Segment (TSS). The IST entries in the TSS point to dedicated stacks; each stack can be a different size.*
+
+- [ ] fine, too many difficult material related with **IDT**, **IST**, **TSS**
+  - [ ] may review the article later
 
 
 ## exec
@@ -609,6 +836,58 @@ static struct pid **task_pid_ptr(struct task_struct *task, enum pid_type type)
 
 ```
 
+## thread_info
+`thread_info` is used to locate `task_struct`
+https://unix.stackexchange.com/questions/22372/what-is-the-need-of-the-struct-thread-info-in-locating-struct-task-struct
+
+in `asm/thread_info.h`, `TIF_NEED_RESCHED` are defined
+
+- [x] do we need `thread_info` to access `task_struct` ?
+
+no, we can access `task_struct` directly
+```c
+struct task_struct;
+
+DECLARE_PER_CPU(struct task_struct *, current_task);
+
+static __always_inline struct task_struct *get_current(void)
+{
+	return this_cpu_read_stable(current_task);
+}
+```
+
+#### TIF
+in `arch/x86/include/asm/thread_info.h`
+
+##### TIF_NEED_RESCHED
+Four reference of TIF_NEED_RESCHED
+```c
+#define tif_need_resched() test_thread_flag(TIF_NEED_RESCHED)
+
+static inline void set_tsk_need_resched(struct task_struct *tsk)
+{
+	set_tsk_thread_flag(tsk,TIF_NEED_RESCHED);
+}
+
+static inline void clear_tsk_need_resched(struct task_struct *tsk)
+{
+	clear_tsk_thread_flag(tsk,TIF_NEED_RESCHED);
+}
+
+static inline int test_tsk_need_resched(struct task_struct *tsk)
+{
+	return unlikely(test_tsk_thread_flag(tsk,TIF_NEED_RESCHED));
+}
+```
+
+`set_tsk_need_resched` call site:
+1. rcu
+2. resched_curr
+
+
+##### TIF_NEED_FPU_LOAD
+
+
 
 ## green thread
 https://github.com/google/marl : 为什么用户层可以控制 scheduler ?
@@ -710,6 +989,51 @@ kernel/smp.c
 
 smp_call_function_many 之类的函数可以看看
 
+
+## `__schedule`
+```c
+/*
+ * __schedule() is the main scheduler function.
+ *
+ * The main means of driving the scheduler and thus entering this function are:
+ *
+ *   1. Explicit blocking: mutex, semaphore, waitqueue, etc.
+ *
+ *   2. TIF_NEED_RESCHED flag is checked on interrupt and userspace return
+ *      paths. For example, see arch/x86/entry_64.S.
+ *
+ *      To drive preemption between tasks, the scheduler sets the flag in timer
+ *      interrupt handler scheduler_tick().
+ *
+ *   3. Wakeups don't really cause entry into schedule(). They add a
+ *      task to the run-queue and that's it.
+ *
+ *      Now, if the new task added to the run-queue preempts the current
+ *      task, then the wakeup sets TIF_NEED_RESCHED and schedule() gets
+ *      called on the nearest possible occasion:
+ *
+ *       - If the kernel is preemptible (CONFIG_PREEMPTION=y):
+ *
+ *         - in syscall or exception context, at the next outmost
+ *           preempt_enable(). (this might be as soon as the wake_up()'s
+ *           spin_unlock()!)
+ *
+ *         - in IRQ context, return from interrupt-handler to
+ *           preemptible context
+ *
+ *       - If the kernel is not preemptible (CONFIG_PREEMPTION is not set)
+ *         then at the next:
+ *
+ *          - cond_resched() call
+ *          - explicit schedule() call
+ *          - return from syscall or exception to user-space
+ *          - return from interrupt-handler to user-space
+ *
+ * WARNING: must be called with preemption disabled!
+ */
+static void __sched notrace __schedule(bool preempt)
+```
+
 ## TODO
 https://phoenixnap.com/kb/create-a-sudo-user-on-debian : 首先搞清楚这种简单的文章
 
@@ -738,3 +1062,6 @@ https://phoenixnap.com/kb/create-a-sudo-user-on-debian : 首先搞清楚这种�
 [^2]: https://man7.org/linux/man-pages/man7/signal.7.html 
 [^3]: https://0xax.gitbooks.io/linux-insides/content/SysCall/linux-syscall-2.html
 [^4]: https://blog.packagecloud.io/eng/2016/04/05/the-definitive-guide-to-linux-system-calls/#64-bit-f
+[^5]: https://www.kernel.org/doc/html/latest/x86/kernel-stacks.html
+[^6]: https://stackoverflow.com/questions/61886139/why-thread-info-should-be-the-first-element-in-task-struct
+[^7]: Understanding Linux Kernel

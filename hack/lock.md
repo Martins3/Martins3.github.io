@@ -12,6 +12,8 @@ https://lwn.net/SubscriberLink/827180/a1c1305686bfea67/
 What is Rcu, Really[^1]:
 RCU ensures that reads are coherent by maintaining multiple versions of objects and ensuring that they are not freed up until all pre-existing read-side critical sections complete. 
 
+## SRCU
+e.g., kvm_mmu_notifier_invalidate_range_start
 
 ## futex
 基本介绍 [^2]
