@@ -61,7 +61,7 @@
 - [dmapool](#dmapool)
 - [mempool](#mempool)
 - [virtual machine](#virtual-machine)
-- [mmu notifier](#mmu-notifier)
+    - [mmu notifier](#mmu-notifier)
     - [userfault fd](#userfault-fd)
     - [balloon compaction](#balloon-compaction)
 - [hmm](#hmm)
@@ -1966,7 +1966,7 @@ The purpose of mempools is to help out in situations where a memory allocation m
 ## virtual machine
 https://lwn.net/Kernel/Index/#Memory_management-Virtualization
 
-## mmu notifier
+#### mmu notifier
 [^24] is worth reading !
 
 - [ ] how mmu notifier works ?
@@ -1980,7 +1980,27 @@ https://lwn.net/Kernel/Index/#Memory_management-Virtualization
 - [ ] mmu_interval_notifier is another 
 
 
+- [x] so why kvm need mmu notifier ?
 
+https://www.linux-kvm.org/images/3/33/KvmForum2008%24kdf2008_15.pdf
+
+Guest ram is mostly allocated by user process with `memalign()` and 
+kvm get physical memory with `get_user_pages`.
+
+> The 'MMU Notifier' functionality can be also used
+by other subsystems like GRU and XPMEM to
+export the user virtual address space of
+computational tasks to other nodes
+
+> This will also allow KVM guest physical ram itself
+to be exported to other nodes through GRU and
+XPMEM or any other RDMA engine
+
+- TODO really interesting RDMA and XPMEM
+
+- [ ] how linux kernel managed the kernel with lines ?
+
+- [ ] difference between mn_hlist_release and mn_itree_release
 
 
 #### userfault fd
@@ -2064,6 +2084,8 @@ static struct bio *do_mpage_readpage(struct mpage_readpage_args *args)
 
 1. 可以将 glibc 的直接替换为这些自定义的吗 ?
 2. 这些东西主要考虑的设计因素是什么
+
+- [ ] how memalign implemented ?
 
 #### jemalloc
 tls_cache 层次，是 per thread 的:

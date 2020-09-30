@@ -15,6 +15,8 @@ RCU ensures that reads are coherent by maintaining multiple versions of objects 
 ## SRCU
 e.g., kvm_mmu_notifier_invalidate_range_start
 
+sleepable rcu
+
 ## futex
 基本介绍 [^2]
 

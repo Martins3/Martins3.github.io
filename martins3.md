@@ -8,6 +8,16 @@
 - [ ] linux kernel lab 前面导读的部分也不错
 
 ## 计划
+I think tech is really stupid too, make a wiki is enough !
+https://github.com/zhangjaycee/real_tech
+
+
+With this repo, we can rewrite our llvm tutorials
+https://github.com/lijiansong/clang-llvm-tutorial/tree/master/live-variable-analysis
+
+
+
+
 https://github.com/MattPD/cpplinks/blob/master/assembly.x86.md : 强大的资源池
 
 虚拟机 可以作为一个项目，自已的编程语言也是
