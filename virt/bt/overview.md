@@ -298,6 +298,9 @@ pgroot 是 mmap 简单的创建一个 page, 是 GVA
 - unikernel 的核心目的是什么 ? 一个进程一个内核吗 ?
   - 如果这样，完全可以将一个 process 放在 dune 上运行
 
+- [ ] how huge page work with VM
+
+
 
 ## TODO
 1. 修复的方法:
@@ -313,4 +316,3 @@ https://gitlab.azmi.pl/azmi-open-source/linux-grsecurity/commit/4b1e54786e4862d3
 ## TODO
 - fork 可以让两个 thread 共享空间吗 ? 从 flags 上看是可以的
 - 使用 wedge 查看 主动注册 httpd handler 是如何使用的
-

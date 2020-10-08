@@ -404,7 +404,7 @@ Man 分析的很清楚[^2] :
 - [x] 当用户的 handler 执行完成之后，用户靠什么回到内核，此外，用户程序要是拒绝回到内核怎么办
   - [ ] 好吧，CNM, 居然在 x86/kernel/signal 中间
 
-
+- [ ] find the caller of `signal_pending` ?
 
 实际上的代码在 kernel/entry/
 irqentry_exit_to_user_mode 和 syscall_exit_to_user_mode
@@ -991,6 +991,8 @@ smp_call_function_many 之类的函数可以看看
 
 
 ## `__schedule`
+- [ ] `cond_resched()`
+
 ```c
 /*
  * __schedule() is the main scheduler function.

@@ -5,7 +5,7 @@
 - [introduction](#introduction)
 - [syscall](#syscall)
 - [page allocator](#page-allocator)
-    - [page ref](#page-ref)
+- [page ref](#page-ref)
 - [page fault](#page-fault)
 - [virtual memory](#virtual-memory)
     - [fork](#fork)
@@ -18,7 +18,10 @@
     - [process vm access](#process-vm-access)
 - [compaction](#compaction)
 - [hugetlb](#hugetlb)
-- [transparent hugepage](#transparent-hugepage)
+- [compound page](#compound-page)
+- [transparent huge page](#transparent-huge-page)
+    - [thp admin manual](#thp-admin-manual)
+    - [khugepaged](#khugepaged)
 - [page cache](#page-cache)
     - [page writeback](#page-writeback)
     - [watermark](#watermark)
@@ -32,6 +35,7 @@
 - [madvise && fadvise](#madvise-fadvise)
 - [highmem](#highmem)
 - [page reclaim](#page-reclaim)
+    - [kswapd](#kswapd)
     - [shrink slab](#shrink-slab)
     - [lru](#lru)
 - [memory consistency](#memory-consistency)
@@ -77,6 +81,10 @@
 - [malloc](#malloc)
     - [jemalloc](#jemalloc)
 - [profiler](#profiler)
+- [skbuff](#skbuff)
+- [struct page](#struct-page)
+- [hardware](#hardware)
+- [idel page](#idel-page)
 
 <!-- vim-markdown-toc -->
 
@@ -230,13 +238,16 @@ happy path : requeue
 // TODO free 的过程了解一下
 
 
-#### page ref
-// 如果没有想错的话，是存在两个
-// 如果一个 page 被映射之后，那么该 page
+## page ref
+- [x] `_refcount` 和 `_mapcount` 的关系是什么 ?
+
+[^27] : Situations where `_count` can exceed `_mapcount` include pages mapped for DMA and pages mapped into the kernel's address space with a function like get_user_pages().
+Locking a page into memory with mlock() will also increase `_count`. The relative value of these two counters is important; if `_count` equals `_mapcount`,
+the page can be reclaimed by locating and removing all of the page table entries. But if `_count` is greater than `_mapcount`, the page is "pinned" and cannot be reclaimed until the extra references are removed.
+
+- [ ] so every time, we have to increase `_count` and `_mapcount` syncronizely ? That's ugly, there are something uncovered yet!
+
 1. page_ref_sub 调查一下，为什么 swap 会使用这个机制
-4. `_refcount` 和 `_mapcount` 的关系是什么 ?
-    1. 是不是 只要被 _refcount 就一定 _mapcount ?
-    2. 还是两者各自表示的内容不同 ?
 
 ```c
 /*
@@ -270,6 +281,20 @@ static inline int put_page_testzero(struct page *page)
 static inline int get_page_unless_zero(struct page *page)
 {
 	return page_ref_add_unless(page, 1, 0);
+}
+```
+
+- [ ] understand this function and it's reference
+```c
+static bool is_refcount_suitable(struct page *page)
+{
+	int expected_refcount;
+
+	expected_refcount = total_mapcount(page);
+	if (PageSwapCache(page))
+		expected_refcount += compound_nr(page);
+
+	return page_count(page) == expected_refcount;
 }
 ```
 
@@ -573,6 +598,8 @@ guest 发送的时候首先会进入到 host 中间，然后调用 syscall.
 2. 什么时候进行 page table 的拷贝 ?
 
 #### page walk
+![](https://static.lwn.net/images/ns/kernel/four-level-pt.png)
+
 // 总结一下 pagewalk.c 中间的内容
 // mincore.c 基本是利用 pagewalk.c 实现的
 
@@ -592,8 +619,10 @@ https://stackoverflow.com/questions/8708463/difference-between-kernel-virtual-ad
 ## compaction
 https://linuxplumbersconf.org/event/2/contributions/65/attachments/15/171/slides-expanded.pdf
 
+ - [ ] https://blog.csdn.net/feelabclihu/article/details/107118409
 
-1. 请问 isolation 和 compaction 有关联吗 ? 为什么会存在 isolation.c 这个文件夹啊
+
+1. 请问 isolation 和 compaction 有关联吗 ? 为什么会存在 isolation.c 这个文件啊
 2. 无论是 page reclaim 还是 compaction 都是内存分配不足，需要采取的措施。非常怀疑，page compaction 和 page reclaim 的代码是对称的 ?
     1. 工作的范围 : zone
     2. 触发机制 : daemon + direct 触发
@@ -659,6 +688,11 @@ isolate_migratepages 和 isolate_freepages 存在什么区别 ? 很类似，但�
 // 可以解释 : 到底如何扫描 memblock ，从 memblock 中间找到 free page
 
 
+- [x] what's criteria to isolate page ?
+
+alloc_contig_range => `__alloc_contig_migrate_range` => isolate_migratepages_range => isolate_migratepages_block
+
+in function `isolate_migratepages_block()`, the answer hides.
 ## hugetlb
 1. 为了实现简单，那么 hugetlb 减少处理什么东西 ?
 
@@ -713,11 +747,42 @@ Further, there are important differences between shared and private mappings dep
 2. include/asm-generic/hugetlb.h : 如果架构含有关于 page table 的不同处理，
 那么就可以使用
 
-## transparent hugepage
+## compound page 
+- [An introduction to compound pages](https://lwn.net/Articles/619514/)
+> A compound page is simply a grouping of two or more physically contiguous pages into a unit that can, in many ways, be treated as a single, larger page. They are most commonly used to create huge pages, used within hugetlbfs or the transparent huge pages subsystem, *but they show up in other contexts as well*. *Compound pages can serve as anonymous memory or be used as buffers within the kernel*; *they cannot, however, appear in the page cache, which is only prepared to deal with singleton pages.*
+
+- [x] so why page cache is only prepared to deal with singleton pages ? I think it's rather reasonable to use huge page as backend for page cache.
+  - https://lwn.net/Articles/619738/ suggests page cache can use thp too.
+
+
+- [ ] find the use case the compound page is buffer within the kernel
+- [ ] 是不是 compound_head 出现的位置，就是和 huge memory 相关的 ? 
+
+> Allocating a compound page is a matter of calling a normal memory allocation function like alloc_pages() with the `__GFP_COMP` allocation flag set and an order of at least one
+> The difference is that creating a compound page involves the creation of a fair amount of metadata; much of the time, **that metadata is unneeded so the expense of creating it can be avoided.**
+
+> Let's start with the page flags. The first (normal) page in a compound page is called the "head page"; it has the PG_head flag set. All other pages are "tail pages"; they are marked with PG_tail. At least, that is the case on systems where page flags are not in short supply — 64-bit systems, in other words. On 32-bit systems, there are no page flags to spare, so a different scheme is used; all pages in a compound page have the PG_compound flag set, and the tail pages have PG_reclaim set as well. The PG_reclaim bit is normally used by the page cache code, but, since compound pages cannot be represented in the page cache, that flag can be reused here.
+>
+> Head and tail pages can be distinguished, should the need arise, with PageHead() and PageTail().
+
+- [ ] verify the complications in 32bit in PageHead() and PageTail()
+
+> Every tail page has a pointer to the head page stored in the `first_page` field of struct page. This field occupies the same storage as the private field, the spinlock used when the page holds page table entries, or the slab_cache pointer used when the page is owned by a slab allocator. The `compound_head()` helper function can be used to find the head page associated with any tail page.
+
+- [ ] 了解一下函数 : PageTransHuge，以及附近的定义，似乎 hugepagefs 和 transparent hugepage 谁采用使用 compound_head 的
+
+- [Minimizing the use of tail pages](https://lwn.net/Articles/787388/)
+
+- [] read the article
+
+## transparent huge page
+- [ ] PageDoubleMap
+- [ ] THP only support PMD ? so can it support more than 2M space (21bit) ?
+
+- [ ] https://gist.github.com/shino/5d9aac68e7ebf03d4962a4c07c503f7d, check references in it
+
+
 transparent hugepage 和 swap 是相关的
-
-[似乎 compound 的内容与此无关](https://lwn.net/Kernel/Index/#Memory_management-Compound_pages)
-
 使用 transparent hugepage 的原因:
 1. TLB 的覆盖更大，可以降低TLB miss rate
 2. page fault 的次数更少，可以忽略不计
@@ -728,22 +793,33 @@ transparent hugepage 和 swap 是相关的
 3. split 和 merge
 
 
+#### thp admin manual
 [用户手册](https://www.kernel.org/doc/html/latest/admin-guide/mm/transhuge.html)
 
 The THP behaviour is controlled via sysfs interface and using madvise(2) and prctl(2) system calls.
 
+- [ ] how madvise and prctl control the THP
+
 Currently THP **only works for** anonymous memory mappings and tmpfs/shmem. But in the future it can expand to other filesystems.
 
-Transparent Hugepage Support maximizes the usefulness of free memory if compared to the reservation approach of hugetlbfs by allowing all unused memory to be used as cache or other movable (or even unmovable entities). It doesn’t require reservation to prevent hugepage allocation failures to be noticeable from userland. It allows paging and all other advanced VM features to be available on the hugepages. It requires no modifications for applications to take advantage of it.
-THP 相对于 hugetlbfs 的优势:
-1. hugetlbfs 需要使用 reservation机制 来防止分配 hugepage 失败被用户层发现
-2. 在 hugepage 上可以使用 paging 等 advanced VM feaures. ( Paging is a mechanism that translates a linear memory address to a physical address. 不知道 hugepage 上使用或者不使用 paging 都是什么效果)
-3. 让所有的 unused memory 作为 cache 或者 movable 以及 unmovable 。。
+- [ ] so page cache can't work with THP ?
 
-从用户层的角度分析 :
-1. /sys/kernel/mm/transparent_hugepage
-2. /proc/vmstat 中间的内容
+THP 相对于 hugetlbfs 的优势:
+- Transparent Hugepage Support maximizes the usefulness of free memory if compared to the reservation approach of hugetlbfs by allowing all unused memory to be used as cache or other movable (or even unmovable entities).
+- It doesn’t require reservation to prevent hugepage allocation failures to be noticeable from userland. *It allows paging and all other advanced VM features to be available on the hugepages.*
+- It requires no modifications for applications to take advantage of it.
+
+- [ ] 在 hugepage 上可以使用 paging 等 advanced VM feaures. ( Paging is a mechanism that translates a linear memory address to a physical address. 不知道 hugepage 上使用或者不使用 paging 都是什么效果)
+
+interface in sysfs :
+1. /sys/kernel/mm/transparent_hugepage : always madvise never
+2. /sys/kernel/mm/transparent_hugepage/defrag : always defer defer + madvise  madvise never
 3. You can control hugepage allocation policy in tmpfs with mount option huge=. It can have following values: always never advise deny force
+
+
+- [ ] THP has to defrag pages, so check the compaction.c and find out how thp with it !
+  - [ ] how defrag wake kcompactd ?
+
 
 内核态分析:
 透明的性质在于 `__handle_mm_fault` 中间就开始检查是否可以
@@ -763,49 +839,33 @@ THP 相对于 hugetlbfs 的优势:
 不关键问题 A : vm_operations_struct::huge_fault 和 DAX 的关系不一般
 不关键问题 A2 : vm_operations_struct 几乎没有一个可以理解的
 
-
 khugepaged.c 中间的 hugepage 守护进程的工作是什么 ?
 
+[Transparent huge page reference counting](https://lwn.net/Articles/619738/)
+
+> In particular, he has eliminated the hard separation between normal and huge pages in the system. In current kernels, a specific 4KB page can be treated as an individual page, or it can be part of a huge page, but not both. If a huge page must be split into individual pages, it is split completely for all users, the compound page structure is torn down, and the huge page no longer exists. The fundamental change in Kirill's patch set is to allow a huge page to be split in one process's address space, while remaining a huge page in any other address space where it is found.
+
+- [ ] what's the flag in PMD page table entry used to suggest the page is huge page ? verify it in intel manual.
+
+- [ ] page_trans_huge_mapcount
+- [ ] total_mapcount
 
 
-细节问题 C :  是不是 compound_head 出现的位置，就是和 huge memory 相关的 ?
-细节问题 D : 了解一下函数 : PageTransHuge，以及附近的定义，似乎 hugepagefs 和 transparent hugepage 谁采用使用 compound_head 的
+[Transparent huge pages for filesystems](https://lwn.net/Articles/789159/)
 
-```c
-static inline struct page *compound_head(struct page *page)
-{
-	unsigned long head = READ_ONCE(page->compound_head);
+> It is using the [Binary Optimization and Layout Tool (BOLT)](https://github.com/facebookincubator/BOLT) to profile its code in order to identify the hot functions. Those functions are collected up into an 8MB region in the generated executable.
 
-	if (unlikely(head & 1))
-		return (struct page *) (head - 1);
-	return page;
-}
 
-static __always_inline int PageCompound(struct page *page)
-{
-	return test_bit(PG_head, &page->flags) || PageTail(page);
-}
-```
+// ------------- split huge page
 
-在page 几个并行的struct 中间:
-```c
-		struct {	/* Tail pages of compound page */
-			unsigned long compound_head;	/* Bit zero is set */
+#### khugepaged
+- [ ] if `kcompactd` compact pages used by hugepage, and demote pages by `split_huge_page_to_list`, so what's the purpose of khugepaged ?
 
-			/* First tail page only */
-			unsigned char compound_dtor;
-			unsigned char compound_order;
-			atomic_t compound_mapcount;
-		};
-```
+1. /sys/kernel/mm/transparent_hugepage/enabled => start_stop_khugepaged => khugepaged => khugepaged_do_scan => khugepaged_scan_mm_slot => khugepaged_scan_pmd
+2. in `khugepaged_scan_pmd`, we will check pages one by one and call `collapse_huge_page` to merge base page to huge page
+3. `collapse_huge_page` = `khugepaged_alloc_page` + `__collapse_huge_page_copy` + many initialization for huge page + `__collapse_huge_page_isolate` (free base page)
 
-> https://lwn.net/Articles/619333/
-
-a call to PageCompound() will return a true value if the passed-in page is a compound page. Head and tail pages can be distinguished, should the need arise, with PageHead() and PageTail()
-
-Every tail page has a pointer to the head page stored in the `first_page` field of struct page.
-This field occupies the same storage as the private field,
-the spinlock used when the page holds page table entries, or the slab_cache pointer used when the page is owned by a slab allocator. The compound_head() helper function can be used to find the head page associated with any tail page.
+- [ ] it seems khugepaged scan pages and collapse it into huge pages, so what's difference between kcompactd
 
 ## page cache
 1. 对于数据库，为什么需要绕过 page cache
@@ -1216,6 +1276,168 @@ enum migratetype {
 // --------------- 需要处理的事情 -----------------
 
 
+- [ ] comments below in /home/maritns3/core/linux/include/linux/page-flags.h 
+  - [ ] PAGE_MAPPING_MOVABLE : I think all anon page is movable
+
+```c
+/*
+ * On an anonymous page mapped into a user virtual memory area,
+ * page->mapping points to its anon_vma, not to a struct address_space;
+ * with the PAGE_MAPPING_ANON bit set to distinguish it.  See rmap.h.
+ *
+ * On an anonymous page in a VM_MERGEABLE area, if CONFIG_KSM is enabled,
+ * the PAGE_MAPPING_MOVABLE bit may be set along with the PAGE_MAPPING_ANON
+ * bit; and then page->mapping points, not to an anon_vma, but to a private
+ * structure which KSM associates with that merged page.  See ksm.h.
+ *
+ * PAGE_MAPPING_KSM without PAGE_MAPPING_ANON is used for non-lru movable
+ * page and then page->mapping points a struct address_space.
+ *
+ * Please note that, confusingly, "page_mapping" refers to the inode
+ * address_space which maps the page from disk; whereas "page_mapped"
+ * refers to user virtual address space into which the page is mapped.
+ */
+#define PAGE_MAPPING_ANON	0x1
+#define PAGE_MAPPING_MOVABLE	0x2
+#define PAGE_MAPPING_KSM	(PAGE_MAPPING_ANON | PAGE_MAPPING_MOVABLE)
+#define PAGE_MAPPING_FLAGS	(PAGE_MAPPING_ANON | PAGE_MAPPING_MOVABLE)
+```
+
+```diff
+ History:        #0
+ Commit:         bda807d4445414e8e77da704f116bb0880fe0c76
+ Author:         Minchan Kim <minchan@kernel.org>
+ Committer:      Linus Torvalds <torvalds@linux-foundation.org>
+ Author Date:    Wed 27 Jul 2016 06:23:05 AM CST
+ Committer Date: Wed 27 Jul 2016 07:19:19 AM CST
+
+ mm: migrate: support non-lru movable page migration
+
+ We have allowed migration for only LRU pages until now and it was enough
+ to make high-order pages.  But recently, embedded system(e.g., webOS,
+ android) uses lots of non-movable pages(e.g., zram, GPU memory) so we
+ have seen several reports about troubles of small high-order allocation.
+ For fixing the problem, there were several efforts (e,g,.  enhance
+ compaction algorithm, SLUB fallback to 0-order page, reserved memory,
+ vmalloc and so on) but if there are lots of non-movable pages in system,
+ their solutions are void in the long run.
+
+ So, this patch is to support facility to change non-movable pages with
+ movable.  For the feature, this patch introduces functions related to
+ migration to address_space_operations as well as some page flags.
+
+ If a driver want to make own pages movable, it should define three
+ functions which are function pointers of struct
+ address_space_operations.
+
+ 1. bool (*isolate_page) (struct page *page, isolate_mode_t mode);
+
+ What VM expects on isolate_page function of driver is to return *true*
+ if driver isolates page successfully.  On returing true, VM marks the
+ page as PG_isolated so concurrent isolation in several CPUs skip the
+ page for isolation.  If a driver cannot isolate the page, it should
+ return *false*.
+
+ Once page is successfully isolated, VM uses page.lru fields so driver
+ shouldn't expect to preserve values in that fields.
+
+ 2. int (*migratepage) (struct address_space *mapping,
+ 		struct page *newpage, struct page *oldpage, enum migrate_mode);
+
+ After isolation, VM calls migratepage of driver with isolated page.  The
+ function of migratepage is to move content of the old page to new page
+ and set up fields of struct page newpage.  Keep in mind that you should
+ indicate to the VM the oldpage is no longer movable via
+ __ClearPageMovable() under page_lock if you migrated the oldpage
+ successfully and returns 0.  If driver cannot migrate the page at the
+ moment, driver can return -EAGAIN.  On -EAGAIN, VM will retry page
+ migration in a short time because VM interprets -EAGAIN as "temporal
+ migration failure".  On returning any error except -EAGAIN, VM will give
+ up the page migration without retrying in this time.
+
+ Driver shouldn't touch page.lru field VM using in the functions.
+
+ 3. void (*putback_page)(struct page *);
+
+ If migration fails on isolated page, VM should return the isolated page
+ to the driver so VM calls driver's putback_page with migration failed
+ page.  In this function, driver should put the isolated page back to the
+ own data structure.
+
+ 4. non-lru movable page flags
+
+ There are two page flags for supporting non-lru movable page.
+
+ * PG_movable
+
+ Driver should use the below function to make page movable under
+ page_lock.
+
+ 	void __SetPageMovable(struct page *page, struct address_space *mapping)
+
+ It needs argument of address_space for registering migration family
+ functions which will be called by VM.  Exactly speaking, PG_movable is
+ not a real flag of struct page.  Rather than, VM reuses page->mapping's
+ lower bits to represent it.
+
+ 	#define PAGE_MAPPING_MOVABLE 0x2
+ 	page->mapping = page->mapping | PAGE_MAPPING_MOVABLE;
+
+ so driver shouldn't access page->mapping directly.  Instead, driver
+ should use page_mapping which mask off the low two bits of page->mapping
+ so it can get right struct address_space.
+
+ For testing of non-lru movable page, VM supports __PageMovable function.
+ However, it doesn't guarantee to identify non-lru movable page because
+ page->mapping field is unified with other variables in struct page.  As
+ well, if driver releases the page after isolation by VM, page->mapping
+ doesn't have stable value although it has PAGE_MAPPING_MOVABLE (Look at
+ __ClearPageMovable).  But __PageMovable is cheap to catch whether page
+ is LRU or non-lru movable once the page has been isolated.  Because LRU
+ pages never can have PAGE_MAPPING_MOVABLE in page->mapping.  It is also
+ good for just peeking to test non-lru movable pages before more
+ expensive checking with lock_page in pfn scanning to select victim.
+
+ For guaranteeing non-lru movable page, VM provides PageMovable function.
+ Unlike __PageMovable, PageMovable functions validates page->mapping and
+ mapping->a_ops->isolate_page under lock_page.  The lock_page prevents
+ sudden destroying of page->mapping.
+
+ Driver using __SetPageMovable should clear the flag via
+ __ClearMovablePage under page_lock before the releasing the page.
+
+ * PG_isolated
+
+ To prevent concurrent isolation among several CPUs, VM marks isolated
+ page as PG_isolated under lock_page.  So if a CPU encounters PG_isolated
+ non-lru movable page, it can skip it.  Driver doesn't need to manipulate
+ the flag because VM will set/clear it automatically.  Keep in mind that
+ if driver sees PG_isolated page, it means the page have been isolated by
+ VM so it shouldn't touch page.lru field.  PG_isolated is alias with
+ PG_reclaim flag so driver shouldn't use the flag for own purpose.
+
+ [opensource.ganesh@gmail.com: mm/compaction: remove local variable is_lru]
+   Link: http://lkml.kernel.org/r/20160618014841.GA7422@leo-test
+ Link: http://lkml.kernel.org/r/1464736881-24886-3-git-send-email-minchan@kernel.org
+ Signed-off-by: Gioh Kim <gi-oh.kim@profitbricks.com>
+ Signed-off-by: Minchan Kim <minchan@kernel.org>
+ Signed-off-by: Ganesh Mahendran <opensource.ganesh@gmail.com>
+ Acked-by: Vlastimil Babka <vbabka@suse.cz>
+ Cc: Sergey Senozhatsky <sergey.senozhatsky@gmail.com>
+ Cc: Rik van Riel <riel@redhat.com>
+ Cc: Joonsoo Kim <iamjoonsoo.kim@lge.com>
+ Cc: Mel Gorman <mgorman@suse.de>
+ Cc: Hugh Dickins <hughd@google.com>
+ Cc: Rafael Aquini <aquini@redhat.com>
+ Cc: Jonathan Corbet <corbet@lwn.net>
+ Cc: John Einar Reitan <john.reitan@foss.arm.com>
+ Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+ Signed-off-by: Linus Torvalds <torvalds@linux-foundation.org>
+```
+
+
+
+
 ## numa
 1. 创建的内存最好是就是在附近 ：buddy 和 slub 分配器的策略，这些策略被整理成为 mempolicy.c
 2. 运行过程中间发生变化 : migrate.c
@@ -1401,12 +1623,20 @@ try_to_free_pages
 ```
 2. 还有第二个路径:
 
+- [ ] it seems second graph is called by kswapd ?
+
+
+#### kswapd
+- [^29] present a beautiful graph ![](https://oscimg.oschina.net/oscnet/33f9024d70cd92f9cc711df451500aa6047.jpg)
+
+- relation between `kswapd` and `kcompactd`: if kswapd free some pages, then we can wake it up and compact pages
+
 #### shrink slab
 1. 面试问题 : dcache 的需要 slab，slab 分配需要 page，那么 page cache, slab 和 dcache 的回收之间的关系是什么
    1. 思考 : slab 都是提供 kmalloc 的内容，凭什么，可以释放
    2. 或者本来，释放 slab 就不是特制一个例子，而是一个 shrinker 机制，专门用于释放内核的分配的数据
    3. 其他 page cache 以及用户页面就是我们熟悉的 lru 算法进行处理了
-    
+
 shrink 的接口和使用方法是什么 ?
 
 这是唯一的使用位置:
@@ -1438,6 +1668,14 @@ static unsigned long do_shrink_slab(struct shrink_control *shrinkctl,
  };
 ```
 > 从其中跟踪的代码看，似乎只有inode 的管理在使用lru_list
+
+- [ ] enum pageflags::PG_lru ? why is special ? why we need time for it ?
+  - [ ] check `SetPageLRU`
+
+move_pages_to_lru
+
+- [ ] page_evictable() and PageMovable()
+  - [ ] I think, if a page can be evicted to swap, so it can movable too.
 
 ## memory consistency
 2. barrier() Documentation/memory-barriers.txt : 彻底理解让人窒息的 memory-barriers.txt
@@ -1522,11 +1760,23 @@ static bool shmem_should_replace_page(struct page *page, gfp_t gfp)
 ## slub
 // 整体是清晰的，但是lockfree 是怎么回事 ?
 
-认真重读一下: 
-https://ruffell.nz/programming/writeups/2019/02/15/looking-at-kmalloc-and-the-slub-memory-allocator.html
-http://www.wowotech.net/memory_management/426.html
+认真重读一下:
+- https://ruffell.nz/programming/writeups/2019/02/15/looking-at-kmalloc-and-the-slub-memory-allocator.html
+- http://www.wowotech.net/memory_management/426.html
 
 ## shmem
+- [ ] [^28] : read it carefully and throughly
+
+- [x] why linux need shmem ?
+
+[^28]
+When pages within a VMA are backed by a file on disk, the interface used is straight-forward. To read a page during a page fault, the required nopage() function is found `vm_area_struct->vm_ops`. To write a page to backing storage, the appropriate `writepage()` function is found in the `address_space_operations` via `inode->i_mapping→a_ops` or alternatively via `page->mapping->a_ops`. When normal file operations are taking place such as mmap(), read() and write(), the struct file_operations with the appropriate functions is found via `inode->i_fop` and so on. These relationships were illustrated in Figure 4.2.
+
+This is a very clean interface that is conceptually easy to understand but it does not help anonymous pages as there is no file backing. To keep this nice interface, Linux creates an artifical file-backing for anonymous pages using a RAM-based filesystem where each VMA is backed by a “file” in this filesystem.
+
+
+huxueshi : I think with this correct and clean perspective, we can shmem easily and use it correct misunderstandings of other parts.
+
 总结:
 1. 为了 tmpfs 建立的配套机制
 2. fallocate : hole
@@ -2003,6 +2253,18 @@ XPMEM or any other RDMA engine
 - [ ] difference between mn_hlist_release and mn_itree_release
 
 
+------------  function calling chain --------------------------
+
+- [ ] *unless we can understand hugetlb and thp, we can't understand mmu_notifier*
+
+```
+mmu_notifier_invalidate_range_start
+  --> __mmu_notifier_invalidate_range_start
+    --> mn_itree_invalidate
+    --> mn_hlist_invalidate_range_start
+```
+
+
 #### userfault fd
 https://lwn.net/Articles/718198/
 
@@ -2015,12 +2277,13 @@ Provide infrastructure and helpers to integrate non-conventional memory (device 
 HMM also provides optional helpers for SVM (Share Virtual Memory) [^19]
 
 ## CMA
-
 Movable pages are, primarily, page cache or anonymous memory pages; they are accessed via page tables and the page cache radix tree. The contents of such pages can be moved somewhere else as long as the tables and tree are updated accordingly. Reclaimable pages, instead, might possibly be given back to the kernel on demand; they hold data structures like the inode cache. Unmovable pages are usually those for which the kernel has direct pointers; memory obtained from kmalloc() cannot normally be moved without breaking things, for example.
 
 In other words, memory which is marked for use by CMA remains available to the rest of the system with the one restriction that it can only contain movable pages. [^21]
 
 To keep pages with the same migrate type together, the buddy allocator groups pages into "pageblocks," each having a migrate type assigned to it. The allocator then tries to allocate pages from pageblocks with a type corresponding to the request. If that's not possible, however, it will take pages from different pageblocks and may even change a pageblock's migrate type. This means that a non-movable page can be allocated from a MIGRATE_MOVABLE pageblock which can also result in that pageblock changing its migrate type. This is undesirable for CMA, so it introduces a MIGRATE_CMA type which has one important property: only movable pages can be allocated from a MIGRATE_CMA pageblock. [^12]
+
+- [ ] track function : `alloc_contig_pages`
 
 ## zsmalloc
 slub 分配器处理size > page_size / 2 会浪费非常多的内容，zsmalloc 就是为了解决这个问题 [^20]
@@ -2132,6 +2395,24 @@ extend 主要完成从 kernel 获取的内存地址页的管理，由 per arena 
 1. https://github.com/KDE/heaptrack
 2. https://github.com/koute/memory-profiler
 
+## skbuff
+
+## struct page
+- [ ] TODO read it and write a article about it : https://lwn.net/Articles/565097/
+
+## hardware
+https://people.freebsd.org/~lstewart/articles/cpumemory.pdf
+
+1. RAM hardware design (speed and parallelism).
+2. Memory controller designs.
+3. CPU caches.
+4. Direct memory access (DMA) for devices
+
+- [ ] 内存控制器的代码在哪里可以找到， 如何实现查找对应
+
+## idel page
+
+
 [^1]: [lwn : Huge pages part 1 (Introduction)](https://lwn.net/Articles/374424/)
 [^2]: [lwn : An end to high memory?](https://lwn.net/Articles/813201/)
 [^3]: [lwn#memory management](https://lwn.net/Kernel/Index/#Memory_management)
@@ -2158,4 +2439,6 @@ extend 主要完成从 kernel 获取的内存地址页的管理，由 per arena 
 [^25]: [kernelnewbies : ioremap vs mmap](https://lists.kernelnewbies.org/pipermail/kernelnewbies/2016-September/016814.html)
 [^26]: [lwn: ioremap and memremap](https://lwn.net/Articles/653585/)
 
-[^26]:Text
+[^27]: https://lwn.net/Articles/619738/
+[^28]: https://www.kernel.org/doc/gorman/html/understand/understand015.html
+[^29]: https://my.oschina.net/u/3857782/blog/1854548

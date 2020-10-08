@@ -579,8 +579,6 @@ it couldn't deal well with large holes in the physical address space.
 #### (rmap) init_swap_address_space
 曾经以为每一个文件才需要，现在居然swap 居然，需要，感觉逻辑上很怪异!
 
-#### (tlb) hugetlb和tranparent hugetlb
-
 #### (fs) debugfs 到底是做什么的 ?
 
 #### (lock) might_sleep 作用是什么，谁会使用 ?
