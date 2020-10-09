@@ -7,13 +7,12 @@
 - [page allocator](#page-allocator)
 - [page ref](#page-ref)
 - [page fault](#page-fault)
+    - [cow](#cow)
 - [virtual memory](#virtual-memory)
     - [fork](#fork)
-    - [vma](#vma)
     - [paging](#paging)
     - [copy_from_user](#copy_from_user)
     - [mmap](#mmap)
-    - [cow](#cow)
     - [page walk](#page-walk)
     - [process vm access](#process-vm-access)
 - [compaction](#compaction)
@@ -53,6 +52,7 @@
 - [out of memory killer](#out-of-memory-killer)
 - [vmstate](#vmstate)
 - [mlock](#mlock)
+- [lock](#lock)
 - [hot plug](#hot-plug)
 - [ioremap](#ioremap)
 - [mremap](#mremap)
@@ -85,6 +85,9 @@
 - [struct page](#struct-page)
 - [hardware](#hardware)
 - [idel page](#idel-page)
+- [mprotect](#mprotect)
+- [vma](#vma)
+    - [vm_ops](#vm_ops)
 
 <!-- vim-markdown-toc -->
 
@@ -309,6 +312,46 @@ handle_pte_fault 的调用路径图:
     2. @todo 由于 cow 机制的存在, 岂不是需要将所有的 pte 全部标记一遍，找到证据!
 4. do_wp_page
 
+#### cow
+- [ ] 如果可以理解 dirty cow，应该 COW 就没有问题吧 https://dirtycow.ninja/
+- [ ] 理解一下文件系统的 cow 的实现e.g., btrfs
+
+- [ ] check the code related with copying page table when cow
+- 1. do_wp_page 和 do_cow_page 是什么关系 ?
+    1. do_cow_page : 和 mmap 的第一次创建有关系
+2. 什么时候进行 page table 的拷贝 ?
+
+- [ ] do_swap_page is used for read page from anonymous vma, check it's usage
+
+```
+handle_pte_fault ==>
+                    ==> do_wp_page ==> wp_page_copy
+do_swap_page     ==>
+```
+
+- [ ] do_wp_page
+  - [ ] why we should check `PageAnon(vmf->page)` especially
+  - [ ] `return VM_FAULT_WRITE;` check why it need return value
+  - [ ] `(unlikely((vma->vm_flags & (VM_WRITE|VM_SHARED)) == (VM_WRITE|VM_SHARED))` if a write protection fault can be triggered on the writable page.
+
+
+
+- [x] why do_swap_page called do_wp_page ?
+  - at first glance, it's unreasonable, but what if a shared page is swapped out and a process it's trying to write to it.
+```c
+vm_fault_t do_swap_page(struct vm_fault *vmf){
+// ...
+	if (vmf->flags & FAULT_FLAG_WRITE) {
+		ret |= do_wp_page(vmf);
+		if (ret & VM_FAULT_ERROR)
+			ret &= VM_FAULT_ERROR;
+		goto out;
+	}
+// ...
+}
+```
+
+
 ## virtual memory
 1. 实现地址空间的隔离是虚拟内存的目的，但是，关键位置在于如何实现在隔离的基础上共享和通信。
   1. 实现隔离的方法: page walk
@@ -369,22 +412,6 @@ x86_64 规定了虚拟地址空间的layout[^5]
 到底内存中间如何控制其中的
 
 
-#### vma
-1. 内核地址空间存在 vma 吗 ? TODO
-  - 应该是不存在的，不然，该 vma 放到哪里呀 ? 挂到各种用户的 mm_struct 上吗 ?
-
-
-了解一下 vmacache.c 中间的内容
-
-virtual memory area : 内核管理进程的最小单位。
-
-和其他版块的联系:
-1. rmap
-
-
-细节问题的解释:
-1. vma 的 vm_flags 是做什么的
-2. mprotect
 
 
 #### paging
@@ -512,11 +539,11 @@ https://stackoverflow.com/questions/8265657/how-does-copy-from-user-from-the-lin
 
 ```c
 ssize_t cdev_fops_write(struct file *flip, const char __user *ubuf,
-                        size_t count, loff_t *f_pos) 
-{     
+                        size_t count, loff_t *f_pos)
+{
     unsigned int *kbuf;
     copy_from_user(kbuf, ubuf, count);
-    printk(KERN_INFO "Data: %d",*kbuf); 
+    printk(KERN_INFO "Data: %d",*kbuf);
 }
 ```
 ubuf 用户提供的指针，在执行该函数的时候，当前的进程地址空间就是该用户的，所以使用 ubuf 并不需要什么奇怪的装换。
@@ -586,16 +613,6 @@ guest 发送的时候首先会进入到 host 中间，然后调用 syscall.
 
 - [ ] 调查一下 mmap 如何返回用户地址的
 
-#### cow
-// TODO
-1. 如果可以理解 dirty cow，应该 COW 就没有问题吧 https://dirtycow.ninja/
-2. cow 是如何实现 page table 的拷贝的 ？
-3. 理解一下文件系统的 cow 的实现
-
-
-1. do_wp_page 和 do_cow_page 是什么关系 ?
-    1. do_cow_page : 和 mmap 的第一次创建有关系
-2. 什么时候进行 page table 的拷贝 ?
 
 #### page walk
 ![](https://static.lwn.net/images/ns/kernel/four-level-pt.png)
@@ -809,17 +826,16 @@ THP 相对于 hugetlbfs 的优势:
 - It doesn’t require reservation to prevent hugepage allocation failures to be noticeable from userland. *It allows paging and all other advanced VM features to be available on the hugepages.*
 - It requires no modifications for applications to take advantage of it.
 
-- [ ] 在 hugepage 上可以使用 paging 等 advanced VM feaures. ( Paging is a mechanism that translates a linear memory address to a physical address. 不知道 hugepage 上使用或者不使用 paging 都是什么效果)
+- [x] 在 hugepage 上可以使用 paging 等 advanced VM feaures. ( Paging is a mechanism that translates a linear memory address to a physical address.)
+    - [x] paging sometimes meaning page fault
 
 interface in sysfs :
 1. /sys/kernel/mm/transparent_hugepage : always madvise never
 2. /sys/kernel/mm/transparent_hugepage/defrag : always defer defer + madvise  madvise never
 3. You can control hugepage allocation policy in tmpfs with mount option huge=. It can have following values: always never advise deny force
 
-
 - [ ] THP has to defrag pages, so check the compaction.c and find out how thp with it !
   - [ ] how defrag wake kcompactd ?
-
 
 内核态分析:
 透明的性质在于 `__handle_mm_fault` 中间就开始检查是否可以
@@ -856,7 +872,10 @@ khugepaged.c 中间的 hugepage 守护进程的工作是什么 ?
 > It is using the [Binary Optimization and Layout Tool (BOLT)](https://github.com/facebookincubator/BOLT) to profile its code in order to identify the hot functions. Those functions are collected up into an 8MB region in the generated executable.
 
 
-// ------------- split huge page
+// ------------- split huge page ---------------- begin
+
+// ------------- split huge page ---------------- end
+
 
 #### khugepaged
 - [ ] if `kcompactd` compact pages used by hugepage, and demote pages by `split_huge_page_to_list`, so what's the purpose of khugepaged ?
@@ -1478,7 +1497,10 @@ struct page * alloc_pages_vma(gfp_t gfp, int order, struct vm_area_struct *vma, 
 1. 为什么 hugepage 会更加麻烦 ?
 
 
-http://martins3.gitee.io/dirtycow
+
+
+
+- rebuild it http://martins3.gitee.io/dirtycow and add it to Notes.wiki
 
 
 内核文档[^8]主要分析下面三个接口:
@@ -1516,7 +1538,7 @@ Part of the problem comes down to the fact that get_user_pages() does not perfor
   #if defined(CONFIG_FS_DAX) || defined (CONFIG_CMA) ，DAX 和 CMA 为什么可以影响
 
 
-- [ ] 猜测 gup.c 的主要问题是处理各种 lock 
+- [ ] 猜测 gup.c 的主要问题是处理各种 lock
   - [ ] 处理 hugepage 的位置
   - [x] 实际上做事的位置在于 `_get_user_pages`
 
@@ -1524,7 +1546,7 @@ Part of the problem comes down to the fact that get_user_pages() does not perfor
 `_get_user_pages` 分析:
 1. 确定 vma
 2. follow_page_mask : 依次进行 page walk，直到找到该 page 或者失败
-    - 如果失败，faultin_page 
+    - 如果失败，faultin_page
     - 将获取的 page 放到参数 : pages 中间
 
 - [x] 并没有找到 将 user page pin 的代码位置，*猜测*防止内核将 page 换出，只是需要将 ref + 1 即可
@@ -2127,6 +2149,9 @@ mlock 施加影响的位置:
 1. page reclaim 和 swap 模块
 2. mlock 可以施加于 hugemem 吗 ?
 
+## lock
+- [ ] mm_take_all_locks
+
 ## hot plug
 
 ## ioremap
@@ -2227,14 +2252,14 @@ https://lwn.net/Kernel/Index/#Memory_management-Virtualization
 - [ ] mmu_notifier.rst
 
 
-- [ ] mmu_interval_notifier is another 
+- [ ] mmu_interval_notifier is another
 
 
 - [x] so why kvm need mmu notifier ?
 
-https://www.linux-kvm.org/images/3/33/KvmForum2008%24kdf2008_15.pdf
+[Integrating KVM with the Linux Memory Management](https://www.linux-kvm.org/images/3/33/KvmForum2008%24kdf2008_15.pdf)
 
-Guest ram is mostly allocated by user process with `memalign()` and 
+Guest ram is mostly allocated by user process with `memalign()` and
 kvm get physical memory with `get_user_pages`.
 
 > The 'MMU Notifier' functionality can be also used
@@ -2252,8 +2277,14 @@ XPMEM or any other RDMA engine
 
 - [ ] difference between mn_hlist_release and mn_itree_release
 
+> - The KVM page fault is the one that instantiates the shadow pagetables
+> - Shadow pagetables works similarly to a TLB
+> - They translate a virtual (or physical with EPT/NPT) guest address to a physical host address
+> - They can be discarded at any time and they will be recreated later as new KVM page fault triggers, just like the primary CPU TLB can be flushed at any time and the CPU will refill it from the ptes
+> - The sptes are recreated by the KVM page fault by calling get_user_pages (i.e. looking at the Linux ptes) to translate a guest physical address (the malloced region) to a host physical address
 
-------------  function calling chain --------------------------
+
+------------  function calling chain -------------------------- begin ---
 
 - [ ] *unless we can understand hugetlb and thp, we can't understand mmu_notifier*
 
@@ -2261,9 +2292,101 @@ XPMEM or any other RDMA engine
 mmu_notifier_invalidate_range_start
   --> __mmu_notifier_invalidate_range_start
     --> mn_itree_invalidate
-    --> mn_hlist_invalidate_range_start
+    --> mn_hlist_invalidate_range_start : call list one by one
 ```
 
+```
+mmu_notifier_invalidate_range_end
+  --> __mmu_notifier_invalidate_range_end
+    --> mn_itree_inv_end
+    --> mn_hlist_invalidate_end
+```
+
+```
+__mmu_notifier_register :
+1. if mm->notifier_subscriptions is NULL, alloc and init one for it
+2. is parameter subscription is not NULL, add it to mm->notifier_subscriptions list, mm->notifier_subscriptions->has_itree = true; otherwise
+	mm_drop_all_locks(mm);
+```
+------------  function calling chain -------------------------- begin ---
+
+
+
+------------ critical struct -------------------------- begin ---
+```c
+/*
+ * The notifier chains are protected by mmap_lock and/or the reverse map
+ * semaphores. Notifier chains are only changed when all reverse maps and
+ * the mmap_lock locks are taken.
+ *
+ * Therefore notifier chains can only be traversed when either
+ *
+ * 1. mmap_lock is held.
+ * 2. One of the reverse map locks is held (i_mmap_rwsem or anon_vma->rwsem).
+ * 3. No other concurrent thread can access the list (release)
+ */
+struct mmu_notifier {
+	struct hlist_node hlist;
+	const struct mmu_notifier_ops *ops;
+	struct mm_struct *mm;
+	struct rcu_head rcu;
+	unsigned int users;
+};
+
+/**
+ * struct mmu_interval_notifier_ops
+ * @invalidate: Upon return the caller must stop using any SPTEs within this
+ *              range. This function can sleep. Return false only if sleeping
+ *              was required but mmu_notifier_range_blockable(range) is false.
+ */
+struct mmu_interval_notifier_ops {
+	bool (*invalidate)(struct mmu_interval_notifier *interval_sub,
+			   const struct mmu_notifier_range *range,
+			   unsigned long cur_seq);
+};
+
+struct mmu_interval_notifier {
+	struct interval_tree_node interval_tree;
+	const struct mmu_interval_notifier_ops *ops;
+	struct mm_struct *mm;
+	struct hlist_node deferred_item;
+	unsigned long invalidate_seq;
+};
+
+
+struct mmu_notifier_range {
+	struct vm_area_struct *vma;
+	struct mm_struct *mm;
+	unsigned long start;
+	unsigned long end;
+	unsigned flags;
+	enum mmu_notifier_event event;
+	void *migrate_pgmap_owner;
+};
+
+/*
+ * The mmu_notifier_subscriptions structure is allocated and installed in
+ * mm->notifier_subscriptions inside the mm_take_all_locks() protected
+ * critical section and it's released only when mm_count reaches zero
+ * in mmdrop().
+ */
+struct mmu_notifier_subscriptions {
+	/* all mmu notifiers registered in this mm are queued in this list */
+	struct hlist_head list;
+	bool has_itree;
+	/* to serialize the list modifications and hlist_unhashed */
+	spinlock_t lock;
+	unsigned long invalidate_seq;
+	unsigned long active_invalidate_ranges;
+	struct rb_root_cached itree;
+	wait_queue_head_t wq;
+	struct hlist_head deferred_list;
+};
+```
+
+- `mmu_notifier` and `mmu_interval_notifier` are chained into `mmu_notifier_subscriptions`
+- `mmu_notifier_range` is interface for memory management part
+------------ critical struct -------------------------- end ---
 
 #### userfault fd
 https://lwn.net/Articles/718198/
@@ -2412,6 +2535,40 @@ https://people.freebsd.org/~lstewart/articles/cpumemory.pdf
 
 ## idel page
 
+
+## mprotect
+[changing memory protection](https://perception-point.io/changing-memory-protection-in-an-arbitrary-process/)
+
+> - The `vm_area_struct` contains the field `vm_flags` which represents the protection flags of the memory region in an architecture-independent manner, and `vm_page_prot` which represents it in an architecture-dependent manner.
+
+> After some reading and digging into the kernel code, we detected the most essential work needed to really change the protection of a memory region:
+> - Change the field `vm_flags` to the desired protection.
+> - Call the function `vma_set_page_prot` to update the field vm_page_prot according to the vm_flags field.
+> - Call the function `change_protection` to actually update the protection bits in the page table.
+
+check the code in `mprotect.c:mprotect_fixup`, above claim can be verified
+
+- except what three steps meantions above, mprotect also splitting and joining memory regions by their protection flags
+
+## vma
+1. 内核地址空间存在 vma 吗 ? TODO
+  - 应该是不存在的，不然，该 vma 放到哪里呀 ? 挂到各种用户的 mm_struct 上吗 ?
+
+
+了解一下 vmacache.c 中间的内容
+
+virtual memory area : 内核管理进程的最小单位。
+
+和其他版块的联系:
+1. rmap
+
+
+细节问题的解释:
+- [ ] vma 的 vm_flags 是做什么的
+2. mprotect
+
+#### vm_ops
+- [ ] `vm_ops->page_mkwrite`
 
 [^1]: [lwn : Huge pages part 1 (Introduction)](https://lwn.net/Articles/374424/)
 [^2]: [lwn : An end to high memory?](https://lwn.net/Articles/813201/)

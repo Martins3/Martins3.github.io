@@ -1,4 +1,7 @@
-# 分析一下
+# kvm
+- [ ] put anything understand ./virt here
+
+## 分析一下
 https://www.owalle.com/2019/02/20/kvm-src-analysis
 
 循环依赖 ?
@@ -1762,11 +1765,12 @@ returns;
 
 ## mmu_notifier
 
-- [ ] mmu_notifier 机制的原理是什么
+- [x] mmu_notifier 机制的原理是什么
 - [ ] mmu_notifier 和 gfn_track 存在什么关联吗 ?
 
 - [ ] 检测 kvm_page_track_notifier_node:node 的使用位置
 - [ ] 似乎多个 kvm_page_track_notifier_node 可以挂到一个 kvm_page_track_notifier_head 上
+
 
 ```c
 struct kvm_page_track_notifier_node {
@@ -1797,11 +1801,11 @@ struct kvm_page_track_notifier_node {
 };
 ```
 
+- [ ] do shadow page table and ept have a different perspective with mmu notifier ?
+- [x] what if guest physical memory is swapped out ?
+    - that's why mmu notifier make sense, if guest physical memory is swapped out, mmu notifier will tell kvm to invalid pages and spte in it.
+
 #### track_write
-
-
-
-
 1. 注册函数
 
 kvm_mmu_pte_write : 

@@ -2,8 +2,9 @@
 
 <!-- vim-markdown-toc GitLab -->
 
-- [动机](#动机)
-- [状态](#状态)
+- [Why](#why)
+- [Status](#status)
+- [Todo](#todo)
 - [License](#license)
     - [License for code](#license-for-code)
     - [License for Documentation](#license-for-documentation)
@@ -11,24 +12,32 @@
 <!-- vim-markdown-toc -->
 
 
-## 动机
+## Why
 1. linux 内核文档内容陈旧，残缺不全，对于新人非常不友好
 2. 没有配套的代码，学习过程将会非常无聊，并且理解会出现偏差。
 
-## 状态
+## Status
+🚧 🚧 🚧 🚧 🚧 🚧 
+| module  | process rate | TODO                                           |
+|---------|--------------|------------------------------------------------|
+| memory  | 70           |                                                |
+| fs      | 60           | mount's new interface                          |
+| process | 50           | scheduler                                      |
+| block   | 5            |                                                |
+| net     | 0            | read the book *linux kernel network internals* |
+| lock    | 2            |                                                |
 🚧 🚧 🚧 🚧 🚧 🚧 
 
-正在紧张制作中，如有问题，欢迎讨论
+## Todo
+- [ ] mmdrop()
+- [ ] mmgrab()
+- [ ] vm_normal_page()
+  - [ ] why some page can work without `struct page`
+  - [ ] check comments above it
+  - [ ] do_wp_page's reference
 
-🚧 🚧 🚧 🚧 🚧 🚧 
-| 模块    | 进度 | 待办                                |
-|---------|------|-------------------------------------|
-| memory  | 70   |                                     |
-| fs      | 60   | mount 的新 interface                |
-| process | 50   | 调度器                              |
-| block   | 5    |                                     |
-| 网络    | 0    | 看书 linux kernel network internals |
-| lock    | 2    |
+- [ ] https://www.kernel.org/doc/html/latest/core-api/mm-api.html# : check the doc
+
 
 ## License
 #### License for code
