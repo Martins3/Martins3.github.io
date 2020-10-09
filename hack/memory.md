@@ -88,6 +88,7 @@
 - [mprotect](#mprotect)
 - [vma](#vma)
     - [vm_ops](#vm_ops)
+    - [vm_flags](#vm_flags)
 
 <!-- vim-markdown-toc -->
 
@@ -312,6 +313,9 @@ handle_pte_fault 的调用路径图:
     2. @todo 由于 cow 机制的存在, 岂不是需要将所有的 pte 全部标记一遍，找到证据!
 4. do_wp_page
 
+
+- [ ] `enum vm_fault_reason` : check it's entry one by one
+
 #### cow
 - [ ] 如果可以理解 dirty cow，应该 COW 就没有问题吧 https://dirtycow.ninja/
 - [ ] 理解一下文件系统的 cow 的实现e.g., btrfs
@@ -351,6 +355,35 @@ vm_fault_t do_swap_page(struct vm_fault *vmf){
 }
 ```
 
+- [x] is_cow_mapping : if the page is shared in parent, it's meanless for child to cow it, just access it.
+```c
+static inline bool is_cow_mapping(vm_flags_t flags)
+{
+	return (flags & (VM_SHARED | VM_MAYWRITE)) == VM_MAYWRITE;
+}
+```
+- https://stackoverflow.com/questions/48241187/memory-region-flags-in-linux-why-both-vm-write-and-vm-maywrite-are-needed
+- https://stackoverflow.com/questions/13405453/shared-memory-pages-and-fork
+
+
+This is a interesting question, if we want to protect a page being written by cow, 
+- if the page is writable, so we should clear the writable flags of it ?
+- but if the page is not writable, so we should fail the cow page fault ?
+
+[内存在父子进程间的共享时间及范围](https://www.cnblogs.com/tsecer/p/10487840.html)
+
+```
+sys_fork--->>>>do_fork--->>>copy_process---->>>copy_mm---->>>dup_mm---->>>dup_mmap---->>>copy_page_range---->>>>copy_pud_range---->>>copy_pmd_range---->>>copy_pte_range
+---->>>copy_nonpresent_pte
+---->>>copy_present_pte
+    ---->>> copy_present_page
+```
+> mmap时它mmap的是私有的，这一点就导致is_cow_mapping中VM_SHARED是没有置位，因此函数返回值为true；对于代码段中的空间，它的VM_SHARED是满足的，所以函数返回false，进而导致父进程和子进程直接共享页面，不会设置COW属性。
+
+
+- [x] copy_nonpresent_pte : copy swap entry, migration entry and device entry
+- [x] copy_present_pte
+- [x] copy_present_page : really simple without dma
 
 ## virtual memory
 1. 实现地址空间的隔离是虚拟内存的目的，但是，关键位置在于如何实现在隔离的基础上共享和通信。
@@ -1005,6 +1038,11 @@ struct address_space_operations {
 	void (*swap_deactivate)(struct file *file);
 };
 ```
+
+- [ ] fgp_flags : just flags, it seems find a page in pagecache and swap cache is more tricky than expected
+  - [ ] find_get_page 
+  - [ ] pagecache_get_page
+
 #### page writeback
 1. fs-writeback.c 和 page-writeback 的关系是上下级的，但是实际上，不是，fs-writeback.c 只是为了实现整个 inode 写回，以及 metadata 的写回。
 2. page writeback 没有 flusher 机制，而是靠 flusher 机制维持生活
@@ -1497,11 +1535,10 @@ struct page * alloc_pages_vma(gfp_t gfp, int order, struct vm_area_struct *vma, 
 1. 为什么 hugepage 会更加麻烦 ?
 
 
-
-
+- [ ] comments in `@VM_FAULT_WRITE:		Special case for get_user_pages`
+  - [ ] check functin `do_wp_page`
 
 - rebuild it http://martins3.gitee.io/dirtycow and add it to Notes.wiki
-
 
 内核文档[^8]主要分析下面三个接口:
 ```c
@@ -2244,19 +2281,15 @@ https://lwn.net/Kernel/Index/#Memory_management-Virtualization
 #### mmu notifier
 [^24] is worth reading !
 
-- [ ] how mmu notifier works ?
+- some notifier triggers:
+  - try_to_unmap_one
+  - ptep_clear_flush_notify
+
 - [ ] how kvm work with mmu notifier ?
 
-
-- [ ] comments
 - [ ] mmu_notifier.rst
 
-
-- [ ] mmu_interval_notifier is another
-
-
 - [x] so why kvm need mmu notifier ?
-
 [Integrating KVM with the Linux Memory Management](https://www.linux-kvm.org/images/3/33/KvmForum2008%24kdf2008_15.pdf)
 
 Guest ram is mostly allocated by user process with `memalign()` and
@@ -2273,16 +2306,11 @@ XPMEM or any other RDMA engine
 
 - TODO really interesting RDMA and XPMEM
 
-- [ ] how linux kernel managed the kernel with lines ?
-
-- [ ] difference between mn_hlist_release and mn_itree_release
-
 > - The KVM page fault is the one that instantiates the shadow pagetables
 > - Shadow pagetables works similarly to a TLB
 > - They translate a virtual (or physical with EPT/NPT) guest address to a physical host address
 > - They can be discarded at any time and they will be recreated later as new KVM page fault triggers, just like the primary CPU TLB can be flushed at any time and the CPU will refill it from the ptes
 > - The sptes are recreated by the KVM page fault by calling get_user_pages (i.e. looking at the Linux ptes) to translate a guest physical address (the malloced region) to a host physical address
-
 
 ------------  function calling chain -------------------------- begin ---
 
@@ -2567,8 +2595,15 @@ virtual memory area : 内核管理进程的最小单位。
 - [ ] vma 的 vm_flags 是做什么的
 2. mprotect
 
+
 #### vm_ops
 - [ ] `vm_ops->page_mkwrite`
+
+#### vm_flags
+in fact, we have already understand most of them
+
+- VM_WIPEONFORK : used by madvise, wipe content when fork, check the function in `dup_mmap`, child process will copy_page_range without it
+
 
 [^1]: [lwn : Huge pages part 1 (Introduction)](https://lwn.net/Articles/374424/)
 [^2]: [lwn : An end to high memory?](https://lwn.net/Articles/813201/)
