@@ -14,6 +14,7 @@
     - [paging](#paging)
     - [copy_from_user](#copy_from_user)
     - [mmap](#mmap)
+    - [mmap layout](#mmap-layout)
     - [page walk](#page-walk)
     - [process vm access](#process-vm-access)
 - [compaction](#compaction)
@@ -649,6 +650,35 @@ guest 发送的时候首先会进入到 host 中间，然后调用 syscall.
 - [ ] 其实可以在进行 vmcall syscall 的时候，可以首先对于 GVA 到 GVA 之间装换
 
 - [ ] 调查一下 mmap 如何返回用户地址的
+
+#### mmap layout
+- [ ] `mm_struct::mmap_base`
+  - [ ] setup_new_exec()
+
+- [ ] `mm_struct::stack_start`
+
+```c
+    // --------- huxueshi : just statistics of memory size -------------------
+		unsigned long hiwater_rss; /* High-watermark of RSS usage */
+		unsigned long hiwater_vm;  /* High-water virtual memory usage */
+
+		unsigned long total_vm;	   /* Total pages mapped */
+		unsigned long locked_vm;   /* Pages that have PG_mlocked set */
+		atomic64_t    pinned_vm;   /* Refcount permanently increased */
+		unsigned long data_vm;	   /* VM_WRITE & ~VM_SHARED & ~VM_STACK */
+		unsigned long exec_vm;	   /* VM_EXEC & ~VM_WRITE & ~VM_STACK */
+		unsigned long stack_vm;	   /* VM_STACK */
+
+    // --------- huxueshi : vm flags for all vma, mainly used for mlock -------------------
+		unsigned long def_flags;
+
+		spinlock_t arg_lock; /* protect the below fields */
+		unsigned long start_code, end_code, start_data, end_data;
+		unsigned long start_brk, brk, start_stack;
+		unsigned long arg_start, arg_end, env_start, env_end;
+```
+
+- [ ] so why we need this flags ?
 
 
 #### page walk
@@ -2189,6 +2219,8 @@ static inline void count_vm_event(enum vm_event_item item)
 mlock 施加影响的位置:
 1. page reclaim 和 swap 模块
 2. mlock 可以施加于 hugemem 吗 ?
+
+- [ ] mlock is more complex than expected, because it has to handle isolation ?
 
 ## lock
 - [ ] mm_take_all_locks

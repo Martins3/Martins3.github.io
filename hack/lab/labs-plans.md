@@ -32,3 +32,6 @@ https://github.com/mengning/mykernel 很有意思
 
 ## 写一个系列的文章
 learn linux kernel with BPF
+
+## https://github.com/ivandavidov/minimal
+https://github.com/MichielDerhaeg/build-linux

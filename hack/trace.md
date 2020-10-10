@@ -12,9 +12,6 @@
 - [实现](#实现)
 - [垃圾堆](#垃圾堆)
 - [question](#question)
-- [audit](#audit)
-- [cpuset](#cpuset)
-- [seccomp](#seccomp)
 - [perf](#perf)
 - [flamegraph](#flamegraph)
 - [kprobe](#kprobe)
@@ -141,17 +138,6 @@ https://facebookmicrosites.github.io/bpf/
 ## question
 1. 所以，kernel/events 和 kernel/trace 的关系是什么 ?
 
-## audit
-
-## cpuset 
-
-## seccomp
-https://mp.weixin.qq.com/s/CJXuPGyOHAyBqx5pZNIZ9Q
-  - https://lwn.net/Articles/824380/
-
-Windows 程序直接调用系统调用，而不是 Window API，让wine没有办法进行拦截,通过 seccomp 可以
-实现其中，
-> TODO 还分析一下
 
 ## perf 
 TODO
@@ -554,6 +540,7 @@ https://github.com/jrfonseca/gprof2dot
 
 ## FlameGraph
 至今不知道如何使用，这是用户层 perf 的前端吗 ?
+
 
 [^1]: [Outlook : future of eBPF](https://docs.google.com/presentation/d/1AcB4x7JCWET0ysDr0gsX-EIdQSTyBtmi6OAW7bE0jm0/preview?slide=id.g704abb5039_2_106)
 [^2]: [A thorough introduction to eBPF](https://lwn.net/Articles/740157/)
