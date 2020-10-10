@@ -8,6 +8,7 @@
 - [page ref](#page-ref)
 - [page fault](#page-fault)
     - [cow](#cow)
+    - [page table](#page-table)
 - [virtual memory](#virtual-memory)
     - [fork](#fork)
     - [paging](#paging)
@@ -384,6 +385,9 @@ sys_fork--->>>>do_fork--->>>copy_process---->>>copy_mm---->>>dup_mm---->>>dup_mm
 - [x] copy_nonpresent_pte : copy swap entry, migration entry and device entry
 - [x] copy_present_pte
 - [x] copy_present_page : really simple without dma
+
+#### page table
+- [ ] https://stackoverflow.com/questions/32943129/how-does-arm-linux-emulate-the-dirty-accessed-and-file-bits-of-a-pte
 
 ## virtual memory
 1. 实现地址空间的隔离是虚拟内存的目的，但是，关键位置在于如何实现在隔离的基础上共享和通信。

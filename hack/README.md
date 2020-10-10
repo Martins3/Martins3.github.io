@@ -37,7 +37,8 @@
   - [ ] do_wp_page's reference
 
 - [ ] https://www.kernel.org/doc/html/latest/core-api/mm-api.html# : check the doc
-
+- [ ] https://www.kernel.org/doc/gorman/html/understand/ : check the book
+- [ ] access_ok()
 
 ## License
 #### License for code
