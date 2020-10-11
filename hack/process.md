@@ -3,6 +3,18 @@
 <!-- vim-markdown-toc GitLab -->
 
 - [introduction](#introduction)
+- [task_struct](#task_struct)
+- [sched class and policy](#sched-class-and-policy)
+- [runqueue](#runqueue)
+- [task_group](#task_group)
+    - [task_group weight](#task_group-weight)
+- [cfs](#cfs)
+- [rt](#rt)
+- [schedule](#schedule)
+- [load](#load)
+- [no hz](#no-hz)
+- [process state](#process-state)
+- [process relation](#process-relation)
 - [preemption](#preemption)
     - [preempt count](#preempt-count)
     - [preempt locking](#preempt-locking)
@@ -38,7 +50,6 @@
 - [thread_info](#thread_info)
     - [TIF](#tif)
       - [TIF_NEED_RESCHED](#tif_need_resched)
-      - [TIF_NEED_FPU_LOAD](#tif_need_fpu_load)
 - [green thread](#green-thread)
 - [cpp thread keyword](#cpp-thread-keyword)
 - [cpu](#cpu)
@@ -85,6 +96,289 @@ n. preemption !
 | 进程调度       |
 | 进程地址空间   | brk
 
+
+
+## task_struct
+
+[^8]: task_struct's fields related with sched
+```c
+struct task_struct {
+    /* ... */
+    
+    /* 进程状态 */
+    volatile long			state;
+
+    /* 调度优先级相关，策略相关 */
+	int				prio;
+	int				static_prio;
+	int				normal_prio;
+	unsigned int			rt_priority;
+  unsigned int			policy;
+    
+  /* 调度类，调度实体相关，任务组相关等 */
+  const struct sched_class	*sched_class;
+	struct sched_entity		se;
+	struct sched_rt_entity		rt;
+#ifdef CONFIG_CGROUP_SCHED
+	struct task_group		*sched_task_group;
+#endif
+	struct sched_dl_entity		dl;
+    
+  /* 进程之间的关系相关 */
+  /* Real parent process: */
+	struct task_struct __rcu	*real_parent;
+
+	/* Recipient of SIGCHLD, wait4() reports: */
+	struct task_struct __rcu	*parent;
+
+	/*
+	 * Children/sibling form the list of natural children:
+	 */
+	struct list_head		children;
+	struct list_head		sibling;
+	struct task_struct		*group_leader;
+    
+    /* ... */
+}
+```
+
+## sched class and policy
+[Fixing SCHED_IDLE](https://lwn.net/Articles/805317/)
+
+I only skim one or two paragraph of it, there is some notes:
+> The CFS (completely fair scheduling) class hosts most of the user tasks; it implements three scheduling policies: SCHED_NORMAL, SCHED_BATCH, and SCHED_IDLE. A task under any of these policies gets a chance to run only if no other tasks are enqueued in the deadline or realtime classes (though by default the scheduler reserves 5% of the CPU for CFS tasks regardless). The scheduler tracks the virtual runtime (vruntime) for all tasks, runnable and blocked. The lower a task's vruntime, the more deserving the task is for time on the processor. CFS accordingly moves low-vruntime tasks toward the front of the scheduling queue.
+>
+> The priority of a task is calculated by adding 120 to its nice value, which ranges from -20 to +19. The priority of the task is used to set the weight of the task, which in turn affects the vruntime of the task; the lower the nice value, the higher the priority. The task's weight will thus be higher, and its vruntime will increase more slowly as the task runs.
+>
+> The SCHED_NORMAL policy (called SCHED_OTHER in user space) is used for most of the tasks that run in a Linux environment, like the shell. The SCHED_BATCH policy is used for batch processing by non-interactive tasks — tasks that should run uninterrupted for a period of time and hence are normally scheduled only after finishing all the SCHED_NORMAL activity. The SCHED_IDLE policy is designed for the lowest-priority tasks in the system; these tasks get a chance to run only if there is nothing else to run. Though, in practice, even in the presence of other SCHED_NORMAL tasks a SCHED_IDLE task will get some time to run (around 1.4% for a task with a nice value of zero). This policy isn't widely used currently and efforts are being made to improve how it works.
+
+
+
+## runqueue
+![](https://img2018.cnblogs.com/blog/1771657/202002/1771657-20200201170629353-2136884130.png)
+
+```c
+/*
+ * This is the main, per-CPU runqueue data structure.
+ *
+ * Locking rule: those places that want to lock multiple runqueues
+ * (such as the load balancing or the thread migration code), lock
+ * acquire operations must be ordered by ascending &runqueue.
+ */
+struct rq {
+	/* runqueue lock: */
+	raw_spinlock_t lock;
+
+	/*
+	 * nr_running and cpu_load should be in the same cacheline because
+	 * remote CPUs use both these fields when doing load calculation.
+	 */
+	unsigned int nr_running;
+    
+    /* 三个调度队列：CFS调度，RT调度，DL调度 */
+	struct cfs_rq cfs;
+	struct rt_rq rt;
+	struct dl_rq dl;
+
+    /* stop指向迁移内核线程， idle指向空闲内核线程 */
+    struct task_struct *curr, *idle, *stop;
+    
+    /* ... */
+}  
+```
+
+## task_group
+![](https://img2020.cnblogs.com/blog/1771657/202003/1771657-20200310214009477-225815245.png)
+- task_group会为每个CPU再维护一个cfs_rq，这个cfs_rq用于组织挂在这个任务组上的任务以及子任务组，参考图中的Group A；
+- 调度器在调度的时候，比如调用pick_next_task_fair时，会从遍历队列，选择sched_entity，如果发现sched_entity对应的是task_group，则会继续往下选择；
+- 由于sched_entity结构中存在parent指针，指向它的父结构，因此，系统的运行也能从下而上的进行遍历操作，通常使用函数walk_tg_tree_from进行遍历；
+
+- [ ] please notice that, when CONFIG_CFS_BADNWIDTH turned off, walk_tg_tree_from's user disapeared, so why `bandwidth` need `walk_tg_tree_from` ?
+
+- [ ] we create a `cfs_rq` for every group, verfiy it
+- [ ] what kinds of process will be added to same process group ?
+
+
+```c
+/* task group related information */
+struct task_group {
+    /* ... */
+
+    /* 为每个CPU都分配一个CFS调度实体和CFS运行队列 */
+#ifdef CONFIG_FAIR_GROUP_SCHED
+	/* schedulable entities of this group on each cpu */
+	struct sched_entity **se;
+	/* runqueue "owned" by this group on each cpu */
+	struct cfs_rq **cfs_rq;
+	unsigned long shares;
+#endif
+
+    /* 为每个CPU都分配一个RT调度实体和RT运行队列 */
+#ifdef CONFIG_RT_GROUP_SCHED
+	struct sched_rt_entity **rt_se;
+	struct rt_rq **rt_rq;
+
+	struct rt_bandwidth rt_bandwidth;
+#endif
+
+    /* task_group之间的组织关系 */
+	struct rcu_head rcu;
+	struct list_head list;
+
+	struct task_group *parent;
+	struct list_head siblings;
+	struct list_head children;
+
+    /* ... */
+};
+```
+
+#### task_group weight
+[LoyenWang](https://www.cnblogs.com/LoyenWang/p/12459000.html)
+
+![](https://img2020.cnblogs.com/blog/1771657/202003/1771657-20200310214059270-591255805.png)
+
+- [ ] update_load_avg : maybe section `load` explain it
+- [ ] calc_group_shares() : a horrible function
+  - [ ] struct cfs_rq::load;
+  - [ ] struct cfs_rq::avg;
+	- [ ] struct cfs_rq::tg_load_avg_contrib;
+  - [ ] struct task_group::shares
+  - [ ] struct task_group::load_avg
+
+
+- [ ] There are a lot more to read the article, but before that we have understand `load` !
+
+## cfs
+- [ ] [LoyenWang](https://www.cnblogs.com/LoyenWang/p/12495319.html)
+
+## rt
+
+- [ ] [LoyenWang](https://www.cnblogs.com/LoyenWang/p/12584345.html)
+
+## schedule
+notes from [^8]:
+
+
+1. 主动调度 - schedule()
+
+![](https://img2018.cnblogs.com/blog/1771657/202002/1771657-20200201170715768-1838632136.png)
+    
+2. 周期调度 - schedule_tick()
+    - 时钟中断处理程序中，调用schedule_tick()函数；
+    - 时钟中断是调度器的脉搏，内核依靠周期性的时钟来处理器CPU的控制权；
+    - 时钟中断处理程序，检查当前进程的执行时间是否超额，如果超额则设置重新调度标志(_TIF_NEED_RESCHED)；
+    - 时钟中断处理函数返回时，被中断的进程如果在用户模式下运行，需要检查是否有重新调度标志，设置了则调用schedule()调度；
+
+![](https://img2018.cnblogs.com/blog/1771657/202002/1771657-20200201170736505-296291185.png)
+
+3. hrtick()
+![](https://img2018.cnblogs.com/blog/1771657/202002/1771657-20200201170755832-1551335560.png) 
+
+
+4. wake_up_process()
+![](https://img2018.cnblogs.com/blog/1771657/202002/1771657-20200201170804248-1658303951.png)
+唤醒进程时调用wake_up_process()函数，被唤醒的进程可能抢占当前的进程；
+
+- [ ] what's relation with hrtick and schedule_tick ?
+
+
+## load
+- cat /proc/loadavg：查看cpu最近1/5/15分钟的平均负载
+
+目前内核中，有以下几种方式来跟踪CPU负载：
+- 全局CPU平均负载；
+- 运行队列CPU负载；
+- PELT（per entity load tracking）;
+
+- [ ] [LoyenWang](https://www.cnblogs.com/LoyenWang/p/12316660.html) and linux/kernel/sched/loadavg.c
+
+
+- [ ] so, what's `share` ?
+  - [ ] calc_group_shares
+
+## no hz
+
+
+
+
+
+## process state
+```c
+/*
+ * Task state bitmask. NOTE! These bits are also
+ * encoded in fs/proc/array.c: get_task_state().
+ *
+ * We have two separate sets of flags: task->state
+ * is about runnability, while task->exit_state are
+ * about the task exiting. Confusing, but this way
+ * modifying one set can't modify the other one by
+ * mistake.
+ */
+
+/* Used in tsk->state: */
+#define TASK_RUNNING			0x0000
+#define TASK_INTERRUPTIBLE		0x0001
+#define TASK_UNINTERRUPTIBLE		0x0002
+#define __TASK_STOPPED			0x0004
+#define __TASK_TRACED			0x0008
+/* Used in tsk->exit_state: */
+#define EXIT_DEAD			0x0010
+#define EXIT_ZOMBIE			0x0020
+#define EXIT_TRACE			(EXIT_ZOMBIE | EXIT_DEAD)
+/* Used in tsk->state again: */
+#define TASK_PARKED			0x0040
+#define TASK_DEAD			0x0080
+#define TASK_WAKEKILL			0x0100
+#define TASK_WAKING			0x0200
+#define TASK_NOLOAD			0x0400
+#define TASK_NEW			0x0800
+#define TASK_STATE_MAX			0x1000
+
+/* Convenience macros for the sake of set_current_state: */
+#define TASK_KILLABLE			(TASK_WAKEKILL | TASK_UNINTERRUPTIBLE)
+#define TASK_STOPPED			(TASK_WAKEKILL | __TASK_STOPPED)
+#define TASK_TRACED			(TASK_WAKEKILL | __TASK_TRACED)
+
+#define TASK_IDLE			(TASK_UNINTERRUPTIBLE | TASK_NOLOAD)
+
+/* Convenience macros for the sake of wake_up(): */
+#define TASK_NORMAL			(TASK_INTERRUPTIBLE | TASK_UNINTERRUPTIBLE)
+
+/* get_task_state(): */
+#define TASK_REPORT			(TASK_RUNNING | TASK_INTERRUPTIBLE | \
+					 TASK_UNINTERRUPTIBLE | __TASK_STOPPED | \
+					 __TASK_TRACED | EXIT_DEAD | EXIT_ZOMBIE | \
+					 TASK_PARKED)
+
+#define task_is_traced(task)		((task->state & __TASK_TRACED) != 0)
+
+#define task_is_stopped(task)		((task->state & __TASK_STOPPED) != 0)
+
+#define task_is_stopped_or_traced(task)	((task->state & (__TASK_STOPPED | __TASK_TRACED)) != 0)
+```
+
+![](https://img2018.cnblogs.com/blog/1771657/202002/1771657-20200201170358218-1930669459.png)
+
+
+- [x] what's difference with `TASK_UNINTERRUPTIBLE` and `TASK_INTERRUPTIBLE` ?
+  - https://stackoverflow.com/questions/223644/what-is-an-uninterruptible-process
+  - https://lwn.net/Articles/288056/
+
+> A process which is placed in the TASK_INTERRUPTIBLE state will sleep until either (1) something explicitly wakes it up, or (2) a non-masked signal is received. The TASK_UNINTERRUPTIBLE state, instead, ignores signals; processes in that state will require an explicit wakeup before they can run again. 
+
+> so Matthew created a new sleeping state, called TASK_KILLABLE; it behaves like TASK_UNINTERRUPTIBLE with the exception that fatal signals will interrupt the sleep.
+
+- [ ] find a example to understand the difference between `TASK_UNINTERRUPTIBLE` and `TASK_INTERRUPTIBLE` 
+
+
+## process relation
+- [ ] zombie
+- [ ] orphan
+
+
+- [ ] check code in kernel/exit.c
+- [ ] why we need parent and real_parent fields in task_struct ?
 
 ## preemption
 - [x] So what's the difference between preempt and disable interrupt ?
@@ -224,6 +518,11 @@ really interesting : if one process is about to switch to user space and it's ti
 
 
 ## context switch
+**THIS IS WHAT TO READ BEFORE ANY FUTURE EXPLORATION OF CONTEXT SWITCH**
+
+- [ ] [LoyenWang](https://www.cnblogs.com/LoyenWang/p/12386281.html)
+
+
 2. vdso 是怎么回事 ?
 3. x86 中间 TSS 是如何参与的，其他的架构又是如何设计的 ?
 4. 那些令人窒息的 try to wake up 是干嘛的 ? wakeup 需要那么复杂吗 ? 
@@ -885,7 +1184,7 @@ static inline int test_tsk_need_resched(struct task_struct *tsk)
 2. resched_curr
 
 
-##### TIF_NEED_FPU_LOAD
+- [ ] TIF_NEED_FPU_LOAD
 
 
 
@@ -1067,3 +1366,4 @@ https://phoenixnap.com/kb/create-a-sudo-user-on-debian : 首先搞清楚这种�
 [^5]: https://www.kernel.org/doc/html/latest/x86/kernel-stacks.html
 [^6]: https://stackoverflow.com/questions/61886139/why-thread-info-should-be-the-first-element-in-task-struct
 [^7]: Understanding Linux Kernel
+[^8]: https://www.cnblogs.com/LoyenWang/p/12249106.html

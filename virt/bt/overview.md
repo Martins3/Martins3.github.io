@@ -208,9 +208,7 @@ vmx_handle_syscall 的作用:
 - [ ] 跟踪一下 dune_tf 和 kernel 的 tf 的关系
 
 
-## 什么时候建立的 process 地址空间
-
-
+## mapping
 vma 都是什么时候建立的
 
 dune_init_and_enter :
@@ -249,6 +247,15 @@ dune_enter:
 
 - [ ] `__setup_mappings_full` 和 `__setup_mappings_precise` 实现细微区别需要理解
 
+- [ ] dune_mmap_addr_to_pa : dune doesn't do a one to one map, in fact, he can do whatever he want, because ept page fault will handle it.
+
+- [ ] GPA_STACK_SIZE : so dune limit user process's virtual address
+
+
+- [ ] dune_page_init and setup_mappings
+   - dune_page_init :  
+   - setup_mappings : setup mapping from GVA to GPA
+    - set up a bigger mapping than need is possible, or just map 
 
 
 
@@ -299,8 +306,6 @@ pgroot 是 mmap 简单的创建一个 page, 是 GVA
   - 如果这样，完全可以将一个 process 放在 dune 上运行
 
 - [ ] how huge page work with VM
-
-
 
 ## TODO
 1. 修复的方法:

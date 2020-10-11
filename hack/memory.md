@@ -13,7 +13,7 @@
     - [fork](#fork)
     - [paging](#paging)
     - [copy_from_user](#copy_from_user)
-    - [mmap](#mmap)
+- [mmap](#mmap)
     - [mmap layout](#mmap-layout)
     - [page walk](#page-walk)
     - [process vm access](#process-vm-access)
@@ -617,7 +617,7 @@ EXPORT_SYMBOL(iov_iter_copy_from_user_atomic);
 ```
 
 
-#### mmap
+## mmap
 // TODO
 1. 为什么其中的 file_operations::mmap 和 mmap 的关系是什么 ?
 2. 找到 pgfault 命中到错误的位置的时候，但是范围外面，并且是如何告知用户的 ? 使用信号机制吗 ?
@@ -650,6 +650,34 @@ guest 发送的时候首先会进入到 host 中间，然后调用 syscall.
 - [ ] 其实可以在进行 vmcall syscall 的时候，可以首先对于 GVA 到 GVA 之间装换
 
 - [ ] 调查一下 mmap 如何返回用户地址的
+
+
+- [ ] check flag of `MAP_HUGETLB`
+```c
+static void * do_mapping(void *base, unsigned long len)
+{
+	void *mem;
+
+	mem = mmap((void *) base, len,
+		   PROT_READ | PROT_WRITE,
+		   MAP_FIXED | MAP_HUGETLB | MAP_PRIVATE |
+		   MAP_ANONYMOUS, -1, 0);
+
+	if (mem != (void *) base) {
+		// try again without huge pages
+		mem = mmap((void *) base, len,
+			   PROT_READ | PROT_WRITE,
+			   MAP_FIXED | MAP_PRIVATE | MAP_ANONYMOUS,
+			   -1, 0);
+		if (mem != (void *) base)
+			return NULL;
+	}
+
+	return mem;
+}
+```
+
+
 
 #### mmap layout
 - [ ] `mm_struct::mmap_base`
