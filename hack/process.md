@@ -33,7 +33,6 @@
     - [do signal](#do-signal)
 - [idle](#idle)
     - [ptrace](#ptrace)
-- [workqueue](#workqueue)
 - [waitqueue](#waitqueue)
 - [design](#design)
 - [fork](#fork)
@@ -59,6 +58,7 @@
 - [user group](#user-group)
 - [smp](#smp)
 - [`__schedule`](#__schedule)
+- [kthread](#kthread)
 - [TODO](#todo)
 
 <!-- vim-markdown-toc -->
@@ -759,9 +759,6 @@ ptrace_notify
     do_notify_parent_cldstop
 ```
 
-## workqueue
-workqueue 不应该被放到 interrupt 中间，毕竟 page writeback 就是使用 workqueue 维持生活的
-
 ## waitqueue
 1. https://github.com/cirosantilli/linux-kernel-module-cheat/blob/master/kernel_modules/wait_queue.c : 还是要好好分析一下其中的代码呀 !
 
@@ -1334,6 +1331,14 @@ smp_call_function_many 之类的函数可以看看
  */
 static void __sched notrace __schedule(bool preempt)
 ```
+
+## kthread
+kernel/kthread.c
+
+- [ ] trace function create_worker()
+  - [ ] kthreadd()
+  - in fact, nothing special, create kthread with a daemon named `kthreadd` which call `fork`
+
 
 ## TODO
 https://phoenixnap.com/kb/create-a-sudo-user-on-debian : 首先搞清楚这种简单的文章

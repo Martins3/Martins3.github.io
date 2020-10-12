@@ -1,8 +1,24 @@
 # 中断
+<!-- vim-markdown-toc GitLab -->
+
+- [workqueue](#workqueue)
+    - [struct work_struct](#struct-work_struct)
+    - [struct workqueue](#struct-workqueue)
+    - [struct worker](#struct-worker)
+    - [struct worker_pool](#struct-worker_pool)
+    - [struct pool_workqueue](#struct-pool_workqueue)
+- [ipi](#ipi)
+- [https://elinux.org/images/8/8c/Zyngier.pdf](#httpselinuxorgimages88czyngierpdf)
+- [https://linux-kernel-labs.github.io/refs/heads/master/lectures/interrupts.html](#httpslinux-kernel-labsgithubiorefsheadsmasterlecturesinterruptshtml)
+- [timer](#timer)
+- [irq](#irq)
+- [softirq](#softirq)
+- [tasklet](#tasklet)
+
+<!-- vim-markdown-toc -->
 
 不要害怕开始：
 1. 总结 从 ics 的中断 和 ucore 的中断的实现，然后再去分析
-2. file:///home/shen/Core/hack-linux-kernel/Documentation/output/teaching/lectures/interrupts.html
 
 
 这篇文章
@@ -13,8 +29,217 @@ A Hardware Architecture for Implementing Protection Rings
 3. interupt 和 exception 在架构实现上存在什么区别吗 ?
 
 ## workqueue
-wowotech 中间的东西可以看看:
-https://zhuanlan.zhihu.com/p/91106844
+- [ ] wowotech 中间的东西可以看看:
+- [ ] https://zhuanlan.zhihu.com/p/91106844
+
+With this article,[LoyenWang](https://www.cnblogs.com/LoyenWang/p/13185451.html), I feel like that I understand how workqueue works, some questions
+  - [ ] workqueue attr
+
+  
+
+#### struct work_struct
+`struct work_struct`用来描述`work`，初始化一个`work`并添加到工作队列后，将会将其传递到合适的内核线程来进行处理，它是用于调度的最小单位。
+
+```c
+struct work_struct {
+	atomic_long_t data;     //低比特存放状态位，高比特存放worker_pool的ID或者pool_workqueue的指针
+	struct list_head entry; //用于添加到其他队列上
+	work_func_t func;       //工作任务的处理函数，在内核线程中回调
+#ifdef CONFIG_LOCKDEP
+	struct lockdep_map lockdep_map;
+#endif
+};
+```
+
+![](https://img2020.cnblogs.com/blog/1771657/202006/1771657-20200623234322425-1856230121.png)
+
+check code get_work_pool(), graph above is kind of misleading.
+
+#### struct workqueue
+- [ ] why we need `struct workqueue`, I think `struct worker_pool` is enough.
+
+#### struct worker
+
+- [x] worker can be create and destroied dynamically.
+
+#### struct worker_pool
+
+
+#### struct pool_workqueue
+`pool_workqueue`充当纽带的作用，用于将`workqueue`和`worker_pool`关联起来；
+
+```c
+struct pool_workqueue {
+	struct worker_pool	*pool;		/* I: the associated pool */    //指向worker_pool
+	struct workqueue_struct *wq;		/* I: the owning workqueue */   //指向所属的workqueue
+
+	int			nr_active;	/* L: nr of active works */     //活跃的work数量
+	int			max_active;	/* L: max active works */   //活跃的最大work数量
+	struct list_head	delayed_works;	/* L: delayed works */      //延迟执行的work挂入本链表
+	struct list_head	pwqs_node;	/* WR: node on wq->pwqs */      //用于添加到workqueue链表中
+	struct list_head	mayday_node;	/* MD: node on wq->maydays */   //用于添加到workqueue链表中
+    ...
+} __aligned(1 << WORK_STRUCT_FLAG_BITS);
+```
+
+- [ ] I think `struct pool_workqueue` is child of `struct worker_pool` and `struct workqueue_struct`
+
 
 ## ipi
 https://stackoverflow.com/questions/62068750/kinds-of-ipi-for-x86-architecture-in-linux
+
+
+## https://elinux.org/images/8/8c/Zyngier.pdf
+
+Chained interrupt controllers : 参考ldd 以及 https://stackoverflow.com/questions/34377846/what-is-chained-irq-in-linux-when-are-they-need-to-used
+
+Generic MSIs : https://en.wikipedia.org/wiki/Message_Signaled_Interrupts
+
+Most systems have tens, hundreds of interrupt signal, an interrupt controller allows them to be multiplexed.
+> device need attension : cpu check some pin after finished one instruction
+> exception : this instruction worked abnormally
+> int n : go to idt , execute  number n slot : 如何这样，似乎只有int 0x80 有意义啊!
+
+> 仲裁器 还是　multiplexed , 如何体现的 multiplexed 的形式的 ?
+
+IRQ line 到底是什么?
+
+
+## https://linux-kernel-labs.github.io/refs/heads/master/lectures/interrupts.html#
+- https://www.ibm.com/developerworks/cn/linux/l-cn-linuxkernelint/index.html
+- https://0xax.gitbooks.io/linux-insides/content/Interrupts/linux-interrupts-7.html
+- https://zhuanlan.zhihu.com/p/83709066
+
+## timer
+
+
+## irq
+
+```c
+struct irq_chip {
+	struct device	*parent_device;     //指向父设备
+	const char	*name;      //  /proc/interrupts中显示的名字
+	unsigned int	(*irq_startup)(struct irq_data *data);  //启动中断，如果设置成NULL，则默认为enable
+	void		(*irq_shutdown)(struct irq_data *data);     //关闭中断，如果设置成NULL，则默认为disable
+	void		(*irq_enable)(struct irq_data *data);   //中断使能，如果设置成NULL，则默认为chip->unmask
+	void		(*irq_disable)(struct irq_data *data);  //中断禁止
+
+	void		(*irq_ack)(struct irq_data *data);  //开始新的中断
+	void		(*irq_mask)(struct irq_data *data); //中断源屏蔽
+	void		(*irq_mask_ack)(struct irq_data *data); //应答并屏蔽中断
+	void		(*irq_unmask)(struct irq_data *data);   //解除中断屏蔽
+	void		(*irq_eoi)(struct irq_data *data);  //中断处理结束后调用
+
+	int		(*irq_set_affinity)(struct irq_data *data, const struct cpumask *dest, bool force); //在SMP中设置CPU亲和力
+	int		(*irq_retrigger)(struct irq_data *data);    //重新发送中断到CPU
+	int		(*irq_set_type)(struct irq_data *data, unsigned int flow_type); //设置中断触发类型
+	int		(*irq_set_wake)(struct irq_data *data, unsigned int on);    //使能/禁止电源管理中的唤醒功能
+
+	void		(*irq_bus_lock)(struct irq_data *data); //慢速芯片总线上的锁
+	void		(*irq_bus_sync_unlock)(struct irq_data *data);  //同步释放慢速总线芯片的锁
+
+	void		(*irq_cpu_online)(struct irq_data *data);
+	void		(*irq_cpu_offline)(struct irq_data *data);
+
+	void		(*irq_suspend)(struct irq_data *data);
+	void		(*irq_resume)(struct irq_data *data);
+	void		(*irq_pm_shutdown)(struct irq_data *data);
+
+	void		(*irq_calc_mask)(struct irq_data *data);
+
+	void		(*irq_print_chip)(struct irq_data *data, struct seq_file *p);
+	int		(*irq_request_resources)(struct irq_data *data);
+	void		(*irq_release_resources)(struct irq_data *data);
+
+	void		(*irq_compose_msi_msg)(struct irq_data *data, struct msi_msg *msg);
+	void		(*irq_write_msi_msg)(struct irq_data *data, struct msi_msg *msg);
+
+	int		(*irq_get_irqchip_state)(struct irq_data *data, enum irqchip_irq_state which, bool *state);
+	int		(*irq_set_irqchip_state)(struct irq_data *data, enum irqchip_irq_state which, bool state);
+
+	int		(*irq_set_vcpu_affinity)(struct irq_data *data, void *vcpu_info);
+
+	void		(*ipi_send_single)(struct irq_data *data, unsigned int cpu);
+	void		(*ipi_send_mask)(struct irq_data *data, const struct cpumask *dest);
+
+	unsigned long	flags;
+};
+
+struct irq_domain {
+	struct list_head link;  //用于添加到全局链表irq_domain_list中
+	const char *name;   //IRQ domain的名字
+	const struct irq_domain_ops *ops;   //IRQ domain映射操作函数集
+	void *host_data;    //在GIC驱动中，指向了irq_gic_data
+	unsigned int flags; 
+	unsigned int mapcount;  //映射中断的个数
+
+	/* Optional data */
+	struct fwnode_handle *fwnode;
+	enum irq_domain_bus_token bus_token;
+	struct irq_domain_chip_generic *gc;
+#ifdef	CONFIG_IRQ_DOMAIN_HIERARCHY
+	struct irq_domain *parent;  //支持级联的话，指向父设备
+#endif
+#ifdef CONFIG_GENERIC_IRQ_DEBUGFS
+	struct dentry		*debugfs_file;
+#endif
+
+	/* reverse map data. The linear map gets appended to the irq_domain */
+	irq_hw_number_t hwirq_max;  //IRQ domain支持中断数量的最大值
+	unsigned int revmap_direct_max_irq;
+	unsigned int revmap_size;   //线性映射的大小
+	struct radix_tree_root revmap_tree; //Radix Tree映射的根节点
+	unsigned int linear_revmap[];   //线性映射用到的查找表
+};
+
+struct irq_domain_ops {
+	int (*match)(struct irq_domain *d, struct device_node *node,
+		     enum irq_domain_bus_token bus_token);      // 用于中断控制器设备与IRQ domain的匹配
+	int (*select)(struct irq_domain *d, struct irq_fwspec *fwspec,
+		      enum irq_domain_bus_token bus_token);
+	int (*map)(struct irq_domain *d, unsigned int virq, irq_hw_number_t hw);    //用于硬件中断号与Linux中断号的映射
+	void (*unmap)(struct irq_domain *d, unsigned int virq);
+	int (*xlate)(struct irq_domain *d, struct device_node *node,
+		     const u32 *intspec, unsigned int intsize,
+		     unsigned long *out_hwirq, unsigned int *out_type);     //通过device_node，解析硬件中断号和触发方式
+
+#ifdef	CONFIG_IRQ_DOMAIN_HIERARCHY
+	/* extended V2 interfaces to support hierarchy irq_domains */
+	int (*alloc)(struct irq_domain *d, unsigned int virq,
+		     unsigned int nr_irqs, void *arg);
+	void (*free)(struct irq_domain *d, unsigned int virq,
+		     unsigned int nr_irqs);
+	void (*activate)(struct irq_domain *d, struct irq_data *irq_data);
+	void (*deactivate)(struct irq_domain *d, struct irq_data *irq_data);
+	int (*translate)(struct irq_domain *d, struct irq_fwspec *fwspec,
+			 unsigned long *out_hwirq, unsigned int *out_type);
+#endif
+};
+```
+
+![](https://img2020.cnblogs.com/blog/1771657/202005/1771657-20200531111554895-528341955.png)
+- `struct irq_chip`结构，描述的是中断控制器的底层操作函数集，这些函数集最终完成对控制器硬件的操作；
+- `struct irq_domain`结构，用于硬件中断号和Linux IRQ中断号（virq，虚拟中断号）之间的映射；
+
+
+![](https://img2020.cnblogs.com/blog/1771657/202005/1771657-20200531111647851-1005315068.png)
+
+- 每个中断控制器都对应一个IRQ Domain；
+- 中断控制器驱动通过`irq_domain_add_*()`接口来创建IRQ Domain；
+- IRQ Domain支持三种映射方式：linear map（线性映射），tree map（树映射），no map（不映射）；
+  - linear map：维护固定大小的表，索引是硬件中断号，如果硬件中断最大数量固定，并且数值不大，可以选择线性映射；
+  - tree map：硬件中断号可能很大，可以选择树映射；
+  - no map：硬件中断号直接就是Linux的中断号；
+
+![](https://img2020.cnblogs.com/blog/1771657/202005/1771657-20200531111718514-879227841.png)
+
+![](https://img2020.cnblogs.com/blog/1771657/202005/1771657-20200531111755704-1231972965.png)
+
+
+## softirq
+- [ ] what's happending in kernel/softirq.c ?
+
+
+## tasklet
+- [ ] https://lwn.net/Articles/830964/
+- [ ] https://www.cnblogs.com/LoyenWang/p/13124803.html

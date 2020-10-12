@@ -19,7 +19,6 @@
 - [irq](#irq)
 - [TODO](#todo)
 - [问题](#问题)
-- [workqueue](#workqueue)
 - [问题](#问题-1)
 - [资源(整理成为 footnote)](#资源整理成为-footnote)
 
@@ -413,12 +412,6 @@ A Hardware Architecture for Implementing Protection Rings
 1. 这里描述的 gates 和 syscall 是什么关系 ?
 2. syscall 可以使用 int 模拟实现吗 ?
 3. interupt 和 exception 在架构实现上存在什么区别吗 ?
-
-
-## workqueue
-1. wowotech 中间的东西可以看看:
-2. https://zhuanlan.zhihu.com/p/91106844
-
 
 ## 问题
 1. 到底一共存在多少总线类型 ? PCI PCIE I2C 
