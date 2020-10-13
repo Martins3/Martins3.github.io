@@ -5,6 +5,7 @@
 - [introduction](#introduction)
 - [syscall](#syscall)
 - [page allocator](#page-allocator)
+    - [page free](#page-free)
 - [page ref](#page-ref)
 - [page fault](#page-fault)
     - [cow](#cow)
@@ -14,10 +15,12 @@
     - [paging](#paging)
     - [copy_from_user](#copy_from_user)
 - [mmap](#mmap)
+    - [brk](#brk)
     - [mmap layout](#mmap-layout)
     - [page walk](#page-walk)
     - [process vm access](#process-vm-access)
 - [compaction](#compaction)
+    - [compact deferred](#compact-deferred)
 - [hugetlb](#hugetlb)
 - [compound page](#compound-page)
 - [transparent huge page](#transparent-huge-page)
@@ -36,9 +39,11 @@
 - [madvise && fadvise](#madvise-fadvise)
 - [highmem](#highmem)
 - [page reclaim](#page-reclaim)
-    - [kswapd](#kswapd)
-    - [shrink slab](#shrink-slab)
     - [lru](#lru)
+    - [direct shrink](#direct-shrink)
+    - [kswapd](#kswapd)
+    - [shrink_node](#shrink_node)
+    - [shrink slab](#shrink-slab)
 - [memory consistency](#memory-consistency)
 - [pmem](#pmem)
 - [memory model](#memory-model)
@@ -91,6 +96,9 @@
 - [vma](#vma)
     - [vm_ops](#vm_ops)
     - [vm_flags](#vm_flags)
+- [vmalloc](#vmalloc)
+- [rmap](#rmap)
+- [mincore](#mincore)
 
 <!-- vim-markdown-toc -->
 
@@ -241,8 +249,47 @@ happy path : requeue
 2. 否则调用 `__rmqueue`，`__rmqueue` 首先进行使用 `__rmqueue_smallest`进行尝试，如果不行，调用 `__rmqueue_fallback` 在 fallback list 中间查找。
 3. `__rmqueue_smallest` 就是介绍 buddy allocator 的理论实现的部分了
 
-// TODO free 的过程了解一下
 
+[LoyenWang](https://www.cnblogs.com/LoyenWang/p/11626237.html)
+
+![loading](https://img2018.cnblogs.com/blog/1771657/201910/1771657-20191006001219745-1992148860.png)
+![loading](https://img2018.cnblogs.com/blog/1771657/201910/1771657-20191006001229047-942884289.png)
+
+- [ ] why allocate pages per zone, but reclaim pages per node ?
+
+
+- [ ] cat /proc/pagetypeinfo && cat /proc/pagetypeinfo , check it in spare time
+
+
+- [ ] gfp_mask and alloc_flags
+  - [ ] gfp_to_alloc_flags
+  - [ ] include/linux/gfp.h contains clear comments for gfp_mask
+
+quick and slow path of allocation:
+
+![loading](https://img2018.cnblogs.com/blog/1771657/201910/1771657-20191006001326475-348220432.png)
+![loading](https://img2018.cnblogs.com/blog/1771657/201910/1771657-20191006001337263-1883106181.png)
+![loading](https://img2018.cnblogs.com/blog/1771657/201910/1771657-20191006001359420-1831491364.png)
+
+
+- [x] So what's ALLOC_HARDER
+  - gfp_to_alloc_flags() :
+  - rmqueue() : will try `MIGRATE_HIGHATOMIC` type memory immediately with ALLOC_HARDER
+
+
+
+![loading](https://img2018.cnblogs.com/blog/1771657/201910/1771657-20191013162755767-482755655.png)
+
+#### page free
+当order = 0时，会使用Per-CPU Page Frame来释放，其中：
+- MIGRATE_UNMOVABLE, MIGRATE_RECLAIMABLE, MIGRATE_MOVABLE三个按原来的类型释放；
+- MIGRATE_CMA, MIGRATE_HIGHATOMIC类型释放到MIGRATE_UNMOVABLE类型中；
+- MIGRATE_ISOLATE类型释放到Buddy系统中；
+- 此外，在PCP释放的过程中，发生溢出时，会调用free_pcppages_bulk()来返回给Buddy系统。来一张图就清晰了：
+
+- [ ] what if order != 0 ?
+
+![loading](https://img2018.cnblogs.com/blog/1771657/201910/1771657-20191013162924540-1531356891.png)
 
 ## page ref
 - [x] `_refcount` 和 `_mapcount` 的关系是什么 ?
@@ -306,6 +353,8 @@ static bool is_refcount_suitable(struct page *page)
 
 
 ## page fault
+[TO BE CONTINUE](https://www.cnblogs.com/LoyenWang/p/12116570.html), this is a awesome post.
+
 handle_pte_fault 的调用路径图:
 1. do_anonymous_page : anon page
 2. do_fault : 和 file 相关的
@@ -677,13 +726,22 @@ static void * do_mapping(void *base, unsigned long len)
 }
 ```
 
+#### brk
 
+- [x] what's `[heap]` in `cat /proc/self/maps`
+```
+5587dad41000-5587dad62000 rw-p 00000000 00:00 0                          [heap]
+```
+answer: https://stackoverflow.com/questions/17782536/missing-heap-section-in-proc-pid-maps
+
+
+- [ ] what's difference of brk and mmap ? So what's are the simplifications and extra of brk ? 
 
 #### mmap layout
 - [ ] `mm_struct::mmap_base`
   - [ ] setup_new_exec()
 
-- [ ] `mm_struct::stack_start`
+- [ ] `mm_struct::stack_start`, discuss it ./mm/stack.md
 
 ```c
     // --------- huxueshi : just statistics of memory size -------------------
@@ -706,9 +764,19 @@ static void * do_mapping(void *base, unsigned long len)
 		unsigned long arg_start, arg_end, env_start, env_end;
 ```
 
-- [ ] so why we need this flags ?
+- [ ] so why we need these start and end ?
 
 
+`arch/x86/mm/mmap.c:arch_pick_mmap_layout`
+1. register get_unmapped_area `mm->get_unmapped_area = arch_get_unmapped_area;`
+2. choose from `mmap_base` and `mmap_legacy_base`
+
+[mmap_base](https://unix.stackexchange.com/questions/407204/program-stack-size) is top of mmap.
+
+All right, heap grows up, mmap grows down, and stack grows down, like [this](https://lwn.net/Articles/91829/).
+![](https://static.lwn.net/images/ns/kernel/mmap2.png)
+
+- [ ] why I need `mmap_base` to `get_unmapped_area()`
 #### page walk
 ![](https://static.lwn.net/images/ns/kernel/four-level-pt.png)
 
@@ -726,7 +794,6 @@ https://stackoverflow.com/questions/8708463/difference-between-kernel-virtual-ad
 **还有非常重要的特点，那就是只要设计到 page walk，至少 2000 行**
 #### process vm access
 // 不同进程地址空间直接拷贝
-// 应该
 
 ## compaction
 https://linuxplumbersconf.org/event/2/contributions/65/attachments/15/171/slides-expanded.pdf
@@ -805,6 +872,137 @@ isolate_migratepages 和 isolate_freepages 存在什么区别 ? 很类似，但�
 alloc_contig_range => `__alloc_contig_migrate_range` => isolate_migratepages_range => isolate_migratepages_block
 
 in function `isolate_migratepages_block()`, the answer hides.
+
+
+[LoyenWang](https://www.cnblogs.com/LoyenWang/p/11746357.html)
+
+memory compaction就是通过将正在使用的可移动页面迁移到另一个地方以获得连续的空闲页面的方法。针对内存碎片，内核中定义了migrate_type用于描述迁移类型：
+- **`MIGRATE_UNMOVABLE`：不可移动，对应于内核分配的页面；**
+- **`MIGRATE_MOVABLE`：可移动，对应于从用户空间分配的内存或文件；**
+- **`MIGRATE_RECLAIMABLE`：不可移动，可以进行回收处理；**
+
+![loading](https://img2018.cnblogs.com/blog/1771657/201910/1771657-20191027000343268-2022062663.png)
+
+
+```c
+/*
+ * Determines how hard direct compaction should try to succeed.
+ * Lower value means higher priority, analogically to reclaim priority.
+ */
+enum compact_priority {
+	COMPACT_PRIO_SYNC_FULL,
+	MIN_COMPACT_PRIORITY = COMPACT_PRIO_SYNC_FULL,
+	COMPACT_PRIO_SYNC_LIGHT,
+	MIN_COMPACT_COSTLY_PRIORITY = COMPACT_PRIO_SYNC_LIGHT,
+	DEF_COMPACT_PRIORITY = COMPACT_PRIO_SYNC_LIGHT,
+	COMPACT_PRIO_ASYNC,
+	INIT_COMPACT_PRIORITY = COMPACT_PRIO_ASYNC
+};
+```
+本结构用于描述memory compact的几种不同方式：
+- COMPACT_PRIO_SYNC_FULL/MIN_COMPACT_PRIORITY：最高优先级，压缩和迁移以同步的方式完成；
+- COMPACT_PRIO_SYNC_LIGHT/MIN_COMPACT_COSTLY_PRIORITY/DEF_COMPACT_PRIORITY：中优先级，压缩以同步方式处理，迁移以异步方式处理；
+- COMPACT_PRIO_ASYNC/INIT_COMPACT_PRIORITY：最低优先级，压缩和迁移以异步方式处理。
+
+
+```c
+/* Return values for compact_zone() and try_to_compact_pages() */
+/* When adding new states, please adjust include/trace/events/compaction.h */
+enum compact_result {
+	/* For more detailed tracepoint output - internal to compaction */
+	COMPACT_NOT_SUITABLE_ZONE,
+	/*
+	 * compaction didn't start as it was not possible or direct reclaim
+	 * was more suitable
+	 */
+	COMPACT_SKIPPED,
+	/* compaction didn't start as it was deferred due to past failures */
+	COMPACT_DEFERRED,
+
+	/* compaction not active last round */
+	COMPACT_INACTIVE = COMPACT_DEFERRED,
+
+	/* For more detailed tracepoint output - internal to compaction */
+	COMPACT_NO_SUITABLE_PAGE,
+	/* compaction should continue to another pageblock */
+	COMPACT_CONTINUE,
+
+	/*
+	 * The full zone was compacted scanned but wasn't successfull to compact
+	 * suitable pages.
+	 */
+	COMPACT_COMPLETE,
+	/*
+	 * direct compaction has scanned part of the zone but wasn't successfull
+	 * to compact suitable pages.
+	 */
+	COMPACT_PARTIAL_SKIPPED,
+
+	/* compaction terminated prematurely due to lock contentions */
+	COMPACT_CONTENDED,
+
+	/*
+	 * direct compaction terminated after concluding that the allocation
+	 * should now succeed
+	 */
+	COMPACT_SUCCESS,
+};
+```
+
+- [ ] compact_zone and try_to_compact_pages
+  - [ ] compact_zone_order => compact_zone
+
+![loading](https://img2018.cnblogs.com/blog/1771657/201910/1771657-20191027000443984-614132434.png) 
+
+```c
+/*
+ * MIGRATE_ASYNC means never block
+ * MIGRATE_SYNC_LIGHT in the current implementation means to allow blocking
+ *	on most operations but not ->writepage as the potential stall time
+ *	is too significant
+ * MIGRATE_SYNC will block when migrating pages
+ * MIGRATE_SYNC_NO_COPY will block when migrating pages but will not copy pages
+ *	with the CPU. Instead, page copy happens outside the migratepage()
+ *	callback and is likely using a DMA engine. See migrate_vma() and HMM
+ *	(mm/hmm.c) for users of this mode.
+ */
+enum migrate_mode {
+	MIGRATE_ASYNC,
+	MIGRATE_SYNC_LIGHT,
+	MIGRATE_SYNC,
+	MIGRATE_SYNC_NO_COPY,
+};
+```
+
+
+- `compaction_suitable()`: one of caller is `compact_zone`, test whether a zone is suitable for compaction, if not, just return.
+
+![loading](https://img2018.cnblogs.com/blog/1771657/201910/1771657-20191027000514160-767100004.png)
+1. 除去申请的页面，空闲页面数将低于水印值，或者虽然大于等于水印值，但是没有一个足够大的空闲页块；
+2. 空闲页面减去两倍的申请页面（两倍表明有足够多的的空闲页面作为迁移目标），高于水印值；
+3. 申请的order大于PAGE_ALLOC_COSTLY_ORDER时，计算碎片指数fragindex，根据值来判断；
+
+- [ ] I skip this part, may read it carefully
+
+#### compact deferred
+
+```c
+struct zone {
+...
+	/*
+	 * On compaction failure, 1<<compact_defer_shift compactions
+	 * are skipped before trying again. The number attempted since
+	 * last failure is tracked with compact_considered.
+	 */
+	unsigned int		compact_considered; //记录推迟次数
+	unsigned int		compact_defer_shift; //（1 << compact_defer_shift）=推迟次数，最大为6
+	int			           compact_order_failed; //记录碎片整理失败时的申请order值
+...
+};
+```
+
+![loading](https://img2018.cnblogs.com/blog/1771657/201910/1771657-20191027000559199-1665601872.png)
+
 ## hugetlb
 1. 为了实现简单，那么 hugetlb 减少处理什么东西 ?
 
@@ -976,10 +1174,11 @@ khugepaged.c 中间的 hugepage 守护进程的工作是什么 ?
 - [ ] if `kcompactd` compact pages used by hugepage, and demote pages by `split_huge_page_to_list`, so what's the purpose of khugepaged ?
 
 1. /sys/kernel/mm/transparent_hugepage/enabled => start_stop_khugepaged => khugepaged => khugepaged_do_scan => khugepaged_scan_mm_slot => khugepaged_scan_pmd
-2. in `khugepaged_scan_pmd`, we will check pages one by one and call `collapse_huge_page` to merge base page to huge page
+2. in `khugepaged_scan_pmd`, we will check pages one by one, if enough base pages are found,  call `collapse_huge_page` to merge base page to huge page
 3. `collapse_huge_page` = `khugepaged_alloc_page` + `__collapse_huge_page_copy` + many initialization for huge page + `__collapse_huge_page_isolate` (free base page)
 
-- [ ] it seems khugepaged scan pages and collapse it into huge pages, so what's difference between kcompactd
+- [x] it seems khugepaged scan pages and collapse it into huge pages, so what's difference between kcompactd
+  - khugepaged is consumer of hugepage, it's scan base pages and collapse them
 
 ## page cache
 1. 对于数据库，为什么需要绕过 page cache
@@ -1218,16 +1417,26 @@ int __set_page_dirty_no_writeback(struct page *page)
 ```
 
 #### watermark
-// TODO
-1. page writeback 如何利用 watermark 机制来触发写回的
+- [x] page writeback 如何利用 watermark 机制来触发写回的
     1. watermark 的初始化 : 根据探测的物理内存，然后确定 watermark
     2. 提供给用户调节 watermark 的机制
     3. page allocator 中间检测和触发
-file:///home/shen/Core/linux/Documentation/output/admin-guide/mm/concepts.html?highlight=watermark
+
+- [ ] file:///home/shen/Core/linux/Documentation/output/admin-guide/mm/concepts.html?highlight=watermark
 内核介绍的核心概念，务必逐个分析
 
+[LoyenWang](https://www.cnblogs.com/LoyenWang/p/11708255.html)
+
+- `WMARK_MIN` : 内存不足的最低点，如果计算出的可用页面低于该值，则无法进行页面计数；
+- `WMARK_LOW` : 默认情况下，该值为WMARK_MIN的125%，此时kswapd将被唤醒，可以通过修改watermark_scale_factor来改变比例值；
+- `WMARK_HIGH` : 默认情况下，该值为WMARK_MAX的150%，此时kswapd将睡眠，可以通过修改watermark_scale_factor来改变比例值；
+![](https://img2018.cnblogs.com/blog/1771657/201910/1771657-20191020172801277-1235981981.png)
+
+**TO BE CONTINUE, read LoyenWang**
+
+
 #### truncate
-// 阅读一下源代码
+- [ ] 阅读一下源代码
 
 #### readahead
 // 阅读一下源代码 readahead.c 的
@@ -1742,36 +1951,75 @@ try_to_free_pages
             shrink_inactive_list (shrink_active_list)
               shrink_page_list
 ```
-2. 还有第二个路径:
 
-- [ ] it seems second graph is called by kswapd ?
-
-
-#### kswapd
-- [^29] present a beautiful graph ![](https://oscimg.oschina.net/oscnet/33f9024d70cd92f9cc711df451500aa6047.jpg)
-
-- relation between `kswapd` and `kcompactd`: if kswapd free some pages, then we can wake it up and compact pages
-
-#### shrink slab
-1. 面试问题 : dcache 的需要 slab，slab 分配需要 page，那么 page cache, slab 和 dcache 的回收之间的关系是什么
-   1. 思考 : slab 都是提供 kmalloc 的内容，凭什么，可以释放
-   2. 或者本来，释放 slab 就不是特制一个例子，而是一个 shrinker 机制，专门用于释放内核的分配的数据
-   3. 其他 page cache 以及用户页面就是我们熟悉的 lru 算法进行处理了
-
-shrink 的接口和使用方法是什么 ?
-
-这是唯一的使用位置:
 ```c
-static unsigned long shrink_slab(gfp_t gfp_mask, int nid,
-				 struct mem_cgroup *memcg,
-				 int priority)
-         // 对于所有的注册的 shrinker 循环调用 do_shrink_slab
-         // 也就是说，其实每个 cache shrinker 之间其实没有什么关系
+struct scan_control {
+	/* How many pages shrink_list() should reclaim */
+	unsigned long nr_to_reclaim;
 
-static unsigned long do_shrink_slab(struct shrink_control *shrinkctl,
-				    struct shrinker *shrinker, int priority)
+	/* This context's GFP mask */
+	gfp_t gfp_mask;
+
+	/* Allocation order */
+	int order;
+
+	/*
+	 * Nodemask of nodes allowed by the caller. If NULL, all nodes
+	 * are scanned.
+	 */
+	nodemask_t	*nodemask;
+
+	/*
+	 * The memory cgroup that hit its limit and as a result is the
+	 * primary target of this reclaim invocation.
+	 */
+	struct mem_cgroup *target_mem_cgroup;
+
+	/* Scan (total_size >> priority) pages at once */
+	int priority;
+
+	/* The highest zone to isolate pages for reclaim from */
+	enum zone_type reclaim_idx;
+
+	/* Writepage batching in laptop mode; RECLAIM_WRITE */
+	unsigned int may_writepage:1;
+
+	/* Can mapped pages be reclaimed? */
+	unsigned int may_unmap:1;
+
+	/* Can pages be swapped as part of reclaim? */
+	unsigned int may_swap:1;
+
+	/*
+	 * Cgroups are not reclaimed below their configured memory.low,
+	 * unless we threaten to OOM. If any cgroups are skipped due to
+	 * memory.low and nothing was reclaimed, go back for memory.low.
+	 */
+	unsigned int memcg_low_reclaim:1;
+	unsigned int memcg_low_skipped:1;
+
+	unsigned int hibernation_mode:1;
+
+	/* One of the zones is ready for compaction */
+	unsigned int compaction_ready:1;
+
+	/* Incremented by the number of inactive pages that were scanned */
+	unsigned long nr_scanned;
+
+	/* Number of pages freed so far during a call to shrink_zones() */
+	unsigned long nr_reclaimed;
+};
 ```
-然后，根据上方的调用路线，课题知道，猜测应该是对的，对于 page 和 slab 分成两个，slab 利用各种 shrinker 进行
+- nr_to_reclaim：需要回收的页面数量；
+- gfp_mask：申请分配的掩码，用户申请页面时可以通过设置标志来限制调用底层文件系统或不允许读写存储设备，最终传递给LRU处理；
+- order：申请分配的阶数值，最终期望内存回收后能满足申请要求；
+- nodemask：内存节点掩码，空指针则访问所有的节点；
+- priority：扫描LRU链表的优先级，用于计算每次扫描页面的数量(total_size >> priority，初始值12)，值越小，扫描的页面数越大，逐级增加扫描粒度；
+- may_writepage：是否允许把修改过文件页写回存储设备；
+- may_unmap：是否取消页面的映射并进行回收处理；
+- may_swap：是否将匿名页交换到swap分区，并进行回收处理；
+- nr_scanned：统计扫描过的非活动页面总数；
+- nr_reclaimed：统计回收了的页面总数
 
 
 #### lru
@@ -1797,6 +2045,147 @@ move_pages_to_lru
 
 - [ ] page_evictable() and PageMovable()
   - [ ] I think, if a page can be evicted to swap, so it can movable too.
+
+
+![loading](https://img2018.cnblogs.com/blog/1771657/201911/1771657-20191109175747860-1724945792.png)
+上图中，主要实现的功能就是将CPU缓存的页面，转移到lruvec链表中，而在转移过程中，最终会调用pagevec_lru_move_fn函数，实际的转移函数是传递给pagevec_lru_move_fn的函数指针。在这些具体的转移函数中，会对Page结构状态位进行判断，清零，设置等处理，并最终调用del_page_from_lru_list/add_page_to_lru_list接口来从一个链表中删除，并加入到另一个链表中。
+
+上述的每个CPU5种缓存struct pagevec，基本描述了LRU链表的几种操作：
+- lru_add_pvec：缓存不属于LRU链表的页，新加入的页；
+- lru_rotate_pvecs：缓存已经在INACTIVE LRU链表中的非活动页，将这些页添加到INACTIVE LRU链表的尾部；
+- lru_deactivate_pvecs：缓存已经在ACTIVE LRU链表中的页，清除掉PG_activate, PG_referenced标志后，将这些页加入到INACTIVE LRU链表中；
+- lru_lazyfree_pvecs：缓存匿名页，清除掉PG_activate, PG_referenced, PG_swapbacked标志后，将这些页加入到LRU_INACTIVE_FILE链表中；
+- activate_page_pvecs：将LRU中的页加入到ACTIVE LRU链表中；
+
+find reference of `pagevec_lru_move_fn`, we can find all the `void (*move_fn)(struct page *page, struct lruvec *lruvec, void *arg)`
+
+```c
+/*
+ * Add the passed pages to the LRU, then drop the caller's refcount
+ * on them.  Reinitialises the caller's pagevec.
+ */
+void __pagevec_lru_add(struct pagevec *pvec)
+{
+    //直接调用pagevec_lru_move_fn函数，并传入转移函数指针
+	pagevec_lru_move_fn(pvec, __pagevec_lru_add_fn, NULL);
+}
+EXPORT_SYMBOL(__pagevec_lru_add);
+
+static void pagevec_lru_move_fn(struct pagevec *pvec,
+	void (*move_fn)(struct page *page, struct lruvec *lruvec, void *arg),
+	void *arg)
+{
+	int i;
+	struct pglist_data *pgdat = NULL;
+	struct lruvec *lruvec;
+	unsigned long flags = 0;
+
+    //遍历缓存中的所有页
+	for (i = 0; i < pagevec_count(pvec); i++) {
+		struct page *page = pvec->pages[i];
+		struct pglist_data *pagepgdat = page_pgdat(page);
+
+       //判断是否为同一个node，同一个node不需要加锁，否则需要加锁处理
+		if (pagepgdat != pgdat) {
+			if (pgdat)
+				spin_unlock_irqrestore(&pgdat->lru_lock, flags);
+			pgdat = pagepgdat;
+			spin_lock_irqsave(&pgdat->lru_lock, flags);
+		}
+
+       //找到目标lruvec，最终页转移到该结构中的LRU链表中
+		lruvec = mem_cgroup_page_lruvec(page, pgdat);
+		(*move_fn)(page, lruvec, arg);  //根据传入的函数进行回调
+	}
+	if (pgdat)
+		spin_unlock_irqrestore(&pgdat->lru_lock, flags);
+    //减少page的引用值，当引用值为0时，从LRU链表中移除页表并释放掉
+	release_pages(pvec->pages, pvec->nr, pvec->cold);
+    //重置pvec结构
+	pagevec_reinit(pvec);
+}
+
+static void __pagevec_lru_add_fn(struct page *page, struct lruvec *lruvec,
+				 void *arg)
+{
+	int file = page_is_file_cache(page);
+	int active = PageActive(page);
+	enum lru_list lru = page_lru(page);
+
+	VM_BUG_ON_PAGE(PageLRU(page), page);
+    //设置page的状态位，表示处于Active状态
+	SetPageLRU(page);
+    //加入到链表中
+	add_page_to_lru_list(page, lruvec, lru);
+    //更新lruvec中的reclaim_state统计信息
+	update_page_reclaim_stat(lruvec, file, active);
+	trace_mm_lru_insertion(page, lru);
+}
+```
+具体的分析在注释中标明了，其余4种缓存类型的迁移都大体类似，至于何时进行迁移以及策略，这个在下文中关于内存回收的进一步分析中再阐述。
+
+正常情况下，LRU链表之间的转移是不需要的，只有在需要进行内存回收的时候，才需要去在ACTIVE和INACTIVE之间去操作。
+
+进入具体的回收分析吧。
+
+#### direct shrink
+
+- [ ] One horrible thing came to me, why not **compact** page when **reclaim** page ?
+
+![loading](https://img2018.cnblogs.com/blog/1771657/201911/1771657-20191109175827519-2018632360.png)
+
+-  [ ] [LoyenWang](https://www.cnblogs.com/LoyenWang/p/11827153.html) section 3.3
+
+
+
+#### kswapd
+- [^29] present a beautiful graph ![](https://oscimg.oschina.net/oscnet/33f9024d70cd92f9cc711df451500aa6047.jpg)
+
+- relation between `kswapd` and `kcompactd`: if kswapd free some pages, then we can wake it up and compact pages
+
+- [ ] [LoyenWang](https://www.cnblogs.com/LoyenWang/p/11827153.html) section 3.4
+
+
+
+#### shrink_node
+
+get_scan_count
+
+```c
+enum scan_balance {
+	SCAN_EQUAL,  // 计算出的扫描值按原样使用
+	SCAN_FRACT,  // 将分数应用于计算的扫描值
+	SCAN_ANON,  // 对于文件页LRU，将扫描次数更改为0
+	SCAN_FILE,     // 对于匿名页LRU，将扫描次数更改为0
+};
+```
+
+![loading](https://img2018.cnblogs.com/blog/1771657/201911/1771657-20191109180043631-1027693945.png)
+
+watch out : rename `shrink_node_memcg` to `shrink_lruvec`
+
+**TO BE CONTINUE, the LoyenWang's blog with code**
+
+#### shrink slab
+1. 面试问题 : dcache 的需要 slab，slab 分配需要 page，那么 page cache, slab 和 dcache 的回收之间的关系是什么
+   1. 思考 : slab 都是提供 kmalloc 的内容，凭什么，可以释放
+   2. 或者本来，释放 slab 就不是特制一个例子，而是一个 shrinker 机制，专门用于释放内核的分配的数据
+   3. 其他 page cache 以及用户页面就是我们熟悉的 lru 算法进行处理了
+
+shrink 的接口和使用方法是什么 ?
+
+这是唯一的使用位置:
+```c
+static unsigned long shrink_slab(gfp_t gfp_mask, int nid,
+				 struct mem_cgroup *memcg,
+				 int priority)
+         // 对于所有的注册的 shrinker 循环调用 do_shrink_slab
+         // 也就是说，其实每个 cache shrinker 之间其实没有什么关系
+
+static unsigned long do_shrink_slab(struct shrink_control *shrinkctl,
+				    struct shrinker *shrinker, int priority)
+```
+然后，根据上方的调用路线，课题知道，猜测应该是对的，对于 page 和 slab 分成两个，slab 利用各种 shrinker 进行
 
 ## memory consistency
 2. barrier() Documentation/memory-barriers.txt : 彻底理解让人窒息的 memory-barriers.txt
@@ -1834,6 +2223,12 @@ https://gist.github.com/Measter/2108508ba25ebe3978a6c10a1e01b9ad
 ## physical memory initialization
 1. 探测
 2. memblock
+
+[LoyenWang](https://www.cnblogs.com/LoyenWang/p/11568481.html)
+[LoyenWang](https://www.cnblogs.com/LoyenWang/p/11523678.html)
+
+整体完成的工作也比较简单，将所有Node中可用的zone全部添加到各个Node中的zonelist中，也就是对应的struct pglist_data结构体中的struct zonelist node_zonelists字段。 这一步之后，准备工作基本就绪，进行页面申请的工作就可以开始了。
+![loading](https://img2018.cnblogs.com/blog/1771657/201910/1771657-20191006001313609-398829452.png)
 
 ## memory zone
 产生 node 的原因 : numa
@@ -1884,6 +2279,8 @@ static bool shmem_should_replace_page(struct page *page, gfp_t gfp)
 认真重读一下:
 - https://ruffell.nz/programming/writeups/2019/02/15/looking-at-kmalloc-and-the-slub-memory-allocator.html
 - http://www.wowotech.net/memory_management/426.html
+
+[TO BE CONTINUE](https://www.cnblogs.com/LoyenWang/p/11922887.html)
 
 ## shmem
 - [ ] [^28] : read it carefully and throughly
@@ -2500,6 +2897,8 @@ To keep pages with the same migrate type together, the buddy allocator groups pa
 
 - [ ] track function : `alloc_contig_pages`
 
+[TO BE CONTINUE](https://www.cnblogs.com/LoyenWang/p/12182594.html)
+
 ## zsmalloc
 slub 分配器处理size > page_size / 2 会浪费非常多的内容，zsmalloc 就是为了解决这个问题 [^20]
 
@@ -2643,6 +3042,8 @@ check the code in `mprotect.c:mprotect_fixup`, above claim can be verified
 - except what three steps meantions above, mprotect also splitting and joining memory regions by their protection flags
 
 ## vma
+[TO BE CONTINUE](https://www.cnblogs.com/LoyenWang/p/12037658.html)
+
 1. 内核地址空间存在 vma 吗 ? TODO
   - 应该是不存在的，不然，该 vma 放到哪里呀 ? 挂到各种用户的 mm_struct 上吗 ?
 
@@ -2667,6 +3068,15 @@ virtual memory area : 内核管理进程的最小单位。
 in fact, we have already understand most of them
 
 - VM_WIPEONFORK : used by madvise, wipe content when fork, check the function in `dup_mmap`, child process will copy_page_range without it
+
+
+## vmalloc
+[TO BE CONTINUE](https://www.cnblogs.com/LoyenWang/p/11965787.html)
+
+## rmap
+[TO BE CONTINUE](https://www.cnblogs.com/LoyenWang/p/12164683.html)
+
+## mincore
 
 
 [^1]: [lwn : Huge pages part 1 (Introduction)](https://lwn.net/Articles/374424/)

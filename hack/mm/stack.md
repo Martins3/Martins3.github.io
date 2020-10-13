@@ -6,6 +6,7 @@
 - [abstract](#abstract)
 - [stack overflow attack](#stack-overflow-attack)
 - [stack types](#stack-types)
+- [start_stack](#start_stack)
 
 <!-- vim-markdown-toc -->
 
@@ -15,7 +16,6 @@
 2. amd64
 3. arm
 4. mips
-
 
 用户态的 stack:
 1. 利用 brk 实现的吗 ?
@@ -73,6 +73,9 @@ While the thread is in user space the kernel stack is empty except for the `thre
 #endif
 ```
 第二个 stack : percpu stack
+
+
+## start_stack
 
 
 [^1]: [kernel doc : kernel stack](https://www.kernel.org/doc/html/latest/x86/kernel-stacks.html)

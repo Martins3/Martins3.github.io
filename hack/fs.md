@@ -61,6 +61,10 @@
 - [nvme](#nvme)
 - [fallocate](#fallocate)
 - [union fs](#union-fs)
+- [TODO](#todo)
+- [multiqueue](#multiqueue)
+- [proc](#proc)
+    - [sysctl](#sysctl)
 
 <!-- vim-markdown-toc -->
 
@@ -1635,6 +1639,15 @@ https:/www.samsung.com/us/labs/pdfs/2016-08-fms-multi-stream-v4.pdf/
 ## union fs
 docker
 
+## TODO
+- [ ] https://news.ycombinator.com/item?id=24758024 : O_SYNC O_DIRECT and many other semantic of posix interface
+
+## multiqueue
+
+## proc
+
+#### sysctl
+`linux/kernel/sysctl.c` is a three thousand lines file, first part is about `proc_put_long`, second part is hierarchy of tables describing /proc/sys/
 
 [^1]: [kernel doc : Overview of the Linux Virtual File System](https://www.kernel.org/doc/html/latest/filesystems/vfs.html)
 [^2]: [github : aio](https://github.com/littledan/linux-aio)
