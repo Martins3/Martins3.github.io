@@ -1818,8 +1818,8 @@ pin_user_pages_fast()
 pin_user_pages_remote()
 ```
 1. In other word use `pin_user_pages*()` for DMA-pinned pages, and `get_user_pages*()` for other cases.
-2. The FOLL_PIN implementation is nearly the same as FOLL_GET, except that FOLL_PIN uses a different reference counting technique.
-3. FOLL_PIN is a prerequisite to FOLL_LONGTERM. Another way of saying that is, FOLL_LONGTERM is a specific case, more restrictive case of FOLL_PIN.
+2. The `FOLL_PIN` implementation is nearly the same as `FOLL_GET`, except that FOLL_PIN uses a different reference counting technique.
+3. `FOLL_PIN` is a prerequisite to `FOLL_LONGTERM`. Another way of saying that is, `FOLL_LONGTERM` is a specific case, more restrictive case of `FOLL_PIN`.
 。。。// TO BE CONTINUE
 
 
@@ -1861,7 +1861,6 @@ Part of the problem comes down to the fact that get_user_pages() does not perfor
   - [x] 猜测是 FOLL_PIN 导致的，在 follow_page_pte 中间使用 get_page
   - [ ] 总结一下，到底那些 memory 的 refcount 的作用
   - [ ] get_page 会一定导致 user page 不可以 swap out 吗 ?
-
 
 
 ## madvise && fadvise

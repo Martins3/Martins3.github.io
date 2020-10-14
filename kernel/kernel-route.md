@@ -1,8 +1,16 @@
+## Merge this to kernel rookie
+
+
+microvm:
+- https://github.com/qemu/qemu/blob/master/docs/microvm.rst
+- https://github.com/Solo5/solo5
+
 ## 计划
 g. [Essential Linux Device Drivers](https://book.douban.com/subject/3088263/)
 2. 日本人的nageshu
 
 http://www.linuxfromscratch.org/lfs/view/10.0-rc1/prologue/foreword.html
+
 
 ## 对症下药
 1. 虚拟化，网络 需要补充一下。

@@ -165,5 +165,10 @@ Creating gzip-compressed initcpio image: /boot/initramfs-4.4-x86_64.img
   -> Running build hook: [udev]
   -> Running build hook: [modconf]
   -> Running build hook: [block]
+```
 
+## install 4.11 ubuntu
+```sh
+qemu-img create -f qcow2 Ubuntu_Xenial-amd64.img 30G
+qemu-system-x86_64 -hda Ubuntu_Xenial-amd64.img -boot d -cdrom ubuntu-16.04.3-server-amd64.iso -m 512 -enable-kvm
 ```
