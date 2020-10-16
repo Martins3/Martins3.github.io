@@ -7,12 +7,16 @@
 - [sched class and policy](#sched-class-and-policy)
 - [runqueue](#runqueue)
 - [task_group](#task_group)
-    - [task_group weight](#task_group-weight)
-- [cfs](#cfs)
+- [load weight share avg](#load-weight-share-avg)
+- [bandwidth](#bandwidth)
 - [rt](#rt)
 - [schedule](#schedule)
 - [load](#load)
-- [no hz](#no-hz)
+    - [global load](#global-load)
+    - [cpu load](#cpu-load)
+    - [pelt](#pelt)
+- [numa balancing](#numa-balancing)
+- [load balancing](#load-balancing)
 - [process state](#process-state)
 - [process relation](#process-relation)
 - [preemption](#preemption)
@@ -60,6 +64,11 @@
 - [`__schedule`](#__schedule)
 - [kthread](#kthread)
 - [TODO](#todo)
+- [session](#session)
+- [sched_class ops](#sched_class-ops)
+    - [enqueue](#enqueue)
+- [runtime vruntime](#runtime-vruntime)
+- [cfs](#cfs)
 
 <!-- vim-markdown-toc -->
 
@@ -82,7 +91,13 @@
 2. pidfd
 3. pidnamespace : 据说 namespace 下，可以没有 pid = 1
 .....
-n. preemption !
+
+- [ ] How to make so many policy work together ?
+    - bandwidth : 
+    - cgroup
+    - every process should run in the period
+    - different scheduler : dead rt
+    - different policy
 
 
 ## introduction
@@ -95,6 +110,8 @@ n. preemption !
 | 进程通信       | IPC 和 signal :
 | 进程调度       |
 | 进程地址空间   | brk
+
+- [ ] https://peteris.rocks/blog/htop/#load-average : Great
 
 
 
@@ -190,10 +207,10 @@ struct rq {
 ## task_group
 ![](https://img2020.cnblogs.com/blog/1771657/202003/1771657-20200310214009477-225815245.png)
 - task_group会为每个CPU再维护一个cfs_rq，这个cfs_rq用于组织挂在这个任务组上的任务以及子任务组，参考图中的Group A；
-- 调度器在调度的时候，比如调用pick_next_task_fair时，会从遍历队列，选择sched_entity，如果发现sched_entity对应的是task_group，则会继续往下选择；
+- 调度器在调度的时候，比如调用`pick_next_task_fair`时，会从遍历队列，选择sched_entity，如果发现sched_entity对应的是task_group，则会继续往下选择；
 - 由于sched_entity结构中存在parent指针，指向它的父结构，因此，系统的运行也能从下而上的进行遍历操作，通常使用函数walk_tg_tree_from进行遍历；
 
-- [ ] please notice that, when CONFIG_CFS_BADNWIDTH turned off, walk_tg_tree_from's user disapeared, so why `bandwidth` need `walk_tg_tree_from` ?
+- [ ] please notice that, when CONFIG_CFS_BADNWIDTH turned off, walk_tg_tree_from's users are disapeared, so why `bandwidth` need `walk_tg_tree_from` ?
 
 - [ ] we create a `cfs_rq` for every group, verfiy it
 - [ ] what kinds of process will be added to same process group ?
@@ -233,24 +250,137 @@ struct task_group {
 };
 ```
 
-#### task_group weight
+
+
+## load weight share avg
+
 [LoyenWang](https://www.cnblogs.com/LoyenWang/p/12459000.html)
 
 ![](https://img2020.cnblogs.com/blog/1771657/202003/1771657-20200310214059270-591255805.png)
 
-- [ ] update_load_avg : maybe section `load` explain it
-- [ ] calc_group_shares() : a horrible function
-  - [ ] struct cfs_rq::load;
-  - [ ] struct cfs_rq::avg;
-	- [ ] struct cfs_rq::tg_load_avg_contrib;
-  - [ ] struct task_group::shares
-  - [ ] struct task_group::load_avg
+- [x] update_load_avg : details are in [load balancing](#load-balancing)
+- [ ] calc_group_shares() : a horrible function, not it's comments is horrible
+
+- [x] struct cfs_rq::avg; it *should* be sum of `se->avg`, but I need a dig into it.
+```c
+static inline void
+enqueue_load_avg(struct cfs_rq *cfs_rq, struct sched_entity *se)
+{
+	cfs_rq->avg.load_avg += se->avg.load_avg;
+	cfs_rq->avg.load_sum += se_weight(se) * se->avg.load_sum;
+}
+
+static inline void
+dequeue_load_avg(struct cfs_rq *cfs_rq, struct sched_entity *se)
+{
+	sub_positive(&cfs_rq->avg.load_avg, se->avg.load_avg);
+	sub_positive(&cfs_rq->avg.load_sum, se_weight(se) * se->avg.load_sum);
+}
+```
+
+- [x] struct task_group::shares
+  - `share` is exclusive concept used for task_group, describing share of a task_group in all task_groups
+
+- [x] struct cfs_rq::load;
+```c
+static void account_entity_enqueue(struct cfs_rq *cfs_rq, struct sched_entity *se){
+	update_load_add(&cfs_rq->load, se->load.weight);
+  // ...
+
+static void account_entity_dequeue(struct cfs_rq *cfs_rq, struct sched_entity *se)
+```
+As these two function suggests, `cfs_rq->load` is weight is sum of all 
+
+- [x] struct task_group::load_avg
+- [x] struct cfs_rq::tg_load_avg_contrib;
+```c
+/**
+ * update_tg_load_avg - update the tg's load avg
+ * @cfs_rq: the cfs_rq whose avg changed
+ * @force: update regardless of how small the difference
+ *
+ * This function 'ensures': tg->load_avg := \Sum tg->cfs_rq[]->avg.load.
+ * However, because tg->load_avg is a global value there are performance
+ * considerations.
+ *
+ * In order to avoid having to look at the other cfs_rq's, we use a
+ * differential update where we store the last value we propagated. This in
+ * turn allows skipping updates if the differential is 'small'.
+ *
+ * Updating tg's load_avg is necessary before update_cfs_share().
+ */
+static inline void update_tg_load_avg(struct cfs_rq *cfs_rq, int force)
 
 
-- [ ] There are a lot more to read the article, but before that we have understand `load` !
+/* Task group related information */
+struct task_group {
+	/*
+	 * load_avg can be heavily contended at clock tick time, so put
+	 * it in its own cacheline separated from the fields above which
+	 * will also be accessed at each tick.
+	 */
+	atomic_long_t		load_avg ____cacheline_aligned;
+```
+As two comments suggests, `tg->load_avg := \Sum tg->cfs_rq[]->avg.load_avg.`, tg_load_avg_contrib is used for lock efficiency.
 
-## cfs
-- [ ] [LoyenWang](https://www.cnblogs.com/LoyenWang/p/12495319.html)
+
+At last, `reweight_entity`
+
+
+## bandwidth
+[LoyenWang](https://www.cnblogs.com/LoyenWang/p/12495319.html)
+
+
+/sys/fs/cgroup/cpu/cpu.cfs_quota_us
+/sys/fs/cgroup/cpu/cpu.cfs_period_us
+
+`period`表示周期，`quota`表示限额，也就是在period期间内，用户组的CPU限额为quota值，当超过这个值的时候，用户组将会被限制运行（throttle），等到下一个周期开始被解除限制（unthrottle）；
+
+
+```c
+struct cfs_bandwidth {
+#ifdef CONFIG_CFS_BANDWIDTH
+	raw_spinlock_t		lock;
+	ktime_t			period;
+	u64			quota;
+	u64			runtime; // 记录限额剩余时间，会使用quota值来周期性赋值；
+	s64			hierarchical_quota;
+
+	u8			idle;
+	u8			period_active; // 周期性计时已经启动；
+	u8			slack_started;
+	struct hrtimer		period_timer;
+	struct hrtimer		slack_timer; // 延迟定时器，在任务出列时，将剩余的运行时间返回到全局池里；
+	struct list_head	throttled_cfs_rq;
+
+	/* Statistics: */
+	int			nr_periods;
+	int			nr_throttled;
+	u64			throttled_time;
+#endif
+};
+
+
+/* CFS-related fields in a runqueue */
+struct cfs_rq {
+// ...
+#ifdef CONFIG_CFS_BANDWIDTH
+	int			runtime_enabled;
+	s64			runtime_remaining; // 剩余的运行时间；
+
+	u64			throttled_clock;
+	u64			throttled_clock_task;
+	u64			throttled_clock_task_time;
+	int			throttled;
+	int			throttle_count;
+	struct list_head	throttled_list;
+#endif /* CONFIG_CFS_BANDWIDTH */
+```
+
+![loading](https://img2020.cnblogs.com/blog/1771657/202003/1771657-20200310214259138-947344133.png)
+
+
+[LoyenWang](https://www.cnblogs.com/LoyenWang/p/12459000.html)'s blog is really clear.
 
 ## rt
 
@@ -297,11 +427,214 @@ notes from [^8]:
 - [ ] so, what's `share` ?
   - [ ] calc_group_shares
 
-## no hz
+#### global load
+exported by `/proc/loadavg`
+
+[^9]: The load number is calculated by counting the number of running (currently running or waiting to run) and uninterruptible processes (waiting for disk or network activity). So it's simply a number of processes.
+
+![](https://img2018.cnblogs.com/blog/1771657/202002/1771657-20200216135559205-958783412.png)
+
+
+1. scheduler_tick :
+    - `curr->sched_class->task_tick(rq, curr, 0);`
+    - calc_global_load_tick : update `calc_load_tasks`
+    - perf_event_task_tick
+2. do_timer : do the calculation
+
+
+- [ ] `curr->sched_class->task_tick` : what are we doing in it ?
+- [ ] what's relation `do_timer` and `scheduler_tick` ?
+
+loadavg decay at rate `1/e` at 1min, 5min, 15min.
+
+#### cpu load
+I think cpu load is used for [load balancing](#load-balancing)
+
+#### pelt 
+[Per-entity load tracking](https://lwn.net/Articles/531853/)
 
 
 
+[Load tracking in the scheduler](https://lwn.net/Articles/639543/)
+- The CFS algorithm defines a time duration called the "scheduling period," during which every runnable task on the CPU should run at least once. 
+- A group of tasks is called a "scheduling entity" in the kernel.
 
+*If a CPU is associated with a number C that represents its ability to process tasks (let's call it "capacity"), then the load of a process is a metric that is expressed in units of C, indicating the number of such CPUs required to make satisfactory progress on its job. This number could also be a fraction of C, in which case it indicates that a single such CPU is good enough. The load of a process is important in scheduling because, besides influencing the time that a task spends running on the CPU, it helps to estimate overall CPU load, which is required during load balancing.
+
+The question is how to estimate the load of a process. Should it be set statically or should it be set dynamically at run time based on the behavior of the process? Either way, how should it be calculated? There have been significant efforts at answering these questions in the recent past. As a consequence, the number of load-tracking metrics has grown significantly and load estimation itself has gotten quite complex.*
+
+- [ ] what's relation with `load`, `priority` , `weight` and `share` ?
+
+how and when groups of tasks are created:
+1. Users may use the control group ("cgroup") infrastructure to partition system resources between tasks. Tasks belonging to a cgroup are associated with a group in the scheduler (if the scheduler controller is attached to the group).
+2. When a new session is created through the `set_sid()` system call. All tasks belonging to a specific session also belong to the same scheduling group. This feature is enabled when CONFIG_SCHED_AUTOGROUP is set in the kernel configuration.
+3. a single task becomes a scheduling entity on its own. 
+
+**Each scheduling entity contains a run queue**, the parent run queue on which a scheduling entity is queued is represented by `cfs_rq`, while the run queue that it owns is represented by `my_rq` in the `sched_entity` data structure. 
+```c
+struct sched_entity {
+	/* rq on which this entity is (to be) queued: */
+	struct cfs_rq			*cfs_rq;
+	/* rq "owned" by this entity/group: */
+	struct cfs_rq			*my_q;
+```
+For every CPU c, a given `task_group` tg has a `sched_entity` called se and a run queue `cfs_rq` associated with it. 
+
+Any given task's time slice is dependent on its priority and the number of tasks on the run queue. The priority of a task is a number that represents its importance; **it is represented in the kernel by a number between zero and 139.**
+
+But the priority value by itself is not helpful to the scheduler, *which also needs to know the load of the task to estimate its time slice.*
+As mentioned above, the load must be the multiple of the capacity of a standard CPU that is required to make satisfactory progress on the task. Hence this priority number must be mapped to such a value; this is done in the array `prio_to_weight[]`.
+
+A priority number of 120, which is the priority of a normal task, is mapped to a load of 1024, which is the value that the kernel uses to represent the capacity of a single standard CPU.
+```c
+/*
+ * Nice levels are multiplicative, with a gentle 10% change for every
+ * nice level changed. I.e. when a CPU-bound task goes from nice 0 to
+ * nice 1, it will get ~10% less CPU time than another CPU-bound task
+ * that remained on nice 0.
+ *
+ * The "10% effect" is relative and cumulative: from _any_ nice level,
+ * if you go up 1 level, it's -10% CPU usage, if you go down 1 level
+ * it's +10% CPU usage. (to achieve that we use a multiplier of 1.25.
+ * If a task goes up by ~10% and another task goes down by ~10% then
+ * the relative distance between them is ~25%.)
+ */
+const int sched_prio_to_weight[40] = {
+ /* -20 */     88761,     71755,     56483,     46273,     36291,
+ /* -15 */     29154,     23254,     18705,     14949,     11916,
+ /* -10 */      9548,      7620,      6100,      4904,      3906,
+ /*  -5 */      3121,      2501,      1991,      1586,      1277,
+ /*   0 */      1024,       820,       655,       526,       423,
+ /*   5 */       335,       272,       215,       172,       137,
+ /*  10 */       110,        87,        70,        56,        45,
+ /*  15 */        36,        29,        23,        18,        15,
+};
+```
+
+```c
+/*
+ * Task weight (visible to users) and its load (invisible to users) have
+ * independent resolution, but they should be well calibrated. We use
+ * scale_load() and scale_load_down(w) to convert between them. The
+ * following must be true:
+ *
+ *  scale_load(sched_prio_to_weight[USER_PRIO(NICE_TO_PRIO(0))]) == NICE_0_LOAD
+ *
+ */
+#define NICE_0_LOAD		(1L << NICE_0_LOAD_SHIFT)
+
+/*
+ * 'User priority' is the nice value converted to something we
+ * can work with better when scaling various scheduler parameters,
+ * it's a [ 0 ... 39 ] range.
+ */
+#define USER_PRIO(p)		((p)-MAX_RT_PRIO)
+
+/*
+ * Convert user-nice values [ -20 ... 0 ... 19 ]
+ * to static priority [ MAX_RT_PRIO..MAX_PRIO-1 ],
+ * and back.
+ */
+#define NICE_TO_PRIO(nice)	((nice) + DEFAULT_PRIO)
+```
+- [x] It's reasonable, nice value is friendly to user, but it doesn't provide proper granularity.
+
+> man nice(2)
+> with -20 being the highest priority and 19 being the lowest priority.
+
+- [ ] what's nice of rt thread ?
+
+A run queue (struct cfs_rq) is also characterized by a "weight" value that is the accumulation of weights of all tasks on its run queue.
+
+The lowest vruntime found in the queue is stored in `cfs_rq.min_vruntime`. When a new task is picked to run, the leftmost node of the red-black tree is chosen since that task has had the least running time on the CPU. *Each time a new task forks or a task wakes up, its vruntime is assigned to a value that is the maximum of its last updated value and cfs_rq.min_vruntime.* If not for this, its vruntime would be very small as an effect of not having run for a long time (or at all) and would take an unacceptably long time to catch up to the vruntime of its sibling tasks and hence starve them of CPU time.
+
+Every periodic tick, the vruntime of the currently-running task is updated as follows:
+```c
+    vruntime += delta_exec * (NICE_0_LOAD/curr->load.weight);
+```
+
+
+The load of a CPU could have simply been the sum of the load of all the scheduling entities running on its run queue.
+In fact, that was once all there was to it.
+This approach has a disadvantage, though, in that tasks are associated with load values based only on their priorities.
+This approach does not take into account the nature of a task, such as whether it is a bursty or a steady task, or whether it is a CPU-intensive or an I/O-bound task.
+*While this does not matter for scheduling within a CPU, it does matter when load balancing across CPUs because it helps estimate the CPU load more accurately.*
+
+
+Therefore the per-entity load tracking metric was introduced to estimate the nature of a task numerically.
+**This metric calculates task load as the amount of time that the task was runnable during the time that it was alive.**
+This is kept track of in the `sched_avg` data structure (stored in the `sched_entity` structure):
+
+Given a task p, if the `sched_entity` associated with it is se and the `sched_avg` of se is sa, then:
+```
+sa.load_avg_contrib = (sa.runnable_sum * se.load.weight) / sa.runnable_period;
+```
+where `runnable_sum` is the amount of time that the task was runnable, `runnable_period` is the period during which the task could have been runnable.
+
+The load on a CPU is the sum of the `load_avg_contrib` of all the scheduling entities on its run queue;
+it is accumulated in a field called `runnable_load_avg` in the `cfs_rq` data structure.
+This is roughly a measure of how heavily contended the CPU is. The kernel also tracks the load associated with blocked tasks. When a task gets blocked, its load is accumulated in the blocked_load_avg metric of the cfs_rq structure.
+
+- [ ] [Per-entity load tracking in presence of task groups](https://lwn.net/Articles/639543/) : Continue the reading if other parts finished.
+
+
+[^10]:
+Linux中使用`struct sched_avg`来记录调度实体和CFS运行队列的负载信息，因此`struct sched_entity`和`struct cfs_rq`结构体中，都包含了`struct sched_avg`，字段介绍如下：
+```c
+struct sched_avg {
+	u64				last_update_time;      //上一次负载更新的时间，主要用于计算时间差；
+	u64				load_sum;              //可运行时间带来的负载贡献总和，包括等待调度时间和正在运行时间；
+	u32				util_sum;              //正在运行时间带来的负载贡献总和；
+	u32				period_contrib;        //上一次负载更新时，对1024求余的值；
+	unsigned long			load_avg;      //runnable 的平均负载贡献；
+	unsigned long			util_avg;      //running 的平均负载贡献；
+};
+```
+
+![](https://img2018.cnblogs.com/blog/1771657/202002/1771657-20200216135939689-531768656.png)
+
+`___update_load_sum` + `___update_load_avg`:
+
+
+// ------ **The Boss** : `___update_load_avg` begin -----
+
+- [x] why has split time into period(1024ms)
+  - kernel can't handle float
+  - `accumulate_sum()`
+- [x] why decay, how to decay ?
+  - maybe the reason is same with /proc/loadavg
+  - details in `___update_load_sum` ==> `accumulate_sum()` ==> `decay_load`, it's 
+
+- [ ] how to count the time is blocked , or runable ?
+  
+- [ ] so, how to use them ?
+- [ ] who are they, the sum, the avg ?
+// ------ **The Boss** : `___update_load_avg` end -----
+
+
+## numa balancing
+- [x] I guess, if memory node is only one, we still balancing task between cores
+
+## load balancing
+
+```c
+__init void init_sched_fair_class(void)
+{
+#ifdef CONFIG_SMP
+	open_softirq(SCHED_SOFTIRQ, run_rebalance_domains);
+
+#ifdef CONFIG_NO_HZ_COMMON
+	nohz.next_balance = jiffies;
+	nohz.next_blocked = jiffies;
+	zalloc_cpumask_var(&nohz.idle_cpus_mask, GFP_NOWAIT);
+#endif
+#endif /* SMP */
+
+}
+```
+- [ ] so, what's softirq, and how run_rebalance_domains triggered ?
+
+- [ ] load_balance ==> find_busiest_group , find_busiest_queue
 
 ## process state
 ```c
@@ -381,6 +714,8 @@ notes from [^8]:
 - [ ] why we need parent and real_parent fields in task_struct ?
 
 ## preemption
+- [ ] config PREEMPT_VOLUNTARY ?
+
 - [x] So what's the difference between preempt and disable interrupt ?
 
 this [ans](https://stackoverflow.com/questions/9473301/are-there-any-difference-between-kernel-preemption-and-interrupt)
@@ -1359,11 +1694,111 @@ https://phoenixnap.com/kb/create-a-sudo-user-on-debian : 首先搞清楚这种�
     2. 部分信号机制总是只是出现在 child 和 parent 
 6. 一个 thread group 都是 group leader 的 children 吗 ?
 
+## session
+- [ ] maybe a third time to read *Linux Programming Interface*
+
+set_sid()
+
+process group
 
 
-[^22]: https://stackoverflow.com/questions/14163208/how-to-link-c-object-files-with-ld
-[^23]: https://stackoverflow.com/questions/18133812/where-is-the-x86-64-system-v-abi-documented
-[^24]: https://uclibc.org/docs/psABI-x86_64.pdf
+## sched_class ops
+```c
+struct sched_class {
+
+#ifdef CONFIG_UCLAMP_TASK
+	int uclamp_enabled;
+#endif
+
+	void (*enqueue_task) (struct rq *rq, struct task_struct *p, int flags);
+	void (*dequeue_task) (struct rq *rq, struct task_struct *p, int flags);
+	void (*yield_task)   (struct rq *rq);
+	bool (*yield_to_task)(struct rq *rq, struct task_struct *p);
+
+	void (*check_preempt_curr)(struct rq *rq, struct task_struct *p, int flags);
+
+	struct task_struct *(*pick_next_task)(struct rq *rq);
+
+	void (*put_prev_task)(struct rq *rq, struct task_struct *p);
+	void (*set_next_task)(struct rq *rq, struct task_struct *p, bool first);
+
+#ifdef CONFIG_SMP
+	int (*balance)(struct rq *rq, struct task_struct *prev, struct rq_flags *rf);
+	int  (*select_task_rq)(struct task_struct *p, int task_cpu, int sd_flag, int flags);
+	void (*migrate_task_rq)(struct task_struct *p, int new_cpu);
+
+	void (*task_woken)(struct rq *this_rq, struct task_struct *task);
+
+	void (*set_cpus_allowed)(struct task_struct *p,
+				 const struct cpumask *newmask);
+
+	void (*rq_online)(struct rq *rq);
+	void (*rq_offline)(struct rq *rq);
+#endif
+
+	void (*task_tick)(struct rq *rq, struct task_struct *p, int queued);
+	void (*task_fork)(struct task_struct *p);
+	void (*task_dead)(struct task_struct *p);
+
+	/*
+	 * The switched_from() call is allowed to drop rq->lock, therefore we
+	 * cannot assume the switched_from/switched_to pair is serliazed by
+	 * rq->lock. They are however serialized by p->pi_lock.
+	 */
+	void (*switched_from)(struct rq *this_rq, struct task_struct *task);
+	void (*switched_to)  (struct rq *this_rq, struct task_struct *task);
+	void (*prio_changed) (struct rq *this_rq, struct task_struct *task,
+			      int oldprio);
+
+	unsigned int (*get_rr_interval)(struct rq *rq,
+					struct task_struct *task);
+
+	void (*update_curr)(struct rq *rq);
+
+#define TASK_SET_GROUP		0
+#define TASK_MOVE_GROUP		1
+
+#ifdef CONFIG_FAIR_GROUP_SCHED
+	void (*task_change_group)(struct task_struct *p, int type);
+#endif
+} __aligned(STRUCT_ALIGNMENT); /* STRUCT_ALIGN(), vmlinux.lds.h */
+```
+
+#### enqueue
+```c
+enqueue_task
+
+	p->sched_class->enqueue_task(rq, p, flags);
+
+```
+
+With post of [LoyenWang](https://www.cnblogs.com/LoyenWang/p/12495319.html), we will understand every class function.
+
+## runtime vruntime
+
+
+## cfs 
+- [ ] 运行时间runtime可以转换成虚拟运行时间vruntime；
+- [ ] what if vruntime overflow ?
+
+
+```c
+struct sched_entity {
+	/* For load-balancing: */
+	struct load_weight		load;     //调度实体的负载权重值
+	struct rb_node			run_node;   //用于连接到CFS运行队列的红黑树中的节点
+	struct list_head		group_node; //用于连接到CFS运行队列的cfs_tasks链表中的节点
+	unsigned int			on_rq;        //用于表示是否在运行队列中
+
+	u64				exec_start;           //当前调度实体的开始执行时间
+	u64				sum_exec_runtime;     //调度实体执行的总时间
+	u64				vruntime;             //虚拟运行时间，这个时间用于在CFS运行队列中排队
+	u64				prev_sum_exec_runtime;//上一个调度实体运行的总时间
+
+	u64				nr_migrations;        //负载均衡
+```
+
+
 [^1]: [blog : Evolution of the x86 context switch in Linux](http://www.maizure.org/projects/evolution_x86_context_switch_linux/)
 [^2]: https://man7.org/linux/man-pages/man7/signal.7.html 
 [^3]: https://0xax.gitbooks.io/linux-insides/content/SysCall/linux-syscall-2.html
@@ -1372,3 +1807,8 @@ https://phoenixnap.com/kb/create-a-sudo-user-on-debian : 首先搞清楚这种�
 [^6]: https://stackoverflow.com/questions/61886139/why-thread-info-should-be-the-first-element-in-task-struct
 [^7]: Understanding Linux Kernel
 [^8]: https://www.cnblogs.com/LoyenWang/p/12249106.html
+[^9]: https://peteris.rocks/blog/htop/
+[^10]: https://www.cnblogs.com/LoyenWang/p/12316660.html
+[^22]: https://stackoverflow.com/questions/14163208/how-to-link-c-object-files-with-ld
+[^23]: https://stackoverflow.com/questions/18133812/where-is-the-x86-64-system-v-abi-documented
+[^24]: https://uclibc.org/docs/psABI-x86_64.pdf

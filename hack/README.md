@@ -40,6 +40,8 @@
 - [ ] https://www.kernel.org/doc/gorman/html/understand/ : check the book
 - [ ] access_ok()
 
+- [ ] update_curr() scheduler_tick()
+
 ## License
 #### License for code
 ```txt

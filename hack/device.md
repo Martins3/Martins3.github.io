@@ -3,6 +3,8 @@
 
 <!-- vim-markdown-toc GitLab -->
 
+- [TODO](#todo)
+- [unsorted](#unsorted)
 - [device model](#device-model)
     - [Hot Plug](#hot-plug)
     - [uevent](#uevent)
@@ -16,13 +18,13 @@
 - [device tree](#device-tree)
 - [char device](#char-device)
 - [block device](#block-device)
-- [irq](#irq)
-- [TODO](#todo)
+- [TODO](#todo-1)
 - [问题](#问题)
-- [问题](#问题-1)
 - [资源(整理成为 footnote)](#资源整理成为-footnote)
 
 <!-- vim-markdown-toc -->
+
+
 
 ## device model
 The simple idea is that the "devices" of the system show up in one single tree at /sys/devices. Devices of a common type have a "subsystem" symlink pointing back to the subsystem's directory. All devices of that subsystem are listed there.
@@ -378,21 +380,6 @@ struct block_device_operations {
 };
 ```
 
-## irq
-1. https://stackoverflow.com/questions/1053572/why-kernel-code-thread-executing-in-interrupt-context-cannot-sleep
-2. spin lock 为什么需要提供 spin_lock_irqsave : 因为 spin_lock 不可以 recursive 的，一个 process 持有 lock, 然后 interrupt handler 被执行，持有这个锁，那么就进入死锁了
-
-[^4] 的质量很好，记录放在 insides 中间:
-
-ideentry.h : 定义了一些常见的 idt, 比如 GP(general protection), PF(page fault) 的问题
-
-<<<<<<< HEAD
-http://www.cs.columbia.edu/~krj/os/lectures/L07-LinuxEvents.pdf
-
-[^5] 的质量很高，虽然是个 ppt:
-- I/O	devices	hae	(unique	or	shared)	Interrupt	Request Lines	(IRQs)	
-- IRQs	are	mapped	by	special	hardware	to	interrupt	vectors, and	passed	to	the	CPU	
-- This	hardware	is	called	a	Programmable	Interrupt Controller	(PIC)	v
 
 
 ## TODO
@@ -405,6 +392,7 @@ http://www.cs.columbia.edu/~krj/os/lectures/L07-LinuxEvents.pdf
 ## 问题
 - [x] 到底一共存在多少总线类型 ? PCI PCIE I2C  ()
 - [ ] major:minor ?
+- [ ] 到底一共存在多少总线类型 ? PCI PCIE I2C 
 
 这篇文章
 A Hardware Architecture for Implementing Protection Rings
@@ -413,8 +401,6 @@ A Hardware Architecture for Implementing Protection Rings
 2. syscall 可以使用 int 模拟实现吗 ?
 3. interupt 和 exception 在架构实现上存在什么区别吗 ?
 
-## 问题
-1. 到底一共存在多少总线类型 ? PCI PCIE I2C 
 
 ## 资源(整理成为 footnote)
 1. https://www.linuxjournal.com/article/7353 : usb 驱动
@@ -427,5 +413,3 @@ https://unix.stackexchange.com/questions/550037/udev-and-uevent-question : udev 
 [^1]: https://events19.linuxfoundation.org/wp-content/uploads/2017/12/Introduction-to-Linux-Kernel-Driver-Programming-Michael-Opdenacker-Bootlin-.pdf
 [^2]: https://lwn.net/Articles/645810/
 [^3]: https://lwn.net/Articles/646514/
-[^4]: https://0xax.gitbooks.io/linux-insides/content/Interrupts/
-[^5]: http://www.cs.columbia.edu/~krj/os/lectures/L07-LinuxEvents.pdf
