@@ -42,6 +42,8 @@
 
 - [ ] update_curr() scheduler_tick()
 
+- [ ] redo hack linux kernel labs, so we can understand kobjs / sys / again
+
 ## License
 #### License for code
 ```txt

@@ -1,23 +1,31 @@
 # 中断
 <!-- vim-markdown-toc GitLab -->
 
-- [TODO](#todo)
-- [unsorted](#unsorted)
-- [workqueue](#workqueue)
-    - [struct work_struct](#struct-work_struct)
-    - [struct workqueue](#struct-workqueue)
-    - [struct worker](#struct-worker)
-    - [struct worker_pool](#struct-worker_pool)
-    - [struct pool_workqueue](#struct-pool_workqueue)
-- [ipi](#ipi)
-- [https://elinux.org/images/8/8c/Zyngier.pdf](#httpselinuxorgimages88czyngierpdf)
-- [https://linux-kernel-labs.github.io/refs/heads/master/lectures/interrupts.html](#httpslinux-kernel-labsgithubiorefsheadsmasterlecturesinterruptshtml)
-- [timer](#timer)
-- [irq](#irq)
-- [softirq](#softirq)
-- [tasklet](#tasklet)
-- [apic](#apic)
-- [chained irq](#chained-irq)
+  - [TODO](#todo)
+  - [unsorted](#unsorted)
+  - [workqueue](#workqueue)
+      - [struct work_struct](#struct-work_struct)
+      - [struct workqueue](#struct-workqueue)
+      - [struct worker](#struct-worker)
+      - [struct worker_pool](#struct-worker_pool)
+      - [struct pool_workqueue](#struct-pool_workqueue)
+  - [ipi](#ipi)
+  - [https://elinux.org/images/8/8c/Zyngier.pdf](#httpselinuxorgimages88czyngierpdf)
+  - [https://linux-kernel-labs.github.io/refs/heads/master/lectures/interrupts.html](#httpslinux-kernel-labsgithubiorefsheadsmasterlecturesinterruptshtml)
+  - [timer](#timer)
+  - [irq](#irq)
+  - [softirq](#softirq)
+  - [tasklet](#tasklet)
+  - [apic](#apic)
+  - [chained irq](#chained-irq)
+  - [irq domain](#irq-domain)
+      - [irq domain hierarchy](#irq-domain-hierarchy)
+  - [request irq](#request-irq)
+  - [irq desc](#irq-desc)
+  - [affinity](#affinity)
+  - [nmi](#nmi)
+  - [apic](#apic-1)
+- [gpio](#gpio)
 
 <!-- vim-markdown-toc -->
 
@@ -33,6 +41,8 @@ A Hardware Architecture for Implementing Protection Rings
 3. interupt 和 exception 在架构实现上存在什么区别吗 ?
 
 ## TODO
+
+1. 什么是软中断 ？
 
 
 - [ ] https://www.kernel.org/doc/html/latest/core-api/genericirq.html
@@ -426,3 +436,48 @@ top-level irq_desc 中间哪里 TMD 有 stash a pointer，只有 action chain �
 > - *The chained irqchip paradigm doesn’t match it*
 
 第 15 16 页是在看不懂了
+
+## irq domain
+[What are linux irq domains, why are they needed?](https://stackoverflow.com/questions/34371352/what-are-linux-irq-domains-why-are-they-needed)
+
+
+[kernel doc](https://www.kernel.org/doc/html/latest/core-api/irq/irq-domain.html)
+
+we need a mechanism to separate controller-local interrupt numbers, called hardware irq's, from Linux IRQ numbers.
+
+#### irq domain hierarchy
+https://www.kernel.org/doc/html/latest/core-api/irq/irq-domain.html : Hierarchy IRQ domain
+
+
+## request irq
+devm_request_threaded_irq ==> request_threaded_irq
+
+
+## irq desc
+- [ ] /sys/kernel/irq
+  - chiq_name_show type_show hwirq_show type_show wakeup_show name_show action_show
+  - irq_sysfs_add
+
+[answer this question](https://unix.stackexchange.com/questions/579513/what-is-meaning-of-empty-action-respect-to-sys-kernel-irq)
+
+
+## affinity
+
+```c
+static int __init irq_affinity_setup(char *str)
+static void __init init_irq_default_affinity(void)
+
+
+static int alloc_masks(struct irq_desc *desc, int node)
+static void free_masks(struct irq_desc *desc)
+```
+> cpu mask 的功能好神奇 ? 还可以实现什么功能
+
+## nmi
+
+## apic
+https://habr.com/en/post/446312/
+
+
+# gpio
+https://github.com/Manawyrm/pata-gpio

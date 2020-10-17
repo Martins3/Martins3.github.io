@@ -1,6 +1,5 @@
 # kernel/irq/irqdesc.md
 
-感觉 : 用于支持动态的分配 irq
 
 ## TODO
 1. struct module 的作用
@@ -9,18 +8,6 @@
     2. CONFIG_SPARSE_IRQ
     3. CONFIG_HANDLE_DOMAIN_IRQ
 3. 
-
-## smp 
-
-```c
-static int __init irq_affinity_setup(char *str)
-static void __init init_irq_default_affinity(void)
-
-
-static int alloc_masks(struct irq_desc *desc, int node)
-static void free_masks(struct irq_desc *desc)
-```
-> cpu mask 的功能好神奇 ? 还可以实现什么功能
 
 
 ## alloc_desc
@@ -33,13 +20,6 @@ static struct irq_desc *alloc_desc(int irq, int node, unsigned int flags,
 ```
 
 ## show
-1. chiq_name_show
-2. type_show
-3. hwirq_show
-4. type_show
-5. wakeup_show
-6. name_show
-7. action_show
 
 ## sfsfs
 

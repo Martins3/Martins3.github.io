@@ -31,11 +31,6 @@
 | Makefile       | 1     | 1       | 15   |             |
 
 
-
-## question
-1. irq_data 的作用 ?
-2. 
-
 ## todo
 1. 以 x86 为例，想知道从 architecture 的 entry.S 触发 到指向对应的 handler 的过程是怎样的 ?
 2. 中断控制器很简单，其大概是怎么实现的 ?
@@ -54,5 +49,3 @@
 1. 中断描述符中应该会包括底层irq chip相关的数据结构，linux kernel中把这些数据组织在一起，形成`struct irq_data`
 2. 中断有两种形态，一种就是直接通过signal相连，用电平或者边缘触发。另外一种是基于消息的，被称为MSI (Message Signaled Interrupts)。
 3. Interrupt controller描述符（struct irq_chip）包括了若干和具体Interrupt controller相关的`callback`函数
-
-

@@ -3,8 +3,6 @@
 
 <!-- vim-markdown-toc GitLab -->
 
-- [TODO](#todo)
-- [unsorted](#unsorted)
 - [device model](#device-model)
     - [Hot Plug](#hot-plug)
     - [uevent](#uevent)
@@ -18,13 +16,10 @@
 - [device tree](#device-tree)
 - [char device](#char-device)
 - [block device](#block-device)
-- [TODO](#todo-1)
 - [问题](#问题)
 - [资源(整理成为 footnote)](#资源整理成为-footnote)
 
 <!-- vim-markdown-toc -->
-
-
 
 ## device model
 The simple idea is that the "devices" of the system show up in one single tree at /sys/devices. Devices of a common type have a "subsystem" symlink pointing back to the subsystem's directory. All devices of that subsystem are listed there.
@@ -379,15 +374,6 @@ struct block_device_operations {
 	const struct pr_ops *pr_ops;
 };
 ```
-
-
-
-## TODO
-1. 什么是软中断 ？
-
-不要害怕开始：
-1. 总结 从 ics 的中断 和 ucore 的中断的实现，然后再去分析
-2. file:///home/shen/Core/hack-linux-kernel/Documentation/output/teaching/lectures/interrupts.html
 
 ## 问题
 - [x] 到底一共存在多少总线类型 ? PCI PCIE I2C  ()
