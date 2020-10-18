@@ -1616,7 +1616,8 @@ systemctl 利用 /etc/init.d/cassandra 的来启动，还是很有意思的
 了解设计思想，然后阅读代码
 
 ## smp
-kernel/smp.c
+/home/maritns3/core/linux/arch/x86/kernel/smp.c
+/home/maritns3/core/linux/arch/x86/kernel/smpboot.c
 
 smp_call_function_many 之类的函数可以看看
 

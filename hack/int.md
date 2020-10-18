@@ -2,6 +2,7 @@
 <!-- vim-markdown-toc GitLab -->
 
   - [TODO](#todo)
+  - [code distribution](#code-distribution)
   - [unsorted](#unsorted)
   - [workqueue](#workqueue)
       - [struct work_struct](#struct-work_struct)
@@ -19,13 +20,20 @@
   - [apic](#apic)
   - [chained irq](#chained-irq)
   - [irq domain](#irq-domain)
-      - [irq domain hierarchy](#irq-domain-hierarchy)
+  - [irq domain hierarchy](#irq-domain-hierarchy)
+  - [ir](#ir)
   - [request irq](#request-irq)
   - [irq desc](#irq-desc)
   - [affinity](#affinity)
   - [nmi](#nmi)
   - [apic](#apic-1)
 - [gpio](#gpio)
+  - [idt](#idt)
+  - [handle irq](#handle-irq)
+  - [x86 vector](#x86-vector)
+  - [isa and pci](#isa-and-pci)
+  - [eoi](#eoi)
+  - [ref](#ref)
 
 <!-- vim-markdown-toc -->
 
@@ -77,6 +85,60 @@ http://www.cs.columbia.edu/~krj/os/lectures/L07-LinuxEvents.pdf
 
 
 - [ ] http://wiki.0xffffff.org/posts/hurlex-8.html : used for understand 8259APIC
+
+## code distribution
+arch/x86/kernel/apic
+| File             | blank | comment | code | explanation |
+|------------------|-------|---------|------|-------------|
+| io_apic.c        | 449   | 560     | 2063 |             |
+| apic.c           | 413   | 758     | 1711 |             |
+| x2apic_uv_x.c    | 274   | 107     | 1193 |             |
+| vector.c         | 189   | 218     | 848  |             |
+| msi.c            | 75    | 79      | 361  |             |
+| apic_numachip.c  | 70    | 18      | 250  |             |
+| ipi.c            | 55    | 68      | 208  |             |
+| x2apic_cluster.c | 44    | 9       | 173  |             |
+| apic_flat_64.c   | 48    | 35      | 168  |             |
+| probe_32.c       | 38    | 25      | 152  |             |
+| x2apic_phys.c    | 41    | 2       | 147  |             |
+| bigsmp_32.c      | 41    | 13      | 138  |             |
+| apic_noop.c      | 28    | 22      | 95   |             |
+| local.h          | 12    | 16      | 41   |             |
+| hw_nmi.c         | 7     | 11      | 41   |             |
+| probe_64.c       | 7     | 13      | 35   |             |
+| apic_common.c    | 7     | 5       | 34   |             |
+| Makefile         | 6     | 9       | 15   |             |
+
+kernel/irq
+| file           | blank | comment | code | explanation |
+|----------------|-------|---------|------|-------------|
+| manage.c       | 309   | 678     | 1271 |             |
+| irqdomain.c    | 242   | 412     | 1107 |             |
+| chip.c         | 217   | 390     | 843  |             |
+| irqdesc.c      | 157   | 127     | 661  |             |
+| generic-chip.c | 92    | 144     | 412  |             |
+| proc.c         | 92    | 52      | 385  |             |
+| msi.c          | 76    | 92      | 357  |             |
+| internals.h    | 73    | 60      | 348  |             |
+| matrix.c       | 55    | 121     | 280  |             |
+| spurious.c     | 58    | 160     | 247  |             |
+| debugfs.c      | 45    | 8       | 220  |             |
+| ipi.c          | 45    | 112     | 182  |             |
+| affinity.c     | 44    | 44      | 182  |             |
+| devres.c       | 39    | 98      | 150  |             |
+| settings.h     | 27    | 5       | 137  |             |
+| pm.c           | 32    | 56      | 124  |             |
+| timings.c      | 41    | 197     | 124  |             |
+| cpuhotplug.c   | 24    | 86      | 106  |             |
+| handle.c       | 35    | 86      | 101  |             |
+| irq_sim.c      | 25    | 43      | 95   |             |
+| autoprobe.c    | 21    | 71      | 92   |             |
+| migration.c    | 18    | 45      | 56   |             |
+| resend.c       | 11    | 41      | 48   |             |
+| debug.h        | 8     | 5       | 36   |             |
+| dummychip.c    | 7     | 21      | 36   |             |
+| Makefile       | 1     | 1       | 15   |             |
+
 
 ## unsorted
 - [ ][How does the Linux kernel handle shared IRQs?](https://unix.stackexchange.com/questions/47306/how-does-the-linux-kernel-handle-shared-irqs)
@@ -298,6 +360,8 @@ struct irq_domain_ops {
 ![loading](https://img2020.cnblogs.com/blog/1771657/202006/1771657-20200614143354812-1093740244.png)
 
 
+- [ ] how kernel transfer from hardirq to softirq ?
+
 ## tasklet
 - [ ] https://lwn.net/Articles/830964/
 - [ ] https://www.cnblogs.com/LoyenWang/p/13124803.html
@@ -445,12 +509,115 @@ top-level irq_desc 中间哪里 TMD 有 stash a pointer，只有 action chain �
 
 we need a mechanism to separate controller-local interrupt numbers, called hardware irq's, from Linux IRQ numbers.
 
-#### irq domain hierarchy
-https://www.kernel.org/doc/html/latest/core-api/irq/irq-domain.html : Hierarchy IRQ domain
 
+
+// --------------------- trace the functions -------------------------------------------
+
+1. alloc_desc <=== alloc_descs <=== `__irq_alloc_descs` <=== irq_domain_alloc_descs <=== `__irq_domain_alloc_irqs` <==== alloc_irq_from_domain <==== mp_map_pin_to_irq <==== pin_2_irq , mp_map_gsi_to_irq <== pin_2_irq <== setup_IO_APIC_irqs <== setup_IO_APIC <== apic_bsp_setup <== apic_intr_mode_init
+  - maybe this how initial irq set up
+
+2. default_get_smp_config ==> check_physptr ==> smp_read_mpc ==> mp_register_ioapic ==> mp_irqdomain_create
+
+
+- [x] apic_intr_mode_select : choose intr mode which can be determined by krenel parameter
+- [ ] apic_intr_mode_init --> *default_setup_apic_routing* , apic_bsp_setup
+- [x] setup_local_APIC : as name suggests, doing something like this:
+- [ ] enable_IO_APIC : why we need i8259, maybe just legacy. it seems io apic has a different mmio space
+- [ ] mp_pin_to_gsi
+  - [ ] mpprase
+  - [ ] what's gsi
+  - [ ] why we have set up relation with ioapic and pin, and what's pin, it's pin of cpu ?
+
+
+- [ ] mp_map_pin_to_irq 
+  - if irq domain already set up, return `irq_find_mapping`
+  - otherwise, `alloc_irq_from_domain` firstly
+
+// --------------------- read the functions -------------------------------------------
+
+
+
+
+
+
+## irq domain hierarchy
+[kernel doc](https://www.kernel.org/doc/html/latest/core-api/irq/irq-domain.html)
+
+There are four major interfaces to use hierarchy `irq_domain`:
+- `irq_domain_alloc_irqs()`: allocate IRQ descriptors and interrupt controller related resources to deliver these interrupts.
+- `irq_domain_free_irqs()`: free IRQ descriptors and interrupt controller related resources associated with these interrupts.
+- `irq_domain_activate_irq()`: activate interrupt controller hardware to deliver the interrupt.
+- `irq_domain_deactivate_irq()`: deactivate interrupt controller hardware to stop delivering the interrupt.
+
+
+```c
+static const struct irq_domain_ops x86_vector_domain_ops = {
+	.alloc		= x86_vector_alloc_irqs,
+	.free		= x86_vector_free_irqs,
+	.activate	= x86_vector_activate,
+	.deactivate	= x86_vector_deactivate,
+#ifdef CONFIG_GENERIC_IRQ_DEBUGFS
+	.debug_show	= x86_vector_debug_show,
+#endif
+};
+
+const struct irq_domain_ops mp_ioapic_irqdomain_ops = {
+	.alloc		= mp_irqdomain_alloc,
+	.free		= mp_irqdomain_free,
+	.activate	= mp_irqdomain_activate,
+	.deactivate	= mp_irqdomain_deactivate,
+};
+
+static const struct irq_domain_ops msi_domain_ops = {
+	.alloc		= msi_domain_alloc,
+	.free		= msi_domain_free,
+	.activate	= msi_domain_activate,
+	.deactivate	= msi_domain_deactivate,
+};
+```
+
+:cat::cat::cat::cat::cat::cat::cat::cat::cat::cat::cat::cat::cat::cat::cat::cat::cat::cat::cat::cat::cat::cat::cat::cat:
+
+
+To support such a hardware topology and make software architecture match hardware architecture,
+an `irq_domain` data structure is built for each interrupt controller and those `irq_domains` are organized into hierarchy.
+When building `irq_domain` hierarchy, the `irq_domain` near to the device is **child** and the `irq_domain` near to CPU is parent.
+So a hierarchy structure as below will be built for the example above:
+```
+CPU Vector irq_domain (root irq_domain to manage CPU vectors)
+        ^
+        |
+Interrupt Remapping irq_domain (manage irq_remapping entries)
+        ^
+        |
+IOAPIC irq_domain (manage IOAPIC delivery entries/pins)
+```
+:cat::cat::cat::cat::cat::cat::cat::cat::cat::cat::cat::cat::cat::cat::cat::cat::cat::cat::cat::cat::cat::cat::cat::cat:
+
+
+- [ ] mp_irqdomain_alloc : setup mapping from child chip irq to parent irq which is IR or vector
+- [ ] x86_vector_alloc_irqs : it will update vector at last
+
+## ir
+```c
+static struct irq_chip ioapic_ir_chip __read_mostly = {
+	.name			= "IR-IO-APIC",
+	.irq_startup		= startup_ioapic_irq,
+	.irq_mask		= mask_ioapic_irq,
+	.irq_unmask		= unmask_ioapic_irq,
+	.irq_ack		= irq_chip_ack_parent,
+	.irq_eoi		= ioapic_ir_ack_level,
+	.irq_set_affinity	= ioapic_set_affinity,
+	.irq_retrigger		= irq_chip_retrigger_hierarchy,
+	.irq_get_irqchip_state	= ioapic_irq_get_chip_state,
+	.flags			= IRQCHIP_SKIP_SET_WAKE,
+};
+```
 
 ## request irq
 devm_request_threaded_irq ==> request_threaded_irq
+
+![loading](https://img2020.cnblogs.com/blog/1771657/202006/1771657-20200605223042609-247616444.png)
 
 
 ## irq desc
@@ -481,3 +648,175 @@ https://habr.com/en/post/446312/
 
 # gpio
 https://github.com/Manawyrm/pata-gpio
+
+
+## idt
+- arch/x86/include/asm/idtentry.h
+- arch/x86/kernel/irq.c
+
+- [x] DEFINE_IDTENTRY_IRQ : interesting, wrap interrupt handler with `irq_enter_rcu`, `irq_exit_rcu` and `irqentry_exit`
+
+
+
+```c
+/*
+ * common_interrupt() handles all normal device IRQ's (the special SMP
+ * cross-CPU interrupts have their own entry points).
+ */
+DEFINE_IDTENTRY_IRQ(common_interrupt)
+```
+
+
+
+
+- [x] How exception are set
+```c
+/*
+ * Dummy trap number so the low level ASM macro vector number checks do not
+ * match which results in emitting plain IDTENTRY stubs without bells and
+ * whistels.
+ */
+#define X86_TRAP_OTHER		0xFFFF
+
+/* Simple exception entry points. No hardware error code */
+DECLARE_IDTENTRY(X86_TRAP_DE,		exc_divide_error);
+DECLARE_IDTENTRY(X86_TRAP_OF,		exc_overflow);
+DECLARE_IDTENTRY(X86_TRAP_BR,		exc_bounds);
+DECLARE_IDTENTRY(X86_TRAP_NM,		exc_device_not_available);
+DECLARE_IDTENTRY(X86_TRAP_OLD_MF,	exc_coproc_segment_overrun);
+DECLARE_IDTENTRY(X86_TRAP_SPURIOUS,	exc_spurious_interrupt_bug);
+DECLARE_IDTENTRY(X86_TRAP_MF,		exc_coprocessor_error);
+DECLARE_IDTENTRY(X86_TRAP_XF,		exc_simd_coprocessor_error);
+
+/* 32bit software IRET trap. Do not emit ASM code */
+DECLARE_IDTENTRY_SW(X86_TRAP_IRET,	iret_error);
+
+/* Simple exception entries with error code pushed by hardware */
+DECLARE_IDTENTRY_ERRORCODE(X86_TRAP_TS,	exc_invalid_tss);
+DECLARE_IDTENTRY_ERRORCODE(X86_TRAP_NP,	exc_segment_not_present);
+DECLARE_IDTENTRY_ERRORCODE(X86_TRAP_SS,	exc_stack_segment);
+DECLARE_IDTENTRY_ERRORCODE(X86_TRAP_GP,	exc_general_protection);
+DECLARE_IDTENTRY_ERRORCODE(X86_TRAP_AC,	exc_alignment_check);
+
+/* Raw exception entries which need extra work */
+DECLARE_IDTENTRY_RAW(X86_TRAP_UD,		exc_invalid_op);
+DECLARE_IDTENTRY_RAW(X86_TRAP_BP,		exc_int3);
+DECLARE_IDTENTRY_RAW_ERRORCODE(X86_TRAP_PF,	exc_page_fault);
+```
+
+```c
+/*
+ * The default IDT entries which are set up in trap_init() before
+ * cpu_init() is invoked. Interrupt stacks cannot be used at that point and
+ * the traps which use them are reinitialized with IST after cpu_init() has
+ * set up TSS.
+ */
+static const __initconst struct idt_data def_idts[] = {
+	INTG(X86_TRAP_DE,		asm_exc_divide_error),
+	INTG(X86_TRAP_NMI,		asm_exc_nmi),
+	INTG(X86_TRAP_BR,		asm_exc_bounds),
+	INTG(X86_TRAP_UD,		asm_exc_invalid_op),
+	INTG(X86_TRAP_NM,		asm_exc_device_not_available),
+	INTG(X86_TRAP_OLD_MF,		asm_exc_coproc_segment_overrun),
+	INTG(X86_TRAP_TS,		asm_exc_invalid_tss),
+	INTG(X86_TRAP_NP,		asm_exc_segment_not_present),
+	INTG(X86_TRAP_SS,		asm_exc_stack_segment),
+	INTG(X86_TRAP_GP,		asm_exc_general_protection),
+	INTG(X86_TRAP_SPURIOUS,		asm_exc_spurious_interrupt_bug),
+	INTG(X86_TRAP_MF,		asm_exc_coprocessor_error),
+	INTG(X86_TRAP_AC,		asm_exc_alignment_check),
+	INTG(X86_TRAP_XF,		asm_exc_simd_coprocessor_error),
+
+#ifdef CONFIG_X86_32
+	TSKG(X86_TRAP_DF,		GDT_ENTRY_DOUBLEFAULT_TSS),
+#else
+	INTG(X86_TRAP_DF,		asm_exc_double_fault),
+#endif
+	INTG(X86_TRAP_DB,		asm_exc_debug),
+
+#ifdef CONFIG_X86_MCE
+	INTG(X86_TRAP_MC,		asm_exc_machine_check),
+#endif
+
+	SYSG(X86_TRAP_OF,		asm_exc_overflow),
+#if defined(CONFIG_IA32_EMULATION)
+	SYSG(IA32_SYSCALL_VECTOR,	entry_INT80_compat),
+#elif defined(CONFIG_X86_32)
+	SYSG(IA32_SYSCALL_VECTOR,	entry_INT80_32),
+#endif
+};
+```
+## handle irq
+
+
+asm_common_interrupt => handle_irq => run_irq_on_irqstack_cond 
+
+```c
+static __always_inline void
+run_irq_on_irqstack_cond(void (*func)(struct irq_desc *desc), struct irq_desc *desc,
+			 struct pt_regs *regs)
+{
+	lockdep_assert_irqs_disabled();
+
+	if (irq_needs_irq_stack(regs))
+		__run_irq_on_irqstack(func, desc);
+	else
+		func(desc);
+}
+```
+
+- [ ] irq_desc::handler
+    - [ ] `__irq_do_set_handler` : currently this is only function where irq_desc::handler is set
+
+
+```c
+const struct irq_domain_ops mp_ioapic_irqdomain_ops = {
+	.alloc		= mp_irqdomain_alloc,
+	.free		= mp_irqdomain_free,
+	.activate	= mp_irqdomain_activate,
+	.deactivate	= mp_irqdomain_deactivate,
+};
+```
+mp_irqdomain_alloc ==> mp_register_handler ==> `__irq_set_handler` ==> `__irq_do_set_handler`
+
+
+`__irq_domain_alloc_irqs` ==> irq_domain_alloc_irqs_hierarchy
+
+
+
+## x86 vector
+arch/x86/kernel/irqinit.c
+
+with irq domain, we can map *linux irq* and *hw irq*, 
+`vector_irq_t` maps interrupt number ==> irq_desc, used in `common_interrupt`
+
+```c
+DEFINE_PER_CPU(vector_irq_t, vector_irq) = {
+	[0 ... NR_VECTORS - 1] = VECTOR_UNUSED,
+};
+```
+
+- [x] how interrupt are seted in idt
+    - **idt_setup_apic_and_irq_gates**
+- [ ] how interrupt are set in vector_irq
+  - [ ] lapic_online : irq and desc relation already setup, *find* out when they are setup.
+
+assign_irq_vector ==> assign_vector_locked
+
+
+## isa and pci
+[^1]:
+ISA and PCI handle interrupts very differently. ISA expansion cards are configured manually for IRQ, usually by setting a jumper, but sometimes by running a setup program. All ISA slots have all IRQ lines present, so it doesn’t matter which card is placed in which slot. ISA cards use edge-sensitive interrupts, which means that an ISA device asserts a voltage on one of the interrupt lines to generate an interrupt. That in turn means that ISA devices cannot share interrupts because when the processor senses voltage on a particular interrupt line, it has no way to determine which of multiple devices might be asserting that interrupt. For ISA slots and devices, the rule is simple: two devices cannot share an IRQ if there is any possibility that those two devices may be used simultaneously. In practice that means that you cannot assign the same IRQ to more than one ISA device.
+
+PCI cards use level-sensitive interrupts, which means that different PCI devices can assert different voltages on the same physical interrupt line, allowing the processor to determine which device generated the interrupt. PCI cards and slots manage interrupts internally. A PCI bus normally supports a maximum of four PCI slots, numbered 1 through 4. Each PCI slot can access four interrupts, labeled INT#1 through INT#4 (or INT#A through INT#D). Ordinarily, INT#1/A is used by PCI Slot 1, INT#2/B by Slot 2, and so on.
+
+
+## eoi
+https://stackoverflow.com/questions/7005331/difference-between-io-apic-fasteoi-and-io-apic-edge
+
+
+## ref
+
+[^1]: https://www.oreilly.com/library/view/pc-hardware-in/059600513X/ch01s03s01s01.html
+
+
