@@ -1070,6 +1070,8 @@ exit_to_usermode_loop => do_signal() => handle_signal()
 
 
 #### ptrace 
+https://blog.0x972.info/?d=2014/11/13/10/40/50-how-does-a-debugger-work
+
 https://github.com/x64dbg/x64dbg
 
 
