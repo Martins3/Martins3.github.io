@@ -101,6 +101,8 @@
 - [rmap](#rmap)
 - [mincore](#mincore)
 - [pageblock](#pageblock)
+- [user address space](#user-address-space)
+- [kaslr](#kaslr)
 
 <!-- vim-markdown-toc -->
 
@@ -3248,6 +3250,72 @@ in fact, we have already understand most of them
 
 ## pageblock
 https://richardweiyang-2.gitbook.io/kernel-exploring/00-memory_a_bottom_up_view/13-physical-layer-partition
+
+
+## user address space
+/home/maritns3/core/vn/hack/lab/proc-self-maps/main.c
+```
+00400000-00401000 r--p 00000000 103:02 13252000                          /home/maritns3/core/vn/hack/lab/proc-self-maps/main.out
+00401000-00402000 r-xp 00001000 103:02 13252000                          /home/maritns3/core/vn/hack/lab/proc-self-maps/main.out
+00402000-00403000 r--p 00002000 103:02 13252000                          /home/maritns3/core/vn/hack/lab/proc-self-maps/main.out
+00403000-00404000 r--p 00002000 103:02 13252000                          /home/maritns3/core/vn/hack/lab/proc-self-maps/main.out
+00404000-00405000 rw-p 00003000 103:02 13252000                          /home/maritns3/core/vn/hack/lab/proc-self-maps/main.out
+007fa000-0081b000 rw-p 00000000 00:00 0                                  [heap]
+7fd3e0f16000-7fd3e0f19000 rw-p 00000000 00:00 0
+7fd3e0f19000-7fd3e0f3e000 r--p 00000000 103:02 4982896                   /usr/lib/x86_64-linux-gnu/libc-2.31.so
+7fd3e0f3e000-7fd3e10b6000 r-xp 00025000 103:02 4982896                   /usr/lib/x86_64-linux-gnu/libc-2.31.so
+7fd3e10b6000-7fd3e1100000 r--p 0019d000 103:02 4982896                   /usr/lib/x86_64-linux-gnu/libc-2.31.so
+7fd3e1100000-7fd3e1101000 ---p 001e7000 103:02 4982896                   /usr/lib/x86_64-linux-gnu/libc-2.31.so
+7fd3e1101000-7fd3e1104000 r--p 001e7000 103:02 4982896                   /usr/lib/x86_64-linux-gnu/libc-2.31.so
+7fd3e1104000-7fd3e1107000 rw-p 001ea000 103:02 4982896                   /usr/lib/x86_64-linux-gnu/libc-2.31.so
+7fd3e1107000-7fd3e110b000 rw-p 00000000 00:00 0
+7fd3e110b000-7fd3e111a000 r--p 00000000 103:02 4982898                   /usr/lib/x86_64-linux-gnu/libm-2.31.so
+7fd3e111a000-7fd3e11c1000 r-xp 0000f000 103:02 4982898                   /usr/lib/x86_64-linux-gnu/libm-2.31.so
+7fd3e11c1000-7fd3e1258000 r--p 000b6000 103:02 4982898                   /usr/lib/x86_64-linux-gnu/libm-2.31.so
+7fd3e1258000-7fd3e1259000 r--p 0014c000 103:02 4982898                   /usr/lib/x86_64-linux-gnu/libm-2.31.so
+7fd3e1259000-7fd3e125a000 rw-p 0014d000 103:02 4982898                   /usr/lib/x86_64-linux-gnu/libm-2.31.so
+7fd3e125a000-7fd3e125c000 rw-p 00000000 00:00 0
+7fd3e1273000-7fd3e1274000 r--p 00000000 103:02 4982891                   /usr/lib/x86_64-linux-gnu/ld-2.31.so
+7fd3e1274000-7fd3e1297000 r-xp 00001000 103:02 4982891                   /usr/lib/x86_64-linux-gnu/ld-2.31.so
+7fd3e1297000-7fd3e129f000 r--p 00024000 103:02 4982891                   /usr/lib/x86_64-linux-gnu/ld-2.31.so
+7fd3e12a0000-7fd3e12a1000 r--p 0002c000 103:02 4982891                   /usr/lib/x86_64-linux-gnu/ld-2.31.so
+7fd3e12a1000-7fd3e12a2000 rw-p 0002d000 103:02 4982891                   /usr/lib/x86_64-linux-gnu/ld-2.31.so
+7fd3e12a2000-7fd3e12a3000 rw-p 00000000 00:00 0
+7ffcb622f000-7ffcb6250000 rw-p 00000000 00:00 0                          [stack]
+7ffcb6374000-7ffcb6377000 r--p 00000000 00:00 0                          [vvar]
+7ffcb6377000-7ffcb6378000 r-xp 00000000 00:00 0                          [vdso]
+ffffffffff600000-ffffffffff601000 --xp 00000000 00:00 0                  [vsyscall]
+```
+
+- [ ] why there are more section for `main.out` than expected ? There are five entry whose path is `proc-self-maps/main.out`.
+  - [ ] check the main.out with section header
+  - [ ] why two entry has same offset ? third and forth
+
+- [x] why text segment start at 0x40000 ?
+  - [ ] read this : https://stackoverflow.com/questions/39689516/why-is-address-0x400000-chosen-as-a-start-of-text-segment-in-x86-64-abi
+
+- [ ] why some area with no names ?
+
+- [x] check inode
+  - [ ] https://unix.stackexchange.com/questions/35292/quickly-find-which-files-belongs-to-a-specific-inode-number
+    - In fact, we can find file name with inode by checking file one by one, but **debufs** impressed my
+
+- [ ] `[vvar]`
+
+- [ ] `[vdso]`
+
+- [ ] `[vsyscall]`
+
+
+## kaslr
+- [ ] https://unix.stackexchange.com/questions/469016/do-the-virtual-address-spaces-of-all-the-processes-have-the-same-content-in-thei
+  - [ ] https://en.wikipedia.org/wiki/Kernel_page-table_isolation
+  - [ ] https://lwn.net/Articles/738975/
+
+- [ ] https://bneuburg.github.io/
+  - [ ] he has writen three post about it
+
+- [ ] https://lwn.net/Articles/569635/
 
 
 [^1]: [lwn : Huge pages part 1 (Introduction)](https://lwn.net/Articles/374424/)

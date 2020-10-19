@@ -65,6 +65,7 @@
 - [kthread](#kthread)
 - [TODO](#todo)
 - [session](#session)
+- [process group](#process-group)
 - [sched_class ops](#sched_class-ops)
     - [enqueue](#enqueue)
 - [runtime vruntime](#runtime-vruntime)
@@ -1700,9 +1701,14 @@ https://phoenixnap.com/kb/create-a-sudo-user-on-debian : 首先搞清楚这种�
 ## session
 - [ ] maybe a third time to read *Linux Programming Interface*
 
-set_sid()
 
-process group
+- [ ] set_sid()
+
+## process group
+- [ ] maybe build a shell: https://github.com/danistefanovic/build-your-own-x#build-your-own-shell, then process group is simple
+
+
+![loading](https://unixism.net/wp-content/uploads/2020/06/Process-Group-Signals.png)
 
 
 ## sched_class ops

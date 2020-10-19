@@ -556,24 +556,22 @@ aio_complete 会调用 eventfd_signal，这是实现 epoll 机制的核心。
 怎么会有 8000 行啊
 大概了解一下吧，暂时可以看其他更加重要的东西:
 
-io_uring 有如此出众的性能，主要来源于以下几个方面[^8]：
+ - [ ] [^8]
+io_uring 有如此出众的性能，主要来源于以下几个方面：
 1. 用户态和内核态共享提交队列（submission queue）和完成队列（completion queue）
 2. IO 提交和收割可以 offload 给 Kernel，且提交和完成不需要经过系统调用（system call）
 3. 支持 Block 层的 Polling 模式
 4. 通过提前注册用户态内存地址，减少地址映射的开销
 5. 不仅如此，io_uring 还可以完美支持 buffered IO，而 libaio 对于 buffered IO 的支持则一直是被诟病的地方。
 
-https://github.com/axboe/liburing : 其中的 test 包含很多demo
+- [ ] TODO doc should be read later
 
-[^8] 是 smartx 的人写的，后面还讲解了 io uring 的接口的使用，值得一看 TODO
 
-read write 会直到事情做完
-epoll : 当有的工作做好之后，通知，其实是一个 thread 可以监控一大群的 socket，任何一个 ready 之后就开始工作
 
-https://thenewstack.io/how-io_uring-and-ebpf-will-revolutionize-programming-in-linux/ : 这个也可以参考参考
-https://kernel-recipes.org/en/2019/talks/faster-io-through-io_uring/
 
-read the doc : [^10]
+
+[^10]
+read the doc :
 aio's limitation :
 1. only support async IO for O_DIRECT
 > TODO how O_DIRECT works
@@ -585,11 +583,27 @@ aio's limitation :
 TODO please continue the documentation
 
 
+- [ ] [liburing](https://github.com/axboe/liburing)
+
+
+
+
+read write 会直到事情做完
+epoll : 当有的工作做好之后，通知，其实是一个 thread 可以监控一大群的 socket，任何一个 ready 之后就开始工作
+
+https://thenewstack.io/how-io_uring-and-ebpf-will-revolutionize-programming-in-linux/ : 这个也可以参考参考
+https://kernel-recipes.org/en/2019/talks/faster-io-through-io_uring/
+
+This is what to do next:
+- [ ] let's read a simple one : https://github.com/shuveb/io_uring-by-example
+  - [ ] read this post two : https://unixism.net/2020/06/pipes-and-process-groups/
+
 ## file writeback
 fs/file-writeback.c 中间到底完成什么工作
 // 具体内容有点迷惑，但是file-writeback.c 绝对不是 page-writeback.c 更加底层的东西
 // 其利用 flusher thread ，然后调用 do_writepages 实现将整个文件，甚至整个文件系统写回，
 
+- [ ] so file-writeback and page-writeback.c are one of two base modules of vmscan, another base moduler is swap.
 
 ## event fd
 - [ ] why eventfd is related with kvm ?
