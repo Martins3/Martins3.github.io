@@ -16,3 +16,5 @@ linux kernle labs 的问题:
 
 3. addr2line 和 objdump 都是 gdb 功能的子集 ?
 
+
+- [ ] read this : https://www.kernel.org/doc/html/latest/dev-tools/gdb-kernel-debugging.html

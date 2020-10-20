@@ -18,3 +18,7 @@ There is only one, but ccls's highlight tell me that it will be compiled because
 In fact, things doesn’t happened in that way.
 ideentry will be include by normal C file and asm file,
 when include by asm, `_ASSEMBLY__` will be selected.
+
+## `__cacheline_aligned`
+
+https://stackoverflow.com/questions/25947962/cacheline-aligned-in-smp-for-structure-in-the-linux-kernel

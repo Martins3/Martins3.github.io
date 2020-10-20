@@ -10,9 +10,11 @@
     - [fpu xstate](#fpu-xstate)
 - [TODO](#todo)
 - [call convention](#call-convention)
-- [syscall](#syscall)
 
 <!-- vim-markdown-toc -->
+
+- [ ] https://www.kernel.org/doc/html/latest/x86/index.html 
+
 ## syntax
 1. ~/Core/x86-64-assembly 似乎非常不错:
 
@@ -215,17 +217,10 @@ Calling conventions, type representations, and name mangling are all part of wha
 > TODO
 
 
-## syscall
-arch/x86/entry/common.c
-
-`__prepare_exit_to_usermode` => exit_to_usermode_loop
-
-currently, exit_to_usermode_loop has tell really important two thing:
-- schdule()
-- do_signal()
-
 
 
 
 [^1]: [wiki](https://en.wikipedia.org/wiki/X86_calling_conventions)
+
+
 

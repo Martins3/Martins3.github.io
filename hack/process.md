@@ -29,7 +29,6 @@
     - [context switch TSS](#context-switch-tss)
     - [context switch TLS](#context-switch-tls)
 - [vfork](#vfork)
-- [TLS](#tls)
 - [thread_struct](#thread_struct)
 - [signal](#signal)
     - [send signal](#send-signal)
@@ -984,18 +983,6 @@ process_64.c:`__switch_to` call `load_TLS` to load `ldt` from `thread_struct->tl
 - [ ] it's easy, it's simple, but it's necessary to understand clearly.
 
 
-## TLS
-// TODO
-https://chao-tic.github.io/blog/2018/12/25/tls
-https://wiki.osdev.org/Thread_Local_Storage
-
-`arch/x86/kernel/tls.c`
-
-- [ ] syscall `get_thread_area` and `set_thread_area`, there is no complete example for it.
-
-
-[this](https://stackoverflow.com/questions/34243432/how-are-ldt-and-gdt-used-differently-in-intel-x86)
-answered the difference between GDT and LDT
 
 ## thread_struct
 1. `tls_array`
@@ -1275,12 +1262,14 @@ some x86 kernel notes:[^5]
 2. wait kill zombie orphan yeild 的代码的验证
 3. waitid 的含义, 回答此问题 : https://stackoverflow.com/questions/13853524/why-doesnt-waitid-block-until-child-terminates
 
-
 waitid -> kernel_waitid -> .... -> do_wait -> ...
 -> wait_task_stopped
 -> wait_task_continued
 
 do_wait : 构建 workqueue，call do_wait_thread
+
+- [ ] what's difference between exit and exit_group
+
 
 #### do_exit
 process 的各种资源的回收，最后通过 do_task_dead 将自己 schedule 出去法
@@ -1536,6 +1525,29 @@ https://superuser.com/questions/1217454/how-do-you-control-thread-affinity-acros
 2. 更进一步，/proc/cpuinfo 中的每一个含义是什么，数据从哪里导出的
 
 ## syscall
+
+- [ ] analyzer code here : arch/x86/entry/common.c
+
+`__prepare_exit_to_usermode` => exit_to_usermode_loop
+
+currently, exit_to_usermode_loop has tell really important two thing:
+- schdule()
+- do_signal()
+
+
+
+// PLKA 上应该分析过和 mem 相关的 syscall 吧 !
+
+https://lwn.net/Articles/604287/
+
+- [ ] Read this chapter carefully: https://0xax.gitbooks.io/linux-insides/content/SysCall/
+
+- [ ] This chapter too
+/home/maritns3/core/vn/kernel/insides/Syscall/syscall_draft.md
+
+
+- [ ] Something interesting wait for clear:
+
 gcc a.c -v 可以获取很多东西:
 ```
 Using built-in specs.
@@ -1604,7 +1616,6 @@ entry_64.S : entry_SYSCALL_64 是 syscall 的入口，这个入口的初始化 x
 
 这个教程很新，一共三个，非常适合阅读:
 https://lwn.net/Articles/604287/ 而 [^4] 全面，但是有的没有讲解清楚.
-
 
 TOOD :
 1. `__kernel_vsyscall` 还是调用 sysenter 之类的，那么有什么意义啊

@@ -69,7 +69,7 @@
     - [page owner](#page-owner)
     - [KASAN](#kasan)
     - [kmemleak](#kmemleak)
-- [percpu](#percpu)
+- [TLS](#tls)
 - [dmapool](#dmapool)
 - [mempool](#mempool)
 - [virtual machine](#virtual-machine)
@@ -185,8 +185,6 @@ https://thevivekpandey.github.io/posts/2017-09-25-linux-system-calls.html
 
 总结内容主要来自于 lwn [^3], (几本书)，wowotech ，几个试验
 
-## syscall
-// PLKA 上应该分析过和 mem 相关的 syscall 吧 !
 
 ## page allocator
 为什么 page allocator 如此复杂 ?
@@ -354,6 +352,8 @@ static bool is_refcount_suitable(struct page *page)
 	return page_count(page) == expected_refcount;
 }
 ```
+
+- [ ] put_page : rather difficult than expected
 
 
 ## page fault
@@ -1866,6 +1866,25 @@ Part of the problem comes down to the fact that get_user_pages() does not perfor
   - [ ] 总结一下，到底那些 memory 的 refcount 的作用
   - [ ] get_page 会一定导致 user page 不可以 swap out 吗 ?
 
+```
+[25556.799013] Hardware name: Timi TM1701/TM1701, BIOS XMAKB5R0P0603 02/02/2018
+[25556.799013] Call Trace:
+[25556.799019]  dump_stack+0x6d/0x9a
+[25556.799037]  ept_mmu_notifier_invalidate_range_start.cold+0x5/0xfe [dune]
+[25556.799039]  __mmu_notifier_invalidate_range_start+0x5e/0xa0
+[25556.799041]  wp_page_copy+0x6be/0x790
+[25556.799042]  ? vsnprintf+0x39e/0x4e0
+[25556.799043]  do_wp_page+0x94/0x6a0
+[25556.799045]  ? sched_clock+0x9/0x10
+[25556.799046]  __handle_mm_fault+0x771/0x7a0
+[25556.799047]  handle_mm_fault+0xca/0x200
+[25556.799048]  __get_user_pages+0x251/0x7d0
+[25556.799049]  get_user_pages_unlocked+0x145/0x1f0
+[25556.799050]  get_user_pages_fast+0x180/0x1a0
+[25556.799051]  ? ept_lookup_gpa.isra.0+0xb2/0x1a0 [dune]
+[25556.799053]  vmx_do_ept_fault+0xe3/0x450 [dune]
+```
+
 
 ## madvise && fadvise
 madvise 告知内核该范围的内存如何访问
@@ -2894,7 +2913,26 @@ Finding places where the kernel accesses memory that it shouldn't is the goal fo
 #### kmemleak
 Kmemleak provides a way of detecting possible kernel memory leaks in a way similar to a tracing garbage collector, with the difference that the orphan objects are not freed but only reported via /sys/kernel/debug/kmemleak. [^18]
 
-## percpu
+## TLS
+// TODO
+https://chao-tic.github.io/blog/2018/12/25/tls
+https://wiki.osdev.org/Thread_Local_Storage
+
+`arch/x86/kernel/tls.c`
+
+- [ ] syscall `get_thread_area` and `set_thread_area`, there is no complete example for it.
+
+
+[this](https://stackoverflow.com/questions/34243432/how-are-ldt-and-gdt-used-differently-in-intel-x86)
+answered the difference between GDT and LDT
+
+- [ ] [](https://www.kernel.org/doc/html/latest/x86/x86_64/fsgs.html)
+
+In 32-bit mode the CPU provides 6 segments, which also support segment limits. The limits can be used to enforce address space protections.
+
+In 64-bit mode the CS/SS/DS/ES segments are ignored and the base address is always 0 to provide a full 64bit address space. The FS and GS segments are still functional in 64-bit mode.
+
+TODO .....
 
 ## dmapool
 https://lwn.net/Articles/69402/

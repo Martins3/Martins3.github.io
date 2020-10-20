@@ -355,3 +355,4 @@ TSWLatexianTemp*
 .vim-arsync.bk
 ./kernel/fio/script/
 *.log
+.gdb_history

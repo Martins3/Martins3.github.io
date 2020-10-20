@@ -153,8 +153,6 @@ static int __do_execve_file(int fd, struct filename *filename, // 分析的源�
 
 
 
-
-
 # How does the open system call work
 
 # Limits on resources in Linux
