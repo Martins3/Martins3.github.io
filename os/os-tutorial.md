@@ -1,11 +1,3 @@
----
-title: Learn OS
-date: 2018-04-19 18:09:37
-tags: os
----
-
-# Practice
-
 ## [cfenollosa/os-tutorial](https://github.com/cfenollosa/os-tutorial)
 1. what is tty mode ?
 [doc](http://www.cs.bham.ac.uk/~exr/lectures/opsys/10_11/lectures/os-dev.pdf)
@@ -39,9 +31,6 @@ memory is used efficiently, in that code or data that is rarely executed needn�
 
 Compile the first kernle with C:
 1. qemu -fda Use file as floppy disk 0/1 image
-2. 
-
-
 
 ### question
 1. make the code run on the raspiberry pif !
@@ -51,28 +40,3 @@ Compile the first kernle with C:
 5. 32-bit protected mode : is there something such as 32-bit real mode 
 6. what's gdt, describe it in details.
 7. **ld** 
-
-
-## assembly language
-文档
-https://software.intel.com/en-us/articles/intel-sdm
-https://software.intel.com/en-us/articles/introduction-to-x64-assembly
-
-输出一个hello world !
-https://stackoverflow.com/questions/27594297/how-to-print-a-string-to-the-terminal-in-x86-64-assembly-nasm-without-syscall
-
-## ucore
-https://www.nasm.us/
-
-# Theory
-How to create an another Android ?
-
-## Doc & Ref
-1. [osdev](https://wiki.osdev.org/Main_Page) Provide almost resource about how to create a new os !
-2. 
-
-## doubly freeing memory
-https://www.owasp.org/index.php/Doubly_freeing_memory
-
-## tool
-https://setupstepbystep.wordpress.com/2017/02/16/running-bochs-emulator-using-kernel-exe-grub-conf-file/

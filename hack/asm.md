@@ -32,3 +32,7 @@ why change to `=m` `m` failed ?
 ```c
 	asm volatile ("call preempt_schedule_thunk" : ASM_CALL_CONSTRAINT)
 ```
+
+## TODO
+
+https://stackoverflow.com/questions/27594297/how-to-print-a-string-to-the-terminal-in-x86-64-assembly-nasm-without-syscall

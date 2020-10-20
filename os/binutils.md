@@ -1,26 +1,3 @@
----
-title: Cross Compiler
-date: 2018-04-19 18:09:37
-tags: os
----
-
-# Cross Compiler
-why we need it !
-
-## Tools
-1. how to build the tools we need
-    1. Add env
-    ```
-    export PREFIX="~Application/i386elfgcc"
-    export TARGET=i386-elf
-    export PATH="$PREFIX/bin:$PATH"
-    ```
-    2. install the gcc infrastructure `gmp` `mpc` `mpfr`
-    3. install `binutil`
-    4. install gcc
-2.
-
-
 
 ### [ndisasm](https://www.nasm.us/doc/nasmdoca.html)
 a companion program to the Netwide Assembler, NASM

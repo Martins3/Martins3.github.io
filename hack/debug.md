@@ -18,3 +18,12 @@ linux kernle labs 的问题:
 
 
 - [ ] read this : https://www.kernel.org/doc/html/latest/dev-tools/gdb-kernel-debugging.html
+
+
+## printk pr_debug
+https://www.andreasch.com/2019/01/28/Linux-kernel-debugging/
+
+- panic
+
+
+[printk](https://www.kernel.org/doc/html/v4.16/core-api/printk-formats.html)
