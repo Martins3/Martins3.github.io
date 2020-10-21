@@ -26,6 +26,8 @@
     - [thp admin manual](#thp-admin-manual)
     - [khugepaged](#khugepaged)
 - [page cache](#page-cache)
+- [address_space](#address_space)
+- [address_space_operations](#address_space_operations)
     - [page writeback](#page-writeback)
     - [watermark](#watermark)
     - [truncate](#truncate)
@@ -369,6 +371,19 @@ handle_pte_fault 的调用路径图:
 
 
 - [ ] `enum vm_fault_reason` : check it's entry one by one
+
+- [ ] I guess the only user of `struct vm_operations_struct` is page fault
+
+```c
+static const struct vm_operations_struct xfs_file_vm_ops = {
+	.fault		= xfs_filemap_fault,
+	.huge_fault	= xfs_filemap_huge_fault,
+	.map_pages	= xfs_filemap_map_pages,
+	.page_mkwrite	= xfs_filemap_page_mkwrite,
+	.pfn_mkwrite	= xfs_filemap_pfn_mkwrite,
+};
+```
+
 
 #### cow
 - [ ] 如果可以理解 dirty cow，应该 COW 就没有问题吧 https://dirtycow.ninja/
@@ -1236,7 +1251,6 @@ ext2_write_begin => block_write_begin // 进入到 buffer.c 中间
   2. `__block_write_begin` : `__block_write_begin_int` 将需要读取的 block 读入到 page cache 中间
 ext2_write_end => block_write_end => `__block_commit_write` : set_buffer_uptodate 和 mark_buffer_dirty 更新一下状态
 
-
 而 file_operations::wreitepage 的实现:
 ext2_writepage => block_write_full_page => `__block_write_full_page` : 将 dirty buffer 写回
 其调用位置在 page-writeback.c 和 fs-writeback.c 中间。
@@ -1244,11 +1258,24 @@ ext2_writepage => block_write_full_page => `__block_write_full_page` : 将 dirty
 所以，file_operations::write_iter 首先将 page 写入到 page cache 中间，
 在 buffer.c 中间，ll_rw_block 会读取由于没有 block 需要加载的 disk 页面，并且初始化或者更新 buffer cache 的各种。
 而写回工作，需要等到 page-writeback.c 和 fs-writeback.c 中间当 flusher 启动的时候，会调用 address_space_operations::writepage 进行
-由此得出的结论 : 为了使用 page cache, fs 需要提供的两套接口，file_operations::write_begin file_operations::write_iter 加入到 page cache 中间
-通过 address_space_operations::writepage 将 page 从 page cache 发送出去。
+由此得出的结论 : **为了使用 page cache, fs 需要提供的两套接口，file_operations::write_begin file_operations::write_iter 加入到 page cache 中间
+通过 address_space_operations::writepage 将 page 从 page cache 发送出去。**
+
 
 2. 从 file_operations::read_iter => generic_file_read_iter => generic_file_buffered_read => address_space_operations::readpage
 
+
+3. How `__x64_sys_write` ==> file_operations::write_iter ?
+
+(hint: read_write.c)
+
+
+- [ ] trace it : pagecache_write_begin
+
+## address_space
+
+
+## address_space_operations
 address_space 和 address_space_operations
 // TODO 整理解释其中每一个内容
 1. 能够区分 writepage 和 write_begin/write_end 之间的关系是什么 ?

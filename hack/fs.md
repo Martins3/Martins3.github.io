@@ -11,6 +11,9 @@
 - [VFS standard file operation](#vfs-standard-file-operation)
     - [inode_operations::fiemap](#inode_operationsfiemap)
     - [file_operations::mmap](#file_operationsmmap)
+    - [file_operations::write_iter](#file_operationswrite_iter)
+    - [file_operations::iopoll](#file_operationsiopoll)
+- [kiocb](#kiocb)
 - [file io](#file-io)
     - [aio(dated)](#aiodated)
     - [io uring](#io-uring)
@@ -35,7 +38,9 @@
     - [path](#path-1)
 - [helper](#helper)
 - [attr](#attr)
-- [open.c](#openc)
+- [open.c(make this part more clear, split it)](#opencmake-this-part-more-clear-split-it)
+- [open](#open)
+- [iomap](#iomap)
 - [fuse](#fuse)
 - [block layer](#block-layer)
 - [initfs](#initfs)
@@ -50,7 +55,7 @@
 - [IO buffer(merge)](#io-buffermerge)
 - [notify](#notify)
 - [attr](#attr-1)
-- [direct IO](#direct-io)
+- [dax](#dax)
 - [block device](#block-device)
 - [char device](#char-device)
 - [tmpfs](#tmpfs)
@@ -364,6 +369,73 @@ int generic_file_mmap(struct file * file, struct vm_area_struct * vma)
 	return 0;
 }
 ```
+#### file_operations::write_iter
+- [x] trace function from `io_uring_enter` to `file_operations::write_iter`
+
+io_issue_sqe ==>
+io_write ==> call_write_iter ==> file_operations::write_iter
+
+```c
+static int io_write(struct io_kiocb *req, bool force_nonblock,
+		    struct io_comp_state *cs)
+{
+  // ...
+	if (req->file->f_op->write_iter)
+		ret2 = call_write_iter(req->file, kiocb, iter);
+	else if (req->file->f_op->write)
+		ret2 = loop_rw_iter(WRITE, req->file, kiocb, iter);
+  // ...
+```
+
+```c
+static inline ssize_t call_write_iter(struct file *file, struct kiocb *kio,
+				      struct iov_iter *iter)
+{
+	return file->f_op->write_iter(kio, iter);
+}
+```
+
+There are many similar calling chain in read_write.c which summaries io models except aio and io_uring
+
+
+#### file_operations::iopoll
+example user: io_uring::io_do_iopoll
+
+```c
+static int blkdev_iopoll(struct kiocb *kiocb, bool wait)
+{
+	struct block_device *bdev = I_BDEV(kiocb->ki_filp->f_mapping->host);
+	struct request_queue *q = bdev_get_queue(bdev);
+
+	return blk_poll(q, READ_ONCE(kiocb->ki_cookie), wait);
+}
+```
+
+
+
+## kiocb
+
+```c
+struct kiocb {
+	struct file		*ki_filp;
+
+	/* The 'ki_filp' pointer is shared in a union for aio */
+	randomized_struct_fields_start
+
+	loff_t			ki_pos;
+	void (*ki_complete)(struct kiocb *iocb, long ret, long ret2);
+	void			*private;
+	int			ki_flags;
+	u16			ki_hint;
+	u16			ki_ioprio; /* See linux/ioprio.h */
+	union {
+		unsigned int		ki_cookie; /* for ->iopoll */
+		struct wait_page_queue	*ki_waitq; /* for async buffered IO */
+	};
+
+	randomized_struct_fields_end
+};
+```
 
 ## file io
 epoll
@@ -553,9 +625,6 @@ aio_complete 会调用 eventfd_signal，这是实现 epoll 机制的核心。
 > 2. aio 不能使用 page cache, 那么对于 metadata 的读取， aio 可以实现异步吗 ? (我猜测，应该所有的文件系统都是不支持的吧!)
 
 #### io uring
-怎么会有 8000 行啊
-大概了解一下吧，暂时可以看其他更加重要的东西:
-
  - [ ] [^8]
 io_uring 有如此出众的性能，主要来源于以下几个方面：
 1. 用户态和内核态共享提交队列（submission queue）和完成队列（completion queue）
@@ -600,6 +669,10 @@ https://kernel-recipes.org/en/2019/talks/faster-io-through-io_uring/
 [Man page]
   - io_uring_setup : 
 
+- IORING_SETUP_IOPOLL
+- IORING_SETUP_SQPOLL
+- IORING_ENTER_GETEVENTS
+- IORING_ENTER_SQ_WAKEUP
 
 ## file writeback
 fs/file-writeback.c 中间到底完成什么工作
@@ -615,6 +688,7 @@ fs/file-writeback.c 中间到底完成什么工作
 ## event poll
 // TODO
 // 找到简书上内容上，写 enomia 的时候介绍 epoll 机制的内容
+
 
 ## flock
 1. advisory lock 指的是 ?
@@ -1256,12 +1330,109 @@ static int __init init_inodecache(void)
 2. 看了一下 ext2_setattr 和 ext2_getattr 的实现，只是提供 inode 的各种基本属性而已。
 
 
-## open.c
+## open.c(make this part more clear, split it)
 vfs 提供的基础设施总结一下
 1. lookup
 2. open ? 为什么 open 需要单独分析
 
 getname_kernel 和  getname_flags 有什么区别吗 ?
+
+
+## open
+Three kinds of open flags accoring to man page:
+1. file privilege : O_RDONLY, O_WRONLY, or O_RDWR
+2. file create : O_CLOEXEC, O_CREAT, O_DIRECTORY, O_EXCL, O_NOCTTY, O_NOFOLLOW, O_TMPFILE
+3. file status : O_APPEND, O_ASYNC
+
+- [ ] what's relation with fmode, e.g. FMODE_WRITE  ? 
+
+
+- [ ]  O_CLOEXEC
+> By default, the new file descriptor is set to remain open across an execve(2) (i.e., the FD_CLOEXEC file descriptor flag described in fcntl(2) is initially disabled); the O_CLOEXEC flag, described below, can be used to change this default.  The file offset is set to the beginning of the file (see lseek(2)).
+
+- [ ] O_DIRECT
+    - [ ] what if I open file with O_DIRECT and do read write with aio ?
+        - There is no contradictory, just skip page cache
+
+> The O_DIRECT flag on its own makes an effort to transfer data synchronously,
+but does not give the guarantees of the *O_SYNC* flag that data and necessary metadata are transferred. 
+To guarantee synchronous I/O, O_SYNC must be used in addition to O_DIRECT.
+
+```c
+ssize_t noop_direct_IO(struct kiocb *iocb, struct iov_iter *iter)
+{
+	/*
+	 * iomap based filesystems support direct I/O without need for
+	 * this callback. However, it still needs to be set in
+	 * inode->a_ops so that open/fcntl know that direct I/O is
+	 * generally supported.
+	 */
+	return -EINVAL;
+}
+```
+Trace caller of `iomap_dio_rw`, we will find out how to do DIRECT IO on linux.
+
+file_operations::write_iter(ext4_file_write_iter) ==> ext4_dio_write_iter ==> iomap_dio_rw
+
+- [ ] O_ASYNC
+
+**This flags's meaning/function is not what I expected, really interesting**
+
+## iomap
+ext4/xfs's direct IO call `iomap_dio_rw`
+
+- [ ] iomap_dio_rw
+
+xfs_file_read_iter
+==> xfs_file_dio_aio_read ==> iomap_dio_rw
+==> xfs_file_buffered_aio_read ==> generic_file_read_iter
+  
+  - [ ] I don't know how iomap_dio_rw write page to disk ?
+
+
+--> several 
+
+- [ ] iomap_write_actor     
+  - xfs_file_write_iter ==> xfs_file_buffered_aio_write ==> iomap_file_buffered_write, direct io has very similar path
+- [ ] iomap_page_mkwrite_actor
+  - [ ] iomap_page_mkwrite : use `xfs` as example: xfs_filemap_fault ==> `_xfs_filemap_fault` ==> `__xfs_filemap_fault`
+- [ ] iomap_readpage_actor
+- [ ] iomap_unshare_actor
+- [ ] iomap_zero_range_actor
+- [ ] iomap_readahead_actor
+
+IOMAP_F_BUFFER_HEAD : It seems iomap is used for kill page cache, by read function iomap_write_actor, that's just how `generic_file_write_iter` works.
+
+maybe iomap is not mature yet, iomap provide a generic interface for fs to read / write / readahead ..., but vfs also provide generic_file_write_iter / generic_file_read_iter, it just doesn't make sense.
+```c
+/*
+ * Flags reported by the file system from iomap_begin:
+ *
+ * IOMAP_F_NEW indicates that the blocks have been newly allocated and need
+ * zeroing for areas that no data is copied to.
+ *
+ * IOMAP_F_DIRTY indicates the inode has uncommitted metadata needed to access
+ * written data and requires fdatasync to commit them to persistent storage.
+ * This needs to take into account metadata changes that *may* be made at IO
+ * completion, such as file size updates from direct IO.
+ *
+ * IOMAP_F_SHARED indicates that the blocks are shared, and will need to be
+ * unshared as part a write.
+ *
+ * IOMAP_F_MERGED indicates that the iomap contains the merge of multiple block
+ * mappings.
+ *
+ * IOMAP_F_BUFFER_HEAD indicates that the file system requires the use of
+ * buffer heads for this mapping.
+ */
+#define IOMAP_F_NEW		0x01
+#define IOMAP_F_DIRTY		0x02
+#define IOMAP_F_SHARED		0x04
+#define IOMAP_F_MERGED		0x08
+#define IOMAP_F_BUFFER_HEAD	0x10
+```
+
+
 
 ## fuse
 https://github.com/libfuse/libfuse
@@ -1546,8 +1717,7 @@ notify 的工作，和 aio epoll 机制其实都是类似的，相比于 blockin
 
 ## attr
 
-## direct IO
-1. 到底 DIRECT_IO flags 的效果是什么
+## dax
 2. dax 机制是什么 ?
 
 ## block device
