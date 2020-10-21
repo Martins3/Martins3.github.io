@@ -594,9 +594,12 @@ epoll : 当有的工作做好之后，通知，其实是一个 thread 可以监�
 https://thenewstack.io/how-io_uring-and-ebpf-will-revolutionize-programming-in-linux/ : 这个也可以参考参考
 https://kernel-recipes.org/en/2019/talks/faster-io-through-io_uring/
 
-This is what to do next:
-- [ ] let's read a simple one : https://github.com/shuveb/io_uring-by-example
-  - [ ] read this post two : https://unixism.net/2020/06/pipes-and-process-groups/
+[nice blog](https://github.com/shuveb/io_uring-by-example) provide example code about liburing and directly syscall
+
+
+[Man page]
+  - io_uring_setup : 
+
 
 ## file writeback
 fs/file-writeback.c 中间到底完成什么工作

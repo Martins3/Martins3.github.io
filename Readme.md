@@ -2,6 +2,7 @@
   <a href="https://www.vim.org/scripts/script.php?script_id=5779">
     <img alt="Coc Logo" src="https://clangbuiltlinux.github.io/logo.png" height="160" />
     <img alt="Coc Logo" src="./ma.png" height="160" />
+    <img alt="Coc Logo" src="https://github.com/shuveb/io_uring-by-example/blob/master/public/tux.png" height="160" />
     <img alt="Coc Logo" src="https://styles.redditmedia.com/t5_2ykcc/styles/image_widget_pifwg495jvr41.png" height="160" />
   </a>
   <p align="center">Martins3's Notes<br>about linux kernel, llvm and many other parts of CS</p>

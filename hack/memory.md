@@ -3,7 +3,6 @@
 <!-- vim-markdown-toc GitLab -->
 
 - [introduction](#introduction)
-- [syscall](#syscall)
 - [page allocator](#page-allocator)
     - [page free](#page-free)
 - [page ref](#page-ref)
@@ -671,6 +670,9 @@ EXPORT_SYMBOL(iov_iter_copy_from_user_atomic);
 
 
 ## mmap
+- [ ] io uring, mmap 的时候需要传入 MAP_POPULATE 参数，以防止内存被 page fault。
+
+
 // TODO
 1. 为什么其中的 file_operations::mmap 和 mmap 的关系是什么 ?
 2. 找到 pgfault 命中到错误的位置的时候，但是范围外面，并且是如何告知用户的 ? 使用信号机制吗 ?
@@ -2210,6 +2212,8 @@ static unsigned long do_shrink_slab(struct shrink_control *shrinkctl,
 然后，根据上方的调用路线，课题知道，猜测应该是对的，对于 page 和 slab 分成两个，slab 利用各种 shrinker 进行
 
 ## memory consistency
+- [ ] https://zhuanlan.zhihu.com/cpu-cache : read posts writen by muchun
+
 2. barrier() Documentation/memory-barriers.txt : 彻底理解让人窒息的 memory-barriers.txt
 
 当分析那么多窒息的例子，都是由于同时访问相同位置的内存，但是访问相同位置的内存的时候，难道不是采用 lock 保护的吗 ? smp_mb 的使用位置和实现方式是什么 ?
@@ -2222,6 +2226,7 @@ https://www.linuxjournal.com/article/8211
 https://www.linuxjournal.com/article/8212
 
 - [ ] READ_ONCE and WRITE_ONCE
+
 
 ## pmem
 DAX 设置 : 到时候在分析吧!

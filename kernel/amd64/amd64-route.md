@@ -41,3 +41,7 @@ https://news.ycombinator.com/item?id=24195627 : win 下的汇编
 
 看指令手册的长度:
 https://sandpile.org/
+
+## question
+
+- [ ] why we don't have 
