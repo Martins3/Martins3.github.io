@@ -1424,7 +1424,7 @@ https://qr.ae/pNs0eS
 3. kernel image 如何被加载到内存的
 
 ## overlay fs
-
+- [ ] an intorduction : https://www.terriblecode.com/blog/how-docker-images-work-union-file-systems-for-dummies/
 
 ## inode
 感觉 inode.c 其实和 dcache.c 是对称的，inode 本身作为 cache 的，与需要加载，删除，初始化等操作

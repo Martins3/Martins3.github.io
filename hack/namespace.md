@@ -70,6 +70,9 @@ struct proc_ns_operations {
 
 ## UTS : hostname &&  domainname
 
+https://unix.stackexchange.com/questions/183717/whats-a-uts-namespace
+https://superuser.com/questions/59093/difference-between-host-name-and-domain-name
+
 
 ## pid
 1. namespace 里面的 pid = 1 的那个如果挂掉了，那么剩下的 process 需要挂到哪里 ?

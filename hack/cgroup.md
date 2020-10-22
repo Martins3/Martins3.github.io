@@ -1,50 +1,8 @@
 # cgroup
-> 这些资源需要被整理清楚
-
-https://www.youtube.com/watch?v=sK5i-N34im8
 
 * http://www.haifux.org/lectures/299/netLec7.pdf
 
-1. network namespace
-2. pid namespace
-3. uts namespace
-
-* https://stackoverflow.com/questions/34820558/difference-between-cgroups-and-namespaces
-
-* man namespaces
-
-Changes to the global resource are visible to other processes that are members of the namespace, but are invisible to other processes.
-One use of namespaces is to implement containers.
-
-* https://www.youtube.com/watch?v=el7768BNUPw
-
-docker contains three thing : cgroup namespaces and unionFS
-https://www.terriblecode.com/blog/how-docker-images-work-union-file-systems-for-dummies/
-
-* what's uts namespace
-
-https://unix.stackexchange.com/questions/183717/whats-a-uts-namespace
-
-https://superuser.com/questions/59093/difference-between-host-name-and-domain-name
-
-
-
 ## overview
-
-| File              | blank | comment | code | explanation                          |
-|-------------------|-------|---------|------|-------------------------------|
-| cgroup.c          | 942   | 1541    | 3508 |
-| cpuset.c          | 374   | 841     | 1542 |
-| cgroup-v1.c       | 171   | 279     | 858  |
-| rdma.c            | 99    | 134     | 3883 |
-| debug.c           | 61    | 28      | 2984 |
-| freezer.c         | 75    | 123     | 2883 |
-| rstat.c           | 69    | 99      | 2488 |
-| pids.c            | 52    | 92      | 2085 |
-| cgroup-internal.h | 40    | 68      | 1489 |
-| namespace.c       | 30    | 5       | 1281 | 这是 namespace 的根本文件吗 ? |
-
-
 | desc                                                                                                                             | lines |
 |----------------------------------------------------------------------------------------------------------------------------------|-------|
 | 对于 cgroup_root 的各种处理，css 的 thread populated 等等的, idr  `*_from_root`, 似乎提供了各种辅助函数 @todo 但是不知道被谁使用 | 1300  |
@@ -69,11 +27,176 @@ Linux kernel provides support for following twelve control group subsystems:
 
 Entries list above can be verified in sys and proc.
 
-## review think 
+```
++-------------+         +---------------------+    +------------->+---------------------+          +----------------+
+| task_struct |         |       css_set       |    |              | cgroup_subsys_state |          |     cgroup     |
++-------------+         |                     |    |              +---------------------+          +----------------+
+|             |         |                     |    |              |                     |          |     flags      |
+|             |         |                     |    |              +---------------------+          |  cgroup.procs  |
+|             |         |                     |    |              |        cgroup       |--------->|       id       |
+|             |         |                     |    |              +---------------------+          |      ....      | 
+|-------------+         |---------------------+----+                                               +----------------+
+|   cgroups   | ------> | cgroup_subsys_state | array of cgroup_subsys_state
+|-------------+         +---------------------+------------------>+---------------------+          +----------------+
+|             |         |                     |                   | cgroup_subsys_state |          |      cgroup    |
++-------------+         +---------------------+                   +---------------------+          +----------------+
+                                                                  |                     |          |      flags     |
+                                                                  +---------------------+          |   cgroup.procs |
+                                                                  |        cgroup       |--------->|        id      |
+                                                                  +---------------------+          |       ....     |
+                                                                  |    cgroup_subsys    |          +----------------+
+                                                                  +---------------------+
+                                                                             |
+                                                                             |
+                                                                             ↓
+                                                                  +---------------------+
+                                                                  |    cgroup_subsys    |
+                                                                  +---------------------+
+                                                                  |         id          |
+                                                                  |        name         |
+                                                                  |      css_online     |
+                                                                  |      css_ofline     |
+                                                                  |        attach       |
+                                                                  |         ....        |
+                                                                  +---------------------+
+```
+
+## userland api
+[kernel doc](https://www.kernel.org/doc/html/latest/admin-guide/cgroup-v2.html)
+
+- cgroup is largely composed of two parts - the core and controllers.
+    - cgroup core is primarily responsible for **hierarchically** organizing processes.
+    - A cgroup controller is usually responsible for distributing a specific type of system resource along the hierarchy although there are utility controllers which serve purposes other than resource distribution.
+- cgroups form a tree structure and every process in the system belongs to one and only one cgroup. 
+- All threads of a process belong to the same cgroup.
+- On creation, all processes are put in the cgroup that the parent process belongs to at the time.
+- A process can be *migrated* to another cgroup. Migration of a process doesn’t affect already existing descendant processes.
+
+- All controller behaviors are hierarchical - if a controller is enabled on a cgroup, it affects all processes which belong to the cgroups consisting the inclusive sub-hierarchy of the cgroup.
 
 
-## V1 和 V2 的关系是什么 ?
-https://www.kernel.org/doc/Documentation/cgroup-v2.txt
+
+[Linux Cgroup系列（01）：Cgroup概述](https://segmentfault.com/a/1190000006917884)
+
+subsystem所关联到的cgroup树的ID，如果多个subsystem关联到同一颗cgroup树，那么他们的这个字段将一样，比如这里的cpu和cpuacct就一样，表示他们绑定到了同一颗树。如果出现下面的情况，这个字段将为0：
+- 当前subsystem没有和任何cgroup树绑定
+- 当前subsystem已经和cgroup v2的树绑定
+- 当前subsystem没有被内核开启
+
+- [ ] stuck here, I want to find how /proc/cgroups works
+
+
+
+## proc
+```c
+/* cgroup core interface files for the default hierarchy */
+static struct cftype cgroup_base_files[] = {
+    //  cgroup.controllers
+    //  cgroup.max.depth
+    //  cgroup.max.descendants
+    //  cgroup.procs
+    //  cgroup.stat
+    //  cgroup.subtree_control
+    //  cgroup.threads
+}
+
+/*
+ * cgroup_file is the handle for a file instance created in a cgroup which
+ * is used, for example, to generate file changed notifications.  This can
+ * be obtained by setting cftype->file_offset.
+ */
+struct cgroup_file {
+	/* do not access any fields from outside cgroup core */
+	struct kernfs_node *kn;
+	unsigned long notified_at;
+	struct timer_list notify_timer;
+};
+
+
+static struct kernfs_ops cgroup_kf_single_ops = {
+	.atomic_write_len	= PAGE_SIZE,
+	.open			= cgroup_file_open,
+	.release		= cgroup_file_release,
+	.write			= cgroup_file_write,
+	.poll			= cgroup_file_poll,
+	.seq_show		= cgroup_seqfile_show,
+};
+
+static struct kernfs_ops cgroup_kf_ops = {
+	.atomic_write_len	= PAGE_SIZE,
+	.open			= cgroup_file_open,
+	.release		= cgroup_file_release,
+	.write			= cgroup_file_write,
+	.poll			= cgroup_file_poll,
+	.seq_start		= cgroup_seqfile_start,
+	.seq_next		= cgroup_seqfile_next,
+	.seq_stop		= cgroup_seqfile_stop,
+	.seq_show		= cgroup_seqfile_show,
+};
+```
+
+- [ ] cftype::kf_ops and cftype::open: now that we can use kf_ops to show files, but we still have to define all kinds of operations ?
+
+## 和虚拟文件系统是如何勾连上的 ?
+
+1. kernfs
+2. kernfs_syscall_ops 诡异的操作
+
+```c
+static struct kernfs_syscall_ops cgroup_kf_syscall_ops = {
+	.show_options		= cgroup_show_options,
+	.remount_fs		= cgroup_remount,
+	.mkdir			= cgroup_mkdir,
+	.rmdir			= cgroup_rmdir,
+	.show_path		= cgroup_show_path,
+};
+
+
+static struct kernfs_ops cgroup_kf_single_ops = {
+	.atomic_write_len	= PAGE_SIZE,
+	.open			= cgroup_file_open,
+	.release		= cgroup_file_release,
+	.write			= cgroup_file_write,
+	.seq_show		= cgroup_seqfile_show,
+};
+
+static struct kernfs_ops cgroup_kf_ops = {
+	.atomic_write_len	= PAGE_SIZE,
+	.open			= cgroup_file_open,
+	.release		= cgroup_file_release,
+	.write			= cgroup_file_write,
+	.seq_start		= cgroup_seqfile_start,
+	.seq_next		= cgroup_seqfile_next,
+	.seq_stop		= cgroup_seqfile_stop,
+	.seq_show		= cgroup_seqfile_show,
+};
+```
+
+## fs
+
+- css_populate_dir
+
+## memcg
+- [ ] why swap works different with memory_cgrp_subsys ? 
+  - [ ] mem_cgroup_swap_init
+
+```c
+struct cgroup_subsys memory_cgrp_subsys = {
+	.css_alloc = mem_cgroup_css_alloc,
+	.css_online = mem_cgroup_css_online,
+	.css_offline = mem_cgroup_css_offline,
+	.css_released = mem_cgroup_css_released,
+	.css_free = mem_cgroup_css_free,
+	.css_reset = mem_cgroup_css_reset,
+	.can_attach = mem_cgroup_can_attach,
+	.cancel_attach = mem_cgroup_cancel_attach,
+	.post_attach = mem_cgroup_move_task,
+	.bind = mem_cgroup_bind,
+	.dfl_cftypes = memory_files,
+	.legacy_cftypes = mem_cgroup_legacy_files,
+	.early_init = 0,
+};
+```
 
 
 ## mount 和 ext4 有什么不同的地方 ?
@@ -148,7 +271,6 @@ int cgroup_attach_task(struct cgroup *dst_cgrp, struct task_struct *leader,
 
 ## 文档整理一波
 1. https://lwn.net/Articles/753162/
-2. https://0xax.gitbooks.io/linux-insides/content/Cgroups/linux-cgroups-1.html : 早期的初始化
 3. https://en.wikipedia.org/wiki/Cgroups : redesign
 4. http://man7.org/linux/man-pages/man7/cpuset.7.html
 5. Man cgroup(7)
@@ -302,41 +424,6 @@ current_cgns_cgroup_from_root(struct cgroup_root *root)
 
 
 ## bpf 不可避免 ?
-
-## 和虚拟文件系统是如何勾连上的 ?
-
-1. kernfs
-2. kernfs_syscall_ops 诡异的操作
-
-```c
-static struct kernfs_syscall_ops cgroup_kf_syscall_ops = {
-	.show_options		= cgroup_show_options,
-	.remount_fs		= cgroup_remount,
-	.mkdir			= cgroup_mkdir,
-	.rmdir			= cgroup_rmdir,
-	.show_path		= cgroup_show_path,
-};
-
-
-static struct kernfs_ops cgroup_kf_single_ops = {
-	.atomic_write_len	= PAGE_SIZE,
-	.open			= cgroup_file_open,
-	.release		= cgroup_file_release,
-	.write			= cgroup_file_write,
-	.seq_show		= cgroup_seqfile_show,
-};
-
-static struct kernfs_ops cgroup_kf_ops = {
-	.atomic_write_len	= PAGE_SIZE,
-	.open			= cgroup_file_open,
-	.release		= cgroup_file_release,
-	.write			= cgroup_file_write,
-	.seq_start		= cgroup_seqfile_start,
-	.seq_next		= cgroup_seqfile_next,
-	.seq_stop		= cgroup_seqfile_stop,
-	.seq_show		= cgroup_seqfile_show,
-};
-```
 ## cgroup ssid 的管理策略
 
 ## cftypes 的作用是什么 ?
@@ -348,8 +435,6 @@ static struct kernfs_ops cgroup_kf_ops = {
 cgroup_add_cftypes : 将 cftype->kf_ops cftype->ss 的内容
 ```
 
-
-## 以 memcontrol 为例，又是如何产生效果的 ?
 
 
 ## control
@@ -376,8 +461,6 @@ static int cgroup_apply_control(struct cgroup *cgrp)
 ```
 
 
-
-## 文档太难阅读了，瞎jb读一下文章吧!
 
 ## cgroup_add_dfl_cftypes 和 cgroup_add_legacy_cftypes
 实际上，两个函数只有cft-> flags 的区别
@@ -425,8 +508,6 @@ int cgroup_add_legacy_cftypes(struct cgroup_subsys *ss, struct cftype *cfts)
 > 以后再说吧! 这他妈是什么啊 ?
 
 ## 外部interface cpuset_cgrp_subsys
-1. scheduler 中间不是已经存在了管理cpu 的机制吗 ?
-
 
 ```c
 struct cgroup_subsys cpuset_cgrp_subsys = {
@@ -452,4 +533,3 @@ struct cpuset {
 	struct cgroup_subsys_state css;
 ```
 怀疑所有的subsys 采用这种机制
-
