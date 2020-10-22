@@ -28,9 +28,10 @@ https://unix.stackexchange.com/questions/183717/whats-a-uts-namespace
 https://superuser.com/questions/59093/difference-between-host-name-and-domain-name
 
 
-# linux kernel cgroup overview
 
-| File              | blank | comment | code | 分析                          |
+## overview
+
+| File              | blank | comment | code | explanation                          |
 |-------------------|-------|---------|------|-------------------------------|
 | cgroup.c          | 942   | 1541    | 3508 |
 | cpuset.c          | 374   | 841     | 1542 |
@@ -52,6 +53,23 @@ https://superuser.com/questions/59093/difference-between-host-name-and-domain-na
 | `css_task_iter_*`                                                                                                                | 4500  |
 | css destruction fork init 以及 `cgroup_get_from_*`                                                                               |
 
+Linux kernel provides support for following twelve control group subsystems:
+- cpuset - assigns individual processor(s) and memory nodes to task(s) in a group;
+- cpu - uses the scheduler to provide cgroup tasks access to the processor resources;
+- cpuacct - generates reports about processor usage by a group;
+- io - sets limit to read/write from/to block devices;
+- memory - sets limit on memory usage by a task(s) from a group;
+- devices - allows access to devices by a task(s) from a group;
+- freezer - allows to suspend/resume for a task(s) from a group;
+- net_cls - allows to mark network packets from task(s) from a group;
+- net_prio - provides a way to dynamically set the priority of network traffic per network interface for a group;
+- perf_event - provides access to perf events) to a group;
+- hugetlb - activates support for huge pages for a group;
+- pid - sets limit to number of processes in a group.
+
+Entries list above can be verified in sys and proc.
+
+## review think 
 
 
 ## V1 和 V2 的关系是什么 ?

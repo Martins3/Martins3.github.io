@@ -1,3 +1,4 @@
+- [ ] clear this post
 ## tar
 
 https://www.cyberciti.biz/faq/how-do-i-compress-a-whole-linux-or-unix-directory/

@@ -25,7 +25,6 @@ void print_maps() {
 ssize_t my_write(int fd, const void *buf, size_t size) {
   print_maps();
 
-  printf("[[[[%p]]]]\n", buf);
   ssize_t ret;
   asm volatile("syscall"
                : "=a"(ret)
