@@ -3,11 +3,11 @@
 <!-- vim-markdown-toc GitLab -->
 
 - [打通fs的方法](#打通fs的方法)
-    - [有待继续的内容](#有待继续的内容)
-- [CFS : Concrete FS](#cfs-concrete-fs)
+    - [TODO](#todo)
 - [VFS](#vfs)
     - [lookup](#lookup)
     - [path](#path)
+- [path walking](#path-walking)
 - [VFS standard file operation](#vfs-standard-file-operation)
     - [inode_operations::fiemap](#inode_operationsfiemap)
     - [file_operations::mmap](#file_operationsmmap)
@@ -18,11 +18,11 @@
     - [aio(dated)](#aiodated)
     - [io uring](#io-uring)
 - [file writeback](#file-writeback)
+- [fd](#fd)
+- [fcntl](#fcntl)
 - [event fd](#event-fd)
 - [event poll](#event-poll)
 - [flock](#flock)
-    - [fcntl](#fcntl)
-    - [ioctl](#ioctl)
 - [ext2](#ext2)
 - [nobdv fs](#nobdv-fs)
 - [virtual fs library summary](#virtual-fs-library-summary)
@@ -35,7 +35,7 @@
 - [superblock](#superblock)
     - [super operations](#super-operations)
 - [dentry](#dentry)
-    - [path](#path-1)
+    - [d_path](#d_path)
 - [helper](#helper)
 - [attr](#attr)
 - [open.c(make this part more clear, split it)](#opencmake-this-part-more-clear-split-it)
@@ -48,8 +48,8 @@
 - [inode](#inode)
 - [dcache](#dcache)
 - [lvm](#lvm)
-- [splice and pipe](#splice-and-pipe)
-- [IO model](#io-model)
+- [splice](#splice)
+- [pipe](#pipe)
 - [devpts](#devpts)
 - [dup(merge)](#dupmerge)
 - [IO buffer(merge)](#io-buffermerge)
@@ -66,11 +66,12 @@
 - [nvme](#nvme)
 - [fallocate](#fallocate)
 - [union fs](#union-fs)
-- [TODO](#todo)
+- [TODO](#todo-1)
 - [multiqueue](#multiqueue)
 - [null blk](#null-blk)
 - [proc](#proc)
     - [sysctl](#sysctl)
+- [fifo](#fifo)
 - [configfs](#configfs)
 
 <!-- vim-markdown-toc -->
@@ -108,19 +109,15 @@
 5. uring io
 6. io scheduler
 7. 磁盘驱动，不要基于内存的虚假驱动
-
 8. fuse
 9. nfs
 
-#### 有待继续的内容
-1. file lock
-2. 内部的 lock 的设计
+#### TODO
+- [ ] file lock
+- [ ] 内部的 lock 的设计
 
-
-## CFS : Concrete FS
-mkfs.ext4 居然存在那么多的选项，才知道文件系统也是具有各种选项的
-
-
+- [ ] dentry and path walking
+  - [ ] dcache
 
 ## VFS
 基本元素:
@@ -264,8 +261,6 @@ struct path {
 } __randomize_layout;
 ```
 
-
-
 ```c
 int kern_path(const char *name, unsigned int flags, struct path *path)
 {
@@ -276,6 +271,9 @@ int kern_path(const char *name, unsigned int flags, struct path *path)
 filename_lookup : 装配 nameidata，call path_lookupat
 path_lookupat : 就是查询的核心位置了
 ```
+
+## path walking
+
 
 
 ## VFS standard file operation 
@@ -681,6 +679,33 @@ fs/file-writeback.c 中间到底完成什么工作
 
 - [ ] so file-writeback and page-writeback.c are one of two base modules of vmscan, another base moduler is swap.
 
+## fd
+Related code resides in fs/file.c, it works just what we expected.
+
+- fd_install
+- dup
+- fget
+
+## fcntl
+abbreviation for file control
+
+1. lease ?
+2. dnotify 
+3. seal
+
+来源自 man fcntl(2)
+
+主要的功能:
+1. Duplicating a file descriptor
+2. File descriptor flags
+
+The principal difference between the two lock types is that whereas traditional record locks are associated with a process,
+open file description locks are associated with the open file description on which they are acquired, much like locks acquired with flock(2).
+Consequently (and unlike traditional advisory record locks), open file description locks are inherited across fork(2) (and clone(2) with CLONE_FILES),
+and are only automatically released on the last close of the open file description, instead of being released on any close of the file.
+
+> Warning: the Linux implementation of mandatory locking is unreliable.  See BUGS below.  Because of these bugs, and the fact that the feature is believed to be little used, since Linux 4.5, mandatory locking has been made an optional feature, governed by a configuration option (CONFIG_MANDATORY_FILE_LOCKING).  This is an initial step toward removing this feature completely.
+
 ## event fd
 - [ ] why eventfd is related with kvm ?
 
@@ -745,27 +770,6 @@ file.
 > 3. 一个文件可以设置多个锁
 
 TODO fcntl 的内容很多，首先打住一下
-
-#### fcntl
-1. lease ?
-2. dnotify 
-3. seal
-
-来源自 man fcntl(2)
-
-主要的功能:
-1. Duplicating a file descriptor
-2. File descriptor flags
-
-The principal difference between the two lock types is that whereas traditional record locks are associated with a process,
-open file description locks are associated with the open file description on which they are acquired, much like locks acquired with flock(2).
-Consequently (and unlike traditional advisory record locks), open file description locks are inherited across fork(2) (and clone(2) with CLONE_FILES),
-and are only automatically released on the last close of the open file description, instead of being released on any close of the file.
-
-> Warning: the Linux implementation of mandatory locking is unreliable.  See BUGS below.  Because of these bugs, and the fact that the feature is believed to be little used, since Linux 4.5, mandatory locking has been made an optional feature, governed by a configuration option (CONFIG_MANDATORY_FILE_LOCKING).  This is an initial step toward removing this feature completely.
-
-#### ioctl
-> TODO 另一个大而全的系统调用 ?
 
 ## ext2
 内部结构:
@@ -916,6 +920,9 @@ vm_fault_t ext4_filemap_fault(struct vm_fault *vmf)
 2. 注册 vm_ops
 
 ## mount
+
+- [ ] https://www.kernel.org/doc/html/latest/filesystems/mount_api.html read the documenation
+
 问题:
 1. mount 在路径查询到时候的作用是什么 ?
 2. master 和 slave 在这里是个什么概念
@@ -924,7 +931,6 @@ vm_fault_t ext4_filemap_fault(struct vm_fault *vmf)
 
 6. 忽然想到，在本来的文件系统上，一个文件夹，比如 /home/shen/core 下面本来就是存在文件的，
 在这种情况下，该文件系统被 mount ， 描述一下这种情况
-
 
 TODO
 1. https://zhuanlan.zhihu.com/p/93592262 新版的 mount 看这里就可以了吧，现在大致理解了 mount 的作用，先看下一个吧!
@@ -1223,64 +1229,15 @@ negative dentry [^6] :
 1. dentry is a way of remembering the resolution of a given file or directory name without having to search through the filesystem to find it.
 2. A negative dentry is a little different, though: it is a memory of a filesystem lookup that failed.
 
+#### d_path
 
-#### path
+- [ ] fs/d_path.c
 
-```c
-struct path {
-	struct vfsmount *mnt;
-	struct dentry *dentry;
-} __randomize_layout;
-```
-> 原来，path 只是一个 dentry !
-
+- [ ] d_path
+- [ ] getpwd
 
 ## helper 
 1. `inode_init_owner` : 
-2. get_next_ino : 调用者只一些虚拟的文件系统。
-    1. 为什么虚拟文件需要 ino ，又不需要和磁盘打交道
-```c
-/*
- * Each cpu owns a range of LAST_INO_BATCH numbers.
- * 'shared_last_ino' is dirtied only once out of LAST_INO_BATCH allocations,
- * to renew the exhausted range.
- *
- * This does not significantly increase overflow rate because every CPU can
- * consume at most LAST_INO_BATCH-1 unused inode numbers. So there is
- * NR_CPUS*(LAST_INO_BATCH-1) wastage. At 4096 and 1024, this is ~0.1% of the
- * 2^32 range, and is a worst-case. Even a 50% wastage would only increase
- * overflow rate by 2x, which does not seem too significant.
- *
- * On a 32bit, non LFS stat() call, glibc will generate an EOVERFLOW
- * error if st_ino won't fit in target struct field. Use 32bit counter
- * here to attempt to avoid that.
- */
-#define LAST_INO_BATCH 1024
-static DEFINE_PER_CPU(unsigned int, last_ino);
-
-unsigned int get_next_ino(void)
-{
-	unsigned int *p = &get_cpu_var(last_ino);
-	unsigned int res = *p;
-
-#ifdef CONFIG_SMP
-	if (unlikely((res & (LAST_INO_BATCH-1)) == 0)) {
-		static atomic_t shared_last_ino;
-		int next = atomic_add_return(LAST_INO_BATCH, &shared_last_ino);
-
-		res = next - LAST_INO_BATCH;
-	}
-#endif
-
-	res++;
-	/* get_next_ino should not provide a 0 inode number */
-	if (unlikely(!res))
-		res++;
-	*p = res;
-	put_cpu_var(last_ino);
-	return res;
-}
-```
 
 3. `d_make_root` : 通过 root inode 创建出来对应的 dentry，所有的inode 都是存在对应的 dentry 并且存放在 parent direcory file 中间，但是唯独 root 不行。
 
@@ -1505,7 +1462,6 @@ struct block_device *bdget(dev_t dev)
 
 	inode = iget5_locked(blockdev_superblock, hash(dev),
 			bdev_test, bdev_set, &dev);
-
 ```
 
 有意思
@@ -1514,7 +1470,6 @@ struct block_device *bdget(dev_t dev)
  * inode number is not sufficient for unique identification of an inode.
 
 3. 两个版本的函数都是存在的 ilookup 和 ilookup5
-
 
 
 * ***hash***
@@ -1533,7 +1488,8 @@ static unsigned long hash(struct super_block *sb, unsigned long hashval)
 }
 ```
 
-
+- [ ] get_next_ino()
+  - [ ] what's relation with struct inode::i_ino and ext4 disk inode
 
 ## dcache
 问题
@@ -1639,11 +1595,100 @@ https://opensource.com/business/16/9/linux-users-guide-lvm
 
 
 
-## splice and pipe
-内核似乎没有文档 : https://www.kernel.org/doc/html/latest/filesystems/splice.html
+## splice
+Four syscall related : vmsplice splice tee pipe
 
-## IO model
-利用 fio 总结一下常用的 IO 模型
+-  [connect buffer and pipe buffer with splice](https://gist.github.com/karthick18/1234187)
+
+> splice() moves data between two file descriptors without copying between kernel address space and user address space. 
+> It transfers up to len bytes of data from the file descriptor fd_in to the file descriptor `fd_out`, where one of the file descriptors must refer to a pipe.
+
+without splice, we can copy file by coping file to user space and coping data in userspace to kernel space. 
+splice can copy file directly in kernel with pipe.
+
+Because splice connect two fd (one of is pipe fd), so splice also works with tee.
+Tee can copy files without consuming it, in the second stage, we can splice the data to files.
+
+- [ ] ./tlpi-dist/pipes/pipe_sync.c
+    - if parent contains a pipe and fork several children, then they share a public pipe, in another word, everyone write to same buffer and everyone read from same buffer.
+    - Only the buffer is close by parent and all children, will it be closed 
+    - [ ] so, check how kernel work for this
+
+## pipe
+- [ ] pipefs
+  - [ ] why we need pipefs ?
+
+- [x] get_pipe_inode() 
+  - init inode 
+  - only called by create_pipe_files
+    - create_pipe_files ==> get_pipe_inode + alloc_file_pseudo + alloc_file_clone
+    - create_pipe_files alloc one `struct inode` and two `struct file`. 
+    - both of `file` points to the `inode`
+  - alloc_pipe_info : alloc pipe related code
+
+
+If we get fd, then find inode, then standard path to `pipefifo_fops::pipe_read`
+
+
+struct pipe_inode_info::pipe_buffer points an array of pipe_buffer, every pipe_buffer manages one page frame.
+```c
+const struct file_operations pipefifo_fops = {
+	.open		= fifo_open,
+	.llseek		= no_llseek,
+	.read_iter	= pipe_read,
+	.write_iter	= pipe_write,
+	.poll		= pipe_poll,
+	.unlocked_ioctl	= pipe_ioctl,
+	.release	= pipe_release,
+	.fasync		= pipe_fasync,
+};
+```
+
+
+buffer ops: because some optimization, e.g., steal page to avoid coping, we can do some magic about buffer page.
+```c
+/*
+ * Note on the nesting of these functions:
+ *
+ * ->confirm()
+ *	->try_steal()
+ *
+ * That is, ->try_steal() must be called on a confirmed buffer.  See below for
+ * the meaning of each operation.  Also see the kerneldoc in fs/pipe.c for the
+ * pipe and generic variants of these hooks.
+ */
+struct pipe_buf_operations {
+	/*
+	 * ->confirm() verifies that the data in the pipe buffer is there
+	 * and that the contents are good. If the pages in the pipe belong
+	 * to a file system, we may need to wait for IO completion in this
+	 * hook. Returns 0 for good, or a negative error value in case of
+	 * error.  If not present all pages are considered good.
+	 */
+	int (*confirm)(struct pipe_inode_info *, struct pipe_buffer *);
+
+	/*
+	 * When the contents of this pipe buffer has been completely
+	 * consumed by a reader, ->release() is called.
+	 */
+	void (*release)(struct pipe_inode_info *, struct pipe_buffer *);
+
+	/*
+	 * Attempt to take ownership of the pipe buffer and its contents.
+	 * ->try_steal() returns %true for success, in which case the contents
+	 * of the pipe (the buf->page) is locked and now completely owned by the
+	 * caller. The page may then be transferred to a different mapping, the
+	 * most often used case is insertion into different file address space
+	 * cache.
+	 */
+	bool (*try_steal)(struct pipe_inode_info *, struct pipe_buffer *);
+
+	/*
+	 * Get a reference to the pipe buffer.
+	 */
+	bool (*get)(struct pipe_inode_info *, struct pipe_buffer *);
+};
+```
 
 ## devpts
 https://www.kernel.org/doc/html/latest/filesystems/devpts.html
@@ -1910,6 +1955,9 @@ https://www.kernel.org/doc/html/latest/block/null_blk.html
 `linux/kernel/sysctl.c` is a three thousand lines file, first part is about `proc_put_long`, second part is hierarchy of tables describing /proc/sys/
 
 - [ ] so It works and different from part of proc ?
+
+## fifo
+https://unix.stackexchange.com/questions/433488/what-is-the-purpose-of-using-a-fifo-vs-a-temporary-file-or-a-pipe
 
 
 ## configfs

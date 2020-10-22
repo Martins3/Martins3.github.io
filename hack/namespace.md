@@ -110,9 +110,6 @@ provide isolation of the system resources associated with networking. Thus, each
 
 ## time
 
-
-
-
 [^1]: https://lwn.net/Articles/531114/
 [^2]: https://lwn.net/Articles/531381/
 [^3]: https://lwn.net/Articles/532748/
