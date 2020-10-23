@@ -137,6 +137,11 @@ static struct kernfs_ops cgroup_kf_ops = {
 
 - [ ] cftype::kf_ops and cftype::open: now that we can use kf_ops to show files, but we still have to define all kinds of operations ?
 
+
+## proc
+proc_cgroup_show
+
+
 ## 和虚拟文件系统是如何勾连上的 ?
 
 1. kernfs
