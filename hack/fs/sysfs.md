@@ -7,6 +7,7 @@
     - [device model part](#device-model-part)
 - [function](#function)
     - [](#)
+- [kobject](#kobject)
 
 <!-- vim-markdown-toc -->
 
@@ -121,4 +122,42 @@ it by doing:
 4. Attributes can be exported for *kobjects* in the form of *regular files* in the filesystem.
 并且提供文件属性
 > 属性在 sfs 中间的存在形式是 文件
+
+
+## kobject
+kobject --- sysfs ---- kernfs
+
+```c
+fs_kobj = kobject_create_and_add("fs", NULL);
+power_kobj = kobject_create_and_add("power", NULL);
+kernel_kobj = kobject_create_and_add("kernel", NULL);
+dev_kobj = kobject_create_and_add("dev", NULL);
+firmware_kobj = kobject_create_and_add("firmware", NULL);
+block_depr = kobject_create_and_add("block", NULL);
+ 
+devices_kset = kset_create_and_add("devices", &device_uevent_ops, NULL);
+class_kset = kset_create_and_add("class", NULL, NULL);
+module_kset = kset_create_and_add("module", &module_uevent_ops, NULL);
+bus_kset = kset_create_and_add("bus", &bus_uevent_ops, NULL);
+```
+
+
+```
+kobject创建：
+-----------
+struct kobject *kobject_create_and_add(const char *name, struct kobject *parent)
+	int kobject_add(struct kobject *kobj, struct kobject *parent, const char *fmt, ...)
+		static int object_add_varg (vargs=...
+			static int kobject_add_internal(struct kobject *kobj)
+				static int create_dir(struct kobject *kobj)
+					int sysfs_create_dir_ns(struct kobject *kobj, const void *ns)  //sysfs_root_kn
+						struct kernfs_node *kernfs_create_dir_ns(struct kernfs_node *parent,
+							struct kernfs_node *kernfs_new_node(struct kernfs_node *parent,
+ 
+kset创建：
+--------
+struct kset *kset_create_and_add(const char *name,
+	int kset_register(struct kset *k)
+		static int kobject_add_internal(struct kobject *kobj)
+```
 

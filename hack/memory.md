@@ -2837,7 +2837,18 @@ static int claim_swapfile(struct swap_info_struct *p, struct inode *inode)
     2. unuse_mm : 逐个清理
 
 ## out of memory killer
-> 据说 OOM killer 工作有点 heuristic 的，实际体验不佳。
+
+- [ ] oom reaper
+
+- [ ] cgroup
+
+- [ ] dump
+
+- out_of_memory
+
+- [ ] `__oom_kill_process`
+
+
 
 ## vmstate
 // 搞清楚如何使用这个代码吧 !

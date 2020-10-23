@@ -1,3 +1,6 @@
+## TODO
+- [ ] fs/proc/namespace handles /proc/$pid/ns
+
 ## 待分析的资料
 **[namespace with c code](https://windsock.io/uts-namespace/)**
 

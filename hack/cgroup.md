@@ -1,6 +1,36 @@
 # cgroup
+<!-- vim-markdown-toc GitLab -->
 
-* http://www.haifux.org/lectures/299/netLec7.pdf
+  - [overview](#overview)
+  - [userland api](#userland-api)
+  - [proc](#proc)
+  - [proc](#proc-1)
+  - [sys](#sys)
+  - [kernfs](#kernfs)
+  - [fs](#fs)
+  - [memcg](#memcg)
+      - [memcg shrinker](#memcg-shrinker)
+      - [memcg oom](#memcg-oom)
+      - [memcg writeback](#memcg-writeback)
+      - [memcg memory.stat](#memcg-memorystat)
+  - [migrate](#migrate)
+  - [文档整理一波](#文档整理一波)
+  - [struct](#struct)
+  - [namespace](#namespace)
+  - [idr](#idr)
+  - [domain threaded mask](#domain-threaded-mask)
+  - [bpf 不可避免 ?](#bpf-不可避免-)
+  - [cgroup ssid 的管理策略](#cgroup-ssid-的管理策略)
+  - [cftypes 的作用是什么 ?](#cftypes-的作用是什么-)
+  - [control](#control)
+  - [cgroup_add_dfl_cftypes 和 cgroup_add_legacy_cftypes](#cgroup_add_dfl_cftypes-和-cgroup_add_legacy_cftypes)
+- [kernel/cgroup/cpuset.md](#kernelcgroupcpusetmd)
+  - [外部interface cpuset_cgrp_subsys](#外部interface-cpuset_cgrp_subsys)
+  - [cpuset](#cpuset)
+  - [cpu](#cpu)
+
+<!-- vim-markdown-toc -->
+
 
 ## overview
 | desc                                                                                                                             | lines |
@@ -60,6 +90,37 @@ Entries list above can be verified in sys and proc.
                                                                   |         ....        |
                                                                   +---------------------+
 ```
+
+- [ ] what's relation with `css` and `cgroup`
+
+```
+cgroup_mkdir         |
+                     |==> cgroup_apply_control_enable ==> css_create
+cgroup_apply_control |
+```
+
+```c
+/**
+ * cgroup_apply_control - apply control mask updates to the subtree
+ * @cgrp: root of the target subtree
+ *
+ * subsystems can be enabled and disabled in a subtree using the following
+ * steps.
+ *
+ * 1. Call cgroup_save_control() to stash the current state.
+ * 2. Update ->subtree_control masks in the subtree as desired.
+ * 3. Call cgroup_apply_control() to apply the changes.
+ * 4. Optionally perform other related operations.
+ * 5. Call cgroup_finalize_control() to finish up.
+ *
+ * This function implements step 3 and propagates the mask changes
+ * throughout @cgrp's subtree, updates csses accordingly and perform
+ * process migrations.
+ */
+static int cgroup_apply_control(struct cgroup *cgrp)
+```
+
+
 
 ## userland api
 [kernel doc](https://www.kernel.org/doc/html/latest/admin-guide/cgroup-v2.html)
@@ -133,49 +194,50 @@ static struct kernfs_ops cgroup_kf_ops = {
 	.seq_stop		= cgroup_seqfile_stop,
 	.seq_show		= cgroup_seqfile_show,
 };
-```
 
-- [ ] cftype::kf_ops and cftype::open: now that we can use kf_ops to show files, but we still have to define all kinds of operations ?
-
-
-## proc
-proc_cgroup_show
-
-
-## 和虚拟文件系统是如何勾连上的 ?
-
-1. kernfs
-2. kernfs_syscall_ops 诡异的操作
-
-```c
 static struct kernfs_syscall_ops cgroup_kf_syscall_ops = {
 	.show_options		= cgroup_show_options,
-	.remount_fs		= cgroup_remount,
 	.mkdir			= cgroup_mkdir,
 	.rmdir			= cgroup_rmdir,
 	.show_path		= cgroup_show_path,
 };
-
-
-static struct kernfs_ops cgroup_kf_single_ops = {
-	.atomic_write_len	= PAGE_SIZE,
-	.open			= cgroup_file_open,
-	.release		= cgroup_file_release,
-	.write			= cgroup_file_write,
-	.seq_show		= cgroup_seqfile_show,
-};
-
-static struct kernfs_ops cgroup_kf_ops = {
-	.atomic_write_len	= PAGE_SIZE,
-	.open			= cgroup_file_open,
-	.release		= cgroup_file_release,
-	.write			= cgroup_file_write,
-	.seq_start		= cgroup_seqfile_start,
-	.seq_next		= cgroup_seqfile_next,
-	.seq_stop		= cgroup_seqfile_stop,
-	.seq_show		= cgroup_seqfile_show,
-};
 ```
+
+- [ ] cftype::kf_ops and cftype::open: now that we can use kf_ops to show files, but we still have to define all kinds of operations ?
+
+## proc
+1. proc_cgroup_show
+2. 
+```c
+	WARN_ON(!proc_create_single("cgroups", 0, NULL, proc_cgroupstats_show));
+```
+
+## sys
+1. /sys/kernel/cgroup
+2. last several lines in cgroup.c is related
+
+cgroup fs is mount at /proc/fs/cgroup
+
+## kernfs
+- [ ] why so many mount points for cgroup ?
+  - [ ] check the code that we mount all kinds all subsystem seperately.
+```
+cgroup /sys/fs/cgroup/net_cls,net_prio cgroup rw,nosuid,nodev,noexec,relatime,net_cls,net_prio 0 0
+cgroup /sys/fs/cgroup/systemd cgroup rw,nosuid,nodev,noexec,relatime,xattr,name=systemd 0 0
+cgroup /sys/fs/cgroup/cpu,cpuacct cgroup rw,nosuid,nodev,noexec,relatime,cpu,cpuacct 0 0
+cgroup /sys/fs/cgroup/perf_event cgroup rw,nosuid,nodev,noexec,relatime,perf_event 0 0
+cgroup2 /sys/fs/cgroup/unified cgroup2 rw,nosuid,nodev,noexec,relatime,nsdelegate 0 0
+cgroup /sys/fs/cgroup/hugetlb cgroup rw,nosuid,nodev,noexec,relatime,hugetlb 0 0
+cgroup /sys/fs/cgroup/freezer cgroup rw,nosuid,nodev,noexec,relatime,freezer 0 0
+cgroup /sys/fs/cgroup/devices cgroup rw,nosuid,nodev,noexec,relatime,devices 0 0
+cgroup /sys/fs/cgroup/cpuset cgroup rw,nosuid,nodev,noexec,relatime,cpuset 0 0
+cgroup /sys/fs/cgroup/memory cgroup rw,nosuid,nodev,noexec,relatime,memory 0 0
+cgroup /sys/fs/cgroup/blkio cgroup rw,nosuid,nodev,noexec,relatime,blkio 0 0
+cgroup /sys/fs/cgroup/pids cgroup rw,nosuid,nodev,noexec,relatime,pids 0 0
+cgroup /sys/fs/cgroup/rdma cgroup rw,nosuid,nodev,noexec,relatime,rdma 0 0
+```
+
+- [ ] cgroup_setup_root
 
 ## fs
 
@@ -184,6 +246,10 @@ static struct kernfs_ops cgroup_kf_ops = {
 ## memcg
 - [ ] why swap works different with memory_cgrp_subsys ? 
   - [ ] mem_cgroup_swap_init
+
+- [ ] mem_cgroup_scan_tasks
+
+- [ ] parent_mem_cgroup
 
 ```c
 struct cgroup_subsys memory_cgrp_subsys = {
@@ -203,24 +269,112 @@ struct cgroup_subsys memory_cgrp_subsys = {
 };
 ```
 
+- [ ] css
 
-## mount 和 ext4 有什么不同的地方 ?
-
+- [ ] both mem_cgroup_legacy_files and memory_files is 
 ```c
-struct file_system_type cgroup_fs_type = {
-	.name = "cgroup",
-	.mount = cgroup_mount,
-	.kill_sb = cgroup_kill_sb,
-	.fs_flags = FS_USERNS_MOUNT,
-};
+int __init cgroup_init(void){
+    // ...
+		if (ss->dfl_cftypes == ss->legacy_cftypes) {
+			WARN_ON(cgroup_add_cftypes(ss, ss->dfl_cftypes));
+		} else {
+			WARN_ON(cgroup_add_dfl_cftypes(ss, ss->dfl_cftypes));
+			WARN_ON(cgroup_add_legacy_cftypes(ss, ss->legacy_cftypes));
+		}
+    // ...
 ```
 
 
-```c
-/* cgroup core interface files for the default hierarchy */
-static struct cftype cgroup_base_files[] = {
+```
+.rw-r--r-- root root 0 B Fri Oct 23 13:41:52 2020  cgroup.clone_children
+.-w--w--w- root root 0 B Fri Oct 23 13:41:52 2020  cgroup.event_control
+.rw-r--r-- root root 0 B Fri Oct 23 13:41:52 2020  cgroup.procs
+.rw-r--r-- root root 0 B Fri Oct 23 13:41:52 2020  memory.failcnt
+.-w------- root root 0 B Fri Oct 23 13:41:52 2020  memory.force_empty
+.rw-r--r-- root root 0 B Fri Oct 23 13:41:52 2020  memory.kmem.failcnt
+.rw-r--r-- root root 0 B Fri Oct 23 13:41:52 2020  memory.kmem.limit_in_bytes
+.rw-r--r-- root root 0 B Fri Oct 23 13:41:52 2020  memory.kmem.max_usage_in_bytes
+.r--r--r-- root root 0 B Fri Oct 23 13:41:52 2020  memory.kmem.slabinfo
+.rw-r--r-- root root 0 B Fri Oct 23 13:41:52 2020  memory.kmem.tcp.failcnt
+.rw-r--r-- root root 0 B Fri Oct 23 13:41:52 2020  memory.kmem.tcp.limit_in_bytes
+.rw-r--r-- root root 0 B Fri Oct 23 13:41:52 2020  memory.kmem.tcp.max_usage_in_bytes
+.r--r--r-- root root 0 B Fri Oct 23 13:41:52 2020  memory.kmem.tcp.usage_in_bytes
+.r--r--r-- root root 0 B Fri Oct 23 13:41:52 2020  memory.kmem.usage_in_bytes
+.rw-r--r-- root root 0 B Fri Oct 23 13:41:52 2020  memory.limit_in_bytes
+.rw-r--r-- root root 0 B Fri Oct 23 13:41:52 2020  memory.max_usage_in_bytes
+.rw-r--r-- root root 0 B Fri Oct 23 13:41:52 2020  memory.move_charge_at_immigrate
+.r--r--r-- root root 0 B Fri Oct 23 13:41:52 2020  memory.numa_stat
+.rw-r--r-- root root 0 B Fri Oct 23 13:41:52 2020  memory.oom_control
+.--------- root root 0 B Fri Oct 23 13:41:52 2020  memory.pressure_level
+.rw-r--r-- root root 0 B Fri Oct 23 13:41:52 2020  memory.soft_limit_in_bytes
+.r--r--r-- root root 0 B Fri Oct 23 13:41:52 2020  memory.stat
+.rw-r--r-- root root 0 B Fri Oct 23 13:41:52 2020  memory.swappiness
+.r--r--r-- root root 0 B Fri Oct 23 13:41:52 2020  memory.usage_in_bytes
+.rw-r--r-- root root 0 B Fri Oct 23 13:41:52 2020  memory.use_hierarchy
+.rw-r--r-- root root 0 B Fri Oct 23 13:41:52 2020  notify_on_release
+drwxr-xr-x root root 0 B Fri Oct 23 13:41:52 2020  session-1.scope
+.rw-r--r-- root root 0 B Fri Oct 23 13:41:52 2020  tasks
+drwxr-xr-x root root 0 B Fri Oct 23 13:41:52 2020  user-runtime-dir@1000.service
+drwxr-xr-x root root 0 B Fri Oct 23 10:54:42 2020  user@1000.service
 ```
 
+#### memcg shrinker
+- [ ] shrink_node_memcgs
+  - [ ] mem_cgroup_calculate_protection
+
+#### memcg oom
+mem_cgroup_oom_synchronize
+
+#### memcg writeback
+- [ ] mem_cgroup_wb_stats
+- [ ] domain_dirty_limits
+
+```c
+static struct dirty_throttle_control *mdtc_gdtc(struct dirty_throttle_control *mdtc)
+{
+	return mdtc->gdtc;
+}
+```
+
+
+#### memcg memory.stat
+```
+➜  user-1000.slice cat memory.stat 
+cache 0
+rss 0
+rss_huge 0
+shmem 0
+mapped_file 0
+dirty 0
+writeback 0
+pgpgin 0
+pgpgout 0
+pgfault 0
+pgmajfault 0
+inactive_anon 0
+active_anon 0
+inactive_file 0
+active_file 0
+unevictable 0
+hierarchical_memory_limit 9223372036854771712
+total_cache 4071890944
+total_rss 9852420096
+total_rss_huge 0
+total_shmem 999370752
+total_mapped_file 1125949440
+total_dirty 1351680
+total_writeback 405504
+total_pgpgin 294122860
+total_pgpgout 290723233
+total_pgfault 255027451
+total_pgmajfault 617992
+total_inactive_anon 1164046336
+total_active_anon 9625313280
+total_inactive_file 1025933312
+total_active_file 2080468992
+total_unevictable 29466624
+```
+memory_stat_show
 
 
 ## migrate
@@ -532,9 +686,11 @@ struct cgroup_subsys cpuset_cgrp_subsys = {
 
 ```
 
-## struct cpuset 
+## cpuset 
 ```c
 struct cpuset {
 	struct cgroup_subsys_state css;
 ```
 怀疑所有的subsys 采用这种机制
+
+## cpu

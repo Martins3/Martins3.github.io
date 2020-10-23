@@ -11,6 +11,8 @@ https://github.com/golang-standards/project-layout : go 项目安排，c++ 有�
 
 https://github.com/Alikhll/golang-developer-roadmap : golang 的 roadmap，看来都是搞后端的
 
+**https://github.com/halfrost/LeetCode-Go** : finished understand of go and c++ simultaneously.
+
 # Go
 The reason to learn go is that I don't want to miss a good community!
 As for how to learn it, I think the best !
