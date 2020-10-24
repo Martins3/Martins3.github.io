@@ -4,6 +4,7 @@
     <img alt="Coc Logo" src="./ma.png" height="160" />
     <img alt="Coc Logo" src="https://github.com/shuveb/io_uring-by-example/blob/master/public/tux.png" height="160" />
     <img alt="Coc Logo" src="https://styles.redditmedia.com/t5_2ykcc/styles/image_widget_pifwg495jvr41.png" height="160" />
+    <img alt="Coc Logo" src="https://www.kite.com/wp-content/uploads/2019/05/penguin.svg" height="160" />
   </a>
   <p align="center">Martins3's Notes<br>about linux kernel, llvm and many other parts of CS</p>
   <p align="center">

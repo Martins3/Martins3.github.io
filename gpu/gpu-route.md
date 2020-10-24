@@ -5,4 +5,6 @@
 
 2. https://news.ycombinator.com/item?id=22941224 : rust gpu 编程库
 
+3. https://github.com/EmbarkStudios/rust-gpu
+
 

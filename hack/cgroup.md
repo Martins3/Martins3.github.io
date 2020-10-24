@@ -1,33 +1,39 @@
 # cgroup
 <!-- vim-markdown-toc GitLab -->
 
-  - [overview](#overview)
-  - [userland api](#userland-api)
-  - [proc](#proc)
-  - [proc](#proc-1)
-  - [sys](#sys)
-  - [kernfs](#kernfs)
-  - [fs](#fs)
-  - [memcg](#memcg)
-      - [memcg shrinker](#memcg-shrinker)
-      - [memcg oom](#memcg-oom)
-      - [memcg writeback](#memcg-writeback)
-      - [memcg memory.stat](#memcg-memorystat)
-  - [migrate](#migrate)
-  - [文档整理一波](#文档整理一波)
-  - [struct](#struct)
-  - [namespace](#namespace)
-  - [idr](#idr)
-  - [domain threaded mask](#domain-threaded-mask)
-  - [bpf 不可避免 ?](#bpf-不可避免-)
-  - [cgroup ssid 的管理策略](#cgroup-ssid-的管理策略)
-  - [cftypes 的作用是什么 ?](#cftypes-的作用是什么-)
-  - [control](#control)
-  - [cgroup_add_dfl_cftypes 和 cgroup_add_legacy_cftypes](#cgroup_add_dfl_cftypes-和-cgroup_add_legacy_cftypes)
-- [kernel/cgroup/cpuset.md](#kernelcgroupcpusetmd)
-  - [外部interface cpuset_cgrp_subsys](#外部interface-cpuset_cgrp_subsys)
-  - [cpuset](#cpuset)
-  - [cpu](#cpu)
+- [overview](#overview)
+- [userland api](#userland-api)
+- [proc](#proc)
+- [subsystem](#subsystem)
+- [sys](#sys)
+- [kernfs](#kernfs)
+- [fs](#fs)
+- [memcg](#memcg)
+    - [memcg force_empty](#memcg-force_empty)
+    - [memcg shrinker](#memcg-shrinker)
+    - [memcg oom](#memcg-oom)
+    - [memcg writeback](#memcg-writeback)
+    - [memcg memory.stat](#memcg-memorystat)
+- [migrate](#migrate)
+- [blkio](#blkio)
+- [文档整理一波](#文档整理一波)
+- [structure](#structure)
+    - [structure struct](#structure-struct)
+    - [structure defines](#structure-defines)
+    - [structure function](#structure-function)
+- [namespace](#namespace)
+- [idr](#idr)
+- [domain threaded mask](#domain-threaded-mask)
+- [bpf 不可避免 ?](#bpf-不可避免-)
+- [cgroup ssid 的管理策略](#cgroup-ssid-的管理策略)
+- [cftypes 的作用是什么 ?](#cftypes-的作用是什么-)
+- [control](#control)
+- [cgroup_add_dfl_cftypes 和 cgroup_add_legacy_cftypes](#cgroup_add_dfl_cftypes-和-cgroup_add_legacy_cftypes)
+- [cpuset](#cpuset)
+- [cgroup core files](#cgroup-core-files)
+- [v1 v2](#v1-v2)
+- [PSI](#psi)
+- [cpu](#cpu)
 
 <!-- vim-markdown-toc -->
 
@@ -120,8 +126,6 @@ cgroup_apply_control |
 static int cgroup_apply_control(struct cgroup *cgrp)
 ```
 
-
-
 ## userland api
 [kernel doc](https://www.kernel.org/doc/html/latest/admin-guide/cgroup-v2.html)
 
@@ -139,16 +143,111 @@ static int cgroup_apply_control(struct cgroup *cgrp)
 
 [Linux Cgroup系列（01）：Cgroup概述](https://segmentfault.com/a/1190000006917884)
 
+/proc/cgroups's entry *hierarchy*
 subsystem所关联到的cgroup树的ID，如果多个subsystem关联到同一颗cgroup树，那么他们的这个字段将一样，比如这里的cpu和cpuacct就一样，表示他们绑定到了同一颗树。如果出现下面的情况，这个字段将为0：
 - 当前subsystem没有和任何cgroup树绑定
 - 当前subsystem已经和cgroup v2的树绑定
 - 当前subsystem没有被内核开启
 
-- [ ] stuck here, I want to find how /proc/cgroups works
+挂载一颗和所有subsystem关联的cgroup树到/sys/fs/cgroup
 
+    mount -t cgroup xxx /sys/fs/cgroup
+
+挂载一颗和cpuset subsystem关联的cgroup树到/sys/fs/cgroup/cpuset
+
+    mkdir /sys/fs/cgroup/cpuset
+    mount -t cgroup -o cpuset xxx /sys/fs/cgroup/cpuset
+
+挂载一颗与cpu和cpuacct subsystem关联的cgroup树到/sys/fs/cgroup/cpu,cpuacct
+
+    mkdir /sys/fs/cgroup/cpu,cpuacct
+    mount -t cgroup -o cpu,cpuacct xxx /sys/fs/cgroup/cpu,cpuacct
+
+挂载一棵cgroup树，但不关联任何subsystem，下面就是systemd所用到的方式
+
+    mkdir /sys/fs/cgroup/systemd
+    mount -t cgroup -o none,name=systemd xxx /sys/fs/cgroup/systemd
 
 
 ## proc
+- **WARN_ON(!proc_create_single("cgroups", 0, NULL, proc_cgroupstats_show));**
+
+```
+➜  vn git:(master) ✗ cat /proc/cgroups                 
+#subsys_name	hierarchy	num_cgroups	enabled
+cpuset	11	1	1
+cpu	5	146	1
+cpuacct	5	146	1
+blkio	10	146	1
+memory	8	156	1
+devices	4	150	1
+freezer	6	5	1
+net_cls	7	1	1
+perf_event	3	1	1
+net_prio	7	1	1
+hugetlb	12	1	1
+pids	9	152	1
+rdma	2	1	1
+```
+
+```c
+		seq_printf(m, "%s\t%d\t%d\t%d\n",
+			   ss->legacy_name, ss->root->hierarchy_id,
+			   atomic_read(&ss->root->nr_cgrps),
+			   cgroup_ssid_enabled(i));
+```
+- [x] how does /proc/cgroups work ?
+  - [ ] **so different subsystems can link to a different cgroup_root ?**
+    - [ ] If cgroup is hierarchical, why there are multiple root ?
+
+- **proc_cgroup_show()**
+
+```
+➜  vn git:(master) ✗ cat /proc/self/cgroup 
+12:hugetlb:/
+11:cpuset:/
+10:blkio:/user.slice
+9:pids:/user.slice/user-1000.slice/user@1000.service
+8:memory:/user.slice/user-1000.slice/user@1000.service
+7:net_cls,net_prio:/
+6:freezer:/
+5:cpu,cpuacct:/user.slice
+4:devices:/user.slice
+3:perf_event:/
+2:rdma:/
+1:name=systemd:/user.slice/user-1000.slice/user@1000.service/vte-spawn-8babf497-024b-43ad-917f-044ac93e2c9e.scope
+0::/user.slice/user-1000.slice/user@1000.service/vte-spawn-8babf497-024b-43ad-917f-044ac93e2c9e.scope
+```
+
+```c
+/* The list of hierarchy roots */
+LIST_HEAD(cgroup_roots);
+
+/* iterate across the hierarchies */
+#define for_each_root(root)						\
+	list_for_each_entry((root), &cgroup_roots, root_list)
+```
+
+- cgroup_setup_root() add root to `cgroup_roots`
+    - [ ] if we only one cgroupv2, then there is only one caller for `cgroup_setup_root`
+
+
+
+## subsystem
+cgroup_init_subsys
+
+```c
+/* generate an array of cgroup subsystem pointers */
+#define SUBSYS(_x) [_x ## _cgrp_id] = &_x ## _cgrp_subsys,
+struct cgroup_subsys *cgroup_subsys[] = {
+#include <linux/cgroup_subsys.h>
+};
+#undef SUBSYS
+```
+
+
+
+## sys
 ```c
 /* cgroup core interface files for the default hierarchy */
 static struct cftype cgroup_base_files[] = {
@@ -205,28 +304,21 @@ static struct kernfs_syscall_ops cgroup_kf_syscall_ops = {
 
 - [ ] cftype::kf_ops and cftype::open: now that we can use kf_ops to show files, but we still have to define all kinds of operations ?
 
-## proc
-1. proc_cgroup_show
-2. 
-```c
-	WARN_ON(!proc_create_single("cgroups", 0, NULL, proc_cgroupstats_show));
-```
-
-## sys
 1. /sys/kernel/cgroup
 2. last several lines in cgroup.c is related
 
 cgroup fs is mount at /proc/fs/cgroup
-
 ## kernfs
-- [ ] why so many mount points for cgroup ?
+- [x] why so many mount points for cgroup ?
   - [ ] check the code that we mount all kinds all subsystem seperately.
+  - I guess, because cgroup can mount multiple times, everytime we mount with different option which specify the subsystem to use.
+
 ```
+cgroup2 /sys/fs/cgroup/unified cgroup2 rw,nosuid,nodev,noexec,relatime,nsdelegate 0 0
 cgroup /sys/fs/cgroup/net_cls,net_prio cgroup rw,nosuid,nodev,noexec,relatime,net_cls,net_prio 0 0
 cgroup /sys/fs/cgroup/systemd cgroup rw,nosuid,nodev,noexec,relatime,xattr,name=systemd 0 0
 cgroup /sys/fs/cgroup/cpu,cpuacct cgroup rw,nosuid,nodev,noexec,relatime,cpu,cpuacct 0 0
 cgroup /sys/fs/cgroup/perf_event cgroup rw,nosuid,nodev,noexec,relatime,perf_event 0 0
-cgroup2 /sys/fs/cgroup/unified cgroup2 rw,nosuid,nodev,noexec,relatime,nsdelegate 0 0
 cgroup /sys/fs/cgroup/hugetlb cgroup rw,nosuid,nodev,noexec,relatime,hugetlb 0 0
 cgroup /sys/fs/cgroup/freezer cgroup rw,nosuid,nodev,noexec,relatime,freezer 0 0
 cgroup /sys/fs/cgroup/devices cgroup rw,nosuid,nodev,noexec,relatime,devices 0 0
@@ -244,6 +336,8 @@ cgroup /sys/fs/cgroup/rdma cgroup rw,nosuid,nodev,noexec,relatime,rdma 0 0
 - css_populate_dir
 
 ## memcg
+- [ ] [In fact, we can check the user api before hack it](https://segmentfault.com/a/1190000008125359)
+
 - [ ] why swap works different with memory_cgrp_subsys ? 
   - [ ] mem_cgroup_swap_init
 
@@ -317,6 +411,28 @@ drwxr-xr-x root root 0 B Fri Oct 23 13:41:52 2020  session-1.scope
 drwxr-xr-x root root 0 B Fri Oct 23 13:41:52 2020  user-runtime-dir@1000.service
 drwxr-xr-x root root 0 B Fri Oct 23 10:54:42 2020  user@1000.service
 ```
+
+#### memcg force_empty
+
+```c
+static ssize_t mem_cgroup_force_empty_write(struct kernfs_open_file *of,
+					    char *buf, size_t nbytes,
+					    loff_t off)
+{
+	struct mem_cgroup *memcg = mem_cgroup_from_css(of_css(of));
+
+	if (mem_cgroup_is_root(memcg))
+		return -EINVAL;
+	return mem_cgroup_force_empty(memcg) ?: nbytes;
+}
+
+```
+
+- [ ] kernfs_open_file : oh shit, the fucking kernfs
+
+- [ ]
+
+
 
 #### memcg shrinker
 - [ ] shrink_node_memcgs
@@ -423,28 +539,27 @@ int cgroup_attach_task(struct cgroup *dst_cgrp, struct task_struct *leader,
 ```
 
 
+## blkio
+/home/maritns3/core/linux/block/blk-throttle.c
 
-
-
-
-
+what the fuck
 ## 文档整理一波
 1. https://lwn.net/Articles/753162/
 3. https://en.wikipedia.org/wiki/Cgroups : redesign
 4. http://man7.org/linux/man-pages/man7/cpuset.7.html
 5. Man cgroup(7)
 
-## struct
+## structure
 其实需要处理两个关系
 1. group 之间的层级结构
 2. 多个限制的共同约束 cpu mem
 
+#### structure struct
 ```c
 // TODO 这个动态创建的 ? 还是static 的，唯一的 ? 解答分析 cgroup_setup_root
 struct kernfs_root {
 	/* published fields */
 	struct kernfs_node	*kn;
-
 
 /*
  * A cgroup_root represents the root of a cgroup hierarchy, and may be
@@ -461,34 +576,6 @@ struct cgroup_root { // TODO 这个结构体只有一个 instance 吧?
  */
 struct cgroup_root cgrp_dfl_root = { .cgrp.rstat_cpu = &cgrp_dfl_root_rstat_cpu };
 EXPORT_SYMBOL_GPL(cgrp_dfl_root);
-
-
-/*
- * The default css_set - used by init and its children prior to any
- * hierarchies being mounted. It contains a pointer to the root state
- * for each subsystem. Also used to anchor the list of css_sets. Not
- * reference-counted, to improve performance when child cgroups
- * haven't been created.
- */
-struct css_set init_css_set = { // init_css_set 和 cgrp_dfl_root 的关系是什么 ? 以及 kernfs_root 结构体
-	.refcount		= REFCOUNT_INIT(1),
-	.dom_cset		= &init_css_set,
-	.tasks			= LIST_HEAD_INIT(init_css_set.tasks),
-	.mg_tasks		= LIST_HEAD_INIT(init_css_set.mg_tasks),
-	.task_iters		= LIST_HEAD_INIT(init_css_set.task_iters),
-	.threaded_csets		= LIST_HEAD_INIT(init_css_set.threaded_csets),
-	.cgrp_links		= LIST_HEAD_INIT(init_css_set.cgrp_links),
-	.mg_preload_node	= LIST_HEAD_INIT(init_css_set.mg_preload_node),
-	.mg_node		= LIST_HEAD_INIT(init_css_set.mg_node),
-
-	/*
-	 * The following field is re-initialized when this cset gets linked
-	 * in cgroup_init().  However, let's initialize the field
-	 * statically too so that the default cgroup can be accessed safely
-	 * early during boot.
-	 */
-	.dfl_cgrp		= &cgrp_dfl_root.cgrp, // TODO 这就是证据!
-};
 
 
 /*
@@ -536,7 +623,60 @@ static struct cgroup *cgroup_create(struct cgroup *parent)
 // 1. control mask
 // 2. cgroup 似乎才是构成tree 的方法呀!
 
+```
 
+- [ ] struct cgroup::self, some cgroup may be link to any subsystem
+
+
+- [x] cgroup_add_cftypes ==> cgroup_init_cftypes
+  - array of cftype bounds to subsystem , only static message of cftpe is initialize, dynamic message such as which subsystem the cftype is bounded need help of cgroup_init_cftypes  
+  - cgroup may bound to subsystem, but still contains cftype
+```c
+int __init cgroup_init(void)
+{
+	struct cgroup_subsys *ss;
+	int ssid;
+
+	BUILD_BUG_ON(CGROUP_SUBSYS_COUNT > 16);
+	BUG_ON(cgroup_init_cftypes(NULL, cgroup_base_files));
+	BUG_ON(cgroup_init_cftypes(NULL, cgroup1_base_files));
+```
+
+
+#### structure defines
+```c
+/*
+ * The default css_set - used by init and its children prior to any
+ * hierarchies being mounted. It contains a pointer to the root state
+ * for each subsystem. Also used to anchor the list of css_sets. Not
+ * reference-counted, to improve performance when child cgroups
+ * haven't been created.
+ */
+struct css_set init_css_set = { // init_css_set 和 cgrp_dfl_root 的关系是什么 ? 以及 kernfs_root 结构体
+	.refcount		= REFCOUNT_INIT(1),
+	.dom_cset		= &init_css_set,
+	.tasks			= LIST_HEAD_INIT(init_css_set.tasks),
+	.mg_tasks		= LIST_HEAD_INIT(init_css_set.mg_tasks),
+	.task_iters		= LIST_HEAD_INIT(init_css_set.task_iters),
+	.threaded_csets		= LIST_HEAD_INIT(init_css_set.threaded_csets),
+	.cgrp_links		= LIST_HEAD_INIT(init_css_set.cgrp_links),
+	.mg_preload_node	= LIST_HEAD_INIT(init_css_set.mg_preload_node),
+	.mg_node		= LIST_HEAD_INIT(init_css_set.mg_node),
+
+	/*
+	 * The following field is re-initialized when this cset gets linked
+	 * in cgroup_init().  However, let's initialize the field
+	 * statically too so that the default cgroup can be accessed safely
+	 * early during boot.
+	 */
+	.dfl_cgrp		= &cgrp_dfl_root.cgrp, // TODO 这就是证据!
+};
+```
+
+
+#### structure function
+
+```c
 /**
  * cgroup_css - obtain a cgroup's css for the specified subsystem
  * @cgrp: the cgroup of interest
@@ -559,6 +699,8 @@ static struct cgroup_subsys_state *cgroup_css(struct cgroup *cgrp,
 }
 // cgroup_subsys 似乎就是那么几个!
 ```
+
+
 
 
 ## namespace
@@ -663,29 +805,6 @@ int cgroup_add_legacy_cftypes(struct cgroup_subsys *ss, struct cftype *cfts)
 ```
 
 
-# kernel/cgroup/cpuset.md
-> 以后再说吧! 这他妈是什么啊 ?
-
-## 外部interface cpuset_cgrp_subsys
-
-```c
-struct cgroup_subsys cpuset_cgrp_subsys = {
-	.css_alloc	= cpuset_css_alloc,
-	.css_online	= cpuset_css_online,
-	.css_offline	= cpuset_css_offline,
-	.css_free	= cpuset_css_free,
-	.can_attach	= cpuset_can_attach,
-	.cancel_attach	= cpuset_cancel_attach,
-	.attach		= cpuset_attach,
-	.post_attach	= cpuset_post_attach,
-	.bind		= cpuset_bind,
-	.fork		= cpuset_fork,
-	.legacy_cftypes	= files,
-	.early_init	= true,
-};
-
-```
-
 ## cpuset 
 ```c
 struct cpuset {
@@ -693,4 +812,69 @@ struct cpuset {
 ```
 怀疑所有的subsys 采用这种机制
 
+- [ ] kernel/cgroup/cpuset.md
+> 以后再说吧! 这他妈是什么啊 ?
+
+## cgroup core files
+fils lies in /sys/fs/cgroup ?
+
+## v1 v2
+
+It's clear v1 and v2 core files is different.
+```
+➜  v2 ls
+ cgroup.controllers   cgroup.max.descendants   cgroup.stat              cgroup.threads   init.scope    machine.slice     system.slice
+ cgroup.max.depth     cgroup.procs             cgroup.subtree_control   cpu.pressure     io.pressure   memory.pressure   user.slice
+
+➜  v1 ls
+ cgroup.clone_children   cgroup.procs   cgroup.sane_behavior   notify_on_release   release_agent   tasks
+```
+
+- [ ] mount option can specific
+
+
+memory subsystem's control file:
+```
+ cgroup.clone_children        memory.kmem.max_usage_in_bytes       memory.limit_in_bytes             memory.stat
+ cgroup.event_control         memory.kmem.slabinfo                 memory.max_usage_in_bytes         memory.swappiness
+ cgroup.procs                 memory.kmem.tcp.failcnt              memory.move_charge_at_immigrate   memory.usage_in_bytes
+ memory.failcnt               memory.kmem.tcp.limit_in_bytes       memory.numa_stat                  memory.use_hierarchy
+ memory.force_empty           memory.kmem.tcp.max_usage_in_bytes   memory.oom_control                notify_on_release
+ memory.kmem.failcnt          memory.kmem.tcp.usage_in_bytes       memory.pressure_level             tasks
+ memory.kmem.limit_in_bytes   memory.kmem.usage_in_bytes           memory.soft_limit_in_bytes       
+```
+
+[Man cgroup(7)](https://man7.org/linux/man-pages/man7/cgroups.7.html)
+
+*In cgroups v1, the ability to mount different controllers against
+different hierarchies was intended to allow great flexibility for
+application design.*  In practice, though, the flexibility turned out
+to be less useful than expected, and in many cases added complexity.
+
+- [ ] different controller against different hierarchy 
+
+- [x] kernel boot parameter : cgroup_no_v1=list
+
+[The current adoption status of cgroup v2 in containers](https://medium.com/nttlabs/cgroup-v2-596d035be4d7)
+cgroup v1 has independent trees for each of controllers. eg. a process can join group "foo” for CPU (/sys/fs/cgroup/cpu/foo ) while joining group “bar” for memory ( /sys/fs/cgroup/memory/bar ).
+While this design seemed to provide good flexibility, it wasn’t proved to be useful in practice.
+
+- [x] one process can join multiple subsystem hierarchy
+
+cgroup v2 focuses on simplicity: `/sys/fs/cgroup/cpu/$GROUPNAME` and `/sys/fs/cgroup/memory/$GROUPNAME` in v1 are now unified as `/sys/fs/cgroup/$GROUPNAME` ,
+and a process can no longer join different groups for different controllers. If the process joins foo ( /sys/fs/cgroup/foo ), all controllers enabled for foo will take the control of the process.
+
+In cgroup v2, the device access control is implemented by attaching an eBPF program (`BPF_PROG_TYPE_CGROUP_DEVICE`)to the file descriptor of `/sys/fs/cgroup/foo` directory. 
+
+
+[](https://medium.com/some-tldrs/tldr-understanding-the-new-control-groups-api-by-rami-rosen-980df476f633)
+1. single hierarchy
+2. You cannot attach a process to an **internal subgroup**
+3. cgroups v2, a process can belong only to a single subgroup.
+
+
+## PSI
+https://www.kernel.org/doc/html/latest/accounting/psi.html#
+
 ## cpu
+[Linux Cgroup系列（05）：限制cgroup的CPU使用（subsystem之cpu）](https://segmentfault.com/a/1190000008323952)
