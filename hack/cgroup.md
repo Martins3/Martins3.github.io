@@ -7,33 +7,46 @@
 - [subsystem](#subsystem)
 - [sys](#sys)
 - [kernfs](#kernfs)
-- [fs](#fs)
+- [mount](#mount)
+- [css_set](#css_set)
+- [fork](#fork)
 - [memcg](#memcg)
+    - [memcg obj_cgroup](#memcg-obj_cgroup)
+    - [memcg task_struct](#memcg-task_struct)
+    - [memcg charge](#memcg-charge)
+    - [memcg overview](#memcg-overview)
     - [memcg force_empty](#memcg-force_empty)
     - [memcg shrinker](#memcg-shrinker)
     - [memcg oom](#memcg-oom)
     - [memcg writeback](#memcg-writeback)
-    - [memcg memory.stat](#memcg-memorystat)
+    - [memcg files](#memcg-files)
+    - [memcg mem_cgroup_legacy_files](#memcg-mem_cgroup_legacy_files)
+    - [memcg memory_files](#memcg-memory_files)
+    - [memcg memsw_files](#memcg-memsw_files)
+    - [memcg swap_files](#memcg-swap_files)
 - [migrate](#migrate)
 - [blkio](#blkio)
-- [文档整理一波](#文档整理一波)
 - [structure](#structure)
     - [structure struct](#structure-struct)
-    - [structure defines](#structure-defines)
     - [structure function](#structure-function)
+- [cgroup_base_files](#cgroup_base_files)
+- [cgroup1_base_files](#cgroup1_base_files)
 - [namespace](#namespace)
 - [idr](#idr)
 - [domain threaded mask](#domain-threaded-mask)
-- [bpf 不可避免 ?](#bpf-不可避免-)
 - [cgroup ssid 的管理策略](#cgroup-ssid-的管理策略)
-- [cftypes 的作用是什么 ?](#cftypes-的作用是什么-)
-- [control](#control)
 - [cgroup_add_dfl_cftypes 和 cgroup_add_legacy_cftypes](#cgroup_add_dfl_cftypes-和-cgroup_add_legacy_cftypes)
 - [cpuset](#cpuset)
 - [cgroup core files](#cgroup-core-files)
 - [v1 v2](#v1-v2)
 - [PSI](#psi)
 - [cpu](#cpu)
+- [thread](#thread)
+- [page counter](#page-counter)
+- [hugetlb cgroup](#hugetlb-cgroup)
+- [cgroup.procs](#cgroupprocs)
+- [TODO](#todo)
+- [reference](#reference)
 
 <!-- vim-markdown-toc -->
 
@@ -103,7 +116,12 @@ Entries list above can be verified in sys and proc.
 cgroup_mkdir         |
                      |==> cgroup_apply_control_enable ==> css_create
 cgroup_apply_control |
+
+
+cgroup_mkdir         |==> cgroup_create(only called here)
 ```
+
+In v1, css is one-to-one mapped to cgroup because every hierarchy only support one subsystem.
 
 ```c
 /**
@@ -125,6 +143,13 @@ cgroup_apply_control |
  */
 static int cgroup_apply_control(struct cgroup *cgrp)
 ```
+
+- [ ] [it contains some doc](https://events.static.linuxfound.org/sites/events/files/slides/cgroup_and_namespaces.pdf)
+
+- [ ] get_mem_cgroup_from_mm
+
+- css_populate_dir : if `struct cgroup_subsys_state` doesn’t attach to any subsystem, only base file will be create.
+
 
 ## userland api
 [kernel doc](https://www.kernel.org/doc/html/latest/admin-guide/cgroup-v2.html)
@@ -198,7 +223,9 @@ rdma	2	1	1
 ```
 - [x] how does /proc/cgroups work ?
   - [ ] **so different subsystems can link to a different cgroup_root ?**
-    - [ ] If cgroup is hierarchical, why there are multiple root ?
+    - [x] If cgroup is hierarchical, why there are multiple root ?
+      - this v1
+- [ ] `root->hierarchy_id` is used only for root, and only for print, kind of wired
 
 - **proc_cgroup_show()**
 
@@ -227,9 +254,10 @@ LIST_HEAD(cgroup_roots);
 #define for_each_root(root)						\
 	list_for_each_entry((root), &cgroup_roots, root_list)
 ```
-
 - cgroup_setup_root() add root to `cgroup_roots`
-    - [ ] if we only one cgroupv2, then there is only one caller for `cgroup_setup_root`
+    -  if we only use cgroup v2, then there is only one caller for `cgroup_setup_root`
+
+
 
 
 
@@ -331,12 +359,192 @@ cgroup /sys/fs/cgroup/rdma cgroup rw,nosuid,nodev,noexec,relatime,rdma 0 0
 
 - [ ] cgroup_setup_root
 
-## fs
+## mount
+- [ ] mount
 
-- css_populate_dir
+```c
+static const struct fs_context_operations cgroup_fs_context_ops = {
+	.free		= cgroup_fs_context_free,
+	.parse_param	= cgroup2_parse_param,
+	.get_tree	= cgroup_get_tree,
+	.reconfigure	= cgroup_reconfigure,
+};
+
+static const struct fs_context_operations cgroup1_fs_context_ops = {
+	.free		= cgroup_fs_context_free,
+	.parse_param	= cgroup1_parse_param,
+	.get_tree	= cgroup1_get_tree,
+	.reconfigure	= cgroup1_reconfigure,
+};
+
+struct file_system_type cgroup_fs_type = {
+	.name			= "cgroup",
+	.init_fs_context	= cgroup_init_fs_context,
+	.parameters		= cgroup1_fs_parameters,
+	.kill_sb		= cgroup_kill_sb,
+	.fs_flags		= FS_USERNS_MOUNT,
+};
+
+static struct file_system_type cgroup2_fs_type = {
+	.name			= "cgroup2",
+	.init_fs_context	= cgroup_init_fs_context,
+	.parameters		= cgroup2_fs_parameters,
+	.kill_sb		= cgroup_kill_sb,
+	.fs_flags		= FS_USERNS_MOUNT,
+};
+```
+If we have register the `file_system_type`, we can mount it as we like.
+
+- [ ] How to mount with a cgroup with subsystem ?
+    - cgroup1_parse_param
+    - cgroup1_get_tree ==> cgroup1_root_to_use ==> cgroup_setup_root ==> rebind_subsystems
+
+
+- [ ] How many root do we have ?
+```c
+/* iterate across the hierarchies */
+#define for_each_root(root)						\
+	list_for_each_entry((root), &cgroup_roots, root_list)
+```
+
+## css_set
+- [ ] find_css_set
+    - [ ] find_existing_css_set
+        - [ ] compare_css_sets
+    - caller is : cgroup_migrate_prepare_dst, cgroup_css_set_fork
+
+
+## fork
+- copy_process
+  - [ ] cgroup_can_fork 
+    - [ ] cgroup_css_set_fork
+  - [ ] cgroup_fork
+  - [ ] cgroup_post_fork
+
+- [ ] cgroup_exit
+
+
+
 
 ## memcg
+
+[How to use memcg, explain every entry in cgroup](https://www.kernel.org/doc/html/latest/admin-guide/cgroup-v1/index.html)
+
+[How memcg implemented](https://www.kernel.org/doc/html/latest/admin-guide/cgroup-v1/memcg_test.html)
+
+```c
+struct cgroup_subsys memory_cgrp_subsys __read_mostly;
+EXPORT_SYMBOL(memory_cgrp_subsys);
+
+struct mem_cgroup *root_mem_cgroup __read_mostly;
+```
+
+- There is only one `cgroup_subsys` for memcg
+- Every `mem_cgroup` has a `struct cgroup_subsys_state`
+
+- [ ] manage `mem_cgroup` in a hierarchy
+
+
+#### memcg obj_cgroup
+```c
+/*
+ * Bucket for arbitrarily byte-sized objects charged to a memory
+ * cgroup. The bucket can be reparented in one piece when the cgroup
+ * is destroyed, without having to round up the individual references
+ * of all live memory objects in the wild.
+ */
+struct obj_cgroup {
+	struct percpu_ref refcnt;
+	struct mem_cgroup *memcg;
+	atomic_t nr_charged_bytes;
+	union {
+		struct list_head list;
+		struct rcu_head rcu;
+	};
+};
+```
+As the name suggested, is used in slab and percpu allocation.
+
+
+#### memcg task_struct
+```c
+/**
+ * get_mem_cgroup_from_mm: Obtain a reference on given mm_struct's memcg.
+ * @mm: mm from which memcg should be extracted. It can be NULL.
+ *
+ * Obtain a reference on mm->memcg and returns it if successful. Otherwise
+ * root_mem_cgroup is returned. However if mem_cgroup is disabled, NULL is
+ * returned.
+ */
+struct mem_cgroup *get_mem_cgroup_from_mm(struct mm_struct *mm)
+{
+	struct mem_cgroup *memcg;
+
+	if (mem_cgroup_disabled())
+		return NULL;
+
+	rcu_read_lock();
+	do {
+		/*
+		 * Page cache insertions can happen withou an
+		 * actual mm context, e.g. during disk probing
+		 * on boot, loopback IO, acct() writes etc.
+		 */
+		if (unlikely(!mm))
+			memcg = root_mem_cgroup;
+		else {
+			memcg = mem_cgroup_from_task(rcu_dereference(mm->owner));
+			if (unlikely(!memcg))
+				memcg = root_mem_cgroup;
+		}
+	} while (!css_tryget(&memcg->css));
+	rcu_read_unlock();
+	return memcg;
+}
+```
+
+This is only way to access task's css_set
+```c
+/**
+ * task_css_set - obtain a task's css_set
+ * @task: the task to obtain css_set for
+ *
+ * See task_css_set_check().
+ */
+static inline struct css_set *task_css_set(struct task_struct *task)
+{
+	return task_css_set_check(task, false);
+}
+```
+
+
+#### memcg charge
+page_cgroup_ino : page -> memcg -> parent memcg -> kernfs_node -> ino
+
+- mem_cgroup_charge : page fault, `__add_to_page_cache_locked`, `shmem_add_to_page_cache`, ...
+   - try_charge
+   - commit_charge
+- mem_cgroup_uncharge : paired with mem_cgroup_charge
+- mem_cgroup_uncharge_skmem : skmem means skbuff
+- mem_cgroup_uncharge_list : uncharge page list, called by `shrink_active_list` `shrink_inactive_list` and `shrink_page_list`
+- mem_cgroup_uncharge_swap && mem_cgroup_try_charge_swap : only called by get_swap_page
+
+
+[Why kmem should be disabled ?](https://www.spinics.net/lists/mm-commits/msg140715.html)
+`__memcg_kmem_charge` : call `try_charge` in the end
+  - `__memcg_kmem_charge_page`
+  - obj_cgroup_charge
+
+
+- [ ] I guess mem_cgroup_uncharge is base of them, but not.
+
+- [ ] swap_group.c
+
+
+
+#### memcg overview
 - [ ] [In fact, we can check the user api before hack it](https://segmentfault.com/a/1190000008125359)
+    - [ ]  [similar tutorial](https://fuckcloudnative.io/posts/understanding-cgroups-part-3-memory/)
 
 - [ ] why swap works different with memory_cgrp_subsys ? 
   - [ ] mem_cgroup_swap_init
@@ -364,19 +572,6 @@ struct cgroup_subsys memory_cgrp_subsys = {
 ```
 
 - [ ] css
-
-- [ ] both mem_cgroup_legacy_files and memory_files is 
-```c
-int __init cgroup_init(void){
-    // ...
-		if (ss->dfl_cftypes == ss->legacy_cftypes) {
-			WARN_ON(cgroup_add_cftypes(ss, ss->dfl_cftypes));
-		} else {
-			WARN_ON(cgroup_add_dfl_cftypes(ss, ss->dfl_cftypes));
-			WARN_ON(cgroup_add_legacy_cftypes(ss, ss->legacy_cftypes));
-		}
-    // ...
-```
 
 
 ```
@@ -432,8 +627,6 @@ static ssize_t mem_cgroup_force_empty_write(struct kernfs_open_file *of,
 
 - [ ]
 
-
-
 #### memcg shrinker
 - [ ] shrink_node_memcgs
   - [ ] mem_cgroup_calculate_protection
@@ -452,8 +645,40 @@ static struct dirty_throttle_control *mdtc_gdtc(struct dirty_throttle_control *m
 }
 ```
 
+#### memcg files
+```c
+/* for encoding cft->private value on file */
+enum res_type {
+	_MEM,
+	_MEMSWAP,
+	_OOM_TYPE,
+	_KMEM,
+	_TCP,
+};
 
-#### memcg memory.stat
+enum {
+	RES_USAGE,
+	RES_LIMIT,
+	RES_MAX_USAGE,
+	RES_FAILCNT,
+	RES_SOFT_LIMIT,
+};
+```
+
+Used in `struct cftype` for distinguished different memory control types
+
+
+```
+mem_cgroup_write(used for legacy) \
+                                   \---> try_to_free_cgroup_pages ---> do_try_to_free_pages : this is classical path to reclaim page
+memory_high_write ----------------/
+```
+
+#### memcg mem_cgroup_legacy_files
+
+#### memcg memory_files
+
+1. memcg memory.stat
 ```
 ➜  user-1000.slice cat memory.stat 
 cache 0
@@ -491,6 +716,11 @@ total_active_file 2080468992
 total_unevictable 29466624
 ```
 memory_stat_show
+
+#### memcg memsw_files
+
+#### memcg swap_files
+
 
 
 ## migrate
@@ -542,17 +772,9 @@ int cgroup_attach_task(struct cgroup *dst_cgrp, struct task_struct *leader,
 ## blkio
 /home/maritns3/core/linux/block/blk-throttle.c
 
-what the fuck
-## 文档整理一波
-1. https://lwn.net/Articles/753162/
-3. https://en.wikipedia.org/wiki/Cgroups : redesign
-4. http://man7.org/linux/man-pages/man7/cpuset.7.html
-5. Man cgroup(7)
 
 ## structure
-其实需要处理两个关系
-1. group 之间的层级结构
-2. 多个限制的共同约束 cpu mem
+There are so many structures such as cgroup, cgroup_subsys_state, css_set, ....
 
 #### structure struct
 ```c
@@ -614,23 +836,53 @@ struct cgroup_subsys {  // 子系统的数量就是那几个
  */
 struct cftype { // TODO 一个文件对应一个这种结构体吗 ?
 
-/*
- * The returned cgroup is fully initialized including its control mask, but
- * it isn't associated with its kernfs_node and doesn't have the control
- * mask applied.
- */
-static struct cgroup *cgroup_create(struct cgroup *parent)
-// 1. control mask
-// 2. cgroup 似乎才是构成tree 的方法呀!
 
+// XXX: v2 只有一个 root
+/* the default hierarchy */
+struct cgroup_root cgrp_dfl_root = { .cgrp.rstat_cpu = &cgrp_dfl_root_rstat_cpu };
+EXPORT_SYMBOL_GPL(cgrp_dfl_root);
 ```
 
-- [ ] struct cgroup::self, some cgroup may be link to any subsystem
+- [x] struct cgroup::self, every cgroup have base files
+```c
+// ONE
+struct cgroup {
+	/* self css with NULL ->ss, points back to this cgroup */
+	struct cgroup_subsys_state self;
 
+// TWO
+static int css_populate_dir(struct cgroup_subsys_state *css)
+{
+	struct cgroup *cgrp = css->cgroup;
+	struct cftype *cfts, *failed_cfts;
+	int ret;
+
+	if ((css->flags & CSS_VISIBLE) || !cgrp->kn)
+		return 0;
+
+	if (!css->ss) {
+		if (cgroup_on_dfl(cgrp))
+			cfts = cgroup_base_files;
+		else
+			cfts = cgroup1_base_files;
+
+// THREE
+struct cgroup_subsys_state *of_css(struct kernfs_open_file *of)
+{
+	struct cgroup *cgrp = of->kn->parent->priv;
+	struct cftype *cft = of_cft(of);
+
+	if (cft->ss)
+		return rcu_dereference_raw(cgrp->subsys[cft->ss->id]);
+	else
+		return &cgrp->self;
+}
+```
 
 - [x] cgroup_add_cftypes ==> cgroup_init_cftypes
   - array of cftype bounds to subsystem , only static message of cftpe is initialize, dynamic message such as which subsystem the cftype is bounded need help of cgroup_init_cftypes  
   - cgroup may bound to subsystem, but still contains cftype
+
 ```c
 int __init cgroup_init(void)
 {
@@ -643,36 +895,40 @@ int __init cgroup_init(void)
 ```
 
 
-#### structure defines
+
+- [ ] css_set::dfl_cgrp
+  - default typically means v2
+
+- [ ] link_css_set
+
 ```c
 /*
- * The default css_set - used by init and its children prior to any
- * hierarchies being mounted. It contains a pointer to the root state
- * for each subsystem. Also used to anchor the list of css_sets. Not
- * reference-counted, to improve performance when child cgroups
- * haven't been created.
+ * A cgroup can be associated with multiple css_sets as different tasks may
+ * belong to different cgroups on different hierarchies.  In the other
+ * direction, a css_set is naturally associated with multiple cgroups.
+ * This M:N relationship is represented by the following link structure
+ * which exists for each association and allows traversing the associations
+ * from both sides.
  */
-struct css_set init_css_set = { // init_css_set 和 cgrp_dfl_root 的关系是什么 ? 以及 kernfs_root 结构体
-	.refcount		= REFCOUNT_INIT(1),
-	.dom_cset		= &init_css_set,
-	.tasks			= LIST_HEAD_INIT(init_css_set.tasks),
-	.mg_tasks		= LIST_HEAD_INIT(init_css_set.mg_tasks),
-	.task_iters		= LIST_HEAD_INIT(init_css_set.task_iters),
-	.threaded_csets		= LIST_HEAD_INIT(init_css_set.threaded_csets),
-	.cgrp_links		= LIST_HEAD_INIT(init_css_set.cgrp_links),
-	.mg_preload_node	= LIST_HEAD_INIT(init_css_set.mg_preload_node),
-	.mg_node		= LIST_HEAD_INIT(init_css_set.mg_node),
+struct cgrp_cset_link {
+	/* the cgroup and css_set this link associates */
+	struct cgroup		*cgrp;
+	struct css_set		*cset;
 
-	/*
-	 * The following field is re-initialized when this cset gets linked
-	 * in cgroup_init().  However, let's initialize the field
-	 * statically too so that the default cgroup can be accessed safely
-	 * early during boot.
-	 */
-	.dfl_cgrp		= &cgrp_dfl_root.cgrp, // TODO 这就是证据!
+	/* list of cgrp_cset_links anchored at cgrp->cset_links */
+	struct list_head	cset_link;
+
+	/* list of cgrp_cset_links anchored at css_set->cgrp_links */
+	struct list_head	cgrp_link;
 };
 ```
 
+- [ ]`css_set` doesn't work as we expected.
+- [ ] Comment says, *A cgroup can be associated with multiple css_sets as different tasks may belong to different cgroups on different hierarchies.*
+  - [ ] Why cgroup has to associated wtih css_set ?
+    - [ ] link_css_set()
+      - [ ] find_css_set()
+      - [ ] cgroup_setup_root()
 
 #### structure function
 
@@ -697,71 +953,77 @@ static struct cgroup_subsys_state *cgroup_css(struct cgroup *cgrp,
 	else
 		return &cgrp->self;
 }
-// cgroup_subsys 似乎就是那么几个!
 ```
 
 
+
+- [ ] cgroup_add_cftypes
+
+- [ ] css_create
+
+```c
+/**
+ * css_create - create a cgroup_subsys_state
+ * @cgrp: the cgroup new css will be associated with
+ * @ss: the subsys of new css
+ *
+ * Create a new css associated with @cgrp - @ss pair.  On success, the new
+ * css is online and installed in @cgrp.  This function doesn't create the
+ * interface files.  Returns 0 on success, -errno on failure.
+ */
+static struct cgroup_subsys_state *css_create(struct cgroup *cgrp,
+					      struct cgroup_subsys *ss)
+```
+
+## cgroup_base_files
+
+- [ ] cgroup_controllers_show
+- [ ] cgroup_subtree_control_show
+
+
+## cgroup1_base_files
 
 
 ## namespace
-```c
-/*
- * look up cgroup associated with current task's cgroup namespace on the
- * specified hierarchy
- */
-static struct cgroup *
-current_cgns_cgroup_from_root(struct cgroup_root *root)
-```
+- [ ] current_cgns_cgroup_from_root
+- [ ] cgroup_path_ns_locked
 
 
 ## idr
-
 对于具体实现并没有什么兴趣 但是
 1. 到底是什么需要 id
 2. 为什么需要 id 
 
+```c
+/**
+ * css_from_id - lookup css by id
+ * @id: the cgroup id
+ * @ss: cgroup subsys to be looked into
+ *
+ * Returns the css if there's valid one with @id, otherwise returns NULL.
+ * Should be called under rcu_read_lock().
+ */
+struct cgroup_subsys_state *css_from_id(int id, struct cgroup_subsys *ss)
+{
+	WARN_ON_ONCE(!rcu_read_lock_held());
+	return idr_find(&ss->css_idr, id);
+}
+
+static void cgroup_exit_root_id(struct cgroup_root *root)
+{
+	lockdep_assert_held(&cgroup_mutex);
+
+	idr_remove(&cgroup_hierarchy_idr, root->hierarchy_id);
+}
+```
+
+- [ ] css_from_id : subsystem rely more on idr to find target css, check it.
+
 ## domain threaded mask
 
 
-
-## bpf 不可避免 ?
 ## cgroup ssid 的管理策略
-
-## cftypes 的作用是什么 ?
-1. 那么 cftype 的作用是什么 ?
-2. 
-
-
-```c
-cgroup_add_cftypes : 将 cftype->kf_ops cftype->ss 的内容
-```
-
-
-
-## control
-
-```c
-/**
- * cgroup_apply_control - apply control mask updates to the subtree
- * @cgrp: root of the target subtree
- *
- * subsystems can be enabled and disabled in a subtree using the following
- * steps.
- *
- * 1. Call cgroup_save_control() to stash the current state.
- * 2. Update ->subtree_control masks in the subtree as desired.
- * 3. Call cgroup_apply_control() to apply the changes.
- * 4. Optionally perform other related operations.
- * 5. Call cgroup_finalize_control() to finish up.
- *
- * This function implements step 3 and propagates the mask changes
- * throughout @cgrp's subtree, updates csses accordingly and perform
- * process migrations.
- */
-static int cgroup_apply_control(struct cgroup *cgrp)
-```
-
-
+- [ ] so, what's ssid ?
 
 ## cgroup_add_dfl_cftypes 和 cgroup_add_legacy_cftypes
 实际上，两个函数只有cft-> flags 的区别
@@ -819,6 +1081,10 @@ struct cpuset {
 fils lies in /sys/fs/cgroup ?
 
 ## v1 v2
+https://github.com/opencontainers/runc/blob/master/docs/cgroup-v2.md
+> Am I using cgroup v2?
+> Yes if /sys/fs/cgroup/cgroup.controllers is present.
+
 
 It's clear v1 and v2 core files is different.
 ```
@@ -867,14 +1133,202 @@ and a process can no longer join different groups for different controllers. If 
 In cgroup v2, the device access control is implemented by attaching an eBPF program (`BPF_PROG_TYPE_CGROUP_DEVICE`)to the file descriptor of `/sys/fs/cgroup/foo` directory. 
 
 
-[](https://medium.com/some-tldrs/tldr-understanding-the-new-control-groups-api-by-rami-rosen-980df476f633)
+[TLDR Understanding the new cgroups v2 API by Rami Rosen](https://medium.com/some-tldrs/tldr-understanding-the-new-control-groups-api-by-rami-rosen-980df476f633)
+
+![loading](https://miro.medium.com/max/557/1*P7ZLLF_F4TMgGfaJ2XIfuQ.png)
 1. single hierarchy
 2. You cannot attach a process to an **internal subgroup**
 3. cgroups v2, a process can belong only to a single subgroup.
 
+- [ ] https://man7.org/conf/lca2019/cgroups_v2-LCA2019-Kerrisk.pdf
+- [ ] https://lwn.net/Articles/679786/
+- [ ] man : https://man7.org/linux/man-pages/man7/cgroups.7.html
 
 ## PSI
 https://www.kernel.org/doc/html/latest/accounting/psi.html#
 
 ## cpu
 [Linux Cgroup系列（05）：限制cgroup的CPU使用（subsystem之cpu）](https://segmentfault.com/a/1190000008323952)
+- [ ] Only worked on cgroup v1, can we redo the experiement on v2 ?
+
+## thread
+https://lwn.net/Articles/656115/
+
+
+## page counter
+- [ ] mm/page_counter.c
+
+
+## hugetlb cgroup
+
+
+
+## cgroup.procs
+```c
+static void *cgroup_seqfile_start(struct seq_file *seq, loff_t *ppos)
+{
+	return seq_cft(seq)->seq_start(seq, ppos);
+}
+
+static void *cgroup_seqfile_next(struct seq_file *seq, void *v, loff_t *ppos)
+{
+	return seq_cft(seq)->seq_next(seq, v, ppos);
+}
+
+static void cgroup_seqfile_stop(struct seq_file *seq, void *v)
+{
+	if (seq_cft(seq)->seq_stop)
+		seq_cft(seq)->seq_stop(seq, v);
+}
+
+static int cgroup_seqfile_show(struct seq_file *m, void *arg)
+{
+	struct cftype *cft = seq_cft(m);
+	struct cgroup_subsys_state *css = seq_css(m);
+
+	if (cft->seq_show)
+		return cft->seq_show(m, arg);
+
+	if (cft->read_u64)
+		seq_printf(m, "%llu\n", cft->read_u64(css, cft));
+	else if (cft->read_s64)
+		seq_printf(m, "%lld\n", cft->read_s64(css, cft));
+	else
+		return -EINVAL;
+	return 0;
+}
+
+static ssize_t cgroup_file_write(struct kernfs_open_file *of, char *buf,
+				 size_t nbytes, loff_t off)
+```
+
+They are registered at here:
+```c
+static struct kernfs_ops cgroup_kf_single_ops = {
+	.atomic_write_len	= PAGE_SIZE,
+	.open			= cgroup_file_open,
+	.release		= cgroup_file_release,
+	.write			= cgroup_file_write,
+	.poll			= cgroup_file_poll,
+	.seq_show		= cgroup_seqfile_show,
+};
+
+static struct kernfs_ops cgroup_kf_ops = {
+	.atomic_write_len	= PAGE_SIZE,
+	.open			= cgroup_file_open,
+	.release		= cgroup_file_release,
+	.write			= cgroup_file_write,
+	.poll			= cgroup_file_poll,
+	.seq_start		= cgroup_seqfile_start,
+	.seq_next		= cgroup_seqfile_next,
+	.seq_stop		= cgroup_seqfile_stop,
+	.seq_show		= cgroup_seqfile_show,
+};
+
+```
+- [x] What's difference between `cgroup_kf_ops` and `cgroup_kf_single_ops`
+  - cgroup_init_cftypes : some files contains multiple value while someone only contains one value
+- [ ] Maybe we can do a survey about why not register theese `write`, `poll`, `seq_show` directly to seq_file ?
+
+
+
+- [ ] `__cgroup1_procs_write`
+  - [ ] cgroup_kn_lock_live
+  - [ ] cgroup_procs_write_start(find pid by find_task_by_vpid, and do some locks)
+  - [ ] cgroup_attach_task
+    - [ ] cgroup_migrate_add_src
+
+
+- [ ] css_set_move_task : used by migrate, but should have 
+
+```c
+/**
+ * cgroup_migrate_add_src - add a migration source css_set
+ * @src_cset: the source css_set to add
+ * @dst_cgrp: the destination cgroup
+ * @mgctx: migration context
+ *
+ * Tasks belonging to @src_cset are about to be migrated to @dst_cgrp.  Pin
+ * @src_cset and add it to @mgctx->src_csets, which should later be cleaned
+ * up by cgroup_migrate_finish().
+ *
+ * This function may be called without holding cgroup_threadgroup_rwsem
+ * even if the target is a process.  Threads may be created and destroyed
+ * but as long as cgroup_mutex is not dropped, no new css_set can be put
+ * into play and the preloaded css_sets are guaranteed to cover all
+ * migrations.
+ */
+void cgroup_migrate_add_src(struct css_set *src_cset,
+			    struct cgroup *dst_cgrp,
+			    struct cgroup_mgctx *mgctx)
+```
+
+- [ ] *Tasks belonging to @src_cset are about to be migrated to @dst_cgrp.  Pin `@src_cset` and add it to `@mgctx->src_csets`, which should later be cleaned.*
+    - it's wired, removed from css_set and added to cgroup
+
+```c
+/* look up cgroup associated with given css_set on the specified hierarchy */
+static struct cgroup *cset_cgroup_from_root(struct css_set *cset,
+					    struct cgroup_root *root)
+{
+	struct cgroup *res = NULL;
+
+	lockdep_assert_held(&cgroup_mutex);
+	lockdep_assert_held(&css_set_lock);
+
+  // 这个暂时看不懂
+	if (cset == &init_css_set) {
+		res = &root->cgrp;
+  // 如果说是 v2 那么就靠 css_set 定义的 dfl_cgrp
+	} else if (root == &cgrp_dfl_root) {
+		res = cset->dfl_cgrp;
+  // v1 的情况 : task should move to same root
+	} else {
+		struct cgrp_cset_link *link;
+
+		list_for_each_entry(link, &cset->cgrp_links, cgrp_link) {
+			struct cgroup *c = link->cgrp;
+
+			if (c->root == root) {
+				res = c;
+				break;
+			}
+		}
+	}
+
+	BUG_ON(!res);
+	return res;
+}
+```
+
+## TODO
+- [ ] css, css_set, ss, cgroup, memcg, so how are they create init and destroyed
+```c
+/*
+ * css destruction is four-stage process.
+ *
+ * 1. Destruction starts.  Killing of the percpu_ref is initiated.
+ *    Implemented in kill_css().
+ *
+ * 2. When the percpu_ref is confirmed to be visible as killed on all CPUs
+ *    and thus css_tryget_online() is guaranteed to fail, the css can be
+ *    offlined by invoking offline_css().  After offlining, the base ref is
+ *    put.  Implemented in css_killed_work_fn().
+ *
+ * 3. When the percpu_ref reaches zero, the only possible remaining
+ *    accessors are inside RCU read sections.  css_release() schedules the
+ *    RCU callback.
+ *
+ * 4. After the grace period, the css can be freed.  Implemented in
+ *    css_free_work_fn().
+ *
+ * It is actually hairier because both step 2 and 4 require process context
+ * and thus involve punting to css->destroy_work adding two additional
+ * steps to the already complex sequence.
+ */
+static void css_free_rwork_fn(struct work_struct *work)
+```
+
+
+## reference
+[^1]: v1 https://www.kernel.org/doc/html/latest/admin-guide/cgroup-v1/index.html

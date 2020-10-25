@@ -2180,6 +2180,8 @@ static void __pagevec_lru_add_fn(struct page *page, struct lruvec *lruvec,
 进入具体的回收分析吧。
 
 #### direct shrink
+- [ ] So, where's indirect shrink, polish documentations here.
+
 
 - [ ] One horrible thing came to me, why not **compact** page when **reclaim** page ?
 

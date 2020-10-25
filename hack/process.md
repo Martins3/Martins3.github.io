@@ -1000,6 +1000,13 @@ the Kernel Mode stack.
 
 
 ## signal
+- [ ] Why everyone has to check signal_pending ?
+```
+➜  linux git:(master) ag signal_pending |wc -l
+741
+```
+
+
 1. 还是先把信号的机制的 tlpi 看完看懂，写代码，做习题完成在看吧，其实挺重要的
 2. fork 是如何处理 signal 共享的 ?
 
