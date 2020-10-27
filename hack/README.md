@@ -44,6 +44,8 @@
 
 - [ ] redo hack linux kernel labs, so we can understand kobjs / sys / again
 
+- [ ] https://kernelnewbies.org/FAQ
+
 ## License
 #### License for code
 ```txt
