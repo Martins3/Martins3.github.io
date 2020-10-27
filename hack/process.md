@@ -24,6 +24,7 @@
     - [preempt locking](#preempt-locking)
     - [preempt notes](#preempt-notes)
 - [context switch](#context-switch)
+    - [context switch switch_to_asm](#context-switch-switch_to_asm)
     - [context switch fpu](#context-switch-fpu)
     - [context switch stack](#context-switch-stack)
     - [context switch TSS](#context-switch-tss)
@@ -41,6 +42,7 @@
 - [design](#design)
 - [fork](#fork)
     - [copy_process](#copy_process)
+    - [copy_thread](#copy_thread)
     - [stack's copy](#stacks-copy)
 - [stack](#stack)
     - [x86 stack](#x86-stack)
@@ -63,6 +65,7 @@
 - [smp](#smp)
 - [`__schedule`](#__schedule)
 - [kthread](#kthread)
+- [first user process](#first-user-process)
 - [TODO](#todo)
 - [session](#session)
 - [process group](#process-group)
@@ -860,6 +863,8 @@ really interesting : if one process is about to switch to user space and it's ti
 - [ ] [LoyenWang](https://www.cnblogs.com/LoyenWang/p/12386281.html)
 
 
+- [ ] `__schedule` ===> context_switch ===> `__switch_to_asm` ===> `__switch_to`
+
 2. vdso 是怎么回事 ?
 3. x86 中间 TSS 是如何参与的，其他的架构又是如何设计的 ?
 4. 那些令人窒息的 try to wake up 是干嘛的 ? wakeup 需要那么复杂吗 ? 
@@ -922,6 +927,7 @@ context_switch(struct rq *rq, struct task_struct *prev,
 	       struct task_struct *next, struct rq_flags *rf)
 ```
 
+#### context switch switch_to_asm
 switch_to 被移动到 arch/x86/include/asm/switch_to.h 中间
 ```c
 #define switch_to(prev, next, last)					\
@@ -934,10 +940,60 @@ do {									\
 1. prepare_switch_to : TODO 看注释，VMAP_STACK 是干什么的
 2. switch_to 的三个参数 ?
 
-`__switch_to_asm` 在：
-arch/x86/entry/entry_64.S 中间，
+`__switch_to_asm` 在： arch/x86/entry/entry_64.S 中间，
+```asm
+SYM_FUNC_START(__switch_to_asm)
+	/*
+	 * Save callee-saved registers
+	 * This must match the order in inactive_task_frame
+	 */
+	pushq	%rbp
+	pushq	%rbx
+	pushq	%r12
+	pushq	%r13
+	pushq	%r14
+	pushq	%r15
 
-Documentation/x86/entry_64.rst 是时候彻底搞清楚 entry_64 了啊 TODO 
+	/* switch stack */
+	movq	%rsp, TASK_threadsp(%rdi)
+	movq	TASK_threadsp(%rsi), %rsp
+
+#ifdef CONFIG_STACKPROTECTOR
+	movq	TASK_stack_canary(%rsi), %rbx
+	movq	%rbx, PER_CPU_VAR(fixed_percpu_data) + stack_canary_offset
+#endif
+
+#ifdef CONFIG_RETPOLINE
+	/*
+	 * When switching from a shallower to a deeper call stack
+	 * the RSB may either underflow or use entries populated
+	 * with userspace addresses. On CPUs where those concerns
+	 * exist, overwrite the RSB with entries which capture
+	 * speculative execution to prevent attack.
+	 */
+	FILL_RETURN_BUFFER %r12, RSB_CLEAR_LOOPS, X86_FEATURE_RSB_CTXSW
+#endif
+
+	/* restore callee-saved registers */
+	popq	%r15
+	popq	%r14
+	popq	%r13
+	popq	%r12
+	popq	%rbx
+	popq	%rbp
+
+	jmp	__switch_to
+SYM_FUNC_END(__switch_to_asm)
+```
+
+注意，由於 `jmp __switch_to` 而 `__switch_to` 是 gcc 編譯的函數，沒有使用 call 調用，導致其 ret 會使用
+inactive_task_frame 的 ret_addr 作爲返回地址。 inactive_task_frame::ret_addr 的賦值存在兩種情況:
+1. fork : 在 copy_thread 中間賦值
+2. 普通的 thread 切換 : 調用 `__switch_to_asm` 的時候，調用者保存的 eip 地址, 從而可以返回。
+
+
+
+- [ ] Documentation/x86/entry_64.rst 是时候彻底搞清楚 entry_64 了啊 TODO 
 
 关于汇编的问题:
 1. 混合编译
@@ -960,16 +1016,10 @@ SYM_FUNC_START(__switch_to_asm)
 
 // TODO
 关于 switch_to_asm 的更多问题:
-1. pushq 和 popq 是发生在不同的 stack 上，当一个 stack 被结束之后，首先将几个寄存器 push 进去
-2. 然后进入到 `__switch_to`，完全看不懂啊
 3. 地址空间的切换在哪里 ?
     1. stack 的切换 => 整理到 stack blog => 因为 context_switch 的时候，发生在内核地址空间，其实只是需要进行，其实 rsp 的切换
-    2. 
-3. 为什么不用切换 eip ?
-    1. 如果所有的函数，
-    2. 那么
-
 - [ ] why `es` `ds` register has to be handled especially in `__switch_to` ?
+
 
 #### context switch fpu
 
@@ -1055,8 +1105,8 @@ Man clone(2)
 
 
 ## thread_struct
-1. `tls_array`
-2. `fsbase` and `fsindex`
+- [ ]`tls_array`
+- [ ] `fsbase` and `fsindex`
 
 [^7]
 At every process switch, the hardware context of the process being replaced must be
@@ -1130,6 +1180,24 @@ irqentry_exit_to_user_mode 和 syscall_exit_to_user_mode
 > Man clone(2)
 > 
 > If this signal is specified as anything other than SIGCHLD, then the parent process must specify the `__WALL` or `__WCLONE` options when waiting for the child with wait(2).  If no signal (i.e., zero) is specified, then the parent process is not signaled when the child terminates.
+
+- signal 在 copy_process 的時候，使用兩個 CLONE_SIGHAND 和 CLONE_THREAD 來控制 signal 和 sighand 的拷貝
+
+- [ ] 似乎一個 thread group 的普通成員(不是 thread group leader), signal_struct
+
+```c
+	/* Signal handlers: */
+	struct signal_struct		*signal;
+	struct sighand_struct __rcu		*sighand;
+	sigset_t			blocked;
+	sigset_t			real_blocked;
+	/* Restored if set_restore_sigmask() was used: */
+	sigset_t			saved_sigmask;
+	struct sigpending		pending;
+	unsigned long			sas_ss_sp;
+	size_t				sas_ss_size;
+	unsigned int			sas_ss_flags;
+```
 
 
 #### send signal
@@ -1229,9 +1297,31 @@ https://stackoverflow.com/questions/4856255/the-difference-between-fork-vfork-ex
 
 
 #### copy_process
+fork ==============> copy_process ==> copy_thread
+|                        |                  |
+|                        |                  |
+完成基本的工作，        各種拷貝         task_struct::stack 的拷貝
+將 process 放入到
+調度器中間
+
+#### copy_thread
+Apparently, it's architecture related.
+
+- [x] are stack of kernel thread and kernel stack of user prcess different ?
+    - [x] In another word, does pt_regs lay on the top of kernel thread stack ? YES
+
+```c
+	/* Kernel thread ? */
+	if (unlikely(p->flags & PF_KTHREAD)) {
+		memset(childregs, 0, sizeof(struct pt_regs)); // if kernel thread doesn't have pt_regs, why should it memset it.
+		kthread_frame_init(frame, sp, arg);
+		return 0;
+	}
+```
+
+
 
 #### stack's copy
-
 - [ ] 两个 thread 共享地址空间，如何防止 stack 互相覆盖 ?
 
 
@@ -1243,8 +1333,24 @@ https://stackoverflow.com/questions/33104091/how-are-system-calls-stored-in-pt-r
 - [ ] task_stack_page : 才发现 `task->stack` 是用于指向 stack 的指针，这个变量的 ref 并不多，好好 check 一下.
   - [ ] fork 的时候，如何从 parent 的拷贝 stack 的
   - [ ] fork 的返回值为什么是两个的原因定位一下代码
+- [ ] CLONE_THREAD 的時候，如何拷貝 stack 的 ?
+  - [ ] 用戶態的 stack 不用拷貝，但是內核態的需要
+  - [ ] 內核態的 stack 拷貝似乎和 CLONE_THREAD 其實沒有關系的
+  - [ ] 如何使用 pthread 創建多個 thread, /proc/maps 會出現多個 stack 嗎 ？
+
+> Man clone(2)
+>
+> The stack for the child process is specified via cl_args.stack, which points to the lowest byte of the stack area, and cl_args.stack_size, which specifies the size of the stack in bytes.  In the case where the CLONE_VM flag (see below) is specified, a stack must be explicitly allocated and specified.  Otherwise, these two fields can be specified as NULL and 0, which causes the child to use the same stack area as the parent (in the child's own virtual address space).
+
+- [ ] verfiy what clone manual *above* say
+
 
 ## stack
+
+- [ ] fork 的時候，如何分別設置內核和用戶態的 stack
+
+
+
 notes from questions [^6]:
 
 - [x] when is `task_stack` allocated and destroied ?
@@ -1832,11 +1938,101 @@ static void __sched notrace __schedule(bool preempt)
 ```
 
 ## kthread
-kernel/kthread.c
+kernel/kthread.c : how to schedule the kthread
 
 - [ ] trace function create_worker()
   - [ ] kthreadd()
   - in fact, nothing special, create kthread with a daemon named `kthreadd` which call `fork`
+
+`kernel_thread()` called by  `create_kthread()` in kthread.c
+```c
+/*
+ * Create a kernel thread.
+ */
+pid_t kernel_thread(int (*fn)(void *), void *arg, unsigned long flags)
+{
+	struct kernel_clone_args args = {
+		.flags		= ((lower_32_bits(flags) | CLONE_VM |
+				    CLONE_UNTRACED) & ~CSIGNAL),
+		.exit_signal	= (lower_32_bits(flags) & CSIGNAL),
+		.stack		= (unsigned long)fn,
+		.stack_size	= (unsigned long)arg,
+	};
+
+	return kernel_clone(&args);
+}
+
+static inline void kthread_frame_init(struct inactive_task_frame *frame,
+				      unsigned long fun, unsigned long arg)
+{
+	frame->bx = fun;
+	frame->r12 = arg;
+}
+```
+
+```
+/*
+ * A newly forked process directly context switches into this address.
+ *
+ * rax: prev task we switched from
+ * rbx: kernel thread func (NULL for user thread)
+ * r12: kernel thread arg
+ */
+.pushsection .text, "ax"
+SYM_CODE_START(ret_from_fork)
+	UNWIND_HINT_EMPTY
+	movq	%rax, %rdi
+	call	schedule_tail			/* rdi: 'prev' task parameter */
+
+	testq	%rbx, %rbx			/* from kernel_thread? */
+	jnz	1f				/* kernel threads are uncommon */
+
+2:
+	UNWIND_HINT_REGS
+	movq	%rsp, %rdi
+	call	syscall_exit_to_user_mode	/* returns with IRQs disabled */
+	jmp	swapgs_restore_regs_and_return_to_usermode
+
+1:
+	/* kernel thread */
+	UNWIND_HINT_EMPTY
+	movq	%r12, %rdi
+	CALL_NOSPEC rbx
+	/*
+	 * A kernel thread is allowed to return here after successfully
+	 * calling kernel_execve().  Exit to userspace to complete the execve()
+	 * syscall.
+	 */
+	movq	$0, RAX(%rsp)
+	jmp	2b
+SYM_CODE_END(ret_from_fork)
+```
+注釋的三個寄存器的解釋:
+1. rax : 因爲從 `__switch_to_asm` ==> `__switch_to` 返回，該函數返回的就是 prev task
+2. rbx, r12 : kthread_frame_init
+
+- [ ] schedule_tail
+
+在 `kthread()` 中間，當 kernel thread 調用 fn 完成之後，需要
+
+## first user process
+```c
+static int run_init_process(const char *init_filename)
+{
+	const char *const *p;
+
+	argv_init[0] = init_filename;
+	pr_info("Run %s as init process\n", init_filename);
+	pr_debug("  with arguments:\n");
+	for (p = argv_init; *p; p++)
+		pr_debug("    %s\n", *p);
+	pr_debug("  with environment:\n");
+	for (p = envp_init; *p; p++)
+		pr_debug("    %s\n", *p);
+	return kernel_execve(init_filename, argv_init, envp_init);
+}
+```
+
 
 
 ## TODO
@@ -2009,6 +2205,15 @@ struct pt_regs {
 - [ ] how pt_regs constructed, by hardware or software ?
   - [ ] syscall, CPU exception and hardware has different ways to construct it ?
 
+
+```c
+struct fork_frame {
+	struct inactive_task_frame frame;
+	struct pt_regs regs;
+};
+```
+
+- [ ] entry_64.S::entry_SYSCALL_64 中間看，保存的內容就是 pt_regs 的，而 switch_to_asm 保存的內容是 inactive_task_frame 的
 
 [^1]: [blog : Evolution of the x86 context switch in Linux](http://www.maizure.org/projects/evolution_x86_context_switch_linux/)
 [^2]: https://man7.org/linux/man-pages/man7/signal.7.html 

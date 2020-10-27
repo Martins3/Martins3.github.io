@@ -2,6 +2,8 @@
 
 - [ ] this is enough https://mentorembedded.github.io/advancedlinuxprogramming/alp-folder/alp-ch09-inline-asm.pdf
 
+- [ ] https://www.kernel.org/doc/html/latest/asm-annotations.html : kernel doc for 
+
 ## inline assembly
 
 #### eg 1
@@ -70,8 +72,6 @@ too basic ?
 
 
 ### constraints 
-[]()
-
 [](https://stackoverflow.com/questions/3323445/what-is-the-difference-between-asm-asm-and-asm)
 
 

@@ -3,6 +3,10 @@
 3. [moder cpp check list](https://github.com/AnthonyCalandra/modern-cpp-features)
 
 
+
+https://github.com/microsoft/vcpkg/blob/master/README_zh_CN.md#%E5%BF%AB%E9%80%9F%E5%BC%80%E5%A7%8B-unix : microsoft cpp package manager
+
+
 https://github.com/fffaraz/awesome-cpp : 难道其中包含的是不 modern 的部分 ?
 https://github.com/rigtorp/awesome-modern-cpp : 首先将 interview 的打牢基础吧
 
