@@ -1,3 +1,3 @@
 # Oh this is one
 
-[](./2.md)
+[gg](./2.md)
