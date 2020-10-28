@@ -1,5 +1,3 @@
-# Martins's blog
-
 <!-- vim-markdown-toc GitLab -->
 
 - [Tips](#tips)
