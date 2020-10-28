@@ -1,7 +1,11 @@
+# Martins's blog
 
-# Fuck
-- [../hack/memory.md](memory) 
+<!-- vim-markdown-toc GitLab -->
 
+- [Tips](#tips)
 
+<!-- vim-markdown-toc -->
 
-WOo
+## Tips
+
+- [How to get across Great Fire Wall in Ubuntu20 with qv2ray](./gfw.md)
