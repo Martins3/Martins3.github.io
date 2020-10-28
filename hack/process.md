@@ -1746,6 +1746,14 @@ https://superuser.com/questions/1217454/how-do-you-control-thread-affinity-acros
 2. 更进一步，/proc/cpuinfo 中的每一个含义是什么，数据从哪里导出的
 
 ## syscall
+[What did hardware do in  syscall](https://www.felixcloutier.com/x86/syscall)
+
+
+[^25] The two modes are distinguished by the `dpl` (descriptor privilege level) field in segment register cs. dpl=3  in cs for user-mode, and zero for kernel-mode (not sure if this "level" equivalent to so-called ring3 and ring0).
+In real mode kernel should handle the segment registers carefully, while in x86-64, instructions syscall and sysret will properly set segment registers automatically, so we don't need to maintain segment registers manually
+And another difference is the permission setting in page tables.
+
+
 - [ ] how kernel transfer sys_call_ptr_t's parameters to, code below is an example.
 ```c
 typedef asmlinkage long (*sys_call_ptr_t)(const struct pt_regs *);
@@ -2228,3 +2236,4 @@ struct fork_frame {
 [^22]: https://stackoverflow.com/questions/14163208/how-to-link-c-object-files-with-ld
 [^23]: https://stackoverflow.com/questions/18133812/where-is-the-x86-64-system-v-abi-documented
 [^24]: https://uclibc.org/docs/psABI-x86_64.pdf
+[^25]: https://david942j.blogspot.com/2018/10/note-learning-kvm-implement-your-own.html
