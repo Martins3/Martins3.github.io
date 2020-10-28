@@ -5,6 +5,7 @@
 - [syntax](#syntax)
 - [long mode](#long-mode)
 - [control register](#control-register)
+    - [cr0](#cr0)
 - [fpu](#fpu)
     - [fpu signal](#fpu-signal)
     - [fpu xstate](#fpu-xstate)
@@ -14,6 +15,8 @@
 <!-- vim-markdown-toc -->
 
 - [ ] https://www.kernel.org/doc/html/latest/x86/index.html 
+
+- [ ] This should be notes for 
 
 ## syntax
 1. ~/Core/x86-64-assembly 似乎非常不错:
@@ -40,6 +43,26 @@ https://wki.osdev.org/Setting_Up_Long_Modei
 https://e.wikipedia.org/wiki/Control_registern
 
 https://wiki.odev.org/CPU_Registers_x86-64#IA32_EFERs : x86 到底有多少 register 
+
+#### cr0
+[wiki](https://en.wikipedia.org/wiki/Control_register#CR0)
+```c
+/* CR0 bits */
+#define CR0_PE 1u
+#define CR0_MP (1u << 1)
+#define CR0_EM (1u << 2)
+#define CR0_TS (1u << 3)
+#define CR0_ET (1u << 4)
+#define CR0_NE (1u << 5)
+#define CR0_WP (1u << 16)
+#define CR0_AM (1u << 18)
+#define CR0_NW (1u << 29)
+#define CR0_CD (1u << 30)
+#define CR0_PG (1u << 31)
+```
+
+## gdt idt
+
 
 ## fpu
 
@@ -217,10 +240,4 @@ Calling conventions, type representations, and name mangling are all part of wha
 > TODO
 
 
-
-
-
 [^1]: [wiki](https://en.wikipedia.org/wiki/X86_calling_conventions)
-
-
-

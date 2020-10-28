@@ -1,6 +1,7 @@
 
 ## Resource
 
+
 http://dtrace.org/blogs/bmc/2020/10/11/rust-after-the-honeymoon/
 
 [All](https://github.com/rust-unofficial/awesome-rust#resources)
@@ -31,6 +32,8 @@ https://github.com/sharkdp/hexyl : 显示文件的二进制，其实，我只是
 https://github.com/uutils/coreutils : 我想知道这个和 busybox 有什么区别，如果两者提供了各种基础程序
 
 
+## fun
+https://github.com/adamsky/globe
 
 ## Container
 1. 如何才可以实现对于 Me.age 全部加上1

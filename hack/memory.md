@@ -3421,6 +3421,10 @@ ffffffffff600000-ffffffffff601000 --xp 00000000 00:00 0                  [vsysca
 - [ ] https://lwn.net/Articles/569635/
 
 
+- [ ] Sometimes /proc/$pid/maps show text address start at 0x400000, sometimes 0x055555555xxx,
+maybe because of user space address randomization
+    - [  ] https://www.theurbanpenguin.com/aslr-address-space-layout-randomization/
+
 [^1]: [lwn : Huge pages part 1 (Introduction)](https://lwn.net/Articles/374424/)
 [^2]: [lwn : An end to high memory?](https://lwn.net/Articles/813201/)
 [^3]: [lwn#memory management](https://lwn.net/Kernel/Index/#Memory_management)

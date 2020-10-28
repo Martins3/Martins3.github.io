@@ -13,6 +13,8 @@ https://github.com/Alikhll/golang-developer-roadmap : golang 的 roadmap，看�
 
 **https://github.com/halfrost/LeetCode-Go** : finished understand of go and c++ simultaneously.
 
+https://github.com/google/crfs : fuse, 3000 lines,  Go is taking over the world
+
 # Go
 The reason to learn go is that I don't want to miss a good community!
 As for how to learn it, I think the best !
