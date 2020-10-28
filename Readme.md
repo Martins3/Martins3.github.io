@@ -13,4 +13,6 @@
   </p>
 </p>
 
-# >>> [Getting started](../../wiki/Home) (CLICK HERE) <<<
+- [./hack/memory.md](memory) 
+
+WOo
