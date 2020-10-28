@@ -10,5 +10,7 @@
 
 afsdfadsf
 
+[gggg](./gfw.md)
+
 ![asdfasdf](./img/gfw.png)
 adsfafsd
