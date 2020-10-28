@@ -1,16 +1,5 @@
 # How to cross Great Fire Wall
 
-
-<!-- vim-markdown-toc GitLab -->
-
-- [Caveat](#caveat)
-- [Abstract](#abstract)
-- [setup](#setup)
-- [terminal proxy](#terminal-proxy)
-- [git proxy](#git-proxy)
-
-<!-- vim-markdown-toc -->
-
 ## Caveat
 Only tested on Ubuntu20.
 
