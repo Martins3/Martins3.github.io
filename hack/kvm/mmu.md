@@ -1,4 +1,3 @@
-
 ## mmu
 
 #### mmu.rst
@@ -126,7 +125,9 @@ fault through the slow path.
 >   shadow pages) so role.quadrant takes values in the range 0..3.  Each
 >   quadrant maps 1GB virtual address space.
 
-linux KVM的内存虚拟化源码中存在一种物理页框对EPT spte的反向映射，具体实现在rmap_add()
+Only two function related with `kvm_mmu_get_page` and `get_written_sptes`
+1. `kvm_mmu_get_page` : alloc a page as page table
+2. `get_written_sptes`
 
 
 
@@ -240,16 +241,67 @@ kvm_handle_page_fault : 入口函数, 靠近 exit handler
 1. where is  paging64_gva_to_gpa ?
 2. mtrr : https://zhuanlan.zhihu.com/p/51023864 : 还是很迷，这个到底是做什么
 
-```c
-kvm_tdp_page_fault
-  direct_page_fault: // 重点关注
-```
-
 https://stackoverflow.com/questions/60694243/how-does-kvm-qemu-and-guest-os-handles-page-fault
 
 > while the EPT tables are used to translate Guest Physical Addresses into Host Physical Addresses.
 >
 > If a page is present in the guest page tables but not present in the EPT, it causes an EPT violation VM exit, so the VMM can handle the missing page.
+
+handle_ept_violation ==> kvm_mmu_page_fault  ==> kvm_mmu_do_page_fault ==> kvm_mmu::page_fault => kvm_tdp_page_fault ==> direct_page_fault ==> `__direct_map` ==> link_shadow_page ==> 
+
+```c
+static int __direct_map(struct kvm_vcpu *vcpu, gpa_t gpa, int write,
+			int map_writable, int max_level, kvm_pfn_t pfn,
+			bool prefault, bool account_disallowed_nx_lpage)
+{
+	struct kvm_shadow_walk_iterator it;
+	struct kvm_mmu_page *sp;
+	int level, ret;
+	gfn_t gfn = gpa >> PAGE_SHIFT;
+	gfn_t base_gfn = gfn;
+
+	if (WARN_ON(!VALID_PAGE(vcpu->arch.mmu->root_hpa)))
+		return RET_PF_RETRY;
+
+	level = kvm_mmu_hugepage_adjust(vcpu, gfn, max_level, &pfn);
+
+	trace_kvm_mmu_spte_requested(gpa, level, pfn);
+	for_each_shadow_entry(vcpu, gpa, it) {
+		/*
+		 * We cannot overwrite existing page tables with an NX
+		 * large page, as the leaf could be executable.
+		 */
+		disallowed_hugepage_adjust(it, gfn, &pfn, &level);
+
+		base_gfn = gfn & ~(KVM_PAGES_PER_HPAGE(it.level) - 1);
+		if (it.level == level)
+			break;
+
+    // 可以在 ept page fault 的时候将 ept hugepage 拆分
+		drop_large_spte(vcpu, it.sptep);
+
+    // 如果 ept page 不存在
+		if (!is_shadow_present_pte(*it.sptep)) {
+      // 分配物理页面
+			sp = kvm_mmu_get_page(vcpu, base_gfn, it.addr,
+					      it.level - 1, true, ACC_ALL);
+
+
+			link_shadow_page(vcpu, it.sptep, sp);
+			if (account_disallowed_nx_lpage)
+				account_huge_nx_page(vcpu->kvm, sp);
+		}
+	}
+
+	ret = mmu_set_spte(vcpu, it.sptep, ACC_ALL,
+			   write, level, base_gfn, pfn, prefault,
+			   map_writable);
+	direct_pte_prefetch(vcpu, it.sptep);
+	++vcpu->stat.pf_fixed;
+	return ret;
+}
+```
+1. for_each_shadow_entry : 对于 ept 进行 page walk, 利用参数 `gpa` 和 `vcpu->arch.mmu->root_hpa`
 
 
 
@@ -350,8 +402,6 @@ static struct kvm_rmap_head *__gfn_to_rmap(gfn_t gfn, int level,
 ```
 
 
-
-
 - [ ] kvm_mmu_notifier_clear_young
   - [ ] kvm_age_hva
   - [ ] kvm_handle_hva_range kvm_age_rmapp
@@ -445,6 +495,27 @@ struct kvm_page_track_notifier_node {
 - [x] what if guest physical memory is swapped out ?
     - that's why mmu notifier make sense, if guest physical memory is swapped out, mmu notifier will tell kvm to invalid pages and spte in it.
 
+
+## track page
+- [ ] 虽然不知道 page track 在干什么, 
+
+```c
+void kvm_slot_page_track_remove_page(struct kvm *kvm,
+				     struct kvm_memory_slot *slot, gfn_t gfn,
+				     enum kvm_page_track_mode mode)
+{
+	if (WARN_ON(!page_track_mode_is_valid(mode)))
+		return;
+
+	update_gfn_track(slot, gfn, mode, -1);
+
+	/*
+	 * allow large page mapping for the tracked page
+	 * after the tracker is gone.
+	 */
+	kvm_mmu_gfn_allow_lpage(slot, gfn);
+}
+```
 
 
 #### track_write
@@ -1345,7 +1416,23 @@ static int rmap_add(struct kvm_vcpu *vcpu, u64 *spte, gfn_t gfn)
 }
 ```
 
+## invlpg
+`kvm_mmu_invalidate_gva` call kvm_mmu::invlpg 
+
+- [ ] kvm_mmu_invalidate_gva
+  - [ ] caller
+    - kvm_inject_emulated_page_fault
+    - kvm_mmu_invlpg <- handle_invlpg (this is kvm exit handler)
+  - [ ] kvm_x86_ops.tlb_flush_gva(vcpu, gva); 判断条件和作用
+  - [ ] ept_invlgp
+    - [ ] kvm_flush_remote_tlbs_with_address
+        - [ ] kvm_flush_remote_tlbs_with_range : goes to somewhere unknown
+    - [ ] mmu_page_zap_pte : 从 guest 中间发射 invlpg 一般说明 guest 想要更新 page table 了，所以此时将 spt 进行更新一下是不错的
+
 #### rmap
+- [ ] 检查一下 rmap_add() 的调用位置
+
+
 ```c
 // 获取一个 shadow page table 指针所在的位置
 static inline struct kvm_mmu_page *sptep_to_sp(u64 *sptep)
@@ -1362,27 +1449,6 @@ static inline struct kvm_mmu_page *to_shadow_page(hpa_t shadow_page)
 ```
 
 
-```c
-static void drop_parent_pte(struct kvm_mmu_page *sp,
-			    u64 *parent_pte)
-{
-	mmu_page_remove_parent_pte(sp, parent_pte);
-	mmu_spte_clear_no_track(parent_pte);
-}
-
-static void mmu_page_remove_parent_pte(struct kvm_mmu_page *sp,
-				       u64 *parent_pte)
-{
-	__pte_list_remove(parent_pte, &sp->parent_ptes);
-}
-```
-
-rmap : 多个 parent page table 会指向 同一个下一级 page table
-
-- [ ]  kvm_mmu_unlink_parents 和 kvm_mmu_page_unlink_children 可以增强理解 mmu
-
-
-
 
 ```c
 #define for_each_slot_rmap_range(_slot_, _start_level_, _end_level_,	\
@@ -1392,8 +1458,107 @@ rmap : 多个 parent page table 会指向 同一个下一级 page table
 	     slot_rmap_walk_okay(_iter_);				\
 	     slot_rmap_walk_next(_iter_))
 ```
-- [ ] check it's caller
+- [x] semantic :  对于范围的各种 level 的 page 进行遍历，找到该区域的映射该 page 的 guest page table 所在的页面
 
+
+
+```c
+#define for_each_valid_sp(_kvm, _sp, _list)				\
+	hlist_for_each_entry(_sp, _list, hash_link)			\
+		if (is_obsolete_sp((_kvm), (_sp))) {			\
+		} else
+
+#define for_each_gfn_indirect_valid_sp(_kvm, _sp, _gfn)			\
+	for_each_valid_sp(_kvm, _sp,					\
+	  &(_kvm)->arch.mmu_page_hash[kvm_page_table_hashfn(_gfn)])	\
+		if ((_sp)->gfn != (_gfn) || (_sp)->role.direct) {} else
+```
+
+```c
+#define for_each_sp(pvec, sp, parents, i)			\
+		for (i = mmu_pages_first(&pvec, &parents);	\
+			i < pvec.nr && ({ sp = pvec.page[i].sp; 1;});	\
+			i = mmu_pages_next(&pvec, &parents, i))
+
+```
+
+
+## kvm_mmu_page
+- kvm_mmu_page : 被称为 page header
+- kvm_mmu_page::spt : 指向一个 page，page 的 private 指向这个 page header
+- kvm_mmu_page::gfns: shadow 专用的, 实现 rmap 的基础，当其中
+- kvm_mmu_page::gfn
+
+```c
+static gfn_t kvm_mmu_page_get_gfn(struct kvm_mmu_page *sp, int index)
+{
+	if (!sp->role.direct)
+		return sp->gfns[index];
+
+  // TODO 让人疑惑，为什么 indirect 也要使用这个
+	return sp->gfn + (index << ((sp->role.level - 1) * PT64_LEVEL_BITS));
+}
+
+static void kvm_mmu_page_set_gfn(struct kvm_mmu_page *sp, int index, gfn_t gfn)
+{
+	if (!sp->role.direct) {
+		sp->gfns[index] = gfn;
+		return;
+	}
+
+	if (WARN_ON(gfn != kvm_mmu_page_get_gfn(sp, index)))
+		pr_err_ratelimited("gfn mismatch under direct page %llx "
+				   "(expected %llx, got %llx)\n",
+				   sp->gfn,
+				   kvm_mmu_page_get_gfn(sp, index), gfn);
+}
+
+static int rmap_add(struct kvm_vcpu *vcpu, u64 *spte, gfn_t gfn)
+{
+	struct kvm_mmu_page *sp;
+	struct kvm_rmap_head *rmap_head;
+
+	sp = sptep_to_sp(spte); // 获取 spte 所在的 page 的 shadow page
+  // shadow page 到 gfn 的映射，注意，shadow page 中间持有的变换地址是 host physical address
+  // XXX : 如此，那么每一个 shadow page table 其实保存着其关联的 guest page table 的内容
+	kvm_mmu_page_set_gfn(sp, spte - sp->spt, gfn); 
+	rmap_head = gfn_to_rmap(vcpu->kvm, gfn, sp);
+	return pte_list_add(vcpu, spte, rmap_head);
+}
+```
+所以，gfns 就是shadow page 用于存放自己关联的 guest page table 的内容。
+
+下面分析 gfn 的作用:
+1. kvm_mmu_get_page 是唯一赋值的位置
+2. 其实就是当 gfn 的数值，
+
+虽然
+
+#### parent page
+
+```c
+static void drop_parent_pte(struct kvm_mmu_page *sp,
+			    u64 *parent_pte)
+{
+	mmu_page_remove_parent_pte(sp, parent_pte); // 通过 kvm_mmu_page::parent_ptes 这个链表管理
+	mmu_spte_clear_no_track(parent_pte); // parent_pte 不在指向该位置
+}
+
+static void mmu_page_add_parent_pte(struct kvm_vcpu *vcpu,
+				    struct kvm_mmu_page *sp, u64 *parent_pte)
+{
+	if (!parent_pte)
+		return;
+
+	pte_list_add(vcpu, parent_pte, &sp->parent_ptes);
+}
+```
+
+
+
+rmap : 多个 parent page table 会指向 同一个下一级 page table
+
+- [ ]  kvm_mmu_unlink_parents 和 kvm_mmu_page_unlink_children 可以增强理解 mmu
 
 
 ## write protect
@@ -1457,28 +1622,17 @@ Level 3 is PTE (Page Table Offset)
 ## root_level 和 shadow_root_level
 
 
-## page walk
-
-```c
-static void shadow_walk_init(struct kvm_shadow_walk_iterator *iterator,
-			     struct kvm_vcpu *vcpu, u64 addr)
-{
-	shadow_walk_init_using_root(iterator, vcpu, vcpu->arch.mmu->root_hpa,
-				    addr);
-}
-```
-
+## shadow walk
+思考一下一般的 page walk 要求 : 正在访问的 virtual address 和 cr3 指向的物理地址
 ```c
 struct kvm_shadow_walk_iterator {
-    u64 addr;            // gfn << PAGE_SHIFT   Guest物理页基址
-    hpa_t shadow_addr;   // 当前VM的EPT页表项的物理页机制
+    u64 addr;            // 虚拟地址
+    hpa_t shadow_addr;   // 物理地址，在 shadow_walk_init_using_root 的赋值从 page_walk 的含义是 cr3 的值
     u64 *sptep;          // 指向下一级EPT页表的指针
     int level;           // 当前所处的页表级别，逐级递减
     unsigned index;      // 页表的索引      *sptep + index = 下下一级EPT页表的指针
 };
 ```
-
-- [ ] sptep 是物理地址吗 ?
 
 翻译 shadow page table :
 - addr : Guest 虚拟地址
@@ -1491,6 +1645,17 @@ struct kvm_shadow_walk_iterator {
 shadow 的存在两种 page walk:
 1. guest page table :  FNAME(walk_addr_generic)
 2. shadow page table : FNAME(fetch)
+
+root_hpa:
+- shadow : shadow page table 的 pdt
+- ept : ept 根地址
+都是正常情况下 cr3 存储的内容，但是不知道分别在虚拟化的硬件是什么。
+
+
+## tlb
+kvm_flush_remote_tlbs
+
+## shadow page fault
 
 ```c
 static int FNAME(page_fault)(struct kvm_vcpu *vcpu, gpa_t addr, u32 error_code,
@@ -1507,55 +1672,7 @@ static int FNAME(page_fault)(struct kvm_vcpu *vcpu, gpa_t addr, u32 error_code,
 FNAME(page_fault) 存在一个误导，gpa_t addr 指出来地址实际上是 pva 地址
 因为 tdp 使用的就是 gpa
 
-```c
-static void shadow_walk_init(struct kvm_shadow_walk_iterator *iterator,
-			     struct kvm_vcpu *vcpu, u64 addr)
-{
-	shadow_walk_init_using_root(iterator, vcpu, vcpu->arch.mmu->root_hpa,
-				    addr);
-}
-```
-
-root_hpa
-- shadow : shadow page table 的 pdt (根地址)
-- ept : ept 根地址
-
-#### shadow_walk_init_using_root
-- [ ] 仅仅捕获了两种情况，其他的 ?
-- [ ] PT32E_ROOT_LEVEL 的原理是什么 ?
-
-```c
-static void shadow_walk_init_using_root(struct kvm_shadow_walk_iterator *iterator,
-					struct kvm_vcpu *vcpu, hpa_t root,
-					u64 addr)
-{
-	iterator->addr = addr;
-	iterator->shadow_addr = root;
-	iterator->level = vcpu->arch.mmu->shadow_root_level;
-
-	if (iterator->level == PT64_ROOT_4LEVEL &&
-	    vcpu->arch.mmu->root_level < PT64_ROOT_4LEVEL &&
-	    !vcpu->arch.mmu->direct_map)
-		--iterator->level;
-
-	if (iterator->level == PT32E_ROOT_LEVEL) {
-		/*
-		 * prev_root is currently only used for 64-bit hosts. So only
-		 * the active root_hpa is valid here.
-		 */
-		BUG_ON(root != vcpu->arch.mmu->root_hpa);
-
-		iterator->shadow_addr
-			= vcpu->arch.mmu->pae_root[(addr >> 30) & 3];
-		iterator->shadow_addr &= PT64_BASE_ADDR_MASK;
-		--iterator->level;
-		if (!iterator->shadow_addr)
-			iterator->level = 0;
-	}
-}
-```
-## tlb
-kvm_flush_remote_tlbs
+> ???? I can't remember what I'm talking about
 
 
 #### make_mmu_pages_available
@@ -1577,7 +1694,7 @@ https://stackoverflow.com/questions/3748384/what-is-tlb-shootdown
 https://stackoverflow.com/questions/50256740/who-performs-the-tlb-shootdown
 
 
-# ept
+# ept(clear this)
 - [ ] EPT violation or an `EPT misconfiguration` encountered during that translation.
 - [ ] intel manual chapter 28
 - guest page fault will not cause vmexit
@@ -1588,3 +1705,15 @@ https://stackoverflow.com/questions/50256740/who-performs-the-tlb-shootdown
 
 
   - [ ] why we need `struct pages`, now that all the pages are page table, and unable to free
+
+## nonpaging
+- [ ] 作为最终的部分理解, 用于验证自己的想法
+
+## nested
+`kvm_init_shadow_ept_mmu` register a `kvm_mmu::page_fault` with `ept_page_fault`, 
+but what we currently interests in  is `init_kvm_tdp_mmu`
+
+
+## zap
+- kvm_mmu_commit_zap_page
+- kvm_mmu_prepare_zap_page
