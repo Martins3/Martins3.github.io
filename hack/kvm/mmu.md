@@ -328,11 +328,18 @@ static bool is_mmio_spte(u64 spte)
 - [ ] fast_page_fault 是怎么回事
 
 ## mmu_notifier
-kvm_mmu_notifier_invalidate_range_start
+kvm_mmu_notifier_invalidate_range_start : 这是关键，end 几乎没有内容，invalidate_range 是给 mmu notifier 使用的.
 
-kvm_mmu_notifier_clear_young
-=> kvm_age_hva
-=> kvm_handle_hva_range kvm_age_rmapp
+kvm_mmu_notifier_invalidate_range_start ==> kvm_unmap_hva_range ==> kvm_handle_hva_range
+  - [ ] kvm_unmap_rmapp ==> kvm_zap_rmapp
+  - [ ] kvm_handle_hva_range
+
+- [ ] KVM_ADDRESS_SPACE_NUM
+
+
+- [ ] kvm_mmu_notifier_clear_young
+  - [ ] kvm_age_hva
+  - [ ] kvm_handle_hva_range kvm_age_rmapp
 
 
 

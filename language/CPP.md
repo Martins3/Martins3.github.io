@@ -3,6 +3,8 @@
 3. [moder cpp check list](https://github.com/AnthonyCalandra/modern-cpp-features)
 
 
+https://news.ycombinator.com/item?id=24901244 : some discussion about cpp code browsing.
+
 
 https://github.com/microsoft/vcpkg/blob/master/README_zh_CN.md#%E5%BF%AB%E9%80%9F%E5%BC%80%E5%A7%8B-unix : microsoft cpp package manager
 
