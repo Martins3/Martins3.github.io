@@ -332,9 +332,24 @@ kvm_mmu_notifier_invalidate_range_start : 这是关键，end 几乎没有内容�
 
 kvm_mmu_notifier_invalidate_range_start ==> kvm_unmap_hva_range ==> kvm_handle_hva_range
   - [ ] kvm_unmap_rmapp ==> kvm_zap_rmapp
-  - [ ] kvm_handle_hva_range
+    - [ ] mmu_spte_clear_track_bits : 将 sptep 的内容清空，也就是 shadow page table 无法访问到位置, and sync spte's ad bit to host pte's ad bit
+    - [ ] pte_list_remove : The `spte` is no longer managed by this `gfn`
+  - [ ] kvm_handle_hva_range : 获取到 range 对应的 gfn 
+    - [ ] for_each_slot_rmap_range : 
+        - [ ] `__gfn_to_rmap`
 
-- [ ] KVM_ADDRESS_SPACE_NUM
+```c
+static struct kvm_rmap_head *__gfn_to_rmap(gfn_t gfn, int level,
+					   struct kvm_memory_slot *slot)
+{
+	unsigned long idx;
+
+	idx = gfn_to_index(gfn, slot->base_gfn, level);
+	return &slot->arch.rmap[level - PG_LEVEL_4K][idx];
+}
+```
+
+
 
 
 - [ ] kvm_mmu_notifier_clear_young
@@ -1330,21 +1345,24 @@ static int rmap_add(struct kvm_vcpu *vcpu, u64 *spte, gfn_t gfn)
 }
 ```
 
-#### functions of rmap
+#### rmap
 ```c
+// 获取一个 shadow page table 指针所在的位置
 static inline struct kvm_mmu_page *sptep_to_sp(u64 *sptep)
 {
 	return to_shadow_page(__pa(sptep));
 }
 
-// 如果传入 pte，那么返回的是 pte 指向的 page table 所在的 page frame
 static inline struct kvm_mmu_page *to_shadow_page(hpa_t shadow_page)
 {
 	struct page *page = pfn_to_page(shadow_page >> PAGE_SHIFT);
 
 	return (struct kvm_mmu_page *)page_private(page);
 }
+```
 
+
+```c
 static void drop_parent_pte(struct kvm_mmu_page *sp,
 			    u64 *parent_pte)
 {
@@ -1361,9 +1379,21 @@ static void mmu_page_remove_parent_pte(struct kvm_mmu_page *sp,
 
 rmap : 多个 parent page table 会指向 同一个下一级 page table
 
-- [ ] why
+- [ ]  kvm_mmu_unlink_parents 和 kvm_mmu_page_unlink_children 可以增强理解 mmu
 
-- kvm_mmu_unlink_parents 和 kvm_mmu_page_unlink_children 可以增强理解 mmu
+
+
+
+```c
+#define for_each_slot_rmap_range(_slot_, _start_level_, _end_level_,	\
+	   _start_gfn, _end_gfn, _iter_)				\
+	for (slot_rmap_walk_init(_iter_, _slot_, _start_level_,		\
+				 _end_level_, _start_gfn, _end_gfn);	\
+	     slot_rmap_walk_okay(_iter_);				\
+	     slot_rmap_walk_next(_iter_))
+```
+- [ ] check it's caller
+
 
 
 ## write protect
@@ -1527,10 +1557,6 @@ static void shadow_walk_init_using_root(struct kvm_shadow_walk_iterator *iterato
 ## tlb
 kvm_flush_remote_tlbs
 
-## zap
-- [x] 好像是 free 的意思 ? 是的
-  - kvm_mmu_prepare_zap_page
-  - kvm_mmu_commit_zap_page
 
 #### make_mmu_pages_available
 - 检测 `kvm->arch.n_max_mmu_pages` 和 `kvm->arch.n_used_mmu_pages`
@@ -1543,8 +1569,22 @@ kvm_mmu_alloc_page : 导致 `kvm->arch.n_used_mmu_pages` ++
 -  kvm_mmu_zap_oldest_mmu_pages 其实就是根据 active_mmu_pages 的头部的 sp 去掉，知道满足足够的数量
 
 
+- [ ] KVM_ADDRESS_SPACE_NUM
+
 
 ## remote TLB
 https://stackoverflow.com/questions/3748384/what-is-tlb-shootdown
 https://stackoverflow.com/questions/50256740/who-performs-the-tlb-shootdown
 
+
+# ept
+- [ ] EPT violation or an `EPT misconfiguration` encountered during that translation.
+- [ ] intel manual chapter 28
+- guest page fault will not cause vmexit
+
+- [ ] libdune has to handle page fault in guest mode ?
+  - [ ] because mapping full, so we will not page fault
+- [ ] dune process malloc and access them ?
+
+
+  - [ ] why we need `struct pages`, now that all the pages are page table, and unable to free

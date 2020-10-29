@@ -356,3 +356,5 @@ TSWLatexianTemp*
 ./kernel/fio/script/
 *.log
 .gdb_history
+
+Readme.md

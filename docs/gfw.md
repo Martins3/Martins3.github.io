@@ -1,7 +1,7 @@
 # How to cross Great Fire Wall
 
 ## Caveat
-Only tested on Ubuntu20.
+Only tested on Ubuntu20, but should work in all linux distribution, and similar approach can be used for macos and windows.
 
 ## Abstract
 If you can't clone https://github.com/torvalds/linux in minutes, this article is what you need.
@@ -37,7 +37,7 @@ sudo dpkg -i qv2ray_2.7.0.alpha1-1stable1_amd64.deb.1
 **Now you can access Google.com**
 
 ## terminal proxy
-```
+```sh
 export http_proxy=http://127.0.0.1:8889 && export https_proxy=http://127.0.0.1:8889 
 ```
 
@@ -48,14 +48,13 @@ export http_proxy=http://127.0.0.1:8889 && export https_proxy=http://127.0.0.1:8
 
 ## git proxy 
 for details, look [this](https://github.com/v2ray/v2ray-core/issues/1190).
-
-```
+```sh
 git config --global http.proxy http://127.0.0.1:8889
 git config --global https.proxy https://127.0.0.1:8889
 ```
 **8889 is the port set in qv2ray.**
 
 To avoid password everytime push to remote.
-```
+```sh
 git config --global credential.helper store                        
 ```
