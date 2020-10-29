@@ -2,7 +2,7 @@
   <a href="https://www.vim.org/scripts/script.php?script_id=5779">
     <img alt="Coc Logo" src="https://clangbuiltlinux.github.io/logo.png" height="160" />
     <img alt="Coc Logo" src="./img/ma.png" height="160" />
-    <img alt="Coc Logo" src="https://github.com/shuveb/io_uring-by-example/blob/master/public/tux.png" height="160" />
+    <img alt="Coc Logo" src="https://raw.githubusercontent.com/shuveb/io_uring-by-example/master/public/tux.png" height="160" />
     <img alt="Coc Logo" src="https://styles.redditmedia.com/t5_2ykcc/styles/image_widget_pifwg495jvr41.png" height="160" />
     <img alt="Coc Logo" src="https://www.kite.com/wp-content/uploads/2019/05/penguin.svg" height="160" />
   </a>
