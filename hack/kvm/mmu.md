@@ -130,9 +130,6 @@ Only two function related with `kvm_mmu_get_page` and `get_written_sptes`
 2. `get_written_sptes`
 
 
-
-#### shadow page's gfn
-
 ## general mmu
 
 TDP : two dimensional paging
@@ -227,10 +224,9 @@ kvm_handle_page_fault : 入口函数, 靠近 exit handler
 ```
 
 
-#### https://terenceli.github.io/%E6%8A%80%E6%9C%AF/2019/03/24/kvm-async-page-fault
+- [ ] https://terenceli.github.io/%E6%8A%80%E6%9C%AF/2019/03/24/kvm-async-page-fault
 1. 需要修改内核kvm 外面的代码 ? 不然怎么来识别从 host inject 的
 2. 内核如何调度 host 的另一个 task 过来运行的
-
 
 > 算是最清楚的代码了，TODO
 
@@ -268,6 +264,7 @@ static int FNAME(page_fault)(struct kvm_vcpu *vcpu, gpa_t addr, u32 error_code,
 			 map_writable, prefault, lpage_disallowed);
 ```
 - [x] 从调用路径来说，gpa_t 存在误导，此处是 cr2 的数值，也就是其实应该 guest virtual address
+
 
 
 #### ept page fault
@@ -343,47 +340,6 @@ static int __direct_map(struct kvm_vcpu *vcpu, gpa_t gpa, int write,
 https://opensource.com/article/17/6/timekeeping-linux-vms
 
 https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/6/html/virtualization_host_configuration_and_guest_installation_guide/chap-virtualization_host_configuration_and_guest_installation_guide-kvm_guest_timing_management
-
-## hypercall
-https://stackoverflow.com/questions/33590843/implementing-a-custom-hypercall-in-kvm
-
-x86.c: kvm_emulate_hypercall
-
-```c
-/* For KVM hypercalls, a three-byte sequence of either the vmcall or the vmmcall
- * instruction.  The hypervisor may replace it with something else but only the
- * instructions are guaranteed to be supported.
- *
- * Up to four arguments may be passed in rbx, rcx, rdx, and rsi respectively.
- * The hypercall number should be placed in rax and the return value will be
- * placed in rax.  No other registers will be clobbered unless explicitly
- * noted by the particular hypercall.
- */
-
-static inline long kvm_hypercall0(unsigned int nr)
-{
-	long ret;
-	asm volatile(KVM_HYPERCALL
-		     : "=a"(ret)
-		     : "a"(nr)
-		     : "memory");
-	return ret;
-}
-```
-host 发送 hypercall 的之后，造成从 host 中间退出，然后 最后调用到 kvm_emulate_hypercall, 实际上支持的操作很少
-
-```c
-int kvm_emulate_hypercall(struct kvm_vcpu *vcpu)
-{
-	unsigned long nr, a0, a1, a2, a3, ret;
-	int op_64_bit;
-
-  // TODO hyperv 另一种虚拟化方案 ?
-  // 一种硬件支持 ?
-	if (kvm_hv_hypercall_enabled(vcpu->kvm))
-		return kvm_hv_hypercall(vcpu);
-
-```
 
 #### kvm_arch_end_assignment
 - [ ] vfio 和 virtual IO 的关系 ?
@@ -529,68 +485,6 @@ struct kvm_page_track_notifier_node {
 - [x] what if guest physical memory is swapped out ?
     - that's why mmu notifier make sense, if guest physical memory is swapped out, mmu notifier will tell kvm to invalid pages and spte in it.
 
-
-## track page
-- [ ] 虽然不知道 page track 在干什么, 
-
-```c
-void kvm_slot_page_track_remove_page(struct kvm *kvm,
-				     struct kvm_memory_slot *slot, gfn_t gfn,
-				     enum kvm_page_track_mode mode)
-{
-	if (WARN_ON(!page_track_mode_is_valid(mode)))
-		return;
-
-	update_gfn_track(slot, gfn, mode, -1);
-
-	/*
-	 * allow large page mapping for the tracked page
-	 * after the tracker is gone.
-	 */
-	kvm_mmu_gfn_allow_lpage(slot, gfn);
-}
-```
-
-
-#### track_write
-1. 注册函数
-
-kvm_mmu_pte_write : 
-调用 for_each_gfn_indirect_valid_sp 获取 gpa 对应的 spte(kvm_mmu_page)，
-然后，mmu_pte_write_new_pte, 最后
-```c
-	vcpu->arch.mmu->update_pte(vcpu, sp, spte, new);
-
-static void FNAME(update_pte)(struct kvm_vcpu *vcpu, struct kvm_mmu_page *sp,
-			      u64 *spte, const void *pte)
-{
-	pt_element_t gpte = *(const pt_element_t *)pte;
-
-	FNAME(prefetch_gpte)(vcpu, sp, spte, gpte, false);
-}
-```
-
-- [ ] 似乎只是完成对于 guest page table 的模拟，但是 shadow page table 没有被同步
-
-
-
-
-从 FNAME(fetch) 看，for_each_gfn_indirect_valid_sp 给定的 gpa 是 guest page table 的 gpa，而不是普通页面
-
-2. 调用位置
-
-push
-=> segmented_write 
-=> emulator_write_emulated : 
-```c
-static const struct read_write_emulator_ops write_emultor = {
-	.read_write_emulate = write_emulate,
-	.read_write_mmio = write_mmio,
-	.read_write_exit_mmio = write_exit_mmio,
-	.write = true,
-};
-```
-完全的迷茫啊!
 
 
 #### https://lwn.net/Articles/266320/
@@ -1499,6 +1393,9 @@ static inline struct kvm_mmu_page *to_shadow_page(hpa_t shadow_page)
 	  &(_kvm)->arch.mmu_page_hash[kvm_page_table_hashfn(_gfn)])	\
 		if ((_sp)->gfn != (_gfn) || (_sp)->role.direct) {} else
 ```
+- 此处使用 hash 遍历的总是 shadow page table，参数 gfn 是一个 guest page table 的物理地址，需要找到 shadow 该 page 的 shadow page table.
+- [ ] 为什么 guest page 在 gfn 上，会存在多个 shadow page table 来 shadow
+- [ ]  
 
 
 ```c
@@ -1564,6 +1461,8 @@ static int rmap_add(struct kvm_vcpu *vcpu, u64 *spte, gfn_t gfn)
 
 
 #### parent page
+-  kvm_unsync_page  : 需要递归的向上告知 parent page 为 unsync, 所以也需要反向指向的链接
+
 
 ```c
 static void drop_parent_pte(struct kvm_mmu_page *sp,
@@ -1583,8 +1482,6 @@ static void mmu_page_add_parent_pte(struct kvm_vcpu *vcpu,
 }
 ```
 
-
-
 rmap : 多个 parent page table 会指向 同一个下一级 page table
 
 - [ ]  kvm_mmu_unlink_parents 和 kvm_mmu_page_unlink_children 可以增强理解 mmu
@@ -1603,20 +1500,170 @@ shadow page table. 设置保护就是更新一下 spte 的标志位。当 page w
 write protect 的时候，显然可以知道是在哪一个 spte 上的，更新 spte 指向的内容。
 还用一个可能性是，guest 更新 page table 的时候，总是会首先进行 invlpg
 
+- [ ] kvm_mmu_page::gfn 就是一个 shadow page table 关联的 guest page table 的 gfn，之所以一个 gfn 会关联多个 guest page table 是因为 32bit 的模拟问题吧。
+  - [ ] 并且通过 parent 反向映射，可以在 parent shadow page table 中间设置当前 shadow page table 的权限
 
 mmu_need_write_protect 的注释:
-CPU1: 正确的顺序是 `sp->unsync`，然后 spte writable
+CPU1: 正确的顺序是 `sp->unsync`，然后 spte writable。
 
 - [ ] 是不是host 使用的页面，只有页表被设置为 write protect 的 ?
 
-**当修改 host page table 的时候，该页面由于被 write protection, 
-退出，根据 gfn(其实是页表的虚拟地址) 可以找到其对应的 spte,
+**当修改 guest page table 的时候，该页面由于被 write protection, 
+退出，根据 gfn(也就是) 可以找到其对应的 spte,
 设置 unsync ，writable，然后继续修改，invlpg，sync page table**
 
-#### mmu_need_write_protect
-如果 unsync，那么就是不需要 write protect
+- [ ] 这种设想，有一点多次一举的感觉
 
-- [ ] 为什么会调用 kvm_unsync_page
+```c
+static bool mmu_need_write_protect(struct kvm_vcpu *vcpu, gfn_t gfn,
+				   bool can_unsync)
+{
+	struct kvm_mmu_page *sp;
+
+	if (kvm_page_track_is_active(vcpu, gfn, KVM_PAGE_TRACK_WRITE))
+		return true;
+
+	for_each_gfn_indirect_valid_sp(vcpu->kvm, sp, gfn) {
+		if (!can_unsync)
+			return true;
+
+		if (sp->unsync)
+			continue;
+
+		WARN_ON(sp->role.level != PG_LEVEL_4K);
+		kvm_unsync_page(vcpu, sp);
+	}
+	smp_wmb();
+
+	return false;
+}
+```
+- 如果一个 page 被 track 了，那么就不需要 write protect 
+- 将其设置为 unsync 也是可以不设置保护，那么可以在 guest invlpg 的时候进行 
+
+
+```c
+/*
+ * add guest page to the tracking pool so that corresponding access on that
+ * page will be intercepted.
+ *
+ * It should be called under the protection both of mmu-lock and kvm->srcu
+ * or kvm->slots_lock.
+ *
+ * @kvm: the guest instance we are interested in.
+ * @slot: the @gfn belongs to.
+ * @gfn: the guest page.
+ * @mode: tracking mode, currently only write track is supported.
+ */
+void kvm_slot_page_track_add_page(struct kvm *kvm,
+				  struct kvm_memory_slot *slot, gfn_t gfn,
+				  enum kvm_page_track_mode mode)
+```
+
+## page track 
+kvm_mmu_get_page ==> account_shadowed ==> kvm_slot_page_track_remove_page / kvm_slot_page_track_add_page ==> update_gfn_track
+
+```c
+static void account_shadowed(struct kvm *kvm, struct kvm_mmu_page *sp)
+{
+	struct kvm_memslots *slots;
+	struct kvm_memory_slot *slot;
+	gfn_t gfn;
+
+	kvm->arch.indirect_shadow_pages++;
+	gfn = sp->gfn;
+	slots = kvm_memslots_for_spte_role(kvm, sp->role);
+	slot = __gfn_to_memslot(slots, gfn);
+
+	/* the non-leaf shadow pages are keeping readonly. */
+	if (sp->role.level > PG_LEVEL_4K)
+		return kvm_slot_page_track_add_page(kvm, slot, gfn,
+						    KVM_PAGE_TRACK_WRITE);
+
+	kvm_mmu_gfn_disallow_lpage(slot, gfn);
+}
+```
+- [ ] 为什么 leaf shadow page 被保持 readonly ?
+- [ ] 至少说明如果一个 page 被 account，那么就 writable
+
+
+```c
+/*
+ * add guest page to the tracking pool so that corresponding access on that
+ * page will be intercepted.
+ *
+ * It should be called under the protection both of mmu-lock and kvm->srcu
+ * or kvm->slots_lock.
+ *
+ * @kvm: the guest instance we are interested in.
+ * @slot: the @gfn belongs to.
+ * @gfn: the guest page.
+ * @mode: tracking mode, currently only write track is supported.
+ */
+void kvm_slot_page_track_add_page(struct kvm *kvm,
+				  struct kvm_memory_slot *slot, gfn_t gfn,
+				  enum kvm_page_track_mode mode)
+{
+
+	if (WARN_ON(!page_track_mode_is_valid(mode)))
+		return;
+
+	update_gfn_track(slot, gfn, mode, 1);
+
+	/*
+	 * new track stops large page mapping for the
+	 * tracked page.
+	 */
+	kvm_mmu_gfn_disallow_lpage(slot, gfn);
+
+	if (mode == KVM_PAGE_TRACK_WRITE)
+		if (kvm_mmu_slot_gfn_write_protect(kvm, slot, gfn))
+			kvm_flush_remote_tlbs(kvm);
+}
+```
+
+
+
+
+* **track_write**
+
+1. 注册函数
+kvm_mmu_pte_write : 
+调用 for_each_gfn_indirect_valid_sp 获取 gpa 对应的 spte(kvm_mmu_page)，
+然后，mmu_pte_write_new_pte, 最后
+```c
+	vcpu->arch.mmu->update_pte(vcpu, sp, spte, new);
+
+static void FNAME(update_pte)(struct kvm_vcpu *vcpu, struct kvm_mmu_page *sp,
+			      u64 *spte, const void *pte)
+{
+	pt_element_t gpte = *(const pt_element_t *)pte;
+
+	FNAME(prefetch_gpte)(vcpu, sp, spte, gpte, false);
+}
+```
+
+- [ ] 似乎只是完成对于 guest page table 的模拟，但是 shadow page table 没有被同步
+
+
+从 FNAME(fetch) 看，for_each_gfn_indirect_valid_sp 给定的 gpa 是 guest page table 的 gpa，而不是普通页面
+
+2. 调用位置
+
+push
+=> segmented_write 
+=> emulator_write_emulated : 
+```c
+static const struct read_write_emulator_ops write_emultor = {
+	.read_write_emulate = write_emulate,
+	.read_write_mmio = write_mmio,
+	.read_write_exit_mmio = write_exit_mmio,
+	.write = true,
+};
+```
+完全的迷茫啊!
+
+
 
 
 

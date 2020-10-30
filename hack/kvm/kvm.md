@@ -1328,6 +1328,50 @@ hspt 的想法 : 将内核中间添加一个 mmap 的空间，每一个 process 
 
 TLB miss is very costly since guest-physical address to machine address needs an extra EPT walk for each stage of guest-virtual address translation.
 
+
+## kvm_make_all_cpus_request
+
+## hypercall
+https://stackoverflow.com/questions/33590843/implementing-a-custom-hypercall-in-kvm
+
+x86.c: kvm_emulate_hypercall
+
+```c
+/* For KVM hypercalls, a three-byte sequence of either the vmcall or the vmmcall
+ * instruction.  The hypervisor may replace it with something else but only the
+ * instructions are guaranteed to be supported.
+ *
+ * Up to four arguments may be passed in rbx, rcx, rdx, and rsi respectively.
+ * The hypercall number should be placed in rax and the return value will be
+ * placed in rax.  No other registers will be clobbered unless explicitly
+ * noted by the particular hypercall.
+ */
+
+static inline long kvm_hypercall0(unsigned int nr)
+{
+	long ret;
+	asm volatile(KVM_HYPERCALL
+		     : "=a"(ret)
+		     : "a"(nr)
+		     : "memory");
+	return ret;
+}
+```
+host 发送 hypercall 的之后，造成从 host 中间退出，然后 最后调用到 kvm_emulate_hypercall, 实际上支持的操作很少
+
+```c
+int kvm_emulate_hypercall(struct kvm_vcpu *vcpu)
+{
+	unsigned long nr, a0, a1, a2, a3, ret;
+	int op_64_bit;
+
+  // TODO hyperv 另一种虚拟化方案 ?
+  // 一种硬件支持 ?
+	if (kvm_hv_hypercall_enabled(vcpu->kvm))
+		return kvm_hv_hypercall(vcpu);
+
+```
+
 ## resources
 - https://github.com/dpw/kvm-hello-world : a good resource to understand how real, protect, long mode in intel
 - https://github.com/david942j/kvm-kernel-example
@@ -1339,5 +1383,3 @@ TLB miss is very costly since guest-physical address to machine address needs an
 - https://github.com/canonical/multipass
   - write with cpp
   - include many cpp 
-
-## kvm_make_all_cpus_request
