@@ -236,10 +236,45 @@ kvm_handle_page_fault : 入口函数, 靠近 exit handler
 
 #### https://lwn.net/Articles/817239/
 
+## shadow page fault
+```c
+/*
+ * Page fault handler.  There are several causes for a page fault:
+ *   - there is no shadow pte for the guest pte
+ *   - write access through a shadow pte marked read only so that we can set
+ *     the dirty bit
+ *   - write access to a shadow pte marked read only so we can update the page
+ *     dirty bitmap, when userspace requests it
+ *   - mmio access; in this case we will never install a present shadow pte
+ *   - normal guest page fault due to the guest pte marked not present, not
+ *     writable, or not executable
+ *
+ *  Returns: 1 if we need to emulate the instruction, 0 otherwise, or
+ *           a negative value on error.
+ */
+static int FNAME(page_fault)(struct kvm_vcpu *vcpu, gpa_t addr, u32 error_code,
+			     bool prefault)
+	/*
+	 * Look up the guest pte for the faulting address.
+	 */
+	r = FNAME(walk_addr)(&walker, vcpu, addr, error_code);
+
+  /*
+   * Fetch a shadow pte for a specific level in the paging hierarchy.
+   * If the guest tries to write a write-protected page, we need to
+   * emulate this operation, return 1 to indicate this case.
+   */
+	r = FNAME(fetch)(vcpu, addr, &walker, write_fault, max_level, pfn,
+			 map_writable, prefault, lpage_disallowed);
+```
+- [x] 从调用路径来说，gpa_t 存在误导，此处是 cr2 的数值，也就是其实应该 guest virtual address
+
 
 #### ept page fault
-1. where is  paging64_gva_to_gpa ?
-2. mtrr : https://zhuanlan.zhihu.com/p/51023864 : 还是很迷，这个到底是做什么
+handle_ept_violation ==> kvm_mmu_page_fault  ==> kvm_mmu_do_page_fault ==> kvm_mmu::page_fault => kvm_tdp_page_fault ==> direct_page_fault ==> `__direct_map` ==> link_shadow_page ==> 
+
+- [ ] where is  paging64_gva_to_gpa ?
+- [ ] mtrr : https://zhuanlan.zhihu.com/p/51023864 : 还是很迷，这个到底是做什么
 
 https://stackoverflow.com/questions/60694243/how-does-kvm-qemu-and-guest-os-handles-page-fault
 
@@ -247,7 +282,6 @@ https://stackoverflow.com/questions/60694243/how-does-kvm-qemu-and-guest-os-hand
 >
 > If a page is present in the guest page tables but not present in the EPT, it causes an EPT violation VM exit, so the VMM can handle the missing page.
 
-handle_ept_violation ==> kvm_mmu_page_fault  ==> kvm_mmu_do_page_fault ==> kvm_mmu::page_fault => kvm_tdp_page_fault ==> direct_page_fault ==> `__direct_map` ==> link_shadow_page ==> 
 
 ```c
 static int __direct_map(struct kvm_vcpu *vcpu, gpa_t gpa, int write,
@@ -1040,13 +1074,6 @@ as follows:**
 
 
 
-## page fault
-handle_exception_nmi => kvm_handle_page_fault
-
-handle_ept_violation / handle_ept_misconfig / kvm_handle_page_fault
-=> kvm_mmu_page_fault
-=> kvm_mmu_do_page_fault
-
 
 ## ept misconfig
 
@@ -1461,7 +1488,6 @@ static inline struct kvm_mmu_page *to_shadow_page(hpa_t shadow_page)
 - [x] semantic :  对于范围的各种 level 的 page 进行遍历，找到该区域的映射该 page 的 guest page table 所在的页面
 
 
-
 ```c
 #define for_each_valid_sp(_kvm, _sp, _list)				\
 	hlist_for_each_entry(_sp, _list, hash_link)			\
@@ -1474,6 +1500,7 @@ static inline struct kvm_mmu_page *to_shadow_page(hpa_t shadow_page)
 		if ((_sp)->gfn != (_gfn) || (_sp)->role.direct) {} else
 ```
 
+
 ```c
 #define for_each_sp(pvec, sp, parents, i)			\
 		for (i = mmu_pages_first(&pvec, &parents);	\
@@ -1481,6 +1508,9 @@ static inline struct kvm_mmu_page *to_shadow_page(hpa_t shadow_page)
 			i = mmu_pages_next(&pvec, &parents, i))
 
 ```
+- [ ]  理解 parent 机制 ?
+
+kvm_mmu_commit_zap_page : 移除 page
 
 
 ## kvm_mmu_page
@@ -1530,9 +1560,8 @@ static int rmap_add(struct kvm_vcpu *vcpu, u64 *spte, gfn_t gfn)
 
 下面分析 gfn 的作用:
 1. kvm_mmu_get_page 是唯一赋值的位置
-2. 其实就是当 gfn 的数值，
+2. gfn 是 ept page fault 的时候，出现问题的 guest physical address
 
-虽然
 
 #### parent page
 
@@ -1562,7 +1591,8 @@ rmap : 多个 parent page table 会指向 同一个下一级 page table
 
 
 ## write protect
-- [x] 到底是保护谁 ?
+- [ ] 查看一下 kvm_mmu_get_page 的内容用于 write_protected, account_shadowed 之类的吧
+
 - [ ] 如何触发, 一个普通的 write page table 的 protection 凭什么惊动 host ?
 - [ ] 触发之后的处理机制在哪里 ?
 
@@ -1654,26 +1684,6 @@ root_hpa:
 
 ## tlb
 kvm_flush_remote_tlbs
-
-## shadow page fault
-
-```c
-static int FNAME(page_fault)(struct kvm_vcpu *vcpu, gpa_t addr, u32 error_code,
-			     bool prefault)
-
-	/*
-	 * Look up the guest pte for the faulting address.
-	 */
-	r = FNAME(walk_addr)(&walker, vcpu, addr, error_code);
-
-	r = FNAME(fetch)(vcpu, addr, &walker, write_fault, max_level, pfn,
-			 map_writable, prefault, lpage_disallowed);
-```
-FNAME(page_fault) 存在一个误导，gpa_t addr 指出来地址实际上是 pva 地址
-因为 tdp 使用的就是 gpa
-
-> ???? I can't remember what I'm talking about
-
 
 #### make_mmu_pages_available
 - 检测 `kvm->arch.n_max_mmu_pages` 和 `kvm->arch.n_used_mmu_pages`
