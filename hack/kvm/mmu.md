@@ -1,6 +1,6 @@
 ## mmu
 
-#### mmu.rst
+## mmu.rst
 
 > Guest memory (gpa) is part of the user address space of the process that is
 using kvm.  Userspace defines the translation between guest addresses and user
@@ -232,7 +232,12 @@ kvm_handle_page_fault : 入口函数, 靠近 exit handler
 
 #### https://lwn.net/Articles/817239/
 
-## shadow page fault
+## page fault
+两条路径:
+- handle_ept_violation ==> kvm_mmu_page_fault  ==> kvm_mmu_do_page_fault ==> kvm_mmu::page_fault => kvm_tdp_page_fault ==> direct_page_fault ==> `__direct_map` ==> link_shadow_page ==> 
+- handle_exception_nmi ==> kvm_handle_page_fault ==> ... 
+
+#### shadow page fault
 ```c
 /*
  * Page fault handler.  There are several causes for a page fault:
@@ -268,7 +273,6 @@ static int FNAME(page_fault)(struct kvm_vcpu *vcpu, gpa_t addr, u32 error_code,
 
 
 #### ept page fault
-handle_ept_violation ==> kvm_mmu_page_fault  ==> kvm_mmu_do_page_fault ==> kvm_mmu::page_fault => kvm_tdp_page_fault ==> direct_page_fault ==> `__direct_map` ==> link_shadow_page ==> 
 
 - [ ] where is  paging64_gva_to_gpa ?
 - [ ] mtrr : https://zhuanlan.zhihu.com/p/51023864 : 还是很迷，这个到底是做什么
@@ -334,6 +338,32 @@ static int __direct_map(struct kvm_vcpu *vcpu, gpa_t gpa, int write,
 ```
 1. for_each_shadow_entry : 对于 ept 进行 page walk, 利用参数 `gpa` 和 `vcpu->arch.mmu->root_hpa`
 
+#### fast page fault
+- [ ] 阅读一下 fast_page_fault 中的代码，似乎被 track 的代码会去掉 flags, 而 fast page fault 只是 restore 上 flags 而已
+  - [ ]
+
+
+```c
+/* Restore an acc-track PTE back to a regular PTE */
+static u64 restore_acc_track_spte(u64 spte)
+{
+	u64 new_spte = spte;
+	u64 saved_bits = (spte >> shadow_acc_track_saved_bits_shift)
+			 & shadow_acc_track_saved_bits_mask;
+
+	WARN_ON_ONCE(spte_ad_enabled(spte));
+	WARN_ON_ONCE(!is_access_track_spte(spte));
+
+	new_spte &= ~shadow_acc_track_mask;
+	new_spte &= ~(shadow_acc_track_saved_bits_mask <<
+		      shadow_acc_track_saved_bits_shift);
+	new_spte |= saved_bits;
+
+	return new_spte;
+}
+```
+
+
 
 
 ## vpclock
@@ -370,6 +400,8 @@ static bool is_mmio_spte(u64 spte)
 - [ ] fast_page_fault 是怎么回事
 
 ## mmu_notifier
+- [ ] hva_to_pfn : 这里应该封装了 gup 的实现
+
 kvm_mmu_notifier_invalidate_range_start : 这是关键，end 几乎没有内容，invalidate_range 是给 mmu notifier 使用的.
 
 kvm_mmu_notifier_invalidate_range_start ==> kvm_unmap_hva_range ==> kvm_handle_hva_range
@@ -597,8 +629,6 @@ FNAME(fetch):
 ## direct_pte_prefetch
 - [ ] 只有 direct 才有 prefetch
 - [ ] 应该是将连续的 GPA 装配上 ept table 吧
-
-## fast page fault
 
 ## https://events.static.linuxfound.org/sites/events/files/slides/Guangrong-fast-write-protection.pdf
 
@@ -907,31 +937,6 @@ static u64 __read_mostly shadow_acc_track_mask;
 - [ ] TODO: 查看这一行的 commit messsage, TODO: 调查 ept A bits 是什么
 - [ ] acc-track PTE
 
-## acc_track_mask
-- [ ] 阅读一下 fast_page_fault 中的代码，似乎被 track 的代码会去掉 flags, 而 fast page fault 只是 restore 上 flags 而已
-  - [ ]
-
-
-```c
-/* Restore an acc-track PTE back to a regular PTE */
-static u64 restore_acc_track_spte(u64 spte)
-{
-	u64 new_spte = spte;
-	u64 saved_bits = (spte >> shadow_acc_track_saved_bits_shift)
-			 & shadow_acc_track_saved_bits_mask;
-
-	WARN_ON_ONCE(spte_ad_enabled(spte));
-	WARN_ON_ONCE(!is_access_track_spte(spte));
-
-	new_spte &= ~shadow_acc_track_mask;
-	new_spte &= ~(shadow_acc_track_saved_bits_mask <<
-		      shadow_acc_track_saved_bits_shift);
-	new_spte |= saved_bits;
-
-	return new_spte;
-}
-```
-
 
 ## lockless
 - [ ] SPTE_HOST_WRITEABLE 和 SPTE_MMU_WRITEABLE
@@ -966,12 +971,7 @@ in Section 24.6.2).*
 as follows:**
 > 当 update a dirty flag for EPT 的自动将地址写入到 PML 中间
 
-
-
-
-## ept misconfig
-
-## PML white paper
+#### PML white paper
 page modification logging
 
 https://www.intel.com/content/dam/www/public/us/en/documents/white-papers/page-modification-logging-vmm-white-paper.pdf
@@ -1214,20 +1214,10 @@ Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
 他们甚至使用上了 : get_user_page
 
 #### sync page
-TODO: 解释其中 第 8 页的所有情况:
-file:///Users/admin/Downloads/07IBM%20XiaoGuangrong%20kvm-mmu.pdf
-
-TODO : 似乎还有 sync 和 mark unsync 之分
-
-
-kvm_sync_page : 
-kvm_mmu_get_page : 获取 gfn 对应的 shadow page，如果没有，那么创建
-
-=> `__kvm_sync_page` => FNAME(sync_name)
-
-可以确定，更新是从 host 到 shadow 的
-
-- [ ] 保护的 page 应该是 guest 的 page
+- [x]  似乎还有 sync 和 mark unsync 之分，分别分析一下
+  - mark unsync 体系 : mmu_need_write_protect(gfn), 	mark_unsync(spte)
+  - [x] kvm_sync_pages : shadow 到同一个 gfn 的 page 全部 sync
+    - [x] `__kvm_sync_page` => FNAME(sync_name)
 
 mmu_spte_update : spte 指向的是物理地址，对于 high level 的 shadow page table，其中的 spte 指向是下一级的 shadow page table
 
@@ -1250,6 +1240,8 @@ static int FNAME(sync_page)(struct kvm_vcpu *vcpu, struct kvm_mmu_page *sp)
 	first_pte_gpa = FNAME(get_level1_sp_gpa)(sp);
   // 获取 sp 指向的所有 gfn
 
+  // 注意 PT64_ENT_PER_PAGE 一个 shadow page 中间的全部的 page 的数量
+  // 所以 sync 一个 gfn 就是将该 gfn 的内容全部传递到其对应的 shadow page table 上
 	for (i = 0; i < PT64_ENT_PER_PAGE; i++) {
     // pte_gpa 是 spte 持有的 gfn
 		pte_gpa = first_pte_gpa + i * sizeof(pt_element_t);
@@ -1266,9 +1258,106 @@ static int FNAME(sync_page)(struct kvm_vcpu *vcpu, struct kvm_mmu_page *sp)
     }
 }
 ```
-
 - [ ] rvsd
 
+sync 的源头： kvm_mmu_sync_roots 和 kvm_sync_pages
+- kvm_mmu_sync_roots 应该是(就是) 将整个 guest page table tree 同步到 shadow page 上。
+- kvm_sync_pages 在 kvm_mmu_get_page 创建完成 sp 的时候，那么需要将原来 guest 中间的内容同步过来一下。
+
+#### mmu_sync_children
+```c
+static int mmu_unsync_walk(struct kvm_mmu_page *sp,
+			   struct kvm_mmu_pages *pvec)
+{
+	pvec->nr = 0; // pvec 就是返回值
+	if (!sp->unsync_children) // 如果没有 unsync_children 就直接返回，
+		return 0;
+
+	mmu_pages_add(pvec, sp, INVALID_INDEX); // 加入一个 pvec，
+	return __mmu_unsync_walk(sp, pvec);
+}
+
+// 对于该 page 所有的含有被设置 bitmap 的 page 进行 sync
+static int __mmu_unsync_walk(struct kvm_mmu_page *sp,
+			   struct kvm_mmu_pages *pvec)
+{
+	int i, ret, nr_unsync_leaf = 0;
+
+	for_each_set_bit(i, sp->unsync_child_bitmap, 512) {
+		struct kvm_mmu_page *child;
+		u64 ent = sp->spt[i];
+
+		if (!is_shadow_present_pte(ent) || is_large_pte(ent)) {
+			clear_unsync_child_bit(sp, i);
+			continue;
+		}
+
+		child = to_shadow_page(ent & PT64_BASE_ADDR_MASK);
+
+		if (child->unsync_children) {
+			if (mmu_pages_add(pvec, child, i))
+				return -ENOSPC;
+
+			ret = __mmu_unsync_walk(child, pvec);
+			if (!ret) {
+				clear_unsync_child_bit(sp, i);
+				continue;
+			} else if (ret > 0) {
+				nr_unsync_leaf += ret;
+			} else
+				return ret;
+		} else if (child->unsync) {
+			nr_unsync_leaf++;
+			if (mmu_pages_add(pvec, child, i))
+				return -ENOSPC;
+		} else
+			clear_unsync_child_bit(sp, i);
+	}
+
+	return nr_unsync_leaf;
+}
+```
+
+好的，终于到达了重头戏
+
+```c
+static void mmu_sync_children(struct kvm_vcpu *vcpu,
+			      struct kvm_mmu_page *parent)
+{
+	int i;
+	struct kvm_mmu_page *sp;
+	struct mmu_page_path parents;
+	struct kvm_mmu_pages pages;
+	LIST_HEAD(invalid_list);
+	bool flush = false;
+
+  // 对于所有的 unsync 的 page
+	while (mmu_unsync_walk(parent, &pages)) {
+		bool protected = false;
+
+    // 设置保护权限
+		for_each_sp(pages, sp, parents, i)
+			protected |= rmap_write_protect(vcpu, sp->gfn);
+
+		if (protected) {
+			kvm_flush_remote_tlbs(vcpu->kvm);
+			flush = false;
+		}
+
+		for_each_sp(pages, sp, parents, i) {
+			flush |= kvm_sync_page(vcpu, sp, &invalid_list);
+			mmu_pages_clear_parents(&parents);
+		}
+		if (need_resched() || spin_needbreak(&vcpu->kvm->mmu_lock)) {
+			kvm_mmu_flush_or_zap(vcpu, &invalid_list, false, flush);
+			cond_resched_lock(&vcpu->kvm->mmu_lock);
+			flush = false;
+		}
+	}
+
+	kvm_mmu_flush_or_zap(vcpu, &invalid_list, false, flush);
+}
+```
 
 ## kvm_mmu_alloc_page
 分配 kvm_mmu_page 和 shadow page，对于非 direct 甚至需要分配一个 gfn 映射数组
@@ -1291,51 +1380,6 @@ static int FNAME(sync_page)(struct kvm_vcpu *vcpu, struct kvm_mmu_page *sp)
 
 现在理解一下 rmap_write_protect : 
 
-#### rmap_write_protect
-
-=> kvm_mmu_slot_gfn_write_protect
-```c
-bool kvm_mmu_slot_gfn_write_protect(struct kvm *kvm,
-				    struct kvm_memory_slot *slot, u64 gfn)
-{
-	struct kvm_rmap_head *rmap_head;
-	int i;
-	bool write_protected = false;
-
-  // TODO : 为什么 rmap 需要处理多个 levels, 现在的假设是为了
-  //  考虑 huge page 的因素
-	for (i = PG_LEVEL_4K; i <= KVM_MAX_HUGEPAGE_LEVEL; ++i) {
-    // 通过 rmap 获取 guest page table 指向其的 spte
-    // 这样的也是可以说清楚，通过在 spte 上添加保护位
-    // 就可以实现保护 spte
-		rmap_head = __gfn_to_rmap(gfn, i, slot);
-		write_protected |= __rmap_write_protect(kvm, rmap_head, true);
-	}
-
-	return write_protected;
-}
-```
-
-- [ ] rmap 为什么是反向的, spte 是 page walk 的结果, 从 spte 到 gfn 才是 rmap 啊
-  - [ ] rmap 的真正作用是可以让 gfn 可以同时持有多个 spte
-  - [ ] 但是实际上只有一个 gfn 可以到达 sptep 啊
-
-从 mmu_set_spte 中间的关于 `was_rmapped` 变量的分析，
-rmap 机制是针对于 2mb 的 PMD 之类的
-
-```c
-static int rmap_add(struct kvm_vcpu *vcpu, u64 *spte, gfn_t gfn)
-{
-	struct kvm_mmu_page *sp;
-	struct kvm_rmap_head *rmap_head;
-
-	sp = sptep_to_sp(spte);
-  // 从这一句说明，就是 spte 指向 gfn
-	kvm_mmu_page_set_gfn(sp, spte - sp->spt, gfn);
-	rmap_head = gfn_to_rmap(vcpu->kvm, gfn, sp);
-	return pte_list_add(vcpu, spte, rmap_head);
-}
-```
 
 ## invlpg
 `kvm_mmu_invalidate_gva` call kvm_mmu::invlpg 
@@ -1486,10 +1530,12 @@ rmap : 多个 parent page table 会指向 同一个下一级 page table
 
 - [ ]  kvm_mmu_unlink_parents 和 kvm_mmu_page_unlink_children 可以增强理解 mmu
 
+## kvm_mmu_get_page
 
-## write protect
 - [ ] 查看一下 kvm_mmu_get_page 的内容用于 write_protected, account_shadowed 之类的吧
 
+
+## write protect
 - [ ] 如何触发, 一个普通的 write page table 的 protection 凭什么惊动 host ?
 - [ ] 触发之后的处理机制在哪里 ?
 
@@ -1560,6 +1606,77 @@ void kvm_slot_page_track_add_page(struct kvm *kvm,
 				  enum kvm_page_track_mode mode)
 ```
 
+#### rmap_write_protect
+函数的目的，从代码分析上来看，给定一个 gfn，然后找到所有映射了这个 gfn 的 shadow page table，在这些 shadow page table 上设置上 write protection，那么就可以实现保护了
+
+- [ ] `__rmap_write_protect` : dirty 和 shadow 的不同
+- [ ] 找到因为 shadow protection 而返回的操作
+- [ ] 找到证据说明，这一个 gfn 实际上就是 shadow page table 的内容
+
+
+调用位置:
+- [ ] kvm_mmu_get_page
+- mmu_sync_children
+
+
+=> kvm_mmu_slot_gfn_write_protect
+```c
+bool kvm_mmu_slot_gfn_write_protect(struct kvm *kvm,
+				    struct kvm_memory_slot *slot, u64 gfn)
+{
+	struct kvm_rmap_head *rmap_head;
+	int i;
+	bool write_protected = false;
+
+  // 为什么 rmap 需要处理多个 levels, 应该是为了实现让所有层次的 page 映射其吧
+	for (i = PG_LEVEL_4K; i <= KVM_MAX_HUGEPAGE_LEVEL; ++i) {
+    // 通过 rmap 获取 shadow page table 指向其的 spte
+    // 这样的也是可以说清楚，通过在 spte 上添加保护位
+    // 就可以实现保护 spte
+		rmap_head = __gfn_to_rmap(gfn, i, slot);
+		write_protected |= __rmap_write_protect(kvm, rmap_head, true);
+	}
+
+	return write_protected;
+}
+
+static bool __rmap_write_protect(struct kvm *kvm,
+				 struct kvm_rmap_head *rmap_head,
+				 bool pt_protect)
+{
+	u64 *sptep;
+	struct rmap_iterator iter;
+	bool flush = false;
+
+	for_each_rmap_spte(rmap_head, &iter, sptep)
+		flush |= spte_write_protect(sptep, pt_protect);
+
+	return flush;
+}
+
+```
+
+- [ ] rmap 为什么是反向的, spte 是 page walk 的结果, 从 spte 到 gfn 才是 rmap 啊
+  - [ ] rmap 的真正作用是可以让 gfn 可以同时持有多个 spte
+  - [ ] 但是实际上只有一个 gfn 可以到达 sptep 啊
+
+从 mmu_set_spte 中间的关于 `was_rmapped` 变量的分析，
+rmap 机制是针对于 2mb 的 PMD 之类的
+
+```c
+static int rmap_add(struct kvm_vcpu *vcpu, u64 *spte, gfn_t gfn)
+{
+	struct kvm_mmu_page *sp;
+	struct kvm_rmap_head *rmap_head;
+
+	sp = sptep_to_sp(spte);
+  // 从这一句说明，就是 spte 指向 gfn
+	kvm_mmu_page_set_gfn(sp, spte - sp->spt, gfn);
+	rmap_head = gfn_to_rmap(vcpu->kvm, gfn, sp);
+	return pte_list_add(vcpu, spte, rmap_head);
+}
+```
+
 ## page track 
 kvm_mmu_get_page ==> account_shadowed ==> kvm_slot_page_track_remove_page / kvm_slot_page_track_add_page ==> update_gfn_track
 
@@ -1616,7 +1733,9 @@ void kvm_slot_page_track_add_page(struct kvm *kvm,
 	 */
 	kvm_mmu_gfn_disallow_lpage(slot, gfn);
 
+  // 必然执行，当前只有这种模式
 	if (mode == KVM_PAGE_TRACK_WRITE)
+    // 将所有的和这一个 gfn 关联的 spte 设置保护
 		if (kvm_mmu_slot_gfn_write_protect(kvm, slot, gfn))
 			kvm_flush_remote_tlbs(kvm);
 }
@@ -1625,63 +1744,140 @@ void kvm_slot_page_track_add_page(struct kvm *kvm,
 
 
 
-* **track_write**
-
-1. 注册函数
-kvm_mmu_pte_write : 
-调用 for_each_gfn_indirect_valid_sp 获取 gpa 对应的 spte(kvm_mmu_page)，
-然后，mmu_pte_write_new_pte, 最后
 ```c
-	vcpu->arch.mmu->update_pte(vcpu, sp, spte, new);
+struct kvm_page_track_notifier_node {
+	struct hlist_node node;
 
-static void FNAME(update_pte)(struct kvm_vcpu *vcpu, struct kvm_mmu_page *sp,
-			      u64 *spte, const void *pte)
-{
-	pt_element_t gpte = *(const pt_element_t *)pte;
-
-	FNAME(prefetch_gpte)(vcpu, sp, spte, gpte, false);
-}
-```
-
-- [ ] 似乎只是完成对于 guest page table 的模拟，但是 shadow page table 没有被同步
-
-
-从 FNAME(fetch) 看，for_each_gfn_indirect_valid_sp 给定的 gpa 是 guest page table 的 gpa，而不是普通页面
-
-2. 调用位置
-
-push
-=> segmented_write 
-=> emulator_write_emulated : 
-```c
-static const struct read_write_emulator_ops write_emultor = {
-	.read_write_emulate = write_emulate,
-	.read_write_mmio = write_mmio,
-	.read_write_exit_mmio = write_exit_mmio,
-	.write = true,
+	/*
+	 * It is called when guest is writing the write-tracked page
+	 * and write emulation is finished at that time.
+	 *
+	 * @vcpu: the vcpu where the write access happened.
+	 * @gpa: the physical address written by guest.
+	 * @new: the data was written to the address.
+	 * @bytes: the written length.
+	 * @node: this node
+	 */
+	void (*track_write)(struct kvm_vcpu *vcpu, gpa_t gpa, const u8 *new,
+			    int bytes, struct kvm_page_track_notifier_node *node);
+	/*
+	 * It is called when memory slot is being moved or removed
+	 * users can drop write-protection for the pages in that memory slot
+	 *
+	 * @kvm: the kvm where memory slot being moved or removed
+	 * @slot: the memory slot being moved or removed
+	 * @node: this node
+	 */
+	void (*track_flush_slot)(struct kvm *kvm, struct kvm_memory_slot *slot,
+			    struct kvm_page_track_notifier_node *node);
 };
 ```
-完全的迷茫啊!
 
 
+1. kvm_page_track_notifier_node::track_write
 
+- [ ]  在 `kvm_mmu_init_vm` 中间注册的函数 **kvm_mmu_pte_write**
+  - [ ] mmu_pte_write_fetch_gpte : 获取 guest 到底想要写入的内容是什么, 根据 gpa 指向的位置
+      - [ ] mmu_pte_write_fetch_gpte :  数值在 `emulator_write_phys` 中间刚刚写入
+  - [ ] for_each_gfn_indirect_valid_sp : 找到和该 gfn 关联的 shadow page, 强调一次，shadow 和 guest page table 总是关联这的，parent guest page table 可以定位 child page table 的 gfn，根据这个 gfn, 可以定位 child shadow page table
+      - [ ] 通过 gpa 就是正在写的 guest page table，从而计算出需要同步更新的 spte 是谁，更新的内容应该是 guest 写入的 page table **关联** 的 shadow page table 的 gfn
+      - [ ] 如果 emulator_write_phys 总是调用到 kvm_mmu_pte_write 的话，也就是只要是 emulate 的 write 就是为了实现 shadow page 的更新 ?
+  - [ ] mmu_pte_write_new_pte :
+      - [ ] paging64_update_pte
+        - [ ] paging64_prefetch_gpte
+          - [ ] pte_prefetch_gfn_to_pfn : 这个 pfn 是 host 物理地址, check 是如何使用的。
+          - [ ] paging64_protect_clean_gpte : 应该跟踪一下 pte_access 的作用
+          - [ ] mmu_set_spte 
+              - [ ] drop_spte
+              - [ ] 从这里看，pfn 是 shadow page table 的物理地址, 但是上面看又是 guest page table 的物理地址，而函数 pte_prefetch_gfn_to_pfn 指出这就是, 的确，如果是 level 4 的时候，如果 guest pt 和 spt 的相同项目指向的位置相同，此时， guest 指向哪里，那么 shadow 指向哪里
+              - [ ] 如果是 non-leaf 的 spt, 其指向是 gfn 关联的
+              - [ ] 似乎需要注意一下判断条件，只有在 level == PG_LEVEL_4K, 才会保证 spt 和 gpt 中间的项目指向的内容相同
+              - [ ] 变量 : was_rmapped
+                  - [x] rmap_add : 一个 gfn 可能被 超过 1000 个 spte 映射
+                  - [ ] rmap_recycle ==> kvm_unmap_rmapp ==> pte_list_remove ==> mmu_spte_clear_track_bits
+- [ ] 从 `FNAME(page_fault)` 的注释看，调用该函数的原因中没有由于 write protection 的存在
+    - [ ] 通过 async_pf 从 gfn 得到其 host 物理页面。虽然 guest 自己处理自己的 page frame, 但是分配了 gfn 之后，还是需要对应的 host 物理页面，我猜测其中还是利用 gup 实现的功能
+    - [ ] set_spte 的结果说， Write protection  is responsibility of mmu_get_page / kvm_sync_page.
+
+
+- [ ] 似乎只是完成对于 guest page table 的模拟，但是 shadow page table 没有被同步
+- [ ] kvm_page_track_init : 内核可以提供多个 kvm 的环境来运行, 当发送消息之后，会给所有的 kvm instance 通知
+
+2. 调用位置
+- emulate_ops::write_emulated ==> emulator_write_emulated ==> emulator_read_write ==> emulator_read_write_onepage ==> write_emultor::read_write_emulate ==> write_emulate ==> emulator_write_phys
+- emulate_ops::cmpxchg_emulated ==>  mulator_cmpxchg_emulated
+
+分析其中一个分支:
+segmented_write ==> emulate_ops::write_emulated
+
+direct_page_fault 和 paging64_page_fault 的位置都调用，page_fault_handle_page_track 检查，如果访问的 page 被 track 那么访问需要被 emulate，具体在 `kvm_mmu_page_fault` 中间。
+
+- [ ] git show .... : 这是一个主线
+    - [ ] 猜测，使用 write track ，在 `emulator_write_phys` 中:
+        - [ ] kvm_vcpu_write_guest : 完成写的模拟
+        - [ ] 通知所有人，将写操作可以同步到 sync 中间了
+    - [ ] reexecute_instruction : 猜测，是因为访问 guest page table 被截获了
+      - [ ] write_fault_to_shadow_pgtable
+    - [x] 有一件事情没有考虑 : guest 的物理地址是什么时候分配的，现在只是关注了 shadow page table 和 ept page table 的分配.
+        - 这是 guest 自己的事情，谢谢
+    - [ ] 对于 instruction emulation 的理解，当使用一条指令进行修改 guest page table 的时候，显然 vmexit, 然后在 emulation 中间更新 shadow page table 以及 guest page table.
+    - [ ] kvm_mmu_unprotect_page : 检查其调用位置
+    - [ ] is_writable_pte()
+      - [ ] it flush tlb if we try to write-protect a spte whose `SPTE_MMU_WRITEABLE`
+      - [ ] mmu_spte_update() : Update the state bits, it means the mapped pfn is not changed. 
+          - [x] 只是修改其中的 ad bit 以及 权限等，而不是修改其中 pfn
+          - [ ] spte_write_protect <= `__rmap_write_protect` <= `rmap_write_protect` : 我们理解的 write protect 的体系
+      - [ ] `#define SPTE_HOST_WRITEABLE	(1ULL << PT_FIRST_AVAIL_BITS_SHIFT)` 和 `#define SPTE_MMU_WRITEABLE	(1ULL << (PT_FIRST_AVAIL_BITS_SHIFT + 1))`
+    - [ ] 同步完成 shadow page table 之后需要 flush tlb
+    - [ ] 为什么 dirty bitmap log 需要进行保护，是不是这又是一种硬件模拟，为了判断 guest 的那些页面是 dirty 的
+
+```c
+/*
+ * Currently, we have two sorts of write-protection, a) the first one
+ * write-protects guest page to sync the guest modification, b) another one is
+ * used to sync dirty bitmap when we do KVM_GET_DIRTY_LOG. The differences
+ * between these two sorts are:
+ * 1) the first case clears SPTE_MMU_WRITEABLE bit.
+ * 2) the first case requires flushing tlb immediately avoiding corrupting
+ *    shadow page table between all vcpus so it should be in the protection of
+ *    mmu-lock. And the another case does not need to flush tlb until returning
+ *    the dirty bitmap to userspace since it only write-protects the page
+ *    logged in the bitmap, that means the page in the dirty bitmap is not
+ *    missed, so it can flush tlb out of mmu-lock.
+ *
+ * So, there is the problem: the first case can meet the corrupted tlb caused
+ * by another case which write-protects pages but without flush tlb
+ * immediately. In order to making the first case be aware this problem we let
+ * it flush tlb if we try to write-protect a spte whose SPTE_MMU_WRITEABLE bit
+ * is set, it works since another case never touches SPTE_MMU_WRITEABLE bit.
+ *
+ * Anyway, whenever a spte is updated (only permission and status bits are
+ * changed) we need to check whether the spte with SPTE_MMU_WRITEABLE becomes
+ * readonly, if that happens, we need to flush tlb. Fortunately,
+ * mmu_spte_update() has already handled it perfectly.
+ *
+ * The rules to use SPTE_MMU_WRITEABLE and PT_WRITABLE_MASK:
+ * - if we want to see if it has writable tlb entry or if the spte can be
+ *   writable on the mmu mapping, check SPTE_MMU_WRITEABLE, this is the most
+ *   case, otherwise
+ * - if we fix page fault on the spte or do write-protection by dirty logging,
+ *   check PT_WRITABLE_MASK.
+ *
+ * TODO: introduce APIs to split these two cases.
+ */
+static inline int is_writable_pte(unsigned long pte)
+{
+	return pte & PT_WRITABLE_MASK;
+}
+```
+从注释的可以解读的东西:
+1. 使用通过 SPTE_MMU_WRITEABLE 来实现对于 guest 的保护
+2. 使用 PT_WRITABLE_MASK 用于 dirty bitmap 操作的
 
 
 ## two cr3
 似乎存在 Guest cr3 和 shadow Cr3
 
-## https://rayanfam.com/topics/hypervisor-from-scratch-part-4/
-> TODO intel 手册 Chapter 28 – (VMX SUPPORT FOR ADDRESS TRANSLATION)
-
-> According to a VMware evaluation paper: “EPT provides performance gains of up to 48% for MMU-intensive benchmarks and up to 600% for MMU-intensive microbenchmarks”.
-
-- [ ] 是 shadow table 需要使用 Complicated reverse map 的吗 ?
-
-> **EPT mechanism that treats your Guest Physical Address like a virtual address and the EPTP is the CR3.**
-
-- [ ] cr3 中间存放 eptp 的地址，找到对应的代码 ?
-
-> Note that PAE stands for **Physical Address Extension** which is a memory management feature for the x86 architecture that extends the address space and PSE stands for **Page Size Extension** that refers to a feature of x86 processors that allows for pages larger than the traditional 4 KiB size.
 
 ## 一般的 page walk 事情总结一下
 1. 那些地方需要修改 page table 的，check 一下代码
@@ -1774,3 +1970,4 @@ but what we currently interests in  is `init_kvm_tdp_mmu`
 ## zap
 - kvm_mmu_commit_zap_page
 - kvm_mmu_prepare_zap_page
+
