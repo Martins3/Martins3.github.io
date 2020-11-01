@@ -862,6 +862,8 @@ really interesting : if one process is about to switch to user space and it's ti
 
 - [ ] [LoyenWang](https://www.cnblogs.com/LoyenWang/p/12386281.html)
 
+- [ ]  那么 tlb flush 的操作在哪里，还是说支持了 vpid 之后可以不用 tlb flush
+    - [ ]  那些位置需要 tlb flush ?
 
 - [ ] `__schedule` ===> context_switch ===> `__switch_to_asm` ===> `__switch_to`
 

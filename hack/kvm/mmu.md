@@ -529,8 +529,6 @@ In particular, if the host system decides that it wants to push a given page out
 #### https://lwn.net/Articles/732952/
 
 
-#### https://www.linux-kvm.org/images/3/33/KvmForum2008%24kdf2008_15.pdf
-> mmu notifier 解决 swap 的问题 ?
 
 ## write_flooding_count
 
@@ -544,9 +542,26 @@ In particular, if the host system decides that it wants to push a given page out
 >    is triggered too frequently on this page, KVM will unmap the page
 >    to avoid emulation in the future.
 
-- [ ] 为什么 leaf page 可以 unsynchronized ?
-- [ ] avoid emulation, 但是实际上存在作用怎么办
+- [ ] mmu.rst 理解
+  - flood 的避免 : 虽然可以 fork 的避免地址空间的拷贝，但是无法避免 page table 的拷贝，如果一个 page table 在连续在 fork 过程中间被拷贝，其实没有必要立刻同步 shadow page table 的
+  - [ ] 为什么 leaf page 可以 unsynchronized，而 non leaf 的不可以 ?
+      - [x] 猜测其中的原因是，invlpg addr 的 addr 是虚拟地址，该虚拟地址只能对应一个普通的 shadow page table 的内容
+  - [x] 怎么才可以知道这个 translation 被使用过 ?
+      - 正常情况下不知道，但是连续三次修改 page table 之后，这个 translation 已经被作废了，所以等到真正需要使用该 translation 的时候，一定会被检查到
+  - [x] unmap page 的 unmap 指的是什么 ?
+  - [ ] 也就是说 write_flooding_count 是完全针对于 non leaf 的
 
+- [ ] clear_sp_write_flooding_count
+    - [ ] FNAME(fetch) 调用多次 clear_sp_write_flooding_count
+
+- [ ] detect_write_flooding
+    - [ ] Skip write-flooding detected for the sp whose level is 1, because it can become unsync, then the guest page is not write-protected.
+        - 不需要对于 level 1 (leaf 进行write procet 保护), 反正总是 invlpg 会主动同步的 的想法不对，进行了保护那么就可以知道那些 sp 是 unsync 的，在 tlb flush 的时候进行 unsync 就可以了
+        - 所以，所有人都需要保护，从而可以截获消息，但是 leaf 可以标记为 unsync, 而 non leaf 需要立刻同步
+    - [ ] 调用者 `kvm_mmu_pte_write` : 含义，如果出现了多次模拟, 如果 detect_write_flooding 条件成立，那么调用 kvm_mmu_prepare_zap_page 清理 sp 以及下面的所有的 page table, 递归的向下。
+        - [ ] 似乎现在同步体系中间，存在如果一个 guest shadow page table 没有对应的 sp, 并不会因此而创建 sp, 而是等到在 page fault 的再创建
+
+- [ ] 所以 invlpg 真的进行了同步吗 ?
 
 ## mmu_set_spte
 
@@ -630,7 +645,6 @@ FNAME(fetch):
 - [ ] 只有 direct 才有 prefetch
 - [ ] 应该是将连续的 GPA 装配上 ept table 吧
 
-## https://events.static.linuxfound.org/sites/events/files/slides/Guangrong-fast-write-protection.pdf
 
 ## FNAME(fetch)
 - [ ] 为什么需要进行两次 while 循环进行 shadow_walk
@@ -659,6 +673,9 @@ static inline bool vcpu_match_mmio_gen(struct kvm_vcpu *vcpu)
 > TODO mmu.rst 中间算是很清楚的吧，检查一下.
 
 ## dirty
+- [ ]  https://events.static.linuxfound.org/sites/events/files/slides/Guangrong-fast-write-protection.pdf
+
+
 kvm_mmu_slot_set_dirty : 将 slot 对应 spte 全部设置为 dirty
 
 ```c
@@ -1213,7 +1230,37 @@ Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
 
 他们甚至使用上了 : get_user_page
 
-#### sync page
+## sync page
+
+
+> Synchronized and unsynchronized pages
+> =====================================
+> 
+> The guest uses two events to synchronize its tlb and page tables: tlb flushes
+> and page invalidations (invlpg).
+> 
+> A tlb flush means that we need to synchronize all sptes reachable from the
+> guest's cr3.  **This is expensive, so we keep all guest page tables write
+> protected, and synchronize sptes to gptes when a gpte is written.**
+> 
+> *A special case is when a guest page table is reachable from the current
+> guest cr3.*  In this case, the guest is obliged to issue an invlpg instruction
+> before using the translation.  We take advantage of that by removing write
+> protection from the guest page, and allowing the guest to modify it freely.
+> We synchronize modified gptes when the guest invokes invlpg.  This reduces
+> the amount of emulation we have to do when the guest modifies multiple gptes,
+> or when the a guest page is no longer used as a page table and is used for
+> random guest data.
+> 
+> As a side effect we have to resynchronize all reachable unsynchronized shadow
+> pages on a tlb flush.
+
+- [ ] 这一段 mmu.rst 的理解:
+  - [ ] 一般来说，对于所有的 guest page table 都是加以保护的
+  - [ ] 在使用 translation 之前，一定会进行 invlpg 来同步，但是 tlb flush 相当于对于所有人都进行了一次 invlpg，所以都需要进行翻译
+
+
+
 - [x]  似乎还有 sync 和 mark unsync 之分，分别分析一下
   - mark unsync 体系 : mmu_need_write_protect(gfn), 	mark_unsync(spte)
   - [x] kvm_sync_pages : shadow 到同一个 gfn 的 page 全部 sync
@@ -1387,12 +1434,20 @@ static void mmu_sync_children(struct kvm_vcpu *vcpu,
 - [ ] kvm_mmu_invalidate_gva
   - [ ] caller
     - kvm_inject_emulated_page_fault
-    - kvm_mmu_invlpg <- handle_invlpg (this is kvm exit handler)
+    - kvm_mmu_invlpg <- handle_invlpg
   - [ ] kvm_x86_ops.tlb_flush_gva(vcpu, gva); 判断条件和作用
   - [ ] ept_invlgp
     - [ ] kvm_flush_remote_tlbs_with_address
         - [ ] kvm_flush_remote_tlbs_with_range : goes to somewhere unknown
     - [ ] mmu_page_zap_pte : 从 guest 中间发射 invlpg 一般说明 guest 想要更新 page table 了，所以此时将 spt 进行更新一下是不错的
+
+
+
+- [ ] kvm_mmu_invlpg
+    - [ ] caller 分别在 x86.c 和 vmx.c 中间，用于 emulat 和 vmexit 的处理，所以 emulate 到底是干啥的
+    - [ ] 似乎正常情况下，会走到 `FNAME(invlpg)`
+        - [ ] 
+
 
 #### rmap
 - [ ] 检查一下 rmap_add() 的调用位置
@@ -1536,6 +1591,7 @@ rmap : 多个 parent page table 会指向 同一个下一级 page table
 
 
 ## write protect
+
 - [ ] 如何触发, 一个普通的 write page table 的 protection 凭什么惊动 host ?
 - [ ] 触发之后的处理机制在哪里 ?
 
@@ -1794,10 +1850,15 @@ struct kvm_page_track_notifier_node {
               - [ ] 似乎需要注意一下判断条件，只有在 level == PG_LEVEL_4K, 才会保证 spt 和 gpt 中间的项目指向的内容相同
               - [ ] 变量 : was_rmapped
                   - [x] rmap_add : 一个 gfn 可能被 超过 1000 个 spte 映射
-                  - [ ] rmap_recycle ==> kvm_unmap_rmapp ==> pte_list_remove ==> mmu_spte_clear_track_bits
+                  - [ ] rmap_recycle ==> kvm_unmap_rmapp ==> pte_list_remove ==> mmu_spte_clear_track_bits : 将 spte 的内容清空。rmap 在说，如果你(spte)指向了我（gfn），那么就存在 rmap，当需要 gfn 发生改动的时候，指向我的 gfn 都是需要修改的，虽然你应该指向我，只要你的内容是空，可以通过 page fault 最后指向此处。
+  - [ ] 为什么参数是物理地址，从虚拟地址到物理地址的装换是谁来操作的 ?
 - [ ] 从 `FNAME(page_fault)` 的注释看，调用该函数的原因中没有由于 write protection 的存在
     - [ ] 通过 async_pf 从 gfn 得到其 host 物理页面。虽然 guest 自己处理自己的 page frame, 但是分配了 gfn 之后，还是需要对应的 host 物理页面，我猜测其中还是利用 gup 实现的功能
     - [ ] set_spte 的结果说， Write protection  is responsibility of mmu_get_page / kvm_sync_page.
+- [ ] 只有 high level 的 gpt 需要 track, 是不是因为 leaf page table 中间的页面是可以同时进行 protect 保护 和 dirty bitmap 的，所以相对于 non leaf 的保护其实更加简单。
+    - [ ] 保护只能靠 rmap 保护，找到来映射 gpt gfn 的 spt，设置保护，在 page fault 的时候，如果检查到这是 track 的 page，加以同步
+    - [ ] 实际上，由于 rmap 保护，将 shadow page 标记为 unsync，之后再 sync, 也即是通过 page track 实现同步修改，而 sync 实现异步修改
+    - [ ] 重新理解一下 cow, 为什么可以 mmap 一个没有访问权限的文件并且加以读去，而且还会进入到 gup 中间。
 
 
 - [ ] 似乎只是完成对于 guest page table 的模拟，但是 shadow page table 没有被同步
@@ -1971,3 +2032,7 @@ but what we currently interests in  is `init_kvm_tdp_mmu`
 - kvm_mmu_commit_zap_page
 - kvm_mmu_prepare_zap_page
 
+
+## ref
+- [ ] https://events.static.linuxfound.org/sites/events/files/slides/Guangrong-fast-write-protection.pdf
+- [ ]  https://www.linux-kvm.org/images/3/33/KvmForum2008%24kdf2008_15.pdf
