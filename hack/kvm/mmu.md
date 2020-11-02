@@ -1,5 +1,11 @@
 ## mmu
 
+## key questions
+
+- [ ] set_spte 是不是仅仅用于设置 leaf
+  - [ ] 如果是，其他 level ?
+  - [ ] 如果不是，`spte |= (u64)pfn << PAGE_SHIFT;` 直接指向 pfn 如何理解
+
 ## mmu.rst
 
 > Guest memory (gpa) is part of the user address space of the process that is
@@ -269,6 +275,7 @@ static int FNAME(page_fault)(struct kvm_vcpu *vcpu, gpa_t addr, u32 error_code,
 			 map_writable, prefault, lpage_disallowed);
 ```
 - [x] 从调用路径来说，gpa_t 存在误导，此处是 cr2 的数值，也就是其实应该 guest virtual address
+- paging64_walk_addr : 对于 gpt 进行 walk, paging64_fetch : 对于 spt 进行 walk
 
 
 
@@ -337,33 +344,6 @@ static int __direct_map(struct kvm_vcpu *vcpu, gpa_t gpa, int write,
 }
 ```
 1. for_each_shadow_entry : 对于 ept 进行 page walk, 利用参数 `gpa` 和 `vcpu->arch.mmu->root_hpa`
-
-#### fast page fault
-- [ ] 阅读一下 fast_page_fault 中的代码，似乎被 track 的代码会去掉 flags, 而 fast page fault 只是 restore 上 flags 而已
-  - [ ]
-
-
-```c
-/* Restore an acc-track PTE back to a regular PTE */
-static u64 restore_acc_track_spte(u64 spte)
-{
-	u64 new_spte = spte;
-	u64 saved_bits = (spte >> shadow_acc_track_saved_bits_shift)
-			 & shadow_acc_track_saved_bits_mask;
-
-	WARN_ON_ONCE(spte_ad_enabled(spte));
-	WARN_ON_ONCE(!is_access_track_spte(spte));
-
-	new_spte &= ~shadow_acc_track_mask;
-	new_spte &= ~(shadow_acc_track_saved_bits_mask <<
-		      shadow_acc_track_saved_bits_shift);
-	new_spte |= saved_bits;
-
-	return new_spte;
-}
-```
-
-
 
 
 ## vpclock
@@ -672,116 +652,7 @@ static inline bool vcpu_match_mmio_gen(struct kvm_vcpu *vcpu)
 ```
 > TODO mmu.rst 中间算是很清楚的吧，检查一下.
 
-## dirty
-- [ ]  https://events.static.linuxfound.org/sites/events/files/slides/Guangrong-fast-write-protection.pdf
-
-
-kvm_mmu_slot_set_dirty : 将 slot 对应 spte 全部设置为 dirty
-
-```c
-static void vmx_slot_disable_log_dirty(struct kvm *kvm,
-				       struct kvm_memory_slot *slot)
-{
-	kvm_mmu_slot_set_dirty(kvm, slot);
-}
-
-
-static void vmx_slot_enable_log_dirty(struct kvm *kvm,
-				     struct kvm_memory_slot *slot)
-{
-	if (!kvm_dirty_log_manual_protect_and_init_set(kvm))
-		kvm_mmu_slot_leaf_clear_dirty(kvm, slot);
-  // TODO largepage 并不知道指的是什么东西
-  // 但是本函数只是简单的 对于 memslot 调用 slot_rmap_write_protect
-	kvm_mmu_slot_largepage_remove_write_access(kvm, slot);
-}
-```
-这时候的想法是没有问题的 : 通过将所有的 page 全部 write protection, 从而可以知道
-那些是 dirty 的
-
-## spte_write_protect
-
-```c
-/*
- * Write-protect on the specified @sptep, @pt_protect indicates whether
- * spte write-protection is caused by protecting shadow page table.
- *
- * Note: write protection is difference between dirty logging and spte
- * protection:
- * - for dirty logging, the spte can be set to writable at anytime if
- *   its dirty bitmap is properly set.
- * - for spte protection, the spte can be writable only after unsync-ing
- *   shadow page.
- *
- * Return true if tlb need be flushed.
- */
-static bool spte_write_protect(u64 *sptep, bool pt_protect)
-{
-	u64 spte = *sptep;
-
-	if (!is_writable_pte(spte) &&
-	      !(pt_protect && spte_can_locklessly_be_made_writable(spte)))
-		return false;
-
-	rmap_printk("rmap_write_protect: spte %p %llx\n", sptep, *sptep);
-
-	if (pt_protect)
-		spte &= ~SPTE_MMU_WRITEABLE;
-	spte = spte & ~PT_WRITABLE_MASK;
-
-	return mmu_spte_update(sptep, spte);
-}
-```
-- [x] dirty logging 和 spte protection 如何实现区分
-  - [ ] pt_protect 参数就是用于区分到底谁才是 pt_protect
-- [ ] 
-
-
-
-```c
-/*
- * Currently, we have two sorts of write-protection, a) the first one
- * write-protects guest page to sync the guest modification, b) another one is
- * used to sync dirty bitmap when we do KVM_GET_DIRTY_LOG. The differences
- * between these two sorts are:
- * 1) the first case clears SPTE_MMU_WRITEABLE bit.
- * 2) the first case requires flushing tlb immediately avoiding corrupting
- *    shadow page table between all vcpus so it should be in the protection of
- *    mmu-lock. And the another case does not need to flush tlb until returning
- *    the dirty bitmap to userspace since it only write-protects the page
- *    logged in the bitmap, that means the page in the dirty bitmap is not
- *    missed, so it can flush tlb out of mmu-lock.
- *
- * So, there is the problem: the first case can meet the corrupted tlb caused
- * by another case which write-protects pages but without flush tlb
- * immediately. In order to making the first case be aware this problem we let
- * it flush tlb if we try to write-protect a spte whose SPTE_MMU_WRITEABLE bit
- * is set, it works since another case never touches SPTE_MMU_WRITEABLE bit.
- *
- * Anyway, whenever a spte is updated (only permission and status bits are
- * changed) we need to check whether the spte with SPTE_MMU_WRITEABLE becomes
- * readonly, if that happens, we need to flush tlb. Fortunately,
- * mmu_spte_update() has already handled it perfectly.
- *
- * The rules to use SPTE_MMU_WRITEABLE and PT_WRITABLE_MASK:
- * - if we want to see if it has writable tlb entry or if the spte can be
- *   writable on the mmu mapping, check SPTE_MMU_WRITEABLE, this is the most
- *   case, otherwise
- * - if we fix page fault on the spte or do write-protection by dirty logging,
- *   check PT_WRITABLE_MASK.
- *
- * TODO: introduce APIs to split these two cases.
- */
-static inline int is_writable_pte(unsigned long pte)
-{
-	return pte & PT_WRITABLE_MASK;
-}
-```
-
-- [ ] 看不懂的注释，两个 flags 还是不知道如何使用
-
-
-## PT_WRITABLE_MASK
+## dirty log
 ```c
 static bool is_dirty_spte(u64 spte)
 {
@@ -914,7 +785,135 @@ static void kvm_flush_pml_buffers(struct kvm *kvm)
 ```
 
 
-## ad bit
+#### dirty flags
+- [ ]  https://events.static.linuxfound.org/sites/events/files/slides/Guangrong-fast-write-protection.pdf
+
+- [ ] 应该存在软件 和 硬件方式实现 dirty log
+
+kvm_mmu_slot_set_dirty : 将 slot 对应 spte 全部设置为 dirty
+
+这时候的想法是没有问题的 : 通过将所有的 page 全部 write protection, 从而可以知道那些是 dirty 的
+
+- [ ] mmu_spte_update
+    - caller : 只是改变 flags 而不修改指向的内容
+      - [ ] spte_set_dirty && spte_clear_dirty
+      - [ ] spte_write_protect
+
+```c
+/*
+ * Write-protect on the specified @sptep, @pt_protect indicates whether
+ * spte write-protection is caused by protecting shadow page table.
+ *
+ * Note: write protection is difference between dirty logging and spte
+ * protection:
+ * - for dirty logging, the spte can be set to writable at anytime if
+ *   its dirty bitmap is properly set.
+ * - for spte protection, the spte can be writable only after unsync-ing
+ *   shadow page.
+ *
+ * Return true if tlb need be flushed.
+ */
+static bool spte_write_protect(u64 *sptep, bool pt_protect)
+{
+	u64 spte = *sptep;
+
+	if (!is_writable_pte(spte) &&
+	      !(pt_protect && spte_can_locklessly_be_made_writable(spte)))
+		return false;
+
+	rmap_printk("rmap_write_protect: spte %p %llx\n", sptep, *sptep);
+
+	if (pt_protect)
+		spte &= ~SPTE_MMU_WRITEABLE;
+	spte = spte & ~PT_WRITABLE_MASK;
+
+	return mmu_spte_update(sptep, spte);
+}
+```
+- [x] dirty logging 和 spte protection 如何实现区分
+  - [ ] pt_protect 参数就是用于区分到底谁才是 pt_protect
+
+```c
+/*
+ * Currently, we have two sorts of write-protection, a) the first one
+ * write-protects guest page to sync the guest modification, b) another one is
+ * used to sync dirty bitmap when we do KVM_GET_DIRTY_LOG. The differences
+ * between these two sorts are:
+ * 1) the first case clears SPTE_MMU_WRITEABLE bit.
+ * 2) the first case requires flushing tlb immediately avoiding corrupting
+ *    shadow page table between all vcpus so it should be in the protection of
+ *    mmu-lock. And the another case does not need to flush tlb until returning
+ *    the dirty bitmap to userspace since it only write-protects the page
+ *    logged in the bitmap, that means the page in the dirty bitmap is not
+ *    missed, so it can flush tlb out of mmu-lock.
+ *
+ * So, there is the problem: the first case can meet the corrupted tlb caused
+ * by another case which write-protects pages but without flush tlb
+ * immediately. In order to making the first case be aware this problem we let
+ * it flush tlb if we try to write-protect a spte whose SPTE_MMU_WRITEABLE bit
+ * is set, it works since another case never touches SPTE_MMU_WRITEABLE bit.
+ *
+ * Anyway, whenever a spte is updated (only permission and status bits are
+ * changed) we need to check whether the spte with SPTE_MMU_WRITEABLE becomes
+ * readonly, if that happens, we need to flush tlb. Fortunately,
+ * mmu_spte_update() has already handled it perfectly.
+ *
+ * The rules to use SPTE_MMU_WRITEABLE and PT_WRITABLE_MASK:
+ * - if we want to see if it has writable tlb entry or if the spte can be
+ *   writable on the mmu mapping, check SPTE_MMU_WRITEABLE, this is the most
+ *   case, otherwise
+ * - if we fix page fault on the spte or do write-protection by dirty logging,
+ *   check PT_WRITABLE_MASK.
+ *
+ * TODO: introduce APIs to split these two cases.
+ */
+static inline int is_writable_pte(unsigned long pte)
+{
+	return pte & PT_WRITABLE_MASK;
+}
+```
+
+- [ ] kvm_memory_slot::dirty_bitmap
+    - [ ] gfn_to_memslot_dirty_bitmap
+    - [ ] mark_page_dirty_in_slot
+- [ ] intel 手册 关于 pml 怎么说的
+
+#### fast page fault
+- [ ] 阅读一下 fast_page_fault 中的代码，似乎被 track 的代码会去掉 flags, 而 fast page fault 只是 restore 上 flags 而已
+
+
+- [ ] shadow_acc_track_mask : access track 是 ad bit 中间对于 a 的模拟吗 ?
+    - [ ] restore_acc_track_spte(u64 spte)
+    - [ ] page_fault_can_be_fast(u32 error_code)
+
+
+
+```c
+/*
+ * SPTEs used by MMUs without A/D bits are marked with SPTE_AD_DISABLED_MASK;
+ * shadow_acc_track_mask is the set of bits to be cleared in non-accessed
+ * pages.
+ */
+static u64 __read_mostly shadow_acc_track_mask;
+
+/*
+ * The mask/shift to use for saving the original R/X bits when marking the PTE
+ * as not-present for access tracking purposes. We do not save the W bit as the
+ * PTEs being access tracked also need to be dirty tracked, so the W bit will be
+ * restored only when a write is attempted to the page.
+ */
+static const u64 shadow_acc_track_saved_bits_mask = PT64_EPT_READABLE_MASK |
+						    PT64_EPT_EXECUTABLE_MASK;
+static const u64 shadow_acc_track_saved_bits_shift = PT64_SECOND_AVAIL_BITS_SHIFT;
+
+// 和 page_fault_handle_page_track 的关系是什么 ?
+static inline bool is_access_track_spte(u64 spte)
+{
+	return !spte_ad_enabled(spte) && (spte & shadow_acc_track_mask) == 0;
+}
+```
+
+[](Documentation/virt/kvm/locking.rst)
 
 
 ## PFERR_WRITE_MASK
@@ -1256,15 +1255,22 @@ Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
 > pages on a tlb flush.
 
 - [ ] 这一段 mmu.rst 的理解:
-  - [ ] 一般来说，对于所有的 guest page table 都是加以保护的
-  - [ ] 在使用 translation 之前，一定会进行 invlpg 来同步，但是 tlb flush 相当于对于所有人都进行了一次 invlpg，所以都需要进行翻译
+  - [x] 对于所有的 guest page table 都是加以保护的
+  - [ ] 在使用 translation 之前，一定会进行 invlpg 来同步，但是 tlb flush 相当于对于所有人都进行了一次 invlpg，那么所有的都需要进行同步
 
-
-
-- [x]  似乎还有 sync 和 mark unsync 之分，分别分析一下
-  - mark unsync 体系 : mmu_need_write_protect(gfn), 	mark_unsync(spte)
-  - [x] kvm_sync_pages : shadow 到同一个 gfn 的 page 全部 sync
+- [x] kvm_sync_pages : shadow 到同一个 gfn 的 page 全部 sync
     - [x] `__kvm_sync_page` => FNAME(sync_name)
+
+- mark unsync 体系
+  - [ ] mmu_need_write_protect(gfn),
+      - [ ] 注释中间说，存在一种操作 : 将 sp 设置为 unsync 的，然后去掉 spte 的写保护去掉。
+          - 当没有了写保护之后，对于 leaf guest page table 就可以随意修改，而且保证其中的数值总是正确的
+          - [ ] 只有 leaf page 才可以 unsync 吧
+          - [x] race condition 的解释 : 如果在第一个 cpu 中间修改，进行 tlb flush 操作，而第二个中间没有实现标记 unsync，那么就不妙
+      - [ ] set_spte 的参数 can_unsync:
+        - [ ] mmu_set_spte : true
+        - [ ] paging64_sync_page: false : 被 sync 之后，默认都是保护的，然后在下一次写的时候进行可以 unsync ?
+  - mark_unsync(spte)
 
 mmu_spte_update : spte 指向的是物理地址，对于 high level 的 shadow page table，其中的 spte 指向是下一级的 shadow page table
 
@@ -1838,20 +1844,19 @@ struct kvm_page_track_notifier_node {
   - [ ] for_each_gfn_indirect_valid_sp : 找到和该 gfn 关联的 shadow page, 强调一次，shadow 和 guest page table 总是关联这的，parent guest page table 可以定位 child page table 的 gfn，根据这个 gfn, 可以定位 child shadow page table
       - [ ] 通过 gpa 就是正在写的 guest page table，从而计算出需要同步更新的 spte 是谁，更新的内容应该是 guest 写入的 page table **关联** 的 shadow page table 的 gfn
       - [ ] 如果 emulator_write_phys 总是调用到 kvm_mmu_pte_write 的话，也就是只要是 emulate 的 write 就是为了实现 shadow page 的更新 ?
-  - [ ] mmu_pte_write_new_pte :
+  - [ ] mmu_pte_write_new_pte : 进一步调用的前提是 `sp->role.level == PG_LEVEL_4K`
       - [ ] paging64_update_pte
         - [ ] paging64_prefetch_gpte
           - [ ] pte_prefetch_gfn_to_pfn : 这个 pfn 是 host 物理地址, check 是如何使用的。
           - [ ] paging64_protect_clean_gpte : 应该跟踪一下 pte_access 的作用
           - [ ] mmu_set_spte 
               - [ ] drop_spte
-              - [ ] 从这里看，pfn 是 shadow page table 的物理地址, 但是上面看又是 guest page table 的物理地址，而函数 pte_prefetch_gfn_to_pfn 指出这就是, 的确，如果是 level 4 的时候，如果 guest pt 和 spt 的相同项目指向的位置相同，此时， guest 指向哪里，那么 shadow 指向哪里
-              - [ ] 如果是 non-leaf 的 spt, 其指向是 gfn 关联的
-              - [ ] 似乎需要注意一下判断条件，只有在 level == PG_LEVEL_4K, 才会保证 spt 和 gpt 中间的项目指向的内容相同
               - [ ] 变量 : was_rmapped
                   - [x] rmap_add : 一个 gfn 可能被 超过 1000 个 spte 映射
                   - [ ] rmap_recycle ==> kvm_unmap_rmapp ==> pte_list_remove ==> mmu_spte_clear_track_bits : 将 spte 的内容清空。rmap 在说，如果你(spte)指向了我（gfn），那么就存在 rmap，当需要 gfn 发生改动的时候，指向我的 gfn 都是需要修改的，虽然你应该指向我，只要你的内容是空，可以通过 page fault 最后指向此处。
   - [ ] 为什么参数是物理地址，从虚拟地址到物理地址的装换是谁来操作的 ?
+  - [x] 更新的策略是 : 如果是 level 4，那么和 pfn 指向相同的位置，否则 invalid 该 spte 下面关联的所有的 shadow page table
+      - [x] kvm_mmu_get_page 分别调用 `rmap_write_protect` 和 `account_shadowed`, 对于 leaf 和 nonleaf 都是加以保护了
 - [ ] 从 `FNAME(page_fault)` 的注释看，调用该函数的原因中没有由于 write protection 的存在
     - [ ] 通过 async_pf 从 gfn 得到其 host 物理页面。虽然 guest 自己处理自己的 page frame, 但是分配了 gfn 之后，还是需要对应的 host 物理页面，我猜测其中还是利用 gup 实现的功能
     - [ ] set_spte 的结果说， Write protection  is responsibility of mmu_get_page / kvm_sync_page.
@@ -1859,6 +1864,7 @@ struct kvm_page_track_notifier_node {
     - [ ] 保护只能靠 rmap 保护，找到来映射 gpt gfn 的 spt，设置保护，在 page fault 的时候，如果检查到这是 track 的 page，加以同步
     - [ ] 实际上，由于 rmap 保护，将 shadow page 标记为 unsync，之后再 sync, 也即是通过 page track 实现同步修改，而 sync 实现异步修改
     - [ ] 重新理解一下 cow, 为什么可以 mmap 一个没有访问权限的文件并且加以读去，而且还会进入到 gup 中间。
+
 
 
 - [ ] 似乎只是完成对于 guest page table 的模拟，但是 shadow page table 没有被同步
@@ -2032,7 +2038,11 @@ but what we currently interests in  is `init_kvm_tdp_mmu`
 - kvm_mmu_commit_zap_page
 - kvm_mmu_prepare_zap_page
 
-
 ## ref
 - [ ] https://events.static.linuxfound.org/sites/events/files/slides/Guangrong-fast-write-protection.pdf
 - [ ]  https://www.linux-kvm.org/images/3/33/KvmForum2008%24kdf2008_15.pdf
+
+## restore
+1. fast page fault:
+    1. 文档 https://www.kernel.org/doc/html/latest/virt/kvm/locking.html
+    2. 李强的相关章节
