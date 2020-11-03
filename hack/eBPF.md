@@ -1,0 +1,183 @@
+# eBPF
+- [ ] 去掉 eBPF 的相关的所有的内容
+
+- [ ] [Dive into BPF: a list of reading material](https://qmonnet.github.io/whirl-offload/2016/09/01/dive-into-bpf/) : may be read all articles of the author
+
+为什么使用eBPF ?[^1]
+3. 为了向内核中间添加功能，如果修改kernel source code，需要等到用户更新内核。如果使用kernel module，每次内核升级，都需要发布对应的kernel module.
+1. eBPF 是 100% modular and composable 的
+2. eBPF 可以实现 hotpatching 
+
+1. safety & security : verifier 保证内核中间发
+2. continuous delivery : 程序可以动态修改
+3. performance : JIT compiler ensures native execution performance (为什么JIT可以实现 native f)
+
+bpf 可以加入的位置 : kprobe uprobe syscall fentry/fexit, some network related stuff
+
+eBPF map 的作用，eBPF helper ，function calls 
+
+eBPF 的升级内容:[^2]
+1. 64bit 的寄存器
+2. 寄存器数量从2个到10个
+3. BPF_CALL : Plus, a new BPF_CALL instruction made it possible to call in-kernel functions cheaply.
+4. The ease of mapping eBPF to native instructions lends itself to just-in-time compilation, yielding improved performance.
+
+eBPF 的作用不仅仅限于 packet filter 的功能，其实可以动态的 debug 内核:
+eBPF is also useful for debugging the kernel and carrying out performance analysis; 
+programs can be attached to tracepoints, kprobes, and perf events.
+Because eBPF programs can access kernel data structures, developers can write and test new debugging code without having to recompile the kernel. The implications are obvious for busy engineers debugging issues on live, running systems. It's even possible to use eBPF to debug user-space programs by using Userland Statically Defined Tracepoints.
+
+
+eBPF verifier :
+1. 对于CFG进行DFS，保证其中不会出现递归，死循环，以及不可执行的代码
+2. 对于每条指令都进行模拟执行，保证程序的执行总是正常的
+3. secure mode 下，不可以使用指针运算
+4. Registers with uninitialized contents (those that have never been written to) cannot be read;
+5. *The contents of registers R0-R5 are marked as unreadable across functions calls by storing a special value to catch any reads of an uninitialized register.* 什么叫做，R0 R5 之间
+6. Similar checks are done for reading variables on the stack and to make sure that no instructions write to the read-only frame-pointer register.
+
+Lastly, the verifier uses the eBPF program type (covered later) to restrict which kernel functions can be called from eBPF programs and which data structures can be accessed.
+
+
+```c
+int bpf(int cmd, union bpf_attr *attr, unsigned int size);
+```
+1. The `bpf_attr` union allows data to be passed between the kernel and user space;
+2. the exact format depends on the `cmd` argument. 
+3. The `size` argument gives the size of the bpf_attr union object in bytes.
+
+cmd 类型包括:
+1. 修改用于eBPF程序和kernel或者user space 沟通的 eBPF map
+2. 将 eBPF 附着于特定的位置(socket file descriptor)
+
+Though there appear to be many different commands, they can be broken down into three categories:
+1. commands for working with eBPF programs,
+2. working with eBPF maps, 
+3. or commands for working with both programs and maps (collectively known as objects).
+
+eBPF map : Each map is defined by four values: a type, a maximum number of elements, a value size in bytes, and a key size in bytes.
+
+如何使用 BPF:
+1. 使用 Clang -march=bpf 编译 或者手动写汇编代码
+2. samples/bpf/ 提供了很多测试程序 
+3. libpf 库 For example, the high-level flow of an eBPF program and user program using libbpf might go something like:
+  - Read the eBPF bytecode into a buffer in your user application and pass it to bpf_load_program().
+  - The eBPF program, when run by the kernel, will call bpf_map_lookup_elem() to find an element in a map and store a new value in it.
+  - The user application calls bpf_map_lookup_elem() to read out the value stored by the eBPF program in the kernel.
+这些测试程序的问题在于，需要使用 bpf 程序需要在 kernel source tree 中间编译，BCC 处理掉这个问题。
+
+eBPF 的关键工具 : BCC 介绍了基本使用规则 [^3]
+The project consists of a toolchain for writing, compiling, and loading eBPF programs, along with example programs and battle-hardened tools for debugging and diagnosing performance issues.
+
+eBPF 更多的使用 : BCC 介绍处理用户层的代码 [^4]
+// TODO 上面的代码操作一下
+
+// TODO 关于 BPF 的问题在于，还是无法理解为什么实现监控
+
+// TODO 一些高级话题 : [^6]
+
+brendangregg 写的关于 eBPF 的内容: [^12]
+1. eBPF 的消息来源:
+kprobes: kernel dynamic tracing.
+uprobes: user level dynamic tracing.
+tracepoints: kernel static tracing.
+perf_events: timed sampling and PMCs.
+
+2. eBPF 将获取到的消息导出用户层的方法:
+The BPF program has two ways to pass measured data back to user space: either per-event details, or via a BPF map. BPF maps can implement arrays, associative arrays, and histograms, and are suited for passing summary statistics.
+
+3. 如何利用 bcc 进行编程:
+// TODO 挺有意思的东西
+http://www.brendangregg.com/ebpf.html#frontends
+
+## BPF Performance Tools
+也许分析其中的目录就是非常足够的吧，知道一共存在什么东西!
+https://search.safaribooksonline.com/book/operating-systems-and-server-administration/linux/9780136588870
+
+## bpftrace
+建立在 bcc 上方的易用工具，手动编译真简单呀!
+https://github.com/iovisor/bpftrace 
+
+bcc 也提供了各种工具，包括 trace argdist 以及 funccount 等等
+
+到底可以实现什么 ?
+
+
+## bcc
+
+
+#### tutorial
+
+Before using bcc, you should start with the Linux basics. One reference is the [Linux Performance Analysis in 60s](http://techblog.netflix.com/2015/11/linux-performance-analysis-in-60s.html) post, which covers these commands:
+
+1. uptime
+1. dmesg | tail
+1. vmstat 1
+1. mpstat -P ALL 1
+1. pidstat 1
+1. iostat -xz 1
+1. free -m
+1. sar -n DEV 1
+1. sar -n TCP,ETCP 1
+1. top
+
+> TODO 传统的分析工具都是从 /proc 中间读取数据的
+
+分析各种 domain specific 工具:
+1. runqlat
+2. profile 暂时不知道如何使用
+
+然后分析三个 generic 的工具:
+argdist
+trace : 
+funccount
+
+> TODO
+
+
+#### tutorial bcc python developers
+kprobe uprobe USDT SDT perf trace 等等，但是其实过于强调其中的
+
+https://github.com/iovisor/bcc/blob/master/docs/tutorial_bcc_python_developer.md
+      |
+     \|/
+记录一下问题:
+1. 为什么 bpf 不能直接访问，而是需要这种封装函数
+```c
+    data.pid = bpf_get_current_pid_tgid();
+    data.ts = bpf_ktime_get_ns();
+    bpf_get_current_comm(&data.comm, sizeof(data.comm));
+```
+2. 这些 macro 的含义是什么，一共存在多少种这种东西。
+```c
+BPF_HASH(last);
+BPF_PERF_OUTPUT(events); // 感觉非常神奇，似乎是 perf 提供特地的通道
+```
+
+3. uprobe 的例子非常玄乎，一个测试完全合乎例子，一个没有测试
+
+#### reference guide
+C 语言总是需要 lua, cpp 或者 python 的辅助，将 eBPF 程序插入到其中其中，划分为 BPF C 和 bcc python
+
+1. 插入的位置
+2. 输出数据
+3. 从内核中间获取数据
+4. MAPS 为什么发要定义这么多的类型
+
+python : 各种 attach 函数， 分析 map 以及输出
+
+## todo
+- [ ] https://github.com/dippynark/bpf-sockmap
+- [ ]  bpftrace -e 'BEGIN { printf("Hello, World!\n"); }' BEGIN 是什么意思，是否存在类似的工具
+- [ ] bpftrace -e 'tracepoint:syscalls:sys_enter_nanosleep { printf("%s is sleeping.\n", comm); }'
+      - [ ]  参数 comm 是什么指定的 ?
+      - [ ]  能不能直接 sys_enter_nanosleep 不要前面的前缀
+      - [ ]  sudo bpftrace -e 'tracepoint:syscalls:sys_enter_nanosleep { printf("%s is sleeping ==> %d.\n", comm, __syscall_nr); }' 居然不知道参数 __syscall_nr，但是
+
+- [ ] https://css.csail.mit.edu/jitk/ : BPF 的文章
+
+[^1]: [Outlook : future of eBPF](https://docs.google.com/presentation/d/1AcB4x7JCWET0ysDr0gsX-EIdQSTyBtmi6OAW7bE0jm0/preview?slide=id.g704abb5039_2_106)
+[^2]: [A thorough introduction to eBPF](https://lwn.net/Articles/740157/)
+[^3]: [An introduction to the BPF Compiler Collection](https://lwn.net/Articles/742082/)
+[^12]: [Linux Extended BPF (eBPF) Tracing Tools](http://www.brendangregg.com/ebpf.html)
+[^6]: [Some advanced BCC topics](https://lwn.net/Articles/747640/)

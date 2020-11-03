@@ -1,3 +1,10 @@
+# 从 Dune 到 kvm : 虚拟化原理介绍
+
+## 内存虚拟化
+
+## 中断虚拟化
+
+
 ## Dune
 http://dune.scs.stanford.edu/
 
@@ -300,6 +307,8 @@ pgroot 是 mmap 简单的创建一个 page, 是 GVA
 - [ ] 为什么 do_dune_enter 需要使用 汇编，直接 ioctl 不香吗 ?
 
 - [ ] ept.c 中间处理过 A/D bit
+
+- [ ] 
 
 ## 其他的启发
 - unikernel 的核心目的是什么 ? 一个进程一个内核吗 ?

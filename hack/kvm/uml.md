@@ -1,0 +1,2 @@
+- [ ] 官方文档 : https://www.kernel.org/doc/html/latest/virt/uml/user_mode_linux.html
+- [ ] https://stackoverflow.com/questions/32303095/how-does-the-user-mode-kernel-in-uml-interface-with-the-underlying-kernel-on-the

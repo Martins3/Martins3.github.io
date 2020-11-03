@@ -1881,9 +1881,11 @@ Part of the problem comes down to the fact that get_user_pages() does not perfor
 
 
 - [ ] 猜测 gup.c 的主要问题是处理各种 lock
+  - 实际上现在只有 2000 多行的样子，根本吓不到人
   - [ ] 处理 hugepage 的位置
   - [x] 实际上做事的位置在于 `_get_user_pages`
-
+  - [ ] 部分位置处理了 mlock 的依赖 : populate_vma_page_range 等
+  - [ ] 处理 vsyscall 机制
 
 `_get_user_pages` 分析:
 1. 确定 vma
@@ -1896,6 +1898,7 @@ Part of the problem comes down to the fact that get_user_pages() does not perfor
   - [ ] 总结一下，到底那些 memory 的 refcount 的作用
   - [ ] get_page 会一定导致 user page 不可以 swap out 吗 ?
 
+- [ ] 为什么在 dune 中间 gup 会触发 mmu_notifier ?
 ```
 [25556.799013] Hardware name: Timi TM1701/TM1701, BIOS XMAKB5R0P0603 02/02/2018
 [25556.799013] Call Trace:
@@ -1914,7 +1917,6 @@ Part of the problem comes down to the fact that get_user_pages() does not perfor
 [25556.799051]  ? ept_lookup_gpa.isra.0+0xb2/0x1a0 [dune]
 [25556.799053]  vmx_do_ept_fault+0xe3/0x450 [dune]
 ```
-
 
 ## madvise && fadvise
 madvise 告知内核该范围的内存如何访问

@@ -21,12 +21,22 @@ https://github.com/rootsongjc/awesome-cloud-native#api-gateway
 
 dockerpi : docker 作为一个容器，为什么可以实现跨架构, 因为里面还安装了一个 qemu !
 
+
 ## 不知道干什么的东西
 https://www.vagrantup.com/intro/getting-started/up : 基于虚拟化的环境开发，那么，所以和 docker 的关系是什么 ?
 https://github.com/weaveworks/footloose : 让 docker 类似虚拟机，看来虚拟机和 containers 的区别不仅仅如此啊
 
 ## KVM
 
+
+## 文摘
+[ali 云计算 的自我推广](https://mp.weixin.qq.com/s/5WKDZfzIQE3QB-Io1lmG-w)
+
+> 对于service mesh，我们采用基于eBPF的sockmap进行加速。sockmap允许将TCP连接之间的数据转发过程卸载到内核中，从而绕过复杂的Linux网络协议栈直接在内核完成socket之间的数据转发操作，减少了上下文切换以及用户态和内核态之间的数据拷贝操作，优化TCP连接之间socket数据转发的性能。
+
+> 首先对于9pfs作为安全容器rootfs的问题，我们建议采用virtio-fs替换9pfs，
+
+https://virtio-fs.gitlab.io/ : /home/maritns3/core/54-linux/fs/fuse/virtio_fs.c : 只有 1000 多行，9pfs 也很小，这些东西有什么特殊的地方吗 ?
 
 ## IOS
 我记得是存在好几个程序的:

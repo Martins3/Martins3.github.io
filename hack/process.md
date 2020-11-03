@@ -60,6 +60,9 @@
 - [cpu](#cpu)
 - [syscall](#syscall)
     - [x86 syscall(merge)](#x86-syscallmerge)
+    - [syscall int](#syscall-int)
+    - [syscall vsyscall](#syscall-vsyscall)
+    - [syscall getcpu](#syscall-getcpu)
 - [daemon](#daemon)
 - [user group](#user-group)
 - [smp](#smp)
@@ -1468,6 +1471,20 @@ some x86 kernel notes:[^5]
 ## exec
 说实话，都是 快速的阅读 程序员的自我修养 ，现在对于 elf 格式始终。。。。
 
+```c
+static struct linux_binfmt elf_format = {
+	.module		= THIS_MODULE,
+	.load_binary	= load_elf_binary,
+	.load_shlib	= load_elf_library,
+	.core_dump	= elf_core_dump,
+	.min_coredump	= ELF_EXEC_PAGESIZE,
+};
+```
+- [ ] 
+search_binary_handler ==> elf_format::load_binary ==> load_elf_binary ==> arch_setup_additional_pages
+
+- [ ] envp
+
 ## wait
 - [ ] read section one of chapter 26 before start analyze kernel code here
 /home/maritns3/core/vn/os/tlpi/2/tlpi-chapter-26.md
@@ -1748,7 +1765,24 @@ https://superuser.com/questions/1217454/how-do-you-control-thread-affinity-acros
 2. 更进一步，/proc/cpuinfo 中的每一个含义是什么，数据从哪里导出的
 
 ## syscall
-[What did hardware do in  syscall](https://www.felixcloutier.com/x86/syscall)
+[What did hardware do in syscall](https://www.felixcloutier.com/x86/syscall)
+
+[讲解极为清楚](http://arthurchiao.art/blog/system-call-definitive-guide-zh/)
+
+
+
+这定义在 x86-64 ABI 的 A.2.1 小节:
+
+> User-level applications use as integer registers for passing the sequence %rdi, %rsi, %rdx, %rcx, %r8 and %r9. The kernel interface uses %rdi, %rsi, %rdx, %r10, %r8 and %r9.
+> A system-call is done via the syscall instruction. The kernel destroys registers %rcx and %r11.
+> The number of the syscall has to be passed in register %rax.
+> System-calls are limited to six arguments,no argument is passed directly on the stack.
+> Returning from the syscall, register %rax contains the result of the system-call. A value in the range between -4095 and -1 indicates an error, it is -errno.
+> Only values of class INTEGER or class MEMORY are passed to the kernel.
+
+- [ ] 现在只有一个小问题，r11 是不是 syscall 指令自动将 user 的 eflags 保存到其中的，至少 rcx 是的
+
+
 
 
 [^25] The two modes are distinguished by the `dpl` (descriptor privilege level) field in segment register cs. dpl=3  in cs for user-mode, and zero for kernel-mode (not sure if this "level" equivalent to so-called ring3 and ring0).
@@ -1756,7 +1790,8 @@ In real mode kernel should handle the segment registers carefully, while in x86-
 And another difference is the permission setting in page tables.
 
 
-- [ ] how kernel transfer sys_call_ptr_t's parameters to, code below is an example.
+- [x] how kernel transfer sys_call_ptr_t's parameters to, code below is an example.
+    - The answer lies in `SYSCALL_DEFINE5`
 ```c
 typedef asmlinkage long (*sys_call_ptr_t)(const struct pt_regs *);
 
@@ -1782,10 +1817,6 @@ __SYSCALL_64(3, __x64_sys_close, )
 
 #define __SYSCALL_64(nr, sym, qual) [nr] = sym,
 ```
-
-
-
-
 
 
 
@@ -1859,7 +1890,8 @@ COLLECT_GCC_OPTIONS='-v' '-mtune=generic' '-march=x86-64'
 关于 syscall 的参数传递，可以 system V abi 的内容: [^23] [^24] (其实只有 100 多页)
 
 函数的 convention 和 syscall 的 convention 不同，所以需要调整一下:
-https://github.com/bminor/glibc/blob/master/sysdeps/unix/sysv/linux/x86_64/syscall.S
+[同时展示 user 和 kernel 的调用关系](https://github.com/bminor/glibc/blob/master/sysdeps/unix/sysv/linux/x86_64/syscall.S)
+这段汇编 stub 代码非常酷，因为它同时展示了两个调用约定：传递给这个函数的参数 符合 用户空间调用约定，然后将这些参数移动到其他寄存器，使得它们在通过 syscall 进入内核之前符合 内核调用约定。
 
 #### x86 syscall(merge)
 https://david942j.blogspot.com/2018/10/note-learning-kvm-implement-your-own.html : 通过 cs 来区分 dpl
@@ -1886,10 +1918,86 @@ TOOD :
 1. `__kernel_vsyscall` 还是调用 sysenter 之类的，那么有什么意义啊
 2. 为什么 syscall, sysenter, int 0x80 的性能区别的原因是什么 ?
 
+#### syscall int
+idt_setup_traps ==> def_idts ==> entry_INT80_compat
+
+```c
+/*
+ * 32-bit legacy system call entry.
+ *
+ * 32-bit x86 Linux system calls traditionally used the INT $0x80
+ * instruction.  INT $0x80 lands here.
+ *
+ * This entry point can be used by 32-bit and 64-bit programs to perform
+ * 32-bit system calls.  Instances of INT $0x80 can be found inline in
+ * various programs and libraries.  It is also used by the vDSO's
+ * __kernel_vsyscall fallback for hardware that doesn't support a faster
+ * entry method.  Restarted 32-bit system calls also fall back to INT
+ * $0x80 regardless of what instruction was originally used to do the
+ * system call.
+ *
+ * This is considered a slow path.  It is not used by most libc
+ * implementations on modern hardware except during process startup.
+ *
+ * Arguments:
+ * eax  system call number
+ * ebx  arg1
+ * ecx  arg2
+ * edx  arg3
+ * esi  arg4
+ * edi  arg5
+ * ebp  arg6
+ */
+SYM_CODE_START(entry_INT80_compat)
+```
+- [ ] int 80 处理了特殊的事情，相对于其他的 int 
+
+#### syscall vsyscall
+
+跟踪 sysenter 工作的逻辑是一项相当复杂的工作，因为和软中断不同，sysenter 并 不保存返回地址。内核在调用 sysenter 之前所做的工作随着内核版本在不断变化（已经 变了，接下来在 Bugs 小节会看到）。
+
+为了消除将来的变动带来的影响，用户程序使用一个叫 `__kernel_vsyscall` 的函数，它在内核实现，但每个用户进程启动的时候它会映射到用户进程。这颇为怪异，它 是内核函数，但在用户空间运行。其实，`__kernel_vsyscall` 是一种被称为虚拟动态共享库（virtual Dynamic Shared Object, vDSO）的一部分，这种技术允许在用户空间 执行内核代码。我们后面会深入介绍 vDSO 的原理和用途。现在，先看 `__kernel_vsyscall` 的实现。
+
+[getauxval() and the auxiliary vector](https://lwn.net/Articles/519085/)
+> There are many mechanisms for communicating information between user-space applications and the kernel. 
+> 1. syscall
+> 2. pseudo fs
+> 3. signal
+> 4. These include the Linux-specific `netlink` sockets and user-mode helper features.
+> 5. The auxiliary vector, a mechanism for communicating information from the kernel to user space
+
+
+
+#### syscall getcpu
+
+`__vdso_getcpu` ==> vdso_read_cpunode
+
+- [ ] `__vdso_getcpu` 的调用者是谁 ?
+- [ ] 所以，在进入 dune 之后，可以正确的使用 gdt ? 似乎 gdt 被错误的清理了 ?
+- [ ] 为什么可以通过设置 got 实现 get node 和 cpu id
+- [ ] 存在完全不同的方法，而且绝对不在一个位置
+
+
+kernel/sys.c
+```c
+SYSCALL_DEFINE3(getcpu, unsigned __user *, cpup, unsigned __user *, nodep,
+		struct getcpu_cache __user *, unused)
+{
+	int err = 0;
+	int cpu = raw_smp_processor_id();
+
+	if (cpup)
+		err |= put_user(cpu, cpup);
+	if (nodep)
+		err |= put_user(cpu_to_node(cpu), nodep);
+	return err ? -EFAULT : 0;
+}
+```
+
+
 
 ## daemon
 systemctl 利用 /etc/init.d/cassandra 的来启动，还是很有意思的
-
 
 ## user group
 了解设计思想，然后阅读代码

@@ -9,22 +9,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-void print_maps() {
-  FILE *map;
-  map = fopen("/proc/self/maps", "r");
-
-  char line[512];
-
-  while (!feof(map)) {
-    if (fgets(line, 512, map) == NULL)
-      break;
-    printf("%s", line);
-  }
-}
-
 ssize_t my_write(int fd, const void *buf, size_t size) {
-  print_maps();
-
   ssize_t ret;
   asm volatile("syscall"
                : "=a"(ret)
@@ -36,6 +21,6 @@ ssize_t my_write(int fd, const void *buf, size_t size) {
 
 int main(int argc, char *argv[]) {
   size_t ret = my_write(1, "12345", 3);
-  printf("\n--->%ld", ret);
+  printf("return is %ld", ret);
   return 0;
 }

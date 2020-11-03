@@ -2039,10 +2039,24 @@ but what we currently interests in  is `init_kvm_tdp_mmu`
 - kvm_mmu_prepare_zap_page
 
 ## ref
-- [ ] https://events.static.linuxfound.org/sites/events/files/slides/Guangrong-fast-write-protection.pdf
 - [ ]  https://www.linux-kvm.org/images/3/33/KvmForum2008%24kdf2008_15.pdf
 
 ## restore
 1. fast page fault:
     1. 文档 https://www.kernel.org/doc/html/latest/virt/kvm/locking.html
     2. 李强的相关章节
+    3. https://events.static.linuxfound.org/sites/events/files/slides/Guangrong-fast-write-protection.pdf
+    4. 再次从 mmu notifier 入手，理解其中的基本问题
+    5. 理解这一个注释的含义
+```
+/*
+ * Fetch a shadow pte for a specific level in the paging hierarchy.
+ * If the guest tries to write a write-protected page, we need to
+ * emulate this operation, return 1 to indicate this case.
+ */
+static int FNAME(fetch)(struct kvm_vcpu *vcpu, gpa_t addr,
+			 struct guest_walker *gw,
+			 int write_fault, int max_level,
+			 kvm_pfn_t pfn, bool map_writable, bool prefault,
+			 bool lpage_disallowed)
+```

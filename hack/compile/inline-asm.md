@@ -4,6 +4,8 @@
 
 - [ ] https://www.kernel.org/doc/html/latest/asm-annotations.html : kernel doc for 
 
+- [ ] really worth reading : https://www.ibiblio.org/gferg/ldp/GCC-Inline-Assembly-HOWTO.html
+
 ## inline assembly
 
 #### eg 1
@@ -74,6 +76,5 @@ too basic ?
 ### constraints 
 [](https://stackoverflow.com/questions/3323445/what-is-the-difference-between-asm-asm-and-asm)
 
-
 ## Awesome
-https://www.agner.org/optimize/
+- [ ] https://www.agner.org/optimize/

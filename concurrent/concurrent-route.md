@@ -1,14 +1,15 @@
 1. 底层架构上，cache 一致性, memory fence !(量化，小册子)
-
 2. C++ 并发编程 和 Rust 并发编程 : 写一个 blog 对比一下。
-
 3. perf
-
 4. 将之前阅读 the art of concurrent programming 整理一下 !
+
+## 正经的教材
+https://arxiv.org/pdf/1701.00854.pdf
 
 ## 阅读的blog
 
 https://begriffs.com/posts/2020-03-23-concurrent-programming.html?hn=1
+https://www.datadoghq.com/blog/engineering/introducing-scipio/
 
 ## 资源
 
@@ -31,6 +32,3 @@ https://github.com/taskflow/taskflow
 4. 各种设计模式 比如 Java 并发编程
 
 5. 然后列举各种例子，内核 malloc 等等为多核做出的努力
-
-
-
