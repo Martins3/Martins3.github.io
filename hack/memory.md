@@ -22,9 +22,11 @@
     - [compact deferred](#compact-deferred)
 - [hugetlb](#hugetlb)
 - [compound page](#compound-page)
-- [transparent huge page](#transparent-huge-page)
-    - [thp admin manual](#thp-admin-manual)
-    - [khugepaged](#khugepaged)
+- [THP](#thp)
+    - [THP admin manual](#thp-admin-manual)
+    - [THP kernel](#thp-kernel)
+    - [THP khugepaged](#thp-khugepaged)
+    - [THP split](#thp-split)
 - [page cache](#page-cache)
 - [address_space](#address_space)
 - [address_space_operations](#address_space_operations)
@@ -358,6 +360,8 @@ static bool is_refcount_suitable(struct page *page)
 
 
 ## page fault
+- [ ] vmf_insert_pfn : 给驱动使用的直接，在 vma 连接 va 和 pa 
+
 [TO BE CONTINUE](https://www.cnblogs.com/LoyenWang/p/12116570.html), this is a awesome post.
 
 handle_pte_fault 的调用路径图:
@@ -748,6 +752,8 @@ static void * do_mapping(void *base, unsigned long len)
 }
 ```
 
+- [ ] 
+
 #### brk
 
 - [x] what's `[heap]` in `cat /proc/self/maps`
@@ -1079,6 +1085,7 @@ Further, there are important differences between shared and private mappings dep
 2. include/asm-generic/hugetlb.h : 如果架构含有关于 page table 的不同处理，
 那么就可以使用
 
+- [ ] 了解一下，从 mmap 的进入到 hugetlb
 ## compound page 
 - [An introduction to compound pages](https://lwn.net/Articles/619514/)
 > A compound page is simply a grouping of two or more physically contiguous pages into a unit that can, in many ways, be treated as a single, larger page. They are most commonly used to create huge pages, used within hugetlbfs or the transparent huge pages subsystem, *but they show up in other contexts as well*. *Compound pages can serve as anonymous memory or be used as buffers within the kernel*; *they cannot, however, appear in the page cache, which is only prepared to deal with singleton pages.*
@@ -1107,12 +1114,14 @@ Further, there are important differences between shared and private mappings dep
 
 - [] read the article
 
-## transparent huge page
+## THP
 - [ ] PageDoubleMap
 - [ ] THP only support PMD ? so can it support more than 2M space (21bit) ?
-
 - [ ] https://gist.github.com/shino/5d9aac68e7ebf03d4962a4c07c503f7d, check references in it
-
+- [ ] 提供的硬件支持是什么 ?
+    - [ ] 除了在 pml4 pud pmd 的 page table 上的 flags
+        - [ ] /sys/kernel/mm/transparent_hugepage/hpage_pmd_size 的含义看，实际上，内核只是支持一共大小的 hugepage
+    - [ ] 需要提供 TLB 知道自己正在访问虚拟地址是否被 hugetlb 映射 
 
 transparent hugepage 和 swap 是相关的
 使用 transparent hugepage 的原因:
@@ -1120,15 +1129,16 @@ transparent hugepage 和 swap 是相关的
 2. page fault 的次数更少，可以忽略不计
 3. hugepage 的出现让原先的 page walk 的路径变短了
 
-1. 居然需要处理 swap
+几个 THP 需要考虑的核心问题:
+1. swap
 2. reference 的问题
 3. split 和 merge
 
 
-#### thp admin manual
+#### THP admin manual
 [用户手册](https://www.kernel.org/doc/html/latest/admin-guide/mm/transhuge.html)
 
-The THP behaviour is controlled via sysfs interface and using madvise(2) and prctl(2) system calls.
+The THP behaviour is controlled via `sysfs` interface and using `madvise(2)` and `prctl(2)` system calls.
 
 - [ ] how madvise and prctl control the THP
 
@@ -1146,16 +1156,46 @@ THP 相对于 hugetlbfs 的优势:
 
 interface in sysfs :
 1. /sys/kernel/mm/transparent_hugepage : always madvise never
-2. /sys/kernel/mm/transparent_hugepage/defrag : always defer defer + madvise  madvise never
+2. /sys/kernel/mm/transparent_hugepage/defrag : always defer defer + madvise madvise never
 3. You can control hugepage allocation policy in tmpfs with mount option huge=. It can have following values: always never advise deny force
 
-- [ ] THP has to defrag pages, so check the compaction.c and find out how thp with it !
+- [ ] 应该按照手册，将手册中间的说明在内核中间一个个的找到
+  - [ ] /sys/kernel/mm/transparent_hugepage
+    - [ ] always 指的是任何位置都需要 hugepage 处理吗?
+  - [ ] /sys/kernel/mm/transparent_hugepage/defrag 的 always 无法理解，或者说，什么时候应该触发 defrag, 不是分配的时候就是决定了吗 ?
+- [ ] THP has to defrag pages, so check the compaction.c and find out how thp deal with it !
   - [ ] how defrag wake kcompactd ?
 
-内核态分析:
-透明的性质在于 `__handle_mm_fault` 中间就开始检查是否可以
-由于 hugepage 会修改 page walk ，所以 pud_none 和 `__transparent_hugepage_enabled`
+- [x] mmap 添加上 hugepage 的参数，是不是几乎等价于普通 mmap，然后 madvice
+  - 不是，一个是 madvise， 一个是 thp
 
+#### THP kernel
+- mmap 和配合 hugetlb 使用的
+
+- [ ] huge_memory.c 用于处理 split 和 各种参数
+- [ ] khugepaged.c 用于 scan page 将 base page 转化为 hugepage
+
+- [ ] 本 section 分析一般的 kernel 问题
+
+- [ ] 内核态分析: 透明的性质在于 `__handle_mm_fault` 中间就开始检查是否可以 由于 hugepage 会修改 page walk ，所以 pud_none 和 `__transparent_hugepage_enabled`
+  - [ ] 检查更多的细节
+
+
+- [ ] 从 madvise 到启动 THP
+    - [ ] hugepage_vma_check : 到底那些 memory 不适合 thp
+    - [x] `__khugepaged_enter` : 将所在的 mm_struct 放到 list 上，等待之后 khugepaged 会将该区域清理赶紧
+
+- [ ] collapse_file : 处理 page cache / shmem / tmpfs
+  - [ ] *caller*
+      - [ ] khugepaged_scan_file
+          - [ ] khugepaged_scan_mm_slot
+
+- [ ] /sys/kernel/mm/transparent_hugepage 的真正含义 ?
+    - [x] khugepaged_enter : 这是判断是否将该区域用于 transparent 的开始位置，[Transparent huge pages for filesystems](https://lwn.net/Articles/789159/) 中来看，现在支持 THP 只有 transparent hugepage 和 tmp memory 了
+        - [x] do_huge_pmd_anonymous_page : 在 page fault 的时候，会首先进行 hugepage 检查，如果是 always, 那么**所有的 vma 都会被转换为 transparent hugepage**
+            - [x] create_huge_pmd <= `__handle_mm_fault`
+
+- [ ] 好吧，transparent hugepage 只是支持 pmd(从 /proc/meminfo 的 HugePagesize 和 /sys/kernel/mm/transparent_hugepage/hpage_pmd_size)，但是实际上 pud 也是支持的.
 
 关键问题 A : do_huge_pmd_anonymous_page
 1. 检查是否 vma 中间是否可以容纳 hugepage
@@ -1181,7 +1221,6 @@ khugepaged.c 中间的 hugepage 守护进程的工作是什么 ?
 - [ ] page_trans_huge_mapcount
 - [ ] total_mapcount
 
-
 [Transparent huge pages for filesystems](https://lwn.net/Articles/789159/)
 
 > It is using the [Binary Optimization and Layout Tool (BOLT)](https://github.com/facebookincubator/BOLT) to profile its code in order to identify the hot functions. Those functions are collected up into an 8MB region in the generated executable.
@@ -1192,8 +1231,8 @@ khugepaged.c 中间的 hugepage 守护进程的工作是什么 ?
 // ------------- split huge page ---------------- end
 
 
-#### khugepaged
-- [ ] if `kcompactd` compact pages used by hugepage, and demote pages by `split_huge_page_to_list`, so what's the purpose of khugepaged ?
+#### THP khugepaged
+- [ ] if `kcompactd` compact pages used by hugepage, and defrag pages by `split_huge_page_to_list`, so what's the purpose of khugepaged ?
 
 1. /sys/kernel/mm/transparent_hugepage/enabled => start_stop_khugepaged => khugepaged => khugepaged_do_scan => khugepaged_scan_mm_slot => khugepaged_scan_pmd
 2. in `khugepaged_scan_pmd`, we will check pages one by one, if enough base pages are found,  call `collapse_huge_page` to merge base page to huge page
@@ -1201,6 +1240,49 @@ khugepaged.c 中间的 hugepage 守护进程的工作是什么 ?
 
 - [x] it seems khugepaged scan pages and collapse it into huge pages, so what's difference between kcompactd
   - khugepaged is consumer of hugepage, it's scan base pages and collapse them
+  - [ ] khugepaged 是用于扫描 base page 的 ? It’s the responsibility of khugepaged to then install the THP pages.
+
+#### THP split
+这几个文章都是讲解两种方案，很烦!
+[Transparent huge pages in the page cache](https://lwn.net/Articles/686690/)
+> Finally, a file may be used without being mapped into process memory at all, while anonymous memory is always mapped. So any changes to a filesystem to support transparent huge page mapping must not negatively impact normal read/write performance on an unmapped file.
+
+- [x] 无论是在内核态和用户态中间，一个 huge page 都是可以随意拆分的，在用户态每个人都是不同的映射。在内核态，总是线性映射，pmd page table entry 的修改其实没有任何意义。
+- [x] swap cache 的实现根本挑战在于区间的可以随意变化
+
+[Improving huge page handling](https://lwn.net/Articles/636162/)
+
+[Transparent huge page reference counting](https://lwn.net/Articles/619738/)
+> In many other situations, Andrea placed a call to split_huge_page(), a function which breaks a huge page down into its component small pages. 
+
+> In other words, if split_huge_page() could be replaced by a new function, call it split_huge_pmd(), that would only split up a single process's mapping of a huge page, code needing to deal with individual pages could often be accommodated while preserving the benefits of the huge page for other processes. But, as noted above, the kernel currently does not support different mappings of huge pages; all processes must map the memory in the same way. This restriction comes down to how various parameters — reference counts in particular — are represented in huge pages.
+
+> it must be replaced by a scheme that can track both the mappings to the huge page as a whole and the individual pages that make up that huge page.
+
+
+```c
+#define split_huge_pmd(__vma, __pmd, __address)				\
+	do {								\
+		pmd_t *____pmd = (__pmd);				\
+		if (is_swap_pmd(*____pmd) || pmd_trans_huge(*____pmd)	\
+					|| pmd_devmap(*____pmd))	\
+			__split_huge_pmd(__vma, __pmd, __address,	\
+						false, NULL);		\
+	}  while (0)
+```
+
+- [ ] split_huge_page_to_list
+  - [ ] `	__split_huge_page` : 不对劲，似乎 hugepage 只是体现在 struct page 上，而没有体现在 pmd 上
+      - [x] 在 huge page 中间拆分出来几个当做其他的 page 正常使用, 虽然从中间抠出来的页面不可以继续当做内核，但是可以给用户使用
+          - [ ] 是否存在 flag 说明那些页面可以分配给用户，那些是内核 ? 
+
+
+
+- [ ] `__split_huge_pmd` : 处理各种 lock 包括 pmd_lock
+  - [ ] `__split_huge_pmd_locked`
+    - 取回 pmd_huge_pte，向其中填充 pte, 然后将 pmd entry 填充该位置
+  - `pgtable_t page::(anonymous union)::(anonymous struct)::pmd_huge_pte`
+      - [ ]  从 `__split_huge_pmd_locked` 的代码: `pgtable_trans_huge_withdraw` 看，这一个 page table 从来没有被删除过
 
 ## page cache
 1. 对于数据库，为什么需要绕过 page cache
@@ -1209,12 +1291,12 @@ https://www.scylladb.com/2018/07/26/how-scylla-data-cache-works/
 3. 当一个设备被 umount 的时候，其关联的所有的数据需要全部落盘，找到对应实现的代码！
 
 
-| aspect | page cache      | cache                    |
-|--------|-----------------|--------------------------|
-| why    | cache disk      | cache memroy             |
-| evict  | lru by software | lru by hardware          |
-| locate | radix tree      | physical address and tag |
-| dirty  | page writeback control                 | cache coherency          |
+| aspect | page cache             | cache                    |
+|--------|------------------------|--------------------------|
+| why    | cache disk             | cache memroy             |
+| evict  | lru by software        | lru by hardware          |
+| locate | radix tree             | physical address and tag |
+| dirty  | page writeback control | cache coherency          |
 
 page cache 处理:
 1. page cache 位于 vfs 和 fs 之间
@@ -1543,6 +1625,8 @@ const struct address_space_operations ext2_nobh_aops = {
 
 
 ## migrate
+- [ ] make_migration_entry()， 看来 migrate 的类型甚至可以出现在 pte 上，看来 migrate 不是简单的复制粘贴了
+
 1. migrate 并不是为了实现 numa 而设计的，其实在numa节点之间迁移并没有什么难度，
 虽然 numa 系统在访问速度上存在区别，但是寻址空间都是同一个，
 所以完成迁移的工作只是拷贝而已。
@@ -1985,6 +2069,11 @@ kmap 和 kmap_atomic 在 64bit 是不是完全相同的:
 并不是完全相同的，应该只是历史遗留产物吧 !
 
 ## page reclaim
+- [ ] 所以 shmem 的内存是如何被回收的
+    - [ ] 将 shmem 的内存当做 swap cache ?
+    - [ ] super_operations::nr_cached_objects 用于处理 transparent_hugepage
+
+
 1. 理清楚一个调用路线图
 2. mark page accessed 和 page reference
 3. 和 dirty page 无穷无尽的关联
@@ -2518,7 +2607,6 @@ When pages within a VMA are backed by a file on disk, the interface used is stra
 
 This is a very clean interface that is conceptually easy to understand but it does not help anonymous pages as there is no file backing. To keep this nice interface, Linux creates an artifical file-backing for anonymous pages using a RAM-based filesystem where each VMA is backed by a “file” in this filesystem.
 
-
 huxueshi : I think with this correct and clean perspective, we can shmem easily and use it correct misunderstandings of other parts.
 
 总结:
@@ -2537,7 +2625,6 @@ huxueshi : I think with this correct and clean perspective, we can shmem easily 
 问题4: 为什么 minfs 和 myfs 都是没有注册 vm_operations_struct 的，但是依旧可以正常的工作 ? 是不是因为 vm_operations_struct 仅仅限于 mmap 以及其延伸的 page fault ?
 > 并不是，使用的是 generic_file_mmap，所以整个机制都是采用
 
-问题5: 似乎 shmem 非常喜欢 transparent hugepage 的内容，到底是如何影响的
 问题6: sysv 和 posix 如何利用 shmem 实现的 ?
 问题7: 是不是 ramfs 和 shmem 的唯一区别在于，ramfs 不会将其数据备份到 swap 中间 ?  比较一下 ramfs 和 getpage 和 shmem_getpage !
 
@@ -2586,6 +2673,12 @@ static const struct file_operations shmem_file_operations = {
 总结，shmem_getpage 是核心，read 使用从 page cache 或者 swap cache ，甚至 swap 中间找。
 
 问题分析3: tmpfs 的文件操作，看上去和 ext2 没有什么区别啊!
+
+- [ ] 问题分析4: shmem 如何使用 transparent hugepage
+    - [ ] https://lwn.net/Articles/679804/
+
+Huge page is represented by HPAGE_PMD_NR entries in radix-tree.
+
 
 ## swap
 
@@ -2875,8 +2968,11 @@ static inline void count_vm_event(enum vm_event_item item)
 ```
 
 ## mlock
+- [ ] 那么 mlock 可以自动 让原来没有建立映射映射的虚拟地址建立映射。mlock 保证其对应的页面没有换出，如果本身就是不存在，不换出的意义在于什么地方啊!
+
 // 首先了解 mlock 的内容
 // @todo read this https://lwn.net/Articles/286485/ 完全解释了vm_flags 是VM_LOCKED 以及 unevictable 的含义
+
 
 mlock 施加影响的位置:
 1. page reclaim 和 swap 模块
@@ -3300,6 +3396,7 @@ https://people.freebsd.org/~lstewart/articles/cpumemory.pdf
 - [ ] 内存控制器的代码在哪里可以找到， 如何实现查找对应
 
 ## idel page
+- [ ] page_is_young()
 
 
 ## mprotect
@@ -3350,6 +3447,28 @@ in fact, we have already understand most of them
 
 ## rmap
 [TO BE CONTINUE](https://www.cnblogs.com/LoyenWang/p/12164683.html)
+4. 匿名页的反向映射
+- 相关数据结构体介绍
+- vma和av首次建立rmap大厦
+- fork时为子进程构建rmap大厦
+- 缺页异常时page关联av
+- 反向映射查找匿名页pte
+- 匿名页rmap情景分析
+5. 文件页的反向映射
+- 相关数据结构体介绍
+- 文件打开关联address_space
+- vma添加到文件页的rmap的红黑树
+- 缺页异常读取文件页
+- 反向映射查找文件pte
+- 文件页rmap情景分析
+6. ksm和ksm页反向映射
+- 相关数据结构体介绍
+- ksm机制剖析（上）
+- ksm机制剖析（下）
+- 反向映射查找ksm页pte
+- ksm实践
+
+
 
 ## mincore
 

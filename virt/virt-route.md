@@ -37,6 +37,7 @@ https://github.com/weaveworks/footloose : 让 docker 类似虚拟机，看来虚
 > 首先对于9pfs作为安全容器rootfs的问题，我们建议采用virtio-fs替换9pfs，
 
 https://virtio-fs.gitlab.io/ : /home/maritns3/core/54-linux/fs/fuse/virtio_fs.c : 只有 1000 多行，9pfs 也很小，这些东西有什么特殊的地方吗 ?
+https://github.com/alibaba/inclavare-containers : alibaba 果然感受到别人对于自己的不信任
 
 ## IOS
 我记得是存在好几个程序的:

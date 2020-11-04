@@ -1,4 +1,6 @@
 # KVM
+
+## TODO
 1. 看看 kvm 的 ioctl 的实现
 2. 求求了，什么时候学一下 x86 汇编吧，然后出一个利用 kvm 给别人写一个教程
 3. 在 kvm 中间运行 unikernel ?
@@ -10,6 +12,10 @@
 7. 所以 kvm 是怎么和 virtio 产生联系的 ？
 8. virtio 如何处理 GPU 的 ?
 
+
+## 问题
+- [ ] 如果 kvm 中间跑一个支持 multicore 的 OS，kvm 从一个 cpu 中间启动，最后可以迁移到其他的 CPU 中间
+    - [ ] 如果 kvm 的 CPU 数量能否动态扩展 ？
 
 ## 记录
 [^1] lwn 给出了一个超级入门的介绍，值得学习 :
