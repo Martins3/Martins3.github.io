@@ -48,3 +48,13 @@ Historically, the connection between the abstract and actual machines was establ
 > 作者是犹他大学的教授，强的一匹。
 
 
+
+## 如何正确的切换 gcc 版本
+https://badsimplicity.com/2019/07/10/gcc-9-and-ubuntu-kernel-error/
+
+```sh
+sudo apt install gcc-8 # 安装
+sudo update-alternatives --install /usr/bin/gcc gcc  /usr/bin/gcc-8 1 # 添加 alternatives
+sudo update-alternatives --install /usr/bin/gcc gcc  /usr/bin/gcc-8 2 # 添加 alternatives
+sudo update-alternatives --config gcc # 选择
+```

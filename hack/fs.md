@@ -1618,6 +1618,15 @@ Tee can copy files without consuming it, in the second stage, we can splice the 
 - [ ] pipefs
   - [ ] why we need pipefs ?
 
+- [ ] linux-kernel-labs 中间似乎创建 pipe 文件
+```c
+|rw-rw-r-- maritns3 maritns3   0 B  Thu Nov  5 17:59:49 2020  pipe1.in
+|rw-rw-r-- maritns3 maritns3   0 B  Thu Nov  5 17:59:49 2020  pipe1.out
+|rw-rw-r-- maritns3 maritns3   0 B  Thu Nov  5 17:59:49 2020  pipe2.in
+|rw-rw-r-- maritns3 maritns3   0 B  Thu Nov  5 17:59:49 2020  pipe2.out
+```
+
+
 - [x] get_pipe_inode() 
   - init inode 
   - only called by create_pipe_files

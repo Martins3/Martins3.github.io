@@ -1,14 +1,11 @@
 # qemu
 
-
 ## 想法
 1. qemu 是如何实现模拟设备的
 2. qemu 和 gdb 的配合调试
 1. 如何 enable kvm
 2. 如何解决网络
 3. 是否存在加速图形显示的操作
-
-
 
 ## 资源
 Learn linux kernel with qemu:
