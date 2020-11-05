@@ -34,6 +34,8 @@ https://github.com/pingcap/talent-plan : pingcap 本来以为是一个教程网�
 
 https://www.qtmuniao.com/series/ : 此人水平不错，分布式上写了一些列的文章
 
+https://www.jianshu.com/p/4ba0d706ee7c : 快速复习一遍
+
 # An overview of distributed system
 https://www.zhihu.com/question/23645117
 

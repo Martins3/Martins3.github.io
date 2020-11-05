@@ -8,6 +8,8 @@
 3. 是否存在加速图形显示的操作
 
 ## 资源
+可以了解一下： https://gitee.com/iprintf/kvm-tools
+
 Learn linux kernel with qemu:
 1. https://github.com/dhruvvyas90/qemu-rpi-kernel : 在 qemu 中间运行 raspibary
 2. https://github.com/geohot/qira : 不知道这调试器为什么和 qemu 有关的

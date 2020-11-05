@@ -5,10 +5,16 @@
    - https://lwn.net/Articles/688492/
    - https://github.com/ephox-gcc-plugins/latent_entropy
 
-## so, why and how to compile linux kernel with clang ?
+## build kernel with clang
+- https://www.kernel.org/doc/html/latest/kbuild/llvm.html
 
+- [ ] 但是不知道怎么在交叉编译 arm 
 
-## `_ASSEMBLY__`
+## `__attribute__((destructor))`
+
+https://stackoverflow.com/questions/2053029/how-exactly-does-attribute-constructor-work
+
+## `__ASSEMBLY__`
 
 https://stackoverflow.com/questions/28924355/gcc-assembler-preprocessor-not-compatible-with-standard-headers
 
