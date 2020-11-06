@@ -11,6 +11,10 @@
 
 <!-- vim-markdown-toc -->
 
+[sysfs 和 proc 的区别](https://unix.stackexchange.com/questions/4884/what-is-the-difference-between-procfs-and-sysfs)，更加的结构化。
+
+https://www.ibm.com/developerworks/cn/linux/l-cn-sysfs/
+
 ## Implementation
 
 #### filesystem part

@@ -22,6 +22,10 @@ bash <(curl -L https://raw.githubusercontent.com/v2fly/fhs-install-v2ray/master/
 ```
 2. [install qv2ray](https://qv2ray.net/en/getting-started/step1.html) : download deb in github release page and install deb locally, here is a example.
 ```
+snap install qv2ray
+```
+or
+```
 wget https://github.com/Qv2ray/Qv2ray/releases/download/v2.7.0-alpha1/qv2ray_2.7.0.alpha1-1stable1_amd64.deb
 sudo dpkg -i qv2ray_2.7.0.alpha1-1stable1_amd64.deb.1 
 ```

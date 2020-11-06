@@ -3,6 +3,8 @@
 https://github.com/aalhour/awesome-compilers : **key**
 可以学习 llvm 之类的
 
+http://craftinginterpreters.com/contents.html : 清晰的教程
+
 
 ## 自己收集的
 https://github.com/netcan : maybe read his blogs

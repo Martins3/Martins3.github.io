@@ -38,7 +38,6 @@ https://www.jianshu.com/p/4ba0d706ee7c : 快速复习一遍
 
 # An overview of distributed system
 https://www.zhihu.com/question/23645117
-
 http://book.mixu.net/distsys/
 https://www.the-paper-trail.org/post/2014-08-09-distributed-systems-theory-for-the-distributed-systems-engineer/
 
@@ -56,6 +55,8 @@ https://github.com/binhnguyennus/awesome-scalability : 各种文章集合，不�
 https://github.com/orangeduck/Cello : 写个blog介绍一下，很有意思
 
 https://github.com/xingshaocheng/architect-awesome : 从后端的角度思考，从更高的视角分析，分布式到底在干什么
+
+https://www.programmableweb.com/news/what-grpc-api-and-how-does-it-work/analysis/2020/10/08 : grpc
 
 
 ## 资源
