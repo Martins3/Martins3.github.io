@@ -739,4 +739,3 @@ request can be handled at all, or perform other sorts of housekeeping.
 > skip
 #### 16.4.2 Tagged Command Queueing
 > skip
-

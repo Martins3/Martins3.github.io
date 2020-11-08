@@ -20,8 +20,9 @@
 - [file writeback](#file-writeback)
 - [fd](#fd)
 - [fcntl](#fcntl)
-- [event fd](#event-fd)
-- [event poll](#event-poll)
+- [eventfd](#eventfd)
+- [epoll](#epoll)
+- [anon_inodes](#anon_inodes)
 - [flock](#flock)
 - [ext2](#ext2)
 - [nobdv fs](#nobdv-fs)
@@ -73,6 +74,7 @@
     - [sysctl](#sysctl)
 - [fifo](#fifo)
 - [configfs](#configfs)
+- [binder](#binder)
 
 <!-- vim-markdown-toc -->
 
@@ -706,14 +708,16 @@ and are only automatically released on the last close of the open file descripti
 
 > Warning: the Linux implementation of mandatory locking is unreliable.  See BUGS below.  Because of these bugs, and the fact that the feature is believed to be little used, since Linux 4.5, mandatory locking has been made an optional feature, governed by a configuration option (CONFIG_MANDATORY_FILE_LOCKING).  This is an initial step toward removing this feature completely.
 
-## event fd
-- [ ] why eventfd is related with kvm ?
+## eventfd
 
 
-## event poll
+## epoll
 // TODO
 // 找到简书上内容上，写 enomia 的时候介绍 epoll 机制的内容
 
+## anon_inodes
+- [ ] 很短的一个代码 : /home/maritns3/core/linux/fs/anon_inodes.c
+    - [ ]  kmv 用于创建 kvm-vm 的方法
 
 ## flock
 1. advisory lock 指的是 ?
@@ -1393,6 +1397,7 @@ maybe iomap is not mature yet, iomap provide a generic interface for fs to read 
 
 ## fuse
 https://github.com/libfuse/libfuse
+https://github.com/cloud-hypervisor/fuse-backend-rs
 
 利用 fuse 从而实现将 ntfs 挂载出来的，有意思啊!
 
@@ -1973,6 +1978,9 @@ https://unix.stackexchange.com/questions/433488/what-is-the-purpose-of-using-a-f
 https://www.kernel.org/doc/html/latest/filesystems/configfs.html
 
 - [ ] after a quick browsing, I think is a userspace driven interface for driver
+
+## binder
+- [ ] https://www.jianshu.com/p/82b691cbdde4
 
 [^1]: [kernel doc : Overview of the Linux Virtual File System](https://www.kernel.org/doc/html/latest/filesystems/vfs.html)
 [^2]: [github : aio](https://github.com/littledan/linux-aio)

@@ -371,6 +371,8 @@ struct irq_domain_ops {
 // global apic variable
 struct apic *apic __ro_after_init = &apic_flat;
 ```
+- [ ] [^2]p117 的 IO APIC 的 24 个引脚的寄存器配置
+
 
 ## chained irq
 [IRQs: the Hard, the Soft, the Threaded and the Preemptible](https://elinux.org/images/8/8c/Zyngier.pdf)
@@ -816,7 +818,6 @@ https://stackoverflow.com/questions/7005331/difference-between-io-apic-fasteoi-a
 
 
 ## ref
-
 [^1]: https://www.oreilly.com/library/view/pc-hardware-in/059600513X/ch01s03s01s01.html
 
-
+[^2]: [深度探索Linux系统虚拟化](https://book.douban.com/subject/35238691/)

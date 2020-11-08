@@ -17,6 +17,7 @@ Learn linux kernel with qemu:
 这个项目的确提供了如何使用 qmeu 的内容:
 https://github.com/tinyclub/linux-0.11-lab
 
+https://github.com/wimpysworld/quickemu : 使用 qemu 的脚本
 ## busy box 和 buildroot 的关系是什么 ?
 https://stackoverflow.com/questions/19532564/linux-kernel-development-using-qemu
 
