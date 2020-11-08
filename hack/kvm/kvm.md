@@ -271,10 +271,6 @@ static struct kmem_cache *x86_emulator_cache;
 
 kvm_steal_time_set_preempted
 
-## nested
-
-指的是 KVM 的 nested, 还是  page table nested ?
-
 
 ## details
 
@@ -410,10 +406,6 @@ int kvm_arch_hardware_setup(void *opaque)
 - vmx 的 kvm_vmx_exit_handlers 需要 emulate 的，但是 emulator 的工作需要从 emulator 中间得到数据
 
 
-## nested.c
-https://www.kernel.org/doc/Documentation/virtual/kvm/nested-vmx.txt
-
-https://www.usenix.org/legacy/events/osdi10/tech/full_papers/Ben-Yehuda.pdf
 
 ## hyperv.c
 模拟 HyperV 的内容, 但是为什么需要模拟 HyperV ?

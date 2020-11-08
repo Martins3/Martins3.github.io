@@ -63,4 +63,7 @@ sudo apt install gcc-8 # 安装
 sudo update-alternatives --install /usr/bin/gcc gcc  /usr/bin/gcc-8 1 # 添加 alternatives
 sudo update-alternatives --install /usr/bin/gcc gcc  /usr/bin/gcc-8 2 # 添加 alternatives
 sudo update-alternatives --config gcc # 选择
+
+sudo update-alternatives --config cc # 设置默认 clang
+sudo update-alternatives --config c++
 ```

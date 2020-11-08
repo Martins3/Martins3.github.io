@@ -15,6 +15,7 @@
   - [https://linux-kernel-labs.github.io/refs/heads/master/lectures/interrupts.html](#httpslinux-kernel-labsgithubiorefsheadsmasterlecturesinterruptshtml)
   - [timer](#timer)
   - [irq](#irq)
+  - [irqaction](#irqaction)
   - [softirq](#softirq)
   - [tasklet](#tasklet)
   - [apic](#apic)
@@ -353,6 +354,54 @@ struct irq_domain_ops {
 
 ![](https://img2020.cnblogs.com/blog/1771657/202005/1771657-20200531111755704-1231972965.png)
 
+## irqaction
+```c
+/**
+ * struct irqaction - per interrupt action descriptor
+ * @handler:	interrupt handler function
+ * @name:	name of the device
+ * @dev_id:	cookie to identify the device
+ * @percpu_dev_id:	cookie to identify the device
+ * @next:	pointer to the next irqaction for shared interrupts
+ * @irq:	interrupt number
+ * @flags:	flags (see IRQF_* above)
+ * @thread_fn:	interrupt handler function for threaded interrupts
+ * @thread:	thread pointer for threaded interrupts
+ * @secondary:	pointer to secondary irqaction (force threading)
+ * @thread_flags:	flags related to @thread
+ * @thread_mask:	bitmask for keeping track of @thread activity
+ * @dir:	pointer to the proc/irq/NN/name entry
+ */
+struct irqaction {
+	irq_handler_t		handler;
+	void			*dev_id;
+	void __percpu		*percpu_dev_id;
+	struct irqaction	*next;
+	irq_handler_t		thread_fn;
+	struct task_struct	*thread;
+	struct irqaction	*secondary;
+	unsigned int		irq;
+	unsigned int		flags;
+	unsigned long		thread_flags;
+	unsigned long		thread_mask;
+	const char		*name;
+	struct proc_dir_entry	*dir;
+} ____cacheline_internodealigned_in_smp;
+```
+
+- [ ] /proc/interrupts : proc.c:show_interrupts() 的最后的描述，其实就是相关的 chip
+```
+            CPU0       CPU1       CPU2       CPU3       CPU4       CPU5       CPU6       CPU7       
+   0:          8          0          0          0          0          0          0          0  IR-IO-APIC    2-edge      timer
+   1:      19619          0          0          0          0          0          0       3444  IR-IO-APIC    1-edge      i8042
+   8:          0          1          0          0          0          0          0          0  IR-IO-APIC    8-edge      rtc0
+   9:         46         68          0          0          0          0          0          0  IR-IO-APIC    9-fasteoi   acpi
+  12:        384          0          0          0          0          0        143          0  IR-IO-APIC   12-edge      i8042
+  14:     187427          0      28041          0          0          0          0          0  IR-IO-APIC   14-fasteoi   INT344B:00
+```
+
+
+
 
 ## softirq
 - [ ] what's happending in kernel/softirq.c ?
@@ -361,6 +410,8 @@ struct irq_domain_ops {
 
 
 - [ ] how kernel transfer from hardirq to softirq ?
+
+- [ ] /proc/stat 关于 softirq 的统计是什么 ？
 
 ## tasklet
 - [ ] https://lwn.net/Articles/830964/
@@ -629,6 +680,7 @@ devm_request_threaded_irq ==> request_threaded_irq
 
 [answer this question](https://unix.stackexchange.com/questions/579513/what-is-meaning-of-empty-action-respect-to-sys-kernel-irq)
 
+- [ ] 显然，CPU 是没有超过 256 个引脚来作为 中断线的，那么 CPU 读取到是什么 ? 最后如何装换为 irq line ?
 
 ## affinity
 
@@ -749,8 +801,6 @@ static const __initconst struct idt_data def_idts[] = {
 };
 ```
 ## handle irq
-
-
 asm_common_interrupt => handle_irq => run_irq_on_irqstack_cond 
 
 ```c
@@ -817,7 +867,8 @@ PCI cards use level-sensitive interrupts, which means that different PCI devices
 https://stackoverflow.com/questions/7005331/difference-between-io-apic-fasteoi-and-io-apic-edge
 
 
+
+
 ## ref
 [^1]: https://www.oreilly.com/library/view/pc-hardware-in/059600513X/ch01s03s01s01.html
-
 [^2]: [深度探索Linux系统虚拟化](https://book.douban.com/subject/35238691/)

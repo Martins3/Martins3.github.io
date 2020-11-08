@@ -114,3 +114,30 @@ struct virt_queue {
 ```
 last_used_signalled 和 last_avail_idx 是不是给 host 使用的 ?
 
+## i8042
+- [ ] 如何从 guest 的 i8042 chip 到 host 的 i8042
+
+从 kvm__irq_line 的参数
+```c
+	kvm__irq_line(state.kvm, KBD_IRQ, klevel);
+	kvm__irq_line(state.kvm, AUX_IRQ, mlevel);
+```
+到
+```c
+void kvm__irq_line(struct kvm *kvm, int irq, int level)
+{
+	struct kvm_irq_level irq_level;
+
+	irq_level	= (struct kvm_irq_level) {
+		{
+			.irq		= irq,
+		},
+		.level		= level,
+	};
+
+	if (ioctl(kvm->vm_fd, KVM_IRQ_LINE, &irq_level) < 0)
+		die_perror("KVM_IRQ_LINE failed");
+}
+```
+可以知道，其实知道，ioctl 的就是 linux irq，其实，不然也没有什么可能了
+
