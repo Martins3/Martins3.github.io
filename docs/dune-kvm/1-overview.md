@@ -330,3 +330,6 @@ https://gitlab.azmi.pl/azmi-open-source/linux-grsecurity/commit/4b1e54786e4862d3
 ## TODO
 - fork 可以让两个 thread 共享空间吗 ? 从 flags 上看是可以的
 - 使用 wedge 查看 主动注册 httpd handler 是如何使用的
+
+## 待处理的资源
+https://pdos.csail.mit.edu/6.828/2016/lec/faq-dune.txt

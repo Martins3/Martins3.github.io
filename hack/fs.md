@@ -75,6 +75,7 @@
 - [fifo](#fifo)
 - [configfs](#configfs)
 - [binder](#binder)
+- [zone](#zone)
 
 <!-- vim-markdown-toc -->
 
@@ -1981,6 +1982,10 @@ https://www.kernel.org/doc/html/latest/filesystems/configfs.html
 
 ## binder
 - [ ] https://www.jianshu.com/p/82b691cbdde4
+
+
+## zone
+https://zonedstorage.io/introduction/zoned-storage/
 
 [^1]: [kernel doc : Overview of the Linux Virtual File System](https://www.kernel.org/doc/html/latest/filesystems/vfs.html)
 [^2]: [github : aio](https://github.com/littledan/linux-aio)
