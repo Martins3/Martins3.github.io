@@ -4,6 +4,8 @@ https://github.com/aalhour/awesome-compilers : **key**
 可以学习 llvm 之类的
 
 http://craftinginterpreters.com/contents.html : 清晰的教程
+https://arzg.github.io/lang/ : 基于 rust 的教程
+
 
 
 ## 自己收集的

@@ -3103,6 +3103,12 @@ https://lwn.net/Articles/69402/
 Some very obscure driver bugs have been traced down to cache coherency problems with structure fields adjacent to small DMA areas. [^17]
 > DMA 为什么会导致附近的内存的 cache coherency 的问题 ?
 
+- [ ] dma_pool_create() - Creates a pool of consistent memory blocks, for dma.
+
+- [ ] https://www.kernel.org/doc/html/latest/driver-api/dmaengine/index.html#dmaengine-documentation
+- [ ] https://www.kernel.org/doc/html/latest/core-api/index.html#memory-management
+- [ ] https://www.kernel.org/doc/Documentation/DMA-API-HOWTO.txt
+
 ## mempool
 使用 mempool 的目的:
 The purpose of mempools is to help out in situations where a memory allocation must succeed, but sleeping is not an option. To that end, mempools pre-allocate a pool of memory and reserve it until it is needed. [^16]
