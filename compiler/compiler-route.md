@@ -6,7 +6,7 @@ https://github.com/aalhour/awesome-compilers : **key**
 http://craftinginterpreters.com/contents.html : 清晰的教程
 https://arzg.github.io/lang/ : 基于 rust 的教程
 
-
+https://tenthousandmeters.com/blog/python-behind-the-scenes-4-how-python-bytecode-is-executed/ : python 的字节码如何执行的 ？
 
 ## 自己收集的
 https://github.com/netcan : maybe read his blogs

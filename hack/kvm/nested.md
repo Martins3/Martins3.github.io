@@ -76,3 +76,10 @@ static struct kvm_x86_ops vmx_x86_ops __initdata = {
 - [ ] nested_vmx_hardware_setup : 最开始的时候初始化
     - [ ] 在 level one 的时候的注册 exit handler 比此处多很多
     - 在虚拟机中间的 hypervisors 可以通过什么方法知道自己其实是在虚拟机的 ?
+
+https://www.linux-kvm.org/images/8/8e/Improving_KVM_nVMX.pdf
+https://www.usenix.org/conference/osdi10/turtles-project-design-and-implementation-nested-virtualization
+
+# TODO
+https://archive.fosdem.org/2018/schedule/event/vai_kvm_on_hyperv/attachments/slides/2200/export/events/attachments/vai_kvm_on_hyperv/slides/2200/slides_fosdem2018_vkuznets.pdf
+https://archive.fosdem.org/2019/schedule/event/vai_enlightening_kvm/attachments/slides/2860/export/events/attachments/vai_enlightening_kvm/slides/2860/vkuznets_fosdem2019_enlightening_kvm.pdf

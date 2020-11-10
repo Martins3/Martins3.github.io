@@ -1,5 +1,7 @@
 # HyperV
 [Documentation](https://docs.microsoft.com/en-us/virtualization/hyper-v-on-windows/about/)
+[Qemu doc for hyperv](https://github.com/qemu/qemu/blob/master/docs/hyperv.txt)
+
 
 https://docs.microsoft.com/en-us/virtualization/hyper-v-on-windows/tlfs/nested-virtualization
 

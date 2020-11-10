@@ -106,6 +106,7 @@
 - [pageblock](#pageblock)
 - [user address space](#user-address-space)
 - [kaslr](#kaslr)
+- [memfd](#memfd)
 
 <!-- vim-markdown-toc -->
 
@@ -3551,6 +3552,9 @@ ffffffffff600000-ffffffffff601000 --xp 00000000 00:00 0                  [vsysca
 - [ ] Sometimes /proc/$pid/maps show text address start at 0x400000, sometimes 0x055555555xxx,
 maybe because of user space address randomization
     - [  ] https://www.theurbanpenguin.com/aslr-address-space-layout-randomization/
+
+## memfd
+https://mp.weixin.qq.com/s/ZLXAz8dAdcqS52MzmXU_YA
 
 [^1]: [lwn : Huge pages part 1 (Introduction)](https://lwn.net/Articles/374424/)
 [^2]: [lwn : An end to high memory?](https://lwn.net/Articles/813201/)
