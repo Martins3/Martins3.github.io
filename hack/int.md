@@ -555,8 +555,14 @@ top-level irq_desc 中间哪里 TMD 有 stash a pointer，只有 action chain �
 第 15 16 页是在看不懂了
 
 ## irq domain
-[What are linux irq domains, why are they needed?](https://stackoverflow.com/questions/34371352/what-are-linux-irq-domains-why-are-they-needed)
+- [x] [What are linux irq domains, why are they needed?](https://stackoverflow.com/questions/34371352/what-are-linux-irq-domains-why-are-they-needed)
+  - 基本的思路是，信号是逐级的传递到 CPU 中间的
+  - CPU 收到中断，知道是哪一个 interrupt line , 以及注册到该 driver 的 handler
+    - 如果一个 interrupt line 上注册了多个，可以依次执行一下, 直到找到该 device / driver
+      - 如果恰巧 driver 是一个 irq chip, 那么该芯片可以知道是来自于哪一个引脚，并且知道注册到该引脚的 device / driver，直到找到真正的 driver
 
+- [ ] 虽然的确是这一个道理，那么为什么需要 irq domain 的概念啊 ?
+  - [ ] 是不是因为在每一个 chip 自己引脚编号 和 对应的 action 的映射建立关系
 
 [kernel doc](https://www.kernel.org/doc/html/latest/core-api/irq/irq-domain.html)
 

@@ -2331,7 +2331,7 @@ struct fork_frame {
 };
 ```
 
-- [ ] entry_64.S::entry_SYSCALL_64 中間看，保存的內容就是 pt_regs 的，而 switch_to_asm 保存的內容是 inactive_task_frame 的
+- [ ] entry_64.S::entry_SYSCALL_64 中間的代码看，保存的內容就是 pt_regs 的，而 switch_to_asm 保存的內容是 inactive_task_frame 的
 
 [^1]: [blog : Evolution of the x86 context switch in Linux](http://www.maizure.org/projects/evolution_x86_context_switch_linux/)
 [^2]: https://man7.org/linux/man-pages/man7/signal.7.html 
