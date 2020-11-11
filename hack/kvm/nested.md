@@ -165,12 +165,12 @@ void nested_vmx_vmexit(struct kvm_vcpu *vcpu, u32 vm_exit_reason,
 		       u32 exit_intr_info, unsigned long exit_qualification)
 ```
 
-- [ ] vmcs 是在内存中间，还是在 cpu 的寄存器中间，类似 msr 之类的
-  - [ ] 从 vmcs_load() 的实现看，利用 vmptrld 指令实现的
+- [x] vmcs 是在内存中间，还是在 cpu 的寄存器中间，类似 msr 之类的
+  - [x] 从 vmcs_load() 的实现看，利用 vmptrld 指令加载一块内存
     - [ ] 但是为什么访问 vmcs 内容的时候需要特殊的指令, 可以实现原子性，可以保护该区域，可以用于触发 vmexit 从而实现 nested，可以加载不同 vmcs, 从而访问的代码不需要修改（给我一个无法拒绝的理由）
     - **一个 vcpu 只能让一个 vmcs 是被 cpu "认可的", 也即是最近的 vmptrld 的那个 vmcs**
 
-- [ ] 进入的准备工作是什么 ?
+- [ ] 进入到 L2 guest 中间的准备工作是什么 ?
   - [ ] vmx_check_nested_events
 
 
@@ -209,14 +209,46 @@ void nested_vmx_vmexit(struct kvm_vcpu *vcpu, u32 vm_exit_reason,
     - [ ] 为什么只是在 vmcs 中间存放 segment register
 - [ ] kvm_register_mark_dirty 有什么意义，不是所有的 register 都会标注吗 ?
 
+## event injection
+- [ ] vcpu_vmx::idt_vectoring_info; 在普通模式下的
+- [ ] `vmcs12->idt_vectoring_info_field` : 在 nested 模式下
+
+- [ ] 在 vmcs 中间，存在 IDT-vectoring information
+  - [ ] 文档:
+    - [ ] 24.9.3 Information for VM Exits That Occur During Event Delivery
+    - [ ] 26.5 EVENT INJECTION
+    - [ ] 27.2.3 Information for VM Exits During Event Delivery
+
+
+[^1] 中间指出，在处理一个 event delivery 的时候，结果造成了另一个 vmexit, 那么这个 vmexit 出来的时候，在 vmcs 中间的 idt_vectoring_info 就会存储下来当时正在 deliver 的 event，具体描述如下:
+> - A VMExit can occur during event-delivery
+> - Example: Write of exception frame to stack triggers `EPT_VIOLATION`
+> - CPU saves the event which attempted to deliver in `vmcs->idt_vectoring_info`
+> - On `guest->host`:
+>   1. KVM checks if `vmcs->idt_vectoring_info valid`
+>   2. If valid, queue injected event in `struct kvm_vcpu_arch` and set `KVM_REQ_EVENT`
+> - `KVM_REQ_EVENT` will evaluate injected event on next entry to guest
+
+huxueshi : 其实我不是很懂，机制是 event deliver 的时候出现 vmexit，到时候从 vmexit 的位置重新进入到 deliver 的 event 对应的 handler 不就完成了，这个操作看来是重新进行一次 handler 执行
+
+- [ ] 忽然想到 : 当 guest 中间出现 page fault, 在使用 ept 的情况下，如果这个 page fault 是 guest page table missing 造成的，会导致 page fault 吗 ?
+
+[^1]:
+> What if VMExit occurs during event-delivery to L2?
+
+**TO BE CONTINUE** 先让我理解一下到底什么指的是 event delivery ?
+  - [ ] 并且理解一下 Intel 是如何处理 NMI 的 ？
+
 ## nest.c 的代码的阅读记录(should be clear)
 - [ ] nested_vmx_hardware_setup : 最开始的时候初始化
     - [ ] 在 level one 的时候的注册 exit handler 比此处多很多
     - 在虚拟机中间的 hypervisors 可以通过什么方法知道自己其实是在虚拟机的 ?
 
-https://www.linux-kvm.org/images/8/8e/Improving_KVM_nVMX.pdf
+## 等待处理的文档
 https://www.usenix.org/conference/osdi10/turtles-project-design-and-implementation-nested-virtualization
 
 # TODO
 https://archive.fosdem.org/2018/schedule/event/vai_kvm_on_hyperv/attachments/slides/2200/export/events/attachments/vai_kvm_on_hyperv/slides/2200/slides_fosdem2018_vkuznets.pdf
 https://archive.fosdem.org/2019/schedule/event/vai_enlightening_kvm/attachments/slides/2860/export/events/attachments/vai_enlightening_kvm/slides/2860/vkuznets_fosdem2019_enlightening_kvm.pdf
+
+[^1]: https://www.linux-kvm.org/images/8/8e/Improving_KVM_nVMX.pdf
