@@ -8,7 +8,15 @@
 ## build kernel with clang
 - https://www.kernel.org/doc/html/latest/kbuild/llvm.html
 
-- [ ] 但是不知道怎么在交叉编译 arm 
+[如何交叉编译!](https://github.com/MaskRay/ccls/wiki/Example-Projects)
+make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- LLVM=1 defconfig
+make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- LLVM=1 -k Image.gz modules // 好吧，-k Image.gz modules 是什么意思
+make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- LLVM=1 -j10
+根据 [ClangBuiltLinux](https://github.com/ClangBuiltLinux/tc-build) 的文档，事先需要
+
+但是还是存在版本不够的问题:
+https://apt.llvm.org/
+
 
 ## `__attribute__((destructor))`
 

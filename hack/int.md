@@ -1,6 +1,7 @@
 # 中断
 <!-- vim-markdown-toc GitLab -->
 
+  - [Context](#context)
   - [TODO](#todo)
   - [code distribution](#code-distribution)
   - [unsorted](#unsorted)
@@ -38,9 +39,14 @@
 
 <!-- vim-markdown-toc -->
 
+## Context
+- [ ] 术道经纬 : https://zhuanlan.zhihu.com/p/93289632
+- [ ] fwnode 是做什么的 ?
+- [ ] 如何实现 nmi 中断的
+
+## TODO
 不要害怕开始：
 1. 总结 从 ics 的中断 和 ucore 的中断的实现，然后再去分析
-
 
 这篇文章
 A Hardware Architecture for Implementing Protection Rings
@@ -49,11 +55,8 @@ A Hardware Architecture for Implementing Protection Rings
 2. syscall 可以使用 int 模拟实现吗 ?
 3. interupt 和 exception 在架构实现上存在什么区别吗 ?
 
-## TODO
 
 1. 什么是软中断 ？
-
-
 - [ ] https://www.kernel.org/doc/html/latest/core-api/genericirq.html
 
 - [ ] --------------- unsorted

@@ -1399,6 +1399,7 @@ maybe iomap is not mature yet, iomap provide a generic interface for fs to read 
 ## fuse
 https://github.com/libfuse/libfuse
 https://github.com/cloud-hypervisor/fuse-backend-rs
+https://zhuanlan.zhihu.com/p/143256077
 
 利用 fuse 从而实现将 ntfs 挂载出来的，有意思啊!
 
