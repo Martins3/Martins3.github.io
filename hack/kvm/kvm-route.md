@@ -5,6 +5,8 @@
 4. byte : virtio
 5. libvirt 是什么 ? https://github.com/libvirt/libvirt
 
+## 问题
+1. 跟踪一下 : guest 写 mmio 和 pio 的时候，如何触发 kvm exit 一直到 用户态的
 
 ## qemu boches
 https://news.ycombinator.com/item?id=22826296 : boches 的原理
@@ -18,9 +20,7 @@ https://github.com/steren/awesome-cloudrun : Google 的产品介绍，不知道�
 https://github.com/rootsongjc/awesome-cloud-native#api-gateway
 > 完全不知道云原生在干什么 !
 
-
 dockerpi : docker 作为一个容器，为什么可以实现跨架构, 因为里面还安装了一个 qemu !
-
 
 ## 不知道干什么的东西
 https://www.vagrantup.com/intro/getting-started/up : 基于虚拟化的环境开发，那么，所以和 docker 的关系是什么 ?
@@ -72,6 +72,8 @@ https://www.ibm.com/developerworks/cn/linux/l-cn-kvm-mem/index.html
 https://github.com/fireeye/speakeasy
 
 [^1] : https://www.cnblogs.com/arnoldlu/category/1118000.html
+
+https://github.com/Kelvinhack/kHypervisor : window 的 ept hypervisor
 
 
 # 看看 backend 到底在干什么 ?

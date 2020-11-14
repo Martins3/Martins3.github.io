@@ -1771,7 +1771,6 @@ https://superuser.com/questions/1217454/how-do-you-control-thread-affinity-acros
 [讲解极为清楚](http://arthurchiao.art/blog/system-call-definitive-guide-zh/)
 
 
-
 这定义在 x86-64 ABI 的 A.2.1 小节:
 
 > User-level applications use as integer registers for passing the sequence %rdi, %rsi, %rdx, %rcx, %r8 and %r9. The kernel interface uses %rdi, %rsi, %rdx, %r10, %r8 and %r9.

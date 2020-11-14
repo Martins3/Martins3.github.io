@@ -1129,6 +1129,10 @@ int main(int argc, char *argv[]) {
 - [ ] 
 - [ ] 是不是没有 preallocated 的 page 会导致分配失败 ？
 
+**TO BE CONTINUE**
+- [ ] 这个文档还是没有看完的，感觉 hugetlb 设计有点问题
+- [ ] issue #14 的检查一下
+
 
 ## compound page 
 - [An introduction to compound pages](https://lwn.net/Articles/619514/)
