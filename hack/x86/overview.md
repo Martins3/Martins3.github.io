@@ -6,6 +6,7 @@
 - [long mode](#long-mode)
 - [control register](#control-register)
     - [cr0](#cr0)
+- [gdt idt](#gdt-idt)
 - [fpu](#fpu)
     - [fpu signal](#fpu-signal)
     - [fpu xstate](#fpu-xstate)
@@ -15,6 +16,9 @@
 <!-- vim-markdown-toc -->
 
 - [ ] https://www.kernel.org/doc/html/latest/x86/index.html 
+- [ ] http://infophysics.net/att0.pdf
+- [ ] https://docs.oracle.com/cd/E19253-01/817-5477/817-5477.pdf
+
 
 - [ ] This should be notes for 
 
@@ -238,6 +242,7 @@ Calling conventions describe the interface of called code:
 Calling conventions, type representations, and name mangling are all part of what is known as an application binary interface (ABI).
 
 > TODO
+
 
 
 [^1]: [wiki](https://en.wikipedia.org/wiki/X86_calling_conventions)

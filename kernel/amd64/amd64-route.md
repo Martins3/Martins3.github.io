@@ -18,7 +18,6 @@ https://www.nasm.us/doc/nasmdoc0.html : nasm 的教程，nasm 和 gcc 的关系�
 
 https://github.com/cirosantilli/x86-assembly-cheat : 看来如何编译这些代码都是不简单的
 
-
 https://github.com/cirosantilli/x86-bare-metal-examples
   - https://stackoverflow.com/questions/22054578/how-to-run-a-program-without-an-operating-system/32483545#32483545
 

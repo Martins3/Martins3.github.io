@@ -18,3 +18,6 @@
 
 ## Scholar
 - [Paper reading list](./paper-reading-list.md)
+
+## Reflections
+<!-- - [Power of continuous thinking](./thinking.md) -->
