@@ -1,41 +1,43 @@
 # 中断
 <!-- vim-markdown-toc GitLab -->
 
-  - [Context](#context)
-  - [TODO](#todo)
-  - [code distribution](#code-distribution)
-  - [unsorted](#unsorted)
-  - [workqueue](#workqueue)
-      - [struct work_struct](#struct-work_struct)
-      - [struct workqueue](#struct-workqueue)
-      - [struct worker](#struct-worker)
-      - [struct worker_pool](#struct-worker_pool)
-      - [struct pool_workqueue](#struct-pool_workqueue)
-  - [ipi](#ipi)
-  - [https://elinux.org/images/8/8c/Zyngier.pdf](#httpselinuxorgimages88czyngierpdf)
-  - [https://linux-kernel-labs.github.io/refs/heads/master/lectures/interrupts.html](#httpslinux-kernel-labsgithubiorefsheadsmasterlecturesinterruptshtml)
-  - [timer](#timer)
-  - [irq](#irq)
-  - [irqaction](#irqaction)
-  - [softirq](#softirq)
-  - [tasklet](#tasklet)
-  - [apic](#apic)
-  - [chained irq](#chained-irq)
-  - [irq domain](#irq-domain)
-  - [irq domain hierarchy](#irq-domain-hierarchy)
-  - [ir](#ir)
-  - [request irq](#request-irq)
-  - [irq desc](#irq-desc)
-  - [affinity](#affinity)
-  - [nmi](#nmi)
-  - [apic](#apic-1)
+- [Context](#context)
+- [TODO](#todo)
+- [code distribution](#code-distribution)
+- [unsorted](#unsorted)
+- [workqueue](#workqueue)
+    - [struct work_struct](#struct-work_struct)
+    - [struct workqueue](#struct-workqueue)
+    - [struct worker](#struct-worker)
+    - [struct worker_pool](#struct-worker_pool)
+    - [struct pool_workqueue](#struct-pool_workqueue)
+- [ipi](#ipi)
+- [https://elinux.org/images/8/8c/Zyngier.pdf](#httpselinuxorgimages88czyngierpdf)
+- [https://linux-kernel-labs.github.io/refs/heads/master/lectures/interrupts.html](#httpslinux-kernel-labsgithubiorefsheadsmasterlecturesinterruptshtml)
+- [timer](#timer)
+- [irq](#irq)
+- [irqaction](#irqaction)
+- [softirq](#softirq)
+- [tasklet](#tasklet)
+- [apic](#apic)
+- [chained irq](#chained-irq)
+- [irq domain](#irq-domain)
+- [irq domain hierarchy](#irq-domain-hierarchy)
+- [ir](#ir)
+- [request irq](#request-irq)
+- [irq desc](#irq-desc)
+- [affinity](#affinity)
+- [nmi](#nmi)
+- [apic](#apic-1)
 - [gpio](#gpio)
-  - [idt](#idt)
-  - [handle irq](#handle-irq)
-  - [x86 vector](#x86-vector)
-  - [isa and pci](#isa-and-pci)
-  - [eoi](#eoi)
-  - [ref](#ref)
+- [idt](#idt)
+- [handle irq](#handle-irq)
+- [x86 vector](#x86-vector)
+- [isa and pci](#isa-and-pci)
+- [eoi](#eoi)
+- [apic](#apic-2)
+- [io apic](#io-apic)
+- [ref](#ref)
 
 <!-- vim-markdown-toc -->
 
@@ -709,7 +711,7 @@ static void free_masks(struct irq_desc *desc)
 https://habr.com/en/post/446312/
 
 
-# gpio
+## gpio
 https://github.com/Manawyrm/pata-gpio
 
 
@@ -876,6 +878,10 @@ PCI cards use level-sensitive interrupts, which means that different PCI devices
 https://stackoverflow.com/questions/7005331/difference-between-io-apic-fasteoi-and-io-apic-edge
 
 
+## apic
+
+## io apic
+- [ ] io apic 寄存器 && Redirection Table
 
 
 ## ref
