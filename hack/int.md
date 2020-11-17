@@ -12,8 +12,6 @@
     - [struct worker_pool](#struct-worker_pool)
     - [struct pool_workqueue](#struct-pool_workqueue)
 - [ipi](#ipi)
-- [https://elinux.org/images/8/8c/Zyngier.pdf](#httpselinuxorgimages88czyngierpdf)
-- [https://linux-kernel-labs.github.io/refs/heads/master/lectures/interrupts.html](#httpslinux-kernel-labsgithubiorefsheadsmasterlecturesinterruptshtml)
 - [timer](#timer)
 - [irq](#irq)
 - [irqaction](#irqaction)
@@ -27,7 +25,6 @@
 - [request irq](#request-irq)
 - [irq desc](#irq-desc)
 - [affinity](#affinity)
-- [nmi](#nmi)
 - [apic](#apic-1)
 - [gpio](#gpio)
 - [idt](#idt)
@@ -39,6 +36,8 @@
 - [io apic](#io-apic)
 - [proc && sys](#proc-sys)
 - [/proc/irq](#procirq)
+- [/proc/interrupts](#procinterrupts)
+- [MSI](#msi)
 - [ref](#ref)
 
 <!-- vim-markdown-toc -->
@@ -50,8 +49,12 @@
 
 - [ ] *这么详细的文档不看，然后天天抱怨 ?* https://www.kernel.org/doc/html/latest/core-api/genericirq.html?highlight=proc%20irq#
 
+- https://linux-kernel-labs.github.io/refs/heads/master/lectures/interrupts.html#
+- https://www.ibm.com/developerworks/cn/linux/l-cn-linuxkernelint/index.html
+- https://0xax.gitbooks.io/linux-insides/content/Interrupts/linux-interrupts-7.html
+- https://zhuanlan.zhihu.com/p/83709066
+
 ## TODO
-不要害怕开始：
 1. 总结 从 ics 的中断 和 ucore 的中断的实现，然后再去分析
 
 这篇文章
@@ -61,6 +64,7 @@ A Hardware Architecture for Implementing Protection Rings
 2. syscall 可以使用 int 模拟实现吗 ?
 3. interupt 和 exception 在架构实现上存在什么区别吗 ?
 
+- [ ] IRQ line 到底是什么?
 
 1. 什么是软中断 ？
 - [ ] https://www.kernel.org/doc/html/latest/core-api/genericirq.html
@@ -217,32 +221,13 @@ struct pool_workqueue {
 https://stackoverflow.com/questions/62068750/kinds-of-ipi-for-x86-architecture-in-linux
 
 
-## https://elinux.org/images/8/8c/Zyngier.pdf
-
-Chained interrupt controllers : 参考ldd 以及 https://stackoverflow.com/questions/34377846/what-is-chained-irq-in-linux-when-are-they-need-to-used
-
-Generic MSIs : https://en.wikipedia.org/wiki/Message_Signaled_Interrupts
-
-Most systems have tens, hundreds of interrupt signal, an interrupt controller allows them to be multiplexed.
-> device need attension : cpu check some pin after finished one instruction
-> exception : this instruction worked abnormally
-> int n : go to idt , execute  number n slot : 如何这样，似乎只有int 0x80 有意义啊!
-
-> 仲裁器 还是　multiplexed , 如何体现的 multiplexed 的形式的 ?
-
-IRQ line 到底是什么?
 
 
-## https://linux-kernel-labs.github.io/refs/heads/master/lectures/interrupts.html#
-- https://www.ibm.com/developerworks/cn/linux/l-cn-linuxkernelint/index.html
-- https://0xax.gitbooks.io/linux-insides/content/Interrupts/linux-interrupts-7.html
-- https://zhuanlan.zhihu.com/p/83709066
 
 ## timer
-
+- [ ] timer 应该是在 CPU 外部存在中断吧，从引脚信息到 lapic 到 scheduler 函数是如何处理的 ?
 
 ## irq
-
 ```c
 struct irq_chip {
 	struct device	*parent_device;     //指向父设备
@@ -345,12 +330,12 @@ struct irq_domain_ops {
 };
 ```
 
-![](https://img2020.cnblogs.com/blog/1771657/202005/1771657-20200531111554895-528341955.png)
+![img](https://img2020.cnblogs.com/blog/1771657/202005/1771657-20200531111554895-528341955.png)
 - `struct irq_chip`结构，描述的是中断控制器的底层操作函数集，这些函数集最终完成对控制器硬件的操作；
 - `struct irq_domain`结构，用于硬件中断号和Linux IRQ中断号（virq，虚拟中断号）之间的映射；
 
 
-![](https://img2020.cnblogs.com/blog/1771657/202005/1771657-20200531111647851-1005315068.png)
+![img](https://img2020.cnblogs.com/blog/1771657/202005/1771657-20200531111647851-1005315068.png)
 
 - 每个中断控制器都对应一个IRQ Domain；
 - 中断控制器驱动通过`irq_domain_add_*()`接口来创建IRQ Domain；
@@ -709,8 +694,6 @@ static void free_masks(struct irq_desc *desc)
 ```
 > cpu mask 的功能好神奇 ? 还可以实现什么功能
 
-## nmi
-
 ## apic
 https://habr.com/en/post/446312/
 
@@ -898,6 +881,69 @@ https://stackoverflow.com/questions/7005331/difference-between-io-apic-fasteoi-a
 
 ## /proc/irq
 代码跟踪 : 如何利用 /proc/irq 调整 io apic 的 cpu affinity
+
+- /proc/irq 的代码都在 kernel/irq/proc.c
+
+## /proc/interrupts
+```c
+➜  irq cat /proc/interrupts 
+            CPU0       CPU1       CPU2       CPU3       CPU4       CPU5       CPU6       CPU7       
+   0:          8          0          0          0          0          0          0          0  IR-IO-APIC    2-edge      timer
+   1:       2716          0          0          0          0          0          0         14  IR-IO-APIC    1-edge      i8042
+   8:          0          1          0          0          0          0          0          0  IR-IO-APIC    8-edge      rtc0
+   9:          4         13          0          0          0          0          0          0  IR-IO-APIC    9-fasteoi   acpi
+  12:         83          0          0          0          0          0        143          0  IR-IO-APIC   12-edge      i8042
+  14:     134097          0         31          0          0          0          0          0  IR-IO-APIC   14-fasteoi   INT344B:00
+  16:    1381211          0          0       1125          0          0          0          0  IR-IO-APIC   16-fasteoi   idma64.0, i801_smbus, i2c_designware.0
+  17:          0          0          0          0          0          0          0          0  IR-IO-APIC   17-fasteoi   idma64.1, i2c_designware.1
+ 120:          0          0          0          0          0          0          0          0  DMAR-MSI    0-edge      dmar0
+ 121:          0          0          0          0          0          0          0          0  DMAR-MSI    1-edge      dmar1
+ 122:          0          0          0          0          0          0          0          0  IR-PCI-MSI 458752-edge      PCIe PME, aerdrv
+ 123:          0          0          0          0          0          0          0          0  IR-PCI-MSI 473088-edge      PCIe PME, aerdrv
+ 124:          0          0          0          0          0          0          0          0  IR-PCI-MSI 475136-edge      PCIe PME, aerdrv
+ 125:     674114          0          0          0     705672       6110          0          0  IR-PCI-MSI 327680-edge      xhci_hcd
+ 126:          0         31          0          0          0          0          0          0  IR-PCI-MSI 360448-edge      mei_me
+ 127:     134097          0         31          0          0          0          0          0  INT344B:00   99  ETD2303:00
+ 128:          0          0          0         18          0          0          0          0  IR-PCI-MSI 1572864-edge      nvme0q0
+ 129:          0          0        250          0          0          0          0          0  IR-PCI-MSI 514048-edge      snd_hda_intel:card0
+ 130:          0          0          0          0      19088          0          0          0  IR-PCI-MSI 1572865-edge      nvme0q1
+ 131:          0       9431          0          0          0          0          0          0  IR-PCI-MSI 1572866-edge      nvme0q2
+ 132:          0          0       8073          0          0          0          0          0  IR-PCI-MSI 1572867-edge      nvme0q3
+ 133:          0          0          0       9255          0          0          0          0  IR-PCI-MSI 1572868-edge      nvme0q4
+ 134:          0          0          0          0          0       7961          0          0  IR-PCI-MSI 1572869-edge      nvme0q5
+ 135:          0          0          0          0          0          0      10062          0  IR-PCI-MSI 1572870-edge      nvme0q6
+ 136:       2222          0     381984          0      22229    1531873      27420       9994  IR-PCI-MSI 32768-edge      i915
+ 137:       1429        164         31        368       1196          0      12158      75506  IR-PCI-MSI 1048576-edge      iwlwifi
+ 138:         32          0         27          0          0          0         15          0  IR-PCI-MSI 524288-edge      nvkm
+ 139:          0          0          0          0          0          0          0       8193  IR-PCI-MSI 1572871-edge      nvme0q7
+ NMI:         29         74         74         74         74         72         69         69   Non-maskable interrupts
+ LOC:    1895402    1772361    1840003    1797418    1822740    2050418    1775710    1753250   Local timer interrupts
+ SPU:          0          0          0          0          0          0          0          0   Spurious interrupts
+ PMI:         29         74         74         74         74         72         69         69   Performance monitoring interrupts
+ IWI:         93          5      22562          9       1329     107699       1915        540   IRQ work interrupts
+ RTR:          0          0          0          0          0          0          0          0   APIC ICR read retries
+ RES:     376738     205460     116961     102464      83042      65067      57540      53069   Rescheduling interrupts
+ CAL:     171524     158205     159437     164110     160299     161635     165628     161995   Function call interrupts
+ TLB:     232182     234240     233417     235103     225417     227488     230138     229758   TLB shootdowns
+ TRM:          4          4          4          4          4          4          4          4   Thermal event interrupts
+ THR:          0          0          0          0          0          0          0          0   Threshold APIC interrupts
+ DFR:          0          0          0          0          0          0          0          0   Deferred Error APIC interrupts
+ MCE:          0          0          0          0          0          0          0          0   Machine check exceptions
+ MCP:         61         61         61         61         61         61         61         61   Machine check polls
+ ERR:          0
+ MIS:          0
+ PIN:          0          0          0          0          0          0          0          0   Posted-interrupt notification event
+ NPI:          0          0          0          0          0          0          0          0   Nested posted-interrupt event
+ PIW:          0          0          0          0          0          0          0          0   Posted-interrupt wakeup event
+```
+才发现，IR-IO-APIC 后面都是添加上设备的，IR-PCI-MSI 主要是和 pcie 相关的设备，而 local apic 的名称直接被该 interrupt 的名字替代了。
+- [ ] 1572869-edge : 是什么鬼
+
+
+
+## MSI
+Generic MSIs : https://en.wikipedia.org/wiki/Message_Signaled_Interrupts
+
 
 
 ## ref
