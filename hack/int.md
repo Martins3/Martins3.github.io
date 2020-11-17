@@ -37,6 +37,8 @@
 - [eoi](#eoi)
 - [apic](#apic-2)
 - [io apic](#io-apic)
+- [proc && sys](#proc-sys)
+- [/proc/irq](#procirq)
 - [ref](#ref)
 
 <!-- vim-markdown-toc -->
@@ -45,6 +47,8 @@
 - [ ] 术道经纬 : https://zhuanlan.zhihu.com/p/93289632
 - [ ] fwnode 是做什么的 ?
 - [ ] 如何实现 nmi 中断的
+
+- [ ] *这么详细的文档不看，然后天天抱怨 ?* https://www.kernel.org/doc/html/latest/core-api/genericirq.html?highlight=proc%20irq#
 
 ## TODO
 不要害怕开始：
@@ -877,11 +881,23 @@ PCI cards use level-sensitive interrupts, which means that different PCI devices
 ## eoi
 https://stackoverflow.com/questions/7005331/difference-between-io-apic-fasteoi-and-io-apic-edge
 
-
 ## apic
 
 ## io apic
 - [ ] io apic 寄存器 && Redirection Table
+
+## proc && sys
+知道的 irq 在 proc 和 sys 下提供的接口 :
+
+- [ ] /proc/irq
+- [ ] /proc/softirq
+- [ ] /proc/interrupts
+- [ ] /sys/kernel/irq
+
+- [ ] /sys/kernel/irq 和 /proc/irq 的关系是什么 ?
+
+## /proc/irq
+代码跟踪 : 如何利用 /proc/irq 调整 io apic 的 cpu affinity
 
 
 ## ref
