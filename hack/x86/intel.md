@@ -19,6 +19,16 @@ Local APICs can receive interrupts from the following sources:
 #### 10.12 EXTENDED XAPIC (X2APIC)
 
 
-
 ## questions
 flat and cluster 
+
+## 命名规则
+1. x86 echnically x86 simply refers to a family of processors and the instruction set they all use. It doesn't actually say anything specific about data sizes. 
+2. IA-32 (short for "**Intel Architecture, 32-bit**", sometijmes also called **i386**)
+3. IA-64 (also called Intel Itanium architecture) ，安腾架构，已经死了
+4. x86-64 (also known as **x64**, **x86_64**, **AMD64** and **Intel 64**)
+
+实际上，软件命名规则是x86 指32位版本，x64指64位版本，比如这一个
+[例子](https://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html)
+
+偶尔会出现amd64, 就是x86-64，之所以含有这一个名字是因为64位是AMD最早提出的。

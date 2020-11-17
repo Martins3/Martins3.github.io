@@ -2,57 +2,20 @@
 
 <!-- vim-markdown-toc GitLab -->
 
-- [TODO](#todo)
-- [syntax](#syntax)
-- [long mode](#long-mode)
-- [control register](#control-register)
-    - [cr0](#cr0)
-- [gdt idt](#gdt-idt)
-- [fpu](#fpu)
-    - [fpu signal](#fpu-signal)
-    - [fpu xstate](#fpu-xstate)
+  - [long mode](#long-mode)
+  - [control register](#control-register)
+      - [cr0](#cr0)
+  - [gdt idt](#gdt-idt)
+  - [fpu](#fpu)
+      - [fpu signal](#fpu-signal)
+      - [fpu xstate](#fpu-xstate)
+  - [apic](#apic)
+  - [io apic](#io-apic)
+  - [question](#question)
+- [关于amd64 架构的疑问](#关于amd64-架构的疑问)
+- [要不要学一波汇编语言](#要不要学一波汇编语言)
 
 <!-- vim-markdown-toc -->
-
-## TODO
-2. 可以参考的资源:
-
-* [The NASM Manual](https://www.nasm.us/doc/)
-* [Compiler Explorer](https://godbolt.org/)
-* [System V Application Binary Interface](https://www.uclibc.org/docs/psABI-x86_64.pdf)
-* [The Intel Processor Manuals](https://software.intel.com/en-us/articles/intel-sdm)
-* [The AMD Processor Manuals](https://developer.amd.com/resources/developer-guides-manuals/)
-* [Agner Fog's optimization guides](https://www.agner.org/optimize/)
-* [x86 and amd64 instruction reference](https://www.felixcloutier.com/x86/)
-
-3. https://asmjit.com/ : 神奇的内联汇编
-
-4. exit.c:do_exit 的 set_fs
-
-5. check code in uaccess.c
-  - for example, understand `get_fs`
-
-- [ ] https://www.kernel.org/doc/html/latest/x86/index.html 
-- [ ] http://infophysics.net/att0.pdf
-- [ ] https://docs.oracle.com/cd/E19253-01/817-5477/817-5477.pdf
-
-
-## syntax
-1. ~/Core/x86-64-assembly 似乎非常不错:
-
-配合答案使用:
-https://github.com/0xAX/asm
-也许可以写一个简化版的，感觉应该非常不错吧!
-
-
-需要回答的问题:
-1. global 是否存在对称的关键字
-2. 定义 static 变量的方法
-
-3. 宏
-4. inlcude
-5. section 的定义
-
 ## long mode
 
 https://wki.osdev.org/Setting_Up_Long_Modei
@@ -124,4 +87,46 @@ I guess it's mainly used for enter user mode and return from user mode whne hand
 
 #### fpu xstate
 - [ ] why `copy_xstate_to_kernel` and `copy_user_to_xstate` are so complex ?
+
+
+## apic
+
+## io apic
+
+## question
+> 关于需要硬件的问题:
+> 1. context switch 的硬件支持，以前使用TSS 为什么现在不使用了
+> 2. exception interrupt syscall 需要的支持
+> 3. io 映射， inb outb 的实现 ?
+> 4. 用户和内核，用户和用户之间如何实现的保护的
+> 5. 原子操作指令(应该很简单)
+> 6. 内存屏障指令
+
+
+# 关于amd64 架构的疑问
+1. cs gs fs 三个segment 寄存器的作用是什么 ?
+2. gdt  tss  idt 各自运行机制是什么
+3. msr 寄存器等作用
+
+
+4. swapfs 等各种特权指令
+> 直接参考v3 中的特权指令
+
+
+
+
+> 需要最终可以看的懂 entry_64.S(32 到 64 的切换) 和 head_64.S 中间的所有的内容即可。
+```
+ * entry.S contains the system-call and fault low-level handling routines.
+ *
+ * Some of this is documented in Documentation/x86/entry_64.txt
+```
+
+
+
+
+# 要不要学一波汇编语言
+https://software.intel.com/en-us/articles/introduction-to-x64-assembly intel 入学手册，感觉没有必要。
+
+
 

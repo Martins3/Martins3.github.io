@@ -21,3 +21,6 @@
 
 ## Reflections
 <!-- - [Power of continuous thinking](./thinking.md) -->
+
+## MISC
+- [what is x86 IA-32 IA-64 x86-64 and amd64 ?](./x86.md)
