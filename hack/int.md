@@ -43,7 +43,6 @@
 <!-- vim-markdown-toc -->
 
 ## Context
-- [ ] 术道经纬 : https://zhuanlan.zhihu.com/p/93289632
 - [ ] fwnode 是做什么的 ?
 - [ ] 如何实现 nmi 中断的
 
@@ -328,11 +327,39 @@ struct irq_domain_ops {
 			 unsigned long *out_hwirq, unsigned int *out_type);
 #endif
 };
+
+/**
+ * struct irq_data - per irq chip data passed down to chip functions
+ * @mask:		precomputed bitmask for accessing the chip registers
+ * @irq:		interrupt number
+ * @hwirq:		hardware interrupt number, local to the interrupt domain
+ * @common:		point to data shared by all irqchips
+ * @chip:		low level interrupt hardware access
+ * @domain:		Interrupt translation domain; responsible for mapping
+ *			between hwirq number and linux irq number.
+ * @parent_data:	pointer to parent struct irq_data to support hierarchy
+ *			irq_domain
+ * @chip_data:		platform-specific per-chip private data for the chip
+ *			methods, to allow shared chip implementations
+ */
+struct irq_data {
+	u32			mask;
+	unsigned int		irq;
+	unsigned long		hwirq;
+	struct irq_common_data	*common;
+	struct irq_chip		*chip;
+	struct irq_domain	*domain;
+#ifdef	CONFIG_IRQ_DOMAIN_HIERARCHY
+	struct irq_data		*parent_data;
+#endif
+	void			*chip_data;
+};
 ```
 
 ![img](https://img2020.cnblogs.com/blog/1771657/202005/1771657-20200531111554895-528341955.png)
 - `struct irq_chip`结构，描述的是中断控制器的底层操作函数集，这些函数集最终完成对控制器硬件的操作；
 - `struct irq_domain`结构，用于硬件中断号和Linux IRQ中断号（virq，虚拟中断号）之间的映射；
+- `irq_chip` 结构体中的每个函数指针，都会携带一个指向struct irq_data的指针作为参数
 
 
 ![img](https://img2020.cnblogs.com/blog/1771657/202005/1771657-20200531111647851-1005315068.png)
@@ -423,9 +450,7 @@ struct apic *apic __ro_after_init = &apic_flat;
 [IRQs: the Hard, the Soft, the Threaded and the Preemptible](https://elinux.org/images/8/8c/Zyngier.pdf)
 
 > An interrupt controller allows them to be multiplexed
-
-我想知道 controller 如何实现 multiplexed 的，或者 multiplexed 到底指什么东西 ? interrupt 队列 ?
-
+> 
 > Offers specific facilities
 > - Masking/unmasking individual interrupts
 > - Setting priorities
@@ -551,17 +576,15 @@ top-level irq_desc 中间哪里 TMD 有 stash a pointer，只有 action chain �
 ## irq domain
 - [x] [What are linux irq domains, why are they needed?](https://stackoverflow.com/questions/34371352/what-are-linux-irq-domains-why-are-they-needed)
   - 基本的思路是，信号是逐级的传递到 CPU 中间的
-  - CPU 收到中断，知道是哪一个 interrupt line , 以及注册到该 driver 的 handler
-    - 如果一个 interrupt line 上注册了多个，可以依次执行一下, 直到找到该 device / driver
-      - 如果恰巧 driver 是一个 irq chip, 那么该芯片可以知道是来自于哪一个引脚，并且知道注册到该引脚的 device / driver，直到找到真正的 driver
+  - 通过逐级的 irq domain, 将最开始的 hardware irq 映射为 linux irq, 而 linux irq 就是 device 注册的
 
-- [ ] 虽然的确是这一个道理，那么为什么需要 irq domain 的概念啊 ?
-  - [ ] 是不是因为在每一个 chip 自己引脚编号 和 对应的 action 的映射建立关系
 
 [kernel doc](https://www.kernel.org/doc/html/latest/core-api/irq/irq-domain.html)
 
 we need a mechanism to separate controller-local interrupt numbers, called hardware irq's, from Linux IRQ numbers.
 
+[兰新宇](https://zhuanlan.zhihu.com/p/85353687)
+> 虽然radix tree、线性映射和硬件映射不会同时存在，但它们在"irq_domain"中是定义在一起的，"revmap_tree"只对radix tree有意义，revmap_size和linear_revmap[]只对线性映射有意义，revmap_direct_max_irq则只对硬件映射有意义。
 
 
 // --------------------- trace the functions -------------------------------------------
@@ -586,12 +609,7 @@ we need a mechanism to separate controller-local interrupt numbers, called hardw
   - if irq domain already set up, return `irq_find_mapping`
   - otherwise, `alloc_irq_from_domain` firstly
 
-// --------------------- read the functions -------------------------------------------
-
-
-
-
-
+// --------------------- trace the functions -------------------------------------------
 
 ## irq domain hierarchy
 [kernel doc](https://www.kernel.org/doc/html/latest/core-api/irq/irq-domain.html)
@@ -671,6 +689,8 @@ static struct irq_chip ioapic_ir_chip __read_mostly = {
 devm_request_threaded_irq ==> request_threaded_irq
 
 ![loading](https://img2020.cnblogs.com/blog/1771657/202006/1771657-20200605223042609-247616444.png)
+- [ ] 上面讲解了 thread ，shared 的处理，问题是，参数 irq 必须找到对应的 irq_desc, 新分配的只是 irq_action
+    - [ ] 通过 irq_domain_alloc_descs 可以分配 irq_desc, 但是现在找不到这些函数的调用位置
 
 
 ## irq desc
@@ -707,8 +727,6 @@ https://github.com/Manawyrm/pata-gpio
 - arch/x86/kernel/irq.c
 
 - [x] DEFINE_IDTENTRY_IRQ : interesting, wrap interrupt handler with `irq_enter_rcu`, `irq_exit_rcu` and `irqentry_exit`
-
-
 
 ```c
 /*
@@ -938,7 +956,6 @@ https://stackoverflow.com/questions/7005331/difference-between-io-apic-fasteoi-a
 ```
 才发现，IR-IO-APIC 后面都是添加上设备的，IR-PCI-MSI 主要是和 pcie 相关的设备，而 local apic 的名称直接被该 interrupt 的名字替代了。
 - [ ] 1572869-edge : 是什么鬼
-
 
 
 ## MSI

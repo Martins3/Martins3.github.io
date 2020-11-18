@@ -2,10 +2,6 @@
 A bus is made up of both an
 electrical interface and a programming interface. 
 
-> 总线，难道不就是一根线吗 ?
-> 为什么会变得这么复杂 ?
-
-
 ## 12.1 The PCI Interface
 Although many computer users think of PCI as a way of laying out electrical wires, it
 is actually **a complete set of specifications defining how different parts of a computer
@@ -14,11 +10,9 @@ should interact**.
 in this section, we are mainly concerned with how a PCI
 driver can find its hardware and gain access to it.
 
-The probing techniques discussed
-in the sections “Module Parameters” in Chapter 2 and “Autodetecting the IRQ
+The probing techniques discussed in the sections “Module Parameters” in Chapter 2 and “Autodetecting the IRQ
 Number” in Chapter 10 can be used with PCI devices, but the specification offers an
 alternative that is preferable to probing.
-> 补齐这些东西
 
 The PCI architecture was designed as a replacement for the ISA standard, with three
 main goals: 
@@ -52,4 +46,3 @@ When power is applied to a PCI device, the hardware remains inactive. In other
 words, **the device responds only to configuration transactions.**
 **At power on, the device has no memory and no I/O ports mapped in the computer’s address space;**
 every other device-specific feature, such as interrupt reporting, is disabled as well.
-

@@ -6,7 +6,7 @@
 - [device model](#device-model)
     - [Hot Plug](#hot-plug)
     - [uevent](#uevent)
-    - [Kobject Kset](#kobject-kset)
+    - [kobject kset](#kobject-kset)
     - [attribute](#attribute)
     - [device](#device)
     - [driver](#driver)
@@ -83,7 +83,7 @@ Uevent的机制是比较简单的(大概1000行)，设备模型中任何设备�
 http://www.wowotech.net/device_model/uevent.html
 
 
-#### Kobject Kset
+#### kobject kset
 主要参考文档 : Documentation/kobject.txt 介绍了几个 API ，其实也没有啥。
 
 1. kset : A kset is a group of kobjects.  These kobjects can be of the same ktype
@@ -96,6 +96,9 @@ http://www.wowotech.net/device_model/uevent.html
 2. ktype 控制 kobject 的创建和销毁。(@todo 那么为什么叫做 type ，不叫 initializer 呀 ?)
 
 kset内部本身也包含一个kobj对象，在sysfs中也表现为目录；所不同的是，kset要承担kobj状态变动消息的发送任务
+
+- [ ] [kobject](https://www.kernel.org/doc/Documentation/kobject.txt)
+- [ ] [The zen of kobjects](https://lwn.net/Articles/51437/)
 
 
 ```c
