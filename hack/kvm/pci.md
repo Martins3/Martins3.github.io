@@ -20,7 +20,7 @@
 - [question](#question)
 
 <!-- vim-markdown-toc -->
-- [ ] iommu group 
+- [ ] iommu group
 
 - [ ] 内核文档 : [^3]
 - [ ] 关键blog : https://resources.infosecinstitute.com/topic/system-address-map-initialization-in-x86x64-architecture-part-1-pci-based-systems/
@@ -31,35 +31,35 @@ https://sites.google.com/site/pinczakko/pinczakko-s-guide-to-award-bios-reverse-
 
 https://www.kernel.org/doc/html/latest/PCI/sysfs-pci.html?highlight=proc%20irq
 
-
 ## overview
 - [x] https://unix.stackexchange.com/questions/83390/what-are-pci-quirks
 
-[^2] 
+[^2]
 > Generally speaking, most modern OSes (Windows and Linux) will re-scan the detected hardware as part of the boot sequence. Trusting the BIOS to detect everything and have it setup properly has proven to be unreliable.
 
 1. os 会重新对于所有的设备进行一次扫描，bios 的扫描其实不可靠的
 2. ACPI Enumeration - The OS can rely on the BIOS to describe these devices in ASL code.
 
 
-| File                                                        blank | comment | code | explanation |
-|-------------------------------------------------------------------|---------|------|-------------|
-| pci.c                                                       950   | 1955    | 3667 |             |
-| probe.c                                                     543   | 631     | 2137 |             |
-| controller/pci-hyperv.c                                     454   | 911     | 2133 |             |
-| setup-bus.c                                                 333   | 373     | 1536 |             |
-| pci-sysfs.c                                                 244   | 150     | 1170 |             |
-| pci-driver.c                                                283   | 331     | 1045 | pcie 本身作为 bus driver 的一种             |
-| msi.c                                                       258   | 276     | 1045 |             |
-| pci-acpi.c                                                  205   | 175     | 989  |             |
-| pcie/aer.c                                                  214   | 229     | 961  |             |
-| pcie/aspm.c                                                 191   | 245     | 941  |             |
-| xen-pcifront.c                                              199   | 49      | 934  |             |
-| iov.c                                                       189   | 177     | 725  |             |
-| p2pdma.c                                                    164   | 240     | 601  |             |
-| pci.h                                                        97   | 64      | 532  |             |
-| vpd.c                                                       101   | 85      | 467  |             |
-| pcie/aer_inject.c                                            67   | 18      | 460  |             |
+| File                                                        blank   | comment | code | explanation                     |
+|---------------------------------------------------------------------|---------|------|---------------------------------|
+| pci.c                                                       950     | 1955    | 3667 |                                 |
+| probe.c                                                     543     | 631     | 2137 |                                 |
+| controller/pci-hyperv.c                                     454     | 911     | 2133 |                                 |
+| setup-bus.c                                                 333     | 373     | 1536 |                                 |
+| pci-sysfs.c                                                 244     | 150     | 1170 |                                 |
+| pci-driver.c                                                283     | 331     | 1045 | pcie 本身作为 bus driver 的一种 |
+| msi.c                                                       258     | 276     | 1045 |                                 |
+| pci-acpi.c                                                  205     | 175     | 989  |                                 |
+| pcie/aer.c                                                  214     | 229     | 961  |                                 |
+| pcie/aspm.c                                                 191     | 245     | 941  |                                 |
+| xen-pcifront.c                                              199     | 49      | 934  |                                 |
+| iov.c                                                       189     | 177     | 725  |                                 |
+| p2pdma.c                                                    164     | 240     | 601  |                                 |
+| pci.h                                                        97     | 64      | 532  |                                 |
+| vpd.c                                                       101     | 85      | 467  |                                 |
+| pcie/aer_inject.c                                            67     | 18      | 460  |                                 |
+| slot.c                                                            0 | 0       | 379  |                                 |
 
 
 ## ldd3
@@ -144,7 +144,7 @@ struct pci_bus {
 ```
 pci_read_config_byte 最终利用 pci_bus::ops:read 实现
 
-pci_bus_set_ops : 
+pci_bus_set_ops :
 
 ### pci_host_bridge
 - [ ] pci_register_host_bridge
@@ -208,7 +208,7 @@ https://github.com/intel/nemu/wiki/ACPI-PCI-discovery-hotplug
   - resource_alignment
   - uevent
 - /proc/bus/pci : /proc 下面的信息应该都是放在 linux/drivers/pci/proc.c 中间了
-  - devices : https://stackoverflow.com/questions/2790637/how-to-interpret-the-contents-of-proc-bus-pci-devices : 是对应的，参考 ldd3 中文版 p303，其中 
+  - devices : https://stackoverflow.com/questions/2790637/how-to-interpret-the-contents-of-proc-bus-pci-devices : 是对应的，参考 ldd3 中文版 p303，其中
   - 00 01 02 03: 之类的, 分别对应 bus:dev:function 的 bus 为 00 的 ，在目录记录 dev:functions *TODO* 具体信息暂时看不到.
 
 ### lspci
@@ -293,9 +293,60 @@ struct bus_type pci_bus_type = {
 - [ ]  pci_bus 的 probe 和 pci_driver 的 probe 是什么关系
 
 > PCI drivers “discover” PCI devices in a system via pci_register_driver(). [^3]
-- [ ] 这个操作的验证没有找到，但是应该是很正确的, 但是参数 pci_dev 谁构造的
+
+从 pci_register_driver 出发，其实可以很容易的 trace 到 pci_bus_type::probe 调用位置, linux/drivers/base/dd.c:really_probe 中间，而具体的 pci_driver::probe 又是在 pci_driver.c 中间被 pci_bus_type::probe 调用的.
+
+> Once the driver knows about a PCI device and takes ownership, the driver generally needs to perform the following initialization: [^3]
+>
+> Enable the device
+> Request MMIO/IOP resources
+> Set the DMA mask size (for both coherent and streaming DMA)
+> Allocate and initialize shared control data (pci_allocate_coherent())
+> Access device configuration space (if needed)
+> Register IRQ handler (request_irq())
+> Initialize non-PCI (i.e. LAN/SCSI/etc parts of the chip)
+> Enable DMA/processing engines
+
+下面使用 nvme 作为例子来分析一一解释上面的话:
+- queue_request_irq : 如果不考虑 msi 之类的，调用 request_threaded_irq 的参数 irq 即使 `dev->irq` *TODO* 所以 desc 的分配是什么什么时候
+- nvme_create_io_queues => nvme_alloc_queue => dma_alloc_coherent
+- [ ] 好吧，感觉是这个道理，但是代码已经不是这么回事了
+
 
 ## irq
+- **写 irq** pci_device_probe : 注册到 pci_bus_type 上, 调用 pci_assign_irq 获取 irq, 并且写入到 configuration space 中间
+
+- [ ] pci_scan_child_bus : *读 irq*
+  - [ ] pci_scan_child_bus_extend
+      - [ ] pci_scan_bridge_extend : If it's a bridge, configure it and scan the bus behind it.
+      - [ ] pci_scan_slot : 用于辅助 https://www.linuxjournal.com/content/jailhouse 的情况
+      - [ ] pci_scan_single_device : 如果调用 pci_get_slot 找到了 dev 那么马上又 pci_dev_put, 因为 scan 是为了找到不存在的 device
+        - pci_get_slot : 首先在 slot 中间利用 devfn 查找, devfn 在语境中又称为 slot
+        - [ ] pci_scan_device 
+          - [ ] pci_alloc_dev : malloc 一个 struct pci_dev
+          - [ ] pci_setup_device : pci_setup_device - Fill in class and map information of a device
+            - [ ] pci_read_irq : 正如 ldd3 中间所说，只有需要中断的 PCI_INTERRUPT_PIN 的才会给中断
+pci_scan_child_bus 的调用者很多:
+- pci_scan_root_bus_bridge
+- pci_scan_root_bus
+- pci_scan_bus
+- pci_rescan_bus_bridge_resize
+跟踪其中一个上去，最后到达了
+```c
+static struct platform_driver gen_pci_driver = {
+	.driver = {
+		.name = "pci-host-generic",
+		.of_match_table = gen_pci_of_match,
+	},
+	.probe = pci_host_common_probe,
+	.remove = pci_host_common_remove,
+};
+```
+也就是 irq_dev 其实是 configuration space 以及所挂在 bus 的抽象。
+
+- [ ] 上面的分析还是让人疑惑，既然 irq 是 bus_type::probe 中间写入的，那么写入的是 linux irq 还是 hardware irq
+  - [ ] 设想是，一个设备挂到 pci 上，pci 说，当你发起中断，我可以保证 configuration space 中间记录的 irq 即使 cpu 的 idt[irq] 相应的
+
 
 ## question
 

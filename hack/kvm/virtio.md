@@ -1,14 +1,16 @@
 ## eventfd
+
+**如何打开 virtio 选项于 make menuconfig 中**
+1. Device Driver => Virtio Drivers
+2. Device Driver => Block devices => Virtio block io
+
+
 - [ ] http://blog.allenx.org/2015/07/05/kvm-irqfd-and-ioeventfd
 - [ ] https://libvirt.org/kbase/virtiofs.html
 
-## 读读代码
-
 ## virtio-blk
-virtio_find_vqs
 
-
-pci 总线的 probe 机制 :
+### eventfd
 ```c
 static struct pci_driver virtio_pci_driver = {
 	.name		= "virtio-pci",
@@ -21,9 +23,47 @@ static struct pci_driver virtio_pci_driver = {
 	.sriov_configure = virtio_pci_sriov_configure,
 };
 ```
+
+virtio_dev_probe 调用 virtio_blk::probe
+```c
+static struct bus_type virtio_bus = {
+	.name  = "virtio",
+	.match = virtio_dev_match,
+	.dev_groups = virtio_dev_groups,
+	.uevent = virtio_uevent,
+	.probe = virtio_dev_probe,
+	.remove = virtio_dev_remove,
+};
+```
+
+```c
+static struct virtio_driver virtio_blk = {
+	.feature_table			= features,
+	.feature_table_size		= ARRAY_SIZE(features),
+	.feature_table_legacy		= features_legacy,
+	.feature_table_size_legacy	= ARRAY_SIZE(features_legacy),
+	.driver.name			= KBUILD_MODNAME,
+	.driver.owner			= THIS_MODULE,
+	.id_table			= id_table,
+	.probe				= virtblk_probe,
+	.remove				= virtblk_remove,
+	.config_changed			= virtblk_config_changed,
+#ifdef CONFIG_PM_SLEEP
+	.freeze				= virtblk_freeze,
+	.restore			= virtblk_restore,
+#endif
+};
+```
+
+- [ ] 为什么会存在 virtio-pci 设备的存在，既然已经构建了一个 virtio_bus 的总线类型
+
+
 - [ ] virtio_pci_probe
   - [ ] virtio_pci_modern_probe : 给 virtio_pci_device::vdev 注册
 
+## 等待清理的部分
+
+virtio_find_vqs
 
 ```c
 /* Our device structure */
