@@ -4,6 +4,7 @@
 - [ ] [这是绝对的核心](https://cs.lmu.edu/~ray/notes/nasmtutorial/)
 - [] global ?
 
+- 可以用来学习一下各种 SIMD 指令的写法吧 : https://github.com/pigirons/cpufp
 
 
 ## as(GNU Assembler)

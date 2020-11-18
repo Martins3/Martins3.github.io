@@ -898,7 +898,31 @@ https://stackoverflow.com/questions/7005331/difference-between-io-apic-fasteoi-a
 - [ ] /sys/kernel/irq 和 /proc/irq 的关系是什么 ?
 
 ## /proc/irq
-代码跟踪 : 如何利用 /proc/irq 调整 io apic 的 cpu affinity
+- [x] 代码跟踪 : 如何利用 /proc/irq 调整 io apic 的 cpu affinity
+  - 最后就是调用到 irq_chip::irq_set_affinity 的位置
+  - 并且和[^3] 中间描述的 ioapic 的中断选项完全相同
+
+> affinity :
+>   - IRQ affinity on SMP. If this is an IPI related irq, then this is the mask of the CPUs to which an IPI can be sent.
+> effective_affinity :
+>  - The effective IRQ affinity on SMP as some irq chips do not allow multi CPU destinations. A subset of affinity.
+
+```c
+static struct irq_chip ioapic_ir_chip __read_mostly = {
+	.name			= "IR-IO-APIC",
+	.irq_startup		= startup_ioapic_irq,
+	.irq_mask		= mask_ioapic_irq,
+	.irq_unmask		= unmask_ioapic_irq,
+	.irq_ack		= irq_chip_ack_parent,
+	.irq_eoi		= ioapic_ir_ack_level,
+	.irq_set_affinity	= ioapic_set_affinity,
+	.irq_retrigger		= irq_chip_retrigger_hierarchy,
+	.irq_get_irqchip_state	= ioapic_irq_get_chip_state,
+	.flags			= IRQCHIP_SKIP_SET_WAKE,
+};
+```
+
+
 
 - /proc/irq 的代码都在 kernel/irq/proc.c
 
@@ -957,7 +981,6 @@ https://stackoverflow.com/questions/7005331/difference-between-io-apic-fasteoi-a
 才发现，IR-IO-APIC 后面都是添加上设备的，IR-PCI-MSI 主要是和 pcie 相关的设备，而 local apic 的名称直接被该 interrupt 的名字替代了。
 - [ ] 1572869-edge : 是什么鬼
 
-
 ## MSI
 Generic MSIs : https://en.wikipedia.org/wiki/Message_Signaled_Interrupts
 
@@ -966,3 +989,4 @@ Generic MSIs : https://en.wikipedia.org/wiki/Message_Signaled_Interrupts
 ## ref
 [^1]: https://www.oreilly.com/library/view/pc-hardware-in/059600513X/ch01s03s01s01.html
 [^2]: [深度探索Linux系统虚拟化](https://book.douban.com/subject/35238691/)
+[^3]: Inside the Linux Virtualization : Principle and Implementation

@@ -715,6 +715,9 @@ and are only automatically released on the last close of the open file descripti
 ## epoll
 // TODO
 // 找到简书上内容上，写 enomia 的时候介绍 epoll 机制的内容
+- https://zhou-yuxin.github.io/articles/2017/%E7%AC%AC%E4%B8%80%E4%B8%AALinux%E9%A9%B1%E5%8A%A8%E7%A8%8B%E5%BA%8F%EF%BC%88%E4%B8%89%EF%BC%89%E2%80%94%E2%80%94aMsg%E7%9A%84%E9%9D%9E%E9%98%BB%E5%A1%9E%E5%BC%8FIO%E4%B9%8Bselect-poll/index.html
+在内核中间实现一个支持的 poll 的模块
+
 
 ## anon_inodes
 - [ ] 很短的一个代码 : /home/maritns3/core/linux/fs/anon_inodes.c
