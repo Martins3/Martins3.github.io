@@ -1,10 +1,9 @@
 # 中断
 <!-- vim-markdown-toc GitLab -->
 
-- [Context](#context)
+- [Question](#question)
 - [TODO](#todo)
-- [code distribution](#code-distribution)
-- [unsorted](#unsorted)
+- [overview](#overview)
 - [workqueue](#workqueue)
     - [struct work_struct](#struct-work_struct)
     - [struct workqueue](#struct-workqueue)
@@ -17,53 +16,41 @@
 - [irqaction](#irqaction)
 - [softirq](#softirq)
 - [tasklet](#tasklet)
+- [pic](#pic)
 - [apic](#apic)
 - [chained irq](#chained-irq)
 - [irq domain](#irq-domain)
 - [irq domain hierarchy](#irq-domain-hierarchy)
-- [ir](#ir)
 - [request irq](#request-irq)
 - [irq desc](#irq-desc)
 - [affinity](#affinity)
 - [apic](#apic-1)
 - [gpio](#gpio)
 - [idt](#idt)
-- [handle irq](#handle-irq)
+  - [Exception Handling](#exception-handling)
+  - [Interrupt	Handling](#interrupthandling)
 - [x86 vector](#x86-vector)
 - [isa and pci](#isa-and-pci)
 - [eoi](#eoi)
 - [apic](#apic-2)
-- [io apic](#io-apic)
+- [ioapic](#ioapic)
 - [proc && sys](#proc-sys)
 - [/proc/irq](#procirq)
 - [/proc/interrupts](#procinterrupts)
 - [MSI](#msi)
+- [matrix](#matrix)
+- [nested](#nested)
+- [interrupt threads](#interrupt-threads)
+- [stack](#stack)
+- [ret](#ret)
 - [ref](#ref)
 
 <!-- vim-markdown-toc -->
 
-## Context
+## Question
+- [ ] 总结 从 ics 的中断 和 ucore 的中断的实现，然后再去分析
 - [ ] fwnode 是做什么的 ?
 - [ ] 如何实现 nmi 中断的
-
-- [ ] *这么详细的文档不看，然后天天抱怨 ?* https://www.kernel.org/doc/html/latest/core-api/genericirq.html?highlight=proc%20irq#
-
-- https://linux-kernel-labs.github.io/refs/heads/master/lectures/interrupts.html#
-- https://www.ibm.com/developerworks/cn/linux/l-cn-linuxkernelint/index.html
-- https://0xax.gitbooks.io/linux-insides/content/Interrupts/linux-interrupts-7.html
-- https://zhuanlan.zhihu.com/p/83709066
-
-## TODO
-1. 总结 从 ics 的中断 和 ucore 的中断的实现，然后再去分析
-
-这篇文章
-A Hardware Architecture for Implementing Protection Rings
-让我怀疑人生:
-1. 这里描述的 gates 和 syscall 是什么关系 ?
-2. syscall 可以使用 int 模拟实现吗 ?
-3. interupt 和 exception 在架构实现上存在什么区别吗 ?
-
-- [ ] IRQ line 到底是什么?
 
 1. 什么是软中断 ？
 - [ ] https://www.kernel.org/doc/html/latest/core-api/genericirq.html
@@ -72,34 +59,24 @@ A Hardware Architecture for Implementing Protection Rings
 1. https://stackoverflow.com/questions/1053572/why-kernel-code-thread-executing-in-interrupt-context-cannot-sleep
 2. spin lock 为什么需要提供 spin_lock_irqsave : 因为 spin_lock 不可以 recursive 的，一个 process 持有 lock, 然后 interrupt handler 被执行，持有这个锁，那么就进入死锁了
 
-[^4] 的质量很好，记录放在 insides 中间:
-
-ideentry.h : 定义了一些常见的 idt, 比如 GP(general protection), PF(page fault) 的问题
-
-<<<<<<< HEAD
-http://www.cs.columbia.edu/~krj/os/lectures/L07-LinuxEvents.pdf
-
+## TODO
 [^5] 的质量很高，虽然是个 ppt:
 - I/O	devices	hae	(unique	or	shared)	Interrupt	Request Lines	(IRQs)	
 - IRQs	are	mapped	by	special	hardware	to	interrupt	vectors, and	passed	to	the	CPU	
 - This	hardware	is	called	a	Programmable	Interrupt Controller	(PIC)	v
 
-[^4]: https://0xax.gitbooks.io/linux-insides/content/Interrupts/
 [^5]: http://www.cs.columbia.edu/~krj/os/lectures/L07-LinuxEvents.pdf
-
-为什么设备是复杂的 ?
-1. 利用构建 vfs 提供访问设备的接口，同时block 设备又是 fs 的载体
-2. module 系统
-3. 中断 系统
-- [ ] so, it's time unravel the mess relationships between them ?
-
 
 - [answer this question](https://unix.stackexchange.com/questions/491437/how-does-linux-kernel-switches-from-kernel-stack-to-interrupt-stack?rq=1)
 
-
 - [ ] http://wiki.0xffffff.org/posts/hurlex-8.html : used for understand 8259APIC
 
-## code distribution
+- [ ] 总结从 idt 分别到 interrupt 和 exception 的过程
+
+- [ ] 所以 CPU 为什么需要 debug 的 exception 啊 ?
+
+- [ ] https://os.phil-opp.com/cpu-exceptions/#the-interrupt-stack-frame 和 insides 处理各种细节应该就可以了吧 !
+## overview
 arch/x86/kernel/apic
 | File             | blank | comment | code | explanation |
 |------------------|-------|---------|------|-------------|
@@ -153,11 +130,6 @@ kernel/irq
 | Makefile       | 1     | 1       | 15   |             |
 
 
-## unsorted
-- [ ][How does the Linux kernel handle shared IRQs?](https://unix.stackexchange.com/questions/47306/how-does-the-linux-kernel-handle-shared-irqs)
-  - [ ] multiple device driver for one interrupt line ?
-
-- [ ] --------------- unsorted
 
 ## workqueue
 - [ ] wowotech 中间的东西可以看看:
@@ -165,8 +137,6 @@ kernel/irq
 
 With this article,[LoyenWang](https://www.cnblogs.com/LoyenWang/p/13185451.html), I feel like that I understand how workqueue works, some questions
   - [ ] workqueue attr
-
-  
 
 #### struct work_struct
 `struct work_struct`用来描述`work`，初始化一个`work`并添加到工作队列后，将会将其传递到合适的内核线程来进行处理，它是用于调度的最小单位。
@@ -429,7 +399,6 @@ struct irqaction {
 
 ![loading](https://img2020.cnblogs.com/blog/1771657/202006/1771657-20200614143354812-1093740244.png)
 
-
 - [ ] how kernel transfer from hardirq to softirq ?
 
 - [ ] /proc/stat 关于 softirq 的统计是什么 ？
@@ -437,6 +406,14 @@ struct irqaction {
 ## tasklet
 - [ ] https://lwn.net/Articles/830964/
 - [ ] https://www.cnblogs.com/LoyenWang/p/13124803.html
+
+## pic
+Interrupt	sequence:	
+– Interrupt	controller	raises	INT	line	
+– 80386	core	pulses	INTA	line	low,	allowing	INT	to	go	low	
+– 80386	core	pulses	INTA	line	low	again,	signaling	controller	to put	interrupt	number	on	data	bus	
+
+> 一共三根线 : interrupt line, interrupt acknowledge line, Data bus 参与
 
 ## apic
 ```c
@@ -669,22 +646,6 @@ IOAPIC irq_domain (manage IOAPIC delivery entries/pins)
 - [ ] mp_irqdomain_alloc : setup mapping from child chip irq to parent irq which is IR or vector
 - [ ] x86_vector_alloc_irqs : it will update vector at last
 
-## ir
-```c
-static struct irq_chip ioapic_ir_chip __read_mostly = {
-	.name			= "IR-IO-APIC",
-	.irq_startup		= startup_ioapic_irq,
-	.irq_mask		= mask_ioapic_irq,
-	.irq_unmask		= unmask_ioapic_irq,
-	.irq_ack		= irq_chip_ack_parent,
-	.irq_eoi		= ioapic_ir_ack_level,
-	.irq_set_affinity	= ioapic_set_affinity,
-	.irq_retrigger		= irq_chip_retrigger_hierarchy,
-	.irq_get_irqchip_state	= ioapic_irq_get_chip_state,
-	.flags			= IRQCHIP_SKIP_SET_WAKE,
-};
-```
-
 ## request irq
 devm_request_threaded_irq ==> request_threaded_irq
 
@@ -723,6 +684,28 @@ https://github.com/Manawyrm/pata-gpio
 
 
 ## idt
+Vectors	usually	IRQ#+	32[^6]:
+– Below	32	reserved	for	non-maskable	intr	&	excepWons	
+– Maskable	interrupts	can	be	assigned	as	needed	
+– Vector	128	used	for	syscall	
+– Vectors	251-255	used	for	IPI
+
+- [ ] 简单验证一下 IRQ#+32 ，也就是在 idt 中间存在偏移量
+
+IDT:	gate	descriptors,	one	per	vector[^6]
+– Address	of	handler	
+– Current	Privilege	Level	(CPL)	
+– Descriptor	Privilege	Level	(DPL)	
+– Gates	(slightly	different	ways	of	entering	kernel)	
+    - Task	gate:	includes	TSS	to	transfer	to	(not	used	by Linux)	
+    - Interrupt	gate:	disables	further	interrupts	
+    - Trap	gate:	further	interrupts	sWll	allowed
+
+- [ ] CPL 和 DPL : DPL 不总是内核态吗 ? 难道还可以在用户态执行 handler ?
+    - [ ] 是不是可以根据 CPL 的不同，操作不同，比如切换到内核态的 stack
+- [ ] Interrupt gate 和 Trap gate 的唯一区别就是是否 disable interrupt 吗 ？
+
+
 - arch/x86/include/asm/idtentry.h
 - arch/x86/kernel/irq.c
 
@@ -735,9 +718,6 @@ https://github.com/Manawyrm/pata-gpio
  */
 DEFINE_IDTENTRY_IRQ(common_interrupt)
 ```
-
-
-
 
 - [x] How exception are set
 ```c
@@ -816,7 +796,13 @@ static const __initconst struct idt_data def_idts[] = {
 #endif
 };
 ```
-## handle irq
+
+### Exception Handling
+[^6]
+- Most	error	excepWons	—	divide by zero,	invalid operation,	illegal	memory	reference,	etc.	—	translate directly	into	signals: `force_sig(sig_number,	current);`
+- An excepWon	can	(infrequently)	happen	in	the	kernel : `die()`;	//	kernel	oops	
+
+### Interrupt	Handling	
 asm_common_interrupt => handle_irq => run_irq_on_irqstack_cond 
 
 ```c
@@ -871,6 +857,34 @@ DEFINE_PER_CPU(vector_irq_t, vector_irq) = {
 
 assign_irq_vector ==> assign_vector_locked
 
+此外，arch_early_irq_init 中间初始化的默认 fwnode 以及 irq_domain 都是叫做 vector 的:
+```c
+int __init arch_early_irq_init(void)
+{
+	struct fwnode_handle *fn;
+
+	fn = irq_domain_alloc_named_fwnode("VECTOR");
+	BUG_ON(!fn);
+	x86_vector_domain = irq_domain_create_tree(fn, &x86_vector_domain_ops,
+						   NULL);
+	BUG_ON(x86_vector_domain == NULL);
+	irq_set_default_host(x86_vector_domain);
+
+	BUG_ON(!alloc_cpumask_var(&vector_searchmask, GFP_KERNEL));
+
+	/*
+	 * Allocate the vector matrix allocator data structure and limit the
+	 * search area.
+	 */
+	vector_matrix = irq_alloc_matrix(NR_VECTORS, FIRST_EXTERNAL_VECTOR,
+					 FIRST_SYSTEM_VECTOR);
+	BUG_ON(!vector_matrix);
+
+	return arch_early_ioapic_init();
+}
+```
+
+
 
 ## isa and pci
 [^1]:
@@ -884,9 +898,17 @@ https://stackoverflow.com/questions/7005331/difference-between-io-apic-fasteoi-a
 
 ## apic
 
-## io apic
+## ioapic
 - [ ] io apic 寄存器 && Redirection Table
 
+Interrupt	routing[^6]:
+– Allows	broadcast	or	selecWve	rouWng	of	interrupts	
+– Ability	to	distribute	interrupt	handling	load	
+– Routes	to	lowest	priority	process		
+  - Special	register:	Task	Priority	Register	(TPR)	
+– Arbitrates	(round-robin)	if	equal	priority	
+
+- [ ] 通过 TPR 可以实现将消息发送到 priority 最低的位置
 ## proc && sys
 知道的 irq 在 proc 和 sys 下提供的接口 :
 
@@ -985,8 +1007,63 @@ static struct irq_chip ioapic_ir_chip __read_mostly = {
 Generic MSIs : https://en.wikipedia.org/wiki/Message_Signaled_Interrupts
 
 
+## matrix
+观察到 linux/kernel/irq/matrix.c 以及 irq_alloc_matrix, 但是根本不知道为什么需要使用 matrix 这一个概念
+
+## nested
+- Interrupts	can	be	interrupted[^6]
+  – By	different	interrupts;	handlers	need	not	be	reentrant	
+  – No	notion	of	priority	in	Linux	
+  – Small	portions	execute	with	interrupts	disabled	
+  – Interrupts	remain	pending	until	acked	by	CPU	
+- Exceptions	can	be	interrupted	
+  – By	interrupts	(devices	needing	service)	
+- Exceptions	can	nest	two	levels	deep	
+  – ExcepWons	indicate	coding	error	
+  – ExcepWon	code	(kernel	code)	shouldn’t	have	bugs	
+  – Page	fault	is	possible	(trying	to	touch	user	data)	
+
+In order to support as many architectures as possible, Linux has a more restrictive interrupt nesting implementation:[^7]
+- an exception (e.g. page fault, system call) can not preempt an interrupt; if that occurs it is considered a bug
+- an interrupt can preempt an exception or other interrupts; however, only one level of interrupt nesting is allowed
+
+- [ ] 嵌套规则是 linux 规定的，还是 hardware, 如果是 os, 找到证据
+
+## interrupt threads
+
+## stack
+- When	an	interrupt	occurs,	what	stack	is	used?	
+  – **Exceptions**:	The	kernel	stack	of	the	current	
+  process,	whatever	it	is,	is	used		(There’s	always	
+  some	process	running	—	the	“idle”	process,	if	
+  nothing	else)	
+  – Interrupts:	hard	IRQ	stack	(1	per	processor)	
+  – SoftIRQs:	soa	IRQ	stack	(1	per	processor)	
+- These	stacks	are	configured	in	the	IDT	and	TSS at	boot	Wme	by	the	kernel	
+
+- [ ] 每一个 core 只是提供一个 stack 给 interrupts，在什么时候分配的
+  - [ ] 配置在 IDT 和 TSS 中间, 验证一下
+- [ ] 嵌套的 interrupts 是使用的不同的 stack 吗 ?
+- [x] exception 是 process context 吗 ？ 不是
+
+## ret
+- Interleaved	assembly	entry	points:	[^6]
+  – ret_from_excepWon()	
+  – ret_from_intr()	
+  – ret_from_sys_call()	
+  – ret_from_fork()	
+- Things	that	happen:	
+  – Run	scheduler	if	necessary	
+  – Return	to	user	mode	if	no	nested	handlers	
+    - Restore	context,	user-stack,	switch	mode	
+    - Re-enable	interrupts	if	necessary	
+– Deliver	pending	signals	
 
 ## ref
 [^1]: https://www.oreilly.com/library/view/pc-hardware-in/059600513X/ch01s03s01s01.html
 [^2]: [深度探索Linux系统虚拟化](https://book.douban.com/subject/35238691/)
 [^3]: Inside the Linux Virtualization : Principle and Implementation
+[^4]: [kernel doc](https://0xax.gitbooks.io/linux-insides/content/Interrupts/)
+[^5]: https://0xax.gitbooks.io/linux-insides/content/Interrupts/
+[^6]: http://www.cs.columbia.edu/~krj/os/lectures/L07-LinuxEvents.pdf
+[^7]: https://linux-kernel-labs.github.io/refs/heads/master/lectures/interrupts.html
