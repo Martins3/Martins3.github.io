@@ -50,21 +50,13 @@
 ## Question
 - [ ] 总结 从 ics 的中断 和 ucore 的中断的实现，然后再去分析
 - [ ] fwnode 是做什么的 ?
-- [ ] 如何实现 nmi 中断的
-
-1. 什么是软中断 ？
-- [ ] https://www.kernel.org/doc/html/latest/core-api/genericirq.html
-
-- [ ] --------------- unsorted
-1. https://stackoverflow.com/questions/1053572/why-kernel-code-thread-executing-in-interrupt-context-cannot-sleep
-2. spin lock 为什么需要提供 spin_lock_irqsave : 因为 spin_lock 不可以 recursive 的，一个 process 持有 lock, 然后 interrupt handler 被执行，持有这个锁，那么就进入死锁了
 
 ## TODO
 - [answer this question](https://unix.stackexchange.com/questions/491437/how-does-linux-kernel-switches-from-kernel-stack-to-interrupt-stack?rq=1)
-
 - [ ] http://wiki.0xffffff.org/posts/hurlex-8.html : used for understand 8259APIC
 - [ ] 总结从 idt 分别到 interrupt 和 exception 的过程
 - [ ] 所以 CPU 为什么需要 debug 的 exception 啊 ?
+
 - [ ] https://os.phil-opp.com/cpu-exceptions/#the-interrupt-stack-frame 和 insides 处理各种细节应该就可以了吧 !
 
 - arm 的一些资料:
@@ -1039,6 +1031,11 @@ In order to support as many architectures as possible, Linux has a more restrict
 - [ ] 嵌套的 interrupts 是使用的不同的 stack 吗 ?
 - [x] exception 是 process context 吗 ？ 不是
 
+- [ ] https://unix.stackexchange.com/questions/491437/how-does-linux-kernel-switches-from-kernel-stack-to-interrupt-stack?rq=1
+  - 这个回答说，如果发生在用户态，会进行两次 stack 切换，我是不信的
+  - TSS 可以找到内核 stack, 那么靠什么找到 IRQ stack ?
+
+
 ## ret
 - Interleaved	assembly	entry	points:	[^6]
   – ret_from_excepWon()	
@@ -1060,3 +1057,4 @@ In order to support as many architectures as possible, Linux has a more restrict
 [^5]: https://0xax.gitbooks.io/linux-insides/content/Interrupts/
 [^6]: http://www.cs.columbia.edu/~krj/os/lectures/L07-LinuxEvents.pdf
 [^7]: https://linux-kernel-labs.github.io/refs/heads/master/lectures/interrupts.html
+[^8]: https://www.kernel.org/doc/html/latest/x86/kernel-stacks.html
