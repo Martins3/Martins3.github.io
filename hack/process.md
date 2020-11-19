@@ -729,6 +729,12 @@ __init void init_sched_fair_class(void)
 
 this [ans](https://stackoverflow.com/questions/9473301/are-there-any-difference-between-kernel-preemption-and-interrupt)
 summaries incisively, and we can check the comment of `__schedule`
+> When a process is interrupted, the kernel runs some code, which may not be related to what the process does.
+> When this is done, two things can happen:
+> 1. The same process will get the CPU again.
+> 2. A different process will get the CPU. The current process was preempted.
+> 
+> So preemption will only happen after an interrupt, but an interrupt doesn't always cause preemption.
 
 
 [^7]
@@ -739,6 +745,10 @@ Therefore, the main characteristic of a preemptive kernel is that a process runn
 Kernel Mode can be replaced by another process while in the middle of a kernel
 function.
 
+- *一句话总结 : 如果没有打开，那么想要切换，只有在返回到用户态的时候才可以，打开之后，在 interrupt handle 的时候都会进行检查*
+  - 当内核不能抢占，一个 user process 阻塞到内核态中间，其无法陷入休眠，并且总是占有 CPU (qemu 重甲测试一下 ?)
+  - 一旦 disable 掉 preempt，可以保证接下来执行的代码都是在同一个 CPU 上的
+
 [^7]:
 it is greater than zero when any of the following cases occurs:
 1. The kernel is executing an interrupt service routine.
@@ -746,8 +756,6 @@ it is greater than zero when any of the following cases occurs:
 softirq or tasklet).
 3. The kernel preemption has been explicitly disabled by setting the preemption
 counter to a positive value.
-
-huxueshi: this is correct
 
 
 - [x] I can't find anything about CONFIG_PREEMPT_NONE when tracing `scheduler_tick` ?
