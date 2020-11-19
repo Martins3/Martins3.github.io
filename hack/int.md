@@ -60,22 +60,15 @@
 2. spin lock 为什么需要提供 spin_lock_irqsave : 因为 spin_lock 不可以 recursive 的，一个 process 持有 lock, 然后 interrupt handler 被执行，持有这个锁，那么就进入死锁了
 
 ## TODO
-[^5] 的质量很高，虽然是个 ppt:
-- I/O	devices	hae	(unique	or	shared)	Interrupt	Request Lines	(IRQs)	
-- IRQs	are	mapped	by	special	hardware	to	interrupt	vectors, and	passed	to	the	CPU	
-- This	hardware	is	called	a	Programmable	Interrupt Controller	(PIC)	v
-
-[^5]: http://www.cs.columbia.edu/~krj/os/lectures/L07-LinuxEvents.pdf
-
 - [answer this question](https://unix.stackexchange.com/questions/491437/how-does-linux-kernel-switches-from-kernel-stack-to-interrupt-stack?rq=1)
 
 - [ ] http://wiki.0xffffff.org/posts/hurlex-8.html : used for understand 8259APIC
-
 - [ ] 总结从 idt 分别到 interrupt 和 exception 的过程
-
 - [ ] 所以 CPU 为什么需要 debug 的 exception 啊 ?
-
 - [ ] https://os.phil-opp.com/cpu-exceptions/#the-interrupt-stack-frame 和 insides 处理各种细节应该就可以了吧 !
+
+- arm 的一些资料:
+  - https://programming.vip/docs/linux-kernel-interrupt-implementation-principle.html
 ## overview
 arch/x86/kernel/apic
 | File             | blank | comment | code | explanation |
