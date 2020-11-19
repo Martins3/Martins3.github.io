@@ -1,12 +1,17 @@
+# TODO
+- [ ] virtiofs 的内容很少
+
 ## eventfd
 
 **如何打开 virtio 选项于 make menuconfig 中**
 1. Device Driver => Virtio Drivers
 2. Device Driver => Block devices => Virtio block io
 
-
 - [ ] http://blog.allenx.org/2015/07/05/kvm-irqfd-and-ioeventfd
+
+## virtiofs
 - [ ] https://libvirt.org/kbase/virtiofs.html
+  - [ ] ali 的人建议 : https://virtio-fs.gitlab.io/ : /home/maritns3/core/54-linux/fs/fuse/virtio_fs.c : 只有 1000 多行，9pfs 也很小，这些东西有什么特殊的地方吗 ?
 
 ## virtio-blk
 
