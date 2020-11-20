@@ -1,5 +1,6 @@
 # qemu
 
+
 ## 资源
 - https://github.com/tinyclub/linux-0.11-lab
 - https://github.com/wimpysworld/quickemu : 使用 qemu 的脚本

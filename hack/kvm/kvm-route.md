@@ -1,5 +1,6 @@
-## 小项目
+## 项目
 https://github.com/wbenny/hvpp 但是指向了一堆项目
+https://github.com/Fmstrat/winapps
 
 https://github.com/steren/awesome-cloudrun : Google 的产品介绍，不知道能不能白嫖
 
@@ -37,6 +38,12 @@ https://github.com/rootsongjc/kubernetes-handbook
 - https://github.com/kubernetes/examples/tree/master/guestbook : 四个例子
 - https://github.com/lensapp/lens : 图形界面
 - https://github.com/aind-containers/aind
+- https://github.com/TNK-Studio/lazykube
+- https://github.com/AliyunContainerService/minikube : 在自己电脑上装 kubernate, 所以和 kind 的关系是什么 ?
+
+https://github.com/ysicing/kubernetes-handbook
+    https://github.com/ramitsurana/awesome-kubernetes
+    https://blog.quickbird.uk/domesticating-kubernetes-d49c178ebc41
 
 ## 文摘
 [ali 云计算 的自我推广](https://mp.weixin.qq.com/s/5WKDZfzIQE3QB-Io1lmG-w)

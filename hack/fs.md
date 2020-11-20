@@ -76,6 +76,7 @@
 - [configfs](#configfs)
 - [binder](#binder)
 - [zone](#zone)
+- [nfs](#nfs)
 
 <!-- vim-markdown-toc -->
 
@@ -1990,6 +1991,9 @@ https://www.kernel.org/doc/html/latest/filesystems/configfs.html
 
 ## zone
 https://zonedstorage.io/introduction/zoned-storage/
+
+## nfs
+https://about.gitlab.com/blog/2018/11/14/how-we-spent-two-weeks-hunting-an-nfs-bug/
 
 [^1]: [kernel doc : Overview of the Linux Virtual File System](https://www.kernel.org/doc/html/latest/filesystems/vfs.html)
 [^2]: [github : aio](https://github.com/littledan/linux-aio)
