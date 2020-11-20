@@ -31,3 +31,7 @@ https://github.com/mtcp-stack/mtcp
 - https://robertovitillo.com/what-every-developer-should-know-about-tcp/ : 这就是 TCP 的全部内容，结束了。
 - https://news.ycombinator.com/item?id=23241934 : ssh-agent 的工作原理是什么 ?
 - https://www.jianshu.com/p/4ba0d706ee7c : TCP/IP 快速复习一遍
+
+交换机(switch) 集线器(hub) 网桥(bridge) 中继器(repeater) 的关系[^1]
+
+[^1]: https://www.zhihu.com/topic/19717539/top-answers

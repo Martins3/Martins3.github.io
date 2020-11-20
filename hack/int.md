@@ -785,7 +785,10 @@ static const __initconst struct idt_data def_idts[] = {
 ### Exception Handling
 [^6]
 - Most	error	excepWons	—	divide by zero,	invalid operation,	illegal	memory	reference,	etc.	—	translate directly	into	signals: `force_sig(sig_number,	current);`
-- An excepWon	can	(infrequently)	happen	in	the	kernel : `die()`;	//	kernel	oops	
+- An exception	can	(infrequently)	happen	in	the	kernel : `die()`;	//	kernel	oops	
+
+- [ ] 之前疑惑于为什么 debug 需要 exception 中间的 debug handler, 比如 software breakpint 采用将目标指令替换为 `int 3`
+  - https://stackoverflow.com/questions/14031930/how-to-break-on-instruction-with-a-specific-opcode-in-gdb/31249378#31249378
 
 ### Interrupt	Handling	
 asm_common_interrupt => handle_irq => run_irq_on_irqstack_cond 
