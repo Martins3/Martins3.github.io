@@ -3,7 +3,6 @@
 2. lfs
 3. 内核文档的完全理解 [^1] 
 4. 可以尝试将内核挂载到文件系统上，然后直接拷贝的方法 ?
-
 5. rootfs 和 initramfs 的区别是什么 ?
 
 
@@ -33,7 +32,6 @@ https://github.com/troglobit/finit : 专门的 init
 
 
 6. 内核的 source tree 中间的 ./usr/
-
 
 7. 那个手动搭建的例子已经很有意思了，搞清楚，内核是怎么开始执行 init 的
 
@@ -309,7 +307,6 @@ http://www.linuxfromscratch.org/lfs/view/stable/prologue/audience.html
 [^4] 虽然 bootloader(grub2) 可以找到内核，但是各种内核驱动都是放在文件系统中间的，
 hence, the creation of a preliminary root file system that would contain just enough in the way of loadable modules to give the kernel access to the rest of the hardware.
 > 岂不是，这些驱动是靠 "preliminary" fs 加载的 ?
-
 
 [^1]: https://www.kernel.org/doc/html/latest/filesystems/ramfs-rootfs-initramfs.html
 [^2]: https://lwn.net/Articles/660404/ 
