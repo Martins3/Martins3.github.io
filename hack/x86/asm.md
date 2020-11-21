@@ -2,7 +2,8 @@
 记录如何书写 .S 文件，记录在 entry.S 的遇到的任何问题
 
 - [ ] [这是绝对的核心](https://cs.lmu.edu/~ray/notes/nasmtutorial/)
-- [] global ?
+- [ ] [可以作为实战](x86-bare-metal-examples)
+
 
 - 可以用来学习一下各种 SIMD 指令的写法吧 : https://github.com/pigirons/cpufp
 
@@ -13,8 +14,9 @@ https://en.wikibooks.org/wiki/X86_Assembly/GAS_Syntax#Additional_GAS_reading 入
 https://sourceware.org/binutils/docs/as/ 完整文档
 https://cs.lmu.edu/~ray/notes/gasexamples/ 最佳入门内容
 
-## 关键问题解释
+## gas 关键语法
 
+### code16
 1. .code32 && .code16
 
 https://stackoverflow.com/questions/32395542/objdump-of-code16-and-code32-x86-assembly
@@ -22,6 +24,11 @@ https://stackoverflow.com/questions/26539603/why-bootloaders-for-x86-use-16bit-c
 
 `.code` 16 tells the assembler to assume the code will be run in 16bit mode
 
+### macro
+
+
+### global
+- [ ] 应该是让一个 label 或者变量是全局的吧!
 
 
 
@@ -117,4 +124,3 @@ https://news.ycombinator.com/item?id=24195627 : win 下的汇编
 
 看指令手册的长度:
 https://sandpile.org/
-
