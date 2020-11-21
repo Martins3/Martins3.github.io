@@ -1,7 +1,9 @@
 ## x86-bare-metal-examples
 项目地址 : https://github.com/cirosantilli/x86-bare-metal-examples
 
-- [ ] 如何编译链接的
+*暂时停止一下，其实还有很多东西可以挖掘*
+
+- [ ] 如何编译链接细节
 - [ ] 在自己的 ThinkPad T450 上安装一下
 - [ ] ./run bios_hello_world debug 如何实现 debug 的
 
@@ -16,10 +18,6 @@ BIOS 主要提供了显示，键盘，disk 和 memory, pci 等功能[^6]，内�
 - [ ] https://github.com/cirosantilli/x86-bare-metal-examples#no-bios-hello-world 中间直接向 0xb800 的位置写入数值，从而绕过 bios 提供的 int
   - [ ] 这些位置是谁规定的 ? 和 MMIO 的关系相同吗 ?
 
-- [ ] i8042
-  - [ ] https://wiki.osdev.org/%228042%22_PS/2_Controller
-  - [ ] i8042 为什么在 /proc/interrupts 下存在两个项 ?
-    - check 一下其中的内核代码 ?
 
 - [ ] Timer
   - [x] rtc.S : 0x70 端口
@@ -31,7 +29,7 @@ BIOS 主要提供了显示，键盘，disk 和 memory, pci 等功能[^6]，内�
 ## grub
 - chainloader : x86-bare-metal-examples/grub/chainloader 下编译好之后，[gnome-disk-image-mounter](https://askubuntu.com/questions/69363/mount-single-partition-from-image-of-entire-disk-device/673257#673257) 查看 main.img 可以看到 grub 构建的文件系统。
   - chainloader 要求放进去的是一个没有格式的文件系统，这就是为什么 grub 是可以启动 Windows 的原因。
-- multiroot : 可以直接运行 elf 格式的文件
+- multiboot : 可以直接运行 elf 格式的文件
 
 ### question
 - [x]  `make -C printf run`

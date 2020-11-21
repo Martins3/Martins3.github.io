@@ -1,6 +1,8 @@
 # IOMMU
 
-http://pages.cs.wisc.edu/~basu/isca_iommu_tutorial/IOMMU_TUTORIAL_ASPLOS_2016.pdf
+## https://events19.linuxfoundation.cn/wp-content/uploads/2017/11/Shared-Virtual-Addressing_Yisheng-Xie-_-Bob-Liu.pdf
+
+## isca_iommu_tutorial
 
 > Extraneous IPI adds overheads => Each extra interrupt can add 5-10K cycles ==> Needs dynamic remapping of interrupts
 
@@ -62,3 +64,5 @@ io device 经过各级 pci hub 到达 root complex,  进入 iommu 翻译，然�
 
 最后，其中的补充文章可以看看，了解一下业界的工作内容。比如:
 - http://web.cs.ucla.edu/~haoyc/pdf/hpca17.pdf
+
+[^1]: http://pages.cs.wisc.edu/~basu/isca_iommu_tutorial/IOMMU_TUTORIAL_ASPLOS_2016.pdf

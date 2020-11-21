@@ -3,6 +3,7 @@
 
 <!-- vim-markdown-toc GitLab -->
 
+- [i8042](#i8042)
 - [device model](#device-model)
     - [Hot Plug](#hot-plug)
     - [uevent](#uevent)
@@ -21,14 +22,21 @@
 
 <!-- vim-markdown-toc -->
 
+## i8042
+*大致的探索了一下，感觉 keyboard 使用的是另一个体系的东西来连接 CPU, 不是 pcie 的，或者不是直接链接到 pcie 上的，ldd3 和 essential linux device driver : Input Device Drivers 都是可以好好看看的*
+
+- [ ] https://wiki.osdev.org/%228042%22_PS/2_Controller
+  - [ ] 在哪里可以找到 intel 的手册
+- [ ] i8042 为什么在 /proc/interrupts 下存在两个项 ?
+- [ ] drivers/input/serio/i8042.c
+- [ ] drivers/input/keyboard/atkbd.c
+
+
 ## device model
 The simple idea is that the "devices" of the system show up in one single tree at /sys/devices. Devices of a common type have a "subsystem" symlink pointing back to the subsystem's directory. All devices of that subsystem are listed there.
 - /sys/devices is the single unified hierarchy of all devices, used to express parent/child relationships
 - /sys/{bus,class} is home of the subsystem, the grouping/listing of devices of this type, used to lookup devices by subsystem + name
 The distinction of bus vs. class never made much sense. For that reason, udev internally merges the view of them and only exposes "subsystem", it refuses to distinguish "bus" and "class". [^3]
-
-
-
 
 为什么需要设备模型，之前遇到的的问题是什么 ? 存在如下猜测
 1. 需要 hot plug ? 所以构建出来一个 bus 类型，并且使用 device 和 device deriver
