@@ -25,6 +25,22 @@ https://stackoverflow.com/questions/26539603/why-bootloaders-for-x86-use-16bit-c
 `.code` 16 tells the assembler to assume the code will be run in 16bit mode
 
 ### macro
+- http://web.mit.edu/rhel-doc/3/rhel-as-en-3/irp.html
+
+```
+.irp    param,1,2,3
+move    d\param,sp@-
+.endr
+```
+is equivalent to assembling
+```
+move    d1,sp@-
+move    d2,sp@-
+move    d3,sp@-
+```
+
+- [How to concatenate GNU GAS macro arguments with other tokens to make single label?](https://stackoverflow.com/questions/2990413/how-to-concatenate-gnu-gas-macro-arguments-with-other-tokens-to-make-single-labe)
+使用 `\()`, 具体例子 https://github.com/cirosantilli/x86-bare-metal-examples/blob/master/bios_initial_state.S
 
 
 ### global

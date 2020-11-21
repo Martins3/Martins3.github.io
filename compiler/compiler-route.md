@@ -10,6 +10,7 @@ https://tenthousandmeters.com/blog/python-behind-the-scenes-4-how-python-bytecod
 
 https://github.com/vnmakarov/mir : redhat 做的，带有中间表示的编译器 ？
 ## 自己收集的
+https://github.com/asmjit/asmjit : Machine code generation for C++
 https://github.com/netcan : maybe read his blogs
 
 https://github.com/airbus-seclab/bincat

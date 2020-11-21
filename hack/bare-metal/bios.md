@@ -11,6 +11,28 @@
 
 BIOS 主要提供了显示，键盘，disk 和 memory, pci 等功能[^6]，内存探测使用 int 15 下 e820 中断。[^7]
 
+- [ ] dmidecode
+
+- [ ] https://github.com/cirosantilli/x86-bare-metal-examples#no-bios-hello-world 中间直接向 0xb800 的位置写入数值，从而绕过 bios 提供的 int
+  - [ ] 这些位置是谁规定的 ? 和 MMIO 的关系相同吗 ?
+
+- [ ] i8042
+  - [ ] https://wiki.osdev.org/%228042%22_PS/2_Controller
+  - [ ] i8042 为什么在 /proc/interrupts 下存在两个项 ?
+    - check 一下其中的内核代码 ?
+
+- [ ] Timer
+  - [x] rtc.S : 0x70 端口
+  - linux 使用的是
+  - [ ] pit 和 
+
+- [ ] UEFI 作者也没有搞定，所以 seabios , coreboot 和 tianocore 的关系是什么 ?
+
+## grub
+- chainloader : x86-bare-metal-examples/grub/chainloader 下编译好之后，[gnome-disk-image-mounter](https://askubuntu.com/questions/69363/mount-single-partition-from-image-of-entire-disk-device/673257#673257) 查看 main.img 可以看到 grub 构建的文件系统。
+  - chainloader 要求放进去的是一个没有格式的文件系统，这就是为什么 grub 是可以启动 Windows 的原因。
+- multiroot : 可以直接运行 elf 格式的文件
+
 ### question
 - [x]  `make -C printf run`
 ```sh
@@ -59,7 +81,8 @@ end:
 - [x] x86 不可以使用 mov pop 之类的指令设置 cs，只能使用 ljmp, 比如在 common.h 的 `BEGIN` 中间[^5], 猜测其中的原因是，实际上的 ip 总是 cs + ip 的，所以使用 `ljmp $0, $1f` 其实是设置了 cs 并且自动设置了 ip 寄存器。
 
 - [x] `BEGIN` 为什么要单独保存好 dl 急促器在 stage 2 使用, bios 提供了什么不得了东西吗 ?
-  - /home/maritns3/core/x86-bare-metal-examples/bios_disk_load.S 和  common.h 的 STAGE2，所模拟的 bios 将 driver 设置为 0x80
+  - x86-bare-metal-examples/bios_disk_load.S 和  common.h 的 STAGE2，所模拟的 bios 将 driver 设置为 0x80
+  - x86-bare-metal-examples/bios_initial_state.S 首先将各种寄存器的 initstate 保存下来，然后打印出来，可以看到，只有 dl = 0x80, 其他都是 0
 
 - [ ] ./c_hello_world
   - [ ] linker.ld  : 里面两个 stackoverflow
@@ -68,8 +91,12 @@ end:
   - [ ] bootloader 和 cpp :  http://3zanders.co.uk/2017/10/18/writing-a-bootloader3/
 
 ###  nasm
-x86-bare-metal-examples/nasm 下的问题:
+x86-bare-metal-examples/nasm 下:
 - [ ] 感受一下 nasm 的语法 : https://medium.com/@g33konaut/writing-an-x86-hello-world-boot-loader-with-assembly-3e4c5bdd96cf
+
+
+## seabios
+https://git.seabios.org/cgit/seabios.git
 
 
 [^1]: https://wiki.ubuntu.com/Booting
