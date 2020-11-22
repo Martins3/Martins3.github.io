@@ -1410,6 +1410,8 @@ https://zhuanlan.zhihu.com/p/143256077
 附带一个 blog
 https://blog.betacat.io/post/2020/08/how-to-mount-etcd-as-a-filesystem/
 
+https://github.com/zargony/fuse-rs
+
 ## block layer
 似乎 block layer 被取消了，但是似乎 mq 又是存在的 ?
 一个 block 被发送到被使用:

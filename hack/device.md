@@ -3,7 +3,9 @@
 
 <!-- vim-markdown-toc GitLab -->
 
+- [serial](#serial)
 - [i8042](#i8042)
+- [platform_driver](#platform_driver)
 - [device model](#device-model)
     - [Hot Plug](#hot-plug)
     - [uevent](#uevent)
@@ -22,14 +24,138 @@
 
 <!-- vim-markdown-toc -->
 
-## i8042
 *大致的探索了一下，感觉 keyboard 使用的是另一个体系的东西来连接 CPU, 不是 pcie 的，或者不是直接链接到 pcie 上的，ldd3 和 essential linux device driver : Input Device Drivers 都是可以好好看看的*
+- [ ] ldd3 的 tty 存在一个巨大的仓库
+- [ ] eldd 的部分章节也是可以看看的 http://www.embeddedlinux.org.cn/essentiallinuxdevicedrivers/final/ch06lev1sec3.html
+- [ ] 微机原理的书可以看看的
+
+## serial
+https://en.wikibooks.org/wiki/Serial_Programming
+- https://www.kernel.org/doc/html/latest/admin-guide/serial-console.html : 似乎可以找到为什么 qemu 运行 linux 在 host 终端里面有消息了
+- https://unix.stackexchange.com/questions/60641/linux-difference-between-dev-console-dev-tty-and-dev-tty0 : 对比 /dev/console /dev/tty /dev/ttyS0
+
+
+- [ ] Documentation/driver-api/serial/driver.rst
+
+- [ ] /home/maritns3/core/linux/drivers/tty/serial/8250/8250_core.c
+  - [ ] port 指的是 ?
+  - [x] 对比 16550, 找到证据 都是 uart 的一种。(虽然没有对比 16550，但是分析 uart_ops 的注册函数的赋值就可以知道，实际上的 uart 设备比想想的多很多)
+
+uart_add_one_port ==> uart_configure_port
+
+serial8250_request_port ==> serial8250_request_std_resource ==> request_mem_region(`port->membase` 初始化)
+
+
+- [ ] eldd chapter 6
+
+```c
+static const struct uart_ops serial8250_pops = {
+	.tx_empty	= serial8250_tx_empty,
+	.set_mctrl	= serial8250_set_mctrl,
+	.get_mctrl	= serial8250_get_mctrl,
+	.stop_tx	= serial8250_stop_tx,
+	.start_tx	= serial8250_start_tx,
+	.throttle	= serial8250_throttle,
+	.unthrottle	= serial8250_unthrottle,
+	.stop_rx	= serial8250_stop_rx,
+	.enable_ms	= serial8250_enable_ms,
+	.break_ctl	= serial8250_break_ctl,
+	.startup	= serial8250_startup,
+	.shutdown	= serial8250_shutdown,
+	.set_termios	= serial8250_set_termios,
+	.set_ldisc	= serial8250_set_ldisc,
+	.pm		= serial8250_pm,
+	.type		= serial8250_type,
+	.release_port	= serial8250_release_port,
+	.request_port	= serial8250_request_port,
+	.config_port	= serial8250_config_port,
+	.verify_port	= serial8250_verify_port,
+#ifdef CONFIG_CONSOLE_POLL
+	.poll_get_char = serial8250_get_poll_char,
+	.poll_put_char = serial8250_put_poll_char,
+#endif
+};
+```
+- [ ] 使用 serial8250_stop_tx 为例子:
+  - 参数是 uart_port
+  - `__stop_tx`
+    - `__do_stop_tx`
+      - serial8250_clear_THRI : 向8250 的 UART_IER 寄存器写入 UART_IER_THRI (**微机原理与接口**原理真不错)
+        - [ ] 从这里来说，port 才是真正在直接控制具体的 8250 芯片，而 8250_core.c 处理是 platform_driver 之类的事情吧！
+```c
+static inline void serial_out(struct uart_8250_port *up, int offset, int value)
+{
+	up->port.serial_out(&up->port, offset, value);
+}
+```
+
+
+
+```c
+static struct uart_driver serial8250_reg = {
+	.owner			= THIS_MODULE,
+	.driver_name		= "serial",
+	.dev_name		= "ttyS",
+	.major			= TTY_MAJOR,
+	.minor			= 64,
+	.cons			= SERIAL8250_CONSOLE,
+};
+
+static struct console univ8250_console = {
+	.name		= "ttyS",
+	.write		= univ8250_console_write,
+	.device		= uart_console_device,
+	.setup		= univ8250_console_setup,
+	.exit		= univ8250_console_exit,
+	.match		= univ8250_console_match,
+	.flags		= CON_PRINTBUFFER | CON_ANYTIME,
+	.index		= -1,
+	.data		= &serial8250_reg,
+};
+
+static struct platform_driver serial8250_isa_driver = {
+	.probe		= serial8250_probe,
+	.remove		= serial8250_remove,
+	.suspend	= serial8250_suspend,
+	.resume		= serial8250_resume,
+	.driver		= {
+		.name	= "serial8250",
+	},
+};
+
+/*
+ * This "device" covers _all_ ISA 8250-compatible serial devices listed
+ * in the table in include/asm/serial.h
+ */
+static struct platform_device *serial8250_isa_devs;
+```
+
+```c
+static int __init serial8250_init(void)
+
+int uart_register_driver(struct uart_driver *drv)
+```
+
+- 在 serial_core.c 中间，几乎所有的函数都是 `uart_*` 的，所以 uart 是 serial 的协议基础:
+
+- [ ] serial8250_isa_devs 和 serial8250_reg 的关系是什么 ?
+
+
+## i8042
 
 - [ ] https://wiki.osdev.org/%228042%22_PS/2_Controller
   - [ ] 在哪里可以找到 intel 的手册
 - [ ] i8042 为什么在 /proc/interrupts 下存在两个项 ?
 - [ ] drivers/input/serio/i8042.c
 - [ ] drivers/input/keyboard/atkbd.c
+
+/home/maritns3/core/linux/Documentation/driver-api/driver-model/platform.rst
+
+
+## platform_driver
+A platform is a pseudo bus usually used to tie lightweight devices integrated into SoCs, with the Linux device model. A platform consists of
+1. A platform device
+2. A platform driver
 
 
 ## device model

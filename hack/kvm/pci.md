@@ -371,7 +371,9 @@ To operate on a memory region such as the frame buffer on the above PCI video ca
 - [ ] [^1] 解释 request_mem_region 只是预留空间的作用, 但是这个预留又不能修改 pcie root hub 对于地址的解析，或者说，这完全是软件上的操作，软件申请了，向该地方写数值，最后还是靠 pcie 的解析，所以，request_mem_region 的根本作用引入检查 ？
   - [ ] 如果是引入检查，那么，从 pci configuration region 中间直接读去不香吗 ?
 
-[^1]: https://stackoverflow.com/questions/7682422/what-does-request-mem-region-actually-do-and-when-it-is-needed
+- [ ] host bridge 是 ?
 
+
+[^1]: https://stackoverflow.com/questions/7682422/what-does-request-mem-region-actually-do-and-when-it-is-needed
 [^2] : https://stackoverflow.com/questions/18854931/how-does-the-os-detect-hardware
 [^3] : https://www.kernel.org/doc/html/latest/PCI/index.html
