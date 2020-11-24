@@ -24,6 +24,29 @@ ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- make
 ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- make defconfig
 ```
 
+下面测试一下 clang 编译配合 clangd 的效果:
+```
+# Use clang 9 or newer.
+make ARCH=x86_64 LLVM=1 defconfig
+make ARCH=x86_64 LLVM=1 -k bzImage modules  # generate .<target>.cmd files
+```
+
+对于 Loongnix 的交叉编译:
+1. http://www.loongnix.org/index.php/Cross-compile 下载 gcc-4.9.3 64位
+2. 执行:
+```sh
+CC_PREFIX=~/Downloads/cross-gcc-4.9.3-n64-loongson-rc6.1
+
+export ARCH=mips
+export CROSS_COMPILE=mips64el-loongson-linux-
+export PATH=$CC_PREFIX/usr/bin:$PATH
+export LD_LIBRARY_PATH=$CC_PREFIX/usr/lib:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=$CC_PREFIX/usr/x86_64-unknown-linux-gnu/mips64el-loongson-linux/lib/:$LD_LIBRARY_PATH
+```
+3. 并行 make 可能对于 MIPS 出现问题，那么 
+https://unix.stackexchange.com/questions/496500/how-to-get-php-7-1-to-use-libreadline-so-8
+
+
 ## `__attribute__((destructor))`
 
 https://stackoverflow.com/questions/2053029/how-exactly-does-attribute-constructor-work

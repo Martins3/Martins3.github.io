@@ -12,6 +12,8 @@
 7. 所以 kvm 是怎么和 virtio 产生联系的 ？
 8. virtio 如何处理 GPU 的 ?
 
+9. 看一下 
+
 
 ## 问题
 - [ ] 如果 kvm 中间跑一个支持 multicore 的 OS，kvm 从一个 cpu 中间启动，最后可以迁移到其他的 CPU 中间

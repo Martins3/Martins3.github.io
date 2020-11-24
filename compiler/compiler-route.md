@@ -1,4 +1,5 @@
 # 收集的资源
+https://github.com/vtil-project/VTIL-Core : 又一个二进制翻译器
 
 https://github.com/aalhour/awesome-compilers : **key**
 可以学习 llvm 之类的

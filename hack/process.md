@@ -1134,6 +1134,11 @@ the Kernel Mode stack.
 
 
 ## signal
+- [ ] https://www.giovannimascellani.eu/having-fun-with-signal-handlers.htmlo
+  - 实际上，可以使用 sigaction 来处理 seg fault
+  - [ ] ucontext ?
+  - [ ] 文章并没有看!
+
 - [ ] Why everyone has to check signal_pending ?
 ```
 ➜  linux git:(master) ag signal_pending |wc -l

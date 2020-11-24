@@ -1,5 +1,4 @@
 # conditional variable
-
 ```c
 // condition_variable example
 #include <chrono>             // std::chrono::seconds
@@ -48,9 +47,6 @@ int main() {
   return 0;
 }
 ```
-
-
-## 继承
 
 #### 权限和继承
 

@@ -1,7 +1,22 @@
+## TODO
+感觉一次阅读一大本书是没有意义的，可以作为一个休息时间，一次阅读一点点，记录自己疑惑的问题:
+1. stackoverflow top question
+2. 右值引用 : http://thbecker.net/articles/rvalue_references/section_01.html
+    1. https://stackoverflow.com/questions/3413470/what-is-stdmove-and-when-should-it-be-used
+3. https://stackoverflow.com/questions/11833070/when-is-the-use-of-stdref-necessary/45823556#45823556
+
+
+- [ ] 先把现有的笔记整理一下就很不错了啊 !
+
+
+- [ ] move
+- [ ] coroutine
+- [ ] 继承
+
+## 阅读
 1. [快速浏览](https://github.com/changkun/modern-cpp-tutorial/blob/master/book/zh-cn/03-runtime.md)
 2. [清真的CPP](http://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines) 本杰尼斯特里斯普写的
 3. [moder cpp check list](https://github.com/AnthonyCalandra/modern-cpp-features)
-
 
 https://news.ycombinator.com/item?id=24901244 : some discussion about cpp code browsing.
 
@@ -55,13 +70,6 @@ https://github.com/gzc/CLRS : 算法导论答案
 ## when boring
 https://github.com/s9w/dt
 
-## TODO
-感觉一次阅读一大本书是没有意义的，可以作为一个休息时间，一次阅读一点点:
-1. stackoverflow top question
-2. 右值引用 : http://thbecker.net/articles/rvalue_references/section_01.html
-    1. https://stackoverflow.com/questions/3413470/what-is-stdmove-and-when-should-it-be-used
-
-https://stackoverflow.com/questions/11833070/when-is-the-use-of-stdref-necessary/45823556#45823556
 
 
 ## 库
@@ -361,4 +369,3 @@ enum class movie_type{
 
 # Part Two
 > base on [C++ Core Guidelines](http://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines)
-

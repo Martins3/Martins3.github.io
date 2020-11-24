@@ -3,6 +3,7 @@
 
 <!-- vim-markdown-toc GitLab -->
 
+- [usb](#usb)
 - [serial](#serial)
 - [i8042](#i8042)
 - [platform_driver](#platform_driver)
@@ -28,6 +29,9 @@
 - [ ] ldd3 的 tty 存在一个巨大的仓库
 - [ ] eldd 的部分章节也是可以看看的 http://www.embeddedlinux.org.cn/essentiallinuxdevicedrivers/final/ch06lev1sec3.html
 - [ ] 微机原理的书可以看看的
+
+## usb
+测试辅助模块 dummy_hcd 和 g_zero
 
 ## serial
 https://en.wikibooks.org/wiki/Serial_Programming
@@ -485,6 +489,11 @@ static inline void *devm_kzalloc(struct device *dev, size_t size, gfp_t gfp)
 > 暂时看不懂，也没有兴趣分析
 
 ## char device
+register_chrdev_region 之类的函数, 都是出现在 `fs/char_dev.c` 中间，
+调用者是各种驱动，比如 tty, 似乎 `fs/char_dev.c` 是一个通用函数的总结，
+而 `fs/block_dev.c` 更像是提供了标准访问 block 的接口。
+
+- [ ] 应该对比一下一般的 char dev 和 tty 的区别
 
 ## block device
 

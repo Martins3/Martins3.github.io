@@ -27,9 +27,9 @@
 - [ ] 关键blog2 :  https://resources.infosecinstitute.com/topic/system-address-map-initialization-x86x64-architecture-part-2-pci-express-based-systems/
 - [ ] https://wiki.osdev.org/PCI_Express / https://wiki.osdev.org/PCI
 
-https://sites.google.com/site/pinczakko/pinczakko-s-guide-to-award-bios-reverse-engineering
-
-https://www.kernel.org/doc/html/latest/PCI/sysfs-pci.html?highlight=proc%20irq
+- [ ] https://www.kernel.org/doc/Documentation/PCI/pci.txt
+- [ ] https://sites.google.com/site/pinczakko/pinczakko-s-guide-to-award-bios-reverse-engineering
+- [ ] https://www.kernel.org/doc/html/latest/PCI/sysfs-pci.html?highlight=proc%20irq
 
 ## overview
 - [x] https://unix.stackexchange.com/questions/83390/what-are-pci-quirks

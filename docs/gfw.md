@@ -1,17 +1,16 @@
 # How to cross Great Fire Wall
 
 ## Caveat
-Only tested on Ubuntu20, but should work in all linux distribution, and similar approach can be used for macos and windows.
+Only tested on Ubuntu20, but should work in all linux distribution, and similar
+approach can be used for macos and windows.
 
 ## Abstract
-If you can't clone https://github.com/torvalds/linux in minutes, this article is what you need.
-
+If you can't clone https://github.com/torvalds/linux in minutes, this article
+is what you need.
 
 | method | airport(机场) | client                                     |
 |--------|---------------|--------------------------------------------|
 | v2ray  | v2e.fun       | [qv2ray](https://github.com/Qv2ray/Qv2ray) |
-
-
 ## setup
 You can reference [document of qv2ray](https://qv2ray.net/en/getting-started/) for details, here is simplified steps.
 
@@ -39,7 +38,6 @@ export http_proxy=http://127.0.0.1:8889 && export https_proxy=http://127.0.0.1:8
 **8889 is the port set in qv2ray.**
 
 ![](./img/gfw3.png)
-
 
 ## git proxy 
 for details, look [this](https://github.com/v2ray/v2ray-core/issues/1190).
