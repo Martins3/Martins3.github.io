@@ -1,17 +1,15 @@
 # cmake
+- https://github.com/onqtam/awesome-cmake
+- https://github.com/wzpan/cmake-demo
+- https://github.com/xiaoweiChen/CMake-Cookbook : 一本书的翻译，其实是讲解的很清晰的了
+- https://github.com/forexample/package-example : cmake 模板 ?
 
-https://github.com/onqtam/awesome-cmake
+- [ ] 尽可能多的引入各种外部库，不要自己手动写任何多余的东西
 
-https://github.com/wzpan/cmake-demo
-
-https://github.com/xiaoweiChen/CMake-Cookbook : 一本书的翻译，其实是讲解的很清晰的了
-
-https://github.com/Akagi201/learning-cmake
+## https://github.com/Akagi201/learning-cmake
 > docs　下面还有三个pdf 都是值得一读
 
-https://github.com/forexample/package-example : cmake 模板 ?
-
-## hello-world
+### hello-world
 ```
 cmake -H. -B_builds
 cmake --build _builds
@@ -54,8 +52,6 @@ add_executable(hello-world ${SOURCE_FILES})
 
 
 ### hello-world-clear
-
-
 ```
 cmake_minimum_required(VERSION 2.8.4)
 
@@ -89,7 +85,6 @@ install(TARGETS hello RUNTIME DESTINATION bin)
 
 
 ### hello-world-lib
-
 ```
 cmake_minimum_required(VERSION 2.8.4)
 
@@ -148,7 +143,6 @@ set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
 
 
 ### curl
-
 ```
 cmake_minimum_required(VERSION 2.8.4)
 
@@ -260,8 +254,6 @@ target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES})
 ```
 > 比想象的简单的多，但是中间各种设置 Boost_USE_STATIC_RUNTIME 之类的变量是做什么的
 
-
-
 ## ref 
 1. https://stackoverflow.com/questions/31090821/what-does-the-h-option-means-for-cmake
 > H 的含义被替换为S，S表示source code的文件夹
@@ -272,4 +264,3 @@ target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES})
 
 # res
 1. https://cmake.org/cmake/help/latest/index.html 标准文档
-

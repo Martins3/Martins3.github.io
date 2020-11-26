@@ -1,3 +1,5 @@
+## https://www.zhihu.com/question/21672895/answer/774538058
+
 ## x86-bare-metal-examples
 项目地址 : https://github.com/cirosantilli/x86-bare-metal-examples
 
@@ -26,7 +28,7 @@ BIOS 主要提供了显示，键盘，disk 和 memory, pci 等功能[^6]，内�
 
 - [ ] UEFI 作者也没有搞定，所以 seabios , coreboot 和 tianocore 的关系是什么 ?
 
-## grub
+### grub
 - chainloader : x86-bare-metal-examples/grub/chainloader 下编译好之后，[gnome-disk-image-mounter](https://askubuntu.com/questions/69363/mount-single-partition-from-image-of-entire-disk-device/673257#673257) 查看 main.img 可以看到 grub 构建的文件系统。
   - chainloader 要求放进去的是一个没有格式的文件系统，这就是为什么 grub 是可以启动 Windows 的原因。
 - multiboot : 可以直接运行 elf 格式的文件

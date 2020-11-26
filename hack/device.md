@@ -3,6 +3,10 @@
 
 <!-- vim-markdown-toc GitLab -->
 
+- [TODO](#todo)
+- [Questions](#questions)
+- [下面是阅读 ldd3 的 tiny_serial.c 和 tiny_tty.c 的结果](#下面是阅读-ldd3-的-tiny_serialc-和-tiny_ttyc-的结果)
+  - [tiny_serial.c](#tiny_serialc)
 - [usb](#usb)
 - [serial](#serial)
 - [i8042](#i8042)
@@ -25,10 +29,79 @@
 
 <!-- vim-markdown-toc -->
 
+## TODO
 *大致的探索了一下，感觉 keyboard 使用的是另一个体系的东西来连接 CPU, 不是 pcie 的，或者不是直接链接到 pcie 上的，ldd3 和 essential linux device driver : Input Device Drivers 都是可以好好看看的*
 - [ ] ldd3 的 tty 存在一个巨大的仓库
 - [ ] eldd 的部分章节也是可以看看的 http://www.embeddedlinux.org.cn/essentiallinuxdevicedrivers/final/ch06lev1sec3.html
 - [ ] 微机原理的书可以看看的
+
+## Questions
+
+
+## 下面是阅读 ldd3 的 tiny_serial.c 和 tiny_tty.c 的结果
+
+### tiny_serial.c
+- [x] TINY_SERIAL_MAJOR 的数值设置不要和 /proc/devices 的数值冲突了
+
+uart_register_driver + uart_add_one_port 
+
+insmod tiny_serial.ko 之后 ： 多出来了 devices/virtual/tty/ttytiny0
+
+```c
+➜  ttytiny0 tree
+.
+├── close_delay
+├── closing_wait
+├── custom_divisor
+├── dev
+├── flags
+├── iomem_base
+├── iomem_reg_shift
+├── io_type
+├── irq
+├── line
+├── port
+├── power
+│   ├── async
+│   ├── autosuspend_delay_ms
+│   ├── control
+│   ├── runtime_active_kids
+│   ├── runtime_active_time
+│   ├── runtime_enabled
+│   ├── runtime_status
+│   ├── runtime_suspended_time
+│   ├── runtime_usage
+│   ├── wakeup
+│   ├── wakeup_abort_count
+│   ├── wakeup_active
+│   ├── wakeup_active_count
+│   ├── wakeup_count
+│   ├── wakeup_expire_count
+│   ├── wakeup_last_time_ms
+│   ├── wakeup_max_time_ms
+│   └── wakeup_total_time_ms
+├── subsystem -> ../../../../class/tty
+├── type
+├── uartclk
+├── uevent
+└── xmit_fifo_size
+```
+
+- [ ] 所以如何使用呀 ?
+- [ ] termios 的作用 ?
+
+insmod tiny_tty.ko
+```c
+devices/virtual/tty/ttty0
+devices/virtual/tty/ttty1
+devices/virtual/tty/ttty2
+devices/virtual/tty/ttty3
+```
+
+为什么都需要 set_termios 之类的东西 ?
+
+从 /dev/tty 看， tiny_serial 和 tiny_tty 无区别 ?
+
 
 ## usb
 测试辅助模块 dummy_hcd 和 g_zero
@@ -37,7 +110,6 @@
 https://en.wikibooks.org/wiki/Serial_Programming
 - https://www.kernel.org/doc/html/latest/admin-guide/serial-console.html : 似乎可以找到为什么 qemu 运行 linux 在 host 终端里面有消息了
 - https://unix.stackexchange.com/questions/60641/linux-difference-between-dev-console-dev-tty-and-dev-tty0 : 对比 /dev/console /dev/tty /dev/ttyS0
-
 
 - [ ] Documentation/driver-api/serial/driver.rst
 
@@ -48,7 +120,6 @@ https://en.wikibooks.org/wiki/Serial_Programming
 uart_add_one_port ==> uart_configure_port
 
 serial8250_request_port ==> serial8250_request_std_resource ==> request_mem_region(`port->membase` 初始化)
-
 
 - [ ] eldd chapter 6
 
@@ -71,7 +142,7 @@ static const struct uart_ops serial8250_pops = {
 	.pm		= serial8250_pm,
 	.type		= serial8250_type,
 	.release_port	= serial8250_release_port,
-	.request_port	= serial8250_request_port,
+	.request_port	= serial8256_request_port,
 	.config_port	= serial8250_config_port,
 	.verify_port	= serial8250_verify_port,
 #ifdef CONFIG_CONSOLE_POLL
@@ -494,6 +565,8 @@ register_chrdev_region 之类的函数, 都是出现在 `fs/char_dev.c` 中间�
 而 `fs/block_dev.c` 更像是提供了标准访问 block 的接口。
 
 - [ ] 应该对比一下一般的 char dev 和 tty 的区别
+
+- [ ] ldd3 的 chapter 3
 
 ## block device
 

@@ -2,6 +2,7 @@
 
 <!-- vim-markdown-toc GitLab -->
 
+- [PCH](#pch)
 - [overview](#overview)
 - [ldd3](#ldd3)
   - [pci_device_id](#pci_device_id)
@@ -30,6 +31,20 @@
 - [ ] https://www.kernel.org/doc/Documentation/PCI/pci.txt
 - [ ] https://sites.google.com/site/pinczakko/pinczakko-s-guide-to-award-bios-reverse-engineering
 - [ ] https://www.kernel.org/doc/html/latest/PCI/sysfs-pci.html?highlight=proc%20irq
+
+## PCH
+[what has happened to north bridge in modern](https://www.reddit.com/r/hardware/comments/bt4xff/what_has_happened_to_north_bridge_in_modern/) :
+> partly integrated into the cpu, partly combined with southbridge—> now just called chipset, aka Platform Control Hub (PCH).
+> 
+> If I'm not mistaken, they were integrated into CPUs. This allows for faster communication between the CPU and other components, because it's closer and on the same silicon die as the CPU.
+
+[Platform Controller Hub](https://en.wikipedia.org/wiki/Platform_Controller_Hub)
+> The Platform Controller Hub (PCH) is a family of Intel's single-chip chipsets, first introduced in 2009. It is the successor to the Intel Hub Architecture, which used two chips - a northbridge and southbridge instead, and first appeared in the Intel 5 Series.
+>
+> As such, I/O functions are reassigned between this new central hub and the CPU compared to the previous architecture: some northbridge functions, the memory controller and PCI-e lanes, were integrated into the CPU while the PCH took over the remaining functions in addition to the traditional roles of the southbridge. AMD has its equivalent for the PCH, known simply as a chipset, no longer using the previous term Fusion controller hub since the release of the Zen architecture in 2017.[1]
+
+[What is the difference between CPU and Chipset?](https://stackoverflow.com/questions/18978503/what-is-the-difference-between-cpu-and-chipset)
+> In a mobile phone, combination of Chipset and CPU is called a SoC (System on Chip) which integrates all the components on a single chip. 
 
 ## overview
 - [x] https://unix.stackexchange.com/questions/83390/what-are-pci-quirks

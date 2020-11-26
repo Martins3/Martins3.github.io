@@ -1,5 +1,8 @@
 # build system
 
+## TODO
+- [ ] linux kernel labs 和 dune 的 Makefile
+
 ## 问题
 1. vmlinux 到底包括什么东西，包括各种 ko 吗 ? 为什么有的驱动被编译为 ko 了 ?
 2. make modules_install 是做什么的 ? 如果各种 ko 不是和 modules_install 分开的，那么为什么存在 make modules_install 
@@ -43,8 +46,6 @@
 
 ## compiler
 https://lwn.net/Articles/512548/ : 函数前 `__visible` 的作用
-
-
 
 [^1]: https://www.kernel.org/doc/html/latest/kbuild/kconfig-language.html
 [^2]: https://unix.stackexchange.com/questions/20864/what-happens-in-each-step-of-the-linux-kernel-building-process
