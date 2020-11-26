@@ -19,7 +19,7 @@ make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- LLVM=1 -k Image.gz modules // �
 但是还是存在版本不够的问题: https://apt.llvm.org/ 可以安装最新的 LLVM, 但是实际上也没有用。
 
 暂时使用 gcc 来实现交叉编译 :
-```c
+```
 ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- make
 ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- make defconfig
 ```
@@ -31,7 +31,7 @@ make ARCH=x86_64 LLVM=1 defconfig
 make ARCH=x86_64 LLVM=1 -k bzImage modules  # generate .<target>.cmd files
 ```
 
-对于 Loongnix 的交叉编译:
+### 对于 Loongnix 的交叉编译:
 1. http://www.loongnix.org/index.php/Cross-compile 下载 gcc-4.9.3 64位
 2. 执行:
 ```sh
@@ -45,6 +45,9 @@ export LD_LIBRARY_PATH=$CC_PREFIX/usr/x86_64-unknown-linux-gnu/mips64el-loongson
 ```
 3. 并行 make 可能对于 MIPS 出现问题，那么 
 https://unix.stackexchange.com/questions/496500/how-to-get-php-7-1-to-use-libreadline-so-8
+
+### Cross Compile standard MIPS
+Tried, but faile to find the compiler
 
 
 ## `__attribute__((destructor))`
