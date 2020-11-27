@@ -49,6 +49,11 @@ https://unix.stackexchange.com/questions/496500/how-to-get-php-7-1-to-use-librea
 ### Cross Compile standard MIPS
 Tried, but faile to find the compiler
 
+### Cross Compile Riscv
+```
+make ARCH=riscv CROSS_COMPILE=riscv64-linux-gnu-
+```
+https://risc-v-getting-started-guide.readthedocs.io/en/latest/linux-introduction.html
 
 ## `__attribute__((destructor))`
 
