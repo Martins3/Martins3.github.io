@@ -65,23 +65,6 @@ be eccentric.
 ## Basic Address Space
 A MIPS CPU runs at one of two privilege levels: user and kernel.
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 # Coprocessor 0 : MIPS Processor Control
 1. CPU configuration
 2. Cache Control
@@ -92,18 +75,12 @@ A MIPS CPU runs at one of two privilege levels: user and kernel.
 > 为什么需要单独设置C0 出来，Intel对应的策略是什么 ?
 > 哪一个策略更加好
 
-CP3 has been invaded by floating-point instructions from MIPS32/64 and is
-now only usable where you are sure you’ll never want to implement floating point. CP2 is available
-and occasionally used for custom ISA extensions or to provide application-specific registers in a few SoC
-applications. CP1 is the floating-point unit itself
-> 那岂不是说CP1 和 CP3 都是浮点数处理单元了
+- CP3 has been invaded by floating-point instructions from MIPS32/64 and is now only usable where you are sure you’ll *never want to implement floating point*.
+- CP2 is available and occasionally used for custom ISA extensions or to provide application-specific registers in a few SoC applications. 
+- CP1 is the floating-point unit itself.
 
-Special MIPS Use of the Word Coprocessor
-
-The word coprocessor is normally used to mean an
+Special MIPS Use of the *Word Coprocessor*. The word coprocessor is normally used to mean an
 optional part of a processor that takes responsibility for some extension to the instruction set.
-
-
 
 ## CPU Control Instructions
 ```
@@ -130,24 +107,24 @@ mtc0 s,$12,1 # 64 位向下兼容指令
 
 ### SR
 
-| Name | Specification |
-| :------:| :------: |
-| CU3-0 | CU0 user mode run Co0 instruction  CU1(FPU) CU2(Co2) CU3(Co3) |
-|RP      | reduce power |
-|FR      | |
-|RE      | reverse endian |
-|MX      | enable instruction set extension|
-|PX      | |
-|BEV     | boot exception vector|
-|FR      | tlb shutdown |
-|SR, NMI | |
-|FR      | |
-|FR      | |
-|FR      | |
-|FR      | |
-|FR      | |
+| Name     | Specification                                                 |
+| :------: | :------:                                                      |
+| CU3-0    | CU0 user mode run Co0 instruction  CU1(FPU) CU2(Co2) CU3(Co3) |
+| RP       | reduce power                                                  |
+| FR       |                                                               |
+| RE       | reverse endian                                                |
+| MX       | enable instruction set extension                              |
+| PX       |                                                               |
+| BEV      | boot exception vector                                         |
+| FR       | tlb shutdown                                                  |
+| SR, NMI  |                                                               |
+| FR       |                                                               |
+| FR       |                                                               |
+| FR       |                                                               |
+| FR       |                                                               |
+| FR       |                                                               |
 
-## Cause Register
+### Cause Register
 > 64/85
 
 
@@ -219,8 +196,6 @@ EBase was added to allow you to relocate all the exception entry points for a CP
 
 it’s primarily there for multiprocessor systems that share memory, so that different CPUs are not obliged to use the same exception handlers.
 > 两者含有逻辑关系的吗?
-
-
 
 
 ### SRSCtl and SRSMap: Shadow Register Setup
@@ -1029,4 +1004,3 @@ register by the start-up code, before any load or store instructions are used.)
 ## Explicit Cache Management
 I/O-cache coherent
 > DMA 直接对于内存写入数据导致内存比cache ...
-

@@ -4,6 +4,7 @@
 - [Question](#question)
 - [TODO](#todo)
 - [overview](#overview)
+- [precise exception](#precise-exception)
 - [workqueue](#workqueue)
     - [struct work_struct](#struct-work_struct)
     - [struct workqueue](#struct-workqueue)
@@ -115,6 +116,8 @@ kernel/irq
 | Makefile       | 1     | 1       | 15   |             |
 
 
+## precise exception
+- [ ] see mips run : chapter 5
 
 ## workqueue
 - [ ] wowotech 中间的东西可以看看:
