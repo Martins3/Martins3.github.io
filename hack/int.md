@@ -40,9 +40,10 @@
 - [/proc/interrupts](#procinterrupts)
 - [MSI](#msi)
 - [matrix](#matrix)
-- [nested](#nested)
+- [nested interrupt](#nested-interrupt)
 - [interrupt threads](#interrupt-threads)
 - [stack](#stack)
+- [interrupt context](#interrupt-context)
 - [ret](#ret)
 - [ref](#ref)
 
@@ -1001,7 +1002,7 @@ Generic MSIs : https://en.wikipedia.org/wiki/Message_Signaled_Interrupts
 ## matrix
 观察到 linux/kernel/irq/matrix.c 以及 irq_alloc_matrix, 但是根本不知道为什么需要使用 matrix 这一个概念
 
-## nested
+## nested interrupt
 - Interrupts	can	be	interrupted[^6]
   – By	different	interrupts;	handlers	need	not	be	reentrant	
   – No	notion	of	priority	in	Linux	
@@ -1010,8 +1011,8 @@ Generic MSIs : https://en.wikipedia.org/wiki/Message_Signaled_Interrupts
 - Exceptions	can	be	interrupted	
   – By	interrupts	(devices	needing	service)	
 - Exceptions	can	nest	two	levels	deep	
-  – ExcepWons	indicate	coding	error	
-  – ExcepWon	code	(kernel	code)	shouldn’t	have	bugs	
+  – Exceptions	indicate	coding	error	
+  – Exception	code	(kernel	code)	shouldn’t	have	bugs	
   – Page	fault	is	possible	(trying	to	touch	user	data)	
 
 In order to support as many architectures as possible, Linux has a more restrictive interrupt nesting implementation:[^7]
@@ -1023,7 +1024,7 @@ In order to support as many architectures as possible, Linux has a more restrict
 ## interrupt threads
 
 ## stack
-- When	an	interrupt	occurs,	what	stack	is	used?	
+- When	an	interrupt	occurs,	what	stack	is	used?	[^6]
   – **Exceptions**:	The	kernel	stack	of	the	current	
   process,	whatever	it	is,	is	used		(There’s	always	
   some	process	running	—	the	“idle”	process,	if	
@@ -1041,6 +1042,34 @@ In order to support as many architectures as possible, Linux has a more restrict
   - 这个回答说，如果发生在用户态，会进行两次 stack 切换，我是不信的
   - TSS 可以找到内核 stack, 那么靠什么找到 IRQ stack ?
 
+## interrupt context
+- [ ] [interrupt context and task context](https://stackoverflow.com/questions/22453739/why-do-we-need-interrupt-context)
+- [ ] we already know why interrupt context is needed, but need more explanations for:
+  - [ ] in_softirq
+  - [ ] in_mni
+  - [ ] ...
+```c
+/*
+ * Are we doing bottom half or hardware interrupt processing?
+ *
+ * in_irq()       - We're in (hard) IRQ context
+ * in_softirq()   - We have BH disabled, or are processing softirqs
+ * in_interrupt() - We're in NMI,IRQ,SoftIRQ context or have BH disabled
+ * in_serving_softirq() - We're in softirq context
+ * in_nmi()       - We're in NMI context
+ * in_task()	  - We're in task context
+ *
+ * Note: due to the BH disabled confusion: in_softirq(),in_interrupt() really
+ *       should not be used in new code.
+ */
+#define in_irq()		(hardirq_count())
+#define in_softirq()		(softirq_count())
+#define in_interrupt()		(irq_count())
+#define in_serving_softirq()	(softirq_count() & SOFTIRQ_OFFSET)
+#define in_nmi()		(preempt_count() & NMI_MASK)
+#define in_task()		(!(preempt_count() & \
+				   (NMI_MASK | HARDIRQ_MASK | SOFTIRQ_OFFSET)))
+```
 
 ## ret
 - Interleaved	assembly	entry	points:	[^6]

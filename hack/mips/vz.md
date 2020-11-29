@@ -26,9 +26,12 @@
 - [code overview](#code-overview)
 
 <!-- vim-markdown-toc -->
+
+
+
+
 ## question
 - [ ] `cpu_has_ldpte` : does ls3a has it ?
-- [ ] 
 
 ## TODO
 - [ ] what's relation with loongson vz and MIPS vz ?
@@ -176,6 +179,9 @@ kvm_mips_map_page : is **core** function ?
 - [ ] gebase
 
 - [ ] kvm_arch_vcpu_create : +2000 +180 +200
+  - [ ] SMR 372: As the CPU fetches instructions from the exception entry point, it also flips on the exception state bit SR(EXL), which will make it insensitive to further
+interrupts and puts it in kernel-privilege mode. It will go to the general exception entry point, at 0x8000.0180.
+
 
 ## coproc
 ```c

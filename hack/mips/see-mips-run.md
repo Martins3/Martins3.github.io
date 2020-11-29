@@ -8,20 +8,8 @@ tags: cpu
 # links
 [cross platform emulator](https://github.com/unicorn-engine/unicorn)
 
-
-
 # 问题
-1. RISC V 和MIPS是什么关系
-2. 从2007到今天，其中变化是什么？
-3. pipeline 中间插入访问存储器。
-4. MIPS的instruction 和 data 分离，但是实际上显然不是如此的。 
-
-5. 为什么叫做Coprocessor 0, 还有其他的版本 ?
-
-# Acronmy
-1. ISA (Instruction Set Architecture)
-
-
+- [ ] SR register ?
 
 # RISCs and MIPS Architectures
 1. pipeline
@@ -983,20 +971,13 @@ register by the start-up code, before any load or store instructions are used.)
 
 
 
-
-
-# How Hardware and Software Work Together
-1. The life and times of an interrupt
-2. What happens on a system call
-3. How addresses get translated in Linux/MIPS
+# 14 How Hardware and Software Work Together
 
 ## The Life and Times of an Interrupt
 
+## What happens on a system call
 
-
-
-
-
+## How addresses get translated in Linux/MIPS
 
 
 # MIPS Specific Issues in the Linux Kernel
