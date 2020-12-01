@@ -77,6 +77,7 @@
 - [binder](#binder)
 - [zone](#zone)
 - [nfs](#nfs)
+- [compression fs](#compression-fs)
 
 <!-- vim-markdown-toc -->
 
@@ -637,9 +638,8 @@ io_uring 有如此出众的性能，主要来源于以下几个方面：
 
 - [ ] TODO doc should be read later
 
-
-
-
+[Linux I/O 原理和 Zero-copy 技术全面揭秘](https://zhuanlan.zhihu.com/p/308054212)
+- [ ] sendfile, etc
 
 [^10]
 read the doc :
@@ -1996,6 +1996,10 @@ https://zonedstorage.io/introduction/zoned-storage/
 
 ## nfs
 https://about.gitlab.com/blog/2018/11/14/how-we-spent-two-weeks-hunting-an-nfs-bug/
+
+## compression fs
+- [ ] https://github.com/mhx/dwarfs
+  - it's written with cpp
 
 [^1]: [kernel doc : Overview of the Linux Virtual File System](https://www.kernel.org/doc/html/latest/filesystems/vfs.html)
 [^2]: [github : aio](https://github.com/littledan/linux-aio)

@@ -969,8 +969,6 @@ register by the start-up code, before any load or store instructions are used.)
 3. 
 
 
-
-
 # 14 How Hardware and Software Work Together
 
 ## The Life and Times of an Interrupt
@@ -985,3 +983,12 @@ register by the start-up code, before any load or store instructions are used.)
 ## Explicit Cache Management
 I/O-cache coherent
 > DMA 直接对于内存写入数据导致内存比cache ...
+
+# manual
+
+## MIPS® Architecture Reference Manual Vol. III: MIPS64® microMIPS64™ Privileged Resource Architecture
+
+1. xkseg
+2. xkphys
+3. xsseg
+4. xuseg

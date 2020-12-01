@@ -2116,6 +2116,7 @@ kmap 和 kmap_atomic 在 64bit 是不是完全相同的:
 ```
 并不是完全相同的，应该只是历史遗留产物吧 !
 
+
 ## page reclaim
 - [ ] 所以 shmem 的内存是如何被回收的
     - [ ] 将 shmem 的内存当做 swap cache ?
@@ -2470,6 +2471,9 @@ static bool shmem_should_replace_page(struct page *page, gfp_t gfp)
 ```
 
 ## slub
+- [ ] Chen Huacai : P215 : explained the meaning of freeze
+
+
 认真重读一下:
 - https://ruffell.nz/programming/writeups/2019/02/15/looking-at-kmalloc-and-the-slub-memory-allocator.html
 

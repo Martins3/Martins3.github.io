@@ -2,6 +2,7 @@
 
 <!-- vim-markdown-toc GitLab -->
 
+- [loongson manual](#loongson-manual)
 - [question](#question)
 - [TODO](#todo)
 - [irqchip](#irqchip)
@@ -22,13 +23,15 @@
   - [kvm_mips_build_enter_guest](#kvm_mips_build_enter_guest)
   - [kvm_mips_build_exit](#kvm_mips_build_exit)
   - [uasm.c && uasm-mips.c](#uasmc-uasm-mipsc)
+- [kscratch](#kscratch)
 - [GuestCtl0 GuestCtl1](#guestctl0-guestctl1)
+- [kvm_arch_vcpu_ioctl_run](#kvm_arch_vcpu_ioctl_run)
 - [code overview](#code-overview)
 
 <!-- vim-markdown-toc -->
 
-
-
+## loongson manual
+Root register update list: with virtualization support, vz add some function to CP0 register.
 
 ## question
 - [ ] `cpu_has_ldpte` : does ls3a has it ?
@@ -167,6 +170,10 @@ kvm_mips_map_page : is **core** function ?
 #define ptep_buddy(x)	((pte_t *)((unsigned long)(x) ^ sizeof(pte_t)))
 ```
 
+- [ ] `mapped` and `unmapped`
+  - [ ] kvm_mips_gpa_pte_to_gva_unmapped, kvm_mips_gpa_pte_to_gva_mapped
+  - [ ] kvm_mips_handle_kseg0_tlb_fault <= kvm_trap_emul_gva_fault <= kvm_get_inst <= used by emulate.c
+
 ## emulate.c
 - [ ] kvm_mips_emulate_CP0 : so many, but not used by kvm
 - [ ] kvm_mips_emulate_load : called by vz.c, with kvm_trap_vz_handle_tlb_ld_miss, used for *MMIO*
@@ -178,10 +185,9 @@ kvm_mips_map_page : is **core** function ?
   - [ ] cpu_has_ebase_wg
 - [ ] gebase
 
-- [ ] kvm_arch_vcpu_create : +2000 +180 +200
+- [x] kvm_arch_vcpu_create :
   - [ ] SMR 372: As the CPU fetches instructions from the exception entry point, it also flips on the exception state bit SR(EXL), which will make it insensitive to further
 interrupts and puts it in kernel-privilege mode. It will go to the general exception entry point, at 0x8000.0180.
-
 
 ## coproc
 ```c
@@ -360,7 +366,9 @@ void __init trap_init(void)
 ```
 
 ## entry.c
-kvm_arch_vcpu_create ==> kvm_mips_build_exit : 
+kvm_arch_vcpu_create
+==> `kvm_mips_build_exception` will build exceptions which jumps to `kvm_mips_build_exit`
+==> `kvm_mips_build_tlb_refill_exception` : special entrance for tlb refill
 
 - [x] kvm_mips_build_ret_from_exit : Assemble the code to handle the return from kvm_mips_handle_exit(), either resuming the guest or returning to the host depending on the return value.
   - [x] kvm_mips_build_ret_to_guest
@@ -368,13 +376,15 @@ kvm_arch_vcpu_create ==> kvm_mips_build_exit :
 
 - [x] kvm_mips_build_vcpu_run
   - [x] kvm_mips_build_enter_guest
+    - [ ] tlbmiss_handler_setup_pgd : initialized in `build_setup_pgd`, used for setup a new pgd, called in `kvm_mips_build_enter_guest` and `kvm_mips_build_exit`
+      - [ ] 
 
-- [ ] kvm_mips_build_tlb_refill_exception : *Why a special entry*
 
 - [x] scratch 
   - [x] kvm_mips_build_save_scratch : scratch_vcpu => cp0_epc scratch_vcpu => cp0_cause
   - [x] kvm_mips_build_restore_scratch
   - [x] c0_kscratch
+  - In `kvm_mips_build_exception`, `UASM_i_MFC0(&p, K1, scratch_vcpu[0], scratch_vcpu[1]);` imply the cpo UASM_i_MFC0 currently using is guest's cp0
 
 ### kvm_mips_build_vcpu_run
 - [ ] C0_STATUS
@@ -525,13 +535,22 @@ void uasm_il_beqzl(u32 **p, struct uasm_reloc **r, unsigned int reg,
 }
 ```
 
-
-
-
+## kscratch
 
 
 ## GuestCtl0 GuestCtl1
+- [ ] only used in loongson vz ?
 
+- [ ] kvm_sched_in && vcpu_load
+
+
+## kvm_arch_vcpu_ioctl_run
+enter guest and exit guest ?
+what the fuck, it seems we did nothing.
+
+- [ ] kvm_arch_vcpu_ioctl_run
+  - kvm_vz_vcpu_load_tlb
+  - [ ] kvm_vz_vcpu_run
 
 ## code overview
 | name              | blank | commet | code |

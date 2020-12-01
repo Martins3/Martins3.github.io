@@ -22,3 +22,4 @@ MIPS64-III-Priviledge :
 
 ## build_loongson3_tlb_refill_handler
 
+## kmap
