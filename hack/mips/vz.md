@@ -3,6 +3,7 @@
 <!-- vim-markdown-toc GitLab -->
 
 - [loongson manual](#loongson-manual)
+- [virtualization manual](#virtualization-manual)
 - [question](#question)
 - [TODO](#todo)
 - [irqchip](#irqchip)
@@ -26,6 +27,7 @@
 - [kscratch](#kscratch)
 - [GuestCtl0 GuestCtl1](#guestctl0-guestctl1)
 - [kvm_arch_vcpu_ioctl_run](#kvm_arch_vcpu_ioctl_run)
+- [kmalloc](#kmalloc)
 - [code overview](#code-overview)
 
 <!-- vim-markdown-toc -->
@@ -33,12 +35,31 @@
 ## loongson manual
 Root register update list: with virtualization support, vz add some function to CP0 register.
 
+## virtualization manual
+*4.4.3.2 Entry to Guest mode*
+The recommended method of entering Guest mode is by executing an **ERET** instruction when Root.GuestCtl0GM=1,
+Root.StatusEXL=1, Root.StatusERL=0 and Root.DebugDM=0
+
+
+*4.4.3.3 Exit from Guest mode*
+
+When an interrupt or exception is to be taken in root mode, the bits Root.StatusEXL or Root.StatusERL are set on entry,
+before any machine state is saved. As a result, execution of the handler will take place in root mode, and root mode
+exception context registers are used, including `Root.EPC`, `Root.Cause`, `Root.BadVAddr`, `Root.Context`, `Root.XContext`,
+`Root.EntryHi`
+- [ ] so we should preserve these root register before entering the host.
+
+*4.7.1 Exceptions in Guest Mode*
+The ‘onion model’ requires that every guest-mode operation be checked first against the guest CP0 context, and then
+against the root CP0 context. Exceptions resulting from the guest CP0 context can be handled entirely within guest
+mode without root-mode intervention. Exceptions resulting from the root-mode CP0 context (including GuestCtl0
+permissions) require a root mode (hypervisor) handler.
+
 ## question
-- [ ] `cpu_has_ldpte` : does ls3a has it ?
+- [x] when enter to guest, PWbase will be used for PGA translation
+  - [x] so, the handler code is put into unmapped area. *YES*
 
 ## TODO
-- [ ] what's relation with loongson vz and MIPS vz ?
-
 - [ ] so, why we should emulate ?
 
 - [x] exc ?
@@ -179,14 +200,10 @@ kvm_mips_map_page : is **core** function ?
 - [ ] kvm_mips_emulate_load : called by vz.c, with kvm_trap_vz_handle_tlb_ld_miss, used for *MMIO*
 
 ## exception
-- [ ] what special attention does it need  ?
-
-- [ ] ebase reg ?
-  - [ ] cpu_has_ebase_wg
-- [ ] gebase
+- [ ] cpu_has_ebase_wg
 
 - [x] kvm_arch_vcpu_create :
-  - [ ] SMR 372: As the CPU fetches instructions from the exception entry point, it also flips on the exception state bit SR(EXL), which will make it insensitive to further
+  - SMR 372: As the CPU fetches instructions from the exception entry point, it also flips on the exception state bit SR(EXL), which will make it insensitive to further
 interrupts and puts it in kernel-privilege mode. It will go to the general exception entry point, at 0x8000.0180.
 
 ## coproc
@@ -539,18 +556,30 @@ void uasm_il_beqzl(u32 **p, struct uasm_reloc **r, unsigned int reg,
 
 
 ## GuestCtl0 GuestCtl1
-- [ ] only used in loongson vz ?
+seems only used in loongson vz ?
 
-- [ ] kvm_sched_in && vcpu_load
+- kvm_sched_in && vcpu_load && vcpu_put
 
+struct kvm_vcpu_arch::cop0 : keep all the guest cop0, even exit from guest, cop0 will not be saved automatically.
+
+- [ ] mtgc0 mfgc0 hypcall
 
 ## kvm_arch_vcpu_ioctl_run
-enter guest and exit guest ?
-what the fuck, it seems we did nothing.
-
-- [ ] kvm_arch_vcpu_ioctl_run
+- kvm_arch_vcpu_ioctl_run
   - kvm_vz_vcpu_load_tlb
-  - [ ] kvm_vz_vcpu_run
+  - kvm_vz_vcpu_run
+    - kvm_mips_build_enter_guest
+
+## kmalloc
+```c
+#define CAC_BASE        _AC(0x9800000000000000, UL)
+#define PAGE_OFFSET		(CAC_BASE + PHYS_OFFSET)
+#define PHYS_OFFSET		_AC(0, UL)
+#define __va(x)		((void *)((unsigned long)(x) + PAGE_OFFSET - PHYS_OFFSET))
+```
+pa + 0x9800 0000 0000 0000 = va
+
+in the `xkphys` area
 
 ## code overview
 | name              | blank | commet | code |

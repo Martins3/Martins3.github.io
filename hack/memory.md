@@ -2409,6 +2409,9 @@ DAX 设置 : 到时候在分析吧!
 ## memory model
 Each memory model defines `pfn_to_page()` and page_to_pfn() helpers that allow the conversion from PFN to struct page and vice versa. [^12]
 
+- [ ] https://randomascii.wordpress.com/2020/11/29/arm-and-lock-free-programming/
+- [ ] [^12]
+
 #### vmemmap
 
 ## mmio

@@ -5,8 +5,6 @@
 4. 可以尝试将内核挂载到文件系统上，然后直接拷贝的方法 ?
 5. rootfs 和 initramfs 的区别是什么 ?
 
-
-
 6. 一个不知道咋回事的项目 : https://github.com/paralin/SkiffOS
 
 7. 这个也可以对照关注一下 : https://github.com/MichielDerhaeg/build-linux
@@ -14,6 +12,9 @@
 https://github.com/coreboot/coreboot : BIOS bootloader 之类的完全搞不懂啊
 https://github.com/troglobit/finit : 专门的 init
 
+- [ ] https://re-ws.pl/2020/11/busybox-based-linux-distro-from-scratch/
+
+- [ ] https://www.qemu-advent-calendar.org/2020/ : pulished every two year, adventure for dune
 
 # 搭建一个高效的内核开发环境
 1. 生成的 bzImage 包含了各种驱动吗 ?
