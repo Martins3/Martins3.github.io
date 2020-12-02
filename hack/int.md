@@ -25,7 +25,6 @@
 - [request irq](#request-irq)
 - [irq desc](#irq-desc)
 - [affinity](#affinity)
-- [apic](#apic-1)
 - [gpio](#gpio)
 - [idt](#idt)
   - [Exception Handling](#exception-handling)
@@ -33,7 +32,6 @@
 - [x86 vector](#x86-vector)
 - [isa and pci](#isa-and-pci)
 - [eoi](#eoi)
-- [apic](#apic-2)
 - [ioapic](#ioapic)
 - [proc && sys](#proc-sys)
 - [/proc/irq](#procirq)
@@ -392,6 +390,25 @@ struct irqaction {
 
 - [ ] /proc/stat 关于 softirq 的统计是什么 ？
 
+```c
+enum
+{
+	HI_SOFTIRQ=0,
+	TIMER_SOFTIRQ,
+	NET_TX_SOFTIRQ,
+	NET_RX_SOFTIRQ,
+	BLOCK_SOFTIRQ,
+	IRQ_POLL_SOFTIRQ,
+	TASKLET_SOFTIRQ,
+	SCHED_SOFTIRQ,
+	HRTIMER_SOFTIRQ,
+	RCU_SOFTIRQ,    /* Preferable RCU should always be the last softirq */
+
+	NR_SOFTIRQS
+};
+```
+- [ ] what does it mean by TIMER ?
+
 ## tasklet
 - [ ] https://lwn.net/Articles/830964/
 - [ ] https://www.cnblogs.com/LoyenWang/p/13124803.html
@@ -405,12 +422,56 @@ Interrupt	sequence:
 > 一共三根线 : interrupt line, interrupt acknowledge line, Data bus 参与
 
 ## apic
+- [ ] https://habr.com/en/post/446312/
 ```c
 // global apic variable
 struct apic *apic __ro_after_init = &apic_flat;
 ```
 - [ ] [^2]p117 的 IO APIC 的 24 个引脚的寄存器配置
 
+
+- [ ] apic, timer and **LVIT**
+  - [ ] what's LVIT ?
+```c
+/* 进入到 arch/x86/kernel/apic/apic.c 了 */
+// 好吧，就是向 apic 控制器写入寄存器之类的操作 !
+
+/*
+ * The local apic timer can be used for any function which is CPU local.
+ */
+static struct clock_event_device lapic_clockevent = {
+	.name				= "lapic",
+	.features			= CLOCK_EVT_FEAT_PERIODIC |
+					  CLOCK_EVT_FEAT_ONESHOT | CLOCK_EVT_FEAT_C3STOP
+					  | CLOCK_EVT_FEAT_DUMMY,
+	.shift				= 32,
+	.set_state_shutdown		= lapic_timer_shutdown,
+	.set_state_periodic		= lapic_timer_set_periodic,
+	.set_state_oneshot		= lapic_timer_set_oneshot,
+	.set_state_oneshot_stopped	= lapic_timer_shutdown,
+	.set_next_event			= lapic_next_event,
+	.broadcast			= lapic_timer_broadcast,
+	.rating				= 100,
+	.irq				= -1,
+};
+
+
+static int lapic_timer_set_oneshot(struct clock_event_device *evt)
+{
+	return lapic_timer_set_periodic_oneshot(evt, true);
+}
+
+static inline int
+lapic_timer_set_periodic_oneshot(struct clock_event_device *evt, bool oneshot)
+{
+	/* Lapic used as dummy for broadcast ? */
+	if (evt->features & CLOCK_EVT_FEAT_DUMMY)
+		return 0;
+
+	__setup_APIC_LVTT(lapic_timer_period, oneshot, 1);
+	return 0;
+}
+```
 
 ## chained irq
 [IRQs: the Hard, the Soft, the Threaded and the Preemptible](https://elinux.org/images/8/8c/Zyngier.pdf)
@@ -664,8 +725,6 @@ static void free_masks(struct irq_desc *desc)
 ```
 > cpu mask 的功能好神奇 ? 还可以实现什么功能
 
-## apic
-https://habr.com/en/post/446312/
 
 
 ## gpio
@@ -887,8 +946,6 @@ PCI cards use level-sensitive interrupts, which means that different PCI devices
 
 ## eoi
 https://stackoverflow.com/questions/7005331/difference-between-io-apic-fasteoi-and-io-apic-edge
-
-## apic
 
 ## ioapic
 - [ ] io apic 寄存器 && Redirection Table
