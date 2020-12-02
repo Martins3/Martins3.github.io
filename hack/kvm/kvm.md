@@ -793,6 +793,7 @@ static int mmu_alloc_roots(struct kvm_vcpu *vcpu)
 		return mmu_alloc_shadow_roots(vcpu);
 }
 ```
+
 ## memory in kernel or qumu process
 luohao's blog:
 

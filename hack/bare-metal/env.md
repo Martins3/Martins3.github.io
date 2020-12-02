@@ -11,10 +11,13 @@
 
 https://github.com/coreboot/coreboot : BIOS bootloader 之类的完全搞不懂啊
 https://github.com/troglobit/finit : 专门的 init
+https://github.com/oasislinux/oasis : oasis is a small linux system.
 
 - [ ] https://re-ws.pl/2020/11/busybox-based-linux-distro-from-scratch/
 
 - [ ] https://www.qemu-advent-calendar.org/2020/ : pulished every two year, adventure for dune
+
+
 
 # 搭建一个高效的内核开发环境
 1. 生成的 bzImage 包含了各种驱动吗 ?

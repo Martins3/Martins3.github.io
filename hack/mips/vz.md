@@ -4,6 +4,7 @@
 
 - [loongson manual](#loongson-manual)
 - [virtualization manual](#virtualization-manual)
+- [III privilege resource](#iii-privilege-resource)
 - [question](#question)
 - [TODO](#todo)
 - [irqchip](#irqchip)
@@ -13,10 +14,15 @@
 - [mmu](#mmu)
 - [emulate.c](#emulatec)
 - [exception](#exception)
+- [interrupts](#interrupts)
+- [hrtimer && timer](#hrtimer-timer)
+- [config](#config)
 - [coproc](#coproc)
 - [cp0](#cp0)
 - [kseg0](#kseg0)
 - [tlb](#tlb)
+- [asid](#asid)
+- [guestid](#guestid)
 - [cpu load / put](#cpu-load-put)
 - [kvm_trap_vz_handle_guest_exit and kvm_mips_handle_exit](#kvm_trap_vz_handle_guest_exit-and-kvm_mips_handle_exit)
 - [entry.c](#entryc)
@@ -54,6 +60,12 @@ The ‘onion model’ requires that every guest-mode operation be checked first 
 against the root CP0 context. Exceptions resulting from the guest CP0 context can be handled entirely within guest
 mode without root-mode intervention. Exceptions resulting from the root-mode CP0 context (including GuestCtl0
 permissions) require a root mode (hypervisor) handler.
+
+## III privilege resource
+*9.59 XContext Register (CP0 Register 20, Select 0)*
+
+However, it is unlikely to be useful to software in the TLB Refill Handler.
+The `XContext` register duplicates some of the information provided in the `BadVAddr` register
 
 ## question
 - [x] when enter to guest, PWbase will be used for PGA translation
@@ -147,34 +159,23 @@ Loongson add ...
 ## functions
 - kvm_read_c0_guest_status
 
-
 ## mmu
-- [ ] flush ?
-  - [ ] difference between kvm_mips_flush_gpa_pte && kvm_mips_flush_gva_pte
-  - [ ] why we need flush ?
+- [x] flush
+  - [x] what's difference between with TLB invalid and flush
+      - kvm_mips_flush_gpa_pt : mainly for mmu_notifier to free
+      - invalid tlb is update
+  - [x] kvm_mips_flush_gva_pt : used by emulate.c at which we're not interested
 
 - [ ] where is the hugetlb ?
 
-- [ ] mkold
-- [ ] mkclean
-
-kvm_mips_map_page : is **core** function ?
-
-- [ ] kseg0
+- [x] mkold && mkclean : ad bit, **THIS IS A CHANCE TO UNDERSTAND DIRTY LOG**
 
 - *kvm_mips_handle_vz_root_tlb_fault*
   - [ ] why surrounded by CONFIG_KVM_MIPS_VZ
   - x: kvm_trap_vz_handle_tlb_ld_miss + kvm_trap_vz_handle_tlb_st_miss
     - x: kvm_mips_handle_exit
-- kvm_mips_handle_kseg0_tlb_fault
-  - x: kvm_trap_emul_gva_fault
-    - x: kvm_get_inst
-- kvm_mips_handle_mapped_seg_tlb_fault : caller is emulate
 
-- [ ] others functions is used by emulate ?
-  - [ ] what does emulate mean ? shadow page ? what shold you emulate ?
-
-- [ ] kvm_mips_map_page
+- [ ] kvm_mips_map_page : is **core** function
   - [ ] out_entry
   - [ ] out_buddy
   - [ ] This takes care of marking pages young or dirty (idle/dirty page tracking), asking KVM for the corresponding PFN, and creating a mapping in the GPA page tables. 
@@ -191,9 +192,17 @@ kvm_mips_map_page : is **core** function ?
 #define ptep_buddy(x)	((pte_t *)((unsigned long)(x) ^ sizeof(pte_t)))
 ```
 
-- [ ] `mapped` and `unmapped`
-  - [ ] kvm_mips_gpa_pte_to_gva_unmapped, kvm_mips_gpa_pte_to_gva_mapped
-  - [ ] kvm_mips_handle_kseg0_tlb_fault <= kvm_trap_emul_gva_fault <= kvm_get_inst <= used by emulate.c
+- [ ] Something related to emualted:
+  - [x] `mapped` and `unmapped`
+    - [x] kvm_mips_gpa_pte_to_gva_unmapped, kvm_mips_gpa_pte_to_gva_mapped
+    - [x] kvm_mips_handle_kseg0_tlb_fault <= kvm_trap_emul_gva_fault <= kvm_get_inst <= used by emulate.c
+  - [ ] others functions is used by emulate ?
+    - [ ] what does emulate mean ? shadow page ? what shold you emulate ?
+  - [x] kseg0
+    - kvm_mips_handle_kseg0_tlb_fault
+  - x: kvm_trap_emul_gva_fault
+    - x: kvm_get_inst
+  - kvm_mips_handle_mapped_seg_tlb_fault : caller is emulate
 
 ## emulate.c
 - [ ] kvm_mips_emulate_CP0 : so many, but not used by kvm
@@ -205,6 +214,75 @@ kvm_mips_map_page : is **core** function ?
 - [x] kvm_arch_vcpu_create :
   - SMR 372: As the CPU fetches instructions from the exception entry point, it also flips on the exception state bit SR(EXL), which will make it insensitive to further
 interrupts and puts it in kernel-privilege mode. It will go to the general exception entry point, at 0x8000.0180.
+
+## interrupts
+> KVM 可以将中断配置为直通虚拟机中断， 此时将 GuestCtl0.PIP 置 1 即可
+> 
+> 通过 KVM 使用 mtc0 指令写 GuestCtl2.VIP 而使得 Guest.Cause.IP 置位， 用 HW 表示外部硬件中断
+
+kvm_vz_vcpu_run && kvm_mips_handle_exit => kvm_mips_deliver_interrupts => `kvm_mips_callbacks->irq_deliver` / kvm_vz_irq_deliver_cb
+
+```c
+void kvm_mips_deliver_interrupts(struct kvm_vcpu *vcpu, u32 cause)
+{
+	unsigned long *pending = &vcpu->arch.pending_exceptions;
+	unsigned long *pending_clr = &vcpu->arch.pending_exceptions_clr;
+	unsigned int priority;
+
+	if (!(*pending) && !(*pending_clr))
+		return;
+
+	priority = __ffs(*pending_clr);
+	while (priority <= MIPS_EXC_MAX) {
+		if (kvm_mips_callbacks->irq_clear(vcpu, priority, cause)) {
+			if (!KVM_MIPS_IRQ_CLEAR_ALL_AT_ONCE)
+				break;
+		}
+
+		priority = find_next_bit(pending_clr,
+					 BITS_PER_BYTE * sizeof(*pending_clr),
+					 priority + 1);
+	}
+
+	priority = __ffs(*pending);
+	while (priority <= MIPS_EXC_MAX) {
+		if (kvm_mips_callbacks->irq_deliver(vcpu, priority, cause)) {
+			if (!KVM_MIPS_IRQ_DELIVER_ALL_AT_ONCE)
+				break;
+		}
+
+		priority = find_next_bit(pending,
+					 BITS_PER_BYTE * sizeof(*pending),
+					 priority + 1);
+	}
+
+}
+```
+So, it's clear, when guest exit, deliver interrupt to guest with `set_c0_guestctl2`
+
+## hrtimer && timer
+kvm_mips_callbacks::queue_timer_int
+
+- [ ] what's happending in vz about hrtimer ?
+
+在 KVM 初始化时， 定义了一个内核高精度定时器 hrtimer， 它的用处就是在
+guest 被调度时根据目前 count 和 compare 的差值进行高精度定时， 定时器触发时
+发生进程切换， 内核调度该定时器的 guest 进程立即执行并注入一个 TI。 
+
+```c
+static struct kvm_timer_callbacks kvm_vz_timer_callbacks = {
+	.restore_timer = kvm_vz_restore_timer,
+	.acquire_htimer = kvm_vz_acquire_htimer,
+	.save_timer = kvm_vz_save_timer,
+	.lose_htimer = kvm_vz_lose_htimer,
+	.count_timeout = kvm_mips_count_timeout,
+	.write_count = kvm_mips_write_count,
+};
+```
+
+## config
+- [ ] kvm_vz_config1_user_wrmask
+- [ ] kvm_vz_config1_guest_wrmask
 
 ## coproc
 ```c
@@ -282,7 +360,54 @@ struct kvm_vcpu_arch {
 ## kseg0
 
 ## tlb
-kvm_vz_vcpu_load_tlb
+- [ ] kvm_vz_vcpu_load_tlb
+  - everytime enter guest
+
+Let's find what lives in tlb.c
+
+```c
+struct kvm_mips_tlb {
+	long tlb_mask;
+	long tlb_hi;
+	long tlb_lo[2];
+};
+
+struct kvm_vcpu_arch {
+  // ...
+
+	/* S/W Based TLB for guest */
+	struct kvm_mips_tlb guest_tlb[KVM_MIPS_GUEST_TLB_SIZE];
+```
+
+flush root / guest tlb, inv tlb when update `gpa->hpa`
+
+## asid
+```c
+static u32 kvm_mips_get_kernel_asid(struct kvm_vcpu *vcpu)
+{
+	struct mm_struct *kern_mm = &vcpu->arch.guest_kernel_mm;
+	int cpu = smp_processor_id();
+
+	return cpu_asid(cpu, kern_mm);
+}
+
+static u32 kvm_mips_get_user_asid(struct kvm_vcpu *vcpu)
+{
+	struct mm_struct *user_mm = &vcpu->arch.guest_user_mm;
+	int cpu = smp_processor_id();
+
+	return cpu_asid(cpu, user_mm);
+}
+```
+- [ ] How kernel maintains the asid
+- [ ] How asid loaded to TLB EntryHi ?
+
+kvm_mips_host_tlb_inv need `va` and `asid` to assemble `EntryHi`.
+
+## guestid
+- clear_root_gid
+- set_root_gid_to_guest_gid
+
 
 ## cpu load / put
 **kvm_vz_vcpu_put** && **kvm_vz_vcpu_load** register here :
