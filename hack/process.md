@@ -712,6 +712,7 @@ __init void init_sched_fair_class(void)
 > so Matthew created a new sleeping state, called TASK_KILLABLE; it behaves like TASK_UNINTERRUPTIBLE with the exception that fatal signals will interrupt the sleep.
 
 - [ ] find a example to understand the difference between `TASK_UNINTERRUPTIBLE` and `TASK_INTERRUPTIBLE` 
+  - [ ] Not all syscall will lead to `TASK_UNINTERRUPTIBLE`, find a example to lead to `TASK_INTERRUPTIBLE` and it has to do that.
 
 
 ## process relation

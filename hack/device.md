@@ -35,6 +35,8 @@
 - [ ] eldd 的部分章节也是可以看看的 http://www.embeddedlinux.org.cn/essentiallinuxdevicedrivers/final/ch06lev1sec3.html
 - [ ] 微机原理的书可以看看的
 
+- [ ] tlpi : chapter 62
+
 ## Questions
 
 
