@@ -28,5 +28,10 @@ root@qemux86:~# cat /sys/devices/system/clocksource/clocksource0/available_clock
 refined-jiffies jiffies
 ```
 
-## TODO
-- [ ] https://rwmj.wordpress.com/2010/10/15/kvm-pvclock/
+## https://github.com/GiantVM/KVM-Annotation/wiki/Kvmclock
+
+- https://rwmj.wordpress.com/2010/10/15/kvm-pvclock/
+- https://lkml.org/lkml/2010/4/15/355
+
+## https://github.com/GiantVM/KVM-Annotation/wiki/Steal-Time
+

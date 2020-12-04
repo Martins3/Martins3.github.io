@@ -16,10 +16,10 @@
 - [How to cross Great Fire Wall](./gfw.md)
 
 ## Scholar
-- [Paper reading list](./paper-reading-list.md)
+- [Binary Translation and Virtualization Paper reading list](./paper-reading-list.md)
 
-## Reflections
+<!-- ## Reflections -->
 <!-- - [Power of continuous thinking](./thinking.md) -->
 
 ## MISC
-- [what is x86 IA-32 IA-64 x86-64 and amd64 ?](./x86.md)(中文)
+- [what is x86 IA-32 IA-64 x86-64 and amd64 ?](./x86.md)
