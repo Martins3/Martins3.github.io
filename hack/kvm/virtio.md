@@ -4,8 +4,9 @@
 ## eventfd
 
 **如何打开 virtio 选项于 make menuconfig 中**
-1. Device Driver => Virtio Drivers
+1. Device Driver => Virtio Drivers ==> PCI drivers for virtio devices
 2. Device Driver => Block devices => Virtio block io
+3. Device Driver => Network Device support => Virtio network driver
 
 - [ ] http://blog.allenx.org/2015/07/05/kvm-irqfd-and-ioeventfd
 

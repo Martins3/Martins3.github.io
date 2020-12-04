@@ -1,3 +1,5 @@
+# https://github.com/cirosantilli/linux-kernel-module-cheat
+
 搭建环境
 1. python 设置源
 https://mirror.tuna.tsinghua.edu.cn/help/pypi/
@@ -10,5 +12,3 @@ https://gist.github.com/MichalZalecki/4a87880bbe7a3a5428b5aebebaa5cd97
 
 ## 记录
 cat "$(./getvar run_dir)/run.sh"
-
-

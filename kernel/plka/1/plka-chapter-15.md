@@ -1,4 +1,41 @@
 # Professional Linux Kernel Architecture : Time Management
+
+<!-- vim-markdown-toc GFM -->
+
+- [15.1 Overview](#151-overview)
+    - [15.1.1 Types of Timers](#1511-types-of-timers)
+    - [15.1.2 Configuration Options](#1512-configuration-options)
+- [15.2 Implementation of Low-Resolution Timers](#152-implementation-of-low-resolution-timers)
+    - [15.2.1 Timer Activation and Process Accounting](#1521-timer-activation-and-process-accounting)
+    - [15.2.2 Working with Jiffies](#1522-working-with-jiffies)
+    - [15.2.3 Data Structures](#1523-data-structures)
+    - [15.2.4 Dynamic Timers](#1524-dynamic-timers)
+- [15.3 Generic Time Subsystem](#153-generic-time-subsystem)
+    - [15.3.1 Overview](#1531-overview)
+    - [15.3.2 Configuration Options](#1532-configuration-options)
+    - [15.3.3 Time Representation](#1533-time-representation)
+    - [15.3.4 Objects for Time Management](#1534-objects-for-time-management)
+- [15.4 High-Resolution Timers](#154-high-resolution-timers)
+    - [15.4.1 Data Structures](#1541-data-structures)
+    - [15.4.2 Setting Timers](#1542-setting-timers)
+    - [15.4.3 Implementation](#1543-implementation)
+    - [15.4.4 Periodic Tick Emulation](#1544-periodic-tick-emulation)
+    - [15.4.5 Switching to High-Resolution Timers](#1545-switching-to-high-resolution-timers)
+- [15.5 Dynamic Ticks](#155-dynamic-ticks)
+    - [15.5.1 Data Structures](#1551-data-structures)
+    - [15.5.2 Dynamic Ticks for Low-Resolution Systems](#1552-dynamic-ticks-for-low-resolution-systems)
+    - [15.5.3 Dynamic Ticks for High-Resolution Systems](#1553-dynamic-ticks-for-high-resolution-systems)
+    - [15.5.4 Stopping and Starting Periodic Ticks](#1554-stopping-and-starting-periodic-ticks)
+- [15.6 Broadcast Mode](#156-broadcast-mode)
+- [15.7 Implementing Timer-Related System Calls](#157-implementing-timer-related-system-calls)
+    - [15.7.1 Time Bases](#1571-time-bases)
+    - [15.7.2 The `alarm` and `setitimer` System Calls](#1572-the-alarm-and-setitimer-system-calls)
+    - [15.7.3 Getting the Current Time](#1573-getting-the-current-time)
+- [15.8 Managing Process Times](#158-managing-process-times)
+- [Appendix](#appendix)
+
+<!-- vim-markdown-toc -->
+
 All the methods of deferring work to a future point in time discussed in this book so far do not cover
 one specific area — the `time-based deferral of tasks`
 
@@ -851,23 +888,23 @@ struct hrtimer_clock_base {
 } __hrtimer_clock_base_align;
 ```
 The meaning of the fields is as follows:
-❑ hrtimer_cpu_base points to the per-CPU basis to which the clock base belongs.
-❑ index distinguishes between CLOCK_MONOTONIC and CLOCK_REALTIME.
-❑ rb_root is the root of a red-black tree on which all active timers are sorted.
-❑ first points to the timer that will expire first.
-❑ Processing high-res timers is initiated from the high-resolution timer softIRQ HRTIMER_SOFTIRQ
+- hrtimer_cpu_base points to the per-CPU basis to which the clock base belongs.
+- index distinguishes between CLOCK_MONOTONIC and CLOCK_REALTIME.
+- rb_root is the root of a red-black tree on which all active timers are sorted.
+- first points to the timer that will expire first.
+- Processing high-res timers is initiated from the high-resolution timer softIRQ HRTIMER_SOFTIRQ
 as described in the next section. softirq_time stores the time at which the softIRQ was issued,
 and get_softirq_time is a function to obtain this time. If high-resolution mode is not active,
 then the stored time will be coarse-grained.
-❑ get_time reads the fine-grained time. This is simple for the monotonic clock (the value delivered
+- get_time reads the fine-grained time. This is simple for the monotonic clock (the value delivered
 by the current clock source can be directly used), but some straightforward arithmetic is required
 to convert the value into the real system time.
-❑ resolution denotes the resolution of the timer in nanoseconds.
-❑ When the real-time clock is adjusted, a discrepancy between the expiration values of timers
+- resolution denotes the resolution of the timer in nanoseconds.
+- When the real-time clock is adjusted, a discrepancy between the expiration values of timers
 stored on the CLOCK_REALTIME clock base and the current real time will arise. The offset field
 helps to fix the situation by denoting an offset by which the timers needs to be corrected. Since
 this is only a temporary effect that happens only seldomly, the complications need not be discussed in more detail.
-❑ reprogram is a function that allows for reprogramming a given timer event, that is, changing the
+- reprogram is a function that allows for reprogramming a given timer event, that is, changing the
 expiration time.
 
 > hrtimer_cpu_base : rb tree 的根部
@@ -998,9 +1035,10 @@ DEFINE_PER_CPU(struct hrtimer_cpu_base, hrtimer_bases) =
 > skip easy
 
 #### 15.4.3 Implementation
-**High-Resolution Timers in High-Resolution Mode**
 
-> skip easy
+**High-Resolution Timers in High-Resolution Mode**
+> skip something we don't need yet
+
 
 **High-Resolution Timers in Low-Resolution Mode**
 > skip wired

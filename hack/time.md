@@ -1,6 +1,20 @@
 # time
 - [ ] what does kernel used to notified hrtimer that it's expired ?
-- [ ] oneshot and hrtimer ?
+
+kernel doc is invaluable[^4].
+
+## hrtimer
+- [ ] https://stackoverflow.com/questions/35800850/why-does-my-hrtimer-callback-return-too-early-after-forwarding-it
+
+```c
+struct clock_event_device {
+	int			(*set_next_event)(unsigned long evt, struct clock_event_device *);
+
+void hrtimer_interrupt(struct clock_event_device *dev)
+```
+My nightmare is wiped out from my mind now.
+With clock_event_device::set_next_event, we program the hardware clock to fire a interrupt at a specified timepoint,
+and the hrtimer_interrupt will be called.
 
 ## timer.c
 low resolution timer
@@ -90,7 +104,7 @@ tick-sched.c 相对复杂一些，毕竟多出来了一个可以不 tick 的状�
 
 CONFIG_GENERIC_SCHED_CLOCK is not set in x86 defconfig
 
-# posix-cpu-timers.c
+## posix-cpu-timers.c
 
 为了处理 两种情况，其中的内容:
 
@@ -233,19 +247,8 @@ struct k_itimer {
 };
 ```
 
-# kernel/time
+## overview
 
-<!-- vim-markdown-toc GitLab -->
-
-- [quetion](#quetion)
-- [todo](#todo)
-- [wowotech](#wowotech)
-    - [1](#1)
-    - [2 软件架构](#2-软件架构)
-    - [3](#3)
-    - [4](#4)
-    - [5](#5)
-    - [6](#6)
 
 <!-- vim-markdown-toc -->
 
@@ -472,11 +475,13 @@ DEFINE_PER_CPU(struct tick_device, tick_cpu_device);
 
 > @todo 各种用户接口，用于浏览整体代码的时候进行阅读
 
+#### [4 timekeeping](http://www.wowotech.net/timer_subsystem/timekeeping.html)
+browsing timekeeping.c
 
-#### [4](http://www.wowotech.net/timer_subsystem/timekeeping.html)
-
-> @todo 有点骚东西!
-
+tk_clock_read
+  - `struct clocksource->read(clock)`
+    - read_tsc
+      - rdtsc_ordered : assembly code using instruction `rdtsc`
 
 #### [5](http://www.wowotech.net/timer_subsystem/posix-clock.html)
 
@@ -486,6 +491,32 @@ DEFINE_PER_CPU(struct tick_device, tick_cpu_device);
 
 http://www.wowotech.net/timer_subsystem/time_subsystem_index.html
 
+
+#### [Timekeeping intheLinux Kernel](http://events17.linuxfoundation.org/sites/events/files/slides/Timekeeping%20in%20the%20Linux%20Kernel_0.pdf)
+```c
+// how many nsecs since last read
+static inline u64 timekeeping_get_ns(const struct tk_read_base *tkr)
+{
+	u64 delta;
+
+	delta = timekeeping_get_delta(tkr); // cycle_t delta = (tkr->read(tkr->clock) - tkr->cycle_last) & tkr->mask;
+	return timekeeping_delta_to_ns(tkr, delta); // nsec = (delta * tkr->mult + tkr->xtime_nsec) >>= tkr->shift;
+}
+
+// simplified version
+void ktime_get_real_ts64(struct timespec64 *ts)
+{
+  ts->tv_sec = tk->xtime_sec;
+	ts->tv_nsec = 0;
+  nsecs = timekeeping_get_ns(&tk->tkr_mono);
+	ts->tv_sec += __iter_div_u64_rem(ts->tv_nsec + nsecs, NSEC_PER_SEC, &nsecs);
+	ts->tv_nsec = nsecs;
+}
+```
+
+- [ ] There something interesting about how to calculate time from hardware clock clcle efficiently and accurately, but we have to handle something for kvm.
+
 [^1]: https://www.kernel.org/doc/html/latest/virt/kvm/timekeeping.html
 [^2]: https://github.com/dterei/tsc
 [^3]: https://en.wikipedia.org/wiki/Intel_8253
+[^4]: https://www.kernel.org/doc/html/latest/timers/index.html
