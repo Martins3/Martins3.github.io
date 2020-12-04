@@ -26,8 +26,10 @@
 - [lttng](#lttng)
 - [Gprof2dot](#gprof2dot)
 - [FlameGraph](#flamegraph-1)
+- [kdump](#kdump)
 
 <!-- vim-markdown-toc -->
+
 
 ## 总结各种 tracer : overview
 http://www.brendangregg.com/blog/2015-07-08/choosing-a-linux-tracer.html
@@ -51,8 +53,6 @@ cat: ksys_read: No such file or directory
     - [ ] uprobe 真的利用了 kprobe 吗 ?
     - [ ] 
 - 所有的工具的功能的整理 : dtrace SystemTap 等
-
-
 
 下面两个链接写的非常好，可以深入理解
 - https://alex.dzyoba.com/blog/kernel-profiling/ 
@@ -363,6 +363,11 @@ https://github.com/jrfonseca/gprof2dot
 
 ## FlameGraph
 至今不知道如何使用，这是用户层 perf 的前端吗 ?
+
+## kdump
+when linux crashed, kexec and kdump will dump kernel memory to vmcore
+
+https://github.com/crash-utility/crash
 
 
 [^4]: [An introduction to KProbes](https://lwn.net/Articles/132196/)

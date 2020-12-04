@@ -2147,6 +2147,10 @@ SYM_CODE_END(ret_from_fork)
 
 在 `kthread()` 中間，當 kernel thread 調用 fn 完成之後，需要
 
+
+- [ ] kthread_queue_work : we encounter this function in the /home/maritns3/core/linux/arch/x86/kvm/i8254.c
+  - my question is : what's the meaning of queue in the context of kthread ?
+
 ## first user process
 ```c
 static int run_init_process(const char *init_filename)

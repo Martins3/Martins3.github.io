@@ -4,7 +4,6 @@
 
 - [Volume 1 : Basic Architecture](#volume-1-basic-architecture)
 - [Volume 2 : Instruction Set Reference](#volume-2-instruction-set-reference)
-    - [1.2 OVERVIEW OF VOLUME 2A, 2B, 2C AND 2D: INSTRUCTION SET REFERENCE](#12-overview-of-volume-2a-2b-2c-and-2d-instruction-set-reference)
 - [Volume 3 : System Programming Guide](#volume-3-system-programming-guide)
   - [10 ADVANCED PROGRAMMABLE INTERRUPT CONTROLLER (APIC)](#10-advanced-programmable-interrupt-controller-apic)
     - [10.12 EXTENDED XAPIC (X2APIC)](#1012-extended-xapic-x2apic)
@@ -15,7 +14,6 @@
 # Volume 1 : Basic Architecture
 
 # Volume 2 : Instruction Set Reference
-### 1.2 OVERVIEW OF VOLUME 2A, 2B, 2C AND 2D: INSTRUCTION SET REFERENCE
 
 # Volume 3 : System Programming Guide
 
@@ -45,6 +43,9 @@ Local APICs can receive interrupts from the following sources:
 
 - [ ] invd : invalid cache, but why invalid tlb isn't unconditionally 
 
+
+
 # questions
 flat and cluster 
 > huxueshi : my comments for the question, please provide enough background about the question, make it clear for latter reference.
+

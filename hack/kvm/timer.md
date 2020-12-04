@@ -35,3 +35,6 @@ refined-jiffies jiffies
 
 ## https://github.com/GiantVM/KVM-Annotation/wiki/Steal-Time
 
+
+## x86/kvm/i8254.c
+hrtimer --expired--> pit_timer_fn ----queue kthread---> pit_do_work ---call--> kvm_set_irq
