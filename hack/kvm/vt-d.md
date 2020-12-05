@@ -58,5 +58,8 @@ This chapter discuss architecture and hardware details for interrupt-remapping a
 - [ ] migration ?
 - [ ] host **vector** for different assigned devices ?
 
-2. CPU-based Posted-Interrupt in Xen 
+![](../img/vt-d-1.png)
 
+Xen Implementation Details:
+- Update IRET according to guest’s modification to the interrupt configuration (MSI address, data)
+- Interrupt migration during VCPU scheduling
