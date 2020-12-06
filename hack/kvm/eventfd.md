@@ -32,6 +32,7 @@ static const struct kvm_io_device_ops ioeventfd_ops = {
 
 ## API
 
+### kvm_ioeventfd
 ```c
 int
 kvm_ioeventfd(struct kvm *kvm, struct kvm_ioeventfd *args)
@@ -44,6 +45,9 @@ kvm_ioeventfd(struct kvm *kvm, struct kvm_ioeventfd *args)
 ```
 - kvm_assign_ioeventfd
   - kvm_assign_ioeventfd_idx
+
+### kvm_irqfd_assign
+
 
 
 [^1]: https://kernelgo.org/mmio.html
