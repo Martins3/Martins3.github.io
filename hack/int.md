@@ -427,7 +427,7 @@ Interrupt	sequence:
 // global apic variable
 struct apic *apic __ro_after_init = &apic_flat;
 ```
-- [ ] [^2]p117 的 IO APIC 的 24 个引脚的寄存器配置
+- [ ] [^3]p117 的 IO APIC 的 24 个引脚的寄存器配置
 
 
 - [ ] apic, timer and **LVIT**
@@ -1055,6 +1055,15 @@ static struct irq_chip ioapic_ir_chip __read_mostly = {
 ## MSI
 Generic MSIs : https://en.wikipedia.org/wiki/Message_Signaled_Interrupts
 
+linux/drivers/pci/msi.c
+
+use nvme as example:
+- nvme_pci_enable
+  - pci_alloc_irq_vectors
+    - pci_alloc_irq_vectors_affinity
+      - `__pci_enable_msix_range`
+        - `__pci_enable_msix`
+          - **msix_capability_init** : [^3] page 130
 
 ## matrix
 观察到 linux/kernel/irq/matrix.c 以及 irq_alloc_matrix, 但是根本不知道为什么需要使用 matrix 这一个概念
@@ -1143,7 +1152,6 @@ In order to support as many architectures as possible, Linux has a more restrict
 
 ## ref
 [^1]: https://www.oreilly.com/library/view/pc-hardware-in/059600513X/ch01s03s01s01.html
-[^2]: [深度探索Linux系统虚拟化](https://book.douban.com/subject/35238691/)
 [^3]: Inside the Linux Virtualization : Principle and Implementation
 [^4]: [kernel doc](https://0xax.gitbooks.io/linux-insides/content/Interrupts/)
 [^5]: https://0xax.gitbooks.io/linux-insides/content/Interrupts/

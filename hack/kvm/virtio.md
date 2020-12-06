@@ -1,6 +1,10 @@
 # TODO
 - [ ] virtiofs 的内容很少
 
+- [ ] virtio and msi: 
+
+- [ ] We're over optimistic about the meaning of the complexity of virtio, try to read **/home/maritns3/core/linux/drivers/virtio**, please.
+
 ## eventfd
 
 **如何打开 virtio 选项于 make menuconfig 中**

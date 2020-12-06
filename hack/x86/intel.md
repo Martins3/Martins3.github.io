@@ -110,7 +110,7 @@ following conditions all hold:
 *(3) there is no blocking by MOV SS or by POP SS; and*
 *(4) the “interrupt-window exiting” VM-execution control is 0.*
 
-The following pseudocode details the behavior of virtualinterrupt delivery (see Section 29.1.1 for definition of VISR, VIRR, and VPPR):
+The following pseudocode details the behavior of virtual interrupt delivery (see Section 29.1.1 for definition of VISR, VIRR, and VPPR):
 ```
 Vector ← RVI;
 VISR[Vector] ← 1;

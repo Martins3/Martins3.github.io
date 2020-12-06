@@ -102,6 +102,11 @@ struct kvm_lapic {
 ## posted_ipi.c
 pi_update_irte
   - kvm_arch_has_assigned_device : kvm_arch_irq_bypass_add_producer :
+  - irq_set_vcpu_affinity : kernel/irq/manage.c
+    - `chip->irq_set_vcpu_affinity`
+      - intel_ir_set_vcpu_affinity
+        - modify_irte
+      - amd_ir_set_vcpu_affinity
   
 
 ## irq_comm.c
@@ -300,8 +305,98 @@ int kvm_setup_default_irq_routing(struct kvm *kvm)
 				   ARRAY_SIZE(default_routing), 0);
 }
 ```
+- 0-15 gsi, set ROUTING_ENTRY2, higher gsi set ROUTING_ENTRY1
+
+
+```c
+struct kvm_irq_routing_entry {
+	__u32 gsi;
+	__u32 type;
+	__u32 flags;
+	__u32 pad;
+	union {
+		struct kvm_irq_routing_irqchip irqchip;
+		struct kvm_irq_routing_msi msi;
+		struct kvm_irq_routing_s390_adapter adapter;
+		struct kvm_irq_routing_hv_sint hv_sint;
+		__u32 pad[8];
+	} u;
+};
+
+struct kvm_kernel_irq_routing_entry {
+	u32 gsi;
+	u32 type;
+	int (*set)(struct kvm_kernel_irq_routing_entry *e,
+		   struct kvm *kvm, int irq_source_id, int level,
+		   bool line_status);
+	union {
+		struct {
+			unsigned irqchip;
+			unsigned pin;
+		} irqchip;
+		struct {
+			u32 address_lo;
+			u32 address_hi;
+			u32 data;
+			u32 flags;
+			u32 devid;
+		} msi;
+		struct kvm_s390_adapter_int adapter;
+		struct kvm_hv_sint hv_sint;
+	};
+	struct hlist_node link;
+};
+```
+- [ ] How we setup kvm_kernel_irq_routing_entry ?
+  - kvm_set_irq_routing
+    * kvm_setup_default_irq_routing
+      * KVM_CREATE_IRQCHIP
+    * kvm_setup_empty_irq_routing
+      * KVM_CAP_SPLIT_IRQCHIP
+    * KVM_SET_GSI_ROUTING(Sets the GSI routing table entries, overwriting any previously set entries.)
+    - setup_routing_entry
+      - kvm_set_routing_entry
+
+- [ ] What's relation between `kvm_kernel_irq_routing_entry` and `kvm_irq_routing_entry` ?
+  - [ ] I don't know, but just some software trick to make code more beautiful
+  - IRQ routing here is used for call multiple kvm_kernel_irq_routing_entry::set with the specific gsi
+
+## guest mode interrupt evaluation
+[^3] section 3.5.2
+```c
+static struct kvm_x86_ops vmx_x86_ops __initdata = {
+
+	.hwapic_irr_update = vmx_hwapic_irr_update,
+	.hwapic_isr_update = vmx_hwapic_isr_update,
+```
+
+- [ ] `.enable_irq_window = enable_irq_window,` if guest mode interrupt evaluation is enabled, how kvm take advantage of irq window ?
+
+
+```c
+static inline void apic_clear_irr(int vec, struct kvm_lapic *apic)
+{
+	struct kvm_vcpu *vcpu;
+
+	vcpu = apic->vcpu;
+
+	if (unlikely(vcpu->arch.apicv_active)) {
+		/* need to update RVI */
+		kvm_lapic_clear_vector(vec, apic->regs + APIC_IRR);
+		kvm_x86_ops.hwapic_irr_update(vcpu,
+				apic_find_highest_irr(apic));
+	} else {
+		apic->irr_pending = false;
+		kvm_lapic_clear_vector(vec, apic->regs + APIC_IRR);
+		if (apic_search_irr(apic) != -1)
+			apic->irr_pending = true;
+	}
+}
+```
 
 ## interrupt injection
 加快中断的响应:
 1. cpu 在 guest mode : kvm_vcpu_kick 使用
 2. vcpu 所在的线程在睡眠
+
+[^3]: Inside the Linux Virtualization : Principle and Implementation

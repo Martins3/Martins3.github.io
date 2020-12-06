@@ -1,4 +1,11 @@
 # VT-d
+How to enable `IRQ_REMAP` in `make menuconfig`:
+Device Drivers ==> IOMMU Hareware Support ==> Support for Interrupt Remapping
+
+intel_setup_irq_remapping ==> iommu_set_irq_remapping, setup `Interrupt Remapping Table Address Register` which hold address **IRET** locate [^3] 163,164
+
+好家伙，才意识到 ITRE 其实存在两种格式，remapped interrupt 的格式下，其功能相当于 IO-APIC 的功能，作为设备和 CPU 之间的联系，而 Posted-interrupt 的格式下，就是我们熟悉的内容。
+在 Posted-interrupt 格式下，IRET 中间没有目标 CPU 等字段，而是 posted-interrupt descriptor 的地址
 
 ## [manual](https://software.intel.com/sites/default/files/managed/c5/15/vt-directed-io-spec.pdf)
 
@@ -63,3 +70,5 @@ This chapter discuss architecture and hardware details for interrupt-remapping a
 Xen Implementation Details:
 - Update IRET according to guest’s modification to the interrupt configuration (MSI address, data)
 - Interrupt migration during VCPU scheduling
+
+[^3]: Inside the Linux Virtualization : Principle and Implementation
