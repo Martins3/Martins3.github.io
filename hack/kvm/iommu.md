@@ -65,4 +65,8 @@ io device 经过各级 pci hub 到达 root complex,  进入 iommu 翻译，然�
 最后，其中的补充文章可以看看，了解一下业界的工作内容。比如:
 - http://web.cs.ucla.edu/~haoyc/pdf/hpca17.pdf
 
+## https://kernelgo.org/intel_iommu.html
+
 [^1]: http://pages.cs.wisc.edu/~basu/isca_iommu_tutorial/IOMMU_TUTORIAL_ASPLOS_2016.pdf
+
+

@@ -46,6 +46,15 @@
 [What is the difference between CPU and Chipset?](https://stackoverflow.com/questions/18978503/what-is-the-difference-between-cpu-and-chipset)
 > In a mobile phone, combination of Chipset and CPU is called a SoC (System on Chip) which integrates all the components on a single chip. 
 
+> ## Chipset
+> - is a set of (chips) electronic components in an integrated circuit known as a "Data Flow Management System" that manages the data flow between the processor, memory and peripherals.
+> - usually designed to work with a specific family of microprocessors.
+> - historically, chips (for keyboard controller, memory controller, ...) were scattered arround the motherboard. With time, engineers reduced the number of chips to the same job and condenced them to only a few chips or what is now called a __chipset__.
+> - recently, the north bridge were built inside the CPU to maximize performance (1 jump instead of 2 from south bridge + performance sensitive devices talks directly to the CPU without the latency addded by north bridge) and the south bridge is called __Platform Controller Hub__.
+> 
+> copyright: github/cpu-internals
+
+
 ## overview
 - [x] https://unix.stackexchange.com/questions/83390/what-are-pci-quirks
 

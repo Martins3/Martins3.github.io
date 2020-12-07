@@ -474,7 +474,7 @@ lapic_timer_set_periodic_oneshot(struct clock_event_device *evt, bool oneshot)
 ```
 
 ## chained irq
-[IRQs: the Hard, the Soft, the Threaded and the Preemptible](https://elinux.org/images/8/8c/Zyngier.pdf)
+[ARM](https://elinux.org/images/8/8c/Zyngier.pdf)
 
 > An interrupt controller allows them to be multiplexed
 > 

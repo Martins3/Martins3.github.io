@@ -34,6 +34,8 @@
 - [GuestCtl0 GuestCtl1](#guestctl0-guestctl1)
 - [kvm_arch_vcpu_ioctl_run](#kvm_arch_vcpu_ioctl_run)
 - [kmalloc](#kmalloc)
+- [timer](#timer)
+- [GuestCtl0 GExcCode](#guestctl0-gexccode)
 - [code overview](#code-overview)
 
 <!-- vim-markdown-toc -->
@@ -150,6 +152,7 @@ So, we can understand mips arch now:
 
 ## irqchip
 Loongson add ...
+
 
 
 ## fpu
@@ -706,15 +709,117 @@ pa + 0x9800 0000 0000 0000 = va
 
 in the `xkphys` area
 
+
+
+## timer
+1. kvm_timer_callbacks::count_timeout
+```c
+/* low level hrtimer wake routine */
+static enum hrtimer_restart kvm_mips_comparecount_wakeup(struct hrtimer *timer)
+{
+	struct kvm_vcpu *vcpu;
+
+	vcpu = container_of(timer, struct kvm_vcpu, arch.comparecount_timer);
+	kvm_mips_comparecount_func((unsigned long) vcpu);
+	return kvm_timer_callbacks->count_timeout(vcpu);
+}
+
+int kvm_arch_vcpu_init(struct kvm_vcpu *vcpu)
+{
+	int err;
+
+	err = kvm_mips_callbacks->vcpu_init(vcpu);
+	if (err)
+		return err;
+
+	hrtimer_init(&vcpu->arch.comparecount_timer, CLOCK_MONOTONIC,
+		     HRTIMER_MODE_REL);
+	vcpu->arch.comparecount_timer.function = kvm_mips_comparecount_wakeup;
+	return 0;
+}
+```
+2. kvm_timer_callbacks::lose_htimer
+  - kvm_vz_gpsi_cop0
+  - kvm_trap_vz_handle_gsfc
+
+
+3. kvm_timer_callbacks::restore_timer
+  - kvm_vz_vcpu_load
+
+4. kvm_timer_callbacks::save_timer
+  - kvm_vz_vcpu_put
+
+5. kvm_timer_callbacks::write_count
+  - only mips vz register, but loongson use it.
+
+```c
+static enum emulation_result kvm_vz_gpsi_cop0(union mips_instruction inst,
+					      u32 *opc, u32 cause,
+					      struct kvm_run *run,
+					      struct kvm_vcpu *vcpu)
+{
+        // ...
+				kvm_timer_callbacks->lose_htimer(vcpu);
+				if(!vcpu->kvm->arch.use_stable_timer)
+					kvm_timer_callbacks->write_count(vcpu, vcpu->arch.gprs[rt]);
+
+static int kvm_vz_set_one_reg(struct kvm_vcpu *vcpu,
+			      const struct kvm_one_reg *reg,
+			      s64 v)
+{
+
+  // ...
+	case KVM_REG_MIPS_CP0_COUNT:
+		if(!vcpu->kvm->arch.use_stable_timer)
+			kvm_timer_callbacks->write_count(vcpu, v);
+		else
+			kvm_timer_callbacks->write_stable_timer(vcpu, v);
+```
+
+6. kvm_timer_callbacks::acquire_htimer
+  - kvm_vz_vcpu_run
+  - kvm_mips_handle_exit : when `ret == RESUME_GUEST`
+
+Call it everytime enter guest os.
+
+```c
+/**
+ * kvm_vz_should_use_htimer() - Find whether to use the VZ hard guest timer.
+ * @vcpu:	Virtual CPU.
+ *
+ * Returns:	true if the VZ GTOffset & real guest CP0_Count should be used
+ *		instead of software emulation of guest timer.
+ *		false otherwise.
+ */
+static bool kvm_vz_should_use_htimer(struct kvm_vcpu *vcpu)
+{
+	if (kvm_mips_count_disabled(vcpu))
+		return false;
+
+	/* Chosen frequency must match real frequency */
+	if (mips_hpt_frequency != vcpu->arch.count_hz)
+		return false;
+
+	/* We don't support a CP0_GTOffset with fewer bits than CP0_Count */
+	if (current_cpu_data.gtoffset_mask != 0xffffffff)
+		return false;
+
+	return true;
+}
+```
+
+## GuestCtl0 GExcCode
+virtualization manual : chapter 4.7.7, table 5.3
+
+`Table 4.8 CP0 Registers in Guest CP0 context` : 
+
+
 ## code overview
 | name              | blank | commet | code |
 |-------------------|-------|--------|------|
-| ls3acomp-vz.c     | 360   | 598    | 2691 |
 | vz.c              | 337   | 596    | 2315 |
-| emulate.c         | 441   | 656    | 2275 |
 | mips.c            | 340   | 247    | 1795 |
 | mmu.c             | 200   | 369    | 1010 |
-| trap_emul.c       | 135   | 205    | 989  |
 | entry.c           | 149   | 307    | 524  |
 | tlb.c             | 115   | 142    | 464  |
 | ls7a_irq.c        | 51    | 16     | 393  |
