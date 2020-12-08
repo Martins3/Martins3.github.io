@@ -6,6 +6,8 @@ https://www.zhihu.com/question/29597104/answer/128443409 : pingcap 的作者谈�
 
 
 ## 各种介绍
+- [ ] https://dancres.github.io/Pages/ : readlist
+
 https://github.com/toutiaoio/awesome-architecture : 各种中文分布式文章的集合
 
 https://github.com/pingcap/talent-plan : pingcap 本来以为是一个教程网站，原来是一个数据库公司

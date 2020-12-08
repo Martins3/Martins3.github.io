@@ -22,7 +22,7 @@ https://github.com/mydzor/bash2048/blob/master/bash2048.sh : 300行的2048
 https://github.com/koalaman/shellcheck : 虽然不能集成到 vim 中间，但是其提供一些错误案例，而且可以静态使用的
 
 https://github.com/alexanderepstein/Bash-Snippets : 可以学习，也可以当做工具
-
+https://notes.pythonic.life/3-Linux/Bash/bash%E7%9A%84%E9%AB%98%E7%BA%A7%E6%8A%80%E5%B7%A7.html : some trick / snippets of bash
 
 > 且称之为三大圣经
 

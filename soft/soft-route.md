@@ -42,3 +42,6 @@ https://github.com/byoungd/English-level-up-tips-for-Chinese
 ## 写作
 https://github.com/ruanyf/document-style-guide : 好好看看吧
 
+
+## code review
+https://mtlynch.io/code-review-love/

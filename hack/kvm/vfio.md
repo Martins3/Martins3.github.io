@@ -4,7 +4,7 @@ https://www.kernel.org/doc/html/latest/driver-api/vfio-mediated-device.html
 https://www.kernel.org/doc/html/latest/driver-api/vfio.html
 https://zhuanlan.zhihu.com/p/27026590
 
-- [ ] 似乎可以用于 GPU 虚拟化
+- [x] 似乎可以用于 GPU 虚拟化 (YES)
 
 - [ ] 使用的时候 vfio 为什么需要和驱动解绑， 因为需要绑定到 vfio-pci 上
     - [ ] vfio-pci 为什么保证覆盖原来的 bind 的驱动的功能
@@ -14,6 +14,35 @@ https://zhuanlan.zhihu.com/p/27026590
 
 - [ ]  据说 iommu 可以软件实现，从 make meueconfig 中间的说法
 
-- [ ]  159 : 
+- [ ] config KVM_VFIO, config VFIO in Kconfig, what's the relation ?
+
+- [ ] ioctl : get irq info / get
+
+## kvmtool/include/linux/vfio.h
+- [ ] software protocol version, or because using different hareware ?
+```c
+#define VFIO_TYPE1_IOMMU		1
+#define VFIO_SPAPR_TCE_IOMMU		2
+#define VFIO_TYPE1v2_IOMMU		3
+```
+- [ ] vfio_info_cap_header
 
 ## group and container
+
+## uio
+- location : linux/drivers/uio/uio.c
+
+- [ ] VFIO is essential for `uio`  ?
+
+## how to use vfio
+before assigning the device to VM, we need to unbind its original driver and bind it to vfio-pci driver firstly. [^4][^5]
+
+- [ ] if we **unbind** the server firstly, so host will not work normally because of lost it's driver
+  - [ ] give it a try, afterall, reboot is the worst case 
+
+
+[^1]: http://www.linux-kvm.org/images/5/54/01x04-Alex_Williamson-An_Introduction_to_PCI_Device_Assignment_with_VFIO.pdf
+[^2]: https://www.kernel.org/doc/html/latest/driver-api/uio-howto.html
+[^3]: [populate the empty /sys/kernel/iommu_groups](https://unix.stackexchange.com/questions/595353/vt-d-support-enabled-but-iommu-groups-are-missing)
+[^4]: https://www.reddit.com/r/VFIO/comments/cbkg6j/devvfioxx_not_being_created/
+[^5]: https://terenceli.github.io/%E6%8A%80%E6%9C%AF/2019/08/16/vfio-usage
