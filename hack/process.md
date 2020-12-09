@@ -1140,6 +1140,9 @@ the Kernel Mode stack.
   - [ ] ucontext ?
   - [ ] 文章并没有看!
 
+- [ ] A signal comes when I'm sleeping ?
+  - [ ] Is there a mechanism to run action handler immediately even the process is sleeping
+
 - [ ] Why everyone has to check signal_pending ?
 ```
 ➜  linux git:(master) ag signal_pending |wc -l

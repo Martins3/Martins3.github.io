@@ -79,6 +79,7 @@
 - [nfs](#nfs)
 - [compression fs](#compression-fs)
 - [timerfd](#timerfd)
+- [ceph](#ceph)
 
 <!-- vim-markdown-toc -->
 
@@ -2004,6 +2005,11 @@ https://about.gitlab.com/blog/2018/11/14/how-we-spent-two-weeks-hunting-an-nfs-b
 
 ## timerfd
 based on linux/kernel/time/alarmtimer.c
+
+## ceph
+https://www.youtube.com/watch?v=c4sgV_FEb4I
+
+Somebody say ceph has one millions of code.
 
 [^1]: [kernel doc : Overview of the Linux Virtual File System](https://www.kernel.org/doc/html/latest/filesystems/vfs.html)
 [^2]: [github : aio](https://github.com/littledan/linux-aio)

@@ -1,5 +1,6 @@
 # kvmtool
 [kvmtool - a QEMU alternative?](https://elinux.org/images/4/44/Przywara.pdf)
+https://github.com/adamdunkels/uip
 
 - [ ] 阅读资料 : https://mp.weixin.qq.com/s/CWqUagksabj4kDFQhTlgUA
 
@@ -12,9 +13,12 @@ lkvm run -k ../linux/arch/x86/boot/bzImage -d /home/maritns3/core/linux-kernel-l
 
 https://www.96boards.org/blog/running-kvm-guest-hikey/
 
-## vfio
-device__register
 
+
+## vfio
+- [ ] device__register is a magic, I believe any device register here will be probe by kernel
+  - [ ] so, I can provide a fake device driver
+    - [ ] provide a tutorial for beginner to learn device model
 
 ## pci
 - [ ]  pci__init
@@ -23,11 +27,11 @@ device__register
 
 - [ ] virtio_pci__init : bar 寄存器设置 mmio 的大小都是 PCI_IO_SIZE, 这好吗 ?
 
+## vhost
 
 ## virtio
 - [ ] 终极问题，数据流是什么样子的 ?
   - [ ] guest 内核的驱动发送消息出去 ?
-
 
 ```c
 static struct virtio_ops blk_dev_virtio_ops = {
