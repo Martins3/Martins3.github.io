@@ -18,6 +18,7 @@ https://github.com/aphyr/distsys-class　: 如果求一个大致理解，这个�
 - https://luyuhuang.github.io/2020/03/06/dht-and-p2p.html : 分布式哈希表 (DHT) 和 P2P 技术
 - https://github.com/grpc/grpc/tree/master/src/cpp : grpc 尝试一下如何使用即可
 - https://proto.school/tutorials : 一堆协议的教程，但是协议都米有听说过
+- https://linkedin.github.io/school-of-sre/security/threats_attacks_defences/
 # An overview of distributed system
 https://www.zhihu.com/question/23645117
 http://book.mixu.net/distsys/
