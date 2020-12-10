@@ -163,26 +163,7 @@ Loongson add ...
 - kvm_read_c0_guest_status
 
 ## mmu
-- [x] flush
-  - [x] what's difference between with TLB invalid and flush
-      - kvm_mips_flush_gpa_pt : mainly for mmu_notifier to free
-      - invalid tlb is update
-  - [x] kvm_mips_flush_gva_pt : used by emulate.c at which we're not interested
-
 - [ ] where is the hugetlb ?
-
-- [x] mkold && mkclean : ad bit, **THIS IS A CHANCE TO UNDERSTAND DIRTY LOG**
-
-- *kvm_mips_handle_vz_root_tlb_fault*
-  - [ ] why surrounded by CONFIG_KVM_MIPS_VZ
-  - x: kvm_trap_vz_handle_tlb_ld_miss + kvm_trap_vz_handle_tlb_st_miss
-    - x: kvm_mips_handle_exit
-
-- [ ] kvm_mips_map_page : is **core** function
-  - [ ] out_entry
-  - [ ] out_buddy
-  - [ ] This takes care of marking pages young or dirty (idle/dirty page tracking), asking KVM for the corresponding PFN, and creating a mapping in the GPA page tables. 
-  - [ ] *Derived mappings* (GVA page tables and *TLBs*) must be handled by the caller.
 
 ```c
 /*

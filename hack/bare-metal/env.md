@@ -18,6 +18,7 @@ https://github.com/oasislinux/oasis : oasis is a small linux system.
 - [ ] https://www.qemu-advent-calendar.org/2020/ : pulished every two year, adventure for dune
 
 - https://github.com/krallin/tini : A tiny but valid init for containers
+- https://github.com/hifiberry/hifiberry-os/ : HiFiBerryOS is our version of a minimal Linux distribution optimized for audio playback. 
 
 
 # 搭建一个高效的内核开发环境

@@ -2,6 +2,8 @@ https://github.com/adugast/read_elf
 
 https://fasterthanli.me/series
 
+https://github.com/serge1/ELFIO
+
 
 [special section](https://lwn.net/Articles/531148/)
 
