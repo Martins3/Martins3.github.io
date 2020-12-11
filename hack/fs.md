@@ -1997,7 +1997,8 @@ https://www.kernel.org/doc/html/latest/filesystems/configfs.html
 https://zonedstorage.io/introduction/zoned-storage/
 
 ## nfs
-https://about.gitlab.com/blog/2018/11/14/how-we-spent-two-weeks-hunting-an-nfs-bug/
+- https://about.gitlab.com/blog/2018/11/14/how-we-spent-two-weeks-hunting-an-nfs-bug/
+- https://github.com/nfs-ganesha/nfs-ganesha
 
 ## compression fs
 - [ ] https://github.com/mhx/dwarfs

@@ -23,6 +23,7 @@
     - [preempt count](#preempt-count)
     - [preempt locking](#preempt-locking)
     - [preempt notes](#preempt-notes)
+    - [preempt notifier](#preempt-notifier)
 - [context switch](#context-switch)
     - [context switch switch_to_asm](#context-switch-switch_to_asm)
     - [context switch fpu](#context-switch-fpu)
@@ -867,8 +868,40 @@ https://stackoverflow.com/questions/49414559/linux-kernel-why-preemption-is-disa
 really interesting : if one process is about to switch to user space and it's time slice is used up, just switch to another process.
 
 
+#### preempt notifier
+- One process can register multiple notifier
+- context_switch
+  - prepare_task_switch
+    - fire_sched_out_preempt_notifiers
+      - for each registered funcion
+```c
+struct task_struct {
+// ...
+#ifdef CONFIG_PREEMPT_NOTIFIERS
+	/* List of struct preempt_notifier: */
+	struct hlist_head		preempt_notifiers;
+#endif
 
+/**
+ * preempt_notifier_register - tell me when current is being preempted & rescheduled
+ * @notifier: notifier struct to register
+ */
+void preempt_notifier_register(struct preempt_notifier *notifier)
+{
+	if (!static_branch_unlikely(&preempt_notifier_key))
+		WARN(1, "registering preempt_notifier while notifiers disabled\n");
 
+	hlist_add_head(&notifier->link, &current->preempt_notifiers);
+}
+
+static void __fire_sched_in_preempt_notifiers(struct task_struct *curr)
+{
+	struct preempt_notifier *notifier;
+
+	hlist_for_each_entry(notifier, &curr->preempt_notifiers, link)
+		notifier->ops->sched_in(notifier, raw_smp_processor_id());
+}
+```
 
 ## context switch
 **THIS IS WHAT TO READ BEFORE ANY FUTURE EXPLORATION OF CONTEXT SWITCH**

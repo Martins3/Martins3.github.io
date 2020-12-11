@@ -69,14 +69,30 @@
   - dune_conf
 
 ```c
-	conf->vcpu = 0; // TODO
+	conf->vcpu = 0; // used for specify which conf is bind to vcpu, but TODO why soemtimes enter dune with established dune_conf
 	conf->rip = (__u64) &__dune_ret;
 	conf->rsp = 0; // TODO
 	conf->cr3 = (physaddr_t) pgroot;
 	conf->rflags = 0x2; // TODO
 ```
+- dune_enter
+  - vmx_launch
+    - vmx_create_vcpu
+      - vmx_setup_registers
+    - vmx_copy_registers_to_conf
 
 
-- [x] vm.c
+- [x] `__dune_go_dune` : mainly used for signal
+
+#### vm.c
+- [ ] ept and host page table has different form, but it seems we handle ept violation and paging setup in the same way ?
 
 
+## horrible
+1. page table format
+  - [ ] how can I verify it ?
+
+2. how signal handled ?
+
+## Not Now
+- [ ] `__dune_go_linux` : related with debug, but currently, debug is not used by far.

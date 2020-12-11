@@ -100,6 +100,7 @@
 - [vma](#vma)
     - [vm_ops](#vm_ops)
     - [vm_flags](#vm_flags)
+    - [page_flags](#page_flags)
 - [vmalloc](#vmalloc)
 - [rmap](#rmap)
 - [mincore](#mincore)
@@ -3504,6 +3505,10 @@ in fact, we have already understand most of them
 
 - VM_WIPEONFORK : used by madvise, wipe content when fork, check the function in `dup_mmap`, child process will copy_page_range without it
 
+#### page_flags
+- I believe, but have find the evidence yet
+  - [ ] pte_mkold / pte_mkyoung is used for access page
+  - [ ] arm / mips has to use pgfault to set page access mask
 
 ## vmalloc
 [TO BE CONTINUE](https://www.cnblogs.com/LoyenWang/p/11965787.html)
