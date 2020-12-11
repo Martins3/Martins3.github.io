@@ -28,6 +28,7 @@
 
 ## Tips
 - [How to cross Great Fire Wall](./gfw.md)
+- [Learn Linux kernel](./learn-linux-kernel.md)
 
 ## Scholar
 - [Binary Translation and Virtualization Paper reading list](./paper-reading-list.md)

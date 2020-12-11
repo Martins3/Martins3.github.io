@@ -20,7 +20,7 @@
   - [x] pte_mkclean / pte_mkold
     - pte_mkold : used by notifier
     - pte_mkclean : used by map page fast 
-  - [ ] mmu notifier
+  - [x] mmu notifier
     - [x] invalidate_range_start
     - [x] invalidate_range_end
     - [x] clear_flush_young  
@@ -28,7 +28,7 @@
     - [x] test_young
     - [x] change_pte : **I think dune will never call this function**
     - [x] release
-  - [ ] invalid TLB
+  - [x] invalid TLB
   - [ ] asid
 
 -  kvm_mips_handle_exit
@@ -51,19 +51,32 @@
       - [x] is supporting kernel mode syscall and user mode syscall possible ?
         - YES, x86 remap the page,  MIPS rewrite the code
 
-- [ ] user mode architectural code ?
 
 - memslot : substituted by our wired **dune_vm_map_pages**
 
 ## clean and old
-how mips handle clean and old page in the host ?
-
+- [x] how mips handle clean and old page in the host ?
 
 ## user mode
 
-- [ ] entry.c
-  - [ ] setup_safe_stack
-  - [ ] fs / gs register
-  - [ ] percpu
-  - [ ] enter guset
+#### entry.c
+- [ ] setup_safe_stack
+- [ ] fs / gs register
+- [ ] percpu
+
+- [ ] do_dune_enter / on_dune_exit
+  - save regs in the host mode, but restore it in the guest mode
+  - dune_conf
+
+```c
+	conf->vcpu = 0; // TODO
+	conf->rip = (__u64) &__dune_ret;
+	conf->rsp = 0; // TODO
+	conf->cr3 = (physaddr_t) pgroot;
+	conf->rflags = 0x2; // TODO
+```
+
+
 - [x] vm.c
+
+

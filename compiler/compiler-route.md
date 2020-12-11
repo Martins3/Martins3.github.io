@@ -56,6 +56,8 @@ https://github.com/rswier/c4 : 大名鼎鼎的 c4 如果可以的，理解他，
 
 https://github.com/lunatic-lang/lunatic
 
+https://github.com/google/cel-spec : The Common Expression Language (CEL) implements common semantics for expression evaluation, enabling different applications to more easily interoperate.
+
 ## 想法
 1. 各种内存分析工具都是如何实现的: 靠编译器静态分析，或者内核的动态分析。
 2. 现在，感觉 taichi 才是最佳的娱乐项目 : 既有编译，又有图形学相关的东西
