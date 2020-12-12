@@ -1,3 +1,8 @@
+## 问题
+- [ ] 关于 vcpu 和 CPU 的关系:
+  - [ ] 一个虚拟机可能创建多个 vcpu 出来，如何保证这个虚拟机的 thread 可以在多个 vcpu 之间切换
+  - [ ] 不同虚拟机的 vcpu 如何实现隔离
+
 ## 项目
 https://github.com/wbenny/hvpp 但是指向了一堆项目
 https://github.com/Fmstrat/winapps
@@ -41,9 +46,9 @@ https://github.com/rootsongjc/kubernetes-handbook
 - https://github.com/TNK-Studio/lazykube
 - https://github.com/AliyunContainerService/minikube : 在自己电脑上装 kubernate, 所以和 kind 的关系是什么 ?
 
-https://github.com/ysicing/kubernetes-handbook
-    https://github.com/ramitsurana/awesome-kubernetes
-    https://blog.quickbird.uk/domesticating-kubernetes-d49c178ebc41
+- https://github.com/ysicing/kubernetes-handbook
+- https://github.com/ramitsurana/awesome-kubernetes
+- https://blog.quickbird.uk/domesticating-kubernetes-d49c178ebc41
 
 ## 文摘
 [ali 云计算 的自我推广](https://mp.weixin.qq.com/s/5WKDZfzIQE3QB-Io1lmG-w)

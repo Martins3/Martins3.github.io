@@ -60,20 +60,35 @@
 ## user mode
 
 #### entry.c
-- [ ] setup_safe_stack
+- [x] setup_safe_stack
+  - [ ] mips switch to kernel stack
 - [ ] fs / gs register
+  - [ ] fs keep is consistent with kernel space, maybe risk something
+  - [x] gs is reserved for percpu access
 - [ ] percpu
+  - bind to vcpu ?
+  - thread / percpu / vcpu / physical cpu 的关系
+    - percpu is thread local area
+    - vcpu is create under current process
+    - so, thread / percpu / vcpu can migrate different physical cpu
+    - [ ] gdt / idt / tss 是全局的还是局部的(必然是局部的，否则 lidt 的指令无法解释)
+      - 好吧，gdt / idt / tss 都是保存在 vmcs 中间的
+      - 没有 preempt 的时候，即使是在内核任何位置都是可以出现代码被 preempt 的情况
+      - 在 vcpu 正在运行的时候，不会直接切换到另一个 cpu 上，但是一旦进入到 host 中间，随时都是可能切换到不同的 cpu 上，切换之后，保证再次进入的时候，vcpu 内容 和 cpu 加载的保持一致。
+      - [ ] 加载到 CPU 中间的内容是 :
+        - 只是 vmcs 的指针吧 !
+      - [ ] vmcs 保存了 vcpu 的 general purpose register 的数值，除此之外还有什么 ?
 
-- [ ] do_dune_enter / on_dune_exit
+- [x] do_dune_enter / on_dune_exit
   - save regs in the host mode, but restore it in the guest mode
   - dune_conf
 
 ```c
-	conf->vcpu = 0; // used for specify which conf is bind to vcpu, but TODO why soemtimes enter dune with established dune_conf
-	conf->rip = (__u64) &__dune_ret;
-	conf->rsp = 0; // TODO
+	conf->vcpu = 0; // used for specify which conf is bind to vcpu
+  conf->rip = (__u64) &__dune_ret;
+	conf->rsp = 0; // 在 __dune_enter 的代码中间，movq	%rsp, DUNE_CFG_RSP(%rsi) 实现的赋值
 	conf->cr3 = (physaddr_t) pgroot;
-	conf->rflags = 0x2; // TODO
+	conf->rflags = 0x2; // although written into the vmcs, but why 0x2 is save TODO
 ```
 - dune_enter
   - vmx_launch
@@ -81,18 +96,29 @@
       - vmx_setup_registers
     - vmx_copy_registers_to_conf
 
-
 - [x] `__dune_go_dune` : mainly used for signal
+
+- [x] TSS
+  - 如果 syscall 全部都是被截断的，为什么一个内核态的 Stack ? 实际上，部分内容还是需要切换到内核中间, 首先，syscall 的代码的部分被覆盖，被覆盖的代码实际上在内核中间执行。
+  - 其次，由于掌控内核态 和 用户态程序，在切换到内核态的时候，需要 stack 的支持
+  - [ ] 有些问题没有调查清楚
+    - [ ] 默认情况下，进入内核，使用的 sp 还是用户态配置的，所以并不是很清楚，在自由切换用户态和内核 的时候， stack 到底是哪一个
+      - [ ] 似乎只要保持始终在内核态，那么就可以了，首先测试一下简单的程序吧 !
 
 #### vm.c
 - [ ] ept and host page table has different form, but it seems we handle ept violation and paging setup in the same way ?
-
 
 ## horrible
 1. page table format
   - [ ] how can I verify it ?
 
-2. how signal handled ?
+- [x] how signal handled ?
 
+- [ ] page 
+
+- [ ] check code in entry line by line
+  - [ ] how to register idt in the code
+
+- [ ] thread local variable
 ## Not Now
 - [ ] `__dune_go_linux` : related with debug, but currently, debug is not used by far.

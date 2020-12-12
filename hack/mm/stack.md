@@ -9,6 +9,10 @@
 
 <!-- vim-markdown-toc -->
 
+- [ ] https://stackoverflow.com/questions/12911841/kernel-stack-and-user-space-stack
+
+x86_64 also has a feature which is not available on i386, the ability to automatically switch to a new stack for designated events such as double fault or NMI, which makes it easier to handle these unusual events on x86_64. This feature is called the Interrupt Stack Table (IST). There can be up to 7 IST entries per CPU. The IST code is an index into the Task State Segment (TSS). The IST entries in the TSS point to dedicated stacks; each stack can be a different size.[^1]
+
 ## abstract 
 不同的架构如何支持 stack 的 ?　使用的指令不同，在内核中间的配置不同 ?
 1. x86-32
@@ -76,5 +80,3 @@ While the thread is in user space the kernel stack is empty except for the `thre
 
 
 [^1]: [kernel doc : kernel stack](https://www.kernel.org/doc/html/latest/x86/kernel-stacks.html)
-
-

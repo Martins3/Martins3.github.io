@@ -1,7 +1,7 @@
 
 ## Resource
 
-
+https://rtpg.co/2020/12/11/dbg-in-python.html
 http://dtrace.org/blogs/bmc/2020/10/11/rust-after-the-honeymoon/
 
 [All](https://github.com/rust-unofficial/awesome-rust#resources)
