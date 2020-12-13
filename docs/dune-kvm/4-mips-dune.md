@@ -1,8 +1,12 @@
 # Port dune to mips
-- [ ] 如何交叉编译从而可以让我在 x86 的电脑上看内核 ?
+- [x] 如何交叉编译从而可以让我在 x86 的电脑上看内核 ?
+
 
 
 # We will finishes it 10 days
+|8 days | lindune 隐患探测|
+|7 days | 完成 kernel space 的代码|
+
 
 ## question before write
 - hypercall 
@@ -76,8 +80,25 @@
       - 没有 preempt 的时候，即使是在内核任何位置都是可以出现代码被 preempt 的情况
       - 在 vcpu 正在运行的时候，不会直接切换到另一个 cpu 上，但是一旦进入到 host 中间，随时都是可能切换到不同的 cpu 上，切换之后，保证再次进入的时候，vcpu 内容 和 cpu 加载的保持一致。
       - [ ] 加载到 CPU 中间的内容是 :
-        - 只是 vmcs 的指针吧 !
-      - [ ] vmcs 保存了 vcpu 的 general purpose register 的数值，除此之外还有什么 ?
+        - vmcs 的地址 ： vmcs_load
+        - [ ]  `__vmx_setup_cpu`
+      - vmcs 保存了 vcpu 的 general purpose register 的数值，除此之外还有什么 ?
+        - [ ] host_rsp
+        - [ ] cr2
+        - [ ] msr_autoload
+        - [x] guest_kernel_gs_base
+        - [x] idt_base : related with posted interrupt
+      - cpu 通过持有 `__this_cpu_read` 来确定自己执行的 vcpu 结构体
+
+
+vcpu::guest_kernel_gs_base
+```c
+#define MSR_FS_BASE		0xc0000100
+#define MSR_GS_BASE		0xc0000101
+#define MSR_KERNEL_GS_BASE	0xc0000102
+```
+
+
 
 - [x] do_dune_enter / on_dune_exit
   - save regs in the host mode, but restore it in the guest mode
@@ -120,5 +141,8 @@
   - [ ] how to register idt in the code
 
 - [ ] thread local variable
+
+- [ ] vmx_run_vcpu 
+  - [ ] `Lkvm_vmx_return` : we are relying on some wired symbol ?
 ## Not Now
 - [ ] `__dune_go_linux` : related with debug, but currently, debug is not used by far.

@@ -11,6 +11,7 @@ is what you need.
 | method | airport(机场) | client                                     |
 |--------|---------------|--------------------------------------------|
 | v2ray  | v2e.fun       | [qv2ray](https://github.com/Qv2ray/Qv2ray) |
+
 ## setup
 You can reference [document of qv2ray](https://qv2ray.net/en/getting-started/) for details, here is simplified steps.
 

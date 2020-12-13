@@ -3,11 +3,9 @@
 # 科学的做法
 https://github.com/google/eng-practices : Google 的工作方式
 
-
 https://github.com/kdn251/interviews : 感觉一般，提供了一些做题的网址，实际意义不大
 https://github.com/MaximAbramchuck/awesome-interview-questions : 对于经典问题需要深入理解
 https://github.com/FAQGURU/FAQGURU : 主要针对于后端，但是其中git 之类的还可以看看的
-
 
 # 参与开源社区
 https://github.com/github/opensource.guide : 参与 github 
