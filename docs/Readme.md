@@ -35,7 +35,7 @@
 <!-- ## Source Appreciation -->
 <!-- qbe -->
 <!-- wren -->
-<!-- https://rtpg.co/2020/12/11/dbg-in-python.html -->
+<!-- https://github.com/cloudius-systems/osv -->
 
 <!-- ## Reflections -->
 <!-- - [Power of continuous thinking](./thinking.md) -->

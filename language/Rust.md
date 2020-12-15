@@ -26,6 +26,8 @@ https://github.com/ctjhoa/rust-learning : 各种教程汇总
 https://github.com/rust-embedded/awesome-embedded-rust : 其实对于嵌入式并没有什么兴趣
 https://lfn3.net/2020/08/03/a-gentle-intro-to-assembly-with-rust/ : Rust with assembly
 
+https://rtpg.co/2020/12/11/dbg-in-python.html
+
 ## crate
 https://github.com/serde-rs/json : 也许下次写小工具的有用，用于解析 json
 https://github.com/sharkdp/hexyl : 显示文件的二进制，其实，我只是奇怪，为什么这么简单的程序会有 5k star

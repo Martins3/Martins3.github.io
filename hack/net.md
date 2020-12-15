@@ -1,7 +1,9 @@
 # network
-
 1. audit 从内核中间传输数据到用户层使用的网络的什么机制
 2. 首先完成 linux kernel lab 然后再说吧
+
+## Unix domain socket
+[Introduction](https://stackoverflow.com/questions/21032562/example-to-explain-unix-domain-socket-af-inet-vs-af-unix)
 
 ## question
 - [ ] Why we need the mac address in the link layer
@@ -208,6 +210,7 @@ TCP is a sliding window protocol with time-out and retransmits.
 Outgoing data must be acknowledged by the far-end TCP.
 Acknowledgements can be piggybacked on data.
 
+- [ ] I don't know I have read it or not.
 
 ## 可以参考
 https://github.com/saminiir/level-ip : 学习一下

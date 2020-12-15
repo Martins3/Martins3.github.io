@@ -1,12 +1,9 @@
 # Port dune to mips
 - [x] 如何交叉编译从而可以让我在 x86 的电脑上看内核 ?
 
-
-
 # We will finishes it 10 days
-|8 days | lindune 隐患探测|
+|8 days | libdune 隐患探测|
 |7 days | 完成 kernel space 的代码|
-
 
 ## question before write
 - hypercall 

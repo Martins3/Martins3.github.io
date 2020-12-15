@@ -1,9 +1,20 @@
 # TODO
+- [ ] /home/maritns3/core/firecracker/src/devices/src/virtio/vsock/csm/connection.rs has a small typo
+
+
 - [ ] virtiofs 的内容很少
 
 - [ ] virtio and msi: 
 
 - [ ] We're over optimistic about the meaning of the complexity of virtio, try to read **/home/maritns3/core/linux/drivers/virtio**, please.
+
+- [ ] what's scsi : https://www.linux-kvm.org/images/archive/f/f5/20110823142849!2011-forum-virtio-scsi.pdf
+
+[ ](https://www.redhat.com/en/blog/deep-dive-virtio-networking-and-vhost-net)
+[ ](https://www.redhat.com/en/blog/introduction-virtio-networking-and-vhost-net)
+
+## vhost
+https://terenceli.github.io/%E6%8A%80%E6%9C%AF/2020/04/18/vsock-internals
 
 ## eventfd
 
