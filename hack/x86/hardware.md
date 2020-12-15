@@ -13,6 +13,7 @@
   - [io apic](#io-apic)
   - [question](#question)
 - [关于amd64 架构的疑问](#关于amd64-架构的疑问)
+  - [tss](#tss)
 - [要不要学一波汇编语言](#要不要学一波汇编语言)
 
 <!-- vim-markdown-toc -->
@@ -123,10 +124,26 @@ I guess it's mainly used for enter user mode and return from user mode whne hand
 ```
 
 
+## [tss](https://en.wikipedia.org/wiki/Task_state_segment)
+The TSS may reside anywhere in memory. A segment register called the task register (TR) holds a segment selector that points to a valid TSS segment descriptor which resides in the GDT (a TSS descriptor may not reside in the LDT). Therefore, to use a TSS the following must be done by the operating system kernel:
 
+- Create a TSS descriptor entry in the GDT
+- Load the TR with the segment selector for that segment
+- Add information to the TSS in memory as needed
+
+For security purposes, the TSS should be placed in memory that is accessible only to the kernel.
+
+
+The x86-64 architecture does not support hardware task switches. However the TSS can still be used in a machine running in the 64 bit extended modes. In these modes the TSS is still useful as it stores:
+
+_ The *stack pointer addresses* for each privilege level.
+_ Pointer Addresses for the Interrupt Stack Table (The inner-level stack pointer section above, discusses the need for this).
+_ Offset Address of the *IO permission bitmap*.
+
+Also, the task register is expanded in these modes to be able to hold a 64-bit base address.
+
+> 所以，TSS 记录了在 kernel stack 和 interrupt stack 的地址
+> kernel stack 每一个 process 都是有一个，所以在进行 context switch 的时候，需要将 TSS 也进行更新
 
 # 要不要学一波汇编语言
 https://software.intel.com/en-us/articles/introduction-to-x64-assembly intel 入学手册，感觉没有必要。
-
-
-

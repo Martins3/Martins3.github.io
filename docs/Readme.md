@@ -44,4 +44,4 @@
 <!-- - [Linux Process Management](./process.md) -->
 
 ## MISC
-- [what is x86 IA-32 IA-64 x86-64 and amd64 ?](./x86.md)
+- [what is x86 IA-32 IA-64 x86-64 and amd64 ?](./names-x86.md)

@@ -13,6 +13,11 @@
 
 x86_64 also has a feature which is not available on i386, the ability to automatically switch to a new stack for designated events such as double fault or NMI, which makes it easier to handle these unusual events on x86_64. This feature is called the Interrupt Stack Table (IST). There can be up to 7 IST entries per CPU. The IST code is an index into the Task State Segment (TSS). The IST entries in the TSS point to dedicated stacks; each stack can be a different size.[^1]
 
+
+如果是发生在用户态，那么是要进行两次 stack 切换的
+https://unix.stackexchange.com/questions/491437/how-does-linux-kernel-switches-from-kernel-stack-to-interrupt-stack
+- [ ] 代码上的证据在哪里 ?
+
 ## abstract 
 不同的架构如何支持 stack 的 ?　使用的指令不同，在内核中间的配置不同 ?
 1. x86-32
@@ -77,6 +82,7 @@ While the thread is in user space the kernel stack is empty except for the `thre
 ```
 
 第二个 stack : percpu stack
+
 
 
 [^1]: [kernel doc : kernel stack](https://www.kernel.org/doc/html/latest/x86/kernel-stacks.html)

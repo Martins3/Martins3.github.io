@@ -58,35 +58,60 @@
 ## clean and old
 - [x] how mips handle clean and old page in the host ?
 
+## 到底要不要写测试
+
 ## user mode
+进入的流程分析:
+1. 地址空间的准备: page table 格式
+2. 切换 : dune_conf / mips 汇编 / 很短的代码(用于调整参数)
+3. 切换之后，利用 eip 进入到 dune_boot 的位置
+4. dune_boot : 设置 ebase 的中间，syscall, page fault 的入口，其他入口的封锁掉
+    - [ ] TSS 的机制, 实际上，并不需要才对, 应该检测一下
+    - 对于 gebase 的赋值
+
+退出，从内核到用户态的退出，在 dune_conf 上，还是从该位置返回啊!
+
+- [ ] SAVE_REGS 和 SAVE_REST 在内核中间是否存在对应的东西
+  - 参数 / gpr / exception frame
+  - [ ] 那个 MIPS 操作系统作为参考
+
 
 #### entry.c
 - [x] setup_safe_stack
   - [ ] mips switch to kernel stack
+  - [ ] **do some test**
 - [ ] fs / gs register
-  - [ ] fs keep is consistent with kernel space, maybe risk something
+  - [ ] keep fs consistent with kernel space
   - [x] gs is reserved for percpu access
-- [ ] percpu
-  - bind to vcpu ?
+- [x] percpu
+  - bind to vcpu (yes)
   - thread / percpu / vcpu / physical cpu 的关系
     - percpu is thread local area
     - vcpu is create under current process
     - so, thread / percpu / vcpu can migrate different physical cpu
-    - [ ] gdt / idt / tss 是全局的还是局部的(必然是局部的，否则 lidt 的指令无法解释)
+    - [x] gdt / idt / tss 是全局的还是局部的(必然是局部的，否则 lidt 的指令无法解释)
       - 好吧，gdt / idt / tss 都是保存在 vmcs 中间的
       - 没有 preempt 的时候，即使是在内核任何位置都是可以出现代码被 preempt 的情况
       - 在 vcpu 正在运行的时候，不会直接切换到另一个 cpu 上，但是一旦进入到 host 中间，随时都是可能切换到不同的 cpu 上，切换之后，保证再次进入的时候，vcpu 内容 和 cpu 加载的保持一致。
-      - [ ] 加载到 CPU 中间的内容是 :
+      - [x] 加载到 CPU 中间的内容是 :
         - vmcs 的地址 ： vmcs_load
-        - [ ]  `__vmx_setup_cpu`
-      - vmcs 保存了 vcpu 的 general purpose register 的数值，除此之外还有什么 ?
-        - [ ] host_rsp
-        - [ ] cr2
-        - [ ] msr_autoload
-        - [x] guest_kernel_gs_base
-        - [x] idt_base : related with posted interrupt
-      - cpu 通过持有 `__this_cpu_read` 来确定自己执行的 vcpu 结构体
-
+        - [x]  `__vmx_setup_cpu`: 让当前所在的 CPU 和 vmcs 中间的 Host 相关的数值保持一致
+          - TR / FS / GS / GDT / HOST_IA32_SYSENTER_ESP
+          - [ ] segment_base
+    - vmcs 保存了 vcpu 的 general purpose register 的数值，除此之外还有什么 ?
+      - [x] host_rsp
+        - [ ] why need a special instruction to handle this : ASM_VMX_VMWRITE_RSP_RDX
+        - [ ] why only reload if changed ?
+      - [x] cr2
+        - it's guest cr2
+        - cr0, cr3, cr4 is preserved by vcpu
+      - [x] msr_autoload
+        - 利用 msr_bitmap 控制 msr 那些可以直接访问，那些不可以
+        - perf need msr
+      - [x] guest_kernel_gs_base
+      - [x] idt_base : related with posted interrupt
+    - cpu 通过持有 `__this_cpu_read` 来确定自己执行的 vcpu 结构体
+    - dune_percpu 是用户态的，被 vmcs 的字段 gs 所指向。lpercpu, vcpu 都是当前 thread 分配的, 只是当前 thread 会被迁移到个个 CPU 上。
 
 vcpu::guest_kernel_gs_base
 ```c
@@ -94,8 +119,6 @@ vcpu::guest_kernel_gs_base
 #define MSR_GS_BASE		0xc0000101
 #define MSR_KERNEL_GS_BASE	0xc0000102
 ```
-
-
 
 - [x] do_dune_enter / on_dune_exit
   - save regs in the host mode, but restore it in the guest mode
@@ -127,19 +150,28 @@ vcpu::guest_kernel_gs_base
 - [ ] ept and host page table has different form, but it seems we handle ept violation and paging setup in the same way ?
 
 ## horrible
-1. page table format
-  - [ ] how can I verify it ?
+- [ ] I should fix the bug in the wedge
+
+- page 
+  - page table format
+    - [ ] how can I verify it ?
+  - page 是如何处理 fork 的
 
 - [x] how signal handled ?
 
-- [ ] page 
-
 - [ ] check code in entry line by line
-  - [ ] how to register idt in the code
+  - [x] how to register idt in the code
 
-- [ ] thread local variable
+- [ ] thread local variable : fs 
 
 - [ ] vmx_run_vcpu 
   - [ ] `Lkvm_vmx_return` : we are relying on some wired symbol ?
+
+- [ ] pthread
+  - [ ] I don't why pthread can work
+  - [ ] difference in thread and process
+
+- [ ] 为什么说修改 glibc 最后会导致性能可以稍微提升一点点。
+
 ## Not Now
 - [ ] `__dune_go_linux` : related with debug, but currently, debug is not used by far.

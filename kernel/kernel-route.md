@@ -1,10 +1,10 @@
 ## Merge this to kernel rookie
-
-
 microvm:
 - https://github.com/qemu/qemu/blob/master/docs/microvm.rst
 - https://github.com/Solo5/solo5
 
+unikernel:
+- https://ssrg-vt.github.io/hermitux/
 ## 计划
 g. [Essential Linux Device Drivers](https://book.douban.com/subject/3088263/)
 2. 日本人的nageshu
@@ -128,5 +128,3 @@ Strong teamwork and communication skills
 关注的问题只有 Linux Kernel，其他的似乎一概不问。
 
 僵尸进程的原因，c++ thread 关键字，slab cache\dcache 回收，
-
-
