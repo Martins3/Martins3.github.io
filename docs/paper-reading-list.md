@@ -4,6 +4,7 @@
 - [Reducing World Switches in Virtualized Environment with Flexible Cross-world Calls](https://trustkernel.com/uploads/pubs/CrossOver_ISCA2015.pdf) 
 - [Hardware-Accelerated Cross-Architecture Full-System Virtualization](https://dl.acm.org/doi/10.1145/2996798)
 - [A Retargetable System-Level DBT Hypervisor](https://www.usenix.org/conference/atc19/presentation/spink)
+- [HQEMU](http://csl.iis.sinica.edu.tw/hqemu/)
 
 ## classic papers
 - [The UNIX Time-Sharing System](https://chsasank.github.io/classic_papers/unix-time-sharing-system.html)

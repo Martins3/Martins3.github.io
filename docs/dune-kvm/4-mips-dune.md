@@ -222,13 +222,12 @@ vcpu::guest_kernel_gs_base
 
 - [ ] 找一下论文的说明
 
-- [ ] dune_clone 的实现
+- [ ] dune_clone 的实现, 现在 sandbox 执行需要 fork 的代码有问题。
 
-- [ ] bug fix : 即使没有进入 dune 也不应该出现错误
-
-- [ ] 在 guest user space 增加一个代码，让所有的 pthread / fork 自动进入到 dune 中间.
+- [x] 在 guest user space 增加一个代码，让所有的 pthread / fork 自动进入到 dune 中间.
   - 调用内核 sys_fork，children 的之后会指向 fork_ret 的路径，然后返回到用户空间, 如果想要不修改 qemu 的代码，那么就让 qemu 的 syscall 被截断
-  - qemu 本身可以运行在用户态, 应该不可以
+  - qemu 本身可以运行在用户态, 但是设置 page table 的 flag 让其可以任意访问
+
 
 ## horrible
 - [x] check code in entry line by line
@@ -270,6 +269,7 @@ sorry for the page fault
 
 - [ ] msa lasx
 - [ ] fpu
+
 
 ## Not Now
 - [ ] `__dune_go_linux` : related with debug, but currently, debug is not used by far.
