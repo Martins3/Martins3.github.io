@@ -5,6 +5,8 @@ microvm:
 
 unikernel:
 - https://ssrg-vt.github.io/hermitux/
+- https://github.com/solo-io/unik
+- includeOs
 ## 计划
 g. [Essential Linux Device Drivers](https://book.douban.com/subject/3088263/)
 2. 日本人的nageshu

@@ -15,12 +15,13 @@ https://github.com/Alikhll/golang-developer-roadmap : golang 的 roadmap，看�
 
 https://github.com/google/crfs : fuse, 3000 lines,  Go is taking over the world
 
+https://github.com/ofabry/go-callvis : The purpose of this tool is to provide developers with a visual overview of a Go program using data from call graph and its relations with packages and types. This is especially useful in larger projects where the complexity of the code much higher or when you are just simply trying to understand code of somebody else.
+
 # Go
 The reason to learn go is that I don't want to miss a good community!
 As for how to learn it, I think the best !
 
 := a shothand for create a variable and assign a value to it !
-
 
 
 

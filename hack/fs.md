@@ -1307,6 +1307,9 @@ getname_kernel 和  getname_flags 有什么区别吗 ?
 
 
 ## open
+- [ ] relation with openat
+  - [ ] AT_FDCWD
+
 Three kinds of open flags accoring to man page:
 1. file privilege : O_RDONLY, O_WRONLY, or O_RDWR
 2. file create : O_CLOEXEC, O_CREAT, O_DIRECTORY, O_EXCL, O_NOCTTY, O_NOFOLLOW, O_TMPFILE
