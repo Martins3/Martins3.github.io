@@ -10,6 +10,7 @@ https://arxiv.org/pdf/1701.00854.pdf
 
 https://begriffs.com/posts/2020-03-23-concurrent-programming.html?hn=1
 https://www.datadoghq.com/blog/engineering/introducing-scipio/
+https://preshing.com/20120612/an-introduction-to-lock-free-programming/ : notes of `the art of concurrent programming`
 
 ## 资源
 

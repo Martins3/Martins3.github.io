@@ -20,6 +20,7 @@
     - [process vm access](#process-vm-access)
 - [compaction](#compaction)
     - [compact deferred](#compact-deferred)
+- [tlb](#tlb)
 - [hugetlb](#hugetlb)
 - [compound page](#compound-page)
 - [THP](#thp)
@@ -1032,6 +1033,9 @@ struct zone {
 ```
 
 ![loading](https://img2018.cnblogs.com/blog/1771657/201910/1771657-20191027000559199-1665601872.png)
+
+## tlb
+x86/mm/tlb.c
 
 ## hugetlb
 1. 为了实现简单，那么 hugetlb 减少处理什么东西 ?
@@ -3642,7 +3646,6 @@ https://mp.weixin.qq.com/s/ZLXAz8dAdcqS52MzmXU_YA
 [^24]: [lwn : Memory management notifiers](https://lwn.net/Articles/266320/)
 [^25]: [kernelnewbies : ioremap vs mmap](https://lists.kernelnewbies.org/pipermail/kernelnewbies/2016-September/016814.html)
 [^26]: [lwn: ioremap and memremap](https://lwn.net/Articles/653585/)
-
 [^27]: https://lwn.net/Articles/619738/
 [^28]: https://www.kernel.org/doc/gorman/html/understand/understand015.html
 [^29]: https://my.oschina.net/u/3857782/blog/1854548

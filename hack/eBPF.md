@@ -5,6 +5,7 @@
 - [ ] [Dive into BPF: a list of reading material](https://qmonnet.github.io/whirl-offload/2016/09/01/dive-into-bpf/) : may be read all articles of the author
 
 https://github.com/netblue30/firejail
+https://filipnikolovski.com/posts/ebpf/
 
 
 ## overview

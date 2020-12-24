@@ -4,6 +4,7 @@ https://fasterthanli.me/series
 
 https://github.com/serge1/ELFIO
 
+https://cjting.me/2020/12/10/tiny-x64-helloworld/ : 轻松的教程
 
 [special section](https://lwn.net/Articles/531148/)
 

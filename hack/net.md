@@ -27,6 +27,15 @@
   - mac80211
   - sched : https://www.cnblogs.com/charlieroro/p/13993695.html
 
+## TCP
+
+### Congestion Control
+rtt 标准算法（Jacobson / Karels 算法）
+（Linux 的源代码在：tcp_rtt_estimator）。[^5]
+
+tcp_ack_update_rtt
+  - tcp_rtt_estimator
+
 ## e1000e[^2]
 - [ ] watch dog
 
@@ -210,7 +219,9 @@ TCP is a sliding window protocol with time-out and retransmits.
 Outgoing data must be acknowledged by the far-end TCP.
 Acknowledgements can be piggybacked on data.
 
-- [ ] I don't know I have read it or not.
+- [ ] I don't know I have finished it or not.
+
+## TAP/TUN
 
 ## 可以参考
 https://github.com/saminiir/level-ip : 学习一下
@@ -249,3 +260,7 @@ https://github.com/mtcp-stack/mtcp
 [^2]: 用芯探核:基于龙芯的 Linux 内核探索解析
 [^3]: https://tools.ietf.org/html/rfc1180
 [^4]: http://yuba.stanford.edu/rcp/
+[^5]: [万字详文：TCP 拥塞控制详解](https://zhuanlan.zhihu.com/p/144273871)
+[^6]: [An Introduction to Computer Networks](http://intronetworks.cs.luc.edu/current2/html/)
+[^7]: [The TCP/IP Guide](http://www.tcpipguide.com/index.htm)
+[^8]: [TUN/TAP设备浅析(一) -- 原理浅析](https://www.jianshu.com/p/09f9375b7fa7)

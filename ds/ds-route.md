@@ -4,7 +4,6 @@ https://github.com/ivanallen/thor : **mit : 首先观看的内容 其他的到�
   - https://blog.microdba.com/archive/?tag=6.824 : 对于课程的记录
 https://www.zhihu.com/question/29597104/answer/128443409 : pingcap 的作者谈如何学习 MIT 6.218
 
-
 ## 各种介绍
 - [ ] https://dancres.github.io/Pages/ : readlist
 

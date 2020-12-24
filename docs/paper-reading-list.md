@@ -1,9 +1,9 @@
 ## Binary Translation
 - [Optimizing Memory Translation Emulation in Full System Emulators](https://dl.acm.org/doi/pdf/10.1145/2686034) :star:
 - [Acceleration of memory accesses in dynamic binary translation](https://tel.archives-ouvertes.fr/tel-02004524/document) :star:
-- [Reducing World Switches in Virtualized Environment with Flexible Cross-world Calls](https://trustkernel.com/uploads/pubs/CrossOver_ISCA2015.pdf) 
-- [Hardware-Accelerated Cross-Architecture Full-System Virtualization](https://dl.acm.org/doi/10.1145/2996798)
+- [Hardware-Accelerated Cross-Architecture Full-System Virtualization](https://dl.acm.org/doi/10.1145/2996798) :star:
 - [A Retargetable System-Level DBT Hypervisor](https://www.usenix.org/conference/atc19/presentation/spink)
+- [Reducing World Switches in Virtualized Environment with Flexible Cross-world Calls](https://trustkernel.com/uploads/pubs/CrossOver_ISCA2015.pdf) 
 - [HQEMU](http://csl.iis.sinica.edu.tw/hqemu/)
 
 ## classic papers
@@ -17,9 +17,11 @@
 
 ## Cloud / Virtualization
 - [Alita: Comprehensive Performance Isolation through Bias Resource Management](https://mp.weixin.qq.com/s/S0lvODk2fe91AxWyMACgEQ)
+- [OSv—Optimizing the Operating System for Virtual Machines](https://www.usenix.org/conference/atc14/technical-sessions/presentation/kivity)
 
 ## How kernel implements
 - https://www.usenix.org/legacy/events/osdi10/tech/full_papers/Ben-Yehuda.pdf
 - https://kernel.dk/systor13-final18.pdf
 - https://www.kernel.org/doc/ols/2007/ols2007v1-pages-225-230.pdf
 
+## libos
