@@ -2,12 +2,12 @@
 
 https://github.com/geektutu/7days-golang
 
-- musl
+- [musl](../unix/musl.md)
 - qbe
 - wren
 - https://github.com/cloudius-systems/osv
 - https://github.com/google/gvisor
-- eomaia
+- [eomaia](../net/eomaia.md)
 
-# maybe
+# maybe I will try
 - zircon
