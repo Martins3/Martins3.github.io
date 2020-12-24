@@ -6,5 +6,8 @@ https://github.com/geektutu/7days-golang
 - qbe
 - wren
 - https://github.com/cloudius-systems/osv
-- https://github.com/google/gvisor (It's fucking hard to setup the reading environment)
+- https://github.com/google/gvisor
+- eomaia
+
+# maybe
 - zircon
