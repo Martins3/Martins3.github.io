@@ -30,13 +30,16 @@
 - [Learn Linux kernel](./learn-linux-kernel.md)
 
 ## Scholar
-- [Binary Translation and Virtualization Paper reading list](./paper-reading-list.md)
 
 <!-- ## Reflections -->
 <!-- - [Power of continuous thinking](./thinking.md) -->
 
 <!-- ## Linux Kernel -->
 <!-- - [Linux Process Management](./process.md) -->
+
+## Navigation
+- [Source code reading list](./source-code-reading-list.md)
+- [Binary Translation and Virtualization Paper reading list](./paper-reading-list.md)
 
 ## MISC
 - [what is x86 IA-32 IA-64 x86-64 and amd64 ?](./x86-names.md)
