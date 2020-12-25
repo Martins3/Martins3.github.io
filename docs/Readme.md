@@ -29,8 +29,6 @@
 - [How to cross Great Fire Wall](./gfw.md)
 - [Learn Linux kernel](./learn-linux-kernel.md)
 
-## Scholar
-
 <!-- ## Reflections -->
 <!-- - [Power of continuous thinking](./thinking.md) -->
 
