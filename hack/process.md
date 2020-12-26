@@ -124,7 +124,6 @@
 - [ ] https://peteris.rocks/blog/htop/#load-average : Great
 
 
-
 ## task_struct
 
 [^8]: task_struct's fields related with sched
@@ -397,8 +396,9 @@ struct cfs_rq {
 - [ ] [LoyenWang](https://www.cnblogs.com/LoyenWang/p/12584345.html)
 
 ## schedule
-notes from [^8]:
+- [ ] https://oskernellab.com/
 
+notes from [^8]:
 
 1. 主动调度 - schedule()
 
@@ -2210,6 +2210,9 @@ static int run_init_process(const char *init_filename)
 ## TODO
 https://phoenixnap.com/kb/create-a-sudo-user-on-debian : 首先搞清楚这种简单的文章
 
+- I need write a blog about how linux process works
+  - [ ] **https://kernel.blog.csdn.net/** : dozens of blog
+  - [ ] LoyenWang
 
 疑问: 
 1. ucore lab1 的附加题的说明，实现地址空间切换的方法
