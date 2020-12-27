@@ -1168,6 +1168,8 @@ the Kernel Mode stack.
 
 
 ## signal
+- https://questions.wizardzines.com/signals.html : nice post create by Evans, correct my understanding of process
+
 - [ ] https://www.giovannimascellani.eu/having-fun-with-signal-handlers.htmlo
   - 实际上，可以使用 sigaction 来处理 seg fault
   - [ ] ucontext ?

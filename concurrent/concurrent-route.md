@@ -1,7 +1,12 @@
+## Plans
 1. 底层架构上，cache 一致性, memory fence !(量化，小册子)
 2. C++ 并发编程 和 Rust 并发编程 : 写一个 blog 对比一下。
 3. perf
 4. 将之前阅读 the art of concurrent programming 整理一下 !
+
+## TODO
+- even loop : https://questions.wizardzines.com/event-loops.html : I read part of it, it seems I haven't learn event loop at all.
+- coroutine in c++
 
 ## 正经的教材
 https://arxiv.org/pdf/1701.00854.pdf

@@ -1633,6 +1633,13 @@ Tee can copy files without consuming it, in the second stage, we can splice the 
     - [ ] so, check how kernel work for this
 
 ## pipe
+- https://questions.wizardzines.com/bash-redirects.html
+  - > will sudo echo x > /file allow you to redirect to /file if it's owned by root?
+  - > some_cmd 2>&1 > file
+  - > some_cmd 2>&1
+  - > some_cmd 2> file.txt
+
+
 - [ ] pipefs
   - [ ] why we need pipefs ?
 

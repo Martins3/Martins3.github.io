@@ -2,10 +2,12 @@
 
 <!-- vim-markdown-toc GitLab -->
 
+- [env setup](#env-setup)
 - [design](#design)
   - [questions](#questions)
   - [crt](#crt)
   - [calling route](#calling-route)
+- [how printf works](#how-printf-works)
     - [start up](#start-up)
     - [TCP_FD::write](#tcp_fdwrite)
     - [syscall_SYS_read](#syscall_sys_read)
@@ -14,6 +16,25 @@
 - [Something else I learn](#something-else-i-learn)
 
 <!-- vim-markdown-toc -->
+
+when coming back : in `your_build_dir`, `run.sh && boot hello` to run the data.
+
+## env setup
+in `IncludeOS`:
+```
+# init operation
+# clang-6.0-linux-x86_64
+
+mkdir build
+conan editable add . includeos/$(conan inspect -a version . | cut -d " " -f 2)@includeos/latest --layout=etc/layout.txt
+conan install -if build . -pr <conan_profile>
+conan build -bf build .
+
+# build every time
+cmake --build build
+```
+
+In `hello_world`: follow readme's instructors
 
 ## design
 
@@ -34,8 +55,6 @@
 
 - single address space, but with clone, but no kernel scheduler.
 
-- can I debug with printf ?
-
 - [ ] posix_memalign ==> musl, what's the purpose of src/musl
 
 - [ ] memdisk ?
@@ -48,11 +67,22 @@
 
 - [ ] /home/maritns3/core/incOs/IncludeOS/src/hw/ ? seems useless
 
+- [ ] from kernel init to hello world ?
 
 ### crt
 src/crt provide C runtime support
 
 ### calling route
+
+
+## how printf works
+Evne in function src/platform/x86_pc/kernel_start.cpp::kernel_start, we can call printf.
+
+where is the package ?
+/home/maritns3/.conan/data/musl/1.1.18/includeos/stable/package/b6ca6a0ffff110bf17b843d4258482a94281eb43/include/stdio.h
+this is standard musl interface.
+
+**It seems musl in IncludeOS is never called**, and we can't call exit()
 
 #### start up
 - kernel_start
