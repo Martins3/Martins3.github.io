@@ -109,6 +109,7 @@
     - different scheduler : dead rt
     - different policy
 
+**https://github.com/gatieme/LDD-LinuxDeviceDrivers/tree/master/study/kernel/01-process**
 
 ## introduction
 
@@ -122,7 +123,6 @@
 | 进程地址空间   | brk
 
 - [ ] https://peteris.rocks/blog/htop/#load-average : Great
-
 
 ## task_struct
 

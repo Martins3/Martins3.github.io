@@ -1,4 +1,3 @@
-
 ## Resource
 
 https://rtpg.co/2020/12/11/dbg-in-python.html
@@ -36,6 +35,26 @@ https://github.com/uutils/coreutils : 我想知道这个和 busybox 有什么区
 
 ## fun
 https://github.com/adamsky/globe
+
+## TODO
+1. RefCell 相对于 Box 实现了什么不同的功能?
+2. 什么时候必须使用Rc : 指向同一个节点的链表
+3. dyn 关键字
+4. use rust::blog::Post; 为什么需要添加rust:: 来指示本地包的作用 ?
+5. macro 的定义非常奇怪，模式后面的代码如果想要定义statement 需要含有两层 {{ .}}
+6. 我们可以在返回值中间包含mut keyword 吗 ?
+7. https://doc.rust-lang.org/rust-by-example/std/hash.html `literal string`为什么总是在添加&使用
+
+
+第十三章讲到如果可以在参数列表前使用 move 关键字强制闭包获取其使用的环境值的所有权.
+
+因此，Rust 类型系统和 *trait bound* 确保永远也不会意外的将不安全的 Rc<T> 在线程间发送
+
+8. 思考一个问题：
+  1. 当一个函数的作用是返回一个 struct, 进而这一个 struct 需要在在各个函数之间传递，如何保证该结构体生命周期的正确性。
+  2. 或者说，在 c++ 中间，在一个函数中间 new 了一个对象，之后在任何地方 delete 掉，如何处理
+
+
 
 ## Container
 1. 如何才可以实现对于 Me.age 全部加上1
@@ -368,26 +387,6 @@ so you don't get unexpected precedence bugs.
 
 ## closure
 1. 闭包可以通过三种方式捕获其环境，他们直接对应函数的三种获取参数的方式：获取所有权，可变借用和不可变借用
-
-
-## 问题
-1. RefCell 相对于 Box 实现了什么不同的功能?
-2. 什么时候必须使用Rc : 指向同一个节点的链表
-3. dyn 关键字
-4. use rust::blog::Post; 为什么需要添加rust:: 来指示本地包的作用 ?
-5. macro 的定义非常奇怪，模式后面的代码如果想要定义statement 需要含有两层 {{ .}}
-6. 我们可以在返回值中间包含mut keyword 吗 ?
-7. https://doc.rust-lang.org/rust-by-example/std/hash.html `literal string`为什么总是在添加&使用
-
-
-第十三章讲到如果可以在参数列表前使用 move 关键字强制闭包获取其使用的环境值的所有权.
-
-因此，Rust 类型系统和 *trait bound* 确保永远也不会意外的将不安全的 Rc<T> 在线程间发送
-
-
-
-
-
 
 
 ## 从最简单的问题分析起

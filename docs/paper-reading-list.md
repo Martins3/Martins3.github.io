@@ -24,4 +24,5 @@
 - https://kernel.dk/systor13-final18.pdf
 - https://www.kernel.org/doc/ols/2007/ols2007v1-pages-225-230.pdf
 
-## libos
+## kernel
+- https://github.com/theseus-os/Theseus
