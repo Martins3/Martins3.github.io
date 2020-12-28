@@ -1038,6 +1038,8 @@ struct zone {
 x86/mm/tlb.c
 
 ## hugetlb
+- [ ] https://lwn.net/Articles/839737/
+
 1. 为了实现简单，那么 hugetlb 减少处理什么东西 ?
 
 https://www.ibm.com/developerworks/cn/linux/l-cn-hugetlb/

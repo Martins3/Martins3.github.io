@@ -5,9 +5,7 @@
     1. https://stackoverflow.com/questions/3413470/what-is-stdmove-and-when-should-it-be-used
 3. https://stackoverflow.com/questions/11833070/when-is-the-use-of-stdref-necessary/45823556#45823556
 
-
 - [ ] 先把现有的笔记整理一下就很不错了啊 !
-
 
 - [ ] move
 - [ ] coroutine
@@ -44,7 +42,6 @@ https://github.com/itanium-cxx-abi/cxx-abi
 https://github.com/TheLartians/ModernCppStarter : A template for modern C++ projects using CMake, CI, code coverage, clang-format, reproducible dependency management and more. 项目模板。
 
 https://github.com/miloyip/game-programmer : 虽然是 游戏开发，但是其中推荐一大波 C++ 开发的东西
-
 
 https://github.com/JakubVojvoda/design-patterns-cpp : 设计模式
 https://github.com/AlfredTheBest/Design-Pattern : 虽然是 Java 写的，但是还是注意一下
@@ -91,6 +88,36 @@ https://github.com/google/googletest
 https://github.com/onqtam/doctest : 和 googletest 有什么区别吗 ?
 https://github.com/catchorg/Catch2 : 又一个测试框架
 
+
+## TODO
+- [ ] 成员函数指针
+```cpp
+template <int i> class A 
+{
+public:
+    void foo(int)
+    {
+    }
+};
+template <uint8_t a, typename b, void* c> class B {};
+template <bool, void (*a)()> class C {};
+template <void (A<3>::*a)(int)> class D {};
+
+template <int i> int Add(int a)	// 当然也能用于函数模板
+{
+    return a + i;
+}
+
+void foo()
+{
+    A<5> a;
+    B<7, A<5>, nullptr>	b; // 模板参数可以是一个无符号八位整数，可以是模板生成的类；可以是一个指针。
+    C<false, &foo> c;      // 模板参数可以是一个bool类型的常量，甚至可以是一个函数指针。
+    D<&A<3>::foo> d;       // 丧心病狂啊！它还能是一个成员函数指针！
+    int x = Add<3>(5);     // x == 8。因为整型模板参数无法从函数参数获得，所以只能是手工指定啦。
+}
+```
+- [ ] RTTI
 
 
 ## When boring
