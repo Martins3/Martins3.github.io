@@ -264,3 +264,6 @@ target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES})
 
 # res
 1. https://cmake.org/cmake/help/latest/index.html 标准文档
+
+
+## cmake for gensim

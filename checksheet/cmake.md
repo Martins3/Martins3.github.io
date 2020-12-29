@@ -1,7 +1,6 @@
 > cmake 缺少的不是 checksheet，而是他到底是什么东西 ? cmake 的设计模式到底是什么 ?
 
 https://cliutils.gitlab.io/modern-cmake/
-
 https://learnxinyminutes.com/docs/cmake/ : 好像还不错
 
 ## CMakeLists 常用语句
@@ -58,4 +57,5 @@ else()
 endif()
 ```
 
-4. find_package : https://github.com/conan-io/examples/tree/master/features/cmake/find_package/exported_targets_multiconfig
+6. find_package : https://github.com/conan-io/examples/tree/master/features/cmake/find_package/exported_targets_multiconfig
+

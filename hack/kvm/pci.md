@@ -21,6 +21,9 @@
 - [question](#question)
 
 <!-- vim-markdown-toc -->
+
+**When Comming back : Loyenwang has analyze PCI, I don't think we will have any question about it**
+
 - [ ] iommu group
 
 - [ ] 内核文档 : [^3]
