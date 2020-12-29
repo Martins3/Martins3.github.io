@@ -1,9 +1,3 @@
-## 核心
-https://github.com/ivanallen/thor : **mit : 首先观看的内容 其他的到时候再说**
-- https://github.com/wlgq2/MIT-6.824-2018 : 6.824 的某一个人的作业
-- https://fantastickb.com/posts/6.824_0_introduction/
-  - https://blog.microdba.com/archive/?tag=6.824 : 对于课程的记录
-https://www.zhihu.com/question/29597104/answer/128443409 : pingcap 的作者谈如何学习 MIT 6.218
 
 
 ## 各种介绍
