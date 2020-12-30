@@ -32,6 +32,7 @@
 ## Tips
 - [How to cross Great Fire Wall](./gfw.md)
 - [Learn Linux kernel](./learn-linux-kernel.md)
+- [cmake notes](./softlinks/cmake.md)
 
 <!-- ## Reflections -->
 <!-- - [Power of continuous thinking](./thinking.md) -->

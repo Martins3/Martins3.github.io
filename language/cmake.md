@@ -7,13 +7,26 @@
 - [ ] 尽可能多的引入各种外部库，不要自己手动写任何多余的东西
 
 ## https://github.com/Akagi201/learning-cmake
-> docs　下面还有三个pdf 都是值得一读
+- [ ] docs 下面还有三个pdf 都是值得一读
+- [ ] add flags
+  - [ ] add compile flags
+- [ ] rely on .hpp
+  - [ ] in the same directory
+  - [ ] in separate directory
 
-### hello-world
+- [ ] 文件之间的依赖是如何实现的
+- [ ] 批量加入文件
+
+cmake build projects in three steps:
+1. create dir
+2. cmake
+3. make
+
 ```
-cmake -H. -B_builds
-cmake --build _builds
+cmake -Bbuilds
+cmake --build builds
 
+mkdir _build
 cmake ../
 make
 
@@ -23,66 +36,31 @@ cmake -G "Ninja" ..
 ninja
 ```
 
-cmake : 
-1. Generate a Project Buildsystem
-2. Build a project : make 
+Commands checksheet:
 
-### cmake lang
-```
-cmake_minimum_required(VERSION 3.7.1)
+1. `project` : set the name of project.
+2. `add_subdirectory` : add a subdirectory to project.
+3. `install` : Specify rules to run at install time
+  - 就是文件拷贝，文件夹拷贝以及拷贝之后的权限设置
+  - [ ]  参数 RUNTIME 
+4. `set` : Set a normal, cache, or environment variable to a given value. 
+  - Multi-item variable : https://stackoverflow.com/questions/31037882/whats-the-cmake-syntax-to-set-and-use-variables
 
-project(hello-world)　// @todo 
+Constant checksheet:
+1. Locations : location constant variable
+  - CMAKE_SOURCE_DIR
+  - PROJECT_BINARY_DIR 
+  - CMAKE_CURRENT_SOURCE_DIR 
+2. Environment Variables
+  - CMAKE_INCLUDE_PATH
+  - CMAKE_LIBRARY_PATH
+3. System & Compiler Information
+  - CMAKE_MAJOR_VERSION
+1. CMAKE_CURRENT_BINARY_DIR
+2. CMAKE_CURRENT_SOURCE_DIR
+3. EXECUTABLE_OUTPUT_PATH
 
-set(SOURCE_FILES main.c)
-
-message(STATUS "This is BINARY dir " ${PROJECT_BINARY_DIR})
-message(STATUS "This is SOURCE dir " ${PROJECT_SOURCE_DIR})
-
-add_executable(hello-world ${SOURCE_FILES})
-```
-
-1. set
-2. message
-3. add_executable
-4. project
-
-1. 生成多个binary 
-2. 文件之间的依赖是如何实现的
-3. 批量加入文件
-
-
-### hello-world-clear
-```
-cmake_minimum_required(VERSION 2.8.4)
-
-project(hello)
-
-add_subdirectory(src)
-
-INSTALL(FILES COPYRIGHT README.md DESTINATION share/doc/cmake/hello-world-clear)
-
-INSTALL(PROGRAMS runhello.sh DESTINATION bin)
-
-INSTALL(DIRECTORY doc/ DESTINATION share/doc/cmake/hello-world-clear)
-```
-
-```
-cmake_minimum_required(VERSION 2.8.4)
-
-add_executable(hello main.c)
-
-set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin) // @tood 不知道这一句话的影响是什么
-
-install(TARGETS hello RUNTIME DESTINATION bin)
-```
-
-1. add_subdirectory
-2. install
-
-1. install 就是文件拷贝，文件夹拷贝以及拷贝之后的权限设置吗 ?
-2. EXECUTABLE_OUTPUT_PATH 之类的，还有什么之类环境定义的变量
-3. install 参数 RUNTIME 
-
+100. [reference](https://gitlab.kitware.com/cmake/community/-/wikis/doc/cmake/Useful-Variables)
 
 ### hello-world-lib
 ```

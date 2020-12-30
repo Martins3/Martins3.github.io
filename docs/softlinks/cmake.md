@@ -1,0 +1,1 @@
+/home/maritns3/core/camile/language/cmake.md
