@@ -1,31 +1,3 @@
-## [captive](https://github.com/tspink/captive)
-- main
-  - KernelLoader::create_from_file
-  - KVM::create_guest
-
-platform :
-1. symbench
-2. user
-3. virt
-
-- [ ] I think code in arch are auto generated, but how are called from 
-
-## [Gensim](https://github.com/gensim-project/gensim)
--  [ ] How the data transfer from 
-
-
-ISADescriptionParser::ParseFile
-  - > ArchDescriptionParser::load_arch_ctor
-    - > ArchDescriptionParser::load_from_arch_node
-      - > ArchDescriptionParser::ParseFile
-        - > main : called by gensim/tools
-  - > ISADescriptionParser::load_from_node
-    - > ISADescriptionParser::ParseFile
-
-  
-- [ ] so, how gensim is used for by ArcSim
-
-
 ## ArcSim
 - main
   - run_simple_simulation
@@ -61,3 +33,4 @@ ISADescriptionParser::ParseFile
 - [ ] How make -C is compiled with ArcSim ?
 
 - [ ] ARGN
+
