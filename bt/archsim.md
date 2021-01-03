@@ -8,6 +8,9 @@
             - interpreter_->StepBlock
               - gensim::armv7a::Interpreter::StepBlock(archsim::core::execution::InterpreterExecutionEngineThreadContext *thread)
                 - file lied in /home/maritns3/core/captive-project/gensim/build/models/armv7/output-armv7a/ee_interpreter.cpp
+                - StepInstruction
+                  - StepInstruction_arm
+                    - StepInstruction_arm_adc1
           - BasicJITExecutionEngine::Execute
             - BasicJITExecutionEngine::ExecuteLoop
               - BasicJITExecutionEngine::lookupBlock

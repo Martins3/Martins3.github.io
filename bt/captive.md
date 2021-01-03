@@ -10,3 +10,4 @@ platform :
 
 - [ ] I think code in arch are auto generated, but how are called from 
 
+- [ ] captive only works on armv8, but no I don't know how to run it
