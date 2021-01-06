@@ -5,3 +5,4 @@
     - https://eli.thegreenplace.net/2011/11/03/position-independent-code-pic-in-shared-libraries/
     - https://eli.thegreenplace.net/2011/08/25/load-time-relocation-of-shared-libraries/
 
+- [How linker works in llvm](https://www.youtube.com/watch?v=a5L66zguFe4)

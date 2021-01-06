@@ -16,6 +16,8 @@
 2. [清真的CPP](http://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines) 本杰尼斯特里斯普写的
 3. [moder cpp check list](https://github.com/AnthonyCalandra/modern-cpp-features)
 
+https://github.com/CppCon/CppCon2017 : all the conference
+
 https://github.com/catchorg/Catch2
 
 https://news.ycombinator.com/item?id=24901244 : some discussion about cpp code browsing.

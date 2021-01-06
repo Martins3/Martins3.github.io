@@ -86,7 +86,6 @@ https://tinylab.gitbooks.io/cbook/zh/chapters/02-chapter4.html : 名字是 C 语
 
 
 ## 二进制翻译
-https://github.com/microsoft/llvm-mctoll : 将文件从 binary 翻译成为文件，我感觉代码量不是很大的样子
 https://github.com/lifting-bits/mcsema : Framework for lifting x86, amd64, and aarch64 program binaries to LLVM bitcode 
     1. 问一下，它们是怎么搞二进制到 binary 的 ?
 
@@ -96,7 +95,6 @@ https://github.com/lifting-bits/mcsema : Framework for lifting x86, amd64, and a
 不一定非要准备齐全，才可以开始工作的，即便不知道，也是需要保持自信的。
 
 https://asmjit.com/ 
-
 
 ## vm
 v8 虚拟机让我开始好奇, v8 自带几个小文件例子.
