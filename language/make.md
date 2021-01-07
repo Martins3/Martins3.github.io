@@ -1,11 +1,11 @@
-
 - [ ] use **tlpi-disk's** makefile to understand how to manage a project with many standalone projects with only one file.
-
 
 ## Links
 https://chrismorgan.info/blog/make-and-git-diff-test-harness/ : git 和 make 结合，来实现测试套件
 
 https://github.com/seisman/how-to-write-makefile : 还是按照这个认真学一遍吧
+
+https://thoughtbot.com/blog/the-magic-behind-configure-make-make-install : 和 make 的配套工具
 
 # make
 ## How to process a Makefile

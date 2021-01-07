@@ -27,6 +27,8 @@ https://lfn3.net/2020/08/03/a-gentle-intro-to-assembly-with-rust/ : Rust with as
 
 https://rtpg.co/2020/12/11/dbg-in-python.html
 
+https://fasterthanli.me/articles/a-half-hour-to-learn-rust : 半小时学习 rust
+
 ## crate
 https://github.com/serde-rs/json : 也许下次写小工具的有用，用于解析 json
 https://github.com/sharkdp/hexyl : 显示文件的二进制，其实，我只是奇怪，为什么这么简单的程序会有 5k star
@@ -35,6 +37,7 @@ https://github.com/uutils/coreutils : 我想知道这个和 busybox 有什么区
 
 ## fun
 https://github.com/adamsky/globe
+https://github.com/rust-unofficial/patterns
 
 ## TODO
 1. RefCell 相对于 Box 实现了什么不同的功能?

@@ -19,6 +19,8 @@ https://github.com/wsdjeg/vim-galore-zh_cn : 使用的教程，值的认真看�
 
 https://www.reddit.com/r/vim/comments/i50pce/how_to_show_commit_that_introduced_current_line/ : 太酷了，搞懂这一句应该会学会很多
 
+https://thevaluable.dev/vim-intermediate/ : A Vim Guide for Intermediate Users, as a checklist for me
+
 # 使用 lua
 https://gabrielpoca.com/2019-11-02-a-little-bit-of-lua-in-your-vim/
 

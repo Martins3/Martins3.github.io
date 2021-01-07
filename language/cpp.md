@@ -17,6 +17,7 @@
 3. [moder cpp check list](https://github.com/AnthonyCalandra/modern-cpp-features)
 
 https://github.com/CppCon/CppCon2017 : all the conference
+https://gist.github.com/bkaradzic/2e39896bc7d8c34e042b : Orthodox C++ (sometimes referred as C+) is minimal subset of C++ that improves C, but avoids all unnecessary things from so called Modern C++.
 
 https://github.com/catchorg/Catch2
 
