@@ -1,16 +1,3 @@
----
-title: See MIPS Run
-date: 2018-04-19 18:09:37
-tags: cpu
----
-> Published in 2007
-
-# links
-[cross platform emulator](https://github.com/unicorn-engine/unicorn)
-
-# 问题
-- [ ] SR register ?
-
 # RISCs and MIPS Architectures
 1. pipeline
 The MIPS architecture was planned with separate instruction and data

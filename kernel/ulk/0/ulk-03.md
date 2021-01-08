@@ -1,5 +1,22 @@
 # Understand Linux Kernel : Processes
 
+
+<!-- vim-markdown-toc GitLab -->
+
+- [KeyNote](#keynote)
+- [1 Processes, Lightweight Processes, and Threads](#1-processes-lightweight-processes-and-threads)
+- [2 Process Descriptor](#2-process-descriptor)
+    - [2.1 Process State](#21-process-state)
+    - [2.2 Identifying a Process](#22-identifying-a-process)
+    - [2.3 Relationships Among Processes](#23-relationships-among-processes)
+    - [2.4 How Processes Are Organized](#24-how-processes-are-organized)
+    - [2.5 Process Resource Limits](#25-process-resource-limits)
+- [3 Process Switch](#3-process-switch)
+- [4 Creating Processes](#4-creating-processes)
+- [5 Destroying Processes](#5-destroying-processes)
+
+<!-- vim-markdown-toc -->
+
 ## KeyNote
 - TASK_INTERRUPTIBLE : **The process is suspended (sleeping) until some condition becomes true.**
 
@@ -285,7 +302,7 @@ rlim array from its parent, and therefore the user cannot override the limits en
 by the administrator.
 > @todo 这个描述的过程也太棒了吧! 可以找到代码上的证据吗 ?
 
-## Process Switch
+## 3 Process Switch
 Modern Unix kernels solve this problem by introducing three different mechanisms:
 - The Copy On Write technique allows both the parent and the child to read the
 same physical pages. Whenever either one tries to write on a physical page, the
@@ -297,4 +314,7 @@ User Mode address space), the open file tables, and the signal dispositions.
 - The `vfork()` system call creates a process that shares the memory address space
 of its parent. To prevent the parent from overwriting data needed by the child,
 the parent’s execution is blocked until the child exits or executes a new program. We’ll learn more about the `vfork()` system call in the following section.
-> 
+
+## 4 Creating Processes
+
+## 5 Destroying Processes

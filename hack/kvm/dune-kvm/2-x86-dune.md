@@ -1,6 +1,17 @@
-# Dune 
+# x86 Dune 
 
+<!-- vim-markdown-toc GitLab -->
 
+- [Bugs](#bugs)
+  - [Debug 1](#debug-1)
+  - [Debug 2](#debug-2)
+  - [问题](#问题)
+  - [wedge 的代码分析](#wedge-的代码分析)
+  - [sandbox](#sandbox)
+- [ref](#ref)
+
+<!-- vim-markdown-toc -->
+# Bugs
 
 ## Debug 1
 为了解决 sched_getcpu 这一个 bug，将 setup_gdt 放到了 create_percpu 中间
@@ -222,3 +233,26 @@ exit_group(0)                           = ?
     - syscall_do_foreal
       - dune_clone
         - dune_pthread_create
+
+# ref
+https://wiki.osdev.org/Paging
+
+```
+Bit 0 (P) is the Present flag.
+Bit 1 (R/W) is the Read/Write flag.
+Bit 2 (U/S) is the User/Supervisor flag.
+```
+
+The combination of these flags specify the details of the page fault and indicate what action to take:
+
+```
+US RW  P - Description
+0  0  0 - Supervisory process tried to read a non-present page entry
+0  0  1 - Supervisory process tried to read a page and caused a protection fault
+0  1  0 - Supervisory process tried to write to a non-present page entry
+0  1  1 - Supervisory process tried to write a page and caused a protection fault
+1  0  0 - User process tried to read a non-present page entry
+1  0  1 - User process tried to read a page and caused a protection fault
+1  1  0 - User process tried to write to a non-present page entry
+1  1  1 - User process tried to write a page and caused a protection fault
+```

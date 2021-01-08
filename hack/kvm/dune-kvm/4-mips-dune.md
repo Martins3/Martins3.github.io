@@ -4,18 +4,21 @@
 
 <!-- vim-markdown-toc GFM -->
 
-  - [question before write](#question-before-write)
-  - [clean and old](#clean-and-old)
-  - [到底要不要写测试](#到底要不要写测试)
-  - [user mode](#user-mode)
-    - [entry.c](#entryc)
-    - [percpu](#percpu)
-    - [vm.c](#vmc)
-    - [signal](#signal)
-  - [*process*](#process)
-  - [horrible](#horrible)
-  - [Not Now](#not-now)
-- [ref](#ref)
+- [question before write](#question-before-write)
+- [clean and old](#clean-and-old)
+- [到底要不要写测试](#到底要不要写测试)
+- [user mode](#user-mode)
+  - [entry.c](#entryc)
+  - [percpu](#percpu)
+  - [vm.c](#vmc)
+  - [signal](#signal)
+- [*process*](#process)
+- [horrible](#horrible)
+- [Not Now](#not-now)
+- [design](#design)
+    - [use kvm as much as possible](#use-kvm-as-much-as-possible)
+    - [ebase](#ebase)
+    - [initial guset state](#initial-guset-state)
 
 <!-- vim-markdown-toc -->
 
@@ -243,7 +246,7 @@ vcpu::guest_kernel_gs_base
 
 - [ ] 每次 debug 的时候，都要恐惧一次地址空间的各个成分，起止位置的含义。
 
-- 不知道为什么，有时候系统直接卡死了，现在不知道处理的办法.
+- [ ] 不知道为什么，有时候系统直接卡死了，现在不知道处理的办法.
 
 - wedge 遇到的 bug : 如果是 trap.c 的 handler 中间调用 printf, 因为 SIMD(SSE) 指令和 stack 对齐的问题，造成 double fault
   - [ ] 但是 printf 在进入 dune 之后似乎变成了线程不安全的，例如下面的效果，实际上，和线程安全性没有关系，因为每次都是下面的效果。
@@ -274,25 +277,61 @@ sorry for the page fault
 ## Not Now
 - [ ] `__dune_go_linux` : related with debug, but currently, debug is not used by far.
 
-# ref
-https://wiki.osdev.org/Paging
+## design
 
-```
-Bit 0 (P) is the Present flag.
-Bit 1 (R/W) is the Read/Write flag.
-Bit 2 (U/S) is the User/Supervisor flag.
-```
+#### use kvm as much as possible
+1. how to register hypercall : semihosting ?
+  - Currently, the only challenge is syscall, and fork family syscall is most tricky one.
+  - [ ] What's happending if a kvm process fork/clone 
+2. setup register
+    - dune setup by a trick which lead the program execute a program at first
+3. setup address space
 
-The combination of these flags specify the details of the page fault and indicate what action to take:
+#### ebase
+1. syscall
+  - lead to vmcall instruction
+2. TLB exception setup because TLB is handled by software
+  - how kernel install TLB exception handler
+  - install handler and then enable it
 
-```
-US RW  P - Description
-0  0  0 - Supervisory process tried to read a non-present page entry
-0  0  1 - Supervisory process tried to read a page and caused a protection fault
-0  1  0 - Supervisory process tried to write to a non-present page entry
-0  1  1 - Supervisory process tried to write a page and caused a protection fault
-1  0  0 - User process tried to read a non-present page entry
-1  0  1 - User process tried to read a page and caused a protection fault
-1  1  0 - User process tried to write to a non-present page entry
-1  1  1 - User process tried to write a page and caused a protection fault
-```
+#### initial guset state
+- [x] how x86-dune setup cr2 / cr0 register?
+  - vmx.c::vmx_setup_initial_guest_state
+
+- [ ] If we have the ability to init guest state, it's any challenge for the unikernel ?
+
+- [ ] I believe what should be initiated
+    - registers
+        - CP0
+          - exception
+          - mmu / TLB
+            - mtco zero, cp0_context
+          - status register
+        - floating point register
+        - page walk related register (in CP0)
+        - SIMD
+        - config register
+        - ipi register
+    - timer
+    - cache
+    - TLB
+
+| CP0        | desc                                                                                                                                                                                       |
+|------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Status(SR) | 1. You’ll need to set up SR to get the CPU into a workable state for the rest of the bootstrap process. [^1] <br> 2. 通过 setup_c0_status_pri 设置主核协处理器 0 的初始 status 寄存器.[^2] |
+| Context    |                                                                                                                                                                                            |
+
+| General Registers | name | desc                   |
+|-------------------|------|------------------------|
+| 28                | GP   | init_thread_union [^2] |
+
+
+- [ ] visiable cache
+- [ ] What about copy current machine state to guest ?
+
+https://stackoverflow.com/questions/59729073/how-to-create-nested-table-in-html
+
+- [ ] chen,P086 到底需要将 status 初始化为什么东西 ?
+
+[^1]: SMR, 3.2 Which Registers Are Relevant When?
+[^2]: chen, P57

@@ -31,6 +31,9 @@
 <!-- vim-markdown-toc -->
 
 
+- [ ] https://oprofile.sourceforge.io/about/
+
+
 ## 总结各种 tracer : overview
 http://www.brendangregg.com/blog/2015-07-08/choosing-a-linux-tracer.html
 https://jvns.ca/blog/2017/07/05/linux-tracing-systems/

@@ -81,6 +81,8 @@ https://news.ycombinator.com/item?id=23376357 : C 语言和汇编的联系
 
 https://qntm.org/perl_en : learn perl in 150 minutes
 
+https://news.ycombinator.com/item?id=25663403 : port v8 to riscv
+
 ## 链接
 https://tinylab.gitbooks.io/cbook/zh/chapters/02-chapter4.html : 名字是 C 语言课程，但是实际上是动态链接的之类的东西
 

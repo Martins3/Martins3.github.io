@@ -32,7 +32,6 @@
     - [context switch TLS](#context-switch-tls)
 - [vfork](#vfork)
 - [clone](#clone)
-- [thread_struct](#thread_struct)
 - [signal](#signal)
     - [signal fork](#signal-fork)
     - [send signal](#send-signal)
@@ -53,9 +52,6 @@
     - [do_exit](#do_exit)
 - [pidfd](#pidfd)
 - [pid](#pid)
-- [thread_info](#thread_info)
-    - [TIF](#tif)
-      - [TIF_NEED_RESCHED](#tif_need_resched)
 - [green thread](#green-thread)
 - [cpp thread keyword](#cpp-thread-keyword)
 - [cpu](#cpu)
@@ -1147,26 +1143,6 @@ Man clone(2)
 	struct signal_struct		*signal;
 ```
 
-
-
-
-
-
-## thread_struct
-- [ ]`tls_array`
-- [ ] `fsbase` and `fsindex`
-
-[^7]
-At every process switch, the hardware context of the process being replaced must be
-saved somewhere. It cannot be saved on the TSS, as in the original Intel design,
-because Linux uses a single TSS for each processor, instead of one for every process.
-
-Thus, each process descriptor includes a field called thread of type thread_struct, in
-which the kernel saves the hardware context whenever the process is being switched
-out. As we’ll see later, this data structure includes fields for most of the CPU registers, except the general-purpose registers such as eax, ebx, etc., which are stored in
-the Kernel Mode stack.
-
-
 ## signal
 - https://questions.wizardzines.com/signals.html : nice post create by Evans, correct my understanding of process
 
@@ -1752,56 +1728,6 @@ static struct pid **task_pid_ptr(struct task_struct *task, enum pid_type type)
 ```
 
 
-## thread_info
-`thread_info` is used to locate `task_struct`
-https://unix.stackexchange.com/questions/22372/what-is-the-need-of-the-struct-thread-info-in-locating-struct-task-struct
-
-in `asm/thread_info.h`, `TIF_NEED_RESCHED` are defined
-
-- [x] do we need `thread_info` to access `task_struct` ?
-
-no, we can access `task_struct` directly
-```c
-struct task_struct;
-
-DECLARE_PER_CPU(struct task_struct *, current_task);
-
-static __always_inline struct task_struct *get_current(void)
-{
-	return this_cpu_read_stable(current_task);
-}
-```
-
-#### TIF
-in `arch/x86/include/asm/thread_info.h`
-
-##### TIF_NEED_RESCHED
-Four reference of TIF_NEED_RESCHED
-```c
-#define tif_need_resched() test_thread_flag(TIF_NEED_RESCHED)
-
-static inline void set_tsk_need_resched(struct task_struct *tsk)
-{
-	set_tsk_thread_flag(tsk,TIF_NEED_RESCHED);
-}
-
-static inline void clear_tsk_need_resched(struct task_struct *tsk)
-{
-	clear_tsk_thread_flag(tsk,TIF_NEED_RESCHED);
-}
-
-static inline int test_tsk_need_resched(struct task_struct *tsk)
-{
-	return unlikely(test_tsk_thread_flag(tsk,TIF_NEED_RESCHED));
-}
-```
-
-`set_tsk_need_resched` call site:
-1. rcu
-2. resched_curr
-
-
-- [ ] TIF_NEED_FPU_LOAD
 
 
 
@@ -1833,8 +1759,6 @@ https://superuser.com/questions/1217454/how-do-you-control-thread-affinity-acros
 > Only values of class INTEGER or class MEMORY are passed to the kernel.
 
 - [ ] 现在只有一个小问题，r11 是不是 syscall 指令自动将 user 的 eflags 保存到其中的，至少 rcx 是的
-
-
 
 
 [^25] The two modes are distinguished by the `dpl` (descriptor privilege level) field in segment register cs. dpl=3  in cs for user-mode, and zero for kernel-mode (not sure if this "level" equivalent to so-called ring3 and ring0).
@@ -2428,7 +2352,6 @@ struct fork_frame {
 [^4]: https://blog.packagecloud.io/eng/2016/04/05/the-definitive-guide-to-linux-system-calls/#64-bit-f
 [^5]: https://www.kernel.org/doc/html/latest/x86/kernel-stacks.html
 [^6]: https://stackoverflow.com/questions/61886139/why-thread-info-should-be-the-first-element-in-task-struct
-[^7]: Understanding Linux Kernel
 [^8]: https://www.cnblogs.com/LoyenWang/p/12249106.html
 [^9]: https://peteris.rocks/blog/htop/
 [^10]: https://www.cnblogs.com/LoyenWang/p/12316660.html
