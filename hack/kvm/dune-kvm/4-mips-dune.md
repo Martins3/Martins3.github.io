@@ -4,9 +4,12 @@
 
 <!-- vim-markdown-toc GFM -->
 
+- [TODO](#todo)
+- [设计](#设计)
 - [question before write](#question-before-write)
 - [clean and old](#clean-and-old)
 - [到底要不要写测试](#到底要不要写测试)
+- [kernel mode](#kernel-mode)
 - [user mode](#user-mode)
   - [entry.c](#entryc)
   - [percpu](#percpu)
@@ -22,9 +25,33 @@
 
 <!-- vim-markdown-toc -->
 
+## TODO
+- [ ] kvmtool 关于如何处理 mips kvm
+
+## 设计
+- [ ] vmx.c::vmx_setup_initial_guest_state 和 entry.c::dune_boot 都是为了初始化各种 cpu 的 privileged 资源，可以放到一起初始化的。
+
+- [ ] 需要使用汇编的位置:
+    - exception handler
+       - TLB
+          - [ ] rixi
+          - invali
+          - load
+       - syscall
+    - `__dune_enter` : we have find a way to save the registers to kvm
+
+- [ ] 能否小心的写入 TLB 的数值，其实根本不需要 kernel space 的 mapping 的 ?
+    - [ ] MIPS 的 unmapped 映射区域的使用
+
 ## question before write
+- [ ] timer 这种东西完全使用不到，默认是如何处理的 ?
+
+- [ ] 随着 tdp-ept violation 出现，必然会构建
+
 - hypercall 
-  - [ ] cause BD : something instruction emulation
+  - review the code
+    - [ ] cause BD : something related with instruction emulation
+  - [ ]  可以让 hypercall 进入到用户态空间吗 ?
 
 - [x] syscall
   - We have to recompile glibc
@@ -33,6 +60,9 @@
     - [x] mips : syscall 的手册 : 
   - [x] MIPS virtualization manual :  4.7.4 Exception Priority
     - [x] A guest enabled interrupt occurred. / A root enabled interrupt occurred. : how to confict ? junru wang's paper says it's dangerous
+  - [ ] x86-dune 似乎是可以在内核态中间，继续系统调用，从而进入标准入口, 所以 MIPS 也可以这样吗 ?
+    - [ ] 一般来说，syscall 是用户态到内核态，而 int 则可以从用户态以及内核态，这是导致 sysenter 之类的指令出现的原因吗 ?
+    - 如果说，syscall 只是一个普通 int，那么就不应该和其他的有什么 int 有什么区别，就应该可以在内核中间其中。
 
 - tdp
   - [x] pte_mkclean / pte_mkold
@@ -44,7 +74,7 @@
     - [x] clear_flush_young  
     - [x] clear_young
     - [x] test_young
-    - [x] change_pte : **I think dune will never call this function**
+    - [x] change_pte : **I think dune will never call this function**, 实际上，从 x86-dune 的 log, 实际上，存在很多的代码的。
     - [x] release
   - [x] invalid TLB
   - [ ] asid
@@ -69,13 +99,17 @@
       - [x] is supporting kernel mode syscall and user mode syscall possible ?
         - YES, x86 remap the page,  MIPS rewrite the code
 
-
-- memslot : substituted by our wired **dune_vm_map_pages**
-
 ## clean and old
 - [x] how mips handle clean and old page in the host ?
 
 ## 到底要不要写测试
+
+## kernel mode
+- [ ] kvm_main.c 的 memslot
+- [ ] 拷贝的代码，理解的部分的总结 
+    - [ ] hugepage 的
+- [ ] 还有什么地方没有拷贝
+  - [ ] 从 exception 到 mmu.c 的部分
 
 ## user mode
 进入的流程分析:
@@ -273,6 +307,7 @@ sorry for the page fault
 - [ ] msa lasx
 - [ ] fpu
 
+- [ ] 如果在 dune 内部创建 sthread ，那么 MIPS TLB 的限制导致, 手动管理 ASID 吗 ?
 
 ## Not Now
 - [ ] `__dune_go_linux` : related with debug, but currently, debug is not used by far.
@@ -331,7 +366,18 @@ sorry for the page fault
 
 https://stackoverflow.com/questions/59729073/how-to-create-nested-table-in-html
 
-- [ ] chen,P086 到底需要将 status 初始化为什么东西 ?
+- [ ] chen,P086 到底需要将 status 初始化为什么东西,  ?
+- [ ] 需要初始化 cache 吗 ?
+    - 初始化 cache 应该是 invalide 掉，此外，cache 将会软件无感知的
+    - TLB 应该是类似的吧
+      - [ ] machine id and guest id works ?
+      - [ ] KVM will load guest tlb before vm enter, what's the details ?
+
+- [ ] check code for irq_chip related paragraph 
+
+- [ ] chen,P101 主核需要自己计算 sp, gp
+
+- [ ] chen,P105 辅核的启动过程也是包括第一入口和第二入口的
 
 [^1]: SMR, 3.2 Which Registers Are Relevant When?
 [^2]: chen, P57
