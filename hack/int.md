@@ -1138,16 +1138,16 @@ In order to support as many architectures as possible, Linux has a more restrict
 ```
 
 ## ret
-- Interleaved	assembly	entry	points:	[^6]
-  – ret_from_excepWon()	
+- Interleaved	assemblyentry	points:	[^6]
+  – ret_from_exception()	
   – ret_from_intr()	
   – ret_from_sys_call()	
   – ret_from_fork()	
-- Things	that	happen:	
-  – Run	scheduler	if	necessary	
-  – Return	to	user	mode	if	no	nested	handlers	
-    - Restore	context,	user-stack,	switch	mode	
-    - Re-enable	interrupts	if	necessary	
+- Things that happen:	
+  – Run	scheduler if	necessary	
+  – Return to user mode	if no	nested handlers	
+    - Restore	context, user-stack, switch	mode	
+    - Re-enable	interrupts if necessary	
 – Deliver	pending	signals	
 
 ## ref
