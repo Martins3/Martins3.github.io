@@ -38,6 +38,8 @@ https://github.com/uutils/coreutils : 我想知道这个和 busybox 有什么区
 ## fun
 https://github.com/adamsky/globe
 https://github.com/rust-unofficial/patterns
+http://technosophos.com/2019/08/07/writing-a-kubernetes-controller-in-rust.html
+https://www.osohq.com/post/rust-reflection-pt-1
 
 ## TODO
 1. RefCell 相对于 Box 实现了什么不同的功能?

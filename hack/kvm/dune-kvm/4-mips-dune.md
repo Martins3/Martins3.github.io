@@ -4,32 +4,39 @@
 
 <!-- vim-markdown-toc GFM -->
 
-- [TODO](#todo)
-- [设计](#设计)
-- [question before write](#question-before-write)
-- [clean and old](#clean-and-old)
-- [到底要不要写测试](#到底要不要写测试)
-- [kernel mode](#kernel-mode)
-- [user mode](#user-mode)
-  - [entry.c](#entryc)
-  - [percpu](#percpu)
-  - [vm.c](#vmc)
-  - [signal](#signal)
-- [*process*](#process)
-- [horrible](#horrible)
-- [Not Now](#not-now)
-- [design](#design)
-    - [use kvm as much as possible](#use-kvm-as-much-as-possible)
-    - [ebase](#ebase)
-    - [initial guset state](#initial-guset-state)
+- [doc](#doc)
+  - [TODO](#todo)
+  - [设计](#设计)
+  - [question before write](#question-before-write)
+  - [clean and old](#clean-and-old)
+  - [test](#test)
+  - [kernel mode](#kernel-mode)
+  - [user mode](#user-mode)
+    - [entry.c](#entryc)
+    - [percpu](#percpu)
+    - [vm.c](#vmc)
+    - [signal](#signal)
+  - [*process*](#process)
+  - [horrible](#horrible)
+  - [Not Now](#not-now)
+  - [design](#design)
+      - [use kvm as much as possible](#use-kvm-as-much-as-possible)
+      - [ebase](#ebase)
+      - [initial guset state](#initial-guset-state)
 
 <!-- vim-markdown-toc -->
+
+# doc
+- [env setup](https://github.com/Martins3/Martins3.github.io/issues/23)
+
 
 ## TODO
 - [ ] kvmtool 关于如何处理 mips kvm
 
+
 ## 设计
 - [ ] vmx.c::vmx_setup_initial_guest_state 和 entry.c::dune_boot 都是为了初始化各种 cpu 的 privileged 资源，可以放到一起初始化的。
+
 
 - [ ] 需要使用汇编的位置:
     - exception handler
@@ -41,7 +48,16 @@
     - `__dune_enter` : we have find a way to save the registers to kvm
 
 - [ ] 能否小心的写入 TLB 的数值，其实根本不需要 kernel space 的 mapping 的 ?
-    - [ ] MIPS 的 unmapped 映射区域的使用
+    - [ ] MIPS 的 unmapped 映射区域利用吗 ?
+    - [ ] kernel 的是不是只有很少的部分是可以修改映射的
+    - [ ] 调查是否存在物理内存限制的问题，如果不存在，那么就是完全相同的映射。
+      - 应该是存在的, 在 github issue 中间描述存在，产生的原因是，TLB 的 entryHi 的长度
+    - 如果真的需要处理 TLB 
+
+- [ ] MIPS 对于 user 和 kernel 的地址，以及 page table 上没有 kernel flags 的
+  - [ ] 所以，MIPS 靠什么东西指示当前是用户态 和 内核态
+  - [ ] 我认为处于内核态还是可以执行 xuseg 的代码，毕竟内核中间存在 status 寄存器
+- 
 
 ## question before write
 - [ ] timer 这种东西完全使用不到，默认是如何处理的 ?
@@ -102,7 +118,8 @@
 ## clean and old
 - [x] how mips handle clean and old page in the host ?
 
-## 到底要不要写测试
+## test
+
 
 ## kernel mode
 - [ ] kvm_main.c 的 memslot
@@ -333,7 +350,7 @@ sorry for the page fault
 - [x] how x86-dune setup cr2 / cr0 register?
   - vmx.c::vmx_setup_initial_guest_state
 
-- [ ] If we have the ability to init guest state, it's any challenge for the unikernel ?
+- If we have the ability to init guest state, it's any challenge for the unikernel ?
 
 - [ ] I believe what should be initiated
     - registers
@@ -346,6 +363,7 @@ sorry for the page fault
         - page walk related register (in CP0)
         - SIMD
         - config register
+          - chenP58: ELPA PAGEGRAIN SFB
         - ipi register
     - timer
     - cache
