@@ -6,6 +6,8 @@
 
 - [doc](#doc)
   - [TODO](#todo)
+      - [kvmtool](#kvmtool)
+      - [TLB](#tlb)
   - [设计](#设计)
   - [question before write](#question-before-write)
   - [clean and old](#clean-and-old)
@@ -33,10 +35,31 @@
 ## TODO
 - [ ] kvmtool 关于如何处理 mips kvm
 
+- [ ] struct kvm_vcpu_arch::guest_tlb ，在 copy tlb.c 应该是 load / store guest tlb 的
+
+#### kvmtool
+- [x] 加载内核镜像
+2. MIPS 特殊之处是什么
+- [x] memslot 如何设置的
+- [x] we can control every register
+- [ ] Can I set TLB from host ? 
+
+#### TLB
+- [ ] 能否小心的写入 TLB 的数值，其实根本不需要 kernel space 的 mapping 的 ?
+    - [ ] MIPS 的 unmapped 映射区域利用吗 ?
+    - [ ] kernel 的是不是只有很少的部分是可以修改映射的
+    - [ ] 调查是否存在物理内存限制的问题，如果不存在，那么就是完全相同的映射。
+      - 应该是存在的, 在 github issue 中间描述存在，产生的原因是，TLB 的 entryHi 的长度
+    - [ ] KVM 中间是否存在注入 TLB 的 interface
+        - chen,P125 指出 TLB 的大小可以为 1G
+        - 估计是不存在 注入 TLB 的 interface 的，但是因为映射关系很简单，可以使用
+          - [ ] mmap_base 和 stack_base 还是会限制可以映射的范围，即使内存不存在
+          - x86 如何让自己的 TLB 知道加载了 hugepage 
+
+- kvm_mips_dump_guest_tlbs
 
 ## 设计
 - [ ] vmx.c::vmx_setup_initial_guest_state 和 entry.c::dune_boot 都是为了初始化各种 cpu 的 privileged 资源，可以放到一起初始化的。
-
 
 - [ ] 需要使用汇编的位置:
     - exception handler
@@ -47,17 +70,12 @@
        - syscall
     - `__dune_enter` : we have find a way to save the registers to kvm
 
-- [ ] 能否小心的写入 TLB 的数值，其实根本不需要 kernel space 的 mapping 的 ?
-    - [ ] MIPS 的 unmapped 映射区域利用吗 ?
-    - [ ] kernel 的是不是只有很少的部分是可以修改映射的
-    - [ ] 调查是否存在物理内存限制的问题，如果不存在，那么就是完全相同的映射。
-      - 应该是存在的, 在 github issue 中间描述存在，产生的原因是，TLB 的 entryHi 的长度
-    - 如果真的需要处理 TLB 
 
 - [ ] MIPS 对于 user 和 kernel 的地址，以及 page table 上没有 kernel flags 的
   - [ ] 所以，MIPS 靠什么东西指示当前是用户态 和 内核态
   - [ ] 我认为处于内核态还是可以执行 xuseg 的代码，毕竟内核中间存在 status 寄存器
-- 
+
+
 
 ## question before write
 - [ ] timer 这种东西完全使用不到，默认是如何处理的 ?
@@ -323,8 +341,40 @@ sorry for the page fault
 
 - [ ] msa lasx
 - [ ] fpu
+    - [ ]chen P363, fpu in context switch
 
-- [ ] 如果在 dune 内部创建 sthread ，那么 MIPS TLB 的限制导致, 手动管理 ASID 吗 ?
+- [ ] 如果在 dune 内部创建 sthread ，那么 MIPS TLB 的限制导致, 手动管理 ASID 吗, x86 的 TLB 是区分不同的地址空间的 ?
+
+vz.c
+```c
+static int kvm_vz_vcpu_run(struct kvm_run *run, struct kvm_vcpu *vcpu)
+{
+	int cpu = smp_processor_id();
+	int r;
+
+	kvm_timer_callbacks->acquire_htimer(vcpu); //  TODO So it will cause something special ?
+	/* Check if we have any exceptions/interrupts pending */
+	kvm_mips_deliver_interrupts(vcpu, read_gc0_cause()); // TODO 
+
+	kvm_vz_check_requests(vcpu, cpu); // TODO remote TLB flush
+	kvm_vz_vcpu_load_tlb(vcpu, cpu); // TODO TLB flush if I change to another CPU
+	kvm_vz_vcpu_load_wired(vcpu); // TODO why I can set the wired register ?
+
+	r = vcpu->arch.vcpu_run(run, vcpu);
+
+	kvm_vz_vcpu_save_wired(vcpu);
+
+	return r;
+}
+```
+
+- kvm_vcpu_arch 的每一个字母都不可以放过
+  - maar 
+
+- kvm_mips_csr_die_notify
+
+- [ ] 4.5.1 Virtualized MMU GuestID Use
+  - how guestid works
 
 ## Not Now
 - [ ] `__dune_go_linux` : related with debug, but currently, debug is not used by far.

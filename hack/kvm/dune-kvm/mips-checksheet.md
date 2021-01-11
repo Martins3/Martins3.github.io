@@ -95,5 +95,21 @@ MIPS64-III-Priviledge :
 ## gpr
 -  在内核汇编中间见到 $28, 那就是 thread_union / thread_info
 
+## syscall
+[^1]P135
+
+- [ ] 使用那些寄存器传递参数的
+- [ ] syscall 是 interrupt 的一部分而已
+
+
+## context switch
+[^1]P363
+
+- [ ] kernelsp 数组是怎么回事 ?
+    - 应该是类似于 x86 中间的 TSS 寄存器，用于*切换到内核态的时候*初始化内核 stack
+- [ ] 找到 pt regs 的定义
+- [ ] 检查一下其中 save regs 相关的代码
+
+## interrupt && exception
 
 [^1]: 用"芯"探核 基于龙芯的 Linux 内核探索解析

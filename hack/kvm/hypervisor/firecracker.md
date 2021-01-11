@@ -112,10 +112,12 @@ device_manager/mod.rs                                    1              9       
 
 
 ## Rust language
-
 - [ ] https://stackoverflow.com/questions/30938499/why-is-the-sized-bound-necessary-in-this-trait
 - https://doc.rust-lang.org/nomicon/hrtb.html
 
-
 ### lib
 - [ ] https://doc.rust-lang.org/beta/core/num/struct.Wrapping.html
+
+## What we should run
+- https://github.com/containers/libkrun
+- https://github.com/cloud-hypervisor/cloud-hypervisor

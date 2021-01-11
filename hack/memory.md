@@ -2224,6 +2224,9 @@ struct scan_control {
 #### lru
 // 首先阅读的内容 : https://lwn.net/Articles/550463/
 
+- [ ] https://mp.weixin.qq.com/s/7eDqHR06TIBh6hqUMTrZKg
+- [ ] LoyenWang seems cover this part too.
+
 // 简要说明一下在 mem/list_lru.c 中间的内容:
 
 ```c
