@@ -2,9 +2,13 @@
 
 
 ## coprocessor 0
+[^2]P56
+![](./img/3.1-1.png)
+![](./img/3.1-2.png)
+
 
 ### Status
-[^1]59
+[^1]P59
 
 ```
 |31    28|27|26|25  24| 23 | 22 | 21| 20 | 19  |18  16| 15    8 | 
@@ -113,3 +117,4 @@ MIPS64-III-Priviledge :
 ## interrupt && exception
 
 [^1]: 用"芯"探核 基于龙芯的 Linux 内核探索解析
+[^2]: See Mips Run 2nd Edition

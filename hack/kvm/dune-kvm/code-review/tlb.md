@@ -71,4 +71,7 @@ PF_VCPU 表示当前的进程执行 `r = kvm_mips_callbacks->vcpu_run(run, vcpu)
 - [ ] guest 存在额外的一套 TLB 吗 ?
   - tlbgr 寄存器 ?
 
-kvm_vz_vcpu_save_wired
+- kvm_vz_vcpu_save_wired
+  - [ ] kvm_vz_save_guesttlb : 被唯一调用
+      - [ ] set_root_gid_to_guest_gid
+      - [ ] clear_root_gid

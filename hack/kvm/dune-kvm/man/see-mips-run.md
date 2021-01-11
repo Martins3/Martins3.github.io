@@ -121,9 +121,7 @@ outside kuseg, or if an address is wrongly aligned. After any other exception it
 Note in particular that it is not set after a bus error. BadVAddr is 64 bits wide if the CPU is.
 
 ### Count/Compare Registers: The On-CPU Timer
-
 These registers provide a simple general-purpose interval timer that runs continuously and that can be programmed to interrupt
-
 
 The interrupt usually comes out of the CPU and is wired back to an interrupt by some
 system-dependent mechanism—but see the IntCtl register for how to find out

@@ -31,6 +31,10 @@ some system calls such as `getpid()`, `kill()`, and `_exit()`. We are going to d
 
 Figure 3-1 describes the Linux process descriptor schematically.
 
+![](../img/3-1.png)
+
+- [ ] 可以跟踪一下上面的图中间 task_struct 包含的内容
+
 The six data structures on the right side of the figure refer to specific resources
 owned by the process. Most of these resources will be covered in future chapters.
 This chapter focuses on two types of fields that refer to the process state and to process parent/child relationships.

@@ -34,8 +34,8 @@
 
 ## TODO
 - [ ] kvmtool 关于如何处理 mips kvm
-
 - [ ] struct kvm_vcpu_arch::guest_tlb ，在 copy tlb.c 应该是 load / store guest tlb 的
+- [ ] 如何保证使用 kvm 的时候，其使用的 exception 的入口是唯一的
 
 #### kvmtool
 - [x] 加载内核镜像
