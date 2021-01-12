@@ -43,3 +43,7 @@ https://github.com/ruanyf/document-style-guide : 好好看看吧
 
 ## code review
 https://mtlynch.io/code-review-love/
+
+
+## ideas
+https://blog.samaltman.com/how-to-be-successful

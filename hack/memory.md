@@ -13,6 +13,7 @@
     - [fork](#fork)
     - [paging](#paging)
     - [copy_from_user](#copy_from_user)
+- [mm_struct](#mm_struct)
 - [mmap](#mmap)
     - [brk](#brk)
     - [mmap layout](#mmap-layout)
@@ -691,10 +692,20 @@ size_t iov_iter_copy_from_user_atomic(struct page *page,
 EXPORT_SYMBOL(iov_iter_copy_from_user_atomic);
 ```
 
+## mm_struct
+- [ ] 并不是所有的进程存在 mm_struct 的, 应该是 kernel thread ?
+```c
+	for_each_process (g) { 
+    if(g->mm)
+      pr_debug("%s ---> %lx %lx\n", g->comm, g->mm->mmap_base, g->mm->start_stack);
+    else 
+      pr_debug("%s doesn't have mm\n", g->comm);
+	}
+```
 
 ## mmap
 - [ ] io uring, mmap 的时候需要传入 MAP_POPULATE 参数，以防止内存被 page fault。
-
+- [ ] https://github.com/edsrzf/mmap-go : 我们应该使用类似的方法来实现一个 C 语言版本，在 mmap 区域放置汇编代码
 
 // TODO
 1. 为什么其中的 file_operations::mmap 和 mmap 的关系是什么 ?

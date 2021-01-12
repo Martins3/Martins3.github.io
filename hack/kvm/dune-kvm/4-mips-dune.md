@@ -376,6 +376,11 @@ static int kvm_vz_vcpu_run(struct kvm_run *run, struct kvm_vcpu *vcpu)
 - [ ] 4.5.1 Virtualized MMU GuestID Use
   - how guestid works
 
+- [ ] manual-III 中间，4.13.3 TLB Initialization
+  - 到底需要如何实现 TLB 的初始化
+  
+- [ ] 当使用上 kvm 的时候，就完全不用再去处理 signal 了，但是信号在 x86-dune 中间如何处理的，我们有需要如何处理其。
+
 ## Not Now
 - [ ] `__dune_go_linux` : related with debug, but currently, debug is not used by far.
 

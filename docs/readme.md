@@ -27,6 +27,7 @@
 </p>
 
 ## Navigations
+- [Martins3's slides](https://martins3.github.io/ppt)
 - [Source code reading list](./source-code-reading-list.md)
 - [Binary Translation and Virtualization Paper reading list](./paper-reading-list.md)
 
