@@ -31,10 +31,11 @@ tags: algorithm
     }
 ```
 
-3. read line by line
+## 一行行的读文件
 
 ```
     #include <fstream>
+    string line;
     std::ifstream infile("thefile.txt");
     while (std::getline(infile, line)){
         std::istringstream iss(line);

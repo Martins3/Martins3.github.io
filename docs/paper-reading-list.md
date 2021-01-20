@@ -41,3 +41,6 @@ This is Tom Spink's doctor thesis.
 
 ## kernel
 - https://github.com/theseus-os/Theseus
+
+## compiler
+- https://zhuanlan.zhihu.com/p/336543238

@@ -17,7 +17,21 @@
 
 <!-- vim-markdown-toc -->
 
-when coming back : in `your_build_dir`, `run.sh && boot hello` to run the data.
+when coming back : in `your_build_dir`, `run.sh` `source activete.sh` `boot hello` to run the data.
+```
+➜  incOs ls
+ hello_world   IncludeOS   your_build_dir
+
+➜  your_build_dir cat run.sh
+cur_dir=`pwd`
+
+inc=/home/maritns3/core/incOs/IncludeOS
+cd $inc
+cmake --build build
+
+cd $cur_dir
+cmake --build .
+```
 
 ## env setup
 in `IncludeOS`:

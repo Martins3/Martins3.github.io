@@ -19,6 +19,8 @@ https://github.com/ofabry/go-callvis : The purpose of this tool is to provide de
 
 https://geektutu.com/post/high-performance-go.html
 
+https://eli.thegreenplace.net/2021/rest-servers-in-go-part-1-standard-library/ : tutorial go for RESTFUL
+
 # Go
 The reason to learn go is that I don't want to miss a good community!
 As for how to learn it, I think the best !

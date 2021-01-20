@@ -1,6 +1,6 @@
-# arch/mips/kvm/tlb.c
+# vz 中间的 tlb 管理
 
-
+关于 tlb 的问题合集可以体现在下面这一个函数中间
 ```c
 static int kvm_vz_vcpu_run(struct kvm_run *run, struct kvm_vcpu *vcpu)
 {
@@ -23,15 +23,13 @@ static int kvm_vz_vcpu_run(struct kvm_run *run, struct kvm_vcpu *vcpu)
 }
 ```
 
-```c
-	.vcpu_load = kvm_vz_vcpu_load,
-	.vcpu_put = kvm_vz_vcpu_put,
-```
+1. kvm_mips_deliver_interrupts : 关于 remote tlb shot
+2. kvm_vz_vcpu_load_tlb : 当 vcpu 在 physical cpu 上迁移之后，需要考虑 guestid 的 invalid
+3. kvm_vz_vcpu_load_wired : 当 load 出现
 
 ## remote tlb shot : kvm_vz_check_requests
 
 ## guestid : kvm_vz_vcpu_load_tlb
-
 - [ ] 两个 load 的关系是什么，部署的位置 
   - schedu_in / schedu_out
 
@@ -75,3 +73,9 @@ PF_VCPU 表示当前的进程执行 `r = kvm_mips_callbacks->vcpu_run(run, vcpu)
   - [ ] kvm_vz_save_guesttlb : 被唯一调用
       - [ ] set_root_gid_to_guest_gid
       - [ ] clear_root_gid
+
+
+从源代码分析，以前取决于 guest 的 wired 寄存器的数值, 只要初始化的时候，将 wired 处理掉，那么就可以了
+```
+	unsigned int wired = read_gc0_wired();
+```

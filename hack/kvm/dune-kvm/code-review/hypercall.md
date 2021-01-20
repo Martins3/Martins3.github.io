@@ -1,0 +1,5 @@
+- hypercall 
+  - review the code
+    - [x] cause BD : something related with instruction emulation
+      - 其实只是延迟槽导致指令的位置出现变化而已。
+  - [x]  可以让 hypercall 进入到用户态空间吗 ?

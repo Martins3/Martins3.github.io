@@ -1,9 +1,9 @@
 ## interrupt && exception
+- [x] 可以调整 ebase 的位置吗 ? [^1] 上说，可以，前提是将 BEV 关闭掉
 
-- [ ] 检查一下 ebase 在其中的作用
-
-- [ ] 可以调整 ebase 的位置吗 ?
-
+- [ ] IntCtl 的处理的 EIC interrupt mode 或者 VI mode 的含义是什么 ?
+- [ ] cause 的 2..6 的 bit 位标注了，Exception 的入口 和 Interrupt 的入口 的联系 ?
+- [ ] Cp0 NestedExc 的作用 ?
 
 ## tlbex
 ```

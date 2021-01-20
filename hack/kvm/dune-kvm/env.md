@@ -24,9 +24,11 @@ ssh: connect to host 10.90.50.133 port 22: Connection refused
 交叉编译 Linux module 的方法 : https://stackoverflow.com/questions/3467850/cross-compiling-a-kernel-module
 因为用户态程序是直接使用 x86 的编译器，从而可以 indexing, 而内核模块交叉编译，从而可以掌握全部的脚本。
 
-
 ## compile_commands.json
 1. 使用 compile_commands.json 生成方法
 ➜  linux git:(master) ✗ scripts/clang-tools/gen_compile_commands.py
 2. 只有最新版的 ccls 才可以正确工作
 3. 当 make tags 也可以使用索引
+
+## 编译器下载
+http://www.loongnix.org/index.php/Cross-compile

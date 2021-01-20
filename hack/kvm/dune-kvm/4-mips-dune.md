@@ -33,9 +33,9 @@
 
 
 ## TODO
-- [ ] kvmtool 关于如何处理 mips kvm
 - [ ] struct kvm_vcpu_arch::guest_tlb ，在 copy tlb.c 应该是 load / store guest tlb 的
 - [ ] 如何保证使用 kvm 的时候，其使用的 exception 的入口是唯一的
+- [ ] config
 
 #### kvmtool
 - [x] 加载内核镜像
@@ -82,10 +82,7 @@
 
 - [ ] 随着 tdp-ept violation 出现，必然会构建
 
-- hypercall 
-  - review the code
-    - [ ] cause BD : something related with instruction emulation
-  - [ ]  可以让 hypercall 进入到用户态空间吗 ?
+
 
 - [x] syscall
   - We have to recompile glibc
@@ -302,6 +299,11 @@ vcpu::guest_kernel_gs_base
 
 
 ## horrible
+
+- [ ] 各种寄存器的保存
+  - 内联汇编
+  -
+
 - [x] check code in entry line by line
   - [x] how to register idt in the code
   - 大部分是 macro, 很多是 debug 和 interrupt 的代码，实际上，我们只需要执行两个代码
@@ -381,6 +383,20 @@ static int kvm_vz_vcpu_run(struct kvm_run *run, struct kvm_vcpu *vcpu)
   
 - [ ] 当使用上 kvm 的时候，就完全不用再去处理 signal 了，但是信号在 x86-dune 中间如何处理的，我们有需要如何处理其。
 
+- [ ] vz 为什么需要 handle tlbri ?
+    - 表示 gpa 到 hpa 的映射出现问题 ?
+    - memslot 的设置存在问题 ?
+
+
+- [ ] kvm_mips_build_enter_guest : 中间为什么需要 ?
+```c
+	/* Disable RDHWR access */
+	uasm_i_mtc0(&p, ZERO, C0_HWRENA);
+```
+
+- [ ] 似乎因为 cp0 上下文保存的开销问题，cp0 会 lazy restore, 最后导致 cp0 unusable 的 exception, 这种问题出现在 guest 态是很有问题的。
+
+- [ ] chen 描述 TLB refill 的时候，为什么每次都需要将 pagemask 清零。
 ## Not Now
 - [ ] `__dune_go_linux` : related with debug, but currently, debug is not used by far.
 
