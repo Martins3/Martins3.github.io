@@ -3,7 +3,7 @@
 
 - [ ] IntCtl 的处理的 EIC interrupt mode 或者 VI mode 的含义是什么 ?
 - [ ] cause 的 2..6 的 bit 位标注了，Exception 的入口 和 Interrupt 的入口 的联系 ?
-- [ ] Cp0 NestedExc 的作用 ?
+- [ ] Cp0 寄存器 NestedExc 的作用 ?
 
 ## tlbex
 ```
@@ -39,17 +39,20 @@ MIPS64-III-Priviledge :
 - [ ] 使用那些寄存器传递参数的
 - [ ] syscall 是 interrupt 的一部分而已
 
+在 /home/maritns3/core/loongson-dune/cross/arch/mips/include/asm/stackframe.h 中的 SAVE_ALL 的理解:
+1. [cfi 只是处理和 macro 有关的东西](https://stackoverflow.com/questions/2529185/what-are-cfi-directives-in-gnu-assembler-gas-used-for)
+
+![](../../../pic/mips-context-switch.svg)
 
 ## context switch
 [^1]P363
-
 - [ ] kernelsp 数组是怎么回事 ?
     - 应该是类似于 x86 中间的 TSS 寄存器，用于*切换到内核态的时候*初始化内核 stack
 - [ ] 找到 pt regs 的定义
 - [ ] 检查一下其中 save regs 相关的代码
-
 - [ ] context switch 中间，地址空间的切换 cr3 在 ?
 
+/home/maritns3/core/loongson-dune/cross/arch/mips/include/asm/asmmacro-64.h 中间定义了来实现上下文的拷贝: cpu_save_nonscratch
 
 [^1]: 用"芯"探核 基于龙芯的 Linux 内核探索解析
 [^2]: See Mips Run 2nd Edition

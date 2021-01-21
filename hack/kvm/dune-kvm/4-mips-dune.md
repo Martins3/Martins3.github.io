@@ -299,10 +299,8 @@ vcpu::guest_kernel_gs_base
 
 
 ## horrible
-
 - [ ] 各种寄存器的保存
   - 内联汇编
-  -
 
 - [x] check code in entry line by line
   - [x] how to register idt in the code

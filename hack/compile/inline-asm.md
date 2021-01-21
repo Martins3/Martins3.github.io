@@ -1,4 +1,7 @@
+
 # Tutorial about assembly
+
+- [ ] analyze this file : /home/maritns3/core/musl/arch/mips64/syscall_arch.h
 
 - [ ] this is enough https://mentorembedded.github.io/advancedlinuxprogramming/alp-folder/alp-ch09-inline-asm.pdf
 
