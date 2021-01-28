@@ -3,8 +3,7 @@
     <img alt="img" src="./img/ma.png" height="160" />
     <img alt="img" src="https://raw.githubusercontent.com/shuveb/io_uring-by-example/master/public/tux.png" height="160" />
     <img alt="img" src="https://styles.redditmedia.com/t5_2ykcc/styles/image_widget_pifwg495jvr41.png" height="160" />
-    <img alt="img" src="https://i.redd.it/3tjmwla59z361.png" height="160" />
-    <img alt="img" src="https://i.redd.it/603jratkjfa61.png" height="160" />
+    <img alt="img" src="https://pbs.twimg.com/media/EssDxqSXYAEDdvP?format=jpg&name=small" height="160" />
   </a>
   <p align="center">
     <a href="https://996.icu"><img src="https://img.shields.io/badge/link-996.icu-red.svg" alt="996.icu" /></a>
@@ -34,6 +33,7 @@
 ## Tips
 - [How to cross Great Fire Wall](./gfw.md)
 - [Learn Linux kernel](./learn-linux-kernel.md)
+- [shell 的一些经验之谈](./shell.md)
 
 <!-- ## Reflections -->
 <!-- - [Power of continuous thinking](./thinking.md) -->

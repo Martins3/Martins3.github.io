@@ -56,7 +56,8 @@ And, this page will contains anything related device except pcie, mmio, pio, int
 - [ ] tlpi : chapter 62
 
 ## Questions
-
+- echo "shit" > /dev/pts/3
+  - 所以，pts 到底是说个啥，tmux / screen 如何利用
 
 ## 下面是阅读 ldd3 的 tiny_serial.c 和 tiny_tty.c 的结果
 

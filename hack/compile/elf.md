@@ -24,4 +24,6 @@ https://cjting.me/2020/12/10/tiny-x64-helloworld/
 博客笔记整理
 
 ## 命令
-file
+file 帮助我解决了 在 x86 上交叉编译内核，让后 sync 到 3a4000 上去，make install, 这种在 3a4000 上没有办法安装内核模块。
+
+## EXPORT_SYMBO 的工作原理是什么 ?

@@ -940,6 +940,9 @@ Currently, there are four interface to fork:
 3. clone
 4. clone3
 
+- [clone3 example code] https://lkml.org/lkml/2019/10/25/184
+
+
 > CLONE_VFORK (since Linux 2.2)
 >   If CLONE_VFORK is set, the execution of the calling process is suspended until the child releases its virtual memory resources via a call to execve(2) or `_exit`(2) (as with vfork(2)).
 >
@@ -1211,7 +1214,7 @@ Apparently, it's architecture related.
 	}
 ```
 
-
+- [ ] so, there's mechanism for lzay copy fpu registers ?
 
 #### stack's copy
 - [ ] 两个 thread 共享地址空间，如何防止 stack 互相覆盖 ?
@@ -1357,6 +1360,13 @@ some x86 kernel notes:[^5]
 
 ## exec
 说实话，都是 快速的阅读 程序员的自我修养 ，现在对于 elf 格式始终。。。。
+
+- [ ] what's difference between these syscall
+
+57	n64	execve			sys_execve
+270	n64	kexec_load			sys_kexec_load
+316	n64	execveat			sys_execveat
+
 
 ```c
 static struct linux_binfmt elf_format = {

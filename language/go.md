@@ -21,6 +21,8 @@ https://geektutu.com/post/high-performance-go.html
 
 https://eli.thegreenplace.net/2021/rest-servers-in-go-part-1-standard-library/ : tutorial go for RESTFUL
 
+[Go 语言设计与实现](https://draveness.me/golang/) 德莱文写的
+
 # Go
 The reason to learn go is that I don't want to miss a good community!
 As for how to learn it, I think the best !

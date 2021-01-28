@@ -11,6 +11,7 @@
 - [ ] coroutine
 - [ ] 继承
 
+
 ## 阅读
 1. [快速浏览](https://github.com/changkun/modern-cpp-tutorial/blob/master/book/zh-cn/03-runtime.md)
 2. [清真的CPP](http://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines) 本杰尼斯特里斯普写的
@@ -36,6 +37,8 @@ https://github.com/Mooophy/Cpp-Primer : 喵喵喵 ?
 
 https://blog.visionappster.com/2020/08/06/overriding-virtual-functions-at-run-time/ : blog
 
+http://modernescpp.com/index.php/c-20-concept-syntactic-sugar : 这个人写了一系列的 cpp 文章，首先将经典的内容看完再看这个吧。
+
 ## 项目
 https://www.qtmuniao.com/2020/07/03/leveldb-data-structures-skip-list/ :  C++ 数据库 Jeff Dean 1000 行
 https://github.com/nmwsharp/polyscope/tree/master/deps : 有意思的项目，用于学习语法，gtest 和 cmake 吧
@@ -43,6 +46,8 @@ https://github.com/microsoft/GSL : 这是微软的项目
 https://github.com/itanium-cxx-abi/cxx-abi
 
 https://github.com/TheLartians/ModernCppStarter : A template for modern C++ projects using CMake, CI, code coverage, clang-format, reproducible dependency management and more. 项目模板。
+https://github.com/lefticus/cpp_starter_project : 有一个 starter
+
 
 https://github.com/miloyip/game-programmer : 虽然是 游戏开发，但是其中推荐一大波 C++ 开发的东西
 
@@ -65,6 +70,7 @@ https://github.com/gabime/spdlog
     1. https://github.com/timberio/vector 对比一下，两者是一个东西吗 ?
 
 https://github.com/k-vernooy/tetris : for chilren
+
 ## algorithm
 https://github.com/xtaci/algorithms : 各种算法的实现
 https://github.com/gzc/CLRS : 算法导论答案
