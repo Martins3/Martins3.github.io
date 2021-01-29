@@ -14,6 +14,10 @@ https://github.com/aphyr/distsys-class　: 如果求一个大致理解，这个�
 - https://github.com/grpc/grpc/tree/master/src/cpp : grpc 尝试一下如何使用即可
 - https://proto.school/tutorials : 一堆协议的教程，但是协议都米有听说过
 - https://linkedin.github.io/school-of-sre/security/threats_attacks_defences/
+
+- https://www.youtube.com/playlist?list=PLeKd45zvjcDFUEv_ohr_HdUFe97RItdiB : Designing Data Intensive Application 的作者提供的 ds 教程
+  - https://martin.kleppmann.com/
+
 # An overview of distributed system
 https://www.zhihu.com/question/23645117
 http://book.mixu.net/distsys/

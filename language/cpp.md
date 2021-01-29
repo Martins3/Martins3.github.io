@@ -41,6 +41,7 @@ http://modernescpp.com/index.php/c-20-concept-syntactic-sugar : 这个人写了�
 
 ## 项目
 https://www.qtmuniao.com/2020/07/03/leveldb-data-structures-skip-list/ :  C++ 数据库 Jeff Dean 1000 行
+  - https://medium.com/databasss/on-disk-io-part-1-flavours-of-io-8e1ace1de017 : 数据库教程
 https://github.com/nmwsharp/polyscope/tree/master/deps : 有意思的项目，用于学习语法，gtest 和 cmake 吧
 https://github.com/microsoft/GSL : 这是微软的项目
 https://github.com/itanium-cxx-abi/cxx-abi

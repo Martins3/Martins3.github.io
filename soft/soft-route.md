@@ -24,6 +24,7 @@ https://github.com/prakhar1989/awesome-courses : 课程
 
 ## 简历
 https://github.com/billryan/resume
+https://github.com/salomonelli/best-resume-ever : 基于网页的技术, 可以导出各种样式
 
 ## 视野
 https://github.com/programthink/books

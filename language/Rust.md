@@ -35,6 +35,8 @@ https://github.com/serde-rs/json : 也许下次写小工具的有用，用于解
 https://github.com/sharkdp/hexyl : 显示文件的二进制，其实，我只是奇怪，为什么这么简单的程序会有 5k star
 https://github.com/uutils/coreutils : 我想知道这个和 busybox 有什么区别，如果两者提供了各种基础程序
 
+## projects
+- https://www.philippflenker.com/hecto-chapter-6/ : 使用 rust 写编辑器的教程
 
 ## fun
 https://github.com/adamsky/globe

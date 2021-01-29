@@ -3,6 +3,9 @@
 
 ## 待分析的资料
 **[namespace with c code](https://windsock.io/uts-namespace/)**
+- https://man7.org/tlpi/code/online/dist/namespaces/simple_init.c.html
+- https://lwn.net/Articles/531114/
+
 
 The UTS namespace is used to isolate two specific elements of the system that relate to the uname system call
 
@@ -607,4 +610,3 @@ static struct nsproxy *create_new_namespaces(unsigned long flags,
 ```
 1. ref : copy_namespaces setns unshare (如 Man 中间所说)
 2. `_do_fork` -> copy_process -> copy_namespaces
-
