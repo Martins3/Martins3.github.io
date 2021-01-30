@@ -40,3 +40,7 @@
 
 ## MISC
 - [what is x86 IA-32 IA-64 x86-64 and amd64 ?](./x86-names.md)
+
+
+## diary
+- [所以，有人告诉我后端在干什么吗?](./dairy/2020-1-29.md)

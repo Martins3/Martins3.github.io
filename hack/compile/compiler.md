@@ -9,26 +9,41 @@
 - https://www.kernel.org/doc/html/latest/kbuild/llvm.html
     - [ClangBuiltLinux](https://github.com/ClangBuiltLinux/tc-build)
 
-[ccls 交叉编译 提供关于 clang 的交叉编译是有问题](https://github.com/MaskRay/ccls/wiki/Example-Projects)
+- [使用 clang 的交叉编译](https://github.com/MaskRay/ccls/wiki/Example-Projects)
 ```
 make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- LLVM=1 defconfig
 make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- LLVM=1 -j10
 make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- LLVM=1 -k Image.gz modules // 好吧，-k Image.gz modules 是什么意思
 ```
 
-但是还是存在版本不够的问题: https://apt.llvm.org/ 可以安装最新的 LLVM, 但是实际上也没有用。
-
-暂时使用 gcc 来实现交叉编译 :
+也可以使用 gcc 来实现交叉编译 :
 ```
-ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- make
 ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- make defconfig
+ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- make
 ```
 
-下面测试一下 clang 编译配合 clangd 的效果:
+
+使用 LLVM 编译 x86
 ```
 # Use clang 9 or newer.
 make ARCH=x86_64 LLVM=1 defconfig
-make ARCH=x86_64 LLVM=1 -k bzImage modules  # generate .<target>.cmd files
+make ARCH=x86_64 LLVM=1 -j10
+```
+
+在最近的内核版本如果遇到问题，很有可能是
+```diff
+diff --git a/include/linux/compiler-clang.h b/include/linux/compiler-clang.h
+index 230604e7f057..e913000f4b95 100644
+--- a/include/linux/compiler-clang.h
++++ b/include/linux/compiler-clang.h
+@@ -7,7 +7,7 @@
+                     + __clang_minor__ * 100    \
+                     + __clang_patchlevel__)
+
+-#if CLANG_VERSION < 100001
++#if CLANG_VERSION < 100000
+ # error Sorry, your version of Clang is too old - please use 10.0.1 or newer.
+ #endif
 ```
 
 ### 对于 Loongnix 的交叉编译:
