@@ -7,16 +7,10 @@
 - [sched class and policy](#sched-class-and-policy)
 - [runqueue](#runqueue)
 - [task_group](#task_group)
-- [load weight share avg](#load-weight-share-avg)
-- [bandwidth](#bandwidth)
 - [rt](#rt)
 - [schedule](#schedule)
 - [load](#load)
-    - [global load](#global-load)
-    - [cpu load](#cpu-load)
     - [pelt](#pelt)
-- [numa balancing](#numa-balancing)
-- [load balancing](#load-balancing)
 - [process state](#process-state)
 - [process relation](#process-relation)
 - [preemption](#preemption)
@@ -289,137 +283,6 @@ struct task_group {
 ```
 
 
-
-## load weight share avg
-
-[LoyenWang](https://www.cnblogs.com/LoyenWang/p/12459000.html)
-
-![](https://img2020.cnblogs.com/blog/1771657/202003/1771657-20200310214059270-591255805.png)
-
-- [x] update_load_avg : details are in [load balancing](#load-balancing)
-- [ ] calc_group_shares() : a horrible function, not it's comments is horrible
-
-- [x] struct cfs_rq::avg; it *should* be sum of `se->avg`, but I need a dig into it.
-```c
-static inline void
-enqueue_load_avg(struct cfs_rq *cfs_rq, struct sched_entity *se)
-{
-	cfs_rq->avg.load_avg += se->avg.load_avg;
-	cfs_rq->avg.load_sum += se_weight(se) * se->avg.load_sum;
-}
-
-static inline void
-dequeue_load_avg(struct cfs_rq *cfs_rq, struct sched_entity *se)
-{
-	sub_positive(&cfs_rq->avg.load_avg, se->avg.load_avg);
-	sub_positive(&cfs_rq->avg.load_sum, se_weight(se) * se->avg.load_sum);
-}
-```
-
-- [x] struct task_group::shares
-  - `share` is exclusive concept used for task_group, describing share of a task_group in all task_groups
-
-- [x] struct cfs_rq::load;
-```c
-static void account_entity_enqueue(struct cfs_rq *cfs_rq, struct sched_entity *se){
-	update_load_add(&cfs_rq->load, se->load.weight);
-  // ...
-
-static void account_entity_dequeue(struct cfs_rq *cfs_rq, struct sched_entity *se)
-```
-As these two function suggests, `cfs_rq->load` is weight is sum of all 
-
-- [x] struct task_group::load_avg
-- [x] struct cfs_rq::tg_load_avg_contrib;
-```c
-/**
- * update_tg_load_avg - update the tg's load avg
- * @cfs_rq: the cfs_rq whose avg changed
- * @force: update regardless of how small the difference
- *
- * This function 'ensures': tg->load_avg := \Sum tg->cfs_rq[]->avg.load.
- * However, because tg->load_avg is a global value there are performance
- * considerations.
- *
- * In order to avoid having to look at the other cfs_rq's, we use a
- * differential update where we store the last value we propagated. This in
- * turn allows skipping updates if the differential is 'small'.
- *
- * Updating tg's load_avg is necessary before update_cfs_share().
- */
-static inline void update_tg_load_avg(struct cfs_rq *cfs_rq, int force)
-
-
-/* Task group related information */
-struct task_group {
-	/*
-	 * load_avg can be heavily contended at clock tick time, so put
-	 * it in its own cacheline separated from the fields above which
-	 * will also be accessed at each tick.
-	 */
-	atomic_long_t		load_avg ____cacheline_aligned;
-```
-As two comments suggests, `tg->load_avg := \Sum tg->cfs_rq[]->avg.load_avg.`, tg_load_avg_contrib is used for lock efficiency.
-
-
-At last, `reweight_entity`
-
-
-## bandwidth
-[LoyenWang](https://www.cnblogs.com/LoyenWang/p/12495319.html)
-
-
-/sys/fs/cgroup/cpu/cpu.cfs_quota_us
-/sys/fs/cgroup/cpu/cpu.cfs_period_us
-
-`period`表示周期，`quota`表示限额，也就是在period期间内，用户组的CPU限额为quota值，当超过这个值的时候，用户组将会被限制运行（throttle），等到下一个周期开始被解除限制（unthrottle）；
-
-
-```c
-struct cfs_bandwidth {
-#ifdef CONFIG_CFS_BANDWIDTH
-	raw_spinlock_t		lock;
-	ktime_t			period;
-	u64			quota;
-	u64			runtime; // 记录限额剩余时间，会使用quota值来周期性赋值；
-	s64			hierarchical_quota;
-
-	u8			idle;
-	u8			period_active; // 周期性计时已经启动；
-	u8			slack_started;
-	struct hrtimer		period_timer;
-	struct hrtimer		slack_timer; // 延迟定时器，在任务出列时，将剩余的运行时间返回到全局池里；
-	struct list_head	throttled_cfs_rq;
-
-	/* Statistics: */
-	int			nr_periods;
-	int			nr_throttled;
-	u64			throttled_time;
-#endif
-};
-
-
-/* CFS-related fields in a runqueue */
-struct cfs_rq {
-// ...
-#ifdef CONFIG_CFS_BANDWIDTH
-	int			runtime_enabled;
-	s64			runtime_remaining; // 剩余的运行时间；
-
-	u64			throttled_clock;
-	u64			throttled_clock_task;
-	u64			throttled_clock_task_time;
-	int			throttled;
-	int			throttle_count;
-	struct list_head	throttled_list;
-#endif /* CONFIG_CFS_BANDWIDTH */
-```
-
-![loading](https://img2020.cnblogs.com/blog/1771657/202003/1771657-20200310214259138-947344133.png)
-
-
-[LoyenWang](https://www.cnblogs.com/LoyenWang/p/12459000.html)'s blog is really clear.
-
 ## rt
 
 - [ ] [LoyenWang](https://www.cnblogs.com/LoyenWang/p/12584345.html)
@@ -451,47 +314,11 @@ notes from [^8]:
 
 - [ ] what's relation with hrtick and schedule_tick ?
 
-
 ## load
-- cat /proc/loadavg：查看cpu最近1/5/15分钟的平均负载
-
-目前内核中，有以下几种方式来跟踪CPU负载：
-- 全局CPU平均负载；
-- 运行队列CPU负载；
-- PELT（per entity load tracking）;
-
-- [ ] [LoyenWang](https://www.cnblogs.com/LoyenWang/p/12316660.html) and linux/kernel/sched/loadavg.c
-
-
-- [ ] so, what's `share` ?
   - [ ] calc_group_shares
-
-#### global load
-exported by `/proc/loadavg`
-
-[^9]: The load number is calculated by counting the number of running (currently running or waiting to run) and uninterruptible processes (waiting for disk or network activity). So it's simply a number of processes.
-
-![](https://img2018.cnblogs.com/blog/1771657/202002/1771657-20200216135559205-958783412.png)
-
-
-1. scheduler_tick :
-    - `curr->sched_class->task_tick(rq, curr, 0);`
-    - calc_global_load_tick : update `calc_load_tasks`
-    - perf_event_task_tick
-2. do_timer : do the calculation
-
-
-- [ ] `curr->sched_class->task_tick` : what are we doing in it ?
-- [ ] what's relation `do_timer` and `scheduler_tick` ?
-
-loadavg decay at rate `1/e` at 1min, 5min, 15min.
-
-#### cpu load
-I think cpu load is used for [load balancing](#load-balancing)
 
 #### pelt 
 [Per-entity load tracking](https://lwn.net/Articles/531853/)
-
 
 
 [Load tracking in the scheduler](https://lwn.net/Articles/639543/)
@@ -617,64 +444,6 @@ This is roughly a measure of how heavily contended the CPU is. The kernel also t
 - [ ] [Per-entity load tracking in presence of task groups](https://lwn.net/Articles/639543/) : Continue the reading if other parts finished.
 
 
-[^10]:
-Linux中使用`struct sched_avg`来记录调度实体和CFS运行队列的负载信息，因此`struct sched_entity`和`struct cfs_rq`结构体中，都包含了`struct sched_avg`，字段介绍如下：
-```c
-struct sched_avg {
-	u64				last_update_time;      //上一次负载更新的时间，主要用于计算时间差；
-	u64				load_sum;              //可运行时间带来的负载贡献总和，包括等待调度时间和正在运行时间；
-	u32				util_sum;              //正在运行时间带来的负载贡献总和；
-	u32				period_contrib;        //上一次负载更新时，对1024求余的值；
-	unsigned long			load_avg;      //runnable 的平均负载贡献；
-	unsigned long			util_avg;      //running 的平均负载贡献；
-};
-```
-
-![](https://img2018.cnblogs.com/blog/1771657/202002/1771657-20200216135939689-531768656.png)
-
-`___update_load_sum` + `___update_load_avg`:
-
-
-// ------ **The Boss** : `___update_load_avg` begin -----
-
-- [x] why has split time into period(1024ms)
-  - kernel can't handle float
-  - `accumulate_sum()`
-- [x] why decay, how to decay ?
-  - maybe the reason is same with /proc/loadavg
-  - details in `___update_load_sum` ==> `accumulate_sum()` ==> `decay_load`, it's 
-
-- [ ] how to count the time is blocked , or runable ?
-  
-- [ ] so, how to use them ?
-- [ ] who are they, the sum, the avg ?
-// ------ **The Boss** : `___update_load_avg` end -----
-
-
-## numa balancing
-- [x] I guess, if memory node is only one, we still balancing task between cores
-
-## load balancing
-
-```c
-__init void init_sched_fair_class(void)
-{
-#ifdef CONFIG_SMP
-	open_softirq(SCHED_SOFTIRQ, run_rebalance_domains);
-
-#ifdef CONFIG_NO_HZ_COMMON
-	nohz.next_balance = jiffies;
-	nohz.next_blocked = jiffies;
-	zalloc_cpumask_var(&nohz.idle_cpus_mask, GFP_NOWAIT);
-#endif
-#endif /* SMP */
-
-}
-```
-- [ ] so, what's softirq, and how run_rebalance_domains triggered ?
-
-- [ ] load_balance ==> find_busiest_group , find_busiest_queue
-
 ## process state
 ```c
 /*
@@ -731,7 +500,6 @@ __init void init_sched_fair_class(void)
 ```
 
 ![](https://img2018.cnblogs.com/blog/1771657/202002/1771657-20200201170358218-1930669459.png)
-
 
 - [x] what's difference with `TASK_UNINTERRUPTIBLE` and `TASK_INTERRUPTIBLE` ?
   - https://stackoverflow.com/questions/223644/what-is-an-uninterruptible-process
