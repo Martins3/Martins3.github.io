@@ -21,13 +21,12 @@ determined by its session identifier (SID), which, like the process group ID,
 is a number of type pid_t. A session leader is the process that creates a new session and whose
 process ID becomes the session ID. A new process inherits its parent’s session ID
 
-**All of the processes in a session share a single controlling terminal.**
-**The controlling terminal is established when the session leader first opens a terminal device. A
-terminal may be the controlling terminal of at most one session.**
+- **All of the processes in a session share a single controlling terminal.**
+- **The controlling terminal is established when the session leader first opens a terminal device.**
+- **A terminal may be the controlling terminal of at most one session.**
 
-At any point in time, one of the process groups in a session is the foreground
-process group for the terminal, and the others are background process groups. 
-Only processes in the foreground process group can read input from the controlling terminal.
+- *At any point in time, one of the process groups in a session is the foreground process group for the terminal, and the others are background process groups.*
+- *Only processes in the foreground process group can read input from the controlling terminal.*
 
 As a consequence of establishing the connection to (i.e., opening) the controlling terminal, the session leader becomes the controlling process for the terminal.
 The principal significance of being the controlling process is that the kernel sends
@@ -136,11 +135,14 @@ them a `SIGHUP` signal.
 
 #### 34.7.1 Using Job Control Within the Shell
 
-The various states of a job under job control, as well as the shell commands and terminal characters (and the accompanying signals) used to move a job between these
-states, are summarized in **Figure 34-2**. This figure also includes a notional
-terminated state for a job. This state can be reached by sending various signals to the
-job, including SIGINT and SIGQUIT, which can be generated from the keyboard.
-> Figure 34-2 的内容非常复杂，但是对于其理解一般
+Since **only** a foreground process can read input from the controlling terminal and receive terminalgenerated signals, sometimes it is necessary to move a background job into the
+foreground. This is done using the **fg** shell built-in command
+
+After we typed Control-Z, the shell displays the command that has been stopped in
+the background. If desired, we can use the **fg** command to resume the job in the
+foreground, or use the **bg** command to resume it in the background.
+
+> **Figure 34-2** 就是总结各种状态的转移
 
 #### 34.7.2 Implementing Job Control
 This support requires the following:
@@ -149,7 +151,7 @@ SIGCONT, SIGTTOU, and SIGTTIN. In addition, the SIGCHLD signal (Section 26.3) is
 necessary, since it allows the shell (the parent of all jobs) to find out when one
 of its children terminates or is stopped.
 
-- The terminal driver must support generation of the job-control signals, so that
+- The *terminal driver* must support generation of the job-control signals, so that
 when certain characters are typed, or terminal I/O and certain other terminal
 operations (described below) are performed from a background job, an appropriate signal (as shown in Figure 34-2) is sent to the relevant process group. In
 order to be able to carry out these actions, the terminal driver must also record
@@ -231,7 +233,6 @@ are restarted.**
 - [GNU](https://www.gnu.org/software/libc/manual/html_node/Job-Control.html#Job-Control)
 
 So you can probably ignore the material in this chapter unless you are writing a shell or login program.
-
 
 
 - [build your own shell](https://github.com/tokenrove/build-your-own-shell)

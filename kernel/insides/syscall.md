@@ -116,7 +116,6 @@ As we can understand from the name of the vdso_image structure, it represents im
 
 > 本section 讲解了execvp 的实现，一下是关于自己对于其的设想
 
-
 1. 初始化 mm_struct，但是此时并不可以初始化 vm_area, vm_area 的信息需要从 分析可执行文件(大小，起始位置之类的)
 0. 将可执行文件读取到内存中间
 1. 请求ld 的协作处理动态链接库

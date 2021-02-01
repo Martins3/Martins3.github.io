@@ -1,13 +1,107 @@
 # kernel/signal.md
+**WHEN COMING BACK** : : 实际上，job control 比想想的更加简单，将 tlpi 34 的内容好好看看, 总结总结，顺便再去搞定 setsid 的问题
+
+还是基于 arm64 架构吧!
+
+首先阅读一下 man signal(7)
+
+ A  process can change the disposition of a signal using sigaction(2) or signal(2).
+
+- [x] By default, a signal handler is invoked on the normal process stack.  It is possible to arrange that the signal handler uses an alternate stack; see sigaltstack(2) for a discussion of how to do this and when it might be useful.
+  - 只是修改一下执行的时候使用的 stack
+
+- [ ] 如果 invalid 的 pagefault 发生了，如果导致 process 被 killed, 这个流程分析一下
+
+- [ ] sigret 的工作原理
+- [x] 一个进程在什么时候检查自己的信号(执行 signal handler)
+  - [x] syscall 返回的时候 ? (不是，int / syscall 返回到用户态的时候)
+      - 如果这是真的，那么 SA_RESTART 的作用无法解释，syscall 都返回了，怎么可能被 handler 打断 
+        - 此时解释 syscall_restart 的理由就是，其实有的系统调用，在执行的会检查 signal_pending, 如果发生了 signal_pending, 会提前结束。
+      - 通过检查 x86 的 signal.c 发生检查的位置在 	exit_to_user_mode_prepare 的调用下
+      - arm64 的代码在 ret_to_user 的时候检查, 这一点是统一的
+
+- do_notify_resume : 从目前的分析看，signal handler 的处理是在 syscall return 的时候，将返回的 pt_regs 修改
+  - do_signal : TODO 需要处理一些 syscall restart 的东西
+    - get_signal : 如果一个信号的 handler 只是内核的默认操作，那么无需切换到用户态，在此处进行操作即可
+      - do_signal_stop
+    - handle_signal : OK, we're invoking a handler
+      - setup_rt_frame
+        - get_sigframe
+          - sigsp
+        - setup_sigframe
+        - setup_return
+        - copy_siginfo_to_user
+      - signal_setup_done
+
+- [ ] clone(2) 中间处理信号的原则
+  - [ ] thread group 中间，谁处理信号
+  - [ ] 能不能只是 kill 一个 thread
+    - tgkill
+  - [ ] 能不能 kill process group 中间的一个 process, 如何 kill 所有的 process
+    - killpg
+  - 其实处理信号的基本在于: thread group 共享的 pending 和 私有的 pending
+    - [ ] 信号应该是不可能那个被 thread group 的所有 thread 都接受一次，因为 pending 维护的是一个 bitmask, 处理完成之后就清空了
+    - process group 让所有的信号接受一遍靠的是，在所有的 process 的 pending 上插入 flags
+
+- [x] sigwaitinfo(2), sigtimedwait(2), and sigwait(3) suspend execution until one of the signals in a specified set is delivered.  Each of these calls returns information about the delivered signal.
+  - [x] 所以，和 pause 和 sigsuspend 有什么区别吗 ? 应该只是一个等待所有信号，一个是针对的等待一个信号吧!
+  - sigsuspend 会首先修改 mask, 然后睡眠，直到信号发生并且被处理之后，其就会返回
+    - 没有 sigsuspend，这个功能: 在屏蔽特定的信号，并且执行完成之后，需要将遗失的信号执行一下, 是没有办法实现的
+    - 如果 sigsuspend 没有收到信号，会一致睡眠，但是其实故意注入一个信号。
+  - pause 不考虑 blocked signal
+  - sigwaitinfo / sigtimedwait 如果存在 blocked signal, 可以立刻返回，否则等待这些信号
+  - [ ] 从设想上，三者的实现应该很相似，但是实际上，sigtimedwait 的实现差别很大，而且另外两个也是很迷糊的
+
+- [ ] A child created via fork(2) inherits a copy of its parent's signal mask; the signal mask is preserved across execve(2).
+  - [ ] 都改朝换代了，为什么还要保持 signal mask
+
+- 才发现 mask 的含义就是 block 
+
+- [x] 被 mask 的信号，当 unmask 之后，还可以处理，还是永久的丢失了 ?
+  - Standard  signals  do  not  queue.  If multiple instances of a standard signal are generated while that signal is blocked, then only one instance of the signal is marked as pending (and the signal will be delivered just once when it is un‐
+blocked).  In the case where a standard signal is already pending, the siginfo_t structure (see sigaction(2)) associated with that signal is not overwritten on arrival of subsequent instances of the same signal.  Thus, the process will re‐
+ceive the information associated with the first instance of the signal.
+  - standard signal : 收到的信号，不会丢失，但是只会处理第一个，其余的都要丢弃了
+  - rt signal : 收到多少个信号，取消 block 之后，就需要处理多少次
+
+Unlike standard signals, real-time signals have no predefined meanings: the entire set of real-time signals can be used for application-defined purposes.
+
+The default action for an unhandled real-time signal is to terminate the receiving process.
+
+Real-time signals are distinguished by the following:
+1. Multiple instances of real-time signals can be queued.
+2. If the signal is sent using sigqueue(3), an accompanying value (either an integer or a pointer) can be sent with the signal.
+3. Real-time signals are delivered in a guaranteed order.
+
+- [x] real-time signals 的功能并不是体现在 real-time 上，而是在一些 specification 加入了一些东西
+  - [x] 阅读一下 rt 和代码 和 standard 的代码，两者如何复用代码的 ?
+
+ | Linux 2.0 and earlier | Linux 2.2 and later | desc |
+ |-----------------------|---------------------|------|
+ | sigaction(2)          | rt_sigaction(2)     | 设置 handler     |
+ | sigpending(2)         | rt_sigpending(2)    |  获取处于 pending 的信号    |
+ | sigprocmask(2)        | rt_sigprocmask(2)   | 确定那些信号被关注   |
+ | sigreturn(2)          | rt_sigreturn(2)     |      |
+ | sigsuspend(2)         | rt_sigsuspend(2)    |      |
+ | sigtimedwait(2)       | rt_sigtimedwait(2)  |  等待该信号的发生    |
+
+ 关于 rt 和 standard 的区别, 从
+> Man sigpending(2)
+>
+> The  original  Linux  system  call was named sigpending().  However, with the addition of real-time signals in Linux 2.2, the fixed-size, 32-bit sigset_t argument supported by that system call was no longer fit for purpose.  Consequently, a new system call, rt_sigpend‐
+> ing(), was added to support an enlarged sigset_t type.  The new system call takes a second argument, size_t sigsetsize, which specifies the size in bytes of the signal set in set.  The glibc sigpending() wrapper function hides these details from us, transparently call‐
+> ing rt_sigpending() when the kernel provides it.
+
+- [ ] 存在几个无法被篡改的，标准的 sigaction, 分析其 handler
+  - SIGCHIL
+  - SIGBUS
 
 
 ## KeyNote
 1. sigset_t : 64bit 下就是 unsigned long
-2. kernel_siginfo 的作用是什么 ?
+- [x] kernel_siginfo 的作用是什么 ? 参考 man sigaction(2)
 
 ```c
-
-
 typedef struct kernel_siginfo {
 	__SIGINFO;
 } kernel_siginfo_t;
@@ -18,8 +112,6 @@ struct {				\
 	int si_code;			\
 	union __sifields _sifields;	\ 
 }
-
-// __sifields 中间的内容非常的多，令人窒息 !
 
 /*
  * How these fields are to be accessed.
@@ -50,24 +142,6 @@ struct {				\
 #define si_arch		_sifields._sigsys._arch
 ```
 
-## TODO
-1. process 处理信号的时机是什么 ?
-2. 什么时候信号是 shared ，什么时候是 private 的 ?
-
-## question
-1. handler 默认执行的 stack space 位置在于何处 ?
-2. 能不能在不同的 namespace 中间实现切换 ?
-3. task->signal_struct 的作用是什么 ? 为什么会有那么多内容 ?
-4. 既然 handler 是在用户层次执行的，那么在切换到用户空间执行的 ? 至少需要知道 注册的函数的跳转地址是什么吧!
-5. 那些默认的 handler 都是在哪里 ? 
-7. 信号是内核态接受的，是如何切换到用户态空间，执行用户程序的
-
-## principal
-1. handler 在 kernel 中间注册，但是执行的位置在 user space
-2. 文档 在 413
-3. signal 种类都是固定的，只是有的可以自定义 handler 而已
-
-
 ## core struct
 
 ```c
@@ -76,7 +150,7 @@ struct task_struct {
 	/* Signal handlers: */
 	struct signal_struct		*signal;
 	struct sighand_struct __rcu		*sighand;
-	sigset_t			blocked;
+	sigset_t			blocked; // TODO 这两个的作用，以及
 	sigset_t			real_blocked;
 	/* Restored if set_restore_sigmask() was used: */
 	sigset_t			saved_sigmask;
@@ -125,56 +199,49 @@ typedef struct kernel_siginfo {
 struct signal_struct { // todo 太复杂了啊!
 ```
 
-
-## ptrace
-
-Usually, a large case structure that deals separately with each case (depending on the request
-parameter) is employed for this purpose. I discuss only some important cases: `PTRACE_ATTACH` and
-`PTRACE_DETACH`, `PTRACE_SYSCALL`, `PTRACE_CONT` as well as `PTRACE_PEEKDATA` and `PTRACE_POKEDATA`. 
-The implementation of the remaining requests follows a similar pattern.
-
-*All further tracing actions performed by the kernel are present in the signal handler code discussed in
-Chapter 5*. When a signal is delivered, the kernel checks whether the `PT_TRACED` flag is set in the `ptrace`
-field of `task_struct`. If it is, the state of the process is set to `TASK_STOPPED` (in `get_signal_to_deliver`
-in `kernel/signal.c`) in order to interrupt execution. `notify_parent` with the `CHLD` signal is then used
-to inform the tracer process. (The tracer process is woken up if it happens to be sleeping.) The tracer
-process then performs the desired checks on the target process as specified by the remaining ptrace
-options.
-
-> 信号来自于 architecture 相关的代码: 比如 strace 的syscall 的，当设置 TIF 上的相关的flags，然后触发
+- [x] calculate_sigpending : Have any signals or users of TIF_SIGPENDING been delayed until after fork?
 
 
-1. 如何 install 一个 handler
-2. 谁可以给 谁发送 消息 ? 没有限制的后果是什么 ? 
-3. 一个正在执行的程序，靠检测什么东西来判断自己是否接收到了消息 ?
-    1. 一个由于等待 signal 或者 各种蛇皮，sleep 之后，谁来唤醒我 ?
-        1. 可能是 parent ?
-        2. thread group leader ?
-        3. init ?
-        4. everyone ?
-
-    2.
-  
-3. 接受到消息之后，处理消息的时机是什么 ?
-
-4. 同时接收到多个消息，但是消息的处理只能一个个处理 ? 还是对于后面的进行忽视 ?
-5. handler 能不能继承，当 fork 的时候 ?
-
-
-## misc
 
 ```c
-static void __user *sig_handler(struct task_struct *t, int sig)
-{
-	return t->sighand->action[sig - 1].sa.sa_handler;
-}
+/*
+ * Let a parent know about the death of a child.
+ * For a stopped/continued status change, use do_notify_parent_cldstop instead.
+ *
+ * Returns true if our parent ignored us and so we've switched to
+ * self-reaping.
+ */
+bool do_notify_parent(struct task_struct *tsk, int sig)
 ```
+- kill_pgrp : 被 tty driver 疯狂调用(tty, 永远的痛)
+  - `__kill_pgrp_info` : 对于 process group 的循环调用
+    - group_send_sig_info 
+      - do_send_sig_info
+        - do_send_sig_info
+          - send_signal
 
-## calculate_sigpending
+flush : 只是一些表示 pending 上的信号清理掉
+- flush_sigqueue_mask:780   
+- flush_signal_handlers:539 
+- `__flush_itimer_signals`:489
+- flush_sigqueue:461        
+- flush_signals:476         
+- flush_itimer_signals:512  
+
+## send_sig : 发送信号
+- send_sig
+  - send_sig_info
+    - do_send_sig_info
+      - send_signal
+        - `send_signal`
+          - `__sigqueue_alloc` : 向目标 task_struct 中间 pending 中间加入内容
+          - pending = (type != PIDTYPE_PID) ? &t->signal->shared_pending : &t->pending;
+          - list_add_tail(&q->list, &pending->list);
+          - sigaddset(&pending->signal, sig);
 
 ## jobctl
 
-tlpi chapter 34
+- [ ] tlpi chapter 34 
 
 ```c
 void task_join_group_stop(struct task_struct *task)
@@ -191,400 +258,3 @@ void task_join_group_stop(struct task_struct *task)
 	}
 }
 ```
-
-## architecture
-x86 提供的帮助是什么 ?
-
-## flush
-
-## send_signal
-处理的各种业务:
-1. queue 
-2. 
-
-## 向整个 group 发送信号
-
-```c
-int
-__group_send_sig_info(int sig, struct siginfo *info, struct task_struct *p)
-{
-	return send_signal(sig, info, p, PIDTYPE_TGID);
-}
-
-
-static int
-specific_send_sig_info(int sig, struct siginfo *info, struct task_struct *t)
-{
-	return send_signal(sig, info, t, PIDTYPE_PID);
-}
-
-
-/*
- * Nuke all other threads in the group.
- */
-int zap_other_threads(struct task_struct *p)
-{
-	struct task_struct *t = p;
-	int count = 0;
-
-	p->signal->group_stop_count = 0;
-
-	while_each_thread(p, t) {
-		task_clear_jobctl_pending(t, JOBCTL_PENDING_MASK);
-		count++;
-
-		/* Don't bother with already dead threads */
-		if (t->exit_state)
-			continue;
-		sigaddset(&t->pending.signal, SIGKILL);
-		signal_wake_up(t, 1);
-	}
-
-	return count;
-}
-
-
-/*
- * send signal info to all the members of a group
- */
-int group_send_sig_info(int sig, struct siginfo *info, struct task_struct *p,
-			enum pid_type type)
-{
-	int ret;
-
-	rcu_read_lock();
-	ret = check_kill_permission(sig, info, p);
-	rcu_read_unlock();
-
-	if (!ret && sig)
-		ret = do_send_sig_info(sig, info, p, type);
-
-	return ret;
-}
-```
-
-## force_sig_info
-
-
-## cred
-
-
-## kill_info 机制
-1500 行左右的内容
-
-
-## send_sigqueue
-
-```c
-int send_sigqueue(struct sigqueue *q, struct pid *pid, enum pid_type type)
-```
-
-
-## notify_parent
-
-> 其实应该分析的内容叫做 ptrace 机制
-
-```c
-/*
- * Let a parent know about the death of a child.
- * For a stopped/continued status change, use do_notify_parent_cldstop instead.
- *
- * Returns true if our parent ignored us and so we've switched to
- * self-reaping.
- */
-bool do_notify_parent(struct task_struct *tsk, int sig)
-```
-
-## API : kill
-
-```c
-/**
- *  sys_kill - send a signal to a process
- *  @pid: the PID of the process
- *  @sig: signal to be sent
- */
-SYSCALL_DEFINE2(kill, pid_t, pid, int, sig)
-{
-	struct kernel_siginfo info;
-
-	prepare_kill_siginfo(sig, &info);
-
-	return kill_something_info(sig, &info, pid); // todo
-}
-```
-
-
-## API : sigaction
-0. sigaction : Man @todo 没有看懂!
-1. sigaction 的 syscall 接口一共存在四个，没有仔细分析
-```c
-int do_sigaction(int sig, struct k_sigaction *act, struct k_sigaction *oact)
-{
-	struct task_struct *p = current, *t;
-	struct k_sigaction *k;
-	sigset_t mask;
-
-	if (!valid_signal(sig) || sig < 1 || (act && sig_kernel_only(sig)))
-		return -EINVAL;
-
-	k = &p->sighand->action[sig-1];
-
-	spin_lock_irq(&p->sighand->siglock);
-	if (oact)
-		*oact = *k; // 简单的拷贝
-
-	sigaction_compat_abi(act, oact);
-
-	if (act) {
-		sigdelsetmask(&act->sa.sa_mask,
-			      sigmask(SIGKILL) | sigmask(SIGSTOP));
-		*k = *act; // 还是简单的拷贝
-		/*
-		 * POSIX 3.3.1.3:
-		 *  "Setting a signal action to SIG_IGN for a signal that is
-		 *   pending shall cause the pending signal to be discarded,
-		 *   whether or not it is blocked."
-		 *
-		 *  "Setting a signal action to SIG_DFL for a signal that is
-		 *   pending and whose default action is to ignore the signal
-		 *   (for example, SIGCHLD), shall cause the pending signal to
-		 *   be discarded, whether or not it is blocked"
-		 */
-		if (sig_handler_ignored(sig_handler(p, sig), sig)) { // 当这个handler 被注册为该信号被忽略，那么需要清理掉信号
-			sigemptyset(&mask); 
-			sigaddset(&mask, sig);
-			flush_sigqueue_mask(&mask, &p->signal->shared_pending);
-			for_each_thread(p, t)
-				flush_sigqueue_mask(&mask, &t->pending); // todo 居然存在两个 pending，有意思
-		}
-	}
-
-	spin_unlock_irq(&p->sighand->siglock);
-	return 0;
-}
-```
-2. 
-
-
-## flush : 辅助理解
-
-```c
-/*
- * Remove signals in mask from the pending set and queue.
- * Returns 1 if any signals were found.
- *
- * All callers must be holding the siglock.
- */
-static void flush_sigqueue_mask(sigset_t *mask, struct sigpending *s)
-{
-	struct sigqueue *q, *n;
-	sigset_t m;
-
-	sigandsets(&m, mask, &s->signal); // 判断当前是否存在 pending
-	if (sigisemptyset(&m))
-		return;
-
-	sigandnsets(&s->signal, &s->signal, mask); // 将该 bit 上清理掉
-	list_for_each_entry_safe(q, n, &s->list, list) {
-		if (sigismember(mask, q->info.si_signo)) { // 这个 pending 的 signal 就是 mask 上的 
-			list_del_init(&q->list);
-			__sigqueue_free(q); // 有意思
-		}
-	}
-}
-```
-
-## send_sig : 发送信号
-
-```c
-int
-send_sig(int sig, struct task_struct *p, int priv)
-{
-	return send_sig_info(sig, __si_special(priv), p);
-}
-
-#define __si_special(priv) \
-	((priv) ? SEND_SIG_PRIV : SEND_SIG_NOINFO)
-
-/*
- * These are for backward compatibility with the rest of the kernel source.
- */
-int send_sig_info(int sig, struct kernel_siginfo *info, struct task_struct *p)
-{
-	/*
-	 * Make sure legacy kernel users don't send in bad values
-	 * (normal paths check this in check_kill_permission).
-	 */
-	if (!valid_signal(sig))  // 测试 sig 数值范围要求
-		return -EINVAL;
-
-	return do_send_sig_info(sig, info, p, PIDTYPE_PID);
-}
-
-int do_send_sig_info(int sig, struct kernel_siginfo *info, struct task_struct *p, // lock 封装
-			enum pid_type type)
-{
-	unsigned long flags;
-	int ret = -ESRCH;
-
-	if (lock_task_sighand(p, &flags)) {
-		ret = send_signal(sig, info, p, type);
-		unlock_task_sighand(p, &flags);
-	}
-
-	return ret;
-}
-
-static int send_signal(int sig, struct kernel_siginfo *info, struct task_struct *t,
-			enum pid_type type)
-{
-	/* Should SIGKILL or SIGSTOP be received by a pid namespace init? */
-	bool force = false;
-
-	if (info == SEND_SIG_NOINFO) {
-		/* Force if sent from an ancestor pid namespace */
-		force = !task_pid_nr_ns(current, task_active_pid_ns(t));
-	} else if (info == SEND_SIG_PRIV) {
-		/* Don't ignore kernel generated signals */
-		force = true;
-	} else if (has_si_pid_and_uid(info)) { // todo 虽然不知道是什么意思，猜测是这些 signal 中间持有 pid 和 uid
-		/* SIGKILL and SIGSTOP is special or has ids */
-		struct user_namespace *t_user_ns;
-
-		rcu_read_lock();
-		t_user_ns = task_cred_xxx(t, user_ns); // todo 看不懂
-		if (current_user_ns() != t_user_ns) {
-			kuid_t uid = make_kuid(current_user_ns(), info->si_uid);
-			info->si_uid = from_kuid_munged(t_user_ns, uid);
-		}
-		rcu_read_unlock();
-
-		/* A kernel generated signal? */
-		force = (info->si_code == SI_KERNEL);
-
-		/* From an ancestor pid namespace? */
-		if (!task_pid_nr_ns(current, task_active_pid_ns(t))) {
-			info->si_pid = 0;
-			force = true;
-		}
-	}
-	return __send_signal(sig, info, t, type, force);
-}
-
-static int __send_signal(int sig, struct kernel_siginfo *info, struct task_struct *t, // 终极 boss，创建 sigqueue 插入队列，通知一下受害人
-			enum pid_type type, bool force)
-{
-	struct sigpending *pending;
-	struct sigqueue *q;
-	int override_rlimit;
-	int ret = 0, result;
-
-	assert_spin_locked(&t->sighand->siglock);
-
-	result = TRACE_SIGNAL_IGNORED;
-	if (!prepare_signal(sig, t, force))
-		goto ret;
-
-	pending = (type != PIDTYPE_PID) ? &t->signal->shared_pending : &t->pending;
-	/*
-	 * Short-circuit ignored signals and support queuing
-	 * exactly one non-rt signal, so that we can get more
-	 * detailed information about the cause of the signal.
-	 */
-	result = TRACE_SIGNAL_ALREADY_PENDING;
-	if (legacy_queue(pending, sig))
-		goto ret;
-
-	result = TRACE_SIGNAL_DELIVERED;
-	/*
-	 * Skip useless siginfo allocation for SIGKILL and kernel threads.
-	 */
-	if ((sig == SIGKILL) || (t->flags & PF_KTHREAD))
-		goto out_set;
-
-	/*
-	 * Real-time signals must be queued if sent by sigqueue, or
-	 * some other real-time mechanism.  It is implementation
-	 * defined whether kill() does so.  We attempt to do so, on
-	 * the principle of least surprise, but since kill is not
-	 * allowed to fail with EAGAIN when low on memory we just
-	 * make sure at least one signal gets delivered and don't
-	 * pass on the info struct.
-	 */
-	if (sig < SIGRTMIN)
-		override_rlimit = (is_si_special(info) || info->si_code >= 0);
-	else
-		override_rlimit = 0;
-
-	q = __sigqueue_alloc(sig, t, GFP_ATOMIC, override_rlimit); // 创建 sigqueue 
-	if (q) {
-		list_add_tail(&q->list, &pending->list); // 挂到 pending->list 上
-		switch ((unsigned long) info) {
-		case (unsigned long) SEND_SIG_NOINFO: // 初始化 sigqueue 的 info
-			clear_siginfo(&q->info);
-			q->info.si_signo = sig;
-			q->info.si_errno = 0;
-			q->info.si_code = SI_USER;
-			q->info.si_pid = task_tgid_nr_ns(current,
-							task_active_pid_ns(t));
-			rcu_read_lock();
-			q->info.si_uid =
-				from_kuid_munged(task_cred_xxx(t, user_ns),
-						 current_uid());
-			rcu_read_unlock();
-			break;
-		case (unsigned long) SEND_SIG_PRIV:
-			clear_siginfo(&q->info);
-			q->info.si_signo = sig;
-			q->info.si_errno = 0;
-			q->info.si_code = SI_KERNEL;
-			q->info.si_pid = 0;
-			q->info.si_uid = 0;
-			break;
-		default:
-			copy_siginfo(&q->info, info);
-			break;
-		}
-	} else if (!is_si_special(info) &&
-		   sig >= SIGRTMIN && info->si_code != SI_USER) { // todo 这对应什么情况 ?
-		/*
-		 * Queue overflow, abort.  We may abort if the
-		 * signal was rt and sent by user using something
-		 * other than kill().
-		 */
-		result = TRACE_SIGNAL_OVERFLOW_FAIL;
-		ret = -EAGAIN;
-		goto ret;
-	} else {
-		/*
-		 * This is a silent loss of information.  We still
-		 * send the signal, but the *info bits are lost.
-		 */
-		result = TRACE_SIGNAL_LOSE_INFO;
-	}
-
-out_set:
-	signalfd_notify(t, sig); // todo
-	sigaddset(&pending->signal, sig);
-
-	/* Let multiprocess signals appear after on-going forks */
-	if (type > PIDTYPE_TGID) { // todo 
-		struct multiprocess_signals *delayed;
-		hlist_for_each_entry(delayed, &t->signal->multiprocess, node) {
-			sigset_t *signal = &delayed->signal;
-			/* Can't queue both a stop and a continue signal */
-			if (sig == SIGCONT)
-				sigdelsetmask(signal, SIG_KERNEL_STOP_MASK);
-			else if (sig_kernel_stop(sig))
-				sigdelset(signal, SIGCONT);
-			sigaddset(signal, sig);
-		}
-	}
-
-	complete_signal(sig, t, type); // todo 具体有待分析
-ret:
-	trace_signal_generate(sig, info, t, type != PIDTYPE_PID, result);
-	return ret;
-}
-```
-
