@@ -170,6 +170,36 @@ driver’s record of the foreground process group.
 * ***Example program: demonstrating the operation of job control***
 
 #### 34.7.3 Handling Job-Control Signals
+> [SIGSTOP 和 SIGTSTP 的区别](https://stackoverflow.com/questions/11886812/what-is-the-difference-between-sigstop-and-sigtstp) : 一个是不可 ignore 的 STOP 信号，一个是
+
+> [信号是禁止 re-entrant 的，或者说，在处理一个信号的时候，这个信号会自动被屏蔽](https://stackoverflow.com/questions/8941001/signal-handler-why-it-is-blocked-while-handling-the-same-signal)
+> 但是我们可以在 handler 中间再次 unblock 这个信号。
+
+> 首先修改 SIGTSTP 的信号，接受到信号之后，将 SIGTSTP 的 handler 设置为默认，然后重新发射信号，unblock 该信号(此时还在 SIGTSTP 的 handler 中间，所以自动屏蔽了), 导致 process 被 suspend，直到收到 SIGCONT 之后，才可以继续
+
+> - 所以，这种使用 SIGTSTP 产生 SIGTSTP 信号的方法意义在于 ?
+> - 因为，有的程序需要注册特殊 SIGTSTP handler，同时维持自己被 STOP, 被 SIGSTOP 让 parent 无法正确的判断 child 被 STOP 的原因，所以正确的操作是让接下来发送 SIGTSTP 来 STOP 自己
+
+* ***Dealing with ignored job-control and terminal-generated signals***
+
+#### 34.7.4 Orphaned Process Groups (and SIGHUP Revisited)
+Put another way, a process group is not orphaned if at least one of its members has a parent in the same session but in a different process group.
+
+**A process may send SIGCONT to any other process in the same session**, but if the child is in a different session, the normal rules for sending signals apply
+(Section 20.5), so the parent may not be able to send a signal to the child if the
+child is a privileged process that has changed its credentials.
+
+To prevent scenarios such as the one described above, SUSv3 specifies that if a process group becomes orphaned and has any stopped members, then all members of the
+group are sent a SIGHUP signal, to inform them that they have become disconnected
+from their session, followed by a SIGCONT signal, to ensure that they resume execution. If the orphaned process group doesn’t have any stopped members, no signals
+are sent.
+
+> 注意，前提其中存在 process 被 STOP 的, 否则也不会发生信号
+
+> 一直都存在的问题 :
+> 如果 child 被 stop 了，然后 parent exit，那么 child 将会一直都处于 STOP 的状态, 所以在形成 orphan 的时候，需要发射两个信号出来
+
+> 其实，在一般的情况下，如果一个 orphan 如果被各种原因 STOP, 那么还是 GG, , 这是程序员的事情
 
 ## 34.8 Summary
 Sessions and process groups (also known as jobs) form a two-level hierarchy of processes:

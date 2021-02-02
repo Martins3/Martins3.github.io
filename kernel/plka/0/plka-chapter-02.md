@@ -1,5 +1,9 @@
 # Professional Linux Kernel Architecture : Process Management and Scheduling
 
+> 基于章节2
+> 2.1 - 2.4 处理process的生老病死
+> 2.5 - 2.8 scheduler 的内容
+
 ## KeyNote
 1. Notice that processes connected with pipes are contained in a process group.
     1. 这是一定的吗? 为什么不检查一下其中 pipe.c 的实现

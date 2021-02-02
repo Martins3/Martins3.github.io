@@ -1,7 +1,5 @@
 # PROCESS GROUPS, SESSIONS, AND JOB CONTROL 
 
-和 tlpi chapter 34 对照阅读
-
 ## task_struct::thread_group
 
 signal.h 中的三个辅助函数:

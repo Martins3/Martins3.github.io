@@ -49,7 +49,6 @@
 - [kthread](#kthread)
 - [first user process](#first-user-process)
 - [TODO](#todo)
-- [session](#session)
 - [process group](#process-group)
 - [sched_class ops](#sched_class-ops)
     - [enqueue](#enqueue)
@@ -1604,13 +1603,6 @@ https://phoenixnap.com/kb/create-a-sudo-user-on-debian : 首先搞清楚这种�
 > 3. https://stackoverflow.com/questions/2711044/why-doesnt-linux-use-the-hardware-context-switch-via-the-tss
 > > 再次印证TSS 在 context switch 中间并没有什么作用，但是 @todo TSS 中间存储了ESP0 和 SS0 用于实现interrupt
 
-
-## session
-- [ ] maybe a third time to read *Linux Programming Interface*
-
-
-- [ ] set_sid()
-
 ## process group
 - [ ] maybe build a shell: https://github.com/danistefanovic/build-your-own-x#build-your-own-shell, then process group is simple
 
@@ -1770,7 +1762,6 @@ struct fork_frame {
 - [ ] 有一个观测程序叫做 : ipcs
 - [ ] 以前整理过的 ipc 和 namespace 相关的放到这里来
 
-[^1]: [blog : Evolution of the x86 context switch in Linux](http://www.maizure.org/projects/evolution_x86_context_switch_linux/)
 [^2]: https://man7.org/linux/man-pages/man7/signal.7.html 
 [^3]: https://0xax.gitbooks.io/linux-insides/content/SysCall/linux-syscall-2.html
 [^4]: https://blog.packagecloud.io/eng/2016/04/05/the-definitive-guide-to-linux-system-calls/#64-bit-f

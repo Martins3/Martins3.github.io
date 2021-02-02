@@ -240,7 +240,6 @@ flush : 只是一些表示 pending 上的信号清理掉
           - sigaddset(&pending->signal, sig);
 
 ## jobctl
-
 - [ ] tlpi chapter 34 
 
 ```c
@@ -258,3 +257,23 @@ void task_join_group_stop(struct task_struct *task)
 	}
 }
 ```
+
+- [ ] thread 被拉入到同一个 thread group 在于 fork 的时候控制，但是 process group 是如何创建起来的
+  - [ ] 同样的问题也在于 session group，我怎么知道新创建的 process 是否在另一个 session ?
+
+/home/maritns3/core/arm64-linux/include/linux/sched/jobctl.h
+
+- [ ] `task->jobctl`
+
+```c
+bool task_set_jobctl_pending(struct task_struct *task, unsigned long mask);
+void task_clear_jobctl_trapping(struct task_struct *task);
+void task_clear_jobctl_pending(struct task_struct *task, unsigned long mask);
+```
+
+[Daemons normally disassociate themselves from any controlling terminal by creating a new session without one](https://stackoverflow.com/questions/6548823/use-and-meaning-of-session-and-process-group-in-unix)
+
+https://stackoverflow.com/questions/9305992/if-threads-share-the-same-pid-how-can-they-be-identified
+课代表总结：
+用户看到的是tgid: thread group id
+kernel看到的是pid

@@ -1,6 +1,9 @@
 ## exec
 说实话，都是 快速的阅读 程序员的自我修养 ，现在对于 elf 格式各种的恐惧，但是静态链接怕个屁。
 
+- [ ]  chapter 27 28 和 ulk execution program 那个可以一起看
+- [ ] /home/maritns3/core/vn/kernel/plka/syn/fs/binfmt_elf.md 之前的总结
+
 我想知道的问题 :
 - [ ] 执行 exec 的进程空间是如何被释放以及替换的 ? 
 - [ ] elf 格式解析了，靠什么将代码加载进来的

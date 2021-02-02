@@ -4,6 +4,9 @@
 
 https://www.embecosm.com/appnotes/ean4/embecosm-howto-rsp-server-ean4-issue-2.html#id3056712
 
+- [ ] strace 是如何实现的 ?
+
+
 ## checklist
 1. strace 实现 : PTRACE_SYSCALL
 2. wait + signal 实现 ptracee 和 ptracer 之间的交互，利用 architecture 来实现　PTRACE_SYSCALL , PTRACE_SINGLESTEP
