@@ -1,3 +1,5 @@
+do_exit
+
 # kernel/exit.c
 
 ## KeyNote

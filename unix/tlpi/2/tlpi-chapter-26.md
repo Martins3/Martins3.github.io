@@ -5,8 +5,6 @@ processes changes state—when the child terminates or *is stopped by a signal*.
 chapter describes two techniques used to monitor child processes: the `wait()` system
 call (and its variants) and the use of the `SIGCHLD` signal.
 
-- [ ] parent can monitor child process's stop ?
-
 
 ## 26.1 Waiting on a Child Process
 
@@ -88,5 +86,3 @@ but somewhat less portably, *a process may elect to set the disposition of SIGCH
 `SIG_IGN`, in which case the status of terminated children is immediately discarded (and
 thus can’t later be retrieved by the parent), and the children don’t become zombies.*
 > @todo 哪里分析过的 ?
-
-

@@ -5,6 +5,8 @@
     1. https://stackoverflow.com/questions/3413470/what-is-stdmove-and-when-should-it-be-used
 3. https://stackoverflow.com/questions/11833070/when-is-the-use-of-stdref-necessary/45823556#45823556
 
+4. 那些高级话题之类就算了吧，cpp primer plus 的内容看懂就很不错了啊!
+
 - [ ] 先把现有的笔记整理一下就很不错了啊 !
 
 - [ ] move

@@ -45,6 +45,15 @@ static inline bool thread_group_leader(struct task_struct *p)
 
 - [ ] kernel_exec
 
+## TODO
+- [ ] ptrace
+- [ ] wait / exit
+- [ ] signal 的融汇贯通
+- [ ] workqueue / softirq
+- [ ] kthread
+  - https://github.com/cirosantilli/linux-kernel-module-cheat/blob/e496f5d538f893d94b24f2779479f071cec40a5d/kernel_module/wait_queue.c 里面的几个 kthread 函数
+- [ ] pid
+
 ## TIF_NEED_RESCHED
 Four reference of TIF_NEED_RESCHED
 ```c
