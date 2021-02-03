@@ -277,3 +277,5 @@ https://stackoverflow.com/questions/9305992/if-threads-share-the-same-pid-how-ca
 课代表总结：
 用户看到的是tgid: thread group id
 kernel看到的是pid
+
+## wait
