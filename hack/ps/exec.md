@@ -65,7 +65,8 @@ static struct linux_binfmt elf_format = {
             - load_elf_interp : 将 /lib64/ld-linux-x86-64.so.2 加载进去
             - create_elf_tables
             - start_thread
-
+        - ptrace_event : If the current program is being ptraced, a SIGTRAP signal is sent to it after a successful execve().
+          - send_sig(SIGTRAP, current, 0);
 
 - [ ] de_thread 的实现非常诡异啊
 

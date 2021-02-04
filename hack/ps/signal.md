@@ -258,6 +258,9 @@ void task_join_group_stop(struct task_struct *task)
 }
 ```
 
+- [ ] task_clear_jobctl_pending
+
+
 - [ ] thread 被拉入到同一个 thread group 在于 fork 的时候控制，但是 process group 是如何创建起来的
   - [ ] 同样的问题也在于 session group，我怎么知道新创建的 process 是否在另一个 session ?
 

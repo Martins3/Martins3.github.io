@@ -1,8 +1,3 @@
----
-title: Strace
-date: 2018-04-19 18:09:37
-tags: kernel
----
 strace is a powerful command line tool for debugging and trouble shooting programs in Unix-like operating systems such as Linux. It captures and records all system calls made by a process and the signals received by the process.
 It displays the name of each system call together with its arguments enclosed in a parenthesis and its return value to standard error; you can optionally redirect it to a file as well.
 

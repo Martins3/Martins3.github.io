@@ -29,9 +29,6 @@
     - [stack's copy](#stacks-copy)
 - [stack](#stack)
     - [x86 stack](#x86-stack)
-- [wait](#wait)
-- [exit.c](#exitc)
-    - [do_exit](#do_exit)
 - [pidfd](#pidfd)
 - [pid](#pid)
 - [green thread](#green-thread)
@@ -937,31 +934,6 @@ some x86 kernel notes:[^5]
 
 - [ ] fine, too many difficult material related with **IDT**, **IST**, **TSS**
   - [ ] may review the article later
-
-## wait
-- [ ] read section one of chapter 26 before start analyze kernel code here
-/home/maritns3/core/vn/os/tlpi/2/tlpi-chapter-26.md
-
-## exit.c
-2. wait kill zombie orphan yeild 的代码的验证
-3. waitid 的含义, 回答此问题 : https://stackoverflow.com/questions/13853524/why-doesnt-waitid-block-until-child-terminates
-
-waitid -> kernel_waitid -> .... -> do_wait -> ...
--> wait_task_stopped
--> wait_task_continued
-
-do_wait : 构建 workqueue，call do_wait_thread
-
-- [ ] what's difference between exit and exit_group
-
-
-#### do_exit
-process 的各种资源的回收，最后通过 do_task_dead 将自己 schedule 出去法
-
-其中 exit_mm 释放 process 持有的各种 prcess
-
-TODO:
-1. do_exit 是用户 process 结束方法，那么 kernel thread 是如何结束的 ?
 
 ## pidfd
 https://man7.org/linux/man-pages/man2/pidfd_open.2.html

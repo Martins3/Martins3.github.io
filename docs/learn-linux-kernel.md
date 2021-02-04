@@ -1,62 +1,67 @@
 # 内核学习经验
+最重要的问题, 你为什么要去学习内核 ? 可以参考[陈硕](https://www.zhihu.com/question/20541014/answer/93312920)的回答。
 
-## 为什么要学习Linux内核
-我反对无差别的鼓励学习Linux内核。虽然学习内核的好处多不胜数，但是投入的时间学习其他的东西也许收获更大。
-本科的学习大学物理，教育部的想法是大学物理这么基础的东西，学了肯定没有什么坏处，可以提升一个人的底蕴，
-但是大学物理和大学物理试验(大学物理实验的报告非常的官僚主义)几乎吃掉整个大一的时间，而操作系统，计算机网络，组成原理等专业核心课 却被全部塞到一个学期上。大学物理由于在平时的工作学习中间没有使用的余地，被忘得一干二净，而专业核心课学的不牢固，让进一步的工作学习都受阻。
-学习内核就像是学习物理，如果你是物理专业的，投入再多时间也不为过，如果你是其他专业的，应该依据专业相关程度进行学习，毕竟人的精力是有限的。
+不同的人基础不同，需求不同，知识范围不同，看内核的方式也是不尽相同的，下面谈谈我的理解。
 
-不同的人的基础不同，从事的方向不同，对于是否学习，学习什么，学习到什么样的程度，其目标应该是不同的。
-我希望大家不要在公众号看了一篇类似于，"为什么程序员都必须懂点Linux内核" 之类的文章就非常的紧张，觉得自己不懂内核就怎么样了。
-知乎上有一个[回答](https://www.zhihu.com/question/20541014/answer/93312920)，陈硕的回答非常好，大家可以参考一下。
+## 环境准备
+1. 阅读环境准备
 
-## 阅读代码工具
-我自己是使用vim阅读代码，具体如何配置，我之前写过一个相关的[文章](https://www.jianshu.com/p/249850f2cc64)，其实使用什么编辑器无所谓，但是一定要有**定义**和**引用**查找的功能。
-图形化的工具，我使用过[sourcetrail](https://www.sourcetrail.com/)，效果很不错，就是吃配置。
+首先你要保证你的操作系统是 linux 内核，让自己对于 kernel 支撑起来的用户态环境有一个感性的认识。
 
-## 学习的路线
-github 有一个叫[low level programming university](https://github.com/gurugio/lowlevelprogramming-university/blob/master/README_cn.md)的项目中有讲到学习Linux内核，也可以参考一下，现在我谈谈自己的想法。
+2. 阅读工具
 
-本科操作系统课程[Operating Systems: Three Easy Pieces](http://pages.cs.wisc.edu/~remzi/OSTEP/) 是基础，有了理论基础，不要着急，可以开始掌握一个简化版的内核，比如linux0.1.1，ucore 或者xv6。
-清华的[ucore](https://github.com/chyyuu/ucore_os_lab) 试验几乎是Linux内核的简化版，完成ucore 可以获取大致的脉络，个人认为写的很好的。如果这种只有两三万行的小工程不看就直接看一个成熟的高版本内核，会非常容易迷失。
+具体什么类型的工具关系不大，但是一定要保证可以高效查找**定义**和**引用**, 如果靠 grep 查找，一般用不了多久就会放弃吧。
 
-[Linux Kernel Development](https://book.douban.com/subject/3291901/)(以下简称lkd) 的作用是让你对于Linux内核有一个大致的了解，可以简单翻翻。
-然后就可以阅读[Understand Linux Kernel](https://book.douban.com/subject/1767120/)(一下简称为ULK), 这是大家公认的经典教材，
-这本书的问题在于其中的内容有点老，但是我个人认为写的比 
-[Professional Linux Kernel Architecture](https://book.douban.com/subject/3244090/)(一下简称为PLKA)好，plka为了避免偏向于某一个架构，对于架构相关的内容几乎都是一笔带过，所以有的内容显得不是非常的通透，
-我个人感觉ULK更加强调设计思想，PLKA有时候有点像是对于代码的罗列。
+我自己是使用 vim 阅读代码，配置在[这里](https://github.com/Martins3/My-Linux-config)
 
-**当 ULK 看个大概之后，我相信你已经可以靠 LWN 和kernel documentation 独立自助解决你的问题了。**
+图形化的工具，我使用过[sourcetrail](https://www.sourcetrail.com/)，视觉效果很不错，就是吃配置。
 
-## 学习经验和体会
+## 理论基础
+- [深入理解计算机体系结构](https://book.douban.com/subject/26912767/) 让你对于计算机体系结构有一个大致了解, 否则在内核中间的 cache, TLB, page walk 之类很难理解。
+- 本科操作系统课程, 比如[Operating Systems: Three Easy Pieces](http://pages.cs.wisc.edu/~remzi/OSTEP/) 可以让知道 kernel 在计算机体系结构的角色，kernel 的主要功能是什么。
+- 一个上万行的小型操作系统，比如清华的[ucore](https://github.com/chyyuu/ucore_os_lab)，可以让你对于 os 的基本知识融汇贯通。
 
-#### 使用什么版本的内核
-我自己总是在使用最新的内核，但是我建议使用贴合 ULK 的版本，等到 ULK 理解差不多之后，其实看最近的内核已经很容易了。
+## 内核学习
+我个人认为需要将**理解用户态**, **读书**, **分析源代码**, **写代码**。
+- 理解用户态是基础，好在用户态的资料一般都丰富，一般问题不大。
+- 读书可以快速掌握设计思路，但是有时候感觉像是背字典一样，作者往往只会将代码中间的骨架挑出来讲解，一些连接这些骨架的血肉被忽略，阅读的时候总会感觉哪里缺一点什么。
+- 分析源代码可以让你掌握各种细节，但是如果连整体概念都没有，这会让自己陷入到细节的汪洋大海之中。
+- 写代码我感觉是最好的方式，主要是相关资源较少，只是覆盖了内核较小的一部分。
 
-阅读最近的内核的问题在于，其内容和 ULK 的描述差距太大了，以至于 ULK 的参考价值大大消减。
+### 用户层需要理解
+内核的核心模块(mm, process, fs 等)都是或多或少有用户态的知识点。推荐[The Linux Programming Interface](https://book.douban.com/subject/4292217/) 作为查询手册。
 
-#### 用户层需要理解
-内核中间几乎所有的章节都是有对应的用户态的知识点。推荐[The Linux Programming Interface](https://book.douban.com/subject/4292217/)(一下简称tlpi)，有人评价此书比APUE强。不建议首先通读本书再去学习内核，这一本书是一个手册一样的东西，内容详尽，也非常厚，看一遍不是一件容易的事情，搞不好后面看完前面忘，所以我建议，内核学到哪里，在本书对应的章节看到哪里即可。
+### 读书
+Robert Love 的[Linux Kernel Development](https://book.douban.com/subject/3291901/) 可以让你对于 Linux 内核有一个大致的了解。
+然后就可以阅读[Understand Linux Kernel](https://book.douban.com/subject/1767120/), 这是大家公认的经典教材，唯一的问题和现在和内核有些出入。
 
-#### 及早确定内核文件树布局
-刚刚接触内核，对于内核的理解就是代码量巨大，非常的复杂，感觉自己被扔到一个无边无尽的大海中间一样，学起来非常的压抑。更加的糟糕的是，对于新学习的内容，不知道其在内核中间的位置，无法确定和已经学习的内容的关系。
-所以，我建议及早确定内核文件树布局。
+[奔跑吧Linux内核](https://book.douban.com/subject/35283154/) 我阅读了其中部分章节，感觉还行。
 
-方法很简单，对于 mm/ kernel/ fs/ 这几个文件夹中间的文件逐个分析，看看里面都是在做什么的，找到其中的系统调用，搞清楚这些系统调用的使用方法。
+如果你恰好有一台龙芯电脑，并且想要了解 MIPS 内核的实现，[用"芯"探核 基于龙芯的 Linux 内核探索解析](https://book.douban.com/subject/35166926/) 可以说相当的不错。
 
-#### 理解汇编
-如果不理解汇编语言，最后对于操作系统的理解用于只会是夹生的状态，这一部分的学习我推荐[这个项目](https://github.com/cirosantilli/x86-assembly-cheat)
+### 代码阅读
+选择哪一个版本其实不是太大的问题，因为内核的核心设计思路基本不变，最好保证你的版本和阅读材料一致。
 
-#### 写代码才是学习方法
+### 写代码
 [Linux Device Driver](https://lwn.net/Kernel/LDD3/)(ldd3)是公认的Linux设备驱动最佳教材之一，该书着重介绍了设备驱动，但是同时也介绍了大量内核的其他方面的知识，例如中断，时间，锁等等。
 可惜其中的代码非常的老，有人对于 ldd3 的代码向高版本内核进行了移植，[代码](https://github.com/martinezjavier/ldd3)在github上。
 
-我个人更加推荐[这个项目](https://linux-kernel-labs.github.io)，以试验的形式学习，各种环境配置齐全，文档详细，更新活跃。
+我个人更加推荐[linux kernel labs](https://linux-kernel-labs.github.io)，以试验的形式学习，各种环境配置齐全，文档详细，更新活跃。
 
 国内的有人做的项目 [tinyclub linux lab](https://github.com/tinyclub/linux-lab) 虽然没有阅读过，但是感觉还不错。
 
-#### 获取最新的文档
-学习内核，你会发现很多书的内容都非常老，Documentation/下很多文档也非常老，最新的文档都在 https://lwn.net/Kernel/Index/ 
+## blog
+[lwn](https://lwn.net/Kernel/Index/) 是最权威，最丰富的资料来源，下面的一些 blog 也不错:
+
+- [LoyenWang](https://www.cnblogs.com/LoyenWang/) : 强烈推荐
+- [wowotech](http://www.wowotech.net/)
+- [linux inside](https://0xax.gitbooks.io/linux-insides/content/)
+- [low level programming university](https://github.com/gurugio/lowlevelprogramming-university/blob/master/README_cn.md)
+- [知乎专栏:术道经纬](https://zhuanlan.zhihu.com/p/93289632)
+- [gatieme 的笔记](https://github.com/gatieme/LDD-LinuxDeviceDrivers)
+- [dsahern's blog](https://people.kernel.org/dsahern/)
+- [terenceli](https://terenceli.github.io/archive.html)
+- [kernelgo](https://kernelgo.org/)
 
 #### 学习资源
 我在自己的学习过程中间收集了一些资源，放到了[这里](https://github.com/kernelrookie/doc/blob/master/awesome-kernel.md), 可以作为参考。

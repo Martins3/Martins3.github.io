@@ -15,20 +15,40 @@ options.
 
 > 信号来自于 architecture 相关的代码: 比如 strace 的syscall 的，当设置 TIF 上的相关的flags，然后触发
 
-[年轻人的第一个 gdb](https://blog.tartanllama.xyz/writing-a-linux-debugger-setup/)
 [GDB Remote Serial Protocol](https://www.embecosm.com/appnotes/ean4/embecosm-howto-rsp-server-ean4-issue-2.html#id3056712)
 [strace](https://github.com/strace/strace)
 
 - [ ] PTRACE_SYSCALL
 - [ ] PTRACE_SINGLESTEP
 - [ ] PTRACE_ATTACH
+  - [ ] 和 PTRACE_ME 的功能重复了 ?
+- [ ] PTRACE_ME  : 让自己的 parent 作为 trace 自己的工具
+  - `__do_sys_ptrace`
+    - ptrace_traceme
+      - ptrace_link
+        - `child->parent = new_parent;`
+
+关键变量:
+```c
+struct task_struct {
+	/*
+	 * 'ptraced' is the list of tasks this task is using ptrace() on.
+	 *
+	 * This includes both natural children and PTRACE_ATTACH targets.
+	 * 'ptrace_entry' is this task's link on the p->parent->ptraced list.
+	 */
+	struct list_head		ptraced;
+	struct list_head		ptrace_entry;
+```
+
+
 
 ## checklist
 1. strace 实现 : PTRACE_SYSCALL
 2. wait + signal 实现 ptracee 和 ptracer 之间的交互，利用 architecture 来实现　PTRACE_SYSCALL , PTRACE_SINGLESTEP
 
 3. Man ptrace(2)
-4. plka 的代码
+4. plka 的说明书
 
 4. 如何在运行的过程中间 attach ? (似乎总是动态运行的)
 
@@ -262,4 +282,20 @@ int ptrace_readdata(struct task_struct *tsk, unsigned long src, char __user *dst
 int ptrace_writedata(struct task_struct *tsk, char __user *src, unsigned long dst, int len)
 ```
 
+
+## [年轻人的第一个 gdb](https://blog.tartanllama.xyz/writing-a-linux-debugger-setup/)
+
+- [ ] fix the bug out of LLVM 10
+
+- [ ] personality : 进一步的调查一下
+
+- [ ] initialise_load_address
+
+- [x] break 靠什么通过函数知道我们将会放置的地址
+  - dwarf
+  
+```c
+minidbg> break main
+Set breakpoint at address 0x4011b8
+```
 
