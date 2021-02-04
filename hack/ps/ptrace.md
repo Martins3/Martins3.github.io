@@ -18,17 +18,30 @@ options.
 [GDB Remote Serial Protocol](https://www.embecosm.com/appnotes/ean4/embecosm-howto-rsp-server-ean4-issue-2.html#id3056712)
 [strace](https://github.com/strace/strace)
 
+> When  a  (possibly  multithreaded) process receives a stopping signal, all threads stop. 
+> 这是真的吗 ？ (是的)
+
+- [ ] `task_struct->sighand` 是做什么的 ? / 查一下 understanding linux kernel
+  - [ ] 既然所有人都是共享 sighand
+
+- [ ] group stop
+
 - [ ] PTRACE_SYSCALL
 - [ ] PTRACE_SINGLESTEP
 - [ ] PTRACE_ATTACH
-  - [ ] 和 PTRACE_ME 的功能重复了 ?
+  - [x] PTRACE_ATTACH 和 PTRACE_SEIZE 的区别似乎只是在是否会 STOP process 上
+  - `__do_sys_ptrace`
+    - ptrace_attach
+      - ptrace_link
+        - send_sig_info(SIGSTOP, SEND_SIG_PRIV, task);
 - [ ] PTRACE_ME  : 让自己的 parent 作为 trace 自己的工具
   - `__do_sys_ptrace`
     - ptrace_traceme
       - ptrace_link
-        - `child->parent = new_parent;`
+
 
 关键变量:
+1. 在 `ptraced` 上挂载被 trace 的进程的 ptrace_entry
 ```c
 struct task_struct {
 	/*
@@ -60,6 +73,9 @@ struct task_struct {
 
 6. task->real_parent 的作用还有什么 ?
     1. plka : P845 中间 STOP 的 step 4
+
+- [ ] ptrace 和 dune 有相似之处，ptrace 让被 tracee 的可以执行任何代码 !
+  - [ ] 能不能通过 ptrace 来控制处于 host 的 process，然后让其动态修改执行路径, 来执行 host_loop
 
 ##  ref && doc
 
@@ -108,8 +124,6 @@ struct task_struct {
 > 
 >        Permission to perform a PTRACE_SEIZE is governed by a ptrace access mode PTRACE_MODE_ATTACH_REALCREDS check; see below.
 
-
-这里是描述了三种方法吗 ? fork execve ，PTRACE_SEIZE 和 PTRACE_ATTACH 
 
 ## kernel/trace/ 下的内容
 1. tracefs ?
@@ -284,18 +298,7 @@ int ptrace_writedata(struct task_struct *tsk, char __user *src, unsigned long ds
 
 
 ## [年轻人的第一个 gdb](https://blog.tartanllama.xyz/writing-a-linux-debugger-setup/)
-
-- [ ] fix the bug out of LLVM 10
+利用的 ptrace 相当有限，不过其中对于 dwarf 和 elf 还是存在不少有意思的探讨的.
 
 - [ ] personality : 进一步的调查一下
-
-- [ ] initialise_load_address
-
-- [x] break 靠什么通过函数知道我们将会放置的地址
-  - dwarf
-  
-```c
-minidbg> break main
-Set breakpoint at address 0x4011b8
-```
 

@@ -30,6 +30,7 @@ https://github.com/ssloy/tinyraycaster : 又是这个人，一周之类做个游
 https://github.com/ssloy/tinyraytracer : 其实这个人搞了一堆这种有意思的项目
 
 
+https://gabrielgambetta.com/computer-graphics-from-scratch/ : 
 # 上课内容
 
 
