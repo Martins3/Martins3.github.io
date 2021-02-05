@@ -18,14 +18,15 @@ options.
 [GDB Remote Serial Protocol](https://www.embecosm.com/appnotes/ean4/embecosm-howto-rsp-server-ean4-issue-2.html#id3056712)
 [strace](https://github.com/strace/strace)
 
-> When  a  (possibly  multithreaded) process receives a stopping signal, all threads stop. 
-> 这是真的吗 ？ (是的)
+- [x] `task_struct->sighand` 是做什么的 ? 
+  - thread group 的 thread 全部共享一个 sighand
+  - 但是不同的 process 也可以共享 sighand, 所以 `task_struct->sighand` 可能指向 `task_struct->sighanl->sighand`, 也可以指向 sighand
+  - > Since Linux 2.6.0, the flags mask must also include CLONE_VM if CLONE_SIGHAND is specified
 
-- [ ] `task_struct->sighand` 是做什么的 ? / 查一下 understanding linux kernel
-  - [ ] 既然所有人都是共享 sighand
 
 - [ ] group stop
-
+- PTRACE_SETOPTIONS
+  - 主要是告诉 tracee 遇到一些事件停下来，通知 tracer 可以 waitpid 获取信息了
 - [ ] PTRACE_SYSCALL
 - [ ] PTRACE_SINGLESTEP
 - [ ] PTRACE_ATTACH
@@ -53,8 +54,43 @@ struct task_struct {
 	struct list_head		ptraced;
 	struct list_head		ptrace_entry;
 ```
+The state
+of the tracee after PTRACE_LISTEN is somewhat of a gray area: it is not in any ptrace-stop (ptrace commands won't work on it,  and
+it  will  deliver  waitpid(2) notifications), but it also may be considered "stopped" because it is not executing instructions (is
+not scheduled), and if it was in group-stop before PTRACE_LISTEN, it will not respond to signals until SIGCONT is received.
+
+**In  this  manual  page, any stopped state in which the tracee is ready to accept ptrace commands from the tracer is called ptrace-
+stop.  Ptrace-stops can be further subdivided into signal-delivery-stop, group-stop, syscall-stop, PTRACE_EVENT stops, and so  on.
+These stopped states are described in detail below.**
+
+Signal-delivery-stop : 当 tracee 被选择发送消息（除了 SIGKILl）的时候，那么首先需要 STOP 一下
+group-stop : 当一个收到 stop 信号，所有 thread 都应该被 stop，
 
 
+```c
+/* Wait extended result codes for the above trace options.  */
+#define PTRACE_EVENT_FORK	1
+#define PTRACE_EVENT_VFORK	2
+#define PTRACE_EVENT_CLONE	3
+#define PTRACE_EVENT_EXEC	4
+#define PTRACE_EVENT_VFORK_DONE	5
+#define PTRACE_EVENT_EXIT	6
+#define PTRACE_EVENT_SECCOMP	7
+/* Extended result codes which enabled by means other than options.  */
+#define PTRACE_EVENT_STOP	128
+
+/* Options set using PTRACE_SETOPTIONS or using PTRACE_SEIZE @data param */
+#define PTRACE_O_TRACESYSGOOD	1
+#define PTRACE_O_TRACEFORK	(1 << PTRACE_EVENT_FORK)
+#define PTRACE_O_TRACEVFORK	(1 << PTRACE_EVENT_VFORK)
+#define PTRACE_O_TRACECLONE	(1 << PTRACE_EVENT_CLONE)
+#define PTRACE_O_TRACEEXEC	(1 << PTRACE_EVENT_EXEC)
+#define PTRACE_O_TRACEVFORKDONE	(1 << PTRACE_EVENT_VFORK_DONE)
+#define PTRACE_O_TRACEEXIT	(1 << PTRACE_EVENT_EXIT)
+#define PTRACE_O_TRACESECCOMP	(1 << PTRACE_EVENT_SECCOMP)
+```
+- [ ] 这些消息都会导致 tracee 被 stop, 然后 tracer 来进一步的 waitpid, 但是 PTRACE_EVENT_STOP 是其他所有的原因
+  - [ ] 实际上 trace PTRACE_EVENT_STOP 这些并不对
 
 ## checklist
 1. strace 实现 : PTRACE_SYSCALL

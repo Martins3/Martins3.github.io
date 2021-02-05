@@ -198,12 +198,7 @@ C check tools.
 Implementation of the `sys_ptrace` handler routine is architecture-specific and is defined in
 `arch/arch/kernel/ptrace.c`
 
-Before examining the flow of the system call in detail, it should be noted that this call is needed because
-ptrace — essentially a tool for reading and modifying values in process address space — **cannot be used
-directly to trace system calls**. Only by extracting the desired information at the right places can trace
-processes draw conclusions on which system calls have been made. Even debuggers such as gdb are
-totally reliant on ptrace for their implementation. ptrace offers more options than are really needed to
-simply trace system calls.
+> 根本没有讲解 ptrace 的原理，利用 ptrace 获取 syscall 的内容需要你来说 ?
 
 `ptrace` requires four arguments as the definition in the kernel sources shows:
 
@@ -214,14 +209,7 @@ SYSCALL_DEFINE4(ptrace, long, request, long, pid, unsigned long, addr,
 		unsigned long, data)
 ```
 
-1. `pid` identifies the target process. The process identifier is interpreted with respect to the
-namespace of the caller. Even though the way in which strace is handled suggests that process
-tracing must be enabled right from the start, this is not true. The tracer program must **attach**
-itself to the target process by means of ptrace — and this can be done while the process is
-already running (not only when the process starts).
-`strace` is responsible for attaching to the process, usually immediately after the target program
-is started with `fork` and `exec`.
-> @todo 到底什么动作指的是attach
+1. `pid` identifies the target process.
 
 2. `addr` and `data` pass a memory address and additional information to the kernel. Their meanings
 differ according to the operation selected.
@@ -229,100 +217,13 @@ differ according to the operation selected.
 3. With the help of symbolic constants, request selects an operation to be performed by ptrace. A
 list of all possible values is given on the manual page `ptrace(2)` and in `<ptrace.h>` in the kernel
 sources. The available options are as follows:
-
-- `PTRACE_ATTACH` issues a request to attach to a process and initiates tracing. `PTRACE_DETACH`
-detaches from the process and terminates tracing. **A traced process is always terminated
-when a signal is pending.** *The options below enable ptrace to be stopped during a system
-call or after a single assembly language instruction.*
-
-When a traced process is stopped, the tracer program is informed by means of a `SIGCHLD`
-signal that waiting can take place using the `wait` function discussed in Chapter 2.
-When tracing is installed, the `SIGSTOP` signal is sent to the traced process — this causes the
-tracer process to be interrupted for the first time. This is essential when system calls are
-traced, as demonstrated below by means of an example.
-
-- `PEEKTEXT`, `PEEKDATA`, and `PEEKUSR` read data from the process address space. PEEKUSR reads
-the normal CPU registers and any other debug registers used11 (of course, only the contents
-of a single register selected on the basis of its identifier are read — not the contents of the
-entire register set). PEEKTEXT and PEEKDATA read any words from the text or data segment
-of the process.
-
-- `POKETEXT`, `POKEDATA`, and `PEEKUSR` write values to the three specified areas of the monitored process and therefore manipulate the process address space contents; this can be very
-important when debugging programs interactively.
-
-> peek 和 poke 机制 ?
-
-Because PTRACE_POKEUSR manipulates the debug registers of the CPU, this option supports
-the use of advanced debugging techniques; for example, monitoring of events that halt
-program execution at a particular point when certain conditions are satisfied.
-
-- `PTRACE_SETREGS` and `PTRACE_GETREGS` set and read values in the privileged register set of
-the CPU.
-
-- `PTRACE_SETFPREGS` and `PTRACE_GETFPREGS` set and read registers used for floating-point
-computations. These operations are also very useful when testing and debugging applications interactively.
-
-- System call tracing is based on `PTRACE_SYSCALL`. If ptrace is activated with this option, the
-kernel starts process execution until a system call is invoked. Once the traced process has
-been stopped, wait informs the tracer process, which then analyzes the process address
-space using the above ptrace operations to gather relevant information on the system call.
-The traced process is stopped for a second time after completion of the system call to allow
-the tracer process to check whether the call was successful.
-Because the system call mechanism differs according to platform, trace programs such
-as strace must implement the reading of data separately for each architecture; this is
-a tedious task that quickly renders source code for portable programs unreadable (the
-strace sources are overburdened with pre-processor conditionals and are no pleasure
-to read).
-
-- `PTRACE_SINGLESTEP` places the processor in single-step mode during execution of the
-traced process. In this mode, the tracer process is able to access the traced process after
-each assembly language instruction. Again, this is a very popular application debugging
-technique, particularly when attempting to track down compiler errors or other such
-subtleties.
-Implementation of the single-step function is strongly dependent on the CPU used — after
-all, the kernel is operating on a machine-oriented level at this point. Nevertheless, a
-uniform interface is available to the tracer process on all platforms. After execution of
-the assembler function, a `SIGCHLD` signal is sent to the tracer, which gathers detailed
-information on the process state using further ptrace options. This cycle is constantly
-repeated — the next assembler instruction is executed after invoking ptrace with
-the `PTRACE_SINGLESTEP` argument, the process is put to sleep, the tracer is informed
-accordingly by means of `SIGCHLD`, and so on.
-
-- `PTRACE_KILL` closes the traced process by sending a KILL signal.
-- `PTRACE_TRACEME` starts tracing the current process. The parent of the current process automatically assumes the role of tracer and must be prepared to receive tracing information
-from its child.
-- `PTRACE_CONT` resumes execution of a traced process without specifying special conditions
-for stopping the process — the traced application next stops when it receives a signal.
-
 * **System Call Tracing**
 
 [](../code/strace.c) 
 
 > 这个代码并没有办法执行，但是易于阅读
 
-Program flow is obvious once the ball is rolling. A system call requested by the traced process triggers
-the ptrace mechanism in the kernel, which sends a `CHLD` signal to the tracer process. The handler of the
-tracer process reads the required information — the number of the system call — and outputs it, again
-using the ptrace mechanism. Execution of the traced process is resumed and interrupted again when a
-system call is invoked.
-But how is the ball set rolling? Somehow or other the handler function must be invoked for the first time
-in order to log system call tracing. **As noted above, the kernel also sends `SIGCHLD` signals to the tracer
-process when a signal is sent to the traced process** — in doing so,
-it invokes the same handler function activated when a system call occurs.
-The fact that the kernel automatically sends a `STOP` signal to the traced
-process when tracing is initiated ensures that the handler function is invoked when tracing starts — even
-if the process receives no other signals. This sets the ball — that is, system call tracing — rolling.
-> strace 的原理 : traced process 被 STOP 的时候，tracer 会被发送一个 `SIGCHLD` ，从此之后，每次收到 syscall , 都会为下一次 syscall 注册 ptrace syscall 消息
-
 * ***Kernel-Side Implementation***
-
-If a different action from PTRACE_ATTACH was requested, ptrace_check_attach first checks whether
-a tracer is attached to the process, and the code splits depending on the particular ptrace operation.
-This is handled in arch_ptrace; the function is defined by every architecture and cannot be provided
-by the generic code. However, this is not entirely true: Some requests can, in fact, be handled by
-architecture-independent code, and they are handled in ptrace_request (from kernel/ptrace.c) called
-by `arch_ptrace`. Only very simple requests are processed by this function. For example, PTRACE_DETACH
-to detach a tracer from a process is one of them.
 
 Usually, a large case structure that deals separately with each case (depending on the request
 parameter) is employed for this purpose. I discuss only some important cases: `PTRACE_ATTACH` and
@@ -339,9 +240,3 @@ The implementation of the remaining requests follows a similar pattern.
 ## 13.4 Summary
 System calls are a **synchronous** mechanism to change from user into kernel mode. The next chapter
 introduces you to interrupts that require **asynchronously** changing between the modes.
-
-1. Syscall 的开销体现在什么地方 ?
-2. 是如何实现内核空间和用户空间的切换的 ?
-3. stack 是如何管理的 ?
-4. 自我修养中间的 关于 vdso 是怎么回事 ?
-5. 参数是如何传递的 ?

@@ -240,7 +240,6 @@ flush : 只是一些表示 pending 上的信号清理掉
           - sigaddset(&pending->signal, sig);
 
 ## jobctl
-- [ ] tlpi chapter 34 
 
 ```c
 void task_join_group_stop(struct task_struct *task)
@@ -274,11 +273,164 @@ void task_clear_jobctl_trapping(struct task_struct *task);
 void task_clear_jobctl_pending(struct task_struct *task, unsigned long mask);
 ```
 
+```c
+#define JOBCTL_STOP_DEQUEUED_BIT 16	/* stop signal dequeued */
+#define JOBCTL_STOP_PENDING_BIT	17	/* task should stop for group stop */
+#define JOBCTL_STOP_CONSUME_BIT	18	/* consume group stop count */
+#define JOBCTL_TRAP_STOP_BIT	19	/* trap for STOP */
+#define JOBCTL_TRAP_NOTIFY_BIT	20	/* trap for NOTIFY */
+#define JOBCTL_TRAPPING_BIT	21	/* switching to TRACED */
+#define JOBCTL_LISTENING_BIT	22	/* ptracer is listening for events */
+#define JOBCTL_TRAP_FREEZE_BIT	23	/* trap for cgroup freezer */
+```
+- [ ] 似乎 三个 STOP 就是用于 group stop 的
+
+- [ ] task_participate_group_stop
+
+- task_join_group_stop : 当成为 thread group 的一员的时候， group_stop_count 和 JOBCTL_STOP_CONSUME
+
+
+```c
+static int ptrace_attach(struct task_struct *task, long request,
+			 unsigned long addr,
+			 unsigned long flags)
+{
+  // ...
+	spin_lock(&task->sighand->siglock);
+
+	/*
+	 * If the task is already STOPPED, set JOBCTL_TRAP_STOP and
+	 * TRAPPING, and kick it so that it transits to TRACED.  TRAPPING
+	 * will be cleared if the child completes the transition or any
+	 * event which clears the group stop states happens.  We'll wait
+	 * for the transition to complete before returning from this
+	 * function.
+	 *
+	 * This hides STOPPED -> RUNNING -> TRACED transition from the
+	 * attaching thread but a different thread in the same group can
+	 * still observe the transient RUNNING state.  IOW, if another
+	 * thread's WNOHANG wait(2) on the stopped tracee races against
+	 * ATTACH, the wait(2) may fail due to the transient RUNNING.
+	 *
+	 * The following task_is_stopped() test is safe as both transitions
+	 * in and out of STOPPED are protected by siglock.
+	 */
+	if (task_is_stopped(task) &&
+	    task_set_jobctl_pending(task, JOBCTL_TRAP_STOP | JOBCTL_TRAPPING))
+		signal_wake_up_state(task, __TASK_STOPPED);
+
+	spin_unlock(&task->sighand->siglock);
+```
+
+- [ ] ptrace 似乎存在一个问题在于，如果 attach 的时候，这个进程本身就是被 STOP 的
+
+
+```c
+static void ptrace_stop(int exit_code, int why, int clear_code, kernel_siginfo_t *info)
+	__releases(&current->sighand->siglock)
+	__acquires(&current->sighand->siglock)
+
+	set_special_state(TASK_TRACED); // TODO 这是啥啊 ？
+
+	/*
+	 * We're committing to trapping.  TRACED should be visible before
+	 * TRAPPING is cleared; otherwise, the tracer might fail do_wait().
+	 * Also, transition to TRACED and updates to ->jobctl should be
+	 * atomic with respect to siglock and should be done after the arch
+	 * hook as siglock is released and regrabbed across it.
+	 *
+	 *     TRACER				    TRACEE
+	 *
+	 *     ptrace_attach()
+	 * [L]   wait_on_bit(JOBCTL_TRAPPING)	[S] set_special_state(TRACED)
+	 *     do_wait()
+	 *       set_current_state()                smp_wmb();
+	 *       ptrace_do_wait()
+	 *         wait_task_stopped()
+	 *           task_stopped_code()
+	 * [L]         task_is_traced()		[S] task_clear_jobctl_trapping();
+	 */
+	smp_wmb();
+```
+
+```c
+static void ptrace_unfreeze_traced(struct task_struct *task)
+{
+	if (task->state != __TASK_TRACED)
+		return;
+
+	WARN_ON(!task->ptrace || task->parent != current);
+
+	/*
+	 * PTRACE_LISTEN can allow ptrace_trap_notify to wake us up remotely.
+	 * Recheck state under the lock to close this race.
+	 */
+	spin_lock_irq(&task->sighand->siglock);
+	if (task->state == __TASK_TRACED) {
+		if (__fatal_signal_pending(task))
+			wake_up_state(task, __TASK_TRACED);
+		else
+			task->state = TASK_TRACED;
+	}
+	spin_unlock_irq(&task->sighand->siglock);
+}
+```
+
+```
+
+       PTRACE_ATTACH
+              Attach to the process specified in pid, making it a tracee of the calling process.  The tracee is sent a SIGSTOP, but  will
+              not  necessarily  have stopped by the completion of this call; use waitpid(2) to wait for the tracee to stop.  See the "At‐
+              taching and detaching" subsection for additional information.  (addr and data are ignored.)
+
+              Permission to perform a PTRACE_ATTACH is governed by a ptrace access mode PTRACE_MODE_ATTACH_REALCREDS check; see below.
+
+       PTRACE_SEIZE (since Linux 3.4)
+              Attach to the process specified in pid, making it a tracee of the calling process.  Unlike PTRACE_ATTACH, PTRACE_SEIZE does
+              not  stop  the process.  Group-stops are reported as PTRACE_EVENT_STOP and WSTOPSIG(status) returns the stop signal.  Auto‐
+              matically attached children stop with PTRACE_EVENT_STOP and WSTOPSIG(status) returns SIGTRAP instead of having SIGSTOP sig‐
+              nal delivered to them.  execve(2) does not deliver an extra SIGTRAP.  Only a PTRACE_SEIZEd process can accept PTRACE_INTER‐
+              RUPT and PTRACE_LISTEN commands.  The "seized" behavior just described is inherited by children that are automatically  at‐
+              tached  using  PTRACE_O_TRACEFORK,  PTRACE_O_TRACEVFORK,  and PTRACE_O_TRACECLONE.  addr must be zero.  data contains a bit
+              mask of ptrace options to activate immediately.
+
+              Permission to perform a PTRACE_SEIZE is governed by a ptrace access mode PTRACE_MODE_ATTACH_REALCREDS check; see below.
+
+       PTRACE_ATTACH  sends  SIGSTOP  to this thread.  If the tracer wants this SIGSTOP to have no effect, it needs to suppress it.  Note
+       that if other signals are concurrently sent to this thread during attach, the tracer may see the tracee enter signal-delivery-stop
+       with  other  signal(s) first!  The usual practice is to reinject these signals until SIGSTOP is seen, then suppress SIGSTOP injec‐
+       tion.  The design bug here is that a ptrace attach and a concurrently delivered SIGSTOP may race and the concurrent SIGSTOP may be
+       lost.
+
+```
+Only a PTRACE_SEIZEd process can accept PTRACE_INTERRUPT and PTRACE_LISTEN commands.  The "seized" behavior just described is inherited by children that are automatically  at‐
+
+- [ ] PTRACE_ATTACH 会自动向 tracee 发送一个 SIGSTOP，但是如果此时，tracee 接受到了来自于其他来源的 SIGSTOP，可能其会忽视。
+
+
+       Since attaching sends SIGSTOP and the tracer usually suppresses it, this may cause a stray EINTR return from the currently execut‐
+       ing system call in the tracee, as described in the "Signal injection and suppression" section.
+
+- [ ] 所以，为什么要进行 suppress signal 啊
+
+
+Since Linux 3.4, PTRACE_SEIZE can be used instead of PTRACE_ATTACH.  PTRACE_SEIZE does not stop the attached process.  If you need
+to stop it after attach (or at any other time) without sending it any signals, use **PTRACE_INTERRUPT** command.
+
+
+       where cmd is PTRACE_CONT, PTRACE_LISTEN, PTRACE_DETACH, PTRACE_SYSCALL, PTRACE_SINGLESTEP,  PTRACE_SYSEMU,  or  PTRACE_SYSEMU_SIN‐
+       GLESTEP.   If  the  tracee is in signal-delivery-stop, sig is the signal to be injected (if it is nonzero).  Otherwise, sig may be
+       ignored.  (When restarting a tracee from a ptrace-stop other than signal-delivery-stop, recommended practice is to always  pass  0
+       in sig.)
+
+- [ ] 还是很奇怪的机制，当我被 STOP 了，然后首先向 tracer 发送信号，tracer 发送了信号之后，才可以让其他的 thread 停止 ？                                           
+  - [ ] 是发送信号，还是首先 STOP 吗 ?
+
+- [ ] https://www.cnblogs.com/mysky007/p/11047943.html : ptrace 的更加高级应用
+
 [Daemons normally disassociate themselves from any controlling terminal by creating a new session without one](https://stackoverflow.com/questions/6548823/use-and-meaning-of-session-and-process-group-in-unix)
 
 https://stackoverflow.com/questions/9305992/if-threads-share-the-same-pid-how-can-they-be-identified
 课代表总结：
 用户看到的是tgid: thread group id
 kernel看到的是pid
-
-## wait
