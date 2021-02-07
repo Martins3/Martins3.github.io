@@ -43,6 +43,8 @@ https://blog.visionappster.com/2020/08/06/overriding-virtual-functions-at-run-ti
 
 http://modernescpp.com/index.php/c-20-concept-syntactic-sugar : 这个人写了一系列的 cpp 文章，首先将经典的内容看完再看这个吧。
 
+https://alandefreitas.github.io/moderncpp/ : 对于 moderncpp 提供一堆例子
+
 ## 项目
 https://www.qtmuniao.com/2020/07/03/leveldb-data-structures-skip-list/ :  C++ 数据库 Jeff Dean 1000 行
   - https://medium.com/databasss/on-disk-io-part-1-flavours-of-io-8e1ace1de017 : 数据库教程

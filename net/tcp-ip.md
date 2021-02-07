@@ -134,4 +134,31 @@ Acknowledgements can be piggybacked on data.
 
 - [ ] I don't know I have finished it or not.
 
+## tcp
+
+#### retransmission
+
+
+#### TCP 状态转换
+- retransmission 表示 : 如果在指定时间没有返回，那么需要重新发送一下
+- tc : 发送的频率
+
+- 其实，难道我们的问题是，为什么存在这么多的选项，和 TCP / IP 的实现可以自由的选择，linux 存在多个配置
+
+- 三次握手的问题，需要让 server 进入 established 状态之后，server 才可以接受数据。
+  - server 需要收到两次数据才可以
+
+- 结束 : 看上去很奇怪，但其实就是各自通知一下对方，让对方回复一下自己
+- 开始的时候类似 : 从 server 的角度，如果接收到 client 的信号之后，发送完成 ack, 然后就认为是 established, 其实可能 client 根本没有接受到
+
+[TCP状态转换图总结](https://zhuanlan.zhihu.com/p/78540103)
+
+TCP close : client and server do a "active" finished and receive the corresponding ack, then they are closed, this is diagram.[^1]
+![](https://benohead.com/wp-content/uploads/2013/07/TCP-CLOSE_WAIT.png)
+
+- [ ] [rfc793](https://tools.ietf.org/html/rfc793) 也许用于参考吧 !
+
+
+
 [^3]: https://tools.ietf.org/html/rfc1180
+[^4]: http://yuba.stanford.edu/rcp/

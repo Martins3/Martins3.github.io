@@ -6,39 +6,74 @@
 [Introduction](https://stackoverflow.com/questions/21032562/example-to-explain-unix-domain-socket-af-inet-vs-af-unix)
 
 ## question
-- [ ] Why we need the mac address in the link layer
-- [ ] which layer will ethernet reside ?
-  - [ ] substitute for ethernet 
-
-- [ ] DHCP
-- [ ] NAT
-- [x] ICMP
-
 - [ ] Where is ebpf hooks for packet filter ?
 - loopback interface
   - `sudo tcpdump -i lo` : print out many message
 
 ## TODO
+忽然间对于网络没有那么恐惧了，所以
+
 - [ ] net/socket.c : all kinds of syscall, check it one by one with tlpi
   - `send()` and `write()`, if everything is a file, why a special syscall is needed for network
 
+
 - [ ] direcory under linux/net to read
-  - core
+  - core : 各种 proc dev sys 之类的东西，整个网络的公共部分吧 !
   - ceph
-  - netfilter : http://www.netfilter.org/projects/
-  - bridge
-  - tipc : Transparent Inter-Process Communication
+  - netfilter 
+  - bridge :
+  - tipc : Transparent Inter Process Communication (TIPC) is an Inter-process communication (IPC) service in Linux designed for cluster wide operation. It is sometimes presented as Cluster Domain Sockets, in contrast to the well-known Unix Domain Socket service; the latter working only on a single kernel. [^9]
   - mac80211
-  - sched : https://www.cnblogs.com/charlieroro/p/13993695.html
+  - sched
+  - [openvswitch](https://www.zhihu.com/column/software-defined-network)
 
-## TCP
+- Red Book
+- [ ] 好吧，并不能找到 routing table 相关的代码 ! (netfilter ?)
+- [ ] https://github.com/CyC2018/CS-Notes : network and distributed system
+- TUN/TAP 驱动分析一下吧
+- [ ] epoll 机制
+- [ ] https://man7.org/linux/man-pages/man7/vsock.7.html
+- [ ] vsock
+- [ ] vlan/[802.1q](https://en.wikipedia.org/wiki/IEEE_802.1Q)
+- [ ] 9p
+- [ ] bpf / bpfilter
+- [ ] ceph
+- [ ] /home/maritns3/core/linux/net/ethernet/eth.c
+- [ ] openvswitch
+- [ ] packet socket
+- [ ] sctp : 流量控制协议
+- [ ] /home/maritns3/core/linux/net/unix
 
-### Congestion Control
-rtt 标准算法（Jacobson / Karels 算法）
-（Linux 的源代码在：tcp_rtt_estimator）。[^5]
+给下面写一个一句话总结好吧
+```
+__do_sys_bind        
+__do_sys_send        
+__do_sys_recv        
+__do_sys_socket      
+__do_sys_listen      
+__do_sys_accept      
+__do_sys_sendto      
+__do_sys_accept4     
+__do_sys_connect     
+__do_sys_sendmsg     
+__do_sys_recvmsg     
+__do_sys_recvfrom    
+__do_sys_shutdown    
+__do_sys_sendmmsg    
+__do_sys_recvmmsg    
+__do_sys_socketpair  
+__do_sys_setsockopt  
+__do_sys_getsockopt  
+__do_sys_socketcall  
+__do_sys_getsockname 
+__do_sys_getpeername 
+__do_sys_recvmmsg_time32
+```
 
-tcp_ack_update_rtt
-  - tcp_rtt_estimator
+
+
+## IBM Read Book 
+[TCP/IP--ICMP和IGMP](https://www.jianshu.com/p/4bd8758f9fbd)
 
 ## e1000e[^2]
 - [ ] watch dog
@@ -89,9 +124,7 @@ tcp_ack_update_rtt
 - dir : net/tcp4
 - file : ip_output.c tcp_output.c tcp.c route.c
 
-
-## TAP/TUN
-
+- [ ] 应该将 recv 的路径也跟着看一遍的
 
 ## 可以参考
 https://github.com/saminiir/level-ip : 学习一下
@@ -115,6 +148,8 @@ https://github.com/google/packetdrill : 甚至还有相关的资源
 https://github.com/mtcp-stack/mtcp
 
 ## 网络基础知识
+- 现在的想法 : 整体框架其实清楚的，利用 level-ip 来分析，其次就是解决 TCP 中间具体的细节问题, tc, retransmission, 
+
 - https://github.com/chenshuo/muduo
 - http://www.mattkeeter.com/projects/pont/ : 了解一下前端后端的整个流程是什么
 - https://zhuanlan.zhihu.com/p/38548737　: http 图解, 应该是没有什么用的
@@ -122,14 +157,9 @@ https://github.com/mtcp-stack/mtcp
 - https://news.ycombinator.com/item?id=23241934 : ssh-agent 的工作原理是什么 ?
 - https://www.jianshu.com/p/4ba0d706ee7c : TCP/IP 快速复习一遍
 
-- [ ] https://github.com/CyC2018/CS-Notes : network and distributed system
-
-交换机(switch) 集线器(hub) 网桥(bridge) 中继器(repeater) 的关系[^1]
-
-[^1]: https://www.zhihu.com/topic/19717539/top-answers
 [^2]: 用芯探核:基于龙芯的 Linux 内核探索解析
 [^4]: http://yuba.stanford.edu/rcp/
-[^5]: [万字详文：TCP 拥塞控制详解](https://zhuanlan.zhihu.com/p/144273871)
 [^6]: [An Introduction to Computer Networks](http://intronetworks.cs.luc.edu/current2/html/)
 [^7]: [The TCP/IP Guide](http://www.tcpipguide.com/index.htm)
 [^8]: [TUN/TAP设备浅析(一) -- 原理浅析](https://www.jianshu.com/p/09f9375b7fa7)
+[^9]: https://en.wikipedia.org/wiki/Transparent_Inter-process_Communication

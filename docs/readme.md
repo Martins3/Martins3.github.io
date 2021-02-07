@@ -29,19 +29,12 @@
 - [Martins3's slides](https://martins3.github.io/ppt)
 - [Source code reading list](./source-code-reading-list.md)
 - [Binary Translation and Virtualization Paper reading list](./paper-reading-list.md)
+- [Diary](./diary/readme.md)
 
 ## Tips
 - [How to cross Great Fire Wall](./gfw.md)
 - [Learn Linux kernel](./learn-linux-kernel.md)
 - [shell 的一些经验之谈](./shell.md)
 
-<!-- ## Reflections -->
-<!-- - [Power of continuous thinking](./thinking.md) -->
-
 ## MISC
 - [what is x86 IA-32 IA-64 x86-64 and amd64 ?](./x86-names.md)
-
-
-## diary
-- [所以，有人告诉我后端在干什么吗?](./diary/2021-1-29.md)
-- [反信息蚕房](./diary/2021-2-1.md)
