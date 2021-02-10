@@ -1,3 +1,7 @@
+# TODO
+- [ ] 分布式锁
+  - https://zhuanlan.zhihu.com/p/72896771
+
 
 
 ## 各种介绍
@@ -29,7 +33,6 @@ https://www.the-paper-trail.org/post/2014-08-09-distributed-systems-theory-for-t
 
 ## when boring
 
-
 https://github.com/binhnguyennus/awesome-scalability : 各种文章集合，不知道分布式和这是什么关系，感觉后端的人总是再提
 
 https://github.com/orangeduck/Cello : 写个blog介绍一下，很有意思
@@ -44,7 +47,8 @@ https://www.programmableweb.com/news/what-grpc-api-and-how-does-it-work/analysis
 ## check
 https://github.com/NASA-SW-VnV/ikos : facebook 的 infer 也可以关注一下
 
-
-
 ## bitcoin
 https://monokh.com/posts/bitcoin-from-scratch-part-1
+
+# [JavaGuide](https://github.com/Snailclimb/JavaGuide/tree/master/docs/system-design/distributed-system)
+> 节选自 JavaGuide 项目中间的分布式章节

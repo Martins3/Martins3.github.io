@@ -48,13 +48,17 @@ Implicit interfaces decouple the definition of an interface from its implementat
 
 ## tips
 1. [slice](https://stackoverflow.com/questions/39984957/is-it-possible-to-initialize-golang-slice-with-specific-values)
-```
+```go
 onesSlice := make([]int, 5)
 for i := range onesSlice {
     onesSlice[i] = 1
 }
 ```
-2. 
+2. [Init array of structs in Go](https://stackoverflow.com/questions/26159416/init-array-of-structs-in-go)
+```go
+	kva := []mr.KeyValue{}
+```
+
 
 ## Question
 1. what's make, is a **new** in c++
@@ -83,7 +87,6 @@ func (h *IntHeap) Pop() interface{} {
 }
 ```
 why return type is `interface{}`
-
 
 ## External Links
 1. https://tour.go-zh.org/basics/7
