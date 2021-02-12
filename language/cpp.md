@@ -67,8 +67,6 @@ https://github.com/TheAlgorithms/C-Plus-Plus : 到底 cpp 的 algorithm 包括�
 
 https://github.com/wuye9036/CppTemplateTutorial : 中文 template 教程，居然有轮子哥参与
 
-https://github.com/Light-City/CPlusPlusThings : 中文教程
-
 https://github.com/Snaipe/libcsptr : 小伙子，不是想要学习 smart pointer 的实现吗 ?
 
 https://github.com/fogleman/Craft : 只有 5000 行，但是实现了 minecraft
