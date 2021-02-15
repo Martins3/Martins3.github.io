@@ -33,9 +33,74 @@
   - https://stackoverflow.com/questions/8630160/call-to-pure-virtual-function-from-base-class-constructor
 
 
-**WHEN COMMING BACK**
-被阅读过的内容会从 core 目录下仓库中间删除，基础知识还是很有意思的
 
+
+- string to int 装换 `stoi`
+- assert :
+  - `#define NDEBUG` 可以让 assert 失效
+
+- global constant 的正确定义方法:
+  - inline extern const int GLOBAL_CONST_VAR = 0xFF;
+  - https://stackoverflow.com/questions/2268749/defining-global-constant-in-c
+  - 需要指出的是，const 变量默认是局部的
+
+- 如果*const*位于`*`的左侧，则const就是用来修饰指针所指向的变量，即指针指向为常量；<br>如果const位于`*`的右侧，*const*就是修饰指针本身，即指针本身是常量。
+
+- 使用const关键字进行说明的成员函数，称为常成员函数。只有常成员函数才有资格操作常量或常对象，没有使用const关键字进行说明的成员函数不能用来操作常对象。
+- const对象**只能访问**const成员函数,而非const对象可以访问任意的成员函数,包括const成员函数.
+- static const member 可以定义在 class 里面，但是 static member 不可以
+  - 因为 nonconst static member 是占用内存， 在多个 compile unit 出现就是一个变量占据多个内存了
+  - https://stackoverflow.com/questions/47882456/why-do-non-constant-static-variables-need-to-be-initialized-outside-the-class
+
+- explicit 的含义:
+  - explicit 修饰构造函数时，可以防止隐式转换和copy初始化
+      - https://stackoverflow.com/questions/34912221/is-list-initialization-an-implicit-conversion
+  - explicit 修饰转换函数时，可以防止隐式转换，但按语境转换除外
+  - /home/maritns3/core/CPlusPlusThings/basic_content/explicit/explicit.cpp 的例子
+
+- using 和 typedef 是相同的
+  - https://stackoverflow.com/questions/10747810/what-is-the-difference-between-typedef-and-using-in-c11
+
+- 对于decltype(e)而言，其判别结果受以下条件的影响：
+如果e是一个没有带括号的标记符表达式或者类成员访问表达式，那么的decltype（e）就是e所命名的实体的类型。此外，如果e是一个被重载的函数，则会导致编译错误。
+否则 ，假设e的类型是T，如果e是一个将亡值，那么decltype（e）为T&&
+否则，假设e的类型是T，如果e是一个左值，那么decltype（e）为T&。
+否则，假设e的类型是T，则decltype（e）为T。
+
+- enum class
+  - 新的enum的作用域不在是全局的
+  - 不能隐式转换成其他类型
+  - 可以指定 enum 的类型
+
+- 如果C++中使用C语言实现的函数，在编译链接的时候，会出错，提示找不到对应的符号。此时`extern "C"`就起作用了：告诉链接器去寻找`_add`这类的C语言符号，而不是经过C++修饰的符号。
+
+- friend 不可继承，不可传递
+
+- class 的大小
+  - [空类的大小为 1 字节](https://stackoverflow.com/questions/621616/c-what-is-the-size-of-an-object-of-an-empty-class)
+  - 一个类中，虚函数本身、成员函数（包括静态与非静态）和静态数据成员都是不占用类对象的存储空间。
+  - 对于包含虚函数的类，不管有多少个虚函数，只有一个虚指针,vptr的大小。
+  - 集成获取所有的成员
+  - 集成获取获取 vptr （取决于 parent 的数量, 不是 ancester 的数量）
+
+
+- 联合（union）是一种节省空间的特殊的类，一个 union 可以有多个数据成员，但是在任意时刻只有一个数据成员可以有值。当某个成员被赋值后其他成员变为未定义状态。联合有如下特点：
+  - 默认访问控制符为 public
+  - 匿名 union 不能包含 protected 成员或 private 成员
+  - 可以含有构造函数、析构函数
+  - 不能含有引用类型的成员
+  - 不能继承自其他类，不能作为基类
+  - 不能含有虚函数
+  - 匿名 union 在定义所在作用域可直接访问 union 成员
+  - [ ] 全局匿名联合必须是静态（static）的
+  - [ ] https://en.cppreference.com/w/cpp/language/union
+  - [ ] 看看 primer 吧
+
+- using
+  - 使用 using 除了可以 typedef，和 namespace
+  - 而且 using 可以修改 parent 的 field / method 对外的可见性
+    - override 一个 overload function 的时候，所有的全部都会被 override, 但是靠 using 可以把 parent 的重新带回来
+    - https://stackoverflow.com/questions/888235/overriding-a-bases-overloaded-function-in-c
 # TODO
 /home/maritns3/core/CPlusPlusThings/basic_content/virtual/set4/warn_rtti.cpp
 
