@@ -46,7 +46,7 @@ http://modernescpp.com/index.php/c-20-concept-syntactic-sugar : 这个人写了�
 https://alandefreitas.github.io/moderncpp/ : 对于 moderncpp 提供一堆例子
 
 ## 项目
-https://www.qtmuniao.com/2020/07/03/leveldb-data-structures-skip-list/ :  C++ 数据库 Jeff Dean 1000 行
+https://www.qtmuniao.com/2020/07/03/leveldb-data-structures-skip-list/ :  C++ 数据库 Jeff Dean 1000 行 :star: leveldb
   - https://medium.com/databasss/on-disk-io-part-1-flavours-of-io-8e1ace1de017 : 数据库教程
 https://github.com/nmwsharp/polyscope/tree/master/deps : 有意思的项目，用于学习语法，gtest 和 cmake 吧
 https://github.com/microsoft/GSL : 这是微软的项目
@@ -84,6 +84,7 @@ https://github.com/gzc/CLRS : 算法导论答案
 https://github.com/s9w/dt
 https://github.com/RuntimeCompiledCPlusPlus/RuntimeCompiledCPlusPlus : modify cpp code dynamically
 https://www.internalpointers.com/post/writing-custom-iterators-modern-cpp : Writing a custom iterator in modern C++
+https://github.com/orangeduck/Cello : 对于 C 语言的黑科技，写个blog介绍一下，很有意思
 
 ## 库
 https://github.com/pybind/pybind11

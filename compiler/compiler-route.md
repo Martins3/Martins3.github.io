@@ -10,6 +10,8 @@ https://arzg.github.io/lang/ : 基于 rust 的教程
 https://tenthousandmeters.com/blog/python-behind-the-scenes-4-how-python-bytecode-is-executed/ : python 的字节码如何执行的 ？
 
 https://github.com/vnmakarov/mir : redhat 做的，带有中间表示的编译器 ？
+
+https://github.com/NASA-SW-VnV/ikos : 静态分析工具，facebook 的 infer 也可以关注一下
 ## 自己收集的
 https://github.com/asmjit/asmjit : Machine code generation for C++
 https://github.com/netcan : maybe read his blogs
