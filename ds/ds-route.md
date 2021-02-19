@@ -31,5 +31,8 @@
 
 - https://proto.school/tutorials : 一堆协议的教程，但是协议都米有听说过
 
+- 分布式存储工程师的技能树 : https://www.zhihu.com/question/43687427/answer/1590320987
+
 # sre
 https://linkedin.github.io/school-of-sre/ : 应该是比较基础的课程
+https://github.com/upgundecha/howtheysre : 各个公司关于 SRE 的报告吧

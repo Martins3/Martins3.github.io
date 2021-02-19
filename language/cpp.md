@@ -20,7 +20,8 @@
 2. [清真的CPP](http://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines) 本杰尼斯特里斯普写的
 3. [moder cpp check list](https://github.com/AnthonyCalandra/modern-cpp-features)
 4. [C++ 那些事](https://github.com/Light-City/CPlusPlusThings)
-https://github.com/rigtorp/awesome-modern-cpp : 首先将 interview 的打牢基础吧
+5. https://github.com/rigtorp/awesome-modern-cpp : 首先将 interview 的打牢基础吧
+6. [Cpp Templates : Complete Guide](https://www.amazon.com/C-Templates-Complete-Guide-2nd/dp/0321714121)
 
 https://github.com/CppCon/CppCon2017 : all the conference
 https://gist.github.com/bkaradzic/2e39896bc7d8c34e042b : Orthodox C++ (sometimes referred as C+) is minimal subset of C++ that improves C, but avoids all unnecessary things from so called Modern C++.

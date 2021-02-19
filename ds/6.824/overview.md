@@ -22,6 +22,10 @@ https://www.zhihu.com/question/29597104/answer/128443409 : pingcap 的作者谈�
     - [l-zookeeper.txt](#l-zookeepertxt)
   - [Lecture 12](#lecture-12)
   - [Lecture 13](#lecture-13)
+  - [Lecture 14](#lecture-14)
+  - [Lecture 15](#lecture-15)
+  - [Lecture 16](#lecture-16)
+  - [Lecture 17](#lecture-17)
 
 <!-- vim-markdown-toc -->
 
@@ -231,5 +235,24 @@ expires. So S2 won't start acting as primary until after S1 stops.
 
 
 ### Lecture 13
-[看看blog](https://www.jianshu.com/p/6ae6e7989161)
+[对于 spanner 的中文翻译](https://www.jianshu.com/p/6ae6e7989161)
+
+[关于 Spanner 中间的 TrueTim](https://zhuanlan.zhihu.com/p/44254954)
+
+https://medium.com/@LightspeedHQ/google-cloud-spanner-the-good-the-bad-and-the-ugly-5795f37a7684
+
+### Lecture 14
+[概述FaRM](https://zhuanlan.zhihu.com/p/24508571)
+
+### Lecture 15
+[分析 spark 比 Hadoop 好 的知乎回答](https://www.zhihu.com/question/26568496/answer/41608400)
+
+[spark rdd ](https://mr-dai.github.io/spark-rdd/)
+
+### Lecture 16
+[Scaling Memcache at Facebook](https://zhuanlan.zhihu.com/p/21362291) : 算是比较清楚的分析了，看看评论作为勘误
+
+### Lecture 17
+
+[](https://zhuanlan.zhihu.com/p/71913226)
 

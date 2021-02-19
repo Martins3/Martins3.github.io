@@ -133,7 +133,6 @@ func (kv *KV) Put(args *PutArgs, reply *PutReply) error {
 
 func main() {
 	server()
-	server()
 
 	put("subject", "6.824")
 	fmt.Printf("Put(subject, 6.824) done\n")
