@@ -3,7 +3,8 @@
 - https://github.com/ivanallen/thor : **mit : 首先观看的内容 其他的到时候再说**
 - https://github.com/wlgq2/MIT-6.824-2018 : 6.824 的某一个人的作业
 - https://blog.microdba.com/archive/?tag=6.824 : 对于课程的记录
-https://www.zhihu.com/question/29597104/answer/128443409 : pingcap 的作者谈如何学习 MIT 6.218
+- https://www.zhihu.com/question/29597104/answer/128443409 : pingcap 的作者谈如何学习 MIT 6.218
+
 
 
 <!-- vim-markdown-toc GitLab -->
@@ -18,6 +19,7 @@ https://www.zhihu.com/question/29597104/answer/128443409 : pingcap 的作者谈�
     - [gfs-faq.txt](#gfs-faqtxt)
   - [Lecture 4](#lecture-4)
   - [Lecture 5](#lecture-5)
+    - [https://pdos.csail.mit.edu/6.824/papers/raft-faq.txt](#httpspdoscsailmitedu6824papersraft-faqtxt)
   - [Lecture 8](#lecture-8)
     - [l-zookeeper.txt](#l-zookeepertxt)
   - [Lecture 12](#lecture-12)
@@ -201,6 +203,18 @@ expires. So S2 won't start acting as primary until after S1 stops.
 ### Lecture 5
 
 - [ ] raft 既然解决了 consensus 问题，那么还存在什么问题呀 ?
+  - [ ] 或者说，后面还讲解这么多的论文是做什么的
+
+#### https://pdos.csail.mit.edu/6.824/papers/raft-faq.txt
+
+- [ ] Every operation must be written to disk for persistence; performance probably requires batching many operations into each disk write.
+  - 没有说一定要 writeback 之后才可以，raft 本身就可以保证机器的 crash, 如果 crash 掉了就 crash 掉了，大不了重新构造
+
+- [ ] A: Raft has no single point of failure, while VMware FT does have a single point of failure in the form of the test-and-set server.
+  - vmware 的东西没有注意看啊
+
+
+
 
 
 ### Lecture 8

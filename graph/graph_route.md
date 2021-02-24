@@ -31,6 +31,7 @@ https://github.com/ssloy/tinyraytracer : 其实这个人搞了一堆这种有意
 
 
 https://gabrielgambetta.com/computer-graphics-from-scratch/ : 
+
 # 上课内容
 
 
