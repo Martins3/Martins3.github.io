@@ -1,29 +1,17 @@
 # https://pdos.csail.mit.edu/6.824/labs/lab-raft.html
 > https://mr-dai.github.io/raft/ 写的相当不错啊
 
-Raft organizes client requests into a sequence, called the log, and ensures that all the replica servers see the same log. 
-
-Each replica executes client requests in log order, applying them to its local copy of the service's state.
-
-A set of Raft instances talk to each other with RPC to maintain replicated logs.
-
-Your Raft interface will support an indefinite sequence of numbered commands, also called log entries.
-
-The entries are numbered with index numbers. The log entry with a given index will eventually be committed. At that point, your Raft should send the log entry to the *larger* service for it to execute.
-
+## Notes in lab instruction
 The service expects your implementation to send an ApplyMsg for each newly committed log entry to the `applyCh` channel argument to `Make()`.
 
-*The tester requires that the leader send heartbeat RPCs no more than ten times per second.*
-*see the ticker() goroutine that Make() creates for this purpose*
-*Don't forget to implement GetState()*
-*You can check whether Kill() has been called using rf.killed()*
+## [Raft Q&A](https://thesquareplanet.com/blog/raft-qa/)
 
-- You might find DPrintf useful instead of calling log.Printf directly to turn printing on and off as you debug different problems.
+## [Students' Guide to Raft](https://thesquareplanet.com/blog/students-guide-to-raft/)
+
+## [Instructors' Guide to Raft](https://thesquareplanet.com/blog/instructors-guide-to-raft/)
+
 
 # Notes
-go test -run 2A -race 
-
-RequestVote RPCs
 
 在 Raft 中，节点间通信由 RPC 实现，主要有 RequestVote 和 AppendEntries 两个 RPC API，其中前者由处于选举阶段的 Candidate 发出，而后者由 Leader 发出。
 
@@ -278,7 +266,9 @@ FAIL	6.824/raft	7.510s
 - [x] log structure
 - [x] append 的结构体
 
+- [ ] Start 函数
 - [ ] 响应 append 的函数
+- [ ] heartbeat 的对应的调整
 
 
 - [x] log 的开始位置是 1 对应的初始化
@@ -303,13 +293,25 @@ FAIL	6.824/raft	7.510s
   - 在 appendEntry 的时候，当大多数人都承认了某一个，那么就可以直接开始了
   - 在使用 matchIndex 来更新 leader 的 commitIndex 的
 
-- [ ] 好的了，但是我怎么感觉不需要这两个数组 ?
+- [x] 好的了，但是我怎么感觉不需要这两个数组 ? [^1]
   - 因为消息是异步的，消息连续到来，根本不用上一个消息是否搞定，就需要发送下一个消息，nextIndex 表示应该发送的消息，如果消息不成功就后退
   - 在正常情况下，commitIndex 和 nextIndex 实际上，没有区别
     - 正常回复即为代表该消息在 client 成功 commit 了
-  - 什么时候算作不正常的情况:
+  - 什么时候算作不正常的情况，感觉甚至可以不需要 nextIndex 了
+    - 因为 nextIndex 的信息保存无线循环的函数了
+    - 对于每一个成功的 log，在数组中间都需要更新一下, 更新那个数组呀 ?
+      - 应该是两个同时更新了
+      - 如果是 leader crash, commitIndex 瞬间提升过去
     - 应该是当 leader 迟迟没有返回的时候
-    - [ ] 问题在于，我会将消息连续的发送
+
+- [x] 因为发送失败，导致发送需要后退，那么是接着发送所有的 log 的，还是一个个的发送 ?
+  - 一起发送，但是如果这个 server 缺失的太少，其实可以存在一些调整策略
+  - 只要保证发送的东西，
+
+- [ ] 什么，为了查找 commit 需要发送 no-op，直接等待下一次即可啊 ?
+  - https://stackoverflow.com/questions/49354345/raft-leaders-commit-a-no-op-entry-at-the-beginning-of-their-term
+  - 但是如果下一次的 entry 迟迟不到来，怎么办法 ?
+  - 所以，其实可以构建一个 nil 强行将其发送过去
 
 ## 2C 的思考
 - raft 保证的是，当 server crash 之后，恢复了，然后系统就可用了
@@ -335,3 +337,6 @@ FAIL	6.824/raft	7.510s
 1. 理解为什么 leader 需要 commitIndex 和 nextIndex 两个数组 : 正常情况下，两者相同
   - stackoverflow 上有人回答过
 2. 然后完成 2B 和 2C
+
+
+[^1]: https://stackoverflow.com/questions/46376293/what-is-lastapplied-and-matchindex-in-raft-protocol-for-volatile-state-in-server
