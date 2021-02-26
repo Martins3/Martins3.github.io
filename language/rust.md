@@ -48,13 +48,13 @@ https://www.osohq.com/post/rust-reflection-pt-1
 
 
 ## TODO
-1. RefCell 相对于 Box 实现了什么不同的功能?
-2. 什么时候必须使用Rc : 指向同一个节点的链表
 3. dyn 关键字
 4. use rust::blog::Post; 为什么需要添加rust:: 来指示本地包的作用 ?
 5. macro 的定义非常奇怪，模式后面的代码如果想要定义statement 需要含有两层 {{ .}}
 6. 我们可以在返回值中间包含mut keyword 吗 ?
 7. https://doc.rust-lang.org/rust-by-example/std/hash.html `literal string`为什么总是在添加&使用
+
+- [闭包](https://stevedonovan.github.io/rustifications/2018/08/18/rust-closures-are-hard.html)
 
 
 第十三章讲到如果可以在参数列表前使用 move 关键字强制闭包获取其使用的环境值的所有权.

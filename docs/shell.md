@@ -7,8 +7,7 @@
 2. https://explainshell.com/ : 解释脚本
 3. https://linuxjourney.com/ : 免费教程
 
-shell 和 gnu make, cmake 等各种工具类似，一学就会，学玩就忘。究其原因，是因为使用频率太低了。 如果你每天都要用，我建议，系统学习，如果只是偶尔学习，对于shell只需要存在一个大致的了解，就是知道shell能做什么，适合做什么，具体的知识点等到遇到的时候再到 Google 上查询。
-
+`shell` 和 `gnu` `make`, `cmake` 等各种工具类似，一学就会，学完就忘。究其原因，是因为使用频率太低了。 如果你每天都要用，我建议，系统学习，如果只是偶尔学习，对于shell只需要存在一个大致的了解，就是知道shell能做什么，适合做什么，具体的知识点等到遇到的时候再到 Google 上查询。
 ## 选择好用的 shell
 zsh 和 bash 之前语法上基本是兼容的，但是由于[oh my zsh](https://github.com/ohmyzsh/ohmyzsh)，我强烈推荐使用zsh
 

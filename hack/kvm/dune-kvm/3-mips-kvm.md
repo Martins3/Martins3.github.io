@@ -15,7 +15,4 @@ how will dune register memslot for it ?
 
 ## asid, machine id, tpid
 
-
-
 ## misc
-

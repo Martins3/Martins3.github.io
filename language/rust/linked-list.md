@@ -38,10 +38,36 @@ Some of you might be thinking "this is clearly tail recursive, and any decent la
 
 - 实现内存关系的基本是，一个 object 从 stack 上消失的时候，自动让其持有的资源也消失
 
-- [ ] 但是，如果 push Node 的时候，根本不将 Node 连接起来，如何 ?
+- [x] 但是，如果 push Node 的时候，根本不将 Node 连接起来，如何 ?
+  - 新创建的 Node 马上消失
+  - 思考一下，为什么需要 Box ?
+  - 没有 Box 分配 heap 上的内存 ?
 
-**WHEN COMING BACK**
-- move clone
-- 闭包
+- [ ] https://phaazon.net/blog/rust-no-drop
+  - 解释了一个实现了 drop 之后，就不可以将自己成员 move 出去
+  - 后半段没看懂
 
-Rust 的事情，一个个推进，中间相隔实践不要太长即可，似乎类似的道理在刷题上也是如此。
+
+- https://hashrust.com/blog/references-in-rust/
+  - rust references 可以自动 dereference
+- https://hashrust.com/blog/arrays-vectors-and-slices-in-rust/
+  - rust 有 array 和 vector，他们都可以支持 slice
+
+We need to add lifetimes only in function and type signatures:
+
+## A Persistent Singly-Linked Stack
+In order to get thread safety, we have to use Arc. Arc is completely identical to Rc except for the fact that reference counts are modified atomically. 
+
+The reason this is the case is because Rust models thread-safety in a first-class way with two traits: `Send` and `Sync`.
+
+Interior mutability types violate this: they let you mutate through a shared reference. There are two major classes of interior mutability: cells, which only work in a single-threaded context; and locks, which work in a multi-threaded context.
+
+## A Bad but Safe Doubly-Linked Deque
+- [ ] 所以，靠 Rc 只能构建单向链表 ?
+
+
+## A Bad Save Deque
+
+**WHEN COMMING BACK**
+
+从 section 5.4 开始吧

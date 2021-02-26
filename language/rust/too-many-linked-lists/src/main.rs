@@ -22,6 +22,7 @@ fn first2() {
     list.print();
 }
 
+#[allow(dead_code)]
 fn second() {
     let mut x = second::List::new();
     x.push(12);
@@ -30,6 +31,43 @@ fn second() {
     x.push(12);
     x.push(12);
 }
+
+struct Name<'a> {
+    x: &'a str,
+    y: &'a str,
+}
+
+impl<'a> Name<'a> {
+    fn longest(&self, y: &str) -> &str {
+        if self.x.len() > y.len() {
+            self.x
+        } else {
+            self.y
+        }
+    }
+}
+struct TextEditor {
+    text: String,
+}
+
+impl TextEditor {
+    //Other methods omitted ...
+
+    pub fn get_text<'a>(&'a self) -> &'a String {
+        return &self.text;
+    }
+}
+
 fn main() {
-    second()
+    let a = Name {
+        x: (&"a"),
+        y: (&"b"),
+    };
+
+    let b = a.longest(&"fasdf");
+    println!("{}", b);
+
+    let a = TextEditor {
+        text: "fasdfa".to_string(),
+    };
 }

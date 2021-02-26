@@ -67,3 +67,24 @@ $(LTPLIBS_DIRS) $(APICMDS_DIR) $(LIBLTP_DIR): %:
 	mkdir -p "$@"
 ```
 
+## 读读文档
+
+Various callbacks can be set by the test writer, including
++test.test_all+, which we have set to +run()+. The test harness will execute
+this callback in a separate process (using +fork()+), forcibly terminating it
+if it does not return after +test.timeout+ seconds.
+
+./runltp -f syscalls
+
+## 分析一下代码
+- fork_testrun
+  * run_tcases_per_fs
+  * tst_run_tcases
+  - testrun : 首先会调用一下 fork 维持生活
+    - do_test_setup
+    - run_tests
+    - do_test_cleanup
+
+所以，在 testrun 的位置添加一个 config 判断，然后生成两个链接库，对于每一个 syscall 生成两个二进制文件来执行。
+
+- [ ] 但是，是存在那种可以执行所有 syscall 测试的脚本，修改一下这个脚本。
