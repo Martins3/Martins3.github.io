@@ -11,8 +11,9 @@ The service expects your implementation to send an ApplyMsg for each newly commi
 ## [Instructors' Guide to Raft](https://thesquareplanet.com/blog/instructors-guide-to-raft/)
 
 
-# Notes
+写出来，进行测试，然后下一个。
 
+# Notes
 在 Raft 中，节点间通信由 RPC 实现，主要有 RequestVote 和 AppendEntries 两个 RPC API，其中前者由处于选举阶段的 Candidate 发出，而后者由 Leader 发出。
 
 - [ ] committed 和 applied 的区别是什么 ?
@@ -26,17 +27,15 @@ prevLogIndex: 在正在备份的日志记录之前的日志记录的 index 值
 prevLogTerm: 在正在备份的日志记录之前的日志记录的 Term ID
 > 很有道理，告诉 client 自己的 prevLog 的信息
 
-
 日志由若干日志记录组成：每条记录中都包含一个需要在状态机上执行的命令，以及其对应的 index 值；除外，日志记录还会记录自己所属的 Term ID。
 
-Follower 在接收到该信息后即可将对应的日志记录应用在位于其上层的状态机上。
-> - [ ] Follower 接收到消息之后，需要 leader 告诉说，已经 commit 到什么位置了，然后才可以返回给 client, 可是为什么不让 leader 直接告知
-
-- [ ] 解决该问题的关键在于在备份旧 Term 的日志时也要把当前 Term 最新的日志一并分发出去。
+- [x] 解决该问题的关键在于在备份旧 Term 的日志时也要把当前 Term 最新的日志一并分发出去。
+  - 实际上，真正的解决方法是进行判断的增加 term 的比较
 
 - [ ] 证得前面 4 条性质后，最后一条 State Machine Safety 性质也可证得
 
-> - [ ] 到底是谁来回复 client ?
+> - [x] 到底是谁来回复 client ?
+>   - 实验，似乎通过 isLeader，而 Raft 算法实际上定义更多
 
 > - [ ] 什么情况下，leader 发送一个 rpc 结果收到的消息是存在 term id 更大的人 ?
 > 猜测，比如 leader 和其他的任何人都断了联系，然后存在新的 leader 出现了
@@ -56,15 +55,13 @@ leaderCommmit: Leader 已经提交的最后一条日志记录的 index 值
 > 1. 首先，有的机器上可能看到没有提交的日志，因为 leader 一旦收到大多数 follower 的回复之后，就会可以回复他们说可以 commit
 > 2. 通过 AppendEntries RPC 的参数 leaderCommmit, follower 就可以知道自己需要将消息 commit 到哪里了
 
-> - [ ] 等等，回复可以 commit 的消息在哪里 ?
-
-
 > 虽然，不知道哪里简化了，只是在 election 的进行规定，就可以保证日志总是从 leader 到 follower 的, 真的很不错
 
-> - [ ] 应该是存在将多个 log 同时发送给 follower，然后等待 commit 吧
+> - [x] 应该是存在将多个 log 同时发送给 follower，然后等待 commit 吧
+>    - 是的，为了提升性能
 
 
-> - [ ] 需要大多数投票，但是我怎么知道一共存在多少人, 如果忽然一堆人加入了，如何办 ?
+> - [x] 需要大多数投票，但是我怎么知道一共存在多少人, 如果忽然一堆人加入了，如何办 ?
 
 > 每一个机器都持有状态机, 因为人人都可能成为 folloer
 
@@ -263,13 +260,6 @@ FAIL	6.824/raft	7.510s
   - [ ] leader is alive ?
   - [ ] 当 leader is alive 的时候，其他人选举，如何 ? 被驳斥而已 !
 
-- [x] log structure
-- [x] append 的结构体
-
-- [ ] Start 函数
-- [ ] 响应 append 的函数
-- [ ] heartbeat 的对应的调整
-
 
 - [x] log 的开始位置是 1 对应的初始化
 
@@ -333,10 +323,43 @@ FAIL	6.824/raft	7.510s
   - 至少，立刻违背了一个原则, 那就是相同的 term 出现过多个 server
   - 这个会延伸很多的错误出现
 
-**WHEN COMING BACK**
-1. 理解为什么 leader 需要 commitIndex 和 nextIndex 两个数组 : 正常情况下，两者相同
-  - stackoverflow 上有人回答过
-2. 然后完成 2B 和 2C
+- [ ] 对于 nextIndex 需要进行优化 ?
 
+**COMMING BACK**
+- [ ] 对于 log 可能 get 了之后，然后在进行写，而且 read 应该是 deep copy, 所以，应该提供一个索引在外面才可以
+
+## 一些测试小程序
+1. buffered chan 和想法根本不同，其实是不需要 buffered 的
+```go
+package main
+
+import (
+	"fmt"
+	"time"
+)
+var done = make(chan bool)
+var msgs = make(chan int)
+
+func produce() {
+	for i := 0; i < 10000000; i++ {
+		msgs <- i
+	}
+}
+
+func consume() {
+	for {
+		msg := <-msgs
+		time.Sleep(100 * time.Millisecond)
+		fmt.Println("Consumer: ", msg)
+	}
+}
+
+func main() {
+	go produce()
+	go consume()
+	for true {
+	}
+}
+```
 
 [^1]: https://stackoverflow.com/questions/46376293/what-is-lastapplied-and-matchindex-in-raft-protocol-for-volatile-state-in-server
