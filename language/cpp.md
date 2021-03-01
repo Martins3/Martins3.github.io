@@ -9,7 +9,6 @@
 
 - [ ] 先把现有的笔记整理一下就很不错了啊 !
 
-- [ ] move
 - [ ] coroutine
 - [ ] 继承
 
@@ -47,6 +46,7 @@ http://modernescpp.com/index.php/c-20-concept-syntactic-sugar : 这个人写了�
 https://alandefreitas.github.io/moderncpp/ : 对于 moderncpp 提供一堆例子
 
 ## 项目
+https://github.com/sogou/workflow : 搜狗开发的, 不到 2 万行，少年，你想做后端开发吗 ?
 https://www.qtmuniao.com/2020/07/03/leveldb-data-structures-skip-list/ :  C++ 数据库 Jeff Dean 1000 行 :star: leveldb
   - https://medium.com/databasss/on-disk-io-part-1-flavours-of-io-8e1ace1de017 : 数据库教程
 https://github.com/nmwsharp/polyscope/tree/master/deps : 有意思的项目，用于学习语法，gtest 和 cmake 吧

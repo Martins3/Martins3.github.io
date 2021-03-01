@@ -323,10 +323,11 @@ FAIL	6.824/raft	7.510s
   - 至少，立刻违背了一个原则, 那就是相同的 term 出现过多个 server
   - 这个会延伸很多的错误出现
 
-- [ ] 对于 nextIndex 需要进行优化 ?
+- [x] 对于 nextIndex 需要进行优化 ?
 
-**COMMING BACK**
-- [ ] 对于 log 可能 get 了之后，然后在进行写，而且 read 应该是 deep copy, 所以，应该提供一个索引在外面才可以
+还存在的问题
+
+Figure 8 可能需要一个 empty 的消息来实现快速确认。
 
 ## 一些测试小程序
 1. buffered chan 和想法根本不同，其实是不需要 buffered 的

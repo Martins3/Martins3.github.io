@@ -1,8 +1,8 @@
 # 6.824
 
+- https://mit-public-courses-cn-translatio.gitbook.io/mit6-824/ : 最核心的参考
 - https://github.com/ivanallen/thor : **mit : 首先观看的内容 其他的到时候再说**
-- https://github.com/wlgq2/MIT-6.824-2018 : 6.824 的某一个人的作业
-- https://blog.microdba.com/archive/?tag=6.824 : 对于课程的记录
+- https://github.com/wlgq2/MIT-6.824-2018 : 6.824 的某一个人的作业答案
 - https://www.zhihu.com/question/29597104/answer/128443409 : pingcap 的作者谈如何学习 MIT 6.218
 
 
@@ -194,7 +194,6 @@ expires. So S2 won't start acting as primary until after S1 stops.
 
 > 利用 lease 来解决两个 primary 的问题
 
-
 ### Lecture 4
 [看看 blog](https://mr-dai.github.io/primary-backup-replication/)
 
@@ -212,9 +211,6 @@ expires. So S2 won't start acting as primary until after S1 stops.
 
 - [ ] A: Raft has no single point of failure, while VMware FT does have a single point of failure in the form of the test-and-set server.
   - vmware 的东西没有注意看啊
-
-
-
 
 
 ### Lecture 8
