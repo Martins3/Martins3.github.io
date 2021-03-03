@@ -30,7 +30,7 @@ zsh 和 bash 之前语法上基本是兼容的，但是由于[oh my zsh](https:/
 | ls   | [lsd](https://github.com/Peltoche/lsd)                                                                               |
 | du   | [ncdu](https://dev.yorhel.nl/ncdu)                                                                             |
 | gdb  | [gdb dashboard](https://github.com/cyrus-and/gdb-dashboard)                                                 |
-| git  | [diff-so-fancy](https://github.com/so-fancy/diff-so-fancy) <br> [lazy git](https://github.com/jesseduffield/lazygit) |
+| git  | [diff-so-fancy](https://github.com/so-fancy/diff-so-fancy) <br> [lazy git](https://github.com/jesseduffield/lazygit) <br> [bit](https://github.com/chriswalz/bit)|
 | man  | [cheat](https://github.com/chubin/cheat.sh)                                                                          |
 | find | [fd](https://github.com/chinanf-boy/fd-zh)                                                                           |
 

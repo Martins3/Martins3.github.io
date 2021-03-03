@@ -3,11 +3,10 @@
 1. 不能使用计算所网络，否则无法 ssh 到 4000 上
 2. `systemctl start sshd` 之后，才可以被 ssh 链接上
    - 安装的方法 : camile git:(master) ✗ sudo apt-get update && sudo apt-get install openssh-server
-```c
+```
 ➜  ~ ssh loongson@10.90.50.133
 ssh: connect to host 10.90.50.133 port 22: Connection refused
 ```
-
 
 ## 交叉编译的方法
 交叉编译的方法:
@@ -24,6 +23,14 @@ ssh: connect to host 10.90.50.133 port 22: Connection refused
 交叉编译 Linux module 的方法 : https://stackoverflow.com/questions/3467850/cross-compiling-a-kernel-module
 因为用户态程序是直接使用 x86 的编译器，从而可以 indexing, 而内核模块交叉编译，从而可以掌握全部的脚本。
 
+```sh
+NOTES_DIR=camile
+alias mipsenv='cat /home/maritns3/core/${NOTES_DIR}/hack/compile/script/mips-env.sh && source /home/maritns3/core/${NOTES_DIR}/hack/compile/script/mips-env.sh'
+alias armenv='cat /home/maritns3/core/xx/hack/compile/script/arm-env.sh && source /home/maritns3/core/xx/hack/compile/script/arm-env.sh'
+alias riscvenv='cat /home/maritns3/core/mi/hack/compile/script/riscv-env.sh && source /home/maritns3/core/mi/hack/compile/script/riscv-env.sh'
+```
+具体文件在这个仓库中间
+
 ## compile_commands.json
 1. 使用 compile_commands.json 生成方法
 ➜  linux git:(master) ✗ scripts/clang-tools/gen_compile_commands.py
@@ -32,3 +39,15 @@ ssh: connect to host 10.90.50.133 port 22: Connection refused
 
 ## 编译器下载
 http://www.loongnix.org/index.php/Cross-compile
+
+
+## 4000 的工作环境搭建
+1. oh-my-zsh
+
+2. https://github.com/skywind3000/z.lua
+```sh
+sudo yum install lua
+eval "$(lua /path/to/z.lua --init zsh)"
+```
+
+## 同步

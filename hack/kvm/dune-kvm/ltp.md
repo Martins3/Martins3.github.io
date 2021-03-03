@@ -83,4 +83,10 @@ echo CC testcases/kernel/syscalls/abort/abort01
      - include/mk/generic_leaf_target.inc
      - include/mk/env_post.mk : 定义各种各种正在测试的变量相关的数据
 
-    
+/home/maritns3/core/loongson-dune/ltp_dir/ltp/include/mk/lib.mk 定义 libltp 被 ar 的位置
+
+正确的方法是，将含有 DUNE flag 的文件和不含有 dune 的文件当做一个文件，分别处理到 tst_test ltp 和各个普通的文件
+
+- [ ] 也许并不是所有的文件都和 ltp 一样简单的
+
+## 使用 UnixBench 测试性能
