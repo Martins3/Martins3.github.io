@@ -51,3 +51,13 @@ eval "$(lua /path/to/z.lua --init zsh)"
 ```
 
 ## 同步
+
+首先在 x86 内核上进行编译模块
+```
+mipsenv && make -j10 ARCH=$ARCH CROSS_COMPILE=$CROSS_COMPILE
+```
+
+在 MIPS 上让其同步过来:
+```
+➜  ~ sudo rmmod kvm && synckernel && sudo insmod ~/cross/arch/mips/kvm/kvm.ko
+```

@@ -13,6 +13,9 @@ function. If a calling function wants to preserve such a register value across a
 
 > 大多數的時候，children possess 根本不會使用到那麼多的參數，所以在編譯的時候，沒有保存
 
+### 3.5 Coding Examples
+![](./img/abi-3.4.png)
+
 ## call convention
 - [ ] 下面的内容需要参考 System V Application Binary Interface 重新分析一下
 

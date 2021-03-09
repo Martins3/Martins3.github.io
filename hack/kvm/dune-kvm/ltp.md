@@ -89,4 +89,6 @@ echo CC testcases/kernel/syscalls/abort/abort01
 
 - [ ] 也许并不是所有的文件都和 ltp 一样简单的
 
+- [ ]  /home/maritns3/core/loongson-dune/ltp_dir/ltp/include/mk/generic_leaf_target.inc 的
+
 ## 使用 UnixBench 测试性能

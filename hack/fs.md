@@ -713,14 +713,77 @@ and are only automatically released on the last close of the open file descripti
 > Warning: the Linux implementation of mandatory locking is unreliable.  See BUGS below.  Because of these bugs, and the fact that the feature is believed to be little used, since Linux 4.5, mandatory locking has been made an optional feature, governed by a configuration option (CONFIG_MANDATORY_FILE_LOCKING).  This is an initial step toward removing this feature completely.
 
 ## eventfd
+> - https://stackoverflow.com/questions/13607730/writing-to-eventfd-from-kernel-module : 在内核模块中间可以直接让等待的等待 eventfd 的 select 返回
+> - https://unixism.net/loti/tutorial/register_eventfd.html : io_uring 可以注册 eventfd ，从而每次 io_uring 的操作完成之后，eventfd 都可以收到消息，而另一个 thread 调用 eventfd_read 的线程可以进入到下一步
 
+- 所以，kvm 是如何使用 eventfd 的 ?
+http://blog.allenx.org/2015/07/05/kvm-irqfd-and-ioeventfd
 
 ## epoll
-// TODO
-// 找到简书上内容上，写 enomia 的时候介绍 epoll 机制的内容
-- https://zhou-yuxin.github.io/articles/2017/%E7%AC%AC%E4%B8%80%E4%B8%AALinux%E9%A9%B1%E5%8A%A8%E7%A8%8B%E5%BA%8F%EF%BC%88%E4%B8%89%EF%BC%89%E2%80%94%E2%80%94aMsg%E7%9A%84%E9%9D%9E%E9%98%BB%E5%A1%9E%E5%BC%8FIO%E4%B9%8Bselect-poll/index.html
+- [ ] https://zhou-yuxin.github.io/articles/2017/%E7%AC%AC%E4%B8%80%E4%B8%AALinux%E9%A9%B1%E5%8A%A8%E7%A8%8B%E5%BA%8F%EF%BC%88%E4%B8%89%EF%BC%89%E2%80%94%E2%80%94aMsg%E7%9A%84%E9%9D%9E%E9%98%BB%E5%A1%9E%E5%BC%8FIO%E4%B9%8Bselect-poll/index.html
 在内核中间实现一个支持的 poll 的模块
 
+fs/eventpoll.md 和 fs/eventfd.md
+
+epoll_create
+```c
+       int epoll_create(int size); // 过时了，内核不需要动态分配，不需要 size 变量
+       int epoll_create1(int flags);
+
+```
+```c
+/*
+ * Open an eventpoll file descriptor.
+ */
+static int do_epoll_create(int flags)
+
+	 * Creates all the items needed to setup an eventpoll file. That is,
+	 * a file structure and a free file descriptor.
+
+
+/* File callbacks that implement the eventpoll file behaviour */
+static const struct file_operations eventpoll_fops = {
+#ifdef CONFIG_PROC_FS
+	.show_fdinfo	= ep_show_fdinfo,
+#endif
+	.release	= ep_eventpoll_release,
+	.poll		= ep_eventpoll_poll,
+	.llseek		= noop_llseek,
+};
+```
+
+- do_epoll_create
+  - get_unused_fd_flags
+  - anon_inode_getfile
+  - fd_install
+
+- do_epoll_ctl
+  - ep_insert
+    - ep_rbtree_insert : 插入到 eventpoll:rbr 这个结构体上
+    - init_poll_funcptr(&epq.pt, ep_ptable_queue_proc);
+  - ep_remove :
+  - ep_modify
+
+
+- do_epoll_wait
+  - ep_poll
+    - ep_events_available
+      - `ep->rdllist`
+
+> Because different file systems have different implementations, it is impossible to get the waiting queue directly through the struct file object, so we use the poll operation of struct file to return the waiting queue of the object in the way of callback.
+The callback function set here is `ep_ptable_queue_proc`
+
+1. 感觉 ep_ptable_queue_proc 是用于加入队列的时候初始化
+2. ep_item_poll
+  - `__ep_eventpoll_poll`
+    - poll_wait
+      - poll_table_struct:poll_queue_proc : 调用 callback 也就是 ep_ptable_queue_proc
+3. ep_poll_callback : 是 wakeup 的时候，调用的 callback 函数
+
+
+> 总结，从描述上看，似乎并没有什么神奇的不得了的事情，只是 epoll 和 eventfd , aio , io_uring 在异步机制上的区别是什么
+
+还需要阅读 poll, ppoll, select, pselect 的代码吗 ? 没必要, 可以看看 [Evans 的 blog](https://jvns.ca/blog/2017/06/03/async-io-on-linux--select--poll--and-epoll/)
 
 ## anon_inodes
 - [ ] 很短的一个代码 : /home/maritns3/core/linux/fs/anon_inodes.c
