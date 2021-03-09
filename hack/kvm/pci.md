@@ -2,6 +2,9 @@
 
 <!-- vim-markdown-toc GitLab -->
 
+- [关键blog](#关键blog)
+- [关键blog2](#关键blog2)
+- [Loyenwang](#loyenwang)
 - [PCH](#pch)
 - [overview](#overview)
 - [ldd3](#ldd3)
@@ -27,13 +30,35 @@
 - [ ] iommu group
 
 - [ ] 内核文档 : [^3]
-- [ ] 关键blog : https://resources.infosecinstitute.com/topic/system-address-map-initialization-in-x86x64-architecture-part-1-pci-based-systems/
-- [ ] 关键blog2 :  https://resources.infosecinstitute.com/topic/system-address-map-initialization-x86x64-architecture-part-2-pci-express-based-systems/
 - [ ] https://wiki.osdev.org/PCI_Express / https://wiki.osdev.org/PCI
 
 - [ ] https://www.kernel.org/doc/Documentation/PCI/pci.txt
 - [ ] https://sites.google.com/site/pinczakko/pinczakko-s-guide-to-award-bios-reverse-engineering
 - [ ] https://www.kernel.org/doc/html/latest/PCI/sysfs-pci.html?highlight=proc%20irq
+
+## 关键blog
+-  https://resources.infosecinstitute.com/topic/system-address-map-initialization-in-x86x64-architecture-part-1-pci-based-systems/
+
+Platform firmware execution can be summarized as follows:
+1. CPU 从 reset vector 开始，对于 x86 这个地址是 4GB - 16 byte, 而这个地址一定在 ROM 芯片中间
+2. CPU operating mode initialization : 初始化 CPU 为 real mode 还是 flat protected mode
+3. CPU microcode update : 使用 ROM 芯片的更新 CPU 的状态
+4. Preparation for memory initialization:
+   - CPU-specific initialization : 对于 CPU 的一些特殊初始化，比如 cache-as-RAM (CAR), 将 cache 作为内存使用，进而执行初始化内存的代码
+   - Chipset initialization. 初始化 chipset 的寄存器，particularly the chipset base address register (BAR).
+   - Main memory (RAM) initialization. 初始化内存控制器，
+5. Post memory initialization. 
+> 下次从这里开始。**WHEN COMMING BACK** 讲解的很清楚啊!
+
+## 关键blog2
+- https://resources.infosecinstitute.com/topic/system-address-map-initialization-x86x64-architecture-part-2-pci-express-based-systems/
+
+## Loyenwang
+> TODO
+
+[【原创】Linux PCI驱动框架分析（一）](https://www.cnblogs.com/LoyenWang/p/14165852.html)
+[【原创】Linux PCI驱动框架分析（二）](https://www.cnblogs.com/LoyenWang/p/14209318.html)
+
 
 ## PCH
 [what has happened to north bridge in modern](https://www.reddit.com/r/hardware/comments/bt4xff/what_has_happened_to_north_bridge_in_modern/) :
@@ -402,5 +427,5 @@ To operate on a memory region such as the frame buffer on the above PCI video ca
 
 
 [^1]: https://stackoverflow.com/questions/7682422/what-does-request-mem-region-actually-do-and-when-it-is-needed
-[^2] : https://stackoverflow.com/questions/18854931/how-does-the-os-detect-hardware
-[^3] : https://www.kernel.org/doc/html/latest/PCI/index.html
+[^2]: https://stackoverflow.com/questions/18854931/how-does-the-os-detect-hardware
+[^3]: https://www.kernel.org/doc/html/latest/PCI/index.html

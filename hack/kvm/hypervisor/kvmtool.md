@@ -8,13 +8,13 @@
 - [pci](#pci)
 - [vhost](#vhost)
 - [virtio](#virtio)
+    - [eventfd](#eventfd)
 - [i8042](#i8042)
 
 <!-- vim-markdown-toc -->
 
 
 ## docs
-
 [kvmtool - a QEMU alternative?](https://elinux.org/images/4/44/Przywara.pdf)
 https://github.com/adamdunkels/uip
 - [ ] 阅读资料 : https://mp.weixin.qq.com/s/CWqUagksabj4kDFQhTlgUA
@@ -101,14 +101,27 @@ virt_queue__get_iov :
     - [ ] 那么 desc 中间的内容其实是内核驱动传输过来的
     - [ ] 如何传入到 guest 中间
 
+#### eventfd
 - [x] `bdev->io_efd`
     - [x] guest 如何通过其告知 host 有来自于 devices 的数据 : notify_vq : 向 `bdev->io_efd` 写入数值，通过 guest 有事情找 host
-      - virtio_pci__data_out : guest 写约定的位置，告诉其数据好了，此时需要 vmm 退出的
+      - virtio_pci__data_out : guest 写 mmio ，告诉其数据好了，此时需要 vmm 退出的
       - ioeventfd : virtio_pci__ioevent_callback : 调用对应的设备的 ioeventfd
-          - virtio_pci__init_ioeventfd : 中间，将 MMIO 和 Port address 的位置注册上，当 guest 对于这两个位置写入的时候，将会自动通过 eventfd 通知 kvmtool, kvmtool 接收到之后调用回调函数
-          - ioeventfd : 当 eventfd 到 guest 写入数据之后 检测到存在事件的发生，那么需要使用 `ioeventfd->vdev->ops->notify_vq(kvm, vpci->dev, ioeventfd->vq);`
-          - virtio_blk_thread 被 `bdev->io_efd` 通知之后，然后 virtio_blk_do_io_request 进行真正的处理，IN 和 OUT 都是存在的
-          - The purpose of this mechanism is to make guest notify host in a lightweight way. 
+
+- virtio_pci__init_ioeventfd : 中间，将 MMIO 和 Port address 的位置注册上，当 guest 对于这两个位置写入的时候，将会自动通过 eventfd 通知 kvmtool, kvmtool 接收到之后调用回调函数
+  - ioeventfd__add_event : 创建一个 struct ioeventfd，作为参数传递给 ioeventfd__add_event
+    - ioeventfd__add_event : 利用参数 struct ioeventfd 构建  struct kvm_ioeventfd, 并且通知内核 和 epoll
+      - `r = ioctl(ioevent->fn_kvm->vm_fd, KVM_IOEVENTFD, &kvm_ioevent);`
+      - `r = epoll_ctl(epoll_fd, EPOLL_CTL_ADD, event, &epoll_event);`
+
+- ioeventfd : 当 eventfd 到 guest 写入数据之后 检测到存在事件的发生，那么需要使用 `ioeventfd->vdev->ops->notify_vq(kvm, vpci->dev, ioeventfd->vq);`
+- virtio_blk_thread 被 `bdev->io_efd` 通知之后，然后 virtio_blk_do_io_request 进行真正的处理，IN 和 OUT 都是存在的
+
+内核侧的分析参考 : hack/kvm/eventfd.md
+
+在 virtio 文件夹的下的分析:
+1. mmio / pci : 通过读写 mmio 或者 pci 的空间来通知消息，例如 virtio_pci__signal_vq 就是 host 通知 guest 队列完成
+2. ... @todo
+
 - [x] KVM 通过注册 eventfd，那么 guest 如何听话:
     - [ ] 通过 VMEXIT 的方式告知 : virtio_pci__init 的时候，会初始化 pci 的端口地址
     - [ ] eventfd : 是 bar 的地址

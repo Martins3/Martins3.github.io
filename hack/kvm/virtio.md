@@ -1,7 +1,6 @@
 # TODO
 - [ ] /home/maritns3/core/firecracker/src/devices/src/virtio/vsock/csm/connection.rs has a small typo
 
-
 - [ ] virtiofs 的内容很少
 
 - [ ] virtio and msi: 
@@ -13,15 +12,15 @@
 [ ](https://www.redhat.com/en/blog/deep-dive-virtio-networking-and-vhost-net)
 [ ](https://www.redhat.com/en/blog/introduction-virtio-networking-and-vhost-net)
 
-## vhost
-https://terenceli.github.io/%E6%8A%80%E6%9C%AF/2020/04/18/vsock-internals
-
-## eventfd
-
 **如何打开 virtio 选项于 make menuconfig 中**
 1. Device Driver => Virtio Drivers ==> PCI drivers for virtio devices
 2. Device Driver => Block devices => Virtio block io
 3. Device Driver => Network Device support => Virtio network driver
+
+## vhost
+https://terenceli.github.io/%E6%8A%80%E6%9C%AF/2020/04/18/vsock-internals
+
+## eventfd
 
 - [ ] http://blog.allenx.org/2015/07/05/kvm-irqfd-and-ioeventfd
 
