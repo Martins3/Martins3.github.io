@@ -1253,27 +1253,6 @@ kvm_is_zone_device_pfn
 
 - [ ] zone device
 
-
-#### vcpu_load
-- [ ] check 一下使用的位置
-- [ ] preempt_notifier_register : 神奇的 notifier 机制
-- [ ] 和 vcpu_put 的结合分析一下
-
-```c
-/*
- * Switches to specified vcpu, until a matching vcpu_put()
- */
-void vcpu_load(struct kvm_vcpu *vcpu)
-{
-	int cpu = get_cpu();
-
-	__this_cpu_write(kvm_running_vcpu, vcpu);
-	preempt_notifier_register(&vcpu->preempt_notifier);
-	kvm_arch_vcpu_load(vcpu, cpu);
-	put_cpu();
-}
-```
-
 #### kvm_vm_ioctl_set_memory_region
 
 #### kvm_vcpu_unmap

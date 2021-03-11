@@ -363,28 +363,11 @@ kvm_mips_host_tlb_inv need `va` and `asid` to assemble `EntryHi`.
 
 
 ## cpu load / put
-**kvm_vz_vcpu_put** && **kvm_vz_vcpu_load** register here :
-```c
-static struct kvm_mips_callbacks kvm_vz_callbacks = {
-```
-and used by:
-- [x] kvm_arch_vcpu_put
-- [x] kvm_arch_vcpu_load : they are used by kvm_main.c and sched/core.c
-
-- [ ] Understand how vcpu_get , vcpu_put worked in dune ?
-  - when vcpu bind to a physical cpu, if vcpu doesn't match the cpu, then ...
-  - don't go to cpu until vcpu_put
-  - dune: 
-    - vcpu points to vmcs, load vmcs to the cpu before run vmcs_read
-
-- [ ] ASID ?
-
-- [ ] gc0
-```c
-static int kvm_vz_vcpu_load(struct kvm_vcpu *vcpu, int cpu)
-{
-	kvm_restore_gc0_wired(cop0);
-```
+调用链条 :
+1. vcpu_load
+  - preempt_notifier_register : 这让只要 process 被换出，就执行 kvm_sched_out => kvm_arch_vcpu_put
+  - kvm_arch_vcpu_load
+    - `kvm_mips_callbacks->vcpu_load` => kvm_vz_vcpu_load
 
 ## kvm_trap_vz_handle_guest_exit and kvm_mips_handle_exit
 ```c

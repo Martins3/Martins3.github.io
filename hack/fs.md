@@ -48,6 +48,7 @@
 - [overlay fs](#overlay-fs)
 - [inode](#inode)
 - [dcache](#dcache)
+    - [dcache shrink](#dcache-shrink)
 - [lvm](#lvm)
 - [splice](#splice)
 - [pipe](#pipe)
@@ -72,6 +73,7 @@
 - [null blk](#null-blk)
 - [proc](#proc)
     - [sysctl](#sysctl)
+- [mnt](#mnt)
 - [fifo](#fifo)
 - [configfs](#configfs)
 - [binder](#binder)
@@ -630,6 +632,10 @@ aio_complete 会调用 eventfd_signal，这是实现 epoll 机制的核心。
 > 2. aio 不能使用 page cache, 那么对于 metadata 的读取， aio 可以实现异步吗 ? (我猜测，应该所有的文件系统都是不支持的吧!)
 
 #### io uring
+![](https://kernel.taobao.org/2020/09/IO_uring_Optimization_for_Nginx/3.png)
+- [ ] https://github.com/frevib/io_uring-echo-server : 别 手高眼低 了，先学会如何使用吧。
+
+
  - [ ] [^8]
 io_uring 有如此出众的性能，主要来源于以下几个方面：
 1. 用户态和内核态共享提交队列（submission queue）和完成队列（completion queue）
@@ -1510,6 +1516,20 @@ https://qr.ae/pNs0eS
 ## inode
 感觉 inode.c 其实和 dcache.c 是对称的，inode 本身作为 cache 的，与需要加载，删除，初始化等操作
 
+inode.c 中间存在的函数:
+1. iget_locked / iput : 被其他的子系统调用(ext4), 用于创建一个新的 general inode
+2. inode_init_owner : 初始化 inode 对应的 uid, gid, mode
+3. super_block::s_inode_lru : 用于 inode 的回收工作
+
+而 dcache.c 中存在的函数:
+1. d_lookup
+2. dput
+3. d_alloc
+4. d_find_alias : alias 应该是 hash 导致的 ?
+5. super_block::s_dentry_lru : 用于回收
+
+
+
 1. inode.c 中间存在好几个结尾数字为5的函数，表示什么含义啊 ?
 
 其中的集大成者是 iget5_locked ?
@@ -1579,51 +1599,6 @@ static unsigned long hash(struct super_block *sb, unsigned long hashval)
 2. d_ops 的作用是什么
 3. negtive 怎么产生的 ?
 
-* ***shrinker***
-
-1. alloc_super 中间创建了一个完成 shrinker 的初始化 TODO 这个 shrinker 机制还有人用吗 ?
-    1. super_cache_scan
-    2. super_cache_count
-
-2. `struct superpage` 中间存在两个函数 TODO 应该用于特殊内容的缓存的
-```c
-	long (*nr_cached_objects)(struct super_block *,
-				  struct shrink_control *);
-	long (*free_cached_objects)(struct super_block *,
-				    struct shrink_control *);
-```
-3.  super_cache_scan 调用两个函数
-    1. prune_dcache_sb 
-    2. prune_icache_sb
-```c
-long prune_dcache_sb(struct super_block *sb, struct shrink_control *sc)
-{
-	LIST_HEAD(dispose);
-	long freed;
-
-	freed = list_lru_shrink_walk(&sb->s_dentry_lru, sc,
-				     dentry_lru_isolate, &dispose);
-	shrink_dentry_list(&dispose);
-	return freed;
-}
-
-prune_icache_sb : TODO 这个是用于释放 inode 还是 inode 持有的文件 ? 还是当 inode 被打开之后就不释放 ?
-```
-
-4. 
-list_lru_shrink_walk 似乎就是遍历一下列表，将可以清理的页面放出来
-```c
-static enum lru_status dentry_lru_isolate(struct list_head *item,
-		struct list_lru_one *lru, spinlock_t *lru_lock, void *arg)
-```
-然后使用 prune_dcache_sb 紧接着调用 shrink_dentry_list ，将刚刚清理出来的内容真正的释放:
-
-5. shrink 的源头还有 unmount 的时候 
-
-
-
-
-
 分析一个 cache 基本方法:
 1. 加入
 2. 删除
@@ -1670,6 +1645,58 @@ Each entry (known as a “dentry”) contains three significant fields:
 3. and a pointer to the “inode” which contains further information about the object in that parent with the given name.
 > 为啥需要包含 parent dentry ?
 
+#### dcache shrink
+1. alloc_super 中间创建了一个完成 shrinker 的初始化 TODO 这个 shrinker 机制还有人用吗 ?
+    1. super_cache_scan
+    2. super_cache_count
+
+2. `struct superpage` 中间存在两个函数 TODO 应该用于特殊内容的缓存的
+```c
+	long (*nr_cached_objects)(struct super_block *,
+				  struct shrink_control *);
+	long (*free_cached_objects)(struct super_block *,
+				    struct shrink_control *);
+```
+3.  super_cache_scan 调用两个函数
+    1. prune_dcache_sb 
+    2. prune_icache_sb
+```c
+long prune_dcache_sb(struct super_block *sb, struct shrink_control *sc)
+{
+	LIST_HEAD(dispose);
+	long freed;
+
+	freed = list_lru_shrink_walk(&sb->s_dentry_lru, sc,
+				     dentry_lru_isolate, &dispose);
+	shrink_dentry_list(&dispose);
+	return freed;
+}
+
+prune_icache_sb : TODO 这个是用于释放 inode 还是 inode 持有的文件 ? 还是当 inode 被打开之后就不释放 ?
+```
+
+4. 
+list_lru_shrink_walk 似乎就是遍历一下列表，将可以清理的页面放出来
+```c
+static enum lru_status dentry_lru_isolate(struct list_head *item,
+		struct list_lru_one *lru, spinlock_t *lru_lock, void *arg)
+```
+然后使用 prune_dcache_sb 紧接着调用 shrink_dentry_list ，将刚刚清理出来的内容真正的释放:
+
+5. shrink 的源头还有 unmount 的时候 
+
+那么 dcache / icache 的 shrink 机制在整个 shrink 机制中间是怎么处理的 ?
+shrink_node_memcgs ==> shrink_slab ==> 对于所有的 `struct shrinker` 调用 do_shrink_slab
+
+对于 inode 和 icache 的回收是放在 alloc_super 的初始化中间的。
+而 x86 kvm 中间也是存在对于 shrinker 的回收工作的。
+```c
+static struct shrinker mmu_shrinker = {
+	.count_objects = mmu_shrink_count,
+	.scan_objects = mmu_shrink_scan,
+	.seeks = DEFAULT_SEEKS * 10,
+};
+```
 
 ## lvm
 https://opensource.com/business/16/9/linux-users-guide-lvm
@@ -2053,6 +2080,27 @@ https://www.kernel.org/doc/html/latest/block/null_blk.html
 
 - [ ] so It works and different from part of proc ?
 
+## mnt
+在 fs/namespace.c 下面:
+
+```c
+__do_sys_mount [Function] 3431,1                                                                                                                                                                                                                          │
+__do_sys_umount [Function] 1781,1                                                                                                                                                                                                                         │
+__do_sys_fsmount [Function] 3496,1                                                                                                                                                                                                                        │
+__do_sys_oldumount [Function] 1791,1                                                                                                                                                                                                                      │
+__do_sys_open_tree [Function] 2441,1                                                                                                                                                                                                                      │
+__do_sys_move_mount [Function] 3626,1                                                                                                                                                                                                                     │
+__do_sys_pivot_root [Function] 3726,1                                                                                                                                                                                                                     │
+__do_sys_mount_setattr [Function] 4132,1                                                                                                                                                                                                                  │
+```
+open_tree 和 move_mount 连 man 都没有
+
+[这里](https://unix.stackexchange.com/questions/464033/understanding-how-mount-namespaces-work-in-linux)
+提供了一个很好的例子，首先 unshare mount namespace，创建一个新的 mount point, 使用 findmnt 来检查，可以看到新的 mnt 点, 但是在另一个 shell 中间就是没有该 mnt 的。
+在 container 的情况下，为了修改一个程序内部观测到 root 是从我们设置好的位置，需要 pivot_root 那嫁接一下。
+
+猜测 : 由于 mount 的空间不同，实际上，在同一个路径，一个可能进入到 mount，一个可能不会，这导致路径查找变得更加复杂了。
+
 ## fifo
 https://unix.stackexchange.com/questions/433488/what-is-the-purpose-of-using-a-fifo-vs-a-temporary-file-or-a-pipe
 
@@ -2064,7 +2112,6 @@ https://www.kernel.org/doc/html/latest/filesystems/configfs.html
 
 ## binder
 - [ ] https://www.jianshu.com/p/82b691cbdde4
-
 
 ## zone
 https://zonedstorage.io/introduction/zoned-storage/

@@ -1,6 +1,10 @@
 # ksm
+kernel doc[^15] 中间说明了如何使用，首先阅读的内容。
 
 ## TODO
+- [ ] KSM 是不是只能合成匿名页面, 什么是 LRU 页面 ? 
+
+
 - [ ] ksm_slab_init : slab 是什么鬼东西 ?
 
 scan_get_next_rmap_item 获取一个合适的匿名页面。
@@ -12,8 +16,6 @@ rmap_item 代表一个页面
 - [ ] `rmap_item::anon_vma;`
 
 - [ ] migrate_pages 移动物理页面，导致所有共享这个物理页面的人都不能使用该页面了。
-
-- [ ] 那么不能被 KSM 的页面非常离谱
 
 - [ ] 始终无法理解为什么和 rmap 相关啊 ?
 
@@ -50,3 +52,5 @@ static void cmp_and_merge_page(struct page *page, struct rmap_item *rmap_item)
       - calc_checksum : 为什么等到现在才进行 calc_checksum, 之前的操作依据是什么 ? 为什么是放到最后进行两个 tree 的 insert ?
       - unstable_tree_search_insert
       - stable_tree_insert
+
+[^15]: [kernel doc : Kernel Samepage Merging](https://www.kernel.org/doc/html/latest/vm/ksm.html)

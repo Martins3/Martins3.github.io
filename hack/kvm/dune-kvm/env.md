@@ -1,5 +1,8 @@
-# 环境搭建
+# 交叉编译器 和 内核 的获取
+- 龙芯官网
+- gitlab : 4.19 , commit-id 46508b5ca3b3c7523993c7f49bf3efa8a7cffeb5 
 
+# 环境搭建
 1. 不能使用计算所网络，否则无法 ssh 到 4000 上
 2. `systemctl start sshd` 之后，才可以被 ssh 链接上
    - 安装的方法 : camile git:(master) ✗ sudo apt-get update && sudo apt-get install openssh-server
@@ -52,6 +55,7 @@ eval "$(lua /path/to/z.lua --init zsh)"
 
 ## 同步
 
+#### rsync
 首先在 x86 内核上进行编译模块
 ```
 mipsenv && make -j10 ARCH=$ARCH CROSS_COMPILE=$CROSS_COMPILE
@@ -61,3 +65,19 @@ mipsenv && make -j10 ARCH=$ARCH CROSS_COMPILE=$CROSS_COMPILE
 ```
 ➜  ~ sudo rmmod kvm && synckernel && sudo insmod ~/cross/arch/mips/kvm/kvm.ko
 ```
+
+#### sshfs
+```
+sudo apt install sshfs
+mkdir 4000
+sshfs loongson@10.90.50.133:/home/loongson 4000
+```
+
+这种方法，编译内核的方式相同，但是内核模块的 install 只需要将两步
+
+```
+➜  ~ sudo rmmod kvm && sudo insmod ~/cross/arch/mips/kvm/kvm.ko
+```
+这其实有个问题，在 x86 上编译内核太慢，在 MIPS 上编译，应该是无法正常生成 compile_commands.json
+
+但是对于小项目，这是无所谓的。

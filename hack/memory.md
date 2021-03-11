@@ -43,12 +43,6 @@
 - [get user page](#get-user-page)
 - [madvise && fadvise](#madvise-fadvise)
 - [highmem](#highmem)
-- [page reclaim](#page-reclaim)
-    - [lru](#lru)
-    - [direct shrink](#direct-shrink)
-    - [kswapd](#kswapd)
-    - [shrink_node](#shrink_node)
-    - [shrink slab](#shrink-slab)
 - [memory consistency](#memory-consistency)
 - [pmem](#pmem)
 - [memory model](#memory-model)
@@ -56,8 +50,6 @@
 - [mmio](#mmio)
 - [physical memory initialization](#physical-memory-initialization)
 - [memory zone](#memory-zone)
-- [slub](#slub)
-    - [slub free](#slub-free)
 - [shmem](#shmem)
 - [swap](#swap)
     - [swap cache](#swap-cache)
@@ -69,7 +61,6 @@
 - [hot plug](#hot-plug)
 - [ioremap](#ioremap)
 - [mremap](#mremap)
-- [KSM](#ksm)
 - [debug](#debug)
     - [page owner](#page-owner)
     - [KASAN](#kasan)
@@ -104,7 +95,6 @@
     - [vm_flags](#vm_flags)
     - [page_flags](#page_flags)
 - [vmalloc](#vmalloc)
-- [rmap](#rmap)
 - [mincore](#mincore)
 - [pageblock](#pageblock)
 - [user address space](#user-address-space)
@@ -362,6 +352,7 @@ static bool is_refcount_suitable(struct page *page)
 
 - [ ] put_page : rather difficult than expected
 
+1. `_mapcount` 是在 union 中间，当该页面给用户使用的时候，才有意义
 
 ## page fault
 - [ ] vmf_insert_pfn : 给驱动使用的直接，在 vma 连接 va 和 pa 
@@ -2135,272 +2126,6 @@ kmap 和 kmap_atomic 在 64bit 是不是完全相同的:
 并不是完全相同的，应该只是历史遗留产物吧 !
 
 
-## page reclaim
-- [ ] 所以 shmem 的内存是如何被回收的
-    - [ ] 将 shmem 的内存当做 swap cache ?
-    - [ ] super_operations::nr_cached_objects 用于处理 transparent_hugepage
-
-
-1. 理清楚一个调用路线图
-2. mark page accessed 和 page reference
-3. 和 dirty page 无穷无尽的关联
-
-理清楚 shrinker，page reclaim ，compaction 之间的联系 !
-似乎是唯一的和 shrinerk 的 lwn  https://lwn.net/Articles/550463/
-1. For the inode cache, that is done by a "shrinker" function provided by the virtual filesystem layer.[^2]
-
-1. vmscan.c 的 direct reclaim 的过程
-```c
-try_to_free_pages
-  do_try_to_free_pages
-    shrink_node
-      shrink_node_memcgs
-        shrink_lruvec + shrink_slab
-
-          shrink_list
-            shrink_inactive_list (shrink_active_list)
-              shrink_page_list
-```
-
-```c
-struct scan_control {
-	/* How many pages shrink_list() should reclaim */
-	unsigned long nr_to_reclaim;
-
-	/* This context's GFP mask */
-	gfp_t gfp_mask;
-
-	/* Allocation order */
-	int order;
-
-	/*
-	 * Nodemask of nodes allowed by the caller. If NULL, all nodes
-	 * are scanned.
-	 */
-	nodemask_t	*nodemask;
-
-	/*
-	 * The memory cgroup that hit its limit and as a result is the
-	 * primary target of this reclaim invocation.
-	 */
-	struct mem_cgroup *target_mem_cgroup;
-
-	/* Scan (total_size >> priority) pages at once */
-	int priority;
-
-	/* The highest zone to isolate pages for reclaim from */
-	enum zone_type reclaim_idx;
-
-	/* Writepage batching in laptop mode; RECLAIM_WRITE */
-	unsigned int may_writepage:1;
-
-	/* Can mapped pages be reclaimed? */
-	unsigned int may_unmap:1;
-
-	/* Can pages be swapped as part of reclaim? */
-	unsigned int may_swap:1;
-
-	/*
-	 * Cgroups are not reclaimed below their configured memory.low,
-	 * unless we threaten to OOM. If any cgroups are skipped due to
-	 * memory.low and nothing was reclaimed, go back for memory.low.
-	 */
-	unsigned int memcg_low_reclaim:1;
-	unsigned int memcg_low_skipped:1;
-
-	unsigned int hibernation_mode:1;
-
-	/* One of the zones is ready for compaction */
-	unsigned int compaction_ready:1;
-
-	/* Incremented by the number of inactive pages that were scanned */
-	unsigned long nr_scanned;
-
-	/* Number of pages freed so far during a call to shrink_zones() */
-	unsigned long nr_reclaimed;
-};
-```
-- nr_to_reclaim：需要回收的页面数量；
-- gfp_mask：申请分配的掩码，用户申请页面时可以通过设置标志来限制调用底层文件系统或不允许读写存储设备，最终传递给LRU处理；
-- order：申请分配的阶数值，最终期望内存回收后能满足申请要求；
-- nodemask：内存节点掩码，空指针则访问所有的节点；
-- priority：扫描LRU链表的优先级，用于计算每次扫描页面的数量(total_size >> priority，初始值12)，值越小，扫描的页面数越大，逐级增加扫描粒度；
-- may_writepage：是否允许把修改过文件页写回存储设备；
-- may_unmap：是否取消页面的映射并进行回收处理；
-- may_swap：是否将匿名页交换到swap分区，并进行回收处理；
-- nr_scanned：统计扫描过的非活动页面总数；
-- nr_reclaimed：统计回收了的页面总数
-
-
-#### lru
-// 首先阅读的内容 : https://lwn.net/Articles/550463/
-
-- [ ] https://mp.weixin.qq.com/s/7eDqHR06TIBh6hqUMTrZKg
-- [ ] LoyenWang seems cover this part too.
-
-// 简要说明一下在 mem/list_lru.c 中间的内容:
-
-```c
- struct list_lru {
- 	struct list_lru_node	*node;
- #ifdef CONFIG_MEMCG_KMEM
- 	struct list_head	list;
- 	int			shrinker_id;
- #endif
- };
-```
-> 从其中跟踪的代码看，似乎只有inode 的管理在使用lru_list
-
-- [ ] enum pageflags::PG_lru ? why is special ? why we need time for it ?
-  - [ ] check `SetPageLRU`
-
-move_pages_to_lru
-
-- [ ] page_evictable() and PageMovable()
-  - [ ] I think, if a page can be evicted to swap, so it can movable too.
-
-
-![loading](https://img2018.cnblogs.com/blog/1771657/201911/1771657-20191109175747860-1724945792.png)
-上图中，主要实现的功能就是将CPU缓存的页面，转移到lruvec链表中，而在转移过程中，最终会调用pagevec_lru_move_fn函数，实际的转移函数是传递给pagevec_lru_move_fn的函数指针。在这些具体的转移函数中，会对Page结构状态位进行判断，清零，设置等处理，并最终调用del_page_from_lru_list/add_page_to_lru_list接口来从一个链表中删除，并加入到另一个链表中。
-
-上述的每个CPU5种缓存struct pagevec，基本描述了LRU链表的几种操作：
-- lru_add_pvec：缓存不属于LRU链表的页，新加入的页；
-- lru_rotate_pvecs：缓存已经在INACTIVE LRU链表中的非活动页，将这些页添加到INACTIVE LRU链表的尾部；
-- lru_deactivate_pvecs：缓存已经在ACTIVE LRU链表中的页，清除掉PG_activate, PG_referenced标志后，将这些页加入到INACTIVE LRU链表中；
-- lru_lazyfree_pvecs：缓存匿名页，清除掉PG_activate, PG_referenced, PG_swapbacked标志后，将这些页加入到LRU_INACTIVE_FILE链表中；
-- activate_page_pvecs：将LRU中的页加入到ACTIVE LRU链表中；
-
-find reference of `pagevec_lru_move_fn`, we can find all the `void (*move_fn)(struct page *page, struct lruvec *lruvec, void *arg)`
-
-```c
-/*
- * Add the passed pages to the LRU, then drop the caller's refcount
- * on them.  Reinitialises the caller's pagevec.
- */
-void __pagevec_lru_add(struct pagevec *pvec)
-{
-    //直接调用pagevec_lru_move_fn函数，并传入转移函数指针
-	pagevec_lru_move_fn(pvec, __pagevec_lru_add_fn, NULL);
-}
-EXPORT_SYMBOL(__pagevec_lru_add);
-
-static void pagevec_lru_move_fn(struct pagevec *pvec,
-	void (*move_fn)(struct page *page, struct lruvec *lruvec, void *arg),
-	void *arg)
-{
-	int i;
-	struct pglist_data *pgdat = NULL;
-	struct lruvec *lruvec;
-	unsigned long flags = 0;
-
-    //遍历缓存中的所有页
-	for (i = 0; i < pagevec_count(pvec); i++) {
-		struct page *page = pvec->pages[i];
-		struct pglist_data *pagepgdat = page_pgdat(page);
-
-       //判断是否为同一个node，同一个node不需要加锁，否则需要加锁处理
-		if (pagepgdat != pgdat) {
-			if (pgdat)
-				spin_unlock_irqrestore(&pgdat->lru_lock, flags);
-			pgdat = pagepgdat;
-			spin_lock_irqsave(&pgdat->lru_lock, flags);
-		}
-
-       //找到目标lruvec，最终页转移到该结构中的LRU链表中
-		lruvec = mem_cgroup_page_lruvec(page, pgdat);
-		(*move_fn)(page, lruvec, arg);  //根据传入的函数进行回调
-	}
-	if (pgdat)
-		spin_unlock_irqrestore(&pgdat->lru_lock, flags);
-    //减少page的引用值，当引用值为0时，从LRU链表中移除页表并释放掉
-	release_pages(pvec->pages, pvec->nr, pvec->cold);
-    //重置pvec结构
-	pagevec_reinit(pvec);
-}
-
-static void __pagevec_lru_add_fn(struct page *page, struct lruvec *lruvec,
-				 void *arg)
-{
-	int file = page_is_file_cache(page);
-	int active = PageActive(page);
-	enum lru_list lru = page_lru(page);
-
-	VM_BUG_ON_PAGE(PageLRU(page), page);
-    //设置page的状态位，表示处于Active状态
-	SetPageLRU(page);
-    //加入到链表中
-	add_page_to_lru_list(page, lruvec, lru);
-    //更新lruvec中的reclaim_state统计信息
-	update_page_reclaim_stat(lruvec, file, active);
-	trace_mm_lru_insertion(page, lru);
-}
-```
-具体的分析在注释中标明了，其余4种缓存类型的迁移都大体类似，至于何时进行迁移以及策略，这个在下文中关于内存回收的进一步分析中再阐述。
-
-正常情况下，LRU链表之间的转移是不需要的，只有在需要进行内存回收的时候，才需要去在ACTIVE和INACTIVE之间去操作。
-
-进入具体的回收分析吧。
-
-#### direct shrink
-- [ ] So, where's indirect shrink, polish documentations here.
-
-
-- [ ] One horrible thing came to me, why not **compact** page when **reclaim** page ?
-
-![loading](https://img2018.cnblogs.com/blog/1771657/201911/1771657-20191109175827519-2018632360.png)
-
--  [ ] [LoyenWang](https://www.cnblogs.com/LoyenWang/p/11827153.html) section 3.3
-
-
-
-#### kswapd
-- [^29] present a beautiful graph ![](https://oscimg.oschina.net/oscnet/33f9024d70cd92f9cc711df451500aa6047.jpg)
-
-- relation between `kswapd` and `kcompactd`: if kswapd free some pages, then we can wake it up and compact pages
-
-- [ ] [LoyenWang](https://www.cnblogs.com/LoyenWang/p/11827153.html) section 3.4
-
-
-
-#### shrink_node
-
-get_scan_count
-
-```c
-enum scan_balance {
-	SCAN_EQUAL,  // 计算出的扫描值按原样使用
-	SCAN_FRACT,  // 将分数应用于计算的扫描值
-	SCAN_ANON,  // 对于文件页LRU，将扫描次数更改为0
-	SCAN_FILE,     // 对于匿名页LRU，将扫描次数更改为0
-};
-```
-
-![loading](https://img2018.cnblogs.com/blog/1771657/201911/1771657-20191109180043631-1027693945.png)
-
-watch out : rename `shrink_node_memcg` to `shrink_lruvec`
-
-**TO BE CONTINUE, the LoyenWang's blog with code**
-
-#### shrink slab
-1. 面试问题 : dcache 的需要 slab，slab 分配需要 page，那么 page cache, slab 和 dcache 的回收之间的关系是什么
-   1. 思考 : slab 都是提供 kmalloc 的内容，凭什么，可以释放
-   2. 或者本来，释放 slab 就不是特制一个例子，而是一个 shrinker 机制，专门用于释放内核的分配的数据
-   3. 其他 page cache 以及用户页面就是我们熟悉的 lru 算法进行处理了
-
-shrink 的接口和使用方法是什么 ?
-
-这是唯一的使用位置:
-```c
-static unsigned long shrink_slab(gfp_t gfp_mask, int nid,
-				 struct mem_cgroup *memcg,
-				 int priority)
-         // 对于所有的注册的 shrinker 循环调用 do_shrink_slab
-         // 也就是说，其实每个 cache shrinker 之间其实没有什么关系
-
-static unsigned long do_shrink_slab(struct shrink_control *shrinkctl,
-				    struct shrinker *shrinker, int priority)
-```
-然后，根据上方的调用路线，课题知道，猜测应该是对的，对于 page 和 slab 分成两个，slab 利用各种 shrinker 进行
 
 ## memory consistency
 - [ ] https://zhuanlan.zhihu.com/cpu-cache : read posts writen by muchun
@@ -2494,185 +2219,6 @@ static bool shmem_should_replace_page(struct page *page, gfp_t gfp)
 	return page_zonenum(page) > gfp_zone(gfp);
 }
 ```
-
-## slub
-- [ ] Chen Huacai : P215 : explained the meaning of freeze
-
-
-认真重读一下:
-- https://ruffell.nz/programming/writeups/2019/02/15/looking-at-kmalloc-and-the-slub-memory-allocator.html
-
-[Wowotech](http://www.wowotech.net/memory_management/426.html)
-[LoyenWang](https://www.cnblogs.com/LoyenWang/p/11922887.html)
-
-- `struct kmem_cache`
-- `struct kmem_cache_cpu`
-- `struct kmem_cache_node`
-
-```c
-/*
- * Slab cache management.
- */
-struct kmem_cache {
-	struct kmem_cache_cpu __percpu *cpu_slab;       //每个CPU slab页面
-	/* Used for retriving partial slabs etc */
-	unsigned long flags;
-	unsigned long min_partial;
-	int size;		/* The size of an object including meta data */
-	int object_size;	/* The size of an object without meta data */
-	int offset;		/* Free pointer offset. */
-  // 既然每个object在没有分配之前不在乎每个object中存储的内容，
-  // 那么完全可以在每个object中存储下一个object内存首地址，
-  // 就形成了一个单链表, 那么这个地址数据存储在object什么位置呢？
-  // offset就是存储下个object地址数据相对于这个object首地址的偏移。
-
-#ifdef CONFIG_SLUB_CPU_PARTIAL
-	/* Number of per cpu partial objects to keep around */
-	unsigned int cpu_partial;
-#endif
-	struct kmem_cache_order_objects oo;     //该结构体会描述申请页面的order值，以及object的个数
-
-	/* Allocation and freeing of slabs */
-	struct kmem_cache_order_objects max;
-	struct kmem_cache_order_objects min;
-	gfp_t allocflags;	/* gfp flags to use on each alloc */
-	int refcount;		/* Refcount for slab cache destroy */
-	void (*ctor)(void *);           // 对象构造函数
-	int inuse;		/* Offset to metadata */
-	int align;		/* Alignment */
-	int reserved;		/* Reserved bytes at the end of slabs */
-	int red_left_pad;	/* Left redzone padding size */
-	const char *name;	/* Name (only for display!) */
-	struct list_head list;	/* List of slab caches */       //kmem_cache最终会链接在一个全局链表中
-    struct kmem_cache_node *node[MAX_NUMNODES];     //Node管理slab页面
-};
-```
-
-
-```c
-struct page {
-	unsigned long flags;		/* Atomic flags, some possibly
-					 * updated asynchronously */
-	/*
-	 * Five words (20/40 bytes) are available in this union.
-	 * WARNING: bit 0 of the first word is used for PageTail(). That
-	 * means the other users of this union MUST NOT use the bit to
-	 * avoid collision and false-positive PageTail().
-	 */
-	union {
-		struct {	/* slab, slob and slub */
-			union {
-				struct list_head slab_list;
-				struct {	/* Partial pages */
-					struct page *next;
-#ifdef CONFIG_64BIT
-					int pages;	/* Nr of pages left */
-					int pobjects;	/* Approximate count */
-#else
-					short int pages;
-					short int pobjects;
-#endif
-				};
-			};
-			struct kmem_cache *slab_cache; /* not slob */
-			/* Double-word boundary */
-			void *freelist;		/* first free object */
-			union {
-				void *s_mem;	/* slab: first object */
-				unsigned long counters;		/* SLUB */
-				struct {			/* SLUB */
-					unsigned inuse:16;
-					unsigned objects:15;
-					unsigned frozen:1;
-				};
-			};
-		};
-  }
-```
-
-- [x] kmem_cache_create
-![loading](https://img2018.cnblogs.com/blog/1771657/201911/1771657-20191124161239520-610202035.png)
-
-
-- [ ] kmem_cache_alloc
-![loading](https://img2018.cnblogs.com/blog/1771657/201911/1771657-20191124161307831-1244111963.png)
-
-***Let's understand some basic function:***
-- [x] get_freepointer_safe
-    - `*(object + s->offset)` : because every free object contains the pointer points to next free object
-    - ==> get_freepointer ==> freelist_dereference ==> freelist_ptr 
-    - freelist_ptr(s, ptr, ptr_addr){return s}
-
-- [ ] calculate_sizes()
-
-
-- [x] get_freelist() : 
-    -  So, we should check 
-    - Check the `page->freelist` of a page and either transfer the freelist to the per cpu freelist or deactivate the page.
-    - ![loading](https://img2018.cnblogs.com/blog/1771657/201911/1771657-20191124161409130-2017775465.png)
-
-- [x] new_slab_objects() : allocate and initialize it as a slab page, it called we can't find a page in partial
-
-- [ ] `kmem_cache::inuse` and `page::(anonymous union)::(anonymous struct)::(anonymous union)::(anonymous struct)::inuse`
-  - [ ] struct page结构体中inuse代表已经使用的obj数量。
-
-- [x] discard_slab() : free page to buddy system if it's empty.
-- [x] add_partial() : add to **node** partial list
-- [x] put_cpu_partial() : add to **percpu** partial list
-- [x] unfreeze_partials() : move all the pages in cpu partial list to node partial list, and unfreeze them.
-
-
-
-***Let's understand some basic concepts:***
-- [ ] **frozen**
-  - [ ] there are free objects on the page, but it's no more usable ?
-  - if `page->freelist == NULL`, then page was on no list
-```c
-			if (kmem_cache_has_cpu_partial(s) && !prior) {
-
-				/*
-				 * Slab was on no list before and will be
-				 * partially empty
-				 * We can defer the list move and instead
-				 * freeze it.
-				 */
-				new.frozen = 1;
-
-			}
-
-		/*
-		 * If we just froze the page then put it onto the
-		 * per cpu partial list.
-		 */
-		if (new.frozen && !was_frozen) {
-			put_cpu_partial(s, page, 1);
-			stat(s, CPU_PARTIAL_FREE);
-		}
-```
-
-
-
-
-
-- [x] partial
-```c
-
-static void *___slab_alloc(struct kmem_cache *s, gfp_t gfpflags, int node,
-			  unsigned long addr, struct kmem_cache_cpu *c)
-        // ...
-new_slab:
-
-	if (slub_percpu_partial(c)) {
-		page = c->page = slub_percpu_partial(c);
-		slub_set_percpu_partial(c, page);
-		stat(s, CPU_PARTIAL_ALLOC);
-		goto redo;
-	}
-```
-
-#### slub free
-
-
 
 ## shmem
 - [ ] [^28] : read it carefully and throughly
@@ -3101,8 +2647,6 @@ void __iomem *ioremap(resource_size_t offset, unsigned long size);
 
 Man mremap(2)
 
-## KSM
-kernel doc[^15] 中间说明了如何使用，首先阅读的内容。
 
 ## debug
 > 从内核的选项来看，对于 debug 一无所知啊 !
@@ -3530,33 +3074,25 @@ in fact, we have already understand most of them
   - [ ] pte_mkold / pte_mkyoung is used for access page
   - [ ] arm / mips has to use pgfault to set page access mask
 
+page_flags 除了 PG_slab, PG_slab 等 flags 可以使用，还可以用于标记 node zone LAST_CPUID(numa 平衡算法使用)
+```c
+static inline void set_page_zone(struct page *page, enum zone_type zone)
+{
+	page->flags &= ~(ZONES_MASK << ZONES_PGSHIFT);
+	page->flags |= (zone & ZONES_MASK) << ZONES_PGSHIFT;
+}
+
+static inline void set_page_node(struct page *page, unsigned long node)
+{
+	page->flags &= ~(NODES_MASK << NODES_PGSHIFT);
+	page->flags |= (node & NODES_MASK) << NODES_PGSHIFT;
+}
+```
+
+  
+
 ## vmalloc
 [TO BE CONTINUE](https://www.cnblogs.com/LoyenWang/p/11965787.html)
-
-## rmap
-[TO BE CONTINUE](https://www.cnblogs.com/LoyenWang/p/12164683.html)
-4. 匿名页的反向映射
-- 相关数据结构体介绍
-- vma和av首次建立rmap大厦
-- fork时为子进程构建rmap大厦
-- 缺页异常时page关联av
-- 反向映射查找匿名页pte
-- 匿名页rmap情景分析
-5. 文件页的反向映射
-- 相关数据结构体介绍
-- 文件打开关联address_space
-- vma添加到文件页的rmap的红黑树
-- 缺页异常读取文件页
-- 反向映射查找文件pte
-- 文件页rmap情景分析
-6. ksm和ksm页反向映射
-- 相关数据结构体介绍
-- ksm机制剖析（上）
-- ksm机制剖析（下）
-- 反向映射查找ksm页pte
-- ksm实践
-
-
 
 ## mincore
 
@@ -3650,7 +3186,6 @@ https://mp.weixin.qq.com/s/ZLXAz8dAdcqS52MzmXU_YA
 [^12]: [kernel doc : memory model](https://www.kernel.org/doc/html/latest/vm/memory-model.html)
 [^13]: [lwn : Smarter shrinkers](https://lwn.net/Articles/550463/)
 [^14]: [kernel doc : page owner: Tracking about who allocated each page](https://www.kernel.org/doc/html/latest/vm/page_owner.html)
-[^15]: [kernel doc : Kernel Samepage Merging](https://www.kernel.org/doc/html/latest/vm/ksm.html)
 [^16]: [kernel doc : Driver porting: low-level memory allocation](https://lwn.net/Articles/22909/)
 [^17]: [stackoverflow : Why do we need DMA pool ?](https://stackoverflow.com/questions/60574054/why-do-we-need-dma-pool)
 [^18]: [kernel doc : Kernel Memory Leak Detector](https://www.kernel.org/doc/html/latest/dev-tools/kmemleak.html)

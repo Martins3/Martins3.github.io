@@ -1,3 +1,38 @@
+## rmap
+[TO BE CONTINUE](https://www.cnblogs.com/LoyenWang/p/12164683.html)
+4. 匿名页的反向映射
+- 相关数据结构体介绍
+- vma和av首次建立rmap大厦
+- fork时为子进程构建rmap大厦
+- 缺页异常时page关联av
+- 反向映射查找匿名页pte
+- 匿名页rmap情景分析
+5. 文件页的反向映射
+- 相关数据结构体介绍
+- 文件打开关联address_space
+- vma添加到文件页的rmap的红黑树
+- 缺页异常读取文件页
+- 反向映射查找文件pte
+- 文件页rmap情景分析
+6. ksm和ksm页反向映射
+- 相关数据结构体介绍
+- ksm机制剖析（上）
+- ksm机制剖析（下）
+- 反向映射查找ksm页pte
+- ksm实践
+
+1. 当发生 cow 的时候，将新创建出来的 `page->mapping` 指向 子进程的 anon_vma 
+2. avc 挂载到 `vma->anon_vma_chain` 这个链表上，同时在 av 的 `anon_vma->rb_root` 上
+  1. 当发生 rmap 遍历，利用 `page->mapping` 找到 anon_vma, 然找到  `anon_vma->rb_root` 来在红黑树中间查找到 avc
+  
+3. avc 是 vma 用来挂载到 av 上的钩子
+2. va 绑定在 vma 上
+4. 进程每创建一个子进程，父进程的 AV 的红黑树中会增加每一个起“桥梁”作用的AVC，以此连接到子进程的VMA
+5. 第 n 个层次的 child 需要创建创建 n 个 avc, 分别将 avc 放到自己和自己的 n - 1 个祖先中间
+6. 将 avc 挂载到 av 上，表示该 avc 
+
+
+
 # rmap.c
 
 1. 在page初始化的时候，只要谁来使用 page ，将 vma 挂到链表上 !
@@ -62,7 +97,7 @@
 
 3. file based 和 anon 的 rmap 的不相同的
 
-1. `vma->anon_vma_chain` 利用 `avc->same_vma` 挂载多个 avc
+1. 利用 `vma->anon_vma_chain` `avc->same_vma`, vma 可以挂载多个 avc, 这些 avc 再分别挂载到自己的 av 和 逐级 parent 的 av 上
 2. `anon_vma->rb_root` 上挂载 avc ，利用 `avc->vma` 作为作为区间的范围。 
     1. avc 中间持有指向 vma 和 av 的指针
     2. av 和 vma 都会管理一堆 avc ?

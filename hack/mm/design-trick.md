@@ -17,3 +17,7 @@
 kcompactd
   - kcompactd_do_work
     - compact_zone
+
+其实 page writeback 机制和另外两个其实有点不同，
+1. 似乎没有 direct 和 indirect 的两种方式
+2. 使用的是 workqueue
