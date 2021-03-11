@@ -3,14 +3,11 @@
 lazy mode 其实非常的麻烦, 默认是 eager mode, 为此 x86 添加专门的指令来处理 FPU save.[^1]
 
 - [ ] 如何测试 ? 
-- [ ] kvm 为什么需要在 fpu 上做特殊处理 ?
-- [ ] 实际上，三个要一起处理.
 
 - /home/maritns3/core/loongson-dune/cross/arch/mips/include/asm/fpu.h:lose_fpu_inatomic
 - in dune, process always has fpu enabed.
 - /home/maritns3/core/loongson-dune/cross/arch/mips/kvm/callback.c 定义了保存 fpu, msa 和 lasx 相关的函数
 
-- [ ] 如何区分 fpu, msa, lasx 的选项:
 
 ## 设计方案
 - fpu lazy 机制 kvm 已经实现好了，如果 guest 进入之后，没有再次使用 fpu, 那么 fpu 就不需要被加载了。
@@ -24,8 +21,6 @@ int arch_dup_task_struct(struct task_struct *dst, struct task_struct *src)
 ```
 
 所以， 从 guest 进入到 host 中间的时候，host 中间的 fpu 并不会主动加载
-
-
 ## kvm_lose_fpu && kvm_vcpu_arch:aux_inuse
 kvm_arch_vcpu_ioctl_run 调用 lose_fpu(1) 导致当前 host 的 fpu 被保存下来, 而程序结束的时候，调用 `vcpu_put` 将 guest 的 fpu 进行保存。
 将 host 的 fpu 进行保存，并且设置当前的 host fpu 不可用。注意和 kvm_lose_fpu 相区分, 整个 kvm 模块仅仅在此处调用过一次 lose_fpu, 其余的情况都是
@@ -131,6 +126,5 @@ kvm_own_fpu:
 1. kvm_lose_fpu : 如果发现 MSA 或者 LASX 可用，那么首先保存一下
 2. `__kvm_restore_fpu`
 
-
-
 [^1]: https://tthtlc.wordpress.com/2016/12/17/understanding-fpu-usage-in-linux-kernel/
+

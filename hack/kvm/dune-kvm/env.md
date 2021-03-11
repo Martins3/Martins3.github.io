@@ -66,6 +66,11 @@ mipsenv && make -j10 ARCH=$ARCH CROSS_COMPILE=$CROSS_COMPILE
 ➜  ~ sudo rmmod kvm && synckernel && sudo insmod ~/cross/arch/mips/kvm/kvm.ko
 ```
 
+rsync 举例子
+```
+rsync --delete -avzh --exclude='/.git' --filter="dir-merge,- .gitignore" maritns3@10.90.50.149:/home/maritns3/core/loongson-dune/3day/ /home/loongson/dune/
+```
+
 #### sshfs
 ```
 sudo apt install sshfs
@@ -81,3 +86,4 @@ sshfs loongson@10.90.50.133:/home/loongson 4000
 这其实有个问题，在 x86 上编译内核太慢，在 MIPS 上编译，应该是无法正常生成 compile_commands.json
 
 但是对于小项目，这是无所谓的。
+

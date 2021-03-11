@@ -2,12 +2,14 @@
 
 ![](https://preview.redd.it/8a7tpszpdgj41.png?width=640&height=360&crop=smart&auto=webp&s=04e05726a9bb67ff47a8599101931409953859a0)
 
-## shell学习
-1. https://devhints.io/bash  : 语法清单
-2. https://explainshell.com/ : 解释脚本
-3. https://linuxjourney.com/ : 免费教程
+`shell` 和 `gnu` `make`, `cmake` 等各种工具类似，一学就会，学完就忘。究其原因，是因为使用频率太低了。
+所以，shell 我不建议非常认真系统的学习，因为学完之后发现根本用不上。难道你每天都需要使用正则表达式删除文件吗?
 
-`shell` 和 `gnu` `make`, `cmake` 等各种工具类似，一学就会，学完就忘。究其原因，是因为使用频率太低了。 如果你每天都要用，我建议，系统学习，如果只是偶尔学习，对于shell只需要存在一个大致的了解，就是知道shell能做什么，适合做什么，具体的知识点等到遇到的时候再到 Google 上查询。
+## shell 资源推荐
+1. https://devhints.io/bash  : 语法清单
+2. https://explainshell.com/ : 给出一个 shell 命令，对于其进行解释
+3. https://linuxjourney.com/ : 一个简明的教程
+
 ## 选择好用的 shell
 zsh 和 bash 之前语法上基本是兼容的，但是由于[oh my zsh](https://github.com/ohmyzsh/ohmyzsh)，我强烈推荐使用zsh
 
@@ -33,6 +35,7 @@ zsh 和 bash 之前语法上基本是兼容的，但是由于[oh my zsh](https:/
 | git  | [diff-so-fancy](https://github.com/so-fancy/diff-so-fancy) <br> [lazy git](https://github.com/jesseduffield/lazygit) <br> [bit](https://github.com/chriswalz/bit)|
 | man  | [cheat](https://github.com/chubin/cheat.sh)                                                                          |
 | find | [fd](https://github.com/chinanf-boy/fd-zh)                                                                           |
+| ssh | [sshfs](https://github.com/libfuse/sshfs)                                                                           |
 
 ## 一些小技巧
 - [alias](https://thorsten-hans.com/5-types-of-zsh-aliases)
