@@ -1,17 +1,27 @@
-# 面向就业学计算机
-回顾大学四年，发现其中很多时间被浪费在大学物理及试验，微积分，数字电路和模拟电路上面了，但是对于一个想要从事互联方面工作的人，那些都是无所谓的东西。可能有的人会说，这些课程都是提升一个人Level的课程，
-计算机里面的课程都是表面功夫，但是我觉得如果没有学会这些表面功夫，就算底蕴再厚，也是徒劳。
+# 学习计算机经验之谈
+
+现在计算机的领域很广泛，从 FPGA 到 NLP，从网页前端到编译器后端，从自动化控制到通信工程，不同的领域对于看到的计算机内容大不相同，
+学习计算机的人也从小学生到博士，从在校生到培训班等各色各样，现在我的经验也只是一家之言，如果不同意，欢迎来讨论。
+
+## 学好英语，科学上网
+如果无法科学上网，现在就停止阅读，去解决。
+
+英语，一定要有意识的提高，不过学英语是一个很系统的问题，阅读是最好的老师，可以多逛逛[外国网站](https://www.buzzing.cc/)
+
+## 可以不去做这个领域，但是对于一个领域必须有一个基本认识, 比如花半天的时间了解一下 bitcoin 的原理。
+
+## 附录
 
 关于如何自学，已经有非常多的参考资料，我觉得写的都非常好：
-1. https://github.com/ossu/computer-science
-4. https://github.com/keithnull/TeachYourselfCS-CN
-2. https://teachyourselfcs.com
-5. https://news.ycombinator.com/item?id=21920205
-7. https://news.ycombinator.com/item?id=19423228
-3. https://www.nocsdegree.com/
-6. https://why.degree/motivation/
-1. https://github.com/PKUanonym/REKCARC-TSC-UHT
-2. https://github.com/QSCTech/zju-icicles
-3. https://github.com/SSHeRun/CS-Xmind-Note
-4. https://github.com/Developer-Y/cs-video-courses#systems-programming
-6. https://github.com/niudai/How-to-be-a-good-programmer : 经典电子书
+- https://github.com/ossu/computer-science
+- https://github.com/keithnull/TeachYourselfCS-CN
+- https://teachyourselfcs.com
+- https://news.ycombinator.com/item?id=21920205
+- https://news.ycombinator.com/item?id=19423228
+- https://www.nocsdegree.com/
+- https://why.degree/motivation/
+- https://github.com/PKUanonym/REKCARC-TSC-UHT
+- https://github.com/QSCTech/zju-icicles
+- https://github.com/SSHeRun/CS-Xmind-Note
+- https://github.com/Developer-Y/cs-video-courses#systems-programming
+- https://github.com/niudai/How-to-be-a-good-programmer : 经典电子书

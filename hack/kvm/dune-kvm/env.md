@@ -87,3 +87,9 @@ sshfs loongson@10.90.50.133:/home/loongson 4000
 
 但是对于小项目，这是无所谓的。
 
+
+似乎 ltp 这种项目，有时候存在 git 和 zsh 的交火, 使用：
+```
+git config --add oh-my-zsh.hide-status 1
+git config --add oh-my-zsh.hide-dirty 1
+```

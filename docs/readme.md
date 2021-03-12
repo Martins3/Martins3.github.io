@@ -35,6 +35,7 @@
 - [How to cross Great Fire Wall](./gfw.md)
 - [Learn Linux kernel](./learn-linux-kernel.md)
 - [shell 的一些经验之谈](./shell.md)
+- [如何学习计算机](./learn-cs.md)
 
 ## MISC
 - [what is x86 IA-32 IA-64 x86-64 and amd64 ?](./x86-names.md)

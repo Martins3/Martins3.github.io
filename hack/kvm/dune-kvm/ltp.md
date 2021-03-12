@@ -2,8 +2,6 @@
 
 - [ ] apicmds 是做什么的 ?
 
-
-
 ## 读读文档
 
 Various callbacks can be set by the test writer, including
@@ -73,6 +71,7 @@ echo CC testcases/kernel/syscalls/abort/abort01
 
 ## Makefile 的依赖路径
 
+
 - abort:Makefile
   - include/mk/testcases.mk : 定义了生成 libltp 的方法
     - include/mk/env_pre.mk : 各种全局变量的定义
@@ -90,4 +89,9 @@ echo CC testcases/kernel/syscalls/abort/abort01
 - [ ] 也许并不是所有的文件都和 ltp 一样简单的
 
 - [ ]  /home/maritns3/core/loongson-dune/ltp_dir/ltp/include/mk/generic_leaf_target.inc 的
+
+## 结论
+
+lib.mk 是提供给不同的
+
 ## 使用 UnixBench 测试性能

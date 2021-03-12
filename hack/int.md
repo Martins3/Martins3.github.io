@@ -389,30 +389,34 @@ struct irqaction {
 
 ![loading](https://img2020.cnblogs.com/blog/1771657/202006/1771657-20200614143354812-1093740244.png)
 
-- [ ] how kernel transfer from hardirq to softirq ?
-
 - [ ] /proc/stat 关于 softirq 的统计是什么 ？
 
-```c
-enum
-{
-	HI_SOFTIRQ=0,
-	TIMER_SOFTIRQ,
-	NET_TX_SOFTIRQ,
-	NET_RX_SOFTIRQ,
-	BLOCK_SOFTIRQ,
-	IRQ_POLL_SOFTIRQ,
-	TASKLET_SOFTIRQ,
-	SCHED_SOFTIRQ,
-	HRTIMER_SOFTIRQ,
-	RCU_SOFTIRQ,    /* Preferable RCU should always be the last softirq */
+1. 首先，内核会给每一个 CPU 创建一个 ksoftirq
+2. 当一个 irq handler 想要将任务委托给 softirq 的时候，只是需要调用 raise_softirq 设置一下 bit 位
+3. ksoftirq 检测到 bit 位之后，就可以执行设置好的函数了
 
-	NR_SOFTIRQS
-};
+```c
+static __init int spawn_ksoftirqd(void)
+{
+	cpuhp_setup_state_nocalls(CPUHP_SOFTIRQ_DEAD, "softirq:dead", NULL,
+				  takeover_tasklets);
+	BUG_ON(smpboot_register_percpu_thread(&softirq_threads));
+
+	return 0;
+}
 ```
-- [ ] what does it mean by TIMER ?
+一个小证据，从 nvme 到 softirq : 在 queue_request_irq 注册 irq handler 为 nvme_irq
+
+- nvme_irq
+  - nvme_process_cq
+    - nvme_handle_cqe
+      - nvme_try_complete_req
+        - blk_mq_complete_request_remote
+          - blk_mq_raise_softirq
 
 ## tasklet
+在 softirq 上的封装：
+
 - [ ] https://lwn.net/Articles/830964/
 - [ ] https://www.cnblogs.com/LoyenWang/p/13124803.html
 
@@ -608,6 +612,66 @@ top-level irq_desc 中间哪里 TMD 有 stash a pointer，只有 action chain �
   - 基本的思路是，信号是逐级的传递到 CPU 中间的
   - 通过逐级的 irq domain, 将最开始的 hardware irq 映射为 linux irq, 而 linux irq 就是 device 注册的
 
+从汇编代码 到 generic_handle_irq_desc 很容易理解，中间经过一次 gic 的 irq_domain，从 hwirq 找到 irq_desc，最后调用注册在上面的 irq handler
+从代码中间找到如下内容:
+
+```c
+	ret = devm_request_threaded_irq(&pdev->dev, gpio_irq, NULL,
+					max77620_gpio_irqhandler, IRQF_ONESHOT,
+					"max77620-gpio", mgpio);
+```
+
+```c
+static irqreturn_t max77620_gpio_irqhandler(int irq, void *data)
+{
+	struct max77620_gpio *gpio = data;
+	unsigned int value, offset;
+	unsigned long pending;
+	int err;
+
+	err = regmap_read(gpio->rmap, MAX77620_REG_IRQ_LVL2_GPIO, &value);
+	if (err < 0) {
+		dev_err(gpio->dev, "REG_IRQ_LVL2_GPIO read failed: %d\n", err);
+		return IRQ_NONE;
+	}
+
+	pending = value;
+
+	for_each_set_bit(offset, &pending, MAX77620_GPIO_NR) {
+		unsigned int virq;
+
+		virq = irq_find_mapping(gpio->gpio_chip.irq.domain, offset);
+		handle_nested_irq(virq);
+	}
+
+	return IRQ_HANDLED;
+}
+```
+也就是说，当 irq 到达之后，下级的中断控制器和普通的设备其实没有区别，
+调用其 handler, 然后中断控制器决定如何处理自己得到的中断。
+
+对于 gpio 也是建立对应的 irq domain 实现从 gpio 引脚编号 到 linux irq 之间的映射。
+
+在 handle_nested_irq 中间:
+1. 获取了 irq 就是获取了 irq_desc
+2. 从而得到 handler 了
+
+- [x] 好吧，流程的确是这个流程，但是既然存在 device tree, 完全可以在开机的时候，让所有的设备驱动都知道自己对应的
+linux irq 是什么，根本不需要，首先在 gpio 的 domain 中间
+
+如果 gic 接入了 gpio 中断控制器，叫做 gpio_a
+从 linux 的角度看，他只是接收到 hwirq a, 但是到底是 gpio_a 引脚上的哪一个设备，
+这是不清楚的，只能执行 gpio_a 的 handler, 在其中找到是哪一个引脚，然后就知道其 linux irq 是什么，
+然后就可以执行对应的代码。
+
+所以，依靠 dtb 即使可以知道每一个设备分配的 irq, 由于没有办法区分 gic 下的次级中断信息，还是需要 irq domain 计算
+次级中断控制器的引脚到 linux irq 的映射。
+
+- [ ] 但是我们还是无法理解:
+  - [ ] MSI
+  - [ ] PCIe 设备为什么可以 随插随用, 插入的时候自动注册 irq 来
+
+> 相比这些东西，还是去理解一下到底 softirq, threaded irq，之类的东西是怎么链接起来的吧 !
 
 [kernel doc](https://www.kernel.org/doc/html/latest/core-api/irq/irq-domain.html)
 
