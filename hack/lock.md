@@ -73,34 +73,50 @@ sleepable rcu
 这个解释了，既然可以使用 userspace 的 spinlock，为什么还是要使用内核:
 https://linuxplumbersconf.org/event/4/contributions/286/attachments/225/398/LPC-2019-OptSpin-Locks.pdf
 
-
-用户态的lock:
+用户态的 spinlock 就是直接使用 原子操作的:
 ```c
-void lock() {
-  while (__sync_lock_test_and_set(&exclusion, 1)) {
-    // Do nothing. This GCC builtin instruction
-    // ensures memory barrier.
-  }
-}
-
-void unlock() {
-  __sync_synchronize(); // Memory barrier.
-  exclusion = 0;
+int pthread_spin_lock(pthread_spinlock_t *s)
+{
+	while (*(volatile int *)s || a_cas(s, 0, EBUSY)) a_spin();
+	return 0;
 }
 ```
+但是 mutex 的实现, 最终会调用的 futex 的:
+```c
+int __pthread_mutex_lock(pthread_mutex_t *m)
+{
+	if ((m->_m_type&15) == PTHREAD_MUTEX_NORMAL
+	    && !a_cas(&m->_m_lock, 0, EBUSY))
+		return 0;
+
+	return __pthread_mutex_timedlock(m, 0);
+}
+```
+
+> 这个时候, 再来说明一下，为什么 futex 的要义:
+
+The futex() system call provides a method for waiting until a certain condition becomes true.  It is typically used
+as a blocking construct in the context of shared-memory synchronization.  When using futexes, the majority  of  the
+synchronization  operations are performed in user space.  A user-space program employs the futex() system call only
+when it is likely that the program has to block for a longer time until the condition becomes true.  Other  futex()
+operations can be used to wake any processes or threads waiting for a particular condition.
+
+在用户态, 如果仅仅靠 spinlock，两个毫不相关的进程上锁，当一个进程 pthread_mutex_unlock 之后，根本无法无法去通知另一个等待在其上的 process
+
+比如 FUTEX_WAKE 在内核对应代码:
+- futex_wake
+  - wake_up_q
+    - wake_up_process
 
 ## set_tid_address
 从 man 和 [^3] 看，似乎是配合 pthread 用于 pthread_join，而且会进一步依赖于 futex 来操作
 
-
-
-
 ## TODO
-考试:
-1. spinlock 和 spinlock_bh
-2. ksoftirqd 的优先级
-3. memcg 如何操作 slab (本来认为 slab 作为内核的部分，不会被 memcg 控制)
-4. ticket spinlock
+面试:
+- [ ]  spinlock 和 spinlock_bh
+- [ ]  ksoftirqd 的优先级
+- [ ]  memcg 如何操作 slab (本来认为 slab 作为内核的部分，不会被 memcg 控制)
+- [ ]  ticket spinlock
 
 
 [^1]: https://lwn.net/Articles/262464/

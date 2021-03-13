@@ -122,11 +122,7 @@
 9. nfs
 
 #### TODO
-- [ ] file lock
 - [ ] 内部的 lock 的设计
-
-- [ ] dentry and path walking
-  - [ ] dcache
 
 ## VFS
 基本元素:
@@ -796,60 +792,33 @@ The callback function set here is `ep_ptable_queue_proc`
     - [ ]  kmv 用于创建 kvm-vm 的方法
 
 ## flock
-1. advisory lock 指的是 ?
-2. open file lock ?
-2. mandatory lock ?
-3. lost lock
-4. recoid lock
-3. flock 和 fcntl 获取的 lock 不兼容 ?
-4. [filelock](https://man7.org/linux/man-pages/man3/flockfile.3.html)
-
-
-[^9] 
-Traditionally, locks are **advisory** in Unix. They work only when a process explicitly acquires and releases locks, and are ignored if a process is not aware of locks.
-
-**There are several types of advisory locks available in Linux**:
-1. BSD locks (flock)
-2. POSIX record locks (fcntl, lockf)
-3. Open file description locks (fcntl)
-
-The following features are common for locks of all types:
-1. All locks support blocking and non-blocking operations.
-2. Locks are allowed only on files, but not directories.
-3. Locks are automatically removed when the process exits or terminates. It’s guaranteed that if a lock is acquired, the process acquiring the lock is still alive.
-
-TODO 该文档写的很好，实际上，这个提供给用户的 lock 和 VFS 实现的 lock 根本就是两回事。
-主要内容在 : fs/locks.c
-
-
-* ***如何使用***
-
-man flock(2)
-
-If a process uses open(2) (or similar) to obtain more than one file descriptor for the same file,
-these file descriptors are treated independently by flock(). 
-An attempt to lock the file using one of these file descriptors may be denied by a lock that the calling process has already placed via another file descriptor.
-> 1. 一共存在两种锁
-
-
-* ***内核文档***
-
+首先，区分一件事情 :
 https://www.kernel.org/doc/html/latest/filesystems/locking.html : 说明几乎VFS api 调用的时候需要持有的锁
 
-1. mandatory locking 是怎么回事啊
+主要内容在 : fs/locks.c
 
-* ***Understanding Linux Kernel***
+下面仅仅阅读一下 fcntl:
+- `__do_sys_fcntl`
+  - do_fcntl
+    - fcntl_setlk
+      - mandatory_lock : 对于 fs 和 inode 进行检查, 看是不是 mandatory lock，和 tlpi 上描述完全一致
+      - do_lock_file_wait
+        - vfs_lock_file
+          - filp->f_op->lock(filp, cmd, fl); : 一些 nfs 使用自定义的
+          - posix_lock_file
+            - posix_lock_inode : fcntl 上锁是对于 inode 实施的, 在这里对于 file_lock_context 的链表进行遍历，决定是否上锁了之类的
+              - 
 
-The POSIX standard requires a file-locking mechanism based on the *fcntl()* system
-call. It is possible to lock an arbitrary region of a file (even a single byte) or to lock
-the whole file (including data appended in the future). Because a process can choose
-to lock only a part of a file, it can also hold multiple locks on different parts of the
-file.
-> 1. 使用系统调用 fcntl
-> 2. 可以按照区域锁
-> 3. 一个文件可以设置多个锁
+```c
+struct file_lock_context {
+	spinlock_t		flc_lock;
+	struct list_head	flc_flock;
+	struct list_head	flc_posix;
+	struct list_head	flc_lease;
+};
+```
 
-TODO fcntl 的内容很多，首先打住一下
+还有关于 lease 相关的实现，close file 和 exec 对于锁的释放，flock 的实现，都在 fs/locks.c 中间占据了不少篇幅。
 
 ## ext2
 内部结构:
@@ -2140,7 +2109,6 @@ Somebody say ceph has one millions of code.
 [^6]: [lwn : Dentry negativity](https://lwn.net/Articles/814535/)
 [^7]: [io uring and eBPF](https://thenewstack.io/how-io_uring-and-ebpf-will-revolutionize-programming-in-linux/)
 [^8]: [zhihu : io_uring introduction](https://zhuanlan.zhihu.com/p/62682475?utm_source=wechat_timeline)
-[^9]: [blog : File locking in Linux](https://gavv.github.io/articles/file-locks/)
 [^10]: [Efficient IO with io_uring](https://kernel.dk/io_uring.pdf)
 [^11]: [usenix : Filebench a flexible framework for fs benchmark](https://www.usenix.org/system/files/login/articles/login_spring16_02_tarasov.pdf)
 [^12]: [sun : Filebench tutorial](http://www.nfsv4bat.org/Documents/nasconf/2005/mcdougall.pdf)
