@@ -68,9 +68,8 @@ instance of the program is running on the system at a time. A common method of
 doing this is to have the daemon create a file in a standard directory and place a
 write lock on it.
 
-> 更多的用户态参考 [^9]
+> 更多的用户态参考[^8] [^9]
 
 [^8]: [filelock](https://man7.org/linux/man-pages/man3/flockfile.3.html)
-
 [^9]: [blog : File locking in Linux](https://gavv.github.io/articles/file-locks/)
 

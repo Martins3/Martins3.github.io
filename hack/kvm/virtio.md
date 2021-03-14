@@ -1,3 +1,13 @@
+## env
+**如何打开 virtio 选项于 make menuconfig 中**
+1. Device Driver => Virtio Drivers ==> PCI drivers for virtio devices
+2. Device Driver => Block devices => Virtio block io
+3. Device Driver => Network Device support => Virtio network driver
+
+**kvmtool** 的编译安装
+
+
+
 # TODO
 - [ ] /home/maritns3/core/firecracker/src/devices/src/virtio/vsock/csm/connection.rs has a small typo
 
@@ -12,17 +22,14 @@
 [ ](https://www.redhat.com/en/blog/deep-dive-virtio-networking-and-vhost-net)
 [ ](https://www.redhat.com/en/blog/introduction-virtio-networking-and-vhost-net)
 
-**如何打开 virtio 选项于 make menuconfig 中**
-1. Device Driver => Virtio Drivers ==> PCI drivers for virtio devices
-2. Device Driver => Block devices => Virtio block io
-3. Device Driver => Network Device support => Virtio network driver
+- [ ] virtio 和 pci 如何一起玩耍的 ?
+
+- [ ] 有的设备不支持 PCI 总线，需要使用 MMIO 的方式，但是kvmtool 怎么知道这个设备需要使用 MMIO
+
+- [ ] 约定是第一个 bar 指向的 IO 空间在内核那一侧是怎么分配的 ?
 
 ## vhost
 https://terenceli.github.io/%E6%8A%80%E6%9C%AF/2020/04/18/vsock-internals
-
-## eventfd
-
-- [ ] http://blog.allenx.org/2015/07/05/kvm-irqfd-and-ioeventfd
 
 ## virtiofs
 - [ ] https://libvirt.org/kbase/virtiofs.html
@@ -246,6 +253,7 @@ static const struct blk_mq_ops virtio_mq_ops = {
 	.map_queues	= virtblk_map_queues,
 };
 ```
+从 ldd3 的 sbull.c 的代码可以知道，queue_rq 就是上层数据到达的调用 block 设备的操作:
 
 - [ ] virtqueue
 
@@ -254,7 +262,7 @@ static const struct blk_mq_ops virtio_mq_ops = {
 - [ ] vring_virtqueue :
   - 似乎划分为 split 和 pack 两种方法
 
- blk_mq_init_queue
+blk_mq_init_queue
 
 
 - [ ] virt_queue 在内核端也是定义了的吗

@@ -1,5 +1,44 @@
 # lock
 
+## qspinlock
+首先，大致看看代码吧!
+```c
+/*
+ * Per-CPU queue node structures; we can never have more than 4 nested
+ * contexts: task, softirq, hardirq, nmi.
+ *
+ * Exactly fits one 64-byte cacheline on a 64-bit architecture.
+ *
+ * PV doubles the storage and uses the second cacheline for PV state.
+ */
+static DEFINE_PER_CPU_ALIGNED(struct qnode, qnodes[MAX_NODES]);
+
+/*
+ * On 64-bit architectures, the mcs_spinlock structure will be 16 bytes in
+ * size and four of them will fit nicely in one 64-byte cacheline. For
+ * pvqspinlock, however, we need more space for extra data. To accommodate
+ * that, we insert two more long words to pad it up to 32 bytes. IOW, only
+ * two of them can fit in a cacheline in this case. That is OK as it is rare
+ * to have more than 2 levels of slowpath nesting in actual use. We don't
+ * want to penalize pvqspinlocks to optimize for a rare case in native
+ * qspinlocks.
+ */
+struct qnode {
+	struct mcs_spinlock mcs;
+#ifdef CONFIG_PARAVIRT_SPINLOCKS
+	long reserved[2];
+#endif
+};
+```
+1. PV 是什么概念 ?
+
+[术道经纬](https://zhuanlan.zhihu.com/p/100546935) 比 奔跑吧更加好，大致的想法是:
+
+使用 mcs 增加了一个指针，这会导致任何包含了 mcs_spinlock 大小都增加 4 byte, 很难接受。
+
+
+当只有三个 CPU 之内进行访问，那么使用 ticket spinlock 类似，都是在一个字段上，如果超过了，那么使用 mcs 的方式。
+
 ## seqlock
 dcache.c:d_lookup 的锁
 
@@ -58,9 +97,6 @@ void synchronize_rcu(void)
 		wait_rcu_gp(call_rcu);
 }
 ```
-
-
-
 
 ## SRCU
 e.g., kvm_mmu_notifier_invalidate_range_start
