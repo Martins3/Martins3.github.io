@@ -7,18 +7,7 @@
   </a>
   <p align="center">
     <a href="https://996.icu"><img src="https://img.shields.io/badge/link-996.icu-red.svg" alt="996.icu" /></a>
-    <a href="https://spacevim.org/"><img src="https://spacevim.org/img/build-with-SpaceVim.svg" alt="996.icu" /></a>
-  </p>
-  <p align="center">
-      <img src="https://img.shields.io/badge/OS-Linux-informational?style=flat&logo=linux&logoColor=white&color=2bbc8a" />
-      <img src="https://img.shields.io/badge/Editor-NeoVIM-informational?style=flat&logo=vim&logoColor=white&color=2bbc8a" />
-      <img src="https://img.shields.io/badge/Shell-Zsh-informational?style=flat&logo=gnu-bash&logoColor=white&color=2bbc8a" />
-      <img src="https://img.shields.io/badge/Tools-Git-informational?style=flat&logo=git&logoColor=white&color=2bbc8a" />
-      <img src="https://img.shields.io/badge/Code-Python-informational?style=flat&logo=python&logoColor=white&color=2bbc8a" />
-      <img src="https://img.shields.io/badge/Code-Golang-informational?style=flat&logo=go&logoColor=white&color=2bbc8a" />
-      <img src="https://img.shields.io/badge/Code-Cpp-informational?style=flat&logoColor=white&color=2bbc8a" />
-      <img src="https://img.shields.io/badge/Code-C-informational?style=flat&logoColor=white&color=2bbc8a" />
-      <img src="https://img.shields.io/badge/Code-Rust-informational?style=flat&logoColor=white&color=2bbc8a" />
+    <a href="https://spacevim.org/"><img src="https://spacevim.org/img/build-with-SpaceVim.svg" alt="spacevim" /></a>
   </p>
   <p align="center">
       <img src="https://github-readme-stats.vercel.app/api?username=Martins3" />

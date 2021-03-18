@@ -148,8 +148,6 @@ M.2 is a physical standard that defines the shape, dimensions, and the physical 
 nvme-cli 使用的教程:
 https://www.nvmedeveloperdays.com/English/Collaterals/Proceedings/2018/20181204_PRECON2_Hands.pdf
 
-https://en.wikipedia.org/wiki/PCI_Express#Hardware_protocol_summary : 讲解 PCIe 的原理
-
-
+http://blog.coderhuo.tech/2020/07/18/flash_basics/ : 讲解的不错
 
 [^1]: https://phoenixnap.com/kb/nvme-vs-sata-vs-m-2-comparison

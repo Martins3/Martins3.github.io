@@ -93,3 +93,10 @@ sshfs loongson@10.90.50.133:/home/loongson 4000
 git config --add oh-my-zsh.hide-status 1
 git config --add oh-my-zsh.hide-dirty 1
 ```
+
+## musl 编译方法
+syncmusl && make && sudo make install
+
+- [ ] 至于怎么编译出来一个支持的 debug 的，现在还不是很清楚
+
+## ltp 编译方法
