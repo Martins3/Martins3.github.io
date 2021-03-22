@@ -9,7 +9,6 @@
 - [timer](#timer)
 - [irq](#irq)
 - [irqaction](#irqaction)
-- [softirq](#softirq)
 - [tasklet](#tasklet)
 - [pic](#pic)
 - [apic](#apic)
@@ -320,38 +319,6 @@ struct irqaction {
   14:     187427          0      28041          0          0          0          0          0  IR-IO-APIC   14-fasteoi   INT344B:00
 ```
 
-
-
-
-## softirq
-- [ ] what's happending in kernel/softirq.c ?
-
-![loading](https://img2020.cnblogs.com/blog/1771657/202006/1771657-20200614143354812-1093740244.png)
-
-- [ ] /proc/stat 关于 softirq 的统计是什么 ？
-
-1. 首先，内核会给每一个 CPU 创建一个 ksoftirq
-2. 当一个 irq handler 想要将任务委托给 softirq 的时候，只是需要调用 raise_softirq 设置一下 bit 位
-3. ksoftirq 检测到 bit 位之后，就可以执行设置好的函数了
-
-```c
-static __init int spawn_ksoftirqd(void)
-{
-	cpuhp_setup_state_nocalls(CPUHP_SOFTIRQ_DEAD, "softirq:dead", NULL,
-				  takeover_tasklets);
-	BUG_ON(smpboot_register_percpu_thread(&softirq_threads));
-
-	return 0;
-}
-```
-一个小证据，从 nvme 到 softirq : 在 queue_request_irq 注册 irq handler 为 nvme_irq
-
-- nvme_irq
-  - nvme_process_cq
-    - nvme_handle_cqe
-      - nvme_try_complete_req
-        - blk_mq_complete_request_remote
-          - blk_mq_raise_softirq
 
 ## tasklet
 在 softirq 上的封装：
