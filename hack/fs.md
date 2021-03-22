@@ -82,6 +82,7 @@
 - [compression fs](#compression-fs)
 - [timerfd](#timerfd)
 - [ceph](#ceph)
+- [close](#close)
 
 <!-- vim-markdown-toc -->
 
@@ -2099,7 +2100,33 @@ based on linux/kernel/time/alarmtimer.c
 ## ceph
 https://www.youtube.com/watch?v=c4sgV_FEb4I
 
-Somebody say ceph has one millions of code.
+https://github.com/gluster/glusterfs
+
+Somebody says ceph has one millions of code.
+
+## close
+- `__do_sys_close`
+  - close_fd
+    - pick_file : 通过 fd 获取 file
+    - filp_close
+      - fput
+        - fput_many : 使用 task_work 来封装延迟
+          - `____fput`
+            - __fput : 真正完成工作的位置
+              - file->f_op->release
+
+```c
+static struct file_operations kvm_vcpu_fops = {
+	.release        = kvm_vcpu_release,
+	.unlocked_ioctl = kvm_vcpu_ioctl,
+	.mmap           = kvm_vcpu_mmap,
+	.llseek		= noop_llseek,
+	KVM_COMPAT(kvm_vcpu_compat_ioctl),
+};
+```
+
+
+
 
 [^1]: [kernel doc : Overview of the Linux Virtual File System](https://www.kernel.org/doc/html/latest/filesystems/vfs.html)
 [^2]: [github : aio](https://github.com/littledan/linux-aio)

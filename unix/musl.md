@@ -8,7 +8,6 @@ Here's simple comparison about [LOC](https://en.wikipedia.org/wiki/Source_lines_
 
 - [ ] https://news.ycombinator.com/item?id=21291893
 
-
 musl
 ```
 github.com/AlDanial/cloc v 1.82  T=0.95 s (2513.4 files/s, 193017.3 lines/s)

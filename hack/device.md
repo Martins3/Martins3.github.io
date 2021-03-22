@@ -127,6 +127,8 @@ devices/virtual/tty/ttty3
 ## usb
 测试辅助模块 dummy_hcd 和 g_zero
 
+- [ ] https://github.com/gregkh/usbutils : 用户态工具
+
 ## serial
 https://en.wikibooks.org/wiki/Serial_Programming
 - https://www.kernel.org/doc/html/latest/admin-guide/serial-console.html : 似乎可以找到为什么 qemu 运行 linux 在 host 终端里面有消息了

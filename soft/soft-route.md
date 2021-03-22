@@ -51,3 +51,6 @@ https://blog.samaltman.com/how-to-be-successful
 https://github.com/taosue/how-to-get-rich-without-getting-lucky/
 
 https://github.com/jivoi/awesome-osint : 各种获取信息的方式, 包括但是不限于使用 Google Search, Twitter
+
+## 设计模式
+https://refactoringguru.cn/design-patterns

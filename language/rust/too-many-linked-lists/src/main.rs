@@ -70,4 +70,7 @@ fn main() {
     let a = TextEditor {
         text: "fasdfa".to_string(),
     };
+
+    println!("{}", 0x20000000);
+    println!("{}", 1 << 29);
 }

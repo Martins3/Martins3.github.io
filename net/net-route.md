@@ -10,6 +10,9 @@
 - loopback interface
   - `sudo tcpdump -i lo` : print out many message
 
+## dpdk
+https://github.com/F-Stack/f-stack : 似乎是对于 dpdk 的封装
+
 ## TODO
 忽然间对于网络没有那么恐惧了，所以
 

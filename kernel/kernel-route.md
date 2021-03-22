@@ -10,6 +10,14 @@ unikernel:
 
 https://github.com/ikwzm/udmabuf : user dma driver
 
+两个 CPU perf 工具，都是仅仅针对于 intel 的那一侧的:
+https://github.com/cyring/CoreFreq
+https://github.com/intel/msr-tools
+https://github.com/tycho/cpuid
+
+有一个性能计数器:
+https://github.com/opcm/pcm
+
 ## 计划
 g. [Essential Linux Device Drivers](https://book.douban.com/subject/3088263/)
 

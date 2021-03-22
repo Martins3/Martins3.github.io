@@ -26,6 +26,8 @@
 ## 资源
 [lanscape](https://github.com/cncf/landscape) Cloud Native Interactive Landscape : 各种厂商的技术整合
 
+- https://github.com/apache/mesos : 用 c++ 写的 cluster manager
+
 # Decentralized Web
 > 猜测这是很高级的内容了
 

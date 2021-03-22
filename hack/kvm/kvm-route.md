@@ -4,6 +4,8 @@
   - [ ] 不同虚拟机的 vcpu 如何实现隔离
 
 ## 项目
+- [ ] https://github.com/openvswitch/ovs : open vSwitch 和 virtio 是什么关系？
+
 https://github.com/wbenny/hvpp 但是指向了一堆项目
 https://github.com/Fmstrat/winapps
 
