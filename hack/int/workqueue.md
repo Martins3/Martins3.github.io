@@ -2,8 +2,53 @@
 - [ ] wowotech 中间的东西可以看看:
 - [ ] https://zhuanlan.zhihu.com/p/91106844
 
-With this article,[LoyenWang](https://www.cnblogs.com/LoyenWang/p/13185451.html), I feel like that I understand how workqueue works, some questions
-  - [ ] workqueue attr
+- [ ] 为什么需要 pool_workqueue 这个结构体
+- [ ] work_struct 为什么放到 worker_pool::worklist 上
+- [ ] pool_workqueue 会属于一个 pool_workqueue, 但是为什么需要将其放出来啊
+
+- [ ] 内核默认创建了一些工作队列（用户也可以创建） 比如 system_mq system_highpri_mq 这些都是 unbounded 吗 ?
+
+- [ ] 存在的对象 work , woker, worker_pool, workqueue 的创建和销毁
+
+每个 cpu 创建两个 per_cpu 的 worker_pool.
+unbounded 和 bounded 的 workqueue 的两个属性
+
+- workqueue 的属性有哪些 ?
+  - 
+
+alloc_and_link_pwqs
+  - init_pwq : 初始化，将自己分别指向 worker_pool 和 workqueue
+  - link_pwq : 将自己挂载到创建 workqueue 上
+> 一个 workqueue 可以持有多个 pwq, 比如给每一个 cpu 的 worker_pool 分配对应优先级的
+> workqueue 划分为 bounded 和 unbounded 的属性, 划分优先级
+
+
+
+> 针对非绑定类型的工作队列，worker_pool创建后会添加到unbound_pool_hash哈希表中；
+> 
+> 存在 unbounded 的 worker pool 吗?
+
+> 判断workqueue的类型，如果是bound类型，根据CPU来获取pool_workqueue，如果是unbound类型，通过node号来获取pool_workqueue；
+
+- `__queue_work`
+  - wq_select_unbound_cpu : 如果是 unbounded, 最好是使用当前 cpu 
+  - unbound_pwq_by_node : 否则使用 `___queue_work` 的内容, 这两个函数最终是为了找到 pwq, 实际上为了进一步的获取 worker_pool
+  - get_work_pool : 直接获取到 worker_pool 的内容
+  - find_worker_executing_work : 如果 work 上一次执行的 worker_pool 和 unbound_pwq_by_node/wq_select_unbound_cpu 得到 pwq 指向的 worker 不是一个东西，那么就要考虑 cache 的问题
+  - insert_work : 挂到选出来的 worker_pool::worklist 链表上
+
+给定一个 pwq，其唯一定位出来一个 workqueue 和 worker_pool
+
+> worker_thread在开始执行时，设置标志位PF_WQ_WORKER，调度器在进行调度处理时会对task进行判断，针对workerqueue worker有特殊处理；
+> - [ ] 我也知道存在特殊处理，但是，是什么 ?
+
+**WHEN COMMING BACK**
+0. 好好看看 worker_thread 的部分
+1. 整理一下笔记
+2. 奔跑 4 的书看看
+## LoyenWang
+[LoyenWang](https://www.cnblogs.com/LoyenWang/p/13185451.html)
+
 
 #### struct work_struct
 `struct work_struct`用来描述`work`，初始化一个`work`并添加到工作队列后，将会将其传递到合适的内核线程来进行处理，它是用于调度的最小单位。
@@ -227,82 +272,6 @@ struct workqueue_struct *__alloc_workqueue_key(const char *fmt,
   // ....
 ```
 
-## alloc_and_link_pwqs
-
-```c
-static int alloc_and_link_pwqs(struct workqueue_struct *wq)
-{
-	bool highpri = wq->flags & WQ_HIGHPRI;
-	int cpu, ret;
-
-	if (!(wq->flags & WQ_UNBOUND)) { // BOUNDED，所以需要为所有的 CPU 上处理
-		wq->cpu_pwqs = alloc_percpu(struct pool_workqueue); 
-
-		for_each_possible_cpu(cpu) {
-			struct pool_workqueue *pwq =
-				per_cpu_ptr(wq->cpu_pwqs, cpu);
-			struct worker_pool *cpu_pools =
-				per_cpu(cpu_worker_pools, cpu);
-
-			init_pwq(pwq, wq, &cpu_pools[highpri]); // 似乎一共存在两个优先级
-
-			mutex_lock(&wq->mutex);
-			link_pwq(pwq);
-			mutex_unlock(&wq->mutex);
-		}
-		return 0;
-	} else if (wq->flags & __WQ_ORDERED) {
-		ret = apply_workqueue_attrs(wq, ordered_wq_attrs[highpri]);
-		/* there should only be single pwq for ordering guarantee */
-		WARN(!ret && (wq->pwqs.next != &wq->dfl_pwq->pwqs_node ||
-			      wq->pwqs.prev != &wq->dfl_pwq->pwqs_node),
-		     "ordering guarantee broken for workqueue %s\n", wq->name);
-		return ret;
-	} else {
-		return apply_workqueue_attrs(wq, unbound_std_wq_attrs[highpri]);
-	}
-}
-
-/* initialize newly alloced @pwq which is associated with @wq and @pool */
-static void init_pwq(struct pool_workqueue *pwq, struct workqueue_struct *wq,
-		     struct worker_pool *pool)
-{
-	BUG_ON((unsigned long)pwq & WORK_STRUCT_FLAG_MASK);
-
-	memset(pwq, 0, sizeof(*pwq));
-
-	pwq->pool = pool;
-	pwq->wq = wq;
-	pwq->flush_color = -1;
-	pwq->refcnt = 1;
-	INIT_LIST_HEAD(&pwq->delayed_works);
-	INIT_LIST_HEAD(&pwq->pwqs_node);
-	INIT_LIST_HEAD(&pwq->mayday_node);
-	INIT_WORK(&pwq->unbound_release_work, pwq_unbound_release_workfn);
-}
-
-/* sync @pwq with the current state of its associated wq and link it */
-static void link_pwq(struct pool_workqueue *pwq)
-{
-	struct workqueue_struct *wq = pwq->wq;
-
-	lockdep_assert_held(&wq->mutex);
-
-	/* may be called multiple times, ignore if already linked */
-	if (!list_empty(&pwq->pwqs_node))
-		return;
-
-	/* set the matching work_color */
-	pwq->work_color = wq->work_color;
-
-	/* sync max_active to the current setting */
-	pwq_adjust_max_active(pwq);
-
-	/* link in @pwq */
-	list_add_rcu(&pwq->pwqs_node, &wq->pwqs);
-}
-```
-
 ## apply_workqueue_attrs
 
 ```c
@@ -389,63 +358,8 @@ static int apply_workqueue_attrs_locked(struct workqueue_struct *wq,
 static struct worker_pool *get_unbound_pool(const struct workqueue_attrs *attrs)
 ```
 
-## interface for outside
 
-> 感觉，似乎workqueue和softirq没有什么蛇皮关系!
-
-```c
-// https://0xax.gitbooks.io/linux-insides/content/Interrupts/linux-interrupts-9.html
-// 初始化和注册功能 !
-
-
-// 哇! 102个refs啊!
-
-/**
- * queue_work - queue work on a workqueue
- * @wq: workqueue to use
- * @work: work to queue
- *
- * Returns %false if @work was already on a queue, %true otherwise.
- *
- * We queue the work to the CPU on which it was submitted, but if the CPU dies
- * it can be processed by another CPU.
- */
-static inline bool queue_work(struct workqueue_struct *wq,
-			      struct work_struct *work)
-{
-	return queue_work_on(WORK_CPU_UNBOUND, wq, work);
-}
-
-/**
- * queue_work_on - queue work on specific cpu
- * @cpu: CPU number to execute work on
- * @wq: workqueue to use
- * @work: work to queue
- *
- * We queue the work to a specific CPU, the caller must ensure it
- * can't go away.
- *
- * Return: %false if @work was already on a queue, %true otherwise.
- */
-bool queue_work_on(int cpu, struct workqueue_struct *wq,
-		   struct work_struct *work)
-{
-	bool ret = false;
-	unsigned long flags;
-
-	local_irq_save(flags);
-
-	if (!test_and_set_bit(WORK_STRUCT_PENDING_BIT, work_data_bits(work))) { // 保证该 work 只会挂载一次
-		__queue_work(cpu, wq, work);
-		ret = true;
-	}
-
-	local_irq_restore(flags);
-	return ret;
-}
-EXPORT_SYMBOL(queue_work_on);
-
-
+```
 static void __queue_work(int cpu, struct workqueue_struct *wq,
 			 struct work_struct *work)
        // 真正的业务处理者

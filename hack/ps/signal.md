@@ -1,4 +1,11 @@
 # kernel/signal.md
+
+## TODO 
+- [ ] force_sigsegv
+
+## man signal(7)
+
+
 **WHEN COMING BACK** : : 实际上，job control 比想想的更加简单，将 tlpi 34 的内容好好看看, 总结总结，顺便再去搞定 setsid 的问题
 
 还是基于 arm64 架构吧!

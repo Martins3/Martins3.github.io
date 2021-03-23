@@ -5,14 +5,16 @@
 - [ ] /home/maritns3/core/vn/kernel/plka/syn/fs/binfmt_elf.md 之前的总结
 
 我想知道的问题 :
-- [ ] 执行 exec 的进程空间是如何被释放以及替换的 ? 
-- [ ] elf 格式解析了，靠什么将代码加载进来的
+- [x] 执行 exec 的进程空间是如何被释放以及替换的 ? 
 - [ ] 什么内容不会被继承 ?
 
 - [x] 那么 pc 数值是怎么设置的，pc 数值显然只能设置为 glibc 提供的入口，如果使用是 glibc 作为动态链接库，但是加载动态链接库是不是 loader 的事情吗 ?
-  - interrupter 也就是 loader 实际上第一行被执行的代码
+  - interpreter 也就是 loader 实际上第一行被执行的代码
 
 - [ ] vdso 是怎么放进去的 ?
+
+1. linux_binprm : 执行 exec 的时候，包含二进制文件的各种属性, 使用 alloc_bprm 分配
+2. linux_binfmt : 提供给不同格式的标准接口
 
 ```c
 /*
@@ -58,6 +60,7 @@ static struct linux_binfmt elf_format = {
                 - activate_mm
               - unshare_sighand
             - setup_new_exec
+              - arch_pick_mmap_layout
             - setup_arg_pages
             - for(i = 0, elf_ppnt = elf_phdata; i < elf_ex->e_phnum; i++, elf_ppnt++) : 将 image load 到空间中去
               - elf_map
@@ -71,9 +74,10 @@ static struct linux_binfmt elf_format = {
 - [ ] de_thread 的实现非常诡异啊
 
 ## syscalls
+存在 kexec ，暂时并不关心:
+
 270	n64	kexec_load			sys_kexec_load
 320	common	kexec_file_load		sys_kexec_file_load
-
 57	n64	execve			sys_execve
 316	n64	execveat			sys_execveat
 
@@ -101,15 +105,15 @@ SYSCALL_DEFINE5(execveat,
 ```
 两个系统调用没有什么区别，只是搜索方式即将执行的文件方式不同而已.
 
-- [ ] execload 
-
-
 posix 对于这个提供了一些列的封装:
 提供了:
 1. l : 参数使用变长数组提供数组
 2. v : 参数使用数组的的形式提供
 3. e : 可以通过参数执行 env
 4. p : 指定执行文件的搜索路径
+
+## close on exec
+`O_CLOEXEC` can be set by fnctl, and file is closed by `do_close_on_exec`
 
 [^1]: https://lwn.net/Articles/630727/
 [^2]: https://lwn.net/Articles/631631/ : 应该算是分析的即为详细了吧!
