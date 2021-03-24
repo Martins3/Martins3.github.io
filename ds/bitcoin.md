@@ -1,4 +1,6 @@
 ## bitcoin
+一个更加秒和完整的教程，但是是 golang 写的:
+https://github.com/veggiedefender/torrent-client
 
 # tutorials
 1. https://monokh.com/posts/bitcoin-from-scratch-part-1
