@@ -221,6 +221,7 @@ P215[^1] 指出，一共五种情况，从本地无锁(kmem_cache_cpu::freelist)
 2. 调用 CPU A 上调用 slab_alloc 分配的对象，可能在 CPU B 释放，这种数据被放到 kmem_cache_cpu::page::freelist 上管理
 3. 当 kmem_cache_cpu::freelist 的用完了，那么就将 kmem_cache_cpu::page::freelist 管理的 objects 全部转移给 kmem_cache_cpu::freelist, 如果 kmem_cache_cpu::page::freelist 也没有了，那么就需要从本地 partial 开始查找了。
 
+// 或者你把你现在的配置仓库的地址给我，我看看在我的机器上的效果
 
 ## `__slab_free`
 - [ ] page 214 深入的分析了 `__slab_free`，这个之后，算是就清楚了
