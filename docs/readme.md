@@ -18,7 +18,6 @@
 - [Martins3's slides](https://martins3.github.io/ppt)
 - [Source code reading list](./source-code-reading-list.md)
 - [Binary Translation and Virtualization Paper reading list](./paper-reading-list.md)
-- [Diary](./diary/diary.md)
 
 ## Tips
 - [How to cross Great Fire Wall](./gfw.md)

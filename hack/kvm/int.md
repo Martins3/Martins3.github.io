@@ -399,4 +399,8 @@ static inline void apic_clear_irr(int vec, struct kvm_lapic *apic)
 1. cpu 在 guest mode : kvm_vcpu_kick 使用
 2. vcpu 所在的线程在睡眠
 
+## [Leyenwang](https://www.cnblogs.com/LoyenWang/p/14017052.html)
+
+
+
 [^3]: Inside the Linux Virtualization : Principle and Implementation
