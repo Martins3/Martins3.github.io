@@ -1,3 +1,8 @@
+# intel 中断虚拟化，基于 狮子书
+
+中断的优化过程:
+
+# 之前记录的笔记
 https://lwn.net/Articles/44139/
 
 - [ ] What's irr(interrupt request register), e.g kvm_lapic_find_highest_irr
@@ -32,7 +37,7 @@ static const struct kvm_io_device_ops ioapic_mmio_ops = {
 };
 ```
 
-# What happened to vmx
+## What happened to vmx
 ```c
 static struct kvm_x86_ops vmx_x86_ops __initdata = {
 
@@ -205,10 +210,6 @@ CCW :
 1. https://www.kernel.org/doc/html/latest/s390/vfio-ccw.html
 2. https://www.ibm.com/support/knowledgecenter/en/linuxonibm/com.ibm.linux.z.lkdd/lkdd_c_ccwdd.html
 
-
-## irqfd
-
-
 ## ioapic
 *主要分析 ioapic.c 下面的代码*
 ```c
@@ -264,6 +265,23 @@ emulator_pio_in_out => kernel_pio
   - kvm_vm_ioctl -> kvm_vm_ioctl_irq_line -> kvm_set_irq => kvm_set_ioapic_irq(使用其中一个作为例子) => kvm_ioapic_set_irq => ioapic_set_irq => ioapic_service => kvm_irq_delivery_to_apic => kvm_apic_set_irq => `__apic_accept_irq` => kvm_vcpu_kick
 
 ## irq routing
+
+## interrupt injection
+加快中断的响应:
+1. cpu 在 guest mode : kvm_vcpu_kick 使用
+2. vcpu 所在的线程在睡眠
+
+# 狮子书笔记
+
+### 3.3.23 IRQ routing
+在加入 APIC 虚拟化后，当外设发送中断请求后，那么 KVM 模块究竟是通过 8259A 还是通过 APIC 向 Guest 注入中断?
+
+这里的 routing 和 ioapic 将中断信息 routing 到 CPU 上其实不是一个事情，这里的 routing 是为了解决中断控制器的选择
+
+gsi 可以理解为中断控制器的引脚线，当 gsi 小于 16 的时候， gsi 可能是 8259A 和 APIC 两个中断控制器的中断，所以需要对于这两个控制器都进行调用。
+
+- [ ] 一个在 Host userspace 态的只是知道发送中断，其实无法确定中断到底发送给谁, 比如在 kvmtool 中间 kvmtool/hw/i8042.c:kbd_update_irq 调用的 `kvm__irq_line(state.kvm, KBD_IRQ, klevel);`
+
 ```c
 struct kvm_irq_routing_table {
 	int chip[KVM_NR_IRQCHIPS][KVM_IRQCHIP_NUM_PINS];
@@ -278,10 +296,6 @@ struct kvm_irq_routing_table {
 gsi，通过 routing table 的 map 可以得到是哪一个芯片的 map
 
 kvm_set_irq_routing => setup_routing_entry
-
-- [ ] 有点复杂
-  - [ ] gsi 是什么
-  - [x] ioapic 不就是 routing 的, this is not same thing, kvm_set_irq_routing distinguish which irqchip to response irq pin
 
 ```c
 static const struct kvm_irq_routing_entry default_routing[] = {
@@ -361,8 +375,65 @@ struct kvm_kernel_irq_routing_entry {
   - [ ] I don't know, but just some software trick to make code more beautiful
   - IRQ routing here is used for call multiple kvm_kernel_irq_routing_entry::set with the specific gsi
 
-## guest mode interrupt evaluation
-[^3] section 3.5.2
+```c
+/*
+ * Return value:
+ *  < 0   Interrupt was ignored (masked or not delivered for other reasons)
+ *  = 0   Interrupt was coalesced (previous irq is still pending)
+ *  > 0   Number of CPUs interrupt was delivered to
+ */
+int kvm_set_irq(struct kvm *kvm, int irq_source_id, u32 irq, int level,
+		bool line_status)
+{
+	struct kvm_kernel_irq_routing_entry irq_set[KVM_NR_IRQCHIPS];
+	int ret = -1, i, idx;
+
+	trace_kvm_set_irq(irq, level, irq_source_id);
+
+	/* Not possible to detect if the guest uses the PIC or the
+	 * IOAPIC.  So set the bit in both. The guest will ignore
+	 * writes to the unused one.
+	 */
+	idx = srcu_read_lock(&kvm->irq_srcu);
+	i = kvm_irq_map_gsi(kvm, irq_set, irq); // kvm_irq_routing_table::map 会记录 irq 数量
+	srcu_read_unlock(&kvm->irq_srcu, idx);
+
+	while (i--) {
+		int r;
+		r = irq_set[i].set(&irq_set[i], kvm, irq_source_id, level,
+				   line_status);
+		if (r < 0)
+			continue;
+
+		ret = r + ((ret < 0) ? 0 : ret);
+	}
+
+	return ret;
+}
+```
+## 3.4 MSI(X) 虚拟化
+MSI 让中断不在受管脚约束，MSI 能够支持的中断数大大增加。支持 MSI 的设备绕过 I/O APIC，直接和 LAPIC 通过系统总线相连。
+
+I/O APIC 从中断重定向表提取中断信息，而 MSI-X 是从 MSI-X Capability 提取信息，找到目标CPU，可以，MSI-X 就是将 I/O APIC的功能下沉到外设中间。
+
+- [x] I/O APIC 的转发在什么位置?
+  - arch/x86/kvm/ioapic.c:ioapic_set_irq 可以看到 `entry = ioapic->redirtbl[irq];`
+
+## 3.5 硬件虚拟化支持
+硬件支持的目的是为了减少 vmexit 啊
+
+- virtual-APIC page : 在 Guest 中间拷贝一份 APIC page
+- Guest 模式下的中断评估逻辑 : 
+  - Interrupt-window exiting : 当 退出到 host 的时候，如果 guest 此时在屏蔽中断，这样就只能等下一次 vmexit，但是中断不能等待太久，为了让中断快速响应
+  - 通过 vmcs_write16(GUEST_INTR_STATUS, status) 直接写入，在 guest 中间就可以处理了
+- posted-interrupt processing : 
+
+- [ ] 看不出来 posted interrupt processing 和 vmcs_write16(GUEST_INTR_STATUS, status) 有什么区别，不都是在让目标 CPU 在 guest 态中间不用退出
+
+- [ ] 而且之前分析的 pic apic 之类的控制器的虚拟化和这里的技术没有冲突，但是书上给我的感觉都是非要 kick 一下 cpu 才可以
+
+- [ ] 分析 IOMMU 的时候，都是假设收到中断的 CPU 和目标 CPU 不是一个 CPU, 但是如果中断从设备直接到达目标 CPU, 需要退出吗 ?
+## 3.5.2
 ```c
 static struct kvm_x86_ops vmx_x86_ops __initdata = {
 
@@ -393,14 +464,6 @@ static inline void apic_clear_irr(int vec, struct kvm_lapic *apic)
 	}
 }
 ```
-
-## interrupt injection
-加快中断的响应:
-1. cpu 在 guest mode : kvm_vcpu_kick 使用
-2. vcpu 所在的线程在睡眠
-
-## [Leyenwang](https://www.cnblogs.com/LoyenWang/p/14017052.html)
-
 
 
 [^3]: Inside the Linux Virtualization : Principle and Implementation

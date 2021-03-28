@@ -10,7 +10,7 @@
 # TODO
 - [ ] /home/maritns3/core/firecracker/src/devices/src/virtio/vsock/csm/connection.rs has a small typo
 
-- [ ] virtiofs 的内容很少
+- [ ] virtiofs 的代码很少，资料很多，其实值得分析一下
 
 - [ ] virtio and msi: 
 
@@ -27,10 +27,14 @@
 
 - [ ] 约定是第一个 bar 指向的 IO 空间在内核那一侧是怎么分配的 ?
 
+- [ ] virtio_bus 是挂载到哪里的?
+
+- [ ] 现在对于 eventfd 都是从 virt-blk 角度理解的，其实如何利用 eventfd 实现 guest 到 kernel 的通知，比如 irqfd 来实现 Qemu 直接将 irq 注入到 guest 中
+
+
 ## [LoyenWang : Linux虚拟化KVM-Qemu分析（十）之virtio驱动](https://blog.csdn.net/LoyenWang/article/details/114275236)
 
 ## [Linux虚拟化KVM-Qemu分析（九）之virtio设备](https://blog.csdn.net/LoyenWang/article/details/113798537)
-- [ ] virtio_bus 是挂载到哪里的?
 
 ## vhost
 https://terenceli.github.io/%E6%8A%80%E6%9C%AF/2020/04/18/vsock-internals
