@@ -1,7 +1,25 @@
 # build system
+[各种 make defconfig 生成的过程 .config 的过程是什么?](https://stackoverflow.com/questions/41885015/what-exactly-does-linux-kernels-make-defconfig-do)
+简单来说，每一个config 项都是默认项目的，如果在 /arch/x86/configs/x86_64_defconfig 中间存在这个选项，那么就使用该选项，否则使用默认选项。
 
-## TODO
-- [ ] linux kernel labs 和 dune 的 Makefile
+[make olddefconfig 的作用](https://lore.kernel.org/patchwork/patch/267098/)
+将想要的选项放到 .config，比如 virtio 的，然后将 make olddefconfig ，其其余的选项都是自动采用默认选项.
+这里存在一个很诡异的地方是 : 在 .config 放下面的语句, 会让配置变为 32bit x86
+```
+# CONFIG_64BIT is not set
+```
+
+- [ ] CONFIG_VIRTIO_BLK 之类的存在依赖，make olddefconfig 可以自动处理吗?
+  - [ ] 比如 B 依赖 A, 如果 CONFIG_B=Y, 那么 CONFIG_A=Y 会被自动配置
+  - [ ] 比如 B 依赖 A, C 要求 A 不能打开，同时配置 CONFIG_B=Y CONFIG_C=Y 会怎么样?
+
+
+[vmlinux bzImage zImage 的关系是什么?](https://unix.stackexchange.com/questions/5518/what-is-the-difference-between-the-following-kernel-makefile-terms-vmlinux-vml)
+1. vmlinux 将内核编译为静态的 ELF 格式，可以用于调试
+2. vmlinux.bin : 将 vmlinux 中的所有符号和重定向信息去掉
+3. vmlinuz : 压缩版本
+4. zImage 和 bzImage : By adding further boot and decompression capabilities to vmlinuz, the image can be used to boot a system with the vmlinux kernel. 
+  - 其中 zImage 和 bzImage 在于 b 也就是 big，大小是否大于 512KB
 
 ## 问题
 1. vmlinux 到底包括什么东西，包括各种 ko 吗 ? 为什么有的驱动被编译为 ko 了 ?
@@ -32,16 +50,13 @@
   DEPMOD  5.7.0-rc7+
 ```
 3. 利用 kconfig  能不能构建更加小的项目。
-4. 各种 make defconfig 生成的过程 .config 的过程是什么 ?
 
 
-
+- [ ] 通过这种方法了解一下 Kconfig 的使用方法 : 在内核的source tree 中间，添加一个 hello world 的程序，然后加以编译执行。
+- [ ]  如果存在部分 module 是单独分开安装的，那么，在 Ubuntu 的 img 重新指定任意的版本的内核就应该是不可能的事情了
 ## make modules
-1. 在内核的source tree 中间，添加一个 hello world 的程序，然后加以编译执行。
-2. 如果存在部分 module 是单独分开安装的，那么，在 Ubuntu 的 img 重新指定任意的版本的内核就应该是不可能的事情了
 
 - [^2] make menuconfig 存在的两个框框 [] <>，前者只能选择为y 或者 n，后者还多出了一个 m，在 .config 中间也是存在对应的描述 =y =m，被注释掉
-
 
 
 ## compiler

@@ -354,4 +354,5 @@ TSWLatexianTemp*
 *.log
 .gdb_history
 
-Readme.md
+*.ext4
+*.img

@@ -4,10 +4,23 @@
 2. Device Driver => Block devices => Virtio block io
 3. Device Driver => Network Device support => Virtio network driver
 
+应该使用这种方法配置:
+https://lore.kernel.org/patchwork/patch/267098/
+```c
+CONFIG_VIRTIO_BLK=y
+
+CONFIG_VIRTIO_NET=y
+CONFIG_VIRTIO_CONSOLE=y
+
+CONFIG_VIRTIO_PCI=y
+```
+
 **kvmtool** 的编译安装
 
+- [ ] 如果 guest kernel 不支持 virtio, 但是 kvmtool / qemu 还是指定使用 virtio ，出现了错误，怎么办法
 
 # TODO
+
 - [ ] /home/maritns3/core/firecracker/src/devices/src/virtio/vsock/csm/connection.rs has a small typo
 
 - [ ] virtiofs 的代码很少，资料很多，其实值得分析一下
@@ -20,8 +33,6 @@
 
 [ ](https://www.redhat.com/en/blog/deep-dive-virtio-networking-and-vhost-net)
 [ ](https://www.redhat.com/en/blog/introduction-virtio-networking-and-vhost-net)
-
-- [ ] virtio 和 pci 如何一起玩耍的 ?
 
 - [ ] 有的设备不支持 PCI 总线，需要使用 MMIO 的方式，但是kvmtool 怎么知道这个设备需要使用 MMIO
 
