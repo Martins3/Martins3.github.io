@@ -1,4 +1,3 @@
-
 ### 10.3
 为什么 Rust 需要 lifetime annotation : 为了描述 references 的声明周期, 书中的例子，比较两个字符串，返回 references 的时候，两者生命周期不同，导致返回值的使用返回不同，所以需要标注
 
@@ -27,9 +26,6 @@ impl<'a> Name<'a> {
     }
 }
 ```
-
-
-
 
 
 [^1]: https://learning-rust.github.io/docs/c3.lifetimes.html
