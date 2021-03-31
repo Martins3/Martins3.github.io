@@ -27,6 +27,14 @@ impl<'a> Name<'a> {
 }
 ```
 
+## 15.5
+- [ ] TODO 这一章应该算是终结了
+
+这个回答是一个不错的总结:
+https://stackoverflow.com/questions/45674479/need-holistic-explanation-about-rusts-cell-and-reference-counted-types
+
+- [ ] 所以单线程中间会出现 Cell 的动态检查不通过的情况吗 ?
+
 
 [^1]: https://learning-rust.github.io/docs/c3.lifetimes.html
 

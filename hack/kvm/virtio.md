@@ -8,12 +8,26 @@
 https://lore.kernel.org/patchwork/patch/267098/
 ```c
 CONFIG_VIRTIO_BLK=y
-
 CONFIG_VIRTIO_NET=y
 CONFIG_VIRTIO_CONSOLE=y
 
 CONFIG_VIRTIO_PCI=y
 ```
+
+
+为了共享 folder : 
+```
+CONFIG_NET_9P=y
+CONFIG_NET_9P_VIRTIO=y
+CONFIG_NET_9P_DEBUG=y (Optional)
+CONFIG_9P_FS=y
+CONFIG_9P_FS_POSIX_ACL=y
+CONFIG_PCI=y
+CONFIG_VIRTIO_PCI=y
+```
+9P 的手动打开方法
+1. Networking Support =>  Plan 9 Resource Sharing Support (9P2000)
+2. File systems  =>  Network File Systems => Plan 9 Resource Sharing Support (9P2000) 
 
 **kvmtool** 的编译安装
 
@@ -40,6 +54,8 @@ CONFIG_VIRTIO_PCI=y
 
 - [ ] virtio_bus 是挂载到哪里的?
 
+- [ ] virtio_console 的具体实现是怎么样子的 ?
+
 - [ ] 现在对于 eventfd 都是从 virt-blk 角度理解的，其实如何利用 eventfd 实现 guest 到 kernel 的通知，比如 irqfd 来实现 Qemu 直接将 irq 注入到 guest 中
 
 
@@ -53,6 +69,12 @@ https://terenceli.github.io/%E6%8A%80%E6%9C%AF/2020/04/18/vsock-internals
 ## virtiofs
 - [ ] https://libvirt.org/kbase/virtiofs.html
   - [ ] ali 的人建议 : https://virtio-fs.gitlab.io/ : /home/maritns3/core/54-linux/fs/fuse/virtio_fs.c : 只有 1000 多行，9pfs 也很小，这些东西有什么特殊的地方吗 ?
+
+首先将 virtiofs 用起来: https://www.tauceti.blog/post/qemu-kvm-share-host-directory-with-vm-with-virtio/
+> virtio-fs on the other side is designed to offer local file system semantics and performance. virtio-fs takes advantage of the virtual machine’s co-location with the hypervisor to avoid overheads associated with network file systems. virtio-fs uses FUSE as the foundation. Unlike traditional FUSE where the file system daemon runs in userspace, the virtio-fs daemon runs on the host. A VIRTIO device carries FUSE messages and provides extensions for advanced features not available in traditional FUSE.
+
+似乎需要 Qemu 5.0 才可以。
+
 
 ## virtio bus
 - [ ] struct bus_type 的 match 和 probe 是什么关系?
