@@ -1,5 +1,3 @@
-## https://www.zhihu.com/question/21672895/answer/774538058
-
 ## x86-bare-metal-examples
 项目地址 : https://github.com/cirosantilli/x86-bare-metal-examples
 
@@ -95,8 +93,6 @@ x86-bare-metal-examples/nasm 下:
 - [ ] 感受一下 nasm 的语法 : https://medium.com/@g33konaut/writing-an-x86-hello-world-boot-loader-with-assembly-3e4c5bdd96cf
 
 
-## seabios
-https://git.seabios.org/cgit/seabios.git
 
 
 [^1]: https://wiki.ubuntu.com/Booting

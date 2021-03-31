@@ -8,6 +8,3 @@ https://www.w3cschool.cn/arduino/arduino_communication.html
 
 - [ ] 实现 CPP 混合编程
 - [ ] 汇编编程
-
-# qboot
-https://github.com/bonzini/qboot
