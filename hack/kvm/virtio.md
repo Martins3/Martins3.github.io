@@ -6,12 +6,25 @@
 
 应该使用这种方法配置:
 https://lore.kernel.org/patchwork/patch/267098/
-```c
+```
+CONFIG_BLK_MQ_VIRTIO=y
+CONFIG_NET_9P_VIRTIO=y
 CONFIG_VIRTIO_BLK=y
 CONFIG_VIRTIO_NET=y
 CONFIG_VIRTIO_CONSOLE=y
-
+# CONFIG_HW_RANDOM_VIRTIO is not set
+# CONFIG_DRM_VIRTIO_GPU is not set
+CONFIG_VIRTIO=y
+CONFIG_VIRTIO_PCI_LIB=y
+CONFIG_VIRTIO_MENU=y
 CONFIG_VIRTIO_PCI=y
+CONFIG_VIRTIO_PCI_LEGACY=y
+CONFIG_VIRTIO_BALLOON=y
+CONFIG_VIRTIO_INPUT=y
+CONFIG_VIRTIO_MMIO=y
+CONFIG_VIRTIO_MMIO_CMDLINE_DEVICES=y
+# CONFIG_RPMSG_VIRTIO is not set
+# CONFIG_CRYPTO_DEV_VIRTIO is not set
 ```
 
 
@@ -19,15 +32,26 @@ CONFIG_VIRTIO_PCI=y
 ```
 CONFIG_NET_9P=y
 CONFIG_NET_9P_VIRTIO=y
-CONFIG_NET_9P_DEBUG=y (Optional)
+CONFIG_NET_9P_DEBUG=y
 CONFIG_9P_FS=y
 CONFIG_9P_FS_POSIX_ACL=y
-CONFIG_PCI=y
-CONFIG_VIRTIO_PCI=y
+CONFIG_9P_FS_SECURITY=y
 ```
 9P 的手动打开方法
 1. Networking Support =>  Plan 9 Resource Sharing Support (9P2000)
 2. File systems  =>  Network File Systems => Plan 9 Resource Sharing Support (9P2000) 
+
+VHOST 打开方法
+1. Device Drivers  =>  VHOST drivers => Host kernel accelerator for virtio net
+```c
+CONFIG_VHOST_IOTLB=y
+CONFIG_VHOST=y
+CONFIG_VHOST_MENU=y
+CONFIG_VHOST_NET=y
+# CONFIG_VHOST_CROSS_ENDIAN_LEGACY is not set
+```
+
+
 
 **kvmtool** 的编译安装
 

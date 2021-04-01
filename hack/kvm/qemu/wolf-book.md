@@ -86,26 +86,13 @@ void module_call_init(module_init_type type)
 - [ ] 从 module_init_type 看，似乎一个类型(module_init_type)的都是在一起初始
 
 
-#### HMI && QMI
-这里描述在 graphic 和 non-graphic 的模式下访问 HMI 的方法，并且说明了从 HMI 中间如何获取各种信息
-https://web.archive.org/web/20180104171638/http://nairobi-embedded.org/qemu_monitor_console.html
 
-自己尝试的效果:
-```c
-(qemu) info chardev
-virtiocon0: filename=pty:/dev/pts/6
-serial1: filename=pipe
-parallel0: filename=vc
-gdb: filename=disconnected:tcp:0.0.0.0:1234,server
-compat_monitor0: filename=stdio
-serial0: filename=pipe
-```
-如果什么都不配置，结果如下:
-```c
-(qemu) info chardev
-parallel0: filename=vc
-compat_monitor0: filename=stdio
-serial0: filename=vc
-```
+## chapter 3 主板和固件模拟
+> 草稿放到 qboot.md 中间了
 
-## chapter 3
+## chapter 7 : 设备虚拟化
+
+### 7.6 vhost net 简介
+virtio 的问题在于为了将数据发送出去，需要切入到用户态，然后走 TAP 设备，vsock 直接走内核，从而减少一次用户态。
+
+- [ ] 为什么 block io 不是类似的处理
