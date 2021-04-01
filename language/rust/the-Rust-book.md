@@ -32,6 +32,9 @@ impl<'a> Name<'a> {
 
 这个回答是一个不错的总结:
 https://stackoverflow.com/questions/45674479/need-holistic-explanation-about-rusts-cell-and-reference-counted-types
+  - 更加丰富的总结 : https://github.com/usagi/rust-memory-container-cs
+
+
 
 - [ ] 所以单线程中间会出现 Cell 的动态检查不通过的情况吗 ?
 
