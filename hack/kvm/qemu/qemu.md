@@ -2,7 +2,7 @@
 
 - [ ] 需要使用 qemu 测试的内容:
   - kdump
-  - qboot
+  - [x] qboot
 
 ## env
 一般的编译方法

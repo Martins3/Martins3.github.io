@@ -356,3 +356,8 @@ TSWLatexianTemp*
 
 *.ext4
 *.img
+
+hack/kvm/qemu/aarch64-softmmu/busybox-*/
+hack/kvm/qemu/aarch64-softmmu/busybox-*
+
+hack/kvm/qemu/aarch64-softmmu/rootfs.cpio.gz
