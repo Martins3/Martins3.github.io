@@ -30,10 +30,6 @@
 ## MISC
 - [what is x86 IA-32 IA-64 x86-64 and amd64 ?](./x86-names.md)
 
-- [comments](./_includes/disqus.html)
-
-{% include disqus.html %}
-
 <div id="disqus_thread"></div>
 <script>
     /**
@@ -45,17 +41,9 @@
     };
     (function() { // DON'T EDIT BELOW THIS LINE
     var d = document, s = d.createElement('script');
-    s.src = '//bachelarhu.disqus.com/embed.js';
+    s.src = 'https://https-martins3-github-io.disqus.com/embed.js';
     s.setAttribute('data-timestamp', +new Date());
     (d.head || d.body).appendChild(s);
     })();
 </script>
 <noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
-
-<script src="https://utteranc.es/client.js"
-        repo="https://github.com/Martins3/Martins3.github.io"
-        issue-term="pathname"
-        theme="github-light"
-        crossorigin="anonymous"
-        async>
-</script>
