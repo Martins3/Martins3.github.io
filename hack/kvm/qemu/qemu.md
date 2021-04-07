@@ -1,19 +1,28 @@
 # Qemu
+> 这里应该放置 synthesis 的内容
 
+## TODO
+- [ ] 编译系统 : https://qemu.readthedocs.io/en/latest/devel/build-system.html
+
+## 使用
 - [ ] 需要使用 qemu 测试的内容:
   - kdump
   - [x] qboot
 
-## env
+## compile
 一般的编译方法
 ```
 mkdir build
 cd build
-./configure --target-list=x86_64-softmmu,aarch64-softmmu,aarch64-linux-user
+../configure --target-list=x86_64-softmmu,aarch64-softmmu,aarch64-linux-user
+../configure --target-list=aarch64-softmmu
 make
 ```
 
+
 使用 ../configure --help 查看支持的系统
+
+为了生成的 compile_commands.json 可以正常使用，--target-list 最好不要同时支持多个，否则会出现一些诡异的问题。
 
 ## 使用 Qemu 的参数
 1. 调试内核:
@@ -27,7 +36,6 @@ make
 -nographic does the same as "-serial stdio" and also hides a QEMU's graphical
 
 -s  Shorthand for -gdb tcp::1234, i.e. open a gdbserver on TCP port 1234.
-
 
 ## 经典配置方案
 1. 自己编译内核 + minimal 镜像: 使用 https://linux-kernel-labs.github.io/

@@ -25,3 +25,6 @@
 - https://github.com/SSHeRun/CS-Xmind-Note
 - https://github.com/Developer-Y/cs-video-courses#systems-programming
 - https://github.com/niudai/How-to-be-a-good-programmer : 经典电子书
+
+# 一些有趣的学习资源
+- [学习编程的12个游戏](https://medium.mybridge.co/12-free-resources-learn-to-code-while-playing-games-f7333043de11#.xi83hlivu)

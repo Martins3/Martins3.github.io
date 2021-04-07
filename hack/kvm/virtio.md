@@ -43,7 +43,7 @@ CONFIG_9P_FS_SECURITY=y
 
 VHOST 打开方法
 1. Device Drivers  =>  VHOST drivers => Host kernel accelerator for virtio net
-```c
+```
 CONFIG_VHOST_IOTLB=y
 CONFIG_VHOST=y
 CONFIG_VHOST_MENU=y

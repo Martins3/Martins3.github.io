@@ -32,12 +32,16 @@ impl<'a> Name<'a> {
 
 这个回答是一个不错的总结:
 https://stackoverflow.com/questions/45674479/need-holistic-explanation-about-rusts-cell-and-reference-counted-types
-  - 更加丰富的总结 : https://github.com/usagi/rust-memory-container-cs
+  - 更加丰富的总结 : ![https://github.com/usagi/rust-memory-container-cs](https://media.githubusercontent.com/media/usagi/rust-memory-container-cs/master/3840x2160/rust-memory-container-cs-3840x2160-dark-back-low-contrast.png)
 
+- [x] 所以单线程中间会出现 Cell 的动态检查不通过的情况吗 ?
+  - Rust Book 给出的例子是 : 当连续调用两次 borrow_mut，那么就会出现问题, 必须等到第一个 borrow_mut 的生命周期结束才可以。
+  - [ ] 但是我感觉这种操作，为什么需要动态的检查
 
+A common way to use `RefCell<T>` is in combination with `Rc<T>`
+一个可以存在多个 owner 同时修改了。
 
-- [ ] 所以单线程中间会出现 Cell 的动态检查不通过的情况吗 ?
-
+- [ ] 最后使用了 listed list 的例子, 但是无法理解没有了 RefCell 会出现什么问题。
 
 [^1]: https://learning-rust.github.io/docs/c3.lifetimes.html
 
