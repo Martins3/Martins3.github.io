@@ -26,7 +26,6 @@
 - [计算机学习的一些经验之谈](./learn-cs.md)
 - [Loongson Box : A Process Level Virtualization framework Base on KVM](./dune.md)
 
-
 ## MISC
 - [what is x86 IA-32 IA-64 x86-64 and amd64 ?](./x86-names.md)
 
@@ -47,3 +46,12 @@
     })();
 </script>
 <noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+
+
+<script src="https://utteranc.es/client.js"
+        repo="Martins3/Martins3.github.io"
+        issue-term="pathname"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+</script>
