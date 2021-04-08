@@ -18,11 +18,16 @@ cd build
 ../configure --target-list=aarch64-softmmu
 make
 ```
-
-
 使用 ../configure --help 查看支持的系统
 
 为了生成的 compile_commands.json 可以正常使用，--target-list 最好不要同时支持多个，否则会出现一些诡异的问题。
+
+编译一个仅仅支持 kvm 的代码:
+```c
+../configure --target-list=x86_64-softmmu  --disable-werror
+```
+
+编译 --disable-werror 目前是必须的, 着很难受
 
 ## 使用 Qemu 的参数
 1. 调试内核:

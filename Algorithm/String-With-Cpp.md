@@ -9,7 +9,7 @@ tags: algorithm
 
 ## IO
 1. 从line中间抠出word
-```
+```cpp
     void get_words(vector<string> & vec, char * line){
         int left = 0;
         int right = 0;
@@ -33,7 +33,7 @@ tags: algorithm
 
 ## 一行行的读文件
 
-```
+```cpp
     #include <fstream>
     string line;
     std::ifstream infile("thefile.txt");
@@ -45,13 +45,13 @@ tags: algorithm
 ```
 
 ## 字符串中间查找
-```
+```cpp
     find
 ```
 
 ## 字符串含有分隔符
 http://ysonggit.github.io/coding/2014/12/16/split-a-string-using-c.html
-```
+```cpp
 std::string s = "scott>=tiger>=mushroom";
 std::string delimiter = ">=";
 
@@ -220,8 +220,9 @@ int main(void){
 ```
 
 ## MISC
-1. 实现对于类对象的排序
-```
+1. 实现对于类对象的排序[^1]
+
+```cpp
 class MyStruct{
     int key;
     std::string stringValue;
@@ -273,11 +274,24 @@ struct less_than_key
         return (struct1.key < struct2.key);
     }
 };
-处理数组和处理vector 使用函数相同的
+std::sort(vec.begin(), vec.end(), less_than_key());
+
+
+// 使用 lambda
+sort(a.begin(), a.end(),
+       [](const MyStruct &struct1, const MyStruct &struct2) -> bool 
+       {
+         return (struct1.key < struct2.key);
+       });
 ```
+总结 : 要么定义为函数，要么定义为 lambda
 
 2. memset 处理二维数组
 
+## priority_queue
+- [ ] 和 heap 是什么关系 ? 
 
 ## ques
 1. 最快读入的string的方法是什么 ？
+
+[^1]: https://stackoverflow.com/questions/1380463/sorting-a-vector-of-custom-objects

@@ -5,6 +5,8 @@
 
 ## 项目
 - [ ] https://github.com/openvswitch/ovs : open vSwitch 和 virtio 是什么关系？
+- [ ] https://github.com/intel/haxm : 对于 Windows 和 Mac 存在良好的支持，但是 Linux 上根本无法编译的，感觉类似于 KVM 的东西
+  - https://www.qemu.org/2017/11/22/haxm-usage-windows/ : 在 qemu 上利用这个东西实现加速
 
 https://github.com/wbenny/hvpp 但是指向了一堆项目
 https://github.com/Fmstrat/winapps
@@ -27,7 +29,7 @@ https://github.com/kholia/OSX-KVM
 5. kata
 https://www.ibm.com/developerworks/cn/linux/l-cn-kvm-mem/index.html
 
-https://github.com/fireeye/speakeasy
+https://github.com/fireeye/speakeasy : Speakeasy is a portable, modular, binary emulator designed to emulate Windows kernel and user mode malware.
 https://github.com/Kelvinhack/kHypervisor : window 的 ept hypervisor
 
 [nodejs](https://en.wikipedia.org/wiki/Node.js) 是 js 的 runtime environment. running scripts server-side to produce dynamic web page content before the page is sent to the user's web browser

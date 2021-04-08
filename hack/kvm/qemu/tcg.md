@@ -44,6 +44,12 @@
 ## tcg find
 
 ## asynchronous events
+accel/tcg/cpu-exec.c 中间的两个函数:
+- cpu_handle_exception
+- cpu_handle_interrupt
+
+- [x] handle_exception 是同步的，为什么需要在 tb 函数的外面处理啊？
+  - 当发生了 exception 之后，会直接从 tb 中间跳转出来，然后然让 qemu 设置 CPUState 之类的东西
 
 ## switch to and escape tb
 - [x] stack 的切换在什么位置 ?
@@ -96,8 +102,25 @@ PROLOGUE: [size=45]
       - `tcg_out_jmp(s, s->code_gen_epilogue);`
       - tcg_out_jmp(s, tb_ret_addr);
 
-
 - [ ] tb 的跳转地址实际在 target 的代码上是确定的，但是在 host 上，这些地址取决于 tb 的 hva 了
+
+- [ ] 是如何处理 tcg_qemu_tb_exec 的返回值的 ?
+  - [ ] 返回值为 0, 1, 2 表示什么 ?
+  - [ ] 关注返回值为 3 如何处理 interrupt 的
+  - [x] synchronize_from_tb 是干什么的 ? 让代码从 TB 开始的位置执行
+  - [x] 为什么需要返回 last_tb ?
+    - 在 tb_find 中找到下一个跳转位置的后，可以会修改 last_tb 中的跳转位置
+
+- [ ] 为什么可以 chain 的，比如对于一个 switch 函数，target 的一个跳转指令，实际上是可以跳转到多个 tb 的, 通过设置 tb 的跳转位置有意义吗 ?
+  - 每一个 tb 中间只有一个跳转指令, 就算是 switch，跳转实际上被拆分为多个 tb 了
+  - 类似于 ret 指令，实际上，函数从多个位置调用，ret 实际上并不知道从哪一个位置返回, 所以，猜测函数的处理会比较特殊啊
+  - 其实大多数时候，一个 tb 的跳转位置都是确定的, 至于选择那一条道路，这是 native code 执行的时候决定的
+
+## interrupt
+- 如果每一个 tb 都去检查 interrupt, 显然非常的不合逻辑
+- [ ] 但是检查的时机是什么啊 ?
+
+实现的内容 : tb_find
 
 ## load store
 cpu_exec : 的两个调用者
