@@ -25,6 +25,7 @@
 - [device tree](#device-tree)
 - [char device](#char-device)
 - [block device](#block-device)
+- [pty pts tty](#pty-pts-tty)
 - [问题](#问题)
   - [需要回答的问题](#需要回答的问题)
   - [可能有用的问题](#可能有用的问题)
@@ -616,6 +617,14 @@ struct block_device_operations {
 	const struct pr_ops *pr_ops;
 };
 ```
+## pty pts tty
+- https://unix.stackexchange.com/questions/21280/difference-between-pts-and-tty/21294
+- https://stackoverflow.com/questions/4426280/what-do-pty-and-tty-mean
+
+- tty : teletype. Usually refers to the serial ports of a computer, to which terminals were attached.
+- tpy : pseudo tty
+- pts : psuedo terminal slave (an xterm or an ssh connection).
+> 是的，还是让人非常的疑惑啊!
 
 ## 问题
 - [x] 到底一共存在多少总线类型 ? PCI PCIE I2C  ()
@@ -624,7 +633,6 @@ struct block_device_operations {
 
 
 ### 需要回答的问题
-1. 什么是tty
 2. 如果抛弃历史原因，如何设计tty程序
 3. tty设备驱动可以实现什么功能
 4. tty设备驱动主要包括什么东西 ?

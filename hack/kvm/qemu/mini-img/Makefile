@@ -22,7 +22,7 @@ YOCTO_IMAGE = $(PROJECT_DIR)/$(YOCTO_IMAGE_NAME)
 #YOCTO_IMAGE = core-image-sato-qemu$(ARCH).ext4
 #YOCTO_IMAGE = core-image-sato-sdk-qemu$(ARCH).ext4
 
-# 实在是没实践再去深入研究了，让我们开始搞点事情吧
+# 实在是没时间再去深入研究了，让我们开始搞点事情吧
 
 	# FIXME
 	# -netdev tap,id=tap0,ifname=tap0,script=no,downscript=no -net nic,netdev=tap0,model=virtio \
@@ -34,8 +34,7 @@ YOCTO_IMAGE = $(PROJECT_DIR)/$(YOCTO_IMAGE_NAME)
 QEMU_OPTS = -kernel $(ZIMAGE) \
 	-virtfs local,path=$(PATH_TO_SHARE),mount_tag=host0,security_model=mapped,id=host0 \
   -enable-kvm \
-	-device virtio-serial \
-	-chardev pty,id=virtiocon0 -device virtconsole,chardev=virtiocon0 \
+	-device virtio-serial -chardev pty,id=virtiocon0 -device virtconsole,chardev=virtiocon0 \
 	-drive file=$(YOCTO_IMAGE),if=virtio,format=raw \
 	-drive file=disk1.img,if=virtio,format=raw \
 	-drive file=disk2.img,if=virtio,format=raw \

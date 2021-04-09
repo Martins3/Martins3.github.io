@@ -4,6 +4,10 @@
 2. Device Driver => Block devices => Virtio block io
 3. Device Driver => Network Device support => Virtio network driver
 
+- [ ] 打开 console 的方法, 不然 mini-img 中的串口无法使用
+  - 如果不打开 block device driver 的，直接无法启动
+
+
 应该使用这种方法配置:
 https://lore.kernel.org/patchwork/patch/267098/
 ```
@@ -51,7 +55,8 @@ CONFIG_VHOST_NET=y
 # CONFIG_VHOST_CROSS_ENDIAN_LEGACY is not set
 ```
 
-
+VIRTIO_SCSI 打开:
+Device Driver ==> SCSI device support ==> SCSI low-level drivers ==> virtio-scsi support  
 
 **kvmtool** 的编译安装
 
