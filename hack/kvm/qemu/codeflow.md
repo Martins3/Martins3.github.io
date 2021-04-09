@@ -1,7 +1,9 @@
 # qemu overview
 
-- [ ] /home/maritns3/core/kvmqemu/pc-bios
+- [ ] /home/maritns3/core/kvmqemu/pc-bios : 中间一堆乱七八糟的二进制文件
 - [ ] ./reply 只有 1000 行左右，值得分析一下。
+- [ ] tcg 整个到底覆盖的代码在什么位置 ?
+- [x] hqm 是怎么统计的 chardev 的
 
 
 ## kvm
@@ -93,9 +95,14 @@ static NetClientInfo net_tap_info = {
 scsi 多增加了一个抽象层次，导致其性能上有稍微的损失，但是存在别的优势。[^5][^6]
 > Shortcomings of virtio-blk include a small feature set (requiring frequent updates to both the host and the guests) and limited scalability. [^7]
 
-## 问题
-- [ ] tcg 整个到底覆盖的代码在什么位置 ?
-- [x] hqm 是怎么统计的 chardev 的
+和实际上，scsi 文件夹下和 vritio 关系不大，反而是用于 persistent reservation
+https://qemu.readthedocs.io/en/latest/tools/qemu-pr-helper.html
+
+- [ ] pr 只是利用了 scsi 机制，但是非要使用 scsi, 不知道
+
+## trace
+- [ ] 为什么需要使用 ftrace，非常的 interesting !
+
 
 
 [^1]: https://developer.apple.com/documentation/hypervisor

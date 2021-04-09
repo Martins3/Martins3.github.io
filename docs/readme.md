@@ -22,6 +22,10 @@
 ## Virtualization
 - [Loongson Box : A Process Level Virtualization framework Base on KVM](./dune.md)
 
+## kernel
+- [Linux Kernel Notes](./kernel-notes.md)
+
+
 ## Tips
 - [How to cross Great Fire Wall](./gfw.md)
 - [Learn Linux kernel](./learn-linux-kernel.md)
