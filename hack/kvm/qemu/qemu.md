@@ -8,6 +8,7 @@
 - [ ] 需要使用 qemu 测试的内容:
   - kdump
   - [x] qboot
+- [ ] 按照文档测试一下 slirp 那个用户态网络库
 
 ## compile
 一般的编译方法

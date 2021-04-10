@@ -7,8 +7,6 @@
 
 - [ ] linux-user 的部分似乎已经涉及到了 tcg 的处理了，看看 本一的工作吧
 
-- [ ] /home/maritns3/core/qemu/accel/tcg 和 /home/maritns3/core/qemu/tcg 是什么关系 ?
-
 - [ ] 如果没有 enable kvm 的话，x86_64 的机器上进行 x86_64 的翻译是怎么进行的 ？
 
 - [x] 用户态的翻译是不是不需要各种地址加速的处理啊
@@ -16,8 +14,6 @@
 - [ ] load store 的 softmmu 的 walk 在哪里?
 
 - [ ] 如果在 tb 的执行中间发生了越过 tb 的跳转，需要进行 tb_find 吗 ?
-
-
 
 - [ ] 需要验证的流程:
   - [ ] tb 的靠什么组织的，linked list ?
@@ -30,8 +26,6 @@
 
 - [ ] qemu-aarch64-softmmu 执行的第一行代码在什么位置 ?
 
-- [x] helper 函数到底是个什么概念 ?
-
 - [ ] cheng wei ren's notes
 
 - [ ] 怎么检查中断 ? 中断是怎么模拟产生的 ?
@@ -40,6 +34,12 @@
   - 如果处理器内存一致性的约束更弱，那么就会导致生成的代码比较随意了
   - 如果原本的按照 target 的代码生成，但是 host 的代码也是随意的生成，但是 host 代码无法保证其内容
   - 最简单的考虑，假如有了一对一的翻译。
+
+## code coverage
+- [ ] 在 accel/tcg 是 tcg 
+- [ ] tcg 应该是和 host 架构有关的代码生成工作
+- [ ] ./softmmu 下面应该是整个 qemu 通用的入口了
+
 
 ## tcg find
 
