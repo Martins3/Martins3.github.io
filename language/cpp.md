@@ -10,7 +10,6 @@
 - [ ] 先把现有的笔记整理一下就很不错了啊 !
 
 - [ ] coroutine
-- [ ] 继承
 
 - https://github.com/mattbierner/STT-C-Compile-Time-Snake : 使用 template 来玩贪吃蛇
 

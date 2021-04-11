@@ -1,11 +1,6 @@
----
-title: dp
-date: 2018-07-10 14:04:28
-tags: algorithm
----
-> 念念不忘 必有回响
-
 # 概述
+- [ ] 将经典算法的思想放到这里
+  - [ ] fucking algorithm 的内容
 
 # RMQ算法
 
@@ -36,7 +31,7 @@ C(n, m) = C(n - 1, m) + C(n - 1, m - 1)
 
 # 找零钱问题
 
-```
+```cpp
 // Every 
 int table[5001];
 class Solution {

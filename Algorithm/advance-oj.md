@@ -1,9 +1,3 @@
----
-title: Amazing Algorithms
-date: 2018-7-15 16:21:40
-tags: Algorithm
----
-
 # Summary
 http://www.pythontip.com/acm/problemCategory
 http://blog.csdn.net/a1dark/article/details/11714009
@@ -24,7 +18,7 @@ add的含义：找到所有包含的了此位置的数值，然后加上v 就可
 
 注意: 第一个位置被空出来了的。
 
-```
+```c
 class BinaryIndexTree{
 private:
     std::vector<int> arr;
@@ -56,8 +50,6 @@ kmp处理pattern。
 next数组记录的是：最长公共子前缀的长度
 如何计算: 利用动态规划
 
-
-
 # SegmentTree
 lazy 修改。
 1. 使用数组表示树
@@ -65,29 +57,60 @@ lazy 修改。
 2. 查询
 3. 修改
 
-# LCA
+# lowest common ancestor
 需要利用Union-Find
     1. 可以查询任意的一组中间
     2. dfs遍历全部的树
 
 只有被遍历结束之后才会被合并。所以当处于不同的分支的时候，只有lca才被合并起来。
 
+
+这是可以统计任意两个节点的.
+
+节点 u 在访问完成其子节点 v 之后，包括 v 在内的所有节点都会认为自己的 ancestor 是 u,
+u 作为其他点的最低点去访问其他的子节点。
+
 ```
-Tarjan(u)//marge和find为并查集合并函数和查找函数
-{
-    for each(u,v)    //访问所有u子节点v
-    {
-        Tarjan(v);        //继续往下遍历
-        marge(u,v);    //合并v到u上
-        标记v被访问过;
-    }
-    for each(u,e)    //访问所有和u有询问关系的e
-    {
-        如果e被访问过;
-        u,e的最近公共祖先为find(e);
-    }
-}
+function TarjanOLCA(u) is
+    MakeSet(u)
+    u.ancestor := u
+    for each v in u.children do
+        TarjanOLCA(v)
+        Union(u, v)
+        Find(u).ancestor := u // 
+    u.color := black
+    for each v such that {u, v} in P do
+        if v.color == black then
+            print "Tarjan's Lowest Common Ancestor of " + u +
+                  " and " + v + " is " + Find(v).ancestor + "."
 ```
+
+```
+function MakeSet(x) is
+    x.parent := x
+    x.rank   := 1
+ 
+function Union(x, y) is
+    xRoot := Find(x)
+    yRoot := Find(y)
+    if xRoot.rank > yRoot.rank then
+        yRoot.parent := xRoot
+    else if xRoot.rank < yRoot.rank then
+        xRoot.parent := yRoot
+    else if xRoot.rank == yRoot.rank then
+        yRoot.parent := xRoot
+        xRoot.rank := xRoot.rank + 1
+  
+function Find(x) is
+    if x.parent != x then
+       x.parent := Find(x.parent)
+    return x.parent
+```
+
+[算法的写法](https://en.wikipedia.org/wiki/Tarjan%27s_off-line_lowest_common_ancestors_algorithm)
+
+[算法描述](https://stackoverflow.com/questions/19262341/tarjans-lowest-common-ancestor-algorithm-explanation)
+
 # Disjoint Set
 ```
 class DisjointSet{

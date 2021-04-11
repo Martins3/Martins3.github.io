@@ -1,77 +1,185 @@
+## TODO
+
+ref : https://leetcode.com/discuss/interview-question/753236/List-of-graph-algorithms-for-coding-interview
+
+- [ ] Union Find: Tonnes of problems on Leetcode
+Single/Multi-source Shortest Path: Dijkstra, Bellman, Floyd-Warshall algorithm. Leetcode has good amount of problems on this topic. Few are following
+Minimum Spanning Trees: Prim's and Kruskal's algorithm.
+https://leetcode.com/problems/optimize-water-distribution-in-a-village/
+
+- [ ] 332
+`A*` Search
+- [ ] 773
+
+Max-Flow, Min-Cut
+- [ ] https://leetcode.com/problems/maximum-students-taking-exam/
+
+Articulation points and bridges
+- [ ] https://leetcode.com/problems/critical-connections-in-a-network/
+
+MST (minimum spanning tree), which can be built using Kruskal's or Prim's
+- [ ] 1489 https://leetcode.com/problems/find-critical-and-pseudo-critical-edges-in-minimum-spanning-tree/
+
+Floyd-Warshall
+- [ ] 1334 https://leetcode.com/problems/find-the-city-with-the-smallest-number-of-neighbors-at-a-threshold-distance/
+- [ ] 399 https://leetcode.com/problems/evaluate-division/
+- [ ] 787 https://leetcode.com/problems/cheapest-flights-within-k-stops/
+- [ ] 1462 https://leetcode.com/problems/course-schedule-iv/
+- [ ] 1617 https://leetcode.com/problems/count-subtrees-with-max-distance-between-cities/
+
+
+## 图论算法
+> 基于 https://github.com/TheAlgorithms/C-Plus-Plus
+
+有权边的邻接表的构建方法:
+```cpp
+void addEdge(std::vector<std::vector<std::pair<int, int>>> *adj, int u, int v,
+             int w) {
+    (*adj)[u - 1].push_back(std::make_pair(v - 1, w));
+    // (*adj)[v - 1].push_back(std::make_pair(u - 1, w));
+}
+```
+
+# trie
+
+
+# 最短路算法
+
+## Dijkstra
+distance 数组
+visited 数组 : 从 priority_queue 中间出来的点需要被标记一下 
+priority_queue : 用于选择当前离 start 最近的节点
+
+到达 start 的距离被刷新，那么就加入到 priority_queue 中间
+
+代码细节:
+1. [std::pair](https://en.cppreference.com/w/cpp/utility/pair/operator_cmp) 和 [std::greater](https://stackoverflow.com/questions/12147566/c-greater-function-object-definition)
+
+## Bellman-Ford
+算法：所有的边来依次更新距离，更新次数为 size(vertex) - 1
+动态规划： 每一步计算都是保证第 i 步可以到达的点是最优的
+
+[Bellman–Ford 可以处理 edge weight 是负数的情况](https://stackoverflow.com/questions/19482317/bellman-ford-vs-dijkstra-under-what-circumstances-is-bellman-ford-better)
+
+当然，Bellman-Ford 无法处理 negative 环路，想要检查出来 negative 环路，就再跑一次
+## Floyed-Warshall
+注意矩阵的对称和中心的位置。
+for k for i for j if dis[i][k] +  dis[k][j] < dis[i][j]
+
+- [ ] 这里的 i, k, j 可以随意嵌套吗 ?
+  - 并不知道，但是 k 在最外面必然是正确的，对于每个 k 的循环计算，都可以计算出来和 k 相连定点之间的最短数值。
+
 # dfs
 visted数组 -- 刚刚进入的时候添加标记
 
+递归搜索，比如对于一棵树找到从 head 到某个点的求和等于一个数情况，node 进入的时候 sum += val, node 退出的时候 sum -= val
 
-## recursive to loop
-应该不会存在这么变态的需求吧
-
-## 查找 cut vertex 和 bridge
-
-算法: 节点维持两个变量a, b。 a 永远不变， b 结束更新
-初次遇见的时候，a = b = count ++
-b的在结束的修改， 取出所有的最小值。
-
-cut vertex : 存在一个 out edge， b小于等于。
-cut edge ： 两个端点 b 差值为1
-
-cut vertex 特殊处理， cut edge不需要特殊处理。
-根节点需要特殊考察分析， 对于一个环，在以上的判断中间会失效， 更节点一旦含有超过
-连个出边是了。
-
-## Euler Circuits
-1. 所有点度数是偶数， 构成回路
-2. 两个点的度数是偶数， 构成路径
-3. 有方向图:
-    1. 所有点上的出度和入度全部相同
-    2. 如果不同，需要成组对应
-算法: Hierholzer's algorithm 使用 doubly linked list
-
-## Topologic sort
-topo排序的前提 ： 如果含有A -> B的边， 那么就一定B必定首先放置到A的前面
-当一个点结束访问时候放入stack中间。
-
-## SCC(Strongly Connected Component)
-对于所有点进行拓扑排序操作， 得到一个标记顺序。 a -> b。
-构建反图
-按照结束的顺序进行dfs, 每次得到的都是一个SCC, 首先访问 a
-
-证明 : v w在同一个， 那么必定通过该点的算法，可以归到一个CC中间
-如果v w 不在， 那么不可能在一起。
+这不是一件事情。
 
 
-# 广度优先
+## dfs with stack
+[使用 stack 访问的一个直觉写法](https://11011110.github.io/blog/2013/12/17/stack-based-graph-traversal.html)
+```py
+def stack_traversal(G,s):
+    visited = {s}
+    stack = [s]
+    while stack:
+        v = stack.pop()
+        for w in G[v]:
+            if w not in visited:
+                visited.add(w)
+                stack.append(w)
+```
+但是这个并不能等价于 DFS, 可以通过 visited 的判断放到最后
+```py
+def dfs2(G,s):
+    visited = set()
+    stack = [s]
+    while stack:
+        v = stack.pop()
+        if v not in visited:
+            traversed_path.push_back(v)
+            for w in G[v]:
+                stack.append(w)
+            visited.add(v)
+```
+
+C-Plus-Plus/graph/depth_first_search_with_stack.cpp 实现的算法是非常蠢的，应该修改一下。
+
+# bfs
 visted数组
 queue ： 点被加入到queue的同时立刻添加标记
 
 # 最小生成树
 
 ## Prim
-类似于 Dijkstra，删除distance数组
+- 类似于 Dijkstra，不需要 distance 数组
+  - 随便找一点加入到 priority_queue 中间, 从而找到最小的边
+  - 从 priority_queue 出来的不要和现在的边构成回路, 加入的点也不要成为回路
+
 
 ## Kruskal
-使用Heap和union-find实现
+使用 union-find 实现
 
-# 最短路算法
+将所有的节点从小到大排序，当 edge 的两个端点没有被 union 在一起，那么就是被选中的
 
-## Dijkstra
-distance 数组
-visited数组 -- 除了开始的点， 其余的出来的时候被标记
-Heap 中间存放的是边
+## 查找 cut vertex 和 bridge
+cut vertex 和 bridge 表示这个点/边不在环路中间, 所以去掉之后，这个图的连通性不改变
 
-添加进入的条件:
-1. y访问过
-2. 没有办法减少距离
+算法: 每一个节点维持两个变量 a, b。 dfs 开始访问的时候， a = b = count ++, dfs 结束的时候 b 等于所有点的最小值
 
-出来的边被使用的条件：
-没有被标记过。
+cut vertex : b 大于等于 a。
+cut edge ： 两个端点 b 差值为 1
 
-## Bellman-Ford
-算法：所有的边 来 依次更新 距离， 更新次数为 size(vertex) - 1
-动态规划： 每一步计算都是保证第i步可以到达点将会在文件中间。
+cut vertex 的根节点不需要特殊考虑一下
+```c
+// (1) u is root of DFS tree and has two or more chilren.
+if (parent[u] == NIL && children > 1)
+  ap[u] = true;
+```
 
-## Floyed-Warshall
-注意矩阵的对称和中心的位置。
-for k for i for j if dis[i][k] +  dis[k][j] < dis[i][j]
+- [x] 如果是存在多个 cut vertex 怎么办? (这是对于所有的点进行询问的)
+
+## Euler Circuits
+所有的边仅仅访问一次
+
+对于无向图:
+1. 所有点度数是偶数， 构成回路
+2. 仅仅两个点的度数是奇数， 构成路径
+
+
+对于有方向图:
+1. 所有点上的出度和入度全部相同
+2. 如果不同，需要成组对应
+
+算法: Hierholzer's algorithm
+首先进行 dfs，当无路可走的时候，那么 dfs 返回，直到重新可以 dfs 了
+
+## Topologic sort
+topo 排序的前提 : 如果含有 `A->B` 的边，  那么 dfs 的时候 B 必定更早的结束
+
+当一个点结束访问时候放入 stack 中间。
+
+- 对于无向图，这个没有什么意义
+- 对于环路，其实虽然可以输出结果，但是不符合语义要求
+
+- [Hamiltonian_path_problem](https://en.wikipedia.org/wiki/Hamiltonian_path_problem) 目前不存在很好的算法
+
+## SCC(Strongly Connected Component)
+定义 : 从任何一个点可以到达任何一个点
+
+- 对于无向图，这个没有什么意义
+
+算法:
+- 对于所有点进行拓扑排序操作， 得到一个标记顺序 a -> b。
+- 构建反图
+- 按照结束的顺序进行dfs, 每次得到的都是一个SCC, 首先访问 a
+
+证明 :
+1. a b 在同一个， 那么必定通过该点的算法，可以归到一个CC中间
+2. 如果a b 不在，在反图上，从 a 开始 dfs 一定是找不到 b 的。
+  - 使用反证法 : a b 不在一个 SCC 上，在反图上, 如果从 a 开始 dfs 可以找到 b , 那么在正图上，必然存在 b -> a, 但是这样 a 就不应该排在前面
+
 
 ## Shortest Path Faster Algorithm
 
