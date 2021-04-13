@@ -1,4 +1,6 @@
 # ASM
+- [ ] 教程 ： https://www.xorpd.net/pages/x86_adventures.html
+
 记录如何书写 .S 文件，记录在 entry.S 的遇到的任何问题
 
 - [ ] [这是绝对的核心](https://cs.lmu.edu/~ray/notes/nasmtutorial/)

@@ -11,6 +11,9 @@
 ssh: connect to host 10.90.50.133 port 22: Connection refused
 ```
 
+为了方便测试机器的调试，将密码删除:
+- [ ] 在 5000 上按照[这个方法](https://askubuntu.com/questions/281074/can-i-set-my-user-account-to-have-no-password)做不到
+
 ## 交叉编译的方法
 交叉编译的方法:
 
@@ -33,6 +36,7 @@ alias armenv='cat /home/maritns3/core/xx/hack/compile/script/arm-env.sh && sourc
 alias riscvenv='cat /home/maritns3/core/mi/hack/compile/script/riscv-env.sh && source /home/maritns3/core/mi/hack/compile/script/riscv-env.sh'
 ```
 具体文件在这个仓库中间
+
 
 ## compile_commands.json
 1. 使用 compile_commands.json 生成方法
@@ -100,3 +104,7 @@ syncmusl && make && sudo make install
 - [ ] 至于怎么编译出来一个支持的 debug 的，现在还不是很清楚
 
 ## ltp 编译方法
+```sh
+make autotools
+./configure
+```

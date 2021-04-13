@@ -34,6 +34,13 @@ https://github.com/Kelvinhack/kHypervisor : window 的 ept hypervisor
 
 [nodejs](https://en.wikipedia.org/wiki/Node.js) 是 js 的 runtime environment. running scripts server-side to produce dynamic web page content before the page is sent to the user's web browser
 
+kvm 虚拟化相关教学:
+- https://luohao-brian.gitbooks.io/interrupt-virtualization/content/qemuzhi-network-device-quan-xu-ni-fang-an-4e8c3a-xu-ni-wang-qia.html
+  - kernelgo.org
+- https://rayanfam.com/topics/hypervisor-from-scratch-part-4/ 
+- https://github.com/changeofpace/VivienneVMM
+
+
 ## kubernetes
 https://github.com/rootsongjc/kubernetes-handbook
   - 这本书太难懂了，使用过多的高深词汇, 比如 Borg : Large-scale cluster management at Google with Borg
@@ -53,6 +60,9 @@ https://github.com/rootsongjc/kubernetes-handbook
 - https://github.com/ysicing/kubernetes-handbook
 - https://github.com/ramitsurana/awesome-kubernetes
 - https://blog.quickbird.uk/domesticating-kubernetes-d49c178ebc41
+
+- 上手尝试才是最好的学习方法
+  - [几种快速上手的方式](https://mp.weixin.qq.com/s/vsicQ6Qn2YDzuD4q2EUK7w)
 
 ## 文摘
 [ali 云计算 的自我推广](https://mp.weixin.qq.com/s/5WKDZfzIQE3QB-Io1lmG-w)

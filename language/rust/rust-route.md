@@ -37,7 +37,8 @@ https://github.com/fishinabarrel/linux-kernel-module-rust : 使用 Rust 来写 k
 ## crate
 https://github.com/serde-rs/json : 也许下次写小工具的有用，用于解析 json
 https://github.com/sharkdp/hexyl : 显示文件的二进制，其实，我只是奇怪，为什么这么简单的程序会有 5k star
-https://github.com/uutils/coreutils : 我想知道这个和 busybox 有什么区别，如果两者提供了各种基础程序
+https://github.com/uutils/coreutils : 提供各种 Unix 小工具
+https://github.com/fdehau/tui-rs : 终端下的图形化框架，好吧，以后写一个 anki 工具吧
 
 ## projects
 - https://www.philippflenker.com/hecto-chapter-6/ : 使用 rust 写编辑器的教程
