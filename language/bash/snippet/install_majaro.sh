@@ -35,12 +35,6 @@ sudo make install
 git clone git@github.com:XiongGuiHui/My-Linux-config.git ~/.SpaceVim.d
 curl -sLf https://spacevim.org/cn/install.sh | bash
 
-# compile Ycm
-# sudo npm install -g typescript # this is optional
-cd .cache/vimfiles/repos/github.com/Valloric/YouCompleteMe
-# ./install.py --clang-completer --go-completer --rust-completer --java-completer # this optional
-./install.py --clang-completer
-
 # compile ccls
 # ref jianshu
 
@@ -56,15 +50,6 @@ sh -c "$(curl -fsSL https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/mas
 ln ~/.SpaceVim.d/.zshrc .zshrc
 # TODO we have a better way !
 # curl -L git.io/antigen > ~/.SpaceVim.d/.antigen.zsh # this optional
-
-# gtags
-# -- download
-GTAGS_V='6.6.2'
-curl -o ~/.Application https://ftp.gnu.org/pub/gnu/global/global-${GTAGS_V}.tar.gz
-tar xvf ~//Application/global-${GTAGS_V}.tar.gz
-./configure --with-exuberant-ctags=/usr/bin/ctags
-make
-sudo make install
 
 # autojump : may need configuration in zshrc
 cd ~/.Application

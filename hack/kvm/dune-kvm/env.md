@@ -21,7 +21,7 @@ ssh: connect to host 10.90.50.133 port 22: Connection refused
 - make -j10 ARCH=$ARCH CROSS_COMPILE=$CROSS_COMPILE
 - rup='rsync -avz /home/maritns3/core/loongson-dune/cross loongson@10.90.50.133:/home/loongson/loongson' 在 loongson 上
 
-- sudo make install / sudo make modules_install
+- sudo make install && sudo make modules_install
 - [ ]  (第一次需要 ?) grub2-mkconfig -o /boot/efi/EFI/BOOT/grub.cfg
     - 在使用 kvmtool 的时候，这个问题将会被解决掉
 - /boot/efi/EFI/BOOT/grub.cfg 添加一个 menuentry, 全部照抄，包括 initramfs，内核指向各个编译的 /boot/the-kernel-name

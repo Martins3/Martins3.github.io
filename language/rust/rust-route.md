@@ -50,6 +50,9 @@ http://technosophos.com/2019/08/07/writing-a-kubernetes-controller-in-rust.html
 https://www.osohq.com/post/rust-reflection-pt-1
 https://github.com/ingraind/redbpf : Rust 提供给 bpf 的接口，但是我没有办法让 cargo 在 Sudo 下运行。
 
+## blog
+- https://www.brandons.me/blog/why-rust-strings-seem-hard : 介绍 Rust 的 String 使用
+
 ## TODO
 3. dyn 关键字
 4. use rust::blog::Post; 为什么需要添加rust:: 来指示本地包的作用 ?
