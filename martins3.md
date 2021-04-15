@@ -1,5 +1,4 @@
 ## 整理笔记
-- [ ] shel
 - [ ] 将编译的作业整理成为一个正规的仓库，利用那个标准cpp 项目模板装饰一下牌面，岂不美哉。
 - [ ] 咨询一下工作的同学关于上班的事情(工资，远程上班，加班，适合职位等)
 - [ ] 完成 linux module check sheet
@@ -60,7 +59,6 @@ linux kernel labs 应该被完整的处理一遍，然后再去做其他的事�
 
 My-Linux-Config 可以增加的内容
 1. https://github.com/puremourning/vimspector#c-c-rust-et
-2. floaterm + 现有的配置
 3. lkmc 让我感觉 docker 原来是实现脚本测试
 
 https://devops.novalagung.com/en/cicd-serverless-ebook-gitbook-github-pages-actions-calibre.htm
@@ -72,16 +70,12 @@ https://poedit.net/ : 用于翻译 My-Linux-Config 用于
 2. 利用 tiny la
 
 
-1. ccls 的安装存在问题
-2. 还有我的 bcc
-
 https://github.com/mengning/mykernel : 检查一下，为什么这里就是只要 qemu -kernel 就是运行的，顺便帮忙其回答的为什么 make allnoconfig 是不能运行的
 
 
 https://conanblog.me/Unix-as-IDE--Chinese-/compiling.html#id3 : 应该这个对于我来说很简单了，但是估计其中还是有些不知道的吧，可以补充一下
 
 https://github.com/zlotus/notes-linear-algebra : 线性代数，你值得拥有
-
 
 https://github.com/tuna/blogroll : 订阅一下 tuna 的blog，给自己开开眼
 https://github.com/jkup/awesome-personal-blogs : 经典 blo
@@ -119,6 +113,3 @@ https://www.gnu.org/software/grub/manual/multiboot/multiboot.html : 不知道整
 # MIS
 https://catonmat.net/online-text-tool
 https://github.com/MaximAbramchuck/awesome-interview-questions#c : 使用面试的方法进行学习各种知识，应该很不错哦!
-
-## 上网
-https://github.com/ShadowsocksR-Live/shadowsocksr-nativ
