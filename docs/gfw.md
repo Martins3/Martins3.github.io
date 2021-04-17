@@ -1,16 +1,20 @@
 # How to cross Great Fire Wall
 
 ## Caveat
-Only tested on Ubuntu20, but should work in all linux distribution, and similar
-approach can be used for macos and windows.
+Only tested on Ubuntu 20.04, but should work in all linux distributions, and similar
+approach should works for MacOS and Windows.
 
 ## Abstract
 If you can't clone https://github.com/torvalds/linux in minutes, this article
 is what you need.
 
-| method | airport(机场) | client                                     |
+| protocol | airport(机场) | client                                     |
 |--------|---------------|--------------------------------------------|
-| v2ray  | v2e.fun       | [qv2ray](https://github.com/Qv2ray/Qv2ray) |
+| v2ray  | \*v\*2\*e\*.\*f\*u\*n\*       | [qv2ray](https://github.com/Qv2ray/Qv2ray) |
+
+- There are many *protocols* for corssing GFW, e.g.,ss, ssr, v2ray, torjan and vpn.
+- You can set up your sever with banwagong, Digitocean, or vulter by yourself, but airport is cheap and simple, it's enough for 99% users.
+- qv2ray is best v2ray's client in Linux in my opinion, but you can choose others too.
 
 ## setup
 You can reference [document of qv2ray](https://qv2ray.net/en/getting-started/) for details, here is simplified steps.
@@ -64,3 +68,5 @@ then we proxy commands in shell, e.g.
 ```
 ➜  vn git:(master) ✗ git send-email /tmp/0001-change-mmap-flags-from-PROT_EXEC-to-PROT_READ.patch --to  hubachelar@qq.com
 ```
+
+<script src="https://utteranc.es/client.js" repo="Martins3/Martins3.github.io" issue-term="url" theme="github-light" crossorigin="anonymous" async> </script>

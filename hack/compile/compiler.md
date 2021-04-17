@@ -127,7 +127,7 @@ sudo update-alternatives --config c++
 ```
 类似可以选择默认的 clang 版本。
 
-```c
+```sh
 cd /usr/bin
 sudo ln -f -s clang-11 clang
 sudo ln -f -s clang++-11 clang++

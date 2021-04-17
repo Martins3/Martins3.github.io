@@ -83,8 +83,6 @@ https://news.ycombinator.com/item?id=23376357 : C 语言和汇编的联系
 
 https://qntm.org/perl_en : learn perl in 150 minutes
 
-https://news.ycombinator.com/item?id=25663403 : port v8 to riscv
-
 ## 链接
 https://tinylab.gitbooks.io/cbook/zh/chapters/02-chapter4.html : 名字是 C 语言课程，但是实际上是动态链接的之类的东西
 
@@ -101,9 +99,11 @@ https://github.com/lifting-bits/mcsema : Framework for lifting x86, amd64, and a
 https://asmjit.com/ 
 
 ## vm
-v8 虚拟机让我开始好奇, v8 自带几个小文件例子.
+- v8 自带几个小文件例子.
+- https://github.com/lazyparser/v8-internals
+  - https://github.com/danbev/learning-v8
+  - https://news.ycombinator.com/item?id=25663403 : 相关的报道
 
-https://github.com/wren-lang/wren : 只有 6000 行，似乎是非常简单的东西，作者还写过 v8 虚拟机的教程，不过的很老
 https://github.com/marcobambini/gravity : 16000 ，也是使用了 vm, 文档非常的详细
 https://github.com/KCreate/charly-vm : 80个star, vm 很大(4000)，其余都是很模块性质的几百行
 

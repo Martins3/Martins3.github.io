@@ -35,6 +35,41 @@ https://github.com/klaussinani/taskbook/blob/master/docs/readme.ZH.md
 https://github.com/kdheepak/lazygit.vim
 如果利用这两个技术实现vim 中间处理todo 就不错了
 
+## minimal's coc
+1. 
+```
+loongson ➜  .vim cat coc-settings.json
+{
+  "languageserver": {
+    "ccls": {
+      "command": "ccls",
+      "filetypes": [
+        "c",
+        "cc",
+        "cpp",
+        "c++",
+        "objc",
+        "objcpp"
+      ],
+      "rootPatterns": [
+        ".ccls",
+        "compile_commands.json",
+        ".git/",
+        ".hg/"
+      ],
+      "initializationOptions": {
+        "cache": {
+          "directory": ".ccls"
+        }
+      }
+    }
+  }
+}
+loongson ➜  .vim
+```
+2. 然后将标准配置放到 mini.vim 中间
+3. vim -u mini.vim a.c
+
 ## Pinao
 本文依赖使用的环境: manjaro + neovim-0.3.4
 

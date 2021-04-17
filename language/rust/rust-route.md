@@ -34,6 +34,8 @@ https://nick.groenen.me/posts/rust-error-handling/ : 一个人阅读 the rust bo
 https://github.com/ferrous-systems/elements-of-rust#combating-rightward-pressure : 一些常用写法 和 建议
 https://github.com/fishinabarrel/linux-kernel-module-rust : 使用 Rust 来写 kernel module
 
+[neovide](https://github.com/Kethku/neovide) neovim 客户端，只有 7000 行
+
 ## crate
 https://github.com/serde-rs/json : 也许下次写小工具的有用，用于解析 json
 https://github.com/sharkdp/hexyl : 显示文件的二进制，其实，我只是奇怪，为什么这么简单的程序会有 5k star
