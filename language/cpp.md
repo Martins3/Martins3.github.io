@@ -44,6 +44,7 @@ https://blog.visionappster.com/2020/08/06/overriding-virtual-functions-at-run-ti
 http://modernescpp.com/index.php/c-20-concept-syntactic-sugar : 这个人写了一系列的 cpp 文章，首先将经典的内容看完再看这个吧。
 
 https://alandefreitas.github.io/moderncpp/ : 对于 moderncpp 提供一堆例子
+https://cor3ntin.github.io/posts/iouring/ : C++ iouring
 
 ## 项目
 https://github.com/sogou/workflow : 搜狗开发的, 不到 2 万行，少年，你想做后端开发吗 ?

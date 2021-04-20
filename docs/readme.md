@@ -28,6 +28,9 @@
 - [shell 的一些经验之谈](./shell.md)
 - [计算机学习的一些经验之谈](./learn-cs.md)
 
+## Loongson
+- [X86 上阅读 Loongarch 内核](./loongarch/ccls.md)
+
 ## MISC
 - [what is x86 IA-32 IA-64 x86-64 and amd64 ?](./x86-names.md)
 

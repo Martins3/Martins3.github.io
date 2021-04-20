@@ -104,6 +104,8 @@ struct scan_control {
 #### lru
 // 首先阅读的内容 : https://lwn.net/Articles/550463/
 
+// https://lwn.net/Articles/851184/ 似乎现在又发布了一个 LRU 了
+
 - [ ] https://mp.weixin.qq.com/s/7eDqHR06TIBh6hqUMTrZKg
 - [ ] LoyenWang seems cover this part too.
 
