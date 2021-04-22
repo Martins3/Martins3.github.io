@@ -33,7 +33,8 @@
 
 ## MISC
 - [what is x86 IA-32 IA-64 x86-64 and amd64 ?](./x86-names.md)
-
+- [The Day](https://martins3.github.io/theday/)
+- [The Garden](http://martins3.gitee.io/garden/)
 
 <script src="https://utteranc.es/client.js" repo="Martins3/Martins3.github.io" issue-term="url" theme="github-light" crossorigin="anonymous" async> </script>
 
