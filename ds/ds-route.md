@@ -38,3 +38,6 @@
 # sre
 https://linkedin.github.io/school-of-sre/ : 应该是比较基础的课程
 https://github.com/upgundecha/howtheysre : 各个公司关于 SRE 的报告吧
+
+# 教程
+- https://github.com/HelloGitHub-Team/HelloZooKeeper : 中文 ZooKeeper 教程
