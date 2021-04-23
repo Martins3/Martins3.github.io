@@ -20,7 +20,7 @@
 - [Binary Translation and Virtualization Paper reading list](./paper-reading-list.md)
 
 ## Virtualization
-- [Loongson Box : A Process Level Virtualization framework Base on KVM](./dune.md)
+- [Loongson Dune : A Process Level Virtualization framework Base on KVM](https://github.com/Martins3/loongson-dune)
 
 ## Tips
 - [How to cross Great Fire Wall](./gfw.md)
@@ -35,6 +35,7 @@
 - [what is x86 IA-32 IA-64 x86-64 and amd64 ?](./x86-names.md)
 - [The Day](https://martins3.github.io/theday/)
 - [The Garden](http://martins3.gitee.io/garden/)
+- [使用两行代码搭建博客](./setup-github-pages.md)
 
 <script src="https://utteranc.es/client.js" repo="Martins3/Martins3.github.io" issue-term="url" theme="github-light" crossorigin="anonymous" async> </script>
 

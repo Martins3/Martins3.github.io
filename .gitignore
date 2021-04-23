@@ -347,10 +347,6 @@ TSWLatexianTemp*
 # Uncomment the next line to have this generated file ignored.
 #*Notes.bib
 
-# https://github.com/KenN7/vim-arsync
-.vim-arsync
-.vim-arsync.bk
-./kernel/fio/script/
 *.log
 .gdb_history
 
@@ -361,3 +357,4 @@ hack/kvm/qemu/aarch64-softmmu/busybox-*/
 hack/kvm/qemu/aarch64-softmmu/busybox-*
 
 hack/kvm/qemu/aarch64-softmmu/rootfs.cpio.gz
+docs/loongarch/loongarch-notes.md

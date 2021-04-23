@@ -1,7 +1,9 @@
-# Set Up Github Pages with Minimal Code
+# 如何使用两行代码搭建博客
 
+## 第一行: 使用 Github 内置框架
+Github 提供了几个不错的主题，只需要在 `docs/_config.yml` 配置即可
 
-## comments
+## 第二行: 搭建评论系统
 可以使用 disqus，比如将下面的代码放到每一篇文章下面，其中三个位置需要调整
 1. `this.page.url`
 2. `this.page.identifier`
@@ -27,4 +29,10 @@
 <noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
 ```
 
-但是更好的方案是 `https://utteranc.es/`。
+但是更好的方案是 `https://utteranc.es/`, 按照其步骤，将其生成的代码(比如下面一行)粘贴到你的blog下即可。
+```js
+<script src="https://utteranc.es/client.js" repo="Martins3/Martins3.github.io" issue-term="url" theme="github-light" crossorigin="anonymous" async> </script>
+```
+
+如果你感觉操作有什么问题，在下面评论即可。
+<script src="https://utteranc.es/client.js" repo="Martins3/Martins3.github.io" issue-term="url" theme="github-light" crossorigin="anonymous" async> </script>
