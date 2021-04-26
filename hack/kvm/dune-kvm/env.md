@@ -12,7 +12,16 @@ ssh: connect to host 10.90.50.133 port 22: Connection refused
 ```
 
 为了方便测试机器的调试，将密码删除:
-- [ ] 在 5000 上按照[这个方法](https://askubuntu.com/questions/281074/can-i-set-my-user-account-to-have-no-password)做不到
+- [x] 在 5000 上按照[这个方法](https://askubuntu.com/questions/281074/can-i-set-my-user-account-to-have-no-password)做不到
+
+删除密码太难了，采用[这个方法](https://askubuntu.com/questions/113682/how-to-change-disable-password-complexity-test-when-changing-password)
+将密码变成 `jj`
+```
+// 注释掉这一行
+# password   [success=2 default=ignore]  pam_unix.so obscure use_authtok try_first_pass sha512 
+// 修改这一行
+password    [success=1 default=ignore]  pam_unix.so minlen=1 sha512
+```
 
 ## 交叉编译的方法
 交叉编译的方法:
@@ -26,6 +35,8 @@ ssh: connect to host 10.90.50.133 port 22: Connection refused
     - 在使用 kvmtool 的时候，这个问题将会被解决掉
 - /boot/efi/EFI/BOOT/grub.cfg 添加一个 menuentry, 全部照抄，包括 initramfs，内核指向各个编译的 /boot/the-kernel-name
 
+
+
 交叉编译 Linux module 的方法 : https://stackoverflow.com/questions/3467850/cross-compiling-a-kernel-module
 因为用户态程序是直接使用 x86 的编译器，从而可以 indexing, 而内核模块交叉编译，从而可以掌握全部的脚本。
 
@@ -37,6 +48,9 @@ alias riscvenv='cat /home/maritns3/core/mi/hack/compile/script/riscv-env.sh && s
 ```
 具体文件在这个仓库中间
 
+- [ ] 在 loongarch 上安装内核
+  1. 编译安装一个内核 - sudo make install && sudo make modules_install
+  2. 在 /boot/EFI/grub.cfg 增加一个选项, 看看镜像的名字
 
 ## compile_commands.json
 1. 使用 compile_commands.json 生成方法
@@ -46,7 +60,6 @@ alias riscvenv='cat /home/maritns3/core/mi/hack/compile/script/riscv-env.sh && s
 
 ## 编译器下载
 http://www.loongnix.org/index.php/Cross-compile
-
 
 ## 4000 的工作环境搭建
 1. oh-my-zsh
