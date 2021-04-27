@@ -1,10 +1,3 @@
----
-Category: build your cpu
-tags: cpu
-title: Build your cpu with chisel
----
-
-
 ![](./img/1.png)
 ![](./img/2.png)
 ![](./img/3.png)
@@ -17,8 +10,10 @@ title: Build your cpu with chisel
 > include a Chinese document
 2. [Chisel api](https://chisel.eecs.berkeley.edu/api/latest/index.html)
 
+- https://github.com/d0iasm/rvemu
+
+- https://github.com/riscv/educational-materials
 
 
-https://github.com/d0iasm/rvemu
-
-https://github.com/riscv/educational-materials
+## Risc-V
+https://marz.utk.edu/my-courses/cosc230/book/example-risc-v-assembly-programs/ : 汇编教程
