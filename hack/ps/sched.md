@@ -2,6 +2,9 @@
 - wowo
 - 奔跑
 - man sched(7) 也是很不错的
+
+- [ ] https://github.com/hamadmarri/cacule-cpu-scheduler : 新的一个 scheduler patch
+
 # linux kernel scheduler
 1. cpu domain
 2. nohz

@@ -8,6 +8,8 @@
 - [ ] https://github.com/intel/haxm : 对于 Windows 和 Mac 存在良好的支持，但是 Linux 上根本无法编译的，感觉类似于 KVM 的东西
   - https://www.qemu.org/2017/11/22/haxm-usage-windows/ : 在 qemu 上利用这个东西实现加速
 
+- https://github.com/KVM-VMI/kvm-vmi : 使用 kvm 来进行 debug
+
 https://github.com/wbenny/hvpp 但是指向了一堆项目
 https://github.com/Fmstrat/winapps
 

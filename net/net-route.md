@@ -160,6 +160,8 @@ https://github.com/mtcp-stack/mtcp
 - https://news.ycombinator.com/item?id=23241934 : ssh-agent 的工作原理是什么 ?
 - https://www.jianshu.com/p/4ba0d706ee7c : TCP/IP 快速复习一遍
 
+https://www2.tkn.tu-berlin.de/teaching/rn/animations/gbn_sr/ : 拥塞网络图形化演示
+
 [^2]: 用芯探核:基于龙芯的 Linux 内核探索解析
 [^4]: http://yuba.stanford.edu/rcp/
 [^6]: [An Introduction to Computer Networks](http://intronetworks.cs.luc.edu/current2/html/)

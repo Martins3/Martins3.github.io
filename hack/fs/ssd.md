@@ -150,4 +150,6 @@ https://www.nvmedeveloperdays.com/English/Collaterals/Proceedings/2018/20181204_
 
 http://blog.coderhuo.tech/2020/07/18/flash_basics/ : 讲解的不错
 
+- https://pages.cs.wisc.edu/~remzi/OSTEP/file-ssd.pdf : 似乎是一个教程中的一部分
+
 [^1]: https://phoenixnap.com/kb/nvme-vs-sata-vs-m-2-comparison

@@ -36,6 +36,7 @@ https://github.com/VGraupera/1on1-questions : 工作的时候问问这些问题�
 https://github.com/Wei-Xia/most-frequent-technology-english-words
 https://github.com/shimohq/chinese-programmer-wrong-pronunciation
 https://github.com/byoungd/English-level-up-tips-for-Chinese
+https://englishplusplus.jcj.uj.edu.pl/index.html : 一些听力，写作 和 presentation 的教程
 
 
 ## 写作

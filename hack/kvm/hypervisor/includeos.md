@@ -17,7 +17,7 @@
 
 <!-- vim-markdown-toc -->
 
-when coming back : in `your_build_dir`, `run.sh` `source activete.sh` `boot hello` to run the data.
+in `your_build_dir`, `run.sh` `source activete.sh` `boot hello` to run the data.
 ```
 ➜  incOs ls
  hello_world   IncludeOS   your_build_dir
@@ -50,7 +50,12 @@ cmake --build build
 
 In `hello_world`: follow readme's instructors
 
+- [ ] 仔细阅读一下 Building with IncludeOS in editable mode 内容来描述吧
+
 ## design
+> Virtio and vmxnet3 Network drivers with DMA. Virtio provides a highly efficient and widely supported I/O virtualization. vmxnet3 is the VMWare equivalent.
+
+- [ ] vmxnet3 是什么?
 
 ### questions
 - [ ] how could it possible to simulate a kernel in 40000 lines of code.
@@ -137,7 +142,6 @@ this is standard musl interface.
           - MemDisk::read_sync
           - VirtioBlk::read
 
-
 ## reading material
 - [ ] https://ma.ttias.be/what-is-a-unikernel/
 - [ ] https://github.com/cetic/unikernels
@@ -150,9 +154,8 @@ this is standard musl interface.
     - > std::array is a template class that encapsulate a statically-sized array, stored inside the object itself, which means that, if you instantiate the class on the stack, the array itself will be on the stack.
 - https://stackoverflow.com/questions/18198314/what-is-the-override-keyword-in-c-used-for
 
-```
+```c
 #pragma once
-
 noexcept
 ```
 
@@ -188,5 +191,4 @@ class VirtioNet : Virtio, public net::Link_layer<net::Ethernet> {
 
 ## Something else I learn
 - [ ] cpp package manage 
-
 - cmake

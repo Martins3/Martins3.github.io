@@ -10,10 +10,8 @@
 > include a Chinese document
 2. [Chisel api](https://chisel.eecs.berkeley.edu/api/latest/index.html)
 
-- https://github.com/d0iasm/rvemu
-
+[https://github.com/d0iasm/rvemu](模拟器，而不是翻译器，应该意义不大)
 - https://github.com/riscv/educational-materials
-
 
 ## Risc-V
 https://marz.utk.edu/my-courses/cosc230/book/example-risc-v-assembly-programs/ : 汇编教程

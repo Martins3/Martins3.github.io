@@ -6,6 +6,7 @@
 - [ ] [这是绝对的核心](https://cs.lmu.edu/~ray/notes/nasmtutorial/)
 - [ ] [可以作为实战](x86-bare-metal-examples)
 
+- https://fgiesen.wordpress.com/2016/08/25/how-many-x86-instructions-are-there/ : 来看看 x86 到底有复杂
 
 - 可以用来学习一下各种 SIMD 指令的写法吧 : https://github.com/pigirons/cpufp
 

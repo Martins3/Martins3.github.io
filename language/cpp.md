@@ -45,6 +45,9 @@ http://modernescpp.com/index.php/c-20-concept-syntactic-sugar : 这个人写了�
 
 https://alandefreitas.github.io/moderncpp/ : 对于 moderncpp 提供一堆例子
 https://cor3ntin.github.io/posts/iouring/ : C++ iouring
+https://hackernoon.com/undefining-the-c-pre-processor-c4eeb3d06e1f : 替代 macro 的方法, 不过我感觉文章论证 macro is harmful 的部分不够有力
+
+https://www.gamasutra.com/view/news/169296/Indepth_Functional_programming_in_C.php : cpp 中的函数编程
 
 ## 项目
 https://github.com/sogou/workflow : 搜狗开发的, 不到 2 万行，少年，你想做后端开发吗 ?
