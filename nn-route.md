@@ -5,7 +5,7 @@ https://github.com/nndl/nndl.github.io  : 《神经网络与深度学习》 邱�
 https://github.com/MingchaoZhu/InterpretableMLBook : 可解释性黑盒，中文翻译
 
 https://cs231n.github.io/ : CS231n: Convolutional Neural Networks for Visual Recognition.
+https://www.52nlp.cn/ : 中文，自然语言社区
 
 ## 可能有用
 https://github.com/FavioVazquez/ds-cheatsheets
-

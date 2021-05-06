@@ -36,6 +36,7 @@
 - [The Day](https://martins3.github.io/theday/)
 - [The Garden](http://martins3.gitee.io/garden/)
 - [使用两行代码搭建博客](./setup-github-pages.md)
+- [言论](./words.md)
 
 <script src="https://utteranc.es/client.js" repo="Martins3/Martins3.github.io" issue-term="url" theme="github-light" crossorigin="anonymous" async> </script>
 

@@ -3,6 +3,7 @@
 <!-- vim-markdown-toc GitLab -->
 
 - [env setup](#env-setup)
+- [想法](#想法)
 - [design](#design)
   - [questions](#questions)
   - [crt](#crt)
@@ -51,6 +52,8 @@ cmake --build build
 In `hello_world`: follow readme's instructors
 
 - [ ] 仔细阅读一下 Building with IncludeOS in editable mode 内容来描述吧
+
+## 想法
 
 ## design
 > Virtio and vmxnet3 Network drivers with DMA. Virtio provides a highly efficient and widely supported I/O virtualization. vmxnet3 is the VMWare equivalent.
