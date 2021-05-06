@@ -69,3 +69,6 @@ ninja
 - https://github.com/forexample/package-example : cmake 模板 ?
 - https://cgold.readthedocs.io/en/latest/
 - https://64.github.io/cmake-raytracer/ : 使用 cmake 来实现 raytracing
+
+- https://cliutils.gitlab.io/modern-cmake/
+- https://learnxinyminutes.com/docs/cmake/ : 好像还不错

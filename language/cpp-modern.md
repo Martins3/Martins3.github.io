@@ -23,7 +23,37 @@ tags: cpu
 
 
 > https://gcc.gnu.org/onlinedocs/cpp/Predefined-Macros.html
-> 
+
+### [1. 修改继承函数的 visibility](https://stackoverflow.com/questions/2141188/changing-function-access-mode-in-derived-class)
+```cpp
+#include <bits/stdc++.h>
+using namespace std;
+
+#define REOPEN_READ freopen("/home/maritns3/test/cpp/input.txt", "r", stdin);
+
+class A {
+public:
+  virtual void gg() { cout << "A" << endl; }
+};
+
+class B : public A {
+private:
+  void gg() { cout << "B" << endl; }
+};
+
+void bb(A *a) { a->gg(); }
+
+int main() {
+  B *b = new B;
+  // b->gg(); // 错误
+  b->A::gg(); // 可以访问 parent 的
+  bb(b); // 可以通过动态绑定访问
+  return 0;
+}
+```
+
+
+
 
 
 ## TODO

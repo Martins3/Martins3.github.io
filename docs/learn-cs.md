@@ -26,5 +26,19 @@
 - https://github.com/Developer-Y/cs-video-courses#systems-programming
 - https://github.com/niudai/How-to-be-a-good-programmer : 经典电子书
 
-# 一些有趣的学习资源
+
+## 一些有趣的学习资源
 - [学习编程的12个游戏](https://medium.mybridge.co/12-free-resources-learn-to-code-while-playing-games-f7333043de11#.xi83hlivu)
+
+## 无穷无尽的资料
+project-based-learning / build-your-own-x 应该都是最好的，计算机还是动手的学科，操作一下，很多概念都是纸老虎。
+
+- https://github.com/tuvtran/project-based-learning :star:
+- https://github.com/danistefanovic/build-your-own-x :star:
+- https://github.com/charlax/professional-programming
+- https://github.com/trimstray/the-book-of-secret-knowledge
+- https://github.com/EbookFoundation/free-programming-books
+- https://github.com/justjavac/free-programming-books-zh_CN 
+- https://github.com/wx-chevalier/Developer-Zero-To-Mastery
+- https://github.com/donnemartin/interactive-coding-challenges
+- https://github.com/donnemartin/system-design-primer

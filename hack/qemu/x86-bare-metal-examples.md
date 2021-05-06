@@ -1,7 +1,9 @@
 ## x86-bare-metal-examples
+
 项目地址 : https://github.com/cirosantilli/x86-bare-metal-examples
 
 *暂时停止一下，其实还有很多东西可以挖掘*
+*忽然意识到这个和 lkmc 不是一个项目*
 
 - [ ] 如何编译链接细节
 - [ ] 在自己的 ThinkPad T450 上安装一下
