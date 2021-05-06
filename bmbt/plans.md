@@ -34,4 +34,5 @@
   - 既然如此，那么就不需要 qemu 也是可以知道如何运行 unikernel 了
   - 如果，加入，让 unikernel 支持了各种 posix 系统调用, 那么将整个 qemu 放到上面也不是不可能的操作
   - 这个东西居然使用的是 qemu 运行的 : https://github.com/includeos/vmrunner/blob/master/bin/boot
+
 [^1]: https://github.com/cetic/unikernels

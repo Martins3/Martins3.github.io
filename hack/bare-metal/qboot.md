@@ -3,9 +3,6 @@
 ## 问题
 - [ ] 据说，PCI 会将所有的设备需要映射的空间告诉操作系统，是这样的吗 ?
 
-- [ ] 利用这个 printf 输出调试信息
-
-
 ## 分析
 - [x] 忽然意识到 : 难道 bios 和 主板不是一个东西啊
   - 是的啊, BIOS 根据主板提供的接口进行初始化
@@ -63,8 +60,6 @@ static void pc_i440fx_4_2_machine_options(MachineClass *m)
     pcmc->default_cpu_version = 1;
 }
 
-
-
 // lv.c:main
 
     machine_class = select_machine();
@@ -106,5 +101,3 @@ fw_cfg 使用 IO 端口 0x510 开始的若干干端口
 其实是用于端口，规定数据组织形式, 用户可以创建
 
 - [ ] 在虚拟机中 /sys/firmware/ 下居然可以看到 qemu 配置的 cfg
-
-

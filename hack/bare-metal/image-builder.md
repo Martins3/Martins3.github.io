@@ -3,10 +3,10 @@
 2. lfs
 3. 内核文档的完全理解 [^1] 
 4. 可以尝试将内核挂载到文件系统上，然后直接拷贝的方法 ?
+
 5. rootfs 和 initramfs 的区别是什么 ?
 
 6. 一个不知道咋回事的项目 : https://github.com/paralin/SkiffOS
-
 7. 这个也可以对照关注一下 : https://github.com/MichielDerhaeg/build-linux
 
 https://github.com/coreboot/coreboot : BIOS bootloader 之类的完全搞不懂啊
@@ -36,12 +36,9 @@ https://github.com/oasislinux/oasis : oasis is a small linux system.
 
 5. 随意编译一个内核，但是驱动和内核不是兼容的，不是 GG，所以驱动是显然需要的:
 
-
 6. 内核的 source tree 中间的 ./usr/
 
 7. 那个手动搭建的例子已经很有意思了，搞清楚，内核是怎么开始执行 init 的
-
-
 
 # busybox
 https://busybox.net/

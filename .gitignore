@@ -353,8 +353,12 @@ TSWLatexianTemp*
 *.ext4
 *.img
 
-hack/kvm/qemu/aarch64-softmmu/busybox-*/
-hack/kvm/qemu/aarch64-softmmu/busybox-*
+*.eep
+
+hack/qemu/aarch64-softmmu/busybox-*/
+hack/qemu/aarch64-softmmu/busybox-*
 
 hack/kvm/qemu/aarch64-softmmu/rootfs.cpio.gz
 docs/loongarch/loongarch-notes.md
+
+embedded/MyFirstSketch/Makefile
