@@ -20,7 +20,7 @@ sure() {
 
 # Parameters.
 id=ubuntu
-abs_loc=/home/maritns3/core/module-example/3-qemu/virt
+abs_loc=/home/maritns3/core/vn/hack/qemu/ubuntu
 disk_img="${abs_loc}/${id}.img.qcow2"
 disk_img_snapshot="${abs_loc}/${id}.snapshot.qcow2"
 version="21.04"
@@ -38,8 +38,8 @@ fi
 
 # Go through installer manually.
 if [ ! -f "$disk_img" ]; then
-  sure "Do you want to create ${disk_img}"
-	qemu-img create -f qcow2 "$disk_img" 1T
+	sure "Do you want to create ${disk_img}"
+	qemu-img create -f qcow2 "$disk_img" 20G
 	qemu-system-x86_64 \
 		-cdrom "$iso" \
 		-drive "file=${disk_img},format=qcow2" \
@@ -52,7 +52,7 @@ fi
 
 # Snapshot the installation.
 if [ ! -f "$disk_img_snapshot" ]; then
-  sure "Do you want to backup ${disk_img} to ${disk_img_snapshot}"
+	sure "Do you want to backup ${disk_img} to ${disk_img_snapshot}"
 	qemu-img \
 		create \
 		-b "$disk_img" \
@@ -63,10 +63,26 @@ if [ ! -f "$disk_img_snapshot" ]; then
 fi
 
 # Run the installed image.
-qemu-system-x86_64 \
-  -drive "file=${disk_img},format=qcow2" \
-  -enable-kvm \
-  -m 8G \
-  -smp 8 \
-  -soundhw hda \
-  -vga virtio
+if [ $# -eq 1 ]; then
+  echo ":"
+	qemu-system-x86_64 \
+		-drive "file=${disk_img},format=qcow2" \
+		-enable-kvm \
+		-m 8G \
+		-smp 8 \
+		-soundhw hda \
+		-vga virtio \
+    -virtfs local,path=/home/maritns3/core/vn/hack/qemu/ubuntu,mount_tag=host0,security_model=mapped,id=host0
+else
+	qemu-system-x86_64 \
+		-hda ${disk_img} \
+		-enable-kvm \
+    -append "root=/dev/sda3" \
+    -kernel /home/maritns3/core/ubuntu-linux/arch/x86/boot/bzImage \
+    -cpu host \
+		-m 8G \
+		-smp 8 \
+
+    # -kernel ${kernel} \
+    # -kernel /home/maritns3/core/vn/hack/qemu/ubuntu/vmlinuz \
+fi

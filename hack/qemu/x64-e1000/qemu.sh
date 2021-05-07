@@ -9,5 +9,5 @@ $QEMU -kernel /home/maritns3/core/linux/arch/x86/boot/bzImage \
 	-device virtio-serial-pci -chardev pty,id=virtiocon0 -device virtconsole,chardev=virtiocon0 \
 	--append "root=/dev/vda loglevel=15 console=ttyS0" \
   -device e1000,netdev=net0 \
-  -netdev user,id=net0,hostfwd=tcp::8081-:80 \
+  -netdev user,id=net0,hostfwd=tcp::8080-:80 \
   -monitor stdio
