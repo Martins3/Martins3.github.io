@@ -3,6 +3,8 @@
 QEMU=/home/maritns3/core/kvmqemu/build/qemu-system-x86_64
 # QEMU=qemu-system-x86_64
 
+# FIXME 也许是 dhcp 没有配置，所以没有办法正常链接网络
+
 $QEMU -kernel /home/maritns3/core/linux/arch/x86/boot/bzImage \
   -enable-kvm \
 	-drive file=/home/maritns3/core/vn/hack/qemu/mini-img/core-image-minimal-qemux86-64.ext4,if=virtio,format=raw \

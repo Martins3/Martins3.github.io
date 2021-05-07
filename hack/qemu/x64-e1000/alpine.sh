@@ -15,6 +15,7 @@ abs_loc=/home/maritns3/core/vn/hack/qemu/x64-e1000
 iso=${abs_loc}/alpine-standard-3.13.5-x86_64.iso
 disk_img=${abs_loc}/alpine.qcow2
 kernel=/home/maritns3/core/ubuntu-linux/arch/x86/boot/bzImage
+qemu=/home/maritns3/core/kvmqemu/build/qemu-system-x86_64
 
 if [ ! -f "$iso" ]; then
 	echo "${iso} not found!"
@@ -34,13 +35,13 @@ if [ ! -f "${disk_img}" ]; then
 	exit 0
 fi
 
-qemu-system-x86_64 \
+${qemu} \
 	-drive "file=${disk_img},format=qcow2" \
 	-m 8G \
 	-enable-kvm \
 	-kernel ${kernel} \
 	-append "root=/dev/sda3" \
 	-smp 8 \
-	-soundhw hda \
-	-vga virtio
+	-vga virtio \
+  
 # qemu-system-x86_64 -m 512 -enable-kvm -nic user -hda ${disk_img}

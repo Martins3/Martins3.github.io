@@ -364,3 +364,6 @@ docs/loongarch/loongarch-notes.md
 embedded/MyFirstSketch/Makefile
 *.qcow2
 *.iso
+*.gz
+
+hack/qemu/init/init
