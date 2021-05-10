@@ -1,8 +1,3 @@
-# 调试内核 
-- http://nickdesaulniers.github.io/blog/2018/10/24/booting-a-custom-linux-kernel-in-qemu-and-debugging-it-with-gdb/
-
-
-
 # 分析路线
 1. 完全搞清楚 minimal 的是如何构建的，如果可以，将其改写为 makefile 的效果
 3. 内核文档的完全理解 [^1] 

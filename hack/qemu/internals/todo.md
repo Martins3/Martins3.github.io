@@ -68,29 +68,6 @@ qmp 让 virsh 可以和 qemu 交互
 
 - [ ] 学会使用 :  https://libvirt.org/manpages/virsh.html
 
-## net
-似乎都是描述 NetClientInfo, guest 里面的虚拟机的网络通过 client 实现真正的和外部网络通信。
-
-```c
-static NetClientInfo net_tap_info = {
-    .type = NET_CLIENT_DRIVER_TAP,
-    .size = sizeof(TAPState),
-    .receive = tap_receive,
-    .receive_raw = tap_receive_raw,
-    .receive_iov = tap_receive_iov,
-    .poll = tap_poll,
-    .cleanup = tap_cleanup,
-    .has_ufo = tap_has_ufo,
-    .has_vnet_hdr = tap_has_vnet_hdr,
-    .has_vnet_hdr_len = tap_has_vnet_hdr_len,
-    .using_vnet_hdr = tap_using_vnet_hdr,
-    .set_offload = tap_set_offload,
-    .set_vnet_hdr_len = tap_set_vnet_hdr_len,
-    .set_vnet_le = tap_set_vnet_le,
-    .set_vnet_be = tap_set_vnet_be,
-};
-```
-
 ## scsi
 scsi 多增加了一个抽象层次，导致其性能上有稍微的损失，但是存在别的优势。[^5][^6]
 > Shortcomings of virtio-blk include a small feature set (requiring frequent updates to both the host and the guests) and limited scalability. [^7]

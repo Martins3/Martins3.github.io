@@ -1,6 +1,17 @@
 #!/bin/bash
-
 set -eux
+
+DEBUG_QEMU=false
+DEBUG_KERNEL=false
+RUN_GDB=false
+while getopts "dsg" opt; do
+	case $opt in
+	d) DEBUG_QEMU=true ;;
+	s) DEBUG_KERNEL=true ;;
+  g) RUN_GDB=true;;
+	*) exit 0 ;;
+	esac
+done
 
 sure() {
 	read -r -p "$1 " yn
@@ -35,13 +46,47 @@ if [ ! -f "${disk_img}" ]; then
 	exit 0
 fi
 
+if [ $DEBUG_QEMU = true ]; then
+	gdb --args ${qemu} \
+		-drive "file=${disk_img},format=qcow2" \
+		-m 8G \
+		-enable-kvm \
+		-kernel ${kernel} \
+		-append "root=/dev/sda3" \
+		-smp 8 \
+		-vga virtio \
+
+	exit 0
+fi
+
+if [ $DEBUG_KERNEL = true ]; then
+	${qemu} \
+		-drive "file=${disk_img},format=qcow2" \
+		-m 8G \
+		-enable-kvm \
+		-kernel ${kernel} \
+		-append "root=/dev/sda3 nokaslr console=ttyS0" \
+		-smp 1 \
+		-vga virtio \
+		-cpu host \
+		-S -s
+
+	exit 0
+fi
+
+if [ $RUN_GDB = true ];then
+  cd /home/maritns3/core/ubuntu-linux/
+  gdb vmlinux -ex "target remote :1234" -ex "hbreak start_kernel" -ex "continue"
+  exit 0
+fi
+
 ${qemu} \
 	-drive "file=${disk_img},format=qcow2" \
 	-m 8G \
 	-enable-kvm \
 	-kernel ${kernel} \
-	-append "root=/dev/sda3" \
-	-smp 8 \
+	-append "root=/dev/sda3 nokaslr console=ttyS0" \
+	-smp 1 \
 	-vga virtio \
-  
-# qemu-system-x86_64 -m 512 -enable-kvm -nic user -hda ${disk_img}
+	-cpu host \
+  -monitor stdio

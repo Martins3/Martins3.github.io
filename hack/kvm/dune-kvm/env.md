@@ -63,12 +63,7 @@ http://www.loongnix.org/index.php/Cross-compile
 
 ## 4000 的工作环境搭建
 1. oh-my-zsh
-
-2. https://github.com/skywind3000/z.lua
-```sh
-sudo yum install lua
-eval "$(lua /path/to/z.lua --init zsh)"
-```
+2. autojump
 
 ## 同步
 

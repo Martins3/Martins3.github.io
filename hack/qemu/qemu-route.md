@@ -8,3 +8,7 @@
     - https://dl.acm.org/doi/abs/10.1145/2382553.2382554
 
 - [ ] https://www.qemu-advent-calendar.org/2020/ : pulished every two year, adventure for dune
+
+## debug kernel with qemu
+- http://nickdesaulniers.github.io/blog/2018/10/24/booting-a-custom-linux-kernel-in-qemu-and-debugging-it-with-gdb/
+- https://www.kernel.org/doc/html/latest/dev-tools/gdb-kernel-debugging.html

@@ -1,6 +1,5 @@
 # problem record
 
-
 ## 使用 cross compile 内核导致模块无法编译 
 
 编译一个很小的模块，得到如下的错误:
