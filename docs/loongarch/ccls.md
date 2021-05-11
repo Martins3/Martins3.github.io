@@ -55,3 +55,16 @@ X86 上阅读 X86 内核的配置可以参考[我之前的文章](https://github
 将其中 mips64el-loongson-linux-gcc 和 -mabi=94 替换掉 Loongarch 的内核 compile_commands.json 中对应的位置即可。
 
 大功告成。
+
+## 补充
+阅读 Loongarch Qemu 的方法:
+1. 在 Loongarch 机器上编译生成 compile_commands.json
+```
+mkdir build
+cd build
+../configure --target-list=loongson-softmmu --disable-werror
+bear make -j10
+```
+2. 将 compile_commands.json 拷贝到 intel 机器上
+3. 替换 "cc" 为 "mips64el-linux-gnu-gcc"
+4. 替换路径
