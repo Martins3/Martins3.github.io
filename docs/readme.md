@@ -38,10 +38,11 @@
 - [使用两行代码搭建博客](./setup-github-pages.md)
 - [言论](./words.md)
 
+## RSS 
+ - [test](./test.md)
+<a class="btn btn-rss" href="/feed.xml" target="_blank">点我订阅</a>
+
 <link rel="alternate" type="application/atom+xml" title="{{ site.title }}" href="/feed.xml">
-
-<a class="btn btn-rss" href="/feed.xml" target="_blank">RSS</a>
-
 <script src="https://utteranc.es/client.js" repo="Martins3/Martins3.github.io" issue-term="url" theme="github-light" crossorigin="anonymous" async> </script>
 
 本站所有文章转发 **CSDN** 将按侵权追究法律责任，其它情况随意。
