@@ -8,7 +8,7 @@ while getopts "dsg" opt; do
 	case $opt in
 	d) DEBUG_QEMU=true ;;
 	s) DEBUG_KERNEL=true ;;
-  g) RUN_GDB=true;;
+	g) RUN_GDB=true ;;
 	*) exit 0 ;;
 	esac
 done
@@ -54,7 +54,7 @@ if [ $DEBUG_QEMU = true ]; then
 		-kernel ${kernel} \
 		-append "root=/dev/sda3" \
 		-smp 8 \
-		-vga virtio \
+		-vga virtio
 
 	exit 0
 fi
@@ -74,10 +74,10 @@ if [ $DEBUG_KERNEL = true ]; then
 	exit 0
 fi
 
-if [ $RUN_GDB = true ];then
-  cd /home/maritns3/core/ubuntu-linux/
-  gdb vmlinux -ex "target remote :1234" -ex "hbreak start_kernel" -ex "continue"
-  exit 0
+if [ $RUN_GDB = true ]; then
+	cd /home/maritns3/core/ubuntu-linux/
+	gdb vmlinux -ex "target remote :1234" -ex "hbreak start_kernel" -ex "continue"
+	exit 0
 fi
 
 ${qemu} \
@@ -89,4 +89,6 @@ ${qemu} \
 	-smp 1 \
 	-vga virtio \
 	-cpu host \
-  -monitor stdio
+	-monitor stdio \
+	-chardev file,path=/tmp/seabios.log,id=seabios -device isa-debugcon,iobase=0x402,chardev=seabios \
+	-bios /home/maritns3/core/seabios/out/bios.bin
