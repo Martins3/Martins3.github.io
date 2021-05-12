@@ -1,3 +1,7 @@
 theme: jekyll-theme-hacker
-title: Martins3
+title: Linux/QEMU/KVM/LLVM
 comments: true
+description: 
+author: Martins3
+plugins:
+  - jekyll-feed

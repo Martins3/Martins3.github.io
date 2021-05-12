@@ -1,5 +1,8 @@
 # QOM
+## TODO
+- [ ] QOM 不是存在一个标准的教学吗?
 
+## material
 - [ ] 从一个普通的调用变为 pci_e1000_realize
 ```c
 /**
@@ -25,35 +28,28 @@
 #18 qmp_x_exit_preconfig (errp=<optimized out>) at ../softmmu/vl.c:2588
 #19 0x0000555555bb1ea2 in qemu_init (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/vl.c:3611
 #20 0x000055555582b4bd in main (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/main.c:49
+```
 
-// 检测 mmio 的地址是确定的，果然如此
-#0  huxueshi () at ../softmmu/memory.c:1188
-#1  0x0000555555b928fa in memory_region_add_subregion_common (subregion=0x5555579fcf80, offset=4273733632, mr=0x55555681a700) at ../softmmu/memory.c:2478
-#2  memory_region_add_subregion_overlap (mr=0x55555681a700, offset=4273733632, subregion=0x5555579fcf80, priority=<optimized out>) at ../softmmu/memory.c:2500
-#3  0x000055555596b5a2 in pci_update_mappings (d=d@entry=0x5555579fa660) at ../hw/pci/pci.c:1371
-#4  0x000055555596bd1c in pci_default_write_config (d=d@entry=0x5555579fa660, addr=addr@entry=4, val_in=val_in@entry=259, l=l@entry=2) at ../hw/pci/pci.c:1431
-#5  0x0000555555909d68 in e1000_write_config (pci_dev=0x5555579fa660, address=4, val=259, len=2) at ../hw/net/e1000.c:1674
-#6  0x0000555555877f1b in pci_host_config_write_common (pci_dev=0x5555579fa660, addr=4, limit=<optimized out>, val=259, len=2) at ../hw/pci/pci_host.c:83
-#7  0x0000555555b8d7c0 in memory_region_write_accessor (mr=0x5555569dbd90, addr=0, value=<optimized out>, size=2, shift=<optimized out>, mask=<optimized out>, attrs=...
-) at ../softmmu/memory.c:491
-#8  0x0000555555b8c0ee in access_with_adjusted_size (addr=0, value=0x7fffd9ff90a8, size=2, access_size_min=<optimized out>, access_size_max=<optimized out>, access_fn=0
-x555555b8d730 <memory_region_write_accessor>, mr=0x5555569dbd90, attrs=...) at ../softmmu/memory.c:552
-#9  0x0000555555b8fce7 in memory_region_dispatch_write (mr=mr@entry=0x5555569dbd90, addr=0, data=<optimized out>, op=<optimized out>, attrs=attrs@entry=...) at ../softm
-mu/memory.c:1533
-#10 0x0000555555bd7190 in flatview_write_continue (fv=fv@entry=0x7ffdcc1490a0, addr=addr@entry=3324, attrs=..., ptr=ptr@entry=0x7fffeb121000, len=len@entry=2, addr1=<op
-timized out>, l=<optimized out>, mr=0x5555569dbd90) at /home/maritns3/core/kvmqemu/include/qemu/host-utils.h:164
-#11 0x0000555555bd73a6 in flatview_write (fv=0x7ffdcc1490a0, addr=addr@entry=3324, attrs=attrs@entry=..., buf=buf@entry=0x7fffeb121000, len=len@entry=2) at ../softmmu/p
-hysmem.c:2786
-#12 0x0000555555bda066 in address_space_write (as=0x5555564e0ba0 <address_space_io>, addr=addr@entry=3324, attrs=..., buf=0x7fffeb121000, len=len@entry=2) at ../softmmu
-/physmem.c:2878
-#13 0x0000555555bda0fe in address_space_rw (as=<optimized out>, addr=addr@entry=3324, attrs=..., attrs@entry=..., buf=<optimized out>, len=len@entry=2, is_write=is_writ
-e@entry=true) at ../softmmu/physmem.c:2888
-#14 0x0000555555bb8939 in kvm_handle_io (count=1, size=2, direction=<optimized out>, data=<optimized out>, attrs=..., port=3324) at ../accel/kvm/kvm-all.c:2256
-#15 kvm_cpu_exec (cpu=cpu@entry=0x5555569b9530) at ../accel/kvm/kvm-all.c:2507
-#16 0x0000555555b77185 in kvm_vcpu_thread_fn (arg=arg@entry=0x5555569b9530) at ../accel/kvm/kvm-accel-ops.c:49
-#17 0x0000555555d24983 in qemu_thread_start (args=<optimized out>) at ../util/qemu-thread-posix.c:521
-#18 0x00007ffff6235609 in start_thread (arg=<optimized out>) at pthread_create.c:477
-#19 0x00007ffff615a293 in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
+添加 str 的方法有点别致
+```c
+    object_class_property_add_str(oc, "kernel",
+        machine_get_kernel, machine_set_kernel);
+```
 
+相当于创建了 option 和 method 之间的方法:
+```c
+/**
+#0  machine_set_kernel (obj=0x5555566c0000, value=0x5555569562a0 "/home/maritns3/core/ubuntu-linux/arch/x86/boot/bzImage", errp=0x7fffffffd610) at ../hw/core/machine.c: 244
+#1  0x0000555555c9b0f7 in property_set_str (obj=0x5555566c0000, v=<optimized out>, name=<optimized out>, opaque=0x5555565ee8a0, errp=0x7fffffffd610) at ../qom/object.c: 2180
+#2  0x0000555555c9d70c in object_property_set (obj=0x5555566c0000, name=0x5555565cfff0 "kernel", v=0x5555568e25c0, errp=0x5555564e2e30 <error_fatal>) at ../qom/object.c :1402
+#3  0x0000555555c9df84 in object_property_parse (obj=obj@entry=0x5555566c0000, name=name@entry=0x5555565cfff0 "kernel", string=string@entry=0x5555565d00c0 "/home/maritn s3/core/ubuntu-linux/arch/x86/boot/bzImage", errp=errp@entry=0x5555564e2e30 <error_fatal>) at ../qom/object.c:1642
+#4  0x0000555555bacf5f in object_parse_property_opt (skip=0x555555e104d6 "type", errp=0x5555564e2e30 <error_fatal>, value=0x5555565d00c0 "/home/maritns3/core/ubuntu-lin ux/arch/x86/boot/bzImage", name=0x5555565cfff0 "kernel", obj=0x5555566c0000) at ../softmmu/vl.c:1651
+#5  object_parse_property_opt (errp=0x5555564e2e30 <error_fatal>, skip=0x555555e104d6 "type", value=0x5555565d00c0 "/home/maritns3/core/ubuntu-linux/arch/x86/boot/bzIma ge", name=0x5555565cfff0 "kernel", obj=0x5555566c0000) at ../softmmu/vl.c:1643
+#6  machine_set_property (opaque=0x5555566c0000, name=0x5555565cfff0 "kernel", value=0x5555565d00c0 "/home/maritns3/core/ubuntu-linux/arch/x86/boot/bzImage", errp=0x555 5564e2e30 <error_fatal>) at ../softmmu/vl.c:1693
+#7  0x0000555555d2041d in qemu_opt_foreach (opts=opts@entry=0x5555565d0010, func=func@entry=0x555555bace80 <machine_set_property>, opaque=0x5555566c0000, errp=errp@entr y=0x5555564e2e30 <error_fatal>) at ../util/qemu-option.c:593
+#8  0x0000555555bb11a9 in qemu_apply_machine_options () at ../softmmu/vl.c:1812
+#9  qemu_init (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/vl.c:3554
+#10 0x000055555582b4bd in main (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/main.c:49
 */
 ```
+

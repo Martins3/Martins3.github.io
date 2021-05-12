@@ -1,5 +1,7 @@
 # Bare Mental Binary Translator
 
+收集更加多的 unikernel 吧!
+
 ## 需要解决的问题
 - [ ] 正确的编程模式:
   - https://includeos.readthedocs.io/en/latest/Features.html
@@ -8,6 +10,18 @@
 - [ ] 创建一个只有只需要最少驱动的环境:
   - 内存管理
   - uart 设备 / ejtag / 串口 / 显示设备
+
+- [ ] grub 的编程接口是什么 ?
+  - 将内核加载什么位置了，内核从什么地方开始执行的
+  - 应该类似的教程很多吧，很多内核都是可以真正在物理机器上运行的
+  - [ ] kernel insides ?
+  - multiboot 规范
+  - [ ] Loongarch 机器上支持 multiboot 吗?
+
+## 细碎的事情可以处理的
+- [ ] qemu `-kernel` 是怎么处理的
+- [ ] qemu 是如何实现 grub 中加载内核的工作的
+- [ ] 检查一下 kernel 中非 pci 设备的模拟工作
 
 #### 基础环境搭建
 
@@ -20,9 +34,131 @@
 - [ ] Qemu 处理硬件的方法
   - [ ] 除了 PCI 驱动，还存在什么驱动 ?
     - 比如 x86 的中断控制器 ?
-        - [ ] 其实也不是很难，让所有的设备走模拟，使用 qemu 来观测一下 x86 的运行即可, 之后的操作也是可以按照这个进行
-    - 怀疑，虽然很多设备都是 pci 设备，但是还是映射出来一堆空间来实现真正的操作, 这些操作都是需要模拟的
-  - [ ] 不用 virtio 运行一个内核试试?
+    - [ ] 更加仔细的检查一下 qtree 中的各种设备
+    - [ ] 为什么还可以模拟一些网络设备
+  - [x] 不用 virtio 运行一个内核试试?
+    - 测试了一下 e1000, 感觉很不错
+    - 虽然很多设备都是 pci 设备，但是还是映射出来一堆空间来实现真正的操作, 这些操作都是需要模拟的
+        - 比如 e1000 是标准的 pci 设备，但是自己的 bar 空间还是需要处理的
+
+#### ACRN
+很正规的系统，值得分析啊
+
+
+#### ramooflax
+似乎我们也是可以划分为三种结构，loader, setup 和 tcg
+
+- [ ] 系统如何启动的 ?
+  - [ ] 系统如何实现基本的初始化的
+- [ ] 如何进行调试的 ?
+
+1. entry.S 前面应该有什么东西吧 ?
+  - [ ] 至少需要有一个模式跳转之类的吧, 看看 loader 是怎么搞的
+
+在 /home/maritns3/core/ld/ramooflax/setup/src/core/init.c 中间装载的 `static info_data_t __info;`
+
+而 info_data_t 就是各种系统初始化的时候完成的:
+```c
+static info_data_t __info;
+```
+
+是怎么和 grub 打交道的 ?
+显然，我们用的也是 grub 的呀!
+
+
+
+```c
+#define __mbh__                 __attribute__ ((section(".mbh"),aligned(4)))
+```
+
+```ld
+OUTPUT_FORMAT("elf32-i386","elf32-i386","elf32-i386");
+OUTPUT_ARCH("i386")
+
+ENTRY(entry)
+
+SECTIONS
+{
+   . = 0x200000;
+   __kernel_start__ = .;
+
+   .mbh       . : { *(.mbh) . = ALIGN(4);           }
+   .text      . : { *(.text)                        }
+   .rodata      : { *(.rodata)                      }
+   .data        : { *(.data)                        }
+   .bss         : { *(.bss COMMON)                  }
+   /DISCARD/  	: { *(.note* .indent .comment)      }
+}
+```
+
+https://en.wikipedia.org/wiki/Multiboot_specification
+
+那么 init 的参数
+```c
+void __regparm__(1) init(mbi_t *mbi)
+```
+
+```asm
+/*
+** - make us uninterruptible
+** - set initial stack for loader
+** - clear eflags
+** - init loader with grub multiboot info
+*/
+entry:
+        cli
+        movl    $__kernel_start__, %esp
+        pushl   $0
+        popf
+        movl    %ebx, %eax
+        jmp     init
+```
+我们知道 %ebx 是这个东西，而且 mbi_t 显然是实现构造好的
+
+
+- [ ] 这个命令的效果是什么?
+```sh
+make INSTOOL=tools/installer_qemu.sh install
+```
+
+
+
+
+读读文章：
+1. The objective is to virtualize already installed operating systems on physical dedicated machine.
+
+- [ ] 最后是怎么切换到 already installed os 上的 ?
+
+2. This allows virtualization, and so analysis, of operating systems running
+in their native environment more specifically regarding devices which are
+hardly emulated by common existing virtualization solutions.
+The idea is to boot the hypervisor from an external storage media (USB
+key), and once the hypervisor has been initialized, to tell the BIOS (now
+virtualized) to boot the already installed operating system.
+
+- [ ] 岂不是将 BIOS 放到虚拟机中间运行吗?
+
+- [ ] Loader 可以被 Grub 检测到，怎么实现的?
+
+- [ ] 观测一下其中探测物理内存的方法
+
+Once the VMM initialized, the setup installs in conventional memory
+the `int 0x19` instruction and starts VMM execution.
+
+- [ ] int 0x19 是做什么的?
+
+The proxy mode is used to intercept, log and emulate MSRs accesses for instance.
+The cpuid instruction is managed this way by default because the hypervisor needs to hide some features to the VM.
+
+The setup finishes its execution by installing the first VM instructions in
+conventional memory: int 0x16 and int 0x19.
+
+The first one is a BIOS service which allows to wait for a keystroke. The second one tells the
+BIOS to load the bootsector of its first bootable device which uses to be
+an hard drive where the native operating system is already installed.
+By doing this, we take benefit of existing BIOS features (devices access
+like USB, SATA, . . . ). The hypervisor seamlessly virtualizes real mode
+code whether it is BIOS or not.
 
 ## 想法
 - 应该首先放到虚拟机中间测试才对的啊，按道理如果可以在 bm 上跑起来，那么必然需要在虚拟机上跑起来的
@@ -30,9 +166,8 @@
   - [ ] 制作一个 C 语言的版本的 InlcudeOS，是不是会轻松很多 ?
     - [ ] 既然 captive / includeos 都是支持 c++ 的，而且不知道以后会不会使用 LLVM 的啊!
 
-- [x] includeos 的 hypervisor 在什么地方，为什么可以脱离 qemu 运行啊 ?
-  - 既然如此，那么就不需要 qemu 也是可以知道如何运行 unikernel 了
+- [x] includeos 的 hypervisor 在什么地方 ?
+  - 是 qemu : https://github.com/includeos/vmrunner/blob/master/bin/boot
   - 如果，加入，让 unikernel 支持了各种 posix 系统调用, 那么将整个 qemu 放到上面也不是不可能的操作
-  - 这个东西居然使用的是 qemu 运行的 : https://github.com/includeos/vmrunner/blob/master/bin/boot
 
 [^1]: https://github.com/cetic/unikernels

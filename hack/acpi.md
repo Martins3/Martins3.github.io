@@ -3,6 +3,11 @@ acpi 的解析[^2]
 
 原来kernel中最终是通过acpi_evaluate_object 来调用bios中在asl中定义好的函数啊 [^1]
 
+uefi 提供了 ACPI 的文档
+
+acpi 是内核上的设计
+
+
 在 acpi_pci_root_add 中，调用 pci_acpi_scan_root
 ```
 #0  acpi_pci_root_add (device=0xffff888100217000, not_used=0xffffffff82063c60 <root_device_ids>) at drivers/acpi/pci_root.c:517
@@ -56,3 +61,5 @@ y=0xffff888100254338, resources=resources@entry=0xffff888100254318) at drivers/p
 
 [^1]: https://blog.csdn.net/tiantao2012/article/details/73775993
 [^2]: https://blog.csdn.net/woai110120130/article/details/93318611
+[^3]: https://uefi.org/sites/default/files/resources/ACPI%206_2_A_Sept29.pdf
+[^4]: https://www.kernel.org/doc/ols/2005/ols2005v1-pages-59-76.pdf
