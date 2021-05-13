@@ -8,7 +8,6 @@
 https://github.com/MichielDerhaeg/build-linux
 - [ ] https://re-ws.pl/2020/11/busybox-based-linux-distro-from-scratch/
 
-
 # 搭建一个高效的内核开发环境
 1. 生成的 bzImage 包含了各种驱动吗 ?
   2. 调查一下 Manjaro 安装 kernel 的方法

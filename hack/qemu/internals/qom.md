@@ -1,4 +1,5 @@
 # QOM
+
 ## TODO
 - [ ] QOM 不是存在一个标准的教学吗?
 
@@ -53,4 +54,9 @@
 */
 ```
 
-各种 realized 函数:
+各种 realized 函数, 最后被调用的方式为:
+
+```c
+return object_property_set_bool(OBJECT(dev), "realized", true, errp);
+```
+

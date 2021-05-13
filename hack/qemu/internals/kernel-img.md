@@ -16,12 +16,6 @@ ram_memory=ram_memory@entry=0x7fffffffd540) at ../hw/i386/pc.c:981
 
 - [ ] 最后，这个东西是怎么被 hardware 检测到的 e820_add_entry
 
-- [ ] /home/maritns3/core/kvmqemu/hw/i386/kvmvapic.c 为什么提供一个 ROM
-```c
-option_rom kvmvapic.bin -1
-option_rom linuxboot_dma.bin 0
-```
-
 似乎最开始运行的是 BIOS
 
 这里，是选择默认的 firmware ，然后在 qemu_create_machine 中间初始化:
@@ -79,10 +73,12 @@ option_rom linuxboot_dma.bin 0
 从 info mtree 中看到，pc.bios 占据了 4G-256k 到 256k 之间的位置。
 
 在 rom_reset 中间检测，实际上，ROM 的数量超乎想想:
+这些都是 ROM , 映射的位置很正常啊，根本没有内核啊
 ```
 [rom : kvmvapic.bin]
 [rom : linuxboot_dma.bin]
-[rom : bios-256k.bin]
+[rom : /home/maritns3/core/seabios/out/bios.bin]
+[/home/maritns3/core/seabios/out/bios.bin fffc0000]
 [rom : etc/acpi/tables]
 [rom : etc/table-loader]
 [rom : etc/acpi/rsdp]
@@ -116,3 +112,87 @@ rrp@entry=0x5555564e2e30 <error_fatal>) at ../qom/qom-qobject.c:28
 #19 0x0000555555bb1e32 in qemu_init (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/vl.c:3612
 #20 0x000055555582b4bd in main (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/main.c:49
 ```
+
+- [ ] 上面分析了 bios 的加载过程，但是 kernel ?
+- [ ] 或者，更加简单的问题，kernel cmdline 是怎么传递进去的 ?
+
+seabios 的代码，FW_CFG_CMDLINE_DATA 并没有 KERNEL 的
+```c
+/****************************************************************
+ * QEMU firmware config (fw_cfg) interface
+ ****************************************************************/
+
+// List of QEMU fw_cfg entries.  DO NOT ADD MORE.  (All new content
+// should be passed via the fw_cfg "file" interface.)
+#define QEMU_CFG_SIGNATURE              0x00
+#define QEMU_CFG_ID                     0x01
+#define QEMU_CFG_UUID                   0x02
+#define QEMU_CFG_NOGRAPHIC              0x04
+#define QEMU_CFG_NUMA                   0x0d
+#define QEMU_CFG_BOOT_MENU              0x0e
+#define QEMU_CFG_NB_CPUS                0x05
+#define QEMU_CFG_MAX_CPUS               0x0f
+#define QEMU_CFG_FILE_DIR               0x19
+#define QEMU_CFG_ARCH_LOCAL             0x8000
+#define QEMU_CFG_ACPI_TABLES            (QEMU_CFG_ARCH_LOCAL + 0)
+#define QEMU_CFG_SMBIOS_ENTRIES         (QEMU_CFG_ARCH_LOCAL + 1)
+#define QEMU_CFG_IRQ0_OVERRIDE          (QEMU_CFG_ARCH_LOCAL + 2)
+#define QEMU_CFG_E820_TABLE             (QEMU_CFG_ARCH_LOCAL + 3)
+```
+
+其实，问题在于，如果直接使用已经包含了的镜像，其实镜像中间是存在 load kernel 的，但是，如果指定了 kernel, 那么就应该直接从 kernel 运行了
+
+和李强的书中描述稍微出入的地方在于：
+```c
+static void
+boot_rom(u32 vector)
+{
+    printf("Booting from ROM, fuck you\n");
+    printf("I found it\n");
+    struct segoff_s so;
+    so.segoff = vector;
+    call_boot_entry(so, 0);
+}
+```
+不是从 disk 进入的，而是从 boot_rom，因为是将内核作为 ROM，接下来就是直接跳转到这里就可以了
+
+bootentry_add
+```
+Searching bootorder for: /pci@i0cf8/*@3
+Registering bootable: iPXE (PCI 00:03.0) (type:128 prio:9999 data:ca000385)
+Searching bootorder for: /rom@genroms/linuxboot_dma.bin
+Registering bootable: Linux loader DMA (type:128 prio:1 data:cb000054)
+Searching bootorder for: /rom@genroms/kvmvapic.bin
+Registering bootable: Legacy option rom (type:129 prio:101 data:cb800003)
+```
+
+- [x] option rom 是怎么放进去的 ?
+  - `run_file_roms("genroms/", 0, sources);` 中的对比，就是直接读去文件搞到的
+
+```c
+    option_rom[nb_option_roms].bootindex = 0;
+    option_rom[nb_option_roms].name = "linuxboot.bin";
+    if (linuxboot_dma_enabled && fw_cfg_dma_enabled(fw_cfg)) {
+        option_rom[nb_option_roms].name = "linuxboot_dma.bin";
+    }
+```
+
+在 seabios 中间的检测方法:
+- optionrom_setup
+  - `boot_add_bev(FLATPTR_TO_SEG(rom), pnp->bev, pnp->productname , getRomPriority(sources, rom, instance++));`
+
+在 QEMU 这里，rom_add_option 已经非常清晰告知了如何实现 Linux DMA 的访问:
+```c
+>>> bt
+#0  rom_add_option (file=0x555555d73353 "kvmvapic.bin", bootindex=-1) at ../hw/core/loader.c:1115
+#1  0x0000555555a622c3 in pc_memory_init (pcms=pcms@entry=0x5555566c0000, system_memory=system_memory@entry=0x5555566f6400, rom_memory=rom_memory@entry=0x555556831270,
+ram_memory=ram_memory@entry=0x7fffffffd540) at ../hw/i386/pc.c:986
+#2  0x0000555555a65ae1 in pc_init1 (machine=0x5555566c0000, pci_type=0x555555dbe5ad "i440FX", host_type=0x555555d80e54 "i440FX-pcihost") at ../hw/i386/pc_piix.c:187
+#3  0x00005555558ff1ae in machine_run_board_init (machine=machine@entry=0x5555566c0000) at ../hw/core/machine.c:1232
+#4  0x0000555555bae1ee in qemu_init_board () at ../softmmu/vl.c:2514
+#5  qmp_x_exit_preconfig (errp=<optimized out>) at ../softmmu/vl.c:2588
+#6  0x0000555555bb1e42 in qemu_init (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/vl.c:3612
+#7  0x000055555582b4bd in main (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/main.c:49
+```
+
+而在 `/home/maritns3/core/kvmqemu/pc-bios/optionrom/linuxboot_dma.c` 中，终于进行 Linux kernel 和参数的读去
