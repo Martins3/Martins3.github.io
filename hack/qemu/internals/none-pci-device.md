@@ -12,6 +12,13 @@
 ## i8257 : dma
 i8257_dma_init
 
+- [An overview of direct memory access](https://geidav.wordpress.com/2014/04/27/an-overview-of-direct-memory-access)
+- [How does DMA work with PCI Express devices?](https://stackoverflow.com/questions/27470885/how-does-dma-work-with-pci-express-devices)
+
+> Today’s computers don’t contain DMA controllers anymore.
+
+实际操作是，通过写 pcie 设备的 mmio 空间，让设备开始进行传输，当设备传输完成之后，设备通过中断的方式加以通知。
+
 ## kvm-i8259
 - [ ] 无法理解，ISA 上的中断控制器和 kvm-ioapic 上的中断控制器的关系是什么啊!
 - [ ] kvm_pic_in_kernel 意味着什么 ?

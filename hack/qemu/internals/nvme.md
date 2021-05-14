@@ -18,3 +18,6 @@ In this article, we introduce the usage of QEMU to emulate some of these block d
 
 [^1]: https://blogs.oracle.com/linux/how-to-emulate-block-devices-with-qemu
 [^2]: https://github.com/manishrma/nvme-qemu
+
+## trace 一下 nvme 设备
+- [ ] 没有了网络 stack 的拆解，如何对于 nvme 进行模拟

@@ -3,6 +3,31 @@
 ## TODO
 - [ ] QOM 不是存在一个标准的教学吗?
 
+- [ ] 到底存在那几个关键概念
+  - Type
+  - Class
+  - ?
+
+- [ ] 一个 ObjectProperty 和普通的函数有什么区别啊 ?
+  - 为什么还有普通的指针啊 ?
+
+```c
+struct ObjectProperty
+{
+    char *name;
+    char *type;
+    char *description;
+    ObjectPropertyAccessor *get;
+    ObjectPropertyAccessor *set;
+    ObjectPropertyResolve *resolve;
+    ObjectPropertyRelease *release;
+    ObjectPropertyInit *init;
+    void *opaque;
+    QObject *defval;
+};
+```
+  
+
 ## material
 - [ ] 从一个普通的调用变为 pci_e1000_realize
 ```c
@@ -30,6 +55,104 @@
 #19 0x0000555555bb1ea2 in qemu_init (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/vl.c:3611
 #20 0x000055555582b4bd in main (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/main.c:49
 ```
+
+qdev_realize_and_unref
+```c
+/**
+ * DeviceState:
+ * @realized: Indicates whether the device has been fully constructed.
+ *            When accessed outside big qemu lock, must be accessed with
+ *            qatomic_load_acquire()
+ * @reset: ResettableState for the device; handled by Resettable interface.
+ *
+ * This structure should not be accessed directly.  We declare it here
+ * so that it can be embedded in individual device state structures.
+ */
+struct DeviceState {
+    /*< private >*/
+    Object parent_obj;
+    /*< public >*/
+
+    const char *id;
+    char *canonical_path;
+    bool realized;
+    bool pending_deleted_event;
+    QemuOpts *opts;
+    int hotplugged;
+    bool allow_unplug_during_migration;
+    BusState *parent_bus;
+    QLIST_HEAD(, NamedGPIOList) gpios;
+    QLIST_HEAD(, NamedClockList) clocks;
+    QLIST_HEAD(, BusState) child_bus;
+    int num_child_bus;
+    int instance_id_alias;
+    int alias_required_for_version;
+    ResettableState reset;
+};
+
+/**
+ * BusState:
+ * @hotplug_handler: link to a hotplug handler associated with bus.
+ * @reset: ResettableState for the bus; handled by Resettable interface.
+ */
+struct BusState {
+    Object obj;
+    DeviceState *parent;
+    char *name;
+    HotplugHandler *hotplug_handler;
+    int max_index;
+    bool realized;
+    int num_children;
+
+    /*
+     * children is a RCU QTAILQ, thus readers must use RCU to access it,
+     * and writers must hold the big qemu lock
+     */
+
+    QTAILQ_HEAD(, BusChild) children;
+    QLIST_ENTRY(BusState) sibling;
+    ResettableState reset;
+};
+```
+实际上，qdev_realize_and_unref 都是各种总线模块的调用，比如 pci, 也就是说，代码设计上，就是设备和总线关联起来的。
+
+- qdev_realize_and_unref
+  - qdev_realize
+    - qdev_set_parent_bus : bus 和 dev 的关系确定
+    - object_property_set_bool(OBJECT(dev), "realized", true, errp);
+      - object_property_set_qobject
+        - qobject_input_visitor_new : *TODO* 真 NM 离谱, 将 Qbool 作为参数，创建 Visitor
+        - object_property_set
+           - object_property_find_err
+              - object_property_find 
+                  - object_get_class
+                  - object_class_property_find : 递归的查找这个 property
+                  - g_hash_table_lookup
+  - object_unref
+
+```c
+/*
+>>> bt
+#0  object_property_try_add (obj=0x5555566c0000, name=0x5555567dc8c0 "peripheral", type=0x5555567dc990 "child<container>", get=0x555555c9eac0 <object_get_child_property
+>, set=0x0, release=0x555555c9cc70 <object_finalize_child_property>, opaque=0x5555567dc900, errp=0x5555564e2e38 <error_abort>) at ../qom/object.c:1196
+#1  0x0000555555c9e401 in object_property_try_add_child (obj=0x5555566c0000, name=0x5555567dc8c0 "peripheral", child=0x5555567dc900, errp=0x5555564e2e38 <error_abort>)
+at ../qom/object.c:1744
+#2  0x0000555555c99e25 in container_get (root=root@entry=0x5555566c0000, path=path@entry=0x555555d72051 "/peripheral") at ../qom/container.c:41
+#3  0x00005555558ff749 in machine_initfn (obj=0x5555566c0000) at ../hw/core/machine.c:923
+#4  0x0000555555c9b7e6 in object_init_with_type (obj=0x5555566c0000, ti=0x5555565a1d70) at ../qom/object.c:371
+#5  0x0000555555c9b7e6 in object_init_with_type (obj=0x5555566c0000, ti=0x55555659d180) at ../qom/object.c:371
+#6  0x0000555555c9b7e6 in object_init_with_type (obj=0x5555566c0000, ti=0x55555659d8e0) at ../qom/object.c:371
+#7  0x0000555555c9ce2c in object_initialize_with_type (obj=0x5555566c0000, size=<optimized out>, type=0x55555659d8e0) at ../qom/object.c:517
+#8  0x0000555555c9cf79 in object_new_with_type (type=0x55555659d8e0) at ../qom/object.c:732
+#9  0x0000555555baf103 in qemu_create_machine (machine_class=0x5555567978b0) at ../softmmu/vl.c:2067
+#10 qemu_init (argc=<optimized out>, argv=0x7fffffffd968, envp=<optimized out>) at ../softmmu/vl.c:3545
+#11 0x000055555582b4bd in main (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/main.c:49
+```
+
+
+
+## 实现方法
+
 
 添加 str 的方法有点别致
 ```c

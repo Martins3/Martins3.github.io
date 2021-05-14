@@ -1,18 +1,7 @@
 # qemu overview
 
-- [ ] /home/maritns3/core/kvmqemu/pc-bios : 中间一堆乱七八糟的二进制文件
-- [ ] ./reply 只有 1000 行左右，值得分析一下。
-- [ ] tcg 整个到底覆盖的代码在什么位置 ?
-- [x] hqm 是怎么统计的 chardev 的
-
-
-## kvm
-4.2 中 cpus.c::qemu_init_vcpu 中间分析了多种 kvm 和 tcg 的引擎, 由于 tcg 和 kvm 被放到 accel 下，但是 
-whpx, hvf[^1] 和 hax 的支持都是 intel 特有的，所以在 qemu/target/i386 下面, 说着是加速，其实这应该是 exec engine, 在 latest 的版本，这一些内容都被移动到这里了
-
-对于 kvm 支持的位置:
-/home/maritns3/core/kvmqemu/hw/i386/kvm : 主要是设备模拟
-/home/maritns3/core/kvmqemu/accel/kvm
+- [ ] ./replay 只有 1000 行左右，值得分析一下。
+- [ ] tcg 相关联的代码在什么位置 ?
 
 ## qga
 生成一个运行在虚拟机中间的程序，然后和 host 之间进行通信。
