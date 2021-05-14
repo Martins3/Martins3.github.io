@@ -3,6 +3,7 @@ https://support.getjoan.com/hc/en-us/articles/360008889859-How-to-change-the-Doc
 
 由于 Loongson 和 docker 的冲突，在此处将 docker 的 briage ip 进行了修改，目前可以上网，但是对于 docker 造成的结果是不知道的。
 
+
 ## TODO
 https://fuckcloudnative.io/posts/docker-images-part1-reducing-image-size/
 
@@ -10,12 +11,12 @@ https://unixism.net/2020/06/containers-the-hard-way-gocker-a-mini-docker-written
 
 https://github.com/yeasy/docker_practice : 一本书
 
-
 https://github.com/shuveb/containers-the-hard-way : docker inside
 
+## 文摘
+- https://devopsdirective.com/posts/2021/04/tiny-container-image/ : 如何制作最小的 docker image
+
 ## [awesome](https://github.com/veggiemonk/awesome-docker)
-
-
 
 ## dockerfile 的原理是什么 ?
 1. docke 中间的各种 run 可不可以进入到镜像中间运行

@@ -60,3 +60,67 @@
 return object_property_set_bool(OBJECT(dev), "realized", true, errp);
 ```
 
+PIIX3_PCI_DEVICE 是如何将一个 parent 类型 pci_dev 转化为 piix3 的
+```c
+pci_dev = pci_create_simple_multifunction(pci_bus, -1, true,
+                                          TYPE_PIIX3_DEVICE);
+piix3 = PIIX3_PCI_DEVICE(pci_dev);
+```
+
+
+这个例子就是简直有毒了
+1. isa_create_simple 的一个参数 name，可以找到对应的类，然后将类的初始化函数进行调用
+
+```c
+>>> bt
+#0  i8042_realizefn (dev=0x5555569fb420, errp=0x7fffffffd310) at ../hw/input/pckbd.c:547
+#1  0x0000555555cade27 in device_set_realized (obj=<optimized out>, value=true, errp=0x7fffffffd390) at ../hw/core/qdev.c:761
+#2  0x0000555555c9b17a in property_set_bool (obj=0x5555569fb420, v=<optimized out>, name=<optimized out>, opaque=0x5555565d1db0, errp=0x7fffffffd390) at ../qom/object.c
+:2257
+#3  0x0000555555c9d68c in object_property_set (obj=obj@entry=0x5555569fb420, name=name@entry=0x555555ed7f76 "realized", v=v@entry=0x5555568bc7a0, errp=errp@entry=0x5555
+564e2e30 <error_fatal>) at ../qom/object.c:1402
+#4  0x0000555555c9f9c4 in object_property_set_qobject (obj=obj@entry=0x5555569fb420, name=name@entry=0x555555ed7f76 "realized", value=value@entry=0x555556a06fa0, errp=e
+rrp@entry=0x5555564e2e30 <error_fatal>) at ../qom/qom-qobject.c:28
+#5  0x0000555555c9d8d9 in object_property_set_bool (obj=0x5555569fb420, name=0x555555ed7f76 "realized", value=<optimized out>, errp=0x5555564e2e30 <error_fatal>) at ../
+qom/object.c:1472
+#6  0x0000555555caccf3 in qdev_realize_and_unref (dev=dev@entry=0x5555569fb420, bus=bus@entry=0x5555568a28a0, errp=<optimized out>) at ../hw/core/qdev.c:396
+#7  0x000055555590c2e9 in isa_realize_and_unref (dev=dev@entry=0x5555569fb420, bus=bus@entry=0x5555568a28a0, errp=<optimized out>) at ../hw/isa/isa-bus.c:179
+#8  0x000055555590c31b in isa_create_simple (bus=bus@entry=0x5555568a28a0, name=name@entry=0x555555d76226 "i8042") at ../hw/isa/isa-bus.c:173
+#9  0x0000555555a62751 in pc_superio_init (no_vmport=false, create_fdctrl=<optimized out>, isa_bus=0x5555568a28a0) at ../hw/i386/pc.c:1079
+#10 pc_basic_device_init (pcms=pcms@entry=0x5555566c0000, isa_bus=0x5555568a28a0, gsi=<optimized out>, rtc_state=rtc_state@entry=0x7fffffffd538, create_fdctrl=create_fd
+ctrl@entry=true, hpet_irqs=hpet_irqs@entry=4) at ../hw/i386/pc.c:1174
+#11 0x0000555555a65bdd in pc_init1 (machine=0x5555566c0000, pci_type=0x555555dbe5ad "i440FX", host_type=0x555555d80e54 "i440FX-pcihost") at ../hw/i386/pc_piix.c:241
+#12 0x00005555558ff1ae in machine_run_board_init (machine=machine@entry=0x5555566c0000) at ../hw/core/machine.c:1232
+#13 0x0000555555bae1be in qemu_init_board () at ../softmmu/vl.c:2514
+#14 qmp_x_exit_preconfig (errp=<optimized out>) at ../softmmu/vl.c:2588
+#15 0x0000555555bb1e02 in qemu_init (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/vl.c:3611
+#16 0x000055555582b4bd in main (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/main.c:49
+```
+
+然后这些东西其实都是靠这个初始化的:
+```c
+static void i8042_class_initfn(ObjectClass *klass, void *data)
+{
+    DeviceClass *dc = DEVICE_CLASS(klass);
+    ISADeviceClass *isa = ISA_DEVICE_CLASS(klass);
+
+    dc->realize = i8042_realizefn;
+    dc->vmsd = &vmstate_kbd_isa;
+    isa->build_aml = i8042_build_aml;
+    set_bit(DEVICE_CATEGORY_INPUT, dc->categories);
+}
+
+static const TypeInfo i8042_info = {
+    .name          = TYPE_I8042,
+    .parent        = TYPE_ISA_DEVICE,
+    .instance_size = sizeof(ISAKBDState),
+    .instance_init = i8042_initfn,
+    .class_init    = i8042_class_initfn,
+};
+
+static void i8042_register_types(void)
+{
+    type_register_static(&i8042_info);
+}
+```
+

@@ -27,9 +27,17 @@ iso=${abs_loc}/alpine-standard-3.13.5-x86_64.iso
 disk_img=${abs_loc}/alpine.qcow2
 kernel=/home/maritns3/core/ubuntu-linux/arch/x86/boot/bzImage
 qemu=/home/maritns3/core/kvmqemu/build/qemu-system-x86_64
+ext4_img1=${abs_loc}/img1.ext4
 
 if [ ! -f "$iso" ]; then
-	echo "${iso} not found!"
+	echo "${iso} not found! Download it from official website"
+	exit 0
+fi
+
+if [ ! -f "$ext4_img1" ]; then
+	sure "create ext4_img"
+	dd if=/dev/null of=${ext4_img1} bs=1M seek=100
+	mkfs.ext4 -F ${ext4_img1}
 	exit 0
 fi
 
@@ -81,14 +89,18 @@ if [ $RUN_GDB = true ]; then
 fi
 
 ${qemu} \
+	-kernel ${kernel} \
 	-drive "file=${disk_img},format=qcow2" \
+	-append "root=/dev/sda3 nokaslr console=ttyS0" \
 	-m 8G \
 	-enable-kvm \
-	-kernel ${kernel} \
-	-append "root=/dev/sda3 nokaslr console=ttyS0" \
 	-smp 1 \
 	-vga virtio \
 	-cpu host \
 	-monitor stdio \
 	-chardev file,path=/tmp/seabios.log,id=seabios -device isa-debugcon,iobase=0x402,chardev=seabios \
-	-bios /home/maritns3/core/seabios/out/bios.bin
+	-bios /home/maritns3/core/seabios/out/bios.bin \
+	-device nvme,drive=nvme0,serial=foo\
+	-drive file=${ext4_img1},if=none,id=nvme0 \
+
+# TODO deadbeaf1 ?
