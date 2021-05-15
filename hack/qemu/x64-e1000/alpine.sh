@@ -49,8 +49,8 @@ if [ ! -f "${disk_img}" ]; then
 		-hda ${disk_img} \
 		-enable-kvm \
 		-m 2G \
-		-smp 2 \
-		;
+		-smp 1
+
 	exit 0
 fi
 
@@ -61,8 +61,9 @@ if [ $DEBUG_QEMU = true ]; then
 		-enable-kvm \
 		-kernel ${kernel} \
 		-append "root=/dev/sda3" \
-		-smp 8 \
-		-vga virtio
+		-smp 2 \
+		-vga virtio \
+		-device nvme,drive=nvme0,serial=foo -drive file=${ext4_img1},format=raw,if=none,id=nvme0
 
 	exit 0
 fi
@@ -77,6 +78,7 @@ if [ $DEBUG_KERNEL = true ]; then
 		-smp 1 \
 		-vga virtio \
 		-cpu host \
+		-device nvme,drive=nvme0,serial=foo -drive file=${ext4_img1},format=raw,if=none,id=nvme0 \
 		-S -s
 
 	exit 0
@@ -100,7 +102,6 @@ ${qemu} \
 	-monitor stdio \
 	-chardev file,path=/tmp/seabios.log,id=seabios -device isa-debugcon,iobase=0x402,chardev=seabios \
 	-bios /home/maritns3/core/seabios/out/bios.bin \
-	-device nvme,drive=nvme0,serial=foo\
-	-drive file=${ext4_img1},if=none,id=nvme0 \
+	-device nvme,drive=nvme0,serial=foo -drive file=${ext4_img1},format=raw,if=none,id=nvme0
 
 # TODO deadbeaf1 ?

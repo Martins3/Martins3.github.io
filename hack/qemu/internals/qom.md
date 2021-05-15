@@ -11,6 +11,144 @@
 - [ ] 一个 ObjectProperty 和普通的函数有什么区别啊 ?
   - 为什么还有普通的指针啊 ?
 
+- [ ] object_class_property_init_all 函数是不是说明，其实还存在 class property
+
+关于 QOM 的进一步参考
+- [ ] http://juniorprincewang.github.io/categories/QEMU/
+- [ ] https://qemu.readthedocs.io/en/latest/devel/qom.html
+
+## Type
+
+```c
+/**
+>>> bt
+#0  type_new (info=0x55555625b1a0 <cirrus_vga_info>) at ../qom/object.c:103
+#1  0x0000555555c9be72 in type_register_internal (info=<optimized out>) at ../qom/object.c:150
+#2  type_register (info=<optimized out>) at ../qom/object.c:150
+#3  0x0000555555d28b62 in module_call_init (type=type@entry=MODULE_INIT_QOM) at ../util/module.c:106
+#4  0x0000555555ae9928 in qemu_init_subsystems () at ../softmmu/runstate.c:761
+#5  0x0000555555bae7b0 in qemu_init (argc=14, argv=0x7fffffffd968, envp=<optimized out>) at ../softmmu/vl.c:2666
+#6  0x000055555582b4bd in main (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/main.c:49
+*/
+```
+似乎各种 Type 注册函数都只是调用一下 type_register_static，最后就是 type 加入到 hash table 中，并且进行初始化
+
+
+```c
+void qemu_init_subsystems(void)
+{
+    Error *err;
+
+    os_set_line_buffering();
+
+    module_call_init(MODULE_INIT_TRACE);
+
+    qemu_init_cpu_list();
+    qemu_init_cpu_loop();
+    qemu_mutex_lock_iothread();
+
+    atexit(qemu_run_exit_notifiers);
+
+    module_call_init(MODULE_INIT_QOM);
+    module_call_init(MODULE_INIT_MIGRATION);
+
+    runstate_init();
+    precopy_infrastructure_init();
+    postcopy_infrastructure_init();
+    monitor_init_globals();
+
+    if (qcrypto_init(&err) < 0) {
+        error_reportf_err(err, "cannot initialize crypto: ");
+        exit(1);
+    }
+
+    os_setup_early_signal_handling();
+
+    bdrv_init_with_whitelist();
+    socket_init();
+}
+```
+
+然后调用 `module_call_init`，参数是 MODULE_INIT_QOM
+
+module_call_init 会调用这个 module 注册的所有的 init，函数的注册位置: `register_module_init`
+
+加入对应模块的队列中间:
+```c
+void register_module_init(void (*fn)(void), module_init_type type)
+{
+    ModuleEntry *e;
+    ModuleTypeList *l;
+
+    e = g_malloc0(sizeof(*e));
+    e->init = fn;
+    e->type = type;
+
+    l = find_type(type);
+
+    QTAILQ_INSERT_TAIL(l, e, node);
+}
+```
+这个函数存在 500 多个调用的位置
+
+
+```c
+struct TypeInfo
+{
+    const char *name;
+    const char *parent;
+
+    size_t instance_size;
+    size_t instance_align;
+    void (*instance_init)(Object *obj);
+    void (*instance_post_init)(Object *obj);
+    void (*instance_finalize)(Object *obj);
+
+    bool abstract;
+    size_t class_size;
+
+    void (*class_init)(ObjectClass *klass, void *data);
+    void (*class_base_init)(ObjectClass *klass, void *data);
+    void *class_data;
+
+    InterfaceInfo *interfaces;
+};
+```
+
+TypeInfo 的 instance_init / class_init 是如何初始化的? 使用 nvme 作为例子:
+
+- 非常的离谱，调用 object_class_get_list 的时候居然会初始化所有的 type, 进而初始化 class 
+
+```c
+/*
+>>> bt
+#0  nvme_class_init (oc=0x55555674a270, data=0x0) at ../hw/block/nvme.c:6312
+#1  0x0000555555c9c29f in type_initialize (ti=0x555556588e30) at ../qom/object.c:1079
+#2  object_class_foreach_tramp (key=<optimized out>, value=0x555556588e30, opaque=0x7fffffffd600) at ../qom/object.c:1079
+#3  0x00007ffff6ed01b8 in g_hash_table_foreach () at /lib/x86_64-linux-gnu/libglib-2.0.so.0
+#4  0x0000555555c9c8dc in object_class_foreach (fn=fn@entry=0x555555c9af70 <object_class_get_list_tramp>, implements_type=implements_type@entry=0x55555612a2d0 "machine" , include_abstract=include_abstract@entry=false, opaque=opaque@entry=0x7fffffffd640) at ../qom/object.c:85
+#5  0x0000555555c9c986 in object_class_get_list (implements_type=implements_type@entry=0x55555612a2d0 "machine", include_abstract=include_abstract@entry=false) at ../qo m/object.c:1158
+#6  0x0000555555baec35 in select_machine () at ../softmmu/vl.c:3545
+#7  qemu_init (argc=<optimized out>, argv=0x7fffffffd8d8, envp=<optimized out>) at ../softmmu/vl.c:3545
+#8  0x000055555582b4bd in main (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/main.c:49
+
+#0  nvme_instance_init (obj=0x555557c93920) at ../hw/block/nvme.c:6328
+#1  0x0000555555c9ce2c in object_initialize_with_type (obj=obj@entry=0x555557c93920, size=size@entry=18496, type=type@entry=0x555556588e30) at ../qom/object.c:527
+#2  0x0000555555c9cf79 in object_new_with_type (type=0x555556588e30) at ../qom/object.c:742
+#3  0x0000555555cac8fa in qdev_new (name=name@entry=0x5555565d01e0 "nvme") at ../hw/core/qdev.c:153
+#4  0x0000555555858844 in qdev_device_add (opts=0x5555565d02d0, errp=errp@entry=0x5555564e2e30 <error_fatal>) at ../softmmu/qdev-monitor.c:650
+#5  0x0000555555babb53 in device_init_func (opaque=<optimized out>, opts=<optimized out>, errp=0x5555564e2e30 <error_fatal>) at ../softmmu/vl.c:1211
+#6  0x0000555555d20fb2 in qemu_opts_foreach (list=<optimized out>, func=func@entry=0x555555babb40 <device_init_func>, opaque=opaque@entry=0x0, errp=errp@entry=0x5555564 e2e30 <error_fatal>) at ../util/qemu-option.c:1167
+#7  0x0000555555bae255 in qemu_create_cli_devices () at ../softmmu/vl.c:2541
+#8  qmp_x_exit_preconfig (errp=<optimized out>) at ../softmmu/vl.c:2589
+#9  0x0000555555bb1e02 in qemu_init (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/vl.c:3611
+#10 0x000055555582b4bd in main (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/main.c:49
+*/
+```
+
+
+## object_property : pci_e1000_realize
+
 ```c
 struct ObjectProperty
 {
@@ -26,9 +164,6 @@ struct ObjectProperty
     QObject *defval;
 };
 ```
-  
-
-## material
 - [ ] 从一个普通的调用变为 pci_e1000_realize
 ```c
 /**
@@ -147,17 +282,12 @@ at ../qom/object.c:1744
 #9  0x0000555555baf103 in qemu_create_machine (machine_class=0x5555567978b0) at ../softmmu/vl.c:2067
 #10 qemu_init (argc=<optimized out>, argv=0x7fffffffd968, envp=<optimized out>) at ../softmmu/vl.c:3545
 #11 0x000055555582b4bd in main (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/main.c:49
+*/
 ```
 
-
-
-## 实现方法
-
-
-添加 str 的方法有点别致
+使用 -kernel 作为例子:
 ```c
-    object_class_property_add_str(oc, "kernel",
-        machine_get_kernel, machine_set_kernel);
+    object_class_property_add_str(oc, "kernel", machine_get_kernel, machine_set_kernel);
 ```
 
 相当于创建了 option 和 method 之间的方法:
@@ -183,16 +313,26 @@ at ../qom/object.c:1744
 return object_property_set_bool(OBJECT(dev), "realized", true, errp);
 ```
 
+- [ ] 关于 object_property 的唯一问题在于，总是从 parent 中间搜索的，之后才到 child 中间找
+
+
+## 类型转换
+
 PIIX3_PCI_DEVICE 是如何将一个 parent 类型 pci_dev 转化为 piix3 的
 ```c
-pci_dev = pci_create_simple_multifunction(pci_bus, -1, true,
-                                          TYPE_PIIX3_DEVICE);
+pci_dev = pci_create_simple_multifunction(pci_bus, -1, true, TYPE_PIIX3_DEVICE);
 piix3 = PIIX3_PCI_DEVICE(pci_dev);
 ```
 
+在创建 pci_create_simple_multifunction 的参数, TYPE_PIIX3_DEVICE 可以保证创建出来的对象就是一个 piix3
 
-这个例子就是简直有毒了
+而 PIIX3_PCI_DEVICE 应该只是进行在 child 到 parent 之间的转换使用上了检查吧
+
+
+## isa 作为例子
+
 1. isa_create_simple 的一个参数 name，可以找到对应的类，然后将类的初始化函数进行调用
+2. 这是因为 type 定义的时候会将 name 加入到 hashtable 中，然后就可以找到函数定义
 
 ```c
 >>> bt
@@ -245,5 +385,286 @@ static void i8042_register_types(void)
 {
     type_register_static(&i8042_info);
 }
+```
+
+## qom-tree
+
+```c
+/*
+(qemu) info qom-tree
+/machine (pc-i440fx-6.0-machine)
+  /fw_cfg (fw_cfg_io)
+    /\x2from@etc\x2facpi\x2frsdp[0] (memory-region)
+    /\x2from@etc\x2facpi\x2ftables[0] (memory-region)
+    /\x2from@etc\x2ftable-loader[0] (memory-region)
+    /fwcfg.dma[0] (memory-region)
+    /fwcfg[0] (memory-region)
+  /i440fx (i440FX-pcihost)
+    /ioapic (kvm-ioapic)
+      /kvm-ioapic[0] (memory-region)
+      /unnamed-gpio-in[0] (irq)
+      /unnamed-gpio-in[10] (irq)
+      /unnamed-gpio-in[11] (irq)
+      /unnamed-gpio-in[12] (irq)
+      /unnamed-gpio-in[13] (irq)
+      /unnamed-gpio-in[14] (irq)
+      /unnamed-gpio-in[15] (irq)
+      /unnamed-gpio-in[16] (irq)
+      /unnamed-gpio-in[17] (irq)
+      /unnamed-gpio-in[18] (irq)
+      /unnamed-gpio-in[19] (irq)
+      /unnamed-gpio-in[1] (irq)
+      /unnamed-gpio-in[20] (irq)
+      /unnamed-gpio-in[21] (irq)
+      /unnamed-gpio-in[22] (irq)
+      /unnamed-gpio-in[23] (irq)
+      /unnamed-gpio-in[2] (irq)
+      /unnamed-gpio-in[3] (irq)
+      /unnamed-gpio-in[4] (irq)
+      /unnamed-gpio-in[5] (irq)
+      /unnamed-gpio-in[6] (irq)
+      /unnamed-gpio-in[7] (irq)
+      /unnamed-gpio-in[8] (irq)
+      /unnamed-gpio-in[9] (irq)
+    /pam-pci[0] (memory-region)
+    /pam-pci[10] (memory-region)
+    /pam-pci[11] (memory-region)
+    /pam-pci[12] (memory-region)
+    /pam-pci[13] (memory-region)
+    /pam-pci[14] (memory-region)
+    /pam-pci[15] (memory-region)
+    /pam-pci[16] (memory-region)
+    /pam-pci[17] (memory-region)
+    /pam-pci[18] (memory-region)
+    /pam-pci[19] (memory-region)
+    /pam-pci[1] (memory-region)
+    /pam-pci[20] (memory-region)
+    /pam-pci[21] (memory-region)
+    /pam-pci[22] (memory-region)
+    /pam-pci[23] (memory-region)
+    /pam-pci[24] (memory-region)
+    /pam-pci[25] (memory-region)
+    /pam-pci[2] (memory-region)
+    /pam-pci[3] (memory-region)
+    /pam-pci[4] (memory-region)
+    /pam-pci[5] (memory-region)
+    /pam-pci[6] (memory-region)
+    /pam-pci[7] (memory-region)
+    /pam-pci[8] (memory-region)
+    /pam-pci[9] (memory-region)
+    /pam-ram[0] (memory-region)
+    /pam-ram[10] (memory-region)
+    /pam-ram[11] (memory-region)
+    /pam-ram[12] (memory-region)
+    /pam-ram[1] (memory-region)
+    /pam-ram[2] (memory-region)
+    /pam-ram[3] (memory-region)
+    /pam-ram[4] (memory-region)
+    /pam-ram[5] (memory-region)
+    /pam-ram[6] (memory-region)
+    /pam-ram[7] (memory-region)
+    /pam-ram[8] (memory-region)
+    /pam-ram[9] (memory-region)
+    /pam-rom[0] (memory-region)
+    /pam-rom[10] (memory-region)
+    /pam-rom[11] (memory-region)
+    /pam-rom[12] (memory-region)
+    /pam-rom[1] (memory-region)
+    /pam-rom[2] (memory-region)
+    /pam-rom[3] (memory-region)
+    /pam-rom[4] (memory-region)
+    /pam-rom[5] (memory-region)
+    /pam-rom[6] (memory-region)
+    /pam-rom[7] (memory-region)
+    /pam-rom[8] (memory-region)
+    /pam-rom[9] (memory-region)
+    /pci-conf-data[0] (memory-region)
+    /pci-conf-idx[0] (memory-region)
+    /pci.0 (PCI)
+  /peripheral (container)
+  /peripheral-anon (container)
+    /device[0] (isa-debugcon)
+      /isa-debugcon[0] (memory-region)
+    /device[1] (nvme)                            // 实际上，nvme 和 e1000 根本不是对称的
+      /bus master container[0] (memory-region)
+      /bus master[0] (memory-region)
+      /msix-pba[0] (memory-region)
+      /msix-table[0] (memory-region)
+      /nvme-bar0[0] (memory-region)
+      /nvme-bus.0 (nvme-bus)
+      /nvme[0] (memory-region)
+  /unattached (container)                         // 所以，什么是 unattached 的 
+    /device[0] (host-x86_64-cpu)
+      /lapic (kvm-apic)
+        /kvm-apic-msi[0] (memory-region)
+    /device[10] (kvm-pit)
+      /kvm-pit[0] (memory-region)
+      /unnamed-gpio-in[0] (irq)
+    /device[11] (isa-pcspk)
+      /pcspk[0] (memory-region)
+    /device[12] (i8257)
+      /dma-chan[0] (memory-region)
+      /dma-cont[0] (memory-region)
+      /dma-page[0] (memory-region)
+      /dma-page[1] (memory-region)
+    /device[13] (i8257)
+      /dma-chan[0] (memory-region)
+      /dma-cont[0] (memory-region)
+      /dma-page[0] (memory-region)
+      /dma-page[1] (memory-region)
+    /device[14] (isa-serial)
+      /serial (serial)
+      /serial[0] (memory-region)
+    /device[15] (isa-parallel)
+      /parallel[0] (memory-region)
+    /device[16] (isa-fdc)
+      /fdc[0] (memory-region)
+      /fdc[1] (memory-region)
+      /floppy-bus.0 (floppy-bus)
+    /device[17] (floppy)
+    /device[18] (i8042)
+      /i8042-cmd[0] (memory-region)
+      /i8042-data[0] (memory-region)
+    /device[19] (vmport)
+      /vmport[0] (memory-region)
+    /device[1] (kvmvapic)
+      /kvmvapic-rom[0] (memory-region)
+      /kvmvapic[0] (memory-region)
+    /device[20] (vmmouse)
+    /device[21] (port92)
+      /port92[0] (memory-region)
+    /device[22] (e1000)
+      /bus master container[0] (memory-region)
+      /bus master[0] (memory-region)
+      /e1000-io[0] (memory-region)
+      /e1000-mmio[0] (memory-region)
+      /e1000.rom[0] (memory-region)
+    /device[23] (piix3-ide)
+      /bmdma[0] (memory-region)
+      /bmdma[1] (memory-region)
+      /bus master container[0] (memory-region)
+      /bus master[0] (memory-region)
+      /ide.0 (IDE)
+      /ide.1 (IDE)
+      /piix-bmdma-container[0] (memory-region)
+      /piix-bmdma[0] (memory-region)
+      /piix-bmdma[1] (memory-region)
+    /device[24] (ide-hd)
+    /device[25] (ide-cd)
+    /device[26] (PIIX4_PM)
+      /acpi-cnt[0] (memory-region)
+      /acpi-cpu-hotplug[0] (memory-region)
+      /acpi-cpu-hotplug[1] (memory-region)
+      /acpi-evt[0] (memory-region)
+      /acpi-gpe0[0] (memory-region)
+      /acpi-pci-hotplug[0] (memory-region)
+      /acpi-tmr[0] (memory-region)
+      /apm-io[0] (memory-region)
+      /bus master container[0] (memory-region)
+      /bus master[0] (memory-region)
+      /i2c (i2c-bus)
+      /piix4-pm[0] (memory-region)
+      /pm-smbus[0] (memory-region)
+    /device[27] (smbus-eeprom)
+    /device[28] (smbus-eeprom)
+    /device[29] (smbus-eeprom)
+    /device[2] (kvmclock)
+    /device[30] (smbus-eeprom)
+    /device[31] (smbus-eeprom)
+    /device[32] (smbus-eeprom)
+    /device[33] (smbus-eeprom)
+    /device[34] (smbus-eeprom)
+    /device[3] (i440FX)
+      /bus master container[0] (memory-region)
+      /bus master[0] (memory-region)
+      /smram-low[0] (memory-region)
+      /smram-region[0] (memory-region)
+      /smram[0] (memory-region)
+    /device[4] (PIIX3)
+      /bus master container[0] (memory-region)
+      /bus master[0] (memory-region)
+      /isa.0 (ISA)
+      /piix3-reset-control[0] (memory-region)
+    /device[5] (kvm-i8259)
+      /kvm-elcr[0] (memory-region)
+      /kvm-pic[0] (memory-region)
+    /device[6] (kvm-i8259)
+      /kvm-elcr[0] (memory-region)
+      /kvm-pic[0] (memory-region)
+    /device[7] (virtio-vga)
+      /bochs dispi interface[0] (memory-region)
+      /bus master container[0] (memory-region)
+      /bus master[0] (memory-region)
+      /msix-pba[0] (memory-region)
+      /msix-table[0] (memory-region)
+      /qemu extended regs[0] (memory-region)
+      /vbe[0] (memory-region)
+      /vga ioports remapped[0] (memory-region)
+      /vga-lowmem[0] (memory-region)
+      /vga.vram[0] (memory-region)
+      /vga[0] (memory-region)
+      /vga[1] (memory-region)
+      /vga[2] (memory-region)
+      /vga[3] (memory-region)
+      /vga[4] (memory-region)
+      /virtio-backend (virtio-gpu-device)
+      /virtio-bus (virtio-pci-bus)
+      /virtio-pci-common-virtio-gpu[0] (memory-region)
+      /virtio-pci-device-virtio-gpu[0] (memory-region)
+      /virtio-pci-isr-virtio-gpu[0] (memory-region)
+      /virtio-pci-notify-pio-virtio-gpu[0] (memory-region)
+      /virtio-pci-notify-virtio-gpu[0] (memory-region)
+      /virtio-pci[0] (memory-region)
+      /virtio-vga-msix[0] (memory-region)
+      /virtio-vga.rom[0] (memory-region)
+    /device[8] (hpet)
+      /hpet[0] (memory-region)
+      /unnamed-gpio-in[0] (irq)
+      /unnamed-gpio-in[1] (irq)
+    /device[9] (mc146818rtc)
+      /rtc-index[0] (memory-region)
+      /rtc[0] (memory-region)
+    /ide[0] (memory-region)
+    /ide[1] (memory-region)
+    /ide[2] (memory-region)
+    /ide[3] (memory-region)
+    /io[0] (memory-region)
+    /ioport80[0] (memory-region)
+    /ioportF0[0] (memory-region)
+    /isa-bios[0] (memory-region)
+    /non-qdev-gpio[0] (irq)
+    /non-qdev-gpio[10] (irq)
+    /non-qdev-gpio[11] (irq)
+    /non-qdev-gpio[12] (irq)
+    /non-qdev-gpio[13] (irq)
+    /non-qdev-gpio[14] (irq)
+    /non-qdev-gpio[15] (irq)
+    /non-qdev-gpio[16] (irq)
+    /non-qdev-gpio[17] (irq)
+    /non-qdev-gpio[18] (irq)
+    /non-qdev-gpio[19] (irq)
+    /non-qdev-gpio[1] (irq)
+    /non-qdev-gpio[20] (irq)
+    /non-qdev-gpio[21] (irq)
+    /non-qdev-gpio[22] (irq)
+    /non-qdev-gpio[23] (irq)
+    /non-qdev-gpio[24] (irq)
+    /non-qdev-gpio[25] (irq)
+    /non-qdev-gpio[2] (irq)
+    /non-qdev-gpio[3] (irq)
+    /non-qdev-gpio[4] (irq)
+    /non-qdev-gpio[5] (irq)
+    /non-qdev-gpio[6] (irq)
+    /non-qdev-gpio[7] (irq)
+    /non-qdev-gpio[8] (irq)
+    /non-qdev-gpio[9] (irq)
+    /pc.bios[0] (memory-region)
+    /pc.rom[0] (memory-region)
+    /pci[0] (memory-region)
+    /ram-above-4g[0] (memory-region)
+    /ram-below-4g[0] (memory-region)
+    /sysbus (System)
+    /system[0] (memory-region)
+(qemu)
 ```
 

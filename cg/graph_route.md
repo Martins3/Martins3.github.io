@@ -6,6 +6,8 @@ https://github.com/tunabrain/tungsten : taichi 中间提到的
 
 https://raytracing.github.io/books/RayTracingInOneWeekend.html
 
+https://github.com/LearnOpenGL-CN/LearnOpenGL-CN : OpenGL 教程
+
 
 - 基于颜色的绘制
 - 基于光照的绘制

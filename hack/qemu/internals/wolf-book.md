@@ -58,8 +58,24 @@ AioContext
 
 ### QOM
 
-从 edu.c 中间分析:
+1. 类型的注册
+  - type_init
+  - register_module_init
+  - type_register
+2. 类型的初始化
+  - type_initialize
+3. 对象的初始化
+  - object_new
+  - object_initialize
+  - object_initialize_with_type
 
+类型的注册
+，在 main 之前完成， 
+类型的初始化, 在 main 中调用，全部初始化，
+对象的初始化, 根据命令行参数选择进行初始化
+
+
+从 edu.c 中间分析:
 ```c
 typedef enum {
     MODULE_INIT_BLOCK,
@@ -88,7 +104,7 @@ void module_call_init(module_init_type type)
 
 
 ## chapter 3 主板和固件模拟
-> 草稿放到 qboot.md 中间了
+> 草稿放到 qboot.md 和 kernel-img.md 中
 
 ## chapter 7 : 设备虚拟化
 

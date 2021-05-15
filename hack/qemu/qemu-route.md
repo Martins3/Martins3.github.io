@@ -1,11 +1,10 @@
 ## TODO
 - [ ] 编译系统 : https://qemu.readthedocs.io/en/latest/devel/build-system.html
 
-- [ ] x86 中间那些非 PCI 设备的工作方式是什么样子的
 - [ ] x86 上原生的运行 x86 tcg, 大致流程是什么样子的?
 
 - [ ] 图形系统是如何实现的 ?
-- [ ] 万恶的 uart 和 tty 等
+  - `-vga virtio` 为什么不需要在 kernel 那一侧的支持 ?
 
 ## compile
 一般的编译方法

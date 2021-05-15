@@ -57,16 +57,16 @@ ram_memory=ram_memory@entry=0x7fffffffd540) at ../hw/i386/pc.c:981
 参数内核( -kernel ) 也是通过这种方法进行设置的:
 ```
 >>> bt
-#0  machine_set_firmware (obj=0x5555566c0000, value=0x555556945330 "bios-256k.bin", errp=0x7fffffffd610) at ../hw/core/machine.c:428
-#1  0x0000555555c9b137 in property_set_str (obj=0x5555566c0000, v=<optimized out>, name=<optimized out>, opaque=0x5555565ef400, errp=0x7fffffffd610) at ../qom/object.c: 2180
-#2  0x0000555555c9d74c in object_property_set (obj=0x5555566c0000, name=0x5555567e6af0 "firmware", v=0x555556979660, errp=0x5555564e2e30 <error_fatal>) at ../qom/object .c:1402
-#3  0x0000555555c9dfc4 in object_property_parse (obj=obj@entry=0x5555566c0000, name=name@entry=0x5555567e6af0 "firmware", string=string@entry=0x5555567e6ab0 "bios-256k. bin", errp=errp@entry=0x5555564e2e30 <error_fatal>) at ../qom/object.c:1642
-#4  0x0000555555bacf9f in object_parse_property_opt (skip=0x555555e104d6 "type", errp=0x5555564e2e30 <error_fatal>, value=0x5555567e6ab0 "bios-256k.bin", name=0x5555567 e6af0 "firmware", obj=0x5555566c0000) at ../softmmu/vl.c:1651
-#5  object_parse_property_opt (errp=0x5555564e2e30 <error_fatal>, skip=0x555555e104d6 "type", value=0x5555567e6ab0 "bios-256k.bin", name=0x5555567e6af0 "firmware", obj= 0x5555566c0000) at ../softmmu/vl.c:1643
-#6  machine_set_property (opaque=0x5555566c0000, name=0x5555567e6af0 "firmware", value=0x5555567e6ab0 "bios-256k.bin", errp=0x5555564e2e30 <error_fatal>) at ../softmmu/ vl.c:1693
-#7  0x0000555555d2045d in qemu_opt_foreach (opts=opts@entry=0x5555565d0010, func=func@entry=0x555555bacec0 <machine_set_property>, opaque=0x5555566c0000, errp=errp@entr y=0x5555564e2e30 <error_fatal>) at ../util/qemu-option.c:593
-#8  0x0000555555bb11e9 in qemu_apply_machine_options () at ../softmmu/vl.c:1812
-#9  qemu_init (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/vl.c:3554
+#0  machine_set_kernel (obj=0x5555566d7800, value=0x555556ab0980 "/home/maritns3/core/ubuntu-linux/arch/x86/boot/bzImage", errp=0x7fffffffd580) at ../hw/core/machine.c: 244
+#1  0x0000555555c9b087 in property_set_str (obj=0x5555566d7800, v=<optimized out>, name=<optimized out>, opaque=0x5555565ef060, errp=0x7fffffffd580) at ../qom/object.c: 2180
+#2  0x0000555555c9d69c in object_property_set (obj=0x5555566d7800, name=0x5555565cfff0 "kernel", v=0x5555568e6400, errp=0x5555564e2e30 <error_fatal>) at ../qom/object.c :1402
+#3  0x0000555555c9df14 in object_property_parse (obj=obj@entry=0x5555566d7800, name=name@entry=0x5555565cfff0 "kernel", string=string@entry=0x5555565d00c0 "/home/maritn s3/core/ubuntu-linux/arch/x86/boot/bzImage", errp=errp@entry=0x5555564e2e30 <error_fatal>) at ../qom/object.c:1642
+#4  0x0000555555baceef in object_parse_property_opt (skip=0x555555e104d6 "type", errp=0x5555564e2e30 <error_fatal>, value=0x5555565d00c0 "/home/maritns3/core/ubuntu-lin ux/arch/x86/boot/bzImage", name=0x5555565cfff0 "kernel", obj=0x5555566d7800) at ../softmmu/vl.c:1651
+#5  object_parse_property_opt (errp=0x5555564e2e30 <error_fatal>, skip=0x555555e104d6 "type", value=0x5555565d00c0 "/home/maritns3/core/ubuntu-linux/arch/x86/boot/bzIma ge", name=0x5555565cfff0 "kernel", obj=0x5555566d7800) at ../softmmu/vl.c:1643
+#6  machine_set_property (opaque=0x5555566d7800, name=0x5555565cfff0 "kernel", value=0x5555565d00c0 "/home/maritns3/core/ubuntu-linux/arch/x86/boot/bzImage", errp=0x555 5564e2e30 <error_fatal>) at ../softmmu/vl.c:1693
+#7  0x0000555555d2038d in qemu_opt_foreach (opts=opts@entry=0x5555565d0010, func=func@entry=0x555555bace10 <machine_set_property>, opaque=0x5555566d7800, errp=errp@entr y=0x5555564e2e30 <error_fatal>) at ../util/qemu-option.c:589
+#8  0x0000555555bb1129 in qemu_apply_machine_options () at ../softmmu/vl.c:1812
+#9  qemu_init (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/vl.c:3553
 #10 0x000055555582b4bd in main (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/main.c:49
 ```
 
@@ -114,9 +114,8 @@ rrp@entry=0x5555564e2e30 <error_fatal>) at ../qom/qom-qobject.c:28
 ```
 
 - [ ] 上面分析了 bios 的加载过程，但是 kernel ?
-- [ ] 或者，更加简单的问题，kernel cmdline 是怎么传递进去的 ?
 
-seabios 的代码，FW_CFG_CMDLINE_DATA 并没有 KERNEL 的
+seabios 的代码，FW_CFG_CMDLINE_DATA 并没有 KERNEL 的, 因为这些是定义在 linuxboot_dma.c 中
 ```c
 /****************************************************************
  * QEMU firmware config (fw_cfg) interface
