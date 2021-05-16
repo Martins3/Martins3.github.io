@@ -6,6 +6,7 @@
 - [overview](#overview)
 - [TODO](#todo)
 - [Questions](#questions)
+- [tty](#tty)
 - [下面是阅读 ldd3 的 tiny_serial.c 和 tiny_tty.c 的结果](#下面是阅读-ldd3-的-tiny_serialc-和-tiny_ttyc-的结果)
   - [tiny_serial.c](#tiny_serialc)
 - [usb](#usb)
@@ -59,6 +60,28 @@ And, this page will contains anything related device except pcie, mmio, pio, int
 ## Questions
 - echo "shit" > /dev/pts/3
   - 所以，pts 到底是说个啥，tmux / screen 如何利用
+
+## tty
+- [ ] line ldisc
+```c
+static struct tty_ldisc_ops n_tty_ops = {
+	.magic           = TTY_LDISC_MAGIC,
+	.name            = "n_tty",
+	.open            = n_tty_open,
+	.close           = n_tty_close,
+	.flush_buffer    = n_tty_flush_buffer,
+	.read            = n_tty_read,
+	.write           = n_tty_write,
+	.ioctl           = n_tty_ioctl,
+	.set_termios     = n_tty_set_termios,
+	.poll            = n_tty_poll,
+	.receive_buf     = n_tty_receive_buf,
+	.write_wakeup    = n_tty_write_wakeup,
+	.receive_buf2	 = n_tty_receive_buf2,
+};
+```
+
+
 
 ## 下面是阅读 ldd3 的 tiny_serial.c 和 tiny_tty.c 的结果
 

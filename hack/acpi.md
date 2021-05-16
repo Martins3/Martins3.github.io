@@ -1,4 +1,9 @@
 # acpi 
+
+- [MADT](https://wiki.osdev.org/MADT)
+- [RSDT](https://wiki.osdev.org/RSDT)
+
+
 acpi 的解析[^2]
 
 原来kernel中最终是通过acpi_evaluate_object 来调用bios中在asl中定义好的函数啊 [^1]
