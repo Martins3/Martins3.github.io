@@ -4,6 +4,10 @@
 - [RSDT](https://wiki.osdev.org/RSDT)
 
 
+- https://github.com/rust-osdev/about : 这个组织提供一堆可以用于 os dev 的工具，包括 uefi bootloader acpi
+- https://github.com/acpica/acpica : acpi 框架的源代码 
+
+
 acpi 的解析[^2]
 
 原来kernel中最终是通过acpi_evaluate_object 来调用bios中在asl中定义好的函数啊 [^1]
