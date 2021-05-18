@@ -1,6 +1,9 @@
 # Bare Mental Binary Translator
 
-收集更加多的 unikernel 吧!
+## 中断
+1. 中断级联这种事情，真的需要我们来操作吗 ?
+  - 是的，首先让 x
+
 
 ## 需要解决的问题
 - [ ] 正确的编程模式:
@@ -17,11 +20,6 @@
   - [ ] kernel insides ?
   - multiboot 规范
   - [ ] Loongarch 机器上支持 multiboot 吗?
-
-## 细碎的事情可以处理的
-- [ ] qemu `-kernel` 是怎么处理的
-- [ ] qemu 是如何实现 grub 中加载内核的工作的
-- [ ] 检查一下 kernel 中非 pci 设备的模拟工作
 
 #### 基础环境搭建
 

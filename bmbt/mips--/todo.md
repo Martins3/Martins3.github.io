@@ -1,3 +1,6 @@
+# 想法
+- [ ] 如果想要支持键盘，那么最小量的代码是什么 ?
+
 # Find out
 代码主要出现的地方:
 1. 内核
@@ -25,21 +28,42 @@ question:
 
 [    0.000000] irq: Added domain unknown-1
 [    0.000000] irq: irq_domain_associate_many(<no-node>, irqbase=50, hwbase=0, count=14)
-[    0.000000] irq: Added domain irqchip@(____ptrval____)
+
+[    0.000000] irq: Added domain irqchip@(____ptrval____) 
+
 [    0.000000] Support EXT interrupt.
 [    0.000000] irq: Added domain irqchip@(____ptrval____)
+
+[    0.000000] pch-msi: Registering 192 MSIs, starting at 64 // 创建出来两个
 [    0.000000] irq: Added domain irqchip@(____ptrval____)
 [    0.000000] irq: Added domain irqchip@(____ptrval____)
+
+[    0.000000] huxueshi : of_setup_pch_irqs
+[    0.000000] 0
 [    0.000000] irq: Added domain irqchip@(____ptrval____)
 [    0.000000] irq: Added domain unknown-2
 [    0.000000] irq: irq_domain_associate_many(<no-node>, irqbase=0, hwbase=0, count=16)
 ```
 
-怀疑这个 irqbase 是最开始的索引，
+
+- [x] 在 irq_set_chained_handler_and_data 中，虽然给将 3 号注册给了 extioi_irq_dispatch 了，但是 3 号的 irq_desc 是初始化就是那个时候完成的
+
+在 liointc_init 中，其 parent irq 是，这应该说明，这个东西本身是挂载到什么东西上的:
+```c
+static int parent_irq[LIOINTC_NUM_PARENT] = {LOONGSON_LINTC_IRQ, LOONGSON_BRIDGE_IRQ};
+```
+
+实际上，irq_domain_ops::map 中, 
+- loongarch_cpu_intc_map
+  - plat_irq_dispatch : 默认的 int 入口这个
+    - 会根据 irq_domain 找到 hwriq 对应的 irq ，已经进一步的 irq_desc
+- handle_percpu_irq : 设置 irq 对应的 desc 以及 handler, 这里是 handle_percpu_irq
+
+of_setup_pch_irqs 挂载到 parent 靠 irq_find_matching_fwnode 实现
 
 
 # 问题
-- bt tree 如何读去的 ?
+- [ ] bt tree 如何读去的 ?
 
 - [ ] 有没有什么 pcie 上的特殊处理啊 ?
 - [ ] ejtag 的使用
@@ -68,21 +92,12 @@ question:
         - irq_desc::handle_irq
 
 - extioi_irq_dispatch : 本身就是在中断上下文中间，现在在做下一级的跳转, TODO 问题是，怎么知道是从上一级跳转到下
-  - irq_linear_revmap : 通过 irq 查询到
-  - generic_handle_irq
+  - irq_linear_revmap : 通过 iocsr_writeq 可以获取物理上的中断
+  - generic_handle_irq 
 
 - [ ] 到底存在那些 irq domain
 
 - [ ] 真正让人恐惧的是， acpi_bus_init_irq 之类的初始化实际上是在 rest_init 后面
-
-
-
-
-## pch 的初始化
-
-- [ ] 从什么位置 ? bios / acpi ??
-
-register_pch_pic
 
 ## TODO
 - [ ] 中断系统初始化
@@ -122,12 +137,23 @@ register_pch_pic
     - prom_init
       - [ ] set_io_port_base : 这个不是硬件应该决定的吗? 还是说，硬件是这么决定，然后软件赢编码
       - efi_init
-      - [ ] acpi_table_upgrade : 让人恐怖的 acpi 机制，但是 acpi 似乎本身是一个单独模块，想想办法将其 ac
-      - [ ] acpi_boot_table_init : 这两个函数在 arch/loongarch/kernel/acpi/boot.c
-      - acpi_boot_init
+        - efi_config_init
+        - [ ] efi_config_parse_tables : 解析出现什么，和 acpi 有什么关系
+      - [ ] acpi_table_upgrade
+        - [ ]  我们应该可以从 qemu 中找到 acpi 的描述
+      - acpi_boot_table_init : 和 acpi_boot_init 相同, 都在 arch/loongarch/kernel/acpi/boot.c
+        - acpi_table_init
+          - acpi_initialize_tables
+            - acpi_os_get_root_pointer : 应该是从 efi 的中获取的
+            - acpi_tb_parse_root_table : 获取了 table 就可以开始解析了
+              - acpi_tb_print_table_header : 这个对应最开始的一堆输出
+                - `[    0.000000] ACPI: RSDP 0x00000000FD2F4000 000024 (v02 LOONGS)`
+          - [ ] acpi_table_initrd_scan
+          - [ ] check_multiple_madt
+      - [ ] acpi_boot_init : 这个函数似乎是很容易看懂的，因为马上就要进行中断初始化，所以需要从 acpi 中分析出来自己的中断是个什么情况，需要验证一下读去 pch pic 之类的情况
         - [ ] 初始化 arch_acpi_wakeup_start, 但是不知道是做什么用的
         - acpi_process_madt : MADT(Multiple APIC Description Table)
-          - [ ] acpi_parse_madt_lapic_entries : 进一步调用 acpi 的标准接口, 在 drivers/acpi/tables.c
+          - acpi_parse_madt_lapic_entries : 进一步调用 acpi 的标准接口, 在 drivers/acpi/tables.c
           - acpi_parse_madt_pch_pic_entries
             - acpi_table_parse_madt : 调用过程中，会将 acpi_parse_pch_pic 作为参数, 后者进一步调用 register_pch_pic
       - register_pch_pic : 从 dmesg 看，acpi_boot_init 的调用路径下没有注册上 pic，这是唯一的调用位置
@@ -137,7 +163,10 @@ register_pch_pic
       - [ ] dmi_set_dump_stack_arch_desc : 似乎解析了 dmi 信息之后，就可以获取 bios 的信息了
       - [ ] efi_runtime_init
       - [ ] register_smp_ops : 检查一下这些注册函数的使用位置
-      - [ ] loongson_acpi_init : acpi 初始化，但是似乎之前就已经进行了 acpi 初始化
+      - loongson_acpi_init
+        - irq_create_fwspec_mapping : FIXME 这里应该是一个 bug, 在中断系统初始化之前注册这个 acpi 中断
+        - [ ] acpi_registers_setup : 写一些寄存器，需要手册的支持
+        - [ ] acpi_hw_clear_status : 写一些寄存器，需要手册的支持
     - cpu_report : 显示一些输出信息
     - [ ] arch_mem_init : 存在一些 device tree 的初始化
       - early_init_dt_verify : 校验 initial_boot_params (也就是 dtb 的地址 loongson_fdt_blob)
@@ -167,14 +196,15 @@ register_pch_pic
   - [ ] init_irq_default_affinity : 最后其作用体现在
   - alloc_desc : 分配了 16 个 irq_desc
   - irq_insert_desc : 插入到 irq_desc_tree 中，而这个是中断最开始的访问的 irq_desc
-    - 与之配套的函数 : irq_to_desc 用于从 irq 找到对应的 irq
+    - 与之配套的函数 : irq_to_desc
 - init_IRQ
   - irq_set_noprobe
   - arch_init_irq
-    - [ ] setup_IRQ : 这里应该是建立了三个 IRQ 中断控制器的处理
+    - setup_IRQ : 这里应该是建立了三个 IRQ 中断控制器的处理
       - loongarch_cpu_irq_init
       - liointc_init
         - "Loongson Local I/O Interrupt Controller"
+        - [ ] 我现在不是很确定，第一个字母 l 这到底是 local  还是 legacy
       - extioi_vec_init
         - [ ] irq_domain_alloc_fwnode : domain handle 是怎么回事, 可以通过 domain handle 创建 irq domain
         - irq_domain_create_linear : 
