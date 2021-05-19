@@ -1,5 +1,10 @@
 # acpi
+感觉 ramooflax 的处理是相当的简单，其实他甚至可以在 acpi 解析之前就可以来初始化 e1000 
 
+ramooflax 不需要模拟 acpi 设备空间，因为设备本身就是相同的
+
+- [ ] 是不是， acpi 探测出来了 pcie，那么剩下的事情应该 pcie 自己做
+- [ ] 探测，到底指的是什么
 ```c
 /*
 [    0.000000] efi:  ACPI 2.0=0xfd2f4000  SMBIOS=0x900000000fffe000  SMBIOS 3.0=0x90000000fd132000 
@@ -15,6 +20,7 @@
 ```
 
 ```c
+/*
 [    0.888502] [<900000000020864c>] show_stack+0x2c/0x100
 [    0.888504] [<9000000000ec3988>] dump_stack+0x90/0xc0
 [    0.888507] [<90000000009a605c>] really_probe+0x20c/0x2b8
@@ -38,6 +44,7 @@
 [    0.888542] [<9000000000eda794>] kernel_init+0x10/0xf4
 [    0.888544] [<9000000000203cc8>] ret_from_kernel_thread+0xc/0x10
 ```
+- [ ] 那么 e1000 需要加入到 acpi 的空间中吗 ?
 
 
 - acpi_init
@@ -47,7 +54,12 @@
     - bus_register(&acpi_bus_type);
   - [ ] pci_mmcfg_late_init : 龙芯自定义的一些的东西
   - acpi_iort_init
+  - acpi_scan_init
+    - acpi_bus_scan : 进一步调用 acpi_bus_check_add 来探测设备，将探测到的设备初始化为 acpi_device
+      - device_attach
+      - 
+
+
+
   - [ ] acpi_bus_init
-    -acpi_ec_init 
-    - acpi_pci_root_init
   - [ ] acpi_ec_init

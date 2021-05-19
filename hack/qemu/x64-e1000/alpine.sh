@@ -55,6 +55,7 @@ if [ ! -f "${disk_img}" ]; then
 fi
 
 if [ $DEBUG_QEMU = true ]; then
+  echo "debug qemu"
 	gdb --args ${qemu} \
 		-drive "file=${disk_img},format=qcow2" \
 		-m 8G \
@@ -69,6 +70,7 @@ if [ $DEBUG_QEMU = true ]; then
 fi
 
 if [ $DEBUG_KERNEL = true ]; then
+  echo "start kernel stopped"
 	${qemu} \
 		-drive "file=${disk_img},format=qcow2" \
 		-m 8G \
@@ -85,6 +87,7 @@ if [ $DEBUG_KERNEL = true ]; then
 fi
 
 if [ $RUN_GDB = true ]; then
+  echo "debug kernel"
 	cd /home/maritns3/core/ubuntu-linux/
 	gdb vmlinux -ex "target remote :1234" -ex "hbreak start_kernel" -ex "continue"
 	exit 0
