@@ -1,27 +1,87 @@
 # acpi 
 
-关键的参考资料:
-https://www.kernel.org/doc/html/latest/firmware-guide/acpi/index.html
+## [核心文档](https://acpica.org/sites/acpica/files/ACPI-Introduction.pdf)
+Fundamentally, ACPI defines two types of data structures which are shared between the
+system firmware and the OS: **data tables** and **definition blocks**. These data structures are the
+primary communication mechanism between the firmware and the OS. Data tables store raw
+data and are consumed by device drivers. Definition blocks consist of byte code that is
+executable by an interpreter.
+> data tables 是提供的表单数据，definition blocks 是
+
+This definition block byte code is compiled from the ACPI Source Language (ASL) code. ASL
+is the language used to define ACPI objects and to write control methods.
+An ASL compiler translates ASL into ACPI Machine Language (AML) byte code. AML is the language
+processed by the ACPI AML interpreter.
+
+The system bus is the root of enumeration for these ACPI devices. 
+
+Devices that are enumerable on other
+buses, like PCI or USB devices, are usually not enumerated in the namespace. *Instead, their
+own buses enumerate the devices and load their drivers.* However, all enumerable buses
+have an encoding technique that allows ACPI to encode the bus­specific addresses of the
+devices so they can be found in ACPI, even though ACPI usually does not load drivers for
+these devices.
+
+As an example of this, PCI does not support native hotplug. However, PCI can use ACPI to
+evaluate objects and define methods that allow ACPI to fill in the functions necessary to
+perform hotplug on PCI.
+
+After the system is up and running, ACPI works with the OS to handle any ACPI interrupt
+events that occur via the *ACPI system control interrupt (SCI) handler*. This interrupt invokes
+ACPI events in one of two general ways: fixed events and general purpose events (GPEs).
+
+
+
+> 这个也是介绍的相当的清楚了: https://wiki.osdev.org/ACPI
+> 那么 AML (definition blocks) 和 namespace 是什么关系?
+
+Upon initialization, the AML interpreter extracts the byte code in the definition blocks as enumerable objects, 
+
+This collection of enumerable forms the OS construct called the ACPI namespace.
+
+
+
+https://lwn.net/Articles/367630/
 
 - [MADT](https://wiki.osdev.org/MADT)
 - [HPET](https://wiki.osdev.org/HPET) : 
 - [RSDT](https://wiki.osdev.org/RSDT) : Root System Description Table
 - [RSDP](https://wiki.osdev.org/RSDP) : Root System Description Pointer
 - [XSDT](https://wiki.osdev.org/XSDT) : eXtended System Descriptor Table (XSDT) - the 64-bit version of the ACPI RSDT
-
+- [DMAR](https://terenceli.github.io/%E6%8A%80%E6%9C%AF/2019/08/10/iommu-driver-analysis) : DMA Remapping Reporting
+- [FADT](https://wiki.osdev.org/FADT) : fixed ACPI description table, This table contains information about fixed register blocks pertaining to power management.
+- [SSDT](https://wiki.osdev.org/SSDT) : Secondary System Descriptor Table
 
 - https://github.com/rust-osdev/about : 这个组织提供一堆可以用于 os dev 的工具，包括 uefi bootloader acpi
 - https://github.com/acpica/acpica : acpi 框架的源代码 
 
+## TODO
+
 - [ ] acpi 是如何提供给 os 的
 - [ ] acpi 表是如何构建起来的
-
 
 - [ ] /home/maritns3/core/kvmqemu/hw/i386/pc.c
 - [ ] /home/maritns3/core/kvmqemu/hw/acpi/cpu.c
 
+
+- [ ] 让人奇怪的地方在于，acpi 的只是解析出来了 IOAPIC 和 HPET 来, pcie 是怎么被探索出来的，
+  - [ ] pcie 在 acpi 中对应的 table 是什么 ？
+
+- [ ] 至少，需要截获所有的 acpi 的访问，才可以正确模拟
+  - [ ] acpi 表是从什么地方读去的, 固定的地址，还是进一步使用其他的机制通知的
+
+- [ ] 其实，还需要创建一个虚假的 acpi 给 x86
+
+- [ ] 除了 acpi 之外，还有什么是 firmware 传递给操作系统的?
+  - [ ] efi 吗?
+
+- [ ] mmio 空间分配是怎么实现的？
+
+- [ ] 也许阅读一下
+
 - [什么是 AML](https://stackoverflow.com/questions/43088172/why-do-we-need-aml-acpi-machine-language)
 
+- [ ] apci 实际上还提供了关机选项啊
 
 acpi 的解析[^2]
 
@@ -77,8 +137,6 @@ pcibios_add_bus 就是 acpi_pci_add_bus，最后调用到 bios 的处理函数�
 #21 0xffffffff810019b2 in ret_from_fork () at arch/x86/entry/entry_64.S:294
 #22 0x0000000000000000 in ?? ()
 ```
-
-
 
 
 ## really_probe

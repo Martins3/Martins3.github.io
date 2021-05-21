@@ -59,7 +59,5 @@ ramooflax 不需要模拟 acpi 设备空间，因为设备本身就是相同的
       - device_attach
       - 
 
-
-
   - [ ] acpi_bus_init
   - [ ] acpi_ec_init

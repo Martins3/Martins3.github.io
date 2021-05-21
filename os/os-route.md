@@ -133,6 +133,7 @@ Linux 内核相关的有趣资源，欢迎补充。
 - https://github.com/swimos/swim
 - https://github.com/dwelch67/raspberrypi : 要啥树莓派，qemu 学习 arm 指令集
 - https://news.ycombinator.com/item?id=22564665 : good fellow helps, all kinds of resources
+- [太素](https://github.com/belowthetree/TisuOS) : RISCV kernel
 
 ## reference
 - [https://sysctl-explorer.net/](https://sysctl-explorer.net/)
