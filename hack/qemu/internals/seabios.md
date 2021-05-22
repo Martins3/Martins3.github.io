@@ -63,6 +63,99 @@ fw_cfg_comb_mem_ops 中对应的 read / write 实现，首先选择地址，然�
 
 - dma 的操作: fw_cfg_dma_transfer 中的，根据配置的地址，最后调用 dma_memory_read / dma_memory_write
 
+## acpi 在 seabios 中是怎么处理的
+1. ACPI 在 seabios 中是一个标准定义项目
+```c
+#define QEMU_CFG_ACPI_TABLES            (QEMU_CFG_ARCH_LOCAL + 0)
+```
+2. qemu_cfg_legacy : 中通过约定好的位置读去 acpi 的代码
+  - qemu_cfg_read_entry(&cnt, QEMU_CFG_ACPI_TABLES, sizeof(cnt));
+  - qemu_romfile_add(name, QEMU_CFG_ACPI_TABLES, offset, len);
+
+3. qemu_platform_setup
+  - pci_setup
+  - [ ] smbios_setup
+    - [ ] smbios_romfile_setup : 完全无法理解啊，这是为啥啊，为什么还要初始化 SMBIOS 给他使用啊
+  - [ ] romfile_loader_execute : 这个 table loader 是做什么的
+  - find_acpi_rsdp : 在一个范围 `find_acpi_rsdp f48c0 --> f50c0` 内比对字符串
+    - [ ] 其实让我疑惑的问题在于，rsdp 不是通过 fw_cfg 传递过来的吗?
+  - acpi_dsdt_parse
+    - `struct fadt_descriptor_rev1 *fadt = find_acpi_table(FACP_SIGNATURE);` : 通过 rdsp 找到 fadt
+    - `u8 *dsdt = (void*)(fadt->dsdt);`
+    - 然后会遍历所有的设备
+  - virtio_mmio_setup_acpi
+    - acpi_dsdt_find_string  : `static const char *virtio_hid = "LNRO0005";` 使用 hid 在 `static struct hlist_head acpi_devices VARVERIFY32INIT;` 中查询
+    - 因为没有配置 virtio，所以，这里并没有找到设备
+    - [ ] virtio 为什么需要 bios 支持，是不是为了枚举出来这个 virtio 设备
+  - acpi_setup : 这个函数将会让 seabios 重新构建一次 seabios 的内容
+
+- [ ] 不能理解，rsdp_descriptor 放到地址为很低，而 rsdt 放到很高的位置，
+```c
+rsdp=0x000f4d40
+rsdt=0xbffe18fe
+```
+通过查看 guest 机器的 /proc/iomem 这两个区域都是 Reserved
+
+
+
+
+在 seabios/src/std/acpi.h 中定义了 RSDP 和 RSDT/XSDT
+```c
+struct rsdp_descriptor {        /* Root System Descriptor Pointer */
+    u64 signature;              /* ACPI signature, contains "RSD PTR " */
+    u8  checksum;               /* To make sum of struct == 0 */
+    u8  oem_id [6];             /* OEM identification */
+    u8  revision;               /* Must be 0 for 1.0, 2 for 2.0 */
+    u32 rsdt_physical_address;  /* 32-bit physical address of RSDT */
+    u32 length;                 /* XSDT Length in bytes including hdr */
+    u64 xsdt_physical_address;  /* 64-bit physical address of XSDT */
+    u8  extended_checksum;      /* Checksum of entire table */
+    u8  reserved [3];           /* Reserved field must be 0 */
+};
+
+/* Table structure from Linux kernel (the ACPI tables are under the
+   BSD license) */
+
+#define ACPI_TABLE_HEADER_DEF   /* ACPI common table header */ \
+    u32 signature;          /* ACPI signature (4 ASCII characters) */ \
+    u32 length;                 /* Length of table, in bytes, including header */ \
+    u8  revision;               /* ACPI Specification minor version # */ \
+    u8  checksum;               /* To make sum of entire table == 0 */ \
+    u8  oem_id [6];             /* OEM identification */ \
+    u8  oem_table_id [8];       /* OEM table identification */ \
+    u32 oem_revision;           /* OEM revision number */ \
+    u8  asl_compiler_id [4];    /* ASL compiler vendor ID */ \
+    u32 asl_compiler_revision;  /* ASL compiler revision number */
+
+/*
+ * ACPI 1.0 Root System Description Table (RSDT)
+ */
+#define RSDT_SIGNATURE 0x54445352 // RSDT
+struct rsdt_descriptor_rev1
+{
+    ACPI_TABLE_HEADER_DEF       /* ACPI common table header */
+    u32 table_offset_entry[0];  /* Array of pointers to other */
+    /* ACPI tables */
+} PACKED;
+
+/*
+ * ACPI 2.0 eXtended System Description Table (XSDT)
+ */
+#define XSDT_SIGNATURE 0x54445358 // XSDT
+struct xsdt_descriptor_rev2
+{
+    ACPI_TABLE_HEADER_DEF       /* ACPI common table header */
+    u64 table_offset_entry[0];  /* Array of pointers to other */
+    /* ACPI tables */
+} PACKED;
+```
+length : 从而知道 table_offset_entry 到底存在多少项了.
+
+
+
+## pcie 在 seabios 中是怎么处理的
+
+
 ## qemu_detect
 在 qemu_detect 中，通过检测 host bridge, 可以发现判断当前在 qemu 中间运行。
 
@@ -189,3 +282,24 @@ static void i440fx_pcihost_initfn(Object *obj)
 
 - [ ] 内核是提供给 fw_cfg 的，bios 怎么最后切换到 kernel 的位置开始执行的 ?
 
+
+## pci_setup
+
+- pci_setup
+  - pci_probe_host : 检测 PCI 是否存在
+    - `outl(0x80000000, PORT_PCI_CMD);`
+  - [ ] pci_bios_init_bus : 应该也是遍历所有的设备
+  - pci_probe_devices : 枚举所有的设备
+  - pci_bios_init_platform : 初始化 platform pci, 也就是 bios 从什么地方开始
+  - pci_bios_check_devices
+    - pci_region_create_entry
+  - pci_bios_map_devices
+    - pci_bios_init_root_regions_io : 映射 ioport
+    - pci_region_map_entries
+      - pci_region_map_one_entry
+        - pci_config_writeb : 
+  - pci_bios_init_devices
+    - `if (pin != 0) pci_config_writeb(bdf, PCI_INTERRUPT_LINE, pci_slot_get_irq(pci, pin));` : 如果可以，那么分配中断给他
+  - pci_enable_default_vga
+
+验证 : pci 空间总是可以

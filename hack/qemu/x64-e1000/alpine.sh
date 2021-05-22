@@ -28,6 +28,7 @@ disk_img=${abs_loc}/alpine.qcow2
 kernel=/home/maritns3/core/ubuntu-linux/arch/x86/boot/bzImage
 qemu=/home/maritns3/core/kvmqemu/build/qemu-system-x86_64
 ext4_img1=${abs_loc}/img1.ext4
+share_dir=${abs_loc}/share
 
 if [ ! -f "$iso" ]; then
 	echo "${iso} not found! Download it from official website"
@@ -55,7 +56,7 @@ if [ ! -f "${disk_img}" ]; then
 fi
 
 if [ $DEBUG_QEMU = true ]; then
-  echo "debug qemu"
+	echo "debug qemu"
 	gdb --args ${qemu} \
 		-drive "file=${disk_img},format=qcow2" \
 		-m 8G \
@@ -70,7 +71,7 @@ if [ $DEBUG_QEMU = true ]; then
 fi
 
 if [ $DEBUG_KERNEL = true ]; then
-  echo "start kernel stopped"
+	echo "start kernel stopped"
 	${qemu} \
 		-drive "file=${disk_img},format=qcow2" \
 		-m 8G \
@@ -87,7 +88,7 @@ if [ $DEBUG_KERNEL = true ]; then
 fi
 
 if [ $RUN_GDB = true ]; then
-  echo "debug kernel"
+	echo "debug kernel"
 	cd /home/maritns3/core/ubuntu-linux/
 	gdb vmlinux -ex "target remote :1234" -ex "hbreak start_kernel" -ex "continue"
 	exit 0
@@ -105,6 +106,9 @@ ${qemu} \
 	-monitor stdio \
 	-chardev file,path=/tmp/seabios.log,id=seabios -device isa-debugcon,iobase=0x402,chardev=seabios \
 	-bios /home/maritns3/core/seabios/out/bios.bin \
-	-device nvme,drive=nvme0,serial=foo -drive file=${ext4_img1},format=raw,if=none,id=nvme0
+	-device nvme,drive=nvme0,serial=foo -drive file=${ext4_img1},format=raw,if=none,id=nvme0 \
+	-virtfs local,path="${share_dir}",mount_tag=host0,security_model=mapped,id=host0
+
+# mount -t 9p -o trans=virtio,version=9p2000.L host0 /mnt/9p
 
 # TODO deadbeaf1 ?

@@ -39,6 +39,9 @@ Upon initialization, the AML interpreter extracts the byte code in the definitio
 
 This collection of enumerable forms the OS construct called the ACPI namespace.
 
+Objects can either have a directly defined value or must be evaluated and interpreted by the AML interpreter.
+
+The system bus is the root of enumeration for these ACPI devices.
 
 
 https://lwn.net/Articles/367630/
@@ -51,6 +54,7 @@ https://lwn.net/Articles/367630/
 - [DMAR](https://terenceli.github.io/%E6%8A%80%E6%9C%AF/2019/08/10/iommu-driver-analysis) : DMA Remapping Reporting
 - [FADT](https://wiki.osdev.org/FADT) : fixed ACPI description table, This table contains information about fixed register blocks pertaining to power management.
 - [SSDT](https://wiki.osdev.org/SSDT) : Secondary System Descriptor Table
+- [DSDT](https://wiki.osdev.org/DSDT) : DSDT stands for Differentiated System Description Table. It Is a major ACPI table and is used to describe what peripherals the machine has. 
 
 - https://github.com/rust-osdev/about : 这个组织提供一堆可以用于 os dev 的工具，包括 uefi bootloader acpi
 - https://github.com/acpica/acpica : acpi 框架的源代码 

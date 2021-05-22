@@ -78,7 +78,6 @@ ram_memory=ram_memory@entry=0x7fffffffd540) at ../hw/i386/pc.c:981
 [rom : kvmvapic.bin]
 [rom : linuxboot_dma.bin]
 [rom : /home/maritns3/core/seabios/out/bios.bin]
-[/home/maritns3/core/seabios/out/bios.bin fffc0000]
 [rom : etc/acpi/tables]
 [rom : etc/table-loader]
 [rom : etc/acpi/rsdp]

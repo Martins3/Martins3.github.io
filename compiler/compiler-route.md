@@ -1,4 +1,6 @@
 # 收集的资源
+https://c9x.me/compile/bib/ : 业余编译器玩家的阅读资源
+
 https://github.com/vtil-project/VTIL-Core : 又一个二进制翻译器
 
 https://github.com/aalhour/awesome-compilers : **key**
