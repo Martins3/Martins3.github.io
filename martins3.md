@@ -50,8 +50,6 @@ https://eli.thegreenplace.net/ : 这个 blog 关注一下，和其他的 blog �
 ## 下一步
 https://github.com/causten/openbmc-tutorials : 到底什么是 bm
 
-https://c9x.me/articles/gthreads/intro.htm
-
 linux kernel labs 应该被完整的处理一遍，然后再去做其他的事情
 然后将该文件夹中间的东西全部删除，
 

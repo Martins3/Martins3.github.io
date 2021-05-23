@@ -278,13 +278,8 @@ static void i440fx_pcihost_initfn(Object *obj)
 ```
 进行 pci 地址空间的 IO 就是只有这个入口，之后在逐步分发:
 
-## fw_cfg 是如何引导内核启动的
-
-- [ ] 内核是提供给 fw_cfg 的，bios 怎么最后切换到 kernel 的位置开始执行的 ?
-
 
 ## pci_setup
-
 - pci_setup
   - pci_probe_host : 检测 PCI 是否存在
     - `outl(0x80000000, PORT_PCI_CMD);`
@@ -302,4 +297,115 @@ static void i440fx_pcihost_initfn(Object *obj)
     - `if (pin != 0) pci_config_writeb(bdf, PCI_INTERRUPT_LINE, pci_slot_get_irq(pci, pin));` : 如果可以，那么分配中断给他
   - pci_enable_default_vga
 
-验证 : pci 空间总是可以
+验证 : 在内核的时候，绝对不会发生对于 pci 配置空间的操作, 配置还是会被写:
+或者，我们想要的是，bios 的工作，无论是谁来做，其实都是相同的。
+
+
+## 到底在 pci 配置空间中写入了什么东西
+
+e1000 的三个 bar 空间:
+```c
+PCI: map device bdf=00:03.0  bar 1, addr 0000c000, size 00000040 [io]
+PCI: map device bdf=00:03.0  bar 6, addr feb80000, size 00040000 [mem]
+PCI: map device bdf=00:03.0  bar 0, addr febc0000, size 00020000 [mem]
+```
+
+pci 设备的 bar 的起始位置映射的配置是 bios 中的代码扫描完成的
+```
+huxueshi:e1000_write_config 10 ffffffff 4
+huxueshi:e1000_write_config 10 0 4
+huxueshi:e1000_write_config 14 ffffffff 4
+huxueshi:e1000_write_config 14 1 4
+huxueshi:e1000_write_config 18 ffffffff 4
+huxueshi:e1000_write_config 18 0 4
+huxueshi:e1000_write_config 1c ffffffff 4
+huxueshi:e1000_write_config 1c 0 4
+huxueshi:e1000_write_config 20 ffffffff 4
+huxueshi:e1000_write_config 20 0 4
+huxueshi:e1000_write_config 24 ffffffff 4
+huxueshi:e1000_write_config 24 0 4
+huxueshi:e1000_write_config 30 fffff800 4
+huxueshi:e1000_write_config 30 0 4
+huxueshi:e1000_write_config 14 c000 4
+huxueshi:e1000_write_config 30 feb80000 4
+huxueshi:e1000_write_config 10 febc0000 4
+huxueshi:e1000_write_config 3c b 1
+huxueshi:e1000_write_config 4 103 2
+huxueshi:e1000_write_config 30 fffffffe 4
+huxueshi:e1000_write_config 30 feb80001 4
+huxueshi:e1000_write_config 30 feb80000 4
+// 下面是内核日志
+
+huxueshi:e1000_write_config 4 503 2
+huxueshi:e1000_write_config 4 103 2
+huxueshi:e1000_write_config 4 100 2
+huxueshi:e1000_write_config 10 ffffffff 4
+huxueshi:e1000_write_config 10 febc0000 4
+huxueshi:e1000_write_config 4 103 2
+huxueshi:e1000_write_config 4 100 2
+huxueshi:e1000_write_config 14 ffffffff 4
+huxueshi:e1000_write_config 14 c001 4
+huxueshi:e1000_write_config 4 103 2
+huxueshi:e1000_write_config 4 100 2
+huxueshi:e1000_write_config 18 ffffffff 4
+huxueshi:e1000_write_config 18 0 4
+huxueshi:e1000_write_config 4 103 2
+huxueshi:e1000_write_config 4 100 2
+huxueshi:e1000_write_config 1c ffffffff 4
+huxueshi:e1000_write_config 1c 0 4
+huxueshi:e1000_write_config 4 103 2
+huxueshi:e1000_write_config 4 100 2
+huxueshi:e1000_write_config 20 ffffffff 4
+huxueshi:e1000_write_config 20 0 4
+huxueshi:e1000_write_config 4 103 2
+huxueshi:e1000_write_config 4 100 2
+huxueshi:e1000_write_config 24 ffffffff 4
+huxueshi:e1000_write_config 24 0 4
+huxueshi:e1000_write_config 4 103 2
+huxueshi:e1000_write_config 4 100 2
+huxueshi:e1000_write_config 30 fffff800 4
+huxueshi:e1000_write_config 30 feb80000 4
+huxueshi:e1000_write_config 4 103 2
+huxueshi:e1000_write_config 4 107 2
+huxueshi:e1000_write_config d 40 1
+```
+
+- 感觉 e1000 被重新初始化了一次
+- 这就是将所有的 bar 空间全部扫描一次  
+- 这些在进行 e1000_probe 之前已经完成了。
+
+真相就是在这里:
+```c
+/*
+#0  pci_write_config_word (dev=0xffff8881002d9800, where=4, val=256) at drivers/pci/pci.h:383
+#1  0xffffffff8142f3f5 in __pci_read_base (dev=dev@entry=0xffff8881002d9800, type=type@entry=pci_bar_unknown, res=res@entry=0xffff8881002d9c50, pos=pos@entry=28) at dri
+vers/pci/probe.c:190
+#2  0xffffffff8142f4b2 in pci_read_bases (dev=0xffff8881002d9800, howmany=6, rom=48) at drivers/pci/probe.c:335
+#3  0xffffffff8142fa17 in pci_setup_device (dev=dev@entry=0xffff8881002d9800) at drivers/pci/probe.c:1848
+#4  0xffffffff8143060d in pci_scan_device (devfn=8, bus=0xffff888100259c00) at drivers/pci/probe.c:2355
+#5  pci_scan_single_device (devfn=8, bus=0xffff888100259c00) at drivers/pci/probe.c:2512
+#6  pci_scan_single_device (bus=0xffff888100259c00, devfn=8) at drivers/pci/probe.c:2502
+#7  0xffffffff8143068d in pci_scan_slot (bus=bus@entry=0xffff888100259c00, devfn=devfn@entry=8) at drivers/pci/probe.c:2591
+#8  0xffffffff814317b0 in pci_scan_child_bus_extend (bus=bus@entry=0xffff888100259c00, available_buses=available_buses@entry=0) at drivers/pci/probe.c:2808
+#9  0xffffffff81431997 in pci_scan_child_bus (bus=bus@entry=0xffff888100259c00) at drivers/pci/probe.c:2938
+#10 0xffffffff81471601 in acpi_pci_root_create (root=root@entry=0xffff888100222a00, ops=ops@entry=0xffffffff826411c0 <acpi_pci_root_ops>, info=info@entry=0xffff88810022
+ca20, sysdata=sysdata@entry=0xffff88810022ca58) at drivers/acpi/pci_root.c:925
+#11 0xffffffff81b23a9d in pci_acpi_scan_root (root=root@entry=0xffff888100222a00) at arch/x86/pci/acpi.c:368
+#12 0xffffffff81b4142c in acpi_pci_root_add (device=0xffff888100217000, not_used=<optimized out>) at drivers/acpi/pci_root.c:597
+#13 0xffffffff8146a1e3 in acpi_scan_attach_handler (device=0xffff888100217000) at drivers/acpi/scan.c:2038
+#14 acpi_bus_attach (device=device@entry=0xffff888100217000, first_pass=first_pass@entry=true) at drivers/acpi/scan.c:2086
+#15 0xffffffff8146a130 in acpi_bus_attach (device=device@entry=0xffff888100216800, first_pass=first_pass@entry=true) at drivers/acpi/scan.c:2107
+#16 0xffffffff8146a130 in acpi_bus_attach (device=0xffff888100216000, first_pass=first_pass@entry=true) at drivers/acpi/scan.c:2107
+#17 0xffffffff8146bf3f in acpi_bus_scan (handle=handle@entry=0xffffffffffffffff) at drivers/acpi/scan.c:2167
+#18 0xffffffff82b6f9a2 in acpi_scan_init () at drivers/acpi/scan.c:2342
+#19 0xffffffff82b6f6d3 in acpi_init () at drivers/acpi/bus.c:1341
+#20 0xffffffff81000def in do_one_initcall (fn=0xffffffff82b6f2e1 <acpi_init>) at init/main.c:1249
+#21 0xffffffff82b3d26b in do_initcall_level (command_line=0xffff888100123400 "root", level=4) at ./include/linux/compiler.h:234
+#22 do_initcalls () at init/main.c:1338
+#23 do_basic_setup () at init/main.c:1358
+#24 kernel_init_freeable () at init/main.c:1560
+#25 0xffffffff81b7c249 in kernel_init (unused=<optimized out>) at init/main.c:1447
+#26 0xffffffff810019b2 in ret_from_fork () at arch/x86/entry/entry_64.S:294
+#27 0x0000000000000000 in ?? ()
+```
+从 pci_read_bases 中可以看的超级清晰，为什么在 Linux kernel 中间依旧存在配置 bar 空间的行为.

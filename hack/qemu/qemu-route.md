@@ -41,10 +41,11 @@ make
   - https://fadeevab.com/how-to-setup-qemu-output-to-console-and-automate-using-shell-script/
 
 ##  和 Host 共享文件
-首先保证 guest kernel 的配置:
-- https://wiki.qemu.org/Documentation/9psetup
-然后按照这个参数:
-- https://askubuntu.com/questions/290668/how-to-share-a-folder-between-kvm-host-and-guest-using-virt-manager
+1. **首先保证 guest kernel 的配置**:
+  - https://wiki.qemu.org/Documentation/9psetup
+  - 首先 NET_9P，然后 9P_FS，等等
+2. 然后按照这个参数:
+  - https://askubuntu.com/questions/290668/how-to-share-a-folder-between-kvm-host-and-guest-using-virt-manager
 
 # 资源
 - https://news.ycombinator.com/item?id=26941744
