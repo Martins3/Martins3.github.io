@@ -22,8 +22,6 @@ Add romfile: etc/smbios/smbios-tables (size=354)
     - copy_smbios : 从 stack 上拷贝到一个确定的区域
   - smbios_legacy_setup : 并不会 fallback 到这里
 
-- [ ] 剩下的问题，怎么从其中读去信息
-
 ## qemu
 表格的创建 : /hw/smbios/smbios.c
 
@@ -86,8 +84,7 @@ struct smbios_30_entry_point {
 ```
 
 ## kernel
-
-
+- [ ] 内核是如何使用这些内存的 ?
 
 ## dmidecode(8)
 dmidecode is a tool for dumping a computer's DMI (some say SMBIOS ) table contents in a human-readable format. This table contains a description of the system's hardware components, as well as other useful pieces of information such as serial numbers and BIOS revision. 

@@ -72,7 +72,7 @@ ram_memory=ram_memory@entry=0x7fffffffd540) at ../hw/i386/pc.c:981
 
 从 info mtree 中看到，pc.bios 占据了 4G-256k 到 256k 之间的位置。
 
-在 rom_reset 中间检测，实际上，ROM 的数量超乎想想:
+在 rom_reset 中间检测，实际上，ROM 存在好几个，
 这些都是 ROM , 映射的位置很正常啊，根本没有内核啊
 ```
 [rom : kvmvapic.bin]

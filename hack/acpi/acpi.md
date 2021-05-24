@@ -30,8 +30,6 @@ After the system is up and running, ACPI works with the OS to handle any ACPI in
 events that occur via the *ACPI system control interrupt (SCI) handler*. This interrupt invokes
 ACPI events in one of two general ways: fixed events and general purpose events (GPEs).
 
-
-
 > 这个也是介绍的相当的清楚了: https://wiki.osdev.org/ACPI
 > 那么 AML (definition blocks) 和 namespace 是什么关系?
 
@@ -42,6 +40,18 @@ This collection of enumerable forms the OS construct called the ACPI namespace.
 Objects can either have a directly defined value or must be evaluated and interpreted by the AML interpreter.
 
 The system bus is the root of enumeration for these ACPI devices.
+
+## [ACPI considerations for PCI host bridges](https://www.kernel.org/doc/html/latest/PCI/acpi-info.html)
+For example, there’s no standard hardware mechanism for enumerating PCI host bridges, so the ACPI namespace must describe each host bridge, the method for accessing PCI config space below it, the address space windows the host bridge forwards to PCI (using _CRS), and the routing of legacy INTx interrupts (using _PRT).
+
+However, ACPI may describe PCI devices if it provides power management or hotplug functionality for them or if the device has INTx interrupts connected by platform interrupt controllers and a `_PRT` is needed to describe those connections.
+
+If the OS is expected to manage a non-discoverable device described via ACPI, that device will have a specific `_HID`/`_CID` that tells the OS what driver to bind to it, and the `_CRS` tells the OS and the driver where the device’s registers are.
+
+## Official Documents
+
+### [ ](https://uefi.org/specs/ACPI/6.4/06_Device_Configuration/Device_Configuration.html)
+
 
 
 https://lwn.net/Articles/367630/
@@ -55,6 +65,10 @@ https://lwn.net/Articles/367630/
 - [FADT](https://wiki.osdev.org/FADT) : fixed ACPI description table, This table contains information about fixed register blocks pertaining to power management.
 - [SSDT](https://wiki.osdev.org/SSDT) : Secondary System Descriptor Table
 - [DSDT](https://wiki.osdev.org/DSDT) : DSDT stands for Differentiated System Description Table. It Is a major ACPI table and is used to describe what peripherals the machine has. 
+
+- [GPE](https://askubuntu.com/questions/148726/what-is-an-acpi-gpe-storm)
+
+
 
 - https://github.com/rust-osdev/about : 这个组织提供一堆可以用于 os dev 的工具，包括 uefi bootloader acpi
 - https://github.com/acpica/acpica : acpi 框架的源代码 

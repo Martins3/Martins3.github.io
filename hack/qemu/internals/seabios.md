@@ -74,8 +74,8 @@ fw_cfg_comb_mem_ops 中对应的 read / write 实现，首先选择地址，然�
 
 3. qemu_platform_setup
   - pci_setup
-  - [ ] smbios_setup
-    - [ ] smbios_romfile_setup : 完全无法理解啊，这是为啥啊，为什么还要初始化 SMBIOS 给他使用啊
+  - smbios_setup
+    - smbios_romfile_setup : 参考 smbios.c
   - [ ] romfile_loader_execute : 这个 table loader 是做什么的
   - find_acpi_rsdp : 在一个范围 `find_acpi_rsdp f48c0 --> f50c0` 内比对字符串
     - [ ] 其实让我疑惑的问题在于，rsdp 不是通过 fw_cfg 传递过来的吗?
@@ -87,7 +87,8 @@ fw_cfg_comb_mem_ops 中对应的 read / write 实现，首先选择地址，然�
     - acpi_dsdt_find_string  : `static const char *virtio_hid = "LNRO0005";` 使用 hid 在 `static struct hlist_head acpi_devices VARVERIFY32INIT;` 中查询
     - 因为没有配置 virtio，所以，这里并没有找到设备
     - [ ] virtio 为什么需要 bios 支持，是不是为了枚举出来这个 virtio 设备
-  - acpi_setup : 这个函数将会让 seabios 重新构建一次 seabios 的内容
+  - acpi_setup : fw_cfg 当没有提供 acpi table 的时候，这个函数将会让 seabios 重新构建一次 acpi 的内容
+
 
 - [ ] 不能理解，rsdp_descriptor 放到地址为很低，而 rsdt 放到很高的位置，
 ```c
@@ -95,8 +96,6 @@ rsdp=0x000f4d40
 rsdt=0xbffe18fe
 ```
 通过查看 guest 机器的 /proc/iomem 这两个区域都是 Reserved
-
-
 
 
 在 seabios/src/std/acpi.h 中定义了 RSDP 和 RSDT/XSDT
@@ -151,10 +150,179 @@ struct xsdt_descriptor_rev2
 ```
 length : 从而知道 table_offset_entry 到底存在多少项了.
 
+## ACPI: dumping dsdt devices
+- [ ] 就算是在 seabios 中间枚举了所有的设备，又怎么样, 需要干什么吗?
+- [ ] 为什么需要靠 acpi 枚举 pci 设备，pci 在 acpi 之前就搞定了
+```
+ACPI: dumping dsdt devices
+    SF8
+    SF0
+    SE8
+    SE0
+    SD8
+    SD0
+    SC8
+    SC0
+    SB8
+    SB0
+    SA8
+    SA0
+    S98
+    S90
+    S88
+    S80
+    S78
+    S70
+    S68
+    S60
+    S58
+    S50
+    S48
+    S40
+    S38
+    S30
+    S28
+    S20
+    S18
+    S10
+    S00
+    FWCF, hid, sta (0x8), crs
+        i/o 0x510 -> 0x51b
+    PHPR, hid, sta (0x8), crs
+        i/o 0xae00 -> 0xae17  // acpi-pci-hotplug
+    GPE0, hid, sta (0x8), crs // acpi-gpe0
+        i/o 0xafe0 -> 0xafe3
+    \_SB.CPUS, hid
+    \_SB.PCI0.PRES, hid, crs // acpi-cpu-hotplug
+        i/o 0xaf00 -> 0xaf0b
+    LNKS, hid, sta (0x14)
+    LNKD, hid, sta (0x14)
+    LNKC, hid, sta (0x14)
+    LNKB, hid, sta (0x14)
+    LNKA, hid, sta (0x14)
+    RTC, hid, crs
+        i/o 0x70 -> 0x77
+        irq 8
+    COM1, hid, sta (0x8), crs // 串口
+        i/o 0x3f8 -> 0x3ff
+        irq 4
+    LPT1, hid, sta (0x8), crs // 并口
+        i/o 0x378 -> 0x37f
+        irq 7
+    FLPA
+    FDC0, hid, crs            // 软盘
+        i/o 0x3f2 -> 0x3f5
+        i/o 0x3f7 -> 0x3f7
+        irq 6
+parse_resource: small: 0x5 (len 3)
+    MOU, hid, sta (0x8), crs
+        irq 12
+    KBD, hid, sta (0x8), crs
+        i/o 0x60 -> 0x60
+        i/o 0x64 -> 0x64
+        irq 1
+    ISA
+    HPET, hid, sta (0x14), crs
+        mem 0xfed00000 -> 0xfed003ff
+    PCI0, hid
+```
+- [x] 前面的 `S` 之类的东西都是搞什么的 ?
+  - build_append_pci_bus_devices 中定义的
+- [x] 那些 LNK 之类的是搞什么的 ?
+  - qemu :  build_piix4_pci0_int 中创建了一堆这些玩意儿，但是不知道有什么作用
+  - 似乎是 routing table 之类的东西
+
+在 seabios/src/fw/dsdt_parser.c: parse_resource 将资源划分为 small resource, 所以打印分为两种。
 
 
-## pcie 在 seabios 中是怎么处理的
+#### qemu 是如何制作这个东西的
+参考 ./hack/acpi/acpi.md 中 ACPI considerations for PCI host bridges, 大概可以知道 acpi 的 crs 就是用于记录 io 空间和 irq 的
 
+在 https://github.com/disdi/ACPI/blob/master/debian/ssdt.dsl 似乎找到了对应的 QEMU 对应的 dsl
+
+- [ ] 其实，我有点想知道，这些 acpi 的内容会真的影响操作系统？
+  - [ ] 比如键盘的 keyboard 的 irq 是什么 ?
+- [ ] 试图拦截一下 GPE 的内容
+
+总体来说，是从 build_dsdt 的位置触发的。
+
+#### FDC0 / MOU / KBD 是如何添加进去的
+```c
+/*
+#0  i8042_build_aml (isadev=0x5555566eb400, scope=0x55555699a990) at ../hw/input/pckbd.c:564
+#1  0x000055555590c474 in isa_build_aml (bus=<optimized out>, scope=scope@entry=0x55555699a990) at ../hw/isa/isa-bus.c:214
+#2  0x0000555555a6e08d in build_isa_devices_aml (table=table@entry=0x555556909540) at /home/maritns3/core/kvmqemu/include/hw/isa/isa.h:17
+#3  0x0000555555a71281 in build_dsdt (machine=0x5555566c0400, pci_hole64=<synthetic pointer>, pci_hole=<synthetic pointer>, misc=<synthetic pointer>, pm=0x7fffffffd450,
+ linker=0x5555568d6bc0, table_data=0x555556aae0a0) at ../hw/i386/acpi-build.c:1403
+#4  acpi_build (tables=tables@entry=0x7fffffffd530, machine=0x5555566c0400) at ../hw/i386/acpi-build.c:2374
+#5  0x0000555555a73e8e in acpi_setup () at /home/maritns3/core/kvmqemu/include/hw/boards.h:24
+#6  0x0000555555a5fd1f in pc_machine_done (notifier=0x5555566c0598, data=<optimized out>) at ../hw/i386/pc.c:789
+#7  0x0000555555d27e67 in notifier_list_notify (list=list@entry=0x5555564c0a58 <machine_init_done_notifiers>, data=data@entry=0x0) at ../util/notify.c:39
+#8  0x00005555558ff94b in qdev_machine_creation_done () at ../hw/core/machine.c:1280
+#9  0x0000555555bae301 in qemu_machine_creation_done () at ../softmmu/vl.c:2567
+#10 qmp_x_exit_preconfig (errp=<optimized out>) at ../softmmu/vl.c:2590
+#11 0x0000555555bb1e62 in qemu_init (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/vl.c:3611
+#12 0x000055555582b4bd in main (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/main.c:49
+```
+原来是通过 isa 总线接入的.
+
+- [ ] 这就是让人更加的疑惑了，isa 不是接入到 pcie 上的，为什么需要 acpi 来探测啊 ?
+
+看看 KBD 是如何探测的啊!
+
+#### acpi_pm1_cnt_write
+当关机的时候:
+```c
+/*
+#0  acpi_pm1_cnt_write (val=1, ar=0x555557b97d00) at ../hw/acpi/core.c:602
+#1  acpi_pm_cnt_write (opaque=0x555557b97d00, addr=0, val=1, width=2) at ../hw/acpi/core.c:602
+#2  0x0000555555b8d820 in memory_region_write_accessor (mr=mr@entry=0x555557b97f30, addr=0, value=value@entry=0x7fffd9ff90a8, size=size@entry=2, shift=<optimized out>,
+mask=mask@entry=65535, attrs=...) at ../softmmu/memory.c:491
+#3  0x0000555555b8c14e in access_with_adjusted_size (addr=addr@entry=0, value=value@entry=0x7fffd9ff90a8, size=size@entry=2, access_size_min=<optimized out>, access_siz
+e_max=<optimized out>, access_fn=access_fn@entry=0x555555b8d790 <memory_region_write_accessor>, mr=0x555557b97f30, attrs=...) at ../softmmu/memory.c:552
+#4  0x0000555555b8fca7 in memory_region_dispatch_write (mr=mr@entry=0x555557b97f30, addr=0, data=<optimized out>, op=<optimized out>, attrs=attrs@entry=...) at ../softm
+mu/memory.c:1502
+#5  0x0000555555bd70f0 in flatview_write_continue (fv=fv@entry=0x7ffdc4082740, addr=addr@entry=1540, attrs=..., ptr=ptr@entry=0x7fffeaf82000, len=len@entry=2, addr1=<op
+timized out>, l=<optimized out>, mr=0x555557b97f30) at /home/maritns3/core/kvmqemu/include/qemu/host-utils.h:164
+#6  0x0000555555bd7306 in flatview_write (fv=0x7ffdc4082740, addr=addr@entry=1540, attrs=attrs@entry=..., buf=buf@entry=0x7fffeaf82000, len=len@entry=2) at ../softmmu/p
+hysmem.c:2786
+#7  0x0000555555bd9fc6 in address_space_write (as=0x5555564e0ba0 <address_space_io>, addr=addr@entry=1540, attrs=..., buf=0x7fffeaf82000, len=len@entry=2) at ../softmmu
+/physmem.c:2878
+#8  0x0000555555bda05e in address_space_rw (as=<optimized out>, addr=addr@entry=1540, attrs=..., attrs@entry=..., buf=<optimized out>, len=len@entry=2, is_write=is_writ
+e@entry=true) at ../softmmu/physmem.c:2888
+#9  0x0000555555bb8899 in kvm_handle_io (count=1, size=2, direction=<optimized out>, data=<optimized out>, attrs=..., port=1540) at ../accel/kvm/kvm-all.c:2256
+#10 kvm_cpu_exec (cpu=cpu@entry=0x5555569c1d20) at ../accel/kvm/kvm-all.c:2507
+#11 0x0000555555b771e5 in kvm_vcpu_thread_fn (arg=arg@entry=0x5555569c1d20) at ../accel/kvm/kvm-accel-ops.c:49
+#12 0x0000555555d248e3 in qemu_thread_start (args=<optimized out>) at ../util/qemu-thread-posix.c:521
+#13 0x00007ffff6096609 in start_thread (arg=<optimized out>) at pthread_create.c:477
+#14 0x00007ffff5fbb293 in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
+```
+
+#### 在 Guest 中间 disassembly acpi
+参考 : https://01.org/linux-acpi/utilities
+
+#### [ ] 为什么在 seabios 中间会调用 `acpi_build_update`
+调用位置在 `romfile_loader_execute` 中间的
+
+```
+[rom : kvmvapic.bin]
+[rom : linuxboot_dma.bin]
+[rom : /home/maritns3/core/seabios/out/bios.bin]
+[rom : etc/acpi/tables]
+[rom : etc/table-loader]
+[rom : etc/acpi/rsdp]
+```
+下面三个都是在 `acpi_setup` 中初始化的，通过函数 `acpi_add_rom_blob`
+
+- acpi_add_rom_blob
+  - rom_add_blob
+    - fw_cfg_add_file_callback
+      - ...(多次调用，跟踪 acpi_build_update 的传递)  fw_cfg_add_bytes_callback 中注册这个函数指针
+  
+- [ ] 暂时搞不清楚了，只是知道在 fw_cfg 的 dma select 的时候最后会调用
+
+#### [ ] 看懂 dsdt.dsl
+- [ ] Notify 和 hotplug
 
 ## qemu_detect
 在 qemu_detect 中，通过检测 host bridge, 可以发现判断当前在 qemu 中间运行。

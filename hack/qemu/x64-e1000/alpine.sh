@@ -65,6 +65,7 @@ if [ $DEBUG_QEMU = true ]; then
 		-append "root=/dev/sda3" \
 		-smp 2 \
 		-vga virtio \
+		-chardev file,path=/tmp/seabios.log,id=seabios -device isa-debugcon,iobase=0x402,chardev=seabios -bios /home/maritns3/core/seabios/out/bios.bin \
 		-device nvme,drive=nvme0,serial=foo -drive file=${ext4_img1},format=raw,if=none,id=nvme0
 
 	exit 0
@@ -104,8 +105,7 @@ ${qemu} \
 	-vga virtio \
 	-cpu host \
 	-monitor stdio \
-	-chardev file,path=/tmp/seabios.log,id=seabios -device isa-debugcon,iobase=0x402,chardev=seabios \
-	-bios /home/maritns3/core/seabios/out/bios.bin \
+	-chardev file,path=/tmp/seabios.log,id=seabios -device isa-debugcon,iobase=0x402,chardev=seabios -bios /home/maritns3/core/seabios/out/bios.bin \
 	-device nvme,drive=nvme0,serial=foo -drive file=${ext4_img1},format=raw,if=none,id=nvme0 \
 	-virtfs local,path="${share_dir}",mount_tag=host0,security_model=mapped,id=host0
 
