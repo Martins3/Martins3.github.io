@@ -288,6 +288,56 @@ pcibios_add_bus 就是 acpi_pci_add_bus，最后调用到 bios 的处理函数�
 
 ## 剩余的设备都是从 pci 向下探测的吗 ?
 
+## [ ] 中断路由是什么个东西
+```c
+[    0.535591] ACPI: PCI: Interrupt link LNKA configured for IRQ 10
+[    0.535956] ACPI: PCI: Interrupt link LNKB configured for IRQ 10
+[    0.536718] ACPI: PCI: Interrupt link LNKC configured for IRQ 11
+[    0.536945] ACPI: PCI: Interrupt link LNKD configured for IRQ 11
+[    0.537683] ACPI: PCI: Interrupt link LNKS configured for IRQ 9
+```
+
+```c
+[    0.764758] ACPI: \_SB_.LNKB: Enabled at IRQ 10
+```
+
+
+## [ ] hotplug 这的设备
+在 device_add 中可以检测到:
+
+```
+[    0.464903] huxueshi device: 'device:02': device_add
+[    0.465557] huxueshi device: 'device:03': device_add
+[    0.465896] huxueshi device: 'device:04': device_add
+[    0.466476] huxueshi device: 'device:05': device_add
+[    0.466896] huxueshi device: 'device:06': device_add
+[    0.467550] huxueshi device: 'device:07': device_add
+[    0.467903] huxueshi device: 'device:08': device_add
+[    0.468899] huxueshi device: 'device:09': device_add
+[    0.469488] huxueshi device: 'device:0a': device_add
+[    0.469896] huxueshi device: 'device:0b': device_add
+[    0.470479] huxueshi device: 'device:0c': device_add
+[    0.470896] huxueshi device: 'device:0d': device_add
+[    0.471478] huxueshi device: 'device:0e': device_add
+[    0.471917] huxueshi device: 'device:0f': device_add
+[    0.472602] huxueshi device: 'device:10': device_add
+[    0.472897] huxueshi device: 'device:11': device_add
+[    0.473480] huxueshi device: 'device:12': device_add
+[    0.473895] huxueshi device: 'device:13': device_add
+[    0.474464] huxueshi device: 'device:14': device_add
+[    0.474894] huxueshi device: 'device:15': device_add
+[    0.475509] huxueshi device: 'device:16': device_add
+[    0.475894] huxueshi device: 'device:17': device_add
+[    0.476463] huxueshi device: 'device:18': device_add
+[    0.476895] huxueshi device: 'device:19': device_add
+[    0.477463] huxueshi device: 'device:1a': device_add
+[    0.477895] huxueshi device: 'device:1b': device_add
+[    0.478507] huxueshi device: 'device:1c': device_add
+[    0.478897] huxueshi device: 'device:1d': device_add
+[    0.479536] huxueshi device: 'device:1e': device_add
+[    0.479895] huxueshi device: 'device:1f': device_add
+[    0.480464] huxueshi device: 'device:20': device_add
+```
 
 
 [^1]: https://blog.csdn.net/tiantao2012/article/details/73775993

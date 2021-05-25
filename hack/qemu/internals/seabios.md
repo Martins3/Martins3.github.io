@@ -264,11 +264,7 @@ parse_resource: small: 0x5 (len 3)
 #11 0x0000555555bb1e62 in qemu_init (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/vl.c:3611
 #12 0x000055555582b4bd in main (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/main.c:49
 ```
-原来是通过 isa 总线接入的.
-
-- [ ] 这就是让人更加的疑惑了，isa 不是接入到 pcie 上的，为什么需要 acpi 来探测啊 ?
-
-看看 KBD 是如何探测的啊!
+原来是通过 isa 总线将描述信息添加进去的。
 
 #### acpi_pm1_cnt_write
 当关机的时候:
