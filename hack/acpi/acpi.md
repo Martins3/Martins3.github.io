@@ -301,6 +301,7 @@ pcibios_add_bus 就是 acpi_pci_add_bus，最后调用到 bios 的处理函数�
 [    0.764758] ACPI: \_SB_.LNKB: Enabled at IRQ 10
 ```
 
+中断到底如何路由的?
 
 ## [ ] hotplug 这的设备
 在 device_add 中可以检测到:

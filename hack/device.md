@@ -57,6 +57,16 @@ And, this page will contains anything related device except pcie, mmio, pio, int
 
 - [ ] tlpi : chapter 62
 
+1. 阅读 /lib/modules(shell uname -a)/build 下的makefile 中间的内容
+  1. 包含的头文件有点不对 asm 下头文件似乎没有被包含下来
+  2. 应该不会指向glibc 的文件
+2. 修改Makefile　产生的文件放置到指定的文件夹中间去
+3. /dev 和 /proc/devices 两者的关系是什么
+4. 为什么ebbchar是没有 手动mknod 的操作, **显然**应该含有对应的操作
+
+6. 修改scull\_load 文件中间的内容
+7. klogd syslogd 
+
 ## Questions
 - echo "shit" > /dev/pts/3
   - 所以，pts 到底是说个啥，tmux / screen 如何利用
@@ -281,6 +291,11 @@ A platform is a pseudo bus usually used to tie lightweight devices integrated in
 
 
 ## device model
+- [ ]  [A fresh look at the kernel's device model](https://lwn.net/Articles/645810/)
+
+
+
+
 The simple idea is that the "devices" of the system show up in one single tree at /sys/devices. Devices of a common type have a "subsystem" symlink pointing back to the subsystem's directory. All devices of that subsystem are listed there.
 - /sys/devices is the single unified hierarchy of all devices, used to express parent/child relationships
 - /sys/{bus,class} is home of the subsystem, the grouping/listing of devices of this type, used to lookup devices by subsystem + name

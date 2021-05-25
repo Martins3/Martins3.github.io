@@ -915,8 +915,6 @@ so every file read function depends on copy_to_user eventually to copy data to u
 
 there is no doubt, find the evidence !
 
-#### () 
-
 #### (fs) 各种值得分析的文件系统
 d_tmpfile
 
