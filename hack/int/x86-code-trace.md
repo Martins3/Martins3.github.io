@@ -1,5 +1,12 @@
 # Trace x86 interrupt
 
+- [ ] msi 的测试和使用
+- [ ] 看看 pci 是怎么分配 irq 的吧!
+- [ ] 这些注册的时候，具体是注册到什么 irq domain 上了
+- [ ] vector_irq 实际上是一个 percpu 的，从 ioapic 如何部署到具体的 cpu 上
+
+- [ ] 目前知道的三个控制器，lapic, ioapic 和 msi 应该都是存在对应的 chip_operation 的才对啊
+
 ## /proc/interrupts
 ```
            CPU0       
@@ -36,9 +43,33 @@ MIS:          0
 PIN:          0   Posted-interrupt notification event
 NPI:          0   Nested posted-interrupt event
 PIW:          0   Posted-interrupt wakeup event
-
 ```
 
+## msi 
+根据 https://habr.com/ru/post/501660/ 告诉如何关闭 pci 的 msi，默认情况下，nvme 就是使用 msi 的
+
+https://www.kernel.org/doc/html/latest/PCI/msi-howto.html : 最详细的文档了
+
+- [ ] pcie 协议上是如何支持 msi 的
+- [ ] 应该 msi 应该是可以直接绕过 ioapic 的，msi 是 pcie 的基础功能，msi 功能是不能模拟的
+
+- [ ] pci_alloc_irq_vectors 申请 pci 的入口，为什么最后到达了 msi 的，看漏了其他的入口
+
+- [ ] msix_capability_init 需要配合关联的 pcie 手册看看了
+  
+
+从 /sys/devices/pci0000:00/0000.00.04.0/msi_irqs 看，分配了 24 25 26 三个
+
+pci_irq_vector : 获取 virq
+device::msi_list 中间获取 `msi_desc->irq`
+msix_setup_entries 创建了 msi_desc
+
+- nvme_reset_work
+  - nvme_pci_enable => x86_vector_alloc_irqs : 分配 irq_desc
+  - nvme_pci_configure_admin_queue => apic_update_vector : 设置 irq_desc
+
+- [ ] 键盘等各种 virq 其实是 acpi 决定的，那么，当 nvme 分配的 virq=24 是靠什么让
+CPU 知道当 24 号引脚拉高的时候是 msi 中断啊, 从原则上，这是物理决定的才对啊
 
 ## trigger
 ```c
@@ -95,9 +126,21 @@ DEFINE_PER_CPU(vector_irq_t, vector_irq) = {
 - [x] i8042 之类如何设置的
 - [x] nvme 如何设置的
 
-- [ ] 看看 pci 是怎么分配的吧！
+- [x] timer 是如何注册的 ?
+timer 的注册在很早的时候:
+```c
+/*
+>>> bt
+#0  setup_default_timer_irq () at arch/x86/kernel/time.c:70
+#1  hpet_time_init () at arch/x86/kernel/time.c:82
+#2  0xffffffff82b52cdb in x86_late_time_init () at arch/x86/kernel/time.c:94
+#3  0xffffffff82b4bfcb in start_kernel () at init/main.c:1051
+#4  0xffffffff81000107 in secondary_startup_64 () at arch/x86/kernel/head_64.S:283
+#5  0x0000000000000000 in ?? ()
+```
 
-1. acpi 注册过程
+
+#### acpi 注册过程
 ```c
 /*
 #0  apic_update_vector (irqd=irqd@entry=0xffff88810004e7c0, newvec=newvec@entry=33, newcpu=0) at arch/x86/kernel/apic/vector.c:134
@@ -129,7 +172,7 @@ or.c:252
 #24 0xffffffff810019b2 in ret_from_fork () at arch/x86/entry/entry_64.S:294
 #25 0x0000000000000000 in ?? ()
 ```
-2. floppy
+#### floppy
 ```c
 /*
 #0  apic_update_vector (irqd=irqd@entry=0xffff88810004e640, newvec=newvec@entry=34, newcpu=0) at arch/x86/kernel/apic/vector.c:134
@@ -155,7 +198,7 @@ or.c:252
 #20 0xffffffff810019b2 in ret_from_fork () at arch/x86/entry/entry_64.S:294
 #21 0x0000000000000000 in ?? ()
 ```
-3. ata_piix
+#### ata_piix
 ```c
 /*
 #0  apic_update_vector (irqd=irqd@entry=0xffff88810004ea40, newvec=newvec@entry=35, newcpu=0) at arch/x86/kernel/apic/vector.c:134
@@ -206,7 +249,7 @@ a/libata-sff.c:2395
 >>>
 ```
 
-4. nvme
+#### nvme
 ```c
 /*
 #0  apic_update_vector (irqd=irqd@entry=0xffff888101194000, newvec=newvec@entry=36, newcpu=0) at arch/x86/kernel/apic/vector.c:134
@@ -234,11 +277,11 @@ u_data>, dev_id=0xffff88810117ea00, fmt=fmt@entry=0xffffffff822b26fd "nvme%dq%d"
 #19 0x0000000000000000 in ?? ()
 ```
 
-
-5. i8042
+#### i8042
 ```c
 /*
->>> bt
+
+
 #0  apic_update_vector (irqd=irqd@entry=0xffff88810004e940, newvec=newvec@entry=39, newcpu=0) at arch/x86/kernel/apic/vector.c:134
 #1  0xffffffff810478f9 in assign_vector_locked (irqd=irqd@entry=0xffff88810004e940, dest=dest@entry=0xffffffff82c97540 <vector_searchmask>) at arch/x86/kernel/apic/vect
 or.c:252
@@ -282,9 +325,84 @@ c:1026
 #34 0xffffffff810019b2 in ret_from_fork () at arch/x86/entry/entry_64.S:294
 #35 0x0000000000000000 in ?? ()
 >>>
-```
 
-6. serial8250
+#0  apic_update_vector (irqd=irqd@entry=0xffff88810004e3c0, newvec=newvec@entry=40, newcpu=0) at arch/x86/kernel/apic/vector.c:134
+#1  0xffffffff810478f9 in assign_vector_locked (irqd=irqd@entry=0xffff88810004e3c0, dest=dest@entry=0xffffffff82c97540 <vector_searchmask>) at arch/x86/kernel/apic/vect
+or.c:252
+#2  0xffffffff81047b0b in assign_irq_vector_any_locked (irqd=0xffff88810004e3c0) at arch/x86/kernel/apic/vector.c:279
+#3  0xffffffff81047f17 in activate_reserved (irqd=0xffff88810004e3c0) at arch/x86/kernel/apic/vector.c:393
+#4  x86_vector_activate (dom=<optimized out>, irqd=0xffff88810004e3c0, reserve=<optimized out>) at arch/x86/kernel/apic/vector.c:462
+#5  0xffffffff810c07ee in __irq_domain_activate_irq (irqd=0xffff88810004e3c0, reserve=reserve@entry=false) at kernel/irq/irqdomain.c:1718
+#6  0xffffffff810c07cd in __irq_domain_activate_irq (irqd=irqd@entry=0xffff888100060a28, reserve=reserve@entry=false) at kernel/irq/irqdomain.c:1715 //
+#7  0xffffffff810c2350 in irq_domain_activate_irq (irq_data=irq_data@entry=0xffff888100060a28, reserve=reserve@entry=false) at kernel/irq/irqdomain.c:1741
+#8  0xffffffff810bf68b in irq_activate (desc=desc@entry=0xffff888100060a00) at kernel/irq/chip.c:291
+#9  0xffffffff810bcfd5 in __setup_irq (irq=irq@entry=1, desc=desc@entry=0xffff888100060a00, new=new@entry=0xffff888101168a00) at kernel/irq/manage.c:1678
+#10 0xffffffff810bd4e7 in request_threaded_irq (irq=1, handler=handler@entry=0xffffffff817d5980 <i8042_interrupt>, thread_fn=thread_fn@entry=0x0 <fixed_percpu_data>, ir
+qflags=irqflags@entry=128, devname=devname@entry=0xffffffff822cc2af "i8042", dev_id=<optimized out>) at kernel/irq/manage.c:2137
+#11 0xffffffff82b8bf53 in request_irq (dev=<optimized out>, name=0xffffffff822cc2af "i8042", flags=128, handler=0xffffffff817d5980 <i8042_interrupt>, irq=<optimized out
+>) at ./include/linux/interrupt.h:164
+#12 i8042_setup_kbd () at drivers/input/serio/i8042.c:1496
+#13 i8042_probe (dev=<optimized out>) at drivers/input/serio/i8042.c:1566
+#14 0xffffffff8168d61a in platform_probe (_dev=0xffff888101393410) at drivers/base/platform.c:1447
+#15 0xffffffff8168b446 in really_probe (dev=dev@entry=0xffff888101393410, drv=drv@entry=0xffffffff825e75e8 <i8042_driver+40>) at drivers/base/dd.c:576
+#16 0xffffffff8168b681 in driver_probe_device (drv=drv@entry=0xffffffff825e75e8 <i8042_driver+40>, dev=dev@entry=0xffff888101393410) at drivers/base/dd.c:763
+#17 0xffffffff8168b94e in device_driver_attach (drv=drv@entry=0xffffffff825e75e8 <i8042_driver+40>, dev=dev@entry=0xffff888101393410) at drivers/base/dd.c:1039
+#18 0xffffffff8168b9b0 in __driver_attach (dev=0xffff888101393410, data=0xffffffff825e75e8 <i8042_driver+40>) at drivers/base/dd.c:1117
+#19 0xffffffff81689653 in bus_for_each_dev (bus=<optimized out>, start=start@entry=0x0 <fixed_percpu_data>, data=data@entry=0xffffffff825e75e8 <i8042_driver+40>, fn=fn@
+entry=0xffffffff8168b960 <__driver_attach>) at drivers/base/bus.c:305
+#20 0xffffffff8168ae35 in driver_attach (drv=drv@entry=0xffffffff825e75e8 <i8042_driver+40>) at drivers/base/dd.c:1133
+#21 0xffffffff8168a802 in bus_add_driver (drv=drv@entry=0xffffffff825e75e8 <i8042_driver+40>) at drivers/base/bus.c:622
+#22 0xffffffff8168c247 in driver_register (drv=drv@entry=0xffffffff825e75e8 <i8042_driver+40>) at drivers/base/driver.c:171
+#23 0xffffffff8168dbce in __platform_driver_register (owner=<optimized out>, drv=0xffffffff825e75c0 <i8042_driver>) at drivers/base/platform.c:894
+#24 __platform_driver_probe (drv=0xffffffff825e75c0 <i8042_driver>, probe=<optimized out>, module=<optimized out>) at drivers/base/platform.c:962
+#25 0xffffffff8168e06a in __platform_create_bundle (driver=driver@entry=0xffffffff825e75c0 <i8042_driver>, probe=probe@entry=0xffffffff82b8b983 <i8042_probe>, res=res@e
+ntry=0x0 <fixed_percpu_data>, n_res=n_res@entry=0, data=data@entry=0x0 <fixed_percpu_data>, size=size@entry=0, module=0x0 <fixed_percpu_data>) at drivers/base/platform.
+c:1026
+#26 0xffffffff82b8c44f in i8042_init () at drivers/input/serio/i8042.c:1629
+#27 0xffffffff81000def in do_one_initcall (fn=0xffffffff82b8c02c <i8042_init>) at init/main.c:1249
+#28 0xffffffff82b4c26b in do_initcall_level (command_line=0xffff888100123400 "root", level=6) at ./include/linux/compiler.h:234
+#29 do_initcalls () at init/main.c:1338
+#30 do_basic_setup () at init/main.c:1358
+#31 kernel_init_freeable () at init/main.c:1560
+#32 0xffffffff81b97a69 in kernel_init (unused=<optimized out>) at init/main.c:1447
+#33 0xffffffff810019b2 in ret_from_fork () at arch/x86/entry/entry_64.S:294
+#34 0x0000000000000000 in ?? ()
+```
+trace 的代码显示，在 i8042_setup_kbd 的时候，I8042_KBD_IRQ 已经设置为 2 了, 使用 gdb 调试，i8042_setup_kbd 可以正常返回
+
+但是，还是无法解释，为什么 apic_update_vector 没有被执行啊
+
+使用 gdb 仔细的调试，问题出现在 `__irq_domain_activate_irq`:
+```
+>>> p irqd
+$7 = (struct irq_data *) 0xffff888100060c28
+>>> p irqd->domain
+$8 = (struct irq_domain *) 0x0 <fixed_percpu_data>
+```
+而在 request_threaded_irq 分别测试修改 acpi 前后的表格，发现 2 号对应的 domain 是空的，而 1 号初始化号了
+
+```
+>>> p desc
+$1 = (struct irq_desc *) 0xffff888100060a00
+>>> p desc->irq_data
+$2 = {
+  mask = 0,
+  irq = 1,
+  hwirq = 1,
+  common = 0xffff888100060a00,
+  chip = 0xffffffff8267c6a0 <ioapic_chip>,
+  domain = 0xffff8881000fe000,
+  parent_data = 0xffff88810004e3c0,
+  chip_data = 0xffff88810005c2c0
+}
+```
+也就是，这个 irq 在很早的时候就已经初始化好了。
+
+在 i8042_pnp_kbd_probe 中会初始化 i8042_pnp_kbd_probe
+
+
+
+#### serial8250
 ```c
 /*
 #0  apic_update_vector (irqd=irqd@entry=0xffff88810004e540, newvec=newvec@entry=42, newcpu=0) at arch/x86/kernel/apic/vector.c:134
@@ -328,8 +446,21 @@ ta>) at fs/open.c:826
 #34 0xffffffff810019b2 in ret_from_fork () at arch/x86/entry/entry_64.S:294
 #35 0x0000000000000000 in ?? ()
 ```
+在 acpi 中间配置的 4，不会这么巧吧?
 
-7. e1000
+阅读 serial_isa_realizefn 的函数，修改 isa_serial_irq 数组中第一个数值从 4 到 5，在 guest 的 /proc/interrupts 中可以看到 serial 数值的确发生改变了
+
+在 serial_pnp_probe 中，初始化了这个中断号:
+
+
+但是 i8042 的 acpi 配置不能修改这些数值，否则键盘直接无法响应。
+- 仔细想想，这应该是 qemu 的原因吧, 因为是从 QEMU 中注入的中断号是一个错误的。
+  - 修改 aml 会导致键盘中断根本不会被注册
+
+- [ ] 让人尴尬的问题，实际上，serial8250_interrupt 也就是开始会被调用，然后就永久的沉默了，搞不清楚都是 serial 的使用过程。
+  - 怀疑这都是内核手动触发的, 比如在 serial8250_do_startup
+
+#### e1000
 ```c
 /*
 >>> bt
@@ -367,3 +498,135 @@ ocket.c:1039
 #27 0x0000000000000000 in ?? ()
 ```
 
+## pnp
+从这里面，其实可以非常清楚的 trace 在 acpi table 中 page walk 的时候，将这种资源添加进去的，其中包括中断号资源
+在 serial_pnp_probe 中，将这个中断号告知设备驱动，之后再去注册。
+```c
+/*
+>>> bt
+#0  pnp_add_resource (dev=dev@entry=0xffff888100322400, res=res@entry=0xffffc90000013c78) at drivers/pnp/resource.c:514
+#1  0xffffffff814af932 in pnpacpi_allocated_resource (res=0xffff88810033da40, data=0xffff888100322400) at drivers/pnp/pnpacpi/rsparser.c:177
+#2  0xffffffff81497cb0 in acpi_walk_resource_buffer (buffer=buffer@entry=0xffffc90000013d18, user_function=user_function@entry=0xffffffff814af8e0 <pnpacpi_allocated_res
+ource>, context=context@entry=0xffff888100322400) at drivers/acpi/acpica/rsxface.c:547
+#3  0xffffffff814980ce in acpi_walk_resources (context=0xffff888100322400, user_function=0xffffffff814af8e0 <pnpacpi_allocated_resource>, name=0xffffffff8225bf9f "_CRS"
+, device_handle=0xffff888100322400) at drivers/acpi/acpica/rsxface.c:623
+#4  acpi_walk_resources (device_handle=device_handle@entry=0xffff8881000f2780, name=name@entry=0xffffffff8225bf9f "_CRS", user_function=user_function@entry=0xffffffff81
+4af8e0 <pnpacpi_allocated_resource>, context=context@entry=0xffff888100322400) at drivers/acpi/acpica/rsxface.c:594
+#5  0xffffffff814afb90 in pnpacpi_parse_allocated_resource (dev=dev@entry=0xffff888100322400) at drivers/pnp/pnpacpi/rsparser.c:280
+#6  0xffffffff82b80ea4 in pnpacpi_add_device (device=0xffff8881001eb800) at drivers/pnp/pnpacpi/core.c:258
+#7  pnpacpi_add_device_handler (handle=<optimized out>, lvl=<optimized out>, context=<optimized out>, rv=<optimized out>) at drivers/pnp/pnpacpi/core.c:295
+#8  0xffffffff81493756 in acpi_ns_get_device_callback (return_value=0x0 <fixed_percpu_data>, context=0xffffc90000013e80, nesting_level=4, obj_handle=0xffff8881000f2780)
+ at drivers/acpi/acpica/nsxfeval.c:740
+#9  acpi_ns_get_device_callback (obj_handle=obj_handle@entry=0xffff8881000f2780, nesting_level=nesting_level@entry=4, context=context@entry=0xffffc90000013e80, return_v
+alue=return_value@entry=0x0 <fixed_percpu_data>) at drivers/acpi/acpica/nsxfeval.c:635
+#10 0xffffffff81492fe5 in acpi_ns_walk_namespace (type=type@entry=6, start_node=<optimized out>, start_node@entry=0xffffffffffffffff, max_depth=max_depth@entry=42949672
+95, flags=flags@entry=1, descending_callback=descending_callback@entry=0xffffffff814935e0 <acpi_ns_get_device_callback>, ascending_callback=ascending_callback@entry=0x0
+ <fixed_percpu_data>, context=0xffffc90000013e80, return_value=0x0 <fixed_percpu_data>) at drivers/acpi/acpica/nswalk.c:229
+#11 0xffffffff81493152 in acpi_get_devices (HID=HID@entry=0x0 <fixed_percpu_data>, user_function=user_function@entry=0xffffffff82b80d07 <pnpacpi_add_device_handler>, co
+ntext=context@entry=0x0 <fixed_percpu_data>, return_value=return_value@entry=0x0 <fixed_percpu_data>) at drivers/acpi/acpica/nsxfeval.c:805
+#12 0xffffffff82b80ce8 in pnpacpi_init () at drivers/pnp/pnpacpi/core.c:308
+#13 0xffffffff81000def in do_one_initcall (fn=0xffffffff82b80ca2 <pnpacpi_init>) at init/main.c:1249
+#14 0xffffffff82b4c26b in do_initcall_level (command_line=0xffff888100123400 "root", level=5) at ./include/linux/compiler.h:234
+#15 do_initcalls () at init/main.c:1338
+#16 do_basic_setup () at init/main.c:1358
+#17 kernel_init_freeable () at init/main.c:1560
+#18 0xffffffff81b97a69 in kernel_init (unused=<optimized out>) at init/main.c:1447
+#19 0xffffffff810019b2 in ret_from_fork () at arch/x86/entry/entry_64.S:294
+#20 0x0000000000000000 in ?? ()
+```
+
+键盘的中断号也是通过 pnp 来进行设置的：
+1. i8042_pnp_kbd_probe 会设置 i8042_pnp_kbd_irq
+2. i8042_pnp_init 用 i8042_pnp_kbd_probe 来设置 i8042_kbd_irq，然后会拿着这个数值去 request_irq
+
+## [ ] irq_desc_tree 和 vector_irq 的关系是什么
+
+#### irq domain 的结构
+1. 在 arch_early_irq_init 会初始化 16 个 irq_desc
+
+紧接着创建变量
+```c
+x86_vector_domain = irq_domain_create_tree(fn, &x86_vector_domain_ops, NULL);
+```
+
+- [ ] 前 16 是这个时候创建，之后的是怎么创建的?
+
+2. vector 在上，而 mp_ioapic_irqdomain_ops
+
+```c
+static const struct irq_domain_ops x86_vector_domain_ops = {
+	.select		= x86_vector_select,
+	.alloc		= x86_vector_alloc_irqs,
+	.free		= x86_vector_free_irqs,
+	.activate	= x86_vector_activate,
+	.deactivate	= x86_vector_deactivate,
+#ifdef CONFIG_GENERIC_IRQ_DEBUGFS
+	.debug_show	= x86_vector_debug_show,
+#endif
+};
+
+const struct irq_domain_ops mp_ioapic_irqdomain_ops = {
+	.alloc		= mp_irqdomain_alloc,
+	.free		= mp_irqdomain_free,
+	.activate	= mp_irqdomain_activate,
+	.deactivate	= mp_irqdomain_deactivate,
+};
+```
+x86_vector_domain_ops 和 mp_ioapic_irqdomain_ops 其实就是对应 lapic 和 ioapic:
+
+- mp_ioapic_irqdomain_ops
+  - mp_register_handler : 注册了 `__irq_set_handler`
+
+- [ ] 不知道为什么 mp_ioapic_irqdomain_ops 正好不会注册 2 号?
+  - [ ] 虽然 0 号 pin 没有连接上
+
+从 mp_register_handler 到达的：
+```c
+/*
+#0  x86_vector_alloc_irqs (domain=0xffff88810004d180, virq=1, nr_irqs=1, arg=0xffffffff82403df0) at arch/x86/kernel/apic/vector.c:533
+#1  0xffffffff8104a2f1 in mp_irqdomain_alloc (domain=0xffff8881000fe000, virq=1, nr_irqs=1, arg=0xffffffff82403df0) at arch/x86/kernel/apic/io_apic.c:3020
+#2  0xffffffff810c1c35 in irq_domain_alloc_irqs_hierarchy (arg=0xffffffff82403df0, nr_irqs=1, irq_base=1, domain=0xffff8881000fe000) at kernel/irq/irqdomain.c:1383
+#3  __irq_domain_alloc_irqs (domain=domain@entry=0xffff8881000fe000, irq_base=irq_base@entry=1, nr_irqs=nr_irqs@entry=1, node=node@entry=-1, arg=arg@entry=0xffffffff824
+03df0, realloc=realloc@entry=true, affinity=0x0 <fixed_percpu_data>) at kernel/irq/irqdomain.c:1439
+#4  0xffffffff8104922a in alloc_isa_irq_from_domain (domain=domain@entry=0xffff8881000fe000, irq=irq@entry=1, ioapic=ioapic@entry=0, info=info@entry=0xffffffff82403df0,
+ pin=1) at arch/x86/kernel/apic/io_apic.c:1008
+#5  0xffffffff81049f2a in mp_map_pin_to_irq (gsi=1, idx=<optimized out>, ioapic=<optimized out>, pin=pin@entry=1, flags=1, info=info@entry=0x0 <fixed_percpu_data>) at a
+rch/x86/kernel/apic/io_apic.c:1057
+#6  0xffffffff8104a0c9 in pin_2_irq (idx=<optimized out>, ioapic=ioapic@entry=0, pin=pin@entry=1, flags=flags@entry=1) at arch/x86/kernel/apic/io_apic.c:1103
+#7  0xffffffff82b5f326 in setup_IO_APIC_irqs () at arch/x86/kernel/apic/io_apic.c:1219
+#8  setup_IO_APIC () at arch/x86/kernel/apic/io_apic.c:2416
+#9  0xffffffff82b52ce4 in x86_late_time_init () at arch/x86/kernel/time.c:100
+#10 0xffffffff82b4bfcb in start_kernel () at init/main.c:1051
+#11 0xffffffff81000107 in secondary_startup_64 () at arch/x86/kernel/head_64.S:283
+#12 0x0000000000000000 in ?? ()
+*/
+```
+
+从 msi_domain_alloc 到达的 :
+```c
+/*
+#0  x86_vector_alloc_irqs (domain=0xffff88810004d180, virq=24, nr_irqs=1, arg=0xffffc90000043c18) at arch/x86/kernel/apic/vector.c:533
+#1  0xffffffff810c3982 in msi_domain_alloc (domain=0xffff88810004df00, virq=24, nr_irqs=1, arg=0xffffc90000043c18) at kernel/irq/msi.c:150
+#2  0xffffffff810c1c35 in irq_domain_alloc_irqs_hierarchy (arg=0xffffc90000043c18, nr_irqs=1, irq_base=24, domain=0xffff88810004df00) at kernel/irq/irqdomain.c:1383
+#3  __irq_domain_alloc_irqs (domain=domain@entry=0xffff88810004df00, irq_base=irq_base@entry=-1, nr_irqs=1, node=<optimized out>, arg=arg@entry=0xffffc90000043c18, real
+loc=realloc@entry=false, affinity=0x0 <fixed_percpu_data>) at kernel/irq/irqdomain.c:1439
+#4  0xffffffff810c3f88 in __msi_domain_alloc_irqs (domain=0xffff88810004df00, dev=0xffff8881002e08c0, nvec=<optimized out>) at ./include/linux/device.h:636
+#5  0xffffffff81448c44 in msix_capability_init (affd=<optimized out>, nvec=<optimized out>, entries=0x0 <fixed_percpu_data>, dev=0xffff8881002e0800) at drivers/pci/msi.
+c:788
+#6  __pci_enable_msix (flags=<optimized out>, affd=<optimized out>, nvec=<optimized out>, entries=0x0 <fixed_percpu_data>, dev=0xffff8881002e0800) at drivers/pci/msi.c:
+1003
+#7  __pci_enable_msix_range (flags=<optimized out>, affd=<optimized out>, maxvec=<optimized out>, minvec=<optimized out>, entries=<optimized out>, dev=<optimized out>)
+at drivers/pci/msi.c:1137
+#8  __pci_enable_msix_range (dev=0xffff8881002e0800, entries=0x0 <fixed_percpu_data>, minvec=<optimized out>, maxvec=<optimized out>, affd=<optimized out>, flags=<optim
+ized out>) at drivers/pci/msi.c:1117
+#9  0xffffffff81448e80 in pci_alloc_irq_vectors_affinity (dev=dev@entry=0xffff8881002e0800, min_vecs=min_vecs@entry=1, max_vecs=max_vecs@entry=1, flags=flags@entry=7, a
+ffd=affd@entry=0x0 <fixed_percpu_data>) at drivers/pci/msi.c:1206
+#10 0xffffffff816e2b5a in pci_alloc_irq_vectors (flags=7, max_vecs=1, min_vecs=1, dev=0xffff8881002e0800) at ./include/linux/pci.h:1824
+#11 nvme_pci_enable (dev=0xffff8881003f4000) at drivers/nvme/host/pci.c:2381
+#12 nvme_reset_work (work=0xffff8881003f46d0) at drivers/nvme/host/pci.c:2605
+#13 0xffffffff8107f9ef in process_one_work (worker=0xffff88810004d9c0, work=0xffff8881003f46d0) at kernel/workqueue.c:2275
+#14 0xffffffff8107fbc5 in worker_thread (__worker=0xffff88810004d9c0) at kernel/workqueue.c:2421
+#15 0xffffffff81086109 in kthread (_create=0xffff888100123040) at kernel/kthread.c:313
+#16 0xffffffff810019b2 in ret_from_fork () at arch/x86/entry/entry_64.S:294
+*/
+```

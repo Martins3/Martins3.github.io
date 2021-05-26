@@ -50,7 +50,7 @@ if [ ! -f "${disk_img}" ]; then
 		-hda ${disk_img} \
 		-enable-kvm \
 		-m 2G \
-		-smp 1
+		-smp 2
 
 	exit 0
 fi
@@ -79,7 +79,7 @@ if [ $DEBUG_KERNEL = true ]; then
 		-enable-kvm \
 		-kernel ${kernel} \
 		-append "root=/dev/sda3 nokaslr console=ttyS0" \
-		-smp 1 \
+		-smp 2 \
 		-vga virtio \
 		-cpu host \
 		-device nvme,drive=nvme0,serial=foo -drive file=${ext4_img1},format=raw,if=none,id=nvme0 \
@@ -101,7 +101,7 @@ ${qemu} \
 	-append "root=/dev/sda3 nokaslr console=ttyS0" \
 	-m 11G \
 	-enable-kvm \
-	-smp 1 \
+	-smp 2 \
 	-vga virtio \
 	-cpu host \
 	-monitor stdio \
