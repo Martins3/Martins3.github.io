@@ -99,7 +99,7 @@ ${qemu} \
 	-kernel ${kernel} \
 	-drive "file=${disk_img},format=qcow2" \
 	-append "root=/dev/sda3 nokaslr console=ttyS0" \
-	-m 11G \
+	-m 6G \
 	-enable-kvm \
 	-smp 2 \
 	-vga virtio \

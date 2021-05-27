@@ -266,33 +266,6 @@ parse_resource: small: 0x5 (len 3)
 ```
 原来是通过 isa 总线将描述信息添加进去的。
 
-#### acpi_pm1_cnt_write
-当关机的时候:
-```c
-/*
-#0  acpi_pm1_cnt_write (val=1, ar=0x555557b97d00) at ../hw/acpi/core.c:602
-#1  acpi_pm_cnt_write (opaque=0x555557b97d00, addr=0, val=1, width=2) at ../hw/acpi/core.c:602
-#2  0x0000555555b8d820 in memory_region_write_accessor (mr=mr@entry=0x555557b97f30, addr=0, value=value@entry=0x7fffd9ff90a8, size=size@entry=2, shift=<optimized out>,
-mask=mask@entry=65535, attrs=...) at ../softmmu/memory.c:491
-#3  0x0000555555b8c14e in access_with_adjusted_size (addr=addr@entry=0, value=value@entry=0x7fffd9ff90a8, size=size@entry=2, access_size_min=<optimized out>, access_siz
-e_max=<optimized out>, access_fn=access_fn@entry=0x555555b8d790 <memory_region_write_accessor>, mr=0x555557b97f30, attrs=...) at ../softmmu/memory.c:552
-#4  0x0000555555b8fca7 in memory_region_dispatch_write (mr=mr@entry=0x555557b97f30, addr=0, data=<optimized out>, op=<optimized out>, attrs=attrs@entry=...) at ../softm
-mu/memory.c:1502
-#5  0x0000555555bd70f0 in flatview_write_continue (fv=fv@entry=0x7ffdc4082740, addr=addr@entry=1540, attrs=..., ptr=ptr@entry=0x7fffeaf82000, len=len@entry=2, addr1=<op
-timized out>, l=<optimized out>, mr=0x555557b97f30) at /home/maritns3/core/kvmqemu/include/qemu/host-utils.h:164
-#6  0x0000555555bd7306 in flatview_write (fv=0x7ffdc4082740, addr=addr@entry=1540, attrs=attrs@entry=..., buf=buf@entry=0x7fffeaf82000, len=len@entry=2) at ../softmmu/p
-hysmem.c:2786
-#7  0x0000555555bd9fc6 in address_space_write (as=0x5555564e0ba0 <address_space_io>, addr=addr@entry=1540, attrs=..., buf=0x7fffeaf82000, len=len@entry=2) at ../softmmu
-/physmem.c:2878
-#8  0x0000555555bda05e in address_space_rw (as=<optimized out>, addr=addr@entry=1540, attrs=..., attrs@entry=..., buf=<optimized out>, len=len@entry=2, is_write=is_writ
-e@entry=true) at ../softmmu/physmem.c:2888
-#9  0x0000555555bb8899 in kvm_handle_io (count=1, size=2, direction=<optimized out>, data=<optimized out>, attrs=..., port=1540) at ../accel/kvm/kvm-all.c:2256
-#10 kvm_cpu_exec (cpu=cpu@entry=0x5555569c1d20) at ../accel/kvm/kvm-all.c:2507
-#11 0x0000555555b771e5 in kvm_vcpu_thread_fn (arg=arg@entry=0x5555569c1d20) at ../accel/kvm/kvm-accel-ops.c:49
-#12 0x0000555555d248e3 in qemu_thread_start (args=<optimized out>) at ../util/qemu-thread-posix.c:521
-#13 0x00007ffff6096609 in start_thread (arg=<optimized out>) at pthread_create.c:477
-#14 0x00007ffff5fbb293 in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
-```
 
 #### 在 Guest 中间 disassembly acpi
 参考 : https://01.org/linux-acpi/utilities

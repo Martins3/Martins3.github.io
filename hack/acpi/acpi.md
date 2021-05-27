@@ -48,10 +48,22 @@ However, ACPI may describe PCI devices if it provides power management or hotplu
 
 If the OS is expected to manage a non-discoverable device described via ACPI, that device will have a specific `_HID`/`_CID` that tells the OS what driver to bind to it, and the `_CRS` tells the OS and the driver where the device’s registers are.
 
+## [ACPI: Design Principles and Concerns](https://www.ssi.gouv.fr/uploads/IMG/pdf/article_acpi.pdf)
+> a userland service called acpid (ACPI daemon) that is functionally part of
+the OSPM. acpid is configured through a set of configuration files stored
+in the /etc/acpi directory, each of which specifying the expected system
+behavior when an ACPI “Notify” event for a particular device is received.
+For instance, the /etc/acpi/power file can be used to configure acpid so
+that whenever a power button event is received, the shutdown command is
+executed.
+
+在 /etc/acpi/PWRF/00000080 的一个脚本文件，只有一行 `poweroff`
+
+- 那么在 poweroff 如何实现的 ?
+  - [ ] 执行 /sbin/poweroff, 但是 /sbin/poweroff 无法被 strace 
+
 ## Official Documents
-
 ### [ ](https://uefi.org/specs/ACPI/6.4/06_Device_Configuration/Device_Configuration.html)
-
 
 
 https://lwn.net/Articles/367630/
@@ -74,7 +86,6 @@ https://lwn.net/Articles/367630/
 - https://github.com/acpica/acpica : acpi 框架的源代码 
 
 ## TODO
-
 - [ ] acpi 是如何提供给 os 的
 - [ ] acpi 表是如何构建起来的
 
@@ -105,8 +116,343 @@ acpi 的解析[^2]
 
 原来kernel中最终是通过acpi_evaluate_object 来调用bios中在asl中定义好的函数啊 [^1]
 
-uefi 提供了 ACPI 的文档
+## shutdown
 
+
+#### [ ] qemu 是如何组装 fadt 的
+
+- [ ] 内核是怎么知道 fadt 的地址的
+
+- acpi_build
+  - acpi_get_pm_info : 系统初始化的时候获取的信息
+  - build_dsdt
+  - build_fadt
+
+acpi_build 会进行两次
+
+#### [ ] i440fx-pm 为什么是一个 pci 设备
+```
+0000-0cf7 : PCI Bus 0000:00
+  0000-001f : dma1
+  0020-0021 : pic1
+  0040-0043 : timer0
+  0050-0053 : timer1
+  0060-0060 : keyboard
+  0064-0064 : keyboard
+  0070-0077 : rtc0
+  0080-008f : dma page reg
+  00a0-00a1 : pic2
+  00c0-00df : dma2
+  00f0-00ff : fpu
+  0170-0177 : 0000:00:01.1
+    0170-0177 : ata_piix
+  01f0-01f7 : 0000:00:01.1
+    01f0-01f7 : ata_piix
+  0376-0376 : 0000:00:01.1
+    0376-0376 : ata_piix
+  03c0-03df : vga+
+  03f2-03f2 : floppy
+  03f4-03f5 : floppy
+  03f6-03f6 : 0000:00:01.1
+    03f6-03f6 : ata_piix
+  03f7-03f7 : floppy
+  03f8-03ff : serial
+  0510-051b : QEMU0002:00
+  0600-063f : 0000:00:01.3
+    0600-0603 : ACPI PM1a_EVT_BLK
+    0604-0605 : ACPI PM1a_CNT_BLK
+    0608-060b : ACPI PM_TMR
+  0700-070f : 0000:00:01.3
+0cf8-0cff : PCI conf1
+0d00-ffff : PCI Bus 0000:00
+  afe0-afe3 : ACPI GPE0_BLK
+  c000-c03f : 0000:00:03.0
+    c000-c03f : e1000
+  c040-c05f : 0000:00:05.0
+  c060-c06f : 0000:00:01.1
+    c060-c06f : ata_piix
+```
+
+从 pci -vvv 中间部分截取的信息:
+```
+00:01.3 Bridge: Intel Corporation 82371AB/EB/MB PIIX4 ACPI (rev 03)
+	Subsystem: Red Hat, Inc. Qemu virtual machine
+	Control: I/O+ Mem+ BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR+ FastB2B- DisINTx-
+	Status: Cap- 66MHz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+	Interrupt: pin A routed to IRQ 9
+```
+
+#### 内核的触发过程
+
+acpi_pm1_cnt_write
+```c
+/*
+#0  acpi_pm1_cnt_write (val=1, ar=0x555557b97d00) at ../hw/acpi/core.c:602
+#1  acpi_pm_cnt_write (opaque=0x555557b97d00, addr=0, val=1, width=2) at ../hw/acpi/core.c:602
+#2  0x0000555555b8d820 in memory_region_write_accessor (mr=mr@entry=0x555557b97f30, addr=0, value=value@entry=0x7fffd9ff90a8, size=size@entry=2, shift=<optimized out>,
+```
+
+
+内核调用流程:
+- machine_power_off
+  - native_machine_power_off
+    - pm_power_off = sleep.c:acpi_power_off
+      - acpi_enter_sleep_state
+        - acpi_hw_legacy_sleep
+          - acpi_pm1_cnt_write : 第一次执行写入到 0x1
+          - acpi_pm1_cnt_write : 第二次执行写入 0x2001
+
+在 acpi_pm1_cnt_write 中正好需要处理 ACPI_BITMASK_SLEEP_ENABLE
+
+// acpi_hw_write 写入的地址正好是 604 啊
+```c
+/*
+#0  acpi_hw_write (value=1, reg=0xffffffff82d0114c <acpi_gbl_FADT+172>) at drivers/acpi/acpica/hwregs.c:291
+#1  0xffffffff8148e293 in acpi_hw_write_pm1_control (pm1a_control=<optimized out>, pm1b_control=pm1b_control@entry=1) at drivers/acpi/acpica/hwregs.c:462
+#2  0xffffffff8148e649 in acpi_hw_legacy_sleep (sleep_state=<optimized out>) at drivers/acpi/acpica/hwsleep.c:101
+#3  0xffffffff8108baa6 in __do_sys_reboot (magic1=-18751827, magic2=<optimized out>, cmd=1126301404, arg=0x0 <fixed_percpu_data>) at kernel/reboot.c:364
+#4  0xffffffff81b945d0 in do_syscall_64 (nr=<optimized out>, regs=0xffffc90002007f58) at arch/x86/entry/common.c:47
+#5  0xffffffff81c0007c in entry_SYSCALL_64 () at arch/x86/entry/entry_64.S:112
+```
+
+从内核中间找到的:
+```c
+struct acpi_table_fadt {
+	struct acpi_table_header header;	/* Common ACPI table header */
+	u32 facs;		/* 32-bit physical address of FACS */
+	u32 dsdt;		/* 32-bit physical address of DSDT */
+	u8 model;		/* System Interrupt Model (ACPI 1.0) - not used in ACPI 2.0+ */
+	u8 preferred_profile;	/* Conveys preferred power management profile to OSPM. */
+	u16 sci_interrupt;	/* System vector of SCI interrupt */
+	u32 smi_command;	/* 32-bit Port address of SMI command port */
+	u8 acpi_enable;		/* Value to write to SMI_CMD to enable ACPI */
+	u8 acpi_disable;	/* Value to write to SMI_CMD to disable ACPI */
+	u8 s4_bios_request;	/* Value to write to SMI_CMD to enter S4BIOS state */
+	u8 pstate_control;	/* Processor performance state control */
+	u32 pm1a_event_block;	/* 32-bit port address of Power Mgt 1a Event Reg Blk */
+	u32 pm1b_event_block;	/* 32-bit port address of Power Mgt 1b Event Reg Blk */
+	u32 pm1a_control_block;	/* 32-bit port address of Power Mgt 1a Control Reg Blk */
+	u32 pm1b_control_block;	/* 32-bit port address of Power Mgt 1b Control Reg Blk */
+	u32 pm2_control_block;	/* 32-bit port address of Power Mgt 2 Control Reg Blk */
+	u32 pm_timer_block;	/* 32-bit port address of Power Mgt Timer Ctrl Reg Blk */
+	u32 gpe0_block;		/* 32-bit port address of General Purpose Event 0 Reg Blk */
+	u32 gpe1_block;		/* 32-bit port address of General Purpose Event 1 Reg Blk */
+	u8 pm1_event_length;	/* Byte Length of ports at pm1x_event_block */
+	u8 pm1_control_length;	/* Byte Length of ports at pm1x_control_block */
+	u8 pm2_control_length;	/* Byte Length of ports at pm2_control_block */
+	u8 pm_timer_length;	/* Byte Length of ports at pm_timer_block */
+	u8 gpe0_block_length;	/* Byte Length of ports at gpe0_block */
+	u8 gpe1_block_length;	/* Byte Length of ports at gpe1_block */
+	u8 gpe1_base;		/* Offset in GPE number space where GPE1 events start */
+	u8 cst_control;		/* Support for the _CST object and C-States change notification */
+	u16 c2_latency;		/* Worst case HW latency to enter/exit C2 state */
+	u16 c3_latency;		/* Worst case HW latency to enter/exit C3 state */
+	u16 flush_size;		/* Processor memory cache line width, in bytes */
+	u16 flush_stride;	/* Number of flush strides that need to be read */
+	u8 duty_offset;		/* Processor duty cycle index in processor P_CNT reg */
+	u8 duty_width;		/* Processor duty cycle value bit width in P_CNT register */
+	u8 day_alarm;		/* Index to day-of-month alarm in RTC CMOS RAM */
+	u8 month_alarm;		/* Index to month-of-year alarm in RTC CMOS RAM */
+	u8 century;		/* Index to century in RTC CMOS RAM */
+	u16 boot_flags;		/* IA-PC Boot Architecture Flags (see below for individual flags) */
+	u8 reserved;		/* Reserved, must be zero */
+	u32 flags;		/* Miscellaneous flag bits (see below for individual flags) */
+	struct acpi_generic_address reset_register;	/* 64-bit address of the Reset register */
+	u8 reset_value;		/* Value to write to the reset_register port to reset the system */
+	u16 arm_boot_flags;	/* ARM-Specific Boot Flags (see below for individual flags) (ACPI 5.1) */
+	u8 minor_revision;	/* FADT Minor Revision (ACPI 5.1) */
+	u64 Xfacs;		/* 64-bit physical address of FACS */
+	u64 Xdsdt;		/* 64-bit physical address of DSDT */
+	struct acpi_generic_address xpm1a_event_block;	/* 64-bit Extended Power Mgt 1a Event Reg Blk address */
+	struct acpi_generic_address xpm1b_event_block;	/* 64-bit Extended Power Mgt 1b Event Reg Blk address */
+	struct acpi_generic_address xpm1a_control_block;	/* 64-bit Extended Power Mgt 1a Control Reg Blk address */
+	struct acpi_generic_address xpm1b_control_block;	/* 64-bit Extended Power Mgt 1b Control Reg Blk address */
+	struct acpi_generic_address xpm2_control_block;	/* 64-bit Extended Power Mgt 2 Control Reg Blk address */
+	struct acpi_generic_address xpm_timer_block;	/* 64-bit Extended Power Mgt Timer Ctrl Reg Blk address */
+	struct acpi_generic_address xgpe0_block;	/* 64-bit Extended General Purpose Event 0 Reg Blk address */
+	struct acpi_generic_address xgpe1_block;	/* 64-bit Extended General Purpose Event 1 Reg Blk address */
+	struct acpi_generic_address sleep_control;	/* 64-bit Sleep Control register (ACPI 5.0) */
+	struct acpi_generic_address sleep_status;	/* 64-bit Sleep Status register (ACPI 5.0) */
+	u64 hypervisor_id;	/* Hypervisor Vendor ID (ACPI 6.0) */
+};
+```
+
+```
+>>> p acpi_gbl_FADT
+$3 = {
+  header = {
+    signature = "FACP",
+    length = 276,
+    revision = 1 '\001',
+    checksum = 129 '\201',
+    oem_id = "BOCHS ",
+    oem_table_id = "BXPC    ",
+    oem_revision = 1,
+    asl_compiler_id = "BXPC",
+    asl_compiler_revision = 1
+  },
+  facs = 3221094400,
+  dsdt = 3221094464,
+  model = 1 '\001',
+  preferred_profile = 0 '\000',
+  sci_interrupt = 9,
+  smi_command = 178,
+  acpi_enable = 241 '\361',
+  acpi_disable = 240 '\360',
+  s4_bios_request = 0 '\000',
+  pstate_control = 0 '\000',
+  pm1a_event_block = 1536,
+  pm1b_event_block = 0,
+  pm1a_control_block = 1540,
+  pm1b_control_block = 0,
+  pm2_control_block = 0,
+  pm_timer_block = 1544,
+  gpe0_block = 45024,
+  gpe1_block = 0,
+  pm1_event_length = 4 '\004',
+  pm1_control_length = 2 '\002',
+  pm2_control_length = 0 '\000',
+  pm_timer_length = 4 '\004',
+  gpe0_block_length = 4 '\004',
+  gpe1_block_length = 0 '\000',
+  gpe1_base = 0 '\000',
+  cst_control = 0 '\000',
+  c2_latency = 4095,
+  c3_latency = 4095,
+  flush_size = 0,
+  flush_stride = 0,
+  duty_offset = 0 '\000',
+  duty_width = 0 '\000',
+  day_alarm = 0 '\000',
+  month_alarm = 0 '\000',
+  century = 50 '2',
+  boot_flags = 0,
+  reserved = 0 '\000',
+  flags = 32933,
+  reset_register = {
+    space_id = 0 '\000',
+    bit_width = 0 '\000',
+    bit_offset = 0 '\000',
+    access_width = 0 '\000',
+    address = 0
+  },
+  reset_value = 0 '\000',
+  arm_boot_flags = 0,
+  minor_revision = 0 '\000',
+  Xfacs = 0,
+  Xdsdt = 3221094464,
+  xpm1a_event_block = {
+    space_id = 1 '\001',
+    bit_width = 32 ' ',
+    bit_offset = 0 '\000',
+    access_width = 0 '\000',
+    address = 1536 // 0x600
+  },
+  xpm1b_event_block = {
+    space_id = 0 '\000',
+    bit_width = 0 '\000',
+    bit_offset = 0 '\000',
+    access_width = 0 '\000',
+    address = 0
+  },
+  xpm1a_control_block = {
+    space_id = 1 '\001',
+    bit_width = 16 '\020',
+    bit_offset = 0 '\000',
+    access_width = 0 '\000',
+    address = 1540 // 0x604
+  },
+  xpm1b_control_block = {
+    space_id = 0 '\000',
+    bit_width = 0 '\000',
+    bit_offset = 0 '\000',
+    access_width = 0 '\000',
+    address = 0
+  },
+  xpm2_control_block = {
+    space_id = 0 '\000',
+    bit_width = 0 '\000',
+    bit_offset = 0 '\000',
+    access_width = 0 '\000',
+    address = 0
+  },
+  xpm_timer_block = {
+    space_id = 1 '\001',
+    bit_width = 32 ' ',
+    bit_offset = 0 '\000',
+    access_width = 0 '\000',
+    address = 1544
+  },
+  xgpe0_block = {
+    space_id = 1 '\001',
+    bit_width = 32 ' ',
+    bit_offset = 0 '\000',
+    access_width = 0 '\000',
+    address = 45024
+  },
+  xgpe1_block = {
+    space_id = 0 '\000',
+    bit_width = 0 '\000',
+    bit_offset = 0 '\000',
+    access_width = 0 '\000',
+    address = 0
+  },
+  sleep_control = {
+    space_id = 0 '\000',
+    bit_width = 0 '\000',
+    bit_offset = 0 '\000',
+    access_width = 0 '\000',
+    address = 0
+  },
+  sleep_status = {
+    space_id = 0 '\000',
+    bit_width = 0 '\000',
+    bit_offset = 0 '\000',
+    access_width = 0 '\000',
+    address = 0
+  },
+  hypervisor_id = 0
+}
+>>>
+```
+
+
+
+
+## acpi in address space
+```
+    0000000000000600-000000000000063f (prio 0, i/o): piix4-pm
+      0000000000000600-0000000000000603 (prio 0, i/o): acpi-evt
+      0000000000000604-0000000000000605 (prio 0, i/o): acpi-cnt
+      0000000000000608-000000000000060b (prio 0, i/o): acpi-tmr
+    0000000000000700-000000000000073f (prio 0, i/o): pm-smbus
+    0000000000000cf8-0000000000000cfb (prio 0, i/o): pci-conf-idx
+    0000000000000cf9-0000000000000cf9 (prio 1, i/o): piix3-reset-control
+    0000000000000cfc-0000000000000cff (prio 0, i/o): pci-conf-data
+    0000000000005658-0000000000005658 (prio 0, i/o): vmport
+    000000000000ae00-000000000000ae17 (prio 0, i/o): acpi-pci-hotplug
+    000000000000af00-000000000000af0b (prio 0, i/o): acpi-cpu-hotplug
+    000000000000afe0-000000000000afe3 (prio 0, i/o): acpi-gpe0
+```
+下面三个设备在 acpi 中间存在对应的配置的
+
+seabios.md 中的部分内容
+```
+    PHPR, hid, sta (0x8), crs
+        i/o 0xae00 -> 0xae17  // acpi-pci-hotplug
+    GPE0, hid, sta (0x8), crs // acpi-gpe0
+        i/o 0xafe0 -> 0xafe3
+    \_SB.CPUS, hid
+    \_SB.PCI0.PRES, hid, crs // acpi-cpu-hotplug
+        i/o 0xaf00 -> 0xaf0b
+```
+
+- [x] piix4-pm 的子空间什么时候定义的
+  - piix4_pm_realize : 以及几个子空间
+
+## [ ] Notify
+
+## [ ] 从 acpi 的 scan 到 pci 的 scan
 acpi 是内核上的设计
 
 

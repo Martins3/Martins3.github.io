@@ -20,8 +20,8 @@ make
 为了生成的 compile_commands.json 可以正常使用，--target-list 最好不要同时支持多个，否则会出现一些诡异的问题。
 
 编译一个仅仅支持 kvm 的代码:
-```c
-../configure --target-list=x86_64-softmmu  --disable-werror
+```
+../configure --target-list=x86_64-softmmu  --disable-werror --enable-debug
 ```
 
 编译 --disable-werror 目前是必须的, 很难受

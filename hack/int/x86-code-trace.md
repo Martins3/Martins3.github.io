@@ -50,15 +50,40 @@ PIW:          0   Posted-interrupt wakeup event
 
 https://www.kernel.org/doc/html/latest/PCI/msi-howto.html : 最详细的文档了
 
-- [ ] pcie 协议上是如何支持 msi 的
 - [ ] 应该 msi 应该是可以直接绕过 ioapic 的，msi 是 pcie 的基础功能，msi 功能是不能模拟的
 
 - [ ] pci_alloc_irq_vectors 申请 pci 的入口，为什么最后到达了 msi 的，看漏了其他的入口
 
-- [ ] msix_capability_init 需要配合关联的 pcie 手册看看了
-  
+- [ ] 键盘等各种 virq 其实是 acpi 决定的，那么，当 nvme 分配的 virq=24 是靠什么让
+CPU 知道当 24 号引脚拉高的时候是 msi 中断啊, 从原则上，这是物理决定的才对啊
+  - 应该是就是 cpu 了
+  - [ ] 感觉已经话费了很长时间了，但是 `__irq_msi_compose_msg` 写入的数据和实际上想想不一样
+- [ ] 当 msi disable 掉，那么 nvme 设备如何通过 pci bridge 实现中断通知
+
+
+- msix_capability_init : 狮子书 P130
+  - msix_map_region : 获取 table 的位置
+  - msix_setup_entries : 初始化 msix_entry
+    - `list_add_tail(&entry->list, dev_to_msi_list(&dev->dev));` : 将新创建的 msix_entry 加入到 entry 中间
+  - pci_msi_setup_msi_irqs
+  - msi_domain_alloc_irqs
+    - `ops->domain_alloc_irqs` => `__msi_domain_alloc_irqs`
+      - irq_domain_alloc_descs : 分配 desc ，其实已经确定了 virq 了
+      - irq_domain_activate_irq
+        - `__irq_domain_activate_irq`
+          - `__irq_domain_activate_irq(irqd->parent_data, reserve)` : 会将 parent 调用一下，也就是 vector
+            - x86_vector_activate
+          - msi_domain_activate
+            - `data->chip->irq_write_msi_msg` 的注册者真不少，但是测试显示只有从 nvme 的路径下 pci_msi_domain_write_msg 被调用而已
+              - irq_chip_compose_msi_msg
+                - irq_chip_compose_msi_msg
+                  - `__irq_msi_compose_msg`
+              - pci_msi_domain_write_msg
+      - arch_setup_msi_irqs : 这是一个空函数
+  - msix_program_entries
 
 从 /sys/devices/pci0000:00/0000.00.04.0/msi_irqs 看，分配了 24 25 26 三个
+
 
 pci_irq_vector : 获取 virq
 device::msi_list 中间获取 `msi_desc->irq`
@@ -68,8 +93,49 @@ msix_setup_entries 创建了 msi_desc
   - nvme_pci_enable => x86_vector_alloc_irqs : 分配 irq_desc
   - nvme_pci_configure_admin_queue => apic_update_vector : 设置 irq_desc
 
-- [ ] 键盘等各种 virq 其实是 acpi 决定的，那么，当 nvme 分配的 virq=24 是靠什么让
-CPU 知道当 24 号引脚拉高的时候是 msi 中断啊, 从原则上，这是物理决定的才对啊
+- [ ] msi 还是可以设置 cpu affinity 的
+  - [ ] 显示是必须的，因为是直接注入到具体的 cpu 的 lapic 中间的，但是
+  - [ ] ioapic 应该也是存在这个问题
+
+
+
+```c
+/**
+ * msi_msg - Representation of a MSI message
+ * @address_lo:		Low 32 bits of msi message address
+ * @arch_addrlo:	Architecture specific shadow of @address_lo
+ * @address_hi:		High 32 bits of msi message address
+ *			(only used when device supports it)
+ * @arch_addrhi:	Architecture specific shadow of @address_hi
+ * @data:		MSI message data (usually 16 bits)
+ * @arch_data:		Architecture specific shadow of @data
+ */
+struct msi_msg {
+	union {
+		u32			address_lo;
+		arch_msi_msg_addr_lo_t	arch_addr_lo;
+	};
+	union {
+		u32			address_hi;
+		arch_msi_msg_addr_hi_t	arch_addr_hi;
+	};
+	union {
+		u32			data;
+		arch_msi_msg_data_t	arch_data;
+	};
+};
+```
+
+[MSI 重点参考](https://www.programmersought.com/article/61643546638/)
+
+```
+➜  vn git:(master) ✗ sudo cat /proc/iomem | grep apic -i
+[sudo] password for maritns3:
+  fec00000-fec003ff : IOAPIC 0
+fee00000-fee00fff : Local APIC
+```
+`__irq_msi_compose_msg` 中间组装的 Message Address 就正好是 fee00000
+
 
 ## trigger
 ```c
@@ -280,8 +346,6 @@ u_data>, dev_id=0xffff88810117ea00, fmt=fmt@entry=0xffffffff822b26fd "nvme%dq%d"
 #### i8042
 ```c
 /*
-
-
 #0  apic_update_vector (irqd=irqd@entry=0xffff88810004e940, newvec=newvec@entry=39, newcpu=0) at arch/x86/kernel/apic/vector.c:134
 #1  0xffffffff810478f9 in assign_vector_locked (irqd=irqd@entry=0xffff88810004e940, dest=dest@entry=0xffffffff82c97540 <vector_searchmask>) at arch/x86/kernel/apic/vect
 or.c:252
