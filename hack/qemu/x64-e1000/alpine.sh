@@ -62,8 +62,10 @@ if [ $DEBUG_QEMU = true ]; then
 		-m 8G \
 		-enable-kvm \
 		-kernel ${kernel} \
-		-append "root=/dev/sda3" \
+		-append "root=/dev/sda3 nokaslr" \
 		-smp 2 \
+		-cpu host \
+		-monitor stdio \
 		-vga virtio \
 		-chardev file,path=/tmp/seabios.log,id=seabios -device isa-debugcon,iobase=0x402,chardev=seabios -bios /home/maritns3/core/seabios/out/bios.bin \
 		-device nvme,drive=nvme0,serial=foo -drive file=${ext4_img1},format=raw,if=none,id=nvme0
@@ -78,7 +80,7 @@ if [ $DEBUG_KERNEL = true ]; then
 		-m 8G \
 		-enable-kvm \
 		-kernel ${kernel} \
-		-append "root=/dev/sda3 nokaslr console=ttyS0" \
+		-append "root=/dev/sda3 nokaslr" \
 		-smp 2 \
 		-vga virtio \
 		-cpu host \
@@ -98,7 +100,7 @@ fi
 ${qemu} \
 	-kernel ${kernel} \
 	-drive "file=${disk_img},format=qcow2" \
-	-append "root=/dev/sda3 nokaslr console=ttyS0" \
+	-append "root=/dev/sda3 nokaslr" \
 	-m 6G \
 	-enable-kvm \
 	-smp 2 \

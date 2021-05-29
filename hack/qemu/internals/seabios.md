@@ -270,6 +270,12 @@ parse_resource: small: 0x5 (len 3)
 #### 在 Guest 中间 disassembly acpi
 参考 : https://01.org/linux-acpi/utilities
 
+```
+$ acpidump > acpidump.out
+$ acpixtract -a acpidump.out
+$ iasl -d TABLE.dat   
+```
+
 #### [ ] 为什么在 seabios 中间会调用 `acpi_build_update`
 调用位置在 `romfile_loader_execute` 中间的
 

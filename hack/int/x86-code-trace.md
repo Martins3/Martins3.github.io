@@ -1,10 +1,6 @@
 # Trace x86 interrupt
 
-- [ ] msi 的测试和使用
-- [ ] 看看 pci 是怎么分配 irq 的吧!
-- [ ] 这些注册的时候，具体是注册到什么 irq domain 上了
 - [ ] vector_irq 实际上是一个 percpu 的，从 ioapic 如何部署到具体的 cpu 上
-
 - [ ] 目前知道的三个控制器，lapic, ioapic 和 msi 应该都是存在对应的 chip_operation 的才对啊
 
 ## /proc/interrupts

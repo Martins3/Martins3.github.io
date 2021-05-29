@@ -118,19 +118,20 @@ acpi 的解析[^2]
 
 ## shutdown
 
-
 #### [ ] qemu 是如何组装 fadt 的
-
-- [ ] 内核是怎么知道 fadt 的地址的
-
 - acpi_build
   - acpi_get_pm_info : 系统初始化的时候获取的信息
   - build_dsdt
   - build_fadt
 
-acpi_build 会进行两次
+acpi_build 会进行两次配置
 
-#### [ ] i440fx-pm 为什么是一个 pci 设备
+- [ ] seabios 什么时候触发第二次 acpi_build 的
+- [ ] 真实的机器上怎么可能发生动态分配 fadt 的事情啊
+
+- [ ] 既然 i440fx 已经是一个 pcie 设备了，为什么需要将自己的端口通过 acpi 提供出去
+
+#### i440fx-pm 配置 acpi-evt 的端口
 ```
 0000-0cf7 : PCI Bus 0000:00
   0000-001f : dma1
@@ -181,8 +182,81 @@ acpi_build 会进行两次
 	Status: Cap- 66MHz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
 	Interrupt: pin A routed to IRQ 9
 ```
+注意其实这个是  apci 普通的设备.
 
-#### 内核的触发过程
+- [ ] 从 acpi 到 pci 的配置空间 ?
+
+
+```c
+/*
+>>> bt
+#0  pm_io_space_update (s=0x40) at ../hw/acpi/piix4.c:129
+#1  0x0000555555af6801 in pm_write_config (d=0x555557e57210, address=64, val=1537, len=4) at ../hw/acpi/piix4.c:161
+#2  0x0000555555932c1c in pci_host_config_write_common (pci_dev=0x555557e57210, addr=64, limit=256, val=1537, len=4) at ../hw/pci/pci_host.c:83
+#3  0x0000555555932d8b in pci_data_write (s=0x555556d53260, addr=2147486528, val=1537, len=4) at ../hw/pci/pci_host.c:120
+#4  0x0000555555932ec1 in pci_host_data_write (opaque=0x555556c3f960, addr=0, val=1537, len=4) at ../hw/pci/pci_host.c:167
+#5  0x0000555555c938c8 in memory_region_write_accessor (mr=0x555556c3fd70, addr=0, value=0x7fffe890ffe8, size=4, shift=0, mask=4294967295, attrs=...) at ../softmmu/memo
+```
+
+
+- 这里是 bios 的 log
+```c
+/*
+=== PCI new allocation pass #2 ===
+PCI: IO: c000 - c04f
+PCI: 32: 00000000c0000000 - 00000000fec00000                                               ---> pci_bios_map_devices
+PCI: map device bdf=00:03.0  bar 1, addr 0000c000, size 00000040 [io]
+PCI: map device bdf=00:01.1  bar 4, addr 0000c040, size 00000010 [io]
+PCI: map device bdf=00:03.0  bar 6, addr feb80000, size 00040000 [mem]
+PCI: map device bdf=00:03.0  bar 0, addr febc0000, size 00020000 [mem]
+PCI: map device bdf=00:02.0  bar 6, addr febe0000, size 00010000 [mem]
+PCI: map device bdf=00:04.0  bar 0, addr febf0000, size 00004000 [mem]
+PCI: map device bdf=00:02.0  bar 4, addr febf4000, size 00001000 [mem]
+PCI: map device bdf=00:02.0  bar 0, addr fe000000, size 00800000 [prefmem]
+PCI: map device bdf=00:02.0  bar 2, addr fe800000, size 00004000 [prefmem]
+PCI: init bdf=00:00.0 id=8086:1237
+PCI: init bdf=00:01.0 id=8086:7000
+PIIX3/PIIX4 init: elcr=00 0c
+PCI: init bdf=00:01.1 id=8086:7010
+PCI: init bdf=00:01.3 id=8086:7113                                                        -----> pci_bios_init_device -> pci_init_device -> ids->func
+```
+在 seabios 中，硬编码了一些
+```c
+static const struct pci_device_id pci_device_tbl[] = {
+    /* PIIX4 Power Management device (for ACPI) */
+    PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82371AB_3,
+               piix4_pm_setup),
+}
+
+/* PIIX4 Power Management device (for ACPI) */
+static void piix4_pm_setup(struct pci_device *pci, void *arg)
+{
+    PiixPmBDF = pci->bdf;
+    piix4_pm_config_setup(pci->bdf);
+
+    acpi_pm1a_cnt = acpi_pm_base + 0x04;
+    pmtimer_setup(acpi_pm_base + 0x08);
+}
+
+static void piix4_pm_config_setup(u16 bdf)
+{
+    // acpi sci is hardwired to 9
+    pci_config_writeb(bdf, PCI_INTERRUPT_LINE, 9);
+
+    // 此时 acpi_pm_base = 0x600
+    pci_config_writel(bdf, PIIX_PMBASE, acpi_pm_base | 1);                            ------> 40
+    pci_config_writeb(bdf, PIIX_PMREGMISC, 0x01); /* enable PM io space */            ------> 80
+    pci_config_writel(bdf, PIIX_SMBHSTBASE, (acpi_pm_base + 0x100) | 1);
+    pci_config_writeb(bdf, PIIX_SMBHSTCFG, 0x09); /* enable SMBus io space */         ------> 0xd2
+}
+```
+
+- [x] acpi_pm_base = 0x600 是怎么得到的?
+  - seabios 日志 : Moving pm_base to 0x600
+- [ ] piix4 的 pci 配置空间 : 0x40 / 0x80 都是个啥，为什么可以启动这个东西
+
+
+#### poweroff 内核的触发过程
 
 acpi_pm1_cnt_write
 ```c
@@ -628,13 +702,25 @@ pcibios_add_bus 就是 acpi_pci_add_bus，最后调用到 bios 的处理函数�
 ```
 其中 acpi_bus_attach 连续递归三次调用，那么说明 acpi 中的设备也是递归创建的。
 
-- [ ] e1000 之类的东西，需要放入到 acpi 中吗 ?
-- [ ] 那么至少 e1000 是需要放入的
-
+## qemu 如何知道 e1000 的中断号
 
 ## 剩余的设备都是从 pci 向下探测的吗 ?
 
-## [ ] 中断路由是什么个东西
+## 中断路由(routing) 是什么个东西
+在这个文档中间搜索 PIRQx ROUTE CONTROL REGISTERS,
+[PIRQx ROUTE CONTROL REGISTERS](https://composter.com.ua/documents/Intel_82371FB_%2082371SB.pdf)
+
+piix3 的 pci 配置空间 PIIX_PIRQCA 是这个设备的扩展功能:
+```c
+/* PIRQRC[A:D]: PIRQx Route Control Registers */
+#define PIIX_PIRQCA 0x60
+#define PIIX_PIRQCB 0x61
+#define PIIX_PIRQCC 0x62
+#define PIIX_PIRQCD 0x63
+```
+
+内核 acpi_pci_link_get_current 函数通过执行 `_CRS` 获取 link
+
 ```c
 [    0.535591] ACPI: PCI: Interrupt link LNKA configured for IRQ 10
 [    0.535956] ACPI: PCI: Interrupt link LNKB configured for IRQ 10
@@ -646,8 +732,94 @@ pcibios_add_bus 就是 acpi_pci_add_bus，最后调用到 bios 的处理函数�
 ```c
 [    0.764758] ACPI: \_SB_.LNKB: Enabled at IRQ 10
 ```
+上面的 Interrupt link LNKA 的 10 10 11 11 这四个数组就是完全受 seabios 的 pci_irqs 控制的
+```c
+/* host irqs corresponding to PCI irqs A-D */
+const u8 pci_irqs[4] = {
+    11, 11, 10, 10
+};
+```
+应该是处理 ISA Bridge 的
 
-中断到底如何路由的?
+
+这个人分析了类似的问题:
+https://gist.github.com/mcastelino/4acda7c2407f1c51e68f3f994d8ffc98
+
+## 网卡是一个什么东西
+
+- [x] 找到 qemu 中生成 link 的方法
+  - 在 acpi_build.c::build_link_dev 
+
+即使是修改了 dsdt 的内容，那么
+
+当然现在还存在一些小问题:
+- [ ] dmesg 是 LNKA / LNKB / LNKC 之类的，但是设备都是 pin A routed to
+- [ ] acpi 是静态的配置的，设备是动态添加的啊 
+
+参考资料:
+https://unix.stackexchange.com/questions/368926/what-does-this-mean-interrupt-pin-a-routed-to-irq-17
+
+- [ ] device 的 pci 的配置空间哪里记录了 lspci -vvv 中的 `Interrupt: pin A routed to IRQ 9`
+
+
+在 seabios 中初始化 pci_bios_init_device :
+```c
+static void pci_bios_init_device(struct pci_device *pci)
+{
+    dprintf(1, "PCI: init bdf=%pP id=%04x:%04x\n"
+            , pci, pci->vendor, pci->device);
+
+    /* map the interrupt */
+    u16 bdf = pci->bdf;
+    int pin = pci_config_readb(bdf, PCI_INTERRUPT_PIN);
+    if (pin != 0)
+        pci_config_writeb(bdf, PCI_INTERRUPT_LINE, pci_slot_get_irq(pci, pin));
+```
+- pin 等于 0, 比如 ISA bridge / IDE bridge
+- 存在 pin 的其余全部需要初始化
+
+- [ ] 应该修改了硬件才对，至少，从 qemu 的角度看，qemu 需要知道是那么中断才可以发送给 guest
+  - [ ] 比如说，nvme 驱动模拟传递完成数据之后，应该就是需要注入中断，让 guest 知道输入传输完成了, 怎么知道注入是 10, 11 之后的
+- [x] 当使用 nomsi 模式，这些 pci 设备都是使用 irq 10 和 11 应该一定是存在一个机制来确定到底是哪一个设备吧
+  - 应该是的，毕竟还可以从 pcie 设备中间读取自己是否触发中断啊
+
+存在 interrupt routing 的配置
+```c
+/* PIRQRC[A:D]: PIRQx Route Control Registers */
+#define PIIX_PIRQCA 0x60
+#define PIIX_PIRQCB 0x61
+#define PIIX_PIRQCC 0x62
+#define PIIX_PIRQCD 0x63
+```
+
+
+```c
+/* host irqs corresponding to PCI irqs A-D */
+const u8 pci_irqs[4] = {
+    10, 10, 11, 11
+};
+
+// Return the global irq number corresponding to a host bus device irq pin.
+static int piix_pci_slot_get_irq(struct pci_device *pci, int pin)
+{
+    int slot_addend = 0;
+
+    while (pci->parent != NULL) {
+        slot_addend += pci_bdf_to_dev(pci->bdf);
+        pci = pci->parent;
+    }
+    slot_addend += pci_bdf_to_dev(pci->bdf) - 1;
+    return pci_irqs[(pin - 1 + slot_addend) & 3];
+}
+```
+piix_pci_slot_get_irq 感觉这就是纯粹的物理编码规则而已啊，而 pci_irqs 是主板决定的。
+
+
+PCI_INTERRUPT_LINE : 发出去中断号
+PCI_INTERRUPT_PIN : 表示存在中断引脚可以发送中断
+
+但是 pcie 的东西是在其他的位置探测的:
+
 
 ## [ ] hotplug 这的设备
 在 device_add 中可以检测到:

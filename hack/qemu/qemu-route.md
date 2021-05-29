@@ -65,6 +65,9 @@ make
 - https://stefano-garzarella.github.io/posts/2019-08-23-qemu-linux-kernel-pvh/
   - 让内核不要被压缩, 根本不是一个东西
 
+## 调试 qemu
+https://wiki.qemu.org/Documentation/Debugging
+
 ## related project
 - [Unicorn](https://github.com/unicorn-engine/unicorn) is a lightweight, multi-platform, multi-architecture CPU emulator framework based on QEMU.
 
