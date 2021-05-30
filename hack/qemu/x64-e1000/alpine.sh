@@ -55,6 +55,7 @@ if [ ! -f "${disk_img}" ]; then
 	exit 0
 fi
 
+# pci=nomsi
 if [ $DEBUG_QEMU = true ]; then
 	echo "debug qemu"
 	gdb --args ${qemu} \

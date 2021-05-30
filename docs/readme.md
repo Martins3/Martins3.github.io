@@ -24,9 +24,7 @@
 
 ## Tips
 - [How to cross Great Fire Wall](./gfw.md)
-- [Learn Linux kernel](./learn-linux-kernel.md)
 - [shell 的一些经验之谈](./shell.md)
-- [计算机学习的一些经验之谈](./learn-cs.md)
 
 ## Loongson
 - [X86 上阅读 Loongarch 内核](./loongarch/ccls.md)

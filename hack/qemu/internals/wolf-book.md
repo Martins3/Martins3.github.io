@@ -10,6 +10,9 @@ qemu/capstone/ : https://github.com/aquynh/capstone
 - [ ] qemu/slirp : https://gitlab.freedesktop.org/slirp/libslirp 这个和普通的用户态网络库的关系是什么?
 
 - [ ] qemu/stubs : 这个暂时搞不懂是什么意思 
+
+- [ ] 可以通过 kernel-irqchip 来决定 irqchip 被谁模拟
+
 ## chapter2
 
 ### glib
@@ -105,6 +108,19 @@ void module_call_init(module_init_type type)
 
 ## chapter 3 主板和固件模拟
 > 草稿放到 qboot.md 和 kernel-img.md 中
+
+## chapter 6
+
+#### 6.2.2 PIC 中断模拟
+- kvm_irqchip_create
+
+kvm 模块在处理
+KVM_CREATE_IRQCHIP
+的时候，会调用
+1. kvm_create_pic
+2. kvm_ioapic_init
+3. kvm_steup_default_irq_routing
+
 
 ## chapter 7 : 设备虚拟化
 

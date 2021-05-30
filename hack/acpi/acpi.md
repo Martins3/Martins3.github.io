@@ -702,13 +702,13 @@ pcibios_add_bus 就是 acpi_pci_add_bus，最后调用到 bios 的处理函数�
 ```
 其中 acpi_bus_attach 连续递归三次调用，那么说明 acpi 中的设备也是递归创建的。
 
-## qemu 如何知道 e1000 的中断号
-
-## 剩余的设备都是从 pci 向下探测的吗 ?
-
 ## 中断路由(routing) 是什么个东西
 在这个文档中间搜索 PIRQx ROUTE CONTROL REGISTERS,
 [PIRQx ROUTE CONTROL REGISTERS](https://composter.com.ua/documents/Intel_82371FB_%2082371SB.pdf)
+> These registers control the routing of the PIRQ[A:D]# signals to the IRQ inputs of the interrupt controller.
+
+- [ ] 似乎是 piix3 控制着从 PIR 到达中断控制器之间的联系
+  - **https://habr.com/en/post/501912/** : 好了，还是 coreboot 三部曲
 
 piix3 的 pci 配置空间 PIIX_PIRQCA 是这个设备的扩展功能:
 ```c
