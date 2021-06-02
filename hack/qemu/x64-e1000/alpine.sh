@@ -99,9 +99,6 @@ if [ $RUN_GDB = true ]; then
 fi
 
 ${qemu} \
-	-kernel ${kernel} \
-	-drive "file=${disk_img},format=qcow2" \
-	-append "root=/dev/sda3 nokaslr" \
 	-m 6G \
 	-enable-kvm \
 	-smp 2 \

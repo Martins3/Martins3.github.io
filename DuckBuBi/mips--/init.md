@@ -112,15 +112,15 @@ of_setup_pch_irqs 挂载到 parent 靠 irq_find_matching_fwnode 实现
 ## 内核启动的逐步分析
 - arch/loongarch/kernel/head.S
   - 存储 fw 参数，初始化 kernel, 关键的寄存器初始化
-  - [ ] fw_arg0 为什么从汇编中可以直接访问
+  - [x] fw_arg0 为什么从汇编中可以直接访问，废话，这是全局变量啊
 - setup_arch
-  - 到目前为止，大多数函数都是空的
+  - *到目前为止，大多数函数都是空的*
   - [ ] setup_early_printk : 利用 serial8250 输出，easy
   - cpu_probe : cpuinfo_loongarch 的初始化, 记录一些信息
   - plat_early_init
     - setup_8250_early_printk_port
     - fw_init_cmdline : 利用 head.S 中的 fw_arg0 组装 kenrel cmdline
-    - [ ] prom_init_env : 初始化之后会用到的数值
+    - [ ] prom_init_env : 初始化众多关键数值
       - loongson_regaddr_set : 对于 prom 一些信息的初始化
       - list_find : 根据 fw 提供的参数, 解析信息, 初始化三个指针
         - parse_mem

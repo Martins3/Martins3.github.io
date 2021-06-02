@@ -1,0 +1,11 @@
+--2021-06-01 21:10:16--  https://xmake.io/shget.text
+Resolving xmake.io (xmake.io)... 76.223.126.88
+Connecting to xmake.io (xmake.io)|76.223.126.88|:443... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 292 [text/plain]
+Saving to: ‘STDOUT’
+
+-                                           0%[                                                                                      ]       0  --.-KB/s               -                                         100%[=====================================================================================>]     292  --.-KB/s    in 0s      
+
+2021-06-01 21:10:17 (17.8 MB/s) - written to stdout [292/292]
+

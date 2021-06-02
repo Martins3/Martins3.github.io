@@ -7,10 +7,7 @@ https://wiki.osdev.org/PCI_Express : 通过 ACPI 的配置，可以让 PCI 配�
 
 ## Ntoes
 - [ ] acpi_scan_add_handler
-
 - [ ] acpi_get_table 可以直接获取 acpi table 出来，所以，这些 table 是什么时候构建的 ?
-
-
 
 ## really probe
 
@@ -64,4 +61,3 @@ https://wiki.osdev.org/PCI_Express : 通过 ACPI 的配置，可以让 PCI 配�
 [    0.888537] [<90000000012d4ce0>] kernel_init_freeable+0x1f8/0x2b8
 [    0.888540] [<9000000000eda774>] kernel_init+0x10/0xf4
 ```
-

@@ -34,6 +34,14 @@ https://github.com/MichielDerhaeg/build-linux
 - https://github.com/troglobit/finit : Finit is a simple alternative to SysV init and systemd. 
 - https://github.com/krallin/tini : A tiny but valid init for containers
 
+## multiboot
+1. https://os.phil-opp.com/multiboot-kernel/
+  - https://stackoverflow.com/questions/45968876/byte-vs-long-vs-word-in-gas-assembly
+2. https://www.gnu.org/software/grub/manual/grub/html_node/multiboot.html#multiboot
+
+3. [multiboot specification](https://nongnu.askapache.com/grub/phcoder/multiboot.pdf)
+4. [how to create iso from multiboot](https://wiki.osdev.org/GRUB_2)
+
 ## rootfs 和 initramfs
 [^2] 关于如何利用 qemu 实现内核加速，非常遗憾，文档是非常不详细的
 

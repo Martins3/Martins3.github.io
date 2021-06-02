@@ -52,7 +52,7 @@ X86 上阅读 X86 内核的配置可以参考[我之前的文章](https://github
     "file": "/home/maritns3/core/loongson-dune/cross/block/partitions/msdos.c"
   }
 ```
-将其中 mips64el-loongson-linux-gcc 和 -mabi=94 替换掉 Loongarch 的内核 compile_commands.json 中对应的位置即可。
+将其中 mips64el-loongson-linux-gcc 和 -mabi=64 替换掉 Loongarch 的内核 compile_commands.json 中对应的位置即可。
 
 大功告成。
 
