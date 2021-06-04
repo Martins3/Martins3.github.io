@@ -114,7 +114,7 @@ of_setup_pch_irqs 挂载到 parent 靠 irq_find_matching_fwnode 实现
   - 存储 fw 参数，初始化 kernel, 关键的寄存器初始化
   - [x] fw_arg0 为什么从汇编中可以直接访问，废话，这是全局变量啊
 - setup_arch
-  - *到目前为止，大多数函数都是空的*
+  - 到目前为止，大多数函数都是空的
   - [ ] setup_early_printk : 利用 serial8250 输出，easy
   - cpu_probe : cpuinfo_loongarch 的初始化, 记录一些信息
   - plat_early_init
@@ -127,7 +127,7 @@ of_setup_pch_irqs 挂载到 parent 靠 irq_find_matching_fwnode 实现
         - parse_vbios
         - parse_screeninfo
       - memblock_and_maxpfn_init : 给 memblock 初始化物理内存
-    - [ ] parse_cmdline
+    - parse_cmdline : 进行参数解析
       - [ ] arch_mem_addpart : 物理内存会因为 `_text` 之类的符号地址而修改，为什么之前不去搞定
       - print_memory_map
       - parse_early_param
@@ -135,25 +135,25 @@ of_setup_pch_irqs 挂载到 parent 靠 irq_find_matching_fwnode 实现
           - [ ] parse_args : 应该是内核参数
     - init_initrd : 根据内核参数计算出来 initrd 的位置, 然后通过 finalize_initrd 在 memblock 中间预留空间
     - prom_init
-      - [ ] set_io_port_base : 这个不是硬件应该决定的吗? 还是说，硬件是这么决定，然后软件赢编码
+      - *set_io_port_base* : 这个不是硬件应该决定的吗? 还是说，硬件是这么决定，然后软件硬编码编码
       - efi_init
         - efi_config_init
         - [ ] efi_config_parse_tables : 解析出现什么，和 acpi 有什么关系
-      - [ ] acpi_table_upgrade
-        - [ ]  我们应该可以从 qemu 中找到 acpi 的描述
+      - acpi_table_upgrade : 利用 initrd 实现更新 acpi
       - acpi_boot_table_init : 和 acpi_boot_init 相同, 都在 arch/loongarch/kernel/acpi/boot.c
         - acpi_table_init
           - acpi_initialize_tables
-            - acpi_os_get_root_pointer : 应该是从 efi 的中获取的
-            - acpi_tb_parse_root_table : 获取了 table 就可以开始解析了
+            - acpi_os_get_root_pointer : 应该是从 efi 的中获取的, 从 /sys/firmware/efi/systab 中间可以知道采用是 acpi20 的
+            - acpi_tb_parse_root_table : 上一个函数获取了 rsdp, 从而解析到，具体内容在哪里我是不知道
               - acpi_tb_print_table_header : 这个对应最开始的一堆输出
                 - `[    0.000000] ACPI: RSDP 0x00000000FD2F4000 000024 (v02 LOONGS)`
-          - [ ] acpi_table_initrd_scan
+          - [x] acpi_table_initrd_scan
           - [ ] check_multiple_madt
       - [ ] acpi_boot_init : 这个函数似乎是很容易看懂的，因为马上就要进行中断初始化，所以需要从 acpi 中分析出来自己的中断是个什么情况，需要验证一下读去 pch pic 之类的情况
         - [ ] 初始化 arch_acpi_wakeup_start, 但是不知道是做什么用的
         - acpi_process_madt : MADT(Multiple APIC Description Table)
-          - acpi_parse_madt_lapic_entries : 进一步调用 acpi 的标准接口, 在 drivers/acpi/tables.c
+          - [ ] acpi_parse_madt_lapic_entries : 进一步调用 acpi 的标准接口, 在 drivers/acpi/tables.c
+            - 哪里™的有 lapic 啊，还是实际上说，这是 lpaic ?
           - acpi_parse_madt_pch_pic_entries
             - acpi_table_parse_madt : 调用过程中，会将 acpi_parse_pch_pic 作为参数, 后者进一步调用 register_pch_pic
       - register_pch_pic : 从 dmesg 看，acpi_boot_init 的调用路径下没有注册上 pic，这是唯一的调用位置

@@ -68,7 +68,7 @@ executed.
 
 https://lwn.net/Articles/367630/
 
-- [MADT](https://wiki.osdev.org/MADT)
+- [MADT](https://wiki.osdev.org/MADT) : (Multiple APIC Description Table
 - [HPET](https://wiki.osdev.org/HPET) : 
 - [RSDT](https://wiki.osdev.org/RSDT) : Root System Description Table
 - [RSDP](https://wiki.osdev.org/RSDP) : Root System Description Pointer

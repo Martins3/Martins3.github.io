@@ -100,7 +100,10 @@ fi
 
 ${qemu} \
 	-m 6G \
+	-drive "file=${disk_img},format=qcow2" \
 	-enable-kvm \
+	-kernel ${kernel} \
+	-append "root=/dev/sda3 nokaslr" \
 	-smp 2 \
 	-vga virtio \
 	-cpu host \
