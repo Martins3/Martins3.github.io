@@ -68,7 +68,7 @@ executed.
 
 https://lwn.net/Articles/367630/
 
-- [MADT](https://wiki.osdev.org/MADT) : (Multiple APIC Description Table
+- [MADT](https://wiki.osdev.org/MADT) : (Multiple APIC Description Tableacpi_ev_install_xrupt_handlers
 - [HPET](https://wiki.osdev.org/HPET) : 
 - [RSDT](https://wiki.osdev.org/RSDT) : Root System Description Table
 - [RSDP](https://wiki.osdev.org/RSDP) : Root System Description Pointer
@@ -115,6 +115,15 @@ https://lwn.net/Articles/367630/
 acpi 的解析[^2]
 
 原来kernel中最终是通过acpi_evaluate_object 来调用bios中在asl中定义好的函数啊 [^1]
+
+## 在 Guest 中间 disassembly acpi
+参考 : https://01.org/linux-acpi/utilities
+
+```
+$ acpidump > acpidump.out
+$ acpixtract -a acpidump.out
+$ iasl -d TABLE.dat   
+```
 
 ## shutdown
 
@@ -858,6 +867,28 @@ PCI_INTERRUPT_PIN : 表示存在中断引脚可以发送中断
 [    0.480464] huxueshi device: 'device:20': device_add
 ```
 
+## fadt : acpi event interrupt number
+
+acpi_table_fadt::sci_interrupt  提供了
+```c
+/*
+[    0.846127] Call Trace:
+[    0.846130] [<900000000020864c>] show_stack+0x2c/0x100
+[    0.846133] [<9000000000ec3968>] dump_stack+0x90/0xc0
+[    0.846136] [<900000000029f8e0>] irq_domain_set_mapping+0x90/0xb8
+[    0.846138] [<90000000002a0698>] __irq_domain_alloc_irqs+0x200/0x2e0
+[    0.846141] [<90000000002a0bf0>] irq_create_fwspec_mapping+0x258/0x368
+[    0.846143] [<900000000020f3d0>] acpi_register_gsi+0x70/0x100
+[    0.846145] [<900000000020f750>] acpi_gsi_to_irq+0x28/0x48
+[    0.846148] [<9000000000890044>] acpi_os_install_interrupt_handler+0x84/0x148
+[    0.846151] [<90000000008ac830>] acpi_ev_install_xrupt_handlers+0x24/0x98
+[    0.846155] [<90000000012f7a14>] acpi_init+0xc0/0x338
+[    0.846157] [<90000000002004fc>] do_one_initcall+0x6c/0x170
+[    0.846159] [<90000000012d4ce0>] kernel_init_freeable+0x1f8/0x2b8
+[    0.846162] [<9000000000eda774>] kernel_init+0x10/0xf4
+[    0.846164] [<9000000000203cc8>] ret_from_kernel_thread+0xc/0x10
+*/
+```
 
 [^1]: https://blog.csdn.net/tiantao2012/article/details/73775993
 [^2]: https://blog.csdn.net/woai110120130/article/details/93318611

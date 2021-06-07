@@ -40,7 +40,7 @@
 [    1.348730] irq: irq_domain_set_mapping 33 33
 ```
 
-```c
+```
 [    1.879533] Call Trace:
 [    1.879535] [<900000000020864c>] show_stack+0x2c/0x100
 [    1.879538] [<9000000000ec3948>] dump_stack+0x90/0xc0
@@ -280,88 +280,6 @@ static void extioi_irq_dispatch(struct irq_desc *desc)
 [    2.798375] input: SONiX USB Keyboard System Control as /devices/pci0000:00/0000:00:05.0/usb4/4-2/4-2:1.1/0003:0C45:760B.0002/input/input3
 ```
 
-
-- [ ] 这些设备的探测功能是需要我来完成吗 ?
-  - ramooflax 的做法?
-  - 找一个设备分析一下吧
-
-## for 循环的 mapping
-- [ ] 从 virq 的分配上，应该可以找到标准入口吧!
-
-`__irq_set_handler` 就是设置的 virq 对应的 handler
-
-这两个循环，占据了
-- 50 - 64 : `__loongarch_cpu_irq_init`
-- 0 - 15 : `pch_lpc_init`
-- 16 : 是为了将 pch_lpc 控制芯片挂载到 pch_ipc 上
-
-
-```
-[    0.000000] irq: irq_domain_associate_many(<no-node>, irqbase=0, hwbase=0, count=16)
-[    0.000000] __irq_set_handler 0
-[    0.000000] irq: irq_domain_set_mapping 0 0
-[    0.000000] __irq_set_handler 1
-[    0.000000] irq: irq_domain_set_mapping 1 1
-[    0.000000] __irq_set_handler 2
-[    0.000000] irq: irq_domain_set_mapping 2 2
-[    0.000000] __irq_set_handler 3
-[    0.000000] irq: irq_domain_set_mapping 3 3
-[    0.000000] __irq_set_handler 4
-[    0.000000] irq: irq_domain_set_mapping 4 4
-[    0.000000] __irq_set_handler 5
-[    0.000000] irq: irq_domain_set_mapping 5 5
-[    0.000000] __irq_set_handler 6
-[    0.000000] irq: irq_domain_set_mapping 6 6
-[    0.000000] __irq_set_handler 7
-[    0.000000] irq: irq_domain_set_mapping 7 7
-[    0.000000] __irq_set_handler 8
-[    0.000000] irq: irq_domain_set_mapping 8 8
-[    0.000000] __irq_set_handler 9
-[    0.000000] irq: irq_domain_set_mapping 9 9
-[    0.000000] __irq_set_handler 10
-[    0.000000] irq: irq_domain_set_mapping 10 10
-[    0.000000] __irq_set_handler 11
-[    0.000000] irq: irq_domain_set_mapping 11 11
-[    0.000000] __irq_set_handler 12
-[    0.000000] irq: irq_domain_set_mapping 12 12
-[    0.000000] __irq_set_handler 13
-[    0.000000] irq: irq_domain_set_mapping 13 13
-[    0.000000] __irq_set_handler 14
-[    0.000000] irq: irq_domain_set_mapping 14 14
-[    0.000000] __irq_set_handler 15
-[    0.000000] irq: irq_domain_set_mapping 15 15
-[    0.000000] CPU: 0 PID: 0 Comm: swapper/0 Not tainted 4.19.167 #18
-[    0.000000] Hardware name: Loongson Loongson-LS3A5000-7A1000-1w-V0.1-CRB/Loongson-LS3A5000-7A1000-1w-EVB-V1.21, BIOS Loongson-UDK2018-V2.0.04073-beta2 03/
-[    0.000000] Stack : 00000000000000aa 9000000000ec3948 900000000123c000 900000000123f9f0
-[    0.000000]         0000000000000000 900000000123f9f0 0000000000000000 9000000001369b48
-[    0.000000]         9000000001369b40 0000000000000000 9000000001359302 000000000000008e
-[    0.000000]         0000000000000000 9000000001261298 0000000000000001 00000000000000aa
-[    0.000000]         900000047aef8000 0000000000000000 0000000000000000 0000000000000001
-[    0.000000]         00000000000000aa 0000000476cd0000 9000000476010940 0000000000000000
-[    0.000000]         00000000000000b0 0000000000000000 0000000000000001 9000000476010780
-[    0.000000]         0000000000000001 90000000011cccf8 0000000000000001 0000000000000000
-[    0.000000]         0000000000000000 0000000000000000 0000000000000000 0000000000000000
-[    0.000000]         0000000000000000 900000000020864c 0000000000000000 00000000000000b0
-[    0.000000]         ...
-[    0.000000] Call Trace:
-[    0.000000] [<900000000020864c>] show_stack+0x2c/0x100
-[    0.000000] [<9000000000ec3948>] dump_stack+0x90/0xc0
-[    0.000000] [<900000000081f550>] pch_pic_alloc+0x48/0xf8
-[    0.000000] [<90000000002a0648>] __irq_domain_alloc_irqs+0x1b0/0x2e0
-[    0.000000] [<90000000002a0bf0>] irq_create_fwspec_mapping+0x258/0x368
-[    0.000000] [<900000000081e7c0>] pch_lpc_init+0xe8/0x178
-[    0.000000] [<900000000081f33c>] pch_pic_init+0x18c/0x358
-[    0.000000] [<90000000012d8424>] setup_IRQ+0xf4/0x110
-[    0.000000] [<90000000012d845c>] arch_init_irq+0x1c/0x98
-[    0.000000] [<90000000012d9cbc>] init_IRQ+0x4c/0xd4
-[    0.000000] [<90000000012d4908>] start_kernel+0x274/0x454
-[    0.000000] pch-pic: huxueshi:pch_pic_alloc 16 19
-[    0.000000] __irq_set_handler 16
-[    0.000000] __irq_set_handler 16
-[    0.000000] irq: irq_domain_set_mapping 19 16
-[    0.000000] irq: irq_domain_set_mapping 19 16
-```
-
 ## 动态的 mapping
 ```
 [    0.846098] pch-pic: huxueshi:pch_pic_alloc 18 47
@@ -390,39 +308,5 @@ static void extioi_irq_dispatch(struct irq_desc *desc)
 [    0.846159] [<90000000012d4ce0>] kernel_init_freeable+0x1f8/0x2b8
 [    0.846162] [<9000000000eda774>] kernel_init+0x10/0xf4
 [    0.846164] [<9000000000203cc8>] ret_from_kernel_thread+0xc/0x10
-```
-
-一种情况是因为 `irq_domain_set_mapping` => irq_domain_associate_many
-
-```c
-/*
-[    0.000000] Call Trace:
-[    0.000000] [<900000000020864c>] show_stack+0x2c/0x100
-[    0.000000] [<9000000000ec3968>] dump_stack+0x90/0xc0
-[    0.000000] [<900000000029f8e0>] irq_domain_set_mapping+0x90/0xb8
-[    0.000000] [<900000000029f9ac>] irq_domain_associate+0xa4/0x1d8
-[    0.000000] [<90000000002a0eec>] irq_domain_associate_many+0x9c/0xc8
-[    0.000000] [<900000000029fc34>] irq_domain_add_legacy+0x7c/0x80
-[    0.000000] [<90000000012f3ce4>] __loongarch_cpu_irq_init+0x94/0xc8
-[    0.000000] [<90000000012d8344>] setup_IRQ+0x14/0x110
-[    0.000000] [<90000000012d845c>] arch_init_irq+0x1c/0x98
-[    0.000000] [<90000000012d9cbc>] init_IRQ+0x4c/0xd4
-[    0.000000] [<90000000012d4908>] start_kernel+0x274/0x454
-```
-
-另一种情况是因为
-```c
-/*
-[    0.000000] [<900000000020864c>] show_stack+0x2c/0x100
-[    0.000000] [<9000000000ec3968>] dump_stack+0x90/0xc0
-[    0.000000] [<900000000029f8e0>] irq_domain_set_mapping+0x90/0xb8
-[    0.000000] [<900000000029f9ac>] irq_domain_associate+0xa4/0x1d8
-[    0.000000] [<90000000002a0eec>] irq_domain_associate_many+0x9c/0xc8
-[    0.000000] [<900000000029fc34>] irq_domain_add_legacy+0x7c/0x80
-[    0.000000] [<900000000081e770>] pch_lpc_init+0x88/0x178
-[    0.000000] [<900000000081f1f4>] pch_pic_init+0x18c/0x358
-[    0.000000] [<90000000012d8424>] setup_IRQ+0xf4/0x110
-[    0.000000] [<90000000012d845c>] arch_init_irq+0x1c/0x98
-[    0.000000] [<90000000012d9cbc>] init_IRQ+0x4c/0xd4
-[    0.000000] [<90000000012d4908>] start_kernel+0x274/0x454
+*/
 ```

@@ -57,7 +57,6 @@ ramooflax 不需要模拟 acpi 设备空间，因为设备本身就是相同的
   - acpi_scan_init
     - acpi_bus_scan : 进一步调用 acpi_bus_check_add 来探测设备，将探测到的设备初始化为 acpi_device
       - device_attach
-      - 
 
   - [ ] acpi_bus_init
   - [ ] acpi_ec_init

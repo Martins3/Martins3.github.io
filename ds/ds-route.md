@@ -1,5 +1,5 @@
 ## 各种介绍
-
+https://github.com/stateright/stateright : 一个图新界面，用于辅助分布式协议的实现
 
 # [An overview of distributed system](https://www.zhihu.com/question/23645117)
 知乎这个回答常看常新啊
