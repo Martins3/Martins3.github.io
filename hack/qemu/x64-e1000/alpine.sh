@@ -101,17 +101,16 @@ fi
 ${qemu} \
 	-m 6G \
 	-drive "file=${disk_img},format=qcow2" \
-	-enable-kvm \
 	-kernel ${kernel} \
 	-append "root=/dev/sda3 nokaslr" \
 	-smp 2 \
-	-vga virtio \
-	-cpu host \
 	-monitor stdio \
 	-chardev file,path=/tmp/seabios.log,id=seabios -device isa-debugcon,iobase=0x402,chardev=seabios -bios /home/maritns3/core/seabios/out/bios.bin \
 	-device nvme,drive=nvme0,serial=foo -drive file=${ext4_img1},format=raw,if=none,id=nvme0 \
 	-virtfs local,path="${share_dir}",mount_tag=host0,security_model=mapped,id=host0
 
+# -vga virtio \
+# -enable-kvm -cpu host \
 # mount -t 9p -o trans=virtio,version=9p2000.L host0 /mnt/9p
 
 # TODO deadbeaf1 ?

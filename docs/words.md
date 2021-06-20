@@ -8,7 +8,9 @@
 - 只要能独立表达你的观点，都是值得你去做的写作
 - 这是一个自我品牌的树立过程，需要长久维持[^3]
 
+中国和美国的教育系统相比不只是无能，而是腐败的。把真正的知识藏起来，用一堆毫无意义的事情充斥大学，这样他们就能谋取所有可以想象的暴利。因为知识就是力量，知识就是自由，只要剥脱了人们的知识，某些人就可以为所欲为。
 
 [^1]: https://www.zhihu.com/question/443850977/answer/1754327421
 [^2]: https://mp.weixin.qq.com/s/4kN65Eu_mYKmC-GLig082g
 [^3]: https://github.com/cdk8s/cdk8s-team-style/blob/master/other/read-write.md
+[^4]: https://twitter.com/yinwang0/status/1402834759407992836?s=20

@@ -5,9 +5,9 @@
 - [ ] 从 capstone 到 arm, 似乎对理解 binary 的构成还是很有帮助的呀!
   - [ ] 似乎在 gen_intermediate_code 中间都是手动分析编码的，和 capstone 没有任何关系啊
 
-- [ ] linux-user 的部分似乎已经涉及到了 tcg 的处理了，看看 本一的工作吧
-
-- [ ] 如果没有 enable kvm 的话，x86_64 的机器上进行 x86_64 的翻译是怎么进行的 ？
+- 如果没有 enable kvm 的话，x86_64 的机器上进行 x86_64 的翻译是怎么进行的 ？
+  - 必然走 tcg 的流程
+  - [ ] 但是不知道是否发生指令翻译的啊
 
 - [x] 用户态的翻译是不是不需要各种地址加速的处理啊
 
@@ -36,10 +36,9 @@
   - 最简单的考虑，假如有了一对一的翻译。
 
 ## code coverage
-- [ ] 在 accel/tcg 是 tcg 
-- [ ] tcg 应该是和 host 架构有关的代码生成工作
-- [ ] ./softmmu 下面应该是整个 qemu 通用的入口了
-
+- 在 accel/tcg 是 tcg 
+- tcg 应该是和 host 架构有关的代码生成工作
+- ./softmmu 下面应该是整个 qemu 通用的入口了
 
 ## tcg find
 
