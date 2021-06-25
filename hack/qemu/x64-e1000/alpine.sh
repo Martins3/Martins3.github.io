@@ -4,11 +4,13 @@ set -eux
 DEBUG_QEMU=false
 DEBUG_KERNEL=false
 RUN_GDB=false
-while getopts "dsg" opt; do
+RUN_TCG=false
+while getopts "dsgt" opt; do
 	case $opt in
 	d) DEBUG_QEMU=true ;;
 	s) DEBUG_KERNEL=true ;;
 	g) RUN_GDB=true ;;
+	t) RUN_TCG=true ;;
 	*) exit 0 ;;
 	esac
 done
@@ -98,6 +100,19 @@ if [ $RUN_GDB = true ]; then
 	exit 0
 fi
 
+if [ $RUN_TCG = true ]; then
+	${qemu} \
+		-m 6G \
+		-drive "file=${disk_img},format=qcow2" \
+		-kernel ${kernel} \
+		-append "root=/dev/sda3 nokaslr" \
+		-smp 2 \
+		-monitor stdio \
+		-chardev file,path=/tmp/seabios.log,id=seabios -device isa-debugcon,iobase=0x402,chardev=seabios -bios /home/maritns3/core/seabios/out/bios.bin \
+		-device nvme,drive=nvme0,serial=foo -drive file=${ext4_img1},format=raw,if=none,id=nvme0 \
+		-virtfs local,path="${share_dir}",mount_tag=host0,security_model=mapped,id=host0
+fi
+
 ${qemu} \
 	-m 6G \
 	-drive "file=${disk_img},format=qcow2" \
@@ -107,10 +122,10 @@ ${qemu} \
 	-monitor stdio \
 	-chardev file,path=/tmp/seabios.log,id=seabios -device isa-debugcon,iobase=0x402,chardev=seabios -bios /home/maritns3/core/seabios/out/bios.bin \
 	-device nvme,drive=nvme0,serial=foo -drive file=${ext4_img1},format=raw,if=none,id=nvme0 \
-	-virtfs local,path="${share_dir}",mount_tag=host0,security_model=mapped,id=host0
+	-virtfs local,path="${share_dir}",mount_tag=host0,security_model=mapped,id=host0 \
+	-vga virtio \
+	-enable-kvm -cpu host
 
-# -vga virtio \
-# -enable-kvm -cpu host \
 # mount -t 9p -o trans=virtio,version=9p2000.L host0 /mnt/9p
 
 # TODO deadbeaf1 ?

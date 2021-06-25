@@ -48,6 +48,9 @@ dcache.c:d_lookup 的锁
 https://lwn.net/SubscriberLink/827180/a1c1305686bfea67/
 
 ## RCU
+- [ ] https://liburcu.org/ : 提供了三个很好的资源
+
+
 What is Rcu, Really[^1]:
 
 RCU ensures that reads are coherent by maintaining multiple versions of objects and ensuring that they are not freed up until all pre-existing read-side critical sections complete. 
