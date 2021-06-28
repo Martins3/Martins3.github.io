@@ -101,7 +101,7 @@ if [ $RUN_GDB = true ]; then
 fi
 
 if [ $RUN_TCG = true ]; then
-	${qemu} \
+  ${qemu} \
 		-m 6G \
 		-drive "file=${disk_img},format=qcow2" \
 		-kernel ${kernel} \
@@ -111,6 +111,8 @@ if [ $RUN_TCG = true ]; then
 		-chardev file,path=/tmp/seabios.log,id=seabios -device isa-debugcon,iobase=0x402,chardev=seabios -bios /home/maritns3/core/seabios/out/bios.bin \
 		-device nvme,drive=nvme0,serial=foo -drive file=${ext4_img1},format=raw,if=none,id=nvme0 \
 		-virtfs local,path="${share_dir}",mount_tag=host0,security_model=mapped,id=host0
+
+	exit 0
 fi
 
 ${qemu} \
