@@ -13,7 +13,6 @@
 
 <!-- vim-markdown-toc -->
 
-
 ## docs
 [kvmtool - a QEMU alternative?](https://elinux.org/images/4/44/Przywara.pdf)
 https://github.com/adamdunkels/uip
@@ -27,8 +26,6 @@ lkvm run -k ../linux/arch/x86/boot/bzImage -d /home/maritns3/core/linux-kernel-l
 - [ ] lkvm setup minimi 可以创建一个 rootfs, 但是无法启动
 
 https://www.96boards.org/blog/running-kvm-guest-hikey/
-
-
 
 ## vfio
 - [ ] device__register is a magic, I believe any device register here will be probe by kernel

@@ -13,6 +13,7 @@
 ## 3 动手是最好的学习方法
 很多东西看看文章，总是没有办法融汇贯通，因为省略了细节
 
+[Standford 教程](https://docs.google.com/spreadsheets/d/1zfw8nPvJeewxcFUBpKUKmAVE8PjnJI7H0CKimdQXxr0/htmlview)
 
 ## 附录
 project-based-learning / build-your-own-x 应该都是最好的，计算机还是动手的学科，操作一下，很多概念都是纸老虎。

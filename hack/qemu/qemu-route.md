@@ -1,10 +1,7 @@
 ## TODO
 - [ ] 编译系统 : https://qemu.readthedocs.io/en/latest/devel/build-system.html
 
-- [ ] x86 上原生的运行 x86 tcg, 大致流程是什么样子的?
-
-- [ ] 图形系统是如何实现的 ?
-  - `-vga virtio` 为什么不需要在 kernel 那一侧的支持 ?
+- `-vga virtio` 为什么不需要在 kernel 那一侧的支持 ?
 
 ## compile
 一般的编译方法
@@ -71,3 +68,5 @@ https://wiki.qemu.org/Documentation/Debugging
 ## related project
 - [Unicorn](https://github.com/unicorn-engine/unicorn) is a lightweight, multi-platform, multi-architecture CPU emulator framework based on QEMU.
 
+## 参考资料
+[主板 INTEL 440FX PCISET](https://wiki.qemu.org/images/b/bb/29054901.pdf)

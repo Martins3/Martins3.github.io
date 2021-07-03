@@ -62,6 +62,8 @@ https://github.com/lunatic-lang/lunatic
 
 https://github.com/google/cel-spec : The Common Expression Language (CEL) implements common semantics for expression evaluation, enabling different applications to more easily interoperate.
 
+https://github.com/keiichiw/constexpr-8cc : 有趣的项目, 其中指向了一个链接，使用 vimscript 来实现 c compiler
+
 ## blog
 https://blog.llvm.org/posts/2020-12-21-interactive-cpp-for-data-science/ : cpp in juperter notebook
 

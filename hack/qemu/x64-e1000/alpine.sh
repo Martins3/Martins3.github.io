@@ -101,6 +101,7 @@ if [ $RUN_GDB = true ]; then
 fi
 
 if [ $RUN_TCG = true ]; then
+  gdb --args \
   ${qemu} \
 		-m 6G \
 		-drive "file=${disk_img},format=qcow2" \
