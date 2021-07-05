@@ -20,7 +20,7 @@
   2. 图形化的工具，我使用过[sourcetrail](https://www.sourcetrail.com/)，很不错，但是很卡。
 
 3. qemu
-  - [ ] TODO 提供一个配置脚本 
+  - 可以参考我的[一个脚本](https://github.com/Martins3/Martins3.github.io/blob/master/hack/qemu/x64-e1000/alpine.sh)
 
 ## 内核学习
 我个人认为需要将**理解用户态**, **读书**, **分析源代码**, **写代码**。
@@ -32,7 +32,7 @@
 ### 用户层需要理解
 内核的核心模块(mm, process, fs 等)都是或多或少有用户态的知识点。推荐[The Linux Programming Interface](https://book.douban.com/subject/4292217/) 作为查询手册。
 
-## 参考书
+### 参考书
 然后就可以阅读[Understand Linux Kernel](https://book.douban.com/subject/1767120/), 这是大家公认的经典教材，唯一的问题和现在和内核有些出入。
 
 [奔跑吧Linux内核](https://book.douban.com/subject/35283154/) 我阅读了其中部分章节，感觉还行。
@@ -47,10 +47,10 @@
 
 国内的有人做的项目 [tinyclub linux lab](https://github.com/tinyclub/linux-lab) 虽然没有阅读过，但是感觉还不错。
 
-## blog
+### 看 blog
 [lwn](https://lwn.net/Kernel/Index/) 是最权威，最丰富的资料来源，
 
-#### 学习资源
-我在自己的学习过程中间收集了一些资源，放到了[这里](/home/maritns3/core/vn/kernel/kernel-route.md), 可以作为参考。
+### 其他的学习资源
+我在自己的学习过程中间收集了一些资源，放到了[这里](https://github.com/Martins3/Martins3.github.io/blob/master/os/os-route.md), 可以作为参考。
 
 转发 **CSDN** 按侵权追究法律责任，其它情况随意。

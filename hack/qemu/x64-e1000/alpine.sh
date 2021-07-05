@@ -127,7 +127,8 @@ ${qemu} \
 	-device nvme,drive=nvme0,serial=foo -drive file=${ext4_img1},format=raw,if=none,id=nvme0 \
 	-virtfs local,path="${share_dir}",mount_tag=host0,security_model=mapped,id=host0 \
 	-vga virtio \
-	-enable-kvm -cpu host
+	-enable-kvm  \
+  -cpu host
 
 # mount -t 9p -o trans=virtio,version=9p2000.L host0 /mnt/9p
 

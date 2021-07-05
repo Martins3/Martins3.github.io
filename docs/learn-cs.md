@@ -8,12 +8,20 @@
 
 英语，一定要有意识的提高，不过学英语是一个很系统的问题，阅读是最好的老师，可以多逛逛[外国网站](https://www.buzzing.cc/)
 
-## 2 可以不去做这个领域，但是对于一个领域必须有一个基本认识, 比如花半天的时间了解一下 bitcoin 的原理。
+## 2 无所不知
+可以不去做这个领域，但是对于一个领域必须有一个基本认识, 比如花半天的时间了解一下 bitcoin 的原理。
+
+计算机的变化是很快的，很多时候并不是你的 35 岁危机到来了，而是因为这个行业的 35 岁危机到来，
+任何时候都要做好接受一个你所在领域死掉的时候，当然这就是计算机很酷的原因之一了吧。
 
 ## 3 动手是最好的学习方法
-很多东西看看文章，总是没有办法融汇贯通，因为省略了细节
+很多东西看看文章，总是没有办法融汇贯通，因为省略了细节, 代码一看，自然清晰。
 
-[Standford 教程](https://docs.google.com/spreadsheets/d/1zfw8nPvJeewxcFUBpKUKmAVE8PjnJI7H0CKimdQXxr0/htmlview)
+不同的源码阅读难度不同，Linux 内核算是我见过最有挑战的，但是也是收获最多的。
+
+## 4 不要迷信大学
+我个人认为大陆的大学连技校的工作都没有做好, 曾经我以为是上的大学比较差，后来看池先生，发现其实国内大学
+都是如此，可以参考国外的大学教程，例如 [Standford 教程](https://docs.google.com/spreadsheets/d/1zfw8nPvJeewxcFUBpKUKmAVE8PjnJI7H0CKimdQXxr0/htmlview)
 
 ## 附录
 project-based-learning / build-your-own-x 应该都是最好的，计算机还是动手的学科，操作一下，很多概念都是纸老虎。

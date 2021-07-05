@@ -24,7 +24,9 @@
 
 ## Tips
 - [How to cross Great Fire Wall](./gfw.md)
-- [shell 的一些经验之谈](./shell.md)
+- [shell 的一点经验之谈](./shell.md)
+- [计算机学习的一点经验之谈](./learn-cs.md)
+- [内核学习的一点经验之谈](./learn-kernel.md)
 
 ## Loongson
 - [X86 上阅读 Loongarch 内核](./loongarch/ccls.md)
