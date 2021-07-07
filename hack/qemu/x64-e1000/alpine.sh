@@ -1,16 +1,39 @@
 #!/bin/bash
 set -eux
 
-DEBUG_QEMU=false
-DEBUG_KERNEL=false
-RUN_GDB=false
-RUN_TCG=false
-while getopts "dsgt" opt; do
+# 当前目录
+abs_loc=/home/maritns3/core/vn/hack/qemu/x64-e1000
+iso=${abs_loc}/alpine-standard-3.13.5-x86_64.iso
+disk_img=${abs_loc}/alpine.qcow2
+ext4_img1=${abs_loc}/img1.ext4
+share_dir=${abs_loc}/share
+
+kernel=/home/maritns3/core/ubuntu-linux/arch/x86/boot/bzImage
+qemu=/home/maritns3/core/kvmqemu/build/qemu-system-x86_64
+seabios=/home/maritns3/core/seabios/out/bios.bin
+# qemu=/home/maritns3/core/kvmqemu/build-4.2/x86_64-softmmu/qemu-system-x86_64
+
+debug_qemu=
+debug_kernel=
+LAUNCH_GDB=false
+
+arg_img="-drive \"file=${disk_img},format=qcow2\""
+arg_mem="-m 6G -smp 2,maxcpus=4 -vga virtio"
+arg_kernel="-kernel ${kernel} -append \"root=/dev/sda3 nokaslr\""
+arg_seabios="-chardev file,path=/tmp/seabios.log,id=seabios -device isa-debugcon,iobase=0x402,chardev=seabios -bios ${seabios}"
+arg_nvme="-device nvme,drive=nvme0,serial=foo -drive file=${ext4_img1},format=raw,if=none,id=nvme0"
+arg_share_dir="-virtfs local,path=${share_dir},mount_tag=host0,security_model=mapped,id=host0"
+arg_kvm="-enable-kvm -cpu host"
+arg_monitor="-monitor stdio"
+# arg_tmp="-device host-x86_64-cpu,socket-id=0,core-id=0,thread-id=0"
+arg_tmp=
+
+while getopts "dkgt" opt; do
 	case $opt in
-	d) DEBUG_QEMU=true ;;
-	s) DEBUG_KERNEL=true ;;
-	g) RUN_GDB=true ;;
-	t) RUN_TCG=true ;;
+	d) debug_qemu="gdb --args" ;;
+	k) debug_kernel="-S -s" ;;
+	g) LAUNCH_GDB=true ;;
+	t) arg_kvm= ;;
 	*) exit 0 ;;
 	esac
 done
@@ -23,14 +46,6 @@ sure() {
 	*) echo "Please answer yes or no." ;;
 	esac
 }
-
-abs_loc=/home/maritns3/core/vn/hack/qemu/x64-e1000
-iso=${abs_loc}/alpine-standard-3.13.5-x86_64.iso
-disk_img=${abs_loc}/alpine.qcow2
-kernel=/home/maritns3/core/ubuntu-linux/arch/x86/boot/bzImage
-qemu=/home/maritns3/core/kvmqemu/build/qemu-system-x86_64
-ext4_img1=${abs_loc}/img1.ext4
-share_dir=${abs_loc}/share
 
 if [ ! -f "$iso" ]; then
 	echo "${iso} not found! Download it from official website"
@@ -53,83 +68,21 @@ if [ ! -f "${disk_img}" ]; then
 		-enable-kvm \
 		-m 2G \
 		-smp 2
-
 	exit 0
 fi
 
-# pci=nomsi
-if [ $DEBUG_QEMU = true ]; then
-	echo "debug qemu"
-	gdb --args ${qemu} \
-		-drive "file=${disk_img},format=qcow2" \
-		-m 8G \
-		-enable-kvm \
-		-kernel ${kernel} \
-		-append "root=/dev/sda3 nokaslr" \
-		-smp 2 \
-		-cpu host \
-		-monitor stdio \
-		-vga virtio \
-		-chardev file,path=/tmp/seabios.log,id=seabios -device isa-debugcon,iobase=0x402,chardev=seabios -bios /home/maritns3/core/seabios/out/bios.bin \
-		-device nvme,drive=nvme0,serial=foo -drive file=${ext4_img1},format=raw,if=none,id=nvme0
-
-	exit 0
-fi
-
-if [ $DEBUG_KERNEL = true ]; then
-	echo "start kernel stopped"
-	${qemu} \
-		-drive "file=${disk_img},format=qcow2" \
-		-m 8G \
-		-enable-kvm \
-		-kernel ${kernel} \
-		-append "root=/dev/sda3 nokaslr" \
-		-smp 2 \
-		-vga virtio \
-		-cpu host \
-		-device nvme,drive=nvme0,serial=foo -drive file=${ext4_img1},format=raw,if=none,id=nvme0 \
-		-S -s
-
-	exit 0
-fi
-
-if [ $RUN_GDB = true ]; then
+if [ $LAUNCH_GDB = true ]; then
 	echo "debug kernel"
 	cd /home/maritns3/core/ubuntu-linux/
 	gdb vmlinux -ex "target remote :1234" -ex "hbreak start_kernel" -ex "continue"
 	exit 0
 fi
 
-if [ $RUN_TCG = true ]; then
-  gdb --args \
-  ${qemu} \
-		-m 6G \
-		-drive "file=${disk_img},format=qcow2" \
-		-kernel ${kernel} \
-		-append "root=/dev/sda3 nokaslr" \
-		-smp 2 \
-		-monitor stdio \
-		-chardev file,path=/tmp/seabios.log,id=seabios -device isa-debugcon,iobase=0x402,chardev=seabios -bios /home/maritns3/core/seabios/out/bios.bin \
-		-device nvme,drive=nvme0,serial=foo -drive file=${ext4_img1},format=raw,if=none,id=nvme0 \
-		-virtfs local,path="${share_dir}",mount_tag=host0,security_model=mapped,id=host0
-
-	exit 0
-fi
-
-${qemu} \
-	-m 6G \
-	-drive "file=${disk_img},format=qcow2" \
-	-kernel ${kernel} \
-	-append "root=/dev/sda3 nokaslr" \
-	-smp 2 \
-	-monitor stdio \
-	-chardev file,path=/tmp/seabios.log,id=seabios -device isa-debugcon,iobase=0x402,chardev=seabios -bios /home/maritns3/core/seabios/out/bios.bin \
-	-device nvme,drive=nvme0,serial=foo -drive file=${ext4_img1},format=raw,if=none,id=nvme0 \
-	-virtfs local,path="${share_dir}",mount_tag=host0,security_model=mapped,id=host0 \
-	-vga virtio \
-	-enable-kvm  \
-  -cpu host
+cmd="${debug_qemu} ${qemu} ${debug_kernel} ${arg_img} ${arg_mem} ${arg_kernel} ${arg_seabios} ${arg_nvme} ${arg_share_dir} ${arg_kvm} ${arg_monitor} ${arg_tmp}"
+echo "$cmd"
+eval "$cmd"
 
 # mount -t 9p -o trans=virtio,version=9p2000.L host0 /mnt/9p
+# 内核参数 : pci=nomsi
 
 # TODO deadbeaf1 ?
