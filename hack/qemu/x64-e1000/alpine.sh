@@ -18,22 +18,22 @@ debug_kernel=
 LAUNCH_GDB=false
 
 arg_img="-drive \"file=${disk_img},format=qcow2\""
-arg_mem="-m 6G -smp 2,maxcpus=4 -vga virtio"
+arg_mem="-m 6G -smp 2,maxcpus=3 -vga virtio"
 arg_kernel="-kernel ${kernel} -append \"root=/dev/sda3 nokaslr\""
 arg_seabios="-chardev file,path=/tmp/seabios.log,id=seabios -device isa-debugcon,iobase=0x402,chardev=seabios -bios ${seabios}"
 arg_nvme="-device nvme,drive=nvme0,serial=foo -drive file=${ext4_img1},format=raw,if=none,id=nvme0"
 arg_share_dir="-virtfs local,path=${share_dir},mount_tag=host0,security_model=mapped,id=host0"
-arg_kvm="-enable-kvm -cpu host"
+arg_accel="-enable-kvm -cpu host"
 arg_monitor="-monitor stdio"
 # arg_tmp="-device host-x86_64-cpu,socket-id=0,core-id=0,thread-id=0"
-arg_tmp=
+arg_tmp=""
 
 while getopts "dkgt" opt; do
 	case $opt in
 	d) debug_qemu="gdb --args" ;;
 	k) debug_kernel="-S -s" ;;
 	g) LAUNCH_GDB=true ;;
-	t) arg_kvm= ;;
+	t) arg_accel="--accel tcg,thread=single" ;;
 	*) exit 0 ;;
 	esac
 done
@@ -78,7 +78,7 @@ if [ $LAUNCH_GDB = true ]; then
 	exit 0
 fi
 
-cmd="${debug_qemu} ${qemu} ${debug_kernel} ${arg_img} ${arg_mem} ${arg_kernel} ${arg_seabios} ${arg_nvme} ${arg_share_dir} ${arg_kvm} ${arg_monitor} ${arg_tmp}"
+cmd="${debug_qemu} ${qemu} ${debug_kernel} ${arg_img} ${arg_mem} ${arg_kernel} ${arg_seabios} ${arg_nvme} ${arg_share_dir} ${arg_accel} ${arg_monitor} ${arg_tmp}"
 echo "$cmd"
 eval "$cmd"
 
