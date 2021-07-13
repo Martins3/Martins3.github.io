@@ -70,14 +70,17 @@ for k for i for j if dis[i][k] +  dis[k][j] < dis[i][j]
   - 并不知道，但是 k 在最外面必然是正确的，对于每个 k 的循环计算，都可以计算出来和 k 相连定点之间的最短数值。
 
 # dfs
-visted数组 -- 刚刚进入的时候添加标记
+visted 数组
 
 递归搜索，比如对于一棵树找到从 head 到某个点的求和等于一个数情况，node 进入的时候 sum += val, node 退出的时候 sum -= val
 
-这不是一件事情。
-
+## 查找环路
+inStack 数组
 
 ## dfs with stack
+visted 数组
+queue
+
 [使用 stack 访问的一个直觉写法](https://11011110.github.io/blog/2013/12/17/stack-based-graph-traversal.html)
 ```py
 def stack_traversal(G,s):
@@ -99,24 +102,26 @@ def dfs2(G,s):
         v = stack.pop()
         if v not in visited:
             traversed_path.push_back(v)
+            visited.add(v)
             for w in G[v]:
                 stack.append(w)
-            visited.add(v)
 ```
+挺容易的
 
 C-Plus-Plus/graph/depth_first_search_with_stack.cpp 实现的算法是非常蠢的，应该修改一下。
 
 # bfs
-visted数组
-queue ： 点被加入到queue的同时立刻添加标记
+visted 数组
+queue
 
 # 最小生成树
 
 ## Prim
 - 类似于 Dijkstra，不需要 distance 数组
   - 随便找一点加入到 priority_queue 中间, 从而找到最小的边
-  - 从 priority_queue 出来的不要和现在的边构成回路, 加入的点也不要成为回路
+  - 从 priority_queue 出来的不要和现在的边构成回路, 也即是找最小边的时候，要看另一端的点是否 visted 过了
 
+和 Dijkstra 的区别，一旦一个点加入，需要刷新周围的数值，并且将这些刷新放到 priority_queue 中
 
 ## Kruskal
 使用 union-find 实现
@@ -173,7 +178,7 @@ topo 排序的前提 : 如果含有 `A->B` 的边，  那么 dfs 的时候 B 必
 算法:
 - 对于所有点进行拓扑排序操作， 得到一个标记顺序 a -> b。
 - 构建反图
-- 按照结束的顺序进行dfs, 每次得到的都是一个SCC, 首先访问 a
+- 按照结束的顺序进行dfs, 每次得到的都是一个SCC, 首先访问 a, 只要访问到就是了
 
 证明 :
 1. a b 在同一个， 那么必定通过该点的算法，可以归到一个CC中间
