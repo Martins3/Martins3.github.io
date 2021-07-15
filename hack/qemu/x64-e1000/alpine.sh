@@ -6,6 +6,7 @@ abs_loc=/home/maritns3/core/vn/hack/qemu/x64-e1000
 iso=${abs_loc}/alpine-standard-3.13.5-x86_64.iso
 disk_img=${abs_loc}/alpine.qcow2
 ext4_img1=${abs_loc}/img1.ext4
+ext4_img2=${abs_loc}/img2.ext4
 share_dir=${abs_loc}/share
 
 kernel=/home/maritns3/core/ubuntu-linux/arch/x86/boot/bzImage
@@ -21,7 +22,8 @@ arg_img="-drive \"file=${disk_img},format=qcow2\""
 arg_mem="-m 6G -smp 2,maxcpus=3 -vga virtio"
 arg_kernel="--kernel ${kernel} -append \"root=/dev/sda3 nokaslr\""
 arg_seabios="-chardev file,path=/tmp/seabios.log,id=seabios -device isa-debugcon,iobase=0x402,chardev=seabios -bios ${seabios}"
-arg_nvme="-device nvme,drive=nvme0,serial=foo -drive file=${ext4_img1},format=raw,if=none,id=nvme0"
+arg_nvme="-device nvme,drive=nvme1,serial=foo -drive file=${ext4_img1},format=raw,if=none,id=nvme1"
+arg_nvme2="-device nvme,drive=nvme2,serial=foo -drive file=${ext4_img2},format=raw,if=none,id=nvme2"
 arg_share_dir="-virtfs local,path=${share_dir},mount_tag=host0,security_model=mapped,id=host0"
 arg_accel="-enable-kvm -cpu host"
 arg_monitor="-monitor stdio"
@@ -59,9 +61,16 @@ if [ ! -f "$iso" ]; then
 fi
 
 if [ ! -f "$ext4_img1" ]; then
-	sure "create ext4_img"
+	sure "create ${ext4_img1}"
 	dd if=/dev/null of=${ext4_img1} bs=1M seek=100
 	mkfs.ext4 -F ${ext4_img1}
+	exit 0
+fi
+
+if [ ! -f "$ext4_img2" ]; then
+	sure "create ${ext4_img1}"
+	dd if=/dev/null of=${ext4_img2} bs=1M seek=100
+	mkfs.ext4 -F ${ext4_img2}
 	exit 0
 fi
 
@@ -84,7 +93,7 @@ if [ $LAUNCH_GDB = true ]; then
 	exit 0
 fi
 
-cmd="${debug_qemu} ${qemu} ${debug_kernel} ${arg_img} ${arg_mem} ${arg_kernel} ${arg_seabios} ${arg_nvme} ${arg_share_dir} ${arg_accel} ${arg_monitor} ${arg_tmp}"
+cmd="${debug_qemu} ${qemu} ${debug_kernel} ${arg_img} ${arg_mem} ${arg_kernel} ${arg_seabios} ${arg_nvme} ${arg_nvme2} ${arg_share_dir} ${arg_accel} ${arg_monitor} ${arg_tmp}"
 echo "$cmd"
 eval "$cmd"
 

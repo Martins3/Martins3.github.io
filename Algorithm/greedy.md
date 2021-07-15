@@ -25,3 +25,7 @@ int continuousMaxSum(vector<int> const & arr){
 ```
 
 ## 安排课程表
+按照结束的时间排序
+
+
+类似问题有 452.用最少数量的箭引爆气球（中等）
