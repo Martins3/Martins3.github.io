@@ -47,4 +47,29 @@ https://stackoverflow.com/questions/19585028/i-lose-my-data-when-the-container-e
 
 ## mistake and todo
 1. 创建docker默认使用 root，但是 root 非常的不清真，应该创建用户，之后再改用户的角度使用
-2. 
+
+## 使用 aliyun 加速
+```json
+{
+  "registry-mirrors": [
+    "https://hub-mirror.c.163.com",
+    "https://mirror.baidubce.com"
+  ]
+,
+"default-address-pools":
+ [
+ {"base":"10.10.0.0/16","size":24}
+ ]
+}
+```
+https://cr.console.aliyun.com/cn-hangzhou/instances/mirrors 修改为:
+
+```sh
+sudo tee /etc/docker/daemon.json <<-'EOF'
+{
+  "registry-mirrors": ["https://123213413421324.mirror.aliyuncs.com"]
+}
+EOF
+sudo systemctl daemon-reload
+sudo systemctl restart docker
+```

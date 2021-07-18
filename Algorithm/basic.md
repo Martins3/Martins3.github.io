@@ -86,3 +86,11 @@ Arr[(2*i)+2]	Returns the right child node
 2. 增加，从尾端增加，逐步向上
 3. 删除，将尾端的放到最上面，逐步向下, 超出范围的就不是 valid
 
+
+## 单调栈
+其实专门用于分析 Next Greater Number 的
+
+对于一个数组 arr = [2, 3, 4, 1, 8] 反方向 push stack
+放入的元素 e 和 stack.pop() 比较:
+1. e > stack.pop(), 一路 pop 直到可以
+2. 如果小鱼，那么这就是 e 的 Next Greater Number
