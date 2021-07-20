@@ -1,3 +1,5 @@
+Take advantage of raspberry, qemu and [visual](https://salmanarif.bitbucket.io/visual/index.html)
+
 https://people.kernel.org/linusw/how-the-arm32-kernel-starts : 启动
 
 在 x86 上使用 acpi, 在 arm 上使用 dtb 来描述设备的逻辑关系[^2]

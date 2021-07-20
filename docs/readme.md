@@ -27,6 +27,7 @@
 - [shell 的一点经验之谈](./shell.md)
 - [计算机学习的一点经验之谈](./learn-cs.md)
 - [内核学习的一点经验之谈](./learn-kernel.md)
+- [2021 年 vim 的 C/C++ 配置](https://martins3.github.io/My-Linux-config/)
 
 ## Loongson
 - [X86 上阅读 Loongarch 内核](./loongarch/ccls.md)
