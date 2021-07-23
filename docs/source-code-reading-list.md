@@ -21,7 +21,7 @@ inspired by https://github.com/geektutu/7days-golang
 
 ## 数据库
 - [leveldb](https://www.qtmuniao.com/2020/07/03/leveldb-data-structures-skip-list/) :  C++ 数据库 Jeff Dean 1000 行 :star:
-  - https://medium.com/databasss/on-disk-io-part-1-flavours-of-io-8e1ace1de017 : 数据库教程
+    - https://medium.com/databasss/on-disk-io-part-1-flavours-of-io-8e1ace1de017 : 数据库教程
 
 ## 其他
 - [eomaia](https://github.com/Martins3/Martins3.github.io/blob/master/net/eomaia.md) : 很小的项目，用于学习 Modern 的 C++ 的书写风格

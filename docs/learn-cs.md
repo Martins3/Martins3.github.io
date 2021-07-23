@@ -23,6 +23,10 @@
 我个人认为大陆的大学连技校的工作都没有做好, 曾经我以为是上的大学比较差，后来看池先生，发现其实国内大学
 都是如此，可以参考国外的大学教程，例如 [Standford 教程](https://docs.google.com/spreadsheets/d/1zfw8nPvJeewxcFUBpKUKmAVE8PjnJI7H0CKimdQXxr0/htmlview)
 
+## 5 工欲善其事, 必先利其器
+可以看看 mit 的这个课程
+https://missing-semester-cn.github.io/
+
 ## 附录
 project-based-learning / build-your-own-x 应该都是最好的，计算机还是动手的学科，操作一下，很多概念都是纸老虎。
 

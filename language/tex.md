@@ -6,3 +6,5 @@ https://github.com/luong-komorebi/Begin-Latex-in-minutes/blob/master/Translation
 ## 模板
 https://github.com/tuna/thuthesis
 
+## Github Action
+https://github.com/xu-cheng/latex-action
