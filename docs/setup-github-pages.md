@@ -29,9 +29,15 @@ Github 提供了几个不错的主题，只需要在 `docs/_config.yml` 配置�
 <noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
 ```
 
-但是更好的方案是 `https://utteranc.es/`, 按照其步骤，将其生成的代码(比如下面一行)粘贴到你的blog下即可。
+但是更好的方案是 `https://utteranc.es/`, 按照其步骤，将其生成的代码(比如下面一行)粘贴到你的 blog 下即可。
 ```js
-<script src="https://utteranc.es/client.js" repo="Martins3/Martins3.github.io" issue-term="url" theme="github-light" crossorigin="anonymous" async> </script>
+<script src="https://utteranc.es/client.js"
+  repo="Martins3/Martins3.github.io"
+  issue-term="url"
+  theme="github-light"
+  crossorigin="anonymous"
+  async>
+</script>
 ```
 ## 第三行 : 搭建 RSS 订阅
 - [ ] TODO : [参考这里](https://dzhavat.github.io/2020/01/19/adding-an-rss-feed-to-github-pages.html) 似乎可行

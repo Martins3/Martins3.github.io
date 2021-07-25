@@ -7,15 +7,12 @@
 Kind of tricky to read without preliminary knowledge about GenSim.
 
 - [Efficient Cross-architecture Hardware Virtualisation](https://era.ed.ac.uk/handle/1842/25377)
-
 This is Tom Spink's doctor thesis.
-
 
 - [Acceleration of memory accesses in dynamic binary translation](http://tima.univ-grenoble-alpes.fr/publications/files/th/2018/2018_10_22_FARAVELON_Antoine_0476.pdf)
 
-
-- [Efficient memory virtualization for cross-isa system mode emulation](espt)
-- [Hspt: Practical implementation and efficient management of embedded shadow page tables for cross-isa system virtual machines]()
+- [Efficient memory virtualization for cross-isa system mode emulation](http://vee2014.cs.technion.ac.il/docs/VEE14-present25.pdf)
+- [Hspt: Practical implementation and efficient management of embedded shadow page tables for cross-isa system virtual machines](https://zhexwang.github.io/papers/hspt.pdf)
 
 - [Reducing World Switches in Virtualized Environment with Flexible Cross-world Calls](https://trustkernel.com/uploads/pubs/CrossOver_ISCA2015.pdf) 
 - [HQEMU](http://csl.iis.sinica.edu.tw/hqemu/)

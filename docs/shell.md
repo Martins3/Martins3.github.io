@@ -11,7 +11,7 @@
 3. https://linuxjourney.com/ : 一个简明的教程
 
 ## 选择好用的 shell
-zsh 和 bash 之前语法上基本是兼容的，但是由于[oh my zsh](https://github.com/ohmyzsh/ohmyzsh)，我强烈推荐使用zsh
+zsh 和 bash 之前语法上基本是兼容的，但是由于[oh my zsh](https://github.com/ohmyzsh/ohmyzsh)，我强烈推荐使用 zsh
 
 ## 终端模拟器
 我现在的选在是 tmux + alacritty，等到我彻底解决了 alacritty 和 fcitx 的问题，我会提供对应教程。
@@ -23,7 +23,7 @@ zsh 和 bash 之前语法上基本是兼容的，但是由于[oh my zsh](https:/
 - [Alacritty](https://github.com/alacritty/alacritty)
 
 ## 常用命令行工具的替代
-使用Linux有个非常窒息的事情在于，默认的工具使用体验一般，下面介绍一些体验更加的工具。
+使用 Linux 有个非常窒息的事情在于，默认的工具使用体验一般，下面介绍一些体验更加的工具。
 [这里](https://css.csail.mit.edu/jitk/) 总结的工具非常不错，下面是我自己的补充。这些工具都是基本是从 github awesome[^1][^2][^3] 和 hacker news[^4] 中间找到:
 
 | 😞   | 😃                                                                                                                   |

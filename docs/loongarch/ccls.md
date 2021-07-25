@@ -59,7 +59,7 @@ X86 上阅读 X86 内核的配置可以参考[我之前的文章](https://github
 ## 补充
 阅读 Loongarch Qemu 的方法:
 1. 在 Loongarch 机器上编译生成 compile_commands.json
-```
+```sh
 mkdir build
 cd build
 ../configure --target-list=loongson-softmmu --disable-werror

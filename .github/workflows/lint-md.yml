@@ -17,5 +17,5 @@ jobs:
         uses: lint-md/github-action@v0.0.2
         with:
                 files: './docs'
-                configFile: '.lintmdrc'
+                configFile: '.lintmdrc.json'
                 failOnWarnings: true
