@@ -13,7 +13,7 @@
 ## 环境准备
 1. 阅读环境准备
 
-首先你要保证你的操作系统是 linux 内核，让自己对于 kernel 支撑起来的用户态环境有一个感性的认识。
+首先你要保证你的操作系统是 Linux 内核，让自己对于 kernel 支撑起来的用户态环境有一个感性的认识。
 
 2. 阅读工具
   1. 我的 neovim 配置在[这里](https://github.com/Martins3/My-Linux-config)
@@ -35,13 +35,13 @@
 ### 参考书
 然后就可以阅读[Understand Linux Kernel](https://book.douban.com/subject/1767120/), 这是大家公认的经典教材，唯一的问题和现在和内核有些出入。
 
-[奔跑吧Linux内核](https://book.douban.com/subject/35283154/) 我阅读了其中部分章节，感觉还行。
+[奔跑吧 Linux 内核](https://book.douban.com/subject/35283154/) 我阅读了其中部分章节，感觉还行。
 
 如果你恰好有一台龙芯电脑，并且想要了解 MIPS 内核的实现，[用"芯"探核 基于龙芯的 Linux 内核探索解析](https://book.douban.com/subject/35166926/) 可以说相当的不错。
 
 ### 写代码
-[Linux Device Driver](https://lwn.net/Kernel/LDD3/)(ldd3)是公认的Linux设备驱动最佳教材之一，该书着重介绍了设备驱动，但是同时也介绍了大量内核的其他方面的知识，例如中断，时间，锁等等。
-可惜其中的代码非常的老，有人对于 ldd3 的代码向高版本内核进行了移植，[代码](https://github.com/martinezjavier/ldd3)在github上。
+[Linux Device Driver](https://lwn.net/Kernel/LDD3/)(ldd3)是公认的 Linux 设备驱动最佳教材之一，该书着重介绍了设备驱动，但是同时也介绍了大量内核的其他方面的知识，例如中断，时间，锁等等。
+可惜其中的代码非常的老，有人对于 ldd3 的代码向高版本内核进行了移植，[代码](https://github.com/martinezjavier/ldd3)在 Github 上。
 
 我个人更加推荐[linux kernel labs](https://linux-kernel-labs.github.io)，以试验的形式学习，各种环境配置齐全，文档详细，更新活跃。
 

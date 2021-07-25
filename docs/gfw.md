@@ -20,7 +20,7 @@ is what you need.
 You can reference [document of qv2ray](https://qv2ray.net/en/getting-started/) for details, here is simplified steps.
 
 1. install `v2ray core` and `qv2ray` 
-```
+```sh
 snap install v2ray
 snap install qv2ray
 ```
@@ -59,14 +59,14 @@ git config --global credential.helper store
 ## cmd proxy
 
 cat /etc/proxychains.conf
-```
+```txt
 [ProxyList]
 socks5 127.0.0.1 1089
 ```
 
 then we proxy commands in shell, e.g.
-```
-➜  vn git:(master) ✗ git send-email /tmp/0001-change-mmap-flags-from-PROT_EXEC-to-PROT_READ.patch --to  hubachelar@qq.com
+```sh
+git send-email /tmp/0001-change-mmap-flags.patch --to hubachelar@qq.com
 ```
 
 <script src="https://utteranc.es/client.js" repo="Martins3/Martins3.github.io" issue-term="url" theme="github-light" crossorigin="anonymous" async> </script>

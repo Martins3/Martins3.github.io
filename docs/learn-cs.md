@@ -46,7 +46,7 @@ project-based-learning / build-your-own-x 应该都是最好的，计算机还�
 - https://github.com/SSHeRun/CS-Xmind-Note
 - https://github.com/Developer-Y/cs-video-courses#systems-programming
 - https://github.com/niudai/How-to-be-a-good-programmer : 经典电子书
-- [学习编程的12个游戏](https://medium.mybridge.co/12-free-resources-learn-to-code-while-playing-games-f7333043de11#.xi83hlivu)
+- [学习编程的 12 个游戏](https://medium.mybridge.co/12-free-resources-learn-to-code-while-playing-games-f7333043de11#.xi83hlivu)
 
 - https://github.com/tuvtran/project-based-learning :star:
 - https://github.com/danistefanovic/build-your-own-x :star:
