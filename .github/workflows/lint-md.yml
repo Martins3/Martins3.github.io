@@ -16,6 +16,6 @@ jobs:
       - name: lint-md-github-action
         uses: lint-md/github-action@v0.0.2
         with:
-                files: './doc'
+                files: './docs'
                 configFile: '.lintmdrc'
                 failOnWarnings: true
