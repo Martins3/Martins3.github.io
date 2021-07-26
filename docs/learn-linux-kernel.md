@@ -28,13 +28,10 @@
 
 ## 环境准备
 1. 阅读环境准备
-
-首先你要保证你的操作系统是 Linux 内核，让自己对于 kernel 支撑起来的用户态环境有一个感性的认识。
-
+    - 首先你要保证你的操作系统是 Linux 内核，让自己对于 kernel 支撑起来的用户态环境有一个感性的认识。
 2. 阅读工具
-    1. 我的 neovim 配置在[这里](https://github.com/Martins3/My-Linux-config)
-    2. 图形化的工具，我使用过[sourcetrail](https://www.sourcetrail.com/)，很不错，但是很卡。
-
+    - 我的 neovim 配置在[这里](https://github.com/Martins3/My-Linux-config)
+    - 图形化的工具，我使用过[sourcetrail](https://www.sourcetrail.com/)，很不错，但是很卡。
 3. qemu
     - 可以参考我的[一个脚本](https://github.com/Martins3/Martins3.github.io/blob/master/hack/qemu/x64-e1000/alpine.sh)
 

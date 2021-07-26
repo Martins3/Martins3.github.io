@@ -24,13 +24,10 @@ https://github.com/prakhar1989/awesome-courses : 课程
 
 ## 简历
 https://github.com/billryan/resume
-https://github.com/salomonelli/best-resume-ever : 基于网页的技术, 可以导出各种样式
 
 ## 视野
 https://github.com/programthink/books
-
 https://github.com/VGraupera/1on1-questions : 工作的时候问问这些问题，也许可以防止走到死胡同中间了
-
 
 ## 英语
 https://github.com/Wei-Xia/most-frequent-technology-english-words
@@ -45,7 +42,7 @@ https://github.com/ruanyf/document-style-guide : 好好看看吧
 
 ## code review
 https://mtlynch.io/code-review-love/
-
+https://medium.com/pinterest-engineering/how-to-review-code-as-a-junior-developer-10ffb7846958
 
 ## ideas
 https://blog.samaltman.com/how-to-be-successful
@@ -55,3 +52,4 @@ https://github.com/jivoi/awesome-osint : 各种获取信息的方式, 包括但�
 
 ## 设计模式
 https://refactoringguru.cn/design-patterns
+
