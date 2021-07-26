@@ -1,14 +1,20 @@
-## draft
-- https://github.com/riscv/riscv-pk : It is designed to support tethered RISC-V implementations with limited I/O capability and thus handles I/O-related system calls by proxying them to a host computer.
-- https://github.com/jdah/tetris-os : 一个只能玩俄罗斯方块的操作系统, 只可惜是基于 i386 架构的
-- https://github.com/rust-embedded/rust-raspberrypi-OS-tutorials : 使用 rust 在树莓派上构建 os
-
-- [一个64位操作系统的设计与实现》学习笔记](https://github.com/yifengyou/The-design-and-implementation-of-a-64-bit-os)
-- https://github.com/belowthetree/TisuOS : 国人 Rust OS
-- https://makelinux.github.io/kernel/map/ : kernel map
-
 # Awesome Linux kernel
 Linux 内核相关的有趣资源，欢迎补充。
+
+## 文章合集
+- [LoyenWang](https://www.cnblogs.com/LoyenWang/) :star: :star: :star: :star: :star:
+- [wowotech](http://www.wowotech.net/) :star: :star: :star: :star: :star:
+- [linux inside](https://0xax.gitbooks.io/linux-insides/content/) :star: :star: :star: :star: :star:
+- [low level programming university](https://github.com/gurugio/lowlevelprogramming-university/blob/master/README_cn.md) :star: :star: :star: :star:
+- [知乎专栏:术道经纬](https://zhuanlan.zhihu.com/p/93289632) :star: :star:
+- [gatieme 的笔记](https://github.com/gatieme/LDD-LinuxDeviceDrivers) :star: :star:
+- [LoyenWang](https://www.cnblogs.com/LoyenWang/) :star: :star:
+- [dsahern's blog](https://people.kernel.org/dsahern/) :star: 
+  - [The CPU Cost of Networking on a Linux Host](https://news.ycombinator.com/item?id=23189372)
+- https://devarea.com/labs/#.Xm3c_XUzYUE
+- https://github.com/novelinux/linux-4.x.y
+- https://terenceli.github.io/archive.html
+- https://unixism.net/2020/04/io-uring-by-example-article-series/
 
 
 ## virtualization
@@ -90,21 +96,6 @@ Linux 内核相关的有趣资源，欢迎补充。
 - [write your own os](http://mikeos.sourceforge.net/write-your-own-os.html)
 - [bb-kernel](https://github.com/RobertCNelson/bb-kernel/tree/am33x-rt-v5.4) : This is just a set of scripts to rebuild a known working kernel for ARM devices.
 
-## 文章合集
-- [LoyenWang](https://www.cnblogs.com/LoyenWang/) :star: :star: :star: :star: :star:
-- [wowotech](http://www.wowotech.net/) :star: :star: :star: :star: :star:
-- [linux inside](https://0xax.gitbooks.io/linux-insides/content/) :star: :star: :star: :star: :star:
-- [low level programming university](https://github.com/gurugio/lowlevelprogramming-university/blob/master/README_cn.md) :star: :star: :star: :star:
-- [知乎专栏:术道经纬](https://zhuanlan.zhihu.com/p/93289632) :star: :star:
-- [gatieme 的笔记](https://github.com/gatieme/LDD-LinuxDeviceDrivers) :star: :star:
-- [LoyenWang](https://www.cnblogs.com/LoyenWang/) :star: :star:
-- [dsahern's blog](https://people.kernel.org/dsahern/) :star: 
-  - [The CPU Cost of Networking on a Linux Host](https://news.ycombinator.com/item?id=23189372)
-- https://devarea.com/labs/#.Xm3c_XUzYUE
-- https://github.com/novelinux/linux-4.x.y
-- https://terenceli.github.io/archive.html
-- https://unixism.net/2020/04/io-uring-by-example-article-series/
-
 ## 文摘
 - [Fuchsia Overview](https://news.ycombinator.com/item?id=23364172) : hn 关于 Fuchaia 的评价
 - [知乎 : 如何学习内核 ?](https://www.zhihu.com/question/304179651/answer/561395663)
@@ -147,3 +138,13 @@ Linux 内核相关的有趣资源，欢迎补充。
 - [Think OS](http://greenteapress.com/thinkos/html/index.html) 操作系统教材
 - [Operating System: three easy pieces](http://pages.cs.wisc.edu/~remzi/OSTEP/) 操作系统教材
 - [free programming books](https://github.com/EbookFoundation/free-programming-books/blob/master/free-programming-books.md#operating-systems) 操作系统相关的免费书籍
+
+## draft
+- https://github.com/riscv/riscv-pk : It is designed to support tethered RISC-V implementations with limited I/O capability and thus handles I/O-related system calls by proxying them to a host computer.
+- https://github.com/jdah/tetris-os : 一个只能玩俄罗斯方块的操作系统, 只可惜是基于 i386 架构的
+- https://github.com/rust-embedded/rust-raspberrypi-OS-tutorials : 使用 rust 在树莓派上构建 os
+
+- [一个64位操作系统的设计与实现》学习笔记](https://github.com/yifengyou/The-design-and-implementation-of-a-64-bit-os)
+- https://github.com/belowthetree/TisuOS : 国人 Rust OS
+- https://makelinux.github.io/kernel/map/ : kernel map
+
