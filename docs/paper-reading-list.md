@@ -32,13 +32,16 @@ This is Tom Spink's doctor thesis.
 ## Cloud / Virtualization
 - [Alita: Comprehensive Performance Isolation through Bias Resource Management](https://mp.weixin.qq.com/s/S0lvODk2fe91AxWyMACgEQ)
 - [OSv—Optimizing the Operating System for Virtual Machines](https://www.usenix.org/conference/atc14/technical-sessions/presentation/kivity)
+- [A Linux in unikernel clothing](https://dl.acm.org/doi/10.1145/3342195.3387526)
+
+之前的 unikernel 就是重新开发的，而作者通过内核的裁剪和 KML 将 Linux 变为一个 unikernel 了
 
 ## How kernel implements
 - https://www.usenix.org/legacy/events/osdi10/tech/full_papers/Ben-Yehuda.pdf
 - https://kernel.dk/systor13-final18.pdf
 - https://www.kernel.org/doc/ols/2007/ols2007v1-pages-225-230.pdf
 
-## kernel
+## os
 - https://github.com/theseus-os/Theseus
 
 ## compiler

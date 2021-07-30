@@ -1,0 +1,3 @@
+- [依赖注入](https://github.com/boost-ext/di)
+  - [知乎解释](https://www.zhihu.com/question/32108444)
+  - [ ] 这不是一个思想吗? 为什么制作出来一个库，有意思

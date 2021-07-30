@@ -10,7 +10,7 @@ Hardware and Software Support for Virtualization : 作者[Edouard Bugnion](https
 [深度探索 Linux 系统虚拟化](https://book.douban.com/subject/35238691/) 是基于 kvmtool 的。kvmtool 移除掉 QEMU 中对于二进制翻译的支持，也不支持设备的模拟，其定位是 microvm， 所以代码量很小，而且很整洁，
 这本书讲解也更加的清晰，我推荐这本书作为开始。
 
-[QEMU/KVM源码解析与应用](https://book.douban.com/subject/35324337/)
+[QEMU/KVM 源码解析与应用](https://book.douban.com/subject/35324337/)
 总体来说是作者自己的 [blog](https://terenceli.github.io/) 的整理，是基于 QEMU 的。kvmtool 实际上在工业上的使用并不多，学习使用 QEMU 是必须的，
 但是 QEMU 更加复杂，市面上这是唯一一本比较详细的分析 QEMU 的书籍(中文和英文范围内)。但是这本书也有缺点，那就是不过凝练，很多时候都是代码流程的分析。
 
@@ -22,4 +22,4 @@ Hardware and Software Support for Virtualization : 作者[Edouard Bugnion](https
 - https://kernelgo.org/
 - https://terenceli.github.io/
 - https://www.linux-kvm.org/page/KVM_Forum : kvm forum 每年的会议 slides 都是精华，值得一个个的翻阅
-
+- [陈伟任的笔记](https://github.com/azru0512/slide/tree/master/QEMU)

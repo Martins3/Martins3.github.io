@@ -42,5 +42,7 @@ Github 提供了几个不错的主题，只需要在 `docs/_config.yml` 配置�
 ## 第三行 : 搭建 RSS 订阅
 - [ ] TODO : [参考这里](https://dzhavat.github.io/2020/01/19/adding-an-rss-feed-to-github-pages.html) 似乎可行
 
+- https://feed-me-up-scotty.vincenttunru.com/ 这个也似乎可行
+
 如果你感觉操作有什么问题，在下面评论即可。
 <script src="https://utteranc.es/client.js" repo="Martins3/Martins3.github.io" issue-term="url" theme="github-light" crossorigin="anonymous" async> </script>
