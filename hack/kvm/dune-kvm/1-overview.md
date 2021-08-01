@@ -312,12 +312,6 @@ pgroot 是 mmap 简单的创建一个 page, 是 GVA
 
 - [ ] 
 
-## 其他的启发
-- unikernel 的核心目的是什么 ? 一个进程一个内核吗 ?
-  - 如果这样，完全可以将一个 process 放在 dune 上运行
-
-- [ ] how huge page work with VM
-
 ## TODO
 1. 修复的方法:
 https://gitlab.azmi.pl/azmi-open-source/linux-grsecurity/commit/4b1e54786e4862d3110bbfb27999c2c795013007

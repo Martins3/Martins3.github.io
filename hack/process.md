@@ -53,6 +53,7 @@
 - [cfs](#cfs)
 - [pt_regs](#pt_regs)
 - [ipc](#ipc)
+- [zombie 和 orphan](#zombie-和-orphan)
 
 <!-- vim-markdown-toc -->
 
@@ -1733,6 +1734,13 @@ struct fork_frame {
 ## ipc
 - [ ] 有一个观测程序叫做 : ipcs
 - [ ] 以前整理过的 ipc 和 namespace 相关的放到这里来
+
+## zombie 和 orphan
+https://stackoverflow.com/questions/20688982/zombie-process-vs-orphan-process
+
+- orphan 根本不是一个问题，只是为了描述一种情况，parent 挂了, child 自动挂载到 init 上
+- zombie : 因为 parent 需要利用 wait 来获取 child 的状态，如果 child 挂掉了, parent 不回收，那就出现问题
+
 
 [^2]: https://man7.org/linux/man-pages/man7/signal.7.html 
 [^3]: https://0xax.gitbooks.io/linux-insides/content/SysCall/linux-syscall-2.html

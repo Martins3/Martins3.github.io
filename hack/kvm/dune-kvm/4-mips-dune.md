@@ -419,25 +419,6 @@ static int kvm_vz_vcpu_run(struct kvm_run *run, struct kvm_vcpu *vcpu)
 - [x] how x86-dune setup cr2 / cr0 register?
   - vmx.c::vmx_setup_initial_guest_state
 
-- If we have the ability to init guest state, it's any challenge for the unikernel ?
-
-- [ ] I believe what should be initiated
-    - registers
-        - CP0
-          - exception
-          - mmu / TLB
-            - mtco zero, cp0_context
-          - status register
-        - floating point register
-        - page walk related register (in CP0)
-        - SIMD
-        - config register
-          - chenP58: ELPA PAGEGRAIN SFB
-        - ipi register
-    - timer
-    - cache
-    - TLB
-
 | CP0        | desc                                                                                                                                                                                       |
 |------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | Status(SR) | 1. You’ll need to set up SR to get the CPU into a workable state for the rest of the bootstrap process. [^1] <br> 2. 通过 setup_c0_status_pri 设置主核协处理器 0 的初始 status 寄存器.[^2] |
@@ -447,20 +428,7 @@ static int kvm_vz_vcpu_run(struct kvm_run *run, struct kvm_vcpu *vcpu)
 |-------------------|------|------------------------|
 | 28                | GP   | init_thread_union [^2] |
 
-
-- [ ] visiable cache
-- [ ] What about copy current machine state to guest ?
-
 https://stackoverflow.com/questions/59729073/how-to-create-nested-table-in-html
-
-- [ ] chen,P086 到底需要将 status 初始化为什么东西,  ?
-- [ ] 需要初始化 cache 吗 ?
-    - 初始化 cache 应该是 invalide 掉，此外，cache 将会软件无感知的
-    - TLB 应该是类似的吧
-      - [ ] machine id and guest id works ?
-      - [ ] KVM will load guest tlb before vm enter, what's the details ?
-
-- [ ] check code for irq_chip related paragraph 
 
 - [ ] chen,P101 主核需要自己计算 sp, gp
 

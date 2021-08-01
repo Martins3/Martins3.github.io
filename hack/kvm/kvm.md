@@ -3,7 +3,6 @@
 ## TODO
 1. 看看 kvm 的 ioctl 的实现
 2. 求求了，什么时候学一下 x86 汇编吧，然后出一个利用 kvm 给别人写一个教程
-3. 在 kvm 中间运行 unikernel ?
 4. [^6] 虚拟化入门，各种 hypervisor 分类
 5. 我心心念念的 TLB 切换在哪里啊 ?
 6. virtio 的两个文章:

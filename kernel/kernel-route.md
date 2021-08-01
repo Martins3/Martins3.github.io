@@ -8,6 +8,8 @@ unikernel:
 - https://github.com/solo-io/unik
 - includeOs
 - https://unikraft.org/getting-started/ : 2021 的一个 unikernel，所以这些 unikernel 都有什么不同吗?
+- https://github.com/hermitcore/libhermit-rs
+- [ ] 无论如何，我是知道的，那就是内核中间的
 
 https://github.com/ikwzm/udmabuf : user dma driver
 

@@ -1,7 +1,7 @@
 # 收集的资源
 https://c9x.me/compile/bib/ : 业余编译器玩家的阅读资源
 
-https://github.com/vtil-project/VTIL-Core : 又一个二进制翻译器
+https://github.com/vtil-project/VTIL-Core : 有一个中间表示层，但是似乎和二进制安全更加相关的
 
 https://github.com/aalhour/awesome-compilers : **key**
 可以学习 llvm 之类的

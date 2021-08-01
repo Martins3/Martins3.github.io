@@ -1,16 +1,10 @@
 <p align="center">
-  <a href="https://github.com/Martins3">
-    <img alt="img" src="./img/ma.png" height="160" />
-    <img alt="img" src="https://raw.githubusercontent.com/shuveb/io_uring-by-example/master/public/tux.png" height="160" />
-    <img alt="img" src="https://styles.redditmedia.com/t5_2ykcc/styles/image_widget_pifwg495jvr41.png" height="160" />
-    <img alt="img" src="https://pbs.twimg.com/media/EssDxqSXYAEDdvP?format=jpg&name=small" height="160" />
-  </a>
+  <p align="center">
+      <img src="https://github-readme-stats.vercel.app/api?username=Martins3&count_private=true" />
+  </p>
   <p align="center">
     <a href="https://996.icu"><img src="https://img.shields.io/badge/link-996.icu-red.svg" alt="996.icu" /></a>
     <a href="https://spacevim.org/"><img src="https://spacevim.org/img/build-with-SpaceVim.svg" alt="spacevim" /></a>
-  </p>
-  <p align="center">
-      <img src="https://github-readme-stats.vercel.app/api?username=Martins3" />
   </p>
 </p>
 

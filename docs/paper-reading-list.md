@@ -49,3 +49,6 @@ This is Tom Spink's doctor thesis.
 
 ## TODO
 - https://www.usenix.org/system/files/osdi18-shan.pdf
+
+## fs
+- [使用 Rust 开发文件系统](http://blog.jcix.top/2021-04-10/bentofs/)
