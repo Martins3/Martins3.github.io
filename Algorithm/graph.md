@@ -93,7 +93,9 @@ def stack_traversal(G,s):
                 visited.add(w)
                 stack.append(w)
 ```
-但是这个并不能等价于 DFS, 可以通过 visited 的判断放到最后
+上面这一种显然不行，就思考二叉树的情况，第一个元素上来就
+将其两个 child 都标记为 visited
+
 ```py
 def dfs2(G,s):
     visited = set()
@@ -106,7 +108,8 @@ def dfs2(G,s):
             for w in G[v]:
                 stack.append(w)
 ```
-挺容易的
+将 stack 的 top 取出来，然后 push neighbor 的元素，
+dfs 唯一的问题在于，其需要检查 pop 出来的是否 visited 过了。
 
 C-Plus-Plus/graph/depth_first_search_with_stack.cpp 实现的算法是非常蠢的，应该修改一下。
 
