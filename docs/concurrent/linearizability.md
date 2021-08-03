@@ -19,6 +19,7 @@ consistency and the Java programming language in detail in Section 3.8.
 1. `QC`要求当出现时间点没有任何程序执行的时候，那么该时间点之前和时间点之后的程序执行的顺序不可以改变。
 
 2. 而`SC`则要求，每一个线程函数调用都是按照程序顺序执行的，但是程序之间的顺序没有关系。 因为两个线程的函数调用的先后关系没有要求，所以，下面两种情况对于`SC`是等价的
+
 ```txt
 // A:
 P1 -- q.enq(x) ----------------------------- 
@@ -39,7 +40,7 @@ P2 ---q.deq():x ----------------------------
 1. Linearizability 是 sequential consistency　的子集，因为 linearizability 是在 sequential consistency 的基础上添加了一个保持没有 overlapping 的顺序的要求。
 2. quiescent consistency 和 sequential consistency 没有包含关系，其实容易理解，
     1. [这里](https://stackoverflow.com/questions/19209274/example-of-execution-which-is-sequentially-consistent-but-not-quiescently-consis)举出一个是 sequential consistency 但是不是 quiescent concurrency 的例子。
-      2. [这里](https://stackoverflow.com/questions/48935256/example-of-a-program-order-which-is-quiescently-consistent-but-sequentially-inco)是一个对称的例子
+    2. [这里](https://stackoverflow.com/questions/48935256/example-of-a-program-order-which-is-quiescently-consistent-but-sequentially-inco)是一个对称的例子
     3. 两者都是 : 对于一个原子寄存器读写。
     4. 两者都不是的例子 : 一个线程 enqueue 一个 1,另个一线程 dequeu 一个 2 出来。
 
@@ -50,7 +51,9 @@ P2 ---q.deq():x ----------------------------
 何为组合: A correctness property is compositional if, whenever each **object** in the system satisfies , the system as a whole satisfies .
 
 - quiescent consistency is compositional
->Can we, in fact, compose a collection of independently implemented quiescently consistent objects to construct a quiescently consistent system? The answer is, yes: quiescent consistency is compositional, so quiescently consistent objects can be composed to construct more complex quiescently consistent objects
+
+> Can we, in fact, compose a collection of independently implemented quiescently consistent objects to construct a quiescently consistent system? The answer is, yes: quiescent consistency is compositional, so quiescently consistent objects can be composed to construct more complex quiescently consistent objects
+
 - Figure 3.8 说明 sequential consistency 不是 compositional 的。
 -  `L`也是可组合的，证明方法是递归的方法(假设对于任意小于 k 个函数调用的历史是组合的)
 
