@@ -43,6 +43,9 @@ This is Tom Spink's doctor thesis.
 
 ## os
 - https://github.com/theseus-os/Theseus
+- https://github.com/demikernel/demikernel
+    - 
+    - Demikernel architecture offers a uniform system call API across kernel-bypass technologies (e.g., RDMA, DPDK) and OS functionality (e.g., a user-level networking stack for DPDK). 
 
 ## compiler
 - https://zhuanlan.zhihu.com/p/336543238
