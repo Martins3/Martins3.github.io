@@ -26,16 +26,18 @@ zsh 和 bash 之前语法上基本是兼容的，但是由于[oh my zsh](https:/
 使用 Linux 有个非常窒息的事情在于，默认的工具使用体验一般，下面介绍一些体验更加的工具。
 [这里](https://css.csail.mit.edu/jitk/) 总结的工具非常不错，下面是我自己的补充。这些工具都是基本是从 github awesome[^1][^2][^3] 和 hacker news[^4] 中间找到:
 
-| 😞   | 😃                                                                                                                   |
-|------|----------------------------------------------------------------------------------------------------------------------|
-| cd   | [autojump](https://github.com/wting/autojump) <br> [z.lua](https://github.com/skywind3000/z.lua)                     |
-| ls   | [lsd](https://github.com/Peltoche/lsd)                                                                               |
-| du   | [ncdu](https://dev.yorhel.nl/ncdu)                                                                             |
-| gdb  | [gdb dashboard](https://github.com/cyrus-and/gdb-dashboard)                                                 |
-| git  | [diff-so-fancy](https://github.com/so-fancy/diff-so-fancy) <br> [lazy git](https://github.com/jesseduffield/lazygit) <br> [bit](https://github.com/chriswalz/bit)|
-| man  | [cheat](https://github.com/chubin/cheat.sh)                                                                          |
-| find | [fd](https://github.com/chinanf-boy/fd-zh)                                                                           |
-| ssh | [sshfs](https://github.com/libfuse/sshfs)                                                                           |
+| 😞   | 😃                                                                                                                                                                |
+|------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| cd   | [autojump](https://github.com/wting/autojump) <br> [z.lua](https://github.com/skywind3000/z.lua)                                                                  |
+| ls   | [lsd](https://github.com/Peltoche/lsd)                                                                                                                            |
+| du   | [ncdu](https://dev.yorhel.nl/ncdu)                                                                                                                                |
+| gdb  | [gdb dashboard](https://github.com/cyrus-and/gdb-dashboard)                                                                                                       |
+| git  | [diff-so-fancy](https://github.com/so-fancy/diff-so-fancy) <br> [lazy git](https://github.com/jesseduffield/lazygit) <br> [bit](https://github.com/chriswalz/bit) |
+| man  | [cheat](https://github.com/chubin/cheat.sh)                                                                                                                       |
+| find | [fd](https://github.com/chinanf-boy/fd-zh)                                                                                                                        |
+| ssh  | [sshfs](https://github.com/libfuse/sshfs)
+
+只能感慨开源社区的强大，最近发现了一个叫 [modern unix](https://github.com/ibraheemdev/modern-unix) 的项目，总结一大堆工具, 比我上面找的更加。
 
 ## 一些小技巧
 - [alias](https://thorsten-hans.com/5-types-of-zsh-aliases)

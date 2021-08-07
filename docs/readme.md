@@ -27,16 +27,16 @@
 ## Loongson
 - [X86 上阅读 Loongarch 内核](./loongarch/ccls.md)
 
+## 并发
+- [Quiescent consistency，Sequential consistency 和 Linearizability](./concurrent/linearizability.md)
+- [wait free，lockfree 和 obstruction free 区分](./concurrent/lock-free.md)
+
 ## MISC
 - [what is x86 IA-32 IA-64 x86-64 and amd64 ?](./x86-names.md)
 - [The Day](https://martins3.github.io/theday/)
 - [The Garden](http://martins3.gitee.io/garden/)
 - [使用两行代码搭建博客](./setup-github-pages.md)
 - [言论](./words.md)
-
-## 并发
-- [Quiescent consistency，Sequential consistency 和 Linearizability](./concurrent/linearizability.md)
-- [wait free，lockfree 和 obstruction free 区分](./concurrent/lock-free.md)
 
 <!-- ## RSS  -->
 <!-- <a class="btn btn-rss" href="/feed.xml" target="_blank">点我订阅</a> -->

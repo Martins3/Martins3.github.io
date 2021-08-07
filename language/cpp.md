@@ -1,3 +1,6 @@
+
+https://github.com/sharkdp/dbg-macro/blob/master/dbg.h : 1000 行的更好的printf debug工具, 正在被我的 leetcode 项目使用
+
 ## TODO
 感觉一次阅读一大本书是没有意义的，可以作为一个休息时间，一次阅读一点点，记录自己疑惑的问题:
 1. stackoverflow top question
@@ -75,7 +78,6 @@ https://github.com/wuye9036/CppTemplateTutorial : 中文 template 教程，居�
 https://github.com/Snaipe/libcsptr : 小伙子，不是想要学习 smart pointer 的实现吗 ?
 
 https://github.com/fogleman/Craft : 只有 5000 行，但是实现了 minecraft
-https://github.com/sharkdp/dbg-macro/blob/master/dbg.h : 1000 行的更好的printf debug工具
 https://github.com/gabime/spdlog
     1. https://github.com/timberio/vector 对比一下，两者是一个东西吗 ?
 
@@ -101,3 +103,5 @@ https://github.com/google/googletest
 https://github.com/onqtam/doctest : 和 googletest 有什么区别吗 ?
 https://github.com/catchorg/Catch2 : 又一个测试框架
 
+## 有趣
+- https://github.com/jupyter-xeus/xeus-cling : Jupyter kernel for C++

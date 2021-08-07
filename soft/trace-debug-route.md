@@ -1,0 +1,2 @@
+- https://github.com/rr-debugger/rr : rr is a lightweight tool for recording, replaying and debugging execution of applications (trees of processes and threads). 
+    - record 调试技术

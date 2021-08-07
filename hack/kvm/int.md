@@ -1,7 +1,5 @@
 # intel 中断虚拟化，基于 狮子书
 
-中断的优化过程:
-
 # 之前记录的笔记
 https://lwn.net/Articles/44139/
 
@@ -433,6 +431,7 @@ I/O APIC 从中断重定向表提取中断信息，而 MSI-X 是从 MSI-X Capabi
 - [ ] 而且之前分析的 pic apic 之类的控制器的虚拟化和这里的技术没有冲突，但是书上给我的感觉都是非要 kick 一下 cpu 才可以
 
 - [ ] 分析 IOMMU 的时候，都是假设收到中断的 CPU 和目标 CPU 不是一个 CPU, 但是如果中断从设备直接到达目标 CPU, 需要退出吗 ?
+
 ## 3.5.2
 ```c
 static struct kvm_x86_ops vmx_x86_ops __initdata = {
