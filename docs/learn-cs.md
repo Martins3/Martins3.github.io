@@ -26,7 +26,11 @@
 一个老哥整理了一些关键课程，https://github.com/conanhujinming/comments-for-awesome-courses, 非常不错
 
 ## 5 工欲善其事, 必先利其器
+很多大学老师一方面总是有意无意的表现出来对于各种编程工具的轻视，认为自己的任务是教授原理，
+
+
 可以看看 mit 的这个课程
+
 https://missing-semester-cn.github.io/
 
 ## 附录

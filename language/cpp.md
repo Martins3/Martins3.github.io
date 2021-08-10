@@ -16,6 +16,9 @@ https://github.com/sharkdp/dbg-macro/blob/master/dbg.h : 1000 行的更好的pri
 
 - https://github.com/mattbierner/STT-C-Compile-Time-Snake : 使用 template 来玩贪吃蛇
 
+- [ ] https://hackingcpp.com/cpp/cheat_sheets.html : 通过图片的方式快速的展示
+- [ ] https://abseil.io/tips/ : 一个 cpp 社区，提供 weekly news 之类的
+
 
 ## 阅读
 1. [快速浏览](https://github.com/changkun/modern-cpp-tutorial/blob/master/book/zh-cn/03-runtime.md)

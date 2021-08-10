@@ -7,7 +7,7 @@ https://github.com/stateright/stateright : 一个图新界面，用于辅助分�
 1. [入门经典，可以写一个总结笔记](http://book.mixu.net/distsys/)
 4. https://github.com/aphyr/distsys-class : 提纲的形式列举出来各种
 
-2. https://github.com/pingcap/talent-plan : pingcap 的教程还是相当不错的
+2. https://github.com/pingcap/talent-plan : **pingcap 的教程还是相当不错的**
 3. https://dancres.github.io/Pages/ : 分布式文章阅读列表，至少先搞定了 mit 6.824 再说吧
 
 4. https://www.youtube.com/playlist?list=PLeKd45zvjcDFUEv_ohr_HdUFe97RItdiB : Designing Data Intensive Application 的作者提供的 ds 教程

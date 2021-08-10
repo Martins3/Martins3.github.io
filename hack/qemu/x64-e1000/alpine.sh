@@ -20,7 +20,7 @@ LAUNCH_GDB=false
 
 arg_img="-drive \"file=${disk_img},format=qcow2\""
 arg_mem="-m 6G -smp 2,maxcpus=3 -vga virtio"
-arg_kernel="--kernel ${kernel} -append \"root=/dev/sda3 nokaslr\""
+arg_kernel="--kernel ${kernel} -append \"root=/dev/sda3 nokaslr pci=nomsi\""
 arg_seabios="-chardev file,path=/tmp/seabios.log,id=seabios -device isa-debugcon,iobase=0x402,chardev=seabios -bios ${seabios}"
 arg_nvme="-device nvme,drive=nvme1,serial=foo -drive file=${ext4_img1},format=raw,if=none,id=nvme1"
 arg_nvme2="-device nvme,drive=nvme2,serial=foo -drive file=${ext4_img2},format=raw,if=none,id=nvme2"
@@ -36,11 +36,11 @@ arg_tmp=""
 # huxueshi:blockdev_init floppy0
 # huxueshi:blockdev_init sd0
 
-while getopts "dkgt" opt; do
+while getopts "dskt" opt; do
 	case $opt in
 	d) debug_qemu="gdb --args" ;;
-	k) debug_kernel="-S -s" ;;
-	g) LAUNCH_GDB=true ;;
+	s) debug_kernel="-S -s" ;;
+	k) LAUNCH_GDB=true ;;
 	t) arg_accel="--accel tcg,thread=single" ;;
 	*) exit 0 ;;
 	esac

@@ -27,7 +27,7 @@
 ## Loongson
 - [X86 上阅读 Loongarch 内核](./loongarch/ccls.md)
 
-## 并发
+## multi-processor programming
 - [Quiescent consistency，Sequential consistency 和 Linearizability](./concurrent/linearizability.md)
 - [wait free，lockfree 和 obstruction free 区分](./concurrent/lock-free.md)
 
