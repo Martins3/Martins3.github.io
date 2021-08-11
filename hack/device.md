@@ -277,7 +277,7 @@ int uart_register_driver(struct uart_driver *drv)
 
 - [ ] https://wiki.osdev.org/%228042%22_PS/2_Controller
   - [ ] 在哪里可以找到 intel 的手册
-- [ ] i8042 为什么在 /proc/interrupts 下存在两个项 ?
+- [x] i8042 为什么在 /proc/interrupts 下存在两个项 ? (同时有键盘和鼠标)
 - [ ] drivers/input/serio/i8042.c
 - [ ] drivers/input/keyboard/atkbd.c
 

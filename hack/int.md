@@ -974,7 +974,7 @@ static struct irq_chip ioapic_ir_chip __read_mostly = {
 - /proc/irq 的代码都在 kernel/irq/proc.c
 
 ## /proc/interrupts
-```c
+```txt
 ➜  irq cat /proc/interrupts 
             CPU0       CPU1       CPU2       CPU3       CPU4       CPU5       CPU6       CPU7       
    0:          8          0          0          0          0          0          0          0  IR-IO-APIC    2-edge      timer
@@ -1027,6 +1027,10 @@ static struct irq_chip ioapic_ir_chip __read_mostly = {
 ```
 才发现，IR-IO-APIC 后面都是添加上设备的，IR-PCI-MSI 主要是和 pcie 相关的设备，而 local apic 的名称直接被该 interrupt 的名字替代了。
 - [ ] 1572869-edge : 是什么鬼
+
+尝试分析一下 /proc/interrupts 如何生成的:
+- 在 kernel/irq/proc.c::show_interrupts 中间
+
 
 ## MSI
 Generic MSIs : https://en.wikipedia.org/wiki/Message_Signaled_Interrupts
