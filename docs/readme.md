@@ -23,6 +23,7 @@
 - [内核学习的一点经验之谈](./learn-linux-kernel.md)
 - [2021 年 vim 的 C/C++ 配置](https://martins3.github.io/My-Linux-config/)
 - [虚拟化学习的一点经验之谈](./learn-virtualization.md)
+- [使用 QEMU FlameGraph 和 eBPF 阅读内核](./tips-reading-kernel.md)
 
 ## Loongson
 - [X86 上阅读 Loongarch 内核](./loongarch/ccls.md)

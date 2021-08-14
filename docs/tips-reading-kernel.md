@@ -52,7 +52,8 @@ perf record -a -g -F100000 dd if=/dev/zero of=/tmp/test.dat bs=1024K count=1000
 
 ```sh
 perf script> perf_data.txt
-perl stackcollapse-perf.pl perf_data.txt|perl flamegraph.pl --title "Flame Graphs - dd if=/dev/zero of=/tmp/test.dat bs=1024K count=1000" > flamegraph_dd.svg
+perl stackcollapse-perf.pl perf_data.txt | \
+perl flamegraph.pl --title "trace" > flamegraph_dd.svg
 ```
 最终效果，可以在新的窗口中打开，
 ![](./img/flamegraph.svg)
