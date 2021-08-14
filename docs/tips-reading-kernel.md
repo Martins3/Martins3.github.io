@@ -1,4 +1,4 @@
-# 阅读内核的一些工具总结
+# 使用 QEMU, FlameGraph 和 bpftrace 阅读内核
 
 在[上一篇文章](https://martins3.github.io/learn-linux-kernel.html)中，提出了学习内核的目的，工作的方向以及
 大致的学习路径，下面谈一下学习的。
@@ -31,7 +31,7 @@ QEMU 高效，简单，强大。
 使用 FlameGraph 可以很快的定位出来函数的大致执行的流程，无需使用编辑器一个个的跳转，非常好用。
 其局限在于，似乎总是只能从用户态系统调用触发。
 
-具体步骤参考 : https://yohei-a.hatenablog.jp/entry/20150706/1436208007
+步骤参考 : https://yohei-a.hatenablog.jp/entry/20150706/1436208007 原文是日文写的，我在转述一下:
 
 ```sh
 wget https://raw.githubusercontent.com/brendangregg/FlameGraph/master/stackcollapse-perf.pl
@@ -55,9 +55,9 @@ perf script> perf_data.txt
 perl stackcollapse-perf.pl perf_data.txt | \
 perl flamegraph.pl --title "trace" > flamegraph_dd.svg
 ```
-最终效果，可以在新的窗口中打开，
-![](./img/flamegraph.svg)
 
+最终效果如下，可以在新的窗口中打开从而可以动态交互。
+![](./img/flamegraph.svg)
 
 ## bpftrace
 使用 bpftrace 的 kprobe 可以很容易的动态的获取内核函数的 backtrace, 效果如下。
