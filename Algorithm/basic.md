@@ -75,6 +75,9 @@ algorithm partition(A, lo, hi) is
     return i
  */
 ```
+即使是这个操作也有关键点:
+1. pivot 从 hi 上取，保证 pivot 的位置不会变动 (从 lo 上就不知道了)
+2. 注意 i j 相等的时候也是可以处理的
 
 ## heap sort
 1. 使用数组
@@ -94,3 +97,8 @@ Arr[(2*i)+2]	Returns the right child node
 放入的元素 e 和 stack.pop() 比较:
 1. e > stack.pop(), 一路 pop 直到可以
 2. 如果小鱼，那么这就是 e 的 Next Greater Number
+
+## 最近公共祖先
+虽然标准算法很麻烦，但是只是找两个点的还是很有技巧性:
+
+https://leetcode-cn.com/problems/lowest-common-ancestor-of-a-binary-tree/comments/

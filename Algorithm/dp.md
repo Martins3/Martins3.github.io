@@ -73,7 +73,7 @@ best = i + 1 的最优解必然是之前的最优解增加一个导致的，所�
 ## 300.最长上升子序列
 dp[i] 记录的内容，当 i 作为序列终点的时候，当前的最长上升子序列
 
-转移: dp[i] 对于每一个人询问，对于那些 arr[i] > arr[j], 就是接上了
+转移: dp[i] 对于前面的每一个数值比较，对于那些 arr[i] > arr[j], 就是接上了
 
 [Longest increasing subsequence](https://en.wikipedia.org/wiki/Longest_increasing_subsequence) 
 https://stackoverflow.com/questions/2631726/how-to-determine-the-longest-increasing-subsequence-using-dynamic-programming

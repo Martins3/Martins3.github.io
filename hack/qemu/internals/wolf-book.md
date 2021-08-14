@@ -121,10 +121,14 @@ KVM_CREATE_IRQCHIP
 2. kvm_ioapic_init
 3. kvm_steup_default_irq_routing
 
+#### 6.2.4 MSI 中断模拟
+1. msi_get_message 构造中断
+2. 设备发起中断通过 msi_notify
+3. msi_send_message 中的 address_space_stl_le 会导致执行 QEMU 层的 kvm-apic 设备的 MMIO 写回调函数, 也就是 kvm_send_msi, 然后 KVM 处理 ioctl KVM_SIGNAL_MSI
 
 ## chapter 7 : 设备虚拟化
 
-### 7.6 vhost net 简介
+#### 7.6 vhost net 简介
 virtio 的问题在于为了将数据发送出去，需要切入到用户态，然后走 TAP 设备，vsock 直接走内核，从而减少一次用户态。
 
 - [ ] 为什么 block io 不是类似的处理

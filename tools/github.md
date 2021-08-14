@@ -5,6 +5,7 @@
   
 - https://github.blog/2021-04-15-work-with-github-actions-in-your-terminal-with-github-cli/
   - 使用 github action 来构造函数
+- https://github.com/Mayandev/interview-schedule/issues/19 : 使用 Google Calendar 来自动更新 github
 
 ## 使用 lint-md 来检查中文文档
 ```yml
