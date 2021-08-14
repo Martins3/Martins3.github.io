@@ -32,4 +32,11 @@ jobs:
                 failOnWarnings: true
 ```
 2. 创建 `.lintmdrc`
-3. 其中的内容为 `{}`
+    - `.lintmdrc` 中的内容为 `{}`
+
+## token
+1. 创建 https://github.com/settings/tokens
+2. 将 ~/.git-credentials 中原来的密码替换为 token:
+```
+https://martins3:token@github.com
+```
