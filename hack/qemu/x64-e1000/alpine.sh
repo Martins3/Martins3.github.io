@@ -25,14 +25,17 @@ debug_qemu=
 debug_kernel=
 LAUNCH_GDB=false
 
+
+
 arg_img="-drive \"file=${disk_img},format=qcow2\""
-arg_mem="-m 6G -smp 2,maxcpus=3 -vga virtio"
+arg_mem="-m 6G -smp 2,maxcpus=3"
+arg_cpu="-cpu host"
 arg_kernel="--kernel ${kernel} -append \"root=/dev/sda3 nokaslr \""
 arg_seabios="-chardev file,path=/tmp/seabios.log,id=seabios -device isa-debugcon,iobase=0x402,chardev=seabios -bios ${seabios}"
 arg_nvme="-device nvme,drive=nvme1,serial=foo -drive file=${ext4_img1},format=raw,if=none,id=nvme1"
 arg_nvme2="-device nvme,drive=nvme2,serial=foo -drive file=${ext4_img2},format=raw,if=none,id=nvme2"
 arg_share_dir="-virtfs local,path=${share_dir},mount_tag=host0,security_model=mapped,id=host0"
-arg_accel="-enable-kvm -cpu host"
+arg_machine="-machine pc,accel=kvm,kernel-irqchip=on" # q35 / q35
 arg_monitor="-monitor stdio"
 arg_tmp=""
 
@@ -57,7 +60,7 @@ while getopts "dskth" opt; do
 	d) debug_qemu="gdb --args" ;;
 	s) debug_kernel="-S -s" ;;
 	k) LAUNCH_GDB=true ;;
-	t) arg_accel="--accel tcg,thread=single" ;;
+	t) arg_machine="--accel tcg,thread=single" arg_cpu="" ;;
 	h) show_help ;;
 	*) exit 0 ;;
 	esac
@@ -115,7 +118,7 @@ if [ $LAUNCH_GDB = true ]; then
 	exit 0
 fi
 
-cmd="${debug_qemu} ${qemu} ${debug_kernel} ${arg_img} ${arg_mem} ${arg_kernel} ${arg_seabios} ${arg_nvme} ${arg_nvme2} ${arg_share_dir} ${arg_accel} ${arg_monitor} ${arg_tmp}"
+cmd="${debug_qemu} ${qemu} ${debug_kernel} ${arg_img} ${arg_mem} ${arg_cpu} ${arg_kernel} ${arg_seabios} ${arg_nvme} ${arg_nvme2} ${arg_share_dir} ${arg_machine} ${arg_monitor} ${arg_tmp}"
 echo "$cmd"
 eval "$cmd"
 

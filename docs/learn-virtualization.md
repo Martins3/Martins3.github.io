@@ -21,5 +21,5 @@ Hardware and Software Support for Virtualization : 作者[Edouard Bugnion](https
 ## 一些有用的 blog
 - https://kernelgo.org/
 - https://terenceli.github.io/
-- https://www.linux-kvm.org/page/KVM_Forum : kvm forum 每年的会议 slides 都是精华，值得一个个的翻阅
+- https://www.linux-kvm.org/page/KVM_Forum : kvm forum 每年的会议 slides 都是精华，值得一个个的翻阅, 在 youtube 上有对应的[录像](https://www.youtube.com/channel/UCRCSQmAOh7yzgheq-emy1xA)
 - [陈伟任的笔记](https://github.com/azru0512/slide/tree/master/QEMU)

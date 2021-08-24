@@ -109,6 +109,9 @@ void module_call_init(module_init_type type)
 ## chapter 3 主板和固件模拟
 > 草稿放到 qboot.md 和 kernel-img.md 中
 
+QEMU 会调用 rom_check_and_register_reset, 其主要的工作是将 rom_reset 挂到 reset_handler
+链表上，将虚拟机重置的时候，会调用这些函数。
+
 ## chapter 6
 
 #### 6.2.2 PIC 中断模拟
