@@ -15,7 +15,7 @@
   - [QA](#qa)
 - [Softmmu](#softmmu)
   - [Overview](#overview-1)
-  - [SOFT TLB](#soft-tlb)
+  - [soft TLB](#soft-tlb)
   - [ram addr](#ram-addr)
   - [SMC](#smc)
 
@@ -269,7 +269,7 @@ softmmu 只有 tcg 才需要，实现基本思路是:
 - 所有的访存指令前使用软件进行地址翻译，如果命中，那么获取 GPA 进行访存
 - 如果不命中，慢路径，也就是 store_helper
 
-### SOFT TLB
+### soft TLB
 TLB 的大致结构如下, 对此需要解释一些问题:
 ![](./img/tlb.svg)
 
