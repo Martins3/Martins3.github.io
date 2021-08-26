@@ -1,8 +1,9 @@
 # QEMU 的 memory model 和 softmmu 设计分析
 
+
 ## memory model
 
-#### 概述
+### 概述
 原图来自于 kernelgo.org, 这里进行一些小小的修改。
 ![](./img/qemu-address-space.svg)
 
