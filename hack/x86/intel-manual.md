@@ -13,7 +13,8 @@
       - [29.1.1 Virtualized APIC Registers](#2911-virtualized-apic-registers)
     - [29.2 EVALUATION AND DELIVERY OF VIRTUAL INTERRUPTS](#292-evaluation-and-delivery-of-virtual-interrupts)
     - [29.2.2 Virtual-Interrupt Delivery](#2922-virtual-interrupt-delivery)
-  - [29.6 POSTED-INTERRUPT PROCESSING](#296-posted-interrupt-processing)
+    - [29.6 POSTED-INTERRUPT PROCESSING](#296-posted-interrupt-processing)
+  - [CHAPTER 34 SYSTEM MANAGEMENT MODE](#chapter-34-system-management-mode)
 - [questions](#questions)
 
 <!-- vim-markdown-toc -->
@@ -125,7 +126,7 @@ deliver interrupt with Vector through IDT;
 cease recognition of any pending virtual interrupt;
 ```
 
-## 29.6 POSTED-INTERRUPT PROCESSING
+### 29.6 POSTED-INTERRUPT PROCESSING
 Posted-interrupt processing is a feature by which a processor processes the virtual interrupts by recording them as pending on the virtual-APIC page.
 
 The processing is performed in response to the arrival of an interrupt with the posted-interrupt notification vector.
@@ -137,6 +138,15 @@ a VMCS. There is a general requirement that software ensure that each such data 
 no logical processor with a current VMCS that references it is in VMX non-root operation.** That requirement does
 not apply to the posted-interrupt descriptor. There is a requirement, however, that such modifications be done
 using locked read-modify-write instructions.
+
+## CHAPTER 34 SYSTEM MANAGEMENT MODE
+SMM is a special-purpose operating mode provided for handling system-wide functions like power management, system hardware control, or proprietary OEM-designed code.
+It is intended for use only by system firmware, not by applications software or general-purpose systems software.
+The main benefit of SMM is that it offers a distinct and easily isolated processor environment that operates transparently to the operating system or executive and software applications.
+
+The execution environment after entering SMM is in real address mode with paging disabled (CR0.PE = CR0.PG = 0). In this initial execution environment, the SMI handler 
+can address up to 4 GBytes of memory and can execute all I/O and system instructions.
+
 
 # questions
 flat and cluster 

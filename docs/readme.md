@@ -15,6 +15,8 @@
 
 ## Virtualization
 - [Loongson Dune : A Process Level Virtualization framework Base on KVM](https://github.com/Martins3/loongson-dune)
+- [裸金属二进制翻译器的设计与实现](https://martins3.github.io/ppt/repo/2021-8-24/index.html)
+- [QEMU 的 memory model 和 softmmu 设计分析](./qemu-memory.md)
 
 ## Tips
 - [How to cross Great Fire Wall](./gfw.md)
