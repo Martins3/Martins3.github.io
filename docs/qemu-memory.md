@@ -22,7 +22,8 @@
 原图来自于 kernelgo.org, 这里进行一些小小的修改。
 ![](./img/qemu-address-space.svg)
 
-首先感受一下 memory model 是什么, 下面是一个例子，guest 机器的配置使用[这个脚本](https://github.com/Martins3/Martins3.github.io/blob/master/hack/qemu/x64-e1000/alpine.sh)生成的。
+首先感受一下 memory model 是什么, 在 QEMU 的 monitor console 中 `info mtree` 可以下面是一个例子，guest 机器的配置使用[这个脚本](https://github.com/Martins3/Martins3.github.io/blob/master/hack/qemu/x64-e1000/alpine.sh)生成的。
+
 ```txt
  ┌──────────► 这是一个 AddressSpace，AddressSpace 用于描述整个地址空间的映射关系。
  │                                        ┌───────────────────────► MemoryRegion 的优先级，如果一个范围两个 MemoryRegion 出现重叠，优先级高的压制优先级低的 
@@ -232,7 +233,8 @@ static inline MemTxAttrs cpu_get_mem_attrs(CPUX86State *env)
 最后在 tlb_set_page_with_attrs 中选择不同的地址空间的。
 
 ### IOMMU
-IOMMU 的学习可以参考 ASPLOS 提供的 ppt[^1], 其内容
+IOMMU 的学习可以参考 ASPLOS 提供的 ppt[^1], 简单来说，以前设备是可以直接访问物理内存，增加了 IOMMU 之后，设备访问物理内存类似 CPU 也是需要经过一个虚实地址映射。
+所以，每一个
 
 ### QA
 - 为什么 ram 不是一整块，而是拆分出来了 ram-below-4g 和 ram-above-4g 两个部分?
