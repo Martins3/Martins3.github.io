@@ -1,9 +1,24 @@
 # QEMU 的 memory model 和 softmmu 设计分析
 
+<!-- vim-markdown-toc GitLab -->
+
+- [memory model](#memory-model)
+  - [Overview](#overview)
+  - [AddressSpace](#addressspace)
+  - [MemoryRegion](#memoryregion)
+  - [FlatView](#flatview)
+  - [AddressSpaceDispatch](#addressspacedispatch)
+  - [MemoryListener](#memorylistener)
+  - [CPUAddressSpace](#cpuaddressspace)
+  - [SMM](#smm)
+  - [IOMMU](#iommu)
+  - [QA](#qa)
+
+<!-- vim-markdown-toc -->
 
 ## memory model
 
-### 概述
+### Overview
 原图来自于 kernelgo.org, 这里进行一些小小的修改。
 ![](./img/qemu-address-space.svg)
 
@@ -217,8 +232,10 @@ static inline MemTxAttrs cpu_get_mem_attrs(CPUX86State *env)
 最后在 tlb_set_page_with_attrs 中选择不同的地址空间的。
 
 ### IOMMU
-IOMMU 简单来说是
+IOMMU 的学习可以参考 ASPLOS 提供的 ppt[^1], 其内容
 
 ### QA
 - 为什么 ram 不是一整块，而是拆分出来了 ram-below-4g 和 ram-above-4g 两个部分?
     - 因为中间需要留出 mmio 空洞
+
+[^1]: [ASPLOS IOMMU tutorial](http://pages.cs.wisc.edu/~basu/isca_iommu_tutorial/IOMMU_TUTORIAL_ASPLOS_2016.pdf)
