@@ -16,6 +16,7 @@
 - [Softmmu](#softmmu)
   - [Overview](#overview-1)
   - [SOFT TLB](#soft-tlb)
+  - [ram addr](#ram-addr)
   - [SMC](#smc)
 
 <!-- vim-markdown-toc -->
@@ -269,9 +270,60 @@ softmmu 只有 tcg 才需要，实现基本思路是:
 - 如果不命中，慢路径，也就是 store_helper
 
 ### SOFT TLB
-TLB 的大致结构如下:
+TLB 的大致结构如下, 对此需要解释一些问题:
 ![](./img/tlb.svg)
 
+1. 快速路径访问的是 CPUTLBEntry 的
+2. 而慢速路径访问 victim TLB 和 CPUIOTLBEntry
+3. victim TLB 的大小是固定的，而正常的 TLB 的大小是动态调整的
+4. CPUTLBEntry 的说明:
+    - addend : GVA + addend 等于 HVA
+    - 分别创建出来三个 addr_read / addr_write / addr_code 是为了快速比较，两者相等就是命中，不相等就是不命中，如果向操作系统中的 page table 将 page entry 插入 flag 描述权限，这个比较就要使用更多的指令了(移位/掩码之后比较)
+5. CPUIOTLBEntry 的说明:
+  - 如果不是落入 RAM : TARGET_PAGE_BITS 内可以放 AddressSpaceDispatch::PhysPageMap::MemoryRegionSection 数组中的偏移, 之外的位置放 MemoryRegion 内偏移。通过这个可以迅速获取 MemoryRegionSection 进而获取 MemoryRegion。
+  - 如果是落入 RAM , 可以得到 [ram addr](#ram-addr)
+
+### ram addr
+构建 ram addr 的目的 dirty page 的记录，所有的 page 的 dirty 都是记录在 `RAMList::DirtyMemoryBlocks::blocks` 中
+给出一个 ram 中的一个 page，需要找到在 blocks 数组中的下标，于是发明了 ram addr
+```c
+typedef struct {
+    struct rcu_head rcu;
+    unsigned long *blocks[];
+} DirtyMemoryBlocks;
+
+typedef struct RAMList {
+    QemuMutex mutex;
+    RAMBlock *mru_block;
+    /* RCU-enabled, writes protected by the ramlist lock. */
+    QLIST_HEAD(, RAMBlock) blocks;
+    DirtyMemoryBlocks *dirty_memory[DIRTY_MEMORY_NUM];
+    uint32_t version;
+    QLIST_HEAD(, RAMBlockNotifier) ramblock_notifiers;
+} RAMList;
+```
+QEMU 使用 RAMBlock 来描述 ram，MemoryRegion 的类型是 ram，那么就会关联一个 RAMBlock
+
+将所有的 RAMBlock 连续的连到一起，形成 RAMList ，一个 RAMBlock 在其中偏移量记录在 `RAMBlock::offset`, 显然，第一个 offset 为 0
+```c
+/*
+pc.ram: offset=0 size=180000000
+pc.bios: offset=180000000 size=40000
+pc.rom: offset=180040000 size=20000
+vga.vram: offset=180080000 size=800000
+/rom@etc/acpi/tables: offset=180900000 size=200000
+virtio-vga.rom: offset=180880000 size=10000
+e1000.rom: offset=1808c0000 size=40000
+/rom@etc/table-loader: offset=180b00000 size=10000
+/rom@etc/acpi/rsdp: offset=180b40000 size=1000
+```
+任何一个 page 的 ram_addr = offset in RAM + `RAMBlock::offset`
+
 ### SMC
+自修改代码指的是运行过程中修改执行的代码。
+
+检查方法是存在 guest code 的 page 的 CPUTLBEntry 中插入 TLB_NOTDIRTY 的 flag, 这个导致 TLB 比较失败，然后会 invalid 掉这个 guest page 关联的所有的 tb
+
+通过 PageDesc 可以从 ram addr 找到其关联的所有的 tb
 
 [^1]: [ASPLOS IOMMU tutorial](http://pages.cs.wisc.edu/~basu/isca_iommu_tutorial/IOMMU_TUTORIAL_ASPLOS_2016.pdf)
