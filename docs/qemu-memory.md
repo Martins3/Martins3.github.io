@@ -4,7 +4,7 @@
 
 #### 概述
 原图来自于 kernelgo.org, 这里进行一些小小的修改。
-![](../img/qemu-address-space.svg)
+![](./img/qemu-address-space.svg)
 
 首先感受一下 memory model 是什么, 下面是一个例子，guest 机器的配置使用[这个脚本](https://github.com/Martins3/Martins3.github.io/blob/master/hack/qemu/x64-e1000/alpine.sh)生成的。
 ```txt
