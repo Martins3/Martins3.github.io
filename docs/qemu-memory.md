@@ -13,13 +13,17 @@
   - [SMM](#smm)
   - [IOMMU](#iommu)
   - [QA](#qa)
+- [Softmmu](#softmmu)
+  - [Overview](#overview-1)
+  - [SOFT TLB](#soft-tlb)
+  - [SMC](#smc)
 
 <!-- vim-markdown-toc -->
 
 ## memory model
 
 ### Overview
-原图来自于 kernelgo.org, 这里进行一些小小的修改。
+原图来自于 kernelgo.org, 这里进行一些小小的修改, 在浏览器中打开新的标签可以看大图。
 ![](./img/qemu-address-space.svg)
 
 首先感受一下 memory model 是什么, 在 QEMU 的 monitor console 中 `info mtree` 可以下面是一个例子，guest 机器的配置使用[这个脚本](https://github.com/Martins3/Martins3.github.io/blob/master/hack/qemu/x64-e1000/alpine.sh)生成的。
@@ -132,6 +136,16 @@ AddressSpace 用于描述整个地址空间的映射关系, 不同的地址空�
                              run->mmio.is_write);
 ```
 
+`address_space_memory` 和 `address_space_io` 分别关联 `system_memory` 和 `system_io` 这两个 MemoryRegion
+
+```
+static MemoryRegion *system_memory;
+static MemoryRegion *system_io;
+
+AddressSpace address_space_io;
+AddressSpace address_space_memory;
+```
+
 ### MemoryRegion
 MemoryRegion 用于描述一个范围内的映射规则。
 
@@ -234,10 +248,30 @@ static inline MemTxAttrs cpu_get_mem_attrs(CPUX86State *env)
 
 ### IOMMU
 IOMMU 的学习可以参考 ASPLOS 提供的 ppt[^1], 简单来说，以前设备是可以直接访问物理内存，增加了 IOMMU 之后，设备访问物理内存类似 CPU 也是需要经过一个虚实地址映射。
-所以，每一个
+所以，每一个 PCI 设备都会创建对应的 AddressSpace
+
+默认没有配置 IOMMU 也就是直接访问物理内存，所以就是直接 alias 到 `system_memory`(就是 `address_space_memory` 关联的那个 MemoryRegion) 上。
+```
+address-space: nvme
+  0000000000000000-ffffffffffffffff (prio 0, i/o): bus master container
+    0000000000000000-ffffffffffffffff (prio 0, i/o): alias bus master @system 0000000000000000-ffffffffffffffff
+```
 
 ### QA
 - 为什么 ram 不是一整块，而是拆分出来了 ram-below-4g 和 ram-above-4g 两个部分?
     - 因为中间需要留出 mmio 空洞
+
+## Softmmu
+
+### Overview
+softmmu 只有 tcg 才需要，实现基本思路是:
+- 所有的访存指令前使用软件进行地址翻译，如果命中，那么获取 GPA 进行访存
+- 如果不命中，慢路径，也就是 store_helper
+
+### SOFT TLB
+TLB 的大致结构如下:
+![](./img/tlb.svg)
+
+### SMC
 
 [^1]: [ASPLOS IOMMU tutorial](http://pages.cs.wisc.edu/~basu/isca_iommu_tutorial/IOMMU_TUTORIAL_ASPLOS_2016.pdf)
