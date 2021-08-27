@@ -327,3 +327,8 @@ e1000.rom: offset=1808c0000 size=40000
 通过 PageDesc 可以从 ram addr 找到其关联的所有的 tb
 
 [^1]: [ASPLOS IOMMU tutorial](http://pages.cs.wisc.edu/~basu/isca_iommu_tutorial/IOMMU_TUTORIAL_ASPLOS_2016.pdf)
+
+欢迎交流评论。
+<script src="https://utteranc.es/client.js" repo="Martins3/Martins3.github.io" issue-term="url" theme="github-light" crossorigin="anonymous" async> </script>
+
+本站所有文章转发 **CSDN** 将按侵权追究法律责任，其它情况随意。
