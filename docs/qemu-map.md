@@ -1,10 +1,10 @@
-# QEMU 中的 map
+# QEMU 中的 map 和 set
 
 <!-- vim-markdown-toc GitLab -->
 
-- [page lock 上锁的位置](#page-lock-上锁的位置)
+- [记录范围内上锁过的 page](#记录范围内上锁过的-page)
 - [根据 Ram addr 找该 guest page 上关联的所有的 tb](#根据-ram-addr-找该-guest-page-上关联的所有的-tb)
-- [TODO](#todo)
+- [根据 host tb 找到其关联的 TranslationBlock](#根据-host-tb-找到其关联的-translationblock)
 - [根据 physical address 计算出来 MemoryRegion](#根据-physical-address-计算出来-memoryregion)
 - [根据 guest virtual address 找到 Translation Block](#根据-guest-virtual-address-找到-translation-block)
 - [根据 guest physical address 找到 Translation Block](#根据-guest-physical-address-找到-translation-block)
@@ -15,18 +15,89 @@
 
 既不会分析所有的种类的 map，也不会分析所有的使用位置，只是感觉老是遇到，总结一下。
 
-## page lock 上锁的位置
+## 记录范围内上锁过的 page
 ```c
 struct page_collection {
   struct GTree *tree;
   struct page_entry *max;
 };
 ```
+为了对于一个连续范围的 page 上锁而不会出现死锁，需要上锁的时候保持顺序。
+具体实现的代码在 page_collection_lock 中, 利用 page_collection::tree 来记录范围中已经上过锁的 page
+
+```c
+/*
+ * Lock a range of pages ([@start,@end[) as well as the pages of all
+ * intersecting TBs.
+ * Locking order: acquire locks in ascending order of page index.
+ */
+struct page_collection *
+page_collection_lock(tb_page_addr_t start, tb_page_addr_t end)
+{
+    struct page_collection *set = g_malloc(sizeof(*set));
+    tb_page_addr_t index;
+    PageDesc *pd;
+
+    start >>= TARGET_PAGE_BITS;
+    end   >>= TARGET_PAGE_BITS;
+    g_assert(start <= end);
+
+    set->tree = g_tree_new_full(tb_page_addr_cmp, NULL, NULL,
+                                page_entry_destroy);
+    set->max = NULL;
+    assert_no_pages_locked();
+
+ retry:
+    // 对于 tree 中的 page 从小达到上锁
+    g_tree_foreach(set->tree, page_entry_lock, NULL);
+    // 现在 tree 中的所有的 page 都是上过锁了
+
+    for (index = start; index <= end; index++) {
+        TranslationBlock *tb;
+        int n;
+
+        pd = page_find(index);
+        if (pd == NULL) {
+            continue;
+        }
+        if (page_trylock_add(set, index << TARGET_PAGE_BITS)) {
+            g_tree_foreach(set->tree, page_entry_unlock, NULL);
+            goto retry;
+        }
+        assert_page_locked(pd);
+        // 需要特别处理跨页的情况
+        PAGE_FOR_EACH_TB(pd, tb, n) {
+            if (page_trylock_add(set, tb->page_addr[0]) ||
+                (tb->page_addr[1] != -1 &&
+                 page_trylock_add(set, tb->page_addr[1]))) {
+                /* drop all locks, and reacquire in order */
+                g_tree_foreach(set->tree, page_entry_unlock, NULL);
+                goto retry;
+            }
+        }
+    }
+    return set;
+}
+```
 
 ## 根据 Ram addr 找该 guest page 上关联的所有的 tb
-page_find_alloc
+使用类似 page table 的方式存储，在 page_table_config_init 初始化 page table 的属性。
 
-## TODO
+在 page_find_alloc 进行查询。
+
+## 根据 host tb 找到其关联的 TranslationBlock
+对于每一段 guest 的 translation block, QEMU 都会创建一个 TranslationBlock, 
+TranslationBlock 就是生成的代码左侧, 但是当生成的代码(也地址为 retaddr) 中退出的时候，是无法知道其关联的 TranslationBlock 的位置的。
+
+tcg_tb_alloc 的注释说道
+```c
+/*
+ * Allocate TBs right before their corresponding translated code, making
+ * sure that TBs and code are on different cache lines.
+ */
+```
+通过 tcg_region_tree 可以实现从 retaddr 到 TranslationBlock 的映射
+
 ```c
 struct tcg_region_tree {
   QemuMutex lock;
@@ -34,6 +105,25 @@ struct tcg_region_tree {
   /* padding to avoid false sharing is computed at run-time */
 };
 ```
+
+```c
+/*
+ * Translation Cache-related fields of a TB.
+ * This struct exists just for convenience; we keep track of TB's in a binary
+ * search tree, and the only fields needed to compare TB's in the tree are
+ * @ptr and @size.
+ * Note: the address of search data can be obtained by adding @size to @ptr.
+ */
+struct tb_tc {
+  void *ptr; /* pointer to the translated code */
+  size_t size;
+};
+```
+
+在 tb_gen_code 中初始化
+1. `tb->tc.ptr = gen_code_buf;`
+2. `tb->tc.size = gen_code_size;`
+也就是，根据 tb 所在地址和大小。
 
 ## 根据 physical address 计算出来 MemoryRegion
 这个玩意设计成为多级页面的目的和页表查询的作用差不多, 都是使用 addr 中一部分逐级向下索引的。
@@ -233,10 +323,10 @@ QEMU 为了优化还进行了很多骚操作:
 tb_jmp_cache 因为是虚拟地址相关的，如果虚拟地址发生改变，那么需要通过调用 tb_flush_jmp_cache 将其中数据清理。
 
 ## 根据 guest physical address 找到 Translation Block
-和 tb_jmp_cache 不同，TBContext::htable 是通过物理地址来访问
+和 tb_jmp_cache 不同，TBContext::htable 是通过物理地址来索引的，因为物理地址是唯一的，所以，所有的 CPU 可以共享.
+因为共享，QEMU 提出了一个高并发的 hashtable 那就是 QEMU hash table，简称 qht
 
-TBContext::htable 
-
+在 tb_lookup 中，这次 hash 的关系清晰可见。
 ```c
 /* Might cause an exception, so have a longjmp destination ready */
 static inline TranslationBlock *tb_lookup(CPUState *cpu, target_ulong pc,
@@ -268,7 +358,6 @@ static inline TranslationBlock *tb_lookup(CPUState *cpu, target_ulong pc,
     return tb;
 }
 ```
-
 
 <script src="https://utteranc.es/client.js" repo="Martins3/Martins3.github.io" issue-term="url" theme="github-light" crossorigin="anonymous" async> </script>
 

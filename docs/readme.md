@@ -8,12 +8,6 @@
   </p>
 </p>
 
-<html>
-	<head>
-    <link rel="shortcut icon" type="image/x-icon" href="img/dog.ico">
-	</head>
-</html>
-
 ## Navigations
 - [Martins3's slides](https://martins3.github.io/ppt)
 - [Source code reading list](./source-code-reading-list.md)
