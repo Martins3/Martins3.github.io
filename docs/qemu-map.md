@@ -227,7 +227,11 @@ QEMU 为了优化还进行了很多骚操作:
 ## 根据 guest virtual address 找到 Translation Block
 根据 GVA 查找 TB 主要使用的是一个很简单的 hash 操作:
 - CPUState::tb_jmp_cache 是一个 `TranslationBlock *` 的数组
-- 通过 tb_jmp_cache_hash_func 将 GVA 
+- 通过 tb_jmp_cache_hash_func 将 GVA hash 之后来索引 tb_jmp_cache
+
+之所以，使用 tb_jmp_cache 来索引，是因为获取物理地址很麻烦，需要经过 TLB 甚至是 page walk 装换，所以使用 tb_jmp_cache 作为高速缓存。
+tb_jmp_cache 因为是虚拟地址相关的，如果虚拟地址发生改变，那么需要通过调用 tb_flush_jmp_cache
+
 
 ## 根据 guest physical address 找到 Translation Block
 TBContext::htable
