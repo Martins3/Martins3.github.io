@@ -3,7 +3,7 @@
   "rules": {
     "no-empty-code": 1,
     "no-long-code": [
-      2,
+      0,
       {
         "length": 100,
         "exclude": [
