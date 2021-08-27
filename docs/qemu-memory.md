@@ -139,7 +139,7 @@ AddressSpace 用于描述整个地址空间的映射关系, 不同的地址空�
 
 `address_space_memory` 和 `address_space_io` 分别关联 `system_memory` 和 `system_io` 这两个 MemoryRegion
 
-```
+```c
 static MemoryRegion *system_memory;
 static MemoryRegion *system_io;
 
@@ -252,7 +252,7 @@ IOMMU 的学习可以参考 ASPLOS 提供的 ppt[^1], 简单来说，以前设�
 所以，每一个 PCI 设备都会创建对应的 AddressSpace
 
 默认没有配置 IOMMU 也就是直接访问物理内存，所以就是直接 alias 到 `system_memory`(就是 `address_space_memory` 关联的那个 MemoryRegion) 上。
-```
+```c
 address-space: nvme
   0000000000000000-ffffffffffffffff (prio 0, i/o): bus master container
     0000000000000000-ffffffffffffffff (prio 0, i/o): alias bus master @system 0000000000000000-ffffffffffffffff
