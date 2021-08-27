@@ -230,11 +230,45 @@ QEMU 为了优化还进行了很多骚操作:
 - 通过 tb_jmp_cache_hash_func 将 GVA hash 之后来索引 tb_jmp_cache
 
 之所以，使用 tb_jmp_cache 来索引，是因为获取物理地址很麻烦，需要经过 TLB 甚至是 page walk 装换，所以使用 tb_jmp_cache 作为高速缓存。
-tb_jmp_cache 因为是虚拟地址相关的，如果虚拟地址发生改变，那么需要通过调用 tb_flush_jmp_cache
-
+tb_jmp_cache 因为是虚拟地址相关的，如果虚拟地址发生改变，那么需要通过调用 tb_flush_jmp_cache 将其中数据清理。
 
 ## 根据 guest physical address 找到 Translation Block
-TBContext::htable
+和 tb_jmp_cache 不同，TBContext::htable 是通过物理地址来访问
+
+TBContext::htable 
+
+```c
+/* Might cause an exception, so have a longjmp destination ready */
+static inline TranslationBlock *tb_lookup(CPUState *cpu, target_ulong pc,
+                                          target_ulong cs_base,
+                                          uint32_t flags, uint32_t cflags)
+{
+    TranslationBlock *tb;
+    uint32_t hash;
+
+    /* we should never be trying to look up an INVALID tb */
+    tcg_debug_assert(!(cflags & CF_INVALID));
+
+    hash = tb_jmp_cache_hash_func(pc);
+    tb = qatomic_rcu_read(&cpu->tb_jmp_cache[hash]); // 使用虚拟地址查询
+
+    if (likely(tb &&
+               tb->pc == pc &&
+               tb->cs_base == cs_base &&
+               tb->flags == flags &&
+               tb->trace_vcpu_dstate == *cpu->trace_dstate &&
+               tb_cflags(tb) == cflags)) {
+        return tb;
+    }
+    tb = tb_htable_lookup(cpu, pc, cs_base, flags, cflags); // 不命中，使用物理地址查询
+    if (tb == NULL) {
+        return NULL;
+    }
+    qatomic_set(&cpu->tb_jmp_cache[hash], tb);
+    return tb;
+}
+```
+
 
 <script src="https://utteranc.es/client.js" repo="Martins3/Martins3.github.io" issue-term="url" theme="github-light" crossorigin="anonymous" async> </script>
 
