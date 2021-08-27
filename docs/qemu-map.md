@@ -1,5 +1,16 @@
 # QEMU 中的 map
 
+<!-- vim-markdown-toc GitLab -->
+
+- [page lock 上锁的位置](#page-lock-上锁的位置)
+- [根据 Ram addr 找该 guest page 上关联的所有的 tb](#根据-ram-addr-找该-guest-page-上关联的所有的-tb)
+- [TODO](#todo)
+- [根据 physical address 计算出来 MemoryRegion](#根据-physical-address-计算出来-memoryregion)
+- [根据 virtual address 找到 tb](#根据-virtual-address-找到-tb)
+- [根据 physical address 找到 tb](#根据-physical-address-找到-tb)
+
+<!-- vim-markdown-toc -->
+
 > 从一个诡异的角度来分析 QEMU 中的源码。
 
 既不会分析所有的种类的 map，也不会分析所有的使用位置，只是感觉老是遇到，总结一下。
@@ -15,7 +26,7 @@ struct page_collection {
 ## 根据 Ram addr 找该 guest page 上关联的所有的 tb
 page_find_alloc
 
-## ???
+## TODO
 ```c
 struct tcg_region_tree {
   QemuMutex lock;
@@ -25,7 +36,9 @@ struct tcg_region_tree {
 ```
 
 ## 根据 physical address 计算出来 MemoryRegion
-基本的调用流程如下：
+这个玩意设计成为多级页面的目的和页表查询的作用差不多, 都是使用 addr 中一部分逐级向下索引的。
+
+查询的基本的调用流程如下：
 
 - flatview_translate
   - flatview_do_translate
@@ -33,6 +46,183 @@ struct tcg_region_tree {
           - address_space_lookup_region
             - AddressSpaceDispatch::mru_section : 首先访问 mru(most recent used) 缓存，如果不命中，那么调用 phys_page_find 的 tree 中间寻找
             - phys_page_find
+
+如何构建 PhysPageMap 这颗树:
+- generate_memory_topology
+  - render_memory_region / flatview_simplify  : 将 memory region 转化为了 FlatRange 的
+  - flatview_add_to_dispatch : 将 FlatRange 首先使用 section_from_flat_range 转化为 MemoryRegionSection 然后添加
+    - register_subpage : 如果 MemoryRegionSection 无法完整地覆盖一整个页
+    - register_multipage
+      - phys_section_add : 将 MemoryRegionSection 添加到 PhysPageMap::sections
+      - phys_page_set : 设置对应的 PhysPageMap::nodes
+        - phys_map_node_reserve : 预留空间
+        - phys_page_set_level :
+
+```c
+struct AddressSpaceDispatch {
+    MemoryRegionSection *mru_section;
+    /* This is a multi-level map on the physical address space.
+     * The bottom level has pointers to MemoryRegionSections.
+     */
+    PhysPageEntry phys_map;
+    PhysPageMap map;
+};
+```
+- phys_map : 相当于 x86 cr3, 每次访问首先访问第一个 PhysPageEntry
+- map : 相当于管理所有的 page tabel 的页面
+- mru_section : 缓存
+
+```c
+struct PhysPageEntry {
+    /* How many bits skip to next level (in units of L2_SIZE). 0 for a leaf. */
+    uint32_t skip : 6;
+     /* index into phys_sections (!skip) or phys_map_nodes (skip) */
+    uint32_t ptr : 26;
+};
+```
+- skip : 表示还有多少级就可以到 leaf 节点
+- prt : 下标
+  - 如果 leaf 节点，那么就是索引 `PhysPageMap::sections` 的下标
+  - 如果 non-leaf 节点，那么就是索引 `PhysPageMap::nodes` 的下标
+
+```c
+typedef PhysPageEntry Node[P_L2_SIZE];
+
+typedef struct PhysPageMap {
+    struct rcu_head rcu;
+
+    unsigned sections_nb;
+    unsigned sections_nb_alloc;
+    unsigned nodes_nb;
+    unsigned nodes_nb_alloc;
+    Node *nodes;
+    MemoryRegionSection *sections;
+} PhysPageMap;
+```
+- Node : 定义这个结构体，相当于定义了一个 page table
+- nodes : 存储所有的 Node，如果分配完了，使用 phys_map_node_reserve 来补充
+- sections : 最终想要获取的
+
+下面是一个 FlatRanges 和其对应构建出来的 tree, 
+在 QEMU 的 human monitor interface 中 `info mtree -f -d` 可以获取。
+```txt
+  Dispatch
+    Physical sections
+      #0 @0000000000000000..ffffffffffffffff (noname) [unassigned]
+      #1 @0000000000000000..000000017fffffff pc.ram [not dirty]
+      #2 @00000000000a0000..00000000000bffff vga-lowmem [ROM]
+      #3 @00000000000c0000..00000001800bffff pc.ram [watch]
+      #4 @00000000000cb000..00000001800cafff pc.ram
+      #5 @00000000000ce000..00000001800cdfff pc.ram
+      #6 @00000000000e4000..00000001800e3fff pc.ram
+      #7 @00000000000f0000..00000001800effff pc.ram
+      #8 @0000000000100000..00000001800fffff pc.ram
+      #9 @00000000fd000000..00000000fdffffff vga.vram
+      #10 @00000000fe000000..00000000fe000fff virtio-pci-common-virtio-9p
+      #11 @00000000fe001000..00000000fe001fff virtio-pci-isr-virtio-9p
+      #12 @00000000fe002000..00000000fe002fff virtio-pci-device-virtio-9p
+      #13 @00000000fe003000..00000000fe003fff virtio-pci-notify-virtio-9p
+      #14 @00000000febc0000..00000000febdffff e1000-mmio [MRU]
+      #15 @00000000febf0000..00000000febf1fff nvme
+      #16 @00000000febf2000..00000000febf2fff (noname)
+      #17 @00000000febf2000..00000000febf240f msix-table
+      #18 @00000000febf3000..00000000febf3fff (noname)
+      #19 @00000000febf3000..00000000febf300f msix-pba
+      #20 @00000000febf4000..00000000febf5fff nvme
+      #21 @00000000febf6000..00000000febf6fff (noname)
+      #22 @00000000febf6000..00000000febf640f msix-table
+      #23 @00000000febf7000..00000000febf7fff (noname)
+      #24 @00000000febf7000..00000000febf700f msix-pba
+      #25 @00000000febf8000..00000000febf8fff (noname)
+      #26 @00000000febf8000..00000000febf817f edid
+      #27 @00000000febf8180..00000000febf917f vga.mmio
+      #28 @00000000febf8400..00000000febf841f vga ioports remapped
+      #29 @00000000febf8420..00000000febf941f vga.mmio
+      #30 @00000000febf8500..00000000febf8515 bochs dispi interface
+      #31 @00000000febf8516..00000000febf9515 vga.mmio
+      #32 @00000000febf8600..00000000febf8607 qemu extended regs
+      #33 @00000000febf8608..00000000febf9607 vga.mmio
+      #34 @00000000febf9000..00000000febf9fff (noname)
+      #35 @00000000febf9000..00000000febf901f msix-table
+      #36 @00000000febf9800..00000000febf9807 msix-pba
+      #37 @00000000fec00000..00000000fec00fff kvm-ioapic
+      #38 @00000000fed00000..00000000fed00fff (noname)
+      #39 @00000000fed00000..00000000fed003ff hpet
+      #40 @00000000fee00000..00000000feefffff kvm-apic-msi
+      #41 @00000000fffc0000..00000000ffffffff pc.bios
+      #42 @0000000100000000..000000027fffffff pc.ram
+    Nodes (9 bits per level, 6 levels) ptr=[3] skip=4
+      [0]
+          0       skip=3  ptr=[3]
+          1..511  skip=1  ptr=NIL
+      [1]
+          0       skip=2  ptr=[3]
+          1..511  skip=1  ptr=NIL
+      [2]
+          0       skip=1  ptr=[3]
+          1..511  skip=1  ptr=NIL
+      [3]
+          0       skip=1  ptr=[4]
+          1..2    skip=0  ptr=#8
+          3       skip=1  ptr=[6]
+          4..6    skip=0  ptr=#42
+          7..511  skip=1  ptr=NIL
+      [4]
+          0       skip=1  ptr=[5]
+          1..511  skip=0  ptr=#8
+      [5]
+          0..159  skip=0  ptr=#1
+        160..191  skip=0  ptr=#2
+        192..202  skip=0  ptr=#3
+        203..205  skip=0  ptr=#4
+        206..227  skip=0  ptr=#5
+        228..239  skip=0  ptr=#6
+        240..255  skip=0  ptr=#7
+        256..511  skip=0  ptr=#8
+      [6]
+          0..487  skip=1  ptr=NIL
+        488..495  skip=0  ptr=#9
+        496       skip=1  ptr=[7]
+        497..500  skip=1  ptr=NIL
+        501       skip=1  ptr=[8]
+        502       skip=1  ptr=[9]
+        503       skip=1  ptr=[10]
+        504..510  skip=1  ptr=NIL
+        511       skip=1  ptr=[11]
+      [7]
+          0       skip=0  ptr=#10
+          1       skip=0  ptr=#11
+          2       skip=0  ptr=#12
+          3       skip=0  ptr=#13
+          4..511  skip=0  ptr=#0
+      [8]
+          0..447  skip=0  ptr=#0
+        448..479  skip=0  ptr=#14
+        480..495  skip=0  ptr=#0
+        496..497  skip=0  ptr=#15
+        498       skip=0  ptr=#16
+        499       skip=0  ptr=#18
+        500..501  skip=0  ptr=#20
+        502       skip=0  ptr=#21
+        503       skip=0  ptr=#23
+        504       skip=0  ptr=#25
+        505       skip=0  ptr=#34
+        506..511  skip=0  ptr=#0
+      [9]
+          0       skip=0  ptr=#37
+          1..255  skip=0  ptr=#0
+        256       skip=0  ptr=#38
+        257..511  skip=0  ptr=#0
+      [10]
+          0..255  skip=0  ptr=#40
+        256..511  skip=0  ptr=#0
+      [11]
+          0..447  skip=0  ptr=#0
+        448..511  skip=0  ptr=#41
+```
+
+QEMU 为了优化还进行了很多骚操作:
+- address_space_dispatch_compact : 很多时候，一个 MemoryRegionSection 可以覆盖很大的范围，所以 tree 是可以压缩的。因为 compact 操作，tree 的 root 不在一定是 PhysPageMap::nodes 中第一个，所以需要记录在 `AddressSpaceDispatch::phys_map` 中。
 
 ## 根据 virtual address 找到 tb
 CPUState::tb_jmp_cache
