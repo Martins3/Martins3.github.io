@@ -6,8 +6,8 @@
 - [根据 Ram addr 找该 guest page 上关联的所有的 tb](#根据-ram-addr-找该-guest-page-上关联的所有的-tb)
 - [TODO](#todo)
 - [根据 physical address 计算出来 MemoryRegion](#根据-physical-address-计算出来-memoryregion)
-- [根据 virtual address 找到 tb](#根据-virtual-address-找到-tb)
-- [根据 physical address 找到 tb](#根据-physical-address-找到-tb)
+- [根据 guest virtual address 找到 Translation Block](#根据-guest-virtual-address-找到-translation-block)
+- [根据 guest physical address 找到 Translation Block](#根据-guest-physical-address-找到-translation-block)
 
 <!-- vim-markdown-toc -->
 
@@ -224,8 +224,14 @@ typedef struct PhysPageMap {
 QEMU 为了优化还进行了很多骚操作:
 - address_space_dispatch_compact : 很多时候，一个 MemoryRegionSection 可以覆盖很大的范围，所以 tree 是可以压缩的。因为 compact 操作，tree 的 root 不在一定是 PhysPageMap::nodes 中第一个，所以需要记录在 `AddressSpaceDispatch::phys_map` 中。
 
-## 根据 virtual address 找到 tb
-CPUState::tb_jmp_cache
+## 根据 guest virtual address 找到 Translation Block
+根据 GVA 查找 TB 主要使用的是一个很简单的 hash 操作:
+- CPUState::tb_jmp_cache 是一个 `TranslationBlock *` 的数组
+- 通过 tb_jmp_cache_hash_func 将 GVA 
 
-## 根据 physical address 找到 tb
+## 根据 guest physical address 找到 Translation Block
 TBContext::htable
+
+<script src="https://utteranc.es/client.js" repo="Martins3/Martins3.github.io" issue-term="url" theme="github-light" crossorigin="anonymous" async> </script>
+
+本站所有文章转发 **CSDN** 将按侵权追究法律责任，其它情况随意。
