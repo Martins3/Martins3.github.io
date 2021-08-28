@@ -1,62 +1,96 @@
-# QEMU softmmu 访存函数集整理
+# QEMU softmmu 访存 helper 整理
 
 <!-- vim-markdown-toc GitLab -->
 
-- [TODO](#todo)
 - [背景介绍](#背景介绍)
-  - [access_size](#access_size)
+  - [access size](#access-size)
   - [endianness](#endianness)
 - [softmmu 慢速路径访存](#softmmu-慢速路径访存)
 - [CPU 访存](#cpu-访存)
 - [设备访存](#设备访存)
 - [PCI 设备访存](#pci-设备访存)
+- [总结](#总结)
 
 <!-- vim-markdown-toc -->
-QEMU 为了处理大端小端(le/be), 不同大小(size = 1/2/4/8), 以及访存方向(load/store)，定义了一堆类似的函数
-
-
-## TODO
-- [ ] 找到那些到达 flatview_read_continue 的函数
-
-- [ ] 为什么需要处理 endian 的情况，如果一个设备是 bigendian 的，那么其放入到内存的就是 bigendian 的，那么模拟设备的代码为什么需要考虑这个事情啊，让 CPU 自己处理啊!
-
-- cpu_physical_memory_rw : 对于 address_space_rw 的一个封装而已
-    - 走了 
+QEMU 为了处理大端小端(le/be), 不同大小(size = 1/2/4/8), 以及访存方向(load/store)，定义了一堆类似的 helper。
 
 ## 背景介绍
 
-### access_size
-access_with_adjusted_size 会计算调用的大小，实际上，最终将大小约束到 1 - 4 之间, 如果需要进行的 io 的大小超过这个 4, 那么就使用循环反复调用 MemoryRegionOps::read
+### access size
+实际上，这些函数集合处理的大小都是 b w l q 四种，**因为这就是访问 IO 空间的所有长度可能性**，为了方便，创建出来一堆 helper 。
 
-所以，真的会出现 pio/mmio 的 size > 4 的情况吗, 实际测试显示，只有 vga-lowmem 会是如此。
+IO 访问的，最后总是走到 `memory_region_dispatch_(read/write)` 上面来的。
 
-MemoryRegionOps::read 的参数是有 size 的
+- memory_region_dispatch_read
+  - memory_region_dispatch_read1
+      - access_with_adjusted_size
+          - memory_region_read_accessor
+              - `mr->ops->read`
 
+`MemoryRegionOps::impl::min_access_size` 和 `MemoryRegionOps::impl::max_access_size` 可以描述设备进行一次 IO 最多和最少传输的 
 
+如果一次 IO 的数量越过了 min_access_size / max_access_size，那么可以循环反复调用 `MemoryRegionOps::read`
 
 ### endianness
-memory_region_dispatch_read 在最后会调用 adjust_endianness
-而 memory_region_dispatch_write 会在开始的时候调用 adjust_endianness
+endianness 为什么会产生问题，先从一个简单的情况考虑，使用 load_helper 可以读取到 guest 一个地址上的数值，之后这个地址被加载到 host 的模拟寄存器，并且进行运算。
+显然，为了让 host CPU 正确理解这个数值，需要在 load_helper 返回数值的时候，进行装换一下。
 
-> 如果 guest 架构和 host 架构的 endianness 不相同的话，写入 RAM 的时候需要注意。
-> 但是如果设备的 endian 的不同和 host 不同，为什么
+到底是调用下面哪一个函数，取决于 guest 是大端还是小端
 
+```c
+tcg_target_ulong helper_le_lduw_mmu(CPUArchState *env, target_ulong addr,
+                                    TCGMemOpIdx oi, uintptr_t retaddr)
+{
+    return full_le_lduw_mmu(env, addr, oi, retaddr);
+}
+
+static uint64_t full_be_lduw_mmu(CPUArchState *env, target_ulong addr,
+                                 TCGMemOpIdx oi, uintptr_t retaddr)
+{
+    return load_helper(env, addr, oi, retaddr, MO_BEUW, false,
+                       full_be_lduw_mmu);
+}
+```
 
 目前只有一个 device 是 big endianness 的，那就是 fwcfg.dma
-- hw/nvram/fw_cfg.c 中 fw_cfg_dma_mem_ops 和 fw_cfg_comb_mem_ops 的确如此定义
-- 从 qemu_cfg_dma_transfer 中也可以找到证据
-
 ```c
 /*
 0000000000000510-0000000000000511 (prio 0, i/o): fwcfg
 0000000000000514-000000000000051b (prio 0, i/o): fwcfg.dma
 ```
 
-实际上，qemu_cfg_dma_transfer 的处理和 adjust_endianness 的操作不是重合了吗?
 
+这是 fw_cfg_dma_transfer 中进行的调整，adjust_endianness 也是进行了调整的。
+```c
+static void fw_cfg_dma_transfer(FWCfgState *s)
+{
+    dma_addr_t len;
+    FWCfgDmaAccess dma;
+    int arch;
+    FWCfgEntry *e;
+    int read = 0, write = 0;
+    dma_addr_t dma_addr;
+
+    /* Reset the address before the next access */
+    dma_addr = s->dma_addr;
+    s->dma_addr = 0;
+
+    if (dma_memory_read(s->dma_as, dma_addr, &dma, sizeof(dma))) {
+        stl_be_dma(s->dma_as, dma_addr + offsetof(FWCfgDmaAccess, control),
+                   FW_CFG_DMA_CTL_ERROR);
+        return;
+    }
+
+    dma.address = be64_to_cpu(dma.address);
+    dma.length = be32_to_cpu(dma.length);
+    dma.control = be32_to_cpu(dma.control);
+
+```
+
+而下面是 seabios 的代码证明了操作
 ```c
 static void
-qemu_cfg_dma_transfer(void *address, u32 length, u32 control)
+fw_cfg_dma_transfer(void *address, u32 length, u32 control)
 {
     QemuCfgDmaAccess access;
 
@@ -73,31 +107,6 @@ qemu_cfg_dma_transfer(void *address, u32 length, u32 control)
     }
 }
 ```
-
-```c
-static void adjust_endianness(MemoryRegion *mr, uint64_t *data, MemOp op)
-{
-    if ((op & MO_BSWAP) != devend_memop(mr->ops->endianness)) {
-        switch (op & MO_SIZE) {
-        case MO_8:
-            break;
-        case MO_16:
-            *data = bswap16(*data);
-            break;
-        case MO_32:
-            *data = bswap32(*data);
-            break;
-        case MO_64:
-            *data = bswap64(*data);
-            break;
-        default:
-            g_assert_not_reached();
-        }
-    }
-}
-```
-
-- [ ] 就分析一下 fw_cfg 吧
 
 ## softmmu 慢速路径访存 
 当 soft tlb 没有命中之后，会切入到此处，
@@ -146,17 +155,11 @@ static inline void glue(stl_le_phys, SUFFIX)(ARG1_DECL, hwaddr addr, uint32_t va
                                        MEMTXATTRS_UNSPECIFIED, NULL);
 }
 ```
-
+如果是 PCI 设备，更多的使用下面 dma 方式。
 
 ## PCI 设备访存
-- [ ] 我总是设想，DMA 和 stl_le_phys 的区别在于增加了一个 IOMMU, 也许不是如此，可以检测一下。
+过下面两组宏，制作出来大量的 dma 相关的辅助函数，这些函数都是主要是给 PCI 设备用的，
 
-
-- [ ] 无法理解 DMA 和 stl_le_phys 的差别啊
-- [ ] 是不是这些 DMA 函数都是给设备使用的 ?
-    - 如果可以使用 DMA，那么一定会使用的 DMA 的
-
-如果可以确定，这个
 ```c
 #define DEFINE_LDST_DMA(_lname, _sname, _bits, _end) \
     static inline uint##_bits##_t ld##_lname##_##_end##_dma(AddressSpace *as, \
@@ -220,4 +223,11 @@ PCI_DMA_DEFINE_LDST(l_be, l_be, 32);
 PCI_DMA_DEFINE_LDST(q_be, q_be, 64);
 ```
 
+## 总结
+进行访存最后总是百川如海，
 
+- store_helper => 此处区分访问的对象是是否为 RAM, 如果是 RAM，直接 memcpy, 如果是 IO，那么 memory_region_dispatch_write
+- address_space_ldl_internal => 此处区分, 如果是 IO ，那么 memory_region_dispatch_write
+- address_space_rw => flatview_write_continue => 此处区分，如果是 IO，那么 memory_region_dispatch_write
+
+而在 memory_region_dispatch_write 将会处理 endianness 和 size 的大小。
