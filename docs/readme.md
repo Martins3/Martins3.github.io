@@ -5,6 +5,7 @@
   <p align="center">
     <a href="https://996.icu"><img src="https://img.shields.io/badge/link-996.icu-red.svg" alt="996.icu" /></a>
     <a href="https://spacevim.org/"><img src="https://spacevim.org/img/build-with-SpaceVim.svg" alt="spacevim" /></a>
+    <a href="https://github.com/martins3/Martins3.github.io"><img src="https://github.com/martins3/Martins3.github.io/actions/workflows/lint-md.yml/badge.svg" alt="ci" /></a>
   </p>
 </p>
 
