@@ -2,9 +2,10 @@
 
 <!-- vim-markdown-toc GitLab -->
 
-    - [access_size](#access_size)
-    - [endianness](#endianness)
 - [TODO](#todo)
+- [背景介绍](#背景介绍)
+  - [access_size](#access_size)
+  - [endianness](#endianness)
 - [softmmu 慢速路径访存](#softmmu-慢速路径访存)
 - [CPU 访存](#cpu-访存)
 - [设备访存](#设备访存)
@@ -13,7 +14,18 @@
 <!-- vim-markdown-toc -->
 QEMU 为了处理大端小端(le/be), 不同大小(size = 1/2/4/8), 以及访存方向(load/store)，定义了一堆类似的函数
 
-#### access_size
+
+## TODO
+- [ ] 找到那些到达 flatview_read_continue 的函数
+
+- [ ] 为什么需要处理 endian 的情况，如果一个设备是 bigendian 的，那么其放入到内存的就是 bigendian 的，那么模拟设备的代码为什么需要考虑这个事情啊，让 CPU 自己处理啊!
+
+- cpu_physical_memory_rw : 对于 address_space_rw 的一个封装而已
+    - 走了 
+
+## 背景介绍
+
+### access_size
 access_with_adjusted_size 会计算调用的大小，实际上，最终将大小约束到 1 - 4 之间, 如果需要进行的 io 的大小超过这个 4, 那么就使用循环反复调用 MemoryRegionOps::read
 
 所以，真的会出现 pio/mmio 的 size > 4 的情况吗, 实际测试显示，只有 vga-lowmem 会是如此。
@@ -22,7 +34,7 @@ MemoryRegionOps::read 的参数是有 size 的
 
 
 
-#### endianness
+### endianness
 memory_region_dispatch_read 在最后会调用 adjust_endianness
 而 memory_region_dispatch_write 会在开始的时候调用 adjust_endianness
 
@@ -86,14 +98,6 @@ static void adjust_endianness(MemoryRegion *mr, uint64_t *data, MemOp op)
 ```
 
 - [ ] 就分析一下 fw_cfg 吧
-
-## TODO
-- [ ] 找到那些到达 flatview_read_continue 的函数
-
-- [ ] 为什么需要处理 endian 的情况，如果一个设备是 bigendian 的，那么其放入到内存的就是 bigendian 的，那么模拟设备的代码为什么需要考虑这个事情啊，让 CPU 自己处理啊!
-
-- cpu_physical_memory_rw : 对于 address_space_rw 的一个封装而已
-    - 走了 
 
 ## softmmu 慢速路径访存 
 当 soft tlb 没有命中之后，会切入到此处，
