@@ -138,11 +138,6 @@ void x86_stw_phys(CPUState *cs, hwaddr addr, uint32_t val)
 - 在 x86_stw_phys 应该都是各种 helper 访问的，也就是其中 CPU 访存的模拟而已，为什么在 address_space_stw 中非要处理 device 的大端小端，从 io_readx 中同样也是处理了的。
 - 如果访问是 ram, 那么就不存在这个装换的需求了，因为 host 和 guest 的相同的。但是如果是访问的是设备，和 io_readx 相同，走的路径都是 `memory_region_dispatch_read` 的，在哪里进行
 
-
-- memory_ldst.c 中，最后的 dirty 只是剩下一个 x86_stl_phys_notdirty 了
-  - [x] 这并不是移植的时候，特地的删除的
-
-
 ## 设备访存
 设备模拟模块调用的, 比如 ioapic 想要发送中断的时候，就会调用 `ioapic_service` => `stl_le_phys`
 
@@ -231,3 +226,7 @@ PCI_DMA_DEFINE_LDST(q_be, q_be, 64);
 - address_space_rw => flatview_write_continue => 此处区分，如果是 IO，那么 memory_region_dispatch_write
 
 而在 memory_region_dispatch_write 将会处理 endianness 和 size 的大小。
+
+<script src="https://utteranc.es/client.js" repo="Martins3/Martins3.github.io" issue-term="url" theme="github-light" crossorigin="anonymous" async> </script>
+
+本站所有文章转发 **CSDN** 将按侵权追究法律责任，其它情况随意。

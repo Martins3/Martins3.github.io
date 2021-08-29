@@ -37,58 +37,56 @@
  │                                        │   │    ┌──────────────► 这是一个 MemoryRegion，这是 Address Space 中最核心的概念，MemoryRegion 用于描述一个范围内的映射规则
 address-space: memory                     │   │    │
   0000000000000000-ffffffffffffffff (prio 0, i/o): system
-    0000000000000000-00000000bfffffff (prio 0, ram): alias ram-below-4g @pc.ram 0000000000000000-00000000bfffffff──────────────┐
-    0000000000000000-ffffffffffffffff (prio -1, i/o): pci                                                                      │
-      00000000000a0000-00000000000bffff (prio 1, i/o): vga-lowmem                                                              │
-      00000000000c0000-00000000000dffff (prio 1, rom): pc.rom                                                                  │
-      00000000000e0000-00000000000fffff (prio 1, rom): alias isa-bios @pc.bios 0000000000020000-000000000003ffff               │
-      00000000fe000000-00000000fe7fffff (prio 1, ram): vga.vram                                                                │
-      00000000fe800000-00000000fe803fff (prio 1, i/o): virtio-pci                                                              │
-        00000000fe800400-00000000fe80041f (prio 0, i/o): vga ioports remapped                                                  │
-        00000000fe800500-00000000fe800515 (prio 0, i/o): bochs dispi interface                                                 │
-        00000000fe800600-00000000fe800607 (prio 0, i/o): qemu extended regs                                                    │
-        00000000fe801000-00000000fe8017ff (prio 0, i/o): virtio-pci-common-virtio-gpu                                          │
-        00000000fe801800-00000000fe801fff (prio 0, i/o): virtio-pci-isr-virtio-gpu                                             │
-        00000000fe802000-00000000fe802fff (prio 0, i/o): virtio-pci-device-virtio-gpu                                          │
-        00000000fe803000-00000000fe803fff (prio 0, i/o): virtio-pci-notify-virtio-gpu                                          │
-      00000000fe804000-00000000fe807fff (prio 1, i/o): virtio-pci                                                              │
-        00000000fe804000-00000000fe804fff (prio 0, i/o): virtio-pci-common-virtio-9p                                           │
-        00000000fe805000-00000000fe805fff (prio 0, i/o): virtio-pci-isr-virtio-9p                                              │
-        00000000fe806000-00000000fe806fff (prio 0, i/o): virtio-pci-device-virtio-9p                                           │
-        00000000fe807000-00000000fe807fff (prio 0, i/o): virtio-pci-notify-virtio-9p                                           │
-      00000000febc0000-00000000febdffff (prio 1, i/o): e1000-mmio                                                              │
-      00000000febf0000-00000000febf3fff (prio 1, i/o): nvme-bar0                                                               │
-        00000000febf0000-00000000febf1fff (prio 0, i/o): nvme                                                                  └── ram-below-4g 是 pc.ram 的一个 alias
-        00000000febf2000-00000000febf240f (prio 0, i/o): msix-table
-        00000000febf3000-00000000febf300f (prio 0, i/o): msix-pba                                                              ┌── ram-above-4g 也是 pc.ram 的一个 alias, 两者都被放到 system 这个 MemoryRegion 上
-      00000000febf4000-00000000febf4fff (prio 1, i/o): virtio-vga-msix                                                         │
-        00000000febf4000-00000000febf402f (prio 0, i/o): msix-table                                                            │
-        00000000febf4800-00000000febf4807 (prio 0, i/o): msix-pba                                                              │
-      00000000febf5000-00000000febf5fff (prio 1, i/o): virtio-9p-pci-msix                                                      │
-        00000000febf5000-00000000febf501f (prio 0, i/o): msix-table                                                            │
-        00000000febf5800-00000000febf5807 (prio 0, i/o): msix-pba                                                              │
-      00000000fffc0000-00000000ffffffff (prio 0, rom): pc.bios                                                                 │
-    00000000000a0000-00000000000bffff (prio 1, i/o): alias smram-region @pci 00000000000a0000-00000000000bffff                 │
-    00000000000c0000-00000000000c3fff (prio 1, ram): alias pam-rom @pc.ram 00000000000c0000-00000000000c3fff                   │
-    00000000000c4000-00000000000c7fff (prio 1, ram): alias pam-rom @pc.ram 00000000000c4000-00000000000c7fff                   │
-    00000000000c8000-00000000000cbfff (prio 1, ram): alias pam-rom @pc.ram 00000000000c8000-00000000000cbfff                   │
-    00000000000cb000-00000000000cdfff (prio 1000, ram): alias kvmvapic-rom @pc.ram 00000000000cb000-00000000000cdfff           │
-    00000000000cc000-00000000000cffff (prio 1, ram): alias pam-rom @pc.ram 00000000000cc000-00000000000cffff                   │
-    00000000000d0000-00000000000d3fff (prio 1, ram): alias pam-rom @pc.ram 00000000000d0000-00000000000d3fff                   │
-    00000000000d4000-00000000000d7fff (prio 1, ram): alias pam-rom @pc.ram 00000000000d4000-00000000000d7fff                   │
-    00000000000d8000-00000000000dbfff (prio 1, ram): alias pam-rom @pc.ram 00000000000d8000-00000000000dbfff                   │
-    00000000000dc000-00000000000dffff (prio 1, ram): alias pam-rom @pc.ram 00000000000dc000-00000000000dffff                   │
-    00000000000e0000-00000000000e3fff (prio 1, ram): alias pam-rom @pc.ram 00000000000e0000-00000000000e3fff                   │
-    00000000000e4000-00000000000e7fff (prio 1, ram): alias pam-ram @pc.ram 00000000000e4000-00000000000e7fff                   │
-    00000000000e8000-00000000000ebfff (prio 1, ram): alias pam-ram @pc.ram 00000000000e8000-00000000000ebfff                   │
-    00000000000ec000-00000000000effff (prio 1, ram): alias pam-ram @pc.ram 00000000000ec000-00000000000effff                   │
-    00000000000f0000-00000000000fffff (prio 1, ram): alias pam-rom @pc.ram 00000000000f0000-00000000000fffff                   │
-    00000000fec00000-00000000fec00fff (prio 0, i/o): kvm-ioapic                                                                │
-    00000000fed00000-00000000fed003ff (prio 0, i/o): hpet                                                                      │
-    00000000fee00000-00000000feefffff (prio 4096, i/o): kvm-apic-msi                                                           │
-    0000000100000000-00000001bfffffff (prio 0, ram): alias ram-above-4g @pc.ram 00000000c0000000-000000017fffffff──────────────┘
+  0000000000000000-ffffffffffffffff (prio 0, i/o): system
+    0000000000000000-00000000bfffffff (prio 0, ram): alias ram-below-4g @pc.ram 0000000000000000-00000000bfffffff ──────────────┐
+    0000000000000000-ffffffffffffffff (prio -1, i/o): pci                                                                       │
+      00000000000a0000-00000000000bffff (prio 1, i/o): vga-lowmem                                                               │
+      00000000000c0000-00000000000dffff (prio 1, rom): pc.rom                                                                   │
+      00000000000e0000-00000000000fffff (prio 1, rom): alias isa-bios @pc.bios 0000000000020000-000000000003ffff                │
+      00000000fd000000-00000000fdffffff (prio 1, ram): vga.vram                                                                 │
+      00000000fe000000-00000000fe003fff (prio 1, i/o): virtio-pci                                                               │
+        00000000fe000000-00000000fe000fff (prio 0, i/o): virtio-pci-common-virtio-9p                                            │
+        00000000fe001000-00000000fe001fff (prio 0, i/o): virtio-pci-isr-virtio-9p                                               │
+        00000000fe002000-00000000fe002fff (prio 0, i/o): virtio-pci-device-virtio-9p                                            │
+        00000000fe003000-00000000fe003fff (prio 0, i/o): virtio-pci-notify-virtio-9p                                            │
+      00000000febc0000-00000000febdffff (prio 1, i/o): e1000-mmio                                                               │
+      00000000febf0000-00000000febf3fff (prio 1, i/o): nvme-bar0                                                                │
+        00000000febf0000-00000000febf1fff (prio 0, i/o): nvme                                                                   │
+        00000000febf2000-00000000febf240f (prio 0, i/o): msix-table                                                             │
+        00000000febf3000-00000000febf300f (prio 0, i/o): msix-pba                                                               │
+      00000000febf4000-00000000febf7fff (prio 1, i/o): nvme-bar0                                                                │
+        00000000febf4000-00000000febf5fff (prio 0, i/o): nvme                                                                   │
+        00000000febf6000-00000000febf640f (prio 0, i/o): msix-table                                                             │
+        00000000febf7000-00000000febf700f (prio 0, i/o): msix-pba                                                               │
+      00000000febf8000-00000000febf8fff (prio 1, i/o): vga.mmio                                                                 │
+        00000000febf8000-00000000febf817f (prio 0, i/o): edid                                                                   └── ram-below-4g 是 pc.ram 的一个 alias
+        00000000febf8400-00000000febf841f (prio 0, i/o): vga ioports remapped                                                                                                                                       
+        00000000febf8500-00000000febf8515 (prio 0, i/o): bochs dispi interface                                                  ┌── ram-above-4g 也是 pc.ram 的一个 alias, 两者都被放到 system 这个 MemoryRegion 上
+        00000000febf8600-00000000febf8607 (prio 0, i/o): qemu extended regs                                                     │
+      00000000febf9000-00000000febf9fff (prio 1, i/o): virtio-9p-pci-msix                                                       │
+        00000000febf9000-00000000febf901f (prio 0, i/o): msix-table                                                             │
+        00000000febf9800-00000000febf9807 (prio 0, i/o): msix-pba                                                               │
+      00000000fffc0000-00000000ffffffff (prio 0, rom): pc.bios                                                                  │
+    00000000000a0000-00000000000bffff (prio 1, i/o): alias smram-region @pci 00000000000a0000-00000000000bffff                  │
+    00000000000c0000-00000000000c3fff (prio 1, ram): alias pam-rom @pc.ram 00000000000c0000-00000000000c3fff                    │
+    00000000000c4000-00000000000c7fff (prio 1, ram): alias pam-rom @pc.ram 00000000000c4000-00000000000c7fff                    │
+    00000000000c8000-00000000000cbfff (prio 1, ram): alias pam-rom @pc.ram 00000000000c8000-00000000000cbfff                    │
+    00000000000cb000-00000000000cdfff (prio 1000, ram): alias kvmvapic-rom @pc.ram 00000000000cb000-00000000000cdfff            │
+    00000000000cc000-00000000000cffff (prio 1, ram): alias pam-rom @pc.ram 00000000000cc000-00000000000cffff                    │
+    00000000000d0000-00000000000d3fff (prio 1, ram): alias pam-rom @pc.ram 00000000000d0000-00000000000d3fff                    │
+    00000000000d4000-00000000000d7fff (prio 1, ram): alias pam-rom @pc.ram 00000000000d4000-00000000000d7fff                    │
+    00000000000d8000-00000000000dbfff (prio 1, ram): alias pam-rom @pc.ram 00000000000d8000-00000000000dbfff                    │
+    00000000000dc000-00000000000dffff (prio 1, ram): alias pam-rom @pc.ram 00000000000dc000-00000000000dffff                    │
+    00000000000e0000-00000000000e3fff (prio 1, ram): alias pam-rom @pc.ram 00000000000e0000-00000000000e3fff                    │
+    00000000000e4000-00000000000e7fff (prio 1, ram): alias pam-ram @pc.ram 00000000000e4000-00000000000e7fff                    │
+    00000000000e8000-00000000000ebfff (prio 1, ram): alias pam-ram @pc.ram 00000000000e8000-00000000000ebfff                    │
+    00000000000ec000-00000000000effff (prio 1, ram): alias pam-ram @pc.ram 00000000000ec000-00000000000effff                    │
+    00000000000f0000-00000000000fffff (prio 1, ram): alias pam-rom @pc.ram 00000000000f0000-00000000000fffff                    │
+    00000000fec00000-00000000fec00fff (prio 0, i/o): ioapic                                                                     │
+    00000000fed00000-00000000fed003ff (prio 0, i/o): hpet                                                                       │
+    00000000fee00000-00000000feefffff (prio 4096, i/o): apic-msi                                                                │
+    0000000100000000-00000001bfffffff (prio 0, ram): alias ram-above-4g @pc.ram 00000000c0000000-000000017fffffff ──────────────┘
 ```
-
 总体来说，MemoryRegion 用于描述一个范围内的映射规则, AddressSpace 用于描述整个地址空间的映射关系。有了映射关系，当 guest 访问到这些地址的时候，就可以知道具体应该进行什么操作了。
 
 下面是 kvm 处理 io 端口的操作的一个调用流程图，只要给出 AddressSpace 以及 地址，最后就可以找到最后的 handler 为 `kbd_read_data`
@@ -174,7 +172,17 @@ MemoryRegion 存在 overlap，alias 的，获取这个地址上的真正的 memo
 FlatView 由一个个 FlatRange 组成，互相不重合，描述了最终的地址空间的样子，从 MemoryRegion 生成 FlatRange 的过程在 `render_memory_region`
 
 ```txt
-  0000000000000000-00000000000bffff (prio 0, ram): pc.ram
+FlatView #0
+ AS "memory", root: system
+ AS "cpu-memory-0", root: system
+ AS "cpu-memory-1", root: system
+ AS "e1000", root: bus master container
+ AS "piix3-ide", root: bus master container
+ AS "nvme", root: bus master container
+ AS "virtio-9p-pci", root: bus master container
+ Root memory region: system
+  0000000000000000-000000000009ffff (prio 0, ram): pc.ram
+  00000000000a0000-00000000000bffff (prio 1, i/o): vga-lowmem
   00000000000c0000-00000000000cafff (prio 0, rom): pc.ram @00000000000c0000
   00000000000cb000-00000000000cdfff (prio 0, ram): pc.ram @00000000000cb000
   00000000000ce000-00000000000e3fff (prio 0, rom): pc.ram @00000000000ce000
@@ -328,7 +336,6 @@ e1000.rom: offset=1808c0000 size=40000
 
 [^1]: [ASPLOS IOMMU tutorial](http://pages.cs.wisc.edu/~basu/isca_iommu_tutorial/IOMMU_TUTORIAL_ASPLOS_2016.pdf)
 
-欢迎交流评论。
 <script src="https://utteranc.es/client.js" repo="Martins3/Martins3.github.io" issue-term="url" theme="github-light" crossorigin="anonymous" async> </script>
 
 本站所有文章转发 **CSDN** 将按侵权追究法律责任，其它情况随意。

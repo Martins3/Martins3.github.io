@@ -20,6 +20,8 @@
 - [QEMU 的 memory model 和 softmmu 设计分析](./qemu-memory.md)
 - [QEMU 中的 map 和 set 的使用](./qemu-map.md)
 - [QEMU softmmu 访存函数集整理](./qemu-softmmu-functions.md) 
+- [QEMU 中的 seabios : 地址空间](./qemu-bios-memory.md)
+<!-- - [QEMU 中的 seabios : fw_cfg](./qemu-bios-fw_cfg.md) -->
 
 ## Tips
 - [How to cross Great Fire Wall](./gfw.md)
