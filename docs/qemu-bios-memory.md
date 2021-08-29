@@ -1,12 +1,11 @@
 # QEMU 中的 seabios : 地址空间
-
 <!-- vim-markdown-toc GitLab -->
 
 - [seabios 执行的第一行代码](#seabios-执行的第一行代码)
 - [pc.bios](#pcbios)
 - [PAM](#pam)
-    - [QEMU 这一侧](#qemu-这一侧)
-    - [Seabios 这一侧](#seabios-这一侧)
+    - [QEMU 侧如何处理 PAM](#qemu-侧如何处理-pam)
+    - [Seabios 侧如何处理 PAM](#seabios-侧如何处理-pam)
 - [SMM](#smm)
 
 <!-- vim-markdown-toc -->
@@ -21,9 +20,9 @@ seabios 的基础知识可以参考李强的《QEMU/KVM 源码解析与应用》
 > present there. This code calls romlayout.S:entry_post() which then
 > calls post.c:handle_post() in 32bit mode.
 
-意思很简答: reset_vector => entry_post => handle_post
+以上是 seabios 的文档，意思很简单: reset_vector => entry_post => handle_post
 
-从 seabios 的源码中可以验证:
+从 seabios 的源码中也可以验证:
 ```asm
         // Reset stack, transition to 32bit mode, and call a C function.
         .macro ENTRY_INTO32 cfunc
@@ -56,26 +55,31 @@ reset_vector:
 
         .end
 ```
-
-entry_post 的地址为, 在 seabios 添加一个 log
-```c
-dprintf(1, "%p\n", VSYMBOL(entry_post));
-```
-可以得到 entry_post 的地址为: `0x000fe05b`
-
-
-从上面的代码还可以知道，stack 的顶是 0x7000 的:
+从上面的代码还可以知道，stack 的顶是 0x7000
 ```c
 #define BUILD_STACK_ADDR          0x7000
 ```
 
+
+在 seabios 添加一个调试语句
+```c
+dprintf(1, "%p\n", VSYMBOL(entry_post));
+```
+可以很容易得到 entry_post 的地址为: `0x000fe05b`
+
+也就是 seabios 执行的第一行代码就是从 0xfffffff0 跳转到 0x000fe05b 上
+
 ## pc.bios
+QEMU 支持很多种类的 bios, seabios 只是其中的一种, bios 加载地址空间中，该 MemoryRegion 的名称为 pc.bios
+
 seabios 的 src/fw/shadow.c 中存在有一个注释:
 
 ```c
 // On the emulators, the bios at 0xf0000 is also at 0xffff0000
 #define BIOS_SRC_OFFSET 0xfff00000
 ```
+是的，seabios 被同时映射到两个位置。
+
 从地址中看，这确实:
 ```txt
       00000000000e0000-00000000000fffff (prio 1, rom): alias isa-bios @pc.bios 0000000000020000-000000000003ffff
@@ -90,7 +94,7 @@ PAM 的作用可以将对于 bios 空间读写转发到 PCI 或者 RAM 中，因
 - https://wiki.qemu.org/Documentation/Platforms/PC
 
 
-#### QEMU 这一侧
+#### QEMU 侧如何处理 PAM
 
 在 i440fx_init 初始化的时候, 来初始化所有 `PAMMemoryRegion`, 一共 13 个
 - 第一个映射: System BIOS Area Memory Segments, 映射 0x10000 到 0xfffff
@@ -146,7 +150,7 @@ void pam_update(PAMMemoryRegion *pam, int idx, uint8_t val)
 }
 ```
 
-#### Seabios 这一侧
+#### Seabios 侧如何处理 PAM
 guest 通过 PCI bridge i440fx 的 `I440FX_PAM` 的位置来实现更新 PAM 的。
 
 具体代码在 `__make_bios_writable_intel` 中，因为修改了映射之后 `isa-bios` 就不见了，
@@ -208,18 +212,24 @@ make_bios_writable_intel(u16 bdf, u32 pam0)
 总结一些，本来 0xc0000 ~ 0xfffff 的区间是映射到 PCI 上的，之后修改为 RAM 的，最后修改为 ROM 的。
 
 ## SMM
-
+i440fx_update_memory_mappings 中初始化了 smram_region
 ```c
+    00000000000a0000-00000000000bffff (prio 1, i/o): alias smram-region @pci 00000000000a0000-00000000000bffff
+```
+其作用是将本来会被 ram 覆盖的 vga-lowmem 重新显示出来。
+
+
+当 CPU 在 SMM 模式下，其空间如下，其实最后的效果就是将 system_memory 上，将原来 0xa0000 ~ 0xbffff 的位置上放上 ram
+
+```
 address-space: cpu-smm-0
   0000000000000000-ffffffffffffffff (prio 0, i/o): memory
     0000000000000000-00000000ffffffff (prio 1, i/o): alias smram @smram 0000000000000000-00000000ffffffff
     0000000000000000-ffffffffffffffff (prio 0, i/o): alias memory @system 0000000000000000-ffffffffffffffff
+
+memory-region: smram
+  0000000000000000-00000000ffffffff (prio 0, i/o): smram
+    00000000000a0000-00000000000bffff (prio 0, ram): alias smram-low @pc.ram 00000000000a0000-00000000000bffff
 ```
 
-我不能理解，你妈的，为什么啊?
-
-```c
-    00000000000a0000-00000000000bffff (prio 1, i/o): alias smram-region @pci 00000000000a0000-00000000000bffff
-```
-
-
+而 0xa0000 ~ 0xbffff 上恰好放置的是 vga-lowmem, 也就是在 SMM 模式下，会将 vga-lowmem 用 ram 覆盖上。
