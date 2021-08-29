@@ -221,7 +221,7 @@ i440fx_update_memory_mappings 中初始化了 smram_region
 
 当 CPU 在 SMM 模式下，其空间如下，其实最后的效果就是将 system_memory 上，将原来 0xa0000 ~ 0xbffff 的位置上放上 ram
 
-```
+```txt
 address-space: cpu-smm-0
   0000000000000000-ffffffffffffffff (prio 0, i/o): memory
     0000000000000000-00000000ffffffff (prio 1, i/o): alias smram @smram 0000000000000000-00000000ffffffff
@@ -233,3 +233,7 @@ memory-region: smram
 ```
 
 而 0xa0000 ~ 0xbffff 上恰好放置的是 vga-lowmem, 也就是在 SMM 模式下，会将 vga-lowmem 用 ram 覆盖上。
+
+<script src="https://utteranc.es/client.js" repo="Martins3/Martins3.github.io" issue-term="url" theme="github-light" crossorigin="anonymous" async> </script>
+
+本站所有文章转发 **CSDN** 将按侵权追究法律责任，其它情况随意。
