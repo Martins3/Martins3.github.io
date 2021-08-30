@@ -7,6 +7,8 @@
     - [QEMU 侧如何处理 PAM](#qemu-侧如何处理-pam)
     - [Seabios 侧如何处理 PAM](#seabios-侧如何处理-pam)
 - [SMM](#smm)
+    - [SMM 地址空间的构建](#smm-地址空间的构建)
+    - [SMM 的使用](#smm-的使用)
 
 <!-- vim-markdown-toc -->
 
@@ -212,27 +214,63 @@ make_bios_writable_intel(u16 bdf, u32 pam0)
 总结一些，本来 0xc0000 ~ 0xfffff 的区间是映射到 PCI 上的，之后修改为 RAM 的，最后修改为 ROM 的。
 
 ## SMM
-i440fx_update_memory_mappings 中初始化了 smram_region
-```c
-    00000000000a0000-00000000000bffff (prio 1, i/o): alias smram-region @pci 00000000000a0000-00000000000bffff
-```
-其作用是将本来会被 ram 覆盖的 vga-lowmem 重新显示出来。
+SMM 实际上是给 firmware 使用的, 其具体作用可以进一步参考 https://www.ssi.gouv.fr/uploads/IMG/pdf/Cansec_final.pdf
+
+> The execution environment after entering SMM is in real address mode with paging disabled (CR0.PE = CR0.PG = 0). In this initial execution environment, the SMI handler 
+can address up to 4 GBytes of memory and can execute all I/O and system instructions. (Intel SDM vol 3 chapter 34)[^1]
 
 
-当 CPU 在 SMM 模式下，其空间如下，其实最后的效果就是将 system_memory 上，将原来 0xa0000 ~ 0xbffff 的位置上放上 ram
+在 x86_cpu_reset 中间将 CPUX86State::smbase 初始化 0x30000, 而 helper_rsm 会将这数值重置为 0xa0000
 
-```txt
-address-space: cpu-smm-0
-  0000000000000000-ffffffffffffffff (prio 0, i/o): memory
-    0000000000000000-00000000ffffffff (prio 1, i/o): alias smram @smram 0000000000000000-00000000ffffffff
-    0000000000000000-ffffffffffffffff (prio 0, i/o): alias memory @system 0000000000000000-ffffffffffffffff
+初始化数值是 0x30000 从 seabios 的 src/config.h 中 `#define BUILD_SMM_INIT_ADDR       0x30000` 可以得到验证。
 
+#### SMM 地址空间的构建
+
+而在 i440fx_init 中，创建出来了 smram_region 和 smram
+```plain
 memory-region: smram
   0000000000000000-00000000ffffffff (prio 0, i/o): smram
     00000000000a0000-00000000000bffff (prio 0, ram): alias smram-low @pc.ram 00000000000a0000-00000000000bffff
 ```
 
+```plain
+address-space: cpu-memory-0
+  0000000000000000-ffffffffffffffff (prio 0, i/o): system
+    0000000000000000-00000000bfffffff (prio 0, ram): alias ram-below-4g @pc.ram 0000000000000000-00000000bfffffff
+    0000000000000000-ffffffffffffffff (prio -1, i/o): pci
+      00000000000a0000-00000000000bffff (prio 1, i/o): vga-lowmem
+      // ....
+    00000000000a0000-00000000000bffff (prio 1, i/o): alias smram-region @pci 00000000000a0000-00000000000bffff
+```
+
+在 tcg_cpu_realizefn 和 tcg_cpu_machine_done 中构建 cpu-smm
+
+```plain
+address-space: cpu-smm-0
+  0000000000000000-ffffffffffffffff (prio 0, i/o): memory
+    0000000000000000-00000000ffffffff (prio 1, i/o): alias smram @smram 0000000000000000-00000000ffffffff
+    0000000000000000-ffffffffffffffff (prio 0, i/o): alias memory @system 0000000000000000-ffffffffffffffff
+```
+
+- 因为 MemoryRegion pci 的优先级比 MemoryRegion pc.ram 的优先级低，使用 smram_region 可以将本来会被 ram 覆盖的 vga-lowmem 重新显示出来。
+- 当 CPU 在 SMM 模式下，其空间如下，其实最后的效果就是将 system_memory 上，将原来 0xa0000 ~ 0xbffff 的位置上放上 ram
 而 0xa0000 ~ 0xbffff 上恰好放置的是 vga-lowmem, 也就是在 SMM 模式下，会将 vga-lowmem 用 ram 覆盖上。
+
+#### SMM 的使用
+不考虑 pflash 的使用情况下，`cpu_get_mem_attrs` 唯一插入使用 `.secure` 的位置
+```c
+static inline MemTxAttrs cpu_get_mem_attrs(CPUX86State *env)
+{
+    return ((MemTxAttrs) { .secure = (env->hflags & HF_SMM_MASK) != 0 });
+}
+```
+而 HF_SMM_MASK 在 `env->hflags` 的插入和删除位置 smm_helper 中间。
+
+而 cpu_get_mem_attrs 的位置在各个 helper 以及 handle_mmu_fault 中。 
+这些组装的出来的 MemTxAttrs 的使用位置是: cpu_asidx_from_attrs
+这样，使用相同的地址访问，如果是 SMM 的地址空间，最后就会访问到 ram 上而不是 vga-lowmem。
+
+[^1]: https://en.wikipedia.org/wiki/System_Management_Mode
 
 <script src="https://utteranc.es/client.js" repo="Martins3/Martins3.github.io" issue-term="url" theme="github-light" crossorigin="anonymous" async> </script>
 
