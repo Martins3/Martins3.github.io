@@ -7,6 +7,7 @@
   - [endianness](#endianness)
 - [softmmu 慢速路径访存](#softmmu-慢速路径访存)
 - [CPU 访存](#cpu-访存)
+- [CPU 访问 IO](#cpu-访问-io)
 - [设备访存](#设备访存)
 - [PCI 设备访存](#pci-设备访存)
 - [总结](#总结)
@@ -137,6 +138,17 @@ void x86_stw_phys(CPUState *cs, hwaddr addr, uint32_t val)
 
 - 在 x86_stw_phys 应该都是各种 helper 访问的，也就是其中 CPU 访存的模拟而已，为什么在 address_space_stw 中非要处理 device 的大端小端，从 io_readx 中同样也是处理了的。
 - 如果访问是 ram, 那么就不存在这个装换的需求了，因为 host 和 guest 的相同的。但是如果是访问的是设备，和 io_readx 相同，走的路径都是 `memory_region_dispatch_read` 的，在哪里进行
+
+## CPU 访问 IO 
+
+在 misc_helper.c 中存在下面的一系列封装，其 x86_stw_phys 的效果非常类似，只是其 address space 是 `address_space_io`
+```c
+void helper_outb(CPUX86State *env, uint32_t port, uint32_t data)
+{
+    address_space_stb(&address_space_io, port, data,
+                      cpu_get_mem_attrs(env), NULL);
+}
+```
 
 ## 设备访存
 设备模拟模块调用的, 比如 ioapic 想要发送中断的时候，就会调用 `ioapic_service` => `stl_le_phys`

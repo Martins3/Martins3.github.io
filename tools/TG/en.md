@@ -1,9 +1,3 @@
----
-title: En
-date: 2018-04-20 08:23:29
-tags: sophisticated
----
-
 1. https://mnemonicdictionary.com/wordlist/GREwordlist
 2. [english level up tips](https://byoungd.gitbook.io/english-level-up-tips/)
 
