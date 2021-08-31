@@ -1,7 +1,4 @@
 remote_theme: pages-themes/cayman@v0.2.0
-title: Martins3's Notes
 comments: true
-description: Scratchpad about Linux, Compiler, and Virtualization
-author: Martins3
 plugins:
   - jekyll-remote-theme # add this line to the plugins list if you already have one

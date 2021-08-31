@@ -9,6 +9,16 @@
   </p>
 </p>
 
+<!-- vim-markdown-toc GitLab -->
+
+- [Navigations](#navigations)
+- [Virtualization](#virtualization)
+- [Tips](#tips)
+- [Loongson](#loongson)
+- [Multiprocessor Programming](#multiprocessor-programming)
+- [Misc](#misc)
+
+<!-- vim-markdown-toc -->
 ## Navigations
 - [Martins3's slides](https://martins3.github.io/ppt)
 - [Source code reading list](./source-code-reading-list.md)
@@ -22,6 +32,7 @@
 - [QEMU softmmu 访存函数集整理](./qemu-softmmu-functions.md) 
 - [QEMU 中的 seabios : 地址空间](./qemu-bios-memory.md)
 <!-- - [QEMU 中的 seabios : fw_cfg](./qemu-bios-fw_cfg.md) -->
+<!-- - [QEMU 的面向对象模型 : QOM](./qemu-qom.md) -->
 
 ## Tips
 - [How to cross Great Fire Wall](./gfw.md)

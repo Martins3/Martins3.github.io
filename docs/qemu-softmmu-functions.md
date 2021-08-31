@@ -7,8 +7,8 @@
   - [endianness](#endianness)
 - [softmmu 慢速路径访存](#softmmu-慢速路径访存)
 - [CPU 访存](#cpu-访存)
-- [CPU 访问物理内存](#cpu-访问物理内存)
-- [CPU 访问虚拟内存](#cpu-访问虚拟内存)
+  - [CPU 访问物理内存](#cpu-访问物理内存)
+  - [CPU 访问虚拟内存](#cpu-访问虚拟内存)
 - [CPU 访问 IO](#cpu-访问-io)
 - [设备访存](#设备访存)
 - [PCI 设备访存](#pci-设备访存)
@@ -121,7 +121,7 @@ fw_cfg_dma_transfer(void *address, u32 length, u32 control)
 target/i386/ 下的各种 helper 在模拟 CPU 访存的过程, 
 - 如果是模拟 page walk 之类的，那就是直接访问物理内存
 - 如果是模拟 FPU 之类的，那就是访问虚拟存储
-## CPU 访问物理内存
+### CPU 访问物理内存
 `x86_*_phys` => `address_space_(ld/st)(w/l/q)_(le/be)` => (st/ld)(w/l/q/uw/sw)_(le/be)_p
 
 在 target/i386/helper.c 定义了一堆类似下面的函数:
@@ -145,7 +145,7 @@ void x86_stw_phys(CPUState *cs, hwaddr addr, uint32_t val)
 - 在 x86_stw_phys 应该都是各种 helper 访问的，也就是其中 CPU 访存的模拟而已，为什么在 address_space_stw 中非要处理 device 的大端小端，从 io_readx 中同样也是处理了的。
 - 如果访问是 ram, 那么就不存在这个装换的需求了，因为 host 和 guest 的相同的。但是如果是访问的是设备，和 io_readx 相同，走的路径都是 `memory_region_dispatch_read` 的，在哪里进行
 
-## CPU 访问虚拟内存
+### CPU 访问虚拟内存
 因为是访问虚拟存储，最终必然要调用到 store_helper / load_helper 的位置，
 这些 helper 的作用就是组装这两个 helper 的函数了。
 
