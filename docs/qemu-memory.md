@@ -231,10 +231,29 @@ FlatView 是一个数组形式，为了加快访问，显然需要使用构成�
 MemoryListener 的还有一个主要功能是 dirty memory 的记录, kvm 依赖内核模块，所以总是需要执行一下对应的通知内核操作。
 
 ### CPUAddressSpace
+CPUAddressSpace 并不是因为 tcg CPU 访存存在新的映射，因为
 tcg 因为使用 softmmu 的原因，cpu 的访问 ram 也是走软件的，
 
-CPUAddressSpace 并不是单独给 CPU 创建一个新的映射，只是将 CPUState 和 AddressSpace 相关的放到一起而已。
-具体例子可以看， address_space_translate_for_iotlb 和 iotlb_to_section 。
+制作出来 CPUAddressSpace 只是为了将 tcg CPU AddressSpace 相关的东西放到一起。
+```diff
+tree a50a83c59f416259a423493cc996646bbeca1f7e
+parent c8bc83a4dd29a9a33f5be81686bfe6e2e628097b
+author Paolo Bonzini <pbonzini@redhat.com> Wed Mar 1 10:34:48 2017 +0100
+committer Paolo Bonzini <pbonzini@redhat.com> Wed Jun 7 18:22:02 2017 +0200
+
+target/i386: use multiple CPU AddressSpaces
+
+This speeds up SMM switches.  Later on it may remove the need to take
+the BQL, and it may also allow to reuse code between TCG and KVM.
+
+Signed-off-by: Paolo Bonzini <pbonzini@redhat.com>
+```
+
+在 tcg_cpu_realizefn 中 tcg_cpu_machine_done 初始化 CPUAddressSpace
+
+CPUAddressSpace 的使用主要在 address_space_translate_for_iotlb 和 iotlb_to_section 。
+
+每一个 CPU 创建一个 CPUAddressSpace ，而不是公用一个 CPUAddressSpace, 这是因为在 tcg_commit 中，通过 CPUAddressSpace 找到对应的 cpu 然后进行 TLBFlush
 
 ### SMM
 tcg 处理 AddressSpace 最大的不同在于为 SMM 创建一个新的地址空间。
