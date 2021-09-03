@@ -2,6 +2,4 @@ title: Martins3
 comments: true
 description: Scratchpad about Linux, Compiler, and Virtualization
 author: Martins3
-plugins:
-  - jekyll-feed
 theme: jekyll-theme-cayman
