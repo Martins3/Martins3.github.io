@@ -33,6 +33,7 @@
 - [QEMU 中的 seabios : 地址空间](./qemu-bios-memory.md)
 <!-- - [QEMU 中的 seabios : fw_cfg](./qemu-bios-fw_cfg.md) -->
 <!-- - [QEMU 的面向对象模型 : QOM](./qemu-qom.md) -->
+<!-- - [QEMU 的线程和锁](./qemu-thread-and-locks.md) -->
 
 ## Tips
 - [How to cross Great Fire Wall](./gfw.md)
@@ -42,6 +43,7 @@
 - [2021 年 vim 的 C/C++ 配置](https://martins3.github.io/My-Linux-config/)
 - [虚拟化学习的一点经验之谈](./learn-virtualization.md)
 - [使用 QEMU, FlameGraph 和 bpftrace 阅读内核](./tips-reading-kernel.md)
+- [使用 Github 记录笔记和搭建 blog](./setup-github-pages.md)
 
 ## Loongson
 - [X86 上阅读 Loongarch 内核](./loongarch/ccls.md)
@@ -54,7 +56,6 @@
 - [what is x86 IA-32 IA-64 x86-64 and amd64 ?](./x86-names.md)
 - [The Day](https://martins3.github.io/theday/)
 - [The Garden](http://martins3.gitee.io/garden/)
-- [使用两行代码搭建博客](./setup-github-pages.md)
 - [言论](./words.md)
 
 <!-- ## RSS  -->

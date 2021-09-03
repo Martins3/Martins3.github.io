@@ -12,3 +12,5 @@ https://zhuanlan.zhihu.com/p/346910129 : 就是这个了
 https://book.douban.com/subject/5338392/ 当时老师推荐的书
 
 https://github.com/vosen/ZLUDA : ZLUDA is a drop-in replacement for CUDA on Intel GPU.
+
+- https://github.com/Tony-Tan/CUDA_Freshman : 中文 cuda 教程，使用腾讯云做实验
