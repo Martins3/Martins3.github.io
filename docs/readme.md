@@ -1,13 +1,14 @@
-<!-- vim-markdown-toc GitLab -->
+<p align="center">
+  <p align="center">
+      <img src="https://github-readme-stats.vercel.app/api?username=Martins3&count_private=true" />
+  </p>
+  <p align="center">
+    <a href="https://996.icu"><img src="https://img.shields.io/badge/link-996.icu-red.svg" alt="996.icu" /></a>
+    <a href="https://spacevim.org/"><img src="https://spacevim.org/img/build-with-SpaceVim.svg" alt="spacevim" /></a>
+    <a href="https://github.com/martins3/Martins3.github.io"><img src="https://github.com/martins3/Martins3.github.io/actions/workflows/lint-md.yml/badge.svg" alt="ci" /></a>
+  </p>
+</p>
 
-- [Navigations](#navigations)
-- [Virtualization](#virtualization)
-- [Tips](#tips)
-- [Loongson](#loongson)
-- [Multiprocessor Programming](#multiprocessor-programming)
-- [Misc](#misc)
-
-<!-- vim-markdown-toc -->
 ## Navigations
 - [Martins3's slides](https://martins3.github.io/ppt)
 - [Source code reading list](./source-code-reading-list.md)
