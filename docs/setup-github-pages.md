@@ -9,10 +9,12 @@
 #### setup up github pages
 基础操作 : https://guides.github.com/features/pages/
 
-Github 提供了几个不错的主题，只需要在 `docs/_config.yml` 配置即可
+- Github 提供了几个不错的主题，只需要在 `docs/_config.yml` 配置即可
+- 我选择的是 : https://github.com/pages-themes/cayman
+- 我建议将需要 docs/ 作为 blog 而不是整个仓库，如此，其他的位置都是草稿区，而 docs/ 中作为发布的
 
-## 第二行: 搭建评论系统
-但是更好的方案是 `https://utteranc.es/`, 按照其步骤，将其生成的代码(比如下面一行)粘贴到你的 blog 下即可。
+## add comments
+但是更好的方案是 `https://utteranc.es/`, 按照其步骤，将其生成的代码粘贴到你的 blog 中，下面是我的例子:
 ```js
 <script src="https://utteranc.es/client.js"
   repo="Martins3/Martins3.github.io"
@@ -22,6 +24,7 @@ Github 提供了几个不错的主题，只需要在 `docs/_config.yml` 配置�
   async>
 </script>
 ```
+
 ## 第三行 : 搭建 RSS 订阅
 - [ ] TODO : [参考这里](https://dzhavat.github.io/2020/01/19/adding-an-rss-feed-to-github-pages.html) 似乎可行
 
