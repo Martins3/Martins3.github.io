@@ -54,8 +54,6 @@ AioContext
     - qemu_signalfd : 调用 syscall 获取一个 sysfd 啊
   - aio_context_new
 
-- [ ] 必须找一个具体一点的例子，太无聊了
-
 ### Qemu 线程模型
 每一个 CPU 都会有一个叫做 vcpu 的线程用于执行代码。
 

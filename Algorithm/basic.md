@@ -95,8 +95,8 @@ Arr[(2*i)+2]	Returns the right child node
 
 对于一个数组 arr = [2, 3, 4, 1, 8] 反方向 push stack
 放入的元素 e 和 stack.pop() 比较:
-1. e > stack.pop(), 一路 pop 直到可以
-2. 如果小鱼，那么这就是 e 的 Next Greater Number
+1. e > stack.top(), 一路 pop 直到可以
+2. 如果 e < stack.top()，那么这就是 e 的 Next Greater Number
 
 ## 最近公共祖先
 虽然标准算法很麻烦，但是只是找两个点的还是很有技巧性:

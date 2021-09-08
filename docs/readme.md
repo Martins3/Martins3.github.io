@@ -17,13 +17,18 @@
 ## Virtualization
 - [Loongson Dune : A Process Level Virtualization framework Base on KVM](https://github.com/Martins3/loongson-dune)
 - [裸金属二进制翻译器的设计与实现](https://martins3.github.io/ppt/repo/2021-8-24/index.html)
-- [QEMU 的 memory model 和 softmmu 设计分析](./qemu-memory.md)
-- [QEMU 中的 map 和 set 的使用](./qemu-map.md)
-- [QEMU softmmu 访存函数集整理](./qemu-softmmu-functions.md) 
-- [QEMU 中的 seabios : 地址空间](./qemu-bios-memory.md)
-<!-- - [QEMU 中的 seabios : fw_cfg](./qemu-bios-fw_cfg.md) -->
-<!-- - [QEMU 的面向对象模型 : QOM](./qemu-qom.md) -->
-<!-- - [QEMU 的线程和锁](./qemu-thread-and-locks.md) -->
+- QEMU 源码分析
+  - [QEMU 的 memory model 和 softmmu 设计分析](./qemu/memory.md)
+  - [QEMU 中的 map 和 set 的使用](./qemu/map.md)
+  - [QEMU softmmu 访存函数集整理](./qemu/softmmu-functions.md) 
+  - [QEMU 中的 seabios : 地址空间](.qemu/bios-memory.md)
+  - QEMU 中的多线程和锁
+    - [QEMU 到底有那些线程?](./qemu/threads.md)
+
+
+  <!-- - [QEMU 中的 seabios : fw_cfg](./qemu-bios-fw_cfg.md) -->
+  <!-- - [QEMU 的面向对象模型 : QOM](./qemu-qom.md) -->
+  <!-- - [QEMU 的线程和锁](./qemu-thread-and-locks.md) -->
 
 ## Tips
 - [How to cross Great Fire Wall](./gfw.md)

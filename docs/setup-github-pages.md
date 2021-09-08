@@ -14,7 +14,7 @@
 - 我选择的是 : https://github.com/pages-themes/cayman
 - 我建议将需要 docs/ 作为 blog 而不是整个仓库，如此，其他的位置都是草稿区，而 docs/ 中作为发布的
 
-## 添加评论
+#### 添加评论
 但是更好的方案是 `https://utteranc.es/`, 按照其步骤，将其生成的代码粘贴到你的 blog 中，下面是我的例子:
 ```js
 <script src="https://utteranc.es/client.js"
