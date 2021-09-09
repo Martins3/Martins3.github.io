@@ -3,19 +3,24 @@
 <!-- vim-markdown-toc GitLab -->
 
 - [Thread](#thread)
-    - [gmain / gdbus / threaded-ml](#gmain-gdbus-threaded-ml)
-    - [worker](#worker)
-    - [call_rcu](#call_rcu)
-    - [QEMUBH](#qemubh)
-    - [coroutine](#coroutine)
+  - [gmain / gdbus / threaded-ml](#gmain-gdbus-threaded-ml)
+  - [worker](#worker)
+  - [call_rcu](#call_rcu)
+  - [QEMUBH](#qemubh)
+  - [coroutine](#coroutine)
 - [QEMU Event Loop](#qemu-event-loop)
-    - [Event Loop in Linux](#event-loop-in-linux)
-    - [Event Loop in glib](#event-loop-in-glib)
-    - [AioContext](#aiocontext)
-    - [main loop thread](#main-loop-thread)
-    - [IOThread](#iothread)
-      - [use IOThread](#use-iothread)
-      - [IOThread internals](#iothread-internals)
+  - [Event Loop in Linux](#event-loop-in-linux)
+  - [Event Loop in glib](#event-loop-in-glib)
+  - [AioContext](#aiocontext)
+  - [main loop thread](#main-loop-thread)
+  - [IOThread](#iothread)
+    - [use IOThread](#use-iothread)
+    - [IOThread internals](#iothread-internals)
+- [Lock](#lock)
+  - [vCPU thread 之间的交互](#vcpu-thread-之间的交互)
+  - [vCPU 和 io thread 的交互](#vcpu-和-io-thread-的交互)
+  - [Big QEMU Lock](#big-qemu-lock)
+  - [mmap_lock](#mmap_lock)
 - [Question](#question)
 - [TODO](#todo)
 
@@ -64,7 +69,7 @@ worker
 
 下面逐个分析一下:
 
-#### gmain / gdbus / threaded-ml
+### gmain / gdbus / threaded-ml
 
 通过 `thread ${pid_num}` 和 `backtrace` 可以获取这几个 thread 的内部的执行流程。
 
@@ -119,7 +124,7 @@ gmain 和 gdbus 类似，只是从 `early_gtk_display_init` 开始，然后经�
 所以，现在可以基本确定一个事情，那就是这几个与众不同的 thread 是 gtk 处理图形界面和音频创建的出来的。
 这些东西的处理都是被 glib 库封装好了，之后没有必要关注了。
 
-#### worker
+### worker
 总体来说，worker pool 的设计比较简单的，整个 thread-pool.c 也就是只有 300 行左右, 这个主要关联的两个结构体:
 
 ```c
@@ -146,7 +151,7 @@ struct ThreadPoolElement {
 
 - 在 worker_thread 中，qemu_sem_timedwait(ThreadPool::sem) 最多只会等待 10s 如果没有任务过来，那么这个 thread 结束。
 
-#### call_rcu
+### call_rcu
 RCU 在 Linux 内核中设计的非常的巧妙，当然也非常的复杂和难以掌握。
 LWN 提供了[一系列的文章](https://lwn.net/Kernel/Index/#Read-copy-update) 来分析解释内核中 RCU 的设计。
 其中 [What is RCU, Fundamentally?](https://lwn.net/Articles/262464/) 中的
@@ -243,7 +248,7 @@ reader 和 writer 都是和 call_rcu thread 来交互的:
       3. QLIST_EMPTY(&registry) : 这表示所有的 reader 都离开 critical region 了
   - try_dequeue && `node->func(node)` : 从队列中间取出需要执行的函数来, 这些执行函数就是进行垃圾回收
 
-#### QEMUBH
+### QEMUBH
 将一个函数挂到队列上，之后从队列上取出函数(也许是另一个 thread) 来执行。
 ```c
 struct QEMUBH {
@@ -275,7 +280,7 @@ aio_set_event_notifier(ctx, &ctx->notifier, false,
   - 通知认为已经提交了: `aio_notify` => `event_notifier_set(&ctx->notifier)` => 一个简单的 write 操作
 - 轮询: `aio_poll` => `aio_bh_poll` => `aio_bh_call`
 
-#### coroutine
+### coroutine
 在 QEMU 中 coroutine 的实现原理和其他的 coroutine 没有区别，其具体实现接口可以参考 https://www.cnblogs.com/VincentXu/p/3350389.html
 
 Stefan Hajnoczi 说 QEMU 中需要 coroutine 是为了避免 callback hell[^2]
@@ -302,7 +307,7 @@ Stefan Hajnoczi 是 QEMU 中 event loop 的主要维护者，[其 blog](http://b
 在 QEMU 中，用于 event loop 的线程为 main loop thread 和 IOThread，其中 IOThread 需要 explicit 的配置才可以被使用。
 也就是说，默认情况下就是 main loop thread 和 vCPU thread 相互交互。
 
-#### Event Loop in Linux
+### Event Loop in Linux
 考虑一个情况，一个 server 需要同时和一个 client 通讯:
 ```c
 connfd = accept(listenfd, (struct sockaddr*)NULL, NULL);
@@ -322,7 +327,7 @@ while(true) {
 - [Async IO on Linux: select, poll, and epoll](https://jvns.ca/blog/2017/06/03/async-io-on-linux--select--poll--and-epoll/)
 - [io_uring 的接口与实现](https://www.skyzh.dev/posts/articles/2021-06-14-deep-dive-io-uring/)
 
-#### Event Loop in glib
+### Event Loop in glib
 大致结构如下:
 <p align="center">
   <img src="../img/glib.svg"/>
@@ -335,7 +340,7 @@ while(true) {
 
 关于 glib 的入门，可以参考[我写的一个小例子](https://github.com/Martins3/Martins3.github.io/tree/master/docs/qemu/glib)
 
-#### AioContext
+### AioContext
 虽然 AioContext 叫做 Context，实际上其定位是 GSource 的，无论是在 main loop thread 还是在 IOThread 中，
 通过 aio_set_fd_handler /  qemu_set_fd_handler => g_source_add_poll 可以将 fd 添加到 AioContext::source 上，而 AioContext::source 总是会进一步地通过 g_source_attach
 被关联到 GMainContext 上。
@@ -362,7 +367,7 @@ static void iothread_init_gcontext(IOThread *iothread)
 
 当然代价就是 aio_poll 真的很复杂。
 
-#### main loop thread
+### main loop thread
 QEMU 的第一个 thread 启动了各个 vCPU 之后，然后就会调用 ppoll 来进行实践监听。
 
 相关代码在 main-loop.c 中间，下面是 main loop 
@@ -415,10 +420,10 @@ static bool aio_context_notifier_poll(void *opaque)
 }
 ```
 
-#### IOThread
+### IOThread
 IOThread 也是一个 event loop 的线程，其可以用于分担 main loop thread 的工作。
 
-##### use IOThread
+#### use IOThread
 IOThread 不是默认打开的，也不是所有的 fd (主要是 virtio-blk-data-plane[^13]) 都可以让 IOThread 来 listen 的:
 参考 https://www.heiko-sieger.info/tuning-vm-disk-performance/ 来配置参数，下面是我的例子。
 ```sh
@@ -447,7 +452,7 @@ VirtIOBlockDataPlane::ctx 的赋值根据 conf 是否有 iothread
 
 aio_set_fd_handler 设置 fd 的时候，使用 VirtIOBlockDataPlane::ctx 作为参数，所以如果配置了 IOThread, 那么这些 fd 将别 IOThread 来监听。
 
-##### IOThread internals
+#### IOThread internals
 
 IOThread 的关联文件为 iothread.c, 内容非常短，IOThread 的实现也很容易:
 ```c
@@ -477,6 +482,47 @@ iothread_run 中实际上会首先使用 aio_poll 然后 g_main_loop_run 来监�
  * iothread we need to pay some performance for functionality.
  */
 ```
+
+## Lock
+对于 lock 的分析侧重 tcg，下面的 vCPU 默认全部值得 tcg vCPU
+
+### vCPU thread 之间的交互
+- 为什么 vCPU 需要交互?
+  - 模拟 remote TLB flush, 一个 vCPU 的
+  - ipi ?
+  - [因为 tb buffer 是共享的](https://martins3.github.io/qemu/map.html#%E6%A0%B9%E6%8D%AE-guest-physical-address-%E6%89%BE%E5%88%B0-translation-block)
+  - [page_lock](https://martins3.github.io/qemu/map.html#%E6%A0%B9%E6%8D%AE-ram-addr-%E6%89%BE%E8%AF%A5-guest-page-%E4%B8%8A%E5%85%B3%E8%81%94%E7%9A%84%E6%89%80%E6%9C%89%E7%9A%84-tb)
+  - memory model : 不能出现一个 cpu 在修改，另一个 cpu 在使用的情况吧
+
+### vCPU 和 io thread 的交互
+
+### Big QEMU Lock
+分析几个需要使用 BIQ QEMU Lock 的位置。
+
+### mmap_lock
+
+```c
+static pthread_mutex_t mmap_mutex = PTHREAD_MUTEX_INITIALIZER;
+static __thread int mmap_lock_count;
+
+void mmap_lock(void)
+{
+    if (mmap_lock_count++ == 0) {
+        pthread_mutex_lock(&mmap_mutex);
+    }
+}
+```
+利用 mmap_lock_count 一个 thread 可以反复上锁，但是可以防止其他 thread 并发访问。
+
+那么只有用户态才需要啊 ?
+
+参考两个资料:
+1. https://qemu.readthedocs.io/en/latest/devel/multi-thread-tcg.html
+2. tcg_region_init 上面的注释
+
+用户态的线程数量可能很大，所以创建多个 region 是不合适的，所以只创建一个，
+而且用户进程的代码大多数都是相同，所以 tb 相关串行也问题不大。
+
 
 ## Question
 - [ ] io/ 下的 qio
