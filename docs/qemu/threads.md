@@ -16,6 +16,8 @@
     - [IOThread](#iothread)
       - [use IOThread](#use-iothread)
       - [IOThread internals](#iothread-internals)
+- [Question](#question)
+- [TODO](#todo)
 
 <!-- vim-markdown-toc -->
 ## Thread
@@ -283,6 +285,9 @@ coroutine 的接口是建立在 BH 上的
 - 执行任务 : 当 aio_poll 的时候，会执行 `ctx->co_schedule_bh` 上的 hook, 也即是 co_schedule_bh_cb, 在其中调用 qemu_aio_coroutine_enter 来执行。
 
 ## QEMU Event Loop
+Stefan Hajnoczi 是 QEMU 中 event loop 的主要维护者，[其 blog](http://blog.vmsplice.net/2020/08/qemu-internals-event-loops.html) 一定要读一下。
+
+
 和 QEMU Event Loop 关联的文件
 
 - util/async.c : AioContext 处理 bh 和 coroutine 相关的操作
@@ -353,6 +358,7 @@ static void iothread_init_gcontext(IOThread *iothread)
     - 从 aio_context_setup 看，最好的是 io_uring 的，其次是 epoll 的，最差是 poll
 - 利用 AioHandler::io_poll 支持可以实现用户态 poll
 - 更加细粒度的调节 timeout 的时间
+- 使用 aio_add_ready_handler 等机制不是遍历所有的 fd 而只是遍历 ready 的 fd
 
 当然代价就是 aio_poll 真的很复杂。
 
@@ -413,7 +419,7 @@ static bool aio_context_notifier_poll(void *opaque)
 IOThread 也是一个 event loop 的线程，其可以用于分担 main loop thread 的工作。
 
 ##### use IOThread
-IOThread 不是默认打开的，也不是所有的 fd 都可以让 IOThread 来 listen 的:
+IOThread 不是默认打开的，也不是所有的 fd (主要是 virtio-blk-data-plane[^13]) 都可以让 IOThread 来 listen 的:
 参考 https://www.heiko-sieger.info/tuning-vm-disk-performance/ 来配置参数，下面是我的例子。
 ```sh
 use_iothread_with_nvme="-device virtio-blk-pci,drive=nvme2,iothread=io0 -drive file=${ext4_img},format=raw,if=none,id=nvme2"
@@ -457,21 +463,9 @@ struct IOThread {
 };
 ```
 IOThread 的核心流程 iothread_run 主要就是通过 aio_poll 进行 listen，如果有 fd ready, 那么 
+那么执行对应 AioHandler::io_read 和 AioHandler::io_write 这些注册的 hook
 
-```c
-/*
-#0  0x00007ffff61a6bf6 in __ppoll (fds=0x7fffd4002420, nfds=3, timeout=<optimized out>, timeout@entry=0x0, sigmask=sigmask@entry=0x0) at ../sysdeps/unix/sysv/linux/ppoll.c:44
-#1  0x0000555555e474c9 in ppoll (__ss=0x0, __timeout=0x0, __nfds=<optimized out>, __fds=<optimized out>) at /usr/include/x86_64-linux-gnu/bits/poll2.h:77
-#2  qemu_poll_ns (fds=<optimized out>, nfds=<optimized out>, timeout=timeout@entry=-1) at ../util/qemu-timer.c:336
-#3  0x0000555555e7def5 in fdmon_poll_wait (ctx=0x555556a3ba00, ready_list=0x7fffe93f2228, timeout=-1) at ../util/fdmon-poll.c:80
-#4  0x0000555555e57703 in aio_poll (ctx=<optimized out>, blocking=blocking@entry=true) at ../util/aio-posix.c:607
-#5  0x0000555555d16be4 in iothread_run (opaque=opaque@entry=0x5555569e6f50) at ../iothread.c:66
-#6  0x0000555555e5e563 in qemu_thread_start (args=<optimized out>) at ../util/qemu-thread-posix.c:541
-#7  0x00007ffff628c609 in start_thread (arg=<optimized out>) at pthread_create.c:477
-#8  0x00007ffff61b3293 in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
-```
-
-iothread_run 的注释:
+iothread_run 中实际上会首先使用 aio_poll 然后 g_main_loop_run 来监听。
 ```c
 /*
  * Note: from functional-wise the g_main_loop_run() below can
@@ -483,15 +477,15 @@ iothread_run 的注释:
  * iothread we need to pay some performance for functionality.
  */
 ```
-会首先使用 aio_poll 然后 g_main_loop_run 来监听的方法。
 
-注意，aio_set_fd_handler 的参数是 AioContext 的，一个 IOThread 关联一个 AioContext, 其 GSource 关联 worker_context。
-所以 iothread_run 中 aio_poll 和 g_main_loop_run 实际上就是监听同一组的
+## Question
+- [ ] io/ 下的 qio
+- [ ] 似乎 io 是可以划分为 external 的，例如 aio_node_check
+- [ ] 什么是 callback hell 为什么 coroutine 可以解决
+- [ ] iohandler_ctx 和 qemu_aio_context 有什么区别
 
-- 但是，为什么 aio_set_fd_handler 中，似乎根本没有区分啊, GSource 还是 AioContext 中的:
-    - 如果不是 pure block layer iothreads 的时候，这是如何处理的?
-    - iothread_run 中运行 g_main_loop_run 之前会检测 IOThread::run_gcontext , 稍微分析了一下，这个需要调用 iothread_get_g_main_context，也就是通过只有 GSource 之后，来间接的持有
-
+## TODO
+- [ ] 异步 io 例如 io uring 如何和 event fd 联系到一起的
 
 [^1]: https://github.com/chiehmin/gdbus_test
 [^2]: http://blog.vmsplice.net/2014/01/coroutines-in-qemu-basics.html
@@ -503,3 +497,7 @@ iothread_run 的注释:
 [^9]: https://stackoverflow.com/questions/8944236/gdb-how-to-get-thread-name-displayed
 [^10]: https://man7.org/linux/man-pages/man2/poll.2.html
 
+[^11]: [io_uring in QEMU: high-performance disk IO for Linux](https://archive.fosdem.org/2020/schedule/event/vai_io_uring_in_qemu/attachments/slides/4145/export/events/attachments/vai_io_uring_in_qemu/slides/4145/io_uring_fosdem.pdf)
+[^12]: [Improving the QEMU Event Loop](http://events17.linuxfoundation.org/sites/events/files/slides/Improving%20the%20QEMU%20Event%20Loop%20-%203.pdf)
+
+[^13]: [Effective multi-threading in QEMU](https://www.linux-kvm.org/images/1/17/Kvm-forum-2013-Effective-multithreading-in-QEMU.pdf)
