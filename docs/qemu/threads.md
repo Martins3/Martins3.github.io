@@ -2,22 +2,23 @@
 
 <!-- vim-markdown-toc GitLab -->
 
-- [整体印象](#整体印象)
+- [overview](#overview)
 - [gmain / gdbus / threaded-ml](#gmain-gdbus-threaded-ml)
 - [worker](#worker)
 - [call_rcu](#call_rcu)
 - [coroutine](#coroutine)
 - [QEMUBH](#qemubh)
-- [Event Loop](#event-loop)
+- [QEMU Event Loop](#qemu-event-loop)
+    - [Event Loop in Linux](#event-loop-in-linux)
+    - [Event Loop in glib](#event-loop-in-glib)
+    - [main loop thread](#main-loop-thread)
 
 <!-- vim-markdown-toc -->
-## 整体印象
+## overview
 QEMU 的执行流程大致来说是分为 io thread 和 vCPU thread 的。
 
 <p align="center">
-  <p align="center">
-      <img src="https://martins3.github.io/ppt/images/QEMU-ARCH.svg" />
-  </p>
+  <img src="https://martins3.github.io/ppt/images/QEMU-ARCH.svg" />
 </p>
 
 **一般来说**:
@@ -117,16 +118,16 @@ gmain 和 gdbus 类似，只是从 `early_gtk_display_init` 开始，然后经�
 
 ```c
 struct ThreadPool {
-    QemuSemaphore sem;　// 工作线程idle时休眠的信号量
+    QemuSemaphore sem; // 工作线程idle时休眠的信号量
 
     /* The following variables are protected by lock.  */
     QTAILQ_HEAD(, ThreadPoolElement) request_list;
 };
 
 struct ThreadPoolElement {
-    ThreadPool *pool;　    // 所属线程池
-    ThreadPoolFunc *func;　// 要在线程池中完成的工作
-    void *arg;　           // 线程池中完成的工作的参数
+    ThreadPool *pool;      // 所属线程池
+    ThreadPoolFunc *func;  // 要在线程池中完成的工作
+    void *arg;             // 线程池中完成的工作的参数
 
     /* Access to this list is protected by lock.  */
     QTAILQ_ENTRY(ThreadPoolElement) reqs; // 通过这个将自己放到 ThreadPool::request_list 上
@@ -146,7 +147,7 @@ LWN 提供了[一系列的文章](https://lwn.net/Kernel/Index/#Read-copy-update
 Example 1: Maintaining Multiple Versions During Deletion 和 Example 2: Maintaining Multiple Versions During Replacement
 用于理解 RCU 的原理算是相当的生动形象了。
 
-虽然原理相同，QEMU 中的 RCU 设计的更加简单和容易理解。
+虽然原理相同，QEMU 中的 RCU[^3][^4][^5] 设计的更加简单和容易理解。
 
 下面的分析使用 RAMList::dirty_memory 作为一个分析的例子:
 
@@ -216,7 +217,8 @@ WITH_RCU_READ_LOCK_GUARD 会展开为:
 ```
 
 先总结一下关联到几个主要结构体:
-| var                  |                                                                                    |
+
+| 名称                 | 作用                                                                               |
 |----------------------|------------------------------------------------------------------------------------|
 | rcu_gp_ctr           | 全局变量，用于标记当前的 period                                                    |
 | rcu_reader           | 每一个线程的局部变量，当 reader 进入 critical reagion 的时候，会和 rcu_gp_ctr 同步 |
@@ -241,8 +243,71 @@ reader 和 writer 都是和 call_rcu thread 来交互的:
 Stefan Hajnoczi 说 QEMU 中需要 coroutine 是为了避免 callback hell[^2]
 
 ## QEMUBH
+将一个函数挂到队列上，之后从队列上取出函数(也许是另一个 thread) 来执行。
+```c
+struct QEMUBH {
+    AioContext *ctx;
+    const char *name;
+    QEMUBHFunc *cb;
+    void *opaque;
+    QSLIST_ENTRY(QEMUBH) next;
+    unsigned flags;
+};
+```
+和 coroutine 的差别在于，coroutine 是有自己的 stack 的。
 
-## Event Loop
+大概这么多吧，浅尝辄止了。
+## QEMU Event Loop
+
+#### Event Loop in Linux
+考虑一个情况，一个 server 需要同时和一个 client 通讯:
+```c
+connfd = accept(listenfd, (struct sockaddr*)NULL, NULL);
+while(true) {
+		read(connfd, sendBuff, strlen(sendBuff));
+		write(connfd, writeBuff, strlen(writeBuff));
+}
+```
+如果 client 不发送信息回来，那么 server 用于等待到 read 那个函数不能返回。
+
+那么 server 想要同时和 10000 个 client 通讯，如果还是这种模型，那么就需要创建出来 10000 个线程出来。
+
+但是更好的方法是，采用 event loop 机制，使用 select / poll / epoll / io_uring 之类的系统调用监听这 10000 个 socket fd，
+只要任何一个 client 发送数据过来，epoll 返回，调用该 fd 对应的 hook 函数。
+
+具体原理不是很麻烦，可以参考下面的内容:
+- [epoll 原理](https://zhuanlan.zhihu.com/p/63179839)
+- [Async IO on Linux: select, poll, and epoll](https://jvns.ca/blog/2017/06/03/async-io-on-linux--select--poll--and-epoll/)
+- [io_uring 的接口与实现](https://www.skyzh.dev/posts/articles/2021-06-14-deep-dive-io-uring/)
+
+#### Event Loop in glib
+大致结构如下:
+<p align="center">
+  <img src="../img/glib.svg"/>
+</p>
+
+- 一个 thread 通过 g_main_loop_run 来执行一个 GMainLoop，一个 thread 可以持有多个 GMainLoop 的，但是一次只能执行一个.
+- 一个 GMainLoop 关联一个 GMainContext
+- 一个 GMainContext 可以关联多个 GSource 的 
+- 一个 GSource 可以关联多个需要被监听的 fd
+
+关于 glib 的入门，可以参考[我写的一个小例子](https://github.com/Martins3/Martins3.github.io/tree/master/docs/qemu/glib)
+
+#### main loop thread
+QEMU 的第一个 thread 启动了各个 vCPU 之后，然后就会调用 ppoll 来进行实践监听。
+
+相关代码在 main-loop.c 中间，下面是 main loop 
+```c
+/*
+#1  0x0000555555e72675 in ppoll (__ss=0x0, __timeout=0x7fffffffd450, __nfds=<optimized out>, __fds=<optimized out>) at /usr/include/x86_64-linux-gnu/bits/poll2.h:77
+#2  qemu_poll_ns (fds=<optimized out>, nfds=<optimized out>, timeout=timeout@entry=4804734) at ../util/qemu-timer.c:348
+#3  0x0000555555e82705 in os_host_main_loop_wait (timeout=4804734) at ../util/main-loop.c:250
+#4  main_loop_wait (nonblocking=nonblocking@entry=0) at ../util/main-loop.c:531
+#5  0x0000555555c09651 in qemu_main_loop () at ../softmmu/runstate.c:726
+#6  0x0000555555940c92 in main (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/main.c:50
+```
+
+
 
 [^1]: https://github.com/chiehmin/gdbus_test
 [^2]: http://blog.vmsplice.net/2014/01/coroutines-in-qemu-basics.html
@@ -253,4 +318,6 @@ Stefan Hajnoczi 说 QEMU 中需要 coroutine 是为了避免 callback hell[^2]
 
 [^8]: https://stackoverflow.com/questions/21926549/get-thread-name-in-gdb
 [^9]: https://stackoverflow.com/questions/8944236/gdb-how-to-get-thread-name-displayed
+
+[^10]: https://man7.org/linux/man-pages/man2/poll.2.html
 
