@@ -2,19 +2,23 @@
 
 <!-- vim-markdown-toc GitLab -->
 
-- [overview](#overview)
-- [gmain / gdbus / threaded-ml](#gmain-gdbus-threaded-ml)
-- [worker](#worker)
-- [call_rcu](#call_rcu)
-- [coroutine](#coroutine)
-- [QEMUBH](#qemubh)
+- [Thread](#thread)
+    - [gmain / gdbus / threaded-ml](#gmain-gdbus-threaded-ml)
+    - [worker](#worker)
+    - [call_rcu](#call_rcu)
+    - [QEMUBH](#qemubh)
+    - [coroutine](#coroutine)
 - [QEMU Event Loop](#qemu-event-loop)
     - [Event Loop in Linux](#event-loop-in-linux)
     - [Event Loop in glib](#event-loop-in-glib)
+    - [AioContext](#aiocontext)
     - [main loop thread](#main-loop-thread)
+    - [IOThread](#iothread)
+      - [use IOThread](#use-iothread)
+      - [IOThread internals](#iothread-internals)
 
 <!-- vim-markdown-toc -->
-## overview
+## Thread
 QEMU 的执行流程大致来说是分为 io thread 和 vCPU thread 的。
 
 <p align="center">
@@ -58,7 +62,7 @@ worker
 
 下面逐个分析一下:
 
-## gmain / gdbus / threaded-ml
+#### gmain / gdbus / threaded-ml
 
 通过 `thread ${pid_num}` 和 `backtrace` 可以获取这几个 thread 的内部的执行流程。
 
@@ -113,7 +117,7 @@ gmain 和 gdbus 类似，只是从 `early_gtk_display_init` 开始，然后经�
 所以，现在可以基本确定一个事情，那就是这几个与众不同的 thread 是 gtk 处理图形界面和音频创建的出来的。
 这些东西的处理都是被 glib 库封装好了，之后没有必要关注了。
 
-## worker
+#### worker
 总体来说，worker pool 的设计比较简单的，整个 thread-pool.c 也就是只有 300 行左右, 这个主要关联的两个结构体:
 
 ```c
@@ -140,7 +144,7 @@ struct ThreadPoolElement {
 
 - 在 worker_thread 中，qemu_sem_timedwait(ThreadPool::sem) 最多只会等待 10s 如果没有任务过来，那么这个 thread 结束。
 
-## call_rcu
+#### call_rcu
 RCU 在 Linux 内核中设计的非常的巧妙，当然也非常的复杂和难以掌握。
 LWN 提供了[一系列的文章](https://lwn.net/Kernel/Index/#Read-copy-update) 来分析解释内核中 RCU 的设计。
 其中 [What is RCU, Fundamentally?](https://lwn.net/Articles/262464/) 中的
@@ -237,12 +241,7 @@ reader 和 writer 都是和 call_rcu thread 来交互的:
       3. QLIST_EMPTY(&registry) : 这表示所有的 reader 都离开 critical region 了
   - try_dequeue && `node->func(node)` : 从队列中间取出需要执行的函数来, 这些执行函数就是进行垃圾回收
 
-## coroutine
-在 QEMU 中 coroutine 的实现原理和其他的 coroutine 没有区别，其具体实现接口可以参考 https://www.cnblogs.com/VincentXu/p/3350389.html
-
-Stefan Hajnoczi 说 QEMU 中需要 coroutine 是为了避免 callback hell[^2]
-
-## QEMUBH
+#### QEMUBH
 将一个函数挂到队列上，之后从队列上取出函数(也许是另一个 thread) 来执行。
 ```c
 struct QEMUBH {
@@ -256,20 +255,58 @@ struct QEMUBH {
 ```
 和 coroutine 的差别在于，coroutine 是有自己的 stack 的。
 
-大概这么多吧，浅尝辄止了。
+QEMU 默认使用 eventfd 来进行通知(参考 : event_notifier_init)，
+eventfd 正如其名，不像 socket fd 或者 file fd 之类可以访问网络或者文件系统，
+这个就是纯粹地用于通知。
+
+而且 aio_set_event_notifier 之后会调用的 g_source_add_poll 的, 
+将 AioContext::notifier 作为一个普通的 fd 来监控。
+
+aio_context_new 中:
+```c
+aio_set_event_notifier(ctx, &ctx->notifier, false,
+                       aio_context_notifier_cb,
+                       aio_context_notifier_poll);
+```
+
+- 提交任务 : `qemu_bh_schedule`
+  - 通知认为已经提交了: `aio_notify` => `event_notifier_set(&ctx->notifier)` => 一个简单的 write 操作
+- 轮询: `aio_poll` => `aio_bh_poll` => `aio_bh_call`
+
+#### coroutine
+在 QEMU 中 coroutine 的实现原理和其他的 coroutine 没有区别，其具体实现接口可以参考 https://www.cnblogs.com/VincentXu/p/3350389.html
+
+Stefan Hajnoczi 说 QEMU 中需要 coroutine 是为了避免 callback hell[^2]
+
+coroutine 的接口是建立在 BH 上的
+- 提交任务 : `qemu_bh_schedule(ctx->co_schedule_bh)`
+- 执行任务 : 当 aio_poll 的时候，会执行 `ctx->co_schedule_bh` 上的 hook, 也即是 co_schedule_bh_cb, 在其中调用 qemu_aio_coroutine_enter 来执行。
+
 ## QEMU Event Loop
+和 QEMU Event Loop 关联的文件
+
+- util/async.c : AioContext 处理 bh 和 coroutine 相关的操作
+- util/aio-posix.c : 定义了 aio_dispatch_handler, aio_poll, aio_set_fd_handler 等核心函数
+- util/fdmon-epoll.c : aio_poll 使用 epoll 进行监听的时候使用的 hook
+- util/fdmon-io_uring.c : 同上，但是是 io_uring
+- util/fdmon-poll.c : 同上
+- util/thread-pool.c
+- main-loop.c : main loop thread
+- iothread.c : IOThread thread
+
+在 QEMU 中，用于 event loop 的线程为 main loop thread 和 IOThread，其中 IOThread 需要 explicit 的配置才可以被使用。
+也就是说，默认情况下就是 main loop thread 和 vCPU thread 相互交互。
 
 #### Event Loop in Linux
 考虑一个情况，一个 server 需要同时和一个 client 通讯:
 ```c
 connfd = accept(listenfd, (struct sockaddr*)NULL, NULL);
 while(true) {
-		read(connfd, sendBuff, strlen(sendBuff));
-		write(connfd, writeBuff, strlen(writeBuff));
+  read(connfd, sendBuff, strlen(sendBuff));
+  write(connfd, writeBuff, strlen(writeBuff));
 }
 ```
-如果 client 不发送信息回来，那么 server 用于等待到 read 那个函数不能返回。
-
+如果 client 不发送信息回来，那么 server 将会永远等待在 read 那个函数中不能从 kernel 中返回。
 那么 server 想要同时和 10000 个 client 通讯，如果还是这种模型，那么就需要创建出来 10000 个线程出来。
 
 但是更好的方法是，采用 event loop 机制，使用 select / poll / epoll / io_uring 之类的系统调用监听这 10000 个 socket fd，
@@ -293,6 +330,32 @@ while(true) {
 
 关于 glib 的入门，可以参考[我写的一个小例子](https://github.com/Martins3/Martins3.github.io/tree/master/docs/qemu/glib)
 
+#### AioContext
+虽然 AioContext 叫做 Context，实际上其定位是 GSource 的，无论是在 main loop thread 还是在 IOThread 中，
+通过 aio_set_fd_handler /  qemu_set_fd_handler => g_source_add_poll 可以将 fd 添加到 AioContext::source 上，而 AioContext::source 总是会进一步地通过 g_source_attach
+被关联到 GMainContext 上。
+
+```c
+static void iothread_init_gcontext(IOThread *iothread)
+{
+    GSource *source;
+
+    iothread->worker_context = g_main_context_new();                        // 创建 GMainContext
+    source = aio_get_g_source(iothread_get_aio_context(iothread));          // 获取 AioContext 里面的 GSource
+    g_source_attach(source, iothread->worker_context);                      // 将 GSource 关联到 GMainContext 上
+    g_source_unref(source);
+    iothread->main_loop = g_main_loop_new(iothread->worker_context, TRUE);  // GMainLoop 和这个创建的 GSource 来放到一起的
+}
+```
+但是 AioContext 相对于 glib 的 gsource 增减更多的功能，比如:
+- 在 [QEMUBH](#qemubh) 中提到的可以管理 QEMUBH 以及 coroutine
+- 利用 FDMonOps 可以使用跟合适的系统调用来 listen，而不是在 main loop 使用 ppoll 的
+    - 从 aio_context_setup 看，最好的是 io_uring 的，其次是 epoll 的，最差是 poll
+- 利用 AioHandler::io_poll 支持可以实现用户态 poll
+- 更加细粒度的调节 timeout 的时间
+
+当然代价就是 aio_poll 真的很复杂。
+
 #### main loop thread
 QEMU 的第一个 thread 启动了各个 vCPU 之后，然后就会调用 ppoll 来进行实践监听。
 
@@ -306,18 +369,137 @@ QEMU 的第一个 thread 启动了各个 vCPU 之后，然后就会调用 ppoll 
 #5  0x0000555555c09651 in qemu_main_loop () at ../softmmu/runstate.c:726
 #6  0x0000555555940c92 in main (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/main.c:50
 ```
+在 glib 中进行 event loop 是通过调用 g_main_loop_run 来进行进行的，但是 QEMU 的 main loop thread 存在更强的自定义，也就是
+os_host_main_loop_wait
 
+- os_host_main_loop_wait
+  - glib_pollfds_fill
+    - g_main_context_query : 调用 glib 的库，将需要监听的 fd 取出来，放到 gpollfds 中
+  - qemu_poll_ns : 调用 poll 来监听保存到 gpollfds 中的 fd
+  - glib_pollfds_poll
+    - g_main_context_dispatch : 调用监听的 fd 的 callback 函数
+
+当存在 fd ready 之后，其执行流程为:
+- g_main_context_dispatch
+  - aio_ctx_dispatch
+    - aio_dispatch
+        - aio_dispatch_handlers
+            - aio_dispatch_handler
+              -  qemu_luring_completion_cb
+
+那么自然涉及到一个问题，这些 callback 函数如何注册的?
+
+这就是 aio_set_fd_handler 的任务，对于一个监听的 fd, 会创建 `AioHandler` 来保存这个 fd 关联的 hook 函数
+
+需要指出的是，AioHandler::io_poll 用于用户态的 poll 操作，找到其注册的三个 hook 函数，都是简单查询一下一个变量，
+如果发现已经存在 fd ready 了，那么就可以直接返回。io_poll 注册的 hook 为:
+- aio_context_notifier_poll
+- qemu_luring_poll_cb : Returns how many unconsumed entries are ready in the CQ ring
+- virtio_queue_host_notifier_aio_poll
+
+实现真的非常的平易近人:
+```c
+/* Returns true if aio_notify() was called (e.g. a BH was scheduled) */
+static bool aio_context_notifier_poll(void *opaque)
+{
+    EventNotifier *e = opaque;
+    AioContext *ctx = container_of(e, AioContext, notifier);
+
+    return qatomic_read(&ctx->notified);
+}
+```
+
+#### IOThread
+IOThread 也是一个 event loop 的线程，其可以用于分担 main loop thread 的工作。
+
+##### use IOThread
+IOThread 不是默认打开的，也不是所有的 fd 都可以让 IOThread 来 listen 的:
+参考 https://www.heiko-sieger.info/tuning-vm-disk-performance/ 来配置参数，下面是我的例子。
+```sh
+use_iothread_with_nvme="-device virtio-blk-pci,drive=nvme2,iothread=io0 -drive file=${ext4_img},format=raw,if=none,id=nvme2"
+create_iothread="-object iothread,id=io0"
+```
+
+```c
+/* Context: QEMU global mutex held */
+bool virtio_blk_data_plane_create(VirtIODevice *vdev, VirtIOBlkConf *conf,
+                                  VirtIOBlockDataPlane **dataplane,
+                                  Error **errp)
+{
+    // ...
+    if (conf->iothread) {
+        s->iothread = conf->iothread;
+        object_ref(OBJECT(s->iothread));
+        s->ctx = iothread_get_aio_context(s->iothread);
+    } else {
+        s->ctx = qemu_get_aio_context(); // s 的类型为 VirtIOBlockDataPlane
+    }
+```
+VirtIOBlockDataPlane::ctx 的赋值根据 conf 是否有 iothread
+- 有 : 通过 iothread_get_aio_context 获取 IOThread::ctx
+- 没有 : 通过 qemu_get_aio_context 得到的是 main loop thread 中 qemu_aio_context
+
+aio_set_fd_handler 设置 fd 的时候，使用 VirtIOBlockDataPlane::ctx 作为参数，所以如果配置了 IOThread, 那么这些 fd 将别 IOThread 来监听。
+
+##### IOThread internals
+
+IOThread 的关联文件为 iothread.c, 内容非常短，IOThread 的实现也很容易:
+```c
+struct IOThread {
+    AioContext *ctx;
+    GMainContext *worker_context;
+    GMainLoop *main_loop;
+
+    QemuThread thread;
+    QemuMutex init_done_lock;
+    QemuCond init_done_cond;    /* is thread initialization done? */
+    bool stopping;
+};
+```
+IOThread 的核心流程 iothread_run 主要就是通过 aio_poll 进行 listen，如果有 fd ready, 那么 
+
+```c
+/*
+#0  0x00007ffff61a6bf6 in __ppoll (fds=0x7fffd4002420, nfds=3, timeout=<optimized out>, timeout@entry=0x0, sigmask=sigmask@entry=0x0) at ../sysdeps/unix/sysv/linux/ppoll.c:44
+#1  0x0000555555e474c9 in ppoll (__ss=0x0, __timeout=0x0, __nfds=<optimized out>, __fds=<optimized out>) at /usr/include/x86_64-linux-gnu/bits/poll2.h:77
+#2  qemu_poll_ns (fds=<optimized out>, nfds=<optimized out>, timeout=timeout@entry=-1) at ../util/qemu-timer.c:336
+#3  0x0000555555e7def5 in fdmon_poll_wait (ctx=0x555556a3ba00, ready_list=0x7fffe93f2228, timeout=-1) at ../util/fdmon-poll.c:80
+#4  0x0000555555e57703 in aio_poll (ctx=<optimized out>, blocking=blocking@entry=true) at ../util/aio-posix.c:607
+#5  0x0000555555d16be4 in iothread_run (opaque=opaque@entry=0x5555569e6f50) at ../iothread.c:66
+#6  0x0000555555e5e563 in qemu_thread_start (args=<optimized out>) at ../util/qemu-thread-posix.c:541
+#7  0x00007ffff628c609 in start_thread (arg=<optimized out>) at pthread_create.c:477
+#8  0x00007ffff61b3293 in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
+```
+
+iothread_run 的注释:
+```c
+/*
+ * Note: from functional-wise the g_main_loop_run() below can
+ * already cover the aio_poll() events, but we can't run the
+ * main loop unconditionally because explicit aio_poll() here
+ * is faster than g_main_loop_run() when we do not need the
+ * gcontext at all (e.g., pure block layer iothreads).  In
+ * other words, when we want to run the gcontext with the
+ * iothread we need to pay some performance for functionality.
+ */
+```
+会首先使用 aio_poll 然后 g_main_loop_run 来监听的方法。
+
+注意，aio_set_fd_handler 的参数是 AioContext 的，一个 IOThread 关联一个 AioContext, 其 GSource 关联 worker_context。
+所以 iothread_run 中 aio_poll 和 g_main_loop_run 实际上就是监听同一组的
+
+- 但是，为什么 aio_set_fd_handler 中，似乎根本没有区分啊, GSource 还是 AioContext 中的:
+    - 如果不是 pure block layer iothreads 的时候，这是如何处理的?
+    - iothread_run 中运行 g_main_loop_run 之前会检测 IOThread::run_gcontext , 稍微分析了一下，这个需要调用 iothread_get_g_main_context，也就是通过只有 GSource 之后，来间接的持有
 
 
 [^1]: https://github.com/chiehmin/gdbus_test
 [^2]: http://blog.vmsplice.net/2014/01/coroutines-in-qemu-basics.html
-
 [^3]: [QEMU RCU 文档](https://github.com/qemu/qemu/blob/master/docs/devel/rcu.txt)
 [^4]: [terenceli 的 blog : QEMU RCU implementation](https://terenceli.github.io/%E6%8A%80%E6%9C%AF/2021/03/14/qemu-rcu)
 [^5]: https://stackoverflow.com/questions/39251287/rcu-dereference-vs-rcu-dereference-protected
 
 [^8]: https://stackoverflow.com/questions/21926549/get-thread-name-in-gdb
 [^9]: https://stackoverflow.com/questions/8944236/gdb-how-to-get-thread-name-displayed
-
 [^10]: https://man7.org/linux/man-pages/man2/poll.2.html
 
