@@ -26,24 +26,20 @@ debug_kernel=
 LAUNCH_GDB=false
 
 
-arg_nvme=""
-arg_nvme2=""
-arg_monitor=""
-arg_tmp=""
 
 arg_img="-drive \"file=${disk_img},format=qcow2\""
 arg_mem="-m 6G -smp 2,maxcpus=3"
 arg_cpu="-cpu host"
 arg_kernel="--kernel ${kernel} -append \"root=/dev/sda3 nokaslr \""
 arg_share_dir="-virtfs local,path=${share_dir},mount_tag=host0,security_model=mapped,id=host0"
-arg_machine="-machine pc,accel=kvm,kernel-irqchip=on" # q35 / q35
+arg_machine="-machine pc,accel=kvm,kernel-irqchip=on" # q35
 arg_monitor="-monitor stdio"
 
 arg_seabios="-chardev file,path=/tmp/seabios.log,id=seabios -device isa-debugcon,iobase=0x402,chardev=seabios -bios ${seabios}"
-# arg_nvme="-device nvme,drive=nvme1,serial=foo -drive file=${ext4_img1},format=raw,if=none,id=nvme1"
-# arg_nvme2="-device virtio-blk-pci,drive=nvme2,iothread=io0 -drive file=${ext4_img2},format=raw,if=none,id=nvme2"
+arg_nvme="-device nvme,drive=nvme1,serial=foo -drive file=${ext4_img1},format=raw,if=none,id=nvme1"
+arg_nvme2="-device virtio-blk-pci,drive=nvme2,iothread=io0 -drive file=${ext4_img2},format=raw,if=none,id=nvme2"
 arg_iothread="-object iothread,id=io0"
-# arg_tmp="-nographic"
+arg_tmp=""
 
 show_help() {
 	echo "------ 配置参数 ---------"

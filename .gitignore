@@ -9,7 +9,7 @@
 # factotum/*
 
 compile_commands.json
- 
+
 # Prerequisites
 *.d
 
@@ -67,7 +67,7 @@ dkms.conf
 .vim/
 
 
-# latex  
+# latex
 ## Core latex/pdflatex auxiliary files:
 *.aux
 *.lof
@@ -369,3 +369,5 @@ hack/qemu/init/init
 
 hack/qemu/x64-e1000/share/
 *.dat
+
+docs/qemu/glib/glib

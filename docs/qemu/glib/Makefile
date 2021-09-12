@@ -14,7 +14,7 @@ INCLUDE=-I . $(GLIB_INCLUDE)
 CFLAGS=$(DEBUG_FLAGS) $(INCLUDE)
 
 # define binaries so we have a list for build rules and cleanup
-BINS=default-context
+BINS=glib
 
 # build test programs
 all: $(BINS)

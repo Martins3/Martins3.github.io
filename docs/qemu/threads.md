@@ -37,7 +37,7 @@ QEMU 的执行流程大致来说是分为 io thread 和 vCPU thread 的。
 - vCPU 的取决于具体的 accel 是什么，`AccelOpsClass::create_vcpu_thread` 上会注册具体的 hook, 例如 kvm 注册的 kvm_start_vcpu_thread
 
 
-对于双核配置，使用 gdb 的 `info thread` [^8][^9] 
+对于双核配置，使用 gdb 的 `info thread` [^8][^9]
 ```plain
   Id   Target Id                                             Frame
 * 1    Thread 0x7fffeb1d4300 (LWP 1389363) "qemu-system-x86" 0x00007ffff61a6bf6 in __ppoll (fds=0x555556ad10f0, nfds=8, timeout=<optimized out>, timeout@entry=0x7fffffffd2c0, sigmask=sigmask@entry=0x0) at ../sysdeps/unix/sysv/linux/ppoll.c:44
@@ -266,7 +266,7 @@ QEMU 默认使用 eventfd 来进行通知(参考 : event_notifier_init)，
 eventfd 正如其名，不像 socket fd 或者 file fd 之类可以访问网络或者文件系统，
 这个就是纯粹地用于通知。
 
-而且 aio_set_event_notifier 之后会调用的 g_source_add_poll 的, 
+而且 aio_set_event_notifier 之后会调用的 g_source_add_poll 的,
 将 AioContext::notifier 作为一个普通的 fd 来监控。
 
 aio_context_new 中:
@@ -335,10 +335,12 @@ while(true) {
 
 - 一个 thread 通过 g_main_loop_run 来执行一个 GMainLoop，一个 thread 可以持有多个 GMainLoop 的，但是一次只能执行一个.
 - 一个 GMainLoop 关联一个 GMainContext
-- 一个 GMainContext 可以关联多个 GSource 的 
+- 一个 GMainContext 可以关联多个 GSource 的
 - 一个 GSource 可以关联多个需要被监听的 fd
 
 关于 glib 的入门，可以参考[我写的一个小例子](https://github.com/Martins3/Martins3.github.io/tree/master/docs/qemu/glib)
+
+在 QEMU 的 tests/unit 中存在很多单元测试，也是可以辅助理解各种源代码的。
 
 ### AioContext
 虽然 AioContext 叫做 Context，实际上其定位是 GSource 的，无论是在 main loop thread 还是在 IOThread 中，
@@ -370,7 +372,7 @@ static void iothread_init_gcontext(IOThread *iothread)
 ### main loop thread
 QEMU 的第一个 thread 启动了各个 vCPU 之后，然后就会调用 ppoll 来进行实践监听。
 
-相关代码在 main-loop.c 中间，下面是 main loop 
+相关代码在 main-loop.c 中间，下面是 main loop
 ```c
 /*
 #1  0x0000555555e72675 in ppoll (__ss=0x0, __timeout=0x7fffffffd450, __nfds=<optimized out>, __fds=<optimized out>) at /usr/include/x86_64-linux-gnu/bits/poll2.h:77
@@ -467,7 +469,7 @@ struct IOThread {
     bool stopping;
 };
 ```
-IOThread 的核心流程 iothread_run 主要就是通过 aio_poll 进行 listen，如果有 fd ready, 那么 
+IOThread 的核心流程 iothread_run 主要就是通过 aio_poll 进行 listen，如果有 fd ready, 那么
 那么执行对应 AioHandler::io_read 和 AioHandler::io_write 这些注册的 hook
 
 iothread_run 中实际上会首先使用 aio_poll 然后 g_main_loop_run 来监听。
@@ -532,6 +534,8 @@ void mmap_lock(void)
 
 ## TODO
 - [ ] 异步 io 例如 io uring 如何和 event fd 联系到一起的
+
+<script src="https://utteranc.es/client.js" repo="Martins3/Martins3.github.io" issue-term="url" theme="github-light" crossorigin="anonymous" async> </script>
 
 [^1]: https://github.com/chiehmin/gdbus_test
 [^2]: http://blog.vmsplice.net/2014/01/coroutines-in-qemu-basics.html

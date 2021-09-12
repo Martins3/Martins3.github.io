@@ -20,13 +20,12 @@
 - QEMU 源码分析
   - [QEMU 的 memory model 和 softmmu 设计分析](./qemu/memory.md)
   - [QEMU 中的 map 和 set 的使用](./qemu/map.md)
-  - [QEMU softmmu 访存函数集整理](./qemu/softmmu-functions.md) 
+  - [QEMU softmmu 访存函数集整理](./qemu/softmmu-functions.md)
   - [QEMU 中的 seabios : 地址空间](.qemu/bios-memory.md)
   - [QEMU 中的线程，事件循环和锁](./qemu/threads.md)
 
   <!-- - [QEMU 中的 seabios : fw_cfg](./qemu-bios-fw_cfg.md) -->
   <!-- - [QEMU 的面向对象模型 : QOM](./qemu-qom.md) -->
-  <!-- - [QEMU 的线程和锁](./qemu-thread-and-locks.md) -->
 
 ## Tips
 - [How to cross Great Fire Wall](./gfw.md)
@@ -50,10 +49,5 @@
 - [The Day](https://martins3.github.io/theday/)
 - [The Garden](http://martins3.gitee.io/garden/)
 - [言论](./words.md)
-
-<!-- ## RSS  -->
-<!-- <a class="btn btn-rss" href="/feed.xml" target="_blank">点我订阅</a> -->
-
-<!-- <link rel="alternate" type="application/atom+xml" title="{{ site.title }}" href="/feed.xml"> -->
 
 本站所有文章转发 **CSDN** 将按侵权追究法律责任，其它情况随意。
