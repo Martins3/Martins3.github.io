@@ -22,10 +22,12 @@
   - [QEMU 中的 map 和 set 的使用](./qemu/map.md)
   - [QEMU softmmu 访存函数集整理](./qemu/softmmu-functions.md)
   - [QEMU 中的 seabios : 地址空间](.qemu/bios-memory.md)
-  - [QEMU 中的线程，事件循环和锁](./qemu/threads.md)
+  - [QEMU 中的线程和事件循环](./qemu/threads.md)
+  - [QEMU 中的锁](./qemu/lock.md)
 
   <!-- - [QEMU 中的 seabios : fw_cfg](./qemu-bios-fw_cfg.md) -->
   <!-- - [QEMU 的面向对象模型 : QOM](./qemu-qom.md) -->
+  <!-- - [QEMU 和内存模型](./memory-model.md) -->
 
 ## Tips
 - [How to cross Great Fire Wall](./gfw.md)

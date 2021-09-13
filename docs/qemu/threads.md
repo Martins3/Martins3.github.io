@@ -1,4 +1,4 @@
-# QEMU 中的线程，事件循环和锁
+# QEMU 中的线程和事件循环
 
 <!-- vim-markdown-toc GitLab -->
 
@@ -16,11 +16,6 @@
   - [IOThread](#iothread)
     - [use IOThread](#use-iothread)
     - [IOThread internals](#iothread-internals)
-- [Lock](#lock)
-  - [vCPU thread 之间的交互](#vcpu-thread-之间的交互)
-  - [vCPU 和 io thread 的交互](#vcpu-和-io-thread-的交互)
-  - [Big QEMU Lock](#big-qemu-lock)
-  - [mmap_lock](#mmap_lock)
 - [Question](#question)
 - [TODO](#todo)
 
@@ -484,46 +479,6 @@ iothread_run 中实际上会首先使用 aio_poll 然后 g_main_loop_run 来监�
  * iothread we need to pay some performance for functionality.
  */
 ```
-
-## Lock
-对于 lock 的分析侧重 tcg，下面的 vCPU 默认全部值得 tcg vCPU
-
-### vCPU thread 之间的交互
-- 为什么 vCPU 需要交互?
-  - 模拟 remote TLB flush, 一个 vCPU 的
-  - ipi ?
-  - [因为 tb buffer 是共享的](https://martins3.github.io/qemu/map.html#%E6%A0%B9%E6%8D%AE-guest-physical-address-%E6%89%BE%E5%88%B0-translation-block)
-  - [page_lock](https://martins3.github.io/qemu/map.html#%E6%A0%B9%E6%8D%AE-ram-addr-%E6%89%BE%E8%AF%A5-guest-page-%E4%B8%8A%E5%85%B3%E8%81%94%E7%9A%84%E6%89%80%E6%9C%89%E7%9A%84-tb)
-  - memory model : 不能出现一个 cpu 在修改，另一个 cpu 在使用的情况吧
-
-### vCPU 和 io thread 的交互
-
-### Big QEMU Lock
-分析几个需要使用 BIQ QEMU Lock 的位置。
-
-### mmap_lock
-
-```c
-static pthread_mutex_t mmap_mutex = PTHREAD_MUTEX_INITIALIZER;
-static __thread int mmap_lock_count;
-
-void mmap_lock(void)
-{
-    if (mmap_lock_count++ == 0) {
-        pthread_mutex_lock(&mmap_mutex);
-    }
-}
-```
-利用 mmap_lock_count 一个 thread 可以反复上锁，但是可以防止其他 thread 并发访问。
-
-那么只有用户态才需要啊 ?
-
-参考两个资料:
-1. https://qemu.readthedocs.io/en/latest/devel/multi-thread-tcg.html
-2. tcg_region_init 上面的注释
-
-用户态的线程数量可能很大，所以创建多个 region 是不合适的，所以只创建一个，
-而且用户进程的代码大多数都是相同，所以 tb 相关串行也问题不大。
 
 
 ## Question

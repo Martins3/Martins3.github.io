@@ -30,7 +30,7 @@ IO 访问的，最后总是走到 `memory_region_dispatch_(read/write)` 上面�
           - memory_region_read_accessor
               - `mr->ops->read`
 
-`MemoryRegionOps::impl::min_access_size` 和 `MemoryRegionOps::impl::max_access_size` 可以描述设备进行一次 IO 最多和最少传输的 
+`MemoryRegionOps::impl::min_access_size` 和 `MemoryRegionOps::impl::max_access_size` 可以描述设备进行一次 IO 最多和最少传输的
 
 如果一次 IO 的数量越过了 min_access_size / max_access_size，那么可以循环反复调用 `MemoryRegionOps::read`
 
@@ -111,16 +111,17 @@ fw_cfg_dma_transfer(void *address, u32 length, u32 control)
 }
 ```
 
-## softmmu 慢速路径访存 
+## softmmu 慢速路径访存
 当 soft tlb 没有命中之后，会切入到此处，
 `helper_(ret/le)_(ld/st)(sb/ub/sw/uw/l/q/sl/ul)_mmu`
 
 简单的组装出参数之后，调用 `load_helper`/`store_helper`
 
 ## CPU 访存
-target/i386/ 下的各种 helper 在模拟 CPU 访存的过程, 
+target/i386/ 下的各种 helper 在模拟 CPU 访存的过程,
 - 如果是模拟 page walk 之类的，那就是直接访问物理内存
 - 如果是模拟 FPU 之类的，那就是访问虚拟存储
+
 ### CPU 访问物理内存
 `x86_*_phys` => `address_space_(ld/st)(w/l/q)_(le/be)` => (st/ld)(w/l/q/uw/sw)_(le/be)_p
 
@@ -190,9 +191,22 @@ cpu_ldst.h 中的描述应该是相当清晰了。
  * cpu_mmu_index().
  */
 ```
+举一个例子，在 `target/i386/tcg/mem_helper.c` 中的 `helper_cmpxchg16b_unlocked`
+```c
+void helper_cmpxchg16b_unlocked(CPUX86State *env, target_ulong a0)
+{
+    // ...
+    o0 = cpu_ldq_data_ra(env, a0 + 0, ra);
+    o1 = cpu_ldq_data_ra(env, a0 + 8, ra);
+    // ...
 
+    cpu_stq_data_ra(env, a0 + 0, int128_getlo(newv), ra);
+    cpu_stq_data_ra(env, a0 + 8, int128_gethi(newv), ra);
+    // ...
+}
+```
 
-## CPU 访问 IO 
+## CPU 访问 IO
 
 在 misc_helper.c 中存在下面的一系列封装，其 x86_stw_phys 的效果非常类似，只是其 address space 是 `address_space_io`
 ```c
