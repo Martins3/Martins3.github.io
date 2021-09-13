@@ -3,6 +3,10 @@
 <!-- vim-markdown-toc GitLab -->
 
 - [Big QEMU Lock](#big-qemu-lock)
+- [BQL Advanced Topic](#bql-advanced-topic)
+  - [migration](#migration)
+  - [main loop](#main-loop)
+  - [rcu](#rcu)
 - [vCPU thread 之间的交互](#vcpu-thread-之间的交互)
 - [vCPU 和 io thread 的交互](#vcpu-和-io-thread-的交互)
 - [misc](#misc)
@@ -27,8 +31,41 @@
   - mttcg_cpu_thread_fn : 同上，原理类似，只是 accel 是 tcg，每一个 thread 模拟一个 vCPU
   - rr_cpu_thread_fn :  同上, 原理类似，accel 是 tcg，一个 thread 模拟多个 vCPU
 - vCPU 进行 IO 之前需要上锁的，回忆[QEMU softmmu 访存 helper 整理](https://martins3.github.io/qemu/softmmu-functions.html) 中分析的访问设备的路径:
-  - store_helper / load_helper 会做出判断
-  - prepare_mmio_access 中
+  - store_helper / load_helper => io_readx / io_writex 中会直接调用 qemu_mutex_iothread_locked 来做出判断来，如果没有上锁会进行上锁的
+  - flatview_write_continue / flatview_read_continue / memory_ldst.inc.c 会调用 prepare_mmio_access 来保证接下来的执行是持有锁的
+- iothread 调用的 callback 全部的需要在有锁的条件下进行的，请看 `os_host_main_loop_wait` 的实现
+
+## BQL Advanced Topic
+但是实际上，BQL 的使用位置要上面多一点，这些是高级话题，可以暂时跳过：
+- [ ] cpu_exec_step_atomic
+
+### migration
+- migration[^1] 相关的。因为需要保存所有的 cpu 的状态，所以自然需要持有 BQL 的，其关联的文件为：
+    - migration/block.c
+    - migration/colo.c
+    - migration/migration.c
+    - migration/ram.c
+    - migration/savevm.c
+    - migration/block-dirty-bitmap.c
+    - hw/vfio/migration.c
+
+实际上，和 migration 相关的还有 qemu_mutex_lock_ramlist，从原则上将当持有了 BQL 的时候，就屏蔽了所有的 lock 的。
+但是在 ram_init_bitmaps 首先上锁 BQL，然后是 ramlist 的。
+具体可以从 `b2a8658ef5dc57ea` 分析，有待进一步跟进。
+
+### main loop
+main loop 中上锁位置非常的早，在 `pc_init1 => qemu_init_subsystems` 中几乎是 BQL 初始化之后就会获取。
+
+创建的 vCPU 例如 `mttcg_cpu_thread_fn` 因为无法获取 BQL 而无法进一步执行，一切都需要等待 main loop 初始化好。
+
+如果 cpu realize 失败，会调用 `x86_cpu_unrealizefn => cpu_remove_sync` 来清理资源包括释放 vCPU 的，为了让 vCPU 进一步执行，所以 cpu_remove_sync 中需要短暂的释放 BQL
+
+### rcu
+
+- rcu 中的使用:
+  - drain_call_rcu : rcu 只有持有 bql 才可以调用 callback 函数
+  - call_rcu_thread : 的确如此，我不能理解，因为 callback 函数只是释放的资源，既然都是可以开始来执行 hook 函数了，说明这些资源已经是没有人使用的。
+      - 看这个邮件列表 : https://lists.gnu.org/archive/html/qemu-devel/2015-02/msg03170.html
 
 ## vCPU thread 之间的交互
 - 为什么 vCPU 需要交互?
@@ -64,3 +101,5 @@ void mmap_lock(void)
 
 用户态的线程数量可能很大，所以创建多个 region 是不合适的，所以只创建一个，
 而且用户进程的代码大多数都是相同，所以 tb 相关串行也问题不大。
+
+[^1]: [Live Migrating QEMU-KVM Virtual Machines](https://developers.redhat.com/blog/2015/03/24/live-migrating-qemu-kvm-virtual-machines#)
