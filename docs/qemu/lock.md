@@ -11,6 +11,7 @@
 - [locks between vCPU](#locks-between-vcpu)
 - [tcg vCPU thread](#tcg-vcpu-thread)
   - [queue_work_on_cpu](#queue_work_on_cpu)
+  - [exclusive context](#exclusive-context)
 - [vCPU thread 之间的交互](#vcpu-thread-之间的交互)
 - [vCPU 和 io thread 的交互](#vcpu-和-io-thread-的交互)
 - [misc](#misc)
@@ -145,7 +146,30 @@ while (!cpu->unplug || cpu_can_run(cpu)){
 rr_start_kick_timer 创建出来一个定时器，将会周期性的让 `rr_current_cpu` `cpu_exit` 出来。
 
 ### queue_work_on_cpu
+queue_work_on_cpu 存在三个调用者:
+- run_on_cpu : 需要等待该 cpu 完成任务之后才可以继续。
+- async_run_on_cpu : 提交任务给 vCPU 然后就可以离开了。
+- async_safe_run_on_cpu : 要求任务在 [exclusive context](#exclusive-context) 下执行的。
 
+分析一下 async_run_on_cpu 的执行流程:
+
+- vCPU thread A:
+  - async_run_on_cpu
+    - 初始化 qemu_work_item
+    - queue_work_on_cpu : 将 qemu_work_item 挂到队列上
+      - qemu_cpu_kick
+        - `qemu_cond_broadcast(cpu->halt_cond)` : 如果 vCPU B 处于 idle 的状态，那么将其醒过来
+        - cpu_exit : 将正在执行的 vCPU 线程停止执行。
+
+- vCPU thread B:
+  - rr_wait_io_event : 因为 cpu_exit 退出到此处 (rr 是这个，mttcg 是 qemu_wait_io_event)
+    - 如果 all_cpu_threads_idle 那么将会等待在 CPUState::halt_cond，通过 qemu_cpu_kick 可以让其继续运行
+    - qemu_wait_io_event_common
+      - process_queued_cpu_work
+        - 将挂载上去的任务逐个执行，
+        - qemu_cond_broadcast(&qemu_work_cond) : 用于通知 run_on_cpu 任务已经结束了
+
+### exclusive context
 
 ## vCPU thread 之间的交互
 - 为什么 vCPU 需要交互?
