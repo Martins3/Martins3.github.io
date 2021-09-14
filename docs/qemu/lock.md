@@ -7,6 +7,7 @@
   - [migration](#migration)
   - [main loop](#main-loop)
   - [rcu](#rcu)
+  - [interrupt_request](#interrupt_request)
 - [vCPU thread 之间的交互](#vcpu-thread-之间的交互)
 - [vCPU 和 io thread 的交互](#vcpu-和-io-thread-的交互)
 - [misc](#misc)
@@ -38,6 +39,7 @@
 ## BQL Advanced Topic
 但是实际上，BQL 的使用位置要上面多一点，这些是高级话题，可以暂时跳过：
 - [ ] cpu_exec_step_atomic
+- pause_all_vcpus
 
 ### migration
 - migration[^1] 相关的。因为需要保存所有的 cpu 的状态，所以自然需要持有 BQL 的，其关联的文件为：
@@ -53,6 +55,7 @@
 但是在 ram_init_bitmaps 首先上锁 BQL，然后是 ramlist 的。
 具体可以从 `b2a8658ef5dc57ea` 分析，有待进一步跟进。
 
+
 ### main loop
 main loop 中上锁位置非常的早，在 `pc_init1 => qemu_init_subsystems` 中几乎是 BQL 初始化之后就会获取。
 
@@ -61,11 +64,24 @@ main loop 中上锁位置非常的早，在 `pc_init1 => qemu_init_subsystems` �
 如果 cpu realize 失败，会调用 `x86_cpu_unrealizefn => cpu_remove_sync` 来清理资源包括释放 vCPU 的，为了让 vCPU 进一步执行，所以 cpu_remove_sync 中需要短暂的释放 BQL
 
 ### rcu
+在 call_rcu_thread 中，需要持有 lock 才可以释放资源，这很奇怪。既然都是可以开始来执行 hook 函数了，说明这些资源已经是没有人使用的，那么为什么还需要使用 BQL 保护。
+其原因在: https://lists.gnu.org/archive/html/qemu-devel/2015-02/msg03170.html
 
-- rcu 中的使用:
-  - drain_call_rcu : rcu 只有持有 bql 才可以调用 callback 函数
-  - call_rcu_thread : 的确如此，我不能理解，因为 callback 函数只是释放的资源，既然都是可以开始来执行 hook 函数了，说明这些资源已经是没有人使用的。
-      - 看这个邮件列表 : https://lists.gnu.org/archive/html/qemu-devel/2015-02/msg03170.html
+### interrupt_request
+interrupt_request 需要被 BQL 保护，其调用位置为:
+
+- cpu_check_watchpoint => tcg_handle_interrupt
+- cpu_handle_halt => apic_poll_irq / cpu_reset_interrupt
+- cpu_handle_exception => ??
+- edu_fact_thread => edu_raise_irq => msi_notify / pci_set_irq
+- helper_write_crN => cpu_set_apic_tpr
+
+- 注入位置
+  - tcg_handle_interrupt :  将 mask 插入到 CPUState::interrupt_request
+  - cpu_reset_interrupt : 将 mask 从 CPUState::interrupt_request 中清理
+- 使用位置 : cpu_handle_interrupt => TCGCPUOps::cpu_exec_interrupt => x86_cpu_exec_interrupt 的
+
+因为中断的注入可能来自于 main loop 或者是其他的 vCPU thread，所以同样这个需要 BQL 的保护
 
 ## vCPU thread 之间的交互
 - 为什么 vCPU 需要交互?
@@ -103,3 +119,7 @@ void mmap_lock(void)
 而且用户进程的代码大多数都是相同，所以 tb 相关串行也问题不大。
 
 [^1]: [Live Migrating QEMU-KVM Virtual Machines](https://developers.redhat.com/blog/2015/03/24/live-migrating-qemu-kvm-virtual-machines#)
+
+<script src="https://utteranc.es/client.js" repo="Martins3/Martins3.github.io" issue-term="url" theme="github-light" crossorigin="anonymous" async> </script>
+
+本站所有文章转发 **CSDN** 将按侵权追究法律责任，其它情况随意。
