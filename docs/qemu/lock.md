@@ -8,6 +8,9 @@
   - [main loop](#main-loop)
   - [rcu](#rcu)
   - [interrupt_request](#interrupt_request)
+- [locks between vCPU](#locks-between-vcpu)
+- [tcg vCPU thread](#tcg-vcpu-thread)
+  - [queue_work_on_cpu](#queue_work_on_cpu)
 - [vCPU thread 之间的交互](#vcpu-thread-之间的交互)
 - [vCPU 和 io thread 的交互](#vcpu-和-io-thread-的交互)
 - [misc](#misc)
@@ -72,7 +75,7 @@ interrupt_request 需要被 BQL 保护，其调用位置为:
 
 - cpu_check_watchpoint => tcg_handle_interrupt
 - cpu_handle_halt => apic_poll_irq / cpu_reset_interrupt
-- cpu_handle_exception => ??
+- cpu_handle_exception
 - edu_fact_thread => edu_raise_irq => msi_notify / pci_set_irq
 - helper_write_crN => cpu_set_apic_tpr
 
@@ -83,6 +86,67 @@ interrupt_request 需要被 BQL 保护，其调用位置为:
 
 因为中断的注入可能来自于 main loop 或者是其他的 vCPU thread，所以同样这个需要 BQL 的保护
 
+## locks between vCPU
+因为 kvm vCPU thread 的比较简单，就不分析了。下面只是关注 tcg 的 vCPU thread，在没有 explicit 的指出的情况下，vCPU thread 指的是 tcg vCPU thread。
+
+## tcg vCPU thread
+- rr_cpu_thread_fn : 使用一个 thread 模拟所有的 vCPU
+- mttcg_cpu_thread_fn : 每一个 thread 模拟一个 vCPU
+
+QEMU 只有两种模式，不存在有的 thread 模拟多个，有的模拟一个的鬼畜情况，那只是徒增复杂了。
+一个 thread 模拟一个 vCPU 当然是很自然的，但是多线程带来很多挑战，具体可以参考 [mttcg](./mttcg.md)
+
+rr 和 mttcg 的执行的相似指出在于，都是调用 `tcg_cpus_exec` 执行的，其展开之后大致如下:
+```c
+    cpu_exec_start(cpu);
+    cpu_exec_enter(cpu);
+    while (!cpu_handle_exception(cpu, &ret)) {
+        while (!cpu_handle_interrupt(cpu, &last_tb)) {
+          tb_gen_code
+          cpu_loop_exec_tb
+        }
+    }
+    cpu_exec_exit(cpu);
+    cpu_exec_end(cpu);
+```
+
+对比 rr_cpu_thread_fn 和 mttcg_cpu_thread_fn 的执行流程:
+1. rr_cpu_thread_fn
+```c
+while (1) {
+  while (cpu && cpu_work_list_empty(cpu) && !cpu->exit_request) {
+    qatomic_mb_set(&rr_current_cpu, cpu);
+    current_cpu = cpu;
+
+    tcg_cpus_exec()
+
+    cpu = CPU_NEXT(cpu); // 在这里轮转需要使用的 cpu
+  }
+
+  rr_wait_io_event();
+}
+```
+
+2. mttcg_cpu_thread_fn
+```c
+while (!cpu->unplug || cpu_can_run(cpu)){
+    if (cpu_can_run(cpu)) {
+      tcg_cpus_exec()
+    }
+
+    qatomic_mb_set(&cpu->exit_request, 0);
+    qemu_wait_io_event(cpu);
+}
+```
+
+在 rr_cpu_thread_fn 中多出来的一个 while loop 在于要轮转 vCPU:
+
+同时 rr_cpu_thread_fn 为了保证每一个 vCPU 都可以运行一段时间的，防止 starvation 的出现，还使用了 rr timer 机制，通过
+rr_start_kick_timer 创建出来一个定时器，将会周期性的让 `rr_current_cpu` `cpu_exit` 出来。
+
+### queue_work_on_cpu
+
+
 ## vCPU thread 之间的交互
 - 为什么 vCPU 需要交互?
   - 模拟 remote TLB flush, 一个 vCPU 的
@@ -90,12 +154,13 @@ interrupt_request 需要被 BQL 保护，其调用位置为:
   - [因为 tb buffer 是共享的](https://martins3.github.io/qemu/map.html#%E6%A0%B9%E6%8D%AE-guest-physical-address-%E6%89%BE%E5%88%B0-translation-block)
   - [page_lock](https://martins3.github.io/qemu/map.html#%E6%A0%B9%E6%8D%AE-ram-addr-%E6%89%BE%E8%AF%A5-guest-page-%E4%B8%8A%E5%85%B3%E8%81%94%E7%9A%84%E6%89%80%E6%9C%89%E7%9A%84-tb)
   - memory model : 不能出现一个 cpu 在修改，另一个 cpu 在使用的情况吧
+  - [ ] tcg_region : 一个 region 只会分配给一个 cpu, 所以防止同时分配给多个 cpu 了
 
 ## vCPU 和 io thread 的交互
 
 ## misc
-### mmap_lock
 
+### mmap_lock
 ```c
 static pthread_mutex_t mmap_mutex = PTHREAD_MUTEX_INITIALIZER;
 static __thread int mmap_lock_count;
@@ -109,9 +174,7 @@ void mmap_lock(void)
 ```
 利用 mmap_lock_count 一个 thread 可以反复上锁，但是可以防止其他 thread 并发访问。
 
-那么只有用户态才需要啊 ?
-
-参考两个资料:
+参考两个资料，可以知道 mmap_lock 是只有用户态翻译才需要的:
 1. https://qemu.readthedocs.io/en/latest/devel/multi-thread-tcg.html
 2. tcg_region_init 上面的注释
 
