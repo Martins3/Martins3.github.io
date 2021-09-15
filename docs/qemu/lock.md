@@ -1,3 +1,4 @@
+# QEMU 中的锁
 <!-- vim-markdown-toc GitLab -->
 
 - [Big QEMU Lock](#big-qemu-lock)
@@ -6,11 +7,11 @@
   - [main loop](#main-loop)
   - [rcu](#rcu)
   - [interrupt_request](#interrupt_request)
+  - [qemu_mutex_iothread_locked](#qemu_mutex_iothread_locked)
 - [resources shared between vCPU thread](#resources-shared-between-vcpu-thread)
 - [locks between vCPU](#locks-between-vcpu)
   - [tcg vCPU thread](#tcg-vcpu-thread)
     - [lifecycle of vCPU thread](#lifecycle-of-vcpu-thread)
-- [first_cpu / CPU_NEXT / CPU_FOREACH 的移植](#first_cpu-cpu_next-cpu_foreach-的移植)
   - [queue_work_on_cpu](#queue_work_on_cpu)
   - [exclusive context](#exclusive-context)
 - [misc](#misc)
@@ -56,13 +57,45 @@
 但是在 ram_init_bitmaps 首先上锁 BQL，然后是 ramlist 的。
 具体可以从 `b2a8658ef5dc57ea` 分析，有待进一步跟进。
 
-
 ### main loop
 main loop 中上锁位置非常的早，在 `pc_init1 => qemu_init_subsystems` 中几乎是 BQL 初始化之后就会获取。
 
 创建的 vCPU 例如 `mttcg_cpu_thread_fn` 因为无法获取 BQL 而无法进一步执行，一切都需要等待 main loop 初始化好。
 
 如果 cpu realize 失败，会调用 `x86_cpu_unrealizefn => cpu_remove_sync` 来清理资源包括释放 vCPU 的，为了让 vCPU 进一步执行，所以 cpu_remove_sync 中需要短暂的释放 BQL
+
+在 [QEMU 中的线程和事件循环](https://martins3.github.io/qemu/threads.html)中，我们分析了 main loop 如何实现事件监听。当 vCPU thread 需要模拟设备操作，比如 DMA 的时候，最后会调用
+具体设备的 callback 函数，但是 vCPU thread 不会等待下去，而是将其中 callback 函数让 main loop 执行。而 main loop 就是靠事件监听来知道有 vCPU 提交任务给他了。当 main loop 执行完成之后，
+只需要向 vCPU 发送一个中断，也即是最后调用到 `tcg_handle_interrupt`, 向 CPUState::interrupt_request 插入一个中断，而 tcg 执行的时候，每一个 tb 都会检查这个，如果插入了中断，就会退出，最后在 `cpu_handle_interrupt` 地方处理。
+
+```c
+/*
+#0  apic_send_msi (msi=0x7fffffffd110) at ../hw/intc/apic.c:726
+#1  0x0000555555c6ab4c in apic_mem_write (opaque=<optimized out>, addr=4100, val=48, size=<optimized out>) at ../hw/intc/apic.c:757
+#2  0x0000555555cd2711 in memory_region_write_accessor (mr=mr@entry=0x55555698bc90, addr=4100, value=value@entry=0x7fffffffd298, size=size@entry=4, shift=<optimized out
+>, mask=mask@entry=4294967295, attrs=...) at ../softmmu/memory.c:492
+#3  0x0000555555cceb9e in access_with_adjusted_size (addr=addr@entry=4100, value=value@entry=0x7fffffffd298, size=size@entry=4, access_size_min=<optimized out>, access_
+size_max=<optimized out>, access_fn=access_fn@entry=0x555555cd2680 <memory_region_write_accessor>, mr=0x55555698bc90, attrs=...) at ../softmmu/memory.c:554
+#4  0x0000555555cd1c47 in memory_region_dispatch_write (mr=mr@entry=0x55555698bc90, addr=4100, data=<optimized out>, data@entry=48, op=op@entry=MO_32, attrs=attrs@entry
+=...) at ../softmmu/memory.c:1504
+#5  0x0000555555ca12ed in address_space_stl_internal (endian=DEVICE_LITTLE_ENDIAN, result=0x0, attrs=..., val=48, addr=<optimized out>, as=0x0) at /home/maritns3/core/k
+vmqemu/include/exec/memory.h:2868
+#6  address_space_stl_le (as=as@entry=0x555556606820 <address_space_memory>, addr=<optimized out>, val=48, attrs=attrs@entry=..., result=result@entry=0x0) at /home/mari
+tns3/core/kvmqemu/memory_ldst.c.inc:357
+#7  0x0000555555cee124 in stl_le_phys (val=<optimized out>, addr=<optimized out>, as=0x555556606820 <address_space_memory>) at /home/maritns3/core/kvmqemu/include/exec/
+memory_ldst_phys.h.inc:121
+#8  ioapic_service (s=s@entry=0x555556a42360) at ../hw/intc/ioapic.c:138
+#9  0x0000555555cee3ff in ioapic_set_irq (opaque=0x555556a42360, vector=<optimized out>, level=1) at ../hw/intc/ioapic.c:186
+#10 0x0000555555b92664 in gsi_handler (opaque=0x555556af6ff0, n=0, level=1) at ../hw/i386/x86.c:600
+#11 0x0000555555b42a9e in qemu_irq_pulse (irq=0x555556ab3b50) at /home/maritns3/core/kvmqemu/include/hw/irq.h:22
+#12 update_irq (timer=<optimized out>, set=<optimized out>) at ../hw/timer/hpet.c:219
+#13 0x0000555555e6fe88 in timerlist_run_timers (timer_list=0x555556707120) at ../util/qemu-timer.c:573
+#14 timerlist_run_timers (timer_list=0x555556707120) at ../util/qemu-timer.c:498
+#15 0x0000555555e70097 in qemu_clock_run_all_timers () at ../util/qemu-timer.c:669
+#16 0x0000555555e4ced9 in main_loop_wait (nonblocking=nonblocking@entry=0) at ../util/main-loop.c:542
+#17 0x0000555555c58231 in qemu_main_loop () at ../softmmu/runstate.c:726
+#18 0x0000555555940c92 in main (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/main.c:50
+```
 
 ### rcu
 在 call_rcu_thread 中，需要持有 lock 才可以释放资源，这很奇怪。既然都是可以开始来执行 hook 函数了，说明这些资源已经是没有人使用的，那么为什么还需要使用 BQL 保护。
@@ -83,6 +116,18 @@ main loop 中上锁位置非常的早，在 `pc_init1 => qemu_init_subsystems` �
 - 使用位置 : cpu_handle_interrupt => TCGCPUOps::cpu_exec_interrupt => x86_cpu_exec_interrupt 的
 
 因为中断的注入可能来自于 main loop 或者是其他的 vCPU thread，所以同样这个需要 BQL 的保护
+
+### qemu_mutex_iothread_locked
+下面来讨论一下整个一些持有 BQL 的位置
+
+- process_queued_cpu_work : 是持有 BQL 的，所以在 start_exclusive 的时候首先需要释放 BQL
+  - 所以 async_run_on_cpu 的 hook 执行的时候也是有 BQL 的
+
+- cputlb.c 中 io_readx 和 io_writex 中会检测，当没有 locked 时候，然后一定上锁
+  - io_readx 和 io_writex 只是被 load_helper 和 store_helper 调用的
+  - 但是 store_helper 和 load_helper 的调用来源有两个位置，一个是执行流中，一个中通过 cpu 访问虚拟地址的 helper，例如 `target/i386/tcg/seg_helper.h` 中定义的函数访问的，后者可能是在有 BQL 的环境中调用的
+
+- memory_region_transaction_commit : 这个可以保证不存在多个 thread 同时修改 memory mapping ，但是可以一个在修改，另一个还在访问, 这是因为 AddressSpace::current_map 的访问是通过 rcu 的。
 
 ## resources shared between vCPU thread
 在这里，重新总结一下被 vCPU 共享的资源，以及建立起来的 lock
@@ -131,9 +176,11 @@ rr 和 mttcg 的执行的相似指出在于，都是调用 `tcg_cpus_exec` 执�
     cpu_exec_exit(cpu);
     cpu_exec_end(cpu);
 ```
+其中，cpu_exec_enter 和 cpu_exec_exit 调用 arch 相关的 hook
 
 对比 rr_cpu_thread_fn 和 mttcg_cpu_thread_fn 的执行流程:
-1. rr_cpu_thread_fn
+
+* rr_cpu_thread_fn
 
 ```c
 while (1) {
@@ -150,7 +197,7 @@ while (1) {
 }
 ```
 
-2. mttcg_cpu_thread_fn
+* mttcg_cpu_thread_fn
 
 ```c
 while (!cpu->unplug || cpu_can_run(cpu)){
@@ -227,23 +274,6 @@ async_run_on_cpu 挂载上的任务的。
 #5  0x0000555555cf1e6b in cpu_exec_realizefn (cpu=cpu@entry=0x555556b09970, errp=errp@entry=0x7fffffffcd70) at ../cpu.c:137
 #6  0x0000555555be220e in x86_cpu_realizefn (dev=0x555556b09970, errp=0x7fffffffcdd0) at ../target/i386/cpu.c:6156
 ```
-
-## first_cpu / CPU_NEXT / CPU_FOREACH 的移植
-
-- [x] 这些 cpus 是如何初始化的
-  - cpu_list_add 和 cpu_list_remove, 通过 CPUState::node 实现的
-
-- [x] 为什么又要采用 RCU 的机制 : 因为 cpu_list_remove 的原因
-
-- [x] first_cpu 和 CPU_NEXT 都是只有一个使用位置的
-  - first_cpu 和 CPU_NEXT 场景分析之后，无论如何，将 RCU 去掉后，其语义不变
-
-在 pic_irq_request 中，利用 first_cpu 来访问 apic_state, 猜测是因为
-apic_state 要么在每一个 cpu 都有，要都没有，所以随便选一个就可以了
-
-- [ ] 只有一个 vCPU 的时候，难道还需要 cpu_next 的含义 ?
-- [ ] 分析一下对应的依赖就可以了
-- [ ] 分析一下 first_cpu 的作用
 
 ### queue_work_on_cpu
 queue_work_on_cpu 存在三个调用者:
