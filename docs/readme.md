@@ -19,7 +19,7 @@
 - [裸金属二进制翻译器的设计与实现](https://martins3.github.io/ppt/repo/2021-8-24/index.html)
 - QEMU 源码分析
   - [QEMU 的 memory model 和 softmmu 设计分析](./qemu/memory.md)
-  - [QEMU 中的 map 和 set 的使用](./qemu/map.md)
+  - [QEMU 中的 map 和 set](./qemu/map.md)
   - [QEMU softmmu 访存函数集整理](./qemu/softmmu-functions.md)
   - [QEMU 中的 seabios : 地址空间](.qemu/bios-memory.md)
   - [QEMU 中的线程和事件循环](./qemu/threads.md)

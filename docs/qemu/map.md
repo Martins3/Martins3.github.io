@@ -1,10 +1,8 @@
-# QEMU 中的 map 和 set 的使用
-
 <!-- vim-markdown-toc GitLab -->
 
 - [记录范围内上锁过的 page](#记录范围内上锁过的-page)
 - [根据 Ram addr 找该 guest page 上关联的所有的 tb](#根据-ram-addr-找该-guest-page-上关联的所有的-tb)
-- [根据 host tb 找到其关联的 TranslationBlock](#根据-host-tb-找到其关联的-translationblock)
+- [根据 retaddr 找到其关联的 TranslationBlock](#根据-retaddr-找到其关联的-translationblock)
 - [根据 physical address 计算出来 MemoryRegion](#根据-physical-address-计算出来-memoryregion)
 - [根据 guest virtual address 找到 Translation Block](#根据-guest-virtual-address-找到-translation-block)
 - [根据 guest physical address 找到 Translation Block](#根据-guest-physical-address-找到-translation-block)
@@ -85,8 +83,8 @@ page_collection_lock(tb_page_addr_t start, tb_page_addr_t end)
 
 在 page_find_alloc 进行查询。
 
-## 根据 host tb 找到其关联的 TranslationBlock
-对于每一段 guest 的 translation block, QEMU 都会创建一个 TranslationBlock, 
+## 根据 retaddr 找到其关联的 TranslationBlock
+对于每一段 guest 的 translation block, QEMU 都会创建一个 TranslationBlock,
 TranslationBlock 就是生成的代码左侧, 但是当生成的代码(也地址为 retaddr) 中退出的时候，是无法知道其关联的 TranslationBlock 的位置的。
 
 tcg_tb_alloc 的注释说道
@@ -123,7 +121,7 @@ struct tb_tc {
 在 tb_gen_code 中初始化
 1. `tb->tc.ptr = gen_code_buf;`
 2. `tb->tc.size = gen_code_size;`
-也就是，根据 tb 所在地址和大小。
+也就是，tb 所在地址和大小。
 
 ## 根据 physical address 计算出来 MemoryRegion
 这个玩意设计成为多级页面的目的和页表查询的作用差不多, 都是使用 addr 中一部分逐级向下索引的。
@@ -193,7 +191,7 @@ typedef struct PhysPageMap {
 - nodes : 存储所有的 Node，如果分配完了，使用 phys_map_node_reserve 来补充
 - sections : 最终想要获取的
 
-下面是一个 FlatRanges 和其对应构建出来的 tree, 
+下面是一个 FlatRanges 和其对应构建出来的 tree,
 在 QEMU 的 human monitor interface 中 `info mtree -f -d` 可以获取。
 ```txt
   Dispatch
