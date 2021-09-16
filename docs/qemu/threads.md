@@ -12,6 +12,7 @@
   - [Event Loop in Linux](#event-loop-in-linux)
   - [Event Loop in glib](#event-loop-in-glib)
   - [AioContext](#aiocontext)
+    - [FDMonOps](#fdmonops)
   - [main loop thread](#main-loop-thread)
   - [IOThread](#iothread)
     - [use IOThread](#use-iothread)
@@ -276,7 +277,15 @@ aio_set_event_notifier(ctx, &ctx->notifier, false,
 - 轮询: `aio_poll` => `aio_bh_poll` => `aio_bh_call`
 
 ### coroutine
-在 QEMU 中 coroutine 的实现原理和其他的 coroutine 没有区别，其具体实现接口可以参考 https://www.cnblogs.com/VincentXu/p/3350389.html
+在 QEMU 中 coroutine 的实现原理和其他的 coroutine 没有区别，
+1. `qemu_coroutine_enter` 开始执行一个 coroutine
+2. aio_co_enter
+  - 如果 aio_co_enter 加入的 AioContext 不是当前线程的，那么加入到该 AioContext
+  - 如果是递归的 aio_co_enter，那么挂载到 list 上
+  - 否则可以直接执行了
+3. 如果 coroutine 执行了 qemu_coroutine_yield 之后，那么 qemu_coroutine_enter 就可以返回了
+
+其具体实现接口可以参考 https://www.cnblogs.com/VincentXu/p/3350389.html
 
 Stefan Hajnoczi 说 QEMU 中需要 coroutine 是为了避免 callback hell[^2]
 
@@ -342,6 +351,15 @@ while(true) {
 通过 aio_set_fd_handler /  qemu_set_fd_handler => g_source_add_poll 可以将 fd 添加到 AioContext::source 上，而 AioContext::source 总是会进一步地通过 g_source_attach
 被关联到 GMainContext 上。
 
+- create_aio_contexts
+    - iothread_new
+      - 使用 qemu_thread_create 创建一个 thread，在该线程中间执行 iothread_run
+      - iothread_run 中间创建出来两个 context 来:
+          - aio_context_new : 创建 aio 出来
+          - iothread_init_gcontext : 创建 GMainContext
+    - aio_bh_schedule_oneshot : 其实就是前面的 aio bh 添加到 queue 上的操作
+- join_aio_contexts
+
 ```c
 static void iothread_init_gcontext(IOThread *iothread)
 {
@@ -363,6 +381,44 @@ static void iothread_init_gcontext(IOThread *iothread)
 - 使用 aio_add_ready_handler 等机制不是遍历所有的 fd 而只是遍历 ready 的 fd
 
 当然代价就是 aio_poll 真的很复杂。
+
+#### FDMonOps
+- 看看 poll, epoll, io_uring 在 FDMonOps::wait 的实现差别:
+    - fdmon_epoll_wait : 使用 AioContext::epollfd
+    - fdmon_poll_wait : 使用全局变量 pollfds, 这个东西是在 fdmon_poll_wait 从 AioContext::aio_handlers 初始化得到的
+    - fdmon_io_uring_wait : 使用 AioContext::fdmon_io_uring
+
+关于 epollfd 是如何添加进去的:
+
+- aio_set_fd_handler 会调用 FDMonOps::update 来需要监听的 fd 更新到 epollfd 中。
+- 而 poll 不需要做任何事情，正如其注释所说，都是放到其
+
+```c
+/*
+ * These thread-local variables are used only in fdmon_poll_wait() around the
+ * call to the poll() system call.  In particular they are not used while
+ * aio_poll is performing callbacks, which makes it much easier to think about
+ * reentrancy!
+ *
+ * Stack-allocated arrays would be perfect but they have size limitations;
+ * heap allocation is expensive enough that we want to reuse arrays across
+ * calls to aio_poll().  And because poll() has to be called without holding
+ * any lock, the arrays cannot be stored in AioContext.  Thread-local data
+ * has none of the disadvantages of these three options.
+ */
+static __thread GPollFD *pollfds;
+static __thread AioHandler **nodes;
+static __thread unsigned npfd, nalloc;
+static __thread Notifier pollfds_cleanup_notifier;
+
+static void fdmon_poll_update(AioContext *ctx,
+                              AioHandler *old_node,
+                              AioHandler *new_node)
+{
+    /* Do nothing, AioHandler already contains the state we'll need */
+}
+```
+
 
 ### main loop thread
 QEMU 的第一个 thread 启动了各个 vCPU 之后，然后就会调用 ppoll 来进行实践监听。
