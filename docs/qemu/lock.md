@@ -12,6 +12,8 @@
 - [locks between vCPU](#locks-between-vcpu)
   - [tcg vCPU thread](#tcg-vcpu-thread)
     - [lifecycle of vCPU thread](#lifecycle-of-vcpu-thread)
+    - [current_cpu](#current_cpu)
+    - [setlongjmp](#setlongjmp)
   - [queue_work_on_cpu](#queue_work_on_cpu)
   - [exclusive context](#exclusive-context)
 - [misc](#misc)
@@ -274,6 +276,26 @@ async_run_on_cpu 挂载上的任务的。
 #5  0x0000555555cf1e6b in cpu_exec_realizefn (cpu=cpu@entry=0x555556b09970, errp=errp@entry=0x7fffffffcd70) at ../cpu.c:137
 #6  0x0000555555be220e in x86_cpu_realizefn (dev=0x555556b09970, errp=0x7fffffffcdd0) at ../target/i386/cpu.c:6156
 ```
+#### current_cpu
+- 赋值位置: cpu_exec / rr_cpu_thread_fn / mttcg_cpu_thread_fn
+  - :duck: 实际上 cpu_exec 中间并没有必要进行对于 cpu_exec 的赋值操作，和两个 thread_fn 重叠了
+```c
+  /* replay_interrupt may need current_cpu */
+  current_cpu = cpu;
+```
+- 使用位置
+  - tb_invalidate_phys_page_range__locked : 为了实现 precise SMC，如果当前 cpu 正在 invalidate 自己运行的 tb 需要做一些特殊操作
+  - 其他的位置暂时不讨论了
+
+#### setlongjmp
+保存上下文: sigsetjmp
+- cpu_exec_step_atomic
+- cpu_exec
+
+跳转回去的位置: siglongjmp
+- cpu_loop_exit
+
+采用 sigsetjmp 可以快速上下文(regs and stack)，通过 siglongjmp 可以快速回到 sigsetjmp 的位置，如果函数调用层次很深，可以避免逐个返回。
 
 ### queue_work_on_cpu
 queue_work_on_cpu 存在三个调用者:
