@@ -10,7 +10,11 @@
 
 <!-- vim-markdown-toc -->
 ## 问题
-- [ ] 到底如何需要 ISABus?
+- [ ] device_reset
+- [ ] qemu_register_reset(x86_cpu_machine_reset_cb, cpu); 最后会调用到 cpu_reset 上，post done 和 reset 的关系到底是什么?
+
+- [ ] rtc_set_cpus_count 中和 seabios 的关系需要完全走通
+- [ ] 分析一下两个必须被模拟的 pci bridge : 很容易定位的小伙纸
 
 ## code flow
 - main: 跳过一个很长的参数解析
@@ -100,15 +104,28 @@
   - qdev_machine_creation_done
     - notifier_list_notify : 通过 qemu_add_machine_init_done_notifier 的 references 最终需要执行的 hook 了
       - pc_machine_done
-        - [ ] x86_rtc_set_cpus_count : 神奇的机制，和 seabios 对称的看看
-        - [ ] fw_cfg_add_extra_pci_roots
-        - [ ] acpi_setup
+        - rtc_set_cpus_count
+        - acpi_setup
           - 依赖于 acpi 的 `x86ms->fw_cfg` 和 pcms->acpi_build_enabled, 否则都会失败
-      - [ ] x86_cpu_machine_done
-      - [ ] ioapic_machine_done_notify
-      - [ ] pcibus_machine_done
-      - [ ] piix4_pm_machine_ready
-      - [ ] machine_init_notify
+        - fw_cfg_build_smbios
+      - x86_cpu_machine_done : 初始化 smram
+      - ioapic_machine_done_notify : 用于支持 kvm 的 splitirq 的
+      - pcibus_machine_done : pci address space 和 pci dev 的地址空间初始化
+      - piix4_pm_machine_ready : piix4 pm 的 pci 配置空间
+      - machine_init_notify
+  - qemu_system_reset
+    - cpu_synchronize_all_states
+    - MachineClass::reset => pc_machine_reset
+      - qemu_devices_reset : 这会 reset 通过 qemu_register_reset 注册上的所有 devices
+        - x86_cpu_machine_reset_cb
+          - cpu_reset : 初始化 CPUX86State
+        - rom_reset : 将 rom 拷贝到指定的空间上
+        - acpi_build_reset
+        - rtc_reset
+        - pc_cmos_init_late
+        - piix3_reset : 初始化 piix3 的配置空间
+      - device_reset(X86CPU::apic_state)
+    - cpu_synchronize_all_post_reset
   - accel_setup_post
   - os_setup_post
   - main_loop

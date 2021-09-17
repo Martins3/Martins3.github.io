@@ -95,9 +95,7 @@ PAM 的作用可以将对于 bios 空间读写转发到 PCI 或者 RAM 中，因
 - https://patchwork.ozlabs.org/project/qemu-devel/patch/1437389593-15297-1-git-send-email-real@ispras.ru/
 - https://wiki.qemu.org/Documentation/Platforms/PC
 
-
 #### QEMU 侧如何处理 PAM
-
 在 i440fx_init 初始化的时候, 来初始化所有 `PAMMemoryRegion`, 一共 13 个
 - 第一个映射: System BIOS Area Memory Segments, 映射 0x10000 到 0xfffff
 - 后面的 12 个映射 0xc0000 ~ 0xeffff, 每一个映射 0x4000 的大小
@@ -216,16 +214,14 @@ make_bios_writable_intel(u16 bdf, u32 pam0)
 ## SMM
 SMM 实际上是给 firmware 使用的, 其具体作用可以进一步参考 https://www.ssi.gouv.fr/uploads/IMG/pdf/Cansec_final.pdf
 
-> The execution environment after entering SMM is in real address mode with paging disabled (CR0.PE = CR0.PG = 0). In this initial execution environment, the SMI handler 
+> The execution environment after entering SMM is in real address mode with paging disabled (CR0.PE = CR0.PG = 0). In this initial execution environment, the SMI handler
 can address up to 4 GBytes of memory and can execute all I/O and system instructions. (Intel SDM vol 3 chapter 34)[^1]
-
 
 在 x86_cpu_reset 中间将 CPUX86State::smbase 初始化 0x30000, 而 helper_rsm 会将这数值重置为 0xa0000
 
 初始化数值是 0x30000 从 seabios 的 src/config.h 中 `#define BUILD_SMM_INIT_ADDR       0x30000` 可以得到验证。
 
 #### SMM 地址空间的构建
-
 而在 i440fx_init 中，创建出来了 smram_region 和 smram
 ```plain
 memory-region: smram
@@ -266,7 +262,7 @@ static inline MemTxAttrs cpu_get_mem_attrs(CPUX86State *env)
 ```
 而 HF_SMM_MASK 在 `env->hflags` 的插入和删除位置 smm_helper 中间。
 
-而 cpu_get_mem_attrs 的位置在各个 helper 以及 handle_mmu_fault 中。 
+而 cpu_get_mem_attrs 的位置在各个 helper 以及 handle_mmu_fault 中。
 这些组装的出来的 MemTxAttrs 的使用位置是: cpu_asidx_from_attrs
 这样，使用相同的地址访问，如果是 SMM 的地址空间，最后就会访问到 ram 上而不是 vga-lowmem。
 

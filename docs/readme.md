@@ -25,6 +25,7 @@
   - [QEMU 中的 seabios : 地址空间](.qemu/bios-memory.md)
   - [QEMU 中的线程和事件循环](./qemu/threads.md)
   - [QEMU 中的锁](./qemu/lock.md)
+  - [QEMU 如何模拟中断(WIP)](./qemu/interrupt.md)
 
   <!-- - [QEMU 中的 seabios : fw_cfg](./qemu-bios-fw_cfg.md) -->
   <!-- - [QEMU 的面向对象模型 : QOM](./qemu-qom.md) -->
