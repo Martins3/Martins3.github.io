@@ -16,6 +16,10 @@
 - [ ] rtc_set_cpus_count 中和 seabios 的关系需要完全走通
 - [ ] 分析一下两个必须被模拟的 pci bridge : 很容易定位的小伙纸
 
+- [ ] 有必要监控所有的 qdev_realize 的，
+  - x86_cpu_realizefn
+  - apic_realize
+
 ## code flow
 - main: 跳过一个很长的参数解析
   - select_machine() : select_machine 中获取 MachineClass, 在这里抉择是 pc 还是 q35

@@ -25,8 +25,7 @@
   - [QEMU 中的 seabios : 地址空间](.qemu/bios-memory.md)
   - [QEMU 中的线程和事件循环](./qemu/threads.md)
   - [QEMU 中的锁](./qemu/lock.md)
-  - [QEMU 如何模拟中断(WIP)](./qemu/interrupt.md)
-
+  - [QEMU 如何模拟中断](./qemu/interrupt.md)
   <!-- - [QEMU 中的 seabios : fw_cfg](./qemu-bios-fw_cfg.md) -->
   <!-- - [QEMU 的面向对象模型 : QOM](./qemu-qom.md) -->
   <!-- - [QEMU 和内存模型](./memory-model.md) -->
@@ -53,5 +52,10 @@
 - [The Day](https://martins3.github.io/theday/)
 - [The Garden](http://martins3.gitee.io/garden/)
 - [言论](./words.md)
+
+## Friends
+- [niugenen](https://niugenen.github.io/)
+- [limaomao821](https://limaomao821.github.io/)
+- [foxsen](https://foxsen.github.io)
 
 本站所有文章转发 **CSDN** 将按侵权追究法律责任，其它情况随意。

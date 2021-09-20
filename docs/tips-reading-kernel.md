@@ -1,8 +1,8 @@
 # 使用 QEMU, FlameGraph 和 bpftrace 阅读内核
 
-在[上一篇文章](https://martins3.github.io/learn-linux-kernel.html)中，提出了学习内核的目的，工作的方向以及大致的学习路径，下面谈一下学习的。
+在[上一篇文章](https://martins3.github.io/learn-linux-kernel.html)中，提出了学习内核的目的，工作的方向以及大致的学习路径，下面谈一下可以提高分析效率的工具。
 
-## QEMU 
+## QEMU
 QEMU 高效，简单，强大。
 
 使用 QEMU 调试内核网上已经有很多的文章, 比如[Booting a Custom Linux Kernel in QEMU and Debugging It With GDB](http://nickdesaulniers.github.io/blog/2018/10/24/booting-a-custom-linux-kernel-in-qemu-and-debugging-it-with-gdb/)
@@ -89,4 +89,4 @@ kprobe:task_tick_fair
 ```
 
 ## TODO
-- [ ] [使用 kgdb](https://www.cnblogs.com/haiyonghao/p/14440777.html) 
+- [ ] [使用 kgdb](https://www.cnblogs.com/haiyonghao/p/14440777.html)
