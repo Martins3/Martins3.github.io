@@ -32,6 +32,7 @@
   - [switch intc](#switch-intc)
   - [legacy PCI interrupt](#legacy-pci-interrupt)
   - [interrupt flow](#interrupt-flow)
+- [references](#references)
 
 <!-- vim-markdown-toc -->
 本文简单地分析一下一个中断从产生到 Linux kernel 执行该中断的 interrupt handler 的过程。
@@ -1167,6 +1168,9 @@ static void pic_set_irq(void *opaque, int irq, int level)
 }
 ```
 
+## references
 [^5]: https://stackoverflow.com/questions/51490552/how-is-cr8-register-used-to-prioritize-interrupts-in-an-x86-64-cpu
 [^11]: https://cloud.tencent.com/developer/article/1087271
 [^12]: https://en.wikipedia.org/wiki/Intel_8259
+
+<script src="https://utteranc.es/client.js" repo="Martins3/Martins3.github.io" issue-term="url" theme="github-light" crossorigin="anonymous" async> </script>
