@@ -56,6 +56,8 @@
 [Linux Device Driver](https://lwn.net/Kernel/LDD3/)(ldd3)是公认的 Linux 设备驱动最佳教材之一，该书着重介绍了设备驱动，但是同时也介绍了大量内核的其他方面的知识，例如中断，时间，锁等等。
 可惜其中的代码非常的老，有人对于 ldd3 的代码向高版本内核进行了移植，[代码](https://github.com/martinezjavier/ldd3)在 Github 上。
 
+[jserv](https://github.com/jserv) 写了更加现代版本的内核驱动教程, [The Linux Kernel Module Programming Guide](https://github.com/sysprog21/lkmpg).
+
 我个人更加推荐 [Linux kernel labs](https://linux-kernel-labs.github.io)，以试验的形式学习，各种环境配置齐全，文档详细，更新活跃。
 
 国内的有人做的项目 [tinyclub linux lab](https://github.com/tinyclub/linux-lab) 虽然没有阅读过，但是感觉还不错。

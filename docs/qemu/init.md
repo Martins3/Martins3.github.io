@@ -19,6 +19,7 @@
 - [ ] 有必要监控所有的 qdev_realize 的，
   - x86_cpu_realizefn
   - apic_realize
+  - [ ] x86_cpu_initfn 实际上没有放进去的，其中进行了 x86_cpu_load_model
 
 ## code flow
 - main: 跳过一个很长的参数解析

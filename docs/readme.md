@@ -28,7 +28,6 @@
   - [QEMU 如何模拟中断](./qemu/interrupt.md)
   <!-- - [QEMU 中的 seabios : fw_cfg](./qemu-bios-fw_cfg.md) -->
   <!-- - [QEMU 的面向对象模型 : QOM](./qemu-qom.md) -->
-  <!-- - [QEMU 和内存模型](./memory-model.md) -->
 
 ## Tips
 - [How to cross Great Fire Wall](./gfw.md)
@@ -57,5 +56,6 @@
 - [niugenen](https://niugenen.github.io/)
 - [limaomao821](https://limaomao821.github.io/)
 - [foxsen](https://foxsen.github.io)
+- [SPC的自由天空](https://blog.spcsky.com/)
 
 本站所有文章转发 **CSDN** 将按侵权追究法律责任，其它情况随意。

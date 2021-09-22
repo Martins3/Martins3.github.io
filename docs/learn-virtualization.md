@@ -24,3 +24,4 @@ Hardware and Software Support for Virtualization : 作者[Edouard Bugnion](https
 - https://www.linux-kvm.org/page/KVM_Forum : kvm forum 每年的会议 slides 都是精华，值得一个个的翻阅, 在 youtube 上有对应的[录像](https://www.youtube.com/channel/UCRCSQmAOh7yzgheq-emy1xA)
 - [陈伟任的笔记](https://github.com/azru0512/slide/tree/master/QEMU)
 - [Stefan Hajnoczi](http://blog.vmsplice.net/2020/08/qemu-internals-event-loops.html)
+- [空客的 QEMU 源码分析](https://github.com/airbus-seclab/qemu_blog)
