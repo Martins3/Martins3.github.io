@@ -1,5 +1,5 @@
 ## 整理笔记
-- [ ] 将编译的作业整理成为一个正规的仓库，利用那个标准cpp 项目模板装饰一下牌面，岂不美哉。
+- [ ] 将编译的作业整理成为一个正规的仓库，利用那个标准 cpp 项目模板装饰一下牌面，岂不美哉。
 - [ ] 咨询一下工作的同学关于上班的事情(工资，远程上班，加班，适合职位等)
 - [ ] 完成 linux module check sheet
 - [ ] 将 nonsense 下的收集的链接整理
@@ -27,7 +27,7 @@ https://gms.tf/stdfind-and-memchr-optimizations.html : 收集这个人的 blo
 
 https://github.com/ruanyf/weekly/issues/1315#issuecomment-651569435 : 这个要求其实告诉我们到底什么是前进的方向
 
-写一个mac的总结，键位 vim zsh input method, how to install softwar
+写一个 mac 的总结，键位 vim zsh input method, how to install softwar
 1. 中文输入法是正的没有办法吗 ?
 
 github/martins3/debugger
@@ -75,7 +75,7 @@ https://conanblog.me/Unix-as-IDE--Chinese-/compiling.html#id3 : 应该这个对�
 
 https://github.com/zlotus/notes-linear-algebra : 线性代数，你值得拥有
 
-https://github.com/tuna/blogroll : 订阅一下 tuna 的blog，给自己开开眼
+https://github.com/tuna/blogroll : 订阅一下 tuna 的 blog，给自己开开眼
 https://github.com/jkup/awesome-personal-blogs : 经典 blo
 https://github.com/kilimchoi/engineering-blogs : 更多的 blo
 
