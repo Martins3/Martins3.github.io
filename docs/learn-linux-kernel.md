@@ -32,8 +32,9 @@
 ## 环境准备
 1. 阅读环境准备
     - 首先你要保证你的操作系统是 Linux 内核，让自己对于 kernel 支撑起来的用户态环境有一个感性的认识。
-2. 保证你的编辑器可以正确跳转，如果你恰好使用的是 neovim, 可以参考[我的 neovim 配置](https://github.com/Martins3/My-Linux-config), 图形化的工具，我使用过[sourcetrail](https://www.sourcetrail.com/)，很不错，但是很卡。
+2. 保证你的编辑器可以正确跳转，如果你恰好使用的是 neovim, 可以参考[我的 neovim 配置](https://github.com/Martins3/My-Linux-Config), 图形化的工具，我使用过[sourcetrail](https://www.sourcetrail.com/)，很不错，但是很卡。
     - 或者 VSCode 的配置: [DKernel-Plus](https://github.com/ShaoxunZeng/DKernel-Plus)
+3. [QEMU, dataframe 和 bpftrace](https://martins3.github.io/tips-reading-kernel.html) 等工具也是可以大大加快分析的速度的。
 
 ## 内核学习
 我个人认为需要将**理解用户态**, **读书**, **分析源代码**, **写代码**。
@@ -43,7 +44,9 @@
 - 写代码我感觉是最好的方式，主要是相关资源较少，只是覆盖了内核较小的一部分。
 
 ### 用户层需要理解
-内核的核心模块(mm, process, fs 等)都是或多或少有用户态的知识点。推荐 [The Linux Programming Interface](https://book.douban.com/subject/4292217/) 作为查询手册。
+内核的核心模块(mm, process, fs 等)和用户态的联系非常的紧密。
+虽然很多人推荐 Richard Stevens 的 Advanced Unix Programming，但是我更加推荐 [The Linux Programming Interface](https://book.douban.com/subject/4292217/)。
+Richard Stevens 英年早逝，这导致 Advanced Unix Programming 这本书接近 20 年没有更新了，书中的很多例子实际上运行起来有一些小毛病。
 
 ### 参考书
 然后就可以阅读 [Understand Linux Kernel](https://book.douban.com/subject/1767120/), 这是大家公认的经典教材，唯一的问题和现在和内核有些出入。
