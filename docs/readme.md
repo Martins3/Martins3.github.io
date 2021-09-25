@@ -26,8 +26,9 @@
   - [QEMU 中的线程和事件循环](./qemu/threads.md)
   - [QEMU 中的锁](./qemu/lock.md)
   - [QEMU 如何模拟中断](./qemu/interrupt.md)
-	- [QEMU 中的面向对象 : QOM](./qemu-qom.md)
-  <!-- - [QEMU 中的 seabios : fw_cfg](./qemu-bios-fw_cfg.md) -->
+  - [QEMU 中的面向对象 : QOM](./qemu/qom.md)
+
+<!-- - [QEMU 中的 seabios : fw_cfg](./qemu-bios-fw_cfg.md) -->
 
 ## Tips
 - [How to cross Great Fire Wall](./gfw.md)
