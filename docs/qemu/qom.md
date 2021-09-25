@@ -130,6 +130,10 @@ static void cpu_class_init(ObjectClass *klass, void *data)
     k->parse_features = cpu_common_parse_features;
 ```
 
+* **QEMU 不支持多继承**
+
+个人认为 C++ 中的多继承非常的鬼畜，谢天谢地，QEMU 没有自讨苦吃。
+
 :warning: 到此你花费了 2% 的时间掌握了 80% 的 QOM 的内容，接下来是具体的代码分析部分了。
 
 ## init
@@ -281,27 +285,38 @@ static inline G_GNUC_UNUSED X86CPUClass *X86_CPU_CLASS(const void *klass) {
 - X86_CPU_GET_CLASS : 根据 object 指针获取到 X86CPUClass
 - X86_CPU_CLASS : 根据 ObjectClass 指针获取到 X86CPUClass
 
-在分析
+在分析这些函数之前，将 ObjectClass 和 Object 中和引用计数，property 相关的内容删除之后，得到如下的简化内容:
+```c
+struct ObjectClass
+{
+    /* private: */
+		struct TypeImpl * type;
 
-- ObjectClass : The base for all classes
-- Object : 持有一个指针 ObjectClass, 而 Object 持有一个 struct TypeImpl * ，所以可以动态的查找到一个 object 真正类型
+    const char *object_cast_cache[OBJECT_CLASS_CAST_CACHE];
+    const char *class_cast_cache[OBJECT_CLASS_CAST_CACHE];
+};
 
-- object_dynamic_cast_assert : 将一个 object cast 成为类型，且参数为 "machine"
-  - 如果没有进行 CONFIG_QOM_CAST_DEBUG, 那么什么都不需要做，因为这些类型都是嵌套到一起的
-  - 首先扫描一下 object_cast_cache 中是否以前从这个 object cast 到过参数的类型，如果之前正确，那么现在肯定正确
-  - object_dynamic_cast
-    - object_class_dynamic_cast : 简单来说, 通过 type_get_by_name 找到 TypeImpl, 然后通过 type_is_ancestor 就可以判断了
-  - 装换成功，设置 object_cast_cache
-- object_class_dynamic_cast_assert : 就会 cache 机制和调用一下 object_class_dynamic_cast
+struct Object
+{
+    /* private: */
+    ObjectClass *class;
+};
+```
 
-object_dynamic_cast_assert 真正恐怖的地方在于，现在所有的对象都是都是可以装换为 Object 类型，
-而一个 object 类型的变量，实际上，可以在完全缺乏上下文的环境中 cast 到可以 cast 的任何类型。
-而这个关键在于，Object 中通过 ObjectClass 知道自己的真正的类型。
+在 type_initialize 中 ObjectClass::type 将会指向 TypeImpl
+```c
+static void type_initialize(TypeImpl *ti){
+		// ...
+    ti->class->type = ti;
+		// ...
+}
+```
 
-
-- 总结一下几个转换函数:
-	- object_dynamic_cast_assert
-	- object_get_class
-	- [x] object_class_dynamic_cast_assert : 什么都不需要做的
-		- 但是，object_class_get_parent 为什么获取的就完全不是一个 class
-		- object_class_by_name
+现在我们就差不多可以猜到 object_dynamic_cast_assert 的实现了:
+- 如果关掉动态检查，因为 Object 总是在一个结构体的最开始位置，那么这个转换无需任何操作
+- 如果需要动态检查:
+	- 首先在 cache 中找该 object 是否可以装换
+	- 否则
+		- Object 可以获取 ObjectClass
+		- ObjectClass 可以获取 TypeImpl
+		- TypeImpl 可以判断将要 cast 的类型是不是自己的父类型
