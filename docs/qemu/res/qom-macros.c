@@ -61,5 +61,5 @@
   DECLARE_INSTANCE_CHECKER(InstanceType, MODULE_OBJ_NAME,                      \
                            TYPE_##MODULE_OBJ_NAME)
 
-// This is a example
+// take X86CPU as an example
 OBJECT_DECLARE_TYPE(X86CPU, X86CPUClass, X86_CPU)
