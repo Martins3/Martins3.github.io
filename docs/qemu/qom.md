@@ -19,6 +19,7 @@
 - [qdev](#qdev)
   - [realize](#realize)
   - [qtree](#qtree)
+- [QOM in action](#qom-in-action)
 - [misc](#misc)
 
 <!-- vim-markdown-toc -->
@@ -267,7 +268,7 @@ select_machine 需要获取所有的 TYPE_MACHINE 的 class,
 ```
 
 ## cast
-QEMU 定义了一些列的 macro 来封装，我将这些 macro 列举到[这里](./res/qom-macro.c)了。
+QEMU 定义了一些列的 macro 来封装，我将这些 macro 列举到[这里](./res/qom-macros.c)了。
 最终将
 
 ```c
@@ -669,6 +670,117 @@ struct DeviceState {
   - 在 bus_add_child 中，使用 DeviceState::sibling 将 DeviceState 挂到 BusState::children 上
 
 在 qdev_realize -> qdev_set_parent_bus 将会 dev 添加到 bus 上，如果一个 dev 没有关联 bus，类似 hpet 那么就会添加到 main-system-bus 上。
+
+## QOM in action
+QEMU 将很多内容按照 QOM 重写了之后，如果不掌握 QOM 的基本知识，有些内容是完全看不懂的，现在我举一个比较经典的例子。
+我们知道，即使是同一个指令集的 CPU 每一个版本的功能也是有差异的，使用 lscpu 可以查看当前的 CPU 支持的 feature。
+QEMU 可以模拟各种版本的 x86 CPU，现在我们分析一下 QEMU 是如何做的:
+
+
+1. 在 cpu.c 中会注册全部的 cpu types
+
+- x86_cpu_register_types : 这个函数是通过 type_init 来调用的
+  - type_register_static(&x86_cpu_type_info); 其他类型的 parent
+  - type_register_static(&max_x86_cpu_type_info); 为什么需要这个 ？
+  - type_register_static(&x86_base_cpu_type_info);
+  - x86_register_cpudef_types : 对于 builtin_x86_defs 循环调用
+    - 组装出来 X86CPUModel
+    - x86_register_cpu_model_type : 构建 .class_data = X86CPUModel 的 TypeInfo，在 x86_cpu_cpudef_class_init 的时候，会将这个穿点到 X86CPUClass::model 上
+
+builtin_x86_defs 定义了一组 `X86CPUDefinition`，其中的 version 信息使用
+`X86CPUVersionDefinition` 描述，每一个 `X86CPUDefinition` 都会在 x86_register_cpudef_types 中生成一个或者多个，
+X86CPUModel(因为 version 的原因)
+
+如果使用 tcg 运行，默认是 qemu64 的:
+```c
+    {
+        .name = "qemu64",
+        .level = 0xd,
+        .vendor = CPUID_VENDOR_AMD,
+        .family = 15,
+        .model = 107,
+        .stepping = 1,
+        .features[FEAT_1_EDX] =
+            PPRO_FEATURES |
+            CPUID_MTRR | CPUID_CLFLUSH | CPUID_MCA |
+            CPUID_PSE36,
+        .features[FEAT_1_ECX] =
+            CPUID_EXT_SSE3 | CPUID_EXT_CX16,
+        .features[FEAT_8000_0001_EDX] =
+            CPUID_EXT2_LM | CPUID_EXT2_SYSCALL | CPUID_EXT2_NX,
+        .features[FEAT_8000_0001_ECX] =
+            CPUID_EXT3_LAHF_LM | CPUID_EXT3_SVM,
+        .xlevel = 0x8000000A,
+        .model_id = "QEMU Virtual CPU version " QEMU_HW_VERSION,
+    },
+```
+
+2. 在 x86_cpu_common_class_init -> x86_cpu_register_feature_bit_props 中为每一个 feature bit 注册属性
+
+2. 在 class init 的时候，调用 x86_cpu_cpudef_class_init 实现对于 X86CPUClass::model 的初始化
+此时每一个 X86CPUClass 都会指向自己的 model
+
+3. 在 qemu_init 中进行 `current_machine->cpu_type` 的初始化,
+而 pc_machine_class_init 中进行选择 MachineClass::default_cpu_type
+当然还可以选择其他的 cpu，其解析工作在 parse_cpu_option，此时确定了具体的哪一个 X86CPUClass 了
+
+4. 在 x86_cpu_initfn 中
+```c
+    if (xcc->model) {
+        x86_cpu_load_model(cpu, xcc->model);
+    }
+```
+
+- x86_cpu_load_model
+  - `object_property_set_int(OBJECT(cpu), "family", def->family, &error_abort);`
+    - 类似的赋值还有好几个
+  - `env->features[w] = def->features[w];` 拷贝到 CPUX86State::features 中
+  - x86_cpu_apply_version_props : 对于 builtin_x86_defs::versions 会在 x86_cpu_def_get_versions 中默认注册一个，其没有关联任何的 prop, 所以最后 x86_cpu_apply_version_props 在 qemu64 的请款下，是一个空操作的
+    - object_property_parse
+
+5. 在 x86_cpu_realizefn 中间注册 X86CPUDefinition::cache_info ，qemu64 注册上的就是 legacy 的数值
+```c
+	env->cache_info_cpuid2.l1d_cache = &legacy_l1d_cache;
+```
+
+6. 在 kvm 或者 tcg 的初始化中可以调用 x86_cpu_register_feature_bit_props 来进行 accel related feature 进行设置。
+kvm
+```c
+/*
+#0  x86_cpu_set_bit_prop (obj=0x555555e64ac8 <object_property_find_err+43>, v=0x7fffffffd0a0, name=0x55555689ee30 "\220\356\211VUU", opaque=0x555556963e80, errp=0x555556c32070) at ../target/i386/cpu.c:4001
+#1  0x0000555555e64f5a in object_property_set (obj=0x555556c32070, name=0x55555608fef1 "kvmclock", v=0x555556b55070, errp=0x5555567a1ee8 <error_abort>) at ../qom/object.c:1402
+#2  0x0000555555e65b0f in object_property_parse (obj=0x555556c32070, name=0x55555608fef1 "kvmclock", string=0x55555608fefa "on", errp=0x5555567a1ee8 <error_abort>) at ../qom/object.c:1642
+#3  0x0000555555ba00f3 in x86_cpu_apply_props (cpu=0x555556c32070, props=0x5555566c7e60 <kvm_default_props>) at ../target/i386/cpu.c:2638
+#4  0x0000555555b3df02 in kvm_cpu_instance_init (cs=0x555556c32070) at ../target/i386/kvm/kvm-cpu.c:126
+#5  0x0000555555c82967 in accel_cpu_instance_init (cpu=0x555556c32070) at ../accel/accel-common.c:110
+#6  0x0000555555ba3ffa in x86_cpu_initfn (obj=0x555556c32070) at ../target/i386/cpu.c:4131
+```
+
+tcg
+```c
+/*
+#0  x86_cpu_set_bit_prop (obj=0x555555e64ac8 <object_property_find_err+43>, v=0x7fffffffd090, name=0x5555568963e0 "@d\211VUU", opaque=0x555556974ba0, errp=0x555556c28050) at ../target/i386/cpu.c:4001
+#1  0x0000555555e64f5a in object_property_set (obj=0x555556c28050, name=0x5555560a7af1 "vme", v=0x555556b56000, errp=0x5555567a1ee8 <error_abort>) at ../qom/object.c:14
+#2  0x0000555555e65b0f in object_property_parse (obj=0x555556c28050, name=0x5555560a7af1 "vme", string=0x5555560a7af5 "off", errp=0x5555567a1ee8 <error_abort>) at ../qom/object.c:1642
+#3  0x0000555555ba00f3 in x86_cpu_apply_props (cpu=0x555556c28050, props=0x5555566d9c00 <tcg_default_props>) at ../target/i386/cpu.c:2638
+#4  0x0000555555bd68f2 in tcg_cpu_instance_init (cs=0x555556c28050) at ../target/i386/tcg/tcg-cpu.c:95
+#5  0x0000555555c82967 in accel_cpu_instance_init (cpu=0x555556c28050) at ../accel/accel-common.c:110
+#6  0x0000555555ba3ffa in x86_cpu_initfn (obj=0x555556c28050) at ../target/i386/cpu.c:4131
+```
+
+这是 tcg 的 feature
+```c
+/*
+ * TCG-specific defaults that override cpudef models when using TCG.
+ * Only for builtin_x86_defs models initialized with x86_register_cpudef_types.
+ */
+static PropValue tcg_default_props[] = {
+    { "vme", "off" },
+    { NULL, NULL },
+};
+```
+
+
 
 ## misc
 - 注意区分 QObject 和 Object，前者是放到 QList 之类 visitor 数据类型中的
