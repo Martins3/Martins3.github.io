@@ -3,23 +3,11 @@
 
 <!-- vim-markdown-toc GitLab -->
 
-- [问题](#问题)
 - [code flow](#code-flow)
 - [tcg_init](#tcg_init)
 - [x86_cpu_realizefn](#x86_cpu_realizefn)
 
 <!-- vim-markdown-toc -->
-## 问题
-- [ ] device_reset
-- [ ] qemu_register_reset(x86_cpu_machine_reset_cb, cpu); 最后会调用到 cpu_reset 上，post done 和 reset 的关系到底是什么?
-
-- [ ] rtc_set_cpus_count 中和 seabios 的关系需要完全走通
-- [ ] 分析一下两个必须被模拟的 pci bridge : 很容易定位的小伙纸
-
-- [ ] 有必要监控所有的 qdev_realize 的，
-  - x86_cpu_realizefn
-  - apic_realize
-  - [ ] x86_cpu_initfn 实际上没有放进去的，其中进行了 x86_cpu_load_model
 
 ## code flow
 - main: 跳过一个很长的参数解析
