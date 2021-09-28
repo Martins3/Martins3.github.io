@@ -72,3 +72,5 @@ Richard Stevens 英年早逝，这导致 Advanced Unix Programming 这本书接�
 我在自己的学习过程中间收集了一些资源，放到了[这里](https://github.com/Martins3/Martins3.github.io/blob/master/os/os-route.md), 可以作为参考。
 
 转发 **CSDN** 按侵权追究法律责任，其它情况随意。
+
+<script src="https://utteranc.es/client.js" repo="Martins3/Martins3.github.io" issue-term="url" theme="github-light" crossorigin="anonymous" async> </script>
