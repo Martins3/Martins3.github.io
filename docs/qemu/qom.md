@@ -714,35 +714,28 @@ X86CPUModel(因为 version 的原因)
         .model_id = "QEMU Virtual CPU version " QEMU_HW_VERSION,
     },
 ```
-
 2. 在 x86_cpu_common_class_init -> x86_cpu_register_feature_bit_props 中为每一个 feature bit 注册属性
-
 2. 在 class init 的时候，调用 x86_cpu_cpudef_class_init 实现对于 X86CPUClass::model 的初始化
 此时每一个 X86CPUClass 都会指向自己的 model
-
 3. 在 qemu_init 中进行 `current_machine->cpu_type` 的初始化,
 而 pc_machine_class_init 中进行选择 MachineClass::default_cpu_type
 当然还可以选择其他的 cpu，其解析工作在 parse_cpu_option，此时确定了具体的哪一个 X86CPUClass 了
-
 4. 在 x86_cpu_initfn 中
 ```c
     if (xcc->model) {
         x86_cpu_load_model(cpu, xcc->model);
     }
 ```
-
 - x86_cpu_load_model
   - `object_property_set_int(OBJECT(cpu), "family", def->family, &error_abort);`
     - 类似的赋值还有好几个
   - `env->features[w] = def->features[w];` 拷贝到 CPUX86State::features 中
   - x86_cpu_apply_version_props : 对于 builtin_x86_defs::versions 会在 x86_cpu_def_get_versions 中默认注册一个，其没有关联任何的 prop, 所以最后 x86_cpu_apply_version_props 在 qemu64 的请款下，是一个空操作的
     - object_property_parse
-
 5. 在 x86_cpu_realizefn 中间注册 X86CPUDefinition::cache_info ，qemu64 注册上的就是 legacy 的数值
 ```c
 	env->cache_info_cpuid2.l1d_cache = &legacy_l1d_cache;
 ```
-
 6. 在 kvm 或者 tcg 的初始化中可以调用 x86_cpu_register_feature_bit_props 来进行 accel related feature 进行设置。
 kvm
 ```c

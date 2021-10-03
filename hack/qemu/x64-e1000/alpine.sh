@@ -4,7 +4,8 @@ set -eu
 # ----------------------- 配置区 -----------------------------------------------
 kernel_dir=/home/maritns3/core/ubuntu-linux
 # 可以直接使用系统中安装的 QEMU, 也就是 qemu-system-x86_64
-qemu=/home/maritns3/core/kvmqemu/build/qemu-system-x86_64
+# qemu=/home/maritns3/core/kvmqemu/build/qemu-system-x86_64
+qemu=/home/maritns3/core/xqm/build/x86_64-softmmu/qemu-system-x86_64
 # bios 镜像的地址，可以不配置，将下面的 arg_seabios 定位为 "" 就是使用默认的
 seabios=/home/maritns3/core/seabios/out/bios.bin
 # 2021/8/14 的最新镜像

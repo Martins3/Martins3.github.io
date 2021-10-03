@@ -1,4 +1,4 @@
-# shell 的一些经验之谈 
+# shell 的一些经验之谈
 
 ![](https://preview.redd.it/8a7tpszpdgj41.png?width=640&height=360&crop=smart&auto=webp&s=04e05726a9bb67ff47a8599101931409953859a0)
 
@@ -12,15 +12,6 @@
 
 ## 选择好用的 shell
 zsh 和 bash 之前语法上基本是兼容的，但是由于[oh my zsh](https://github.com/ohmyzsh/ohmyzsh)，我强烈推荐使用 zsh
-
-## 终端模拟器
-我现在的选在是 tmux + alacritty，等到我彻底解决了 alacritty 和 fcitx 的问题，我会提供对应教程。
-
-- [Deepin](https://github.com/linuxdeepin/deepin-terminal)
-- [tilix](https://gnunn1.github.io/tilix-web/)
-- [kitty](https://sw.kovidgoyal.net/kitty/)
-- [hyper](https://hyper.is/)
-- [Alacritty](https://github.com/alacritty/alacritty)
 
 ## 常用命令行工具的替代
 使用 Linux 有个非常窒息的事情在于，默认的工具使用体验一般，下面介绍一些体验更加的工具。
@@ -48,4 +39,4 @@ zsh 和 bash 之前语法上基本是兼容的，但是由于[oh my zsh](https:/
 [^1]: https://github.com/agarrharr/awesome-cli-apps
 [^2]: https://github.com/alebcay/awesome-shell
 [^3]: https://github.com/unixorn/awesome-zsh-plugins
-[^4]: https://news.ycombinator.com/ 
+[^4]: https://news.ycombinator.com/
