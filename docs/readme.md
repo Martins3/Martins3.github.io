@@ -35,7 +35,7 @@
 - [shell 的一点经验之谈](./shell.md)
 - [计算机学习的一点经验之谈](./learn-cs.md)
 - [内核学习的一点经验之谈](./learn-linux-kernel.md)
-- [2021 年 vim 的 C/C++ 配置](https://martins3.github.io/My-Linux-Config/)
+- [2021 年 vim 的 C/C++ 配置](https://martins3.github.io/My-Linux-Config/nvim.html)
 - [虚拟化学习的一点经验之谈](./learn-virtualization.md)
 - [使用 QEMU, FlameGraph 和 bpftrace 阅读内核](./tips-reading-kernel.md)
 - [使用 Github 记录笔记和搭建 blog](./setup-github-pages.md)

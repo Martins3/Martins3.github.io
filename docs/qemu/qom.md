@@ -736,7 +736,7 @@ X86CPUModel(因为 version 的原因)
 ```c
 	env->cache_info_cpuid2.l1d_cache = &legacy_l1d_cache;
 ```
-6. 在 kvm 或者 tcg 的初始化中可以调用 x86_cpu_register_feature_bit_props 来进行 accel related feature 进行设置。
+6. 在 kvm 或者 tcg 的初始化中可以调用 x86_cpu_apply_props 来进行 accel related feature 进行设置。
 kvm
 ```c
 /*
