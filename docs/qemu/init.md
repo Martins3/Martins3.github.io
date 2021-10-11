@@ -16,11 +16,10 @@
       - io_mem_init : 初始化 `MemoryRegion` `io_mem_unassigned`, 用于捕获访问 io 空洞的行为, 实际上这个 mr 永远都不会被使用,
       - memory_map_init : 初始化 `system_memory` 和 `io_memory` 这两个分别是两个对顶级的 container 分别和 address_space_io 和 address_space_memory 关联起来
   - page_size_init
-  - configure_accelerators
-    - qemu_opts_foreach
-      - configure_accelerator
-        - accel_init_machine : 在 tcg_accel_class_init 的位置初始化
-          - [tcg_init](#tcg_init)
+  - configure_accelerator
+      - accel_init_machine
+        - AccelClass::init_machine : 在 tcg_accel_class_init 初始化
+          - 实际上调用就是 [tcg_init](#tcg_init)
   - machine_run_board_init
     - `machine_class->init` : DEFINE_I440FX_MACHINE 这个封装出来 pc_init_v6_1 来调用
       - pc_init1

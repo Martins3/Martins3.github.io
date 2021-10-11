@@ -777,7 +777,7 @@ static PropValue tcg_default_props[] = {
 
 ## misc
 - 注意区分 QObject 和 Object，前者是放到 QList 之类 visitor 数据类型中的
-- 通过 InterfaceClass QEMU 可以模拟 interface
+- 通过 InterfaceClass QEMU 可以模拟 interface，具体例子参考 HotplugHandlerClass
 
 [^1]: https://www.linux-kvm.org/images/9/90/Kvmforum14-qom.pdf
 [^2]: https://wiki.qemu.org/Features/QAPI
