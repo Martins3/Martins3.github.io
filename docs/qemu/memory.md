@@ -1,4 +1,4 @@
-# QEMU 的 memory model 和 softmmu 设计分析
+# QEMU 的 memory model 和 softmmu 设计概览
 
 <!-- vim-markdown-toc GitLab -->
 
@@ -17,7 +17,6 @@
   - [Overview](#overview-1)
   - [soft TLB](#soft-tlb)
   - [ram addr](#ram-addr)
-  - [SMC](#smc)
 
 <!-- vim-markdown-toc -->
 
@@ -31,7 +30,7 @@
 
 ```txt
  ┌──────────► 这是一个 AddressSpace，AddressSpace 用于描述整个地址空间的映射关系。
- │                                        ┌───────────────────────► MemoryRegion 的优先级，如果一个范围两个 MemoryRegion 出现重叠，优先级高的压制优先级低的 
+ │                                        ┌───────────────────────► MemoryRegion 的优先级，如果一个范围两个 MemoryRegion 出现重叠，优先级高的压制优先级低的
  │                                        │
  │                                        │   ┌───────────────────► 表示这个空间的类型，一般划分为 io 和 RAM
  │                                        │   │    ┌──────────────► 这是一个 MemoryRegion，这是 Address Space 中最核心的概念，MemoryRegion 用于描述一个范围内的映射规则
@@ -60,7 +59,7 @@ address-space: memory                     │   │    │
         00000000febf7000-00000000febf700f (prio 0, i/o): msix-pba                                                               │
       00000000febf8000-00000000febf8fff (prio 1, i/o): vga.mmio                                                                 │
         00000000febf8000-00000000febf817f (prio 0, i/o): edid                                                                   └── ram-below-4g 是 pc.ram 的一个 alias
-        00000000febf8400-00000000febf841f (prio 0, i/o): vga ioports remapped                                                                                                                                       
+        00000000febf8400-00000000febf841f (prio 0, i/o): vga ioports remapped
         00000000febf8500-00000000febf8515 (prio 0, i/o): bochs dispi interface                                                  ┌── ram-above-4g 也是 pc.ram 的一个 alias, 两者都被放到 system 这个 MemoryRegion 上
         00000000febf8600-00000000febf8607 (prio 0, i/o): qemu extended regs                                                     │
       00000000febf9000-00000000febf9fff (prio 1, i/o): virtio-9p-pci-msix                                                       │
@@ -150,7 +149,7 @@ MemoryRegion 用于描述一个范围内的映射规则。
 
 例如下面的范围中描述的是，e1000-mmio 空间，对于该范围的读写最后不是在读写内存，而是在在操作设备，这会触发设备的模拟工作。
 ```txt
-      00000000febc0000-00000000febdffff (prio 1, i/o): e1000-mmio                                                              
+      00000000febc0000-00000000febdffff (prio 1, i/o): e1000-mmio
 ```
 而这个范围访问 ram 了。
 ```txt
@@ -345,13 +344,6 @@ e1000.rom: offset=1808c0000 size=40000
 /rom@etc/acpi/rsdp: offset=180b40000 size=1000
 ```
 任何一个 page 的 ram_addr = offset in RAM + `RAMBlock::offset`
-
-### SMC
-自修改代码指的是运行过程中修改执行的代码。
-
-检查方法是存在 guest code 的 page 的 CPUTLBEntry 中插入 TLB_NOTDIRTY 的 flag, 这个导致 TLB 比较失败，然后会 invalid 掉这个 guest page 关联的所有的 tb
-
-通过 PageDesc 可以从 ram addr 找到其关联的所有的 tb
 
 [^1]: [ASPLOS IOMMU tutorial](http://pages.cs.wisc.edu/~basu/isca_iommu_tutorial/IOMMU_TUTORIAL_ASPLOS_2016.pdf)
 

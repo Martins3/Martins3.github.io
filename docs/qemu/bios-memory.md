@@ -97,7 +97,7 @@ PAM 的作用可以将对于 bios 空间读写转发到 PCI 或者 RAM 中，因
 
 #### QEMU 侧如何处理 PAM
 在 i440fx_init 初始化的时候, 来初始化所有 `PAMMemoryRegion`, 一共 13 个
-- 第一个映射: System BIOS Area Memory Segments, 映射 0x10000 到 0xfffff
+- 第一个映射: System BIOS Area Memory Segments, 也即是映射 0xf0000 到 0xfffff
 - 后面的 12 个映射 0xc0000 ~ 0xeffff, 每一个映射 0x4000 的大小
 
 ```c
@@ -263,8 +263,8 @@ static inline MemTxAttrs cpu_get_mem_attrs(CPUX86State *env)
 而 HF_SMM_MASK 在 `env->hflags` 的插入和删除位置 smm_helper 中间。
 
 而 cpu_get_mem_attrs 的位置在各个 helper 以及 handle_mmu_fault 中。
-这些组装的出来的 MemTxAttrs 的使用位置是: cpu_asidx_from_attrs
-这样，使用相同的地址访问，如果是 SMM 的地址空间，最后就会访问到 ram 上而不是 vga-lowmem。
+这些组装的出来的 MemTxAttrs 的最终使用位置是: cpu_asidx_from_attrs。
+如此，如果是 SMM 的地址空间, 使用相同的地址访问，最后就会访问到 ram 上而不是 vga-lowmem。
 
 [^1]: https://en.wikipedia.org/wiki/System_Management_Mode
 
