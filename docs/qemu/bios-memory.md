@@ -1,7 +1,6 @@
 # QEMU 中的 seabios : 地址空间
 <!-- vim-markdown-toc GitLab -->
 
-- [seabios 执行的第一行代码](#seabios-执行的第一行代码)
 - [pc.bios](#pcbios)
 - [PAM](#pam)
     - [QEMU 侧如何处理 PAM](#qemu-侧如何处理-pam)
@@ -13,63 +12,6 @@
 <!-- vim-markdown-toc -->
 
 seabios 的基础知识可以参考李强的《QEMU/KVM 源码解析与应用》, 下面来分析一下和地址空间相关的几个小问题。
-
-## seabios 执行的第一行代码
-
-> On emulators, this phase starts when the CPU starts execution in 16bit
-> mode at 0xFFFF0000:FFF0. The emulators map the SeaBIOS binary to this
-> address, and SeaBIOS arranges for romlayout.S:reset_vector() to be
-> present there. This code calls romlayout.S:entry_post() which then
-> calls post.c:handle_post() in 32bit mode.
-
-以上是 seabios 的文档，意思很简单: reset_vector => entry_post => handle_post
-
-从 seabios 的源码中也可以验证:
-```asm
-        // Reset stack, transition to 32bit mode, and call a C function.
-        .macro ENTRY_INTO32 cfunc
-        xorw %dx, %dx
-        movw %dx, %ss
-        movl $ BUILD_STACK_ADDR , %esp
-        movl $ \cfunc , %edx
-        jmp transition32
-        .endm
-```
-
-```asm
-entry_post:
-        cmpl $0, %cs:HaveRunPost                // Check for resume/reboot
-        jnz entry_resume
-        ENTRY_INTO32 _cfunc32flat_handle_post   // Normal entry point
-
-        ORG 0xe2c3
-```
-
-```asm
-reset_vector:
-        ljmpw $SEG_BIOS, $entry_post
-
-        // 0xfff5 - BiosDate in misc.c
-
-        // 0xfffe - BiosModelId in misc.c
-
-        // 0xffff - BiosChecksum in misc.c
-
-        .end
-```
-从上面的代码还可以知道，stack 的顶是 0x7000
-```c
-#define BUILD_STACK_ADDR          0x7000
-```
-
-
-在 seabios 添加一个调试语句
-```c
-dprintf(1, "%p\n", VSYMBOL(entry_post));
-```
-可以很容易得到 entry_post 的地址为: `0x000fe05b`
-
-也就是 seabios 执行的第一行代码就是从 0xfffffff0 跳转到 0x000fe05b 上
 
 ## pc.bios
 QEMU 支持很多种类的 bios, seabios 只是其中的一种, bios 加载地址空间中，该 MemoryRegion 的名称为 pc.bios

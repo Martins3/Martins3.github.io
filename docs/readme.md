@@ -20,10 +20,11 @@
 - QEMU 源码分析
   - [QEMU 初始化过程分析](./qemu/init.md)
   - [QEMU 的 memory model 和 softmmu 设计概览](./qemu/memory.md)
-  - [QEMU 的 memory model 和 softmmu 高级话题分析](./qemu/memory-advance.md)
+  - [**WIP** QEMU 的 memory model 和 softmmu 高级话题分析](./qemu/memory-advance.md)
   - [QEMU 中的 map 和 set](./qemu/map.md)
   - [QEMU softmmu 访存函数集整理](./qemu/softmmu-functions.md)
   - [QEMU 中的 seabios : 地址空间](./qemu/bios-memory.md)
+  - [**WIP** QEMU 执行的 guest 第一行代码](./qemu/bios-init.md)
   - [QEMU 中的线程和事件循环](./qemu/threads.md)
   - [QEMU 中的锁](./qemu/lock.md)
   - [QEMU 如何模拟中断](./qemu/interrupt.md)
