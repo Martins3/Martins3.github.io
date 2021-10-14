@@ -168,7 +168,7 @@ https://github.com/Martins3/BMBT/issues/144
   - huxueshi:flatviews_reset KVM-SMRAM
 
 ## AddressSpaceDispatch
-
+- [ ] 应该将这些经典执行流程保护起来
 
 #### AddressSpaceDispatch dispatch 的过程 : 百川归海
 进行 pio / mmio 最后总是到达 : memory_region_dispatch_read
