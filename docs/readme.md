@@ -25,6 +25,7 @@
   - [QEMU softmmu 访存函数集整理](./qemu/softmmu-functions.md)
   - [QEMU 中的 seabios : 地址空间](./qemu/bios-memory.md)
   - [**WIP** QEMU 执行的 guest 第一行代码](./qemu/bios-init.md)
+  - [**WIP** QEMU 和 seabios 的数据传输协议: fw_cfg](./qemu/bios-fw_cfg.md)
   - [QEMU 中的线程和事件循环](./qemu/threads.md)
   - [QEMU 中的锁](./qemu/lock.md)
   - [QEMU 如何模拟中断](./qemu/interrupt.md)
