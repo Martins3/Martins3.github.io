@@ -1,6 +1,6 @@
 # QEMU 中的 seabios : fw_cfg
 
-## why QEMU needs fw_cfg
+## Why QEMU needs fw_cfg
 seabios 可以在裸机上，也可以在 QEMU 中运行，在 QEMU 中运行时，通过 fw_cfg 从 host 获取 guest 的各种配置或者 rom 会相当的方便。
 
 比如在 ./hw/i386/fw_cfg.c 中 fw_cfg_arch_create 中，使用 fw_cfg 可以容易将 guest 的主板的 CPU 的数量通知给 guest。
@@ -8,7 +8,7 @@ seabios 可以在裸机上，也可以在 QEMU 中运行，在 QEMU 中运行时
     fw_cfg_add_i16(fw_cfg, FW_CFG_MAX_CPUS, apic_id_limit);
 ```
 
-## what does fw_cfg transfer
+## What does fw_cfg transfer
 
 ## Implement details
 
@@ -104,7 +104,7 @@ file 类型和其他的类型有一些区别，并不是因为数据保存在文
 也不是因为数据大小的原因。file 的类型主要是为了**灵活性**。
 
 实际上，fw_cfg 需要让 host 和 guest 传输多种数据，这些数据都是保存在数组 FWCfgState::entries 中的，
-对于一些常用，存在一些公共的约定:
+对于一些常用/有名的，host 和 guest 存在公共的约定索引
 
 架构无关的在: include/standard-headers/linux/qemu_fw_cfg.h
 ```c
@@ -114,6 +114,7 @@ file 类型和其他的类型有一些区别，并不是因为数据保存在文
 #define FW_CFG_UUID		0x02
 #define FW_CFG_RAM_SIZE		0x03
 #define FW_CFG_NOGRAPHIC	0x04
+// ...
 ```
 
 和架构相关的内容放到了 ./hw/i386/fw_cfg.h
@@ -124,18 +125,20 @@ file 类型和其他的类型有一些区别，并不是因为数据保存在文
 #define FW_CFG_E820_TABLE       (FW_CFG_ARCH_LOCAL + 3)
 #define FW_CFG_HPET             (FW_CFG_ARCH_LOCAL + 4)
 ```
+
 如果想要添加一个新的内容，比如 smbios 的配置，就需要修改所有的 host 和 guest 的代码，
 于是设计出来了 file
 
 因为很多 fw_cfg 使用约定好的 index，但是新添加的，有一些采用名称来区分
 
 文件的处理方法:
-- 常规内容都存贮在 FWCfgState::entries
-- FWCfgState::files 指向一个 FWCfgFiles 是为了记录文件的特有信息
-- FW_CFG_FILE_FIRST 开始, FWCfgState::entries 持有 FWCfgState::files 的 index
-- 通过 FW_CFG_FILE_DIR 这个 entry 读取 FWCfgFiles，从而知道一个文件的索引是多少
+- 文件的常规内容都存贮在 FWCfgState::entries
+- FWCfgState::files 指向一个 FWCfgFiles 是为了记录文件的属性
+- FW_CFG_FILE_FIRST 开始, FWCfgState::entries[index - FW_CFG_FILE_FIRST] 持有 FWCfgState::files[index] 的内容是对应的，前者持有 file 的内容，后者持有 file 的属性
+- FWCfgState::entries[FW_CFG_FILE_DIR] 保存的是 FWCfgFiles 的内容，也就是文件的属性，seabios 可以给出一个文件名可以知道其在 FWCfgState::entries
 
-- [ ] 所以 readfile 是靠文件索引的吗?
+使用图形表示就是:
+![](../img/fw_cfg.svg)
 
 seabios 中的 qemu_cfg_init 处理:
 ```c
