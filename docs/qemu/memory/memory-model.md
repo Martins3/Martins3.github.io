@@ -113,11 +113,14 @@ AddressSpace 关联一个 MemoryRegion, 通过 MemoryRegion 可以找到 Flatvie
 - 通过  `static GHashTable *flat_views;` 可以找到通过 mr 找到 flatview
 
 ## RAMBlock
-- qemu_ram_alloc : MemoryRegion::ram_block 总是使用这个初始化
-  - ram_block_add
-    - phys_mem_alloc (qemu_anon_ram_alloc)
-      - qemu_ram_mmap
-        - mmap : 可见，RAMBlock 就是分配一块空间
+- memory_region_init_ram : 创建出来 RAM, 但是 memory_region_set_readonly 不就让这里没有作用了
+    - memory_region_init_ram_nomigrate
+      - memory_region_init_ram_flags_nomigrate
+        - qemu_ram_alloc
+          - ram_block_add
+            - phys_mem_alloc (qemu_anon_ram_alloc)
+              - qemu_ram_mmap
+                - mmap : 可见 RAMBlock 在初始化的时候会在 host virtual address space 中 map 出来一个空间
 
 RAMBlock 结构体分析:
 1. RAMBlock::host : host 的虚拟地址空间，存储 mmap 的返回值
@@ -141,9 +144,6 @@ huxueshi:ram_block_add virtio-vga.rom: offset=180880000 size=10000
 huxueshi:ram_block_add /rom@etc/table-loader: offset=180b00000 size=10000
 huxueshi:ram_block_add /rom@etc/acpi/rsdp: offset=180b40000 size=1000
 ```
-
-这里分析了，实际上，只有一个东西是 RAM
-https://github.com/Martins3/BMBT/issues/144
 
 ## render_memory_region : 将 memory region 转化为 FlatRange
 - memory_region_transaction_commit

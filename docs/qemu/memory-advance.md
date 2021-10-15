@@ -85,6 +85,35 @@ static MemoryRegionSection *address_space_lookup_region(AddressSpaceDispatch *d,
 
 
 # cross page check
+```c
+static inline bool use_goto_tb(DisasContext *s, target_ulong pc)
+{
+#ifndef CONFIG_USER_ONLY
+    return (pc & TARGET_PAGE_MASK) == (s->base.tb->pc & TARGET_PAGE_MASK) ||
+           (pc & TARGET_PAGE_MASK) == (s->pc_start & TARGET_PAGE_MASK);
+#else
+    return true;
+#endif
+}
+
+static inline void gen_goto_tb(DisasContext *s, int tb_num, target_ulong eip)
+{
+    target_ulong pc = s->cs_base + eip;
+
+    if (use_goto_tb(s, pc))  {
+        /* jump to same page: we can use a direct jump */
+        tcg_gen_goto_tb(tb_num);
+        gen_jmp_im(s, eip);
+        tcg_gen_exit_tb(s->base.tb, tb_num);
+        s->base.is_jmp = DISAS_NORETURN;
+    } else {
+        /* jump to another page */
+        gen_jmp_im(s, eip);
+        gen_jr(s, s->tmp0);
+    }
+}
+```
+
 是 guest physical page 持有 tb 而不是 guest virtual page 持有 tb
 
 执行代码首先持有的是虚拟地址，在 tb_find => tb_lookup__cpu_state 中进行查找，可以保证 tb_jmp_cache 中找到的绝对有效，但是 TLB flush 之后，tb_jmp_cache 也是会被刷新的。

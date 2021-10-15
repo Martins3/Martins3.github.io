@@ -2,6 +2,7 @@
 <!-- vim-markdown-toc GitLab -->
 
 - [pc.bios](#pcbios)
+- [pc.rom](#pcrom)
 - [PAM](#pam)
     - [QEMU 侧如何处理 PAM](#qemu-侧如何处理-pam)
     - [Seabios 侧如何处理 PAM](#seabios-侧如何处理-pam)
@@ -31,6 +32,23 @@ seabios 的 src/fw/shadow.c 中存在有一个注释:
 ```
 也就是一方面，pc.bios 被映射到 4G 的顶端，一方面其后 0x20000 的部分被放到了 0xe0000 的位置
 这就是 seabios 启动的时候，可以直接跳转到这里。
+
+## pc.rom
+在 pc_memory_init 中初始化:
+```c
+    option_rom_mr = g_malloc(sizeof(*option_rom_mr));
+    memory_region_init_ram(option_rom_mr, NULL, "pc.rom", PC_ROM_SIZE,
+                           &error_fatal);
+    if (pcmc->pci_enabled) {
+        memory_region_set_readonly(option_rom_mr, true);
+    }
+    memory_region_add_subregion_overlap(rom_memory,
+                                        PC_ROM_MIN_VGA,
+                                        option_rom_mr,
+                                        1);
+```
+
+实际上，当 pci enable 的时候，pc.rom 被设置为 readonly 了, 将 option_rom_mr 相关的代码都删除，还是可以正常启动
 
 ## PAM
 PAM 的作用可以将对于 bios 空间读写转发到 PCI 或者 RAM 中，因为读写 ROM 比较慢, 进一步可以参考:

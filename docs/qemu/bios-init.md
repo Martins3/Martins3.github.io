@@ -56,72 +56,35 @@ dprintf(1, "%p\n", VSYMBOL(entry_post));
 
 也就是 seabios 执行的第一行代码就是从 0xfffffff0 跳转到 0x000fe05b 上
 
+## QEMU 一侧
+主要发生在 loader.c 中
+
+### 构建 pc.bios 地址空间
+在 x86_bios_rom_init 中初始化，这个没有什么好分析的:
+
+```c
+void x86_bios_rom_init(MemoryRegion *rom_memory, bool isapc_ram_fw)
+{
+    bios = g_malloc(sizeof(*bios));
+    memory_region_init_ram(bios, NULL, "pc.bios", bios_size, &error_fatal);
+    if (!isapc_ram_fw) {
+        memory_region_set_readonly(bios, true);
+    }
+    ret = rom_add_file_fixed(bios_name, (uint32_t)(-bios_size), -1);
+```
+
+### 关联 Rom image
+创建 MemoryRegion pc.bios 但是如何将 Rom image 关联上去值得分析:
+
+
 ## loader
-
-- [ ] 了解一下 pc.rom 和 isa-bios 的映射规则
-    - [ ] 好像进行了一些有趣的操作，让 bios 映射到两个位置 (map the last 128KB of the BIOS in ISA space)
-
-- [ ] 看来需要理解一下 isa 地址空间, 1M 的地址空间内的各种布局到底是怎么规定的
-- [ ] ROM 到底是不是 readonly 的啊?
-
-- [ ] 为什么需要将 pc.bios 映射到 4G pci 空间的最上方
-
-- [ ] 实际上，只是使用了 seabios 的后 128k 的空间，看看 seabios 的 loader 中内容吧
-
 - isa-bios 是 pc.bios 的后 128k 的部分，而且放到 1M 的后面的空间中
-
-- [ ] add_boot_device_path 一定是组装了什么东西，然后传递给 fw_cfg 的
-  - 现在既不知道如何组装的，也不知道如何传递过去的
 
 总体来说，loader 在处理 elf, ramdisk 和 rom 的事情，但是暂时需要的并不多。
 
-## pc.bios 和 pc.ram 是重叠的
-真的会为了 below 4g / above 4g 从而 mmap 出来空间吗?
-
-在 pc_memory_init 中分别对于将 MachineState::ram 分别映射出来两个 alias : ram_below_4g 和 ram_above_4g 的
-
-下面分析 MachineState::ram 的初始化
-- machine_run_board_init
-  - machine_consume_memdev
-    - host_memory_backend_get_memory : 返回 HostMemoryBackend::mr
-
-而 HostMemoryBackend::mr 是在 ram_backend_memory_alloc 创建的，所以，现在是会重合的
-
-## pc.rom
-在 pc_memory_init 中初始化的:
-```c
-    option_rom_mr = g_malloc(sizeof(*option_rom_mr));
-    memory_region_init_ram(option_rom_mr, NULL, "pc.rom", PC_ROM_SIZE,
-                           &error_fatal);
-    if (pcmc->pci_enabled) {
-        memory_region_set_readonly(option_rom_mr, true);
-    }
-    memory_region_add_subregion_overlap(rom_memory,
-                                        PC_ROM_MIN_VGA,
-                                        option_rom_mr,
-                                        1);
-```
-- memory_region_init_ram : 创建出来 RAM, 但是 memory_region_set_readonly 不就让这里没有作用了
-    - memory_region_init_ram_nomigrate
-      - memory_region_init_ram_flags_nomigrate
-        - qemu_ram_alloc :(./memory/memory-model.md(#RAMBlock)) 分析了进一步如何创建空间的
-
-实际上，当 pci enable 的时候，这个东西并没有啥作用, 将 option_rom_mr 相关的代码都删除，还不是工作的好好的。
-
 ## struct Rom
-总体来说，是一个很简单的结构体, 除了:
-- Rom::fw_dir
-- Rom::fw_file
 
-**分析添加的位置**
-
-只有下面两个选项的时候有用:
 ```c
-int rom_add_vga(const char *file)
-{
-    return rom_add_file(file, "vgaroms", 0, -1, true, NULL, NULL);
-}
-
 int rom_add_option(const char *file, int32_t bootindex)
 {
     return rom_add_file(file, "genroms", 0, bootindex, true, NULL, NULL);
@@ -365,35 +328,8 @@ static QTAILQ_HEAD(, FWLCHSEntry) fw_lchs =
 
 - add_boot_device_lchs : 的调用者存在 scsi 和 virtio-blk 暂时不用管理这个吧
 
-## ref material
-```txt
-address-space: memory
-  0000000000000000-ffffffffffffffff (prio 0, i/o): system
-    0000000000000000-00000000bfffffff (prio 0, ram): alias ram-below-4g @pc.ram 0000000000000000-00000000bfffffff
-    0000000000000000-ffffffffffffffff (prio -1, i/o): pci
-      00000000000a0000-00000000000bffff (prio 1, i/o): vga-lowmem
-      00000000000c0000-00000000000dffff (prio 1, rom): pc.rom
-      00000000000e0000-00000000000fffff (prio 1, rom): alias isa-bios @pc.bios 0000000000020000-000000000003ffff
-      00000000fd000000-00000000fdffffff (prio 1, ram): vga.vram
-      00000000fe000000-00000000fe003fff (prio 1, i/o): virtio-pci
-        00000000fe000000-00000000fe000fff (prio 0, i/o): virtio-pci-common-virtio-9p
-        00000000fe001000-00000000fe001fff (prio 0, i/o): virtio-pci-isr-virtio-9p
-        00000000fe002000-00000000fe002fff (prio 0, i/o): virtio-pci-device-virtio-9p
-        00000000fe003000-00000000fe003fff (prio 0, i/o): virtio-pci-notify-virtio-9p
-      00000000febc0000-00000000febdffff (prio 1, i/o): e1000-mmio
-      00000000febf0000-00000000febf3fff (prio 1, i/o): nvme-bar0
-        00000000febf0000-00000000febf1fff (prio 0, i/o): nvme
-        00000000febf2000-00000000febf240f (prio 0, i/o): msix-table
-        00000000febf3000-00000000febf300f (prio 0, i/o): msix-pba
-      00000000febf4000-00000000febf4fff (prio 1, i/o): vga.mmio
-        00000000febf4000-00000000febf417f (prio 0, i/o): edid
-        00000000febf4400-00000000febf441f (prio 0, i/o): vga ioports remapped
-        00000000febf4500-00000000febf4515 (prio 0, i/o): bochs dispi interface
-        00000000febf4600-00000000febf4607 (prio 0, i/o): qemu extended regs
-      00000000febf5000-00000000febf5fff (prio 1, i/o): virtio-9p-pci-msix
-        00000000febf5000-00000000febf501f (prio 0, i/o): msix-table
-        00000000febf5800-00000000febf5807 (prio 0, i/o): msix-pba
-      00000000fffc0000-00000000ffffffff (prio 0, rom): pc.bios
-```
+## 问题
+- 虽然从代码中可以知道 pc Machine 的 0 ~ 1M 的物理地址空间内的各种布局，但是其规定在哪里，并不知道是来自于哪一个手册?
+- 为什么需要将 pc.bios 映射到 4G pci 空间的最上方，这又是哪里的规定?
 
 [^1]: https://en.wikipedia.org/wiki/Cylinder-head-sector
