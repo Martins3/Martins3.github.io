@@ -2,9 +2,8 @@
 
 <!-- vim-markdown-toc GitLab -->
 
-- [subpage](#subpage)
-    - [SMC](#smc)
-- [SMC](#smc-1)
+  - [MemOp](#memop)
+  - [SMC](#smc)
   - [lock page](#lock-page)
   - [TARGET_HAS_PRECISE_SMC](#target_has_precise_smc)
   - [流程](#流程)
@@ -13,7 +12,7 @@
       - [PageDesc::code_bitmap / PageDesc::code_write_count](#pagedesccode_bitmap-pagedesccode_write_count)
   - [page desc tree](#page-desc-tree)
   - [tb_invalidate_phys_page_fast](#tb_invalidate_phys_page_fast)
-- [非对其访问](#非对其访问)
+  - [unaligned access](#unaligned-access)
 - [如何重新设计 QEMU 中的 memory](#如何重新设计-qemu-中的-memory)
   - [设计](#设计)
   - [需求分析](#需求分析)
@@ -33,68 +32,25 @@
 - [ ] 整理 /home/maritns3/core/vn/docs/qemu/memory/memory-model.md
 - [ ] 整理 /home/maritns3/core/vn/docs/qemu/memory/softmmu.md
 
-# subpage
-之前分析过 flatview_translate 的流程，其作用在于根据 hwaddr 在 AddressSpace 中找到对应的 MemoryRegion
-查询过程是采用类似 page walk 的过程，具体参考函数 phys_page_find
+## MemOp
+convert_to_tcgmemop 上的注释对于
+MemOp 这个 enum 做出来一些解释, 包含了 size / signed / endian / aligned
 
-但是如果一个 MemoryRegion 无法占据整个 TARGET_PAGE_SIZE 的时候，例如各种 port io 对应的 MemoryRegion，是如何通过
-flatview_translate 访问到的?
-
-QEMU 为此设计出来了一个 subpage MemoryRegion:
-
-```txt
-|  subpage MR   |
-|mr1|mr2|mr3|mr4|
-```
-通过 phys_page_find 只是获取了 subpage MemoryRegion，可以通过 addr 在页内偏移获取获取找到真正的 MemoryRegion
+2.  的逻辑看，就是检查一下 MemOp 的 6:4 的 bit 而已
+3. 目前的代码，所有的位置都没有插入过 `MO_ALIGN_x` 的
 
 ```c
-/* Called from RCU critical section */
-static MemoryRegionSection *address_space_lookup_region(AddressSpaceDispatch *d,
-                                                        hwaddr addr,
-                                                        bool resolve_subpage)
-{
-    MemoryRegionSection *section = atomic_read(&d->mru_section);
-    subpage_t *subpage;
+static inline MemOp get_memop(TCGMemOpIdx oi) { return oi >> 4; }
 
-    // 1. 如果 section 没有命中 AddressSpaceDispatch::mru_section
-    if (!section || section == &d->map.sections[PHYS_SECTION_UNASSIGNED] ||
-        !section_covers_addr(section, addr)) {
-        // 2. 那么就老实的查询一次
-        section = phys_page_find(d, addr);
-        atomic_set(&d->mru_section, section);
-    }
-    // 3. 根据参数 resolve_subpage 查询是否查询到下面的 mr 的
-    if (resolve_subpage && section->mr->subpage) {
-        subpage = container_of(section->mr, subpage_t, iomem);
-        section = &d->map.sections[subpage->sub_section[SUBPAGE_IDX(addr)]];
-    }
-    return section;
-}
+static inline unsigned get_mmuidx(TCGMemOpIdx oi) { return oi & 15; }
 ```
 
-这样很多问题都可以被解释了:
-1. iotlb 可以加速 softmmu 处理 mmio 的情况，将这个 CPUIOTLBEntry 直接存储这个 gpa 上的 MemoryRegion，实际上上一个 guest page 上可能存在多个物理页面，那么 IOTLB 是如何处理的?
-    - 在 tlb_set_page_with_attrs 中调用 memory_region_section_get_iotlb 获取的是 subpage MemoryRegion 索引，然后在 io_readx / io_writex 调用 memory_region_dispatch_read  进行访问的时候的参数也是 subpage MemoryRegion
-    - 然后逐步调用到 memory_region_dispatch_read => memory_region_dispatch_read1 => memory_region_read_with_attrs_accessor => subpage_read，然后在 subpage_read 中在进行常规路径的调用
-2. address_space_translate 调用 address_space_translate_internal 参数 is_mmio 总是 true，而 address_space_get_iotlb_entry 调用的时候 is_mmio 总是 false ?
-  - 因为  address_space_get_iotlb_entry 需要向 IOTLB 上填充的是 subpage MemoryRegion
-
-最后说明一下 subpage 的初始化过程:
-- register_subpage
-  - subpage_init : 初始化 subpage MemoryRegion，注册其 MemoryRegionOps 为 subpage_ops
-  - phys_section_add : 向 PhysPageMap::sections 添加上一个 MemoryRegionSection
-  - subpage_register : 让 `subpage->sub_section[SUBPAGE_IDX(addr)]` 索引 `d->map.sections`
-
-### SMC
+## SMC
 自修改代码指的是运行过程中修改执行的代码。
 
 检查方法是存在 guest code 的 page 的 CPUTLBEntry 中插入 TLB_NOTDIRTY 的 flag, 这个导致 TLB 比较失败，然后会 invalid 掉这个 guest page 关联的所有的 tb
 
 通过 PageDesc 可以从 ram addr 找到其关联的所有的 tb
-
-
-# SMC
 
 ## lock page
 ```c
@@ -154,6 +110,7 @@ page_collection 收集一堆 page_entry ，通过一个 page_entry 来索引 Pag
   - page_trylock_add 这个函数写的实际上很糟糕，和其调用者 page_collection_lock 的逻辑强耦合，在 page_collection_lock 中，首先会将 tree 中间的全部 lock 一遍，然后才会开始逐个扫描，所以只要
 
 - 如果 page_collection_lock 了，这一块的代码还可以同时被另一个 CPU 执行吗, 应该是可以，主要的目的是屏蔽那些调用 page_lock 的位置, 其中一个重要的用户就是 tb_link_page 了，tb_link_page 通过调用 page_lock_pair 将 tb 所需要的两个 tb 保护起来。
+
 
 ## TARGET_HAS_PRECISE_SMC
 TARGET_HAS_PRECISE_SMC 的使用位置只有 tb_invalidate_phys_page_range__locked
@@ -335,20 +292,22 @@ static void page_table_config_init(void)
   * tb_invalidate_phys_page_range
     * tb_invalidate_phys_addr : 没有用户, 或者说是一个很奇怪的架构需要这个东西
 
-# 非对其访问
+## unaligned access
+```c
+static inline uint64_t QEMU_ALWAYS_INLINE load_helper(
+    CPUArchState *env, target_ulong addr, TCGMemOpIdx oi, uintptr_t retaddr,
+    MemOp op, bool code_read, FullLoadHelper *full_load) {
 
-- [x] 所以，x86 为什么不害怕这个非对其访问的问题 ?
+  unsigned a_bits = get_alignment_bits(get_memop(oi));
 
-1. 搜索符号，convert_to_tcgmemop 上的注释对于
-MemOp 这个 enum 做出来一些解释, 包含了 size / signed / endian / aligned
-2. get_alignment_bits 的逻辑看，就是检查一下 MemOp 的 6:4 的 bit 而已
-3. 目前的代码，所有的位置都没有插入过 `MO_ALIGN_x` 的
+  /* Handle CPU specific unaligned behaviour */
+  if (addr & ((1 << a_bits) - 1)) {
+    cpu_unaligned_access(env_cpu(env), addr, access_type, mmu_idx, retaddr);
+  }
+```
 
-所以 addr & ((1 << a_bits) - 1) 的检查永远失败啊
-
-
-cpu_unaligned_access : x86 对应的 handler 没有赋值
-但是一些 risc 平台是赋值的，
+如果 guest 是 x86，cpu_unaligned_access 是永远不会被调用的,
+但是一些 risc 平台是赋值的。
 ```c
 void riscv_cpu_do_unaligned_access(CPUState *cs, vaddr addr,
                                    MMUAccessType access_type, int mmu_idx,
@@ -375,16 +334,7 @@ void riscv_cpu_do_unaligned_access(CPUState *cs, vaddr addr,
     riscv_raise_exception(env, cs->exception_index, retaddr);
 }
 ```
-原因在于，X86 的根本没有非对其访问的 exception 啊
-
-```c
-static inline MemOp get_memop(TCGMemOpIdx oi) { return oi >> 4; }
-
-static inline unsigned get_mmuidx(TCGMemOpIdx oi) { return oi & 15; }
-```
-
-- [ ] 如果 x86 本身是非对其访问，但是我们又是不支持非对其，那怎么办 ?
-    - 我猜测是被模拟成为两次访问
+原因在于，X86 的根本没有非对其访问的 exception，但是很多 RISC 平台上是有的。
 
 # 如何重新设计 QEMU 中的 memory
 

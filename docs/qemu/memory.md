@@ -7,6 +7,7 @@
 - [MemoryRegion](#memoryregion)
 - [FlatView](#flatview)
 - [AddressSpaceDispatch](#addressspacedispatch)
+- [subpage](#subpage)
 - [MemoryListener](#memorylistener)
 - [CPUAddressSpace](#cpuaddressspace)
 - [SMM](#smm)
@@ -215,6 +216,60 @@ FlatView 是一个数组形式，为了加快访问，显然需要使用构成�
 这个就是 AddressSpaceDispatch 了。
 
 将 FlatRange 逐个调用 `flatview_add_to_dispatch` 创建出来的。
+
+## subpage
+之前分析过 flatview_translate 的流程，其作用在于根据 hwaddr 在 AddressSpace 中找到对应的 MemoryRegion
+查询过程是采用类似 page walk 的过程，具体参考函数 phys_page_find
+
+但是如果一个 MemoryRegion 无法占据整个 TARGET_PAGE_SIZE 的时候，例如各种 port io 对应的 MemoryRegion，是如何通过
+flatview_translate 访问到的?
+
+QEMU 为此设计出来了一个 subpage MemoryRegion:
+
+```txt
+|  subpage MR   |
+|mr1|mr2|mr3|mr4|
+```
+通过 phys_page_find 只是获取了 subpage MemoryRegion，可以通过 addr 在页内偏移获取获取找到真正的 MemoryRegion
+
+```c
+/* Called from RCU critical section */
+static MemoryRegionSection *address_space_lookup_region(AddressSpaceDispatch *d,
+                                                        hwaddr addr,
+                                                        bool resolve_subpage)
+{
+    MemoryRegionSection *section = atomic_read(&d->mru_section);
+    subpage_t *subpage;
+
+    // 1. 如果 section 没有命中 AddressSpaceDispatch::mru_section
+    if (!section || section == &d->map.sections[PHYS_SECTION_UNASSIGNED] ||
+        !section_covers_addr(section, addr)) {
+        // 2. 那么就老实的查询一次
+        section = phys_page_find(d, addr);
+        atomic_set(&d->mru_section, section);
+    }
+    // 3. 根据参数 resolve_subpage 查询是否查询到下面的 mr 的
+    if (resolve_subpage && section->mr->subpage) {
+        subpage = container_of(section->mr, subpage_t, iomem);
+        section = &d->map.sections[subpage->sub_section[SUBPAGE_IDX(addr)]];
+    }
+    return section;
+}
+```
+
+这样很多问题都可以被解释了:
+1. iotlb 可以加速 softmmu 处理 mmio 的情况，将这个 CPUIOTLBEntry 直接存储这个 gpa 上的 MemoryRegion，实际上上一个 guest page 上可能存在多个物理页面，那么 IOTLB 是如何处理的?
+    - 在 tlb_set_page_with_attrs 中调用 memory_region_section_get_iotlb 获取的是 subpage MemoryRegion 索引，然后在 io_readx / io_writex 调用 memory_region_dispatch_read  进行访问的时候的参数也是 subpage MemoryRegion
+    - 然后逐步调用到 memory_region_dispatch_read => memory_region_dispatch_read1 => memory_region_read_with_attrs_accessor => subpage_read，然后在 subpage_read 中在进行常规路径的调用
+2. address_space_translate 调用 address_space_translate_internal 参数 is_mmio 总是 true，而 address_space_get_iotlb_entry 调用的时候 is_mmio 总是 false ?
+  - 因为  address_space_get_iotlb_entry 需要向 IOTLB 上填充的是 subpage MemoryRegion
+
+最后说明一下 subpage 的初始化过程:
+- register_subpage
+  - subpage_init : 初始化 subpage MemoryRegion，注册其 MemoryRegionOps 为 subpage_ops
+  - phys_section_add : 向 PhysPageMap::sections 添加上一个 MemoryRegionSection
+  - subpage_register : 让 `subpage->sub_section[SUBPAGE_IDX(addr)]` 索引 `d->map.sections`
+
 
 ## MemoryListener
 当修改地址空间的映射规则的时候，有时候需要执行一下 hook 函数，最典型的就是 kvm 添加了一个 ram 的时候，这个时候是需要通知内核的 kvm 模块的，
