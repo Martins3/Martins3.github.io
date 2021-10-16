@@ -1,28 +1,21 @@
-# QEMU 的 memory model 和 softmmu 设计概览
+# QEMU 的 memory model
 
 <!-- vim-markdown-toc GitLab -->
 
-- [memory model](#memory-model)
-  - [Overview](#overview)
-  - [AddressSpace](#addressspace)
-  - [MemoryRegion](#memoryregion)
-  - [FlatView](#flatview)
-  - [AddressSpaceDispatch](#addressspacedispatch)
-  - [MemoryListener](#memorylistener)
-  - [CPUAddressSpace](#cpuaddressspace)
-  - [SMM](#smm)
-  - [IOMMU](#iommu)
-  - [QA](#qa)
-- [Softmmu](#softmmu)
-  - [Overview](#overview-1)
-  - [soft TLB](#soft-tlb)
-  - [ram addr](#ram-addr)
+- [Overview](#overview)
+- [AddressSpace](#addressspace)
+- [MemoryRegion](#memoryregion)
+- [FlatView](#flatview)
+- [AddressSpaceDispatch](#addressspacedispatch)
+- [MemoryListener](#memorylistener)
+- [CPUAddressSpace](#cpuaddressspace)
+- [SMM](#smm)
+- [IOMMU](#iommu)
+- [QA](#qa)
 
 <!-- vim-markdown-toc -->
 
-## memory model
-
-### Overview
+## Overview
 原图来自于 kernelgo.org, 这里进行一些小小的修改, 在浏览器中打开新的标签可以看大图。
 ![](../img/qemu-address-space.svg)
 
@@ -109,7 +102,7 @@ address-space: memory                     │   │    │
 #16 0x00007ffff61b4293 in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
 */
 ```
-### AddressSpace
+## AddressSpace
 AddressSpace 用于描述整个地址空间的映射关系, 不同的地址空间的映射关系不同。guest 写相同的地址，在 io 的空间和 memory 空间的效果不同的。
 在 kvm 模式下，主要是两个 AddressSpace，一个是 `address_space_memory` 另一个是 `address_space_io`, 定义在 `softmmu/physmem.c` 中间。
 
@@ -144,7 +137,7 @@ AddressSpace address_space_io;
 AddressSpace address_space_memory;
 ```
 
-### MemoryRegion
+## MemoryRegion
 MemoryRegion 用于描述一个范围内的映射规则。
 
 例如下面的范围中描述的是，e1000-mmio 空间，对于该范围的读写最后不是在读写内存，而是在在操作设备，这会触发设备的模拟工作。
@@ -163,7 +156,7 @@ MemoryRegion 用于描述一个范围内的映射规则。
 - 使用 alias 可以将一个 memory region 的一部分放到另一个 memory region 上，就 ram-below-4g 和 ram-above-4g 的例子而言，就是将创建 ram-below-4g 是 pc.ram 的一部分，然后放到 MemoryRegion `system` 上。
     - 如果不采用这种方法，而是创建两个分裂的 pc.ram, 那么就要 mmap 两次，之后的种种操作也都需要进行两次。
 
-### FlatView
+## FlatView
 给出一个地址，显然需要尽快知道该地址映射到什么位置, 但是
 MemoryRegion 存在 overlap，alias 的，获取这个地址上的真正的 memory region 需要进行计算，
 不可能每次访存都将 memory region 的关系计算一次，而且要保存下来。这个保存下来的结果就是 FlatView 了。
@@ -217,19 +210,19 @@ FlatView #0
   0000000100000000-00000001bfffffff (prio 0, ram): pc.ram @00000000c0000000
 ```
 
-### AddressSpaceDispatch
+## AddressSpaceDispatch
 FlatView 是一个数组形式，为了加快访问，显然需要使用构成一个红黑树之类的，可以在 log(n) 的时间内访问的, QEMU 实现的
 这个就是 AddressSpaceDispatch 了。
 
 将 FlatRange 逐个调用 `flatview_add_to_dispatch` 创建出来的。
 
-### MemoryListener
+## MemoryListener
 当修改地址空间的映射规则的时候，有时候需要执行一下 hook 函数，最典型的就是 kvm 添加了一个 ram 的时候，这个时候是需要通知内核的 kvm 模块的，
 而 tcg 的地址空间是纯粹软件模拟，就无需注册这个 hook
 
 MemoryListener 的还有一个主要功能是 dirty memory 的记录, kvm 依赖内核模块，所以总是需要执行一下对应的通知内核操作。
 
-### CPUAddressSpace
+## CPUAddressSpace
 CPUAddressSpace 并不是因为 tcg CPU 访存存在新的映射，因为
 tcg 因为使用 softmmu 的原因，cpu 的访问 ram 也是走软件的，
 
@@ -254,7 +247,7 @@ CPUAddressSpace 的使用主要在 address_space_translate_for_iotlb 和 iotlb_t
 
 每一个 CPU 创建一个 CPUAddressSpace ，而不是公用一个 CPUAddressSpace, 这是因为在 tcg_commit 中，通过 CPUAddressSpace 找到对应的 cpu 然后进行 TLBFlush
 
-### SMM
+## SMM
 tcg 处理 AddressSpace 最大的不同在于为 SMM 创建一个新的地址空间。
 
 在 do_smm_enter 中，会
@@ -273,7 +266,7 @@ static inline MemTxAttrs cpu_get_mem_attrs(CPUX86State *env)
 
 最后在 tlb_set_page_with_attrs 中选择不同的地址空间的。
 
-### IOMMU
+## IOMMU
 IOMMU 的学习可以参考 ASPLOS 提供的 ppt[^1], 简单来说，以前设备是可以直接访问物理内存，增加了 IOMMU 之后，设备访问物理内存类似 CPU 也是需要经过一个虚实地址映射。
 所以，每一个 PCI 设备都会创建对应的 AddressSpace
 
@@ -284,66 +277,9 @@ address-space: nvme
     0000000000000000-ffffffffffffffff (prio 0, i/o): alias bus master @system 0000000000000000-ffffffffffffffff
 ```
 
-### QA
+## QA
 - 为什么 ram 不是一整块，而是拆分出来了 ram-below-4g 和 ram-above-4g 两个部分?
     - 因为中间需要留出 mmio 空洞
-
-## Softmmu
-
-### Overview
-softmmu 只有 tcg 才需要，实现基本思路是:
-- 所有的访存指令前使用软件进行地址翻译，如果命中，那么获取 GPA 进行访存
-- 如果不命中，慢路径，也就是 store_helper
-
-### soft TLB
-TLB 的大致结构如下, 对此需要解释一些问题:
-![](./img/tlb.svg)
-
-1. 快速路径访问的是 CPUTLBEntry 的
-2. 而慢速路径访问 victim TLB 和 CPUIOTLBEntry
-3. victim TLB 的大小是固定的，而正常的 TLB 的大小是动态调整的
-4. CPUTLBEntry 的说明:
-    - addend : GVA + addend 等于 HVA
-    - 分别创建出来三个 addr_read / addr_write / addr_code 是为了快速比较，两者相等就是命中，不相等就是不命中，如果向操作系统中的 page table 将 page entry 插入 flag 描述权限，这个比较就要使用更多的指令了(移位/掩码之后比较)
-5. CPUIOTLBEntry 的说明:
-  - 如果不是落入 RAM : TARGET_PAGE_BITS 内可以放 AddressSpaceDispatch::PhysPageMap::MemoryRegionSection 数组中的偏移, 之外的位置放 MemoryRegion 内偏移。通过这个可以迅速获取 MemoryRegionSection 进而获取 MemoryRegion。
-  - 如果是落入 RAM , 可以得到 [ram addr](#ram-addr)
-
-### ram addr
-构建 ram addr 的目的 dirty page 的记录，所有的 page 的 dirty 都是记录在 `RAMList::DirtyMemoryBlocks::blocks` 中
-给出一个 ram 中的一个 page，需要找到在 blocks 数组中的下标，于是发明了 ram addr
-```c
-typedef struct {
-    struct rcu_head rcu;
-    unsigned long *blocks[];
-} DirtyMemoryBlocks;
-
-typedef struct RAMList {
-    QemuMutex mutex;
-    RAMBlock *mru_block;
-    /* RCU-enabled, writes protected by the ramlist lock. */
-    QLIST_HEAD(, RAMBlock) blocks;
-    DirtyMemoryBlocks *dirty_memory[DIRTY_MEMORY_NUM];
-    uint32_t version;
-    QLIST_HEAD(, RAMBlockNotifier) ramblock_notifiers;
-} RAMList;
-```
-QEMU 使用 RAMBlock 来描述 ram，MemoryRegion 的类型是 ram，那么就会关联一个 RAMBlock
-
-将所有的 RAMBlock 连续的连到一起，形成 RAMList ，一个 RAMBlock 在其中偏移量记录在 `RAMBlock::offset`, 显然，第一个 offset 为 0
-```c
-/*
-pc.ram: offset=0 size=180000000
-pc.bios: offset=180000000 size=40000
-pc.rom: offset=180040000 size=20000
-vga.vram: offset=180080000 size=800000
-/rom@etc/acpi/tables: offset=180900000 size=200000
-virtio-vga.rom: offset=180880000 size=10000
-e1000.rom: offset=1808c0000 size=40000
-/rom@etc/table-loader: offset=180b00000 size=10000
-/rom@etc/acpi/rsdp: offset=180b40000 size=1000
-```
-任何一个 page 的 ram_addr = offset in RAM + `RAMBlock::offset`
 
 [^1]: [ASPLOS IOMMU tutorial](http://pages.cs.wisc.edu/~basu/isca_iommu_tutorial/IOMMU_TUTORIAL_ASPLOS_2016.pdf)
 

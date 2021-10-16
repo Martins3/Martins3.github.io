@@ -2,6 +2,9 @@
 <!-- vim-markdown-toc GitLab -->
 
 - [pc.bios](#pcbios)
+  - [pc.bios is mapped to two location](#pcbios-is-mapped-to-two-location)
+  - [map pc.bios to guest](#map-pcbios-to-guest)
+  - [first instructions executed in seabios](#first-instructions-executed-in-seabios)
 - [pc.rom](#pcrom)
 - [PAM](#pam)
     - [QEMU 侧如何处理 PAM](#qemu-侧如何处理-pam)
@@ -9,6 +12,7 @@
 - [SMM](#smm)
     - [SMM 地址空间的构建](#smm-地址空间的构建)
     - [SMM 的使用](#smm-的使用)
+- [问题](#问题)
 
 <!-- vim-markdown-toc -->
 
@@ -16,6 +20,8 @@ seabios 的基础知识可以参考李强的《QEMU/KVM 源码解析与应用》
 
 ## pc.bios
 QEMU 支持很多种类的 bios, seabios 只是其中的一种, bios 加载地址空间中，该 MemoryRegion 的名称为 pc.bios
+
+### pc.bios is mapped to two location
 
 seabios 的 src/fw/shadow.c 中存在有一个注释:
 
@@ -32,6 +38,82 @@ seabios 的 src/fw/shadow.c 中存在有一个注释:
 ```
 也就是一方面，pc.bios 被映射到 4G 的顶端，一方面其后 0x20000 的部分被放到了 0xe0000 的位置
 这就是 seabios 启动的时候，可以直接跳转到这里。
+
+### map pc.bios to guest
+在 x86_bios_rom_init 中会调用 rom_add_file_fixed 设置 bios 的内容在 4G - 256k 的地址上
+同时创建了 MemoryRegion pc.bios，但是两者并没有没有关联起来。实际上等待两者关联起来需要等到整个 QEMU 初始化结束之后
+调用 rom_reset 的时候
+
+```c
+  memory_region_init_ram(bios, NULL, "pc.bios", bios_size, &error_fatal);
+
+  rom_add_file_fixed(bios_name, (uint32_t)(-bios_size), -1)
+```
+
+其实真正将两者关联起来的位置在 rom_reset:
+
+- rom_reset
+  - address_space_write_rom
+    - address_space_write_rom_internal
+      - address_space_translate : 通过 4G - 256k 地址查询到 pc.bios 这个 MemoryRegion，然后将 Rom::data 的数据拷贝到 MemoryRegion::RamBlock::host
+      - memcpy
+
+### first instructions executed in seabios
+> On emulators, this phase starts when the CPU starts execution in 16bit
+> mode at 0xFFFF0000:FFF0. The emulators map the SeaBIOS binary to this
+> address, and SeaBIOS arranges for romlayout.S:reset_vector() to be
+> present there. This code calls romlayout.S:entry_post() which then
+> calls post.c:handle_post() in 32bit mode.
+
+以上是 seabios 的文档，意思很简单: reset_vector => entry_post => handle_post
+
+从 seabios 的源码中也可以验证:
+```asm
+        // Reset stack, transition to 32bit mode, and call a C function.
+        .macro ENTRY_INTO32 cfunc
+        xorw %dx, %dx
+        movw %dx, %ss
+        movl $ BUILD_STACK_ADDR , %esp
+        movl $ \cfunc , %edx
+        jmp transition32
+        .endm
+```
+
+```asm
+entry_post:
+        cmpl $0, %cs:HaveRunPost                // Check for resume/reboot
+        jnz entry_resume
+        ENTRY_INTO32 _cfunc32flat_handle_post   // Normal entry point
+
+        ORG 0xe2c3
+```
+
+```asm
+reset_vector:
+        ljmpw $SEG_BIOS, $entry_post
+
+        // 0xfff5 - BiosDate in misc.c
+
+        // 0xfffe - BiosModelId in misc.c
+
+        // 0xffff - BiosChecksum in misc.c
+
+        .end
+```
+从上面的代码还可以知道，stack 的顶是 0x7000
+```c
+#define BUILD_STACK_ADDR          0x7000
+```
+
+
+在 seabios 添加一个调试语句
+```c
+dprintf(1, "%p\n", VSYMBOL(entry_post));
+```
+可以很容易得到 entry_post 的地址为: `0x000fe05b`
+
+也就是 seabios 执行的第一行代码就是从 0xfffffff0 跳转到 0x000fe05b 上
+
 
 ## pc.rom
 在 pc_memory_init 中初始化:
@@ -226,8 +308,12 @@ static inline MemTxAttrs cpu_get_mem_attrs(CPUX86State *env)
 这些组装的出来的 MemTxAttrs 的最终使用位置是: cpu_asidx_from_attrs。
 如此，如果是 SMM 的地址空间, 使用相同的地址访问，最后就会访问到 ram 上而不是 vga-lowmem。
 
-[^1]: https://en.wikipedia.org/wiki/System_Management_Mode
+## 问题
+- 虽然从代码中可以知道 pc Machine 的 0 ~ 1M 的物理地址空间内的各种布局，但是其规定在哪里，并不知道是来自于哪一个手册?
+- 为什么需要将 pc.bios 映射到 4G pci 空间的最上方，这又是哪里的规定?
 
 <script src="https://utteranc.es/client.js" repo="Martins3/Martins3.github.io" issue-term="url" theme="github-light" crossorigin="anonymous" async> </script>
 
 本站所有文章转发 **CSDN** 将按侵权追究法律责任，其它情况随意。
+
+[^1]: https://en.wikipedia.org/wiki/System_Management_Mode

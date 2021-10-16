@@ -2,7 +2,6 @@
 
 <!-- vim-markdown-toc GitLab -->
 
-- [问题](#问题)
 - [Why QEMU needs fw_cfg](#why-qemu-needs-fw_cfg)
 - [Implement details](#implement-details)
   - [transfer method](#transfer-method)
@@ -10,7 +9,6 @@
     - [DMA transfer](#dma-transfer)
     - [file](#file)
   - [ROM](#rom)
-    - [pc.bios](#pcbios)
     - [ROM migration](#rom-migration)
   - [modify](#modify)
   - [FWCfgEntry callback](#fwcfgentry-callback)
@@ -20,19 +18,6 @@
   - [linuxboot_dma.bin](#linuxboot_dmabin)
 
 <!-- vim-markdown-toc -->
-
-## 问题
-
-- [ ] 很烦，为什么需要 reset 的时候进行 fw_cfg_select
-```c
-static void fw_cfg_reset(FWCfgState *s) {
-  /* we never register a read callback for FW_CFG_SIGNATURE */
-  fw_cfg_select(s, FW_CFG_SIGNATURE);
-}
-```
-
-- FWCfgEntry::select_cb 仅仅被注册上 acpi_build_update
-
 
 ## Why QEMU needs fw_cfg
 seabios 可以在裸机上，也可以在 QEMU 中运行，在 QEMU 中运行时，通过 fw_cfg 从 host 获取 guest 的各种配置或者 rom 会相当的方便。
@@ -272,7 +257,7 @@ bios-geometry
 QEMU 让 guest 访问 rom 大致可以如此划分:
 
 - rom_insert
-  - **映射 MemoryRegion 到 guest 地址空间**
+  - **映射 MemoryRegion 到 guest 地址空间** : 这和 fw_cfg 无关
     - /home/maritns3/core/seabios/out/bios.bin
   - **guest 通过 fw_cfg 读取**
     - **未关联 MemoryRegion**
@@ -289,26 +274,8 @@ QEMU 让 guest 访问 rom 大致可以如此划分:
 - rom_reset : 遍历 `roms` 中的所有的 rom, 如果 `rom->fw_file == NULL`，那么 rom 的数据需要拷贝到 MemoryRegion 中
 
 rom_reset 包含了有意思的小问题
-- pc.bios 如何映射到 guest 空间的
+- [pc.bios 如何映射到 guest 空间的](https://martins3.github.io/qemu/bios-memory.html)
 - 为什么 rom 通过 fw_cfg 访问，为什么还是需要将数据拷贝到 MemoryRegion::RamBlock::host 中
-
-#### pc.bios
-在 x86_bios_rom_init 中会调用 rom_add_file_fixed 设置 bios 的内容在 4G - 256k 的地址上
-同时创建了 MemoryRegion pc.bios，但是没有关联起来：
-
-```c
-  memory_region_init_ram(bios, NULL, "pc.bios", bios_size, &error_fatal);
-
-  rom_add_file_fixed(bios_name, (uint32_t)(-bios_size), -1)
-```
-
-其实真正将两者关联起来的位置在 rom_reset:
-
-- rom_reset
-  - address_space_write_rom
-    - address_space_write_rom_internal
-      - address_space_translate : 通过 4G - 256k 地址查询到 pc.bios 这个 MemoryRegion，然后将 Rom::data 的数据拷贝到 MemoryRegion::RamBlock::host
-      - memcpy
 
 #### ROM migration
 之所以需要进行 ROM 的拷贝到 MemoryRegion 的原因:

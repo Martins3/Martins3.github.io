@@ -3,7 +3,6 @@
 <!-- vim-markdown-toc GitLab -->
 
 - [subpage](#subpage)
-- [cross page check](#cross-page-check)
     - [SMC](#smc)
 - [SMC](#smc-1)
   - [lock page](#lock-page)
@@ -20,6 +19,10 @@
   - [需求分析](#需求分析)
   - [address_space_translate_for_iotlb 和 address_space_translate 的关系](#address_space_translate_for_iotlb-和-address_space_translate-的关系)
   - [笔记补充](#笔记补充)
+  - [Softmmu](#softmmu)
+    - [Overview](#overview)
+    - [soft TLB](#soft-tlb)
+    - [ram addr](#ram-addr)
 
 <!-- vim-markdown-toc -->
 
@@ -82,67 +85,6 @@ static MemoryRegionSection *address_space_lookup_region(AddressSpaceDispatch *d,
   - subpage_init : 初始化 subpage MemoryRegion，注册其 MemoryRegionOps 为 subpage_ops
   - phys_section_add : 向 PhysPageMap::sections 添加上一个 MemoryRegionSection
   - subpage_register : 让 `subpage->sub_section[SUBPAGE_IDX(addr)]` 索引 `d->map.sections`
-
-
-# cross page check
-```c
-static inline bool use_goto_tb(DisasContext *s, target_ulong pc)
-{
-#ifndef CONFIG_USER_ONLY
-    return (pc & TARGET_PAGE_MASK) == (s->base.tb->pc & TARGET_PAGE_MASK) ||
-           (pc & TARGET_PAGE_MASK) == (s->pc_start & TARGET_PAGE_MASK);
-#else
-    return true;
-#endif
-}
-
-static inline void gen_goto_tb(DisasContext *s, int tb_num, target_ulong eip)
-{
-    target_ulong pc = s->cs_base + eip;
-
-    if (use_goto_tb(s, pc))  {
-        /* jump to same page: we can use a direct jump */
-        tcg_gen_goto_tb(tb_num);
-        gen_jmp_im(s, eip);
-        tcg_gen_exit_tb(s->base.tb, tb_num);
-        s->base.is_jmp = DISAS_NORETURN;
-    } else {
-        /* jump to another page */
-        gen_jmp_im(s, eip);
-        gen_jr(s, s->tmp0);
-    }
-}
-```
-
-是 guest physical page 持有 tb 而不是 guest virtual page 持有 tb
-
-执行代码首先持有的是虚拟地址，在 tb_find => tb_lookup__cpu_state 中进行查找，可以保证 tb_jmp_cache 中找到的绝对有效，但是 TLB flush 之后，tb_jmp_cache 也是会被刷新的。
-
-
-存在两种情况的 cross page，
-1. tb A 跳转到 tb B 上，A B 分别在两个页面上
-2. tb B 本身横跨两个页面
-
-- [ ] 从 tb_find 看，其会处理第二种情况，就是直接不跳转的，但是对于第一种情况，没有处理，总是默认使用 tb_add_jump 添加上两者的
-  - [ ] 找不到证据说明会处理第一种情况啊
-  - tb_set_jmp_target : 设置为跳转到下一个位置
-
-
-- 当 cross page 的时候，cross 的是 virtual page
-  - 虽然 virtual page 的 cross page 就是 physical page 的 cross page
-  - QEMU 对于 corss page 的处理就是不做处理，所有跳转到 cross page 的页面都是只能退出，然后
-
-xqm 增加的处理:
-
-- do_tb_flush
-  - CPU_FOREACH(cpu) { cpu_tb_jmp_cache_clear(cpu); }
-    - xtm_pf_inc_jc_clear
-    - *xtm_cpt_flush* : clear Code Page Table (cpt)
-    - `atomic_set(&cpu->tb_jmp_cache[i], NULL);` : 就是直接 tb_jmp_cache 的吗? 难道不会采用更加复杂的东西吗 ?
-- tb_lookup__cpu_state
-  - *xtm_cpt_insert_tb*
-- tb_jmp_cache_clear_page
-  - *xtm_cpt_flush_page*
 
 ### SMC
 自修改代码指的是运行过程中修改执行的代码。
@@ -743,6 +685,63 @@ static void piix4_apmc_smm_setup(int isabdf, int i440_bdf)
 smm 模式下:
   - smram 打开了，一定走 ram 的
   - smram 未打开，和普通相同的
+
+## Softmmu
+
+### Overview
+softmmu 只有 tcg 才需要，实现基本思路是:
+- 所有的访存指令前使用软件进行地址翻译，如果命中，那么获取 GPA 进行访存
+- 如果不命中，慢路径，也就是 store_helper
+
+### soft TLB
+TLB 的大致结构如下, 对此需要解释一些问题:
+![](./img/tlb.svg)
+
+1. 快速路径访问的是 CPUTLBEntry 的
+2. 而慢速路径访问 victim TLB 和 CPUIOTLBEntry
+3. victim TLB 的大小是固定的，而正常的 TLB 的大小是动态调整的
+4. CPUTLBEntry 的说明:
+    - addend : GVA + addend 等于 HVA
+    - 分别创建出来三个 addr_read / addr_write / addr_code 是为了快速比较，两者相等就是命中，不相等就是不命中，如果向操作系统中的 page table 将 page entry 插入 flag 描述权限，这个比较就要使用更多的指令了(移位/掩码之后比较)
+5. CPUIOTLBEntry 的说明:
+  - 如果不是落入 RAM : TARGET_PAGE_BITS 内可以放 AddressSpaceDispatch::PhysPageMap::MemoryRegionSection 数组中的偏移, 之外的位置放 MemoryRegion 内偏移。通过这个可以迅速获取 MemoryRegionSection 进而获取 MemoryRegion。
+  - 如果是落入 RAM , 可以得到 [ram addr](#ram-addr)
+
+### ram addr
+构建 ram addr 的目的 dirty page 的记录，所有的 page 的 dirty 都是记录在 `RAMList::DirtyMemoryBlocks::blocks` 中
+给出一个 ram 中的一个 page，需要找到在 blocks 数组中的下标，于是发明了 ram addr
+```c
+typedef struct {
+    struct rcu_head rcu;
+    unsigned long *blocks[];
+} DirtyMemoryBlocks;
+
+typedef struct RAMList {
+    QemuMutex mutex;
+    RAMBlock *mru_block;
+    /* RCU-enabled, writes protected by the ramlist lock. */
+    QLIST_HEAD(, RAMBlock) blocks;
+    DirtyMemoryBlocks *dirty_memory[DIRTY_MEMORY_NUM];
+    uint32_t version;
+    QLIST_HEAD(, RAMBlockNotifier) ramblock_notifiers;
+} RAMList;
+```
+QEMU 使用 RAMBlock 来描述 ram，MemoryRegion 的类型是 ram，那么就会关联一个 RAMBlock
+
+将所有的 RAMBlock 连续的连到一起，形成 RAMList ，一个 RAMBlock 在其中偏移量记录在 `RAMBlock::offset`, 显然，第一个 offset 为 0
+```c
+/*
+pc.ram: offset=0 size=180000000
+pc.bios: offset=180000000 size=40000
+pc.rom: offset=180040000 size=20000
+vga.vram: offset=180080000 size=800000
+/rom@etc/acpi/tables: offset=180900000 size=200000
+virtio-vga.rom: offset=180880000 size=10000
+e1000.rom: offset=1808c0000 size=40000
+/rom@etc/table-loader: offset=180b00000 size=10000
+/rom@etc/acpi/rsdp: offset=180b40000 size=1000
+```
+任何一个 page 的 ram_addr = offset in RAM + `RAMBlock::offset`
 
 
 <script src="https://utteranc.es/client.js" repo="Martins3/Martins3.github.io" issue-term="url" theme="github-light" crossorigin="anonymous" async> </script>
