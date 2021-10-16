@@ -2,27 +2,41 @@
 
 <!-- vim-markdown-toc GitLab -->
 
-  - [Why QEMU needs fw_cfg](#why-qemu-needs-fw_cfg)
-  - [What does fw_cfg transfer](#what-does-fw_cfg-transfer)
-  - [Implement details](#implement-details)
-    - [transfer method](#transfer-method)
-      - [IO transfer](#io-transfer)
-      - [DMA transfer](#dma-transfer)
-      - [file](#file)
-    - [ROM](#rom)
-      - [pc.bios](#pcbios)
-      - [ROM migration](#rom-migration)
-  - [boot device](#boot-device)
-- [fw_cfg](#fw_cfg)
-  - [smbios](#smbios)
-  - [modify 相关的函数](#modify-相关的函数)
-  - [FWCfgEntry::select_cb 和 FWCfgEntry::write_cb](#fwcfgentryselect_cb-和-fwcfgentrywrite_cb)
-  - [从 NVDIMM 到 Bios Linker](#从-nvdimm-到-bios-linker)
-  - [kernel image 是如何被加载的](#kernel-image-是如何被加载的)
-    - [QEMU's preparation](#qemus-preparation)
-    - [Seabios](#seabios)
+- [问题](#问题)
+- [Why QEMU needs fw_cfg](#why-qemu-needs-fw_cfg)
+- [What does fw_cfg transfer](#what-does-fw_cfg-transfer)
+- [Implement details](#implement-details)
+  - [transfer method](#transfer-method)
+    - [IO transfer](#io-transfer)
+    - [DMA transfer](#dma-transfer)
+    - [file](#file)
+  - [ROM](#rom)
+    - [pc.bios](#pcbios)
+    - [ROM migration](#rom-migration)
+- [smbios](#smbios)
+- [modify 相关的函数](#modify-相关的函数)
+- [FWCfgEntry::select_cb 和 FWCfgEntry::write_cb](#fwcfgentryselect_cb-和-fwcfgentrywrite_cb)
+- [从 NVDIMM 到 Bios Linker](#从-nvdimm-到-bios-linker)
+- [kernel image 是如何被加载的](#kernel-image-是如何被加载的)
+  - [QEMU's preparation](#qemus-preparation)
+  - [Seabios](#seabios)
+  - [linuxboot_dma.bin](#linuxboot_dmabin)
 
 <!-- vim-markdown-toc -->
+
+## 问题
+
+- [ ] 很烦，为什么需要 reset 的时候进行 fw_cfg_select
+```c
+static void fw_cfg_reset(FWCfgState *s) {
+  /* we never register a read callback for FW_CFG_SIGNATURE */
+  fw_cfg_select(s, FW_CFG_SIGNATURE);
+}
+```
+
+- FWCfgEntry::select_cb 仅仅被注册上 acpi_build_update
+
+
 ## Why QEMU needs fw_cfg
 seabios 可以在裸机上，也可以在 QEMU 中运行，在 QEMU 中运行时，通过 fw_cfg 从 host 获取 guest 的各种配置或者 rom 会相当的方便。
 
@@ -342,45 +356,6 @@ Reviewed-by: Laszlo Ersek <lersek@redhat.com>
 1. 创建 rom_set_mr : 将 rom 关联一个 mr, 并且将 rom 中的数据拷贝到 mr 的空间中
 2. 修改 rom_add_file  : fw_cfg 提供数据给 guest 注册的时候只是需要一个指针，如果配置了 option_rom_has_mr 的话，那么这个指针来自于 memory_region_get_ram_ptr
 
-## boot device
-关联文件 softmmu/bootdevice.c
-
-在 seabios 的 loadBootOrder 中需要读取 fw_cfg 的 bootorder,
-seabios 的 boot order 是受到 fw_cfg 制作的 bootorder 控制的, 此处就是在制作 bootorder
-
-```c
-typedef struct FWBootEntry FWBootEntry;
-
-static QTAILQ_HEAD(, FWBootEntry) fw_boot_order =
-    QTAILQ_HEAD_INITIALIZER(fw_boot_order);
-```
-实际上，对于 add_boot_device_path 只有 linuxboot_dma.bin 有意义
-huxueshi:add_boot_device_path bootindex=0 dev=(nil) suffix=/rom@genroms/linuxboot_dma.bin
-
-应该是为了向 fw_cfg 提供: get_boot_devices_list
-
-- fw_cfg_machine_reset
-  - get_boot_devices_lchs_list
-  - `ptr = fw_cfg_modify_file(s, "bios-geometry", (uint8_t *)buf, len);` : 如果其中的内容是空的，fw_cfg 如何处理的
-      - seabios 的 loadBiosGeometry 中，当调用 romfile_loadfile 可以获取一个空
-
-结论，传递给 seabios 的
-| bootorder                      | bios-geometry |
-|--------------------------------|---------------|
-| /rom@genroms/linuxboot_dma.bin | -             |
-
-# fw_cfg
-
-- [ ] 很烦，为什么需要 reset 的时候进行 fw_cfg_select
-```c
-static void fw_cfg_reset(FWCfgState *s) {
-  /* we never register a read callback for FW_CFG_SIGNATURE */
-  fw_cfg_select(s, FW_CFG_SIGNATURE);
-}
-```
-
-- FWCfgEntry::select_cb 仅仅被注册上 acpi_build_update
-
 ## smbios
 https://gist.github.com/smoser/290f74c256c89cb3f3bd434a27b9f64c
 
@@ -504,6 +479,15 @@ static void machine_set_kernel(Object *obj, const char *value, Error **errp)
 2. 在 `x86_load_linux` 中添加 linuxboot_dma.bin 到 `option_rom` 数组中
 
 ```c
+    f = fopen(kernel_filename, "rb");
+
+    if (fread(kernel, 1, kernel_size, f) != kernel_size) { // 读去文件内容
+        fprintf(stderr, "fread() failed\n");
+        exit(1);
+    }
+
+    fw_cfg_add_bytes(fw_cfg, FW_CFG_KERNEL_DATA, kernel, kernel_size); // 通过 FW_CFG_KERNEL_DATA 告知 seabios
+
     option_rom[nb_option_roms].bootindex = 0;
     option_rom[nb_option_roms].name = "linuxboot.bin";
     if (linuxboot_dma_enabled && fw_cfg_dma_enabled(fw_cfg)) {
@@ -530,39 +514,39 @@ static void machine_set_kernel(Object *obj, const char *value, Error **errp)
 
 ### Seabios
 
-```txt
-Searching bootorder for: /pci@i0cf8/*@3
-Registering bootable: iPXE (PCI 00:03.0) (type:128 prio:9999 data:ca000385)
-Searching bootorder for: /rom@genroms/linuxboot_dma.bin
-Registering bootable: Linux loader DMA (type:128 prio:1 data:cb000054)
-Searching bootorder for: /rom@genroms/kvmvapic.bin
-Registering bootable: Legacy option rom (type:129 prio:101 data:cb800003)
-```
+- maininit
+  - interface_init
+    - boot_init
+      - loadBootOrder : 构建 Bootorder
+  - optionrom_setup
+    - run_file_roms
+      - deploy_romfile : 将 linuxboot_dma.bin 加载进来
+      - init_optionrom
+        - callrom : 执行 linuxboot_dma.bin 部分代码，初始化 pnp 相关内容
+      - setRomSource
+    - get_pnp_rom : linuxboot_dma.bin 是按照 pnp 规则的构建的 optionrom
+    - boot_add_bev : Registering bootable: Linux loader DMA (type:128 prio:1 data:cb000054)
+      - getRomPriority
+        - find_prio : 根据 Bootorder 的内容返回 prio
+      - bootentry_add : 将 kernel image 添加到 BootList 中，在 BootList 的排序根据 getRomPriority 获取的 prio 确定
+  - prepareboot
+    - bcv_prepboot : 连续调用 add_bev, 调用顺序是按照 BootList 构建 `BEV`
+  - startBoot
+    - call16_int(0x19, &br)
+      - handle_19
+        - do_boot
+          - boot_rom : 默认使用第一个 BEV，也就是 kernel image
+            - call_boot_entry : linuxboot_dma.bin 上，然后 linuxboot_dma.bin 进一步跳转到 kernel image 上开始执行
 
+其实，总体来说，seabios 做了两个事情:
+- 执行 optionrom linuxboot_dma.bin 将 kernel image 加载进来
+- 根据 "bootorder" 将 kernel image 作为 boot 默认启动方式
 
-```c
-static void
-boot_rom(u32 vector)
-{
-    struct segoff_s so;
-    so.segoff = vector;
-    call_boot_entry(so, 0);
-}
-```
-不是从 disk 进入的，而是从 boot_rom，因为是将内核作为 ROM，接下来就是直接跳转到这里就可以了
+### linuxboot_dma.bin
+linuxboot_dma.bin 是通过 `pc-bios/optionrom/linuxboot_dma.c` 编译出来的，通过前面的分析，其实我们已经可以大致的猜测出来到底
 
-bootentry_add
+第一个部分是 pnp optionrom 规范的内容，第二个就是通过 fw_cfg 获取到 kernel image 的地址，然后跳转过去了
 
-- option rom 是怎么放进去的?
-  - `run_file_roms("genroms/", 0, sources);` 中的对比，就是直接读取文件搞到的
-
-在 seabios 中间的检测方法:
-- optionrom_setup
-  - `boot_add_bev(FLATPTR_TO_SEG(rom), pnp->bev, pnp->productname , getRomPriority(sources, rom, instance++));`
-
-在 QEMU 这里，rom_add_option 已经非常清晰告知了如何实现 Linux DMA 的访问:
-
-而在 `/home/maritns3/core/kvmqemu/pc-bios/optionrom/linuxboot_dma.c` 中，终于进行 Linux kernel 和参数的读取
 
 <script src="https://utteranc.es/client.js" repo="Martins3/Martins3.github.io" issue-term="url" theme="github-light" crossorigin="anonymous" async> </script>
 
