@@ -4,7 +4,6 @@
 
 - [问题](#问题)
 - [Why QEMU needs fw_cfg](#why-qemu-needs-fw_cfg)
-- [What does fw_cfg transfer](#what-does-fw_cfg-transfer)
 - [Implement details](#implement-details)
   - [transfer method](#transfer-method)
     - [IO transfer](#io-transfer)
@@ -13,10 +12,8 @@
   - [ROM](#rom)
     - [pc.bios](#pcbios)
     - [ROM migration](#rom-migration)
-- [smbios](#smbios)
-- [modify 相关的函数](#modify-相关的函数)
-- [FWCfgEntry::select_cb 和 FWCfgEntry::write_cb](#fwcfgentryselect_cb-和-fwcfgentrywrite_cb)
-- [从 NVDIMM 到 Bios Linker](#从-nvdimm-到-bios-linker)
+  - [modify](#modify)
+  - [FWCfgEntry callback](#fwcfgentry-callback)
 - [kernel image 是如何被加载的](#kernel-image-是如何被加载的)
   - [QEMU's preparation](#qemus-preparation)
   - [Seabios](#seabios)
@@ -44,8 +41,6 @@ seabios 可以在裸机上，也可以在 QEMU 中运行，在 QEMU 中运行时
 ```c
     fw_cfg_add_i16(fw_cfg, FW_CFG_MAX_CPUS, apic_id_limit);
 ```
-
-## What does fw_cfg transfer
 
 ## Implement details
 fw_cfg 出现在两个文件中， hw/nvram/fw_cfg.c 和 hw/i386/fw_cfg.c，
@@ -356,110 +351,29 @@ Reviewed-by: Laszlo Ersek <lersek@redhat.com>
 1. 创建 rom_set_mr : 将 rom 关联一个 mr, 并且将 rom 中的数据拷贝到 mr 的空间中
 2. 修改 rom_add_file  : fw_cfg 提供数据给 guest 注册的时候只是需要一个指针，如果配置了 option_rom_has_mr 的话，那么这个指针来自于 memory_region_get_ram_ptr
 
-## smbios
-https://gist.github.com/smoser/290f74c256c89cb3f3bd434a27b9f64c
+### modify
+fw_cfg_add_bytes_callback 对于一个 entry 只能调用一次，如果想要修改就需要调用
+fw_cfg_modify_bytes_read
 
-- fw_cfg_build_smbios
-  - 然后就是各种构建 smbios 了
-  - [ ] 无法理解的是，为什么需要 anchor 啊
-    - [ ] smbios 也是有 anchor 的吗?
+- fw_cfg_modify_file
+  - fw_cfg_modify_bytes_read
+  - fw_cfg_add_file_callback
 
-## modify 相关的函数
-- [ ] modify 总是和 reset 机制放到一起的
+- fw_cfg_modify_i16
+  - fw_cfg_modify_bytes_read
 
-一共出现在两个位置：
-  - pc_machine_done
-    - `fw_cfg_modify_i16(x86ms->fw_cfg, FW_CFG_NB_CPUS, x86ms->boot_cpus);`
-  - fw_cfg_modify_file
-```c
-/*
-#0  fw_cfg_modify_file (s=0x1f, filename=0x0, data=0x5555569a3850, len=93825003170080) at ../hw/nvram/fw_cfg.c:1012
-#1  0x000055555591a473 in fw_cfg_machine_reset (opaque=0x555556b92980) at ../hw/nvram/fw_cfg.c:1097
-#2  0x0000555555e7ee35 in qemu_devices_reset () at ../hw/core/reset.c:69
-#3  0x0000555555b5e68b in pc_machine_reset (machine=0x555556a94800) at ../hw/i386/pc.c:1644
-#4  0x0000555555d36f90 in qemu_system_reset (reason=SHUTDOWN_CAUSE_NONE) at ../softmmu/runstate.c:442
-#5  0x0000555555aec45c in qdev_machine_creation_done () at ../hw/core/machine.c:1299
-#6  0x0000555555cdaea0 in qemu_machine_creation_done () at ../softmmu/vl.c:2579
-#7  0x0000555555cdaf73 in qmp_x_exit_preconfig (errp=0x5555567a94b0 <error_fatal>) at ../softmmu/vl.c:2602
-#8  0x0000555555cdd641 in qemu_init (argc=28, argv=0x7fffffffd7c8, envp=0x7fffffffd8b0) at ../softmmu/vl.c:3635
-#9  0x000055555582e575 in main (argc=28, argv=0x7fffffffd7c8, envp=0x7fffffffd8b0) at ../softmmu/main.c:49
-```
-- [ ] 是通过 modify 机制才加载的 "bootorder"，调查一下深层次的原因
+### FWCfgEntry callback
 
-## FWCfgEntry::select_cb 和 FWCfgEntry::write_cb
-仅仅是在 fw_cfg_select 中调用，出现三次，每次 select_cb 注册都是 acpi_build_update
-在 acpi_setup 中正好添加了三次, 而 write_cb 从未使用过。
+实际上注册了可选的 callback，
+- fw_cfg_select => FWCfgEntry::select_cb
+- fw_cfg_dma_transfer => FWCfgEntry::write_cb
 
-下面开启分析 FWCfgEntry::select_cb
-```c
-/*
-#0  fw_cfg_select (s=0x555556c76600, key=42) at ../hw/nvram/fw_cfg.c:298
-#1  0x00005555559187a5 in fw_cfg_dma_transfer (s=0x555556c76600) at ../hw/nvram/fw_cfg.c:371
-#2  0x0000555555918b73 in fw_cfg_dma_mem_write (opaque=0x555556c76600, addr=4, value=28024, size=4) at ../hw/nvram/fw_cfg.c:469
-#3  0x0000555555ca6b2a in memory_region_write_accessor (mr=0x555556c76980, addr=4, value=0x7fffe890efe8, size=4, shift=0, mask=4294967295, attrs=...) at ../softmmu/memory.c:489
-#4  0x0000555555ca6d07 in access_with_adjusted_size (addr=4, value=0x7fffe890efe8, size=4, access_size_min=1, access_size_max=8, access_fn=0x555555ca6a3d <memory_region_write_accessor>, mr=0x555556c76980, attrs=...) at ../softmmu/memory.c:545
-#5  0x0000555555ca9e10 in memory_region_dispatch_write (mr=0x555556c76980, addr=4, data=28024, op=MO_32, attrs=...) at ../softmmu/memory.c:1500
-#6  0x0000555555d31c60 in flatview_write_continue (fv=0x7ffdcc1cf380, addr=1304, attrs=..., ptr=0x7fffeb180000, len=4, addr1=4, l=4, mr=0x555556c76980) at ../softmmu/physmem.c:2767
-#7  0x0000555555d31da9 in flatview_write (fv=0x7ffdcc1cf380, addr=1304, attrs=..., buf=0x7fffeb180000, len=4) at ../softmmu/physmem.c:2807
-#8  0x0000555555d32123 in address_space_write (as=0x5555567a6b00 <address_space_io>, addr=1304, attrs=..., buf=0x7fffeb180000, len=4) at ../softmmu/physmem.c:2899
-#9  0x0000555555d32194 in address_space_rw (as=0x5555567a6b00 <address_space_io>, addr=1304, attrs=..., buf=0x7fffeb180000, len=4, is_write=true) at ../softmmu/physmem.c:2909
-#10 0x0000555555c408d3 in kvm_handle_io (port=1304, attrs=..., data=0x7fffeb180000, direction=1, size=4, count=1) at ../accel/kvm/kvm-all.c:2626
-#11 0x0000555555c410d1 in kvm_cpu_exec (cpu=0x555556c8be90) at ../accel/kvm/kvm-all.c:2877
-#12 0x0000555555c95315 in kvm_vcpu_thread_fn (arg=0x555556c8be90) at ../accel/kvm/kvm-accel-ops.c:49
-#13 0x0000555555f54268 in qemu_thread_start (args=0x555556bb1810) at ../util/qemu-thread-posix.c:521
-#14 0x00007ffff6298609 in start_thread (arg=<optimized out>) at pthread_create.c:477
-#15 0x00007ffff61bd293 in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
-```
+FWCfgEntry::select_cb 的唯一注册者为 acpi_build_update, 而 write_cb 从未使用过。
+
 - acpi_build_update
   - acpi_build_tables_init : 初始化 tables 的数值
-  - acpi_build : 我屮艸芔茻，这是把整个 acpi table 构建一次
+  - acpi_build : 构建整个 acpi table
   - acpi_ram_update
-
-应该是，acpi 必须在运行时才可以构建好, 而且是通过 copy of table in RAM 来 patched
-```c
-typedef struct AcpiBuildState {
-    /* Copy of table in RAM (for patching). */
-    MemoryRegion *table_mr;
-    /* Is table patched? */
-    uint8_t patched;
-    void *rsdp;
-    MemoryRegion *rsdp_mr;
-    MemoryRegion *linker_mr;
-} AcpiBuildState;
-```
-
-
-## 从 NVDIMM 到 Bios Linker
-https://richardweiyang-2.gitbook.io/understanding_qemu/00-qmeu_bios_guest/03-seabios
-
-https://richardweiyang-2.gitbook.io/understanding_qemu/00-devices/00-an_example/05-nvdimm
-> 似乎，连 acpi 的函数和构建地址空间
-
-从 romfile_loader_execute 看，etc/table-loader 中就是装载各种 table 的东西
-
-etc/table-loader
-
-- build_rsdt : 指向其他的 table 的，之所以需要 linker，好像是因为将 table 放到哪里，只是知道相对偏移，而不知道绝对偏移，
-所以需要 linker 将绝对值计算出来。
-
-- checksum 需要让 guest 计算的原因:
-  - 因为 checksum 中间包含了 linker 正确计算出来的指针，只有被修正之后的指针才能计算出来正确的 checksum
-
-DSDT address to be filled by Guest linker at runtime
-
-- [x] 为什么 microvm 的 table 就不会动态修改? (猜测是一些东西写死了吧, 不需要 linker 吧)
-
-除了 TMPLOG ，其余的三个都是和 acpi_build_update 关联起来的:
-```c
-#define ACPI_BUILD_TABLE_FILE "etc/acpi/tables"
-#define ACPI_BUILD_RSDP_FILE "etc/acpi/rsdp"
-#define ACPI_BUILD_TPMLOG_FILE "etc/tpm/log"
-#define ACPI_BUILD_LOADER_FILE "etc/table-loader"
-```
-
-- bios_linker_loader_alloc : ask guest to load file into guest memory.
-  - romfile_loader_allocate 实际上加载的两个文件为 etc/acpi/rsdp 和 etc/acpi/tables
-  - 应该是首先传递进去的是  etc/table-loader, 然后靠这个将 etc/acpi/rsdp 和 etc/acpi/tables 传递进去
 
 ## kernel image 是如何被加载的
 QEMU 提供了 -kernel 参数，让 guest 运行的内核可以随意指定，这对于调试内核非常的方便，现在说明一下 -kernel 选项是如何实现的:
