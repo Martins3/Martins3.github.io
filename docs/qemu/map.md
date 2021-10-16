@@ -15,12 +15,18 @@
 既不会分析所有的种类的 map，也不会分析所有的使用位置，只是感觉老是遇到，总结一下。
 
 ## 记录范围内上锁过的 page
+
 ```c
 struct page_collection {
   struct GTree *tree;
   struct page_entry *max;
 };
 ```
+
+在 page_collection::tree 的 (key, value) = (page_addr, page_entry)
+
+page_collection_lock => page_entry_lock => page_lock
+
 为了对于一个连续范围的 page 上锁而不会出现死锁，需要上锁的时候保持顺序。
 具体实现的代码在 page_collection_lock 中, 利用 page_collection::tree 来记录范围中已经上过锁的 page
 
@@ -60,11 +66,16 @@ page_collection_lock(tb_page_addr_t start, tb_page_addr_t end)
             continue;
         }
         if (page_trylock_add(set, index << TARGET_PAGE_BITS)) {
+            // 进入到这里只有的情况:
+            // 1. 因为 TB 跨页导致进入到 retry 中
+            // 2. 对于 g_tree 中的全部上锁，假设为页面 A C ( A C 中间有 B)
+            // 3. 另外 thread 的执行 B，并且将 B 上锁，那么在 page_trylock_add 将会返回 true
             g_tree_foreach(set->tree, page_entry_unlock, NULL);
             goto retry;
         }
         assert_page_locked(pd);
-        // 需要特别处理跨页的情况
+        // 需要特别处理 TB 跨页的情况
+        // 如果一个从 start ~ end 中的页包含的 TB 跨页了，那么 TB 跨越的页也需要上锁
         PAGE_FOR_EACH_TB(pd, tb, n) {
             if (page_trylock_add(set, tb->page_addr[0]) ||
                 (tb->page_addr[1] != -1 &&

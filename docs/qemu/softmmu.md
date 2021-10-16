@@ -2,9 +2,9 @@
 
 <!-- vim-markdown-toc GitLab -->
 
-  - [MemOp](#memop)
-  - [SMC](#smc)
+  - [[ ] MemOp](#-memop)
   - [lock page](#lock-page)
+  - [SMC](#smc)
   - [TARGET_HAS_PRECISE_SMC](#target_has_precise_smc)
   - [流程](#流程)
   - [PageDesc](#pagedesc)
@@ -32,7 +32,7 @@
 - [ ] 整理 /home/maritns3/core/vn/docs/qemu/memory/memory-model.md
 - [ ] 整理 /home/maritns3/core/vn/docs/qemu/memory/softmmu.md
 
-## MemOp
+## [ ] MemOp
 convert_to_tcgmemop 上的注释对于
 MemOp 这个 enum 做出来一些解释, 包含了 size / signed / endian / aligned
 
@@ -45,71 +45,44 @@ static inline MemOp get_memop(TCGMemOpIdx oi) { return oi >> 4; }
 static inline unsigned get_mmuidx(TCGMemOpIdx oi) { return oi & 15; }
 ```
 
+## lock page
+在 ./accel/tcg/translate-all.c 中我们实际上看到了一系列的 lock，比如
+- page_lock_tb
+- page_lock_pair
+- page_lock
+- page_entry_lock
+- page_collection_lock
+
+现在分析一下，page lock 的作用和实现。
+
+首先理清楚几个基本问题:
+- TB 关联的是 guest physical page
+  - 如果 guest physical page 发生改变，那么生成的所有的 TB 都需要 invalidate 掉
+  - 多个 guest virtual page 可以映射到同一个 guest physical page 上，当执行这些 guest virtual page 的代码的时候，将会找到相同的 TB，而不是生成出来多份
+  - 执行 TB 指向，首先需要从 TB buffer 中查询 TB，使用的是 gpa 来查询的
+- TB 只会 invalidate 操作掉，然后在 tb_flush 的时候将整个 TB buffer 全部删除，不会出现单独释放 tb_buffer 中的一个位置，生成的 TB 只会不断放到 tb buffer 的后面，直到 TB buffer 满了。
+
+需要的实现的目标是，一个 guest physical page 上关联的 TB 总是和 guest physical page 上的 x86 代码总是对应的。而不要出现:
+- guest physical page 上的内容被修改了，但是对应的 TB 没有被 invalidate 掉
+- 多个 vCPU thread 同时生成 TB，同时关联，出现 data race，最后生成错误的数据
+
+分析具体的代码:
+- 写操作
+  - tb_link_page : add a new TB and link it to the physical page tables
+  - tb_phys_invalidate
+
+- 读操作: tb_htable_lookup
+
+这里有两个注意点:
+- 因为 SMC 可能 invalidate 多个 physical page，所以有 page_collection_lock 的情况，此时需要注意上锁的时候保证从低到高逐个上锁，否则容易出现死锁
+- tb_htable_lookup 使用 qht 实现，所以，tb_htable_lookup 实际上无需持有 page lock 的
+
 ## SMC
 自修改代码指的是运行过程中修改执行的代码。
 
 检查方法是存在 guest code 的 page 的 CPUTLBEntry 中插入 TLB_NOTDIRTY 的 flag, 这个导致 TLB 比较失败，然后会 invalid 掉这个 guest page 关联的所有的 tb
 
 通过 PageDesc 可以从 ram addr 找到其关联的所有的 tb
-
-## lock page
-```c
-/**
- * struct page_entry - page descriptor entry
- * @pd:     pointer to the &struct PageDesc of the page this entry represents
- * @index:  page index of the page
- * @locked: whether the page is locked
- *
- * This struct helps us keep track of the locked state of a page, without
- * bloating &struct PageDesc.
- *
- * A page lock protects accesses to all fields of &struct PageDesc.
- *
- * See also: &struct page_collection.
- */
-struct page_entry {
-    PageDesc *pd;
-    tb_page_addr_t index;
-    bool locked;
-};
-```
-> This struct helps us keep track of the locked state of a page, without bloating &struct PageDesc.
-
-page_collection_lock => page_entry_lock
-
-```c
-/**
- * struct page_collection - tracks a set of pages (i.e. &struct page_entry's)
- * @tree:   Binary search tree (BST) of the pages, with key == page index
- * @max:    Pointer to the page in @tree with the highest page index
- *
- * To avoid deadlock we lock pages in ascending order of page index.
- * When operating on a set of pages, we need to keep track of them so that
- * we can lock them in order and also unlock them later. For this we collect
- * pages (i.e. &struct page_entry's) in a binary search @tree. Given that the
- * @tree implementation we use does not provide an O(1) operation to obtain the
- * highest-ranked element, we use @max to keep track of the inserted page
- * with the highest index. This is valuable because if a page is not in
- * the tree and its index is higher than @max's, then we can lock it
- * without breaking the locking order rule.
- *
- * Note on naming: 'struct page_set' would be shorter, but we already have a few
- * page_set_*() helpers, so page_collection is used instead to avoid confusion.
- *
- * See also: page_collection_lock().
- */
-struct page_collection {
-    GTree *tree;
-    struct page_entry *max;
-};
-```
-page_collection 收集一堆 page_entry ，通过一个 page_entry 来索引 PageDesc 的
-
-- page_collection_lock 中通过调用 page_trylock_add 来将一个范围的 block 来 lock, 同时保证如果一个 page 上锁了，比它小的 page 不能直接上锁。
-  - 出现 out of order lock 的主要情况 : cross page 的时候，可能先找到 tb 的上半部分所在的 page，然后才找到的下半部分的
-  - page_trylock_add 这个函数写的实际上很糟糕，和其调用者 page_collection_lock 的逻辑强耦合，在 page_collection_lock 中，首先会将 tree 中间的全部 lock 一遍，然后才会开始逐个扫描，所以只要
-
-- 如果 page_collection_lock 了，这一块的代码还可以同时被另一个 CPU 执行吗, 应该是可以，主要的目的是屏蔽那些调用 page_lock 的位置, 其中一个重要的用户就是 tb_link_page 了，tb_link_page 通过调用 page_lock_pair 将 tb 所需要的两个 tb 保护起来。
 
 
 ## TARGET_HAS_PRECISE_SMC
