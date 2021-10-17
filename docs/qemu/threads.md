@@ -18,7 +18,6 @@
     - [use IOThread](#use-iothread)
     - [IOThread internals](#iothread-internals)
 - [Question](#question)
-- [TODO](#todo)
 
 <!-- vim-markdown-toc -->
 ## Thread
@@ -542,8 +541,6 @@ iothread_run 中实际上会首先使用 aio_poll 然后 g_main_loop_run 来监�
 - [ ] 似乎 io 是可以划分为 external 的，例如 aio_node_check
 - [ ] 什么是 callback hell 为什么 coroutine 可以解决
 - [ ] iohandler_ctx 和 qemu_aio_context 有什么区别
-
-## TODO
 - [ ] 异步 io 例如 io uring 如何和 event fd 联系到一起的
 
 <script src="https://utteranc.es/client.js" repo="Martins3/Martins3.github.io" issue-term="url" theme="github-light" crossorigin="anonymous" async> </script>

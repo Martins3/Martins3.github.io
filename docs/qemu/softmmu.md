@@ -3,22 +3,60 @@
 主要是基于 tcg 分析，对于做云计算的同学应该没有什么作用。
 因为 kvm 将内存虚拟化处理掉之后，softmmu 的很多复杂机制就完全消失了。
 
-- [ ] 引用上 /home/maritns3/core/vn/docs/qemu/memory/memory-model-kvm.txt
-- [ ] 整理 /home/maritns3/core/vn/docs/qemu/memory/memory-model.md
-- [ ] 整理 /home/maritns3/core/vn/docs/qemu/memory/softmmu.md
+## Overview
+softmmu 只有 tcg 才需要，实现基本思路是:
+- 所有的访存指令前使用软件进行地址翻译，如果命中，那么获取 GPA 进行访存
+- 如果不命中，慢路径，也就是 store_helper
 
-## [ ] MemOp
-convert_to_tcgmemop 上的注释对于
-MemOp 这个 enum 做出来一些解释, 包含了 size / signed / endian / aligned
+## soft TLB
+TLB 的大致结构如下, 对此需要解释一些问题:
+![](./img/tlb.svg)
 
-2.  的逻辑看，就是检查一下 MemOp 的 6:4 的 bit 而已
-3. 目前的代码，所有的位置都没有插入过 `MO_ALIGN_x` 的
+1. 快速路径访问的是 CPUTLBEntry 的
+2. 而慢速路径访问 victim TLB 和 CPUIOTLBEntry
+3. victim TLB 的大小是固定的，而正常的 TLB 的大小是动态调整的
+4. CPUTLBEntry 的说明:
+    - addend : GVA + addend 等于 HVA
+    - 分别创建出来三个 addr_read / addr_write / addr_code 是为了快速比较，两者相等就是命中，不相等就是不命中，如果向操作系统中的 page table 将 page entry 插入 flag 描述权限，这个比较就要使用更多的指令了(移位/掩码之后比较)
+5. CPUIOTLBEntry 的说明:
+  - 如果不是落入 RAM : TARGET_PAGE_BITS 内可以放 AddressSpaceDispatch::PhysPageMap::MemoryRegionSection 数组中的偏移, 之外的位置放 MemoryRegion 内偏移。通过这个可以迅速获取 MemoryRegionSection 进而获取 MemoryRegion。
+  - 如果是落入 RAM , 可以得到 [ram addr](#ram-addr)
 
+## ram addr
+构建 ram addr 的目的 dirty page 的记录，所有的 page 的 dirty 都是记录在 `RAMList::DirtyMemoryBlocks::blocks` 中
+给出一个 ram 中的一个 page，需要找到在 blocks 数组中的下标，于是发明了 ram addr
 ```c
-static inline MemOp get_memop(TCGMemOpIdx oi) { return oi >> 4; }
+typedef struct {
+    struct rcu_head rcu;
+    unsigned long *blocks[];
+} DirtyMemoryBlocks;
 
-static inline unsigned get_mmuidx(TCGMemOpIdx oi) { return oi & 15; }
+typedef struct RAMList {
+    QemuMutex mutex;
+    RAMBlock *mru_block;
+    /* RCU-enabled, writes protected by the ramlist lock. */
+    QLIST_HEAD(, RAMBlock) blocks;
+    DirtyMemoryBlocks *dirty_memory[DIRTY_MEMORY_NUM];
+    uint32_t version;
+    QLIST_HEAD(, RAMBlockNotifier) ramblock_notifiers;
+} RAMList;
 ```
+QEMU 使用 RAMBlock 来描述 ram，MemoryRegion 的类型是 ram，那么就会关联一个 RAMBlock
+
+将所有的 RAMBlock 连续的连到一起，形成 RAMList ，一个 RAMBlock 在其中偏移量记录在 `RAMBlock::offset`, 显然，第一个 offset 为 0
+```c
+/*
+pc.ram: offset=0 size=180000000
+pc.bios: offset=180000000 size=40000
+pc.rom: offset=180040000 size=20000
+vga.vram: offset=180080000 size=800000
+/rom@etc/acpi/tables: offset=180900000 size=200000
+virtio-vga.rom: offset=180880000 size=10000
+e1000.rom: offset=1808c0000 size=40000
+/rom@etc/table-loader: offset=180b00000 size=10000
+/rom@etc/acpi/rsdp: offset=180b40000 size=1000
+```
+任何一个 page 的 ram_addr = offset in RAM + `RAMBlock::offset`
 
 ## lock page
 在 ./accel/tcg/translate-all.c 中我们实际上看到了一系列的 lock，比如
@@ -206,193 +244,101 @@ void riscv_cpu_do_unaligned_access(CPUState *cs, vaddr addr,
 ```
 原因在于，X86 的根本没有非对其访问的 exception，但是很多 RISC 平台上是有的。
 
-# 如何重新设计 QEMU 中的 memory
+## access size
+如果一次访问同时横跨了两个 MemoryRegion 怎么办?
 
-## 设计
-AddressSpace 中增加两个函数?
-
-1. segments 直接初始化为固定大小的数组
-2. 所有的 MemoryRegion 在按照顺序排放
-3. 使用二分查找来找到 MemoryRegion
-4. 以后增加一个 mru 的 cache 维持生活这个样子的
-
-- 对于 SMM 的处理，首先判断是否命中 SMM 空间
-  - 常规路径
-  - 查看是否是 SMM 的那个 MemoryRegion 的，如果是，再看 attrs 的结果
-
-- 对于 0xfffff 下面的那些 memory region 都是直接静态的定义下来的
-
-## 需求分析
-- [ ] 原本的 QEMU 初始化 memory 的函数全部都列举出来
-  - [ ] x86_bios_rom_init : 进行 bios 相关的初始 *完全没有移植*
-    - [ ] rom_add_file_fixed : 如何和 pc.bios 联系起来的
-  - [ ] pc_memory_init : 将其重新 copy 将不需要的部分适应 BMBT 包围起来
-  - 很多函数都在被过于快速的删除了
-
-- 修改那些位置是需要进行 tcg_commit 的
-  - 修改 AddressSpace::segments 的时候，也就是 io_add_memory_region 和 mem_add_memory_region
-  - smm / pam 修改映射关系的时候，对应原来的代码  memory_region_set_enabled 会调用 memory_region_transaction_commit 的情况啊!
+address_space_translate_internal 中的注释解释很不错:
+- 进行 address_space_translate_internal 的一个参数 plen 其实是用于返回实际上可以访问的范围
+- MMIO 访问的时候会在 memory_access_size 中调整访问的大小为最大为 4，而且 MMIO 很少出现 MemoryRegion 的
+- MMIO 的 MemoryRegion 有时候会出现完全重合的情况，所以不能因为一个访问的延伸到了另外一个
+- flatview_read_continue / flatview_write_continue 中会循环调用 flatview_translate memory_access_size memory_region_dispatch_write，从而可以保证即使是访问跨 MemoryRegion 的，其 MemoryRegionOps 也是自动变化的
 
 ```c
+    /* MMIO registers can be expected to perform full-width accesses based only
+     * on their address, without considering adjacent registers that could
+     * decode to completely different MemoryRegions.  When such registers
+     * exist (e.g. I/O ports 0xcf8 and 0xcf9 on most PC chipsets), MMIO
+     * regions overlap wildly.  For this reason we cannot clamp the accesses
+     * here.
+     *
+     * If the length is small (as is the case for address_space_ldl/stl),
+     * everything works fine.  If the incoming length is large, however,
+     * the caller really has to do the clamping through memory_access_size.
+     */
+```
+
+补充若干内容:
+1. 重合的 MMIO
+```txt
+0000000000000cf8-0000000000000cfb (prio 0, i/o): pci-conf-idx
+0000000000000cf9-0000000000000cf9 (prio 1, i/o): piix3-reset-control
+0000000000000cfc-0000000000000cff (prio 0, i/o): pci-conf-data
+```
+flatview 的样子就非常有趣了。
+```txt
+0000000000000cf8-0000000000000cf8 (prio 0, i/o): pci-conf-idx
+0000000000000cf9-0000000000000cf9 (prio 1, i/o): piix3-reset-control
+0000000000000cfa-0000000000000cfb (prio 0, i/o): pci-conf-idx @0000000000000002
+```
+
+2. MMIO 的 access size 除了通过 memory_access_size 将 access_size 限制为 4 以内，而且在 access_with_adjusted_size 也进行了处理，不过目的不在于处理 cross MemoryRegion，单纯的为了保证访问的时候 size 为 4
+- flatview_read_continue
+  - memory_access_size : 将访问的大小调整为最多为 4，比如 hpet 的
+  - memory_region_dispatch_read
+
+- io_writex
+    - memory_region_dispatch_write
+        - access_with_adjusted_size : 将一次 access 的 size 压缩为 1 ~ 4 之间，然后多次调用 access_fn，比如 vga_mem_write
+
+## TCGMemOpIdx
+TCGMemOpIdx
+- 0 ~ 4 : mmuid
+- 5 ~   : MemOp
+
+```c
+static inline MemOp get_memop(TCGMemOpIdx oi) { return oi >> 4; }
+
+static inline unsigned get_mmuidx(TCGMemOpIdx oi) { return oi & 15; }
+```
+
+而 MemOp 的进一步的编码如下:
+```c
 /*
- * SMRAM memory area and PAM memory area in Legacy address range for PC.
- * PAM: Programmable Attribute Map registers
+ * MemOp in tcg/tcg.h
  *
- * 0xa0000 - 0xbffff compatible SMRAM
+ * [1:0] op size
+ *     = 0 : MO_8
+ *     = 1 : MO_16
+ *     = 2 : MO_32
+ *     = 3 : MO_64
+ *    mask : MO_SIZE = 3 = 0b11
  *
- * 0xc0000 - 0xc3fff Expansion area memory segments // 每一个 segments
- * 0xc4000 - 0xc7fff
- * 0xc8000 - 0xcbfff
- * 0xcc000 - 0xcffff
- * 0xd0000 - 0xd3fff
- * 0xd4000 - 0xd7fff
- * 0xd8000 - 0xdbfff
- * 0xdc000 - 0xdffff
- * 0xe0000 - 0xe3fff Extended System BIOS Area Memory Segments
- * 0xe4000 - 0xe7fff
- * 0xe8000 - 0xebfff
- * 0xec000 - 0xeffff
+ * [  2] sign or unsign
+ *     = 1 : signed
+ *     = 0 : unsigned
+ *    mask : MO_SIGN = 4 = 0b100
  *
- * 0xf0000 - 0xfffff System BIOS Area Memory Segments
+ * [  3] host reverse endian
+ *   if host is big endian
+ *     = 1 : MO_LE
+ *     = 0 : MO_BE
+ *   if host is little endian
+ *     = 1 : MO_BE
+ *     = 0 : MO_LE
+ *
+ * [6:4] aligned or unaligned
+ *    = 1 : MO_ALIGN_2  = 0b001000
+ *    = 2 : MO_ALIGN_4  = 0b010000
+ *    = 3 : MO_ALIGN_8  = 0b011000
+ *    = 4 : MO_ALIGN_16 = 0b100000
+ *    = 5 : MO_ALIGN_32 = 0b101000
+ *    = 6 : MO_ALIGN_64 = 0b110000
+ *   mask : MO_AMASK    = 0b111000
  */
 ```
 
-其实，PAM
-```txt
-0000000000000000-ffffffffffffffff (prio -1, i/o): pci
-  00000000000c0000-00000000000dffff (prio 1, rom): pc.rom
-  00000000000e0000-00000000000fffff (prio 1, i/o): alias isa-bios @pc.bios 0000000000020000-000000000003ffff
-  00000000fffc0000-00000000ffffffff (prio 0, rom): pc.bios
-```
-- [x] 分析一下 pc.rom 是如何初始化，是不是完全没有任何的作用
-  - 是的
-
-- [x] 修改 PAM 的时候，是不是所有的 CPU 都可以看到的
-  - 是的
-
-- 恐怕，RAMBlock 显然是不能只有一块的
-
-- [x] 我们是如何通过 RamBlock 实现空洞的处理的
-  - alias
-  - 在 memory_region_get_ram_ptr 首先计算出来一个 MemoryRegion 所在的偏移
-
-- 如何构建 MemoryRegion 和 RamBlock 的关系啊?
-  - 从 memory_region_get_ram_ptr 中，应该出现的是，
-
-- 将 dirty memory 的 ram_addr
-
-
-## address_space_translate_for_iotlb 和 address_space_translate 的关系
-
-- address_space_translate
-  - address_space_to_flatview : 获取 Flatview
-  - flatview_translate : 返回 MemoryRegionSection
-    - flatview_do_translation
-      - flatview_to_dispatch : 从 Flatview 获取 dispatch
-        - address_space_translate_internal
-    - 从 MemoryRegionSection 获取 mr
-
-- address_space_translate_for_iotlb
-  - `atomic_rcu_read(&cpu->cpu_ases[asidx].memory_dispatch)` : 直接获取 dispatch
-  - address_space_translate_internal
-
-| function                          | para                                            | res                       |
-|-----------------------------------|-------------------------------------------------|---------------------------|
-| address_space_translate_for_iotlb | [cpu asidx](获取地址) addr [attrs prot](没用的) | MemoryRegionSection, xlat |
-| address_space_translate           | as addr is_write attrs ()                       | MemoryRegion, xlat, len   |
-| address_space_translate_internal  | d, addr, resolve_subpage                        | xlat, plen                |
-
-
-
-
-- [x] attrs 有用?
-- [x] address_space_translate 返回 len : 在 read continue 中使用的
-  - 只有 ram 的时候会遇到
-  - 因为访问的时候可能越过 MemoryRegion 的范围
-  - 估计当前的项目中不会遇到，增加上 duck_check 的方法
-  - mmio 中也是需要考虑 size 的问题: 会使用 prepare_mmio_access 计算
-  - 注释中也是如此说明的
-    - [x] 注释说，When such registers exist (e.g. I/O ports 0xcf8 and 0xcf9 on most PC chipsets), MMIO regions overlap wildly.
-
-- [ ] address_space_rw : 是不是只有 dma 的位置在使用?
-  - [ ] 重新看看访存辅助函数集合 ?
-  - [ ] 所以到底如何处理 flatview_write_continue，其中只有 ram 的访问吗?
-
--  memory_access_size 中会进行返回值调整的就只有一个 hpet 了
-
-这个空间居然是重合的，鬼鬼:
-```c
-    0000000000000cf8-0000000000000cfb (prio 0, i/o): pci-conf-idx
-    0000000000000cf9-0000000000000cf9 (prio 1, i/o): piix3-reset-control
-    0000000000000cfc-0000000000000cff (prio 0, i/o): pci-conf-data
-```
-
-在 Flatview 中的效果的确如此:
-```c
-  0000000000000cf8-0000000000000cf8 (prio 0, i/o): pci-conf-idx
-  0000000000000cf9-0000000000000cf9 (prio 1, i/o): piix3-reset-control
-  0000000000000cfa-0000000000000cfb (prio 0, i/o): pci-conf-idx @0000000000000002
-```
-
-## Softmmu
-
-### Overview
-softmmu 只有 tcg 才需要，实现基本思路是:
-- 所有的访存指令前使用软件进行地址翻译，如果命中，那么获取 GPA 进行访存
-- 如果不命中，慢路径，也就是 store_helper
-
-### soft TLB
-TLB 的大致结构如下, 对此需要解释一些问题:
-![](./img/tlb.svg)
-
-1. 快速路径访问的是 CPUTLBEntry 的
-2. 而慢速路径访问 victim TLB 和 CPUIOTLBEntry
-3. victim TLB 的大小是固定的，而正常的 TLB 的大小是动态调整的
-4. CPUTLBEntry 的说明:
-    - addend : GVA + addend 等于 HVA
-    - 分别创建出来三个 addr_read / addr_write / addr_code 是为了快速比较，两者相等就是命中，不相等就是不命中，如果向操作系统中的 page table 将 page entry 插入 flag 描述权限，这个比较就要使用更多的指令了(移位/掩码之后比较)
-5. CPUIOTLBEntry 的说明:
-  - 如果不是落入 RAM : TARGET_PAGE_BITS 内可以放 AddressSpaceDispatch::PhysPageMap::MemoryRegionSection 数组中的偏移, 之外的位置放 MemoryRegion 内偏移。通过这个可以迅速获取 MemoryRegionSection 进而获取 MemoryRegion。
-  - 如果是落入 RAM , 可以得到 [ram addr](#ram-addr)
-
-### ram addr
-构建 ram addr 的目的 dirty page 的记录，所有的 page 的 dirty 都是记录在 `RAMList::DirtyMemoryBlocks::blocks` 中
-给出一个 ram 中的一个 page，需要找到在 blocks 数组中的下标，于是发明了 ram addr
-```c
-typedef struct {
-    struct rcu_head rcu;
-    unsigned long *blocks[];
-} DirtyMemoryBlocks;
-
-typedef struct RAMList {
-    QemuMutex mutex;
-    RAMBlock *mru_block;
-    /* RCU-enabled, writes protected by the ramlist lock. */
-    QLIST_HEAD(, RAMBlock) blocks;
-    DirtyMemoryBlocks *dirty_memory[DIRTY_MEMORY_NUM];
-    uint32_t version;
-    QLIST_HEAD(, RAMBlockNotifier) ramblock_notifiers;
-} RAMList;
-```
-QEMU 使用 RAMBlock 来描述 ram，MemoryRegion 的类型是 ram，那么就会关联一个 RAMBlock
-
-将所有的 RAMBlock 连续的连到一起，形成 RAMList ，一个 RAMBlock 在其中偏移量记录在 `RAMBlock::offset`, 显然，第一个 offset 为 0
-```c
-/*
-pc.ram: offset=0 size=180000000
-pc.bios: offset=180000000 size=40000
-pc.rom: offset=180040000 size=20000
-vga.vram: offset=180080000 size=800000
-/rom@etc/acpi/tables: offset=180900000 size=200000
-virtio-vga.rom: offset=180880000 size=10000
-e1000.rom: offset=1808c0000 size=40000
-/rom@etc/table-loader: offset=180b00000 size=10000
-/rom@etc/acpi/rsdp: offset=180b40000 size=1000
-```
-任何一个 page 的 ram_addr = offset in RAM + `RAMBlock::offset`
 ## Notes
 - 从 tb_page_add 可以看到, TranslationBlock::page_addr 保存到是 guest 的物理页面地址
-
 
 <script src="https://utteranc.es/client.js" repo="Martins3/Martins3.github.io" issue-term="url" theme="github-light" crossorigin="anonymous" async> </script>
 

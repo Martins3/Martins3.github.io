@@ -219,8 +219,6 @@ FlatView 是一个数组形式，为了加快访问，显然需要使用构成�
 将 FlatRange 逐个调用 `flatview_add_to_dispatch` 创建出来的。
 
 ## RamBlock
-:TODO:
-
 - memory_region_get_ram_ptr : 返回一个 RAMBlock 在 host 中的偏移量
 - memory_region_get_ram_addr : 获取在 ram 空间的偏移
 - memory_region_section_get_iotlb : 如果是一个
