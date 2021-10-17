@@ -4,6 +4,7 @@
 
 - [Overview](#overview)
 - [AddressSpace](#addressspace)
+  - [memory_region_get_flatview_root](#memory_region_get_flatview_root)
 - [MemoryRegion](#memoryregion)
 - [FlatView](#flatview)
 - [AddressSpaceDispatch](#addressspacedispatch)
@@ -12,9 +13,20 @@
 - [subpage](#subpage)
 - [MemoryListener](#memorylistener)
 - [CPUAddressSpace](#cpuaddressspace)
-- [SMM](#smm)
+- [memory access code flow](#memory-access-code-flow)
+- [alias](#alias)
+- [memory listener](#memory-listener)
+    - [memory listener tcg](#memory-listener-tcg)
+    - [memory listener hook 的调用位置](#memory-listener-hook-的调用位置)
+    - [ioeventfd](#ioeventfd)
+    - [kvm memory listener hook](#kvm-memory-listener-hook)
 - [IOMMU](#iommu)
-- [QA](#qa)
+- [PCI Device AddressSpace](#pci-device-addressspace)
+    - [PCIIORegion](#pciioregion)
+- [dma](#dma)
+- [Option ROM](#option-rom)
+- [address_space_map](#address_space_map)
+- [Appendix](#appendix)
 
 <!-- vim-markdown-toc -->
 
@@ -164,6 +176,18 @@ memory_region_transaction_commit 进而调用 address_space_set_flatview
 在 memory_region_transaction_commit 中调用 flatviews_reset
 flatviews_reset 会将之前生成的 flag_views 全部删除掉, 然后重新构建
 
+### memory_region_get_flatview_root
+
+实际上, AddressSpace::root 持有的 MemoryRegion 并不一定就是顶层 MemoryRegion
+是需要通过 memory_region_get_flatview_root 来获取的，比如 e1000 的顶层 MemoryRegion 就不是 bus master container
+而是 system，这样就可以让多个 AddressSpace 虽然持有的 AddressSpace::root 不同，但是可以公用相同的 Flatview 了，
+```c
+/*
+address-space: e1000
+  0000000000000000-ffffffffffffffff (prio 0, i/o): bus master container
+    0000000000000000-ffffffffffffffff (prio 0, i/o): alias bus master @system 0000000000000000-ffffffffffffffff
+```
+
 ## MemoryRegion
 MemoryRegion 用于描述一个范围内的映射规则。
 
@@ -191,6 +215,11 @@ MemoryRegion 存在 overlap，alias 的，获取这个地址上的真正的 memo
 
 FlatView 由一个个 FlatRange 组成，互相不重合，描述了最终的地址空间的样子，从 MemoryRegion 生成 FlatRange 的过程在
 `generate_memory_topology`
+
+- address_space_init : 使用 MemoryRegion 来初始化 AddressSpace，除了调用
+    - address_space_update_topology
+      - memory_region_get_flatview_root
+      - generate_memory_topology
 
 ```c
 /* Render a memory topology into a list of disjoint absolute ranges. */
@@ -230,6 +259,8 @@ static FlatView *generate_memory_topology(MemoryRegion *mr)
     return view;
 }
 ```
+
+如果 container MemoryRegion 很 priority 很低，而 subregions 的 priority 再高也没用了
 
 ## AddressSpaceDispatch
 FlatView 是一个数组形式，为了加快访问，显然需要使用构成一个红黑树之类的，可以在 log(n) 的时间内访问的, QEMU 实现的
@@ -384,39 +415,405 @@ CPUAddressSpace 的使用主要在 address_space_translate_for_iotlb 和 iotlb_t
 
 每一个 CPU 创建一个 CPUAddressSpace ，而不是公用一个 CPUAddressSpace, 这是因为在 tcg_commit 中，通过 CPUAddressSpace 找到对应的 cpu 然后进行 TLBFlush
 
-## SMM
-tcg 处理 AddressSpace 最大的不同在于为 SMM 创建一个新的地址空间。
+## memory access code flow
+总体来说
 
-在 do_smm_enter 中，会
+- helper_inw
+  - address_space_lduw
+    - address_space_ldl_internal
+      - address_space_translate : 获取具体是在那个 memory region 是为了判断当前的读写发生在哪一个 memory region 上
+        - flatview_translate : 参数 Flatview, 和 hwaddr 返回 MemoryRegion
+            - flatview_do_translate : 这就是利用 AddressSpaceDispatch 的基础设施查询
+              - address_space_translate_internal
+                - phys_page_find : 这存在一个 cache, 当没有命中的时候，需要查询一波
+      - memory_region_dispatch_read : 如果进行的是 mmio, 通过持有 MemoryRegions 可以很快的找到对应的空间
+        - memory_region_dispatch_read1
+          - access_with_adjusted_size
+      - qemu_map_ram_ptr : 如果是 RAM 的访问就很容易
 
+- kvm_handle_io / dma_memory_rw_relaxed / address_space_map
+  - address_space_rw
+    - address_space_read_full
+      - address_space_to_flatview : 获取  AddressSpace::current_map
+      - flatview_read
+        - flatview_translate : 从 flatview 到 mr
+        - flatview_read_continue
+          - memory_region_dispatch_read : MMIO 之类的最终调用到 MemoryRegionOps
+          - memcpy : RAM 直接拷贝
+
+- io_readx / io_writex
+  - memory_region_dispatch_read
+
+其中 flatview_read 的三个调用者:
+- subpage_read
+- address_space_read_full : 只有唯一调用者 address_space_rw
+- address_space_map
+
+所以，如果调用者不知道将要访问的是 MMIO 还是 RAM，那么
+那么就会走 flatview_read 。如果知道了，比如典型的例子
+address_space_ldl_internal ，如果 MMIO，那么直接走
+flatview_translate，如果是 RAM，直接 memcpy
+
+- address_space_stw_internal 和 io_readx 开始访存的对比
+  - io_readx 是 address_space_stw_internal 的简化版，相当于直接调用 memory_region_dispatch_read, 没有处理 ram 相关的。
+  - store_helper 是 address_space_stw_internal 的强化版本
+    - 处理 watchpoint
+    - 主要是需要处理 TLB 命中的问题
+    - 以及非对其访问，因为 address_space_stw_internal 的调用者都是从 helper 哪里来的，所以要容易的多
+    - 两者都需要处理 dirty page 的情况
+
+## alias
+通过 alias 可以创建出来一个 MemoryRegion 的一部分。
+
+使用 pc.ram 作为例子，物理内存中存在空洞的，用于存放 PCI 的映射空洞。
+利用 alias 机制构建出来 ram-below-4g 和 ram-above-4g 两个 MemoryRegion 添加到 system_memory 上。
 ```c
-    env->hflags |= HF_SMM_MASK;
+void pc_memory_init(PCMachineState *pcms,
+                    MemoryRegion *system_memory,
+                    MemoryRegion *rom_memory,
+                    MemoryRegion **ram_memory)
+    // 创建出来 pc.ram
+    memory_region_allocate_system_memory(ram, NULL, "pc.ram",
+                                         machine->ram_size);
+    *ram_memory = ram;
+    ram_below_4g = g_malloc(sizeof(*ram_below_4g));
+    memory_region_init_alias(ram_below_4g, NULL, "ram-below-4g", ram,
+                             0, x86ms->below_4g_mem_size);
+    memory_region_add_subregion(system_memory, 0, ram_below_4g);
+    e820_add_entry(0, x86ms->below_4g_mem_size, E820_RAM);
+    if (x86ms->above_4g_mem_size > 0) {
+        ram_above_4g = g_malloc(sizeof(*ram_above_4g));
+        memory_region_init_alias(ram_above_4g, NULL, "ram-above-4g", ram,
+                                 x86ms->below_4g_mem_size,
+                                 x86ms->above_4g_mem_size);
+        memory_region_add_subregion(system_memory, 0x100000000ULL,
+                                    ram_above_4g);
+        e820_add_entry(0x100000000ULL, x86ms->above_4g_mem_size, E820_RAM);
+    }
+```
+最后的结果:
+```txt
+address-space: memory
+  0000000000000000-ffffffffffffffff (prio 0, i/o): system
+    0000000000000000-00000000bfffffff (prio 0, ram): alias ram-below-4g @pc.ram 0000000000000000-00000000bfffffff
+    0000000100000000-00000001bfffffff (prio 0, ram): alias ram-above-4g @pc.ram 00000000c0000000-000000017fffffff
+
+memory-region: pc.ram
+  0000000000000000-000000017fffffff (prio 0, ram): pc.ram
 ```
 
-导致制作出来的 MemTxAttrs 的不同
+此外，alias 的一个例子在 isa 地址空间:
 ```c
-static inline MemTxAttrs cpu_get_mem_attrs(CPUX86State *env)
+/*
+      00000000000e0000-00000000000fffff (prio 1, rom): alias isa-bios @pc.bios 0000000000020000-000000000003ffff
+      00000000fffc0000-00000000ffffffff (prio 0, rom): pc.bios
+*/
+```
+
+因为 alias 的引入，很多函数的逻辑也需要稍微修改一下，比如 memory_region_get_ram_ptr
+
+```c
+void *memory_region_get_ram_ptr(MemoryRegion *mr)
 {
-    return ((MemTxAttrs) { .secure = (env->hflags & HF_SMM_MASK) != 0 });
+    void *ptr;
+    uint64_t offset = 0;
+
+    RCU_READ_LOCK_GUARD();
+    // 首先计算出来 alias MemoryRegion 在本体中的偏移 offset
+    while (mr->alias) {
+        offset += mr->alias_offset;
+        mr = mr->alias;
+    }
+    assert(mr->ram_block);
+    // 加上 offset 才是真正的 ram addr
+    ptr = qemu_map_ram_ptr(mr->ram_block, offset);
+
+    return ptr;
 }
 ```
 
-最后在 tlb_set_page_with_attrs 中选择不同的地址空间的。
+## memory listener
+
+- kvm 根本没有注册 MemoryListener::commit
+
+- memory_listener_register
+  - 将 memory_listener 添加到全局链表 memory_listeners 和 AddressSpace::listeners
+  - listener_add_address_space
+    - 调用 begin region_add log_start commit 等 hook
+
+#### memory listener tcg
+- 忽然意识到，CPUAddressSpace 只是 tcg 特有的
+- cpu_address_space_init 中注册 memory listener
+
+一共注册两个 hook:
+```c
+    if (tcg_enabled()) {
+        newas->tcg_as_listener.log_global_after_sync = tcg_log_global_after_sync;
+        newas->tcg_as_listener.commit = tcg_commit;
+        memory_listener_register(&newas->tcg_as_listener, as);
+    }
+```
+
+- tcg_commit
+  - 处理一些 RCU，iothread 的问题
+  - tlb_flush
+  - 当 memory_region_transaction_commit 和 将 listener 添加到 (memory_listener_register -> listener_add_address_space) 中间的时候。
+- tcg_log_global_after_sync : 当 dirty map sync 之后，需要为了针对于 tcg 特殊调用的 hook
+
+```c
+/**
+ * CPUAddressSpace: all the information a CPU needs about an AddressSpace
+ * @cpu: the CPU whose AddressSpace this is
+ * @as: the AddressSpace itself
+ * @memory_dispatch: its dispatch pointer (cached, RCU protected)
+ * @tcg_as_listener: listener for tracking changes to the AddressSpace
+ */
+struct CPUAddressSpace {
+    CPUState *cpu;
+    AddressSpace *as;
+    struct AddressSpaceDispatch *memory_dispatch;
+    MemoryListener tcg_as_listener;
+};
+```
+
+#### memory listener hook 的调用位置
+实际上，这些 hook 都是 KVM 注册的:
+- 关于 dirty log 可以参考李强的 blog[^1]
+
+- address_space_set_flatview 会调用两次 address_space_update_topology_pass，进而调用 log_start log_stop region_del region_add 之类的, 因为更新了新的 Flatview 之类，所以也是需要进行一下比如对于 kvm 的通知吧
+- memory_listener_register -> listener_add_address_space : address_space 首次注册上 memory listener, 所以将这些 flat range 分别调用一下 listener hook 还是很有必要的
+- memory_region_sync_dirty_bitmap
+    - log_sync / log_sync_global
+- memory_global_dirty_log_start
+- memory_global_after_dirty_log_sync
+    - log_global_after_sync
+- address_space_add_del_ioeventfds : 将经过 memory model 变动之后还存在的 ioeventfd 保存起来
+    - eventfd_add / eventfd_del
+
+总结一下，基本就是前面两个 , dirty map 更加复杂一点还要中间几个， 最后一个处理 ioeventfd 的
+
+#### ioeventfd
+haiyonghao 的两篇 blog 对于这个问题分析非常清晰易懂
+- Linux kernel 的 eventfd 实现 : https://www.cnblogs.com/haiyonghao/p/14440737.html
+- QEMU 的 eventfd 实现  https://www.cnblogs.com/haiyonghao/p/14440743.html
+
+从 memory listener 的角度，也就是当 memory_region_add_eventfd 实现添加 eventfd，而使用注册的 hook 来处理当
+memory region 发生变动的时候来通知内核。
+
+#### kvm memory listener hook
+- kvm_region_add : 这个很重要，这会让 KVM 最终对于这个 memory section 调用 KVM_SET_USER_MEMORY_REGION, 也即是映射出来一个地址空间来
+- kvm_log_start : 其实很容易，这是这个 region 的 flag, 从现在开始记录 kvm 了
+- log_sync : 将内核的 dirty log 读去出来，调用者为 memory_region_sync_dirty_bitmap
+
+现在分析出来，实际上，kvm 注册 memory listener 多出来的就只是 dirty log 了
 
 ## IOMMU
 IOMMU 的学习可以参考 ASPLOS 提供的 ppt[^1], 简单来说，以前设备是可以直接访问物理内存，增加了 IOMMU 之后，设备访问物理内存类似 CPU 也是需要经过一个虚实地址映射。
 所以，每一个 PCI 设备都会创建对应的 AddressSpace
 
 默认没有配置 IOMMU 也就是直接访问物理内存，所以就是直接 alias 到 `system_memory`(就是 `address_space_memory` 关联的那个 MemoryRegion) 上。
-```c
+```txt
 address-space: nvme
   0000000000000000-ffffffffffffffff (prio 0, i/o): bus master container
     0000000000000000-ffffffffffffffff (prio 0, i/o): alias bus master @system 0000000000000000-ffffffffffffffff
 ```
 
-## QA
-- 为什么 ram 不是一整块，而是拆分出来了 ram-below-4g 和 ram-above-4g 两个部分?
-    - 因为中间需要留出 mmio 空洞
+pci_device_iommu_address_space : 如果一个 device 被用于直通，那么其进行 IO 的 address space 就不再是 address_space_memory 的，而是需要经过一层映射。
+
+1. https://wiki.qemu.org/Features/VT-d 分析了下为什么 guest 需要 vIOMMU
+2. [oracle 的 blog](https://blogs.oracle.com/linux/post/a-study-of-the-linux-kernel-pci-subsystem-with-qemu) 告诉了 iommu 打开的方法 : `-device intel-iommu` + `-machine q35`
+
+## PCI Device AddressSpace
+```c
+struct PCIDevice {
+    // ...
+    PCIIORegion io_regions[PCI_NUM_REGIONS];
+    AddressSpace bus_master_as;                // 因为 IOMMU 的存在，所以存在
+    MemoryRegion bus_master_container_region;  // container
+    MemoryRegion bus_master_enable_region;     // 总是 bus_master_as->root 的 alias, 是否 enable 取决于运行时操作系统对于设备的操作
+```
+
+形成下面的 AddressSpace 分别发生在: pci_init_bus_master 和 do_pci_register_device
+```c
+/*
+address-space: e1000
+  0000000000000000-ffffffffffffffff (prio 0, i/o): bus master container
+    0000000000000000-ffffffffffffffff (prio 0, i/o): alias bus master @system 0000000000000000-ffffffffffffffff
+```
+
+
+```c
+static void pci_init_bus_master(PCIDevice *pci_dev)
+{
+    AddressSpace *dma_as = pci_device_iommu_address_space(pci_dev); // dma 的空间就是 address_space_memory
+
+    memory_region_init_alias(&pci_dev->bus_master_enable_region,
+                             OBJECT(pci_dev), "bus master",
+                             dma_as->root, 0, memory_region_size(dma_as->root)); // 创建一个 alias 到 system_memory
+    memory_region_set_enabled(&pci_dev->bus_master_enable_region, false);
+    memory_region_add_subregion(&pci_dev->bus_master_container_region, 0, // 创建一个 container
+                                &pci_dev->bus_master_enable_region);
+}
+```
+
+- do_pci_register_device
+   - `address_space_init(&pci_dev->bus_master_as, &pci_dev->bus_master_container_region, pci_dev->name);`
+
+PCIDevice 关联了一个 AddressSpace, PCIDevice::bus_master_as 其引用位置为:
+  - msi_send_message
+  - pci_get_address_space
+    - 当 pci_dma_rw 进行操作的时候需要获取当时的地址空间了
+
+需要区分的是，IOMMU 让 dma_as 可能不再是 address_space_memory，但是
+操作设备的 mmio 和 pio 的, 最后都会添加到 pci MemoryRegion 上
+
+#### PCIIORegion
+和 bus_master_as / bus_master_container_region / bus_master_enable_region 区分的是，这个就是设备的配置空间
+最后都是放到 system_memory / system_io 上的
+
+## dma
+主要出现的文件: include/sysemu/dma.h 和 softmmu/dma-helpers.c
+
+- dma 最重要的客户还是 pci 产生的地址空间, 其中 dma_blk_io 和 dma_buf_read 之类的都是 DMA 和 scsi / nvme 相关的, 是一个很容易的封装。
+- dma_memory_rw 另一个用户当然是 fw_cfg，另一个就是 pci_dma_rw 了
+  - 实际上，fw_cfg 选择的 as 总是 address_space_memory 的
+
+```c
+/*
+#0  pci_dma_rw (dir=DMA_DIRECTION_TO_DEVICE, len=64, buf=0x7fffffffd210, addr=3221082112, dev=0x555557c86f30) at /home/maritns3/core/kvmqemu/include/hw/pci/pci.h:806
+#1  pci_dma_read (len=64, buf=0x7fffffffd210, addr=3221082112, dev=0x555557c86f30) at /home/maritns3/core/kvmqemu/include/hw/pci/pci.h:824
+#2  nvme_addr_read (n=0x555557c86f30, addr=3221082112, buf=0x7fffffffd210, size=64) at ../hw/nvme/ctrl.c:377
+#3  0x00005555559550b9 in nvme_process_sq (opaque=opaque@entry=0x555557c8a728) at ../hw/nvme/ctrl.c:5514
+*/
+
+static inline MemTxResult pci_dma_rw(PCIDevice *dev, dma_addr_t addr, void *buf, dma_addr_t len, DMADirection dir) {
+    return dma_memory_rw(pci_get_address_space(dev), addr, buf, len, dir);
+}
+```
+
+- dma_memory_set : 只有一个用户 fw_cfg_dma_transfer，就是 DMA 版本的 memset 了
+- dma_barrier : 就是一条 smp_mb，注释说的是，因为 guest 设备模拟和 guest 的执行是同步进行的, 希望让 guest 看到的内存修改就是 host 的这一侧的
+    - 因为设备是被直通的，而且当前是单核，所以暂时也许不用考虑
+
+- dma_memory_rw 和 cpu_physical_memory_read 非常相似，只是 cpu_physical_memory_read 走的 `as` 是 `address_space_memory`,  而 dma_memory_rw 是可以指定自己的 address space 的
+
+
+
+## Option ROM
+https://en.wikipedia.org/wiki/Option_ROM
+
+```txt
+pci_update_mappings pci febe0000 vga.rom
+pci_update_mappings pci feb80000 e1000.rom
+```
+
+- [x] 更新了，为什么在地址空间中间看不到 pci 的 rom 啊
+这个地址之后被隐藏了
+```txt
+Option rom sizing returned febe0000 ffff0000
+map_pcirom 0xfebe0000
+```
+最开始的时候，将 ROM 映射到 PCI 空间中，然后拷贝到 ROM 中，然后更新 PCI 空间, 这个 ROM 被隐藏起来了。
+
+```txt
+pci_add_option_rom /home/maritns3/core/kvmqemu/build/pc-bios/vgabios-stdvga.bin
+ram_block_add vga.rom
+```
+vga 的源代码应该是在 : https://github.com/qemu/vgabios
+
+## address_space_map
+
+```c
+/* Map a physical memory region into a host virtual address.
+ * May map a subset of the requested range, given by and returned in *plen.
+ * May return NULL if resources needed to perform the mapping are exhausted.
+ * Use only for reads OR writes - not for read-modify-write operations.
+ * Use cpu_register_map_client() to know when retrying the map operation is
+ * likely to succeed.
+ */
+```
+
+```c
+typedef struct {
+    MemoryRegion *mr;
+    void *buffer;
+    hwaddr addr;
+    hwaddr len;
+    bool in_use;
+} BounceBuffer;
+```
+
+基本可以简化为
+```c
+    fv = address_space_to_flatview(as);
+    mr = flatview_translate(fv, addr, &xlat, &l, is_write, attrs);
+    ptr = qemu_ram_ptr_length(mr->ram_block, xlat, plen, true);
+```
+其真正的作用在于，如果想要映射的一个空间本身不是 ram 的(memory_access_is_direct)
+这个时候，将会动态的创建出来一个 memory region。
+此外可以处理访问越过 MemoryRegion 的情况。
+
+其中的一个使用者为
+
+```c
+/*
+#0  address_space_map (as=0x5555563e9880 <address_space_memory>, addr=addr@entry=4320863120, plen=plen@entry=0x7fffe2ff2e70, is_write=is_write@entry=false, attrs=attrs@
+entry=...) at /home/maritns3/core/xqm/exec.c:3513
+#1  0x00005555558f4cd5 in dma_memory_map (dir=DMA_DIRECTION_TO_DEVICE, len=<synthetic pointer>, addr=4320863120, as=<optimized out>) at /home/maritns3/core/xqm/include/
+sysemu/dma.h:135
+#2  virtqueue_map_desc (vdev=vdev@entry=0x555557a02cc0, p_num_sg=p_num_sg@entry=0x7fffe2ff2ef8, addr=addr@entry=0x7fffe2ff2f90, iov=iov@entry=0x7fffe2ff4f90, max_num_sg
+=max_num_sg@entry=1024, is_write=is_write@entry=false, pa=4320863120, sz=16) at /home/maritns3/core/xqm/hw/virtio/virtio.c:1314
+#3  0x00005555558f553f in virtqueue_split_pop (vq=0x555557a0e970, sz=<optimized out>) at /home/maritns3/core/xqm/hw/virtio/virtio.c:1496
+#4  0x00005555558f5b35 in virtqueue_pop (vq=vq@entry=0x555557a0e970, sz=sz@entry=192) at /home/maritns3/core/xqm/hw/virtio/virtio.c:1687
+#5  0x00005555558bacda in virtio_blk_get_request (vq=0x555557a0e970, s=0x555557a02cc0) at /home/maritns3/core/xqm/hw/block/virtio-blk.c:775
+#6  virtio_blk_handle_vq (s=0x555557a02cc0, vq=0x555557a0e970) at /home/maritns3/core/xqm/hw/block/virtio-blk.c:775
+#7  0x00005555558f00a6 in virtio_queue_notify_aio_vq (vq=0x555557a0e970) at /home/maritns3/core/xqm/hw/virtio/virtio.c:2317
+#8  0x0000555555caf857 in aio_dispatch_handlers (ctx=ctx@entry=0x5555566f1580) at /home/maritns3/core/xqm/util/aio-posix.c:429
+#9  0x0000555555cb0526 in aio_poll (ctx=0x5555566f1580, blocking=blocking@entry=true) at /home/maritns3/core/xqm/util/aio-posix.c:731
+#10 0x00005555559b5904 in iothread_run (opaque=opaque@entry=0x55555676bf00) at /home/maritns3/core/xqm/iothread.c:75
+#11 0x0000555555cb28e3 in qemu_thread_start (args=<optimized out>) at /home/maritns3/core/xqm/util/qemu-thread-posix.c:519
+#12 0x00007ffff5c0a609 in start_thread (arg=<optimized out>) at pthread_create.c:477
+#13 0x00007ffff5b31293 in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
+```
+
+## Appendix
+在 v6.0 中
+| file             | desc                                                            |
+|------------------|-----------------------------------------------------------------|
+| softmmu/memory.c | memory_region_dispatch_read 之类的各种 memory region 的管理工作 |
+| softmmu/physmem  | RAMBlock 之类的管理                                             |
+
+| function                                                   | desc                                                                                      |
+|------------------------------------------------------------|-------------------------------------------------------------------------------------------|
+| address_space_translate                                    | 通过 hwaddr 参数找到 MemoryRegion 这里和 Flatview 有关的                                  |
+| qemu_map_ram_ptr                                           | 给定 ram_addr 获取到 host virtual addr                                                    |
+| memory_region_dispatch_read / memory_region_dispatch_write | 最终 dispatch 到设备注册的 MemoryRegionOps 上                                             |
+| prepare_mmio_access                                        | 进行 MMIO 需要持有 BQL 锁, 如果没有上 QBL 的话，那么在 prepare_mmio_access 中会把锁加上去 |
+| memory_access_is_direct                                    | 判断内存到底是可以直接写，还是设备空间，需要重新处理一下                                  |
+| memory_region_get_ram_ptr                                  | 返回一个 RAMBlock 在 host 中的偏移量                                                      |
+| memory_region_get_ram_addr                                 | 获取在 ram 空间的偏移                                                                     |
+| memory_region_section_get_iotlb                            | 获取一个 gpa 上的 MemoryRegion，不会 resolve_subpage                                      |
+
+| struct               | desc                                                                                                                |
+|----------------------|---------------------------------------------------------------------------------------------------------------------|
+| AddressSpace         | root : 仅仅关联一个 MemoryRegion, current_map : 关联 Flatview，其余是 ioeventfd 之类的                              |
+| MemoryRegion         | 主要成员 ram_block, ops, *container*, *alias*, **subregions**, 看来是 MemoryRegion 通过 subregions 负责构建树形结构 |
+| Flatview             | ranges : 通过 render_memory_region 生成, 成员 nr nr_allocated 来管理其数量, root : 关联的 MemoryRegions , dispatch  |
+| AddressSpaceDispatch | 保存 GPA 到 HVA 的映射关系                                                                                          |
+
+cpu_address_space_init : 初始化 `CPUAddressSpace *CPUState::cpu_ases`, CPUAddressSpace 的主要成员 AddressSpace + CPUState
+
+在
+`info mtree [-f][-d][-o][-D]` -- show memory tree (-f: dump flat view for address spaces;-d: dump dispatch tree, valid with -f only);-o: dump region owners/parents;-D: dump disabled regions
+
+通过 mtree_info 函数在代码特定位置观测 memory region 的形成的过程
+
+一些参考:
+- https://www.anquanke.com/post/id/86412 :star:
+- https://wiki.osdev.org/System_Management_Mode
+- https://www.linux-kvm.org/images/1/17/Kvm-forum-2013-Effective-multithreading-in-QEMU.pdf
+- https://terenceli.github.io/%E6%8A%80%E6%9C%AF/2018/08/11/dirty-pages-tracking-in-migration
+- [official doc](https://qemu.readthedocs.io/en/latest/devel/memory.html)
 
 [^1]: [ASPLOS IOMMU tutorial](http://pages.cs.wisc.edu/~basu/isca_iommu_tutorial/IOMMU_TUTORIAL_ASPLOS_2016.pdf)
 
