@@ -1,69 +1,46 @@
 # memory model
 
-在 https://github.com/kernelrookie/DuckBuBi/issues/35 中，
-分析 `address_space_*` 以及如何检查 memory_ldst.inc.c 和
-memory_ldst.inc.h 的方法。
-
 在 v6.0 中
 | file             | desc                                                            |
 |------------------|-----------------------------------------------------------------|
 | softmmu/memory.c | memory_region_dispatch_read 之类的各种 memory region 的管理工作 |
 | softmmu/physmem  | RAMBlock 之类的管理                                             |
 
-- flatview_for_each_range 从来不会被调用
-- memory_region_read_with_attrs_accessor 从来不会被调用
+| function                                                   | desc                                                                                      |
+|------------------------------------------------------------|-------------------------------------------------------------------------------------------|
+| address_space_translate                                    | 通过 hwaddr 参数找到 MemoryRegion 这里和 Flatview 有关的                                  |
+| qemu_map_ram_ptr                                           | 给定 ram_addr 获取到 host virtual addr                                                    |
+| memory_region_dispatch_read / memory_region_dispatch_write | 最终 dispatch 到设备注册的 MemoryRegionOps 上                                             |
+| prepare_mmio_access                                        | 进行 MMIO 需要持有 BQL 锁, 如果没有上 QBL 的话，那么在 prepare_mmio_access 中会把锁加上去 |
+| memory_access_is_direct                                    | 判断内存到底是可以直接写，还是设备空间，需要重新处理一下                                  |
+| memory_region_get_ram_ptr                                  | 返回一个 RAMBlock 在 host 中的偏移量                                                      |
+| memory_region_get_ram_addr                                 | 获取在 ram 空间的偏移                                                                     |
+| memory_region_section_get_iotlb                            | 获取一个 gpa 上的 MemoryRegion，不会 resolve_subpage                                      |
 
-分析 memory.h 吧。
-
-| function                                                   | desc                                                                                                          |
-|------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------|
-| address_space_translate                                    | 通过 hwaddr 参数找到 MemoryRegion 这里和 Flatview 有关的                                                      |
-| memory_region_dispatch_read / memory_region_dispatch_write | 最关键的，访问 device, 逐步向下分发的过程                                                                     |
-| memory_region_get_dirty_log_mask                           | 获取 MemoryRegion::dirty_log_mask                                                                             |
-| memory_region_get_roptionrom_setupam_addr                                 |                                                                                                               |
-| devend_memop                                               | 使用一个非常繁杂的宏判断，进行 IO 的时候，设备是否需要进行 endiana 调整，从现在的调用链看，应该永远返回都是 0 |
-| qemu_map_ram_ptr                                           | 仔细看看注释，为了定义从 memory region 中的偏移获取 HVA, 定义了一堆函数                                       |
-| invalidate_and_set_dirty                                   | 将一个范围的 TLB invalidate 利用 DirtyMemoryBlocks 标记这个区域为 dirty                                       |
-| prepare_mmio_access                                        | 如果没有上 QBL 的话，那么把锁加上去                                                                           |
-| memory_access_is_direct                                    | 判断内存到底是可以直接写，还是设备空间，需要重新处理一下                                                      |
-
-按道理，memory_ldst 提供的是标准访存接口，那么:
-
-- address_space_stw_internal
-  - io_readx 是 address_space_stw_internal 的简化版，相当于直接调用 memory_region_dispatch_read, 没有处理 ram 相关的。
-  - store_helper 是 address_space_stw_internal 的强化版本
-    - 主要是需要处理 TLB 命中的问题
-    - 以及非对其访问，因为 address_space_stw_internal 的调用者都是从 helper 哪里来的，所以要容易的多
-
-- 从 address_space_rw 到 memory_region_dispatch_read 中间经历了什么东西?
-    - 地址转换, 准确来说，是 flatview_translate
-
-- store_helper 相对于 address_space_stw_internal 的内容对比
-    - not dirty : 都有，address_space_stw_internal 也处理了
-    - watch point : 多出来的
-    - store_helper_unaligned : 多出来的
-
-- [ ] kvmtool 处理地址空间之所以那么简单，是因为其不用模拟设备，
-但是 QEMU 中间从 kvm 中 exit 出来，address_space_rw 的内容感觉还是比 kvmtool 复杂很多啊!
-
-## QA
-- [x] PCIe 注册的 AddressSpace 是不是因为对应的 MMIO 空间
-  - [x] KVM 是如何注册这些 MMIO 空间的，还是说没有注册的空间默认为 MMIO 空间
-- [x] region_add 是处理 block 的，看看 ram block 和 ptr 的处理
-  - kvm_set_phys_mem : 使用 memory_region_is_ram 做了判断的
-- [x] 一个 container 的 priority 会影响其 subregions 的 priority 吗? 或者说，如果 container 很 priority 很低，而 subregions 的 priority 再高也没用了
-  - 从 render_memory_region 是递归的向下的, 高优先级的首先部署，所以答案是肯定的。
-
-## QEMU Memory Model 结构分析
-https://kernelgo.org/images/qemu-address-space.svg
-
-关键结构体内容分析:
 | struct               | desc                                                                                                                |
 |----------------------|---------------------------------------------------------------------------------------------------------------------|
 | AddressSpace         | root : 仅仅关联一个 MemoryRegion, current_map : 关联 Flatview，其余是 ioeventfd 之类的                              |
 | MemoryRegion         | 主要成员 ram_block, ops, *container*, *alias*, **subregions**, 看来是 MemoryRegion 通过 subregions 负责构建树形结构 |
 | Flatview             | ranges : 通过 render_memory_region 生成, 成员 nr nr_allocated 来管理其数量, root : 关联的 MemoryRegions , dispatch  |
 | AddressSpaceDispatch | 保存 GPA 到 HVA 的映射关系                                                                                          |
+
+按道理，memory_ldst 提供的是标准访存接口，那么:
+
+- address_space_stw_internal
+  - io_readx 是 address_space_stw_internal 的简化版，相当于直接调用 memory_region_dispatch_read, 没有处理 ram 相关的。
+  - store_helper 是 address_space_stw_internal 的强化版本
+    - 处理 watchpoint
+    - 主要是需要处理 TLB 命中的问题
+    - 以及非对其访问，因为 address_space_stw_internal 的调用者都是从 helper 哪里来的，所以要容易的多
+    - 两者都需要处理 dirty page 的情况
+
+- 从 address_space_rw 到 memory_region_dispatch_read 中间经历了什么东西?
+    - 地址转换, 准确来说，是 flatview_translate
+
+
+## QA
+- [x] 一个 container 的 priority 会影响其 subregions 的 priority 吗? 或者说，如果 container 很 priority 很低，而 subregions 的 priority 再高也没用了
+  - 从 render_memory_region 是递归的向下的, 高优先级的首先部署，所以答案是肯定的。
 
 - cpu_address_space_init : 初始化 `CPUAddressSpace *CPUState::cpu_ases`, CPUAddressSpace 的主要成员 AddressSpace + CPUState
   - address_space_init : 使用 MemoryRegion 来初始化 AddressSpace，除了调用
@@ -78,97 +55,7 @@ https://kernelgo.org/images/qemu-address-space.svg
 
 通过 mtree_info 函数在代码特定位置观测 memory region 的形成的过程
 
-## AddressSpace
-当提到 address space 的时候，因为要处理地址空间的变换的, 所以，实际上是来持有 Flatview 的
-
-- 如果 memory region 添加了，但是导致 Flatview 重构，那么 AddressSpace 如何知道?
-  - 在 memory_region_transaction_commit 后面紧跟着 address_space_set_flatview
-
-- [x] 为什么使用 flat_views 这个 g_hash_table 来保存
-  - 不是所有的 MemoryRegion 都是需要关联一个 Flatview 的, 实际上只有顶层的
-  - AddressSpace 的确需要关联 Flatview 的，但是可能其他的 MemoryRegion 已经将其对应的 Flatview 更新了
-  - 所以，其实这就是正确的操作
-
-- [x] 为什么需要给创建多个 AddressSpace
-  - KVM 中, 显然 IO 和 MMIO 是两个空间的，IO 和 MMIO 分别选择全局定义的 address_space_memory 和 address_space_io
-  - tcg 中为了处理 SMM
-  - [ ] KVM 处理 SMRAM 是怎么说
-
-- cpu_address_space_init 当在 KVM 模式下, 已经没有任何必要创建出来 CPUAddressSpace 的必要
-  - kvm 注册 memory listener 例如 kvm_memory_listener_register 都是直接使用 address_space_memory 的
-
-```c
-static MemoryRegion *system_memory;
-static MemoryRegion *system_io;
-
-AddressSpace address_space_io;
-AddressSpace address_space_memory;
-```
-这两个 AddressSpace 的初始位置，都是在 memory_map_init, 将其和 system_memory 和 system_io 联系起来
-而之后的一些列初始化和内容的填充都是通过这两个 MemoryRegion 完成的。
-
-AddressSpace 关联一个 MemoryRegion, 通过 MemoryRegion 可以找到 Flatview Root, 从而找到该 as 关联的真正 flatview
-而是 flatview 决定了 io 真正的地址 (address_space_set_flatview)
-
-- 通过  `static GHashTable *flat_views;` 可以找到通过 mr 找到 flatview
-
-## RAMBlock
-- memory_region_init_ram : 创建出来 RAM, 但是 memory_region_set_readonly 不就让这里没有作用了
-    - memory_region_init_ram_nomigrate
-      - memory_region_init_ram_flags_nomigrate
-        - qemu_ram_alloc
-          - ram_block_add
-            - phys_mem_alloc (qemu_anon_ram_alloc)
-              - qemu_ram_mmap
-                - mmap : 可见 RAMBlock 在初始化的时候会在 host virtual address space 中 map 出来一个空间
-
-RAMBlock 结构体分析:
-1. RAMBlock::host : host 的虚拟地址空间，存储 mmap 的返回值
-2. RAMBlock::offset : 将所有的 RAMBlock 连续的放到一起，每一个 RAMBlock 的 offset，第一个加入的 offset 为 0
-    - 通过 RAMBlock::offset 可以放一个 RAM 内的 page 知道在 RAMList::dirty_memory 对应的 bit 位
-
-find_ram_offset 中 RAM 的对齐至少为 0x40000
-```c
-        candidate = ROUND_UP(candidate, BITS_PER_LONG << TARGET_PAGE_BITS);
-```
-再看下面的 RAM 的 offset 既可以发现，其 RAM 就是一个个链接到一起的
-```c
-/*
-huxueshi:ram_block_add pc.ram: offset=0 size=180000000
-huxueshi:ram_block_add vga.vram: offset=180080000 size=800000
-huxueshi:ram_block_add /rom@etc/acpi/tables: offset=180900000 size=200000
-huxueshi:ram_block_add pc.bios: offset=180000000 size=40000
-huxueshi:ram_block_add e1000.rom: offset=1808c0000 size=40000
-huxueshi:ram_block_add pc.rom: offset=180040000 size=20000
-huxueshi:ram_block_add virtio-vga.rom: offset=180880000 size=10000
-huxueshi:ram_block_add /rom@etc/table-loader: offset=180b00000 size=10000
-huxueshi:ram_block_add /rom@etc/acpi/rsdp: offset=180b40000 size=1000
-```
-
-## render_memory_region : 将 memory region 转化为 FlatRange
-- memory_region_transaction_commit
-  - flatviews_reset
-    - generate_memory_topology : Render a memory topology into a list of disjoint absolute ranges.
-      - render_memory_region : 虽然是一个很长的函数,
-        1. 如果是 alias, 那么 render alias
-        2. 如果存在 child，那么按照优先级 render child, memory_region_add_subregion_common 优先级是满足的
-        3. 最后，Render the region itself into any gaps left by the current view.
-        4. 终极目的，创建 FlatRange 出来，并且使用 flatview_insert 将 FlatRange 放到 FlatView::ranges 数组上
-      - flatview_simplify
-      - address_space_dispatch_new : 初始化 FlatView::dispatch
-      - flatview_add_to_dispatch
-      - address_space_dispatch_compact
-
-## flatviews_reset
-- flatviews_reset 的调用者总是 memory_region_transaction_commit
-- flatviews_reset 总是会将之前生成的 flag_views 全部删除掉, 然后重新构建
-- flat_views 中间一共只有三个 memory region 的
-  - huxueshi:flatviews_reset memory
-  - huxueshi:flatviews_reset I/O
-  - huxueshi:flatviews_reset KVM-SMRAM
-
 ## AddressSpaceDispatch
-- [ ] 应该将这些经典执行流程保护起来
 
 #### AddressSpaceDispatch dispatch 的过程 : 百川归海
 进行 pio / mmio 最后总是到达 : memory_region_dispatch_read

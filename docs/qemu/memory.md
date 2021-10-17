@@ -8,6 +8,7 @@
 - [FlatView](#flatview)
 - [AddressSpaceDispatch](#addressspacedispatch)
 - [RamBlock](#ramblock)
+- [ram addr](#ram-addr)
 - [subpage](#subpage)
 - [MemoryListener](#memorylistener)
 - [CPUAddressSpace](#cpuaddressspace)
@@ -81,6 +82,9 @@ address-space: memory                     │   │    │
     00000000fee00000-00000000feefffff (prio 4096, i/o): apic-msi                                                                │
     0000000100000000-00000001bfffffff (prio 0, ram): alias ram-above-4g @pc.ram 00000000c0000000-000000017fffffff ──────────────┘
 ```
+完整的在这里[这里](https://martins3.github.io/qemu/memory/memory-model-tcg.txt)
+看上去非常的长，实际上，cpu-memory-0, system, pci 这三个 MemoryRegion 逐个包含，pci 的这个 MemoryRegion 在其中打印了多次。
+
 总体来说，MemoryRegion 用于描述一个范围内的映射规则, AddressSpace 用于描述整个地址空间的映射关系。有了映射关系，当 guest 访问到这些地址的时候，就可以知道具体应该进行什么操作了。
 
 下面是 kvm 处理 io 端口的操作的一个调用流程图，只要给出 AddressSpace 以及 地址，最后就可以找到最后的 handler 为 `kbd_read_data`
@@ -104,6 +108,13 @@ address-space: memory                     │   │    │
 #16 0x00007ffff61b4293 in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
 */
 ```
+
+但是这里有一个问题，这些 MemoryRegion 逐层嵌套，如果不做简化处理，为了确定一个地址到底落到了哪一个 MemoryRegion，每次都需要
+从顶层 MemoryRegion 逐个找其 child MemoryRegion，其中还需要处理 alias 和 priority 的问题，而且到底命中哪一个 MemoryRegion 需要这个比较范围。
+为此，QEMU 在每次 MemoryRegion 的属性发生修改的时候都会进行两个事情:
+- 将 MemoryRegion 压平为 FlatRange，避免逐级查询 MemoryRegion
+- 将 FlatRange 变为树的查询，将查询从 O(n) 的查询修改为 O(log(N))
+
 ## AddressSpace
 AddressSpace 用于描述整个地址空间的映射关系, 不同的地址空间的映射关系不同。guest 写相同的地址，在 io 的空间和 memory 空间的效果不同的。
 在 kvm 模式下，主要是两个 AddressSpace，一个是 `address_space_memory` 另一个是 `address_space_io`, 定义在 `softmmu/physmem.c` 中间。
@@ -129,7 +140,6 @@ AddressSpace 用于描述整个地址空间的映射关系, 不同的地址空�
                              run->mmio.is_write);
 ```
 
-`address_space_memory` 和 `address_space_io` 分别关联 `system_memory` 和 `system_io` 这两个 MemoryRegion
 
 ```c
 static MemoryRegion *system_memory;
@@ -138,6 +148,21 @@ static MemoryRegion *system_io;
 AddressSpace address_space_io;
 AddressSpace address_space_memory;
 ```
+在 memory_map_init 中, AddressSpace
+`address_space_memory` 和 `address_space_io` 分别关联 `system_memory` 和 `system_io` 这两个 MemoryRegion,
+而之后的各种初始化都是同个将初始化 MemoryRegion 添加到这两个 MemoryRegion 上的。
+
+通过 MemoryRegion 可以找到该 MemoryRegion 下的 Flatview
+一个 AddressSpace 只会关联一个 MemoryRegion, 通过 address_space_set_flatview 缓存到 AddressSpace::current_map 上。
+
+因为只有顶层的 MemoryRegion 才需要持有的 Flatview 的，所以没有必要在 MemoryRegion 中添加一个属性，QEMU 将 MemoryRegion 持有的 Flatview 保存在 `static GHashTable *flat_views;`
+
+每次增删改 MemoryRegion 之后，都会调用，
+memory_region_transaction_commit 进而调用 address_space_set_flatview
+保证 AddressSpace::current_map 的 Flatview 和 MemoryRegion 总是同步的。
+
+在 memory_region_transaction_commit 中调用 flatviews_reset
+flatviews_reset 会将之前生成的 flag_views 全部删除掉, 然后重新构建
 
 ## MemoryRegion
 MemoryRegion 用于描述一个范围内的映射规则。
@@ -162,69 +187,117 @@ MemoryRegion 用于描述一个范围内的映射规则。
 给出一个地址，显然需要尽快知道该地址映射到什么位置, 但是
 MemoryRegion 存在 overlap，alias 的，获取这个地址上的真正的 memory region 需要进行计算，
 不可能每次访存都将 memory region 的关系计算一次，而且要保存下来。这个保存下来的结果就是 FlatView 了。
+[查看一个完整的 FlatRange](https://martins3.github.io/qemu/memory/memory-model-tcg-flat.txt)
 
-FlatView 由一个个 FlatRange 组成，互相不重合，描述了最终的地址空间的样子，从 MemoryRegion 生成 FlatRange 的过程在 `render_memory_region`
+FlatView 由一个个 FlatRange 组成，互相不重合，描述了最终的地址空间的样子，从 MemoryRegion 生成 FlatRange 的过程在
+`generate_memory_topology`
 
-```txt
-FlatView #0
- AS "memory", root: system
- AS "cpu-memory-0", root: system
- AS "cpu-memory-1", root: system
- AS "e1000", root: bus master container
- AS "piix3-ide", root: bus master container
- AS "nvme", root: bus master container
- AS "virtio-9p-pci", root: bus master container
- Root memory region: system
-  0000000000000000-000000000009ffff (prio 0, ram): pc.ram
-  00000000000a0000-00000000000bffff (prio 1, i/o): vga-lowmem
-  00000000000c0000-00000000000cafff (prio 0, rom): pc.ram @00000000000c0000
-  00000000000cb000-00000000000cdfff (prio 0, ram): pc.ram @00000000000cb000
-  00000000000ce000-00000000000e3fff (prio 0, rom): pc.ram @00000000000ce000
-  00000000000e4000-00000000000effff (prio 0, ram): pc.ram @00000000000e4000
-  00000000000f0000-00000000000fffff (prio 0, rom): pc.ram @00000000000f0000
-  0000000000100000-00000000bfffffff (prio 0, ram): pc.ram @0000000000100000
-  00000000fd000000-00000000fdffffff (prio 1, ram): vga.vram
-  00000000fe000000-00000000fe000fff (prio 0, i/o): virtio-pci-common-virtio-9p
-  00000000fe001000-00000000fe001fff (prio 0, i/o): virtio-pci-isr-virtio-9p
-  00000000fe002000-00000000fe002fff (prio 0, i/o): virtio-pci-device-virtio-9p
-  00000000fe003000-00000000fe003fff (prio 0, i/o): virtio-pci-notify-virtio-9p
-  00000000febc0000-00000000febdffff (prio 1, i/o): e1000-mmio
-  00000000febf0000-00000000febf1fff (prio 0, i/o): nvme
-  00000000febf2000-00000000febf240f (prio 0, i/o): msix-table
-  00000000febf3000-00000000febf300f (prio 0, i/o): msix-pba
-  00000000febf4000-00000000febf5fff (prio 0, i/o): nvme
-  00000000febf6000-00000000febf640f (prio 0, i/o): msix-table
-  00000000febf7000-00000000febf700f (prio 0, i/o): msix-pba
-  00000000febf8000-00000000febf817f (prio 0, i/o): edid
-  00000000febf8180-00000000febf83ff (prio 1, i/o): vga.mmio @0000000000000180
-  00000000febf8400-00000000febf841f (prio 0, i/o): vga ioports remapped
-  00000000febf8420-00000000febf84ff (prio 1, i/o): vga.mmio @0000000000000420
-  00000000febf8500-00000000febf8515 (prio 0, i/o): bochs dispi interface
-  00000000febf8516-00000000febf85ff (prio 1, i/o): vga.mmio @0000000000000516
-  00000000febf8600-00000000febf8607 (prio 0, i/o): qemu extended regs
-  00000000febf8608-00000000febf8fff (prio 1, i/o): vga.mmio @0000000000000608
-  00000000febf9000-00000000febf901f (prio 0, i/o): msix-table
-  00000000febf9800-00000000febf9807 (prio 0, i/o): msix-pba
-  00000000fec00000-00000000fec00fff (prio 0, i/o): ioapic
-  00000000fed00000-00000000fed003ff (prio 0, i/o): hpet
-  00000000fee00000-00000000feefffff (prio 4096, i/o): apic-msi
-  00000000fffc0000-00000000ffffffff (prio 0, rom): pc.bios
-  0000000100000000-00000001bfffffff (prio 0, ram): pc.ram @00000000c0000000
+```c
+/* Render a memory topology into a list of disjoint absolute ranges. */
+static FlatView *generate_memory_topology(MemoryRegion *mr)
+{
+    int i;
+    FlatView *view;
+
+    view = flatview_new(mr);
+
+    if (mr) {
+        // 递归的将 MemoryRegion 中的各个 sub MemoryRegion 压平为 FlatRange
+        //  1. 如果是 alias, 那么 render alias
+        //  2. 如果存在 child，那么按照优先级 render child, memory_region_add_subregion_common 优先级是满足的
+        //  3. 最后，Render the region itself into any gaps left by the current view.
+        //  4. 终极目的，创建 FlatRange 出来，并且使用 flatview_insert 将 FlatRange 放到 FlatView::ranges 数组上
+        render_memory_region(view, mr, int128_zero(),
+                             addrrange_make(int128_zero(), int128_2_64()),
+                             false, false);
+    }
+    // 将可以合并的 FlatRange 合并起来
+    flatview_simplify(view);
+
+    view->dispatch = address_space_dispatch_new(view);
+    for (i = 0; i < view->nr; i++) {
+        // FlatRange 装换为 MemoryRegionSection 是一个很简单的装换
+        MemoryRegionSection mrs =
+            section_from_flat_range(&view->ranges[i], view);
+        // 在其中由于一个 FlatRange 可能只会覆盖 page 的部分
+        // 一个 MemoryRegionSection 可能会被拆分为多个 MemoryRegionSection
+        flatview_add_to_dispatch(view, &mrs);
+    }
+    address_space_dispatch_compact(view->dispatch);
+    // 新的 FlatView 制作出来，将老的替换掉
+    g_hash_table_replace(flat_views, mr, view);
+
+    return view;
+}
 ```
 
 ## AddressSpaceDispatch
 FlatView 是一个数组形式，为了加快访问，显然需要使用构成一个红黑树之类的，可以在 log(n) 的时间内访问的, QEMU 实现的
 这个就是 AddressSpaceDispatch 了。
 
-将 FlatRange 逐个调用 `flatview_add_to_dispatch` 创建出来的。
+在 `generate_memory_topology` 中将 FlatRange 逐个调用 `flatview_add_to_dispatch` 创建出来的。
 
 ## RamBlock
-- memory_region_get_ram_ptr : 返回一个 RAMBlock 在 host 中的偏移量
-- memory_region_get_ram_addr : 获取在 ram 空间的偏移
-- memory_region_section_get_iotlb : 如果是一个
+创建一个 RAM 的过程大致如此:
+1. 创建一个 MemoryRegion / RamBlock，并且关联起来
+2. mmap 出来一个 host virtual memory 当做 guest 的内存
 
-- 在 tlb_set_page_with_attrs 的 xlat 是 MemoryRegion 内的偏移
-  - 需要靠 address_space_translate_for_iotlb 同时返回 MemoryRegion 和 xlat
+- memory_region_init_ram : 创建出来 RAM, 但是 memory_region_set_readonly 不就让这里没有作用了
+    - memory_region_init_ram_nomigrate
+      - memory_region_init_ram_flags_nomigrate
+        - qemu_ram_alloc
+          - ram_block_add
+            - phys_mem_alloc (qemu_anon_ram_alloc)
+              - qemu_ram_mmap
+                - mmap : 可见 RAMBlock 在初始化的时候会在 host virtual address space 中 map 出来一个空间
+
+RAMBlock 结构体分析:
+1. RAMBlock::host : host 的虚拟地址空间，存储 mmap 的返回值
+2. RAMBlock::offset : 将所有的 RAMBlock 连续的放到一起，每一个 RAMBlock 的 offset，第一个加入的 offset 为 0
+    - 通过 RAMBlock::offset 可以放一个 RAM 内的 page 知道在 RAMList::dirty_memory 对应的 bit 位
+
+## ram addr
+构建 ram addr 的目的 dirty page 的记录，所有的 page 的 dirty 都是记录在 `RAMList::DirtyMemoryBlocks::blocks` 中
+给出一个 ram 中的一个 page，需要找到在 blocks 数组中的下标，于是发明了 ram addr
+```c
+typedef struct {
+    struct rcu_head rcu;
+    unsigned long *blocks[];
+} DirtyMemoryBlocks;
+
+typedef struct RAMList {
+    QemuMutex mutex;
+    RAMBlock *mru_block;
+    /* RCU-enabled, writes protected by the ramlist lock. */
+    QLIST_HEAD(, RAMBlock) blocks;
+    DirtyMemoryBlocks *dirty_memory[DIRTY_MEMORY_NUM];
+    uint32_t version;
+    QLIST_HEAD(, RAMBlockNotifier) ramblock_notifiers;
+} RAMList;
+```
+QEMU 使用 RAMBlock 来描述 ram，MemoryRegion 的类型是 ram，那么就会关联一个 RAMBlock
+
+将所有的 RAMBlock 连续的连到一起，形成 RAMList ，一个 RAMBlock 在其中偏移量记录在 `RAMBlock::offset`, 显然，第一个 offset 为 0
+
+find_ram_offset 中 RAM 的对齐至少为 0x40000
+```c
+        candidate = ROUND_UP(candidate, BITS_PER_LONG << TARGET_PAGE_BITS);
+```
+```c
+/*
+pc.ram: offset=0 size=180000000
+pc.bios: offset=180000000 size=40000
+pc.rom: offset=180040000 size=20000
+vga.vram: offset=180080000 size=800000
+/rom@etc/acpi/tables: offset=180900000 size=200000
+virtio-vga.rom: offset=180880000 size=10000
+e1000.rom: offset=1808c0000 size=40000
+/rom@etc/table-loader: offset=180b00000 size=10000
+/rom@etc/acpi/rsdp: offset=180b40000 size=1000
+```
+任何一个 page 的 ram_addr = offset in RAM + `RAMBlock::offset`
+
+
 
 ## subpage
 之前分析过 flatview_translate 的流程，其作用在于根据 hwaddr 在 AddressSpace 中找到对应的 MemoryRegion
