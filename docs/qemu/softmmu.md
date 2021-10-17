@@ -1,29 +1,4 @@
-# QEMU 的 memory model 和 softmmu 高级话题分析
-
-<!-- vim-markdown-toc GitLab -->
-
-  - [[ ] MemOp](#-memop)
-  - [lock page](#lock-page)
-  - [SMC](#smc)
-  - [TARGET_HAS_PRECISE_SMC](#target_has_precise_smc)
-  - [流程](#流程)
-  - [PageDesc](#pagedesc)
-      - [PageDesc::first_tb](#pagedescfirst_tb)
-      - [PageDesc::code_bitmap / PageDesc::code_write_count](#pagedesccode_bitmap-pagedesccode_write_count)
-  - [page desc tree](#page-desc-tree)
-  - [tb_invalidate_phys_page_fast](#tb_invalidate_phys_page_fast)
-  - [unaligned access](#unaligned-access)
-- [如何重新设计 QEMU 中的 memory](#如何重新设计-qemu-中的-memory)
-  - [设计](#设计)
-  - [需求分析](#需求分析)
-  - [address_space_translate_for_iotlb 和 address_space_translate 的关系](#address_space_translate_for_iotlb-和-address_space_translate-的关系)
-  - [笔记补充](#笔记补充)
-  - [Softmmu](#softmmu)
-    - [Overview](#overview)
-    - [soft TLB](#soft-tlb)
-    - [ram addr](#ram-addr)
-
-<!-- vim-markdown-toc -->
+# QEMU 的 softmmu 设计
 
 主要是基于 tcg 分析，对于做云计算的同学应该没有什么作用。
 因为 kvm 将内存虚拟化处理掉之后，softmmu 的很多复杂机制就完全消失了。
@@ -79,19 +54,11 @@ static inline unsigned get_mmuidx(TCGMemOpIdx oi) { return oi & 15; }
 
 ## SMC
 自修改代码指的是运行过程中修改执行的代码。
+用户态是通过信号机制(SEGV)，系统态直接在 softmmu 的位置检查
 
-检查方法是存在 guest code 的 page 的 CPUTLBEntry 中插入 TLB_NOTDIRTY 的 flag, 这个导致 TLB 比较失败，然后会 invalid 掉这个 guest page 关联的所有的 tb
-
-通过 PageDesc 可以从 ram addr 找到其关联的所有的 tb
-
-
-## TARGET_HAS_PRECISE_SMC
-TARGET_HAS_PRECISE_SMC 的使用位置只有 tb_invalidate_phys_page_range__locked
-
-为了处理当前的 tb 正好被 SMC 了
-
-## 流程
-- 用户态是如此处理的 通过信号机制(SEGV)，系统态直接在 softmmu 的位置检查
+在系统态中，存在 guest code 的 page 的 CPUTLBEntry 中插入 TLB_NOTDIRTY 的 flag, 这个导致 TLB 比较失败，
+通过 PageDesc 可以从 ram addr 找到其关联的所有的 tb，
+进而 invalidate 掉这个 guest page 关联的所有的 tb
 
 保护代码的流程:
 
@@ -112,158 +79,88 @@ TARGET_HAS_PRECISE_SMC 的使用位置只有 tb_invalidate_phys_page_range__lock
     - cpu_physical_memory_set_dirty_range : Set both VGA and migration bits for simplicity and to remove the notdirty callback faster.
     - tlb_set_dirty
 
-## PageDesc
-```c
-typedef struct PageDesc {
-    /* list of TBs intersecting this ram page */
-    uintptr_t first_tb;
-#ifdef CONFIG_SOFTMMU
-    /* in order to optimize self modifying code, we count the number
-       of lookups we do to a given page to use a bitmap */
-    unsigned long *code_bitmap;
-    unsigned int code_write_count;
-#else
-    unsigned long flags;
-    void *target_data;
-#endif
-#ifndef CONFIG_USER_ONLY
-    QemuSpin lock;
-#endif
-} PageDesc;
-```
+
+### PageDesc
+如果找到 guest physical page 上的所有的 TB ，这就是通过 PageDesc 进行的
 
 #### PageDesc::first_tb
-从 tb_page_add 可以看到
-- TranslationBlock::page_addr : guest 的物理页面地址
-- TranslationBlock::page_next : 通过 page_next 将 TranslationBlock 挂到 PageDesc::first_tb 上，这样 PageDesc 就可以找到所有的 TranslationBlock 了
+- TranslationBlock::page_next : 通过 page_next 将 TranslationBlock 挂到 PageDesc::first_tb 上
+- TranslationBlock::page_next[2] 存在两个项目，当一个 tb 跨页之后，那么这个 tb 就需要分别添加到两个 PageDesc::first 的数组中。 只要 PageDesc::first_tb 那么 page_already_protected
 
+- PageDesc::first_tb 和 TranslationBlock::page_next 指针的最低一位可以用于 PageDesc p 知道这个 TB 的那一部分在 p 中
 
-> 注意，TranslationBlock::page_next[2] 存在两个项目，当一个 tb 跨页之后，那么这个 tb 就需要分别添加到
-> 两个 PageDesc::first 的数组中。
+在 tb_page_add 中初始化:
+```c
+static inline void tb_page_add(PageDesc *p, TranslationBlock *tb,
+                               unsigned int n, tb_page_addr_t page_addr)
+{
 
-只要 PageDesc::first_tb page_already_protected
+    tb->page_next[n] = p->first_tb;
+    // ...
+    p->first_tb = (uintptr_t)tb | n;
+```
 
-- PageDesc::first_tb 指针的最低两位可以保存这个 PageDesc 是 tb 的第一个 PageDesc 还是第二个。
-  - 比如 build_page_bitmap 就需要这个的。
-
-- tb_link_page (exec.c) 把新的 TB 加進 tb_phys_hash 和 l1_map 二級頁表。
-tb_find_slow 會用 pc 對映的 GPA 的哈希值索引 tb_phys_hash。
-
-- tb_page_add (exec.c) 設置 TB 的 page_addr 和 page_next，並在 l1_map 中配置 PageDesc 給 TB。
-
-tb_invalidate_phys_page_fast : 一个 PageDesc 并不会立刻创建 bitmap, 而是发现 tb_invalidate_phys_page_fast 多次被调用才会创建
-创建 bitmap 的作用是为了精准定位出来到底是哪一个 page 需要被 invalid。
-
-- [ ] page_flush_tb
-
-- [ ] 结构体 PageDesc 的作用是什么 ?
-  - 难道时候首先分配 page，然后这些 tb 都是 page
-  - 对于连续的物理空间或者虚拟地址空间，感觉并没有必要如此必要吧
-  - TranslationBlock::page_addr
-    - 记录了一个 TB 所在的页面
-    - 如果页面是连续的，就不应该申请两个
-
-- [ ] SMC_BITMAP_USE_THRESHOLD
-  - 和 highwater 什么关系?
-
-- tb_gen_code : 这是一个关键核心
-  - get_page_addr_code : 将虚拟地址的 pc 装换为物理地址
-    - get_page_addr_code_hostp
-      - 如果命中，就是 TLB 的翻译 `p = (void *)((uintptr_t)addr + entry->addend);`
-      - qemu_ram_addr_from_host_nofail
-  - tb_link_page : 将 tb 纳入到 QEMU 的管理中
-    - tb_page_add
-      - [ ] invalidate_page_bitmap : 根本无法理解，link page 的时候为什么会将 bitmap disable 掉
-      - tlb_protect_code : 指向 exec.c 中间，应该是通过 dirty / clean 的方式来防止代码被修改 ?
-        - [ ] 原则上，guest 代码段被修改必然需要让对应的 tb 也是被 invalidate 的呀
-
-#### PageDesc::code_bitmap / PageDesc::code_write_count
-主要的使用位置 : tb_invalidate_phys_page_fast
-
-逻辑非常简单，如果一个 PageDesc 对应的 page 反复被 invalidate 的时候，那么就会建立 bitmap 将其中真正有代码的位置确认，
-只有命中了翻译了 tb 的位置，才会真正的 invalidate 的，而一般的处理是，直接 invalidate 所有的。
-
-## page desc tree
-- PageDesc 的 lock 是基于什么的 ?
-
-创建:
-- page_lock_pair
-  - page_find_alloc
-
-查询:
-- page_find
-  - page_find_alloc
-
-将 tb 放到 PageDesc 的管理中:
-- tb_link_page
-  - tb_page_add : 需要将 bitmap invalidate 掉
+构建出来一个标准处理的 macro, macro 的使用者将会获得三个变量:
+- p : PageDesc
+- tb : 在 p 上的一个 TranslationBlock
+- n
+  - n == 0 : 说明 tb 要么不跨页，要么是上半部分跨页
+  - n == 1: 下半部分跨页
 
 ```c
-/* Size of the L2 (and L3, etc) page tables.  */
-#define V_L2_BITS 10
-#define V_L2_SIZE (1 << V_L2_BITS)
+/* list iterators for lists of tagged pointers in TranslationBlock */
+#define TB_FOR_EACH_TAGGED(head, tb, n, field)                          \
+    for (n = (head) & 1, tb = (TranslationBlock *)((head) & ~1);        \
+         tb; tb = (TranslationBlock *)tb->field[n], n = (uintptr_t)tb & 1, \
+             tb = (TranslationBlock *)((uintptr_t)tb & ~1))
 
-# define L1_MAP_ADDR_SPACE_BITS  TARGET_PHYS_ADDR_SPACE_BITS
+#define PAGE_FOR_EACH_TB(pagedesc, tb, n)                       \
+    TB_FOR_EACH_TAGGED((pagedesc)->first_tb, tb, n, page_next)
+```
 
-/*
- * L1 Mapping properties
- */
-static int v_l1_size;
-static int v_l1_shift;
-static int v_l2_levels;
+当构建一个 page 的 bitmap 的时候，就可以通过 n == 1 可以快速的计算出来这个 tb 到底那些是落到 page 上的：
+```c
+static void build_page_bitmap(PageDesc *p) {
+  int n, tb_start, tb_end;
+  TranslationBlock *tb;
 
-/* The bottom level has pointers to PageDesc, and is indexed by
- * anything from 4 to (V_L2_BITS + 3) bits, depending on target page size.
- */
-#define V_L1_MIN_BITS 4
-#define V_L1_MAX_BITS (V_L2_BITS + 3)
-#define V_L1_MAX_SIZE (1 << V_L1_MAX_BITS)
+  assert_page_locked(p);
+  p->code_bitmap = bitmap_new(TARGET_PAGE_SIZE);
 
-static void *l1_map[V_L1_MAX_SIZE];
-
-static void page_table_config_init(void)
-{
-    uint32_t v_l1_bits;
-
-    assert(TARGET_PAGE_BITS);
-    /* The bits remaining after N lower levels of page tables.  */
-    v_l1_bits = (L1_MAP_ADDR_SPACE_BITS - TARGET_PAGE_BITS) % V_L2_BITS;
-
-    if (v_l1_bits < V_L1_MIN_BITS) {
-        v_l1_bits += V_L2_BITS;
+  PAGE_FOR_EACH_TB(p, tb, n) {
+    /* NOTE: this is subtle as a TB may span two physical pages */
+    if (n == 0) {
+      /* NOTE: tb_end may be after the end of the page, but
+         it is not a problem */
+      tb_start = tb->pc & ~TARGET_PAGE_MASK;
+      tb_end = tb_start + tb->size;
+      if (tb_end > TARGET_PAGE_SIZE) {
+        tb_end = TARGET_PAGE_SIZE;
+      }
+    } else {
+      tb_start = 0;
+      tb_end = ((tb->pc + tb->size) & ~TARGET_PAGE_MASK);
     }
-
-    v_l1_size = 1 << v_l1_bits;
-    v_l1_shift = L1_MAP_ADDR_SPACE_BITS - TARGET_PAGE_BITS - v_l1_bits;
-    v_l2_levels = v_l1_shift / V_L2_BITS - 1;
-
-    assert(v_l1_bits <= V_L1_MAX_BITS);
-    assert(v_l1_shift % V_L2_BITS == 0);
-    assert(v_l2_levels >= 0);
+    bitmap_set(p->code_bitmap, tb_start, tb_end - tb_start);
+  }
 }
 ```
 
-- 需要覆盖架构支持的所有的物理地址
-- 保证 V_L2_BITS 总是 10
+#### code_bitmap
+在默认情况下，如果一个 page 只要一个写，那么就会将整个 page 关联的 TB 全部清理，实际上:
+- 一般来说，反复修改代码段的情况比较少
+- 如果一个 page 同时含有数据和代码，修改数据的时候可能导致 spurious 的 TB 修改
 
-## tb_invalidate_phys_page_fast
-- tb_invalidate_phys_page_fast
-  - page_find
-    - [ ] page_find_alloc(tb_page_addr_t index, int alloc)
-      - 分配空间，还需要考虑 level 什么的
-      - [ ] page_find_alloc 中间为什么需要使用 rcu
-  - build_page_bitmap
-  - tb_invalidate_phys_page_range__locked
-    - tb_phys_invalidate__locked
-      - do_tb_phys_invalidate
-        - do_tb_phys_invalidate(在 chen 的笔记中叫做 tb_phys_invalidate)，在这里完成真正的工作, 将 tb 从 hash 中间移除之类的
+一个 PageDesc 并不会立刻创建 bitmap, 而是发现 `tb_invalidate_phys_page_fast` 多次被调用才会创建
+创建 bitmap 的作用是为了精准定位出来 page 中到底是那些 位置需要 code，从而避免 spurious SMC
 
-- tb_invalidate_phys_page_range__locked : 这是真正进行工作的位置
-  * tb_invalidate_phys_range
-      * invalidate_and_set_dirty : 调用这个的位置超级多
-      * tb_check_watchpoint
-  * tb_invalidate_phys_page_range
-    * tb_invalidate_phys_addr : 没有用户, 或者说是一个很奇怪的架构需要这个东西
+- PageDesc::code_write_count : 将 write 的字数保存到此处，如果 write count 超过 SMC_BITMAP_USE_THRESHOLD，那么就会构建 code_bitmap
+- PageDesc::code_bitmap
+
+#### precise smc
+TARGET_HAS_PRECISE_SMC 的使用位置只有 tb_invalidate_phys_page_range__locked
+
+为了处理当前的 tb 正好被 SMC 了
 
 ## unaligned access
 ```c
@@ -665,6 +562,8 @@ e1000.rom: offset=1808c0000 size=40000
 /rom@etc/acpi/rsdp: offset=180b40000 size=1000
 ```
 任何一个 page 的 ram_addr = offset in RAM + `RAMBlock::offset`
+## Notes
+- 从 tb_page_add 可以看到, TranslationBlock::page_addr 保存到是 guest 的物理页面地址
 
 
 <script src="https://utteranc.es/client.js" repo="Martins3/Martins3.github.io" issue-term="url" theme="github-light" crossorigin="anonymous" async> </script>
