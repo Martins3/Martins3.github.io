@@ -7,6 +7,7 @@
 - [MemoryRegion](#memoryregion)
 - [FlatView](#flatview)
 - [AddressSpaceDispatch](#addressspacedispatch)
+- [RamBlock](#ramblock)
 - [subpage](#subpage)
 - [MemoryListener](#memorylistener)
 - [CPUAddressSpace](#cpuaddressspace)
@@ -216,6 +217,16 @@ FlatView 是一个数组形式，为了加快访问，显然需要使用构成�
 这个就是 AddressSpaceDispatch 了。
 
 将 FlatRange 逐个调用 `flatview_add_to_dispatch` 创建出来的。
+
+## RamBlock
+:TODO:
+
+- memory_region_get_ram_ptr : 返回一个 RAMBlock 在 host 中的偏移量
+- memory_region_get_ram_addr : 获取在 ram 空间的偏移
+- memory_region_section_get_iotlb : 如果是一个
+
+- 在 tlb_set_page_with_attrs 的 xlat 是 MemoryRegion 内的偏移
+  - 需要靠 address_space_translate_for_iotlb 同时返回 MemoryRegion 和 xlat
 
 ## subpage
 之前分析过 flatview_translate 的流程，其作用在于根据 hwaddr 在 AddressSpace 中找到对应的 MemoryRegion

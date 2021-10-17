@@ -11,6 +11,8 @@
     - [Seabios 侧如何处理 PAM](#seabios-侧如何处理-pam)
 - [SMM](#smm)
     - [SMM 地址空间的构建](#smm-地址空间的构建)
+    - [seabios 如何使用 SMMM](#seabios-如何使用-smmm)
+    - [QEMU 如何响应](#qemu-如何响应)
     - [SMM 的使用](#smm-的使用)
 - [问题](#问题)
 
@@ -192,6 +194,10 @@ void pam_update(PAMMemoryRegion *pam, int idx, uint8_t val)
 }
 ```
 
+- 在 PAM 完全没有打开的时候，映射的 PCI
+- 然后映射为 RAM
+- 最后映射为 ROM
+
 #### Seabios 侧如何处理 PAM
 guest 通过 PCI bridge i440fx 的 `I440FX_PAM` 的位置来实现更新 PAM 的。
 
@@ -251,6 +257,58 @@ make_bios_writable_intel(u16 bdf, u32 pam0)
 ```
 当 bios 结束之后，这些 PAM 的位置会再次设置上 `make_bios_readonly_intel`，但是 0xe4000 ~ 0xeffff 的部分会被豁免。
 
+```c
+static void
+make_bios_readonly_intel(u16 bdf, u32 pam0)
+{
+    // Flush any pending writes before locking memory.
+    wbinvd();
+
+    // Read in current PAM settings from pci config space
+    union pamdata_u pamdata;
+    pamdata.data32[0] = pci_config_readl(bdf, ALIGN_DOWN(pam0, 4));
+    pamdata.data32[1] = pci_config_readl(bdf, ALIGN_DOWN(pam0, 4) + 4);
+    u8 *pam = &pamdata.data8[pam0 & 0x03];
+
+    // Write protect roms from 0xc0000-0xf0000
+    u32 romlast = BUILD_BIOS_ADDR, rommax = BUILD_BIOS_ADDR;
+    if (CONFIG_WRITABLE_UPPERMEMORY)
+        romlast = rom_get_last();
+    if (CONFIG_MALLOC_UPPERMEMORY)
+        rommax = rom_get_max();
+    int i;
+    for (i=0; i<6; i++) {
+        u32 mem = BUILD_ROM_START + i * 32*1024;
+        if (romlast < mem + 16*1024 || rommax < mem + 32*1024) {
+            if (romlast >= mem && rommax >= mem + 16*1024)
+                pam[i + 1] = 0x31;
+            break;
+        }
+        pam[i + 1] = 0x11;
+    }
+
+    // Write protect 0xf0000-0x100000
+    pam[0] = 0x10;
+
+    // Write PAM settings back to pci config space
+    pci_config_writel(bdf, ALIGN_DOWN(pam0, 4), pamdata.data32[0]);
+    pci_config_writel(bdf, ALIGN_DOWN(pam0, 4) + 4, pamdata.data32[1]);
+}
+```
+
+添加 kvmvapic 的影响，最后得到 flatview 就是在 0xc0000 ~ 0xfffff 中有两个 RAM 的区间了
+```txt
+    00000000000cb000-00000000000cdfff (prio 1000, i/o): alias kvmvapic-rom @pc.ram 00000000000cb000-00000000000cdfff
+```
+
+```txt
+  00000000000c0000-00000000000cafff (prio 0, rom): pc.ram @00000000000c0000
+  00000000000cb000-00000000000cdfff (prio 0, ram): pc.ram @00000000000cb000 // kvmvapic-rom
+  00000000000ce000-00000000000e3fff (prio 0, rom): pc.ram @00000000000ce000
+  00000000000e4000-00000000000effff (prio 0, ram): pc.ram @00000000000e4000 // 被豁免的
+  00000000000f0000-00000000000fffff (prio 0, rom): pc.ram @00000000000f0000
+```
+
 总结一些，本来 0xc0000 ~ 0xfffff 的区间是映射到 PCI 上的，之后修改为 RAM 的，最后修改为 ROM 的。
 
 ## SMM
@@ -290,9 +348,55 @@ address-space: cpu-smm-0
     0000000000000000-ffffffffffffffff (prio 0, i/o): alias memory @system 0000000000000000-ffffffffffffffff
 ```
 
-- 因为 MemoryRegion pci 的优先级比 MemoryRegion pc.ram 的优先级低，使用 smram_region 可以将本来会被 ram 覆盖的 vga-lowmem 重新显示出来。
-- 当 CPU 在 SMM 模式下，其空间如下，其实最后的效果就是将 system_memory 上，将原来 0xa0000 ~ 0xbffff 的位置上放上 ram
+- smram_region :  因为 MemoryRegion pci 的优先级比 MemoryRegion pc.ram 的优先级低，使用 smram_region 可以将本来会被 ram 覆盖的 vga-lowmem 重新显示出来。
+- smram : 当 CPU 在 SMM 模式下，其选择的 address-space 是 cpu-smm-0，其实最后的效果就是将 system_memory 上，将原来 0xa0000 ~ 0xbffff 的位置上放上 ram
 而 0xa0000 ~ 0xbffff 上恰好放置的是 vga-lowmem, 也就是在 SMM 模式下，会将 vga-lowmem 用 ram 覆盖上。
+
+#### seabios 如何使用 SMMM
+写 I440FX 的配置空间
+
+```c
+    int smram_region = !(pd->config[I440FX_SMRAM] & SMRAM_D_OPEN);
+    int smram = pd->config[I440FX_SMRAM] & SMRAM_G_SMRAME;
+    printf("huxueshi:%s %d %d\n", __FUNCTION__, smram_region, smram);
+```
+
+- (smram_region, smram) = (1 0) ==> 因为 smram 关闭，那么 CPU 处于 SMM 模式下和普通模式没有区别, 所有的 CPU 都是无法访问到 SMM 空间的
+- (smram_region, smram) = (0 8) ==> 因为 smram_region 关闭，所有的 CPU 访问到的都是 smm 模式，也即是访问到的是 pc.ram
+- (smram_region, smram) = (1 8) ==> 正常的 smm 空间，smm 模式下的 CPU 和正常的 CPU 走不同的位置
+
+seabios 中代码在这里
+```c
+// This code is hardcoded for PIIX4 Power Management device.
+static void piix4_apmc_smm_setup(int isabdf, int i440_bdf)
+{
+    /* check if SMM init is already done */
+    u32 value = pci_config_readl(isabdf, PIIX_DEVACTB);
+    if (value & PIIX_DEVACTB_APMC_EN)
+        return;
+
+    /* enable the SMM memory window */
+    pci_config_writeb(i440_bdf, I440FX_SMRAM, 0x02 | 0x48);
+
+    smm_save_and_copy();
+
+    /* enable SMI generation when writing to the APMC register */
+    pci_config_writel(isabdf, PIIX_DEVACTB, value | PIIX_DEVACTB_APMC_EN);
+
+    /* enable SMI generation */
+    value = inl(acpi_pm_base + PIIX_PMIO_GLBCTL);
+    outl(value | PIIX_PMIO_GLBCTL_SMI_EN, acpi_pm_base + PIIX_PMIO_GLBCTL);
+
+    smm_relocate_and_restore();
+
+    /* close the SMM memory window and enable normal SMM */
+    pci_config_writeb(i440_bdf, I440FX_SMRAM, 0x02 | 0x08);
+}
+```
+
+#### QEMU 如何响应
+其实 PAM 和 SMM 的响应都是在 i440fx_update_memory_mappings 中，而且操作非常类似，就是 enable / disable MemoryRegion
+只是 SMM 处理的是 smram 和 smram_region 两个 MemoryRegion
 
 #### SMM 的使用
 不考虑 pflash 的使用情况下，`cpu_get_mem_attrs` 唯一插入使用 `.secure` 的位置
@@ -307,6 +411,7 @@ static inline MemTxAttrs cpu_get_mem_attrs(CPUX86State *env)
 而 cpu_get_mem_attrs 的位置在各个 helper 以及 handle_mmu_fault 中。
 这些组装的出来的 MemTxAttrs 的最终使用位置是: cpu_asidx_from_attrs。
 如此，如果是 SMM 的地址空间, 使用相同的地址访问，最后就会访问到 ram 上而不是 vga-lowmem。
+
 
 ## 问题
 - 虽然从代码中可以知道 pc Machine 的 0 ~ 1M 的物理地址空间内的各种布局，但是其规定在哪里，并不知道是来自于哪一个手册?
