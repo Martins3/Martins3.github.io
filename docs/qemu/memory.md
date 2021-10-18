@@ -24,6 +24,8 @@
 - [PCI Device AddressSpace](#pci-device-addressspace)
     - [PCIIORegion](#pciioregion)
 - [dma](#dma)
+- [dirty page tracking](#dirty-page-tracking)
+    - [migration](#migration)
 - [Option ROM](#option-rom)
 - [address_space_map](#address_space_map)
 - [Appendix](#appendix)
@@ -697,7 +699,68 @@ static inline MemTxResult pci_dma_rw(PCIDevice *dev, dma_addr_t addr, void *buf,
 
 - dma_memory_rw 和 cpu_physical_memory_read 非常相似，只是 cpu_physical_memory_read 走的 `as` 是 `address_space_memory`,  而 dma_memory_rw 是可以指定自己的 address space 的
 
+## dirty page tracking
+> 要 dirty page tracking 需要分析 migration 的整个实现，这个暂时不是我的关注重点，这里随便记录一下
 
+dirty_memory 划分为三种
+```c
+#define DIRTY_MEMORY_VGA       0
+#define DIRTY_MEMORY_CODE      1
+#define DIRTY_MEMORY_MIGRATION 2
+#define DIRTY_MEMORY_NUM       3        /* num of dirty bits */
+```
+因为三种需求:
+- smc : TCG 中检测到 guest 的代码修改过，那么就需要 invalidate 这个 page 上管理的 TB
+- migration : 当前虚拟机的内存被修改没有同步到远程的虚拟机中
+- vga : 绘制屏幕的时候，记录下仅仅被修改过的部分，从而加快渲染速度
+
+关联的主要函数以及他们的调用者:
+- tlb_set_dirty
+- tlb_reset_dirty
+- notdirty_write
+   * atomic_mmu_lookup : 这是整个 atomic 机制调用的地方
+   * probe_access / probe_access_flags : x86 guest 从来没有调用过，这个不是我能理解的
+   * store_helper
+
+- 在 cpu_physical_memory_set_dirty_lebitmap 中间, 如果没有打开 global_dirty_log 那么 client 就不会添加上 DIRTY_MEMORY_MIGRATION
+- 在 memory_region_get_dirty_log_mask 中对于 DIRTY_MEMORY_CODE 和 DIRTY_MEMORY_MIGRATION 也是存在类似的特殊处理
+
+- colo_incoming_start_dirty_log : https://wiki.qemu.org/Features/COLO
+  - ramblock_sync_dirty_bitmap
+    - cpu_physical_memory_sync_dirty_bitmap
+
+- 在正常的 kvm 其中的操作过程中，cpu_physical_memory_test_and_clear_dirty 和  cpu_physical_memory_snapshot_and_clear_dirty 都不会被调用
+- 在 tcg 模式下, 如果只是需要支持 SMC, 那么需要的函数不多，例如 cpu_physical_memory_test_and_clear_dirty
+
+- vga_mem_write : 使用 memory_region_set_dirty 来调用设置 memory dirty 的操作
+- 当 vga_draw_graphic 的时候，其可以 memory_region_snapshot_and_clear_dirty
+
+#### migration
+
+QEMU 记录的 dirty page 已经发送到只剩下最后的 max_size 的时候，调用 migration_bitmap_sync 进行 dirty page 同步，
+该函数最终会调用到 ioctl(KVM_GET_DIRTY_LOG) 上，将 dirty page 记录到 ram_list.dirty_memory 中。
+- migration_bitmap_sync
+  - memory_global_dirty_log_sync : 调用 MemoryListener::log_sync，比如 kvm, 这是为将 dirty memory 从 kernel 中同步过来，**tcg** 因为只是操作 ramlist.dirty_memory 的，所以这一步函数对于其为空操作
+    - memory_region_sync_dirty_bitmap
+      - MemoryListener::log_sync
+         - kvm_log_sync
+            - kvm_physical_sync_dirty_bitmap
+              - kvm_slot_get_dirty_log  : 使用 KVM_GET_DIRTY_LOG ioctl
+              - kvm_slot_sync_dirty_pages
+                - cpu_physical_memory_set_dirty_lebitmap : 这个将从 kvm 中得到的 dirty map 的信息放到 ram_list.dirty_memory
+      - MemoryListener::log_sync_global
+  - ramblock_sync_dirty_bitmap : 将 dirty memory 同步到 RAMState 中，准备发送出去
+    - cpu_physical_memory_sync_dirty_bitmap
+
+```c
+    if (s->kvm_dirty_ring_size) {
+        kml->listener.log_sync_global = kvm_log_sync_global;
+    } else {
+        kml->listener.log_sync = kvm_log_sync;
+        kml->listener.log_clear = kvm_log_clear;
+    }
+```
+[log_sync_global](https://www.youtube.com/watch?v=YsQJ-Vll3sg) 接口都是 Peter Xu 在 2020 添加的
 
 ## Option ROM
 https://en.wikipedia.org/wiki/Option_ROM
@@ -793,6 +856,7 @@ sysemu/dma.h:135
 | memory_region_get_ram_ptr                                  | 返回一个 RAMBlock 在 host 中的偏移量                                                      |
 | memory_region_get_ram_addr                                 | 获取在 ram 空间的偏移                                                                     |
 | memory_region_section_get_iotlb                            | 获取一个 gpa 上的 MemoryRegion，不会 resolve_subpage                                      |
+| cpu_physical_memory_get_dirty                              | 获取该位置是否发生为 dirty                                                                |
 
 | struct               | desc                                                                                                                |
 |----------------------|---------------------------------------------------------------------------------------------------------------------|
