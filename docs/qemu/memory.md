@@ -290,6 +290,14 @@ RAMBlock 结构体分析:
 2. RAMBlock::offset : 将所有的 RAMBlock 连续的放到一起，每一个 RAMBlock 的 offset，第一个加入的 offset 为 0
     - 通过 RAMBlock::offset 可以放一个 RAM 内的 page 知道在 RAMList::dirty_memory 对应的 bit 位
 
+看一个在综合路径中的使用:
+- get_page_addr_code : 从 guest 虚拟地址的 pc 获取 guest 物理地址的 pc
+  - tlb_hit : 进行虚实转换获取 hva
+  - get_page_addr_code_hostp
+    - qemu_ram_addr_from_host_nofail : 通过 hva 获取 gpa
+      - qemu_ram_addr_from_host
+        - qemu_ram_block_from_host
+
 ## ram addr
 构建 ram addr 的目的 dirty page 的记录，所有的 page 的 dirty 都是记录在 `RAMList::DirtyMemoryBlocks::blocks` 中
 给出一个 ram 中的一个 page，需要找到在 blocks 数组中的下标，于是发明了 ram addr
