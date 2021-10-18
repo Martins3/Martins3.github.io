@@ -16,11 +16,52 @@ TLB 的大致结构如下, 对此需要解释一些问题:
 2. 而慢速路径访问 victim TLB 和 CPUIOTLBEntry
 3. victim TLB 的大小是固定的，而正常的 TLB 的大小是动态调整的
 4. CPUTLBEntry 的说明:
-    - addend : GVA + addend 等于 HVA
+    - addr_read / addr_write / addr_code 都是 GVA
     - 分别创建出来三个 addr_read / addr_write / addr_code 是为了快速比较，两者相等就是命中，不相等就是不命中，如果向操作系统中的 page table 将 page entry 插入 flag 描述权限，这个比较就要使用更多的指令了(移位/掩码之后比较)
+    - addend : GVA + addend 等于 HVA
 5. CPUIOTLBEntry 的说明:
   - 如果不是落入 RAM : TARGET_PAGE_BITS 内可以放 AddressSpaceDispatch::PhysPageMap::MemoryRegionSection 数组中的偏移, 之外的位置放 MemoryRegion 内偏移。通过这个可以迅速获取 MemoryRegionSection 进而获取 MemoryRegion。
   - 如果是落入 RAM , 可以得到 [ram addr](#ram-addr)
+
+CPUNegativeOffsetState : include/exec/cpu-defs.h
+- [ ] 为什么 neg 一定需要放到 CPUArchState 前面
+
+### CPUIOTLBEntry
+```c
+typedef struct CPUIOTLBEntry {
+    /*
+     * @addr contains:
+     *  - in the lower TARGET_PAGE_BITS, a physical section number
+     *  - with the lower TARGET_PAGE_BITS masked off, an offset which
+     *    must be added to the virtual address to obtain:
+     *     + the ram_addr_t of the target RAM (if the physical section
+     *       number is PHYS_SECTION_NOTDIRTY or PHYS_SECTION_ROM)
+     *     + the offset within the target MemoryRegion (otherwise)
+     */
+    hwaddr addr;
+    MemTxAttrs attrs;
+} CPUIOTLBEntry;
+```
+
+- CPUIOTLBEntry 的创建位置:
+  - tlb_set_page_with_attrs
+
+- CPUIOTLBEntry 的使用位置:
+  - probe_access
+    - tlb_hit / victim_tlb_hit / tlb_fill : TLB 访问经典三件套
+    - cpu_check_watchpoint
+    - notdirty_write : 和 cpu_check_watchpoint 相同，需要 iotlbentry 作为参数
+  - io_writex / io_readx
+    - iotlb_to_section
+    - `mr_offset = (iotlbentry->addr & TARGET_PAGE_MASK) + addr;`
+
+- [ ] attrs 的作用是什么，为什么是放到 IOTLB 中，对于 RAM 有意义吗?
+
+- [ ] 什么叫做 physical section number ?
+  - 一共出现三次，第三次是 phys_section_add
+- [ ] PHYS_SECTION_NOTDIRTY
+- [ ] PHYS_SECTION_ROM
+
 
 ## lock page
 在 ./accel/tcg/translate-all.c 中我们实际上看到了一系列的 lock，比如
@@ -303,6 +344,9 @@ static inline unsigned get_mmuidx(TCGMemOpIdx oi) { return oi & 15; }
 
 ## Notes
 - 从 tb_page_add 可以看到, TranslationBlock::page_addr 保存到是 guest 的物理页面地址
+
+## TODO
+- [ ] 找到 CPUTLBEntry::addr_read / addr_write / addr_code 比较的过程
 
 <script src="https://utteranc.es/client.js" repo="Martins3/Martins3.github.io" issue-term="url" theme="github-light" crossorigin="anonymous" async> </script>
 

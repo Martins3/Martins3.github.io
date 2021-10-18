@@ -280,6 +280,7 @@ FlatView 是一个数组形式，为了加快访问，显然需要使用构成�
       - memory_region_init_ram_flags_nomigrate
         - qemu_ram_alloc
           - ram_block_add
+            - dirty_memory_extend : 初始化 ram_list.dirty_memory , 使用的位置在 cpu_physical_memory_test_and_clear_dirty 和  cpu_physical_memory_snapshot_and_clear_dirty
             - phys_mem_alloc (qemu_anon_ram_alloc)
               - qemu_ram_mmap
                 - mmap : 可见 RAMBlock 在初始化的时候会在 host virtual address space 中 map 出来一个空间
@@ -329,6 +330,8 @@ e1000.rom: offset=1808c0000 size=40000
 /rom@etc/acpi/rsdp: offset=180b40000 size=1000
 ```
 任何一个 page 的 ram_addr = offset in RAM + `RAMBlock::offset`
+
+
 
 
 
@@ -846,17 +849,18 @@ sysemu/dma.h:135
 | softmmu/memory.c | memory_region_dispatch_read 之类的各种 memory region 的管理工作 |
 | softmmu/physmem  | RAMBlock 之类的管理                                             |
 
-| function                                                   | desc                                                                                      |
-|------------------------------------------------------------|-------------------------------------------------------------------------------------------|
-| address_space_translate                                    | 通过 hwaddr 参数找到 MemoryRegion 这里和 Flatview 有关的                                  |
-| qemu_map_ram_ptr                                           | 给定 ram_addr 获取到 host virtual addr                                                    |
-| memory_region_dispatch_read / memory_region_dispatch_write | 最终 dispatch 到设备注册的 MemoryRegionOps 上                                             |
-| prepare_mmio_access                                        | 进行 MMIO 需要持有 BQL 锁, 如果没有上 QBL 的话，那么在 prepare_mmio_access 中会把锁加上去 |
-| memory_access_is_direct                                    | 判断内存到底是可以直接写，还是设备空间，需要重新处理一下                                  |
-| memory_region_get_ram_ptr                                  | 返回一个 RAMBlock 在 host 中的偏移量                                                      |
-| memory_region_get_ram_addr                                 | 获取在 ram 空间的偏移                                                                     |
-| memory_region_section_get_iotlb                            | 获取一个 gpa 上的 MemoryRegion，不会 resolve_subpage                                      |
-| cpu_physical_memory_get_dirty                              | 获取该位置是否发生为 dirty                                                                |
+| function                              | desc                                                                                      |
+|---------------------------------------|-------------------------------------------------------------------------------------------|
+| address_space_translate               | 通过 hwaddr 参数找到 MemoryRegion 这里和 Flatview 有关的                                  |
+| qemu_map_ram_ptr                      | 给定 ram_addr 获取到 host virtual addr                                                    |
+| memory_region_dispatch_ (read/ write) | 最终 dispatch 到设备注册的 MemoryRegionOps 上                                             |
+| prepare_mmio_access                   | 进行 MMIO 需要持有 BQL 锁, 如果没有上 QBL 的话，那么在 prepare_mmio_access 中会把锁加上去 |
+| memory_access_is_direct               | 判断内存到底是可以直接写，还是设备空间，需要重新处理一下                                  |
+| memory_region_get_ram_ptr             | 返回一个 RAMBlock 在 host 中的偏移量                                                      |
+| memory_region_get_ram_addr            | 获取在 ram 空间的偏移                                                                     |
+| memory_region_section_get_iotlb       | 获取一个 gpa 上的 MemoryRegion，不会 resolve_subpage                                      |
+| cpu_physical_memory_get_dirty         | 获取该位置是否发生为 dirty                                                                |
+| qemu_ram_block_from_host              | 根据 hva 获取 RamBlock                                                                    |
 
 | struct               | desc                                                                                                                |
 |----------------------|---------------------------------------------------------------------------------------------------------------------|
