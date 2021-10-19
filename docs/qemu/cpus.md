@@ -12,6 +12,7 @@
 - [locks between vCPU](#locks-between-vcpu)
   - [tcg vCPU thread](#tcg-vcpu-thread)
     - [lifecycle of vCPU thread](#lifecycle-of-vcpu-thread)
+      - [sync between main loop and vCPU](#sync-between-main-loop-and-vcpu)
     - [current_cpu](#current_cpu)
     - [setlongjmp](#setlongjmp)
   - [queue_work_on_cpu](#queue_work_on_cpu)
@@ -267,7 +268,7 @@ void tlb_flush_by_mmuidx(CPUState *cpu, uint16_t idxmap)
 因为 tlb_flush_by_mmuidx 的调用比 qemu_init_vcpu 早，此时 vCPU 还被挡在 BQL 上了，是不可能有去执行 qemu_wait_io_event 来执行
 async_run_on_cpu 挂载上的任务的。
 
-```txt
+```c
 /*
 #0  tlb_flush_by_mmuidx (cpu=0x555556b09970, idxmap=7) at ../accel/tcg/cputlb.c:384
 #1  0x0000555555c5e3e8 in listener_add_address_space (as=<optimized out>, listener=0x555556a08508) at ../softmmu/memory.c:2839
@@ -277,6 +278,29 @@ async_run_on_cpu 挂载上的任务的。
 #5  0x0000555555cf1e6b in cpu_exec_realizefn (cpu=cpu@entry=0x555556b09970, errp=errp@entry=0x7fffffffcd70) at ../cpu.c:137
 #6  0x0000555555be220e in x86_cpu_realizefn (dev=0x555556b09970, errp=0x7fffffffcdd0) at ../target/i386/cpu.c:6156
 ```
+
+##### sync between main loop and vCPU
+如果是 -thread=single 的 tcg 的 vCPU 执行的位置从
+qemu_tcg_rr_cpu_thread_fn 开始，进行一些初始化之后会卡到这里:
+
+```c
+  /* wait for initial kick-off after machine start */
+  while (first_cpu->stopped) {
+    qemu_cond_wait(first_cpu->halt_cond, &qemu_global_mutex);
+
+    /* process any pending work */
+    CPU_FOREACH(cpu) {
+      current_cpu = cpu;
+      qemu_wait_io_event_common(cpu);
+    }
+  }
+```
+
+- 因为 main loop 几乎总是持有 BQL，这个导致 vCPU 始终从  qemu_cond_wait 无法离开
+- 在 do_run_on_cpu 中，因为 main loop 需要等待 qemu_work_cond，所以会暂时释放 BQL
+  - 让 vCPU 现在可以执行到 qemu_wait_io_event 并且处理掉一些任务
+- 当 main loop 调用 resume_all_vcpus => `qemu_cond_broadcast(cpu->halt_cond)` 之后，并且在 main_loop 在 os_host_main_loop_wait 中释放 lock 之后，那个时候 vCPU 才可以真正的离开
+
 #### current_cpu
 - 赋值位置: cpu_exec / rr_cpu_thread_fn / mttcg_cpu_thread_fn
   - :duck: 实际上 cpu_exec 中间并没有必要进行对于 cpu_exec 的赋值操作，和两个 thread_fn 重叠了
