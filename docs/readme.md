@@ -28,7 +28,7 @@
   - [**WIP** QEMU 的参数解析](./qemu/options.md)
   - [**WIP** QEMU 二进制翻译基础](./qemu/tcg.md)
   - [QEMU 中的线程和事件循环](./qemu/threads.md)
-  - [QEMU 中的锁](./qemu/lock.md)
+  - [QEMU 中的锁](./qemu/cpus.md)
   - [QEMU 如何模拟中断](./qemu/interrupt.md)
   - [QEMU 中的面向对象 : QOM](./qemu/qom.md)
 

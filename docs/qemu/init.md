@@ -8,6 +8,7 @@
 - [x86_cpu_realizefn](#x86_cpu_realizefn)
 - [notes](#notes)
   - [memory](#memory)
+  - [tcg](#tcg)
 
 <!-- vim-markdown-toc -->
 
@@ -129,7 +130,7 @@
       - qemu_poll_ns
 
 ## tcg_init
-- tcg_init
+- [tcg_init](#tcg)
   - tcg_exec_init
     - cpu_gen_init
       - tcg_context_init : 在 xqm 下这个没有意义
@@ -153,9 +154,10 @@
       - tlb_mmu_init
   - x86_cpu_expand_features
   - x86_cpu_filter_features
-  - mce_init : machine check exception, 初始化之后，那些 helper 就可以正确工作了, mce 参考[^2]
+  - mce_init : machine check exception, 初始化之后，那些 helper 就可以正确工作了
   - qemu_init_vcpu : 创建执行线程
     - rr_cpu_thread_fn : 进行一些基本的注册工作，然后等待, 注意，此时在另一个线程中间了
+      - [tcg_register_thread](#tcg)
   - [cpu_address_space_init](#memory)
   - x86_cpu_apic_realize
     - 通过 QOM 调用到 apic_common_realize
@@ -166,8 +168,14 @@
 ## notes
 
 ### memory
-Memory 初始化一种三个位置:
+Memory 初始化一共三个位置:
 1. memory_map_init
 2. pc_memory_init : 创建了两个 mr alias，ram_below_4g 以及 ram_above_4g，这两个 mr 分别指向 ram 的低 4g 以及高 4g 空间，这两个 alias 是挂在根 system_memory mr 下面的
 创建 pc.bios
 3. cpu_address_space_init : tcg 需要创建出来 CPUAddressSpace
+
+### tcg
+tcg 初始化两个部分:
+
+- tcg_init : 初始化所有 tcg 相关基础设施
+- tcg_register_thread : 分配 tcg region 给一个 CPU 使用

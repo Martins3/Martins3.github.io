@@ -296,52 +296,6 @@ void riscv_cpu_do_unaligned_access(CPUState *cs, vaddr addr,
 ```
 原因在于，X86 的根本没有非对其访问的 exception，但是很多 RISC 平台上是有的。
 
-## access size
-如果一次访问同时横跨了两个 MemoryRegion 怎么办?
-
-address_space_translate_internal 中的注释解释很不错:
-- 进行 address_space_translate_internal 的一个参数 plen 其实是用于返回实际上可以访问的范围
-- MMIO 访问的时候会在 memory_access_size 中调整访问的大小为最大为 4，而且 MMIO 很少出现 MemoryRegion 的
-- MMIO 的 MemoryRegion 有时候会出现完全重合的情况，所以不能因为一个访问的延伸到了另外一个
-- flatview_read_continue / flatview_write_continue 中会循环调用 flatview_translate memory_access_size memory_region_dispatch_write，从而可以保证即使是访问跨 MemoryRegion 的，其 MemoryRegionOps 也是自动变化的
-
-```c
-    /* MMIO registers can be expected to perform full-width accesses based only
-     * on their address, without considering adjacent registers that could
-     * decode to completely different MemoryRegions.  When such registers
-     * exist (e.g. I/O ports 0xcf8 and 0xcf9 on most PC chipsets), MMIO
-     * regions overlap wildly.  For this reason we cannot clamp the accesses
-     * here.
-     *
-     * If the length is small (as is the case for address_space_ldl/stl),
-     * everything works fine.  If the incoming length is large, however,
-     * the caller really has to do the clamping through memory_access_size.
-     */
-```
-
-补充若干内容:
-1. 重合的 MMIO
-```txt
-0000000000000cf8-0000000000000cfb (prio 0, i/o): pci-conf-idx
-0000000000000cf9-0000000000000cf9 (prio 1, i/o): piix3-reset-control
-0000000000000cfc-0000000000000cff (prio 0, i/o): pci-conf-data
-```
-flatview 的样子就非常有趣了。
-```txt
-0000000000000cf8-0000000000000cf8 (prio 0, i/o): pci-conf-idx
-0000000000000cf9-0000000000000cf9 (prio 1, i/o): piix3-reset-control
-0000000000000cfa-0000000000000cfb (prio 0, i/o): pci-conf-idx @0000000000000002
-```
-
-2. MMIO 的 access size 除了通过 memory_access_size 将 access_size 限制为 4 以内，而且在 access_with_adjusted_size 也进行了处理，不过目的不在于处理 cross MemoryRegion，单纯的为了保证访问的时候 size 为 4
-- flatview_read_continue
-  - memory_access_size : 将访问的大小调整为最多为 4，比如 hpet 的
-  - memory_region_dispatch_read
-
-- io_writex
-    - memory_region_dispatch_write
-        - access_with_adjusted_size : 将一次 access 的 size 压缩为 1 ~ 4 之间，然后多次调用 access_fn，比如 vga_mem_write
-
 ## TCGMemOpIdx
 TCGMemOpIdx
 - 0 ~ 4 : mmuid

@@ -120,7 +120,7 @@ memory_ldst_phys.h.inc:121
 因为中断的注入可能来自于 main loop 或者是其他的 vCPU thread，所以同样这个需要 BQL 的保护
 
 ### qemu_mutex_iothread_locked
-下面来讨论一下整个一些持有 BQL 的位置
+下面来讨论一下一些持有 BQL 的位置
 
 - process_queued_cpu_work : 是持有 BQL 的，所以在 start_exclusive 的时候首先需要释放 BQL
   - 所以 async_run_on_cpu 的 hook 执行的时候也是有 BQL 的
@@ -242,6 +242,7 @@ void cpu_exit(CPUState *cpu)
     qatomic_set(&cpu->icount_decr_ptr->u16.high, -1);
 }
 ```
+
 - CPUState::created
   - 起初，因为 main loop 持有 BQL，vCPU thread 会卡到 BQL 上
   - 在 x86_cpu_realizefn => qemu_init_vcpu 中, main loop 会 wait 在 qemu_cpu_cond 上，同时释放 BQL
