@@ -244,11 +244,38 @@ void cpu_exit(CPUState *cpu)
 }
 ```
 
-- CPUState::created
-  - 起初，因为 main loop 持有 BQL，vCPU thread 会卡到 BQL 上
-  - 在 x86_cpu_realizefn => qemu_init_vcpu 中, main loop 会 wait 在 qemu_cpu_cond 上，同时释放 BQL
-  - 因为 BQL 释放，所以 vCPU 运行，进行简单的初始化之后，使用 cpu_thread_signal_created 来告诉 main loop 可以继续运行
-  - 最后 vCPU 在 qemu_wait_io_event 中因为等待到 CPUState::halt_cond 上才真正的释放 BQL，main loop 才可以继续的。
+
+##### sync between main loop and vCPU
+在 x86_cpu_realizefn => qemu_init_vcpu 中，会创建并且执行 vCPU thread
+如果是 -thread=single 的 tcg 的 vCPU 执行的位置从 qemu_tcg_rr_cpu_thread_fn 开始
+
+* **main loop** 等待
+
+- main loop 会 wait 在  qemu_init_vcpu 中 qemu_cpu_cond 上，同时释放 BQL
+- 因为 BQL 释放，所以 vCPU 从 qemu_mutex_lock_iothread() 上继续运行，进行简单的初始化之后，使用 cpu_thread_signal_created 来告诉 main loop 可以继续运行
+- 最后 vCPU 在 qemu_wait_io_event 中因为等待到 CPUState::halt_cond 上才真正的释放 BQL，main loop 才可以继续的。
+
+* **child 的等待**
+
+
+```c
+  /* wait for initial kick-off after machine start */
+  while (first_cpu->stopped) {
+    qemu_cond_wait(first_cpu->halt_cond, &qemu_global_mutex);
+
+    /* process any pending work */
+    CPU_FOREACH(cpu) {
+      current_cpu = cpu;
+      qemu_wait_io_event_common(cpu);
+    }
+  }
+```
+
+- 因为 main loop 几乎总是持有 BQL，这个导致 vCPU 始终从  qemu_cond_wait 无法离开
+- 在 do_run_on_cpu 中，因为 main loop 需要等待 qemu_work_cond，所以会暂时释放 BQL
+  - 让 vCPU 现在可以执行到 qemu_wait_io_event 并且处理掉一些任务
+- 当 main loop 调用 resume_all_vcpus => `qemu_cond_broadcast(cpu->halt_cond)` 之后，并且在 main_loop 在 os_host_main_loop_wait 中释放 lock 之后，那个时候 vCPU 才可以真正的离开
+
 
 通过上面的流程，终于可以理解为什么 tlb_flush_by_mmuidx 需要增加一个对于 CPUState::created 的判断了。
 ```c
@@ -279,27 +306,6 @@ async_run_on_cpu 挂载上的任务的。
 #6  0x0000555555be220e in x86_cpu_realizefn (dev=0x555556b09970, errp=0x7fffffffcdd0) at ../target/i386/cpu.c:6156
 ```
 
-##### sync between main loop and vCPU
-如果是 -thread=single 的 tcg 的 vCPU 执行的位置从
-qemu_tcg_rr_cpu_thread_fn 开始，进行一些初始化之后会卡到这里:
-
-```c
-  /* wait for initial kick-off after machine start */
-  while (first_cpu->stopped) {
-    qemu_cond_wait(first_cpu->halt_cond, &qemu_global_mutex);
-
-    /* process any pending work */
-    CPU_FOREACH(cpu) {
-      current_cpu = cpu;
-      qemu_wait_io_event_common(cpu);
-    }
-  }
-```
-
-- 因为 main loop 几乎总是持有 BQL，这个导致 vCPU 始终从  qemu_cond_wait 无法离开
-- 在 do_run_on_cpu 中，因为 main loop 需要等待 qemu_work_cond，所以会暂时释放 BQL
-  - 让 vCPU 现在可以执行到 qemu_wait_io_event 并且处理掉一些任务
-- 当 main loop 调用 resume_all_vcpus => `qemu_cond_broadcast(cpu->halt_cond)` 之后，并且在 main_loop 在 os_host_main_loop_wait 中释放 lock 之后，那个时候 vCPU 才可以真正的离开
 
 #### current_cpu
 - 赋值位置: cpu_exec / rr_cpu_thread_fn / mttcg_cpu_thread_fn

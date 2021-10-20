@@ -2,8 +2,8 @@
 <!-- vim-markdown-toc GitLab -->
 
 - [pc.bios](#pcbios)
-  - [pc.bios is mapped to two location](#pcbios-is-mapped-to-two-location)
   - [map pc.bios to guest](#map-pcbios-to-guest)
+  - [pc.bios is mapped to two location](#pcbios-is-mapped-to-two-location)
   - [first instructions executed in seabios](#first-instructions-executed-in-seabios)
 - [pc.rom](#pcrom)
 - [PAM](#pam)
@@ -11,7 +11,7 @@
     - [Seabios 侧如何处理 PAM](#seabios-侧如何处理-pam)
 - [SMM](#smm)
     - [SMM 地址空间的构建](#smm-地址空间的构建)
-    - [seabios 如何使用 SMMM](#seabios-如何使用-smmm)
+    - [seabios 如何使用 SMM](#seabios-如何使用-smm)
     - [QEMU 如何响应](#qemu-如何响应)
     - [SMM 的使用](#smm-的使用)
 - [问题](#问题)
@@ -22,27 +22,9 @@ seabios 的基础知识可以参考李强的《QEMU/KVM 源码解析与应用》
 
 ## pc.bios
 QEMU 支持很多种类的 bios, seabios 只是其中的一种, bios 加载地址空间中，该 MemoryRegion 的名称为 pc.bios
-
-### pc.bios is mapped to two location
-
-seabios 的 src/fw/shadow.c 中存在有一个注释:
-
-```c
-// On the emulators, the bios at 0xf0000 is also at 0xffff0000
-#define BIOS_SRC_OFFSET 0xfff00000
-```
-是的，seabios 被同时映射到两个位置。
-
-从地址中看，这确实:
-```txt
-      00000000000e0000-00000000000fffff (prio 1, rom): alias isa-bios @pc.bios 0000000000020000-000000000003ffff
-      00000000fffc0000-00000000ffffffff (prio 0, rom): pc.bios
-```
-也就是一方面，pc.bios 被映射到 4G 的顶端，一方面其后 0x20000 的部分被放到了 0xe0000 的位置
-这就是 seabios 启动的时候，可以直接跳转到这里。
-
 ### map pc.bios to guest
-在 x86_bios_rom_init 中会调用 rom_add_file_fixed 设置 bios 的内容在 4G - 256k 的地址上
+
+在 x86_bios_rom_init 中会调用 rom_add_file_fixed 将 256k 大小的 bios 正好映射到 4G - 256k 的地址上
 同时创建了 MemoryRegion pc.bios，但是两者并没有没有关联起来。实际上等待两者关联起来需要等到整个 QEMU 初始化结束之后
 调用 rom_reset 的时候
 
@@ -60,6 +42,25 @@ seabios 的 src/fw/shadow.c 中存在有一个注释:
       - address_space_translate : 通过 4G - 256k 地址查询到 pc.bios 这个 MemoryRegion，然后将 Rom::data 的数据拷贝到 MemoryRegion::RamBlock::host
       - memcpy
 
+### pc.bios is mapped to two location
+实际上，pc.bios 的后 128k 同时被映射到了 0xe0000 ~ 0xfffff 的位置上
+
+seabios 的 src/fw/shadow.c 中存在有一个注释:
+
+x86_bios_rom_init 中通过创建 isa-bios 的 alias 的实现的。
+
+从地址中看，这确实:
+```txt
+      00000000000e0000-00000000000fffff (prio 1, rom): alias isa-bios @pc.bios 0000000000020000-000000000003ffff
+      00000000fffc0000-00000000ffffffff (prio 0, rom): pc.bios
+```
+
+```c
+// On the emulators, the bios at 0xf0000 is also at 0xffff0000
+#define BIOS_SRC_OFFSET 0xfff00000
+```
+
+之所以需要将 pc.bios 映射两次下面再分析。
 ### first instructions executed in seabios
 > On emulators, this phase starts when the CPU starts execution in 16bit
 > mode at 0xFFFF0000:FFF0. The emulators map the SeaBIOS binary to this
@@ -255,6 +256,9 @@ make_bios_writable_intel(u16 bdf, u32 pam0)
     __make_bios_writable_intel(bdf, pam0);
 }
 ```
+当 make bios writable 的时候，原来的 isa-bios 的位置(0xe0000)会被设置为 RAM，其实内容相当于被清空了
+所以需要从 pc.ram(4G - 256k) 的位置拷贝过来
+
 当 bios 结束之后，这些 PAM 的位置会再次设置上 `make_bios_readonly_intel`，但是 0xe4000 ~ 0xeffff 的部分会被豁免。
 
 ```c
@@ -352,7 +356,7 @@ address-space: cpu-smm-0
 - smram : 当 CPU 在 SMM 模式下，其选择的 address-space 是 cpu-smm-0，其实最后的效果就是将 system_memory 上，将原来 0xa0000 ~ 0xbffff 的位置上放上 ram
 而 0xa0000 ~ 0xbffff 上恰好放置的是 vga-lowmem, 也就是在 SMM 模式下，会将 vga-lowmem 用 ram 覆盖上。
 
-#### seabios 如何使用 SMMM
+#### seabios 如何使用 SMM
 写 I440FX 的配置空间
 
 ```c
