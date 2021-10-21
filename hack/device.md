@@ -54,6 +54,7 @@ And, this page will contains anything related device except pcie, mmio, pio, int
 - [ ] ldd3 的 tty 存在一个巨大的仓库
 - [ ] eldd 的部分章节也是可以看看的 http://www.embeddedlinux.org.cn/essentiallinuxdevicedrivers/final/ch06lev1sec3.html
 - [ ] 微机原理的书可以看看的
+- [ ] TTY 到底是什么？https://www.kawabangga.com/posts/4515
 
 - [ ] tlpi : chapter 62
 
@@ -65,7 +66,7 @@ And, this page will contains anything related device except pcie, mmio, pio, int
 4. 为什么ebbchar是没有 手动mknod 的操作, **显然**应该含有对应的操作
 
 6. 修改scull\_load 文件中间的内容
-7. klogd syslogd 
+7. klogd syslogd
 
 ## Questions
 - echo "shit" > /dev/pts/3
@@ -98,7 +99,7 @@ static struct tty_ldisc_ops n_tty_ops = {
 ### tiny_serial.c
 - [x] TINY_SERIAL_MAJOR 的数值设置不要和 /proc/devices 的数值冲突了
 
-uart_register_driver + uart_add_one_port 
+uart_register_driver + uart_add_one_port
 
 insmod tiny_serial.ko 之后 ： 多出来了 devices/virtual/tty/ttytiny0
 
@@ -303,7 +304,7 @@ The distinction of bus vs. class never made much sense. For that reason, udev in
 
 为什么需要设备模型，之前遇到的的问题是什么 ? 存在如下猜测
 1. 需要 hot plug ? 所以构建出来一个 bus 类型，并且使用 device 和 device deriver
-2. 处理 power 相关的 ? suspend 或者 resume 
+2. 处理 power 相关的 ? suspend 或者 resume
 2. 重复代码消除: 一个设备驱动可以处理不同设备控制器，甚至一个设备驱动可以支持多个类似的设备[^1]
 
 设备模型 : platform bus 用于注销
@@ -326,8 +327,8 @@ adapter driver are device deriver too !
 
 > lld3 上分析的全部内容 :
 1. linux 设备模型的核心要素 : bus device device_driver class
-2. attribute sfsfs 
-3. kobject kset **subsystem** 
+2. attribute sfsfs
+3. kobject kset **subsystem**
 4. hotplug
 
 > wowtech 添加的内容
@@ -532,7 +533,7 @@ device_unregister 和 device_register 的作用 ?
 To work with the attributes, we have structure atribute , DEVICE_ATTR macrodefine for definition, and device_create_file and device_remove_file functions to add the attribute to the device.
 >  device_create_file 这种函数用于挂载 attr 到
 
-The device_create and device_destroy functions are available for initialization / deinterlacing . 
+The device_create and device_destroy functions are available for initialization / deinterlacing .
 
 ```c
 /*
@@ -563,10 +564,10 @@ To work with attributes, we have the driver_attribute structure , the macro defi
 
 #### bus
 bus_register 和 bus_unregister 的作用 ?
-bus_create_file 
+bus_create_file
 
 Other possible operations on a bus are browsing the drivers or devices attached to it.
-Although we can not directly access them (lists of drives and devices being stored in the private data of the driver, the subsys_private * p field ), 
+Although we can not directly access them (lists of drives and devices being stored in the private data of the driver, the subsys_private * p field ),
 these can be scanned using the `bus_for_each_dev` and `bus_for_each_drv` macrodefines .
 
 The `match` function is used when a new device or a new driver is added to the bus.
@@ -667,7 +668,7 @@ struct block_device_operations {
 ## 问题
 - [x] 到底一共存在多少总线类型 ? PCI PCIE I2C  ()
 - [ ] major:minor ?
-- [ ] 到底一共存在多少总线类型 ? PCI PCIE I2C 
+- [ ] 到底一共存在多少总线类型 ? PCI PCIE I2C
 
 
 ### 需要回答的问题

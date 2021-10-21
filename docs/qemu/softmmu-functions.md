@@ -39,7 +39,6 @@ endianness 为什么会产生问题，先从一个简单的情况考虑，使用
 显然，为了让 host CPU 正确理解这个数值，需要在 load_helper 返回数值的时候，进行装换一下。
 
 到底是调用下面哪一个函数，取决于 guest 是大端还是小端
-
 ```c
 tcg_target_ulong helper_le_lduw_mmu(CPUArchState *env, target_ulong addr,
                                     TCGMemOpIdx oi, uintptr_t retaddr)
@@ -62,35 +61,7 @@ static uint64_t full_be_lduw_mmu(CPUArchState *env, target_ulong addr,
 0000000000000514-000000000000051b (prio 0, i/o): fwcfg.dma
 ```
 
-
-这是 fw_cfg_dma_transfer 中进行的调整，adjust_endianness 也是进行了调整的。
-```c
-static void fw_cfg_dma_transfer(FWCfgState *s)
-{
-    dma_addr_t len;
-    FWCfgDmaAccess dma;
-    int arch;
-    FWCfgEntry *e;
-    int read = 0, write = 0;
-    dma_addr_t dma_addr;
-
-    /* Reset the address before the next access */
-    dma_addr = s->dma_addr;
-    s->dma_addr = 0;
-
-    if (dma_memory_read(s->dma_as, dma_addr, &dma, sizeof(dma))) {
-        stl_be_dma(s->dma_as, dma_addr + offsetof(FWCfgDmaAccess, control),
-                   FW_CFG_DMA_CTL_ERROR);
-        return;
-    }
-
-    dma.address = be64_to_cpu(dma.address);
-    dma.length = be32_to_cpu(dma.length);
-    dma.control = be32_to_cpu(dma.control);
-
-```
-
-而下面是 seabios 的代码证明了操作
+在 seabios 的代码中，outl 传递的数值使用 cpu_to_be32 进行了装换
 ```c
 static void
 fw_cfg_dma_transfer(void *address, u32 length, u32 control)
@@ -110,6 +81,35 @@ fw_cfg_dma_transfer(void *address, u32 length, u32 control)
     }
 }
 ```
+
+在 QEMU 的 memory_region_write_accessor 中调用 MemoryRegions::ops 的时候，传递给参数的 data 的 tmp 就是 host 的 endianness
+```c
+    mr->ops->write(mr->opaque, addr, tmp, size);
+```
+
+在 MemoryRegionOps::write 中就可以直接使用了参数 value
+```c
+static void fw_cfg_dma_mem_write(void *opaque, hwaddr addr,
+                                 uint64_t value, unsigned size)
+{
+    FWCfgState *s = opaque;
+
+    if (size == 4) {
+        if (addr == 0) {
+            /* FWCfgDmaAccess high address */
+            s->dma_addr = value << 32;
+        } else if (addr == 4) {
+            /* FWCfgDmaAccess low address */
+            s->dma_addr |= value;
+            fw_cfg_dma_transfer(s);
+        }
+    } else if (size == 8 && addr == 0) {
+        s->dma_addr = value;
+        fw_cfg_dma_transfer(s);
+    }
+}
+```
+
 
 ## softmmu 慢速路径访存
 当 soft tlb 没有命中之后，会切入到此处，
