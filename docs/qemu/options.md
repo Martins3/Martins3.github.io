@@ -1,6 +1,27 @@
 # QEMU 的参数解析
-大家第一次使用 QEMU 的时候必然被 QEMU 的参数搞的很难受，这是我常用的一个[脚本](https://github.com/Martins3/Martins3.github.io/blob/0aaf533f7a048a621d6a45657fbd42aa34cda45a/hack/qemu/x64-e1000/alpine.sh#L126)，
-随随便便几十个参数。
+
+大家第一次使用 QEMU 的时候必然被 QEMU 的参数搞的很难受，这是我常用的一个[脚本](https://github.com/Martins3/Martins3.github.io/blob/0aaf533f7a048a621d6a45657fbd42aa34cda45a/hack/qemu/x64-e1000/alpine.sh#L126) 的参数
+```sh
+qemu-system-x86_64 \
+-drive file=/home/maritns3/core/vn/hack/qemu/x64-e1000/alpine.qcow2,format=qcow2 \
+-m 6G \
+-smp 1,maxcpus=3 \
+-kernel /home/maritns3/core/ubuntu-linux/arch/x86/boot/bzImage \
+-append root=/dev/sda3 nokaslr \
+-chardev file,path=/tmp/seabios.log,id=seabios \
+-device isa-debugcon,iobase=0x402,chardev=seabios \
+-bios /home/maritns3/core/seabios/out/bios.bin \
+-device nvme,drive=nvme1,serial=foo \
+-drive file=/home/maritns3/core/vn/hack/qemu/x64-e1000/img1.ext4,format=raw,if=none,id=nvme1 \
+-device virtio-blk-pci,drive=nvme2,iothread=io0 \
+-drive file=/home/maritns3/core/vn/hack/qemu/x64-e1000/img2.ext4,format=raw,if=none,id=nvme2 \
+-object iothread,id=io0 \
+-virtfs local,path=/home/maritns3/core/vn/hack/qemu/x64-e1000/share,mount_tag=host0,security_model=mapped,id=host0 \
+-accel tcg,thread=single \
+-monitor stdio \
+-qmp unix:/home/maritns3/core/vn/hack/qemu/x64-e1000/test.socket,server,nowait \
+```
+随随便便几十个参数 :( :(
 
 分析细节之前非常推荐读一下 [LWN 的一篇文章](https://lwn.net/Articles/872321/)，大致讲解 QEMU 核心 maintainer Bonzini 在 KVM forum 2021 上做的一篇报告。
 有[中文翻译](https://mp.weixin.qq.com/s/xLIXBifypRUJDmSnL7AOEA)可以快速浏览。这篇文章使用 QEMU 的参数解析作为例子，分析了那些不必要的复杂性来源，以及避免的策略。
@@ -8,8 +29,8 @@
 下面只是粗浅的分析。
 
 ## core code flow
-
-在
+这是 main 函数中的巨大的 for 循环，使用 lookup_opt 从左向右对于
+参数扫描，每次匹配到一个完整的参数之后，就会返回 QEMUOption 和 optarg
 ```c
     for(;;) {
         if (optind >= argc)
@@ -20,6 +41,9 @@
         } else {
             const QEMUOption *popt;
 
+            // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+            printf("[%s] : [%s]\n", popt->name,  optarg);
+            // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
             popt = lookup_opt(argc, argv, &optarg, &optind);
             if (!(popt->arch_mask & arch_type)) {
                 error_report("Option not supported for this target");
@@ -29,57 +53,115 @@
             case QEMU_OPTION_cpu:
 ```
 
+使用上面的调试语句可以获取下面的输出
+```txt
+[drive] : [file=/home/maritns3/core/vn/hack/qemu/x64-e1000/alpine.qcow2,format=qcow2]
+[m] : [6G]
+[smp] : [1,maxcpus=3]
+[kernel] : [/home/maritns3/core/ubuntu-linux/arch/x86/boot/bzImage]
+[append] : [root=/dev/sda3 nokaslr ]
+[chardev] : [file,path=/tmp/seabios.log,id=seabios]
+[device] : [isa-debugcon,iobase=0x402,chardev=seabios]
+[bios] : [/home/maritns3/core/seabios/out/bios.bin]
+[device] : [nvme,drive=nvme1,serial=foo]
+[drive] : [file=/home/maritns3/core/vn/hack/qemu/x64-e1000/img1.ext4,format=raw,if=none,id=nvme1]
+[device] : [virtio-blk-pci,drive=nvme2,iothread=io0]
+[drive] : [file=/home/maritns3/core/vn/hack/qemu/x64-e1000/img2.ext4,format=raw,if=none,id=nvme2]
+[object] : [iothread,id=io0]
+[virtfs] : [local,path=/home/maritns3/core/vn/hack/qemu/x64-e1000/share,mount_tag=host0,security_model=mapped,id=host0]
+[accel] : [tcg,thread=single]
+[monitor] : [stdio]
+[qmp] : [unix:/home/maritns3/core/vn/hack/qemu/x64-e1000/test.socket,server,nowait]
+```
 
-- qemu_opts_parse_noisily : 从 vl.c 开始调用，遇到一个 -foo bar 之类就匹配一个
+### QEMUOption 组织结构
+现在根据 `popt->index` 可以跳转到一个具体的处理操作上.
+
+例如 -machine 会跳转到:
+```c
+            case QEMU_OPTION_kernel:
+                qemu_opts_set(qemu_find_opts("machine"), 0, "kernel", optarg,
+                              &error_abort);
+                break;
+```
+解析了这些参数之后，需要将参数的结果保存起来，等到需要使用在查询。
+
+QEMU 使用 QemuOptsList QemuOpts 和 QemuOpt 三级结构来保存
+- QemuOptsList 可以持有多个 QemuOpts
+- QemuOpts 可以持有多个 QemuOpt
+
+
+为什么需要三层结构可以从下面两个参数理解:
+```plain
+[drive] : [file=/home/maritns3/core/vn/hack/qemu/x64-e1000/img1.ext4,format=raw,if=none,id=nvme1]
+[drive] : [file=/home/maritns3/core/vn/hack/qemu/x64-e1000/img2.ext4,format=raw,if=none,id=nvme2]
+```
+
+1. 一个 `-drive` 的参数会创建出来一个 QemuOpts
+2. `-drive` 后面跟着的 file=... format=... if=... 和 id=... 都会创建出来一个 QemuOpt 挂到 QemuOpts 上
+3. `-drive` 对应的 QemuOpts 会挂载到一个 QemuOptsList 上，也就是 `qemu_drive_opts` 上的。
+```c
+QemuOptsList qemu_drive_opts = {
+    .name = "drive",
+    .head = QTAILQ_HEAD_INITIALIZER(qemu_drive_opts.head),
+    .desc = {
+        /*
+         * no elements => accept any params
+         * validation will happen later
+         */
+        { /* end of list */ }
+    },
+};
+```
+4. 这些 QemuOptsList 通过调用 qemu_add_opts  保存到数组 vm_config_groups 中间，通过 qemu_find_opts 使用字符串查询到 QemuOptsList
+
+最后就可以解析的大致流程了:
+- qemu_opts_parse_noisily : 在 [core code flow](#core-code-flow) 中遇到一个 -foo bar 之类就匹配一个
   - opts_parse
     - opts_parse_id : 当参数为类似 -device nvme,drive=nvme1,serial=foo -drive file=${ext4_img1},format=raw,if=none,id=nvme1 的时候，获取到 id=nvme1
-    - qemu_opts_create : 创建 opts 并且将其插入到 QemuOptsList 上
+    - qemu_opts_create : 创建 QemuOpts 并且将其插入到 QemuOptsList 上
     - opts_do_parse : 用于解析出来一个一个的 QemuOpt 插入到 QemuOptsList 上
       - get_opt_name_value : 将一个参数拆分开来, 比如 2,maxcpus=3 就可以拆分为两个
       - opt_create : 将解析出来的参数划分为使用 QemuOpt 包装，并且插入到 QemuOptsList 上
   - qemu_opts_print_help : 解析出现错误，那么就报错
 
 
-1. 三层结构: QemuOptsList QemuOpts 和 QemuOpt 的关系可以从下面两个参数理解
-```plain
--device nvme,drive=nvme1,serial=foo -drive file=${ext4_img1},format=raw,if=none,id=nvme1
--device nvme,drive=nvme2,serial=foo -drive file=${ext4_img2},format=raw,if=none,id=nvme2
-```
-创建的 device 都在 QEMU_OPTION_device 中，每一个 `-device` 创建出来一个 QemuOpts，而 `format=raw` 对应一个 QemuOpt
-
-2. 所有的 QEMUOption 的定义在一个全局变量 qemu_options 中间，在 qemu_init 的一个巨大的 for(;;) 中 因为参数都是 -cpu 之类的，可以将这些参数一行行的分离开
-  - [ ] 具体是在哪一个函数上的
-
-3. 注意，QemuOptsList 一个 group 只有一个，通过 qemu_add_opts 添加，通过 qemu_find_opts 查询.
-  - 而 qemu_opts_create 是在 QemuOptsList 创建 QemuOpts 的
-
-4. QemuOptsList::merge_lists 的作用是
-  - 其实 `-smp 2,maxcpus=3` 也可以写为 `-smp 2 -smp maxcpus=3`，所以
-
 ## qemu-options.def
-这是一个经典的例子:
+在 qemu-options.def 中会定义每一个选项的基本信息
 ```c
-DEF("drive", HAS_ARG, QEMU_OPTION_drive,
-"-drive [file=file][,if=type][,bus=n][,unit=m][,media=d][,index=i]\n"
-"       [,cache=writethrough|writeback|none|directsync|unsafe][,format=f]\n"
-"       [,snapshot=on|off][,rerror=ignore|stop|report]\n"
-"       [,werror=ignore|stop|report|enospc][,id=name]\n"
-"       [,aio=threads|native|io_uring]\n"
-"       [,readonly=on|off][,copy-on-read=on|off]\n"
-"       [,discard=ignore|unmap][,detect-zeroes=on|off|unmap]\n"
-"       [[,bps=b]|[[,bps_rd=r][,bps_wr=w]]]\n"
-"       [[,iops=i]|[[,iops_rd=r][,iops_wr=w]]]\n"
-"       [[,bps_max=bm]|[[,bps_rd_max=rm][,bps_wr_max=wm]]]\n"
-"       [[,iops_max=im]|[[,iops_rd_max=irm][,iops_wr_max=iwm]]]\n"
-"       [[,iops_size=is]]\n"
-"       [[,group=g]]\n"
-"                use 'file' as a drive image\n", QEMU_ARCH_ALL)
+DEF("cpu", HAS_ARG, QEMU_OPTION_cpu,
+    "-cpu cpu        select CPU ('-cpu help' for list)\n", QEMU_ARCH_ALL)
 ```
 
 qemu-options.def 会在三个位置 include，因为每次 include 前面 macro 的定义不同，而解析出来不同的内容
 
+### qemu_options
+```c
+static const QEMUOption qemu_options[] = {
+    { "h", 0, QEMU_OPTION_h, QEMU_ARCH_ALL },
+
+#define DEF(option, opt_arg, opt_enum, opt_help, arch_mask)     \
+    { option, opt_arg, opt_enum, arch_mask },
+#define DEFHEADING(text)
+#define ARCHHEADING(text, arch_mask)
+
+#include "qemu-options.def"
+    { NULL },
+};
+```
+在 lookup_opt 中，查询 qemu_options 来将参数做拆分并返回 QEMUOption
+
+```c
+typedef struct QEMUOption {
+    const char *name;
+    int flags;
+    int index;
+    uint32_t arch_mask;
+} QEMUOption;
+```
+
 ### opt_enum
-1. 将每一个 drive 中的 opt_enum 找出来，从而
+将每一个 drive 中的 opt_enum 找出来，从而
 ```c
 enum {
 
@@ -91,6 +173,7 @@ enum {
 #include "qemu-options.def"
 };
 ```
+这是 [core code flow](#core-code-flow) 中根据 QEMUOption::index 来做 switch case.
 
 将会生成如下的 enum
 ```c
@@ -101,7 +184,7 @@ enum {
 ```
 其使用位置为
 
-2. 将其中的 help 信息打印出来
+### help info
 ```c
 static void help(int exitcode)
 {
@@ -135,68 +218,9 @@ static void help(int exitcode)
 }
 ```
 
-3. 构建 qemu_options 出来, 在 lookup_opt 中被唯一 reference
-```c
-static const QEMUOption qemu_options[] = {
-    { "h", 0, QEMU_OPTION_h, QEMU_ARCH_ALL },
+## extra notes
+- QemuOptsList::merge_lists : `-smp 2,maxcpus=3` 也可以写为 `-smp 2 -smp maxcpus=3`
 
-#define DEF(option, opt_arg, opt_enum, opt_help, arch_mask)     \
-    { option, opt_arg, opt_enum, arch_mask },
-#define DEFHEADING(text)
-#define ARCHHEADING(text, arch_mask)
+<script src="https://utteranc.es/client.js" repo="Martins3/Martins3.github.io" issue-term="url" theme="github-light" crossorigin="anonymous" async> </script>
 
-#include "qemu-options.def"
-    { NULL },
-};
-```
-
-## qemu_init : 分解为一个个的 QemuOpts
-在 vl.c:qemu_init 中的巨大循环中
-```c
-for(;;) {
-  const QEMUOption *popt;
-
-  popt = lookup_opt(argc, argv, &optarg, &optind);
-  if (!(popt->arch_mask & arch_type)) {
-      error_report("Option not supported for this target");
-      exit(1);
-  }
-  switch(popt->index) {
-    // 在这里从巨大的范围中选择
-    case QEMU_OPTION_drive:
-        if (drive_def(optarg) == NULL) {
-            exit(1);
-        }
-        break;
-```
-
-其中通过 lookup_opt 可以将
-```plain
--chardev file,path=/tmp/seabios.log,id=seabios 15
-```
-其两个参数返回值为
-poptarg = file,path=/tmp/seabios.log,id=seabios
-15 = poptind
-同时函数返回值为命中的 QEMUOption
-
-## 移植的方案
-
-原先在 vl.c 中间调用的
-```c
-            case QEMU_OPTION_xtm:
-                opts = qemu_opts_parse_noisily(qemu_find_opts("xtm"),
-                                               optarg, true);
-                x86_to_mips_parse_options(opts);
-                break;
-```
-
-
-- lookup_opt 返回的就是
-```c
-typedef struct QEMUOption {
-    const char *name;
-    int flags;
-    int index;
-    uint32_t arch_mask;
-} QEMUOption;
-```
+本站所有文章转发 **CSDN** 将按侵权追究法律责任，其它情况随意。
