@@ -6,8 +6,12 @@
     <a href="https://996.icu"><img src="https://img.shields.io/badge/link-996.icu-red.svg" alt="996.icu" /></a>
     <a href="https://spacevim.org/"><img src="https://spacevim.org/img/build-with-SpaceVim.svg" alt="spacevim" /></a>
     <a href="https://github.com/martins3/Martins3.github.io"><img src="https://github.com/martins3/Martins3.github.io/actions/workflows/lint-md.yml/badge.svg" alt="ci" /></a>
+    <a href="https://wakatime.com/@21daab89-a694-4970-88ed-a7d264a380e4"><img src="https://wakatime.com/badge/user/21daab89-a694-4970-88ed-a7d264a380e4.svg" alt="Total time coded since Feb 8 2020" /></a>
   </p>
 </p>
+
+<!--START_SECTION:waka-->
+<!--END_SECTION:waka-->
 
 ## Navigations
 - [Martins3's slides](https://martins3.github.io/ppt)
@@ -25,7 +29,7 @@
   - [QEMU softmmu 访存函数集整理](./qemu/softmmu-functions.md)
   - [QEMU 中的 seabios : 地址空间](./qemu/bios-memory.md)
   - [QEMU 和 seabios 的数据传输协议: fw_cfg](./qemu/fw_cfg.md)
-  - [**WIP** QEMU 的参数解析](./qemu/options.md)
+  - [QEMU 的参数解析](./qemu/options.md)
   - [**WIP** QEMU 二进制翻译基础](./qemu/tcg.md)
   - [QEMU 中的线程和事件循环](./qemu/threads.md)
   - [QEMU 中的锁](./qemu/cpus.md)
