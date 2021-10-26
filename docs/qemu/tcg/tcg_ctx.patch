@@ -1,0 +1,96 @@
+diff --git a/accel/tcg/translate-all.c b/accel/tcg/translate-all.c
+index 9f48da9472..8e47a6da65 100644
+--- a/accel/tcg/translate-all.c
++++ b/accel/tcg/translate-all.c
+@@ -1033,7 +1033,7 @@ static inline void *alloc_code_gen_buffer(void)
+     int prot = PROT_WRITE | PROT_READ | PROT_EXEC;
+     int flags = MAP_PRIVATE | MAP_ANONYMOUS;
+     uintptr_t start = 0;
+-    size_t size = tcg_ctx->code_gen_buffer_size;
++    size_t size = tcg_init_ctx.code_gen_buffer_size;
+     void *buf;
+
+     /* Constrain the position of the buffer based on the host cpu.
+@@ -1110,9 +1110,9 @@ static inline void *alloc_code_gen_buffer(void)
+
+ static inline void code_gen_alloc(size_t tb_size)
+ {
+-    tcg_ctx->code_gen_buffer_size = size_code_gen_buffer(tb_size);
+-    tcg_ctx->code_gen_buffer = alloc_code_gen_buffer();
+-    if (tcg_ctx->code_gen_buffer == NULL) {
++    tcg_init_ctx.code_gen_buffer_size = size_code_gen_buffer(tb_size);
++    tcg_init_ctx.code_gen_buffer = alloc_code_gen_buffer();
++    if (tcg_init_ctx.code_gen_buffer == NULL) {
+         fprintf(stderr, "Could not allocate dynamic translator buffer\n");
+         exit(1);
+     }
+diff --git a/tcg/tcg.c b/tcg/tcg.c
+index 5475d49ed1..779d058601 100644
+--- a/tcg/tcg.c
++++ b/tcg/tcg.c
+@@ -992,6 +992,8 @@ void tcg_context_init(TCGContext *s)
+     alloc_tcg_plugin_context(s);
+
+     tcg_ctx = s;
++    tcg_ctx = NULL;
++
+     /*
+      * In user-mode we simply share the init context among threads, since we
+      * use a single region. See the documentation tcg_region_init() for the
+@@ -1041,6 +1043,8 @@ void tcg_prologue_init(TCGContext *s)
+ {
+     size_t prologue_size, total_size;
+     void *buf0, *buf1;
++    s = &tcg_init_ctx;
++
+
+     /* Put the prologue at the beginning of code_gen_buffer.  */
+     buf0 = s->code_gen_buffer;
+@@ -1191,7 +1195,8 @@ void tcg_set_frame(TCGContext *s, TCGReg reg, intptr_t start, intptr_t size)
+ TCGTemp *tcg_global_mem_new_internal(TCGType type, TCGv_ptr base,
+                                      intptr_t offset, const char *name)
+ {
+-    TCGContext *s = tcg_ctx;
++    TCGContext *s = &tcg_init_ctx;
++
+     TCGTemp *base_ts = tcgv_ptr_temp(base);
+     TCGTemp *ts = tcg_global_alloc(s);
+     int indirect_reg = 0, bigendian = 0;
+diff --git a/tcg/tcg.h b/tcg/tcg.h
+index 92ca10dffc..4cb5ef6c88 100644
+--- a/tcg/tcg.h
++++ b/tcg/tcg.h
+@@ -680,8 +680,9 @@ extern TCGv_env cpu_env;
+
+ static inline size_t temp_idx(TCGTemp *ts)
+ {
+-    ptrdiff_t n = ts - tcg_ctx->temps;
+-    tcg_debug_assert(n >= 0 && n < tcg_ctx->nb_temps);
++    TCGContext * l_tcg_ctx = tcg_ctx == NULL ? &tcg_init_ctx : tcg_ctx;
++    ptrdiff_t n = ts - l_tcg_ctx->temps;
++    tcg_debug_assert(n >= 0 && n < l_tcg_ctx->nb_temps);
+     return n;
+ }
+
+@@ -701,7 +702,8 @@ static inline TCGTemp *arg_temp(TCGArg a)
+ static inline TCGTemp *tcgv_i32_temp(TCGv_i32 v)
+ {
+     uintptr_t o = (uintptr_t)v;
+-    TCGTemp *t = (void *)tcg_ctx + o;
++    TCGContext * l_tcg_ctx = tcg_ctx == NULL ? &tcg_init_ctx : tcg_ctx;
++    TCGTemp *t = (void *)l_tcg_ctx + o;
+     tcg_debug_assert(offsetof(TCGContext, temps[temp_idx(t)]) == o);
+     return t;
+ }
+@@ -744,7 +746,10 @@ static inline TCGArg tcgv_vec_arg(TCGv_vec v)
+ static inline TCGv_i32 temp_tcgv_i32(TCGTemp *t)
+ {
+     (void)temp_idx(t); /* trigger embedded assert */
+-    return (TCGv_i32)((void *)t - (void *)tcg_ctx);
++    if(tcg_ctx != NULL){
++         return (TCGv_i32)((void *)t - (void *)tcg_ctx);
++    }
++    return (TCGv_i32)((void *)t - (void *)&tcg_init_ctx);
+ }
+
+ static inline TCGv_i64 temp_tcgv_i64(TCGTemp *t)

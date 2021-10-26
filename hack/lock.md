@@ -42,6 +42,12 @@ struct qnode {
 ## seqlock
 dcache.c:d_lookup 的锁
 
+### https://github.com/rigtorp/Seqlock
+超级简单清晰的分析
+
+使用 segnum 当 reader 在临界区的时候，writer 是否进行过操作，如果是，那么重新尝试。
+
+其实关键在于 memory order 的
 
 ## lockless
 让人想起了 slab 的内容:
@@ -53,7 +59,7 @@ https://lwn.net/SubscriberLink/827180/a1c1305686bfea67/
 
 What is Rcu, Really[^1]:
 
-RCU ensures that reads are coherent by maintaining multiple versions of objects and ensuring that they are not freed up until all pre-existing read-side critical sections complete. 
+RCU ensures that reads are coherent by maintaining multiple versions of objects and ensuring that they are not freed up until all pre-existing read-side critical sections complete.
 
 [LoyenWang](https://www.cnblogs.com/LoyenWang/p/12681494.html)
 
