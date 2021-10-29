@@ -353,7 +353,7 @@ static bool is_refcount_suitable(struct page *page)
 1. `_mapcount` 是在 union 中间，当该页面给用户使用的时候，才有意义
 
 ## page fault
-- [ ] vmf_insert_pfn : 给驱动使用的直接，在 vma 连接 va 和 pa 
+- [ ] vmf_insert_pfn : 给驱动使用的直接，在 vma 连接 va 和 pa
 
 [TO BE CONTINUE](https://www.cnblogs.com/LoyenWang/p/12116570.html), this is a awesome post.
 
@@ -433,7 +433,7 @@ static inline bool is_cow_mapping(vm_flags_t flags)
 - https://stackoverflow.com/questions/13405453/shared-memory-pages-and-fork
 
 
-This is a interesting question, if we want to protect a page being written by cow, 
+This is a interesting question, if we want to protect a page being written by cow,
 - if the page is writable, so we should clear the writable flags of it ?
 - but if the page is not writable, so we should fail the cow page fault ?
 
@@ -684,10 +684,10 @@ EXPORT_SYMBOL(iov_iter_copy_from_user_atomic);
 ## mm_struct
 - [ ] 并不是所有的进程存在 mm_struct 的, 应该是 kernel thread ?
 ```c
-	for_each_process (g) { 
+	for_each_process (g) {
     if(g->mm)
       pr_debug("%s ---> %lx %lx\n", g->comm, g->mm->mmap_base, g->mm->start_stack);
-    else 
+    else
       pr_debug("%s doesn't have mm\n", g->comm);
 	}
 ```
@@ -755,7 +755,7 @@ static void * do_mapping(void *base, unsigned long len)
 }
 ```
 
-- [ ] 
+- [ ]
 
 #### brk
 
@@ -766,7 +766,7 @@ static void * do_mapping(void *base, unsigned long len)
 answer: https://stackoverflow.com/questions/17782536/missing-heap-section-in-proc-pid-maps
 
 
-- [ ] what's difference of brk and mmap ? So what's are the simplifications and extra of brk ? 
+- [ ] what's difference of brk and mmap ? So what's are the simplifications and extra of brk ?
 
 #### mmap layout
 - [ ] `mm_struct::mmap_base`
@@ -983,7 +983,7 @@ enum compact_result {
 - [ ] compact_zone and try_to_compact_pages
   - [ ] compact_zone_order => compact_zone
 
-![loading](https://img2018.cnblogs.com/blog/1771657/201910/1771657-20191027000443984-614132434.png) 
+![loading](https://img2018.cnblogs.com/blog/1771657/201910/1771657-20191027000443984-614132434.png)
 
 ```c
 /*
@@ -1125,15 +1125,15 @@ int main(int argc, char *argv[]) {
 }
 ```
 
-  
+
 
 > /proc/sys/vm/nr_hugepages indicates the current number of “persistent” huge pages in the kernel’s huge page pool. “Persistent” huge pages will be returned to the huge page pool when freed by a task. A user with root privileges can dynamically allocate more or free some persistent huge pages by increasing or decreasing the value of nr_hugepages.
-> 
+>
 > Pages that are used as huge pages are reserved inside the kernel and **cannot** be used for other purposes. Huge pages cannot be swapped out under memory pressure.
-> 
-> Once a number of huge pages have been pre-allocated to the kernel huge page pool, a user with appropriate privilege can use either the mmap system call or shared memory system calls to use the huge pages. 
+>
+> Once a number of huge pages have been pre-allocated to the kernel huge page pool, a user with appropriate privilege can use either the mmap system call or shared memory system calls to use the huge pages.
 
-- [ ] 
+- [ ]
 - [ ] 是不是没有 preallocated 的 page 会导致分配失败 ？
 
 **TO BE CONTINUE**
@@ -1141,7 +1141,7 @@ int main(int argc, char *argv[]) {
 - [ ] issue #14 的检查一下
 
 
-## compound page 
+## compound page
 - [An introduction to compound pages](https://lwn.net/Articles/619514/)
 > A compound page is simply a grouping of two or more physically contiguous pages into a unit that can, in many ways, be treated as a single, larger page. They are most commonly used to create huge pages, used within hugetlbfs or the transparent huge pages subsystem, *but they show up in other contexts as well*. *Compound pages can serve as anonymous memory or be used as buffers within the kernel*; *they cannot, however, appear in the page cache, which is only prepared to deal with singleton pages.*
 
@@ -1150,7 +1150,7 @@ int main(int argc, char *argv[]) {
 
 
 - [ ] find the use case the compound page is buffer within the kernel
-- [ ] 是不是 compound_head 出现的位置，就是和 huge memory 相关的 ? 
+- [ ] 是不是 compound_head 出现的位置，就是和 huge memory 相关的 ?
 
 > Allocating a compound page is a matter of calling a normal memory allocation function like alloc_pages() with the `__GFP_COMP` allocation flag set and an order of at least one
 > The difference is that creating a compound page involves the creation of a fair amount of metadata; much of the time, **that metadata is unneeded so the expense of creating it can be avoided.**
@@ -1176,7 +1176,7 @@ int main(int argc, char *argv[]) {
 - [ ] 提供的硬件支持是什么 ?
     - [ ] 除了在 pml4 pud pmd 的 page table 上的 flags
         - [ ] /sys/kernel/mm/transparent_hugepage/hpage_pmd_size 的含义看，实际上，内核只是支持一共大小的 hugepage
-    - [ ] 需要提供 TLB 知道自己正在访问虚拟地址是否被 hugetlb 映射 
+    - [ ] 需要提供 TLB 知道自己正在访问虚拟地址是否被 hugetlb 映射
 
 transparent hugepage 和 swap 是相关的
 使用 transparent hugepage 的原因:
@@ -1308,7 +1308,7 @@ khugepaged.c 中间的 hugepage 守护进程的工作是什么 ?
 [Improving huge page handling](https://lwn.net/Articles/636162/)
 
 [Transparent huge page reference counting](https://lwn.net/Articles/619738/)
-> In many other situations, Andrea placed a call to split_huge_page(), a function which breaks a huge page down into its component small pages. 
+> In many other situations, Andrea placed a call to split_huge_page(), a function which breaks a huge page down into its component small pages.
 
 > In other words, if split_huge_page() could be replaced by a new function, call it split_huge_pmd(), that would only split up a single process's mapping of a huge page, code needing to deal with individual pages could often be accommodated while preserving the benefits of the huge page for other processes. But, as noted above, the kernel currently does not support different mappings of huge pages; all processes must map the memory in the same way. This restriction comes down to how various parameters — reference counts in particular — are represented in huge pages.
 
@@ -1329,7 +1329,7 @@ khugepaged.c 中间的 hugepage 守护进程的工作是什么 ?
 - [ ] split_huge_page_to_list
   - [ ] `	__split_huge_page` : 不对劲，似乎 hugepage 只是体现在 struct page 上，而没有体现在 pmd 上
       - [x] 在 huge page 中间拆分出来几个当做其他的 page 正常使用, 虽然从中间抠出来的页面不可以继续当做内核，但是可以给用户使用
-          - [ ] 是否存在 flag 说明那些页面可以分配给用户，那些是内核 ? 
+          - [ ] 是否存在 flag 说明那些页面可以分配给用户，那些是内核 ?
 
 
 
@@ -1472,7 +1472,7 @@ struct address_space_operations {
 ```
 
 - [ ] fgp_flags : just flags, it seems find a page in pagecache and swap cache is more tricky than expected
-  - [ ] find_get_page 
+  - [ ] find_get_page
   - [ ] pagecache_get_page
 
 #### page writeback
@@ -1777,7 +1777,7 @@ enum migratetype {
 // --------------- 需要处理的事情 -----------------
 
 
-- [ ] comments below in /home/maritns3/core/linux/include/linux/page-flags.h 
+- [ ] comments below in /home/maritns3/core/linux/include/linux/page-flags.h
   - [ ] PAGE_MAPPING_MOVABLE : I think all anon page is movable
 
 ```c
@@ -2050,7 +2050,7 @@ kmap 和 kmap_atomic 在 64bit 是不是完全相同的:
 
 // TODO 是存在一个叫做 membarrier 的系统调用的哦!
 
-// 教程，也许可以阅读一下 : 
+// 教程，也许可以阅读一下 :
 https://www.cs.utexas.edu/~bornholt/post/memory-models.html
 https://www.linuxjournal.com/article/8211
 https://www.linuxjournal.com/article/8212
@@ -2067,6 +2067,9 @@ DAX 设置 : 到时候在分析吧!
 目前观察到的generic_file_read_iter 和 file_operations::mmap 的内容对于 DAX 区分对待的，但是内容远远不该如此，不仅仅可以越过 page cache 机制，而且 page reclaim 全部可以跳过。
 
 ## memory model
+字节团队写的，应该是相当清楚了:
+https://mp.weixin.qq.com/s/wt5b5e1Y1yG1kDIf0QPsvg
+
 Each memory model defines `pfn_to_page()` and page_to_pfn() helpers that allow the conversion from PFN to struct page and vice versa. [^12]
 
 - [ ] https://randomascii.wordpress.com/2020/11/29/arm-and-lock-free-programming/
@@ -2528,7 +2531,7 @@ https://en.wikipedia.org/wiki/Memory-mapped_I/O
 1. maps device physical address(device memory or device registers) to kernel virtual address
 [^25]
 2. elld 中间也是类似的提到过!
-3. Like user space, the kernel accesses memory through page tables; as a result, when kernel code needs to access memory-mapped I/O devices, it must first set up an appropriate kernel page-table mapping. 
+3. Like user space, the kernel accesses memory through page tables; as a result, when kernel code needs to access memory-mapped I/O devices, it must first set up an appropriate kernel page-table mapping.
 [^26]
 
 memremap 是 ioremap 的更好的接口. [^26]
@@ -2964,7 +2967,7 @@ static inline void set_page_node(struct page *page, unsigned long node)
 }
 ```
 
-  
+
 
 ## vmalloc
 [TO BE CONTINUE](https://www.cnblogs.com/LoyenWang/p/11965787.html)
