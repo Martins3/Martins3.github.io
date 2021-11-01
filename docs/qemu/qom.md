@@ -715,7 +715,7 @@ X86CPUModel(因为 version 的原因)
     },
 ```
 2. 在 x86_cpu_common_class_init -> x86_cpu_register_feature_bit_props 中为每一个 feature bit 注册属性
-2. 在 class init 的时候，调用 x86_cpu_cpudef_class_init 实现对于 X86CPUClass::model 的初始化
+2. 在 class init 的时候，调用 x86_cpu_cpudef_class_init 来初始化 X86CPUClass::model
 此时每一个 X86CPUClass 都会指向自己的 model
 3. 在 qemu_init 中进行 `current_machine->cpu_type` 的初始化,
 而 pc_machine_class_init 中进行选择 MachineClass::default_cpu_type

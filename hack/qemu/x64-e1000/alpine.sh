@@ -7,7 +7,8 @@ kernel_dir=/home/maritns3/core/ubuntu-linux
 # qemu=/home/maritns3/core/kvmqemu/build/qemu-system-x86_64
 qemu=/home/maritns3/core/xqm/build/x86_64-softmmu/qemu-system-x86_64
 # bios 镜像的地址，可以不配置，将下面的 arg_seabios 定位为 "" 就是使用默认的
-seabios=/home/maritns3/core/seabios/out/bios.bin
+# seabios=/home/maritns3/core/seabios/out/bios.bin
+seabios=/home/maritns3/core/5000/ld/DuckBuBi/seabios/out/bios.bin
 # 2021/8/14 的最新镜像
 alpine_img_url=https://dl-cdn.alpinelinux.org/alpine/v3.14/releases/x86_64/alpine-standard-3.14.1-x86_64.iso
 # ------------------------------------------------------------------------------

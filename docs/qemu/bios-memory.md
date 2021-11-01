@@ -117,6 +117,7 @@ dprintf(1, "%p\n", VSYMBOL(entry_post));
 
 也就是 seabios 执行的第一行代码就是从 0xfffffff0 跳转到 0x000fe05b 上
 
+然后跳转到 handle_resume 上。
 
 ## pc.rom
 在 pc_memory_init 中初始化:

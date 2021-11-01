@@ -35,6 +35,7 @@
   - [QEMU 中的锁](./qemu/cpus.md)
   - [QEMU 如何模拟中断](./qemu/interrupt.md)
   - [QEMU 中的面向对象 : QOM](./qemu/qom.md)
+  - 🚧 [QEMU 的 timer](./qemu/timer.md)
 
 <!-- - [QEMU 中的 seabios : fw_cfg](./qemu-bios-fw_cfg.md) -->
 

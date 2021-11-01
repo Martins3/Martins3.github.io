@@ -29,6 +29,7 @@
 - [Option ROM](#option-rom)
 - [access size](#access-size)
 - [address_space_map](#address_space_map)
+- [sysbus_init_mmio](#sysbus_init_mmio)
 - [Appendix](#appendix)
 
 <!-- vim-markdown-toc -->
@@ -235,7 +236,7 @@ static FlatView *generate_memory_topology(MemoryRegion *mr)
 
     if (mr) {
         // 递归的将 MemoryRegion 中的各个 sub MemoryRegion 压平为 FlatRange
-        //  1. 如果是 alias, 那么 render alias
+        //  1. 如果是 alias, 那么 render mr->alias
         //  2. 如果存在 child，那么按照优先级 render child, memory_region_add_subregion_common 优先级是满足的
         //  3. 最后，Render the region itself into any gaps left by the current view.
         //  4. 终极目的，创建 FlatRange 出来，并且使用 flatview_insert 将 FlatRange 放到 FlatView::ranges 数组上
@@ -326,6 +327,8 @@ find_ram_offset 中 RAM 的对齐至少为 0x40000
 ```c
         candidate = ROUND_UP(candidate, BITS_PER_LONG << TARGET_PAGE_BITS);
 ```
+
+在 ram_list 中，RAMBlock 按照大小排序的。
 ```c
 /*
 pc.ram: offset=0 size=180000000
@@ -339,10 +342,6 @@ e1000.rom: offset=1808c0000 size=40000
 /rom@etc/acpi/rsdp: offset=180b40000 size=1000
 ```
 任何一个 page 的 ram_addr = offset in RAM + `RAMBlock::offset`
-
-
-
-
 
 ## subpage
 之前分析过 flatview_translate 的流程，其作用在于根据 hwaddr 在 AddressSpace 中找到对应的 MemoryRegion
@@ -524,8 +523,6 @@ memory-region: pc.ram
 */
 ```
 
-因为 alias 的引入，很多函数的逻辑也需要稍微修改一下，比如 memory_region_get_ram_ptr
-
 ```c
 void *memory_region_get_ram_ptr(MemoryRegion *mr)
 {
@@ -539,7 +536,6 @@ void *memory_region_get_ram_ptr(MemoryRegion *mr)
         mr = mr->alias;
     }
     assert(mr->ram_block);
-    // 加上 offset 才是真正的 ram addr
     ptr = qemu_map_ram_ptr(mr->ram_block, offset);
 
     return ptr;
@@ -897,6 +893,9 @@ sysemu/dma.h:135
 #12 0x00007ffff5c0a609 in start_thread (arg=<optimized out>) at pthread_create.c:477
 #13 0x00007ffff5b31293 in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
 ```
+## sysbus_init_mmio
+在 hw/intc/ioapic.c:ioapic_realize 初始化了 MemoryRegion "ioapic" 的，但是实际上是
+在 ioapic_common_realize 调用 sysbus_init_mmio 注册上的
 
 ## Appendix
 在 v6.0 中
