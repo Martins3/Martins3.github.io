@@ -1,16 +1,19 @@
-## how to port clock
+## QEMU 中的时钟
 实际上，timer 的监听就是靠 mian loop 中处理的
 
-- [ ] 为什么制作出来了 timer_list_group 的概念
+- [x] 为什么制作出来了 timer_list_group 的概念
   - timerlist_run_timers
-- [ ] 全局变量的 rtc_clock 正确初始化，其中影响是什么?
+  - 因为存在 main loop 和 iothread 两种
+
+- [x] 全局变量的 rtc_clock 正确初始化，其中影响是什么?
   - 在 rtc_configure 的地方初始化的
+
 - 为什么搞出来四种 clock 的呀
   - QEMU_CLOCK_VIRTUAL_RT 和 icount 有关，暂时不管了
-  - [ ] 主要是 QEMU_CLOCK_HOST 和 QEMU_CLOCK_REALTIME
+  - 主要是 QEMU_CLOCK_HOST 和 QEMU_CLOCK_REALTIME
 
-- [ ] 似乎是 TimersState 主要处理什么的
-  - [ ] cpu_get_clock 和 cpu_get_ticks cpu_get_icount 是一个高度对称的
+- [x] 似乎是 TimersState 主要处理什么的
+  - [x] cpu_get_clock 和 cpu_get_ticks cpu_get_icount 是一个高度对称的
 
 提交之前:
 - [ ] 写一个 blog
@@ -256,6 +259,7 @@ void qemu_timer_notify_cb(void *opaque, QEMUClockType type)
     }
 }
 ```
+- qemu_notify_event 用于让 main_loop 从 poll 之类新过来，从而可以去处理各种到来的 timer 了
 
 ## timer
 在 aio 只是添加了这一个 timer 而已:
@@ -398,6 +402,121 @@ p=0x0) at /home/maritns3/core/xqm/include/qemu/timer.h:531
 ```c
 qemu_clock_get_ms(QEMU_CLOCK_VIRTUAL)
 ```
+```c
+/**
+ * QEMUClockType:
+ *
+ * The following clock types are available:
+ *
+ * @QEMU_CLOCK_REALTIME: Real time clock
+ *
+ * The real time clock should be used only for stuff which does not
+ * change the virtual machine state, as it runs even if the virtual
+ * machine is stopped.
+ *
+ * @QEMU_CLOCK_VIRTUAL: virtual clock
+ *
+ * The virtual clock only runs during the emulation. It stops
+ * when the virtual machine is stopped.
+ *
+ * @QEMU_CLOCK_HOST: host clock
+ *
+ * The host clock should be used for device models that emulate accurate
+ * real time sources. It will continue to run when the virtual machine
+ * is suspended, and it will reflect system time changes the host may
+ * undergo (e.g. due to NTP).
+ *
+ * @QEMU_CLOCK_VIRTUAL_RT: realtime clock used for icount warp
+ *
+ * Outside icount mode, this clock is the same as @QEMU_CLOCK_VIRTUAL.
+ * In icount mode, this clock counts nanoseconds while the virtual
+ * machine is running.  It is used to increase @QEMU_CLOCK_VIRTUAL
+ * while the CPUs are sleeping and thus not executing instructions.
+ */
+
+typedef enum {
+    QEMU_CLOCK_REALTIME = 0,
+    QEMU_CLOCK_VIRTUAL = 1,
+    QEMU_CLOCK_HOST = 2,
+    QEMU_CLOCK_VIRTUAL_RT = 3,
+    QEMU_CLOCK_MAX
+} QEMUClockType;
+```
+
+最后走到这里来:
+```c
+int64_t qemu_clock_get_ns(QEMUClockType type)
+{
+    switch (type) {
+    case QEMU_CLOCK_REALTIME:
+        return get_clock(); // get_clock_realtime
+    default:
+    case QEMU_CLOCK_VIRTUAL:
+        if (use_icount) {
+            return cpu_get_icount();
+        } else {
+            return cpu_get_clock(); // 偏移
+        }
+    case QEMU_CLOCK_HOST:
+        return REPLAY_CLOCK(REPLAY_CLOCK_HOST, get_clock_realtime()); // 没有任何变化的呀
+    case QEMU_CLOCK_VIRTUAL_RT:
+        return REPLAY_CLOCK(REPLAY_CLOCK_VIRTUAL_RT, cpu_get_clock());
+    }
+}
+```
+如果没有 replay 的情况，后面两个 macro 都是可以直接退化为 get_clock_realtime 和 cpu_get_clock 的。
+
+- [x] 为什么说 QEMU_CLOCK_HOST 是给 devices 模拟的呀
+- [x] 分析一下各种 lock 的使用情况
+
+#### clock
+
+```c
+static int64_t cpu_get_clock_locked(void)
+{
+    int64_t time;
+
+    time = timers_state.cpu_clock_offset;
+    if (timers_state.cpu_ticks_enabled) {
+        time += get_clock();
+    }
+
+    return time;
+}
+```
+
+```c
+/*
+#0  cpu_enable_ticks () at /home/maritns3/core/xqm/cpus.c:402
+#1  0x000055555587996a in vm_prepare_start () at /home/maritns3/core/xqm/cpus.c:2205
+#2  0x00005555558799cd in vm_start () at /home/maritns3/core/xqm/cpus.c:2213
+#3  0x000055555582b69d in main (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at /home/maritns3/core/xqm/vl.c:4467
+```
+正常情况下，cpu_disable_ticks 几乎不需要被调用的
+
+QEMU_CLOCK_REALTIME 和 QEMU_CLOCK_VIRTUAL 的唯一区别在于后者总是会添加上一个 timers_state.cpu_clock_offset
+
+- [x] timers_state.cpu_clock_offset 总是不变的
+  - rnm, 太真实了，就是在 cpu_enable_ticks 中减去当时的 get_clock 的呀
+- [x] 似乎退出的时候，会导致 timers_state.cpu_clock_offset 发生修改
+  - 那是因为 cpu_disable_ticks 的原因
+```c
+/*
+#0  cpu_disable_ticks () at /home/maritns3/core/xqm/cpus.c:451
+#1  0x00005555558792fd in do_vm_stop (state=RUN_STATE_SHUTDOWN, send_stop=<optimized out>) at /home/maritns3/core/xqm/cpus.c:1130
+#2  0x000055555582b30d in main (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at /home/maritns3/core/xqm/vl.c:4495
+```
+
+QEMU_CLOCK_VIRTUAL 的实现和想象的非常不相同的，就是让整个 vm 挺住的时候，停止计算时间。
+实际上，不会处理 vmexit 导致的时间偏移的。
+
+分析一下 qemu_clock_enable 的调用位置:
+- resume_all_vcpus
+- qemu_tcg_rr_cpu_thread_fn : 因为单步调试的时候屏蔽中断和 timer 这是一个很正确的操作实际上。
+
+分析 qemu_clock_enable 的原理:
+- 如果将 clock 装换为可以使用，当然需要进行一波操作让 timer 向下走一遍
+- 如果 disable，那么自然需要等待这些 timer list 结束才可以的呀
 
 ## rr 中怎么处理的
 - [ ] 是不是存在多个 vCPU timer 的，然后尽可能保证所有的 timer 的时间相同的
