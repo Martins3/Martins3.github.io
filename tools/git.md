@@ -1,3 +1,7 @@
+## bisect
+
+https://stackoverflow.com/questions/4713088/how-to-use-git-bisect
+
 ## TODO
 http://www.ruanyifeng.com/blog/2016/01/commit_message_change_log.html
 
@@ -12,7 +16,7 @@ https://github.com/commitizen/cz-cli : 学会正确的 commit
 https://www.toptal.com/developers/gitignore : 纯工具，再也不用一个个的复制了
 https://github.com/tipsy/profile-summary-for-github : github 个人信息生成器
 
-https://github.com/jlord/git-it-electron : 推荐给小朋友用于学习 git 
+https://github.com/jlord/git-it-electron : 推荐给小朋友用于学习 git
 
 
 ## checklist
@@ -74,7 +78,7 @@ git diff
 
 git fetch origin
 git reset --hard origin/master
-git clean -f -d 
+git clean -f -d
 ```
 
 
@@ -273,7 +277,7 @@ http://www.drdobbs.com/architecture-and-design/git-tracking-relationships-use-th
 
 ## git push
 1. git push origin master 会出现失败，当本地的master 没有办法对于远程的master 进行 fast-forward 的时候.
-2. 当采用 
+2. 当采用
 
 
 ## 搭建git 服务器
@@ -309,7 +313,7 @@ Often, merge conflicts happen when people make different changes to the same lin
 
 Merge 的前提是必须含有公共的ancester. 如果是在同一个仓库中间，必定会存在一个父类的节点，最不济，在init 的位置，所以不同的仓库
 即使内容完全相同，也是没有办法实现merge 的.
-merge 的关键在于内容是否相同，而不是在于谁处于领先的状态. 
+merge 的关键在于内容是否相同，而不是在于谁处于领先的状态.
 
 如果一个分支比如(dev)，始终领先于master ，那么master 不停的合并 dev（spacevim.d ) 的操作，那么永远不会出现冲突，
 出现冲突不是因为内容conflict，而是双方的commit 出现冲突。
