@@ -514,7 +514,7 @@ x86_allocate_cpu_irq 会创建出来一个 qemu_irq 出来，其 handler 为 pic
 ```c
     cpu->interrupt_request |= mask;
 ```
-在 cpu_handle_interrupt 中检测到 interrupt_request 上之后:
+在 cpu_handle_interrupt 中检测到 interrupt_request 上之后，会调用和 arch 相关的实现函数来处理:
 
 - x86_cpu_exec_interrupt : 调用 x86 注册
   - x86_cpu_pending_interrupt : 获取当前到来的是什么中断

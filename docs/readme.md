@@ -7,6 +7,7 @@
     <a href="https://spacevim.org/"><img src="https://spacevim.org/img/build-with-SpaceVim.svg" alt="spacevim" /></a>
     <a href="https://github.com/martins3/Martins3.github.io"><img src="https://github.com/martins3/Martins3.github.io/actions/workflows/lint-md.yml/badge.svg" alt="ci" /></a>
     <a href="https://wakatime.com/@21daab89-a694-4970-88ed-a7d264a380e4"><img src="https://wakatime.com/badge/user/21daab89-a694-4970-88ed-a7d264a380e4.svg" alt="Total time coded since Feb 8 2020" /></a>
+    <a href="https://github.com/Martins3/Martins3.github.io/commits/master"><img src="https://img.shields.io/github/commit-activity/w/martins3/martins3.github.io"></a>
   </p>
 </p>
 
@@ -22,6 +23,7 @@
 - [Loongson Dune : A Process Level Virtualization framework Base on KVM](https://github.com/Martins3/loongson-dune)
 - [裸金属二进制翻译器的设计与实现](https://martins3.github.io/ppt/repo/2021-8-24/index.html)
 - QEMU 源码分析
+  -  🚧 [QEMU 的文件结构](./qemu/file-structure.md)
   - [QEMU 初始化过程分析](./qemu/init.md)
   - [QEMU 的 memory model 设计](./qemu/memory.md)
   - [QEMU 的 softmmu 设计](./qemu/softmmu.md)
@@ -35,7 +37,7 @@
   - [QEMU 中的锁](./qemu/cpus.md)
   - [QEMU 如何模拟中断](./qemu/interrupt.md)
   - [QEMU 中的面向对象 : QOM](./qemu/qom.md)
-  - 🚧 [QEMU 中的时钟](./qemu/timer.md)
+  - [QEMU 中的时钟](./qemu/timer.md)
 
 <!-- - [QEMU 中的 seabios : fw_cfg](./qemu-bios-fw_cfg.md) -->
 

@@ -9,9 +9,10 @@
   - [interrupt_request](#interrupt_request)
   - [qemu_mutex_iothread_locked](#qemu_mutex_iothread_locked)
 - [resources shared between vCPU thread](#resources-shared-between-vcpu-thread)
-- [locks between vCPU](#locks-between-vcpu)
-  - [tcg vCPU thread](#tcg-vcpu-thread)
+- [tcg vCPU thread](#tcg-vcpu-thread)
     - [lifecycle of vCPU thread](#lifecycle-of-vcpu-thread)
+    - [halt](#halt)
+- [locks between vCPU](#locks-between-vcpu)
       - [sync between main loop and vCPU](#sync-between-main-loop-and-vcpu)
     - [current_cpu](#current_cpu)
     - [setlongjmp](#setlongjmp)
@@ -143,23 +144,7 @@ memory_ldst_phys.h.inc:121
 - PageDesc::lock : 用于保护一个 guest page 上翻译的所有 tb 。
 - TBContext::htable : 根据物理地址找到 TranslationBlock 的映射。有的 vCPU 因为 SMC 可能在修改，而另一个 vCPU 在使用，所以需要考虑共享的问题。qht 的实现利用了 rcu 机制。
 
-## locks between vCPU
-因为 kvm vCPU thread 的比较简单，就不分析了。下面只是关注 tcg 的 vCPU thread，在没有 explicit 的指出的情况下，vCPU thread 指的是 tcg vCPU thread。
-
-
-```c
-static QemuMutex qemu_cpu_list_lock;   // 这个就是 cpu 的 lock，一旦持有，其他的 cpu 都不可以动弹的，也是用于实现下面的各种 cond
-static QemuCond exclusive_cond;        // 用于实现 start_exclusive 中 wait，在 cpu_exec_end 中 notify 的。
-static QemuCond exclusive_resume;      // 在 inclusive_idle 的调用
-static QemuCond qemu_work_cond;        // 用于实现 do_run_on_cpu 的，在 process_queued_cpu_work 中 qemu_cond_broadcast(&qemu_work_cond);
-
-static QemuMutex qemu_global_mutex;    // 这个居然就是 bql 啊
-struct QemuCond * CPUState::halt_cond; // 当整个 cpu 处于 stop 的状态，那么会卡到这里去
-
-static QemuCond qemu_pause_cond;       // pause_all_vcpus 中用于等待所有的 vCPU 进入 stop 的状态
-```
-
-### tcg vCPU thread
+## tcg vCPU thread
 - rr_cpu_thread_fn : 使用一个 thread 模拟所有的 vCPU
 - mttcg_cpu_thread_fn : 每一个 thread 模拟一个 vCPU
 
@@ -244,6 +229,32 @@ void cpu_exit(CPUState *cpu)
 }
 ```
 
+#### halt
+x86 halt 指令会让 CPU 进入低功耗的状态，当外界有中断到来的时候，CPU 才会继续运行。
+显然，当 guest 执行 halt 指令之后，host 对应的 vCPU thread 也是需要进入到 idle 的状态。
+
+- 当遇到 halt 指令，会调用 helper do_hlt
+- do_hlt 设置 CPUState::halted 并且通过 siglongjmp 跳转到 cpu_exec 中，并且退出到  qemu_tcg_rr_cpu_thread_fn
+- qemu_tcg_rr_cpu_thread_fn 会调用到 qemu_tcg_rr_wait_io_event
+- 在 qemu_tcg_rr_wait_io_event 中调用 all_cpu_threads_idle 来分析 CPU 是否进入到 idle 中
+- 如果是，vCPU 将会等待到 `qemu_cond_wait(first_cpu->halt_cond, &qemu_global_mutex)`
+- 如果有中断到来了，例如在 tcg_handle_interrupt 中，调用 cpu_exit 可以会 broadcast halt_cond 从而让 vCPU 继续执行
+
+## locks between vCPU
+因为 kvm vCPU thread 的比较简单，就不分析了。下面只是关注 tcg 的 vCPU thread，在没有 explicit 的指出的情况下，vCPU thread 指的是 tcg vCPU thread。
+
+
+```c
+static QemuMutex qemu_cpu_list_lock;   // 这个就是 cpu 的 lock，一旦持有，其他的 cpu 都不可以动弹的，也是用于实现下面的各种 cond
+static QemuCond exclusive_cond;        // 用于实现 start_exclusive 中 wait，在 cpu_exec_end 中 notify 的。
+static QemuCond exclusive_resume;      // 在 inclusive_idle 的调用
+static QemuCond qemu_work_cond;        // 用于实现 do_run_on_cpu 的，在 process_queued_cpu_work 中 qemu_cond_broadcast(&qemu_work_cond);
+
+static QemuMutex qemu_global_mutex;    // 这个居然就是 bql 啊
+struct QemuCond * CPUState::halt_cond; // 当整个 cpu 处于 stop 的状态，那么会卡到这里去
+
+static QemuCond qemu_pause_cond;       // pause_all_vcpus 中用于等待所有的 vCPU 进入 stop 的状态
+```
 
 ##### sync between main loop and vCPU
 在 x86_cpu_realizefn => qemu_init_vcpu 中，会创建并且执行 vCPU thread
