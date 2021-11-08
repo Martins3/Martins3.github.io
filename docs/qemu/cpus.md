@@ -11,6 +11,7 @@
 - [resources shared between vCPU thread](#resources-shared-between-vcpu-thread)
 - [tcg vCPU thread](#tcg-vcpu-thread)
     - [lifecycle of vCPU thread](#lifecycle-of-vcpu-thread)
+    - [exit_request](#exit_request)
     - [halt](#halt)
 - [locks between vCPU](#locks-between-vcpu)
       - [sync between main loop and vCPU](#sync-between-main-loop-and-vcpu)
@@ -209,16 +210,11 @@ while (!cpu->unplug || cpu_can_run(cpu)){
 - thread_kicked : 在 qemu_cpu_kick 中，因为 AccelOpsClass::kick_vcpu_thread 注册过，不会调用 cpus_kick_thread 上
 - stop / stopped : 这是用于处理 vmstate 的之类的将 cpu 停下来的操作。实际上，runstate 之类的也是处理这个事情。
 
-- CPUState::halted : 对于 halt 的模拟
-  - do_hlt : 在 helper 中，用于模拟处理 hlt 指令的
-  - cpu_x86_load_seg_cache_sipi : 机器启动的位置，将从 halt 状态进行切换
-  - [ ] cpu_handle_halt : cpu_exec 执行之前会调用，如果 halt 了，如果在 mttcg 中的，这个 thread 直接结束了
-  - cpu_handle_interrupt : 将 CPUState::interrupt_request 中插入的 CPU_INTERRUPT_HALT 装换为在 CPUState::exception_index 上插入 EXCP_HLT
-
+#### exit_request
 - exit_request : cpu_exit 让 vCPU 从执行流逐步退出
-  - 在 cpu_exit 中做两个事情，设置 icount_decr_ptr 让 vCPU 在 tb 结束的位置退出，其次是设置 exit_request
+  - 在 cpu_exit 中做两个事情，设置 icount_decr_ptr 让 vCPU 在 tb 结束的位置退出，其次是设置 exit_request = 1
   - cpu_handle_interrupt : 检测到 exit_request 之后会设置 `cpu->exception_index = EXCP_INTERRUPT`，这导致执行流进入到 `cpu_handle_exception` 中
-  - cpu_handle_exception 中因为检测到 `cpu->exception_index >= EXCP_INTERRUPT`，将会重置 `cpu->exception_index = -1` 并且进一步导致退出到 `cpu_exec`
+  - cpu_handle_exception 中因为检测到 `cpu->exception_index >= EXCP_INTERRUPT`，将会重置 `cpu->exception_index = -1` 并且进一步导致退出 `cpu_exec`
 ```c
 void cpu_exit(CPUState *cpu)
 {
@@ -233,8 +229,10 @@ void cpu_exit(CPUState *cpu)
 x86 halt 指令会让 CPU 进入低功耗的状态，当外界有中断到来的时候，CPU 才会继续运行。
 显然，当 guest 执行 halt 指令之后，host 对应的 vCPU thread 也是需要进入到 idle 的状态。
 
+- cpu_x86_load_seg_cache_sipi : 机器启动的位置，将 CPUState::halted 从 1 设置为 0
 - 当遇到 halt 指令，会调用 helper do_hlt
-- do_hlt 设置 CPUState::halted 并且通过 siglongjmp 跳转到 cpu_exec 中，并且退出到  qemu_tcg_rr_cpu_thread_fn
+- do_hlt 设置 CPUState::halted 并且通过 siglongjmp 跳转到 cpu_exec 中
+- cpu_handle_interrupt : 将 CPUState::interrupt_request 中插入的 CPU_INTERRUPT_HALT 装换为在 CPUState::exception_index 上插入 EXCP_HLT 从而进一步退出到 qemu_tcg_rr_cpu_thread_fn
 - qemu_tcg_rr_cpu_thread_fn 会调用到 qemu_tcg_rr_wait_io_event
 - 在 qemu_tcg_rr_wait_io_event 中调用 all_cpu_threads_idle 来分析 CPU 是否进入到 idle 中
 - 如果是，vCPU 将会等待到 `qemu_cond_wait(first_cpu->halt_cond, &qemu_global_mutex)`

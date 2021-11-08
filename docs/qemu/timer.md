@@ -6,6 +6,7 @@
 - [timer](#timer)
 - [timerlist](#timerlist)
 - [timerlistgroup](#timerlistgroup)
+- [misc](#misc)
 
 <!-- vim-markdown-toc -->
 
@@ -207,6 +208,9 @@ void qemu_timer_notify_cb(void *opaque, QEMUClockType type);
 void aio_notify(AioContext *ctx);
 ```
 
+为什么存在立刻执行 qemu_clock_run_all_timers 的需求?
+- 如果添加的 timer 是 soonest 的时候(分析 timer_mod_ns_locked)，这要求 ppoll 提前返回，否则等到 ppoll 返回的时候，这个 timer 要求的时间已经过去了
+
 ## timerlistgroup
 ```c
 struct QEMUTimerListGroup {
@@ -244,6 +248,11 @@ xqm/include/block/aio.h:433
 #6  0x0000555555cc7283 in coroutine_trampoline (i0=<optimized out>, i1=<optimized out>) at /home/maritns3/core/xqm/util/coroutine-ucontext.c:115
 #7  0x00007ffff5a6f660 in __start_context () at ../sysdeps/unix/sysv/linux/x86_64/__start_context.S:91
 ```
+
+## misc
+- 如果一个 Timer 被添加到了 timerlist 中，那么 QEMUTimer::expire_time 不应该等于 -1
+- timer_mod_anticipate_ns 和 timer_mod_ns 的区别: 前者要求，只有提前这个 timer 的时候，才可以修改 timerlist，否则此次操作为空
+- 因为 QEMU_CLOCK_VIRTUAL 类型的 clock 只有在 CPU 运行的时候才可以运行的
 
 <script src="https://utteranc.es/client.js" repo="Martins3/Martins3.github.io" issue-term="url" theme="github-light" crossorigin="anonymous" async> </script>
 
