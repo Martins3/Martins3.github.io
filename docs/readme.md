@@ -33,6 +33,7 @@
   - [QEMU 和 seabios 的数据传输协议: fw_cfg](./qemu/fw_cfg.md)
   - [QEMU 的参数解析](./qemu/options.md)
   - 🚧 [QEMU 二进制翻译基础](./qemu/tcg.md)
+  - 🚧 [QEMU 如何模拟 PCI 设备](./qemu/pci.md)
   - [QEMU 中的线程和事件循环](./qemu/threads.md)
   - [QEMU 中的锁](./qemu/cpus.md)
   - [QEMU 如何模拟中断](./qemu/interrupt.md)

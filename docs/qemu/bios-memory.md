@@ -117,7 +117,57 @@ dprintf(1, "%p\n", VSYMBOL(entry_post));
 
 也就是 seabios 执行的第一行代码就是从 0xfffffff0 跳转到 0x000fe05b 上
 
-然后跳转到 handle_resume 上。
+在 transition32 中，将
+```c
+// Place CPU into 32bit mode from 16bit mode.
+// %edx = return location (in 32bit mode)
+// Clobbers: ecx, flags, segment registers, cr0, idt/gdt
+        DECLFUNC transition32
+        .global transition32_nmi_off
+transition32:
+        // Disable irqs (and clear direction flag)
+        cli
+        cld
+
+        // Disable nmi
+        movl %eax, %ecx
+        movl $CMOS_RESET_CODE|NMI_DISABLE_BIT, %eax
+        outb %al, $PORT_CMOS_INDEX
+        inb $PORT_CMOS_DATA, %al
+
+        // enable a20
+        inb $PORT_A20, %al
+        orb $A20_ENABLE_BIT, %al
+        outb %al, $PORT_A20
+        movl %ecx, %eax
+
+transition32_nmi_off:
+        // Set segment descriptors
+        lidtw %cs:pmode_IDT_info
+        lgdtw %cs:rombios32_gdt_48
+
+        // Enable protected mode
+        movl %cr0, %ecx
+        andl $~(CR0_PG|CR0_CD|CR0_NW), %ecx
+        orl $CR0_PE, %ecx
+        movl %ecx, %cr0
+
+        // start 32bit protected mode code
+        ljmpl $SEG32_MODE32_CS, $(BUILD_BIOS_ADDR + 1f)
+
+        .code32
+        // init data segments
+1:      movl $SEG32_MODE32_DS, %ecx
+        movw %cx, %ds
+        movw %cx, %es
+        movw %cx, %ss
+        movw %cx, %fs
+        movw %cx, %gs
+
+        jmpl *%edx
+        .code16
+```
+
 
 ## pc.rom
 在 pc_memory_init 中初始化:
