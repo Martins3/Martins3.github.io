@@ -61,9 +61,10 @@ show_help() {
 	exit 0
 }
 
-while getopts "dskth" opt; do
+while getopts "dskthp" opt; do
 	case $opt in
 	d) debug_qemu="gdb --args" ;;
+	p) debug_qemu="perf record -F 1000" ;;
 	s) debug_kernel="-S -s" ;;
 	k) LAUNCH_GDB=true ;;
 	t) arg_machine="--accel tcg,thread=single" arg_cpu="" ;;

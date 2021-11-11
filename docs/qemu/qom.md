@@ -20,6 +20,8 @@
   - [realize](#realize)
   - [qtree](#qtree)
 - [QOM in action](#qom-in-action)
+  - [cpu type](#cpu-type)
+  - [qdev realize](#qdev-realize)
 - [misc](#misc)
 
 <!-- vim-markdown-toc -->
@@ -672,6 +674,8 @@ struct DeviceState {
 在 qdev_realize -> qdev_set_parent_bus 将会 dev 添加到 bus 上，如果一个 dev 没有关联 bus，类似 hpet 那么就会添加到 main-system-bus 上。
 
 ## QOM in action
+
+### cpu type
 QEMU 将很多内容按照 QOM 重写了之后，如果不掌握 QOM 的基本知识，有些内容是完全看不懂的，现在我举一个比较经典的例子。
 我们知道，即使是同一个指令集的 CPU 每一个版本的功能也是有差异的，使用 lscpu 可以查看当前的 CPU 支持的 feature。
 QEMU 可以模拟各种版本的 x86 CPU，现在我们分析一下 QEMU 是如何做的:
@@ -773,7 +777,64 @@ static PropValue tcg_default_props[] = {
 };
 ```
 
+### qdev realize
+给大家再介绍一个 QEMU 处理 QOM 非常隐秘的一个点。
 
+```c
+PCIBus *i440fx_init(const char *host_type, const char *pci_type, // ...
+{
+    // ...
+    dev = qdev_create(NULL, host_type);
+    s = PCI_HOST_BRIDGE(dev);
+    b = pci_root_bus_new(dev, NULL, pci_address_space,
+                         address_space_io, 0, TYPE_PCI_BUS);
+    s->bus = b;
+    object_property_add_child(qdev_get_machine(), "i440fx", OBJECT(dev), NULL);
+    qdev_init_nofail(dev);
+```
+review 这个代码，你会发现这里有点不顺眼的地方。
+
+- qdev_create 创建 dev 之后，然后是创建 pci_root_bus_new 之后再去 qdev_init_nofail(dev) 的，为什么需要在 create 和 init 之间插入一个 pci_root_bus_new 的。
+
+我尝试了一下调换顺序，但是虽然可以启动，但是 seabios 的启动会出现一个停滞。
+
+检查 seabios 的 log 可以发现
+```txt
+Found 1 serial ports                  <- 首先会在这里卡住
+WARNING - Timeout at nvme_wait:144!   <- 报错之后继续
+```
+
+最后在 @niugenen 和 @rrwhx 的帮助下，终于找到了下面的 backtrace
+```c
+/*
+#0  pci_bus_realize (qbus=0x555556937d20, errp=0x7fffffffcb70) at /home/maritns3/core/xqm/hw/pci/pci.c:121
+#1  0x0000555555a2852a in bus_set_realized (obj=<optimized out>, value=<optimized out>, errp=0x7fffffffcc60) at /home/maritns3/core/xqm/hw/core/bus.c:225
+#2  0x0000555555bb206b in property_set_bool (obj=0x555556937d20, v=<optimized out>, name=<optimized out>, opaque=0x5555566cda50, errp=0x7fffffffcc60) at /home/maritns3
+/core/xqm/qom/object.c:2083
+#3  0x0000555555bb6854 in object_property_set_qobject (obj=obj@entry=0x555556937d20, value=value@entry=0x555556709610, name=name@entry=0x555555db1293 "realized", errp=
+errp@entry=0x7fffffffcc60) at /home/maritns3/core/xqm/qom/qom-qobject.c:26
+#4  0x0000555555bb408a in object_property_set_bool (obj=0x555556937d20, value=<optimized out>, name=0x555555db1293 "realized", errp=0x7fffffffcc60) at /home/maritns3/c
+ore/xqm/qom/object.c:1341
+#5  0x0000555555a2832d in qbus_realize (bus=bus@entry=0x555556937d20, parent=parent@entry=0x555556782560, name=name@entry=0x0) at /home/maritns3/core/xqm/hw/core/bus.c
+:138
+#6  0x0000555555a287ce in qbus_create (typename=<optimized out>, parent=0x555556782560, name=0x0) at /home/maritns3/core/xqm/hw/core/bus.c:187
+#7  0x0000555555ab7856 in pci_root_bus_new (parent=parent@entry=0x555556782560, name=name@entry=0x0, address_space_mem=address_space_mem@entry=0x555556535300, address_
+space_io=address_space_io@entry=0x55555653a300, devfn_min=devfn_min@entry=0 '\000', typename=typename@entry=0x555555d7af80 "PCI") at /home/maritns3/core/xqm/hw/pci/pci
+.c:466
+#8  0x0000555555ab4c71 in i440fx_init (host_type=host_type@entry=0x555555d74f1b "i440FX-pcihost", pci_type=pci_type@entry=0x555555d75e48 "i440FX", pi440fx_state=pi440f
+x_state@entry=0x7fffffffcd90, address_space_mem=address_space_mem@entry=0x555556551700, address_space_io=address_space_io@entry=0x55555653a300, ram_size=6442450944, be
+low_4g_mem_size=3221225472, above_4g_mem_size=3221225472, pci_address_space=0x555556535300, ram_memory=0x555556506700) at /home/maritns3/core/xqm/hw/pci-host/i440fx.c:
+296
+#9  0x0000555555913b3d in pc_init1 (machine=0x55555659a000, pci_type=0x555555d75e48 "i440FX", host_type=0x555555d74f1b "i440FX-pcihost") at /home/maritns3/core/xqm/hw/
+i386/pc_piix.c:196
+#10 0x0000555555a2c8d3 in machine_run_board_init (machine=0x55555659a000) at /home/maritns3/core/xqm/hw/core/machine.c:1143
+#11 0x000055555582b0b8 in main (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at /home/maritns3/core/xqm/vl.c:4348
+```
+
+原来注册到 DeviceClass::realize 的并不是在 property_set_bool 中直接调用的，而是在调用 device_set_realized 中调用的
+device_set_realized 除了调用 DeviceClass::realize 的这个 hook 之外，还会调用
+- 处理 hotplug
+- 将在这个设备上的所有的 child bus 全部 realize
 
 ## misc
 - 注意区分 QObject 和 Object，前者是放到 QList 之类 visitor 数据类型中的

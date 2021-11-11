@@ -6,6 +6,7 @@
 - [main](#main)
 - [tcg_init](#tcg_init)
 - [x86_cpu_realizefn](#x86_cpu_realizefn)
+- [i440fx_init](#i440fx_init)
 - [notes](#notes)
   - [memory](#memory)
   - [tcg](#tcg)
@@ -51,20 +52,7 @@
       - pc_guest_info_init : 初始化 PCMachineState 的成员，注册上 pc_machine_done 最后执行
       - smbios_set_defaults : 初始化一些 smbios 变量，为下一步制作 smbios table 打下基础
       - pc_gsi_create : 创建了 qemu_irq，分配了 GSIState , 但是 GSIState 没有被初始化. X86MachineState::gsi 指向这个位置
-      - i440fx_init : 只有 `pcmc->pci_enabled` 才会调用的
-        - qdev_new("i440FX-pcihost") : 这当然会调用 i440fx_pcihost_initfn 和 i440fx_pcihost_class_init 之类的函数
-          - i440fx_pcihost_initfn : 初始化出来 0xcf8 0xcfb 这两个关键地址
-        - pci_root_bus_new : 创建 PCIBus
-          - [ ] PCIHostState 和分别是啥关系 ? host bridge 和 bus 的关系 ?
-          - qbus_create("pci")
-            - qbus_create("pci")
-              - pci_root_bus_init
-                - 一些常规的初始化
-                - pci_host_bus_register : 将 PCIHostState 挂载到一个全局的链表上
-            - qbus_init
-          - pci_root_bus_init
-        - [ ] 处理 PCI 的地址空间的映射初始化
-        - init_pam
+      - [i440fx_init](#i440fx_init)
       - piix3_create
         - pci_create_simple_multifunction : 创建出来设备
         - 设置从 piix3 到 i440fx 的中断路由之类的事情
@@ -164,6 +152,22 @@
        - 通过 QOM 调用 apic_realize
     - 添加对应的 memory region
   - X86CPUClass::parent_realize : 也就是 cpu_common_realizefn, 这里并没有做什么事情
+
+## i440fx_init
+- i440fx_init : 只有 `pcmc->pci_enabled` 才会调用的
+  - qdev_new("i440FX-pcihost") : 这当然会调用 i440fx_pcihost_initfn 和 i440fx_pcihost_class_init 之类的函数
+    - i440fx_pcihost_initfn : 初始化出来 0xcf8 0xcfb 这两个关键地址
+  - pci_root_bus_new : 创建 PCIBus
+    - [ ] PCIHostState 和分别是啥关系 ? host bridge 和 bus 的关系 ?
+    - qbus_create("pci")
+      - qbus_create("pci")
+        - pci_root_bus_init
+          - 一些常规的初始化
+          - pci_host_bus_register : 将 PCIHostState 挂载到一个全局的链表上
+      - qbus_init
+    - pci_root_bus_init
+  - [ ] 处理 PCI 的地址空间的映射初始化
+  - init_pam
 
 ## notes
 
