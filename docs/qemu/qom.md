@@ -836,6 +836,9 @@ device_set_realized 除了调用 DeviceClass::realize 的这个 hook 之外，�
 - 处理 hotplug
 - 将在这个设备上的所有的 child bus 全部 realize
 
+所以，如果将 qdev_create 和 qdev_init_nofail 放到一起初始化，那么会导致 pci_bus_realize 没有被调用
+最终导致 pci 设备的 mmio 空间没有被注册。
+
 ## misc
 - 注意区分 QObject 和 Object，前者是放到 QList 之类 visitor 数据类型中的
 - 通过 InterfaceClass QEMU 可以模拟 interface，具体例子参考 HotplugHandlerClass

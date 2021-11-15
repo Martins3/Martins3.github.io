@@ -31,6 +31,7 @@
 - [address_space_map](#address_space_map)
 - [sysbus_init_mmio](#sysbus_init_mmio)
 - [Appendix](#appendix)
+- [debug](#debug)
 
 <!-- vim-markdown-toc -->
 
@@ -651,23 +652,29 @@ address-space: e1000
     0000000000000000-ffffffffffffffff (prio 0, i/o): alias bus master @system 0000000000000000-ffffffffffffffff
 ```
 
-
+和 PCI 的 memory region 初始化有关的代码为:
 ```c
 static void pci_init_bus_master(PCIDevice *pci_dev)
 {
-    AddressSpace *dma_as = pci_device_iommu_address_space(pci_dev); // dma 的空间就是 address_space_memory
+    AddressSpace *dma_as = pci_device_iommu_address_space(pci_dev); // dma_as 就是 address_space_memory
 
     memory_region_init_alias(&pci_dev->bus_master_enable_region,
                              OBJECT(pci_dev), "bus master",
-                             dma_as->root, 0, memory_region_size(dma_as->root)); // 创建一个 alias 到 system_memory
+                             dma_as->root, 0, memory_region_size(dma_as->root)); // 创建 "bus master" alias 到 system_memory
     memory_region_set_enabled(&pci_dev->bus_master_enable_region, false);
-    memory_region_add_subregion(&pci_dev->bus_master_container_region, 0, // 创建一个 container
+    memory_region_add_subregion(&pci_dev->bus_master_container_region, 0, // 将 "bus master" 添加到 "bus master container"
                                 &pci_dev->bus_master_enable_region);
 }
 ```
 
-- do_pci_register_device
-   - `address_space_init(&pci_dev->bus_master_as, &pci_dev->bus_master_container_region, pci_dev->name);`
+在 do_pci_register_device 中:
+```c
+  memory_region_init(&pci_dev->bus_master_container_region, OBJECT(pci_dev),
+                     "bus master container", UINT64_MAX);
+  address_space_init(&pci_dev->bus_master_as,
+                     &pci_dev->bus_master_container_region, pci_dev->name);
+```
+
 
 PCIDevice 关联了一个 AddressSpace, PCIDevice::bus_master_as 其引用位置为:
   - msi_send_message
@@ -926,8 +933,8 @@ sysemu/dma.h:135
 
 cpu_address_space_init : 初始化 `CPUAddressSpace *CPUState::cpu_ases`, CPUAddressSpace 的主要成员 AddressSpace + CPUState
 
-在
-`info mtree [-f][-d][-o][-D]` -- show memory tree (-f: dump flat view for address spaces;-d: dump dispatch tree, valid with -f only);-o: dump region owners/parents;-D: dump disabled regions
+## debug
+在 `info mtree [-f][-d][-o][-D]` -- show memory tree (-f: dump flat view for address spaces;-d: dump dispatch tree, valid with -f only);-o: dump region owners/parents;-D: dump disabled regions
 
 通过 mtree_info 函数在代码特定位置观测 memory region 的形成的过程
 
