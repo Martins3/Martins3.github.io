@@ -151,7 +151,6 @@ void tlb_set_page_with_attrs(CPUState *cpu, target_ulong vaddr,
 进而 invalidate 掉这个 guest page 关联的所有的 tb
 
 保护代码的流程:
-
 - tb_link_page
   - tb_page_add
     - tlb_protect_code

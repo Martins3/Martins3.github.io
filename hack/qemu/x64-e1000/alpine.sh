@@ -33,7 +33,7 @@ arg_kernel="--kernel ${kernel} -append \"root=/dev/sda3 nokaslr \""
 arg_monitor="-monitor stdio"
 
 # 可选参数
-arg_mem="-m 6G -smp 1"
+arg_mem="-m 128m -smp 1"
 arg_share_dir="-virtfs local,path=${share_dir},mount_tag=host0,security_model=mapped,id=host0"
 arg_machine="-machine pc,accel=kvm,kernel-irqchip=on" # q35
 # arg_cpu="-cpu host"

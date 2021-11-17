@@ -383,7 +383,7 @@ static void machine_set_kernel(Object *obj, const char *value, Error **errp)
     }
 ```
 
-4. rom_add_option 会进一步调用 add_boot_device_path 中，记录到 `fw_boot_order`
+4. rom_add_option 会进一步调用 add_boot_device_path 中，记录到 `fw_boot_order`，从而让 get_boot_devices_list 可以返回 "/rom@genroms/linuxboot_dma.bin"
 
 5. fw_cfg_machine_reset 中修改 "bootorder"
 ```c
