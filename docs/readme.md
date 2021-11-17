@@ -23,7 +23,7 @@
 - [Loongson Dune : A Process Level Virtualization framework Base on KVM](https://github.com/Martins3/loongson-dune)
 - [裸金属二进制翻译器的设计与实现](https://martins3.github.io/ppt/repo/2021-8-24/index.html)
 - QEMU 源码分析
-  -  🚧 [QEMU 的文件结构](./qemu/file-structure.md)
+  <!-- -  🚧 [QEMU 的文件结构](./qemu/file-structure.md) -->
   - [QEMU 初始化过程分析](./qemu/init.md)
   - [QEMU 的 memory model 设计](./qemu/memory.md)
   - [QEMU 的 softmmu 设计](./qemu/softmmu.md)
@@ -32,8 +32,9 @@
   - [QEMU 中的 seabios : 地址空间](./qemu/bios-memory.md)
   - [QEMU 和 seabios 的数据传输协议: fw_cfg](./qemu/fw_cfg.md)
   - [QEMU 的参数解析](./qemu/options.md)
-  - 🚧 [QEMU 二进制翻译基础](./qemu/tcg.md)
-  - 🚧 [QEMU 如何模拟 PCI 设备](./qemu/pci.md)
+  <!-- - 🚧 [QEMU 二进制翻译基础](./qemu/tcg.md) -->
+  <!-- - 🚧 [QEMU 如何模拟 PCI 设备](./qemu/pci.md) -->
+  <!-- - 🚧 [seabios 源码分析](./qemu/seabios.md) -->
   - [QEMU 中的线程和事件循环](./qemu/threads.md)
   - [QEMU 中的锁](./qemu/cpus.md)
   - [QEMU 如何模拟中断](./qemu/interrupt.md)
