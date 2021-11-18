@@ -1,10 +1,4 @@
 # QEMU 如何模拟 PCI 设备
-
-- [ ] i440fx pm 这个设备到底是如何管理 power 的
-- [ ] 处理掉所有的 NEED_LATER
-  - [ ] fw_cfg 之类的留到下次在处理吧
-  - [ ] pc_machine_initfn 中的 `pmms->smm`
-
 - i440fx_pcihost_initfn : 初始化最初的注册
 - i440fx_pcihost_realize : 注册 0xcf8 和 0xcfc 两个端口，然后将这两个
 - hw/pci/pci_host.c : 非常小的一个文件，定义了
