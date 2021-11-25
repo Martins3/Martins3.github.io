@@ -279,6 +279,8 @@ rom_reset 包含了有意思的小问题
 2. 但是 Rom::data 的数据不会
 3. 如果 guest 读取 Rom::data
 
+这个问题在 `04920fc0faa4760f9c4fc0e73b992b768099be70` 中被解决
+
 ```diff
 tree 90921644ff0d58e6e165cc439321328e5d771256
 parent 0851c9f75ccb0baf28f5bf901b9ffe3c91fcf969
@@ -311,8 +313,12 @@ Reviewed-by: Laszlo Ersek <lersek@redhat.com>
 
 让 rom 和 mr 关联的原因: 因为 bios 无法自动同步，所以使用 MemoryRegion 保存 bios 从而可以自动 migration
 解决方法:
-1. 创建 rom_set_mr : 将 rom 关联一个 mr, 并且将 rom 中的数据拷贝到 mr 的空间中
-2. 修改 rom_add_file  : fw_cfg 提供数据给 guest 注册的时候只是需要一个指针，如果配置了 option_rom_has_mr 的话，那么这个指针来自于 memory_region_get_ram_ptr
+- 创建 rom_set_mr : 将 rom 关联一个 mr, 并且将 rom 中的数据拷贝到 mr 的空间中，比如下面三个 ROM
+```c
+/rom@etc/acpi/tables
+/rom@etc/table-loader
+/rom@etc/acpi/rsdp
+```
 
 ### modify
 fw_cfg_add_bytes_callback 对于一个 entry 只能调用一次，如果想要修改就需要调用

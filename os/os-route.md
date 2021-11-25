@@ -1,6 +1,34 @@
 # Awesome Linux kernel
 Linux 内核相关的有趣资源，欢迎补充。
 
+## TODO Merge this to kernel rookie
+microvm:
+- https://github.com/qemu/qemu/blob/master/docs/microvm.rst
+- https://github.com/Solo5/solo5
+
+unikernel:
+- https://ssrg-vt.github.io/hermitux/
+- https://github.com/solo-io/unik
+- includeOs
+- https://unikraft.org/getting-started/ : 2021 的一个 unikernel，所以这些 unikernel 都有什么不同吗?
+- https://github.com/hermitcore/libhermit-rs
+- [ ] 无论如何，我是知道的，有一个人已经整理好了
+
+https://github.com/ikwzm/udmabuf : user dma driver
+
+两个 CPU perf 工具，都是仅仅针对于 intel 的那一侧的:
+https://github.com/cyring/CoreFreq
+https://github.com/intel/msr-tools
+https://github.com/tycho/cpuid
+
+有一个性能计数器:
+https://github.com/opcm/pcm
+
+## 计划
+g. [Essential Linux Device Drivers](https://book.douban.com/subject/3088263/)
+
+http://www.linuxfromscratch.org/lfs/view/10.0-rc1/prologue/foreword.html
+
 ## 文章合集
 - [LoyenWang](https://www.cnblogs.com/LoyenWang/) :star: :star: :star: :star: :star:
 - [wowotech](http://www.wowotech.net/) :star: :star: :star: :star: :star:
@@ -9,7 +37,7 @@ Linux 内核相关的有趣资源，欢迎补充。
 - [知乎专栏:术道经纬](https://zhuanlan.zhihu.com/p/93289632) :star: :star:
 - [gatieme 的笔记](https://github.com/gatieme/LDD-LinuxDeviceDrivers) :star: :star:
 - [LoyenWang](https://www.cnblogs.com/LoyenWang/) :star: :star:
-- [dsahern's blog](https://people.kernel.org/dsahern/) :star: 
+- [dsahern's blog](https://people.kernel.org/dsahern/) :star:
   - [The CPU Cost of Networking on a Linux Host](https://news.ycombinator.com/item?id=23189372)
 - https://devarea.com/labs/#.Xm3c_XUzYUE
 - https://github.com/novelinux/linux-4.x.y
@@ -68,7 +96,7 @@ Linux 内核相关的有趣资源，欢迎补充。
 - [eudyptula](https://github.com/agelastic/eudyptula) : 划分为 20 任务，项目已停止，不过还是有价值
 - [Linux kernel labs](https://linux-kernel-labs.github.io/refs/heads/master/labs/introduction.html) : 强烈推荐
 - [raspberry pi os](https://github.com/s-matyukevich/raspberry-pi-os) : 利用 raspberrypi 学习内核
-- https://gitee.com/tinylab 
+- https://gitee.com/tinylab
 - https://devarea.com/labs
   - https://devarea.com/introduction-to-network-filters-linux/#.Xm3bn3UzYUE
   - https://devarea.com/linux-kernel-development-creating-a-proc-file-and-interfacing-with-user-space/#.Xm3biXUzYUE
@@ -103,6 +131,7 @@ Linux 内核相关的有趣资源，欢迎补充。
 - https://news.ycombinator.com/item?id=22987747 : telefork() 将进程发送到另一个计算机上
 - [meltdown 和 spectrum 相关](https://mp.weixin.qq.com/s?__biz=Mzg2MjE0NDE5OA==&mid=2247484455&idx=1&sn=3ce685da00fb31579c08ce585bfda135&chksm=ce0d178ef97a9e98fc8e77cc57a9efe91cba607ee235d5c1e28bce23453b72298f7372b04f18&scene=0&xtrack=1#rd)
 - [what cs major should know](http://matt.might.net/articles/what-cs-majors-should-know/)
+- [制作一个启动到 bash 的最小内核](https://weeraman.com/building-a-tiny-linux-kernel-8c07579ae79d)
 
 ## project
 - [syzkaller](https://github.com/google/syzkaller/blob/master/docs/setup.md) : @todo 暂时不知道如何实现 fuzzer 的
@@ -147,4 +176,3 @@ Linux 内核相关的有趣资源，欢迎补充。
 - [一个64位操作系统的设计与实现》学习笔记](https://github.com/yifengyou/The-design-and-implementation-of-a-64-bit-os)
 - https://github.com/belowthetree/TisuOS : 国人 Rust OS
 - https://makelinux.github.io/kernel/map/ : kernel map
-

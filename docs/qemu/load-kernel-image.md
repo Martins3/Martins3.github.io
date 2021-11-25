@@ -78,8 +78,10 @@ static void machine_set_kernel(Object *obj, const char *value, Error **errp)
             - call_boot_entry : linuxboot_dma.bin 上，然后 linuxboot_dma.bin 进一步跳转到 kernel image 上开始执行
 
 其实，总体来说，seabios 做了两个事情:
-- 执行 optionrom linuxboot_dma.bin 将 kernel image 加载进来
-- 根据 "bootorder" 将 kernel image 作为 boot 默认启动方式
+- 执行 optionrom linuxboot_dma.bin 将 linuxboot_dma.bin 注册到 BootList 中
+- 根据 "bootorder" 将 linuxboot_dma.bin 作为优先级最高的启动方式
+- 执行 linuxboot_dma.bin 的第二部分，在其中通过 fw_cfg 获取 kernel 的入口地址、参数地址等
+
 
 ## linuxboot_dma.bin 源代码解析
 linuxboot_dma.bin 是通过 `pc-bios/optionrom/linuxboot_dma.c` 编译出来的，通过前面的分析，其实我们已经可以大致的猜测出来到底
