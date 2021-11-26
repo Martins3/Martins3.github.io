@@ -4,18 +4,19 @@ ifeq ($(ARCH),x86-64)
 b = b
 endif
 
-KDIR = /home/maritns3/core/linux
+KDIR = /home/maritns3/core/ubuntu-linux
 ZIMAGE = $(KDIR)/arch/$(ARCH)/boot/$(b)zImage
 
 ifeq ($(ARCH),x86-64)
 ZIMAGE = $(KDIR)/arch/x86/boot/$(b)zImage
 endif
 
-PROJECT_DIR = /home/maritns3/core/vn/hack/kvm/qemu/mini-img
+PROJECT_DIR = /home/maritns3/core/vn/hack/qemu/mini-img
 PATH_TO_SHARE = $(PROJECT_DIR)/virtfs
 
 YOCTO_URL = http://downloads.yoctoproject.org/releases/yocto/yocto-3.1/machines/qemu/qemu$(ARCH)/
 YOCTO_IMAGE_NAME=core-image-minimal-qemu$(ARCH).ext4
+
 YOCTO_IMAGE = $(PROJECT_DIR)/$(YOCTO_IMAGE_NAME)
 #YOCTO_IMAGE = core-image-minimal-dev-qemu$(ARCH).ext4
 #YOCTO_IMAGE = core-image-sato-dev-qemu$(ARCH).ext4
@@ -28,7 +29,7 @@ YOCTO_IMAGE = $(PROJECT_DIR)/$(YOCTO_IMAGE_NAME)
 	# -netdev tap,id=tap0,ifname=tap0,script=no,downscript=no -net nic,netdev=tap0,model=virtio \
 	# -netdev tap,id=tap1,ifname=tap1,script=no,downscript=no -net nic,netdev=tap1,model=i82559er \
 	# -serial pipe:pipe1 -serial pipe:pipe2 \
-	
+
 # TODO 现在唯一的问题，如果自动的注入这条消息
 # mount -t 9p -o trans=virtio,version=9p2000.L host0 /mnt/9p
 QEMU_OPTS = -kernel $(ZIMAGE) \
@@ -39,7 +40,8 @@ QEMU_OPTS = -kernel $(ZIMAGE) \
 	-drive file=disk1.img,if=virtio,format=raw \
 	-drive file=disk2.img,if=virtio,format=raw \
 	--append "root=/dev/vda loglevel=15 console=hvc0" \
-	--display $(QEMU_DISPLAY) -s -m 256
+	--display $(QEMU_DISPLAY) -s -m 256 \
+	-cpu host
 
 # FIXME tap0 tap1 pipe1.in pipe1.out pipe2.in pipe2.out
 boot: .modinst disk1.img disk2.img
@@ -51,7 +53,7 @@ TEMPDIR := $(shell mktemp -u)
 	echo $^
 	mkdir $(TEMPDIR)
 	sudo mount -t ext4 -o loop $(YOCTO_IMAGE) $(TEMPDIR)
-	sudo $(MAKE) -C $(KDIR) modules_install INSTALL_MOD_PATH=$(TEMPDIR)
+	# sudo $(MAKE) -C $(KDIR) modules_install INSTALL_MOD_PATH=$(TEMPDIR)
 	sudo umount $(TEMPDIR)
 	rmdir $(TEMPDIR)
 	sleep 1 && touch .modinst

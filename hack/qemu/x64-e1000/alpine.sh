@@ -1,7 +1,7 @@
 #!/bin/bash
 set -eu
 
-use_32bit=true
+use_32bit=false
 
 # ----------------------- 配置区 -----------------------------------------------
 kernel_dir=/home/maritns3/core/ubuntu-linux
@@ -14,8 +14,6 @@ qemu=/home/maritns3/core/kvmqemu/build/qemu-system-x86_64
 qemu=/home/maritns3/core/xqm/build/x86_64-softmmu/qemu-system-x86_64
 if [[ $use_32bit == true ]]; then
 	qemu=/home/maritns3/core/xqm/32bit/i386-softmmu/qemu-system-i386
-else
-	exit 1
 fi
 initrd=/home/maritns3/core/5000/ld/DuckBuBi/image/test.cpio.gz
 # bios 镜像的地址，可以不配置，将下面的 arg_seabios 定位为 "" 就是使用默认的
@@ -42,13 +40,16 @@ LAUNCH_GDB=false
 # 必选参数
 arg_img="-drive \"file=${disk_img},format=qcow2\""
 arg_initrd=""
-arg_kernel_args="root=/dev/sda3 nokaslr"
+arg_initrd="-initrd ${initrd}"
+
+arg_kernel_args="root=/dev/sda3 nokaslr console=ttyS0"
 if [[ $use_32bit == true ]]; then
-	arg_kernel_args="nokaslr console=ttyS0 earlyprintk=serial"
-  arg_initrd="-initrd ${initrd}"
+	arg_kernel_args="nokaslr console=ttyS0 root=/dev/ram rdinit=/hello.out"
 fi
 arg_kernel="--kernel ${kernel} -append \"${arg_kernel_args}\""
 arg_monitor="-monitor stdio"
+
+arg_monitor="-nographic"
 
 if [[ $use_32bit == true ]]; then
 	arg_monitor="-nographic"
@@ -65,6 +66,7 @@ arg_nvme="-device nvme,drive=nvme1,serial=foo -drive file=${ext4_img1},format=ra
 arg_nvme2="-device virtio-blk-pci,drive=nvme2,iothread=io0 -drive file=${ext4_img2},format=raw,if=none,id=nvme2"
 arg_iothread="-object iothread,id=io0"
 arg_qmp="-qmp unix:${abs_loc}/test.socket,server,nowait"
+arg_qmp=""
 arg_tmp=""
 # -soundhw pcspk
 
@@ -148,7 +150,10 @@ if [ $LAUNCH_GDB = true ]; then
 	exit 0
 fi
 
-cmd="${debug_qemu} ${qemu} ${debug_kernel} ${arg_img} ${arg_mem} ${arg_cpu} ${arg_kernel} ${arg_seabios} ${arg_nvme} ${arg_nvme2} ${arg_iothread} ${arg_share_dir} ${arg_machine} ${arg_monitor} ${arg_qmp} ${arg_initrd} ${arg_tmp}"
+cmd="${debug_qemu} ${qemu} ${debug_kernel} ${arg_img} ${arg_mem} ${arg_cpu} \
+  ${arg_kernel} ${arg_seabios} ${arg_nvme} ${arg_nvme2} ${arg_iothread} \
+  ${arg_share_dir} ${arg_machine} ${arg_monitor} ${arg_qmp} ${arg_initrd} \
+  ${arg_tmp}"
 echo "$cmd"
 eval "$cmd"
 

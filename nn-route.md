@@ -6,6 +6,7 @@ https://github.com/MingchaoZhu/InterpretableMLBook : 可解释性黑盒，中文
 
 https://cs231n.github.io/ : CS231n: Convolutional Neural Networks for Visual Recognition.
 https://www.52nlp.cn/ : 中文，自然语言社区
+https://arthurdouillard.com/deepcourse/ : 机器学习路线
 
 ## 可能有用
 https://github.com/FavioVazquez/ds-cheatsheets

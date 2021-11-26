@@ -10,5 +10,6 @@
 4. memory region
   - isa_register_ioport
 5. VMStateDescription 总是在被直接删除的
+6. `Error **errp` 出现错误就直接 error_report 了，直接报错了
 
 ### fuck_trace
