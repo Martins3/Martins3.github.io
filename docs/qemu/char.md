@@ -1,5 +1,19 @@
 # QEMU 字符设备模拟
 
+<!-- vim-markdown-toc GitLab -->
+
+- [Architecture](#architecture)
+  - [Chardev](#chardev)
+  - [CharBackend](#charbackend)
+- [init](#init)
+  - [Chardev 的创建](#chardev-的创建)
+  - [SerialState](#serialstate)
+- [附录](#附录)
+  - [后端的一点抽象](#后端的一点抽象)
+  - [mux](#mux)
+
+<!-- vim-markdown-toc -->
+
 如果想要大致了解 printf 的实现，从上到下参考如下内容:
 1. 用户态 : [musl](https://www.musl-libc.org/) 和 《程序员的自我修养》
 2. 内核态 : [TTY 到底是什么？](https://www.kawabangga.com/posts/4515) 和 Linux Device Driver 可以参考
