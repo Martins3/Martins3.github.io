@@ -1,7 +1,7 @@
 #!/bin/bash
 set -eu
 
-use_32bit=false
+use_32bit=true
 
 # ----------------------- 配置区 -----------------------------------------------
 kernel_dir=/home/maritns3/core/ubuntu-linux

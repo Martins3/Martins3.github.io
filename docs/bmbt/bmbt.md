@@ -11,5 +11,6 @@
   - isa_register_ioport
 5. VMStateDescription 总是在被直接删除的
 6. `Error **errp` 出现错误就直接 error_report 了，直接报错了
+  - error_setg 使用 error_report 来代替
 
-### fuck_trace
+### bmbt_trace

@@ -43,8 +43,6 @@
   - [QEMU 中的时钟](./qemu/timer.md)
   - [QEMU 字符设备模拟](./qemu/char.md)
 
-<!-- - [QEMU 中的 seabios : fw_cfg](./qemu-bios-fw_cfg.md) -->
-
 ## Tips
 - [How to cross Great Fire Wall](./gfw.md)
 - [shell 的一点经验之谈](./shell.md)
