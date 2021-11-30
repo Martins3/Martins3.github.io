@@ -2,25 +2,83 @@
 
 - [ ] 如何使用 QEMU 调试
 - [ ] 也许阅读一下 https://edk2-docs.gitbook.io/edk-ii-uefi-driver-writer-s-guide/ 然后快速的感受一下其提供的接口是什么
-- [ ] 所以 libc 可以干啥呀
-- [ ] 写 UEFI 的程序可以干啥呀?
 
 ## 运行第一个 UEFI 程序
+### 编译 efi
+参考教程 https://www.rodsbooks.com/efi-programming/hello.html
+但是这个教程有点老，参考 [stackoverflow](https://stackoverflow.com/questions/31514866/how-to-compile-uefi-application-using-gnu-efi/31517520)
+可以修复。
 
-- 关于构建一个 hello world 的程序，分析每一个参数的使用
-- https://www.rodsbooks.com/efi-programming/hello.html
-  - https://stackoverflow.com/questions/31514866/how-to-compile-uefi-application-using-gnu-efi/31517520
-    - 上面的教程很老，实际上编译不通过，需要在 Makefile 中进行一下修改
-  - 实际上，osdev 上描述更加清楚好用
+或者看[我写的](https://github.com/Martins3/Martins3.github.io/tree/master/docs/bmbt/uefi/uefi.sh)，将其中的 main.c 和 Makefile 拷贝出来，make 就可以得到 hello.efi 了
 
+### 运行 efi
+参考 [osdev](https://wiki.osdev.org/UEFI#Linux.2C_root_not_required) 上，我构建出来了一个
+[小脚本](https://github.com/Martins3/Martins3.github.io/tree/master/docs/bmbt/uefi/uefi.sh)，其参数为将要测试的 efi.
+然后在 QEMU 的图形界面中，可以看到 UEFI shell, 在其中输入 FS0:，最后执行程序。
 
-## 使用
-source edksetup.sh
+## 编译 edk2
+参考[官方文档](https://github.com/tianocore/tianocore.github.io/wiki/Using-EDK-II-with-Native-GCC)
 
-## compile_commands.json
-https://bugzilla.tianocore.org/show_bug.cgi?id=2850
+```bash
+git clone https://github.com/tianocore/edk2.git
+cd edk2
+make -C BaseTools
+source edksetup.sh # 几乎所有的教程都是 . edksetup.sh，但是 source edksetup.sh 也可以
+```
+然后修改 Conf/target.txt 中修改
+```txt
+ACTIVE_PLATFORM       = MdeModulePkg/MdeModulePkg.dsc
+TARGET_ARCH           = X64 # 因为上面的 QEMU
+MAX_CONCURRENT_THREAD_NUMBER = 9 # 这个取决于你的机器 CPU 核心数量
+```
 
-几乎是按照这个 patch 来搞的，但是似乎这个 patch 有点问题:
+关于编译器，官方文档反复强调是 gcc5，但是参考 [stackoverflow](https://stackoverflow.com/questions/63725239/build-edk2-in-linux) 实际上系统中的 gcc 是 gcc9 或者 gcc10 也是无所谓的。
+
+最后运行
+```sh
+build
+```
+
+进入到对应的目录测试一下:
+```c
+➜  X64 git:(master) ✗ pwd
+/home/maritns3/core/ld/edk2-workstation/edk2/Build/MdeModule/DEBUG_GCC5/X64
+➜  X64 git:(master) ✗ /home/maritns3/core/vn/docs/bmbt/uefi/uefi.sh HelloWorld.efi
+```
+![](./uefi/MdeModulePkg_hello_world.png)
+
+## 构建基于 edk2 的 HelloWorld
+虽然上面使用 MdeModulePkg 的 HelloWorld，但是 MdeModulePkg 包含的内容过多，现在构建一个更加简单的 HelloWorld
+
+几乎可以参照 https://damn99.com/2020-05-18-edk2-first-app/ 这个来写，但是需要在 .dsc 中添加上
+```c
+!include MdePkg/MdeLibs.dsc.inc
+```
+
+最后我制作出来了自己的一个[小 demo](https://github.com/Martins3/Martins3.github.io/tree/master/docs/bmbt/uefi/BootloaderPkg/)，将其拷贝到 edk2 的目录中。
+```sh
+build -p BootloaderPkg/BootloaderPkg.dsc
+```
+也可以设置 Conf/target.txt
+```txt
+ACTIVE_PLATFORM       = BootloaderPkg/BootloaderPkg.dsc
+```
+这样直接使用就可以了
+```sh
+build
+```
+
+## 生成 compile_commands.json
+虽然 edk2 是一个和操作系统无关的，但是 edk2 编译出来了的 efi 格式实际上是 Windows 二进制格式，项目的构建似乎默认 VS 的风格。
+想要在 vim 越快的阅读代码需要生成 compile_commands.json，但是这个编译系统不是 CMake, Make, Ninja 之类的，想要生成，并不容易。
+
+从 https://bugzilla.tianocore.org/show_bug.cgi?id=2850 可以找到 https://github.com/makaleks/edk2-tools/tree/master/compilation_database_patch
+
+几乎是按照这个 patch 来搞的，但是似乎这个 patch 有点问题，总是会提示报错:
+
+Error: cc or cc_flags is not defined!
+
+稍微调试一下，
 ```txt
 {'cmd': '"$(CC)" $(DEPS_FLAGS) $(CC_FLAGS) -c -o '
         '/home/maritns3/core/ld/edk2-workstation/edk2/Build/Bootloader/DEBUG_GCC5/X64/MdePkg/Library/BaseMemoryLib/BaseMemoryLib/OUTPUT/./CompareMemWrapper.obj '
@@ -32,18 +90,23 @@ https://bugzilla.tianocore.org/show_bug.cgi?id=2850
  'target': '$(OUTPUT_DIR)/CompareMemWrapper.obj'}
 ```
 
-最后的报错总是，结果发现在
-Error: cc or cc_flags is not defined!
-
 分析
-/home/maritns3/core/ld/edk2-workstation/edk2/Build/Bootloader/DEBUG_GCC5/X64/TOOLS_DEF.X64 中内容，发现，原来是将
+/home/maritns3/core/ld/edk2-workstation/edk2/Build/Bootloader/DEBUG_GCC5/X64/TOOLS_DEF.X64 中内容，发现，原来是新的 edk2 将
 其中的 CC 修改为 CC_PATH，修改之后，这个 patch 就可以使用了。
 
+对于 tag 为 `edk2-stable202111`
+1. 添加修改之后的 [edk2_compile_commands.py](https://github.com/Martins3/Martins3.github.io/tree/master/docs/bmbt/uefi/compile_commands_patch/edk2_compile_commands.py)
+2. 修改 BaseTools/Source/Python/AutoGen/GenMake.py
+  - 在文件头修改 `from edk2_compile_commands import update_compile_commands_file`
+  - 在 1067 行下添加 `update_compile_commands_file(TargetDict, self._AutoGenObject, self.Macros)`
+
+## 内核作为 efi 文件启动
+内核实际上可以作为 efi 文件在 UEFI 上执行，对于 x64 将 bzImage 修改为 bzImage.efi 就可以了，具体参考[内核文档](https://www.kernel.org/doc/Documentation/efi-stub.txt)
 
 ## stdlib 的事情分析一下
-https://github.com/tianocore/edk2-libc
-
-- 很容易，按照文档，把这个项目拷贝进去就好了。
+因为一些原因，edk2 将其实现的 libc 和 edk2 的主要库分离开了，使用方法很简单
+1. git clone https://github.com/tianocore/edk2-libc
+2. 将 edk2-libc 中的三个文件夹拷贝到 edk2 中，然后就可以当做普通的 pkg 使用
 
 https://www.mail-archive.com/edk2-devel@lists.01.org/msg17266.html
 - [ ] 使用 StdLib 只能成为 Application 不能成为 Driver 的
@@ -70,30 +133,10 @@ each other's toes.
 - [ ] 不知道对于 signal 的支持到底有多强
 - setjmp
 
-## 第一个项目
-几乎可以参照
-https://damn99.com/2020-05-18-edk2-first-app/ 这个来写，但是需要在 .dsc 中添加上
-```c
-!include MdePkg/MdeLibs.dsc.inc
-```
-
-- https://blog.system76.com/post/139138591598/howto-uefi-qemu-guest-on-ubuntu-xenial-host
-  - 分析了一下使用 ovmf 的事情，但是没有仔细看
-
-- https://stackoverflow.com/questions/63725239/build-edk2-in-linux
-  - 原来 GCC5 就是包含 GCC9 的，甚至 GCC10 也是没有问题的
-
-https://unix.stackexchange.com/questions/52996/how-to-boot-efi-kernel-using-qemu-kvm
-
-
 - https://wiki.osdev.org/GNU-EFI
 - https://wiki.osdev.org/POSIX-UEFI
 
-## GNU UEFI
-
-
-
-## 如果启动不起来，也许是有帮助的
+## 一些也许有用的项目
 - https://stackoverflow.com/questions/66399748/qemu-hangs-after-booting-a-gnu-efi-os
   - https://github.com/xubury/myos
 
@@ -114,8 +157,9 @@ https://unix.stackexchange.com/questions/52996/how-to-boot-efi-kernel-using-qemu
 
 - https://github.com/rust-osdev/uefi-rs/issues/218
 
-- https://www.kernel.org/doc/Documentation/efi-stub.txt
-  - 实际上，内核上的是提供了对应的接口的
+
+- https://blog.system76.com/post/139138591598/howto-uefi-qemu-guest-on-ubuntu-xenial-host
+  - 分析了一下使用 ovmf 的事情，但是没有仔细看
 
 On the x86 and ARM platforms, a kernel zImage/bzImage can masquerade
 as a PE/COFF image, thereby convincing EFI firmware loaders to load
