@@ -128,7 +128,6 @@ each other's toes.
 - printf
 - setjmp
 - [x] 似乎文件是无法打开的 : 没有问题的
-- [ ] 不知道对于 signal 的支持到底有多强
 
 如果都可以支持 lua 解释器了，那么还什么做不了:
 - [x] lua 之前的编译系统
@@ -144,16 +143,10 @@ https://github.com/derkyjadex/Lua-Framework/tree/master/lua-5.2.3
 
 - [x] 我知道实际上 lua 可能会使用一些库，如何处理
   - 实际上，那些库是可选的，在 UEFI 下，这些库都被删除了
-- [ ] timer 应该无法无法处理吧，以及基于 timer 的系统
-  - [ ] 能不能直接枚举出来所有的 header
 - [x] 测试一下 segment fault / assert 的效果
   - segment fault 可以检查出来，但是效果是直接死掉在哪里了
   - assert 非常好用
-
-- [ ] errno 靠什么实现的，不会成为一个 TLS 变量吧
-
-
-对比 Lua 的库，发现只是需要实现两个 .inf 的配置
+- [x] errno 靠什么实现的，现在变为了一个普通的变量了
 
 ### 分析一下所有的 dirent.h 的
 edk2/StdLib/Include/dirent.h
@@ -165,13 +158,13 @@ edk2/StdLib/Include/dirent.h
 /home/maritns3/core/ld/edk2-workstation/edk2/StdLib/LibC/Uefi/StubFunctions.c
 似乎主要实现不了的都是 get pid 之类
 
-- [ ] 如果内核是按照 EFI 的方式启动，那么曾经初始化的那些东西怎么办?
-- [ ] 实际上，我发现根本无法操纵文件，文件是无法打开的
+
+## 文件操作
+- [x] 实际上，我发现根本无法操纵文件，文件是无法打开的
   - https://krinkinmu.github.io/2020/10/18/handles-guids-and-protocols.html
   - https://stackoverflow.com/questions/39719771/how-to-open-a-file-by-its-full-path-in-uefi
-- [ ] 对于代码的跟踪实际上是有问题的，总是只能跳转函数指针的位置然后就不知道去到哪里了
 
-
+对比 lua 之后，在 inf 中间没有正确引用导致的
 
 ## UEFI shell 可以做什么
 甚至差不多集成了一个 vim 进去了
