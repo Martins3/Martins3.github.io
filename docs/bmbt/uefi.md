@@ -100,7 +100,7 @@ Error: cc or cc_flags is not defined!
 ## 内核作为 efi 文件启动
 内核实际上可以作为 efi 文件在 UEFI 上执行，对于 x64 将 bzImage 修改为 bzImage.efi 就可以了，具体参考[内核文档](https://www.kernel.org/doc/Documentation/efi-stub.txt)
 
-## stdlib 的事情分析一下
+## StdLib
 因为一些原因，edk2 将其实现的 libc 和 edk2 的主要库分离开了，使用方法很简单
 1. git clone https://github.com/tianocore/edk2-libc
 2. 将 edk2-libc 中的三个文件夹拷贝到 edk2 中，然后就可以当做普通的 pkg 使用
@@ -123,15 +123,66 @@ an MdePkg library that I also wrote, so it actually exemplifies how you
 can use both stdlib and an edk2 library, as long as they don't step on
 each other's toes.
 
-### 分下一下这几个项目吧
+### 具体 Applications 分析
 - sizeof : 可以启动的时候使用
 - printf
-- [ ] 似乎文件是无法打开的
-- [ ] 不知道对于 signal 的支持到底有多强
 - setjmp
+- [x] 似乎文件是无法打开的 : 没有问题的
+- [ ] 不知道对于 signal 的支持到底有多强
 
-- https://wiki.osdev.org/GNU-EFI
-- https://wiki.osdev.org/POSIX-UEFI
+如果都可以支持 lua 解释器了，那么还什么做不了:
+- [x] lua 之前的编译系统
+
+按照这个标志来查找:
+
+```c
+** $Id: lauxlib.c,v 1.248.1.1 2013/04/12 18:48:47 roberto Exp $
+```
+最后可以找到
+https://github.com/derkyjadex/Lua-Framework/tree/master/lua-5.2.3
+然后对比一下之后，发现几乎没有什么改动
+
+- [x] 我知道实际上 lua 可能会使用一些库，如何处理
+  - 实际上，那些库是可选的，在 UEFI 下，这些库都被删除了
+- [ ] timer 应该无法无法处理吧，以及基于 timer 的系统
+  - [ ] 能不能直接枚举出来所有的 header
+- [x] 测试一下 segment fault / assert 的效果
+  - segment fault 可以检查出来，但是效果是直接死掉在哪里了
+  - assert 非常好用
+
+- [ ] errno 靠什么实现的，不会成为一个 TLS 变量吧
+
+
+对比 Lua 的库，发现只是需要实现两个 .inf 的配置
+
+### 分析一下所有的 dirent.h 的
+edk2/StdLib/Include/dirent.h
+- edk2/StdLib/Include/err.h
+- edk2/StdLib/Include/sys
+  - socket.h
+  - poll.h
+
+/home/maritns3/core/ld/edk2-workstation/edk2/StdLib/LibC/Uefi/StubFunctions.c
+似乎主要实现不了的都是 get pid 之类
+
+- [ ] 如果内核是按照 EFI 的方式启动，那么曾经初始化的那些东西怎么办?
+- [ ] 实际上，我发现根本无法操纵文件，文件是无法打开的
+  - https://krinkinmu.github.io/2020/10/18/handles-guids-and-protocols.html
+  - https://stackoverflow.com/questions/39719771/how-to-open-a-file-by-its-full-path-in-uefi
+- [ ] 对于代码的跟踪实际上是有问题的，总是只能跳转函数指针的位置然后就不知道去到哪里了
+
+
+
+## UEFI shell 可以做什么
+甚至差不多集成了一个 vim 进去了
+https://linuxhint.com/use-uefi-interactive-shell-and-its-common-commands/
+
+## 集成 musl
+https://github.com/Openwide-Ingenierie/uefi-musl
+
+## 一个游戏
+https://github.com/Openwide-Ingenierie/Pong-UEFI
+
 
 ## 一些也许有用的项目
 - https://stackoverflow.com/questions/66399748/qemu-hangs-after-booting-a-gnu-efi-os
@@ -213,4 +264,8 @@ brw-rw---- root disk 0 B Wed Nov 24 09:00:37 2021 ﰩ /dev/nvme0n1p2
 - [ ] 也许阅读一下 https://edk2-docs.gitbook.io/edk-ii-uefi-driver-writer-s-guide/ 然后快速的感受一下其提供的接口是什么
 
 ## 资源
-Robin 的 blog: http://yiiyee.cn/blog/
+- Robin 的 blog: http://yiiyee.cn/blog/
+- https://wiki.osdev.org/GNU-EFI
+- https://wiki.osdev.org/POSIX-UEFI
+
+[^1]: https://stackoverflow.com/questions/800030/remove-carriage-return-in-unix

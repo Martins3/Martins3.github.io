@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 WORK_DIR=/home/maritns3/core/vn/docs/bmbt/uefi
 DISK_IMG=${WORK_DIR}/uefi.img
@@ -19,15 +20,24 @@ if [[ ! -f ${EFI} ]]; then
 	exit 1
 fi
 
-dd if=/dev/zero of=${DISK_IMG} bs=512 count=93750
-parted ${DISK_IMG} -s -a minimal mklabel gpt
-parted ${DISK_IMG} -s -a minimal mkpart EFI FAT16 2048s 93716s
-parted ${DISK_IMG} -s -a minimal toggle 1 boot
+res=(/home/maritns3/core/ld/edk2-workstation/edk2/Build/AppPkg/DEBUG_GCC5/X64/Main.efi
+	/home/maritns3/core/ld/edk2-workstation/edk2/AppPkg/Applications/Lua/scripts/Hello.lua
+	"${EFI}"
+)
+
+if [[ ! -f ${DISK_IMG} ]]; then
+	dd if=/dev/zero of=${DISK_IMG} bs=512 count=93750
+	parted ${DISK_IMG} -s -a minimal mklabel gpt
+	parted ${DISK_IMG} -s -a minimal mkpart EFI FAT16 2048s 93716s
+	parted ${DISK_IMG} -s -a minimal toggle 1 boot
+fi
 
 dd if=/dev/zero of=${PART_IMG} bs=512 count=91669
 mformat -i ${PART_IMG} -h 32 -t 32 -n 64 -c 1
 
-mcopy -i ${PART_IMG} "${EFI}" ::
+for VAR in "${res[@]}"; do
+  mcopy -i ${PART_IMG} "${VAR}" ::
+done
 
 dd if=${PART_IMG} of=${DISK_IMG} bs=512 count=91669 seek=2048 conv=notrunc
 

@@ -1,4 +1,9 @@
 # 使用 Github 记录笔记和搭建 blog
+
+> 发表是最好的记忆
+>
+>   – 侯捷
+
 我的所有笔记都是放到上传到 Github 的[一个仓库](https://github.com/Martins3/Martins3.github.io) 中的，这个页面也是其中[一个文件](https://github.com/Martins3/Martins3.github.io/blob/master/docs/setup-github-pages.md)生成的。
 
 ## 动机
