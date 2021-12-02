@@ -252,10 +252,6 @@ brw-rw---- root disk 0 B Wed Nov 24 09:00:37 2021 ﰩ /dev/nvme0n1p2
 - [ ] 在物理机上的是什么样子的呀
 - [ ] 变化体现在什么地方啊
 
-## TODO
-- [ ] 如何使用 QEMU 调试
-- [ ] 也许阅读一下 https://edk2-docs.gitbook.io/edk-ii-uefi-driver-writer-s-guide/ 然后快速的感受一下其提供的接口是什么
-
 ## 资源
 - Robin 的 blog: http://yiiyee.cn/blog/
 - https://wiki.osdev.org/GNU-EFI

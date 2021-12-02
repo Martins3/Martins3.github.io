@@ -46,7 +46,6 @@ gen_symbol_offsets() {
 		SYMS="$(echo ${NAME} | sed -e "s/\.efi/\.debug/g")"
 		SYMFILE="$(find ${SEARCHPATHS} -name ${SYMS} -maxdepth 1 -type f)"
 		echo "add-symbol-file ${SYMFILE} ${TEXT}" | tee -a $GDB_SCRIPT
-
 	done
 	exit 0
 }
@@ -87,6 +86,7 @@ fi
 res=(
 	# /home/maritns3/core/ld/edk2-workstation/edk2/Build/AppPkg/DEBUG_GCC5/X64/Main.efi
 	/home/maritns3/core/ld/edk2-workstation/edk2/AppPkg/Applications/Lua/scripts/Hello.lua
+  /home/maritns3/core/ubuntu-linux/arch/x86_64/boot/bzImage
 	"${EFI}"
 )
 

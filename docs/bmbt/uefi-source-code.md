@@ -7,12 +7,28 @@
   - 感觉好多东西又是重新初始化一次，好烦啊，分析一下内核的入口的区别
 - [ ] EFI_BOOT_SERVICES 的这个结构体什么时候注册的
 
+- [ ] 到底啥是 GUID 的呀?
 
-- [ ] 测试一下 segment fault 最后走到那个地方去了
+- [ ] 也许阅读一下 https://edk2-docs.gitbook.io/edk-ii-uefi-driver-writer-s-guide/ 然后快速的感受一下其提供的接口是什么
+- [ ] Driver 和 Application 的区别是啥
 
+## `_ModuleEntryPoint` 的写法是从哪里来的
+
+## will kernel destroy everything built by uefi
+https://edk2-docs.gitbook.io/edk-ii-uefi-driver-writer-s-guide/3_foundation/readme.7/371_applications
+
+当需要释放 UEFI 的影响的时候，将会调用 CoreExitBootServices
+- [x] 检查一下内核中是否调用过 ExitBootServices 如果 kernel 直接作为一个 efi 程序启动 启动
+- 在代码 drivers/firmware/efi/libstub/x86-stub.c 中的参数为
+
+struct efi_boot_services 和 UEFI 中定义的 EFI_BOOT_SERVICES 是对应的。
+
+## what's happening on segment fault
+- [ ] https://edk2-docs.gitbook.io/a-tour-beyond-bios-mitigate-buffer-overflow-in-ue/
+
+似乎，edk2 想要触发 segment 实际上并容易
+## Read the doc
 - [ ] https://blog.csdn.net/stringNewName
-
-
 比如跟踪文件操作，最后就到达这个位置了:
 /home/maritns3/core/ld/edk2-workstation/edk2/MdePkg/Library/UefiFileHandleLib/UefiFileHandleLib.c
 但是
