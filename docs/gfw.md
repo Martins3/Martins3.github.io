@@ -19,7 +19,7 @@ is what you need.
 ## setup
 You can reference [document of qv2ray](https://qv2ray.net/en/getting-started/) for details, here is simplified steps.
 
-1. install `v2ray core` and `qv2ray` 
+1. install `v2ray core` and `qv2ray`
 ```sh
 snap install v2ray
 snap install qv2ray
@@ -37,14 +37,14 @@ snap install qv2ray
 
 ## terminal proxy
 ```sh
-export http_proxy=http://127.0.0.1:8889 && export https_proxy=http://127.0.0.1:8889 
+export http_proxy=http://127.0.0.1:8889 && export https_proxy=http://127.0.0.1:8889
 ```
 
 **8889 is the port set in qv2ray.**
 
 ![](./img/gfw3.png)
 
-## git proxy 
+## git proxy
 for details, look [this](https://github.com/v2ray/v2ray-core/issues/1190).
 ```sh
 git config --global http.proxy http://127.0.0.1:8889
@@ -54,7 +54,7 @@ git config --global https.proxy https://127.0.0.1:8889
 
 To avoid password everytime push to remote.
 ```sh
-git config --global credential.helper store                        
+git config --global credential.helper store
 ```
 ## cmd proxy
 
@@ -69,4 +69,18 @@ then we proxy commands in shell, e.g.
 git send-email /tmp/0001-change-mmap-flags.patch --to hubachelar@qq.com
 ```
 
-<script src="https://utteranc.es/client.js" repo="Martins3/Martins3.github.io" issue-term="url" theme="github-light" crossorigin="anonymous" async> </script>
+<script src="https://giscus.app/client.js"
+        data-repo="martins3/martins3.github.io"
+        data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="
+        data-category="Show and tell"
+        data-category-id="MDE4OkRpc2N1c3Npb25DYXRlZ29yeTMyMDMzNjY4"
+        data-mapping="pathname"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-theme="light"
+        data-lang="zh-CN"
+        crossorigin="anonymous"
+        async>
+</script>
+
+本站所有文章转发 **CSDN** 将按侵权追究法律责任，其它情况随意。
