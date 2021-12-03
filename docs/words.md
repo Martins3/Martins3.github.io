@@ -24,9 +24,12 @@
 - 缺乏信息（Lack of information，对应短期记忆， short-term memory， STM）。指开发者缺乏程序要处理的问题领域信息的了解，而造成的困扰。
 - 缺乏处理能力（Lack of processing power ，对应工作记忆，working memory，WM）。指开发者缺乏对整个编程执行过程的处理能力，而造成的困扰。
 
+独立解决问题，然后你就会独立思考了[^7]。
+
 [^1]: https://www.zhihu.com/question/443850977/answer/1754327421
 [^2]: https://mp.weixin.qq.com/s/4kN65Eu_mYKmC-GLig082g
 [^3]: https://github.com/cdk8s/cdk8s-team-style/blob/master/other/read-write.md
 [^4]: https://twitter.com/yinwang0/status/1402834759407992836?s=20
 [^5]: [How to be successful](https://blog.samaltman.com/how-to-be-successful) Naval 是美国风险投资家，在他的 3 小时长播客《如何不靠运气变得富有》中介绍了他的[财富观](https://github.com/taosue/how-to-get-rich-without-getting-lucky/)，其中一些观点很有启发性, 摘抄在此
 [^6]: https://mp.weixin.qq.com/s/XAkJzT21uoKWPIkvv_45nw
+[^7]: https://www.bilibili.com/video/BV1pF4118747

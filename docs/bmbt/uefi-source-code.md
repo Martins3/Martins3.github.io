@@ -3,8 +3,6 @@
 - [ ] timer 应该无法无法处理吧，以及基于 timer 的系统
 - [ ] poll 之类的实现了解一下
 
-- [ ] 如果内核是按照 EFI 的方式启动，那么曾经初始化的那些东西怎么办?
-  - 感觉好多东西又是重新初始化一次，好烦啊，分析一下内核的入口的区别
 - [ ] EFI_BOOT_SERVICES 的这个结构体什么时候注册的
 
 - [ ] 到底啥是 GUID 的呀?
@@ -13,6 +11,15 @@
 - [ ] Driver 和 Application 的区别是啥
 
 ## `_ModuleEntryPoint` 的写法是从哪里来的
+找到这些东西对应的代码:
+```c
+/*
+Loading driver at 0x0007E5C2000 EntryPoint=0x0007E5CDFAE Main.efi
+InstallProtocolInterface: BC62157E-3E33-4FEC-9920-2D3B36D750DF 7E64EB98
+ProtectUefiImageCommon - 0x7E64E040
+  - 0x000000007E5C2000 - 0x0000000000020500
+InstallProtocolInterface: 752F3136-4E16-4FDC-A22A-E5F46812F4CA 7FE9E6D8
+```
 
 ## will kernel destroy everything built by uefi
 https://edk2-docs.gitbook.io/edk-ii-uefi-driver-writer-s-guide/3_foundation/readme.7/371_applications
