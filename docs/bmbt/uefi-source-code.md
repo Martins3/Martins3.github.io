@@ -7,8 +7,119 @@
 
 - [ ] 到底啥是 GUID 的呀?
 
-- [ ] 也许阅读一下 https://edk2-docs.gitbook.io/edk-ii-uefi-driver-writer-s-guide/ 然后快速的感受一下其提供的接口是什么
-- [ ] Driver 和 Application 的区别是啥
+- [ ] 测试一下信号机制
+- [ ] CoreLoadPeImage 为什么不是 AppPkg 的基础设施
+- [ ] MdePkg 和 MdeModulePkg 的关系是啥呀?
+  - 分析其中主要的代码有什么
+- [ ] 那么还可以检查 TLB refill 的入口吗?
+  - [ ] 类似 la 的这种总是在虚拟地址上的怎么处理的呀
+
+- [ ] 重新修改一下 uefi 的 compile_commands.json 的脚本，让所有的 compile_commands 都是自动注入的 home 上的
+
+## Driver 和 Application
+3.7 [^1]
+
+ EFI_LOADED_IMAGE_PROTOCOL
+
+## 文件系统
+其实就是在: edk2/FatPkg
+总共代码只有 5000 行而已
+
+Loading driver at 0x0007ED72000 EntryPoint=0x0007ED79AD2 Fat.efi
+
+```c
+/*
+#0  FatOFileOpen (OFile=OFile@entry=0x7ed14118, NewIFile=NewIFile@entry=0x7fe9e8e8, FileName=FileName@entry=0x7ec55f9c, OpenMode=OpenMode@entry=1, Attributes=Attribute
+s@entry=0 '\000') at /home/maritns3/core/ld/edk2-workstation/edk2/FatPkg/EnhancedFatDxe/Open.c:100
+#1  0x000000007ed790f1 in FatOpenEx (Token=0x0, Attributes=0, OpenMode=1, FileName=0x7ec55f9c, NewHandle=0x7fe9ea28, FHand=<optimized out>) at /home/maritns3/core/ld/e
+dk2-workstation/edk2/FatPkg/EnhancedFatDxe/Open.c:265
+#2  FatOpenEx (FHand=<optimized out>, NewHandle=0x7fe9ea28, FileName=0x7ec55f9c, OpenMode=1, Attributes=Attributes@entry=0, Token=Token@entry=0x0) at /home/maritns3/co
+re/ld/edk2-workstation/edk2/FatPkg/EnhancedFatDxe/Open.c:196
+#3  0x000000007ed79184 in FatOpen (FHand=<optimized out>, NewHandle=<optimized out>, FileName=<optimized out>, OpenMode=<optimized out>, Attributes=0) at /home/maritns
+3/core/ld/edk2-workstation/edk2/FatPkg/EnhancedFatDxe/Open.c:319
+#4  0x000000007f05a875 in GetFileBufferByFilePath (AuthenticationStatus=0x7fe9e9f0, FileSize=<synthetic pointer>, FilePath=0x7f0a3718, BootPolicy=1 '\001') at /home/ma
+ritns3/core/ld/edk2-workstation/edk2/MdePkg/Library/DxeServicesLib/DxeServicesLib.c:762
+#5  GetFileBufferByFilePath (BootPolicy=1 '\001', AuthenticationStatus=0x7fe9e9f0, FileSize=<synthetic pointer>, FilePath=0x7f0a3718, BootPolicy=1 '\001') at /home/mar
+itns3/core/ld/edk2-workstation/edk2/MdePkg/Library/DxeServicesLib/DxeServicesLib.c:610
+#6  BmGetNextLoadOptionBuffer (Type=LoadOptionTypeBoot, Type@entry=2131068519, FilePath=FilePath@entry=0x7ec5bf18, FullPath=FullPath@entry=0x7fe9ead0, FileSize=FileSiz
+e@entry=0x7fe9eac8) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Library/UefiBootManagerLib/BmLoadOption.c:1304
+#7  0x000000007f05c405 in EfiBootManagerBoot (BootOption=BootOption@entry=0x7ec753c8) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Library/UefiBootMana
+gerLib/BmBoot.c:1874
+#8  0x000000007f05fca2 in BootBootOptions (BootManagerMenu=0x7fe9ecd8, BootOptionCount=4, BootOptions=0x7ec75318) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeMo
+dulePkg/Universal/BdsDxe/BdsEntry.c:409
+#9  BdsEntry (This=<optimized out>) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Universal/BdsDxe/BdsEntry.c:1072
+#10 0x000000007feaabf8 in DxeMain (HobStart=<optimized out>) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/DxeMain/DxeMain.c:553
+#11 0x000000007feaac9d in ProcessModuleEntryPointList (HobStart=<optimized out>) at /home/maritns3/core/ld/edk2-workstation/edk2/Build/OvmfX64/DEBUG_GCC5/X64/MdeModule
+Pkg/Core/Dxe/DxeMain/DEBUG/AutoGen.c:489
+#12 _ModuleEntryPoint (HobStart=<optimized out>) at /home/maritns3/core/ld/edk2-workstation/edk2/MdePkg/Library/DxeCoreEntryPoint/DxeCoreEntryPoint.c:48
+#13 0x000000007fee10cf in InternalSwitchStack ()
+#14 0x0000000000000000 in ?? ()
+```
+
+## 进程地址空间
+- [ ] 是不是因为所有的 Application 都是逐个运行的，所以实际上所有的 Application 都是相同的地址
+- [ ] 修改代码重新写，gdb script 会发现变化吗?
+
+- [ ] 现在运行多个程序，每个程序装载的位置如何确定的啊
+  - Loading driver at 0x0007E5C2000 EntryPoint=0x0007E5CDF6A Main.efi
+  - Loading driver at 0x0007E63B000 EntryPoint=0x0007E63C001 Hello.efi
+    - Loading driver at 0x0007E63C000 EntryPoint=0x0007E63D001 Hello.efi
+  - 位置不是确定的，而且不是顺序的
+
+
+秘密都是在此处的，此处划分了加载地址是否固定还是动态分配的
+
+[^1]3.7 分钟分析 LoadImage 的实现:
+```c
+    DEBUG ((DEBUG_INFO | DEBUG_LOAD,
+           "Loading GG driver at 0x%11p EntryPoint=0x%11p ",
+           (VOID *)(UINTN) Image->ImageContext.ImageAddress,
+           FUNCTION_ENTRY_POINT (Image->ImageContext.EntryPoint)));
+```
+
+在 InternalShellExecuteDevicePath 中调用 `gBS->LoadImage` 的:
+```c
+/*
+#0  CoreLoadPeImage (DstBuffer=0, EntryPoint=0x0, Attribute=3, BootPolicy=<optimized out>, Image=0x7e64e398, Pe32Handle=0x7fe9e4b0) at /home/maritns3/core/ld/edk2-work
+station/edk2/MdeModulePkg/Core/Dxe/Image/Image.c:569
+#1  CoreLoadImageCommon.part.0.constprop.0 (BootPolicy=<optimized out>, ParentImageHandle=0x7ecaae18, FilePath=<optimized out>, SourceBuffer=<optimized out>, SourceSiz
+e=<optimized out>, ImageHandle=0x7fe9e6c0, Attribute=3, EntryPoint=0x0, NumberOfPages=0x0, DstBuffer=0) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Co
+re/Dxe/Image/Image.c:1348
+#2  0x000000007feb4aa2 in CoreLoadImageCommon (DstBuffer=0, NumberOfPages=0x0, EntryPoint=0x0, Attribute=3, ImageHandle=0x7fe9e6c0, SourceSize=0, SourceBuffer=0x0, Fil
+ePath=0x7e64e018, ParentImageHandle=0x0, BootPolicy=160 '\240') at /home/maritns3/core/ld/edk2-workstation/edk2/OvmfPkg/Library/PlatformDebugLibIoPort/DebugLib.c:282
+#3  CoreLoadImage (BootPolicy=<optimized out>, ParentImageHandle=0x0, FilePath=0x7e64e018, SourceBuffer=0x0, SourceSize=0, ImageHandle=0x7fe9e6c0) at /home/maritns3/co
+re/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/Image/Image.c:1511
+#4  0x000000007e52458d in InternalShellExecuteDevicePath (ParentImageHandle=0x7e5a4ad8, DevicePath=DevicePath@entry=0x7e64e018, CommandLine=CommandLine@entry=0x7e64d21
+8, Environment=Environment@entry=0x0, StartImageStatus=StartImageStatus@entry=0x7fe9e838) at /home/maritns3/core/ld/edk2-workstation/edk2/ShellPkg/Application/Shell/Sh
+ellProtocol.c:1439
+#5  0x000000007e527ab4 in RunCommandOrFile (CommandStatus=0x0, ParamProtocol=0x7e682e98, FirstParameter=0x7e678a18, CmdLine=0x7e64d218, Type=Efi_Application) at /home/
+maritns3/core/ld/edk2-workstation/edk2/ShellPkg/Application/Shell/Shell.c:2505
+#6  SetupAndRunCommandOrFile (CommandStatus=0x0, ParamProtocol=0x7e682e98, FirstParameter=0x7e678a18, CmdLine=<optimized out>, Type=Efi_Application) at /home/maritns3/
+core/ld/edk2-workstation/edk2/ShellPkg/Application/Shell/Shell.c:2589
+#7  RunShellCommand (CommandStatus=0x0, CmdLine=0x7e64d218) at /home/maritns3/core/ld/edk2-workstation/edk2/ShellPkg/Application/Shell/Shell.c:2713
+#8  RunShellCommand (CmdLine=CmdLine@entry=0x7e64f018, CommandStatus=0x0, CommandStatus@entry=0x7e64e018) at /home/maritns3/core/ld/edk2-workstation/edk2/ShellPkg/Appl
+ication/Shell/Shell.c:2625
+#9  0x000000007e52b370 in RunCommand (CmdLine=0x7e64f018) at /home/maritns3/core/ld/edk2-workstation/edk2/ShellPkg/Application/Shell/Shell.c:2765
+#10 DoShellPrompt () at /home/maritns3/core/ld/edk2-workstation/edk2/ShellPkg/Application/Shell/Shell.c:1358
+#11 UefiMain (ImageHandle=<optimized out>, SystemTable=<optimized out>) at /home/maritns3/core/ld/edk2-workstation/edk2/ShellPkg/Application/Shell/Shell.c:621
+#12 0x000000007e50f52d in ProcessModuleEntryPointList (SystemTable=0x7f9ee018, ImageHandle=0x7ecaae18) at /home/maritns3/core/ld/edk2-workstation/edk2/Build/OvmfX64/DE
+BUG_GCC5/X64/ShellPkg/Application/Shell/Shell/DEBUG/AutoGen.c:1013
+#13 _ModuleEntryPoint (ImageHandle=0x7ecaae18, SystemTable=0x7f9ee018) at /home/maritns3/core/ld/edk2-workstation/edk2/MdePkg/Library/UefiApplicationEntryPoint/Applica
+tionEntryPoint.c:59
+#14 0x000000007feba8b5 in CoreStartImage (ImageHandle=0x7ecaae18, ExitDataSize=0x7ec75470, ExitData=0x7ec75468) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModu
+lePkg/Core/Dxe/Image/Image.c:1654
+#15 0x000000007f05c5e2 in EfiBootManagerBoot (BootOption=BootOption@entry=0x7ec75420) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Library/UefiBootMana
+gerLib/BmBoot.c:1982
+#16 0x000000007f05fca2 in BootBootOptions (BootManagerMenu=0x7fe9ecd8, BootOptionCount=4, BootOptions=0x7ec75318) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeMo
+dulePkg/Universal/BdsDxe/BdsEntry.c:409
+#17 BdsEntry (This=<optimized out>) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Universal/BdsDxe/BdsEntry.c:1072
+#18 0x000000007feaabe3 in DxeMain (HobStart=<optimized out>) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/DxeMain/DxeMain.c:551
+#19 0x000000007feaac88 in ProcessModuleEntryPointList (HobStart=<optimized out>) at /home/maritns3/core/ld/edk2-workstation/edk2/Build/OvmfX64/DEBUG_GCC5/X64/MdeModule
+Pkg/Core/Dxe/DxeMain/DEBUG/AutoGen.c:489
+#20 _ModuleEntryPoint (HobStart=<optimized out>) at /home/maritns3/core/ld/edk2-workstation/edk2/MdePkg/Library/DxeCoreEntryPoint/DxeCoreEntryPoint.c:48
+#21 0x000000007fee10cf in InternalSwitchStack ()
+#22 0x0000000000000000 in ?? ()
+```
 
 ## `_ModuleEntryPoint` 的写法是从哪里来的
 找到这些东西对应的代码:
@@ -20,6 +131,22 @@ ProtectUefiImageCommon - 0x7E64E040
   - 0x000000007E5C2000 - 0x0000000000020500
 InstallProtocolInterface: 752F3136-4E16-4FDC-A22A-E5F46812F4CA 7FE9E6D8
 ```
+在 /home/maritns3/core/ld/edk2-workstation/edk2/MdePkg/Library/UefiApplicationEntryPoint/ApplicationEntryPoint.c 似乎是所有 Application 的标准入口
+- `_ModuleEntryPoint`
+  - ProcessLibraryConstructorList
+  - ProcessModuleEntryPointList
+    - ShellCEntryLib
+      - `SystemTable->BootServices->OpenProtocol`
+      - ShellAppMain
+        - `gMD = AllocateZeroPool(sizeof(struct __MainData))` : `__MainData` 记录一些 argc argV 之类的东西，是的，我们的程序是不需要链接器的
+        - main
+  - ProcessLibraryDestructorList
+
+再看 ShellAppMain 的程序，其只是从 ShellAppMain 开始的而已:
+
+调用的入口其实是自动生成的:
+/home/maritns3/core/ld/edk2-workstation/edk2/Build/AppPkg/DEBUG_GCC5/X64/AppPkg/Applications/Main/Main/DEBUG/AutoGen.c
+
 
 ## will kernel destroy everything built by uefi
 https://edk2-docs.gitbook.io/edk-ii-uefi-driver-writer-s-guide/3_foundation/readme.7/371_applications
@@ -326,103 +453,12 @@ Pkg/Core/Dxe/DxeMain/DEBUG/AutoGen.c:489
 #52 0x0000000000000000 in ?? ()
 ```
 
-## EFI Boot Services Table
-```c
-///
-/// EFI Boot Services Table.
-///
-typedef struct {
-  ///
-  /// The table header for the EFI Boot Services Table.
-  ///
-  EFI_TABLE_HEADER                Hdr;
+## Res
+EFI_MM_SYSTEM_TABLE;
+EFI_LOADED_IMAGE_PROTOCOL
 
-  //
-  // Task Priority Services
-  //
-  EFI_RAISE_TPL                   RaiseTPL;
-  EFI_RESTORE_TPL                 RestoreTPL;
+- EFI_SYSTEM_TABLE
+  - EFI_BOOT_SERVICES
+  - EFI_RUNTIME_SERVICES
 
-  //
-  // Memory Services
-  //
-  EFI_ALLOCATE_PAGES              AllocatePages;
-  EFI_FREE_PAGES                  FreePages;
-  EFI_GET_MEMORY_MAP              GetMemoryMap;
-  EFI_ALLOCATE_POOL               AllocatePool;
-  EFI_FREE_POOL                   FreePool;
-
-  //
-  // Event & Timer Services
-  //
-  EFI_CREATE_EVENT                  CreateEvent;
-  EFI_SET_TIMER                     SetTimer;
-  EFI_WAIT_FOR_EVENT                WaitForEvent;
-  EFI_SIGNAL_EVENT                  SignalEvent;
-  EFI_CLOSE_EVENT                   CloseEvent;
-  EFI_CHECK_EVENT                   CheckEvent;
-
-  //
-  // Protocol Handler Services
-  //
-  EFI_INSTALL_PROTOCOL_INTERFACE    InstallProtocolInterface;
-  EFI_REINSTALL_PROTOCOL_INTERFACE  ReinstallProtocolInterface;
-  EFI_UNINSTALL_PROTOCOL_INTERFACE  UninstallProtocolInterface;
-  EFI_HANDLE_PROTOCOL               HandleProtocol;
-  VOID                              *Reserved;
-  EFI_REGISTER_PROTOCOL_NOTIFY      RegisterProtocolNotify;
-  EFI_LOCATE_HANDLE                 LocateHandle;
-  EFI_LOCATE_DEVICE_PATH            LocateDevicePath;
-  EFI_INSTALL_CONFIGURATION_TABLE   InstallConfigurationTable;
-
-  //
-  // Image Services
-  //
-  EFI_IMAGE_LOAD                    LoadImage;
-  EFI_IMAGE_START                   StartImage;
-  EFI_EXIT                          Exit;
-  EFI_IMAGE_UNLOAD                  UnloadImage;
-  EFI_EXIT_BOOT_SERVICES            ExitBootServices;
-
-  //
-  // Miscellaneous Services
-  //
-  EFI_GET_NEXT_MONOTONIC_COUNT      GetNextMonotonicCount;
-  EFI_STALL                         Stall;
-  EFI_SET_WATCHDOG_TIMER            SetWatchdogTimer;
-
-  //
-  // DriverSupport Services
-  //
-  EFI_CONNECT_CONTROLLER            ConnectController;
-  EFI_DISCONNECT_CONTROLLER         DisconnectController;
-
-  //
-  // Open and Close Protocol Services
-  //
-  EFI_OPEN_PROTOCOL                 OpenProtocol;
-  EFI_CLOSE_PROTOCOL                CloseProtocol;
-  EFI_OPEN_PROTOCOL_INFORMATION     OpenProtocolInformation;
-
-  //
-  // Library Services
-  //
-  EFI_PROTOCOLS_PER_HANDLE          ProtocolsPerHandle;
-  EFI_LOCATE_HANDLE_BUFFER          LocateHandleBuffer;
-  EFI_LOCATE_PROTOCOL               LocateProtocol;
-  EFI_INSTALL_MULTIPLE_PROTOCOL_INTERFACES    InstallMultipleProtocolInterfaces;
-  EFI_UNINSTALL_MULTIPLE_PROTOCOL_INTERFACES  UninstallMultipleProtocolInterfaces;
-
-  //
-  // 32-bit CRC Services
-  //
-  EFI_CALCULATE_CRC32               CalculateCrc32;
-
-  //
-  // Miscellaneous Services
-  //
-  EFI_COPY_MEM                      CopyMem;
-  EFI_SET_MEM                       SetMem;
-  EFI_CREATE_EVENT_EX               CreateEventEx;
-} EFI_BOOT_SERVICES;
-```
+[^1]: edk-ii-uefi-driver-writer-s-guide

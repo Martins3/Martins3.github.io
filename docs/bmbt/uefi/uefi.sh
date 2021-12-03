@@ -76,18 +76,13 @@ if [[ ! -f ${OVMF_CODE} ]]; then
 	echo "sudo apt install ovmf"
 fi
 
-EFI=/home/maritns3/core/ld/edk2-workstation/edk2/Build/AppPkg/DEBUG_GCC5/X64/Main.efi
-
-if [[ ! -f ${EFI} ]]; then
-	echo "${EFI} not found"
-	exit 1
-fi
-
 res=(
-	# /home/maritns3/core/ld/edk2-workstation/edk2/Build/AppPkg/DEBUG_GCC5/X64/Main.efi
+  /home/maritns3/core/ld/edk2-workstation/edk2/Build/AppPkg/DEBUG_GCC5/X64/Main.efi
+  /home/maritns3/core/ld/edk2-workstation/edk2/Build/AppPkg/DEBUG_GCC5/X64/Hello.efi
+  /home/maritns3/core/ld/edk2-workstation/edk2/Build/Shell/DEBUG_GCC5/X64/AcpiViewApp.efi
+  /home/maritns3/core/ld/edk2-workstation/edk2/Build/Shell/DEBUG_GCC5/X64/dp.efi
 	/home/maritns3/core/ld/edk2-workstation/edk2/AppPkg/Applications/Lua/scripts/Hello.lua
   /home/maritns3/core/ubuntu-linux/arch/x86_64/boot/bzImage
-	"${EFI}"
 )
 
 if [[ ! -f ${DISK_IMG} ]]; then

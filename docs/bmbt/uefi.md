@@ -97,6 +97,9 @@ Error: cc or cc_flags is not defined!
   - 在文件头修改 `from edk2_compile_commands import update_compile_commands_file`
   - 在 1067 行下添加 `update_compile_commands_file(TargetDict, self._AutoGenObject, self.Macros)`
 
+这个 patch 是一个单线程，所以在生成 compile_commands.json 的时候，不能并发编译:
+
+
 ## 内核作为 efi 文件启动
 内核实际上可以作为 efi 文件在 UEFI 上执行，对于 x64 将 bzImage 修改为 bzImage.efi 就可以了，具体参考[内核文档](https://www.kernel.org/doc/Documentation/efi-stub.txt)
 
