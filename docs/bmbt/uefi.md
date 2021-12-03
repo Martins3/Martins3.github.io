@@ -1,4 +1,4 @@
-# 在 Linux 快速入手 UEFI 指南
+# Linux UEFI 学习环境搭建
 
 ## 运行第一个 UEFI 程序
 ### 编译 efi
@@ -256,5 +256,19 @@ brw-rw---- root disk 0 B Wed Nov 24 09:00:37 2021 ﰩ /dev/nvme0n1p2
 - Robin 的 blog: http://yiiyee.cn/blog/
 - https://wiki.osdev.org/GNU-EFI
 - https://wiki.osdev.org/POSIX-UEFI
+
+<script src="https://giscus.app/client.js"
+        data-repo="martins3/martins3.github.io"
+        data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="
+        data-category="Show and tell"
+        data-category-id="MDE4OkRpc2N1c3Npb25DYXRlZ29yeTMyMDMzNjY4"
+        data-mapping="pathname"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-theme="light"
+        data-lang="zh-CN"
+        crossorigin="anonymous"
+        async>
+</script>
 
 [^1]: https://stackoverflow.com/questions/800030/remove-carriage-return-in-unix

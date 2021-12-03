@@ -21,7 +21,7 @@
 
 ## Binary Translation
 - [裸金属二进制翻译器的设计与实现](https://martins3.github.io/ppt/repo/2021-8-24/index.html)
-<!-- - [UEFI 快速入门](./bmbt/uefi.md) -->
+- 🚧 [Linux UEFI 学习环境搭建](./bmbt/uefi.md)
 
 ## Virtualization
 - [Loongson Dune : A Process Level Virtualization framework Base on KVM](https://github.com/Martins3/loongson-dune)
