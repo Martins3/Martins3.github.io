@@ -68,6 +68,7 @@
 - [The Day](https://martins3.github.io/theday/)
 - [The Garden](http://martins3.gitee.io/garden/)
 - [言论](./words.md)
+- [感想](./thoughts.md)
 
 ## Friends
 - [niugenen](https://niugenen.github.io/)

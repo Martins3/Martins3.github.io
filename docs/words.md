@@ -26,6 +26,8 @@
 
 独立解决问题，然后你就会独立思考了[^7]。
 
+四年时间足以让一个人在任何领域成为资深业者，甚至专家。可是我们的大学生呢，经过本科四年，不要说领域专家，甚至能力强的学生都寥寥无几。我们的大学制度用了四年时间，培养出了大量一无所长的、迷茫困惑的、市场滞销的年轻人。[^8]
+
 [^1]: https://www.zhihu.com/question/443850977/answer/1754327421
 [^2]: https://mp.weixin.qq.com/s/4kN65Eu_mYKmC-GLig082g
 [^3]: https://github.com/cdk8s/cdk8s-team-style/blob/master/other/read-write.md
@@ -33,3 +35,4 @@
 [^5]: [How to be successful](https://blog.samaltman.com/how-to-be-successful) Naval 是美国风险投资家，在他的 3 小时长播客《如何不靠运气变得富有》中介绍了他的[财富观](https://github.com/taosue/how-to-get-rich-without-getting-lucky/)，其中一些观点很有启发性, 摘抄在此
 [^6]: https://mp.weixin.qq.com/s/XAkJzT21uoKWPIkvv_45nw
 [^7]: https://www.bilibili.com/video/BV1pF4118747
+[^8]: https://survivor.ruanyifeng.com/collapse/university.html

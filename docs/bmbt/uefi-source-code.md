@@ -1,11 +1,8 @@
 ## 继续分析代码
 - [ ] 不知道对于 signal 的支持到底有多强
-- [ ] timer 应该无法无法处理吧，以及基于 timer 的系统
 - [ ] poll 之类的实现了解一下
 
 - [ ] EFI_BOOT_SERVICES 的这个结构体什么时候注册的
-
-- [ ] 到底啥是 GUID 的呀?
 
 - [ ] 测试一下信号机制
 - [ ] CoreLoadPeImage 为什么不是 AppPkg 的基础设施
