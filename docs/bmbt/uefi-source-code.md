@@ -8,13 +8,66 @@
 
 - [ ] UEFI 加载一个 image 的过程是怎么样子的
 - [ ] 测试一下信号机制
+  - [ ] 不在存在信号屏蔽机制了，小伙子，但是 UEFI 屏蔽的方法没有完全看懂
 - [ ] CoreLoadPeImage 为什么不是 AppPkg 的基础设施
-- [ ] MdePkg 和 MdeModulePkg 的关系是啥呀?
-  - 分析其中主要的代码有什么
 - [ ] 那么还可以检查 TLB refill 的入口吗?
   - [ ] 类似 la 的这种总是在虚拟地址上的怎么处理的呀
 
 - [ ] 重新修改一下 uefi 的 compile_commands.json 的脚本，让所有的 compile_commands 都是自动注入的 home 上的
+- [ ] 什么叫做 Pei
+
+- [ ] OVMF 到底在干什么，似乎现在都是在关注 Shell DxeMain 之类的事情
+
+- [ ] 修改 CoreLoadPeImage 然后 build -p AppPkg/AppPkg.dsc 并不会出现
+  - 所以编译什么会导致 MdeModulePkg 被编译
+
+## gBS and gST
+注册位置:
+```c
+EFI_STATUS
+EFIAPI
+UefiBootServicesTableLibConstructor (
+  IN EFI_HANDLE        ImageHandle,
+  IN EFI_SYSTEM_TABLE  *SystemTable
+  )
+{
+  //
+  // Cache the Image Handle
+  //
+  gImageHandle = ImageHandle;
+  ASSERT (gImageHandle != NULL);
+
+  //
+  // Cache pointer to the EFI System Table
+  //
+  gST = SystemTable;
+  ASSERT (gST != NULL);
+
+  //
+  // Cache pointer to the EFI Boot Services Table
+  //
+  gBS = SystemTable->BootServices;
+  ASSERT (gBS != NULL);
+
+  return EFI_SUCCESS;
+}
+```
+
+- 在任何程序中打印出来的 gBS 和 gST 的位置都是相同的，这就是最神奇的地方，没有虚拟地址空间了，隔离方式才是最大的问题。
+
+这个玩意儿就是在 DxeMain 初始化的
+```c
+/*
+#0  UefiBootServicesTableLibConstructor (SystemTable=0x7f9ee018, ImageHandle=0x7f8eef98) at /home/maritns3/core/ld/edk2-workstation/edk2/MdePkg/Library/UefiBootService
+sTableLib/UefiBootServicesTableLib.c:44
+#1  ProcessLibraryConstructorList (SystemTable=0x7f9ee018, ImageHandle=0x7f8eef98) at /home/maritns3/core/ld/edk2-workstation/edk2/Build/OvmfX64/DEBUG_GCC5/X64/MdeModu
+lePkg/Core/Dxe/DxeMain/DEBUG/AutoGen.c:449
+#2  DxeMain (HobStart=0x7f8ea018) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/DxeMain/DxeMain.c:297
+#3  0x000000007feaac88 in ProcessModuleEntryPointList (HobStart=<optimized out>) at /home/maritns3/core/ld/edk2-workstation/edk2/Build/OvmfX64/DEBUG_GCC5/X64/MdeModule
+Pkg/Core/Dxe/DxeMain/DEBUG/AutoGen.c:489
+#4  _ModuleEntryPoint (HobStart=<optimized out>) at /home/maritns3/core/ld/edk2-workstation/edk2/MdePkg/Library/DxeCoreEntryPoint/DxeCoreEntryPoint.c:48
+#5  0x000000007fee10cf in InternalSwitchStack ()
+```
 
 ## Driver 和 Application
 3.7 [^1]
@@ -69,7 +122,7 @@ Pkg/Core/Dxe/DxeMain/DEBUG/AutoGen.c:489
 
 秘密都是在此处的，此处划分了加载地址是否固定还是动态分配的
 
-[^1]3.7 分钟分析 LoadImage 的实现:
+[^1]3.7 中分析 LoadImage 的实现:
 ```c
     DEBUG ((DEBUG_INFO | DEBUG_LOAD,
            "Loading GG driver at 0x%11p EntryPoint=0x%11p ",
@@ -120,8 +173,16 @@ Pkg/Core/Dxe/DxeMain/DEBUG/AutoGen.c:489
 #21 0x000000007fee10cf in InternalSwitchStack ()
 #22 0x0000000000000000 in ?? ()
 ```
+## MdePkg 和 MdeModulePkg 的关系是什么，其中各自主要包含的代码
+This package provides the modules that conform to UEFI/PI Industry standards.
+It also provides the defintions(including PPIs/PROTOCOLs/GUIDs and library classes) and libraries instances,
+which are used for those modules.[^2]
 
-## `_ModuleEntryPoint` 的写法是从哪里来的
+MdeModulePkg [^3]
+
+好吧，只是知道 Mde 比 MdeModulePkg 要更加基础一点。
+
+## OpenProtocol 和 InstallProtocol 的基本操作
 找到这些东西对应的代码:
 ```c
 /*
@@ -136,7 +197,9 @@ InstallProtocolInterface: 752F3136-4E16-4FDC-A22A-E5F46812F4CA 7FE9E6D8
   - ProcessLibraryConstructorList
   - ProcessModuleEntryPointList
     - ShellCEntryLib
-      - `SystemTable->BootServices->OpenProtocol`
+      - `SystemTable->BootServices->OpenProtocol` : 利用 EfiShellParametersProtocol 来获取参数，获取标准输入输出
+        - CoreOpenProtocol : 使用 gEfiShellInterfaceGuid 来填充 EFI_SHELL_PARAMETERS_PROTOCOL
+          - CoreGetProtocolInterface : 使用 EFI_GUID 也就是 gEfiShellInterfaceGuid 获取 PROTOCOL_INTERFACE
       - ShellAppMain
         - `gMD = AllocateZeroPool(sizeof(struct __MainData))` : `__MainData` 记录一些 argc argV 之类的东西，是的，我们的程序是不需要链接器的
         - main
@@ -144,8 +207,106 @@ InstallProtocolInterface: 752F3136-4E16-4FDC-A22A-E5F46812F4CA 7FE9E6D8
 
 再看 ShellAppMain 的程序，其只是从 ShellAppMain 开始的而已:
 
-调用的入口其实是自动生成的:
-/home/maritns3/core/ld/edk2-workstation/edk2/Build/AppPkg/DEBUG_GCC5/X64/AppPkg/Applications/Main/Main/DEBUG/AutoGen.c
+
+使用 edk2/AppPkg/Applications/Main 作为例子:
+- 调用的入口其实是自动生成的: uild/AppPkg/DEBUG_GCC5/X64/AppPkg/Applications/Main/Main/DEBUG/AutoGen.c
+- gEfiShellParametersProtocolGuid 的定义也是在 AutoGen.c 中的
+
+
+注册上 gEfiShellParametersProtocolGuid 的位置
+```c
+/*
+#0  CoreInstallProtocolInterfaceNotify (UserHandle=UserHandle@entry=0x7fe9e6c0, Protocol=Protocol@entry=0x7df83850, InterfaceType=EFI_NATIVE_INTERFACE, Interface=0x7fe
+9e6d8, Notify=Notify@entry=1 '\001') at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/Hand/Handle.c:348
+#1  0x000000007feb5eda in CoreInstallProtocolInterface (UserHandle=0x7fe9e6c0, Protocol=0x7df83850, InterfaceType=<optimized out>, Interface=<optimized out>) at /home/
+maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/Hand/Handle.c:313
+#2  0x000000007df65751 in InternalShellExecuteDevicePath (ParentImageHandle=0x7dfe5ad8, DevicePath=DevicePath@entry=0x7e08eb98, CommandLine=CommandLine@entry=0x7e0c849
+8, Environment=Environment@entry=0x0, StartImageStatus=StartImageStatus@entry=0x7fe9e838) at /home/maritns3/core/ld/edk2-workstation/edk2/ShellPkg/Application/Shell/Sh
+ellProtocol.c:1531
+#3  0x000000007df68ab4 in RunCommandOrFile (CommandStatus=0x0, ParamProtocol=0x7e0ca198, FirstParameter=0x7e08e998, CmdLine=0x7e0c8498, Type=Efi_Application) at /home/
+maritns3/core/ld/edk2-workstation/edk2/ShellPkg/Application/Shell/Shell.c:2505
+#4  SetupAndRunCommandOrFile (CommandStatus=0x0, ParamProtocol=0x7e0ca198, FirstParameter=0x7e08e998, CmdLine=<optimized out>, Type=Efi_Application) at /home/maritns3/
+core/ld/edk2-workstation/edk2/ShellPkg/Application/Shell/Shell.c:2589
+#5  RunShellCommand (CommandStatus=0x0, CmdLine=0x7e0c8498) at /home/maritns3/core/ld/edk2-workstation/edk2/ShellPkg/Application/Shell/Shell.c:2713
+#6  RunShellCommand (CmdLine=CmdLine@entry=0x7e0b8018, CommandStatus=0x0, CommandStatus@entry=0x7df829ac) at /home/maritns3/core/ld/edk2-workstation/edk2/ShellPkg/Appl
+ication/Shell/Shell.c:2625
+#7  0x000000007df6c370 in RunCommand (CmdLine=0x7e0b8018) at /home/maritns3/core/ld/edk2-workstation/edk2/ShellPkg/Application/Shell/Shell.c:2765
+#8  DoShellPrompt () at /home/maritns3/core/ld/edk2-workstation/edk2/ShellPkg/Application/Shell/Shell.c:1358
+#9  UefiMain (ImageHandle=<optimized out>, SystemTable=<optimized out>) at /home/maritns3/core/ld/edk2-workstation/edk2/ShellPkg/Application/Shell/Shell.c:621
+#10 0x000000007df5052d in ProcessModuleEntryPointList (SystemTable=0x7f9ee018, ImageHandle=0x7f130218) at /home/maritns3/core/ld/edk2-workstation/edk2/Build/OvmfX64/DE
+BUG_GCC5/X64/ShellPkg/Application/Shell/Shell/DEBUG/AutoGen.c:1013
+#11 _ModuleEntryPoint (ImageHandle=0x7f130218, SystemTable=0x7f9ee018) at /home/maritns3/core/ld/edk2-workstation/edk2/MdePkg/Library/UefiApplicationEntryPoint/Applica
+tionEntryPoint.c:59
+#12 0x000000007feba8b5 in CoreStartImage (ImageHandle=0x7f130218, ExitDataSize=0x7e1e06c8, ExitData=0x7e1e06c0) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModu
+lePkg/Core/Dxe/Image/Image.c:1653
+#13 0x000000007f05d5e2 in EfiBootManagerBoot (BootOption=BootOption@entry=0x7e1e0678) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Library/UefiBootMana
+gerLib/BmBoot.c:1982
+#14 0x000000007f060ca2 in BootBootOptions (BootManagerMenu=0x7fe9ecd8, BootOptionCount=5, BootOptions=0x7e1e0518) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeMo
+dulePkg/Universal/BdsDxe/BdsEntry.c:409
+#15 BdsEntry (This=<optimized out>) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Universal/BdsDxe/BdsEntry.c:1072
+#16 0x000000007feaabe3 in DxeMain (HobStart=<optimized out>) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/DxeMain/DxeMain.c:551
+#17 0x000000007feaac88 in ProcessModuleEntryPointList (HobStart=<optimized out>) at /home/maritns3/core/ld/edk2-workstation/edk2/Build/OvmfX64/DEBUG_GCC5/X64/MdeModule
+Pkg/Core/Dxe/DxeMain/DEBUG/AutoGen.c:489
+#18 _ModuleEntryPoint (HobStart=<optimized out>) at /home/maritns3/core/ld/edk2-workstation/edk2/MdePkg/Library/DxeCoreEntryPoint/DxeCoreEntryPoint.c:48
+#19 0x000000007fee10cf in InternalSwitchStack ()
+#20 0x0000000000000000 in ?? ()
+```
+从这个 backtrace 看， Protocol 的 interface 的注册发生在 InternalShellExecuteDevicePath 中的:
+```c
+    //
+    // Initialize and install a shell parameters protocol on the image.
+    //
+    ShellParamsProtocol.StdIn   = ShellInfoObject.NewShellParametersProtocol->StdIn;
+    ShellParamsProtocol.StdOut  = ShellInfoObject.NewShellParametersProtocol->StdOut;
+    ShellParamsProtocol.StdErr  = ShellInfoObject.NewShellParametersProtocol->StdErr;
+    Status = UpdateArgcArgv(&ShellParamsProtocol, NewCmdLine, Efi_Application, NULL, NULL);
+
+    Status = gBS->InstallProtocolInterface(&NewHandle, &gEfiShellParametersProtocolGuid, EFI_NATIVE_INTERFACE, &ShellParamsProtocol);
+```
+
+才发现，PROTOCOL_INTERFACE 的定义是一个很随意的存在的呀!
+```c
+
+///
+/// PROTOCOL_INTERFACE - each protocol installed on a handle is tracked
+/// with a protocol interface structure
+///
+typedef struct {
+  UINTN                       Signature;
+  /// Link on IHANDLE.Protocols
+  LIST_ENTRY                  Link;
+  /// Back pointer
+  IHANDLE                     *Handle;
+  /// Link on PROTOCOL_ENTRY.Protocols
+  LIST_ENTRY                  ByProtocol;
+  /// The protocol ID
+  PROTOCOL_ENTRY              *Protocol;
+  /// The interface value
+  VOID                        *Interface;
+  /// OPEN_PROTOCOL_DATA list
+  LIST_ENTRY                  OpenList;
+  UINTN                       OpenListCount;
+
+} PROTOCOL_INTERFACE;
+```
+
+## UEFI System Table 到底是在如何被使用的
+- [x] 在 ShellCEntryLib 中的参数就是
+
+- CoreStartImage
+  - `Image->EntryPoint (ImageHandle, Image->Info.SystemTable);` 其实就是 `_ModuleEntryPoint`，其 SystemTable 就是在此处传递的
+    - ProcessModuleEntryPointList
+      - UefiMain
+
+## InternalShellExecuteDevicePath
+- `gBS->LoadImage`
+  - CoreLoadImage
+    - CoreLoadImageCommon
+      - 在此处创建出来一个 EFI_LOADED_IMAGE_PROTOCOL
+      - CoreInstallProtocolInterfaceNotify : 注册这个 EFI_LOADED_IMAGE_PROTOCOL ，然后在下面的 OpenProtocol 中使用
+- `Status = gBS->OpenProtocol( NewHandle, &gEfiLoadedImageProtocolGuid, (VOID**)&LoadedImage, gImageHandle, NULL, EFI_OPEN_PROTOCOL_GET_PROTOCOL);`
+  - 现在获取了一个 EFI_LOADED_IMAGE_PROTOCOL
+- `Status = gBS->InstallProtocolInterface(&NewHandle, &gEfiShellParametersProtocolGuid, EFI_NATIVE_INTERFACE, &ShellParamsProtocol);`
 
 
 ## will kernel destroy everything built by uefi
@@ -228,11 +389,13 @@ InstallProtocolInterface ?
 DXE 设备接受 PEI 阶段的参数
 - HOB 数据
 
-## 无法理解一些东西啊
+## LoadedImage
 每次加载的时候都是相同的位置:
 Loading driver at 0x0007E5C2000 EntryPoint=0x0007E5CE00C Main.efi
 
-发现，不是 ccls 跳转的问题，而是 UEFI 的协议确实让这些就是从内存中加载的:
+下面的 backtrace 实际上非常的经典:
+DXE 加载 Shell 需要搞一次: CoreLoadImage / CoreStartImage 组合，
+然后 Shell 加载具体的程序需要重新走一次。
 ```c
 /*
 #0  malloc (Size=Size@entry=7900) at /home/maritns3/core/ld/edk2-workstation/edk2/StdLib/LibC/StdLib/Malloc.c:85
@@ -541,3 +704,5 @@ EFI_LOADED_IMAGE_PROTOCOL
   - EFI_RUNTIME_SERVICES
 
 [^1]: edk-ii-uefi-driver-writer-s-guide
+[^2]: https://github.com/tianocore/tianocore.github.io/wiki/MdeModulePkg
+[^3]: https://github.com/tianocore/tianocore.github.io/wiki/MdePkg

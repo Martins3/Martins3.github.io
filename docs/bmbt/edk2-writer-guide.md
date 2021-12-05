@@ -1,3 +1,5 @@
+- [ ] 顺便读读这个东西吧: https://edk2-docs.gitbook.io/edk-ii-dsc-specification/
+
 ## Foundation
 - [ ] 关于 Binding 的问题，如果一个 driver 创建出来了，如何提供接口给另一个 driver 用
 

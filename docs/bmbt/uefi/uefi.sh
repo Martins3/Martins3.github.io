@@ -9,7 +9,9 @@ EDK2_PATH=/home/maritns3/core/ld/edk2-workstation/edk2
 VirtualDrive=${WORK_DIR}/VirtualDrive
 
 OVMFBASE=${EDK2_PATH}/Build/OvmfX64/DEBUG_GCC5
-SEARCHPATHS="${OVMFBASE}/X64 ${EDK2_PATH}/Build/AppPkg/DEBUG_GCC5/X64/"
+SEARCHPATHS="${OVMFBASE}/X64 ${EDK2_PATH}/Build/AppPkg/DEBUG_GCC5/X64 ${EDK2_PATH}/Build/Mde/DEBUG_GCC5/X64"
+# SEARCHPATHS="${EDK2_PATH}/Build/AppPkg/DEBUG_GCC5/X64/"
+
 
 OVMF_CODE=${OVMFBASE}/FV/OVMF_CODE.fd
 OVMF_VARS=${OVMFBASE}/FV/OVMF_VARS.fd
@@ -36,7 +38,12 @@ gen_symbol_offsets() {
 		echo "${OVMF_LOG} not found, run 'uefi.sh' firstly to generate the log"
 	fi
 
-	echo "" >$GDB_SCRIPT
+	if [[ -e ${OVMF_LOG} ]]; then
+		echo "${OVMF_LOG} is empty, run 'uefi.sh' firstly to generate the log"
+	fi
+
+  rm -f $GDB_SCRIPT
+  touch $GDB_SCRIPT
 	grep Loading <${OVMF_LOG} | grep -i efi | while read LINE; do
 		BASE="$(echo ${LINE} | cut -d " " -f4)"
 		NAME="$(echo ${LINE} | cut -d " " -f6 | tr -d "[:cntrl:]")"
@@ -46,6 +53,12 @@ gen_symbol_offsets() {
 		TEXT="$(python -c "print(hex(${BASE} + ${ADDR}))")"
 		SYMS="$(echo ${NAME} | sed -e "s/\.efi/\.debug/g")"
 		SYMFILE="$(find ${SEARCHPATHS} -name ${SYMS} -maxdepth 1 -type f)"
+
+    echo "------------------"
+    echo "${SYMFILE}"
+    echo "${TEXT}"
+    echo "------------------"
+
 		echo "add-symbol-file ${SYMFILE} ${TEXT}" | tee -a $GDB_SCRIPT
 	done
 	exit 0
@@ -56,7 +69,7 @@ run_gdb() {
 		echo "${GDB_SCRIPT} not found, run 'uefi.sh -g' firstly"
 	fi
 
-	gdb -ex "source ${GDB_SCRIPT}.bak" -ex "target remote :1234" -ex "hb DxeMain"
+	gdb -ex "source ${GDB_SCRIPT}" -ex "target remote :1234" -ex "hb DxeMain"
 	exit 0
 }
 
