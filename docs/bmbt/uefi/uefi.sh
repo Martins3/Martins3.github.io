@@ -6,6 +6,7 @@ WORK_DIR=/home/maritns3/core/vn/docs/bmbt/uefi
 DISK_IMG=${WORK_DIR}/uefi.img
 PART_IMG=${WORK_DIR}/part.img
 EDK2_PATH=/home/maritns3/core/ld/edk2-workstation/edk2
+VirtualDrive=${WORK_DIR}/VirtualDrive
 
 OVMFBASE=${EDK2_PATH}/Build/OvmfX64/DEBUG_GCC5
 SEARCHPATHS="${OVMFBASE}/X64 ${EDK2_PATH}/Build/AppPkg/DEBUG_GCC5/X64/"
@@ -77,12 +78,12 @@ if [[ ! -f ${OVMF_CODE} ]]; then
 fi
 
 res=(
-  /home/maritns3/core/ld/edk2-workstation/edk2/Build/AppPkg/DEBUG_GCC5/X64/Main.efi
-  /home/maritns3/core/ld/edk2-workstation/edk2/Build/AppPkg/DEBUG_GCC5/X64/Hello.efi
-  /home/maritns3/core/ld/edk2-workstation/edk2/Build/Shell/DEBUG_GCC5/X64/AcpiViewApp.efi
-  /home/maritns3/core/ld/edk2-workstation/edk2/Build/Shell/DEBUG_GCC5/X64/dp.efi
+	/home/maritns3/core/ld/edk2-workstation/edk2/Build/AppPkg/DEBUG_GCC5/X64/Main.efi
+	/home/maritns3/core/ld/edk2-workstation/edk2/Build/AppPkg/DEBUG_GCC5/X64/Hello.efi
+	# /home/maritns3/core/ld/edk2-workstation/edk2/Build/Shell/DEBUG_GCC5/X64/AcpiViewApp.efi
+	# /home/maritns3/core/ld/edk2-workstation/edk2/Build/Shell/DEBUG_GCC5/X64/dp.efi
 	/home/maritns3/core/ld/edk2-workstation/edk2/AppPkg/Applications/Lua/scripts/Hello.lua
-  /home/maritns3/core/ubuntu-linux/arch/x86_64/boot/bzImage
+	/home/maritns3/core/ubuntu-linux/arch/x86_64/boot/bzImage
 )
 
 if [[ ! -f ${DISK_IMG} ]]; then
@@ -103,7 +104,10 @@ dd if=${PART_IMG} of=${DISK_IMG} bs=512 count=91669 seek=2048 conv=notrunc
 
 # ref: https://blog.hartwork.org/posts/get-qemu-to-boot-efi/
 ${QEMU} \
-	-enable-kvm -cpu host -m 2G -nographic -drive file=${DISK_IMG},format=raw -net none \
+	-machine q35,smm=on,accel=kvm \
+	-cpu host -m 2G -nographic -drive file=${DISK_IMG},format=raw -net none \
 	-debugcon file:${OVMF_LOG} -global isa-debugcon.iobase=0x402 \
+	-global driver=cfi.pflash01,property=secure,value=on \
 	-drive if=pflash,format=raw,readonly=on,file=${OVMF_CODE} \
+	-drive file=fat:rw:${VirtualDrive},format=raw,media=disk \
 	-drive if=pflash,format=raw,file=${OVMF_VARS} ${USE_GDB}

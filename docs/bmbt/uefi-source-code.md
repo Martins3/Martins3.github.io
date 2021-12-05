@@ -4,6 +4,9 @@
 
 - [ ] EFI_BOOT_SERVICES 的这个结构体什么时候注册的
 
+- [ ] 如果执行了 illegal instruction，其现象是什么?
+
+- [ ] UEFI 加载一个 image 的过程是怎么样子的
 - [ ] 测试一下信号机制
 - [ ] CoreLoadPeImage 为什么不是 AppPkg 的基础设施
 - [ ] MdePkg 和 MdeModulePkg 的关系是啥呀?
@@ -449,6 +452,85 @@ Pkg/Core/Dxe/DxeMain/DEBUG/AutoGen.c:489
 #51 0x000000007fee10cf in InternalSwitchStack ()
 #52 0x0000000000000000 in ?? ()
 ```
+
+## 让程序运行 shell 命令
+- https://stackoverflow.com/questions/38738862/run-a-uefi-shell-command-from-inside-uefi-application
+这个亲测有效，顺便理解了:
+- ENTRY_POINT
+- LibraryClasses
+
+```c
+#include <Library/ShellLib.h>
+#include <Library/UefiLib.h>
+#include <Uefi.h>
+
+EFI_STATUS
+EFIAPI
+UefiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE *SystemTable) {
+  EFI_STATUS Status;
+
+  ShellExecute(&ImageHandle, L"echo Hello World!", FALSE, NULL, &Status);
+
+  return Status;
+}
+```
+
+```inf
+## @file
+#  A simple, basic, EDK II native, "hello" application.
+#
+#   Copyright (c) 2010 - 2018, Intel Corporation. All rights reserved.<BR>
+#   SPDX-License-Identifier: BSD-2-Clause-Patent
+#
+##
+
+[Defines]
+  INF_VERSION                    = 0x00010006
+  BASE_NAME                      = Hello
+  FILE_GUID                      = a912f198-7f0e-4803-b908-b757b806ec83
+  MODULE_TYPE                    = UEFI_APPLICATION
+  VERSION_STRING                 = 0.1
+  ENTRY_POINT                    = UefiMain
+
+#
+#  VALID_ARCHITECTURES           = IA32 X64
+#
+
+[Sources]
+  Hello.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+  ShellPkg/ShellPkg.dec
+
+[LibraryClasses]
+  UefiLib
+  ShellCEntryLib
+  ShellLib
+```
+
+## 各种 uefi shell 命令对应的源代码
+/home/maritns3/core/ld/edk2-workstation/edk2/ShellPkg/Library
+- UefiShellDebug1CommandsLib : edit
+- UefiShellDriver1CommandsLib : connect unconnect 之类的
+- UefiShellInstall1CommandsLib : install
+- UefiShellLevel1CommandsLib : goto exit for if stall
+- UefiShellLevel1CommandsLib : cd ls
+- UefiShellLevel3CommandsLib : cls echo
+- UefiShellNetwork1CommandsLib : ping
+
+## 如何让程序在 ovmf 启动的时候自动执行
+- https://stackoverflow.com/questions/22641605/running-an-efi-application-automatically-on-boot
+- https://stackoverflow.com/questions/50011728/how-is-an-efi-application-being-set-as-the-bootloader-through-code
+
+在 shell 会等待 5s 来等待程序的执行:
+/home/maritns3/core/ld/edk2-workstation/edk2/ShellPkg/Application/Shell/Shell.c
+在其中修改为 0s
+
+在 edk2 的代码中搜索 startup.nsh
+找到文件
+/home/maritns3/core/ld/edk2-workstation/edk2/OvmfPkg/PlatformCI/PlatformBuild.py
+了解了如何添加 startup.nsh 的方法
 
 ## Res
 EFI_MM_SYSTEM_TABLE;
