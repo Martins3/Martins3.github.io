@@ -37,10 +37,12 @@ show_help() {
 gen_symbol_offsets() {
 	if [[ ! -f ${OVMF_LOG} ]]; then
 		echo "${OVMF_LOG} not found, run 'uefi.sh' firstly to generate the log"
+    exit 1
 	fi
 
-	if [[ -e ${OVMF_LOG} ]]; then
+	if [[ ! -s ${OVMF_LOG} ]]; then
 		echo "${OVMF_LOG} is empty, run 'uefi.sh' firstly to generate the log"
+    exit 1
 	fi
 
   rm -f $GDB_SCRIPT
@@ -95,11 +97,8 @@ fi
 
 res=(
 	/home/maritns3/core/ld/edk2-workstation/edk2/Build/AppPkg/DEBUG_GCC5/X64/Main.efi
-	/home/maritns3/core/ld/edk2-workstation/edk2/Build/AppPkg/DEBUG_GCC5/X64/Hello.efi
-	# /home/maritns3/core/ld/edk2-workstation/edk2/Build/Shell/DEBUG_GCC5/X64/AcpiViewApp.efi
-	# /home/maritns3/core/ld/edk2-workstation/edk2/Build/Shell/DEBUG_GCC5/X64/dp.efi
-	/home/maritns3/core/ld/edk2-workstation/edk2/AppPkg/Applications/Lua/scripts/Hello.lua
-	/home/maritns3/core/ubuntu-linux/arch/x86_64/boot/bzImage
+	/home/maritns3/core/ld/edk2-workstation/edk2/Build/AppPkg/DEBUG_GCC5/X64/timertest.efi
+	# /home/maritns3/core/ubuntu-linux/arch/x86_64/boot/bzImage
 )
 
 if [[ ! -f ${DISK_IMG} ]]; then

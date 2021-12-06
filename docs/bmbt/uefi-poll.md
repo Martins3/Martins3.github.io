@@ -1,9 +1,49 @@
+## signal
+- [ ] 测试一下信号机制
+  - [ ] 不在存在信号屏蔽机制了，小伙子，但是 UEFI 屏蔽的方法没有完全看懂
+- [ ] setitimer 中需要使用 callback 的而不是 Application 的
+
+一举搞定 TPL 吧!
+
+似乎只是支持下面两个:
+```c
+/** Send a signal.
+
+    The raise function carries out the actions described for signal,
+    in <sys/signal.h>, for the signal sig. If a signal handler is called, the
+    raise function does not return until after the signal handler does.
+
+    @return   The raise function returns zero if successful,
+              or nonzero if unsuccessful.
+**/
+int raise(int sig);
+
+/** The signal function associates a "signal handler" with a signal number.
+
+    For historical reasons; programs expect signal to be declared
+    in <sys/signal.h>.
+
+    @param[in]  sig       Signal number that function is to be associated with.
+    @param[in]  function  The "handler" function to be associated with signal sig.
+
+    @return     If the request can be honored, the signal function returns the
+                value of func for the most recent successful call to signal for
+                the specified signal sig. Otherwise, a value of SIG_ERR is
+                returned and a positive value is stored in errno.
+ */
+__sighandler_t  *signal(int sig, __sighandler_t *func);
+```
+和 /usr/include/signal.h 对比，这个几乎叫做什么都没有实现啊
+
+- [ ] 不知道为什么，会 crash 掉的
+  - 但是直接使用 UEFI 的接口，就问题不大了
+
 ## poll
 所以，实际上就是会卡到这个代码上，不会出现异步的情况
 
-## 附录
+### 附录
 
-### source code
+#### source code
 ```c
 #include <stdio.h>
 #include <stdlib.h>
@@ -62,7 +102,7 @@ int main(int argc, char *argv[]) {
 }
 ```
 
-### backtrace
+#### backtrace
 
 ```c
 /*
