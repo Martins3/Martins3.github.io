@@ -1,25 +1,20 @@
 ## 继续分析代码
-- [ ] 不知道对于 signal 的支持到底有多强
-- [ ] poll 之类的实现了解一下
-
-- [ ] EFI_BOOT_SERVICES 的这个结构体什么时候注册的
-
 - [ ] 如果执行了 illegal instruction，其现象是什么?
-
-- [ ] UEFI 加载一个 image 的过程是怎么样子的
 - [ ] 测试一下信号机制
   - [ ] 不在存在信号屏蔽机制了，小伙子，但是 UEFI 屏蔽的方法没有完全看懂
-- [ ] CoreLoadPeImage 为什么不是 AppPkg 的基础设施
 - [ ] 那么还可以检查 TLB refill 的入口吗?
   - [ ] 类似 la 的这种总是在虚拟地址上的怎么处理的呀
-
-- [ ] 重新修改一下 uefi 的 compile_commands.json 的脚本，让所有的 compile_commands 都是自动注入的 home 上的
 - [ ] 什么叫做 Pei
-
 - [ ] OVMF 到底在干什么，似乎现在都是在关注 Shell DxeMain 之类的事情
 
+
+- [ ] CoreLoadPeImage 为什么不是 AppPkg 的基础设施
 - [ ] 修改 CoreLoadPeImage 然后 build -p AppPkg/AppPkg.dsc 并不会出现
   - 所以编译什么会导致 MdeModulePkg 被编译
+
+- [ ] acpi 在 UEFI 中已经支持了，为什么需要在内核中再次重新构建一次
+## poll 是如何实现的
+
 
 ## gBS and gST
 注册位置:

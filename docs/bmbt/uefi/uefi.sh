@@ -30,6 +30,7 @@ show_help() {
 	echo "-h 展示本消息"
 	echo "-s 调试 OVMF"
 	echo "-g 生成 gdb script"
+	echo "-x 使用图形界面"
 	exit 0
 }
 
@@ -74,13 +75,15 @@ run_gdb() {
 }
 
 USE_GDB=""
+USE_GRAPHIC="-nographic"
 
-while getopts "shgd" opt; do
+while getopts "shgdx" opt; do
 	case $opt in
 	s) USE_GDB="-S -s" ;;
 	h) show_help ;;
 	g) gen_symbol_offsets ;;
 	d) run_gdb ;;
+	x) USE_GRAPHIC="" ;;
 	*) exit 0 ;;
 	esac
 done
@@ -118,7 +121,8 @@ dd if=${PART_IMG} of=${DISK_IMG} bs=512 count=91669 seek=2048 conv=notrunc
 # ref: https://blog.hartwork.org/posts/get-qemu-to-boot-efi/
 ${QEMU} \
 	-machine q35,smm=on,accel=kvm \
-	-cpu host -m 2G -nographic -drive file=${DISK_IMG},format=raw -net none \
+  ${USE_GRAPHIC} \
+	-cpu host -m 2G  -drive file=${DISK_IMG},format=raw -net none \
 	-debugcon file:${OVMF_LOG} -global isa-debugcon.iobase=0x402 \
 	-global driver=cfi.pflash01,property=secure,value=on \
 	-drive if=pflash,format=raw,readonly=on,file=${OVMF_CODE} \
