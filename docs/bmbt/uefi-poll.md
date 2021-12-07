@@ -2,8 +2,17 @@
 - [ ] 测试一下信号机制
   - [ ] 不在存在信号屏蔽机制了，小伙子，但是 UEFI 屏蔽的方法没有完全看懂
 - [ ] setitimer 中需要使用 callback 的而不是 Application 的
+- [ ] 继续向下分析一下，使用这些 Event 函数为什么总是需要 raised priority 的
+- [ ] 所以，到底什么是 EVT_NOTIFY_WAIT
+   - [ ] 现在文档说，最好是不要长时间的屏蔽中断，否则不是很好
+- [ ] TPL_NOTIFY 之类的对应的 TPL level 都是做什么的呀
 
-一举搞定 TPL 吧!
+- [ ] 真的有必要使用 signal 机制来实现 timer 吗 ?
+  - [ ] CheckEvent() 到底是一个什么等待方法
+
+- [ ] Raise 和 Restore TPL 是如何实现的
+- [ ] 可以通过 Raise TPL 实现临时屏蔽 timer 吗?
+
 
 似乎只是支持下面两个:
 ```c
@@ -35,8 +44,64 @@ __sighandler_t  *signal(int sig, __sighandler_t *func);
 ```
 和 /usr/include/signal.h 对比，这个几乎叫做什么都没有实现啊
 
-- [ ] 不知道为什么，会 crash 掉的
-  - 但是直接使用 UEFI 的接口，就问题不大了
+
+```c
+
+/**
+  Creates an event.
+
+  @param  Type                   The type of event to create and its mode and
+                                 attributes
+  @param  NotifyTpl              The task priority level of event notifications
+  @param  NotifyFunction         Pointer to the events notification function
+  @param  NotifyContext          Pointer to the notification functions context;
+                                 corresponds to parameter "Context" in the
+                                 notification function
+  @param  Event                  Pointer to the newly created event if the call
+                                 succeeds; undefined otherwise
+
+  @retval EFI_SUCCESS            The event structure was created
+  @retval EFI_INVALID_PARAMETER  One of the parameters has an invalid value
+  @retval EFI_OUT_OF_RESOURCES   The event could not be allocated
+
+**/
+EFI_STATUS
+EFIAPI
+CoreCreateEvent (
+  IN UINT32                   Type,
+  IN EFI_TPL                  NotifyTpl,
+  IN EFI_EVENT_NOTIFY         NotifyFunction, OPTIONAL
+  IN VOID                     *NotifyContext, OPTIONAL
+  OUT EFI_EVENT               *Event
+  )
+{
+  return CoreCreateEventEx (Type, NotifyTpl, NotifyFunction, NotifyContext, NULL, Event);
+}
+
+EFI_STATUS
+EFIAPI
+CoreCreateEventEx (
+  IN UINT32                   Type,
+  IN EFI_TPL                  NotifyTpl,
+  IN EFI_EVENT_NOTIFY         NotifyFunction, OPTIONAL
+  IN CONST VOID               *NotifyContext, OPTIONAL
+  IN CONST EFI_GUID           *EventGroup,    OPTIONAL
+  OUT EFI_EVENT               *Event
+  )
+{
+  //
+  // If it's a notify type of event, check for invalid NotifyTpl
+  //
+  if ((Type & (EVT_NOTIFY_WAIT | EVT_NOTIFY_SIGNAL)) != 0) {
+    if (NotifyTpl != TPL_APPLICATION &&
+        NotifyTpl != TPL_CALLBACK &&
+        NotifyTpl != TPL_NOTIFY) {
+      return EFI_INVALID_PARAMETER;
+    }
+  }
+```
+实际上，出现问题的位置不在于当时调用的，而是参数 NotifyTpl 中的，
+就是在 CoreCreateEventEx 中间的
 
 ## poll
 所以，实际上就是会卡到这个代码上，不会出现异步的情况

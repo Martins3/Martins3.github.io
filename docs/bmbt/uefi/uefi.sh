@@ -98,7 +98,7 @@ fi
 res=(
 	/home/maritns3/core/ld/edk2-workstation/edk2/Build/AppPkg/DEBUG_GCC5/X64/Main.efi
 	/home/maritns3/core/ld/edk2-workstation/edk2/Build/AppPkg/DEBUG_GCC5/X64/timertest.efi
-	# /home/maritns3/core/ubuntu-linux/arch/x86_64/boot/bzImage
+  /home/maritns3/core/ubuntu-linux/arch/x86_64/boot/bzImage
 )
 
 if [[ ! -f ${DISK_IMG} ]]; then

@@ -17,6 +17,19 @@
 
 - [ ] acpi 在 UEFI 中已经支持了，为什么需要在内核中再次重新构建一次
   - [ ] 无论如何，kernel 是需要 acpi 实现电源管理的
+
+- [ ] UEFI supports polled drivers, not interrupts.
+  - 既然如此，检查一下 UEFI 是如何使用 serial 的
+  - 既然我们保证 UEFI 总是被动的使用 driver 的，岂不是，只要保证 UEFI 不去主动 poll，那么设备的状态就不会被修改
+
+- [ ] 分析一下 period timer 和 one shot timer
+- [ ] 似乎在 edk2 writer 中间是存在 pci 设备的驱动的，这些驱动到底在搞什么? 如果我们来截获所有的 interrupt 不会出现问题吗？
+
+- [ ] 似乎的确可以使用 EFI_EVENT 来实现通知一些 protocol consumers 来 consume 数据
+  - Implementation of protocols that produce an EFI_EVENT to inform protocol consumers when input is available.
+
+- [ ] protocol 的这种设计在这种设计模式下是最好的吗? 存在更好的设计模式吗?
+
 ## gBS and gST
 注册位置:
 ```c
@@ -702,3 +715,4 @@ EFI_LOADED_IMAGE_PROTOCOL
 [^1]: edk-ii-uefi-driver-writer-s-guide
 [^2]: https://github.com/tianocore/tianocore.github.io/wiki/MdeModulePkg
 [^3]: https://github.com/tianocore/tianocore.github.io/wiki/MdePkg
+[^4]: https://edk2-docs.gitbook.io/edk-ii-uefi-driver-writer-s-guide/3_foundation/readme.8
