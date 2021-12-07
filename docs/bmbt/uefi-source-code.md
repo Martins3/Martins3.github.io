@@ -29,6 +29,12 @@
   - Implementation of protocols that produce an EFI_EVENT to inform protocol consumers when input is available.
 
 - [ ] protocol 的这种设计在这种设计模式下是最好的吗? 存在更好的设计模式吗?
+- [ ] 让内核作为 bzImage 启动，那么 ExitBootServices 之后，还存在一些 service 的，那些 service 使用的内存的保留是如何实现的?
+
+- [ ] 5.1.1.2 Do not directly allocate a memory buffer for DMA access
+  - 在分配这些内存会存在什么特殊的要求吗? 或者或 UEFI 增加什么特殊操作吗?
+
+- [ ] 我们可以用得上 Stall() 从来来模拟 guess 的 halt 指令
 
 ## gBS and gST
 注册位置:

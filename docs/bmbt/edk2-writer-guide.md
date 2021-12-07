@@ -23,6 +23,7 @@ NvmExpressDriverBindingStart (
   IN EFI_DEVICE_PATH_PROTOCOL     *RemainingDevicePath
   );
 ```
+- [ ] EFI_EVENT 是个啥
 
 ## Foundation
 - [ ] 关于 Binding 的问题，如果一个 driver 创建出来了，如何提供接口给另一个 driver 用
@@ -131,6 +132,11 @@ The EDK II contains many more UEFI drivers than those listed in Appendix B.
 > Implementation of protocols that produce an EFI_EVENT to inform protocol consumers when input is available.
 
 The type of event determines when an event's notification function is invoked.
+
+#### 5.1.6 SetTimer()
+首先创建 Event 的，然后创建出来 timer 的
+
+#### 5.1.7 Stall()
 
 ## 7
 The driver entry point is the function called when a UEFI driver is started with the `StartImage()` service.
