@@ -5,16 +5,6 @@
 - [ ] 什么叫做 Pei
 - [ ] OVMF 到底在干什么，似乎现在都是在关注 Shell DxeMain 之类的事情
 
-- [ ] CoreLoadPeImage 为什么不是 AppPkg 的基础设施
-  - [ ] 但是好像是 OVMF 的基础啊
-- [ ] 修改 CoreLoadPeImage 然后 build -p AppPkg/AppPkg.dsc 并不会出现
-  - 所以编译什么会导致 MdeModulePkg 被编译
-- [ ] 如果观察 /home/maritns3/core/ld/edk2-workstation/edk2/AppPkg/Applications/Main/Main.inf 将会发现其没有使用 MdeModulePkg.dec
-- [ ] 发现 MdePkg/Include/Uefi/UefiSpec.h:619:#define TPL_CALLBACK          8 始终无法被正确索引进去
-  - [ ] ccls 说 `#ifndef __UEFI_SPEC_H__` 就像是出现过一样
-- [ ] 还是添加一个 lock 吧，妨碍我的快速的测试
-
-
 - [ ] acpi 在 UEFI 中已经支持了，为什么需要在内核中再次重新构建一次
   - [ ] 无论如何，kernel 是需要 acpi 实现电源管理的
 
@@ -35,6 +25,7 @@
   - 在分配这些内存会存在什么特殊的要求吗? 或者或 UEFI 增加什么特殊操作吗?
 
 - [ ] 我们可以用得上 Stall() 从来来模拟 guess 的 halt 指令
+
 
 ## gBS and gST
 注册位置:

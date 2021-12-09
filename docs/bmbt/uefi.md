@@ -255,6 +255,9 @@ brw-rw---- root disk 0 B Wed Nov 24 09:00:37 2021 ﰩ /dev/nvme0n1p2
 - [ ] 在物理机上的是什么样子的呀
 - [ ] 变化体现在什么地方啊
 
+## 文档
+https://edk2-docs.gitbook.io/edk-ii-build-specification/
+
 ## 资源
 - Robin 的 blog: http://yiiyee.cn/blog/
 - https://wiki.osdev.org/GNU-EFI

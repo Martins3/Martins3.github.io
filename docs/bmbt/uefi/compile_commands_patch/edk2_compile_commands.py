@@ -2,10 +2,12 @@ import glob
 import os
 import json
 from pprint import pprint
+from filelock import FileLock
+from time import sleep
 
 def update_compile_commands_file(TargetDict, AutoGenObject, Macros):
     # process only compilation, not linkage or whatever else
-    pprint(TargetDict)
+    #  pprint(TargetDict)
     if not TargetDict['cmd'].startswith('"$(CC)"'):
         return
 
@@ -13,7 +15,7 @@ def update_compile_commands_file(TargetDict, AutoGenObject, Macros):
     cc = ''
     cc_flags = ''
     for p in glob.glob(os.path.join(Macros['BIN_DIR'], 'TOOLS_DEF.*')):
-        pprint(p)
+        #  pprint(p)
         try:
             content = open(p, 'r').read()
             done = {'CC_PATH': False, 'CC_FLAGS': False}
@@ -35,9 +37,10 @@ def update_compile_commands_file(TargetDict, AutoGenObject, Macros):
     if not cc or not cc_flags:
         print ('Error: cc or cc_flags is not defined!\n')
         exit(1)
-        return
 
-    project_path    = AutoGenObject.Macros['PLATFORM_DIR']
+    #  project_path    = AutoGenObject.Macros['PLATFORM_DIR']
+    project_path    = AutoGenObject.Macros['WORKSPACE']
+    #  pprint(project_path)
     directory_field = Macros['BIN_DIR']
     command_field   = TargetDict['cmd'].replace('$(CC)', cc, 1).replace(
                           '$(CC_FLAGS)', cc_flags, 1
@@ -61,34 +64,36 @@ def common_update_compile_commands_file (
     project_path, directory_field, command_field, file_field
 ):
     result_path = os.path.join(project_path, 'compile_commands.json')
-    content = []
-    try:
-        f = open(result_path, 'r')
-        candidate_content_raw = f.read()
+    with FileLock("lockfile.txt"):
+        content = []
+        try:
+            f = open(result_path, 'r')
+            candidate_content_raw = f.read()
+            f.close()
+            candidate_content = json.loads(candidate_content_raw)
+            content = candidate_content
+        except IOError:
+            print ('Can\'t read {}, creating new..'.format(result_path))
+        except ValueError:
+            # ValueError is inherited by json.decoder.JSONDecodeError
+            print ('Error at parsing {}, creating new..'.format(result_path))
+            exit(1);
+        except:
+            print ('Unexpected error')
+            exit(1);
+
+        obj = {
+            'directory': directory_field,
+            'command':   command_field,
+            'file':      file_field
+        }
+        try:
+            i = next(i for i,entry in enumerate(content) if entry['file'] == file_field)
+            content[i] = obj
+        except StopIteration:
+            content.append(obj)
+
+        f = open(result_path, 'w')
+        # Save to file
+        json.dump(content, f, indent=2)
         f.close()
-        candidate_content = json.loads(candidate_content_raw)
-        content = candidate_content
-    except IOError:
-        print ('Can\'t read {}, creating new..'.format(result_path))
-    except ValueError:
-        # ValueError is inherited by json.decoder.JSONDecodeError
-        print ('Error at parsing {}, creating new..'.format(result_path))
-    except:
-        print ('Unexpected error')
-        raise
-
-    obj = {
-        'directory': directory_field,
-        'command':   command_field,
-        'file':      file_field
-    }
-    try:
-        i = next(i for i,entry in enumerate(content) if entry['file'] == file_field)
-        content[i] = obj
-    except StopIteration:
-        content.append(obj)
-
-    f = open(result_path, 'w')
-    # Save to file
-    json.dump(content, f, indent=2)
-    f.close()

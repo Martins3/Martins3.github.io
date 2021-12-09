@@ -65,5 +65,8 @@ do.c:882
 - https://www.lua.org/doc/jucs05.pdf 的确不错，而且 lua 根本没看懂啊
 - 这也是一个很不错的分析参考: https://www.zhihu.com/question/20617406
 
+这个东西介绍了基本的 registr based vm 的实现，也许可以作为一个基础
+https://www.andreinc.net/2021/12/01/writing-a-simple-vm-in-less-than-125-lines-of-c
+
 [^1]: https://github.com/efrederickson/LuaAssemblyTools/blob/master/etc/ChunkSpy.lua
 [^2]: 核心参考 : https://github.com/lichuang/Lua-Source-Internal
