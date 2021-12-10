@@ -133,6 +133,15 @@ The EDK II contains many more UEFI drivers than those listed in Appendix B.
 
 The type of event determines when an event's notification function is invoked.
 
+The following two basic types of events can be created:
+- EVT_NOTIFY_SIGNAL
+- EVT_NOTIFY_WAIT
+
+The type of event determines when an event's notification function is invoked.
+The notification function for signal type events is invoked when an event is placed into the signaled state with a call to `SignalEvent()`.
+The notification function for wait type events is invoked when the event is passed to the `CheckEvent()` or `WaitForEvent()` services.
+
+
 #### 5.1.6 SetTimer()
 首先创建 Event 的，然后创建出来 timer 的
 

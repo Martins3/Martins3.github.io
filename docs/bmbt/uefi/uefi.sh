@@ -9,7 +9,7 @@ EDK2_PATH=/home/maritns3/core/ld/edk2-workstation/edk2
 VirtualDrive=${WORK_DIR}/VirtualDrive
 
 OVMFBASE=${EDK2_PATH}/Build/OvmfX64/DEBUG_GCC5
-SEARCHPATHS="${OVMFBASE}/X64 ${EDK2_PATH}/Build/AppPkg/DEBUG_GCC5/X64 ${EDK2_PATH}/Build/Mde/DEBUG_GCC5/X64"
+SEARCHPATHS="${OVMFBASE}/X64 ${EDK2_PATH}/Build/AppPkg/DEBUG_GCC5/X64"
 # SEARCHPATHS="${EDK2_PATH}/Build/AppPkg/DEBUG_GCC5/X64/"
 
 
@@ -31,6 +31,7 @@ show_help() {
 	echo "-s 调试 OVMF"
 	echo "-g 生成 gdb script"
 	echo "-x 使用图形界面"
+	echo "-b 让 debugcon 的输出到标准输出上"
 	exit 0
 }
 
@@ -72,20 +73,25 @@ run_gdb() {
 		echo "${GDB_SCRIPT} not found, run 'uefi.sh -g' firstly"
 	fi
 
-	gdb -ex "source ${GDB_SCRIPT}" -ex "target remote :1234" -ex "hb DxeMain"
+	gdb -ex "source ${GDB_SCRIPT}" -ex "target remote :1234"
 	exit 0
 }
 
 USE_GDB=""
 USE_GRAPHIC="-nographic"
+DEBUG_BACKEND="file:${OVMF_LOG}"
 
-while getopts "shgdx" opt; do
+while getopts "shgdxb" opt; do
 	case $opt in
 	s) USE_GDB="-S -s" ;;
 	h) show_help ;;
 	g) gen_symbol_offsets ;;
 	d) run_gdb ;;
 	x) USE_GRAPHIC="" ;;
+	b)
+    DEBUG_BACKEND="stdio"
+    USE_GRAPHIC=""
+    ;;
 	*) exit 0 ;;
 	esac
 done
@@ -97,7 +103,6 @@ fi
 
 res=(
 	/home/maritns3/core/ld/edk2-workstation/edk2/Build/AppPkg/DEBUG_GCC5/X64/Main.efi
-	/home/maritns3/core/ld/edk2-workstation/edk2/Build/AppPkg/DEBUG_GCC5/X64/timertest.efi
   /home/maritns3/core/ubuntu-linux/arch/x86_64/boot/bzImage
 )
 
@@ -122,7 +127,7 @@ ${QEMU} \
 	-machine q35,smm=on,accel=kvm \
   ${USE_GRAPHIC} \
 	-cpu host -m 2G  -drive file=${DISK_IMG},format=raw -net none \
-	-debugcon file:${OVMF_LOG} -global isa-debugcon.iobase=0x402 \
+	-debugcon ${DEBUG_BACKEND} -global isa-debugcon.iobase=0x402 \
 	-global driver=cfi.pflash01,property=secure,value=on \
 	-drive if=pflash,format=raw,readonly=on,file=${OVMF_CODE} \
 	-drive file=fat:rw:${VirtualDrive},format=raw,media=disk \

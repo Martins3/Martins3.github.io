@@ -6,102 +6,224 @@
 - [ ] 所以，到底什么是 EVT_NOTIFY_WAIT
    - [ ] 现在文档说，最好是不要长时间的屏蔽中断，否则不是很好
 - [ ] TPL_NOTIFY 之类的对应的 TPL level 都是做什么的呀
-
 - [ ] 真的有必要使用 signal 机制来实现 timer 吗 ?
   - [ ] CheckEvent() 到底是一个什么等待方法
-
 - [ ] Raise 和 Restore TPL 是如何实现的
 - [ ] 可以通过 Raise TPL 实现临时屏蔽 timer 吗?
+- [ ] 总体来说，我们应该知道 shell 的是如何使用驱动来捕获输入输出的
+  - 现在已经没有 IO 多路复用了
+- 为什么 EVT_TIMER|EVT_NOTIFY_SIGNAL, 是不能使用 EfiGetCurrentTpl() 的
+- [ ] 在 shell 的 FileInterfaceStdInRead 中调用了 hlt 中还是可以醒过来的，所以这个 timer 操作在什么地方啊
+- [ ] 各种 EVT 的作用是什么?
+- [ ] 调查一下 CoreCheckTimers 中的作用
+
+```c
+//
+// These types can be ORed together as needed - for example,
+// EVT_TIMER might be Ored with EVT_NOTIFY_WAIT or
+// EVT_NOTIFY_SIGNAL.
+//
+#define EVT_TIMER                         0x80000000
+#define EVT_RUNTIME                       0x40000000
+#define EVT_NOTIFY_WAIT                   0x00000100
+#define EVT_NOTIFY_SIGNAL                 0x00000200
+```
+- CoreCreateEventInternal
+- 似乎 EVT_RUNTIME 是几乎没有作用的
+- EVT_NOTIFY_SIGNAL
+  - 将 IEvent 放到 gEventSignalQueue 中
+- EVT_TIMER : 没有特殊操作
+- EVT_NOTIFY_WAIT : 同样没有特殊操作
 
 
+- 也就是 EVT_NOTIFY_SIGNAL 的 Event 靠执行流程中去调用
+  `gBS->SignalEvent (Event);`
+
+所有的 Event 都是挂载到 gEventSignalQueue 上的，每一个 Event 都是可以关联一个
+EventGroup
+```c
+  CoreNotifySignalList (&gEfiEventExitBootServicesGuid);
+```
+
+- CoreSignalEvent
+  - CoreAcquireEventLock
+  - CoreNotifySignalList : 如果 notify 是一个 group，那么将这个 group 的 Event 全部 notify 一下
+    - CoreNotifyEvent
+  - CoreNotifyEvent
+    - 将 Event 加入到 gEventQueue
+  - CoreReleaseEventLock
+    - CoreDispatchEventNotifies
+      - `Event->NotifyFunction` : 注意，这里只会执行 tpl 高于当前的 tpl 的 event 的
+
+- CoreCheckEvent
+  - 如果没有 notify ，调用 CoreNotifyEvent 来将 gEventQueue 中
+  - 如果已经 notified 过，那么释放掉对应的数据
+  - 要求被 check 的 event 一定 ***不是*** EVT_NOTIFY_SIGNAL 类型的
+- CoreWaitForEvent : Stops execution until an event is signaled.
+  - 对于每一个 Event 调用 CoreCheckEvent
+  - 如果存在一个 Event 被 signal 了，那么可以返回
+  - 否则调用 CoreSignalEvent (gIdleLoopEvent)，最后执行 CpuSleep
+
+```c
+/*
+#0  0x000000007f16f841 in CpuSleep ()
+#1  0x000000007feac77d in CoreDispatchEventNotifies (Priority=16) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/Event/Event.c:194
+#2  CoreRestoreTpl (NewTpl=4) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/Event/Tpl.c:131
+#3  0x000000007feb4d61 in CoreReleaseLock (Lock=0x7fec2470) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/Library/Library.c:96
+#4  0x000000007fead478 in CoreSignalEvent (UserEvent=0x7f8edd18) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/Event/Event.c:566
+#5  CoreSignalEvent (UserEvent=0x7f8edd18) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/Event/Event.c:531
+#6  0x000000007fead59c in CoreWaitForEvent (UserIndex=<optimized out>, UserEvents=<optimized out>, NumberOfEvents=<optimized out>) at /home/maritns3/core/ld/edk2-works
+tation/edk2/MdeModulePkg/Core/Dxe/Event/Event.c:707
+#7  CoreWaitForEvent (NumberOfEvents=1, UserEvents=0x7edecce0, UserIndex=0x7fe9e808) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/Event/Event.
+c:663
+#8  0x000000007df58972 in FileInterfaceStdInRead (This=<optimized out>, BufferSize=0x7fe9e908, Buffer=0x7e08c018) at /home/maritns3/core/ld/edk2-workstation/edk2/Shell
+Pkg/Application/Shell/FileHandleWrappers.c:532
+#9  0x000000007df64332 in DoShellPrompt () at /home/maritns3/core/ld/edk2-workstation/edk2/ShellPkg/Application/Shell/Shell.c:1346
+#10 UefiMain (ImageHandle=<optimized out>, SystemTable=<optimized out>) at /home/maritns3/core/ld/edk2-workstation/edk2/ShellPkg/Application/Shell/Shell.c:621
+#11 0x000000007df4852d in ProcessModuleEntryPointList (SystemTable=0x7f9ee018, ImageHandle=0x7f130218) at /home/maritns3/core/ld/edk2-workstation/edk2/Build/OvmfX64/DE
+BUG_GCC5/X64/ShellPkg/Application/Shell/Shell/DEBUG/AutoGen.c:1013
+#12 _ModuleEntryPoint (ImageHandle=0x7f130218, SystemTable=0x7f9ee018) at /home/maritns3/core/ld/edk2-workstation/edk2/MdePkg/Library/UefiApplicationEntryPoint/Applica
+tionEntryPoint.c:59
+#13 0x000000007feba8b5 in CoreStartImage (ImageHandle=0x7f130218, ExitDataSize=0x7e1d8d48, ExitData=0x7e1d8d40) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModu
+lePkg/Core/Dxe/Image/Image.c:1654
+#14 0x000000007f05d5e2 in EfiBootManagerBoot (BootOption=BootOption@entry=0x7e1d8cf8) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Library/UefiBootMana
+gerLib/BmBoot.c:1982
+#15 0x000000007f060ca2 in BootBootOptions (BootManagerMenu=0x7fe9ecd8, BootOptionCount=5, BootOptions=0x7e1d8b98) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeMo
+dulePkg/Universal/BdsDxe/BdsEntry.c:409
+#16 BdsEntry (This=<optimized out>) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Universal/BdsDxe/BdsEntry.c:1072
+#17 0x000000007feaabe3 in DxeMain (HobStart=<optimized out>) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/DxeMain/DxeMain.c:551
+#18 0x000000007feaac88 in ProcessModuleEntryPointList (HobStart=<optimized out>) at /home/maritns3/core/ld/edk2-workstation/edk2/Build/OvmfX64/DEBUG_GCC5/X64/MdeModule
+Pkg/Core/Dxe/DxeMain/DEBUG/AutoGen.c:489
+#19 _ModuleEntryPoint (HobStart=<optimized out>) at /home/maritns3/core/ld/edk2-workstation/edk2/MdePkg/Library/DxeCoreEntryPoint/DxeCoreEntryPoint.c:48
+#20 0x000000007fee10cf in InternalSwitchStack ()
+#21 0x0000000000000000 in ?? ()
+```
+在 gdb 中 disass 可以:
+```txt
+Dump of assembler code for function CpuSleep:
+   0x000000007fed6760 <+0>:     hlt
+   0x000000007fed6761 <+1>:     retq
+   0x000000007fed6762 <+2>:     nopw   %cs:0x0(%rax,%rax,1)
+   0x000000007fed676c <+12>:    nopl   0x0(%rax)
+```
+进而找到 MdePkg/Library/BaseCpuLib/BaseCpuLib.inf 可以找到和架构相关的汇编实现
+
+## EVT_NOTIFY_WAIT
+使用 `ConInPrivate->TextIn.WaitForKey` 作为例子:
+
+- 初始化 : ConSplitterTextInConstructor
+  - hook : ConSplitterTextInWaitForKey
+- 调用位置 : FileInterfaceStdInRead
+
+最后的执行流程:
+- FileInterfaceStdInRead
+  - CoreWaitForEvent
+    - CpuSleep
+    - FileInterfaceStdInRead
+
+所以 CoreWaitForEvent 会将 Event 上的 hook 执行一次，而且需要一直等待到 hook 返回 EFI_READY
+用于监听键盘输入实在是极度合适啊。
+
+## EVT_NOTIFY_SIGNAL
+使用 gIdleLoopEvent 作为例子
+- 在 CoreSignalEvent 中调用 `CoreSignalEvent (gIdleLoopEvent)`
+
+
+使用 PeCoffEmuProtocolNotify 作为例子:
+
+- CoreInstallMultipleProtocolInterfaces : 使用这个作为例子
+  - CoreRestoreTpl
+    - CoreDispatchEventNotifies
+      - PeCoffEmuProtocolNotify
+
+- CoreInitializeImageServices
+  - CoreInstallProtocolInterface : gEfiLoadedImageProtocolGuid
+    - CoreInstallProtocolInterfaceNotify
+      - CoreNotifyProtocolEntry
+  - CoreCreateEvent : mPeCoffEmuProtocolRegistrationEvent
+  - CoreRegisterProtocolNotify : 将 mPeCoffEmuProtocolRegistrationEvent 注册上，最后会在 CoreNotifyProtocolEntry 中被 signal 然后在 CoreRestoreTpl 时候调用
+
+```c
+/*
+#0  CoreNotifyProtocolEntry (ProtEntry=ProtEntry@entry=0x7f8ee018) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/Hand/Notify.c:28
+#1  0x000000007feb5e66 in CoreInstallProtocolInterfaceNotify (InterfaceType=<optimized out>, Notify=1 '\001', Interface=0x7fec25e8, Protocol=0x7fec1bb0, UserHandle=0x7
+fec25c8) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/Hand/Handle.c:476
+#2  CoreInstallProtocolInterfaceNotify (UserHandle=0x7fec25c8, UserHandle@entry=0x7f8ee018, Protocol=0x7fec1bb0, Protocol@entry=0x0, InterfaceType=InterfaceType@entry=
+EFI_NATIVE_INTERFACE, Interface=Interface@entry=0x7fec25e8, Notify=Notify@entry=1 '\001') at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/Hand/Ha
+ndle.c:341
+#3  0x000000007feb5ef8 in CoreInstallProtocolInterface (UserHandle=0x7f8ee018, UserHandle@entry=0x7fec25c8, Protocol=0x0, InterfaceType=InterfaceType@entry=EFI_NATIVE_
+INTERFACE, Interface=Interface@entry=0x7fec25e8) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/Hand/Handle.c:313
+#4  0x000000007feb98d8 in CoreInitializeImageServices (HobStart=<optimized out>) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/Image/Image.c:22
+9
+#5  0x000000007fea98d2 in DxeMain (HobStart=0x7bf56000) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/DxeMain/DxeMain.c:285
+#6  0x000000007feaac88 in ProcessModuleEntryPointList (HobStart=<optimized out>) at /home/maritns3/core/ld/edk2-workstation/edk2/Build/OvmfX64/DEBUG_GCC5/X64/MdeModule
+Pkg/Core/Dxe/DxeMain/DEBUG/AutoGen.c:489
+#7  _ModuleEntryPoint (HobStart=<optimized out>) at /home/maritns3/core/ld/edk2-workstation/edk2/MdePkg/Library/DxeCoreEntryPoint/DxeCoreEntryPoint.c:48
+#8  0x000000007fee10cf in InternalSwitchStack ()
+#9  0x0000000000000000 in ?? ()
+```
+
+```c
+/*
+#0  PeCoffEmuProtocolNotify (Event=0x7f8eeb18, Context=0x0) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/Image/Image.c:127
+#1  0x000000007feac77d in CoreDispatchEventNotifies (Priority=8) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/Event/Event.c:194
+#2  CoreRestoreTpl (NewTpl=4) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/Event/Tpl.c:131
+#3  0x000000007feb7066 in CoreInstallMultipleProtocolInterfaces (Handle=0x7fe9ec88) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/Hand/Handle.c
+:611
+#4  0x000000007f58b14d in InitializeEbcDriver (SystemTable=<optimized out>, ImageHandle=<optimized out>) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/U
+niversal/EbcDxe/EbcInt.c:547
+#5  ProcessModuleEntryPointList (SystemTable=<optimized out>, ImageHandle=<optimized out>) at /home/maritns3/core/ld/edk2-workstation/edk2/Build/OvmfX64/DEBUG_GCC5/X64
+/MdeModulePkg/Universal/EbcDxe/EbcDxe/DEBUG/AutoGen.c:196
+#6  _ModuleEntryPoint (ImageHandle=<optimized out>, SystemTable=<optimized out>) at /home/maritns3/core/ld/edk2-workstation/edk2/MdePkg/Library/UefiDriverEntryPoint/Dr
+iverEntryPoint.c:127
+```
+
+```c
+/**
+  Notification event handler registered by CoreInitializeImageServices () to
+  keep track of which PE/COFF image emulators are available.
+
+  @param  Event          The Event that is being processed, not used.
+  @param  Context        Event Context, not used.
+
+**/
+STATIC
+VOID
+EFIAPI
+PeCoffEmuProtocolNotify (
+  IN  EFI_EVENT       Event,
+  IN  VOID            *Context
+  )
+```
+
+```c
+/**
+  Installs a list of protocol interface into the boot services environment.
+  This function calls InstallProtocolInterface() in a loop. If any error
+  occures all the protocols added by this function are removed. This is
+  basically a lib function to save space.
+**/
+CoreInstallMultipleProtocolInterfaces (
+```
+
+## 我们可以直通 keyboard 吗
+- FileInterfaceStdInRead
+  - `gBS->WaitForEvent`
+  - `Status = gST->ConIn->ReadKeyStroke (gST->ConIn, &Key);`
+
+- [ ] 也许调查一下 gKeyboardControllerDriver 是如何被使用的
+
+## notes
 似乎只是支持下面两个:
 ```c
-/** Send a signal.
-
-    The raise function carries out the actions described for signal,
-    in <sys/signal.h>, for the signal sig. If a signal handler is called, the
-    raise function does not return until after the signal handler does.
-
-    @return   The raise function returns zero if successful,
-              or nonzero if unsuccessful.
-**/
 int raise(int sig);
-
-/** The signal function associates a "signal handler" with a signal number.
-
-    For historical reasons; programs expect signal to be declared
-    in <sys/signal.h>.
-
-    @param[in]  sig       Signal number that function is to be associated with.
-    @param[in]  function  The "handler" function to be associated with signal sig.
-
-    @return     If the request can be honored, the signal function returns the
-                value of func for the most recent successful call to signal for
-                the specified signal sig. Otherwise, a value of SIG_ERR is
-                returned and a positive value is stored in errno.
- */
 __sighandler_t  *signal(int sig, __sighandler_t *func);
 ```
 和 /usr/include/signal.h 对比，这个几乎叫做什么都没有实现啊
 
+我们发现无法简单的使用 setitimer， 出现问题的位置不在于当时调用的，而是参数 NotifyTpl 中的，
+在 CoreCreateEventEx 中间会对于
 
-```c
-
-/**
-  Creates an event.
-
-  @param  Type                   The type of event to create and its mode and
-                                 attributes
-  @param  NotifyTpl              The task priority level of event notifications
-  @param  NotifyFunction         Pointer to the events notification function
-  @param  NotifyContext          Pointer to the notification functions context;
-                                 corresponds to parameter "Context" in the
-                                 notification function
-  @param  Event                  Pointer to the newly created event if the call
-                                 succeeds; undefined otherwise
-
-  @retval EFI_SUCCESS            The event structure was created
-  @retval EFI_INVALID_PARAMETER  One of the parameters has an invalid value
-  @retval EFI_OUT_OF_RESOURCES   The event could not be allocated
-
-**/
-EFI_STATUS
-EFIAPI
-CoreCreateEvent (
-  IN UINT32                   Type,
-  IN EFI_TPL                  NotifyTpl,
-  IN EFI_EVENT_NOTIFY         NotifyFunction, OPTIONAL
-  IN VOID                     *NotifyContext, OPTIONAL
-  OUT EFI_EVENT               *Event
-  )
-{
-  return CoreCreateEventEx (Type, NotifyTpl, NotifyFunction, NotifyContext, NULL, Event);
-}
-
-EFI_STATUS
-EFIAPI
-CoreCreateEventEx (
-  IN UINT32                   Type,
-  IN EFI_TPL                  NotifyTpl,
-  IN EFI_EVENT_NOTIFY         NotifyFunction, OPTIONAL
-  IN CONST VOID               *NotifyContext, OPTIONAL
-  IN CONST EFI_GUID           *EventGroup,    OPTIONAL
-  OUT EFI_EVENT               *Event
-  )
-{
-  //
-  // If it's a notify type of event, check for invalid NotifyTpl
-  //
-  if ((Type & (EVT_NOTIFY_WAIT | EVT_NOTIFY_SIGNAL)) != 0) {
-    if (NotifyTpl != TPL_APPLICATION &&
-        NotifyTpl != TPL_CALLBACK &&
-        NotifyTpl != TPL_NOTIFY) {
-      return EFI_INVALID_PARAMETER;
-    }
-  }
-```
-实际上，出现问题的位置不在于当时调用的，而是参数 NotifyTpl 中的，
-就是在 CoreCreateEventEx 中间的
 
 ## poll
 所以，实际上就是会卡到这个代码上，不会出现异步的情况

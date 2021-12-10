@@ -250,11 +250,6 @@ brw-rw---- root disk 0 B Wed Nov 24 09:00:37 2021 ﰩ /dev/nvme0n1p2
 - 因为 UEFI 不能支持普通的程序，但是应该是可以支持各种介质 storage 的访问，所以制作出来一个 EFI system Partition
 - [ ] 那么 /boot/grub 的内容为什么可以被加载啊?
 
-## omvf
-- [ ] 那么 Loongson 上有没有这个东西啊
-- [ ] 在物理机上的是什么样子的呀
-- [ ] 变化体现在什么地方啊
-
 ## 文档
 https://edk2-docs.gitbook.io/edk-ii-build-specification/
 

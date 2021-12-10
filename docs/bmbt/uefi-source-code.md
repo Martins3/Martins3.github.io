@@ -26,6 +26,11 @@
 
 - [ ] 我们可以用得上 Stall() 从来来模拟 guess 的 halt 指令
 
+- [ ] omvf
+  - [ ] 那么 Loongson 上有没有这个东西啊
+  - [ ] 在物理机上的是什么样子的呀
+  - [ ] 变化体现在什么地方啊
+- [ ] EfiEventEmptyFunction 这个函数我是打不上断点的
 
 ## gBS and gST
 注册位置:

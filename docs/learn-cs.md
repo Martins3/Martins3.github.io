@@ -33,9 +33,11 @@
 
 https://missing-semester-cn.github.io/
 
+
 ## 附录
 project-based-learning / build-your-own-x 应该都是最好的，计算机还是动手的学科，操作一下，很多概念都是纸老虎。
 
+https://wangzhe3224.github.io/2021/10/20/roadpath/#more
 
 关于如何自学，已经有非常多的参考资料，我觉得写的都非常好：
 - https://github.com/ossu/computer-science
@@ -57,7 +59,7 @@ project-based-learning / build-your-own-x 应该都是最好的，计算机还�
 - https://github.com/charlax/professional-programming
 - https://github.com/trimstray/the-book-of-secret-knowledge
 - https://github.com/EbookFoundation/free-programming-books
-- https://github.com/justjavac/free-programming-books-zh_CN 
+- https://github.com/justjavac/free-programming-books-zh_CN
 - https://github.com/wx-chevalier/Developer-Zero-To-Mastery
 - https://github.com/donnemartin/interactive-coding-challenges
 - https://github.com/donnemartin/system-design-primer
