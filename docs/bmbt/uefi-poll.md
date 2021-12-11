@@ -4,16 +4,110 @@
 - [ ] setitimer 中需要使用 callback 的而不是 Application 的
 - [ ] 继续向下分析一下，使用这些 Event 函数为什么总是需要 raised priority 的
 - [ ] 所以，到底什么是 EVT_NOTIFY_WAIT
-   - [ ] 现在文档说，最好是不要长时间的屏蔽中断，否则不是很好
+  - [ ] 现在文档说，最好是不要长时间的屏蔽中断，否则不是很好
 - [ ] TPL_NOTIFY 之类的对应的 TPL level 都是做什么的呀
+  - [ ] 所以 TPL_CALLBACK 和 TPL_NOTIFY 存在什么区别吗?
 - [ ] 真的有必要使用 signal 机制来实现 timer 吗 ?
   - [ ] CheckEvent() 到底是一个什么等待方法
 - [ ] Raise 和 Restore TPL 是如何实现的
 - [ ] 可以通过 Raise TPL 实现临时屏蔽 timer 吗?
 - [ ] 在 shell 的 FileInterfaceStdInRead 中调用了 hlt 中还是可以醒过来的，所以这个 timer 操作在什么地方啊
+- [ ] 为什么 NotifyFunction 需要设置对应的 TPL，存在一个例子说明的确如此吗?
+  - 回忆一下 QEMU 中的 machine done function，也许是一种使用的方法
 
+## Lock
+```c
+  EfiInitializeLock (&(Sock->Lock), TPL_CALLBACK);
+```
+
+```c
+EFI_STATUS
+EFIAPI
+EfiAcquireLockOrFail (
+  IN EFI_LOCK  *Lock
+  )
+{
+
+  ASSERT (Lock != NULL);
+  ASSERT (Lock->Lock != EfiLockUninitialized);
+
+  if (Lock->Lock == EfiLockAcquired) {
+    //
+    // Lock is already owned, so bail out
+    //
+    return EFI_ACCESS_DENIED;
+  }
+
+  Lock->OwnerTpl = gBS->RaiseTPL (Lock->Tpl);
+
+  Lock->Lock = EfiLockAcquired;
+
+  return EFI_SUCCESS;
+}
+```
+为了防止，在执行流程中，已经执行了 EfiAcquireLockOrFail 但是中断到了，那么此时函数调用就是需要失败的
+
+屏蔽中断和上锁是两个事情:
+- 上锁，将一个变量设置一下为 lockAcquired，之后检查一下变量，还是可以被打断，但是想要上锁就会失败
+
+其实和 TPL 关系不大
 ## 各种 TPL
 
+### TPL_APPLICATION
+- CoreWaitForEvent : 只能在 TPL_APPLICATION 调用 WaitForEvent
+```c
+  //
+  // Can only WaitForEvent at TPL_APPLICATION
+  //
+  if (gEfiCurrentTpl != TPL_APPLICATION) {
+    return EFI_UNSUPPORTED;
+  }
+```
+- CoreCreateEventInternal : 对于 EVT_NOTIFY_WAIT | EVT_NOTIFY_SIGNAL 必须有 NotifyFunction，而且 NotifyFunction 执行的 NotifyTpl 介于 TPL_APPLICATION 和 TPL_HIGH_LEVEL 之间(不包含)
+  - NotifyTpl 的作用在 : 在 CoreRestoreTpl 中，当 NewTpl 降到 NotifyTpl 之下（不包含），那么该 NotifyFunction 可以执行
+  - 所以 NotifyTpl 是不能等于 TPL_APPLICATION，否则永远无法执行的
+  - NotifyTpl 不能等于 TPL_APPLICATION，表示其不能屏蔽中断
+
+```c
+  //
+  // If it's a notify type of event, check its parameters
+  //
+  if ((Type & (EVT_NOTIFY_WAIT | EVT_NOTIFY_SIGNAL)) != 0) {
+    //
+    // Check for an invalid NotifyFunction or NotifyTpl
+    //
+    if ((NotifyFunction == NULL) ||
+        (NotifyTpl <= TPL_APPLICATION) ||
+       (NotifyTpl >= TPL_HIGH_LEVEL)) {
+      return EFI_INVALID_PARAMETER;
+    }
+
+  } else {
+    //
+    // No notification needed, zero ignored values
+    //
+    NotifyTpl = 0;
+    NotifyFunction = NULL;
+    NotifyContext = NULL;
+  }
+```
+
+### TPL_CALLBACK
+```diff
+History: #0
+Commit:  15cc67e616cad2dad3d3b6f9ba1cba856b5de414
+Author:  erictian <erictian@6f19259b-4bc3-4df7-8a09-765794883524>
+Date:    Wed 05 May 2010 01:21:38 PM CST
+
+raise TPL to TPL_CALLBACK level at DriverBindingStart() for all usb-related modules, which prevent DriverBindingStop() from being invoked when DriverBindingStart() runs.
+```
+
+使用位置基本是:
+- `EfiInitializeLock (&(Sock->Lock), TPL_CALLBACK);`
+- `OldTpl = gBS->RaiseTPL (TPL_CALLBACK);`
+- `Status = gBS->CreateEventEx (`
+
+- [ ] TPL_CALLBACK 和 TPL_NOTIFY 的使用方法非常相似，说实话，根本无法区分两者
 
 ## 各种 EVT
 ```c
