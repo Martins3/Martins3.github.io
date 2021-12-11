@@ -32,6 +32,55 @@
   - [ ] 变化体现在什么地方啊
 - [ ] EfiEventEmptyFunction 这个函数我是打不上断点的
 
+- [ ] 虽然我们知道 CoreStartImage 来加载各种 image，但是现在 ovmf 到底在加载什么东西，表示完全搞不清楚啊
+   - [ ] 加载列表在什么地方，如何找到对应的 image 的
+   - [ ] 那些内容是默认初始化执行的，那些是加载 image 的方式过来的
+   - [ ] 如何调整到底需要加载什么 image
+    - [ ] 比如 shell 就是没有必要加载的东西
+   - [ ] 是按照什么规则首先执行 /boot/efi/EFI/BOOT/BOOTX64.EFI 的内容的
+    - 使用 ovmf 启动 Ubuntu 的方法了解一下
+```c
+/*
+#0  TimerDriverRegisterHandler (This=0x7f145c40, NotifyFunction=0x7fead493 <CoreTimerTick>) at /home/maritns3/core/ld/edk2-workstation/edk2/OvmfPkg/8254TimerDxe/Timer.
+c:132
+#1  0x000000007feab988 in GenericProtocolNotify (Event=<optimized out>, Context=0x7fec15f8) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/DxeMa
+in/DxeProtocolNotify.c:155
+#2  0x000000007feac77d in CoreDispatchEventNotifies (Priority=8) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/Event/Event.c:194
+#3  CoreRestoreTpl (NewTpl=4) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/Event/Tpl.c:131
+#4  0x000000007feb7062 in CoreInstallMultipleProtocolInterfaces (Handle=0x7f145cb0) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/Hand/Handle.c
+:611
+#5  0x000000007f145328 in TimerDriverInitialize (SystemTable=<optimized out>, ImageHandle=<optimized out>) at /home/maritns3/core/ld/edk2-workstation/edk2/OvmfPkg/8254
+TimerDxe/Timer.c:393
+#6  ProcessModuleEntryPointList (SystemTable=<optimized out>, ImageHandle=<optimized out>) at /home/maritns3/core/ld/edk2-workstation/edk2/Build/OvmfX64/DEBUG_GCC5/X64
+/OvmfPkg/8254TimerDxe/8254Timer/DEBUG/AutoGen.c:194
+#7  _ModuleEntryPoint (ImageHandle=<optimized out>, SystemTable=<optimized out>) at /home/maritns3/core/ld/edk2-workstation/edk2/MdePkg/Library/UefiDriverEntryPoint/Dr
+iverEntryPoint.c:127
+#8  0x000000007feba8cf in CoreStartImage (ImageHandle=0x7f151c98, ExitDataSize=0x0, ExitData=0x0) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe
+/Image/Image.c:1654
+#9  0x000000007feb1803 in CoreDispatcher () at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/Dispatcher/Dispatcher.c:523
+#10 CoreDispatcher () at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/Dispatcher/Dispatcher.c:404
+#11 0x000000007feaaafd in DxeMain (HobStart=<optimized out>) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/DxeMain/DxeMain.c:508
+#12 0x000000007feaac88 in ProcessModuleEntryPointList (HobStart=<optimized out>) at /home/maritns3/core/ld/edk2-workstation/edk2/Build/OvmfX64/DEBUG_GCC5/X64/MdeModule
+Pkg/Core/Dxe/DxeMain/DEBUG/AutoGen.c:489
+#13 _ModuleEntryPoint (HobStart=<optimized out>) at /home/maritns3/core/ld/edk2-workstation/edk2/MdePkg/Library/DxeCoreEntryPoint/DxeCoreEntryPoint.c:48
+#14 0x000000007fee10cf in InternalSwitchStack ()
+#15 0x0000000000000000 in ?? ()
+```
+
+- [ ] 各种符号的地址是不是最后由于 physical address 确定的?
+```txt
+in GenericProtocolNotify 7FEAB91A
+in core notify event 7FEAB91A
+```
+- [ ] CoreInstallMultipleProtocolInterfaces => CoreLocateDevicePath 中通过 guid 找 DevicePath DeviceHandle 的操作可以关注一下
+
+## 代码量分析
+定义了主要分布的位置:
+```txt
+➜  edk2 git:(master) ✗ cloc /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe
+C                               32           3954           7995          14700
+```
+
 ## gBS and gST
 注册位置:
 ```c

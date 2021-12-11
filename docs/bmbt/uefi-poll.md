@@ -10,13 +10,12 @@
   - [ ] CheckEvent() 到底是一个什么等待方法
 - [ ] Raise 和 Restore TPL 是如何实现的
 - [ ] 可以通过 Raise TPL 实现临时屏蔽 timer 吗?
-- [ ] 总体来说，我们应该知道 shell 的是如何使用驱动来捕获输入输出的
-  - 现在已经没有 IO 多路复用了
-- 为什么 EVT_TIMER|EVT_NOTIFY_SIGNAL, 是不能使用 EfiGetCurrentTpl() 的
 - [ ] 在 shell 的 FileInterfaceStdInRead 中调用了 hlt 中还是可以醒过来的，所以这个 timer 操作在什么地方啊
-- [ ] 各种 EVT 的作用是什么?
-- [ ] 调查一下 CoreCheckTimers 中的作用
 
+## 各种 TPL
+
+
+## 各种 EVT
 ```c
 //
 // These types can be ORed together as needed - for example,
@@ -64,6 +63,12 @@ EventGroup
   - 如果存在一个 Event 被 signal 了，那么可以返回
   - 否则调用 CoreSignalEvent (gIdleLoopEvent)，最后执行 CpuSleep
 
+- EVT_TIMER 和 EVT_NOTIFY_SIGNAL 是可以放到一起使用的，这样一个消息可以通过
+  - EVT_TIMER 的唯一的区别对待是 CoreCloseEvent 中需要手动关闭一下 pending 的 CoreSetTimer
+
+
+
+## Shell 的等待
 ```c
 /*
 #0  0x000000007f16f841 in CpuSleep ()
@@ -107,6 +112,57 @@ Dump of assembler code for function CpuSleep:
    0x000000007fed676c <+12>:    nopl   0x0(%rax)
 ```
 进而找到 MdePkg/Library/BaseCpuLib/BaseCpuLib.inf 可以找到和架构相关的汇编实现
+
+虽然无法在 EfiEventEmptyFunction 上打断点，但是在其中添加输出 DEBUG，最后会发现 EfiEventEmptyFunction 和
+IdleLoopEventCallback 都是会被调用的:
+- 在 CoreCreateEventInternal 中，可以看到 EventGroup
+- 在 CoreSignalEvent 中，虽然是 `CoreSignalEvent (gIdleLoopEvent)` 但是在 CoreSignalEvent 中的实际上会将整个 group 的全部 notify 一下
+
+## Timer
+```c
+/*
+#0  CoreCheckTimers (CheckEvent=0x7f8edc18, Context=0x0) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/Event/Timer.c:98
+#1  0x000000007feac77d in CoreDispatchEventNotifies (Priority=30) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/Event/Event.c:194
+#2  CoreRestoreTpl (NewTpl=16) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/Event/Tpl.c:131
+#3  0x000000007f144350 in TimerInterruptHandler (InterruptType=<optimized out>, SystemContext=...) at /home/maritns3/core/ld/edk2-workstation/edk2/OvmfPkg/8254TimerDxe
+/Timer.c:89
+#4  0x000000007f168da4 in CommonExceptionHandlerWorker (ExceptionHandlerData=0x7f173920, SystemContext=..., ExceptionType=104) at /home/maritns3/core/ld/edk2-workstati
+on/edk2/UefiCpuPkg/Library/CpuExceptionHandlerLib/X64/ArchExceptionHandler.c:94
+#5  CommonExceptionHandler (ExceptionType=<optimized out>, SystemContext=...) at /home/maritns3/core/ld/edk2-workstation/edk2/UefiCpuPkg/Library/CpuExceptionHandlerLib
+/DxeException.c:40
+#6  0x000000007f16fba0 in DrFinish ()
+#7  0x0000000000000080 in ?? ()
+#8  0x00ffff0000000000 in ?? ()
+#9  0x0000000000000000 in ?? ()
+8?
+```
+处理中断的代码主要分布在 ./UefiCpuPkg/Library/CpuExceptionHandlerLib/X64/ExceptionHandlerAsm.nasm 中
+
+基本的处理套路:
+- AsmGetTemplateAddressMap : 制作入口
+  - AsmIdtVectorBegin : 之后这就是 idt 的入口了
+    - CommonInterruptEntry
+      - DrFinish
+        - CommonExceptionHandler : 好的，现在进入到我们熟悉的位置了
+          - ExternalInterruptHandler = ExceptionHandlerData->ExternalInterruptHandler; 获取 hook，其实就是 TimerInterruptHandler 了
+            - TimerInterruptHandler
+              - `gBS->RaiseTPL (TPL_HIGH_LEVEL);` : 这个区间是需要屏蔽中断的
+              - mTimerNotifyFunction : 被注册为 CoreTimerTick
+                - mEfiSystemTime += Duration; : 刷新系统时间
+                - CoreSignalEvent (mEfiCheckTimerEvent);
+              - `gBS->RestoreTPL (OriginalTPL);`
+- UpdateIdtTable : 进行安装
+
+* 注册 ExternalInterruptHandler 为 TimerInterruptHandler 的位置 :  TimerDriverInitialize => `mCpu->RegisterInterruptHandler`
+* TimerInterruptHandler 中将 mTimerNotifyFunction 注册为 : CoreTimerTick
+* mEfiCheckTimerEvent 注册的 hook 为 CoreCheckTimers，会将其中过期的 timer 处理一下
+
+### 如何调整系统 periodic timer 的时间的
+- TimerDriverInitialize
+  - TimerDriverSetTimerPeriod
+    - SetPitCount : 向一些端口写数值
+
+所以，系统中存在一个 timer 总是按照固定频率触发，从而保证系统的时钟，实际上，这天然的是制造出来了问题。
 
 ## EVT_NOTIFY_WAIT
 使用 `ConInPrivate->TextIn.WaitForKey` 作为例子:
@@ -206,12 +262,223 @@ PeCoffEmuProtocolNotify (
 CoreInstallMultipleProtocolInterfaces (
 ```
 
+### TimerDriverRegisterHandler
+
+***步骤 1***
+
+GenericProtocolNotify 是在 CoreNotifyOnProtocolEntryTable 中注册的，很多 protocol 的 hook 都是注册的这个
+
+- DxeMain
+  - CoreNotifyOnProtocolInstallation : mArchProtocols 和 mOptionalProtocols 定义一堆 EFI_CORE_PROTOCOL_NOTIFY_ENTRY
+    - CoreNotifyOnProtocolEntryTable (mArchProtocols);
+    - CoreNotifyOnProtocolEntryTable (mOptionalProtocols);
+
+- CoreNotifyOnProtocolEntryTable : Creates an event for each entry in a table that is fired everytime a Protocol of a specific type is installed.
+  - CoreCreateEvent : 创建 Event 的出来
+  - CoreRegisterProtocolNotify : 将 Event 和 protocol 关联起来
+    - CoreFindProtocolEntry : 根据 EFI_GUID 找到的 ProtEntry
+    - 创建出来 PROTOCOL_NOTIFY ProtEntry
+    - `InsertTailList (&ProtEntry->Notify, &ProtNotify->Link);`
+
+
+***步骤 2***
+
+GenericProtocolNotify 对应的 hook 是从 gEventQueue 取出来的，添加的时候在下面:
+
+```c
+/*
+#1  CoreNotifyEvent (Event=Event@entry=0x7f8e7118) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/Event/Event.c:252
+#2  0x000000007fead4df in CoreSignalEvent (UserEvent=0x7f8e7118) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/Event/Event.c:589
+#3  CoreSignalEvent (UserEvent=0x7f8e7118) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/Event/Event.c:551
+#4  0x000000007feb442a in CoreNotifyProtocolEntry (ProtEntry=ProtEntry@entry=0x7f8e7b18) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/Hand/Not
+ify.c:32
+#5  0x000000007feb5ea0 in CoreInstallProtocolInterfaceNotify (InterfaceType=<optimized out>, Notify=1 '\001', Interface=0x7fae7040, Protocol=0x7fae7090, UserHandle=0x7
+fae7120) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/Hand/Handle.c:476
+#6  CoreInstallProtocolInterfaceNotify (UserHandle=0x7fae7120, UserHandle@entry=0x7f8e7b18, Protocol=0x7fae7090, Protocol@entry=0x0, InterfaceType=InterfaceType@entry=
+EFI_NATIVE_INTERFACE, Interface=Interface@entry=0x7fae7040, Notify=Notify@entry=1 '\001') at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/Hand/Ha
+ndle.c:341
+#7  0x000000007feb5f32 in CoreInstallProtocolInterface (UserHandle=0x7f8e7b18, UserHandle@entry=0x7fae7120, Protocol=0x0, Protocol@entry=0x7fae7090, InterfaceType=Inte
+rfaceType@entry=EFI_NATIVE_INTERFACE, Interface=Interface@entry=0x7fae7040) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/Hand/Handle.c:313
+#8  0x000000007feb7014 in CoreInstallMultipleProtocolInterfaces (Handle=0x7fae7120) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/Hand/Handle.c
+:586
+#9  0x000000007fae5901 in RuntimeDriverInitialize (SystemTable=0x7f9ee018, ImageHandle=0x7f5ad118) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Ru
+ntimeDxe/Runtime.c:415
+#10 ProcessModuleEntryPointList (SystemTable=0x7f9ee018, ImageHandle=0x7f5ad118) at /home/maritns3/core/ld/edk2-workstation/edk2/Build/OvmfX64/DEBUG_GCC5/X64/MdeModule
+Pkg/Core/RuntimeDxe/RuntimeDxe/DEBUG/AutoGen.c:361
+#11 _ModuleEntryPoint (ImageHandle=0x7f5ad118, SystemTable=0x7f9ee018) at /home/maritns3/core/ld/edk2-workstation/edk2/MdePkg/Library/UefiDriverEntryPoint/DriverEntryP
+oint.c:127
+#12 0x000000007feba90d in CoreStartImage (ImageHandle=0x7f5ad118, ExitDataSize=0x0, ExitData=0x0) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe
+/Image/Image.c:1654
+#13 0x000000007feb1841 in CoreDispatcher () at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/Dispatcher/Dispatcher.c:523
+#14 CoreDispatcher () at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/Dispatcher/Dispatcher.c:404
+#15 0x000000007feaaafd in DxeMain (HobStart=<optimized out>) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/DxeMain/DxeMain.c:508
+#16 0x000000007feaac88 in ProcessModuleEntryPointList (HobStart=<optimized out>) at /home/maritns3/core/ld/edk2-workstation/edk2/Build/OvmfX64/DEBUG_GCC5/X64/MdeModule
+Pkg/Core/Dxe/DxeMain/DEBUG/AutoGen.c:489
+#17 _ModuleEntryPoint (HobStart=<optimized out>) at /home/maritns3/core/ld/edk2-workstation/edk2/MdePkg/Library/DxeCoreEntryPoint/DxeCoreEntryPoint.c:48
+#18 0x000000007fee10cf in InternalSwitchStack ()
+```
+- CoreInstallProtocolInterfaceNotify
+  - CoreFindProtocolEntry : 可以根据 guid 找到 PROTOCOL_ENTRY (遍历 mProtocolDatabase)
+  - CoreNotifyProtocolEntry : 因为 PROTOCOL_ENTRY 持有 PROTOCOL_NOTIFY 的，进而添加 notify
+
+***步骤 3***
+
+```c
+/*
+#0  TimerDriverRegisterHandler (This=0x7f145c40, NotifyFunction=0x7fead493 <CoreTimerTick>) at /home/maritns3/core/ld/edk2-workstation/edk2/OvmfPkg/8254TimerDxe/Timer.
+c:132
+#1  0x000000007feab988 in GenericProtocolNotify (Event=<optimized out>, Context=0x7fec15f8) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/DxeMa
+in/DxeProtocolNotify.c:155
+#2  0x000000007feac77d in CoreDispatchEventNotifies (Priority=8) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/Event/Event.c:194
+#3  CoreRestoreTpl (NewTpl=4) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/Event/Tpl.c:131
+#4  0x000000007feb7062 in CoreInstallMultipleProtocolInterfaces (Handle=0x7f145cb0) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/Hand/Handle.c
+:611
+#5  0x000000007f145328 in TimerDriverInitialize (SystemTable=<optimized out>, ImageHandle=<optimized out>) at /home/maritns3/core/ld/edk2-workstation/edk2/OvmfPkg/8254
+TimerDxe/Timer.c:393
+#6  ProcessModuleEntryPointList (SystemTable=<optimized out>, ImageHandle=<optimized out>) at /home/maritns3/core/ld/edk2-workstation/edk2/Build/OvmfX64/DEBUG_GCC5/X64
+/OvmfPkg/8254TimerDxe/8254Timer/DEBUG/AutoGen.c:194
+#7  _ModuleEntryPoint (ImageHandle=<optimized out>, SystemTable=<optimized out>) at /home/maritns3/core/ld/edk2-workstation/edk2/MdePkg/Library/UefiDriverEntryPoint/Dr
+iverEntryPoint.c:127
+#8  0x000000007feba8cf in CoreStartImage (ImageHandle=0x7f151c98, ExitDataSize=0x0, ExitData=0x0) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe
+/Image/Image.c:1654
+#9  0x000000007feb1803 in CoreDispatcher () at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/Dispatcher/Dispatcher.c:523
+#10 CoreDispatcher () at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/Dispatcher/Dispatcher.c:404
+#11 0x000000007feaaafd in DxeMain (HobStart=<optimized out>) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/DxeMain/DxeMain.c:508
+#12 0x000000007feaac88 in ProcessModuleEntryPointList (HobStart=<optimized out>) at /home/maritns3/core/ld/edk2-workstation/edk2/Build/OvmfX64/DEBUG_GCC5/X64/MdeModule
+Pkg/Core/Dxe/DxeMain/DEBUG/AutoGen.c:489
+#13 _ModuleEntryPoint (HobStart=<optimized out>) at /home/maritns3/core/ld/edk2-workstation/edk2/MdePkg/Library/DxeCoreEntryPoint/DxeCoreEntryPoint.c:48
+#14 0x000000007fee10cf in InternalSwitchStack ()
+#15 0x0000000000000000 in ?? ()
+```
+
+- [ ] 步骤二 和 步骤三都是在 CoreInstallMultipleProtocolInterfaces 调用路径上的
+  - 在步骤二中，CoreInstallMultipleProtocolInterfaces 最后会调用 CoreRestoreTpl 的，那么当时 notfiy event 的时候，不会在那个时候执行
+- [ ] 步骤二中 CoreInstallMultipleProtocolInterfaces 调用的 guid 都是怎么获取的，和 步骤一 的 guid 是什么关系
+
+每一个 IEVENT::NotifyTpl 表示该 evnet 的 callback 只有在程序运行 gEfiCurrentTpl 小于等于该 event 的才可以的呀。
+这就是我们发现有非常多的 callback 都是在 CoreRestoreTpl 的时候执行的
+
+```c
+/*
+Loading driver F099D67F-71AE-4C36-B2A3-DCEB0EB2B7D8
+InstallProtocolInterface: 5B1B31A1-9562-11D2-8E3F-00A0C969723B 7F0EC040
+Loading driver at 0x0007F0BD000 EntryPoint=0x0007F0BDFBE WatchdogTimer.efi
+InstallProtocolInterface: BC62157E-3E33-4FEC-9920-2D3B36D750DF 7F0ED298
+ProtectUefiImageCommon - 0x7F0EC040
+  - 0x000000007F0BD000 - 0x0000000000001EC0
+InstallProtocolInterface: 665E3FF5-46CC-11D4-9A38-0090273FC14D 7F0BED30
+fuck
+begin 7FEAB91A
+in GenericProtocolNotify 7FEAB91A
+execute 7FEAB91A
+end
+
+Loading driver AD608272-D07F-4964-801E-7BD3B7888652
+InstallProtocolInterface: 5B1B31A1-9562-11D2-8E3F-00A0C969723B 7F0EC440
+Loading driver at 0x0007FAB8000 EntryPoint=0x0007FAB9D8F MonotonicCounterRuntimeDxe.efi
+InstallProtocolInterface: BC62157E-3E33-4FEC-9920-2D3B36D750DF 7F0EC998
+ProtectUefiImageCommon - 0x7F0EC440
+  - 0x000000007FAB8000 - 0x0000000000004000
+SetUefiImageMemoryAttributes - 0x000000007FAB8000 - 0x0000000000001000 (0x0000000000004008)
+SetUefiImageMemoryAttributes - 0x000000007FAB9000 - 0x0000000000002000 (0x0000000000020008)
+SetUefiImageMemoryAttributes - 0x000000007FABB000 - 0x0000000000001000 (0x0000000000004008)
+InstallProtocolInterface: 1DA97072-BDDC-4B30-99F1-72A0B56FFF2A 0
+fuck
+begin 7FEAB91A
+in GenericProtocolNotify 7FEAB91A
+execute 7FEAB91A
+end
+```
+看上去这些 Event 都是在步骤二中同时注册的，但是实际上是一个个执行的。
+
+## 我们到底是如何 install image
+这两个函数是交错出现的
+1. 首先 load image
+2. 然后 start image
+
+```c
+/*
+#0  CoreInstallProtocolInterface (UserHandle=0x7f162020, Protocol=0x7fec1c60, InterfaceType=EFI_NATIVE_INTERFACE, Interface=0x7f162f18) at /home/maritns3/core/ld/edk2-
+workstation/edk2/MdeModulePkg/Core/Dxe/Hand/Handle.c:312
+#1  0x000000007fea6397 in CoreLoadImageCommon.part.0.constprop.0 (BootPolicy=<optimized out>, ParentImageHandle=<optimized out>, FilePath=<optimized out>, SourceBuffer
+=<optimized out>, SourceSize=<optimized out>, ImageHandle=0x7f881098, Attribute=3, EntryPoint=0x0, NumberOfPages=0x0, DstBuffer=0) at /home/maritns3/core/ld/edk2-works
+tation/edk2/MdeModulePkg/Core/Dxe/Image/Image.c:1393
+#2  0x000000007feb4b55 in CoreLoadImageCommon (DstBuffer=0, NumberOfPages=0x0, EntryPoint=0x0, Attribute=3, ImageHandle=0x7f881098, SourceSize=0, SourceBuffer=0x0, Fil
+ePath=0x7f881f98, ParentImageHandle=0x7f174218, BootPolicy=64 '@') at /home/maritns3/core/ld/edk2-workstation/edk2/OvmfPkg/Library/PlatformDebugLibIoPort/DebugLib.c:28
+2
+#3  CoreLoadImage (BootPolicy=<optimized out>, ParentImageHandle=0x7f174218, FilePath=0x7f881f98, SourceBuffer=0x0, SourceSize=0, ImageHandle=0x7f881098) at /home/mari
+tns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/Image/Image.c:1511
+#4  0x000000007feb17d8 in CoreDispatcher () at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/Dispatcher/Dispatcher.c:458
+#5  CoreDispatcher () at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/Dispatcher/Dispatcher.c:404
+#6  0x000000007feaaafd in DxeMain (HobStart=<optimized out>) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/DxeMain/DxeMain.c:508
+#7  0x000000007feaac88 in ProcessModuleEntryPointList (HobStart=<optimized out>) at /home/maritns3/core/ld/edk2-workstation/edk2/Build/OvmfX64/DEBUG_GCC5/X64/MdeModule
+Pkg/Core/Dxe/DxeMain/DEBUG/AutoGen.c:489
+#8  _ModuleEntryPoint (HobStart=<optimized out>) at /home/maritns3/core/ld/edk2-workstation/edk2/MdePkg/Library/DxeCoreEntryPoint/DxeCoreEntryPoint.c:48
+#9  0x000000007fee10cf in InternalSwitchStack ()
+#10 0x0000000000000000 in ?? ()
+```
+
+```c
+/*
+#0  CoreInstallProtocolInterface (UserHandle=UserHandle@entry=0x7fe9eca8, Protocol=Protocol@entry=0x7fae1140, InterfaceType=InterfaceType@entry=EFI_NATIVE_INTERFACE, I
+nterface=Interface@entry=0x0) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/Hand/Handle.c:312
+#1  0x000000007feb706f in CoreInstallMultipleProtocolInterfaces (Handle=0x7fe9eca8) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/Hand/Handle.c
+:586
+#2  0x000000007fadfd58 in InitializeResetSystem (SystemTable=0x7f9ee018, ImageHandle=0x7f174218) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Universal
+/ResetSystemRuntimeDxe/ResetSystem.c:190
+#3  ProcessModuleEntryPointList (SystemTable=0x7f9ee018, ImageHandle=0x7f174218) at /home/maritns3/core/ld/edk2-workstation/edk2/Build/OvmfX64/DEBUG_GCC5/X64/MdeModule
+Pkg/Universal/ResetSystemRuntimeDxe/ResetSystemRuntimeDxe/DEBUG/AutoGen.c:417
+#4  _ModuleEntryPoint (ImageHandle=0x7f174218, SystemTable=0x7f9ee018) at /home/maritns3/core/ld/edk2-workstation/edk2/MdePkg/Library/UefiDriverEntryPoint/DriverEntryP
+oint.c:127
+#5  0x000000007feba968 in CoreStartImage (ImageHandle=0x7f174218, ExitDataSize=0x0, ExitData=0x0) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe
+/Image/Image.c:1654
+#6  0x000000007feb189c in CoreDispatcher () at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/Dispatcher/Dispatcher.c:523
+#7  CoreDispatcher () at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/Dispatcher/Dispatcher.c:404
+#8  0x000000007feaaafd in DxeMain (HobStart=<optimized out>) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/DxeMain/DxeMain.c:508
+#9  0x000000007feaac88 in ProcessModuleEntryPointList (HobStart=<optimized out>) at /home/maritns3/core/ld/edk2-workstation/edk2/Build/OvmfX64/DEBUG_GCC5/X64/MdeModule
+Pkg/Core/Dxe/DxeMain/DEBUG/AutoGen.c:489
+#10 _ModuleEntryPoint (HobStart=<optimized out>) at /home/maritns3/core/ld/edk2-workstation/edk2/MdePkg/Library/DxeCoreEntryPoint/DxeCoreEntryPoint.c:48
+#11 0x000000007fee10cf in InternalSwitchStack ()
+#12 0x0000000000000000 in ?? ()
+```
+
+但是 CoreInstallProtocolInterfaceNotify 的形式差不多就总是这个样子的了:
+```c
+/*
+#0  CoreInstallProtocolInterfaceNotify (InterfaceType=<optimized out>, Notify=1 '\001', Interface=0x0, Protocol=0x7fae1140, UserHandle=0x7fe9eca8) at /home/maritns3/co
+re/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/Hand/Handle.c:376
+#1  CoreInstallProtocolInterfaceNotify (UserHandle=UserHandle@entry=0x7fe9eca8, Protocol=Protocol@entry=0x7fae1140, InterfaceType=InterfaceType@entry=EFI_NATIVE_INTERF
+ACE, Interface=Interface@entry=0x0, Notify=Notify@entry=1 '\001') at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/Hand/Handle.c:341
+#2  0x000000007feb5f8d in CoreInstallProtocolInterface (UserHandle=UserHandle@entry=0x7fe9eca8, Protocol=Protocol@entry=0x7fae1140, InterfaceType=InterfaceType@entry=E
+FI_NATIVE_INTERFACE, Interface=Interface@entry=0x0) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/Hand/Handle.c:313
+#3  0x000000007feb706f in CoreInstallMultipleProtocolInterfaces (Handle=0x7fe9eca8) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/Hand/Handle.c
+:586
+#4  0x000000007fadfd58 in InitializeResetSystem (SystemTable=0x7f9ee018, ImageHandle=0x7f174218) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Universal
+/ResetSystemRuntimeDxe/ResetSystem.c:190
+#5  ProcessModuleEntryPointList (SystemTable=0x7f9ee018, ImageHandle=0x7f174218) at /home/maritns3/core/ld/edk2-workstation/edk2/Build/OvmfX64/DEBUG_GCC5/X64/MdeModule
+Pkg/Universal/ResetSystemRuntimeDxe/ResetSystemRuntimeDxe/DEBUG/AutoGen.c:417
+#6  _ModuleEntryPoint (ImageHandle=0x7f174218, SystemTable=0x7f9ee018) at /home/maritns3/core/ld/edk2-workstation/edk2/MdePkg/Library/UefiDriverEntryPoint/DriverEntryP
+oint.c:127
+#7  0x000000007feba968 in CoreStartImage (ImageHandle=0x7f174218, ExitDataSize=0x0, ExitData=0x0) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe
+/Image/Image.c:1654
+#8  0x000000007feb189c in CoreDispatcher () at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/Dispatcher/Dispatcher.c:523
+#9  CoreDispatcher () at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/Dispatcher/Dispatcher.c:404
+#10 0x000000007feaaafd in DxeMain (HobStart=<optimized out>) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/DxeMain/DxeMain.c:508
+#11 0x000000007feaac88 in ProcessModuleEntryPointList (HobStart=<optimized out>) at /home/maritns3/core/ld/edk2-workstation/edk2/Build/OvmfX64/DEBUG_GCC5/X64/MdeModule
+Pkg/Core/Dxe/DxeMain/DEBUG/AutoGen.c:489
+#12 _ModuleEntryPoint (HobStart=<optimized out>) at /home/maritns3/core/ld/edk2-workstation/edk2/MdePkg/Library/DxeCoreEntryPoint/DxeCoreEntryPoint.c:48
+#13 0x000000007fee10cf in InternalSwitchStack ()
+#14 0x0000000000000000 in ?? ()
+```
+
 ## 我们可以直通 keyboard 吗
 - FileInterfaceStdInRead
   - `gBS->WaitForEvent`
   - `Status = gST->ConIn->ReadKeyStroke (gST->ConIn, &Key);`
 
 - [ ] 也许调查一下 gKeyboardControllerDriver 是如何被使用的
+
+
 
 ## notes
 似乎只是支持下面两个:
