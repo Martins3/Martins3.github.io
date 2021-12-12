@@ -21,7 +21,6 @@
 
 ## Binary Translation
 - [裸金属二进制翻译器的设计与实现](https://martins3.github.io/ppt/repo/2021-8-24/index.html)
-  - 🚧 [Linux UEFI 学习环境搭建](./bmbt/uefi.md)
 
 ## Virtualization
 - [Loongson Dune : A Process Level Virtualization framework Base on KVM](https://github.com/Martins3/loongson-dune)
@@ -45,6 +44,9 @@
   - [QEMU 中的面向对象 : QOM](./qemu/qom.md)
   - [QEMU 中的时钟](./qemu/timer.md)
   - [QEMU 字符设备模拟](./qemu/char.md)
+
+## UEFI
+- [Linux 下 UEFI 学习环境搭建](./bmbt/uefi.md)
 
 ## Tips
 - [How to cross Great Fire Wall](./gfw.md)
