@@ -1,5 +1,21 @@
 # Linux UEFI 学习环境搭建
 
+<!-- vim-markdown-toc GitLab -->
+
+- [运行第一个 UEFI 程序](#运行第一个-uefi-程序)
+  - [编译 efi](#编译-efi)
+  - [运行 efi](#运行-efi)
+- [编译 edk2](#编译-edk2)
+- [构建基于 edk2 的 HelloWorld](#构建基于-edk2-的-helloworld)
+- [构建基于 StdLib 的 HelloWorld](#构建基于-stdlib-的-helloworld)
+- [如何让自动运行 efi 程序](#如何让自动运行-efi-程序)
+- [在 Linux 上调试 edk2](#在-linux-上调试-edk2)
+- [生成 compile_commands.json](#生成-compile_commandsjson)
+- [内核作为 efi 文件启动](#内核作为-efi-文件启动)
+- [资源](#资源)
+
+<!-- vim-markdown-toc -->
+
 ## 运行第一个 UEFI 程序
 ### 编译 efi
 参考教程 https://www.rodsbooks.com/efi-programming/hello.html
@@ -65,6 +81,64 @@ ACTIVE_PLATFORM       = BootloaderPkg/BootloaderPkg.dsc
 build
 ```
 
+## 构建基于 StdLib 的 HelloWorld
+上面是调用原生的 uefi 接口来构建的程序，实际上，UEFI 提供了 [StdLib](https://github.com/tianocore/edk2-libc)，其尽可能提供和 glibc 相同的接口，这样，很多用户态程序几乎不需要做任何修改就可以
+直接编译为 .efi 文件，在 UEFI shell 中运行了。
+
+使用方法很简单:
+```sh
+# 下载
+git clone https://github.com/tianocore/edk2-libc
+# 将 edk2-libc 的内容拷贝到 edk2 中
+mv edk2-libc/* path/to/edk2
+cd path/to/edk2
+# 编译
+build -p AppPkg/AppPkg.dsc
+```
+其实 edk2-libc 主要就是两个文件夹:
+1. StdLib : 利用 UEFI native 的接口实现 glib 的接口
+2. AppPkg : 各种测试程序，甚至包括 lua 解释器
+
+## 如何让自动运行 efi 程序
+为了运行刚刚编译出来的 Main.efi，接班操作步骤是:
+- 启动 QEMU 之后
+- fs0:
+- Mian.efi
+
+要是能够 QEMU 启动之后，可以自动执行 Main.efi 就可以大大加快调试的速度了:
+
+1. 我们知道 UEFI 启动之后会自动执行 startup.nsh
+2. 在 edk2 中搜索 startup.nsh 可以找到 OvmfPkg/PlatformCI/PlatformBuild.py, 了解到 QEMU 可以通过下面的参数实现
+```sh
+-drive file=fat:rw:${VirtualDrive},format=raw,media=disk
+```
+3. VirtualDrive 中的内容见 https://github.com/Martins3/Martins3.github.io/tree/master/docs/bmbt/uefi/VirtualDrive
+
+## 在 Linux 上调试 edk2
+主要参考 https://retrage.github.io/2019/12/05/debugging-ovmf-en.html
+
+在 Linux 调试的主要难度在于如何获取调试的符号信息，但是 edk2 生成的符号信息进行一些装换之后才可以被 gdb 识别，
+具体细节参考引用 blog，这里我描述一下基本步骤:
+
+1. 准备环节，只需要操作一次
+```sh
+# 生成 /tmp/ovmf.log 启动包含各个 module 加载的地址信息
+./uefi.sh
+# 根据 /tmp/ovmf.log 和 Build 下 .debug 生成 gdb 可识别调试信息
+./uefi.sh -g
+```
+2. 调试:
+```sh
+# 在第一次窗口，启动 QEMU
+./uefi.sh -s
+# 在第二个窗口，启动 gdb
+./uefi.sh -d
+```
+
+最后效果:
+![](./uefi/gdb.png)
+
+需要注意的事情是，打断点需要使用 [hardware breakpoint](https://stackoverflow.com/questions/8878716/what-is-the-difference-between-hardware-and-software-breakpoints)
 ## 生成 compile_commands.json
 虽然 edk2 是一个和操作系统无关的，但是 edk2 编译出来了的 efi 格式实际上是 Windows 二进制格式，项目的构建似乎默认 VS 的风格。
 想要在 vim 越快的阅读代码需要生成 compile_commands.json，但是这个编译系统不是 CMake, Make, Ninja 之类的，想要生成，并不容易。
@@ -73,9 +147,11 @@ build
 
 几乎是按照这个 patch 来搞的，但是似乎这个 patch 有点问题，总是会提示报错:
 
+```txt
 Error: cc or cc_flags is not defined!
+```
 
-稍微调试一下，
+稍微添加一些调试语句调试一下，在启动获取下面的 log
 ```txt
 {'cmd': '"$(CC)" $(DEPS_FLAGS) $(CC_FLAGS) -c -o '
         '/home/maritns3/core/ld/edk2-workstation/edk2/Build/Bootloader/DEBUG_GCC5/X64/MdePkg/Library/BaseMemoryLib/BaseMemoryLib/OUTPUT/./CompareMemWrapper.obj '
@@ -91,172 +167,26 @@ Error: cc or cc_flags is not defined!
 /home/maritns3/core/ld/edk2-workstation/edk2/Build/Bootloader/DEBUG_GCC5/X64/TOOLS_DEF.X64 中内容，发现，原来是新的 edk2 将
 其中的 CC 修改为 CC_PATH，修改之后，这个 patch 就可以使用了。
 
+此外，对于这个 patch 我做了两个小小的调整:
+- 原来的这个配置是只能单线程编译的，我在上面添加了一个文件锁，从而可以多线程编译
+- 原来的 compile_commands.json 都是生成在 package 下的，比如 AppPkg/compile_commands.json，如果同时阅读多个 pkg 的代码，还需要手动将这些 compile_commands.json 合并起来，我调整了一下脚本，让所有的信息都是放到 edk2 的根路径上的
+
 对于 tag 为 `edk2-stable202111`
 1. 添加修改之后的 [edk2_compile_commands.py](https://github.com/Martins3/Martins3.github.io/tree/master/docs/bmbt/uefi/compile_commands_patch/edk2_compile_commands.py)
 2. 修改 BaseTools/Source/Python/AutoGen/GenMake.py
   - 在文件头修改 `from edk2_compile_commands import update_compile_commands_file`
   - 在 1067 行下添加 `update_compile_commands_file(TargetDict, self._AutoGenObject, self.Macros)`
-
-这个 patch 是一个单线程，所以在生成 compile_commands.json 的时候，不能并发编译:
-
+3. build -p OvmfPkg/OvmfPkgX64.dsc
+4. build -p AppPkg/AppPkg.dsc
 
 ## 内核作为 efi 文件启动
-内核实际上可以作为 efi 文件在 UEFI 上执行，对于 x64 将 bzImage 修改为 bzImage.efi 就可以了，具体参考[内核文档](https://www.kernel.org/doc/Documentation/efi-stub.txt)
-
-## StdLib
-因为一些原因，edk2 将其实现的 libc 和 edk2 的主要库分离开了，使用方法很简单
-1. git clone https://github.com/tianocore/edk2-libc
-2. 将 edk2-libc 中的三个文件夹拷贝到 edk2 中，然后就可以当做普通的 pkg 使用
-
-https://www.mail-archive.com/edk2-devel@lists.01.org/msg17266.html
-- [ ] 使用 StdLib 只能成为 Application 不能成为 Driver 的
-  - [ ] Application 不能直接启动，只能从 UEFI shell 上启动
-
-- [ ] I told you to read "AppPkg/ReadMe.txt"; that file explains what is
-necessary for what "flavor" of UEFI application.
-
-- [ ] It even mentions two
-example programs, "Main" and "Hello", which don't do anything but
-highlight the differences.
-
-- [ ] For another (quite self-contained) example,
-"AppPkg/Applications/OrderedCollectionTest" is an application that I
-wrote myself; it uses fopen() and fprintf(). This is a unit tester for
-an MdePkg library that I also wrote, so it actually exemplifies how you
-can use both stdlib and an edk2 library, as long as they don't step on
-each other's toes.
-
-### 具体 Applications 分析
-- sizeof : 可以启动的时候使用
-- printf
-- setjmp
-- [x] 似乎文件是无法打开的 : 没有问题的
-
-如果都可以支持 lua 解释器了，那么还什么做不了:
-- [x] lua 之前的编译系统
-
-按照这个标志来查找:
-
-```c
-** $Id: lauxlib.c,v 1.248.1.1 2013/04/12 18:48:47 roberto Exp $
-```
-最后可以找到
-https://github.com/derkyjadex/Lua-Framework/tree/master/lua-5.2.3
-然后对比一下之后，发现几乎没有什么改动
-
-- [x] 我知道实际上 lua 可能会使用一些库，如何处理
-  - 实际上，那些库是可选的，在 UEFI 下，这些库都被删除了
-- [x] 测试一下 segment fault / assert 的效果
-  - segment fault 可以检查出来，但是效果是直接死掉在哪里了
-  - assert 非常好用
-- [x] errno 靠什么实现的，现在变为了一个普通的变量了
-
-### 分析一下所有的 dirent.h 的
-edk2/StdLib/Include/dirent.h
-- edk2/StdLib/Include/err.h
-- edk2/StdLib/Include/sys
-  - socket.h
-  - poll.h
-
-/home/maritns3/core/ld/edk2-workstation/edk2/StdLib/LibC/Uefi/StubFunctions.c
-似乎主要实现不了的都是 get pid 之类
-
-
-## 文件操作
-- [x] 实际上，我发现根本无法操纵文件，文件是无法打开的
-  - https://krinkinmu.github.io/2020/10/18/handles-guids-and-protocols.html
-  - https://stackoverflow.com/questions/39719771/how-to-open-a-file-by-its-full-path-in-uefi
-
-对比 lua 之后，在 inf 中间没有正确引用导致的
-
-## UEFI shell 可以做什么
-甚至差不多集成了一个 vim 进去了
-https://linuxhint.com/use-uefi-interactive-shell-and-its-common-commands/
-
-## 集成 musl
-https://github.com/Openwide-Ingenierie/uefi-musl
-
-## 一个游戏
-https://github.com/Openwide-Ingenierie/Pong-UEFI
-
-
-## 一些也许有用的项目
-- https://stackoverflow.com/questions/66399748/qemu-hangs-after-booting-a-gnu-efi-os
-  - https://github.com/xubury/myos
-
-- https://github.com/evanpurkhiser/rEFInd-minimal
-  - 虽然不太相关，但是可以换壁纸也实在是有趣
-
-- https://github.com/vvaltchev/tilck
-  - 同时处理了 acpi 和 uefi 的一个 Linux kernel 兼容的 os
-
-- https://github.com/linuxboot/linuxboot
-  - 什么叫做使用 Linux 来替换 firmware 啊
-
-- https://github.com/limine-bootloader/limine
-  - 一个新的 bootloader
-
-- https://gil0mendes.io/blog/an-efi-app-a-bit-rusty/
-  - 使用 rust 封装 UEFI，并且分析了一下 efi 程序的功能
-
-- https://github.com/rust-osdev/uefi-rs/issues/218
-
-
-- https://blog.system76.com/post/139138591598/howto-uefi-qemu-guest-on-ubuntu-xenial-host
-  - 分析了一下使用 ovmf 的事情，但是没有仔细看
-
-On the x86 and ARM platforms, a kernel zImage/bzImage can masquerade
-as a PE/COFF image, thereby convincing EFI firmware loaders to load
-it as an EFI executable.
-
-The bzImage located in arch/x86/boot/bzImage must be copied to the EFI
-System Partition (ESP) and renamed with the extension ".efi".
-
-## EFI system Partition
-在 /boot 下
-```txt
-efi/
-└── EFI
-    ├── BOOT
-    │   ├── BOOTX64.EFI
-    │   ├── fbx64.efi
-    │   └── mmx64.efi
-    └── ubuntu
-        ├── BOOTX64.CSV
-        ├── grub.cfg
-        ├── grubx64.efi
-        ├── mmx64.efi
-        └── shimx64.efi
-```
-而 /boot/grub 中内容就比较诡异了
-
-使用 df -h 可以观察到
-```txt
-/dev/nvme0n1p2                       234G  211G   12G  95% /
-/dev/nvme0n1p1                       511M  5.3M  506M   2% /boot/efi
-```
-
-其实一直都没有搞懂，为什么 nvme 为什么存在四个 dev
-```txt
-➜  /boot l /dev/nvme0 /dev/nvme0n1 /dev/nvme0n1p1 /dev/nvme0n1p2
-crw------- root root 0 B Wed Nov 24 09:00:37 2021  /dev/nvme0
-brw-rw---- root disk 0 B Wed Nov 24 09:00:37 2021 ﰩ /dev/nvme0n1
-brw-rw---- root disk 0 B Wed Nov 24 09:00:40 2021 ﰩ /dev/nvme0n1p1
-brw-rw---- root disk 0 B Wed Nov 24 09:00:37 2021 ﰩ /dev/nvme0n1p2
-```
-
-如果使用 gPartion 的话，实际上就是只有两个分区而已。
-
-- 因为 UEFI 不能支持普通的程序，但是应该是可以支持各种介质 storage 的访问，所以制作出来一个 EFI system Partition
-- [ ] 那么 /boot/grub 的内容为什么可以被加载啊?
-
-## 文档
-https://edk2-docs.gitbook.io/edk-ii-build-specification/
+内核实际上可以作为 efi 文件在 UEFI 上执行, 具体参考[内核文档](https://www.kernel.org/doc/Documentation/efi-stub.txt)
 
 ## 资源
 - Robin 的 blog: http://yiiyee.cn/blog/
 - https://wiki.osdev.org/GNU-EFI
 - https://wiki.osdev.org/POSIX-UEFI
+- https://edk2-docs.gitbook.io/edk-ii-build-specification/
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

@@ -74,8 +74,7 @@ in core notify event 7FEAB91A
 ```
 - [ ] CoreInstallMultipleProtocolInterfaces => CoreLocateDevicePath 中通过 guid 找 DevicePath DeviceHandle 的操作可以关注一下
 
-
-- [ ] binding 机制
+## driver binding
 ```c
 //
 // DriverBinding protocol instance
@@ -131,8 +130,49 @@ struct _EFI_DRIVER_BINDING_PROTOCOL {
   EFI_HANDLE                    DriverBindingHandle;
 };
 ```
+- [ ] 观测一下，当 ExitBootServices 之后，还会保存类型的服务
+  - [ ] 既然可以在操作系统挂掉的时候，使用网络重启系统，说明，各种设备就是可以一会被 UEFI 使用，一会被操作系统使用的
+  - [ ] 还存在一些 service 是可以运行的，那么我相信，相信内存分配之类的机制还是存在的
 
-## 代码量分析
+### FatDriverBindingSupported
+看看他们分别的 bt
+```c
+/*
+#0  FatDriverBindingSupported (This=0x7ed7bd00, ControllerHandle=0x7edfb398, RemainingDevicePath=0x0) at /home/maritns3/core/ld/edk2-workstation/edk2/FatPkg/EnhancedFa
+tDxe/Fat.c:286
+#1  0x000000007feb6a88 in CoreConnectSingleController (RemainingDevicePath=0x0, ContextDriverImageHandles=0x0, ControllerHandle=0x7edfb398) at /home/maritns3/core/ld/e
+dk2-workstation/edk2/MdeModulePkg/Core/Dxe/Hand/DriverSupport.c:635
+#2  CoreConnectController (ControllerHandle=0x7edfb398, ControllerHandle@entry=0x7fec28a0, DriverImageHandle=DriverImageHandle@entry=0x0, RemainingDevicePath=Remaining
+DevicePath@entry=0x0, Recursive=Recursive@entry=1 '\001') at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/Hand/DriverSupport.c:136
+#3  0x000000007feb71cf in CoreReinstallProtocolInterface (UserHandle=0x7fec28a0, Protocol=0x0, OldInterface=0x7edfeb40, NewInterface=0x7edfeb40) at /home/maritns3/core
+/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/Hand/Notify.c:265
+#4  0x000000007fea6348 in CoreLoadImageCommon.part.0.constprop.0 (BootPolicy=<optimized out>, ParentImageHandle=<optimized out>, FilePath=<optimized out>, SourceBuffer
+=<optimized out>, SourceSize=<optimized out>, ImageHandle=0x7f72c698, Attribute=3, EntryPoint=0x0, NumberOfPages=0x0, DstBuffer=0) at /home/maritns3/core/ld/edk2-works
+tation/edk2/MdeModulePkg/Core/Dxe/Image/Image.c:1372
+#5  0x000000007feb4b55 in CoreLoadImageCommon (DstBuffer=0, NumberOfPages=0x0, EntryPoint=0x0, Attribute=3, ImageHandle=0x7f72c698, SourceSize=0, SourceBuffer=0x0, Fil
+ePath=0x7f72c398, ParentImageHandle=0x7edfb398, BootPolicy=64 '@') at /home/maritns3/core/ld/edk2-workstation/edk2/OvmfPkg/Library/PlatformDebugLibIoPort/DebugLib.c:28
+2
+#6  CoreLoadImage (BootPolicy=<optimized out>, ParentImageHandle=0x7edfb398, FilePath=0x7f72c398, SourceBuffer=0x0, SourceSize=0, ImageHandle=0x7f72c698) at /home/mari
+tns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/Image/Image.c:1511
+#7  0x000000007feb17d8 in CoreDispatcher () at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/Dispatcher/Dispatcher.c:458
+#8  CoreDispatcher () at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/Dispatcher/Dispatcher.c:404
+#9  0x000000007feaaafd in DxeMain (HobStart=<optimized out>) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/DxeMain/DxeMain.c:508
+#10 0x000000007feaac88 in ProcessModuleEntryPointList (HobStart=<optimized out>) at /home/maritns3/core/ld/edk2-workstation/edk2/Build/OvmfX64/DEBUG_GCC5/X64/MdeModule
+Pkg/Core/Dxe/DxeMain/DEBUG/AutoGen.c:489
+#11 _ModuleEntryPoint (HobStart=<optimized out>) at /home/maritns3/core/ld/edk2-workstation/edk2/MdePkg/Library/DxeCoreEntryPoint/DxeCoreEntryPoint.c:48
+#12 0x000000007fee10cf in InternalSwitchStack ()
+#13 0x0000000000000000 in ?? ()
+```
+似乎 FatDriverBindingSupported 会被调用非常多次，实际上，在任何一次:
+```txt
+InstallProtocolInterface: 5B1B31A1-9562-11D2-8E3F-00A0C969723B 7E1D26C0
+Loading driver at 0x0007EC6D000 EntryPoint=0x0007EC70B36 QemuVideoDxe.efi
+```
+其实都是会执行一次 FatDriverBindingSupported 和 FatDriverBindingStart
+
+主要出现在 MdeModulePkg/Core/Dxe/Hand/DriverSupport.c
+
+## 代码量分析 cloc
 定义了主要分布的位置:
 ```txt
 ➜  edk2 git:(master) ✗ cloc /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe
@@ -790,6 +830,30 @@ UefiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE *SystemTable) {
   ShellLib
 ```
 
+## StdLib
+因为一些原因，edk2 将其实现的 libc 和 edk2 的主要库分离开了，使用方法很简单
+1. git clone https://github.com/tianocore/edk2-libc
+2. 将 edk2-libc 中的三个文件夹拷贝到 edk2 中，然后就可以当做普通的 pkg 使用
+
+https://www.mail-archive.com/edk2-devel@lists.01.org/msg17266.html
+- [ ] 使用 StdLib 只能成为 Application 不能成为 Driver 的
+  - [ ] Application 不能直接启动，只能从 UEFI shell 上启动
+
+- [ ] I told you to read "AppPkg/ReadMe.txt"; that file explains what is
+necessary for what "flavor" of UEFI application.
+
+- [ ] It even mentions two
+example programs, "Main" and "Hello", which don't do anything but
+highlight the differences.
+
+- [ ] For another (quite self-contained) example,
+"AppPkg/Applications/OrderedCollectionTest" is an application that I
+wrote myself; it uses fopen() and fprintf(). This is a unit tester for
+an MdePkg library that I also wrote, so it actually exemplifies how you
+can use both stdlib and an edk2 library, as long as they don't step on
+each other's toes.
+
+
 ## 各种 uefi shell 命令对应的源代码
 /home/maritns3/core/ld/edk2-workstation/edk2/ShellPkg/Library
 - UefiShellDebug1CommandsLib : edit
@@ -799,6 +863,57 @@ UefiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE *SystemTable) {
 - UefiShellLevel1CommandsLib : cd ls
 - UefiShellLevel3CommandsLib : cls echo
 - UefiShellNetwork1CommandsLib : ping
+
+## 文件操作
+- [x] 实际上，我发现根本无法操纵文件，文件是无法打开的
+  - https://krinkinmu.github.io/2020/10/18/handles-guids-and-protocols.html
+  - https://stackoverflow.com/questions/39719771/how-to-open-a-file-by-its-full-path-in-uefi
+
+对比 lua 之后，在 inf 中间没有正确引用库导致的
+
+## UEFI shell 可以做什么
+甚至差不多集成了一个 vim 进去了
+https://linuxhint.com/use-uefi-interactive-shell-and-its-common-commands/
+
+## 集成 musl
+https://github.com/Openwide-Ingenierie/uefi-musl
+
+## 一个游戏
+https://github.com/Openwide-Ingenierie/Pong-UEFI
+
+
+## 一些也许有用的项目
+- https://stackoverflow.com/questions/66399748/qemu-hangs-after-booting-a-gnu-efi-os
+  - https://github.com/xubury/myos
+
+- https://github.com/evanpurkhiser/rEFInd-minimal
+  - 虽然不太相关，但是可以换壁纸也实在是有趣
+
+- https://github.com/vvaltchev/tilck
+  - 同时处理了 acpi 和 uefi 的一个 Linux kernel 兼容的 os
+
+- https://github.com/linuxboot/linuxboot
+  - 什么叫做使用 Linux 来替换 firmware 啊
+
+- https://github.com/limine-bootloader/limine
+  - 一个新的 bootloader
+
+- https://gil0mendes.io/blog/an-efi-app-a-bit-rusty/
+  - 使用 rust 封装 UEFI，并且分析了一下 efi 程序的功能
+
+- https://github.com/rust-osdev/uefi-rs/issues/218
+
+
+- https://blog.system76.com/post/139138591598/howto-uefi-qemu-guest-on-ubuntu-xenial-host
+  - 分析了一下使用 ovmf 的事情，但是没有仔细看
+
+On the x86 and ARM platforms, a kernel zImage/bzImage can masquerade
+as a PE/COFF image, thereby convincing EFI firmware loaders to load
+it as an EFI executable.
+
+The bzImage located in arch/x86/boot/bzImage must be copied to the EFI
+System Partition (ESP) and renamed with the extension ".efi".
+
 
 ## 如何让程序在 ovmf 启动的时候自动执行
 - https://stackoverflow.com/questions/22641605/running-an-efi-application-automatically-on-boot
@@ -812,6 +927,44 @@ UefiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE *SystemTable) {
 找到文件
 /home/maritns3/core/ld/edk2-workstation/edk2/OvmfPkg/PlatformCI/PlatformBuild.py
 了解了如何添加 startup.nsh 的方法
+
+## EFI system Partition
+在 /boot 下
+```txt
+efi/
+└── EFI
+    ├── BOOT
+    │   ├── BOOTX64.EFI
+    │   ├── fbx64.efi
+    │   └── mmx64.efi
+    └── ubuntu
+        ├── BOOTX64.CSV
+        ├── grub.cfg
+        ├── grubx64.efi
+        ├── mmx64.efi
+        └── shimx64.efi
+```
+而 /boot/grub 中内容就比较诡异了
+
+使用 df -h 可以观察到
+```txt
+/dev/nvme0n1p2                       234G  211G   12G  95% /
+/dev/nvme0n1p1                       511M  5.3M  506M   2% /boot/efi
+```
+
+其实一直都没有搞懂，为什么 nvme 为什么存在四个 dev
+```txt
+➜  /boot l /dev/nvme0 /dev/nvme0n1 /dev/nvme0n1p1 /dev/nvme0n1p2
+crw------- root root 0 B Wed Nov 24 09:00:37 2021  /dev/nvme0
+brw-rw---- root disk 0 B Wed Nov 24 09:00:37 2021 ﰩ /dev/nvme0n1
+brw-rw---- root disk 0 B Wed Nov 24 09:00:40 2021 ﰩ /dev/nvme0n1p1
+brw-rw---- root disk 0 B Wed Nov 24 09:00:37 2021 ﰩ /dev/nvme0n1p2
+```
+
+如果使用 gPartion 的话，实际上就是只有两个分区而已。
+
+- 因为 UEFI 不能支持普通的程序，但是应该是可以支持各种介质 storage 的访问，所以制作出来一个 EFI system Partition
+- [ ] 那么 /boot/grub 的内容为什么可以被加载啊?
 
 ## Res
 EFI_MM_SYSTEM_TABLE;

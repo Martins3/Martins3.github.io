@@ -159,50 +159,51 @@ and the pointer to the UEFI system table allows the UEFI driver to make UEFI Boo
 - [ ] 分配私有数据有什么神奇的地方吗?
 
 ## 9 Driver Binding Protocol
-```c
-///
-/// This protocol provides the services required to determine if a driver supports a given controller.
-/// If a controller is supported, then it also provides routines to start and stop the controller.
-///
-struct _EFI_DRIVER_BINDING_PROTOCOL {
-  EFI_DRIVER_BINDING_SUPPORTED  Supported;
-  EFI_DRIVER_BINDING_START      Start;
-  EFI_DRIVER_BINDING_STOP       Stop;
+UEFI drivers following the UEFI driver model are required to implement the Driver Binding Protocol. This requirement includes the following drivers:
+- Device drivers
+- Bus drivers
+- Hybrid drivers
 
-  ///
-  /// The version number of the UEFI driver that produced the
-  /// EFI_DRIVER_BINDING_PROTOCOL. This field is used by
-  /// the EFI boot service ConnectController() to determine
-  /// the order that driver's Supported() service will be used when
-  /// a controller needs to be started. EFI Driver Binding Protocol
-  /// instances with higher Version values will be used before ones
-  /// with lower Version values. The Version values of 0x0-
-  /// 0x0f and 0xfffffff0-0xffffffff are reserved for
-  /// platform/OEM specific drivers. The Version values of 0x10-
-  /// 0xffffffef are reserved for IHV-developed drivers.
-  ///
-  UINT32                        Version;
+*Root bridge driver, service drivers, and initializing drivers* do not produce this protocol.
 
-  ///
-  /// The image handle of the UEFI driver that produced this instance
-  /// of the EFI_DRIVER_BINDING_PROTOCOL.
-  ///
-  EFI_HANDLE                    ImageHandle;
+- [ ] 看来几个 driver 都是没有分清楚了啊
 
-  ///
-  /// The handle on which this instance of the
-  /// EFI_DRIVER_BINDING_PROTOCOL is installed. In most
-  /// cases, this is the same handle as ImageHandle. However, for
-  /// UEFI drivers that produce more than one instance of the
-  /// EFI_DRIVER_BINDING_PROTOCOL, this value may not be
-  /// the same as ImageHandle.
-  ///
-  EFI_HANDLE                    DriverBindingHandle;
-};
-```
+The EFI_DRIVER_BINDING_PROTOCOL is installed onto the driver's image handle.
+- [ ] 什么叫做 image handle，什么叫做 EFI_DRIVER_BINDING_PROTOCOL install 上去了
+
+It is possible for a driver to produce more than one instance of the Driver Binding Protocol. All additional instances of the Driver Binding Protocol must be installed onto new handles.
+
+The Driver Binding Protocol can be installed directly using the UEFI Boot Service `InstallMultipleProtocolInterfaces()`.
+
+### 9.1
+Installs all the Driver Binding Protocols in the driver entry point
 
 ## 10 UEFI Service Binding Protocol
 - [ ] 和 chapter 9 是啥关系
+
+The Service Binding Protocol is not associated with a single GUID value.
+Instead, each Service Binding Protocol GUID value is paired with another protocol providing a specific set of services.
+The protocol interfaces for all Service Binding Protocols are identical and contain the services `CreateChild()` and `DestroyChild()`.
+When `CreateChild()` is called, a new handle is created with the associated protocol installed. When `DestroyChild()` is called,
+the associated protocol is uninstalled and the handle is freed.
+
+```c
+///
+/// The EFI_SERVICE_BINDING_PROTOCOL provides member functions to create and destroy
+/// child handles. A driver is responsible for adding protocols to the child handle
+/// in CreateChild() and removing protocols in DestroyChild(). It is also required
+/// that the CreateChild() function opens the parent protocol BY_CHILD_CONTROLLER
+/// to establish the parent-child relationship, and closes the protocol in DestroyChild().
+/// The pseudo code for CreateChild() and DestroyChild() is provided to specify the
+/// required behavior, not to specify the required implementation. Each consumer of
+/// a software protocol is responsible for calling CreateChild() when it requires the
+/// protocol and calling DestroyChild() when it is finished with that protocol.
+///
+struct _EFI_SERVICE_BINDING_PROTOCOL {
+  EFI_SERVICE_BINDING_CREATE_CHILD         CreateChild;
+  EFI_SERVICE_BINDING_DESTROY_CHILD        DestroyChild;
+};
+```
 
 ## 11
 

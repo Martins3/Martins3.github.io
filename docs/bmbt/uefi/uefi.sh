@@ -1,7 +1,6 @@
 #!/bin/bash
 set -eu
 
-# 关键参考: https://retrage.github.io/2019/12/05/debugging-ovmf-en.html
 WORK_DIR=/home/maritns3/core/vn/docs/bmbt/uefi
 DISK_IMG=${WORK_DIR}/uefi.img
 PART_IMG=${WORK_DIR}/part.img
@@ -31,11 +30,16 @@ show_help() {
 	echo "-s 调试 OVMF"
 	echo "-g 生成 gdb script"
 	echo "-x 使用图形界面"
-	echo "-b 让 debugcon 的输出到标准输出上"
+	echo "-b 让 debugcon 的输出到标准输出上，同时使用图形界面"
 	exit 0
 }
 
 gen_symbol_offsets() {
+  if [[ ! -f ${PEINFO} ]];then
+    echo "${PEINFO} not found, install https://github.com/retrage/peinfo"
+  fi
+
+
 	if [[ ! -f ${OVMF_LOG} ]]; then
 		echo "${OVMF_LOG} not found, run 'uefi.sh' firstly to generate the log"
     exit 1
@@ -101,6 +105,7 @@ if [[ ! -f ${OVMF_CODE} ]]; then
 	echo "sudo apt install ovmf"
 fi
 
+# 将需要拷贝到 fs0: 中的代码放到此处
 res=(
 	/home/maritns3/core/ld/edk2-workstation/edk2/Build/AppPkg/DEBUG_GCC5/X64/Main.efi
   /home/maritns3/core/ubuntu-linux/arch/x86_64/boot/bzImage
@@ -122,7 +127,6 @@ done
 
 dd if=${PART_IMG} of=${DISK_IMG} bs=512 count=91669 seek=2048 conv=notrunc
 
-# ref: https://blog.hartwork.org/posts/get-qemu-to-boot-efi/
 ${QEMU} \
 	-machine q35,smm=on,accel=kvm \
   ${USE_GRAPHIC} \
