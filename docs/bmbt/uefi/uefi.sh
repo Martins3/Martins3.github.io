@@ -1,21 +1,27 @@
 #!/bin/bash
 set -eu
 
+# --------------- 选项配置 ---------------------------
 WORK_DIR=/home/maritns3/core/vn/docs/bmbt/uefi
+EDK2_DIR=/home/maritns3/core/ld/edk2-workstation/edk2
+PEINFO=/home/maritns3/core/ld/edk2-workstation/peinfo/peinfo
+QEMU=/home/maritns3/core/kvmqemu/build/x86_64-softmmu/qemu-system-x86_64
+# 将需要拷贝到 fs0: 中的代码放到此处
+EFI_APPLICATIONS=(
+	/home/maritns3/core/ld/edk2-workstation/edk2/Build/AppPkg/DEBUG_GCC5/X64/Main.efi
+  /home/maritns3/core/ubuntu-linux/arch/x86_64/boot/bzImage
+)
+# ----------------------------------------------------
+
+VirtualDrive=${WORK_DIR}/VirtualDrive
 DISK_IMG=${WORK_DIR}/uefi.img
 PART_IMG=${WORK_DIR}/part.img
-EDK2_PATH=/home/maritns3/core/ld/edk2-workstation/edk2
-VirtualDrive=${WORK_DIR}/VirtualDrive
 
-OVMFBASE=${EDK2_PATH}/Build/OvmfX64/DEBUG_GCC5
-SEARCHPATHS="${OVMFBASE}/X64 ${EDK2_PATH}/Build/AppPkg/DEBUG_GCC5/X64"
-# SEARCHPATHS="${EDK2_PATH}/Build/AppPkg/DEBUG_GCC5/X64/"
-
+OVMFBASE=${EDK2_DIR}/Build/OvmfX64/DEBUG_GCC5
+SEARCHPATHS="${OVMFBASE}/X64 ${EDK2_DIR}/Build/AppPkg/DEBUG_GCC5/X64"
 
 OVMF_CODE=${OVMFBASE}/FV/OVMF_CODE.fd
 OVMF_VARS=${OVMFBASE}/FV/OVMF_VARS.fd
-QEMU=/home/maritns3/core/kvmqemu/build/x86_64-softmmu/qemu-system-x86_64
-PEINFO=/home/maritns3/core/ld/edk2-workstation/peinfo/peinfo
 OVMF_LOG=/tmp/ovmf.log
 GDB_SCRIPT=/tmp/gdbscript.ovmf
 
@@ -24,6 +30,8 @@ show_help() {
 	echo "qemu=${QEMU}"
 	echo "OVMF=${OVMFBASE}"
 	echo "workdir=${WORK_DIR}"
+	echo "edk2=${EDK2_DIR}"
+	echo "peinfo=${PEINFO}"
 	echo "-------------------------"
 	echo ""
 	echo "-h 展示本消息"
@@ -105,12 +113,6 @@ if [[ ! -f ${OVMF_CODE} ]]; then
 	echo "sudo apt install ovmf"
 fi
 
-# 将需要拷贝到 fs0: 中的代码放到此处
-res=(
-	/home/maritns3/core/ld/edk2-workstation/edk2/Build/AppPkg/DEBUG_GCC5/X64/Main.efi
-  /home/maritns3/core/ubuntu-linux/arch/x86_64/boot/bzImage
-)
-
 if [[ ! -f ${DISK_IMG} ]]; then
 	dd if=/dev/zero of=${DISK_IMG} bs=512 count=93750
 	parted ${DISK_IMG} -s -a minimal mklabel gpt
@@ -121,7 +123,7 @@ fi
 dd if=/dev/zero of=${PART_IMG} bs=512 count=91669
 mformat -i ${PART_IMG} -h 32 -t 32 -n 64 -c 1
 
-for VAR in "${res[@]}"; do
+for VAR in "${EFI_APPLICATIONS[@]}"; do
 	mcopy -i ${PART_IMG} "${VAR}" ::
 done
 

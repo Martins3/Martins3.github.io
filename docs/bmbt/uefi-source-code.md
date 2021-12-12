@@ -73,6 +73,20 @@ in GenericProtocolNotify 7FEAB91A
 in core notify event 7FEAB91A
 ```
 - [ ] CoreInstallMultipleProtocolInterfaces => CoreLocateDevicePath 中通过 guid 找 DevicePath DeviceHandle 的操作可以关注一下
+- [ ] 显然对于 driver 如何设备绑定起来这个事情，没有看懂
+
+- [ ] 那些 service 是 ExitBootServices 之后保存下来的，据说，划分为 boot service 和 runtime service 的?
+- [ ] 感觉我们现在使用的都是 mBootServices, 至于 EFI_RUNTIME_SERVICES 和 EFI_DXE_SERVICES 是啥作用完全不知道啊
+
+- [ ] 发现还是无法理清楚 handle protocol
+## device path
+主要参考:
+- https://zhuanlan.zhihu.com/p/351065844
+- https://zhuanlan.zhihu.com/p/351926214
+
+每个 Physical Device 都会对应 1 个 Controller Handle，在该 Handle 下会安装其对应的 Device Path。
+
+UEFI Bus Driver Connect 时为 Child Device Controller 产生 Device Path
 
 ## driver binding
 ```c
@@ -608,6 +622,49 @@ Pkg/Core/Dxe/DxeMain/DEBUG/AutoGen.c:489
 而 CoreAllocatePool 的注册在 mEfiSystemTableTemplate 中
 
 其实，其内存实现就是在: edk2/MdeModulePkg/Core/Dxe/Mem/Pool.c 中
+
+- CoreDispatcher : 从 mScheduledQueue 中可以取出来 EFI_CORE_DRIVER_ENTRY 然后来加载
+  - CoreLoadImage
+    - CoreLoadImageCommon
+
+```c
+typedef struct {
+  UINTN                           Signature;
+  LIST_ENTRY                      Link;             // mDriverList
+
+  LIST_ENTRY                      ScheduledLink;    // mScheduledQueue
+
+  EFI_HANDLE                      FvHandle;
+  EFI_GUID                        FileName;
+  EFI_DEVICE_PATH_PROTOCOL        *FvFileDevicePath;
+  EFI_FIRMWARE_VOLUME2_PROTOCOL   *Fv;
+
+  VOID                            *Depex;
+  UINTN                           DepexSize;
+
+  BOOLEAN                         Before;
+  BOOLEAN                         After;
+  EFI_GUID                        BeforeAfterGuid;
+
+  BOOLEAN                         Dependent;
+  BOOLEAN                         Unrequested;
+  BOOLEAN                         Scheduled;
+  BOOLEAN                         Untrusted;
+  BOOLEAN                         Initialized;
+  BOOLEAN                         DepexProtocolError;
+
+  EFI_HANDLE                      ImageHandle;
+  BOOLEAN                         IsFvImage;
+
+} EFI_CORE_DRIVER_ENTRY;
+```
+
+https://stackoverflow.com/questions/63400839/how-to-set-dxe-drivers-loading-sequence
+> DXE dispatcher first loads the driver that specifed in Apriori file.
+
+- DxeMain
+  - CoreInitializeDispatcher
+    - CoreFwVolEventProtocolNotify : While you are at it read the Ariori file into memory. Place drivers in the A Priori list onto the mScheduledQueue.
 
 ## CoreAllocatePages
 ```c

@@ -207,5 +207,41 @@ struct _EFI_SERVICE_BINDING_PROTOCOL {
 
 ## 11
 
+## 18
+The PCI bus driver consumes the services of the `PCI_ROOT_BRIDGE_IO_PROTOCOL` and uses those services to enumerate the PCI controllers present in the system.
+In this example, the PCI bus driver detected a disk controller, a graphics controller, and a USB host controller.
+As a result, the PCI bus driver produces three child handles with the `EFI_DEVICE_PATH_PROTOCOL` and the `EFI_PCI_IO_PROTOCOL`.
+
+- [ ] 当检测到了三个 child 的时候，那么就会产生三个 EFI_DEVICE_PATH_PROTOCOL 出来
+
+```c
+/**
+  This protocol can be used on any device handle to obtain generic path/location
+  information concerning the physical device or logical device. If the handle does
+  not logically map to a physical device, the handle may not necessarily support
+  the device path protocol. The device path describes the location of the device
+  the handle is for. The size of the Device Path can be determined from the structures
+  that make up the Device Path.
+**/
+typedef struct {
+  UINT8 Type;       ///< 0x01 Hardware Device Path.
+                    ///< 0x02 ACPI Device Path.
+                    ///< 0x03 Messaging Device Path.
+                    ///< 0x04 Media Device Path.
+                    ///< 0x05 BIOS Boot Specification Device Path.
+                    ///< 0x7F End of Hardware Device Path.
+
+  UINT8 SubType;    ///< Varies by Type
+                    ///< 0xFF End Entire Device Path, or
+                    ///< 0x01 End This Instance of a Device Path and start a new
+                    ///< Device Path.
+
+  UINT8 Length[2];  ///< Specific Device Path data. Type and Sub-Type define
+                    ///< type of data. Size of data is included in Length.
+
+} EFI_DEVICE_PATH_PROTOCOL;
+```
+
+
 ## 30
 按照 30 的操作执行就可以了
