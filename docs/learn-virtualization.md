@@ -1,5 +1,6 @@
 # 虚拟化学习的一点经验之谈
 我是首先了解了一点内核再去学习虚拟化的，总体来说，虚拟化还是一个很有趣的方向，而且在云计算等产业中也有很强的应用。
+因为自身的水平原因，这里的教程主要侧重于 kvm 相关的东西。
 
 ## 教材
 Hardware and Software Support for Virtualization : 作者[Edouard Bugnion](https://en.wikipedia.org/wiki/Edouard_Bugnion) 是 VMware 的创始人之一，绝对的经典。

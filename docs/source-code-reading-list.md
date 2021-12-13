@@ -8,11 +8,12 @@ inspired by https://github.com/geektutu/7days-golang
 - [qbe](https://github.com/Martins3/Martins3.github.io/blob/master/compiler/qbe.md) : LLVM 对于我来说已经过于庞大了
 - [wren](https://github.com/Martins3/Martins3.github.io/blob/master/compiler/wren.md) : 一直想要搞一个 vm, 每次听到别人谈论 v8, JVM 虚拟机的时候都非常的向往。
 - [mold](https://github.com/rui314/mold) : 代码量非常的小，配合[教程学习](https://eli.thegreenplace.net/tag/linkers-and-loaders) 应该是不错的
-- [chibicc](https://github.com/rui314/chibicc) : C11 编译器
+- [chibicc](https://github.com/rui314/chibicc) : 支持 C11 编译器
 - [lua](https://www.lua.org/source/) : 大名鼎鼎的 lua 语言，被广泛的使用，其代码量只有 10000 多行。
 
 ## 操作系统
 - [zircon](https://github.com/Martins3/Martins3.github.io/blob/master/os/zicron/zicron_overview.md)
+- [skift](https://github.com/skiftOS/skift) : 两万行 C++ 构建的操作，直接 image viewer 之类的
 
 ## 虚拟化
 - [gvisor](https://github.com/Martins3/Martins3.github.io/blob/master/hack/kvm/gvisor.md)

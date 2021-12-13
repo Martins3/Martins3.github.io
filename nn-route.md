@@ -10,3 +10,6 @@ https://arthurdouillard.com/deepcourse/ : 机器学习路线
 
 ## 可能有用
 https://github.com/FavioVazquez/ds-cheatsheets
+
+## 给小孩收集的
+https://github.com/tsherif/space-shooter.c

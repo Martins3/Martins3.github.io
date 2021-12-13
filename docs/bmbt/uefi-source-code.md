@@ -79,6 +79,12 @@ in core notify event 7FEAB91A
 - [ ] 感觉我们现在使用的都是 mBootServices, 至于 EFI_RUNTIME_SERVICES 和 EFI_DXE_SERVICES 是啥作用完全不知道啊
 
 - [ ] 发现还是无法理清楚 handle protocol
+
+- [x] os loader 是可以加载 os 的，那么 os 那么是需要一个 nvme 驱动的
+  - [x] 让我疑惑的内容是，内核实际上在 /boot/bzImage 上，所以，也存在一个 ext4 的 dirver 吗?
+  - 似乎 ext4 不是 edk2 支持的，在 2012 7 月还在讨论 https://www.mail-archive.com/devel@edk2.groups.io/msg33956.html
+  - 这部分是放到 grub 中间的
+
 ## device path
 主要参考:
 - https://zhuanlan.zhihu.com/p/351065844
