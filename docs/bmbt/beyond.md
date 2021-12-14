@@ -1,3 +1,5 @@
+虽然，
+
 chapter 8 : 原来叫做 DXE 时代
 
 9 : some ?
@@ -44,10 +46,18 @@ Any UEFI code can operate with protocols during boot time. However, after `ExitB
 However, drivers may create multiple instances of a particular protocol and attach each instance to a different handle.[^2]
 
 
+To accomplish this task, several important steps must be taken:
+- The OS loader must determine from where it was loaded. This determination allows an OS loader to retrieve additional files from the same location.[^4]
+  - [ ] 什么意思啊? loaded 的位置还能发生改变 ?
+  - [ ] additional files 是什么意思 ?
 
 ## 使用 gDxeCoreImageHandle 为例子了解一下 HANDLE 的作用
 - 看文档，老是说，HANDLE 是一组 protocols，没有其他的功能吗?
 - 实际上，似乎更加重要的功能在于
+
+两个组合拳:
+- CoreInstallProtocolInterface
+- CoreHandleProtocol
 
 - [ ] 那么 IHANDLE 的作用是啥啊?
 ```c

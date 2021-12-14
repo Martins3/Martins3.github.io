@@ -19,7 +19,6 @@
   - Implementation of protocols that produce an EFI_EVENT to inform protocol consumers when input is available.
 
 - [ ] protocol 的这种设计在这种设计模式下是最好的吗? 存在更好的设计模式吗?
-- [ ] 让内核作为 bzImage 启动，那么 ExitBootServices 之后，还存在一些 service 的，那些 service 使用的内存的保留是如何实现的?
 
 - [ ] 5.1.1.2 Do not directly allocate a memory buffer for DMA access
   - 在分配这些内存会存在什么特殊的要求吗? 或者或 UEFI 增加什么特殊操作吗?
@@ -75,7 +74,6 @@ in core notify event 7FEAB91A
 - [ ] CoreInstallMultipleProtocolInterfaces => CoreLocateDevicePath 中通过 guid 找 DevicePath DeviceHandle 的操作可以关注一下
 - [ ] 显然对于 driver 如何设备绑定起来这个事情，没有看懂
 
-- [ ] 那些 service 是 ExitBootServices 之后保存下来的，据说，划分为 boot service 和 runtime service 的?
 - [ ] 感觉我们现在使用的都是 mBootServices, 至于 EFI_RUNTIME_SERVICES 和 EFI_DXE_SERVICES 是啥作用完全不知道啊
 
 - [ ] 发现还是无法理清楚 handle protocol
@@ -84,6 +82,8 @@ in core notify event 7FEAB91A
   - [x] 让我疑惑的内容是，内核实际上在 /boot/bzImage 上，所以，也存在一个 ext4 的 dirver 吗?
   - 似乎 ext4 不是 edk2 支持的，在 2012 7 月还在讨论 https://www.mail-archive.com/devel@edk2.groups.io/msg33956.html
   - 这部分是放到 grub 中间的
+
+- [ ] 跟踪一下 ExitBootServices 到底释放了什么东西
 
 ## device path
 主要参考:

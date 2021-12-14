@@ -23,18 +23,8 @@ id=ubuntu
 abs_loc=/home/maritns3/core/vn/hack/qemu/ubuntu
 disk_img="${abs_loc}/${id}.img.qcow2"
 disk_img_snapshot="${abs_loc}/${id}.snapshot.qcow2"
-version="21.04"
-iso_name=ubuntu-${version}-desktop-amd64.iso
-iso=${abs_loc}/${iso_name}
-kernel=/home/maritns3/core/linux/arch/x86/boot/bzImage
-
-# Get image.
-if [ ! -f "$iso" ]; then
-	sure "Do you want to download ${iso}"
-	echo "ubuntu image not found"
-	wget "http://releases.ubuntu.com/${version}/${iso_name}"
-	exit 0
-fi
+iso=/home/maritns3/arch/nixos-gnome-21.11.334247.573095944e7-x86_64-linux.iso
+kernel=/home/maritns3/core/ubuntu-linux/arch/x86_64/boot/bzImage
 
 # Go through installer manually.
 if [ ! -f "$disk_img" ]; then
@@ -42,11 +32,8 @@ if [ ! -f "$disk_img" ]; then
 	qemu-img create -f qcow2 "$disk_img" 20G
 	qemu-system-x86_64 \
 		-cdrom "$iso" \
-		-drive "file=${disk_img},format=qcow2" \
-		-enable-kvm \
-		-m 2G \
-		-smp 2 \
-		;
+		-hda "$disk_img" \
+		-enable-kvm -m 2G -smp 2 -cpu host
 	exit 0
 fi
 
@@ -64,25 +51,18 @@ fi
 
 # Run the installed image.
 if [ $# -eq 1 ]; then
-  echo ":"
+	echo "::::::::::::::::::::::::::::::::::"
 	qemu-system-x86_64 \
-		-drive "file=${disk_img},format=qcow2" \
+		-hda "${disk_img}" \
 		-enable-kvm \
 		-m 8G \
 		-smp 8 \
 		-soundhw hda \
 		-vga virtio \
-    -virtfs local,path=/home/maritns3/core/vn/hack/qemu/ubuntu,mount_tag=host0,security_model=mapped,id=host0
+		-virtfs local,path=/home/maritns3/core/vn/hack/qemu/ubuntu,mount_tag=host0,security_model=mapped,id=host0
 else
 	qemu-system-x86_64 \
 		-hda ${disk_img} \
-		-enable-kvm \
-    -append "root=/dev/sda3" \
-    -kernel /home/maritns3/core/ubuntu-linux/arch/x86/boot/bzImage \
-    -cpu host \
-		-m 8G \
-		-smp 8 \
-
-    # -kernel ${kernel} \
-    # -kernel /home/maritns3/core/vn/hack/qemu/ubuntu/vmlinuz \
+		-enable-kvm -kernel ${kernel} -cpu host -m 8G -smp 8 \
+		-append "root=/dev/sda"
 fi
