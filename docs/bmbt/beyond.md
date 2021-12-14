@@ -1,6 +1,4 @@
-虽然，
-
-chapter 8 : 原来叫做 DXE 时代
+虽然 chapter 4 的名称叫做 protocols you should know，但是实际上描述一个 os loader 应该做什么的
 
 9 : some ?
 
@@ -51,13 +49,27 @@ To accomplish this task, several important steps must be taken:
   - [ ] 什么意思啊? loaded 的位置还能发生改变 ?
   - [ ] additional files 是什么意思 ?
 
+The DXE phase contains an implementation of UEFI that is compliant with the PI (Platform Initialization) Specification.
+As a result, both the DXE Core and DXE drivers share many of the attributes of UEFI images.
+The DXE phase is the phase where most of the system initialization is performed. The Pre-EFI Initialization (PEI) phase is responsible for initializing permanent memory in the platform so the DXE phase can be loaded and executed.
+The state of the system at the end of the PEI phase is passed to the DXE phase through a list of position-independent data structures called Hand-Off Blocks (HOBs).
+The DXE phase consists of several components:[^8]
+- DXE Core
+- DXE Dispatcher
+- DXE Drivers
+
+- [ ] 什么叫做 PI (Platform Initialization) Specification.
+
+The DXE Core produces a set of Boot Services, Runtime Services, and DXE Services.
+The DXE Dispatcher is responsible for discovering and executing DXE drivers in the correct order.
+The DXE drivers are responsible for initializing the processor, chipset, and platform components as well as providing software abstractions for console and boot devices.
+These components work together to initialize the platform and provide the services required to boot an OS.[^8]
+
+The DXE Core produces the EFI System Table and its associated set of EFI Boot Services and EFI Runtime Services. The DXE Core also contains the DXE Dispatcher, whose main purpose is to discover and execute DXE drivers stored in firmware volumes.
+
 ## 使用 gDxeCoreImageHandle 为例子了解一下 HANDLE 的作用
 - 看文档，老是说，HANDLE 是一组 protocols，没有其他的功能吗?
 - 实际上，似乎更加重要的功能在于
-
-两个组合拳:
-- CoreInstallProtocolInterface
-- CoreHandleProtocol
 
 - [ ] 那么 IHANDLE 的作用是啥啊?
 ```c
@@ -110,5 +122,12 @@ gDxeCoreImageHandle 的使用
     - CoreLoadPeImage
     - CoreReinstallProtocolInterface
 
+以为是两个组合拳
+- CoreInstallProtocolInterface
+- CoreHandleProtocol : Queries a handle to determine if it supports a specified protocol.
+  - OpenProtocol : Locates the installed protocol handler for the handle, and invokes it to obtain the protocol interface.
+好吧，原来 CoreHandleProtocol 只是 CoreOpenProtocol 的简单封装
+
 [^2]: chapter 2
 [^4]: chapter 4
+[^8]: chapter 8

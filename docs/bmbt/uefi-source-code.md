@@ -837,60 +837,45 @@ Pkg/Core/Dxe/DxeMain/DEBUG/AutoGen.c:489
 #52 0x0000000000000000 in ?? ()
 ```
 
-## 让程序运行 shell 命令
-- https://stackoverflow.com/questions/38738862/run-a-uefi-shell-command-from-inside-uefi-application
-这个亲测有效，顺便理解了:
-- ENTRY_POINT
-- LibraryClasses
+## 分析 io stack 从而理解关闭掉 interrupt timer 的效果是什么
 
 ```c
-#include <Library/ShellLib.h>
-#include <Library/UefiLib.h>
-#include <Uefi.h>
-
-EFI_STATUS
-EFIAPI
-UefiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE *SystemTable) {
-  EFI_STATUS Status;
-
-  ShellExecute(&ImageHandle, L"echo Hello World!", FALSE, NULL, &Status);
-
-  return Status;
-}
-```
-
-```inf
-## @file
-#  A simple, basic, EDK II native, "hello" application.
-#
-#   Copyright (c) 2010 - 2018, Intel Corporation. All rights reserved.<BR>
-#   SPDX-License-Identifier: BSD-2-Clause-Patent
-#
-##
-
-[Defines]
-  INF_VERSION                    = 0x00010006
-  BASE_NAME                      = Hello
-  FILE_GUID                      = a912f198-7f0e-4803-b908-b757b806ec83
-  MODULE_TYPE                    = UEFI_APPLICATION
-  VERSION_STRING                 = 0.1
-  ENTRY_POINT                    = UefiMain
-
-#
-#  VALID_ARCHITECTURES           = IA32 X64
-#
-
-[Sources]
-  Hello.c
-
-[Packages]
-  MdePkg/MdePkg.dec
-  ShellPkg/ShellPkg.dec
-
-[LibraryClasses]
-  UefiLib
-  ShellCEntryLib
-  ShellLib
+/*
+#0  FatDiskIo (Volume=Volume@entry=0x7eb09018, IoMode=IoMode@entry=ReadDisk, Offset=514, BufferSize=2, Buffer=Buffer@entry=0x7eb092e8, Task=Task@entry=0x0) at /home/ma
+ritns3/core/ld/edk2-workstation/edk2/FatPkg/EnhancedFatDxe/Misc.c:330
+#1  0x000000007ed758f1 in FatAccessVolumeDirty (Volume=Volume@entry=0x7eb09018, IoMode=IoMode@entry=ReadDisk, DirtyValue=DirtyValue@entry=0x7eb092e8) at /home/maritns3
+/core/ld/edk2-workstation/edk2/FatPkg/EnhancedFatDxe/Misc.c:236
+#2  0x000000007ed75d41 in FatOpenDevice (Volume=0x7eb09018) at /home/maritns3/core/ld/edk2-workstation/edk2/FatPkg/EnhancedFatDxe/Init.c:349
+#3  FatAllocateVolume (BlockIo=<optimized out>, DiskIo2=<optimized out>, DiskIo=<optimized out>, Handle=0x7eb12b18) at /home/maritns3/core/ld/edk2-workstation/edk2/Fat
+Pkg/EnhancedFatDxe/Init.c:67
+#4  FatDriverBindingStart (This=0x7ed7bd00, ControllerHandle=0x7eb12b18, RemainingDevicePath=<optimized out>) at /home/maritns3/core/ld/edk2-workstation/edk2/FatPkg/En
+hancedFatDxe/Fat.c:417
+#5  0x000000007feb69f5 in CoreConnectSingleController (RemainingDevicePath=0x0, ContextDriverImageHandles=0x0, ControllerHandle=0x7eb12b18) at /home/maritns3/core/ld/e
+dk2-workstation/edk2/MdeModulePkg/Core/Dxe/Hand/DriverSupport.c:650
+#6  CoreConnectController (ControllerHandle=0x7eb12b18, DriverImageHandle=DriverImageHandle@entry=0x0, RemainingDevicePath=RemainingDevicePath@entry=0x0, Recursive=Rec
+ursive@entry=1 '\001') at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/Hand/DriverSupport.c:136
+#7  0x000000007feb6bd5 in CoreConnectController (ControllerHandle=0x7eb3a718, DriverImageHandle=DriverImageHandle@entry=0x0, RemainingDevicePath=RemainingDevicePath@en
+try=0x0, Recursive=Recursive@entry=1 '\001') at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/Hand/DriverSupport.c:222
+#8  0x000000007feb6bd5 in CoreConnectController (ControllerHandle=0x7ed80c98, DriverImageHandle=<optimized out>, RemainingDevicePath=<optimized out>, Recursive=<optimi
+zed out>) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/Hand/DriverSupport.c:222
+#9  0x000000007f0533c5 in ConnectRecursivelyIfPciMassStorage (PciHeader=0x7fe9ead0, Instance=0x7ec75998, Handle=0x7ed80c98) at /home/maritns3/core/ld/edk2-workstation/
+edk2/OvmfPkg/Library/PlatformBootManagerLib/BdsPlatform.c:1354
+#10 ConnectRecursivelyIfPciMassStorage (Handle=Handle@entry=0x7ed80c98, Instance=Instance@entry=0x7ed80428, PciHeader=PciHeader@entry=0x7fe9ead0) at /home/maritns3/cor
+e/ld/edk2-workstation/edk2/OvmfPkg/Library/PlatformBootManagerLib/BdsPlatform.c:1312
+#11 0x000000007f04c28e in VisitingAPciInstance (Handle=0x7ed80c98, Instance=0x7ed80428, Context=0x7f0532ee <ConnectRecursivelyIfPciMassStorage>) at /home/maritns3/core
+/ld/edk2-workstation/edk2/OvmfPkg/Library/PlatformBootManagerLib/BdsPlatform.c:951
+#12 0x000000007f0528f9 in VisitAllInstancesOfProtocol (Id=0x7f066700, CallBackFunction=0x7f04c247 <VisitingAPciInstance>, Context=0x7f0532ee <ConnectRecursivelyIfPciMa
+ssStorage>) at /home/maritns3/core/ld/edk2-workstation/edk2/OvmfPkg/Library/PlatformBootManagerLib/BdsPlatform.c:910
+#13 0x000000007f05ffab in PlatformBdsRestoreNvVarsFromHardDisk () at /home/maritns3/core/ld/edk2-workstation/edk2/OvmfPkg/Library/PlatformBootManagerLib/BdsPlatform.c:
+1539
+#14 PlatformBootManagerAfterConsole () at /home/maritns3/core/ld/edk2-workstation/edk2/OvmfPkg/Library/PlatformBootManagerLib/BdsPlatform.c:1539
+#15 BdsEntry (This=<optimized out>) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Universal/BdsDxe/BdsEntry.c:915
+#16 0x000000007feaabe3 in DxeMain (HobStart=<optimized out>) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/DxeMain/DxeMain.c:551
+#17 0x000000007feaac88 in ProcessModuleEntryPointList (HobStart=<optimized out>) at /home/maritns3/core/ld/edk2-workstation/edk2/Build/OvmfX64/DEBUG_GCC5/X64/MdeModule
+Pkg/Core/Dxe/DxeMain/DEBUG/AutoGen.c:489
+#18 _ModuleEntryPoint (HobStart=<optimized out>) at /home/maritns3/core/ld/edk2-workstation/edk2/MdePkg/Library/DxeCoreEntryPoint/DxeCoreEntryPoint.c:48
+#19 0x000000007fee10cf in InternalSwitchStack ()
+#20 0x0000000000000000 in ?? ()
 ```
 
 ## StdLib
@@ -978,20 +963,9 @@ The bzImage located in arch/x86/boot/bzImage must be copied to the EFI
 System Partition (ESP) and renamed with the extension ".efi".
 
 
-## 如何让程序在 ovmf 启动的时候自动执行
-- https://stackoverflow.com/questions/22641605/running-an-efi-application-automatically-on-boot
-- https://stackoverflow.com/questions/50011728/how-is-an-efi-application-being-set-as-the-bootloader-through-code
-
-在 shell 会等待 5s 来等待程序的执行:
-/home/maritns3/core/ld/edk2-workstation/edk2/ShellPkg/Application/Shell/Shell.c
-在其中修改为 0s
-
-在 edk2 的代码中搜索 startup.nsh
-找到文件
-/home/maritns3/core/ld/edk2-workstation/edk2/OvmfPkg/PlatformCI/PlatformBuild.py
-了解了如何添加 startup.nsh 的方法
-
 ## EFI system Partition
+我认为安装一下 nixos 有助于帮助我们理解这些蛇皮
+
 在 /boot 下
 ```txt
 efi/

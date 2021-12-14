@@ -12,6 +12,7 @@
 - [在 Linux 上调试 edk2](#在-linux-上调试-edk2)
 - [生成 compile_commands.json](#生成-compile_commandsjson)
 - [内核作为 efi 文件启动](#内核作为-efi-文件启动)
+- [让程序运行 shell 命令](#让程序运行-shell-命令)
 - [资源](#资源)
 
 <!-- vim-markdown-toc -->
@@ -114,6 +115,11 @@ build -p AppPkg/AppPkg.dsc
 ```
 3. VirtualDrive 中的内容见 https://github.com/Martins3/Martins3.github.io/tree/master/docs/bmbt/uefi/VirtualDrive
 
+
+- https://stackoverflow.com/questions/22641605/running-an-efi-application-automatically-on-boot
+- https://stackoverflow.com/questions/50011728/how-is-an-efi-application-being-set-as-the-bootloader-through-code
+
+在 shell 会等待 5s 来等待程序的执行, 在 ShellPkg/Application/Shell/Shell.c 中修改为等待时间 0s
 ## 在 Linux 上调试 edk2
 主要参考 https://retrage.github.io/2019/12/05/debugging-ovmf-en.html
 
@@ -182,6 +188,59 @@ Error: cc or cc_flags is not defined!
 ## 内核作为 efi 文件启动
 内核实际上可以作为 efi 文件在 UEFI 上执行, 具体参考[内核文档](https://www.kernel.org/doc/Documentation/efi-stub.txt)
 
+## 让程序运行 shell 命令
+参考[^2]
+
+```c
+#include <Library/ShellLib.h>
+#include <Library/UefiLib.h>
+#include <Uefi.h>
+
+EFI_STATUS
+EFIAPI
+UefiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE *SystemTable) {
+  EFI_STATUS Status;
+
+  ShellExecute(&ImageHandle, L"echo Hello World!", FALSE, NULL, &Status);
+
+  return Status;
+}
+```
+
+```inf
+## @file
+#  A simple, basic, EDK II native, "hello" application.
+#
+#   Copyright (c) 2010 - 2018, Intel Corporation. All rights reserved.<BR>
+#   SPDX-License-Identifier: BSD-2-Clause-Patent
+#
+##
+
+[Defines]
+  INF_VERSION                    = 0x00010006
+  BASE_NAME                      = Hello
+  FILE_GUID                      = a912f198-7f0e-4803-b908-b757b806ec83
+  MODULE_TYPE                    = UEFI_APPLICATION
+  VERSION_STRING                 = 0.1
+  ENTRY_POINT                    = UefiMain
+
+#
+#  VALID_ARCHITECTURES           = IA32 X64
+#
+
+[Sources]
+  Hello.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+  ShellPkg/ShellPkg.dec
+
+[LibraryClasses]
+  UefiLib
+  ShellCEntryLib
+  ShellLib
+```
+
 ## 资源
 - Robin 的 blog: http://yiiyee.cn/blog/
 - https://wiki.osdev.org/GNU-EFI
@@ -203,3 +262,4 @@ Error: cc or cc_flags is not defined!
 </script>
 
 [^1]: https://stackoverflow.com/questions/800030/remove-carriage-return-in-unix
+[^2]: https://stackoverflow.com/questions/38738862/run-a-uefi-shell-command-from-inside-uefi-application
