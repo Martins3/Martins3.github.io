@@ -1,9 +1,5 @@
 虽然 chapter 4 的名称叫做 protocols you should know，但是实际上描述一个 os loader 应该做什么的
 
-9 : some ?
-
-14 : 模拟
-
 Table 5.2 中说，EfiBootServicesCode 和 EfiBootServicesData 将会变为普通使用的 memory，如果我们继续使用，只要保证以后的 os 不会访问这些内容，是不是就不会存在问题的?
 
 首先，搞个串口输出，不要对于 UEFI 进行任何的侵入, 验证一下想法，确定需要移植的接口。

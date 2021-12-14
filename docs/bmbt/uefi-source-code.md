@@ -838,6 +838,7 @@ Pkg/Core/Dxe/DxeMain/DEBUG/AutoGen.c:489
 ```
 
 ## 分析 io stack 从而理解关闭掉 interrupt timer 的效果是什么
+根据 beyond chapter 9 中间的 Disk io 和 Block io
 
 ```c
 /*
@@ -877,6 +878,80 @@ Pkg/Core/Dxe/DxeMain/DEBUG/AutoGen.c:489
 #19 0x000000007fee10cf in InternalSwitchStack ()
 #20 0x0000000000000000 in ?? ()
 ```
+
+```c
+//
+// Template for DiskIo private data structure.
+// The pointer to BlockIo protocol interface is assigned dynamically.
+//
+DISK_IO_PRIVATE_DATA        gDiskIoPrivateDataTemplate = {
+  DISK_IO_PRIVATE_DATA_SIGNATURE,
+  {
+    EFI_DISK_IO_PROTOCOL_REVISION,
+    DiskIoReadDisk,
+    DiskIoWriteDisk
+  },
+  {
+    EFI_DISK_IO2_PROTOCOL_REVISION,
+    DiskIo2Cancel,
+    DiskIo2ReadDiskEx,
+    DiskIo2WriteDiskEx,
+    DiskIo2FlushDiskEx
+  }
+};
+```
+- DiskIoReadDisk
+  - DiskIo2ReadWriteDisk
+    - PartitionWriteBlocks : 似乎在启动的时候会初步的使用一下
+      - 为什么感觉是 PartitionWriteBlocks 回去调用 AtaBlockIoWriteBlocks
+    - AtaBlockIoWriteBlocks
+      - BlockIoReadWrite
+        - AccessAtaDevice : 在其中划分为 Blocking mode 和 Non Blocking Mode，实际上，我们选择的是
+          - TransferAtaDevice
+            - `Packet->Timeout  = EFI_TIMER_PERIOD_SECONDS (DivU64x32 (MultU64x32 (TransferLength, AtaDevice->BlockMedia.BlockSize), 3300000) + 31);` : 计算重新尝试的时间
+            - AtaDevicePassThru
+              - AtaPassThruPassThru
+                - AtaPassThruPassThruExecute
+                  - AhciDmaTransfer
+                    - AhciBuildCommand
+                    - AhciStartCommand
+                    - AhciWaitUntilFisReceived
+                      - AhciCheckFisReceived
+                      - MicroSecondDelay
+
+```c
+/*
+#0  AccessAtaDevice (AtaDevice=AtaDevice@entry=0x7eb3a398, Buffer=Buffer@entry=0x7e028018 '\257' <repeats 200 times>..., StartLba=StartLba@entry=2685, NumberOfBlocks=N
+umberOfBlocks@entry=128, IsWrite=IsWrite@entry=0 '\000', Token=Token@entry=0x0) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Bus/Ata/AtaBusDxe/AtaPassT
+hruExecute.c:794
+#1  0x000000007ed9a9e5 in BlockIoReadWrite (This=This@entry=0x7eb3a398, MediaId=MediaId@entry=2114093080, Lba=2685, Token=Token@entry=0x0, BufferSize=<optimized out>,
+Buffer=Buffer@entry=0x7e028018, IsBlockIo2=IsBlockIo2@entry=0 '\000', IsWrite=IsWrite@entry=0 '\000') at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Bus/
+Ata/AtaBusDxe/AtaBus.c:1083
+#2  0x000000007ed9ab28 in AtaBlockIoReadBlocks (This=0x7eb3a398, MediaId=2114093080, Lba=<optimized out>, BufferSize=<optimized out>, Buffer=0x7e028018) at /home/marit
+ns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Bus/Ata/AtaBusDxe/AtaBus.c:1120
+#3  0x000000007edf3ba2 in QemuFwCfgReadBytes (Size=128, Buffer=0xa7d) at /home/maritns3/core/ld/edk2-workstation/edk2/OvmfPkg/Library/QemuFwCfgLib/QemuFwCfgDxe.c:124
+#4  0x000000007edf393b in ConvertKernelBlobTypeToFileInfo (BlobType=<optimized out>, BufferSize=0x10001 <__sF+65>, Buffer=0x7eb33318) at /home/maritns3/core/ld/edk2-wo
+rkstation/edk2/OvmfPkg/QemuKernelLoaderFsDxe/QemuKernelLoaderFsDxe.c:312
+#5  0x0000000000000000 in ?? ()
+
+
+#0  AccessAtaDevice (AtaDevice=AtaDevice@entry=0x7eb3a398, Buffer=Buffer@entry=0x7e67b018 "\360\377\377\377\003", StartLba=StartLba@entry=2049, NumberOfBlocks=NumberOf
+Blocks@entry=64, IsWrite=IsWrite@entry=1 '\001', Token=Token@entry=0x0) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Bus/Ata/AtaBusDxe/AtaPassThruExecu
+te.c:794
+#1  0x000000007ed9a9e5 in BlockIoReadWrite (This=<optimized out>, MediaId=<optimized out>, Lba=Lba@entry=2049, Token=Token@entry=0x0, BufferSize=BufferSize@entry=32768
+, Buffer=Buffer@entry=0x7e67b018, IsBlockIo2=IsBlockIo2@entry=0 '\000', IsWrite=IsWrite@entry=1 '\001') at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Bu
+s/Ata/AtaBusDxe/AtaBus.c:1083
+#2  0x000000007ed9aaee in AtaBlockIoWriteBlocks (This=0x7eb3a398, MediaId=2120724504, Lba=2049, BufferSize=32768, Buffer=0x7e67b018) at /home/maritns3/core/ld/edk2-wor
+kstation/edk2/MdeModulePkg/Bus/Ata/AtaBusDxe/AtaBus.c:1156
+#3  0x000000007edf3c15 in AllocFwCfgDmaAccessBuffer (MapInfo=<synthetic pointer>, Access=<synthetic pointer>) at /home/maritns3/core/ld/edk2-workstation/edk2/OvmfPkg/L
+ibrary/QemuFwCfgLib/QemuFwCfgDxe.c:170
+#4  InternalQemuFwCfgDmaBytes (Control=2, Buffer=0x0, Size=2146033040) at /home/maritns3/core/ld/edk2-workstation/edk2/OvmfPkg/Library/QemuFwCfgLib/QemuFwCfgDxe.c:384
+#5  InternalQemuFwCfgDmaBytes (Control=2, Buffer=0x0, Size=2146033040) at /home/maritns3/core/ld/edk2-workstation/edk2/OvmfPkg/Library/QemuFwCfgLib/QemuFwCfgDxe.c:348
+#6  InternalQemuFwCfgReadBytes (Buffer=0x0, Size=2146033040) at /home/maritns3/core/ld/edk2-workstation/edk2/OvmfPkg/Library/QemuFwCfgLib/QemuFwCfgLib.c:57
+#7  QemuFwCfgReadBytes (Size=2146033040, Buffer=0x0) at /home/maritns3/core/ld/edk2-workstation/edk2/OvmfPkg/Library/QemuFwCfgLib/QemuFwCfgLib.c:83
+#8  0x0000000000000000 in ?? ()
+```
+怎么感觉对不上啊!
 
 ## StdLib
 因为一些原因，edk2 将其实现的 libc 和 edk2 的主要库分离开了，使用方法很简单
