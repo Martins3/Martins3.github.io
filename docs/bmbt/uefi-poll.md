@@ -251,6 +251,38 @@ on/edk2/UefiCpuPkg/Library/CpuExceptionHandlerLib/X64/ArchExceptionHandler.c:94
 * TimerInterruptHandler 中将 mTimerNotifyFunction 注册为 : CoreTimerTick
 * mEfiCheckTimerEvent 注册的 hook 为 CoreCheckTimers，会将其中过期的 timer 处理一下
 
+TimerDriverRegisterHandler
+- 定义在 OvmfPkg/8254TimerDxe 中，这是和架构相关的
+- This function registers the handler NotifyFunction so it is called every time the timer interrupt fires.
+
+```c
+/*
+#0  TimerDriverRegisterHandler (This=0x7f145c40, NotifyFunction=0x7fead493 <CoreTimerTick>) at /home/maritns3/core/ld/edk2-workstation/edk2/OvmfPkg/8254TimerDxe/Timer.
+c:132
+#1  0x000000007feab988 in GenericProtocolNotify (Event=<optimized out>, Context=0x7fec15f8) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/DxeMa
+in/DxeProtocolNotify.c:155
+#2  0x000000007feac77d in CoreDispatchEventNotifies (Priority=8) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/Event/Event.c:194
+#3  CoreRestoreTpl (NewTpl=4) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/Event/Tpl.c:131
+#4  0x000000007feb7062 in CoreInstallMultipleProtocolInterfaces (Handle=0x7f145cb0) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/Hand/Handle.c
+:611
+#5  0x000000007f145328 in TimerDriverInitialize (SystemTable=<optimized out>, ImageHandle=<optimized out>) at /home/maritns3/core/ld/edk2-workstation/edk2/OvmfPkg/8254
+TimerDxe/Timer.c:393
+#6  ProcessModuleEntryPointList (SystemTable=<optimized out>, ImageHandle=<optimized out>) at /home/maritns3/core/ld/edk2-workstation/edk2/Build/OvmfX64/DEBUG_GCC5/X64
+/OvmfPkg/8254TimerDxe/8254Timer/DEBUG/AutoGen.c:194
+#7  _ModuleEntryPoint (ImageHandle=<optimized out>, SystemTable=<optimized out>) at /home/maritns3/core/ld/edk2-workstation/edk2/MdePkg/Library/UefiDriverEntryPoint/Dr
+iverEntryPoint.c:127
+#8  0x000000007feba8cf in CoreStartImage (ImageHandle=0x7f151c98, ExitDataSize=0x0, ExitData=0x0) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe
+/Image/Image.c:1654
+#9  0x000000007feb1803 in CoreDispatcher () at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/Dispatcher/Dispatcher.c:523
+#10 CoreDispatcher () at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/Dispatcher/Dispatcher.c:404
+#11 0x000000007feaaafd in DxeMain (HobStart=<optimized out>) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/DxeMain/DxeMain.c:508
+#12 0x000000007feaac88 in ProcessModuleEntryPointList (HobStart=<optimized out>) at /home/maritns3/core/ld/edk2-workstation/edk2/Build/OvmfX64/DEBUG_GCC5/X64/MdeModule
+Pkg/Core/Dxe/DxeMain/DEBUG/AutoGen.c:489
+#13 _ModuleEntryPoint (HobStart=<optimized out>) at /home/maritns3/core/ld/edk2-workstation/edk2/MdePkg/Library/DxeCoreEntryPoint/DxeCoreEntryPoint.c:48
+#14 0x000000007fee10cf in InternalSwitchStack ()
+#15 0x0000000000000000 in ?? ()
+```
+
 ### 如何调整系统 periodic timer 的时间的
 - TimerDriverInitialize
   - TimerDriverSetTimerPeriod

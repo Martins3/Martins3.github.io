@@ -2,88 +2,68 @@
 - [ ] 如果执行了 illegal instruction，其现象是什么?
 - [ ] 那么还可以检查 TLB refill 的入口吗?
   - [ ] 类似 la 的这种总是在虚拟地址上的怎么处理的呀
-- [ ] 什么叫做 Pei
-- [ ] OVMF 到底在干什么，似乎现在都是在关注 Shell DxeMain 之类的事情
-
 - [ ] acpi 在 UEFI 中已经支持了，为什么需要在内核中再次重新构建一次
   - [ ] 无论如何，kernel 是需要 acpi 实现电源管理的
 
-- [ ] UEFI supports polled drivers, not interrupts.
+- [x] UEFI supports polled drivers, not interrupts.
   - 既然如此，检查一下 UEFI 是如何使用 serial 的
   - 既然我们保证 UEFI 总是被动的使用 driver 的，岂不是，只要保证 UEFI 不去主动 poll，那么设备的状态就不会被修改
 
-- [ ] 分析一下 period timer 和 one shot timer
 - [ ] 似乎在 edk2 writer 中间是存在 pci 设备的驱动的，这些驱动到底在搞什么? 如果我们来截获所有的 interrupt 不会出现问题吗？
-
 - [ ] 似乎的确可以使用 EFI_EVENT 来实现通知一些 protocol consumers 来 consume 数据
   - Implementation of protocols that produce an EFI_EVENT to inform protocol consumers when input is available.
-
-- [ ] protocol 的这种设计在这种设计模式下是最好的吗? 存在更好的设计模式吗?
-
-- [ ] 5.1.1.2 Do not directly allocate a memory buffer for DMA access
+- [x] 5.1.1.2 Do not directly allocate a memory buffer for DMA access
   - 在分配这些内存会存在什么特殊的要求吗? 或者或 UEFI 增加什么特殊操作吗?
-
-- [ ] 我们可以用得上 Stall() 从来来模拟 guess 的 halt 指令
-
-- [ ] omvf
-  - [ ] 那么 Loongson 上有没有这个东西啊
-  - [ ] 在物理机上的是什么样子的呀
-  - [ ] 变化体现在什么地方啊
-- [ ] EfiEventEmptyFunction 这个函数我是打不上断点的
-
-- [ ] 虽然我们知道 CoreStartImage 来加载各种 image，但是现在 ovmf 到底在加载什么东西，表示完全搞不清楚啊
-   - [ ] 加载列表在什么地方，如何找到对应的 image 的
-   - [ ] 那些内容是默认初始化执行的，那些是加载 image 的方式过来的
-   - [ ] 如何调整到底需要加载什么 image
-    - [ ] 比如 shell 就是没有必要加载的东西
-   - [ ] 是按照什么规则首先执行 /boot/efi/EFI/BOOT/BOOTX64.EFI 的内容的
-    - 使用 ovmf 启动 Ubuntu 的方法了解一下
-```c
-/*
-#0  TimerDriverRegisterHandler (This=0x7f145c40, NotifyFunction=0x7fead493 <CoreTimerTick>) at /home/maritns3/core/ld/edk2-workstation/edk2/OvmfPkg/8254TimerDxe/Timer.
-c:132
-#1  0x000000007feab988 in GenericProtocolNotify (Event=<optimized out>, Context=0x7fec15f8) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/DxeMa
-in/DxeProtocolNotify.c:155
-#2  0x000000007feac77d in CoreDispatchEventNotifies (Priority=8) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/Event/Event.c:194
-#3  CoreRestoreTpl (NewTpl=4) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/Event/Tpl.c:131
-#4  0x000000007feb7062 in CoreInstallMultipleProtocolInterfaces (Handle=0x7f145cb0) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/Hand/Handle.c
-:611
-#5  0x000000007f145328 in TimerDriverInitialize (SystemTable=<optimized out>, ImageHandle=<optimized out>) at /home/maritns3/core/ld/edk2-workstation/edk2/OvmfPkg/8254
-TimerDxe/Timer.c:393
-#6  ProcessModuleEntryPointList (SystemTable=<optimized out>, ImageHandle=<optimized out>) at /home/maritns3/core/ld/edk2-workstation/edk2/Build/OvmfX64/DEBUG_GCC5/X64
-/OvmfPkg/8254TimerDxe/8254Timer/DEBUG/AutoGen.c:194
-#7  _ModuleEntryPoint (ImageHandle=<optimized out>, SystemTable=<optimized out>) at /home/maritns3/core/ld/edk2-workstation/edk2/MdePkg/Library/UefiDriverEntryPoint/Dr
-iverEntryPoint.c:127
-#8  0x000000007feba8cf in CoreStartImage (ImageHandle=0x7f151c98, ExitDataSize=0x0, ExitData=0x0) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe
-/Image/Image.c:1654
-#9  0x000000007feb1803 in CoreDispatcher () at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/Dispatcher/Dispatcher.c:523
-#10 CoreDispatcher () at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/Dispatcher/Dispatcher.c:404
-#11 0x000000007feaaafd in DxeMain (HobStart=<optimized out>) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/DxeMain/DxeMain.c:508
-#12 0x000000007feaac88 in ProcessModuleEntryPointList (HobStart=<optimized out>) at /home/maritns3/core/ld/edk2-workstation/edk2/Build/OvmfX64/DEBUG_GCC5/X64/MdeModule
-Pkg/Core/Dxe/DxeMain/DEBUG/AutoGen.c:489
-#13 _ModuleEntryPoint (HobStart=<optimized out>) at /home/maritns3/core/ld/edk2-workstation/edk2/MdePkg/Library/DxeCoreEntryPoint/DxeCoreEntryPoint.c:48
-#14 0x000000007fee10cf in InternalSwitchStack ()
-#15 0x0000000000000000 in ?? ()
-```
-
-- [ ] 各种符号的地址是不是最后由于 physical address 确定的?
+  - 因为一个 driver 不知道 CPU 的状态
+- [x] omvf
+  - [x] OVMF 的代码和 DXE 的代码什么关系，是不是主要负责 PEI 的部分啊
+    - 感觉上是，OVMF 处理了和架构相关的部分，而 MdePkg 和 MdeModulePkg 都是在处理架构无关的
+    - 比如 OVMF 需要处理 reset vector 和 timer 的事情
+    - 当然最直接的即使，OVMF 实际上存在大量的和 QEMU virtio xen 相关的代码
+  - [x] 那么 Loongson 上有没有这个东西啊
+  - [x] 在物理机上的是什么样子的呀
+- [x] 各种符号的地址是不是最后由于 physical address 确定的?
+  - 是的，而且基本都是靠近物理内存的末端的
 ```txt
 in GenericProtocolNotify 7FEAB91A
 in core notify event 7FEAB91A
 ```
+
 - [ ] CoreInstallMultipleProtocolInterfaces => CoreLocateDevicePath 中通过 guid 找 DevicePath DeviceHandle 的操作可以关注一下
 - [ ] 显然对于 driver 如何设备绑定起来这个事情，没有看懂
 
 - [ ] 感觉我们现在使用的都是 mBootServices, 至于 EFI_RUNTIME_SERVICES 和 EFI_DXE_SERVICES 是啥作用完全不知道啊
-
-- [ ] 发现还是无法理清楚 handle protocol
-
 - [x] os loader 是可以加载 os 的，那么 os 那么是需要一个 nvme 驱动的
   - [x] 让我疑惑的内容是，内核实际上在 /boot/bzImage 上，所以，也存在一个 ext4 的 dirver 吗?
   - 似乎 ext4 不是 edk2 支持的，在 2012 7 月还在讨论 https://www.mail-archive.com/devel@edk2.groups.io/msg33956.html
   - 这部分是放到 grub 中间的
 
 - [ ] 跟踪一下 ExitBootServices 到底释放了什么东西
+
+## InternalSwitchStack 之前发生的内容
+```c
+/*
+#0  SwitchStack (EntryPoint=EntryPoint@entry=0x7feaac72 <_ModuleEntryPoint>, Context1=Context1@entry=0x7bf56000, Context2=0x0, NewStack=NewStack@entry=0x7fe9eff0, Cont
+ext2=0x0) at /home/maritns3/core/ld/edk2-workstation/edk2/MdePkg/Library/BaseLib/SwitchStack.c:42
+#1  0x000000007fee0ebc in HandOffToDxeCore (HobList=..., DxeCoreEntryPoint=2146086002) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/DxeIplPeim/X64
+/DxeLoadFunc.c:126
+#2  DxeLoadCore (This=<optimized out>, PeiServices=<optimized out>, HobList=...) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/DxeIplPeim/DxeLoad.c
+:449
+#3  0x000000007feef94e in PeiCore (SecCoreDataPtr=<optimized out>, PpiList=<optimized out>, Data=<optimized out>) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeMo
+dulePkg/Core/Pei/PeiMain/PeiMain.c:512
+#4  0x0000000000826b25 in ?? ()
+#5  0x000000007bf548a0 in ?? ()
+#6  0x0000000000000000 in ?? ()
+```
+
+- This routine is invoked by main entry of PeiMain module during transition
+from SEC to PEI. After switching stack in the PEI core, it will restart
+with the old core data.
+
+## 关键缩写
+Driver Execution Environment (DXE)
+pre-EFI initialization (PEI)
+Platform Initialization (PI)
 
 ## device path
 主要参考:
@@ -199,7 +179,7 @@ Loading driver at 0x0007EC6D000 EntryPoint=0x0007EC70B36 QemuVideoDxe.efi
 C                               32           3954           7995          14700
 ```
 
-## gBS and gST
+## gBS gST 和 gDS
 注册位置:
 ```c
 EFI_STATUS
@@ -233,7 +213,7 @@ UefiBootServicesTableLibConstructor (
 
 - 在任何程序中打印出来的 gBS 和 gST 的位置都是相同的，这就是最神奇的地方，没有虚拟地址空间了，隔离方式才是最大的问题。
 
-这个玩意儿就是在 DxeMain 初始化的
+gBS 和 gST 是在 DxeMain 初始化的
 ```c
 /*
 #0  UefiBootServicesTableLibConstructor (SystemTable=0x7f9ee018, ImageHandle=0x7f8eef98) at /home/maritns3/core/ld/edk2-workstation/edk2/MdePkg/Library/UefiBootService
@@ -246,6 +226,7 @@ Pkg/Core/Dxe/DxeMain/DEBUG/AutoGen.c:489
 #4  _ModuleEntryPoint (HobStart=<optimized out>) at /home/maritns3/core/ld/edk2-workstation/edk2/MdePkg/Library/DxeCoreEntryPoint/DxeCoreEntryPoint.c:48
 #5  0x000000007fee10cf in InternalSwitchStack ()
 ```
+gDS 是在 DxeServicesTableLibConstructor 中初始化的
 
 ## Driver 和 Application
 3.7 [^1]
@@ -1039,6 +1020,10 @@ System Partition (ESP) and renamed with the extension ".efi".
 
 
 ## EFI system Partition
+- [x] 使用 ovmf 启动 Ubuntu 的方法了解一下
+  - 使用 -cdrom 的时候，就是默认启动到
+- [ ] 是按照什么规则首先执行 /boot/efi/EFI/BOOT/BOOTX64.EFI 的内容的
+
 我认为安装一下 nixos 有助于帮助我们理解这些蛇皮
 
 在 /boot 下
@@ -1077,6 +1062,57 @@ brw-rw---- root disk 0 B Wed Nov 24 09:00:37 2021 ﰩ /dev/nvme0n1p2
 
 - 因为 UEFI 不能支持普通的程序，但是应该是可以支持各种介质 storage 的访问，所以制作出来一个 EFI system Partition
 - [ ] 那么 /boot/grub 的内容为什么可以被加载啊?
+
+### 启动的过程
+有点好奇当 BOOTX64 没有找到的时候，如何自动切换到 Shell 的啊
+
+启动出来 BOOTX64 的位置大约就是在这里了
+```c
+/*
+#0  FatOFileOpen (OFile=OFile@entry=0x7e1b3698, NewIFile=NewIFile@entry=0x7fe9e8e8, FileName=FileName@entry=0x7dd07f9c, OpenMode=OpenMode@entry=1, Attributes=Attribute
+s@entry=0 '\000') at /home/maritns3/core/ld/edk2-workstation/edk2/FatPkg/EnhancedFatDxe/Open.c:100
+#1  0x000000007ed740f1 in FatOpenEx (Token=0x0, Attributes=0, OpenMode=1, FileName=0x7dd07f9c, NewHandle=0x7fe9ea28, FHand=<optimized out>) at /home/maritns3/core/ld/e
+dk2-workstation/edk2/FatPkg/EnhancedFatDxe/Open.c:265
+#2  FatOpenEx (FHand=<optimized out>, NewHandle=0x7fe9ea28, FileName=0x7dd07f9c, OpenMode=1, Attributes=Attributes@entry=0, Token=Token@entry=0x0) at /home/maritns3/co
+re/ld/edk2-workstation/edk2/FatPkg/EnhancedFatDxe/Open.c:196
+#3  0x000000007ed74184 in FatOpen (FHand=<optimized out>, NewHandle=<optimized out>, FileName=<optimized out>, OpenMode=<optimized out>, Attributes=0) at /home/maritns
+3/core/ld/edk2-workstation/edk2/FatPkg/EnhancedFatDxe/Open.c:319
+#4  0x000000007f05b88a in GetFileBufferByFilePath (AuthenticationStatus=0x7fe9e9f0, FileSize=<synthetic pointer>, FilePath=0x7f0a3718, BootPolicy=1 '\001') at /home/ma
+ritns3/core/ld/edk2-workstation/edk2/MdePkg/Library/DxeServicesLib/DxeServicesLib.c:762
+#5  GetFileBufferByFilePath (BootPolicy=1 '\001', AuthenticationStatus=0x7fe9e9f0, FileSize=<synthetic pointer>, FilePath=0x7f0a3718, BootPolicy=1 '\001') at /home/mar
+itns3/core/ld/edk2-workstation/edk2/MdePkg/Library/DxeServicesLib/DxeServicesLib.c:610
+#6  BmGetNextLoadOptionBuffer (Type=LoadOptionTypeBoot, Type@entry=2131072636, FilePath=FilePath@entry=0x7dd13498, FullPath=FullPath@entry=0x7fe9ead0, FileSize=FileSiz
+e@entry=0x7fe9eac8) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Library/UefiBootManagerLib/BmLoadOption.c:1304
+#7  0x000000007f05d41a in EfiBootManagerBoot (BootOption=BootOption@entry=0x7dcfe570) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Library/UefiBootMana
+gerLib/BmBoot.c:1874
+#8  0x000000007f060cb7 in BootBootOptions (BootManagerMenu=0x7fe9ecd8, BootOptionCount=5, BootOptions=0x7dcfe518) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeMo
+dulePkg/Universal/BdsDxe/BdsEntry.c:409
+#9  BdsEntry (This=<optimized out>) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Universal/BdsDxe/BdsEntry.c:1072
+#10 0x000000007feaabe3 in DxeMain (HobStart=<optimized out>) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/DxeMain/DxeMain.c:551
+#11 0x000000007feaac88 in ProcessModuleEntryPointList (HobStart=<optimized out>) at /home/maritns3/core/ld/edk2-workstation/edk2/Build/OvmfX64/DEBUG_GCC5/X64/MdeModule
+Pkg/Core/Dxe/DxeMain/DEBUG/AutoGen.c:489
+#12 _ModuleEntryPoint (HobStart=<optimized out>) at /home/maritns3/core/ld/edk2-workstation/edk2/MdePkg/Library/DxeCoreEntryPoint/DxeCoreEntryPoint.c:48
+#13 0x000000007fee10cf in InternalSwitchStack ()
+#14 0x0000000000000000 in ?? ()
+```
+
+而启动 shell 的 backtrace 在这个位置:
+```c
+/*
+#14 0x000000007feba8b5 in CoreStartImage (ImageHandle=0x7ecaae18, ExitDataSize=0x7ec75470, ExitData=0x7ec75468) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModu
+lePkg/Core/Dxe/Image/Image.c:1654
+#15 0x000000007f05c5e2 in EfiBootManagerBoot (BootOption=BootOption@entry=0x7ec75420) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Library/UefiBootMana
+gerLib/BmBoot.c:1982
+#16 0x000000007f05fca2 in BootBootOptions (BootManagerMenu=0x7fe9ecd8, BootOptionCount=4, BootOptions=0x7ec75318) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeMo
+dulePkg/Universal/BdsDxe/BdsEntry.c:409
+#17 BdsEntry (This=<optimized out>) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Universal/BdsDxe/BdsEntry.c:1072
+#18 0x000000007feaabe3 in DxeMain (HobStart=<optimized out>) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/DxeMain/DxeMain.c:551
+#19 0x000000007feaac88 in ProcessModuleEntryPointList (HobStart=<optimized out>) at /home/maritns3/core/ld/edk2-workstation/edk2/Build/OvmfX64/DEBUG_GCC5/X64/MdeModule
+Pkg/Core/Dxe/DxeMain/DEBUG/AutoGen.c:489
+#20 _ModuleEntryPoint (HobStart=<optimized out>) at /home/maritns3/core/ld/edk2-workstation/edk2/MdePkg/Library/DxeCoreEntryPoint/DxeCoreEntryPoint.c:48
+#21 0x000000007fee10cf in InternalSwitchStack ()
+#22 0x0000000000000000 in ?? ()
+```
 
 ## Res
 EFI_MM_SYSTEM_TABLE;

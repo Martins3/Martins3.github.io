@@ -11,6 +11,7 @@ EFI_APPLICATIONS=(
 	/home/maritns3/core/ld/edk2-workstation/edk2/Build/AppPkg/DEBUG_GCC5/X64/Main.efi
   /home/maritns3/core/ubuntu-linux/arch/x86_64/boot/bzImage
 )
+KERNEL=/home/maritns3/core/ubuntu-linux/arch/x86_64/boot/bzImage
 # ----------------------------------------------------
 
 VirtualDrive=${WORK_DIR}/VirtualDrive
@@ -90,7 +91,7 @@ run_gdb() {
 }
 
 USE_GDB=""
-USE_GRAPHIC="-nographic"
+USE_GRAPHIC=""
 DEBUG_BACKEND="file:${OVMF_LOG}"
 
 while getopts "shgdxb" opt; do
@@ -99,7 +100,7 @@ while getopts "shgdxb" opt; do
 	h) show_help ;;
 	g) gen_symbol_offsets ;;
 	d) run_gdb ;;
-	x) USE_GRAPHIC="" ;;
+	x) USE_GRAPHIC="-nographic" ;;
 	b)
     DEBUG_BACKEND="stdio"
     USE_GRAPHIC=""
@@ -138,3 +139,5 @@ ${QEMU} \
 	-drive if=pflash,format=raw,readonly=on,file=${OVMF_CODE} \
 	-drive file=fat:rw:${VirtualDrive},format=raw,media=disk \
 	-drive if=pflash,format=raw,file=${OVMF_VARS} ${USE_GDB}
+  # -kernel ${KERNEL} \
+  # -cdrom /home/maritns3/arch/nixos-gnome-21.11.334247.573095944e7-x86_64-linux.iso \
