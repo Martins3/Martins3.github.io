@@ -63,6 +63,12 @@ These components work together to initialize the platform and provide the servic
 
 The DXE Core produces the EFI System Table and its associated set of EFI Boot Services and EFI Runtime Services. The DXE Core also contains the DXE Dispatcher, whose main purpose is to discover and execute DXE drivers stored in firmware volumes.
 
+从 Figure 2.4 才知道:
+- UEFI Driver Model driver
+- Application
+- Services Driver
+主要的区别在于是否处理 device 和产生 protocol 了
+
 ## 使用 gDxeCoreImageHandle 为例子了解一下 HANDLE 的作用
 - 看文档，老是说，HANDLE 是一组 protocols，没有其他的功能吗?
 - 实际上，似乎更加重要的功能在于

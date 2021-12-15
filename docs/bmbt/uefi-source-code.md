@@ -8,10 +8,6 @@
 - [x] UEFI supports polled drivers, not interrupts.
   - 既然如此，检查一下 UEFI 是如何使用 serial 的
   - 既然我们保证 UEFI 总是被动的使用 driver 的，岂不是，只要保证 UEFI 不去主动 poll，那么设备的状态就不会被修改
-
-- [ ] 似乎在 edk2 writer 中间是存在 pci 设备的驱动的，这些驱动到底在搞什么? 如果我们来截获所有的 interrupt 不会出现问题吗？
-- [ ] 似乎的确可以使用 EFI_EVENT 来实现通知一些 protocol consumers 来 consume 数据
-  - Implementation of protocols that produce an EFI_EVENT to inform protocol consumers when input is available.
 - [x] 5.1.1.2 Do not directly allocate a memory buffer for DMA access
   - 在分配这些内存会存在什么特殊的要求吗? 或者或 UEFI 增加什么特殊操作吗?
   - 因为一个 driver 不知道 CPU 的状态
@@ -29,14 +25,109 @@ in GenericProtocolNotify 7FEAB91A
 in core notify event 7FEAB91A
 ```
 
-- [ ] CoreInstallMultipleProtocolInterfaces => CoreLocateDevicePath 中通过 guid 找 DevicePath DeviceHandle 的操作可以关注一下
-- [ ] 显然对于 driver 如何设备绑定起来这个事情，没有看懂
-
-- [ ] 感觉我们现在使用的都是 mBootServices, 至于 EFI_RUNTIME_SERVICES 和 EFI_DXE_SERVICES 是啥作用完全不知道啊
 - [x] os loader 是可以加载 os 的，那么 os 那么是需要一个 nvme 驱动的
   - [x] 让我疑惑的内容是，内核实际上在 /boot/bzImage 上，所以，也存在一个 ext4 的 dirver 吗?
   - 似乎 ext4 不是 edk2 支持的，在 2012 7 月还在讨论 https://www.mail-archive.com/devel@edk2.groups.io/msg33956.html
   - 这部分是放到 grub 中间的
+
+## Protocol Event
+Implementation of protocols that produce an EFI_EVENT to inform protocol consumers when input is available.[^5]
+- [ ] 找到一个这样的例子
+
+https://uefi.org/sites/default/files/resources/Understanding%20UEFI%20and%20PI%20Events_Final.pdf
+这里算是一些高级话题吧!
+
+算是一个更加清楚的例子吧，也就是，让 protocol 关联上 event，当 install 的 event 可以被调用的
+
+
+步骤一:
+CoreRegisterProtocolNotify : 添加一个用于提醒的 Event
+```c
+/*
+#0  CoreRegisterProtocolNotify (Protocol=Protocol@entry=0x7fec25f0, Event=0x7f8eeb18, Registration=Registration@entry=0x7fec4790) at /home/maritns3/core/ld/edk2-workst
+ation/edk2/MdeModulePkg/Core/Dxe/Hand/Notify.c:108
+#1  0x000000007feb9a9a in CoreInitializeImageServices (HobStart=<optimized out>) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/Image/Image.c:26
+1
+#2  0x000000007fea98d2 in DxeMain (HobStart=0x7bf56000) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/DxeMain/DxeMain.c:285
+#3  0x000000007feaac88 in ProcessModuleEntryPointList (HobStart=<optimized out>) at /home/maritns3/core/ld/edk2-workstation/edk2/Build/OvmfX64/DEBUG_GCC5/X64/MdeModule
+Pkg/Core/Dxe/DxeMain/DEBUG/AutoGen.c:489
+#4  _ModuleEntryPoint (HobStart=<optimized out>) at /home/maritns3/core/ld/edk2-workstation/edk2/MdePkg/Library/DxeCoreEntryPoint/DxeCoreEntryPoint.c:48
+#5  0x000000007fee10cf in InternalSwitchStack ()
+#6  0x0000000000000000 in ?? ()
+```
+在 CoreInitializeImageServices 中创建 Hook 为 PeCoffEmuProtocolNotify
+
+步骤二:
+CoreInstallProtocolInterfaceNotify : 注册的时候，可能会同时 notify 这个 protocol 关联的所有的 Event
+```c
+/*
+#1  0x000000007feac4d8 in CoreNotifyEvent (Event=Event@entry=0x7f8eeb18) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/Event/Event.c:242
+#2  0x000000007fead53e in CoreSignalEvent (UserEvent=0x7f8eeb18) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/Event/Event.c:591
+#3  CoreSignalEvent (UserEvent=0x7f8eeb18) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/Event/Event.c:553
+#4  0x000000007feb4489 in CoreNotifyProtocolEntry (ProtEntry=ProtEntry@entry=0x7f8eee98) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/Hand/Not
+ify.c:32
+#5  0x000000007feb5eff in CoreInstallProtocolInterfaceNotify (InterfaceType=<optimized out>, Notify=1 '\001', Interface=0x7f58dc60, Protocol=0x7f58dc80, UserHandle=0x7
+fe9ec88) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/Hand/Handle.c:476
+#6  CoreInstallProtocolInterfaceNotify (UserHandle=0x7fe9ec88, UserHandle@entry=0x7f8eee98, Protocol=0x7f58dc80, Protocol@entry=0x0, InterfaceType=InterfaceType@entry=
+EFI_NATIVE_INTERFACE, Interface=Interface@entry=0x7f58dc60, Notify=Notify@entry=1 '\001') at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/Hand/Ha
+ndle.c:341
+#7  0x000000007feb5f91 in CoreInstallProtocolInterface (UserHandle=0x7f8eee98, UserHandle@entry=0x7fe9ec88, Protocol=0x0, Protocol@entry=0x7f58dc80, InterfaceType=Inte
+rfaceType@entry=EFI_NATIVE_INTERFACE, Interface=Interface@entry=0x7f58dc60) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/Hand/Handle.c:313
+#8  0x000000007feb7073 in CoreInstallMultipleProtocolInterfaces (Handle=0x7fe9ec88) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/Hand/Handle.c
+:586
+#9  0x000000007f58b14d in InitializeEbcDriver (SystemTable=<optimized out>, ImageHandle=<optimized out>) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/U
+niversal/EbcDxe/EbcInt.c:547
+#10 ProcessModuleEntryPointList (SystemTable=<optimized out>, ImageHandle=<optimized out>) at /home/maritns3/core/ld/edk2-workstation/edk2/Build/OvmfX64/DEBUG_GCC5/X64
+/MdeModulePkg/Universal/EbcDxe/EbcDxe/DEBUG/AutoGen.c:196
+#11 _ModuleEntryPoint (ImageHandle=<optimized out>, SystemTable=<optimized out>) at /home/maritns3/core/ld/edk2-workstation/edk2/MdePkg/Library/UefiDriverEntryPoint/Dr
+iverEntryPoint.c:127
+#12 0x000000007feba96c in CoreStartImage (ImageHandle=0x7f5a9798 <BasePrintLibSPrintMarker+1091>, ExitDataSize=0x0, ExitData=0x0) at /home/maritns3/core/ld/edk2-workst
+ation/edk2/MdeModulePkg/Core/Dxe/Image/Image.c:1653
+#13 0x000000007feb18a0 in CoreDispatcher () at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/Dispatcher/Dispatcher.c:523
+#14 CoreDispatcher () at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/Dispatcher/Dispatcher.c:404
+#15 0x000000007feaaafd in DxeMain (HobStart=<optimized out>) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/DxeMain/DxeMain.c:508
+#16 0x000000007feaac88 in ProcessModuleEntryPointList (HobStart=<optimized out>) at /home/maritns3/core/ld/edk2-workstation/edk2/Build/OvmfX64/DEBUG_GCC5/X64/MdeModule
+Pkg/Core/Dxe/DxeMain/DEBUG/AutoGen.c:489
+#17 _ModuleEntryPoint (HobStart=<optimized out>) at /home/maritns3/core/ld/edk2-workstation/edk2/MdePkg/Library/DxeCoreEntryPoint/DxeCoreEntryPoint.c:48
+#18 0x000000007fee10cf in InternalSwitchStack ()
+#19 0x0000000000000000 in ?? ()
+```
+在 InitializeEbcDriver 中的确是 install 了 mPeCoffEmuProtocol 的
+```c
+    Status = gBS->InstallMultipleProtocolInterfaces (
+                    &ImageHandle,
+                    &gEfiEbcProtocolGuid, EbcProtocol,
+                    &gEdkiiPeCoffImageEmulatorProtocolGuid, &mPeCoffEmuProtocol,
+                    NULL
+                    );
+```
+
+步骤三:
+调用 PeCoffEmuProtocolNotify 只是会在此时调用一次
+```c
+/*
+#0  PeCoffEmuProtocolNotify (Event=0x7f8eeb18, Context=0x0) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/Image/Image.c:127
+#1  0x000000007feac7a9 in CoreDispatchEventNotifies (Priority=8) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/Event/Event.c:194
+#2  CoreRestoreTpl (NewTpl=4) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/Event/Tpl.c:131
+#3  0x000000007feb70a5 in CoreInstallMultipleProtocolInterfaces (Handle=0x7fe9ec88) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/Hand/Handle.c
+:611
+#4  0x000000007f58b14d in InitializeEbcDriver (SystemTable=<optimized out>, ImageHandle=<optimized out>) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/U
+niversal/EbcDxe/EbcInt.c:547
+#5  ProcessModuleEntryPointList (SystemTable=<optimized out>, ImageHandle=<optimized out>) at /home/maritns3/core/ld/edk2-workstation/edk2/Build/OvmfX64/DEBUG_GCC5/X64
+/MdeModulePkg/Universal/EbcDxe/EbcDxe/DEBUG/AutoGen.c:196
+#6  _ModuleEntryPoint (ImageHandle=<optimized out>, SystemTable=<optimized out>) at /home/maritns3/core/ld/edk2-workstation/edk2/MdePkg/Library/UefiDriverEntryPoint/Dr
+iverEntryPoint.c:127
+#7  0x000000007feba912 in CoreStartImage (ImageHandle=0x7f5a9798 <BasePrintLibSPrintMarker+1091>, ExitDataSize=0x0, ExitData=0x0) at /home/maritns3/core/ld/edk2-workst
+ation/edk2/MdeModulePkg/Core/Dxe/Image/Image.c:1654
+#8  0x000000007feb1846 in CoreDispatcher () at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/Dispatcher/Dispatcher.c:523
+#9  CoreDispatcher () at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/Dispatcher/Dispatcher.c:404
+#10 0x000000007feaaafd in DxeMain (HobStart=<optimized out>) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/DxeMain/DxeMain.c:508
+#11 0x000000007feaac88 in ProcessModuleEntryPointList (HobStart=<optimized out>) at /home/maritns3/core/ld/edk2-workstation/edk2/Build/OvmfX64/DEBUG_GCC5/X64/MdeModule
+Pkg/Core/Dxe/DxeMain/DEBUG/AutoGen.c:489
+#12 _ModuleEntryPoint (HobStart=<optimized out>) at /home/maritns3/core/ld/edk2-workstation/edk2/MdePkg/Library/DxeCoreEntryPoint/DxeCoreEntryPoint.c:48
+#13 0x000000007fee10cf in InternalSwitchStack ()
+#14 0x0000000000000000 in ?? ()
+```
 
 ## 跟踪一下 CoreExitBootServices
 - 释放内存 : CoreTerminateMemoryMap : 根据其注释，实际上，并不会清空内容
@@ -168,12 +259,37 @@ struct _EFI_DRIVER_BINDING_PROTOCOL {
   EFI_HANDLE                    DriverBindingHandle;
 };
 ```
-- [ ] 观测一下，当 ExitBootServices 之后，还会保存类型的服务
-  - [ ] 既然可以在操作系统挂掉的时候，使用网络重启系统，说明，各种设备就是可以一会被 UEFI 使用，一会被操作系统使用的
-  - [ ] 还存在一些 service 是可以运行的，那么我相信，相信内存分配之类的机制还是存在的
 
-### FatDriverBindingSupported
-看看他们分别的 bt
+DXE 阶段将所有的 driver 都加载进来，执行所有的 entrypoint
+
+- 结合 Fat.c 作为例子分析一下
+
+首先，将 binding 找出来
+- ProcessModuleEntryPointList
+  - FatEntryPoint
+    - EfiLibInstallDriverBindingComponentName2
+
+```c
+/*
+#0  FatEntryPoint (ImageHandle=ImageHandle@entry=0x7edd9918, SystemTable=SystemTable@entry=0x7f9ee018) at /home/maritns3/core/ld/edk2-workstation/edk2/MdePkg/Library/U
+efiLib/UefiDriverModel.c:377
+#1  0x000000007ed74d9b in ProcessModuleEntryPointList (SystemTable=0x7f9ee018, ImageHandle=0x7edd9918) at /home/maritns3/core/ld/edk2-workstation/edk2/Build/OvmfX64/DE
+BUG_GCC5/X64/FatPkg/EnhancedFatDxe/Fat/DEBUG/AutoGen.c:319
+#2  _ModuleEntryPoint (ImageHandle=0x7edd9918, SystemTable=0x7f9ee018) at /home/maritns3/core/ld/edk2-workstation/edk2/MdePkg/Library/UefiDriverEntryPoint/DriverEntryP
+oint.c:127
+#3  0x000000007feba912 in CoreStartImage (ImageHandle=0x7edd9918, ExitDataSize=0x0, ExitData=0x0) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe
+/Image/Image.c:1654
+#4  0x000000007feb1846 in CoreDispatcher () at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/Dispatcher/Dispatcher.c:523
+#5  CoreDispatcher () at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/Dispatcher/Dispatcher.c:404
+#6  0x000000007feaaafd in DxeMain (HobStart=<optimized out>) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/DxeMain/DxeMain.c:508
+#7  0x000000007feaac88 in ProcessModuleEntryPointList (HobStart=<optimized out>) at /home/maritns3/core/ld/edk2-workstation/edk2/Build/OvmfX64/DEBUG_GCC5/X64/MdeModule
+Pkg/Core/Dxe/DxeMain/DEBUG/AutoGen.c:489
+#8  _ModuleEntryPoint (HobStart=<optimized out>) at /home/maritns3/core/ld/edk2-workstation/edk2/MdePkg/Library/DxeCoreEntryPoint/DxeCoreEntryPoint.c:48
+#9  0x000000007fee10cf in InternalSwitchStack ()
+```
+这个操作，将 gFatDriverBinding 和 fat driver ImageHandle 关联起来
+
+FatDriverBindingSupported 的 backtrace:
 ```c
 /*
 #0  FatDriverBindingSupported (This=0x7ed7bd00, ControllerHandle=0x7edfb398, RemainingDevicePath=0x0) at /home/maritns3/core/ld/edk2-workstation/edk2/FatPkg/EnhancedFa
@@ -207,7 +323,6 @@ InstallProtocolInterface: 5B1B31A1-9562-11D2-8E3F-00A0C969723B 7E1D26C0
 Loading driver at 0x0007EC6D000 EntryPoint=0x0007EC70B36 QemuVideoDxe.efi
 ```
 其实都是会执行一次 FatDriverBindingSupported 和 FatDriverBindingStart
-
 主要出现在 MdeModulePkg/Core/Dxe/Hand/DriverSupport.c
 
 ## 代码量分析 cloc
@@ -218,6 +333,8 @@ C                               32           3954           7995          14700
 ```
 
 ## gBS gST 和 gDS
+需要说明的事情是: EFI_DXE_SERVICES 并没有太考虑清楚。
+
 注册位置:
 ```c
 EFI_STATUS
@@ -1163,3 +1280,4 @@ EFI_LOADED_IMAGE_PROTOCOL
 [^2]: https://github.com/tianocore/tianocore.github.io/wiki/MdeModulePkg
 [^3]: https://github.com/tianocore/tianocore.github.io/wiki/MdePkg
 [^4]: https://edk2-docs.gitbook.io/edk-ii-uefi-driver-writer-s-guide/3_foundation/readme.8
+[^5]: https://edk2-docs.gitbook.io/edk-ii-uefi-driver-writer-s-guide/5_uefi_services/51_services_that_uefi_drivers_commonly_use/515_event_services

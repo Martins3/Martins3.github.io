@@ -1,20 +1,3 @@
-## signal
-- [ ] 测试一下信号机制
-  - [ ] 不在存在信号屏蔽机制了，小伙子，但是 UEFI 屏蔽的方法没有完全看懂
-- [ ] setitimer 中需要使用 callback 的而不是 Application 的
-- [ ] 继续向下分析一下，使用这些 Event 函数为什么总是需要 raised priority 的
-- [ ] 所以，到底什么是 EVT_NOTIFY_WAIT
-  - [ ] 现在文档说，最好是不要长时间的屏蔽中断，否则不是很好
-- [ ] TPL_NOTIFY 之类的对应的 TPL level 都是做什么的呀
-  - [ ] 所以 TPL_CALLBACK 和 TPL_NOTIFY 存在什么区别吗?
-- [ ] 真的有必要使用 signal 机制来实现 timer 吗 ?
-  - [ ] CheckEvent() 到底是一个什么等待方法
-- [ ] Raise 和 Restore TPL 是如何实现的
-- [ ] 可以通过 Raise TPL 实现临时屏蔽 timer 吗?
-- [ ] 在 shell 的 FileInterfaceStdInRead 中调用了 hlt 中还是可以醒过来的，所以这个 timer 操作在什么地方啊
-- [ ] 为什么 NotifyFunction 需要设置对应的 TPL，存在一个例子说明的确如此吗?
-  - 回忆一下 QEMU 中的 machine done function，也许是一种使用的方法
-
 ## Lock
 ```c
   EfiInitializeLock (&(Sock->Lock), TPL_CALLBACK);
