@@ -12,6 +12,8 @@ EFI_APPLICATIONS=(
   /home/maritns3/core/ubuntu-linux/arch/x86_64/boot/bzImage
 )
 KERNEL=/home/maritns3/core/ubuntu-linux/arch/x86_64/boot/bzImage
+# CDROM=/home/maritns3/arch/nixos-gnome-21.11.334247.573095944e7-x86_64-linux.iso
+CDROM=/home/maritns3/arch/nixos-minimal-21.11.334247.573095944e7-x86_64-linux.iso
 # ----------------------------------------------------
 
 VirtualDrive=${WORK_DIR}/VirtualDrive
@@ -92,9 +94,10 @@ run_gdb() {
 
 USE_GDB=""
 USE_GRAPHIC=""
+USE_CDROM=""
 DEBUG_BACKEND="file:${OVMF_LOG}"
 
-while getopts "shgdxb" opt; do
+while getopts "shgdxbc" opt; do
 	case $opt in
 	s) USE_GDB="-S -s" ;;
 	h) show_help ;;
@@ -105,6 +108,7 @@ while getopts "shgdxb" opt; do
     DEBUG_BACKEND="stdio"
     USE_GRAPHIC=""
     ;;
+  c) USE_CDROM="-cdrom ${CDROM}";;
 	*) exit 0 ;;
 	esac
 done
@@ -138,6 +142,5 @@ ${QEMU} \
 	-global driver=cfi.pflash01,property=secure,value=on \
 	-drive if=pflash,format=raw,readonly=on,file=${OVMF_CODE} \
 	-drive file=fat:rw:${VirtualDrive},format=raw,media=disk \
-	-drive if=pflash,format=raw,file=${OVMF_VARS} ${USE_GDB}
+	-drive if=pflash,format=raw,file=${OVMF_VARS} ${USE_GDB} ${USE_CDROM}
   # -kernel ${KERNEL} \
-  # -cdrom /home/maritns3/arch/nixos-gnome-21.11.334247.573095944e7-x86_64-linux.iso \
