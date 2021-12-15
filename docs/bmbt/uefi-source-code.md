@@ -129,46 +129,6 @@ Pkg/Core/Dxe/DxeMain/DEBUG/AutoGen.c:489
 #14 0x0000000000000000 in ?? ()
 ```
 
-## 跟踪一下 CoreExitBootServices
-- 释放内存 : CoreTerminateMemoryMap : 根据其注释，实际上，并不会清空内容
-- ZeroMem (gBS, sizeof (EFI_BOOT_SERVICES)); 好的，现在 memory 真的清空了
-- `gCpu->DisableInterrupt (gCpu);` : 关闭中断
-- CoreNotifySignalList (&gEfiEventExitBootServicesGuid); 是通过 gEfiEventExitBootServicesGuid 来实现找到对应的 Event 的，主要的内容都各种设备的 reset 而已
-
-```c
-/*
-ArmPkg/Drivers/MmCommunicationDxe/MmCommunication.c:259:  &gEfiEventExitBootServicesGuid,
-OvmfPkg/Csm/BiosThunk/VideoDxe/BiosVideo.c:601:                    &gEfiEventExitBootServicesGuid,
-NetworkPkg/SnpDxe/Snp.c:660:                    &gEfiEventExitBootServicesGuid,
-NetworkPkg/IScsiDxe/IScsiMisc.c:1770:                  &gEfiEventExitBootServicesGuid,
-StandaloneMmPkg/Core/StandaloneMmCore.c:90:  { MmExitBootServiceHandler,&gEfiEventExitBootServicesGuid,     NULL, FALSE },
-StandaloneMmPkg/Core/StandaloneMmCore.c:160:               &gEfiEventExitBootServicesGuid,
-SourceLevelDebugPkg/DebugAgentDxe/DebugAgentDxe.c:100:                  &gEfiEventExitBootServicesGuid,
-IntelFsp2WrapperPkg/FspWrapperNotifyDxe/FspWrapperNotifyDxe.c:270:                  &gEfiEventExitBootServicesGuid,
-MdeModulePkg/Library/RuntimeDxeReportStatusCodeLib/ReportStatusCodeLib.c:156:                  &gEfiEventExitBootServicesGuid,
-MdeModulePkg/Universal/Variable/RuntimeDxe/VariableSmmRuntimeDxe.c:1825:         &gEfiEventExitBootServicesGuid,
-MdeModulePkg/Universal/StatusCodeHandler/RuntimeDxe/SerialStatusCodeWorker.c:155:  // If register an unregister function of gEfiEventExitBootServicesGuid,
-MdeModulePkg/Universal/Acpi/FirmwarePerformanceDataTableDxe/FirmwarePerformanceDxe.c:695:                  &gEfiEventExitBootServicesGuid,
-MdeModulePkg/Core/PiSmmCore/PiSmmIpl.c:363:  { FALSE, FALSE, &gEfiEventExitBootServicesGuid,     SmmIplGuidedEventNotify,           &gEfiEventExitBootServicesGuid,     TPL_CALLBACK, NULL },
-MdeModulePkg/Core/PiSmmCore/PiSmmCore.c:87:  { SmmExitBootServicesHandler, &gEfiEventExitBootServicesGuid,      NULL, FALSE },
-MdeModulePkg/Core/PiSmmCore/PiSmmCore.c:189:    if (CompareGuid (mSmmCoreSmiHandlers[Index].HandlerType, &gEfiEventExitBootServicesGuid)) {
-MdeModulePkg/Core/Dxe/DxeMain/DxeMain.c:774:  CoreNotifySignalList (&gEfiEventExitBootServicesGuid);
-MdeModulePkg/Core/Dxe/Event/Event.c:417:    if (CompareGuid (EventGroup, &gEfiEventExitBootServicesGuid)) {
-MdeModulePkg/Core/Dxe/Event/Event.c:427:      EventGroup = &gEfiEventExitBootServicesGuid;
-MdeModulePkg/Bus/Pci/UhciDxe/Uhci.c:1759:                  &gEfiEventExitBootServicesGuid,
-MdeModulePkg/Bus/Pci/XhciDxe/Xhci.c:2048:                  &gEfiEventExitBootServicesGuid,
-MdeModulePkg/Bus/Pci/EhciDxe/Ehci.c:1914:                  &gEfiEventExitBootServicesGuid,
-RedfishPkg/RedfishCredentialDxe/RedfishCredentialDxe.c:189:                  &gEfiEventExitBootServicesGuid,
-RedfishPkg/RedfishConfigHandler/RedfishConfigHandlerCommon.c:149:                  &gEfiEventExitBootServicesGuid,
-BaseTools/Scripts/SmiHandlerProfileSymbolGen.py:181:  '27ABF055-B1B8-4C26-8048-748F37BAA2DF':'gEfiEventExitBootServicesGuid',
-MdePkg/Include/Guid/EventGroup.h:16:extern EFI_GUID gEfiEventExitBootServicesGuid;
-MdePkg/MdePkg.dec:403:  gEfiEventExitBootServicesGuid  = { 0x27ABF055, 0xB1B8, 0x4C26, { 0x80, 0x48, 0x74, 0x8F, 0x37, 0xBA, 0xA2, 0xDF }}
-SecurityPkg/Tcg/TcgDxe/TcgDxe.c:1436:                    &gEfiEventExitBootServicesGuid,
-SecurityPkg/Tcg/Tcg2Dxe/Tcg2Dxe.c:2765:                    &gEfiEventExitBootServicesGuid,
-
-```
-
-
 ## InternalSwitchStack 之前发生的内容
 ```c
 /*
@@ -1088,30 +1048,6 @@ ibrary/QemuFwCfgLib/QemuFwCfgDxe.c:170
 #8  0x0000000000000000 in ?? ()
 ```
 怎么感觉对不上啊!
-
-## StdLib
-因为一些原因，edk2 将其实现的 libc 和 edk2 的主要库分离开了，使用方法很简单
-1. git clone https://github.com/tianocore/edk2-libc
-2. 将 edk2-libc 中的三个文件夹拷贝到 edk2 中，然后就可以当做普通的 pkg 使用
-
-https://www.mail-archive.com/edk2-devel@lists.01.org/msg17266.html
-- [ ] 使用 StdLib 只能成为 Application 不能成为 Driver 的
-  - [ ] Application 不能直接启动，只能从 UEFI shell 上启动
-
-- [ ] I told you to read "AppPkg/ReadMe.txt"; that file explains what is
-necessary for what "flavor" of UEFI application.
-
-- [ ] It even mentions two
-example programs, "Main" and "Hello", which don't do anything but
-highlight the differences.
-
-- [ ] For another (quite self-contained) example,
-"AppPkg/Applications/OrderedCollectionTest" is an application that I
-wrote myself; it uses fopen() and fprintf(). This is a unit tester for
-an MdePkg library that I also wrote, so it actually exemplifies how you
-can use both stdlib and an edk2 library, as long as they don't step on
-each other's toes.
-
 
 ## 各种 uefi shell 命令对应的源代码
 /home/maritns3/core/ld/edk2-workstation/edk2/ShellPkg/Library

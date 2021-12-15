@@ -46,7 +46,8 @@
   - [QEMU 字符设备模拟](./qemu/char.md)
 
 ## UEFI
-- [Linux 下 UEFI 学习环境搭建](./bmbt/uefi.md)
+- [Linux 下 UEFI 学习环境搭建](./bmbt/uefi-linux.md)
+- [UEFI 入门](./bmbt/uefi-beginner.md)
 
 ## Tips
 - [How to cross Great Fire Wall](./gfw.md)

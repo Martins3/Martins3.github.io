@@ -42,6 +42,7 @@ show_help() {
 	echo "-g 生成 gdb script"
 	echo "-x 使用图形界面"
 	echo "-b 让 debugcon 的输出到标准输出上，同时使用图形界面"
+	echo "-c 使用 cdrom，UEFI 将会自动执行 BOOTX64 而不是 shell"
 	exit 0
 }
 
