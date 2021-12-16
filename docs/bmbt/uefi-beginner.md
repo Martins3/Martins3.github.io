@@ -60,3 +60,13 @@ MdePkg/MdePkg.dec:403:  gEfiEventExitBootServicesGuid  = { 0x27ABF055, 0xB1B8, 0
 SecurityPkg/Tcg/TcgDxe/TcgDxe.c:1436:                    &gEfiEventExitBootServicesGuid,
 SecurityPkg/Tcg/Tcg2Dxe/Tcg2Dxe.c:2765:                    &gEfiEventExitBootServicesGuid,
 ```
+
+## 资源
+- https://github.com/Openwide-Ingenierie/uefi-musl
+  - 使用 edk2 APIs 来实现 syscall 从而将 musl 库包含进去
+- https://github.com/Openwide-Ingenierie/Pong-UEFI
+  - 弹球游戏
+- https://github.com/linuxboot/linuxboot
+  - UEFI 的 DXE 截断可以使用 linuxboot 替代，因为其很多功能和内核是重叠的
+- https://blog.system76.com/post/139138591598/howto-uefi-qemu-guest-on-ubuntu-xenial-host
+  - 分析了一下使用 ovmf 的事情，但是没有仔细看

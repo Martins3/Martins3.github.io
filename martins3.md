@@ -48,7 +48,7 @@ https://eli.thegreenplace.net/ : 这个 blog 关注一下，和其他的 blog �
 
 
 ## 下一步
-https://github.com/causten/openbmc-tutorials : 到底什么是 bm
+https://github.com/causten/openbmc-tutorials : 到底什么是 bmc
 
 linux kernel labs 应该被完整的处理一遍，然后再去做其他的事情
 然后将该文件夹中间的东西全部删除，
@@ -62,29 +62,17 @@ My-Linux-Config 可以增加的内容
 https://devops.novalagung.com/en/cicd-serverless-ebook-gitbook-github-pages-actions-calibre.htm
 
 https://poedit.net/ : 用于翻译 My-Linux-Config 用于
-
-下一步，研究一下各种 qemu 的使用方法吧!
-1. 利用 linux kernel lab
-2. 利用 tiny la
-
-
 https://github.com/mengning/mykernel : 检查一下，为什么这里就是只要 qemu -kernel 就是运行的，顺便帮忙其回答的为什么 make allnoconfig 是不能运行的
-
 
 https://conanblog.me/Unix-as-IDE--Chinese-/compiling.html#id3 : 应该这个对于我来说很简单了，但是估计其中还是有些不知道的吧，可以补充一下
 
 https://github.com/zlotus/notes-linear-algebra : 线性代数，你值得拥有
 
 https://github.com/tuna/blogroll : 订阅一下 tuna 的 blog，给自己开开眼
-https://github.com/jkup/awesome-personal-blogs : 经典 blo
-https://github.com/kilimchoi/engineering-blogs : 更多的 blo
-
+https://github.com/jkup/awesome-personal-blogs : 经典 blog
+https://github.com/kilimchoi/engineering-blogs : 更多的 blog
 https://stackoverflow.com/questions/62701847/difference-between-ilookup-and-ilookup5-in-linux-kernel?noredirect=1#comment110935686_62701847 : 评论非常有意思啊!
-
 https://github.com/dortania/OpenCore-Install-Guide : 黑苹果，据说学习体系结构的人都需要会
-
-https://www.gnu.org/software/grub/manual/multiboot/multiboot.html : 不知道整理到哪里
-
 ## TOD
 - [9 个超有趣的 Linux 命令动画演示](https://zhuanlan.zhihu.com/p/37530240)
 - [群体的智慧与愚蠢](https://ncase.me/crowds/zh-CN.html)

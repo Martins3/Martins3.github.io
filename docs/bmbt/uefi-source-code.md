@@ -1070,45 +1070,6 @@ ibrary/QemuFwCfgLib/QemuFwCfgDxe.c:170
 甚至差不多集成了一个 vim 进去了
 https://linuxhint.com/use-uefi-interactive-shell-and-its-common-commands/
 
-## 集成 musl
-https://github.com/Openwide-Ingenierie/uefi-musl
-
-## 一个游戏
-https://github.com/Openwide-Ingenierie/Pong-UEFI
-
-
-## 一些也许有用的项目
-- https://stackoverflow.com/questions/66399748/qemu-hangs-after-booting-a-gnu-efi-os
-  - https://github.com/xubury/myos
-
-- https://github.com/evanpurkhiser/rEFInd-minimal
-  - 虽然不太相关，但是可以换壁纸也实在是有趣
-
-- https://github.com/vvaltchev/tilck
-  - 同时处理了 acpi 和 uefi 的一个 Linux kernel 兼容的 os
-
-- https://github.com/linuxboot/linuxboot
-  - 什么叫做使用 Linux 来替换 firmware 啊
-
-- https://github.com/limine-bootloader/limine
-  - 一个新的 bootloader
-
-- https://gil0mendes.io/blog/an-efi-app-a-bit-rusty/
-  - 使用 rust 封装 UEFI，并且分析了一下 efi 程序的功能
-
-- https://github.com/rust-osdev/uefi-rs/issues/218
-
-
-- https://blog.system76.com/post/139138591598/howto-uefi-qemu-guest-on-ubuntu-xenial-host
-  - 分析了一下使用 ovmf 的事情，但是没有仔细看
-
-On the x86 and ARM platforms, a kernel zImage/bzImage can masquerade
-as a PE/COFF image, thereby convincing EFI firmware loaders to load
-it as an EFI executable.
-
-The bzImage located in arch/x86/boot/bzImage must be copied to the EFI
-System Partition (ESP) and renamed with the extension ".efi".
-
 
 ## EFI system Partition
 - [x] 使用 ovmf 启动 Ubuntu 的方法了解一下

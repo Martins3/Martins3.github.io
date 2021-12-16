@@ -10,6 +10,7 @@ QEMU=/home/maritns3/core/kvmqemu/build/x86_64-softmmu/qemu-system-x86_64
 EFI_APPLICATIONS=(
 	/home/maritns3/core/ld/edk2-workstation/edk2/Build/AppPkg/DEBUG_GCC5/X64/Main.efi
   /home/maritns3/core/ubuntu-linux/arch/x86_64/boot/bzImage
+  /home/maritns3/core/ld/uefi-rs/target/x86_64-unknown-uefi/debug/uefi_app.efi
 )
 KERNEL=/home/maritns3/core/ubuntu-linux/arch/x86_64/boot/bzImage
 # CDROM=/home/maritns3/arch/nixos-gnome-21.11.334247.573095944e7-x86_64-linux.iso

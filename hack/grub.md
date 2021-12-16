@@ -1,0 +1,2 @@
+- https://github.com/limine-bootloader/limine
+- https://askubuntu.com/questions/760875/any-downside-to-using-refind-instead-of-grub

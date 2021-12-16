@@ -13,6 +13,7 @@
 - [生成 compile_commands.json](#生成-compile_commandsjson)
 - [内核作为 efi 文件启动](#内核作为-efi-文件启动)
 - [让程序运行 shell 命令](#让程序运行-shell-命令)
+- [使用 Rust 编写 UEFI Application](#使用-rust-编写-uefi-application)
 - [资源](#资源)
 
 <!-- vim-markdown-toc -->
@@ -240,6 +241,12 @@ UefiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE *SystemTable) {
   ShellCEntryLib
   ShellLib
 ```
+## 使用 Rust 编写 UEFI Application
+- 在 https://gil0mendes.io/blog/an-efi-app-a-bit-rusty/ 介绍了一下使用 Rust 构建 UEFI 的动机。
+- 进一步的，在 https://github.com/rust-embedded/book 中介绍了在嵌入式项目中如何使用 Rust.
+
+我们使用 [uefi-rs](https://github.com/rust-osdev/uefi-rs) 来感受一下。
+进入到 template 目录中，按照 https://github.com/rust-osdev/uefi-rs/blob/master/BUILDING.md 操作即可。
 
 ## 资源
 - Robin 的 blog: http://yiiyee.cn/blog/
