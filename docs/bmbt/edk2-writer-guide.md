@@ -26,7 +26,6 @@ NvmExpressDriverBindingStart (
 - [ ] EFI_EVENT 是个啥
 
 ## Foundation
-- [ ] 关于 Binding 的问题，如果一个 driver 创建出来了，如何提供接口给另一个 driver 用
 
 ### 3.1
 There is only one interrupt: the timer. This means that data structures accessed by both in-line code and timer-driven code must take care to synchronize access to critical paths. This is accomplished via privilege levels.

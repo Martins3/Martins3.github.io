@@ -248,6 +248,7 @@ UefiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE *SystemTable) {
 我们使用 [uefi-rs](https://github.com/rust-osdev/uefi-rs) 来感受一下。
 进入到 template 目录中，按照 https://github.com/rust-osdev/uefi-rs/blob/master/BUILDING.md 操作即可。
 
+相对 edk2 而言，uefi-rs 的代码量非常少，如果你恰好是 Rust 高手，读读其代码还是相当有意思的。
 ## 资源
 - Robin 的 blog: http://yiiyee.cn/blog/
 - https://wiki.osdev.org/GNU-EFI
