@@ -91,25 +91,115 @@ stack_end=0x7fffffffd628) at ../csu/libc-start.c:308
 - pre-EFI initialization (PEI)
 - Driver Execution Environment (DXE)
 - Boot Device Selection (BDS)
-## Handle 和 Protocol
-![](./uefi/handle-category.png)
 
+## UEFI System Table
+UEFI Boot Services
+UEFI Runtime Services
+Protocol services
+
+## Handle 和 Protocol
+![](./uefi/img/handle-category.png)
+
+- The handle database is composed of objects called handles and protocols.
+- Handles are a collection of one or more protocols
+- Protocols are data structures named by a GUID.
+
+- [ ] 让我们来找到这些 database 的内容吧!
 
 ## Image
-![](./uefi/image-category.png)
+![](./uefi/img/image-category.png)
+
+The driver entry point is the function called when a UEFI driver is started with the `StartImage()` service.
+At this point the driver has already been loaded into memory with the `LoadImage()` service.
+
+The image handle of the UEFI driver and a pointer to the UEFI system table are passed into every UEFI driver.
+The image handle allows the UEFI driver to discover information about itself,
+and the pointer to the UEFI system table allows the UEFI driver to make UEFI Boot Service and UEFI Runtime Service calls.
 
 ## Event
-![](./uefi/event-category.png)
+![](./uefi/img/event-category.png)
+
+| **Type of events**            | **Description**                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| ----------------------------- | ----------------------------------------------------------------------------------------------------                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| Wait event                    | An event whose notification function is executed whenever the event is checked or waited upon.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| Signal event                  | An event whose notification function is scheduled for execution whenever the event goes from the waiting state to the signaled state.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| Timer event                   | A type of signal event that is moved from the waiting state to the signaled state when at least a specified amount of time has elapsed. Both periodic and one-shot timers are supported. The event's notification function is scheduled for execution when a specific amount of time has elapsed.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| Periodic timer event          | A type of timer event that is moved from the waiting state to the signaled state at a specified frequency. The event's notification function is scheduled for execution when a specific amount of time has elapsed.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| One-shot timer event          | A type of timer event that is moved from the waiting state to the signaled state after the specified time period has elapsed. The event's notification function is scheduled for execution when a specific amount of time has elapsed. The following three elements are associated with every event: * The task priority level (TPL) of the event * A notification function * A notification context The notification function for a wait event is executed when the state of the event is checked or when the event is being waited upon. The notification function of a signal event is executed whenever the event transitions from the waiting state to the signaled state. The notification context is passed into the notification function each time the notification function is executed. The TPL is the priority at which the notification function is executed. The four TPL levels that are defined in UEFI are listed in the table below. |
+| Exit Boot Services event      | A special type of signal event that is moved from the waiting state to the signaled state when the EFI Boot Service `ExitBootServices()` is called. This call is the point in time when ownership of the platform is transferred from the firmware to an operating system. The event's notification function is scheduled for execution when `ExitBootServices()` is called.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| Set Virtual Address Map event | A special type of signal event that is moved from the waiting state to the signaled state when the UEFI runtime service `SetVirtualAddressMap()` is called. This call is the point in time when the operating system is making a request for the runtime components of UEFI to be converted from a physical addressing mode to a virtual addressing mode. The operating system provides the map of virtual addresses to use. The event's notification function is scheduled for execution when `SetVirtualAddressMap()` is called.                                                                                                                                                                                                                                                                                                                                                                                                                     |
+
+
+| Task Priority Level | Description                                                                               |
+|---------------------|-------------------------------------------------------------------------------------------|
+| TPL_APPLICATION     | The priority level at which UEFI images are executed.                                     |
+| TPL_CALLBACK        | The priority level for most notification functions.                                       |
+| TPL_NOTIFY          | The priority level at which most I/O operations are performed.                            |
+| TPL_HIGH_LEVEL      | The priority level for the one timer interrupt supported in UEFI. (Not usable by drivers) |
+
+The type of event determines when an event's notification function is invoked.
+The notification function for signal type events is invoked when an event is placed into the signaled state with a call to `SignalEvent()`.
+The notification function for wait type events is invoked when the event is passed to the `CheckEvent()` or `WaitForEvent()` services.
 
 ## DXE
 
 ## UEFI Driver Model
 
 ### Driver Binding Protocol
+UEFI drivers following the UEFI driver model are required to implement the Driver Binding Protocol. This requirement includes the following drivers:
+- Device drivers
+- Bus drivers
+- Hybrid drivers
+
+*Root bridge driver, service drivers, and initializing drivers* do not produce this protocol.
+
+
+The EFI_DRIVER_BINDING_PROTOCOL is installed onto the driver's image handle.
+
+It is possible for a driver to produce more than one instance of the Driver Binding Protocol. All additional instances of the Driver Binding Protocol must be installed onto new handles.
+
+The Driver Binding Protocol can be installed directly using the UEFI Boot Service `InstallMultipleProtocolInterfaces()`.
+
+
+
 主要参考
 - [Driver Binding Protocol](https://edk2-docs.gitbook.io/edk-ii-uefi-driver-writer-s-guide/9_driver_binding_protocol)
 - [PCI Driver Design Guidelines](https://edk2-docs.gitbook.io/edk-ii-uefi-driver-writer-s-guide/18_pci_driver_design_guidelines)
 
+使用 pci 作为同一个例子:
+
+> The PCI bus driver consumes the services of the `PCI_ROOT_BRIDGE_IO_PROTOCOL` and uses those services to enumerate the PCI controllers present in the system.
+> In this example, the PCI bus driver detected a disk controller, a graphics controller, and a USB host controller.
+> As a result, the PCI bus driver produces three child handles with the `EFI_DEVICE_PATH_PROTOCOL` and the `EFI_PCI_IO_PROTOCOL`.[^2]
+
+分析对应的代码流程:
+
+- PciBusDriverBindingStart
+  - PciEnumerator : 扫描出来一个 root 下的所有的 device
+    - PciHostBridgeEnumerator
+      - InsertRootBridge
+  - StartPciDevices :
+    - StartPciDevicesOnBridge
+      - RegisterPciDevice
+        - // Install the pciio protocol, device path protocol
+        - 处理 option rom 之类的操作
+
+扫描过程中，对于创建出来的 pcidev, 为其创建 handle 并且注册上 `EFI_DEVICE_PATH_PROTOCOL` 和 `EFI_PCI_IO_PROTOCOL`
+```c
+  //
+  // Install the pciio protocol, device path protocol
+  //
+  Status = gBS->InstallMultipleProtocolInterfaces (
+                  &PciIoDevice->Handle,
+                  &gEfiDevicePathProtocolGuid,
+                  PciIoDevice->DevicePath,
+                  &gEfiPciIoProtocolGuid,
+                  &PciIoDevice->PciIo,
+                  NULL
+                  );
+```
+
+- [ ] 使用 NvmExpressDriverBindingStart 来分析将是一个绝佳的例子
 
 ## Device Path
 主要参考:
@@ -185,3 +275,5 @@ SecurityPkg/Tcg/Tcg2Dxe/Tcg2Dxe.c:2765:                    &gEfiEventExitBootSer
 - [ ] 所有的 UEFI 的书籍开始的时候都会讲解曾经痛苦的 bios 时代，说实话，我没有经历过，不是非常理解。
 
 [^1]: https://sourceware.org/gdb/current/onlinedocs/gdb/Backtrace.html
+[^2]: https://edk2-docs.gitbook.io/edk-ii-uefi-driver-writer-s-guide/3_foundation/readme.10/3102_bus_driver
+[^3]: https://edk2-docs.gitbook.io/edk-ii-uefi-driver-writer-s-guide/3_foundation/34_handle_database

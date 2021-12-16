@@ -24,7 +24,7 @@
 但是这个教程有点老，参考 [stackoverflow](https://stackoverflow.com/questions/31514866/how-to-compile-uefi-application-using-gnu-efi/31517520)
 可以修复。
 
-或者看[我写的](https://github.com/Martins3/Martins3.github.io/tree/master/docs/bmbt/uefi/uefi.sh)，将其中的 main.c 和 Makefile 拷贝出来，make 就可以得到 hello.efi 了
+者看[我写的](https://github.com/Martins3/Martins3.github.io/tree/master/docs/bmbt/uefi/gnuefi)，将其中的 main.c 和 Makefile 拷贝出来，make 就可以得到 hello.efi 了
 
 ### 运行 efi
 参考 [osdev](https://wiki.osdev.org/UEFI#Linux.2C_root_not_required) 上，我构建出来了一个
@@ -60,7 +60,7 @@ build
 /home/maritns3/core/ld/edk2-workstation/edk2/Build/MdeModule/DEBUG_GCC5/X64
 ➜  X64 git:(master) ✗ /home/maritns3/core/vn/docs/bmbt/uefi/uefi.sh HelloWorld.efi
 ```
-![](./uefi/MdeModulePkg_hello_world.png)
+![](./uefi/img/MdeModulePkg_hello_world.png)
 
 ## 构建基于 edk2 的 HelloWorld
 虽然上面使用 MdeModulePkg 的 HelloWorld，但是 MdeModulePkg 包含的内容过多，现在构建一个更加简单的 HelloWorld
@@ -143,7 +143,7 @@ build -p AppPkg/AppPkg.dsc
 ```
 
 最后效果:
-![](./uefi/gdb.png)
+![](./uefi/img/gdb.png)
 
 需要注意的事情是，打断点需要使用 [hardware breakpoint](https://stackoverflow.com/questions/8878716/what-is-the-difference-between-hardware-and-software-breakpoints)
 ## 生成 compile_commands.json
