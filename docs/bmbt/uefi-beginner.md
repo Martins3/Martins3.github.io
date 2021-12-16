@@ -7,6 +7,14 @@
 
 [uefi.org specifications]( https://uefi.org/specifications) 就太专业了，大多数时候是用不着的。
 
+下面的内容对应的代码主要在 MdeModulePkg/Core/Dxe 中，实际上，edk2 中大多数的代码都是各种 driver，基本是对称的，Dxe 算是最为核心的部分了
+
+
+- [ ] 使用 gKeyboardControllerDriver 将是一个更加好的例子
+  - 分析 load，bind, 然后被其他的组件适应起来的 Event，
+  - 分析 protocols
+
+
 ## 和用户态编程的根本性区别
 使用上 StdLib 之后，很多编程几乎看似和用户态已无区别，比如一个 HelloWorld.c 可以直接编译为 .efi 并且在 UefiShell 中运行。
 但是仔细观察，我们会发现诸多和用户态编程的根本性区别。
@@ -75,6 +83,11 @@ stack_end=0x7fffffffd628) at ../csu/libc-start.c:308
 
 **始终使用的是通一个 stack**
 
+进程地址空间的一个重要作用就是隔离，你在一个程序中定义的全局变量在另一个程序中是无法看到的。
+UEFI 中程序都在物理地址空间中，一个程序可以随意访问另一个程序的各种数据，当然你最好不要这么做，因为这会大大增加
+编程的复杂度，但是 UEFI 中程序还是需要进行交互的，那么就必须显示地使用统一的接口，这个接口就是 handle / protocol 了。
+
+
 **没有 parallel 和 context switch**
 
 在 edk2 中，程序就是一个接着一个执行的，即使运行的平台含有多个 core, 但是只会使用其中一个运行。
@@ -93,9 +106,47 @@ stack_end=0x7fffffffd628) at ../csu/libc-start.c:308
 - Boot Device Selection (BDS)
 
 ## UEFI System Table
-UEFI Boot Services
-UEFI Runtime Services
-Protocol services
+通过 UEFI System Table 可以访问到三种 services:
+- UEFI Boot Services
+- UEFI Runtime Services
+- Protocol services
+
+在 MdePkg/Include/Uefi/UefiSpec.h 中定义了 EFI_RUNTIME_SERVICES EFI_BOOT_SERVICES 和 EFI_SYSTEM_TABLE
+```c
+  ///
+  /// A pointer to the EFI Runtime Services Table.
+  ///
+  EFI_RUNTIME_SERVICES              *RuntimeServices;
+  ///
+  /// A pointer to the EFI Boot Services Table.
+  ///
+  EFI_BOOT_SERVICES                 *BootServices;
+  ///
+  /// The number of system configuration tables in the buffer ConfigurationTable.
+  ///
+  UINTN                             NumberOfTableEntries;
+  ///
+  /// A pointer to the system configuration tables.
+  /// The number of entries in the table is NumberOfTableEntries.
+  ///
+  EFI_CONFIGURATION_TABLE           *ConfigurationTable;
+} EFI_SYSTEM_TABLE;
+```
+
+在 DXE 早期 UefiBootServicesTableLibConstructor 中，会初始化 UEFI 中为数不多的全局变量，各种 driver 就是靠访问 gST 来获取各种服务。
+```c
+EFI_HANDLE         gImageHandle = NULL;
+EFI_SYSTEM_TABLE   *gST         = NULL;
+EFI_BOOT_SERVICES  *gBS         = NULL;
+```
+
+类似的全局变量还有 gDS
+```c
+//
+// Cache copy of the DXE Services Table
+//
+EFI_DXE_SERVICES  *gDS      = NULL;
+```
 
 ## Handle 和 Protocol
 ![](./uefi/img/handle-category.png)
@@ -104,7 +155,72 @@ Protocol services
 - Handles are a collection of one or more protocols
 - Protocols are data structures named by a GUID.
 
-- [ ] 让我们来找到这些 database 的内容吧!
+- [ ] 让我们来找到这些 database 的变量在什么位置
+
+单看这个几个定义 database 管理了多个 handle，handle 包含了多个 protocol。
+实际上，handle 更像是 object，而 protocol 像是这个 object 的 field (method and variable)
+下面使用 ps2 键盘进行具体的分析:
+- 在 KbdControllerDriverStart 中安装:
+```c
+  //
+  // Install protocol interfaces for the keyboard device.
+  //
+  Status = gBS->InstallMultipleProtocolInterfaces (
+                  &Controller,
+                  &gEfiSimpleTextInProtocolGuid,
+                  &ConsoleIn->ConIn, // EFI_SIMPLE_TEXT_INPUT_PROTOCOL
+                  &gEfiSimpleTextInputExProtocolGuid,
+                  &ConsoleIn->ConInEx,
+                  NULL
+                  );
+```
+这里的 handle 是 `Controller`，而 protocol 是 `ConsoleIn->ConIn` 和 `ConsoleIn->ConInEx`。
+
+- ConSplitterConInDriverBindingStart => ConSplitterStart 中获取
+```c
+  //
+  // Open InterfaceGuid on the virtual handle.
+  //
+  Status =  gBS->OpenProtocol (
+                ControllerHandle,
+                InterfaceGuid, // 就是 gEfiSimpleTextInProtocolGuid
+                Interface, // 从这里获取了 ConsoleIn->ConIn
+                This->DriverBindingHandle,
+                ConSplitterVirtualHandle,
+                EFI_OPEN_PROTOCOL_GET_PROTOCOL
+                );
+```
+
+```c
+/*
+#0  KeyReadStatusRegister (ConsoleIn=ConsoleIn@entry=0x7ec76018) at /home/maritns3/core/ld/edk2-workstation/edk2/MdePkg/Library/BaseIoLibIntrinsic/IoLibGcc.c:50
+#1  0x000000007edacc38 in KeyboardTimerHandler (Event=Event@entry=0x0, Context=Context@entry=0x7ec76018) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/B
+us/Isa/Ps2KeyboardDxe/Ps2KbdCtrller.c:807
+#2  0x000000007edad371 in KeyboardReadKeyStrokeWorker (ConsoleInDev=ConsoleInDev@entry=0x7ec76018, KeyData=KeyData@entry=0x7fe9e1e4) at /home/maritns3/core/ld/edk2-wor
+kstation/edk2/MdeModulePkg/Bus/Isa/Ps2KeyboardDxe/Ps2KbdTextIn.c:156
+#3  0x000000007edad42d in KeyboardReadKeyStroke (This=<optimized out>, Key=0x7fe9e244) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Bus/Isa/Ps2Keyboard
+Dxe/Ps2KbdTextIn.c:279
+#4  0x000000007ede8f56 in ConSplitterTextInPrivateReadKeyStroke (Key=0x7fe9e2ac, Private=0x7edeccc0) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Unive
+rsal/Console/ConSplitterDxe/ConSplitter.c:3562
+#5  ConSplitterTextInReadKeyStroke (This=<optimized out>, Key=0x7fe9e2ac) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Universal/Console/ConSplitterDxe
+/ConSplitter.c:3623
+#6  0x000000007dff9538 in da_ConRawRead (filp=filp@entry=0x7e074018, Character=Character@entry=0x7e091344 L"") at /home/maritns3/core/ld/edk2-workstation/edk2/StdLib/L
+ibC/Uefi/Devices/Console/daConsole.c:257
+#7  0x000000007dff9626 in da_ConPoll (filp=0x7e074018, events=<optimized out>) at /home/maritns3/core/ld/edk2-workstation/edk2/StdLib/LibC/Uefi/Devices/Console/daConso
+le.c:672
+#8  0x000000007e001bbd in poll (nfds=1, timeout=-1, pfd=0x7e06af38) at /home/maritns3/core/ld/edk2-workstation/edk2/MdePkg/Library/BaseDebugLibNull/DebugLib.c:166
+*/
+```
+
+在 ConSplitterTextInPrivateReadKeyStroke 中就可以持有 EFI_SIMPLE_TEXT_INPUT_PROTOCOL 来调用其函数指针 EFI_INPUT_READ_KEY
+也就是 KeyboardReadKeyStroke [^11]
+```c
+    // Private->TextInList[Index] 就是 EFI_SIMPLE_TEXT_INPUT_PROTOCOL 了
+    Status = Private->TextInList[Index]->ReadKeyStroke (
+                                          Private->TextInList[Index],
+                                          &KeyData.Key
+                                          );
+```
 
 ## Image
 ![](./uefi/img/image-category.png)
@@ -115,6 +231,17 @@ At this point the driver has already been loaded into memory with the `LoadImage
 The image handle of the UEFI driver and a pointer to the UEFI system table are passed into every UEFI driver.
 The image handle allows the UEFI driver to discover information about itself,
 and the pointer to the UEFI system table allows the UEFI driver to make UEFI Boot Service and UEFI Runtime Service calls.
+
+### Image Load
+
+- [ ] https://edk2-docs.gitbook.io/edk-ii-uefi-driver-writer-s-guide/6_uefi_driver_categories/61_device_drivers/614_device_drivers_with_one_driver_binding_protoco
+
+在 CoreLoadImageCommon 中还会 EFI_LOADED_IMAGE_PROTOCOL
+
+- CoreStartImage
+  - `Image->EntryPoint (ImageHandle, Image->Info.SystemTable);` 其实就是 `_ModuleEntryPoint`，其 SystemTable 就是在此处传递的
+    - ProcessModuleEntryPointList
+      - UefiMain
 
 ## Event
 ![](./uefi/img/event-category.png)
@@ -160,17 +287,14 @@ It is possible for a driver to produce more than one instance of the Driver Bind
 
 The Driver Binding Protocol can be installed directly using the UEFI Boot Service `InstallMultipleProtocolInterfaces()`.
 
-
-
+#### 使用 pci 作为参考
 主要参考
 - [Driver Binding Protocol](https://edk2-docs.gitbook.io/edk-ii-uefi-driver-writer-s-guide/9_driver_binding_protocol)
 - [PCI Driver Design Guidelines](https://edk2-docs.gitbook.io/edk-ii-uefi-driver-writer-s-guide/18_pci_driver_design_guidelines)
 
-使用 pci 作为同一个例子:
-
-> The PCI bus driver consumes the services of the `PCI_ROOT_BRIDGE_IO_PROTOCOL` and uses those services to enumerate the PCI controllers present in the system.
-> In this example, the PCI bus driver detected a disk controller, a graphics controller, and a USB host controller.
-> As a result, the PCI bus driver produces three child handles with the `EFI_DEVICE_PATH_PROTOCOL` and the `EFI_PCI_IO_PROTOCOL`.[^2]
+The PCI bus driver consumes the services of the `PCI_ROOT_BRIDGE_IO_PROTOCOL` and uses those services to enumerate the PCI controllers present in the system.
+In this example, the PCI bus driver detected a disk controller, a graphics controller, and a USB host controller.
+As a result, the PCI bus driver produces three child handles with the `EFI_DEVICE_PATH_PROTOCOL` and the `EFI_PCI_IO_PROTOCOL`.[^2]
 
 分析对应的代码流程:
 
@@ -199,7 +323,11 @@ The Driver Binding Protocol can be installed directly using the UEFI Boot Servic
                   );
 ```
 
-- [ ] 使用 NvmExpressDriverBindingStart 来分析将是一个绝佳的例子
+再看一个经典的 pci 设备 nvme:
+- NvmExpressDriverBindingSupported
+  - 首先比较 Device Path 来判断是否匹配
+  - 使用 gEfiPciIoProtocolGuid 获取 EFI_PCI_IO_PROTOCOL 也即是这个设备配置空间访问的 protocol
+  - `PciIo->Pci.Read` 访问设备进行比对
 
 ## Device Path
 主要参考:
@@ -260,6 +388,27 @@ MdePkg/MdePkg.dec:403:  gEfiEventExitBootServicesGuid  = { 0x27ABF055, 0xB1B8, 0
 SecurityPkg/Tcg/TcgDxe/TcgDxe.c:1436:                    &gEfiEventExitBootServicesGuid,
 SecurityPkg/Tcg/Tcg2Dxe/Tcg2Dxe.c:2765:                    &gEfiEventExitBootServicesGuid,
 ```
+## [ ] Timer
+
+## Shell Application
+分析一下 Shell 创建 Application 的过程:
+
+- InternalShellExecuteDevicePath
+  - `gBS->LoadImage` : 加载需要执行的程序镜像, 这会创建出来一个 image handle 来
+  - `gBS->OpenProtocol(NewHandle, &gEfiLoadedImageProtocolGuid, (VOID**)&LoadedImage, gImageHandle, NULL, EFI_OPEN_PROTOCOL_GET_PROTOCOL);` : 向 handle 添加 EFI_LOADED_IMAGE_PROTOCOL
+  - `gBS->InstallProtocolInterface(&NewHandle, &gEfiShellParametersProtocolGuid, EFI_NATIVE_INTERFACE, &ShellParamsProtocol);` : 向 handle 添加 EFI_SHELL_PARAMETERS_PROTOCOL
+  - `gBS->StartImage(NewHandle, 0, NULL );` : 开始执行程序
+    - `_ModuleEntryPoint` : 从这里就是程序执行的位置了
+      - ProcessLibraryConstructorList
+      - ProcessModuleEntryPointList
+        - ShellCEntryLib
+          - `SystemTable->BootServices->OpenProtocol` : 利用 EfiShellParametersProtocol 来获取参数，获取标准输入输出
+            - CoreOpenProtocol : 使用 gEfiShellInterfaceGuid 来填充 EFI_SHELL_PARAMETERS_PROTOCOL
+              - CoreGetProtocolInterface : 使用 EFI_GUID 也就是 gEfiShellInterfaceGuid 获取 PROTOCOL_INTERFACE
+          - ShellAppMain
+            - `gMD = AllocateZeroPool(sizeof(struct __MainData))` : `__MainData` 记录一些 argc argV 之类的东西，是的，我们的程序是不需要链接器的
+            - main
+      - ProcessLibraryDestructorList
 
 ## 资源
 - https://github.com/Openwide-Ingenierie/uefi-musl
@@ -277,3 +426,4 @@ SecurityPkg/Tcg/Tcg2Dxe/Tcg2Dxe.c:2765:                    &gEfiEventExitBootSer
 [^1]: https://sourceware.org/gdb/current/onlinedocs/gdb/Backtrace.html
 [^2]: https://edk2-docs.gitbook.io/edk-ii-uefi-driver-writer-s-guide/3_foundation/readme.10/3102_bus_driver
 [^3]: https://edk2-docs.gitbook.io/edk-ii-uefi-driver-writer-s-guide/3_foundation/34_handle_database
+[^11]: 这里有一个问题，guid 是全局定义的，但是 handle 对于两个 driver 都是其 Start() 的参数，我不能理解
