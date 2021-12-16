@@ -149,20 +149,6 @@ dulePkg/Core/Pei/PeiMain/PeiMain.c:512
 from SEC to PEI. After switching stack in the PEI core, it will restart
 with the old core data.
 
-## 关键缩写
-Driver Execution Environment (DXE)
-pre-EFI initialization (PEI)
-Platform Initialization (PI)
-
-## device path
-主要参考:
-- https://zhuanlan.zhihu.com/p/351065844
-- https://zhuanlan.zhihu.com/p/351926214
-
-每个 Physical Device 都会对应 1 个 Controller Handle，在该 Handle 下会安装其对应的 Device Path。
-
-UEFI Bus Driver Connect 时为 Child Device Controller 产生 Device Path
-
 ## driver binding
 ```c
 //

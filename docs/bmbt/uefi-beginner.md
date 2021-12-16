@@ -1,9 +1,11 @@
 # UEFI 入门
 
-经过 ![Linux UEFI 学习环境搭建](./uefi-linux.md) 想必对于 UEFI 存在一些感性的认识，现在来基于 edk2 介绍一些 UEFI 入门级的核心概念。
+经过 [Linux UEFI 学习环境搭建](./uefi-linux.md) 想必对于 UEFI 存在一些感性的认识，现在来基于 edk2 介绍一些 UEFI 入门级的核心概念。
 
 主要参考 [Beyond BIOS: Developing with the Unified Extensible Firmware Interface, Third Edition](https://www.amazon.com/Beyond-BIOS-Developing-Extensible-Interface/dp/1501514784)
 同时 [官方文档](https://edk2-docs.gitbook.io/edk-ii-uefi-driver-writer-s-guide) 也是重要参考。
+
+[uefi.org specifications]( https://uefi.org/specifications) 就太专业了，大多数时候是用不着的。
 
 ## 和用户态编程的根本性区别
 使用上 StdLib 之后，很多编程几乎看似和用户态已无区别，比如一个 HelloWorld.c 可以直接编译为 .efi 并且在 UefiShell 中运行。
@@ -85,16 +87,41 @@ stack_end=0x7fffffffd628) at ../csu/libc-start.c:308
 ## UEFI 的基本启动过程
 ![load img failed](https://edk2-docs.gitbook.io/~/files/v0/b/gitbook-28427.appspot.com/o/assets%2F-M5spcVt2sqlUZOWmnXY%2F-M5sphJDWD7_iUuoREya%2F-M5spjTOFjRbcY8ckkSh%2Fimage3.png?generation=1587944061697998&alt=media)
 
+主要是:
+- pre-EFI initialization (PEI)
+- Driver Execution Environment (DXE)
+- Boot Device Selection (BDS)
 ## Handle 和 Protocol
+![](./uefi/handle-category.png)
+
 
 ## Image
+![](./uefi/image-category.png)
 
 ## Event
+![](./uefi/event-category.png)
 
-- [ ] 各种 image 的分类
-- [ ] 各种 handle 的类型
+## DXE
+
+## UEFI Driver Model
+
+### Driver Binding Protocol
+主要参考
+- [Driver Binding Protocol](https://edk2-docs.gitbook.io/edk-ii-uefi-driver-writer-s-guide/9_driver_binding_protocol)
+- [PCI Driver Design Guidelines](https://edk2-docs.gitbook.io/edk-ii-uefi-driver-writer-s-guide/18_pci_driver_design_guidelines)
+
+
+## Device Path
+主要参考:
+- https://zhuanlan.zhihu.com/p/351065844
+- https://zhuanlan.zhihu.com/p/351926214
+
+每个 Physical Device 都会对应 1 个 Controller Handle，在该 Handle 下会安装其对应的 Device Path。
+
+UEFI Bus Driver Connect 时为 Child Device Controller 产生 Device Path
+
+
 - [ ] 分析一下 load image 的效果
-- [ ] 几个阶段
 
 At this time, applications developed with the EADK are intended to reside
 on, and be loaded from, storage separate from the core firmware.  This is
