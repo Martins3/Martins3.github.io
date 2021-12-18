@@ -10,6 +10,8 @@
 - [构建基于 StdLib 的 HelloWorld](#构建基于-stdlib-的-helloworld)
 - [如何让自动运行 efi 程序](#如何让自动运行-efi-程序)
 - [在 Linux 上调试 edk2](#在-linux-上调试-edk2)
+  - [使用 gdb 调试](#使用-gdb-调试)
+  - [使用 debugcon 调试](#使用-debugcon-调试)
 - [生成 compile_commands.json](#生成-compile_commandsjson)
 - [内核作为 efi 文件启动](#内核作为-efi-文件启动)
 - [让程序运行 shell 命令](#让程序运行-shell-命令)
@@ -121,7 +123,9 @@ build -p AppPkg/AppPkg.dsc
 - https://stackoverflow.com/questions/50011728/how-is-an-efi-application-being-set-as-the-bootloader-through-code
 
 在 shell 会等待 5s 来等待程序的执行, 在 ShellPkg/Application/Shell/Shell.c 中修改为等待时间 0s
+
 ## 在 Linux 上调试 edk2
+### 使用 gdb 调试
 主要参考 https://retrage.github.io/2019/12/05/debugging-ovmf-en.html
 
 在 Linux 调试的主要难度在于如何获取调试的符号信息，但是 edk2 生成的符号信息进行一些装换之后才可以被 gdb 识别，
@@ -146,6 +150,13 @@ build -p AppPkg/AppPkg.dsc
 ![](./uefi/img/gdb.png)
 
 需要注意的事情是，打断点需要使用 [hardware breakpoint](https://stackoverflow.com/questions/8878716/what-is-the-difference-between-hardware-and-software-breakpoints)
+
+### 使用 debugcon 调试
+在源码中添加调试语句，然后重新编译运行
+```c
+  DEBUG((DEBUG_INFO, "%s\n", "hello"));
+```
+
 ## 生成 compile_commands.json
 虽然 edk2 是一个和操作系统无关的，但是 edk2 编译出来了的 efi 格式实际上是 Windows 二进制格式，项目的构建似乎默认 VS 的风格。
 想要在 vim 越快的阅读代码需要生成 compile_commands.json，但是这个编译系统不是 CMake, Make, Ninja 之类的，想要生成，并不容易。

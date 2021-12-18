@@ -48,7 +48,7 @@
 ## UEFI
 - [Linux 下 UEFI 学习环境搭建](./bmbt/uefi-linux.md)
 - [UEFI 入门](./bmbt/uefi-beginner.md)
-- [UEFI 实战 : 将 QEMU 转换为 UEFI Application](./bmbt/uefi-in-action.md)
+- 🚧 [UEFI 实战 : 将 QEMU 转换为 UEFI Application](./bmbt/uefi-in-action.md)
 
 ## Tips
 - [How to cross Great Fire Wall](./gfw.md)

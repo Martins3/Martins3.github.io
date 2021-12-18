@@ -79,6 +79,9 @@ stack_end=0x7fffffffd628) at ../csu/libc-start.c:308
 *   #27 0x000000007fee10cf in InternalSwitchStack ()
 *   #28 0x0000000000000000 in ?? ()
 ```
+没有虚拟地址空间还存在一个大问题，那就是不会出现 segment fault 的错误，随意访问物理地址不会被立刻检测出来，错误往往可能传递到更远的位置才会被发现。
+所以 UEFI 对于程序的访存安全要求更高。
+
 如果你理解了 backtrace 实现的原理，上面的 backtrace 说明在 DXE 阶段，执行的程序:
 
 **始终使用的是通一个 stack**
@@ -552,7 +555,16 @@ on/edk2/UefiCpuPkg/Library/CpuExceptionHandlerLib/X64/ArchExceptionHandler.c:94
             - main
       - ProcessLibraryDestructorList
 
+UEFI shell 自带的各种命令出现在 ShellPkg/Library 中，
+- UefiShellDebug1CommandsLib : edit
+- UefiShellDriver1CommandsLib : connect unconnect 之类的
+- UefiShellInstall1CommandsLib : install
+- UefiShellLevel1CommandsLib : goto exit for if stall
+- UefiShellLevel1CommandsLib : cd ls
+- UefiShellLevel3CommandsLib : cls echo
+- UefiShellNetwork1CommandsLib : ping
 
+他们的使用方法可以参考[这里](https://linuxhint.com/use-uefi-interactive-shell-and-its-common-commands/)，简单明了。
 
 ## 资源
 - https://github.com/Openwide-Ingenierie/uefi-musl
@@ -566,6 +578,8 @@ on/edk2/UefiCpuPkg/Library/CpuExceptionHandlerLib/X64/ArchExceptionHandler.c:94
 
 ## 疑惑
 - [ ] 所有的 UEFI 的书籍开始的时候都会讲解曾经痛苦的 bios 时代，说实话，我没有经历过，不是非常理解。
+- [ ] 如果执行了 illegal instruction，其现象是什么?
+- [ ] 在 edk2 的语境中，似乎总是默认运行在物理地址上的，但是 Loongarch 的这种总是在虚拟地址上的怎么处理的呀
 
 [^1]: https://sourceware.org/gdb/current/onlinedocs/gdb/Backtrace.html
 [^2]: https://edk2-docs.gitbook.io/edk-ii-uefi-driver-writer-s-guide/3_foundation/readme.10/3102_bus_driver
