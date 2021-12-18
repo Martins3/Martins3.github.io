@@ -1,5 +1,29 @@
 # UEFI 入门
 
+<!-- vim-markdown-toc GitLab -->
+
+- [和用户态编程的根本性区别](#和用户态编程的根本性区别)
+- [UEFI 的基本启动过程](#uefi-的基本启动过程)
+- [UEFI System Table](#uefi-system-table)
+- [Handle 和 Protocol](#handle-和-protocol)
+- [Image](#image)
+  - [Image Load](#image-load)
+- [Event](#event)
+  - [Signal Event](#signal-event)
+  - [Wait Event](#wait-event)
+- [UEFI Driver Model](#uefi-driver-model)
+  - [Driver Binding Protocol](#driver-binding-protocol)
+    - [e.g. pci](#eg-pci)
+- [Device Path](#device-path)
+- [Os Loader](#os-loader)
+  - [CoreExitBootServices](#coreexitbootservices)
+- [Timer](#timer)
+- [Shell Application](#shell-application)
+- [资源](#资源)
+- [疑惑](#疑惑)
+
+<!-- vim-markdown-toc -->
+
 经过 [Linux UEFI 学习环境搭建](./uefi-linux.md) 想必对于 UEFI 存在一些感性的认识，现在来基于 edk2 介绍一些 UEFI 入门级的核心概念。
 
 主要参考 [Beyond BIOS: Developing with the Unified Extensible Firmware Interface, Third Edition](https://www.amazon.com/Beyond-BIOS-Developing-Extensible-Interface/dp/1501514784)
@@ -10,10 +34,13 @@
 下面的内容对应的代码主要在 MdeModulePkg/Core/Dxe 中，实际上，edk2 中大多数的代码都是各种 driver，基本是对称的，Dxe 算是最为核心的部分了
 
 
-- [ ] 使用 gKeyboardControllerDriver 将是一个更加好的例子
-  - 分析 load，bind, 然后被其他的组件适应起来的 Event，
-  - 分析 protocols
-
+Assuming you are new to UEFI, the following introduction explains a few of the key UEFI concepts in a helpful framework to keep in mind as you study the specification:[^6]
+- Objects managed by UEFI-based firmware - used to manage system state, including I/O devices, memory, and events
+- The UEFI System Table - the primary data structure with data information tables and function calls to interface with the systems
+- Handle database and protocols - the means by which callable interfaces are registered
+- UEFI images - the executable content format by which code is deployed
+- Events - the means by which software can be signaled in response to some other activity
+- Device paths - a data structure that describes the hardware location of an entity, such as the bus, spindle, partition, and file name of an UEFI image on a formatted disk.
 
 ## 和用户态编程的根本性区别
 使用上 StdLib 之后，很多编程几乎看似和用户态已无区别，比如一个 HelloWorld.c 可以直接编译为 .efi 并且在 UefiShell 中运行。
@@ -108,6 +135,25 @@ UEFI 中程序都在物理地址空间中，一个程序可以随意访问另一
 - Driver Execution Environment (DXE)
 - Boot Device Selection (BDS)
 
+### DXE
+
+The DXE phase contains an implementation of UEFI that is compliant with the PI (Platform Initialization) Specification.
+As a result, both the DXE Core and DXE drivers share many of the attributes of UEFI images.
+The DXE phase is the phase where most of the system initialization is performed. The Pre-EFI Initialization (PEI) phase is responsible for initializing permanent memory in the platform so the DXE phase can be loaded and executed.
+The state of the system at the end of the PEI phase is passed to the DXE phase through a list of position-independent data structures called Hand-Off Blocks (HOBs).
+The DXE phase consists of several components:
+- DXE Core
+- DXE Dispatcher
+- DXE Drivers
+
+The DXE Core produces a set of Boot Services, Runtime Services, and DXE Services.
+The DXE Dispatcher is responsible for discovering and executing DXE drivers in the correct order.
+The DXE drivers are responsible for initializing the processor, chipset, and platform components as well as providing software abstractions for console and boot devices.
+These components work together to initialize the platform and provide the services required to boot an OS.
+
+The DXE Core produces the EFI System Table and its associated set of EFI Boot Services and EFI Runtime Services. The DXE Core also contains the DXE Dispatcher, whose main purpose is to discover and execute DXE drivers stored in firmware volumes.
+
+
 ## UEFI System Table
 通过 UEFI System Table 可以访问到三种 services:
 - UEFI Boot Services
@@ -158,7 +204,37 @@ EFI_DXE_SERVICES  *gDS      = NULL;
 - Handles are a collection of one or more protocols
 - Protocols are data structures named by a GUID.
 
-- [ ] 让我们来找到这些 database 的变量在什么位置
+- CoreInstallProtocolInterfaceNotify : 将需要安装的 handle 放到 database 中 `gHandleList`
+- CoreGetProtocolInterface : 在 handle 根据 protocol guid 查询 protocol
+
+
+Handle 的定义[^12]:
+- AllHandles : 将自己挂入到 database 中
+- Protocols : 获取所有的 protocol
+```c
+///
+/// IHANDLE - contains a list of protocol handles
+///
+typedef struct {
+  UINTN               Signature;
+  /// All handles list of IHANDLE
+  LIST_ENTRY          AllHandles;
+  /// List of PROTOCOL_INTERFACE's for this handle
+  LIST_ENTRY          Protocols;
+  UINTN               LocateRequest;
+  /// The Handle Database Key value when this handle was last created or modified
+  UINT64              Key;
+} IHANDLE;
+```
+实际上，IHANDLE 并不是直接使用，在各种参数传递的过程中，总是使用的 EFI_HANDLE 的，我猜测
+是为了隐藏 IHANDLE 的实现。
+```c
+///
+/// A collection of related interfaces.
+///
+typedef VOID                      *EFI_HANDLE;
+```
+
 
 单看这个几个定义 database 管理了多个 handle，handle 包含了多个 protocol。
 实际上，handle 更像是 object，而 protocol 像是这个 object 的 field (method and variable)
@@ -224,6 +300,7 @@ le.c:672
                                           &KeyData.Key
                                           );
 ```
+
 
 ## Image
 ![](./uefi/img/image-category.png)
@@ -446,7 +523,7 @@ issues.
 Os loader 和普通的 Application 没有什么区别，只是调用了一下 ExitBootServices 而已。[^4]
 
 当调用 CoreExitBootServices 之后，表示 loader 已经准备好了接手整个设备的管理。
-从此之后，不能在使用 UEFI Boot Services 但是可以继续使用 UEFI Runtime Services。
+从此之后，不能在使用 UEFI Boot Services, 同时 handle database 也被释放了，但是可以继续使用 UEFI Runtime Services。
 
 ### CoreExitBootServices
 
@@ -586,4 +663,5 @@ UEFI shell 自带的各种命令出现在 ShellPkg/Library 中，
 [^3]: https://edk2-docs.gitbook.io/edk-ii-uefi-driver-writer-s-guide/3_foundation/34_handle_database
 [^4]: https://edk2-docs.gitbook.io/edk-ii-uefi-driver-writer-s-guide/3_foundation/readme.7/371_applications#3.7.1.1-os-loader
 [^5]: https://edk2-docs.gitbook.io/edk-ii-uefi-driver-writer-s-guide/3_foundation/readme.8#figure-6-event-types
+[^6]: Beyong Bios 3rd edition
 [^11]: 这里有一个问题，guid 是全局定义的，但是 handle 对于两个 driver 都是其 Start() 的参数，我不能理解
