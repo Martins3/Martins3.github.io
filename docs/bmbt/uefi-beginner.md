@@ -246,8 +246,12 @@ and the pointer to the UEFI system table allows the UEFI driver to make UEFI Boo
 ## Event
 ![](./uefi/img/event-category.png)
 
+官方文档[^5]中给出了 event 和 tpl 的简单定义:
+
+- Event types
+
 | **Type of events**            | **Description**                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
-| ----------------------------- | ----------------------------------------------------------------------------------------------------                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | Wait event                    | An event whose notification function is executed whenever the event is checked or waited upon.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
 | Signal event                  | An event whose notification function is scheduled for execution whenever the event goes from the waiting state to the signaled state.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | Timer event                   | A type of signal event that is moved from the waiting state to the signaled state when at least a specified amount of time has elapsed. Both periodic and one-shot timers are supported. The event's notification function is scheduled for execution when a specific amount of time has elapsed.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
@@ -256,19 +260,105 @@ and the pointer to the UEFI system table allows the UEFI driver to make UEFI Boo
 | Exit Boot Services event      | A special type of signal event that is moved from the waiting state to the signaled state when the EFI Boot Service `ExitBootServices()` is called. This call is the point in time when ownership of the platform is transferred from the firmware to an operating system. The event's notification function is scheduled for execution when `ExitBootServices()` is called.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 | Set Virtual Address Map event | A special type of signal event that is moved from the waiting state to the signaled state when the UEFI runtime service `SetVirtualAddressMap()` is called. This call is the point in time when the operating system is making a request for the runtime components of UEFI to be converted from a physical addressing mode to a virtual addressing mode. The operating system provides the map of virtual addresses to use. The event's notification function is scheduled for execution when `SetVirtualAddressMap()` is called.                                                                                                                                                                                                                                                                                                                                                                                                                     |
 
+- Task priority levels defined in UEFI
 
-| Task Priority Level | Description                                                                               |
-|---------------------|-------------------------------------------------------------------------------------------|
-| TPL_APPLICATION     | The priority level at which UEFI images are executed.                                     |
-| TPL_CALLBACK        | The priority level for most notification functions.                                       |
-| TPL_NOTIFY          | The priority level at which most I/O operations are performed.                            |
-| TPL_HIGH_LEVEL      | The priority level for the one timer interrupt supported in UEFI. (Not usable by drivers) |
+| **Task Priority Level** | **Description**                                                                           |
+|-------------------------|-------------------------------------------------------------------------------------------|
+| TPL_APPLICATION         | The priority level at which UEFI images are executed.                                     |
+| TPL_CALLBACK            | The priority level for most notification functions.                                       |
+| TPL_NOTIFY              | The priority level at which most I/O operations are performed.                            |
+| TPL_HIGH_LEVEL          | The priority level for the one timer interrupt supported in UEFI. (Not usable by drivers) |
 
 The type of event determines when an event's notification function is invoked.
-The notification function for signal type events is invoked when an event is placed into the signaled state with a call to `SignalEvent()`.
-The notification function for wait type events is invoked when the event is passed to the `CheckEvent()` or `WaitForEvent()` services.
+- The notification function for signal type events is invoked when an event is placed into the signaled state with a call to `SignalEvent()`.
+- The notification function for wait type events is invoked when the event is passed to the `CheckEvent()` or `WaitForEvent()` services.
 
-## DXE
+event 的分类是按照触发的方式，Exit Boot Services event 和 Set Virtual Address Map event 比较容易理解。
+Timer event 的触发方式就是时钟中断。
+
+如果一个 event 想要通过 SignalEvent() 来触发，同时想要被时钟中断触发，那么就可以这么声明了:
+```c
+  //
+  // Create the timer for packet timeout check.
+  //
+  Status = gBS->CreateEvent (
+                  EVT_NOTIFY_SIGNAL | EVT_TIMER,
+                  TPL_CALLBACK,
+                  MnpCheckPacketTimeout,
+                  MnpDeviceData,
+                  &MnpDeviceData->TimeoutCheckTimer
+                  );
+```
+### Signal Event
+- CoreSignalEvent
+  - CoreAcquireEventLock
+  - CoreNotifySignalList : 如果 notify 是一个 group，那么将这个 group 的 Event 全部 notify 一下
+    - CoreNotifyEvent
+  - CoreNotifyEvent
+    - 将 Event 加入到 gEventQueue
+  - CoreReleaseEventLock
+    - CoreDispatchEventNotifies
+      - `Event->NotifyFunction` : 注意，这里只会执行 tpl 高于当前的 tpl 的 event 的
+
+这里存在两个点需要注意一下:
+- event 可以构成一个 event group 的，如果 signal 其中一个，所有都会被 signal
+  - 比如 IdleLoopEventCallback 和 EfiEventEmptyFunction 就是一个 event group 的 callback，当 `CoreSignalEvent (gIdleLoopEvent)` 的时候，两者都会调用
+- 首先是将 evnet 放到 gEventQueue 中
+
+### Wait Event
+在 UEFI 持续运行，然后在 gdb 中 Ctrl+C 然后 backtrace 可以得到下面的记录:
+```c
+/*
+#0  0x000000007f16f841 in CpuSleep ()
+#1  0x000000007feac77d in CoreDispatchEventNotifies (Priority=16) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/Event/Event.c:194
+#2  CoreRestoreTpl (NewTpl=4) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/Event/Tpl.c:131
+#3  0x000000007feb4d61 in CoreReleaseLock (Lock=0x7fec2470) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/Library/Library.c:96
+#4  0x000000007fead478 in CoreSignalEvent (UserEvent=0x7f8edd18) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/Event/Event.c:566
+#5  CoreSignalEvent (UserEvent=0x7f8edd18) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/Event/Event.c:531
+#6  0x000000007fead59c in CoreWaitForEvent (UserIndex=<optimized out>, UserEvents=<optimized out>, NumberOfEvents=<optimized out>) at /home/maritns3/core/ld/edk2-works
+tation/edk2/MdeModulePkg/Core/Dxe/Event/Event.c:707
+#7  CoreWaitForEvent (NumberOfEvents=1, UserEvents=0x7edecce0, UserIndex=0x7fe9e808) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/Event/Event.
+c:663
+#8  0x000000007df58972 in FileInterfaceStdInRead (This=<optimized out>, BufferSize=0x7fe9e908, Buffer=0x7e08c018) at /home/maritns3/core/ld/edk2-workstation/edk2/Shell
+Pkg/Application/Shell/FileHandleWrappers.c:532
+#9  0x000000007df64332 in DoShellPrompt () at /home/maritns3/core/ld/edk2-workstation/edk2/ShellPkg/Application/Shell/Shell.c:1346
+#10 UefiMain (ImageHandle=<optimized out>, SystemTable=<optimized out>) at /home/maritns3/core/ld/edk2-workstation/edk2/ShellPkg/Application/Shell/Shell.c:621
+#11 0x000000007df4852d in ProcessModuleEntryPointList (SystemTable=0x7f9ee018, ImageHandle=0x7f130218) at /home/maritns3/core/ld/edk2-workstation/edk2/Build/OvmfX64/DE
+BUG_GCC5/X64/ShellPkg/Application/Shell/Shell/DEBUG/AutoGen.c:1013
+#12 _ModuleEntryPoint (ImageHandle=0x7f130218, SystemTable=0x7f9ee018) at /home/maritns3/core/ld/edk2-workstation/edk2/MdePkg/Library/UefiApplicationEntryPoint/Applica
+tionEntryPoint.c:59
+#13 0x000000007feba8b5 in CoreStartImage (ImageHandle=0x7f130218, ExitDataSize=0x7e1d8d48, ExitData=0x7e1d8d40) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModu
+lePkg/Core/Dxe/Image/Image.c:1654
+#14 0x000000007f05d5e2 in EfiBootManagerBoot (BootOption=BootOption@entry=0x7e1d8cf8) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Library/UefiBootMana
+gerLib/BmBoot.c:1982
+#15 0x000000007f060ca2 in BootBootOptions (BootManagerMenu=0x7fe9ecd8, BootOptionCount=5, BootOptions=0x7e1d8b98) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeMo
+dulePkg/Universal/BdsDxe/BdsEntry.c:409
+#16 BdsEntry (This=<optimized out>) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Universal/BdsDxe/BdsEntry.c:1072
+#17 0x000000007feaabe3 in DxeMain (HobStart=<optimized out>) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/DxeMain/DxeMain.c:551
+#18 0x000000007feaac88 in ProcessModuleEntryPointList (HobStart=<optimized out>) at /home/maritns3/core/ld/edk2-workstation/edk2/Build/OvmfX64/DEBUG_GCC5/X64/MdeModule
+Pkg/Core/Dxe/DxeMain/DEBUG/AutoGen.c:489
+#19 _ModuleEntryPoint (HobStart=<optimized out>) at /home/maritns3/core/ld/edk2-workstation/edk2/MdePkg/Library/DxeCoreEntryPoint/DxeCoreEntryPoint.c:48
+#20 0x000000007fee10cf in InternalSwitchStack ()
+#21 0x0000000000000000 in ?? ()
+```
+在 gdb 中 disass CPUSleep:
+```txt
+Dump of assembler code for function CpuSleep:
+   0x000000007fed6760 <+0>:     hlt
+   0x000000007fed6761 <+1>:     retq
+   0x000000007fed6762 <+2>:     nopw   %cs:0x0(%rax,%rax,1)
+   0x000000007fed676c <+12>:    nopl   0x0(%rax)
+```
+进而找到 MdePkg/Library/BaseCpuLib/BaseCpuLib.inf 可以找到和架构相关的汇编实现
+
+这其实非常有意思，在 Linux 中，一个 shell 如果没有什么事情可以做，其实会一直等待用户输入，或者说是等待在 poll 中，而 UEFI 程序实际上运行在内核态，所以实际上会通过 hlt 来
+进入低功耗模式。通过调用 CoreWaitForEvent 来等待各种键盘输入的 event，直到存在用户的输入。
+
+等待过程中:
+- FileInterfaceStdInRead
+  - CoreWaitForEvent : 循环执行下面两个函数
+    - CpuSleep
+    - FileInterfaceStdInRead : 如果没有检测到输入，那么就继续等待
 
 ## UEFI Driver Model
 
@@ -287,7 +377,7 @@ It is possible for a driver to produce more than one instance of the Driver Bind
 
 The Driver Binding Protocol can be installed directly using the UEFI Boot Service `InstallMultipleProtocolInterfaces()`.
 
-#### 使用 pci 作为参考
+#### e.g. pci
 主要参考
 - [Driver Binding Protocol](https://edk2-docs.gitbook.io/edk-ii-uefi-driver-writer-s-guide/9_driver_binding_protocol)
 - [PCI Driver Design Guidelines](https://edk2-docs.gitbook.io/edk-ii-uefi-driver-writer-s-guide/18_pci_driver_design_guidelines)
@@ -349,7 +439,13 @@ This release of the EADK should only be used to produce UEFI Applications.  Due 
 environment built by the StdLib component, execution as a UEFI driver can cause system stability
 issues.
 
-## CoreExitBootServices
+## Os Loader
+Os loader 和普通的 Application 没有什么区别，只是调用了一下 ExitBootServices 而已。[^4]
+
+当调用 CoreExitBootServices 之后，表示 loader 已经准备好了接手整个设备的管理。
+从此之后，不能在使用 UEFI Boot Services 但是可以继续使用 UEFI Runtime Services。
+
+### CoreExitBootServices
 
 - 释放内存 : CoreTerminateMemoryMap : 根据其注释，实际上，并不会清空 Memory 中的内容
 - `gCpu->DisableInterrupt (gCpu);` : 关闭中断
@@ -388,7 +484,53 @@ MdePkg/MdePkg.dec:403:  gEfiEventExitBootServicesGuid  = { 0x27ABF055, 0xB1B8, 0
 SecurityPkg/Tcg/TcgDxe/TcgDxe.c:1436:                    &gEfiEventExitBootServicesGuid,
 SecurityPkg/Tcg/Tcg2Dxe/Tcg2Dxe.c:2765:                    &gEfiEventExitBootServicesGuid,
 ```
-## [ ] Timer
+## Timer
+处理时钟中断的代码主要分布在 ./UefiCpuPkg/Library/CpuExceptionHandlerLib/X64/ExceptionHandlerAsm.nasm 中
+
+在 CoreCheckTimers 中间打一个断点，得到下面的 backtrace，这就是时钟中断的基本处理过程。
+```c
+/*
+#0  CoreCheckTimers (CheckEvent=0x7f8edc18, Context=0x0) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/Event/Timer.c:98
+#1  0x000000007feac77d in CoreDispatchEventNotifies (Priority=30) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/Event/Event.c:194
+#2  CoreRestoreTpl (NewTpl=16) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/Event/Tpl.c:131
+#3  0x000000007f144350 in TimerInterruptHandler (InterruptType=<optimized out>, SystemContext=...) at /home/maritns3/core/ld/edk2-workstation/edk2/OvmfPkg/8254TimerDxe
+/Timer.c:89
+#4  0x000000007f168da4 in CommonExceptionHandlerWorker (ExceptionHandlerData=0x7f173920, SystemContext=..., ExceptionType=104) at /home/maritns3/core/ld/edk2-workstati
+on/edk2/UefiCpuPkg/Library/CpuExceptionHandlerLib/X64/ArchExceptionHandler.c:94
+#5  CommonExceptionHandler (ExceptionType=<optimized out>, SystemContext=...) at /home/maritns3/core/ld/edk2-workstation/edk2/UefiCpuPkg/Library/CpuExceptionHandlerLib
+/DxeException.c:40
+#6  0x000000007f16fba0 in DrFinish ()
+#7  0x0000000000000080 in ?? ()
+#8  0x00ffff0000000000 in ?? ()
+#9  0x0000000000000000 in ?? ()
+8?
+```
+
+时钟中断的注册和注册过程:
+- AsmGetTemplateAddressMap : 制作入口
+  - AsmIdtVectorBegin : 之后这就是 idt 的入口了
+    - CommonInterruptEntry
+      - DrFinish
+        - CommonExceptionHandler
+          - ExternalInterruptHandler = ExceptionHandlerData->ExternalInterruptHandler; 获取 hook，其实就是 TimerInterruptHandler 了
+            - TimerInterruptHandler
+              - `gBS->RaiseTPL (TPL_HIGH_LEVEL);` : 这个区间是需要屏蔽中断的
+              - mTimerNotifyFunction : 被注册为 CoreTimerTick
+                - mEfiSystemTime += Duration; : 刷新系统时间
+                - CoreSignalEvent (mEfiCheckTimerEvent);
+              - `gBS->RestoreTPL (OriginalTPL);`
+- UpdateIdtTable : 进行安装
+
+* 注册 ExternalInterruptHandler 为 TimerInterruptHandler 的位置 :  TimerDriverInitialize => `mCpu->RegisterInterruptHandler`
+* TimerInterruptHandler 中将 mTimerNotifyFunction 注册为 : CoreTimerTick
+* OvmfPkg/8254TimerDxe/Timer.c:TimerDriverRegisterHandler 中将 mEfiCheckTimerEvent 注册为 CoreCheckTimers
+
+时钟触发的周期是固定的，如果想要修改时钟中断的频率:
+- TimerDriverInitialize
+  - TimerDriverSetTimerPeriod
+    - SetPitCount
+
+
 
 ## Shell Application
 分析一下 Shell 创建 Application 的过程:
@@ -410,6 +552,8 @@ SecurityPkg/Tcg/Tcg2Dxe/Tcg2Dxe.c:2765:                    &gEfiEventExitBootSer
             - main
       - ProcessLibraryDestructorList
 
+
+
 ## 资源
 - https://github.com/Openwide-Ingenierie/uefi-musl
   - 使用 edk2 APIs 来实现 syscall 从而将 musl 库包含进去
@@ -426,4 +570,6 @@ SecurityPkg/Tcg/Tcg2Dxe/Tcg2Dxe.c:2765:                    &gEfiEventExitBootSer
 [^1]: https://sourceware.org/gdb/current/onlinedocs/gdb/Backtrace.html
 [^2]: https://edk2-docs.gitbook.io/edk-ii-uefi-driver-writer-s-guide/3_foundation/readme.10/3102_bus_driver
 [^3]: https://edk2-docs.gitbook.io/edk-ii-uefi-driver-writer-s-guide/3_foundation/34_handle_database
+[^4]: https://edk2-docs.gitbook.io/edk-ii-uefi-driver-writer-s-guide/3_foundation/readme.7/371_applications#3.7.1.1-os-loader
+[^5]: https://edk2-docs.gitbook.io/edk-ii-uefi-driver-writer-s-guide/3_foundation/readme.8#figure-6-event-types
 [^11]: 这里有一个问题，guid 是全局定义的，但是 handle 对于两个 driver 都是其 Start() 的参数，我不能理解

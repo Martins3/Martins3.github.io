@@ -16,22 +16,6 @@ Assuming you are new to UEFI, the following introduction explains a few of the k
 - Events - the means by which software can be signaled in response to some other activity
 - Device paths - a data structure that describes the hardware location of an entity, such as the bus, spindle, partition, and file name of an UEFI image on a formatted disk.
 
-The handle database is composed of objects called handles and protocols. Handles are a collection of one or more protocols, and protocols are data structures that are named by a GUID.[^2]
-
-
-- [ ] 我们知道，UEFI 提供的 service 主要是三种的，其中的第三种就是:
-  - UEFI Boot Services
-  - UEFI Runtime Services
-  - Protocol services
-是不是，其中的第三种就是使用 handle database 来处理的
-
-```c
-///
-/// A collection of related interfaces.
-///
-typedef VOID                      *EFI_HANDLE;
-```
-
 - [ ] The UEFI 2.6 Specification defines over 30 different protocols, and various implementations of UEFI firmware and UEFI drivers may produce additional protocols to extend the functionality of a platform.
   - 这些除了 Boot 和 Runtime 的 protocols 居然存在 UEFI 的规定呀
 
