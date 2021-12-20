@@ -8,7 +8,7 @@ PEINFO=/home/maritns3/core/ld/edk2-workstation/peinfo/peinfo
 QEMU=/home/maritns3/core/kvmqemu/build/x86_64-softmmu/qemu-system-x86_64
 # 将需要拷贝到 fs0: 中的代码放到此处
 EFI_APPLICATIONS=(
-	/home/maritns3/core/ld/edk2-workstation/edk2/Build/AppPkg/DEBUG_GCC5/X64/Main.efi
+	/home/maritns3/core/ld/edk2-workstation/edk2/Build/AppPkg/DEBUG_GCC5/X64/bmbt.efi
   /home/maritns3/core/ubuntu-linux/arch/x86_64/boot/bzImage
 )
 KERNEL=/home/maritns3/core/ubuntu-linux/arch/x86_64/boot/bzImage

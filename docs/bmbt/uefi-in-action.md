@@ -25,6 +25,7 @@ SUM:                            14            345            822           1303
 -------------------------------------------------------------------------------
 ```
 对比 glib 本身的库，算是非常精简了。
+
 ## 为什么我们会采用将 QEMU 变为 UEFI Application
 
 为什么说 UEFI 只是一个过渡阶段的辅助工具?
@@ -43,6 +44,17 @@ SUM:                            14            345            822           1303
 所以，让 guest 可以使用 UEFI 的封装的接口实现串口输出，不要对于 UEFI 的源代码进行修改, 验证一下想法，确定需要移植的接口到底都存在那些(感觉其实不多，而且还可以从 UEFI 中抄过来)。之后，从 UEFI 中间确定内存分配的代码，以及各种需要移植的代码。
 相当于说，因为 edk2 中的体用的 StdLib 更加少，使用 edk2 是一个进行逐步跳转的好时机。
 
+## 构建项目
+- 将 bmbt 放到 AppPkg/Applications 下
+- 在 AppPkg.dec 中添加如下的 header 引用
+```c
+[Includes]
+  Applications/bmbt/include
+  Applications/bmbt/env/uefi/include
+```
+- 使用 uefi.sh 应该可以得到如下结果
+![](./uefi/img/bmbt.png)
+
 ## signal 的处理
 似乎只是支持下面两个:
 ```c
@@ -53,71 +65,6 @@ __sighandler_t  *signal(int sig, __sighandler_t *func);
 
 我们发现无法简单的使用 setitimer， 出现问题的位置不在于当时调用的，而是参数 NotifyTpl 中的，
 在 CoreCreateEventEx 中间会对于
-
-
-## poll
-所以，实际上就是会卡到这个代码上，不会出现异步的情况
-
-### 附录
-
-#### source code
-```c
-#include <stdio.h>
-#include <stdlib.h>
-#include <sys/poll.h>
-#include <time.h>
-
-int main(int argc, char *argv[]) {
-  int numPipes, ready, j;
-  struct pollfd *pollFd;
-  int pfds[1]; /* File descriptors for all pipes */
-
-  /* Allocate the arrays that we use. The arrays are sized according
-     to the number of pipes specified on command line */
-
-  numPipes = 1;
-
-  pollFd = calloc(numPipes, sizeof(struct pollfd));
-  if (pollFd == NULL) {
-    exit(EXIT_FAILURE);
-  }
-
-  /* Create the number of pipes specified on command line */
-
-  for (j = 0; j < numPipes; j++)
-    pfds[j] = 0;
-
-  /* Build the file descriptor list to be supplied to poll(). This list
-     is set to contain the file descriptors for the read ends of all of
-     the pipes. */
-
-  for (j = 0; j < numPipes; j++) {
-    pollFd[j].fd = pfds[j];
-    pollFd[j].events = POLLIN;
-  }
-
-  printf("huxueshi:%s before \n", __FUNCTION__);
-  ready = poll(pollFd, numPipes, -1);
-  printf("huxueshi:%s after \n", __FUNCTION__);
-  if (ready == -1) {
-    exit(EXIT_FAILURE);
-  }
-
-  printf("poll() returned: %d\n", ready);
-
-  /* Check which pipes have data available for reading */
-
-  for (j = 0; j < numPipes; j++)
-    if (pollFd[j].revents & POLLIN) {
-      printf("Readable: %3d\n", pollFd[j].fd);
-      char x[100];
-      scanf("%s", x);
-      printf("[%s]", x);
-    }
-
-  exit(EXIT_SUCCESS);
-}
-```
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
