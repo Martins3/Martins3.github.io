@@ -94,7 +94,7 @@ run_gdb() {
 }
 
 USE_GDB=""
-USE_GRAPHIC=""
+USE_GRAPHIC="-nographic"
 USE_CDROM=""
 DEBUG_BACKEND="file:${OVMF_LOG}"
 
@@ -104,7 +104,7 @@ while getopts "shgdxbc" opt; do
 	h) show_help ;;
 	g) gen_symbol_offsets ;;
 	d) run_gdb ;;
-	x) USE_GRAPHIC="-nographic" ;;
+	x) USE_GRAPHIC="" ;;
 	b)
     DEBUG_BACKEND="stdio"
     USE_GRAPHIC=""

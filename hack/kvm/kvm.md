@@ -12,7 +12,7 @@
 8. virtio 如何处理 GPU 的 ?
 
 
-1. VMPTRST 和 VMPTRLD 
+1. VMPTRST 和 VMPTRLD
 
 3. rsp_rdx
 
@@ -40,8 +40,8 @@ VPID 在内核中的操作方法 ?
 ## 记录
 [^1] lwn 给出了一个超级入门的介绍，值得学习 :
 
-Each virtual CPU has an associated struct `kvm_run` data structure, 
-used to communicate information about the CPU between the kernel and user space. 
+Each virtual CPU has an associated struct `kvm_run` data structure,
+used to communicate information about the CPU between the kernel and user space.
 
 he VCPU also includes the processor's register state, broken into two sets of registers: standard registers and "special" registers. These correspond to two architecture-specific data structures: `struct kvm_regs` and `struct kvm_sregs`, respectively. On x86, the standard registers include general-purpose registers, as well as the instruction pointer and flags; the "special" registers primarily include segment registers and control registers.
 
@@ -54,7 +54,7 @@ he VCPU also includes the processor's register state, broken into two sets of re
 3. x86 virtual machines will likely want to support CPUID and model-specific registers (SRs), both of which have architecture-specific ioctl()s that minimize vmexits.M
 > TODO 这几个进阶，值得关注
 
-While they can support other devices and `virtio` hardware, if you want to emulate a completely different type of system that shares little more than the instruction set architecture, you might want to implement a new VM instead. 
+While they can support other devices and `virtio` hardware, if you want to emulate a completely different type of system that shares little more than the instruction set architecture, you might want to implement a new VM instead.
 
 [^2]: 配置的代码非常详尽
 TODO : 内核切换到 long mode 的方法比这里复杂多了, 看看[devos](https://wiki.osev.org/Setting_Up_Long_Moded)
@@ -82,7 +82,7 @@ kata 和 firecracker :
 
 
 ## virtio
-问题 : 
+问题 :
 2. 利用 virtqueue 解决了高效传输的数据的问题，那么中断虚拟化怎么办 ?
 
 
@@ -97,12 +97,12 @@ VirtIO – The three goals
 - Uniformity to provide a common ABI for general publication and use of buffers
 - Device probing and configuration
 
-Virtqueue 
+Virtqueue
 - It is a part of the memory of the
 guest OS
 - A channel between front-end and back-end
 - It is an interface Implemented as
-Vring 
+Vring
   - Vring is a memory mapped region between QEMU and guest OS
   - Vring is the memory layout of the virtqueue abstraction
 
@@ -112,8 +112,8 @@ Vring
 [^4] 的记录:
 The end goal of the process is to try to create a straightforward, efficient, and extensible standard.
 
-- "Straightforward" implies that, to the greatest extent possible, devices should use existing bus interfaces. Virtio devices see something that looks like a standard PCI bus, for example; there is to be no "boutique hypervisor bus" for drivers to deal with. 
--  "Efficient" means that batching of operations is both possible and encouraged; interrupt suppression is supported, as is notification suppression on the device side. 
+- "Straightforward" implies that, to the greatest extent possible, devices should use existing bus interfaces. Virtio devices see something that looks like a standard PCI bus, for example; there is to be no "boutique hypervisor bus" for drivers to deal with.
+-  "Efficient" means that batching of operations is both possible and encouraged; interrupt suppression is supported, as is notification suppression on the device side.
 - "Extensible" is handled with feature bits on both the device and driver sides with a negotiation phase at device setup time; this mechanism, Rusty said, has worked well so far. And the standard defines a common ring buffer and descripor mechanism (a "virtqueue") that is used by all devices; the same devices can work transparently over different transports.
 > changes for virtio 1.0 之后没看，先看个更加简单的吧!
 
@@ -137,7 +137,7 @@ Here, the guest operating system is aware that it’s running on a hypervisor an
 
 Guest (front-end) drivers communicate with hypervisor (back-end) drivers through buffers. For an I/O, the guest provides one or more buffers representing the request.
 
-Linking the guest driver and hypervisor driver occurs through the `virtio_device` and most commonly through `virtqueues`. The `virtqueue` supports its own API consisting of five functions. 
+Linking the guest driver and hypervisor driver occurs through the `virtio_device` and most commonly through `virtqueues`. The `virtqueue` supports its own API consisting of five functions.
 1. add_buf
 2. kick
 3. get_buf
@@ -145,10 +145,10 @@ Linking the guest driver and hypervisor driver occurs through the `virtio_device
 5. disable_cb
 
 > 具体的例子 : blk 大致 1000 行，net 大致 3000 行，在 virtio 中间大致 6000 行
-You can find the source to the various front-end drivers within the ./drivers subdirectory of the Linux kernel. 
-1. The virtio network driver can be found in ./drivers/net/virtio_net.c, and 
-2. the virtio block driver can be found in ./drivers/block/virtio_blk.c. 
-3. The subdirectory ./drivers/virtio provides the implementation of the virtio interfaces (virtio device, driver, virtqueue, and ring). 
+You can find the source to the various front-end drivers within the ./drivers subdirectory of the Linux kernel.
+1. The virtio network driver can be found in ./drivers/net/virtio_net.c, and
+2. the virtio block driver can be found in ./drivers/block/virtio_blk.c.
+3. The subdirectory ./drivers/virtio provides the implementation of the virtio interfaces (virtio device, driver, virtqueue, and ring).
 
 ## Intel VT-x
 [wiki](https://en.wikipedia.org/wiki/X86_virtualization#Intel_virtualization_(VT-x))
@@ -294,7 +294,7 @@ kvm_steal_time_set_preempted
 
 ## details
 
-#### vmx_vcpu_run 
+#### vmx_vcpu_run
 vmx_exit_handlers_fastpath : 通过 omit what 来 fast
 
 
@@ -308,7 +308,7 @@ vmx_exit_handlers_fastpath : 通过 omit what 来 fast
 
 
 
-#### kvm_vcpu_ioctl_x86_set_mce 
+#### kvm_vcpu_ioctl_x86_set_mce
 向 guest 注入错误的方法
 
 kvm_queue_exception
@@ -331,8 +331,8 @@ static void kvm_vcpu_flush_tlb_all(struct kvm_vcpu *vcpu)
 ```
 
 ## emulat.c
-init_emulate_ctxt 
-x86_emulate_instruction : 
+init_emulate_ctxt
+x86_emulate_instruction :
 
 ```c
 int kvm_emulate_instruction(struct kvm_vcpu *vcpu, int emulation_type)
@@ -456,7 +456,7 @@ https://luohao-brian.gitbooks.io/interrupt-virtualization/content/qemu-kvm-zhong
 
 查询 GSI 号上对应的所有的中断号:
 
-从 ioctl 到下层，kvm_vm_ioctl 注入的中断，最后更改了 kvm_kipc_state:irr 
+从 ioctl 到下层，kvm_vm_ioctl 注入的中断，最后更改了 kvm_kipc_state:irr
 
 kvm_kipc_state 的信息如何告知 CPU ? 通过 kvm_pic_read_irq
 
@@ -526,7 +526,7 @@ search_memslots(struct kvm_memslots *slots, gfn_t gfn)
 kvm_mmu_page_fault()(vmx.c)->
 r = vcpu->arch.mmu.page_fault(vcpu, cr2, error_code);(mmu.c)->
 FNAME(page_fault)(struct kvm_vcpu *vcpu, gva_t addr, u32 error_code)(paging_tmpl.h)->
-FNAME(walk_addr)() 
+FNAME(walk_addr)()
 ```
 查guest页表，物理地址是否存在， 这时肯定是不存在的
 The page is not mapped by the guest. Let the guest handle it.
@@ -557,7 +557,7 @@ static int __direct_map(struct kvm_vcpu *vcpu, gpa_t gpa, int write,
 {
   // TODO 是在对于谁进行 walk ? 应该不是是对于 shadow page 进行的
   // shadow page 也是划分为 leaf 和 nonleaf 的，也就是这是对于 shadow 的
-  // 
+  //
   // shadow page 形成一个层次结构的目的是什么 ?
 	struct kvm_shadow_walk_iterator it;
 	struct kvm_mmu_page *sp;
@@ -676,7 +676,7 @@ static bool mmu_spte_update(u64 *sptep, u64 new_spte)
 
 核心就是 WRITE_ONCE 而已，但是存在很多检查
 
-## ept 
+## ept
 
 tdp_page_fault()->
 gfn_to_pfn(); GPA到HPA的转化分两步完成，分别通过gfn_to_hva、hva_to_pfn两个函数完成
@@ -933,7 +933,7 @@ static struct kvm_rmap_head *gfn_to_rmap(struct kvm *kvm, gfn_t gfn,
 	return pte_list_add(vcpu, spte, rmap_head); // slot 的每一个 page 都会被 rmap
 ```
 
-实际上，存在两个 rmap 
+实际上，存在两个 rmap
 - `sp->gfns` 获取每一个 pte 对应的 gfn
 - `rmap_head->val` = spte : 这不是 rmap 吧
 
@@ -959,7 +959,7 @@ static void mmu_page_add_parent_pte(struct kvm_vcpu *vcpu,
 	for (_spte_ = rmap_get_first(_rmap_head_, _iter_);		\
 	     _spte_; _spte_ = rmap_get_next(_iter_))
 ```
-使用位置: 
+使用位置:
 kvm_mmu_write_protect_pt_masked : 给定 gfn_offset，将关联的所有的 spte 全部添加 flags
 
 kvm_set_pte_rmapp : 将 rmap_head 的持有的所有的 sptep 进行设置
@@ -998,7 +998,7 @@ static void mark_unsync(u64 *spte)
 link_shadow_page : mark_unsync 的唯一调用位置
 kvm_unsync_page : kvm_mmu_mark_parents_unsync 唯一调用位置
 
-mmu_need_write_protect : 对于sp 
+mmu_need_write_protect : 对于sp
 
 #### mmu_need_write_protect
 for_each_gfn_indirect_valid_sp : 一个 gfn 可以
@@ -1066,7 +1066,7 @@ direct_page_fault 和 FNAME(page_fault) 调用，
 
 
 ## track 机制
-track 和 dirty bitmap 实际上是两个事情吧! 
+track 和 dirty bitmap 实际上是两个事情吧!
 
 对于加以维护的:
 kvm_slot_page_track_add_page :
@@ -1080,7 +1080,7 @@ kvm_slot_page_track_remove_page :
 `__kvm_mmu_prepare_zap_page` : 被各种 zap page 调用，并且配合 commit_zap 使用
 => unaccount_shadowed
 
-kvm_mmu_get_page : 
+kvm_mmu_get_page :
 => account_shadowed
 
 
@@ -1099,7 +1099,7 @@ void kvm_mmu_init_vm(struct kvm *kvm)
 }
 ```
 kvm_mmu_get_page: 当不是 direct 模式，那么需要对于 kvm_mmu_alloc_page 的 page 进行 account_shadowed
-=> account_shadowed : 
+=> account_shadowed :
 => kvm_slot_page_track_add_page
 
 **所以，保护的是 shadow page table ?**
@@ -1247,7 +1247,7 @@ static bool is_mmio_spte(u64 spte)
 ## mmio generation
 👇记录 mmu.rst 的内容:
 虽然的确解释了 mmio 使用 generation 的原因，但是下面的问题值得理解:
-- [ ] As mentioned in "Reaction to events" above, kvm will cache MMIO information in leaf sptes. 
+- [ ] As mentioned in "Reaction to events" above, kvm will cache MMIO information in leaf sptes.
   - [ ] 如果不 cache, 这些数据放在那里
 
 - [ ] When a new memslot is added or an existing memslot is changed, this information may become stale and needs to be invalidated.
@@ -1279,7 +1279,7 @@ kvm_is_zone_device_pfn
 - [ ] 为什么要处理 guest page 机制
 
 #### kvm_vcpu_fault
-> 配合 vcpu ioctl 
+> 配合 vcpu ioctl
 ```c
 static int create_vcpu_fd(struct kvm_vcpu *vcpu)
 {
@@ -1374,8 +1374,6 @@ int kvm_emulate_hypercall(struct kvm_vcpu *vcpu)
 ```
 
 ## resources
-- https://github.com/dpw/kvm-hello-world : a good resource to understand how real, protect, long mode in intel
-- https://github.com/david942j/kvm-kernel-example
 
 - [Watch this organization](https://github.com/rust-vmm/kvm-bindings)
 >  It provides a set of virtualization components that any project can use to quickly develop virtualization solutions while focusing on the key differentiators of their product rather than re-implementing common components like KVM wrappers, virtio devices and other VMM libraries.
@@ -1383,4 +1381,4 @@ int kvm_emulate_hypercall(struct kvm_vcpu *vcpu)
 
 - https://github.com/canonical/multipass
   - write with cpp
-  - include many cpp 
+  - include many cpp

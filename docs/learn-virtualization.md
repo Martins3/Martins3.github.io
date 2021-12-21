@@ -15,17 +15,25 @@ Hardware and Software Support for Virtualization : 作者[Edouard Bugnion](https
 总体来说是作者自己的 [blog](https://terenceli.github.io/) 的整理，是基于 QEMU 的。kvmtool 实际上在工业上的使用并不多，学习使用 QEMU 是必须的，
 但是 QEMU 更加复杂，市面上这是唯一一本比较详细的分析 QEMU 的书籍(中文和英文范围内)。但是这本书也有缺点，那就是不过凝练，很多时候都是代码流程的分析。
 
+## minimal kvm example
+- https://github.com/dpw/kvm-hello-world
+- https://github.com/david942j/kvm-kernel-example
+
 ## 一些补充资料
 - [cpu internals](https://github.com/LordNoteworthy/cpu-internals) 是 intel SDM 的笔记，其中覆盖了 intel CPU 在硬件上如何支持虚拟化的, 阅读 kvm 的时候可以配合这阅读一下。
 - [ASPLOS IOMMU tutorial](http://pages.cs.wisc.edu/~basu/isca_iommu_tutorial/IOMMU_TUTORIAL_ASPLOS_2016.pdf) 介绍了 IOMMU，学习 vt-d 之前可以阅读一下。
 
 ## 一些有用的 blog
 - https://kernelgo.org/
+  - [作者整理的 gitbook](https://luohao-brian.gitbooks.io/interrupt-virtualization/content/qemuzhi-network-device-quan-xu-ni-fang-an-4e8c3a-xu-ni-wang-qia.html)
 - https://terenceli.github.io/
 - https://www.linux-kvm.org/page/KVM_Forum : kvm forum 每年的会议 slides 都是精华，值得一个个的翻阅, 在 youtube 上有对应的[录像](https://www.youtube.com/channel/UCRCSQmAOh7yzgheq-emy1xA)
 - [陈伟任的笔记](https://github.com/azru0512/slide/tree/master/QEMU)
 - [Stefan Hajnoczi](http://blog.vmsplice.net/2020/08/qemu-internals-event-loops.html)
 - [空客的 QEMU 源码分析](https://github.com/airbus-seclab/qemu_blog)
+
+## 一些有意思的项目
+- [VivienneVMM](https://github.com/changeofpace/VivienneVMM) : 使用 vmx 实现的调试器
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
