@@ -56,15 +56,8 @@ SUM:                            14            345            822           1303
 ![](./uefi/img/bmbt.png)
 
 ## signal 的处理
-似乎只是支持下面两个:
-```c
-int raise(int sig);
-__sighandler_t  *signal(int sig, __sighandler_t *func);
-```
-和 /usr/include/signal.h 对比，这个几乎叫做什么都没有实现啊
 
-我们发现无法简单的使用 setitimer， 出现问题的位置不在于当时调用的，而是参数 NotifyTpl 中的，
-在 CoreCreateEventEx 中间会对于
+// TODO
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

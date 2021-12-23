@@ -2,7 +2,7 @@
 website : https://www.musl-libc.org/
 github mirror : https://github.com/ifduyue/musl
 
-I came acorss musl when compiling the project firecracker. Being disgusted with glibc for years, 
+I came acorss musl when compiling the project firecracker. Being disgusted with glibc for years,
 I want to find a substitute for it from time to time. Glibc has too many macros, C language tricks, I bet noting will you understand with browsing the source code.
 Here's simple comparison about [LOC](https://en.wikipedia.org/wiki/Source_lines_of_code) between musl and glibc
 
@@ -605,5 +605,6 @@ SUM:                            85            121              9            898
 ➜  src git:(master) ✗
 ```
 
-## What you can make a reference to
-- [ ] TODO
+## 编译 glibc
+
+[hacking](https://stackoverflow.com/questions/10412684/how-to-compile-my-own-glibc-c-standard-library-from-source-and-use-it)

@@ -17,10 +17,9 @@ if [[ $use_32bit == true ]]; then
 fi
 initrd=/home/maritns3/core/5000/ld/DuckBuBi/image/test.cpio.gz
 # bios 镜像的地址，可以不配置，将下面的 arg_seabios 定位为 "" 就是使用默认的
-# seabios=/home/maritns3/core/seabios/out/bios.bin
 seabios=/home/maritns3/core/5000/ld/DuckBuBi/seabios/out/bios.bin
-# 2021/8/14 的最新镜像
-alpine_img_url=https://dl-cdn.alpinelinux.org/alpine/v3.14/releases/x86_64/alpine-standard-3.14.1-x86_64.iso
+seabios=/home/maritns3/core/seabios/out/bios.bin
+alpine_img_url=https://alpinelinux.org/downloads/
 # ------------------------------------------------------------------------------
 
 abs_loc=$(dirname "$(realpath "$0")")
@@ -39,8 +38,8 @@ LAUNCH_GDB=false
 
 # 必选参数
 arg_img="-drive \"file=${disk_img},format=qcow2\""
-arg_initrd=""
 arg_initrd="-initrd ${initrd}"
+arg_initrd=""
 
 arg_kernel_args="root=/dev/sda3 nokaslr console=ttyS0"
 if [[ $use_32bit == true ]]; then
@@ -108,8 +107,7 @@ sure() {
 }
 
 if [ ! -f "$iso" ]; then
-	echo "${iso} not found! Download it from official website"
-	wget -O "${iso}" ${alpine_img_url}
+	echo "${iso} not found! Download it from ${alpine_img_url}"
 	exit 0
 fi
 

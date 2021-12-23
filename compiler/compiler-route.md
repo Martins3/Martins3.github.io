@@ -92,7 +92,7 @@ https://tinylab.gitbooks.io/cbook/zh/chapters/02-chapter4.html : 名字是 C 语
 
 
 ## 二进制翻译
-https://github.com/lifting-bits/mcsema : Framework for lifting x86, amd64, and aarch64 program binaries to LLVM bitcode 
+https://github.com/lifting-bits/mcsema : Framework for lifting x86, amd64, and aarch64 program binaries to LLVM bitcode
     1. 问一下，它们是怎么搞二进制到 binary 的 ?
 
 
@@ -100,7 +100,7 @@ https://github.com/lifting-bits/mcsema : Framework for lifting x86, amd64, and a
 目前看来，其实编译的各种优化，短期是难以有时间的，其实很多时候，
 不一定非要准备齐全，才可以开始工作的，即便不知道，也是需要保持自信的。
 
-https://asmjit.com/ 
+https://asmjit.com/
 
 ## vm
 - v8 自带几个小文件例子.
@@ -114,7 +114,7 @@ https://github.com/KCreate/charly-vm : 80个star, vm 很大(4000)，其余都是
 https://github.com/rubinius/rubinius : **这似乎就是想象的内容**, 可以仔细观察一下
 https://github.com/jakogut/tinyvm : 非常短小，可以仔细阅读一下
 
-https://github.com/janet-lang/janet : vm 和 
+https://github.com/janet-lang/janet : vm 和
 
 https://news.ycombinator.com/item?id=24170201 : 感觉完成度还可以的 浏览器实现，所以，好的，可以去做前端了
 
@@ -125,3 +125,6 @@ https://news.ycombinator.com/item?id=24170201 : 感觉完成度还可以的 浏�
 ## 问题
 1. runtime 和 vm 的关系是什么 ?
     1. JIT 的他们的关系是什么 ?
+
+## 工作
+- https://www.sourcebrella.com/jobs/
