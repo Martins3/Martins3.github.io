@@ -20,7 +20,8 @@
 - [Binary Translation and Virtualization Paper reading list](./paper-reading-list.md)
 
 ## Binary Translation
-- [裸金属二进制翻译器的设计与实现](https://martins3.github.io/ppt/repo/2021-8-24/index.html)
+- [裸金属二进制翻译器(BMBT)的设计与实现](https://martins3.github.io/ppt/repo/2021-8-24/index.html)
+- 🚧 [为 BMBT 构建一个 mini libc](./bmbt/ulibc.md)
 
 ## Virtualization
 - [Loongson Dune : A Process Level Virtualization framework Base on KVM](https://github.com/Martins3/loongson-dune)

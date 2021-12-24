@@ -4,6 +4,8 @@ https://support.getjoan.com/hc/en-us/articles/360008889859-How-to-change-the-Doc
 由于 Loongson 和 docker 的冲突，在此处将 docker 的 briage ip 进行了修改，目前可以上网，但是对于 docker 造成的结果是不知道的。
 
 
+[lazydocker](https://github.com/jesseduffield/lazydocker)
+
 ## TODO
 https://fuckcloudnative.io/posts/docker-images-part1-reducing-image-size/
 
