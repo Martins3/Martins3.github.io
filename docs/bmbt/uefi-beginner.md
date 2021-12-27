@@ -643,6 +643,10 @@ UEFI shell 自带的各种命令出现在 ShellPkg/Library 中，
 
 他们的使用方法可以参考[这里](https://linuxhint.com/use-uefi-interactive-shell-and-its-common-commands/)，简单明了。
 
+## 编程风格
+edk2 的函数中有 EFIAPI 的标签，这是通过编译选项确定:
+> DEFIAPI=__attribute__((ms_abi))
+
 ## 资源
 - https://github.com/Openwide-Ingenierie/uefi-musl
   - 使用 edk2 APIs 来实现 syscall 从而将 musl 库包含进去

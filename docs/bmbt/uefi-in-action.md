@@ -51,12 +51,18 @@ SUM:                            14            345            822           1303
 [Includes]
   Applications/bmbt/include
   Applications/bmbt/env/uefi/include
+  Applications/bmbt/capstone/include
+  Applications/bmbt/libc/include # 当使用本地的 libc 的时候，那么就使用这一个函数
 ```
 - 使用 uefi.sh 应该可以得到如下结果
 ![](./uefi/img/bmbt.png)
 
-## signal 的处理
+为了进行编译为使用 UEFI StdLib 的:
+1. 将 AppPkg.dec 中去掉 Applications/bmbt/libc
+2. 将 bmbt.inf 的 [Packages] 中增加 StdLib/StdLib.dec
+3. 在 env/uefi/include/uapi/env.h `#define USE_UEFI_LIBC` 中添加
 
+## signal 的处理
 // TODO
 
 <script src="https://giscus.app/client.js"
