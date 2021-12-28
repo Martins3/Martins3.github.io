@@ -74,3 +74,35 @@ obj/include/bits/alltypes.h: $(srcdir)/arch/$(ARCH)/bits/alltypes.h.in $(srcdir)
 在分析 malloc 的原理的时候，我发现当在静态链接的时候，使用 free 与否会导致实际上调用的 malloc 不同
 - https://stackoverflow.com/questions/23079997/override-weak-symbols-in-static-library
 - https://stackoverflow.com/questions/51656838/attribute-weak-and-static-libraries
+
+- calloc 中的 all_zerop 也是如此
+
+- [ ] 依赖 /home/maritns3/core/musl/src/internal/libc.h 做什么
+- calloc.c 为什么需要依赖 dylink.c
+
+- https://www.cs.cmu.edu/afs/cs/academic/class/15213-f12/www/lectures/12-linking.pdf
+  - 介绍了三种 interposition 的方法
+  - 实际上，如果不怕麻烦，可以定义自己的 malloc 就好了，这里介绍的方法是继续使用原来的技术
+
+- [ ] 在 /home/maritns3/core/musl/src/malloc/mallocng/meta.h 使用了一堆 4096 之类操作，这不是一个问题吗?
+- [x] 调查为什么到处判断 pagesize : 应该只是因为
+- [ ] 为什么需要重新制造出来一个 assert
+  - 感觉没有什么特别强的道理
+
+- [x] 似乎可以很容易的构造出来一个多线程的问题来
+```c
+#define MT (libc.need_locks)
+```
+当共享地址空间的时候，才需要上锁的
+
+- 似乎只是 pthread 才会在乎啊，clone 根本不在乎
+  - [ ] lite_malloc 的 lock 机制还是不一样的
+  - https://stackoverflow.com/questions/855763/is-malloc-thread-safe 中的人都说 malloc 是安全的，但是似乎只是在 pthread 的时候是安全的
+  - 从 musl 的库中可以清楚的检查到对于 clone 形成的多线程，malloc 不是安全的，但是对于 glibc 的 malloc 过于复杂，暂时不看
+
+## 浮点
+- 似乎是可以参考的 musl 库:
+  - https://github.com/xen0n/musl/commit/f8ec0dbd4b08456cda7a38ee4a34924665afa69a
+- 参考一下 gcc 的内容
+- 内核环境的重新搭建起来
+- 搞一个 QEMU 环境来将之前的内核运行一下什么的啊
