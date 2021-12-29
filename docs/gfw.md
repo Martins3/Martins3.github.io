@@ -1,5 +1,17 @@
 # How to cross Great Fire Wall
 
+<!-- vim-markdown-toc GitLab -->
+
+- [Caveat](#caveat)
+- [Abstract](#abstract)
+- [setup](#setup)
+- [terminal proxy](#terminal-proxy)
+- [git proxy](#git-proxy)
+- [cmd proxy](#cmd-proxy)
+- [share proxy cross lan](#share-proxy-cross-lan)
+
+<!-- vim-markdown-toc -->
+
 ## Caveat
 Only tested on Ubuntu 20.04, but should work in all linux distributions, and similar
 approach should works for MacOS and Windows.
@@ -71,6 +83,13 @@ git send-email /tmp/0001-change-mmap-flags.patch --to hubachelar@qq.com
 ## share proxy cross lan
 https://github.com/v2ray/v2ray-core/issues/210
 
+in terminal
+```sh
+export http_proxy=http://${X86_IP}:8889 && export https_proxy=http://{X86_IP}:8889
+```
+
+in browser:
+- add proxy server : http://${X86_IP}:8889 
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
