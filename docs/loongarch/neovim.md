@@ -7,8 +7,10 @@
 - [Terminal](#terminal)
 - [Browser](#browser)
 - [科学上网](#科学上网)
+- [No more works in 3A5000](#no-more-works-in-3a5000)
 
 <!-- vim-markdown-toc -->
+![](../img/3a5000.png)
 (Tested on 2021.12.29)
 
 Because I don't wanna to spend too much time to tune the fcixt, as you see, I will give up Chinese temporarily.
@@ -58,13 +60,12 @@ In order to access Google, v2ray and qv2ray are necessary.
 I don't try to port them. use another x86 to setup the network proxy and share it to 3A5000.
 
 ## No more works in 3A5000
-| What              | Why                                                                                   |
-|-------------------|---------------------------------------------------------------------------------------|
-| [lazygit]()       | Outdated golang toolchain                                                             |
-| All Chrome plugin | I don't                                                                               |
-| Audio             |                                                                                       |
-| pynvim            | [greenlet](https://github.com/python-greenlet/greenlet) has architecture related code |
-| wakatime          | wakatime only deploy amd64 client                                                     |
+| What                                                | Why                                                                                   |
+|-----------------------------------------------------|---------------------------------------------------------------------------------------|
+| [lazygit](https://github.com/jesseduffield/lazygit) | Outdated golang toolchain                                                             |
+| All Chrome plugin                                   | I don't know why                                                                      |
+| pynvim                                              | [greenlet](https://github.com/python-greenlet/greenlet) has architecture related code |
+| wakatime                                            | wakatime only deploy amd64 client                                                     |
 
 [^1]: https://github.com/neovim/neovim/wiki/Building-Neovim#how-to-build-without-bundled-dependencies
-[^2]: https://martins3.github.io/gfw.html
+[^2]: https://martins3.github.io/gfw.html#share-proxy-cross-lan
