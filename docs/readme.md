@@ -62,6 +62,7 @@
 
 ## Loongson
 - [X86 上阅读 Loongarch 内核](./loongarch/ccls.md)
+- [Replace My x86 Laptop With 3A5000](./loongarch/neovim.md)
 
 ## Multiprocessor Programming
 - [Quiescent consistency，Sequential consistency 和 Linearizability](./concurrent/linearizability.md)

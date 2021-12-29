@@ -1,4 +1,4 @@
-# Replace my mi book with 3A5000
+# Replace My x86 Laptop With 3A5000
 
 <!-- vim-markdown-toc GitLab -->
 
@@ -6,7 +6,7 @@
 - [Neovim](#neovim)
 - [Terminal](#terminal)
 - [Browser](#browser)
-- [科学上网](#科学上网)
+- [Scientific Network Access](#scientific-network-access)
 - [No more works in 3A5000](#no-more-works-in-3a5000)
 
 <!-- vim-markdown-toc -->
@@ -16,7 +16,7 @@
 Because I don't wanna to spend too much time to tune the fcixt, as you see, I will give up Chinese temporarily.
 ## Background
 Several months ago, when I'm still working the [loongson-dune](https://github.com/Martins3/loongson-dune), I tried to
-sync my [My Linux Config][https://github.com/Martins3/My-Linux-Config] to Longson 3a5000.
+sync my [My Linux Config](https://github.com/Martins3/My-Linux-Config) to Longson 3a5000.
 
 As for zsh, it's not too hard. Although it define many macro related architecture, while fixing them is fairly easy.
 zsh complaints that it doesn't recognize the loongarch64 arch, I comment the related code, then it compiles and works fine.
@@ -55,11 +55,12 @@ So I use the system default gnome-terminal, it works perfectly.
 Based on [chromium](https://www.chromium.org/), no crash, nothing new except the logo.
 
 But there is one thing makes me sick. Loongson removed Google's original profile with it's own, so I can't sync my bookmarks from my x86 Chrome's bookmarks and passwords.
-## 科学上网
+## Scientific Network Access
 In order to access Google, v2ray and qv2ray are necessary.
 I don't try to port them. use another x86 to setup the network proxy and share it to 3A5000.
 
 ## No more works in 3A5000
+
 | What                                                | Why                                                                                   |
 |-----------------------------------------------------|---------------------------------------------------------------------------------------|
 | [lazygit](https://github.com/jesseduffield/lazygit) | Outdated golang toolchain                                                             |
