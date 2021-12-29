@@ -103,6 +103,7 @@ obj/include/bits/alltypes.h: $(srcdir)/arch/$(ARCH)/bits/alltypes.h.in $(srcdir)
 ## 浮点
 - 似乎是可以参考的 musl 库:
   - https://github.com/xen0n/musl/commit/f8ec0dbd4b08456cda7a38ee4a34924665afa69a
-- 参考一下 gcc 的内容
-- 内核环境的重新搭建起来
+- 参考一下 glibc 的内容
+  - [x] 编译验证测试的环境搭建起来
+- [ ] 内核环境的重新搭建起来
 - 搞一个 QEMU 环境来将之前的内核运行一下什么的啊

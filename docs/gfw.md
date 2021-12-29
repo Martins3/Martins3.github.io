@@ -68,6 +68,9 @@ then we proxy commands in shell, e.g.
 ```sh
 git send-email /tmp/0001-change-mmap-flags.patch --to hubachelar@qq.com
 ```
+## share proxy cross lan
+https://github.com/v2ray/v2ray-core/issues/210
+
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
