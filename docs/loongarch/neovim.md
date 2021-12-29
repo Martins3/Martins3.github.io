@@ -214,5 +214,4 @@ cmake ../third-party -DUSE_BUNDLED=OFF -DUSE_BUNDLED_LUV=ON
 ## 安装 pyright
 这个代码需要用户态的上下文切换，这个部分和汇编代码相关，我不像再去尝试了
 https://github.com/python-greenlet/greenlet
-
 ## 设置终端
