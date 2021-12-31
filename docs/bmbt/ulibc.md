@@ -103,7 +103,43 @@ obj/include/bits/alltypes.h: $(srcdir)/arch/$(ARCH)/bits/alltypes.h.in $(srcdir)
 ## 浮点
 - 似乎是可以参考的 musl 库:
   - https://github.com/xen0n/musl/commit/f8ec0dbd4b08456cda7a38ee4a34924665afa69a
-- 参考一下 glibc 的内容
-  - [x] 编译验证测试的环境搭建起来
 - [ ] 内核环境的重新搭建起来
 - 搞一个 QEMU 环境来将之前的内核运行一下什么的啊
+- [ ] i don't know why the dynamic library contains the symbols
+
+## [ ] sqrtf and sqrt
+https://stackoverflow.com/questions/57058848/glibc-uses-kernel-functions
+
+```c
+>>> br sqrt
+Breakpoint 1 at 0x120000a38: file ./w_sqrt_template.c, line 33.
+>>> br sqrtf
+Breakpoint 2 at 0x120000a6c: file ./w_sqrt_template.c, line 33.
+```
+actually, they are defined by the macros.
+
+##  pow / tan
+unlike sqrtf, they normal functions, we'll try to copy them from musl
+
+## Questions
+- [ ] the c language syntax?
+  - copy the code directly will cause the 
+```c
+/* Declare sqrt for use within GLIBC.  Compilers typically inline sqrt as a
+   single instruction.  Use an asm to avoid use of PLTs if it doesn't.  */
+float (sqrtf) (float) asm ("__ieee754_sqrtf");
+double (sqrt) (double) asm ("__ieee754_sqrt");
+```
+
+- [x] sqrt and sqrtf not found
+  - link with -lm
+  
+```c
+/*
+➜  ~/core/glibc git:(master) ✗ make
+/usr/bin/ld: /tmp/ccXBnRac.o: in function `L0':
+test.c:(.text+0xe8): undefined reference to `sqrt'
+/usr/bin/ld: test.c:(.text+0x100): undefined reference to `sqrtf'
+collect2: error: ld returned 1 exit status
+make: *** [Makefile:12: all] Error 1
+```

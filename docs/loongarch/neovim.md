@@ -7,6 +7,7 @@
 - [Terminal](#terminal)
 - [Browser](#browser)
 - [Scientific Network Access](#scientific-network-access)
+- [Git](#git)
 - [No more works in 3A5000](#no-more-works-in-3a5000)
 
 <!-- vim-markdown-toc -->
@@ -41,7 +42,7 @@ Neovim separate it's compile into three stage[^1]:
 - link the neovim with the bundles
 
 ```sh
-make BUNDLED_CMAKE_FLAG="-DUSE_BUNDLED=ON -DUSE_BUNDLED_LUAJIT=OFF -DUSE_BUNDLED_LUAROCKS=OFF"
+make BUNDLED_CMAKE_FLAG="-DUSE_BUNDLED=ON -DUSE_BUNDLED_LUAJIT=OFF -DUSE_BUNDLED_LUAROCKS=OFF" CMAKE_BUILD_TYPE=Release
 ```
 This command will compile all the bundles from source except luajit and luarocks.
 
@@ -59,14 +60,20 @@ But there is one thing makes me sick. Loongson removed Google's original profile
 In order to access Google, v2ray and qv2ray are necessary.
 I don't try to port them. use another x86 to setup the network proxy and share it to 3A5000.
 
+## Git
+[lazygit](https://github.com/jesseduffield/lazygit)is not available because of outdated golang toolchain.
+so use [tig](https://jonas.github.io/tig/doc/tig.1.html) as a substitute.
+
 ## No more works in 3A5000
 
-| What                                                | Why                                                                                   |
-|-----------------------------------------------------|---------------------------------------------------------------------------------------|
-| [lazygit](https://github.com/jesseduffield/lazygit) | Outdated golang toolchain                                                             |
-| All Chrome plugin                                   | I don't know why                                                                      |
-| pynvim                                              | [greenlet](https://github.com/python-greenlet/greenlet) has architecture related code |
-| wakatime                                            | wakatime only deploy amd64 client                                                     |
+| What                          | Why                                                                                   |
+|-------------------------------|---------------------------------------------------------------------------------------|
+| I can't install Chrome plugin | I don't know why                                                                      |
+| pynvim                        | [greenlet](https://github.com/python-greenlet/greenlet) has architecture related code |
+| wakatime                      | wakatime only deploy amd64 client                                                     |
+| doesn't support 2k screen     | no GPU card                                                                           |
+| fzf                           | apt provide an outdated veresion, latest version need latest golang                   |
+| coc-snippet                   |
 
 [^1]: https://github.com/neovim/neovim/wiki/Building-Neovim#how-to-build-without-bundled-dependencies
 [^2]: https://martins3.github.io/gfw.html#share-proxy-cross-lan
