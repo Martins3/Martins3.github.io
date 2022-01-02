@@ -1,8 +1,3 @@
----
-title: SSH
-date: 2018-03-29 21:51:47
-tags: tech
----
 1. No password
 ```
 # copy local's .ssh/id_rsa.pub to remote servers' .ssh/authorized_keys
@@ -24,3 +19,7 @@ logout
 
 fg
 > 可以一并阅读一下
+
+4. copy remote neovim's clipboard to local
+  - https://superuser.com/questions/806637/xauth-not-creating-xauthority-file
+  - ssh -X

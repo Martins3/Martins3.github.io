@@ -4,17 +4,20 @@
 
 - [Background](#background)
 - [Neovim](#neovim)
+  - [ccls](#ccls)
 - [Terminal](#terminal)
 - [Browser](#browser)
 - [Scientific Network Access](#scientific-network-access)
 - [Git](#git)
 - [No more works in 3A5000](#no-more-works-in-3a5000)
+- [Works in 3A5000](#works-in-3a5000)
 
 <!-- vim-markdown-toc -->
 ![](../img/3a5000.png)
 (Tested on 2021.12.29)
 
 Because I don't wanna to spend too much time to tune the fcixt, as you see, I will give up Chinese temporarily.
+
 ## Background
 Several months ago, when I'm still working the [loongson-dune](https://github.com/Martins3/loongson-dune), I tried to
 sync my [My Linux Config](https://github.com/Martins3/My-Linux-Config) to Longson 3a5000.
@@ -47,7 +50,34 @@ make BUNDLED_CMAKE_FLAG="-DUSE_BUNDLED=ON -DUSE_BUNDLED_LUAJIT=OFF -DUSE_BUNDLED
 This command will compile all the bundles from source except luajit and luarocks.
 
 The reason to exempt luajit is easy, but leaving luarocks out is kind of mysterious. I don't know why, it just works.
+### ccls
+When working on a C project, I found my neovim doesn't complete code anymore.
 
+I think it's caused by coc.nvim, so I switch to [lspconfig](https://github.com/neovim/nvim-lspconfig), 
+the problem doesn't disappear. What's more, the .vim project works well, so I guess may caused by ccls.
+
+config the neovim
+```c
+--- a/plugin/coc.vim
++++ b/plugin/coc.vim
+@@ -57,7 +57,6 @@ call coc#config("languageserver", {
+       \"ccls": {
+       \  "command": "/home/loongson/arch/ccls/Release/ccls",
+       \  "filetypes": ["c", "cpp"],
+-      \  "trace.server": "verbose",
+       \  "rootPatterns": ["compile_commands.json", ".git/"],
+       \  "index": {
+       \     "threads": 0
+```
+and debug the languageserver[^3]
+```txt
+:CocCommand workspace.showOutput
+```
+In order to debug the ccls, I recompile the ccls with
+```c
+cmake -H. -BRelease -DCMAKE_BUILD_TYPE=Debug
+```
+The problem fixed. Laugh my ass off.
 ## Terminal
 [alacritty](https://github.com/alacritty/alacritty) can't be compiled correctly because of outdated rust toolchain.
 So I use the system default gnome-terminal, it works perfectly.
@@ -66,14 +96,21 @@ so use [tig](https://jonas.github.io/tig/doc/tig.1.html) as a substitute.
 
 ## No more works in 3A5000
 
-| What                          | Why                                                                                   |
-|-------------------------------|---------------------------------------------------------------------------------------|
-| I can't install Chrome plugin | I don't know why                                                                      |
-| pynvim                        | [greenlet](https://github.com/python-greenlet/greenlet) has architecture related code |
-| wakatime                      | wakatime only deploy amd64 client                                                     |
-| doesn't support 2k screen     | no GPU card                                                                           |
-| fzf                           | apt provide an outdated veresion, latest version need latest golang                   |
-| coc-snippet                   |
+| What                          | Why                                                                                      |
+|-------------------------------|------------------------------------------------------------------------------------------|
+| I can't install Chrome plugin | I don't know why                                                                         |
+| pynvim                        | [greenlet](https://github.com/python-greenlet/greenlet) has architecture related code    |
+| coc-snippet                   | need pynvim                                                                                     |
+| wakatime                      | wakatime only deploy amd64 client                                                        |
+| doesn't support 2k screen     | no GPU card                                                                              |
+| fzf                           | apt provide an outdated veresion, latest version need latest golang                      |
+| coc-explorer                  | don't know why, replace it with [nvim-tree](https://github.com/kyazdani42/nvim-tree.lua) |
+
+The fan is always buzzing. I have to wear the WH-1000XM3
+
+## Works in 3A5000
+- flameshot
 
 [^1]: https://github.com/neovim/neovim/wiki/Building-Neovim#how-to-build-without-bundled-dependencies
 [^2]: https://martins3.github.io/gfw.html#share-proxy-cross-lan
+[^3]: https://github.com/neoclide/coc.nvim/wiki/Debug-language-server

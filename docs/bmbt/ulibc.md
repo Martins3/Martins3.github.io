@@ -1,8 +1,17 @@
 # 为 BMBT 构建一个 mini libc
 基于 musl 的版本: 1e4204d522670a1d8b8ab85f1cfefa960547e8af
 
+all code copied from musl except:
+- libc/src/bits/
+- libc/src/math/sqrt.c
+- libc/src/math/sqrtf.c
+
+
 - malloc : https://github.com/mtrebi/memory-allocators
 - printf : 这个容易
+
+## TODO
+- [ ] I remember QEMU relys on glibc macros
 
 ## stdint / limits.h / inttypes.h / stdbool
 musl 为什么需要动态的生成 bits/alltypes.h
@@ -103,11 +112,46 @@ obj/include/bits/alltypes.h: $(srcdir)/arch/$(ARCH)/bits/alltypes.h.in $(srcdir)
 ## 浮点
 - 似乎是可以参考的 musl 库:
   - https://github.com/xen0n/musl/commit/f8ec0dbd4b08456cda7a38ee4a34924665afa69a
+- 参考一下 glibc 的内容
+  - [x] 编译验证测试的环境搭建起来
 - [ ] 内核环境的重新搭建起来
 - 搞一个 QEMU 环境来将之前的内核运行一下什么的啊
-- [ ] i don't know why the dynamic library contains the symbols
+- [ ] how floating point exception handle
+  - only related with `errno` or related with hardware?
+- [ ] actually, we need to port the `memset` `strchr` and related function, but Linux kernel implemented them.
 
-## [ ] sqrtf and sqrt
+```c
+#define _GNU_SOURCE
+#include <assert.h>
+#include <math.h>
+#include <stdatomic.h>
+#include <stdio.h>
+
+int main(int argc, char **argv) {
+  double x = 1.0;
+  double y = 2.0;
+  double z = 3.0;
+  float g = 1.0;
+  // by inline
+  printf("%lf\n", fabs(x));
+  printf("%f\n", fabsf(g));
+  printf("%lf\n", fma(x, y, z));
+  printf("%lf\n", fmaf(x, y, z));
+  printf("%lf\n", sqrt(x));
+  printf("%f\n", sqrtf(g));
+
+  // from musl
+  printf("%f\n", pow(x, y));
+  printf("%lf", tan(x));
+  printf("%lf", rint(x));
+  printf("%lf", floor(x));
+  printf("%lf", ceil(x));
+  printf("%lf", log(x));
+  printf("%lf", log10(x));
+}
+```
+
+### [ ] sqrtf and sqrt
 https://stackoverflow.com/questions/57058848/glibc-uses-kernel-functions
 
 ```c
@@ -118,10 +162,21 @@ Breakpoint 2 at 0x120000a6c: file ./w_sqrt_template.c, line 33.
 ```
 actually, they are defined by the macros.
 
-##  pow / tan
-unlike sqrtf, they normal functions, we'll try to copy them from musl
+so,  ./w_sqrt_template.c is the source code
+```c
+   0x0000000120000878 <+84>:    bl      76(0x4c) # 0x1200008c4 <__sqrt>
+   0x000000012000087c <+88>:    movfr2gr.d      $r5,$f0
+   0x0000000120000880 <+92>:    pcaddu12i       $r4,82(0x52)
+   0x0000000120000884 <+96>:    addi.d  $r4,$r4,1528(0x5f8)
+   0x0000000120000888 <+100>:   bl      27348(0x6ad4) # 0x12000735c <__printf>
+   0x000000012000088c <+104>:   fld.d   $f0,$r22,-24(0xfe8)
+   0x0000000120000890 <+108>:   fcvt.s.d        $f0,$f0
+   0x0000000120000894 <+112>:   bl      64(0x40) # 0x1200008d4 <__sqrtf>
+```
 
-## Questions
+the source code is generated dynamically
+
+### Questions
 - [ ] the c language syntax?
   - copy the code directly will cause the 
 ```c
@@ -130,10 +185,10 @@ unlike sqrtf, they normal functions, we'll try to copy them from musl
 float (sqrtf) (float) asm ("__ieee754_sqrtf");
 double (sqrt) (double) asm ("__ieee754_sqrt");
 ```
-
+- [ ] i don't know why the dynamic library contains the symbols
 - [x] sqrt and sqrtf not found
   - link with -lm
-  
+
 ```c
 /*
 ➜  ~/core/glibc git:(master) ✗ make
@@ -143,3 +198,35 @@ test.c:(.text+0xe8): undefined reference to `sqrt'
 collect2: error: ld returned 1 exit status
 make: *** [Makefile:12: all] Error 1
 ```
+- [ ]  https://stackoverflow.com/questions/10412684/how-to-compile-my-own-glibc-c-standard-library-from-source-and-use-it#
+  - [ ] what's meaning of start file
+  - [ ] read the musl's spec files
+
+
+### fabs
+- [ ] I don't know what's `_Float32`
+  - [ ] what's the purpose of fabsf32 fabsf64  fabsf32x and fabsf64x
+
+```c
+#define _GNU_SOURCE
+#include <math.h>
+#include <stdio.h>
+
+double g(double x) { return __builtin_fabs(x); }
+
+int main(int argc, char **argv) {
+  double x = -10;
+  double y = 1.0;
+  double z = 1.0;
+  // inline asm
+  printf("%lf\n", fabs(x));
+  printf("%f\n", fabsf(x));
+  printf("%Lf\n", fabsl(x));
+
+  printf("%lf\n", (double)fabsf32(x));  // 2
+  printf("%lf\n", (double)fabsf64(x)); // 1
+  printf("%lf\n", (double)fabsf32x(x)); // 1
+  printf("%lf\n", (double)fabsf64x(x)); // 3 // doesn't effect me ?
+}
+```
+- actually, ccls is really cool, next time if you can't find the definition of macros, try to define the macro, the compiler will locate it by complaints
