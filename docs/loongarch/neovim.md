@@ -5,6 +5,7 @@
 - [Background](#background)
 - [Neovim](#neovim)
   - [ccls](#ccls)
+  - [coc-explorer](#coc-explorer)
 - [Terminal](#terminal)
 - [Browser](#browser)
 - [Scientific Network Access](#scientific-network-access)
@@ -80,7 +81,10 @@ In order to debug the ccls, I recompile the ccls with
 cmake -H. -BRelease -DCMAKE_BUILD_TYPE=Debug
 ```
 The problem fixed. Laugh my ass off.
-![](../img/3a5000-nvim-cmp.png)
+![broken image](../img/3a5000-nvim-cmp.png)
+
+### coc-explorer
+Replace it with [nvim-tree](https://github.com/kyazdani42/nvim-tree.lua), permanently.
 
 ## Terminal
 [alacritty](https://github.com/alacritty/alacritty) can't be compiled correctly because of outdated rust toolchain.
@@ -100,18 +104,15 @@ so use [tig](https://jonas.github.io/tig/doc/tig.1.html) as a substitute.
 
 ## No more works in 3A5000
 
-| What                          | Why                                                                                      |
-|-------------------------------|------------------------------------------------------------------------------------------|
-| I can't install Chrome plugin | I don't know why                                                                         |
-| pynvim                        | [greenlet](https://github.com/python-greenlet/greenlet) has architecture related code    |
-| coc-snippet                   | need pynvim                                                                                     |
-| wakatime                      | wakatime only deploy amd64 client                                                        |
-| doesn't support 2k screen     | no GPU card                                                                              |
-| fzf                           | apt provide an outdated veresion, latest version need latest golang                      |
-| coc-explorer                  | don't know why, replace it with [nvim-tree](https://github.com/kyazdani42/nvim-tree.lua) |
+| What                      | Why                                                                                   |
+|---------------------------|---------------------------------------------------------------------------------------|
+| pynvim                    | [greenlet](https://github.com/python-greenlet/greenlet) has architecture related code |
+| coc-snippet               | need pynvim                                                                           |
+| wakatime                  | wakatime only deploy amd64 client                                                     |
+| doesn't support 2k screen | no GPU card                                                                           |
+| markdown-preview.nvim     | I don't know                                                                          |
 
 The fan is always buzzing. I have to wear the WH-1000XM3
-
 ## Works in 3A5000
 - flameshot
 
