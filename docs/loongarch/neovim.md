@@ -15,9 +15,11 @@
 <!-- vim-markdown-toc -->
 ![](../img/3a5000.png)
 (Tested on 2021.12.29)
+You can open the image in new Tab for more vivid view.
+As you can see, the left is the Chrome browser, the right the terminal signing that 3a5000 has four cores.
+
 
 Because I don't wanna to spend too much time to tune the fcixt, as you see, I will give up Chinese temporarily.
-
 ## Background
 Several months ago, when I'm still working the [loongson-dune](https://github.com/Martins3/loongson-dune), I tried to
 sync my [My Linux Config](https://github.com/Martins3/My-Linux-Config) to Longson 3a5000.
@@ -78,6 +80,8 @@ In order to debug the ccls, I recompile the ccls with
 cmake -H. -BRelease -DCMAKE_BUILD_TYPE=Debug
 ```
 The problem fixed. Laugh my ass off.
+![](../img/3a5000-nvim-cmp.png)
+
 ## Terminal
 [alacritty](https://github.com/alacritty/alacritty) can't be compiled correctly because of outdated rust toolchain.
 So I use the system default gnome-terminal, it works perfectly.
