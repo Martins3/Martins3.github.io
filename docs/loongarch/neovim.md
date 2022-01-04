@@ -6,12 +6,13 @@
 - [Neovim](#neovim)
   - [ccls](#ccls)
   - [coc-explorer](#coc-explorer)
+  - [greenlet](#greenlet)
 - [Terminal](#terminal)
 - [Browser](#browser)
 - [Scientific Network Access](#scientific-network-access)
 - [lazygit](#lazygit)
 - [No more works in 3A5000](#no-more-works-in-3a5000)
-- [Works in 3A5000](#works-in-3a5000)
+- [Works perfectly in 3A5000 without extra efforts](#works-perfectly-in-3a5000-without-extra-efforts)
 
 <!-- vim-markdown-toc -->
 龙芯的 3A5000 的一周我自己的使用体验总结：基本可以替代我的 x86 电脑。
@@ -102,6 +103,10 @@ The problem fixed. Laugh my ass off.
 ### coc-explorer
 Replace it with [nvim-tree](https://github.com/kyazdani42/nvim-tree.lua), permanently.
 
+### greenlet
+[greenlet](https://github.com/python-greenlet/greenlet) has architecture related code.
+it is being fixed in https://github.com/python-greenlet/greenlet/pull/257
+
 ## Terminal
 [alacritty](https://github.com/alacritty/alacritty) can't be compiled correctly because of outdated rust toolchain.
 So I use the system default gnome-terminal, it works perfectly.
@@ -119,20 +124,33 @@ I don't try to port them. use another x86 to setup the network proxy and share i
 so use [tig](https://jonas.github.io/tig/doc/tig.1.html) as a substitute.
 
 ## No more works in 3A5000
-
 | What                      | Why                                                                                    |
 |---------------------------|----------------------------------------------------------------------------------------|
-| pynvim                    | [greenlet](https://github.com/python-greenlet/greenlet) has architecture related code  |
-| coc-snippet               | need pynvim                                                                            |
 | wakatime                  | I don't know how to compile wakatime-cli                                               |
 | doesn't support 2k screen | no GPU card                                                                            |
 | markdown-preview.nvim     | I don't know                                                                           |
 | openmoji.org              | terminal can't render emoji in openmoji.org correctly, install the same font with x86' |
 
 The fan is always buzzing. I have to wear the WH-1000XM3
-## Works in 3A5000
+## Works perfectly in 3A5000 without extra efforts
 - flameshot
 - ag
+
+<script src="https://giscus.app/client.js"
+        data-repo="martins3/martins3.github.io"
+        data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="
+        data-category="Show and tell"
+        data-category-id="MDE4OkRpc2N1c3Npb25DYXRlZ29yeTMyMDMzNjY4"
+        data-mapping="pathname"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-theme="light"
+        data-lang="zh-CN"
+        crossorigin="anonymous"
+        async>
+</script>
+
+本站所有文章转发 **CSDN** 将按侵权追究法律责任，其它情况随意。
 
 [^1]: https://github.com/neovim/neovim/wiki/Building-Neovim#how-to-build-without-bundled-dependencies
 [^2]: https://martins3.github.io/gfw.html#share-proxy-cross-lan
