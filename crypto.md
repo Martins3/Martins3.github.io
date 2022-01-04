@@ -1,1 +1,2 @@
-- https://joyofcryptography.com/
+- https://joyofcryptography.com/ : joy
+- https://github.com/bitcoinbook/bitcoinbook : the animal book

@@ -1,9 +1,9 @@
-### [ndisasm](https://www.nasm.us/doc/nasmdoca.html)
+## [ndisasm](https://www.nasm.us/doc/nasmdoca.html)
 a companion program to the Netwide Assembler, NASM
 ```
 ndisasm -b {16|32|64} filename
 ```
-### [binutils](https://www.gnu.org/software/binutils/)
+## [binutils](https://www.gnu.org/software/binutils/)
 Mainly
 1. ld - the GNU linker.
 1. as - the GNU assembler.
@@ -26,3 +26,15 @@ But they also include:
 1. strip - Discards symbols.
 1. windmc - A Windows compatible message compiler.
 1. windres - A compiler for Windows resource files.
+
+# [binutils](https://www.gnu.org/software/binutils/)
+> 将其他的几个 merge 到此处吧!
+https://interrupt.memfault.com/blog/gnu-binutils#readelf
+
+https://github.com/keystone-engine/keystone : as 的替代产品吧
+    https://github.com/unicorn-engine/unicorn　
+    https://github.com/aquynh/capstone
+    // Reversing Trilogy: Capstone (capstone-engine.org), Unicorn (unicorn-engine.org) & Keystone (keystone-engine.org)
+
+### ld
+--verbose --gc-sections

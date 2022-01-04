@@ -5,13 +5,16 @@ all code copied from musl except:
 - libc/src/bits/
 - libc/src/math/sqrt.c
 - libc/src/math/sqrtf.c
-
-
-- malloc : https://github.com/mtrebi/memory-allocators
-- printf : 这个容易
+- strncpy
 
 ## TODO
 - [ ] I remember QEMU relys on glibc macros
+- [ ] compile ulibc as static liba, create a new makefile for it
+  - export features.h to the whole project is ugly
+- [ ] what if kernel implement the memset too?
+- [ ] review bits again, all code copied from loongarch64, maybe compare it with xen0n's implementation
+- [ ] test the libc
+- [ ] remove the flie related API
 
 ## stdint / limits.h / inttypes.h / stdbool
 musl 为什么需要动态的生成 bits/alltypes.h
@@ -230,3 +233,80 @@ int main(int argc, char **argv) {
 }
 ```
 - actually, ccls is really cool, next time if you can't find the definition of macros, try to define the macro, the compiler will locate it by complaints
+
+## [ ] undefined reference to fwrite
+ld: x86tomips-options.c:(.text+0x534): undefined reference to `fwrite'
+
+```c
+#include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+#define lsassertm(cond, ...)                                                   \
+  do {                                                                         \
+    if (!(cond)) {                                                             \
+      fprintf(stderr, "\033[31m assertion failed in <%s> %s:%d \033[m",        \
+              __FUNCTION__, __FILE__, __LINE__);                               \
+      fprintf(stderr, __VA_ARGS__);                                            \
+      abort();                                                                 \
+    }                                                                          \
+  } while (0)
+
+int main(int argc, char *argv[]) {
+  lsassertm(false, "no");
+  return 0;
+}
+```
+```mk
+a:
+	gcc -c -nostdlib a.c  -o a.o
+	ld a.o
+```
+It seems that fprintf will be optimized into fwrite
+
+## undefined extenddftf2
+this can fix by link with /usr/lib/gcc/loongarch64-linux-gnu/8/libgcc.a
+
+https://gcc.gnu.org/onlinedocs/gccint/Soft-float-library-routines.html
+
+```txt
+ld: /home/loongson/core/bmbt/build_[loongson]_[]_[]/libc/src/stdio/vfprintf.o: in function `.L5':
+vfprintf.c:(.text+0x2e4): undefined reference to `__extenddftf2'
+ld: /home/loongson/core/bmbt/build_[loongson]_[]_[]/libc/src/stdio/vfprintf.o: in function `.L54':
+vfprintf.c:(.text+0x7fc): undefined reference to `__netf2'
+ld: /home/loongson/core/bmbt/build_[loongson]_[]_[]/libc/src/stdio/vfprintf.o: in function `.L52':
+vfprintf.c:(.text+0x93c): undefined reference to `__addtf3'
+ld: vfprintf.c:(.text+0x96c): undefined reference to `__netf2'
+ld: /home/loongson/core/bmbt/build_[loongson]_[]_[]/libc/src/stdio/vfprintf.o: in function `.L69':
+vfprintf.c:(.text+0xa24): undefined reference to `__multf3'
+ld: /home/loongson/core/bmbt/build_[loongson]_[]_[]/libc/src/stdio/vfprintf.o: in function `.L68':
+vfprintf.c:(.text+0xab4): undefined reference to `__subtf3'
+ld: vfprintf.c:(.text+0xaf0): undefined reference to `__addtf3'
+ld: /home/loongson/core/bmbt/build_[loongson]_[]_[]/libc/src/stdio/vfprintf.o: in function `.L70':
+vfprintf.c:(.text+0xb60): undefined reference to `__addtf3'
+ld: vfprintf.c:(.text+0xb9c): undefined reference to `__subtf3'
+ld: /home/loongson/core/bmbt/build_[loongson]_[]_[]/libc/src/stdio/vfprintf.o: in function `.LBB4':
+vfprintf.c:(.text+0xc6c): undefined reference to `__fixtfsi'
+ld: vfprintf.c:(.text+0xcbc): undefined reference to `__floatsitf'
+ld: vfprintf.c:(.text+0xce4): undefined reference to `__subtf3'
+ld: vfprintf.c:(.text+0xd1c): undefined reference to `__multf3'
+ld: vfprintf.c:(.text+0xd6c): undefined reference to `__netf2'
+ld: /home/loongson/core/bmbt/build_[loongson]_[]_[]/libc/src/stdio/vfprintf.o: in function `.L74':
+vfprintf.c:(.text+0xdbc): undefined reference to `__netf2'
+ld: /home/loongson/core/bmbt/build_[loongson]_[]_[]/libc/src/stdio/vfprintf.o: in function `.L80':
+vfprintf.c:(.text+0x1030): undefined reference to `__netf2'
+ld: vfprintf.c:(.text+0x106c): undefined reference to `__multf3'
+ld: /home/loongson/core/bmbt/build_[loongson]_[]_[]/libc/src/stdio/vfprintf.o: in function `.L85':
+vfprintf.c:(.text+0x1100): undefined reference to `__fixunstfsi'
+ld: vfprintf.c:(.text+0x1128): undefined reference to `__floatunsitf'
+ld: vfprintf.c:(.text+0x1150): undefined reference to `__subtf3'
+ld: vfprintf.c:(.text+0x1188): undefined reference to `__multf3'
+ld: vfprintf.c:(.text+0x11b8): undefined reference to `__netf2'
+ld: /home/loongson/core/bmbt/build_[loongson]_[]_[]/libc/src/stdio/vfprintf.o: in function `.L116':
+vfprintf.c:(.text+0x17b4): undefined reference to `__addtf3'
+ld: /home/loongson/core/bmbt/build_[loongson]_[]_[]/libc/src/stdio/vfprintf.o: in function `.L121':
+vfprintf.c:(.text+0x18d8): undefined reference to `__addtf3'
+ld: vfprintf.c:(.text+0x18f4): undefined reference to `__netf2'
+```
+
+objdump -ald build_\[loongson\]_\[\]_\[\]/src/main.o > b.txt

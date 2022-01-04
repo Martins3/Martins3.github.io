@@ -31,6 +31,7 @@
 
 ![](../img/3a5000.png)
 (Tested on 2021.12.29)
+
 You can open the image in new Tab for more vivid view.
 As you can see, the left is the Chrome browser, the right the terminal signing that 3a5000 has four cores.
 
@@ -75,7 +76,7 @@ I think it's caused by coc.nvim, so I switch to [lspconfig](https://github.com/n
 the problem doesn't disappear. What's more, the .vim project works well, so I guess may caused by ccls.
 
 config the neovim
-```c
+```diff
 --- a/plugin/coc.vim
 +++ b/plugin/coc.vim
 @@ -57,7 +57,6 @@ call coc#config("languageserver", {

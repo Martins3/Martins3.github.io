@@ -1,7 +1,8 @@
 1. No password
-```
+```sh
 # copy local's .ssh/id_rsa.pub to remote servers' .ssh/authorized_keys
-cat ~/.ssh/id_rsa.pub | ssh <user>@<hostname> 'cat >> .ssh/authorized_keys && echo "Key copied"'
+ssh -t $server "mkdir -p ~/.ssh"
+cat ~/.ssh/id_rsa.pub | ssh $server 'cat >> .ssh/authorized_keys && echo "Key copied"'
 # change the file privilege
 chmod 644 authorized_keys
 ```
