@@ -14,10 +14,25 @@ all code copied from musl except:
 - [ ] what if kernel implement the memset too?
 - [ ] review bits again, all code copied from loongarch64, maybe compare it with xen0n's implementation
 - [ ] test the libc
-- [ ] remove the flie related API
+- [ ] remove the flie related file API
+- [ ] implement brk in the baremetal environment
+  - https://stackoverflow.com/questions/68123943/advantages-of-mmap-over-sbrk
+## header include
+./src/include has a higher priority over ./include
+
+## how hidden works
+in musl/src/include/stdlib.h, we found:
+```c
+hidden void *__libc_malloc(size_t);
+hidden void *__libc_malloc_impl(size_t);
+hidden void *__libc_calloc(size_t, size_t);
+hidden void *__libc_realloc(void *, size_t);
+hidden void __libc_free(void *);
+```
+- [ ] create some files to test them
 
 ## stdint / limits.h / inttypes.h / stdbool
-musl 为什么需要动态的生成 bits/alltypes.h
+- [ ] answer this nice questions : musl 为什么需要动态的生成 bits/alltypes.h
 
 ```c
 obj/include/bits/alltypes.h: $(srcdir)/arch/$(ARCH)/bits/alltypes.h.in $(srcdir)/include/alltypes.h.in $(srcdir)/tools/mkalltypes.sed
@@ -86,6 +101,7 @@ obj/include/bits/alltypes.h: $(srcdir)/arch/$(ARCH)/bits/alltypes.h.in $(srcdir)
 在分析 malloc 的原理的时候，我发现当在静态链接的时候，使用 free 与否会导致实际上调用的 malloc 不同
 - https://stackoverflow.com/questions/23079997/override-weak-symbols-in-static-library
 - https://stackoverflow.com/questions/51656838/attribute-weak-and-static-libraries
+- try to use ./week_alias to verify the ideas
 
 - calloc 中的 all_zerop 也是如此
 
@@ -165,7 +181,7 @@ Breakpoint 2 at 0x120000a6c: file ./w_sqrt_template.c, line 33.
 ```
 actually, they are defined by the macros.
 
-so,  ./w_sqrt_template.c is the source code
+so,  ./w_sqrt_template.c is the source codeelescope in future for configs. adding _ in front helps with duplication of same file name. ￼
 ```c
    0x0000000120000878 <+84>:    bl      76(0x4c) # 0x1200008c4 <__sqrt>
    0x000000012000087c <+88>:    movfr2gr.d      $r5,$f0
@@ -233,6 +249,14 @@ int main(int argc, char **argv) {
 }
 ```
 - actually, ccls is really cool, next time if you can't find the definition of macros, try to define the macro, the compiler will locate it by complaints
+
+## crt0
+- crt/crt1.c : used by static library
+- crt/rcrt1.c : dynamic library
+
+in `src/env/__libc_start_main.c` we understand how 
+[Auxiliary Vector](https://www.gnu.org/software/libc/manual/html_node/Auxiliary-Vector.html)
+implemented in libc
 
 ## [ ] undefined reference to fwrite
 ld: x86tomips-options.c:(.text+0x534): undefined reference to `fwrite'
@@ -310,3 +334,4 @@ ld: vfprintf.c:(.text+0x18f4): undefined reference to `__netf2'
 ```
 
 objdump -ald build_\[loongson\]_\[\]_\[\]/src/main.o > b.txt
+

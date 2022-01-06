@@ -73,7 +73,7 @@ The reason to exempt luajit is easy, but leaving luarocks out is kind of mysteri
 ### ccls
 When working on a C project, I found my neovim doesn't complete code anymore.
 
-I think it's caused by coc.nvim, so I switch to [lspconfig](https://github.com/neovim/nvim-lspconfig), 
+I think it's caused by coc.nvim, so I switch to [lspconfig](https://github.com/neovim/nvim-lspconfig),
 the problem doesn't disappear. What's more, the .vim project works well, so I guess may caused by ccls.
 
 config the neovim
@@ -130,6 +130,7 @@ so use [tig](https://jonas.github.io/tig/doc/tig.1.html) as a substitute.
 | doesn't support 2k screen | no GPU card                                                                            |
 | markdown-preview.nvim     | I don't know                                                                           |
 | openmoji.org              | terminal can't render emoji in openmoji.org correctly, install the same font with x86' |
+| coc-ci                    | don't know why, no time to investigate                                                 |
 
 The fan is always buzzing. I have to wear the WH-1000XM3
 ## Works perfectly in 3A5000 without extra efforts
