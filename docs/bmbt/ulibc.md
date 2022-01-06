@@ -38,25 +38,12 @@ hidden void __libc_free(void *);
 obj/include/bits/alltypes.h: $(srcdir)/arch/$(ARCH)/bits/alltypes.h.in $(srcdir)/include/alltypes.h.in $(srcdir)/tools/mkalltypes.sed
 	sed -f $(srcdir)/tools/mkalltypes.sed $(srcdir)/arch/$(ARCH)/bits/alltypes.h.in $(srcdir)/include/alltypes.h.in > $@
 ```
-
-- [ ] 似乎在 float_t 上的确有东西
-- [ ] FILE 这个东西是不是定义的有点太随意了啊
 - [ ] why NULL is defined every where，虽然很容易处理，但是无法理解
-
-- [ ] 我希望整个 glibc 可以让用户态程序编译出来
-  - [ ] 应该是有办法不使用用户态的 lib 然后只是使用系统态的
-- [x] 为什么 assert.h 没有 once 来保护
-- [ ] 现在 bits 下全部是按照 x86 的，除了 limits.h
-  - 其中的 float 相关的需要重点关注一下
-  - setjmp 完全就是瞎几把实现的
-  - [ ] 需要仔细的比较一下在 types 上, la 和 x86 的实现的差别
-- 似乎只是 capstone 使用过 qsort
-  - AppPkg/Applications/bmbt/capstone/arch/X86/qsort.h
-- [ ] 似乎只是需要补充几个函数，就可以让程序在用户态编译起来
-- [ ] strerror 的使用位置非常少，也许直接删除掉?
+- [ ] FILE 这个东西是不是定义的有点太随意了啊
 - [ ] #261 需要逐个分析一下
-- [ ] `_GUN_SOURCE` 之前的时候为什么都是默认不需要添加的，现在使用上 musl 的时候，就需要添加上了
-  - [ ] 使用 musl 编译测试一下其他程序，看看能不能复现，现在 features.h 中直接添加 `_GUN_SOURCE` 真的过于粗暴
+
+### float_t
+https://stackoverflow.com/questions/5390011/whats-the-point-of-float-t-and-when-should-it-be-used
 
 ## 为了处理 env
 改动:
@@ -258,10 +245,34 @@ in `src/env/__libc_start_main.c` we understand how
 [Auxiliary Vector](https://www.gnu.org/software/libc/manual/html_node/Auxiliary-Vector.html)
 implemented in libc
 
+## exit
+```c
+_Noreturn void exit(int code)
+{
+	__funcs_on_exit();
+	__libc_exit_fini();
+	__stdio_exit();
+	_Exit(code);
+}
+```
+1. atexit : https://stackoverflow.com/questions/25115612/whats-the-scenario-to-use-atexit-function
+2. destructor: https://stackoverflow.com/questions/6477494/do-global-dtors-aux-and-do-global-ctors-aux
+  - https://gcc.gnu.org/onlinedocs/gcc-4.7.0/gcc/Function-Attributes.html
+
+## GNU_SOURCE
+- what's GNU_SOURCE : https://stackoverflow.com/questions/5582211/what-does-define-gnu-source-imply/5583764
+我不知道为什么正常编译的一个程序的时候，从来不需要考虑 `_GNU_SOURCE` 的问题，但是现在使用 musl 不添加 `_GNU_SOURCE` 几乎就没有可以运行的代码了。
+
+- https://stackoverflow.com/questions/48332332/what-does-define-posix-source-mean
+
+## errno
+我无法理解 errno 居然是架构相关的:
+- [ ] 而且 signal 的部分定义 也是架构相关的 
+
 ## [ ] undefined reference to fwrite
 ld: x86tomips-options.c:(.text+0x534): undefined reference to `fwrite'
 
-```c
+```
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -281,6 +292,7 @@ int main(int argc, char *argv[]) {
   return 0;
 }
 ```
+
 ```mk
 a:
 	gcc -c -nostdlib a.c  -o a.o
