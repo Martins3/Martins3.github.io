@@ -6,17 +6,129 @@ all code copied from musl except:
 - libc/src/math/sqrt.c
 - libc/src/math/sqrtf.c
 - strncpy
+- libc/src/string/memchr.c
+
 
 ## TODO
-- [ ] I remember QEMU relys on glibc macros
-- [ ] compile ulibc as static liba, create a new makefile for it
-  - export features.h to the whole project is ugly
-- [ ] what if kernel implement the memset too?
-- [ ] review bits again, all code copied from loongarch64, maybe compare it with xen0n's implementation
-- [ ] test the libc
-- [ ] remove the flie related file API
-- [ ] implement brk in the baremetal environment
+- [x] what if kernel implement the memset too?
+  - 内核确定支持
+- [x] implement brk in the baremetal environment
   - https://stackoverflow.com/questions/68123943/advantages-of-mmap-over-sbrk
+
+当我们得到 C 库之后:
+- [ ] syscallcp 如何操作
+- [ ] 发送邮件
+
+## syscall_cp_asm
+在 /musl/src/thread/loongarch64/syscall_cp.s 中
+- [ ] 没有定义 `__syscall_cp_asm` 啊
+- [ ] 为什么需要定义
+
+## syscall cancel
+- [ ] 为什么 nanosleep 系统需要实现 syscall_cp
+- [ ] 为什么 syscall_cp 的实现是和 pthread 相关的
+- [ ] 为什么当 single thread 的时候 syscall_cp 可以退化为普通的
+
+## GNU_C
+才知道 `__GNU_C__` 表示为支持 GNU C 扩展啊
+https://stackoverflow.com/questions/19908922/what-is-this-ifdef-gnuc-about
+
+## wchar
+实际上，wchar 和 unicode 根本不是一个东西
+[Unicode 编程: C语言描述](https://begriffs.com/posts/2019-05-23-unicode-icu.html#what-is-a-character)
+
+## [ ] 无法理解 musl 中 math_invalid 中的实现
+```c
+double __math_invalid(double x) { return (x - x) / (x - x); }
+```
+
+## used
+https://stackoverflow.com/questions/29545191/prevent-gcc-from-removing-an-unused-variable
+
+```c
+static inline void fp_force_evalf(float x) {
+  volatile float y __attribute__((used));
+  y = x;
+}
+```
+- [ ] 不知道为什么会出现下面的错误:
+```txt
+[ccls 2] [W] 'used' attribute only applies to variables with non-local storage, functions, and Objective-C methods
+```
+
+
+## bits/loongarch/strnlen.S
+strnlen.S 中为什么可以定义
+```c
+#ifndef ANDROID_CHANGES
+#ifdef _LIBC
+weak_alias (__strnlen, strnlen)
+libc_hidden_def (strnlen)
+libc_hidden_def (__strnlen)
+#endif
+#endif
+```
+应为 /home/loongson/ld/caiyinyu/glibc-2.28/include/libc-symbols.h 对于 weak 分别定义了两种情况。
+https://begriffs.com/posts/2019-05-23-unicode-icu.html#what-is-a-character
+
+## memset.S 中的 macro 
+```c
+/* This is defined for the compilation of all C library code.  features.h
+   tests this to avoid inclusion of stubs.h while compiling the library,
+   before stubs.h has been generated.  Some library code that is shared
+   with other packages also tests this symbol to see if it is being
+   compiled as part of the C library.  We must define this before including
+   config.h, because it makes some definitions conditional on whether libc
+   itself is being compiled, or just some generator program.  */
+#define _LIBC	1
+```
+看注释应该是编译上的一些技术!
+
+## [ ] a_ctz_32
+https://en.wikipedia.org/wiki/De_Bruijn_sequence
+
+## sNaN and qNaN
+- https://stackoverflow.com/questions/18118408/what-is-the-difference-between-quiet-nan-and-signaling-nan
+
+## 初始化一个结构体
+
+```c
+struct A {
+  int a;
+  int b;
+};
+int main(int argc, char *argv[]) {
+  struct A a = {0};
+  printf("huxueshi:%s %d %d\n", __FUNCTION__, a.a, a.b);
+  return 0;
+}
+```
+## a_cas
+```c
+static inline int a_cas(volatile int *p, int t, int s)
+{
+	__asm__ __volatile__ (
+		"lock ; cmpxchg %3, %1"
+		: "=a"(t), "=m"(*p) : "a"(t), "r"(s) : "memory" );
+	return t;
+}
+```
+[cmpxchg 指令说明](https://hikalium.github.io/opv86/?q=cmpxchg)
+
+1. t 被加载到寄存器 a 中
+2. 指令为 `cmpxchg *p, s` // dest , source
+```c
+if(*p == t){
+  *p = s;
+}else{
+  t = *p;
+}
+return t;
+```
+> Compares the value in the AL, AX, EAX, or RAX register with the first operand (destination operand). If the two
+values are equal, the second operand (source operand) is loaded into the destination operand. Otherwise, the
+destination operand is loaded into the AL, AX, EAX or RAX register. RAX register is available only in 64-bit mode
+
 ## header include
 ./src/include has a higher priority over ./include
 
@@ -45,17 +157,15 @@ obj/include/bits/alltypes.h: $(srcdir)/arch/$(ARCH)/bits/alltypes.h.in $(srcdir)
 ### float_t
 https://stackoverflow.com/questions/5390011/whats-the-point-of-float-t-and-when-should-it-be-used
 
-## 为了处理 env
-改动:
-1. 因为 UEFI 在 MdePkg 中定义了 NULL 的，而 NULL 在很多头文件中都是定义了，所以在 `env/*/uaip/libc.h` 中处理 NULL。
-2. 因为 UEFI 的 StdLib 的实现的差别，需要使用 USE_UEFI_LIBC 来构建其中的差别。
-
-细节:
-1. swap.h
-  - 因为 QEMU 已经实现了 bswap16 / bswap32 / bswap64，最简单的做法还是直接使用 QEMU 的实现，所以 undefined 掉 CONFIG_BYTESWAP_H
-  - 因为 UEFI StdLib 总是将这几个函数包含进去了(即使不去直接 include 头文件)，所以使用 USE_UEFI_LIBC 让来包含系统的头文件
-2. env/uefi/include/uapi/env.h
-  - 因为 UEFI StdLib 的
+```c
+int main(int argc, char *argv[]) {
+  long double a = 1;
+  long double b = 1;
+  long double c = a + b;
+  return c;
+}
+```
+将这个反汇编一下，就可以知道 long double 为什么需要 gcclib.a 了
 
 ## 编译选项
 -g
@@ -74,8 +184,9 @@ https://stackoverflow.com/questions/5390011/whats-the-point-of-float-t-and-when-
 
 ## printf 的实现
 似乎总体来说，几乎没有很大的挑战
-
 - [ ] 理解一下 wchar_t
+- [x] 分析理解 stderr 和 stdout 的区别
+  - 主要是 buffer 吧
 
 ## malloc
 在这两个位置讨论分析了一下 malloc 的实现:
@@ -259,6 +370,24 @@ _Noreturn void exit(int code)
 2. destructor: https://stackoverflow.com/questions/6477494/do-global-dtors-aux-and-do-global-ctors-aux
   - https://gcc.gnu.org/onlinedocs/gcc-4.7.0/gcc/Function-Attributes.html
 
+关于 exit 和 abort 的区别:
+- https://stackoverflow.com/questions/397075/what-is-the-difference-between-exit-and-abort 
+
+## locks
+```c
+void __unlock(volatile int *l)
+{
+	/* Check l[0] to see if we are multi-threaded. */
+	if (l[0] < 0) {
+		if (a_fetch_add(l, -(INT_MIN + 1)) != (INT_MIN + 1)) {
+			__wake(l, 1, 1);
+		}
+	}
+}
+```
+- [ ] 本来以为是存在 unlock 的时候，那么前面一定有 lock，实际上不是如此 
+  - [ ] 这个 unlock 操作没看懂
+
 ## GNU_SOURCE
 - what's GNU_SOURCE : https://stackoverflow.com/questions/5582211/what-does-define-gnu-source-imply/5583764
 我不知道为什么正常编译的一个程序的时候，从来不需要考虑 `_GNU_SOURCE` 的问题，但是现在使用 musl 不添加 `_GNU_SOURCE` 几乎就没有可以运行的代码了。
@@ -270,7 +399,7 @@ _Noreturn void exit(int code)
 - [ ] 而且 signal 的部分定义 也是架构相关的 
 
 ## [ ] undefined reference to fwrite
-ld: x86tomips-options.c:(.text+0x534): undefined reference to `fwrite'
+ld: x86tomips-options.c:(.text+0x534): undefined reference to `fwrite`
 
 ```
 #include <stdbool.h>
@@ -347,3 +476,50 @@ ld: vfprintf.c:(.text+0x18f4): undefined reference to `__netf2'
 
 objdump -ald build_\[loongson\]_\[\]_\[\]/src/main.o > b.txt
 
+## asm clobber
+
+```c
+#include <assert.h>  // assert
+#include <fcntl.h>   // open
+#include <limits.h>  // INT_MAX
+#include <math.h>    // sqrt
+#include <stdbool.h> // bool false true
+#include <stdio.h>
+#include <stdlib.h> // malloc sort
+#include <string.h> // strcmp ..
+#include <unistd.h> // sleep
+
+#define __SYSCALL_CLOBBERS                                                     \
+  "$t0", "$t1", "$t2", "$t3", "$t4", "$t5", "$t6", "$t7", "$t8", "memory"
+
+long hello(long arg0, long arg1, long arg2, long arg3,
+                                  long arg4, long arg5, long arg6,
+                                  long number) {
+  // printf("hello %ld\n", number);
+  return 77;
+}
+
+long __syscall0(long number) {
+  long int _sys_result;
+
+  {
+    register long int __a7 asm("$a7") = number;
+    register long int __a0 asm("$a0");
+    __asm__ volatile("bl hello" "\n\t"
+                     : "=r"(__a0)
+                     : "r"(__a7)
+                     : __SYSCALL_CLOBBERS);
+    _sys_result = __a0;
+  }
+  asm(
+    "move $ra, $zero \n\t"
+  );
+  // printf("huxueshi:%s \n", __FUNCTION__);
+  return _sys_result;
+}
+
+int main(int argc, char *argv[]) {
+  printf("huxueshi:%s %ld\n", __FUNCTION__, __syscall0(12));
+  return 0;
+}
+```

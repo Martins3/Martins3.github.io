@@ -1,4 +1,4 @@
-#!/bin/bash
+#!lpine.sh/bin/bash
 set -eu
 
 use_32bit=true

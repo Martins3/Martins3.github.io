@@ -3,6 +3,7 @@
 <!-- vim-markdown-toc GitLab -->
 
 - [Background](#background)
+- [输入法](#输入法)
 - [Neovim](#neovim)
   - [ccls](#ccls)
   - [coc-explorer](#coc-explorer)
@@ -30,14 +31,15 @@
 - 你熟悉 Linux 以及 GNU toolchain
 - 最好掌握 LLVM Rust 和 Golang
 
+下面用我的英语写的不是为了展示炫耀我的刚过 4 级的分数，而是最开始的时候我非常不习惯这个输入法设定，一是没有搜狗输入法
+对于我这个可怜的"蓝"方人太难受了，二是我没怎么搞清楚输入法的切换，每次切换都非常麻烦。
+
 ![](../img/3a5000.png)
 (Tested on 2021.12.29)
 
 You can open the image in new Tab for more vivid view.
 As you can see, the left is the Chrome browser, the right the terminal signing that 3a5000 has four cores.
 
-
-Because I don't wanna to spend too much time to tune the fcixt, as you see, I will give up Chinese temporarily.
 ## Background
 Several months ago, when I'm still working the [loongson-dune](https://github.com/Martins3/loongson-dune), I tried to
 sync my [My Linux Config](https://github.com/Martins3/My-Linux-Config) to Longson 3a5000.
@@ -49,6 +51,11 @@ But neovim is not so easy because it depends on luajit which has a huge portion 
 I'm not a compiler expert, mips expert and loongarch expert, it will cost me too much time, weeks or months, to make it work.
 
 But last day I found the luajit has been ported by loonson engineers, it's time to give it a try.
+
+## 输入法
+无需安装，但是按照下图配置，可以实现 shift 切换中英文输入的操作。
+![](../img/fcitx_1.png)
+![](../img/fcitx_2.png)
 
 ## Neovim
 ```sh
@@ -124,6 +131,7 @@ I don't try to port them. use another x86 to setup the network proxy and share i
 so use [tig](https://jonas.github.io/tig/doc/tig.1.html) as a substitute.
 
 ## No more works in 3A5000
+
 | What                      | Why                                                                                    |
 |---------------------------|----------------------------------------------------------------------------------------|
 | wakatime                  | I don't know how to compile wakatime-cli                                               |

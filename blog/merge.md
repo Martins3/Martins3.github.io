@@ -219,7 +219,6 @@ https://github.com/hackerzhou/Love
 ## [使用Rust语言进行创作](https://nannou.cc/)
 有意思的一匹，先等我学会Rust(先等我学会C++(先等我看懂内核))
 
-## [Unicode 编程: C语言描述](https://begriffs.com/posts/2019-05-23-unicode-icu.html#what-is-a-character)
 
 ## [c++ template 编程 badge](https://awesomekling.github.io/Serenity-C++-patterns-The-Badge/)
 
