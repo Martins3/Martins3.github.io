@@ -1,2 +1,3 @@
 - https://joyofcryptography.com/ : joy
 - https://github.com/bitcoinbook/bitcoinbook : the animal book
+- https://betterprogramming.pub/how-to-become-a-blockchain-engineer-fa4386a0504f : 区块链入门指南

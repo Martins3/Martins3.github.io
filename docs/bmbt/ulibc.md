@@ -474,7 +474,9 @@ vfprintf.c:(.text+0x18d8): undefined reference to `__addtf3'
 ld: vfprintf.c:(.text+0x18f4): undefined reference to `__netf2'
 ```
 
+```sh
 objdump -ald build_\[loongson\]_\[\]_\[\]/src/main.o > b.txt
+```
 
 ## asm clobber
 
@@ -523,3 +525,114 @@ int main(int argc, char *argv[]) {
   return 0;
 }
 ```
+
+## complex syscall
+
+### remalloc
+1. e820_add_entry -> g_renew
+2. get_boot_devices_list
+3. capstone : cs_disasm
+  - cs_disasm
+4. ir2_allocate
+5. td_rcd_softmmu_slow_path
+主要是 cs_disasm, 用到操作系统优势就是 ir2_allocate 和 td_rcd_softmmu_slow_path 的少数几次调用，不适用快速路径也无所谓的
+
+### mmap 和 unmap 调用的 size
+huxueshi:huxueshi 2
+huxueshi:huxueshi 1
+huxueshi:huxueshi 2000
+huxueshi:huxueshi 10
+huxueshi:huxueshi 4
+huxueshi:huxueshi 20
+huxueshi:huxueshi 800
+huxueshi:huxueshi 7
+unmap:huxueshi 7
+unmap:huxueshi 1
+huxueshi:huxueshi 3
+huxueshi:huxueshi 1e
+huxueshi:huxueshi 6
+huxueshi:huxueshi 5
+unmap:huxueshi 2
+huxueshi:huxueshi 8
+unmap:huxueshi 4
+huxueshi:huxueshi f
+unmap:huxueshi 8
+huxueshi:huxueshi 1f
+unmap:huxueshi f
+huxueshi:huxueshi 3e
+unmap:huxueshi 1f
+huxueshi:huxueshi 7d
+unmap:huxueshi 3e
+
+### mmap 和 unmap 调用的次数
+
+1. 为什么会存在这么多的 map 10
+  - 分配这么多的 10 是因为 bitmap 的存在
+  - 是从 setup_dirty_memory 中构建的
+2. 为什么存在这么多的 unmap 1
+  - 主要是 cs_disasm 的 remalloc 导致的
+  - 总是首先分配 0x1e00 的空间，然后释放为 0xf0
+
+huxueshi:huxueshi 2
+huxueshi:huxueshi 1
+huxueshi:huxueshi 2000
+huxueshi:huxueshi 4
+huxueshi:huxueshi 20 // qht
+huxueshi:huxueshi 800
+huxueshi:huxueshi 1
+huxueshi:huxueshi 7
+huxueshi:huxueshi 2
+unmap:huxueshi 7
+unmap:huxueshi 1
+huxueshi:huxueshi 3
+huxueshi:huxueshi 1
+huxueshi:huxueshi 1
+huxueshi:huxueshi 1
+huxueshi:huxueshi 1e
+huxueshi:huxueshi 1
+huxueshi:huxueshi 7
+huxueshi:huxueshi 1
+huxueshi:huxueshi 1
+huxueshi:huxueshi 6
+unmap:huxueshi 1
+huxueshi:huxueshi 2
+huxueshi:huxueshi 5
+huxueshi:huxueshi 1
+unmap:huxueshi 1
+huxueshi:huxueshi 1
+unmap:huxueshi 1
+huxueshi:huxueshi 1
+huxueshi:huxueshi 1
+unmap:huxueshi 1
+huxueshi:huxueshi 1
+unmap:huxueshi 1
+huxueshi:huxueshi 1
+unmap:huxueshi 1
+huxueshi:huxueshi 1
+unmap:huxueshi 1
+huxueshi:huxueshi 1
+unmap:huxueshi 1
+huxueshi:huxueshi 1
+huxueshi:huxueshi 1
+unmap:huxueshi 1
+huxueshi:huxueshi 1
+unmap:huxueshi 1
+huxueshi:huxueshi 1
+huxueshi:huxueshi 1
+huxueshi:huxueshi 1
+unmap:huxueshi 2
+unmap:huxueshi 4
+unmap:huxueshi 1
+unmap:huxueshi 1
+unmap:huxueshi 1
+unmap:huxueshi 1
+unmap:huxueshi 1
+unmap:huxueshi 1
+unmap:huxueshi 1
+unmap:huxueshi 1
+unmap:huxueshi 1
+unmap:huxueshi 1
+unmap:huxueshi 1
+unmap:huxueshi 1
+unmap:huxueshi 1
+// 还有几百个吧!

@@ -1,2 +1,2 @@
-- disassemble with code and line
-  - https://stackoverflow.com/questions/9970636/view-both-assembly-and-c-code
+- [disassemble with code and line](https://stackoverflow.com/questions/9970636/view-both-assembly-and-c-code)
+- [如何增大 dmesg buffer 的大小](https://unix.stackexchange.com/questions/412182/how-to-increase-dmesg-buffer-size-in-centos-7-2)
