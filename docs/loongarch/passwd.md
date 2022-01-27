@@ -1,6 +1,7 @@
+# 如何修改为一个超级简单的密码
 保持内容
 /etc/pam.d/common-password
-```
+```txt
 # /etc/pam.d/common-password - password-related modules common to all services
 #
 # This file is included from other service-specific PAM config files,

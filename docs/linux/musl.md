@@ -1,5 +1,80 @@
-# 为 BMBT 构建一个 mini libc
+# 阅读 musl 学到的一些东西
+
+# musl
+website : https://www.musl-libc.org/
+github mirror : https://github.com/ifduyue/musl
+
+I came acorss musl when compiling the project firecracker. Being disgusted with glibc for years,
+I want to find a substitute for it from time to time. Glibc has too many macros, C language tricks, I bet noting will you understand with browsing the source code.
+Here's simple comparison about [LOC](https://en.wikipedia.org/wiki/Source_lines_of_code) between musl and glibc
+
+- [ ] https://news.ycombinator.com/item?id=21291893
+
+musl
+```txt
+github.com/AlDanial/cloc v 1.82  T=0.95 s (2513.4 files/s, 193017.3 lines/s)
+-------------------------------------------------------------------------------
+Language                     files          blank        comment           code
+-------------------------------------------------------------------------------
+JSON                             1              0              0          71397
+C                             1563           6612           7473          50762
+C/C++ Header                   539           4513            285          33124
+Assembly                       276            515            641           6532
+Bourne Shell                     5            115            169            645
+awk                              3             56             74            301
+make                             1             68             10            159
+sed                              1              0              6              9
+-------------------------------------------------------------------------------
+SUM:                          2389          11879           8658         162929
+-------------------------------------------------------------------------------
+```
+
+glibc
+```txt
+github.com/AlDanial/cloc v 1.82  T=21.03 s (1028.0 files/s, 280970.3 lines/s)
+---------------------------------------------------------------------------------------
+Language                             files          blank        comment           code
+---------------------------------------------------------------------------------------
+D                                     4076         820632              0        1313609
+DIET                                  2657         449605              0         721526
+C                                     9249         115647         175829         682981
+JSON                                     3              0              0         493775
+C/C++ Header                          3217          40145          66415         369962
+Assembly                              1828          39920          93537         234778
+PO File                                 43          40870          55813         106389
+Bourne Shell                            88           2037           2656          16058
+make                                   207           2652           2642          12223
+Python                                  52           1363           3812           8792
+TeX                                      1            813           3697           7162
+m4                                      55            355            167           3445
+Windows Module Definition               18            190              0           2937
+SWIG                                     3             12              0           2808
+Verilog-SystemVerilog                    2              0              0           2748
+awk                                     36            266            368           1890
+Bourne Again Shell                       6            212            297           1850
+C++                                     40            326            456           1382
+Perl                                     4            103            165            830
+Korn Shell                               1             55             68            435
+yacc                                     1             56             36            290
+Pascal                                   7             82            326            182
+Expect                                   8              0              0             77
+sed                                     11              8             15             70
+Gencat NLS                               2              0              3             10
+---------------------------------------------------------------------------------------
+SUM:                                 21615        1515349         406302        3986209
+---------------------------------------------------------------------------------------
+```
+Although musl's code is clean, it's impossible and laborious to inspect it line by line,
+here is What I learn from it.
+## compile musl
+./configure && make install
+
+## 编译 glibc
+
+[hacking](https://stackoverflow.com/questions/10412684/how-to-compile-my-own-glibc-c-standard-library-from-source-and-use-it)
+
 基于 musl 的版本: 1e4204d522670a1d8b8ab85f1cfefa960547e8af
+
 
 all code copied from musl except:
 - libc/src/bits/
@@ -11,7 +86,7 @@ all code copied from musl except:
 
 ## TODO
 - [x] what if kernel implement the memset too?
-  - 内核确定支持
+  - 内核确定支持，但是实现上存在，
 - [x] implement brk in the baremetal environment
   - https://stackoverflow.com/questions/68123943/advantages-of-mmap-over-sbrk
 
@@ -35,7 +110,7 @@ https://stackoverflow.com/questions/19908922/what-is-this-ifdef-gnuc-about
 
 ## wchar
 实际上，wchar 和 unicode 根本不是一个东西
-[Unicode 编程: C语言描述](https://begriffs.com/posts/2019-05-23-unicode-icu.html#what-is-a-character)
+[Unicode 编程: C 语言描述](https://begriffs.com/posts/2019-05-23-unicode-icu.html#what-is-a-character)
 
 ## [ ] 无法理解 musl 中 math_invalid 中的实现
 ```c
@@ -71,7 +146,7 @@ libc_hidden_def (__strnlen)
 应为 /home/loongson/ld/caiyinyu/glibc-2.28/include/libc-symbols.h 对于 weak 分别定义了两种情况。
 https://begriffs.com/posts/2019-05-23-unicode-icu.html#what-is-a-character
 
-## memset.S 中的 macro 
+## memset.S 中的 macro
 ```c
 /* This is defined for the compilation of all C library code.  features.h
    tests this to avoid inclusion of stubs.h while compiling the library,
@@ -295,7 +370,7 @@ the source code is generated dynamically
 
 ### Questions
 - [ ] the c language syntax?
-  - copy the code directly will cause the 
+  - copy the code directly will cause the
 ```c
 /* Declare sqrt for use within GLIBC.  Compilers typically inline sqrt as a
    single instruction.  Use an asm to avoid use of PLTs if it doesn't.  */
@@ -352,7 +427,7 @@ int main(int argc, char **argv) {
 - crt/crt1.c : used by static library
 - crt/rcrt1.c : dynamic library
 
-in `src/env/__libc_start_main.c` we understand how 
+in `src/env/__libc_start_main.c` we understand how
 [Auxiliary Vector](https://www.gnu.org/software/libc/manual/html_node/Auxiliary-Vector.html)
 implemented in libc
 
@@ -371,7 +446,7 @@ _Noreturn void exit(int code)
   - https://gcc.gnu.org/onlinedocs/gcc-4.7.0/gcc/Function-Attributes.html
 
 关于 exit 和 abort 的区别:
-- https://stackoverflow.com/questions/397075/what-is-the-difference-between-exit-and-abort 
+- https://stackoverflow.com/questions/397075/what-is-the-difference-between-exit-and-abort
 
 ## locks
 ```c
@@ -385,7 +460,7 @@ void __unlock(volatile int *l)
 	}
 }
 ```
-- [ ] 本来以为是存在 unlock 的时候，那么前面一定有 lock，实际上不是如此 
+- [ ] 本来以为是存在 unlock 的时候，那么前面一定有 lock，实际上不是如此
   - [ ] 这个 unlock 操作没看懂
 
 ## GNU_SOURCE
@@ -396,12 +471,12 @@ void __unlock(volatile int *l)
 
 ## errno
 我无法理解 errno 居然是架构相关的:
-- [ ] 而且 signal 的部分定义 也是架构相关的 
+- [ ] 而且 signal 的部分定义 也是架构相关的
 
 ## [ ] undefined reference to fwrite
 ld: x86tomips-options.c:(.text+0x534): undefined reference to `fwrite`
 
-```
+```c
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -526,113 +601,18 @@ int main(int argc, char *argv[]) {
 }
 ```
 
-## complex syscall
+<script src="https://giscus.app/client.js"
+        data-repo="martins3/martins3.github.io"
+        data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="
+        data-category="Show and tell"
+        data-category-id="MDE4OkRpc2N1c3Npb25DYXRlZ29yeTMyMDMzNjY4"
+        data-mapping="pathname"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-theme="light"
+        data-lang="zh-CN"
+        crossorigin="anonymous"
+        async>
+</script>
 
-### remalloc
-1. e820_add_entry -> g_renew
-2. get_boot_devices_list
-3. capstone : cs_disasm
-  - cs_disasm
-4. ir2_allocate
-5. td_rcd_softmmu_slow_path
-主要是 cs_disasm, 用到操作系统优势就是 ir2_allocate 和 td_rcd_softmmu_slow_path 的少数几次调用，不适用快速路径也无所谓的
-
-### mmap 和 unmap 调用的 size
-huxueshi:huxueshi 2
-huxueshi:huxueshi 1
-huxueshi:huxueshi 2000
-huxueshi:huxueshi 10
-huxueshi:huxueshi 4
-huxueshi:huxueshi 20
-huxueshi:huxueshi 800
-huxueshi:huxueshi 7
-unmap:huxueshi 7
-unmap:huxueshi 1
-huxueshi:huxueshi 3
-huxueshi:huxueshi 1e
-huxueshi:huxueshi 6
-huxueshi:huxueshi 5
-unmap:huxueshi 2
-huxueshi:huxueshi 8
-unmap:huxueshi 4
-huxueshi:huxueshi f
-unmap:huxueshi 8
-huxueshi:huxueshi 1f
-unmap:huxueshi f
-huxueshi:huxueshi 3e
-unmap:huxueshi 1f
-huxueshi:huxueshi 7d
-unmap:huxueshi 3e
-
-### mmap 和 unmap 调用的次数
-
-1. 为什么会存在这么多的 map 10
-  - 分配这么多的 10 是因为 bitmap 的存在
-  - 是从 setup_dirty_memory 中构建的
-2. 为什么存在这么多的 unmap 1
-  - 主要是 cs_disasm 的 remalloc 导致的
-  - 总是首先分配 0x1e00 的空间，然后释放为 0xf0
-
-huxueshi:huxueshi 2
-huxueshi:huxueshi 1
-huxueshi:huxueshi 2000
-huxueshi:huxueshi 4
-huxueshi:huxueshi 20 // qht
-huxueshi:huxueshi 800
-huxueshi:huxueshi 1
-huxueshi:huxueshi 7
-huxueshi:huxueshi 2
-unmap:huxueshi 7
-unmap:huxueshi 1
-huxueshi:huxueshi 3
-huxueshi:huxueshi 1
-huxueshi:huxueshi 1
-huxueshi:huxueshi 1
-huxueshi:huxueshi 1e
-huxueshi:huxueshi 1
-huxueshi:huxueshi 7
-huxueshi:huxueshi 1
-huxueshi:huxueshi 1
-huxueshi:huxueshi 6
-unmap:huxueshi 1
-huxueshi:huxueshi 2
-huxueshi:huxueshi 5
-huxueshi:huxueshi 1
-unmap:huxueshi 1
-huxueshi:huxueshi 1
-unmap:huxueshi 1
-huxueshi:huxueshi 1
-huxueshi:huxueshi 1
-unmap:huxueshi 1
-huxueshi:huxueshi 1
-unmap:huxueshi 1
-huxueshi:huxueshi 1
-unmap:huxueshi 1
-huxueshi:huxueshi 1
-unmap:huxueshi 1
-huxueshi:huxueshi 1
-unmap:huxueshi 1
-huxueshi:huxueshi 1
-huxueshi:huxueshi 1
-unmap:huxueshi 1
-huxueshi:huxueshi 1
-unmap:huxueshi 1
-huxueshi:huxueshi 1
-huxueshi:huxueshi 1
-huxueshi:huxueshi 1
-unmap:huxueshi 2
-unmap:huxueshi 4
-unmap:huxueshi 1
-unmap:huxueshi 1
-unmap:huxueshi 1
-unmap:huxueshi 1
-unmap:huxueshi 1
-unmap:huxueshi 1
-unmap:huxueshi 1
-unmap:huxueshi 1
-unmap:huxueshi 1
-unmap:huxueshi 1
-unmap:huxueshi 1
-unmap:huxueshi 1
-unmap:huxueshi 1
-// 还有几百个吧!
+本站所有文章转发 **CSDN** 将按侵权追究法律责任，其它情况随意。

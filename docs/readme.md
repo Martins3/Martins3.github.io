@@ -21,7 +21,6 @@
 
 ## Binary Translation
 - [裸金属二进制翻译器(BMBT)的设计与实现](https://martins3.github.io/ppt/repo/2021-8-24/index.html)
-- 🚧 [为 BMBT 构建一个 mini libc](./bmbt/ulibc.md)
 
 ## Virtualization
 - [Loongson Dune : A Process Level Virtualization framework Base on KVM](https://github.com/Martins3/loongson-dune)
@@ -60,6 +59,9 @@
 - [使用 QEMU, FlameGraph 和 bpftrace 阅读内核](./tips-reading-kernel.md)
 - [使用 Github 记录笔记和搭建 blog](./setup-github-pages.md)
 
+## Linux
+- [musl 阅读笔记](./linux/musl.md)
+
 ## Loongson
 - [X86 上阅读 Loongarch 内核](./loongarch/ccls.md)
 - [Replace My x86 Laptop With 3A5000](./loongarch/neovim.md)
@@ -72,8 +74,11 @@
 - [what is x86 IA-32 IA-64 x86-64 and amd64 ?](./x86-names.md)
 - [The Day](https://martins3.github.io/theday/)
 - [The Garden](http://martins3.gitee.io/garden/)
-- [言论](./words.md)
-- [感想](./thoughts.md)
+- [言论](./abaaba/words.md)
+
+## Guff
+- [About](./abaaba/about.md)
+- [2021 秋招总结](./abaaba/job.md)
 
 ## Friends
 - [niugenen](https://niugenen.github.io/)
