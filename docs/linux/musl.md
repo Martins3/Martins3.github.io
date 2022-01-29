@@ -1,18 +1,27 @@
 # 阅读 musl 学到的一些东西
 
+- [官方网站](https://www.musl-libc.org/)
 
 ## 准备工作
-website : https://www.musl-libc.org/
 
-- [ ] https://news.ycombinator.com/item?id=21291893
+```sh
+git clone https://github.com/bminor/musl
+cd musl
+mkdir install
+./configure --enable-debug --prefix=$(pwd)/install
+# 默认安装位置是 /usr/local/musl 将其修改为 musl/install 中
+```
 
+[glibc 的编译](https://stackoverflow.com/questions/10412684/how-to-compile-my-own-glibc-c-standard-library-from-source-and-use-it)
+
+
+[musl 作者对于几种主流的 C 库比较](https://news.ycombinator.com/item?id=21291893)，我从阅读的角度使用 cloc 比对行数:
 musl
 ```txt
 github.com/AlDanial/cloc v 1.82  T=0.95 s (2513.4 files/s, 193017.3 lines/s)
 -------------------------------------------------------------------------------
 Language                     files          blank        comment           code
 -------------------------------------------------------------------------------
-JSON                             1              0              0          71397
 C                             1563           6612           7473          50762
 C/C++ Header                   539           4513            285          33124
 Assembly                       276            515            641           6532
@@ -60,27 +69,7 @@ Gencat NLS                               2              0              3        
 SUM:                                 21615        1515349         406302        3986209
 ---------------------------------------------------------------------------------------
 ```
-Although musl's code is clean, it's impossible and laborious to inspect it line by line,
-here is What I learn from it.
-## compile musl
-./configure && make install
 
-## 编译 glibc
-
-[hacking](https://stackoverflow.com/questions/10412684/how-to-compile-my-own-glibc-c-standard-library-from-source-and-use-it)
-
-基于 musl 的版本: 1e4204d522670a1d8b8ab85f1cfefa960547e8af
-
-
-all code copied from musl except:
-- libc/src/bits/
-- libc/src/math/sqrt.c
-- libc/src/math/sqrtf.c
-- strncpy
-- libc/src/string/memchr.c
-
-
-## TODO
 - [x] what if kernel implement the memset too?
   - 内核确定支持，但是实现上存在，
 - [x] implement brk in the baremetal environment
@@ -88,7 +77,6 @@ all code copied from musl except:
 
 当我们得到 C 库之后:
 - [ ] syscallcp 如何操作
-- [ ] 发送邮件
 
 ## syscall_cp_asm
 在 /musl/src/thread/loongarch64/syscall_cp.s 中
