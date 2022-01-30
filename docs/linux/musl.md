@@ -1,6 +1,41 @@
 # 阅读 musl 学到的一些东西
 
 - [官方网站](https://www.musl-libc.org/)
+
+<!-- vim-markdown-toc GitLab -->
+
+- [准备](#准备)
+- [Makefile](#makefile)
+- [memset 的实现和内核有区别吗](#memset-的实现和内核有区别吗)
+- [可以不使用 brk 来实现 malloc 吗](#可以不使用-brk-来实现-malloc-吗)
+- [syscall_cp](#syscall_cp)
+- [`__GNU_C__`](#__gnu_c__)
+- [wchar](#wchar)
+- [gcc attribute](#gcc-attribute)
+- [sNaN and qNaN](#snan-and-qnan)
+- [初始化结构体](#初始化结构体)
+- [头文件 include 是存在优先级的](#头文件-include-是存在优先级的)
+- [hidden 的作用](#hidden-的作用)
+- [stdint / limits.h / inttypes.h / stdbool](#stdint-limitsh-inttypesh-stdbool)
+  - [float_t 和 long double](#float_t-和-long-double)
+- [redzone](#redzone)
+- [malloc](#malloc)
+  - [多线程的处理](#多线程的处理)
+  - [week_alias 和静态链接](#week_alias-和静态链接)
+  - [a_ctz_32](#a_ctz_32)
+- [fabs 的定义](#fabs-的定义)
+- [当 exit 的时候会发生什么](#当-exit-的时候会发生什么)
+- [[ ] musl 如何实现 locks](#-musl-如何实现-locks)
+- [GNU_SOURCE](#gnu_source)
+- [gcc can optimize fprintf to fwrite](#gcc-can-optimize-fprintf-to-fwrite)
+- [crt0](#crt0)
+- [glibc](#glibc)
+  - [bits/loongarch/strnlen.S](#bitsloongarchstrnlens)
+- [TODO](#todo)
+- [一些奇怪的事情](#一些奇怪的事情)
+
+<!-- vim-markdown-toc -->
+
 ## 准备
 
 ```sh
@@ -284,37 +319,21 @@ redzone 是
 - https://musl.openwall.narkive.com/J9ymcXt2/what-s-wrong-with-musl-s-malloc
 - https://news.ycombinator.com/item?id=23080290
 
-
-- calloc 中的 all_zerop 也是如此
-
-- [ ] 依赖 /home/maritns3/core/musl/src/internal/libc.h 做什么
-- calloc.c 为什么需要依赖 dylink.c
-
-- https://www.cs.cmu.edu/afs/cs/academic/class/15213-f12/www/lectures/12-linking.pdf
-  - 介绍了三种 interposition 的方法
-  - 实际上，如果不怕麻烦，可以定义自己的 malloc 就好了，这里介绍的方法是继续使用原来的技术
-
-- [ ] 在 /home/maritns3/core/musl/src/malloc/mallocng/meta.h 使用了一堆 4096 之类操作，这不是一个问题吗?
-- [x] 调查为什么到处判断 pagesize : 应该只是因为
-- [ ] 为什么需要重新制造出来一个 assert
-  - 感觉没有什么特别强的道理
-
-- [x] 似乎可以很容易的构造出来一个多线程的问题来
+### 多线程的处理
+- [有人说](https://stackoverflow.com/questions/855763/is-malloc-thread-safe) 中的人都说 malloc 总是安全的，但是似乎只是在 pthread 的时候是安全的
 ```c
 #define MT (libc.need_locks)
 ```
 当共享地址空间的时候，才需要上锁的
 
-- 似乎只是 pthread 才会在乎啊，clone 根本不在乎
-  - [ ] lite_malloc 的 lock 机制还是不一样的
-  - https://stackoverflow.com/questions/855763/is-malloc-thread-safe 中的人都说 malloc 是安全的，但是似乎只是在 pthread 的时候是安全的
-  - 从 musl 的库中可以清楚的检查到对于 clone 形成的多线程，malloc 不是安全的，但是对于 glibc 的 malloc 过于复杂，暂时不看
+而且我们构建了一个[clone.c](./malloc_thread_safe/clone.c) [pthread.c](./malloc_thread_safe/pthread.c)
 
 ### week_alias 和静态链接
 在分析 malloc 的原理的时候，我发现当在静态链接的时候，使用 free 与否会导致实际上调用的 malloc 不同
 - https://stackoverflow.com/questions/23079997/override-weak-symbols-in-static-library
 - https://stackoverflow.com/questions/51656838/attribute-weak-and-static-libraries
-- try to use ./week_alias to verify the ideas
+
+其中的原理我们使用了[一个例子](./weak_alias) 来阐述
 
 ### a_ctz_32
 - https://en.wikipedia.org/wiki/De_Bruijn_sequence
