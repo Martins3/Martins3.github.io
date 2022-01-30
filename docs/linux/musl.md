@@ -1,8 +1,7 @@
 # 阅读 musl 学到的一些东西
 
 - [官方网站](https://www.musl-libc.org/)
-
-## 准备工作
+## 准备
 
 ```sh
 git clone https://github.com/bminor/musl
@@ -12,8 +11,7 @@ mkdir install
 # 默认安装位置是 /usr/local/musl 将其修改为 musl/install 中
 ```
 
-[glibc 的编译](https://stackoverflow.com/questions/10412684/how-to-compile-my-own-glibc-c-standard-library-from-source-and-use-it)
-
+- [glibc 的编译](https://stackoverflow.com/questions/10412684/how-to-compile-my-own-glibc-c-standard-library-from-source-and-use-it)
 
 [musl 作者对于几种主流的 C 库比较](https://news.ycombinator.com/item?id=21291893)，我从阅读的角度使用 cloc 比对行数:
 musl
@@ -69,40 +67,137 @@ Gencat NLS                               2              0              3        
 SUM:                                 21615        1515349         406302        3986209
 ---------------------------------------------------------------------------------------
 ```
+但是总体来说，C 库在 Linux 的复杂度面前，还是一个小学生。
 
-- [x] what if kernel implement the memset too?
-  - 内核确定支持，但是实现上存在，
-- [x] implement brk in the baremetal environment
-  - https://stackoverflow.com/questions/68123943/advantages-of-mmap-over-sbrk
+## Makefile
+实际上，musl 的 Makefile 实际上非常值得一读，可以掌握一些整个工程的架构的。
 
-当我们得到 C 库之后:
-- [ ] syscallcp 如何操作
+```mk
+obj/crt/Scrt1.o obj/crt/rcrt1.o: CFLAGS_ALL += -fPIC
+```
 
-## syscall_cp_asm
-在 /musl/src/thread/loongarch64/syscall_cp.s 中
-- [ ] 没有定义 `__syscall_cp_asm` 啊
-- [ ] 为什么需要定义
+## memset 的实现和内核有区别吗
+有，比如，amd64 的实现在 arch/x86/lib/memset_64.S 中
 
-## syscall cancel
-- [ ] 为什么 nanosleep 系统需要实现 syscall_cp
-- [ ] 为什么 syscall_cp 的实现是和 pthread 相关的
-- [ ] 为什么当 single thread 的时候 syscall_cp 可以退化为普通的
+## 可以不使用 brk 来实现 malloc 吗
+可以的。
+- musl 用 brk 分配 meta data
+- glibc 普通的数据也会使用 brk 分配
 
-## GNU_C
-才知道 `__GNU_C__` 表示为支持 GNU C 扩展啊
-https://stackoverflow.com/questions/19908922/what-is-this-ifdef-gnuc-about
+总所周知[^1]，brk 实际上是一个简化版的 mmap, 只是调整一个 vma 的上边界，而这个 vma 下边界就是 bss section 结束的位置。
+所以 brk 应该比 mmap 更加快一点点。
+
+## syscall_cp
+将 src/time/clock_nanosleep.c 展开为
+```c
+int __clock_nanosleep(clockid_t clk, int flags, const struct timespec *req, struct timespec *rem)
+{
+ if (clk == 3) return 22;
+ if (clk == 0 && !flags)
+  return -(__syscall_cp)(35,((long) (req)),((long) (rem)),0,0,0,0);
+ return -(__syscall_cp)(230,((long) (clk)),((long) (flags)),((long) (req)),((long) (rem)),0,0);
+}
+```
+
+`src/thread/__syscall_cp.c` 在中，通过 week_alias 告诉我们当 single thread 的时候 syscall_cp 可以退化为普通的 syscall 的。
+```c
+long __syscall_cp_c(syscall_arg_t nr,
+                    syscall_arg_t u, syscall_arg_t v, syscall_arg_t w,
+                    syscall_arg_t x, syscall_arg_t y, syscall_arg_t z)
+{
+	pthread_t self;
+	long r;
+	int st;
+
+	if ((st=(self=__pthread_self())->canceldisable)
+	    && (st==PTHREAD_CANCEL_DISABLE || nr==SYS_close))
+		return __syscall(nr, u, v, w, x, y, z);
+
+	r = __syscall_cp_asm(&self->cancel, nr, u, v, w, x, y, z);
+	if (r==-EINTR && nr!=SYS_close && self->cancel &&
+	    self->canceldisable != PTHREAD_CANCEL_DISABLE)
+		r = __cancel();
+	return r;
+}
+```
+在 `__syscall_cp_c` 中，只是将 `self->cancel` 传递到 r11 上了
+
+src/thread/x86_64/syscall_cp.s
+```c
+.text
+.global __cp_begin
+.hidden __cp_begin
+.global __cp_end
+.hidden __cp_end
+.global __cp_cancel
+.hidden __cp_cancel
+.hidden __cancel
+.global __syscall_cp_asm
+.hidden __syscall_cp_asm
+.type   __syscall_cp_asm,@function
+__syscall_cp_asm:
+
+__cp_begin:
+	mov (%rdi),%eax
+	test %eax,%eax
+	jnz __cp_cancel
+	mov %rdi,%r11
+	mov %rsi,%rax
+	mov %rdx,%rdi
+	mov %rcx,%rsi
+	mov %r8,%rdx
+	mov %r9,%r10
+	mov 8(%rsp),%r8
+	mov 16(%rsp),%r9
+	mov %r11,8(%rsp)
+	syscall
+__cp_end:
+	ret
+__cp_cancel:
+	jmp __cancel
+```
+
+对比 glibc 的 syscall 是一个很好的理解 x86 syscall 装换:
+```c
+ENTRY (syscall)
+	movq %rdi, %rax		/* Syscall number -> rax.  */
+	movq %rsi, %rdi		/* shift arg1 - arg5.  */
+	movq %rdx, %rsi
+	movq %rcx, %rdx
+	movq %r8, %r10
+	movq %r9, %r8
+	movq 8(%rsp),%r9	/* arg6 is on the stack.  */
+	syscall			/* Do the system call.  */
+	cmpq $-4095, %rax	/* Check %rax for error.  */
+	jae SYSCALL_ERROR_LABEL	/* Jump to error handler if error.  */
+	ret			/* Return to caller.  */
+
+PSEUDO_END (syscall)
+```
+
+参考 kernel inside[^2] 可以找到内核 r11 保存到 `pt_regs->flags`:
+```S
+	pushq	%r11					/* pt_regs->flags */
+```
+
+在 lwn 的
+[This is why we can't have safe cancellation points](https://lwn.net/Articles/683118/)
+有更多的分析。
+
+https://tutorialspoint.dev/language/c/pthread_cancel-c-example
+## `__GNU_C__`
+才知道 `__GNU_C__` [表示为支持 GNU C 扩展](https://stackoverflow.com/questions/19908922/what-is-this-ifdef-gnuc-about)
 
 ## wchar
 实际上，wchar 和 unicode 根本不是一个东西
 [Unicode 编程: C 语言描述](https://begriffs.com/posts/2019-05-23-unicode-icu.html#what-is-a-character)
 
-## [ ] 无法理解 musl 中 math_invalid 中的实现
-```c
-double __math_invalid(double x) { return (x - x) / (x - x); }
-```
+## gcc attribute
+gcc 的一些优化可能将一些函数直接优化掉，可以通过 used 来告诉 gcc 这个符号的确是需要的:
+- https://stackoverflow.com/questions/29545191/prevent-gcc-from-removing-an-unused-variable
+- https://stackoverflow.com/questions/31637626/whats-the-usecase-of-gccs-used-attribute
 
-## used
-https://stackoverflow.com/questions/29545191/prevent-gcc-from-removing-an-unused-variable
+使用 -Wall 会导致让一些没有使用的符号被警告，使用 unused 可以告诉 gcc 我知道，请不要警告。
 
 ```c
 static inline void fp_force_evalf(float x) {
@@ -110,97 +205,48 @@ static inline void fp_force_evalf(float x) {
   y = x;
 }
 ```
-- [ ] 不知道为什么会出现下面的错误:
+
 ```txt
 [ccls 2] [W] 'used' attribute only applies to variables with non-local storage, functions, and Objective-C methods
 ```
 
-
-## bits/loongarch/strnlen.S
-strnlen.S 中为什么可以定义
-```c
-#ifndef ANDROID_CHANGES
-#ifdef _LIBC
-weak_alias (__strnlen, strnlen)
-libc_hidden_def (strnlen)
-libc_hidden_def (__strnlen)
-#endif
-#endif
-```
-应为 /home/loongson/ld/caiyinyu/glibc-2.28/include/libc-symbols.h 对于 weak 分别定义了两种情况。
-https://begriffs.com/posts/2019-05-23-unicode-icu.html#what-is-a-character
-
-## memset.S 中的 macro
-```c
-/* This is defined for the compilation of all C library code.  features.h
-   tests this to avoid inclusion of stubs.h while compiling the library,
-   before stubs.h has been generated.  Some library code that is shared
-   with other packages also tests this symbol to see if it is being
-   compiled as part of the C library.  We must define this before including
-   config.h, because it makes some definitions conditional on whether libc
-   itself is being compiled, or just some generator program.  */
-#define _LIBC	1
-```
-看注释应该是编译上的一些技术!
-
-## [ ] a_ctz_32
-https://en.wikipedia.org/wiki/De_Bruijn_sequence
-
 ## sNaN and qNaN
 - https://stackoverflow.com/questions/18118408/what-is-the-difference-between-quiet-nan-and-signaling-nan
 
-## 初始化一个结构体
+## 初始化结构体
 
 ```c
+#include <assert.h>
+#include <stdio.h>
+
 struct A {
   int a;
   int b;
+  int x[1000];
 };
 int main(int argc, char *argv[]) {
-  struct A a = {0};
-  printf("huxueshi:%s %d %d\n", __FUNCTION__, a.a, a.b);
+  struct A a = {0};     // 直接所有的成员初始化为 0
+  struct A b = {.a = 1}; // 除了 .a = 1 之外，其余全部都是等于 0
+  for (int i = 0; i < 1000; ++i) {
+    assert(a.x[i] + b.x[i] == 0);
+  }
   return 0;
 }
 ```
-## a_cas
-```c
-static inline int a_cas(volatile int *p, int t, int s)
-{
-	__asm__ __volatile__ (
-		"lock ; cmpxchg %3, %1"
-		: "=a"(t), "=m"(*p) : "a"(t), "r"(s) : "memory" );
-	return t;
-}
-```
-[cmpxchg 指令说明](https://hikalium.github.io/opv86/?q=cmpxchg)
 
-1. t 被加载到寄存器 a 中
-2. 指令为 `cmpxchg *p, s` // dest , source
-```c
-if(*p == t){
-  *p = s;
-}else{
-  t = *p;
-}
-return t;
-```
-> Compares the value in the AL, AX, EAX, or RAX register with the first operand (destination operand). If the two
-values are equal, the second operand (source operand) is loaded into the destination operand. Otherwise, the
-destination operand is loaded into the AL, AX, EAX or RAX register. RAX register is available only in 64-bit mode
+## 头文件 include 是存在优先级的
+如果工程中，同时存在
+- src/include/time.h
+- include/time.h
 
-## header include
-./src/include has a higher priority over ./include
-
-## how hidden works
-in musl/src/include/stdlib.h, we found:
+因为在 Makefile 中
 ```c
-hidden void *__libc_malloc(size_t);
-hidden void *__libc_malloc_impl(size_t);
-hidden void *__libc_calloc(size_t, size_t);
-hidden void *__libc_realloc(void *, size_t);
-hidden void __libc_free(void *);
+CFLAGS_ALL += -D_XOPEN_SOURCE=700 -I$(srcdir)/arch/$(ARCH) -I$(srcdir)/arch/generic -Iobj/src/internal -I$(srcdir)/src/include -I$(srcdir)/src/internal -Iobj/include -I$(srcdir)/include
 ```
-- [ ] create some files to test them
+src/include 定义在前，所以优先级更高。
+
+## hidden 的作用
+的
 
 ## stdint / limits.h / inttypes.h / stdbool
 - [ ] answer this nice questions : musl 为什么需要动态的生成 bits/alltypes.h
@@ -213,8 +259,8 @@ obj/include/bits/alltypes.h: $(srcdir)/arch/$(ARCH)/bits/alltypes.h.in $(srcdir)
 - [ ] FILE 这个东西是不是定义的有点太随意了啊
 - [ ] #261 需要逐个分析一下
 
-### float_t
-https://stackoverflow.com/questions/5390011/whats-the-point-of-float-t-and-when-should-it-be-used
+### float_t 和 long double
+[float_t](https://stackoverflow.com/questions/5390011/whats-the-point-of-float-t-and-when-should-it-be-used)
 
 ```c
 int main(int argc, char *argv[]) {
@@ -224,41 +270,20 @@ int main(int argc, char *argv[]) {
   return c;
 }
 ```
+如果上
 将这个反汇编一下，就可以知道 long double 为什么需要 gcclib.a 了
 
-## 编译选项
--g
--Wall
--Werror
--fno-stack-protector
--mno-red-zone
--nostdinc
--nostdlib
--Wextra
--fno-builtin
-
+## redzone
+redzone 是
 关于 redzone 的解释:
 - https://os.phil-opp.com/red-zone/
 - https://eli.thegreenplace.net/2011/09/06/stack-frame-layout-on-x86-64
 
-## printf 的实现
-似乎总体来说，几乎没有很大的挑战
-- [ ] 理解一下 wchar_t
-- [x] 分析理解 stderr 和 stdout 的区别
-  - 主要是 buffer 吧
-
 ## malloc
-在这两个位置讨论分析了一下 malloc 的实现:
+在这两个位置讨论分析了一下 malloc 的实现
 - https://musl.openwall.narkive.com/J9ymcXt2/what-s-wrong-with-musl-s-malloc
 - https://news.ycombinator.com/item?id=23080290
 
-- [ ] 只是将 lock 简化一下，而不要改动本身的
-  - [ ] 如果使用一些让人窒息的 lock 怎么办?
-
-在分析 malloc 的原理的时候，我发现当在静态链接的时候，使用 free 与否会导致实际上调用的 malloc 不同
-- https://stackoverflow.com/questions/23079997/override-weak-symbols-in-static-library
-- https://stackoverflow.com/questions/51656838/attribute-weak-and-static-libraries
-- try to use ./week_alias to verify the ideas
 
 - calloc 中的 all_zerop 也是如此
 
@@ -285,16 +310,18 @@ int main(int argc, char *argv[]) {
   - https://stackoverflow.com/questions/855763/is-malloc-thread-safe 中的人都说 malloc 是安全的，但是似乎只是在 pthread 的时候是安全的
   - 从 musl 的库中可以清楚的检查到对于 clone 形成的多线程，malloc 不是安全的，但是对于 glibc 的 malloc 过于复杂，暂时不看
 
-## 浮点
-- 似乎是可以参考的 musl 库:
-  - https://github.com/xen0n/musl/commit/f8ec0dbd4b08456cda7a38ee4a34924665afa69a
-- 参考一下 glibc 的内容
-  - [x] 编译验证测试的环境搭建起来
-- [ ] 内核环境的重新搭建起来
-- 搞一个 QEMU 环境来将之前的内核运行一下什么的啊
-- [ ] how floating point exception handle
-  - only related with `errno` or related with hardware?
-- [ ] actually, we need to port the `memset` `strchr` and related function, but Linux kernel implemented them.
+### week_alias 和静态链接
+在分析 malloc 的原理的时候，我发现当在静态链接的时候，使用 free 与否会导致实际上调用的 malloc 不同
+- https://stackoverflow.com/questions/23079997/override-weak-symbols-in-static-library
+- https://stackoverflow.com/questions/51656838/attribute-weak-and-static-libraries
+- try to use ./week_alias to verify the ideas
+
+### a_ctz_32
+- https://en.wikipedia.org/wiki/De_Bruijn_sequence
+- https://www.cnblogs.com/brighthoo/p/10649588.html
+
+
+## fabs 的定义
 
 ```c
 #define _GNU_SOURCE
@@ -326,96 +353,9 @@ int main(int argc, char **argv) {
   printf("%lf", log10(x));
 }
 ```
+这个代码编译之后，反汇编之后，我才意识到 fabs 是 gcc 的 built-in 函数，可以直接生成的对应的指令。
 
-### [ ] sqrtf and sqrt
-https://stackoverflow.com/questions/57058848/glibc-uses-kernel-functions
-
-```c
->>> br sqrt
-Breakpoint 1 at 0x120000a38: file ./w_sqrt_template.c, line 33.
->>> br sqrtf
-Breakpoint 2 at 0x120000a6c: file ./w_sqrt_template.c, line 33.
-```
-actually, they are defined by the macros.
-
-so,  ./w_sqrt_template.c is the source codeelescope in future for configs. adding _ in front helps with duplication of same file name. ￼
-```c
-   0x0000000120000878 <+84>:    bl      76(0x4c) # 0x1200008c4 <__sqrt>
-   0x000000012000087c <+88>:    movfr2gr.d      $r5,$f0
-   0x0000000120000880 <+92>:    pcaddu12i       $r4,82(0x52)
-   0x0000000120000884 <+96>:    addi.d  $r4,$r4,1528(0x5f8)
-   0x0000000120000888 <+100>:   bl      27348(0x6ad4) # 0x12000735c <__printf>
-   0x000000012000088c <+104>:   fld.d   $f0,$r22,-24(0xfe8)
-   0x0000000120000890 <+108>:   fcvt.s.d        $f0,$f0
-   0x0000000120000894 <+112>:   bl      64(0x40) # 0x1200008d4 <__sqrtf>
-```
-
-the source code is generated dynamically
-
-### Questions
-- [ ] the c language syntax?
-  - copy the code directly will cause the
-```c
-/* Declare sqrt for use within GLIBC.  Compilers typically inline sqrt as a
-   single instruction.  Use an asm to avoid use of PLTs if it doesn't.  */
-float (sqrtf) (float) asm ("__ieee754_sqrtf");
-double (sqrt) (double) asm ("__ieee754_sqrt");
-```
-- [ ] i don't know why the dynamic library contains the symbols
-- [x] sqrt and sqrtf not found
-  - link with -lm
-
-```c
-/*
-➜  ~/core/glibc git:(master) ✗ make
-/usr/bin/ld: /tmp/ccXBnRac.o: in function `L0':
-test.c:(.text+0xe8): undefined reference to `sqrt'
-/usr/bin/ld: test.c:(.text+0x100): undefined reference to `sqrtf'
-collect2: error: ld returned 1 exit status
-make: *** [Makefile:12: all] Error 1
-```
-- [ ]  https://stackoverflow.com/questions/10412684/how-to-compile-my-own-glibc-c-standard-library-from-source-and-use-it#
-  - [ ] what's meaning of start file
-  - [ ] read the musl's spec files
-
-
-### fabs
-- [ ] I don't know what's `_Float32`
-  - [ ] what's the purpose of fabsf32 fabsf64  fabsf32x and fabsf64x
-
-```c
-#define _GNU_SOURCE
-#include <math.h>
-#include <stdio.h>
-
-double g(double x) { return __builtin_fabs(x); }
-
-int main(int argc, char **argv) {
-  double x = -10;
-  double y = 1.0;
-  double z = 1.0;
-  // inline asm
-  printf("%lf\n", fabs(x));
-  printf("%f\n", fabsf(x));
-  printf("%Lf\n", fabsl(x));
-
-  printf("%lf\n", (double)fabsf32(x));  // 2
-  printf("%lf\n", (double)fabsf64(x)); // 1
-  printf("%lf\n", (double)fabsf32x(x)); // 1
-  printf("%lf\n", (double)fabsf64x(x)); // 3 // doesn't effect me ?
-}
-```
-- actually, ccls is really cool, next time if you can't find the definition of macros, try to define the macro, the compiler will locate it by complaints
-
-## crt0
-- crt/crt1.c : used by static library
-- crt/rcrt1.c : dynamic library
-
-in `src/env/__libc_start_main.c` we understand how
-[Auxiliary Vector](https://www.gnu.org/software/libc/manual/html_node/Auxiliary-Vector.html)
-implemented in libc
-
-## exit
+## 当 exit 的时候会发生什么
 ```c
 _Noreturn void exit(int code)
 {
@@ -425,14 +365,15 @@ _Noreturn void exit(int code)
 	_Exit(code);
 }
 ```
-1. atexit : https://stackoverflow.com/questions/25115612/whats-the-scenario-to-use-atexit-function
-2. destructor: https://stackoverflow.com/questions/6477494/do-global-dtors-aux-and-do-global-ctors-aux
+1. [atexit 注册的 hook 执行](https://stackoverflow.com/questions/25115612/whats-the-scenario-to-use-atexit-function)
+2. [destructor 被执行](https://stackoverflow.com/questions/6477494/do-global-dtors-aux-and-do-global-ctors-aux)
   - https://gcc.gnu.org/onlinedocs/gcc-4.7.0/gcc/Function-Attributes.html
 
-关于 exit 和 abort 的区别:
-- https://stackoverflow.com/questions/397075/what-is-the-difference-between-exit-and-abort
+[exit 和 abort 的区别](https://stackoverflow.com/questions/397075/what-is-the-difference-between-exit-and-abort)
+- exit 会执行上面的两种 hook，但是 abort 不会
+- abort 是通过发送 SIGABRT 信号的，这意味着你实际上可以给这个信号注册 handler 的
 
-## locks
+## [ ] musl 如何实现 locks
 ```c
 void __unlock(volatile int *l)
 {
@@ -443,9 +384,17 @@ void __unlock(volatile int *l)
 		}
 	}
 }
+
+static volatile int lock[1];
+
+static inline void __wake(volatile void *addr, int cnt, int priv)
+{
+	if (priv) priv = FUTEX_PRIVATE;
+	if (cnt<0) cnt = INT_MAX;
+	__syscall(SYS_futex, addr, FUTEX_WAKE|priv, cnt) != -ENOSYS ||
+	__syscall(SYS_futex, addr, FUTEX_WAKE, cnt);
+}
 ```
-- [ ] 本来以为是存在 unlock 的时候，那么前面一定有 lock，实际上不是如此
-  - [ ] 这个 unlock 操作没看懂
 
 ## GNU_SOURCE
 - what's GNU_SOURCE : https://stackoverflow.com/questions/5582211/what-does-define-gnu-source-imply/5583764
@@ -453,137 +402,41 @@ void __unlock(volatile int *l)
 
 - https://stackoverflow.com/questions/48332332/what-does-define-posix-source-mean
 
-## errno
-我无法理解 errno 居然是架构相关的:
-- [ ] 而且 signal 的部分定义 也是架构相关的
+## gcc can optimize fprintf to fwrite
 
-## [ ] undefined reference to fwrite
-ld: x86tomips-options.c:(.text+0x534): undefined reference to `fwrite`
+## crt0
+- crt/crt1.c : 静态链接的时候使用
+- crt/rcrt1.c : 动态链接的时候使用
 
+在 `src/env/__libc_start_main.c` 可以分析出来 [Auxiliary Vector](https://www.gnu.org/software/libc/manual/html_node/Auxiliary-Vector.html) 是如何
+在用户态如何构建的。
+
+## glibc
+### bits/loongarch/strnlen.S
+sysdeps/x86_64/strnlen.S 中存在
 ```c
-#include <stdbool.h>
-#include <stdio.h>
-#include <stdlib.h>
-
-#define lsassertm(cond, ...)                                                   \
-  do {                                                                         \
-    if (!(cond)) {                                                             \
-      fprintf(stderr, "\033[31m assertion failed in <%s> %s:%d \033[m",        \
-              __FUNCTION__, __FILE__, __LINE__);                               \
-      fprintf(stderr, __VA_ARGS__);                                            \
-      abort();                                                                 \
-    }                                                                          \
-  } while (0)
-
-int main(int argc, char *argv[]) {
-  lsassertm(false, "no");
-  return 0;
-}
+weak_alias (__strnlen, strnlen);
+libc_hidden_builtin_def (strnlen)
 ```
+但是，显然这是 c 语言的语法，为什么会出现在 .S 中，这是
+因为 include/libc-symbols.h 对于 weak 分别定义了两种情况。
 
-```mk
-a:
-	gcc -c -nostdlib a.c  -o a.o
-	ld a.o
-```
-It seems that fprintf will be optimized into fwrite
 
-## undefined extenddftf2
-this can fix by link with /usr/lib/gcc/loongarch64-linux-gnu/8/libgcc.a
+## TODO
+- 实际上，程序员自有修养的很好的分析了一下 crt 相关的工作，值得深入分析。
+- 没有在 gcc 中找到将 fprintf 优化为 fwrite 的代码
+- 没有仔细分析为什么 Makefile 中处理 .s 和 .S 的区别是什么
+- lock 中很多细节
+  - 为什么要定义为数组
+  - C 中 volatile 的作用
+  - 为什么使用 INT_MIN
 
-https://gcc.gnu.org/onlinedocs/gccint/Soft-float-library-routines.html
+## 一些奇怪的事情
+- errno 和 signal 的编号都是和架构相关的
 
-```txt
-ld: /home/loongson/core/bmbt/build_[loongson]_[]_[]/libc/src/stdio/vfprintf.o: in function `.L5':
-vfprintf.c:(.text+0x2e4): undefined reference to `__extenddftf2'
-ld: /home/loongson/core/bmbt/build_[loongson]_[]_[]/libc/src/stdio/vfprintf.o: in function `.L54':
-vfprintf.c:(.text+0x7fc): undefined reference to `__netf2'
-ld: /home/loongson/core/bmbt/build_[loongson]_[]_[]/libc/src/stdio/vfprintf.o: in function `.L52':
-vfprintf.c:(.text+0x93c): undefined reference to `__addtf3'
-ld: vfprintf.c:(.text+0x96c): undefined reference to `__netf2'
-ld: /home/loongson/core/bmbt/build_[loongson]_[]_[]/libc/src/stdio/vfprintf.o: in function `.L69':
-vfprintf.c:(.text+0xa24): undefined reference to `__multf3'
-ld: /home/loongson/core/bmbt/build_[loongson]_[]_[]/libc/src/stdio/vfprintf.o: in function `.L68':
-vfprintf.c:(.text+0xab4): undefined reference to `__subtf3'
-ld: vfprintf.c:(.text+0xaf0): undefined reference to `__addtf3'
-ld: /home/loongson/core/bmbt/build_[loongson]_[]_[]/libc/src/stdio/vfprintf.o: in function `.L70':
-vfprintf.c:(.text+0xb60): undefined reference to `__addtf3'
-ld: vfprintf.c:(.text+0xb9c): undefined reference to `__subtf3'
-ld: /home/loongson/core/bmbt/build_[loongson]_[]_[]/libc/src/stdio/vfprintf.o: in function `.LBB4':
-vfprintf.c:(.text+0xc6c): undefined reference to `__fixtfsi'
-ld: vfprintf.c:(.text+0xcbc): undefined reference to `__floatsitf'
-ld: vfprintf.c:(.text+0xce4): undefined reference to `__subtf3'
-ld: vfprintf.c:(.text+0xd1c): undefined reference to `__multf3'
-ld: vfprintf.c:(.text+0xd6c): undefined reference to `__netf2'
-ld: /home/loongson/core/bmbt/build_[loongson]_[]_[]/libc/src/stdio/vfprintf.o: in function `.L74':
-vfprintf.c:(.text+0xdbc): undefined reference to `__netf2'
-ld: /home/loongson/core/bmbt/build_[loongson]_[]_[]/libc/src/stdio/vfprintf.o: in function `.L80':
-vfprintf.c:(.text+0x1030): undefined reference to `__netf2'
-ld: vfprintf.c:(.text+0x106c): undefined reference to `__multf3'
-ld: /home/loongson/core/bmbt/build_[loongson]_[]_[]/libc/src/stdio/vfprintf.o: in function `.L85':
-vfprintf.c:(.text+0x1100): undefined reference to `__fixunstfsi'
-ld: vfprintf.c:(.text+0x1128): undefined reference to `__floatunsitf'
-ld: vfprintf.c:(.text+0x1150): undefined reference to `__subtf3'
-ld: vfprintf.c:(.text+0x1188): undefined reference to `__multf3'
-ld: vfprintf.c:(.text+0x11b8): undefined reference to `__netf2'
-ld: /home/loongson/core/bmbt/build_[loongson]_[]_[]/libc/src/stdio/vfprintf.o: in function `.L116':
-vfprintf.c:(.text+0x17b4): undefined reference to `__addtf3'
-ld: /home/loongson/core/bmbt/build_[loongson]_[]_[]/libc/src/stdio/vfprintf.o: in function `.L121':
-vfprintf.c:(.text+0x18d8): undefined reference to `__addtf3'
-ld: vfprintf.c:(.text+0x18f4): undefined reference to `__netf2'
-```
-
-```sh
-objdump -ald build_\[loongson\]_\[\]_\[\]/src/main.o > b.txt
-```
-
-## asm clobber
-
-```c
-#include <assert.h>  // assert
-#include <fcntl.h>   // open
-#include <limits.h>  // INT_MAX
-#include <math.h>    // sqrt
-#include <stdbool.h> // bool false true
-#include <stdio.h>
-#include <stdlib.h> // malloc sort
-#include <string.h> // strcmp ..
-#include <unistd.h> // sleep
-
-#define __SYSCALL_CLOBBERS                                                     \
-  "$t0", "$t1", "$t2", "$t3", "$t4", "$t5", "$t6", "$t7", "$t8", "memory"
-
-long hello(long arg0, long arg1, long arg2, long arg3,
-                                  long arg4, long arg5, long arg6,
-                                  long number) {
-  // printf("hello %ld\n", number);
-  return 77;
-}
-
-long __syscall0(long number) {
-  long int _sys_result;
-
-  {
-    register long int __a7 asm("$a7") = number;
-    register long int __a0 asm("$a0");
-    __asm__ volatile("bl hello" "\n\t"
-                     : "=r"(__a0)
-                     : "r"(__a7)
-                     : __SYSCALL_CLOBBERS);
-    _sys_result = __a0;
-  }
-  asm(
-    "move $ra, $zero \n\t"
-  );
-  // printf("huxueshi:%s \n", __FUNCTION__);
-  return _sys_result;
-}
-
-int main(int argc, char *argv[]) {
-  printf("huxueshi:%s %ld\n", __FUNCTION__, __syscall0(12));
-  return 0;
-}
-```
+[^1]: https://stackoverflow.com/questions/68123943/advantages-of-mmap-over-sbrk
+[^2]: https://0xax.gitbooks.io/linux-insides/content/SysCall/linux-syscall-2.html
+[^3]: https://gcc.gnu.org/onlinedocs/gccint/Soft-float-library-routines.html
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

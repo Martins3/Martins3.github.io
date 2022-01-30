@@ -15,3 +15,5 @@ https://github.com/vosen/ZLUDA : ZLUDA is a drop-in replacement for CUDA on Inte
 
 - https://github.com/Tony-Tan/CUDA_Freshman : 中文 cuda 教程，使用腾讯云做实验
 - https://github.com/stackgl/shader-school : 在网页中运行的 GLSL
+
+- https://github.com/parallel101/course : b 站上上课，每节课都是都是存在配套作业，非常有必要学一下
