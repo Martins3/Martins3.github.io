@@ -8,3 +8,12 @@ https://github.com/tuna/thuthesis
 
 ## Github Action
 https://github.com/xu-cheng/latex-action
+
+## vim
+如果想要书写中文，需要修改默认的 latex engine，在 ~/.latexmkrc 中设置:
+```txt
+$pdf_mode = 5;
+```
+参考:
+- https://tex.stackexchange.com/questions/429274/chinese-on-mactex2018-simple-example
+- https://tex.stackexchange.com/questions/501492/how-do-i-set-xelatex-as-my-default-engine

@@ -3,25 +3,15 @@ https://zhuanlan.zhihu.com/p/123989641
 
 https://vedipen.com/2020/linux-bash-vs-windows-powershell/
 
-https://geekgo.tech/archive : 这个人的blog 还挺有意思的
-
 https://gist.github.com/premek/6e70446cfc913d3c929d7cdbfe896fef
 
 https://redandblack.io/blog/2020/bash-prompt-with-updating-time/ : 在bash 中间加入时间 prompt 的功能
-
 https://wangdoc.com/bash/index.html : 简单的教程
-
 https://blog.balthazar-rouberol.com/shell-productivity-tips-and-tricks.html : 高效和 shell 交互
 
 https://www.dolthub.com/blog/2020-03-23-testing-dolt-bats/ : 使用 bash 做集成测试
 
-https://github.com/wfxr/forgit : 功能强大，但是只有 200行，的确值的关注
 https://github.com/mydzor/bash2048/blob/master/bash2048.sh : 300行的2048
-
-
-https://github.com/koalaman/shellcheck : 虽然不能集成到 vim 中间，但是其提供一些错误案例，而且可以静态使用的
-
-https://github.com/alexanderepstein/Bash-Snippets : 可以学习，也可以当做工具
 https://notes.pythonic.life/3-Linux/Bash/bash%E7%9A%84%E9%AB%98%E7%BA%A7%E6%8A%80%E5%B7%A7.html : some trick / snippets of bash
 
 > 且称之为三大圣经
@@ -38,10 +28,6 @@ https://samizdat.dev/help-message-for-shell-scripts/ : 使用 sed 输出 help
 
 https://stackoverflow.com/questions/669452/is-double-square-brackets-preferable-over-single-square-brackets-in-ba : 为什么条件是 sed
 
-
-## bash function
-1. () 和　{} 的区别是什么 ?
-
 ## function parameter
 https://unix.stackexchange.com/questions/129072/whats-the-difference-between-and
 https://stackoverflow.com/questions/12314451/accessing-bash-command-line-args-vs
@@ -52,20 +38,6 @@ https://stackoverflow.com/questions/12314451/accessing-bash-command-line-args-vs
     - `"$@"` : 将参数，按照 quote 逐个拆分
 
 ## 对于数组的循环为什么这么复杂啊 !
-> TODO 理解一下每一个符号的含义
-for i in "${arrayName[@]}"; do
-  echo $i
-done
-
-> TODO 而且 if 的功能也是诡异的
-> 2 后面的空格不可以省略，否则GG
-
-if [[ $# != 2 ]]
-then
-  echo usage : test.sh fio file name
-fi
-
-
 
 https://stackoverflow.com/questions/35296169/bash-empty-string-command
 > 含有对于 [[ ]] 的解释
@@ -205,35 +177,20 @@ echo "J8 fuck"
 # 命令缩写
 su:switch user 切换用户
 ps: process status(进程状态，类似于windows的任务管理器) 常用参数：－auxf
-ps -auxf 显示进程状态
-df: disk free 其功能是显示磁盘可用空间数目信息及空间结点信息。换句话说，就是报告在任何安装的设备或目录中，还剩多少自由的空间。
-pwd：Print working directory
-su：Swith user
-cd：Change directory
-ls：List files
-ps：Process Status
-rmdir：Remove directory
-mkfs: Make file system
 fsck：File system check
 cat: Concatenate
 uname: Unix name
 df: Disk free
 du: Disk usage
-fg: Foreground
-bg: Background
-chown: Change owner
-chgrp: Change group
-umount: Unmount
 dd: 本来应根据其功能描述“Convert an copy”命名为“cc”，但“cc”已经被用以代表“C Complier”，所以命名为“dd”
 tar：Tape archive
 ldd：List dynamic dependencies
 文件结尾的"rc"（如.bashrc、.xinitrc等）：Resource configuration
-Knnxxx / Snnxxx（位于rcx.d目录下）：K（Kill）；S(Service)；nn（执行顺序号）；xxx（服务标识）
 .a（扩展名a）：Archive，static library
 .so（扩展名so）：Shared object，dynamically linked library
 .o（扩展名o）：Object file，complied result of C/C++ source file
 RPM：Red hat package manager
-dpkg：Debian package manager
+dpkg: Debian package manager
 apt：Advanced package tool（Debian或基于Debian的发行版中提供）
 
 bin = BINaries #下面的是一些二进制程序文件
@@ -246,149 +203,144 @@ bin = BINaries #下面的是一些二进制程序文件
 /usr = Unix Shared Resources
 /var = VARiable ?
 /boot=boot #下面的是开机启动文件
-FIFO = First In, First Out
-GRUB = GRand Unified Bootloader
-IFS = Internal Field Seperators
-LILO = LInux LOader
-PHP = Personal Home Page Tools = PHP Hypertext Preprocessor
-PS = Prompt String
-Perl = "Pratical Extraction and Report Language" = "Pathologically Eclectic Rubbish Lister"
-Python 得名于电视剧Monty Python's Flying Circus
-Tcl = Tool Command Language
-Tk = ToolKit
-VT = Video Terminal
-YaST = Yet Another Setup Tool
+fifo = first in, first out
+grub = grand unified bootloader
+ifs = internal field seperators
+lilo = linux loader
+php = personal home page tools = php hypertext preprocessor
+ps = prompt string
+perl = "pratical extraction and report language" = "pathologically eclectic rubbish lister"
+python 得名于电视剧monty python's flying circus
+tcl = tool command language
+tk = toolkit
+vt = video terminal
+yast = yet another setup tool
 apache = "a patchy" server
-apt = Advanced Packaging Tool
 ar = archiver
 as = assembler
-awk = "Aho Weiberger and Kernighan" 三个作者的姓的第一个字母
-bash = Bourne Again SHell
-bc = Basic (Better) Calculator
-bg = BackGround
-biff = 作者Heidi Stettner在U.C.Berkely养的一条狗,喜欢对邮递员汪汪叫。
-cal = CALendar
-cat = CATenate
-cd = Change Directory
-chgrp = CHange GRouP
-chmod = CHange MODe
-chown = CHange OWNer
-chsh = CHange SHell
+awk = "aho weiberger and kernighan" 三个作者的姓的第一个字母
+bash = bourne again shell
+bc = basic (better) calculator
+bg = background
+biff = 作者heidi stettner在u.c.berkely养的一条狗,喜欢对邮递员汪汪叫。
+cal = calendar
+cat = catenate
+cd = change directory
+chgrp = change group
+chmod = change mode
+chown = change owner
+chsh = change shell
 cmp = compare
-cobra = Common Object Request Broker Architecture
+cobra = common object request broker architecture
 comm = common
-cp = CoPy
-cpio = CoPy In and Out
-cpp = C Pre Processor
-cron = Chronos 希腊文时间
-cups = Common Unix Printing System
-cvs = Current Version System
-daemon = Disk And Execution MONitor
-dc = Desk Calculator
-dd = Disk Dump
-df = Disk Free
-diff = DIFFerence
+cp = copy
+cpio = copy in and out
+cpp = c pre processor
+cron = chronos 希腊文时间
+cups = common unix printing system
+cvs = current version system
+daemon = disk and execution monitor
+dc = desk calculator
+dd = disk dump
+diff = difference
 dmesg = diagnostic message
-du = Disk Usage
+du = disk usage
 ed = editor
-egrep = Extended GREP
-elf = Extensible Linking Format
-elm = ELectronic Mail
-emacs = Editor MACroS
-eval = EVALuate
-ex = EXtended
-exec = EXECute
+egrep = extended grep
+elf = extensible linking format
+elm = electronic mail
+emacs = editor macros
+eval = evaluate
+ex = extended
+exec = execute
 fd = file descriptors
-fg = ForeGround
-fgrep = Fixed GREP
+fg = foreground
+fgrep = fixed grep
 fmt = format
-fsck = File System ChecK
-fstab = FileSystem TABle
+fsck = file system check
+fstab = filesystem table
 
-fvwm = Fuck Virtual Window Manager
+fvwm = fuck virtual window manager
 
-gawk = GNU AWK
-gpg = GNU Privacy Guard
-groff = GNU troff
-hal = Hardware Abstraction Layer
-joe = Joe's Own Editor
-ksh = Korn SHell
-lame = Lame Ain't an MP3 Encoder
-lex = LEXical analyser
-lisp = LISt Processing = Lots of Irritating Superfluous Parentheses
-lpr = Line PRint
-lsof = LiSt Open Files
-m4 = Macro processor Version 4
-man = MANual pages
-mawk = Mike Brennan's AWK
-mc = Midnight Commander
-mkfs = MaKe FileSystem
-mknod = MaKe NODe
-motd = Message of The Day
-mozilla = MOsaic GodZILLa
-mtab = Mount TABle
-mv = MoVe
-nano = Nano's ANOther editor
-nawk = New AWK
-nl = Number of Lines
+gawk = gnu awk
+gpg = gnu privacy guard
+groff = gnu troff
+hal = hardware abstraction layer
+joe = joe's own editor
+ksh = korn shell
+lame = lame ain't an mp3 encoder
+lex = lexical analyser
+lisp = list processing = lots of irritating superfluous parentheses
+lpr = line print
+lsof = list open files
+m4 = macro processor version 4
+man = manual pages
+mawk = mike brennan's awk
+mc = midnight commander
+mkfs = make filesystem
+mknod = make node
+motd = message of the day
+mozilla = mosaic godzilla
+mtab = mount table
+mv = move
+nano = nano's another editor
+nawk = new awk
+nl = number of lines
 nm = names
-nohup = No HangUP
-nroff = New ROFF
-od = Octal Dump
-passwd = PASSWorD
+nohup = no hangup
+nroff = new roff
+od = octal dump
+passwd = password
 pg = pager
-pico = PIne's message COmposition editor
-pine = "Program for Internet News & Email" = "Pine is not Elm"
-pirntcap = PRINTer CAPability
-popd = POP Directory
+pico = pine's message composition editor
+pine = "program for internet news & email" = "pine is not elm"
+pirntcap = printer capability
+popd = pop directory
 pr = pre
 pty = pseudo tty
-pushd = PUSH Directory
-pwd = Print Working Directory
+pushd = push directory
+pwd = print working directory
 rc = runcom = run command, rc还是plan9的shell
-rev = REVerse
-rm = ReMove
-rn = Read News
-roff = RunOFF
-rpm = RPM Package Manager = RedHat Package Manager
-rsh, rlogin, rvim中的r = Remote
-rxvt = ouR XVT
+rev = reverse
+rm = remove
+rn = read news
+roff = runoff
+rpm = rpm package manager = redhat package manager
+rsh, rlogin, rvim中的r = remote
+rxvt = our xvt
 seamoneky = 我
-sed = Stream EDitor
-seq = SEQuence
-shar = SHell ARchive
-slrn = S-Lang rn
-ssh = Secure SHell
-ssl = Secure Sockets Layer
-stty = Set TTY
-su = Substitute User
-svn = SubVersioN
-tar = Tape ARchive
-tcsh = TENEX C shell
-telnet = TEminaL over Network
+sed = stream editor
+seq = sequence
+shar = shell archive
+slrn = s-lang rn
+ssh = secure shell
+ssl = secure sockets layer
+stty = set tty
+su = substitute user
+svn = subversion
+tar = tape archive
+tcsh = tenex c shell
+telnet = teminal over network
 termcap = terminal capability
 terminfo = terminal information
 tex = τέχνη的缩写，希腊文art
 tr = traslate
-troff = Typesetter new ROFF
-tsort = Topological SORT
-tty = TeleTypewriter
-twm = Tom's Window Manager
-tz = TimeZone
-udev = Userspace DEV
-ulimit = User's LIMIT
-umask = User's MASK
-uniq = UNIQue
+troff = typesetter new roff
+tsort = topological sort
+tty = teletypewriter
+twm = tom's window manager
+udev = userspace dev
+umask = user's mask
 wall = write all
-wine = WINE Is Not an Emulator
-xargs = eXtended ARGuments
-xdm = X Display Manager
-xlfd = X Logical Font Description
-xmms = X Multimedia System
-xrdb = X Resources DataBase
-xwd = X Window Dump
+wine = wine is not an emulator
+xargs = extended arguments
+xdm = x display manager
+xlfd = x logical font description
+xmms = x multimedia system
+xrdb = x resources database
+xwd = x window dump
 yacc = yet another compiler compiler
-Fish = the Friendly Interactive SHell
-su = Switch User
-MIME = Multipurpose Internet Mail Extensions
-ECMA = European Computer Manufacturers Association
+fish = the friendly interactive shell
+su = switch user
+mime = multipurpose internet mail extensions
+ecma = european computer manufacturers association
