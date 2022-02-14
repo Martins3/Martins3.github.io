@@ -28,45 +28,11 @@ https://samizdat.dev/help-message-for-shell-scripts/ : 使用 sed 输出 help
 
 https://stackoverflow.com/questions/669452/is-double-square-brackets-preferable-over-single-square-brackets-in-ba : 为什么条件是 sed
 
-## function parameter
-https://unix.stackexchange.com/questions/129072/whats-the-difference-between-and
-https://stackoverflow.com/questions/12314451/accessing-bash-command-line-args-vs
-
-- 当没有 quote 的时候，没有什么区别，都是按照空格进行拆分的
-- 当 quote :
-    - `"$*"` : 将所有的参数作为一个字符串
-    - `"$@"` : 将参数，按照 quote 逐个拆分
-
-## 对于数组的循环为什么这么复杂啊 !
-
-https://stackoverflow.com/questions/35296169/bash-empty-string-command
-> 含有对于 [[ ]] 的解释
-
-
-
-
-# 常用命令
-
-## basic
-
-
-
-
-## stream pipe and lists
-3. 2> standrad error
-4. $> merge output and error
-
-https://stackoverflow.com/questions/818255/in-the-shell-what-does-21-mean
-
-
 ## get help
 1. whatis
 2. tldr
 3. cheat.sh
 4. apropos 模糊查询man
-
-## 终端上编辑
-
 
 ## process
 1. ps top htop
@@ -108,72 +74,6 @@ https://stackoverflow.com/questions/818255/in-the-shell-what-does-21-mean
 1. zip – Package and compress files
 1. rsync – Remote file and directory synchronization
 
-
-## 还有四章没有看
-
-
-# bash script
-一个应该是简单易懂的教程
-https://ryanstutorials.net/bash-scripting-tutorial/bash-variables.php
-
-
-## snippets
-1. change file extension
-```
-for file in *.html; do
-    mv "$file" "$(basename "$file" .html).txt"
-done
-```
-
-2. 修复强制关机导致的磁盘错误
-```
-fsck -y /dev/sdb1
-```
-
-3. 处理路径的缩写
-```
-STR="/path/to/foo.cpp"
-echo ${STR%.cpp}    # /path/to/foo
-echo ${STR##*.}     # cpp (extension)
-echo ${STR##*/}     # foo.cpp (basepath)
-```
-
-## 资源和工具
-1. https://explainshell.com/
-2. https://wangchujiang.com/linux-command/
-3.
-
-## 具体问题的链接
-1. [obscure but useful](https://github.com/jlevy/the-art-of-command-line/blob/master/README.md)
-1. https://askubuntu.com/questions/939294/difference-between-let-expr-and
-1. https://ss64.com/bash/syntax-execute.html
-2. [`$*`和`$@`的区别](https://stackoverflow.com/questions/2761723/what-is-the-difference-between-and-in-shell-scripts)
-
-
-# 一些链接
-1. [Bash hand book](https://github.com/denysdovhan/bash-handbook)
-1. [Bash guide](https://github.com/Idnan/bash-guide)
-1. [Pure bash bible](https://github.com/dylanaraps/pure-bash-bible)
-1. [The art of command line](https://github.com/jlevy/the-art-of-command-line/blob/master/README-zh.md#%E4%BB%85%E9%99%90-os-x-%E7%B3%BB%E7%BB%9F)
-
-
-# 问题
-如下代码段在./lan/bash/a.sh 的形式和直接复制粘贴的方式执行结果不同。
-```
-< /home/shen/Core/Vn/Readme-Template.md | while read line; do
-  echo $line
-done
-```
-# 双引号的作用是什么
-echo J8 fuck
-echo "J8 fuck"
-并没有什么区别
-
-# 各种括号 的作用是什么
-{}
-()
-(())
-[[]]
 # 命令缩写
 su:switch user 切换用户
 ps: process status(进程状态，类似于windows的任务管理器) 常用参数：－auxf
@@ -308,7 +208,6 @@ roff = runoff
 rpm = rpm package manager = redhat package manager
 rsh, rlogin, rvim中的r = remote
 rxvt = our xvt
-seamoneky = 我
 sed = stream editor
 seq = sequence
 shar = shell archive
