@@ -1,8 +1,6 @@
 编写可靠 bash 脚本的一些技巧 - 腾讯技术工程的文章 - 知乎
 https://zhuanlan.zhihu.com/p/123989641
 
-https://vedipen.com/2020/linux-bash-vs-windows-powershell/
-
 https://gist.github.com/premek/6e70446cfc913d3c929d7cdbfe896fef
 
 https://redandblack.io/blog/2020/bash-prompt-with-updating-time/ : 在bash 中间加入时间 prompt 的功能
@@ -16,7 +14,6 @@ https://notes.pythonic.life/3-Linux/Bash/bash%E7%9A%84%E9%AB%98%E7%BA%A7%E6%8A%8
 
 > 且称之为三大圣经
 
-https://github.com/jlevy/the-art-of-command-line : **重点** 其实 bash 和 command line 可以分为两个部分讨论
 https://github.com/learnbyexample/Command-line-text-processing : 文本处理，终于来了
 https://github.com/dylanaraps/pure-bash-bible
 

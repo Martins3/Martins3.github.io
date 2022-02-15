@@ -21,5 +21,15 @@ https://refrf.shreyasminocha.me/
 |    grep    |             |
 |    egrep   |             |
 
+现在根本看不懂 regex 的语法了:
+https://github.com/dylanaraps/pure-bash-bible#use-regex-on-a-string
+```sh
+regex() {
+    # Usage: regex "string" "regex"
+    [[ $1 =~ $2 ]] && printf '%s\n' "${BASH_REMATCH[1]}"
+}
+```
+
+regex "      hello" '^\s*(.*)'
 ## quesion
 1. About different version, how many version ? The difference between them ?
