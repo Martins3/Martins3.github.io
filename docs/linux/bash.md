@@ -7,18 +7,15 @@
   * [基本符号](#基本符号)
   * [扩展模式](#扩展模式)
   * [here doc 和 here string](#here-doc-和-here-string)
-  * [变量的默认值](#变量的默认值)
+  * [变量](#变量)
   * [字符串](#字符串)
   * [数组](#数组)
   * [eval 和 exec 的区别](#eval-和-exec-的区别)
   * [算术运算](#算术运算)
   * [[ ] xargs](#-xargs)
-  * [bible](#bible)
   * [重定向](#重定向)
   * [资源和工具](#资源和工具)
-  * [具体问题的链接](#具体问题的链接)
 * [一些链接](#一些链接)
-  * [一些高级技术](#一些高级技术)
   * [一些资源](#一些资源)
   * [一些博客](#一些博客)
 
@@ -27,6 +24,7 @@
 ## 问题
 - [ ] 学会使用 eval
 - [ ] 类似 $SHELL 之外的还有什么定义好的全局变量
+- 学会使用 dirname 和 basename
 
 ## 命令行参数
 1. -n 参数可以取消末尾的回车符
@@ -66,6 +64,17 @@ echo a; ls
   - `@(pattern-list)`：只匹配一个模式。
   - `!(pattern-list)`：匹配给定模式以外的任何内容。
 
+只有打开 globstar 的时候才是递归的遍历所有的，
+否则只是遍历部分。
+```plain
+shopt -s globstar
+for file in "$(pwd)"/**; do
+    printf '%s\n' "$file"
+done
+shopt -u globstar
+```
+
+
 ## here doc 和 here string
 ```sh
 this=aaa
@@ -88,7 +97,22 @@ LUA
 ```sh
 cat <<< "fuck"
 ```
-## 变量的默认值
+## 变量
+- [indirect expansion](https://unix.stackexchange.com/questions/41292/variable-substitution-with-an-exclamation-mark-in-bash)
+```sh
+hello_world="value"
+# Create the variable name.
+var="world"
+ref="hello_$var"
+# Print the value of the variable name stored in 'hello_$var'.
+printf '%s\n' "${!ref}"
+```
+
+```sh
+var="world"
+declare "hello_$var=value"
+printf '%s\n' "$hello_world"
+```
 
 ## 字符串
 ```sh
@@ -165,8 +189,6 @@ exec 继续执行程序
 git grep -l 'apples' | xargs sed -i 's/apples/oranges/g'
 - https://stackoverflow.com/questions/6758963/find-and-replace-with-sed-in-directory-and-sub-directories
 
-## bible
-[Pure bash bible](https://github.com/dylanaraps/pure-bash-bible)
 
 ## 重定向
 参考[^1]
@@ -180,15 +202,9 @@ git grep -l 'apples' | xargs sed -i 's/apples/oranges/g'
 1. https://explainshell.com/
 2. https://wangchujiang.com/linux-command/
 
-## 具体问题的链接
-1. [obscure but useful](https://github.com/jlevy/the-art-of-command-line/blob/master/README.md)
-
 # 一些链接
 1. [The art of command line](https://github.com/jlevy/the-art-of-command-line/blob/master/README-zh.md#%E4%BB%85%E9%99%90-os-x-%E7%B3%BB%E7%BB%9F)
-
-
-## 一些高级技术
-- [indirect expansion](https://unix.stackexchange.com/questions/41292/variable-substitution-with-an-exclamation-mark-in-bash)
+2. [Pure bash bible](https://github.com/dylanaraps/pure-bash-bible)
 
 ## 一些资源
 - [A utility tool powered by fzf for using git interactively](https://github.com/wfxr/forgit)
