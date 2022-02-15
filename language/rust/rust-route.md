@@ -91,7 +91,7 @@ fn main() {
     let mut contacts = HashMap::new();
     contacts.insert(1, Me{age: 1, name: 2});
 
-    for (contact, &number) in contacts.iter() { 
+    for (contact, &number) in contacts.iter() {
       // number 后面添加 & 意味着 number 将会出现borrow，需要显示copy Trait
     }
 }
@@ -104,7 +104,7 @@ fn main() {
     1. 多个泛型类型 T U
     2. 对于泛型类型添加限制
     3. 添加生命周期
-    
+
 
 
 ## 函数式
@@ -116,7 +116,7 @@ fn main() {
 
 
 ## 控制流 类型
-1. 
+1.
 ```
 fn foo(x: i32) -> i32 {
     if x == 5 {
@@ -143,7 +143,6 @@ for i in &queue {  // 如果不在此处添加 & ，那么之后即使是 queue.
    2. IterMut - &mut T
    3. Iter - &T
 
-5. 
 ## 并发控制
 为此，我们不会冒忘记释放锁并阻塞互斥器为其它线程所用的风险，因为锁的释放是自动发生的。
 
@@ -159,7 +158,7 @@ for i in &queue {  // 如果不在此处添加 & ，那么之后即使是 queue.
 9. 生命周期使用的位置:
     1. 函数: 返回引用指定生命周期
     2. 结构体: 结构体成员包含的引用
-    3. trait : 
+    3. trait :
 
 10. 泛型使用的位置:
     1. 函数: 泛型函数
@@ -169,10 +168,10 @@ for i in &queue {  // 如果不在此处添加 & ，那么之后即使是 queue.
 11. 泛型和生命周期的描述符都是可以同时使用的, 泛型可以添加限制，限制内容包括生命周期和trait, 但是不可以是结构体
 12. 引用到底是什么东西:
   1. 是实现 borrow, 而不是取地址的作用
-  2. deref 
+  2. deref
   3. 解引用强制多态
 
-13. 非mutable 的不可以ref 为mutable 
+13. 非mutable 的不可以ref 为mutable
 
 14. leetcode 688 中 对于从queue 中间去处元素的操作，
 ```
@@ -216,14 +215,14 @@ for i in &queue {  // 如果不在此处添加 & ，那么之后即使是 queue.
 ```
 > 其中 as_ref 和 take() 的功能类似
 
-23. It turns out that **writing the argument of the closure that way doesn't specify that value is a mutable reference**. 
+23. It turns out that **writing the argument of the closure that way doesn't specify that value is a mutable reference**.
 Instead, it creates a pattern that will be matched against the argument to the closure; |&mut value| means "the argument is a mutable reference,
 but just copy the value it points to into value, please." If we just use |value|, the type of value will be &mut i32 and we can actually mutate the head.
         list.peek_mut().map(|value| *value = 42); // 正确
         list.peek_mut().map(|mut value| *value = 42); // @todo 诡异的警告
         list.peek_mut().map(|&mut value| *value = 42); // 报错，和上述的理论相符
 
-24. Quite simply, a lifetime is the name of a region (~block/scope) of code somewhere in a program. That's it. When a reference is tagged with a lifetime, we're saying that it has to be valid for that entire region. Different things place requirements on how long a reference must and can be valid for. The entire lifetime system is in turn just a constraint-solving system that tries to minimize the region of every reference. 
+24. Quite simply, a lifetime is the name of a region (~block/scope) of code somewhere in a program. That's it. When a reference is tagged with a lifetime, we're saying that it has to be valid for that entire region. Different things place requirements on how long a reference must and can be valid for. The entire lifetime system is in turn just a constraint-solving system that tries to minimize the region of every reference.
     1. 生命周期是为了处理ref 而产生的
 
 25. Within a function body you generally can't talk about lifetimes, and wouldn't want to anyway. The compiler has full information and can infer all the contraints to find the minimum lifetimes. However at the type and API-level, the compiler doesn't have all the information. It requires you to tell it about the relationship between different lifetimes so it can figure out what you're doing.
@@ -255,7 +254,7 @@ Once you stop using the output, the compiler will know it's ok for the input to 
 ## malloc
 除了数据被储存在堆上而不是栈上之外，box 没有性能损失。不过也没有很多额外的功能。它们多用于如下场景
 1. 当有一个在编译时未知大小的类型，而又想要在需要确切大小的上下文中使用这个类型值的时候 : 递归类型：因为Box 将真正的数据存储在heap 上，自己只是一个指针，所以可以结束无限循环
-2. 当有大量数据并希望在确保数据不被拷贝的情况下转移所有权的时候 : 
+2. 当有大量数据并希望在确保数据不被拷贝的情况下转移所有权的时候 :
 3. 当希望拥有一个值并只关心它的类型是否实现了特定 trait 而不是其具体类型的时候 : 17 trait 对象
 
 4. Box的作用，malloc 的效果的效果，可以使用ref 的形式的访问，只是将真正的数据放到heap之中，borrow ref的规则依旧满足.
@@ -299,7 +298,7 @@ fn main() {
 
 ```
 fn main() {
-   let mut i = Box::new(12); // 必须含有 mut 
+   let mut i = Box::new(12); // 必须含有 mut
    *i = 12;
 }
 ```
@@ -318,7 +317,7 @@ fn main() {
 真正的原因是: Box::new的操作会调用Copy(应该是，没有证据)，将数据copy 到Heap 上面，而原来的数据还是在stack 上，
 将b的申明中间的mut 删除掉之后，只是b 不能继续赋值了。
 ```
-8. Rc RefCell 的clone 参数必定是ref(因为需要实现多个ownership, 而且clone 的参数要求)，但是包括Box在内的new 的参数 不能是ref 
+8. Rc RefCell 的clone 参数必定是ref(因为需要实现多个ownership, 而且clone 的参数要求)，但是包括Box在内的new 的参数 不能是ref
 9. Box::new Rc::new 的对象，前者可以直接使用 `*`, 后者需要 get_mut 才可以。其中的原因是，Box 的ownership 是独占的，但是 Rc 必须保证只有一个 strong_accout的时候才可以进行修改. 如果想要实现多个人修改，那么就需要采用ref cell
 
 ```
@@ -400,7 +399,7 @@ so you don't get unexpected precedence bugs.
     * 调用不安全的函数或方法
     * 访问或修改可变静态变量
     * 实现不安全 trait
-3. 
+3.
 
 
 ## closure
@@ -498,7 +497,7 @@ https://doc.rust-lang.org/stable/rust-by-example/mod/split.html
 
 ## Rust for leetcode
 1. 创建指定大小的初始化数组 vec![0; 26]
-2. iter String  
+2. iter String
 ```
         let bytes = word.as_bytes();
         let mut v = &mut self.node;

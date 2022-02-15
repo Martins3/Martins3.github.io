@@ -30,3 +30,7 @@ inspired by https://github.com/geektutu/7days-golang
 ## 其他
 - [eomaia](https://github.com/Martins3/Martins3.github.io/blob/master/net/eomaia.md) : 很小的项目，用于学习 Modern 的 C++ 的书写风格
 - [musl](https://github.com/Martins3/Martins3.github.io/blob/master/unix/musl.md) : 大名鼎鼎的 musl 库，写的非常清晰
+
+## 2022 计划阅读
+- https://github.com/copy/v86 : 在网页中放一个 QEMU
+- [ ] https://github.com/OpenXiangShan/XiangShan
