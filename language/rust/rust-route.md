@@ -36,6 +36,27 @@ https://github.com/fishinabarrel/linux-kernel-module-rust : 使用 Rust 来写 k
 
 [neovide](https://github.com/Kethku/neovide) neovim 客户端，只有 7000 行
 
+#### What is the relation with str and String
+https://mgattozzi.github.io/2016/05/26/how-do-i-str-string.html
+
+#### Modular
+https://doc.rust-lang.org/stable/rust-by-example/mod/split.html
+
+#### Faq for Leetcode
+1. [Append to vector as value of hashmap](https://stackoverflow.com/questions/33243784/append-to-vector-as-value-of-hashmap/33243862)
+2. [Return a local hashmap](https://stackoverflow.com/questions/32682876/is-there-any-way-to-return-a-reference-to-a-variable-created-in-a-function)
+3. [How to return a ref](https://bryce.fisher-fleig.org/blog/strategies-for-returning-references-in-rust/index.html)
+
+4. https://github.com/aylei/leetcode-rust
+
+
+
+#### This is fun
+3. https://blog.subnetzero.io/post/building-language-vm-part-00/
+4. https://vnduongthanhtung.gitbooks.io/migrate-from-c-to-rust/content/string-manipulations.html
+
+
+
 ## crate
 https://github.com/serde-rs/json : 也许下次写小工具的有用，用于解析 json
 https://github.com/sharkdp/hexyl : 显示文件的二进制，其实，我只是奇怪，为什么这么简单的程序会有 5k star
@@ -260,7 +281,8 @@ Once you stop using the output, the compiler will know it's ok for the input to 
 4. Box的作用，malloc 的效果的效果，可以使用ref 的形式的访问，只是将真正的数据放到heap之中，borrow ref的规则依旧满足.
 5. Rc的作用，可以实现多个人访问，使用clone 实现多个访问, 和Box相同的，访问直接使用`*` 就可以了，但是似乎仅仅限于
 6. Rc provides shared ownership so by default its contents can't be mutated, while Box provides exclusive ownership and thus mutation is allowed:
-```
+
+```rs
 use std::rc::Rc;
 
 #[derive(Debug)]
@@ -296,14 +318,14 @@ fn main() {
 7. is a & reference so the data it refers to cannot be written : WDNMD, 出现该错误的原因并不是 &不可以访问，需要进一步deref (感觉这一个rust 的deref 本身有点问题)，真正的原因是需要成为mutable 的。
 成为mutable 的要求是一个chain.
 
-```
+```rs
 fn main() {
    let mut i = Box::new(12); // 必须含有 mut
    *i = 12;
 }
 ```
 
-```
+```rs
 fn main() {
    let mut b = 12;
    let mut i = Box::new(b);
@@ -320,7 +342,7 @@ fn main() {
 8. Rc RefCell 的clone 参数必定是ref(因为需要实现多个ownership, 而且clone 的参数要求)，但是包括Box在内的new 的参数 不能是ref
 9. Box::new Rc::new 的对象，前者可以直接使用 `*`, 后者需要 get_mut 才可以。其中的原因是，Box 的ownership 是独占的，但是 Rc 必须保证只有一个 strong_accout的时候才可以进行修改. 如果想要实现多个人修改，那么就需要采用ref cell
 
-```
+```rs
 #[derive(Debug)]
 struct A{
     name: i32,
@@ -336,7 +358,7 @@ fn main() {
 }
 ```
 
-```
+```rs
 #[derive(Debug)]
 struct A{
     name: i32,
@@ -354,7 +376,7 @@ fn main() {
 // b 的ownership 已经没有，而 x 必须含有mut
 ```
 
-```
+```rs
 fn main() {
     let mut b = A{name : 0, addr : 0};
     let mut x = Box::new(&b);
@@ -469,30 +491,6 @@ https://stackoverflow.com/questions/28800121/use-of-moved-values
 When a function requires a parameter by value, the compiler will check if the value can be copied by checking if it implements the trait Copy.
 1. If it does, the value is copied (with a memcpy) and given to the function, and you can still continue to use your original value.
 2. If it doesn't, then the value is moved to the given function, and the caller cannot use it afterwards
-
-
-#### What is the relation with str and String
-https://mgattozzi.github.io/2016/05/26/how-do-i-str-string.html
-
-#### Modular
-https://doc.rust-lang.org/stable/rust-by-example/mod/split.html
-
-## Faq for Leetcode
-1. [Append to vector as value of hashmap](https://stackoverflow.com/questions/33243784/append-to-vector-as-value-of-hashmap/33243862)
-2. [Return a local hashmap](https://stackoverflow.com/questions/32682876/is-there-any-way-to-return-a-reference-to-a-variable-created-in-a-function)
-3. [How to return a ref](https://bryce.fisher-fleig.org/blog/strategies-for-returning-references-in-rust/index.html)
-
-
-4. https://github.com/aylei/leetcode-rust
-
-
-
-#### This is fun
-// with compare, we understand both of c++ and cpp
-
-2. https://github.com/nrc/r4cppp
-3. https://blog.subnetzero.io/post/building-language-vm-part-00/
-4. https://vnduongthanhtung.gitbooks.io/migrate-from-c-to-rust/content/string-manipulations.html
 
 
 ## Rust for leetcode

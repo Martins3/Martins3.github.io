@@ -2,18 +2,18 @@
 
 <!-- vim-markdown-toc GitLab -->
 
-- [Background](#background)
-- [输入法](#输入法)
-- [Neovim](#neovim)
-  - [ccls](#ccls)
-  - [coc-explorer](#coc-explorer)
-  - [greenlet](#greenlet)
-- [Terminal](#terminal)
-- [Browser](#browser)
-- [Scientific Network Access](#scientific-network-access)
-- [lazygit](#lazygit)
-- [No more works in 3A5000](#no-more-works-in-3a5000)
-- [Works perfectly in 3A5000 without extra efforts](#works-perfectly-in-3a5000-without-extra-efforts)
+* [Background](#background)
+* [输入法](#输入法)
+* [Neovim](#neovim)
+  * [ccls](#ccls)
+  * [coc-explorer](#coc-explorer)
+  * [greenlet](#greenlet)
+* [Terminal](#terminal)
+* [Browser](#browser)
+* [Scientific Network Access](#scientific-network-access)
+* [lazygit](#lazygit)
+* [No more works in 3A5000](#no-more-works-in-3a5000)
+* [Works perfectly in 3A5000 without extra efforts](#works-perfectly-in-3a5000-without-extra-efforts)
 
 <!-- vim-markdown-toc -->
 龙芯的 3A5000 的一周我自己的使用体验总结：基本可以替代我的 x86 电脑。
@@ -77,6 +77,7 @@ make BUNDLED_CMAKE_FLAG="-DUSE_BUNDLED=ON -DUSE_BUNDLED_LUAJIT=OFF -DUSE_BUNDLED
 This command will compile all the bundles from source except luajit and luarocks.
 
 The reason to exempt luajit is easy, but leaving luarocks out is kind of mysterious. I don't know why, it just works.
+
 ### ccls
 When working on a C project, I found my neovim doesn't complete code anymore.
 
@@ -122,6 +123,7 @@ So I use the system default gnome-terminal, it works perfectly.
 Based on [chromium](https://www.chromium.org/), no crash, nothing new except the logo.
 
 But there is one thing makes me sick. Loongson removed Google's original profile with it's own, so I can't sync my bookmarks from my x86 Chrome's bookmarks and passwords.
+
 ## Scientific Network Access
 In order to access Google, v2ray and qv2ray are necessary.
 I don't try to port them. use another x86 to setup the network proxy and share it to 3A5000.

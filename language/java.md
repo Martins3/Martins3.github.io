@@ -242,7 +242,7 @@ myList = new double[] {1.9, 2.9, 3.4, 3.5}
 
 # Appendix
 
-### Use Vim 
+### Use Vim
 1. https://www.techrepublic.com/article/configure-vi-for-java-application-development/
 2. use spacevim layers
 3. https://stackoverflow.com/questions/1085146/programming-java-with-vim

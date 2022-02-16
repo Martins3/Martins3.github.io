@@ -23,7 +23,7 @@ https://github.com/F-Stack/f-stack : 似乎是对于 dpdk 的封装
 - [ ] direcory under linux/net to read
   - core : 各种 proc dev sys 之类的东西，整个网络的公共部分吧 !
   - ceph
-  - netfilter 
+  - netfilter
   - bridge :
   - tipc : Transparent Inter Process Communication (TIPC) is an Inter-process communication (IPC) service in Linux designed for cluster wide operation. It is sometimes presented as Cluster Domain Sockets, in contrast to the well-known Unix Domain Socket service; the latter working only on a single kernel. [^9]
   - mac80211
@@ -49,33 +49,33 @@ https://github.com/F-Stack/f-stack : 似乎是对于 dpdk 的封装
 
 给下面写一个一句话总结好吧
 ```
-__do_sys_bind        
-__do_sys_send        
-__do_sys_recv        
-__do_sys_socket      
-__do_sys_listen      
-__do_sys_accept      
-__do_sys_sendto      
-__do_sys_accept4     
-__do_sys_connect     
-__do_sys_sendmsg     
-__do_sys_recvmsg     
-__do_sys_recvfrom    
-__do_sys_shutdown    
-__do_sys_sendmmsg    
-__do_sys_recvmmsg    
-__do_sys_socketpair  
-__do_sys_setsockopt  
-__do_sys_getsockopt  
-__do_sys_socketcall  
-__do_sys_getsockname 
-__do_sys_getpeername 
+__do_sys_bind
+__do_sys_send
+__do_sys_recv
+__do_sys_socket
+__do_sys_listen
+__do_sys_accept
+__do_sys_sendto
+__do_sys_accept4
+__do_sys_connect
+__do_sys_sendmsg
+__do_sys_recvmsg
+__do_sys_recvfrom
+__do_sys_shutdown
+__do_sys_sendmmsg
+__do_sys_recvmmsg
+__do_sys_socketpair
+__do_sys_setsockopt
+__do_sys_getsockopt
+__do_sys_socketcall
+__do_sys_getsockname
+__do_sys_getpeername
 __do_sys_recvmmsg_time32
 ```
 
 
 
-## IBM Read Book 
+## IBM Read Book
 [TCP/IP--ICMP和IGMP](https://www.jianshu.com/p/4bd8758f9fbd)
 
 ## e1000e[^2]
@@ -96,7 +96,7 @@ __do_sys_recvmmsg_time32
                     - tcp_write_xmit
                       - tcp_transmit_skb
                         - `__tcp_transmit_skb`
-                          - `INDIRECT_CALL_INET(icsk->icsk_af_ops->queue_xmit, inet6_csk_xmit, ip_queue_xmit, sk, skb, &inet->cork.fl);`= 
+                          - `INDIRECT_CALL_INET(icsk->icsk_af_ops->queue_xmit, inet6_csk_xmit, ip_queue_xmit, sk, skb, &inet->cork.fl);`=
                             - inet_connection_sock::inet_connection_sock_af_ops::queue_xmit
                               - ip_queue_xmit
                                 - `__ip_queue_xmit`
@@ -138,7 +138,7 @@ http://beej.us/guide/bgnet/html/#socket : 主要是使用 posix 接口吧!
 
 https://www.cs.dartmouth.edu/~sergey/me/netreads/path-of-packet/Lab9_modified.pdf
 
-https://blog.packagecloud.io/eng/2016/06/22/monitoring-tuning-linux-netw  orking-stack-receiving-data/ : 
+https://blog.packagecloud.io/eng/2016/06/22/monitoring-tuning-linux-netw  orking-stack-receiving-data/ :
 
 https://github.com/sdnds-tw/awesome-sdn
 
@@ -146,12 +146,13 @@ https://github.com/sdnds-tw/awesome-sdn
 https://github.com/coolsnowwolf/lede
 https://github.com/redcode-labs/Neurax
 
+
 ## 可以参考的资源
 https://github.com/google/packetdrill : 甚至还有相关的资源
 https://github.com/mtcp-stack/mtcp
 
 ## 网络基础知识
-- 现在的想法 : 整体框架其实清楚的，利用 level-ip 来分析，其次就是解决 TCP 中间具体的细节问题, tc, retransmission, 
+- 现在的想法 : 整体框架其实清楚的，利用 level-ip 来分析，其次就是解决 TCP 中间具体的细节问题, tc, retransmission,
 
 - https://github.com/chenshuo/muduo
 - http://www.mattkeeter.com/projects/pont/ : 了解一下前端后端的整个流程是什么

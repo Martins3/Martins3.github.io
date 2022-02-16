@@ -4,6 +4,7 @@ https://github.com/lijin-THU/notes-python
 
 https://github.com/geekcomputers/Python : 一些实用的脚本
 https://github.com/coodict/python3-in-one-pic : 思维导图
+https://gto76.github.io/python-cheatsheet/ : python check sheet
 
 
 - [ ] 总结一些从 fio 测试的中间获取的内容吧

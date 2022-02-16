@@ -31,6 +31,8 @@ Hardware and Software Support for Virtualization : 作者[Edouard Bugnion](https
 - [陈伟任的笔记](https://github.com/azru0512/slide/tree/master/QEMU)
 - [Stefan Hajnoczi](http://blog.vmsplice.net/2020/08/qemu-internals-event-loops.html)
 - [空客的 QEMU 源码分析](https://github.com/airbus-seclab/qemu_blog)
+- [opengers](https://opengers.github.io/) : kvm ceph 之类的
+- [mpolednik](https://mpolednik.github.io/) : redhat 工程师，vfio 之类的
 
 ## 一些有意思的项目
 - [VivienneVMM](https://github.com/changeofpace/VivienneVMM) : 使用 vmx 实现的调试器

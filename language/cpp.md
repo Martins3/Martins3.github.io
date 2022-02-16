@@ -56,6 +56,8 @@ https://hackernoon.com/undefining-the-c-pre-processor-c4eeb3d06e1f : 替代 macr
 https://www.gamasutra.com/view/news/169296/Indepth_Functional_programming_in_C.php : cpp 中的函数编程
 
 ## 项目
+- [aseprite](https://github.com/aseprite/aseprite) : 动画编辑器
+
 https://github.com/sogou/workflow : 搜狗开发的, 不到 2 万行，少年，你想做后端开发吗 ?
 https://www.qtmuniao.com/2020/07/03/leveldb-data-structures-skip-list/ :  C++ 数据库 Jeff Dean 1000 行 :star: leveldb
   - https://medium.com/databasss/on-disk-io-part-1-flavours-of-io-8e1ace1de017 : 数据库教程
@@ -89,7 +91,7 @@ https://github.com/k-vernooy/tetris : for chilren
 ## algorithm
 https://github.com/xtaci/algorithms : 各种算法的实现
 https://github.com/gzc/CLRS : 算法导论答案
-  
+
 ## when boring
 https://github.com/s9w/dt
 https://github.com/RuntimeCompiledCPlusPlus/RuntimeCompiledCPlusPlus : modify cpp code dynamically
@@ -108,3 +110,6 @@ https://github.com/catchorg/Catch2 : 又一个测试框架
 
 ## 有趣
 - https://github.com/jupyter-xeus/xeus-cling : Jupyter kernel for C++
+
+## blog
+- [shafik](https://shafik.github.io/) 的 blog，谈论了很多 cpp 高级话题

@@ -1,7 +1,9 @@
+# DS
+
 ## 各种介绍
 https://github.com/stateright/stateright : 一个图新界面，用于辅助分布式协议的实现
 
-# [An overview of distributed system](https://www.zhihu.com/question/23645117)
+## [An overview of distributed system](https://www.zhihu.com/question/23645117)
 知乎这个回答常看常新啊
 
 1. [入门经典，可以写一个总结笔记](http://book.mixu.net/distsys/)
@@ -19,7 +21,7 @@ https://github.com/stateright/stateright : 一个图新界面，用于辅助分�
   - https://github.com/toutiaoio/awesome-architecture : 类似的，但是更加侧重分布式一点
 - https://github.com/erikgrinaker/readings/blob/master/distributed-systems.md : 作者还写过 toydb
 
-# 细节
+## 细节
 - https://www.programmableweb.com/news/what-grpc-api-and-how-does-it-work/analysis/2020/10/08 : grpc 的分析
   - https://github.com/grpc/grpc/tree/master/src/cpp : grpc 尝试一下如何使用即可
 - https://luyuhuang.github.io/2020/03/06/dht-and-p2p.html : 分布式哈希表 (DHT) 和 P2P 技术
@@ -29,16 +31,20 @@ https://github.com/stateright/stateright : 一个图新界面，用于辅助分�
 
 - https://github.com/apache/mesos : 用 c++ 写的 cluster manager
 
-# Decentralized Web
+## Decentralized Web
 > 猜测这是很高级的内容了
 
 - https://proto.school/tutorials : 一堆协议的教程，但是协议都米有听说过
 
 - 分布式存储工程师的技能树 : https://www.zhihu.com/question/43687427/answer/1590320987
 
-# sre
+## sre
 https://linkedin.github.io/school-of-sre/ : 应该是比较基础的课程
 https://github.com/upgundecha/howtheysre : 各个公司关于 SRE 的报告吧
 
-# 教程
+## 教程
 - https://github.com/HelloGitHub-Team/HelloZooKeeper : 中文 ZooKeeper 教程
+- [数据密集型应用](https://vonng.github.io/ddia/#/part-i) 的中文翻译，可以快速阅读
+
+## 项目
+- [分布式网络模拟](https://github.com/shadow/shadow)

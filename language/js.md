@@ -38,5 +38,3 @@ Typescript is a typed superset of JavaScript that compiles to plain JavaScript.
 
 7. What can JS do ?
 Depends on your imagination.
-
-
