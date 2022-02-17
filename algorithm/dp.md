@@ -57,7 +57,7 @@ public:
 实际上，这是一个背包问题啊!
 
 这个问题的正确思考方法就是:
-对于这些 coins, 
+对于这些 coins,
 
 dp[i][j] : 完成前面 i 个 coin 的选择，装备容量为 j 的的种类
 转移函数 : `dp[i][j] = dp[i - 1][j] + dp[i][j - coins[i]]`
@@ -75,7 +75,7 @@ dp[i] 记录的内容，当 i 作为序列终点的时候，当前的最长上�
 
 转移: dp[i] 对于前面的每一个数值比较，对于那些 arr[i] > arr[j], 就是接上了
 
-[Longest increasing subsequence](https://en.wikipedia.org/wiki/Longest_increasing_subsequence) 
+[Longest increasing subsequence](https://en.wikipedia.org/wiki/Longest_increasing_subsequence)
 https://stackoverflow.com/questions/2631726/how-to-determine-the-longest-increasing-subsequence-using-dynamic-programming
 
 how to find the actural subsequence ?
@@ -121,3 +121,6 @@ dp[i][j] : 范围在 i j 之间的最长回文子序列
 # 题目
 1. [The Triangle](http://poj.org/problem?id=1163) 理解初步
 2. [Chores](http://poj.org/problem?id=1949) DAG
+
+## 别人的总结
+- https://github.com/ninechapter-algorithm/linghu-algorithm-templete/blob/master/%E7%AE%97%E6%B3%95%E4%B8%8E%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E5%8A%A8%E6%80%81%E8%A7%84%E5%88%92%E5%8D%81%E9%97%AE%E5%8D%81%E7%AD%94.md

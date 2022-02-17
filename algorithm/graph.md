@@ -47,7 +47,7 @@ void addEdge(std::vector<std::vector<std::pair<int, int>>> *adj, int u, int v,
 
 ## Dijkstra
 distance 数组
-visited 数组 : 从 priority_queue 中间出来的点需要被标记一下 
+visited 数组 : 从 priority_queue 中间出来的点需要被标记一下
 priority_queue : 用于选择当前离 start 最近的节点
 
 到达 start 的距离被刷新，那么就加入到 priority_queue 中间
@@ -218,10 +218,10 @@ for u in graph vertex topological order start with s:
 # 既没有思考如何证明, 也没有思考为什么对于通用的算法是 NP
 ```
 
-a *biconnected graph* is a connected and "nonseparable" graph, meaning that if any one vertex were to be removed, the graph will remain connected. 
-Therefore a biconnected graph has no articulation vertices.The property of being 2-connected is equivalent to biconnectivity, with the caveat that the 
-complete graph of two vertices is sometimes regarded as biconnected but not 2-connected.This property is especially useful in maintaining a graph with 
-a two-fold redundancy, to prevent disconnection upon the removal of a single edge (or 
+a *biconnected graph* is a connected and "nonseparable" graph, meaning that if any one vertex were to be removed, the graph will remain connected.
+Therefore a biconnected graph has no articulation vertices.The property of being 2-connected is equivalent to biconnectivity, with the caveat that the
+complete graph of two vertices is sometimes regarded as biconnected but not 2-connected.This property is especially useful in maintaining a graph with
+a two-fold redundancy, to prevent disconnection upon the removal of a single edge (or
 connection).
 
 
@@ -263,9 +263,9 @@ a *bipartite graph* (or bigraph) is a graph whose vertices can be divided into t
 3) Initialize MST as empty.
 4) While there are more than one components, do following
    for each component.
-      a)  Find the closest weight edge that connects this 
+      a)  Find the closest weight edge that connects this
           component to any other component.
-      b)  Add this closest edge to MST if not already added.  
+      b)  Add this closest edge to MST if not already added.
 5) Return MST.
 
 # 不是很清楚和 Kruska 算法有什么区别啊!
@@ -273,7 +273,7 @@ a *bipartite graph* (or bigraph) is a graph whose vertices can be divided into t
 *Johnson’s algorithm*
 The idea of Johnson’s algorithm is to re-weight all edges and make them all positive, then apply Dijkstra’s algorithm for every vertex.
 Let the weight assigned to vertex u be h[u]. We reweight edges using vertex weights
-he great thing about this reweighting is, all set of paths between any two vertices are increased by same amount and all negative weights become non-negative. 
+he great thing about this reweighting is, all set of paths between any two vertices are increased by same amount and all negative weights become non-negative.
 ```
 Algorithm:
 1) Let the given graph be G. Add a new vertex s to the graph, add edges from new vertex to all vertices of G. Let the modified graph be G’.
@@ -287,7 +287,7 @@ Algorithm:
 
 *Shortest Path in Directed Acyclic Graph* can be O(V + E) that is better than Dijkstra's O(V * log(V) + E), the algorithm is same as longest path problem
 
-*Check if a graph is strongly connected* for undirected it's easy, for directed, if every node can be reached from a vertex v, and every node can reach v, then 
+*Check if a graph is strongly connected* for undirected it's easy, for directed, if every node can be reached from a vertex v, and every node can reach v, then
 the graph is strongly connected.
 
 *bridge* The condition for an edge (u, v) to be a bridge is, “low[v] > disc[u]”.
@@ -296,12 +296,12 @@ the graph is strongly connected.
 
 *Euler Cycle*
 An undirected graph has Euler cycle if following two conditions are true.
-1. All vertices with non-zero degree are connected. 
+1. All vertices with non-zero degree are connected.
 2. All vertices have even degree.
 
 *Euler Path*
 An undirected graph has Euler Path if following two conditions are true.
-1. All vertices with non-zero degree are connected. 
+1. All vertices with non-zero degree are connected.
 2.  If zero or two vertices have odd degree and all other vertices have even degree. Note that only one vertex with odd degree is not possible in an undirected graph (sum of all degrees is always even in an undirected graph)
 
 *Hierholzer algorithm*
@@ -321,7 +321,7 @@ __as the ruler , not yet implemented__
 
 [definitions](https://en.wikipedia.org/wiki/Graph_(discrete_mathematics))
 
-# Maximum flow 
+# Maximum flow
 
 ## *Ford-Fulkerson Algorithm*:
 1. augment path from source to sink:
@@ -361,7 +361,7 @@ When no more paths in step 2 can be found, s will not be able to reach t in the 
     1. 分割双方 也就是 限制最大流 的关键
 
 ## Maximum Bipartite Matching
-1. A maximum matching is a matching of maximum size (maximum number of edges). 
+1. A maximum matching is a matching of maximum size (maximum number of edges).
 2. 转化的方法: 标记 bipartite 的两个部分为L 和 R, 首先添加 source 和 end, source 指向所有L, 所有的R 指向 R 部分,
 最大流的中间的一条路径必定和 一个匹配是一一对应的
 
@@ -379,5 +379,3 @@ When no more paths in step 2 can be found, s will not be able to reach t in the 
 2. use function
     1. add the visited array parameter(this is just a shallow copy)
     2. make visited array a object variable
-
-

@@ -31,3 +31,6 @@
 
 ## 资源
 - [Langdev libraries for Rust](https://github.com/Kixiron/rust-langdev) : 使用 Rust 写编译器的一些开发工具
+
+## 工具
+- [cxx](https://github.com/dtolnay/cxx) : safe FFI between Rust and C++

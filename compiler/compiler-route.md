@@ -126,6 +126,9 @@ https://news.ycombinator.com/item?id=24170201 : 感觉完成度还可以的 浏�
 
 ## jvm
 
+## GC
+- https://draveness.me/system-design-memory-management/
+  - 最后一部分关于 gc，应该是比较简明的了
 
 
 ## 问题

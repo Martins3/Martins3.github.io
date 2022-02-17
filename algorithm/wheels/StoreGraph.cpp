@@ -13,7 +13,7 @@ using namespace std;
 #define REOPEN_WRITE freopen("../output.txt", "w", stdout);
 
 int main(){
-    
+
     return 0;
 }
 

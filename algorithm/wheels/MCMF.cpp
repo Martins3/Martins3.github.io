@@ -21,7 +21,7 @@ using namespace std;
 #define REOPEN_WRITE freopen("/home/martin/X-Brain/Notes/Clang/OnlineJudge/uva/output.txt", "w", stdout);
 /**
  * 每一条边除了 容量限制， 还有单位流量的费用
- * 最大流是前提， 
+ * 最大流是前提，
  */
 
 class Edge{
@@ -31,7 +31,7 @@ public:
     int cap;
     int flow;
     int cost;
-    Edge(int x, int y, int cap, int flow, int cost): 
+    Edge(int x, int y, int cap, int flow, int cost):
     x(x), y(y), cap(cap), flow(flow), cost(cost){};
 };
 
@@ -58,13 +58,13 @@ public:
 
     void addEdge(int x, int y, int cap, int cost){
         edges.push_back(Edge(x, y, cap, 0, cost));
-        edges.push_back(Edge(y, x, 0, 0, -cost)); 
+        edges.push_back(Edge(y, x, 0, 0, -cost));
         int m = edges.size();
         G[x].push_back(m - 2);
         G[y].push_back(m - 1);
     }
-    
-        
+
+
 };
 
 int main(){

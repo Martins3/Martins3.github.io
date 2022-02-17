@@ -77,7 +77,7 @@ function TarjanOLCA(u) is
     for each v in u.children do
         TarjanOLCA(v)
         Union(u, v)
-        Find(u).ancestor := u // 
+        Find(u).ancestor := u //
     u.color := black
     for each v such that {u, v} in P do
         if v.color == black then
@@ -89,7 +89,7 @@ function TarjanOLCA(u) is
 function MakeSet(x) is
     x.parent := x
     x.rank   := 1
- 
+
 function Union(x, y) is
     xRoot := Find(x)
     yRoot := Find(y)
@@ -100,7 +100,7 @@ function Union(x, y) is
     else if xRoot.rank == yRoot.rank then
         yRoot.parent := xRoot
         xRoot.rank := xRoot.rank + 1
-  
+
 function Find(x) is
     if x.parent != x then
        x.parent := Find(x.parent)
@@ -134,4 +134,3 @@ public:
     }
 };
 ```
-
