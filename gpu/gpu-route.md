@@ -17,3 +17,4 @@ https://github.com/vosen/ZLUDA : ZLUDA is a drop-in replacement for CUDA on Inte
 - https://github.com/stackgl/shader-school : 在网页中运行的 GLSL
 
 - https://github.com/parallel101/course : b 站上上课，每节课都是都是存在配套作业，非常有必要学一下
+- [2D Graphics on Modern GPU](https://raphlinus.github.io/rust/graphics/gpu/2019/05/08/modern-2d.html)

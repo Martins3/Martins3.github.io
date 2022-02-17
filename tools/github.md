@@ -10,6 +10,9 @@
 - [ ] https://posthog.com/blog/automating-a-software-company-with-github-actions
 	- 作者介绍他们公司如何使用 GitHub Actions，将各种开发步骤自动化，举了很多例子，演示了测试、代码格式化、构建、部署的配置文件应该怎么写。
 
+### 一些有用的 action
+- [issue 翻译](https://github.com/usthe/issues-translate-action)
+
 ## 使用 lint-md 来检查中文文档
 ```yml
 name: Lint Markdown By Lint Markdown

@@ -18,6 +18,7 @@ https://github.com/learnbyexample/Command-line-text-processing : 文本处理，
 https://github.com/dylanaraps/pure-bash-bible
 
 https://cjting.me/2020/08/16/shell-init-type/ : 不错不错，讲解 bash 的启动
+https://learnbyexample.github.io/cli_text_processing_coreutils/tr.html : 讲解各种 text processing 的事情，值得单独作为一个章节来分析。
 
 ## 学到了
 https://samizdat.dev/help-message-for-shell-scripts/ : 使用 sed 输出 help

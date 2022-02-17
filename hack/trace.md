@@ -2,31 +2,31 @@
 
 <!-- vim-markdown-toc GitLab -->
 
-- [总结各种 tracer : overview](#总结各种-tracer-overview)
-- [关键问题 : 到底实现什么功能，以及不可以做什么](#关键问题-到底实现什么功能以及不可以做什么)
-- [关键问题 : 可以做的事情](#关键问题-可以做的事情)
-- [(tmp)branch trace](#tmpbranch-trace)
-- [任务](#任务)
-    - [需要询问的问题](#需要询问的问题)
-    - [计划](#计划)
-- [实现](#实现)
-- [垃圾堆](#垃圾堆)
-- [question](#question)
-- [perf](#perf)
-- [flamegraph](#flamegraph)
-- [kprobe](#kprobe)
-- [uprobe](#uprobe)
-- [dtrace](#dtrace)
-- [ftrace](#ftrace)
-    - [debug/tracing 文件夹的内容理解](#debugtracing-文件夹的内容理解)
-    - [ftrace-cmd](#ftrace-cmd)
-- [valgrind](#valgrind)
-- [SystemTap](#systemtap)
-- [dtrace](#dtrace-1)
-- [lttng](#lttng)
-- [Gprof2dot](#gprof2dot)
-- [FlameGraph](#flamegraph-1)
-- [kdump](#kdump)
+* [总结各种 tracer : overview](#总结各种-tracer-overview)
+* [关键问题 : 到底实现什么功能，以及不可以做什么](#关键问题-到底实现什么功能以及不可以做什么)
+* [关键问题 : 可以做的事情](#关键问题-可以做的事情)
+* [(tmp)branch trace](#tmpbranch-trace)
+* [任务](#任务)
+    * [需要询问的问题](#需要询问的问题)
+    * [计划](#计划)
+* [实现](#实现)
+* [垃圾堆](#垃圾堆)
+* [question](#question)
+* [perf](#perf)
+* [flamegraph](#flamegraph)
+* [kprobe](#kprobe)
+* [uprobe](#uprobe)
+* [dtrace](#dtrace)
+* [ftrace](#ftrace)
+    * [debug/tracing 文件夹的内容理解](#debugtracing-文件夹的内容理解)
+    * [ftrace-cmd](#ftrace-cmd)
+* [valgrind](#valgrind)
+* [SystemTap](#systemtap)
+* [dtrace](#dtrace-1)
+* [lttng](#lttng)
+* [Gprof2dot](#gprof2dot)
+* [FlameGraph](#flamegraph-1)
+* [kdump](#kdump)
 
 <!-- vim-markdown-toc -->
 
@@ -35,30 +35,31 @@
 
 
 ## 总结各种 tracer : overview
+
 http://www.brendangregg.com/blog/2015-07-08/choosing-a-linux-tracer.html
 https://jvns.ca/blog/2017/07/05/linux-tracing-systems/
 
 ## 关键问题 : 到底实现什么功能，以及不可以做什么
 - [ ] 依赖 kprobe 可以为所欲为的效果 : 比如在 open 的位置插入 printk，或者插入函数直接返回错误，造成所有的对于 syscall open 函数失败. ?
 - [x] bcc 能不能插入多个 kprobe 并且将所有的数据整合。(应该很容易，可以使用相同的 map 直接在内核层次使用，或者让 python 处理)
-- [ ] bcc 
+- [ ] bcc
 - [ ] file:///home/shen/Core/linux/Documentation/output/trace/ftrace.html
 - [ ] available_filter_functions : dynamic ftrace 的含义
 
 > 记录一个小问题 :
-[shen-pc tracing]# cat ksys_read > set_ftrace_filter 
+[shen-pc tracing]# cat ksys_read > set_ftrace_filter
 cat: ksys_read: No such file or directory
-[shen-pc tracing]# cat ksys_read > s^C_ftrace_filter 
+[shen-pc tracing]# cat ksys_read > s^C_ftrace_filter
 [shen-pc tracing]# trace 'ksys_read'^C
 
 ## 关键问题 : 可以做的事情
 - [ ] 各种机制的原理
     - [ ] uprobe 真的利用了 kprobe 吗 ?
-    - [ ] 
+    - [ ]
 - 所有的工具的功能的整理 : dtrace SystemTap 等
 
 下面两个链接写的非常好，可以深入理解
-- https://alex.dzyoba.com/blog/kernel-profiling/ 
+- https://alex.dzyoba.com/blog/kernel-profiling/
 - https://elinux.org/images/d/d7/Launet-kernel_profiling_debugging_tools_0.pdf
 
 
@@ -68,21 +69,21 @@ cat: ksys_read: No such file or directory
 ```c
 static void branch_print_header(struct seq_file *s)
 {
-	seq_puts(s, "#           TASK-PID    CPU#    TIMESTAMP  CORRECT"
-		    "  FUNC:FILE:LINE\n"
-		    "#              | |       |          |         |   "
-		    "    |\n");
+  seq_puts(s, "#           TASK-PID    CPU#    TIMESTAMP  CORRECT"
+        "  FUNC:FILE:LINE\n"
+        "#              | |       |          |         |   "
+        "    |\n");
 }
 
 static struct tracer branch_trace __read_mostly =
 {
-	.name		= "branch",
-	.init		= branch_trace_init,
-	.reset		= branch_trace_reset,
+  .name   = "branch",
+  .init   = branch_trace_init,
+  .reset    = branch_trace_reset,
 #ifdef CONFIG_FTRACE_SELFTEST
-	.selftest	= trace_selftest_startup_branch,
+  .selftest = trace_selftest_startup_branch,
 #endif /* CONFIG_FTRACE_SELFTEST */
-	.print_header	= branch_print_header,
+  .print_header = branch_print_header,
 };
 ```
 
@@ -101,7 +102,7 @@ static struct tracer branch_trace __read_mostly =
 可以完成的简单的事情:
 - 需要确保，我们使用的是同一个 unixbench 的内容，阅读一下 unixbench 的内容，似乎 perl 需要阅读一下
 - http://www.loongson.cn/index.html : 1课时的性能分析可以阅读一下
-- 看来的确是存在性能计数器的: 用户手册 LPMP 
+- 看来的确是存在性能计数器的: 用户手册 LPMP
 
 #### 计划
 
@@ -134,13 +135,13 @@ https://facebookmicrosites.github.io/bpf/
 1. 所以，kernel/events 和 kernel/trace 的关系是什么 ?
 
 
-## perf 
+## perf
 TODO
 http://www.brendangregg.com/blog/2015-02-27/linux-profiling-at-netflix.html
 1. 为什么 perf 工具如何 flamegraph 配合使用的
 2. perf 可以做到什么功能 ?
 
-## flamegraph 
+## flamegraph
 参考这个功能:
 http://www.brendangregg.com/FlameGraphs/cpuflamegraphs.html
 
@@ -174,7 +175,7 @@ This spinlock is locked before a new probe is registered, an existing probe is u
 This prevents these operations from executing simultaneously on a SMP machine.
 Whenever a probe is hit, the probe handler is called with interrupts disabled. Interrupts are disabled because handling a probe is a **multiple step process** which involves breakpoint handling and single-step execution of the probed instruction. There is no easy way to save the state between these operations hence interrupts are kept disabled during probe handling.
 
-关键的问题是 : 
+关键的问题是 :
 1. 当执行到某一个指令的时候，我怎么知道我需要开始进行 kprobe 的部分了。
 2. 按照 JProbe 的想法，我怎么知道，这个函数开始需要执行 JProbe。
 3. 凭什么 eBPF 可以关联到 KProbe 上。
@@ -183,7 +184,7 @@ Whenever a probe is hit, the probe handler is called with interrupts disabled. I
 **A JProbe leverages the mechanism used by a KProbe.**
 Instead of calling a user-defined pre-handler a JProbe specifies its own pre-handler called setjmp_pre_handler() and uses another handler called a break_handler. This is a three-step process.
 
-Kprobe 的实现参考 register_kprobe 的内容，采用的方法应该将原有指令替换掉，然后写入 int3，然后让 int3 开始执行 handler 
+Kprobe 的实现参考 register_kprobe 的内容，采用的方法应该将原有指令替换掉，然后写入 int3，然后让 int3 开始执行 handler
 
 > 至于 jprobe 在哪里，我们是不知道的
 
@@ -228,7 +229,7 @@ After mounting tracefs you will have access to the control and output files of f
 hwlat blk mmiotrace function_graph wakeup_dl wakeup_rt wakeup function nop
 ```
 2. This tracer is similar to the function tracer except that it probes a function on its entry and its exit.
-This is done by using a dynamically allocated stack of return addresses in each `task_struct`. On function entry the tracer overwrites the return address of each function traced to set a custom probe. 
+This is done by using a dynamically allocated stack of return addresses in each `task_struct`. On function entry the tracer overwrites the return address of each function traced to set a custom probe.
 Thus the original return address is stored on the stack of return address in the `task_struct`.
 > 似乎合乎想象，在内核到处插入 checkpoint，然后从这些 checkpoint 找到需要知道
 3. Note, the proc sysctl ftrace_enable is a big on/off switch for the function tracer. By default it is enabled (when function tracing is enabled in the kernel). If it is disabled, all function tracing is disabled. This includes not only the function tracers for ftrace, but also for any other uses (perf, kprobes, stack tracing, profiling, etc).
@@ -242,56 +243,56 @@ Thus the original return address is stored on the stack of return address in the
 
 ```c
 static const struct file_operations ftrace_avail_fops = {
-	.open = ftrace_avail_open,
-	.read = seq_read,
-	.llseek = seq_lseek,
-	.release = seq_release_private,
+  .open = ftrace_avail_open,
+  .read = seq_read,
+  .llseek = seq_lseek,
+  .release = seq_release_private,
 };
 
 static const struct file_operations ftrace_enabled_fops = {
-	.open = ftrace_enabled_open,
-	.read = seq_read,
-	.llseek = seq_lseek,
-	.release = seq_release_private,
+  .open = ftrace_enabled_open,
+  .read = seq_read,
+  .llseek = seq_lseek,
+  .release = seq_release_private,
 };
 
 static const struct file_operations ftrace_filter_fops = {
-	.open = ftrace_filter_open,
-	.read = seq_read,
-	.write = ftrace_filter_write,
-	.llseek = tracing_lseek,
-	.release = ftrace_regex_release,
+  .open = ftrace_filter_open,
+  .read = seq_read,
+  .write = ftrace_filter_write,
+  .llseek = tracing_lseek,
+  .release = ftrace_regex_release,
 };
 
 static const struct file_operations ftrace_notrace_fops = {
-	.open = ftrace_notrace_open,
-	.read = seq_read,
-	.write = ftrace_notrace_write,
-	.llseek = tracing_lseek,
-	.release = ftrace_regex_release,
+  .open = ftrace_notrace_open,
+  .read = seq_read,
+  .write = ftrace_notrace_write,
+  .llseek = tracing_lseek,
+  .release = ftrace_regex_release,
 };
 
 static __init int ftrace_init_dyn_tracefs(struct dentry *d_tracer)
 {
 
-	trace_create_file("available_filter_functions", 0444,
-			d_tracer, NULL, &ftrace_avail_fops);
+  trace_create_file("available_filter_functions", 0444,
+      d_tracer, NULL, &ftrace_avail_fops);
 
-	trace_create_file("enabled_functions", 0444,
-			d_tracer, NULL, &ftrace_enabled_fops);
+  trace_create_file("enabled_functions", 0444,
+      d_tracer, NULL, &ftrace_enabled_fops);
 
-	ftrace_create_filter_files(&global_ops, d_tracer);
+  ftrace_create_filter_files(&global_ops, d_tracer);
 
 #ifdef CONFIG_FUNCTION_GRAPH_TRACER
-	trace_create_file("set_graph_function", 0644, d_tracer,
-				    NULL,
-				    &ftrace_graph_fops);
-	trace_create_file("set_graph_notrace", 0644, d_tracer,
-				    NULL,
-				    &ftrace_graph_notrace_fops);
+  trace_create_file("set_graph_function", 0644, d_tracer,
+            NULL,
+            &ftrace_graph_fops);
+  trace_create_file("set_graph_notrace", 0644, d_tracer,
+            NULL,
+            &ftrace_graph_notrace_fops);
 #endif /* CONFIG_FUNCTION_GRAPH_TRACER */
 
-	return 0;
+  return 0;
 }
 ```
 
@@ -311,7 +312,7 @@ https://lwn.net/Articles/410200/ 的记录
 
 
 - [ ] 两个用户层次的前端工具 : perf + trace-cmd 分别读取的内容是从哪里的呀 ?
-- [ ] trace-cmd 
+- [ ] trace-cmd
 
 1. ftrace-cmd 的 record 原理: 为每一个 cpu 创建出来一个 process，读取 /sys/kernel/debug/tracing/per_cpu/cpu0，最后主函数将所有的 concatenate 起来
 2. -e 可以选择一个 trace event 或者一个 subsystem 的 trace point。The -e option enables an event. The argument following the -e can be an event name, event subsystem name, or the special name all.

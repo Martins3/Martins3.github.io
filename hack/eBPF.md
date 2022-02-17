@@ -13,7 +13,7 @@ https://filipnikolovski.com/posts/ebpf/
 为什么使用eBPF ?[^1]
 3. 为了向内核中间添加功能，如果修改kernel source code，需要等到用户更新内核。如果使用kernel module，每次内核升级，都需要发布对应的kernel module.
 1. eBPF 是 100% modular and composable 的
-2. eBPF 可以实现 hotpatching 
+2. eBPF 可以实现 hotpatching
 
 1. safety & security : verifier 保证内核中间发
 2. continuous delivery : 程序可以动态修改
@@ -21,7 +21,7 @@ https://filipnikolovski.com/posts/ebpf/
 
 bpf 可以加入的位置 : kprobe uprobe syscall fentry/fexit, some network related stuff
 
-eBPF map 的作用，eBPF helper ，function calls 
+eBPF map 的作用，eBPF helper ，function calls
 
 eBPF 的升级内容:[^2]
 1. 64bit 的寄存器
@@ -30,7 +30,7 @@ eBPF 的升级内容:[^2]
 4. The ease of mapping eBPF to native instructions lends itself to just-in-time compilation, yielding improved performance.
 
 eBPF 的作用不仅仅限于 packet filter 的功能，其实可以动态的 debug 内核:
-eBPF is also useful for debugging the kernel and carrying out performance analysis; 
+eBPF is also useful for debugging the kernel and carrying out performance analysis;
 programs can be attached to tracepoints, kprobes, and perf events.
 Because eBPF programs can access kernel data structures, developers can write and test new debugging code without having to recompile the kernel. The implications are obvious for busy engineers debugging issues on live, running systems. It's even possible to use eBPF to debug user-space programs by using Userland Statically Defined Tracepoints.
 
@@ -50,7 +50,7 @@ Lastly, the verifier uses the eBPF program type (covered later) to restrict whic
 int bpf(int cmd, union bpf_attr *attr, unsigned int size);
 ```
 1. The `bpf_attr` union allows data to be passed between the kernel and user space;
-2. the exact format depends on the `cmd` argument. 
+2. the exact format depends on the `cmd` argument.
 3. The `size` argument gives the size of the bpf_attr union object in bytes.
 
 cmd 类型包括:
@@ -59,14 +59,14 @@ cmd 类型包括:
 
 Though there appear to be many different commands, they can be broken down into three categories:
 1. commands for working with eBPF programs,
-2. working with eBPF maps, 
+2. working with eBPF maps,
 3. or commands for working with both programs and maps (collectively known as objects).
 
 eBPF map : Each map is defined by four values: a type, a maximum number of elements, a value size in bytes, and a key size in bytes.
 
 如何使用 BPF:
 1. 使用 Clang -march=bpf 编译 或者手动写汇编代码
-2. samples/bpf/ 提供了很多测试程序 
+2. samples/bpf/ 提供了很多测试程序
 3. libpf 库 For example, the high-level flow of an eBPF program and user program using libbpf might go something like:
   - Read the eBPF bytecode into a buffer in your user application and pass it to bpf_load_program().
   - The eBPF program, when run by the kernel, will call bpf_map_lookup_elem() to find an element in a map and store a new value in it.
@@ -103,7 +103,7 @@ https://search.safaribooksonline.com/book/operating-systems-and-server-administr
 
 ## bpftrace
 建立在 bcc 上方的易用工具，手动编译真简单呀!
-https://github.com/iovisor/bpftrace 
+https://github.com/iovisor/bpftrace
 
 bcc 也提供了各种工具，包括 trace argdist 以及 funccount 等等
 
@@ -136,7 +136,7 @@ Before using bcc, you should start with the Linux basics. One reference is the [
 
 然后分析三个 generic 的工具:
 argdist
-trace : 
+trace :
 funccount
 
 > TODO

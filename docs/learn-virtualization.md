@@ -18,7 +18,11 @@ Hardware and Software Support for Virtualization : 作者[Edouard Bugnion](https
 ## minimal kvm example
 - https://github.com/dpw/kvm-hello-world
 - https://github.com/david942j/kvm-kernel-example
+
+## minimal hypervisor / virtual machine example
+- https://github.com/calinyara/asor
 - https://github.com/ionescu007/SimpleVisor : Window Driver 或者 UEFI driver 方式执行的 hypervisor
+- [Write your Own Virtual Machine](https://justinmeiners.github.io/lc3-vm)
 
 ## 一些补充资料
 - [cpu internals](https://github.com/LordNoteworthy/cpu-internals) 是 intel SDM 的笔记，其中覆盖了 intel CPU 在硬件上如何支持虚拟化的, 阅读 kvm 的时候可以配合这阅读一下。

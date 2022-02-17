@@ -3,6 +3,7 @@
 
 ## 教程
 - [The Little Book of Rust Macros](https://danielkeep.github.io/tlborm/book/README.html)
+- [Rust Latam: procedural macros workshop](https://github.com/dtolnay/proc-macro-workshop) : 学一下 macro
 
 ## 文摘
 - [Why not Rust](https://matklad.github.io//2020/09/20/why-not-rust.html) : 指出 Rust 的一些问题，关于 C++ 和 Rust 的性能对比，理解很深刻。
@@ -17,6 +18,7 @@
 - [tokio 的源码分析](https://tony612.github.io/tokio-internals/01.html) : 中文的，很简短
 - [10 万行 rust 之后的经验](https://matklad.github.io/2021/09/05/Rust100k.html)
 - [RustMagazine 中文月刊](https://rustmagazine.github.io/rust_magazine_2021/chapter_12/toc.html) : 国内写的一些文摘
+- [Making slow Rust code fast](https://patrickfreed.github.io/rust/2021/10/15/making-slow-rust-code-fast.html#viewing-criterions-html-report) : 如何在 Rust 上搞性能分析
 
 ## 项目
 - [Aims to be compatible with the Linux ABI](https://github.com/nuta/kerla)

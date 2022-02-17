@@ -2,87 +2,87 @@
 
 <!-- vim-markdown-toc GitLab -->
 
-- [打通fs的方法](#打通fs的方法)
-    - [TODO](#todo)
-- [VFS](#vfs)
-    - [lookup](#lookup)
-    - [path](#path)
-- [path walking](#path-walking)
-- [VFS standard file operation](#vfs-standard-file-operation)
-    - [inode_operations::fiemap](#inode_operationsfiemap)
-    - [file_operations::mmap](#file_operationsmmap)
-    - [file_operations::write_iter](#file_operationswrite_iter)
-    - [file_operations::iopoll](#file_operationsiopoll)
-- [kiocb](#kiocb)
-- [file io](#file-io)
-    - [aio(dated)](#aiodated)
-    - [io uring](#io-uring)
-- [file writeback](#file-writeback)
-- [fd](#fd)
-- [fcntl](#fcntl)
-- [eventfd](#eventfd)
-- [epoll](#epoll)
-- [anon_inodes](#anon_inodes)
-- [flock](#flock)
-- [ext2](#ext2)
-- [nobdv fs](#nobdv-fs)
-- [virtual fs library summary](#virtual-fs-library-summary)
-    - [libfs](#libfs)
-- [virtual fs for debug](#virtual-fs-for-debug)
-- [file descriptor](#file-descriptor)
-- [virtual fs interface](#virtual-fs-interface)
-- [mount](#mount)
-    - [pivot_root](#pivot_root)
-- [superblock](#superblock)
-    - [super operations](#super-operations)
-- [dentry](#dentry)
-    - [d_path](#d_path)
-- [helper](#helper)
-- [attr](#attr)
-- [open.c(make this part more clear, split it)](#opencmake-this-part-more-clear-split-it)
-- [open](#open)
-- [iomap](#iomap)
-- [fuse](#fuse)
-- [block layer](#block-layer)
-- [initfs](#initfs)
-- [overlay fs](#overlay-fs)
-- [inode](#inode)
-- [dcache](#dcache)
-    - [dcache shrink](#dcache-shrink)
-- [lvm](#lvm)
-- [splice](#splice)
-- [pipe](#pipe)
-- [devpts](#devpts)
-- [dup(merge)](#dupmerge)
-- [IO buffer(merge)](#io-buffermerge)
-- [notify](#notify)
-- [attr](#attr-1)
-- [dax](#dax)
-- [block device](#block-device)
-- [char device](#char-device)
-- [tmpfs](#tmpfs)
-- [exciting](#exciting)
-- [benchmark](#benchmark)
-    - [fio](#fio)
-    - [filebench](#filebench)
-- [nvme](#nvme)
-- [fallocate](#fallocate)
-- [union fs](#union-fs)
-- [TODO](#todo-1)
-- [multiqueue](#multiqueue)
-- [null blk](#null-blk)
-- [proc](#proc)
-    - [sysctl](#sysctl)
-- [mnt](#mnt)
-- [fifo](#fifo)
-- [configfs](#configfs)
-- [binder](#binder)
-- [zone](#zone)
-- [nfs](#nfs)
-- [compression fs](#compression-fs)
-- [timerfd](#timerfd)
-- [ceph](#ceph)
-- [close](#close)
+* [打通fs的方法](#打通fs的方法)
+    * [TODO](#todo)
+* [VFS](#vfs)
+    * [lookup](#lookup)
+    * [path](#path)
+* [path walking](#path-walking)
+* [VFS standard file operation](#vfs-standard-file-operation)
+    * [inode_operations::fiemap](#inode_operationsfiemap)
+    * [file_operations::mmap](#file_operationsmmap)
+    * [file_operations::write_iter](#file_operationswrite_iter)
+    * [file_operations::iopoll](#file_operationsiopoll)
+* [kiocb](#kiocb)
+* [file io](#file-io)
+    * [aio(dated)](#aiodated)
+    * [io uring](#io-uring)
+* [file writeback](#file-writeback)
+* [fd](#fd)
+* [fcntl](#fcntl)
+* [eventfd](#eventfd)
+* [epoll](#epoll)
+* [anon_inodes](#anon_inodes)
+* [flock](#flock)
+* [ext2](#ext2)
+* [nobdv fs](#nobdv-fs)
+* [virtual fs library summary](#virtual-fs-library-summary)
+    * [libfs](#libfs)
+* [virtual fs for debug](#virtual-fs-for-debug)
+* [file descriptor](#file-descriptor)
+* [virtual fs interface](#virtual-fs-interface)
+* [mount](#mount)
+    * [pivot_root](#pivot_root)
+* [superblock](#superblock)
+    * [super operations](#super-operations)
+* [dentry](#dentry)
+    * [d_path](#d_path)
+* [helper](#helper)
+* [attr](#attr)
+* [open.c(make this part more clear, split it)](#opencmake-this-part-more-clear-split-it)
+* [open](#open)
+* [iomap](#iomap)
+* [fuse](#fuse)
+* [block layer](#block-layer)
+* [initfs](#initfs)
+* [overlay fs](#overlay-fs)
+* [inode](#inode)
+* [dcache](#dcache)
+    * [dcache shrink](#dcache-shrink)
+* [lvm](#lvm)
+* [splice](#splice)
+* [pipe](#pipe)
+* [devpts](#devpts)
+* [dup(merge)](#dupmerge)
+* [IO buffer(merge)](#io-buffermerge)
+* [notify](#notify)
+* [attr](#attr-1)
+* [dax](#dax)
+* [block device](#block-device)
+* [char device](#char-device)
+* [tmpfs](#tmpfs)
+* [exciting](#exciting)
+* [benchmark](#benchmark)
+    * [fio](#fio)
+    * [filebench](#filebench)
+* [nvme](#nvme)
+* [fallocate](#fallocate)
+* [union fs](#union-fs)
+* [TODO](#todo-1)
+* [multiqueue](#multiqueue)
+* [null blk](#null-blk)
+* [proc](#proc)
+    * [sysctl](#sysctl)
+* [mnt](#mnt)
+* [fifo](#fifo)
+* [configfs](#configfs)
+* [binder](#binder)
+* [zone](#zone)
+* [nfs](#nfs)
+* [compression fs](#compression-fs)
+* [timerfd](#timerfd)
+* [ceph](#ceph)
+* [close](#close)
 
 <!-- vim-markdown-toc -->
 
@@ -91,7 +91,7 @@
 用户层的角度:
 1. fs 可以用于访问文件: ext2, ext3
 2. fs 用于导出信息: (audit 为什么使用网络)
-    1. 系统的状态 : proc 
+    1. 系统的状态 : proc
     2. 设备状态 : sysfs
     3. 调试 : debugfs
 3. 设备可以通过文件系统进行访问 : fs/char_dev.c fs/block_dev.c
@@ -128,7 +128,7 @@
 ## VFS
 基本元素:
 
-superblock : 持有整个文件系统的基本信息。 superblock operation 描述创建 fs specific 的 inode 
+superblock : 持有整个文件系统的基本信息。 superblock operation 描述创建 fs specific 的 inode
 
 inode : 描述文件的静态属性，比如大小，创建的时间等等。
 
@@ -138,7 +138,7 @@ dir entry : 目录也是一个文件，这是目录保存的基本内容。(那�
 
 VFS 提供的功能:
 1. 提供一些统一的解决方案 : file lock，路径解析
-2. 提供一些 generic 的实现 : 
+2. 提供一些 generic 的实现 :
 3. 一些需要具体文件系统实现的接口 :
 
 file_operations::mkdir 作为 file 的inode 和 dir 有区别吗 ?
@@ -165,31 +165,31 @@ file_operations::mkdir 作为 file 的inode 和 dir 有区别吗 ?
 
 * ***核心数据结构***
 1. 都是在什么时候装配的 ?
-2. 
+2.
 
 ```c
 struct nameidata {
-	struct path	path;
-	struct qstr	last;
-	struct path	root;
-	struct inode	*inode; /* path.dentry.d_inode */
-	unsigned int	flags;
-	unsigned	seq, m_seq, r_seq;
-	int		last_type;
-	unsigned	depth;
-	int		total_link_count;
-	struct saved {
-		struct path link;
-		struct delayed_call done;
-		const char *name;
-		unsigned seq;
-	} *stack, internal[EMBEDDED_LEVELS];
-	struct filename	*name;
-	struct nameidata *saved;
-	unsigned	root_seq;
-	int		dfd;
-	kuid_t		dir_uid;
-	umode_t		dir_mode;
+  struct path path;
+  struct qstr last;
+  struct path root;
+  struct inode  *inode; /* path.dentry.d_inode */
+  unsigned int  flags;
+  unsigned  seq, m_seq, r_seq;
+  int   last_type;
+  unsigned  depth;
+  int   total_link_count;
+  struct saved {
+    struct path link;
+    struct delayed_call done;
+    const char *name;
+    unsigned seq;
+  } *stack, internal[EMBEDDED_LEVELS];
+  struct filename *name;
+  struct nameidata *saved;
+  unsigned  root_seq;
+  int   dfd;
+  kuid_t    dir_uid;
+  umode_t   dir_mode;
 } __randomize_layout;
 ```
 
@@ -198,14 +198,14 @@ struct nameidata {
 
 
 * ***流程***
-walk_component 
+walk_component
 
 ```c
 static const char *walk_component(struct nameidata *nd, int flags) // 调用 lookup_fast 和 lookup_slow
 ```
 
 lookup_fast : 调用 `__d_lookup`
-`__lookup_slow` : 
+`__lookup_slow` :
 1. d_alloc_parallel : ?
 2. `old = inode->i_op->lookup(inode, dentry, flags);` : vfs 提供 looup 接口
 
@@ -213,24 +213,24 @@ lookup_fast : 调用 `__d_lookup`
 ```c
 static struct dentry *ext2_lookup(struct inode * dir, struct dentry *dentry, unsigned int flags)
 {
-	struct inode * inode;
-	ino_t ino;
-	
-	if (dentry->d_name.len > EXT2_NAME_LEN)
-		return ERR_PTR(-ENAMETOOLONG);
+  struct inode * inode;
+  ino_t ino;
 
-	ino = ext2_inode_by_name(dir, &dentry->d_name);
-	inode = NULL;
-	if (ino) {
-		inode = ext2_iget(dir->i_sb, ino);
-		if (inode == ERR_PTR(-ESTALE)) {
-			ext2_error(dir->i_sb, __func__,
-					"deleted inode referenced: %lu",
-					(unsigned long) ino);
-			return ERR_PTR(-EIO);
-		}
-	}
-	return d_splice_alias(inode, dentry);
+  if (dentry->d_name.len > EXT2_NAME_LEN)
+    return ERR_PTR(-ENAMETOOLONG);
+
+  ino = ext2_inode_by_name(dir, &dentry->d_name);
+  inode = NULL;
+  if (ino) {
+    inode = ext2_iget(dir->i_sb, ino);
+    if (inode == ERR_PTR(-ESTALE)) {
+      ext2_error(dir->i_sb, __func__,
+          "deleted inode referenced: %lu",
+          (unsigned long) ino);
+      return ERR_PTR(-EIO);
+    }
+  }
+  return d_splice_alias(inode, dentry);
 }
 ```
 
@@ -238,16 +238,16 @@ static struct dentry *ext2_lookup(struct inode * dir, struct dentry *dentry, uns
 ```c
 ino_t ext2_inode_by_name(struct inode *dir, const struct qstr *child)
 {
-	ino_t res = 0;
-	struct ext2_dir_entry_2 *de;
-	struct page *page;
-	
-	de = ext2_find_entry (dir, child, &page); // 将 direcory 的内容加载到 page cache 中间，其实 dentry 和 这个没有什么关系，此处加载的 page 其实就是当做普通文件内容即可
-	if (de) {
-		res = le32_to_cpu(de->inode);
-		ext2_put_page(page);
-	}
-	return res;
+  ino_t res = 0;
+  struct ext2_dir_entry_2 *de;
+  struct page *page;
+
+  de = ext2_find_entry (dir, child, &page); // 将 direcory 的内容加载到 page cache 中间，其实 dentry 和 这个没有什么关系，此处加载的 page 其实就是当做普通文件内容即可
+  if (de) {
+    res = le32_to_cpu(de->inode);
+    ext2_put_page(page);
+  }
+  return res;
 }
 ```
 
@@ -262,16 +262,16 @@ ino_t ext2_inode_by_name(struct inode *dir, const struct qstr *child)
 
 ```c
 struct path {
-	struct vfsmount *mnt;
-	struct dentry *dentry;
+  struct vfsmount *mnt;
+  struct dentry *dentry;
 } __randomize_layout;
 ```
 
 ```c
 int kern_path(const char *name, unsigned int flags, struct path *path)
 {
-	return filename_lookup(AT_FDCWD, getname_kernel(name),
-			       flags, path, NULL);
+  return filename_lookup(AT_FDCWD, getname_kernel(name),
+             flags, path, NULL);
 }
 
 filename_lookup : 装配 nameidata，call path_lookupat
@@ -282,8 +282,8 @@ path_lookupat : 就是查询的核心位置了
 
 
 
-## VFS standard file operation 
-1. 
+## VFS standard file operation
+1.
 ```c
 /*
  * Support for read() - Find the page attached to f_mapping and copy out the
@@ -299,34 +299,34 @@ static ssize_t hugetlbfs_read_iter(struct kiocb *iocb, struct iov_iter *to)
     3. 所以说不过去
 ```c
 static const struct address_space_operations myfs_aops = {
-	/* TODO 6: Fill address space operations structure. */
-	.readpage	= simple_readpage,
-	.write_begin	= simple_write_begin,
-	.write_end	= simple_write_end,
+  /* TODO 6: Fill address space operations structure. */
+  .readpage = simple_readpage,
+  .write_begin  = simple_write_begin,
+  .write_end  = simple_write_end,
 };
 
 static const struct address_space_operations minfs_aops = {
-	.readpage = simple_readpage,
-	.write_begin = simple_write_begin,
-	.write_end = simple_write_end,
+  .readpage = simple_readpage,
+  .write_begin = simple_write_begin,
+  .write_end = simple_write_end,
 };
 ```
 
 
 #### inode_operations::fiemap
-// TODO 
+// TODO
 // 啥功能呀 ?
 
 ```c
 const struct inode_operations ext2_file_inode_operations = {
 #ifdef CONFIG_EXT2_FS_XATTR
-	.listxattr	= ext2_listxattr,
+  .listxattr  = ext2_listxattr,
 #endif
-	.getattr	= ext2_getattr,
-	.setattr	= ext2_setattr,
-	.get_acl	= ext2_get_acl,
-	.set_acl	= ext2_set_acl,
-	.fiemap		= ext2_fiemap,
+  .getattr  = ext2_getattr,
+  .setattr  = ext2_setattr,
+  .get_acl  = ext2_get_acl,
+  .set_acl  = ext2_set_acl,
+  .fiemap   = ext2_fiemap,
 };
 
 /**
@@ -342,35 +342,35 @@ const struct inode_operations ext2_file_inode_operations = {
  */
 
 int generic_block_fiemap(struct inode *inode,
-			 struct fiemap_extent_info *fieinfo, u64 start,
-			 u64 len, get_block_t *get_block)
+       struct fiemap_extent_info *fieinfo, u64 start,
+       u64 len, get_block_t *get_block)
 {
-	int ret;
-	inode_lock(inode);
-	ret = __generic_block_fiemap(inode, fieinfo, start, len, get_block);
-	inode_unlock(inode);
-	return ret;
+  int ret;
+  inode_lock(inode);
+  ret = __generic_block_fiemap(inode, fieinfo, start, len, get_block);
+  inode_unlock(inode);
+  return ret;
 }
 ```
 
 #### file_operations::mmap
 
-唯一的调用位置: mmap_region 
+唯一的调用位置: mmap_region
 ```c
 static inline int call_mmap(struct file *file, struct vm_area_struct *vma) {
-	return file->f_op->mmap(file, vma);
+  return file->f_op->mmap(file, vma);
 }
 
 /* This is used for a general mmap of a disk file */
 int generic_file_mmap(struct file * file, struct vm_area_struct * vma)
 {
-	struct address_space *mapping = file->f_mapping;
+  struct address_space *mapping = file->f_mapping;
 
-	if (!mapping->a_ops->readpage)
-		return -ENOEXEC;
-	file_accessed(file);
-	vma->vm_ops = &generic_file_vm_ops; // TODO 追踪一下
-	return 0;
+  if (!mapping->a_ops->readpage)
+    return -ENOEXEC;
+  file_accessed(file);
+  vma->vm_ops = &generic_file_vm_ops; // TODO 追踪一下
+  return 0;
 }
 ```
 #### file_operations::write_iter
@@ -381,21 +381,21 @@ io_write ==> call_write_iter ==> file_operations::write_iter
 
 ```c
 static int io_write(struct io_kiocb *req, bool force_nonblock,
-		    struct io_comp_state *cs)
+        struct io_comp_state *cs)
 {
   // ...
-	if (req->file->f_op->write_iter)
-		ret2 = call_write_iter(req->file, kiocb, iter);
-	else if (req->file->f_op->write)
-		ret2 = loop_rw_iter(WRITE, req->file, kiocb, iter);
+  if (req->file->f_op->write_iter)
+    ret2 = call_write_iter(req->file, kiocb, iter);
+  else if (req->file->f_op->write)
+    ret2 = loop_rw_iter(WRITE, req->file, kiocb, iter);
   // ...
 ```
 
 ```c
 static inline ssize_t call_write_iter(struct file *file, struct kiocb *kio,
-				      struct iov_iter *iter)
+              struct iov_iter *iter)
 {
-	return file->f_op->write_iter(kio, iter);
+  return file->f_op->write_iter(kio, iter);
 }
 ```
 
@@ -408,10 +408,10 @@ example user: io_uring::io_do_iopoll
 ```c
 static int blkdev_iopoll(struct kiocb *kiocb, bool wait)
 {
-	struct block_device *bdev = I_BDEV(kiocb->ki_filp->f_mapping->host);
-	struct request_queue *q = bdev_get_queue(bdev);
+  struct block_device *bdev = I_BDEV(kiocb->ki_filp->f_mapping->host);
+  struct request_queue *q = bdev_get_queue(bdev);
 
-	return blk_poll(q, READ_ONCE(kiocb->ki_cookie), wait);
+  return blk_poll(q, READ_ONCE(kiocb->ki_cookie), wait);
 }
 ```
 
@@ -421,23 +421,23 @@ static int blkdev_iopoll(struct kiocb *kiocb, bool wait)
 
 ```c
 struct kiocb {
-	struct file		*ki_filp;
+  struct file   *ki_filp;
 
-	/* The 'ki_filp' pointer is shared in a union for aio */
-	randomized_struct_fields_start
+  /* The 'ki_filp' pointer is shared in a union for aio */
+  randomized_struct_fields_start
 
-	loff_t			ki_pos;
-	void (*ki_complete)(struct kiocb *iocb, long ret, long ret2);
-	void			*private;
-	int			ki_flags;
-	u16			ki_hint;
-	u16			ki_ioprio; /* See linux/ioprio.h */
-	union {
-		unsigned int		ki_cookie; /* for ->iopoll */
-		struct wait_page_queue	*ki_waitq; /* for async buffered IO */
-	};
+  loff_t      ki_pos;
+  void (*ki_complete)(struct kiocb *iocb, long ret, long ret2);
+  void      *private;
+  int     ki_flags;
+  u16     ki_hint;
+  u16     ki_ioprio; /* See linux/ioprio.h */
+  union {
+    unsigned int    ki_cookie; /* for ->iopoll */
+    struct wait_page_queue  *ki_waitq; /* for async buffered IO */
+  };
 
-	randomized_struct_fields_end
+  randomized_struct_fields_end
 };
 ```
 
@@ -455,60 +455,60 @@ aio 和 uring :
 3. iopoll 的 epoll 有没有关系 ?
 4. iterate 和 iterate_shared 是用于遍历什么的 ?
 5. fsycn 和 fasync 的区别
-6. flock 
+6. flock
 7. splice_write 和 splice_read 和 pipe 的关系是什么 ?
 8. setfl 是做什么的 ?
 
 ```c
 struct file_operations {
-	struct module *owner;
-	loff_t (*llseek) (struct file *, loff_t, int);
-	ssize_t (*read) (struct file *, char __user *, size_t, loff_t *);
-	ssize_t (*write) (struct file *, const char __user *, size_t, loff_t *);
-	ssize_t (*read_iter) (struct kiocb *, struct iov_iter *);
-	ssize_t (*write_iter) (struct kiocb *, struct iov_iter *);
-	int (*iopoll)(struct kiocb *kiocb, bool spin);
-	int (*iterate) (struct file *, struct dir_context *);
-	int (*iterate_shared) (struct file *, struct dir_context *);
-	__poll_t (*poll) (struct file *, struct poll_table_struct *);
-	long (*unlocked_ioctl) (struct file *, unsigned int, unsigned long);
-	long (*compat_ioctl) (struct file *, unsigned int, unsigned long);
-	int (*mmap) (struct file *, struct vm_area_struct *);
-	unsigned long mmap_supported_flags;
-	int (*open) (struct inode *, struct file *);
-	int (*flush) (struct file *, fl_owner_t id);
-	int (*release) (struct inode *, struct file *);
-	int (*fsync) (struct file *, loff_t, loff_t, int datasync);
-	int (*fasync) (int, struct file *, int);
-	int (*lock) (struct file *, int, struct file_lock *);
-	ssize_t (*sendpage) (struct file *, struct page *, int, size_t, loff_t *, int);
-	unsigned long (*get_unmapped_area)(struct file *, unsigned long, unsigned long, unsigned long, unsigned long);
-	int (*check_flags)(int);
-	int (*setfl)(struct file *, unsigned long);
-	int (*flock) (struct file *, int, struct file_lock *);
-	ssize_t (*splice_write)(struct pipe_inode_info *, struct file *, loff_t *, size_t, unsigned int);
-	ssize_t (*splice_read)(struct file *, loff_t *, struct pipe_inode_info *, size_t, unsigned int);
-	int (*setlease)(struct file *, long, struct file_lock **, void **);
-	long (*fallocate)(struct file *file, int mode, loff_t offset,
-			  loff_t len);
-	void (*show_fdinfo)(struct seq_file *m, struct file *f);
+  struct module *owner;
+  loff_t (*llseek) (struct file *, loff_t, int);
+  ssize_t (*read) (struct file *, char __user *, size_t, loff_t *);
+  ssize_t (*write) (struct file *, const char __user *, size_t, loff_t *);
+  ssize_t (*read_iter) (struct kiocb *, struct iov_iter *);
+  ssize_t (*write_iter) (struct kiocb *, struct iov_iter *);
+  int (*iopoll)(struct kiocb *kiocb, bool spin);
+  int (*iterate) (struct file *, struct dir_context *);
+  int (*iterate_shared) (struct file *, struct dir_context *);
+  __poll_t (*poll) (struct file *, struct poll_table_struct *);
+  long (*unlocked_ioctl) (struct file *, unsigned int, unsigned long);
+  long (*compat_ioctl) (struct file *, unsigned int, unsigned long);
+  int (*mmap) (struct file *, struct vm_area_struct *);
+  unsigned long mmap_supported_flags;
+  int (*open) (struct inode *, struct file *);
+  int (*flush) (struct file *, fl_owner_t id);
+  int (*release) (struct inode *, struct file *);
+  int (*fsync) (struct file *, loff_t, loff_t, int datasync);
+  int (*fasync) (int, struct file *, int);
+  int (*lock) (struct file *, int, struct file_lock *);
+  ssize_t (*sendpage) (struct file *, struct page *, int, size_t, loff_t *, int);
+  unsigned long (*get_unmapped_area)(struct file *, unsigned long, unsigned long, unsigned long, unsigned long);
+  int (*check_flags)(int);
+  int (*setfl)(struct file *, unsigned long);
+  int (*flock) (struct file *, int, struct file_lock *);
+  ssize_t (*splice_write)(struct pipe_inode_info *, struct file *, loff_t *, size_t, unsigned int);
+  ssize_t (*splice_read)(struct file *, loff_t *, struct pipe_inode_info *, size_t, unsigned int);
+  int (*setlease)(struct file *, long, struct file_lock **, void **);
+  long (*fallocate)(struct file *file, int mode, loff_t offset,
+        loff_t len);
+  void (*show_fdinfo)(struct seq_file *m, struct file *f);
 #ifndef CONFIG_MMU
-	unsigned (*mmap_capabilities)(struct file *);
+  unsigned (*mmap_capabilities)(struct file *);
 #endif
-	ssize_t (*copy_file_range)(struct file *, loff_t, struct file *,
-			loff_t, size_t, unsigned int);
-	loff_t (*remap_file_range)(struct file *file_in, loff_t pos_in,
-				   struct file *file_out, loff_t pos_out,
-				   loff_t len, unsigned int remap_flags);
-	int (*fadvise)(struct file *, loff_t, loff_t, int);
+  ssize_t (*copy_file_range)(struct file *, loff_t, struct file *,
+      loff_t, size_t, unsigned int);
+  loff_t (*remap_file_range)(struct file *file_in, loff_t pos_in,
+           struct file *file_out, loff_t pos_out,
+           loff_t len, unsigned int remap_flags);
+  int (*fadvise)(struct file *, loff_t, loff_t, int);
 } __randomize_layout;
 ```
 
-2. 
+2.
 
 #### aio(dated)
-1. 但是似乎是可以替代 read 和 write 的功能，比如 ext2 中间就没有为 ext2_file_operation 注册 read 和 write 
-2. read_iter 和 write_iter 是用来实现 异步IO 的。 为什么可以实现 aio ? aio 在用户层的体现是什么 ? 
+1. 但是似乎是可以替代 read 和 write 的功能，比如 ext2 中间就没有为 ext2_file_operation 注册 read 和 write
+2. read_iter 和 write_iter 是用来实现 异步IO 的。 为什么可以实现 aio ? aio 在用户层的体现是什么 ?
 
 aio 在工程上的具体使用 libaio 的库， https://oxnz.github.io/2016/10/13/linux-aio/
 
@@ -528,20 +528,20 @@ vfs_write
 ```c
 static ssize_t new_sync_write(struct file *filp, const char __user *buf, size_t len, loff_t *ppos)
 {
-	struct iovec iov = { .iov_base = (void __user *)buf, .iov_len = len };
-	struct kiocb kiocb;
-	struct iov_iter iter;
-	ssize_t ret;
+  struct iovec iov = { .iov_base = (void __user *)buf, .iov_len = len };
+  struct kiocb kiocb;
+  struct iov_iter iter;
+  ssize_t ret;
 
-	init_sync_kiocb(&kiocb, filp);
-	kiocb.ki_pos = (ppos ? *ppos : 0);
-	iov_iter_init(&iter, WRITE, &iov, 1, len);
+  init_sync_kiocb(&kiocb, filp);
+  kiocb.ki_pos = (ppos ? *ppos : 0);
+  iov_iter_init(&iter, WRITE, &iov, 1, len);
 
-	ret = call_write_iter(filp, &kiocb, &iter);
-	BUG_ON(ret == -EIOCBQUEUED);
-	if (ret > 0 && ppos)
-		*ppos = kiocb.ki_pos;
-	return ret;
+  ret = call_write_iter(filp, &kiocb, &iter);
+  BUG_ON(ret == -EIOCBQUEUED);
+  if (ret > 0 && ppos)
+    *ppos = kiocb.ki_pos;
+  return ret;
 }
 ```
 
@@ -558,49 +558,49 @@ int io_destroy(io_context_t ctx);
 io_context_t 是指向 io_context 的指针类型，其中 maxevents 是参数，ctxp 是返回值。
 
 io_context 是公共资源:
-An `io_context_t` object can be shared between threads, both for submission and completion. 
-No guarantees are provided about ordering of submission and completion with respect to interaction from multiple threads. 
+An `io_context_t` object can be shared between threads, both for submission and completion.
+No guarantees are provided about ordering of submission and completion with respect to interaction from multiple threads.
 There may be performance implications from sharing `io_context_t` objects between threads.
 
 ```c
 struct kiocb {
-	struct file		*ki_filp;
+  struct file   *ki_filp;
 
-	loff_t			ki_pos;
-	void (*ki_complete)(struct kiocb *iocb, long ret, long ret2);
-	void			*private;
-	int			ki_flags;
-	u16			ki_hint;
-	u16			ki_ioprio; /* See linux/ioprio.h */
-	unsigned int		ki_cookie; /* for ->iopoll */
+  loff_t      ki_pos;
+  void (*ki_complete)(struct kiocb *iocb, long ret, long ret2);
+  void      *private;
+  int     ki_flags;
+  u16     ki_hint;
+  u16     ki_ioprio; /* See linux/ioprio.h */
+  unsigned int    ki_cookie; /* for ->iopoll */
 };
 
 struct iocb {
-	PADDEDptr(void *data, __pad1);	/* Return in the io completion event */
-	/* key: For use in identifying io requests */
-	/* aio_rw_flags: RWF_* flags (such as RWF_NOWAIT) */
-	PADDED(unsigned key, aio_rw_flags);
+  PADDEDptr(void *data, __pad1);  /* Return in the io completion event */
+  /* key: For use in identifying io requests */
+  /* aio_rw_flags: RWF_* flags (such as RWF_NOWAIT) */
+  PADDED(unsigned key, aio_rw_flags);
 
-	short		aio_lio_opcode;	
-	short		aio_reqprio;
-	int		aio_fildes;
+  short   aio_lio_opcode;
+  short   aio_reqprio;
+  int   aio_fildes;
 
-	union {
-		struct io_iocb_common		c;
-		struct io_iocb_vector		v;
-		struct io_iocb_poll		poll;
-		struct io_iocb_sockaddr	saddr;
-	} u;
+  union {
+    struct io_iocb_common   c;
+    struct io_iocb_vector   v;
+    struct io_iocb_poll   poll;
+    struct io_iocb_sockaddr saddr;
+  } u;
 };
 
 struct io_iocb_common {
-	PADDEDptr(void	*buf, __pad1);
-	PADDEDul(nbytes, __pad2);
-	long long	offset;
-	long long	__pad3;
-	unsigned	flags;
-	unsigned	resfd;
-};	/* result code is the amount read or -'ve errno */
+  PADDEDptr(void  *buf, __pad1);
+  PADDEDul(nbytes, __pad2);
+  long long offset;
+  long long __pad3;
+  unsigned  flags;
+  unsigned  resfd;
+};  /* result code is the amount read or -'ve errno */
 ```
 The meaning of the fields is as follows: data is a pointer to a user-defined object used to represent the operation
 
@@ -616,11 +616,11 @@ The meaning of the fields is as follows: data is a pointer to a user-defined obj
 
 作者还分析了 io_getevents 的参数不同取值的含义。
 
-第三个问题: aio 内核如何实现的 
+第三个问题: aio 内核如何实现的
 1. 分析 syscall io_submit ，可以非常容易的跟踪到 aio_write，并且在其中调用 call_write_iter
 2. 如何实现系统调用 : io_getevents
 
-io_getevents => read_events => aio_read_events => aio_read_events_ring 
+io_getevents => read_events => aio_read_events => aio_read_events_ring
 
 aio_read_events_ring 会访问 kioctx::ring_pages 来提供给用户就绪的 io，使用 aio_complete 向其中添加。
 aio_complete 会调用 eventfd_signal，这是实现 epoll 机制的核心。
@@ -629,9 +629,10 @@ aio_complete 会调用 eventfd_signal，这是实现 epoll 机制的核心。
 > 2. aio 不能使用 page cache, 那么对于 metadata 的读取， aio 可以实现异步吗 ? (我猜测，应该所有的文件系统都是不支持的吧!)
 
 #### io uring
+- [迟先生 : io_uring 的接口与实现](https://www.skyzh.dev/posts/articles/2021-06-14-deep-dive-io-uring/)
+
 ![](https://kernel.taobao.org/2020/09/IO_uring_Optimization_for_Nginx/3.png)
 - [ ] https://github.com/frevib/io_uring-echo-server : 别 手高眼低 了，先学会如何使用吧。
-
 
  - [ ] [^8]
 io_uring 有如此出众的性能，主要来源于以下几个方面：
@@ -646,12 +647,13 @@ io_uring 有如此出众的性能，主要来源于以下几个方面：
 [Linux I/O 原理和 Zero-copy 技术全面揭秘](https://zhuanlan.zhihu.com/p/308054212)
 - [ ] sendfile, etc
 
+
 [^10]
 read the doc :
 aio's limitation :
 1. only support async IO for O_DIRECT
 > TODO how O_DIRECT works
-> 1. checked 
+> 1. checked
 > 2. skip page cache
 2. some constrans for sync submit
 3. api lead noticeable copying
@@ -674,7 +676,7 @@ https://kernel-recipes.org/en/2019/talks/faster-io-through-io_uring/
 
 
 [Man page]
-  - io_uring_setup : 
+  - io_uring_setup :
 
 - IORING_SETUP_IOPOLL
 - IORING_SETUP_SQPOLL
@@ -699,7 +701,7 @@ Related code resides in fs/file.c, it works just what we expected.
 abbreviation for file control
 
 1. lease ?
-2. dnotify 
+2. dnotify
 3. seal
 
 来源自 man fcntl(2)
@@ -740,18 +742,18 @@ epoll_create
  */
 static int do_epoll_create(int flags)
 
-	 * Creates all the items needed to setup an eventpoll file. That is,
-	 * a file structure and a free file descriptor.
+   * Creates all the items needed to setup an eventpoll file. That is,
+   * a file structure and a free file descriptor.
 
 
 /* File callbacks that implement the eventpoll file behaviour */
 static const struct file_operations eventpoll_fops = {
 #ifdef CONFIG_PROC_FS
-	.show_fdinfo	= ep_show_fdinfo,
+  .show_fdinfo  = ep_show_fdinfo,
 #endif
-	.release	= ep_eventpoll_release,
-	.poll		= ep_eventpoll_poll,
-	.llseek		= noop_llseek,
+  .release  = ep_eventpoll_release,
+  .poll   = ep_eventpoll_poll,
+  .llseek   = noop_llseek,
 };
 ```
 
@@ -808,14 +810,14 @@ https://www.kernel.org/doc/html/latest/filesystems/locking.html : 说明几乎VF
           - filp->f_op->lock(filp, cmd, fl); : 一些 nfs 使用自定义的
           - posix_lock_file
             - posix_lock_inode : fcntl 上锁是对于 inode 实施的, 在这里对于 file_lock_context 的链表进行遍历，决定是否上锁了之类的
-              - 
+              -
 
 ```c
 struct file_lock_context {
-	spinlock_t		flc_lock;
-	struct list_head	flc_flock;
-	struct list_head	flc_posix;
-	struct list_head	flc_lease;
+  spinlock_t    flc_lock;
+  struct list_head  flc_flock;
+  struct list_head  flc_posix;
+  struct list_head  flc_lease;
 };
 ```
 
@@ -864,11 +866,11 @@ wowotech 有一个嵌入式工程师都应该知道的 debug
 This situation may arise as a result of a call to dup(), dup2(), or fcntl() (see Section 5.5).
 
 ## virtual fs interface
-1. fd 
+1. fd
 5. dentry :
     1. 实在是想不懂为什么会出现 dops 这种东西
 ```c
-// 其中的想法是什么 : 
+// 其中的想法是什么 :
 struct dentry_operations {
         int (*d_revalidate)(struct dentry *, unsigned int);
         int (*d_weak_revalidate)(struct dentry *, unsigned int);
@@ -898,71 +900,71 @@ struct dentry_operations {
 ```c
 int generic_file_mmap(struct file * file, struct vm_area_struct * vma)
 {
-	struct address_space *mapping = file->f_mapping;
+  struct address_space *mapping = file->f_mapping;
 
-	if (!mapping->a_ops->readpage)
-		return -ENOEXEC;
-	file_accessed(file);
-	vma->vm_ops = &generic_file_vm_ops;
-	return 0;
+  if (!mapping->a_ops->readpage)
+    return -ENOEXEC;
+  file_accessed(file);
+  vma->vm_ops = &generic_file_vm_ops;
+  return 0;
 }
 
 struct vm_operations_struct generic_file_vm_ops = {
-	.fault		= filemap_fault, // 标准 page fault 函数
-	.map_pages	= filemap_map_pages, // TODO 从 do_fault_around 调用 filemap_map_pages https://lwn.net/Articles/588802/ 但是具体实现有点不懂，什么叫做 easy access page
-	.page_mkwrite	= filemap_page_mkwrite, // 用于通知当 page 从 read 变成可以 write 的过程
+  .fault    = filemap_fault, // 标准 page fault 函数
+  .map_pages  = filemap_map_pages, // TODO 从 do_fault_around 调用 filemap_map_pages https://lwn.net/Articles/588802/ 但是具体实现有点不懂，什么叫做 easy access page
+  .page_mkwrite = filemap_page_mkwrite, // 用于通知当 page 从 read 变成可以 write 的过程
 };
 ```
 
 ext2 的内容:
 ```
-#define ext2_file_mmap	generic_file_mmap
+#define ext2_file_mmap  generic_file_mmap
 ```
 
 ext4 的内容:
 ```c
 static const struct vm_operations_struct ext4_file_vm_ops = {
-	.fault		= ext4_filemap_fault,
-	.map_pages	= filemap_map_pages,
-	.page_mkwrite   = ext4_page_mkwrite,
+  .fault    = ext4_filemap_fault,
+  .map_pages  = filemap_map_pages,
+  .page_mkwrite   = ext4_page_mkwrite,
 };
 
 static int ext4_file_mmap(struct file *file, struct vm_area_struct *vma)
 {
-	struct inode *inode = file->f_mapping->host;
-	struct ext4_sb_info *sbi = EXT4_SB(inode->i_sb);
-	struct dax_device *dax_dev = sbi->s_daxdev;
+  struct inode *inode = file->f_mapping->host;
+  struct ext4_sb_info *sbi = EXT4_SB(inode->i_sb);
+  struct dax_device *dax_dev = sbi->s_daxdev;
 
-	if (unlikely(ext4_forced_shutdown(sbi)))
-		return -EIO;
+  if (unlikely(ext4_forced_shutdown(sbi)))
+    return -EIO;
 
-	/*
-	 * We don't support synchronous mappings for non-DAX files and
-	 * for DAX files if underneath dax_device is not synchronous.
-	 */
-	if (!daxdev_mapping_supported(vma, dax_dev))
-		return -EOPNOTSUPP;
+  /*
+   * We don't support synchronous mappings for non-DAX files and
+   * for DAX files if underneath dax_device is not synchronous.
+   */
+  if (!daxdev_mapping_supported(vma, dax_dev))
+    return -EOPNOTSUPP;
 
-	file_accessed(file);
-	if (IS_DAX(file_inode(file))) {
-		vma->vm_ops = &ext4_dax_vm_ops;
-		vma->vm_flags |= VM_HUGEPAGE;
-	} else {
-		vma->vm_ops = &ext4_file_vm_ops;
-	}
-	return 0;
+  file_accessed(file);
+  if (IS_DAX(file_inode(file))) {
+    vma->vm_ops = &ext4_dax_vm_ops;
+    vma->vm_flags |= VM_HUGEPAGE;
+  } else {
+    vma->vm_ops = &ext4_file_vm_ops;
+  }
+  return 0;
 }
 
 vm_fault_t ext4_filemap_fault(struct vm_fault *vmf)
 {
-	struct inode *inode = file_inode(vmf->vma->vm_file);
-	vm_fault_t ret;
+  struct inode *inode = file_inode(vmf->vma->vm_file);
+  vm_fault_t ret;
 
-	down_read(&EXT4_I(inode)->i_mmap_sem);
-	ret = filemap_fault(vmf);
-	up_read(&EXT4_I(inode)->i_mmap_sem);
+  down_read(&EXT4_I(inode)->i_mmap_sem);
+  ret = filemap_fault(vmf);
+  up_read(&EXT4_I(inode)->i_mmap_sem);
 
-	return ret;
+  return ret;
 }
 ```
 由此看来，file_operations::mmap 的作用:
@@ -1021,62 +1023,62 @@ file_system_type + super block + mount的关系 : file_system_type 一个文件�
 ```c
 // 这个结构体强调的是自己的信息
 struct vfsmount {
-	struct dentry *mnt_root;	/* root of the mounted tree */
-	struct super_block *mnt_sb;	/* pointer to superblock */
-	int mnt_flags;
+  struct dentry *mnt_root;  /* root of the mounted tree */
+  struct super_block *mnt_sb; /* pointer to superblock */
+  int mnt_flags;
 } __randomize_layout;
 
 // 和其他人关系
 // 1. namespace
 // 2. mount
 struct mount {
-	struct hlist_node mnt_hash; // 全局表格
-	struct mount *mnt_parent; // 爸爸是谁
-	struct dentry *mnt_mountpoint; // 放在爸爸的什么位置
-	struct vfsmount mnt;
-	union {
-		struct rcu_head mnt_rcu;
-		struct llist_node mnt_llist;
-	};
+  struct hlist_node mnt_hash; // 全局表格
+  struct mount *mnt_parent; // 爸爸是谁
+  struct dentry *mnt_mountpoint; // 放在爸爸的什么位置
+  struct vfsmount mnt;
+  union {
+    struct rcu_head mnt_rcu;
+    struct llist_node mnt_llist;
+  };
 #ifdef CONFIG_SMP
-	struct mnt_pcp __percpu *mnt_pcp;
+  struct mnt_pcp __percpu *mnt_pcp;
 #else
-	int mnt_count;
-	int mnt_writers;
+  int mnt_count;
+  int mnt_writers;
 #endif
-	struct list_head mnt_mounts;	/* list of children, anchored here */
-	struct list_head mnt_child;	/* and going through their mnt_child */
-	struct list_head mnt_instance;	/* mount instance on sb->s_mounts */
-	const char *mnt_devname;	/* Name of device e.g. /dev/dsk/hda1 */
-	struct list_head mnt_list; /* 链接到进程namespace中已挂载文件系统中，表头为mnt_namespace的list域 */
-	struct list_head mnt_expire;	/* link in fs-specific expiry list */
-	struct list_head mnt_share;	/* circular list of shared mounts */
-	struct list_head mnt_slave_list;/* list of slave mounts */
-	struct list_head mnt_slave;	/* slave list entry */
-	struct mount *mnt_master;	/* slave is on master->mnt_slave_list */
-	struct mnt_namespace *mnt_ns;	/* containing namespace */
-	struct mountpoint *mnt_mp;	/* where is it mounted */
-	union {
-		struct hlist_node mnt_mp_list;	/* list mounts with the same mountpoint */
-		struct hlist_node mnt_umount;
-	};
-	struct list_head mnt_umounting; /* list entry for umount propagation */
+  struct list_head mnt_mounts;  /* list of children, anchored here */
+  struct list_head mnt_child; /* and going through their mnt_child */
+  struct list_head mnt_instance;  /* mount instance on sb->s_mounts */
+  const char *mnt_devname;  /* Name of device e.g. /dev/dsk/hda1 */
+  struct list_head mnt_list; /* 链接到进程namespace中已挂载文件系统中，表头为mnt_namespace的list域 */
+  struct list_head mnt_expire;  /* link in fs-specific expiry list */
+  struct list_head mnt_share; /* circular list of shared mounts */
+  struct list_head mnt_slave_list;/* list of slave mounts */
+  struct list_head mnt_slave; /* slave list entry */
+  struct mount *mnt_master; /* slave is on master->mnt_slave_list */
+  struct mnt_namespace *mnt_ns; /* containing namespace */
+  struct mountpoint *mnt_mp;  /* where is it mounted */
+  union {
+    struct hlist_node mnt_mp_list;  /* list mounts with the same mountpoint */
+    struct hlist_node mnt_umount;
+  };
+  struct list_head mnt_umounting; /* list entry for umount propagation */
 #ifdef CONFIG_FSNOTIFY
-	struct fsnotify_mark_connector __rcu *mnt_fsnotify_marks;
-	__u32 mnt_fsnotify_mask;
+  struct fsnotify_mark_connector __rcu *mnt_fsnotify_marks;
+  __u32 mnt_fsnotify_mask;
 #endif
-	int mnt_id;			/* mount identifier */
-	int mnt_group_id;		/* peer group identifier */
-	int mnt_expiry_mark;		/* true if marked for expiry */
-	struct hlist_head mnt_pins;
-	struct hlist_head mnt_stuck_children;
+  int mnt_id;     /* mount identifier */
+  int mnt_group_id;   /* peer group identifier */
+  int mnt_expiry_mark;    /* true if marked for expiry */
+  struct hlist_head mnt_pins;
+  struct hlist_head mnt_stuck_children;
 } __randomize_layout;
 ```
 
 
 老版本的记录:
 1. register_filesystem => file_system_type::mount => 调用文件系统自定义mount函数，该函数只是 mount_nodev 的封装，作用是提供自己的 fill_super
-2. fill_super 完成的基本任务 : 
+2. fill_super 完成的基本任务 :
 
 
 按照全新的版本 : fs_context_operations 即可
@@ -1085,17 +1087,17 @@ struct mount {
 
 ```c
 static const struct fs_context_operations hugetlbfs_fs_context_ops = {
-	.free		= hugetlbfs_fs_context_free,
-	.parse_param	= hugetlbfs_parse_param,
-	.get_tree	= hugetlbfs_get_tree,
+  .free   = hugetlbfs_fs_context_free,
+  .parse_param  = hugetlbfs_parse_param,
+  .get_tree = hugetlbfs_get_tree,
 };
 
 static int hugetlbfs_get_tree(struct fs_context *fc)
 {
-	int err = hugetlbfs_validate(fc);
-	if (err)
-		return err;
-	return get_tree_nodev(fc, hugetlbfs_fill_super);
+  int err = hugetlbfs_validate(fc);
+  if (err)
+    return err;
+  return get_tree_nodev(fc, hugetlbfs_fill_super);
   // @todo 总结一下 get_tree_nodev 对于含有 dev 对称函数
 }
 ```
@@ -1109,9 +1111,9 @@ kern_mount
         alloc_fs_context : fc->fs_type->init_fs_context or legacy_init_fs_context
   fc_mount
       vfs_get_tree
-          fc->ops->get_tree : get_tree is init in the alloc_fs_context, legacy_init_fs_context is init get_tree with legacy_get_tree 
+          fc->ops->get_tree : get_tree is init in the alloc_fs_context, legacy_init_fs_context is init get_tree with legacy_get_tree
               A : legacy_get_tree : fc->fs_type->mount
-              B : get_tree_nodev : it seems that kernel always call get_tree_nodev eg. get_tree_nodev(fc, shmem_fill_super) : 
+              B : get_tree_nodev : it seems that kernel always call get_tree_nodev eg. get_tree_nodev(fc, shmem_fill_super) :
                     vfs_get_super
                         sget_fc
                         fill_super
@@ -1121,7 +1123,7 @@ kern_mount
 ```c
 do_mount
   do_new_mount
-    fs_context_for_mount : init the context 
+    fs_context_for_mount : init the context
     vfs_get_tree
     do_new_mount_fc
       vfs_create_mount
@@ -1160,28 +1162,28 @@ mount 的时候，首先需要加载 superblock
 ```c
 void kill_anon_super(struct super_block *sb)
 {
-	dev_t dev = sb->s_dev;
-	generic_shutdown_super(sb);
-	free_anon_bdev(dev);
+  dev_t dev = sb->s_dev;
+  generic_shutdown_super(sb);
+  free_anon_bdev(dev);
 }
 
 void kill_litter_super(struct super_block *sb)
 {
-	if (sb->s_root)
-		d_genocide(sb->s_root);
-	kill_anon_super(sb);
+  if (sb->s_root)
+    d_genocide(sb->s_root);
+  kill_anon_super(sb);
 }
 
 void kill_block_super(struct super_block *sb) // 提供基于block 的 fs, ext2 fat 之类的
 {
-	struct block_device *bdev = sb->s_bdev;
-	fmode_t mode = sb->s_mode;
+  struct block_device *bdev = sb->s_bdev;
+  fmode_t mode = sb->s_mode;
 
-	bdev->bd_super = NULL;
-	generic_shutdown_super(sb); // TODO 
-	sync_blockdev(bdev);
-	WARN_ON_ONCE(!(mode & FMODE_EXCL));
-	blkdev_put(bdev, mode | FMODE_EXCL);
+  bdev->bd_super = NULL;
+  generic_shutdown_super(sb); // TODO
+  sync_blockdev(bdev);
+  WARN_ON_ONCE(!(mode & FMODE_EXCL));
+  blkdev_put(bdev, mode | FMODE_EXCL);
 }
 ```
 - kill_block_super(), which unmounts a file system on a block device
@@ -1207,8 +1209,8 @@ An example for a file system without disk support is the ramfs_mount() function 
 
 ```c
 static const struct super_operations myfs_sops = {
-	.statfs = simple_statfs,
-	.drop_inode = generic_delete_inode,
+  .statfs = simple_statfs,
+  .drop_inode = generic_delete_inode,
 };
 ```
 
@@ -1241,37 +1243,37 @@ static const struct super_operations myfs_sops = {
 
 ```c
 struct dentry {
-	/* RCU lookup touched fields */
-	unsigned int d_flags;		/* protected by d_lock */
-	seqcount_t d_seq;		/* per dentry seqlock */
-	struct hlist_bl_node d_hash;	/* lookup hash list */
-	struct dentry *d_parent;	/* parent directory */
-	struct qstr d_name;
-	struct inode *d_inode;		/* Where the name belongs to - NULL is
-					 * negative */
-	unsigned char d_iname[DNAME_INLINE_LEN];	/* small names */
+  /* RCU lookup touched fields */
+  unsigned int d_flags;   /* protected by d_lock */
+  seqcount_t d_seq;   /* per dentry seqlock */
+  struct hlist_bl_node d_hash;  /* lookup hash list */
+  struct dentry *d_parent;  /* parent directory */
+  struct qstr d_name;
+  struct inode *d_inode;    /* Where the name belongs to - NULL is
+           * negative */
+  unsigned char d_iname[DNAME_INLINE_LEN];  /* small names */
 
-	/* Ref lookup also touches following */
-	struct lockref d_lockref;	/* per-dentry lock and refcount */
-	const struct dentry_operations *d_op;
-	struct super_block *d_sb;	/* The root of the dentry tree */
-	unsigned long d_time;		/* used by d_revalidate */
-	void *d_fsdata;			/* fs-specific data */
+  /* Ref lookup also touches following */
+  struct lockref d_lockref; /* per-dentry lock and refcount */
+  const struct dentry_operations *d_op;
+  struct super_block *d_sb; /* The root of the dentry tree */
+  unsigned long d_time;   /* used by d_revalidate */
+  void *d_fsdata;     /* fs-specific data */
 
-	union {
-		struct list_head d_lru;		/* LRU list */
-		wait_queue_head_t *d_wait;	/* in-lookup ones only */
-	};
-	struct list_head d_child;	/* child of parent list */
-	struct list_head d_subdirs;	/* our children */
-	/*
-	 * d_alias and d_rcu can share memory
-	 */
-	union {
-		struct hlist_node d_alias;	/* inode alias list */
-		struct hlist_bl_node d_in_lookup_hash;	/* only for in-lookup ones */
-	 	struct rcu_head d_rcu;
-	} d_u;
+  union {
+    struct list_head d_lru;   /* LRU list */
+    wait_queue_head_t *d_wait;  /* in-lookup ones only */
+  };
+  struct list_head d_child; /* child of parent list */
+  struct list_head d_subdirs; /* our children */
+  /*
+   * d_alias and d_rcu can share memory
+   */
+  union {
+    struct hlist_node d_alias;  /* inode alias list */
+    struct hlist_bl_node d_in_lookup_hash;  /* only for in-lookup ones */
+    struct rcu_head d_rcu;
+  } d_u;
 } __randomize_layout;
 ```
 
@@ -1286,26 +1288,26 @@ negative dentry [^6] :
 - [ ] d_path
 - [ ] getpwd
 
-## helper 
-1. `inode_init_owner` : 
+## helper
+1. `inode_init_owner` :
 
 3. `d_make_root` : 通过 root inode 创建出来对应的 dentry，所有的inode 都是存在对应的 dentry 并且存放在 parent direcory file 中间，但是唯独 root 不行。
 
 ```c
 struct dentry *d_make_root(struct inode *root_inode)
 {
-	struct dentry *res = NULL;
+  struct dentry *res = NULL;
 
-	if (root_inode) {
-		res = d_alloc_anon(root_inode->i_sb);
-		if (res) {
-			res->d_flags |= DCACHE_RCUACCESS;
-			d_instantiate(res, root_inode);
-		} else {
-			iput(root_inode);
-		}
-	}
-	return res;
+  if (root_inode) {
+    res = d_alloc_anon(root_inode->i_sb);
+    if (res) {
+      res->d_flags |= DCACHE_RCUACCESS;
+      d_instantiate(res, root_inode);
+    } else {
+      iput(root_inode);
+    }
+  }
+  return res;
 }
 ```
 
@@ -1318,16 +1320,16 @@ inode_init_once 看来作用更像是更加基本的初始化，在 minfs 中间
 ```c
 static int __init init_inodecache(void)
 {
-	ext4_inode_cachep = kmem_cache_create_usercopy("ext4_inode_cache",
-				sizeof(struct ext4_inode_info), 0,
-				(SLAB_RECLAIM_ACCOUNT|SLAB_MEM_SPREAD|
-					SLAB_ACCOUNT),
-				offsetof(struct ext4_inode_info, i_data),
-				sizeof_field(struct ext4_inode_info, i_data),
-				init_once); // 
-	if (ext4_inode_cachep == NULL)
-		return -ENOMEM;
-	return 0;
+  ext4_inode_cachep = kmem_cache_create_usercopy("ext4_inode_cache",
+        sizeof(struct ext4_inode_info), 0,
+        (SLAB_RECLAIM_ACCOUNT|SLAB_MEM_SPREAD|
+          SLAB_ACCOUNT),
+        offsetof(struct ext4_inode_info, i_data),
+        sizeof_field(struct ext4_inode_info, i_data),
+        init_once); //
+  if (ext4_inode_cachep == NULL)
+    return -ENOMEM;
+  return 0;
 }
 ```
 
@@ -1354,7 +1356,7 @@ Three kinds of open flags accoring to man page:
 2. file create : O_CLOEXEC, O_CREAT, O_DIRECTORY, O_EXCL, O_NOCTTY, O_NOFOLLOW, O_TMPFILE
 3. file status : O_APPEND, O_ASYNC
 
-- [ ] what's relation with fmode, e.g. FMODE_WRITE  ? 
+- [ ] what's relation with fmode, e.g. FMODE_WRITE  ?
 
 
 - [ ]  O_CLOEXEC
@@ -1365,19 +1367,19 @@ Three kinds of open flags accoring to man page:
         - There is no contradictory, just skip page cache
 
 > The O_DIRECT flag on its own makes an effort to transfer data synchronously,
-but does not give the guarantees of the *O_SYNC* flag that data and necessary metadata are transferred. 
+but does not give the guarantees of the *O_SYNC* flag that data and necessary metadata are transferred.
 To guarantee synchronous I/O, O_SYNC must be used in addition to O_DIRECT.
 
 ```c
 ssize_t noop_direct_IO(struct kiocb *iocb, struct iov_iter *iter)
 {
-	/*
-	 * iomap based filesystems support direct I/O without need for
-	 * this callback. However, it still needs to be set in
-	 * inode->a_ops so that open/fcntl know that direct I/O is
-	 * generally supported.
-	 */
-	return -EINVAL;
+  /*
+   * iomap based filesystems support direct I/O without need for
+   * this callback. However, it still needs to be set in
+   * inode->a_ops so that open/fcntl know that direct I/O is
+   * generally supported.
+   */
+  return -EINVAL;
 }
 ```
 Trace caller of `iomap_dio_rw`, we will find out how to do DIRECT IO on linux.
@@ -1396,13 +1398,13 @@ ext4/xfs's direct IO call `iomap_dio_rw`
 xfs_file_read_iter
 ==> xfs_file_dio_aio_read ==> iomap_dio_rw
 ==> xfs_file_buffered_aio_read ==> generic_file_read_iter
-  
+
   - [ ] I don't know how iomap_dio_rw write page to disk ?
 
 
---> several 
+--> several
 
-- [ ] iomap_write_actor     
+- [ ] iomap_write_actor
   - xfs_file_write_iter ==> xfs_file_buffered_aio_write ==> iomap_file_buffered_write, direct io has very similar path
 - [ ] iomap_page_mkwrite_actor
   - [ ] iomap_page_mkwrite : use `xfs` as example: xfs_filemap_fault ==> `_xfs_filemap_fault` ==> `__xfs_filemap_fault`
@@ -1435,11 +1437,11 @@ maybe iomap is not mature yet, iomap provide a generic interface for fs to read 
  * IOMAP_F_BUFFER_HEAD indicates that the file system requires the use of
  * buffer heads for this mapping.
  */
-#define IOMAP_F_NEW		0x01
-#define IOMAP_F_DIRTY		0x02
-#define IOMAP_F_SHARED		0x04
-#define IOMAP_F_MERGED		0x08
-#define IOMAP_F_BUFFER_HEAD	0x10
+#define IOMAP_F_NEW   0x01
+#define IOMAP_F_DIRTY   0x02
+#define IOMAP_F_SHARED    0x04
+#define IOMAP_F_MERGED    0x08
+#define IOMAP_F_BUFFER_HEAD 0x10
 ```
 
 
@@ -1474,7 +1476,7 @@ https://landley.net/writing/rootfs-intro.html
 3. 既然 initrd 还是可以使用的，为什么 qemu 不能运行 ?
 
 Robert love 谈到 initramfs 的作用:
-https://qr.ae/pNs0eS 
+https://qr.ae/pNs0eS
 但是还是让人非常迷惑:
 1. grub 如何让 ssd 中间的 initramfs 被加载到内存
 2. nvme 模块如何被加载内存
@@ -1505,22 +1507,22 @@ inode.c 中间存在的函数:
 其中的集大成者是 iget5_locked ?
 ```c
 struct inode *iget5_locked(struct super_block *sb, unsigned long hashval,
-		int (*test)(struct inode *, void *),
-		int (*set)(struct inode *, void *), void *data)
+    int (*test)(struct inode *, void *),
+    int (*set)(struct inode *, void *), void *data)
 {
-	struct inode *inode = ilookup5(sb, hashval, test, data);
+  struct inode *inode = ilookup5(sb, hashval, test, data);
 
-	if (!inode) {
-		struct inode *new = alloc_inode(sb);
+  if (!inode) {
+    struct inode *new = alloc_inode(sb);
 
-		if (new) {
-			new->i_state = 0;
-			inode = inode_insert5(new, hashval, test, set, data);
-			if (unlikely(inode != new))
-				destroy_inode(new);
-		}
-	}
-	return inode;
+    if (new) {
+      new->i_state = 0;
+      inode = inode_insert5(new, hashval, test, set, data);
+      if (unlikely(inode != new))
+        destroy_inode(new);
+    }
+  }
+  return inode;
 }
 ```
 真正的有意义的调用:
@@ -1528,11 +1530,11 @@ struct inode *iget5_locked(struct super_block *sb, unsigned long hashval,
 ```c
 struct block_device *bdget(dev_t dev)
 {
-	struct block_device *bdev;
-	struct inode *inode;
+  struct block_device *bdev;
+  struct inode *inode;
 
-	inode = iget5_locked(blockdev_superblock, hash(dev),
-			bdev_test, bdev_set, &dev);
+  inode = iget5_locked(blockdev_superblock, hash(dev),
+      bdev_test, bdev_set, &dev);
 ```
 
 有意思
@@ -1550,12 +1552,12 @@ struct block_device *bdget(dev_t dev)
 ```c
 static unsigned long hash(struct super_block *sb, unsigned long hashval)
 {
-	unsigned long tmp;
+  unsigned long tmp;
 
-	tmp = (hashval * (unsigned long)sb) ^ (GOLDEN_RATIO_PRIME + hashval) /
-			L1_CACHE_BYTES;
-	tmp = tmp ^ ((tmp ^ GOLDEN_RATIO_PRIME) >> i_hash_shift);
-	return tmp & i_hash_mask;
+  tmp = (hashval * (unsigned long)sb) ^ (GOLDEN_RATIO_PRIME + hashval) /
+      L1_CACHE_BYTES;
+  tmp = tmp ^ ((tmp ^ GOLDEN_RATIO_PRIME) >> i_hash_shift);
+  return tmp & i_hash_mask;
 }
 ```
 
@@ -1591,7 +1593,7 @@ static struct hlist_bl_head *dentry_hashtable __read_mostly;
 
 static inline struct hlist_bl_head *d_hash(unsigned int hash)
 {
-	return dentry_hashtable + (hash >> d_hash_shift);
+  return dentry_hashtable + (hash >> d_hash_shift);
 }
 ```
 
@@ -1604,14 +1606,14 @@ static inline struct hlist_bl_head *d_hash(unsigned int hash)
 1. d_add 调用位置太少了，比较通用的调用位置在 libfs 中间，
 2. 其核心执行的内容如下，也就是存在两个 hash，全局的，每个
 
-		hlist_add_head(&dentry->d_u.d_alias, &inode->i_dentry);
+    hlist_add_head(&dentry->d_u.d_alias, &inode->i_dentry);
 3. 实际上，依托 hlist_bl_add_head_rcu d_hash 加入 dentry_hashtable
 
 
-The “dcache” caches information about names in each filesystem to make them quickly available for lookup. 
-Each entry (known as a “dentry”) contains three significant fields: 
-1. a component name, 
-2. *a pointer to a parent dentry*, 
+The “dcache” caches information about names in each filesystem to make them quickly available for lookup.
+Each entry (known as a “dentry”) contains three significant fields:
+1. a component name,
+2. *a pointer to a parent dentry*,
 3. and a pointer to the “inode” which contains further information about the object in that parent with the given name.
 > 为啥需要包含 parent dentry ?
 
@@ -1622,38 +1624,38 @@ Each entry (known as a “dentry”) contains three significant fields:
 
 2. `struct superpage` 中间存在两个函数 TODO 应该用于特殊内容的缓存的
 ```c
-	long (*nr_cached_objects)(struct super_block *,
-				  struct shrink_control *);
-	long (*free_cached_objects)(struct super_block *,
-				    struct shrink_control *);
+  long (*nr_cached_objects)(struct super_block *,
+          struct shrink_control *);
+  long (*free_cached_objects)(struct super_block *,
+            struct shrink_control *);
 ```
 3.  super_cache_scan 调用两个函数
-    1. prune_dcache_sb 
+    1. prune_dcache_sb
     2. prune_icache_sb
 ```c
 long prune_dcache_sb(struct super_block *sb, struct shrink_control *sc)
 {
-	LIST_HEAD(dispose);
-	long freed;
+  LIST_HEAD(dispose);
+  long freed;
 
-	freed = list_lru_shrink_walk(&sb->s_dentry_lru, sc,
-				     dentry_lru_isolate, &dispose);
-	shrink_dentry_list(&dispose);
-	return freed;
+  freed = list_lru_shrink_walk(&sb->s_dentry_lru, sc,
+             dentry_lru_isolate, &dispose);
+  shrink_dentry_list(&dispose);
+  return freed;
 }
 
 prune_icache_sb : TODO 这个是用于释放 inode 还是 inode 持有的文件 ? 还是当 inode 被打开之后就不释放 ?
 ```
 
-4. 
+4.
 list_lru_shrink_walk 似乎就是遍历一下列表，将可以清理的页面放出来
 ```c
 static enum lru_status dentry_lru_isolate(struct list_head *item,
-		struct list_lru_one *lru, spinlock_t *lru_lock, void *arg)
+    struct list_lru_one *lru, spinlock_t *lru_lock, void *arg)
 ```
 然后使用 prune_dcache_sb 紧接着调用 shrink_dentry_list ，将刚刚清理出来的内容真正的释放:
 
-5. shrink 的源头还有 unmount 的时候 
+5. shrink 的源头还有 unmount 的时候
 
 那么 dcache / icache 的 shrink 机制在整个 shrink 机制中间是怎么处理的 ?
 shrink_node_memcgs ==> shrink_slab ==> 对于所有的 `struct shrinker` 调用 do_shrink_slab
@@ -1662,9 +1664,9 @@ shrink_node_memcgs ==> shrink_slab ==> 对于所有的 `struct shrinker` 调用 
 而 x86 kvm 中间也是存在对于 shrinker 的回收工作的。
 ```c
 static struct shrinker mmu_shrinker = {
-	.count_objects = mmu_shrink_count,
-	.scan_objects = mmu_shrink_scan,
-	.seeks = DEFAULT_SEEKS * 10,
+  .count_objects = mmu_shrink_count,
+  .scan_objects = mmu_shrink_scan,
+  .seeks = DEFAULT_SEEKS * 10,
 };
 ```
 
@@ -1678,10 +1680,10 @@ Four syscall related : vmsplice splice tee pipe
 
 -  [connect buffer and pipe buffer with splice](https://gist.github.com/karthick18/1234187)
 
-> splice() moves data between two file descriptors without copying between kernel address space and user address space. 
+> splice() moves data between two file descriptors without copying between kernel address space and user address space.
 > It transfers up to len bytes of data from the file descriptor fd_in to the file descriptor `fd_out`, where one of the file descriptors must refer to a pipe.
 
-without splice, we can copy file by coping file to user space and coping data in userspace to kernel space. 
+without splice, we can copy file by coping file to user space and coping data in userspace to kernel space.
 splice can copy file directly in kernel with pipe.
 
 Because splice connect two fd (one of is pipe fd), so splice also works with tee.
@@ -1689,7 +1691,7 @@ Tee can copy files without consuming it, in the second stage, we can splice the 
 
 - [ ] ./tlpi-dist/pipes/pipe_sync.c
     - if parent contains a pipe and fork several children, then they share a public pipe, in another word, everyone write to same buffer and everyone read from same buffer.
-    - Only the buffer is close by parent and all children, will it be closed 
+    - Only the buffer is close by parent and all children, will it be closed
     - [ ] so, check how kernel work for this
 
 ## pipe
@@ -1712,11 +1714,11 @@ Tee can copy files without consuming it, in the second stage, we can splice the 
 ```
 
 
-- [x] get_pipe_inode() 
-  - init inode 
+- [x] get_pipe_inode()
+  - init inode
   - only called by create_pipe_files
     - create_pipe_files ==> get_pipe_inode + alloc_file_pseudo + alloc_file_clone
-    - create_pipe_files alloc one `struct inode` and two `struct file`. 
+    - create_pipe_files alloc one `struct inode` and two `struct file`.
     - both of `file` points to the `inode`
   - alloc_pipe_info : alloc pipe related code
 
@@ -1727,14 +1729,14 @@ If we get fd, then find inode, then standard path to `pipefifo_fops::pipe_read`
 struct pipe_inode_info::pipe_buffer points an array of pipe_buffer, every pipe_buffer manages one page frame.
 ```c
 const struct file_operations pipefifo_fops = {
-	.open		= fifo_open,
-	.llseek		= no_llseek,
-	.read_iter	= pipe_read,
-	.write_iter	= pipe_write,
-	.poll		= pipe_poll,
-	.unlocked_ioctl	= pipe_ioctl,
-	.release	= pipe_release,
-	.fasync		= pipe_fasync,
+  .open   = fifo_open,
+  .llseek   = no_llseek,
+  .read_iter  = pipe_read,
+  .write_iter = pipe_write,
+  .poll   = pipe_poll,
+  .unlocked_ioctl = pipe_ioctl,
+  .release  = pipe_release,
+  .fasync   = pipe_fasync,
 };
 ```
 
@@ -1745,42 +1747,42 @@ buffer ops: because some optimization, e.g., steal page to avoid coping, we can 
  * Note on the nesting of these functions:
  *
  * ->confirm()
- *	->try_steal()
+ *  ->try_steal()
  *
  * That is, ->try_steal() must be called on a confirmed buffer.  See below for
  * the meaning of each operation.  Also see the kerneldoc in fs/pipe.c for the
  * pipe and generic variants of these hooks.
  */
 struct pipe_buf_operations {
-	/*
-	 * ->confirm() verifies that the data in the pipe buffer is there
-	 * and that the contents are good. If the pages in the pipe belong
-	 * to a file system, we may need to wait for IO completion in this
-	 * hook. Returns 0 for good, or a negative error value in case of
-	 * error.  If not present all pages are considered good.
-	 */
-	int (*confirm)(struct pipe_inode_info *, struct pipe_buffer *);
+  /*
+   * ->confirm() verifies that the data in the pipe buffer is there
+   * and that the contents are good. If the pages in the pipe belong
+   * to a file system, we may need to wait for IO completion in this
+   * hook. Returns 0 for good, or a negative error value in case of
+   * error.  If not present all pages are considered good.
+   */
+  int (*confirm)(struct pipe_inode_info *, struct pipe_buffer *);
 
-	/*
-	 * When the contents of this pipe buffer has been completely
-	 * consumed by a reader, ->release() is called.
-	 */
-	void (*release)(struct pipe_inode_info *, struct pipe_buffer *);
+  /*
+   * When the contents of this pipe buffer has been completely
+   * consumed by a reader, ->release() is called.
+   */
+  void (*release)(struct pipe_inode_info *, struct pipe_buffer *);
 
-	/*
-	 * Attempt to take ownership of the pipe buffer and its contents.
-	 * ->try_steal() returns %true for success, in which case the contents
-	 * of the pipe (the buf->page) is locked and now completely owned by the
-	 * caller. The page may then be transferred to a different mapping, the
-	 * most often used case is insertion into different file address space
-	 * cache.
-	 */
-	bool (*try_steal)(struct pipe_inode_info *, struct pipe_buffer *);
+  /*
+   * Attempt to take ownership of the pipe buffer and its contents.
+   * ->try_steal() returns %true for success, in which case the contents
+   * of the pipe (the buf->page) is locked and now completely owned by the
+   * caller. The page may then be transferred to a different mapping, the
+   * most often used case is insertion into different file address space
+   * cache.
+   */
+  bool (*try_steal)(struct pipe_inode_info *, struct pipe_buffer *);
 
-	/*
-	 * Get a reference to the pipe buffer.
-	 */
-	bool (*get)(struct pipe_inode_info *, struct pipe_buffer *);
+  /*
+   * Get a reference to the pipe buffer.
+   */
+  bool (*get)(struct pipe_inode_info *, struct pipe_buffer *);
 };
 ```
 
@@ -1819,7 +1821,7 @@ static inline void fsnotify_modify(struct file *file) { fsnotify_file(file, FS_M
  * notification event in whatever means they feel necessary.
  */
 int fsnotify(struct inode *to_tell, __u32 mask, const void *data, int data_is,
-	     const struct qstr *file_name, u32 cookie)
+       const struct qstr *file_name, u32 cookie)
 ```
 
 * ***如何让从 notifyFd 中间读出 event***
@@ -1828,27 +1830,27 @@ int fsnotify(struct inode *to_tell, __u32 mask, const void *data, int data_is,
 /* inotify syscalls */
 static int do_inotify_init(int flags)
 {
-	struct fsnotify_group *group;
-	int ret;
+  struct fsnotify_group *group;
+  int ret;
 
-	/* Check the IN_* constants for consistency.  */
-	BUILD_BUG_ON(IN_CLOEXEC != O_CLOEXEC);
-	BUILD_BUG_ON(IN_NONBLOCK != O_NONBLOCK);
+  /* Check the IN_* constants for consistency.  */
+  BUILD_BUG_ON(IN_CLOEXEC != O_CLOEXEC);
+  BUILD_BUG_ON(IN_NONBLOCK != O_NONBLOCK);
 
-	if (flags & ~(IN_CLOEXEC | IN_NONBLOCK))
-		return -EINVAL;
+  if (flags & ~(IN_CLOEXEC | IN_NONBLOCK))
+    return -EINVAL;
 
-	/* fsnotify_obtain_group took a reference to group, we put this when we kill the file in the end */
-	group = inotify_new_group(inotify_max_queued_events);
-	if (IS_ERR(group))
-		return PTR_ERR(group);
+  /* fsnotify_obtain_group took a reference to group, we put this when we kill the file in the end */
+  group = inotify_new_group(inotify_max_queued_events);
+  if (IS_ERR(group))
+    return PTR_ERR(group);
 
-	ret = anon_inode_getfd("inotify", &inotify_fops, group, // 这就是关键吧
-				  O_RDONLY | flags);
-	if (ret < 0)
-		fsnotify_destroy_group(group);
+  ret = anon_inode_getfd("inotify", &inotify_fops, group, // 这就是关键吧
+          O_RDONLY | flags);
+  if (ret < 0)
+    fsnotify_destroy_group(group);
 
-	return ret;
+  return ret;
 }
 ```
 
@@ -1866,7 +1868,7 @@ notify 的工作，和 aio epoll 机制其实都是类似的，相比于 blockin
 ## char device
 
 ## tmpfs
-cat /proc/mounts : we find the filesystem type of /dev is tmpfs, so what's the difference between fs between 
+cat /proc/mounts : we find the filesystem type of /dev is tmpfs, so what's the difference between fs between
 
 ## exciting
 http://www.betrfs.org/
@@ -1901,7 +1903,7 @@ By default, Filebench does not create any files in the file system and only allo
 file entries to accommodate all defined files.
 > internal file entries 是 filebench 自己管理的吧 !
 
-Every thread executes a loop of flowops. 
+Every thread executes a loop of flowops.
 > 能不能 randomly choose a file
 
 Filebench uses Virtual Fie Descriptors (VFDs) to refer to files in flowops.
@@ -1911,8 +1913,8 @@ fileset. *By default this is done by iterating over all file entries in
 a fileset.* To change this behavior one can use the index attribute that allows one to refer to a specific file in a fileset using
 a unique index. In most real cases, instead of using a constant
 number for the index, one should use custom variables described
-in the following section 
-> fd 自动顺序选择，是不是 fd 默认为 1 
+in the following section
+> fd 自动顺序选择，是不是 fd 默认为 1
 
 The abilty to quickly define multiple processes and synchronization between them was one of the main requirements during
 Filebench framework conception.
@@ -1939,7 +1941,7 @@ fileset. By default this is done by iterating over all file entries in
 a fileset. To change this behavior one can use the index attribute that allows one to refer to a specific file in a fileset using
 a unique *index*. In most real cases, instead of using a constant
 number for the index, one should use custom variables described
-in the following section. 
+in the following section.
 > index 从来没有体现过作用!
 
 
@@ -1972,10 +1974,10 @@ docker
 
 ## multiqueue
 [lwn : The multiqueue block layer](https://lwn.net/Articles/552904/)
-> While requests are in the submission queue, they can be operated on by the block layer in the usual manner. Reordering of requests for locality offers **little** or no benefit on solid-state devices; 
+> While requests are in the submission queue, they can be operated on by the block layer in the usual manner. Reordering of requests for locality offers **little** or no benefit on solid-state devices;
 > indeed, spreading requests out across the device might help with the parallel processing of requests.
 > So reordering will not be done, but coalescing requests will reduce the total number of I/O operations, improving performance somewhat.
-> Since the submission queues are **per-CPU**, there is no way to coalesce requests submitted to different queues. 
+> Since the submission queues are **per-CPU**, there is no way to coalesce requests submitted to different queues.
 > With no empirical evidence whatsoever, your editor would guess that adjacent requests are most likely to come from the same process and,
 > thus, will automatically find their way into the same submission queue, so the lack of cross-CPU coalescing is probably not a big problem.
 
@@ -1999,8 +2001,8 @@ Based on our analysis of the Linux block layer, we identify three major requirem
 1. **Single Device Fairness** :  Without a centralized arbiter of device access, applications must either coordinate among themselves for fairness or rely on the fairness policies implemented in device drivers (which rarely exist).
 2. **Single and Multiple Device Accounting** : Having a uniform interface for system performance monitoring and accounting enables applications and other operating system components to make intelligent decisions about application scheduling, load balancing, and performance.
 3. **Single Device IO Staging Area** :
-    - To do this, the block layer requires a staging area, where IOs may be buffered before they are sent down into the device driver. 
-    - Using a staging area, the block layer can reorder IOs, typically to promote sequential accesses over random ones, or it can group IOs, to submit larger IOs to the underlying device. 
+    - To do this, the block layer requires a staging area, where IOs may be buffered before they are sent down into the device driver.
+    - Using a staging area, the block layer can reorder IOs, typically to promote sequential accesses over random ones, or it can group IOs, to submit larger IOs to the underlying device.
     - In addition, the staging area allows the block layer to adjust its submission rate for quality of service or due to device back-pressure indicating the OS should not send down additional IO or risk overflowing the device’s buffering capability.
 
 
@@ -2017,7 +2019,7 @@ dispatch queue see improved scaling from the new multiqueue block layer.
 our design incoporates several other implementation improvements.
 1. First, we introduce tag-based completions within the block layer. Device command tagging was first introduced
 with hardware supporting native command queuing. A tag is an integer value that uniquely identifies the position of the
-block IO in the driver submission queue, so when completed the tag is passed back from the device indicating which IO has been completed. 
+block IO in the driver submission queue, so when completed the tag is passed back from the device indicating which IO has been completed.
 2. Second, to support fine grained IO accounting we have
 modified the internal Linux accounting library to provide
 statistics for the states of both the software queues and dis-
@@ -2115,18 +2117,16 @@ Somebody says ceph has one millions of code.
             - __fput : 真正完成工作的位置
               - file->f_op->release
 
+
 ```c
 static struct file_operations kvm_vcpu_fops = {
-	.release        = kvm_vcpu_release,
-	.unlocked_ioctl = kvm_vcpu_ioctl,
-	.mmap           = kvm_vcpu_mmap,
-	.llseek		= noop_llseek,
-	KVM_COMPAT(kvm_vcpu_compat_ioctl),
+  .release        = kvm_vcpu_release,
+  .unlocked_ioctl = kvm_vcpu_ioctl,
+  .mmap           = kvm_vcpu_mmap,
+  .llseek   = noop_llseek,
+  KVM_COMPAT(kvm_vcpu_compat_ioctl),
 };
 ```
-
-
-
 
 [^1]: [kernel doc : Overview of the Linux Virtual File System](https://www.kernel.org/doc/html/latest/filesystems/vfs.html)
 [^2]: [github : aio](https://github.com/littledan/linux-aio)

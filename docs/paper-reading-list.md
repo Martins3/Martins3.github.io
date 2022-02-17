@@ -58,3 +58,4 @@ This is Tom Spink's doctor thesis.
 ## 其他
 - [How to circumvent Sci-Hub ISP block](https://fragile-credences.github.io/scihub-proxy/)
 - [如何阅读学术论文](https://deardrops.github.io/post/how-to-read-academic-papers/)
+- [体系结构，操作系统相关学术资源](https://github.com/rajesh-s/computer-engineering-resources) :star:

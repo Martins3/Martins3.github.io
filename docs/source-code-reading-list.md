@@ -36,3 +36,4 @@ inspired by https://github.com/geektutu/7days-golang
 - [ ] https://github.com/OpenXiangShan/XiangShan
 - https://glinscott.github.io/lz/index.html
 - [Cosmopolitan](https://ahgamut.github.io/2021/02/27/ape-cosmo/)
+- [youki](https://github.com/containers/youki)
