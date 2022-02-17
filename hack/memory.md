@@ -198,40 +198,40 @@ https://thevivekpandey.github.io/posts/2017-09-25-linux-system-calls.html
 static inline struct page * alloc_pages(gfp_t gfp_mask, unsigned int order) { return alloc_pages_current(gfp_mask, order); }
 
 /**
- * 	alloc_pages_current - Allocate pages.
+ *  alloc_pages_current - Allocate pages.
  *
- *	@gfp:
- *		%GFP_USER   user allocation,
- *      	%GFP_KERNEL kernel allocation,
- *      	%GFP_HIGHMEM highmem allocation,
- *      	%GFP_FS     don't call back into a file system.
- *      	%GFP_ATOMIC don't sleep.
- *	@order: Power of two of allocation size in pages. 0 is a single page.
+ *  @gfp:
+ *    %GFP_USER   user allocation,
+ *        %GFP_KERNEL kernel allocation,
+ *        %GFP_HIGHMEM highmem allocation,
+ *        %GFP_FS     don't call back into a file system.
+ *        %GFP_ATOMIC don't sleep.
+ *  @order: Power of two of allocation size in pages. 0 is a single page.
  *
- *	Allocate a page from the kernel page pool.  When not in
- *	interrupt context and apply the current process NUMA policy.
- *	Returns NULL when no page can be allocated.
+ *  Allocate a page from the kernel page pool.  When not in
+ *  interrupt context and apply the current process NUMA policy.
+ *  Returns NULL when no page can be allocated.
  */
 struct page *alloc_pages_current(gfp_t gfp, unsigned order)
 {
-	struct mempolicy *pol = &default_policy;
-	struct page *page;
+  struct mempolicy *pol = &default_policy;
+  struct page *page;
 
-	if (!in_interrupt() && !(gfp & __GFP_THISNODE))
-		pol = get_task_policy(current);
+  if (!in_interrupt() && !(gfp & __GFP_THISNODE))
+    pol = get_task_policy(current);
 
-	/*
-	 * No reference counting needed for current->mempolicy
-	 * nor system default_policy
-	 */
-	if (pol->mode == MPOL_INTERLEAVE)
-		page = alloc_page_interleave(gfp, order, interleave_nodes(pol));
+  /*
+   * No reference counting needed for current->mempolicy
+   * nor system default_policy
+   */
+  if (pol->mode == MPOL_INTERLEAVE)
+    page = alloc_page_interleave(gfp, order, interleave_nodes(pol));
     else
-		page = __alloc_pages_nodemask(gfp, order,
-				policy_node(gfp, pol, numa_node_id()),
-				policy_nodemask(gfp, pol));
+    page = __alloc_pages_nodemask(gfp, order,
+        policy_node(gfp, pol, numa_node_id()),
+        policy_nodemask(gfp, pol));
 
-	return page;
+  return page;
 }
 EXPORT_SYMBOL(alloc_pages_current);
 ```
@@ -318,8 +318,8 @@ the page can be reclaimed by locating and removing all of the page table entries
  */
 static inline int put_page_testzero(struct page *page)
 {
-	VM_BUG_ON_PAGE(page_ref_count(page) == 0, page);
-	return page_ref_dec_and_test(page);
+  VM_BUG_ON_PAGE(page_ref_count(page) == 0, page);
+  return page_ref_dec_and_test(page);
 }
 
 /*
@@ -330,7 +330,7 @@ static inline int put_page_testzero(struct page *page)
  */
 static inline int get_page_unless_zero(struct page *page)
 {
-	return page_ref_add_unless(page, 1, 0);
+  return page_ref_add_unless(page, 1, 0);
 }
 ```
 
@@ -338,13 +338,13 @@ static inline int get_page_unless_zero(struct page *page)
 ```c
 static bool is_refcount_suitable(struct page *page)
 {
-	int expected_refcount;
+  int expected_refcount;
 
-	expected_refcount = total_mapcount(page);
-	if (PageSwapCache(page))
-		expected_refcount += compound_nr(page);
+  expected_refcount = total_mapcount(page);
+  if (PageSwapCache(page))
+    expected_refcount += compound_nr(page);
 
-	return page_count(page) == expected_refcount;
+  return page_count(page) == expected_refcount;
 }
 ```
 
@@ -373,11 +373,11 @@ handle_pte_fault 的调用路径图:
 
 ```c
 static const struct vm_operations_struct xfs_file_vm_ops = {
-	.fault		= xfs_filemap_fault,
-	.huge_fault	= xfs_filemap_huge_fault,
-	.map_pages	= xfs_filemap_map_pages,
-	.page_mkwrite	= xfs_filemap_page_mkwrite,
-	.pfn_mkwrite	= xfs_filemap_pfn_mkwrite,
+  .fault    = xfs_filemap_fault,
+  .huge_fault = xfs_filemap_huge_fault,
+  .map_pages  = xfs_filemap_map_pages,
+  .page_mkwrite = xfs_filemap_page_mkwrite,
+  .pfn_mkwrite  = xfs_filemap_pfn_mkwrite,
 };
 ```
 
@@ -412,12 +412,12 @@ do_swap_page     ==>
 ```c
 vm_fault_t do_swap_page(struct vm_fault *vmf){
 // ...
-	if (vmf->flags & FAULT_FLAG_WRITE) {
-		ret |= do_wp_page(vmf);
-		if (ret & VM_FAULT_ERROR)
-			ret &= VM_FAULT_ERROR;
-		goto out;
-	}
+  if (vmf->flags & FAULT_FLAG_WRITE) {
+    ret |= do_wp_page(vmf);
+    if (ret & VM_FAULT_ERROR)
+      ret &= VM_FAULT_ERROR;
+    goto out;
+  }
 // ...
 }
 ```
@@ -426,7 +426,7 @@ vm_fault_t do_swap_page(struct vm_fault *vmf){
 ```c
 static inline bool is_cow_mapping(vm_flags_t flags)
 {
-	return (flags & (VM_SHARED | VM_MAYWRITE)) == VM_MAYWRITE;
+  return (flags & (VM_SHARED | VM_MAYWRITE)) == VM_MAYWRITE;
 }
 ```
 - https://stackoverflow.com/questions/48241187/memory-region-flags-in-linux-why-both-vm-write-and-vm-maywrite-are-needed
@@ -466,9 +466,9 @@ sys_fork--->>>>do_fork--->>>copy_process---->>>copy_mm---->>>dup_mm---->>>dup_mm
 // ---------- 等待处理的事情 ---------------
 1. 为什么 mm_struct 中间存在这个，难道这个的实现不是标准操作吗 ?
 ```c
-		unsigned long (*get_unmapped_area) (struct file *filp,
-				unsigned long addr, unsigned long len,
-				unsigned long pgoff, unsigned long flags);
+    unsigned long (*get_unmapped_area) (struct file *filp,
+        unsigned long addr, unsigned long len,
+        unsigned long pgoff, unsigned long flags);
 ```
 2. vma_ops : anonymous 的不需要 vm_ops，所以 vm_ops 处理都是文件相关的内容，解释一下每个函数到底如何处理 underlying 的文件的。
     1. 找到各种 file vma 的插入 vm_ops 的过程是什么 ?
@@ -476,7 +476,7 @@ sys_fork--->>>>do_fork--->>>copy_process---->>>copy_mm---->>>dup_mm---->>>dup_mm
 ```c
 static inline bool vma_is_anonymous(struct vm_area_struct *vma)
 {
-	return !vma->vm_ops;
+  return !vma->vm_ops;
 }
 ```
 3. 虚拟地址空间的结构是什么 ? amd64 的架构上，内核空间如此大，内核空间的线性地址的映射是如何完成的 ?
@@ -546,92 +546,92 @@ B. 通过分析 `__handle_mm_fault` 说明其中的机制：
  * return value.  See filemap_fault() and __lock_page_or_retry().
  */
 static vm_fault_t __handle_mm_fault(struct vm_area_struct *vma,
-		unsigned long address, unsigned int flags)
+    unsigned long address, unsigned int flags)
 {
-	struct vm_fault vmf = {
-		.vma = vma,
-		.address = address & PAGE_MASK,
-		.flags = flags,
-		.pgoff = linear_page_index(vma, address),
-		.gfp_mask = __get_fault_gfp_mask(vma),
-	};
-	unsigned int dirty = flags & FAULT_FLAG_WRITE;
-	struct mm_struct *mm = vma->vm_mm;
-	pgd_t *pgd;
-	p4d_t *p4d;
-	vm_fault_t ret;
+  struct vm_fault vmf = {
+    .vma = vma,
+    .address = address & PAGE_MASK,
+    .flags = flags,
+    .pgoff = linear_page_index(vma, address),
+    .gfp_mask = __get_fault_gfp_mask(vma),
+  };
+  unsigned int dirty = flags & FAULT_FLAG_WRITE;
+  struct mm_struct *mm = vma->vm_mm;
+  pgd_t *pgd;
+  p4d_t *p4d;
+  vm_fault_t ret;
 
-	pgd = pgd_offset(mm, address); // 访问 mm_struct::pgd 以及 address 的偏移，但是可以从此处获取到
-	p4d = p4d_alloc(mm, pgd, address); // 如果 pgd 指向 p4d entry 是无效的，首先分配。如果有效，只是简单的计算地址。
-	if (!p4d)
-		return VM_FAULT_OOM;
+  pgd = pgd_offset(mm, address); // 访问 mm_struct::pgd 以及 address 的偏移，但是可以从此处获取到
+  p4d = p4d_alloc(mm, pgd, address); // 如果 pgd 指向 p4d entry 是无效的，首先分配。如果有效，只是简单的计算地址。
+  if (!p4d)
+    return VM_FAULT_OOM;
 
-	vmf.pud = pud_alloc(mm, p4d, address); // vmf.pud 指向 pmd。vmf.pud 对应的映射范围 : pmd 的 entry *  page table 的 entry * PAGE_SIZE
-	if (!vmf.pud)
-		return VM_FAULT_OOM;
+  vmf.pud = pud_alloc(mm, p4d, address); // vmf.pud 指向 pmd。vmf.pud 对应的映射范围 : pmd 的 entry *  page table 的 entry * PAGE_SIZE
+  if (!vmf.pud)
+    return VM_FAULT_OOM;
 retry_pud:
-	if (pud_none(*vmf.pud) && __transparent_hugepage_enabled(vma)) {
-		ret = create_huge_pud(&vmf);
-		if (!(ret & VM_FAULT_FALLBACK))
-			return ret;
-	} else {
-		pud_t orig_pud = *vmf.pud;
+  if (pud_none(*vmf.pud) && __transparent_hugepage_enabled(vma)) {
+    ret = create_huge_pud(&vmf);
+    if (!(ret & VM_FAULT_FALLBACK))
+      return ret;
+  } else {
+    pud_t orig_pud = *vmf.pud;
 
-		barrier(); // TODO 现在不清楚为什么需要添加 barrier
-		if (pud_trans_huge(orig_pud) || pud_devmap(orig_pud)) {
+    barrier(); // TODO 现在不清楚为什么需要添加 barrier
+    if (pud_trans_huge(orig_pud) || pud_devmap(orig_pud)) {
 
-			/* NUMA case for anonymous PUDs would go here */
+      /* NUMA case for anonymous PUDs would go here */
 
-			if (dirty && !pud_write(orig_pud)) {
-				ret = wp_huge_pud(&vmf, orig_pud); //
-				if (!(ret & VM_FAULT_FALLBACK))
-					return ret;
-			} else {
-				huge_pud_set_accessed(&vmf, orig_pud);
-				return 0;
-			}
-		}
-	}
+      if (dirty && !pud_write(orig_pud)) {
+        ret = wp_huge_pud(&vmf, orig_pud); //
+        if (!(ret & VM_FAULT_FALLBACK))
+          return ret;
+      } else {
+        huge_pud_set_accessed(&vmf, orig_pud);
+        return 0;
+      }
+    }
+  }
 
-	vmf.pmd = pmd_alloc(mm, vmf.pud, address); // 如果处理的不是 vmf.pud 指向的不是 pgfault
-	if (!vmf.pmd)
-		return VM_FAULT_OOM;
+  vmf.pmd = pmd_alloc(mm, vmf.pud, address); // 如果处理的不是 vmf.pud 指向的不是 pgfault
+  if (!vmf.pmd)
+    return VM_FAULT_OOM;
 
-	/* Huge pud page fault raced with pmd_alloc? */
-	if (pud_trans_unstable(vmf.pud)) // 当线程同时在进行 page fault
-		goto retry_pud;
+  /* Huge pud page fault raced with pmd_alloc? */
+  if (pud_trans_unstable(vmf.pud)) // 当线程同时在进行 page fault
+    goto retry_pud;
 
-	if (pmd_none(*vmf.pmd) && __transparent_hugepage_enabled(vma)) {
-		ret = create_huge_pmd(&vmf);
-		if (!(ret & VM_FAULT_FALLBACK))
-			return ret;
-	} else {
-		pmd_t orig_pmd = *vmf.pmd;
+  if (pmd_none(*vmf.pmd) && __transparent_hugepage_enabled(vma)) {
+    ret = create_huge_pmd(&vmf);
+    if (!(ret & VM_FAULT_FALLBACK))
+      return ret;
+  } else {
+    pmd_t orig_pmd = *vmf.pmd;
 
-		barrier();
-		if (unlikely(is_swap_pmd(orig_pmd))) { // TODO swap 的关系是什么
-			VM_BUG_ON(thp_migration_supported() &&
-					  !is_pmd_migration_entry(orig_pmd));
-			if (is_pmd_migration_entry(orig_pmd))
-				pmd_migration_entry_wait(mm, vmf.pmd);
-			return 0;
-		}
-		if (pmd_trans_huge(orig_pmd) || pmd_devmap(orig_pmd)) {
-			if (pmd_protnone(orig_pmd) && vma_is_accessible(vma))
-				return do_huge_pmd_numa_page(&vmf, orig_pmd); // TODO 处理内容
+    barrier();
+    if (unlikely(is_swap_pmd(orig_pmd))) { // TODO swap 的关系是什么
+      VM_BUG_ON(thp_migration_supported() &&
+            !is_pmd_migration_entry(orig_pmd));
+      if (is_pmd_migration_entry(orig_pmd))
+        pmd_migration_entry_wait(mm, vmf.pmd);
+      return 0;
+    }
+    if (pmd_trans_huge(orig_pmd) || pmd_devmap(orig_pmd)) {
+      if (pmd_protnone(orig_pmd) && vma_is_accessible(vma))
+        return do_huge_pmd_numa_page(&vmf, orig_pmd); // TODO 处理内容
 
-			if (dirty && !pmd_write(orig_pmd)) {
-				ret = wp_huge_pmd(&vmf, orig_pmd);
-				if (!(ret & VM_FAULT_FALLBACK))
-					return ret;
-			} else {
-				huge_pmd_set_accessed(&vmf, orig_pmd);
-				return 0;
-			}
-		}
-	}
+      if (dirty && !pmd_write(orig_pmd)) {
+        ret = wp_huge_pmd(&vmf, orig_pmd);
+        if (!(ret & VM_FAULT_FALLBACK))
+          return ret;
+      } else {
+        huge_pmd_set_accessed(&vmf, orig_pmd);
+        return 0;
+      }
+    }
+  }
 
-	return handle_pte_fault(&vmf);
+  return handle_pte_fault(&vmf);
 }
 ```
 
@@ -657,26 +657,26 @@ ubuf 用户提供的指针，在执行该函数的时候，当前的进程地址
 
 ```c
 size_t iov_iter_copy_from_user_atomic(struct page *page,
-		struct iov_iter *i, unsigned long offset, size_t bytes)
+    struct iov_iter *i, unsigned long offset, size_t bytes)
 {
-	char *kaddr = kmap_atomic(page), *p = kaddr + offset;
-	if (unlikely(!page_copy_sane(page, offset, bytes))) {
-		kunmap_atomic(kaddr);
-		return 0;
-	}
-	if (unlikely(iov_iter_is_pipe(i) || iov_iter_is_discard(i))) {
-		kunmap_atomic(kaddr);
-		WARN_ON(1);
-		return 0;
-	}
-	iterate_all_kinds(i, bytes, v,
-		copyin((p += v.iov_len) - v.iov_len, v.iov_base, v.iov_len),
-		memcpy_from_page((p += v.bv_len) - v.bv_len, v.bv_page,
-				 v.bv_offset, v.bv_len),
-		memcpy((p += v.iov_len) - v.iov_len, v.iov_base, v.iov_len)
-	)
-	kunmap_atomic(kaddr);
-	return bytes;
+  char *kaddr = kmap_atomic(page), *p = kaddr + offset;
+  if (unlikely(!page_copy_sane(page, offset, bytes))) {
+    kunmap_atomic(kaddr);
+    return 0;
+  }
+  if (unlikely(iov_iter_is_pipe(i) || iov_iter_is_discard(i))) {
+    kunmap_atomic(kaddr);
+    WARN_ON(1);
+    return 0;
+  }
+  iterate_all_kinds(i, bytes, v,
+    copyin((p += v.iov_len) - v.iov_len, v.iov_base, v.iov_len),
+    memcpy_from_page((p += v.bv_len) - v.bv_len, v.bv_page,
+         v.bv_offset, v.bv_len),
+    memcpy((p += v.iov_len) - v.iov_len, v.iov_base, v.iov_len)
+  )
+  kunmap_atomic(kaddr);
+  return bytes;
 }
 EXPORT_SYMBOL(iov_iter_copy_from_user_atomic);
 ```
@@ -684,12 +684,12 @@ EXPORT_SYMBOL(iov_iter_copy_from_user_atomic);
 ## mm_struct
 - [ ] 并不是所有的进程存在 mm_struct 的, 应该是 kernel thread ?
 ```c
-	for_each_process (g) {
+  for_each_process (g) {
     if(g->mm)
       pr_debug("%s ---> %lx %lx\n", g->comm, g->mm->mmap_base, g->mm->start_stack);
     else
       pr_debug("%s doesn't have mm\n", g->comm);
-	}
+  }
 ```
 
 ## mmap
@@ -703,23 +703,23 @@ EXPORT_SYMBOL(iov_iter_copy_from_user_atomic);
 
 ```c
 static unsigned long myfs_mmu_get_unmapped_area(struct file *file,
-		unsigned long addr, unsigned long len, unsigned long pgoff,
-		unsigned long flags)
+    unsigned long addr, unsigned long len, unsigned long pgoff,
+    unsigned long flags)
 {
-	return current->mm->get_unmapped_area(file, addr, len, pgoff, flags);
+  return current->mm->get_unmapped_area(file, addr, len, pgoff, flags);
 }
 
 const struct file_operations ramfs_file_operations = {
-	.get_unmapped_area	= ramfs_mmu_get_unmapped_area, // 不是非常理解啊 !
+  .get_unmapped_area  = ramfs_mmu_get_unmapped_area, // 不是非常理解啊 !
 };
 ```
 
 在 do_mmap 中间的各种代码都是非常简单的，但是唯独这一行理解不了:
 ```c
-	/* Obtain the address to map to. we verify (or select) it and ensure
-	 * that it represents a valid section of the address space.
-	 */
-	addr = get_unmapped_area(file, addr, len, pgoff, flags);
+  /* Obtain the address to map to. we verify (or select) it and ensure
+   * that it represents a valid section of the address space.
+   */
+  addr = get_unmapped_area(file, addr, len, pgoff, flags);
 ```
 
 - [x] 在 dune 的分析的时候，通过 mmap 是返回一个地址的，这个地址应该是 guest physical address，
@@ -734,24 +734,24 @@ guest 发送的时候首先会进入到 host 中间，然后调用 syscall.
 ```c
 static void * do_mapping(void *base, unsigned long len)
 {
-	void *mem;
+  void *mem;
 
-	mem = mmap((void *) base, len,
-		   PROT_READ | PROT_WRITE,
-		   MAP_FIXED | MAP_HUGETLB | MAP_PRIVATE |
-		   MAP_ANONYMOUS, -1, 0);
+  mem = mmap((void *) base, len,
+       PROT_READ | PROT_WRITE,
+       MAP_FIXED | MAP_HUGETLB | MAP_PRIVATE |
+       MAP_ANONYMOUS, -1, 0);
 
-	if (mem != (void *) base) {
-		// try again without huge pages
-		mem = mmap((void *) base, len,
-			   PROT_READ | PROT_WRITE,
-			   MAP_FIXED | MAP_PRIVATE | MAP_ANONYMOUS,
-			   -1, 0);
-		if (mem != (void *) base)
-			return NULL;
-	}
+  if (mem != (void *) base) {
+    // try again without huge pages
+    mem = mmap((void *) base, len,
+         PROT_READ | PROT_WRITE,
+         MAP_FIXED | MAP_PRIVATE | MAP_ANONYMOUS,
+         -1, 0);
+    if (mem != (void *) base)
+      return NULL;
+  }
 
-	return mem;
+  return mem;
 }
 ```
 
@@ -776,23 +776,23 @@ answer: https://stackoverflow.com/questions/17782536/missing-heap-section-in-pro
 
 ```c
     // --------- huxueshi : just statistics of memory size -------------------
-		unsigned long hiwater_rss; /* High-watermark of RSS usage */
-		unsigned long hiwater_vm;  /* High-water virtual memory usage */
+    unsigned long hiwater_rss; /* High-watermark of RSS usage */
+    unsigned long hiwater_vm;  /* High-water virtual memory usage */
 
-		unsigned long total_vm;	   /* Total pages mapped */
-		unsigned long locked_vm;   /* Pages that have PG_mlocked set */
-		atomic64_t    pinned_vm;   /* Refcount permanently increased */
-		unsigned long data_vm;	   /* VM_WRITE & ~VM_SHARED & ~VM_STACK */
-		unsigned long exec_vm;	   /* VM_EXEC & ~VM_WRITE & ~VM_STACK */
-		unsigned long stack_vm;	   /* VM_STACK */
+    unsigned long total_vm;    /* Total pages mapped */
+    unsigned long locked_vm;   /* Pages that have PG_mlocked set */
+    atomic64_t    pinned_vm;   /* Refcount permanently increased */
+    unsigned long data_vm;     /* VM_WRITE & ~VM_SHARED & ~VM_STACK */
+    unsigned long exec_vm;     /* VM_EXEC & ~VM_WRITE & ~VM_STACK */
+    unsigned long stack_vm;    /* VM_STACK */
 
     // --------- huxueshi : vm flags for all vma, mainly used for mlock -------------------
-		unsigned long def_flags;
+    unsigned long def_flags;
 
-		spinlock_t arg_lock; /* protect the below fields */
-		unsigned long start_code, end_code, start_data, end_data;
-		unsigned long start_brk, brk, start_stack;
-		unsigned long arg_start, arg_end, env_start, env_end;
+    spinlock_t arg_lock; /* protect the below fields */
+    unsigned long start_code, end_code, start_data, end_data;
+    unsigned long start_brk, brk, start_stack;
+    unsigned long arg_start, arg_end, env_start, env_end;
 ```
 
 - [ ] so why we need these start and end ?
@@ -857,8 +857,8 @@ https://linuxplumbersconf.org/event/2/contributions/65/attachments/15/171/slides
  * This is the main entry point for direct page compaction.
  */
 enum compact_result try_to_compact_pages(gfp_t gfp_mask, unsigned int order,
-		unsigned int alloc_flags, const struct alloc_context *ac,
-		enum compact_priority prio, struct page **capture)
+    unsigned int alloc_flags, const struct alloc_context *ac,
+    enum compact_priority prio, struct page **capture)
 ```
 1. try_to_compact_pages : 根据 alloc_context 提供的 zonelist 循环调用 compact_zone_order
 2. compact_zone_order : 组装 compact_control，然后调用 compact_zone
@@ -880,16 +880,16 @@ static int kcompactd(void *p)
 
 compact_zone 的核心是调用 :
 ```c
-	while ((ret = compact_finished(cc)) == COMPACT_CONTINUE) {
+  while ((ret = compact_finished(cc)) == COMPACT_CONTINUE) {
     // 通过 isolate_migratepages 确定需要搬动的 pages
-		switch (isolate_migratepages(cc)) {
+    switch (isolate_migratepages(cc)) {
 
     }
 
     // 将收集到的 cc->migratepages 进行搬迁 cc->freepages 中间去
-		err = migrate_pages(&cc->migratepages, compaction_alloc,
-				compaction_free, (unsigned long)cc, cc->mode,
-				MR_COMPACTION);
+    err = migrate_pages(&cc->migratepages, compaction_alloc,
+        compaction_free, (unsigned long)cc, cc->mode,
+        MR_COMPACTION);
   }
 ```
 
@@ -921,13 +921,13 @@ memory compaction就是通过将正在使用的可移动页面迁移到另一个
  * Lower value means higher priority, analogically to reclaim priority.
  */
 enum compact_priority {
-	COMPACT_PRIO_SYNC_FULL,
-	MIN_COMPACT_PRIORITY = COMPACT_PRIO_SYNC_FULL,
-	COMPACT_PRIO_SYNC_LIGHT,
-	MIN_COMPACT_COSTLY_PRIORITY = COMPACT_PRIO_SYNC_LIGHT,
-	DEF_COMPACT_PRIORITY = COMPACT_PRIO_SYNC_LIGHT,
-	COMPACT_PRIO_ASYNC,
-	INIT_COMPACT_PRIORITY = COMPACT_PRIO_ASYNC
+  COMPACT_PRIO_SYNC_FULL,
+  MIN_COMPACT_PRIORITY = COMPACT_PRIO_SYNC_FULL,
+  COMPACT_PRIO_SYNC_LIGHT,
+  MIN_COMPACT_COSTLY_PRIORITY = COMPACT_PRIO_SYNC_LIGHT,
+  DEF_COMPACT_PRIORITY = COMPACT_PRIO_SYNC_LIGHT,
+  COMPACT_PRIO_ASYNC,
+  INIT_COMPACT_PRIORITY = COMPACT_PRIO_ASYNC
 };
 ```
 本结构用于描述memory compact的几种不同方式：
@@ -940,43 +940,43 @@ enum compact_priority {
 /* Return values for compact_zone() and try_to_compact_pages() */
 /* When adding new states, please adjust include/trace/events/compaction.h */
 enum compact_result {
-	/* For more detailed tracepoint output - internal to compaction */
-	COMPACT_NOT_SUITABLE_ZONE,
-	/*
-	 * compaction didn't start as it was not possible or direct reclaim
-	 * was more suitable
-	 */
-	COMPACT_SKIPPED,
-	/* compaction didn't start as it was deferred due to past failures */
-	COMPACT_DEFERRED,
+  /* For more detailed tracepoint output - internal to compaction */
+  COMPACT_NOT_SUITABLE_ZONE,
+  /*
+   * compaction didn't start as it was not possible or direct reclaim
+   * was more suitable
+   */
+  COMPACT_SKIPPED,
+  /* compaction didn't start as it was deferred due to past failures */
+  COMPACT_DEFERRED,
 
-	/* compaction not active last round */
-	COMPACT_INACTIVE = COMPACT_DEFERRED,
+  /* compaction not active last round */
+  COMPACT_INACTIVE = COMPACT_DEFERRED,
 
-	/* For more detailed tracepoint output - internal to compaction */
-	COMPACT_NO_SUITABLE_PAGE,
-	/* compaction should continue to another pageblock */
-	COMPACT_CONTINUE,
+  /* For more detailed tracepoint output - internal to compaction */
+  COMPACT_NO_SUITABLE_PAGE,
+  /* compaction should continue to another pageblock */
+  COMPACT_CONTINUE,
 
-	/*
-	 * The full zone was compacted scanned but wasn't successfull to compact
-	 * suitable pages.
-	 */
-	COMPACT_COMPLETE,
-	/*
-	 * direct compaction has scanned part of the zone but wasn't successfull
-	 * to compact suitable pages.
-	 */
-	COMPACT_PARTIAL_SKIPPED,
+  /*
+   * The full zone was compacted scanned but wasn't successfull to compact
+   * suitable pages.
+   */
+  COMPACT_COMPLETE,
+  /*
+   * direct compaction has scanned part of the zone but wasn't successfull
+   * to compact suitable pages.
+   */
+  COMPACT_PARTIAL_SKIPPED,
 
-	/* compaction terminated prematurely due to lock contentions */
-	COMPACT_CONTENDED,
+  /* compaction terminated prematurely due to lock contentions */
+  COMPACT_CONTENDED,
 
-	/*
-	 * direct compaction terminated after concluding that the allocation
-	 * should now succeed
-	 */
-	COMPACT_SUCCESS,
+  /*
+   * direct compaction terminated after concluding that the allocation
+   * should now succeed
+   */
+  COMPACT_SUCCESS,
 };
 ```
 
@@ -989,19 +989,19 @@ enum compact_result {
 /*
  * MIGRATE_ASYNC means never block
  * MIGRATE_SYNC_LIGHT in the current implementation means to allow blocking
- *	on most operations but not ->writepage as the potential stall time
- *	is too significant
+ *  on most operations but not ->writepage as the potential stall time
+ *  is too significant
  * MIGRATE_SYNC will block when migrating pages
  * MIGRATE_SYNC_NO_COPY will block when migrating pages but will not copy pages
- *	with the CPU. Instead, page copy happens outside the migratepage()
- *	callback and is likely using a DMA engine. See migrate_vma() and HMM
- *	(mm/hmm.c) for users of this mode.
+ *  with the CPU. Instead, page copy happens outside the migratepage()
+ *  callback and is likely using a DMA engine. See migrate_vma() and HMM
+ *  (mm/hmm.c) for users of this mode.
  */
 enum migrate_mode {
-	MIGRATE_ASYNC,
-	MIGRATE_SYNC_LIGHT,
-	MIGRATE_SYNC,
-	MIGRATE_SYNC_NO_COPY,
+  MIGRATE_ASYNC,
+  MIGRATE_SYNC_LIGHT,
+  MIGRATE_SYNC,
+  MIGRATE_SYNC_NO_COPY,
 };
 ```
 
@@ -1020,14 +1020,14 @@ enum migrate_mode {
 ```c
 struct zone {
 ...
-	/*
-	 * On compaction failure, 1<<compact_defer_shift compactions
-	 * are skipped before trying again. The number attempted since
-	 * last failure is tracked with compact_considered.
-	 */
-	unsigned int		compact_considered; //记录推迟次数
-	unsigned int		compact_defer_shift; //（1 << compact_defer_shift）=推迟次数，最大为6
-	int			           compact_order_failed; //记录碎片整理失败时的申请order值
+  /*
+   * On compaction failure, 1<<compact_defer_shift compactions
+   * are skipped before trying again. The number attempted since
+   * last failure is tracked with compact_considered.
+   */
+  unsigned int    compact_considered; //记录推迟次数
+  unsigned int    compact_defer_shift; //（1 << compact_defer_shift）=推迟次数，最大为6
+  int                compact_order_failed; //记录碎片整理失败时的申请order值
 ...
 };
 ```
@@ -1316,18 +1316,18 @@ khugepaged.c 中间的 hugepage 守护进程的工作是什么 ?
 
 
 ```c
-#define split_huge_pmd(__vma, __pmd, __address)				\
-	do {								\
-		pmd_t *____pmd = (__pmd);				\
-		if (is_swap_pmd(*____pmd) || pmd_trans_huge(*____pmd)	\
-					|| pmd_devmap(*____pmd))	\
-			__split_huge_pmd(__vma, __pmd, __address,	\
-						false, NULL);		\
-	}  while (0)
+#define split_huge_pmd(__vma, __pmd, __address)       \
+  do {                \
+    pmd_t *____pmd = (__pmd);       \
+    if (is_swap_pmd(*____pmd) || pmd_trans_huge(*____pmd) \
+          || pmd_devmap(*____pmd))  \
+      __split_huge_pmd(__vma, __pmd, __address, \
+            false, NULL);   \
+  }  while (0)
 ```
 
 - [ ] split_huge_page_to_list
-  - [ ] `	__split_huge_page` : 不对劲，似乎 hugepage 只是体现在 struct page 上，而没有体现在 pmd 上
+  - [ ] ` __split_huge_page` : 不对劲，似乎 hugepage 只是体现在 struct page 上，而没有体现在 pmd 上
       - [x] 在 huge page 中间拆分出来几个当做其他的 page 正常使用, 虽然从中间抠出来的页面不可以继续当做内核，但是可以给用户使用
           - [ ] 是否存在 flag 说明那些页面可以分配给用户，那些是内核 ?
 
@@ -1421,53 +1421,53 @@ address_space 和 address_space_operations
 
 ```c
 struct address_space_operations {
-	int (*writepage)(struct page *page, struct writeback_control *wbc);
-	int (*readpage)(struct file *, struct page *);
+  int (*writepage)(struct page *page, struct writeback_control *wbc);
+  int (*readpage)(struct file *, struct page *);
 
-	/* Write back some dirty pages from this mapping. */
-	int (*writepages)(struct address_space *, struct writeback_control *);
+  /* Write back some dirty pages from this mapping. */
+  int (*writepages)(struct address_space *, struct writeback_control *);
 
-	/* Set a page dirty.  Return true if this dirtied it */
-	int (*set_page_dirty)(struct page *page);
+  /* Set a page dirty.  Return true if this dirtied it */
+  int (*set_page_dirty)(struct page *page);
 
-	/*
-	 * Reads in the requested pages. Unlike ->readpage(), this is
-	 * PURELY used for read-ahead!.
-	 */
-	int (*readpages)(struct file *filp, struct address_space *mapping,
-			struct list_head *pages, unsigned nr_pages);
+  /*
+   * Reads in the requested pages. Unlike ->readpage(), this is
+   * PURELY used for read-ahead!.
+   */
+  int (*readpages)(struct file *filp, struct address_space *mapping,
+      struct list_head *pages, unsigned nr_pages);
 
-	int (*write_begin)(struct file *, struct address_space *mapping,
-				loff_t pos, unsigned len, unsigned flags,
-				struct page **pagep, void **fsdata);
-	int (*write_end)(struct file *, struct address_space *mapping,
-				loff_t pos, unsigned len, unsigned copied,
-				struct page *page, void *fsdata);
+  int (*write_begin)(struct file *, struct address_space *mapping,
+        loff_t pos, unsigned len, unsigned flags,
+        struct page **pagep, void **fsdata);
+  int (*write_end)(struct file *, struct address_space *mapping,
+        loff_t pos, unsigned len, unsigned copied,
+        struct page *page, void *fsdata);
 
-	/* Unfortunately this kludge is needed for FIBMAP. Don't use it */
-	sector_t (*bmap)(struct address_space *, sector_t);
-	void (*invalidatepage) (struct page *, unsigned int, unsigned int);
-	int (*releasepage) (struct page *, gfp_t);
-	void (*freepage)(struct page *);
-	ssize_t (*direct_IO)(struct kiocb *, struct iov_iter *iter);
-	/*
-	 * migrate the contents of a page to the specified target. If
-	 * migrate_mode is MIGRATE_ASYNC, it must not block.
-	 */
-	int (*migratepage) (struct address_space *,
-			struct page *, struct page *, enum migrate_mode);
-	bool (*isolate_page)(struct page *, isolate_mode_t);
-	void (*putback_page)(struct page *);
-	int (*launder_page) (struct page *);
-	int (*is_partially_uptodate) (struct page *, unsigned long,
-					unsigned long);
-	void (*is_dirty_writeback) (struct page *, bool *, bool *);
-	int (*error_remove_page)(struct address_space *, struct page *);
+  /* Unfortunately this kludge is needed for FIBMAP. Don't use it */
+  sector_t (*bmap)(struct address_space *, sector_t);
+  void (*invalidatepage) (struct page *, unsigned int, unsigned int);
+  int (*releasepage) (struct page *, gfp_t);
+  void (*freepage)(struct page *);
+  ssize_t (*direct_IO)(struct kiocb *, struct iov_iter *iter);
+  /*
+   * migrate the contents of a page to the specified target. If
+   * migrate_mode is MIGRATE_ASYNC, it must not block.
+   */
+  int (*migratepage) (struct address_space *,
+      struct page *, struct page *, enum migrate_mode);
+  bool (*isolate_page)(struct page *, isolate_mode_t);
+  void (*putback_page)(struct page *);
+  int (*launder_page) (struct page *);
+  int (*is_partially_uptodate) (struct page *, unsigned long,
+          unsigned long);
+  void (*is_dirty_writeback) (struct page *, bool *, bool *);
+  int (*error_remove_page)(struct address_space *, struct page *);
 
-	/* swapfile support */
-	int (*swap_activate)(struct swap_info_struct *sis, struct file *file,
-				sector_t *span);
-	void (*swap_deactivate)(struct file *file);
+  /* swapfile support */
+  int (*swap_activate)(struct swap_info_struct *sis, struct file *file,
+        sector_t *span);
+  void (*swap_deactivate)(struct file *file);
 };
 ```
 
@@ -1512,21 +1512,21 @@ dirty 和 update 的关系是什么 ? 各自的管理策略是什么 ?
 ```c
 int do_writepages(struct address_space *mapping, struct writeback_control *wbc)
 {
-	int ret;
+  int ret;
 
-	if (wbc->nr_to_write <= 0)
-		return 0;
-	while (1) {
-		if (mapping->a_ops->writepages)
-			ret = mapping->a_ops->writepages(mapping, wbc); // 有点窒息的地方在于，ext4 的 writepages 注册就是 generic_writepages
-		else
-			ret = generic_writepages(mapping, wbc); // 调用 address_space::writepage 一个个的写入
-		if ((ret != -ENOMEM) || (wbc->sync_mode != WB_SYNC_ALL))
-			break;
-		cond_resched();
-		congestion_wait(BLK_RW_ASYNC, HZ/50);
-	}
-	return ret;
+  if (wbc->nr_to_write <= 0)
+    return 0;
+  while (1) {
+    if (mapping->a_ops->writepages)
+      ret = mapping->a_ops->writepages(mapping, wbc); // 有点窒息的地方在于，ext4 的 writepages 注册就是 generic_writepages
+    else
+      ret = generic_writepages(mapping, wbc); // 调用 address_space::writepage 一个个的写入
+    if ((ret != -ENOMEM) || (wbc->sync_mode != WB_SYNC_ALL))
+      break;
+    cond_resched();
+    congestion_wait(BLK_RW_ASYNC, HZ/50);
+  }
+  return ret;
 }
 ```
 
@@ -1552,8 +1552,8 @@ int do_writepages(struct address_space *mapping, struct writeback_control *wbc)
  * from overshooting the limit by (ratelimit_pages) each.
  */
 void balance_dirty_pages_ratelimited(struct address_space *mapping)
-	if (unlikely(current->nr_dirtied >= ratelimit)) // 只有超过 ratelimit 的时候才会进行真正的 balance_dirty_pages 的工作
-		balance_dirty_pages(wb, current->nr_dirtied); // 很长的函数，在其中触发 fs-writeback.c 的 flusher 维持生活
+  if (unlikely(current->nr_dirtied >= ratelimit)) // 只有超过 ratelimit 的时候才会进行真正的 balance_dirty_pages 的工作
+    balance_dirty_pages(wb, current->nr_dirtied); // 很长的函数，在其中触发 fs-writeback.c 的 flusher 维持生活
 ```
 
 
@@ -1581,9 +1581,9 @@ int __set_page_dirty_nobuffers(struct page *page)
  */
 int __set_page_dirty_no_writeback(struct page *page)
 {
-	if (!PageDirty(page))
-		return !TestSetPageDirty(page);
-	return 0;
+  if (!PageDirty(page))
+    return !TestSetPageDirty(page);
+  return 0;
 }
 ```
 
@@ -1651,30 +1651,30 @@ mark_buffer_dirty();
 // ext2_direct_IO 和 dax 似乎完全不是一个东西 ?
 ```c
 const struct address_space_operations ext2_aops = {
-	.readpage		= ext2_readpage,
-	.readpages		= ext2_readpages,
-	.writepage		= ext2_writepage,
-	.write_begin		= ext2_write_begin,
-	.write_end		= ext2_write_end,
-	.bmap			= ext2_bmap,
-	.direct_IO		= ext2_direct_IO,
-	.writepages		= ext2_writepages,
-	.migratepage		= buffer_migrate_page,
-	.is_partially_uptodate	= block_is_partially_uptodate,
-	.error_remove_page	= generic_error_remove_page,
+  .readpage   = ext2_readpage,
+  .readpages    = ext2_readpages,
+  .writepage    = ext2_writepage,
+  .write_begin    = ext2_write_begin,
+  .write_end    = ext2_write_end,
+  .bmap     = ext2_bmap,
+  .direct_IO    = ext2_direct_IO,
+  .writepages   = ext2_writepages,
+  .migratepage    = buffer_migrate_page,
+  .is_partially_uptodate  = block_is_partially_uptodate,
+  .error_remove_page  = generic_error_remove_page,
 };
 
 const struct address_space_operations ext2_nobh_aops = {
-	.readpage		= ext2_readpage,
-	.readpages		= ext2_readpages,
-	.writepage		= ext2_nobh_writepage,
-	.write_begin		= ext2_nobh_write_begin,
-	.write_end		= nobh_write_end,
-	.bmap			= ext2_bmap,
-	.direct_IO		= ext2_direct_IO,
-	.writepages		= ext2_writepages,
-	.migratepage		= buffer_migrate_page,
-	.error_remove_page	= generic_error_remove_page,
+  .readpage   = ext2_readpage,
+  .readpages    = ext2_readpages,
+  .writepage    = ext2_nobh_writepage,
+  .write_begin    = ext2_nobh_write_begin,
+  .write_end    = nobh_write_end,
+  .bmap     = ext2_bmap,
+  .direct_IO    = ext2_direct_IO,
+  .writepages   = ext2_writepages,
+  .migratepage    = buffer_migrate_page,
+  .error_remove_page  = generic_error_remove_page,
 };
 ```
 
@@ -1705,17 +1705,17 @@ migrate 什么类型的 page ?
 ```c
 /*
  * migrate_pages - migrate the pages specified in a list, to the free pages
- *		   supplied as the target for the page migration
+ *       supplied as the target for the page migration
  *
- * @from:		The list of pages to be migrated.
- * @get_new_page:	The function used to allocate free pages to be used
- *			as the target of the page migration.
- * @put_new_page:	The function used to free target pages if migration
- *			fails, or NULL if no special handling is necessary.
- * @private:		Private data to be passed on to get_new_page()
- * @mode:		The migration mode that specifies the constraints for
- *			page migration, if any.
- * @reason:		The reason for page migration.
+ * @from:   The list of pages to be migrated.
+ * @get_new_page: The function used to allocate free pages to be used
+ *      as the target of the page migration.
+ * @put_new_page: The function used to free target pages if migration
+ *      fails, or NULL if no special handling is necessary.
+ * @private:    Private data to be passed on to get_new_page()
+ * @mode:   The migration mode that specifies the constraints for
+ *      page migration, if any.
+ * @reason:   The reason for page migration.
  *
  * The function returns after 10 attempts or if no pages are movable any more
  * because the list has become empty or no retryable pages exist any more.
@@ -1725,8 +1725,8 @@ migrate 什么类型的 page ?
  * Returns the number of pages that were not migrated, or an error code.
  */
 int migrate_pages(struct list_head *from, new_page_t get_new_page,
-		free_page_t put_new_page, unsigned long private,
-		enum migrate_mode mode, int reason)
+    free_page_t put_new_page, unsigned long private,
+    enum migrate_mode mode, int reason)
 // 调用 : unmap_and_move_huge_page 或者 unmap_and_move 维持一下生活
 ```
 其实可以对于函数调用进行
@@ -1740,38 +1740,38 @@ int migrate_pages(struct list_head *from, new_page_t get_new_page,
 // 几乎是唯一初始化 ac->migratetype 的地方
 // 另一个在 unreserve_highatomic_pageblock
 static inline int gfpflags_to_migratetype(const gfp_t gfp_flags) {
-	return (gfp_flags & GFP_MOVABLE_MASK) >> GFP_MOVABLE_SHIFT;
+  return (gfp_flags & GFP_MOVABLE_MASK) >> GFP_MOVABLE_SHIFT;
 }
 ```
 
 // --------------- 需要处理的事情 -----------------
 ```c
 enum migratetype {
-	MIGRATE_UNMOVABLE,
-	MIGRATE_MOVABLE,     // 需要难受
-	MIGRATE_RECLAIMABLE, // 想必这应该是最简单的，将其释放或者flush 掉即可
-	MIGRATE_PCPTYPES,	/* the number of types on the pcp lists */ // todo 为什么PCP 只需要前面的三种 ? 为什么 PCP 需要区分这些内容 ?
-	MIGRATE_HIGHATOMIC = MIGRATE_PCPTYPES,
+  MIGRATE_UNMOVABLE,
+  MIGRATE_MOVABLE,     // 需要难受
+  MIGRATE_RECLAIMABLE, // 想必这应该是最简单的，将其释放或者flush 掉即可
+  MIGRATE_PCPTYPES, /* the number of types on the pcp lists */ // todo 为什么PCP 只需要前面的三种 ? 为什么 PCP 需要区分这些内容 ?
+  MIGRATE_HIGHATOMIC = MIGRATE_PCPTYPES,
 #ifdef CONFIG_CMA
-	/*
-	 * MIGRATE_CMA migration type is designed to mimic the way
-	 * ZONE_MOVABLE works.  Only movable pages can be allocated
-	 * from MIGRATE_CMA pageblocks and page allocator never
-	 * implicitly change migration type of MIGRATE_CMA pageblock.
-	 *
-	 * The way to use it is to change migratetype of a range of
-	 * pageblocks to MIGRATE_CMA which can be done by
-	 * __free_pageblock_cma() function.  What is important though
-	 * is that a range of pageblocks must be aligned to
-	 * MAX_ORDER_NR_PAGES should biggest page be bigger then
-	 * a single pageblock.
-	 */
-	MIGRATE_CMA,
+  /*
+   * MIGRATE_CMA migration type is designed to mimic the way
+   * ZONE_MOVABLE works.  Only movable pages can be allocated
+   * from MIGRATE_CMA pageblocks and page allocator never
+   * implicitly change migration type of MIGRATE_CMA pageblock.
+   *
+   * The way to use it is to change migratetype of a range of
+   * pageblocks to MIGRATE_CMA which can be done by
+   * __free_pageblock_cma() function.  What is important though
+   * is that a range of pageblocks must be aligned to
+   * MAX_ORDER_NR_PAGES should biggest page be bigger then
+   * a single pageblock.
+   */
+  MIGRATE_CMA,
 #endif
 #ifdef CONFIG_MEMORY_ISOLATION
-	MIGRATE_ISOLATE,	/* can't allocate from here */
+  MIGRATE_ISOLATE,  /* can't allocate from here */
 #endif
-	MIGRATE_TYPES
+  MIGRATE_TYPES
 };
 ```
 // --------------- 需要处理的事情 -----------------
@@ -1798,10 +1798,10 @@ enum migratetype {
  * address_space which maps the page from disk; whereas "page_mapped"
  * refers to user virtual address space into which the page is mapped.
  */
-#define PAGE_MAPPING_ANON	0x1
-#define PAGE_MAPPING_MOVABLE	0x2
-#define PAGE_MAPPING_KSM	(PAGE_MAPPING_ANON | PAGE_MAPPING_MOVABLE)
-#define PAGE_MAPPING_FLAGS	(PAGE_MAPPING_ANON | PAGE_MAPPING_MOVABLE)
+#define PAGE_MAPPING_ANON 0x1
+#define PAGE_MAPPING_MOVABLE  0x2
+#define PAGE_MAPPING_KSM  (PAGE_MAPPING_ANON | PAGE_MAPPING_MOVABLE)
+#define PAGE_MAPPING_FLAGS  (PAGE_MAPPING_ANON | PAGE_MAPPING_MOVABLE)
 ```
 
 ```diff
@@ -1843,7 +1843,7 @@ enum migratetype {
  shouldn't expect to preserve values in that fields.
 
  2. int (*migratepage) (struct address_space *mapping,
- 		struct page *newpage, struct page *oldpage, enum migrate_mode);
+    struct page *newpage, struct page *oldpage, enum migrate_mode);
 
  After isolation, VM calls migratepage of driver with isolated page.  The
  function of migratepage is to move content of the old page to new page
@@ -1874,15 +1874,15 @@ enum migratetype {
  Driver should use the below function to make page movable under
  page_lock.
 
- 	void __SetPageMovable(struct page *page, struct address_space *mapping)
+  void __SetPageMovable(struct page *page, struct address_space *mapping)
 
  It needs argument of address_space for registering migration family
  functions which will be called by VM.  Exactly speaking, PG_movable is
  not a real flag of struct page.  Rather than, VM reuses page->mapping's
  lower bits to represent it.
 
- 	#define PAGE_MAPPING_MOVABLE 0x2
- 	page->mapping = page->mapping | PAGE_MAPPING_MOVABLE;
+  #define PAGE_MAPPING_MOVABLE 0x2
+  page->mapping = page->mapping | PAGE_MAPPING_MOVABLE;
 
  so driver shouldn't access page->mapping directly.  Instead, driver
  should use page_mapping which mask off the low two bits of page->mapping
@@ -2015,8 +2015,8 @@ kmap 和 kmap_atomic 在 64bit 是不是完全相同的:
 ```c
  static inline void *kmap(struct page *page)
  {
- 	might_sleep();
- 	return page_address(page);
+  might_sleep();
+  return page_address(page);
  }
 
  static inline void kunmap(struct page *page)
@@ -2025,16 +2025,16 @@ kmap 和 kmap_atomic 在 64bit 是不是完全相同的:
 
  static inline void *kmap_atomic(struct page *page)
  {
- 	preempt_disable();
- 	pagefault_disable();
- 	return page_address(page);
+  preempt_disable();
+  pagefault_disable();
+  return page_address(page);
  }
- #define kmap_atomic_prot(page, prot)	kmap_atomic(page)
+ #define kmap_atomic_prot(page, prot) kmap_atomic(page)
 
  static inline void __kunmap_atomic(void *addr)
  {
- 	pagefault_enable();
- 	preempt_enable();
+  pagefault_enable();
+  preempt_enable();
  }
 ```
 并不是完全相同的，应该只是历史遗留产物吧 !
@@ -2069,6 +2069,10 @@ DAX 设置 : 到时候在分析吧!
 ## memory model
 字节团队写的，应该是相当清楚了:
 https://mp.weixin.qq.com/s/wt5b5e1Y1yG1kDIf0QPsvg
+
+
+https://lotabout.me/2019/QQA-What-is-Sequential-Consistency/
+- 介绍什么是顺序一致性
 
 在 go 语言中，因为没有考虑到 arm 的弱内存序导致的问题:
 https://mzh.io/how-go-core-team-debug-1-memory-model/
@@ -2117,7 +2121,7 @@ https://gist.github.com/Measter/2108508ba25ebe3978a6c10a1e01b9ad
   * This iterator iterates though all zones at or below a given zone index.
   */
  #define for_each_zone_zonelist(zone, z, zlist, highidx) \
- 	for_each_zone_zonelist_nodemask(zone, z, zlist, highidx, NULL)
+  for_each_zone_zonelist_nodemask(zone, z, zlist, highidx, NULL)
 ```
 
 TODO 等待分析: zone 功能不同，甚至 swap cache 到 page cache 需要靠拷贝的方法维持生活 ?
@@ -2137,7 +2141,7 @@ TODO 等待分析: zone 功能不同，甚至 swap cache 到 page cache 需要�
 static bool shmem_should_replace_page(struct page *page, gfp_t gfp)
 {
   // 如果 swap cache 的 page_zonenum，
-	return page_zonenum(page) > gfp_zone(gfp);
+  return page_zonenum(page) > gfp_zone(gfp);
 }
 ```
 
@@ -2184,33 +2188,33 @@ shmem_writepage : get_swap_page 获取 swp_entry_t，将 page 和 swp_entry_t �
 ```c
 static const struct address_space_operations shmem_aops = {
     // TODO 为什么没有 readpage ?
-	.writepage	= shmem_writepage,
-	.set_page_dirty	= __set_page_dirty_no_writeback,
+  .writepage  = shmem_writepage,
+  .set_page_dirty = __set_page_dirty_no_writeback,
 #ifdef CONFIG_TMPFS
   // 为了实现 generic_file_write_iter，在进行拷贝前后使用，用于从 page cache 中间找到正确的 page
-	.write_begin	= shmem_write_begin, // shmem_getpage
-	.write_end	= shmem_write_end, // SetPageUptodate set_page_dirty
+  .write_begin  = shmem_write_begin, // shmem_getpage
+  .write_end  = shmem_write_end, // SetPageUptodate set_page_dirty
 #endif
 #ifdef CONFIG_MIGRATION
-	.migratepage	= migrate_page,
+  .migratepage  = migrate_page,
 #endif
-	.error_remove_page = generic_error_remove_page,
+  .error_remove_page = generic_error_remove_page,
 };
 
 // shmem 的基础配置可以实现什么功能 ?
 // posix 以及 sysv  的 shmem，但是它们是靠什么函数进行 IO 的 ?
 // 难道 /tmp 和 ramfs 的功能不是重复的吗 ? line 4085 的 CONFIG_SHMEM 似乎说明了很多东西
 static const struct file_operations shmem_file_operations = {
-	.mmap		= shmem_mmap,
-	.get_unmapped_area = shmem_get_unmapped_area,
+  .mmap   = shmem_mmap,
+  .get_unmapped_area = shmem_get_unmapped_area,
 #ifdef CONFIG_TMPFS
-	.llseek		= shmem_file_llseek,
-	.read_iter	= shmem_file_read_iter,// shmem_getpage + copy_page_to_iter
-	.write_iter	= generic_file_write_iter, // 就是通用的写操作
-	.fsync		= noop_fsync,
-	.splice_read	= generic_file_splice_read,
-	.splice_write	= iter_file_splice_write,
-	.fallocate	= shmem_fallocate, // TODO 又是这个
+  .llseek   = shmem_file_llseek,
+  .read_iter  = shmem_file_read_iter,// shmem_getpage + copy_page_to_iter
+  .write_iter = generic_file_write_iter, // 就是通用的写操作
+  .fsync    = noop_fsync,
+  .splice_read  = generic_file_splice_read,
+  .splice_write = iter_file_splice_write,
+  .fallocate  = shmem_fallocate, // TODO 又是这个
 #endif
 };
 ```
@@ -2315,10 +2319,10 @@ int add_to_swap(struct page *page)
 4. 利用 swap_cache_info 来给管理员提供信息
 ```c
 static struct {
-	unsigned long add_total;
-	unsigned long del_total;
-	unsigned long find_success;
-	unsigned long find_total;
+  unsigned long add_total;
+  unsigned long del_total;
+  unsigned long find_success;
+  unsigned long find_total;
 } swap_cache_info;
 ```
 
@@ -2339,11 +2343,11 @@ static struct {
  * or vma-based(ie, virtual address based on faulty address) readahead.
  */
 struct page *swapin_readahead(swp_entry_t entry, gfp_t gfp_mask,
-				struct vm_fault *vmf)
+        struct vm_fault *vmf)
 {
-	return swap_use_vma_readahead() ?
-			swap_vma_readahead(entry, gfp_mask, vmf) :
-			swap_cluster_readahead(entry, gfp_mask, vmf);
+  return swap_use_vma_readahead() ?
+      swap_vma_readahead(entry, gfp_mask, vmf) :
+      swap_cluster_readahead(entry, gfp_mask, vmf);
 }
 ```
 2. 什么时候使用 readahead，什么时候使用 page-io.c:swap_readpage ?<br/> memory.c::do_swap_page 中间说明
@@ -2377,14 +2381,14 @@ swap_slot.c 主要内容:
 ```c
 static DEFINE_PER_CPU(struct swap_slots_cache, swp_slots);
 struct swap_slots_cache {
-	bool		lock_initialized;
-	struct mutex	alloc_lock; /* protects slots, nr, cur */
-	swp_entry_t	*slots;
-	int		nr;
-	int		cur;
-	spinlock_t	free_lock;  /* protects slots_ret, n_ret */
-	swp_entry_t	*slots_ret;
-	int		n_ret;
+  bool    lock_initialized;
+  struct mutex  alloc_lock; /* protects slots, nr, cur */
+  swp_entry_t *slots;
+  int   nr;
+  int   cur;
+  spinlock_t  free_lock;  /* protects slots_ret, n_ret */
+  swp_entry_t *slots_ret;
+  int   n_ret;
 };
 
 // 两个对外提供的接口
@@ -2415,17 +2419,17 @@ PLIST_HEAD(swap_active_head); // TODO 是不是首先按照 swap_info_struct，�
 
 static void __del_from_avail_list(struct swap_info_struct *p)
 {
-	int nid;
+  int nid;
 
-	for_each_node(nid)
-		plist_del(&p->avail_lists[nid], &swap_avail_heads[nid]);
+  for_each_node(nid)
+    plist_del(&p->avail_lists[nid], &swap_avail_heads[nid]);
 }
 
 static void del_from_avail_list(struct swap_info_struct *p)
 {
-	spin_lock(&swap_avail_lock);
-	__del_from_avail_list(p);
-	spin_unlock(&swap_avail_lock);
+  spin_lock(&swap_avail_lock);
+  __del_from_avail_list(p);
+  spin_unlock(&swap_avail_lock);
 }
 ```
 
@@ -2464,7 +2468,7 @@ int try_to_free_swap(struct page *page)
  * pages_to_unuse==0 means all pages; ignored if frontswap is false
  */
 int try_to_unuse(unsigned int type, bool frontswap,
-		 unsigned long pages_to_unuse)
+     unsigned long pages_to_unuse)
 
 static int claim_swapfile(struct swap_info_struct *p, struct inode *inode)
 ```
@@ -2499,15 +2503,15 @@ static int claim_swapfile(struct swap_info_struct *p, struct inode *inode)
 ```c
 static inline void count_vm_event(enum vm_event_item item)
 {
-	this_cpu_inc(vm_event_states.event[item]);
+  this_cpu_inc(vm_event_states.event[item]);
 }
 // @todo 以此为机会找到内核实现暴露接口的位置
 ```
 
 ```c
-		__mod_zone_page_state(page_zone(page), NR_MLOCK,
-				    hpage_nr_pages(page));
-		count_vm_event(UNEVICTABLE_PGMLOCKED);
+    __mod_zone_page_state(page_zone(page), NR_MLOCK,
+            hpage_nr_pages(page));
+    count_vm_event(UNEVICTABLE_PGMLOCKED);
     // 两个统计的机制，但是并不清楚各自统计的内容是什么包含什么区别
 ```
 
@@ -2675,7 +2679,7 @@ mmu_notifier_invalidate_range_end
 __mmu_notifier_register :
 1. if mm->notifier_subscriptions is NULL, alloc and init one for it
 2. is parameter subscription is not NULL, add it to mm->notifier_subscriptions list, mm->notifier_subscriptions->has_itree = true; otherwise
-	mm_drop_all_locks(mm);
+  mm_drop_all_locks(mm);
 ```
 ------------  function calling chain -------------------------- begin ---
 
@@ -2695,11 +2699,11 @@ __mmu_notifier_register :
  * 3. No other concurrent thread can access the list (release)
  */
 struct mmu_notifier {
-	struct hlist_node hlist;
-	const struct mmu_notifier_ops *ops;
-	struct mm_struct *mm;
-	struct rcu_head rcu;
-	unsigned int users;
+  struct hlist_node hlist;
+  const struct mmu_notifier_ops *ops;
+  struct mm_struct *mm;
+  struct rcu_head rcu;
+  unsigned int users;
 };
 
 /**
@@ -2709,28 +2713,28 @@ struct mmu_notifier {
  *              was required but mmu_notifier_range_blockable(range) is false.
  */
 struct mmu_interval_notifier_ops {
-	bool (*invalidate)(struct mmu_interval_notifier *interval_sub,
-			   const struct mmu_notifier_range *range,
-			   unsigned long cur_seq);
+  bool (*invalidate)(struct mmu_interval_notifier *interval_sub,
+         const struct mmu_notifier_range *range,
+         unsigned long cur_seq);
 };
 
 struct mmu_interval_notifier {
-	struct interval_tree_node interval_tree;
-	const struct mmu_interval_notifier_ops *ops;
-	struct mm_struct *mm;
-	struct hlist_node deferred_item;
-	unsigned long invalidate_seq;
+  struct interval_tree_node interval_tree;
+  const struct mmu_interval_notifier_ops *ops;
+  struct mm_struct *mm;
+  struct hlist_node deferred_item;
+  unsigned long invalidate_seq;
 };
 
 
 struct mmu_notifier_range {
-	struct vm_area_struct *vma;
-	struct mm_struct *mm;
-	unsigned long start;
-	unsigned long end;
-	unsigned flags;
-	enum mmu_notifier_event event;
-	void *migrate_pgmap_owner;
+  struct vm_area_struct *vma;
+  struct mm_struct *mm;
+  unsigned long start;
+  unsigned long end;
+  unsigned flags;
+  enum mmu_notifier_event event;
+  void *migrate_pgmap_owner;
 };
 
 /*
@@ -2740,16 +2744,16 @@ struct mmu_notifier_range {
  * in mmdrop().
  */
 struct mmu_notifier_subscriptions {
-	/* all mmu notifiers registered in this mm are queued in this list */
-	struct hlist_head list;
-	bool has_itree;
-	/* to serialize the list modifications and hlist_unhashed */
-	spinlock_t lock;
-	unsigned long invalidate_seq;
-	unsigned long active_invalidate_ranges;
-	struct rb_root_cached itree;
-	wait_queue_head_t wq;
-	struct hlist_head deferred_list;
+  /* all mmu notifiers registered in this mm are queued in this list */
+  struct hlist_head list;
+  bool has_itree;
+  /* to serialize the list modifications and hlist_unhashed */
+  spinlock_t lock;
+  unsigned long invalidate_seq;
+  unsigned long active_invalidate_ranges;
+  struct rb_root_cached itree;
+  wait_queue_head_t wq;
+  struct hlist_head deferred_list;
 };
 ```
 
@@ -2806,14 +2810,14 @@ fs/mpage.c : 为毛是需要使用这个机制 ? 猜测其中的机制是为了�
 ```c
 static int ext2_readpage(struct file *file, struct page *page)
 {
-	return mpage_readpage(page, ext2_get_block);
+  return mpage_readpage(page, ext2_get_block);
 }
 
 static int
 ext2_readpages(struct file *file, struct address_space *mapping,
-		struct list_head *pages, unsigned nr_pages)
+    struct list_head *pages, unsigned nr_pages)
 {
-	return mpage_readpages(mapping, pages, nr_pages, ext2_get_block);
+  return mpage_readpages(mapping, pages, nr_pages, ext2_get_block);
 }
 
 /*
@@ -2960,14 +2964,14 @@ page_flags 除了 PG_slab, PG_slab 等 flags 可以使用，还可以用于标�
 ```c
 static inline void set_page_zone(struct page *page, enum zone_type zone)
 {
-	page->flags &= ~(ZONES_MASK << ZONES_PGSHIFT);
-	page->flags |= (zone & ZONES_MASK) << ZONES_PGSHIFT;
+  page->flags &= ~(ZONES_MASK << ZONES_PGSHIFT);
+  page->flags |= (zone & ZONES_MASK) << ZONES_PGSHIFT;
 }
 
 static inline void set_page_node(struct page *page, unsigned long node)
 {
-	page->flags &= ~(NODES_MASK << NODES_PGSHIFT);
-	page->flags |= (node & NODES_MASK) << NODES_PGSHIFT;
+  page->flags &= ~(NODES_MASK << NODES_PGSHIFT);
+  page->flags |= (node & NODES_MASK) << NODES_PGSHIFT;
 }
 ```
 

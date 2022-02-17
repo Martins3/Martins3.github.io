@@ -122,7 +122,7 @@ https://news.ycombinator.com/item?id=24170201 : 感觉完成度还可以的 浏�
 ## 教程
 - https://github.com/wa-lang/ugo-compiler-book : uGo 语言开发教程
 - https://oleksandrkvl.github.io/2021/04/02/cpp-20-overview.html : cpp 20 新特性，每一个例子都有对应的文档
-
+- https://github.com/lotabout/write-a-C-interpreter : 写一个 C interpreter
 
 ## jvm
 

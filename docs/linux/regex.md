@@ -53,5 +53,6 @@ echo ${str/?/sss}
 
 ## 有趣的文摘
 - [使用 swift 打造一个自己的 regex 引擎](https://kean.blog/post/lets-build-regex)
+- [melody : 一个可以编译为 regex 的语言](https://github.com/yoav-lavi/melody)
 
 [^1]: https://thevaluable.dev/vim-advanced/

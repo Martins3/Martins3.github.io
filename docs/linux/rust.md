@@ -4,6 +4,7 @@
 ## 教程
 - [The Little Book of Rust Macros](https://danielkeep.github.io/tlborm/book/README.html)
 - [Rust Latam: procedural macros workshop](https://github.com/dtolnay/proc-macro-workshop) : 学一下 macro
+- [Asynchronous Programming in Rust](https://github.com/rust-lang/async-book)
 
 ## 文摘
 - [Why not Rust](https://matklad.github.io//2020/09/20/why-not-rust.html) : 指出 Rust 的一些问题，关于 C++ 和 Rust 的性能对比，理解很深刻。
@@ -19,12 +20,14 @@
 - [10 万行 rust 之后的经验](https://matklad.github.io/2021/09/05/Rust100k.html)
 - [RustMagazine 中文月刊](https://rustmagazine.github.io/rust_magazine_2021/chapter_12/toc.html) : 国内写的一些文摘
 - [Making slow Rust code fast](https://patrickfreed.github.io/rust/2021/10/15/making-slow-rust-code-fast.html#viewing-criterions-html-report) : 如何在 Rust 上搞性能分析
+- [pretzelhammer's Rust blog](https://github.com/pretzelhammer/rust-blog) : 不能理解为什么有 4.1k 的 star
 
 ## 项目
 - [Aims to be compatible with the Linux ABI](https://github.com/nuta/kerla)
 - [Rust WebAssembly](https://rustwasm.github.io/docs/book/introduction.html)
   - [ ] 所以 WebAssembly 和 Java 字节码是一种类型的东西吗?
 - [rustviz](https://github.com/rustviz/rustviz): Interactively Visualizing Ownership and Borrowing for Rust
+- [bevy](https://github.com/bevyengine/bevy) : data-driven game engine
 
 ## 资源
 - [Langdev libraries for Rust](https://github.com/Kixiron/rust-langdev) : 使用 Rust 写编译器的一些开发工具

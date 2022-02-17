@@ -30,6 +30,8 @@ zsh 和 bash 之前语法上基本是兼容的，但是由于[oh my zsh](https:/
 
 只能感慨开源社区的强大，最近发现了一个叫 [modern unix](https://github.com/ibraheemdev/modern-unix) 的项目，总结一大堆工具, 比我上面找的更加。
 
+- [libtree](https://github.com/ibraheemdev/modern-unix)
+
 ## 一些小技巧
 - [alias](https://thorsten-hans.com/5-types-of-zsh-aliases)
 - [/dev/null](https://www.putorius.net/introduction-to-dev-null.html)

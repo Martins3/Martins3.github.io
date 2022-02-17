@@ -20,7 +20,8 @@
 - 我建议将需要 docs/ 作为 blog 而不是整个仓库，如此，其他的位置都是草稿区，而 docs/ 中作为发布的
 
 #### 添加评论
-在[静态网站上存在各种方法](https://darekkay.com/blog/static-site-comments/)
+在[静态网站上存在各种方法](https://darekkay.com/blog/static-site-comments/)，比如:
+- [gitalk](https://github.com/gitalk/gitalk)
 
 我使用的方案是 `https://giscus.app/`, 按照其步骤，将其生成的代码粘贴到你的 blog 中，下面是我的例子:
 ```js

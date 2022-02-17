@@ -62,7 +62,7 @@ for i := range onesSlice {
 
 ## Question
 1. what's make, is a **new** in c++
-2. is there generic 
+2. is there generic
 3. does go has copy-constructor
 4. code as below
 ```
@@ -90,4 +90,5 @@ why return type is `interface{}`
 
 ## External Links
 1. https://tour.go-zh.org/basics/7
-2. https://github.com/go101/go101/issues/132
+- https://github.com/go101/go101
+  - https://github.com/go101/go101/issues/132

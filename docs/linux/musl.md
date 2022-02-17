@@ -113,6 +113,9 @@ obj/crt/Scrt1.o obj/crt/rcrt1.o: CFLAGS_ALL += -fPIC
 ## memset 的实现和内核有区别吗
 有，比如，amd64 的实现在 arch/x86/lib/memset_64.S 中
 
+实际上，memset 的实现非常有门道，我们只是需要简单看看 musl 和 glibc 的对比就可以看出来 glibc 的实现要更加高效。
+[Fast Memset and Memcpy implementations](https://github.com/nadavrot/memset_benchmark) 中仔细的对比了各种实现。
+
 ## 可以不使用 brk 来实现 malloc 吗
 可以的。
 - musl 用 brk 分配 meta data
@@ -139,19 +142,19 @@ long __syscall_cp_c(syscall_arg_t nr,
                     syscall_arg_t u, syscall_arg_t v, syscall_arg_t w,
                     syscall_arg_t x, syscall_arg_t y, syscall_arg_t z)
 {
-	pthread_t self;
-	long r;
-	int st;
+  pthread_t self;
+  long r;
+  int st;
 
-	if ((st=(self=__pthread_self())->canceldisable)
-	    && (st==PTHREAD_CANCEL_DISABLE || nr==SYS_close))
-		return __syscall(nr, u, v, w, x, y, z);
+  if ((st=(self=__pthread_self())->canceldisable)
+      && (st==PTHREAD_CANCEL_DISABLE || nr==SYS_close))
+    return __syscall(nr, u, v, w, x, y, z);
 
-	r = __syscall_cp_asm(&self->cancel, nr, u, v, w, x, y, z);
-	if (r==-EINTR && nr!=SYS_close && self->cancel &&
-	    self->canceldisable != PTHREAD_CANCEL_DISABLE)
-		r = __cancel();
-	return r;
+  r = __syscall_cp_asm(&self->cancel, nr, u, v, w, x, y, z);
+  if (r==-EINTR && nr!=SYS_close && self->cancel &&
+      self->canceldisable != PTHREAD_CANCEL_DISABLE)
+    r = __cancel();
+  return r;
 }
 ```
 在 `__syscall_cp_c` 中，只是将 `self->cancel` 传递到 r11 上了
@@ -172,46 +175,46 @@ src/thread/x86_64/syscall_cp.s
 __syscall_cp_asm:
 
 __cp_begin:
-	mov (%rdi),%eax
-	test %eax,%eax
-	jnz __cp_cancel
-	mov %rdi,%r11
-	mov %rsi,%rax
-	mov %rdx,%rdi
-	mov %rcx,%rsi
-	mov %r8,%rdx
-	mov %r9,%r10
-	mov 8(%rsp),%r8
-	mov 16(%rsp),%r9
-	mov %r11,8(%rsp)
-	syscall
+  mov (%rdi),%eax
+  test %eax,%eax
+  jnz __cp_cancel
+  mov %rdi,%r11
+  mov %rsi,%rax
+  mov %rdx,%rdi
+  mov %rcx,%rsi
+  mov %r8,%rdx
+  mov %r9,%r10
+  mov 8(%rsp),%r8
+  mov 16(%rsp),%r9
+  mov %r11,8(%rsp)
+  syscall
 __cp_end:
-	ret
+  ret
 __cp_cancel:
-	jmp __cancel
+  jmp __cancel
 ```
 
 对比 glibc 的 syscall 是一个很好的理解 x86 syscall 装换:
 ```c
 ENTRY (syscall)
-	movq %rdi, %rax		/* Syscall number -> rax.  */
-	movq %rsi, %rdi		/* shift arg1 - arg5.  */
-	movq %rdx, %rsi
-	movq %rcx, %rdx
-	movq %r8, %r10
-	movq %r9, %r8
-	movq 8(%rsp),%r9	/* arg6 is on the stack.  */
-	syscall			/* Do the system call.  */
-	cmpq $-4095, %rax	/* Check %rax for error.  */
-	jae SYSCALL_ERROR_LABEL	/* Jump to error handler if error.  */
-	ret			/* Return to caller.  */
+  movq %rdi, %rax   /* Syscall number -> rax.  */
+  movq %rsi, %rdi   /* shift arg1 - arg5.  */
+  movq %rdx, %rsi
+  movq %rcx, %rdx
+  movq %r8, %r10
+  movq %r9, %r8
+  movq 8(%rsp),%r9  /* arg6 is on the stack.  */
+  syscall     /* Do the system call.  */
+  cmpq $-4095, %rax /* Check %rax for error.  */
+  jae SYSCALL_ERROR_LABEL /* Jump to error handler if error.  */
+  ret     /* Return to caller.  */
 
 PSEUDO_END (syscall)
 ```
 
 参考 kernel inside[^2] 可以找到内核 r11 保存到 `pt_regs->flags`:
 ```S
-	pushq	%r11					/* pt_regs->flags */
+  pushq %r11          /* pt_regs->flags */
 ```
 
 在 lwn 的
@@ -287,7 +290,7 @@ src/include 定义在前，所以优先级更高。
 
 ```c
 obj/include/bits/alltypes.h: $(srcdir)/arch/$(ARCH)/bits/alltypes.h.in $(srcdir)/include/alltypes.h.in $(srcdir)/tools/mkalltypes.sed
-	sed -f $(srcdir)/tools/mkalltypes.sed $(srcdir)/arch/$(ARCH)/bits/alltypes.h.in $(srcdir)/include/alltypes.h.in > $@
+  sed -f $(srcdir)/tools/mkalltypes.sed $(srcdir)/arch/$(ARCH)/bits/alltypes.h.in $(srcdir)/include/alltypes.h.in > $@
 ```
 - [ ] why NULL is defined every where，虽然很容易处理，但是无法理解
 - [ ] FILE 这个东西是不是定义的有点太随意了啊
@@ -377,10 +380,10 @@ int main(int argc, char **argv) {
 ```c
 _Noreturn void exit(int code)
 {
-	__funcs_on_exit();
-	__libc_exit_fini();
-	__stdio_exit();
-	_Exit(code);
+  __funcs_on_exit();
+  __libc_exit_fini();
+  __stdio_exit();
+  _Exit(code);
 }
 ```
 1. [atexit 注册的 hook 执行](https://stackoverflow.com/questions/25115612/whats-the-scenario-to-use-atexit-function)
@@ -395,22 +398,22 @@ _Noreturn void exit(int code)
 ```c
 void __unlock(volatile int *l)
 {
-	/* Check l[0] to see if we are multi-threaded. */
-	if (l[0] < 0) {
-		if (a_fetch_add(l, -(INT_MIN + 1)) != (INT_MIN + 1)) {
-			__wake(l, 1, 1);
-		}
-	}
+  /* Check l[0] to see if we are multi-threaded. */
+  if (l[0] < 0) {
+    if (a_fetch_add(l, -(INT_MIN + 1)) != (INT_MIN + 1)) {
+      __wake(l, 1, 1);
+    }
+  }
 }
 
 static volatile int lock[1];
 
 static inline void __wake(volatile void *addr, int cnt, int priv)
 {
-	if (priv) priv = FUTEX_PRIVATE;
-	if (cnt<0) cnt = INT_MAX;
-	__syscall(SYS_futex, addr, FUTEX_WAKE|priv, cnt) != -ENOSYS ||
-	__syscall(SYS_futex, addr, FUTEX_WAKE, cnt);
+  if (priv) priv = FUTEX_PRIVATE;
+  if (cnt<0) cnt = INT_MAX;
+  __syscall(SYS_futex, addr, FUTEX_WAKE|priv, cnt) != -ENOSYS ||
+  __syscall(SYS_futex, addr, FUTEX_WAKE, cnt);
 }
 ```
 
