@@ -14,7 +14,7 @@ This is Tom Spink's doctor thesis.
 - [Efficient memory virtualization for cross-isa system mode emulation](http://vee2014.cs.technion.ac.il/docs/VEE14-present25.pdf)
 - [Hspt: Practical implementation and efficient management of embedded shadow page tables for cross-isa system virtual machines](https://zhexwang.github.io/papers/hspt.pdf)
 
-- [Reducing World Switches in Virtualized Environment with Flexible Cross-world Calls](https://trustkernel.com/uploads/pubs/CrossOver_ISCA2015.pdf) 
+- [Reducing World Switches in Virtualized Environment with Flexible Cross-world Calls](https://trustkernel.com/uploads/pubs/CrossOver_ISCA2015.pdf)
 - [HQEMU](http://csl.iis.sinica.edu.tw/hqemu/)
 
 - MagiXen: Combining Binary Translation and Virtualization
@@ -44,7 +44,7 @@ This is Tom Spink's doctor thesis.
 ## os
 - https://github.com/theseus-os/Theseus
 - https://github.com/demikernel/demikernel
-    - Demikernel architecture offers a uniform system call API across kernel-bypass technologies (e.g., RDMA, DPDK) and OS functionality (e.g., a user-level networking stack for DPDK). 
+    - Demikernel architecture offers a uniform system call API across kernel-bypass technologies (e.g., RDMA, DPDK) and OS functionality (e.g., a user-level networking stack for DPDK).
 
 ## compiler
 - https://zhuanlan.zhihu.com/p/336543238
@@ -54,3 +54,7 @@ This is Tom Spink's doctor thesis.
 
 ## fs
 - [使用 Rust 开发文件系统](http://blog.jcix.top/2021-04-10/bentofs/)
+
+## 其他
+- [How to circumvent Sci-Hub ISP block](https://fragile-credences.github.io/scihub-proxy/)
+- [如何阅读学术论文](https://deardrops.github.io/post/how-to-read-academic-papers/)

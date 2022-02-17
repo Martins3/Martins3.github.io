@@ -8,7 +8,7 @@ https://github.com/MaximAbramchuck/awesome-interview-questions : 对于经典问
 https://github.com/FAQGURU/FAQGURU : 主要针对于后端，但是其中git 之类的还可以看看的
 
 # 参与开源社区
-https://github.com/github/opensource.guide : 参与 github 
+https://github.com/github/opensource.guide : 参与 github
 https://github.com/ryanhanwu/How-To-Ask-Questions-The-Smart-Way : 问问题
 
 
@@ -38,7 +38,7 @@ https://englishplusplus.jcj.uj.edu.pl/index.html : 一些听力，写作 和 pre
 
 ## 写作
 https://github.com/ruanyf/document-style-guide : 好好看看吧
-
+[awesome writing](https://github.com/jenniferlynparsons/awesome-writing)
 
 ## code review
 https://mtlynch.io/code-review-love/
@@ -52,4 +52,3 @@ https://github.com/jivoi/awesome-osint : 各种获取信息的方式, 包括但�
 
 ## 设计模式
 https://refactoringguru.cn/design-patterns
-

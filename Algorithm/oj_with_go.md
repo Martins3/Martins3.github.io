@@ -85,7 +85,7 @@ fmt.Println(s=="") // prints "true"
 ```
 
 ## slice
-1. Add a element at the first 
+1. Add a element at the first
 ```
 data := []string{"A", "B", "C", "D"}
 data = append([]string{"Prepend Item"}, data...)
@@ -119,5 +119,3 @@ func main(){
     fmt.Println(p)
 }
 ```
-
-

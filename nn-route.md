@@ -10,7 +10,8 @@ https://arthurdouillard.com/deepcourse/ : 机器学习路线
 
 ## 可能有用
 https://github.com/FavioVazquez/ds-cheatsheets
-
+## 文摘
+- [autodiff](https://douglasorr.github.io/2021-11-autodiff/article.html) 的原理
 ## 给小孩收集的
 - https://github.com/tsherif/space-shooter.c
 - https://github.com/coding-horror/basic-computer-games

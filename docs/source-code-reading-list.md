@@ -34,3 +34,5 @@ inspired by https://github.com/geektutu/7days-golang
 ## 2022 计划阅读
 - https://github.com/copy/v86 : 在网页中放一个 QEMU
 - [ ] https://github.com/OpenXiangShan/XiangShan
+- https://glinscott.github.io/lz/index.html
+- [Cosmopolitan](https://ahgamut.github.io/2021/02/27/ape-cosmo/)

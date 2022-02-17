@@ -18,6 +18,7 @@ Hardware and Software Support for Virtualization : 作者[Edouard Bugnion](https
 ## minimal kvm example
 - https://github.com/dpw/kvm-hello-world
 - https://github.com/david942j/kvm-kernel-example
+- https://github.com/ionescu007/SimpleVisor : Window Driver 或者 UEFI driver 方式执行的 hypervisor
 
 ## 一些补充资料
 - [cpu internals](https://github.com/LordNoteworthy/cpu-internals) 是 intel SDM 的笔记，其中覆盖了 intel CPU 在硬件上如何支持虚拟化的, 阅读 kvm 的时候可以配合这阅读一下。
@@ -33,6 +34,7 @@ Hardware and Software Support for Virtualization : 作者[Edouard Bugnion](https
 - [空客的 QEMU 源码分析](https://github.com/airbus-seclab/qemu_blog)
 - [opengers](https://opengers.github.io/) : kvm ceph 之类的
 - [mpolednik](https://mpolednik.github.io/) : redhat 工程师，vfio 之类的
+- [stefano garzarella](https://stefano-garzarella.github.io/) : redhat 工程师
 
 ## 一些有意思的项目
 - [VivienneVMM](https://github.com/changeofpace/VivienneVMM) : 使用 vmx 实现的调试器

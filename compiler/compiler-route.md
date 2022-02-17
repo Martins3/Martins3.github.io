@@ -118,6 +118,12 @@ https://github.com/janet-lang/janet : vm 和
 
 https://news.ycombinator.com/item?id=24170201 : 感觉完成度还可以的 浏览器实现，所以，好的，可以去做前端了
 
+
+## 教程
+- https://github.com/wa-lang/ugo-compiler-book : uGo 语言开发教程
+- https://oleksandrkvl.github.io/2021/04/02/cpp-20-overview.html : cpp 20 新特性，每一个例子都有对应的文档
+
+
 ## jvm
 
 
@@ -128,3 +134,4 @@ https://news.ycombinator.com/item?id=24170201 : 感觉完成度还可以的 浏�
 
 ## 工作
 - https://www.sourcebrella.com/jobs/
+- https://github.com/chai2010/chai2010/blob/master/jobs.md

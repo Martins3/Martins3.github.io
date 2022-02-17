@@ -101,7 +101,7 @@ std::string str="We think in generalities, but we live in details.";
 
 ## IO
 1. fgets()
-Reads characters from stream and stores them as a C string into str until (num-1) 
+Reads characters from stream and stores them as a C string into str until (num-1)
 characters have been read or either a newline or the end-of-file is reached, whichever happens first.
 A newline character makes fgets stop reading, but it is considered a valid character by the function and included in the string copied to str.
 
@@ -279,7 +279,7 @@ std::sort(vec.begin(), vec.end(), less_than_key());
 
 // 使用 lambda
 sort(a.begin(), a.end(),
-       [](const MyStruct &struct1, const MyStruct &struct2) -> bool 
+       [](const MyStruct &struct1, const MyStruct &struct2) -> bool
        {
          return (struct1.key < struct2.key);
        });
@@ -289,7 +289,7 @@ sort(a.begin(), a.end(),
 2. memset 处理二维数组
 
 ## priority_queue
-- [ ] 和 heap 是什么关系 ? 
+- [ ] 和 heap 是什么关系 ?
 
 ## ques
 1. 最快读入的string的方法是什么 ？

@@ -58,17 +58,17 @@ keep find the smallest elements
         int cmp = key.compareTo(x.key);
         if      (cmp < 0) x.left  = delete(x.left,  key);
         else if (cmp > 0) x.right = delete(x.right, key);
-        else { 
+        else {
             if (x.right == null) return x.left;
             if (x.left  == null) return x.right;
             Node t = x;
             x = min(t.right);
             x.right = deleteMin(t.right);
             x.left = t.left;
-        } 
+        }
         x.size = size(x.left) + size(x.right) + 1;
         return x;
-    } 
+    }
 ```
 
 
@@ -88,7 +88,7 @@ single rotation and double rotation
 3. There are no two adjacent red nodes (A red node cannot have a red parent or red child).
 4. Every path from root to a NULL node has same number of black nodes.
 
-The AVL trees are more balanced compared to Red Black Trees, but they may cause more rotations 
+The AVL trees are more balanced compared to Red Black Trees, but they may cause more rotations
 during insertion and deletion
 
 

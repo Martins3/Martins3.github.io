@@ -1,4 +1,6 @@
 # GCC 实战
+- https://kristerw.github.io/2021/10/19/fast-math/
+  - 分析关于 math 的各种优化
 
 ## gcc specs
 比如

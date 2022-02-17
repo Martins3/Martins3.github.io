@@ -1,6 +1,6 @@
 1. C 的所有输入函数
     2. printf 读取整数　字符串的策略是什么
-    
+
     ```
     1. 整数中间包含字母是不是自动略过去
     ```
@@ -11,7 +11,7 @@
 
 4. scanf 遇到无法处理的符号无法自动跳跃过去
     1. 比如　在读入整数的时候, '.' 就是无法处理的符号
-    
+
 
 // 需要处理
 5. 复杂的巅峰
@@ -22,7 +22,7 @@
 ```
 #include <stdio.h>
 #include <stdlib.h>
-int comp (const void * elem1, const void * elem2) 
+int comp (const void * elem1, const void * elem2)
 {
     int f = *((int*)elem1);
     int s = *((int*)elem2);
@@ -30,7 +30,7 @@ int comp (const void * elem1, const void * elem2)
     if (f < s) return -1;
     return 0;
 }
-int main(int argc, char* argv[]) 
+int main(int argc, char* argv[])
 {
     int x[] = {4,5,2,3,1,0,9,8,6,7};
     qsort (x, sizeof(x)/sizeof(*x), sizeof(*x), comp);
