@@ -66,6 +66,8 @@ https://github.com/keiichiw/constexpr-8cc : 有趣的项目, 其中指向了一�
 
 ## blog
 https://blog.llvm.org/posts/2020-12-21-interactive-cpp-for-data-science/ : cpp in juperter notebook
+- https://docs.microsoft.com/en-us/archive/msdn-magazine/2015/february/compilers-what-every-programmer-should-know-about-compiler-optimizations
+  - 人人都应该知道的 compiler 优化
 
 ## 想法
 1. 各种内存分析工具都是如何实现的: 靠编译器静态分析，或者内核的动态分析。

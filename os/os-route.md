@@ -125,6 +125,7 @@ http://www.linuxfromscratch.org/lfs/view/10.0-rc1/prologue/foreword.html
 - [meltdown 和 spectrum 相关](https://mp.weixin.qq.com/s?__biz=Mzg2MjE0NDE5OA==&mid=2247484455&idx=1&sn=3ce685da00fb31579c08ce585bfda135&chksm=ce0d178ef97a9e98fc8e77cc57a9efe91cba607ee235d5c1e28bce23453b72298f7372b04f18&scene=0&xtrack=1#rd)
 - [what cs major should know](http://matt.might.net/articles/what-cs-majors-should-know/)
 - [制作一个启动到 bash 的最小内核](https://weeraman.com/building-a-tiny-linux-kernel-8c07579ae79d)
+- [品读 Linux 0.11 核心代码](https://github.com/sunym1993/flash-linux0.11-talk)
 
 ## project
 - [syzkaller](https://github.com/google/syzkaller/blob/master/docs/setup.md) : @todo 暂时不知道如何实现 fuzzer 的
