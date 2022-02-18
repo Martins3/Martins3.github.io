@@ -17,7 +17,11 @@ Hardware and Software Support for Virtualization : 作者[Edouard Bugnion](https
 
 ## minimal kvm example
 - https://github.com/dpw/kvm-hello-world
-- https://github.com/david942j/kvm-kernel-example
+- [Learning KVM - implement your own kernel](https://david942j.blogspot.com/2018/10/note-learning-kvm-implement-your-own.html)
+  - [源码](https://github.com/david942j/kvm-kernel-example)
+- [kvmsample](https://github.com/soulxu/kvmsample) : 几百行，guest 就是一个三行的汇编
+- [kvmtool](https://github.com/kvmtool/kvmtool) : 没有维护, 大约 20000 行，已经不怎么 minimal 了，但是比 QEMU 要好!
+
 
 ## minimal hypervisor / virtual machine example
 - https://github.com/calinyara/asor

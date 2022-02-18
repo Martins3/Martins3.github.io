@@ -28,6 +28,7 @@
   - [ ] 所以 WebAssembly 和 Java 字节码是一种类型的东西吗?
 - [rustviz](https://github.com/rustviz/rustviz): Interactively Visualizing Ownership and Borrowing for Rust
 - [bevy](https://github.com/bevyengine/bevy) : data-driven game engine
+- [KVM firmware Rust 实现](https://news.ycombinator.com/item?id=19883626)
 
 ## 资源
 - [Langdev libraries for Rust](https://github.com/Kixiron/rust-langdev) : 使用 Rust 写编译器的一些开发工具

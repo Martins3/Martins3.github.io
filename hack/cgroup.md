@@ -1,52 +1,52 @@
 # cgroup
 <!-- vim-markdown-toc GitLab -->
 
-- [overview](#overview)
-- [userland api](#userland-api)
-- [proc](#proc)
-- [subsystem](#subsystem)
-- [sys](#sys)
-- [kernfs](#kernfs)
-- [mount](#mount)
-- [css_set](#css_set)
-- [fork](#fork)
-- [memcg](#memcg)
-    - [memcg obj_cgroup](#memcg-obj_cgroup)
-    - [memcg task_struct](#memcg-task_struct)
-    - [memcg charge](#memcg-charge)
-    - [memcg overview](#memcg-overview)
-    - [memcg force_empty](#memcg-force_empty)
-    - [memcg shrinker](#memcg-shrinker)
-    - [memcg oom](#memcg-oom)
-    - [memcg writeback](#memcg-writeback)
-    - [memcg files](#memcg-files)
-    - [memcg mem_cgroup_legacy_files](#memcg-mem_cgroup_legacy_files)
-    - [memcg memory_files](#memcg-memory_files)
-    - [memcg memsw_files](#memcg-memsw_files)
-    - [memcg swap_files](#memcg-swap_files)
-- [migrate](#migrate)
-- [blkio](#blkio)
-- [structure](#structure)
-    - [structure struct](#structure-struct)
-    - [structure function](#structure-function)
-- [cgroup_base_files](#cgroup_base_files)
-- [cgroup1_base_files](#cgroup1_base_files)
-- [namespace](#namespace)
-- [idr](#idr)
-- [domain threaded mask](#domain-threaded-mask)
-- [cgroup ssid 的管理策略](#cgroup-ssid-的管理策略)
-- [cgroup_add_dfl_cftypes 和 cgroup_add_legacy_cftypes](#cgroup_add_dfl_cftypes-和-cgroup_add_legacy_cftypes)
-- [cpuset](#cpuset)
-- [cgroup core files](#cgroup-core-files)
-- [v1 v2](#v1-v2)
-- [PSI](#psi)
-- [cpu](#cpu)
-- [thread](#thread)
-- [page counter](#page-counter)
-- [hugetlb cgroup](#hugetlb-cgroup)
-- [cgroup.procs](#cgroupprocs)
-- [TODO](#todo)
-- [reference](#reference)
+* [overview](#overview)
+* [userland api](#userland-api)
+* [proc](#proc)
+* [subsystem](#subsystem)
+* [sys](#sys)
+* [kernfs](#kernfs)
+* [mount](#mount)
+* [css_set](#css_set)
+* [fork](#fork)
+* [memcg](#memcg)
+    * [memcg obj_cgroup](#memcg-obj_cgroup)
+    * [memcg task_struct](#memcg-task_struct)
+    * [memcg charge](#memcg-charge)
+    * [memcg overview](#memcg-overview)
+    * [memcg force_empty](#memcg-force_empty)
+    * [memcg shrinker](#memcg-shrinker)
+    * [memcg oom](#memcg-oom)
+    * [memcg writeback](#memcg-writeback)
+    * [memcg files](#memcg-files)
+    * [memcg mem_cgroup_legacy_files](#memcg-mem_cgroup_legacy_files)
+    * [memcg memory_files](#memcg-memory_files)
+    * [memcg memsw_files](#memcg-memsw_files)
+    * [memcg swap_files](#memcg-swap_files)
+* [migrate](#migrate)
+* [blkio](#blkio)
+* [structure](#structure)
+    * [structure struct](#structure-struct)
+    * [structure function](#structure-function)
+* [cgroup_base_files](#cgroup_base_files)
+* [cgroup1_base_files](#cgroup1_base_files)
+* [namespace](#namespace)
+* [idr](#idr)
+* [domain threaded mask](#domain-threaded-mask)
+* [cgroup ssid 的管理策略](#cgroup-ssid-的管理策略)
+* [cgroup_add_dfl_cftypes 和 cgroup_add_legacy_cftypes](#cgroup_add_dfl_cftypes-和-cgroup_add_legacy_cftypes)
+* [cpuset](#cpuset)
+* [cgroup core files](#cgroup-core-files)
+* [v1 v2](#v1-v2)
+* [PSI](#psi)
+* [cpu](#cpu)
+* [thread](#thread)
+* [page counter](#page-counter)
+* [hugetlb cgroup](#hugetlb-cgroup)
+* [cgroup.procs](#cgroupprocs)
+* [TODO](#todo)
+* [reference](#reference)
 
 <!-- vim-markdown-toc -->
 
@@ -83,7 +83,7 @@ Entries list above can be verified in sys and proc.
 |             |         |                     |    |              |                     |          |     flags      |
 |             |         |                     |    |              +---------------------+          |  cgroup.procs  |
 |             |         |                     |    |              |        cgroup       |--------->|       id       |
-|             |         |                     |    |              +---------------------+          |      ....      | 
+|             |         |                     |    |              +---------------------+          |      ....      |
 |-------------+         |---------------------+----+                                               +----------------+
 |   cgroups   | ------> | cgroup_subsys_state | array of cgroup_subsys_state
 |-------------+         +---------------------+------------------>+---------------------+          +----------------+
@@ -157,7 +157,7 @@ static int cgroup_apply_control(struct cgroup *cgrp)
 - cgroup is largely composed of two parts - the core and controllers.
     - cgroup core is primarily responsible for **hierarchically** organizing processes.
     - A cgroup controller is usually responsible for distributing a specific type of system resource along the hierarchy although there are utility controllers which serve purposes other than resource distribution.
-- cgroups form a tree structure and every process in the system belongs to one and only one cgroup. 
+- cgroups form a tree structure and every process in the system belongs to one and only one cgroup.
 - All threads of a process belong to the same cgroup.
 - On creation, all processes are put in the cgroup that the parent process belongs to at the time.
 - A process can be *migrated* to another cgroup. Migration of a process doesn’t affect already existing descendant processes.
@@ -198,28 +198,28 @@ subsystem所关联到的cgroup树的ID，如果多个subsystem关联到同一颗
 - **WARN_ON(!proc_create_single("cgroups", 0, NULL, proc_cgroupstats_show));**
 
 ```
-➜  vn git:(master) ✗ cat /proc/cgroups                 
-#subsys_name	hierarchy	num_cgroups	enabled
-cpuset	11	1	1
-cpu	5	146	1
-cpuacct	5	146	1
-blkio	10	146	1
-memory	8	156	1
-devices	4	150	1
-freezer	6	5	1
-net_cls	7	1	1
-perf_event	3	1	1
-net_prio	7	1	1
-hugetlb	12	1	1
-pids	9	152	1
-rdma	2	1	1
+➜  vn git:(master) ✗ cat /proc/cgroups
+#subsys_name  hierarchy num_cgroups enabled
+cpuset  11  1 1
+cpu 5 146 1
+cpuacct 5 146 1
+blkio 10  146 1
+memory  8 156 1
+devices 4 150 1
+freezer 6 5 1
+net_cls 7 1 1
+perf_event  3 1 1
+net_prio  7 1 1
+hugetlb 12  1 1
+pids  9 152 1
+rdma  2 1 1
 ```
 
 ```c
-		seq_printf(m, "%s\t%d\t%d\t%d\n",
-			   ss->legacy_name, ss->root->hierarchy_id,
-			   atomic_read(&ss->root->nr_cgrps),
-			   cgroup_ssid_enabled(i));
+    seq_printf(m, "%s\t%d\t%d\t%d\n",
+         ss->legacy_name, ss->root->hierarchy_id,
+         atomic_read(&ss->root->nr_cgrps),
+         cgroup_ssid_enabled(i));
 ```
 - [x] how does /proc/cgroups work ?
   - [ ] **so different subsystems can link to a different cgroup_root ?**
@@ -230,7 +230,7 @@ rdma	2	1	1
 - **proc_cgroup_show()**
 
 ```
-➜  vn git:(master) ✗ cat /proc/self/cgroup 
+➜  vn git:(master) ✗ cat /proc/self/cgroup
 12:hugetlb:/
 11:cpuset:/
 10:blkio:/user.slice
@@ -251,8 +251,8 @@ rdma	2	1	1
 LIST_HEAD(cgroup_roots);
 
 /* iterate across the hierarchies */
-#define for_each_root(root)						\
-	list_for_each_entry((root), &cgroup_roots, root_list)
+#define for_each_root(root)           \
+  list_for_each_entry((root), &cgroup_roots, root_list)
 ```
 - cgroup_setup_root() add root to `cgroup_roots`
     -  if we only use cgroup v2, then there is only one caller for `cgroup_setup_root`
@@ -294,39 +294,39 @@ static struct cftype cgroup_base_files[] = {
  * be obtained by setting cftype->file_offset.
  */
 struct cgroup_file {
-	/* do not access any fields from outside cgroup core */
-	struct kernfs_node *kn;
-	unsigned long notified_at;
-	struct timer_list notify_timer;
+  /* do not access any fields from outside cgroup core */
+  struct kernfs_node *kn;
+  unsigned long notified_at;
+  struct timer_list notify_timer;
 };
 
 
 static struct kernfs_ops cgroup_kf_single_ops = {
-	.atomic_write_len	= PAGE_SIZE,
-	.open			= cgroup_file_open,
-	.release		= cgroup_file_release,
-	.write			= cgroup_file_write,
-	.poll			= cgroup_file_poll,
-	.seq_show		= cgroup_seqfile_show,
+  .atomic_write_len = PAGE_SIZE,
+  .open     = cgroup_file_open,
+  .release    = cgroup_file_release,
+  .write      = cgroup_file_write,
+  .poll     = cgroup_file_poll,
+  .seq_show   = cgroup_seqfile_show,
 };
 
 static struct kernfs_ops cgroup_kf_ops = {
-	.atomic_write_len	= PAGE_SIZE,
-	.open			= cgroup_file_open,
-	.release		= cgroup_file_release,
-	.write			= cgroup_file_write,
-	.poll			= cgroup_file_poll,
-	.seq_start		= cgroup_seqfile_start,
-	.seq_next		= cgroup_seqfile_next,
-	.seq_stop		= cgroup_seqfile_stop,
-	.seq_show		= cgroup_seqfile_show,
+  .atomic_write_len = PAGE_SIZE,
+  .open     = cgroup_file_open,
+  .release    = cgroup_file_release,
+  .write      = cgroup_file_write,
+  .poll     = cgroup_file_poll,
+  .seq_start    = cgroup_seqfile_start,
+  .seq_next   = cgroup_seqfile_next,
+  .seq_stop   = cgroup_seqfile_stop,
+  .seq_show   = cgroup_seqfile_show,
 };
 
 static struct kernfs_syscall_ops cgroup_kf_syscall_ops = {
-	.show_options		= cgroup_show_options,
-	.mkdir			= cgroup_mkdir,
-	.rmdir			= cgroup_rmdir,
-	.show_path		= cgroup_show_path,
+  .show_options   = cgroup_show_options,
+  .mkdir      = cgroup_mkdir,
+  .rmdir      = cgroup_rmdir,
+  .show_path    = cgroup_show_path,
 };
 ```
 
@@ -364,33 +364,33 @@ cgroup /sys/fs/cgroup/rdma cgroup rw,nosuid,nodev,noexec,relatime,rdma 0 0
 
 ```c
 static const struct fs_context_operations cgroup_fs_context_ops = {
-	.free		= cgroup_fs_context_free,
-	.parse_param	= cgroup2_parse_param,
-	.get_tree	= cgroup_get_tree,
-	.reconfigure	= cgroup_reconfigure,
+  .free   = cgroup_fs_context_free,
+  .parse_param  = cgroup2_parse_param,
+  .get_tree = cgroup_get_tree,
+  .reconfigure  = cgroup_reconfigure,
 };
 
 static const struct fs_context_operations cgroup1_fs_context_ops = {
-	.free		= cgroup_fs_context_free,
-	.parse_param	= cgroup1_parse_param,
-	.get_tree	= cgroup1_get_tree,
-	.reconfigure	= cgroup1_reconfigure,
+  .free   = cgroup_fs_context_free,
+  .parse_param  = cgroup1_parse_param,
+  .get_tree = cgroup1_get_tree,
+  .reconfigure  = cgroup1_reconfigure,
 };
 
 struct file_system_type cgroup_fs_type = {
-	.name			= "cgroup",
-	.init_fs_context	= cgroup_init_fs_context,
-	.parameters		= cgroup1_fs_parameters,
-	.kill_sb		= cgroup_kill_sb,
-	.fs_flags		= FS_USERNS_MOUNT,
+  .name     = "cgroup",
+  .init_fs_context  = cgroup_init_fs_context,
+  .parameters   = cgroup1_fs_parameters,
+  .kill_sb    = cgroup_kill_sb,
+  .fs_flags   = FS_USERNS_MOUNT,
 };
 
 static struct file_system_type cgroup2_fs_type = {
-	.name			= "cgroup2",
-	.init_fs_context	= cgroup_init_fs_context,
-	.parameters		= cgroup2_fs_parameters,
-	.kill_sb		= cgroup_kill_sb,
-	.fs_flags		= FS_USERNS_MOUNT,
+  .name     = "cgroup2",
+  .init_fs_context  = cgroup_init_fs_context,
+  .parameters   = cgroup2_fs_parameters,
+  .kill_sb    = cgroup_kill_sb,
+  .fs_flags   = FS_USERNS_MOUNT,
 };
 ```
 If we have register the `file_system_type`, we can mount it as we like.
@@ -403,8 +403,8 @@ If we have register the `file_system_type`, we can mount it as we like.
 - [ ] How many root do we have ?
 ```c
 /* iterate across the hierarchies */
-#define for_each_root(root)						\
-	list_for_each_entry((root), &cgroup_roots, root_list)
+#define for_each_root(root)           \
+  list_for_each_entry((root), &cgroup_roots, root_list)
 ```
 
 ## css_set
@@ -416,7 +416,7 @@ If we have register the `file_system_type`, we can mount it as we like.
 
 ## fork
 - copy_process
-  - [ ] cgroup_can_fork 
+  - [ ] cgroup_can_fork
     - [ ] cgroup_css_set_fork
   - [ ] cgroup_fork
   - [ ] cgroup_post_fork
@@ -454,13 +454,13 @@ struct mem_cgroup *root_mem_cgroup __read_mostly;
  * of all live memory objects in the wild.
  */
 struct obj_cgroup {
-	struct percpu_ref refcnt;
-	struct mem_cgroup *memcg;
-	atomic_t nr_charged_bytes;
-	union {
-		struct list_head list;
-		struct rcu_head rcu;
-	};
+  struct percpu_ref refcnt;
+  struct mem_cgroup *memcg;
+  atomic_t nr_charged_bytes;
+  union {
+    struct list_head list;
+    struct rcu_head rcu;
+  };
 };
 ```
 As the name suggested, is used in slab and percpu allocation.
@@ -478,28 +478,28 @@ As the name suggested, is used in slab and percpu allocation.
  */
 struct mem_cgroup *get_mem_cgroup_from_mm(struct mm_struct *mm)
 {
-	struct mem_cgroup *memcg;
+  struct mem_cgroup *memcg;
 
-	if (mem_cgroup_disabled())
-		return NULL;
+  if (mem_cgroup_disabled())
+    return NULL;
 
-	rcu_read_lock();
-	do {
-		/*
-		 * Page cache insertions can happen withou an
-		 * actual mm context, e.g. during disk probing
-		 * on boot, loopback IO, acct() writes etc.
-		 */
-		if (unlikely(!mm))
-			memcg = root_mem_cgroup;
-		else {
-			memcg = mem_cgroup_from_task(rcu_dereference(mm->owner));
-			if (unlikely(!memcg))
-				memcg = root_mem_cgroup;
-		}
-	} while (!css_tryget(&memcg->css));
-	rcu_read_unlock();
-	return memcg;
+  rcu_read_lock();
+  do {
+    /*
+     * Page cache insertions can happen withou an
+     * actual mm context, e.g. during disk probing
+     * on boot, loopback IO, acct() writes etc.
+     */
+    if (unlikely(!mm))
+      memcg = root_mem_cgroup;
+    else {
+      memcg = mem_cgroup_from_task(rcu_dereference(mm->owner));
+      if (unlikely(!memcg))
+        memcg = root_mem_cgroup;
+    }
+  } while (!css_tryget(&memcg->css));
+  rcu_read_unlock();
+  return memcg;
 }
 ```
 
@@ -513,7 +513,7 @@ This is only way to access task's css_set
  */
 static inline struct css_set *task_css_set(struct task_struct *task)
 {
-	return task_css_set_check(task, false);
+  return task_css_set_check(task, false);
 }
 ```
 
@@ -546,7 +546,7 @@ page_cgroup_ino : page -> memcg -> parent memcg -> kernfs_node -> ino
 - [ ] [In fact, we can check the user api before hack it](https://segmentfault.com/a/1190000008125359)
     - [ ]  [similar tutorial](https://fuckcloudnative.io/posts/understanding-cgroups-part-3-memory/)
 
-- [ ] why swap works different with memory_cgrp_subsys ? 
+- [ ] why swap works different with memory_cgrp_subsys ?
   - [ ] mem_cgroup_swap_init
 
 - [ ] mem_cgroup_scan_tasks
@@ -555,19 +555,19 @@ page_cgroup_ino : page -> memcg -> parent memcg -> kernfs_node -> ino
 
 ```c
 struct cgroup_subsys memory_cgrp_subsys = {
-	.css_alloc = mem_cgroup_css_alloc,
-	.css_online = mem_cgroup_css_online,
-	.css_offline = mem_cgroup_css_offline,
-	.css_released = mem_cgroup_css_released,
-	.css_free = mem_cgroup_css_free,
-	.css_reset = mem_cgroup_css_reset,
-	.can_attach = mem_cgroup_can_attach,
-	.cancel_attach = mem_cgroup_cancel_attach,
-	.post_attach = mem_cgroup_move_task,
-	.bind = mem_cgroup_bind,
-	.dfl_cftypes = memory_files,
-	.legacy_cftypes = mem_cgroup_legacy_files,
-	.early_init = 0,
+  .css_alloc = mem_cgroup_css_alloc,
+  .css_online = mem_cgroup_css_online,
+  .css_offline = mem_cgroup_css_offline,
+  .css_released = mem_cgroup_css_released,
+  .css_free = mem_cgroup_css_free,
+  .css_reset = mem_cgroup_css_reset,
+  .can_attach = mem_cgroup_can_attach,
+  .cancel_attach = mem_cgroup_cancel_attach,
+  .post_attach = mem_cgroup_move_task,
+  .bind = mem_cgroup_bind,
+  .dfl_cftypes = memory_files,
+  .legacy_cftypes = mem_cgroup_legacy_files,
+  .early_init = 0,
 };
 ```
 
@@ -611,14 +611,14 @@ drwxr-xr-x root root 0 B Fri Oct 23 10:54:42 2020  user@1000.service
 
 ```c
 static ssize_t mem_cgroup_force_empty_write(struct kernfs_open_file *of,
-					    char *buf, size_t nbytes,
-					    loff_t off)
+              char *buf, size_t nbytes,
+              loff_t off)
 {
-	struct mem_cgroup *memcg = mem_cgroup_from_css(of_css(of));
+  struct mem_cgroup *memcg = mem_cgroup_from_css(of_css(of));
 
-	if (mem_cgroup_is_root(memcg))
-		return -EINVAL;
-	return mem_cgroup_force_empty(memcg) ?: nbytes;
+  if (mem_cgroup_is_root(memcg))
+    return -EINVAL;
+  return mem_cgroup_force_empty(memcg) ?: nbytes;
 }
 
 ```
@@ -641,7 +641,7 @@ mem_cgroup_oom_synchronize
 ```c
 static struct dirty_throttle_control *mdtc_gdtc(struct dirty_throttle_control *mdtc)
 {
-	return mdtc->gdtc;
+  return mdtc->gdtc;
 }
 ```
 
@@ -649,19 +649,19 @@ static struct dirty_throttle_control *mdtc_gdtc(struct dirty_throttle_control *m
 ```c
 /* for encoding cft->private value on file */
 enum res_type {
-	_MEM,
-	_MEMSWAP,
-	_OOM_TYPE,
-	_KMEM,
-	_TCP,
+  _MEM,
+  _MEMSWAP,
+  _OOM_TYPE,
+  _KMEM,
+  _TCP,
 };
 
 enum {
-	RES_USAGE,
-	RES_LIMIT,
-	RES_MAX_USAGE,
-	RES_FAILCNT,
-	RES_SOFT_LIMIT,
+  RES_USAGE,
+  RES_LIMIT,
+  RES_MAX_USAGE,
+  RES_FAILCNT,
+  RES_SOFT_LIMIT,
 };
 ```
 
@@ -680,7 +680,7 @@ memory_high_write ----------------/
 
 1. memcg memory.stat
 ```
-➜  user-1000.slice cat memory.stat 
+➜  user-1000.slice cat memory.stat
 cache 0
 rss 0
 rss_huge 0
@@ -727,30 +727,30 @@ memory_stat_show
 ```c
 /* used to track tasks and csets during migration */
 struct cgroup_taskset {
-	/* the src and dst cset list running through cset->mg_node */
-	struct list_head	src_csets;
-	struct list_head	dst_csets;
+  /* the src and dst cset list running through cset->mg_node */
+  struct list_head  src_csets;
+  struct list_head  dst_csets;
 
-	/* the number of tasks in the set */
-	int			nr_tasks;
+  /* the number of tasks in the set */
+  int     nr_tasks;
 
-	/* the subsys currently being processed */
-	int			ssid;
+  /* the subsys currently being processed */
+  int     ssid;
 
-	/*
-	 * Fields for cgroup_taskset_*() iteration.
-	 *
-	 * Before migration is committed, the target migration tasks are on
-	 * ->mg_tasks of the csets on ->src_csets.  After, on ->mg_tasks of
-	 * the csets on ->dst_csets.  ->csets point to either ->src_csets
-	 * or ->dst_csets depending on whether migration is committed.
-	 *
-	 * ->cur_csets and ->cur_task point to the current task position
-	 * during iteration.
-	 */
-	struct list_head	*csets;
-	struct css_set		*cur_cset;
-	struct task_struct	*cur_task;
+  /*
+   * Fields for cgroup_taskset_*() iteration.
+   *
+   * Before migration is committed, the target migration tasks are on
+   * ->mg_tasks of the csets on ->src_csets.  After, on ->mg_tasks of
+   * the csets on ->dst_csets.  ->csets point to either ->src_csets
+   * or ->dst_csets depending on whether migration is committed.
+   *
+   * ->cur_csets and ->cur_task point to the current task position
+   * during iteration.
+   */
+  struct list_head  *csets;
+  struct css_set    *cur_cset;
+  struct task_struct  *cur_task;
 };
 
 cgroup_migrate
@@ -764,8 +764,8 @@ cgroup_migrate
  * Call holding cgroup_mutex and cgroup_threadgroup_rwsem.
  */
 int cgroup_attach_task(struct cgroup *dst_cgrp, struct task_struct *leader,
-		       bool threadgroup)
-// todo 看到了一个 thread 
+           bool threadgroup)
+// todo 看到了一个 thread
 ```
 
 
@@ -780,8 +780,8 @@ There are so many structures such as cgroup, cgroup_subsys_state, css_set, ....
 ```c
 // TODO 这个动态创建的 ? 还是static 的，唯一的 ? 解答分析 cgroup_setup_root
 struct kernfs_root {
-	/* published fields */
-	struct kernfs_node	*kn;
+  /* published fields */
+  struct kernfs_node  *kn;
 
 /*
  * A cgroup_root represents the root of a cgroup hierarchy, and may be
@@ -789,7 +789,7 @@ struct kernfs_root {
  * internal to cgroup core.  Don't access directly from controllers.
  */
 struct cgroup_root { // TODO 这个结构体只有一个 instance 吧?
-	struct kernfs_root *kf_root;
+  struct kernfs_root *kf_root;
 
 /*
  * The default hierarchy, reserved for the subsystems that are otherwise
@@ -807,7 +807,7 @@ EXPORT_SYMBOL_GPL(cgrp_dfl_root);
  * list_add()/del() can bump the reference count on the entire cgroup
  * set for a task.
  */
-struct css_set { // task_struct 
+struct css_set { // task_struct
 
 /*
  * Per-subsystem/per-cgroup state maintained by the system.  This is the
@@ -831,8 +831,8 @@ struct cgroup_subsys {  // 子系统的数量就是那几个
  * struct cftype: handler definitions for cgroup control files
  *
  * When reading/writing to a file:
- *	- the cgroup to use is file->f_path.dentry->d_parent->d_fsdata
- *	- the 'cftype' of the file is file->f_path.dentry->d_fsdata
+ *  - the cgroup to use is file->f_path.dentry->d_parent->d_fsdata
+ *  - the 'cftype' of the file is file->f_path.dentry->d_fsdata
  */
 struct cftype { // TODO 一个文件对应一个这种结构体吗 ?
 
@@ -847,51 +847,51 @@ EXPORT_SYMBOL_GPL(cgrp_dfl_root);
 ```c
 // ONE
 struct cgroup {
-	/* self css with NULL ->ss, points back to this cgroup */
-	struct cgroup_subsys_state self;
+  /* self css with NULL ->ss, points back to this cgroup */
+  struct cgroup_subsys_state self;
 
 // TWO
 static int css_populate_dir(struct cgroup_subsys_state *css)
 {
-	struct cgroup *cgrp = css->cgroup;
-	struct cftype *cfts, *failed_cfts;
-	int ret;
+  struct cgroup *cgrp = css->cgroup;
+  struct cftype *cfts, *failed_cfts;
+  int ret;
 
-	if ((css->flags & CSS_VISIBLE) || !cgrp->kn)
-		return 0;
+  if ((css->flags & CSS_VISIBLE) || !cgrp->kn)
+    return 0;
 
-	if (!css->ss) {
-		if (cgroup_on_dfl(cgrp))
-			cfts = cgroup_base_files;
-		else
-			cfts = cgroup1_base_files;
+  if (!css->ss) {
+    if (cgroup_on_dfl(cgrp))
+      cfts = cgroup_base_files;
+    else
+      cfts = cgroup1_base_files;
 
 // THREE
 struct cgroup_subsys_state *of_css(struct kernfs_open_file *of)
 {
-	struct cgroup *cgrp = of->kn->parent->priv;
-	struct cftype *cft = of_cft(of);
+  struct cgroup *cgrp = of->kn->parent->priv;
+  struct cftype *cft = of_cft(of);
 
-	if (cft->ss)
-		return rcu_dereference_raw(cgrp->subsys[cft->ss->id]);
-	else
-		return &cgrp->self;
+  if (cft->ss)
+    return rcu_dereference_raw(cgrp->subsys[cft->ss->id]);
+  else
+    return &cgrp->self;
 }
 ```
 
 - [x] cgroup_add_cftypes ==> cgroup_init_cftypes
-  - array of cftype bounds to subsystem , only static message of cftpe is initialize, dynamic message such as which subsystem the cftype is bounded need help of cgroup_init_cftypes  
+  - array of cftype bounds to subsystem , only static message of cftpe is initialize, dynamic message such as which subsystem the cftype is bounded need help of cgroup_init_cftypes
   - cgroup may bound to subsystem, but still contains cftype
 
 ```c
 int __init cgroup_init(void)
 {
-	struct cgroup_subsys *ss;
-	int ssid;
+  struct cgroup_subsys *ss;
+  int ssid;
 
-	BUILD_BUG_ON(CGROUP_SUBSYS_COUNT > 16);
-	BUG_ON(cgroup_init_cftypes(NULL, cgroup_base_files));
-	BUG_ON(cgroup_init_cftypes(NULL, cgroup1_base_files));
+  BUILD_BUG_ON(CGROUP_SUBSYS_COUNT > 16);
+  BUG_ON(cgroup_init_cftypes(NULL, cgroup_base_files));
+  BUG_ON(cgroup_init_cftypes(NULL, cgroup1_base_files));
 ```
 
 
@@ -911,15 +911,15 @@ int __init cgroup_init(void)
  * from both sides.
  */
 struct cgrp_cset_link {
-	/* the cgroup and css_set this link associates */
-	struct cgroup		*cgrp;
-	struct css_set		*cset;
+  /* the cgroup and css_set this link associates */
+  struct cgroup   *cgrp;
+  struct css_set    *cset;
 
-	/* list of cgrp_cset_links anchored at cgrp->cset_links */
-	struct list_head	cset_link;
+  /* list of cgrp_cset_links anchored at cgrp->cset_links */
+  struct list_head  cset_link;
 
-	/* list of cgrp_cset_links anchored at css_set->cgrp_links */
-	struct list_head	cgrp_link;
+  /* list of cgrp_cset_links anchored at css_set->cgrp_links */
+  struct list_head  cgrp_link;
 };
 ```
 
@@ -945,13 +945,13 @@ struct cgrp_cset_link {
  * %NULL if @cgrp doesn't have @subsys_id enabled.
  */
 static struct cgroup_subsys_state *cgroup_css(struct cgroup *cgrp,
-					      struct cgroup_subsys *ss)
+                struct cgroup_subsys *ss)
 {
-	if (ss)
-		return rcu_dereference_check(cgrp->subsys[ss->id],
-					lockdep_is_held(&cgroup_mutex));
-	else
-		return &cgrp->self;
+  if (ss)
+    return rcu_dereference_check(cgrp->subsys[ss->id],
+          lockdep_is_held(&cgroup_mutex));
+  else
+    return &cgrp->self;
 }
 ```
 
@@ -972,7 +972,7 @@ static struct cgroup_subsys_state *cgroup_css(struct cgroup *cgrp,
  * interface files.  Returns 0 on success, -errno on failure.
  */
 static struct cgroup_subsys_state *css_create(struct cgroup *cgrp,
-					      struct cgroup_subsys *ss)
+                struct cgroup_subsys *ss)
 ```
 
 ## cgroup_base_files
@@ -992,7 +992,7 @@ static struct cgroup_subsys_state *css_create(struct cgroup *cgrp,
 ## idr
 对于具体实现并没有什么兴趣 但是
 1. 到底是什么需要 id
-2. 为什么需要 id 
+2. 为什么需要 id
 
 ```c
 /**
@@ -1005,15 +1005,15 @@ static struct cgroup_subsys_state *css_create(struct cgroup *cgrp,
  */
 struct cgroup_subsys_state *css_from_id(int id, struct cgroup_subsys *ss)
 {
-	WARN_ON_ONCE(!rcu_read_lock_held());
-	return idr_find(&ss->css_idr, id);
+  WARN_ON_ONCE(!rcu_read_lock_held());
+  return idr_find(&ss->css_idr, id);
 }
 
 static void cgroup_exit_root_id(struct cgroup_root *root)
 {
-	lockdep_assert_held(&cgroup_mutex);
+  lockdep_assert_held(&cgroup_mutex);
 
-	idr_remove(&cgroup_hierarchy_idr, root->hierarchy_id);
+  idr_remove(&cgroup_hierarchy_idr, root->hierarchy_id);
 }
 ```
 
@@ -1041,11 +1041,11 @@ static void cgroup_exit_root_id(struct cgroup_root *root)
  */
 int cgroup_add_dfl_cftypes(struct cgroup_subsys *ss, struct cftype *cfts)
 {
-	struct cftype *cft;
+  struct cftype *cft;
 
-	for (cft = cfts; cft && cft->name[0] != '\0'; cft++)
-		cft->flags |= __CFTYPE_ONLY_ON_DFL;
-	return cgroup_add_cftypes(ss, cfts);
+  for (cft = cfts; cft && cft->name[0] != '\0'; cft++)
+    cft->flags |= __CFTYPE_ONLY_ON_DFL;
+  return cgroup_add_cftypes(ss, cfts);
 }
 
 /**
@@ -1058,19 +1058,19 @@ int cgroup_add_dfl_cftypes(struct cgroup_subsys *ss, struct cftype *cfts)
  */
 int cgroup_add_legacy_cftypes(struct cgroup_subsys *ss, struct cftype *cfts)
 {
-	struct cftype *cft;
+  struct cftype *cft;
 
-	for (cft = cfts; cft && cft->name[0] != '\0'; cft++)
-		cft->flags |= __CFTYPE_NOT_ON_DFL;
-	return cgroup_add_cftypes(ss, cfts);
+  for (cft = cfts; cft && cft->name[0] != '\0'; cft++)
+    cft->flags |= __CFTYPE_NOT_ON_DFL;
+  return cgroup_add_cftypes(ss, cfts);
 }
 ```
 
 
-## cpuset 
+## cpuset
 ```c
 struct cpuset {
-	struct cgroup_subsys_state css;
+  struct cgroup_subsys_state css;
 ```
 怀疑所有的subsys 采用这种机制
 
@@ -1107,7 +1107,7 @@ memory subsystem's control file:
  memory.failcnt               memory.kmem.tcp.limit_in_bytes       memory.numa_stat                  memory.use_hierarchy
  memory.force_empty           memory.kmem.tcp.max_usage_in_bytes   memory.oom_control                notify_on_release
  memory.kmem.failcnt          memory.kmem.tcp.usage_in_bytes       memory.pressure_level             tasks
- memory.kmem.limit_in_bytes   memory.kmem.usage_in_bytes           memory.soft_limit_in_bytes       
+ memory.kmem.limit_in_bytes   memory.kmem.usage_in_bytes           memory.soft_limit_in_bytes
 ```
 
 [Man cgroup(7)](https://man7.org/linux/man-pages/man7/cgroups.7.html)
@@ -1117,7 +1117,7 @@ different hierarchies was intended to allow great flexibility for
 application design.*  In practice, though, the flexibility turned out
 to be less useful than expected, and in many cases added complexity.
 
-- [ ] different controller against different hierarchy 
+- [ ] different controller against different hierarchy
 
 - [x] kernel boot parameter : cgroup_no_v1=list
 
@@ -1130,7 +1130,7 @@ While this design seemed to provide good flexibility, it wasn’t proved to be u
 cgroup v2 focuses on simplicity: `/sys/fs/cgroup/cpu/$GROUPNAME` and `/sys/fs/cgroup/memory/$GROUPNAME` in v1 are now unified as `/sys/fs/cgroup/$GROUPNAME` ,
 and a process can no longer join different groups for different controllers. If the process joins foo ( /sys/fs/cgroup/foo ), all controllers enabled for foo will take the control of the process.
 
-In cgroup v2, the device access control is implemented by attaching an eBPF program (`BPF_PROG_TYPE_CGROUP_DEVICE`)to the file descriptor of `/sys/fs/cgroup/foo` directory. 
+In cgroup v2, the device access control is implemented by attaching an eBPF program (`BPF_PROG_TYPE_CGROUP_DEVICE`)to the file descriptor of `/sys/fs/cgroup/foo` directory.
 
 
 [TLDR Understanding the new cgroups v2 API by Rami Rosen](https://medium.com/some-tldrs/tldr-understanding-the-new-control-groups-api-by-rami-rosen-980df476f633)
@@ -1167,62 +1167,62 @@ https://lwn.net/Articles/656115/
 ```c
 static void *cgroup_seqfile_start(struct seq_file *seq, loff_t *ppos)
 {
-	return seq_cft(seq)->seq_start(seq, ppos);
+  return seq_cft(seq)->seq_start(seq, ppos);
 }
 
 static void *cgroup_seqfile_next(struct seq_file *seq, void *v, loff_t *ppos)
 {
-	return seq_cft(seq)->seq_next(seq, v, ppos);
+  return seq_cft(seq)->seq_next(seq, v, ppos);
 }
 
 static void cgroup_seqfile_stop(struct seq_file *seq, void *v)
 {
-	if (seq_cft(seq)->seq_stop)
-		seq_cft(seq)->seq_stop(seq, v);
+  if (seq_cft(seq)->seq_stop)
+    seq_cft(seq)->seq_stop(seq, v);
 }
 
 static int cgroup_seqfile_show(struct seq_file *m, void *arg)
 {
-	struct cftype *cft = seq_cft(m);
-	struct cgroup_subsys_state *css = seq_css(m);
+  struct cftype *cft = seq_cft(m);
+  struct cgroup_subsys_state *css = seq_css(m);
 
-	if (cft->seq_show)
-		return cft->seq_show(m, arg);
+  if (cft->seq_show)
+    return cft->seq_show(m, arg);
 
-	if (cft->read_u64)
-		seq_printf(m, "%llu\n", cft->read_u64(css, cft));
-	else if (cft->read_s64)
-		seq_printf(m, "%lld\n", cft->read_s64(css, cft));
-	else
-		return -EINVAL;
-	return 0;
+  if (cft->read_u64)
+    seq_printf(m, "%llu\n", cft->read_u64(css, cft));
+  else if (cft->read_s64)
+    seq_printf(m, "%lld\n", cft->read_s64(css, cft));
+  else
+    return -EINVAL;
+  return 0;
 }
 
 static ssize_t cgroup_file_write(struct kernfs_open_file *of, char *buf,
-				 size_t nbytes, loff_t off)
+         size_t nbytes, loff_t off)
 ```
 
 They are registered at here:
 ```c
 static struct kernfs_ops cgroup_kf_single_ops = {
-	.atomic_write_len	= PAGE_SIZE,
-	.open			= cgroup_file_open,
-	.release		= cgroup_file_release,
-	.write			= cgroup_file_write,
-	.poll			= cgroup_file_poll,
-	.seq_show		= cgroup_seqfile_show,
+  .atomic_write_len = PAGE_SIZE,
+  .open     = cgroup_file_open,
+  .release    = cgroup_file_release,
+  .write      = cgroup_file_write,
+  .poll     = cgroup_file_poll,
+  .seq_show   = cgroup_seqfile_show,
 };
 
 static struct kernfs_ops cgroup_kf_ops = {
-	.atomic_write_len	= PAGE_SIZE,
-	.open			= cgroup_file_open,
-	.release		= cgroup_file_release,
-	.write			= cgroup_file_write,
-	.poll			= cgroup_file_poll,
-	.seq_start		= cgroup_seqfile_start,
-	.seq_next		= cgroup_seqfile_next,
-	.seq_stop		= cgroup_seqfile_stop,
-	.seq_show		= cgroup_seqfile_show,
+  .atomic_write_len = PAGE_SIZE,
+  .open     = cgroup_file_open,
+  .release    = cgroup_file_release,
+  .write      = cgroup_file_write,
+  .poll     = cgroup_file_poll,
+  .seq_start    = cgroup_seqfile_start,
+  .seq_next   = cgroup_seqfile_next,
+  .seq_stop   = cgroup_seqfile_stop,
+  .seq_show   = cgroup_seqfile_show,
 };
 
 ```
@@ -1239,7 +1239,7 @@ static struct kernfs_ops cgroup_kf_ops = {
     - [ ] cgroup_migrate_add_src
 
 
-- [ ] css_set_move_task : used by migrate, but should have 
+- [ ] css_set_move_task : used by migrate, but should have
 
 ```c
 /**
@@ -1259,8 +1259,8 @@ static struct kernfs_ops cgroup_kf_ops = {
  * migrations.
  */
 void cgroup_migrate_add_src(struct css_set *src_cset,
-			    struct cgroup *dst_cgrp,
-			    struct cgroup_mgctx *mgctx)
+          struct cgroup *dst_cgrp,
+          struct cgroup_mgctx *mgctx)
 ```
 
 - [ ] *Tasks belonging to @src_cset are about to be migrated to @dst_cgrp.  Pin `@src_cset` and add it to `@mgctx->src_csets`, which should later be cleaned.*
@@ -1269,35 +1269,35 @@ void cgroup_migrate_add_src(struct css_set *src_cset,
 ```c
 /* look up cgroup associated with given css_set on the specified hierarchy */
 static struct cgroup *cset_cgroup_from_root(struct css_set *cset,
-					    struct cgroup_root *root)
+              struct cgroup_root *root)
 {
-	struct cgroup *res = NULL;
+  struct cgroup *res = NULL;
 
-	lockdep_assert_held(&cgroup_mutex);
-	lockdep_assert_held(&css_set_lock);
+  lockdep_assert_held(&cgroup_mutex);
+  lockdep_assert_held(&css_set_lock);
 
   // 这个暂时看不懂
-	if (cset == &init_css_set) {
-		res = &root->cgrp;
+  if (cset == &init_css_set) {
+    res = &root->cgrp;
   // 如果说是 v2 那么就靠 css_set 定义的 dfl_cgrp
-	} else if (root == &cgrp_dfl_root) {
-		res = cset->dfl_cgrp;
+  } else if (root == &cgrp_dfl_root) {
+    res = cset->dfl_cgrp;
   // v1 的情况 : task should move to same root
-	} else {
-		struct cgrp_cset_link *link;
+  } else {
+    struct cgrp_cset_link *link;
 
-		list_for_each_entry(link, &cset->cgrp_links, cgrp_link) {
-			struct cgroup *c = link->cgrp;
+    list_for_each_entry(link, &cset->cgrp_links, cgrp_link) {
+      struct cgroup *c = link->cgrp;
 
-			if (c->root == root) {
-				res = c;
-				break;
-			}
-		}
-	}
+      if (c->root == root) {
+        res = c;
+        break;
+      }
+    }
+  }
 
-	BUG_ON(!res);
-	return res;
+  BUG_ON(!res);
+  return res;
 }
 ```
 

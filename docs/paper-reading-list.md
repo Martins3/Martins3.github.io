@@ -27,7 +27,7 @@ This is Tom Spink's doctor thesis.
 - https://www.zhihu.com/column/yxg-paper-intro
 - https://www.youtube.com/watch?v=zyuMwIza4Pw&feature=youtu.be
 - [论文阅读笔记（分布式，虚拟化，机器学习）](https://github.com/dyweb/papers-notebook/issues)
-
+- [alastairreid's reading list](https://alastairreid.github.io/RelatedWork/papers/)
 
 ## Cloud / Virtualization
 - [Alita: Comprehensive Performance Isolation through Bias Resource Management](https://mp.weixin.qq.com/s/S0lvODk2fe91AxWyMACgEQ)

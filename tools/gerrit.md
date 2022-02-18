@@ -2,26 +2,26 @@
 电脑配置的信息
 
 ```
-➜  git-in-practice git:(master) ✗ neofetch 
-██████████████████  ████████   shen@shen-pc 
-██████████████████  ████████   ------------ 
-██████████████████  ████████   OS: Manjaro Linux x86_64 
-██████████████████  ████████   Host: TM1701 
-████████            ████████   Kernel: 5.2.1-1-MANJARO 
-████████  ████████  ████████   Uptime: 21 hours, 9 mins 
-████████  ████████  ████████   Packages: 1552 (pacman) 
-████████  ████████  ████████   Shell: zsh 5.7.1 
-████████  ████████  ████████   Resolution: 1920x1080, 1080x1920, 2560x1440 
-████████  ████████  ████████   DE: Deepin 
-████████  ████████  ████████   WM: Mutter(DeepinGala) 
-████████  ████████  ████████   Theme: deepin [GTK2/3] 
-████████  ████████  ████████   Icons: deepin [GTK2/3] 
-████████  ████████  ████████   Terminal: deepin-terminal 
-                               Terminal Font: DejaVuSansMono Nerd Font Mono 11 
-                               CPU: Intel i7-8550U (8) @ 4.000GHz 
-                               GPU: NVIDIA GeForce MX150 
-                               GPU: Intel UHD Graphics 620 
-                               Memory: 5072MiB / 15923MiB 
+➜  git-in-practice git:(master) ✗ neofetch
+██████████████████  ████████   shen@shen-pc
+██████████████████  ████████   ------------
+██████████████████  ████████   OS: Manjaro Linux x86_64
+██████████████████  ████████   Host: TM1701
+████████            ████████   Kernel: 5.2.1-1-MANJARO
+████████  ████████  ████████   Uptime: 21 hours, 9 mins
+████████  ████████  ████████   Packages: 1552 (pacman)
+████████  ████████  ████████   Shell: zsh 5.7.1
+████████  ████████  ████████   Resolution: 1920x1080, 1080x1920, 2560x1440
+████████  ████████  ████████   DE: Deepin
+████████  ████████  ████████   WM: Mutter(DeepinGala)
+████████  ████████  ████████   Theme: deepin [GTK2/3]
+████████  ████████  ████████   Icons: deepin [GTK2/3]
+████████  ████████  ████████   Terminal: deepin-terminal
+                               Terminal Font: DejaVuSansMono Nerd Font Mono 11
+                               CPU: Intel i7-8550U (8) @ 4.000GHz
+                               GPU: NVIDIA GeForce MX150
+                               GPU: Intel UHD Graphics 620
+                               Memory: 5072MiB / 15923MiB
 ```
 
 ## 设置mysql数据库
@@ -60,7 +60,7 @@ Jul 20 01:22:59 shen-pc systemd[1]: Started MariaDB 10.4.6 database server.
 > 参考资料 : https://gerrit.googlesource.com/plugins/verify-status/+/master/src/main/resources/Documentation/mysql-setup-example.md
 ```
 ➜  git-in-practice git:(master) ✗ mysql -u gerrit -p
-Enter password: 
+Enter password:
 Welcome to the MariaDB monitor.  Commands end with ; or \g.
 Your MariaDB connection id is 12
 Server version: 10.4.6-MariaDB Source distribution
@@ -87,12 +87,12 @@ MariaDB [(none)]> SHOW GRANTS FOR 'gerrit'@'localhost';
 +---------------------------------------------------------------------------------------------------------------+
 2 rows in set (0.000 sec)
 
-MariaDB [(none)]> 
+MariaDB [(none)]>
 ```
 
 ## 添加用户gerrit
 ```
-sudo useradd -u 
+sudo useradd -u
 ```
 
 ## 添加反向代理
@@ -177,22 +177,22 @@ Using secure store: com.google.gerrit.server.securestore.DefaultSecureStore
 [2019-07-20 22:47:12,441] [main] INFO  com.google.gerrit.server.config.GerritServerConfigProvider : No /home/gerrit/Gerrit/etc/gerrit.config; assuming defaults
 
 *** Gerrit Code Review 3.0.1
-*** 
+***
 
-Create '/home/gerrit/Gerrit'   [Y/n]? 
+Create '/home/gerrit/Gerrit'   [Y/n]?
 
 *** Git Repositories
-*** 
+***
 
-Location of Git repositories   [git]: 
+Location of Git repositories   [git]:
 
 *** Index
-*** 
+***
 
-Type                           [lucene/?]: 
+Type                           [lucene/?]:
 
 *** User Authentication
-*** 
+***
 
 Authentication method          [openid/?]: ?
        Supported options are:
@@ -207,64 +207,64 @@ Authentication method          [openid/?]: ?
          development_become_any_account
          oauth
 Authentication method          [openid/?]: development_become_any_account
-Enable signed push support     [y/N]? 
+Enable signed push support     [y/N]?
 
 *** Review Labels
-*** 
+***
 
-Install Verified label         [y/N]? 
+Install Verified label         [y/N]?
 
 *** Email Delivery
-*** 
+***
 
-SMTP server hostname           [localhost]: 
-SMTP server port               [(default)]: 
-SMTP encryption                [none/?]: 
-SMTP username                  : 
+SMTP server hostname           [localhost]:
+SMTP server port               [(default)]:
+SMTP encryption                [none/?]:
+SMTP username                  :
 
 *** Container Process
-*** 
+***
 
-Run as                         [gerrit]: 
-Java runtime                   [/usr/lib/jvm/java-8-openjdk/jre]: 
-Copy gerrit-3.0.1.war to /home/gerrit/Gerrit/bin/gerrit.war [Y/n]? 
+Run as                         [gerrit]:
+Java runtime                   [/usr/lib/jvm/java-8-openjdk/jre]:
+Copy gerrit-3.0.1.war to /home/gerrit/Gerrit/bin/gerrit.war [Y/n]?
 Copying gerrit-3.0.1.war to /home/gerrit/Gerrit/bin/gerrit.war
 
 *** SSH Daemon
-*** 
+***
 
-Listen on address              [*]: 
-Listen on port                 [29418]: 
+Listen on address              [*]:
+Listen on port                 [29418]:
 Generating SSH host key ... rsa... ed25519... ecdsa 256... ecdsa 384... ecdsa 521... done
 
 *** HTTP Daemon
-*** 
+***
 
-Behind reverse proxy           [y/N]? 
-Use SSL (https://)             [y/N]? 
-Listen on address              [*]: 
-Listen on port                 [8080]: 
-Canonical URL                  [http://shen-pc:8080/]: 
+Behind reverse proxy           [y/N]?
+Use SSL (https://)             [y/N]?
+Listen on address              [*]:
+Listen on port                 [8080]:
+Canonical URL                  [http://shen-pc:8080/]:
 
 *** Cache
-*** 
+***
 
 
 *** Plugins
-*** 
+***
 
 Installing plugins.
-Install plugin codemirror-editor version v3.0.1 [y/N]? 
-Install plugin commit-message-length-validator version v3.0.1 [y/N]? 
-Install plugin delete-project version v3.0.1 [y/N]? 
-Install plugin download-commands version v3.0.1 [y/N]? 
-Install plugin gitiles version v3.0.1 [y/N]? 
-Install plugin hooks version v3.0.1 [y/N]? 
-Install plugin plugin-manager version v3.0.1 [y/N]? 
-Install plugin replication version v3.0.1 [y/N]? 
-Install plugin reviewnotes version v3.0.1 [y/N]? 
-Install plugin singleusergroup version v3.0.1 [y/N]? 
-Install plugin webhooks version v3.0.1 [y/N]? 
+Install plugin codemirror-editor version v3.0.1 [y/N]?
+Install plugin commit-message-length-validator version v3.0.1 [y/N]?
+Install plugin delete-project version v3.0.1 [y/N]?
+Install plugin download-commands version v3.0.1 [y/N]?
+Install plugin gitiles version v3.0.1 [y/N]?
+Install plugin hooks version v3.0.1 [y/N]?
+Install plugin plugin-manager version v3.0.1 [y/N]?
+Install plugin replication version v3.0.1 [y/N]?
+Install plugin reviewnotes version v3.0.1 [y/N]?
+Install plugin singleusergroup version v3.0.1 [y/N]?
+Install plugin webhooks version v3.0.1 [y/N]?
 Initializing plugins.
 No plugins found with init steps.
 
@@ -273,13 +273,13 @@ No plugins found with init steps.
 
 
 *** Gerrit Administrator
-*** 
+***
 
 Create administrator user      [Y/n]?
-username                       [admin]: 
-name                           [Administrator]: 
-HTTP password                  [secret]: 
-public SSH key file            []: 
+username                       [admin]:
+name                           [Administrator]:
+HTTP password                  [secret]:
+public SSH key file            []:
 email                          [admin@example.com]: hubachelar@qq.com
 Initialized /home/gerrit/Gerrit
 Reindexing projects:    100% (2/2) with: reindex --site-path /home/gerrit/Gerrit --threads 1 --index projects
@@ -306,84 +306,84 @@ Using secure store: com.google.gerrit.server.securestore.DefaultSecureStore
 [2019-07-21 01:02:30,162] [main] INFO  com.google.gerrit.server.config.GerritServerConfigProvider : No /home/gerrit/Gerrit/etc/gerrit.config; assuming defaults
 
 *** Gerrit Code Review 3.0.1
-*** 
+***
 
-Create '/home/gerrit/Gerrit'   [Y/n]? 
+Create '/home/gerrit/Gerrit'   [Y/n]?
 
 *** Git Repositories
-*** 
+***
 
-Location of Git repositories   [git]: 
+Location of Git repositories   [git]:
 
 *** Index
-*** 
+***
 
-Type                           [lucene/?]: 
+Type                           [lucene/?]:
 
 *** User Authentication
-*** 
+***
 
 Authentication method          [openid/?]: http
 Get username from custom HTTP header [y/N]? N
-SSO logout URL                 : 
-Enable signed push support     [y/N]? 
+SSO logout URL                 :
+Enable signed push support     [y/N]?
 
 *** Review Labels
-*** 
+***
 
-Install Verified label         [y/N]? 
+Install Verified label         [y/N]?
 
 *** Email Delivery
-*** 
+***
 
-SMTP server hostname           [localhost]: 
-SMTP server port               [(default)]: 
-SMTP encryption                [none/?]: 
-SMTP username                  : 
+SMTP server hostname           [localhost]:
+SMTP server port               [(default)]:
+SMTP encryption                [none/?]:
+SMTP username                  :
 
 *** Container Process
-*** 
+***
 
-Run as                         [gerrit]: 
-Java runtime                   [/usr/lib/jvm/java-8-openjdk/jre]: 
-Copy gerrit-3.0.1.war to /home/gerrit/Gerrit/bin/gerrit.war [Y/n]? 
+Run as                         [gerrit]:
+Java runtime                   [/usr/lib/jvm/java-8-openjdk/jre]:
+Copy gerrit-3.0.1.war to /home/gerrit/Gerrit/bin/gerrit.war [Y/n]?
 Copying gerrit-3.0.1.war to /home/gerrit/Gerrit/bin/gerrit.war
 
 *** SSH Daemon
-*** 
+***
 
-Listen on address              [*]: 
-Listen on port                 [29418]: 
+Listen on address              [*]:
+Listen on port                 [29418]:
 Generating SSH host key ... rsa... ed25519... ecdsa 256... ecdsa 384... ecdsa 521... done
 
 *** HTTP Daemon
-*** 
+***
 
-Behind reverse proxy           [y/N]? 
+Behind reverse proxy           [y/N]?
 Use SSL (https://)             [y/N]? N
-Listen on address              [*]: 
+Listen on address              [*]:
 Listen on port                 [8080]: 8081
-Canonical URL                  [http://shen-pc:8081/]: 
+Canonical URL                  [http://shen-pc:8081/]:
 
 *** Cache
-*** 
+***
 
 
 *** Plugins
-*** 
+***
 
 Installing plugins.
-Install plugin codemirror-editor version v3.0.1 [y/N]? 
-Install plugin commit-message-length-validator version v3.0.1 [y/N]? 
-Install plugin delete-project version v3.0.1 [y/N]? 
-Install plugin download-commands version v3.0.1 [y/N]? 
-Install plugin gitiles version v3.0.1 [y/N]? 
-Install plugin hooks version v3.0.1 [y/N]? 
-Install plugin plugin-manager version v3.0.1 [y/N]? 
-Install plugin replication version v3.0.1 [y/N]? 
-Install plugin reviewnotes version v3.0.1 [y/N]? 
-Install plugin singleusergroup version v3.0.1 [y/N]? 
-Install plugin webhooks version v3.0.1 [y/N]? 
+Install plugin codemirror-editor version v3.0.1 [y/N]?
+Install plugin commit-message-length-validator version v3.0.1 [y/N]?
+Install plugin delete-project version v3.0.1 [y/N]?
+Install plugin download-commands version v3.0.1 [y/N]?
+Install plugin gitiles version v3.0.1 [y/N]?
+Install plugin hooks version v3.0.1 [y/N]?
+Install plugin plugin-manager version v3.0.1 [y/N]?
+Install plugin replication version v3.0.1 [y/N]?
+Install plugin reviewnotes version v3.0.1 [y/N]?
+Install plugin singleusergroup version v3.0.1 [y/N]?
+Install plugin webhooks version v3.0.1 [y/N]?
 Initializing plugins.
 No plugins found with init steps.
 
@@ -399,57 +399,57 @@ OK
 Waiting for server on shen-pc:8081 ... OK
 Opening http://shen-pc:8081/#/admin/projects/ ...No protocol specified
 OK
-[gerrit@shen-pc ~]$ cat Gerrit/etc/gerrit.config 
+[gerrit@shen-pc ~]$ cat Gerrit/etc/gerrit.config
 [gerrit]
-	basePath = git
-	canonicalWebUrl = http://shen-pc:8081/
-	serverId = ba8a5bd1-3332-473b-8891-2dbf9a2ef9d0
+  basePath = git
+  canonicalWebUrl = http://shen-pc:8081/
+  serverId = ba8a5bd1-3332-473b-8891-2dbf9a2ef9d0
 [container]
-	javaOptions = "-Dflogger.backend_factory=com.google.common.flogger.backend.log4j.Log4jBackendFactory#getInstance"
-	javaOptions = "-Dflogger.logging_context=com.google.gerrit.server.logging.LoggingContext#getInstance"
-	user = gerrit
-	javaHome = /usr/lib/jvm/java-8-openjdk/jre
+  javaOptions = "-Dflogger.backend_factory=com.google.common.flogger.backend.log4j.Log4jBackendFactory#getInstance"
+  javaOptions = "-Dflogger.logging_context=com.google.gerrit.server.logging.LoggingContext#getInstance"
+  user = gerrit
+  javaHome = /usr/lib/jvm/java-8-openjdk/jre
 [index]
-	type = LUCENE
+  type = LUCENE
 [auth]
-	type = HTTP
+  type = HTTP
 [receive]
-	enableSignedPush = false
+  enableSignedPush = false
 [sendemail]
-	smtpServer = localhost
+  smtpServer = localhost
 [sshd]
-	listenAddress = *:29418
+  listenAddress = *:29418
 [httpd]
-	listenUrl = http://*:8081/
+  listenUrl = http://*:8081/
 [cache]
-	directory = cache
+  directory = cache
 ```
 
 为了对应反向代理，对于$site_path/ect/gerrit.config 作出以下调整,但是依旧无法使用:
 ```
 [gerrit]
-	basePath = git
-	canonicalWebUrl = http://shen-pc:8080/
-	serverId = ba8a5bd1-3332-473b-8891-2dbf9a2ef9d0
+  basePath = git
+  canonicalWebUrl = http://shen-pc:8080/
+  serverId = ba8a5bd1-3332-473b-8891-2dbf9a2ef9d0
 [container]
-	javaOptions = "-Dflogger.backend_factory=com.google.common.flogger.backend.log4j.Log4jBackendFactory#getInstance"
-	javaOptions = "-Dflogger.logging_context=com.google.gerrit.server.logging.LoggingContext#getInstance"
-	user = gerrit
-	javaHome = /usr/lib/jvm/java-8-openjdk/jre
+  javaOptions = "-Dflogger.backend_factory=com.google.common.flogger.backend.log4j.Log4jBackendFactory#getInstance"
+  javaOptions = "-Dflogger.logging_context=com.google.gerrit.server.logging.LoggingContext#getInstance"
+  user = gerrit
+  javaHome = /usr/lib/jvm/java-8-openjdk/jre
 [index]
-	type = LUCENE
+  type = LUCENE
 [auth]
-	type = HTTP
+  type = HTTP
 [receive]
-	enableSignedPush = false
+  enableSignedPush = false
 [sendemail]
-	smtpServer = localhost
+  smtpServer = localhost
 [sshd]
-	listenAddress = *:29418
+  listenAddress = *:29418
 [httpd]
-	listenUrl = proxy-http://127.0.0.1:8081/r/
+  listenUrl = proxy-http://127.0.0.1:8081/r/
 [cache]
-	directory = cache
+  directory = cache
 ```
 错误内容为:
 ```
@@ -458,5 +458,3 @@ The HTTP server did not provide the username in the Authorization header when it
 If the HTTP server is Apache HTTPd, check the proxy configuration includes an authorization directive with the proper location, ensuring it ends with '/':
 ...
 ```
-
-

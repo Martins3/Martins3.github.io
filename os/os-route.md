@@ -54,14 +54,6 @@ http://www.linuxfromscratch.org/lfs/view/10.0-rc1/prologue/foreword.html
 - [v86](https://github.com/copy/v86/) : 使用 js 写的 x86 硬件虚拟化，可以在网页上运行机器
 - [windows95 in electron](https://github.com/felixrieseberg/windows95) : 利用 v86 实现运行 windows95 在 electron 中间
 
-#### KVM
-- [Learning KVM - implement your own kernel](https://david942j.blogspot.com/2018/10/note-learning-kvm-implement-your-own.html)
-  - [源码](https://github.com/david942j/kvm-kernel-example)
-- [kvmexample](https://github.com/dpw/kvm-hello-world)
-- [kvmsample](https://github.com/soulxu/kvmsample) : 几百行，guest 就是一个三行的汇编
-- [kvmtool](https://github.com/kvmtool/kvmtool) : 没有维护, 大约20000 行
-- [简易的KVM firmware的简单Rust 实现](https://news.ycombinator.com/item?id=19883626) : @todo 不是很懂 firmware 在此处的含义
-
 ## 进程
 - [Kernel Thread Sanitizer](https://github.com/google/ktsan/wiki)
 - [cfs](https://mp.weixin.qq.com/s?src=11&timestamp=1591080226&ver=2375&signature=K2jSqjhp-0l6XyTMq2HpeRjHcThcAXKYScK2X3SIdSh5K01c1tF723WBf3y834RS7KoK18OlSRROZe3uA8JRTwsp3p8VkIei7tRK5ibDllsoWytRhLxkolG*79iX9Jc9&new=1)
