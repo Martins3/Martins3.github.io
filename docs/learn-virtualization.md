@@ -43,6 +43,7 @@ Hardware and Software Support for Virtualization : 作者[Edouard Bugnion](https
 - [opengers](https://opengers.github.io/) : kvm ceph 之类的
 - [mpolednik](https://mpolednik.github.io/) : redhat 工程师，vfio 之类的
 - [stefano garzarella](https://stefano-garzarella.github.io/) : redhat 工程师
+- [知乎专栏 : 河马虚拟化](https://www.zhihu.com/column/c_1040263672760885248)
 
 ## 一些有意思的项目
 - [VivienneVMM](https://github.com/changeofpace/VivienneVMM) : 使用 vmx 实现的调试器

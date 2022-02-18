@@ -115,6 +115,7 @@ http://www.linuxfromscratch.org/lfs/view/10.0-rc1/prologue/foreword.html
 - [linux frome scratch](http://www.linuxfromscratch.org/)
 - [write your own os](http://mikeos.sourceforge.net/write-your-own-os.html)
 - [bb-kernel](https://github.com/RobertCNelson/bb-kernel/tree/am33x-rt-v5.4) : This is just a set of scripts to rebuild a known working kernel for ARM devices.
+- [Write Your Own 64-bit Operating System Kernel From Scratch](https://github.com/davidcallanan/os-series)
 
 ## 文摘
 - [Fuchsia Overview](https://news.ycombinator.com/item?id=23364172) : hn 关于 Fuchaia 的评价

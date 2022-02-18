@@ -83,6 +83,7 @@
 * [timerfd](#timerfd)
 * [ceph](#ceph)
 * [close](#close)
+* [用户态](#用户态)
 
 <!-- vim-markdown-toc -->
 
@@ -2127,6 +2128,10 @@ static struct file_operations kvm_vcpu_fops = {
   KVM_COMPAT(kvm_vcpu_compat_ioctl),
 };
 ```
+
+## 用户态
+- https://github.com/juicedata/juicefs
+  - Using the JuiceFS to store data, the data itself will be persisted in object storage (e.g. Amazon S3), and the metadata corresponding to the data can be persisted in various database engines such as Redis, MySQL, and SQLite according to the needs of the scene.
 
 [^1]: [kernel doc : Overview of the Linux Virtual File System](https://www.kernel.org/doc/html/latest/filesystems/vfs.html)
 [^2]: [github : aio](https://github.com/littledan/linux-aio)

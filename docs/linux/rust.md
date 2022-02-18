@@ -21,6 +21,7 @@
 - [RustMagazine 中文月刊](https://rustmagazine.github.io/rust_magazine_2021/chapter_12/toc.html) : 国内写的一些文摘
 - [Making slow Rust code fast](https://patrickfreed.github.io/rust/2021/10/15/making-slow-rust-code-fast.html#viewing-criterions-html-report) : 如何在 Rust 上搞性能分析
 - [pretzelhammer's Rust blog](https://github.com/pretzelhammer/rust-blog) : 不能理解为什么有 4.1k 的 star
+- [迷思](https://zhuanlan.zhihu.com/prattle) : 从 rust 的角度分析计算机网络，安全等
 
 ## 项目
 - [Aims to be compatible with the Linux ABI](https://github.com/nuta/kerla)
@@ -35,3 +36,7 @@
 
 ## 工具
 - [cxx](https://github.com/dtolnay/cxx) : safe FFI between Rust and C++
+- [pyo3](https://github.com/PyO3/pyo3) : Calling Rust from Python using PyO3
+
+## TODO
+- pin : https://course.rs/advance/circle-self-ref/self-referential.html
