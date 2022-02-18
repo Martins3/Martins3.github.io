@@ -9,3 +9,6 @@ https://github.com/lhvy/pipes-rs : 在终端上绘制管道
 ## 有趣的思想
 https://veekaybee.github.io/2019/05/10/java8/ : 你所处于的环境会让你觉得整个世界就是如此，一个经常阅读HN的人觉得这个世界都是运行在Rust Go CI cloud 上的，但是其实大多数人都在使用Java8，所以面对新技术，需要正确的衡量
 https://blog.acrossapp.com/how-a-2-person-startup-already-uses-28-other-tools/ : 作为创业者需要使用的一些工具
+
+## 有趣的文章
+- https://ciechanow.ski/naval-architecture/ : 介绍了货船的设计，其中的动画效果非常酷炫

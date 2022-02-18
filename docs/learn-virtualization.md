@@ -44,6 +44,7 @@ Hardware and Software Support for Virtualization : 作者[Edouard Bugnion](https
 - [mpolednik](https://mpolednik.github.io/) : redhat 工程师，vfio 之类的
 - [stefano garzarella](https://stefano-garzarella.github.io/) : redhat 工程师
 - [知乎专栏 : 河马虚拟化](https://www.zhihu.com/column/c_1040263672760885248)
+- [kraxel](https://www.kraxel.org/blog/) : 主要关于 GPU 之类的
 
 ## 一些有意思的项目
 - [VivienneVMM](https://github.com/changeofpace/VivienneVMM) : 使用 vmx 实现的调试器

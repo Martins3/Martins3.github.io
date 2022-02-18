@@ -3,6 +3,8 @@ https://www.zhihu.com/question/21923021/answer/1032665486
 
 ## 综合教程
 - https://github.com/labuladong/fucking-algorithm : 不要好高骛远，先吧这里的东西一个个的专题搞懂就可以了
+  - 类似的书籍仓库
+    - https://github.com/geekxh/hello-algorithm
 - https://github.com/hzwer/shareOI : fucking 看完之后，可以开始分析这一个，作为进阶
 - https://github.com/OI-wiki/OI-wiki
 - https://github.com/julycoding/The-Art-Of-Programming-By-July/blob/master/ebook/zh/05.03.md : 卖书的，可以稍稍吧

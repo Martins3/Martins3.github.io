@@ -40,3 +40,4 @@
 
 ## TODO
 - pin : https://course.rs/advance/circle-self-ref/self-referential.html
+- https://github.com/skyzh/type-exercise-in-rust

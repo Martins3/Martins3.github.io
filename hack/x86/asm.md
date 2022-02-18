@@ -1,5 +1,7 @@
 # ASM
 - [ ] 教程 ： https://www.xorpd.net/pages/x86_adventures.html
+- [ ] https://github.com/tenderlove/asmrepl
+  - asmrepl 函数
 
 记录如何书写 .S 文件，记录在 entry.S 的遇到的任何问题
 
@@ -52,7 +54,7 @@ move    d3,sp@-
 
 
 ## 问题
-#### include 
+#### include
 1. include 源文件
 
 https://stackoverflow.com/questions/39457263/include-assembly-file-in-another-assembly-file
@@ -83,7 +85,7 @@ https://stackoverflow.com/questions/4928238/include-header-with-c-declarations-i
 5. check code in uaccess.c
   - for example, understand `get_fs`
 
-- [ ] https://www.kernel.org/doc/html/latest/x86/index.html 
+- [ ] https://www.kernel.org/doc/html/latest/x86/index.html
 - [ ] http://infophysics.net/att0.pdf
 - [ ] https://docs.oracle.com/cd/E19253-01/817-5477/817-5477.pdf
 

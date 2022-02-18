@@ -8,6 +8,8 @@ https://cs231n.github.io/ : CS231n: Convolutional Neural Networks for Visual Rec
 https://www.52nlp.cn/ : 中文，自然语言社区
 https://arthurdouillard.com/deepcourse/ : 机器学习路线
 
+https://github.com/nadermx/backgroundremover
+
 ## 可能有用
 https://github.com/FavioVazquez/ds-cheatsheets
 

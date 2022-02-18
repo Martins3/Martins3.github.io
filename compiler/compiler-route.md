@@ -44,8 +44,6 @@ https://github.com/banach-space/llvm-tutor : 按照这个项目，改写之前�
 
 https://oneraynyday.github.io/dev/2020/05/03/Analyzing-The-Simplest-C++-Program/#table-of-contents : blog 复写一下链接器
 
-https://nim-lang.org/ : 不知道这个语言老是被人提起，还有Julia .... 也许可以整理一下。
-
 https://news.ycombinator.com/item?id=23333891 : 糟糕的面向对象
 
 https://cjting.me/2020/06/07/chip8-emulator/ : chip-8 虚拟机
@@ -125,6 +123,8 @@ https://news.ycombinator.com/item?id=24170201 : 感觉完成度还可以的 浏�
 - https://github.com/wa-lang/ugo-compiler-book : uGo 语言开发教程
 - https://oleksandrkvl.github.io/2021/04/02/cpp-20-overview.html : cpp 20 新特性，每一个例子都有对应的文档
 - https://github.com/lotabout/write-a-C-interpreter : 写一个 C interpreter
+- https://catcoding.me/2022/01/12/a-book-on-programming-language.html
+- https://github.com/wizardpisces/js-ziju : LLVM 教程，将 JS 编译为 LLVM IR
 
 ## jvm
 
@@ -132,6 +132,8 @@ https://news.ycombinator.com/item?id=24170201 : 感觉完成度还可以的 浏�
 - https://draveness.me/system-design-memory-management/
   - 最后一部分关于 gc，应该是比较简明的了
 
+## deep learning
+- https://tvm.apache.org/2021/12/15/tvm-unity
 
 ## 问题
 1. runtime 和 vm 的关系是什么 ?
