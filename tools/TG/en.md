@@ -18,3 +18,5 @@ No more reading and listening about chinese unless it's not controlled by myself
 
 ##　听力
 1. 使用专业的内容
+
+https://youglish.com/ : 将单词匹配到对应的英语中

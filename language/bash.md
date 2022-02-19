@@ -13,6 +13,7 @@ https://github.com/mydzor/bash2048/blob/master/bash2048.sh : 300行的2048
 https://notes.pythonic.life/3-Linux/Bash/bash%E7%9A%84%E9%AB%98%E7%BA%A7%E6%8A%80%E5%B7%A7.html : some trick / snippets of bash
 
 > 且称之为三大圣经
+sh
 
 https://github.com/learnbyexample/Command-line-text-processing : 文本处理，终于来了
 https://github.com/dylanaraps/pure-bash-bible

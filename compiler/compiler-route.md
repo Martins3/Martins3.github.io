@@ -1,71 +1,47 @@
 # 收集的资源
-https://c9x.me/compile/bib/ : 业余编译器玩家的阅读资源
+- https://c9x.me/compile/bib/ : 业余编译器玩家的阅读资源
+- https://lowlevelbits.org/how-to-learn-compilers-llvm-edition/ :
+  - 基于 LLVM 学习编译器
+- https://github.com/vtil-project/VTIL-Core : 有一个中间表示层，但是似乎和二进制安全更加相关的
+- https://github.com/aalhour/awesome-compilers : **key** 可以学习 llvm 之类的
+- http://craftinginterpreters.com/contents.html : 清晰的教程
+- https://arzg.github.io/lang/ : 基于 rust 的教程
+- https://tenthousandmeters.com/blog/python-behind-the-scenes-4-how-python-bytecode-is-executed/ : python 的字节码如何执行的 ？
+- https://github.com/vnmakarov/mir : redhat 做的，带有中间表示的编译器 ？
+- https://github.com/NASA-SW-VnV/ikos : 静态分析工具，facebook 的 infer 也可以关注一下
 
-https://github.com/vtil-project/VTIL-Core : 有一个中间表示层，但是似乎和二进制安全更加相关的
 
-https://github.com/aalhour/awesome-compilers : **key**
-可以学习 llvm 之类的
-
-http://craftinginterpreters.com/contents.html : 清晰的教程
-https://arzg.github.io/lang/ : 基于 rust 的教程
-
-https://tenthousandmeters.com/blog/python-behind-the-scenes-4-how-python-bytecode-is-executed/ : python 的字节码如何执行的 ？
-
-https://github.com/vnmakarov/mir : redhat 做的，带有中间表示的编译器 ？
-
-https://github.com/NASA-SW-VnV/ikos : 静态分析工具，facebook 的 infer 也可以关注一下
 ## 自己收集的
-https://github.com/asmjit/asmjit : Machine code generation for C++
-https://github.com/netcan : maybe read his blogs
-
-https://github.com/airbus-seclab/bincat
-
-https://github.com/instagram/MonkeyType : 将 Python 动态运行信息插入类型
-
-https://andrewkelley.me/post/zig-cc-powerful-drop-in-replacement-gcc-clang.html 号称替代 gcc clang 的东西 ?
-
-https://github.com/chapel-lang/chapel : 并发的编程语言。
-
-https://github.com/rxi/fe/blob/master/doc/impl.md : 其中可以参考Garbage Collection，Error Handling 的设计。
-
-https://github.com/Feral-Lang/Feral : 也许用于学习一下 C++
-
-https://blog.josephmorag.com/posts/mcc3/ : 利用llvm 实现 C 语言。
-
-https://github.com/TrustInSoft/tis-interpreter : 对于 C 进行检查错误
-
-https://github.com/tboox/vm86 : 别的到时没有什么印象，但是说 ida 98% 反汇编可以直接运行，还是非常震惊的。
-
-https://github.com/Microsoft/checkedc/wiki : 并不是很清楚是如何做的，这种东西不可以向 llvm 中间插入一个 pass 吗 ?
-
-https://github.com/lifting-bits/remill : 人家写好的工具，将各种二进制转化为llvm bytecode
-
-https://github.com/banach-space/llvm-tutor : 按照这个项目，改写之前的 llvm 作业。
-
-https://oneraynyday.github.io/dev/2020/05/03/Analyzing-The-Simplest-C++-Program/#table-of-contents : blog 复写一下链接器
-
-https://news.ycombinator.com/item?id=23333891 : 糟糕的面向对象
-
-https://cjting.me/2020/06/07/chip8-emulator/ : chip-8 虚拟机
-
-https://github.com/rethab/awk-jvm : 利用 awk 实现 jvm，非常有意思，同时可以学习两个
-
-https://github.com/jamiebuilds/the-super-tiny-compiler : 包含大量的注释的情况下大约1000行，js 书写的，可以推荐给别人作为学习资源
-
-https://rekcarc-tsc-uht.readthedocs.io/en/latest/%E5%A4%A7%E4%B8%89%E4%B8%8A.html#id6 : 清华的教程，基于 java 的 decaf
-
-https://github.com/rswier/c4 : 大名鼎鼎的 c4 如果可以的，理解他，写一个 blog
-
-https://github.com/lunatic-lang/lunatic
-
-https://github.com/google/cel-spec : The Common Expression Language (CEL) implements common semantics for expression evaluation, enabling different applications to more easily interoperate.
-
-https://github.com/keiichiw/constexpr-8cc : 有趣的项目, 其中指向了一个链接，使用 vimscript 来实现 c compiler
-
+- https://github.com/asmjit/asmjit : Machine code generation for C++
+- https://github.com/netcan : maybe read his blogs
+- https://github.com/airbus-seclab/bincat
+- https://github.com/instagram/MonkeyType : 将 Python 动态运行信息插入类型
+- https://andrewkelley.me/post/zig-cc-powerful-drop-in-replacement-gcc-clang.html 号称替代 gcc clang 的东西 ?
+- https://github.com/chapel-lang/chapel : 并发的编程语言。
+- https://github.com/rxi/fe/blob/master/doc/impl.md : 其中可以参考Garbage Collection，Error Handling 的设计。
+- https://github.com/Feral-Lang/Feral : 也许用于学习一下 C++
+- https://blog.josephmorag.com/posts/mcc3/ : 利用llvm 实现 C 语言。
+- https://github.com/TrustInSoft/tis-interpreter : 对于 C 进行检查错误
+- https://github.com/tboox/vm86 : 别的到时没有什么印象，但是说 ida 98% 反汇编可以直接运行，还是非常震惊的。
+- https://github.com/Microsoft/checkedc/wiki : 并不是很清楚是如何做的，这种东西不可以向 llvm 中间插入一个 pass 吗 ?
+- https://github.com/lifting-bits/remill : 人家写好的工具，将各种二进制转化为llvm bytecode
+- https://github.com/banach-space/llvm-tutor : 按照这个项目，改写之前的 llvm 作业。
+- https://oneraynyday.github.io/dev/2020/05/03/Analyzing-The-Simplest-C++-Program/#table-of-contents : blog 复写一下链接器
+- https://news.ycombinator.com/item?id=23333891 : 糟糕的面向对象
+- https://cjting.me/2020/06/07/chip8-emulator/ : chip-8 虚拟机
+- https://github.com/rethab/awk-jvm : 利用 awk 实现 jvm，非常有意思，同时可以学习两个
+- https://github.com/jamiebuilds/the-super-tiny-compiler : 包含大量的注释的情况下大约1000行，js 书写的，可以推荐给别人作为学习资源
+- https://rekcarc-tsc-uht.readthedocs.io/en/latest/%E5%A4%A7%E4%B8%89%E4%B8%8A.html#id6 : 清华的教程，基于 java 的 decaf
+- https://github.com/rswier/c4 : 大名鼎鼎的 c4 如果可以的，理解他，写一个 blog
+- https://github.com/lunatic-lang/lunatic
+- https://github.com/google/cel-spec : The Common Expression Language (CEL) implements common semantics for expression evaluation, enabling different applications to more easily interoperate.
+- https://github.com/keiichiw/constexpr-8cc : 有趣的项目, 其中指向了一个链接，使用 vimscript 来实现 c compiler
 ## blog
 https://blog.llvm.org/posts/2020-12-21-interactive-cpp-for-data-science/ : cpp in juperter notebook
 - https://docs.microsoft.com/en-us/archive/msdn-magazine/2015/february/compilers-what-every-programmer-should-know-about-compiler-optimizations
   - 人人都应该知道的 compiler 优化
+- https://blog.matthieud.me/2020/exploring-clang-llvm-optimization-on-programming-horror/
+  - 探索 LLVM 实现的优化
 
 ## 想法
 1. 各种内存分析工具都是如何实现的: 靠编译器静态分析，或者内核的动态分析。
@@ -139,10 +115,14 @@ https://news.ycombinator.com/item?id=24170201 : 感觉完成度还可以的 浏�
 - https://secret.club/2021/04/09/std-clamp.html
 - https://www.intel.com/content/www/us/en/developer/articles/technical/adoption-of-llvm-complete-icx.html
   - intel 也是采用 llvm 了，没太看懂
+- https://github.com/lijiansong : 当时的指针分析
 
 ## 问题
 1. runtime 和 vm 的关系是什么 ?
     1. JIT 的他们的关系是什么 ?
+
+## mini compiler
+- https://github.com/jserv/shecc : A self-hosting and educational C compiler
 
 ## 工作
 - https://www.sourcebrella.com/jobs/

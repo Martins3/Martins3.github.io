@@ -10,9 +10,10 @@
   * [变量](#变量)
   * [字符串](#字符串)
   * [数组](#数组)
+  * [有用的变量](#有用的变量)
   * [eval 和 exec 的区别](#eval-和-exec-的区别)
   * [算术运算](#算术运算)
-  * [[ ] xargs](#-xargs)
+  * [xargs](#xargs)
   * [重定向](#重定向)
   * [资源和工具](#资源和工具)
 * [一些链接](#一些链接)
@@ -177,6 +178,12 @@ https://blog.k8s.li/shell-snippet.html
   - 但是实际上，这个解释是有问题的, 实际上是三个特殊字符除外：美元符号（`$`）、反引号（`\`）和反斜杠（`\`) 其余都是在双引号被取消掉
   - 而单引号会取消掉任何，甚至包括反斜杠
 
+## 有用的变量
+
+| var     |                                |
+|---------|--------------------------------|
+| SECCOND | 记录除了给上一次到这一次的时间 |
+
 ## eval 和 exec 的区别
 https://unix.stackexchange.com/questions/296838/whats-the-difference-between-eval-and-exec/296852
 
@@ -186,10 +193,23 @@ exec 继续执行程序
 ## 算术运算
 使用这个，而不是 let expr 之类的 $((1+2))
 
-## [ ] xargs
+## xargs
+对于所有的文件来进行替换
+```sh
 git grep -l 'apples' | xargs sed -i 's/apples/oranges/g'
+```
 - https://stackoverflow.com/questions/6758963/find-and-replace-with-sed-in-directory-and-sub-directories
 
+xargs 的性能比 find 的 exec 更加好:
+```sh
+find ./foo -type f -name "*.txt" -exec rm {} \;
+find ./foo -type f -name "*.txt" | xargs rm
+```
+
+使用 `-I` 来确定参数:
+```sh
+cat foo.txt | xargs -I % sh -c 'echo %; mkdir %'
+```
 
 ## 重定向
 参考[^1]

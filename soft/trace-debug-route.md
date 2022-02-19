@@ -1,3 +1,5 @@
 - https://github.com/rr-debugger/rr : rr is a lightweight tool for recording, replaying and debugging execution of applications (trees of processes and threads).
     - record 调试技术
 - [DynamoRIO](https://github.com/DynamoRIO/dynamorio) : runtime code manipulation system  : 这不就是 dune 需要的内容吗?
+- [heaptrack](https://github.com/KDE/heaptrack) : a heap memory profiler for Linux
+- [mull](https://github.com/mull-project/mull) is a practical mutation testing tool for C and C++.

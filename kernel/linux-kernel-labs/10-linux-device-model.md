@@ -10,8 +10,8 @@ Plug and Play is a technology that offers support for automatically adding and r
 
 ## 笔记
 1. bus_find_device_by_name : 存在这种函数 !
-2. **Other possible operations on a bus are browsing the drivers or devices attached to it**. 
-Although we can not directly access them (lists of drives and devices being stored in the private data of the driver, the subsys_private * p field ), 
+2. **Other possible operations on a bus are browsing the drivers or devices attached to it**.
+Although we can not directly access them (lists of drives and devices being stored in the private data of the driver, the subsys_private * p field ),
 these can be scanned using the *bus_for_each_dev* and *bus_for_each_drv* macrodefines .
 
 
@@ -22,16 +22,16 @@ these can be scanned using the *bus_for_each_dev* and *bus_for_each_drv* macrode
 ```c
 static inline const char *dev_name(const struct device *dev)
 {
-	/* Use the init name until the kobject becomes available */
-	if (dev->init_name)
-		return dev->init_name;
+  /* Use the init name until the kobject becomes available */
+  if (dev->init_name)
+    return dev->init_name;
 
-	return kobject_name(&dev->kobj);
+  return kobject_name(&dev->kobj);
 }
 
 static inline const char *kobject_name(const struct kobject *kobj)
 {
-	return kobj->name;
+  return kobj->name;
 }
 ```
 
@@ -43,13 +43,13 @@ static inline const char *kobject_name(const struct kobject *kobj)
  */
 int dev_set_name(struct device *dev, const char *fmt, ...)
 {
-	va_list vargs;
-	int err;
+  va_list vargs;
+  int err;
 
-	va_start(vargs, fmt);
-	err = kobject_set_name_vargs(&dev->kobj, fmt, vargs); // 调用kvasprintf_const，然后给 kobj 赋值
-	va_end(vargs);
-	return err;
+  va_start(vargs, fmt);
+  err = kobject_set_name_vargs(&dev->kobj, fmt, vargs); // 调用kvasprintf_const，然后给 kobj 赋值
+  va_end(vargs);
+  return err;
 }
 ```
 
@@ -68,37 +68,37 @@ int dev_set_name(struct device *dev, const char *fmt, ...)
  * private data.
  */
 struct bus_type {
-	const char		*name;
-	const char		*dev_name;
-	struct device		*dev_root;
-	const struct attribute_group **bus_groups;
-	const struct attribute_group **dev_groups;
-	const struct attribute_group **drv_groups;
+  const char    *name;
+  const char    *dev_name;
+  struct device   *dev_root;
+  const struct attribute_group **bus_groups;
+  const struct attribute_group **dev_groups;
+  const struct attribute_group **drv_groups;
 
-	int (*match)(struct device *dev, struct device_driver *drv);
-	int (*uevent)(struct device *dev, struct kobj_uevent_env *env);
-	int (*probe)(struct device *dev);
-	int (*remove)(struct device *dev);
-	void (*shutdown)(struct device *dev);
+  int (*match)(struct device *dev, struct device_driver *drv);
+  int (*uevent)(struct device *dev, struct kobj_uevent_env *env);
+  int (*probe)(struct device *dev);
+  int (*remove)(struct device *dev);
+  void (*shutdown)(struct device *dev);
 
-	int (*online)(struct device *dev);
-	int (*offline)(struct device *dev);
+  int (*online)(struct device *dev);
+  int (*offline)(struct device *dev);
 
-	int (*suspend)(struct device *dev, pm_message_t state);
-	int (*resume)(struct device *dev);
+  int (*suspend)(struct device *dev, pm_message_t state);
+  int (*resume)(struct device *dev);
 
-	int (*num_vf)(struct device *dev);
+  int (*num_vf)(struct device *dev);
 
-	int (*dma_configure)(struct device *dev);
+  int (*dma_configure)(struct device *dev);
 
-	const struct dev_pm_ops *pm; // 电池管理
+  const struct dev_pm_ops *pm; // 电池管理
 
-	const struct iommu_ops *iommu_ops;
+  const struct iommu_ops *iommu_ops;
 
-	struct subsys_private *p;
-	struct lock_class_key lock_key;
+  struct subsys_private *p;
+  struct lock_class_key lock_key;
 
-	bool need_parent_lock;
+  bool need_parent_lock;
 };
 ```
 
@@ -108,41 +108,41 @@ struct bus_type {
 
 ```c
 struct attribute {
-	const char		*name;
-	umode_t			mode;
+  const char    *name;
+  umode_t     mode;
 };
 
 /**
  * struct attribute_group - data structure used to declare an attribute group.
- * @name:	Optional: Attribute group name
- *		If specified, the attribute group will be created in
- *		a new subdirectory with this name.
- * @is_visible:	Optional: Function to return permissions associated with an
- *		attribute of the group. Will be called repeatedly for each
- *		non-binary attribute in the group. Only read/write
- *		permissions as well as SYSFS_PREALLOC are accepted. Must
- *		return 0 if an attribute is not visible. The returned value
- *		will replace static permissions defined in struct attribute.
+ * @name: Optional: Attribute group name
+ *    If specified, the attribute group will be created in
+ *    a new subdirectory with this name.
+ * @is_visible: Optional: Function to return permissions associated with an
+ *    attribute of the group. Will be called repeatedly for each
+ *    non-binary attribute in the group. Only read/write
+ *    permissions as well as SYSFS_PREALLOC are accepted. Must
+ *    return 0 if an attribute is not visible. The returned value
+ *    will replace static permissions defined in struct attribute.
  * @is_bin_visible:
- *		Optional: Function to return permissions associated with a
- *		binary attribute of the group. Will be called repeatedly
- *		for each binary attribute in the group. Only read/write
- *		permissions as well as SYSFS_PREALLOC are accepted. Must
- *		return 0 if a binary attribute is not visible. The returned
- *		value will replace static permissions defined in
- *		struct bin_attribute.
- * @attrs:	Pointer to NULL terminated list of attributes.
- * @bin_attrs:	Pointer to NULL terminated list of binary attributes.
- *		Either attrs or bin_attrs or both must be provided.
+ *    Optional: Function to return permissions associated with a
+ *    binary attribute of the group. Will be called repeatedly
+ *    for each binary attribute in the group. Only read/write
+ *    permissions as well as SYSFS_PREALLOC are accepted. Must
+ *    return 0 if a binary attribute is not visible. The returned
+ *    value will replace static permissions defined in
+ *    struct bin_attribute.
+ * @attrs:  Pointer to NULL terminated list of attributes.
+ * @bin_attrs:  Pointer to NULL terminated list of binary attributes.
+ *    Either attrs or bin_attrs or both must be provided.
  */
 struct attribute_group {
-	const char		*name;
-	umode_t			(*is_visible)(struct kobject *,
-					      struct attribute *, int);
-	umode_t			(*is_bin_visible)(struct kobject *,
-						  struct bin_attribute *, int);
-	struct attribute	**attrs;
-	struct bin_attribute	**bin_attrs;
+  const char    *name;
+  umode_t     (*is_visible)(struct kobject *,
+                struct attribute *, int);
+  umode_t     (*is_bin_visible)(struct kobject *,
+              struct bin_attribute *, int);
+  struct attribute  **attrs;
+  struct bin_attribute  **bin_attrs;
 };
 ```
 
@@ -157,14 +157,14 @@ struct attribute_group {
  * the DEVTYPE variable.
  */
 struct device_type {
-	const char *name;
-	const struct attribute_group **groups;
-	int (*uevent)(struct device *dev, struct kobj_uevent_env *env);
-	char *(*devnode)(struct device *dev, umode_t *mode,
-			 kuid_t *uid, kgid_t *gid);
-	void (*release)(struct device *dev);
+  const char *name;
+  const struct attribute_group **groups;
+  int (*uevent)(struct device *dev, struct kobj_uevent_env *env);
+  char *(*devnode)(struct device *dev, umode_t *mode,
+       kuid_t *uid, kgid_t *gid);
+  void (*release)(struct device *dev);
 
-	const struct dev_pm_ops *pm;
+  const struct dev_pm_ops *pm;
 };
 ```
 
@@ -178,29 +178,29 @@ struct device_type {
  * of any specific device.
  */
 struct device_driver {
-	const char		*name;
-	struct bus_type		*bus;
+  const char    *name;
+  struct bus_type   *bus;
 
-	struct module		*owner;
-	const char		*mod_name;	/* used for built-in modules */
+  struct module   *owner;
+  const char    *mod_name;  /* used for built-in modules */
 
-	bool suppress_bind_attrs;	/* disables bind/unbind via sysfs */
-	enum probe_type probe_type;
+  bool suppress_bind_attrs; /* disables bind/unbind via sysfs */
+  enum probe_type probe_type;
 
-	const struct of_device_id	*of_match_table;
-	const struct acpi_device_id	*acpi_match_table;
+  const struct of_device_id *of_match_table;
+  const struct acpi_device_id *acpi_match_table;
 
-	int (*probe) (struct device *dev);
-	int (*remove) (struct device *dev);
-	void (*shutdown) (struct device *dev);
-	int (*suspend) (struct device *dev, pm_message_t state);
-	int (*resume) (struct device *dev);
-	const struct attribute_group **groups;
+  int (*probe) (struct device *dev);
+  int (*remove) (struct device *dev);
+  void (*shutdown) (struct device *dev);
+  int (*suspend) (struct device *dev, pm_message_t state);
+  int (*resume) (struct device *dev);
+  const struct attribute_group **groups;
 
-	const struct dev_pm_ops *pm;
-	void (*coredump) (struct device *dev);
+  const struct dev_pm_ops *pm;
+  void (*coredump) (struct device *dev);
 
-	struct driver_private *p;
+  struct driver_private *p;
 };
 ```
 > @todo 所以，是不是说，device_driver 让 device 和 driver 分离了 ?
@@ -233,23 +233,23 @@ EIP: bus_add_device+0x5d/0x150
 ```
 
 ```c
-	/*
-	 * device_add does this:
-	 *    bus_add_device(dev)
-	 *    ->device_attach(dev)
-	 *      ->for each driver drv registered on the bus that dev is on
-	 *          if (dev.drv)  **  device already has a driver **
-	 *            ** not sure we could ever get here... **
-	 *          else
-	 *            if (bus.match(dev,drv)) [visorbus_match]
-	 *              dev.drv = drv
-	 *              if (!drv.probe(dev))  [visordriver_probe_device]
-	 *                dev.drv = NULL
-	 *
-	 * Note that device_add does NOT fail if no driver failed to claim the
-	 * device.  The device will be linked onto bus_type.klist_devices
-	 * regardless (use bus_for_each_dev).
-	 */
+  /*
+   * device_add does this:
+   *    bus_add_device(dev)
+   *    ->device_attach(dev)
+   *      ->for each driver drv registered on the bus that dev is on
+   *          if (dev.drv)  **  device already has a driver **
+   *            ** not sure we could ever get here... **
+   *          else
+   *            if (bus.match(dev,drv)) [visorbus_match]
+   *              dev.drv = drv
+   *              if (!drv.probe(dev))  [visordriver_probe_device]
+   *                dev.drv = NULL
+   *
+   * Note that device_add does NOT fail if no driver failed to claim the
+   * device.  The device will be linked onto bus_type.klist_devices
+   * regardless (use bus_for_each_dev).
+   */
 ```
 
 ```c
@@ -277,5 +277,3 @@ EIP: bus_add_device+0x5d/0x150
  */
 int device_add(struct device *dev)
 ```
-
-
