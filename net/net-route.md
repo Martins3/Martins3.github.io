@@ -170,6 +170,12 @@ https://www2.tkn.tu-berlin.de/teaching/rn/animations/gbn_sr/ : 拥塞网络图�
 - [bgp](https://www.cloudflare.com/learning/security/glossary/what-is-bgp/) : 这是当时 facebook 不可用的时候出现的
   - 更多的教程参考这里: https://www.cloudflare.com/learning/
 
+## 教材
+- [Computer Networks: A Systems Approach](https://book.systemsapproach.org/index.html)
+
+## 工具
+- https://rfc.fyi/ : rfc 搜索
+
 [^2]: 用芯探核:基于龙芯的 Linux 内核探索解析
 [^4]: http://yuba.stanford.edu/rcp/
 [^6]: [An Introduction to Computer Networks](http://intronetworks.cs.luc.edu/current2/html/)

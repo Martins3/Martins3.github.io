@@ -135,6 +135,11 @@ https://news.ycombinator.com/item?id=24170201 : 感觉完成度还可以的 浏�
 ## deep learning
 - https://tvm.apache.org/2021/12/15/tvm-unity
 
+## llvm
+- https://secret.club/2021/04/09/std-clamp.html
+- https://www.intel.com/content/www/us/en/developer/articles/technical/adoption-of-llvm-complete-icx.html
+  - intel 也是采用 llvm 了，没太看懂
+
 ## 问题
 1. runtime 和 vm 的关系是什么 ?
     1. JIT 的他们的关系是什么 ?

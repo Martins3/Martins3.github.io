@@ -10,10 +10,12 @@
 
 ## 工具
 - https://www.toptal.com/developers/gitignore : 为你的项目自动生成 gitignore 文件
-- https://sysctl-explorer.net/ : sys 文件夹内容查询 
+- https://sysctl-explorer.net/ : sys 文件夹内容查询
 - https://wangchujiang.com/linux-command/ : Linux 命令搜索
 - https://combinepdf.com/ : pdf 合并
 
 ## 文摘
 - [ ] https://writing.kemitchell.com/2016/09/21/MIT-License-Line-by-Line.html : 一行行的解释 MIT licence
 - https://github.com/cn/constitution/commit/5678be0af5b67d241f1c5bf6ec1f4012b22d3ebb : 宪法修改对比
+
+- [computation structures](https://computationstructures.org/lectures/info/info.html) : 从数字电路到编译器到操作系统

@@ -11,9 +11,6 @@
   </p>
 </p>
 
-<!--START_SECTION:waka-->
-<!--END_SECTION:waka-->
-
 ## Navigations
 - [Martins3's slides](https://martins3.github.io/ppt)
 - [Source code reading list](./source-code-reading-list.md)

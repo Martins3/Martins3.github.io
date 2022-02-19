@@ -39,6 +39,7 @@ https://github.com/microsoft/vcpkg/blob/master/README_zh_CN.md#%E5%BF%AB%E9%80%9
 
 
 https://github.com/fffaraz/awesome-cpp : 难道其中包含的是不 modern 的部分 ?
+- https://github.com/jobbole/awesome-cpp-cn
 
 https://github.com/me115/design_patterns : 设计模式，暂时不会去处理的
 

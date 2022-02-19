@@ -635,6 +635,8 @@ aio_complete 会调用 eventfd_signal，这是实现 epoll 机制的核心。
 ![](https://kernel.taobao.org/2020/09/IO_uring_Optimization_for_Nginx/3.png)
 - [ ] https://github.com/frevib/io_uring-echo-server : 别 手高眼低 了，先学会如何使用吧。
 
+https://despairlabs.com/posts/2021-06-16-io-uring-is-not-an-event-system/
+
  - [ ] [^8]
 io_uring 有如此出众的性能，主要来源于以下几个方面：
 1. 用户态和内核态共享提交队列（submission queue）和完成队列（completion queue）

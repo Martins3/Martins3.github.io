@@ -25,6 +25,7 @@
 - [ ] 学会使用 eval
 - [ ] 类似 $SHELL 之外的还有什么定义好的全局变量
 - 学会使用 dirname 和 basename
+- [ ] [The art of command line](https://github.com/jlevy/the-art-of-command-line/blob/master/README-zh.md#%E4%BB%85%E9%99%90-os-x-%E7%B3%BB%E7%BB%9F)
 
 ## 命令行参数
 1. -n 参数可以取消末尾的回车符
@@ -202,14 +203,13 @@ git grep -l 'apples' | xargs sed -i 's/apples/oranges/g'
 1. https://explainshell.com/
 2. https://wangchujiang.com/linux-command/
 
-
 # 一些链接
-1. [The art of command line](https://github.com/jlevy/the-art-of-command-line/blob/master/README-zh.md#%E4%BB%85%E9%99%90-os-x-%E7%B3%BB%E7%BB%9F)
 2. [Pure bash bible](https://github.com/dylanaraps/pure-bash-bible)
 
 ## 一些资源
-- [A utility tool powered by fzf for using git interactively](https://github.com/wfxr/forgit)
-- [Bash web server](https://github.com/dzove855/Bash-web-server/) : 只有几百行的 web server 使用 bash 写的
+- [forgit](https://github.com/wfxr/forgit) A utility tool powered by fzf for using git interactively
+- [Bash web server](https://github.com/dzove855/Bash-web-server/) : 只有几百行的 web server 使用 bash 写的 :star:
+- [Write a shell in C](https://brennan.io/2015/01/16/write-a-shell-in-c/) : 自己动手写一个 shell
 
 ## 一些博客
 - [window powershell 和 bash 的对比](https://vedipen.com/2020/linux-bash-vs-windows-powershell/)

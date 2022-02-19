@@ -10,7 +10,6 @@
 
 中国和美国的教育系统相比不只是无能，而是腐败的。把真正的知识藏起来，用一堆毫无意义的事情充斥大学，这样他们就能谋取所有可以想象的暴利。因为知识就是力量，知识就是自由，只要剥脱了人们的知识，某些人就可以为所欲为。[^4]
 
-
 - 财富不是零和游戏。
 - 你不可能既正常又期待异常回报。
 - 出租时间不会让你变得富有，因为你不能非线性地赚钱。
@@ -28,6 +27,10 @@
 
 四年时间足以让一个人在任何领域成为资深业者，甚至专家。可是我们的大学生呢，经过本科四年，不要说领域专家，甚至能力强的学生都寥寥无几。我们的大学制度用了四年时间，培养出了大量一无所长的、迷茫困惑的、市场滞销的年轻人。[^8]
 
+强制越多意味着弹性越小，意味着有工作的人福利越多，没工作的人越惨。年轻人可能不知道，改革开放之前就是这样，劳动保护标准高，但有国企工作的人跟没工作的人，完全是两个不同的社会阶层。[^9]
+
+Working hard is not just a dial you turn up to 11. It's a complicated, dynamic system that has to be tuned just right at each point. You have to understand the shape of real work, see clearly what kind you're best suited for, aim as close to the true core of it as you can, accurately judge at each moment both what you're capable of and how you're doing, and put in as many hours each day as you can without harming the quality of the result. This network is too complicated to trick. But if you're consistently honest and clear-sighted, it will automatically assume an optimal shape, and you'll be productive in a way few people are.[^10]
+
 [^1]: https://www.zhihu.com/question/443850977/answer/1754327421
 [^2]: https://mp.weixin.qq.com/s/4kN65Eu_mYKmC-GLig082g
 [^3]: https://github.com/cdk8s/cdk8s-team-style/blob/master/other/read-write.md
@@ -36,3 +39,5 @@
 [^6]: https://mp.weixin.qq.com/s/XAkJzT21uoKWPIkvv_45nw
 [^7]: https://www.bilibili.com/video/BV1pF4118747
 [^8]: https://survivor.ruanyifeng.com/collapse/university.html
+[^9]: https://mp.weixin.qq.com/s/4kN65Eu_mYKmC-GLig082g
+[^10]: http://paulgraham.com/hwh.html

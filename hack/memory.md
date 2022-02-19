@@ -2070,9 +2070,12 @@ DAX 设置 : 到时候在分析吧!
 字节团队写的，应该是相当清楚了:
 https://mp.weixin.qq.com/s/wt5b5e1Y1yG1kDIf0QPsvg
 
+- https://kernelgo.org/memory-model.html : c++ 内存模型
 
 https://lotabout.me/2019/QQA-What-is-Sequential-Consistency/
 - 介绍什么是顺序一致性
+
+- https://bitbashing.io/papers.html : 其中有一篇是关于 memory concurrency 的
 
 在 go 语言中，因为没有考虑到 arm 的弱内存序导致的问题:
 https://mzh.io/how-go-core-team-debug-1-memory-model/
