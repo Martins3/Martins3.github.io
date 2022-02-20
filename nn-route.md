@@ -13,6 +13,9 @@ https://github.com/nadermx/backgroundremover
 ## 可能有用
 https://github.com/FavioVazquez/ds-cheatsheets
 
+## 教程
+- https://github.com/microsoft/Data-Science-For-Beginners : 微软的教程
+
 ## 文摘
 - [autodiff](https://douglasorr.github.io/2021-11-autodiff/article.html) 的原理
 

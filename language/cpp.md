@@ -9,14 +9,9 @@ https://github.com/sharkdp/dbg-macro/blob/master/dbg.h : 1000 行的更好的pri
 3. https://stackoverflow.com/questions/11833070/when-is-the-use-of-stdref-necessary/45823556#45823556
 
 4. 那些高级话题之类就算了吧，cpp primer plus 的内容看懂就很不错了啊!
-
-- [ ] 先把现有的笔记整理一下就很不错了啊 !
-
 - [ ] coroutine
-
 - https://github.com/mattbierner/STT-C-Compile-Time-Snake : 使用 template 来玩贪吃蛇
 
-- [ ] https://hackingcpp.com/cpp/cheat_sheets.html : 通过图片的方式快速的展示
 - [ ] https://abseil.io/tips/ : 一个 cpp 社区，提供 weekly news 之类的
 
 
@@ -112,3 +107,6 @@ https://github.com/catchorg/Catch2 : 又一个测试框架
 
 ## blog
 - [shafik](https://shafik.github.io/) 的 blog，谈论了很多 cpp 高级话题
+
+## Dustbin
+- https://hackingcpp.com/cpp/cheat_sheets.html : 通过图片做出来的 cheatsheets，主要是关于 std 使用之类的

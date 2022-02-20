@@ -2,3 +2,7 @@
 
 ## coq
 - https://github.com/OpenSmalltalk/opensmalltalk-vm
+
+## automated reasoning
+
+- https://www.amazon.science/blog/a-gentle-introduction-to-automated-reasoning

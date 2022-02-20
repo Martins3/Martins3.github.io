@@ -94,6 +94,8 @@ https://github.com/janet-lang/janet : vm 和
 
 https://news.ycombinator.com/item?id=24170201 : 感觉完成度还可以的 浏览器实现，所以，好的，可以去做前端了
 
+- https://medium.com/@JasonWyatt/squeezing-performance-from-sqlite-explaining-the-virtual-machine-2550ef6c5db
+  - 为了解析 sql 语句，实际上 sqlite 中是存在 vm 来解释执行的，这个文章中分析这些大致是如何运行的
 
 ## 教程
 - https://github.com/wa-lang/ugo-compiler-book : uGo 语言开发教程
@@ -116,6 +118,8 @@ https://news.ycombinator.com/item?id=24170201 : 感觉完成度还可以的 浏�
 - https://www.intel.com/content/www/us/en/developer/articles/technical/adoption-of-llvm-complete-icx.html
   - intel 也是采用 llvm 了，没太看懂
 - https://github.com/lijiansong : 当时的指针分析
+- https://www.npopov.com/2021/06/02/Design-issues-in-LLVM-IR.html
+  - 分析了一下 LLVM 中存在的问题
 
 ## 问题
 1. runtime 和 vm 的关系是什么 ?
@@ -123,6 +127,9 @@ https://news.ycombinator.com/item?id=24170201 : 感觉完成度还可以的 浏�
 
 ## mini compiler
 - https://github.com/jserv/shecc : A self-hosting and educational C compiler
+
+## 工具
+- https://github.com/compiler-explorer/compiler-explorer : godbolt.org 的源码
 
 ## 工作
 - https://www.sourcebrella.com/jobs/

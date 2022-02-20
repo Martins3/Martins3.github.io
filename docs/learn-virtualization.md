@@ -33,18 +33,21 @@ Hardware and Software Support for Virtualization : 作者[Edouard Bugnion](https
 - [ASPLOS IOMMU tutorial](http://pages.cs.wisc.edu/~basu/isca_iommu_tutorial/IOMMU_TUTORIAL_ASPLOS_2016.pdf) 介绍了 IOMMU，学习 vt-d 之前可以阅读一下。
 
 ## 一些有用的 blog
-- https://kernelgo.org/
+- [KVM forum](https://www.linux-kvm.org/page/KVM_Forum) :star: :star: :star: kvm forum 每年的会议 slides 都是精华
+- [kernelgo](https://kernelgo.org/) :star: :star:
   - [作者整理的 gitbook](https://luohao-brian.gitbooks.io/interrupt-virtualization/content/qemuzhi-network-device-quan-xu-ni-fang-an-4e8c3a-xu-ni-wang-qia.html)
-- https://terenceli.github.io/
-- https://www.linux-kvm.org/page/KVM_Forum : kvm forum 每年的会议 slides 都是精华，值得一个个的翻阅, 在 youtube 上有对应的[录像](https://www.youtube.com/channel/UCRCSQmAOh7yzgheq-emy1xA)
+- [terenceli](https://terenceli.github.io/) :star:
+  - 值得一个个的翻阅, 在 youtube 上有对应的[录像](https://www.youtube.com/channel/UCRCSQmAOh7yzgheq-emy1xA)
+- [Redhat blog](https://www.redhat.com/en/blog) 的 virtualization 板块
+  - [All you need to know about KVM userspace](https://www.redhat.com/en/blog/all-you-need-know-about-kvm-userspace)
 - [陈伟任的笔记](https://github.com/azru0512/slide/tree/master/QEMU)
 - [Stefan Hajnoczi](http://blog.vmsplice.net/2020/08/qemu-internals-event-loops.html)
-- [空客的 QEMU 源码分析](https://github.com/airbus-seclab/qemu_blog)
 - [opengers](https://opengers.github.io/) : kvm ceph 之类的
 - [mpolednik](https://mpolednik.github.io/) : redhat 工程师，vfio 之类的
 - [stefano garzarella](https://stefano-garzarella.github.io/) : redhat 工程师
 - [知乎专栏 : 河马虚拟化](https://www.zhihu.com/column/c_1040263672760885248)
 - [kraxel](https://www.kraxel.org/blog/) : 主要关于 GPU 之类的
+- [空客的 QEMU 源码分析](https://github.com/airbus-seclab/qemu_blog)
 
 ## 一些有意思的项目
 - [VivienneVMM](https://github.com/changeofpace/VivienneVMM) : 使用 vmx 实现的调试器
