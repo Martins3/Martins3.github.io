@@ -1,5 +1,6 @@
-如何更好地理解和掌握 KMP 算法? - 阮行止的回答 - 知乎
-https://www.zhihu.com/question/21923021/answer/1032665486
+如果是 Java 选手，可以从 [Algorithm](https://algs4.cs.princeton.edu/home/) 这本书入手
+
+[各大 OJ 分类](http://www.pythontip.com/acm/problemCategory)
 
 ## 综合教程
 - https://github.com/labuladong/fucking-algorithm : 不要好高骛远，先吧这里的东西一个个的专题搞懂就可以了
@@ -19,3 +20,8 @@ https://www.zhihu.com/question/21923021/answer/1032665486
 
 ## misc
 - https://github.com/aoapc-book/aoapc-bac2nd : 刘汝佳的书
+
+
+## blog
+如何更好地理解和掌握 KMP 算法? - 阮行止的回答 - 知乎
+https://www.zhihu.com/question/21923021/answer/1032665486

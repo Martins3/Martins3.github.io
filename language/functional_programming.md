@@ -246,3 +246,4 @@ main = putStrLn $ "Hello, sky! " ++ (say Blue)
 ## 文摘
 - https://ycombinator.chibicode.com/functional-programming-emojis
   - 先去看看 Church encoding 和 Y combinator 然后再去看看这个文章的解释，搞一堆 emoji，信息量非常低
+- [An Introduction to Type-Level Programming](https://rebeccaskinner.net/posts/2021-08-25-introduction-to-type-level-programming.html)

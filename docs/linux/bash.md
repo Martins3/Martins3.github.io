@@ -236,6 +236,8 @@ cat foo.txt | xargs -I % sh -c 'echo %; mkdir %'
 ```
 
 ### awk
+基本参考这篇 [blog](https://earthly.dev/blog/awk-examples/)，其内容还是非常容易的。
+
 - $0 是所有的函数
 - $1  ... 是之后的逐个
 ```sh
