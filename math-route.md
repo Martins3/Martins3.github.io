@@ -5,3 +5,5 @@
 <blockquote class="twitter-tweet"><p lang="zh" dir="ltr">数学的学习最好结合数值分析软件（如：Scilab）和计算机代数系统（如：Maxima）一起。</p>&mdash; 灰狐(Huihoo) (@huihoo) <a href="https://twitter.com/huihoo/status/1494219912747032579?ref_src=twsrc%5Etfw">February 17, 2022</a></blockquote> <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
 
 - [数学中最违背直觉的结论](https://axisofordinary.substack.com/p/the-most-counterintuitive-facts-in?utm_source=url)
+
+- http://adelelopez.com/chu-are-you : 就很迷惑，范畴 category ?

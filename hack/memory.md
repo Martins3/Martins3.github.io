@@ -2085,7 +2085,7 @@ Each memory model defines `pfn_to_page()` and page_to_pfn() helpers that allow t
 - [ ] https://randomascii.wordpress.com/2020/11/29/arm-and-lock-free-programming/
 - [ ] [^12]
 - [ ] https://kernelgo.org/memory-model.html : really nice blog with cpp perspective
-- [ ] https://research.swtch.com/mm
+- [ ] https://research.swtch.com/mm : Rust 的 contributor ? 写的
 
 #### vmemmap
 

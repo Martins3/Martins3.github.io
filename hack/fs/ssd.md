@@ -1,10 +1,15 @@
 # 深入浅出SSD
+**请阅读完成下面的内容，然后再去看别的东西**
+
+- https://codecapsule.com/2014/02/12/coding-for-ssds-part-1-introduction-and-table-of-contents/
+
 https://github.com/spdk/spdk : 配合 dpdk 了解一下，还可以分析一下 build your own x 的 tcp stack 的构建过程
 
 https://github.com/linux-rdma/rdma-core
   - https://www.youtube.com/watch?v=QAIAoNheX-8 : RDMA 的想法应该很简单吧!
 
 https://link.springer.com/chapter/10.1007/978-94-017-7512-0_10
+
 
 ## Introduction
 ·FTL闪存转换层：作为SSD固件的核心部分，FTL实现了例如映射管理、磨损均衡、垃圾回收、坏块管理等诸多功能，本书将一一介绍。

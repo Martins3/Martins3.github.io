@@ -15,8 +15,8 @@
 好像没有设置，最后的后果即使启动一个连 ls 都没有 sh 出来
 
 - [ ] 不要再使用完整的来作为 install 了，使用命令行可以加速调试
-
-
+- [ ] https://alexpearce.me/2021/07/managing-dotfiles-with-nix/
+  - Nix 下如何管理 package 的
 
 [^1]: https://nixos.org/manual/nixos/stable/index.html#sec-installation
 [^2]: https://github.com/Martins3/Martins3.github.io/blob/master/hack/qemu/ubuntu/4-11.sh

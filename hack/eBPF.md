@@ -173,6 +173,9 @@ C 语言总是需要 lua, cpp 或者 python 的辅助，将 eBPF 程序插入到
 
 python : 各种 attach 函数， 分析 map 以及输出
 
+## paper
+- https://www.usenix.org/conference/nsdi21/presentation/ghigoff : 使用 eBPF 加速 memcahced ，无需修改内核。
+
 ## todo
 - [ ] https://github.com/dippynark/bpf-sockmap
 - [ ]  bpftrace -e 'BEGIN { printf("Hello, World!\n"); }' BEGIN 是什么意思，是否存在类似的工具

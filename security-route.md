@@ -11,5 +11,8 @@
 - https://github.com/stong/how-to-exploit-a-double-free : 如何通过 double free 实现漏洞的利用
 - [漏洞利用的基本小技巧](https://github.com/Naetw/CTF-pwn-tips)
 
+## 案例
+- https://www.openwall.com/lists/oss-security/2021/07/20/1 :
+
 ## 工具
 - [imhex](https://github.com/WerWolv/ImHex) : 反汇编 IDE

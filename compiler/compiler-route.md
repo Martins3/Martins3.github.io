@@ -97,6 +97,8 @@ https://news.ycombinator.com/item?id=24170201 : 感觉完成度还可以的 浏�
 - https://medium.com/@JasonWyatt/squeezing-performance-from-sqlite-explaining-the-virtual-machine-2550ef6c5db
   - 为了解析 sql 语句，实际上 sqlite 中是存在 vm 来解释执行的，这个文章中分析这些大致是如何运行的
 
+- https://notes.eatonphil.com/lua-in-rust.html :star: 使用 rust 写一个 mininal lua 实现
+
 ## 教程
 - https://github.com/wa-lang/ugo-compiler-book : uGo 语言开发教程
 - https://oleksandrkvl.github.io/2021/04/02/cpp-20-overview.html : cpp 20 新特性，每一个例子都有对应的文档

@@ -2,15 +2,18 @@
 
 <!-- vim-markdown-toc GitLab -->
 
-- [Caveat](#caveat)
-- [Abstract](#abstract)
-- [setup](#setup)
-- [terminal proxy](#terminal-proxy)
-- [git proxy](#git-proxy)
-- [cmd proxy](#cmd-proxy)
-- [share proxy cross lan](#share-proxy-cross-lan)
+* [Caveat](#caveat)
+* [Abstract](#abstract)
+* [setup](#setup)
+* [terminal proxy](#terminal-proxy)
+* [git proxy](#git-proxy)
+* [cmd proxy](#cmd-proxy)
+* [share proxy cross lan](#share-proxy-cross-lan)
 
 <!-- vim-markdown-toc -->
+Across the Great Wall we can reach every corner in the world.
+
+Search for:
 
 ## Caveat
 Only tested on Ubuntu 20.04, but should work in all linux distributions, and similar
@@ -89,7 +92,7 @@ export http_proxy=http://${X86_IP}:8889 && export https_proxy=http://{X86_IP}:88
 ```
 
 in browser:
-- add proxy server : http://${X86_IP}:8889 
+- add proxy server : http://${X86_IP}:8889
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
