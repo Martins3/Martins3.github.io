@@ -1,4 +1,4 @@
-# 给我老婆收集的
+# 给 mi 收集的
 
 https://github.com/poloclub/cnn-explainer : 交互式的教学 cnn 原理
 https://github.com/nndl/nndl.github.io  : 《神经网络与深度学习》 邱锡鹏著

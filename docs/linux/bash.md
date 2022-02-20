@@ -3,7 +3,7 @@
 <!-- vim-markdown-toc GitLab -->
 
   * [问题](#问题)
-  * [命令行参数](#命令行参数)
+  * [Bash 的基本语法](#bash-的基本语法)
   * [基本符号](#基本符号)
   * [扩展模式](#扩展模式)
   * [here doc 和 here string](#here-doc-和-here-string)
@@ -13,8 +13,10 @@
   * [有用的变量](#有用的变量)
   * [eval 和 exec 的区别](#eval-和-exec-的区别)
   * [算术运算](#算术运算)
-  * [xargs](#xargs)
   * [重定向](#重定向)
+  * [常用工具](#常用工具)
+    * [xargs](#xargs)
+    * [awk](#awk)
   * [资源和工具](#资源和工具)
 * [一些链接](#一些链接)
   * [一些资源](#一些资源)
@@ -22,18 +24,31 @@
 
 <!-- vim-markdown-toc -->
 
+基本参考 [Bash 脚本教程](https://wangdoc.com/bash/index.html)
+
 ## 问题
 - [ ] 学会使用 eval
 - [ ] 类似 $SHELL 之外的还有什么定义好的全局变量
 - 学会使用 dirname 和 basename
 - [ ] [The art of command line](https://github.com/jlevy/the-art-of-command-line/blob/master/README-zh.md#%E4%BB%85%E9%99%90-os-x-%E7%B3%BB%E7%BB%9F)
 
-## 命令行参数
+## Bash 的基本语法
+
 1. -n 参数可以取消末尾的回车符
 2. -e 参数会解释引号（双引号和单引号）里面的特殊字符（比如换行符\n
 
 - ctrl + w 删除光标前的单个域
 - ctrl + k：从光标位置删除到行尾
+
+在 bash 中 \ 会让下一行和上一行放到一起来解释，体会一下下面的两个命令的差别:
+```sh
+echo "one two
+three"
+
+echo "one two \
+three"
+```
+
 
 ## 基本符号
 ```sh
@@ -193,7 +208,16 @@ exec 继续执行程序
 ## 算术运算
 使用这个，而不是 let expr 之类的 $((1+2))
 
-## xargs
+## 重定向
+参考[^1]
+1. ls > a.txt
+2. ls 2> a.txt
+3. ls 2>&1
+4. ls 2>&1 > a.txt
+5. ls | tee > a.txt
+
+## 常用工具
+### xargs
 对于所有的文件来进行替换
 ```sh
 git grep -l 'apples' | xargs sed -i 's/apples/oranges/g'
@@ -211,13 +235,40 @@ find ./foo -type f -name "*.txt" | xargs rm
 cat foo.txt | xargs -I % sh -c 'echo %; mkdir %'
 ```
 
-## 重定向
-参考[^1]
-1. ls > a.txt
-2. ls 2> a.txt
-3. ls 2>&1
-4. ls 2>&1 > a.txt
-5. ls | tee > a.txt
+### awk
+- $0 是所有的函数
+- $1  ... 是之后的逐个
+```sh
+echo "one two
+three" | awk '{print $1}'
+
+awk '{ print $1 }' /home/maritns3/core/vn/security-route.md
+```
+
+```sh
+echo "one|two|three" | awk -F_ '{print $1}'
+```
+
+- $NF seems like an unusual name for printing the last column
+- NR(number of records) 表示当前是第几行
+- NF(number of fields) : 表示当前行一共存在多少个成员
+
+```sh
+echo "one_two_three" | awk -F_ '{print NR " " $(NF - 1) " " NF}'
+```
+
+awk 的正则匹配:
+```sh
+awk '/hello/ { print "This line contains hello", $0}'
+awk '$4~/hello/ { print "This field contains hello", $4}'
+awk '$4 == "hello" { print "This field is hello:", $4}'
+```
+
+awk 的 BEGIN 和 END 分别表示在开始之前执行的内容。
+
+awk 还存在
+- Associative Arrays
+- for / if
 
 ## 资源和工具
 1. https://explainshell.com/
