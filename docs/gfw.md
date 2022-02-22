@@ -45,6 +45,7 @@ snap install qv2ray
     1. [百度搜索机场](https://www.baidu.com/s?wd=%E6%9C%BA%E5%9C%BA%E8%AF%84%E6%B5%8B&rsv_spt=1&rsv_iqid=0xc4db450f00001a08&issp=1&f=8&rsv_bp=1&rsv_idx=2&ie=utf-8&tn=baiduhome_pg&rsv_enter=1&rsv_dl=tb&rsv_n=2&rsv_sug3=1&rsv_sug1=1&rsv_sug7=100&rsv_sug2=0&rsv_btype=i&inputT=457&rsv_sug4=458)
     2. select your favorite airport
     3. follows instructions provided by airports, such as register, charge, then your will get your subscription
+    4. contact me with [my github email](https://github.com/Martins3)
 4. add subscription to qv2ray:
 ![](./img/gfw2.png)
 

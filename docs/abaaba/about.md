@@ -1,11 +1,5 @@
 # 关于
 
-### 经历
-- 华中科技大学
-- 计算所
-- 龙芯中科
-- smartx
-
 ### 喜欢
 - [配 vim](https://martins3.github.io/My-Linux-Config/nvim.html)
 - 阅读（和业务无关的）源代码
@@ -16,7 +10,25 @@
 - 虚拟化
   - Qemu
 - Linux Kernel
+- Twitter / Hacker News / Reddit
+- StackOverflow
 
 ### 不喜欢
 - 写报告
 - Mac / iPhone
+
+<script src="https://giscus.app/client.js"
+        data-repo="martins3/martins3.github.io"
+        data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="
+        data-category="Show and tell"
+        data-category-id="MDE4OkRpc2N1c3Npb25DYXRlZ29yeTMyMDMzNjY4"
+        data-mapping="pathname"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-theme="light"
+        data-lang="zh-CN"
+        crossorigin="anonymous"
+        async>
+</script>
+
+本站所有文章转发 **CSDN** 将按侵权追究法律责任，其它情况随意。
