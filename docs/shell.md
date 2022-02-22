@@ -28,7 +28,7 @@ zsh 和 bash 之前语法上基本是兼容的，但是由于[oh my zsh](https:/
 | find | [fd](https://github.com/chinanf-boy/fd-zh)                                                                                                                        |
 | ssh  | [sshfs](https://github.com/libfuse/sshfs)
 
-只能感慨开源社区的强大，最近发现了一个叫 [modern unix](https://github.com/ibraheemdev/modern-unix) 的项目，总结一大堆工具, 比我上面找的更加。
+只能感慨开源社区的强大，最近发现了一个叫 [modern unix](https://github.com/ibraheemdev/modern-unix) 的项目，总结一大堆工具, 比我上面找的更加全面。
 
 - [libtree](https://github.com/ibraheemdev/modern-unix)
 

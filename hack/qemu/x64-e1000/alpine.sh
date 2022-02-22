@@ -1,4 +1,4 @@
-#!lpine.sh/bin/bash
+#!/bin/bash
 set -eu
 
 use_32bit=true
@@ -6,14 +6,14 @@ use_32bit=true
 # ----------------------- 配置区 -----------------------------------------------
 kernel_dir=/home/maritns3/core/ubuntu-linux
 if [[ $use_32bit == true ]]; then
-	kernel_dir=/home/maritns3/core/ld/guest-src/linux-4.4.142
+  kernel_dir=/home/maritns3/core/ld/guest-src/linux-4.4.142
 fi
 
 # 可以直接使用系统中安装的 QEMU, 也就是 qemu-system-x86_64
 qemu=/home/maritns3/core/kvmqemu/build/qemu-system-x86_64
 qemu=/home/maritns3/core/xqm/build/x86_64-softmmu/qemu-system-x86_64
 if [[ $use_32bit == true ]]; then
-	qemu=/home/maritns3/core/xqm/32bit/i386-softmmu/qemu-system-i386
+  qemu=/home/maritns3/core/xqm/32bit/i386-softmmu/qemu-system-i386
 fi
 initrd=/home/maritns3/core/5000/ld/DuckBuBi/image/test.cpio.gz
 # bios 镜像的地址，可以不配置，将下面的 arg_seabios 定位为 "" 就是使用默认的
@@ -43,7 +43,7 @@ arg_initrd=""
 
 arg_kernel_args="root=/dev/sda3 nokaslr console=ttyS0"
 if [[ $use_32bit == true ]]; then
-	arg_kernel_args="nokaslr console=ttyS0 root=/dev/ram rdinit=/hello.out"
+  arg_kernel_args="nokaslr console=ttyS0 root=/dev/ram rdinit=/hello.out"
 fi
 arg_kernel="--kernel ${kernel} -append \"${arg_kernel_args}\""
 arg_monitor="-monitor stdio"
@@ -51,7 +51,7 @@ arg_monitor="-monitor stdio"
 arg_monitor="-nographic"
 
 if [[ $use_32bit == true ]]; then
-	arg_monitor="-nographic"
+  arg_monitor="-nographic"
 fi
 
 # 可选参数
@@ -70,82 +70,82 @@ arg_tmp=""
 # -soundhw pcspk
 
 show_help() {
-	echo "------ 配置参数 ---------"
-	echo "kernel=${kernel}"
-	echo "qemu=${qemu}"
-	echo "seabios=${seabios}"
-	echo "alpine image url=${alpine_img_url}"
-	echo "-------------------------"
-	echo ""
-	echo "-h 展示本消息"
-	echo "-s 调试内核，启动 QEMU 部分"
-	echo "-k 调试内核，启动 gdb 部分"
-	echo "-t 使用 tcg 作为执行引擎而不是 kvm"
-	echo "-d 调试 QEMU"
-	exit 0
+  echo "------ 配置参数 ---------"
+  echo "kernel=${kernel}"
+  echo "qemu=${qemu}"
+  echo "seabios=${seabios}"
+  echo "alpine image url=${alpine_img_url}"
+  echo "-------------------------"
+  echo ""
+  echo "-h 展示本消息"
+  echo "-s 调试内核，启动 QEMU 部分"
+  echo "-k 调试内核，启动 gdb 部分"
+  echo "-t 使用 tcg 作为执行引擎而不是 kvm"
+  echo "-d 调试 QEMU"
+  exit 0
 }
 
 while getopts "dskthp" opt; do
-	case $opt in
-	d) debug_qemu="gdb --args" ;;
-	p) debug_qemu="perf record -F 1000" ;;
-	s) debug_kernel="-S -s" ;;
-	k) LAUNCH_GDB=true ;;
-	t) arg_machine="--accel tcg,thread=single" arg_cpu="" ;;
-	h) show_help ;;
-	*) exit 0 ;;
-	esac
+  case $opt in
+  d) debug_qemu="gdb --args" ;;
+  p) debug_qemu="perf record -F 1000" ;;
+  s) debug_kernel="-S -s" ;;
+  k) LAUNCH_GDB=true ;;
+  t) arg_machine="--accel tcg,thread=single" arg_cpu="" ;;
+  h) show_help ;;
+  *) exit 0 ;;
+  esac
 done
 
 sure() {
-	read -r -p "$1? (y/n)" yn
-	case $yn in
-	[Yy]*) return ;;
-	[Nn]*) exit ;;
-	*) echo "Please answer yes or no." ;;
-	esac
+  read -r -p "$1? (y/n)" yn
+  case $yn in
+  [Yy]*) return ;;
+  [Nn]*) exit ;;
+  *) echo "Please answer yes or no." ;;
+  esac
 }
 
 if [ ! -f "$iso" ]; then
-	echo "${iso} not found! Download it from ${alpine_img_url}"
-	exit 0
+  echo "${iso} not found! Download it from ${alpine_img_url}"
+  exit 0
 fi
 
 # 创建额外的两个 disk 用于测试 nvme
 if [ ! -f "$ext4_img1" ]; then
-	sure "create ${ext4_img1}"
-	dd if=/dev/null of="${ext4_img1}" bs=1M seek=100
-	mkfs.ext4 -F "${ext4_img1}"
-	exit 0
+  sure "create ${ext4_img1}"
+  dd if=/dev/null of="${ext4_img1}" bs=1M seek=100
+  mkfs.ext4 -F "${ext4_img1}"
+  exit 0
 fi
 
 if [ ! -f "$ext4_img2" ]; then
-	sure "create ${ext4_img1}"
-	dd if=/dev/null of="${ext4_img2}" bs=1M seek=100
-	mkfs.ext4 -F "${ext4_img2}"
-	exit 0
+  sure "create ${ext4_img1}"
+  dd if=/dev/null of="${ext4_img2}" bs=1M seek=100
+  mkfs.ext4 -F "${ext4_img2}"
+  exit 0
 fi
 
 if [ ! -f "${disk_img}" ]; then
-	sure "install alpine image"
-	qemu-img create -f qcow2 "${disk_img}" 10G
-	qemu-system-x86_64 \
-		-cdrom "$iso" \
-		-cpu host \
-		-hda "${disk_img}" \
-		-enable-kvm \
-		-m 2G \
-		-smp 2
-	exit 0
+  sure "install alpine image"
+  qemu-img create -f qcow2 "${disk_img}" 10G
+  qemu-system-x86_64 \
+    -cdrom "$iso" \
+    -cpu host \
+    -hda "${disk_img}" \
+    -enable-kvm \
+    -m 2G \
+    -smp 2
+  exit 0
 fi
 
 mkdir -p "${share_dir}"
 
 if [ $LAUNCH_GDB = true ]; then
-	echo "debug kernel"
-	cd ${kernel_dir}
-	gdb vmlinux -ex "target remote :1234" -ex "hbreak start_kernel" -ex "continue"
-	exit 0
+  echo "debug kernel"
+  cd ${kernel_dir}
+  gdb vmlinux -ex "target remote :1234" -ex "hbreak start_kernel" -ex "continue"
+  exit 0
 fi
 
 cmd="${debug_qemu} ${qemu} ${debug_kernel} ${arg_img} ${arg_mem} ${arg_cpu} \
@@ -157,3 +157,11 @@ eval "$cmd"
 
 # mount -t 9p -o trans=virtio,version=9p2000.L host0 /mnt/9p
 # 内核参数 : pci=nomsi
+
+# x86 上运行运行 32bit 内核
+# 1 编译出来对应的 qemu
+# mkdir 32bit
+# cd 32bit
+# ../configure --target-list=i386-softmmu
+# kernel_dir=/home/maritns3/core/ld/guest-src/linux-4.4.142 # 指向 32bit 内核
+# qemu=/home/maritns3/core/xqm/32bit/i386-softmmu/qemu-system-i386 # 使用 32bit 的 qemu

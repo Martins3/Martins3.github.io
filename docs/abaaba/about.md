@@ -1,5 +1,12 @@
 # 关于
 
+### 经历
+- 华中科技大学
+- 计算所
+- 龙芯中科
+- smartx
+
+### 喜欢
 - [配 vim](https://martins3.github.io/My-Linux-Config/nvim.html)
 - 阅读（和业务无关的）源代码
 - 英雄联盟 / 原神
@@ -9,4 +16,7 @@
 - 虚拟化
   - Qemu
 - Linux Kernel
-- 不喜欢 MAC, iPhone
+
+### 不喜欢
+- 写报告
+- Mac / iPhone

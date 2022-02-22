@@ -3,6 +3,9 @@
 <!-- vim-markdown-toc GitLab -->
 
 * [Background](#background)
+* [在此之前的工作方法](#在此之前的工作方法)
+  * [sshfs](#sshfs)
+  * [rsync](#rsync)
 * [输入法](#输入法)
 * [Neovim](#neovim)
   * [ccls](#ccls)
@@ -51,6 +54,36 @@ But neovim is not so easy because it depends on luajit which has a huge portion 
 I'm not a compiler expert, mips expert and loongarch expert, it will cost me too much time, weeks or months, to make it work.
 
 But last day I found the luajit has been ported by loonson engineers, it's time to give it a try.
+
+## 在此之前的工作方法
+
+### sshfs
+[loongson-dune](https://github.com/Martins3/loongson-dune) 就是在这种环境下写的。
+- 在 tmux 打开两个终端
+- 第一个使用 sshfs 将 3a5000 的目录挂载到 x86 本地，然后就可以直接编辑了
+- 在第二个终端 ssh 到 3a5000 上，直接 make
+
+这种方法存在两个问题:
+- 为了索引正确
+  - 因为 compile_commands.json 只能在 3a5000 上生成，生成之后，需要手动修改其路径
+  - 编写的代码如果需要和架构相关的头文件，比如 kvm 相关的，那么需要保证这些代码在 x86 上可以索引到，在 loongson-dune 的做法是直接放到 git 仓库中的
+- 只是适合小项目，loongson-dune 只有几千行，几个文件而已，大项目存在明显的延迟，比如内核。
+
+当然 sshfs 还是很有用的，比如有的项目需要编译 x86 镜像的时候。
+### rsync
+使用下面的脚本可以过滤掉被 git 忽略的文件
+```c
+#!/bin/bash
+if [ $# -eq 0 ];then
+  echo "need parameter"
+  exit 0
+fi
+echo "sync $1"
+rsync --delete -avzh --exclude='/.git' --filter="dir-merge,- .gitignore" maritns3@$ip_addr:/home/maritns3/core/ld/"$1" /home/loongson/ld
+```
+每次在 x86 编写，然后同步过去
+
+好处是没有延迟，因为本身就是在 x86 上写代码，但是会导致文件上的时间出现错乱，make 会说 skewed time 之类的。
 
 ## 输入法
 无需安装，但是按照下图配置，可以实现 shift 切换中英文输入的操作。
@@ -129,7 +162,7 @@ In order to access Google, v2ray and qv2ray are necessary.
 I don't try to port them. use another x86 to setup the network proxy and share it to 3A5000.
 
 ## lazygit
-[lazygit](https://github.com/jesseduffield/lazygit)is not available because of outdated golang toolchain.
+[lazygit](https://github.com/jesseduffield/lazygit) is not available because of outdated golang toolchain.
 so use [tig](https://jonas.github.io/tig/doc/tig.1.html) as a substitute.
 
 ## No more works in 3A5000
