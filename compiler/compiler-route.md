@@ -1,7 +1,9 @@
 # 收集的资源
 - https://c9x.me/compile/bib/ : 业余编译器玩家的阅读资源
-- https://lowlevelbits.org/how-to-learn-compilers-llvm-edition/ :
-  - 基于 LLVM 学习编译器
+- https://github.com/banach-space/llvm-tutor : 按照这个项目，改写之前的 llvm 作业。
+
+
+
 - https://github.com/vtil-project/VTIL-Core : 有一个中间表示层，但是似乎和二进制安全更加相关的
 - https://github.com/aalhour/awesome-compilers : **key** 可以学习 llvm 之类的
 - http://craftinginterpreters.com/contents.html : 清晰的教程
@@ -25,7 +27,6 @@
 - https://github.com/tboox/vm86 : 别的到时没有什么印象，但是说 ida 98% 反汇编可以直接运行，还是非常震惊的。
 - https://github.com/Microsoft/checkedc/wiki : 并不是很清楚是如何做的，这种东西不可以向 llvm 中间插入一个 pass 吗 ?
 - https://github.com/lifting-bits/remill : 人家写好的工具，将各种二进制转化为llvm bytecode
-- https://github.com/banach-space/llvm-tutor : 按照这个项目，改写之前的 llvm 作业。
 - https://oneraynyday.github.io/dev/2020/05/03/Analyzing-The-Simplest-C++-Program/#table-of-contents : blog 复写一下链接器
 - https://news.ycombinator.com/item?id=23333891 : 糟糕的面向对象
 - https://cjting.me/2020/06/07/chip8-emulator/ : chip-8 虚拟机
@@ -136,3 +137,6 @@ https://news.ycombinator.com/item?id=24170201 : 感觉完成度还可以的 浏�
 ## 工作
 - https://www.sourcebrella.com/jobs/
 - https://github.com/chai2010/chai2010/blob/master/jobs.md
+
+## 被 review 过的资源
+- [HOW TO LEARN COMPILERS: LLVM EDITION](https://lowlevelbits.org/how-to-learn-compilers-llvm-edition/) : 好吧，似乎其实 llvm 没有什么资源

@@ -48,7 +48,6 @@
 
 ## Tips
 - [How to cross Great Fire Wall](./gfw.md)
-- [shell 的一点经验之谈](./shell.md)
 - [计算机学习的一点经验之谈](./learn-cs.md)
 - [内核学习的一点经验之谈](./learn-linux-kernel.md)
 - [2021 年 vim 的 C/C++ 配置](https://martins3.github.io/My-Linux-Config/nvim.html)
