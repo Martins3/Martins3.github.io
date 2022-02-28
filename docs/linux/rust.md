@@ -5,6 +5,7 @@
 - [The Little Book of Rust Macros](https://danielkeep.github.io/tlborm/book/README.html)
 - [Rust Latam: procedural macros workshop](https://github.com/dtolnay/proc-macro-workshop) : 学一下 macro
 - [Asynchronous Programming in Rust](https://github.com/rust-lang/async-book)
+- [RustBook](https://github.com/QMHTMY/RustBook) : 中文的 rust 的书籍
 
 ## 文摘
 - [Why not Rust](https://matklad.github.io//2020/09/20/why-not-rust.html) : 指出 Rust 的一些问题，关于 C++ 和 Rust 的性能对比，理解很深刻。

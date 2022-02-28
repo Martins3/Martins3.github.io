@@ -35,6 +35,7 @@
   <!-- - 🚧 [QEMU 二进制翻译基础](./qemu/tcg.md) -->
   <!-- - 🚧 [QEMU 如何模拟 PCI 设备](./qemu/pci.md) -->
   <!-- - 🚧 [seabios 源码分析](./qemu/seabios.md) -->
+  <!-- - 🚧 [Qemu Hash table 设计](./qemu/qht.md) -->
   - [QEMU 中的线程和事件循环](./qemu/threads.md)
   - [QEMU 中的锁](./qemu/cpus.md)
   - [QEMU 如何模拟中断](./qemu/interrupt.md)

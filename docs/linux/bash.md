@@ -17,10 +17,17 @@
   * [常用工具](#常用工具)
     * [xargs](#xargs)
     * [awk](#awk)
+    * [[ ] sed](#-sed)
   * [资源和工具](#资源和工具)
 * [一些链接](#一些链接)
   * [一些资源](#一些资源)
   * [一些博客](#一些博客)
+* [shell 的一些经验之谈](#shell-的一些经验之谈)
+  * [shell 资源推荐](#shell-资源推荐)
+  * [选择好用的 shell](#选择好用的-shell)
+  * [常用命令行工具的替代](#常用命令行工具的替代)
+  * [一些小技巧](#一些小技巧)
+  * [reference](#reference)
 
 <!-- vim-markdown-toc -->
 
@@ -271,6 +278,12 @@ awk 的 BEGIN 和 END 分别表示在开始之前执行的内容。
 awk 还存在
 - Associative Arrays
 - for / if
+
+### [ ] sed
+删除掉文件夹中所有含有 TODO 的行
+```plain
+ag -l TODO | xargs sed -i '/TODO/d'
+```
 
 ## 资源和工具
 1. https://explainshell.com/
