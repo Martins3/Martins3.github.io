@@ -1,6 +1,5 @@
 ## [CppTemplateTutorial](https://github.com/wuye9036/CppTemplateTutorial)' Notes
 
-
 由于C++11正式废弃“模板导出”这一特性，因此在模板类的变量在调用成员函数的时候，需要看到完整的成员函数定义。**因此现在的模板类中的成员函数，通常都是以内联的方式实现**。 例如：
 
 ```cpp
@@ -12,7 +11,7 @@ public:
     {
         // Function body
     }
-	
+
 private:
     T* elements;
 };
@@ -20,7 +19,7 @@ private:
 
 整型也可是Template参数:
 ```cpp
-template <int i> class A 
+template <int i> class A
 {
 public:
     void foo(int)

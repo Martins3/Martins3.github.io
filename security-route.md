@@ -10,6 +10,7 @@
 - [pwn.college](https://pwn.college/) : 从安全的角度学习内核，非常不错
 - https://github.com/stong/how-to-exploit-a-double-free : 如何通过 double free 实现漏洞的利用
 - [漏洞利用的基本小技巧](https://github.com/Naetw/CTF-pwn-tips)
+- https://cybercoastal.com/cybersecurity-brief-guide-for-beginners-phishing-attacks/ : 网络钓鱼之类的原理
 
 ## 案例
 - https://www.openwall.com/lists/oss-security/2021/07/20/1 :

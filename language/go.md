@@ -29,9 +29,6 @@ As for how to learn it, I think the best !
 
 := a shothand for create a variable and assign a value to it !
 
-
-
-
 ## Interface
 It seems that go is going back to the C. No class, only struct.
 

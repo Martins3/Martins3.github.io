@@ -18,5 +18,11 @@
 - [ ] https://alexpearce.me/2021/07/managing-dotfiles-with-nix/
   - Nix 下如何管理 package 的
 
+* TODO https://ianthehenry.com/posts/how-to-learn-nix/ : 在 QEMU 中间首先测试一下，看看 zhihu 上的大佬的说明
+  [2021-12-13 Mon]
+
+## 文摘
+- [ ] https://christine.website/blog/nix-flakes-2-2022-02-27 : xe 写的
+
 [^1]: https://nixos.org/manual/nixos/stable/index.html#sec-installation
 [^2]: https://github.com/Martins3/Martins3.github.io/blob/master/hack/qemu/ubuntu/4-11.sh

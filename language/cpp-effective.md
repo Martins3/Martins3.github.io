@@ -5,16 +5,16 @@
 4. static 在 C 语言的中间的作用 和 C++ 中间的作用的如何统一的 ？
 
 5. 为了的免除 "跨编译单元之初始化的的次序问题" 使用local 对象代替的 non-local 对象
- 
+
 
 
 # 其他的一些笔记
 
 <!-- vim-markdown-toc GitLab -->
 
-- [为什么 copy move assignment 这些拷贝控制函数不用是 virtual](#为什么-copy-move-assignment-这些拷贝控制函数不用是-virtual)
-- [如何调用 parent 的 virtual function 即便是被 override](#如何调用-parent-的-virtual-function-即便是被-override)
-- [final 关键字的作用](#final-关键字的作用)
+* [为什么 copy move assignment 这些拷贝控制函数不用是 virtual](#为什么-copy-move-assignment-这些拷贝控制函数不用是-virtual)
+* [如何调用 parent 的 virtual function 即便是被 override](#如何调用-parent-的-virtual-function-即便是被-override)
+* [final 关键字的作用](#final-关键字的作用)
 
 <!-- vim-markdown-toc -->
 ## 为什么 copy move assignment 这些拷贝控制函数不用是 virtual
@@ -90,5 +90,3 @@ int main(int argc, char *argv[]) {
 
 ## final 关键字的作用
 [修饰 virtual function 或者 class](https://en.cppreference.com/w/cpp/language/final)
-
-
