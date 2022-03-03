@@ -71,7 +71,7 @@
 - [what is x86 IA-32 IA-64 x86-64 and amd64 ?](./x86-names.md)
 - [The Day](https://martins3.github.io/theday/)
 - [The Garden](http://martins3.gitee.io/garden/)
-- [言论](./abaaba/words.md)
+- [言论](./words.md)
 
 ## Guff
 - [About](./abaaba/about.md)

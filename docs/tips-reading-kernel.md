@@ -5,7 +5,7 @@
 ## QEMU
 QEMU 高效，简单，强大。
 
-使用 QEMU 调试内核网上已经有很多的文章, 比如[Booting a Custom Linux Kernel in QEMU and Debugging It With GDB](http://nickdesaulniers.github.io/blog/2018/10/24/booting-a-custom-linux-kernel-in-qemu-and-debugging-it-with-gdb/)
+使用 QEMU 调试内核网上已经有很多的文章, 比如[Booting a Custom Linux Kernel in QEMU and Debugging It With GDB](http://nickdesaulniers.github.io/blog/2018/10/24/booting-a-custom-linux-kernel-in-qemu-and-debugging-it-witcm fskkjh-gdb/)
 但是，这些都不是完整，对着教程用下来总是出问题。
 
 所以我写了一个[脚本](https://github.com/Martins3/Martins3.github.io/blob/master/hack/qemu/x64-e1000/alpine.sh), 简单解释几个点:

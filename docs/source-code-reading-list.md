@@ -27,6 +27,8 @@ inspired by https://github.com/geektutu/7days-golang
 - [leveldb](https://www.qtmuniao.com/2020/07/03/leveldb-data-structures-skip-list/) :  C++ 数据库 Jeff Dean 1000 行 :star:
     - https://medium.com/databasss/on-disk-io-part-1-flavours-of-io-8e1ace1de017 : 数据库教程
 
+<blockquote class="twitter-tweet"><p lang="en" dir="ltr">Why is 𝐑𝐞𝐝𝐢𝐬 so 𝐟𝐚𝐬𝐭? There are 3 main reasons:<br><br>1. Redis is a RAM-based data store. RAM access is at least 1000 times faster than random disk access.<br><br>2. Redis leverages IO multiplexing and single-threaded execution loop for execution efficiency. <a href="https://t.co/U1KX1GXFRt">pic.twitter.com/U1KX1GXFRt</a></p>&mdash; Alex Xu (@alexxubyte) <a href="https://twitter.com/alexxubyte/status/1498703822528544770?ref_src=twsrc%5Etfw">March 1, 2022</a></blockquote> <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+
 ## 其他
 - [eomaia](https://github.com/Martins3/Martins3.github.io/blob/master/net/eomaia.md) : 很小的项目，用于学习 Modern 的 C++ 的书写风格
 - [musl](https://github.com/Martins3/Martins3.github.io/blob/master/unix/musl.md) : 大名鼎鼎的 musl 库，写的非常清晰
