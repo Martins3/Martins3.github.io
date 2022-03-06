@@ -2,37 +2,37 @@
 
 <!-- vim-markdown-toc GitLab -->
 
-- [how interrupt are generated](#how-interrupt-are-generated)
-  - [keyboard](#keyboard)
-  - [ide](#ide)
-- [QEMU irqchip](#qemu-irqchip)
-  - [files related with irqchip](#files-related-with-irqchip)
-  - [TypeInfo related with irqchip](#typeinfo-related-with-irqchip)
-  - [irqchip select](#irqchip-select)
-- [irq routing](#irq-routing)
-  - [qemu side irq routing](#qemu-side-irq-routing)
-  - [kernel side irq routing](#kernel-side-irq-routing)
-- [irqchip internal](#irqchip-internal)
-  - [irqchip init](#irqchip-init)
-  - [tcg pic](#tcg-pic)
-  - [tcg ioapic](#tcg-ioapic)
-- [how interrupt inserted to vCPU](#how-interrupt-inserted-to-vcpu)
-- [interrupt in x86 Linux kernel](#interrupt-in-x86-linux-kernel)
-  - [code flow from first instruction](#code-flow-from-first-instruction)
-    - [start from idt](#start-from-idt)
-    - [jump to C function](#jump-to-c-function)
-    - [route to interrupt handler](#route-to-interrupt-handler)
-  - [how ioapic got programmed](#how-ioapic-got-programmed)
-- [intel manual](#intel-manual)
-  - [irr and isr](#irr-and-isr)
-  - [tpr](#tpr)
-- [Advanced topic](#advanced-topic)
-  - [how kernel switch from pic to apic](#how-kernel-switch-from-pic-to-apic)
-  - [kvmvapic](#kvmvapic)
-  - [switch intc](#switch-intc)
-  - [legacy PCI interrupt](#legacy-pci-interrupt)
-  - [interrupt flow](#interrupt-flow)
-- [references](#references)
+* [how interrupt are generated](#how-interrupt-are-generated)
+  * [keyboard](#keyboard)
+  * [ide](#ide)
+* [QEMU irqchip](#qemu-irqchip)
+  * [files related with irqchip](#files-related-with-irqchip)
+  * [TypeInfo related with irqchip](#typeinfo-related-with-irqchip)
+  * [irqchip select](#irqchip-select)
+* [irq routing](#irq-routing)
+  * [qemu side irq routing](#qemu-side-irq-routing)
+  * [kernel side irq routing](#kernel-side-irq-routing)
+* [irqchip internal](#irqchip-internal)
+  * [irqchip init](#irqchip-init)
+  * [tcg pic](#tcg-pic)
+  * [tcg ioapic](#tcg-ioapic)
+* [how interrupt inserted to vCPU](#how-interrupt-inserted-to-vcpu)
+* [interrupt in x86 Linux kernel](#interrupt-in-x86-linux-kernel)
+  * [code flow from first instruction](#code-flow-from-first-instruction)
+    * [start from idt](#start-from-idt)
+    * [jump to C function](#jump-to-c-function)
+    * [route to interrupt handler](#route-to-interrupt-handler)
+  * [how ioapic got programmed](#how-ioapic-got-programmed)
+* [intel manual](#intel-manual)
+  * [irr and isr](#irr-and-isr)
+  * [tpr](#tpr)
+* [Advanced topic](#advanced-topic)
+  * [how kernel switch from pic to apic](#how-kernel-switch-from-pic-to-apic)
+  * [kvmvapic](#kvmvapic)
+  * [switch intc](#switch-intc)
+  * [legacy PCI interrupt](#legacy-pci-interrupt)
+  * [interrupt flow](#interrupt-flow)
+* [references](#references)
 
 <!-- vim-markdown-toc -->
 本文简单地分析一下一个中断从产生到 Linux kernel 执行该中断的 interrupt handler 的过程。
@@ -585,14 +585,14 @@ Backtrace stopped: Cannot access memory at address 0xffffc90000004010
  */
 void __init idt_setup_apic_and_irq_gates(void)
 {
-	int i = FIRST_EXTERNAL_VECTOR;
-	void *entry;
+  int i = FIRST_EXTERNAL_VECTOR;
+  void *entry;
 
-	idt_setup_from_table(idt_table, apic_idts, ARRAY_SIZE(apic_idts), true);
+  idt_setup_from_table(idt_table, apic_idts, ARRAY_SIZE(apic_idts), true);
 
-	for_each_clear_bit_from(i, system_vectors, FIRST_SYSTEM_VECTOR) {
-		entry = irq_entries_start + 8 * (i - FIRST_EXTERNAL_VECTOR);
-		set_intr_gate(i, entry);
+  for_each_clear_bit_from(i, system_vectors, FIRST_SYSTEM_VECTOR) {
+    entry = irq_entries_start + 8 * (i - FIRST_EXTERNAL_VECTOR);
+    set_intr_gate(i, entry);
 }
 ```
 
@@ -612,18 +612,18 @@ void __init idt_setup_apic_and_irq_gates(void)
  * point is to mask off the bits above bit 7 because the push is sign
  * extending.
  */
-	.align 8
+  .align 8
 SYM_CODE_START(irq_entries_start)
     vector=FIRST_EXTERNAL_VECTOR // FIRST_EXTERNAL_VECTOR 是 0x20
     .rept NR_EXTERNAL_VECTORS    //
-	UNWIND_HINT_IRET_REGS
+  UNWIND_HINT_IRET_REGS
 0 :
-	.byte	0x6a, vector            // 这里就是装配
-	jmp	asm_common_interrupt
-	nop
-	/* Ensure that the above is 8 bytes max */
-	. = 0b + 8
-	vector = vector+1
+  .byte 0x6a, vector            // 这里就是装配
+  jmp asm_common_interrupt
+  nop
+  /* Ensure that the above is 8 bytes max */
+  . = 0b + 8
+  vector = vector+1
     .endr
 SYM_CODE_END(irq_entries_start)
 ```
@@ -643,32 +643,32 @@ jmp asm_common_interrupt
 在 idtentry.h 中定义了:
 ```c
 /* Device interrupts common/spurious */
-DECLARE_IDTENTRY_IRQ(X86_TRAP_OTHER,	common_interrupt);
+DECLARE_IDTENTRY_IRQ(X86_TRAP_OTHER,  common_interrupt);
 ```
 
 idtentry.h 会分别被 c 源文件和 asm 源文件 include，所以其定义也分别有两种
 ```c
-#define DECLARE_IDTENTRY_IRQ(vector, func)				\
-	asmlinkage void asm_##func(void);				\
-	asmlinkage void xen_asm_##func(void);				\
-	__visible void func(struct pt_regs *regs, unsigned long error_code)
+#define DECLARE_IDTENTRY_IRQ(vector, func)        \
+  asmlinkage void asm_##func(void);       \
+  asmlinkage void xen_asm_##func(void);       \
+  __visible void func(struct pt_regs *regs, unsigned long error_code)
 
 /* Entries for common/spurious (device) interrupts */
-#define DECLARE_IDTENTRY_IRQ(vector, func)				\
-	idtentry_irq vector func
+#define DECLARE_IDTENTRY_IRQ(vector, func)        \
+  idtentry_irq vector func
 ```
 
 在 `arch/x86/entry/entry_64.S` 中间定义了 idtentry_irq，下面分析其是如何被一步步展开的:
 ```asm
 .macro idtentry_irq vector cfunc
-	idtentry \vector asm_\cfunc \cfunc has_error_code=1
+  idtentry \vector asm_\cfunc \cfunc has_error_code=1
 .endm
 ```
 
 ```asm
 .macro idtentry vector asmsym cfunc has_error_code:req
 SYM_CODE_START(\asmsym)
-	idtentry_body \cfunc \has_error_code
+  idtentry_body \cfunc \has_error_code
 SYM_CODE_END(\asmsym)
 .endm
 ```
@@ -676,21 +676,21 @@ SYM_CODE_END(\asmsym)
 ```asm
 .macro idtentry_body cfunc has_error_code:req
 
-	call	error_entry // 其中的 error_entry 是用于保存 pt_regs 的上下文的
+  call  error_entry // 其中的 error_entry 是用于保存 pt_regs 的上下文的
 
   // 将 rsp 数值传递给 rdi
   // 根据 x86 abi 的标准, rdi 就是第二个参数，rsi 是第一个参数
   // pt_regs 正好是 x86 放到 stack 的内容
-	movq	%rsp, %rdi /* pt_regs pointer into 1st argument*/
+  movq  %rsp, %rdi /* pt_regs pointer into 1st argument*/
 
-	.if \has_error_code == 1
-		movq	ORIG_RAX(%rsp), %rsi	/* get error code into 2nd argument*/
-	.endif
+  .if \has_error_code == 1
+    movq  ORIG_RAX(%rsp), %rsi  /* get error code into 2nd argument*/
+  .endif
 
   // 当然这个函数就是 common_interrupt 了
-	call	\cfunc
+  call  \cfunc
 
-	jmp	error_return
+  jmp error_return
 .endm
 ```
 
@@ -705,10 +705,10 @@ SYM_CODE_END(\asmsym)
 将上面所有的整合起来，就相当于生成了:
 ```asm
 asm_common_interrupt
-  call	error_entry
-	movq	%rsp, %rdi /* pt_regs pointer into 1st argument*/
-	movq	ORIG_RAX(%rsp), %rsi	/* get error code into 2nd argument*/
-	call	common_interrupt
+  call  error_entry
+  movq  %rsp, %rdi /* pt_regs pointer into 1st argument*/
+  movq  ORIG_RAX(%rsp), %rsi  /* get error code into 2nd argument*/
+  call  common_interrupt
   jmp error_return
 ```
 common_interrupt 是一般设备中断的入口, 例如 ipi 以及 timer 等中断的走的入口不同。
@@ -733,8 +733,8 @@ irq_desc 同时存在 handle_irq 和 action，前者来注册 handle_edge_irq �
 
 ```c
 struct irq_desc {
-	irq_flow_handler_t	handle_irq;
-	struct irqaction	*action;	/* IRQ action list */
+  irq_flow_handler_t  handle_irq;
+  struct irqaction  *action;  /* IRQ action list */
 }
 ```
 
@@ -746,7 +746,7 @@ ioapic 的作用的输入是引脚编号，其最后会告知一个 lapic 的哪
 ```c
 struct irq_desc *irq_to_desc(unsigned int irq)
 {
-	return radix_tree_lookup(&irq_desc_tree, irq);
+  return radix_tree_lookup(&irq_desc_tree, irq);
 }
 ```
 使用 `cat /proc/interrupts` 看到的是
@@ -769,7 +769,7 @@ vector index 就是 common_interrupt 中的参数，用于索引 `vector_irq`
 vector index 实际上是 lapic 发送给 CPU 的中断数值，导致第 vector index 的 idt 被执行。
 ```c
 DEFINE_PER_CPU(vector_irq_t, vector_irq) = {
-	[0 ... NR_VECTORS - 1] = VECTOR_UNUSED,
+  [0 ... NR_VECTORS - 1] = VECTOR_UNUSED,
 };
 ```
 

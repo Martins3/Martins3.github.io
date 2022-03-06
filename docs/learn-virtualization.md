@@ -47,6 +47,7 @@ Hardware and Software Support for Virtualization : 作者[Edouard Bugnion](https
 - [mpolednik](https://mpolednik.github.io/) : redhat 工程师，vfio 之类的
 - [stefano garzarella](https://stefano-garzarella.github.io/) : redhat 工程师
 - [知乎专栏 : 河马虚拟化](https://www.zhihu.com/column/c_1040263672760885248)
+- [知乎专栏 : 虚拟化笔记](https://www.zhihu.com/column/huiweics)
 - [kraxel](https://www.kraxel.org/blog/) : 主要关于 GPU 之类的
 - [空客的 QEMU 源码分析](https://github.com/airbus-seclab/qemu_blog)
 

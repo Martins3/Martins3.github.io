@@ -58,7 +58,7 @@ export PATH=$CC_PREFIX/usr/bin:$PATH
 export LD_LIBRARY_PATH=$CC_PREFIX/usr/lib:$LD_LIBRARY_PATH
 export LD_LIBRARY_PATH=$CC_PREFIX/usr/x86_64-unknown-linux-gnu/mips64el-loongson-linux/lib/:$LD_LIBRARY_PATH
 ```
-3. 并行 make 可能对于 MIPS 出现问题，那么 
+3. 并行 make 可能对于 MIPS 出现问题，那么
 https://unix.stackexchange.com/questions/496500/how-to-get-php-7-1-to-use-libreadline-so-8
 
 ### Cross Compile standard MIPS
@@ -92,13 +92,12 @@ https://stackoverflow.com/questions/25947962/cacheline-aligned-in-smp-for-struct
 ## asmlinkage
 https://stackoverflow.com/questions/10459688/what-is-the-asmlinkage-modifier-meant-for
 
-
 ## volatile
 https://gcc.gnu.org/onlinedocs/gcc/Volatiles.html#Volatiles
 
 ## [深入理解volatile关键字](https://blog.regehr.org/archives/28)
 1. volative 到底实现了什么功能 ?
-2. 使用 volative 的位置在什么地方 ? 
+2. 使用 volative 的位置在什么地方 ?
 3. volative 需要硬件如何支持 ? 并不需要特殊指令，但是需要编译器的支持。
 
 The way the volatile connects the abstract and real semantics is this:
@@ -110,8 +109,6 @@ Historically, the connection between the abstract and actual machines was establ
 最终结论，不要使用volatile 而要使用锁。
 
 > 作者是犹他大学的教授，强的一匹。
-
-
 
 ## 如何正确的切换 gcc 版本
 https://badsimplicity.com/2019/07/10/gcc-9-and-ubuntu-kernel-error/

@@ -6,3 +6,4 @@
     - https://eli.thegreenplace.net/2011/08/25/load-time-relocation-of-shared-libraries/
 - [How linker works in llvm](https://www.youtube.com/watch?v=a5L66zguFe4)
 - MaskRay 写的一堆小例子: https://github.com/MaskRay/ElfHacks
+- https://www.lurklurk.org/linkers/linkers.html : 初学者入门

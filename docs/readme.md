@@ -56,8 +56,12 @@
 - [使用 QEMU, FlameGraph 和 bpftrace 阅读内核](./tips-reading-kernel.md)
 - [使用 Github 记录笔记和搭建 blog](./setup-github-pages.md)
 
-## Linux
+## Linux / Unix
 - [musl 阅读笔记](./linux/musl.md)
+
+## Kernel
+<!-- - [irq domain](./kernel/irq-domain.md) -->
+<!-- - [irq domain](./kernel/tty.md) -->
 
 ## Loongson
 - [X86 上阅读 Loongarch 内核](./loongarch/ccls.md)
