@@ -18,8 +18,3 @@ source ~/fuchsia/scripts/fx-env.sh
 
 - [ ] fbl
 - [ ] https://github.com/littlekernel/lk : arose my interest, oh my god, it's huge project
-
-
-
-**When coming back, fix problem below, read the kernel, it seems fairly easy to follow**
-- [ ] https://blog.csdn.net/FJDJFKDJFKDJFKD/article/details/95047147 : why we can't use ls

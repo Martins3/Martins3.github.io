@@ -14,7 +14,7 @@ Whereas the **lower part** is modified during a context switch (between two
 user processes), the **kernel part** of virtual address space always remains the same.
 
 ***The available physical memory is mapped into the address space of the kernel.***
-Accesses with virtual addresses whose offset to the start of the kernel area does not exceed the size of the available RAM are therefore *automatically* associated with physical page frames. This is practical because memory allocations in the kernel area always land in physical RAM when this scheme is adopted. 
+Accesses with virtual addresses whose offset to the start of the kernel area does not exceed the size of the available RAM are therefore *automatically* associated with physical page frames. This is practical because memory allocations in the kernel area always land in physical RAM when this scheme is adopted.
 However, there is one problem. The virtual address space portion of the kernel is necessarily smaller than the
 maximum theoretical address space of the CPU. If there is more physical RAM than can be mapped
 into the kernel address space, the kernel must resort to the *highmem* method to manage ‘‘superfluous‘‘ memory.
@@ -77,56 +77,56 @@ Each node is split into `zones` as further subdivisions of memory
 ```c
 enum zone_type {
 #ifdef CONFIG_ZONE_DMA
-	/*
-	 * ZONE_DMA is used when there are devices that are not able
-	 * to do DMA to all of addressable memory (ZONE_NORMAL). Then we
-	 * carve out the portion of memory that is needed for these devices.
-	 * The range is arch specific.
-	 *
-	 * Some examples
-	 *
-	 * Architecture		Limit
-	 * ---------------------------
-	 * parisc, ia64, sparc	<4G
-	 * s390			<2G
-	 * arm			Various
-	 * alpha		Unlimited or 0-16MB.
-	 *
-	 * i386, x86_64 and multiple other arches
-	 * 			<16M.
-	 */
-	ZONE_DMA,
+  /*
+   * ZONE_DMA is used when there are devices that are not able
+   * to do DMA to all of addressable memory (ZONE_NORMAL). Then we
+   * carve out the portion of memory that is needed for these devices.
+   * The range is arch specific.
+   *
+   * Some examples
+   *
+   * Architecture   Limit
+   * ---------------------------
+   * parisc, ia64, sparc  <4G
+   * s390     <2G
+   * arm      Various
+   * alpha    Unlimited or 0-16MB.
+   *
+   * i386, x86_64 and multiple other arches
+   *      <16M.
+   */
+  ZONE_DMA,
 #endif
 #ifdef CONFIG_ZONE_DMA32
-	/*
-	 * x86_64 needs two ZONE_DMAs because it supports devices that are
-	 * only able to do DMA to the lower 16M but also 32 bit devices that
-	 * can only do DMA areas below 4G.
-	 */
-	ZONE_DMA32,
+  /*
+   * x86_64 needs two ZONE_DMAs because it supports devices that are
+   * only able to do DMA to the lower 16M but also 32 bit devices that
+   * can only do DMA areas below 4G.
+   */
+  ZONE_DMA32,
 #endif
-	/*
-	 * Normal addressable memory is in ZONE_NORMAL. DMA operations can be
-	 * performed on pages in ZONE_NORMAL if the DMA devices support
-	 * transfers to all addressable memory.
-	 */
-	ZONE_NORMAL,
+  /*
+   * Normal addressable memory is in ZONE_NORMAL. DMA operations can be
+   * performed on pages in ZONE_NORMAL if the DMA devices support
+   * transfers to all addressable memory.
+   */
+  ZONE_NORMAL,
 #ifdef CONFIG_HIGHMEM
-	/*
-	 * A memory area that is only addressable by the kernel through
-	 * mapping portions into its own address space. This is for example
-	 * used by i386 to allow the kernel to address the memory beyond
-	 * 900MB. The kernel will set up special mappings (page
-	 * table entries on i386) for each page that the kernel needs to
-	 * access.
-	 */
-	ZONE_HIGHMEM,
+  /*
+   * A memory area that is only addressable by the kernel through
+   * mapping portions into its own address space. This is for example
+   * used by i386 to allow the kernel to address the memory beyond
+   * 900MB. The kernel will set up special mappings (page
+   * table entries on i386) for each page that the kernel needs to
+   * access.
+   */
+  ZONE_HIGHMEM,
 #endif
-	ZONE_MOVABLE,
+  ZONE_MOVABLE,
 #ifdef CONFIG_ZONE_DEVICE
-	ZONE_DEVICE,
+  ZONE_DEVICE,
 #endif
-	__MAX_NR_ZONES
+  __MAX_NR_ZONES
 
 };
 ```
@@ -158,9 +158,9 @@ The nodes are kept on a singly linked list so that the kernel can traverse them.
  */
 struct bootmem_data;
 typedef struct pglist_data {
-	struct zone node_zones[MAX_NR_ZONES];
-	struct zonelist node_zonelists[MAX_ZONELISTS];
-	int nr_zones;
+  struct zone node_zones[MAX_NR_ZONES];
+  struct zonelist node_zonelists[MAX_ZONELISTS];
+  int nr_zones;
   ...
 } pg_data_t;
 
@@ -174,10 +174,10 @@ typedef struct pglist_data {
  * for_each_online_pgdat - helper macro to iterate over all online nodes
  * @pgdat - pointer to a pg_data_t variable
  */
-#define for_each_online_pgdat(pgdat)			\
-	for (pgdat = first_online_pgdat();		\
-	     pgdat;					\
-	     pgdat = next_online_pgdat(pgdat))
+#define for_each_online_pgdat(pgdat)      \
+  for (pgdat = first_online_pgdat();    \
+       pgdat;         \
+       pgdat = next_online_pgdat(pgdat))
 /**
  * for_each_zone - helper macro to iterate over all memory zones
  * @zone - pointer to struct zone variable
@@ -185,18 +185,18 @@ typedef struct pglist_data {
  * The user only needs to declare the zone variable, for_each_zone
  * fills it in.
  */
-#define for_each_zone(zone)			        \
-	for (zone = (first_online_pgdat())->node_zones; \
-	     zone;					\
-	     zone = next_zone(zone))
+#define for_each_zone(zone)             \
+  for (zone = (first_online_pgdat())->node_zones; \
+       zone;          \
+       zone = next_zone(zone))
 
-#define for_each_populated_zone(zone)		        \
-	for (zone = (first_online_pgdat())->node_zones; \
-	     zone;					\
-	     zone = next_zone(zone))			\
-		if (!populated_zone(zone))		\
-			; /* do nothing */		\
-		else
+#define for_each_populated_zone(zone)           \
+  for (zone = (first_online_pgdat())->node_zones; \
+       zone;          \
+       zone = next_zone(zone))      \
+    if (!populated_zone(zone))    \
+      ; /* do nothing */    \
+    else
 ```
 > 两个用于迭代的函数
 
@@ -209,7 +209,7 @@ typedef struct pglist_data {
 
 extern struct pglist_data *node_data[];
 
-#define NODE_DATA(nid)		(node_data[nid])
+#define NODE_DATA(nid)    (node_data[nid])
 
 #endif
 
@@ -239,8 +239,8 @@ EXPORT_SYMBOL(contig_page_data);
  * here to avoid dereferences into large structures and lookups of tables
  */
 struct zoneref {
-	struct zone *zone;	/* Pointer to actual zone */
-	int zone_idx;		/* zone_idx(zoneref->zone) */
+  struct zone *zone;  /* Pointer to actual zone */
+  int zone_idx;   /* zone_idx(zoneref->zone) */
 };
 
 /*
@@ -253,12 +253,12 @@ struct zoneref {
  * of the entry being read. Helper functions to access information given
  * a struct zoneref are
  *
- * zonelist_zone()	- Return the struct zone * for an entry in _zonerefs
- * zonelist_zone_idx()	- Return the index of the zone for an entry
- * zonelist_node_idx()	- Return the index of the node for an entry
+ * zonelist_zone()  - Return the struct zone * for an entry in _zonerefs
+ * zonelist_zone_idx()  - Return the index of the zone for an entry
+ * zonelist_node_idx()  - Return the index of the node for an entry
  */
 struct zonelist {
-	struct zoneref _zonerefs[MAX_ZONES_PER_ZONELIST + 1];
+  struct zoneref _zonerefs[MAX_ZONES_PER_ZONELIST + 1];
 };
 ```
 
@@ -274,25 +274,25 @@ If more than one node can be present on the system, the kernel keeps a bitmap th
 一些辅助函数:
 ```c
 static inline void node_set_state(int node, enum node_states state) {
-	__node_set(node, &node_states[state]);
+  __node_set(node, &node_states[state]);
 }
 
 
 static __always_inline void __node_set(int node, volatile nodemask_t *dstp) {
-	set_bit(node, dstp->bits);
+  set_bit(node, dstp->bits);
 }
 
 
 set_bit(long nr, volatile unsigned long *addr) {
-	if (IS_IMMEDIATE(nr)) {
-		asm volatile(LOCK_PREFIX "orb %1,%0"
-			: CONST_MASK_ADDR(nr, addr)
-			: "iq" ((u8)CONST_MASK(nr))
-			: "memory");
-	} else {
-		asm volatile(LOCK_PREFIX "bts %1,%0"
-			: BITOP_ADDR(addr) : "Ir" (nr) : "memory");
-	}
+  if (IS_IMMEDIATE(nr)) {
+    asm volatile(LOCK_PREFIX "orb %1,%0"
+      : CONST_MASK_ADDR(nr, addr)
+      : "iq" ((u8)CONST_MASK(nr))
+      : "memory");
+  } else {
+    asm volatile(LOCK_PREFIX "bts %1,%0"
+      : BITOP_ADDR(addr) : "Ir" (nr) : "memory");
+  }
 }
 ```
 >  除非理解下面的`node_states`中间内容是什么!
@@ -302,18 +302,18 @@ set_bit(long nr, volatile unsigned long *addr) {
  * Array of node states.
  */
 nodemask_t node_states[NR_NODE_STATES] __read_mostly = {
-	[N_POSSIBLE] = NODE_MASK_ALL,
-	[N_ONLINE] = { { [0] = 1UL } },
+  [N_POSSIBLE] = NODE_MASK_ALL,
+  [N_ONLINE] = { { [0] = 1UL } },
 #ifndef CONFIG_NUMA
-	[N_NORMAL_MEMORY] = { { [0] = 1UL } },
+  [N_NORMAL_MEMORY] = { { [0] = 1UL } },
 #ifdef CONFIG_HIGHMEM
-	[N_HIGH_MEMORY] = { { [0] = 1UL } },
+  [N_HIGH_MEMORY] = { { [0] = 1UL } },
 #endif
 #ifdef CONFIG_MOVABLE_NODE
-	[N_MEMORY] = { { [0] = 1UL } },
+  [N_MEMORY] = { { [0] = 1UL } },
 #endif
-	[N_CPU] = { { [0] = 1UL } },
-#endif	/* NUMA */
+  [N_CPU] = { { [0] = 1UL } },
+#endif  /* NUMA */
 };
 EXPORT_SYMBOL(node_states);
 
@@ -322,9 +322,9 @@ typedef struct { DECLARE_BITMAP(bits, MAX_NUMNODES); } nodemask_t;
 
 
 #define DECLARE_BITMAP(name,bits) \
-	unsigned long name[BITS_TO_LONGS(bits)]
+  unsigned long name[BITS_TO_LONGS(bits)]
 
-#define BITS_TO_LONGS(nr)	DIV_ROUND_UP(nr, BITS_PER_BYTE * sizeof(long))
+#define BITS_TO_LONGS(nr) DIV_ROUND_UP(nr, BITS_PER_BYTE * sizeof(long))
 ```
 
 > 本节的内容，正如NUMA的架构，从node -> zone -> page frame 逐级分析的.
@@ -339,39 +339,35 @@ typedef struct { DECLARE_BITMAP(bits, MAX_NUMNODES); } nodemask_t;
 
 * 处理watermark
 ```c
-	/* zone watermarks, access with *_wmark_pages(zone) macros */
-	unsigned long _watermark[NR_WMARK];
-	unsigned long watermark_boost;
+  /* zone watermarks, access with *_wmark_pages(zone) macros */
+  unsigned long _watermark[NR_WMARK];
+  unsigned long watermark_boost;
 
 enum zone_watermarks {
-	WMARK_MIN,
-	WMARK_LOW,
-	WMARK_HIGH,
-	NR_WMARK
+  WMARK_MIN,
+  WMARK_LOW,
+  WMARK_HIGH,
+  NR_WMARK
 };
 ```
 
 * 预存一些内存
 ```c
-	/*
-	 * We don't know if the memory that we're going to allocate will be
-	 * freeable or/and it will be released eventually, so to avoid totally
-	 * wasting several GB of ram we must reserve some of the lower zone
-	 * memory (otherwise we risk to run OOM on the lower zones despite
-	 * there being tons of freeable ram on the higher zones).  This array is
-	 * recalculated at runtime if the sysctl_lowmem_reserve_ratio sysctl
-	 * changes.
-	 */
-	long lowmem_reserve[MAX_NR_ZONES];
+  /*
+   * We don't know if the memory that we're going to allocate will be
+   * freeable or/and it will be released eventually, so to avoid totally
+   * wasting several GB of ram we must reserve some of the lower zone
+   * memory (otherwise we risk to run OOM on the lower zones despite
+   * there being tons of freeable ram on the higher zones).  This array is
+   * recalculated at runtime if the sysctl_lowmem_reserve_ratio sysctl
+   * changes.
+   */
+  long lowmem_reserve[MAX_NR_ZONES];
 ```
 > 1. 为毛 zone 被划分　low 和 high 的部分, 此处的higher zones 和 high memory 有什么关系 ? (第四条说: 应该没有什么关系吧
-> 2. 为什么是lowmeme_reserve　而不是 highmem_reserve
+> 2. 为什么是 lowmeme_reserve　而不是 highmem_reserve
 > 3. 设置 reserve　难道不就是内存的浪费吗?
 > 4. 这是zone 的描述，high memory , DMA , NORMAL 本身就是zone，也就是说low 指的是zone 内部也划分low 和 high
-
-https://blog.csdn.net/kickxxx/article/details/8835733
-> 做出部分解释
-> 但是无法理解为什么内存分配首先是从high到low 的，为什么DMA 的内存都可以被用来分配
 
 * pageset 用于管理那些被cache　视为hot page 和 cold page 的
 
@@ -379,23 +375,23 @@ https://blog.csdn.net/kickxxx/article/details/8835733
 struct per_cpu_pageset __percpu *pageset;
 
 struct per_cpu_pages {
-	int count;		/* number of pages in the list */
-	int high;		/* high watermark, emptying needed */
-	int batch;		/* chunk size for buddy add/remove */
+  int count;    /* number of pages in the list */
+  int high;   /* high watermark, emptying needed */
+  int batch;    /* chunk size for buddy add/remove */
 
-	/* Lists of pages, one per migrate type stored on the pcp-lists */
-	struct list_head lists[MIGRATE_PCPTYPES];
+  /* Lists of pages, one per migrate type stored on the pcp-lists */
+  struct list_head lists[MIGRATE_PCPTYPES];
 };
 
 struct per_cpu_pageset {
-	struct per_cpu_pages pcp;
+  struct per_cpu_pages pcp;
 #ifdef CONFIG_NUMA
-	s8 expire;
-	u16 vm_numa_stat_diff[NR_VM_NUMA_STAT_ITEMS];
+  s8 expire;
+  u16 vm_numa_stat_diff[NR_VM_NUMA_STAT_ITEMS];
 #endif
 #ifdef CONFIG_SMP
-	s8 stat_threshold;
-	s8 vm_stat_diff[NR_VM_ZONE_STAT_ITEMS];
+  s8 stat_threshold;
+  s8 vm_stat_diff[NR_VM_ZONE_STAT_ITEMS];
 #endif
 };
 ```
@@ -405,8 +401,8 @@ Each array element stands for contiguous memory areas of a fixed size. Managemen
 memory pages contained in each area is performed starting from `free_area`.
 ```c
 struct free_area {
-	struct list_head	free_list[MIGRATE_TYPES];
-	unsigned long		nr_free;
+  struct list_head  free_list[MIGRATE_TYPES];
+  unsigned long   nr_free;
 };
 ```
 
@@ -415,47 +411,47 @@ struct free_area {
 * `zone_start_pfn`
 
 * `spanned_pages` specifies the total number of pages in the zone. However, not all need be usable
-since there may be small holes in the zone as already mentioned. 
+since there may be small holes in the zone as already mentioned.
 
 ```c
-	/*
-	 * spanned_pages is the total pages spanned by the zone, including
-	 * holes, which is calculated as:
-	 * 	spanned_pages = zone_end_pfn - zone_start_pfn;
-	 *
-	 * present_pages is physical pages existing within the zone, which
-	 * is calculated as:
-	 *	present_pages = spanned_pages - absent_pages(pages in holes);
-	 *
-	 * managed_pages is present pages managed by the buddy system, which
-	 * is calculated as (reserved_pages includes pages allocated by the
-	 * bootmem allocator):
-	 *	managed_pages = present_pages - reserved_pages;
-	 *
-	 * So present_pages may be used by memory hotplug or memory power
-	 * management logic to figure out unmanaged pages by checking
-	 * (present_pages - managed_pages). And managed_pages should be used
-	 * by page allocator and vm scanner to calculate all kinds of watermarks
-	 * and thresholds.
-	 *
-	 * Locking rules:
-	 *
-	 * zone_start_pfn and spanned_pages are protected by span_seqlock.
-	 * It is a seqlock because it has to be read outside of zone->lock,
-	 * and it is done in the main allocator path.  But, it is written
-	 * quite infrequently.
-	 *
-	 * The span_seq lock is declared along with zone->lock because it is
-	 * frequently read in proximity to zone->lock.  It's good to
-	 * give them a chance of being in the same cacheline.
-	 *
-	 * Write access to present_pages at runtime should be protected by
-	 * mem_hotplug_begin/end(). Any reader who can't tolerant drift of
-	 * present_pages should get_online_mems() to get a stable value.
-	 */
-	atomic_long_t		managed_pages;
-	unsigned long		spanned_pages;
-	unsigned long		present_pages;
+  /*
+   * spanned_pages is the total pages spanned by the zone, including
+   * holes, which is calculated as:
+   *  spanned_pages = zone_end_pfn - zone_start_pfn;
+   *
+   * present_pages is physical pages existing within the zone, which
+   * is calculated as:
+   *  present_pages = spanned_pages - absent_pages(pages in holes);
+   *
+   * managed_pages is present pages managed by the buddy system, which
+   * is calculated as (reserved_pages includes pages allocated by the
+   * bootmem allocator):
+   *  managed_pages = present_pages - reserved_pages;
+   *
+   * So present_pages may be used by memory hotplug or memory power
+   * management logic to figure out unmanaged pages by checking
+   * (present_pages - managed_pages). And managed_pages should be used
+   * by page allocator and vm scanner to calculate all kinds of watermarks
+   * and thresholds.
+   *
+   * Locking rules:
+   *
+   * zone_start_pfn and spanned_pages are protected by span_seqlock.
+   * It is a seqlock because it has to be read outside of zone->lock,
+   * and it is done in the main allocator path.  But, it is written
+   * quite infrequently.
+   *
+   * The span_seq lock is declared along with zone->lock because it is
+   * frequently read in proximity to zone->lock.  It's good to
+   * give them a chance of being in the same cacheline.
+   *
+   * Write access to present_pages at runtime should be protected by
+   * mem_hotplug_begin/end(). Any reader who can't tolerant drift of
+   * present_pages should get_online_mems() to get a stable value.
+   */
+  atomic_long_t   managed_pages;
+  unsigned long   spanned_pages;
+  unsigned long   present_pages;
 ```
 > 到底我都懂，但是为毛　zone 中间含有hole 啊?
 
@@ -480,29 +476,29 @@ Filling the watermarks in the data structure is handled by `init_per_zone_pages_
  * we want it large (64MB max).  But it is not linear, because network
  * bandwidth does not increase linearly with machine size.  We use
  *
- *	min_free_kbytes = 4 * sqrt(lowmem_kbytes), for better accuracy:
- *	min_free_kbytes = sqrt(lowmem_kbytes * 16)
+ *  min_free_kbytes = 4 * sqrt(lowmem_kbytes), for better accuracy:
+ *  min_free_kbytes = sqrt(lowmem_kbytes * 16)
  *
  * which yields
  *
- * 16MB:	512k
- * 32MB:	724k
- * 64MB:	1024k
- * 128MB:	1448k
- * 256MB:	2048k
- * 512MB:	2896k
- * 1024MB:	4096k
- * 2048MB:	5792k
- * 4096MB:	8192k
- * 8192MB:	11584k
- * 16384MB:	16384k
+ * 16MB:  512k
+ * 32MB:  724k
+ * 64MB:  1024k
+ * 128MB: 1448k
+ * 256MB: 2048k
+ * 512MB: 2896k
+ * 1024MB:  4096k
+ * 2048MB:  5792k
+ * 4096MB:  8192k
+ * 8192MB:  11584k
+ * 16384MB: 16384k
  */
 int __meminit init_per_zone_wmark_min(void)
 {
 ...
-	setup_per_zone_wmarks();
-	refresh_zone_stat_thresholds();
-	setup_per_zone_lowmem_reserve();
+  setup_per_zone_wmarks();
+  refresh_zone_stat_thresholds();
+  setup_per_zone_lowmem_reserve();
 ...
 }
 ```
@@ -543,148 +539,148 @@ a guideline to the number of pages to be added in a single pass.
  * and lru list pointers also.
  */
 struct page {
-	unsigned long flags;		/* Atomic flags, some possibly
-					 * updated asynchronously */
-	/*
-	 * Five words (20/40 bytes) are available in this union.
-	 * WARNING: bit 0 of the first word is used for PageTail(). That
-	 * means the other users of this union MUST NOT use the bit to
-	 * avoid collision and false-positive PageTail().
-	 */
-	union {
-		struct {	/* Page cache and anonymous pages */
-			/**
-			 * @lru: Pageout list, eg. active_list protected by
-			 * pgdat->lru_lock.  Sometimes used as a generic list
-			 * by the page owner.
-			 */
-			struct list_head lru;
-			/* See page-flags.h for PAGE_MAPPING_FLAGS */
-			struct address_space *mapping;
-			pgoff_t index;		/* Our offset within mapping. */
-			/**
-			 * @private: Mapping-private opaque data.
-			 * Usually used for buffer_heads if PagePrivate.
-			 * Used for swp_entry_t if PageSwapCache.
-			 * Indicates order in the buddy system if PageBuddy.
-			 */
-			unsigned long private;
-		};
-		struct {	/* page_pool used by netstack */
-			/**
-			 * @dma_addr: might require a 64-bit value even on
-			 * 32-bit architectures.
-			 */
-			dma_addr_t dma_addr;
-		};
-		struct {	/* slab, slob and slub */
-			union {
-				struct list_head slab_list;	/* uses lru */
-				struct {	/* Partial pages */
-					struct page *next;
+  unsigned long flags;    /* Atomic flags, some possibly
+           * updated asynchronously */
+  /*
+   * Five words (20/40 bytes) are available in this union.
+   * WARNING: bit 0 of the first word is used for PageTail(). That
+   * means the other users of this union MUST NOT use the bit to
+   * avoid collision and false-positive PageTail().
+   */
+  union {
+    struct {  /* Page cache and anonymous pages */
+      /**
+       * @lru: Pageout list, eg. active_list protected by
+       * pgdat->lru_lock.  Sometimes used as a generic list
+       * by the page owner.
+       */
+      struct list_head lru;
+      /* See page-flags.h for PAGE_MAPPING_FLAGS */
+      struct address_space *mapping;
+      pgoff_t index;    /* Our offset within mapping. */
+      /**
+       * @private: Mapping-private opaque data.
+       * Usually used for buffer_heads if PagePrivate.
+       * Used for swp_entry_t if PageSwapCache.
+       * Indicates order in the buddy system if PageBuddy.
+       */
+      unsigned long private;
+    };
+    struct {  /* page_pool used by netstack */
+      /**
+       * @dma_addr: might require a 64-bit value even on
+       * 32-bit architectures.
+       */
+      dma_addr_t dma_addr;
+    };
+    struct {  /* slab, slob and slub */
+      union {
+        struct list_head slab_list; /* uses lru */
+        struct {  /* Partial pages */
+          struct page *next;
 #ifdef CONFIG_64BIT
-					int pages;	/* Nr of pages left */
-					int pobjects;	/* Approximate count */
+          int pages;  /* Nr of pages left */
+          int pobjects; /* Approximate count */
 #else
-					short int pages;
-					short int pobjects;
+          short int pages;
+          short int pobjects;
 #endif
-				};
-			};
-			struct kmem_cache *slab_cache; /* not slob */
-			/* Double-word boundary */
-			void *freelist;		/* first free object */
-			union {
-				void *s_mem;	/* slab: first object */
-				unsigned long counters;		/* SLUB */
-				struct {			/* SLUB */
-					unsigned inuse:16;
-					unsigned objects:15;
-					unsigned frozen:1;
-				};
-			};
-		};
-		struct {	/* Tail pages of compound page */
-			unsigned long compound_head;	/* Bit zero is set */
+        };
+      };
+      struct kmem_cache *slab_cache; /* not slob */
+      /* Double-word boundary */
+      void *freelist;   /* first free object */
+      union {
+        void *s_mem;  /* slab: first object */
+        unsigned long counters;   /* SLUB */
+        struct {      /* SLUB */
+          unsigned inuse:16;
+          unsigned objects:15;
+          unsigned frozen:1;
+        };
+      };
+    };
+    struct {  /* Tail pages of compound page */
+      unsigned long compound_head;  /* Bit zero is set */
 
-			/* First tail page only */
-			unsigned char compound_dtor;
-			unsigned char compound_order;
-			atomic_t compound_mapcount;
-		};
-		struct {	/* Second tail page of compound page */
-			unsigned long _compound_pad_1;	/* compound_head */
-			unsigned long _compound_pad_2;
-			struct list_head deferred_list;
-		};
-		struct {	/* Page table pages */
-			unsigned long _pt_pad_1;	/* compound_head */
-			pgtable_t pmd_huge_pte; /* protected by page->ptl */
-			unsigned long _pt_pad_2;	/* mapping */
-			union {
-				struct mm_struct *pt_mm; /* x86 pgds only */
-				atomic_t pt_frag_refcount; /* powerpc */
-			};
+      /* First tail page only */
+      unsigned char compound_dtor;
+      unsigned char compound_order;
+      atomic_t compound_mapcount;
+    };
+    struct {  /* Second tail page of compound page */
+      unsigned long _compound_pad_1;  /* compound_head */
+      unsigned long _compound_pad_2;
+      struct list_head deferred_list;
+    };
+    struct {  /* Page table pages */
+      unsigned long _pt_pad_1;  /* compound_head */
+      pgtable_t pmd_huge_pte; /* protected by page->ptl */
+      unsigned long _pt_pad_2;  /* mapping */
+      union {
+        struct mm_struct *pt_mm; /* x86 pgds only */
+        atomic_t pt_frag_refcount; /* powerpc */
+      };
 #if ALLOC_SPLIT_PTLOCKS
-			spinlock_t *ptl;
+      spinlock_t *ptl;
 #else
-			spinlock_t ptl;
+      spinlock_t ptl;
 #endif
-		};
-		struct {	/* ZONE_DEVICE pages */
-			/** @pgmap: Points to the hosting device page map. */
-			struct dev_pagemap *pgmap;
-			unsigned long hmm_data;
-			unsigned long _zd_pad_1;	/* uses mapping */
-		};
+    };
+    struct {  /* ZONE_DEVICE pages */
+      /** @pgmap: Points to the hosting device page map. */
+      struct dev_pagemap *pgmap;
+      unsigned long hmm_data;
+      unsigned long _zd_pad_1;  /* uses mapping */
+    };
 
-		/** @rcu_head: You can use this to free a page by RCU. */
-		struct rcu_head rcu_head;
-	};
+    /** @rcu_head: You can use this to free a page by RCU. */
+    struct rcu_head rcu_head;
+  };
 
-	union {		/* This union is 4 bytes in size. */
-		/*
-		 * If the page can be mapped to userspace, encodes the number
-		 * of times this page is referenced by a page table.
-		 */
-		atomic_t _mapcount;
+  union {   /* This union is 4 bytes in size. */
+    /*
+     * If the page can be mapped to userspace, encodes the number
+     * of times this page is referenced by a page table.
+     */
+    atomic_t _mapcount;
 
-		/*
-		 * If the page is neither PageSlab nor mappable to userspace,
-		 * the value stored here may help determine what this page
-		 * is used for.  See page-flags.h for a list of page types
-		 * which are currently stored here.
-		 */
-		unsigned int page_type;
+    /*
+     * If the page is neither PageSlab nor mappable to userspace,
+     * the value stored here may help determine what this page
+     * is used for.  See page-flags.h for a list of page types
+     * which are currently stored here.
+     */
+    unsigned int page_type;
 
-		unsigned int active;		/* SLAB */
-		int units;			/* SLOB */
-	};
+    unsigned int active;    /* SLAB */
+    int units;      /* SLOB */
+  };
 
-	/* Usage count. *DO NOT USE DIRECTLY*. See page_ref.h */
-	atomic_t _refcount;
+  /* Usage count. *DO NOT USE DIRECTLY*. See page_ref.h */
+  atomic_t _refcount;
 
 #ifdef CONFIG_MEMCG
-	struct mem_cgroup *mem_cgroup;
+  struct mem_cgroup *mem_cgroup;
 #endif
 
-	/*
-	 * On machines where all RAM is mapped into kernel address space,
-	 * we can simply calculate the virtual address. On machines with
-	 * highmem some memory is mapped into kernel virtual memory
-	 * dynamically, so we need a place to store that address.
-	 * Note that this field could be 16 bits on x86 ... ;)
-	 *
-	 * Architectures with slow multiplication can define
-	 * WANT_PAGE_VIRTUAL in asm/page.h
-	 */
+  /*
+   * On machines where all RAM is mapped into kernel address space,
+   * we can simply calculate the virtual address. On machines with
+   * highmem some memory is mapped into kernel virtual memory
+   * dynamically, so we need a place to store that address.
+   * Note that this field could be 16 bits on x86 ... ;)
+   *
+   * Architectures with slow multiplication can define
+   * WANT_PAGE_VIRTUAL in asm/page.h
+   */
 #if defined(WANT_PAGE_VIRTUAL)
-	void *virtual;			/* Kernel virtual address (NULL if
-					   not kmapped, ie. highmem) */
+  void *virtual;      /* Kernel virtual address (NULL if
+             not kmapped, ie. highmem) */
 #endif /* WANT_PAGE_VIRTUAL */
 
 #ifdef LAST_CPUPID_NOT_IN_PAGE_FLAGS
-	int _last_cpupid;
+  int _last_cpupid;
 #endif
 } _struct_page_alignment;
 
@@ -698,13 +694,13 @@ struct page {
 > 3. union ----> 4byte ---> 标志信息
 > 4. union ----> 4byte ---> 具体用途信息
 > ```c
->      struct {	/* Page cache and anonymous pages */
->      struct {	/* page_pool used by netstack */
->      struct {	/* slab, slob and slub */
->      struct {	/* Tail pages of compound page */
->      struct {	/* Second tail page of compound page */
->      struct {	/* Page table pages */
->      struct {	/* ZONE_DEVICE pages */
+>      struct { /* Page cache and anonymous pages */
+>      struct { /* page_pool used by netstack */
+>      struct { /* slab, slob and slub */
+>      struct { /* Tail pages of compound page */
+>      struct { /* Second tail page of compound page */
+>      struct { /* Page table pages */
+>      struct { /* ZONE_DEVICE pages */
 >  ```
 
 > FIXME 文章描述其中部分变量，但是实际上已经发生了变化
@@ -712,7 +708,7 @@ struct page {
 **Architecture-Independent Page Flags**
 Not only are the individual flags defined with the help of the pre-processor in `page-flags.h`, but also
 macros are generated to set, delete, and query the flags. In doing so, the kernel conforms to a universal
-naming scheme; 
+naming scheme;
 
 Which page flags are available? The following list includes the most important flags (again, their meanings become clear in later chapters):
 
@@ -809,13 +805,13 @@ functions provided by the kernel are of particular interest for us:
 void wait_on_page_locked(struct page *page);
 void wait_on_page_writeback(struct page *page)
 
-/* 
+/*
  * Wait for a page to complete writeback
  */
 static inline void wait_on_page_writeback(struct page *page)
 {
-	if (PageWriteback(page))
-		wait_on_page_bit(page, PG_writeback);
+  if (PageWriteback(page))
+    wait_on_page_bit(page, PG_writeback);
 }
 ```
 
@@ -831,7 +827,7 @@ bit. Their names follow a certain pattern:
 ## 3.3 Page Tables
 The structures discussed so far
 serve to describe the structure of RAM memory (partitioning into **nodes** and **zones**) and to specify the
-number and state (used or free) of the page frames contained. 
+number and state (used or free) of the page frames contained.
 
 1. Page tables are used to make a uniform virtual address space available to each process; the applications see this space as a contiguous memory area.
 2. The tables also map the virtual pages used into RAM, thus supporting the implementation of shared memory (memory shared by several processes at the same time) and the swapping-out of pages
@@ -879,7 +875,7 @@ calculations time and time again. The variables are defined as follows:
 > 定义被划分到两个文件中间了 `page_types.h` 以及 `pagetable_64_types.h`
 
 **Format of Page Tables**
-The standard functions to analyze page table entries are listed in ***Table 3-2***. 
+The standard functions to analyze page table entries are listed in ***Table 3-2***.
 
 **PTE-Specific Entries**
 Each final entry in the page table not only yields a pointer to the memory location of the page, but also
@@ -890,26 +886,26 @@ elements are found in most CPUs supported by the Linux kernel:
 > 1. 注意page struct 中间的flag 和　此处的flag 的区别
 
 ```c
-#define _PAGE_BIT_PRESENT	0	/* is present */
-#define _PAGE_BIT_RW		1	/* writeable */
-#define _PAGE_BIT_USER		2	/* userspace addressable */
-#define _PAGE_BIT_PWT		3	/* page write through */
-#define _PAGE_BIT_PCD		4	/* page cache disabled */
-#define _PAGE_BIT_ACCESSED	5	/* was accessed (raised by CPU) */
-#define _PAGE_BIT_DIRTY		6	/* was written to (raised by CPU) */
-#define _PAGE_BIT_PSE		7	/* 4 MB (or 2MB) page */
-#define _PAGE_BIT_PAT		7	/* on 4KB pages */
-#define _PAGE_BIT_GLOBAL	8	/* Global TLB entry PPro+ */
-#define _PAGE_BIT_SOFTW1	9	/* available for programmer */
-#define _PAGE_BIT_SOFTW2	10	/* " */
-#define _PAGE_BIT_SOFTW3	11	/* " */
-#define _PAGE_BIT_PAT_LARGE	12	/* On 2MB or 1GB pages */
-#define _PAGE_BIT_SOFTW4	58	/* available for programmer */
-#define _PAGE_BIT_PKEY_BIT0	59	/* Protection Keys, bit 1/4 */
-#define _PAGE_BIT_PKEY_BIT1	60	/* Protection Keys, bit 2/4 */
-#define _PAGE_BIT_PKEY_BIT2	61	/* Protection Keys, bit 3/4 */
-#define _PAGE_BIT_PKEY_BIT3	62	/* Protection Keys, bit 4/4 */
-#define _PAGE_BIT_NX		63	/* No execute: only valid after cpuid check */
+#define _PAGE_BIT_PRESENT 0 /* is present */
+#define _PAGE_BIT_RW    1 /* writeable */
+#define _PAGE_BIT_USER    2 /* userspace addressable */
+#define _PAGE_BIT_PWT   3 /* page write through */
+#define _PAGE_BIT_PCD   4 /* page cache disabled */
+#define _PAGE_BIT_ACCESSED  5 /* was accessed (raised by CPU) */
+#define _PAGE_BIT_DIRTY   6 /* was written to (raised by CPU) */
+#define _PAGE_BIT_PSE   7 /* 4 MB (or 2MB) page */
+#define _PAGE_BIT_PAT   7 /* on 4KB pages */
+#define _PAGE_BIT_GLOBAL  8 /* Global TLB entry PPro+ */
+#define _PAGE_BIT_SOFTW1  9 /* available for programmer */
+#define _PAGE_BIT_SOFTW2  10  /* " */
+#define _PAGE_BIT_SOFTW3  11  /* " */
+#define _PAGE_BIT_PAT_LARGE 12  /* On 2MB or 1GB pages */
+#define _PAGE_BIT_SOFTW4  58  /* available for programmer */
+#define _PAGE_BIT_PKEY_BIT0 59  /* Protection Keys, bit 1/4 */
+#define _PAGE_BIT_PKEY_BIT1 60  /* Protection Keys, bit 2/4 */
+#define _PAGE_BIT_PKEY_BIT2 61  /* Protection Keys, bit 3/4 */
+#define _PAGE_BIT_PKEY_BIT3 62  /* Protection Keys, bit 4/4 */
+#define _PAGE_BIT_NX    63  /* No execute: only valid after cpuid check */
 ```
 
 A summary of all functions provided to manipulate PTE entries can be found in ***Table 3-3***.
@@ -923,7 +919,7 @@ A summary of all functions provided to manipulate PTE entries can be found in **
 
 #### 3.3.2 Creating and Manipulating Entries
 1. mk_pte
-2. pte_page 
+2. pte_page
 3. `*_alloc`
 4. `*_free`
 5. `set_*`
@@ -960,7 +956,7 @@ of `NODE_DATA` is now even simpler.
 struct pglist_data *node_data[MAX_NUMNODES] __read_mostly;
 EXPORT_SYMBOL(node_data);
 
-#define NODE_DATA(nid)	(node_data[nid])
+#define NODE_DATA(nid)  (node_data[nid])
 ```
 
 The kernel can also rely on the fact that the architecture-dependent initialization code has set the
@@ -1014,11 +1010,11 @@ invokes `build_zonelists` for each NUMA node in the system.
 static int __build_all_zonelists(void *data)
 {
 ...
-	for_each_online_node(nid) {
-		pg_data_t *pgdat = NODE_DATA(nid);
+  for_each_online_node(nid) {
+    pg_data_t *pgdat = NODE_DATA(nid);
 
-		build_zonelists(pgdat);
-	}
+    build_zonelists(pgdat);
+  }
 ...
 }
 ```
@@ -1054,41 +1050,41 @@ zone in the zonelist array in which the fallback list is held.
 
 static void build_zonelists(pg_data_t *pgdat)
 {
-	static int node_order[MAX_NUMNODES];
-	int node, load, nr_nodes = 0;
-	nodemask_t used_mask;
-	int local_node, prev_node;
+  static int node_order[MAX_NUMNODES];
+  int node, load, nr_nodes = 0;
+  nodemask_t used_mask;
+  int local_node, prev_node;
 
-	/* NUMA-aware ordering of nodes */
-	local_node = pgdat->node_id;
-	load = nr_online_nodes;
-	prev_node = local_node;
-	nodes_clear(used_mask);
+  /* NUMA-aware ordering of nodes */
+  local_node = pgdat->node_id;
+  load = nr_online_nodes;
+  prev_node = local_node;
+  nodes_clear(used_mask);
 
-	memset(node_order, 0, sizeof(node_order));
-	while ((node = find_next_best_node(local_node, &used_mask)) >= 0) {
-		/*
-		 * We don't want to pressure a particular node.
-		 * So adding penalty to the first node in same
-		 * distance group to make it round-robin.
-		 */
-		if (node_distance(local_node, node) !=
-		    node_distance(local_node, prev_node))
-			node_load[node] = load;
+  memset(node_order, 0, sizeof(node_order));
+  while ((node = find_next_best_node(local_node, &used_mask)) >= 0) {
+    /*
+     * We don't want to pressure a particular node.
+     * So adding penalty to the first node in same
+     * distance group to make it round-robin.
+     */
+    if (node_distance(local_node, node) !=
+        node_distance(local_node, prev_node))
+      node_load[node] = load;
 
-		node_order[nr_nodes++] = node;
-		prev_node = node;
-		load--;
-	}
+    node_order[nr_nodes++] = node;
+    prev_node = node;
+    load--;
+  }
 
-	build_zonelists_in_node_order(pgdat, node_order, nr_nodes);
-	build_thisnode_zonelists(pgdat);
+  build_zonelists_in_node_order(pgdat, node_order, nr_nodes);
+  build_thisnode_zonelists(pgdat);
 }
 ```
 
 The kernel uses an array of **zonelist** elements in `pg_data_t` to represent the described hierarchy as a
 data structure.
-> 
+>
 
 #### 3.4.2 Architecture-Specific Setup
 > 这里，作者解释了为什么使用IA-32作为例子
@@ -1196,7 +1192,7 @@ setup_arch
 
 
 1. `machine_specific_memory_setup` is first invoked to create a list with the memory regions occupied by
-the system and the free memory regions. 
+the system and the free memory regions.
 > 实际上由于架构优化，这一个函数并不存在，实际上实现功能的函数为`default_machine_specific_memory_setup`
 > 1. 我不知道上面的结论是如何得的，两个函数都都没有找到.
 
@@ -1205,41 +1201,41 @@ the system and the free memory regions.
 
 ```c
 void __init setup_memory_map(void) {
-	char *who;
+  char *who;
 
-	who = x86_init.resources.memory_setup();
-	memcpy(&e820_saved, &e820, sizeof(struct e820map));
-	printk(KERN_INFO "e820: BIOS-provided physical RAM map:\n");
-	e820_print_map(who);
+  who = x86_init.resources.memory_setup();
+  memcpy(&e820_saved, &e820, sizeof(struct e820map));
+  printk(KERN_INFO "e820: BIOS-provided physical RAM map:\n");
+  e820_print_map(who);
 }
 
- 
+
 /*
  * The platform setup functions are preset with the default functions
  * for standard PC hardware.
  */
 struct x86_init_ops x86_init __initdata = {
 
-	.resources = {
-		.probe_roms		= probe_roms,
-		.reserve_resources	= reserve_standard_io_resources,
-		.memory_setup		= default_machine_specific_memory_setup,
-	},
+  .resources = {
+    .probe_roms   = probe_roms,
+    .reserve_resources  = reserve_standard_io_resources,
+    .memory_setup   = default_machine_specific_memory_setup,
+  },
 ```
 
 
 ```c
 void __init e820_print_map(char *who) {
-	int i;
+  int i;
 
-	for (i = 0; i < e820.nr_map; i++) {
-		printk(KERN_INFO "%s: [mem %#018Lx-%#018Lx] ", who,
-		       (unsigned long long) e820.map[i].addr,
-		       (unsigned long long)
-		       (e820.map[i].addr + e820.map[i].size - 1));
-		e820_print_type(e820.map[i].type);
-		printk(KERN_CONT "\n");
-	}
+  for (i = 0; i < e820.nr_map; i++) {
+    printk(KERN_INFO "%s: [mem %#018Lx-%#018Lx] ", who,
+           (unsigned long long) e820.map[i].addr,
+           (unsigned long long)
+           (e820.map[i].addr + e820.map[i].size - 1));
+    e820_print_type(e820.map[i].type);
+    printk(KERN_CONT "\n");
+  }
 }
 ```
 
@@ -1249,16 +1245,16 @@ void __init e820_print_map(char *who) {
 ```c
 /* Arch code calls this early on, or if not, just before other parsing. */
 void __init parse_early_param(void) {
-	static int done __initdata;
-	static char tmp_cmdline[COMMAND_LINE_SIZE] __initdata;
+  static int done __initdata;
+  static char tmp_cmdline[COMMAND_LINE_SIZE] __initdata;
 
-	if (done)
-		return;
+  if (done)
+    return;
 
-	/* All fall through to do_early_param. */
-	strlcpy(tmp_cmdline, boot_command_line, COMMAND_LINE_SIZE);
-	parse_early_options(tmp_cmdline);
-	done = 1;
+  /* All fall through to do_early_param. */
+  strlcpy(tmp_cmdline, boot_command_line, COMMAND_LINE_SIZE);
+  parse_early_options(tmp_cmdline);
+  done = 1;
 }
 ```
 > 1. 参数是从什么位置传送过来的,　是从BIOS 还是用户的配置文件中间?
@@ -1274,20 +1270,20 @@ They both have the same effect although their implementation differ.
 4. `paging_init` initializes the kernel page tables and enables paging since it is not active by default on IA-32 machines.
 By calling `pagetable_init`, ***the function also ensures that the direct mapping of physical memory into the kernel
 address space is initialized***. All page frames in low memory are directly mapped to the virtual memory
-region above `PAGE_OFFSET`. This allows the kernel to address a good part of the available memory without having to deal with page tables anymore. 
+region above `PAGE_OFFSET`. This allows the kernel to address a good part of the available memory without having to deal with page tables anymore.
 > 应该此处就是内核中间实现　线性映射 建立的地方了
 
 `x86_init.h`
 ```c
 /**
  * struct x86_init_paging - platform specific paging functions
- * @pagetable_init:	platform specific paging initialization call to setup
- *			the kernel pagetables and prepare accessors functions.
- *			Callback must call paging_init(). Called once after the
- *			direct mapping for phys memory is available.
+ * @pagetable_init: platform specific paging initialization call to setup
+ *      the kernel pagetables and prepare accessors functions.
+ *      Callback must call paging_init(). Called once after the
+ *      direct mapping for phys memory is available.
  */
 struct x86_init_paging {
-	void (*pagetable_init)(void);
+  void (*pagetable_init)(void);
 };
 ```
 `x86_init.c`
@@ -1298,9 +1294,9 @@ struct x86_init_paging {
  */
 struct x86_init_ops x86_init __initdata = {
 ...
-	.paging = {
-		.pagetable_init		= native_pagetable_init,
-	},
+  .paging = {
+    .pagetable_init   = native_pagetable_init,
+  },
 ...
 }
 ```
@@ -1318,20 +1314,20 @@ extern void native_pagetable_init(void);
 ```c
 void __init paging_init(void)
 {
-	sparse_memory_present_with_active_regions(MAX_NUMNODES);
-	sparse_init();
+  sparse_memory_present_with_active_regions(MAX_NUMNODES);
+  sparse_init();
 
-	/*
-	 * clear the default setting with node 0
-	 * note: don't use nodes_clear here, that is really clearing when
-	 *	 numa support is not compiled in, and later node_set_state
-	 *	 will not set it back.
-	 */
-	node_clear_state(0, N_MEMORY);
-	if (N_MEMORY != N_NORMAL_MEMORY)
-		node_clear_state(0, N_NORMAL_MEMORY);
+  /*
+   * clear the default setting with node 0
+   * note: don't use nodes_clear here, that is really clearing when
+   *   numa support is not compiled in, and later node_set_state
+   *   will not set it back.
+   */
+  node_clear_state(0, N_MEMORY);
+  if (N_MEMORY != N_NORMAL_MEMORY)
+    node_clear_state(0, N_NORMAL_MEMORY);
 
-	zone_sizes_init();
+  zone_sizes_init();
 }
 ```
 
@@ -1343,7 +1339,7 @@ void __init paging_init(void)
 5. Calling `zone_sizes_init` initializes the `pgdat_t` instances of all nodes of the system
  First a comparatively simple list of the available physical memory is prepared using `add_active_range`. The
 architecture-independent function `free_area_init_nodes` then uses this information to prepare the
-**full-blown** kernel data structures. 
+**full-blown** kernel data structures.
 > 1. emmmmmm ? `paging_init` 调用的 `zone_sizes_init`, 你敢信 ?
 > 2. `free_area_init_nodes` ????
 
@@ -1365,7 +1361,7 @@ to deal with some set-up routines for sparse memory systems that are not interes
 The important thing, however, is that the function also calls `free_area_init_nodes`, which is as in the
 IA-32 case responsible to initialize the data structures required to manage physical page frames by the
 kernel. Recall that this is an architecture-independent function and relies on the information provided
-by `add_active_range` as mentioned above. 
+by `add_active_range` as mentioned above.
 
 
 
@@ -1410,34 +1406,34 @@ task)
 2. `__va(paddr)` yields the virtual address corresponding to the physical address paddr.
 
 ```c
-#define __pa(x)		__phys_addr((unsigned long)(x))
+#define __pa(x)   __phys_addr((unsigned long)(x))
 
 unsigned long __phys_addr(unsigned long x)
 {
-	unsigned long y = x - __START_KERNEL_map;
+  unsigned long y = x - __START_KERNEL_map;
 
-	/* use the carry flag to determine if x was < __START_KERNEL_map */
-	if (unlikely(x > y)) {
-		x = y + phys_base;
+  /* use the carry flag to determine if x was < __START_KERNEL_map */
+  if (unlikely(x > y)) {
+    x = y + phys_base;
 
-		VIRTUAL_BUG_ON(y >= KERNEL_IMAGE_SIZE);
-	} else {
-		x = y + (__START_KERNEL_map - PAGE_OFFSET);
+    VIRTUAL_BUG_ON(y >= KERNEL_IMAGE_SIZE);
+  } else {
+    x = y + (__START_KERNEL_map - PAGE_OFFSET);
 
-		/* carry flag will be set if starting x was >= PAGE_OFFSET */
-		VIRTUAL_BUG_ON((x > y) || !phys_addr_valid(x));
-	}
+    /* carry flag will be set if starting x was >= PAGE_OFFSET */
+    VIRTUAL_BUG_ON((x > y) || !phys_addr_valid(x));
+  }
 
-	return x;
+  return x;
 }
 
 static inline unsigned long __phys_addr_nodebug(unsigned long x) {
-	unsigned long y = x - __START_KERNEL_map;
+  unsigned long y = x - __START_KERNEL_map;
 
-	/* use the carry flag to determine if x was < __START_KERNEL_map */
-	x = y + ((x > y) ? phys_base : (__START_KERNEL_map - PAGE_OFFSET));
+  /* use the carry flag to determine if x was < __START_KERNEL_map */
+  x = y + ((x > y) ? phys_base : (__START_KERNEL_map - PAGE_OFFSET));
 
-	return x;
+  return x;
 }
 ```
 > 实际上ccls对于`phys_base`的符号跳转有问题
@@ -1450,9 +1446,9 @@ static inline unsigned long __phys_addr_nodebug(unsigned long x) {
 
 1. 64位
 ```
-#define __AC(X,Y)	(X##Y)
-#define _AC(X,Y)	__AC(X,Y)
-#define _AT(T,X)	((T)(X))
+#define __AC(X,Y) (X##Y)
+#define _AC(X,Y)  __AC(X,Y)
+#define _AT(T,X)  ((T)(X))
 ```
 
 ```
@@ -1464,15 +1460,15 @@ static inline unsigned long __phys_addr_nodebug(unsigned long x) {
  */
 #define __PAGE_OFFSET       _AC(0xffff880000000000, UL)
 
-#define __START_KERNEL_map	_AC(0xffffffff80000000, UL)
+#define __START_KERNEL_map  _AC(0xffffffff80000000, UL)
 
-#define PAGE_OFFSET		((unsigned long)__PAGE_OFFSET)
+#define PAGE_OFFSET   ((unsigned long)__PAGE_OFFSET)
 ```
 
 2. 32位
 ```
-#define __phys_addr_nodebug(x)	((x) - PAGE_OFFSET)
-#define PAGE_OFFSET		((unsigned long)__PAGE_OFFSET)
+#define __phys_addr_nodebug(x)  ((x) - PAGE_OFFSET)
+#define PAGE_OFFSET   ((unsigned long)__PAGE_OFFSET)
 
 
 /*
@@ -1485,7 +1481,7 @@ static inline unsigned long __phys_addr_nodebug(unsigned long x) {
  * If you want more physical memory than this then see the CONFIG_HIGHMEM4G
  * and CONFIG_HIGHMEM64G options in the kernel configuration.
  */
-#define __PAGE_OFFSET		_AC(CONFIG_PAGE_OFFSET, UL)
+#define __PAGE_OFFSET   _AC(CONFIG_PAGE_OFFSET, UL)
 ```
 
 
@@ -1529,7 +1525,7 @@ extern unsigned int __VMALLOC_RESERVE;
  * range must not overlap with anything except the KASAN shadow area, which
  * is correct as KASAN disables KASLR.
  */
-#define MAXMEM			(1UL << MAX_PHYSMEM_BITS)
+#define MAXMEM      (1UL << MAX_PHYSMEM_BITS)
 ```
 > 上面介绍了内存地址空间的分配，接下来在代码中间查找对应的证据(也就是头文件中间的一些macro)
 
@@ -1580,18 +1576,18 @@ Besides calling `add_active_range`, the function `zone_sizes_init` stores the bo
 
 **Address Space Setup on AMD64**
 
-While having a 64-bit virtual address space allows for avoiding oddities like **high memory**, 
+While having a 64-bit virtual address space allows for avoiding oddities like **high memory**,
 things are complicated by another factor: The address space spanned by 64 bits is so large
 that there are currently simply no applications that would require this.
 
-Current implementations therefore implement a smaller physical address space that is only 48 bits wide. 
+Current implementations therefore implement a smaller physical address space that is only 48 bits wide.
 
 Since future hardware implementations might support larger physical address spaces, it is not possible
 to simply to remap the subset that is not addressable to a different subset of the address space. Suppose
 that any program would rely on pointers into the unimplemented address space to be remapped to some
 part of the regular address space. Next-generation processors that implement more physical address bits
 would lead to a different behavior and thus break all existing code
-> emmmmmm 
+> emmmmmm
 
 The complete lower half of the accessible address space is used as userspace, while the complete upper
 half is reserved for the kernel. Since both spaces are huge, no fiddling with splitting ratios and the like is
@@ -1611,7 +1607,7 @@ all struct page instances located in physical memory are mapped into the area wi
 provides a virtually contiguous area in which only the active memory regions are included. The MMU
 therefore automatically aids the translation between virtual and physical numbers that does not need to
 be concerned with holes anymore. This accelerates the operation considerably.
-> emmmm 
+> emmmm
 > 1. because all holes in the physical address space
 > 2. VMM 难道和 VMALLOC 不是一个东西吗?
 
@@ -1631,14 +1627,14 @@ early boot phase is used to do this.
 
 1. Kernel developers therefore decided to implement a ***first-fit*** allocator as the simplest conceivable
 way of managing memory in the boot phase.
-2. A ***bitmap*** with (at least) as many bits as there are physical pages present in the system is used to manage pages. 
+2. A ***bitmap*** with (at least) as many bits as there are physical pages present in the system is used to manage pages.
 
 **Data Structures**
 `struct bootmem_data;`
 > 由于内核升级, 具体内容参考 [this](../../insides/MM/linux-mm-1.md)
 
 > 1. 阅读start_kernel 函数，可以发现此函数在之前分析 build_all_zonelists 之类东西初始化之后。
-> 2. 内存初始化的整个过程似乎是， 通过 build_all_zonelists 获取 zone的初始化，然后将zone 中间的内存回收，最后提交给 buddy system 
+> 2. 内存初始化的整个过程似乎是， 通过 build_all_zonelists 获取 zone的初始化，然后将zone 中间的内存回收，最后提交给 buddy system
 
 ## 3.5 Management of Physical Memory
 
@@ -1650,14 +1646,14 @@ managing buddy data
 
 ```c
 struct free_area {
-  struct list_head free_list[MIGRATE_TYPES]; 
+  struct list_head free_list[MIGRATE_TYPES];
   // 定义MIGRATE_TYPES 的原因在于组合相同的类型的内存在一起，进而实现防止内存碎片
   unsigned long nr_free;
 };
 ```
 1. `nr_free` specifies the number of free page blocks in the current area (counting is page by page for the
-zeroth area, by two-page pairs for order 1, by sets of four pages for order 2, etc.). 
-2. `free_list` is used to link page lists. 
+zeroth area, by two-page pairs for order 1, by sets of four pages for order 2, etc.).
+2. `free_list` is used to link page lists.
 
 The ***order*** is a very important term in buddy systems. It describes the quantified units in which memory
 can be allocated. The typical value of this constant is 11, which means that the maximum number of pages that can be
@@ -1667,8 +1663,8 @@ requested in a single allocation is 2^11 = 2, 048.
 ```c
 struct zone{
 ...
-	/* free areas of different sizes */
-	struct free_area	free_area[MAX_ORDER];
+  /* free areas of different sizes */
+  struct free_area  free_area[MAX_ORDER];
 ...
 }
 ```
@@ -1715,31 +1711,31 @@ the different migrate types:
 
 ```c
 enum migratetype {
-	MIGRATE_UNMOVABLE,
-	MIGRATE_MOVABLE,
-	MIGRATE_RECLAIMABLE,
-	MIGRATE_PCPTYPES,	/* the number of types on the pcp lists */
-	MIGRATE_HIGHATOMIC = MIGRATE_PCPTYPES,
+  MIGRATE_UNMOVABLE,
+  MIGRATE_MOVABLE,
+  MIGRATE_RECLAIMABLE,
+  MIGRATE_PCPTYPES, /* the number of types on the pcp lists */
+  MIGRATE_HIGHATOMIC = MIGRATE_PCPTYPES,
 #ifdef CONFIG_CMA
-	/*
-	 * MIGRATE_CMA migration type is designed to mimic the way
-	 * ZONE_MOVABLE works.  Only movable pages can be allocated
-	 * from MIGRATE_CMA pageblocks and page allocator never
-	 * implicitly change migration type of MIGRATE_CMA pageblock.
-	 *
-	 * The way to use it is to change migratetype of a range of
-	 * pageblocks to MIGRATE_CMA which can be done by
-	 * __free_pageblock_cma() function.  What is important though
-	 * is that a range of pageblocks must be aligned to
-	 * MAX_ORDER_NR_PAGES should biggest page be bigger then
-	 * a single pageblock.
-	 */
-	MIGRATE_CMA,
+  /*
+   * MIGRATE_CMA migration type is designed to mimic the way
+   * ZONE_MOVABLE works.  Only movable pages can be allocated
+   * from MIGRATE_CMA pageblocks and page allocator never
+   * implicitly change migration type of MIGRATE_CMA pageblock.
+   *
+   * The way to use it is to change migratetype of a range of
+   * pageblocks to MIGRATE_CMA which can be done by
+   * __free_pageblock_cma() function.  What is important though
+   * is that a range of pageblocks must be aligned to
+   * MAX_ORDER_NR_PAGES should biggest page be bigger then
+   * a single pageblock.
+   */
+  MIGRATE_CMA,
 #endif
 #ifdef CONFIG_MEMORY_ISOLATION
-	MIGRATE_ISOLATE,	/* can't allocate from here */
+  MIGRATE_ISOLATE,  /* can't allocate from here */
 #endif
-	MIGRATE_TYPES
+  MIGRATE_TYPES
 };
 ```
 > 1. 终于算是知道MIGRATE的含义了
@@ -1749,8 +1745,8 @@ The macro `for_each_migratetype_order(order, type)` can be used to iterate over 
 types of all allocation orders.
 ```c
 #define for_each_migratetype_order(order, type) \
-	for (order = 0; order < MAX_ORDER; order++) \
-		for (type = 0; type < MIGRATE_TYPES; type++)
+  for (order = 0; order < MAX_ORDER; order++) \
+    for (type = 0; type < MIGRATE_TYPES; type++)
 ```
 
 What happens if the kernel cannot fulfill an allocation request for a given migrate type? A similar problem
@@ -1765,14 +1761,14 @@ desired list:
  * the free lists for the desirable migrate type are depleted
  */
 static int fallbacks[MIGRATE_TYPES][4] = {
-	[MIGRATE_UNMOVABLE]   = { MIGRATE_RECLAIMABLE, MIGRATE_MOVABLE,   MIGRATE_TYPES },
-	[MIGRATE_MOVABLE]     = { MIGRATE_RECLAIMABLE, MIGRATE_UNMOVABLE, MIGRATE_TYPES },
-	[MIGRATE_RECLAIMABLE] = { MIGRATE_UNMOVABLE,   MIGRATE_MOVABLE,   MIGRATE_TYPES },
+  [MIGRATE_UNMOVABLE]   = { MIGRATE_RECLAIMABLE, MIGRATE_MOVABLE,   MIGRATE_TYPES },
+  [MIGRATE_MOVABLE]     = { MIGRATE_RECLAIMABLE, MIGRATE_UNMOVABLE, MIGRATE_TYPES },
+  [MIGRATE_RECLAIMABLE] = { MIGRATE_UNMOVABLE,   MIGRATE_MOVABLE,   MIGRATE_TYPES },
 #ifdef CONFIG_CMA
-	[MIGRATE_CMA]         = { MIGRATE_TYPES }, /* Never used */
+  [MIGRATE_CMA]         = { MIGRATE_TYPES }, /* Never used */
 #endif
 #ifdef CONFIG_MEMORY_ISOLATION
-	[MIGRATE_ISOLATE]     = { MIGRATE_TYPES }, /* Never used */
+  [MIGRATE_ISOLATE]     = { MIGRATE_TYPES }, /* Never used */
 #endif
 };
 ```
@@ -1793,10 +1789,10 @@ are provided by the architecture
 
 ```c
 /* Huge pages are a constant size */
-#define pageblock_order		HUGETLB_PAGE_ORDER
+#define pageblock_order   HUGETLB_PAGE_ORDER
 ```
 
-How does the kernel know to which migrate type a given allocation belongs? 
+How does the kernel know to which migrate type a given allocation belongs?
 The kernel provides two flags that signal that the allocated memory will be movable (`__GFP_MOVABLE`) or reclaimable
 (`__GFP_RECLAIMABLE`). If none of these flags is specified, the allocation is assumed to be non-movable.
 > 1. 又看到GFP flags
@@ -1809,17 +1805,17 @@ have not introduced this feature before:
 struct zone{
 ...
 #ifndef CONFIG_SPARSEMEM
-	/*
-	 * Flags for a pageblock_nr_pages block. See pageblock-flags.h.
-	 * In SPARSEMEM, this map is stored in struct mem_section
-	 */
-	unsigned long		*pageblock_flags;
+  /*
+   * Flags for a pageblock_nr_pages block. See pageblock-flags.h.
+   * In SPARSEMEM, this map is stored in struct mem_section
+   */
+  unsigned long   *pageblock_flags;
 #endif /* CONFIG_SPARSEMEM */
 ...
 ```
 > @todo 内存模型，简直是一生之敌
 
-During initialization, 
+During initialization,
 the kernel automatically ensures that for each page block group in the zone,
 sufficient space is available in `pageblock_flags` to store `NR_PAGEBLOCK_BITS` bits.
 Currently, 3 bits are required to denote the migrate type of the page range:
@@ -1859,14 +1855,14 @@ but one thing is essential: **All pages are initially marked to be movable!**
  * done. Non-atomic initialization, single-pass.
  */
 void __meminit memmap_init_zone(unsigned long size, int nid, unsigned long zone,
-		unsigned long start_pfn, enum memmap_context context,
-		struct vmem_altmap *altmap)
+    unsigned long start_pfn, enum memmap_context context,
+    struct vmem_altmap *altmap)
 {
 
 void __meminit __weak memmap_init(unsigned long size, int nid,
-				  unsigned long zone, unsigned long start_pfn)
+          unsigned long zone, unsigned long start_pfn)
 {
-	memmap_init_zone(size, nid, zone, start_pfn, MEMMAP_EARLY, NULL);
+  memmap_init_zone(size, nid, zone, start_pfn, MEMMAP_EARLY, NULL);
 }
 
 /*
@@ -1883,8 +1879,8 @@ static void __init free_area_init_core(struct pglist_data *pgdat)
 
 
 void __init free_area_init_node(int nid, unsigned long *zones_size,
-				   unsigned long node_start_pfn,
-				   unsigned long *zholes_size)
+           unsigned long node_start_pfn,
+           unsigned long *zholes_size)
 {
 // 后面的没有分析了，主要被　page_alloc.c 中间的两个函数调用
 // 总之都是memory 初始化的哪一类
@@ -1896,7 +1892,7 @@ How does the kernel know to which migrate type a given allocation belongs ?
 **The Virtual Movable Zone**
 Grouping pages by mobility order is one possible method to prevent fragmentation of physical
 memory, but the kernel additionally provides another means to fight this problem: the virtual
-zone `ZONE_MOVABLE`. 
+zone `ZONE_MOVABLE`.
 
 The basic idea is simple: The available physical memory is partitioned into one zone used for movable
 allocations, and one zone used for non-movable allocations.
@@ -1943,42 +1939,42 @@ void __init free_area_init_nodes(unsigned long *max_zone_pfn)
 ```c
 void __init paging_init(void)
 {
-	sparse_memory_present_with_active_regions(MAX_NUMNODES);
-	sparse_init(); // 我们的老朋友，pfn_to_page 应该是此时建立的，同样的问题，到底探测了什么内容让此时可以建立该信息
+  sparse_memory_present_with_active_regions(MAX_NUMNODES);
+  sparse_init(); // 我们的老朋友，pfn_to_page 应该是此时建立的，同样的问题，到底探测了什么内容让此时可以建立该信息
 
-	/*
-	 * clear the default setting with node 0
-	 * note: don't use nodes_clear here, that is really clearing when
-	 *	 numa support is not compiled in, and later node_set_state
-	 *	 will not set it back.
-	 */
-	node_clear_state(0, N_MEMORY);
-	if (N_MEMORY != N_NORMAL_MEMORY)
-		node_clear_state(0, N_NORMAL_MEMORY);
+  /*
+   * clear the default setting with node 0
+   * note: don't use nodes_clear here, that is really clearing when
+   *   numa support is not compiled in, and later node_set_state
+   *   will not set it back.
+   */
+  node_clear_state(0, N_MEMORY);
+  if (N_MEMORY != N_NORMAL_MEMORY)
+    node_clear_state(0, N_NORMAL_MEMORY);
 
-	zone_sizes_init();
+  zone_sizes_init();
 }
 
 void __init zone_sizes_init(void)
 {
-	unsigned long max_zone_pfns[MAX_NR_ZONES]; // 大小为4, noramle moveable dma 和 dma32
+  unsigned long max_zone_pfns[MAX_NR_ZONES]; // 大小为4, noramle moveable dma 和 dma32
 
-	memset(max_zone_pfns, 0, sizeof(max_zone_pfns));
+  memset(max_zone_pfns, 0, sizeof(max_zone_pfns));
 
 #ifdef CONFIG_ZONE_DMA
-	max_zone_pfns[ZONE_DMA]		= min(MAX_DMA_PFN, max_low_pfn);
+  max_zone_pfns[ZONE_DMA]   = min(MAX_DMA_PFN, max_low_pfn);
 #endif
 #ifdef CONFIG_ZONE_DMA32
-	max_zone_pfns[ZONE_DMA32]	= min(MAX_DMA32_PFN, max_low_pfn);
+  max_zone_pfns[ZONE_DMA32] = min(MAX_DMA32_PFN, max_low_pfn);
 #endif
-	max_zone_pfns[ZONE_NORMAL]	= max_low_pfn;
+  max_zone_pfns[ZONE_NORMAL]  = max_low_pfn;
 
   // 这一个没有配置
 #ifdef CONFIG_HIGHMEM
-	max_zone_pfns[ZONE_HIGHMEM]	= max_pfn;
+  max_zone_pfns[ZONE_HIGHMEM] = max_pfn;
 #endif
 
-	free_area_init_nodes(max_zone_pfns);
+  free_area_init_nodes(max_zone_pfns);
 }
 ```
 
@@ -1994,34 +1990,34 @@ for this purpose.*
 
 ```c
 void __init free_area_init_node(int nid, unsigned long *zones_size,
-				   unsigned long node_start_pfn,
-				   unsigned long *zholes_size)
+           unsigned long node_start_pfn,
+           unsigned long *zholes_size)
 {
-	pg_data_t *pgdat = NODE_DATA(nid);
-	unsigned long start_pfn = 0;
-	unsigned long end_pfn = 0;
+  pg_data_t *pgdat = NODE_DATA(nid);
+  unsigned long start_pfn = 0;
+  unsigned long end_pfn = 0;
 
-	/* pg_data_t should be reset to zero when it's allocated */
-	WARN_ON(pgdat->nr_zones || pgdat->kswapd_classzone_idx);
+  /* pg_data_t should be reset to zero when it's allocated */
+  WARN_ON(pgdat->nr_zones || pgdat->kswapd_classzone_idx);
 
-	pgdat->node_id = nid;
-	pgdat->node_start_pfn = node_start_pfn;
-	pgdat->per_cpu_nodestats = NULL;
+  pgdat->node_id = nid;
+  pgdat->node_start_pfn = node_start_pfn;
+  pgdat->per_cpu_nodestats = NULL;
 #ifdef CONFIG_HAVE_MEMBLOCK_NODE_MAP
-	get_pfn_range_for_nid(nid, &start_pfn, &end_pfn);
-	pr_info("Initmem setup node %d [mem %#018Lx-%#018Lx]\n", nid,
-		(u64)start_pfn << PAGE_SHIFT,
-		end_pfn ? ((u64)end_pfn << PAGE_SHIFT) - 1 : 0);
+  get_pfn_range_for_nid(nid, &start_pfn, &end_pfn);
+  pr_info("Initmem setup node %d [mem %#018Lx-%#018Lx]\n", nid,
+    (u64)start_pfn << PAGE_SHIFT,
+    end_pfn ? ((u64)end_pfn << PAGE_SHIFT) - 1 : 0);
 #else
-	start_pfn = node_start_pfn;
+  start_pfn = node_start_pfn;
 #endif
-	calculate_node_totalpages(pgdat, start_pfn, end_pfn,
-				  zones_size, zholes_size);
+  calculate_node_totalpages(pgdat, start_pfn, end_pfn,
+          zones_size, zholes_size);
 
-	alloc_node_mem_map(pgdat);
-	pgdat_set_deferred_range(pgdat);
+  alloc_node_mem_map(pgdat);
+  pgdat_set_deferred_range(pgdat);
 
-	free_area_init_core(pgdat);
+  free_area_init_core(pgdat);
 }
 ```
 首先完成部分变量初始化的过程，
@@ -2062,7 +2058,7 @@ the beginning
 #### 3.5.4 Allocator API
 As far as the interface to the buddy system is concerned, it makes no difference whether a NUMA or
 a UMA architecture is used as the call syntax is the same for both. Common to all functions is the fact
-that pages can only be allocated in integer powers of 2. 
+that pages can only be allocated in integer powers of 2.
 
 1. `alloc_pages(mask, order)` allocates 2^order pages and returns an instance of struct page to represent the start of
 the reserved block. `alloc_page(mask)` is a shorter notation for order = 0 if
@@ -2077,7 +2073,7 @@ instance.
 The kernel provides other memory management functions in addition to the buddy system functions.
 They build on layers that are used as a basis by the buddy system but do not belong to the buddy allocator
 itself. These functions are `vmalloc` and `vmalloc_32`, which use page tables to map discontiguous memory
-into kernel address space so that it appears to be contiguous. 
+into kernel address space so that it appears to be contiguous.
 
 Four slightly different functions are defined to return pages no longer needed in memory to the kernel.
 1. `free_page(struct page*)` and `free_pages(struct page*, order)` return one or 2order pages
@@ -2096,7 +2092,7 @@ area to be returned.
 #### 3.5.5 Reserving Pages
 > @todo 其中包含了关于swap 的部分内容
 
-All API functions lead back to `alloc_pages_node`, 
+All API functions lead back to `alloc_pages_node`,
 which is a kind of ‘‘launch pad‘‘ for central implementation of the buddy system
 
 ```c
@@ -2107,10 +2103,10 @@ which is a kind of ‘‘launch pad‘‘ for central implementation of the budd
 static inline struct page *
 __alloc_pages_node(int nid, gfp_t gfp_mask, unsigned int order)
 {
-	VM_BUG_ON(nid < 0 || nid >= MAX_NUMNODES);
-	VM_WARN_ON((gfp_mask & __GFP_THISNODE) && !node_online(nid));
+  VM_BUG_ON(nid < 0 || nid >= MAX_NUMNODES);
+  VM_WARN_ON((gfp_mask & __GFP_THISNODE) && !node_online(nid));
 
-	return __alloc_pages(gfp_mask, order, nid);
+  return __alloc_pages(gfp_mask, order, nid);
 }
 
 /*
@@ -2119,12 +2115,12 @@ __alloc_pages_node(int nid, gfp_t gfp_mask, unsigned int order)
  * online.
  */
 static inline struct page *alloc_pages_node(int nid, gfp_t gfp_mask,
-						unsigned int order)
+            unsigned int order)
 {
-	if (nid == NUMA_NO_NODE)
-		nid = numa_mem_id();
+  if (nid == NUMA_NO_NODE)
+    nid = numa_mem_id();
 
-	return __alloc_pages_node(nid, gfp_mask, order);
+  return __alloc_pages_node(nid, gfp_mask, order);
 }
 ```
 
@@ -2142,16 +2138,16 @@ static inline struct page *alloc_pages_node(int nid, gfp_t gfp_mask,
  * to check in the allocation paths if no pages are free.
  */
 bool __zone_watermark_ok(struct zone *z, unsigned int order, unsigned long mark,
-			 int classzone_idx, unsigned int alloc_flags,
-			 long free_pages)
+       int classzone_idx, unsigned int alloc_flags,
+       long free_pages)
 {
 
 
 bool zone_watermark_ok(struct zone *z, unsigned int order, unsigned long mark,
-		      int classzone_idx, unsigned int alloc_flags)
+          int classzone_idx, unsigned int alloc_flags)
 {
-	return __zone_watermark_ok(z, order, mark, classzone_idx, alloc_flags,
-					zone_page_state(z, NR_FREE_PAGES));
+  return __zone_watermark_ok(z, order, mark, classzone_idx, alloc_flags,
+          zone_page_state(z, NR_FREE_PAGES));
 }
 ```
 2. `get_page_from_freelist` is another important helper function used by the buddy system. It refers to the
@@ -2164,12 +2160,12 @@ allocation
  */
 static struct page *
 get_page_from_freelist(gfp_t gfp_mask, unsigned int order, int alloc_flags,
-						const struct alloc_context *ac)
+            const struct alloc_context *ac)
 {
 ```
 > 这个东西其实就是 alloc_page 的核心实现，后面之所以有那么多的内容，只是由于内存不足，然后fallback处理之类的啊
 
-> SKIP 跳过非常多的page，主要内容是 
+> SKIP 跳过非常多的page，主要内容是
 
 
 #### 3.5.6 Freeing Pages
@@ -2187,7 +2183,7 @@ pages are wasted.
 
 
 * ***Reserving Memory with vmalloc***
-The best-known example of vmalloc use is in the module implementation of the kernel. 
+The best-known example of vmalloc use is in the module implementation of the kernel.
 > 主要给module 使用
 
 
@@ -2206,14 +2202,14 @@ applications)
 
 ```c
 struct vm_struct {
-	struct vm_struct	*next;
-	void			*addr;
-	unsigned long		size;
-	unsigned long		flags;
-	struct page		**pages;
-	unsigned int		nr_pages;
-	phys_addr_t		phys_addr;
-	const void		*caller;
+  struct vm_struct  *next;
+  void      *addr;
+  unsigned long   size;
+  unsigned long   flags;
+  struct page   **pages;
+  unsigned int    nr_pages;
+  phys_addr_t   phys_addr;
+  const void    *caller;
 };
 ```
 There is an instance of the structure in kernel memory for each area allocated with vmalloc. The meanings
@@ -2243,8 +2239,8 @@ the size specification by the appropriate amount
 ```c
 /**
  * get_vm_area - reserve a contiguous kernel virtual area
- * @size:	 size of the area
- * @flags:	 %VM_IOREMAP for I/O mappings or VM_ALLOC
+ * @size:  size of the area
+ * @flags:   %VM_IOREMAP for I/O mappings or VM_ALLOC
  *
  * Search an area of @size in the kernel virtual mapping area,
  * and reserved it for out purposes.  Returns the area descriptor
@@ -2254,52 +2250,52 @@ the size specification by the appropriate amount
  */
 struct vm_struct *get_vm_area(unsigned long size, unsigned long flags)
 {
-	return __get_vm_area_node(size, 1, flags, VMALLOC_START, VMALLOC_END,
-				  NUMA_NO_NODE, GFP_KERNEL,
-				  __builtin_return_address(0));
+  return __get_vm_area_node(size, 1, flags, VMALLOC_START, VMALLOC_END,
+          NUMA_NO_NODE, GFP_KERNEL,
+          __builtin_return_address(0));
 }
 
 struct vm_struct *__get_vm_area(unsigned long size, unsigned long flags,
-				unsigned long start, unsigned long end)
+        unsigned long start, unsigned long end)
 {
-	return __get_vm_area_node(size, 1, flags, start, end, NUMA_NO_NODE,
-				  GFP_KERNEL, __builtin_return_address(0));
+  return __get_vm_area_node(size, 1, flags, start, end, NUMA_NO_NODE,
+          GFP_KERNEL, __builtin_return_address(0));
 }
 // 这一个函数似乎是给　module　或者　用户使用的，但是下划线开头，不科学啊
 
 
 static struct vm_struct *__get_vm_area_node(unsigned long size,
-		unsigned long align, unsigned long flags, unsigned long start,
-		unsigned long end, int node, gfp_t gfp_mask, const void *caller)
+    unsigned long align, unsigned long flags, unsigned long start,
+    unsigned long end, int node, gfp_t gfp_mask, const void *caller)
 {
-	struct vmap_area *va;
-	struct vm_struct *area;
+  struct vmap_area *va;
+  struct vm_struct *area;
 
-	BUG_ON(in_interrupt());
-	size = PAGE_ALIGN(size);
-	if (unlikely(!size))
-		return NULL;
+  BUG_ON(in_interrupt());
+  size = PAGE_ALIGN(size);
+  if (unlikely(!size))
+    return NULL;
 
-	if (flags & VM_IOREMAP)
-		align = 1ul << clamp_t(int, get_count_order_long(size),
-				       PAGE_SHIFT, IOREMAP_MAX_ORDER);
+  if (flags & VM_IOREMAP)
+    align = 1ul << clamp_t(int, get_count_order_long(size),
+               PAGE_SHIFT, IOREMAP_MAX_ORDER);
 
-	area = kzalloc_node(sizeof(*area), gfp_mask & GFP_RECLAIM_MASK, node);
-	if (unlikely(!area))
-		return NULL;
+  area = kzalloc_node(sizeof(*area), gfp_mask & GFP_RECLAIM_MASK, node);
+  if (unlikely(!area))
+    return NULL;
 
-	if (!(flags & VM_NO_GUARD))
-		size += PAGE_SIZE;
+  if (!(flags & VM_NO_GUARD))
+    size += PAGE_SIZE;
 
-	va = alloc_vmap_area(size, align, start, end, node, gfp_mask);
-	if (IS_ERR(va)) {
-		kfree(area);
-		return NULL;
-	}
+  va = alloc_vmap_area(size, align, start, end, node, gfp_mask);
+  if (IS_ERR(va)) {
+    kfree(area);
+    return NULL;
+  }
 
-	setup_vmalloc_vm(area, va, flags, caller);
+  setup_vmalloc_vm(area, va, flags, caller);
 
-	return area;
+  return area;
 }
 ```
 > 书上接下来描述了其中 `__get_vm_area_node` 的细节，但是实际上并没有那么直白，
@@ -2310,7 +2306,7 @@ The `remove_vm_area` function removes an existing area from the vmalloc address 
 ```c
 /**
  * remove_vm_area - find and remove a continuous kernel virtual area
- * @addr:	    base address
+ * @addr:     base address
  *
  * Search for the kernel VM area starting at @addr, and remove it.
  * This function returns the found VM area, but using it is NOT safe
@@ -2320,26 +2316,26 @@ The `remove_vm_area` function removes an existing area from the vmalloc address 
  */
 struct vm_struct *remove_vm_area(const void *addr)
 {
-	struct vmap_area *va;
+  struct vmap_area *va;
 
-	might_sleep();
+  might_sleep();
 
-	va = find_vmap_area((unsigned long)addr);
-	if (va && va->flags & VM_VM_AREA) {
-		struct vm_struct *vm = va->vm;
+  va = find_vmap_area((unsigned long)addr);
+  if (va && va->flags & VM_VM_AREA) {
+    struct vm_struct *vm = va->vm;
 
-		spin_lock(&vmap_area_lock);
-		va->vm = NULL;
-		va->flags &= ~VM_VM_AREA;
-		va->flags |= VM_LAZY_FREE;
-		spin_unlock(&vmap_area_lock);
+    spin_lock(&vmap_area_lock);
+    va->vm = NULL;
+    va->flags &= ~VM_VM_AREA;
+    va->flags |= VM_LAZY_FREE;
+    spin_unlock(&vmap_area_lock);
 
-		kasan_free_shadow(vm);
-		free_unmap_vmap_area(va);
+    kasan_free_shadow(vm);
+    free_unmap_vmap_area(va);
 
-		return vm;
-	}
-	return NULL;
+    return vm;
+  }
+  return NULL;
 }
 ```
 The function expects as a parameter the virtual start address of the area to be removed. To find the area,
@@ -2347,22 +2343,22 @@ the kernel must successively scan the list elements of vmlist until it finds a m
 `vm_area` instance can then be removed from the list
 
 Allocation of a non-continuous memory area is initiated by vmalloc. This is simply a front-end function
-to supply `__vmalloc` with suitable parameters and to directly invoke `__vmalloc_node`. 
+to supply `__vmalloc` with suitable parameters and to directly invoke `__vmalloc_node`.
 
 
 
 ```c
 /**
  * __vmalloc_node_range - allocate virtually contiguous memory
- * @size:		  allocation size
- * @align:		  desired alignment
- * @start:		  vm area range start
- * @end:		  vm area range end
- * @gfp_mask:		  flags for the page level allocator
- * @prot:		  protection mask for the allocated pages
- * @vm_flags:		  additional vm area flags (e.g. %VM_NO_GUARD)
- * @node:		  node to use for allocation or NUMA_NO_NODE
- * @caller:		  caller's return address
+ * @size:     allocation size
+ * @align:      desired alignment
+ * @start:      vm area range start
+ * @end:      vm area range end
+ * @gfp_mask:     flags for the page level allocator
+ * @prot:     protection mask for the allocated pages
+ * @vm_flags:     additional vm area flags (e.g. %VM_NO_GUARD)
+ * @node:     node to use for allocation or NUMA_NO_NODE
+ * @caller:     caller's return address
  *
  * Allocate enough pages to cover @size from the page level
  * allocator with @gfp_mask flags.  Map them into contiguous
@@ -2371,20 +2367,20 @@ to supply `__vmalloc` with suitable parameters and to directly invoke `__vmalloc
  * Return: the address of the area or %NULL on failure
  */
 void *__vmalloc_node_range(unsigned long size, unsigned long align,
-			unsigned long start, unsigned long end, gfp_t gfp_mask,
-			pgprot_t prot, unsigned long vm_flags, int node,
-			const void *caller)
+      unsigned long start, unsigned long end, gfp_t gfp_mask,
+      pgprot_t prot, unsigned long vm_flags, int node,
+      const void *caller)
 {
 
 
 /**
  * __vmalloc_node - allocate virtually contiguous memory
- * @size:	    allocation size
- * @align:	    desired alignment
- * @gfp_mask:	    flags for the page level allocator
- * @prot:	    protection mask for the allocated pages
- * @node:	    node to use for allocation or NUMA_NO_NODE
- * @caller:	    caller's return address
+ * @size:     allocation size
+ * @align:      desired alignment
+ * @gfp_mask:     flags for the page level allocator
+ * @prot:     protection mask for the allocated pages
+ * @node:     node to use for allocation or NUMA_NO_NODE
+ * @caller:     caller's return address
  *
  * Allocate enough pages to cover @size from the page level
  * allocator with @gfp_mask flags.  Map them into contiguous
@@ -2399,18 +2395,18 @@ void *__vmalloc_node_range(unsigned long size, unsigned long align,
  * Return: pointer to the allocated memory or %NULL on error
  */
 static void *__vmalloc_node(unsigned long size, unsigned long align,
-			    gfp_t gfp_mask, pgprot_t prot,
-			    int node, const void *caller)
+          gfp_t gfp_mask, pgprot_t prot,
+          int node, const void *caller)
 {
-	return __vmalloc_node_range(size, align, VMALLOC_START, VMALLOC_END,
-				gfp_mask, prot, 0, node, caller);
+  return __vmalloc_node_range(size, align, VMALLOC_START, VMALLOC_END,
+        gfp_mask, prot, 0, node, caller);
 }
 
 static inline void *__vmalloc_node_flags(unsigned long size,
-					int node, gfp_t flags)
+          int node, gfp_t flags)
 {
-	return __vmalloc_node(size, 1, flags, PAGE_KERNEL,
-					node, __builtin_return_address(0));
+  return __vmalloc_node(size, 1, flags, PAGE_KERNEL,
+          node, __builtin_return_address(0));
 }
 
 /**
@@ -2427,8 +2423,8 @@ static inline void *__vmalloc_node_flags(unsigned long size,
  */
 void *vmalloc(unsigned long size)
 {
-	return __vmalloc_node_flags(size, NUMA_NO_NODE,
-				    GFP_KERNEL);
+  return __vmalloc_node_flags(size, NUMA_NO_NODE,
+            GFP_KERNEL);
 }
 ```
 > SKIP 含有一些变动了
@@ -2449,7 +2445,7 @@ this is, therefore, a common source of confusion.
 #### 3.6.1 Alternative Allocators
 Problems arise when slab allocation is used on machines
 that range on the borders of the current hardware scale: tiny embedded systems and large, massively
-parallel systems equipped with huge amounts of RAM. 
+parallel systems equipped with huge amounts of RAM.
 
 1.The ***slob*** allocator is especially optimized for low code size. It is centered around a simple linked
 lists of blocks (thus its name). To allocate memory, a likewise simple first-fit algorithm is used.
@@ -2516,15 +2512,15 @@ few exceptions, are in power-of-2 steps between 2^5 = 32 (for machines with 4 Ki
 allowed allocation order:
 
 ```c
-#define KMALLOC_SHIFT_HIGH	(PAGE_SHIFT + 1)
-#define KMALLOC_SHIFT_MAX	(MAX_ORDER + PAGE_SHIFT - 1)
+#define KMALLOC_SHIFT_HIGH  (PAGE_SHIFT + 1)
+#define KMALLOC_SHIFT_MAX (MAX_ORDER + PAGE_SHIFT - 1)
 
 /* Maximum allocatable size */
-#define KMALLOC_MAX_SIZE	(1UL << KMALLOC_SHIFT_MAX)
+#define KMALLOC_MAX_SIZE  (1UL << KMALLOC_SHIFT_MAX)
 /* Maximum size for which we actually use a slab cache */
-#define KMALLOC_MAX_CACHE_SIZE	(1UL << KMALLOC_SHIFT_HIGH)
+#define KMALLOC_MAX_CACHE_SIZE  (1UL << KMALLOC_SHIFT_HIGH)
 /* Maximum order allocatable via the slab allocagtor */
-#define KMALLOC_MAX_ORDER	(KMALLOC_SHIFT_MAX - PAGE_SHIFT)
+#define KMALLOC_MAX_ORDER (KMALLOC_SHIFT_MAX - PAGE_SHIFT)
 ```
 
 Each time kmalloc is invoked, the kernel finds the most suitable cache and allocates one of its objects to
@@ -2606,14 +2602,14 @@ type by means of a set of standard functions.
 
 ```c
 struct kmem_cache_cpu {
-	void **freelist;	/* Pointer to next available object */
-	unsigned long tid;	/* Globally unique transaction id */
-	struct page *page;	/* The slab from which we are allocating */
+  void **freelist;  /* Pointer to next available object */
+  unsigned long tid;  /* Globally unique transaction id */
+  struct page *page;  /* The slab from which we are allocating */
 #ifdef CONFIG_SLUB_CPU_PARTIAL
-	struct page *partial;	/* Partially allocated frozen slabs */
+  struct page *partial; /* Partially allocated frozen slabs */
 #endif
 #ifdef CONFIG_SLUB_STATS
-	unsigned stat[NR_SLUB_STAT_ITEMS];
+  unsigned stat[NR_SLUB_STAT_ITEMS];
 #endif
 };
 
@@ -2621,59 +2617,59 @@ struct kmem_cache_cpu {
  * Slab cache management.
  */
 struct kmem_cache {
-	struct kmem_cache_cpu __percpu *cpu_slab;
-	/* Used for retrieving partial slabs, etc. */
-	slab_flags_t flags;
-	unsigned long min_partial;
-	unsigned int size;	/* The size of an object including metadata */
-	unsigned int object_size;/* The size of an object without metadata */
-	unsigned int offset;	/* Free pointer offset */
+  struct kmem_cache_cpu __percpu *cpu_slab;
+  /* Used for retrieving partial slabs, etc. */
+  slab_flags_t flags;
+  unsigned long min_partial;
+  unsigned int size;  /* The size of an object including metadata */
+  unsigned int object_size;/* The size of an object without metadata */
+  unsigned int offset;  /* Free pointer offset */
 
-	struct kmem_cache_order_objects oo;
+  struct kmem_cache_order_objects oo;
 
-	/* Allocation and freeing of slabs */
-	struct kmem_cache_order_objects max;
-	struct kmem_cache_order_objects min;
-	gfp_t allocflags;	/* gfp flags to use on each alloc */
-	int refcount;		/* Refcount for slab cache destroy */
-	void (*ctor)(void *);
-	unsigned int inuse;		/* Offset to metadata */
-	unsigned int align;		/* Alignment */
-	unsigned int red_left_pad;	/* Left redzone padding size */
-	const char *name;	/* Name (only for display!) */
-	struct list_head list;	/* List of slab caches */
+  /* Allocation and freeing of slabs */
+  struct kmem_cache_order_objects max;
+  struct kmem_cache_order_objects min;
+  gfp_t allocflags; /* gfp flags to use on each alloc */
+  int refcount;   /* Refcount for slab cache destroy */
+  void (*ctor)(void *);
+  unsigned int inuse;   /* Offset to metadata */
+  unsigned int align;   /* Alignment */
+  unsigned int red_left_pad;  /* Left redzone padding size */
+  const char *name; /* Name (only for display!) */
+  struct list_head list;  /* List of slab caches */
 
-	unsigned int useroffset;	/* Usercopy region offset */
-	unsigned int usersize;		/* Usercopy region size */
+  unsigned int useroffset;  /* Usercopy region offset */
+  unsigned int usersize;    /* Usercopy region size */
 
-	struct kmem_cache_node *node[MAX_NUMNODES];
+  struct kmem_cache_node *node[MAX_NUMNODES];
 };
 
 struct kmem_cache_node {
-	spinlock_t list_lock;
+  spinlock_t list_lock;
 
 #ifdef CONFIG_SLAB
-	struct list_head slabs_partial;	/* partial list first, better asm code */
-	struct list_head slabs_full;
-	struct list_head slabs_free;
-	unsigned long total_slabs;	/* length of all slab lists */
-	unsigned long free_slabs;	/* length of free slab list only */
-	unsigned long free_objects;
-	unsigned int free_limit;
-	unsigned int colour_next;	/* Per-node cache coloring */
-	struct array_cache *shared;	/* shared per node */
-	struct alien_cache **alien;	/* on other nodes */
-	unsigned long next_reap;	/* updated without locking */
-	int free_touched;		/* updated without locking */
+  struct list_head slabs_partial; /* partial list first, better asm code */
+  struct list_head slabs_full;
+  struct list_head slabs_free;
+  unsigned long total_slabs;  /* length of all slab lists */
+  unsigned long free_slabs; /* length of free slab list only */
+  unsigned long free_objects;
+  unsigned int free_limit;
+  unsigned int colour_next; /* Per-node cache coloring */
+  struct array_cache *shared; /* shared per node */
+  struct alien_cache **alien; /* on other nodes */
+  unsigned long next_reap;  /* updated without locking */
+  int free_touched;   /* updated without locking */
 #endif
 
 #ifdef CONFIG_SLUB
-	unsigned long nr_partial;
-	struct list_head partial;
+  unsigned long nr_partial;
+  struct list_head partial;
 #ifdef CONFIG_SLUB_DEBUG
-	atomic_long_t nr_slabs;
-	atomic_long_t total_objects;
-	struct list_head full;
+  atomic_long_t nr_slabs;
+  atomic_long_t total_objects;
+  struct list_head full;
 #endif
 #endif
 };
@@ -2692,20 +2688,20 @@ struct kmem_cache_node {
  *
  */
 struct array_cache {
-	unsigned int avail;
-	unsigned int limit;
-	unsigned int batchcount;
-	unsigned int touched;
-	void *entry[];	/*
-			 * Must have this definition in here for the proper
-			 * alignment of array_cache. Also simplifies accessing
-			 * the entries.
-			 */
+  unsigned int avail;
+  unsigned int limit;
+  unsigned int batchcount;
+  unsigned int touched;
+  void *entry[];  /*
+       * Must have this definition in here for the proper
+       * alignment of array_cache. Also simplifies accessing
+       * the entries.
+       */
 };
 
 struct alien_cache {
-	spinlock_t lock;
-	struct array_cache ac;
+  spinlock_t lock;
+  struct array_cache ac;
 };
 ```
 > 似乎书上描述的关键的代码都放置到 kmem_cache_node 中间去
@@ -2729,83 +2725,83 @@ a multistep process to activate the slab allocator step-by-step.
  */
 void __init kmem_cache_init(void)
 {
-	int i;
+  int i;
 
-	kmem_cache = &kmem_cache_boot;
+  kmem_cache = &kmem_cache_boot;
 
-	if (!IS_ENABLED(CONFIG_NUMA) || num_possible_nodes() == 1)
-		use_alien_caches = 0;
+  if (!IS_ENABLED(CONFIG_NUMA) || num_possible_nodes() == 1)
+    use_alien_caches = 0;
 
-	for (i = 0; i < NUM_INIT_LISTS; i++)
-		kmem_cache_node_init(&init_kmem_cache_node[i]);
+  for (i = 0; i < NUM_INIT_LISTS; i++)
+    kmem_cache_node_init(&init_kmem_cache_node[i]);
 
-	/*
-	 * Fragmentation resistance on low memory - only use bigger
-	 * page orders on machines with more than 32MB of memory if
-	 * not overridden on the command line.
-	 */
-	if (!slab_max_order_set && totalram_pages() > (32 << 20) >> PAGE_SHIFT)
-		slab_max_order = SLAB_MAX_ORDER_HI;
+  /*
+   * Fragmentation resistance on low memory - only use bigger
+   * page orders on machines with more than 32MB of memory if
+   * not overridden on the command line.
+   */
+  if (!slab_max_order_set && totalram_pages() > (32 << 20) >> PAGE_SHIFT)
+    slab_max_order = SLAB_MAX_ORDER_HI;
 
-	/* Bootstrap is tricky, because several objects are allocated
-	 * from caches that do not exist yet:
-	 * 1) initialize the kmem_cache cache: it contains the struct
-	 *    kmem_cache structures of all caches, except kmem_cache itself:
-	 *    kmem_cache is statically allocated.
-	 *    Initially an __init data area is used for the head array and the
-	 *    kmem_cache_node structures, it's replaced with a kmalloc allocated
-	 *    array at the end of the bootstrap.
-	 * 2) Create the first kmalloc cache.
-	 *    The struct kmem_cache for the new cache is allocated normally.
-	 *    An __init data area is used for the head array.
-	 * 3) Create the remaining kmalloc caches, with minimally sized
-	 *    head arrays.
-	 * 4) Replace the __init data head arrays for kmem_cache and the first
-	 *    kmalloc cache with kmalloc allocated arrays.
-	 * 5) Replace the __init data for kmem_cache_node for kmem_cache and
-	 *    the other cache's with kmalloc allocated memory.
-	 * 6) Resize the head arrays of the kmalloc caches to their final sizes.
-	 */
+  /* Bootstrap is tricky, because several objects are allocated
+   * from caches that do not exist yet:
+   * 1) initialize the kmem_cache cache: it contains the struct
+   *    kmem_cache structures of all caches, except kmem_cache itself:
+   *    kmem_cache is statically allocated.
+   *    Initially an __init data area is used for the head array and the
+   *    kmem_cache_node structures, it's replaced with a kmalloc allocated
+   *    array at the end of the bootstrap.
+   * 2) Create the first kmalloc cache.
+   *    The struct kmem_cache for the new cache is allocated normally.
+   *    An __init data area is used for the head array.
+   * 3) Create the remaining kmalloc caches, with minimally sized
+   *    head arrays.
+   * 4) Replace the __init data head arrays for kmem_cache and the first
+   *    kmalloc cache with kmalloc allocated arrays.
+   * 5) Replace the __init data for kmem_cache_node for kmem_cache and
+   *    the other cache's with kmalloc allocated memory.
+   * 6) Resize the head arrays of the kmalloc caches to their final sizes.
+   */
 
-	/* 1) create the kmem_cache */
+  /* 1) create the kmem_cache */
 
-	/*
-	 * struct kmem_cache size depends on nr_node_ids & nr_cpu_ids
-	 */
-	create_boot_cache(kmem_cache, "kmem_cache",
-		offsetof(struct kmem_cache, node) +
-				  nr_node_ids * sizeof(struct kmem_cache_node *),
-				  SLAB_HWCACHE_ALIGN, 0, 0);
-	list_add(&kmem_cache->list, &slab_caches);
-	memcg_link_cache(kmem_cache);
-	slab_state = PARTIAL;
+  /*
+   * struct kmem_cache size depends on nr_node_ids & nr_cpu_ids
+   */
+  create_boot_cache(kmem_cache, "kmem_cache",
+    offsetof(struct kmem_cache, node) +
+          nr_node_ids * sizeof(struct kmem_cache_node *),
+          SLAB_HWCACHE_ALIGN, 0, 0);
+  list_add(&kmem_cache->list, &slab_caches);
+  memcg_link_cache(kmem_cache);
+  slab_state = PARTIAL;
 
-	/*
-	 * Initialize the caches that provide memory for the  kmem_cache_node
-	 * structures first.  Without this, further allocations will bug.
-	 */
-	kmalloc_caches[KMALLOC_NORMAL][INDEX_NODE] = create_kmalloc_cache(
-				kmalloc_info[INDEX_NODE].name,
-				kmalloc_size(INDEX_NODE), ARCH_KMALLOC_FLAGS,
-				0, kmalloc_size(INDEX_NODE));
-	slab_state = PARTIAL_NODE;
-	setup_kmalloc_cache_index_table();
+  /*
+   * Initialize the caches that provide memory for the  kmem_cache_node
+   * structures first.  Without this, further allocations will bug.
+   */
+  kmalloc_caches[KMALLOC_NORMAL][INDEX_NODE] = create_kmalloc_cache(
+        kmalloc_info[INDEX_NODE].name,
+        kmalloc_size(INDEX_NODE), ARCH_KMALLOC_FLAGS,
+        0, kmalloc_size(INDEX_NODE));
+  slab_state = PARTIAL_NODE;
+  setup_kmalloc_cache_index_table();
 
-	slab_early_init = 0;
+  slab_early_init = 0;
 
-	/* 5) Replace the bootstrap kmem_cache_node */
-	{
-		int nid;
+  /* 5) Replace the bootstrap kmem_cache_node */
+  {
+    int nid;
 
-		for_each_online_node(nid) {
-			init_list(kmem_cache, &init_kmem_cache_node[CACHE_CACHE + nid], nid);
+    for_each_online_node(nid) {
+      init_list(kmem_cache, &init_kmem_cache_node[CACHE_CACHE + nid], nid);
 
-			init_list(kmalloc_caches[KMALLOC_NORMAL][INDEX_NODE],
-					  &init_kmem_cache_node[SIZE_NODE + nid], nid);
-		}
-	}
+      init_list(kmalloc_caches[KMALLOC_NORMAL][INDEX_NODE],
+            &init_kmem_cache_node[SIZE_NODE + nid], nid);
+    }
+  }
 
-	create_kmalloc_caches(ARCH_KMALLOC_FLAGS);
+  create_kmalloc_caches(ARCH_KMALLOC_FLAGS);
 }
 
 // 本函数被 mm_init 调用
@@ -2845,10 +2841,10 @@ void __init kmem_cache_init(void)
  */
 struct kmem_cache *
 kmem_cache_create(const char *name, unsigned int size, unsigned int align,
-		slab_flags_t flags, void (*ctor)(void *))
+    slab_flags_t flags, void (*ctor)(void *))
 {
-	return kmem_cache_create_usercopy(name, size, align, flags, 0, 0,
-					  ctor);
+  return kmem_cache_create_usercopy(name, size, align, flags, 0, 0,
+            ctor);
 }
 EXPORT_SYMBOL(kmem_cache_create);
 ```
@@ -2894,7 +2890,7 @@ EXPORT_SYMBOL(kmem_cache_create);
 #### [zhihu](https://www.zhihu.com/question/321040802/answer/664205133)
 32位的cpu，Linux虚拟内存有1g的内核空间，低端内存线性映射到这个内核空间的一部分，高端内存采用其他办法动态映射，保证内核空间有办法映射到所有的物理内存。我的问题是：内核运行又不需要全部的物理页框
 > 1. 难道是内核是为了将所有的空间映射到内核中间，　
-> 2. 既然都是线性映射，那如此还需要内核页表干什么？ 
+> 2. 既然都是线性映射，那如此还需要内核页表干什么？
 
 
 高端内存和低端内存是物理的划分吗，或者是和memory zone的相关联的东西(是的，因为前面就是根本没有理解好好的内存需要划分成为一堆zone)

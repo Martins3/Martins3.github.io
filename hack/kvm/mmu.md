@@ -85,7 +85,7 @@ reached given its gfn.  This is used, for example, when swapping out a page.
 > *TODO* synchronized and unsynchronized pages
 > A special case is when a guest page table is reachable from the current
 guest cr3.  In this case, the guest is obliged to issue an invlpg instruction
-before using the translation. 
+before using the translation.
 
 > reachable 为什么反而需要 cr3 来处理
 
@@ -147,7 +147,7 @@ KVM Forum :
 问题是:
 1. mmu 的设计不是在 vmx 中间吗 ? mmu.c 中间存放什么内容的 ?
 
-mmu.c 
+mmu.c
 ```c
 /*
  * x86 supports 4 paging modes (5-level 64-bit, 4-level 64-bit, 3-level 32-bit,
@@ -224,7 +224,7 @@ direct_page_fault => try_async_pf => kvm_arch_setup_async_pf => kvm_setup_async_
 
 路径2:
 ```c
-kvm_handle_page_fault : 入口函数, 靠近 exit handler 
+kvm_handle_page_fault : 入口函数, 靠近 exit handler
   - kvm_mmu_page_fault
   - kvm_async_pf_task_wait_schedule
 ```
@@ -240,8 +240,8 @@ kvm_handle_page_fault : 入口函数, 靠近 exit handler
 
 ## page fault
 两条路径:
-- handle_ept_violation ==> kvm_mmu_page_fault  ==> kvm_mmu_do_page_fault ==> kvm_mmu::page_fault => kvm_tdp_page_fault ==> direct_page_fault ==> `__direct_map` ==> link_shadow_page ==> 
-- handle_exception_nmi ==> kvm_handle_page_fault ==> ... 
+- handle_ept_violation ==> kvm_mmu_page_fault  ==> kvm_mmu_do_page_fault ==> kvm_mmu::page_fault => kvm_tdp_page_fault ==> direct_page_fault ==> `__direct_map` ==> link_shadow_page ==>
+- handle_exception_nmi ==> kvm_handle_page_fault ==> ...
 
 #### shadow page fault
 ```c
@@ -353,12 +353,9 @@ https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/6/html/vi
 
 #### kvm_arch_end_assignment
 - [ ] vfio 和 virtual IO 的关系 ?
-- [ ] kvm 下面也有 eventfd 
-
+- [ ] kvm 下面也有 eventfd
 
 ## memslot
-https://blog.csdn.net/sdulibh/article/details/83306327
-
 memslot : HPA 到 GVA 之间的映射关系
 
 ## link_shadow_page
@@ -388,8 +385,8 @@ kvm_mmu_notifier_invalidate_range_start ==> kvm_unmap_hva_range ==> kvm_handle_h
   - [ ] kvm_unmap_rmapp ==> kvm_zap_rmapp
     - [ ] mmu_spte_clear_track_bits : 将 sptep 的内容清空，也就是 shadow page table 无法访问到位置, and sync spte's ad bit to host pte's ad bit
     - [ ] pte_list_remove : The `spte` is no longer managed by this `gfn`
-  - [ ] kvm_handle_hva_range : 获取到 range 对应的 gfn 
-    - [ ] for_each_slot_rmap_range : 
+  - [ ] kvm_handle_hva_range : 获取到 range 对应的 gfn
+    - [ ] for_each_slot_rmap_range :
         - [ ] `__gfn_to_rmap`
 
 ```c
@@ -503,7 +500,7 @@ struct kvm_page_track_notifier_node {
 Guest systems maintain their own page tables, but they are not the tables used by the memory management unit. Instead, whenever the guest makes a change to its tables, the host system intercepts the operation, checks it for validity, then mirrors the change in the real page tables, which "shadow" those maintained by the guest.
 > - 物理上的是 shadow page table，guest 无法访问 shadow page table，否则存在安全问题
 
-In particular, if the host system decides that it wants to push a given page out to swap, it can't tell the guest that the page is no longer resident. 
+In particular, if the host system decides that it wants to push a given page out to swap, it can't tell the guest that the page is no longer resident.
 > 通过 notifier 告诉他的物理地址被换出了
 
 #### https://lwn.net/Articles/732952/
@@ -630,7 +627,7 @@ FNAME(fetch):
 - [ ] 为什么需要进行两次 while 循环进行 shadow_walk
   - [ ] 调用 FNAME(fetch) 之前，FNAME(walk_addr) 进行的循环是走到最下面一个级别的，所以，实际上只是单独处理最后一个级别的内容吧!
 
-## Generation 
+## Generation
 > As mentioned in "Reaction to events" above, kvm will cache MMIO
 information in leaf sptes.
 
@@ -977,13 +974,13 @@ https://stackoverflow.com/questions/55589131/what-is-the-relation-between-ept-pt
 #### ad bit manual
 IA32_VMX_EPT_VPID_CAP
 
-When accessed and dirty flags for EPT are enabled, software can track writes to guest-physical addresses using a 
+When accessed and dirty flags for EPT are enabled, software can track writes to guest-physical addresses using a
 feature called page-modification logging.
 
-*Software can enable page-modification logging by setting the “enable PML” VM-execution control (see Table 24-7 
+*Software can enable page-modification logging by setting the “enable PML” VM-execution control (see Table 24-7
 in Section 24.6.2).*
 
-**If the processor updated a dirty flag for EPT (changing it from 0 to 1), it then operates 
+**If the processor updated a dirty flag for EPT (changing it from 0 to 1), it then operates
 as follows:**
 > 当 update a dirty flag for EPT 的自动将地址写入到 PML 中间
 
@@ -1061,7 +1058,7 @@ static int handle_pml_full(struct kvm_vcpu *vcpu)
   - [ ] 直接禁止使用
   - [ ] host 建立对应的 huge page table
     - 如果 guest 建议 huge page table，但是 host 根本没有这么多空间，如何 ?
- 
+
 - [ ] 不考虑 kvm 虚拟化，为了支持 THP 需要实现什么东西 ?
   - TLB 设置标志位，告诉一个一个 2M 的虚拟地址空间都是可以翻译
   - page walk 机制，当检测到是 page entry THP 的时候，可以得到物理地址了
@@ -1133,7 +1130,7 @@ static struct kvm_lpage_info *lpage_info_slot(gfn_t gfn,
 https://www.kernel.org/doc/Documentation/x86/pat.txt
 
 
-#### disallowed_hugepage_adjust 
+#### disallowed_hugepage_adjust
 - 可以查看该函数所在 git blame，就是对于 host huge page 的再次检查，
 如果不可以，那么需要 break up 成为普通 page
 
@@ -1223,7 +1220,7 @@ Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
 #### mmu_topup_memory_caches
 - 添加(topup) cache
 
-- [ ] 什么 cache 
+- [ ] 什么 cache
 
 #### shadow page table 的 dirty bit
 
@@ -1234,14 +1231,14 @@ Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
 
 > Synchronized and unsynchronized pages
 > =====================================
-> 
+>
 > The guest uses two events to synchronize its tlb and page tables: tlb flushes
 > and page invalidations (invlpg).
-> 
+>
 > A tlb flush means that we need to synchronize all sptes reachable from the
 > guest's cr3.  **This is expensive, so we keep all guest page tables write
 > protected, and synchronize sptes to gptes when a gpte is written.**
-> 
+>
 > *A special case is when a guest page table is reachable from the current
 > guest cr3.*  In this case, the guest is obliged to issue an invlpg instruction
 > before using the translation.  We take advantage of that by removing write
@@ -1250,7 +1247,7 @@ Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
 > the amount of emulation we have to do when the guest modifies multiple gptes,
 > or when the a guest page is no longer used as a page table and is used for
 > random guest data.
-> 
+>
 > As a side effect we have to resynchronize all reachable unsynchronized shadow
 > pages on a tlb flush.
 
@@ -1431,11 +1428,11 @@ static void mmu_sync_children(struct kvm_vcpu *vcpu,
 	}
 ```
 
-现在理解一下 rmap_write_protect : 
+现在理解一下 rmap_write_protect :
 
 
 ## invlpg
-`kvm_mmu_invalidate_gva` call kvm_mmu::invlpg 
+`kvm_mmu_invalidate_gva` call kvm_mmu::invlpg
 
 - [ ] kvm_mmu_invalidate_gva
   - [ ] caller
@@ -1452,7 +1449,7 @@ static void mmu_sync_children(struct kvm_vcpu *vcpu,
 - [ ] kvm_mmu_invlpg
     - [ ] caller 分别在 x86.c 和 vmx.c 中间，用于 emulat 和 vmexit 的处理，所以 emulate 到底是干啥的
     - [ ] 似乎正常情况下，会走到 `FNAME(invlpg)`
-        - [ ] 
+        - [ ]
 
 
 #### rmap
@@ -1500,7 +1497,7 @@ static inline struct kvm_mmu_page *to_shadow_page(hpa_t shadow_page)
 ```
 - 此处使用 hash 遍历的总是 shadow page table，参数 gfn 是一个 guest page table 的物理地址，需要找到 shadow 该 page 的 shadow page table.
 - [ ] 为什么 guest page 在 gfn 上，会存在多个 shadow page table 来 shadow
-- [ ]  
+- [ ]
 
 
 ```c
@@ -1553,7 +1550,7 @@ static int rmap_add(struct kvm_vcpu *vcpu, u64 *spte, gfn_t gfn)
 	sp = sptep_to_sp(spte); // 获取 spte 所在的 page 的 shadow page
   // shadow page 到 gfn 的映射，注意，shadow page 中间持有的变换地址是 host physical address
   // XXX : 如此，那么每一个 shadow page table 其实保存着其关联的 guest page table 的内容
-	kvm_mmu_page_set_gfn(sp, spte - sp->spt, gfn); 
+	kvm_mmu_page_set_gfn(sp, spte - sp->spt, gfn);
 	rmap_head = gfn_to_rmap(vcpu->kvm, gfn, sp);
 	return pte_list_add(vcpu, spte, rmap_head);
 }
@@ -1604,7 +1601,7 @@ rmap : 多个 parent page table 会指向 同一个下一级 page table
 为什么设置保护机制是在 shadow page table 上的 ?
 
 Guest 想要修改 GPTE 的时候，其实也是需要 page walk 的，此时 page walk 经过的就是
-shadow page table. 设置保护就是更新一下 spte 的标志位。当 page walk 失败的原因是 
+shadow page table. 设置保护就是更新一下 spte 的标志位。当 page walk 失败的原因是
 write protect 的时候，显然可以知道是在哪一个 spte 上的，更新 spte 指向的内容。
 还用一个可能性是，guest 更新 page table 的时候，总是会首先进行 invlpg
 
@@ -1616,7 +1613,7 @@ CPU1: 正确的顺序是 `sp->unsync`，然后 spte writable。
 
 - [ ] 是不是host 使用的页面，只有页表被设置为 write protect 的 ?
 
-**当修改 guest page table 的时候，该页面由于被 write protection, 
+**当修改 guest page table 的时候，该页面由于被 write protection,
 退出，根据 gfn(也就是) 可以找到其对应的 spte,
 设置 unsync ，writable，然后继续修改，invlpg，sync page table**
 
@@ -1646,8 +1643,8 @@ static bool mmu_need_write_protect(struct kvm_vcpu *vcpu, gfn_t gfn,
 	return false;
 }
 ```
-- 如果一个 page 被 track 了，那么就不需要 write protect 
-- 将其设置为 unsync 也是可以不设置保护，那么可以在 guest invlpg 的时候进行 
+- 如果一个 page 被 track 了，那么就不需要 write protect
+- 将其设置为 unsync 也是可以不设置保护，那么可以在 guest invlpg 的时候进行
 
 
 ```c
@@ -1739,7 +1736,7 @@ static int rmap_add(struct kvm_vcpu *vcpu, u64 *spte, gfn_t gfn)
 }
 ```
 
-## page track 
+## page track
 kvm_mmu_get_page ==> account_shadowed ==> kvm_slot_page_track_remove_page / kvm_slot_page_track_add_page ==> update_gfn_track
 
 ```c
@@ -1849,7 +1846,7 @@ struct kvm_page_track_notifier_node {
         - [ ] paging64_prefetch_gpte
           - [ ] pte_prefetch_gfn_to_pfn : 这个 pfn 是 host 物理地址, check 是如何使用的。
           - [ ] paging64_protect_clean_gpte : 应该跟踪一下 pte_access 的作用
-          - [ ] mmu_set_spte 
+          - [ ] mmu_set_spte
               - [ ] drop_spte
               - [ ] 变量 : was_rmapped
                   - [x] rmap_add : 一个 gfn 可能被 超过 1000 个 spte 映射
@@ -1891,7 +1888,7 @@ direct_page_fault 和 paging64_page_fault 的位置都调用，page_fault_handle
     - [ ] kvm_mmu_unprotect_page : 检查其调用位置
     - [ ] is_writable_pte()
       - [ ] it flush tlb if we try to write-protect a spte whose `SPTE_MMU_WRITEABLE`
-      - [ ] mmu_spte_update() : Update the state bits, it means the mapped pfn is not changed. 
+      - [ ] mmu_spte_update() : Update the state bits, it means the mapped pfn is not changed.
           - [x] 只是修改其中的 ad bit 以及 权限等，而不是修改其中 pfn
           - [ ] spte_write_protect <= `__rmap_write_protect` <= `rmap_write_protect` : 我们理解的 write protect 的体系
       - [ ] `#define SPTE_HOST_WRITEABLE	(1ULL << PT_FIRST_AVAIL_BITS_SHIFT)` 和 `#define SPTE_MMU_WRITEABLE	(1ULL << (PT_FIRST_AVAIL_BITS_SHIFT + 1))`
@@ -2030,7 +2027,7 @@ https://stackoverflow.com/questions/50256740/who-performs-the-tlb-shootdown
 - [ ] 作为最终的部分理解, 用于验证自己的想法
 
 ## nested
-`kvm_init_shadow_ept_mmu` register a `kvm_mmu::page_fault` with `ept_page_fault`, 
+`kvm_init_shadow_ept_mmu` register a `kvm_mmu::page_fault` with `ept_page_fault`,
 but what we currently interests in  is `init_kvm_tdp_mmu`
 
 

@@ -78,7 +78,6 @@
 动手能力几乎为零。
 
 - 将自己的操作系统换成 Linux，不要过多的使用 Windows，越早越好
-  -
 - 学好 [mit 的这个课程](https://missing-semester-cn.github.io/)
 
 ## 附录

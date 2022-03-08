@@ -4,10 +4,7 @@
 - [ ] /proc/stat 关于 softirq 的统计是什么 ？
 
 ## Notes
-ref : https://blog.csdn.net/LoyenWang/article/details/106774834?spm=1001.2014.3001.5501
-
 ![loading](https://img2020.cnblogs.com/blog/1771657/202006/1771657-20200614143354812-1093740244.png)
-
 
 softirq_action 可能是紧跟着 hardirq 执行的，也可能是在 softirqd 中间执行的。
 

@@ -75,6 +75,24 @@ apic_timer => apic_local_deliver => apic_set_irq 的过程中，本来 apic 的�
         00000000febf3000-00000000febf300f (prio 0, i/o): msix-pba
 ```
 
+## function trace
+1. alloc_desc <=== alloc_descs <=== `__irq_alloc_descs` <=== irq_domain_alloc_descs <=== `__irq_domain_alloc_irqs` <==== alloc_irq_from_domain <==== mp_map_pin_to_irq <==== pin_2_irq , mp_map_gsi_to_irq <== pin_2_irq <== setup_IO_APIC_irqs <== setup_IO_APIC <== apic_bsp_setup <== apic_intr_mode_init
+  - maybe this how initial irq set up
+2. default_get_smp_config ==> check_physptr ==> smp_read_mpc ==> mp_register_ioapic ==> mp_irqdomain_create
+
+- [x] apic_intr_mode_select : choose intr mode which can be determined by krenel parameter
+- [ ] apic_intr_mode_init --> *default_setup_apic_routing* , apic_bsp_setup
+- [x] setup_local_APIC : as name suggests, doing something like this:
+- [ ] enable_IO_APIC : why we need i8259, maybe just legacy. it seems io apic has a different mmio space
+- [ ] mp_pin_to_gsi
+  - [ ] mpprase
+  - [ ] what's gsi
+  - [ ] why we have set up relation with ioapic and pin, and what's pin, it's pin of cpu ?
+
+- [ ] mp_map_pin_to_irq
+  - if irq domain already set up, return `irq_find_mapping`
+  - otherwise, `alloc_irq_from_domain` firstly
+
 [^1]: https://events.static.linuxfound.org/sites/events/files/slides/VT-d%20Posted%20Interrupts-final%20.pdf
 [^2]: https://luohao-brian.gitbooks.io/interrupt-virtualization/content/qemu-kvm-zhong-duan-xu-ni-hua-kuang-jia-fen-679028-4e0a29.html
 

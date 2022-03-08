@@ -13,9 +13,7 @@
 * [tasklet](#tasklet)
 * [pic](#pic)
 * [apic](#apic)
-* [chained irq](#chained-irq)
 * [request irq](#request-irq)
-* [irq desc](#irq-desc)
 * [affinity](#affinity)
 * [gpio](#gpio)
 * [idt](#idt)
@@ -28,7 +26,6 @@
 * [proc && sys](#proc-sys)
 * [/proc/irq](#procirq)
 * [/proc/interrupts](#procinterrupts)
-* [MSI](#msi)
 * [matrix](#matrix)
 * [nested interrupt](#nested-interrupt)
 * [interrupt threads](#interrupt-threads)
@@ -389,149 +386,12 @@ lapic_timer_set_periodic_oneshot(struct clock_event_device *evt, bool oneshot)
 }
 ```
 
-## chained irq
-[ARM](https://elinux.org/images/8/8c/Zyngier.pdf)
-
-> An interrupt controller allows them to be multiplexed
->
-> Offers specific facilities
-> - Masking/unmasking individual interrupts
-> - Setting priorities
-> - SMP affinity
-> - Exotic things like wake-up interrupts
-
-> Interrupt triggers
-> - Level triggered (high or low)
->   - Indicates a persistent condition
->   - An action has to be performed on the device to clear the interrupt
-> - Edge triggered (rising or falling)
->   - Indicates an event
->   - May have happened once or more...
-> - Some systems do not expose the trigger type to software
->   - Either the interrupt is abstracted (virtualization)
->   - Or this is more an exception than an interrupt...
-
-> How does Linux deal with interrupts
-> - `struct irq_chip`
->     - A set of methods describing how to drive the interrupt controller
->     - Directly called by core IRQ code
-> - `struct irqdomain`
->     - A pointer to the firmware node for a given interrupt controller (`fwnode`)
->     - A method to convert a firmware description of an IRQ into an ID local to this interrupt controller (`hwirq`)
->     - A way to retrieve the Linux view of an IRQ from the `hwirq`
-> - `struct irq_desc`
->     - Linux’s view of an interrupt
->     - Contains all the core stuff
->     - 1:1 mapping to the Linux interrupt number
-> - `struct irq_data`
->     - Contains the data that is relevant to the `irq_chip` managing this interrupt
->     - Both the Linux IRQ number and the hwirq
->     - A pointer to the `irq_chip`
->     - Embedded in `irq_desc` (for now)
-
-> - CPU gets an interrupt
-> - Find out the `hwirq` from the interrupt controller
->    - Usually involves reading some HW register
-> - Look-up the `irq_desc` into the `irqdomain` using the `hwirq`
->    - Actually returns an IRQ number, which is equivalent to the `irq_desc`
-> - The core kernel then handles the interrupt
->
-> ![](../../../img/misc/irqdomain.png)
-
-那么，hwirq 在 irqdomain 中间被翻译为 irq_desc ，IRQ number 在 kernel 看来等价于 irq_desc
-
-
-> - Not enough interrupts lines?
->   - Dedicate a single line for a secondary interrupt controller
->   - And add more stuff to it!
-> - Requires two level handling
->   - First handle the interrupt on the primary interrupt controller
->   - Then at the secondary one to find out which device has caused the interrupt
->   - See `irq_set_chained_handler_and_data`, `chained_irq_enter`, `chained_irq_exit`
->   - `Never` treat this as a normal interrupt handler
-> - Used in each and every x86 system
->   - The infamous i8259 cascade
-> - You can also share a single interrupt between devices
->   - And that really stinks. Please avoid doing it if possible.
-
-
-
-```c
-/*
- * Entry/exit functions for chained handlers where the primary IRQ chip
- * may implement either fasteoi or level-trigger flow control.
- */
-static inline void chained_irq_enter(struct irq_chip *chip,
-				     struct irq_desc *desc)
-{
-	/* FastEOI controllers require no action on entry. */
-	if (chip->irq_eoi)
-		return;
-
-	if (chip->irq_mask_ack) {
-		chip->irq_mask_ack(&desc->irq_data);
-	} else {
-		chip->irq_mask(&desc->irq_data);
-		if (chip->irq_ack)
-			chip->irq_ack(&desc->irq_data);
-	}
-}
-
-static inline void chained_irq_exit(struct irq_chip *chip,
-				    struct irq_desc *desc)
-{
-	if (chip->irq_eoi)
-		chip->irq_eoi(&desc->irq_data);
-	else
-		chip->irq_unmask(&desc->irq_data);
-}
-```
-
-
-> - Each interrupt controller has its own `irqdomain`
-> - The kernel deals with two interrupts
->   - and two interrupt handlers
->   - the first one being a chained handler
->   - *convention is to stash a pointer to the secondary domain inside the top-level `irq_desc`*
-> - We walk the interrupt chain in reverse order
-> - Once we reach the last level irq_desc, we can process the actual interrupt handler
-> ![](../../../img/misc/irqdomain2.png)
-
-interrupt controller 和 irqdomain 一一对应的
-
-top-level irq_desc 中间哪里 TMD 有 stash a pointer，只有 action chain 吧 ? 应该是 irq_domain 是含有层次架构的，
-但是对于 irq_desc 和 irq_domain 如何联系起来，并不清楚 ?
-
-> When multiplexing doesn’t fit
-> - There is more than just cascading irqchips
-> - Some setups have a 1:1 mapping between input and output
->   - *Interrupt routers*
->   - *Wake-up controllers*
->   - Programmable line inverters
-> - Most of them are not interrupt controllers
->   - Still, they do impact the interrupt delivery
->   - We choose to represent them as `irq_chip`
-> - This is a hierarchical/stacked configuration
-> - *The chained irqchip paradigm doesn’t match it*
-
-第 15 16 页是在看不懂了
-
 ## request irq
 devm_request_threaded_irq ==> request_threaded_irq
 
 ![loading](https://img2020.cnblogs.com/blog/1771657/202006/1771657-20200605223042609-247616444.png)
 - [ ] 上面讲解了 thread ，shared 的处理，问题是，参数 irq 必须找到对应的 irq_desc, 新分配的只是 irq_action
     - [ ] 通过 irq_domain_alloc_descs 可以分配 irq_desc, 但是现在找不到这些函数的调用位置
-
-
-## irq desc
-- [ ] /sys/kernel/irq
-  - chiq_name_show type_show hwirq_show type_show wakeup_show name_show action_show
-  - irq_sysfs_add
-
-[answer this question](https://unix.stackexchange.com/questions/579513/what-is-meaning-of-empty-action-respect-to-sys-kernel-irq)
-
-- [ ] 显然，CPU 是没有超过 256 个引脚来作为 中断线的，那么 CPU 读取到是什么 ? 最后如何装换为 irq line ?
 
 ## affinity
 
@@ -544,8 +404,6 @@ static int alloc_masks(struct irq_desc *desc, int node)
 static void free_masks(struct irq_desc *desc)
 ```
 > cpu mask 的功能好神奇 ? 还可以实现什么功能
-
-
 
 ## gpio
 https://github.com/Manawyrm/pata-gpio
@@ -875,20 +733,6 @@ static struct irq_chip ioapic_ir_chip __read_mostly = {
 尝试分析一下 /proc/interrupts 如何生成的:
 - 在 kernel/irq/proc.c::show_interrupts 中间
 
-
-## MSI
-Generic MSIs : https://en.wikipedia.org/wiki/Message_Signaled_Interrupts
-
-linux/drivers/pci/msi.c
-
-use nvme as example:
-- nvme_pci_enable
-  - pci_alloc_irq_vectors
-    - pci_alloc_irq_vectors_affinity
-      - `__pci_enable_msix_range`
-        - `__pci_enable_msix`
-          - **msix_capability_init** : [^3] page 130
-
 ## matrix
 观察到 linux/kernel/irq/matrix.c 以及 irq_alloc_matrix, 但是根本不知道为什么需要使用 matrix 这一个概念
 
@@ -903,7 +747,7 @@ use nvme as example:
 - Exceptions	can	nest	two	levels	deep
   – Exceptions	indicate	coding	error
   – Exception	code	(kernel	code)	shouldn’t	have	bugs
-  – Page	fault	is	possible	(trying	to	touch	user	data)
+  – Pagefault	is	possible	(trying	to	touch	user	data)
 
 In order to support as many architectures as possible, Linux has a more restrictive interrupt nesting implementation:[^7]
 - an exception (e.g. page fault, system call) can not preempt an interrupt; if that occurs it is considered a bug
@@ -912,6 +756,7 @@ In order to support as many architectures as possible, Linux has a more restrict
 - [ ] 嵌套规则是 linux 规定的，还是 hardware, 如果是 os, 找到证据
 
 ## interrupt threads
+- 感觉总是调用这个函数 : request_threaded_irq
 
 ## stack
 - When	an	interrupt	occurs,	what	stack	is	used?	[^6]

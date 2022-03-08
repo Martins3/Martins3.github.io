@@ -17,7 +17,6 @@ https://github.com/stateright/stateright : 一个图新界面，用于辅助分�
 
 ## when boring
 - https://github.com/binhnguyennus/awesome-scalability : 指向各种文章，有点高级
-- https://github.com/xingshaocheng/architect-awesome : 指向一堆杂七杂八的 CSDN 文章，可以大概知道后端在干什么
   - https://github.com/toutiaoio/awesome-architecture : 类似的，但是更加侧重分布式一点
 - https://github.com/erikgrinaker/readings/blob/master/distributed-systems.md : 作者还写过 toydb
 

@@ -1,14 +1,8 @@
 # kernel/resource.c
 
-
-
 ## TODO
 1. plka 内容回顾一下
 2. https://0xax.gitbooks.io/linux-insides/content/MM/linux-mm-2.html 似乎提供了关键内容啊!
-3. https://blog.csdn.net/skyflying2012/article/details/8672011 
-    1. resource 使用的空间其实是虚拟的空间，真正利用的是设备的空间
-    2. 利用mmap 将这些空间映射到设备的内存上，所以对于其上读写可以修改
-
 4. https://lwn.net/Articles/653585/ 实际上，使用不是 mmap 而是 ioremap 完成的工作
 
 ## question
@@ -19,7 +13,7 @@
 
 2. 利用 allocate_resource ?
 
-## proc 
+## proc
 1. /proc/ioports 和 /proc/iomem
 
 

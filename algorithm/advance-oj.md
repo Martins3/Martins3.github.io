@@ -1,6 +1,5 @@
 # Summary
 http://www.pythontip.com/acm/problemCategory
-http://blog.csdn.net/a1dark/article/details/11714009
 
 1. [2-SAT](http://blog.sina.com.cn/s/blog_64675f540100k2xj.html)
 2. [String](https://www.cnblogs.com/hate13/p/4622141.html)

@@ -1,4 +1,5 @@
 ## [cfenollosa/os-tutorial](https://github.com/cfenollosa/os-tutorial)
+
 1. what is tty mode ?
 [doc](http://www.cs.bham.ac.uk/~exr/lectures/opsys/10_11/lectures/os-dev.pdf)
 Luckily, what we do have is the Basic Input/Output Software (BIOS), a collection of software routines that are
@@ -11,7 +12,7 @@ BIOS must read specific sectors of data (usually 512 bytes in size) from specifi
 
 The emulators translate low-level display device instructions into pixel rendering on
 a desktop window, so you can see exactly what would be rendered on a real monitor.
-> If in the real machine, how to debug and test the code 
+> If in the real machine, how to debug and test the code
 
 we used the `-f bin` option to instruct nasm to produce raw machine code.
 
@@ -37,6 +38,6 @@ Compile the first kernle with C:
 2. why **Loaded Boot Sector** is located at 0x7c00
 3. [org 0x7c00] the line means what, why just this file has it !
 4. can we make a tutorial for mips, as we know, there is no such thing as real mode and protected mode.
-5. 32-bit protected mode : is there something such as 32-bit real mode 
+5. 32-bit protected mode : is there something such as 32-bit real mode
 6. what's gdt, describe it in details.
-7. **ld** 
+7. **ld**

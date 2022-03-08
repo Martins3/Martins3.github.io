@@ -829,7 +829,7 @@ https://stackoverflow.com/questions/8708463/difference-between-kernel-virtual-ad
 ## compaction
 https://linuxplumbersconf.org/event/2/contributions/65/attachments/15/171/slides-expanded.pdf
 
- - [ ] https://blog.csdn.net/feelabclihu/article/details/107118409
+- [ ] https://www.cnblogs.com/Linux-tech/p/13326565.html
 
 
 1. 请问 isolation 和 compaction 有关联吗 ? 为什么会存在 isolation.c 这个文件啊
@@ -2537,44 +2537,23 @@ mlock 施加影响的位置:
 ## hot plug
 
 ## ioremap
-https://en.wikipedia.org/wiki/Memory-mapped_I/O
+1. maps device physical address(device memory or device registers) to kernel virtual address [^25]
+2. Like user space, the kernel accesses memory through page tables; as a result, when kernel code needs to access memory-mapped I/O devices, it must first set up an appropriate kernel page-table mapping. [^26]
+  - [ ] memremap 是 ioremap 的更好的接口.
 
-1. maps device physical address(device memory or device registers) to kernel virtual address
-[^25]
-2. elld 中间也是类似的提到过!
-3. Like user space, the kernel accesses memory through page tables; as a result, when kernel code needs to access memory-mapped I/O devices, it must first set up an appropriate kernel page-table mapping.
-[^26]
-
-memremap 是 ioremap 的更好的接口. [^26]
-
-问题:
-1. 不是很懂，为什么 ioremap 需要处理 page table 的修改 ?
-    1. pci_iomap 的实现更加符合想象，相当于配置一下 PCIe 的 RC，将 PCIe 的包进行切换.
-    2. ioremap 的参数 : 怎么知道到底是哪一个 设备的 ?
+因为内核也是运行在虚拟地址空间上的，而访问设备是需要物理地址，为了将访问设备的物理地址映射到虚拟地址空间中，所以需要 ioremap，当然 pci 访问带来的各种 cache coherency 问题也是需要尽量考虑的:
 ```c
-/**
- * ioremap     -   map bus memory into CPU space
- * @offset:    bus address of the memory
- * @size:      size of the resource to map
- *
- * ioremap performs a platform specific sequence of operations to
- * make bus memory CPU accessible via the readb/readw/readl/writeb/
- * writew/writel functions and the other mmio helpers. The returned
- * address is not guaranteed to be usable directly as a virtual
- * address.
- *
- * If the area you are trying to map is a PCI BAR you should have a
- * look at pci_iomap().
- */
-void __iomem *ioremap(resource_size_t offset, unsigned long size);
+#0  ioremap (phys_addr=1107312640, size=56) at arch/loongarch/mm/ioremap.c:95
+#1  0x90000000008555c0 in pci_iomap_range (dev=<optimized out>, bar=<optimized out>, offset=<optimized out>, maxlen=<optimized out>) at lib/pci_iomap.c:46
+#2  0x9000000000962150 in map_capability (dev=0x900000027d75b000, off=<optimized out>, minlen=56, align=4, start=0, size=56, len=0x0) at drivers/virtio/virtio_pci_modern.c:134
+#3  0x9000000000962950 in virtio_pci_modern_probe (vp_dev=0x900000027da3e800) at drivers/virtio/virtio_pci_modern.c:652
+#4  0x900000000096311c in virtio_pci_probe (pci_dev=0x900000027d75b000, id=<optimized out>) at drivers/virtio/virtio_pci_common.c:546
+#5  0x90000000008c28c0 in local_pci_probe (_ddi=0x900000027cd33c58) at drivers/pci/pci-driver.c:306
+#6  0x9000000000235030 in work_for_cpu_fn (work=0x900000027cd33c08) at kernel/workqueue.c:4908
+#7  0x9000000000238ce0 in process_one_work (worker=0x900000027c08fc00, work=0x900000027cd33c08) at kernel/workqueue.c:2152
+#8  0x9000000000239220 in process_scheduled_works (worker=<optimized out>) at kernel/workqueue.c:2211
 ```
-
-
 ## mremap
-我想知道 mremap 和 ioremap 的关系是什么 ? 它们应该是没有任何关系的
-
-Man mremap(2)
-
 
 ## debug
 > 从内核的选项来看，对于 debug 一无所知啊 !

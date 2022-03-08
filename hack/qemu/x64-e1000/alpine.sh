@@ -1,7 +1,7 @@
 #!/bin/bash
 set -eu
 
-use_32bit=true
+use_32bit=false
 
 # ----------------------- 配置区 -----------------------------------------------
 kernel_dir=/home/maritns3/core/ubuntu-linux
@@ -11,13 +11,7 @@ fi
 
 # 可以直接使用系统中安装的 QEMU, 也就是 qemu-system-x86_64
 qemu=/home/maritns3/core/kvmqemu/build/qemu-system-x86_64
-qemu=/home/maritns3/core/xqm/build/x86_64-softmmu/qemu-system-x86_64
-if [[ $use_32bit == true ]]; then
-  qemu=/home/maritns3/core/xqm/32bit/i386-softmmu/qemu-system-i386
-fi
-initrd=/home/maritns3/core/5000/ld/DuckBuBi/image/test.cpio.gz
 # bios 镜像的地址，可以不配置，将下面的 arg_seabios 定位为 "" 就是使用默认的
-seabios=/home/maritns3/core/5000/ld/DuckBuBi/seabios/out/bios.bin
 seabios=/home/maritns3/core/seabios/out/bios.bin
 alpine_img_url=https://alpinelinux.org/downloads/
 # ------------------------------------------------------------------------------
@@ -38,36 +32,43 @@ LAUNCH_GDB=false
 
 # 必选参数
 arg_img="-drive \"file=${disk_img},format=qcow2\""
-arg_initrd="-initrd ${initrd}"
-arg_initrd=""
-
-arg_kernel_args="root=/dev/sda3 nokaslr console=ttyS0"
-if [[ $use_32bit == true ]]; then
-  arg_kernel_args="nokaslr console=ttyS0 root=/dev/ram rdinit=/hello.out"
-fi
+arg_kernel_args="root=/dev/sda3 nokaslr console=ttyS0 earlyprink=serial"
 arg_kernel="--kernel ${kernel} -append \"${arg_kernel_args}\""
-arg_monitor="-monitor stdio"
-
+arg_monitor="-serial mon:stdio"
 arg_monitor="-nographic"
-
-if [[ $use_32bit == true ]]; then
-  arg_monitor="-nographic"
-fi
 
 # 可选参数
 arg_mem="-m 128m -smp 1"
 arg_share_dir="-virtfs local,path=${share_dir},mount_tag=host0,security_model=mapped,id=host0"
 arg_machine="-machine pc,accel=kvm,kernel-irqchip=on" # q35
-# arg_cpu="-cpu host"
-arg_cpu=""
+arg_cpu="-cpu host"
 arg_seabios="-chardev file,path=/tmp/seabios.log,id=seabios -device isa-debugcon,iobase=0x402,chardev=seabios -bios ${seabios}"
 arg_nvme="-device nvme,drive=nvme1,serial=foo -drive file=${ext4_img1},format=raw,if=none,id=nvme1"
 arg_nvme2="-device virtio-blk-pci,drive=nvme2,iothread=io0 -drive file=${ext4_img2},format=raw,if=none,id=nvme2"
 arg_iothread="-object iothread,id=io0"
 arg_qmp="-qmp unix:${abs_loc}/test.socket,server,nowait"
+arg_initrd=""
 arg_qmp=""
 arg_tmp=""
 # -soundhw pcspk
+
+
+if [[ $use_32bit == true ]]; then
+  qemu=/home/maritns3/core/xqm/32bit/i386-softmmu/qemu-system-i386
+  initrd=/home/maritns3/core/5000/ld/DuckBuBi/image/test.cpio.gz
+  arg_initrd="-initrd ${initrd}"
+  arg_monitor="-nographic"
+  arg_kernel_args="nokaslr console=ttyS0 root=/dev/ram rdinit=/hello.out"
+fi
+
+yocto_img=${abs_loc}/yocto.ext4
+ARCH=x86-64
+YOCTO_URL=http://downloads.yoctoproject.org/releases/yocto/yocto-3.1/machines/qemu/qemu${ARCH}/
+YOCTO_IMAGE_NAME=core-image-minimal-qemu${ARCH}.ext4
+if [[ ! -f ${yocto_img} ]];then
+  wget ${YOCTO_URL}/${YOCTO_IMAGE_NAME} -O "${yocto_img}"
+  arg_img="-drive \"file=${yocto_img},if=virtio\""
+fi
 
 show_help() {
   echo "------ 配置参数 ---------"
@@ -108,6 +109,7 @@ sure() {
 
 if [ ! -f "$iso" ]; then
   echo "${iso} not found! Download it from ${alpine_img_url}"
+  wget https://dl-cdn.alpinelinux.org/alpine/v3.15/releases/x86_64/alpine-standard-3.15.0-x86_64.iso -O "${iso}"
   exit 0
 fi
 
