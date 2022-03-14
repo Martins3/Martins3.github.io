@@ -176,6 +176,10 @@ https://www2.tkn.tu-berlin.de/teaching/rn/animations/gbn_sr/ : 拥塞网络图�
 ## 工具
 - https://rfc.fyi/ : rfc 搜索
 
+## 有趣
+- [ping localhost 不会和网卡打交道，那是 loopback devices](https://superuser.com/questions/565742/localhost-pinging-when-there-is-no-network-card)
+
+
 [^2]: 用芯探核:基于龙芯的 Linux 内核探索解析
 [^4]: http://yuba.stanford.edu/rcp/
 [^6]: [An Introduction to Computer Networks](http://intronetworks.cs.luc.edu/current2/html/)

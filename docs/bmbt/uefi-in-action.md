@@ -61,22 +61,3 @@ SUM:                            14            345            822           1303
 1. 将 AppPkg.dec 中去掉 Applications/bmbt/libc
 2. 将 bmbt.inf 的 [Packages] 中增加 StdLib/StdLib.dec
 3. 在 env/uefi/include/uapi/env.h `#define USE_UEFI_LIBC` 中添加
-
-## signal 的处理
-// TODO
-
-<script src="https://giscus.app/client.js"
-        data-repo="martins3/martins3.github.io"
-        data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="
-        data-category="Show and tell"
-        data-category-id="MDE4OkRpc2N1c3Npb25DYXRlZ29yeTMyMDMzNjY4"
-        data-mapping="pathname"
-        data-reactions-enabled="1"
-        data-emit-metadata="0"
-        data-theme="light"
-        data-lang="zh-CN"
-        crossorigin="anonymous"
-        async>
-</script>
-
-本站所有文章转发 **CSDN** 将按侵权追究法律责任，其它情况随意。

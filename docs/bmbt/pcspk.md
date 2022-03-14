@@ -46,12 +46,12 @@ tsctimer_setup(void)
 ```c
 static unsigned long quick_pit_calibrate(void)
 {
-	int i;
-	u64 tsc, delta;
-	unsigned long d1, d2;
+  int i;
+  u64 tsc, delta;
+  unsigned long d1, d2;
 
-	/* Set the Gate high, disable speaker */
-	outb((inb(0x61) & ~0x02) | 0x01, 0x61);
+  /* Set the Gate high, disable speaker */
+  outb((inb(0x61) & ~0x02) | 0x01, 0x61);
 ```
 
 ## QEMU

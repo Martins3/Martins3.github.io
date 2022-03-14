@@ -2,25 +2,28 @@
 
 <!-- vim-markdown-toc GitLab -->
 
-- [和用户态编程的根本性区别](#和用户态编程的根本性区别)
-- [UEFI 的基本启动过程](#uefi-的基本启动过程)
-- [UEFI System Table](#uefi-system-table)
-- [Handle 和 Protocol](#handle-和-protocol)
-- [Image](#image)
-  - [Image Load](#image-load)
-- [Event](#event)
-  - [Signal Event](#signal-event)
-  - [Wait Event](#wait-event)
-- [UEFI Driver Model](#uefi-driver-model)
-  - [Driver Binding Protocol](#driver-binding-protocol)
-    - [e.g. pci](#eg-pci)
-- [Device Path](#device-path)
-- [Os Loader](#os-loader)
-  - [CoreExitBootServices](#coreexitbootservices)
-- [Timer](#timer)
-- [Shell Application](#shell-application)
-- [资源](#资源)
-- [疑惑](#疑惑)
+* [和用户态编程的根本性区别](#和用户态编程的根本性区别)
+* [UEFI 的基本启动过程](#uefi-的基本启动过程)
+  * [DXE](#dxe)
+* [UEFI System Table](#uefi-system-table)
+* [Handle 和 Protocol](#handle-和-protocol)
+* [Image](#image)
+  * [Image Load](#image-load)
+* [Event](#event)
+  * [Signal Event](#signal-event)
+  * [Wait Event](#wait-event)
+* [UEFI Driver Model](#uefi-driver-model)
+  * [Driver Binding Protocol](#driver-binding-protocol)
+    * [e.g. pci](#eg-pci)
+* [Device Path](#device-path)
+* [Os Loader](#os-loader)
+  * [CoreExitBootServices](#coreexitbootservices)
+* [Timer](#timer)
+* [Shell Application](#shell-application)
+* [编程风格](#编程风格)
+* [资源](#资源)
+* [疑惑](#疑惑)
+* [总结](#总结)
 
 <!-- vim-markdown-toc -->
 
@@ -661,6 +664,11 @@ edk2 的函数中有 EFIAPI 的标签，这是通过编译选项确定:
 - [ ] 所有的 UEFI 的书籍开始的时候都会讲解曾经痛苦的 bios 时代，说实话，我没有经历过，不是非常理解。
 - [ ] 如果执行了 illegal instruction，其现象是什么?
 - [ ] 在 edk2 的语境中，似乎总是默认运行在物理地址上的，但是 Loongarch 的这种总是在虚拟地址上的怎么处理的呀
+
+## 总结
+经过一段时间对于 UEFI 的学习，我感觉我不太喜欢 edk2 的实现，也不喜欢 UEFI 这个协议。
+- 一方面感觉 UEFI 实现的太复杂了
+- [What’s scary about UEFI is that it has both direct hardware access and a massive attack surface: GUI, Ethernet stack, occasionally an 802.11 stack, etc.](https://news.ycombinator.com/item?id=30651295#30651767)
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

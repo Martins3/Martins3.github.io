@@ -2,21 +2,21 @@
 
 <!-- vim-markdown-toc GitLab -->
 
-- [运行第一个 UEFI 程序](#运行第一个-uefi-程序)
-  - [编译 efi](#编译-efi)
-  - [运行 efi](#运行-efi)
-- [编译 edk2](#编译-edk2)
-- [构建基于 edk2 的 HelloWorld](#构建基于-edk2-的-helloworld)
-- [构建基于 StdLib 的 HelloWorld](#构建基于-stdlib-的-helloworld)
-- [如何让自动运行 efi 程序](#如何让自动运行-efi-程序)
-- [在 Linux 上调试 edk2](#在-linux-上调试-edk2)
-  - [使用 gdb 调试](#使用-gdb-调试)
-  - [使用 debugcon 调试](#使用-debugcon-调试)
-- [生成 compile_commands.json](#生成-compile_commandsjson)
-- [内核作为 efi 文件启动](#内核作为-efi-文件启动)
-- [让程序运行 shell 命令](#让程序运行-shell-命令)
-- [使用 Rust 编写 UEFI Application](#使用-rust-编写-uefi-application)
-- [资源](#资源)
+* [运行第一个 UEFI 程序](#运行第一个-uefi-程序)
+  * [编译 efi](#编译-efi)
+  * [运行 efi](#运行-efi)
+* [编译 edk2](#编译-edk2)
+* [构建基于 edk2 的 HelloWorld](#构建基于-edk2-的-helloworld)
+* [构建基于 StdLib 的 HelloWorld](#构建基于-stdlib-的-helloworld)
+* [如何让自动运行 efi 程序](#如何让自动运行-efi-程序)
+* [在 Linux 上调试 edk2](#在-linux-上调试-edk2)
+  * [使用 gdb 调试](#使用-gdb-调试)
+  * [使用 debugcon 调试](#使用-debugcon-调试)
+* [生成 compile_commands.json](#生成-compile_commandsjson)
+* [内核作为 efi 文件启动](#内核作为-efi-文件启动)
+* [让程序运行 shell 命令](#让程序运行-shell-命令)
+* [使用 Rust 编写 UEFI Application](#使用-rust-编写-uefi-application)
+* [资源](#资源)
 
 <!-- vim-markdown-toc -->
 

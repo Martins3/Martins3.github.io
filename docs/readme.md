@@ -4,7 +4,6 @@
   </p>
   <p align="center">
     <a href="https://996.icu"><img src="https://img.shields.io/badge/link-996.icu-red.svg" alt="996.icu" /></a>
-    <a href="https://spacevim.org/"><img src="https://spacevim.org/img/build-with-SpaceVim.svg" alt="spacevim" /></a>
     <a href="https://github.com/martins3/Martins3.github.io"><img src="https://github.com/martins3/Martins3.github.io/actions/workflows/lint-md.yml/badge.svg" alt="ci" /></a>
     <a href="https://wakatime.com/@21daab89-a694-4970-88ed-a7d264a380e4"><img src="https://wakatime.com/badge/user/21daab89-a694-4970-88ed-a7d264a380e4.svg" alt="Total time coded since Feb 8 2020" /></a>
     <a href="https://github.com/Martins3/Martins3.github.io/commits/master"><img src="https://img.shields.io/github/commit-activity/w/martins3/martins3.github.io"></a>
@@ -16,10 +15,7 @@
 - [Source code reading list](./source-code-reading-list.md)
 - [Binary Translation and Virtualization Paper reading list](./paper-reading-list.md)
 
-## Binary Translation
-- [裸金属二进制翻译器(BMBT)的设计与实现](https://martins3.github.io/ppt/repo/2021-8-24/index.html)
-
-## Virtualization
+## Virtualization && Binary Translation
 - [Loongson Dune : A Process Level Virtualization framework Base on KVM](https://github.com/Martins3/loongson-dune)
 - QEMU 源码分析
   <!-- -  🚧 [QEMU 的文件结构](./qemu/file-structure.md) -->
@@ -42,6 +38,16 @@
   - [QEMU 中的面向对象 : QOM](./qemu/qom.md)
   - [QEMU 中的时钟](./qemu/timer.md)
   - [QEMU 字符设备模拟](./qemu/char.md)
+- [淦，设计一个裸金属二进制翻译器不可能这么难](./bmbt/introduction.md)
+  <!-- - [二进制翻译技术介绍]() -->
+  <!-- - [系统态二进制翻译和用户态翻译]() -->
+  <!-- - [为什么系统态二进制翻译应该在系统态中运行]() -->
+  <!-- - [BMBT: 裸金属二进制翻译器的总体设计和实现]() -->
+  <!-- - [BMBT: 如何实现 CPU 虚拟化]() -->
+  <!-- - [BMBT: 如何实现中断虚拟化]() -->
+  <!-- - [BMBT: 如何实现设备虚拟化]() -->
+  <!-- - [BMBT: 如何实现内存虚拟化]() -->
+  <!-- - [BMBT: 未来的工作]() -->
 
 ## UEFI
 - [Linux 下 UEFI 学习环境搭建](./bmbt/uefi-linux.md)
