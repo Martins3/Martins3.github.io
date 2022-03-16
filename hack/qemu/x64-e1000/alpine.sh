@@ -2,6 +2,7 @@
 set -eu
 
 use_32bit=false
+use_nvme=true
 
 # ----------------------- 配置区 -----------------------------------------------
 kernel_dir=/home/maritns3/core/ubuntu-linux
@@ -31,8 +32,15 @@ debug_kernel=
 LAUNCH_GDB=false
 
 # 必选参数
-arg_img="-drive \"file=${disk_img},format=qcow2\""
-arg_kernel_args="root=/dev/sda3 nokaslr console=ttyS0 earlyprink=serial"
+arg_img="-drive file=${disk_img},format=qcow2"
+root=/dev/sda3
+
+if [[ $use_nvme = true ]]; then
+  arg_img="-device nvme,drive=nvme3,serial=foo -drive file=${disk_img},format=qcow2,if=none,id=nvme3"
+  root=/dev/nvme1n1
+fi
+
+arg_kernel_args="root=$root nokaslr console=ttyS0 earlyprink=serial"
 arg_kernel="--kernel ${kernel} -append \"${arg_kernel_args}\""
 arg_monitor="-serial mon:stdio"
 arg_monitor="-nographic"
@@ -52,7 +60,6 @@ arg_qmp=""
 arg_tmp=""
 # -soundhw pcspk
 
-
 if [[ $use_32bit == true ]]; then
   qemu=/home/maritns3/core/xqm/32bit/i386-softmmu/qemu-system-i386
   initrd=/home/maritns3/core/5000/ld/DuckBuBi/image/test.cpio.gz
@@ -65,7 +72,7 @@ yocto_img=${abs_loc}/yocto.ext4
 ARCH=x86-64
 YOCTO_URL=http://downloads.yoctoproject.org/releases/yocto/yocto-3.1/machines/qemu/qemu${ARCH}/
 YOCTO_IMAGE_NAME=core-image-minimal-qemu${ARCH}.ext4
-if [[ ! -f ${yocto_img} ]];then
+if [[ ! -f ${yocto_img} ]]; then
   wget ${YOCTO_URL}/${YOCTO_IMAGE_NAME} -O "${yocto_img}"
   arg_img="-drive \"file=${yocto_img},if=virtio\""
 fi

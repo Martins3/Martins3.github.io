@@ -1,4 +1,4 @@
-# acpi 
+# acpi
 
 ## [核心文档](https://acpica.org/sites/acpica/files/ACPI-Introduction.pdf)
 Fundamentally, ACPI defines two types of data structures which are shared between the
@@ -13,7 +13,7 @@ is the language used to define ACPI objects and to write control methods.
 An ASL compiler translates ASL into ACPI Machine Language (AML) byte code. AML is the language
 processed by the ACPI AML interpreter.
 
-The system bus is the root of enumeration for these ACPI devices. 
+The system bus is the root of enumeration for these ACPI devices.
 
 Devices that are enumerable on other
 buses, like PCI or USB devices, are usually not enumerated in the namespace. *Instead, their
@@ -33,7 +33,7 @@ ACPI events in one of two general ways: fixed events and general purpose events 
 > 这个也是介绍的相当的清楚了: https://wiki.osdev.org/ACPI
 > 那么 AML (definition blocks) 和 namespace 是什么关系?
 
-Upon initialization, the AML interpreter extracts the byte code in the definition blocks as enumerable objects, 
+Upon initialization, the AML interpreter extracts the byte code in the definition blocks as enumerable objects,
 
 This collection of enumerable forms the OS construct called the ACPI namespace.
 
@@ -60,7 +60,7 @@ executed.
 在 /etc/acpi/PWRF/00000080 的一个脚本文件，只有一行 `poweroff`
 
 - 那么在 poweroff 如何实现的 ?
-  - [ ] 执行 /sbin/poweroff, 但是 /sbin/poweroff 无法被 strace 
+  - [ ] 执行 /sbin/poweroff, 但是 /sbin/poweroff 无法被 strace
 
 ## Official Documents
 ### [ ](https://uefi.org/specs/ACPI/6.4/06_Device_Configuration/Device_Configuration.html)
@@ -69,21 +69,21 @@ executed.
 https://lwn.net/Articles/367630/
 
 - [MADT](https://wiki.osdev.org/MADT) : (Multiple APIC Description Tableacpi_ev_install_xrupt_handlers
-- [HPET](https://wiki.osdev.org/HPET) : 
+- [HPET](https://wiki.osdev.org/HPET) :
 - [RSDT](https://wiki.osdev.org/RSDT) : Root System Description Table
 - [RSDP](https://wiki.osdev.org/RSDP) : Root System Description Pointer
 - [XSDT](https://wiki.osdev.org/XSDT) : eXtended System Descriptor Table (XSDT) - the 64-bit version of the ACPI RSDT
 - [DMAR](https://terenceli.github.io/%E6%8A%80%E6%9C%AF/2019/08/10/iommu-driver-analysis) : DMA Remapping Reporting
 - [FADT](https://wiki.osdev.org/FADT) : fixed ACPI description table, This table contains information about fixed register blocks pertaining to power management.
 - [SSDT](https://wiki.osdev.org/SSDT) : Secondary System Descriptor Table
-- [DSDT](https://wiki.osdev.org/DSDT) : DSDT stands for Differentiated System Description Table. It Is a major ACPI table and is used to describe what peripherals the machine has. 
+- [DSDT](https://wiki.osdev.org/DSDT) : DSDT stands for Differentiated System Description Table. It Is a major ACPI table and is used to describe what peripherals the machine has.
 
 - [GPE](https://askubuntu.com/questions/148726/what-is-an-acpi-gpe-storm)
 
 
 
 - https://github.com/rust-osdev/about : 这个组织提供一堆可以用于 os dev 的工具，包括 uefi bootloader acpi
-- https://github.com/acpica/acpica : acpi 框架的源代码 
+- https://github.com/acpica/acpica : acpi 框架的源代码
 
 ## TODO
 - [ ] acpi 是如何提供给 os 的
@@ -112,6 +112,9 @@ https://lwn.net/Articles/367630/
 
 - [ ] apci 实际上还提供了关机选项啊
 
+- [ ] acpi_scan_add_handler
+- [ ] acpi_get_table 可以直接获取 acpi table 出来，所以，这些 table 是什么时候构建的 ?
+
 acpi 的解析[^2]
 
 原来kernel中最终是通过acpi_evaluate_object 来调用bios中在asl中定义好的函数啊 [^1]
@@ -122,7 +125,7 @@ acpi 的解析[^2]
 ```
 $ acpidump > acpidump.out
 $ acpixtract -a acpidump.out
-$ iasl -d TABLE.dat   
+$ iasl -d TABLE.dat
 ```
 
 ## shutdown
@@ -757,13 +760,13 @@ https://gist.github.com/mcastelino/4acda7c2407f1c51e68f3f994d8ffc98
 ## 网卡是一个什么东西
 
 - [x] 找到 qemu 中生成 link 的方法
-  - 在 acpi_build.c::build_link_dev 
+  - 在 acpi_build.c::build_link_dev
 
 即使是修改了 dsdt 的内容，那么
 
 当然现在还存在一些小问题:
 - [ ] dmesg 是 LNKA / LNKB / LNKC 之类的，但是设备都是 pin A routed to
-- [ ] acpi 是静态的配置的，设备是动态添加的啊 
+- [ ] acpi 是静态的配置的，设备是动态添加的啊
 
 参考资料:
 https://unix.stackexchange.com/questions/368926/what-does-this-mean-interrupt-pin-a-routed-to-irq-17

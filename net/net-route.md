@@ -166,6 +166,20 @@ https://www2.tkn.tu-berlin.de/teaching/rn/animations/gbn_sr/ : 拥塞网络图�
 - [sdn book](https://tonydeng.github.io/sdn-handbook/) : 中文的
 - [网络编程懒人入门](https://zhuanlan.zhihu.com/p/335137284) : 一共十几篇，值得分析
 
+- 仅仅是看一看
+```c
+       -nic [tap|bridge|user|l2tpv3|vde|netmap|vhost-user|socket][,...][,mac=macaddr][,model=mn]
+           This option is a shortcut for configuring both the on-board (default) guest NIC hardware and the host network backend in one go. The host backend options are the same as with the corresponding -netdev options below.  The guest NIC model can be set with
+           model=modelname.  Use model=help to list the available device types.  The hardware MAC address can be set with mac=macaddr.
+
+           The following two example do exactly the same, to show how -nic can be used to shorten the command line length (note that the e1000 is the default on i386, so the model=e1000 parameter could even be omitted here, too):
+
+                   qemu-system-i386 -netdev user,id=n1,ipv6=off -device e1000,netdev=n1,mac=52:54:98:76:54:32
+                   qemu-system-i386 -nic user,ipv6=off,model=e1000,mac=52:54:98:76:54:32
+```
+- 所以 -nic 和 -netdev 都是做啥的?
+- -nic 后面跟着的这么多的设备是做啥的
+
 ### cloudflare
 - [bgp](https://www.cloudflare.com/learning/security/glossary/what-is-bgp/) : 这是当时 facebook 不可用的时候出现的
   - 更多的教程参考这里: https://www.cloudflare.com/learning/

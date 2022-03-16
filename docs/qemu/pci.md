@@ -1,3 +1,7 @@
+**TODO** 将所有的 pci.md 都整理到这个位置吧
+
+https://wiki.osdev.org/PCI_Express : 通过 ACPI 的配置，可以让 PCI 配置空间的访问使用 mmio 的方式
+
 # QEMU 如何模拟 PCI 设备
 - i440fx_pcihost_initfn : 初始化最初的注册
 - i440fx_pcihost_realize : 注册 0xcf8 和 0xcfc 两个端口，然后将这两个
@@ -13,7 +17,7 @@
 ## pci 设备的初始化基本过程
 通过 pci_root_bus_new 可以创建出来 PCIBus 的，这里最后初始化到了 pci_bus_info 的呀
 
-```c
+```txt
 /*
 #0  i440fx_realize (dev=0x5555568e2e00, errp=0x7fffffffcb30) at /home/maritns3/core/xqm/hw/pci-host/i440fx.c:264
 #1  0x0000555555abaf2b in pci_qdev_realize (qdev=0x5555568e2e00, errp=<optimized out>) at /home/maritns3/core/xqm/hw/pci/pci.c:2099
