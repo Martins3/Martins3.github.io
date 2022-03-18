@@ -801,20 +801,3 @@ mtree info 看到的:
 [    5.915877] e1000e 0000:00:02.0 0000:00:02.0 (uninitialized): Failed to initialize MSI-X interrupts.  Falling back to MSI interrupts.
 [    5.919983] e1000e 0000:00:02.0 0000:00:02.0 (uninitialized): Failed to initialize MSI interrupts.  Falling back to legacy interrupts.
 ```
-
-<script src="https://giscus.app/client.js"
-        data-repo="Martins3/My-Linux-Config"
-        data-repo-id="MDEwOlJlcG9zaXRvcnkyMTUwMDkyMDU="
-        data-category="General"
-        data-category-id="MDE4OkRpc2N1c3Npb25DYXRlZ29yeTMyODc0NjA5"
-        data-mapping="pathname"
-        data-reactions-enabled="1"
-        data-emit-metadata="0"
-        data-input-position="bottom"
-        data-theme="light"
-        data-lang="en"
-        crossorigin="anonymous"
-        async>
-</script>
-
-本站所有文章转发 **CSDN** 将按侵权追究法律责任，其它情况随意。
