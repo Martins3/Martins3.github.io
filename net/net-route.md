@@ -186,6 +186,7 @@ https://www2.tkn.tu-berlin.de/teaching/rn/animations/gbn_sr/ : 拥塞网络图�
 
 ## 教材
 - [Computer Networks: A Systems Approach](https://book.systemsapproach.org/index.html)
+- https://github.com/smoltcp-rs/smoltcp : 似乎这个用户态网络栈的文档就可以了
 
 ## 工具
 - https://rfc.fyi/ : rfc 搜索

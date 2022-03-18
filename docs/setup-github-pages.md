@@ -23,7 +23,7 @@
 在[静态网站上存在各种方法](https://darekkay.com/blog/static-site-comments/)，比如:
 - [gitalk](https://github.com/gitalk/gitalk)
 
-我使用的方案是 `https://giscus.app/`, 按照其步骤，将其生成的代码粘贴到你的 blog 中，下面是我的例子:
+我使用的方案是 https://giscus.app/ , 按照其步骤，将其生成的代码粘贴到你的 blog 中，下面是我的例子:
 ```js
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
