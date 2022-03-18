@@ -803,15 +803,16 @@ mtree info 看到的:
 ```
 
 <script src="https://giscus.app/client.js"
-        data-repo="martins3/martins3.github.io"
-        data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="
-        data-category="Show and tell"
-        data-category-id="MDE4OkRpc2N1c3Npb25DYXRlZ29yeTMyMDMzNjY4"
+        data-repo="Martins3/My-Linux-Config"
+        data-repo-id="MDEwOlJlcG9zaXRvcnkyMTUwMDkyMDU="
+        data-category="General"
+        data-category-id="MDE4OkRpc2N1c3Npb25DYXRlZ29yeTMyODc0NjA5"
         data-mapping="pathname"
         data-reactions-enabled="1"
         data-emit-metadata="0"
+        data-input-position="bottom"
         data-theme="light"
-        data-lang="zh-CN"
+        data-lang="en"
         crossorigin="anonymous"
         async>
 </script>
