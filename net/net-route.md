@@ -9,6 +9,7 @@
 - [ ] Where is ebpf hooks for packet filter ?
 - loopback interface
   - `sudo tcpdump -i lo` : print out many message
+- 为什么 QEMU 可以让 Guest 可以有某一个 ip 到 host 的网络中
 
 ## dpdk
 https://github.com/F-Stack/f-stack : 似乎是对于 dpdk 的封装

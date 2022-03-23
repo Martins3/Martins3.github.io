@@ -73,7 +73,8 @@ https://github.com/jkup/awesome-personal-blogs : 经典 blog
 https://github.com/kilimchoi/engineering-blogs : 更多的 blog
 https://stackoverflow.com/questions/62701847/difference-between-ilookup-and-ilookup5-in-linux-kernel?noredirect=1#comment110935686_62701847 : 评论非常有意思啊!
 https://github.com/dortania/OpenCore-Install-Guide : 黑苹果，据说学习体系结构的人都需要会
-## TOD
+
+## TODO
 - [9 个超有趣的 Linux 命令动画演示](https://zhuanlan.zhihu.com/p/37530240)
 - [群体的智慧与愚蠢](https://ncase.me/crowds/zh-CN.html)
 - [juliabox](https://www.juliabox.com/)

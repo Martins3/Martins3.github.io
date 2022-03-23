@@ -1,3 +1,6 @@
+# 工具
+intel 指令 fzf : https://hikalium.github.io/opv86/
+
 # ASM
 - [ ] 教程 ： https://www.xorpd.net/pages/x86_adventures.html
 - [ ] https://github.com/tenderlove/asmrepl

@@ -1,4 +1,5 @@
 # qht 移植
+- [ ] 分析一下这个文章，介绍如何实现多核的操作的: Cross-ISA machine emulation for multicores
 
 - 在 tb_link_page 中 qht_insert 什么时候无法插入啊，是不是在 single core 的模式下，可以保证总是插入成功的
   - 既然进入到 tb_link_page 的位置，说明刚才还是无法找到这个 tb 的
