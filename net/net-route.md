@@ -49,7 +49,7 @@ https://github.com/F-Stack/f-stack : 似乎是对于 dpdk 的封装
 - [ ] /home/maritns3/core/linux/net/unix
 
 给下面写一个一句话总结好吧
-```
+```txt
 __do_sys_bind
 __do_sys_send
 __do_sys_recv
@@ -82,7 +82,7 @@ __do_sys_recvmmsg_time32
 ## e1000e[^2]
 - [ ] watch dog
 
-```
+```txt
 - send
   - `__sys_sendto`
     - sock_sendmsg
@@ -168,7 +168,7 @@ https://www2.tkn.tu-berlin.de/teaching/rn/animations/gbn_sr/ : 拥塞网络图�
 - [网络编程懒人入门](https://zhuanlan.zhihu.com/p/335137284) : 一共十几篇，值得分析
 
 - 仅仅是看一看
-```c
+```txt
        -nic [tap|bridge|user|l2tpv3|vde|netmap|vhost-user|socket][,...][,mac=macaddr][,model=mn]
            This option is a shortcut for configuring both the on-board (default) guest NIC hardware and the host network backend in one go. The host backend options are the same as with the corresponding -netdev options below.  The guest NIC model can be set with
            model=modelname.  Use model=help to list the available device types.  The hardware MAC address can be set with mac=macaddr.
@@ -195,6 +195,13 @@ https://www2.tkn.tu-berlin.de/teaching/rn/animations/gbn_sr/ : 拥塞网络图�
 ## 有趣
 - [ping localhost 不会和网卡打交道，那是 loopback devices](https://superuser.com/questions/565742/localhost-pinging-when-there-is-no-network-card)
 
+使用这个代码[^1] 可以用于测试网卡的 ip
+注意: eth0 -> enxd43a650739d8
+
+[^1]: https://stackoverflow.com/questions/2283494/get-ip-address-of-an-interface-on-linux
+
+用这个代码可以来测试获取所有的网卡:
+https://www.cyberithub.com/list-network-interfaces/
 
 [^2]: 用芯探核:基于龙芯的 Linux 内核探索解析
 [^4]: http://yuba.stanford.edu/rcp/

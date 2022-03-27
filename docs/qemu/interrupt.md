@@ -110,9 +110,10 @@ static void kbd_update_irq_lines(KBDState *s)
     qemu_set_irq(s->irq_mouse, irq_mouse_level);
 }
 ```
+
 ### ide
 
-```c
+```txt
 /*
 #0  huxueshi (i=34) at ../hw/intc/apic.c:402
 #1  0x0000555555c6a21a in apic_set_irq (s=0x55555697f560, vector_num=34, trigger_mode=0) at ../hw/intc/apic.c:411
@@ -445,6 +446,7 @@ gsi_handler 了。
 lapic 因为是每一个 CPU 需要的，所以其初始化在 x86_cpu_realizefn 中进行的。下面分析 pic 和 ioapic 的中断如何送到 lapic 的。
 
 ### tcg pic
+
 - pc_i8259_create
   - `i8259_init(isa_bus, x86_allocate_cpu_irq())`
 
@@ -465,6 +467,7 @@ x86_allocate_cpu_irq 会创建出来一个 qemu_irq 出来，其 handler 为 pic
                   - cpu_interrupt
 
 ### tcg ioapic
+
 - ioapic_realize
   - qdev_init_gpio_in(dev, ioapic_set_irq, IOAPIC_NUM_PINS);
 
@@ -501,6 +504,7 @@ x86_allocate_cpu_irq 会创建出来一个 qemu_irq 出来，其 handler 为 pic
 #17 0x0000555555c58231 in qemu_main_loop () at ../softmmu/runstate.c:726
 #18 0x0000555555940c92 in main (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/main.c:50
 ```
+
 ## how interrupt inserted to vCPU
 首先来回忆一下整个 vCPU 的执行流程
 
@@ -533,7 +537,7 @@ x86_allocate_cpu_irq 会创建出来一个 qemu_irq 出来，其 handler 为 pic
 使用一些[技术](https://martins3.github.io/tips-reading-kernel.html)在 interrupt handler 的位置 backtrace
 
 - 键盘
-```c
+```txt
 /*
 [   36.794135] Call Trace:
 [   36.794140]  <IRQ>
@@ -562,7 +566,7 @@ x86_allocate_cpu_irq 会创建出来一个 qemu_irq 出来，其 handler 为 pic
 ```
 
 - ssd
-```c
+```txt
 /*
 #0  nvme_irq (irq=24, data=0xffff888101150e00) at drivers/nvme/host/pci.c:1066
 #1  0xffffffff810bb448 in __handle_irq_event_percpu (desc=desc@entry=0xffff888101163200, flags=flags@entry=0xffffc90000003f84) at kernel/irq/handle.c:156
@@ -579,6 +583,7 @@ Backtrace stopped: Cannot access memory at address 0xffffc90000004010
 这里留下一个问题，在 common_interrupt 的参数 vector = 37 和 nvme_irq 的参数 irq=24 分别值得是什么?
 
 #### start from idt
+
 ```c
 /**
  * idt_setup_apic_and_irq_gates - Setup APIC/SMP and normal interrupt gates
@@ -795,7 +800,7 @@ Understanding Linux Kernel 中的 Table 4-2. Interrupt vectors in Linux
 
 
 下面分析一个经典例子:
-```c
+```txt
 /*
 #0  apic_update_irq_cfg (irqd=irqd@entry=0xffff88810004e840, vector=33, cpu=1) at arch/x86/kernel/apic/vector.c:120
 #1  0xffffffff810bd9a8 in assign_vector_locked (irqd=irqd@entry=0xffff88810004e840, dest=dest@entry=0xffffffff82efdb60 <vector_searchmask>) at arch/x86/kernel/apic/vector.c:253
@@ -922,8 +927,7 @@ if(index == 0x32 + APIC_LVT_LINT0)
 Line 33 of "./include/asm-generic/fixmap.h" starts at address 0xffffffff810c14d0 <native_apic_mem_write> and ends at 0xffffffff810c14d2 <native_apic_mem_write+2>.
 ```
 
-```c
-/*
+```txt
 #0  native_apic_mem_write (reg=848, v=1792) at ./include/asm-generic/fixmap.h:33
 #1  0xffffffff810bc7eb in apic_write (val=1792, reg=848) at ./arch/x86/include/asm/apic.h:394
 #2  setup_local_APIC () at arch/x86/kernel/apic/apic.c:1698
@@ -980,7 +984,7 @@ if(index == 0x32 + APIC_LVT_LINT0)
 Line 33 of "./include/asm-generic/fixmap.h" starts at address 0xffffffff810c14d0 <native_apic_mem_write> and ends at 0xffffffff810c14d2 <native_apic_mem_write+2>.
 ```
 
-```c
+```txt
 /*
 #0  native_apic_mem_write (reg=848, v=1792) at ./include/asm-generic/fixmap.h:33
 #1  0xffffffff810bc7eb in apic_write (val=1792, reg=848) at ./arch/x86/include/asm/apic.h:394
@@ -1079,8 +1083,7 @@ interrupt 的 tirgger 类型。
 
 handle_level_irq 只有在 setup_default_timer_irq 中注册 timer_interrupt 是时候使用，使用这个 hook 主要是处理 legacy 的设备的，处理 level flow 的情况更多是
 handle_fasteoi_irq
-```c
-/*
+```txt
 #0  timer_interrupt (irq=0, dev_id=0x0 <fixed_percpu_data>) at arch/x86/kernel/time.c:57
 #1  0xffffffff81132995 in __handle_irq_event_percpu (desc=desc@entry=0xffff888100051800, flags=flags@entry=0xffffc90000003f84) at kernel/irq/handle.c:156
 #2  0xffffffff81132acc in handle_irq_event_percpu (desc=desc@entry=0xffff888100051800) at kernel/irq/handle.c:196
@@ -1092,7 +1095,7 @@ handle_fasteoi_irq
 #8  0xffffffff81c366ee in common_interrupt (regs=0xffffffff82603dc8, error_code=<optimized out>) at arch/x86/kernel/irq.c:240
 ```
 但是随着系统启动，很快就切换为 lapic 来提供时钟中断，其 flow 类型为 interrupt
-```c
+```txt
 /*
 #0  task_tick_fair (rq=0xffff8881b9c29700, curr=0xffff888100208000, queued=0) at kernel/sched/fair.c:10992
 #1  0xffffffff8110d5d8 in scheduler_tick () at kernel/sched/core.c:4954
@@ -1104,7 +1107,7 @@ handle_fasteoi_irq
 #7  0xffffffff81c3810d in sysvec_apic_timer_interrupt (regs=0xffffc90000013c98) at arch/x86/kernel/apic/apic.c:1100
 ```
 因为 pci interrupt line 是共享的，而只有 level 类型才可以用于共享，可以看到 e1000 的就是经过 handle_fasteoi_irq 的。
-```c
+```txt
 /*
 #0  e1000_intr (irq=11, data=0xffff888100232000) at drivers/net/ethernet/intel/e1000/e1000_main.c:3749
 #1  0xffffffff81132995 in __handle_irq_event_percpu (desc=desc@entry=0xffff888100100e00, flags=flags@entry=0xffffc90000003f7c) at kernel/irq/handle.c:156

@@ -1,13 +1,13 @@
 #!/bin/bash
 set -eu
 
-use_32bit=false
-use_nvme=true
+use_32bit=true
+use_nvme=false
 
 # ----------------------- 配置区 -----------------------------------------------
 kernel_dir=/home/maritns3/core/ubuntu-linux
 if [[ $use_32bit == true ]]; then
-  kernel_dir=/home/maritns3/core/ld/guest-src/linux-4.4.142
+  kernel_dir=/home/maritns3/core/bmbt_linux
 fi
 
 # 可以直接使用系统中安装的 QEMU, 也就是 qemu-system-x86_64
@@ -53,6 +53,7 @@ arg_cpu="-cpu host"
 arg_seabios="-chardev file,path=/tmp/seabios.log,id=seabios -device isa-debugcon,iobase=0x402,chardev=seabios -bios ${seabios}"
 arg_nvme="-device nvme,drive=nvme1,serial=foo -drive file=${ext4_img1},format=raw,if=none,id=nvme1"
 arg_nvme2="-device virtio-blk-pci,drive=nvme2,iothread=io0 -drive file=${ext4_img2},format=raw,if=none,id=nvme2"
+arg_network="-netdev user,id=n1,ipv6=off -device e1000e,netdev=n1"
 arg_iothread="-object iothread,id=io0"
 arg_qmp="-qmp unix:${abs_loc}/test.socket,server,nowait"
 arg_initrd=""
@@ -61,11 +62,11 @@ arg_tmp=""
 # -soundhw pcspk
 
 if [[ $use_32bit == true ]]; then
-  qemu=/home/maritns3/core/xqm/32bit/i386-softmmu/qemu-system-i386
-  initrd=/home/maritns3/core/5000/ld/DuckBuBi/image/test.cpio.gz
+  # qemu=/home/maritns3/core/xqm/32bit/i386-softmmu/qemu-system-i386
+  initrd=/home/maritns3/core/5000/core/bmbt/image/initrd.bin
   arg_initrd="-initrd ${initrd}"
   arg_monitor="-nographic"
-  arg_kernel_args="nokaslr console=ttyS0 root=/dev/ram rdinit=/hello.out"
+  arg_kernel_args="nokaslr console=ttyS0"
 fi
 
 yocto_img=${abs_loc}/yocto.ext4
@@ -158,7 +159,7 @@ if [ $LAUNCH_GDB = true ]; then
 fi
 
 cmd="${debug_qemu} ${qemu} ${debug_kernel} ${arg_img} ${arg_mem} ${arg_cpu} \
-  ${arg_kernel} ${arg_seabios} ${arg_nvme} ${arg_nvme2} ${arg_iothread} \
+  ${arg_kernel} ${arg_seabios} ${arg_nvme} ${arg_nvme2} ${arg_iothread} ${arg_network} \
   ${arg_share_dir} ${arg_machine} ${arg_monitor} ${arg_qmp} ${arg_initrd} \
   ${arg_tmp}"
 echo "$cmd"
@@ -174,3 +175,5 @@ eval "$cmd"
 # ../configure --target-list=i386-softmmu
 # kernel_dir=/home/maritns3/core/ld/guest-src/linux-4.4.142 # 指向 32bit 内核
 # qemu=/home/maritns3/core/xqm/32bit/i386-softmmu/qemu-system-i386 # 使用 32bit 的 qemu
+#
+# 实际上，没有必要，因为 kvm 可以运行 32bit 的 guest 内核的

@@ -1,7 +1,6 @@
 # busybox
 https://busybox.net/
 
-
 似乎是一个比较靠谱的文章:
 https://www.cnblogs.com/hellogc/p/7482066.html
 busybox 是用于提供 init 程序
@@ -16,9 +15,22 @@ busybox 是用于提供 init 程序
 cnblog 的那个，其中 tty 的报错，也许可以使用如下解决
 
 ```sh
-sudo mkdir -p rootfs/dev 
-sudo mknod rootfs/dev/tty1 c 4 1  
-sudo mknod rootfs/dev/tty2 c 4 2  
-sudo mknod rootfs/dev/tty3 c 4 3  
+sudo mkdir -p rootfs/dev
+sudo mknod rootfs/dev/tty1 c 4 1
+sudo mknod rootfs/dev/tty2 c 4 2
+sudo mknod rootfs/dev/tty3 c 4 3
 sudo mknod rootfs/dev/tty4 c 4 4
+```
+
+## 一个小问题
+不知道为什么，当运行一个 hello world 的 initrd 的 kernel 参数是这个:
+
+```c
+  # arg_kernel_args="nokaslr console=ttyS0 root=/dev/ram rdinit=/hello.out"
+```
+
+而运行 initrd 的时候:
+
+```c
+  # arg_kernel_args="nokaslr console=ttyS0"
 ```

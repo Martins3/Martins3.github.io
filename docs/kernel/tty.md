@@ -3,6 +3,11 @@
 ## TODO
 - [ ] TTY 到底是什么？https://www.kawabangga.com/posts/4515
 
+简单的构建一个 busybox 之后，其 shell 有这个警告:
+```c
+/bin/sh: can't access tty; job control turned off
+```
+
 ## pty pts tty
 - https://unix.stackexchange.com/questions/21280/difference-between-pts-and-tty/21294
 - https://stackoverflow.com/questions/4426280/what-do-pty-and-tty-mean
