@@ -10,6 +10,7 @@
 - loopback interface
   - `sudo tcpdump -i lo` : print out many message
 - 为什么 QEMU 可以让 Guest 可以有某一个 ip 到 host 的网络中
+- [ ] 将 net.diff 中的内容整理一下
 
 ## dpdk
 https://github.com/F-Stack/f-stack : 似乎是对于 dpdk 的封装
@@ -187,6 +188,7 @@ https://www2.tkn.tu-berlin.de/teaching/rn/animations/gbn_sr/ : 拥塞网络图�
 
 ## 教材
 - [Computer Networks: A Systems Approach](https://book.systemsapproach.org/index.html)
+  - 有 hackernews 用户推荐过
 - https://github.com/smoltcp-rs/smoltcp : 似乎这个用户态网络栈的文档就可以了
 
 ## 工具

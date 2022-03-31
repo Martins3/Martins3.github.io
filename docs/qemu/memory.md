@@ -330,8 +330,7 @@ find_ram_offset 中 RAM 的对齐至少为 0x40000
 ```
 
 在 ram_list 中，RAMBlock 按照大小排序的。
-```c
-/*
+```txt
 pc.ram: offset=0 size=180000000
 pc.bios: offset=180000000 size=40000
 pc.rom: offset=180040000 size=20000

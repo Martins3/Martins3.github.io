@@ -168,7 +168,6 @@ void tlb_set_page_with_attrs(CPUState *cpu, target_ulong vaddr,
     - cpu_physical_memory_set_dirty_range : Set both VGA and migration bits for simplicity and to remove the notdirty callback faster.
     - tlb_set_dirty
 
-
 ### PageDesc
 如果找到 guest physical page 上的所有的 TB ，这就是通过 PageDesc 进行的
 

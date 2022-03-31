@@ -80,10 +80,10 @@ static void machine_set_kernel(Object *obj, const char *value, Error **errp)
 其实，总体来说，seabios 做了两个事情:
 - 执行 optionrom linuxboot_dma.bin 将 linuxboot_dma.bin 注册到 BootList 中
 - 根据 "bootorder" 将 linuxboot_dma.bin 作为优先级最高的启动方式
-- 执行 linuxboot_dma.bin 的第二部分，在其中通过 fw_cfg 获取 kernel 的入口地址、参数地址等
-
+- 执行 linuxboot_dma.bin 的第二部分，在其中通过 fw_cfg 获取 kernel 的入口地址、参数地址，并且通过 *fw_cfg* 加载内核过来。
 
 ## linuxboot_dma.bin 源代码解析
+
 linuxboot_dma.bin 是通过 `pc-bios/optionrom/linuxboot_dma.c` 编译出来的，通过前面的分析，其实我们已经可以大致的猜测出来到底
 
 第一个部分是 pnp optionrom 规范的内容，第二个就是通过 fw_cfg 获取到 kernel image 的地址，然后跳转过去了

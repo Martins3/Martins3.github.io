@@ -1,0 +1,393 @@
+diff --git a/arch/x86/kernel/apic/msi.c b/arch/x86/kernel/apic/msi.c
+index 5f1feb68..a7374825 100644
+--- a/arch/x86/kernel/apic/msi.c
++++ b/arch/x86/kernel/apic/msi.c
+@@ -51,6 +51,8 @@ static void irq_msi_compose_msg(struct irq_data *data, struct msi_msg *msg)
+ 			MSI_DATA_DELIVERY_FIXED :
+ 			MSI_DATA_DELIVERY_LOWPRI) |
+ 		MSI_DATA_VECTOR(cfg->vector);
++
++	pr_info("[huxueshi:%s:%d] %x %x %x\n", __FUNCTION__, __LINE__, msg->address_lo, msg->data, cfg->vector);
+ }
+
+ /*
+diff --git a/drivers/net/ethernet/intel/e1000e/netdev.c b/drivers/net/ethernet/intel/e1000e/netdev.c
+index 6369d88b..62f899c5 100644
+--- a/drivers/net/ethernet/intel/e1000e/netdev.c
++++ b/drivers/net/ethernet/intel/e1000e/netdev.c
+@@ -1234,9 +1234,11 @@ static bool e1000_clean_tx_irq(struct e1000_ring *tx_ring)
+ 	eop = tx_ring->buffer_info[i].next_to_watch;
+ 	eop_desc = E1000_TX_DESC(*tx_ring, eop);
+
++	pr_info("[huxueshi:%s:%d] [-a] %lx %x %x\n", __FUNCTION__, __LINE__, (long)eop_desc, eop_desc->upper.data, tx_ring->count);
+ 	while ((eop_desc->upper.data & cpu_to_le32(E1000_TXD_STAT_DD)) &&
+ 	       (count < tx_ring->count)) {
+ 		bool cleaned = false;
++		pr_info("[huxueshi:%s:%d] [-A]\n", __FUNCTION__, __LINE__);
+
+ 		dma_rmb();		/* read buffer_info after eop_desc */
+ 		for (; !cleaned; count++) {
+@@ -1245,9 +1247,11 @@ static bool e1000_clean_tx_irq(struct e1000_ring *tx_ring)
+ 			cleaned = (i == eop);
+
+ 			if (cleaned) {
++				pr_info("[huxueshi:%s:%d] [-B]\n", __FUNCTION__, __LINE__);
+ 				total_tx_packets += buffer_info->segs;
+ 				total_tx_bytes += buffer_info->bytecount;
+ 				if (buffer_info->skb) {
++					pr_info("[huxueshi:%s:%d] [-C]\n", __FUNCTION__, __LINE__);
+ 					bytes_compl += buffer_info->skb->len;
+ 					pkts_compl++;
+ 				}
+@@ -1269,6 +1273,7 @@ static bool e1000_clean_tx_irq(struct e1000_ring *tx_ring)
+
+ 	tx_ring->next_to_clean = i;
+
++	pr_info("[huxueshi:%s:%d] [A]\n", __FUNCTION__, __LINE__);
+ 	netdev_completed_queue(netdev, pkts_compl, bytes_compl);
+
+ #define TX_WAKE_THRESHOLD 32
+@@ -1912,6 +1917,7 @@ static irqreturn_t e1000_msix_other(int __always_unused irq, void *data)
+ 	struct e1000_adapter *adapter = netdev_priv(netdev);
+ 	struct e1000_hw *hw = &adapter->hw;
+ 	u32 icr = er32(ICR);
++	pr_info("[huxueshi:%s:%d] \n", __FUNCTION__, __LINE__);
+
+ 	if (!(icr & E1000_ICR_INT_ASSERTED)) {
+ 		if (!test_bit(__E1000_DOWN, &adapter->state))
+@@ -1944,13 +1950,16 @@ static irqreturn_t e1000_intr_msix_tx(int __always_unused irq, void *data)
+ 	struct e1000_adapter *adapter = netdev_priv(netdev);
+ 	struct e1000_hw *hw = &adapter->hw;
+ 	struct e1000_ring *tx_ring = adapter->tx_ring;
++	pr_info("[huxueshi:%s:%d] \n", __FUNCTION__, __LINE__);
+
+ 	adapter->total_tx_bytes = 0;
+ 	adapter->total_tx_packets = 0;
+
+-	if (!e1000_clean_tx_irq(tx_ring))
++	if (!e1000_clean_tx_irq(tx_ring)){
++		pr_info("[huxueshi:%s:%d] don't follow me\n", __FUNCTION__, __LINE__);
+ 		/* Ring was not completely cleaned, so fire another interrupt */
+ 		ew32(ICS, tx_ring->ims_val);
++	}
+
+ 	return IRQ_HANDLED;
+ }
+@@ -1960,6 +1969,7 @@ static irqreturn_t e1000_intr_msix_rx(int __always_unused irq, void *data)
+ 	struct net_device *netdev = data;
+ 	struct e1000_adapter *adapter = netdev_priv(netdev);
+ 	struct e1000_ring *rx_ring = adapter->rx_ring;
++	pr_info("[huxueshi:%s:%d] \n", __FUNCTION__, __LINE__);
+
+ 	/* Write the ITR value calculated at the end of the
+ 	 * previous interrupt.
+@@ -5611,6 +5621,7 @@ static void e1000_tx_queue(struct e1000_ring *tx_ring, int tx_flags, int count)
+ 		tx_desc->buffer_addr = cpu_to_le64(buffer_info->dma);
+ 		tx_desc->lower.data = cpu_to_le32(txd_lower |
+ 						  buffer_info->length);
++		pr_info("[huxueshi:%s:%d] ggggggggggggggggggggggggg %lx %x\n", __FUNCTION__, __LINE__, (long)tx_desc, cpu_to_le32(txd_upper));
+ 		tx_desc->upper.data = cpu_to_le32(txd_upper);
+
+ 		i++;
+@@ -5813,6 +5824,7 @@ static netdev_tx_t e1000_xmit_frame(struct sk_buff *skb,
+ 	/* if count is 0 then mapping error has occurred */
+ 	count = e1000_tx_map(tx_ring, skb, first, adapter->tx_fifo_limit,
+ 			     nr_frags);
++	pr_info("[KERNEL:%s:%d] %x\n", __FUNCTION__, __LINE__, count);
+ 	if (count) {
+ 		if (unlikely(skb_shinfo(skb)->tx_flags & SKBTX_HW_TSTAMP) &&
+ 		    (adapter->flags & FLAG_HAS_HW_TIMESTAMP) &&
+@@ -5836,17 +5848,24 @@ static netdev_tx_t e1000_xmit_frame(struct sk_buff *skb,
+
+ 		if (!skb->xmit_more ||
+ 		    netif_xmit_stopped(netdev_get_tx_queue(netdev, 0))) {
+-			if (adapter->flags2 & FLAG2_PCIM2PCI_ARBITER_WA)
++			// 之后写入的位置
++			if (adapter->flags2 & FLAG2_PCIM2PCI_ARBITER_WA){
+ 				e1000e_update_tdt_wa(tx_ring,
+ 						     tx_ring->next_to_use);
+-			else
++				dump_stack();
++			}
++			else{
+ 				writel(tx_ring->next_to_use, tx_ring->tail);
++			}
++			// 第一次
+
+ 			/* we need this if more than one processor can write
+ 			 * to our tail at a time, it synchronizes IO on
+ 			 *IA64/Altix systems
+ 			 */
+ 			mmiowb();
++		}else{
++			pr_info("[huxueshi:%s:%d] \n", __FUNCTION__, __LINE__);
+ 		}
+ 	} else {
+ 		dev_kfree_skb_any(skb);
+diff --git a/include/linux/netdevice.h b/include/linux/netdevice.h
+index fc54049e..79286798 100644
+--- a/include/linux/netdevice.h
++++ b/include/linux/netdevice.h
+@@ -2781,6 +2781,7 @@ static inline void netdev_tx_sent_queue(struct netdev_queue *dev_queue,
+ 		return;
+
+ 	set_bit(__QUEUE_STATE_STACK_XOFF, &dev_queue->state);
++	dump_stack();
+
+ 	/*
+ 	 * The XOFF flag must be set before checking the dql_avail below,
+@@ -2790,8 +2791,10 @@ static inline void netdev_tx_sent_queue(struct netdev_queue *dev_queue,
+ 	smp_mb();
+
+ 	/* check again in case another CPU has just made room avail */
+-	if (unlikely(dql_avail(&dev_queue->dql) >= 0))
++	if (unlikely(dql_avail(&dev_queue->dql) >= 0)){
+ 		clear_bit(__QUEUE_STATE_STACK_XOFF, &dev_queue->state);
++		pr_info("[huxueshi:%s:%d] ccccccccccccccccccccc\n", __FUNCTION__, __LINE__);
++	}
+ #endif
+ }
+
+@@ -2813,8 +2816,10 @@ static inline void netdev_tx_completed_queue(struct netdev_queue *dev_queue,
+ 					     unsigned int pkts, unsigned int bytes)
+ {
+ #ifdef CONFIG_BQL
+-	if (unlikely(!bytes))
++	if (unlikely(!bytes)){
++		pr_info("[huxueshi:%s:%d] [B]\n", __FUNCTION__, __LINE__);
+ 		return;
++	}
+
+ 	dql_completed(&dev_queue->dql, bytes);
+
+@@ -2825,11 +2830,17 @@ static inline void netdev_tx_completed_queue(struct netdev_queue *dev_queue,
+ 	 */
+ 	smp_mb();
+
+-	if (dql_avail(&dev_queue->dql) < 0)
++	pr_info("[huxueshi:%s:%d] %x\n", __FUNCTION__, __LINE__, dql_avail(&dev_queue->dql));
++	pr_info("[huxueshi:%s:%d] %lx\n", __FUNCTION__, __LINE__, dev_queue->state);
++	if (dql_avail(&dev_queue->dql) < 0){
++		pr_info("[huxueshi:%s:%d] [C]\n", __FUNCTION__, __LINE__);
+ 		return;
++	}
+
+-	if (test_and_clear_bit(__QUEUE_STATE_STACK_XOFF, &dev_queue->state))
++	if (test_and_clear_bit(__QUEUE_STATE_STACK_XOFF, &dev_queue->state)){
++		pr_info("[huxueshi:%s:%d] ccccccccccccccccccc\n", __FUNCTION__, __LINE__);
+ 		netif_schedule_queue(dev_queue);
++	}
+ #endif
+ }
+
+@@ -2852,6 +2863,7 @@ static inline void netdev_completed_queue(struct net_device *dev,
+ static inline void netdev_tx_reset_queue(struct netdev_queue *q)
+ {
+ #ifdef CONFIG_BQL
++	pr_info("[huxueshi:%s:%d] cccccccccccccccccccccccccc\n", __FUNCTION__, __LINE__);
+ 	clear_bit(__QUEUE_STATE_STACK_XOFF, &q->state);
+ 	dql_reset(&q->dql);
+ #endif
+@@ -3749,6 +3761,7 @@ static inline netdev_tx_t netdev_start_xmit(struct sk_buff *skb, struct net_devi
+ 	const struct net_device_ops *ops = dev->netdev_ops;
+ 	int rc;
+
++	pr_info("[huxueshi:%s:%d] \n", __FUNCTION__, __LINE__);
+ 	rc = __netdev_start_xmit(ops, skb, dev, more);
+ 	if (rc == NETDEV_TX_OK)
+ 		txq_trans_update(txq);
+diff --git a/include/net/dst.h b/include/net/dst.h
+index e4f45061..3c5c4e09 100644
+--- a/include/net/dst.h
++++ b/include/net/dst.h
+@@ -455,10 +455,13 @@ static inline int dst_neigh_output(struct dst_entry *dst, struct neighbour *n,
+ 	}
+
+ 	hh = &n->hh;
+-	if ((n->nud_state & NUD_CONNECTED) && hh->hh_len)
++	if ((n->nud_state & NUD_CONNECTED) && hh->hh_len){
++		pr_info("[huxueshi:%s:%d] \n", __FUNCTION__, __LINE__);
+ 		return neigh_hh_output(hh, skb);
+-	else
++	} else{
++		pr_info("[huxueshi:%s:%d] \n", __FUNCTION__, __LINE__);
+ 		return n->output(n, skb);
++	}
+ }
+
+ static inline struct neighbour *dst_neigh_lookup(const struct dst_entry *dst, const void *daddr)
+diff --git a/net/core/dev.c b/net/core/dev.c
+index 3bcbf931..51597435 100644
+--- a/net/core/dev.c
++++ b/net/core/dev.c
+@@ -2750,6 +2750,7 @@ static int xmit_one(struct sk_buff *skb, struct net_device *dev,
+ {
+ 	unsigned int len;
+ 	int rc;
++	pr_info("[huxueshi:%s:%d] \n", __FUNCTION__, __LINE__);
+
+ 	if (!list_empty(&ptype_all) || !list_empty(&dev->ptype_all))
+ 		dev_queue_xmit_nit(skb, dev);
+@@ -2772,6 +2773,7 @@ struct sk_buff *dev_hard_start_xmit(struct sk_buff *first, struct net_device *de
+ 		struct sk_buff *next = skb->next;
+
+ 		skb->next = NULL;
++		pr_info("[huxueshi:%s:%d] \n", __FUNCTION__, __LINE__);
+ 		rc = xmit_one(skb, dev, txq, next != NULL);
+ 		if (unlikely(!dev_xmit_complete(rc))) {
+ 			skb->next = next;
+@@ -2941,6 +2943,9 @@ static inline int __dev_xmit_skb(struct sk_buff *skb, struct Qdisc *q,
+ 		spin_lock(&q->busylock);
+
+ 	spin_lock(root_lock);
++
++	pr_info("[huxueshi:%s:%d] %x %x %x\n", __FUNCTION__, __LINE__, q->flags, q->__state, qdisc_qlen(q) );
++
+ 	if (unlikely(test_bit(__QDISC_STATE_DEACTIVATED, &q->state))) {
+ 		kfree_skb(skb);
+ 		rc = NET_XMIT_DROP;
+@@ -2954,6 +2959,7 @@ static inline int __dev_xmit_skb(struct sk_buff *skb, struct Qdisc *q,
+
+ 		qdisc_bstats_update(q, skb);
+
++		pr_info("[huxueshi:%s:%d] \n", __FUNCTION__, __LINE__);
+ 		if (sch_direct_xmit(skb, q, dev, txq, root_lock, true)) {
+ 			if (unlikely(contended)) {
+ 				spin_unlock(&q->busylock);
+@@ -2965,6 +2971,7 @@ static inline int __dev_xmit_skb(struct sk_buff *skb, struct Qdisc *q,
+
+ 		rc = NET_XMIT_SUCCESS;
+ 	} else {
++		pr_info("[huxueshi:%s:%d] !!!!!!!!!!!!!!!\n", __FUNCTION__, __LINE__);
+ 		rc = q->enqueue(skb, q) & NET_XMIT_MASK;
+ 		if (qdisc_run_begin(q)) {
+ 			if (unlikely(contended)) {
+@@ -3172,6 +3179,7 @@ static int __dev_queue_xmit(struct sk_buff *skb, void *accel_priv)
+ #endif
+ 	trace_net_dev_queue(skb);
+ 	if (q->enqueue) {
++		pr_info("[huxueshi:%s:%d] \n", __FUNCTION__, __LINE__);
+ 		rc = __dev_xmit_skb(skb, q, dev, txq);
+ 		goto out;
+ 	}
+@@ -3238,6 +3246,7 @@ out:
+
+ int dev_queue_xmit(struct sk_buff *skb)
+ {
++	pr_info("[huxueshi:%s:%d] \n", __FUNCTION__, __LINE__);
+ 	return __dev_queue_xmit(skb, NULL);
+ }
+ EXPORT_SYMBOL(dev_queue_xmit);
+diff --git a/net/core/neighbour.c b/net/core/neighbour.c
+index f60b9362..f59022bf 100644
+--- a/net/core/neighbour.c
++++ b/net/core/neighbour.c
+@@ -1363,6 +1363,7 @@ EXPORT_SYMBOL(neigh_connected_output);
+
+ int neigh_direct_output(struct neighbour *neigh, struct sk_buff *skb)
+ {
++	pr_info("[huxueshi:%s:%d] \n", __FUNCTION__, __LINE__);
+ 	return dev_queue_xmit(skb);
+ }
+ EXPORT_SYMBOL(neigh_direct_output);
+diff --git a/net/ipv6/ip6_output.c b/net/ipv6/ip6_output.c
+index 74786783..d2ed2329 100644
+--- a/net/ipv6/ip6_output.c
++++ b/net/ipv6/ip6_output.c
+@@ -90,6 +90,7 @@ static int ip6_finish_output2(struct net *net, struct sock *sk, struct sk_buff *
+ 				IP6_INC_STATS(net, idev,
+ 					      IPSTATS_MIB_OUTDISCARDS);
+ 				kfree_skb(skb);
++				pr_info("[huxueshi:%s:%d] \n", __FUNCTION__, __LINE__);
+ 				return 0;
+ 			}
+ 		}
+@@ -100,6 +101,7 @@ static int ip6_finish_output2(struct net *net, struct sock *sk, struct sk_buff *
+ 		    IPV6_ADDR_SCOPE_NODELOCAL &&
+ 		    !(dev->flags & IFF_LOOPBACK)) {
+ 			kfree_skb(skb);
++			pr_info("[huxueshi:%s:%d] \n", __FUNCTION__, __LINE__);
+ 			return 0;
+ 		}
+ 	}
+@@ -110,9 +112,12 @@ static int ip6_finish_output2(struct net *net, struct sock *sk, struct sk_buff *
+ 	if (unlikely(!neigh))
+ 		neigh = __neigh_create(&nd_tbl, nexthop, dst->dev, false);
+ 	if (!IS_ERR(neigh)) {
++		pr_info("[huxueshi:%s:%d] \n", __FUNCTION__, __LINE__);
+ 		ret = dst_neigh_output(dst, neigh, skb);
+ 		rcu_read_unlock_bh();
+ 		return ret;
++	}else{
++		pr_info("[huxueshi:%s:%d] \n", __FUNCTION__, __LINE__);
+ 	}
+ 	rcu_read_unlock_bh();
+
+@@ -123,6 +128,7 @@ static int ip6_finish_output2(struct net *net, struct sock *sk, struct sk_buff *
+
+ static int ip6_finish_output(struct net *net, struct sock *sk, struct sk_buff *skb)
+ {
++	pr_info("[huxueshi:%s:%d] \n", __FUNCTION__, __LINE__);
+ 	if ((skb->len > ip6_skb_dst_mtu(skb) && !skb_is_gso(skb)) ||
+ 	    dst_allfrag(skb_dst(skb)) ||
+ 	    (IP6CB(skb)->frag_max_size && skb->len > IP6CB(skb)->frag_max_size))
+@@ -141,6 +147,7 @@ int ip6_output(struct net *net, struct sock *sk, struct sk_buff *skb)
+ 		kfree_skb(skb);
+ 		return 0;
+ 	}
++	pr_info("[huxueshi:%s:%d] \n", __FUNCTION__, __LINE__);
+
+ 	return NF_HOOK_COND(NFPROTO_IPV6, NF_INET_POST_ROUTING,
+ 			    net, sk, skb, NULL, dev,
+diff --git a/net/ipv6/mcast.c b/net/ipv6/mcast.c
+index 06640685..8bc9110d 100644
+--- a/net/ipv6/mcast.c
++++ b/net/ipv6/mcast.c
+@@ -1011,6 +1011,7 @@ static void mld_gq_stop_timer(struct inet6_dev *idev)
+ static void mld_ifc_start_timer(struct inet6_dev *idev, unsigned long delay)
+ {
+ 	unsigned long tv = prandom_u32() % delay;
++	pr_info("[huxueshi:%s:%d] %lx\n", __FUNCTION__, __LINE__, tv);
+
+ 	if (!mod_timer(&idev->mc_ifc_timer, jiffies+tv+2))
+ 		in6_dev_hold(idev);
+@@ -1612,6 +1613,7 @@ static void mld_sendpack(struct sk_buff *skb)
+ 	int err;
+ 	struct flowi6 fl6;
+ 	struct dst_entry *dst;
++	pr_info("[huxueshi:%s:%d] \n", __FUNCTION__, __LINE__);
+
+ 	rcu_read_lock();
+ 	idev = __in6_dev_get(skb->dev);
+@@ -2427,6 +2429,7 @@ static void mld_ifc_timer_expire(unsigned long data)
+ {
+ 	struct inet6_dev *idev = (struct inet6_dev *)data;
+
++	pr_info("[huxueshi:%s:%d] \n", __FUNCTION__, __LINE__);
+ 	mld_send_cr(idev);
+ 	if (idev->mc_ifc_count) {
+ 		idev->mc_ifc_count--;
+diff --git a/net/sched/sch_generic.c b/net/sched/sch_generic.c
+index aa472503..9989275d 100644
+--- a/net/sched/sch_generic.c
++++ b/net/sched/sch_generic.c
+@@ -155,14 +155,18 @@ int sch_direct_xmit(struct sk_buff *skb, struct Qdisc *q,
+ 	/* And release qdisc */
+ 	spin_unlock(root_lock);
+
++	pr_info("[huxueshi:%s:%d] \n", __FUNCTION__, __LINE__);
+ 	/* Note that we validate skb (GSO, checksum, ...) outside of locks */
+ 	if (validate)
+ 		skb = validate_xmit_skb_list(skb, dev);
+
+ 	if (likely(skb)) {
+ 		HARD_TX_LOCK(dev, txq, smp_processor_id());
+-		if (!netif_xmit_frozen_or_stopped(txq))
++		if (!netif_xmit_frozen_or_stopped(txq)){
+ 			skb = dev_hard_start_xmit(skb, dev, txq, &ret);
++		}else{
++			pr_info("[huxueshi:%s:%d] !!!!!!!!!!!!!!! %lx\n", __FUNCTION__, __LINE__, txq->state);
++		}
+
+ 		HARD_TX_UNLOCK(dev, txq);
+ 	} else {

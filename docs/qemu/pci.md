@@ -4,6 +4,37 @@ https://wiki.osdev.org/PCI_Express : 通过 ACPI 的配置，可以让 PCI 配�
 
 https://66ring.github.io/2021/09/10/universe/qemu/qemu_bus_simulate/ : 写的非常不错的文档
 
+- [ ] 从 pci_register_bar 中介绍一下 wmask 的作用
+    - 其实很简单，就是 pci_dev->config 之前，首先和 wmask 一下，但是读直接读取 pci_dev->config
+
+## dma
+
+在 QEMU 中的部分:
+```c
+static uint32_t
+e1000e_txdesc_writeback(E1000ECore *core, dma_addr_t base,
+                        struct e1000_tx_desc *dp, bool *ide, int queue_idx)
+{
+    uint32_t txd_upper, txd_lower = le32_to_cpu(dp->lower.data);
+
+    if (!(txd_lower & E1000_TXD_CMD_RS) &&
+        !(core->mac[IVAR] & E1000_IVAR_TX_INT_EVERY_WB)) {
+        return 0;
+    }
+
+    *ide = (txd_lower & E1000_TXD_CMD_IDE) ? true : false;
+
+    txd_upper = le32_to_cpu(dp->upper.data) | E1000_TXD_STAT_DD;
+
+    dp->upper.data = cpu_to_le32(txd_upper);
+    pci_dma_write(core->owner, base + ((char *)&dp->upper - (char *)dp),
+                  &dp->upper, sizeof(dp->upper));
+    return e1000e_tx_wb_interrupt_cause(core, queue_idx);
+}
+```
+
+在内核中的 e1000_clean_tx_irq 中对应位置检查数值的。
+
 # QEMU 如何模拟 PCI 设备
 - i440fx_pcihost_initfn : 初始化最初的注册
 - i440fx_pcihost_realize : 注册 0xcf8 和 0xcfc 两个端口，然后将这两个
