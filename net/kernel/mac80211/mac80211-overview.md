@@ -2,7 +2,6 @@
 
 IEEE 802.11 is part of the IEEE 802 set of local area network (LAN) protocols, and specifies the set of media access control (MAC) and physical layer (PHY) protocols for implementing wireless local area network (WLAN) Wi-Fi computer communication in various frequencies including, but not limited to, 2.4 GHz, 5 GHz, 6 GHz, and 60 GHz frequency bands.
 
-
 # [stackoverflow](https://stackoverflow.com/questions/7157181/how-to-learn-the-structure-of-linux-wireless-drivers-mac80211)
 
 # code
@@ -42,7 +41,7 @@ static const struct net_device_ops e1000_netdev_ops = {
 };
 ```
 
-```
+```txt
 ➜  linux git:(master) sudo lshw -C network
 [sudo] password for maritns3:
   *-network

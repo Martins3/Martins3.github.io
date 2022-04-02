@@ -451,9 +451,7 @@ struct PCIDevice {
     - [x] 既然所有的 pci 都是可以统一寻址，那么应该存在一个机制将所有的 PCIDevice::config 挂到一起。
       - 通过 `PCIDevice *pci_dev = pci_dev_find_by_addr(s, addr);`
 
-```c
-/**
- *
+```txt
 #0  pci_default_read_config (d=0x5555568923a0, address=0, len=2) at ../hw/pci/pci.c:1419
 #1  0x00005555558780f8 in pci_host_config_read_common (pci_dev=0x5555568923a0, addr=0, limit=<optimized out>, limit@entry=256, len=2) at ../hw/pci/pci_host.c:104
 #2  0x00005555558782ee in pci_data_read (s=<optimized out>, addr=<optimized out>, len=<optimized out>) at ../hw/pci/pci_host.c:133
@@ -553,8 +551,7 @@ huxueshi:e1000_write_config d 40 1
 - 这些在进行 e1000_probe 之前已经完成了。
 
 真相就是在这里:
-```c
-/*
+```txt
 #0  pci_write_config_word (dev=0xffff8881002d9800, where=4, val=256) at drivers/pci/pci.h:383
 #1  0xffffffff8142f3f5 in __pci_read_base (dev=dev@entry=0xffff8881002d9800, type=type@entry=pci_bar_unknown, res=res@entry=0xffff8881002d9c50, pos=pos@entry=28) at dri
 vers/pci/probe.c:190
@@ -585,6 +582,8 @@ ca20, sysdata=sysdata@entry=0xffff88810022ca58) at drivers/acpi/pci_root.c:925
 #25 0xffffffff81b7c249 in kernel_init (unused=<optimized out>) at init/main.c:1447
 #26 0xffffffff810019b2 in ret_from_fork () at arch/x86/entry/entry_64.S:294
 #27 0x0000000000000000 in ?? ()
+e of these components can be found at github.com/loongson.However, it is not so easy to find proper combination of all components that can work. I forked them, make necessary patches and tag the source versions for binaries here to help you to reproduce and further customizations.
+
 ```
 从 pci_read_bases 中可以看的超级清晰，为什么在 Linux kernel 中间依旧存在配置 bar 空间的行为.
 
