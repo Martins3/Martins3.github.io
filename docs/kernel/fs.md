@@ -12,5 +12,8 @@
 | initrd    | kernel 启动的时候，可以指定 rootfs 中存储的内容，从而在 mount real root fs 之前搞 |
 | initramfs | initrd 的改进版本                                                                 |
 
+## 这里空说，实际上难以感受在说啥
+将 hack/qemu/bare-metal/ 下的内容整理一下吧！
+
 [^1]: http://junyelee.blogspot.com/2020/03/ramfs-rootfs-and-initramfs.html
 [^2]: https://docs.kernel.org/filesystems/ramfs-rootfs-initramfs.html

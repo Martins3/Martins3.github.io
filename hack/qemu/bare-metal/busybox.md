@@ -25,20 +25,20 @@ sudo mknod rootfs/dev/tty4 c 4 4
 ## 一个小问题
 不知道为什么，当运行一个 hello world 的 initrd 的 kernel 参数是这个:
 
-```c
-  # arg_kernel_args="nokaslr console=ttyS0 root=/dev/ram rdinit=/hello.out"
+```bash
+arg_kernel_args="nokaslr console=ttyS0 root=/dev/ram rdinit=/hello.out"
 ```
 
 而运行 initrd 的时候:
 
-```c
-  # arg_kernel_args="nokaslr console=ttyS0"
+```bash
+arg_kernel_args="nokaslr console=ttyS0"
 ```
 
 ## 使用 busybox 可以观察到有意思的东西
 
 ## 网络
-在启动 dhcp 的时候，可以检测到两次 irq_msi_compose_msg 和写入网络的操作。
+在启动 dhcp 的时候，可以检测到两次 `irq_msi_compose_msg` 和写入网络的操作。
 
 ```c
 /*

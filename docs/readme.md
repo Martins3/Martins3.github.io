@@ -54,10 +54,10 @@
 - [使用 QEMU, FlameGraph 和 bpftrace 阅读内核](./tips-reading-kernel.md)
 - [使用 Github 记录笔记和搭建 blog](./setup-github-pages.md)
 
-## Linux / Unix
+## Unix Environment Programming
 - [musl 阅读笔记](./linux/musl.md)
 
-## Kernel
+## Linux Kernel
 <!-- - [irq domain](./kernel/irq-domain.md) -->
 <!-- - [irq domain](./kernel/tty.md) -->
 

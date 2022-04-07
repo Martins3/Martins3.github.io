@@ -18,6 +18,7 @@
     * [xargs](#xargs)
     * [awk](#awk)
     * [[ ] sed](#-sed)
+    * [[ ] cut](#-cut)
   * [资源和工具](#资源和工具)
 * [一些链接](#一些链接)
   * [一些资源](#一些资源)
@@ -284,6 +285,7 @@ awk 还存在
 ```plain
 ag -l TODO | xargs sed -i '/TODO/d'
 ```
+### [ ] cut
 
 ## 资源和工具
 1. https://explainshell.com/

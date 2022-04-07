@@ -1,6 +1,6 @@
 # Regex
 ## 基本学习路线
-阅读[这个文档](https://github.com/ziishaned/learn-regex/blob/master/README-cn.md)
+阅读[这个文档](https://github.com/ziishaned/learn-regex/blob/master/translations/README-cn.md)
 
 但是更加推荐[交互式的教程](https://regexlearn.com/zh-cn)
 

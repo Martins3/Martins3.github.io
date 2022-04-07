@@ -44,3 +44,7 @@ crtendS.o%s /usr/local/musl/lib/crtn.o
 *esp_cpp_options:
 ```
 - [ ] 其中的 startfile 和 endfile 和 crt 有关，而 crt 在程序员的自我修养的时候就没有看懂
+
+## 一些笔记
+- [-m32](https://stackoverflow.com/questions/2426478/when-should-m32-option-of-gcc-be-used) 编译为 32bit 的操作系统的
+- -march=i386 : 是用于指定指令集的
