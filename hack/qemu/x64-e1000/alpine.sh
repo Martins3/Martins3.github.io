@@ -1,7 +1,7 @@
 #!/bin/bash
 set -eu
 
-use_32bit=true
+use_32bit=false
 use_nvme=false
 
 # ----------------------- 配置区 -----------------------------------------------

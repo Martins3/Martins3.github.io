@@ -1,20 +1,20 @@
 # QEMU 中的 seabios : 地址空间
 <!-- vim-markdown-toc GitLab -->
 
-- [pc.bios](#pcbios)
-  - [map pc.bios to guest](#map-pcbios-to-guest)
-  - [pc.bios is mapped to two location](#pcbios-is-mapped-to-two-location)
-  - [first instructions executed in seabios](#first-instructions-executed-in-seabios)
-- [pc.rom](#pcrom)
-- [PAM](#pam)
-    - [QEMU 侧如何处理 PAM](#qemu-侧如何处理-pam)
-    - [Seabios 侧如何处理 PAM](#seabios-侧如何处理-pam)
-- [SMM](#smm)
-    - [SMM 地址空间的构建](#smm-地址空间的构建)
-    - [seabios 如何使用 SMM](#seabios-如何使用-smm)
-    - [QEMU 如何响应](#qemu-如何响应)
-    - [SMM 的使用](#smm-的使用)
-- [问题](#问题)
+* [pc.bios](#pcbios)
+  * [map pc.bios to guest](#map-pcbios-to-guest)
+  * [pc.bios is mapped to two location](#pcbios-is-mapped-to-two-location)
+  * [first instructions executed in seabios](#first-instructions-executed-in-seabios)
+* [pc.rom](#pcrom)
+* [PAM](#pam)
+  * [QEMU 侧如何处理 PAM](#qemu-侧如何处理-pam)
+  * [Seabios 侧如何处理 PAM](#seabios-侧如何处理-pam)
+* [SMM](#smm)
+  * [SMM 地址空间的构建](#smm-地址空间的构建)
+  * [seabios 如何使用 SMM](#seabios-如何使用-smm)
+  * [QEMU 如何响应](#qemu-如何响应)
+  * [SMM 的使用](#smm-的使用)
+* [问题](#问题)
 
 <!-- vim-markdown-toc -->
 
@@ -191,7 +191,7 @@ PAM 的作用可以将对于 bios 空间读写转发到 PCI 或者 RAM 中，因
 - https://patchwork.ozlabs.org/project/qemu-devel/patch/1437389593-15297-1-git-send-email-real@ispras.ru/
 - https://wiki.qemu.org/Documentation/Platforms/PC
 
-#### QEMU 侧如何处理 PAM
+### QEMU 侧如何处理 PAM
 在 i440fx_init 初始化的时候, 来初始化所有 `PAMMemoryRegion`, 一共 13 个
 - 第一个映射: System BIOS Area Memory Segments, 也即是映射 0xf0000 到 0xfffff
 - 后面的 12 个映射 0xc0000 ~ 0xeffff, 每一个映射 0x4000 的大小
@@ -250,7 +250,7 @@ void pam_update(PAMMemoryRegion *pam, int idx, uint8_t val)
 - 然后映射为 RAM
 - 最后映射为 ROM
 
-#### Seabios 侧如何处理 PAM
+### Seabios 侧如何处理 PAM
 guest 通过 PCI bridge i440fx 的 `I440FX_PAM` 的位置来实现更新 PAM 的。
 
 具体代码在 `__make_bios_writable_intel` 中，因为修改了映射之后 `isa-bios` 就不见了，
@@ -376,7 +376,7 @@ can address up to 4 GBytes of memory and can execute all I/O and system instruct
 
 初始化数值是 0x30000 从 seabios 的 src/config.h 中 `#define BUILD_SMM_INIT_ADDR       0x30000` 可以得到验证。
 
-#### SMM 地址空间的构建
+### SMM 地址空间的构建
 而在 i440fx_init 中，创建出来了 smram_region 和 smram
 ```plain
 memory-region: smram
@@ -407,7 +407,7 @@ address-space: cpu-smm-0
 - smram : 当 CPU 在 SMM 模式下，其选择的 address-space 是 cpu-smm-0，其实最后的效果就是将 system_memory 上，将原来 0xa0000 ~ 0xbffff 的位置上放上 ram
 而 0xa0000 ~ 0xbffff 上恰好放置的是 vga-lowmem, 也就是在 SMM 模式下，会将 vga-lowmem 用 ram 覆盖上。
 
-#### seabios 如何使用 SMM
+### seabios 如何使用 SMM
 写 I440FX 的配置空间
 
 ```c
@@ -449,11 +449,11 @@ static void piix4_apmc_smm_setup(int isabdf, int i440_bdf)
 }
 ```
 
-#### QEMU 如何响应
+### QEMU 如何响应
 其实 PAM 和 SMM 的响应都是在 i440fx_update_memory_mappings 中，而且操作非常类似，就是 enable / disable MemoryRegion
 只是 SMM 处理的是 smram 和 smram_region 两个 MemoryRegion
 
-#### SMM 的使用
+### SMM 的使用
 不考虑 pflash 的使用情况下，`cpu_get_mem_attrs` 唯一插入使用 `.secure` 的位置
 ```c
 static inline MemTxAttrs cpu_get_mem_attrs(CPUX86State *env)

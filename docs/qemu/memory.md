@@ -3,6 +3,7 @@
 <!-- vim-markdown-toc GitLab -->
 
 * [Overview](#overview)
+* [为什么 QEMU 将 memory region 设计的如此复杂](#为什么-qemu-将-memory-region-设计的如此复杂)
 * [AddressSpace](#addressspace)
   * [memory_region_get_flatview_root](#memory_region_get_flatview_root)
 * [MemoryRegion](#memoryregion)
@@ -131,6 +132,13 @@ address-space: memory                     │   │    │
 为此，QEMU 在每次 MemoryRegion 的属性发生修改的时候都会进行两个事情:
 - 将 MemoryRegion 压平为 FlatRange，避免逐级查询 MemoryRegion
 - 将 FlatRange 变为树的查询，将查询从 O(n) 的查询修改为 O(log(N))
+
+## 为什么 QEMU 将 memory region 设计的如此复杂
+- TODO 详细的解释一下
+
+* PCI bridge window
+* IOMMU
+* PAM / SMM
 
 ## AddressSpace
 AddressSpace 用于描述整个地址空间的映射关系, 不同的地址空间的映射关系不同。guest 写相同的地址，在 io 的空间和 memory 空间的效果不同的。

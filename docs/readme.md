@@ -38,7 +38,7 @@
   - [QEMU 中的面向对象 : QOM](./qemu/qom.md)
   - [QEMU 中的时钟](./qemu/timer.md)
   - [QEMU 字符设备模拟](./qemu/char.md)
-- [淦，设计一个裸金属二进制翻译器不可能这么难](./bmbt/introduction.md)
+- [淦，写一个裸金属二进制翻译器不可能这么难](./bmbt/introduction.md)
   <!-- - [二进制翻译技术介绍]() -->
 
 ## UEFI

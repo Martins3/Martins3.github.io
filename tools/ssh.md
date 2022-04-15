@@ -20,7 +20,3 @@ logout
 
 fg
 > 可以一并阅读一下
-
-4. copy remote neovim's clipboard to local
-  - https://superuser.com/questions/806637/xauth-not-creating-xauthority-file
-  - ssh -X
