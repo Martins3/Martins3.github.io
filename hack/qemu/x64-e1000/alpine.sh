@@ -122,6 +122,7 @@ if [ ! -f "$iso" ]; then
 fi
 
 # 创建额外的两个 disk 用于测试 nvme
+# mount -o loop /path/to/data /mnt
 if [ ! -f "$ext4_img1" ]; then
   sure "create ${ext4_img1}"
   dd if=/dev/null of="${ext4_img1}" bs=1M seek=100

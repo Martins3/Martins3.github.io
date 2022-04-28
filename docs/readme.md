@@ -18,28 +18,35 @@
 ## Virtualization && Binary Translation
 - [Loongson Dune : A Process Level Virtualization framework Base on KVM](https://github.com/Martins3/loongson-dune)
 - QEMU 源码分析
-  <!-- -  🚧 [QEMU 的文件结构](./qemu/file-structure.md) -->
+  -  🚧 [从 QEMU 的文件结构认识 QEMU](./qemu/file-structure.md)
   - [QEMU 初始化过程分析](./qemu/init.md)
   - [QEMU 的 memory model 设计](./qemu/memory.md)
   - [QEMU 的 softmmu 设计](./qemu/softmmu.md)
   - [QEMU 中的 map 和 set](./qemu/map.md)
   - [QEMU softmmu 访存函数集整理](./qemu/softmmu-functions.md)
   - [QEMU 中的 seabios : 地址空间](./qemu/bios-memory.md)
-  - [QEMU 和 seabios 的数据传输协议: fw_cfg](./qemu/fw_cfg.md)
+  - [QEMU 和 seabios 的数据传输协议: `fw_cfg`](./qemu/fw_cfg.md)
   - [QEMU 如何加载 Linux kernel image](./qemu/load-kernel-image.md)
   - [QEMU 的参数解析](./qemu/options.md)
-  <!-- - 🚧 [QEMU 二进制翻译基础](./qemu/tcg.md) -->
-  <!-- - 🚧 [QEMU 如何模拟 PCI 设备](./qemu/pci.md) -->
-  <!-- - 🚧 [seabios 源码分析](./qemu/seabios.md) -->
-  <!-- - 🚧 [Qemu Hash table 设计](./qemu/qht.md) -->
+  - 🚧 [QEMU 二进制翻译基础](./qemu/tcg.md)
+  - 🚧 [QEMU 如何模拟 PCI 设备](./qemu/pci.md)
+  - 🚧 [seabios 源码分析](./qemu/seabios.md)
+  - 🚧 [Qemu Hash table 设计](./qemu/qht.md)
   - [QEMU 中的线程和事件循环](./qemu/threads.md)
   - [QEMU 中的锁](./qemu/cpus.md)
   - [QEMU 如何模拟中断](./qemu/interrupt.md)
   - [QEMU 中的面向对象 : QOM](./qemu/qom.md)
   - [QEMU 中的时钟](./qemu/timer.md)
   - [QEMU 字符设备模拟](./qemu/char.md)
-- [淦，写一个裸金属二进制翻译器不可能这么难](./bmbt/introduction.md)
-  <!-- - [二进制翻译技术介绍]() -->
+
+### 裸金属二进制翻译器的设计和实现
+- [淦，写一个裸金属二进制翻译器不可能这么难](./bmbt/emotion.md)
+- 🚧 [为什么要写一个裸金属二进制翻译器](.)
+
+## 淦，打一把英雄联盟不可能这么难
+- 🚧 [双系统: bootloader 和分区](.)
+- 🚧 [wine : 如何实现系统调用虚拟化](.)
+- 🚧 [设备直通: VFIO](.)
 
 ## UEFI
 - [Linux 下 UEFI 学习环境搭建](./bmbt/uefi-linux.md)
@@ -59,7 +66,8 @@
 
 ## Linux Kernel
 <!-- - [irq domain](./kernel/irq-domain.md) -->
-<!-- - [irq domain](./kernel/tty.md) -->
+- 🚧 [tty](.)
+- 🚧 [syscall](.)
 
 ## Loongson
 - [X86 上阅读 Loongarch 内核](./loongarch/ccls.md)

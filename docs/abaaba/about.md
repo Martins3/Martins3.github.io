@@ -16,6 +16,10 @@
 ### 不喜欢
 - 写报告
 - Mac / iPhone
+- 微信
+
+### 佩服
+- [Fabrice Bellard](https://bellard.org/)
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

@@ -282,6 +282,8 @@ FlatView 是一个数组形式，为了加快访问，显然需要使用构成�
 在 `generate_memory_topology` 中将 FlatRange 逐个调用 `flatview_add_to_dispatch` 创建出来的。
 
 ## RAMBlock
+TMP_TODO 说明一下: RAMBlock 的 host 真的是可以随意指向任何位置吗?
+
 创建一个 RAM 的过程大致如此:
 1. 创建一个 MemoryRegion / RamBlock，并且关联起来
 2. mmap 出来一个 host virtual memory 当做 guest 的内存
