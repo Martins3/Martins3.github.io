@@ -1,5 +1,104 @@
 # QEMU 的文件结构
 
+ accel
+ audio
+ authz
+ backends
+-  block : 后端
+-  chardev : 后端
+ bsd-user
+ common-user
+ configs
+-  contrib : 各种工具
+  - ivshmem: http://just4coding.com/2021/09/12/qemu-ivshmem/
+ crypto
+ disas
+ docs
+-  dump : dump 将 Guest 的 memory
+-  ebpf : 网络
+- submodules
+  -  dtc : device tree compiler
+  -  capstone
+-  fpu
+-  fsdev : 9p
+ gdb-xml
+ hw
+ include
+ io
+ libdecnumber
+ linux-headers
+ linux-user
+ meson
+ migration
+ monitor
+ nbd
+ net
+ pc-bios
+ plugins
+ po
+ python
+ qapi
+ qga
+ qobject
+ qom
+ replay
+ roms
+ scripts
+ scsi
+ semihosting
+ slirp
+ softmmu
+ storage-daemon
+ stubs
+ subprojects
+ target
+ tcg
+ tests
+ tools
+ trace
+ ui
+ util
+ block.c
+ blockdev-nbd.c
+ blockdev.c
+ blockjob.c
+ cpu.c
+ cpus-common.c
+ disas.c
+ gdbstub.c
+gitdm.config
+hmp-commands-info.hx
+hmp-commands.hx
+qemu-img-cmds.hx
+qemu-options.hx
+qemu.nsi
+qemu.sasl
+ iothread.c
+ job-qmp.c
+ job.c
+Kconfig
+Kconfig.host
+ LICENSE
+MAINTAINERS
+Makefile
+memory_ldst.c.inc
+meson.build
+ meson_options.txt
+ module-common.c
+ os-posix.c
+ os-win32.c
+ page-vary-common.c
+ page-vary.c
+ qemu-bridge-helper.c
+ qemu-edid.c
+ qemu-img.c
+ qemu-io-cmds.c
+ qemu-io.c
+ qemu-keymap.c
+ qemu-nbd.c
+ replication.c
+trace-events
+
 ## target/i386
 
 | Filename         | desc                                                                                                                     | line |
@@ -65,3 +164,13 @@
 - sev-stub.c
 - sev.c
 - sev_i386.h
+
+## 问题
+- [ ] virtio fs [^1] 的实现在哪里
+- [ ] 为什么在 ./contrib/ 存在 vhost 的工具
+- [ ] common-user/ 存在架构的 hacking 的代码
+- [ ] disas 和 QEMU 是什么关系吗?
+- [ ] hw 下存在
+
+[^1]: https://virtio-fs.gitlab.io/howto-qemu.html
+[^2]: https://en.wikipedia.org/wiki/Pluggable_authentication_module

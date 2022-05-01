@@ -2,11 +2,11 @@
 
 <!-- vim-markdown-toc GitLab -->
 
-- [unsorted](#unsorted)
-- [abbreviation explanation](#abbreviation-explanation)
-- [tb link](#tb-link)
-- [TCGContext initialization](#tcgcontext-initialization)
-- [cross page](#cross-page)
+* [unsorted](#unsorted)
+* [abbreviation explanation](#abbreviation-explanation)
+* [tb link](#tb-link)
+* [TCGContext initialization](#tcgcontext-initialization)
+* [cross page](#cross-page)
 
 <!-- vim-markdown-toc -->
 

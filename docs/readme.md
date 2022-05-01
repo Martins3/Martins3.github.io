@@ -18,7 +18,7 @@
 ## Virtualization && Binary Translation
 - [Loongson Dune : A Process Level Virtualization framework Base on KVM](https://github.com/Martins3/loongson-dune)
 - QEMU 源码分析
-  -  🚧 [从 QEMU 的文件结构认识 QEMU](./qemu/file-structure.md)
+  - 🚧 [从 QEMU 的文件结构认识 QEMU](./qemu/file-structure.md)
   - [QEMU 初始化过程分析](./qemu/init.md)
   - [QEMU 的 memory model 设计](./qemu/memory.md)
   - [QEMU 的 softmmu 设计](./qemu/softmmu.md)
@@ -29,9 +29,10 @@
   - [QEMU 如何加载 Linux kernel image](./qemu/load-kernel-image.md)
   - [QEMU 的参数解析](./qemu/options.md)
   - 🚧 [QEMU 二进制翻译基础](./qemu/tcg.md)
+  - 🚧 [QEMU 时钟模拟](./qemu/timer.md)
   - 🚧 [QEMU 如何模拟 PCI 设备](./qemu/pci.md)
   - 🚧 [seabios 源码分析](./qemu/seabios.md)
-  - 🚧 [Qemu Hash table 设计](./qemu/qht.md)
+  - 🚧 [Qemu Hash Table 设计](./qemu/qht.md)
   - [QEMU 中的线程和事件循环](./qemu/threads.md)
   - [QEMU 中的锁](./qemu/cpus.md)
   - [QEMU 如何模拟中断](./qemu/interrupt.md)
@@ -40,8 +41,10 @@
   - [QEMU 字符设备模拟](./qemu/char.md)
 
 ### 裸金属二进制翻译器的设计和实现
-- [淦，写一个裸金属二进制翻译器不可能这么难](./bmbt/emotion.md)
-- 🚧 [为什么要写一个裸金属二进制翻译器](.)
+- 🚧 [为什么要写一个裸金属二进制翻译器](./bmbt/1-why.md)
+- 🚧 [裸金属二进制翻译器的软件架构](./bmbt/2-arch.md)
+- 🚧 [裸金属二进制翻译器的技术细节](./bmbt/2-arch.md)
+- 🚧 [淦，写一个裸金属二进制翻译器不可能这么难](./bmbt/emotion.md)
 
 ## 淦，打一把英雄联盟不可能这么难
 - 🚧 [双系统: bootloader 和分区](.)

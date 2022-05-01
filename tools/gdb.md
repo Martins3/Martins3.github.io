@@ -25,3 +25,7 @@ https://stackoverflow.com/questions/12938067/how-clear-gdb-command-screen
 
 ## coredump
 1. https://stackoverflow.com/questions/2065912/core-dumped-but-core-file-is-not-in-the-current-directory
+
+
+## TODO
+- https://www.bilibili.com/video/BV1kP4y1K7Eo

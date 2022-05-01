@@ -5,9 +5,10 @@
 ## QEMU
 QEMU 高效，简单，强大。
 
-使用 QEMU 调试内核网上已经有很多的文章, 比如[Booting a Custom Linux Kernel in QEMU and Debugging It With GDB](http://nickdesaulniers.github.io/blog/2018/10/24/booting-a-custom-linux-kernel-in-qemu-and-debugging-it-witcm fskkjh-gdb/)
+使用 QEMU 调试内核网上已经有很多的文章, 比如 [Booting a Custom Linux Kernel in QEMU and Debugging It With GDB](http://nickdesaulniers.github.io/blog/2018/10/24/booting-a-custom-linux-kernel-in-qemu-and-debugging-it-with-gdb/)
 但是，这些都不是完整，对着教程用下来总是出问题。
 
+## 镜像
 所以我写了一个[脚本](https://github.com/Martins3/Martins3.github.io/blob/master/hack/qemu/x64-e1000/alpine.sh), 简单解释几个点:
 1. 其中采用 alpine 作为镜像，因为 alpine 是 Docker 选择的轻量级镜像，比 Yocto 功能齐全(包管理器)，而且比 Ubuntu 简单
 2. 第一步使用 iso 来安装镜像，这次运行的是 iso 中是包含了一个默认内核, 安装镜像之后，使用 -kernel 指定内核
@@ -27,7 +28,6 @@ QEMU 高效，简单，强大。
 
 > 将系统安装到脚本制作的 image 中
 ![](./img/alpine-3.png)
-
 
 构建好了之后，就可以像是调试普通进程一样调试内核了，非常好用。
 
@@ -50,14 +50,18 @@ echo 0 > /proc/sys/kernel/kptr_restrict
 perf record -a -g -F100000 dd if=/dev/zero of=/tmp/test.dat bs=1024K count=1000
 ```
 
+perf 可能需要安装:
+```sh
+sudo apt install linux-tools-common linux-tools-generic linux-tools-`uname -r`
+```
+
 - -g: record call stack (call graph, backtrace)
 - -a: Collect information not only for execution commands, but also for the entire OS
 - -F: 100,000Hz (100,000 times per second) sampling
 
 ```sh
 perf script> perf_data.txt
-perl stackcollapse-perf.pl perf_data.txt | \
-perl flamegraph.pl --title "trace" > flamegraph_dd.svg
+perl stackcollapse-perf.pl perf_data.txt | perl flamegraph.pl --title "trace" > flamegraph_dd.svg
 ```
 
 最终效果如下，可以在新的窗口中打开从而可以动态交互。
@@ -90,5 +94,7 @@ kprobe:task_tick_fair
 ```
 
 ## TODO
+- [ ] 将 QEMU 的基本使用变为一个单独的文章分析一下
+  - 分析各种常用的技术
 - [ ] [使用 kgdb](https://www.cnblogs.com/haiyonghao/p/14440777.html)
 - [ ] 介绍 [hotspot](https://github.com/KDAB/hotspot)
