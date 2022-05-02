@@ -49,6 +49,8 @@ https://github.com/F-Stack/f-stack : 似乎是对于 dpdk 的封装
 - [ ] sctp : 流量控制协议
 - [ ] /home/maritns3/core/linux/net/unix
 
+https://www.kawabangga.com/posts/4515 中间提到 nc -l  9999 的操作可以了解一下 nc 的含义
+
 给下面写一个一句话总结好吧
 ```txt
 __do_sys_bind
@@ -181,6 +183,7 @@ https://www2.tkn.tu-berlin.de/teaching/rn/animations/gbn_sr/ : 拥塞网络图�
 ```
 - 所以 -nic 和 -netdev 都是做啥的?
 - -nic 后面跟着的这么多的设备是做啥的
+
 
 ### cloudflare
 - [bgp](https://www.cloudflare.com/learning/security/glossary/what-is-bgp/) : 这是当时 facebook 不可用的时候出现的

@@ -69,7 +69,7 @@
 
 ## Linux Kernel
 <!-- - [irq domain](./kernel/irq-domain.md) -->
-- 🚧 [tty](.)
+- [tty, pty, terminal emulator, serial, uart 和 tmux 到底都是什么](kernel/tty.md)
 - 🚧 [syscall](.)
 
 ## Loongson
@@ -82,8 +82,6 @@
 
 ## Misc
 - [what is x86 IA-32 IA-64 x86-64 and amd64 ?](./x86-names.md)
-- [The Day](https://martins3.github.io/theday/)
-- [The Garden](http://martins3.gitee.io/garden/)
 - [言论](./words.md)
 
 ## Guff

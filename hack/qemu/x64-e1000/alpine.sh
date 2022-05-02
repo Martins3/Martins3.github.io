@@ -43,7 +43,7 @@ fi
 arg_kernel_args="root=$root nokaslr console=ttyS0 earlyprink=serial"
 arg_kernel="--kernel ${kernel} -append \"${arg_kernel_args}\""
 arg_monitor="-serial mon:stdio"
-arg_monitor="-nographic"
+# arg_monitor="-nographic"
 
 # 可选参数
 arg_mem="-m 128m -smp 1"
