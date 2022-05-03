@@ -374,3 +374,4 @@ docs/qemu/glib/glib
 *.efi
 .vim-bookmarks
 tmp/
+*.bkp

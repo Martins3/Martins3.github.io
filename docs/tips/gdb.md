@@ -29,3 +29,11 @@ https://stackoverflow.com/questions/12938067/how-clear-gdb-command-screen
 
 ## TODO
 - https://www.bilibili.com/video/BV1kP4y1K7Eo
+
+调试内核模块
+```sh
+cat /proc/modules
+objdump -dS --adjust-vma=0xffffffff85037434 vmlinux
+```
+
+## how to use kgdb

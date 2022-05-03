@@ -18,7 +18,7 @@
 ## Virtualization && Binary Translation
 - [Loongson Dune : A Process Level Virtualization framework Base on KVM](https://github.com/Martins3/loongson-dune)
 - QEMU 源码分析
-  - 🚧 [从 QEMU 的文件结构认识 QEMU](./qemu/file-structure.md)
+  - [QEMU 的整体架构](./qemu/file-structure.md)
   - [QEMU 初始化过程分析](./qemu/init.md)
   - [QEMU 的 memory model 设计](./qemu/memory.md)
   - [QEMU 的 softmmu 设计](./qemu/softmmu.md)
@@ -59,10 +59,13 @@
 - [How to cross Great Fire Wall](./gfw.md)
 - [计算机学习的一点经验之谈](./learn-cs.md)
 - [内核学习的一点经验之谈](./learn-linux-kernel.md)
-- [Linux 常用工具的一点配置](https://martins3.github.io/My-Linux-Config/)
 - [虚拟化学习的一点经验之谈](./learn-virtualization.md)
-- [使用 QEMU, FlameGraph 和 bpftrace 阅读内核](./tips-reading-kernel.md)
 - [使用 Github 记录笔记和搭建 blog](./setup-github-pages.md)
+
+## Tools
+- [我的 Linux 配置环境](https://martins3.github.io/My-Linux-Config/)
+- [gdb 调试技巧](./tips/gdb.md)
+- [使用 QEMU, FlameGraph 和 bpftrace 阅读内核](./tips-reading-kernel.md)
 
 ## Unix Environment Programming
 - [musl 阅读笔记](./linux/musl.md)

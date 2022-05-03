@@ -9,7 +9,7 @@
 ![](https://nvmexpress.org/wp-content/uploads/Linux-storage-stack-diagram_v4.10-e1575939041721.png)
 
 1. 理解一下 IO scheduler 和 blkmq 的关系:
-https://kernel.dk/blk-mq.pdf 
+https://kernel.dk/blk-mq.pdf
 
 
 ## ldd3 的驱动理解
@@ -20,3 +20,15 @@ https://kernel.dk/blk-mq.pdf
     - 从 virtio_blk.c 中间来看 : major 放到局部变量中间，所以实际功能是分配 major number
 
 - [ ] 似乎很多的初始化工作是放到了 init 中间了
+
+## nbd
+将 `blk_mq_ops` 替换成为网络的接口就可以了
+
+```c
+static const struct blk_mq_ops nbd_mq_ops = {
+	.queue_rq	= nbd_queue_rq,
+	.complete	= nbd_complete_rq,
+	.init_request	= nbd_init_request,
+	.timeout	= nbd_xmit_timeout,
+};
+```
