@@ -59,6 +59,7 @@ arg_qmp="-qmp unix:${abs_loc}/test.socket,server,nowait"
 arg_initrd=""
 arg_qmp=""
 arg_tmp=""
+arg_trace="--trace 'memory_region_ops_\*'"
 # -soundhw pcspk
 
 if [[ $use_32bit == true ]]; then
@@ -159,7 +160,7 @@ if [ $LAUNCH_GDB = true ]; then
   exit 0
 fi
 
-cmd="${debug_qemu} ${qemu} ${debug_kernel} ${arg_img} ${arg_mem} ${arg_cpu} \
+cmd="${debug_qemu} ${qemu} ${arg_trace} ${debug_kernel} ${arg_img} ${arg_mem} ${arg_cpu} \
   ${arg_kernel} ${arg_seabios} ${arg_nvme} ${arg_nvme2} ${arg_iothread} ${arg_network} \
   ${arg_share_dir} ${arg_machine} ${arg_monitor} ${arg_qmp} ${arg_initrd} \
   ${arg_tmp}"

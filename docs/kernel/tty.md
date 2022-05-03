@@ -109,9 +109,11 @@ static const struct uart_ops serial8250_pops  // <------ uart 有 8250 和 16550
 
 https://www.uninformativ.de/blog/postings/2018-02-24/0/POSTING-en.html
 
-其中的源码非常容易阅读，一下假设你已经阅读过了。我总结了 eduterm 的基本执行流程如下:
+其中的源码非常容易阅读，以下假设你已经阅读过了。我总结了 eduterm 的基本执行流程如下:
 
 ![](./img/terminal-emulator.svg)
+
+现代计算机实现 tty 是兼容了上古时期的 tty 的，但是其无需和具体的 serial 打交道。
 
 通过上面的火焰图可以验证想法，将我们关心的部分重新截图一下:
 
