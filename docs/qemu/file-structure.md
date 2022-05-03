@@ -5,7 +5,7 @@
 
 QEMU 是虚拟化的集大成者，有的项目可以利用 kvm 构建虚拟机，例如 [firecracker](https://github.com/firecracker-microvm/firecracker)，但是
 其只能使用 virtio IO 模拟设备[^4]，但是 QEMU 还可以使用设备模拟和直通的方法，有的项目，例如 Apple M1 Mac 上的 [Rosetta](https://en.wikipedia.org/wiki/Rosetta_(software))，但是其只能进行
-x86 到 arm 上的二进制翻译器，而 QEMU 可以支持多达 20 个架构的互相翻译.
+x86 到 arm 上的二进制翻译器，而 QEMU 可以支持多达 20 个架构的互相翻译。
 
 ![](./img/qemu.svg)
 
@@ -29,7 +29,7 @@ kvm 不能跨架构，而利用 tcg 可以在 arm 上运行 x86 的操作系统�
 | tcg | `accel` `tcg` `target/$(arch)/tcg` |
 | kvm | `accel` `target/$(arch)/kvm`       |
 
-target/$(arch) 下是各个架构相关的模拟，例如 target/i386/cpu.c 中就定义了 x86 的各种 CPU 模型，Tiger Lake, Haswell 之类的。
+`target/$(arch)` 下是各个架构相关的模拟，例如 target/i386/cpu.c 中就定义了 x86 的各种 CPU 模型，Tiger Lake, Haswell 之类的。
 accel 中处理的是 CPU 模拟的通用结构，因为 tcg 下是各个架构指令翻译为 tcg IR，`target/$(arch)/tcg` 中是 tcg IR 翻译为各个架构指令的代码。
 总体来说，内核在各个架构上提供的 kvm 接口比较统一，但是还是存在一定的差异，其差异的地方定义在 `target/$(arch)/kvm` 中。
 
