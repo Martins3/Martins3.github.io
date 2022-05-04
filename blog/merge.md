@@ -290,8 +290,8 @@ https://github.com/fmtlib/fmt
 > RSA 并不是一个很好的加密方式
 
 ## [分类学趣学](https://arxiv.org/abs/1803.05316)
-> This book is an invitation to discover advanced topics in category theory through concrete, real-world examples. It aims to give a tour: a gentle, quick introduction to guide later exploration. The tour takes place over seven sketches, each pairing an evocative application, such as databases, electric circuits, or dynamical systems, with the exploration of a categorical structure, such as adjoint functors, enriched categories, or toposes. 
-> No prior knowledge of category theory is assumed. 
+> This book is an invitation to discover advanced topics in category theory through concrete, real-world examples. It aims to give a tour: a gentle, quick introduction to guide later exploration. The tour takes place over seven sketches, each pairing an evocative application, such as databases, electric circuits, or dynamical systems, with the exploration of a categorical structure, such as adjoint functors, enriched categories, or toposes.
+> No prior knowledge of category theory is assumed.
 
 ## [shadowsocks upgrade](https://www.devtalking.com/articles/shadowsocks-guide/)
 
@@ -579,7 +579,7 @@ I don't know why we can't setup organization for things like this !
 > 虽然文章是2006年写的，但是可以判断，随后的移动网络的爆发，美国人再一次占领了制高点，虽然收到一点点威胁，但是，其地位其实进一步强化的。
 > 虽然很多内容是经验之谈，但是其中部分观点值得思考
 
-	
+
 6. In America Work Is Less Identified with Employment.
 
 Gradually employment has been shedding such paternalistic overtones and becoming simply an economic exchange.
@@ -609,7 +609,7 @@ Incidentally, America's private universities are one reason there's so much vent
 Even if women only use those sites more than men because that is where their friends are, many experts and parents say they have found that girls appear to have a greater fear of missing out, which compels them to keep up with what their friends are posting.
 > 害怕被忽视
 
-Researchers at the University of Zurich looked at how differences in brain functioning can help explain why women tend to be more prosocial—that is, helpful, generous and cooperative—than men. In the 2017 study, they hypothesized that the areas of women’s brains related to reward processing are more active when they share rewards and that those areas in men are more active when receiving selfish rewards. 
+Researchers at the University of Zurich looked at how differences in brain functioning can help explain why women tend to be more prosocial—that is, helpful, generous and cooperative—than men. In the 2017 study, they hypothesized that the areas of women’s brains related to reward processing are more active when they share rewards and that those areas in men are more active when receiving selfish rewards.
 
 ## [tea bag 中间可能含有数百万的 micro-plastic](https://www.cbc.ca/news/technology/tea-bags-plastic-study-mcgill-1.5295662)
 
@@ -801,13 +801,6 @@ Rust,绝对不是浅尝辄止的内容。
 ## [北大acm icpc](https://lib-pku.github.io/#acm-icpc%E6%9A%91%E6%9C%9F%E8%AF%BE)
 看一下正宗大学的acm到底是搞什么玩意儿。
 
-
-## [为什么不要使用调试器](https://lemire.me/blog/2016/06/21/i-do-not-use-a-debugger/)
-
-## [gerrit](https://www.gerritcodereview.com/)
-看一下code review 是如何进行的
-
-
 ## [git bisect](https://thoughtbot.com/blog/git-bisect)
 
 ## [高性能计算介绍](http://pages.tacc.utexas.edu/~eijkhout/istc/html/index.html)
@@ -859,5 +852,3 @@ https://stackoverflow.com/questions/1624726/how-does-jemalloc-work-what-are-the-
 
 
 ## [2D 图像在现代GPU中间的实现方式](https://raphlinus.github.io/rust/graphics/gpu/2019/05/08/modern-2d.html)
-
-

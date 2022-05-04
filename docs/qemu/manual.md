@@ -11,3 +11,6 @@
 ## 安装 Windows
 
 ## 所以 virtue box 是如何实现的
+
+## 设置网络，参考一下
+https://www.collabora.com/news-and-blog/blog/2017/03/13/kernel-debugging-with-qemu-overview-tools-available/
