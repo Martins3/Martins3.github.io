@@ -42,7 +42,6 @@
 * [open.c(make this part more clear, split it)](#opencmake-this-part-more-clear-split-it)
 * [open](#open)
 * [iomap](#iomap)
-* [fuse](#fuse)
 * [block layer](#block-layer)
 * [initfs](#initfs)
 * [overlay fs](#overlay-fs)
@@ -1446,18 +1445,6 @@ maybe iomap is not mature yet, iomap provide a generic interface for fs to read 
 ```
 
 
-
-## fuse
-https://github.com/libfuse/libfuse
-https://github.com/cloud-hypervisor/fuse-backend-rs
-https://zhuanlan.zhihu.com/p/143256077
-
-利用 fuse 从而实现将 ntfs 挂载出来的，有意思啊!
-
-附带一个 blog
-https://blog.betacat.io/post/2020/08/how-to-mount-etcd-as-a-filesystem/
-
-https://github.com/zargony/fuse-rs
 
 ## block layer
 似乎 block layer 被取消了，但是似乎 mq 又是存在的 ?

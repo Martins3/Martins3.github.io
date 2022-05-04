@@ -14,7 +14,7 @@ trace irq sched time
 |------------------------|-------|---------|------|-----------------------------------------------------------------------------------------------------------------------------------------|
 | module.c               | 652   | 526     | 3220 | module 相关的操作，显然module 比 driver 是一个更加范围广的东西                                                                          |
 | workqueue.c            | 869   | 1909    | 3038 | generic async execution with shared worker pool @todo workqueue 为什么不放置irq 中间，还是workqueue 实现根本不是基于此的                |
-| sysctl.c               | 202   | 310     | 2735 | proc fs                                                                                                                           |
+| sysctl.c               | 202   | 310     | 2735 | proc fs                                                                                                                                 |
 | signal.c               | 518   | 954     | 2541 | 实现 signal 机制，需要结合 process/thread/thread group/daemon/session/job control 相关的东西配合才可以真正的理解。                      |
 | sys.c                  | 341   | 312     | 1988 | 不是sys的内容，而是提供了大量的简单的syscall 的支持，比如gethostname getuid 之类的                                                      |
 | auditsc.c              | 253   | 392     | 1884 | Gateway between the kernel (e.g., selinux) and the user-space audit daemon.  System-call specific features have moved to auditsc.c      |
@@ -32,11 +32,11 @@ trace irq sched time
 | ptrace.c               | 187   | 259     | 853  | @todo ptrace 和 trace/ 中间的内容有什么关系                                                                                             |
 | user_namespace.c       | 199   | 290     | 838  | https://en.wikipedia.org/wiki/Linux_namespaces　@todo 所以user namespace 实现什么东西的虚拟化 ?                                         |
 | audit_tree.c           | 138   | 84      | 812  |                                                                                                                                         |
-| kexec_file.c           | 195   | 226     | 808  | 没有CONFIG，但是这一个功能有点神奇 https://linux.die.net/man/8/kexec                                                                    |
+| kexec_file.c           | 195   | 226     | 808  |                                                                                                                                         |
 | kexec_core.c           | 167   | 295     | 746  |                                                                                                                                         |
 | padata.c               | 207   | 186     | 719  | 应该是并行计算的                                                                                                                        |
 | params.c               | 147   | 96      | 717  | 内核参数解析之类的操作                                                                                                                  |
-| kthread.c              | 152   | 409     | 671  | @todo interesting                                                                                                                                        |
+| kthread.c              | 152   | 409     | 671  |                                                                                                                                         |
 | jump_label.c           | 127   | 116     | 557  | https://lwn.net/Articles/412072/                                                                                                        |
 | torture.c              | 76    | 177     | 541  | @todo                                                                                                                                   |
 | cred.c                 | 101   | 190     | 527  | Task credentials management                                                                                                             |
@@ -132,4 +132,3 @@ module.c 对应chapter 7 中间的内容:
 > 总体来说更像是对于二进制文件的操作
 
 > 本来以为module 和 device 放在一起，其实整个关注的内容完全的不同，放在文件夹的位置也是完全不同的。
-
