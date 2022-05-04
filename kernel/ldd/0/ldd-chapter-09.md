@@ -30,16 +30,11 @@ selection when accessing memory
 > ISA 是什么 PCI是什么东西 ?
 
 ## 9.2 I/O Registers and Conventional Memory
-Despite the strong **similarity** between hardware registers and memory, 
+Despite the strong **similarity** between hardware registers and memory,
 a programmer accessing I/O registers must be careful to avoid being tricked by CPU (or compiler) optimizations that can modify the expected I/O behavior.
 
 The main difference between I/O registers and RAM is that I/O operations have side
-effects, while memory operations have none
-the no-side-effects
-case has been optimized in several ways: values are cached and read/write instructions are reordered
-> volatile 的那篇文章说的很清楚了
-
-
+effects, while memory operations have none the no-side-effects case has been optimized in several ways: values are cached and read/write instructions are reordered
 
 ## 9.3 Using I/O Ports
 
@@ -120,7 +115,7 @@ void __release_region(struct resource *parent, resource_size_t start,
 ```
 #### 9.3.2 Manipulating I/O ports
 The Linux kernel headers (specifically,
-the architecture-dependent header `<asm/io.h>)` 
+the architecture-dependent header `<asm/io.h>)`
 define the following inline functions to access I/O ports:
 `inb`
 `inw`
@@ -144,7 +139,7 @@ your hardware without acquiring explicit privileges. Please do not install them 
 #### 9.3.5 Pausing I/O
 he pausing functions are exactly like
 those listed previously, but their names end in `_p`; they are called inb_p, outb_p, and
-so on. 
+so on.
 
 #### 9.3.6 Platform Dependencies
 I/O instructions are, by their nature, highly processor dependent. Because they work
@@ -179,7 +174,7 @@ are needed, I/O memory locations lookpretty much like I/O ports, and you can jus
 read and write to them using proper wrapper functions.
 
 Whether or not ioremap is required to access I/O memory, direct use of pointers to I/O
-memory is discouraged. 
+memory is discouraged.
 
 #### 9.5.1 I/O Memory Allocation and Mapping
 All I/O memory allocations are listed in `/proc/iomem`.
@@ -242,5 +237,4 @@ One of the most well-known I/O memory regions is the ISA range found on personal
 ## 总结
 1. 想要使用LED等进行演示
 2. 实现io port　和 io memory 的底层机制是什么 ? x86 到底是如何实现的 ?
-3. 
-
+3.

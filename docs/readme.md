@@ -82,6 +82,7 @@
 ## Multiprocessor Programming
 - [Quiescent consistency，Sequential consistency 和 Linearizability](./concurrent/linearizability.md)
 - [wait free，lockfree 和 obstruction free 区分](./concurrent/lock-free.md)
+- [volatile](./concurrent/volatile.md)
 
 ## Misc
 - [what is x86 IA-32 IA-64 x86-64 and amd64 ?](./x86-names.md)

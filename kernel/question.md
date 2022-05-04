@@ -36,7 +36,7 @@
 
 ## 资源
 1. 有一张内核调用的[图](https://makelinux.net/kernel_map/)，或者自己做一张这样的图。
-2. 除了这一个　[子模块](https://linux-mm.org/)，还有没有其他的模块。 
+2. 除了这一个　[子模块](https://linux-mm.org/)，还有没有其他的模块。
 #### (process) struct pid  的作用是什么
 
 
@@ -110,7 +110,7 @@ dentry 描述directory entry, 为什么其功能不直接放到inode 中间，
 #### (fs) page cache 和 page fault 的关联是什么?
 
 #### (mem) map 的类型划分到底如何定义？
-private shared 
+private shared
 file-based ?
 
 #### (lock) 为什么执行某些代码的时候不可以被interrupt, 某些代码不可以sleep ?
@@ -208,7 +208,7 @@ In struct address_space, for example, there is a radix tree called page_tree tha
 1. 程序启动的参数放在哪里？什么栈 环境变量存放的位置在什么地方(CSAPP 提到过，PA试验, 进程初始化的过程是什么)
 2. 进程切换的时候，stack 是如何切换的
 3. 当syscall 的时候，stack 如何切换，和上面的切换有什么区别和不同之处
-4. 如果stack不够使用的时候，通过什么方法大小。因为stack 也是vm_area 管理的，vm_area 的初始化　大小之后就是没有办法扩展吗? 
+4. 如果stack不够使用的时候，通过什么方法大小。因为stack 也是vm_area 管理的，vm_area 的初始化　大小之后就是没有办法扩展吗?
 
 到底切换stack麻烦的在于，函数执行需要stack的支持，但是切换stack 是通过调用函数实现的，实现切换的过程真空期如何处理。
 
@@ -216,7 +216,7 @@ In struct address_space, for example, there is a radix tree called page_tree tha
 1. 找到page frame 和 struct page 通过地址差互相访问的代码
 2. 既然不同的用户进程之间的虚拟地址空间都是可以相互重叠的，那么为什么用户和内核的虚拟地址空间就是不能互相重叠的
 3. 线性地址空间
-    1. 如何初始化的线性地址空间 : 将预定义的pg table 进行填充，之后所有的进程全部从其中fork 
+    1. 如何初始化的线性地址空间 : 将预定义的pg table 进行填充，之后所有的进程全部从其中fork
     2. linear space 带来的结果 : 在内核空间中，当持有了其物理地址，那么可以知道其虚拟地址。物理地址的差值等于虚拟地址的差值。
     3. 什么机制的实现必须依赖于 linear space ? 找到哪一个实现地址宏的使用的位置即可!
 4. fork 拷贝pg table，到底是拷贝整个树，还是仅仅拷贝dir 的2k地址。如果是拷贝了整个树，那么如何确定谁的内容是谁的
@@ -245,7 +245,7 @@ KASAN 的工作原理是什么 ?
 #### (arch) 同时编译一份RISC-V 的代码
 1. 交叉编译
 2. ccls 处理交叉编译
-3. defconfig 
+3. defconfig
 
 #### (todo) https://read.seas.harvard.edu/cs161-19/
 harvard 的使用C++ 的多核操作系统课程。
@@ -276,9 +276,6 @@ https://www.ibiblio.org/gferg/ldp/GCC-Inline-Assembly-HOWTO.html
 
 #### (mem) stack 空间切换的本质是什么，切换之后，stack push开始地址不同而已
 
-#### (mem) asm 和 memory barrier
-https://stackoverflow.com/questions/14950614/working-of-asm-volatile-memory
-
 #### (arch) 找一门x86_64和RISC-V64 的汇编课程上一下
 现在在arch 层次到处碰壁
 
@@ -292,7 +289,7 @@ https://0xax.gitbooks.io/linux-insides/content/Interrupts/linux-interrupts-2.htm
 #### (arch) https://en.wikipedia.org/wiki/X86_memory_segmentation
 x86_memory_segmentation 分析问题首先确定当前处于何种模式
 
-#### () 
+#### ()
 
 #### (int) 一致认为中断的来源非常多，但是这是被除0 exception 误导的，感觉一个终端号处理事情有限，但是实际上整个syscall 也只是占用一个终端号而已
 
@@ -319,7 +316,7 @@ If the possible processor is the new terminology for you, you can read more abou
 #### (open) 到底什么信息需要register( 或者硬件支持, 比如各种CR寄存器)，什么只是需要放置到内存中间就可以了
 1. 寄存器可以实现高速访问，对于最常用内容，放在寄存器中间 ?
 2. 访存会有虚拟地址空间的问题，cr3 这种本身处理地址映射的需要 放到寄存中间, 不过分吧!
-3. 
+3.
 
 #### (misc) 为了让64位内核可以运行32位的用户程序，内核做出了怎么样的丧心病狂的努力
 从 file_operation 定义的 compat 函数到 syscall 中间的
@@ -340,7 +337,7 @@ if delay, 延迟的信号保存在什么位置了 ?
 
 #### (proc) 当用户进程切换到内核态的时候，从 scheduler 的观点，此时syscall 产生的
 syscall 产生的内核线程
-1. 需要被scheduler 调用吗 ?  
+1. 需要被scheduler 调用吗 ?
 2. 可以被 interrupt 打断吗 ?　显然是可以被exception 处理的，但是内核态的 exception 应该很严重的
 
 
@@ -399,7 +396,7 @@ growing stack |bp |argc| argv poninter | argv | PATH |
     3. 如何保证其强制性
 4. cgroup 是为了解决什么问题
 
-#### (fs) fread 实现机制 
+#### (fs) fread 实现机制
 fread 需要参数 用户地址空间的指针 和 文件描述符
 1. 如果fread 需要穿过page cache 层次，那么意味着数据首先拷贝到page cache 然后才可以拷贝到用户中间
 2. 如何将数据传送到用户的地址空间中间，应该也是copy_to_user 实现的方法了:
@@ -537,7 +534,7 @@ segment selector 中间的确含有rpl之类的东西，也许是用来作为防
 
 #### (init) 内核启动让人疑惑的地方
 1. bios 也会设置中断向量表 和 之后系统启动使用的idt 是两个东西
-2. bios 会选择启动盘，然后读入bootloader 然后 bootloader 读入 kernel image 
+2. bios 会选择启动盘，然后读入bootloader 然后 bootloader 读入 kernel image
 
 #### (vmm) 找到内核态中间不能进行pgfault 的证据在什么地方 ?
 
@@ -568,7 +565,7 @@ static int run_init_process(const char *init_filename)
 
 #### (misc) cgroup 和 rlimit 是一个东西吗 ?
 
-#### () 
+#### ()
 https://lwn.net/Articles/789304/
 
 it couldn't deal well with large holes in the physical address space.
@@ -694,7 +691,7 @@ struct audit_context
 
 #### (process) 一共都有那些 kthread ，其执行方法有什么类似的地方 ?(while 循环, wakeup, sleep 之类的)
 1. audit.c : kauditd_thread
-2. vmscan.c : kswapd(好像这个名字) 
+2. vmscan.c : kswapd(好像这个名字)
 
 
 #### (misc) 编译系统 Kconfig 那个make menu 以及各种 dep 文件
@@ -711,18 +708,6 @@ struct audit_context
     1. 不然执行syscall 的时候岂不是非常的难受, 访问另一个内存上的内核代码段
 
 #### (sched) 什么时候使用 might_sleep，什么时候使用 need_sched
-
-#### (ioremap) volatile 和 memory IO 的
-
-1. http://www.informit.com/articles/article.aspx?p=1832575&seqNum=3
-
-对于
-```c
-a = 1
-b = 2
-a = 3
-```
-由于编译器的分析，那么第一条指令会被取消掉，但是这对于该位置是被 IO 映射的，那么该操作是不可接受的。
 
 #### (misc) poll 和 select 是如何实现的 ?
 
@@ -747,7 +732,7 @@ set_current_state(TASK_INTERRUPTIBLE)
 
 #### (misc) watchdog 是什么 ? 感觉到处都可以看到 watchdog 函数
 
-#### () 
+#### ()
 
 #### () 我想知道uboot bootloader PMON bios 都是什么J8 东西。
 https://github.com/u-boot/u-boot
@@ -825,34 +810,34 @@ struct cgroup_subsys memory_cgrp_subsys = {
 /sys/block/nvme0n1 和 /dev/nvme0n1 的关系是什么 ?
 
 ```
-drwxr-xr-x root root 0 B Thu Feb 20 11:07:03 2020   .                                                                           
-dr-xr-xr-x root root 0 B Thu Feb 20 09:52:58 2020   ..                                                                          
-lrwxrwxrwx root root 0 B Thu Feb 20 11:07:03 2020   loop0 ⇒ ../devices/virtual/block/loop0                                      
-lrwxrwxrwx root root 0 B Thu Feb 20 11:07:03 2020   loop1 ⇒ ../devices/virtual/block/loop1                                      
-lrwxrwxrwx root root 0 B Thu Feb 20 11:07:03 2020   loop10 ⇒ ../devices/virtual/block/loop10                                    
-lrwxrwxrwx root root 0 B Thu Feb 20 11:07:03 2020   loop11 ⇒ ../devices/virtual/block/loop11                                    
-lrwxrwxrwx root root 0 B Thu Feb 20 11:07:03 2020   loop12 ⇒ ../devices/virtual/block/loop12                                    
-lrwxrwxrwx root root 0 B Thu Feb 20 11:07:03 2020   loop13 ⇒ ../devices/virtual/block/loop13                                    
-lrwxrwxrwx root root 0 B Thu Feb 20 11:07:03 2020   loop14 ⇒ ../devices/virtual/block/loop14                                    
-lrwxrwxrwx root root 0 B Thu Feb 20 11:07:03 2020   loop15 ⇒ ../devices/virtual/block/loop15                                    
-lrwxrwxrwx root root 0 B Thu Feb 20 11:07:03 2020   loop16 ⇒ ../devices/virtual/block/loop16                                    
-lrwxrwxrwx root root 0 B Thu Feb 20 11:07:03 2020   loop17 ⇒ ../devices/virtual/block/loop17                                    
-lrwxrwxrwx root root 0 B Thu Feb 20 11:07:03 2020   loop18 ⇒ ../devices/virtual/block/loop18                                    
-lrwxrwxrwx root root 0 B Thu Feb 20 11:07:03 2020   loop19 ⇒ ../devices/virtual/block/loop19                                    
-lrwxrwxrwx root root 0 B Thu Feb 20 11:07:03 2020   loop2 ⇒ ../devices/virtual/block/loop2                                      
-lrwxrwxrwx root root 0 B Thu Feb 20 11:07:03 2020   loop20 ⇒ ../devices/virtual/block/loop20                                    
-lrwxrwxrwx root root 0 B Thu Feb 20 11:07:03 2020   loop21 ⇒ ../devices/virtual/block/loop21                                    
-lrwxrwxrwx root root 0 B Thu Feb 20 11:07:03 2020   loop22 ⇒ ../devices/virtual/block/loop22                                    
-lrwxrwxrwx root root 0 B Thu Feb 20 11:07:03 2020   loop23 ⇒ ../devices/virtual/block/loop23                                    
-lrwxrwxrwx root root 0 B Thu Feb 20 11:07:03 2020   loop24 ⇒ ../devices/virtual/block/loop24                                    
-lrwxrwxrwx root root 0 B Thu Feb 20 11:07:03 2020   loop25 ⇒ ../devices/virtual/block/loop25                                    
-lrwxrwxrwx root root 0 B Thu Feb 20 11:07:03 2020   loop3 ⇒ ../devices/virtual/block/loop3                                      
-lrwxrwxrwx root root 0 B Thu Feb 20 11:07:03 2020   loop4 ⇒ ../devices/virtual/block/loop4                                      
-lrwxrwxrwx root root 0 B Thu Feb 20 11:07:03 2020   loop5 ⇒ ../devices/virtual/block/loop5                                      
-lrwxrwxrwx root root 0 B Thu Feb 20 11:07:03 2020   loop6 ⇒ ../devices/virtual/block/loop6                                      
-lrwxrwxrwx root root 0 B Thu Feb 20 11:07:03 2020   loop7 ⇒ ../devices/virtual/block/loop7                                      
-lrwxrwxrwx root root 0 B Thu Feb 20 11:07:03 2020   loop8 ⇒ ../devices/virtual/block/loop8                                      
-lrwxrwxrwx root root 0 B Thu Feb 20 11:07:03 2020   loop9 ⇒ ../devices/virtual/block/loop9                                      
+drwxr-xr-x root root 0 B Thu Feb 20 11:07:03 2020   .
+dr-xr-xr-x root root 0 B Thu Feb 20 09:52:58 2020   ..
+lrwxrwxrwx root root 0 B Thu Feb 20 11:07:03 2020   loop0 ⇒ ../devices/virtual/block/loop0
+lrwxrwxrwx root root 0 B Thu Feb 20 11:07:03 2020   loop1 ⇒ ../devices/virtual/block/loop1
+lrwxrwxrwx root root 0 B Thu Feb 20 11:07:03 2020   loop10 ⇒ ../devices/virtual/block/loop10
+lrwxrwxrwx root root 0 B Thu Feb 20 11:07:03 2020   loop11 ⇒ ../devices/virtual/block/loop11
+lrwxrwxrwx root root 0 B Thu Feb 20 11:07:03 2020   loop12 ⇒ ../devices/virtual/block/loop12
+lrwxrwxrwx root root 0 B Thu Feb 20 11:07:03 2020   loop13 ⇒ ../devices/virtual/block/loop13
+lrwxrwxrwx root root 0 B Thu Feb 20 11:07:03 2020   loop14 ⇒ ../devices/virtual/block/loop14
+lrwxrwxrwx root root 0 B Thu Feb 20 11:07:03 2020   loop15 ⇒ ../devices/virtual/block/loop15
+lrwxrwxrwx root root 0 B Thu Feb 20 11:07:03 2020   loop16 ⇒ ../devices/virtual/block/loop16
+lrwxrwxrwx root root 0 B Thu Feb 20 11:07:03 2020   loop17 ⇒ ../devices/virtual/block/loop17
+lrwxrwxrwx root root 0 B Thu Feb 20 11:07:03 2020   loop18 ⇒ ../devices/virtual/block/loop18
+lrwxrwxrwx root root 0 B Thu Feb 20 11:07:03 2020   loop19 ⇒ ../devices/virtual/block/loop19
+lrwxrwxrwx root root 0 B Thu Feb 20 11:07:03 2020   loop2 ⇒ ../devices/virtual/block/loop2
+lrwxrwxrwx root root 0 B Thu Feb 20 11:07:03 2020   loop20 ⇒ ../devices/virtual/block/loop20
+lrwxrwxrwx root root 0 B Thu Feb 20 11:07:03 2020   loop21 ⇒ ../devices/virtual/block/loop21
+lrwxrwxrwx root root 0 B Thu Feb 20 11:07:03 2020   loop22 ⇒ ../devices/virtual/block/loop22
+lrwxrwxrwx root root 0 B Thu Feb 20 11:07:03 2020   loop23 ⇒ ../devices/virtual/block/loop23
+lrwxrwxrwx root root 0 B Thu Feb 20 11:07:03 2020   loop24 ⇒ ../devices/virtual/block/loop24
+lrwxrwxrwx root root 0 B Thu Feb 20 11:07:03 2020   loop25 ⇒ ../devices/virtual/block/loop25
+lrwxrwxrwx root root 0 B Thu Feb 20 11:07:03 2020   loop3 ⇒ ../devices/virtual/block/loop3
+lrwxrwxrwx root root 0 B Thu Feb 20 11:07:03 2020   loop4 ⇒ ../devices/virtual/block/loop4
+lrwxrwxrwx root root 0 B Thu Feb 20 11:07:03 2020   loop5 ⇒ ../devices/virtual/block/loop5
+lrwxrwxrwx root root 0 B Thu Feb 20 11:07:03 2020   loop6 ⇒ ../devices/virtual/block/loop6
+lrwxrwxrwx root root 0 B Thu Feb 20 11:07:03 2020   loop7 ⇒ ../devices/virtual/block/loop7
+lrwxrwxrwx root root 0 B Thu Feb 20 11:07:03 2020   loop8 ⇒ ../devices/virtual/block/loop8
+lrwxrwxrwx root root 0 B Thu Feb 20 11:07:03 2020   loop9 ⇒ ../devices/virtual/block/loop9
 lrwxrwxrwx root root 0 B Thu Feb 20 11:07:03 2020   nvme0n1 ⇒ ../devices/pci0000:00/0000:00:1d.0/0000:03:00.0/nvme/nvme0/nvme0n1
 ```
 > 为什么全部都是链接文件 ? 为什么要这样 ?
@@ -917,4 +902,3 @@ there is no doubt, find the evidence !
 
 #### (fs) 各种值得分析的文件系统
 d_tmpfile
-

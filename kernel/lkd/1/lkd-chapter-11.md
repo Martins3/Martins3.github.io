@@ -1,4 +1,4 @@
-# Linux Kernel Development : 
+# Linux Kernel Development :
 
 The passing of time is important to the kernel. A large number of kernel functions are time-driven, as opposed to event-driven
 
@@ -15,13 +15,13 @@ The passing of time is important to the kernel. A large number of kernel functio
 
 ## 2.3 Disadvantage with a Large Hz
 > A Tickless OS
-> 
+>
 > You might wonder whether an operating system even needs a fixed timer interrupt. Although
 > that has been the norm for 40 years, with nearly all general-purpose operating systems employing a timer interrupt similar to the system described in this chapter, the Linux kernel supports an option known as a tickless operation. When a kernel is built with the CONFIG_HZ
 > configuration option set, the system dynamically schedules the timer interrupt in accordance
 > with pending timers. Instead of firing the timer interrupt every, say, 1ms, the interrupt is dynamically scheduled and rescheduled as needed. If the next timer is set to go off in 3ms,
 > the timer interrupt fires in 3ms. After that, if there is no work for 50ms, the kernel reschedules the interrupt to go off in 50ms.
-> 
+>
 > The reduction in overhead is welcome, but the real gain is in power savings, particular on an
 > idle system. On a standard tick-based system, the kernel needs to service timer interrupts,
 > even during idle periods. With a tickless system, moments of idleness are not interrupted by
@@ -45,7 +45,7 @@ either read jiffies or call `get_jiffies_64()` as both actions have the same eff
 
 ```c
 /*
- *	These inlines deal with timer wrapping correctly. You are 
+ *	These inlines deal with timer wrapping correctly. You are
  *	strongly encouraged to use them
  *	1. Because people otherwise forget
  *	2. Because if the timer wrap changes in future you won't have to
@@ -73,7 +73,7 @@ these interfaces became permanent, applications grew to rely on a specific value
 Consequently, changing HZ would scale various exported values by some constant—without user-space knowing! Uptime would read 20 hours when it was in fact two!
 
 To prevent such problems, the kernel needs to scale all exported jiffies values. It
-does this by defining `USER_HZ`, which is the HZ value that user-space expects. 
+does this by defining `USER_HZ`, which is the HZ value that user-space expects.
 > 有些 application 依赖于特定的 HZ 数值，所以，需要使用一些数值来处理
 
 ## 4 Hardware Clocks and Timers
@@ -210,13 +210,12 @@ find the expired timers. Consequently, the timer management code is efficient.
 
 > 暂时，还是不理解为什么有人需要 delay execution
 
-#### 8.1 
+#### 8.1
 ```c
 while (time_before(jiffies, timeout)) ;
 
 while (time_before(jiffies, delay)) cond_resched();
 ```
-> 其中还有一点 volatile 的问题
 
 
 #### 8.2 Small Delays

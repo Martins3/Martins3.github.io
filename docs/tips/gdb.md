@@ -16,8 +16,12 @@
 当然也有例外，如果你刚刚接手陌生的一个大项目，debugger 是分析代码流程的好工具。
 
 ## gdb 的原理
+TODO
 
 ## gdb 的使用
+首先强烈推荐 [gdb-dashboard](https://github.com/cyrus-and/gdb-dashboard)
+
+### Basic
 - break
 - continue
 - backtrace
@@ -103,11 +107,9 @@
 - 如果要把断点设置在汇编指令层次函数的开头，要使用如下命令：`b *func`
 - [清屏](https://stackoverflow.com/questions/12938067/how-clear-gdb-command-screen) : Ctrl-l
 
-## gdb 封装工具
-1. https://github.com/cyrus-and/gdb-dashboard :star: 强烈推荐
+### gdb 封装工具
 2. https://www.gdbgui.com/
 3. https://github.com/rohanrhu/gdb-frontend
-
 
 ## 其他工具
 这里列举了 Linux 平台上的各种 debugger，https://scattered-thoughts.net/writing/the-state-of-linux-debuggers/
@@ -139,7 +141,5 @@
 - [ ] https://stackoverflow.com/questions/43701428/gdb-proc-info-mapping-vs-proc-pid-mapping
 - [ ] 调查一下 https://github.com/smcdef/kprobe-template 难道 ebpf 不能实现这个功能 ?
 - [ ] kgdb 到底是什么
-- [ ] vim 中调试环境
-- [ ] Facebook 的调试工具
 
 [^1]: 如果 data type 是一个结构体，而且这个结构体很大，那怎么办 ?

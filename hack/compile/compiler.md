@@ -92,24 +92,6 @@ https://stackoverflow.com/questions/25947962/cacheline-aligned-in-smp-for-struct
 ## asmlinkage
 https://stackoverflow.com/questions/10459688/what-is-the-asmlinkage-modifier-meant-for
 
-## volatile
-https://gcc.gnu.org/onlinedocs/gcc/Volatiles.html#Volatiles
-
-## [深入理解volatile关键字](https://blog.regehr.org/archives/28)
-1. volative 到底实现了什么功能 ?
-2. 使用 volative 的位置在什么地方 ?
-3. volative 需要硬件如何支持 ? 并不需要特殊指令，但是需要编译器的支持。
-
-The way the volatile connects the abstract and real semantics is this:
-> For every read from a volatile variable by the abstract machine, the actual machine must load from the memory address corresponding to that variable.  **Also, each read may return a different value.**  For every write to a volatile variable by the abstract machine, the actual machine must store to the corresponding address.  Otherwise, the address should not be accessed (with some exceptions) and also accesses to volatiles should not be reordered (with some exceptions).
-
-Historically, the connection between the abstract and actual machines was established mainly through accident: **compilers weren’t good enough at optimizing to create an important semantic gap.**
-
-
-最终结论，不要使用volatile 而要使用锁。
-
-> 作者是犹他大学的教授，强的一匹。
-
 ## 如何正确的切换 gcc 版本
 https://badsimplicity.com/2019/07/10/gcc-9-and-ubuntu-kernel-error/
 
