@@ -9,6 +9,7 @@
 - [ ] Where is ebpf hooks for packet filter ?
 - loopback interface
   - `sudo tcpdump -i lo` : print out many message
+- [ ] tcpdump 如何工作的 ?
 - 为什么 QEMU 可以让 Guest 可以有某一个 ip 到 host 的网络中
 - [ ] 将 net.diff 中的内容整理一下
 - [ ] https://github.com/liexusong/linux-source-code-analyze/blob/master/ip-source-code.md
@@ -16,17 +17,15 @@
     - 如果是在局域网中，这个事情似乎很简单 （重新看看 level-ip 的实现），如果没有，那么发送给网关
 - [ ] 将本地端口暴露到公网的方法
   - 为什么局域网中的 ip 是可以访问的 www.google.com 但是在另一个网络中无法访问本地
+- [ ] 将 bridge 使用 docker 和 qemu 测试一下
+- [ ] 测试 vhost-net / vhost-sock
+- [ ] 测试一下 bpf filter 的功能
+- [ ] dhcp 协议是如何实现的
 
 ## dpdk
 https://github.com/F-Stack/f-stack : 似乎是对于 dpdk 的封装
 
-## TODO
-忽然间对于网络没有那么恐惧了，所以
-
-- [ ] net/socket.c : all kinds of syscall, check it one by one with tlpi
-  - `send()` and `write()`, if everything is a file, why a special syscall is needed for network
-
-
+## todo
 - [ ] direcory under linux/net to read
   - core : 各种 proc dev sys 之类的东西，整个网络的公共部分吧 !
   - ceph
@@ -39,7 +38,6 @@ https://github.com/F-Stack/f-stack : 似乎是对于 dpdk 的封装
 
 - Red Book
 - [ ] 好吧，并不能找到 routing table 相关的代码 ! (netfilter ?)
-- [ ] https://github.com/CyC2018/CS-Notes : network and distributed system
 - TUN/TAP 驱动分析一下吧
 - [ ] epoll 机制
 - [ ] https://man7.org/linux/man-pages/man7/vsock.7.html
@@ -55,34 +53,7 @@ https://github.com/F-Stack/f-stack : 似乎是对于 dpdk 的封装
 - [ ] /home/maritns3/core/linux/net/unix
 
 https://www.kawabangga.com/posts/4515 中间提到 nc -l  9999 的操作可以了解一下 nc 的含义
-
-给下面写一个一句话总结好吧
-```txt
-__do_sys_bind
-__do_sys_send
-__do_sys_recv
-__do_sys_socket
-__do_sys_listen
-__do_sys_accept
-__do_sys_sendto
-__do_sys_accept4
-__do_sys_connect
-__do_sys_sendmsg
-__do_sys_recvmsg
-__do_sys_recvfrom
-__do_sys_shutdown
-__do_sys_sendmmsg
-__do_sys_recvmmsg
-__do_sys_socketpair
-__do_sys_setsockopt
-__do_sys_getsockopt
-__do_sys_socketcall
-__do_sys_getsockname
-__do_sys_getpeername
-__do_sys_recvmmsg_time32
-```
-
-
+- netstat
 
 ## IBM Read Book
 [TCP/IP--ICMP和IGMP](https://www.jianshu.com/p/4bd8758f9fbd)
@@ -205,13 +176,31 @@ https://www2.tkn.tu-berlin.de/teaching/rn/animations/gbn_sr/ : 拥塞网络图�
 ## 有趣
 - [ping localhost 不会和网卡打交道，那是 loopback devices](https://superuser.com/questions/565742/localhost-pinging-when-there-is-no-network-card)
 
-使用这个代码[^1] 可以用于测试网卡的 ip
-注意: eth0 -> enxd43a650739d8
-
-[^1]: https://stackoverflow.com/questions/2283494/get-ip-address-of-an-interface-on-linux
+使用这个代码可以用于测试网卡的 ip
+https://stackoverflow.com/questions/2283494/get-ip-address-of-an-interface-on-linux
+> 注意: eth0 -> enxd43a650739d8
 
 用这个代码可以来测试获取所有的网卡:
 https://www.cyberithub.com/list-network-interfaces/
+
+- [网卡的工作模式](https://zdyxry.github.io/2020/03/18/%E7%90%86%E8%A7%A3%E7%BD%91%E5%8D%A1%E6%B7%B7%E6%9D%82%E6%A8%A1%E5%BC%8F/)
+- [什么是 NAPI](https://stackoverflow.com/questions/28090086/what-are-the-advantages-napi-before-the-irq-coalesce)
+- [什么是 GRO](https://stackoverflow.com/questions/47332232/why-is-gro-more-efficient)
+  - [ ] [gro 详解](https://abcdxyzk.github.io/blog/2015/04/18/kernel-net-gro/)
+  - `napi_gro_receive` 在 NAPI 层次做 GRO
+- [当 read/write 的 flags 为 0 的时候，其等价于 read / write](https://stackoverflow.com/questions/19971858/c-socket-send-recv-vs-write-read)
+- [sendmsg vs send 和 writev vs write 有点类似](https://stackoverflow.com/questions/4258834/how-sendmsg-works)
+- [socketpair](https://stackoverflow.com/questions/64214231/why-do-i-need-socketpair-when-i-have-socket-with-af-unix)
+  - 相比于 pipe 可以是双向的
+  - 相比于 unix domain 可以用于暴露出来路径
+- getsockname / getpeername: 详细内容参考 tlpi 61.5 Retrieving Socket Addresses
+  - 存在好几种情况，可以让内核分配 port ，例如在 bind 之前 connect 或者 listen，可以通过 getsockname 来获取
+
+## linux network interfaces
+https://developers.redhat.com/blog/2018/10/22/introduction-to-linux-interfaces-for-virtual-networking
+
+## linux network virtual interfaces
+https://developers.redhat.com/blog/2019/05/17/an-introduction-to-linux-virtual-interfaces-tunnels#
 
 [^2]: 用芯探核:基于龙芯的 Linux 内核探索解析
 [^4]: http://yuba.stanford.edu/rcp/
