@@ -36,6 +36,7 @@ compiler barrier 和 CPU barrier 。
 - [ ] arm 也是弱序，为什么 asm volatile 没有生成任何东西
 - 反正 CPU 都可以进行调度，那么 asm volatile 在 x86 中什么都不生成，那么有个什么作用啊
 
+## 其他的小问题
 [stackoverflow : What does—or did—"volatile void function( ... )" do?](https://stackoverflow.com/questions/14288603/what-does-or-did-volatile-void-function-do)
 > volatile void as a function return value in C (but not in C++) is equivalent to __attribute__((noreturn)) on the function and tells the compiler that the function never returns.
 

@@ -1,3 +1,6 @@
+# 认识 elf
+- [ ] 重新回顾一下 程序员的自我修养
+
 https://github.com/adugast/read_elf
 
 https://fasterthanli.me/series
@@ -26,4 +29,13 @@ https://cjting.me/2020/12/10/tiny-x64-helloworld/
 ## 命令
 file 帮助我解决了 在 x86 上交叉编译内核，让后 sync 到 3a4000 上去，make install, 这种在 3a4000 上没有办法安装内核模块。
 
-## EXPORT_SYMBO 的工作原理是什么 ?
+## EXPORT_SYMBO 的工作原理是什么
+
+## [ ] 将内核处理 elf 的笔记放过来
+/home/maritns3/core/vn/kernel/plka/syn/fs/binfmt_elf.md
+
+## grub 也是可以加载 elf 的
+
+## [ ]  动态链接库
+
+## 辅助向量

@@ -67,13 +67,14 @@
 - [Debugger 的理念，原理和使用](./tips/gdb.md)
 - [使用 QEMU, FlameGraph 和 bpftrace 阅读内核](./tips-reading-kernel.md)
 
-## Unix Environment Programming
+## Linux Environment Programming
 - [musl 阅读笔记](./linux/musl.md)
+- [认识 elf](./linux/elf.md)
 
 ## Linux Kernel
 <!-- - [irq domain](./kernel/irq-domain.md) -->
 - [tty, pty, terminal emulator, serial, uart 和 tmux 到底都是什么](kernel/tty.md)
-- 🚧 [syscall](.)
+- 🚧 [syscall](./kernel/syscall.md)
 
 ## Loongson
 - [X86 上阅读 Loongarch 内核](./loongarch/ccls.md)
@@ -82,7 +83,7 @@
 ## Multiprocessor Programming
 - [Quiescent consistency，Sequential consistency 和 Linearizability](./concurrent/linearizability.md)
 - [wait free，lockfree 和 obstruction free 区分](./concurrent/lock-free.md)
-- [volatile](./concurrent/volatile.md)
+- 🚧 [volatile 关键字说明](./concurrent/volatile.md)
 
 ## Misc
 - [what is x86 IA-32 IA-64 x86-64 and amd64 ?](./x86-names.md)
