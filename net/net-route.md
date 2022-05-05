@@ -11,6 +11,11 @@
   - `sudo tcpdump -i lo` : print out many message
 - 为什么 QEMU 可以让 Guest 可以有某一个 ip 到 host 的网络中
 - [ ] 将 net.diff 中的内容整理一下
+- [ ] https://github.com/liexusong/linux-source-code-analyze/blob/master/ip-source-code.md
+  - `ip_route_output` 可以通过 ip 获取到直接路由信息
+    - 如果是在局域网中，这个事情似乎很简单 （重新看看 level-ip 的实现），如果没有，那么发送给网关
+- [ ] 将本地端口暴露到公网的方法
+  - 为什么局域网中的 ip 是可以访问的 www.google.com 但是在另一个网络中无法访问本地
 
 ## dpdk
 https://github.com/F-Stack/f-stack : 似乎是对于 dpdk 的封装

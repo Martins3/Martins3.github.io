@@ -34,7 +34,8 @@ http://www.linuxfromscratch.org/lfs/view/10.0-rc1/prologue/foreword.html
 - [wowotech](http://www.wowotech.net/) :star: :star: :star: :star: :star:
 - [linux inside](https://0xax.gitbooks.io/linux-insides/content/) :star: :star: :star: :star: :star:
 - [low level programming university](https://github.com/gurugio/lowlevelprogramming-university/blob/master/README_cn.md) :star: :star: :star: :star:
-- [知乎专栏:术道经纬](https://zhuanlan.zhihu.com/p/93289632) :star: :star:
+- [知乎专栏:术道经纬](https://zhuanlan.zhihu.com/p/93289632) :star: :star: :star:
+- [liexusong](https://github.com/liexusong/linux-source-code-analyze) :star: :star: :star:
 - [gatieme 的笔记](https://github.com/gatieme/LDD-LinuxDeviceDrivers) :star: :star:
 - [LoyenWang](https://www.cnblogs.com/LoyenWang/) :star: :star:
 - [dsahern's blog](https://people.kernel.org/dsahern/) :star:

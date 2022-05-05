@@ -1,11 +1,10 @@
 # syscall
 
 ## syscall 的流程
-## 进入 syscall 之前 : glibc
+### 进入 syscall 之前 : glibc
+### 进入 syscall 中
 
-## 进入 syscall 中
-
-## syscall 返回
+### syscall 返回
 
 ## syscall 的优化
 - [ ] int 0x80 对比 fast system call, 它做了更多的工作， 是什么，为什么要做
@@ -18,12 +17,6 @@
 - [ ] 使用 asm 分别使用一下在机器上调用一次
 
 ### sysenter / sysexit
-
-### vdso
-- [ ] x86 中 gettimeofday 在 vdso 中如何生成的
-
-将 vdso dump 出来
-https://kernel.googlesource.com/pub/scm/linux/kernel/git/luto/misc-tests/+/5655bd41ffedc002af69e3a8d1b0a168c22f2549/dump-vdso.c
 
 ### vsyscall
 - 将 vsyscall 映射到固定的位置为什么存在潜在的风险
@@ -50,6 +43,13 @@ int main(int argc, char *argv[]) {
   return 0;
 }
 ```
+
+
+### vdso
+- [ ] x86 中 gettimeofday 在 vdso 中如何生成的
+
+将 vdso dump 出来
+https://kernel.googlesource.com/pub/scm/linux/kernel/git/luto/misc-tests/+/5655bd41ffedc002af69e3a8d1b0a168c22f2549/dump-vdso.c
 
 ## 高级话题
 

@@ -96,5 +96,4 @@ kprobe:task_tick_fair
 ## TODO
 - [ ] 将 QEMU 的基本使用变为一个单独的文章分析一下
   - 分析各种常用的技术
-- [ ] [使用 kgdb](https://www.cnblogs.com/haiyonghao/p/14440777.html)
 - [ ] 介绍 [hotspot](https://github.com/KDAB/hotspot)
