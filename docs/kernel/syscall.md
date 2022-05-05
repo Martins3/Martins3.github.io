@@ -61,3 +61,9 @@ void vdso_per_cpu_switch_thread(struct task_struct *prev,
 	vdso_pcpu_data_update_seq(&vdso_data.pcpu_data[cpu_id]);
 }
 ```
+
+## inside
+/home/maritns3/core/vn/kernel/insides/syscall.md 整理一下
+
+## 整理这个 issue
+https://github.com/Martins3/Martins3.github.io/issues/8
