@@ -26,5 +26,3 @@ static int __init cmd_init(void)
     2. echo g > /proc/sysrq-trigger
     3. ctrl+O g
     4. /debug/dynamic_debug/control is protected from writing !
-
-8. pr_info 和 printk 的区别是什么 ?

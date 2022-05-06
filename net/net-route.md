@@ -7,9 +7,6 @@
 
 ## question
 - [ ] Where is ebpf hooks for packet filter ?
-- loopback interface
-  - `sudo tcpdump -i lo` : print out many message
-- [ ] tcpdump 如何工作的 ?
 - 为什么 QEMU 可以让 Guest 可以有某一个 ip 到 host 的网络中
 - [ ] 将 net.diff 中的内容整理一下
 - [ ] https://github.com/liexusong/linux-source-code-analyze/blob/master/ip-source-code.md
@@ -39,7 +36,6 @@ https://github.com/F-Stack/f-stack : 似乎是对于 dpdk 的封装
 - Red Book
 - [ ] 好吧，并不能找到 routing table 相关的代码 ! (netfilter ?)
 - TUN/TAP 驱动分析一下吧
-- [ ] epoll 机制
 - [ ] https://man7.org/linux/man-pages/man7/vsock.7.html
 - [ ] vsock
 - [ ] vlan/[802.1q](https://en.wikipedia.org/wiki/IEEE_802.1Q)
@@ -51,9 +47,8 @@ https://github.com/F-Stack/f-stack : 似乎是对于 dpdk 的封装
 - [ ] packet socket
 - [ ] sctp : 流量控制协议
 - [ ] /home/maritns3/core/linux/net/unix
-
-https://www.kawabangga.com/posts/4515 中间提到 nc -l  9999 的操作可以了解一下 nc 的含义
-- netstat
+- [ ] QUIC
+- [ ] 使用 wireshark 分析网络
 
 ## IBM Read Book
 [TCP/IP--ICMP和IGMP](https://www.jianshu.com/p/4bd8758f9fbd)
@@ -195,12 +190,32 @@ https://www.cyberithub.com/list-network-interfaces/
   - 相比于 unix domain 可以用于暴露出来路径
 - getsockname / getpeername: 详细内容参考 tlpi 61.5 Retrieving Socket Addresses
   - 存在好几种情况，可以让内核分配 port ，例如在 bind 之前 connect 或者 listen，可以通过 getsockname 来获取
+- [Why does DHCP use UDP and not TCP?](https://networkengineering.stackexchange.com/questions/64401/why-does-dhcp-use-udp-and-not-tcp)
+  - 因为 TCP 是 connection-oriented 的，负责两个 Host 之间的联系，无法进行 broadcast 的操作
 
-## linux network interfaces
+## [ ] linux network interfaces
 https://developers.redhat.com/blog/2018/10/22/introduction-to-linux-interfaces-for-virtual-networking
 
-## linux network virtual interfaces
+## [ ] linux network virtual interfaces
 https://developers.redhat.com/blog/2019/05/17/an-introduction-to-linux-virtual-interfaces-tunnels#
+
+## dhcp
+```sh
+sudo ip addr flush en0
+sudo dhclient -r 
+sudo dhclient en0
+```
+
+## [ ] tls
+
+## 关键参考
+- [使用 wireshark 分析网络](https://gaia.cs.umass.edu/kurose_ross/wireshark.php)
+  - [ ] tls 和 wireless 没有深入分析
+
+## filter
+- [ ] https://devarea.com/introduction-to-network-filters-linux/
+  - 似乎还行，但是用户态和内核态中的代码都不可以运行
+
 
 [^2]: 用芯探核:基于龙芯的 Linux 内核探索解析
 [^4]: http://yuba.stanford.edu/rcp/

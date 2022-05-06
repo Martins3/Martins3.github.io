@@ -2067,6 +2067,9 @@ DAX 设置 : 到时候在分析吧!
 目前观察到的generic_file_read_iter 和 file_operations::mmap 的内容对于 DAX 区分对待的，但是内容远远不该如此，不仅仅可以越过 page cache 机制，而且 page reclaim 全部可以跳过。
 
 ## memory model
+- Shared Memory Consistency Models: A Tutorial
+  - 这是最经典的项目了
+
 字节团队写的，应该是相当清楚了:
 https://mp.weixin.qq.com/s/wt5b5e1Y1yG1kDIf0QPsvg
 
