@@ -49,6 +49,8 @@ https://github.com/F-Stack/f-stack : 似乎是对于 dpdk 的封装
 - [ ] /home/maritns3/core/linux/net/unix
 - [ ] QUIC
 - [ ] 使用 wireshark 分析网络
+- [ ] veth
+  - https://tonydeng.github.io/sdn-handbook/linux/virtual-device.html
 
 ## IBM Read Book
 [TCP/IP--ICMP和IGMP](https://www.jianshu.com/p/4bd8758f9fbd)
@@ -129,17 +131,10 @@ https://github.com/mtcp-stack/mtcp
 ## 网络基础知识
 - 现在的想法 : 整体框架其实清楚的，利用 level-ip 来分析，其次就是解决 TCP 中间具体的细节问题, tc, retransmission,
 
-- https://github.com/chenshuo/muduo
-- http://www.mattkeeter.com/projects/pont/ : 了解一下前端后端的整个流程是什么
-- https://zhuanlan.zhihu.com/p/38548737　: http 图解, 应该是没有什么用的
+- http://www.mattkeeter.com/projects/pont/ : 一个小游戏，涉及到前端后端，websoctet
 - https://www.learncloudnative.com/blog/2020-04-25-beginners-guide-to-gateways-proxies/ : 讲解网关
 - https://news.ycombinator.com/item?id=23241934 : ssh-agent 的工作原理是什么 ?
-- https://www.jianshu.com/p/4ba0d706ee7c : TCP/IP 快速复习一遍
-
-https://www2.tkn.tu-berlin.de/teaching/rn/animations/gbn_sr/ : 拥塞网络图形化演示
-
-- [sdn book](https://tonydeng.github.io/sdn-handbook/) : 中文的
-- [网络编程懒人入门](https://zhuanlan.zhihu.com/p/335137284) : 一共十几篇，值得分析
+- https://www2.tkn.tu-berlin.de/teaching/rn/animations/gbn_sr/ : 拥塞网络图形化演示
 
 - 仅仅是看一看
 ```txt
@@ -163,7 +158,6 @@ https://www2.tkn.tu-berlin.de/teaching/rn/animations/gbn_sr/ : 拥塞网络图�
 ## 教材
 - [Computer Networks: A Systems Approach](https://book.systemsapproach.org/index.html)
   - 有 hackernews 用户推荐过
-- https://github.com/smoltcp-rs/smoltcp : 似乎这个用户态网络栈的文档就可以了
 
 ## 工具
 - https://rfc.fyi/ : rfc 搜索
@@ -208,9 +202,24 @@ sudo dhclient en0
 
 ## [ ] tls
 
+## LVS
+- liexusong 和 sdn book 都分析过
+
 ## 关键参考
 - [使用 wireshark 分析网络](https://gaia.cs.umass.edu/kurose_ross/wireshark.php)
   - [ ] tls 和 wireless 没有深入分析
+- [liexusong](https://github.com/liexusong/linux-source-code-analyze)
+- [sdn book](https://tonydeng.github.io/sdn-handbook/)
+  - [ ] dpdk
+  - [ ] vpn
+  - [ ] ovs
+  - [ ] 以及后面的 sdn 的所有内容
+
+## Linux Virtual Network Device
+- drivers/net/veth.c
+- drivers/net/tun.c
+- drivers/net/tap.c
+- net/bridge
 
 ## filter
 - [ ] https://devarea.com/introduction-to-network-filters-linux/

@@ -32,3 +32,6 @@ https://www.kawabangga.com/posts/4515 中间提到 nc -l  9999 的操作可以�
   - 如果一个网络中，加入一个新的机器的流程
     - 为了获取一个 ip addr, 使用 udp broadcast，此时 destination mac address 是 ff.ff.ff.ff.ff.ff
     - 和 dhcp server 可以获取 ip addr，但是无法知道局域网中每一台机器的 mac addr
+
+## iproute2
+https://github.com/shemminger/iproute2
