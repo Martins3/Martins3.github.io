@@ -5,57 +5,29 @@
 ## Unix domain socket
 [Introduction](https://stackoverflow.com/questions/21032562/example-to-explain-unix-domain-socket-af-inet-vs-af-unix)
 
-## question
-- [ ] Where is ebpf hooks for packet filter ?
-- 为什么 QEMU 可以让 Guest 可以有某一个 ip 到 host 的网络中
-- [ ] 将 net.diff 中的内容整理一下
-- [ ] https://github.com/liexusong/linux-source-code-analyze/blob/master/ip-source-code.md
-  - `ip_route_output` 可以通过 ip 获取到直接路由信息
-    - 如果是在局域网中，这个事情似乎很简单 （重新看看 level-ip 的实现），如果没有，那么发送给网关
-- [ ] 将本地端口暴露到公网的方法
-  - 为什么局域网中的 ip 是可以访问的 www.google.com 但是在另一个网络中无法访问本地
-- [ ] 将 bridge 使用 docker 和 qemu 测试一下
-- [ ] 测试 vhost-net / vhost-sock
-- [ ] 测试一下 bpf filter 的功能
-- [ ] dhcp 协议是如何实现的
-
 ## dpdk
-https://github.com/F-Stack/f-stack : 似乎是对于 dpdk 的封装
+- [ ] https://github.com/F-Stack/f-stack : 似乎是对于 dpdk 的封装
+- [ ] https://blog.selectel.com/introduction-dpdk-architecture-principles/
+
+## [ ] openvswitch
+- [openvswitch](https://www.zhihu.com/column/software-defined-network)
 
 ## todo
-- [ ] direcory under linux/net to read
-  - core : 各种 proc dev sys 之类的东西，整个网络的公共部分吧 !
-  - ceph
-  - netfilter
-  - bridge :
-  - tipc : Transparent Inter Process Communication (TIPC) is an Inter-process communication (IPC) service in Linux designed for cluster wide operation. It is sometimes presented as Cluster Domain Sockets, in contrast to the well-known Unix Domain Socket service; the latter working only on a single kernel. [^9]
-  - mac80211
-  - sched
-  - [openvswitch](https://www.zhihu.com/column/software-defined-network)
-
+- [ ] openwrt 到底是什么?
+  - 教别人编译的 : https://github.com/coolsnowwolf/lede
 - Red Book
 - [ ] 好吧，并不能找到 routing table 相关的代码 ! (netfilter ?)
-- TUN/TAP 驱动分析一下吧
-- [ ] https://man7.org/linux/man-pages/man7/vsock.7.html
-- [ ] vsock
-- [ ] vlan/[802.1q](https://en.wikipedia.org/wiki/IEEE_802.1Q)
-- [ ] 9p
 - [ ] bpf / bpfilter
 - [ ] ceph
-- [ ] /home/maritns3/core/linux/net/ethernet/eth.c
-- [ ] openvswitch
 - [ ] packet socket
-- [ ] sctp : 流量控制协议
-- [ ] /home/maritns3/core/linux/net/unix
-- [ ] QUIC
-- [ ] 使用 wireshark 分析网络
-- [ ] veth
-  - https://tonydeng.github.io/sdn-handbook/linux/virtual-device.html
+- 无论如何，将 Linux kernel Labs 中的实验做一下
+- [ ] Where is ebpf hooks for packet filter ?
+- 为什么 QEMU 可以让 Guest 可以有某一个 ip 到 host 的网络中
+- [ ] 测试一下 bpf filter 的功能
 
 ## IBM Read Book
-[TCP/IP--ICMP和IGMP](https://www.jianshu.com/p/4bd8758f9fbd)
 
-## e1000e[^2]
+## network flow[^2]
 - [ ] watch dog
 
 ```txt
@@ -102,31 +74,24 @@ https://github.com/F-Stack/f-stack : 似乎是对于 dpdk 的封装
                                                                             - e1000_xmit_frame
 ```
 - dir : net/tcp4
-- file : ip_output.c tcp_output.c tcp.c route.c
+- file : `ip_output.c` `tcp_output.c` tcp.c route.c
 
 - [ ] 应该将 recv 的路径也跟着看一遍的
 
-## 可以参考
-https://github.com/saminiir/level-ip : 学习一下
-dpdk : 了解一下工作原理
-  - https://blog.selectel.com/introduction-dpdk-architecture-principles/
+- 物理设备接受一个 package [^10]
+  - core/dev.c:`netif_rx`: 将 skb 放到 CPU 的队列中
+  - core/dev.c:`net_rx_action`: 将 skb 从 CPU 队列中移除
+- ip 层接受
+  - `ip_input.c:ip_rcv`
+    - `ip_rcv_finish`
+      - `route.c:ip_route_input`
+        - `ip_input.c:ip_local_deliver()` : 如果 ip 等于就是自己，将 packet 向上提交
+        - `ipv4/route.c:ip_route_input_slow()`
+          - 如果不 forward，或者不知道如何 forward ，那么 send ICMP
+          - `ipv4/ip_forward.c:ip_forward()`
+            - `core/dev.c:dev_queue_xmit()`
+              - `sched/sch_generic.c:pfifo_fast_enqueue()`
 
-http://beej.us/guide/bgnet/html/#socket : 主要是使用 posix 接口吧!
-
-https://www.cs.dartmouth.edu/~sergey/me/netreads/path-of-packet/Lab9_modified.pdf
-
-https://blog.packagecloud.io/eng/2016/06/22/monitoring-tuning-linux-netw  orking-stack-receiving-data/ :
-
-https://github.com/sdnds-tw/awesome-sdn
-
-## Project
-https://github.com/coolsnowwolf/lede
-https://github.com/redcode-labs/Neurax
-
-
-## 可以参考的资源
-https://github.com/google/packetdrill : 甚至还有相关的资源
-https://github.com/mtcp-stack/mtcp
 
 ## 网络基础知识
 - 现在的想法 : 整体框架其实清楚的，利用 level-ip 来分析，其次就是解决 TCP 中间具体的细节问题, tc, retransmission,
@@ -187,6 +152,13 @@ https://www.cyberithub.com/list-network-interfaces/
 - [Why does DHCP use UDP and not TCP?](https://networkengineering.stackexchange.com/questions/64401/why-does-dhcp-use-udp-and-not-tcp)
   - 因为 TCP 是 connection-oriented 的，负责两个 Host 之间的联系，无法进行 broadcast 的操作
 
+- [ICMP vs IGMP](https://www.jianshu.com/p/4bd8758f9fbd)
+- [Wireshark 的工作原理](https://stackoverflow.com/questions/29620590/where-does-the-wireshark-capture-the-packets)
+  - [How does the `AF_PACKET` socket work in Linux?](https://stackoverflow.com/questions/62866943/how-does-the-af-packet-socket-work-in-linux)
+
+## [ ] `AF_PACKET`
+- [ ] 如果 wireshark 使用 `AF_PACKET` ，那么 bpf filter 发生在什么位置啊?
+
 ## [ ] linux network interfaces
 https://developers.redhat.com/blog/2018/10/22/introduction-to-linux-interfaces-for-virtual-networking
 
@@ -204,6 +176,9 @@ sudo dhclient en0
 
 ## LVS
 - liexusong 和 sdn book 都分析过
+
+## sdn
+- https://github.com/sdnds-tw/awesome-sdn
 
 ## 关键参考
 - [使用 wireshark 分析网络](https://gaia.cs.umass.edu/kurose_ross/wireshark.php)
@@ -223,8 +198,71 @@ sudo dhclient en0
 
 ## filter
 - [ ] https://devarea.com/introduction-to-network-filters-linux/
-  - 似乎还行，但是用户态和内核态中的代码都不可以运行
+  - 似乎还行，但是给出来的用户态和内核态中的代码都不可以运行
 
+## 802
+[wiki](https://en.wikipedia.org/wiki/IEEE_802)
+主要是处理这两个层次的规划:
+- Data link layer
+  - LLC sublayer
+  - MAC sublayer
+- Physical layer
+
+## [ ] vsock
+- [ ] https://man7.org/linux/man-pages/man7/vsock.7.html
+
+## [ ] vlan
+- [ ] vlan/[802.1q](https://en.wikipedia.org/wiki/IEEE_802.1Q)
+
+## ipoe
+- [ ] [IPOE到底是什么？](https://www.zhihu.com/question/35749997/answer/83459499)
+
+## [ ] tun
+
+## [ ] tap
+
+## [ ] bridge
+https://github.com/liexusong/linux-source-code-analyze/blob/master/net_bridge.md
+
+最终想要挑战的内容:
+- https://www.ibm.com/docs/en/linux-on-systems?topic=choices-using-open-vswitch
+
+- [ ] 将 bridge 使用 docker 和 qemu 测试一下
+
+## [ ] veth
+- [ ]  https://tonydeng.github.io/sdn-handbook/linux/virtual-device.html
+
+## vhost-net / virtio-net / vhost-sock
+
+## arp
+https://github.com/liexusong/linux-source-code-analyze/blob/master/arp-neighbour.md
+
+## tc
+
+- https://tldp.org/HOWTO/Traffic-Control-HOWTO/
+
+### 源码分布位置
+- `linux/net/sched/cls_*.c`
+  - `struct tcf_proto_ops`
+- `linux/net/sched/sch_*.c`
+  - `struct Qdisc_ops`
+  - `struct Qdisc_class_ops`
+- `linux/net/sched/act_*.c`
+  - `struct tc_action_ops`
+
+## QUIC
+
+> But it's still just a layer on top of UDP, and still implemented at the application, like in the past.
+> from https://news.ycombinator.com/item?id=27310349
+
+emmm, 只是 DUP 上的封装
+
+## 9p
+- [Plan 9 的历史](https://www.zhihu.com/question/19706063/answer/763200196)
+
+
+## 奇怪的项目
+- [A framework that aids in creation of self-spreading software](https://github.com/redcode-labs/Neurax)
 
 [^2]: 用芯探核:基于龙芯的 Linux 内核探索解析
 [^4]: http://yuba.stanford.edu/rcp/
@@ -232,3 +270,4 @@ sudo dhclient en0
 [^7]: [The TCP/IP Guide](http://www.tcpipguide.com/index.htm)
 [^8]: [TUN/TAP设备浅析(一) -- 原理浅析](https://www.jianshu.com/p/09f9375b7fa7)
 [^9]: https://en.wikipedia.org/wiki/Transparent_Inter-process_Communication
+[^10]: https://www.cs.dartmouth.edu/~sergey/me/netreads/path-of-packet/Lab9_modified.pdf

@@ -35,3 +35,6 @@ https://www.kawabangga.com/posts/4515 中间提到 nc -l  9999 的操作可以�
 
 ## iproute2
 https://github.com/shemminger/iproute2
+
+## 网络测试工具
+- https://github.com/google/packetdrill : 甚至还有相关的资源

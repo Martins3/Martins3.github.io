@@ -39,7 +39,7 @@ enxd43a650739d8: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
         TX packets 3694072  bytes 318623167 (318.6 MB)
         TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
 ```
-remove -Werror in ./Makefile 
+remove -Werror in ./Makefile
 
 由于不支持 ipv6，也许有用的内容:
 sudo sysctl -w net.ipv6.conf.all.disable_ipv6=1
@@ -131,5 +131,7 @@ static struct sock_ops inet_stream_ops = {
 
 ## linux kernel
 
+## 其他的用户态网络栈
+- https://github.com/mtcp-stack/mtcp
 
 [^1]: https://benohead.com/blog/2013/07/21/tcp-about-fin_wait_2-time_wait-and-close_wait/

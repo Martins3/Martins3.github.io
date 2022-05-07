@@ -36,8 +36,12 @@
   - `struct proto_ops` : 每一个协议都会对应的注册，例如 inet
 - `net_proto_family` : 只有一个 create hook，相比 `struct proto_ops` 是一个更大的分类，例如在 `inet6_family_ops` 下， 有 `inet6_dgram_ops` 和 `inet6_stream_ops`
 
-## net 目录的简单阅读一下
 
+## 基本流程
 - `sys_socket`
   - `sock_create`
   - `sock_map_fd` : 将 socket 和 fd 关联起来
+
+
+## 关键目录
+net/ethernet/eth.c
