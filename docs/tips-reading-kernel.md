@@ -60,8 +60,9 @@ sudo apt install linux-tools-common linux-tools-generic linux-tools-`uname -r`
 - -F: 100,000Hz (100,000 times per second) sampling
 
 ```sh
-perf script> perf_data.txt
-perl stackcollapse-perf.pl perf_data.txt | perl flamegraph.pl --title "trace" > flamegraph_dd.svg
+perf script | perl stackcollapse-perf.pl  > perf_data.out
+# grep ls perf_data.out | perl flamegraph.pl --title "trace" > flamegraph_dd.svg # 加上一个 grep
+cat perf_data.out | perl flamegraph.pl --title "trace" > flamegraph_dd.svg
 ```
 
 最终效果如下，可以在新的窗口中打开从而可以动态交互。
@@ -97,3 +98,5 @@ kprobe:task_tick_fair
 - [ ] 将 QEMU 的基本使用变为一个单独的文章分析一下
   - 分析各种常用的技术
 - [ ] 介绍 [hotspot](https://github.com/KDAB/hotspot)
+- [ ] perf 工具比我想想的要强大，应该好好的重新分析一下
+  - https://www.brendangregg.com/FlameGraphs/cpuflamegraphs.html

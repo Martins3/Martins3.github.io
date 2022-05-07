@@ -92,6 +92,7 @@
 ## Guff
 - [About](./abaaba/about.md)
 - [2021 秋招总结](./abaaba/job.md)
+- [有缘再见，龙芯](./abaaba/loongson.md)
 
 ## Friends
 - [niugenen](https://niugenen.github.io/)

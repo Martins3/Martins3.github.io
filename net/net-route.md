@@ -1,6 +1,33 @@
-# kernel network stack
-1. audit 从内核中间传输数据到用户层使用的网络的什么机制
-2. 首先完成 linux kernel lab 然后再说吧
+## todo
+- [ ] openwrt 到底是什么?
+  - 教别人编译的 : https://github.com/coolsnowwolf/lede
+- [ ] 好吧，并不能找到 routing table 相关的代码 ! (netfilter ?)
+- [ ] ceph
+- 无论如何，将 Linux kernel Labs 中的实验做一下
+- [ ] Where is ebpf hooks for packet filter ?
+- 为什么 QEMU 可以让 Guest 可以有某一个 ip 到 host 的网络中
+- [ ] 测试一下 bpf filter 的功能
+- http://www.mattkeeter.com/projects/pont/ : 一个小游戏，涉及到前端后端，websoctet
+- https://www.learncloudnative.com/blog/2020-04-25-beginners-guide-to-gateways-proxies/ : 讲解网关
+- https://news.ycombinator.com/item?id=23241934 : ssh-agent 的工作原理是什么 ?
+- https://www2.tkn.tu-berlin.de/teaching/rn/animations/gbn_sr/ : 拥塞网络图形化演示
+
+- 仅仅是看一看
+```txt
+       -nic [tap|bridge|user|l2tpv3|vde|netmap|vhost-user|socket][,...][,mac=macaddr][,model=mn]
+           This option is a shortcut for configuring both the on-board (default) guest NIC hardware and the host network backend in one go. The host backend options are the same as with the corresponding -netdev options below.  The guest NIC model can be set with
+           model=modelname.  Use model=help to list the available device types.  The hardware MAC address can be set with mac=macaddr.
+
+           The following two example do exactly the same, to show how -nic can be used to shorten the command line length (note that the e1000 is the default on i386, so the model=e1000 parameter could even be omitted here, too):
+
+                   qemu-system-i386 -netdev user,id=n1,ipv6=off -device e1000,netdev=n1,mac=52:54:98:76:54:32
+                   qemu-system-i386 -nic user,ipv6=off,model=e1000,mac=52:54:98:76:54:32
+```
+- 所以 -nic 和 -netdev 都是做啥的?
+- -nic 后面跟着的这么多的设备是做啥的
+
+- [ ] 在内核源码中找到 loopback 的实现位置
+- [ ] 验证一下，
 
 ## Unix domain socket
 [Introduction](https://stackoverflow.com/questions/21032562/example-to-explain-unix-domain-socket-af-inet-vs-af-unix)
@@ -11,21 +38,6 @@
 
 ## [ ] openvswitch
 - [openvswitch](https://www.zhihu.com/column/software-defined-network)
-
-## todo
-- [ ] openwrt 到底是什么?
-  - 教别人编译的 : https://github.com/coolsnowwolf/lede
-- Red Book
-- [ ] 好吧，并不能找到 routing table 相关的代码 ! (netfilter ?)
-- [ ] bpf / bpfilter
-- [ ] ceph
-- [ ] packet socket
-- 无论如何，将 Linux kernel Labs 中的实验做一下
-- [ ] Where is ebpf hooks for packet filter ?
-- 为什么 QEMU 可以让 Guest 可以有某一个 ip 到 host 的网络中
-- [ ] 测试一下 bpf filter 的功能
-
-## IBM Read Book
 
 ## network flow[^2]
 - [ ] watch dog
@@ -92,41 +104,6 @@
             - `core/dev.c:dev_queue_xmit()`
               - `sched/sch_generic.c:pfifo_fast_enqueue()`
 
-
-## 网络基础知识
-- 现在的想法 : 整体框架其实清楚的，利用 level-ip 来分析，其次就是解决 TCP 中间具体的细节问题, tc, retransmission,
-
-- http://www.mattkeeter.com/projects/pont/ : 一个小游戏，涉及到前端后端，websoctet
-- https://www.learncloudnative.com/blog/2020-04-25-beginners-guide-to-gateways-proxies/ : 讲解网关
-- https://news.ycombinator.com/item?id=23241934 : ssh-agent 的工作原理是什么 ?
-- https://www2.tkn.tu-berlin.de/teaching/rn/animations/gbn_sr/ : 拥塞网络图形化演示
-
-- 仅仅是看一看
-```txt
-       -nic [tap|bridge|user|l2tpv3|vde|netmap|vhost-user|socket][,...][,mac=macaddr][,model=mn]
-           This option is a shortcut for configuring both the on-board (default) guest NIC hardware and the host network backend in one go. The host backend options are the same as with the corresponding -netdev options below.  The guest NIC model can be set with
-           model=modelname.  Use model=help to list the available device types.  The hardware MAC address can be set with mac=macaddr.
-
-           The following two example do exactly the same, to show how -nic can be used to shorten the command line length (note that the e1000 is the default on i386, so the model=e1000 parameter could even be omitted here, too):
-
-                   qemu-system-i386 -netdev user,id=n1,ipv6=off -device e1000,netdev=n1,mac=52:54:98:76:54:32
-                   qemu-system-i386 -nic user,ipv6=off,model=e1000,mac=52:54:98:76:54:32
-```
-- 所以 -nic 和 -netdev 都是做啥的?
-- -nic 后面跟着的这么多的设备是做啥的
-
-
-### cloudflare
-- [bgp](https://www.cloudflare.com/learning/security/glossary/what-is-bgp/) : 这是当时 facebook 不可用的时候出现的
-  - 更多的教程参考这里: https://www.cloudflare.com/learning/
-
-## 教材
-- [Computer Networks: A Systems Approach](https://book.systemsapproach.org/index.html)
-  - 有 hackernews 用户推荐过
-
-## 工具
-- https://rfc.fyi/ : rfc 搜索
-
 ## 有趣
 - [ping localhost 不会和网卡打交道，那是 loopback devices](https://superuser.com/questions/565742/localhost-pinging-when-there-is-no-network-card)
 
@@ -156,8 +133,8 @@ https://www.cyberithub.com/list-network-interfaces/
 - [Wireshark 的工作原理](https://stackoverflow.com/questions/29620590/where-does-the-wireshark-capture-the-packets)
   - [How does the `AF_PACKET` socket work in Linux?](https://stackoverflow.com/questions/62866943/how-does-the-af-packet-socket-work-in-linux)
 
-## [ ] `AF_PACKET`
-- [ ] 如果 wireshark 使用 `AF_PACKET` ，那么 bpf filter 发生在什么位置啊?
+## packet
+- [ ] wireshark 使用 `AF_PACKET` ，那么 bpf filter 发生在什么位置啊?
 
 ## [ ] linux network interfaces
 https://developers.redhat.com/blog/2018/10/22/introduction-to-linux-interfaces-for-virtual-networking
@@ -179,22 +156,6 @@ sudo dhclient en0
 
 ## sdn
 - https://github.com/sdnds-tw/awesome-sdn
-
-## 关键参考
-- [使用 wireshark 分析网络](https://gaia.cs.umass.edu/kurose_ross/wireshark.php)
-  - [ ] tls 和 wireless 没有深入分析
-- [liexusong](https://github.com/liexusong/linux-source-code-analyze)
-- [sdn book](https://tonydeng.github.io/sdn-handbook/)
-  - [ ] dpdk
-  - [ ] vpn
-  - [ ] ovs
-  - [ ] 以及后面的 sdn 的所有内容
-
-## Linux Virtual Network Device
-- drivers/net/veth.c
-- drivers/net/tun.c
-- drivers/net/tap.c
-- net/bridge
 
 ## filter
 - [ ] https://devarea.com/introduction-to-network-filters-linux/
@@ -222,6 +183,8 @@ sudo dhclient en0
 ## [ ] tap
 
 ## [ ] bridge
+[bridge 和 ovs 的对比](https://www.fiber-optic-transceiver-module.com/ovs-vs-linux-bridge-who-is-the-winner.html)
+
 https://github.com/liexusong/linux-source-code-analyze/blob/master/net_bridge.md
 
 最终想要挑战的内容:
@@ -231,6 +194,34 @@ https://github.com/liexusong/linux-source-code-analyze/blob/master/net_bridge.md
 
 ## [ ] veth
 - [ ]  https://tonydeng.github.io/sdn-handbook/linux/virtual-device.html
+
+![](./img/veth.svg)
+首先参考[这里](https://blog.scottlowe.org/2013/09/04/introducing-linux-network-namespaces/) 构建另一个 namespaces，并且从一个 network ns ping 到另一个 network ns 中。
+
+从其中可以注意到:
+- `dev_hard_start_xmit`
+  - `veth_xmit`
+    - `veth_forward_skb`
+
+然后可以找到这个:
+```c
+static const struct net_device_ops veth_netdev_ops = {
+```
+
+## network namespace
+- [ ] network namespace 中到底隔离了什么东西 ?
+- https://www.cnblogs.com/bakari/p/10613710.html
+  - 这个文章从直接相连，bridge 和 ovs 三个方面说明 network namespaces 的连接
+
+> Network  namespaces  provide  isolation of the system resources associated with networking: network devices, IPv4 and IPv6 protocol
+> stacks, IP routing tables, firewall rules, the /proc/net directory (which is a symbolic link to /proc/PID/net), the  /sys/class/net
+> directory,  various files under /proc/sys/net, port numbers (sockets), and so on.  In addition, network namespaces isolate the UNIX
+> domain abstract socket namespace (see unix(7)).
+>
+> from `man(2) network_namespaces`
+
+- [ ] 虽然可以找到 `struct netns_ipv4`，但是暂时不能理解 namespace 可以隔离 IPv4
+
 
 ## vhost-net / virtio-net / vhost-sock
 
@@ -250,19 +241,65 @@ https://github.com/liexusong/linux-source-code-analyze/blob/master/arp-neighbour
 - `linux/net/sched/act_*.c`
   - `struct tc_action_ops`
 
-## QUIC
+## quic
 
 > But it's still just a layer on top of UDP, and still implemented at the application, like in the past.
 > from https://news.ycombinator.com/item?id=27310349
 
-emmm, 只是 DUP 上的封装
+emmmmmmm, 只是 DUP 上的封装
+
+## netlink
+似乎并不是很难实现，如果有时间，可以先看看如何实现吧:
+- [Instructions for running netlink example code in c](https://gist.github.com/arunk-s/c897bb9d75a6c98733d6)
+- [stackoverflow : How to use netlink socket to communicate with a kernel module?](https://stackoverflow.com/questions/3299386/how-to-use-netlink-socket-to-communicate-with-a-kernel-module)
+
+## bgp
+- [CloudFlare](https://www.cloudflare.com/learning/security/glossary/what-is-bgp/)
+
+> - Each AS wishing to exchange routing information must have a registered autonomous system number (ASN).
+> - Internet Assigned Numbers Authority (IANA) assigns ASNs to Regional Internet Registries (RIRs), which then assigns them to ISPs and networks.
+> - Routes are exchanged and traffic is transmitted over the Internet using external BGP (eBGP). Autonomous systems can also use an internal version of BGP to route through their internal networks, which is known as internal BGP (iBGP). It should be noted that using internal BGP is NOT a requirement for using external BGP. Autonomous systems can choose from a number of internal protocols to connect the routers on their internal network.
 
 ## 9p
 - [Plan 9 的历史](https://www.zhihu.com/question/19706063/answer/763200196)
 
+## icmp
+位置:
+- net/ipv6/icmp.c
+- net/ipv4/icmp.c
+
+![](./img/ping.svg)
+
+注意一下其中的:
+- `ip_send_skb`
+  - `ip_local_out`
+    - `__ip_local_out`
+      - `nf_hook`  : 调用 netfilter
+    - `dst_output` : 发送位置
 
 ## 奇怪的项目
 - [A framework that aids in creation of self-spreading software](https://github.com/redcode-labs/Neurax)
+
+
+## 关键参考
+- [使用 wireshark 分析网络](https://gaia.cs.umass.edu/kurose_ross/wireshark.php)
+  - [ ] tls 和 wireless 没有深入分析
+- [liexusong](https://github.com/liexusong/linux-source-code-analyze)
+- [sdn book](https://tonydeng.github.io/sdn-handbook/)
+  - [ ] dpdk
+  - [ ] vpn
+  - [ ] ovs
+  - [ ] 以及后面的 sdn 的所有内容
+
+
+## 资源
+- [Computer Networks: A Systems Approach](https://book.systemsapproach.org/index.html) : 教科书
+- [cloudflare](https://www.cloudflare.com/learning/) 的教程
+- https://rfc.fyi/ : rfc 搜索
+
+## nfs
+- [ ] https://zhuanlan.zhihu.com/p/295230549 : 简介
+
 
 [^2]: 用芯探核:基于龙芯的 Linux 内核探索解析
 [^4]: http://yuba.stanford.edu/rcp/
