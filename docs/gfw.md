@@ -9,6 +9,7 @@
 * [git proxy](#git-proxy)
 * [cmd proxy](#cmd-proxy)
 * [share proxy cross lan](#share-proxy-cross-lan)
+* [clash](#clash)
 
 <!-- vim-markdown-toc -->
 Across the Great Wall we can reach every corner in the world.
@@ -94,6 +95,29 @@ export http_proxy=http://${X86_IP}:8889 && export https_proxy=http://{X86_IP}:88
 
 in browser:
 - add proxy server : http://${X86_IP}:8889
+
+## clash
+Qv2ray no longer maintained, so I switched to Clash and found it's more simple to setup.
+
+reference : https://einverne.github.io/post/2021/03/linux-use-clash.html
+
+- download and extract to somewhere
+  - url: https://github.com/Fndroid/clash_for_windows_pkg/releases
+- add icon to start menu
+
+```txt
+➜ cd /home/maritns3/.local/share/applications
+➜ cat sourcetrail.desktop
+[Desktop Entry]
+Name=clash
+Comment=vpn
+Exec=/home/maritns3/arch/clash/cfw
+Icon=/home/maritns3/arch/clash/logo.png
+Terminal=false
+Type=Application
+Categories=Development
+```
+
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

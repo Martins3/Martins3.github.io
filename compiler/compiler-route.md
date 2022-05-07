@@ -99,6 +99,7 @@ https://news.ycombinator.com/item?id=24170201 : 感觉完成度还可以的 浏�
   - 为了解析 sql 语句，实际上 sqlite 中是存在 vm 来解释执行的，这个文章中分析这些大致是如何运行的
 
 - https://notes.eatonphil.com/lua-in-rust.html :star: 使用 rust 写一个 mininal lua 实现
+- https://github.com/vnmakarov/mir : A lightweight JIT compiler based on MIR (Medium Internal Representation) and C11 JIT compiler and interpreter based on MIR
 
 ## 教程
 - https://github.com/wa-lang/ugo-compiler-book : uGo 语言开发教程

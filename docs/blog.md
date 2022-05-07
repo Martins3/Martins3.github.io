@@ -6,6 +6,14 @@
 - http://weng-blog.com/workblog.html : 内核 网络
 - https://oskernellab.com/ : 内核
 - https://www.jonathanmueller.dev/ : c++
+- [matt](http://matt.might.net/articles/)
+- [eli](https://eli.thegreenplace.net)
+- [zhangjaycee](https://github.com/zhangjaycee/real_tech)
+
+## blog list
+- https://github.com/jkup/awesome-personal-blogs : 经典 blog
+- https://github.com/kilimchoi/engineering-blogs : 更多的 blog
+- https://github.com/tuna/blogroll : 清华 tuna
 
 ## 有趣的文章
 - [计算机中的编码技术基础](https://kunststube.net/encoding/)
