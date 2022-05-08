@@ -47,9 +47,10 @@
 - 🚧 [淦，写一个裸金属二进制翻译器不可能这么难](./bmbt/emotion.md)
 
 ## 淦，打一把英雄联盟不可能这么难
-- 🚧 [双系统: bootloader 和分区](.)
-- 🚧 [wine : 如何实现系统调用虚拟化](.)
-- 🚧 [设备直通: VFIO](.)
+- 🚧 [双系统（一）: blockdev](./lol/blockdev.md)
+- 🚧 [双系统（二）: bootloader](./lol/bootloader.md)
+- 🚧 [wine : 如何实现系统调用虚拟化](./lol/wine.md)
+- 🚧 [设备直通: VFIO](./lol/vfio.md)
 
 ## UEFI
 - [Linux 下 UEFI 学习环境搭建](./bmbt/uefi-linux.md)

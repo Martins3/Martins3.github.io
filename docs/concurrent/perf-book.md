@@ -1,11 +1,15 @@
-## Plans
-1. 底层架构上，cache 一致性, memory fence !(量化，小册子)
-2. C++ 并发编程 和 Rust 并发编程 : 写一个 blog 对比一下。
-3. perf
-4. 将之前阅读 the art of concurrent programming 整理一下 !
+> 如果是将 perf book 作为参考，那么将会很快乐，如果只是为了阅读，将会很痛苦的
+
+# 当这个事情结束之后，重新思考一下这个事情
+- [ ] 回答在 volatile 中的问题
+- [ ] 总结一个如何使用 memory bariier 的基本方法，太 TM 的恐惧了
+- [ ] 如何正确的使用 RCU ，以及 Linux 内核中的 ART
+- [ ] 总结 memory model 形成的原因，CPU 如何保证，对于编程者的影响
+- [ ] C++ 并发编程 和 Rust 并发编程 : 写一个 blog 对比一下。
+- [ ] cache coherence 和 memory model 的关系 ?
+- [ ] DMA 的 cache 一致性是谁处理的
 
 ## TODO
-- even loop : https://questions.wizardzines.com/event-loops.html : I read part of it, it seems I haven't learn event loop at all.
 - coroutine in c++
 
 ## 正经的教材

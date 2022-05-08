@@ -1,1 +1,1 @@
-# 双系统: bootloader 和分区
+# 双系统: blockdev

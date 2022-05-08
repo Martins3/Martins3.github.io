@@ -20,3 +20,5 @@ https://github.com/carbon-app/carbon : 将代码作为图片分享
 
 https://github.com/darknessomi/musicbox　: 网易云音乐
 
+## 压缩图片
+convert yy.jpg -quality 50% yy.jpg

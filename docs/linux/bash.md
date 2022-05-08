@@ -28,6 +28,7 @@
   * [选择好用的 shell](#选择好用的-shell)
   * [常用命令行工具的替代](#常用命令行工具的替代)
   * [一些小技巧](#一些小技巧)
+  * [shell 中移动](#shell-中移动)
   * [reference](#reference)
 
 <!-- vim-markdown-toc -->
@@ -342,6 +343,9 @@ zsh 和 bash 之前语法上基本是兼容的，但是由于[oh my zsh](https:/
 - [alias](https://thorsten-hans.com/5-types-of-zsh-aliases)
 - [/dev/null](https://www.putorius.net/introduction-to-dev-null.html)
 - [bash 使用方向键匹配历史记录](https://askubuntu.com/questions/59846/bash-history-search-partial-up-arrow)
+
+## shell 中移动
+- http://blog.jcix.top/2021-10-05/shell-shortcuts/
 
 ## reference
 [^1]: https://github.com/agarrharr/awesome-cli-apps
