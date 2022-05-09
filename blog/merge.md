@@ -69,9 +69,6 @@ struct X{
 似乎提供了原本的视频。
 https://ieeexplore.ieee.org/xpl/mostRecentIssue.jsp?punumber=8401306　所以ISCA 到底是什么类型会议。
 
-## [vim 内置debug](https://www.dannyadam.com/blog/2019/05/debugging-in-vim/)
-可以看一下，但是guigdb才是王道
-
 ## [如何学习芯片设计](https://news.ycombinator.com/item?id=19890949)
 
 ## [gameboy](https://github.com/HFO4/gameboy.live)
@@ -113,10 +110,6 @@ https://github.com/huihut/interview#%E9%9D%A2%E5%90%91%E5%AF%B9%E8%B1%A1
 
 ## [go 块的5个原因](https://dave.cheney.net/2014/06/07/five-things-that-make-go-fast)
 
-## [让我们自己手写TCP/IP 协议栈](https://www.saminiir.com/lets-code-tcp-ip-stack-1-ethernet-arp/)
-事实上，内核中的TCP 性能并不佳
-
-
 ## [rust 实现shell 自动补全](https://www.joshmcguigan.com/blog/shell-completions-pure-rust/)
 
 ## [RISC-V 体系结构介绍](https://twilco.github.io/riscv-from-scratch/2019/03/10/riscv-from-scratch-1.html)
@@ -140,12 +133,6 @@ https://github.com/huihut/interview#%E9%9D%A2%E5%90%91%E5%AF%B9%E8%B1%A1
 population momentum指的是虽然出生率下降，但是处于生育年龄的女性(women in the reproductive age bracket)增加，出生的婴儿数量并不会快速下降。
 总体而言，中国人口含有少量的外迁。
 
-## [任正非采访](https://36kr.com/p/5207055)
-
-## [博客客户端](https://github.com/getgridea/gridea/releases)
-可以用来作为自己的微博，但是目前实在是不知道怎么安装啊。
-
-
 ## [微软的复兴](https://www.bloomberg.com/news/features/2019-05-02/satya-nadella-remade-microsoft-as-world-s-most-valuable-company)
 
 ## [Vim 的技巧](https://www.hillelwayne.com/post/intermediate-vim/)
@@ -165,8 +152,6 @@ Everything is file 是一个正确的哲学吗 ?
 如何使用go实现解释器
 
 ## [chrome :　典型的卑鄙小人](https://alexdanco.com/2019/05/30/google-chrome-the-perfect-antitrust-villain/)
-
-## [用户层tcp协议栈](https://shader.kaist.edu/mtcp/)
 
 ## [计算机领域中间的相似题目](http://www.kmjn.org/notes/colons_in_dblp_titles.html)
 
@@ -189,9 +174,6 @@ Everything is file 是一个正确的哲学吗 ?
 
 ## [印度的语言](https://en.wikipedia.org/wiki/Languages_of_India)
 
-## [内核中间的解释器](https://css.csail.mit.edu/jitk/)
-听上去就是一个非常叼的东西啊。
-
 ## [512byte的游戏](https://news.ycombinator.com/item?id=20112479)
 
 ## [基因算法](https://blog.floydhub.com/introduction-to-genetic-algorithms/)
@@ -199,12 +181,6 @@ Everything is file 是一个正确的哲学吗 ?
 ## [树莓派上的GPIO](https://www.tomshardware.com/reviews/raspberry-pi-gpio-pinout,6122.html)
 
 ## [龙猫学术导航](http://www.6453.net/)
-
-## [如果有女朋友](https://news.ycombinator.com/)
-https://github.com/sfyc23/EverydayWechat
-https://github.com/hackerzhou/Love
-
-
 
 ## [RISC-V 芯片　1G+ Hz](https://arxiv.org/abs/1906.00478)
 
@@ -219,9 +195,7 @@ https://github.com/hackerzhou/Love
 ## [使用Rust语言进行创作](https://nannou.cc/)
 有意思的一匹，先等我学会Rust(先等我学会C++(先等我看懂内核))
 
-
 ## [c++ template 编程 badge](https://awesomekling.github.io/Serenity-C++-patterns-The-Badge/)
-
 
 ## [使用Rust和go　实现高并发　分布式网络编程](https://github.com/pingcap/talent-plan)
 
@@ -807,14 +781,6 @@ Rust,绝对不是浅尝辄止的内容。
 
 ## [为什么正则分布会消失](https://alexdanco.com/2015/12/17/taylor-swift-ios-and-the-access-economy-why-the-normal-distribution-is-vanishing/)
 
-## [github page template](https://github.com/orderedlist/minimal)
-
-## [hack night](https://github.com/osirislab/Hack-Night)
-没有看是做什么的，但是其中关于链接博客内容非常的不错
-
-## [内核u_ring io](http://kernel.dk/io_uring.pdf)
-终于，更新的内核新特性了
-
 ## [jemalloc](https://people.freebsd.org/~jasone/jemalloc/bsdcan2006/jemalloc.pdf)
 https://stackoverflow.com/questions/1624726/how-does-jemalloc-work-what-are-the-benefits
 
@@ -825,11 +791,6 @@ https://stackoverflow.com/questions/1624726/how-does-jemalloc-work-what-are-the-
 
 ## [The Chinese researcher painting the printing industry green](https://www.nature.com/articles/d41586-019-00886-4?from=timeline)
 看一看，都是中科院，差距为什么这么大
-
-
-## [一个大哥博客](http://tinylab.org/categories/)
-很硬盒，值得仔细看看
-
 
 ## [org mode](https://beorg.app/orgmode/letsgetgoing/)
 到底什么是org mode，如何在vim 上面部署该功能?
@@ -843,12 +804,10 @@ https://stackoverflow.com/questions/1624726/how-does-jemalloc-work-what-are-the-
 ## [linux 的编译系统](https://www.linuxjournal.com/content/kbuild-linux-kernel-build-system)
 查资料查到了，但是有必要将内核的编译，链接，装载过程搞清楚
 
-
 ## [比较clang 和其他的开源编译器](https://clang.llvm.org/comparison.html)
 可以用这一个彻底的鄙视gcc
 
 ## [继承还是组合](https://lwn.net/SubscriberLink/787800/b7f5351b3a41421a/)
 是时候理解为什么继承的问题是什么了!
-
 
 ## [2D 图像在现代GPU中间的实现方式](https://raphlinus.github.io/rust/graphics/gpu/2019/05/08/modern-2d.html)
