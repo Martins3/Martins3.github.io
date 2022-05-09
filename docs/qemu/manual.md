@@ -8,9 +8,15 @@
 
 ## 制作各种镜像
 
+
 ## 安装 Windows
 
-## 所以 virtue box 是如何实现的
+## 所以 virtur box 是如何实现的
 
 ## 设置网络，参考一下
 https://www.collabora.com/news-and-blog/blog/2017/03/13/kernel-debugging-with-qemu-overview-tools-available/
+
+## 共享目录
+记录一下，如何让 module 的编译不是根据 /usr/ 而是自己指定的内核的，然后使用 QEMU 来作为 driver 的驱动设计方法。
+
+这样，在 Host 中编译，在 Guest 中执行。

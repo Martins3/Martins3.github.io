@@ -70,9 +70,12 @@ cat perf_data.out | perl flamegraph.pl --title "trace" > flamegraph_dd.svg
 ![](./img/flamegraph.svg)
 
 ## bpftrace
-使用 bpftrace 的 kprobe 可以很容易的动态的获取内核函数的 backtrace, 效果如下。
+使用 bpftrace 的 kprobe 可以很容易的动态的获取内核函数的 backtrace
 
 
+首先可以使用 bpftrace -l | fzf 检查可以观测的点
+
+脚本：
 ```bt
 #!/usr/bin/bpftrace
 kprobe:task_tick_fair
@@ -81,6 +84,7 @@ kprobe:task_tick_fair
 }
 ```
 
+结果:
 ```txt
 @[
     task_tick_fair+1

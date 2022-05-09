@@ -1,12 +1,7 @@
 # blk-core.c
 
-1. 几乎全部都是各种 request_queue 的支持
-
-2. 
-
 ## TODO
 1. 希望搞清楚 bio request 和 request_queue 的关系
-
 
 ## 对于 queue 的各种操作
 1. 从 280 行之后的一段位置，前面的内容并不知道是干什么的
@@ -280,61 +275,4 @@ blk_qc_t submit_bio(struct bio *bio)
 EXPORT_SYMBOL(submit_bio);
 ```
 
-
-
-
 ## account
-
-
-
-
-
-## plug
-1. an intend
-
-```c
-/**
- * blk_start_plug - initialize blk_plug and track it inside the task_struct
- * @plug:	The &struct blk_plug that needs to be initialized
- *
- * Description:
- *   blk_start_plug() indicates to the block layer an intent by the caller
- *   to submit multiple I/O requests in a batch.  The block layer may use
- *   this hint to defer submitting I/Os from the caller until blk_finish_plug()
- *   is called.  However, the block layer may choose to submit requests
- *   before a call to blk_finish_plug() if the number of queued I/Os
- *   exceeds %BLK_MAX_REQUEST_COUNT, or if the size of the I/O is larger than
- *   %BLK_PLUG_FLUSH_SIZE.  The queued I/Os may also be submitted early if
- *   the task schedules (see below).
- *
- *   Tracking blk_plug inside the task_struct will help with auto-flushing the
- *   pending I/O should the task end up blocking between blk_start_plug() and
- *   blk_finish_plug(). This is important from a performance perspective, but
- *   also ensures that we don't deadlock. For instance, if the task is blocking
- *   for a memory allocation, memory reclaim could end up wanting to free a
- *   page belonging to that request that is currently residing in our private
- *   plug. By flushing the pending I/O when the process goes to sleep, we avoid
- *   this kind of deadlock.
- */
-void blk_start_plug(struct blk_plug *plug)
-{
-	struct task_struct *tsk = current;
-
-	/*
-	 * If this is a nested plug, don't actually assign it.
-	 */
-	if (tsk->plug)
-		return;
-
-	INIT_LIST_HEAD(&plug->mq_list);
-	INIT_LIST_HEAD(&plug->cb_list);
-	plug->rq_count = 0;
-	plug->multiple_queues = false;
-
-	/*
-	 * Store ordering should not be needed here, since a potential
-	 * preempt will imply a full memory barrier
-	 */
-	tsk->plug = plug;
-}
-```

@@ -1,3 +1,9 @@
+## 代码浏览
+- block/partitions : 处理各种分区
+- `*-iosched.c` : 集中 scheduler
+- `blk-mq.c` : multiqueue
+-
+
 | name                   | blank | comment | code | desc                                                                       |
 |------------------------|-------|---------|------|----------------------------------------------------------------------------|
 | bfq-iosched.c          | 679   | 3326    | 2852 | bfq io scheduler                                                           |
@@ -120,7 +126,6 @@
     2. bfq 是一个模块啊，如何动态注册 ?
 2.  那些是 policy ，那些具体任务的执行，那些是用于 debug 的东西 ?
 3. part one 和 part two
-4. 谁知道 gendisk 以及 blk_dev 和这些关系是什么 ?
 
 ```c
 	elv_unregister(&iosched_bfq_mq);
@@ -140,28 +145,6 @@ blkcg_policy_register 的调用位置:
 2. block/bfq-iosched.c (按道理来说，不应该，可能自己特有的)
 
 很尴尬，从 Kconfig 上分析一共只有三个 io scheduler , 所以说明不是所有的调度器都需要这个。
-
-## bio layer
-- [A block layer introduction part 1: the bio layer](https://lwn.net/Articles/736534/) https://yq.aliyun.com/articles/609907
-
-- [Block layer introduction part 2: the request layer](https://lwn.net/Articles/738449/)
-
-
-http://byteliu.com/2019/05/10/Linux-The-block-I-O-layer/
-
-http://byteliu.com/2019/05/21/What-is-the-major-difference-between-the-buffer-cache-and-the-page-cache-Why-were-they-separate-entities-in-older-kernels-Why-were-they-merged-later-on/
-
-1. bio 给上下两个层次提供的接口是什么 ?
-    1. FA
-
-
-
-## all kinds of doc
-1. https://zhuanlan.zhihu.com/p/39199521
-    1. bio 机制核心 : 合并请求
-2.
-
-
 
 ## multi queue
 - [](https://www.thomas-krenn.com/en/wiki/Linux_Multi-Queue_Block_IO_Queueing_Mechanism_(blk-mq))
