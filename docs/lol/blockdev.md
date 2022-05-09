@@ -244,16 +244,7 @@ static const struct blk_mq_ops nbd_mq_ops = {
 
 ## 一些基本理论
 
-### /proc/mounts
-如何实现的
-
-### /proc/partitions
-这个东西是如何实现的，为什么
-
-### /dev/nvme1n1p2
-- [ ] 解释一下为什么不可以 mount /dev/nvme0n1，而是必须为
-
-### /sys/dev/block/
+### /sys/dev/block/ 的构建位置
 
 ## gui tools
 ### gpart
@@ -341,239 +332,8 @@ nvme1n1     259:2    0 238.5G  0 disk
 
 - [ ] 找到对应的内核源代码，然后 ptrace 一下:
 
-# block_dev.c 分析
-> 主要的内容 : 实现 everything is file 的设计思路，不是放到 fs 下面实现 block io 的
-
-
 ## Doc
 1. https://terenceli.github.io/%E6%8A%80%E6%9C%AF/2018/06/14/linux-block-device-driver
-
-When we add devices to system, a node in /dev/ will be created, this is done in ‘devtmpfs_create_node’.
-
-2. https://unix.stackexchange.com/questions/176215/difference-between-dev-and-sys
-3. https://sungju.github.io/kernel/internals/block_device_driver.html : 下面的插图有意思
-
-![](https://sungju.github.io/kernel/internals/block_device_driver.jpg)
-
-### Question
-1. block_dev 是不是成为 block layer 的屏蔽层，这是文件系统看到的全部的内容
-2. swap 的 partion 是如何自动被识别出来的 ?
-3. ext4 文件系统注册在不同的 block 上，所以如何实现 submit_bio 进入到不同的 block 中间里面。
-4. 现在，觉得，block_dev.c 只是 block layer 需要使用 fs 的内容而已，block 保证几个 page 的 io，但是全局的 io 需要 fs 提供。
-5. 注意，block 上也可以挂载 inode 和 address_space，猜测，仅仅限于，当没有 fs 挂载到其上的时候 !
-
-6. so, what is `struct block_device` ?
-      1. relation with module ?
-      2. I want to read the routin that the bios(or something else probe the device and create bdev_inode on the bdev file system )
-
-8. blockdev_superblock :
-    1. mount details ? f
-
-9. how to add block device to the bdev file system ?
-
-11. how dev_t involved ?
-      1. dev_t => inode
-      2. dev_t => pathname
-      3. dev_t alloc
-      4. /sys
-
-```c
-struct block_device {
-// ...
-	struct gendisk *	bd_disk;
-	struct request_queue *  bd_queue;
-	struct backing_dev_info *bd_bdi;
-// ...
-```
-block size 和 sector size 的区别是什么 ?
-
-## link
-1. 主要是一些驱动调用的
-
-1. 为什么需要 symbol link
-2. 从哪里创建到哪里的 symbol link 的　: bd_find_holder_disk 的注释说过，但是看不懂
-
-
-```c
-#ifdef CONFIG_SYSFS // 完全在这一个 config 的包围下
-struct bd_holder_disk {
-	struct list_head	list;
-	struct gendisk		*disk;
-	int			refcnt;
-};
-
-static struct bd_holder_disk *bd_find_holder_disk(struct block_device *bdev,
-						  struct gendisk *disk)
-{
-	struct bd_holder_disk *holder;
-
-	list_for_each_entry(holder, &bdev->bd_holder_disks, list)
-		if (holder->disk == disk)
-			return holder;
-	return NULL;
-}
-
-static int add_symlink(struct kobject *from, struct kobject *to)
-{
-	return sysfs_create_link(from, to, kobject_name(to));
-}
-
-static void del_symlink(struct kobject *from, struct kobject *to)
-{
-	sysfs_remove_link(from, kobject_name(to));
-}
-
-/**
- * bd_link_disk_holder - create symlinks between holding disk and slave bdev
- * @bdev: the claimed slave bdev
- * @disk: the holding disk
- *
- * DON'T USE THIS UNLESS YOU'RE ALREADY USING IT.
- *
- * This functions creates the following sysfs symlinks.
- *
- * - from "slaves" directory of the holder @disk to the claimed @bdev
- * - from "holders" directory of the @bdev to the holder @disk
- *
- * For example, if /dev/dm-0 maps to /dev/sda and disk for dm-0 is
- * passed to bd_link_disk_holder(), then:
- *
- *   /sys/block/dm-0/slaves/sda --> /sys/block/sda
- *   /sys/block/sda/holders/dm-0 --> /sys/block/dm-0
- *
- * The caller must have claimed @bdev before calling this function and
- * ensure that both @bdev and @disk are valid during the creation and
- * lifetime of these symlinks.
- *
- * CONTEXT:
- * Might sleep.
- *
- * RETURNS:
- * 0 on success, -errno on failure.
- */
-int bd_link_disk_holder(struct block_device *bdev, struct gendisk *disk)
-{
-	struct bd_holder_disk *holder;
-	int ret = 0;
-
-	mutex_lock(&bdev->bd_mutex);
-
-	WARN_ON_ONCE(!bdev->bd_holder);
-
-	/* FIXME: remove the following once add_disk() handles errors */
-	if (WARN_ON(!disk->slave_dir || !bdev->bd_part->holder_dir))
-		goto out_unlock;
-
-	holder = bd_find_holder_disk(bdev, disk);
-	if (holder) {
-		holder->refcnt++;
-		goto out_unlock;
-	}
-
-	holder = kzalloc(sizeof(*holder), GFP_KERNEL);
-	if (!holder) {
-		ret = -ENOMEM;
-		goto out_unlock;
-	}
-
-	INIT_LIST_HEAD(&holder->list);
-	holder->disk = disk;
-	holder->refcnt = 1;
-
-	ret = add_symlink(disk->slave_dir, &part_to_dev(bdev->bd_part)->kobj);
-	if (ret)
-		goto out_free;
-
-	ret = add_symlink(bdev->bd_part->holder_dir, &disk_to_dev(disk)->kobj);
-	if (ret)
-		goto out_del;
-	/*
-	 * bdev could be deleted beneath us which would implicitly destroy
-	 * the holder directory.  Hold on to it.
-	 */
-	kobject_get(bdev->bd_part->holder_dir);
-
-	list_add(&holder->list, &bdev->bd_holder_disks);
-	goto out_unlock;
-
-out_del:
-	del_symlink(disk->slave_dir, &part_to_dev(bdev->bd_part)->kobj);
-out_free:
-	kfree(holder);
-out_unlock:
-	mutex_unlock(&bdev->bd_mutex);
-	return ret;
-}
-EXPORT_SYMBOL_GPL(bd_link_disk_holder);
-
-/**
- * bd_unlink_disk_holder - destroy symlinks created by bd_link_disk_holder()
- * @bdev: the calimed slave bdev
- * @disk: the holding disk
- *
- * DON'T USE THIS UNLESS YOU'RE ALREADY USING IT.
- *
- * CONTEXT:
- * Might sleep.
- */
-void bd_unlink_disk_holder(struct block_device *bdev, struct gendisk *disk)
-{
-	struct bd_holder_disk *holder;
-
-	mutex_lock(&bdev->bd_mutex);
-
-	holder = bd_find_holder_disk(bdev, disk);
-
-	if (!WARN_ON_ONCE(holder == NULL) && !--holder->refcnt) {
-		del_symlink(disk->slave_dir, &part_to_dev(bdev->bd_part)->kobj);
-		del_symlink(bdev->bd_part->holder_dir,
-			    &disk_to_dev(disk)->kobj);
-		kobject_put(bdev->bd_part->holder_dir);
-		list_del_init(&holder->list);
-		kfree(holder);
-	}
-
-	mutex_unlock(&bdev->bd_mutex);
-}
-EXPORT_SYMBOL_GPL(bd_unlink_disk_holder);
-#endif
-```
-
-
-## freeze_bdev 和 thaw_bdev
-
-
-
-## blkdev_get 和 blkdev_put
-1. 好像，这就是给正儿八经的文件系统 mount 到特定的设备上需要的, @todo 所以，过程是下面这样的吗 ?
-      1. 系统启动，创建 vfs，/dev 之类的东西
-      2. 然后 ext4 等文件系统 mount ， mount 的时候需要 /dev
-2. blkdev_get 调用两个有意思的函数: blkdev_get_by_path 和 blkdev_get_by_dev
-
-```c
-void blkdev_put(struct block_device *bdev, fmode_t mode)
-
-/**
- * blkdev_get - open a block device
- * @bdev: block_device to open
- * @mode: FMODE_* mask
- * @holder: exclusive holder identifier
- *
- * Open @bdev with @mode.  If @mode includes %FMODE_EXCL, @bdev is
- * open with exclusive access.  Specifying %FMODE_EXCL with %NULL
- * @holder is invalid.  Exclusive opens may nest for the same @holder.
- *
- * On success, the reference count of @bdev is unchanged.  On failure,
- * @bdev is put.
- *
- * CONTEXT:
- * Might sleep.
- *
- * RETURNS:
- * 0 on success, -errno on failure.
- */
-int blkdev_get(struct block_device *bdev, fmode_t mode, void *holder)
-```
 
 在 mount 的过程中，根据路径得到:
 ```txt
@@ -595,45 +355,15 @@ int blkdev_get(struct block_device *bdev, fmode_t mode, void *holder)
 ```
 - 通过 `lookup_bdev` 可以将 path 装换为 `dev_t`
 
-## interface
+## 源码
 
 ```c
 static const struct super_operations bdev_sops = {
-	.statfs = simple_statfs,
-	.alloc_inode = bdev_alloc_inode,
-	.destroy_inode = bdev_destroy_inode,
-	.drop_inode = generic_delete_inode,
-	.evict_inode = bdev_evict_inode,
-};
+```
 
+```c
 static const struct address_space_operations def_blk_aops = {
-	.readpage	= blkdev_readpage,
-	.readpages	= blkdev_readpages,
-	.writepage	= blkdev_writepage,
-	.write_begin	= blkdev_write_begin,
-	.write_end	= blkdev_write_end,
-	.writepages	= blkdev_writepages,
-	.releasepage	= blkdev_releasepage,
-	.direct_IO	= blkdev_direct_IO,
-	.is_dirty_writeback = buffer_check_dirty_writeback,
-};
-
 const struct file_operations def_blk_fops = {
-	.open		= blkdev_open,
-	.release	= blkdev_close,
-	.llseek		= block_llseek,
-	.read_iter	= blkdev_read_iter,
-	.write_iter	= blkdev_write_iter,
-	.mmap		= generic_file_mmap,
-	.fsync		= blkdev_fsync,
-	.unlocked_ioctl	= block_ioctl,
-#ifdef CONFIG_COMPAT
-	.compat_ioctl	= compat_blkdev_ioctl,
-#endif
-	.splice_read	= generic_file_splice_read,
-	.splice_write	= iter_file_splice_write,
-	.fallocate	= blkdev_fallocate,
-};
 ```
 `address_space_operations` 是文件系统注册的，用于向下传导的
 

@@ -65,7 +65,7 @@
 
 ## Tools
 - [我的 Linux 配置环境](https://martins3.github.io/My-Linux-Config/)
-- [Debugger 的理念，原理和使用](./tips/gdb.md)
+- 🚧 [Debugger 的理念，原理和使用](./tips/gdb.md)
 - [使用 QEMU, FlameGraph 和 bpftrace 阅读内核](./tips-reading-kernel.md)
 
 ## Linux Environment Programming

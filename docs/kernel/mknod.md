@@ -41,6 +41,9 @@ const struct file_operations def_chr_fops = {
 - `init_special_node` 将 inode 和 cdev 挂钩起来，但是只是告诉设备号和 `def_chr_fops`(`chrdev_open`)
 - 当打开文件，也就会调用 inode 中间的 open 函数，也就是 `chrdev_open`, 此时将 struct cdev 和 inode 关联起来，并且替换 fops 然后调用这个设备的 inode 真正的 open, 例如 `memory_open`
 
+如果启动内核之后，就是启动 bash ，虽然可以从 `/proc/partitions` 中可以看到有 blockdev，但是在 /dev 下依旧是什么都没有，
+而在一般的 Linux distribution 中，在 /dev/ 下创建对应的文件的工作，应该是被 udev 完成了。
+
 ## 源码
 处理 chardev 和 blockdev 的位置:
 - chardev : fs/chardev.c
@@ -48,8 +51,10 @@ const struct file_operations def_chr_fops = {
 
 ## 相关话题
 - [ebbchar](http://derekmolloy.ie/writing-a-linux-kernel-module-part-2-a-character-device/) 的这个教程中，实际上是不使用 mknod 的
-  - 因为其调用了 `device_create` 在内核模块中直接创建的
+  - 因为其调用了 `device_create` 在内核模块中直接创建的，最后调用到 `devtmpfs_create_node`
 - [ ] 重启之后，自己手动创建的 mknod 还会存在吗 ?
+- [/sys 和 /dev 的区别](https://unix.stackexchange.com/questions/176215/difference-between-dev-and-sys)
+  - /dev 用于访问 dev 和内容，而 /sys 用于获取 dev 的基本信息以及管理之类的
 
 [^1]: [What does mknod do?](https://unix.stackexchange.com/questions/562341/what-does-mknod-do)
 [^2]: Professional Linux Kernel Architecture : Device Drivers
