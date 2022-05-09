@@ -50,7 +50,7 @@ The namespace API consists of three system calls—clone(), unshare(), and setns
 ```
 ls -l /proc/$$/ns
 ```
-两种 让当前 fs 不被销毁的方法 : 
+两种 让当前 fs 不被销毁的方法 :
 - The /proc/PID/ns symbolic links also serve other purposes. If we open one of these files, then the namespace will continue to exist as long as the file descriptor remains open, even if all processes in the namespace terminate.
 - The same effect can also be obtained by bind mounting one of the symbolic links to another location in the file system:
 
@@ -87,14 +87,14 @@ https://superuser.com/questions/59093/difference-between-host-name-and-domain-na
     - 在外层的 parent 挂掉之后，会将 children 放到内层的 init 中间
 
 作用[^1]:
-pid namespace isolate the process ID number space. 
-In other words, processes in different PID namespaces can have the same PID. 
-1. One of the main benefits of PID namespaces is that containers can be migrated between hosts while keeping the same process IDs for the processes inside the container. 
+pid namespace isolate the process ID number space.
+In other words, processes in different PID namespaces can have the same PID.
+1. One of the main benefits of PID namespaces is that containers can be migrated between hosts while keeping the same process IDs for the processes inside the container.
 2. PID namespaces also allow each container to have its own init (PID 1), the "ancestor of all processes" that manages various system initialization tasks and reaps orphaned child processes when they terminate.
 
 结构[^1]:
 1. From the point of view of a particular PID namespace instance, a process has two PIDs: the PID inside the namespace, and the PID outside the namespace on the host system.
-2. PID namespaces can be nested: a process will have one PID for each of the layers of the hierarchy starting from the PID namespace in which it resides through to the root PID namespace. 
+2. PID namespaces can be nested: a process will have one PID for each of the layers of the hierarchy starting from the PID namespace in which it resides through to the root PID namespace.
 3. A process can see (e.g., view via /proc/PID and send signals with kill()) only processes contained in its own PID namespace and the namespaces nested below that PID namespace.
 
 unshare 和 setns 在处理 pid 不会把 caller 放到该 namespace 中间，原因是
@@ -132,15 +132,6 @@ provide isolation of the system resources associated with networking. Thus, each
     2. 如果没有 mount 虽然可以访问到设备，但是是没有文件系统的，所以其实并不能做什么操作。
 
 ## Doc
-#### Man mount(8)
-
-All files accessible in a Unix system are arranged in one big tree, the file hierarchy, rooted at /.  These files can be spread out over several devices.  The mount command serves to attach the filesystem found on some device to the big file tree.  Conversely, the umount(8) command will detach it again.  The filesystem is used to control how data is stored on the device or provided in a virtual way by network or another services.
-
-```
-➜  c sudo mount a b
-mount: /home/shen/c/b: /home/shen/c/a is not a block device.
-```
-> @todo 似乎最大的问题是 mknod 是什么时候调用的了
 
 ## core struct
 1. fs_context
@@ -306,7 +297,7 @@ static struct file_system_type pipe_fs_type = {
 
 ## vfsmount API
 1. alloc_vfsmnt : 创建 mount 并且对于其中的成员进行基本的初始化。
-2. free_vfsmnt : 
+2. free_vfsmnt :
 3. lookup_mnt
 ```c
 static void free_vfsmnt(struct mount *mnt) // 为什么和 alloc_vfsmnt 不对称啊 !
@@ -342,7 +333,7 @@ struct mount *__lookup_mnt(struct vfsmount *mnt, struct dentry *dentry) // todo 
 
 
 ## do_new_mount
-1. fs_context_for_mount : 初始化 context 
+1. fs_context_for_mount : 初始化 context
 2. parse_monolithic_mount_data && vfs_parse_fs_string : @todo 应该完成 fs 特殊内容相关的参数解析吧 ! Man mount(2/8) 应该有帮助吧 !
 3. vfs_get_tree : 获取 mount root，链接两个系统的
 4. do_new_mount_fc : 处理一些检查工作(和 ns 相关的)，最后利用 graft_tree
@@ -377,7 +368,7 @@ int vfs_get_tree(struct fs_context *fc)
 	/* Get the mountable root in fc->root, with a ref on the root and a ref
 	 * on the superblock.
 	 */
-	error = fc->ops->get_tree(fc); // 最终的任务还是交给 file_system_type::mount 中间，其中搜索或者创建了 super_block 以及初始化 fc 中间 root 
+	error = fc->ops->get_tree(fc); // 最终的任务还是交给 file_system_type::mount 中间，其中搜索或者创建了 super_block 以及初始化 fc 中间 root
 	if (error < 0)
 		return error;
 
@@ -509,7 +500,7 @@ static int graft_tree(struct mount *mnt, struct mount *p, struct mountpoint *mp)
 1. kernel/utsname.c 同样的只有简单的 200 多行的样子，感觉完全就是对称的
     1. @todo  hostname domain , 为什么不和网络的放在一起呀 ?
 
-2. 
+2.
 
 ## 瞎几把复制
 

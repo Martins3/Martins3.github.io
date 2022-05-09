@@ -104,22 +104,6 @@ void init_special_inode(struct inode *inode, umode_t mode, dev_t rdev);
 struct inode *ext4_iget(struct super_block *sb, unsigned long ino)
 ```
 
-chrdev_open :
-实现一个非常诡异的操作，虽然所有的char 开始的时候，def_char_ops ，但是最后在首次打开的时候会在此处进行替换
-完成 i_cdev 的赋值
-dev_t 可以查询对应的 struct cdev 通过kobject 机制
-
-
-在上面操作进行之前，然后就是需要 dev 和 cdev 准备好，**还有对应的path** 
-> 关联路径 : mknod 的含义 ?
-```c
-int cdev_add(struct cdev *p, dev_t dev, unsigned count) 
-
-// dir 和 rdev 关联
-static int ext4_mknod(struct inode *dir, struct dentry *dentry,
-		      umode_t mode, dev_t rdev)
-```
-
 namespace 中间居然都是各种mount 实现。
 
 buffer.c 在16.5 中间含有详细的描述。
@@ -216,4 +200,3 @@ line.
 Rootfs is a special instance of ramfs (or tmpfs, if that's enabled), which is
 always present in 2.6 systems.  You can't unmount rootfs for approximately the
 same reason you can't kill the init process;
-

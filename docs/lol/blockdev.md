@@ -13,7 +13,6 @@
 - [ ] /etc/fstab 的作用是什么
 - [ ] 我无法理解 BMBT 中，为什么一会是 UUID，一会是 PARTUUID 的
 - [ ] 谁会去创建 /dev/nvme1n1p2 的，udev 的那个工具吗 ?
-- [ ] mknod 的原理是什么
 - [ ] 理解一下 IO scheduler 和 blkmq 的关系:
   - https://kernel.dk/blk-mq.pdf
   - [ ] 还是使用 flamegraph 分析一下吧，根本
@@ -35,6 +34,7 @@ static const struct blk_mq_ops nbd_mq_ops = {
 ```
 - [ ] request queue 和 multiqueue 的关系是什么 ?
   - [ ] block/blk-core.c 中，几乎所有的函数的参数都是有 `request_queue` 的
+- [ ] 可能更加有意思的问题是，为什么需要设计 /dev/ 和 major number 和 minor number 出来啊
 
 ## overview
 <p align="center">
@@ -548,7 +548,6 @@ EXPORT_SYMBOL_GPL(bd_unlink_disk_holder);
 1. 好像，这就是给正儿八经的文件系统 mount 到特定的设备上需要的, @todo 所以，过程是下面这样的吗 ?
       1. 系统启动，创建 vfs，/dev 之类的东西
       2. 然后 ext4 等文件系统 mount ， mount 的时候需要 /dev
-
 2. blkdev_get 调用两个有意思的函数: blkdev_get_by_path 和 blkdev_get_by_dev
 
 ```c
@@ -576,82 +575,31 @@ void blkdev_put(struct block_device *bdev, fmode_t mode)
 int blkdev_get(struct block_device *bdev, fmode_t mode, void *holder)
 ```
 
-## fs
-1. bdev 这个 fs 怎么使用，谁使用 ?
-2. fs_context 都是搞什么的 ?
-
-```c
-static const struct super_operations bdev_sops = {
-	.statfs = simple_statfs,
-	.alloc_inode = bdev_alloc_inode,
-	.free_inode = bdev_free_inode,
-	.drop_inode = generic_delete_inode,
-	.evict_inode = bdev_evict_inode,
-};
-
-static int bd_init_fs_context(struct fs_context *fc)
-{
-	struct pseudo_fs_context *ctx = init_pseudo(fc, BDEVFS_MAGIC);
-	if (!ctx)
-		return -ENOMEM;
-	fc->s_iflags |= SB_I_CGROUPWB;
-	ctx->ops = &bdev_sops;
-	return 0;
-}
-
-static struct file_system_type bd_type = {
-	.name		= "bdev",
-	.init_fs_context = bd_init_fs_context,
-	.kill_sb	= kill_anon_super,
-};
+在 mount 的过程中，根据路径得到:
+```txt
+#0  blkdev_get_by_dev (dev=8388611, mode=129, holder=0xffffffff8296b2a0 <ext3_fs_type>) at block/bdev.c:787
+#1  0xffffffff81415352 in blkdev_get_by_path (path=<optimized out>, mode=mode@entry=129, holder=0xffffffff8296b2a0 <ext3_fs_type>) at block/bdev.c:881
+#2  0xffffffff81212297 in get_tree_bdev (fc=0xffff888004425300, fill_super=0xffffffff81310db0 <ext4_fill_super>) at fs/super.c:1242
+#3  0xffffffff81211490 in vfs_get_tree (fc=fc@entry=0xffff888004425300) at fs/super.c:1497
+#4  0xffffffff81238668 in do_new_mount (data=0x0 <fixed_percpu_data>, name=0xffffffff8257820b "/dev/root", mnt_flags=96, sb_flags=<optimized out>, fstype=0xffffc90000013de0 "`qQ\003\200\210\377\377", path=0xffffc90000013de0) at fs/namespace.c:3040
+#5  path_mount (dev_name=dev_name@entry=0xffffffff8257820b "/dev/root", path=path@entry=0xffffc90000013de0, type_page=type_page@entry=0xffff8880044b6000 "ext3", flags=<optimized out>, flags@entry=32769, data_page=data_page@entry=0x0 <fixed_percpu_data>) at fs/namespace.c:3370
+#6  0xffffffff82fef8fd in init_mount (dev_name=dev_name@entry=0xffffffff8257820b "/dev/root", dir_name=dir_name@entry=0xffffffff8257820f "/root", type_page=type_page@entry=0xffff8880044b6000 "ext3", flags=flags@entry=32769, data_page=0x0 <fixed_percpu_data>) at fs/init.c:25
+#7  0xffffffff82fc5568 in do_mount_root (name=name@entry=0xffffffff8257820b "/dev/root", fs=fs@entry=0xffff8880044b6000 "ext3", flags=flags@entry=32769, data=<optimized out>) at init/do_mounts.c:375
+#8  0xffffffff82fc5724 in mount_block_root (name=name@entry=0xffffffff8257820b "/dev/root", flags=32769) at init/do_mounts.c:414
+#9  0xffffffff82fc5a0e in mount_root () at init/do_mounts.c:592
+#10 0xffffffff82fc5b68 in prepare_namespace () at init/do_mounts.c:644
+#11 0xffffffff82fc5442 in kernel_init_freeable () at init/main.c:1626
+#12 0xffffffff81c9e851 in kernel_init (unused=<optimized out>) at init/main.c:1502
+#13 0xffffffff810019a2 in ret_from_fork () at arch/x86/entry/entry_64.S:298
+#14 0x0000000000000000 in ?? ()
 ```
+- 通过 `lookup_bdev` 可以将 path 装换为 `dev_t`
 
-
-
-## sync
-
-```c
-// 感觉block_dev 应该是最底层的东西，但是，实际上，居然调用 filemap 的实现
-// 这两个函数的最终调用 :  do_writepages 也就是实际的写会的操作还是 ext2 ext4 文件系统的writeback
-// TODO 所以block_dev.c 的核心目的是什么 ?
-// 反而 fs/sync.c 中间的 int sync_filesystem(struct super_block *sb) 反而调用比较正常
-int __sync_blockdev(struct block_device *bdev, int wait)
-{
-	if (!bdev)
-		return 0;
-	if (!wait)
-		return filemap_flush(bdev->bd_inode->i_mapping);
-	return filemap_write_and_wait(bdev->bd_inode->i_mapping);
-}
-
-// 被block_layer 调用，比如invalidate dev 的时候，首先将数据写会
-/*
- * Write out and wait upon all dirty data associated with this
- * device.   Filesystem data as well as the underlying block
- * device.  Takes the superblock lock.
- */
-int fsync_bdev(struct block_device *bdev)
-{
-
-  // 居然block 上需要划分是否挂载了文件系统的情况
-  // 是不是，当block_device 上用于swap 的时候，没有fs 然后 。。。
-	struct super_block *sb = get_super(bdev);
-	if (sb) {
-		int res = sync_filesystem(sb);
-		drop_super(sb);
-		return res;
-	}
-	return sync_blockdev(bdev);
-}
-```
+- [ ] 既然在这里是根据路径的，那么 mknod 就一定需要在前面的位置调用的吧
 
 ## interface
 
 ```c
-// 曾经的设想，这些操作是将设备当做文件处理的基础，但是 ?
-// todo 疯狂打脸，block_dev 为什么会需要这个 fs
-
-// TODO 普通文件是如何处理 super_operations 的 ?
 static const struct super_operations bdev_sops = {
 	.statfs = simple_statfs,
 	.alloc_inode = bdev_alloc_inode,
@@ -659,24 +607,6 @@ static const struct super_operations bdev_sops = {
 	.drop_inode = generic_delete_inode,
 	.evict_inode = bdev_evict_inode,
 };
-
-
-// 这就已经很难解释了 ! (
-// 其实不难解释 :
-// 1. 将设备当做文件处理，现在提供一些通用的操作而已
-// 2. 既可以将设备当做文件处理，同时，设备又是fs的基础
-// 3. 注意 : 既然 block dev 要利用 vfs，利用 inode 表示，必然就具有所有的 inode 都有 fops 和 aops
-//      2. 利用 vfs 将 block 设备暴露出来其实是一个非常酷炫的事情: 可以直接 sudo less -f  /dev/nvme0n1p5 访问磁盘中间的内容啊
-//      1. TODO block dev 对应的 inode 是怎么创建的 ?
-//      3. 一个文件系统的功能，实现效果无非就是向上提供 fops ，向下提供 aops
-//          1. 当一个文件对应的 inode 属于某一个文件系统的时候，只需要只有这些 fops 和 aops 就可以实现正常的访问了。
-//          2. 所以，block dev 对应的 inode 一旦持有了对应 fops 和 aops ，其效果就像是 backed by some fs 的效果。
-//          3. TODO 那么 block_dev.c 想要提供的功能就是这有这吗 ?
-//
-// XXX : 需要理解文件系统的作用到底是什么: 如果只有一个文件，那么我需要文件系统吗 ? (显然不需要) (其实 fs 的关键在于实现 get_block_t，给定一个 inode 以及 偏移量，找到对应的 block number ?
-//
-// 3. TODO 所以将/dev/nvme0n1p5 暴露出来的作用是什么 ? 显然是因为存在部分操作需要越过fs
-// 4. TODO 需要借助ucore 理解一下根文件系统挂载 /dev/nvme0n1p5 同时，这是根的所在的地方，这种鸡生蛋的问题 !
 
 static const struct address_space_operations def_blk_aops = {
 	.readpage	= blkdev_readpage,
@@ -691,7 +621,7 @@ static const struct address_space_operations def_blk_aops = {
 };
 
 const struct file_operations def_blk_fops = {
-	.open		= blkdev_open, // todo 很有意思的，似乎是驱动首先注册之后就可以使用了
+	.open		= blkdev_open,
 	.release	= blkdev_close,
 	.llseek		= block_llseek,
 	.read_iter	= blkdev_read_iter,
@@ -706,6 +636,44 @@ const struct file_operations def_blk_fops = {
 	.splice_write	= iter_file_splice_write,
 	.fallocate	= blkdev_fallocate,
 };
+```
+`address_space_operations` 是文件系统注册的，用于向下传导的
+
+- `blkdev_readpage` 和 `ext4_mpage_readpages` 都会调用 `block_read_full_page` 的，但是 ext4 中会去调用 `ext4_get_block` 的实现。
+  - `get_block_t`，给定一个 inode 以及偏移量，找到对应的 block number
+
+简单分析一下 `super_operations` 的过程:
+```plain
+#0  bdev_alloc_inode (sb=0xffff888003455800) at block/bdev.c:388
+#1  0xffffffff8122dab8 in alloc_inode (sb=0xffff888003455800) at fs/inode.c:260
+#2  0xffffffff8122fc78 in new_inode_pseudo (sb=<optimized out>) at fs/inode.c:1018
+#3  0xffffffff8122fcde in new_inode (sb=<optimized out>) at fs/inode.c:1047
+#4  0xffffffff81414e38 in bdev_alloc (disk=disk@entry=0xffff8880043a3b00, partno=partno@entry=1 '\001') at block/bdev.c:479
+#5  0xffffffff81433135 in add_partition (disk=disk@entry=0xffff8880043a3b00, partno=partno@entry=1, start=start@entry=2048, len=204800, flags=0, info=0xffffc900001e1095 at block/partitions/core.c:355
+#6  0xffffffff814338ca in blk_add_partition (state=0xffff8880043d20c0, p=1, disk=0xffff8880043a3b00) at block/partitions/core.c:585
+#7  blk_add_partitions (disk=0xffff8880043a3b00) at block/partitions/core.c:652
+#8  bdev_disk_changed (invalidate=<optimized out>, disk=<optimized out>) at block/partitions/core.c:694
+#9  bdev_disk_changed (disk=disk@entry=0xffff8880043a3b00, invalidate=invalidate@entry=false) at block/partitions/core.c:661
+#10 0xffffffff8141448b in blkdev_get_whole (bdev=bdev@entry=0xffff888003814600, mode=mode@entry=1) at block/bdev.c:679
+#11 0xffffffff814151a7 in blkdev_get_by_dev (holder=0x0 <fixed_percpu_data>, mode=1, dev=<optimized out>) at block/bdev.c:816
+#12 blkdev_get_by_dev (dev=<optimized out>, mode=mode@entry=1, holder=holder@entry=0x0 <fixed_percpu_data>) at block/bdev.c:780
+#13 0xffffffff81430f2f in disk_scan_partitions (disk=disk@entry=0xffff8880043a3b00, mode=mode@entry=1) at ./include/linux/blkdev.h:196
+#14 0xffffffff8143127e in device_add_disk (parent=parent@entry=0xffff8880042f8198, disk=disk@entry=0xffff8880043a3b00, groups=groups@entry=0x0 <fixed_percpu_data>) at block/genhd.c:523
+#15 0xffffffff81765cf7 in sd_probe (dev=0xffff8880042f8198) at drivers/scsi/sd.c:3475
+#16 0xffffffff81722350 in call_driver_probe (drv=0xffffffff829dfce0 <sd_template>, drv=0xffffffff829dfce0 <sd_template>, dev=0xffff8880042f8198) at drivers/base/dd.c:542
+#17 really_probe (drv=0xffffffff829dfce0 <sd_template>, dev=0xffff8880042f8198) at drivers/base/dd.c:621
+#18 really_probe (dev=0xffff8880042f8198, drv=0xffffffff829dfce0 <sd_template>) at drivers/base/dd.c:566
+#19 0xffffffff817224fd in __driver_probe_device (drv=drv@entry=0xffffffff829dfce0 <sd_template>, dev=dev@entry=0xffff8880042f8198) at drivers/base/dd.c:752
+#20 0xffffffff81722579 in driver_probe_device (drv=drv@entry=0xffffffff829dfce0 <sd_template>, dev=dev@entry=0xffff8880042f8198) at drivers/base/dd.c:782
+#21 0xffffffff81722807 in __device_attach_driver (drv=0xffffffff829dfce0 <sd_template>, _data=0xffffc9000004be48) at drivers/base/dd.c:899
+#22 0xffffffff81720569 in bus_for_each_drv (bus=<optimized out>, start=start@entry=0x0 <fixed_percpu_data>, data=data@entry=0xffffc9000004be48, fn=fn@entry=0xffffffff817227a0 <__device_attach_driver>) at drivers/base/bus.c:427
+#23 0xffffffff81721cba in __device_attach_async_helper (_dev=0xffff8880042f8198, cookie=<optimized out>) at drivers/base/dd.c:928
+#24 0xffffffff8109250b in async_run_entry_fn (work=0xffff888004278bc0) at kernel/async.c:127
+#25 0xffffffff81086133 in process_one_work (worker=0xffff88800344da80, work=0xffff888004278bc0) at kernel/workqueue.c:2289
+#26 0xffffffff81086345 in worker_thread (__worker=0xffff88800344da80) at kernel/workqueue.c:2436
+#27 0xffffffff8108d742 in kthread (_create=0xffff888003546040) at kernel/kthread.c:376
+#28 0xffffffff810019a2 in ret_from_fork () at arch/x86/entry/entry_64.S:298
+#29 0x0000000000000000 in ?? ()
 ```
 
 ## 结束语

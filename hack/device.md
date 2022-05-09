@@ -56,7 +56,6 @@ And, this page will contains anything related device except pcie, mmio, pio, int
   2. 应该不会指向glibc 的文件
 2. 修改Makefile　产生的文件放置到指定的文件夹中间去
 3. /dev 和 /proc/devices 两者的关系是什么
-4. 为什么ebbchar是没有 手动mknod 的操作, **显然**应该含有对应的操作
 
 6. 修改scull\_load 文件中间的内容
 7. klogd syslogd
@@ -468,7 +467,6 @@ struct block_device_operations {
 ### 可能有用的问题
 1. 为什么采用fs(everything is file 真的正确吗)的方法，难道真的没有更好的办法吗?
 2. 似乎设备驱动的步骤的总是那几个 : malloc init register driver/ register device
-3. driver 和 device 的区别是什么，为什么需要进行两次注册 ? 此外mknod 和 insmod 各自实现的功能是什么 ?
 4. /dev /sys /proc 这些文件夹和设备驱动的关系是什么?
 5. 为什么在interrupt context 不能调用可能导致睡眠的函数?
 6. 那些机制实现内核可以动态的装载模块的 ? 除了export_symbols 之类的东西

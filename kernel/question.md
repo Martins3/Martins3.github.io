@@ -842,9 +842,6 @@ lrwxrwxrwx root root 0 B Thu Feb 20 11:07:03 2020   nvme0n1 ⇒ ../devices/pc
 ```
 > 为什么全部都是链接文件 ? 为什么要这样 ?
 
-
-#### (device 的内容) mknode syscall 的整个 path
-
 #### (io) iopl ioperm 了解一下
 
 #### (mem) slab_is_available

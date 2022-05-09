@@ -177,7 +177,6 @@ man = manual pages
 mawk = mike brennan's awk
 mc = midnight commander
 mkfs = make filesystem
-mknod = make node
 motd = message of the day
 mozilla = mosaic godzilla
 mtab = mount table
