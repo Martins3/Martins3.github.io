@@ -595,8 +595,6 @@ int blkdev_get(struct block_device *bdev, fmode_t mode, void *holder)
 ```
 - 通过 `lookup_bdev` 可以将 path 装换为 `dev_t`
 
-- [ ] 既然在这里是根据路径的，那么 mknod 就一定需要在前面的位置调用的吧
-
 ## interface
 
 ```c

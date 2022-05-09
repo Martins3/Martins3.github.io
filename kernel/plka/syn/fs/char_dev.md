@@ -8,22 +8,6 @@ char_dev 的内容相比较而言，没有 address_space_operations 和 super_op
 
 3. mknod /dev/kbd c 42 0
 
-## misc
-```c
-// 1. 通过char的device设备查找，注册分析block设备的查找问题
-// 2. char 提供一个蛇皮设备，也是值的分析的好东西
-
-/*
- * Dummy default file-operations: the only thing this does
- * is contain the open that then fills in the correct operations
- * depending on the special file...
- */
-const struct file_operations def_chr_fops = {
-	.open = chrdev_open,
-	.llseek = noop_llseek,
-};
-```
-
 ## register_chrdev_region
 1. alloc a char_device_struct into `chrdevs`
 
@@ -66,7 +50,7 @@ static struct char_device_struct {
 } *chrdevs[CHRDEV_MAJOR_HASH_SIZE]; // chrdevs is global array containing all the char_device_struct pointers
 ```
 
-## 
+##
 
 ```c
 /**

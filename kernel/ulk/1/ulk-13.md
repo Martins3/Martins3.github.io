@@ -12,7 +12,7 @@
 
 7. In the following discussion, we assume that `PAGE_OFFSET` is equal to 0xc0000000—that is, that the kernel linear addresses are in the fourth gigabyte.
 
-- In the section “I/O Architecture,” we give a brief survey of the 80x86 I/O architecture. 
+- In the section “I/O Architecture,” we give a brief survey of the 80x86 I/O architecture.
 - In the section “The Device Driver Model,” we introduce the Linux device driver model.
 - Next, in the section “Device Files,” we show how the VFS associates a special file called “device file” with each different hardware device, so that application
 - programs can use all kinds of devices in the same way.
@@ -104,7 +104,7 @@ and modifies (through the I/O interface) the value of the status register
 
 A typical device controller is the disk controller, which receives high-level commands
 such as a “write this block of data” from the microprocessor (through the I/O interface) and converts them into low-level disk operations such as “position the disk
-head on the right track” and “write the data inside the track.” 
+head on the right track” and “write the data inside the track.”
 **Modern disk controllers are very sophisticated, because they can keep the disk data in on-board fast disk
 caches and can reorder the CPU high-level requests optimized for the actual disk geometry.**
 > device controller 好神奇吗！
@@ -142,7 +142,7 @@ components of the device driver model**. The related top-level directories of th
 | firmware | Files to handle the firmware of some hardware devices.
 
 Relationships between components of the device driver models are expressed in the
-sysfs filesystem as symbolic links between directories and files. 
+sysfs filesystem as symbolic links between directories and files.
 For example, the `/sys/block/sda/device` file can be a symbolic link to a subdirectory nested in `/sys/devices/pci0000:00` representing the SCSI controller connected to the PCI bus.
 Moreover, the `/sys/block/sda/device/block` file is a symbolic link to `/sys/block/sda`, stating that this
 PCI device is the controller of the SCSI disk
@@ -171,7 +171,7 @@ partition)
 
 * ***Kobjects, ksets, and subsystems***
 
-The kobjects can be organized in a hierarchical tree by means of ksets. 
+The kobjects can be organized in a hierarchical tree by means of ksets.
 A kset is a collection of kobjects of the same type—that is, included in the same type of container.
 
 Collections of ksets called subsystems also exist. A subsystem may include ksets of
@@ -459,18 +459,8 @@ device among a group of devices that share the same major number. For instance, 
 group of disks managed by the same disk controller have the same major number
 and different minor numbers.
 
-The `mknod()` system call is used to create device files. It receives the name of the
-device file, its type, and the major and minor numbers as its parameters. Device files
-are usually included in the /dev directory.
-
-As far as the kernel is concerned, **the name of the device file is irrelevant.** If you create a device file named /tmp/disk of type “block” with the major number 3 and minor
-number 0, it would be equivalent to the /dev/hda device file shown in the table. On
-the other hand, device filenames may be significant for some application programs.
-For example, a communication program might assume that the first serial port is
-associated with the `/dev/ttyS0` device file. But most application programs can be configured to interact with arbitrarily named device files.
-
 #### 3.1 User Mode Handling of Device Files
-> 说明了一下 major minor dev_t
+> 说明了一下 major minor `dev_t`
 
 The additional available device numbers are not being statically allocated in the official registry, because they should be used only when dealing with unusual demands
 for device numbers. Actually, today’s preferred way to deal with device files is highly
@@ -495,10 +485,10 @@ A set of User Mode programs, collectively known as the `udev` toolset, must be i
 #### 3.2 VFS Handling of Device Files
 
 The service routine of the `open()` system call also invokes the `dentry_open()` function, which allocates a new
-file object and sets its f_op field to the address stored in `i_fop`—that is, to the address
+file object and sets its `f_op` field to the address stored in `i_fop`—that is, to the address
 of `def_blk_fops` or `def_chr_fops` once again.
 
-> @todo  dentry_open 的作用是什么 ?
+> @todo `dentry_open` 的作用是什么 ?
 
 ## 4 Device Drivers
 
@@ -510,7 +500,7 @@ Memory Access (DMA)” and “Buffering Strategies for Character Devices.”
 #### 4.1 Device Driver Registration
 > @todo device driver registration 一定会在 fs 中间创建出来文件，进而向用户空间提供接口吗 ?
 
-If a device driver is statically compiled in the kernel, its registration is performed during the kernel initialization phase. 
+If a device driver is statically compiled in the kernel, its registration is performed during the kernel initialization phase.
 Conversely, if a device driver is compiled as a kernel module (see Appendix B), its registration is performed when the module is
 loaded. In the latter case, the device driver can also unregister itself when the module is unloaded.
 
@@ -552,7 +542,7 @@ to insert the driver in the data structures of the device driver model.
  */
 int device_add(struct device *dev)
 ```
-> @todo 
+> @todo
 
 When a device driver is being registered, the kernel looks for unsupported hardware
 devices that could be possibly handled by the driver. To do this, it relies on the `match`
@@ -611,14 +601,14 @@ locations must be expressed as addresses greater than PAGE_OFFSET. In the follow
 discussion, we assume that `PAGE_OFFSET` is equal to 0xc0000000—that is, that the kernel linear addresses are in the fourth gigabyte.
 
 1. 内核的确映射了 0xc0000000 之后的虚拟地址空间到低地址的物理空间上。
-    1. 
-    2. 
+    1.
+    2.
 
 There is a problem, however, for the second statement, because the I/O physical
 address is greater than the *last physical address of the system RAM*. Therefore, the
-`0xfc000000` linear address does not correspond to the 0xfc000000 physical address. 
+`0xfc000000` linear address does not correspond to the 0xfc000000 physical address.
 > @todo 什么叫做 : last physical address of the system RAM
-> 
+>
 
 In
 such cases, the kernel Page Tables must be modified to include a linear address that
@@ -630,7 +620,7 @@ corresponding Page Table entries of the canonical kernel Page Tables appropriate
 The `ioremap_nocache()` function differs from ioremap() in that it also disables the
 *hardware cache* when referencing the remapped linear addresses properly.
 > @todo 什么叫做 hardware cache 啊 ?
-> @todo 也就是 访问相当于访问 设备是一个早就存在的操作，使用 ioremap 只是因为部分 page table entry 无法走到正确的位置而已。 如果这样说，resource 的含义到底是什么 ? 
+> @todo 也就是 访问相当于访问 设备是一个早就存在的操作，使用 ioremap 只是因为部分 page table entry 无法走到正确的位置而已。 如果这样说，resource 的含义到底是什么 ?
 > @todo 我感觉只要分析了 resource 以及 System Ram 是如何放到其中的就可以了 !
 
 On some architectures other than the PC, I/O shared memory cannot be accessed by

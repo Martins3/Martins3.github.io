@@ -62,7 +62,7 @@ sudo apt install linux-tools-common linux-tools-generic linux-tools-`uname -r`
 
 ```sh
 perf script | perl stackcollapse-perf.pl  > perf_data.out
-# grep ls perf_data.out | perl flamegraph.pl --title "trace" > flamegraph_dd.svg # 加上一个 grep
+grep mknod perf_data.out | perl flamegraph.pl --title "trace" > flamegraph_dd.svg # 加上一个 grep
 cat perf_data.out | perl flamegraph.pl --title "trace" > flamegraph_dd.svg
 ```
 

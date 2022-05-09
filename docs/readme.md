@@ -76,6 +76,7 @@
 <!-- - [irq domain](./kernel/irq-domain.md) -->
 - [tty, pty, terminal emulator, serial, uart 和 tmux 到底都是什么](kernel/tty.md)
 - 🚧 [syscall](./kernel/syscall.md)
+- [mknod](./kernel/mknod.md)
 
 ## Loongson
 - [X86 上阅读 Loongarch 内核](./loongarch/ccls.md)

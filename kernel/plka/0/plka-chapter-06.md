@@ -1,7 +1,7 @@
 # Professional Linux Kernel Architecture : Device Drivers
-The classic text in this area is **Linux Device Drivers** by Corbet et al. [CRKH05]. 
-We can recommend it wholeheartedly to anyone interested in or charged with writing a device driver. 
-A recent addition to kernel hackers’ bookshelves is **Essential Linux Device Drivers** by Venkateswaran [Ven08]. 
+The classic text in this area is **Linux Device Drivers** by Corbet et al. [CRKH05].
+We can recommend it wholeheartedly to anyone interested in or charged with writing a device driver.
+A recent addition to kernel hackers’ bookshelves is **Essential Linux Device Drivers** by Venkateswaran [Ven08].
 
 1. Here, we document how the kernel sets up and manages data structures and generic infrastructure for device drivers.
 2. Also, we discuss routines that are provided to support device drivers
@@ -36,7 +36,7 @@ Some buses such as USB or FireWire cannot be operated as main buses but always r
 There are several ways of communicating with the hardware attached to the system.
 1. I/O Ports
 
-Commands such as outb (to write a byte), `outw` (to write a word), and `inb` (to read a byte) are implemented in asm-arch/io.h. 
+Commands such as outb (to write a byte), `outw` (to write a word), and `inb` (to read a byte) are implemented in asm-arch/io.h.
 > @todo 我想知道NEMU中间是如何实现在硬件和软件上实现outw 和 inw 的, 应该不是很麻烦
 
 2. I/O Memory Mapping
@@ -47,7 +47,7 @@ System buses such as PCI are also often addressed by means of mapped I/O address
 
 Because the methods used to do this differ greatly between the various
 underlying architectures, the kernel once again provides a small abstraction layer consisting primarily of
-the `ioremap` and `iounmap` commands to map and unmap I/O areas. 
+the `ioremap` and `iounmap` commands to map and unmap I/O areas.
 > RTFSC
 
 Expansion buses such as USB, IEEE1394, and SCSI exchange data and commands with attached devices
@@ -61,7 +61,7 @@ driver but in some cases may also be implemented from userspace.
 @todo
 
 ## 6.2 Access to Devices
-Device special files (often referred to as device files) are used to access expansion devices. 
+Device special files (often referred to as device files) are used to access expansion devices.
 #### 6.2.1 Device Files
 The device is identified not by means of its filename but
 by means of the major and minor number of the file; these numbers are managed as special attributes in
@@ -96,7 +96,7 @@ sources.
 
 Nearly all distributions have thus switched to managing the contents of `/dev` with `udevd`, a daemon that allows
 dynamic device file creation from userland.
-> Man udev(7)  
+> Man udev(7)
 > udev - Dynamic device management
 
 Whenever the kernel detects a device, a kernel object (kobject; see Chapter 1) is created. The object is
@@ -147,13 +147,13 @@ SYSCALL_DEFINE3(ioctl, unsigned int, fd, unsigned int, cmd, unsigned long, arg)
 ```
 
 Character and block devices are not the only device categories managed by the kernel. Network cards
-occupy a special position in the kernel because they do not fit into this category scheme 
+occupy a special position in the kernel because they do not fit into this category scheme
 
 There are also other system devices that do not have device files; these are accessed either by specially
 defined system calls or are simply not accessed from userspace
 
 **Network Cards and Other Devices**
-@todo 
+@todo
 During the development of 2.6, a 16-bit integer (typically unsigned short) was
 used to represent major and minor numbers. The integer was split in a 1:1 ratio, that is, 8 bits for the
 major number and 8 bits for the minor number. This meant that exactly 256 major numbers and 256
@@ -249,7 +249,7 @@ static struct kobj_map *cdev_map;
 static struct kobj_map *bdev_map;
 ```
 解释一下kobj_map的成员变量:
-0. The `mutex` lock serializes access to the hash table. 
+0. The `mutex` lock serializes access to the hash table.
 1. `data`: 当为字符设备的时候，data指向`struct cdev`, 当为块设备的时候，data 指向 `struct genhd`
 2. `next` connects all hash elements in a singly linked list.
 3.  `dev` denotes the device number. Recall that both major and minor numbers are contained in this
@@ -263,7 +263,7 @@ use.
 > @todo hash 在内核中间到底是如何使用的 ? hash 是如何运用于kobj_map的
 
 ===> Character Device Range Database
-> @todo 
+> @todo
 
 
 **Registration Procedures**
@@ -397,7 +397,7 @@ int cdev_add(struct cdev *p, dev_t dev, unsigned count)
 
 ===>  Block Devices
 Registering block devices requires only a single call to `add_disk`. To describe the device properties, an
-instance of `struct genhd` is required as a parameter; 
+instance of `struct genhd` is required as a parameter;
 Earlier kernel versions required block devices to be registered using register_blkdev, which has the
 following prototype:
 ```c
@@ -446,7 +446,7 @@ EXPORT_SYMBOL(device_add_disk);
 
 ## 6.3 Association with the Filesystem
 ##### 6.3.1 Device File Elements in Inodes
-Each file in the virtual file system is associated with just one inode that manages the file properties. 
+Each file in the virtual file system is associated with just one inode that manages the file properties.
 
 1. To uniquely identify that device associated with a device file, the kernel stores the file type
 (block- or character-oriented) in `i_mode` and the major and minor numbers in `i_rdev`. *These two
@@ -584,12 +584,12 @@ struct cdev {
 };
 ```
 1. `kobj` is a kernel object embedded in the structure. As usual, it is used for general management of the data
-structure. 
+structure.
 2. `owner` points to the module (if any) that provides the driver, and ops is a list of file operations
-that implement specific operations to communicate with the hardware. 
+that implement specific operations to communicate with the hardware.
 3. `dev` specifies the device number,
-and 
-4. `count` denotes how many minors are associated with the device. 
+and
+4. `count` denotes how many minors are associated with the device.
 4. `list` allows for implementing a list of all inodes that represent device special files for the device.
 > 1. cdev 中间含有 `struct file_operations *ops;`, 在`init_special_inode` 本身也会初始化cdev 的 `inode->i_fop = &def_chr_fops;`
 > 2. `count` 再一次说明其中的
@@ -597,10 +597,6 @@ and
 Initially, the file operations for character devices are limited to just a single method for opening the
 associated device file (always the first action when using a driver).
 #### 6.4.2 Opening Device Files
-> 总结一下:
-> 0. 实现注册一个 cdev(kobject hash set 之类东西)
-> 1. init_special_node 将 inode 和 cdev 挂钩起来，但是只是告诉 设备号 和 def_chr_fops(chrdev_open)
-> 2. 当真正打开文件，也就会调用inode中间的open 函数，也就是chrdev_open, 此时将struct cdev 和 inode 进一步关联起来，并且替换fops
 
 A specific set of file operations is first installed
 on the basis of the major number. These operations can then be replaced by other operations selected
@@ -662,7 +658,7 @@ static const struct file_operations memory_fops = {
 	.llseek = noop_llseek,
 };
 ```
-当打开设备的时候，memory_open 函数将会被调用，然后进一步根据从minor设备号确定是哪一个设备。
+当打开设备的时候，`memory_open` 函数将会被调用，然后进一步根据从minor设备号确定是哪一个设备。
 
 > **敲** 所以是怎么通过 "/dev/null" 访问到正确的设备的全部过程的。
 > 没有确凿的证据，但是应该是ext4 的文件系统负责 最后调用 自己的mknod 函数实现: inode 路径 设备三者的关联
@@ -766,7 +762,7 @@ EXPORT_SYMBOL(bdget);
 ```
 > 现在的问题是，既然block 设备采用 inode 管理，char 设备对应的部分是如何处理的 ?
 
-In contrast to the character device layer, 
+In contrast to the character device layer,
 the block device layer provides comprehensive `queueing functions` as demonstrated by the request queue associated with each device. Queues of this kind are the reason
 for most of the complexity of the block device layer.
 
@@ -930,7 +926,7 @@ struct disk_part_tbl {
 	struct hd_struct __rcu *part[];
 };
 ```
-> gendisk 中间的 part 被替换为 disk_part_tbl 
+> gendisk 中间的 part 被替换为 disk_part_tbl
 
 
 
@@ -1001,7 +997,7 @@ Consequently, gendisks must not be destroyed by simply freeing them. Use `del_ge
 
 **Connecting the Pieces**
 
-For each **partition** of a block device that has already been opened, there is an instance of `struct block_device`. 
+For each **partition** of a block device that has already been opened, there is an instance of `struct block_device`.
 The objects for partitions are connected with the object for the complete device via
 `bd_contains`. All `block_device` instances contain a link to their generic disk data structure `gen_disk` via
 `bd_disk`. Note that while there are multiple `block_device` instances for a partitioned disk, one gendisk
@@ -1044,7 +1040,7 @@ struct block_device_operations {
 ```
 The functions are not invoked directly by the `VFS code` but indirectly by the operations contained in the standard file operations for block devices,
 `def_blk_fops`.
-> 所以为什么包含这一个结构体的不是 struct block_device 而是 `struct gendisk`. 
+> 所以为什么包含这一个结构体的不是 struct block_device 而是 `struct gendisk`.
 
 **Request Queues**
 Read and write requests to block devices are placed on a queue known as a request queue. The gendisk
@@ -1238,7 +1234,7 @@ struct request_queue {
 `queue_head` is the central list head used to construct a doubly linked list of requests — each element is
 of the data type request discussed below and stands for a request to the block device to read or fetch
 data.As there are various ways of resorting requests, the
-`elevator` element groups the required functions together in the form of function pointers. 
+`elevator` element groups the required functions together in the form of function pointers.
 
 `rq` serves as a cache for request instances. `struct request_list` is used as a data type; in addition to the
 cache itself, it provides two counters to record the number of available free input and output requests.
@@ -1321,7 +1317,7 @@ Until now, nothing is known about the partitions of the device. To remedy this s
 calls several procedures that end up in `rescan_partitions` (see the discussion of the exact call chain in
 the next section). The function tries to identify the partitions on the block device by trial and error. The
 global array `check_part` contains pointers to functions that are able to identify one particular partition
-type. 
+type.
 > `check_part` 位于check.c 中间静态 函数指针数组
 
 #### 6.5.4 Opening Block Device Files
@@ -1406,7 +1402,7 @@ struct gendisk *get_gendisk(dev_t devt, int *partno) // 这一个函数值的研
 ```
 
 > 总的来说，本section last page 讲解了 `__blkdev_get`，分析了其中各种情况，但是其中为什么划分为这些情况，以及打开设备到底要完成什么工作，很迷!
-#### 6.5.5 Request Structure 
+#### 6.5.5 Request Structure
 The very nature of a request is to be kept on a request queue. Such queues are implemented using doubly
 linked lists, and `queuelist` provides the required list element.`q` points back to the request queue to
 which the request belongs, if any.
@@ -1638,7 +1634,7 @@ blk_qc_t generic_make_request(struct bio *bio)
 > 接下来还讨论了因为内核stack有限，如何应对其中递归调用过深的问题
 
 After having resolved the difficulties with recursive `generic_make_request` calls,
-we can go on to examine the default `make_request_fn` implementation `__make_request`. 
+we can go on to examine the default `make_request_fn` implementation `__make_request`.
 Figure 6-18 shows the code flow diagram.
 > 既然是函数指针，必定实现是可以含有多个版本的
 
@@ -1652,7 +1648,7 @@ static blk_qc_t md_make_request(struct request_queue *q, struct bio *bio)
 > 三个描述，没有一个相似的，
 
 **Queue Plugging**
-The kernel uses queue plugging to intentionally prevent requests from being processed. 
+The kernel uses queue plugging to intentionally prevent requests from being processed.
 A request queue may be in one of two states — **either free or plugged**. If it is free, the requests waiting in the queue are
 processed. Otherwise, new requests are added to the list but not processed. The QUEUE_FLAG_PLUGGED
 flag in the `queue_flags` element of request_queue is set when a queue is plugged; the kernel provides
@@ -1782,7 +1778,7 @@ the gendisk instance.
 ## 6.6 Resource Reservation
 I/O ports and I/O memory are two conceptual ways of supporting communication between device drivers
 and devices. So that the various drivers do not interfere with each other, it is essential to reserve ports and
-I/O memory ranges prior to use by a driver. 
+I/O memory ranges prior to use by a driver.
 This ensures that several device drivers do not attempt to access the same resources.
 
 > 一生之敌，IO映射
@@ -2168,7 +2164,7 @@ int device_add(struct device *dev) // 可以检查一下其中的代码，代码
 2. Registering the device in the devices subsystem requires a simple call to kobject_add since subsystem
 membership was already set in device_initialize
 3. Afterward `bus_add_device` adds links within sysfs — one in the bus directory that points to the device,
-and one in the device directory which points to the bus subsystem. 
+and one in the device directory which points to the bus subsystem.
 4. `bus_attach_device` tries to autoprobe
 the device. If a suitable driver can be found, the device is added to `bus->klist_devices`. The device is
 also added to the child list of the parent (before that, the device knew its parent, but the parent did not
@@ -2407,9 +2403,9 @@ referred to as adapters that bridge the gap between Ethernet and USB.
 
 The USB standard defines four different transfer modes, each of which must be explicitly catered for by
 the kernel
-1. Control transfer 
+1. Control transfer
 2. Bulk transfers
-3. Interrupt transfers 
+3. Interrupt transfers
 4. isochronous transfer
 > @todo 上面几个类型的细节并不清楚，但是ldd 比这一个将的清楚多了
 
@@ -2430,7 +2426,7 @@ a presentation of the generic device and driver model, which allows both kernel 
 1. 结构体
 2. 注册函数
 3. 各级打开函数
-4. and more 
+4. and more
 
 ## 参考资料
 ####  https://hyunyoung2.github.io/2016/09/08/Block_Device/
@@ -2439,4 +2435,3 @@ a presentation of the generic device and driver model, which allows both kernel 
 3. each of disks is represented by struct block_deivce and struct gendisk.
 4. When the device file of block device is opened for the first time, the kernel allocates the block_device structure and fills structures in block_device structure.
 > 所以gendisk 和 block_device 的关系到底是什么，为什么感觉两者直接其实是可以相互替代的
-

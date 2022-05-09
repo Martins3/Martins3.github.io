@@ -39,6 +39,7 @@ https://github.com/Kelvinhack/kHypervisor : window 的 ept hypervisor
 https://github.com/Friz-zy/awesome-linux-containers
 ## kubernetes
 - https://www.yuque.com/abser/kubernetes : kubernetes 的原理，有很多的图
+- https://github.com/jindezgm/k8s-src-analysis : Alibaba 的工程师写的
 
 https://github.com/rootsongjc/kubernetes-handbook
   - 这本书太难懂了，使用过多的高深词汇, 比如 Borg : Large-scale cluster management at Google with Borg
