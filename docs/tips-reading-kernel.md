@@ -44,6 +44,7 @@ wget https://raw.githubusercontent.com/brendangregg/FlameGraph/master/flamegraph
 # 为了让 non root 用户可以 perf
 echo 0 > /proc/sys/kernel/perf_event_paranoid
 echo 0 > /proc/sys/kernel/kptr_restrict
+echo 100000 > /proc/sys/kernel/perf_event_max_sample_rate
 ```
 
 ```sh
@@ -100,3 +101,4 @@ kprobe:task_tick_fair
 - [ ] 介绍 [hotspot](https://github.com/KDAB/hotspot)
 - [ ] perf 工具比我想想的要强大，应该好好的重新分析一下
   - https://www.brendangregg.com/FlameGraphs/cpuflamegraphs.html
+- [ ] 内核中存在 gcov 分析工具吗?

@@ -1,21 +1,21 @@
 # genhd.c
 
-1. 700 :  alloc_disk add_disk 
+1. 700 :  alloc_disk add_disk
 2. 1300 : ref counter
 3. end : events
 
 
-## TODO 
+## TODO
 1. block/genhd.c 和 fs/block_dev.c 的关系是什么 ?
     1. genhd.c 处理都是 genhd 这个结构体 : 和具体的驱动处理
-    2. block_dev 处理的是 block_device 这个内容 : 似乎是用来和 vfs 
+    2. block_dev 处理的是 block_device 这个内容 : 似乎是用来和 vfs
     3. 所以，两者如何是如何关联在一起的 ?
 
 2. partion 和 minor number 的关系 ?
 3. add_disk 调用的内容非常的多 !
 4. ldd ch16 在 disk 初始化的过程中间，完成 make_request_fn 的注册，所以，整个 mq ，io scheduler 都是 lib 吗 ? driver 如何和他们协作的 ?
 
-## add_disk 和 alloc_disk 
+## add_disk 和 alloc_disk
 
 ```c
 static inline void add_disk(struct gendisk *disk)
@@ -52,7 +52,7 @@ EXPORT_SYMBOL(device_add_disk);
 ```
 
 
-1. 到底如何管理设备 ? 至少让 fs mount 的时候可以找到它 
+1. 到底如何管理设备 ? 至少让 fs mount 的时候可以找到它
 
 ```c
 /**
@@ -77,5 +77,3 @@ EXPORT_SYMBOL(device_add_disk);
  */
 int register_blkdev(unsigned int major, const char *name) // 很简单，向major_names 中间注册即可发
 ```
-
-

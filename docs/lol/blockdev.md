@@ -17,6 +17,10 @@
 - [ ] 理解一下 IO scheduler 和 blkmq 的关系:
   - https://kernel.dk/blk-mq.pdf
   - [ ] 还是使用 flamegraph 分析一下吧，根本
+- [ ] 从 ldd3 的 driver 的角度分析一下
+- [ ] block/bfq-iosched.c 真的有人使用吗
+- [ ] 将 Linux Block Driver 的实验写一下吧
+- [ ] block 下存在一个 partitions 的文件夹，说实话，一直都不是非常理解啊
 
 ## block layer
 <p align="center">
@@ -26,6 +30,31 @@
 from https://nvmexpress.org/education/drivers/linux-driver-information/
 </p>
 
+## [x] io scheduler 和 multiqueue
+- Kernel Documentaion : https://www.kernel.org/doc/html/latest/block/blk-mq.html
+
+> blk-mq has two group of queues: software staging queues and hardware dispatch queues. When the request arrives at the block layer, it will try the shortest path possible: send it directly to the hardware queue. However, there are two cases that it might not do that: if there’s an IO scheduler attached at the layer or if we want to try to merge requests. In both cases, requests will be sent to the software queue.
+
+> The block IO subsystem adds requests in the software staging queues (represented by struct blk_mq_ctx) in case that they weren’t sent directly to the driver. A request is one or more BIOs. They arrived at the block layer through the data structure struct bio. The block layer will then build a new structure from it, the struct request that will be used to communicate with the device driver. Each queue has its own lock and the number of queues is defined by a per-CPU or per-node basis.
+
+```c
+struct blk_mq_hw_ctx
+```
+原来还是可以修改 scheduler 的:
+- https://linuxhint.com/change-i-o-scheduler-linux/
+- https://askubuntu.com/questions/78682/how-do-i-change-to-the-noop-scheduler
+
+检查了一下自己的机器的:
+```c
+➜ cat /sys/block/nvme0n1/queue/scheduler
+
+[none] mq-deadline
+```
+应该只是支持 block/mq-deadline.c ，但是实际上并不会采用任何的 scheduler 的。
+
+![](./img/fio.svg)
+
+从函数 `blk_start_plug` 的注释说，plug 表示向 block layer 添加数据。
 
 ## ldd3 的驱动理解
 
@@ -35,6 +64,9 @@ from https://nvmexpress.org/education/drivers/linux-driver-information/
     - 从 virtio_blk.c 中间来看 : major 放到局部变量中间，所以实际功能是分配 major number
 
 - [ ] 似乎很多的初始化工作是放到了 init 中间了
+
+## [ ] partitions
+构建多个分区显然是一个很划算的事情。
 
 ## nbd
 将 `blk_mq_ops` 替换成为网络的接口就可以了

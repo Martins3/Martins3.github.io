@@ -109,9 +109,7 @@
 5. 注意: block layer 是可以被 disable 掉的，当其被 disable 掉之后，那么
 6. 统计模块在什么地方 ?
 7. io control 的位置似乎所有的地方都没有分析过 !
-
 8. blk-flush 和 blk-core 的作用是什么 ?
-
 8. submit_bio 开始分析
 
 对于 IO scheduler 我早就非常的不爽了，和当前的 SSD 的原理完全不符合，所以对于 ssd 之类 driver 是如何绕过这一个东西, 从 bio 层次开始分析。

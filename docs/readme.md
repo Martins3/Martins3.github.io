@@ -70,7 +70,7 @@
 
 ## Linux Environment Programming
 - [musl 阅读笔记](./linux/musl.md)
-- [认识 elf](./linux/elf.md)
+- 🚧 [认识 elf](./linux/elf.md)
 
 ## Linux Kernel
 <!-- - [irq domain](./kernel/irq-domain.md) -->
