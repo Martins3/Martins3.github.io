@@ -53,8 +53,8 @@
 - 🚧 [设备直通: VFIO](./lol/vfio.md)
 
 ## UEFI
-- [Linux 下 UEFI 学习环境搭建](./bmbt/uefi-linux.md)
-- [UEFI 入门](./bmbt/uefi-beginner.md)
+- [Linux 下 UEFI 学习环境搭建](./uefi/uefi-linux.md)
+- [UEFI 入门](./uefi/uefi-beginner.md)
 
 ## Tips
 - [How to cross Great Fire Wall](./gfw.md)

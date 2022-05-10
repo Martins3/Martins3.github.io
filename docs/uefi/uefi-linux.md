@@ -23,14 +23,13 @@
 ## 运行第一个 UEFI 程序
 ### 编译 efi
 参考教程 https://www.rodsbooks.com/efi-programming/hello.html
-但是这个教程有点老，参考 [stackoverflow](https://stackoverflow.com/questions/31514866/how-to-compile-uefi-application-using-gnu-efi/31517520)
-可以修复。
+但是这个教程有点老，参考 [stackoverflow](https://stackoverflow.com/questions/31514866/how-to-compile-uefi-application-using-gnu-efi/31517520) 可以修复。
 
-者看[我写的](https://github.com/Martins3/Martins3.github.io/tree/master/docs/bmbt/uefi/gnuefi)，将其中的 main.c 和 Makefile 拷贝出来，make 就可以得到 hello.efi 了
+或者参考[我写的](https://github.com/Martins3/Martins3.github.io/tree/master/docs/uefi/uefi/gnuefi)，将其中的 main.c 和 Makefile 拷贝出来，make 就可以得到 hello.efi 了
 
 ### 运行 efi
-参考 [osdev](https://wiki.osdev.org/UEFI#Linux.2C_root_not_required) 上，我构建出来了一个
-[小脚本](https://github.com/Martins3/Martins3.github.io/tree/master/docs/bmbt/uefi/uefi.sh)，其参数为将要测试的 efi.
+参考 [osdev](https://wiki.osdev.org/UEFI#Linux.2C_root_not_required) 上，我构建出来了一个小脚本
+[uefi.sh](https://github.com/Martins3/Martins3.github.io/tree/master/docs/uefi/uefi/uefi.sh)，其参数为将要测试的 efi.
 然后在 QEMU 的图形界面中，可以看到 UEFI shell, 在其中输入 FS0:，最后执行程序。
 
 ## 编译 edk2
@@ -60,7 +59,7 @@ build
 ```c
 ➜  X64 git:(master) ✗ pwd
 /home/maritns3/core/ld/edk2-workstation/edk2/Build/MdeModule/DEBUG_GCC5/X64
-➜  X64 git:(master) ✗ /home/maritns3/core/vn/docs/bmbt/uefi/uefi.sh HelloWorld.efi
+➜  X64 git:(master) ✗ /home/maritns3/core/vn/docs/uefi/uefi/uefi.sh HelloWorld.efi
 ```
 ![](./uefi/img/MdeModulePkg_hello_world.png)
 
@@ -72,7 +71,7 @@ build
 !include MdePkg/MdeLibs.dsc.inc
 ```
 
-最后我制作出来了自己的一个[小 demo](https://github.com/Martins3/Martins3.github.io/tree/master/docs/bmbt/uefi/BootloaderPkg/)，将其拷贝到 edk2 的目录中。
+最后我制作出来了自己的一个[小 demo](https://github.com/Martins3/Martins3.github.io/tree/master/docs/uefi/uefi/BootloaderPkg/)，将其拷贝到 edk2 的目录中。
 ```sh
 build -p BootloaderPkg/BootloaderPkg.dsc
 ```
@@ -116,7 +115,7 @@ build -p AppPkg/AppPkg.dsc
 ```sh
 -drive file=fat:rw:${VirtualDrive},format=raw,media=disk
 ```
-3. VirtualDrive 中的内容见 https://github.com/Martins3/Martins3.github.io/tree/master/docs/bmbt/uefi/VirtualDrive
+3. VirtualDrive 中的内容见 https://github.com/Martins3/Martins3.github.io/tree/master/docs/uefi/uefi/VirtualDrive
 
 
 - https://stackoverflow.com/questions/22641605/running-an-efi-application-automatically-on-boot
@@ -190,7 +189,7 @@ Error: cc or cc_flags is not defined!
 - 原来的 compile_commands.json 都是生成在 package 下的，比如 AppPkg/compile_commands.json，如果同时阅读多个 pkg 的代码，还需要手动将这些 compile_commands.json 合并起来，我调整了一下脚本，让所有的信息都是放到 edk2 的根路径上的
 
 对于 tag 为 `edk2-stable202111`
-1. 添加修改之后的 [edk2_compile_commands.py](https://github.com/Martins3/Martins3.github.io/tree/master/docs/bmbt/uefi/compile_commands_patch/edk2_compile_commands.py)
+1. 添加修改之后的 [edk2_compile_commands.py](https://github.com/Martins3/Martins3.github.io/tree/master/docs/uefi/uefi/compile_commands_patch/edk2_compile_commands.py)
 2. 修改 BaseTools/Source/Python/AutoGen/GenMake.py
   - 在文件头修改 `from edk2_compile_commands import update_compile_commands_file`
   - 在 1067 行下添加 `update_compile_commands_file(TargetDict, self._AutoGenObject, self.Macros)`
@@ -260,6 +259,7 @@ UefiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE *SystemTable) {
 进入到 template 目录中，按照 https://github.com/rust-osdev/uefi-rs/blob/master/BUILDING.md 操作即可。
 
 相对 edk2 而言，uefi-rs 的代码量非常少，如果你恰好是 Rust 高手，读读其代码还是相当有意思的。
+
 ## 资源
 - Robin 的 blog: http://yiiyee.cn/blog/
 - https://wiki.osdev.org/GNU-EFI
