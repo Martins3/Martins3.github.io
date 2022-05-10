@@ -1,26 +1,26 @@
 # QEMU 中的锁
 <!-- vim-markdown-toc GitLab -->
 
-- [Big QEMU Lock](#big-qemu-lock)
-- [BQL Advanced Topic](#bql-advanced-topic)
-  - [migration](#migration)
-  - [main loop](#main-loop)
-  - [rcu](#rcu)
-  - [interrupt_request](#interrupt_request)
-  - [qemu_mutex_iothread_locked](#qemu_mutex_iothread_locked)
-- [resources shared between vCPU thread](#resources-shared-between-vcpu-thread)
-- [tcg vCPU thread](#tcg-vcpu-thread)
-    - [lifecycle of vCPU thread](#lifecycle-of-vcpu-thread)
-    - [exit_request](#exit_request)
-    - [halt](#halt)
-- [locks between vCPU](#locks-between-vcpu)
-      - [sync between main loop and vCPU](#sync-between-main-loop-and-vcpu)
-    - [current_cpu](#current_cpu)
-    - [setlongjmp](#setlongjmp)
-  - [queue_work_on_cpu](#queue_work_on_cpu)
-  - [exclusive context](#exclusive-context)
-- [misc](#misc)
-  - [mmap_lock](#mmap_lock)
+* [Big QEMU Lock](#big-qemu-lock)
+* [BQL Advanced Topic](#bql-advanced-topic)
+  * [migration](#migration)
+  * [main loop](#main-loop)
+  * [rcu](#rcu)
+  * [interrupt_request](#interrupt_request)
+  * [qemu_mutex_iothread_locked](#qemu_mutex_iothread_locked)
+* [resources shared between vCPU thread](#resources-shared-between-vcpu-thread)
+* [tcg vCPU thread](#tcg-vcpu-thread)
+    * [lifecycle of vCPU thread](#lifecycle-of-vcpu-thread)
+    * [exit_request](#exit_request)
+    * [halt](#halt)
+* [locks between vCPU](#locks-between-vcpu)
+      * [sync between main loop and vCPU](#sync-between-main-loop-and-vcpu)
+    * [current_cpu](#current_cpu)
+    * [setlongjmp](#setlongjmp)
+  * [queue_work_on_cpu](#queue_work_on_cpu)
+  * [exclusive context](#exclusive-context)
+* [misc](#misc)
+  * [mmap_lock](#mmap_lock)
 
 <!-- vim-markdown-toc -->
 之所以使用 lock ，是因为存在共享的资源。
@@ -29,7 +29,7 @@
 使用 Big QEMU Lock (下面简称为 BQL) 是因为设备的模拟是串行的。
 比如 pic 中断控制器在 QEMU 中描述在 `hw/intc/i8259.c` 中, pic 的状态保存在 `PICCommonState` 中，多个 vCPU thread 访问 pic 的时候，
 那就需要靠 BQL 来实现互斥，只能逐个调用 pic 的模拟函数，也就是 pic_ioport_read /  pic_ioport_write 。
-如果一个 vCPU 在执行 pic_ioport_write，另一个 vCPU 在 pic_ioport_read 的时候，其获取的状态可能错误的中间状态。
+如果一个 vCPU 在执行 `pic_ioport_write`，另一个 vCPU 在 pic_ioport_read 的时候，其获取的状态可能错误的中间状态。
 
 回忆一下，[QEMU 中的线程和事件循环](https://martins3.github.io/qemu/threads.html) 中 QEMU 的执行模型:
 - vCPU 在执行过程中，通过 pio / mmio 访问设备, 其模拟最后是通过调用 MemoryRegionOps 实现的
@@ -364,15 +364,15 @@ queue_work_on_cpu 存在三个调用者:
 ### exclusive context
 使用 rr 作为例子，mttcg 差不多类似:
 
-- rr_cpu_thread_fn
-  - tcg_cpus_exec
-    - cpu_exec_start :star:
-    - cpu_exec
-    - cpu_exec_end :star:
-  - cpu_exec_step_atomic
-    - start_exclusive :star:
-    - end_exclusive :star:
-  - rr_wait_io_event
+- `rr_cpu_thread_fn`
+  - `tcg_cpus_exec`
+    - `cpu_exec_start` :star:
+    - `cpu_exec`
+    - `cpu_exec_end` :star:
+  - `cpu_exec_step_atomic`
+    - `start_exclusive` :star:
+    - `end_exclusive` :star:
+  - `rr_wait_io_event`
     - qemu_wait_io_event_common
       - start_exclusive() :star:
       - `wi->func(cpu, wi->data)`
@@ -411,11 +411,11 @@ void mmap_lock(void)
     }
 }
 ```
-利用 mmap_lock_count 一个 thread 可以反复上锁，但是可以防止其他 thread 并发访问。
+利用 `mmap_lock_count` 一个 thread 可以反复上锁，但是可以防止其他 thread 并发访问。
 
-参考两个资料，可以知道 mmap_lock 是只有用户态翻译才需要的:
+参考两个资料，可以知道 `mmap_lock` 是只有用户态翻译才需要的:
 1. https://qemu.readthedocs.io/en/latest/devel/multi-thread-tcg.html
-2. tcg_region_init 上面的注释
+2. `tcg_region_init` 上面的注释
 
 用户态的线程数量可能很大，所以创建多个 region 是不合适的，所以只创建一个，
 而且用户进程的代码大多数都是相同，所以 tb 相关串行也问题不大。

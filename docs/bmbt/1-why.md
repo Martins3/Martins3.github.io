@@ -20,5 +20,6 @@
 ## 为什么系统级二进制翻译器需要运行在裸机上
 
 ### unikernel
+- [A Linux in Unikernel Clothing](https://dl.acm.org/doi/pdf/10.1145/3342195.3387526)
 
 ### Guest 访存加速

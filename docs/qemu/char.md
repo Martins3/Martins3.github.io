@@ -2,21 +2,21 @@
 
 <!-- vim-markdown-toc GitLab -->
 
-- [Architecture](#architecture)
-  - [Chardev](#chardev)
-  - [CharBackend](#charbackend)
-- [init](#init)
-  - [Chardev 的创建](#chardev-的创建)
-  - [SerialState](#serialstate)
-- [附录](#附录)
-  - [后端的一点抽象](#后端的一点抽象)
-  - [mux](#mux)
+* [Architecture](#architecture)
+  * [Chardev](#chardev)
+  * [CharBackend](#charbackend)
+* [init](#init)
+  * [Chardev 的创建](#chardev-的创建)
+  * [SerialState](#serialstate)
+* [附录](#附录)
+  * [后端的一点抽象](#后端的一点抽象)
+  * [mux](#mux)
 
 <!-- vim-markdown-toc -->
 
 如果想要大致了解 printf 的实现，从上到下参考如下内容:
 1. 用户态 : [musl](https://www.musl-libc.org/) 和 《程序员的自我修养》
-2. 内核态 : [TTY 到底是什么？](https://www.kawabangga.com/posts/4515) 和 Linux Device Driver 可以参考
+2. 内核态 : [TTY 到底是什么？](https://www.kawabangga.com/posts/4515) 或者我写的 [tty 到底是什么](../kernel/tty.md)
 3. 硬件: 参考 serial parallel 等字符设备的手册
 
 当然这这是考虑一些很粗略的情况了，今天这些分析的是，QEMU 是如何模拟字符设备的，当 guest 读写 pio / mmio 导致 vmexit
@@ -86,15 +86,14 @@ struct CharBackend {
 };
 ```
 CharBackend 中四个 hook 都是前端注册上的
-- chr_event : 因为 backend 收到一些特殊信息需要 frontend 来采取特殊操作，比如 OPEN CLOSE
-- chr_be_change : 当 backend 发生变化的时候采取的东西
-- chr_can_read / chr_read
+- `chr_event` : 因为 backend 收到一些特殊信息需要 frontend 来采取特殊操作，比如 OPEN CLOSE
+- `chr_be_change` : 当 backend 发生变化的时候采取的东西
+- `chr_can_read` / `chr_read`
   - read 模拟过程是: 如果 host 的"设备" ready 了，比如标准输入中有数据了，然后 backend 读去数据，最后发送到 frontend，frontend 处理完成之后将通过中断的方法告诉 vCPU
   - 显然不能使用阻塞的方式等待 host 的"设备" ready, QEMU 已经有了一套完整的事件监听机制来实现异步的等待。
-  - 当 ready 之后，serial 在 serial_realize_core 中调用 qemu_chr_fe_set_handlers 注册的 serial_can_receive1 就可以被调用
+  - 当 ready 之后，serial 在 `serial_realize_core` 中调用 `qemu_chr_fe_set_handlers` 注册的 `serial_can_receive1` 就可以被调用
 
-```c
-/*
+```txt
 #4  0x0000555555a208c7 in serial_can_receive1 (opaque=<optimized out>) at /home/maritns3/core/xqm/hw/char/serial.c:609
 #5  0x0000555555c4cca0 in mux_chr_read (opaque=<optimized out>, buf=<optimized out>, size=<optimized out>) at /home/maritns3/core/xqm/chardev/char-mux.c:223
 #6  0x0000555555c4ac3d in fd_chr_read (chan=0x55555649e810, cond=<optimized out>, opaque=<optimized out>) at /home/maritns3/core/xqm/chardev/char-fd.c:68
@@ -163,13 +162,13 @@ void serial_hds_isa_init(ISABus *bus, int from, int to)
     }
 }
 ```
-当 serial_isa_init 中的参数 serial_hd(i) 就是之前创建的 Chardev
+当 `serial_isa_init` 中的参数 `serial_hd(i)` 就是之前创建的 Chardev
 
-- serial_isa_init
-  - qdev_prop_set_chr : 这里的 qom property 的操作最后会调用到
-    - set_chr
-      - qemu_chr_find : 获取 chardev 的名字 "serial0"
-      - qemu_chr_fe_init : 初始化 SerialState::CharBackend
+- `serial_isa_init`
+  - `qdev_prop_set_chr` : 这里的 qom property 的操作最后会调用到
+    - `set_chr`
+      - `qemu_chr_find` : 获取 chardev 的名字 "serial0"
+      - `qemu_chr_fe_init` : 初始化 SerialState::CharBackend
 
 ```c
 static Property serial_isa_properties[] = {
@@ -194,7 +193,7 @@ const PropertyInfo qdev_prop_chr = {
 - chardev
   - char-io.c : 主要处理 epoll 等机制
   - char-fe.c : 主要是 CharBackend 的进一步的进一步封装，正如其文件名，处理前端的
-  - char-fd.c : 因为有好几个后端比如 file stdio 都是使用 fd 来索引，这些后端有一些通用属性，所以抽象出来 TYPE_CHARDEV 的子类 TYPE_CHARDEV_FD
+  - char-fd.c : 因为有好几个后端比如 file stdio 都是使用 fd 来索引，这些后端有一些通用属性，所以抽象出来 `TYPE_CHARDEV` 的子类 `TYPE_CHARDEV_FD`
 
 ```c
 static void char_fd_class_init(ObjectClass *oc, void *data)

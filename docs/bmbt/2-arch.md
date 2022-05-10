@@ -9,13 +9,13 @@
 - QEMU 的代码质量更加可靠，如果出现问题，那么一定是自己的问题
 
 ## 如何让 QEMU 运行在裸金属上
-
 - QEMU 依赖了外部的库
   - 主要是 glibc 和 glib [^6]
   - 实际上，
 - QEMU 调用了很多系统调用，这些系统调用需要操作系统的支持
 
 ## QEMU 被重构的部分
+按照 interface.md 梳理一遍吧
 - memory model
 - thread
 - option

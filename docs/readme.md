@@ -18,7 +18,7 @@
 ## Virtualization && Binary Translation
 - [Loongson Dune : A Process Level Virtualization framework Base on KVM](https://github.com/Martins3/loongson-dune)
 - QEMU 源码分析
-  - [QEMU 概叙](./qemu/file-structure.md)
+  - [QEMU 概叙](./qemu/introduction.md)
   - [QEMU 初始化过程分析](./qemu/init.md)
   - [QEMU 的 memory model 设计](./qemu/memory.md)
   - [QEMU 的 softmmu 设计](./qemu/softmmu.md)
@@ -74,7 +74,7 @@
 
 ## Linux Kernel
 <!-- - [irq domain](./kernel/irq-domain.md) -->
-- [tty, pty, terminal emulator, serial, uart 和 tmux 到底都是什么](kernel/tty.md)
+- [tty 到底是什么](./kernel/tty.md)
 - 🚧 [syscall](./kernel/syscall.md)
 - [mknod](./kernel/mknod.md)
 

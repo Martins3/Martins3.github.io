@@ -44,7 +44,6 @@
 * [highmem](#highmem)
 * [memory consistency](#memory-consistency)
 * [pmem](#pmem)
-* [memory model](#memory-model)
     * [vmemmap](#vmemmap)
 * [mmio](#mmio)
 * [physical memory initialization](#physical-memory-initialization)
@@ -2066,30 +2065,6 @@ DAX 设置 : 到时候在分析吧!
 
 目前观察到的generic_file_read_iter 和 file_operations::mmap 的内容对于 DAX 区分对待的，但是内容远远不该如此，不仅仅可以越过 page cache 机制，而且 page reclaim 全部可以跳过。
 
-## memory model
-- Shared Memory Consistency Models: A Tutorial
-  - 这是最经典的项目了
-
-字节团队写的，应该是相当清楚了:
-https://mp.weixin.qq.com/s/wt5b5e1Y1yG1kDIf0QPsvg
-
-- https://kernelgo.org/memory-model.html : c++ 内存模型
-
-https://lotabout.me/2019/QQA-What-is-Sequential-Consistency/
-- 介绍什么是顺序一致性
-
-- https://bitbashing.io/papers.html : 其中有一篇是关于 memory concurrency 的
-
-在 go 语言中，因为没有考虑到 arm 的弱内存序导致的问题:
-https://mzh.io/how-go-core-team-debug-1-memory-model/
-
-Each memory model defines `pfn_to_page()` and page_to_pfn() helpers that allow the conversion from PFN to struct page and vice versa. [^12]
-
-- [ ] https://randomascii.wordpress.com/2020/11/29/arm-and-lock-free-programming/
-- [ ] [^12]
-- [ ] https://kernelgo.org/memory-model.html : really nice blog with cpp perspective
-- [ ] https://research.swtch.com/mm : Rust 的 contributor ? 写的
-
 #### vmemmap
 
 ## mmio
@@ -3054,7 +3029,6 @@ https://mp.weixin.qq.com/s/ZLXAz8dAdcqS52MzmXU_YA
 [^9]: [lwn : Explicit pinning of user-space pages](https://lwn.net/Articles/807108/)
 [^10]: [stackoverflow : Using move_pages() to move hugepages?](https://stackoverflow.com/questions/59726288/using-move-pages-to-move-hugepages)
 [^11]: [kernel doc : page migratin](https://www.kernel.org/doc/html/latest/vm/page_migration.html)
-[^12]: [kernel doc : memory model](https://www.kernel.org/doc/html/latest/vm/memory-model.html)
 [^13]: [lwn : Smarter shrinkers](https://lwn.net/Articles/550463/)
 [^14]: [kernel doc : page owner: Tracking about who allocated each page](https://www.kernel.org/doc/html/latest/vm/page_owner.html)
 [^16]: [kernel doc : Driver porting: low-level memory allocation](https://lwn.net/Articles/22909/)

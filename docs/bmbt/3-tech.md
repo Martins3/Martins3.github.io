@@ -12,3 +12,4 @@ https://www.cs.cmu.edu/afs/cs/academic/class/15213-f12/www/lectures/12-linking.p
   - 频率
   - 中断路由
 - PCI bridge
+- PCI hole

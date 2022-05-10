@@ -1,4 +1,4 @@
-# tty, serial, uart 和 pty, terminal emulator, tmux 到底都是什么
+# tty 到底是什么
 
 > 本文多次使用 QEMU 和 FlameGraph 做实验，相关的使用可以参考其他文档，或者我的[blog](../tips-reading-kernel.md)
 
