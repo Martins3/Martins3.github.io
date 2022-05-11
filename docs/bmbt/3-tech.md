@@ -1,5 +1,7 @@
 # 裸金属二进制翻译器的技术细节
 
+- [文档](https://loongson.github.io/LoongArch-Documentation/README-CN.html)
+
 ## Serial
 从这里找信息:
 https://github.com/loongson-community/docs
@@ -10,9 +12,16 @@ https://www.cs.cmu.edu/afs/cs/academic/class/15213-f12/www/lectures/12-linking.p
 ## 裸机中的注意点
 - 串口
   - 频率
-  - 中断路由
+  - 中断控制器
 - PCI bridge
 - PCI hole
+- `cpu_has_hypervisor` 包围的部分
+
+如果看 7A1000 用户手册，似乎 uart 是这样的配置
+![](./7a1000-usermanual/table-5-1.png)
+
+但是实际上，串口走的是 legacy inct 的 10 位
+![](./3a5000-usermanual/fig-11-1.png)
 
 # softmmu 和 memory model 的移植的设计
 
@@ -51,11 +60,11 @@ https://www.cs.cmu.edu/afs/cs/academic/class/15213-f12/www/lectures/12-linking.p
 ## 重写的函数接口
 | function                          | 作用                                                                                                          |
 |-----------------------------------|---------------------------------------------------------------------------------------------------------------|
-| address_space_translate_for_iotlb | 根据 addr 得到 memory region 的                                                                               |
-| memory_region_section_get_iotlb   | 计算出来当前的 section 是 AddressSpaceDispatch 中的第几个 section, 之后就可以通过 addr 获取 section 了        |
-| qemu_map_ram_ptr                  | 这是一个神仙设计的接口，如果参数 ram_block 的接口为 NULL, 那么 addr 是 ram addr， 如果不是，那么是 ram 内偏移 |
-| cpu_addressspace                  |                                                                                                               |
-| iotlb_to_section                  |                                                                                                               |
+| `address_space_translate_for_iotlb` | 根据 addr 得到 memory region 的                                                                               |
+| `memory_region_section_get_iotlb`   | 计算出来当前的 section 是 `AddressSpaceDispatch` 中的第几个 section, 之后就可以通过 addr 获取 section 了        |
+| `qemu_map_ram_ptr`                  | 这是一个神仙设计的接口，如果参数 `ram_block` 的接口为 NULL, 那么 addr 是 ram addr， 如果不是，那么是 ram 内偏移 |
+| `cpu_addressspace`                  |                                                                                                               |
+| `iotlb_to_section`                  |                                                                                                               |
 
 #### 真的需要移除掉 iotlb 机制吗
 而 IOTLB 的 MMIO 移除掉，让 `io_readx` 和 `io_writex` 中直接走 memory region translate 的操作
@@ -81,7 +90,7 @@ https://www.cs.cmu.edu/afs/cs/academic/class/15213-f12/www/lectures/12-linking.p
 | function                            | para                                            | res                       |
 |-------------------------------------|-------------------------------------------------|---------------------------|
 | `address_space_translate_for_iotlb` | [cpu asidx](获取地址) addr [attrs prot](没用的) | MemoryRegionSection, xlat |
-| `address_space_translate`           | as addr [is_write attrs](没用的)                | MemoryRegion, xlat, len   |
+| `address_space_translate`           | as, addr, [`is_write attrs`](没用的)                | MemoryRegion, xlat, len   |
 | `address_space_translate_internal`  | d, addr, `resolve_subpage`                      | xlat, plen                |
 
 

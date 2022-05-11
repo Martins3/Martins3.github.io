@@ -244,6 +244,26 @@ static const struct blk_mq_ops nbd_mq_ops = {
 
 ## 一些基本理论
 
+### /etc/fstab
+- [ ] 所以 /etc/fstab 到底是如何被使用的呀
+
+```txt
+➜  vn git:(master) ✗ cat /etc/fstab
+# /etc/fstab: static file system information.
+#
+# Use 'blkid' to print the universally unique identifier for a
+# device; this may be used with UUID= as a more robust way to name devices
+# that works even if disks are added and removed. See fstab(5).
+#
+# <file system> <mount point>   <type>  <options>       <dump>  <pass>
+# / was on /dev/nvme0n1p2 during installation
+UUID=7876593d-555f-4a0d-8c9f-9d90e1a94343 /               ext4    errors=remount-ro 0       1
+# /boot/efi was on /dev/nvme0n1p1 during installation
+UUID=9EDC-2FD6  /boot/efi       vfat    umask=0077      0       1
+/swapfile                                 none            swap    sw              0       0
+/dev/disk/by-uuid/12855c04-ce76-47a0-840c-206253052ccf /home/maritns3/hack auto nosuid,nodev,nofail,x-gvfs-show 0 0
+```
+
 ### /sys/dev/block/ 的构建位置
 
 ## gui tools

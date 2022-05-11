@@ -25,8 +25,7 @@
 #0  i8042_build_aml (isadev=0x5555566eb400, scope=0x55555699a990) at ../hw/input/pckbd.c:564
 #1  0x000055555590c474 in isa_build_aml (bus=<optimized out>, scope=scope@entry=0x55555699a990) at ../hw/isa/isa-bus.c:214
 #2  0x0000555555a6e08d in build_isa_devices_aml (table=table@entry=0x555556909540) at /home/maritns3/core/kvmqemu/include/hw/isa/isa.h:17
-#3  0x0000555555a71281 in build_dsdt (machine=0x5555566c0400, pci_hole64=<synthetic pointer>, pci_hole=<synthetic pointer>, misc=<synthetic pointer>, pm=0x7fffffffd450,
- linker=0x5555568d6bc0, table_data=0x555556aae0a0) at ../hw/i386/acpi-build.c:1403
+#3  0x0000555555a71281 in build_dsdt (machine=0x5555566c0400, pci_hole64=<synthetic pointer>, pci_hole=<synthetic pointer>, misc=<synthetic pointer>, pm=0x7fffffffd450, linker=0x5555568d6bc0, table_data=0x555556aae0a0) at ../hw/i386/acpi-build.c:1403
 #4  acpi_build (tables=tables@entry=0x7fffffffd530, machine=0x5555566c0400) at ../hw/i386/acpi-build.c:2374
 #5  0x0000555555a73e8e in acpi_setup () at /home/maritns3/core/kvmqemu/include/hw/boards.h:24
 #6  0x0000555555a5fd1f in pc_machine_done (notifier=0x5555566c0598, data=<optimized out>) at ../hw/i386/pc.c:789
@@ -87,6 +86,8 @@ DSDT address to be filled by Guest linker at runtime
 
 
 # la 中如何处理 acpi
+- [ ] 似乎现在 QEMU 中都是支持的了，还是可以看看的
+
 感觉 ramooflax 的处理是相当的简单，其实他甚至可以在 acpi 解析之前就可以来初始化 e1000
 
 ramooflax 不需要模拟 acpi 设备空间，因为设备本身就是相同的
@@ -133,19 +134,19 @@ ramooflax 不需要模拟 acpi 设备空间，因为设备本身就是相同的
 - [ ] 那么 e1000 需要加入到 acpi 的空间中吗 ?
 
 
-- acpi_init
-  - [ ] init_acpi_device_notify
-  - acpi_bus_init
-    - acpi_bus_init_irq
-    - bus_register(&acpi_bus_type);
-  - [ ] pci_mmcfg_late_init : 龙芯自定义的一些的东西
-  - acpi_iort_init
-  - acpi_scan_init
-    - acpi_bus_scan : 进一步调用 acpi_bus_check_add 来探测设备，将探测到的设备初始化为 acpi_device
-      - device_attach
+- `acpi_init`
+  - [ ] `init_acpi_device_notify`
+  - `acpi_bus_init`
+    - `acpi_bus_init_irq`
+    - `bus_register(&acpi_bus_type);`
+  - [ ] `pci_mmcfg_late_init` : 龙芯自定义的一些的东西
+  - `acpi_iort_init`
+  - `acpi_scan_init`
+    - `acpi_bus_scan` : 进一步调用 `acpi_bus_check_add` 来探测设备，将探测到的设备初始化为 `acpi_device`
+      - `device_attach`
 
-  - [ ] acpi_bus_init
-  - [ ] acpi_ec_init
+  - [ ] `acpi_bus_init`
+  - [ ] `acpi_ec_init`
 
 
 # acpica 的移植
