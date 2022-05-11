@@ -29,5 +29,49 @@ Each memory model defines `pfn_to_page()` and page_to_pfn() helpers that allow t
 - [ ] [^12]
 - [ ] https://kernelgo.org/memory-model.html : really nice blog with cpp perspective
 - [ ] https://research.swtch.com/mm : Rust 的 contributor ? 写的
+- https://www.cl.cam.ac.uk/~pes20/weakmemory/cacm.pdf
+- https://www.cl.cam.ac.uk/~pes20/weakmemory/x86tso-paper.tphols.pdf
 
 [^12]: [kernel doc : memory model](https://www.kernel.org/doc/html/latest/vm/memory-model.html)
+
+## https://research.swtch.com/mm
+
+```c
+// Thread 1           // Thread 2
+x = 1;                while(done == 0) { /* loop */ }
+done = 1;             print(x);
+```
+It depends. It depends on the hardware, and it depends on the compiler. A direct line-for-line translation to assembly run on an x86 multiprocessor will always print 1. But a direct line-for-line translation to assembly run on an ARM or POWER multiprocessor can print 0.
+- [ ] 为什么 x86 不会
+- [ ] 如果从 high level 的语言的角度处理，为什么会存在更加高级的
+
+
+<p align="center">
+  <img src="https://research.swtch.com/mem-sc.png" alt="drawing" align="center"/>
+</p>
+<p align="center">
+https://research.swtch.com/hwmm
+</p>
+
+<p align="center">
+  <img src="https://research.swtch.com/mem-tso.png" alt="drawing" align="center"/>
+</p>
+<p align="center">
+https://research.swtch.com/hwmm
+</p>
+
+
+Litmus Test: Write Queue (also called Store Buffer) Can this program see r1 = 0, r2 = 0?
+```txt
+// Thread 1           // Thread 2
+x = 1                 y = 1
+r1 = y                r2 = x
+```
+
+- On sequentially consistent hardware: no.
+- On x86 (or other TSO): yes!
+
+This example may seem artificial, but using two synchronization variables does happen in well-known synchronization algorithms, such as `Dekker's algorithm` or `Peterson's algorithm`, as well as ad hoc schemes. They break if one thread isn’t seeing all the writes from another.
+
+Litmus Test: Independent Reads of Independent Writes (IRIW)
+- there is a total order over all stores (writes) to main memory, and all processors agree on that order, subject to the wrinkle that each processor knows about its own writes before they reach main memory.
