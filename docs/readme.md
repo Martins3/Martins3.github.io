@@ -32,7 +32,9 @@
   - 🚧 [QEMU 时钟模拟](./qemu/timer.md)
   - 🚧 [QEMU 如何模拟 PCI 设备](./qemu/pci.md)
   - 🚧 [seabios 源码分析](./qemu/seabios.md)
-  - 🚧 [Qemu Hash Table 设计](./qemu/qht.md)
+  - 🚧 [QEMU Hash Table 设计](./qemu/qht.md)
+  - 🚧 [QEMU ACPI 模拟](./qemu/acpi.md)
+  - 🚧 [QEMU Hotplug & reset](./qemu/reset.md)
   - [QEMU 中的线程和事件循环](./qemu/threads.md)
   - [QEMU 中的锁](./qemu/cpus.md)
   - [QEMU 如何模拟中断](./qemu/interrupt.md)
@@ -85,6 +87,7 @@
 ## Multiprocessor Programming
 - [Quiescent consistency，Sequential consistency 和 Linearizability](./concurrent/linearizability.md)
 - [wait free，lockfree 和 obstruction free 区分](./concurrent/lock-free.md)
+- 🚧 [memory model](./concurrent/memory-model.md)
 - 🚧 [volatile 关键字说明](./concurrent/volatile.md)
 
 ## Misc

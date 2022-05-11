@@ -52,26 +52,17 @@ e1000e_txdesc_writeback(E1000ECore *core, dma_addr_t base,
 通过 pci_root_bus_new 可以创建出来 PCIBus 的，这里最后初始化到了 pci_bus_info 的呀
 
 ```txt
-/*
 #0  i440fx_realize (dev=0x5555568e2e00, errp=0x7fffffffcb30) at /home/maritns3/core/xqm/hw/pci-host/i440fx.c:264
 #1  0x0000555555abaf2b in pci_qdev_realize (qdev=0x5555568e2e00, errp=<optimized out>) at /home/maritns3/core/xqm/hw/pci/pci.c:2099
 #2  0x0000555555a25435 in device_set_realized (obj=<optimized out>, value=<optimized out>, errp=0x7fffffffccc0) at /home/maritns3/core/xqm/hw/core/qdev.c:876
-#3  0x0000555555bb1e1b in property_set_bool (obj=0x5555568e2e00, v=<optimized out>, name=<optimized out>, opaque=0x555556c1db90, errp=0x7fffffffccc0) at /home/maritns3
-/core/xqm/qom/object.c:2078
-#4  0x0000555555bb6604 in object_property_set_qobject (obj=obj@entry=0x5555568e2e00, value=value@entry=0x555556c11370, name=name@entry=0x555555db1285 "realized", errp=
-errp@entry=0x7fffffffccc0) at /home/maritns3/core/xqm/qom/qom-qobject.c:26
-#5  0x0000555555bb3e3a in object_property_set_bool (obj=0x5555568e2e00, value=<optimized out>, name=0x555555db1285 "realized", errp=0x7fffffffccc0) at /home/maritns3/c
-ore/xqm/qom/object.c:1336
+#3  0x0000555555bb1e1b in property_set_bool (obj=0x5555568e2e00, v=<optimized out>, name=<optimized out>, opaque=0x555556c1db90, errp=0x7fffffffccc0) at /home/maritns3/core/xqm/qom/object.c:2078
+#4  0x0000555555bb6604 in object_property_set_qobject (obj=obj@entry=0x5555568e2e00, value=value@entry=0x555556c11370, name=name@entry=0x555555db1285 "realized", errp=errp@entry=0x7fffffffccc0) at /home/maritns3/core/xqm/qom/qom-qobject.c:26
+#5  0x0000555555bb3e3a in object_property_set_bool (obj=0x5555568e2e00, value=<optimized out>, name=0x555555db1285 "realized", errp=0x7fffffffccc0) at /home/maritns3/core/xqm/qom/object.c:1336
 #6  0x0000555555a24276 in qdev_init_nofail (dev=dev@entry=0x5555568e2e00) at /home/maritns3/core/xqm/hw/core/qdev.c:363
-#7  0x0000555555ab99ab in pci_create_simple_multifunction (name=<optimized out>, multifunction=false, devfn=<optimized out>, bus=<optimized out>) at /home/maritns3/cor
-e/xqm/hw/pci/pci.c:2168
+#7  0x0000555555ab99ab in pci_create_simple_multifunction (name=<optimized out>, multifunction=false, devfn=<optimized out>, bus=<optimized out>) at /home/maritns3/core/xqm/hw/pci/pci.c:2168
 #8  pci_create_simple (bus=<optimized out>, devfn=<optimized out>, name=<optimized out>) at /home/maritns3/core/xqm/hw/pci/pci.c:2179
-#9  0x0000555555ab4add in i440fx_init (host_type=host_type@entry=0x555555d74f1b "i440FX-pcihost", pci_type=pci_type@entry=0x555555d75e48 "i440FX", pi440fx_state=pi440f
-x_state@entry=0x7fffffffcd90, address_space_mem=address_space_mem@entry=0x555556551700, address_space_io=address_space_io@entry=0x55555653a300, ram_size=6442450944, be
-low_4g_mem_size=3221225472, above_4g_mem_size=3221225472, pci_address_space=0x555556535300, ram_memory=0x555556506700) at /home/maritns3/core/xqm/hw/pci-host/i440fx.c:
-298
-#10 0x0000555555913b3d in pc_init1 (machine=0x55555659a000, pci_type=0x555555d75e48 "i440FX", host_type=0x555555d74f1b "i440FX-pcihost") at /home/maritns3/core/xqm/hw/
-i386/pc_piix.c:196
+#9  0x0000555555ab4add in i440fx_init (host_type=host_type@entry=0x555555d74f1b "i440FX-pcihost", pci_type=pci_type@entry=0x555555d75e48 "i440FX", pi440fx_state=pi440fx_state@entry=0x7fffffffcd90, address_space_mem=address_space_mem@entry=0x555556551700, address_space_io=address_space_io@entry=0x55555653a300, ram_size=6442450944, below_4g_mem_size=3221225472, above_4g_mem_size=3221225472, pci_address_space=0x555556535300, ram_memory=0x555556506700) at /home/maritns3/core/xqm/hw/pci-host/i440fx.c:298
+#10 0x0000555555913b3d in pc_init1 (machine=0x55555659a000, pci_type=0x555555d75e48 "i440FX", host_type=0x555555d74f1b "i440FX-pcihost") at /home/maritns3/core/xqm/hw/i386/pc_piix.c:196
 #11 0x0000555555a2c693 in machine_run_board_init (machine=0x55555659a000) at /home/maritns3/core/xqm/hw/core/machine.c:1143
 #12 0x000055555582b0b8 in main (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at /home/maritns3/core/xqm/vl.c:4348
 ```

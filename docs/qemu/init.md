@@ -3,13 +3,13 @@
 
 <!-- vim-markdown-toc GitLab -->
 
-- [main](#main)
-- [tcg_init](#tcg_init)
-- [x86_cpu_realizefn](#x86_cpu_realizefn)
-- [i440fx_init](#i440fx_init)
-- [notes](#notes)
-  - [memory](#memory)
-  - [tcg](#tcg)
+* [main](#main)
+* [tcg_init](#tcg_init)
+* [x86_cpu_realizefn](#x86_cpu_realizefn)
+* [i440fx_init](#i440fx_init)
+* [notes](#notes)
+  * [memory](#memory)
+  * [tcg](#tcg)
 
 <!-- vim-markdown-toc -->
 
@@ -154,32 +154,32 @@
   - X86CPUClass::parent_realize : 也就是 cpu_common_realizefn, 这里并没有做什么事情
 
 ## i440fx_init
-- i440fx_init : 只有 `pcmc->pci_enabled` 才会调用的
-  - qdev_new("i440FX-pcihost") : 这当然会调用 i440fx_pcihost_initfn 和 i440fx_pcihost_class_init 之类的函数
-    - i440fx_pcihost_initfn : 初始化出来 0xcf8 0xcfb 这两个关键地址
-  - pci_root_bus_new : 创建 PCIBus
+- `i440fx_init` : 只有 `pcmc->pci_enabled` 才会调用的
+  - `qdev_new`("i440FX-pcihost") : 这当然会调用 i440fx_pcihost_initfn 和 i440fx_pcihost_class_init 之类的函数
+    - `i440fx_pcihost_initfn` : 初始化出来 0xcf8 0xcfb 这两个关键地址
+  - `pci_root_bus_new` : 创建 PCIBus
     - [ ] PCIHostState 和分别是啥关系 ? host bridge 和 bus 的关系 ?
-    - qbus_create("pci")
-      - qbus_create("pci")
-        - pci_root_bus_init
+    - `qbus_create("pci")`
+      - `qbus_create("pci")`
+        - `pci_root_bus_init`
           - 一些常规的初始化
-          - pci_host_bus_register : 将 PCIHostState 挂载到一个全局的链表上
-      - qbus_init
-    - pci_root_bus_init
+          - `pci_host_bus_register` : 将 PCIHostState 挂载到一个全局的链表上
+      - `qbus_init`
+    - `pci_root_bus_init`
   - [ ] 处理 PCI 的地址空间的映射初始化
-  - init_pam
+  - `init_pam`
 
 ## notes
 
 ### memory
 Memory 初始化一共三个位置:
-1. memory_map_init
-2. pc_memory_init : 创建了两个 mr alias，ram_below_4g 以及 ram_above_4g，这两个 mr 分别指向 ram 的低 4g 以及高 4g 空间，这两个 alias 是挂在根 system_memory mr 下面的
+1. `memory_map_init`
+2. `pc_memory_init` : 创建了两个 mr alias，ram_below_4g 以及 ram_above_4g，这两个 mr 分别指向 ram 的低 4g 以及高 4g 空间，这两个 alias 是挂在根 system_memory mr 下面的
 创建 pc.bios
-3. cpu_address_space_init : tcg 需要创建出来 CPUAddressSpace
+3. `cpu_address_space_init` : tcg 需要创建出来 CPUAddressSpace
 
 ### tcg
 tcg 初始化两个部分:
 
-- tcg_init : 初始化所有 tcg 相关基础设施
-- tcg_register_thread : 分配 tcg region 给一个 CPU 使用
+- `tcg_init` : 初始化所有 tcg 相关基础设施
+- `tcg_register_thread` : 分配 tcg region 给一个 CPU 使用

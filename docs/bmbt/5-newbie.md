@@ -19,6 +19,7 @@
 - Linux Programming Interface
 - 深入理解计算机体系结构
 - [gdb bash makefile and ...](https://missing-semester-cn.github.io/)
+- busybox
 
 ## 调试细节
 - [ ] guest ip 来反汇编
