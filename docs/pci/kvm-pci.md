@@ -2,26 +2,26 @@
 
 <!-- vim-markdown-toc GitLab -->
 
-- [关键blog](#关键blog)
-- [关键blog2](#关键blog2)
-- [Loyenwang](#loyenwang)
-- [PCH](#pch)
-- [overview](#overview)
-- [ldd3](#ldd3)
-  - [pci_device_id](#pci_device_id)
-  - [pci_dev](#pci_dev)
-  - [bus_type](#bus_type)
-  - [pci_bus](#pci_bus)
-  - [pci_host_bridge](#pci_host_bridge)
-  - [device_driver](#device_driver)
-- [pci bar](#pci-bar)
-- [hotplug](#hotplug)
-- [proc and sys](#proc-and-sys)
-  - [lspci](#lspci)
-- [configuration space](#configuration-space)
-- [probe](#probe)
-- [irq](#irq)
-- [question](#question)
+* [关键 blog](#关键blog)
+* [关键 blog2](#关键blog2)
+* [Loyenwang](#loyenwang)
+* [PCH](#pch)
+* [overview](#overview)
+* [ldd3](#ldd3)
+  * [pci_device_id](#pci_device_id)
+  * [pci_dev](#pci_dev)
+  * [bus_type](#bus_type)
+  * [pci_bus](#pci_bus)
+  * [pci_host_bridge](#pci_host_bridge)
+  * [device_driver](#device_driver)
+* [pci bar](#pci-bar)
+* [hotplug](#hotplug)
+* [proc and sys](#proc-and-sys)
+  * [lspci](#lspci)
+* [configuration space](#configuration-space)
+* [probe](#probe)
+* [irq](#irq)
+* [question](#question)
 
 <!-- vim-markdown-toc -->
 
@@ -36,7 +36,7 @@
 - [ ] https://sites.google.com/site/pinczakko/pinczakko-s-guide-to-award-bios-reverse-engineering
 - [ ] https://www.kernel.org/doc/html/latest/PCI/sysfs-pci.html?highlight=proc%20irq
 
-## 关键blog
+## 关键 blog
 -  https://resources.infosecinstitute.com/topic/system-address-map-initialization-in-x86x64-architecture-part-1-pci-based-systems/
 
 Platform firmware execution can be summarized as follows:
@@ -47,23 +47,23 @@ Platform firmware execution can be summarized as follows:
    - CPU-specific initialization : 对于 CPU 的一些特殊初始化，比如 cache-as-RAM (CAR), 将 cache 作为内存使用，进而执行初始化内存的代码
    - Chipset initialization. 初始化 chipset 的寄存器，particularly the chipset base address register (BAR).
    - Main memory (RAM) initialization. 初始化内存控制器，
-5. Post memory initialization. 
+5. Post memory initialization.
 > 下次从这里开始。**WHEN COMMING BACK** 讲解的很清楚啊!
 
-## 关键blog2
+## 关键 blog2
 - https://resources.infosecinstitute.com/topic/system-address-map-initialization-x86x64-architecture-part-2-pci-express-based-systems/
 
 ## Loyenwang
 > TODO
 
-[【原创】Linux PCI驱动框架分析（一）](https://www.cnblogs.com/LoyenWang/p/14165852.html)
-[【原创】Linux PCI驱动框架分析（二）](https://www.cnblogs.com/LoyenWang/p/14209318.html)
+[【原创】Linux PCI 驱动框架分析（一）](https://www.cnblogs.com/LoyenWang/p/14165852.html)
+[【原创】Linux PCI 驱动框架分析（二）](https://www.cnblogs.com/LoyenWang/p/14209318.html)
 
 
 ## PCH
 [what has happened to north bridge in modern](https://www.reddit.com/r/hardware/comments/bt4xff/what_has_happened_to_north_bridge_in_modern/) :
 > partly integrated into the cpu, partly combined with southbridge—> now just called chipset, aka Platform Control Hub (PCH).
-> 
+>
 > If I'm not mistaken, they were integrated into CPUs. This allows for faster communication between the CPU and other components, because it's closer and on the same silicon die as the CPU.
 
 [Platform Controller Hub](https://en.wikipedia.org/wiki/Platform_Controller_Hub)
@@ -72,14 +72,14 @@ Platform firmware execution can be summarized as follows:
 > As such, I/O functions are reassigned between this new central hub and the CPU compared to the previous architecture: some northbridge functions, the memory controller and PCI-e lanes, were integrated into the CPU while the PCH took over the remaining functions in addition to the traditional roles of the southbridge. AMD has its equivalent for the PCH, known simply as a chipset, no longer using the previous term Fusion controller hub since the release of the Zen architecture in 2017.[1]
 
 [What is the difference between CPU and Chipset?](https://stackoverflow.com/questions/18978503/what-is-the-difference-between-cpu-and-chipset)
-> In a mobile phone, combination of Chipset and CPU is called a SoC (System on Chip) which integrates all the components on a single chip. 
+> In a mobile phone, combination of Chipset and CPU is called a SoC (System on Chip) which integrates all the components on a single chip.
 
 > ## Chipset
 > - is a set of (chips) electronic components in an integrated circuit known as a "Data Flow Management System" that manages the data flow between the processor, memory and peripherals.
 > - usually designed to work with a specific family of microprocessors.
 > - historically, chips (for keyboard controller, memory controller, ...) were scattered arround the motherboard. With time, engineers reduced the number of chips to the same job and condenced them to only a few chips or what is now called a __chipset__.
 > - recently, the north bridge were built inside the CPU to maximize performance (1 jump instead of 2 from south bridge + performance sensitive devices talks directly to the CPU without the latency addded by north bridge) and the south bridge is called __Platform Controller Hub__.
-> 
+>
 > copyright: github/cpu-internals
 
 
@@ -127,7 +127,7 @@ sudo insmod pci_skel.ko 之后
   - 而 pci_device 用于抽象对应的设备
 
 ### pci_device_id
-1. 用于 struct pci_driver 中间, 例如ldd3的例子
+1. 用于 struct pci_driver 中间, 例如 ldd3 的例子
 2. 被用于告知用户空间特定的设备驱动支持什么设备
 ```c
 static struct pci_driver pci_driver = {
@@ -269,7 +269,7 @@ https://github.com/intel/nemu/wiki/ACPI-PCI-discovery-hotplug
 
 - [ ] host bridge 和 pci bridge ？
 
-```
+```plain
 -> lspci -vmm # 的部分结果
 Slot:   01:00.0
 Class:  3D controller
@@ -280,7 +280,7 @@ SDevice:        Mi Notebook Pro [GeForce MX150]
 Rev:    a1
 ```
 
-```
+```plain
 ➜  lspci
 00:00.0 Host bridge: Intel Corporation Xeon E3-1200 v6/7th Gen Core Processor Host Bridge/DRAM Registers (rev 08)
 00:02.0 VGA compatible controller: Intel Corporation UHD Graphics 620 (rev 07)
@@ -304,7 +304,7 @@ Rev:    a1
 - 前面都是在同一个 bus 上，最后三个设备分别一个 bus
 
 在 /sys/devices/pci0000:00 中间，找不到后面三个设备，但是
-```
+```plain
 /sys/devices/pci0000:00/0000:00:1d.0/0000:03:00.0/nvme
 /sys/devices/pci0000:00/0000:00:1c.7/0000:02:00.0/net
 /sys/devices/pci0000:00/0000:00:1c.0/0000:01:00.0/drm
@@ -316,7 +316,7 @@ Rev:    a1
 
 - [ ] 每一个设备都有一个 configuration space, 靠什么知道这些 configuration space 在哪里 ?
   - 在内核中间，这些都是靠 pci_ops 实现的，但是这个变量的赋值有点绕，感觉从 kvmtool 入手其实更好
-```
+```plain
 ➜  ldd3 git:(master) ✗ lspci -x -s 00:02.00
 00:02.0 VGA compatible controller: Intel Corporation UHD Graphics 620 (rev 07)
 00: 86 80 17 59 07 04 10 00 07 00 00 03 10 00 00 00
@@ -374,7 +374,7 @@ struct bus_type pci_bus_type = {
       - [ ] pci_scan_slot : 用于辅助 https://www.linuxjournal.com/content/jailhouse 的情况
       - [ ] pci_scan_single_device : 如果调用 pci_get_slot 找到了 dev 那么马上又 pci_dev_put, 因为 scan 是为了找到不存在的 device
         - pci_get_slot : 首先在 slot 中间利用 devfn 查找, devfn 在语境中又称为 slot
-        - [ ] pci_scan_device 
+        - [ ] pci_scan_device
           - [ ] pci_alloc_dev : malloc 一个 struct pci_dev
           - [ ] pci_setup_device : pci_setup_device - Fill in class and map information of a device
             - [ ] pci_read_irq : 正如 ldd3 中间所说，只有需要中断的 PCI_INTERRUPT_PIN 的才会给中断

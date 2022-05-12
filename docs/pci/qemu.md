@@ -36,20 +36,20 @@ e1000e_txdesc_writeback(E1000ECore *core, dma_addr_t base,
 在内核中的 e1000_clean_tx_irq 中对应位置检查数值的。
 
 # QEMU 如何模拟 PCI 设备
-- i440fx_pcihost_initfn : 初始化最初的注册
-- i440fx_pcihost_realize : 注册 0xcf8 和 0xcfc 两个端口，然后将这两个
-- hw/pci/pci_host.c : 非常小的一个文件，定义了
-  - pci_host_config_read
-  - pci_host_data_write
-    - pci_data_write
-      - pci_dev_find_by_addr
-        - pci_find_device
-          - pci_find_bus_nr : 这个东西是在 do_pci_register_device 位置注册的
-      - pci_host_config_write_common
+- `i440fx_pcihost_initfn` : 初始化最初的注册
+- `i440fx_pcihost_realize` : 注册 0xcf8 和 0xcfc 两个端口，然后将这两个
+- `hw/pci/pci_host.c` : 非常小的一个文件，定义了
+  - `pci_host_config_read`
+  - `pci_host_data_write`
+    - `pci_data_write`
+      - `pci_dev_find_by_addr`
+        - `pci_find_device`
+          - `pci_find_bus_nr` : 这个东西是在 `do_pci_register_device` 位置注册的
+      - `pci_host_config_write_common`
 
 
 ## pci 设备的初始化基本过程
-通过 pci_root_bus_new 可以创建出来 PCIBus 的，这里最后初始化到了 pci_bus_info 的呀
+通过 `pci_root_bus_new` 可以创建出来 PCIBus 的，这里最后初始化到了 `pci_bus_info` 的呀
 
 ```txt
 #0  i440fx_realize (dev=0x5555568e2e00, errp=0x7fffffffcb30) at /home/maritns3/core/xqm/hw/pci-host/i440fx.c:264

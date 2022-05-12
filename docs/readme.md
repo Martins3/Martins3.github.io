@@ -65,6 +65,12 @@
 - [虚拟化学习的一点经验之谈](./learn-virtualization.md)
 - [使用 Github 记录笔记和搭建 blog](./setup-github-pages.md)
 
+## PCIe
+- 🚧 [PCIe 的基本原理](.)
+- 🚧 [Seabios 如何处理 PCIe](.)
+- 🚧 [Linux Kernel 如何处理 PCIe](.)
+- 🚧 [QEMU 如何模拟 PCIe](.)
+
 ## Tools
 - [我的 Linux 配置环境](https://martins3.github.io/My-Linux-Config/)
 - 🚧 [Debugger 的理念，原理和使用](./tips/gdb.md)
