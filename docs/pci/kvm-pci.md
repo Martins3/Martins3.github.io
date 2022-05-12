@@ -2,8 +2,8 @@
 
 <!-- vim-markdown-toc GitLab -->
 
-* [关键 blog](#关键blog)
-* [关键 blog2](#关键blog2)
+* [关键 blog](#关键-blog)
+* [关键 blog2](#关键-blog2)
 * [Loyenwang](#loyenwang)
 * [PCH](#pch)
 * [overview](#overview)

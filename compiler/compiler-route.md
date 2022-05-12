@@ -2,8 +2,6 @@
 - https://c9x.me/compile/bib/ : 业余编译器玩家的阅读资源
 - https://github.com/banach-space/llvm-tutor : 按照这个项目，改写之前的 llvm 作业。
 
-
-
 - https://github.com/vtil-project/VTIL-Core : 有一个中间表示层，但是似乎和二进制安全更加相关的
 - https://github.com/aalhour/awesome-compilers : **key** 可以学习 llvm 之类的
 - http://craftinginterpreters.com/contents.html : 清晰的教程
@@ -37,6 +35,7 @@
 - https://github.com/lunatic-lang/lunatic
 - https://github.com/google/cel-spec : The Common Expression Language (CEL) implements common semantics for expression evaluation, enabling different applications to more easily interoperate.
 - https://github.com/keiichiw/constexpr-8cc : 有趣的项目, 其中指向了一个链接，使用 vimscript 来实现 c compiler
+
 ## blog
 https://blog.llvm.org/posts/2020-12-21-interactive-cpp-for-data-science/ : cpp in juperter notebook
 - https://docs.microsoft.com/en-us/archive/msdn-magazine/2015/february/compilers-what-every-programmer-should-know-about-compiler-optimizations
