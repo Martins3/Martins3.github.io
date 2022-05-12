@@ -23,6 +23,8 @@
 * [valgrind](#valgrind)
 * [SystemTap](#systemtap)
 * [dtrace](#dtrace-1)
+* [ltrace](#ltrace)
+* [[ ] uftrace](#-uftrace)
 * [lttng](#lttng)
 * [Gprof2dot](#gprof2dot)
 * [FlameGraph](#flamegraph-1)
@@ -343,7 +345,6 @@ https://superuser.com/questions/287371/obtain-kernel-config-from-currently-runni
 tracing_on 和 /proc/sys/kernel/ftrace_enabled 分别表示什么 ?
 
 
-
 ## valgrind
 https://stackoverflow.com/questions/5134891/how-do-i-use-valgrind-to-find-memory-leaks
 > 1. valgrind 除了可以检查 mem leak，还可以做什么事情 ?
@@ -360,6 +361,8 @@ https://www.jianshu.com/p/84b3885aa8cb
 ## ltrace
 library call trace
 
+## [ ] uftrace
+https://github.com/namhyung/uftrace
 
 ## lttng
 https://lttng.org/docs/

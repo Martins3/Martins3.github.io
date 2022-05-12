@@ -17,7 +17,7 @@ https://www.cs.cmu.edu/afs/cs/academic/class/15213-f12/www/lectures/12-linking.p
 - PCI hole
 - `cpu_has_hypervisor` 包围的部分
 
-如果看 7A1000 用户手册，似乎 uart 是这样的配置
+如果看 7A1000 用户手册，似乎 uart 似乎是 8 号，而 QEMU 上测试显示是 2 号
 ![](./7a1000-usermanual/table-5-1.png)
 
 但是实际上，串口走的是 legacy inct 的 10 位

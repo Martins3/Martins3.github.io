@@ -10,37 +10,55 @@ softmmu 只有 tcg 才需要，实现基本思路是:
 
 TLB 在 code 中的经典路径:
 ```c
-/*
  * Since the addressing of x86 architecture is complex, we
  * remain the original processing that exacts the final
  * x86vaddr from IR1_OPND(x86 opnd).
  * It is usually done by functions load_ireg_from_ir1_mem()
  * and store_ireg_from_ir1_mem().
 ```
-- gen_ldst_softmmu_helper
-  - `__gen_ldst_softmmu_helper_native` : 其中的注释非常清晰，首先查询 TLB，如果不成功，进入慢路径
-    - tr_gen_lookup_qemu_tlb : TLB 比较查询
-    - tr_gen_ldst_slow_path : 无奈，只能跳转到 slow path 去
-      - td_rcd_softmmu_slow_path
 
-- tr_ir2_generate
-  - tr_gen_tb_start
-  - tr_gen_softmmu_slow_path : slow path 的代码在每一个 tb 哪里只会生成一次
+- `gen_ldst_softmmu_helper`
+  - `__gen_ldst_softmmu_helper_native` : 其中的注释非常清晰，首先查询 TLB，如果不成功，进入慢路径
+    - `tr_gen_lookup_qemu_tlb` : TLB 比较查询
+    - `tr_gen_ldst_slow_path` : 无奈，只能跳转到 slow path 去
+      - `td_rcd_softmmu_slow_path`
+
+- `tr_ir2_generate`
+  - `tr_gen_tb_start`
+  - `tr_gen_softmmu_slow_path` : slow path 的代码在每一个 tb 哪里只会生成一次
     - `__tr_gen_softmmu_sp_rcd`
-      - helper_ret_stb_mmu : 跳转的入口通过 helper_ret_stb_mmu 实现, 当前在 accel/tcg/cputlb.c 中
-        - store_helper
-          - io_writex
-            - memory_region_dispatch_write
-  - tr_gen_tb_end
+      - `helper_ret_stb_mmu` : 跳转的入口通过 `helper_ret_stb_mmu` 实现, 当前在 accel/tcg/cputlb.c 中
+        - `store_helper`
+          - `io_writex`
+            - `memory_region_dispatch_write`
+  - `tr_gen_tb_end`
 
 进行 TLB 填充的经典路径:
-- store_helper
-  - tlb_fill
-    - x86_cpu_tlb_fill
-      - handle_mmu_fault : 利用 x86 的页面进行 page walk
-        - tlb_set_page_with_attrs : 设置页面
+- `store_helper`
+  - `tlb_fill`
+    - `x86_cpu_tlb_fill`
+      - `handle_mmu_fault` : 利用 x86 的页面进行 page walk
+        - `tlb_set_page_with_attrs` : 设置页面
+
+指令执行的过程，获取指令同样可以触发 TLB refill 操作:
+```txt
+#0  tlb_set_page_with_attrs (cpu=0x7ffff7ffd9e8 <_rtld_global+2440>, vaddr=32767, paddr=140737354006919, attrs=..., prot=0, mmu_idx=-1, size=4096) at src/tcg/cputlb.c:682
+#1  0x0000555555629469 in handle_mmu_fault (cs=0x55555596ea80 <__x86_cpu>, addr=4294967280, size=0, is_write1=2, mmu_idx=2) at src/i386/excp_helper.c:637
+#2  0x0000555555629640 in x86_cpu_tlb_fill (cs=0x55555596ea80 <__x86_cpu>, addr=4294967280, size=0, access_type=MMU_INST_FETCH, mmu_idx=2, probe=false, retaddr=0) at src/i386/excp_helper.c:685
+#3  0x00005555555d94d8 in tlb_fill (cpu=0x55555596ea80 <__x86_cpu>, addr=4294967280, size=0, access_type=MMU_INST_FETCH, mmu_idx=2, retaddr=0) at src/tcg/cputlb.c:895
+#4  0x00005555555d9d88 in get_page_addr_code_hostp (env=0x5555559771f0 <__x86_cpu+34672>, addr=4294967280, hostp=0x0) at src/tcg/cputlb.c:1075
+#5  0x00005555555d9f0e in get_page_addr_code (env=0x5555559771f0 <__x86_cpu+34672>, addr=4294967280) at src/tcg/cputlb.c:1106
+#6  0x00005555555cd59e in tb_htable_lookup (cpu=0x55555596ea80 <__x86_cpu>, pc=4294967280, cs_base=4294901760, flags=64, cflags=4278190080) at src/tcg/cpu-exec.c:675
+#7  0x00005555555cbaab in tb_lookup__cpu_state (cpu=0x55555596ea80 <__x86_cpu>, pc=0x7fffffffd4b8, cs_base=0x7fffffffd4b4, flags=0x7fffffffd4bc, cflags=4278190080) at src/tcg/../../include/exec/tb-lookup.h:44
+#8  0x00005555555cc5a1 in tb_find (cpu=0x55555596ea80 <__x86_cpu>, last_tb=0x0, tb_exit=0, cflags=0) at src/tcg/cpu-exec.c:285
+#9  0x00005555555cd0a6 in cpu_exec (cpu=0x55555596ea80 <__x86_cpu>) at src/tcg/cpu-exec.c:559
+#10 0x000055555561afb8 in tcg_cpu_exec (cpu=0x55555596ea80 <__x86_cpu>) at src/qemu/cpus.c:122
+#11 0x000055555561b22c in qemu_tcg_rr_cpu_thread_fn (arg=0x55555596ea80 <__x86_cpu>) at src/qemu/cpus.c:235
+```
 
 ## soft TLB
+- [ ] TODO 将论文的中的指令的图放过来补充一下
+
 TLB 的大致结构如下, 对此需要解释一些问题:
 ![](./img/tlb.svg)
 
@@ -48,11 +66,11 @@ TLB 的大致结构如下, 对此需要解释一些问题:
 2. 而慢速路径访问 victim TLB 和 CPUIOTLBEntry
 3. victim TLB 的大小是固定的，而正常的 TLB 的大小是动态调整的
 4. CPUTLBEntry 的说明:
-    - addr_read / addr_write / addr_code 都是 GVA
-    - 分别创建出来三个 addr_read / addr_write / addr_code 是为了快速比较，两者相等就是命中，不相等就是不命中，如果向操作系统中的 page table 将 page entry 插入 flag 描述权限，这个比较就要使用更多的指令了(移位/掩码之后比较)
+    - `addr_read` / `addr_write` / `addr_code` 都是 GVA
+    - 分别创建出来三个 `addr_read` / `addr_write` / `addr_code` 是为了快速比较，两者相等就是命中，不相等就是不命中，如果向操作系统中的 page table 将 page entry 插入 flag 描述权限，这个比较就要使用更多的指令了(移位/掩码之后比较)
     - addend : GVA + addend 等于 HVA
 5. CPUIOTLBEntry 的说明:
-  - 如果不是落入 RAM : TARGET_PAGE_BITS 内可以放 AddressSpaceDispatch::PhysPageMap::MemoryRegionSection 数组中的偏移, 之外的位置放 MemoryRegion 内偏移。通过这个可以迅速获取 MemoryRegionSection 进而获取 MemoryRegion。
+  - 如果不是落入 RAM : `TARGET_PAGE_BITS` 内可以放 AddressSpaceDispatch::PhysPageMap::MemoryRegionSection 数组中的偏移, 之外的位置放 MemoryRegion 内偏移。通过这个可以迅速获取 MemoryRegionSection 进而获取 MemoryRegion。
   - 如果是落入 RAM , 可以得到 [ram addr](#ram-addr)
 
 ### CPUIOTLBEntry
@@ -71,11 +89,11 @@ typedef struct CPUIOTLBEntry {
     MemTxAttrs attrs;
 } CPUIOTLBEntry;
 ```
-这个注释，其实有点误导，我以为 lower TARGET_PAGE_BITS 中总是存放的 physical section number
+这个注释，其实有点误导，我以为 lower `TARGET_PAGE_BITS` 中总是存放的 physical section number
 实际上，
 - physical section number 就是 MemoryRegionSection 在 AddressSpaceDispatch::map::sections 中的 index
-- 对于 is_ram 而言，直接就是翻译为 ram_addr 了，lower TARGET_PAGE_BITS 没有任何东西
-- 对于 IO 而言，lower TARGET_PAGE_BITS 保存 physical section number, upper 部分是 MemoryRegion 的偏移，两者一并计算出来需要访问的是 MemoryRegion 的哪里
+- 对于 `is_ram` 而言，直接就是翻译为 `ram_addr` 了，lower `TARGET_PAGE_BITS` 没有任何东西
+- 对于 IO 而言，lower `TARGET_PAGE_BITS` 保存 physical section number, upper 部分是 MemoryRegion 的偏移，两者一并计算出来需要访问的是 MemoryRegion 的哪里
 
 ```c
 void tlb_set_page_with_attrs(CPUState *cpu, target_ulong vaddr,
@@ -99,24 +117,24 @@ void tlb_set_page_with_attrs(CPUState *cpu, target_ulong vaddr,
 ```
 
 - CPUIOTLBEntry 的创建位置:
-  - tlb_set_page_with_attrs
+  - `tlb_set_page_with_attrs`
 
 - CPUIOTLBEntry 的使用位置:
-  - probe_access
-    - tlb_hit / victim_tlb_hit / tlb_fill : TLB 访问经典三件套
-    - cpu_check_watchpoint
-    - notdirty_write : 和 cpu_check_watchpoint 相同，需要 iotlbentry 作为参数
-  - io_writex / io_readx
-    - iotlb_to_section
+  - `probe_access`
+    - `tlb_hit` / `victim_tlb_hit` / `tlb_fill` : TLB 访问经典三件套
+    - `cpu_check_watchpoint`
+    - `notdirty_write` : 和 `cpu_check_watchpoint` 相同，需要 iotlbentry 作为参数
+  - `io_writex` / `io_readx`
+    - `iotlb_to_section`
     - `mr_offset = (iotlbentry->addr & TARGET_PAGE_MASK) + addr;`
 
 ## lock page
 在 ./accel/tcg/translate-all.c 中我们实际上看到了一系列的 lock，比如
-- page_lock_tb
-- page_lock_pair
-- page_lock
-- page_entry_lock
-- page_collection_lock
+- `page_lock_tb`
+- `page_lock_pair`
+- `page_lock`
+- `page_entry_lock`
+- `page_collection_lock`
 
 现在分析一下，page lock 的作用和实现。
 
@@ -125,7 +143,7 @@ void tlb_set_page_with_attrs(CPUState *cpu, target_ulong vaddr,
   - 如果 guest physical page 发生改变，那么生成的所有的 TB 都需要 invalidate 掉
   - 多个 guest virtual page 可以映射到同一个 guest physical page 上，当执行这些 guest virtual page 的代码的时候，将会找到相同的 TB，而不是生成出来多份
   - 执行 TB 指向，首先需要从 TB buffer 中查询 TB，使用的是 gpa 来查询的
-- TB 只会 invalidate 操作掉，然后在 tb_flush 的时候将整个 TB buffer 全部删除，不会出现单独释放 tb_buffer 中的一个位置，生成的 TB 只会不断放到 tb buffer 的后面，直到 TB buffer 满了。
+- TB 只会 invalidate 操作掉，然后在 `tb_flush` 的时候将整个 TB buffer 全部删除，不会出现单独释放 tb_buffer 中的一个位置，生成的 TB 只会不断放到 tb buffer 的后面，直到 TB buffer 满了。
 
 需要的实现的目标是，一个 guest physical page 上关联的 TB 总是和 guest physical page 上的 x86 代码总是对应的。而不要出现:
 - guest physical page 上的内容被修改了，但是对应的 TB 没有被 invalidate 掉
@@ -133,40 +151,43 @@ void tlb_set_page_with_attrs(CPUState *cpu, target_ulong vaddr,
 
 分析具体的代码:
 - 写操作
-  - tb_link_page : add a new TB and link it to the physical page tables
-  - tb_phys_invalidate
+  - `tb_link_page` : add a new TB and link it to the physical page tables
+  - `tb_phys_invalidate`
 
-- 读操作: tb_htable_lookup
+- 读操作: `tb_htable_lookup`
 
 这里有两个注意点:
-- 因为 SMC 可能 invalidate 多个 physical page，所以有 page_collection_lock 的情况，此时需要注意上锁的时候保证从低到高逐个上锁，否则容易出现死锁
-- tb_htable_lookup 使用 qht 实现，所以，tb_htable_lookup 实际上无需持有 page lock 的
+- 因为 SMC 可能 invalidate 多个 physical page，所以有 `page_collection_lock` 的情况，此时需要注意上锁的时候保证从低到高逐个上锁，否则容易出现死锁
+- `tb_htable_lookup` 使用 qht 实现，所以，`tb_htable_lookup` 实际上无需持有 page lock 的
 
 ## SMC
 自修改代码指的是运行过程中修改执行的代码。
 用户态是通过信号机制(SEGV)，系统态直接在 softmmu 的位置检查
 
-在系统态中，存在 guest code 的 page 的 CPUTLBEntry 中插入 TLB_NOTDIRTY 的 flag, 这个导致 TLB 比较失败，
+在系统态中，存在 guest code 的 page 的 CPUTLBEntry 中插入 `TLB_NOTDIRTY` 的 flag, 这个导致 TLB 比较失败，
 通过 PageDesc 可以从 ram addr 找到其关联的所有的 tb，
 进而 invalidate 掉这个 guest page 关联的所有的 tb
 
 保护代码的流程:
-- tb_link_page
-  - tb_page_add
-    - tlb_protect_code
-      - cpu_physical_memory_test_and_clear_dirty : 这是 ram_addr.h 中一个处理 dirty page 的标准函数
-        - memory_region_clear_dirty_bitmap
-        - tlb_reset_dirty_range_all
-          - tlb_reset_dirty : 将这个范围内的 TLB 全部添加上 TLB_NOTDIRTY
-            - tlb_reset_dirty_range_locked : 这就是设置保护的位置
+- `cpu_exec`
+  - `tb_find`
+    - `tb_gen_code`
+      - `tb_link_page`
+        - `tb_page_add`
+          - `tlb_protect_code`
+            - `cpu_physical_memory_test_and_clear_dirty` : 这是 `ram_addr.h` 中一个处理 dirty page 的标准函数
+              - `memory_region_clear_dirty_bitmap`
+              - `tlb_reset_dirty_range_all`
+                - `tlb_reset_dirty` : 将这个范围内的 TLB 全部添加上 `TLB_NOTDIRTY`
+                  - `tlb_reset_dirty_range_locked` : 这就是设置保护的位置
 
 触发错误的流程:
-- store_helper
-  - notdirty_write : 当写向一个 dirty 的位置的处理
-    - cpu_physical_memory_get_dirty_flag
-    - tb_invalidate_phys_page_fast :
-    - cpu_physical_memory_set_dirty_range : Set both VGA and migration bits for simplicity and to remove the notdirty callback faster.
-    - tlb_set_dirty
+- `store_helper`
+  - `notdirty_write` : 当写向一个 dirty 的位置的处理
+    - `cpu_physical_memory_get_dirty_flag`
+    - `tb_invalidate_phys_page_fast` :
+    - `cpu_physical_memory_set_dirty_range` : Set both VGA and migration bits for simplicity and to remove the notdirty callback faster.
+    - `tlb_set_dirty`
 
 ### PageDesc
 如果找到 guest physical page 上的所有的 TB ，这就是通过 PageDesc 进行的
@@ -177,7 +198,7 @@ void tlb_set_page_with_attrs(CPUState *cpu, target_ulong vaddr,
 
 - PageDesc::first_tb 和 TranslationBlock::page_next 指针的最低一位可以用于 PageDesc p 知道这个 TB 的那一部分在 p 中
 
-在 tb_page_add 中初始化:
+在 `tb_page_add` 中初始化:
 ```c
 static inline void tb_page_add(PageDesc *p, TranslationBlock *tb,
                                unsigned int n, tb_page_addr_t page_addr)
@@ -408,9 +429,9 @@ struct CPUState{
 }
 ```
 
-在 tlb_set_page_with_attrs 中如果 cpu_watchpoint_address_matches, 那么该 TLB 将会插入 watchpoints，而
+在 tlb_set_page_with_attrs 中如果 `cpu_watchpoint_address_matches`, 那么该 TLB 将会插入 watchpoints，而
 
-在 store_helper 中间，检查 TLB_WATCHPOINT, 调用 cpu_check_watchpoint
+在 `store_helper` 中间，检查 `TLB_WATCHPOINT`, 调用 `cpu_check_watchpoint`
 
 ```c
 /* Return flags for watchpoints that match addr + prot.  */

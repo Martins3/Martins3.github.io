@@ -83,7 +83,7 @@
 */
 ```
 
-具体分析 kbd_update_irq_lines 的内容:
+具体分析 `kbd_update_irq_lines` 的内容:
 ```c
 /* XXX: not generating the irqs if KBD_MODE_DISABLE_KBD is set may be
    incorrect, but it avoids having to simulate exact delays */
@@ -482,8 +482,7 @@ x86_allocate_cpu_irq 会创建出来一个 qemu_irq 出来，其 handler 为 pic
         - apic_mem_write
           - apic_send_msi : 最终选择正确的 CPU 进行中断的发送
 
-```c
-/*
+```txt
 #0  apic_send_msi (msi=0x7fffffffd110) at ../hw/intc/apic.c:726
 #1  0x0000555555c6ab4c in apic_mem_write (opaque=<optimized out>, addr=4100, val=48, size=<optimized out>) at ../hw/intc/apic.c:757
 #2  0x0000555555cd2711 in memory_region_write_accessor (mr=mr@entry=0x55555698bc90, addr=4100, value=value@entry=0x7fffffffd298, size=size@entry=4, shift=<optimized out>, mask=mask@entry=4294967295, attrs=...) at ../softmmu/memory.c:492
@@ -536,9 +535,9 @@ x86_allocate_cpu_irq 会创建出来一个 qemu_irq 出来，其 handler 为 pic
 ### code flow from first instruction
 使用一些[技术](https://martins3.github.io/tips-reading-kernel.html)在 interrupt handler 的位置 backtrace
 
-- 键盘
+
+- i8042 键盘中断流程
 ```txt
-/*
 [   36.794135] Call Trace:
 [   36.794140]  <IRQ>
 [   36.794143]  dump_stack+0x64/0x7c
@@ -563,6 +562,33 @@ x86_allocate_cpu_irq 会创建出来一个 qemu_irq 出来，其 handler 为 pic
 [   36.794277]  common_interrupt+0x76/0xa0
 [   36.794283]  </IRQ>
 [   36.794285]  asm_common_interrupt+0x1e/0x40
+```
+
+- usb 键盘中断流程
+```txt
+[   75.597619] [<900000000020866c>] show_stack+0x2c/0x100
+[   75.597621] [<9000000000ec39c8>] dump_stack+0x90/0xc0
+[   75.597624] [<9000000000c4b1b0>] input_event+0x30/0xc8
+[   75.597626] [<9000000000ca3ee4>] hidinput_report_event+0x44/0x68
+[   75.597628] [<9000000000ca1e30>] hid_report_raw_event+0x230/0x470
+[   75.597631] [<9000000000ca21a4>] hid_input_report+0x134/0x1b0
+[   75.597632] [<9000000000cb07ac>] hid_irq_in+0x9c/0x280
+[   75.597634] [<9000000000be9cf0>] __usb_hcd_giveback_urb+0xa0/0x120
+[   75.597636] [<9000000000c23a7c>] finish_urb+0xac/0x1c0
+[   75.597638] [<9000000000c24b50>] ohci_work.part.8+0x218/0x550
+[   75.597640] [<9000000000c27f98>] ohci_irq+0x108/0x320
+[   75.597642] [<9000000000be96e8>] usb_hcd_irq+0x28/0x40
+[   75.597644] [<9000000000296430>] __handle_irq_event_percpu+0x70/0x1b8
+[   75.597645] [<9000000000296598>] handle_irq_event_percpu+0x20/0x88
+[   75.597647] [<9000000000296644>] handle_irq_event+0x44/0xa8
+[   75.597648] [<900000000029abfc>] handle_level_irq+0xdc/0x188
+[   75.597651] [<90000000002952a4>] generic_handle_irq+0x24/0x40
+[   75.597652] [<900000000081dc50>] extioi_irq_dispatch+0x178/0x210
+[   75.597654] [<90000000002952a4>] generic_handle_irq+0x24/0x40
+[   75.597656] [<9000000000ee4eb8>] do_IRQ+0x18/0x28
+[   75.597658] [<9000000000203ffc>] except_vec_vi_end+0x94/0xb8
+[   75.597660] [<9000000000203e80>] __cpu_wait+0x20/0x24
+[   75.597662] [<900000000020fa90>] calculate_cpu_foreign_map+0x148/0x180
 ```
 
 - ssd
