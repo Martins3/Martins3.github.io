@@ -35,7 +35,7 @@
 - 🚧 [seabios 源码分析](./qemu/seabios.md)
 - 🚧 [QEMU Hash Table 设计](./qemu/qht.md)
 - 🚧 [QEMU ACPI 模拟](./qemu/acpi.md)
-- 🚧 [QEMU Hotplug & reset](./qemu/reset.md)
+- 🚧 [QEMU Hotplug 和 Reset](./qemu/reset.md)
 - [QEMU 中的线程和事件循环](./qemu/threads.md)
 - [QEMU 中的锁](./qemu/cpus.md)
 - [QEMU 如何模拟中断](./qemu/interrupt.md)
@@ -68,12 +68,12 @@
 
 ## PCIe
 - 🚧 [PCIe 的基本原理](.)
-- 🚧 [Seabios 如何处理 PCIe](.)
-- 🚧 [Linux Kernel 如何处理 PCIe](.)
-- 🚧 [QEMU 如何模拟 PCIe](.)
+- 🚧 [Seabios 如何探测 PCIe](.)
+- 🚧 [Linux Kernel 如何管理 PCIe 设备](.)
+- 🚧 [QEMU 如何模拟 PCIe 设备](.)
 
 ## Tools
-- [我的 Linux 配置环境](https://martins3.github.io/My-Linux-Config/)
+- [我的 Linux 配置](https://martins3.github.io/My-Linux-Config/)
 - 🚧 [Debugger 的理念，原理和使用](./tips/gdb.md)
 - [使用 QEMU, FlameGraph 和 bpftrace 阅读内核](./tips-reading-kernel.md)
 
