@@ -195,7 +195,11 @@ http://byteliu.com/2019/05/21/What-is-the-major-difference-between-the-buffer-ca
 #1  0xffffffff830071ad in md_init () at drivers/md/md.c:9619
 ```
 
-## loop device
+## [ ] loop device
+
+```txt
+sudo mount -t ext4 -o loop core-image-minimal-qemux86.ext4 /tmp/tmp.takj147R7Q
+```
 
 检查一下
 ```plain

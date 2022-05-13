@@ -6,7 +6,6 @@
 * [overview](#overview)
 * [TODO](#todo)
 * [usb](#usb)
-* [platform_driver](#platform_driver)
 * [device model](#device-model)
     * [Hot Plug](#hot-plug)
     * [uevent](#uevent)
@@ -19,13 +18,13 @@
     * [resource management](#resource-management)
 * [device tree](#device-tree)
 * [char device](#char-device)
-* [问题](#问题)
-  * [可能有用的问题](#可能有用的问题)
 * [ldd3](#ldd3)
 * [资源(整理成为 footnote)](#资源整理成为-footnote)
+* [udev 的工作原理](#udev-的工作原理)
 
 <!-- vim-markdown-toc -->
 - [ ] 将 Linux Knerle Lab 中的内容合并进来
+- [ ] 只要要求一个事情，将其中的
 
 ## overview
 > Let's start with a device[^4]
@@ -38,12 +37,10 @@ And, this page will contains anything related device except pcie, mmio, pio, int
 - [ ] maybe tear this page into device model and concrete device
 
 ## TODO
-1. 阅读 /lib/modules(shell uname -a)/build 下的 makefile 中间的内容
+1. 阅读 /lib/modules/(shell uname -a)/build 下的 makefile 中间的内容
   1. 包含的头文件有点不对 asm 下头文件似乎没有被包含下来
   2. 应该不会指向 glibc 的文件
 2. 修改 Makefile　产生的文件放置到指定的文件夹中间去
-3. /dev 和 /proc/devices 两者的关系是什么
-
 6. 修改 `scull_load` 文件中间的内容
 7. klogd syslogd
 
@@ -52,17 +49,8 @@ And, this page will contains anything related device except pcie, mmio, pio, int
 
 - [ ] https://github.com/gregkh/usbutils : 用户态工具
 
-
-## platform_driver
-A platform is a pseudo bus usually used to tie lightweight devices integrated into SoCs, with the Linux device model. A platform consists of
-1. A platform device
-2. A platform driver
-
-
 ## device model
 - [ ]  [A fresh look at the kernel's device model](https://lwn.net/Articles/645810/)
-
-
 
 
 The simple idea is that the "devices" of the system show up in one single tree at /sys/devices. Devices of a common type have a "subsystem" symlink pointing back to the subsystem's directory. All devices of that subsystem are listed there.
@@ -394,19 +382,6 @@ static inline void *devm_kzalloc(struct device *dev, size_t size, gfp_t gfp)
 - [ ] ldd3 的 chapter 3
 - [ ] 检查 `pci_register_driver` 的实现，大致就是调用过程
 
-## 问题
-
-### 可能有用的问题
-5. 为什么在 interrupt context 不能调用可能导致睡眠的函数?
-6. 那些机制实现内核可以动态的装载模块的 ? 除了 export_symbols 之类的东西
-
-这篇文章
-A Hardware Architecture for Implementing Protection Rings
-让我怀疑人生:
-1. 这里描述的 gates 和 syscall 是什么关系 ?
-2. syscall 可以使用 int 模拟实现吗 ?
-3. interupt 和 exception 在架构实现上存在什么区别吗 ?
-
 ## ldd3
 `pci_register_driver`
 
@@ -424,12 +399,13 @@ sudo insmod pci_skel.ko 之后
   - 而 pci_device 用于抽象对应的设备
 
 ## 资源(整理成为 footnote)
-1. https://www.linuxjournal.com/article/7353 : usb 驱动
-2. https://www.linuxjournal.com/article/7136 : i2c 驱动
-3. https://m.tb.cn/h.ViQNCvc?sm=09356c : 在实体机器上操作一下
+1. [linuxjournal : Writing a Simple USB Driver](https://www.linuxjournal.com/article/7353)
+2. [linuxjournal : I2C Drivers, Part I](https://www.linuxjournal.com/article/7136)
 
-https://opensource.com/article/18/11/udev : udev 的介绍
-https://unix.stackexchange.com/questions/550037/udev-and-uevent-question : udev stackexchange
+## udev 的工作原理
+参考 [stackexchange](https://unix.stackexchange.com/questions/550037/udev-and-uevent-question)
+- udev 是 systemd 中一部分
+- 通过 uevent 来实现更新
 
 [^1]: https://events19.linuxfoundation.org/wp-content/uploads/2017/12/Introduction-to-Linux-Kernel-Driver-Programming-Michael-Opdenacker-Bootlin-.pdf
 [^2]: https://lwn.net/Articles/645810/

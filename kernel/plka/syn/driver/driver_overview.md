@@ -1,7 +1,7 @@
 # driver_overview
 
-
 我想，只有 base.c 中间的文件
+
 | File                                    | blank | comment | code | desc                                        |
 |-----------------------------------------|-------|---------|------|---------------------------------------------|
 | core.c                                  | 505   | 980     | 2294 |  |
@@ -83,13 +83,7 @@
 | hypervisor.c                            | 3     | 8       | 13   |                                             |
 
 
-
-
-
-
-
-
-## Makefile 
+## Makefile
 driver/ 文件夹过于恐怖，但是分析其Makefile大多数都是可选的.
 
 ```Makefile
@@ -282,6 +276,3 @@ obj-$(CONFIG_UNISYS_VISORBUS)	+= visorbus/
 obj-$(CONFIG_SIOX)		+= siox/
 obj-$(CONFIG_GNSS)		+= gnss/
 ```
-
-
-

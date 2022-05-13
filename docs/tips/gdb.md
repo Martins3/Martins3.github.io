@@ -15,8 +15,7 @@
 
 当然也有例外，如果你刚刚接手陌生的一个大项目，debugger 是分析代码流程的好工具。
 
-## gdb 的原理
-TODO
+## [ ] gdb 的原理
 
 ## gdb 的使用
 首先强烈推荐 [gdb-dashboard](https://github.com/cyrus-and/gdb-dashboard)
@@ -54,6 +53,18 @@ TODO
 
 ### print
 - p array[index]@num : 打印数组 array 从 index 开始的 num 个成员
+- 打印内存
+  - x/nfs addr : nfs=(number format size) 例如 x/2xb 0x401234
+  - f : 和 printf 相同
+  - s : b (byte，1 个字节) h (half，两个字节) w (word，四个字节) g (gaint，四个字节)
+
+例如打印内核中的变量: jiffies
+```txt
+>>> x/xw &jiffies
+0xffffffff82807980 <jiffies_64>:        0xfffb6c20
+>>> x/xg &jiffies
+0xffffffff82807980 <jiffies_64>:        0x00000000fffb6c20
+```
 
 ### thread
 - thread apply all bt
@@ -72,7 +83,7 @@ TODO
 - info sharedlibrary
 - info threads
 
-### script
+### [ ] script
 
 ### 高级
 - 条件 break
@@ -101,8 +112,6 @@ TODO
   - whatis var
   - i variables var
   - ptype var
-- 打印内存 e
-  - x/nfs addr : nfs=(number format size) 例如 x/2xb 0x401234
 - 将汇编格式改为 intel 格式 set disassembly-flavor intel
 - 如果要把断点设置在汇编指令层次函数的开头，要使用如下命令：`b *func`
 - [清屏](https://stackoverflow.com/questions/12938067/how-clear-gdb-command-screen) : Ctrl-l

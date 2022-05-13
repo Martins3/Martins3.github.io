@@ -43,6 +43,12 @@
 </script>
 ```
 
+### 增加语法检查
+使用 [lint-md](https://github.com/lint-md/lint-md) 和 [pre-commit](https://pre-commit.com/) 来构建语法检查，在这个仓库中，有三个文件和这个功能相关:
+- .pre-commit-config.yaml : git commit 指向执行检查
+- language/bash/hook/lint-md.sh : 其中一项检查是执行这个脚本
+- .lintmdrc.json : lint-md 的执行参数
+
 ## 想法
 看了一些 blog, 谈谈自己的想法:
 - blog 是一个人构建知识体系的过程
