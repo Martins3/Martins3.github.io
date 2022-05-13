@@ -5,9 +5,7 @@
 
 * [overview](#overview)
 * [TODO](#todo)
-* [Questions](#questions)
 * [usb](#usb)
-* [i8042](#i8042)
 * [platform_driver](#platform_driver)
 * [device model](#device-model)
     * [Hot Plug](#hot-plug)
@@ -38,41 +36,21 @@
 And, this page will contains anything related device except pcie, mmio, pio, interupt and dma.
 
 - [ ] maybe tear this page into device model and concrete device
-  - [ ] lack understanding of char_dev.c and block_dev.c
 
 ## TODO
-*大致的探索了一下，感觉 keyboard 使用的是另一个体系的东西来连接 CPU, 不是 pcie 的，或者不是直接链接到 pcie 上的，ldd3 和 essential linux device driver : Input Device Drivers 都是可以好好看看的*
-- [ ] ldd3 的 tty 存在一个巨大的仓库
-- [ ] eldd 的部分章节也是可以看看的 http://www.embeddedlinux.org.cn/essentiallinuxdevicedrivers/final/ch06lev1sec3.html
-- [ ] 微机原理的书可以看看的
-- [ ] tlpi : chapter 62
-
-1. 阅读 /lib/modules(shell uname -a)/build 下的makefile 中间的内容
+1. 阅读 /lib/modules(shell uname -a)/build 下的 makefile 中间的内容
   1. 包含的头文件有点不对 asm 下头文件似乎没有被包含下来
-  2. 应该不会指向glibc 的文件
-2. 修改Makefile　产生的文件放置到指定的文件夹中间去
+  2. 应该不会指向 glibc 的文件
+2. 修改 Makefile　产生的文件放置到指定的文件夹中间去
 3. /dev 和 /proc/devices 两者的关系是什么
 
-6. 修改scull\_load 文件中间的内容
+6. 修改 `scull_load` 文件中间的内容
 7. klogd syslogd
 
-## Questions
-- echo "shit" > /dev/pts/3
-  - 所以，pts 到底是说个啥，tmux / screen 如何利用
-
 ## usb
-测试辅助模块 dummy_hcd 和 g_zero
+测试辅助模块 `dummy_hcd` 和 `g_zero`
 
 - [ ] https://github.com/gregkh/usbutils : 用户态工具
-
-## i8042
-- [ ] https://wiki.osdev.org/%228042%22_PS/2_Controller
-  - [ ] 在哪里可以找到 intel 的手册
-- [x] i8042 为什么在 /proc/interrupts 下存在两个项 ? (同时有键盘和鼠标)
-- [ ] drivers/input/serio/i8042.c
-- [ ] drivers/input/keyboard/atkbd.c
-
-/home/maritns3/core/linux/Documentation/driver-api/driver-model/platform.rst
 
 
 ## platform_driver
@@ -128,7 +106,7 @@ adapter driver are device deriver too !
 很多 device 不一定就是一个硬件设备，很多时候是作为一个接口，或者是为了使用 sfsfs
 
 
-- For the same device, need to use the same device driver on
+- For the same device, need to use the same device driver on……
 multiple CPU architectures (x86, ARM…), even though the
 hardware controllers are different.
 - Need for a single driver to support multiple devices of the
@@ -138,9 +116,9 @@ same kind.
 
 
 #### uevent
-Uevent的机制是比较简单的(大概1000行)，设备模型中任何设备有事件需要上报时，
-会触发Uevent提供的接口。Uevent模块准备好上报事件的格式后，可以通过两个途径把事件上报到用户空间：
-一种是通过kmod模块，直接调用用户空间的可执行文件；另一种是通过netlink通信机制，将事件从内核空间传递给用户空间。
+Uevent 的机制是比较简单的(大概 1000 行)，设备模型中任何设备有事件需要上报时，
+会触发 Uevent 提供的接口。Uevent 模块准备好上报事件的格式后，可以通过两个途径把事件上报到用户空间：
+一种是通过 kmod 模块，直接调用用户空间的可执行文件；另一种是通过 netlink 通信机制，将事件从内核空间传递给用户空间。
 
 http://www.wowotech.net/device_model/uevent.html
 
@@ -157,7 +135,7 @@ http://www.wowotech.net/device_model/uevent.html
    of those directories corresponds to a kobject in the same kset.
 2. ktype 控制 kobject 的创建和销毁。(@todo 那么为什么叫做 type ，不叫 initializer 呀 ?)
 
-kset内部本身也包含一个kobj对象，在sysfs中也表现为目录；所不同的是，kset要承担kobj状态变动消息的发送任务
+kset 内部本身也包含一个 kobj 对象，在 sysfs 中也表现为目录；所不同的是，kset 要承担 kobj 状态变动消息的发送任务
 
 - [ ] [kobject](https://www.kernel.org/doc/Documentation/kobject.txt)
 - [ ] [The zen of kobjects](https://lwn.net/Articles/51437/)
@@ -179,7 +157,7 @@ struct kobject {
   unsigned int uevent_suppress:1;
 };
 ```
-name : 同时也是sysfs中的目录名称。由于Kobject添加到Kernel时，需要根据名字注册到sysfs中，之后就不能再直接修改该字段。如果需要修改Kobject的名字，需要调用kobject_rename接口，该接口会主动处理sysfs的相关事宜
+name : 同时也是 sysfs 中的目录名称。由于 Kobject 添加到 Kernel 时，需要根据名字注册到 sysfs 中，之后就不能再直接修改该字段。如果需要修改 Kobject 的名字，需要调用 kobject_rename 接口，该接口会主动处理 sysfs 的相关事宜
 
 
 提供的一个 API :
@@ -321,7 +299,7 @@ To add / delete an attribute within the bus structure, the `bus_create_file` and
 device_unregister 和 device_register 的作用 ?
 
 To work with the attributes, we have structure atribute , DEVICE_ATTR macrodefine for definition, and device_create_file and device_remove_file functions to add the attribute to the device.
->  device_create_file 这种函数用于挂载 attr 到
+> device_create_file 这种函数用于挂载 attr 到
 
 The device_create and device_destroy functions are available for initialization / deinterlacing .
 
@@ -365,16 +343,16 @@ Its role is to make a comparison between the device ID and the driver ID.
 The `uevent` function is called before generating a hotplug in user-space and has the role of adding environment variables.
 > match 函数用于在 device 或者 driver 连接到 bus 上(device 和 device_driver 都是持有 bus_type 这个成员的，当其注册的时候，那么就是自动关联上对应的 bus )，但是 uevent 被 hotplug 触发
 
-struct subsys_private中各个字段的解释：
+struct subsys_private 中各个字段的解释：
 
-subsys、devices_kset、drivers_kset是三个kset，kset是一个特殊的kobject，用来集合相似的kobject，它在sysfs中也会以目录的形式体现。其中subsys，代表了本bus（如/sys/bus/spi），它下面可以包含其它的kset或者其它的kobject；devices_kset和drivers_kset则是bus下面的两个kset（如/sys/bus/spi/devices和/sys/bus/spi/drivers），分别包括本bus下所有的device和device_driver。
+subsys、devices_kset、drivers_kset 是三个 kset，kset 是一个特殊的 kobject，用来集合相似的 kobject，它在 sysfs 中也会以目录的形式体现。其中 subsys，代表了本 bus（如/sys/bus/spi），它下面可以包含其它的 kset 或者其它的 kobject；devices_kset 和 drivers_kset 则是 bus 下面的两个 kset（如/sys/bus/spi/devices 和/sys/bus/spi/drivers），分别包括本 bus 下所有的 device 和 device_driver。
 
-interface是一个list head，用于保存该bus下所有的interface。有关interface的概念后面会详细介绍。
+interface 是一个 list head，用于保存该 bus 下所有的 interface。有关 interface 的概念后面会详细介绍。
 
-klist_devices和klist_drivers是两个链表，分别保存了本bus下所有的device和device_driver的指针，以方便查找。
+klist_devices 和 klist_drivers 是两个链表，分别保存了本 bus 下所有的 device 和 device_driver 的指针，以方便查找。
 
-drivers_autoprobe，用于控制该bus下的drivers或者device是否自动probe
-bus和class指针，分别保存上层的bus或者class指针。
+drivers_autoprobe，用于控制该 bus 下的 drivers 或者 device 是否自动 probe
+bus 和 class 指针，分别保存上层的 bus 或者 class 指针。
 
 wowo : 分析过 bus_register bus_add_device bus_add_driver 的具体实现
 
@@ -385,21 +363,21 @@ class_create_file_ns
 
 **两套接口原来大家都是存在的呀!**
 
-sysfs中所有的目录以及目录下的文件都对应内核中的一个struct kobj实例。
-bus目录中所有的子目录都对应内核中的一个struct bus_type实例。
-class目录中所有的子目录对应内核中的一个struct class实例
-devices目录中的所有目录以及子目录都对应一个struct device实例
+sysfs 中所有的目录以及目录下的文件都对应内核中的一个 struct kobj 实例。
+bus 目录中所有的子目录都对应内核中的一个 struct bus_type 实例。
+class 目录中所有的子目录对应内核中的一个 struct class 实例
+devices 目录中的所有目录以及子目录都对应一个 struct device 实例
 
 #### resource management
-内容在 : drivers/base/devres.c (wowo 还分析过具体的实现，暂时没有阅读的兴趣，至少等待KVM 和 namespace cgroup 看完再说吧) 提供一种机制，将系统中某个设备的所有资源，以链表的形式，组织起来，以便在driver detach的时候，自动释放。
+内容在 : drivers/base/devres.c (wowo 还分析过具体的实现，暂时没有阅读的兴趣，至少等待 KVM 和 namespace cgroup 看完再说吧) 提供一种机制，将系统中某个设备的所有资源，以链表的形式，组织起来，以便在 driver detach 的时候，自动释放。
 
 a）power，供电。
 b）clock，时钟。
-c）memory，内存，在kernel中一般使用kzalloc分配。
-d）GPIO，用户和CPU交换简单控制、状态等信息。
+c）memory，内存，在 kernel 中一般使用 kzalloc 分配。
+d）GPIO，用户和 CPU 交换简单控制、状态等信息。
 e）IRQ，触发中断。
-f）DMA，无CPU参与情况下进行数据传输。
-g）虚拟地址空间，一般使用ioremap、request_region等分配。
+f）DMA，无 CPU 参与情况下进行数据传输。
+g）虚拟地址空间，一般使用 ioremap、request_region 等分配。
 h）等等
 
 ```c
@@ -413,24 +391,14 @@ static inline void *devm_kzalloc(struct device *dev, size_t size, gfp_t gfp)
 > 暂时看不懂，也没有兴趣分析
 
 ## char device
-register_chrdev_region 之类的函数, 都是出现在 `fs/char_dev.c` 中间，
-调用者是各种驱动，比如 tty, 似乎 `fs/char_dev.c` 是一个通用函数的总结，
-而 `fs/block_dev.c` 更像是提供了标准访问 block 的接口。
-
-- [ ] 应该对比一下一般的 char dev 和 tty 的区别
-
 - [ ] ldd3 的 chapter 3
-
-- [ ] 检查 pci_register_driver 的实现，大致就是调用过程
+- [ ] 检查 `pci_register_driver` 的实现，大致就是调用过程
 
 ## 问题
-- [x] 到底一共存在多少总线类型 ? PCI PCIE I2C  ()
-- [ ] major:minor ?
-- [ ] 到底一共存在多少总线类型 ? PCI PCIE I2C
 
 ### 可能有用的问题
-5. 为什么在interrupt context 不能调用可能导致睡眠的函数?
-6. 那些机制实现内核可以动态的装载模块的 ? 除了export_symbols 之类的东西
+5. 为什么在 interrupt context 不能调用可能导致睡眠的函数?
+6. 那些机制实现内核可以动态的装载模块的 ? 除了 export_symbols 之类的东西
 
 这篇文章
 A Hardware Architecture for Implementing Protection Rings

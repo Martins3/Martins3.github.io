@@ -1,8 +1,6 @@
 # Linux Programming Interface: Chapter 62: Terminals
-> ldd 实在是看不懂，羞耻啊!
 
-All of the above is a `preamble` to saying that the need to program terminal devices is less frequent than it used to be. 
-> ok, 学一个单词 preamble
+All of the above is a preamble to saying that the need to program terminal devices is less frequent than it used to be.
 
 ## 62.1 Overview
 Both a conventional terminal and a terminal emulator have an associated terminal
@@ -23,7 +21,7 @@ Control-D).
 A terminal driver operates two queues (Figure 62-1): one for input characters
 transmitted from the terminal device to the reading process(es) and the other for
 output characters transmitted from processes to the terminal
-> terminal device ---> the process ---> terminal 
+> terminal device ---> the process ---> terminal
 > 图62-1 不错的
 
 ## 62.2 Retrieving and Modifying Terminal Attributes
@@ -45,7 +43,7 @@ The following paragraphs provide more details about some of the `termios` flags.
 > 继续描述termios的几个flags ，flags 中间包含的很多变量已经没有作用了
 
 ## 62.6 Terminal I/O Modes
-1. describe these two modes in detail. 
+1. describe these two modes in detail.
 2. describe three useful terminal modes—cooked, cbreak, and raw
 3. show how these modes are *emulated* on modern UNIX systems by setting appropriate values in the termios structure.
 
@@ -82,5 +80,3 @@ need to determine whether their standard input and output are directed to a term
 ## 62.11 Summary
 > to read !
 > 总体来说，都是操纵termios的内容而已，并且逐个讲解其中的作用是什么。
-
-

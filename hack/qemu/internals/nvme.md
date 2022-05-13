@@ -23,8 +23,7 @@ In this article, we introduce the usage of QEMU to emulate some of these block d
   - hw/block/nvme.c 是用于模拟 nvme 设备的
   - block/nvme.c 是 nvme 设备穿透的
 
-```c
-/*
+```txt
 #0  blk_aio_prwv (blk=0x5555568dc990, offset=4275045376, bytes=1024, iobuf=0x7ffdc4000ee0, co_entry=co_entry@entry=0x555555c8a3e0 <blk_aio_read_entry>, flags=0, cb=0x55
 555587ece0 <dma_blk_cb>, opaque=0x7ffdc4000e80) at ../block/block-backend.c:1433
 #1  0x0000555555c8b345 in blk_aio_preadv (blk=<optimized out>, offset=<optimized out>, qiov=<optimized out>, flags=<optimized out>, cb=<optimized out>, opaque=<optimize
@@ -55,8 +54,7 @@ x555555b8d730 <memory_region_write_accessor>, mr=0x5555579f7280, attrs=...) at .
 #20 0x00007ffff5fbb293 in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
 ```
 
-```c
-/*
+```txt
 #0  huxueshi () at ../block/block-backend.c:1426
 #1  0x0000555555c8b215 in blk_aio_prwv (blk=0x55555691b4a0, offset=0, bytes=4096, iobuf=0x555556942dd0, co_entry=0x555555c8a2e0 <blk_aio_read_entry>, flags=0, cb=0x5555
 5587ece0 <dma_blk_cb>, opaque=0x555556942d70) at ../block/block-backend.c:1439

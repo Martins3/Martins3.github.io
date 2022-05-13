@@ -88,7 +88,7 @@ minicom -D /dev/ttyUSB0
 ```c
 static const struct file_operations tty_fops // <---- tty_fops ，当打开 /dev/ttyS0 这个文件，其 IO 操作最后会调用此处
 
-static const struct tty_operations uart_ops  // <------ 选择 tty 的具体实现，如果是物理 serial，那么选择这个
+static const struct tty_operations uart_ops  // <------ 选择 tty 的具体实现，如果是物理 serial，那么选择这个，如果是 pty 那就是 pty_unix98_ops
 
 static const struct uart_ops serial8250_pops  // <------ uart 有 8250 和 16550 等信号
 ```
@@ -138,6 +138,7 @@ tty 交互实际上更加消耗 CPU 。好在现代的 CPU 足够快，输出到
 
 ## 一些其他疑惑的解答
 
+
 ### tty 如何实现的
 ```txt
 ➜  vn git:(master) ✗ strace tty
@@ -162,7 +163,7 @@ write(1, "speed 38400 baud; rows 73; colum"..., 50speed 38400 baud; rows 73; col
 通过 ioctl 实现，在内核中对应的位置在这里:
 ```c
 static const struct file_operations tty_fops = {
-	.unlocked_ioctl	= tty_ioctl,
+    .unlocked_ioctl = tty_ioctl,
 };
 ```
 
@@ -187,6 +188,9 @@ https://www.quora.com/How-do-I-understand-the-tmux-design-architecture-and-inter
 
 ## 关键参考
 - [TTY 到底是什么？](https://www.kawabangga.com/posts/4515)
+- [Linux Device Driver 3 : Chapter 18](https://lwn.net/images/pdf/LDD3/ch18.pdf)
+  - 其中分别构建了 mini 的 `tty_operations` 和 `uart_ops` 的实现
+- [The Linux Programming Interface : Chapter 62](https://man7.org/tlpi/)
 
 [^1]: 为了让 Hello World 程序更加明显，最好是循环输出多次，例如 100000 。
 

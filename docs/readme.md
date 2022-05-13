@@ -86,6 +86,7 @@
 - [tty 到底是什么](./kernel/tty.md)
 - 🚧 [syscall](./kernel/syscall.md)
 - [mknod](./kernel/mknod.md)
+- [Linux 设备模型](./kernel/device.md)
 
 ## Loongson
 - [X86 上阅读 Loongarch 内核](./loongarch/ccls.md)

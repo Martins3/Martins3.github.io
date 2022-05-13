@@ -49,6 +49,8 @@ const struct file_operations def_chr_fops = {
 - chardev : fs/chardev.c
 - blockdev : block/fops.c 和 block/bdev.c
 
+主要是注册和管理 chardev 驱动，最后
+
 ## 相关话题
 - [ebbchar](http://derekmolloy.ie/writing-a-linux-kernel-module-part-2-a-character-device/) 的这个教程中，实际上是不使用 mknod 的
   - 因为其调用了 `device_create` 在内核模块中直接创建的，最后调用到 `devtmpfs_create_node`
