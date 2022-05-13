@@ -21,17 +21,13 @@
     * [resource management](#resource-management)
 * [device tree](#device-tree)
 * [char device](#char-device)
-* [block device](#block-device)
 * [问题](#问题)
-  * [需要回答的问题](#需要回答的问题)
   * [可能有用的问题](#可能有用的问题)
-  * [细节问题](#细节问题)
-  * [具体内容](#具体内容)
-  * [各种结构体](#各种结构体)
-  * [习题](#习题)
+* [ldd3](#ldd3)
 * [资源(整理成为 footnote)](#资源整理成为-footnote)
 
 <!-- vim-markdown-toc -->
+- [ ] 将 Linux Knerle Lab 中的内容合并进来
 
 ## overview
 > Let's start with a device[^4]
@@ -425,86 +421,16 @@ register_chrdev_region 之类的函数, 都是出现在 `fs/char_dev.c` 中间�
 
 - [ ] ldd3 的 chapter 3
 
-## block device
-
-// TODO 感觉就像是以前从来接触过一样
-```c
-struct block_device_operations {
-  int (*open) (struct block_device *, fmode_t);
-  void (*release) (struct gendisk *, fmode_t);
-  int (*rw_page)(struct block_device *, sector_t, struct page *, unsigned int);
-  int (*ioctl) (struct block_device *, fmode_t, unsigned, unsigned long);
-  int (*compat_ioctl) (struct block_device *, fmode_t, unsigned, unsigned long);
-  unsigned int (*check_events) (struct gendisk *disk,
-              unsigned int clearing);
-  /* ->media_changed() is DEPRECATED, use ->check_events() instead */
-  int (*media_changed) (struct gendisk *);
-  void (*unlock_native_capacity) (struct gendisk *);
-  int (*revalidate_disk) (struct gendisk *);
-  int (*getgeo)(struct block_device *, struct hd_geometry *);
-  /* this callback is with swap_lock and sometimes page table lock held */
-  void (*swap_slot_free_notify) (struct block_device *, unsigned long);
-  int (*report_zones)(struct gendisk *, sector_t sector,
-      unsigned int nr_zones, report_zones_cb cb, void *data);
-  struct module *owner;
-  const struct pr_ops *pr_ops;
-};
-```
+- [ ] 检查 pci_register_driver 的实现，大致就是调用过程
 
 ## 问题
 - [x] 到底一共存在多少总线类型 ? PCI PCIE I2C  ()
 - [ ] major:minor ?
 - [ ] 到底一共存在多少总线类型 ? PCI PCIE I2C
 
-
-### 需要回答的问题
-2. 如果抛弃历史原因，如何设计tty程序
-3. tty设备驱动可以实现什么功能
-4. tty设备驱动主要包括什么东西 ?
-5. tty 和 键盘驱动 以及 是如何沟通联系起来的
-
-
 ### 可能有用的问题
-1. 为什么采用fs(everything is file 真的正确吗)的方法，难道真的没有更好的办法吗?
-2. 似乎设备驱动的步骤的总是那几个 : malloc init register driver/ register device
-4. /dev /sys /proc 这些文件夹和设备驱动的关系是什么?
 5. 为什么在interrupt context 不能调用可能导致睡眠的函数?
 6. 那些机制实现内核可以动态的装载模块的 ? 除了export_symbols 之类的东西
-
-
-### 细节问题
-1. 到底tty core 对应的代码是什么，函数，文件，变量 ?
-2. tty core和driver 如何沟通 ?
-3. tty 架构是什么样子的，提供证据
-4. port 到底在上下文中间指的是什么东西 ?
-
-### 具体内容
-1. 介绍三个结构体
-2. 介绍重要函数
-3. 介绍整个驱动工作的流程
-4. 说明一下有什么特殊的东西的
-5. 提供习题以及参考资料
-
-### 各种结构体
-1. tty_struct
-2. tty_operation
-3. tty_driver
-4. tty_port
-4. termios
-
-1. 三者的联系是什么 ?
-
-似乎初始化的内容就是在其中主要将 driver 和 termios ,op, port 挂钩起来, 其中port 的挂钩似乎含有单独的说明!
-
-而tty_struct 几乎是所有的函数调用的时候参数，但是是谁提供该参数目前并不清楚。
-
-2. 自己定义的 `struct tiny_serial` 的作用是什么
-### 习题
-1. 如何修改以实现支持kernel 5.1的内核
-2. 实现终端模拟器
-
-
-
 
 这篇文章
 A Hardware Architecture for Implementing Protection Rings
@@ -513,6 +439,21 @@ A Hardware Architecture for Implementing Protection Rings
 2. syscall 可以使用 int 模拟实现吗 ?
 3. interupt 和 exception 在架构实现上存在什么区别吗 ?
 
+## ldd3
+`pci_register_driver`
+
+sudo insmod pci_skel.ko 之后
+
+```c
+/sys/bus/pci/drivers/pci_skel
+/sys/module/pci_skel
+/sys/module/pci_skel/drivers/pci:pci_skel
+```
+
+- [ ] pci_enable_device
+
+- [x] pci_driver 到底指的是控制 pci 设备的软件, 因为在 /sys/bus/pci/drivers/pci_skel 的同级目录下，还可以找到其他各种驱动
+  - 而 pci_device 用于抽象对应的设备
 
 ## 资源(整理成为 footnote)
 1. https://www.linuxjournal.com/article/7353 : usb 驱动

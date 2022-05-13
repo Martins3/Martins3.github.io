@@ -9,7 +9,7 @@ Plug and Play is a technology that offers support for automatically adding and r
 - When the device and its bus allow, the system should be able to add or remove the device from the system while it is running, without having to reboot the system ( hotplug ).
 
 ## 笔记
-1. bus_find_device_by_name : 存在这种函数 !
+1. `bus_find_device_by_name` : 存在这种函数 !
 2. **Other possible operations on a bus are browsing the drivers or devices attached to it**.
 Although we can not directly access them (lists of drives and devices being stored in the private data of the driver, the subsys_private * p field ),
 these can be scanned using the *bus_for_each_dev* and *bus_for_each_drv* macrodefines .

@@ -69,7 +69,7 @@
 ## PCIe
 - 🚧 [PCIe 的基本原理](.)
 - 🚧 [Seabios 如何探测 PCIe](.)
-- 🚧 [Linux Kernel 如何管理 PCIe 设备](.)
+- [Linux Kernel 如何管理 PCIe 设备](./pci/kernel.md)
 - 🚧 [QEMU 如何模拟 PCIe 设备](.)
 
 ## Tools

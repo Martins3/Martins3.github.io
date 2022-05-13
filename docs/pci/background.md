@@ -2,6 +2,8 @@
 - [ ] 整理 bridge 如何模拟的
 - [ ] virtio 都是使用 PCI 模拟的吗?
 - [ ] host bridge 和 pci bridge ？
+- [ ] 什么是 PCI slot
+https://stackoverflow.com/questions/25908782/in-linux-is-there-a-way-to-find-out-which-pci-card-is-plugged-into-which-pci-sl
 
 ## 工具
 - `lscpi t` shows the bus device tree

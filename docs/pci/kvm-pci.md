@@ -82,4 +82,3 @@ To operate on a memory region such as the frame buffer on the above PCI video ca
 
 [^1]: https://stackoverflow.com/questions/7682422/what-does-request-mem-region-actually-do-and-when-it-is-needed
 [^2]: https://stackoverflow.com/questions/18854931/how-does-the-os-detect-hardware
-[^3]: https://www.kernel.org/doc/html/latest/PCI/index.html
