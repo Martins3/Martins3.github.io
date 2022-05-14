@@ -1,7 +1,22 @@
 # Linux kernel Labs 笔记
 
-## 搭建
-https://linux-kernel-labs.github.io/refs/heads/master/info/vm.html
+## 回答的问题
+- [ ] 浏览一下 fs 中内容
+- [ ] network
+- [ ] device model
+- [ ] kgdb
+- [ ] user model linux
+
+## 基本操作
+1. [搭建开发环境](https://linux-kernel-labs.github.io/refs/heads/master/info/vm.html)
+```sh
+git clone https://github.com/linux-kernel-labs/linux linux-kernel-labs
+cd linux-kernel-labs/tools/labs
+make boot
+```
+
+- [ ] make 和 make build 的各自的工作内容。
+- [ ] 开发环境的内容也需要吸收一下
 
 ## Makefile, shell scripts and python scripts internals
 1. img :
@@ -10,18 +25,14 @@ https://linux-kernel-labs.github.io/refs/heads/master/info/vm.html
         3. I create a.md under /home/root, so where is a.md, in which disk ?
     3. what's realtion with bzimage disk1.img disk2.img and mydisk.img ?
 2. change the login password ? set password, change user name
-3. user mode kernel ?
 4. ldd3 : kernel debug chapter! read it.
-5. https://en.wikipedia.org/wiki/Rootkit
 
 > 6. The analysis of the kernel image is a method of static analysis. If we want to perform dynamic analysis (analyzing how the kernel runs, not only its static image) we can use /proc/kcore;
 > maybe, this should be done when the kernel version on host and qemu are consistent !
 
-7. https://www.yoctoproject.org/docs/1.2/yocto-project-qs/yocto-project-qs.html
-9. make 和 make build 的各自的工作内容。
+
 ## Notes
 1. Using the dynamic image of the kernel is useful for detecting rootkits.
-2. https://darkdust.net/files/GDB%20Cheat%20Sheet.pdf
 
 # 10 Device model
 
@@ -304,9 +315,7 @@ int device_add(struct device *dev)
 # 9 network
 @todo 主要介绍了比较上层的东西，对应的实验并没有做，做一下对于 socket 和 netfilter 的理解帮助应该是很大的
 
-@todo 其中 e100 的部分应该是之后的实验了，似乎非常的有趣。都是最近两个月添加，看上去非常的有意思啊!
-
-# Question
+@todo 其中 e1000 的部分应该是之后的实验了，似乎非常的有趣。都是最近两个月添加，看上去非常的有意思啊!
 
 ## prepare-image.sh
 - 似乎使用传统的启动方法，等等，你真的理解 **传统方法吗 ?**
@@ -449,49 +458,49 @@ In case request queues are used and you needed to process the requests at struct
     3. 但是 data 和 size 找不到对应，很想知道最后走到 io 总线的位置是怎么样子的!
 ```c
 static struct my_block_dev {
-	spinlock_t lock;
-	struct request_queue *queue;
-	struct gendisk *gd;
-	u8 *data;
-	size_t size;
+    spinlock_t lock;
+    struct request_queue *queue;
+    struct gendisk *gd;
+    u8 *data;
+    size_t size;
 } g_dev;
 
 struct block_device {
-	dev_t			bd_dev;  /* not a kdev_t - it's a search key */
-	int			bd_openers;
-	struct inode *		bd_inode;	/* will die */
-	struct super_block *	bd_super;
-	struct mutex		bd_mutex;	/* open/close mutex */
-	void *			bd_claiming;
-	void *			bd_holder;
-	int			bd_holders;
-	bool			bd_write_holder;
+    dev_t           bd_dev;  /* not a kdev_t - it's a search key */
+    int         bd_openers;
+    struct inode *      bd_inode;   /* will die */
+    struct super_block *    bd_super;
+    struct mutex        bd_mutex;   /* open/close mutex */
+    void *          bd_claiming;
+    void *          bd_holder;
+    int         bd_holders;
+    bool            bd_write_holder;
 #ifdef CONFIG_SYSFS
-	struct list_head	bd_holder_disks;
+    struct list_head    bd_holder_disks;
 #endif
-	struct block_device *	bd_contains;
-	unsigned		bd_block_size;
-	u8			bd_partno;
-	struct hd_struct *	bd_part;
-	/* number of times partitions within this device have been opened. */
-	unsigned		bd_part_count;
-	int			bd_invalidated;
-	struct gendisk *	bd_disk;
-	struct request_queue *  bd_queue;
-	struct backing_dev_info *bd_bdi;
-	struct list_head	bd_list;
-	/*
-	 * Private data.  You must have bd_claim'ed the block_device
-	 * to use this.  NOTE:  bd_claim allows an owner to claim
-	 * the same device multiple times, the owner must take special
-	 * care to not mess up bd_private for that case.
-	 */
-	unsigned long		bd_private;
+    struct block_device *   bd_contains;
+    unsigned        bd_block_size;
+    u8          bd_partno;
+    struct hd_struct *  bd_part;
+    /* number of times partitions within this device have been opened. */
+    unsigned        bd_part_count;
+    int         bd_invalidated;
+    struct gendisk *    bd_disk;
+    struct request_queue *  bd_queue;
+    struct backing_dev_info *bd_bdi;
+    struct list_head    bd_list;
+    /*
+     * Private data.  You must have bd_claim'ed the block_device
+     * to use this.  NOTE:  bd_claim allows an owner to claim
+     * the same device multiple times, the owner must take special
+     * care to not mess up bd_private for that case.
+     */
+    unsigned long       bd_private;
 
-	/* The counter of freeze processes */
-	int			bd_fsfreeze_count;
-	/* Mutex for freeze */
-	struct mutex		bd_fsfreeze_mutex;
+    /* The counter of freeze processes */
+    int         bd_fsfreeze_count;
+    /* Mutex for freeze */
+    struct mutex        bd_fsfreeze_mutex;
 } __randomize_layout;
 ```
 
@@ -556,29 +565,29 @@ The KeyBoard driver is really intesting :
 ```c
 static int __init i8042_setup_kbd(void)
 {
-	int error;
+    int error;
 
-	error = i8042_create_kbd_port();
-	if (error)
-		return error;
+    error = i8042_create_kbd_port();
+    if (error)
+        return error;
 
-	error = request_irq(I8042_KBD_IRQ, i8042_interrupt, IRQF_SHARED,
-			    "i8042", i8042_platform_device);
-	if (error)
-		goto err_free_port;
+    error = request_irq(I8042_KBD_IRQ, i8042_interrupt, IRQF_SHARED,
+                "i8042", i8042_platform_device);
+    if (error)
+        goto err_free_port;
 
-	error = i8042_enable_kbd_port(); // tell the device, everything is ok, start working now !
-	if (error)
-		goto err_free_irq;
+    error = i8042_enable_kbd_port(); // tell the device, everything is ok, start working now !
+    if (error)
+        goto err_free_irq;
 
-	i8042_kbd_irq_registered = true;
-	return 0;
+    i8042_kbd_irq_registered = true;
+    return 0;
 
  err_free_irq:
-	free_irq(I8042_KBD_IRQ, i8042_platform_device);
+    free_irq(I8042_KBD_IRQ, i8042_platform_device);
  err_free_port:
-	i8042_free_kbd_port();
-	return error;
+    i8042_free_kbd_port();
+    return error;
 }
 
 
@@ -595,26 +604,26 @@ static irqreturn_t i8042_interrupt(int irq, void *dev_id)
 
 static inline int i8042_read_data(void)
 {
-	return inb(I8042_DATA_REG);
+    return inb(I8042_DATA_REG);
 }
 ```
 
 ```c
 struct serio_driver { // todo so, what's the relation between serio_driver and keyboard ?
-	const char *description;
+    const char *description;
 
-	const struct serio_device_id *id_table;
-	bool manual_bind;
+    const struct serio_device_id *id_table;
+    bool manual_bind;
 
-	void (*write_wakeup)(struct serio *);
-	irqreturn_t (*interrupt)(struct serio *, unsigned char, unsigned int);
-	int  (*connect)(struct serio *, struct serio_driver *drv);
-	int  (*reconnect)(struct serio *);
-	int  (*fast_reconnect)(struct serio *);
-	void (*disconnect)(struct serio *);
-	void (*cleanup)(struct serio *);
+    void (*write_wakeup)(struct serio *);
+    irqreturn_t (*interrupt)(struct serio *, unsigned char, unsigned int);
+    int  (*connect)(struct serio *, struct serio_driver *drv);
+    int  (*reconnect)(struct serio *);
+    int  (*fast_reconnect)(struct serio *);
+    void (*disconnect)(struct serio *);
+    void (*cleanup)(struct serio *);
 
-	struct device_driver driver;
+    struct device_driver driver;
 };
 ```
 

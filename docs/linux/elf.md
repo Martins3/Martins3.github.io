@@ -37,5 +37,6 @@ file 帮助我解决了 在 x86 上交叉编译内核，让后 sync 到 3a4000 �
 ## grub 也是可以加载 elf 的
 
 ## [ ]  动态链接库
+https://tinylab-1.gitbook.io/cbook/02-chapter4
 
 ## 辅助向量

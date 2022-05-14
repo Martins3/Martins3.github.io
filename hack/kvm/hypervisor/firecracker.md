@@ -1,5 +1,5 @@
 ## make it run
-I think what we should do when coming back 
+I think what we should do when coming back
 - [ ] vmm
 - [ ] mmds / Dumbo
 - [ ] devices
@@ -28,7 +28,7 @@ It complements containers so well, and the best thing is that it can be managed 
 - [ ] Restful API
   - in the /api_server
 
-- [ ] Firecracker also provides a *metadata service* that securely shares configuration information between the host and guest operating system. 
+- [ ] Firecracker also provides a *metadata service* that securely shares configuration information between the host and guest operating system.
 - [ ] The *jailer* provides a second line of defense in case the virtualization barrier is ever compromised.
 
 - [ ] CPU type : T2, E3
@@ -121,3 +121,6 @@ device_manager/mod.rs                                    1              9       
 ## What we should run
 - https://github.com/containers/libkrun
 - https://github.com/cloud-hypervisor/cloud-hypervisor
+
+## 中文的参考文档
+https://aws.amazon.com/cn/blogs/china/deep-analysis-aws-firecracker-principle-virtualization-container-runtime-technology/?nc1=b_rp
