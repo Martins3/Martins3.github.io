@@ -89,5 +89,6 @@
   - 而且 using 可以修改 parent 的 field / method 对外的可见性
     - override 一个 overload function 的时候，所有的全部都会被 override, 但是靠 using 可以把 parent 的重新带回来
     - https://stackoverflow.com/questions/888235/overriding-a-bases-overloaded-function-in-c
+
 # TODO
 /home/maritns3/core/CPlusPlusThings/basic_content/virtual/set4/warn_rtti.cpp

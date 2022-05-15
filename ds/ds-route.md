@@ -43,7 +43,6 @@ https://github.com/upgundecha/howtheysre : 各个公司关于 SRE 的报告吧
 
 ## 教程
 - https://github.com/HelloGitHub-Team/HelloZooKeeper : 中文 ZooKeeper 教程
-- [数据密集型应用](https://vonng.github.io/ddia/#/part-i) 的中文翻译，可以快速阅读
 
 ## 项目
 - [分布式网络模拟](https://github.com/shadow/shadow)

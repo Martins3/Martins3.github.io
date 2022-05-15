@@ -10,11 +10,6 @@
   </p>
 </p>
 
-## Navigations
-- [Martins3's slides](https://martins3.github.io/ppt)
-- [Source code reading list](./source-code-reading-list.md)
-- [Binary Translation and Virtualization Paper reading list](./paper-reading-list.md)
-
 ## Virtualization && Binary Translation
 - [Loongson Dune : A Process Level Virtualization framework Base on KVM](https://github.com/Martins3/loongson-dune)
 
@@ -98,7 +93,7 @@
 - 🚧 [memory model](./concurrent/memory-model.md)
 - 🚧 [volatile 关键字说明](./concurrent/volatile.md)
 
-## Misc
+## Potpourri
 - [what is x86 IA-32 IA-64 x86-64 and amd64 ?](./x86-names.md)
 - [言论](./words.md)
 

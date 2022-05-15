@@ -75,3 +75,5 @@ This example may seem artificial, but using two synchronization variables does h
 
 Litmus Test: Independent Reads of Independent Writes (IRIW)
 - there is a total order over all stores (writes) to main memory, and all processors agree on that order, subject to the wrinkle that each processor knows about its own writes before they reach main memory.
+
+## leveldb 中的 skiplist 中的 cpp 11 的 memory model

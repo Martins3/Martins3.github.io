@@ -97,6 +97,7 @@
 * [user address space](#user-address-space)
 * [kaslr](#kaslr)
 * [memfd](#memfd)
+* [DAX](#dax)
 
 <!-- vim-markdown-toc -->
 
@@ -3018,6 +3019,11 @@ maybe because of user space address randomization
 
 ## memfd
 https://mp.weixin.qq.com/s/ZLXAz8dAdcqS52MzmXU_YA
+
+## DAX
+面试的时候被问了好几次
+- `O_DIRECT` 和 DAX 的差别
+- 是不是，直接读写 blockdev 是绕过了 fs，但是没有绕过 page cache?
 
 [^1]: [lwn : Huge pages part 1 (Introduction)](https://lwn.net/Articles/374424/)
 [^2]: [lwn : An end to high memory?](https://lwn.net/Articles/813201/)
