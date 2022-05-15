@@ -35,39 +35,17 @@ QEMU 很强大。
 使用 FlameGraph 可以很快的定位出来函数的大致执行的流程，无需使用编辑器一个个的跳转，非常好用。
 其局限在于，似乎总是只能从用户态系统调用触发。
 
-步骤参考 : https://yohei-a.hatenablog.jp/entry/20150706/1436208007 原文是日文写的，我在转述一下:
-
-```sh
-wget https://raw.githubusercontent.com/brendangregg/FlameGraph/master/stackcollapse-perf.pl
-wget https://raw.githubusercontent.com/brendangregg/FlameGraph/master/flamegraph.pl
-
-# 为了让 non root 用户可以 perf
-echo 0 > /proc/sys/kernel/perf_event_paranoid
-echo 0 > /proc/sys/kernel/kptr_restrict
-echo 100000 > /proc/sys/kernel/perf_event_max_sample_rate
-```
-
-```sh
-perf record -a -g -F100000 dd if=/dev/zero of=/tmp/test.dat bs=1024K count=1000
-```
+具体细节参考 https://www.brendangregg.com/FlameGraphs/cpuflamegraphs.html
 
 perf 可能需要安装:
 ```sh
 sudo apt install linux-tools-common linux-tools-generic linux-tools-`uname -r`
 ```
 
-- -g: record call stack (call graph, backtrace)
-- -a: Collect information not only for execution commands, but also for the entire OS
-- -F: 100,000Hz (100,000 times per second) sampling
-
-```sh
-perf script | perl stackcollapse-perf.pl  > perf_data.out
-grep mknod perf_data.out | perl flamegraph.pl --title "trace" > flamegraph_dd.svg # 加上一个 grep
-cat perf_data.out | perl flamegraph.pl --title "trace" > flamegraph_dd.svg
-```
-
 最终效果如下，可以在新的窗口中打开从而可以动态交互。
-![](./img/flamegraph.svg)
+![](./img/dd.svg)
+
+这个工具我使用的非常频繁，所以构建了简单的[一个脚本](https://github.com/Martins3/Martins3.github.io/blob/master/docs/kernel/code/flamegraph.sh)
 
 ## bpftrace
 使用 bpftrace 的 kprobe 可以很容易的动态的获取内核函数的 backtrace

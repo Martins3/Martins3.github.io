@@ -42,6 +42,10 @@
 
 
 ## leveldb
+- [ ] 环境搭建
+  - diff 一下
+  - LSM tree 是什么?
+
 - [ ] skiplist ?
   - [ ] 在 leveldb 用来管理什么的？
 - cache
