@@ -10,7 +10,6 @@ if [[ $use_32bit == true ]]; then
   kernel_dir=/home/maritns3/core/bmbt_linux
 fi
 
-# 可以直接使用系统中安装的 QEMU, 也就是 qemu-system-x86_64
 qemu=/home/maritns3/core/kvmqemu/build/qemu-system-x86_64
 # bios 镜像的地址，可以不配置，将下面的 arg_seabios 定位为 "" 就是使用默认的
 seabios=/home/maritns3/core/seabios/out/bios.bin

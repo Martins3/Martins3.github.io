@@ -40,6 +40,10 @@
 
 构建好了之后，就可以像是调试普通进程一样调试内核了，非常地好用。
 
+```sh
+apk add pciutils
+```
+
 ### [ ] Ubuntu Server
 
 ### [ ] Ubuntu Desktop
@@ -64,6 +68,8 @@ $QEMU -kernel /home/maritns3/core/ubuntu-linux/arch/x86/boot/bzImage \
   -monitor stdio
 ```
 
+- [ ] 使用 alpine 直接就可以 ssh 到远程，很神奇
+
 ## 直通一个设备
 
 ## 共享目录
@@ -81,4 +87,35 @@ $QEMU -kernel /home/maritns3/core/ubuntu-linux/arch/x86/boot/bzImage \
 - [ ] 从 Linux-Kernel-Labs.sh 中抽出来的，莫名其妙的，其他的内容也全部整合一下
 ```sh
 -device virtio-serial-pci -chardev pty,id=virtiocon0 -device virtconsole,chardev=virtiocon0 \
+```
+
+## PCI bridge : 构建更加复杂的 topo 结构
+
+首先运行 `lspci`，观察到 00:03.0 是一个 PCI bridge
+```plain
+00:00.0 Host bridge: Intel Corporation 440FX - 82441FX PMC [Natoma] (rev 02)
+00:01.0 ISA bridge: Intel Corporation 82371SB PIIX3 ISA [Natoma/Triton II]
+00:01.1 IDE interface: Intel Corporation 82371SB PIIX3 IDE [Natoma/Triton II]
+00:01.3 Bridge: Intel Corporation 82371AB/EB/MB PIIX4 ACPI (rev 03)
+00:02.0 VGA compatible controller: Device 1234:1111 (rev 02)
+00:03.0 PCI bridge: Red Hat, Inc. QEMU PCI-PCI bridge
+00:04.0 SCSI storage controller: Red Hat, Inc. Virtio block device
+00:05.0 Ethernet controller: Intel Corporation 82574L Gigabit Network Connection
+00:06.0 Unclassified device [0002]: Red Hat, Inc. Virtio filesystem
+01:01.0 Non-Volatile memory controller: Red Hat, Inc. QEMU NVM Express Controller (rev 02)
+```
+
+然后运行 `ls -l /sys/bus/pci/devices`，可以观察到 01:01.0 是挂载到 00:03.0 上的
+
+```txt
+lrwxrwxrwx    1 root     root             0 May 16 08:50 0000:00:00.0 -> ../../../devices/pci0000:00/0000:00:00.0
+lrwxrwxrwx    1 root     root             0 May 16 08:50 0000:00:01.0 -> ../../../devices/pci0000:00/0000:00:01.0
+lrwxrwxrwx    1 root     root             0 May 16 08:50 0000:00:01.1 -> ../../../devices/pci0000:00/0000:00:01.1
+lrwxrwxrwx    1 root     root             0 May 16 08:50 0000:00:01.3 -> ../../../devices/pci0000:00/0000:00:01.3
+lrwxrwxrwx    1 root     root             0 May 16 08:50 0000:00:02.0 -> ../../../devices/pci0000:00/0000:00:02.0
+lrwxrwxrwx    1 root     root             0 May 16 08:50 0000:00:03.0 -> ../../../devices/pci0000:00/0000:00:03.0
+lrwxrwxrwx    1 root     root             0 May 16 08:50 0000:00:04.0 -> ../../../devices/pci0000:00/0000:00:04.0
+lrwxrwxrwx    1 root     root             0 May 16 08:50 0000:00:05.0 -> ../../../devices/pci0000:00/0000:00:05.0
+lrwxrwxrwx    1 root     root             0 May 16 08:50 0000:00:06.0 -> ../../../devices/pci0000:00/0000:00:06.0
+lrwxrwxrwx    1 root     root             0 May 16 08:50 0000:01:01.0 -> ../../../devices/pci0000:00/0000:00:03.0/0000:01:01.0
 ```
