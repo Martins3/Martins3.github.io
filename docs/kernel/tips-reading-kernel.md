@@ -21,13 +21,13 @@ QEMU 很强大。
     - 安装磁盘选择创建的
 
 > 默认 root 登录
-![](./img/alpine-2.png)
+![](./img/x-2.png)
 
 > 选择 f 也即是自动选择最快的
-![](./img/alpine-1.png)
+![](./img/x-1.png)
 
 > 将系统安装到脚本制作的 image 中
-![](./img/alpine-3.png)
+![](./img/x-3.png)
 
 构建好了之后，就可以像是调试普通进程一样调试内核了，非常好用。
 
