@@ -2,7 +2,7 @@
 set -eu
 
 use_32bit=false
-use_nvme=false
+use_nvme_as_root=false
 
 # ----------------------- 配置区 -----------------------------------------------
 kernel_dir=/home/maritns3/core/ubuntu-linux
@@ -35,7 +35,7 @@ LAUNCH_GDB=false
 arg_img="-drive file=${disk_img},format=qcow2"
 root=/dev/sda3
 
-if [[ $use_nvme = true ]]; then
+if [[ $use_nvme_as_root = true ]]; then
   arg_img="-device nvme,drive=nvme3,serial=foo -drive file=${disk_img},format=qcow2,if=none,id=nvme3"
   root=/dev/nvme1n1
 fi
@@ -48,10 +48,11 @@ arg_monitor="-serial mon:stdio"
 # 可选参数
 arg_mem="-m 128m -smp 1"
 arg_share_dir="-virtfs local,path=${share_dir},mount_tag=host0,security_model=mapped,id=host0"
+arg_bridge="-device pci-bridge,id=mybridge,chassis_nr=1"
 arg_machine="-machine pc,accel=kvm,kernel-irqchip=on" # q35
 arg_cpu="-cpu host"
 arg_seabios="-chardev file,path=/tmp/seabios.log,id=seabios -device isa-debugcon,iobase=0x402,chardev=seabios -bios ${seabios}"
-arg_nvme="-device nvme,drive=nvme1,serial=foo -drive file=${ext4_img1},format=raw,if=none,id=nvme1"
+arg_nvme="-device nvme,drive=nvme1,serial=foo,bus=mybridge,addr=0x1 -drive file=${ext4_img1},format=raw,if=none,id=nvme1"
 arg_nvme2="-device virtio-blk-pci,drive=nvme2,iothread=io0 -drive file=${ext4_img2},format=raw,if=none,id=nvme2"
 arg_network="-netdev user,id=n1,ipv6=off -device e1000e,netdev=n1"
 arg_iothread="-object iothread,id=io0"
@@ -68,15 +69,6 @@ if [[ $use_32bit == true ]]; then
   arg_initrd="-initrd ${initrd}"
   arg_monitor="-nographic"
   arg_kernel_args="nokaslr console=ttyS0"
-fi
-
-yocto_img=${abs_loc}/yocto.ext4
-ARCH=x86-64
-YOCTO_URL=http://downloads.yoctoproject.org/releases/yocto/yocto-3.1/machines/qemu/qemu${ARCH}/
-YOCTO_IMAGE_NAME=core-image-minimal-qemu${ARCH}.ext4
-if [[ ! -f ${yocto_img} ]]; then
-  wget ${YOCTO_URL}/${YOCTO_IMAGE_NAME} -O "${yocto_img}"
-  arg_img="-drive \"file=${yocto_img},if=virtio\""
 fi
 
 show_help() {
@@ -161,7 +153,7 @@ if [ $LAUNCH_GDB = true ]; then
 fi
 
 cmd="${debug_qemu} ${qemu} ${arg_trace} ${debug_kernel} ${arg_img} ${arg_mem} ${arg_cpu} \
-  ${arg_kernel} ${arg_seabios} ${arg_nvme} ${arg_nvme2} ${arg_iothread} ${arg_network} \
+  ${arg_kernel} ${arg_seabios} ${arg_bridge} ${arg_nvme} ${arg_nvme2} ${arg_iothread} ${arg_network} \
   ${arg_share_dir} ${arg_machine} ${arg_monitor} ${arg_qmp} ${arg_initrd} \
   ${arg_tmp}"
 echo "$cmd"

@@ -8,29 +8,6 @@ QEMU 很强大。
 使用 QEMU 调试内核网上已经有很多的文章, 比如 [Booting a Custom Linux Kernel in QEMU and Debugging It With GDB](http://nickdesaulniers.github.io/blog/2018/10/24/booting-a-custom-linux-kernel-in-qemu-and-debugging-it-with-gdb/)
 但是，这些都不是完整，对着教程用下来总是出问题。
 
-## 镜像
-所以我写了一个[脚本](https://github.com/Martins3/Martins3.github.io/blob/master/hack/qemu/x64-e1000/alpine.sh), 简单解释几个点:
-1. 其中采用 alpine 作为镜像，因为 alpine 是 Docker 选择的轻量级镜像，比 Yocto 功能齐全(包管理器)，而且比 Ubuntu 简单
-2. 第一步使用 iso 来安装镜像，这次运行的是 iso 中是包含了一个默认内核, 安装镜像之后，使用 -kernel 指定内核
-3. 在 [How to use custom image kernel for ubuntu in qemu?](https://stackoverflow.com/questions/65951475/how-to-use-custom-image-kernel-for-ubuntu-in-qemu) 的这个问题中，我回答了如何设置内核参数 sda
-
-其中几乎所有的操作使用脚本，除了镜像的安装需要手动操作
-1. 使用 root 登录
-2. 执行 setup-alpine 来进行安装, 所有的都是默认的, 一路 enter (包括密码，之后登录直接 enter) ，除了下面的两个
-    - 选择 image 的时候让其自动选择最快的，一般是清华的
-    - 安装磁盘选择创建的
-
-> 默认 root 登录
-![](./img/x-2.png)
-
-> 选择 f 也即是自动选择最快的
-![](./img/x-1.png)
-
-> 将系统安装到脚本制作的 image 中
-![](./img/x-3.png)
-
-构建好了之后，就可以像是调试普通进程一样调试内核了，非常好用。
-
 ## FlameGraph
 使用 FlameGraph 可以很快的定位出来函数的大致执行的流程，无需使用编辑器一个个的跳转，非常好用。
 其局限在于，似乎总是只能从用户态系统调用触发。

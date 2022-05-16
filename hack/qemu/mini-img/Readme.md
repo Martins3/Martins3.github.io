@@ -29,11 +29,7 @@ root
                                                                                                                                                                        ^
 root@qemux86-64:~#
 ```
-	
 
 https://fadeevab.com/how-to-setup-qemu-output-to-console-and-automate-using-shell-script/
 
-[yoctoproject 官方文档指导了如果制作镜像](https://docs.yoctoproject.org/index.html)
-
-## Licence
-Copyright belongs to https://github.com/linux-kernel-labs
+[yoctoproject 官方文档指导了如何制作镜像](https://docs.yoctoproject.org/index.html)
