@@ -11,6 +11,8 @@
 - https://15445.courses.cs.cmu.edu/fall2021/
   - https://www.bilibili.com/video/BV1bQ4y1Y7iT
 
+- https://github.com/pingcap/awesome-database-learning
+
 ## 两本教科书
 - database system concepts
 - [数据密集型应用](https://vonng.github.io/ddia/#/part-i) 的中文翻译，可以快速阅读
@@ -39,20 +41,3 @@
 
 ## 问题
 - 什么是时序数据库
-
-
-## leveldb
-- [ ] 环境搭建
-  - diff 一下
-  - LSM tree 是什么?
-
-- [ ] skiplist ?
-  - [ ] 在 leveldb 用来管理什么的？
-- cache
-  - [ ] shared lru cache
-
-- [ ] 日志压缩
-
-- [leveldb](https://www.qtmuniao.com/2020/07/03/leveldb-data-structures-skip-list/) :  C++ 数据库 Jeff Dean 1000 行 :star:
-    - https://medium.com/databasss/on-disk-io-part-1-flavours-of-io-8e1ace1de017 : 数据库教程
-    - https://www.bilibili.com/video/BV16B4y1N7Qh

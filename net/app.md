@@ -7,3 +7,7 @@
 
 ## dns
 https://questions.wizardzines.com/dns.html
+
+## nginx
+- https://www.nginx.com/blog/improving-nginx-performance-with-kernel-tls/ : 配置工具
+- https://github.com/y123456yz/reading-code-of-nginx-1.9.2 : 源码分析

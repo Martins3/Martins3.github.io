@@ -80,6 +80,7 @@ kprobe:task_tick_fair
 ## TODO
 - [ ] 将 QEMU 的基本使用变为一个单独的文章分析一下
   - 分析各种常用的技术
+  - 整理 ./perf 和 ./hack/trace.md
 - [ ] 介绍 [hotspot](https://github.com/KDAB/hotspot)
 - [ ] perf 工具比我想想的要强大，应该好好的重新分析一下
   - https://www.brendangregg.com/FlameGraphs/cpuflamegraphs.html
