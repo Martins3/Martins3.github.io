@@ -21,6 +21,9 @@
 ### 佩服
 - [Fabrice Bellard](https://bellard.org/)
 
+### 影视
+- [绿色星球](https://www.bilibili.com/bangumi/play/ep451882)
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

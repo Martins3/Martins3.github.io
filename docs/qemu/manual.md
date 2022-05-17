@@ -1,5 +1,14 @@
 # QEMU 使用入门
 
+## 如何编译 QEMU
+编译 x86 32bit 的方法
+```sh
+cd path_to_qemu || exit 1
+mkdir 32bit
+cd 32bit || exit 1
+../configure --target-list=i386-softmmu
+make -j
+```
 
 ## 给一个硬盘安装操作系统
 
@@ -13,7 +22,15 @@
 
 ## img 制作方法
 
-### [ ] Hello World
+### [ ] hello world
+```c
+  /*
+   - use hello.out
+      - "console=ttyS0 earlyprintk=serial debug root=/dev/ram rdinit=/hello.out"
+   - use busybox
+      - "console=ttyS0 earlyprintk=serial debug";
+  */
+```
 
 ### [ ] busybox
 
@@ -69,6 +86,14 @@ $QEMU -kernel /home/maritns3/core/ubuntu-linux/arch/x86/boot/bzImage \
 ```
 
 - [ ] 使用 alpine 直接就可以 ssh 到远程，很神奇
+
+- 似乎增加一个网络设备并不是很难，难的是如何正确配置
+network 的事情参考这个部分：
+https://www.digi.com/resources/documentation/digidocs/90001515/task/yocto/t_configure_network.htm
+基础的部分参考这个：
+https://www.cnblogs.com/wipan/p/9272255.html
+https://gist.github.com/chrisdone/02e165a0004be33734ac2334f215380e
+https://www.digi.com/resources/documentation/digidocs/90001515/task/yocto/t_configure_network.htm
 
 ## 直通一个设备
 

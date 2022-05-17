@@ -26,15 +26,23 @@
   - [x] block 设备提供给 multiqueue 的标准接口是啥 : 就是 `mq_ops`
 ```c
 static const struct blk_mq_ops nbd_mq_ops = {
-	.queue_rq	= nbd_queue_rq,
-	.complete	= nbd_complete_rq,
-	.init_request	= nbd_init_request,
-	.timeout	= nbd_xmit_timeout,
+    .queue_rq   = nbd_queue_rq,
+    .complete   = nbd_complete_rq,
+    .init_request   = nbd_init_request,
+    .timeout    = nbd_xmit_timeout,
 };
 ```
 - [ ] request queue 和 multiqueue 的关系是什么 ?
   - [ ] block/blk-core.c 中，几乎所有的函数的参数都是有 `request_queue` 的
 - [ ] 可能更加有意思的问题是，为什么需要设计 /dev/ 和 major number 和 minor number 出来啊
+- [ ] 为什么一会是 PARTUUID，在 grub 中又是 UUID 的，而且 PARTUUID 两个的长短完全不同
+```c
+    ms->kernel_cmdline = "console=ttyS0 earlyprintk=serial "
+                         "root=PARTUUID=ee917107-01 init=/bin/bash";
+
+    ms->kernel_cmdline = "root=PARTUUID=616e86aa-a573-4d60-bb44-b1b701d5a552 "
+                         "rw console=ttyS0 init=/bin/bash";
+```
 
 ## overview
 <p align="center">
@@ -239,10 +247,10 @@ bpftrace -e 'kprobe:blk_add_partitions { @[kstack] = count(); }'
 
 ```c
 static const struct blk_mq_ops nbd_mq_ops = {
-	.queue_rq	= nbd_queue_rq,
-	.complete	= nbd_complete_rq,
-	.init_request	= nbd_init_request,
-	.timeout	= nbd_xmit_timeout,
+    .queue_rq   = nbd_queue_rq,
+    .complete   = nbd_complete_rq,
+    .init_request   = nbd_init_request,
+    .timeout    = nbd_xmit_timeout,
 };
 ```
 

@@ -68,11 +68,11 @@
 
 ## Tools
 - [我的 Linux 配置](https://martins3.github.io/My-Linux-Config/)
-- 🚧 [Debugger 的理念，原理和使用](./tips/gdb.md)
 
 ## Linux Environment Programming
 - [musl 阅读笔记](./linux/musl.md)
 - 🚧 [认识 elf](./linux/elf.md)
+- 🚧 [Debugger 的理念，原理和使用](./linux/gdb.md)
 
 ## Linux Kernel
 - [内核学习的一点经验之谈](./kernel/learn-linux-kernel.md)
