@@ -44,6 +44,6 @@ jobs:
 ## token
 1. 创建 https://github.com/settings/tokens
 2. 将 ~/.git-credentials 中原来的密码替换为 token:
-```
+```txt
 https://martins3:token@github.com
 ```

@@ -6,7 +6,7 @@
 
 - 外部的库是如何引入的？
 
-```c
+```
 #0  0x000055555556851c in stack_init ()
 #1  0x000055555556862e in f_luaopen () // 有趣，进行了多个初始化
 #2  0x000055555556043e in luaD_rawrunprotected ()
@@ -15,9 +15,9 @@
 #5  0x000055555555caeb in main ()
 ```
 
-f_luaopen
+`f_luaopen`
 
-```c
+```
 #0  0x0000555555560f50 in luaD_precall ()
 #1  0x000055555556137c in luaD_callnoyield ()
 #2  0x000055555555ce57 in f_call ()
@@ -28,7 +28,7 @@ f_luaopen
 ```
 
 似乎是在 luaV_execute 中进行虚拟指令的执行，
-```c
+```
 #0  luaV_execute (L=L@entry=0x5555555972a8, ci=0x555555598af0) at lvm.c:1145
 #1  0x0000555555561392 in ccall (inc=65537, nResults=-1, func=0x555555597950, L=0x5555555972a8) at ldo.c:586
 #2  luaD_callnoyield (L=L@entry=0x5555555972a8, func=0x555555597950, nResults=-1) at ldo.c:602

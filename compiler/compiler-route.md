@@ -1,4 +1,9 @@
 # 收集的资源
+
+路线:
+- 代码: qbe
+- 书籍: 龙书和 eac 就可以了
+
 - https://c9x.me/compile/bib/ : 业余编译器玩家的阅读资源
 - https://github.com/banach-space/llvm-tutor : 按照这个项目，改写之前的 llvm 作业。
 

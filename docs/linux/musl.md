@@ -8,25 +8,25 @@
 * [Makefile](#makefile)
 * [memset 的实现和内核有区别吗](#memset-的实现和内核有区别吗)
 * [可以不使用 brk 来实现 malloc 吗](#可以不使用-brk-来实现-malloc-吗)
-* [syscall_cp](#syscall_cp)
+* [`syscall_cp`](#syscall_cp)
 * [`__GNU_C__`](#__gnu_c__)
 * [wchar](#wchar)
 * [gcc attribute](#gcc-attribute)
 * [sNaN and qNaN](#snan-and-qnan)
 * [初始化结构体](#初始化结构体)
 * [头文件 include 是存在优先级的](#头文件-include-是存在优先级的)
-* [hidden 的作用](#hidden-的作用)
-* [stdint / limits.h / inttypes.h / stdbool](#stdint-limitsh-inttypesh-stdbool)
-  * [float_t 和 long double](#float_t-和-long-double)
+* [[ ] hidden 的作用](#-hidden-的作用)
+* [[ ] stdint / limits.h / inttypes.h / stdbool](#-stdint-limitsh-inttypesh-stdbool)
+  * [`float_t` 和 long double](#float_t-和-long-double)
 * [redzone](#redzone)
 * [malloc](#malloc)
   * [多线程的处理](#多线程的处理)
-  * [week_alias 和静态链接](#week_alias-和静态链接)
-  * [a_ctz_32](#a_ctz_32)
+  * [`week_alias` 和静态链接](#week_alias-和静态链接)
+  * [`a_ctz_32`](#a_ctz_32)
 * [fabs 的定义](#fabs-的定义)
 * [当 exit 的时候会发生什么](#当-exit-的时候会发生什么)
 * [[ ] musl 如何实现 locks](#-musl-如何实现-locks)
-* [GNU_SOURCE](#gnu_source)
+* [`GNU_SOURCE`](#gnu_source)
 * [gcc can optimize fprintf to fwrite](#gcc-can-optimize-fprintf-to-fwrite)
 * [crt0](#crt0)
 * [glibc](#glibc)
@@ -124,8 +124,9 @@ obj/crt/Scrt1.o obj/crt/rcrt1.o: CFLAGS_ALL += -fPIC
 总所周知[^1]，brk 实际上是一个简化版的 mmap, 只是调整一个 vma 的上边界，而这个 vma 下边界就是 bss section 结束的位置。
 所以 brk 应该比 mmap 更加快一点点。
 
-## syscall_cp
-将 src/time/clock_nanosleep.c 展开为
+## `syscall_cp`
+
+将 `src/time/clock_nanosleep.c` 展开为
 ```c
 int __clock_nanosleep(clockid_t clk, int flags, const struct timespec *req, struct timespec *rem)
 {
@@ -136,7 +137,7 @@ int __clock_nanosleep(clockid_t clk, int flags, const struct timespec *req, stru
 }
 ```
 
-`src/thread/__syscall_cp.c` 在中，通过 week_alias 告诉我们当 single thread 的时候 syscall_cp 可以退化为普通的 syscall 的。
+`src/thread/__syscall_cp.c` 在中，通过 `week_alias` 告诉我们当 single thread 的时候 `syscall_cp` 可以退化为普通的 syscall 的。
 ```c
 long __syscall_cp_c(syscall_arg_t nr,
                     syscall_arg_t u, syscall_arg_t v, syscall_arg_t w,
@@ -157,10 +158,12 @@ long __syscall_cp_c(syscall_arg_t nr,
   return r;
 }
 ```
+
 在 `__syscall_cp_c` 中，只是将 `self->cancel` 传递到 r11 上了
 
-src/thread/x86_64/syscall_cp.s
-```c
+`src/thread/x86_64/syscall_cp.s` 中:
+
+```asm
 .text
 .global __cp_begin
 .hidden __cp_begin
@@ -195,7 +198,7 @@ __cp_cancel:
 ```
 
 对比 glibc 的 syscall 是一个很好的理解 x86 syscall 装换:
-```c
+```asm
 ENTRY (syscall)
   movq %rdi, %rax   /* Syscall number -> rax.  */
   movq %rsi, %rdi   /* shift arg1 - arg5.  */
@@ -217,11 +220,10 @@ PSEUDO_END (syscall)
   pushq %r11          /* pt_regs->flags */
 ```
 
-在 lwn 的
-[This is why we can't have safe cancellation points](https://lwn.net/Articles/683118/)
-有更多的分析。
+在 lwn 的 [This is why we can't have safe cancellation points](https://lwn.net/Articles/683118/) 有更多的分析。
 
-https://tutorialspoint.dev/language/c/pthread_cancel-c-example
+- [ ] https://tutorialspoint.dev/language/c/pthread_cancel-c-example
+
 ## `__GNU_C__`
 才知道 `__GNU_C__` [表示为支持 GNU C 扩展](https://stackoverflow.com/questions/19908922/what-is-this-ifdef-gnuc-about)
 
@@ -282,10 +284,9 @@ CFLAGS_ALL += -D_XOPEN_SOURCE=700 -I$(srcdir)/arch/$(ARCH) -I$(srcdir)/arch/gene
 ```
 src/include 定义在前，所以优先级更高。
 
-## hidden 的作用
-的
+## [ ] hidden 的作用
 
-## stdint / limits.h / inttypes.h / stdbool
+## [ ] stdint / limits.h / inttypes.h / stdbool
 - [ ] answer this nice questions : musl 为什么需要动态的生成 bits/alltypes.h
 
 ```c
@@ -296,8 +297,8 @@ obj/include/bits/alltypes.h: $(srcdir)/arch/$(ARCH)/bits/alltypes.h.in $(srcdir)
 - [ ] FILE 这个东西是不是定义的有点太随意了啊
 - [ ] #261 需要逐个分析一下
 
-### float_t 和 long double
-[float_t](https://stackoverflow.com/questions/5390011/whats-the-point-of-float-t-and-when-should-it-be-used)
+### `float_t` 和 long double
+[`float_t`](https://stackoverflow.com/questions/5390011/whats-the-point-of-float-t-and-when-should-it-be-used)
 
 ```c
 int main(int argc, char *argv[]) {
@@ -330,14 +331,14 @@ redzone 是
 
 而且我们构建了一个[clone.c](./malloc_thread_safe/clone.c) [pthread.c](./malloc_thread_safe/pthread.c)
 
-### week_alias 和静态链接
+### `week_alias` 和静态链接
 在分析 malloc 的原理的时候，我发现当在静态链接的时候，使用 free 与否会导致实际上调用的 malloc 不同
 - https://stackoverflow.com/questions/23079997/override-weak-symbols-in-static-library
 - https://stackoverflow.com/questions/51656838/attribute-weak-and-static-libraries
 
 其中的原理我们使用了[一个例子](./weak_alias) 来阐述
 
-### a_ctz_32
+### `a_ctz_32`
 - https://en.wikipedia.org/wiki/De_Bruijn_sequence
 - https://www.cnblogs.com/brighthoo/p/10649588.html
 
@@ -417,8 +418,8 @@ static inline void __wake(volatile void *addr, int cnt, int priv)
 }
 ```
 
-## GNU_SOURCE
-- what's GNU_SOURCE : https://stackoverflow.com/questions/5582211/what-does-define-gnu-source-imply/5583764
+## `GNU_SOURCE`
+- what's `GNU_SOURCE` : https://stackoverflow.com/questions/5582211/what-does-define-gnu-source-imply/5583764
 我不知道为什么正常编译的一个程序的时候，从来不需要考虑 `_GNU_SOURCE` 的问题，但是现在使用 musl 不添加 `_GNU_SOURCE` 几乎就没有可以运行的代码了。
 
 - https://stackoverflow.com/questions/48332332/what-does-define-posix-source-mean
@@ -433,12 +434,14 @@ static inline void __wake(volatile void *addr, int cnt, int priv)
 在用户态如何构建的。
 
 ## glibc
+
 ### bits/loongarch/strnlen.S
-sysdeps/x86_64/strnlen.S 中存在
+`sysdeps/x86_64/strnlen.S` 中存在
 ```c
 weak_alias (__strnlen, strnlen);
 libc_hidden_builtin_def (strnlen)
 ```
+
 但是，显然这是 c 语言的语法，为什么会出现在 .S 中，这是
 因为 include/libc-symbols.h 对于 weak 分别定义了两种情况。
 
@@ -450,7 +453,64 @@ libc_hidden_builtin_def (strnlen)
 - lock 中很多细节
   - 为什么要定义为数组
   - C 中 volatile 的作用
-  - 为什么使用 INT_MIN
+  - 为什么使用 `INT_MIN`
+- 在 BMBT 中，我们发现，修改编译选项从 -Ofast 的时候，然后打开所有的警告
+```sh
+CFLAGS="-Ofast -Wall" ./configure --enable-debug --prefix=$(pwd)/install
+```
+
+可以展示这个警告:
+```txt
+libc/src/stdio/vfprintf.c:561:23: 警告：此函数中的‘estr’在使用前可能未初始化 [-Wmaybe-uninitialized]
+     out(f, estr, ebuf - estr);
+                  ~~~~~^~~~~~
+```
+这个警告只有在只有在 -O0 的时候是没有的哦。
+
+- musl 的似乎是通过 spec 文件进行的，那个东西可以简单的分析一下
+```sh
+➜  obj git:(master) ✗ more musl-gcc
+#!/bin/sh
+exec "${REALGCC:-gcc}" "$@" -specs "/usr/local/musl/lib/musl-gcc.specs"
+```
+
+```txt
+➜  lib git:(master) ✗ cat musl-gcc.specs
+%rename cpp_options old_cpp_options
+
+*cpp_options:
+-nostdinc -isystem /usr/local/musl/include -isystem include%s %(old_cpp_options)
+
+*cc1:
+%(cc1_cpu) -nostdinc -isystem /usr/local/musl/include -isystem include%s
+
+*link_libgcc:
+-L/usr/local/musl/lib -L .%s
+
+*libgcc:
+libgcc.a%s %:if-exists(libgcc_eh.a%s)
+
+*startfile:
+%{!shared: /usr/local/musl/lib/Scrt1.o} /usr/local/musl/lib/crti.o crtbeginS.o%s
+
+*endfile:
+crtendS.o%s /usr/local/musl/lib/crtn.o
+
+*link:
+-dynamic-linker /lib/ld-musl-x86_64.so.1 -nostdlib %{shared:-shared} %{static:-static} %{rdynamic:-export-dynamic}
+
+*esp_link:
+
+
+*esp_options:
+
+
+*esp_cpp_options:
+```
+- [ ] 其中的 startfile 和 endfile 和 crt 有关，而 crt 在程序员的自我修养的时候就没有看懂
+
+
+
 
 ## 一些奇怪的事情
 - errno 和 signal 的编号都是和架构相关的

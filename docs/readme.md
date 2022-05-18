@@ -70,7 +70,7 @@
 - [我的 Linux 配置](https://martins3.github.io/My-Linux-Config/)
 
 ## Linux Environment Programming
-- [musl 阅读笔记](./linux/musl.md)
+- 🚧 [musl 阅读笔记](./linux/musl.md)
 - 🚧 [认识 elf](./linux/elf.md)
 - 🚧 [Debugger 的理念，原理和使用](./linux/gdb.md)
 
@@ -81,7 +81,7 @@
 - [tty 到底是什么](./kernel/tty.md)
 - 🚧 [syscall](./kernel/syscall.md)
 - [mknod](./kernel/mknod.md)
-- [Linux 设备模型](./kernel/device.md)
+-  🚧 [Linux 设备模型](./kernel/device.md)
 
 ## Database
 <!-- - [leveldb 源码分析](./database/leveldb.md) -->

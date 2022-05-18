@@ -1,3 +1,6 @@
+## 更新 Go
+https://gist.github.com/nikhita/432436d570b89cab172dcf2894465753
+
 ## env 美化
 - https://github.com/adi1090x : 壁纸，系统等
 

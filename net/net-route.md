@@ -301,6 +301,9 @@ emmmmmmm, 只是 DUP 上的封装
 - [ ] https://zhuanlan.zhihu.com/p/295230549 : 简介
 
 
+## Understanding Host Network Stack Overheads
+url: http://www.cs.cornell.edu/~ragarwal/pubs/network-stack.pdf
+
 [^2]: 用芯探核:基于龙芯的 Linux 内核探索解析
 [^4]: http://yuba.stanford.edu/rcp/
 [^6]: [An Introduction to Computer Networks](http://intronetworks.cs.luc.edu/current2/html/)

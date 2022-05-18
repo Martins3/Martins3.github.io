@@ -4,6 +4,7 @@
 - [ ] 能不能稳定的复现，或者制作出来这些 memory model 的效果
 - [ ] 各种使用案例
 - [ ] 和 volatile 中的问题
+- [ ] https://blog.stuffedcow.net/2015/08/pagewalk-coherence/ 还存在一些蛇皮的 TLB pagewalk 的 coherence 问题啊
 
 - https://www.cs.utexas.edu/~bornholt/post/memory-models.html
 
