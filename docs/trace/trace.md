@@ -28,6 +28,8 @@
 * [ltrace](#ltrace)
 * [[ ] uftrace](#-uftrace)
 * [lttng](#lttng)
+* [[ ] sysdig](#-sysdig)
+* [usdt](#usdt)
 * [kdump](#kdump)
 
 <!-- vim-markdown-toc -->
@@ -43,6 +45,8 @@
 
 - [ ] bpftrace 和 bcc 的关系是什么?
 - [ ] ftrace-cmd 的功能都可以使用 bcc 替代吗?
+- https://leezhenghui.github.io/linux/2019/03/05/exploring-usdt-on-linux.html
+  - 总结的很全面
 
 ## [ ] libbpf
 https://pingcap.com/blog/why-we-switched-from-bcc-to-libbpf-for-linux-bpf-performance-analysis
@@ -376,6 +380,36 @@ https://github.com/namhyung/uftrace
 
 ## lttng
 https://lttng.org/docs/
+
+https://lttng.org/
+
+yaourt -s lttng-tools lttng-ust lttng-modules
+
+第三个的安装似乎并不简单，出现了大量的错误，于是采用手动安装，在第二步骤会出现错误，类似于
+https://github.com/umlaeute/v4l2loopback/issues/139，**虽然完全不知道为什么**
+但是这个东西大概是可以使用的。
+
+其分析居然还要使用一个 : https://babeltrace.org/
+
+## [ ] sysdig
+
+https://github.com/draios/sysdig
+
+```txt
+$ sysdig -l
+```
+
+1. fd :
+2. process : 不仅仅可以从进程的描述符，程序名称等，还可以使用
+3. user group
+4. evt :
+5. syslog
+6. container k8s mesos
+7. evtin
+8. span
+
+## usdt
+sudo apt install systemtap-sdt-dev
 
 ## kdump
 when linux crashed, kexec and kdump will dump kernel memory to vmcore
