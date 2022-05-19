@@ -2,6 +2,7 @@
 
 <!-- vim-markdown-toc GitLab -->
 
+* [[ ] libbpf](#-libbpf)
 * [总结各种 tracer : overview](#总结各种-tracer-overview)
 * [关键问题 : 到底实现什么功能，以及不可以做什么](#关键问题-到底实现什么功能以及不可以做什么)
 * [关键问题 : 可以做的事情](#关键问题-可以做的事情)
@@ -21,20 +22,30 @@
     * [debug/tracing 文件夹的内容理解](#debugtracing-文件夹的内容理解)
     * [ftrace-cmd](#ftrace-cmd)
 * [valgrind](#valgrind)
+* [gprof2dot](#gprof2dot)
 * [SystemTap](#systemtap)
 * [dtrace](#dtrace-1)
 * [ltrace](#ltrace)
 * [[ ] uftrace](#-uftrace)
 * [lttng](#lttng)
-* [Gprof2dot](#gprof2dot)
-* [FlameGraph](#flamegraph-1)
 * [kdump](#kdump)
 
 <!-- vim-markdown-toc -->
 
 
 - [ ] https://oprofile.sourceforge.io/about/
+- [ ] https://github.com/jrfonseca/gprof2dot
+  - 这个工具是被我们使用上了，但是本身是一个将各种 perf 结果生成新的结果的工具，可以看看原来的结果的位置
+- https://github.com/Netflix/flamescope : FlameScope is a visualization tool for exploring different time ranges as Flame Graphs
+- https://en.algorithmica.org/ : 基于现代硬件的算法，对于 cache miss branch predictor 都是有考虑的
 
+- https://github.com/opcm/pcm
+
+- [ ] bpftrace 和 bcc 的关系是什么?
+- [ ] ftrace-cmd 的功能都可以使用 bcc 替代吗?
+
+## [ ] libbpf
+https://pingcap.com/blog/why-we-switched-from-bcc-to-libbpf-for-linux-bpf-performance-analysis
 
 ## 总结各种 tracer : overview
 
@@ -309,7 +320,6 @@ static __init int ftrace_init_dyn_tracefs(struct dentry *d_tracer)
 
 
 #### ftrace-cmd
-
 https://lwn.net/Articles/410200/ 的记录
 
 
@@ -334,7 +344,6 @@ trace-cmd record -p function -l 'sched_*' -n 'sched_slice'
  trace-cmd record -p function_graph -l do_IRQ -e irq_handler_entry sleep 10
 ```
 
-
 > TODO : 到底 dynamic ftrace 是什么 ?
 
 
@@ -345,10 +354,11 @@ https://superuser.com/questions/287371/obtain-kernel-config-from-currently-runni
 tracing_on 和 /proc/sys/kernel/ftrace_enabled 分别表示什么 ?
 
 
-## valgrind
+## [valgrind](http://valgrind.org/)
+使用上很简单:
 https://stackoverflow.com/questions/5134891/how-do-i-use-valgrind-to-find-memory-leaks
-> 1. valgrind 除了可以检查 mem leak，还可以做什么事情 ?
-> 2. 实现的原理是什么
+
+## [gprof2dot](https://github.com/jrfonseca/gprof2dot)
 
 ## SystemTap
 > 文档清晰，但是安装并不简单呀
@@ -367,18 +377,9 @@ https://github.com/namhyung/uftrace
 ## lttng
 https://lttng.org/docs/
 
-## Gprof2dot
-https://github.com/jrfonseca/gprof2dot
-> 非常有意思，其可以 read output from 的项目，并不是每一个我都知道啊!
-
-## FlameGraph
-至今不知道如何使用，这是用户层 perf 的前端吗 ?
-
 ## kdump
 when linux crashed, kexec and kdump will dump kernel memory to vmcore
-
 https://github.com/crash-utility/crash
-
 
 [^4]: [An introduction to KProbes](https://lwn.net/Articles/132196/)
 [^5]: [Using user-space tracepoints with BPF](https://lwn.net/Articles/753601/)

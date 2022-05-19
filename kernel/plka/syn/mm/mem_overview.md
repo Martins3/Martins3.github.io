@@ -20,7 +20,7 @@
 | vmstat.c             | 325   | 337     | 1479 | 各种统计                                                                                                                                                     |
 | page-writeback.c     | 329   | 1031    | 1472 | Contains functions related to writing back dirty pages at the  address_space level.                                                                          |
 | khugepaged.c         | 243   | 289     | 1417 | transparent hugetlb 的守护进程                                                                                                                                                             |
-| kmemleak.c           | 249   | 615     | 1260 | 识别内核中间内存泄露的工具，首先了解一下valgrind等用户层的内存检测工具也不错!                                                                                |
+| kmemleak.c           | 249   | 615     | 1260 | 识别内核中间内存泄露的工具                                                                                |
 | memory_hotplug.c     | 301   | 374     | 1231 | 应该是numa，默认不会编译进去的                                                                                                                               |
 | nommu.c              | 288   | 431     | 1231 | nommu 处理没有mmu的情况                                                                                                                                      |
 | compaction.c         | 338   | 605     | 1215 | 依托于memory migration 实现减少 external fragmentation，但是page_alloc.c 中间不是已经处理过这一个事情了吗 ?　各自侧重在于何处 ?                              |

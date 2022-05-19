@@ -141,6 +141,7 @@
 - [DynamoRIO](https://github.com/DynamoRIO/dynamorio) : 通过动态插桩来调试
 - [mull](https://github.com/mull-project/mull) is a practical mutation testing tool for C and C++.
 - https://github.com/osandov/drgn : Facebook 写的侧重于编程的 debuggers
+- https://clang.llvm.org/docs/AddressSanitizer.html
 
 ## 关键参考
 - [100 个 gdb 技巧](https://github.com/hellogcc/100-gdb-tips)
