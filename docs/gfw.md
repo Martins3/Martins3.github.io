@@ -24,9 +24,9 @@ approach should works for MacOS and Windows.
 If you can't clone https://github.com/torvalds/linux in minutes, this article
 is what you need.
 
-| protocol | airport(机场)           | client                                     |
-|----------|-------------------------|--------------------------------------------|
-| v2ray    | \*v\*2\*e\*.\*f\*u\*n\* | [qv2ray](https://github.com/Qv2ray/Qv2ray) |
+| protocol | airport(机场) | client                                     |
+|----------|---------------|--------------------------------------------|
+| v2ray    | ~             | [qv2ray](https://github.com/Qv2ray/Qv2ray) |
 
 - There are many *protocols* for corssing GFW, e.g.,ss, ssr, v2ray, torjan and vpn.
 - You can set up your sever with banwagong, Digitocean, or vulter by yourself, but airport is cheap and simple, it's enough for 99% users.
@@ -94,7 +94,7 @@ export http_proxy=http://${X86_IP}:8889 && export https_proxy=http://{X86_IP}:88
 ```
 
 in browser:
-- add proxy server : http://${X86_IP}:8889
+- add proxy server : `http://${X86_IP}:8889`
 
 ## clash
 Qv2ray no longer maintained, so I switched to Clash and found it's more simple to setup.
@@ -102,7 +102,7 @@ Qv2ray no longer maintained, so I switched to Clash and found it's more simple t
 reference : https://einverne.github.io/post/2021/03/linux-use-clash.html
 
 - download and extract to somewhere
-  - url: https://github.com/Fndroid/clash_for_windows_pkg/releases
+  - [url](https://github.com/Fndroid/clash_for_windows_pkg/releases)
 - add icon to start menu
 
 ```txt

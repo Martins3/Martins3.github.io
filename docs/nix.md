@@ -21,11 +21,19 @@
 * TODO https://ianthehenry.com/posts/how-to-learn-nix/ : 在 QEMU 中间首先测试一下，看看 zhihu 上的大佬的说明
   [2021-12-13 Mon]
 
+- https://github.com/nix-community/home-manager : 管理 ~ 的工具?
+  - https://github.com/Misterio77/nix-colors : 主题
+
 ## 文摘
 - [ ] https://christine.website/blog/nix-flakes-2-2022-02-27 : xe 写的
 - [ ] https://roscidus.com/blog/blog/2021/03/07/qubes-lite-with-kvm-and-wayland/
   - 简单的介绍 qubes ，nixso and  SpectrumOS
   - 对应的讨论: https://news.ycombinator.com/item?id=26378854
+- https://matklad.github.io//2022/03/14/rpath-or-why-lld-doesnt-work-on-nixos.html ： rust 大佬解决 nix 的问题 blog
+
+## 资源
+https://github.com/nixos-cn/flakes : nixos 中文社区
+https://github.com/mikeroyal/NixOS-Guide : 乱七八糟的，什么都有
 
 [^1]: https://nixos.org/manual/nixos/stable/index.html#sec-installation
 [^2]: https://github.com/Martins3/Martins3.github.io/blob/master/hack/qemu/ubuntu/4-11.sh
