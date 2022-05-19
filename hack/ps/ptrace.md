@@ -18,7 +18,7 @@ options.
 [GDB Remote Serial Protocol](https://www.embecosm.com/appnotes/ean4/embecosm-howto-rsp-server-ean4-issue-2.html#id3056712)
 [strace](https://github.com/strace/strace)
 
-- [x] `task_struct->sighand` 是做什么的 ? 
+- [x] `task_struct->sighand` 是做什么的 ?
   - thread group 的 thread 全部共享一个 sighand
   - 但是不同的 process 也可以共享 sighand, 所以 `task_struct->sighand` 可能指向 `task_struct->sighanl->sighand`, 也可以指向 sighand
   - > Since Linux 2.6.0, the flags mask must also include CLONE_VM if CLONE_SIGHAND is specified
@@ -103,7 +103,7 @@ group-stop : 当一个收到 stop 信号，所有 thread 都应该被 stop，
 
 2. 当 ptracee 在执行的时候，靠什么通知 ptracer ?
 
-3. ptracee 怎么知道执行到哪一个位置的时候停止 ? 
+3. ptracee 怎么知道执行到哪一个位置的时候停止 ?
     1. x86 下面到底有什么东西可以用来支持 ptrace ?
       1. 各种 watchpoint 是怎么打上去 ?
 
@@ -136,7 +136,7 @@ group-stop : 当一个收到 stop 信号，所有 thread 都应该被 stop，
 
 
 > CLONE_PTRACE (since Linux 2.2)
-> 
+>
 >        If  CLONE_PTRACE  is  specified,  and  the calling process is being
 >        traced, then trace the child also (see ptrace(2)).
 
@@ -146,9 +146,9 @@ group-stop : 当一个收到 stop 信号，所有 thread 都应该被 stop，
 >        Attach to the process specified in pid, making it a tracee of the calling process.  The tracee is sent a SIGSTOP, but  will
 >        not  necessarily  have stopped by the completion of this call; use waitpid(2) to wait for the tracee to stop.  See the "At‐
 >        taching and detaching" subsection for additional information.  (addr and data are ignored.)
-> 
+>
 >        Permission to perform a PTRACE_ATTACH is governed by a ptrace access mode PTRACE_MODE_ATTACH_REALCREDS check; see below.
-> 
+>
 > PTRACE_SEIZE (since Linux 3.4)
 >        Attach to the process specified in pid, making it a tracee of the calling process.  Unlike PTRACE_ATTACH, PTRACE_SEIZE does
 >        not  stop  the process.  Group-stops are reported as PTRACE_EVENT_STOP and WSTOPSIG(status) returns the stop signal.  Auto‐
@@ -157,13 +157,13 @@ group-stop : 当一个收到 stop 信号，所有 thread 都应该被 stop，
 >        RUPT and PTRACE_LISTEN commands.  The "seized" behavior just described is inherited by children that are automatically  at‐
 >        tached  using  PTRACE_O_TRACEFORK,  PTRACE_O_TRACEVFORK,  and PTRACE_O_TRACECLONE.  addr must be zero.  data contains a bit
 >        mask of ptrace options to activate immediately.
-> 
+>
 >        Permission to perform a PTRACE_SEIZE is governed by a ptrace access mode PTRACE_MODE_ATTACH_REALCREDS check; see below.
 
 
 ## kernel/trace/ 下的内容
 1. tracefs ?
-2. 使用的标准框架，用户实现 trace 的，是什么 ? 
+2. 使用的标准框架，用户实现 trace 的，是什么 ?
 
 
 ```c
@@ -230,7 +230,7 @@ static int ptrace_traceme(void)
 		 * pretend ->real_parent untraces us right after return.
 		 */
 		if (!ret && !(current->real_parent->flags & PF_EXITING)) { // current->real_parent 真正的 parent 是什么东西呀 ?
-			current->ptrace = PT_PTRACED; 
+			current->ptrace = PT_PTRACED;
 			ptrace_link(current, current->real_parent);
 		}
 	}
@@ -317,7 +317,7 @@ int wake_up_state(struct task_struct *p, unsigned int state)
 	struct list_head		ptraced;
 	struct list_head		ptrace_entry;
   // 这两个变量用来实现挂载其中的函数，
-  // todo natural children 的内容到底是什么 ? 
+  // todo natural children 的内容到底是什么 ?
 ```
 
 ## ptrace_readdata && ptrace_writedata
@@ -337,4 +337,3 @@ int ptrace_writedata(struct task_struct *tsk, char __user *src, unsigned long ds
 利用的 ptrace 相当有限，不过其中对于 dwarf 和 elf 还是存在不少有意思的探讨的.
 
 - [ ] personality : 进一步的调查一下
-

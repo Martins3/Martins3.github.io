@@ -345,13 +345,13 @@ SystemTap 是最强大的 trace 工具，其甚至提供自定义的语言，但
 1. 安装 Manjaro 虚拟机，具体的方法存在很多，下面简单的介绍使用 KVM 基于 KVM 的安装方法:
 
 ```sh
-  qemu-img create -f raw manjaor.img 60G
+qemu-img create -f raw manjaor.img 60G
 
-  qemu-system-x86_64 -hda manjaro.img  -boot d -cdrom manjaro-desktop-amd64.iso -m 4G -enable-kvm
+qemu-system-x86_64 -hda manjaro.img  -boot d -cdrom manjaro-desktop-amd64.iso -m 4G -enable-kvm
 
-  qemu-system-x86_64 \
-  -smp 4  -m 8G -enable-kvm \
-  -drive file=manjaro.img.bk,index=0,media=disk,format=raw
+qemu-system-x86_64 \
+-smp 4  -m 8G -enable-kvm \
+-drive file=manjaro.img.bk,index=0,media=disk,format=raw
 ```
 
 这三个命令，第一个创建磁盘，第二个是利用镜像镜像安装，第三个是运行，此时，我们已经获取了一个 manjaro 环境

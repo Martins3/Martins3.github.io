@@ -7,10 +7,6 @@
 * [关键问题 : 到底实现什么功能，以及不可以做什么](#关键问题-到底实现什么功能以及不可以做什么)
 * [关键问题 : 可以做的事情](#关键问题-可以做的事情)
 * [(tmp)branch trace](#tmpbranch-trace)
-* [任务](#任务)
-    * [需要询问的问题](#需要询问的问题)
-    * [计划](#计划)
-* [实现](#实现)
 * [垃圾堆](#垃圾堆)
 * [question](#question)
 * [perf](#perf)
@@ -31,6 +27,8 @@
 * [[ ] sysdig](#-sysdig)
 * [usdt](#usdt)
 * [kdump](#kdump)
+* [[ ] QEMU 中的 trace](#-qemu-中的-trace)
+  * [log](#log)
 
 <!-- vim-markdown-toc -->
 
@@ -47,6 +45,7 @@
 - [ ] ftrace-cmd 的功能都可以使用 bcc 替代吗?
 - https://leezhenghui.github.io/linux/2019/03/05/exploring-usdt-on-linux.html
   - 总结的很全面
+- [ ] BCC 可以取代 ftrace 吗?
 
 ## [ ] libbpf
 https://pingcap.com/blog/why-we-switched-from-bcc-to-libbpf-for-linux-bpf-performance-analysis
@@ -104,28 +103,6 @@ static struct tracer branch_trace __read_mostly =
 };
 ```
 
-
-
-## 任务
-
-#### 需要询问的问题
-- 这个任务的指标是什么，是否存在 deadline ?
-- 这个还有其他有人处理吗 ?
-- eBPF 如此强力的工具，居然无法使用，为什么要坚持 3.10 的版本上，别人的代码又不会入侵我的代码，而且不用合并到主线中间，想使用那个版本就使用那个版本，为什么不使用更高的版本。
-- file:///home/shen/Core/linux/Documentation/output/admin-guide/perf/index.html perf 中间需要硬件的支持吗 ?
-- https://en.wikipedia.org/wiki/Hardware_performance_counter 我需要知道硬件计数器的文章在哪里 ?
-
-
-可以完成的简单的事情:
-- 需要确保，我们使用的是同一个 unixbench 的内容，阅读一下 unixbench 的内容，似乎 perl 需要阅读一下
-- http://www.loongson.cn/index.html : 1 课时的性能分析可以阅读一下
-- 看来的确是存在性能计数器的: 用户手册 LPMP
-
-#### 计划
-
-## 实现
-
-
 ## 垃圾堆
 1. kernel/trace 中间的内容到底是干啥的 ?
 
@@ -147,10 +124,8 @@ https://github.com/NanXiao/perf-little-book
 // 有一个 BPF，而且似乎写的还不错的东西
 https://facebookmicrosites.github.io/bpf/
 
-
 ## question
 1. 所以，kernel/events 和 kernel/trace 的关系是什么 ?
-
 
 ## perf
 TODO
@@ -414,6 +389,25 @@ sudo apt install systemtap-sdt-dev
 ## kdump
 when linux crashed, kexec and kdump will dump kernel memory to vmcore
 https://github.com/crash-utility/crash
+
+## [ ] QEMU 中的 trace
+- [ ] 测试一下, 添加新的 Trace 的方法
+
+- [ ]  为什么会支持各种 backend, 甚至有的 dtrace 的内容?
+
+- [ ] 这里显示的 trace 都是做什么的 ?
+```plain
+➜  vn git:(master) ✗ qemu-system-x86_64 -trace help
+```
+
+- [ ] 例如这些文件:
+/home/maritns3/core/qemu/hw/i386/trace-events
+
+### log
+util/log.c 定义所有的 log, 其实整个机制是很容易的
+
+- asm_in : accel/tcg/translator.c::translator_loop
+- asm_out : tcg/translate-all.c::tb_gen_code
 
 [^4]: [An introduction to KProbes](https://lwn.net/Articles/132196/)
 [^5]: [Using user-space tracepoints with BPF](https://lwn.net/Articles/753601/)
