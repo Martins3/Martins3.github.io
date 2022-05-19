@@ -39,7 +39,7 @@ trace-cmd record
 
 .. todo::
   1. start 和 record 的唯一区别就是两者记录文件的区别吗 ?
-  2. 
+  2.
 
 trace-cmd list
 **************

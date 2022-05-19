@@ -136,6 +136,7 @@ address-space: memory                     │   │    │
 ## 为什么 QEMU 将 memory region 设计的如此复杂
 - TODO 详细的解释一下
 
+* PCI 让 memory region 变得可以随意移动
 * PCI bridge window
 * IOMMU
 * PAM / SMM

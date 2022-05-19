@@ -51,7 +51,7 @@ https://medium.com/@evintheair/building-a-custom-kernel-in-manjaro-linux-186da6a
 ::
 
   ➜  trace-cmd git:(master) ✗ sudo stap -v -e 'probe vfs.read {printf("read performed\n"); exit()}'
-  [sudo] password for shen: 
+  [sudo] password for shen:
   WARNING: Kernel function symbol table missing [man warning::symbols]
   Pass 1: parsed user script and 477 library scripts using 108620virt/88948res/11092shr/77648data kb, in 170usr/20sys/182real ms.
   WARNING: Potential type mismatch in reassignment: identifier 'root_dentry' at /usr/share/systemtap/tapset/linux/dentry.stp:246:3
@@ -78,6 +78,5 @@ https://medium.com/@evintheair/building-a-custom-kernel-in-manjaro-linux-186da6a
 --------
 根据 https://jvns.ca/blog/2017/07/05/linux-tracing-systems/ 的描述，
 1. 写一个 systemtap 程序，并且将其编译到内核中间
-2. 该内核模块注册 kprobe 
+2. 该内核模块注册 kprobe
 3. 最后将数据导出到用户空间
-

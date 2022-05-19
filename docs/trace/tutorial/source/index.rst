@@ -1,7 +1,7 @@
 linux内核漏洞检测
 =================
 
-.. https://github.com/ralsina/rst-cheatsheet/blob/master/rst-cheatsheet.rst 
+.. https://github.com/ralsina/rst-cheatsheet/blob/master/rst-cheatsheet.rst
 .. 相信我，你需要的
 
 .. toctree::

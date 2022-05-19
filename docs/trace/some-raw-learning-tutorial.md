@@ -21,7 +21,7 @@ FlameGraph/flamegraph.pl primes.collapsed > primes.svg
 1. Java 的内容操作上有点不对啊 !
 2. bonus 部分没有操作，似乎需要 debuginfo，似乎不需要重新编译就可以得到 debuginfo
 
-## 3 
+## 3
 pidstat -u -p $(pidof server) 1
 sudo syscount  -p $(pidof server)
 
@@ -29,7 +29,7 @@ sudo syscount  -p $(pidof server)
 sudo opensnoop -p $(pidof server)
 
 // 似乎也是不可以实现
-```
+```plain
 argdist -p $(pidof server) -H 'p::SyS_nanosleep(struct timespec *time):u64:time->tv_nsec'
 ```
 // 访问 bcc，中间的例子，发现根本不能使用使用
@@ -56,37 +56,37 @@ PATH=/usr/share/bcc/tools:$PATH
 
 
 ## 笔记
-```
+```plain
 /proc/sys/kernel/perf_event_paranoid
 ```
 
 `Skid` is the distance between events which trigger the issue and the events which are actually caught by perf
 
 每一个 thread:
-```
+```plain
 perf record -s ./sum
 perf report -T
 ```
 
 profile system in realtime:
-```
+```plain
 perf top
 ```
 
 trace 命令的 syscall:
-```
+```plain
 perf trace ls
 ```
 
 measure scheduler latency:
-```
+```plain
 perf sched record sleep 10
 perf sched latency
 ```
 
 也可以作为 ftrace 使用:
-perf ftrace is a simple *wrapper* for kernel's ftrace functionality, and only supports single thread tracing now. 
-```
+perf ftrace is a simple *wrapper* for kernel's ftrace functionality, and only supports single thread tracing now.
+```plain
 perf ftrace -T __kmalloc ./add_vec
 perf ftrace ./add_vec
 ```
@@ -101,7 +101,7 @@ perf ftrace ./add_vec
 ## 笔记
 It is used to monitor and tamper with interactions between processes and the Linux kernel, which **include system calls, signal deliveries, and changes of process state.**
 
-```
+```plain
 strace -A -o a.log ls
 strace -p 2194,2195  # 同时跟踪多个进程
 strace -p $(pidof dead_loop) # 利用 pidof 或者 pgrep
@@ -110,13 +110,13 @@ strace -p $(pidof dead_loop) # 利用 pidof 或者 pgrep
 To trace child processes, -f option need to be specified
 `-b` syscall option can be used to instruct strace to detach process when specified syscall is executed. However, currently only execve is supported.
 `-D` option is used to detach strace and tracee processes. 使用此参数，tracee 不会作为 strace 的 children
-```
+```plain
 strace -c ls # stat
-strace -w -c ls # wall time 
+strace -w -c ls # wall time
 strace -c -S calls ls # sort by calls
 ```
 
--e expression 是一个强大的工具，可以控制输出的详细程度，约束到底跟踪哪一个东西，操控信号，注入syscall返回值
+-e expression 是一个强大的工具，可以控制输出的详细程度，约束到底跟踪哪一个东西，操控信号，注入 syscall 返回值
 
 strace 执行的时候，可以修改执行的 trace 以及 修改指令执行的位置。
 
@@ -127,7 +127,6 @@ strace 执行的时候，可以修改执行的 trace 以及 修改指令执行�
 ## https://jvns.ca/blog/2016/03/12/how-does-perf-work-and-some-questions/
 1. /home/shen/Core/linux/kernel/events/core.c 中间定义了 perf_event_open 的内容
 2. 输出放到 buffer ring 中间
-3. 
 ```c
 /*
  * Callers need to ensure there can be no nesting of this function, otherwise

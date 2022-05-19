@@ -20,8 +20,8 @@ filter
 1. fd :
 2. process : 不仅仅可以从进程的描述符，程序名称等，还可以使用
 3. user group
-4. evt : 
-5. syslog 
+4. evt :
+5. syslog
 6. container k8s mesos
 7. evtin
 8. span

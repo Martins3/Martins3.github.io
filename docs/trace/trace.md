@@ -103,7 +103,7 @@ static struct tracer branch_trace __read_mostly =
 
 可以完成的简单的事情:
 - 需要确保，我们使用的是同一个 unixbench 的内容，阅读一下 unixbench 的内容，似乎 perl 需要阅读一下
-- http://www.loongson.cn/index.html : 1课时的性能分析可以阅读一下
+- http://www.loongson.cn/index.html : 1 课时的性能分析可以阅读一下
 - 看来的确是存在性能计数器的: 用户手册 LPMP
 
 #### 计划
@@ -149,7 +149,7 @@ http://www.brendangregg.com/FlameGraphs/cpuflamegraphs.html
 
 
 ## kprobe
-// BCC 的 第一个例子 kprobe 可以检查整个内核中间的fork，为什么可以 ?
+// BCC 的 第一个例子 kprobe 可以检查整个内核中间的 fork，为什么可以 ?
 
 LWN 的这个文章还不错哦 [^4]。
 
@@ -165,7 +165,7 @@ A kernel probe is a set of handlers placed on a certain instruction address.
 > 那么 kernel probe 是可以放到任何指令的位置吗 ?
 
 A kernel probe is a set of handlers placed on a certain instruction address. There are two types of probes in the kernel as of now, called "KProbes" and "JProbes." A KProbe is defined by a pre-handler and a post-handler. When a KProbe is installed at a particular instruction and that instruction is executed, the pre-handler is executed just before the execution of the probed instruction. Similarly, the post-handler is executed just after the execution of the probed instruction. JProbes are used to get access to a kernel function's arguments at runtime. A JProbe is defined by a JProbe handler with the same prototype as that of the function whose arguments are to be accessed. When the probed function is executed the control is first transferred to the user-defined JProbe handler, followed by the transfer of execution to the original function. The KProbes package has been designed in such a way that tools for debugging, tracing and logging could be built by extending it.
-> 两种类型 : KProbe 和 JProbe，KProbe 可以在指令的前后执行，而JProbe 可以获取内核参数，然后执行，最后回到原来的函数
+> 两种类型 : KProbe 和 JProbe，KProbe 可以在指令的前后执行，而 JProbe 可以获取内核参数，然后执行，最后回到原来的函数
 
 Most of the handling of the probes is done in the context of the breakpoint and the debug exception handlers which make up the KProbes architecture dependent layer.
 The KProbes architecture independent layer is the KProbes manager which is used to register and unregister probes. Users provide probe handlers in kernel modules which register probes through the KProbes manager.
@@ -202,7 +202,7 @@ Kprobe 的实现参考 register_kprobe 的内容，采用的方法应该将原�
 ## ftrace
 总体的教程 : 直接在 debugfs 上的操作，然后 trace-cmd，最后图形化的 kernelshark
 lwn 关于 ftrace 的介绍 [^10]
-trace-cmd作为ftrace的前端，kernel shark作为trace-cmd的前端 [^7]
+trace-cmd 作为 ftrace 的前端，kernel shark 作为 trace-cmd 的前端 [^7]
 
 
 The name ftrace comes from "function tracer", which was its original purpose, but it can do more than that. Various additional tracers have been added to look at things like context switches, how long interrupts are disabled, how long it takes for high-priority tasks to run after they have been woken up, and so on. Its genesis in the realtime tree is evident in the tracers so far available, but ftrace also includes a plugin framework that allows new tracers to be added easily.
@@ -210,7 +210,7 @@ The name ftrace comes from "function tracer", which was its original purpose, bu
 
 // TODO 为什么感觉所有的内容都是可以挂载在 debug 下面的
 
-观察一下 /sys/kernel/debug/tracing 的README
+观察一下 /sys/kernel/debug/tracing 的 README
 
 https://jvns.ca/blog/2017/03/19/getting-started-with-ftrace/
 
@@ -226,7 +226,7 @@ https://www.kernel.org/doc/html/latest/trace/ftrace.html : 讲解了如何使用
 
 After mounting tracefs you will have access to the control and output files of ftrace. Here is a list of some of the key files:
 1. current_tracer available_tracers
-```
+```plain
 [shen-pc tracing]# cat available_tracers
 hwlat blk mmiotrace function_graph wakeup_dl wakeup_rt wakeup function nop
 ```
@@ -330,7 +330,7 @@ https://lwn.net/Articles/410200/ 的记录
 trace-cmd record -p function -l 'sched_*' -n 'sched_slice'
 ```
 5. 解释下面的程序: TODO 应该是采用，
-```
+```plain
  trace-cmd record -p function_graph -l do_IRQ -e irq_handler_entry sleep 10
 ```
 

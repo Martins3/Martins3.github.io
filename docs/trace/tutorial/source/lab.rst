@@ -105,9 +105,9 @@ Dirty Cow
           Permission to access this file is governed by a ptrace access mode PTRACE_MODE_ATTACH_FSCREDS check; see ptrace(2).
 
 检查其权限:
-:: 
+::
 
-  $  ~ l /proc/self/mem 
+  $  ~ l /proc/self/mem
   .rw------- shen shen 0 B Sun Jun  7 07:23:01 2020 mem
 
 那么，可以知道，procselfmemThread进行的操作是，对于目标文件映射位置进行写操作，但是我们知道这样的写操作由于权限不够，显然不可能植入字符串写入到目标文件中间，所以让我们理解一下/proc/self/mem到底如何实现的。
@@ -287,9 +287,9 @@ tracepoint 是内核静态定义的信息收集机制，其实现非常简单，
 
 其输出格式:
 
-:: 
+::
 
-  [shen-pc mm_vmscan_writepage]# cat format 
+  [shen-pc mm_vmscan_writepage]# cat format
   name: mm_vmscan_writepage
   ID: 509
   format:
@@ -347,7 +347,7 @@ Step 1 : 环境搭建
 1. 安装Manjaro虚拟机，具体的方法存在很多，下面简单的介绍使用KVM基于KVM的安装方法:
 
 .. code:: type
-   
+
   qemu-img create -f raw manjaor.img 60G
 
   qemu-system-x86_64 -hda manjaro.img  -boot d -cdrom manjaro-desktop-amd64.iso -m 4G -enable-kvm
@@ -393,7 +393,7 @@ Step 1 : 环境搭建
 5. 编译安装包，中间进行的时间可能需要数个小时:
 
 .. code:: sh
-   
+
   updpkgsums
   makepkg -s
   sudo pacman -U ./linux57-5.7.0-3-x86_64.pkg.tar.xz ./linux57-headers-5.7.0-3-x86_64.pkg.tar.xz
@@ -402,7 +402,7 @@ Step 1 : 环境搭建
 Step 2 : 复现bug
 *****************
 
-运行测试 `代码 <https://github.com/dirtycow/dirtycow.github.io/blob/master/dirtyc0w.c>`_ 
+运行测试 `代码 <https://github.com/dirtycow/dirtycow.github.io/blob/master/dirtyc0w.c>`_
 
 
 评分

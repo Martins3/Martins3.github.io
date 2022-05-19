@@ -67,7 +67,7 @@ PMU 的功能是 : performance monitor unit
   1. event modified 一共存在那些 ?
   2. 什么叫做 symbolic event types ?
   4. 一些奇怪的和处理器 specific 的东西
-  5. event group 
+  5. event group
   6. leader samplings
 
 perf bench
