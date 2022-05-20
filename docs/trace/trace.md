@@ -3,8 +3,12 @@
 <!-- vim-markdown-toc GitLab -->
 
 ## 基本理念
-http://www.brendangregg.com/blog/2015-07-08/choosing-a-linux-tracer.html
 https://jvns.ca/blog/2017/07/05/linux-tracing-systems/
+
+在 https://github.com/brendangregg/perf-tools 可以看到 bash 脚本 execsnoop，其中就是使用 ftrace 在 /sys 下提供的接口来使用的。
+而 https://github.com/iovisor/bcc/ 中，有如下的两个文件:
+- libbpf-tools/execsnoop.c : 基于 libbpf [^3]，overhead 更加小
+- tools/execsnoop.py : 编译 BCC 程序来实现的
 
 ## 基本原理
 感觉基本技术也就是:
@@ -20,13 +24,14 @@ https://jvns.ca/blog/2017/07/05/linux-tracing-systems/
 
 - 那些基于 stack 的操作是怎么搞出来的，例如 flamegraph 的
 - [ ] 所以 bpf 是不是只是因为更加容易插入代码了而已
+  - 应该也是更加安全吧
+- [ ] uprobe 真的利用了 kprobe 吗 ?
 
 ## 问题
 - [ ] https://github.com/jrfonseca/gprof2dot
   - 这个工具是被我们使用上了，但是本身是一个将各种 perf 结果生成新的结果的工具，可以看看原来的结果的位置
-- https://github.com/Netflix/flamescope : FlameScope is a visualization tool for exploring different time ranges as Flame Graphs
+
 - https://en.algorithmica.org/ : 基于现代硬件的算法，对于 cache miss branch predictor 都是有考虑的
-- https://github.com/opcm/pcm
 
 - https://leezhenghui.github.io/linux/2019/03/05/exploring-usdt-on-linux.html
   - 总结的很全面
@@ -35,16 +40,10 @@ https://jvns.ca/blog/2017/07/05/linux-tracing-systems/
 - [ ] perf 工具比我想想的要强大，应该好好的重新分析一下
   - https://www.brendangregg.com/FlameGraphs/cpuflamegraphs.html
 
-## [ ] libbpf
-https://pingcap.com/blog/why-we-switched-from-bcc-to-libbpf-for-linux-bpf-performance-analysis
-
-## 总结各种 tracer : overview
+- [ ] 感觉 perf 能做的事情，bpftrace 和 ebpf 都可以做，而且更加好
+  - 例如 hardware monitor 在 bpftrace 中和 bcc 中 llcstat-bpfcc 都是可以做的
 
 ## 关键问题 : 到底实现什么功能，以及不可以做什么
-- [ ] 依赖 kprobe 可以为所欲为的效果 : 比如在 open 的位置插入 printk，或者插入函数直接返回错误，造成所有的对于 syscall open 函数失败. ?
-- [x] bcc 能不能插入多个 kprobe 并且将所有的数据整合。(应该很容易，可以使用相同的 map 直接在内核层次使用，或者让 python 处理)
-- [ ] bcc
-- [ ] file:///home/shen/Core/linux/Documentation/output/trace/ftrace.html
 - [ ] `available_filter_functions` : dynamic ftrace 的含义
 
 > 记录一个小问题 :
@@ -54,15 +53,7 @@ cat: ksys_read: No such file or directory
 [shen-pc tracing]# trace 'ksys_read'^C
 
 ## 关键问题 : 可以做的事情
-- [ ] 各种机制的原理
-    - [ ] uprobe 真的利用了 kprobe 吗 ?
-    - [ ]
 - 所有的工具的功能的整理 : dtrace SystemTap 等
-
-下面两个链接写的非常好，可以深入理解
-- https://alex.dzyoba.com/blog/kernel-profiling/
-- https://elinux.org/images/d/d7/Launet-kernel_profiling_debugging_tools_0.pdf
-
 
 ## (tmp)branch trace
 2. /sys/kernel/debug/tracing 可以对应 branch_print_header 的输出内容啊
@@ -99,29 +90,16 @@ static struct tracer branch_trace __read_mostly =
 // TODO ftrace 和 kprobe 的关系是什么 ?
 // TODO 把那本书找到，好吧，存在两本书的内容
 
-
-// TODO papi 是啥 ?
-// TODO perf 是不是存在两个，一个测量操作系统，一个测量硬件的 ?
-
-// 这个人写过一堆内容
-https://github.com/NanXiao/perf-little-book
-
-// 有一个 BPF，而且似乎写的还不错的东西
-https://facebookmicrosites.github.io/bpf/
-
 ## question
 1. 所以，kernel/events 和 kernel/trace 的关系是什么 ?
 
 ## perf
-TODO
+
+[^12] 中，大致讲解了各种 perf 的功能，那些是 BCC 中无法实现的。
+
 http://www.brendangregg.com/blog/2015-02-27/linux-profiling-at-netflix.html
 1. 为什么 perf 工具如何 flamegraph 配合使用的
 2. perf 可以做到什么功能 ?
-
-## flamegraph
-参考这个功能:
-http://www.brendangregg.com/FlameGraphs/cpuflamegraphs.html
-
 
 ## kprobe
 // BCC 的 第一个例子 kprobe 可以检查整个内核中间的 fork，为什么可以 ?
@@ -161,10 +139,9 @@ Whenever a probe is hit, the probe handler is called with interrupts disabled. I
 **A JProbe leverages the mechanism used by a KProbe.**
 Instead of calling a user-defined pre-handler a JProbe specifies its own pre-handler called setjmp_pre_handler() and uses another handler called a break_handler. This is a three-step process.
 
-Kprobe 的实现参考 register_kprobe 的内容，采用的方法应该将原有指令替换掉，然后写入 int3，然后让 int3 开始执行 handler
+Kprobe 的实现参考 `register_kprobe` 的内容，采用的方法应该将原有指令替换掉，然后写入 int3，然后让 int3 开始执行 handler
 
 > 至于 jprobe 在哪里，我们是不知道的
-
 
 ## uprobe
 不知道为什么，uprobe.c 被放到 kernel/events/ 下面了。
@@ -279,10 +256,8 @@ static __init int ftrace_init_dyn_tracefs(struct dentry *d_tracer)
 - [ ] available_tracers current_tracer: 1. 除了 function 和 function_graph 之外，其他的 tracer 的功能
 - [ ] set_ftrace_filter set_ftrace_notrace  available_filter_functions : 确认一下前面两个就是为了给最后一个进行筛选的
 
-
 #### ftrace-cmd
 https://lwn.net/Articles/410200/ 的记录
-
 
 - [ ] 两个用户层次的前端工具 : perf + trace-cmd 分别读取的内容是从哪里的呀 ?
 - [ ] trace-cmd
@@ -376,8 +351,11 @@ https://github.com/crash-utility/crash
 ### log
 util/log.c 定义所有的 log, 其实整个机制是很容易的
 
-- asm_in : accel/tcg/translator.c::translator_loop
-- asm_out : tcg/translate-all.c::tb_gen_code
+- `asm_in` : `accel/tcg/translator.c::translator_loop`
+- `asm_out` : `tcg/translate-all.c::tb_gen_code`
+
+## [ ] [flamescope](https://github.com/Netflix/flamescope)
+
 
 ## 小众的 profile 工具
 - https://oprofile.sourceforge.io/about/
@@ -387,6 +365,31 @@ util/log.c 定义所有的 log, 其实整个机制是很容易的
 ### [ ] [hotspot](https://github.com/KDAB/hotspot)
 这个工具是不是需要特殊的配置啊，搞出来的火焰图明显不对
 
+### [pcm](https://github.com/opcm/pcm)
+```sh
+git clone https://github.com/opcm/pcm
+cd pcm
+mkdir build
+cd build
+cmake ..
+cmake --build . --parallel
+
+./build/pcm
+```
+
+![](https://raw.githubusercontent.com/wiki/opcm/pcm/pcm.x.jpg)
+
+### [ ] kernelshark
+
+### [ ] [pprof](https://github.com/google/pprof)
+
+和这个东西是什么关系?
+- https://github.com/gperftools/gperftools
+- [ ] 如果 pprof 似乎是可以 C 语言工作的，但是 gperf 据说已经很好用了
+
+## 参考
+- https://github.com/adriannovegil/awesome-observability
+
 [^4]: [An introduction to KProbes](https://lwn.net/Articles/132196/)
 [^5]: [Using user-space tracepoints with BPF](https://lwn.net/Articles/753601/)
 [^7]: [kernelshark](https://www.cnblogs.com/arnoldlu/p/9014365.html)
@@ -394,3 +397,5 @@ util/log.c 定义所有的 log, 其实整个机制是很容易的
 [^9]: [Linux tracing systems & how they fit together](https://jvns.ca/blog/2017/07/05/linux-tracing-systems/)
 [^10]: [lwn : A look at ftrace](https://lwn.net/Articles/322666/)
 [^11]: [perf tutorial](https://perf.wiki.kernel.org/index.php/Tutorial)
+[^12]: https://github.com/NanXiao/perf-little-book
+[^13]:https://pingcap.com/blog/why-we-switched-from-bcc-to-libbpf-for-linux-bpf-performance-analysis

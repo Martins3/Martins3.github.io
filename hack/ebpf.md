@@ -6,7 +6,7 @@
 
 https://github.com/netblue30/firejail
 https://filipnikolovski.com/posts/ebpf/
-
+https://facebookmicrosites.github.io/bpf/
 
 ## overview
 
@@ -26,7 +26,7 @@ eBPF map 的作用，eBPF helper ，function calls
 eBPF 的升级内容:[^2]
 1. 64bit 的寄存器
 2. 寄存器数量从2个到10个
-3. BPF_CALL : Plus, a new BPF_CALL instruction made it possible to call in-kernel functions cheaply.
+3. `BPF_CALL` : Plus, a new `BPF_CALL` instruction made it possible to call in-kernel functions cheaply.
 4. The ease of mapping eBPF to native instructions lends itself to just-in-time compilation, yielding improved performance.
 
 eBPF 的作用不仅仅限于 packet filter 的功能，其实可以动态的 debug 内核:
@@ -51,7 +51,7 @@ int bpf(int cmd, union bpf_attr *attr, unsigned int size);
 ```
 1. The `bpf_attr` union allows data to be passed between the kernel and user space;
 2. the exact format depends on the `cmd` argument.
-3. The `size` argument gives the size of the bpf_attr union object in bytes.
+3. The `size` argument gives the size of the `bpf_attr` union object in bytes.
 
 cmd 类型包括:
 1. 修改用于eBPF程序和kernel或者user space 沟通的 eBPF map
@@ -181,8 +181,8 @@ python : 各种 attach 函数， 分析 map 以及输出
 - [ ]  bpftrace -e 'BEGIN { printf("Hello, World!\n"); }' BEGIN 是什么意思，是否存在类似的工具
 - [ ] bpftrace -e 'tracepoint:syscalls:sys_enter_nanosleep { printf("%s is sleeping.\n", comm); }'
     - [ ]  参数 comm 是什么指定的 ?
-    - [ ]  能不能直接 sys_enter_nanosleep 不要前面的前缀
-    - [ ]  sudo bpftrace -e 'tracepoint:syscalls:sys_enter_nanosleep { printf("%s is sleeping ==> %d.\n", comm, __syscall_nr); }' 居然不知道参数 __syscall_nr，但是
+    - [ ]  能不能直接 `sys_enter_nanosleep` 不要前面的前缀
+    - [ ]  `sudo bpftrace -e 'tracepoint:syscalls:sys_enter_nanosleep { printf("%s is sleeping ==> %d.\n", comm, __syscall_nr); }'` 居然不知道参数 `__syscall_nr`，但是
 - [ ] https://css.csail.mit.edu/jitk/ : BPF 的文章
 - https://www.graplsecurity.com/post/kernel-pwning-with-ebpf-a-love-story
   - 从安全工程师的角度分析 eBPF
