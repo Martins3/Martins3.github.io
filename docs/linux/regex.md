@@ -2,7 +2,7 @@
 ## 基本学习路线
 阅读[这个文档](https://github.com/ziishaned/learn-regex/blob/master/translations/README-cn.md)
 
-但是更加推荐[交互式的教程](https://regexlearn.com/zh-cn)
+但是更加推荐[交互式的教程](https://regexlearn.com/zh-cn) 和 [图形化演示](https://devtoolcafe.com/tools/regex#!flags=img&re=)
 
 学习完成之后，通过这个[教程配套的 checksheet](https://regexlearn.com/zh-cn/cheatsheet) 来复习
 

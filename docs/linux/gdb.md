@@ -128,12 +128,13 @@
 
 - [qita](https://github.com/geohot/qira)
 - [rr](https://github.com/rr-debugger/rr)
+
 ### 内存泄露调试技术
 - valgrind
 - [heaptrack](https://github.com/KDE/heaptrack) : a heap memory profiler for Linux
 
-
 ### 代码覆盖率工具
+- [syzkaller](https://github.com/google/syzkaller)
 
 ### 静态检查工具
 

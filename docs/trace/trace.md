@@ -2,65 +2,50 @@
 
 <!-- vim-markdown-toc GitLab -->
 
-* [[ ] libbpf](#-libbpf)
-* [总结各种 tracer : overview](#总结各种-tracer-overview)
-* [关键问题 : 到底实现什么功能，以及不可以做什么](#关键问题-到底实现什么功能以及不可以做什么)
-* [关键问题 : 可以做的事情](#关键问题-可以做的事情)
-* [(tmp)branch trace](#tmpbranch-trace)
-* [垃圾堆](#垃圾堆)
-* [question](#question)
-* [perf](#perf)
-* [flamegraph](#flamegraph)
-* [kprobe](#kprobe)
-* [uprobe](#uprobe)
-* [dtrace](#dtrace)
-* [ftrace](#ftrace)
-    * [debug/tracing 文件夹的内容理解](#debugtracing-文件夹的内容理解)
-    * [ftrace-cmd](#ftrace-cmd)
-* [valgrind](#valgrind)
-* [gprof2dot](#gprof2dot)
-* [SystemTap](#systemtap)
-* [dtrace](#dtrace-1)
-* [ltrace](#ltrace)
-* [[ ] uftrace](#-uftrace)
-* [lttng](#lttng)
-* [[ ] sysdig](#-sysdig)
-* [usdt](#usdt)
-* [kdump](#kdump)
-* [[ ] QEMU 中的 trace](#-qemu-中的-trace)
-  * [log](#log)
+## 基本理念
+http://www.brendangregg.com/blog/2015-07-08/choosing-a-linux-tracer.html
+https://jvns.ca/blog/2017/07/05/linux-tracing-systems/
 
-<!-- vim-markdown-toc -->
+## 基本原理
+感觉基本技术也就是:
+- kprobe / uprobe
+- tracepoint
+  - [ ] tracepoint 相对 kprobe/uprobe 来说存在什么优点吗?
+- MPC
 
+导出的方法
+- bpf
+- ftrace
+- `perf_event_open`
 
-- [ ] https://oprofile.sourceforge.io/about/
+- 那些基于 stack 的操作是怎么搞出来的，例如 flamegraph 的
+- [ ] 所以 bpf 是不是只是因为更加容易插入代码了而已
+
+## 问题
 - [ ] https://github.com/jrfonseca/gprof2dot
   - 这个工具是被我们使用上了，但是本身是一个将各种 perf 结果生成新的结果的工具，可以看看原来的结果的位置
 - https://github.com/Netflix/flamescope : FlameScope is a visualization tool for exploring different time ranges as Flame Graphs
 - https://en.algorithmica.org/ : 基于现代硬件的算法，对于 cache miss branch predictor 都是有考虑的
-
 - https://github.com/opcm/pcm
 
-- [ ] bpftrace 和 bcc 的关系是什么?
-- [ ] ftrace-cmd 的功能都可以使用 bcc 替代吗?
 - https://leezhenghui.github.io/linux/2019/03/05/exploring-usdt-on-linux.html
   - 总结的很全面
-- [ ] BCC 可以取代 ftrace 吗?
+- [ ] 所以 lttng 相对于 bpf 有什么优势吗?
+
+- [ ] perf 工具比我想想的要强大，应该好好的重新分析一下
+  - https://www.brendangregg.com/FlameGraphs/cpuflamegraphs.html
 
 ## [ ] libbpf
 https://pingcap.com/blog/why-we-switched-from-bcc-to-libbpf-for-linux-bpf-performance-analysis
 
 ## 总结各种 tracer : overview
 
-http://www.brendangregg.com/blog/2015-07-08/choosing-a-linux-tracer.html
-https://jvns.ca/blog/2017/07/05/linux-tracing-systems/
-
 ## 关键问题 : 到底实现什么功能，以及不可以做什么
 - [ ] 依赖 kprobe 可以为所欲为的效果 : 比如在 open 的位置插入 printk，或者插入函数直接返回错误，造成所有的对于 syscall open 函数失败. ?
 - [x] bcc 能不能插入多个 kprobe 并且将所有的数据整合。(应该很容易，可以使用相同的 map 直接在内核层次使用，或者让 python 处理)
 - [ ] bcc
 - [ ] file:///home/shen/Core/linux/Documentation/output/trace/ftrace.html
-- [ ] available_filter_functions : dynamic ftrace 的含义
+- [ ] `available_filter_functions` : dynamic ftrace 的含义
 
 > 记录一个小问题 :
 [shen-pc tracing]# cat ksys_read > set_ftrace_filter
@@ -185,9 +170,6 @@ Kprobe 的实现参考 register_kprobe 的内容，采用的方法应该将原�
 不知道为什么，uprobe.c 被放到 kernel/events/ 下面了。
 
 - [ ] uprobe 利用的是 kprobe 的基础
-
-
-## dtrace
 
 ## ftrace
 总体的教程 : 直接在 debugfs 上的操作，然后 trace-cmd，最后图形化的 kernelshark
@@ -330,7 +312,7 @@ trace-cmd record -p function -l 'sched_*' -n 'sched_slice'
 https://superuser.com/questions/287371/obtain-kernel-config-from-currently-running-linux-system
 
 > 引出了一个小问题:
-tracing_on 和 /proc/sys/kernel/ftrace_enabled 分别表示什么 ?
+`tracing_on` 和 `/proc/sys/kernel/ftrace_enabled` 分别表示什么 ?
 
 
 ## [valgrind](http://valgrind.org/)
@@ -345,25 +327,13 @@ https://stackoverflow.com/questions/5134891/how-do-i-use-valgrind-to-find-memory
 
 https://www.jianshu.com/p/84b3885aa8cb
 
-## dtrace
-
 ## ltrace
 library call trace
 
 ## [ ] uftrace
 https://github.com/namhyung/uftrace
 
-## lttng
-https://lttng.org/docs/
-
-https://lttng.org/
-
-yaourt -s lttng-tools lttng-ust lttng-modules
-
-第三个的安装似乎并不简单，出现了大量的错误，于是采用手动安装，在第二步骤会出现错误，类似于
-https://github.com/umlaeute/v4l2loopback/issues/139，**虽然完全不知道为什么**
-但是这个东西大概是可以使用的。
-
+## [lttng](https://lttng.org/docs/)
 其分析居然还要使用一个 : https://babeltrace.org/
 
 ## [ ] sysdig
@@ -408,6 +378,14 @@ util/log.c 定义所有的 log, 其实整个机制是很容易的
 
 - asm_in : accel/tcg/translator.c::translator_loop
 - asm_out : tcg/translate-all.c::tb_gen_code
+
+## 小众的 profile 工具
+- https://oprofile.sourceforge.io/about/
+
+## 更加好用的前端分析工具
+
+### [ ] [hotspot](https://github.com/KDAB/hotspot)
+这个工具是不是需要特殊的配置啊，搞出来的火焰图明显不对
 
 [^4]: [An introduction to KProbes](https://lwn.net/Articles/132196/)
 [^5]: [Using user-space tracepoints with BPF](https://lwn.net/Articles/753601/)

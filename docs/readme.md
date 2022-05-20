@@ -76,7 +76,7 @@
 
 ## Linux Kernel
 - [内核学习的一点经验之谈](./kernel/learn-linux-kernel.md)
-- [使用 QEMU, FlameGraph 和 bpftrace 阅读内核](./kernel/tips-reading-kernel.md)
+- 🚧 [使用 QEMU, FlameGraph 和 bpftrace 阅读内核](./kernel/tips-reading-kernel.md)
 <!-- - [irq domain](./kernel/irq-domain.md) -->
 - [tty 到底是什么](./kernel/tty.md)
 - 🚧 [syscall](./kernel/syscall.md)
