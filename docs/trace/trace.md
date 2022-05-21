@@ -122,6 +122,9 @@ cmake --build . --parallel
 - [ ] https://github.com/jrfonseca/gprof2dot
   - 这个工具是被我们使用上了，但是本身是一个将各种 perf 结果生成新的结果的工具，可以看看原来的结果的位置
 
+### [ ] [tracecompass](https://www.eclipse.org/tracecompass/index.html)
+
+
 ## 其他
 ### ltrace
 library call trace
