@@ -7,6 +7,7 @@
 https://github.com/netblue30/firejail
 https://filipnikolovski.com/posts/ebpf/
 https://facebookmicrosites.github.io/bpf/
+https://github.com/zoidbergwill/awesome-ebpf
 
 ## overview
 
