@@ -10,12 +10,12 @@
 set -eux
 
 sure() {
-	read -r -p "$1 " yn
-	case $yn in
-	[Yy]*) return ;;
-	[Nn]*) exit ;;
-	*) echo "Please answer yes or no." ;;
-	esac
+  read -r -p "$1 " yn
+  case $yn in
+  [Yy]*) return ;;
+  [Nn]*) exit ;;
+  *) echo "Please answer yes or no." ;;
+  esac
 }
 
 # Parameters.
@@ -28,41 +28,20 @@ kernel=/home/maritns3/core/ubuntu-linux/arch/x86_64/boot/bzImage
 
 # Go through installer manually.
 if [ ! -f "$disk_img" ]; then
-	sure "Do you want to create ${disk_img}"
-	qemu-img create -f qcow2 "$disk_img" 20G
-	qemu-system-x86_64 \
-		-cdrom "$iso" \
-		-hda "$disk_img" \
-		-enable-kvm -m 2G -smp 2 -cpu host
-	exit 0
-fi
-
-# Snapshot the installation.
-if [ ! -f "$disk_img_snapshot" ]; then
-	sure "Do you want to backup ${disk_img} to ${disk_img_snapshot}"
-	qemu-img \
-		create \
-		-b "$disk_img" \
-		-f qcow2 \
-		"$disk_img_snapshot" \
-		;
-	exit 0
+  sure "Do you want to create ${disk_img}"
+  qemu-img create -f qcow2 "$disk_img" 20G
+  qemu-system-x86_64 -cdrom "$iso" -hda "$disk_img" -enable-kvm -m 2G -smp 2 -cpu host
+  qemu-img create -b "$disk_img" -f qcow2 "$disk_img_snapshot"
+  exit 0
 fi
 
 # Run the installed image.
 if [ $# -eq 1 ]; then
-	echo "::::::::::::::::::::::::::::::::::"
-	qemu-system-x86_64 \
-		-hda "${disk_img}" \
-		-enable-kvm \
-		-m 8G \
-		-smp 8 \
-		-soundhw hda \
-		-vga virtio \
-		-virtfs local,path=/home/maritns3/core/vn/hack/qemu/ubuntu,mount_tag=host0,security_model=mapped,id=host0
+  echo "::::::::::::::::::::::::::::::::::"
+  qemu-system-x86_64 -hda "${disk_img}" -enable-kvm \
+    -m 8G -smp 8 -soundhw hda -vga virtio \
+    -virtfs local,path=/home/maritns3/core/vn/hack/qemu/ubuntu,mount_tag=host0,security_model=mapped,id=host0
 else
-	qemu-system-x86_64 \
-		-hda ${disk_img} \
-		-enable-kvm -kernel ${kernel} -cpu host -m 8G -smp 8 \
-		-append "root=/dev/sda"
+  qemu-system-x86_64 -hda ${disk_img} -enable-kvm -kernel ${kernel} -cpu host -m 8G -smp 8 \
+    -append "root=/dev/sda"
 fi
