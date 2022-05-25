@@ -1,5 +1,6 @@
 #!/bin/bash
 
+sudo -i
 parted /dev/sda -- mklabel msdos
 parted /dev/sda -- mkpart primary 1MiB -8GiB
 mkfs.ext4 -L nixos /dev/sda1

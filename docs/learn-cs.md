@@ -84,7 +84,8 @@
 
 https://wangzhe3224.github.io/2021/10/20/roadpath/#more
 
-似乎这个才是真正落到实处的吧: https://github.com/pkuflyingpig/pku-cs-self-learning/
+似乎这个才是真正落到实处的吧:
+https://github.com/PKUFlyingPig/cs-self-learning
 
 
 关于如何自学，已经有非常多的参考资料，我觉得写的都非常好：

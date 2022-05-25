@@ -9,6 +9,15 @@
 但是 Ian Henry 的[How to Learn Nix](https://ianthehenry.com/posts/how-to-learn-nix/) 写的好长啊，
 首先在 QEMU 上尝试一下效果，记录一踩的坑。
 
+## 问题
+nix-env -i git 和 nix-env -iA nixpkgs.git 的区别是什么?
+
+## TODO
+- [ ] 真的可以替代 docker 吗?
+- [ ] https://nixos.org/learn.html#learn-guides
+- [ ] https://nixos.org/ 包含了一堆 examples
+
+
 ## 似乎我不会安装啊
 > You must set the option boot.loader.systemd-boot.enable to true. nixos-generate-config should do this automatically for new configurations when booted in UEFI mode.
 >
@@ -36,8 +45,13 @@ https://www.cs.fsu.edu/~langley/CNT4603/2019-Fall/assignment-nixos-2019-fall.htm
 ## 资源
 https://github.com/nixos-cn/flakes : nixos 中文社区
 https://github.com/mikeroyal/NixOS-Guide : 乱七八糟的，什么都有
+https://github.com/mitchellh/nixos-config
 
 [^1]: https://nixos.org/manual/nixos/stable/index.html#sec-installation
 
 ## nixOS
 https://github.com/xieby1/nix_config
+
+## 从 bak 开始
+- 进入 root tear
+- 创建一个用户，然后重启
