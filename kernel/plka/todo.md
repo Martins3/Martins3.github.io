@@ -2,8 +2,6 @@
 
 #### copy_to_user 实现机制
 
-#### 锁: RCU 
-
 #### 多核意味着什么
 1. percpu 单核percpu 是没有价值的
 2. percpu 如何实现，amd64 中间使用 为什么使用fs(也许是gs 寄存器实现) 来支持percpu
@@ -36,7 +34,7 @@ https://en.wikipedia.org/wiki/Memory-mapped_I/O
 Each I/O device monitors the CPU's address bus and responds to any CPU access of an address assigned to that device, connecting the data bus to the desired device's hardware register. To accommodate the I/O devices, areas of the addresses used by the CPU must be reserved for I/O and must not be available for normal physical memory. The reservation may be permanent, or temporary (as achieved via bank switching)
 
 Different CPU-to-device communication methods, such as memory mapping, do not affect the direct memory access (DMA) for a device, because, by definition, DMA is a memory-to-device communication method that bypasses the CPU.
-> DMA 和 memory port 没有关联 ? 
+> DMA 和 memory port 没有关联 ?
 
 Hardware interrupts are another communication method between the CPU and peripheral devices, however, for a number of reasons, interrupts are always treated separately. An interrupt is device-initiated, as opposed to the methods mentioned above, which are CPU-initiated
 > interrupt 也关系不大 ?

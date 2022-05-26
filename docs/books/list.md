@@ -1,2 +1,0 @@
-- Concepts, Techniques, and Models of Computer Programming
-- tructure and Interpretation of Computer Programs

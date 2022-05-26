@@ -78,3 +78,19 @@ Litmus Test: Independent Reads of Independent Writes (IRIW)
 - there is a total order over all stores (writes) to main memory, and all processors agree on that order, subject to the wrinkle that each processor knows about its own writes before they reach main memory.
 
 ## leveldb 中的 skiplist 中的 cpp 11 的 memory model
+
+## memory consistency
+- [ ] https://zhuanlan.zhihu.com/cpu-cache : read posts writen by muchun
+
+- [ ] barrier() Documentation/memory-barriers.txt : 彻底理解让人窒息的 memory-barriers.txt
+
+当分析那么多窒息的例子，都是由于同时访问相同位置的内存，但是访问相同位置的内存的时候，难道不是采用 lock 保护的吗 ? smp_mb 的使用位置和实现方式是什么 ?
+
+// TODO 是存在一个叫做 membarrier 的系统调用的哦!
+
+// 教程，也许可以阅读一下 :
+https://www.cs.utexas.edu/~bornholt/post/memory-models.html
+https://www.linuxjournal.com/article/8211
+https://www.linuxjournal.com/article/8212
+
+- [ ] READ_ONCE and WRITE_ONCE

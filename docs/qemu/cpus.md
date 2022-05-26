@@ -73,8 +73,7 @@ main loop 中上锁位置非常的早，在 `pc_init1 => qemu_init_subsystems` �
 具体设备的 callback 函数，但是 vCPU thread 不会等待下去，而是将其中 callback 函数让 main loop 执行。而 main loop 就是靠事件监听来知道有 vCPU 提交任务给他了。当 main loop 执行完成之后，
 只需要向 vCPU 发送一个中断，也即是最后调用到 `tcg_handle_interrupt`, 向 CPUState::interrupt_request 插入一个中断，而 tcg 执行的时候，每一个 tb 都会检查这个，如果插入了中断，就会退出，最后在 `cpu_handle_interrupt` 地方处理。
 
-```c
-/*
+```txt
 #0  apic_send_msi (msi=0x7fffffffd110) at ../hw/intc/apic.c:726
 #1  0x0000555555c6ab4c in apic_mem_write (opaque=<optimized out>, addr=4100, val=48, size=<optimized out>) at ../hw/intc/apic.c:757
 #2  0x0000555555cd2711 in memory_region_write_accessor (mr=mr@entry=0x55555698bc90, addr=4100, value=value@entry=0x7fffffffd298, size=size@entry=4, shift=<optimized out
@@ -103,17 +102,19 @@ memory_ldst_phys.h.inc:121
 ```
 
 ### rcu
-在 call_rcu_thread 中，需要持有 lock 才可以释放资源，这很奇怪。既然都是可以开始来执行 hook 函数了，说明这些资源已经是没有人使用的，那么为什么还需要使用 BQL 保护。
+
+在 `call_rcu_thread` 中，需要持有 lock 才可以释放资源，这很奇怪。既然都是可以开始来执行 hook 函数了，说明这些资源已经是没有人使用的，那么为什么还需要使用 BQL 保护。
 其原因在: https://lists.gnu.org/archive/html/qemu-devel/2015-02/msg03170.html
 
 ### interrupt_request
+
 因为一个 CPU 利用 ipi 机制给另一个 vCPU 发送中断，所以 interrupt_request 需要被 BQL 保护，其调用位置为:
 
-- cpu_check_watchpoint => tcg_handle_interrupt
-- cpu_handle_halt => apic_poll_irq / cpu_reset_interrupt
-- cpu_handle_exception
-- edu_fact_thread => edu_raise_irq => msi_notify / pci_set_irq
-- helper_write_crN => cpu_set_apic_tpr
+- `cpu_check_watchpoint` => tcg_handle_interrupt
+- `cpu_handle_halt` => apic_poll_irq / cpu_reset_interrupt
+- `cpu_handle_exception`
+- `edu_fact_thread` => edu_raise_irq => msi_notify / pci_set_irq
+- `helper_write_crN` => cpu_set_apic_tpr
 
 - 注入位置
   - tcg_handle_interrupt :  将 mask 插入到 CPUState::interrupt_request

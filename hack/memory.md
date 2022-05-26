@@ -42,7 +42,6 @@
     * [mempolicy](#mempolicy)
 * [madvise && fadvise](#madvise-fadvise)
 * [highmem](#highmem)
-* [memory consistency](#memory-consistency)
 * [pmem](#pmem)
     * [vmemmap](#vmemmap)
 * [mmio](#mmio)
@@ -2038,25 +2037,6 @@ kmap 和 kmap_atomic 在 64bit 是不是完全相同的:
  }
 ```
 并不是完全相同的，应该只是历史遗留产物吧 !
-
-
-
-## memory consistency
-- [ ] https://zhuanlan.zhihu.com/cpu-cache : read posts writen by muchun
-
-2. barrier() Documentation/memory-barriers.txt : 彻底理解让人窒息的 memory-barriers.txt
-
-当分析那么多窒息的例子，都是由于同时访问相同位置的内存，但是访问相同位置的内存的时候，难道不是采用 lock 保护的吗 ? smp_mb 的使用位置和实现方式是什么 ?
-
-// TODO 是存在一个叫做 membarrier 的系统调用的哦!
-
-// 教程，也许可以阅读一下 :
-https://www.cs.utexas.edu/~bornholt/post/memory-models.html
-https://www.linuxjournal.com/article/8211
-https://www.linuxjournal.com/article/8212
-
-- [ ] READ_ONCE and WRITE_ONCE
-
 
 ## pmem
 DAX 设置 : 到时候在分析吧!
