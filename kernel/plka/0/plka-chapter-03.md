@@ -685,7 +685,6 @@ struct page {
 } _struct_page_alignment;
 
 
-```
 > 正如前面说过的那样，`struct page `中间包含超级内容，而且使用union的方式
 > 1. 一定存在只有两个变量
 >     * `_refcount`

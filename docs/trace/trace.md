@@ -68,7 +68,8 @@ sudo apt install systemtap-sdt-dev
 
 ## kdump
 when linux crashed, kexec and kdump will dump kernel memory to vmcore
-https://github.com/crash-utility/crash
+- https://github.com/crash-utility/crash
+- drgn : 具有明显的速度优势
 
 ## [ ] QEMU 中的 trace
 - [ ] 测试一下, 添加新的 Trace 的方法
