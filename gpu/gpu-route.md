@@ -19,3 +19,6 @@
 ## 似乎存在不少 GPU 封装的语言
 - https://github.com/diku-dk/futhark
 - https://github.com/halide/Halide
+
+## 问题
+- [ ]  想大致的知道 Liunx 和 Windows 的图形栈是什么
