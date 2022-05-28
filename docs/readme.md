@@ -67,7 +67,7 @@
 - 🚧 [QEMU 如何模拟 PCIe 设备](.)
 
 ## Tools
-- [我的 Linux 配置](https://martins3.github.io/My-Linux-Config/)
+- [My Linux Config](https://martins3.github.io/My-Linux-Config/)
 
 ## Linux Environment Programming
 - 🚧 [musl 阅读笔记](./linux/musl.md)

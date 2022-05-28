@@ -35,6 +35,8 @@ Working hard is not just a dial you turn up to 11. It's a complicated, dynamic s
 
 <blockquote class="twitter-tweet"><p lang="zh" dir="ltr">如果因为观点不同，和自己的好朋友割席，我觉得傻逼那个是我自己。<br>君子和而不同，在困难时候互相帮一把，许久不见依然举杯畅聊，是朋友。喜好，观点，对国际局势的看法完全一致，那是网友。</p>&mdash; yihong0618 (@yihong0618) <a href="https://twitter.com/yihong0618/status/1500317909255536640?ref_src=twsrc%5Etfw">March 6, 2022</a></blockquote> <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
 
+对于小公司来说，员工都明白，只有公司取得成功，个人才能取得成功，公司利益和个人利益是一致的。他们就会更关心公司会不会倒闭，而不是自己的晋升。[^11]
+
 [^1]: https://www.zhihu.com/question/443850977/answer/1754327421
 [^2]: https://mp.weixin.qq.com/s/4kN65Eu_mYKmC-GLig082g
 [^3]: https://github.com/cdk8s/cdk8s-team-style/blob/master/other/read-write.md
@@ -45,3 +47,4 @@ Working hard is not just a dial you turn up to 11. It's a complicated, dynamic s
 [^8]: https://survivor.ruanyifeng.com/collapse/university.html
 [^9]: https://mp.weixin.qq.com/s/4kN65Eu_mYKmC-GLig082g
 [^10]: http://paulgraham.com/hwh.html
+[^11]: https://github.com/ruanyf/weekly/blob/master/docs/issue-208.md

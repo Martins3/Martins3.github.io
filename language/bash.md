@@ -66,13 +66,6 @@ https://stackoverflow.com/questions/669452/is-double-square-brackets-preferable-
 1. xargs – Build and execute command lines from standard input
 1. stat – Display file or file system status
 
-## archive
-1. gzip – Compress or expand files
-1. bzip2 – A block sorting file compressor
-1. tar – Tape archiving utility
-1. zip – Package and compress files
-1. rsync – Remote file and directory synchronization
-
 # 命令缩写
 su:switch user 切换用户
 ps: process status(进程状态，类似于windows的任务管理器) 常用参数：－auxf
