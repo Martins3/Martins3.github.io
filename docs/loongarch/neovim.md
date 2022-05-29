@@ -65,14 +65,15 @@ But last day I found the luajit has been ported by loonson engineers, it's time 
 
 这种方法存在两个问题:
 - 为了索引正确
-  - 因为 compile_commands.json 只能在 3a5000 上生成，生成之后，需要手动修改其路径
+  - 因为 `compile_commands.json` 只能在 3a5000 上生成，生成之后，需要手动修改其路径
   - 编写的代码如果需要和架构相关的头文件，比如 kvm 相关的，那么需要保证这些代码在 x86 上可以索引到，在 loongson-dune 的做法是直接放到 git 仓库中的
 - 只是适合小项目，loongson-dune 只有几千行，几个文件而已，大项目存在明显的延迟，比如内核。
 
 当然 sshfs 还是很有用的，比如有的项目需要编译 x86 镜像的时候。
+
 ### rsync
 使用下面的脚本可以过滤掉被 git 忽略的文件
-```c
+```sh
 #!/bin/bash
 if [ $# -eq 0 ];then
   echo "need parameter"
