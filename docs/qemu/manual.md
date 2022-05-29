@@ -1,24 +1,25 @@
-# QEMU 使用入门
+# QEMU 基本使用
+QEMU 的功能这里大致介绍一下
 
 ## 如何编译 QEMU
-编译 x86 32bit 的方法
+QEMU 支持的选项很多，通过下面的命令来查看：
 ```sh
-cd path_to_qemu || exit 1
+../configure --help
+```
+
+想要运行 32 位的 x86 操作系统，编译参数为:
+```sh
 mkdir 32bit
 cd 32bit || exit 1
 ../configure --target-list=i386-softmmu
 make -j
 ```
 
-## 给一个硬盘安装操作系统
-
 ## 到底是 sdb3 ，其中的基本原理是什么
 - 为什么不能作为启动盘啊
 - 将之前的几个 ubuntu imge 之类重新整理一下
 
 ## 所以 virtue box 是如何实现的
-
-## 安装 Windows
 
 ## img 制作方法
 
@@ -222,3 +223,6 @@ lrwxrwxrwx    1 root     root             0 May 16 08:50 0000:00:05.0 -> ../../.
 lrwxrwxrwx    1 root     root             0 May 16 08:50 0000:00:06.0 -> ../../../devices/pci0000:00/0000:00:06.0
 lrwxrwxrwx    1 root     root             0 May 16 08:50 0000:01:01.0 -> ../../../devices/pci0000:00/0000:00:03.0/0000:01:01.0
 ```
+
+## TODO
+- [ ] 利用 QEMU 给一个分区安装操作系统

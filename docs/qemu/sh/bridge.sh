@@ -4,9 +4,9 @@
 abs_loc=$(dirname "$(realpath "$0")")
 configuration=${abs_loc}/config.json
 
-QEMU=$(jq -r ".QEMU" <"$configuration")
-KERNEL=$(jq -r ".KERNEL" <"$configuration")
-IMG=$(jq -r ".IMG" <"$configuration")
+QEMU=$(jq -r ".qemu" <"$configuration")
+KERNEL=$(jq -r ".kernel" <"$configuration")
+IMG="$(jq -r ".workstation" <"$configuration")/yocto.img"
 
 ext4_img1=/home/maritns3/core/vn/docs/qemu/sh/img1.ext4
 arg_bridge="-device pci-bridge,id=mybridge,chassis_nr=1"

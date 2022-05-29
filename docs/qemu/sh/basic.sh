@@ -4,9 +4,9 @@ set -eu
 abs_loc=$(dirname "$(realpath "$0")")
 configuration=${abs_loc}/config.json
 
-QEMU=$(jq -r ".QEMU" <"$configuration")
-KERNEL=$(jq -r ".KERNEL" <"$configuration")
-IMG=$(jq -r ".YOCTO" <"$configuration")
+QEMU=$(jq -r ".qemu" <"$configuration")
+KERNEL=$(jq -r ".kernel" <"$configuration")
+IMG="$(jq -r ".workstation" <"$configuration")/yocto.img"
 
 function usage() {
   echo "Usage :   [options] [--]
