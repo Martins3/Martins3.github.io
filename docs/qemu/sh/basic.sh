@@ -1,21 +1,25 @@
 #!/bin/bash
 
-QEMU=/home/maritns3/core/kvmqemu/build/x86_64-softmmu/qemu-system-x86_64
-KERNEL=/home/maritns3/core/ubuntu-linux/arch/x86/boot/bzImage
-IMG=/home/maritns3/core/vn/docs/qemu/sh/img/yocto.ext4
+set -eu
+abs_loc=$(dirname "$(realpath "$0")")
+configuration=${abs_loc}/config.json
+
+QEMU=$(jq -r ".QEMU" <"$configuration")
+KERNEL=$(jq -r ".KERNEL" <"$configuration")
+IMG=$(jq -r ".YOCTO" <"$configuration")
 
 function usage() {
   echo "Usage :   [options] [--]
 
     Options:
     -h|help       Display this message
-    -c|help       Display this message"
+    -c|help       Which cmd to run"
 }
 
-cmd=""
+which=""
 while getopts "hc:" opt; do
   case $opt in
-  c) cmd=${OPTARG} ;;
+  c) which=${OPTARG} ;;
   h)
     usage
     exit 0
@@ -29,9 +33,13 @@ while getopts "hc:" opt; do
 done
 shift $((OPTIND - 1))
 
-case $cmd in
-1) ${QEMU} ;;
-2) ${QEMU} -kernel ${KERNEL} ;;
-3) ${QEMU} -kernel ${KERNEL} -enable-kvm ;;
-*) ${QEMU} -kernel ${KERNEL} -enable-kvm -drive file=${IMG},if=virtio,format=raw --append "root=/dev/vda console=ttyS0" -nographic ;;
+cmd="echo 'no such option'"
+case $which in
+1) cmd="${QEMU}" ;;
+2) cmd="${QEMU} -kernel ${KERNEL}" ;;
+3) cmd="${QEMU} -kernel ${KERNEL} -enable-kvm" ;;
+*) cmd="${QEMU} -kernel ${KERNEL} -enable-kvm -drive file=${IMG},if=virtio,format=raw --append 'root=/dev/vda console=ttyS0' -nographic" ;;
 esac
+
+echo "$cmd"
+eval "$cmd"

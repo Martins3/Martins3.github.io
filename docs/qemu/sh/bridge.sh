@@ -1,9 +1,12 @@
 #!/bin/bash
 
 # 参考 https://github.com/qemu/qemu/blob/master/docs/pcie.txt
-QEMU=/home/maritns3/core/kvmqemu/build/qemu-system-x86_64
-KERNEL=/home/maritns3/core/ubuntu-linux/arch/x86/boot/bzImage
-IMG=/home/maritns3/core/vn/docs/qemu/sh/img/yocto.ext4
+abs_loc=$(dirname "$(realpath "$0")")
+configuration=${abs_loc}/config.json
+
+QEMU=$(jq -r ".QEMU" <"$configuration")
+KERNEL=$(jq -r ".KERNEL" <"$configuration")
+IMG=$(jq -r ".IMG" <"$configuration")
 
 ext4_img1=/home/maritns3/core/vn/docs/qemu/sh/img1.ext4
 arg_bridge="-device pci-bridge,id=mybridge,chassis_nr=1"
