@@ -4,6 +4,17 @@
 ![](./img/xx.jpg)
 ![](./img/yy.jpg)
 
+## 使用 gpart 创建新的分区
+
+## 安装操作系统
+- [ ] 可以在 bios 中看到一个新的条目
+
+## 更新 grub
+```sh
+sudo update-grub
+```
+在 grub 中看到一个新的条目
+
 ## 问题
 - [ ] gendisk 之类的到底是啥
 - [ ] 直接对于 dev 进行读的时候，其 flamegraph 看看一下

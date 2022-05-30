@@ -17,6 +17,7 @@
 当时还有很多不成熟的想法:
 - 让 Guest 代码在 non-root 模式下运行
 - 让 Guest 使用 virtio 驱动，从头构建设备驱动
+- 将 Linux 作为一个 Unikerne，然后在上面运行 QEMU
 
 分析了一下 Captive 之后，和老板讨论了一下如何处理设备的问题，老板说:"按照我的理解，设备是可以直通的"。
 从此，我豁然开朗，之后的一年的时间里，技术路线几乎没有发生任何变化，而且任何进展都是符合预期的。
@@ -91,3 +92,4 @@ ejtag 调试器，一直都是使用串口就差不多了，每次都是以为�
 [^1]: [ramooflax](https://github.com/airbus-seclab/ramooflax)
 [^2]: [The Transmeta Code Morphing Software: Using Speculation, Recovery, and Adaptive Retranslation to Address Real-Life Challenges](https://safari.ethz.ch/digitaltechnik/spring2019/lib/exe/fetch.php?media=dehnert_transmeta_code_morphing_software.pdf)
 [^3]: [Captive](https://www.usenix.org/system/files/atc19-spink.pdf)
+[^4]: [A Linux in Unikernel Clothing](https://dl.acm.org/doi/pdf/10.1145/3342195.3387526)

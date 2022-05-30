@@ -1,11 +1,81 @@
 # VFIO
 
+通过 VFIO 可以将一个物理设备直接被 Guest 使用。
+
+## 上手操作
+测试机器是小米笔记本 pro 2019 版本，其显卡为 Nvidia MX150，在 Linux 上，其实 Nvidia 的显卡一般工作就很不正常，所以直通给 Guest 使用。
+参考[内核文档](https://www.kernel.org/doc/html/latest/driver-api/vfio.html)，我这里记录一下操作:
+
+
+1. 确定 GPU 的 bdf
+```txt
+➜  vn git:(master) ✗ lspci
+00:00.0 Host bridge: Intel Corporation Xeon E3-1200 v6/7th Gen Core Processor Host Bridge/DRAM Registers (rev 08)
+00:02.0 VGA compatible controller: Intel Corporation UHD Graphics 620 (rev 07)
+00:08.0 System peripheral: Intel Corporation Xeon E3-1200 v5/v6 / E3-1500 v5 / 6th/7th/8th Gen Core Processor Gaussian Mixture Model
+00:14.0 USB controller: Intel Corporation Sunrise Point-LP USB 3.0 xHCI Controller (rev 21)
+00:14.2 Signal processing controller: Intel Corporation Sunrise Point-LP Thermal subsystem (rev 21)
+00:15.0 Signal processing controller: Intel Corporation Sunrise Point-LP Serial IO I2C Controller #0 (rev 21)
+00:15.1 Signal processing controller: Intel Corporation Sunrise Point-LP Serial IO I2C Controller #1 (rev 21)
+00:16.0 Communication controller: Intel Corporation Sunrise Point-LP CSME HECI #1 (rev 21)
+00:1c.0 PCI bridge: Intel Corporation Sunrise Point-LP PCI Express Root Port #1 (rev f1)
+00:1c.4 PCI bridge: Intel Corporation Sunrise Point-LP PCI Express Root Port #5 (rev f1)
+00:1c.7 PCI bridge: Intel Corporation Sunrise Point-LP PCI Express Root Port #8 (rev f1)
+00:1d.0 PCI bridge: Intel Corporation Sunrise Point-LP PCI Express Root Port #9 (rev f1)
+00:1f.0 ISA bridge: Intel Corporation Sunrise Point LPC Controller/eSPI Controller (rev 21)
+00:1f.2 Memory controller: Intel Corporation Sunrise Point-LP PMC (rev 21)
+00:1f.3 Audio device: Intel Corporation Sunrise Point-LP HD Audio (rev 21)
+00:1f.4 SMBus: Intel Corporation Sunrise Point-LP SMBus (rev 21)
+01:00.0 3D controller: NVIDIA Corporation GP108M [GeForce MX150] (rev ff)
+02:00.0 Non-Volatile memory controller: ADATA Technology Co., Ltd. Device 0021 (rev 01)
+03:00.0 Network controller: Intel Corporation Wireless 8265 / 8275 (rev 78)
+04:00.0 Non-Volatile memory controller: Samsung Electronics Co Ltd NVMe SSD Controller SM961/PM961
+➜  vn git:(master) ✗
+```
+
+2. 确定是哪一个 iommu group，如果这个命令失败，那么修改 grub ，内核启动参数中增加上 `intel_iommu=on` [^4]
+```txt
+➜  vn git:(master) ✗ readlink /sys/bus/pci/devices/0000:01:00.0/iommu_group
+../../../../kernel/iommu_groups/11
+```
+
+3. 获取 ref ff :)
+```txt
+➜  vn git:(master) ✗ lspci -n -s 0000:01:00.0
+01:00.0 0302: 10de:1d12 (rev ff)
+```
+
+4. 将 GPU 和 vfio 驱动绑定
+
+如果 GPU 之前在被使用，那么首先需要解绑
+```sh
+echo 0000:01:00.0 > /sys/bus/pci/devices/0000:01:00.0/driver/unbind
+```
+
+```sh
+sudo su
+echo 10de 1d12 > /sys/bus/pci/drivers/vfio-pci/new_id
+```
+
+5. 无需管理员权限
+```sh
+➜  vn git:(master) ✗ sudo chown maritns3:maritns3 /dev/vfio/11
+```
+
+6. qemu 中运行
+
+```txt
+➜  vn git:(master) ✗ ls -l /sys/bus/pci/devices/0000:01:00.0/iommu_group/devices
+lrwxrwxrwx root root 0 B Mon May 30 09:53:28 2022  0000:01:00.0 ⇒ ../../../../devices/pci0000:00/0000:00:1c.0/0000:01:00.0
+```
+
+
 ## 基本原理
 [An Introduction with PCI Device Assignment with VFIO](http://events17.linuxfoundation.org/sites/events/files/slides/An%20Introduction%20to%20PCI%20Device%20Assignment%20with%20VFIO%20-%20Williamson%20-%202016-08-30_0.pdf)
 
 首先分析一下 QEMU 的图形显示系统:
 - https://www.kraxel.org/blog/2019/09/display-devices-in-qemu/#tldr
-  - **这篇文章非常重要** 只是现在实在是没有 disk 内存空间去测试 ubuntu 了
+  - **这篇文章非常重要**
   - 可以用于了解图形系统的栈是怎么搞的
 
 ## 直通 GPU
@@ -49,14 +119,10 @@ https://zhuanlan.zhihu.com/p/27026590
 
 - [ ] VFIO is essential for `uio`  ?
 
-## how to use vfio
-before assigning the device to VM, we need to unbind its original driver and bind it to vfio-pci driver firstly. [^4][^5]
-
-- [ ] if we **unbind** the server firstly, so host will not work normally because of lost it's driver
-  - [ ] give it a try, afterall, reboot is the worst case
+## TODO
+- [ ] 如何启动已经安装在硬盘上的 windows
 
 [^1]: http://www.linux-kvm.org/images/5/54/01x04-Alex_Williamson-An_Introduction_to_PCI_Device_Assignment_with_VFIO.pdf
 [^2]: https://www.kernel.org/doc/html/latest/driver-api/uio-howto.html
 [^3]: [populate the empty /sys/kernel/iommu_groups](https://unix.stackexchange.com/questions/595353/vt-d-support-enabled-but-iommu-groups-are-missing)
-[^4]: https://www.reddit.com/r/VFIO/comments/cbkg6j/devvfioxx_not_being_created/
-[^5]: https://terenceli.github.io/%E6%8A%80%E6%9C%AF/2019/08/16/vfio-usage
+[^4]: https://unix.stackexchange.com/questions/595353/vt-d-support-enabled-but-iommu-groups-are-missing

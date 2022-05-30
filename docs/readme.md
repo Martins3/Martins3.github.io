@@ -40,7 +40,7 @@
 - [QEMU 字符设备模拟](./qemu/char.md)
 
 ### 裸金属二进制翻译器的设计和实现
-- 🚧 [为什么要写一个裸金属二进制翻译器](./bmbt/1-why.md)
+设计思想参考[硕士毕业论文以及答辩 PPT](https://github.com/Martins3/Bare-Metal-Binary-Translator)，以下是技术细节
 - 🚧 [裸金属二进制翻译器的软件架构](./bmbt/2-arch.md)
 - 🚧 [裸金属二进制翻译器的技术细节](./bmbt/3-tech.md)
 - [淦，写一个裸金属二进制翻译器不可能这么难](./bmbt/4-emotion.md)
@@ -48,7 +48,7 @@
 ## 淦，打一把英雄联盟不可能这么难
 - 🚧 [双系统（一）: blockdev](./lol/blockdev.md)
 - 🚧 [双系统（二）: bootloader](./lol/bootloader.md)
-- 🚧 [wine : 如何实现系统调用虚拟化](./lol/wine.md)
+- [wine : 如何实现系统调用虚拟化](./lol/wine.md)
 - 🚧 [设备直通: VFIO](./lol/vfio.md)
 
 ## UEFI
