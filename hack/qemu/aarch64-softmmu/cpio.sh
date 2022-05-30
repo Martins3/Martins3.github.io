@@ -12,9 +12,7 @@ echo "(aarch64-linux-gnu-) Cross compiler prefix"
 
 make menuconfig
 
-
 make && make install
-
 
 cd install || exit 1
 mkdir dev || exit 1
@@ -27,4 +25,4 @@ ln -sf null tty3
 ln -sf null tty4
 cd ..
 
-find . | cpio -o -H newc |gzip > ../rootfs.cpio.gz
+find . | cpio -o -H newc | gzip >../rootfs.cpio.gz

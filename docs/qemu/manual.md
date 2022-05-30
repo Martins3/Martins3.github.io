@@ -24,16 +24,36 @@ make -j
 ## img 制作方法
 
 ### [ ] hello world
-```c
-  /*
-   - use hello.out
-      - "console=ttyS0 earlyprintk=serial debug root=/dev/ram rdinit=/hello.out"
-   - use busybox
-      - "console=ttyS0 earlyprintk=serial debug";
-  */
-```
+
+- https://ibugone.com/blog/2019/04/os-lab-1/ : 中科大老哥的 blog, 并没有办法复现, 文中提到，通过 -initrd 可以实现最佳是
+  - https://ops.tips/notes/booting-linux-on-qemu/ 这里的 ref 指出 : initramfs 和 kernel 被 bootloader 加载内存中间，而 initramfs 被 mount 到 / ，并且执行其中的 init
+- https://www.kernel.org/doc/html/latest/filesystems/ramfs-rootfs-initramfs.html : 内核文档，可以复现，整个内容都可以好好读一读
+
+其实唯一的不同在于，到底执行是 hello 还是 init.sh 这个程序:
 
 ### [ ] busybox
+
+https://busybox.net/
+
+```sh
+sudo mkdir -p rootfs/dev
+mknod dev/tty1 c 4 1
+mknod dev/tty2 c 4 2
+mknod dev/tty3 c 4 3
+mknod dev/tty4 c 4 4
+```
+## 一个小问题
+不知道为什么，当运行一个 hello world 的 initrd 的 kernel 参数是这个:
+
+```bash
+arg_kernel_args="nokaslr console=ttyS0 root=/dev/ram rdinit=/hello.out"
+```
+
+而运行 initrd 的时候:
+
+```bash
+arg_kernel_args="nokaslr console=ttyS0"
+```
 
 ### Alpine
 所以我写了一个[脚本](https://github.com/Martins3/Martins3.github.io/blob/master/docs/qemu/sh/alpine.sh), 简单解释几个点:

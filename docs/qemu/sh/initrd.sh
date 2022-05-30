@@ -10,13 +10,14 @@ KERNEL=$(jq -r ".kernel" <"$configuration")
 # gcc -m32 -static hello.c -o hello.out
 img="$workstation/test.cpio.gz"
 src="$abs_loc/hello.c"
-gcc -static "$src" -o "$img"
+out="$workstation/hello.out"
+gcc -static "$src" -o "$out"
 cd "$workstation" || exit 1
-echo init | cpio -o -H newc | gzip > "$img"
+echo hello.out | cpio -o -H newc | gzip > "$img"
 
 # 可以直接使用本系统中 initrd
 # img=/boot/initrd.img-$(uname -r)
 
-cmd="$QEMU -kernel $KERNEL -initrd $img -nographic -append 'console=ttyS0' -m 4G"
+cmd="$QEMU -enable-kvm -kernel $KERNEL -initrd $img -nographic -append 'console=ttyS0 root=/dev/ram rdinit=/hello.out' -m 4G"
 echo "$cmd"
 eval "$cmd"
