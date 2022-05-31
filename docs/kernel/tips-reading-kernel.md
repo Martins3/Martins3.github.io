@@ -1,12 +1,12 @@
-# 使用 QEMU, FlameGraph 和 bpftrace 阅读内核
+# 使用 QEMU 和 ebpf 阅读内核
 
 在[上一篇文章](https://martins3.github.io/learn-linux-kernel.html)中，提出了学习内核的目的，工作的方向以及大致的学习路径，下面谈一下可以提高分析效率的工具。
 
 ## QEMU
-QEMU 很强大。
-
 使用 QEMU 调试内核网上已经有很多的文章, 比如 [Booting a Custom Linux Kernel in QEMU and Debugging It With GDB](http://nickdesaulniers.github.io/blog/2018/10/24/booting-a-custom-linux-kernel-in-qemu-and-debugging-it-with-gdb/)
-但是，这些都不是完整，对着教程用下来总是出问题。
+
+QEMU 很强大，但是 QEMU 的参数对于新手不是很友好，我写了一个[QEMU 的基本使用方法](https://martins3.github.io/qemu/manual.html)，
+关于调试可以参考[这个脚本](https://github.com/Martins3/Martins3.github.io/blob/master/docs/qemu/sh/alpine.sh)
 
 ## FlameGraph
 使用 FlameGraph 可以很快的定位出来函数的大致执行的流程，无需使用编辑器一个个的跳转，非常好用。

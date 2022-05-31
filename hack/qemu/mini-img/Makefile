@@ -33,8 +33,7 @@ YOCTO_IMAGE = $(PROJECT_DIR)/$(YOCTO_IMAGE_NAME)
 # TODO 现在唯一的问题，如果自动的注入这条消息
 # mount -t 9p -o trans=virtio,version=9p2000.L host0 /mnt/9p
 QEMU_OPTS = -kernel $(ZIMAGE) \
-	-virtfs local,path=$(PATH_TO_SHARE),mount_tag=host0,security_model=mapped,id=host0 \
-  -enable-kvm \
+	-virtfs local,path=$(PATH_TO_SHARE),mount_tag=host0,security_model=mapped,id=host0 -enable-kvm \
 	-device virtio-serial -chardev pty,id=virtiocon0 -device virtconsole,chardev=virtiocon0 \
 	-drive file=$(YOCTO_IMAGE),if=virtio,format=raw \
 	-drive file=disk1.img,if=virtio,format=raw \

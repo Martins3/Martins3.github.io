@@ -1,4 +1,4 @@
-# QEMU 基本使用
+# QEMU 的基本使用方法
 QEMU 的功能这里大致介绍一下
 
 ## 如何编译 QEMU
@@ -15,48 +15,45 @@ cd 32bit || exit 1
 make -j
 ```
 
-## 到底是 sdb3 ，其中的基本原理是什么
-- 为什么不能作为启动盘啊
-- 将之前的几个 ubuntu imge 之类重新整理一下
+## 基本使用方法
+**各种脚本都是在这里: https://github.com/Martins3/Martins3.github.io/blob/master/docs/qemu/sh/**
+- config.json 中保存配置，设置内核和 QEMU 路径，以及各种镜像保存的位置
+- basic.sh : QEMU 的集中基本用法
+- initrd.sh : 将 init 进程设置为 hello
+- busybox.sh : [busybox](https://busybox.net)
+- alpine.sh ubuntu.sh windows.sh yocto.sh : 运行各种 Linux 发行版
+- bridge.sh : 测试添加一个 PCIe bridge
 
-## 所以 virtue box 是如何实现的
+## 运行各种 Distribution
 
-## img 制作方法
+### [basic](https://github.com/Martins3/Martins3.github.io/blob/master/docs/qemu/sh/yocto.sh)
+使用 yocto 作为镜像，并且使用不同的参数演示 QEMU 的使用
 
-### [ ] hello world
+### [hello world](https://github.com/Martins3/Martins3.github.io/blob/master/docs/qemu/sh/initrd.sh)
 
-- https://ibugone.com/blog/2019/04/os-lab-1/ : 中科大老哥的 blog, 并没有办法复现, 文中提到，通过 -initrd 可以实现最佳是
-  - https://ops.tips/notes/booting-linux-on-qemu/ 这里的 ref 指出 : initramfs 和 kernel 被 bootloader 加载内存中间，而 initramfs 被 mount 到 / ，并且执行其中的 init
-- https://www.kernel.org/doc/html/latest/filesystems/ramfs-rootfs-initramfs.html : 内核文档，可以复现，整个内容都可以好好读一读
+参考:
+- https://ibugone.com/blog/2019/04/os-lab-1/
+- https://www.kernel.org/doc/html/latest/filesystems/ramfs-rootfs-initramfs.html
 
-其实唯一的不同在于，到底执行是 hello 还是 init.sh 这个程序:
+其中，init 不仅仅可以是 elf 格式的程序，还是可以是 shell 的，例如
 
-### [ ] busybox
-
-https://busybox.net/
-
-```sh
-sudo mkdir -p rootfs/dev
-mknod dev/tty1 c 4 1
-mknod dev/tty2 c 4 2
-mknod dev/tty3 c 4 3
-mknod dev/tty4 c 4 4
-```
-## 一个小问题
-不知道为什么，当运行一个 hello world 的 initrd 的 kernel 参数是这个:
-
+需要注意的是，其运行参数为
 ```bash
-arg_kernel_args="nokaslr console=ttyS0 root=/dev/ram rdinit=/hello.out"
+arg_kernel_args="console=ttyS0 root=/dev/ram rdinit=/hello.out"
 ```
+这是因为我们的程序名称为 hello.out ，如果将 hello.out 修改为 init，那么就无需使用额外的参数了。
 
-而运行 initrd 的时候:
+### [busybox](https://github.com/Martins3/Martins3.github.io/blob/master/docs/qemu/sh/busybox.sh)
+基础的部分参考这个：
+- https://www.cnblogs.com/wipan/p/9272255.html
+- https://gist.github.com/chrisdone/02e165a0004be33734ac2334f215380e
 
-```bash
-arg_kernel_args="nokaslr console=ttyS0"
-```
+network 的事情参考这个部分：
+- https://www.digi.com/resources/documentation/digidocs/90001515/task/yocto/t_configure_network.htm
 
-### Alpine
-所以我写了一个[脚本](https://github.com/Martins3/Martins3.github.io/blob/master/docs/qemu/sh/alpine.sh), 简单解释几个点:
+### [Alpine](https://github.com/Martins3/Martins3.github.io/blob/master/docs/qemu/sh/alpine.sh)
+
+简单解释几个点:
 1. 其中采用 alpine 作为镜像，因为 alpine 是 Docker 选择的轻量级镜像，比 Yocto 功能齐全(包管理器)，而且比 Ubuntu 简单
 2. 第一步使用 iso 来安装镜像，这次运行的是 iso 中是包含了一个默认内核, 安装镜像之后，使用 -kernel 指定内核
 3. 在 [How to use custom image kernel for ubuntu in qemu?](https://stackoverflow.com/questions/65951475/how-to-use-custom-image-kernel-for-ubuntu-in-qemu) 的这个问题中，我回答了如何设置内核参数 sda
@@ -76,146 +73,59 @@ arg_kernel_args="nokaslr console=ttyS0"
 > 将系统安装到脚本制作的 image 中
 ![](./img/x-3.png)
 
-构建好了之后，就可以像是调试普通进程一样调试内核了，非常地好用。
-
+构建好了之后，就可以像是调试普通进程一样调试内核了，非常地好用。而且 Alpine 自带网络管理:
 ```sh
 apk add pciutils
 ```
 
-### [ ] Ubuntu Server
+### [Ubuntu Desktop](https://github.com/Martins3/Martins3.github.io/blob/master/docs/qemu/sh/ubuntu.sh)
+Ubuntu 需要首先安装，利用 iso 制作镜像，然后使用该镜像。
 
-### [ ] Ubuntu Desktop
+### [Windows](https://github.com/Martins3/Martins3.github.io/blob/master/docs/qemu/sh/windows.sh)
+当然，QEMU 也是可以运行 Windows 的
 
-## communicate with the guest
+## Guest 网络
 
-- [ ] TODO verify this one by one
-
-I came across the same problem and fix it after struggling, here is my solution.
-
-1. create the qcow2 image from iso[^1]
+### 端口重定向
 ```sh
-disk_img=ubuntu.qcow2
-iso_name=ubuntu-21.04-desktop-amd64.iso
-
-qemu-img create -f qcow2 "$disk_img" 1T
-
-qemu-system-x86_64 \
-		-cdrom "$iso" \
-		-drive "file=${disk_img},format=qcow2" \
-		-enable-kvm \
-		-m 2G \
-		-smp 2 \
-		;
+-netdev user,id=net0,hostfwd=tcp::8080-:80
 ```
-Then, you install ubuntu and reboot.
+将 Host 8080 端口重定向到 Guest 的 80 端口
 
-2. Run the Ubuntu with built-in kernel.
+### Guest 科学上网
+有时候 Guest 中需要安装某些东西，没有代理几乎没有成功的可能性。在 Host 打开 Qv2ray 或者 Clash，设置为可以代理整个局域网，
+然后获取 host 的 ip 地址，最后在 Guest 中运行一下命令即可。
 ```sh
-qemu-system-x86_64 \
-  -drive "file=${disk_img},format=qcow2" \
-  -enable-kvm \
-  -m 8G \
-  -smp 8
-```
-It should works well, open a terminal and use `df -h` to find out from which drive your ubuntu boot.
-On my computer, it's "/dev/sda3".
-
-3. compile the kernel
-```bash
-cd /kernel/src/path
-git reset --hard origin/master
-make defconfig
-make -j4
+export http_proxy=http://ip_addr:8889 && export https_proxy=http://ip_addr:8889
 ```
 
-4. Run the Ubuntu with the newly compiled kernel with hard drive specified
-```bash
-qemu-system-x86_64 \
-  -hda ${disk_img} \
-  -enable-kvm \
-  -append "root=/dev/sda3" \
-  -kernel /kernel/src/path/arch/x86/boot/bzImage \
-  -cpu host \
-  -m 8G \
-  -smp 8
-```
+## 共享
 
-The key point is to inform the kernel 'root=/dev/sda3', as can be obtained step 2.
-
-[^1]: https://github.com/cirosantilli/linux-cheat/blob/4c8ee243e0121f9bbd37f0ab85294d74fb6f3aec/ubuntu-18.04.1-desktop-amd64.sh
-
-
-
-### [ ] NixOS
-
-## [ ] 增加一个网络设备
-https://www.collabora.com/news-and-blog/blog/2017/03/13/kernel-debugging-with-qemu-overview-tools-available/
-
-似乎这个配置是无法启动网络的，但是 Linux-kernel-labs 中可以，也许是 `create_net.sh` 的原因
+### 9p
+QEMU 启动参数增加
 ```sh
-#!/bin/bash
-# FIXME 也许是 dhcp 没有配置，所以没有办法正常链接网络
-QEMU=/home/maritns3/core/kvmqemu/build/qemu-system-x86_64
-$QEMU -kernel /home/maritns3/core/ubuntu-linux/arch/x86/boot/bzImage \
-  -enable-kvm \
-  -drive file=/home/maritns3/core/vn/hack/qemu/mini-img/core-image-minimal-qemux86-64.ext4,if=virtio,format=raw \
-  -device virtio-serial-pci -chardev pty,id=virtiocon0 -device virtconsole,chardev=virtiocon0 \
-  --append "root=/dev/vda loglevel=15 console=ttyS0" \
-  -device e1000,netdev=net0 \
-  -netdev user,id=net0,hostfwd=tcp::8080-:80 \
-  -monitor stdio
+arg_share_dir="-virtfs local,path=${share_dir},mount_tag=host0,security_model=mapped,id=host0"
 ```
 
-- [ ] 使用 alpine 直接就可以 ssh 到远程，很神奇
-
-- 似乎增加一个网络设备并不是很难，难的是如何正确配置
-network 的事情参考这个部分：
-https://www.digi.com/resources/documentation/digidocs/90001515/task/yocto/t_configure_network.htm
-基础的部分参考这个：
-https://www.cnblogs.com/wipan/p/9272255.html
-https://gist.github.com/chrisdone/02e165a0004be33734ac2334f215380e
-https://www.digi.com/resources/documentation/digidocs/90001515/task/yocto/t_configure_network.htm
-
-## 直通一个设备
-
-## 共享目录
-
-- Through `qemu-nbd` to write/read guest's file
-- Through libguestfs to mount/unmount qcow2 image
-  - `sudo apt-get install libguestfs-tools`
-  - `sudo yum install libguestfs-tools`
-    - not wotk on Loongson because of the lack of supermin package
-    - works fine on Ubuntu 16.04 AMD64
-- Through interrnet
-  - On default, the guest is connected to the interrnet and is able to `git clone` ...
-  - But the guest is inside another Internal network and can not be reached by the host directly, such as
-    - Guest IP : 10.0.2.15
-    - Host IP: 192.168.1.103
-- Through `-net` to make the guest connect to the host
-  - may need the `tun` kernel module
-    - `sudo modprobe tun`
-
-- With 9p and virtio:
-  - https://askubuntu.com/questions/290668/how-to-share-a-folder-between-kvm-host-and-guest-using-virt-manager/1274315#1274315
-
-### [ ] virtiofs
-
-### [ ] 9p
-
-### [ ] ssh
+在 guest 中
+```sh
+mount -t 9p -o trans=virtio,version=9p2000.L host0 /mnt/9p
+```
+### ssh
+在 host 通过 `ip addr` 获取 ip 地址，之后和普通的 ssh 使用起来没有差异。
 
 ### [ ] ftp
+有待开发
 
-## [ ] 让人迷惑的东西
+### [ ] nbd
+有待开发
 
-- [ ] 从 Linux-Kernel-Labs.sh 中抽出来的，莫名其妙的，其他的内容也全部整合一下
-```sh
--device virtio-serial-pci -chardev pty,id=virtiocon0 -device virtconsole,chardev=virtiocon0 \
-```
+### [ ] virtiofs
+有待开发
 
-## PCI bridge : 构建更加复杂的 topo 结构
+## [PCI bridge](https://github.com/Martins3/Martins3.github.io/blob/master/docs/qemu/sh/bridge.sh)
 
-首先运行 `lspci`，观察到 00:03.0 是一个 PCI bridge
+在 Guest 中，首先运行 `lspci`，观察到 00:03.0 是一个 PCI bridge
 ```plain
 00:00.0 Host bridge: Intel Corporation 440FX - 82441FX PMC [Natoma] (rev 02)
 00:01.0 ISA bridge: Intel Corporation 82371SB PIIX3 ISA [Natoma/Triton II]
@@ -246,3 +156,4 @@ lrwxrwxrwx    1 root     root             0 May 16 08:50 0000:01:01.0 -> ../../.
 
 ## TODO
 - [ ] 利用 QEMU 给一个分区安装操作系统
+- [ ] 內核启动参数中需要指定 root=/dev/sda3 如何确定

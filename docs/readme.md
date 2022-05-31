@@ -17,7 +17,7 @@
 - [Loongson Dune : A Process Level Virtualization framework Base on KVM](https://github.com/Martins3/loongson-dune)
 
 ### QEMU 源码分析
-- [QEMU 的基本使用](./qemu/manual.md)
+- [QEMU 的基本使用方法](./qemu/manual.md)
 - [QEMU 源码概叙](./qemu/introduction.md)
 - [QEMU 初始化过程分析](./qemu/init.md)
 - [QEMU 的 memory model 设计](./qemu/memory.md)
