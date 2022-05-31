@@ -167,3 +167,20 @@ lrwxrwxrwx    1 root     root             0 May 16 08:50 0000:01:01.0 -> ../../.
 ## TODO
 - [ ] 利用 QEMU 给一个分区安装操作系统
 - [ ] 內核启动参数中需要指定 root=/dev/sda3 如何确定
+
+
+<script src="https://giscus.app/client.js"
+        data-repo="martins3/martins3.github.io"
+        data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="
+        data-category="Show and tell"
+        data-category-id="MDE4OkRpc2N1c3Npb25DYXRlZ29yeTMyMDMzNjY4"
+        data-mapping="pathname"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-theme="light"
+        data-lang="zh-CN"
+        crossorigin="anonymous"
+        async>
+</script>
+
+本站所有文章转发 **CSDN** 将按侵权追究法律责任，其它情况随意。
