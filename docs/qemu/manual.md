@@ -26,10 +26,13 @@ make -j
 
 ## 运行各种 Distribution
 
-### [basic](https://github.com/Martins3/Martins3.github.io/blob/master/docs/qemu/sh/yocto.sh)
+### Basic
+- [script](https://github.com/Martins3/Martins3.github.io/blob/master/docs/qemu/sh/yocto.sh)
+
 使用 yocto 作为镜像，并且使用不同的参数演示 QEMU 的使用
 
-### [hello world](https://github.com/Martins3/Martins3.github.io/blob/master/docs/qemu/sh/initrd.sh)
+### Hello World
+- [script](https://github.com/Martins3/Martins3.github.io/blob/master/docs/qemu/sh/initrd.sh)
 
 参考:
 - https://ibugone.com/blog/2019/04/os-lab-1/
@@ -43,7 +46,9 @@ arg_kernel_args="console=ttyS0 root=/dev/ram rdinit=/hello.out"
 ```
 这是因为我们的程序名称为 hello.out ，如果将 hello.out 修改为 init，那么就无需使用额外的参数了。
 
-### [busybox](https://github.com/Martins3/Martins3.github.io/blob/master/docs/qemu/sh/busybox.sh)
+### busybox
+- [script](https://github.com/Martins3/Martins3.github.io/blob/master/docs/qemu/sh/busybox.sh)
+
 基础的部分参考这个：
 - https://www.cnblogs.com/wipan/p/9272255.html
 - https://gist.github.com/chrisdone/02e165a0004be33734ac2334f215380e
@@ -51,7 +56,8 @@ arg_kernel_args="console=ttyS0 root=/dev/ram rdinit=/hello.out"
 network 的事情参考这个部分：
 - https://www.digi.com/resources/documentation/digidocs/90001515/task/yocto/t_configure_network.htm
 
-### [Alpine](https://github.com/Martins3/Martins3.github.io/blob/master/docs/qemu/sh/alpine.sh)
+### Alpine
+- [script](https://github.com/Martins3/Martins3.github.io/blob/master/docs/qemu/sh/alpine.sh)
 
 简单解释几个点:
 1. 其中采用 alpine 作为镜像，因为 alpine 是 Docker 选择的轻量级镜像，比 Yocto 功能齐全(包管理器)，而且比 Ubuntu 简单
@@ -78,10 +84,14 @@ network 的事情参考这个部分：
 apk add pciutils
 ```
 
-### [Ubuntu Desktop](https://github.com/Martins3/Martins3.github.io/blob/master/docs/qemu/sh/ubuntu.sh)
+### Ubuntu Desktop
+- [script](https://github.com/Martins3/Martins3.github.io/blob/master/docs/qemu/sh/ubuntu.sh)
+
 Ubuntu 需要首先安装，利用 iso 制作镜像，然后使用该镜像。
 
-### [Windows](https://github.com/Martins3/Martins3.github.io/blob/master/docs/qemu/sh/windows.sh)
+### Windows
+- [script](https://github.com/Martins3/Martins3.github.io/blob/master/docs/qemu/sh/windows.sh)
+
 当然，QEMU 也是可以运行 Windows 的
 
 ## Guest 网络
