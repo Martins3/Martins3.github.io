@@ -25,7 +25,7 @@ must be located in the same source file
 
 ## questions
 1. parameters of class
-```
+```scala
 class Animal(val name: String, val species: String)
 class Human(val name: String)
 implicit def human2animal(h: Human): Animal = {
@@ -35,20 +35,12 @@ val me = new Human("Adam")
 println(me.species)
 ```
 
-2. 
-
-
-
 ## Inherience
 > Superclass Construction
 
 #### Use Vim
 http://seenaburns.com/vim-setup-for-scala/
 
-
 1. Scala functions that do not have any arguments do not require empty parenthese
 2. By convention, argument-less functions that do not have side effects (i.e. calling them does not change anything and they simply return a value) do not use parentheses, and functions that do have side effects (perhaps they change class variables or print stuff out) should require parentheses.
 3. Overloaded functions should be avoided, though.
-
-
-

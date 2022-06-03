@@ -20,6 +20,7 @@ Kind of tricky to read without preliminary knowledge about GenSim.
 - [论文阅读笔记（分布式，虚拟化，机器学习）](https://github.com/dyweb/papers-notebook/issues)
 - [alastairreid's reading list](https://alastairreid.github.io/RelatedWork/papers/)
 - [micahlerner](https://www.micahlerner.com/2021/12/28/ghost-fast-and-flexible-user-space-delegation-of-linux-scheduling.html)
+- [System/Networking](https://github.com/Romero027/sysnet-reading-list)
 
 ## Cloud / Virtualization
 - [Alita: Comprehensive Performance Isolation through Bias Resource Management](https://mp.weixin.qq.com/s/S0lvODk2fe91AxWyMACgEQ)
