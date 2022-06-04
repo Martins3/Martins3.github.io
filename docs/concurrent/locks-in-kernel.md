@@ -1,4 +1,18 @@
 # lock
+- [ ] qspinlock : zhihu 专栏的 lanxinyu 的文章
+- [ ] 总结一下内核中带锁的位置
+- [ ] 我们应该从 lock 的角度来重新思考内核的各种模块
+  - vfs 的那些元素需要保护: inode dcache
+  - memory 中的 : lru 的链表
+- [ ] 验证一下，如果只有单核，内核中很多的 lock 都是会简化的
+- [ ] 内核中 lock 和用户态的差别
+  - [ ]  内核中存在 conditionnal variables 吗? 如果没有
+    - 显然是可以实现的，但是似乎没有见到过
+    - 似乎是被替代为 wait queue 了，如果的确是，为什么？
+
+## preempt
+- 中断的屏蔽和 preempt 的 disable 是两个事情
+- [ ] 那些地方是必须 `preempt_disable` 但是无需屏蔽中断
 
 ## qspinlock
 首先，大致看看代码吧!
@@ -24,9 +38,9 @@ static DEFINE_PER_CPU_ALIGNED(struct qnode, qnodes[MAX_NODES]);
  * qspinlocks.
  */
 struct qnode {
-	struct mcs_spinlock mcs;
+    struct mcs_spinlock mcs;
 #ifdef CONFIG_PARAVIRT_SPINLOCKS
-	long reserved[2];
+    long reserved[2];
 #endif
 };
 ```
@@ -34,7 +48,7 @@ struct qnode {
 
 [术道经纬](https://zhuanlan.zhihu.com/p/100546935) 比 奔跑吧更加好，大致的想法是:
 
-使用 mcs 增加了一个指针，这会导致任何包含了 mcs_spinlock 大小都增加 4 byte, 很难接受。
+使用 mcs 增加了一个指针，这会导致任何包含了 `mcs_spinlock` 大小都增加 4 byte, 很难接受。
 
 
 当只有三个 CPU 之内进行访问，那么使用 ticket spinlock 类似，都是在一个字段上，如果超过了，那么使用 mcs 的方式。
@@ -63,19 +77,19 @@ https://linuxplumbersconf.org/event/4/contributions/286/attachments/225/398/LPC-
 ```c
 int pthread_spin_lock(pthread_spinlock_t *s)
 {
-	while (*(volatile int *)s || a_cas(s, 0, EBUSY)) a_spin();
-	return 0;
+    while (*(volatile int *)s || a_cas(s, 0, EBUSY)) a_spin();
+    return 0;
 }
 ```
 但是 mutex 的实现, 最终会调用的 futex 的:
 ```c
 int __pthread_mutex_lock(pthread_mutex_t *m)
 {
-	if ((m->_m_type&15) == PTHREAD_MUTEX_NORMAL
-	    && !a_cas(&m->_m_lock, 0, EBUSY))
-		return 0;
+    if ((m->_m_type&15) == PTHREAD_MUTEX_NORMAL
+        && !a_cas(&m->_m_lock, 0, EBUSY))
+        return 0;
 
-	return __pthread_mutex_timedlock(m, 0);
+    return __pthread_mutex_timedlock(m, 0);
 }
 ```
 

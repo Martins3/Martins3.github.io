@@ -93,4 +93,12 @@ https://www.cs.utexas.edu/~bornholt/post/memory-models.html
 https://www.linuxjournal.com/article/8211
 https://www.linuxjournal.com/article/8212
 
-- [ ] READ_ONCE and WRITE_ONCE
+- [ ] `READ_ONCE` and `WRITE_ONCE`
+
+## perf book 中的 B.3 的表中使用 ref counter 实现 RCU
+
+## 和 cache coherence 的关系是什么
+- [ ] 可以吧周音困的总结搞过来看看
+
+- [ ] cache 中的三级 cache 同步的时候，需要每一个层级都同步吗?
+- [ ] 可不可以将 load queue / store queue 也是作为 3 级 cache 中的一种方法
