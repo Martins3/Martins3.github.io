@@ -152,6 +152,13 @@ csysdig -l
 
 ### [ ] https://github.com/javamelody/javamelody
 
+### [ ] https://github.com/intel/msr-tools
+### [ ] https://github.com/corpaul/flamegraphdiff
+### [ ] https://github.com/andikleen/pmu-tools
+### [ ] https://github.com/aquasecurity/tracee
+### [ ] https://github.com/cloudflare/ebpf_exporter
+### [ ] https://github.com/bytedance/trace-irqoff
+
 ## 参考
 - https://github.com/adriannovegil/awesome-observability
 
