@@ -73,10 +73,6 @@ lrwxrwxrwx root root 0 B Mon May 30 09:53:28 2022  0000:01:00.0 ⇒ ../../../
 ## 基本原理
 [An Introduction with PCI Device Assignment with VFIO](http://events17.linuxfoundation.org/sites/events/files/slides/An%20Introduction%20to%20PCI%20Device%20Assignment%20with%20VFIO%20-%20Williamson%20-%202016-08-30_0.pdf)
 
-首先分析一下 QEMU 的图形显示系统:
-- https://www.kraxel.org/blog/2019/09/display-devices-in-qemu/#tldr
-  - **这篇文章非常重要**
-  - 可以用于了解图形系统的栈是怎么搞的
 
 ## 直通 GPU
 
