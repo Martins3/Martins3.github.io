@@ -59,6 +59,11 @@
 - [Linux 下 UEFI 学习环境搭建](./uefi/uefi-linux.md)
 - [UEFI 入门](./uefi/uefi-beginner.md)
 
+## Micro Architecture
+
+#### BOOM 源码阅读: 从静态 5 级 MIPS 流水线到乱序多发射 RISC-V CPU
+<!-- - [准备工作]() -->
+
 ## Tips
 - [How to cross Great Fire Wall](./gfw.md)
 - [计算机学习的一点经验之谈](./learn-cs.md)
@@ -82,11 +87,11 @@
 ## Linux Kernel
 - [内核学习的一点经验之谈](./kernel/learn-linux-kernel.md)
 - 🚧 [使用 QEMU, FlameGraph 和 bpftrace 阅读内核](./kernel/tips-reading-kernel.md)
-<!-- - [irq domain](./kernel/irq-domain.md) -->
 - [tty 到底是什么](./kernel/tty.md)
 - 🚧 [syscall](./kernel/syscall.md)
 - [mknod](./kernel/mknod.md)
 -  🚧 [Linux 设备模型](./kernel/device.md)
+<!-- - [irq domain](./kernel/irq-domain.md) -->
 
 ## Database
 <!-- - [leveldb 源码分析](./database/leveldb.md) -->

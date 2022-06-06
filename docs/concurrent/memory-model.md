@@ -6,6 +6,11 @@
 - [ ] 和 volatile 中的问题
 - [ ] https://blog.stuffedcow.net/2015/08/pagewalk-coherence/ 还存在一些蛇皮的 TLB pagewalk 的 coherence 问题啊
 
+- [ ] GPU 中的 memory model 是做什么的?
+- [ ] 尝试了解一下 RISCV 的模型
+  - https://zhuanlan.zhihu.com/p/191660613
+  - https://riscv.org/wp-content/uploads/2018/05/14.25-15.00-RISCVMemoryModelTutorial.pdf
+
 - https://www.cs.utexas.edu/~bornholt/post/memory-models.html
 
 - [Shared Memory Consistency Models: A Tutorial](https://www.hpl.hp.com/techreports/Compaq-DEC/WRL-95-7.pdf)
@@ -102,3 +107,8 @@ https://www.linuxjournal.com/article/8212
 
 - [ ] cache 中的三级 cache 同步的时候，需要每一个层级都同步吗?
 - [ ] 可不可以将 load queue / store queue 也是作为 3 级 cache 中的一种方法
+
+- [ ] 似乎 [^1] 中说明了 **全局序** ，那么什么样子的设计会导致观测顺序的不一致啊
+
+
+[^1]: https://zhuanlan.zhihu.com/p/191660613
