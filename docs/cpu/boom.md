@@ -1,5 +1,9 @@
 # BOOM 源码阅读
 
+## 其他可以选择的项目
+- xiangshan
+- T9000
+
 ## 计划
 - [ ] 中文文档
 - [ ] 可以运行 Boom 的
@@ -8,6 +12,12 @@
 - BoomFrontendModule : Main Frontend module that connects the icache, TLB, fetch controller, and branch prediction pipeline together.
 
 ## 问题
+- [ ] 既然采用 icache 和 dcache 是分开的，为什么只是在最上层分开？
+- [ ] 存在对于 instruction 和 data 各自的 TLB 吗?
+- [ ] chipyard 中如果可以运行 Linux Kernel 的话，那么岂不是也是存在内存控制器的，从 cache 不命中到
+- [ ] Boom 中是如何使用状态机的
+
+## 源码阅读
 
 ### generators/boom/src/main/scala/ifu/frontend.scala
 ```scala
@@ -65,12 +75,6 @@ class BoomFrontendIO(implicit p: Parameters) extends BoomBundle
   - [ ]  /home/maritns3/hack/chipyard/generators/boom/src/main/scala/lsu/mshrs.scala 是做什么的?
 - 总结一下为什么 LSU 非常复杂
   - 因为 out of order 之后，对于内存也是需要对比的，例如对于相同位置的 write 需要保持顺序
-
-## 问题
-- [ ] 既然采用 icache 和 dcache 是分开的，为什么只是在最上层分开？
-- [ ] 存在对于 instruction 和 data 各自的 TLB 吗?
-- [ ] load queue / store queue 的功能是什么?
-  - [ ] chipyard 中如果可以运行 Linux Kernel 的话，那么岂不是也是存在内存控制器的，从 cache 不命中到
 
 ## MIPS R10000 的设计
 - stage 1 : 读入 4 条指令

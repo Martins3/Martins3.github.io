@@ -8,7 +8,6 @@
 ## questions
 - [ ] chipyard 为什么是需要 QEMU 的啊
 
-
 ```sh
 source env.sh
 cd sims/verilator
