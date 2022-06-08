@@ -9,6 +9,9 @@
 但是 Ian Henry 的[How to Learn Nix](https://ianthehenry.com/posts/how-to-learn-nix/) 写的好长啊，
 首先在 QEMU 上尝试一下效果，记录一踩的坑。
 
+
+- [ ]  https://github.com/digitalocean/nginxconfig.io : Nginx 到底是做啥的
+
 ## 问题
 nix-env -i git 和 nix-env -iA nixpkgs.git 的区别是什么?
 

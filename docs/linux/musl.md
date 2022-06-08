@@ -509,9 +509,6 @@ crtendS.o%s /usr/local/musl/lib/crtn.o
 ```
 - [ ] 其中的 startfile 和 endfile 和 crt 有关，而 crt 在程序员的自我修养的时候就没有看懂
 
-
-
-
 ## 一些奇怪的事情
 - errno 和 signal 的编号都是和架构相关的
 

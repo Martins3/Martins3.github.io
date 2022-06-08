@@ -7,7 +7,9 @@
 
 ## questions
 - [ ] chipyard 为什么是需要 QEMU 的啊
+- [ ] hwacha 是做什么的?
 
+## 基本使用方法
 ```sh
 source env.sh
 cd sims/verilator
@@ -30,6 +32,13 @@ spike hello.riscv
 现有的 neovim 配置开箱即用，无需任何额外的配置。
 
 - [ ] 搞一个截图出来说明一下
+
+参考: https://github.com/ucb-bar/chipyard/issues/986
+
+在根目录上运行
+```sh
+sbt bloopInstall
+```
 
 ## [ ] 主要组成成分是什么
 
