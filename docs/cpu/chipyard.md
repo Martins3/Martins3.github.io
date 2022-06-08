@@ -29,6 +29,10 @@ spike hello.riscv
 ## neovim 环境搭建
 现有的 neovim 配置开箱即用，无需任何额外的配置。
 
+- [ ] 搞一个截图出来说明一下
+
+## [ ] 主要组成成分是什么
+
 ## Learn the basic syntax
 
 ### Class
