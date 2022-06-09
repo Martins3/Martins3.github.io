@@ -33,6 +33,8 @@ case states("idle") => states("idle")
 }
 ```
 - [ ] 什么东西是 TileLink
+- [ ] [what does flipped do in chisel3](https://stackoverflow.com/questions/48343073/what-does-flipped-do-in-chisel3)
+- [ ]  `<>` : [尚未阅读](https://github.com/freechipsproject/chisel3/wiki/Interfaces-Bulk-Connections)
 
 ## bootcamp
 ### 2.2

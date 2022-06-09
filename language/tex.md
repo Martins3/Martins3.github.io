@@ -14,6 +14,13 @@ https://github.com/xu-cheng/latex-action
 ```txt
 $pdf_mode = 5;
 ```
+
+虽然，但是我看了下我机器这个文件中的内容:
+```txt
+$pdflatex="xelatex %O %S";
+$pdf_mode = 5;
+```
+
 参考:
 - https://tex.stackexchange.com/questions/429274/chinese-on-mactex2018-simple-example
 - https://tex.stackexchange.com/questions/501492/how-do-i-set-xelatex-as-my-default-engine
