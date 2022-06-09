@@ -36,8 +36,15 @@
 - [firecracker](https://github.com/Martins3/Martins3.github.io/blob/master/hack/kvm/hypervisor/firecracker.md)
 - kvmtool
 
+## 数据库
+- [leveldb](https://github.com/google/leveldb)
+
+## 图形栈
+- [glfw](https://github.com/glfw/glfw) : 只有两三个文件，大约 2 万行，但是支持各种后端，有很多语言的 binding
+- [imgui](https://github.com/ocornut/imgui) : 没有太搞清楚这个库的定位
+
 ## 分布式
-暂无
+- [toydb](https://github.com/erikgrinaker/toydb)
 
 ## 其他
 - [eomaia](https://github.com/Martins3/Martins3.github.io/blob/master/net/eomaia.md) : 很小的项目，用于学习 Modern 的 C++ 的书写风格
