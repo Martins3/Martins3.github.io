@@ -154,7 +154,7 @@
 
   Balls \& Bins : 类似于生日悖论
 
-  将Balls = m Bins = n 
+  将Balls = m Bins = n
   当 $m \sim \theta(\sqrt n)$  的时候, $\exists x_i \ge 2 $ 的概率很高了，也可以表述为 $Y = \max\limits_{1 \leq i \leq m}x_i \ge 2$.
 
 \noindent\rule[0.25\baselineskip]{\textwidth}{1pt}
@@ -163,9 +163,9 @@
 
   一个特殊情况，$m = n$的时候，那么$Y$的取值是多少 ?
   \begin{itemize}
-    \item 平均情况，负载为$1$ 
+    \item 平均情况，负载为$1$
     \item 当 $m = n$ ，那么 $Y \sim \theta(\frac{\ln{n}}{\ln\ln{n}})$ W.H.P
-    \item Proof : 
+    \item Proof :
       转化为两个部分:
       $Pr(Y \le 4 \times \frac{\ln{n}}{\ln\ln{n}})$ 和
       $Pr(Y \ge \frac{1}{4} \times \frac{\ln{n}}{\ln\ln{n}})$
@@ -175,7 +175,7 @@
   \[
     Pr(x_i \ge 4 \times t) \le \sum\limits_{1 \leq j_1 \le ... \le j_{4t+1} \leq n }^{j_i ... j_{4t+1}} Pr(j_i ... j_{4t+1} \in bin) = \binom{n}{4t + 1}(\frac{1}{n})^{4t+1}
   \]
-  
+
   存在公式:
   \[
     (\frac{n}{m})^m \leq  \binom{n}{m} = \frac{n!}{m!(n-m)!} \leq (\frac{ne}{m})^m
@@ -183,11 +183,11 @@
 
   所以:
   \[
-    Pr(x_i \ge 4 \times t) \leq (\frac{ne}{4t+1})^{4t+1}(\frac{1}{n})^{4t+1} 
-    < (\frac{1}{t})^{4t+1} 
-    = (\frac{\ln{\ln{n}}}{\ln{n}})^{4t+1} 
-    < (\frac{\sqrt{\ln{n}}}{\ln{n}})^{4t+1} 
-    = (\frac{1}{\ln{n}})^{\frac{4t+1}{2}} 
+    Pr(x_i \ge 4 \times t) \leq (\frac{ne}{4t+1})^{4t+1}(\frac{1}{n})^{4t+1}
+    < (\frac{1}{t})^{4t+1}
+    = (\frac{\ln{\ln{n}}}{\ln{n}})^{4t+1}
+    < (\frac{\sqrt{\ln{n}}}{\ln{n}})^{4t+1}
+    = (\frac{1}{\ln{n}})^{\frac{4t+1}{2}}
   \]
 
   \[
@@ -221,7 +221,7 @@
   \[
      Pr(x_i < \frac{1}{4}
   \]
-  
+
 
 % 如果不懂，阅读 2:25:44 的截图吧!
 

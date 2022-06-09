@@ -17,7 +17,7 @@
 \hypersetup{
     colorlinks=true,
     linkcolor=blue,
-    filecolor=magenta,      
+    filecolor=magenta,
     urlcolor=cyan,
 }
 
@@ -194,16 +194,16 @@
 \]
 所以，$S=[ac+bd, ad+bc+bd, ac + bc + ad + 2bd, (a+b)d + (a+2d)(c+d)]$
 
-2. 
+2.
 \begin{figure}[h!]
   \begin{center}
     \begin{tikzpicture}
-      \draw [red,thick] (-4,0) to (-2,0) -- node[above] {w} ++(-2,0) ;    
+      \draw [red,thick] (-4,0) to (-2,0) -- node[above] {w} ++(-2,0) ;
 
-      \draw [red,thick] (1,0) to (3,1) -- node[above] {x} ++(0,0) ;    
-      \draw [red,thick] (1,0) to (3,-1) -- node[above] {y} ++(0,0) ;    
+      \draw [red,thick] (1,0) to (3,1) -- node[above] {x} ++(0,0) ;
+      \draw [red,thick] (1,0) to (3,-1) -- node[above] {y} ++(0,0) ;
 
-      \draw [green,thick] (-2,0) to [out=0,in=0] (1,0) -- node[above] {z} ++(-2,0) ;    
+      \draw [green,thick] (-2,0) to [out=0,in=0] (1,0) -- node[above] {z} ++(-2,0) ;
 
       \draw [blue,fill] (-2,0) circle [radius=0.2] node [black,below=4] {H};
       \draw [blue,fill] (1,0) circle [radius=0.2] node [black,below=4] {F};
@@ -220,7 +220,7 @@
 \begin{homeworkProblem}
 
 当$H$节点数小于3的时候，可以多项式时间计算。下面分析这两种情况:
-\begin{enumerate}    
+\begin{enumerate}
   \item 当$H$的节点为1的时候，称之为$v$，$G$所有的节点只能映射到$v$，如果存在$v$到$v$的自环，那么存在唯一的映射，也就是所有的点映射到$v$。其实这种情况也是属于上课的时候分析过的rank=1的情况。
 
   \item 当$H$的节点为2的时候，$H$的两个节点为$u$,$v$，只需要分析导致$H$的rank=2的情况:
