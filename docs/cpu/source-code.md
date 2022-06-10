@@ -29,6 +29,8 @@
 - [ ] ghist : 有 global history 的，那么岂不是还存在 local history 的?
   - 一个 pc 下的就是 local history 吗?
 
+## ifu
+
 ###  ifu/frontend.scala
 ```scala
 class FrontendResp(implicit p: Parameters) extends BoomBundle()(p) {
@@ -144,5 +146,9 @@ class WithAlpha21264BPD extends Config((site, here, up) => {
   }
 })
 ```
-
 - [ ] class WithAlpha21264BPD extends Config((site, here, up) => { 的这种写法没见过
+
+## lsu
+
+### lsu/dcache.scala
+- BoomProbeUnit

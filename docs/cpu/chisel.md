@@ -24,11 +24,17 @@ https://marz.utk.edu/my-courses/cosc230/book/example-risc-v-assembly-programs/ :
     - Trait : interface
 - [什么是 mixin](https://stackoverflow.com/questions/533631/what-is-a-mixin-and-why-is-it-useful)
   - 感觉是 inherient trait
-- [ ] 什么是 Bundle 啊?
-- [ ] 似乎 scala 的 match 不是很会使用，这个代码为什么会报错
+- [x] 什么是 Bundle 啊?
 - Module 是什么?
   - https://www.chisel-lang.org/chisel3/docs/explanations/modules.html
     - 类似 verilog 中 module
+- [x] [what does flipped do in chisel3](https://stackoverflow.com/questions/48343073/what-does-flipped-do-in-chisel3)
+- [x]  `<>`
+  - https://stackoverflow.com/questions/61329117/chisel-bundle-connection-and-type-safety
+    - 双向的，:= 是单向的
+- [ ] 什么东西是 TileLink
+- [ ] 从 BOOM 源码学习 Chisel 语言的设计技巧: https://zhuanlan.zhihu.com/p/350301092
+- [ ] 似乎 scala 的 match 不是很会使用，这个代码为什么会报错
 ```scala
 def states = Map("idle" -> 0, "coding" -> 1, "writing" -> 2, "grad" -> 3)
 
@@ -37,12 +43,6 @@ match nextState = {
 case states("idle") => states("idle")
 }
 ```
-- [x] [what does flipped do in chisel3](https://stackoverflow.com/questions/48343073/what-does-flipped-do-in-chisel3)
-- [x]  `<>`
-  - https://stackoverflow.com/questions/61329117/chisel-bundle-connection-and-type-safety
-    - 双向的，:= 是单向的
-- [ ] 什么东西是 TileLink
-- [ ] 从 BOOM 源码学习 Chisel 语言的设计技巧: https://zhuanlan.zhihu.com/p/350301092
 
 ## bootcamp
 ### 2.2

@@ -5,7 +5,7 @@
 - [Awesome Blockchain cn](https://github.com/chaozh/awesome-blockchain-cn) 15k star
 
 ## bitcoin
-一个更加秒和完整的教程，但是是 golang 写的:
+一个更加妙和完整的教程，但是是 golang 写的:
 https://github.com/veggiedefender/torrent-client
 
 # tutorials
@@ -21,6 +21,8 @@ return rouille::match_assets(&request, "web/public/index.html");
 ```
 没有办法正确返回，很难受。
 
+实际上，build your own x 中存在很多类似的想法，有时间可以挑一个好用的:
+https://github.com/codecrafters-io/build-your-own-x#build-your-own-blockchain--cryptocurrency
 
 ## 资讯
 - https://github.com/dogecoin

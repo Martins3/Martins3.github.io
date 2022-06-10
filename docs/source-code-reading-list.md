@@ -2,7 +2,7 @@
 受 [7days-golang](https://github.com/geektutu/7days-golang) 启发。
 
 ## 为什么要阅读源码
-之前简单地阅读了 Linux 和 QEMU ，学习到了很多东西:
+阅读了一些源码，学习到了很多东西:
 - [Linux](https://github.com/Martins3/Martins3.github.io/blob/master/docs/kernel)
 - [QEMU](https://github.com/Martins3/Martins3.github.io/blob/master/docs/qemu)
 
@@ -21,12 +21,11 @@
 
 当然，最终的目的是将别人的优秀技术运用在自己的项目中，最好是有所改进。
 
-## 我的阅读列表
+## 我的待阅读列表
 
 ## 编译
 - [qbe](https://github.com/Martins3/Martins3.github.io/blob/master/compiler/qbe.md) : LLVM 对于我来说已经过于庞大了
 - [wren](https://github.com/Martins3/Martins3.github.io/blob/master/compiler/wren.md) : 一直想要搞一个 vm, 每次听到别人谈论 v8, JVM 虚拟机的时候都非常的向往。
-- [mold](https://github.com/rui314/mold) : 代码量非常的小，配合[教程学习](https://eli.thegreenplace.net/tag/linkers-and-loaders) 应该是不错的
 - [chibicc](https://github.com/rui314/chibicc) : 支持 C11 编译器
 - [lua](https://www.lua.org/source/) : 大名鼎鼎的 lua 语言，被广泛的使用，其代码量只有 10000 多行。
 
@@ -52,3 +51,21 @@
 ## 其他
 - [eomaia](https://github.com/Martins3/Martins3.github.io/blob/master/net/eomaia.md) : 很小的项目，用于学习 Modern 的 C++ 的书写风格
 - [musl](./linux/musl.md) : 大名鼎鼎的 musl 库，写的非常清晰
+
+## 浏览器
+- https://limpet.net/mbrubeck/2014/08/08/toy-layout-engine-1.html
+
+## 语言虚拟机
+- https://blog.subnetzero.io/post/building-language-vm-part-01/
+
+## 区块链
+
+## Linker
+- [mold](https://github.com/rui314/mold) : 配合[教程学习](https://eli.thegreenplace.net/tag/linkers-and-loaders) 应该是不错的
+
+## 神经网络
+- pytorch: https://zhuanlan.zhihu.com/p/34629243
+  - 似乎，实际上，如何使用还是一个问题
+
+## 搜索引擎
+- 似乎完全没有概念

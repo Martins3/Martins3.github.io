@@ -10,6 +10,7 @@
 - [ ] 尝试了解一下 RISCV 的模型
   - https://zhuanlan.zhihu.com/p/191660613
   - https://riscv.org/wp-content/uploads/2018/05/14.25-15.00-RISCVMemoryModelTutorial.pdf
+- https://zhuanlan.zhihu.com/p/151425608
 
 - https://www.cs.utexas.edu/~bornholt/post/memory-models.html
 
@@ -110,5 +111,6 @@ https://www.linuxjournal.com/article/8212
 
 - [ ] 似乎 [^1] 中说明了 **全局序** ，那么什么样子的设计会导致观测顺序的不一致啊
 
+- 浅谈多核系统的缓存一致性协议与非均一缓存访问 : https://zhuanlan.zhihu.com/p/162099300
 
 [^1]: https://zhuanlan.zhihu.com/p/191660613
