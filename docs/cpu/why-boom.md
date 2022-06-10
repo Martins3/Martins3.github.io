@@ -3,10 +3,7 @@
 ## 其他可以选择的项目
 - [XiangShan](https://github.com/OpenXiangShan/XiangShan)
 - T9000
-
-## 计划
-- [ ] 中文文档
-- [ ] 可以运行 Boom 的
+- [Rocket chip](https://github.com/chipsalliance/rocket-chip) 还是提供来很多信息的
 
 ## 笔记
 - BoomFrontendModule : Main Frontend module that connects the icache, TLB, fetch controller, and branch prediction pipeline together.

@@ -4,12 +4,13 @@
 - [实战](https://github.com/ucb-bar/chisel-tutorial)
 1. [Chisel Document](https://chisel.eecs.berkeley.edu/documentation.html)
 > include a Chinese document
-2. [Chisel api](https://chisel.eecs.berkeley.edu/api/latest/index.html)
-
-https://github.com/d0iasm/rvemu : 模拟器，可以同时在浏览器和终端中运行(浏览器中运行！！！！
-https://marz.utk.edu/my-courses/cosc230/book/example-risc-v-assembly-programs/ : 汇编教程
+2. [Chisel API](https://chisel.eecs.berkeley.edu/api/latest/index.html)
 
 - https://learnxinyminutes.com/docs/scala/ : scala 语法 check sheet
+
+## 资源
+https://github.com/d0iasm/rvemu : 模拟器，可以同时在浏览器和终端中运行(浏览器中运行！！！！
+https://marz.utk.edu/my-courses/cosc230/book/example-risc-v-assembly-programs/ : 汇编教程
 
 ## 问题
 - [x] scala 中 := 和 = 是什么区别?
@@ -21,9 +22,13 @@ https://marz.utk.edu/my-courses/cosc230/book/example-risc-v-assembly-programs/ :
     - object : 是 singleton
     - case class : 轻量级的 class
     - Trait : interface
+- [什么是 mixin](https://stackoverflow.com/questions/533631/what-is-a-mixin-and-why-is-it-useful)
+  - 感觉是 inherient trait
 - [ ] 什么是 Bundle 啊?
 - [ ] 似乎 scala 的 match 不是很会使用，这个代码为什么会报错
-
+- Module 是什么?
+  - https://www.chisel-lang.org/chisel3/docs/explanations/modules.html
+    - 类似 verilog 中 module
 ```scala
 def states = Map("idle" -> 0, "coding" -> 1, "writing" -> 2, "grad" -> 3)
 
@@ -32,9 +37,12 @@ match nextState = {
 case states("idle") => states("idle")
 }
 ```
+- [x] [what does flipped do in chisel3](https://stackoverflow.com/questions/48343073/what-does-flipped-do-in-chisel3)
+- [x]  `<>`
+  - https://stackoverflow.com/questions/61329117/chisel-bundle-connection-and-type-safety
+    - 双向的，:= 是单向的
 - [ ] 什么东西是 TileLink
-- [ ] [what does flipped do in chisel3](https://stackoverflow.com/questions/48343073/what-does-flipped-do-in-chisel3)
-- [ ]  `<>` : [尚未阅读](https://github.com/freechipsproject/chisel3/wiki/Interfaces-Bulk-Connections)
+- [ ] 从 BOOM 源码学习 Chisel 语言的设计技巧: https://zhuanlan.zhihu.com/p/350301092
 
 ## bootcamp
 ### 2.2

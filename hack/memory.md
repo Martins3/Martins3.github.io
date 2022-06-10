@@ -97,6 +97,7 @@
 * [kaslr](#kaslr)
 * [memfd](#memfd)
 * [DAX](#dax)
+* [CXL](#cxl)
 
 <!-- vim-markdown-toc -->
 
@@ -3004,6 +3005,10 @@ https://mp.weixin.qq.com/s/ZLXAz8dAdcqS52MzmXU_YA
 面试的时候被问了好几次
 - `O_DIRECT` 和 DAX 的差别
 - 是不是，直接读写 blockdev 是绕过了 fs，但是没有绕过 page cache?
+
+## CXL
+- CXL 2.0的基本概念: https://www.zhihu.com/question/531720207/answer/2521601976
+- 显存为什么不能当内存使？内存、Cache和Cache一致性: https://zhuanlan.zhihu.com/p/63494668
 
 [^1]: [lwn : Huge pages part 1 (Introduction)](https://lwn.net/Articles/374424/)
 [^2]: [lwn : An end to high memory?](https://lwn.net/Articles/813201/)
