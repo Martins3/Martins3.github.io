@@ -106,6 +106,8 @@ https://news.ycombinator.com/item?id=24170201 : 感觉完成度还可以的 浏�
 - https://notes.eatonphil.com/lua-in-rust.html :star: 使用 rust 写一个 mininal lua 实现
 - https://github.com/vnmakarov/mir : A lightweight JIT compiler based on MIR (Medium Internal Representation) and C11 JIT compiler and interpreter based on MIR
 
+- https://interpreterbook.com/ : **Writing An Interpreter In Go**
+
 ## 教程
 - https://github.com/wa-lang/ugo-compiler-book : uGo 语言开发教程
 - https://oleksandrkvl.github.io/2021/04/02/cpp-20-overview.html : cpp 20 新特性，每一个例子都有对应的文档
@@ -143,6 +145,10 @@ https://news.ycombinator.com/item?id=24170201 : 感觉完成度还可以的 浏�
 ## 工作
 - https://www.sourcebrella.com/jobs/
 - https://github.com/chai2010/chai2010/blob/master/jobs.md
+
+## lexer
+- https://github.com/Geal/nom : Rust
+
 
 ## 被 review 过的资源
 - [HOW TO LEARN COMPILERS: LLVM EDITION](https://lowlevelbits.org/how-to-learn-compilers-llvm-edition/) : 好吧，似乎其实 llvm 没有什么资源
