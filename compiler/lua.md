@@ -27,7 +27,7 @@
 #6  0x000055555555cb44 in main ()
 ```
 
-似乎是在 luaV_execute 中进行虚拟指令的执行，
+似乎是在 `luaV_execute` 中进行虚拟指令的执行，
 ```
 #0  luaV_execute (L=L@entry=0x5555555972a8, ci=0x555555598af0) at lvm.c:1145
 #1  0x0000555555561392 in ccall (inc=65537, nResults=-1, func=0x555555597950, L=0x5555555972a8) at ldo.c:586
