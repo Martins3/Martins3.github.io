@@ -1,5 +1,25 @@
 # lua
 
+## 为什么是 Lua
+
+- vim
+- 资料多
+
+## 问题
+- [ ] vm 如何构建的，jit 技术
+- [ ] 如何构建的 tail call 的
+- [ ] 如何实现 coroutine 的
+
+- [ ] https://github.com/LuaJIT/LuaJIT
+
+## 学习一下 lua 语言
+- https://learnxinyminutes.com/docs/lua/ : 大致了解
+  - [ ] 从 metatables 构建 Class，无法理解啊
+- https://www.lua.org/pil/contents.html : 详细阅读
+
+## 问题
+- [ ] 对于 lua 的基本设想，首先，将其编译为自己的中间代码，然后可以解释执行，也可以使用 luajit 编译为程序
+
 - 好家伙，为什么找到和架构耦合的部分啊，代码生成的部分在什么位置啊
 - 词法分析器在哪里 lobject lstring
 - 虚拟机 lState
@@ -62,6 +82,7 @@ do.c:882
 ```
 
 ## [从零开始实现 Lua 虚拟机 ( UniLua 开发过程 )](https://zhuanlan.zhihu.com/p/22476315)
+
 - https://www.lua.org/doc/jucs05.pdf 的确不错，而且 lua 根本没看懂啊
 - 这也是一个很不错的分析参考: https://www.zhihu.com/question/20617406
 

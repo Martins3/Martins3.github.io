@@ -1,5 +1,8 @@
 # BOOM 源码阅读
 
+- [超标量处理器设计](https://book.douban.com/subject/26293546/) 豆瓣 9.2
+- 将小册子也看看
+
 ## 其他可以选择的项目
 - [XiangShan](https://github.com/OpenXiangShan/XiangShan)
 - T9000
