@@ -146,6 +146,9 @@ csysdig -l
 ### [prometheus](https://prometheus.io)
 集群的管理
 
+也许应该新增加一个栏目，叫做 monitor 的
+- https://github.com/winsiderss/systeminformer
+
 ### [ ] [memray](https://github.com/bloomberg/memray)
 
 ### [ ] https://github.com/google/schedviz
