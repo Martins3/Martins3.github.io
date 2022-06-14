@@ -21,6 +21,12 @@
 
 当然，最终的目的是将别人的优秀技术运用在自己的项目中，最好是有所改进。
 
+## [ ] 总结一下阅读方法
+- uftrace 之类的
+- 内核和用户态的分别都需要一个
+- 总结两边都可以使用的
+  - sourcetrail 之类的图形工具
+
 ## 我的待阅读列表
 
 ## 编译
@@ -40,6 +46,7 @@
 
 ## 数据库
 - [leveldb](https://github.com/google/leveldb)
+- sqlite
 
 ## 图形栈
 - [glfw](https://github.com/glfw/glfw) : 只有两三个文件，大约 2 万行，但是支持各种后端，有很多语言的 binding
@@ -56,7 +63,7 @@
 - https://limpet.net/mbrubeck/2014/08/08/toy-layout-engine-1.html
 
 ## 语言虚拟机
-- https://blog.subnetzero.io/post/building-language-vm-part-01/
+- lua
 
 ## 区块链
 
