@@ -25,3 +25,6 @@
 
 ## 收集一些材料来写理解图形栈的工作原理
 - https://github.com/ocornut/imgui : 这个工作非常有意思，其代码简单，而且支持各种各样的后端，并且在其基础上开发语言的开发库
+  - 后端: dearpygui
+- https://tauri.app/v1/guides/getting-started/setup/html-css-js
+  - 号称是 electorn 的替代品

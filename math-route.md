@@ -7,3 +7,6 @@
 - [数学中最违背直觉的结论](https://axisofordinary.substack.com/p/the-most-counterintuitive-facts-in?utm_source=url)
 
 - http://adelelopez.com/chu-are-you : 就很迷惑，范畴 category ?
+
+https://github.com/zlotus/notes-linear-algebra : 线性代数，你值得拥有
+- [category theory](https://github.com/hmemcpy/milewski-ctfp-pdf)

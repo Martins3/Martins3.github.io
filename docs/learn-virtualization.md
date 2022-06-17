@@ -22,7 +22,6 @@ Hardware and Software Support for Virtualization : 作者[Edouard Bugnion](https
 - [kvmsample](https://github.com/soulxu/kvmsample) : 几百行，guest 就是一个三行的汇编
 - [kvmtool](https://github.com/kvmtool/kvmtool) : 没有维护, 大约 20000 行，已经不怎么 minimal 了，但是比 QEMU 要好!
 
-
 ## minimal hypervisor / virtual machine example
 - https://github.com/calinyara/asor
 - https://github.com/ionescu007/SimpleVisor : Window Driver 或者 UEFI driver 方式执行的 hypervisor

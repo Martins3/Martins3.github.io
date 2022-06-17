@@ -165,9 +165,12 @@ Under the hood:
 2. Runs clang-tblgen to get .inc files from .td files.
 3. Builds rest of Clang.
 
-![](../clang-1.png)
-![](../clang-2.png)
+![](./img/clang-1.png)
+![](./img/clang-2.png)
+![](./img/clang-3.png)
+![](./img/clang-4.png)
 
-## [LLVM IR tutorial](https://llvm.org/devmtg/2019-04/slides/Tutorial-Bridgers-LLVM_IR_tutorial.pdf)
+## [ ] LLVM IR tutorial
+[LLVM IR tutorial](https://llvm.org/devmtg/2019-04/slides/Tutorial-Bridgers-LLVM_IR_tutorial.pdf)
 
 llvm-dis / llvm-as

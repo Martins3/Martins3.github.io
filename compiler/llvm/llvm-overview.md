@@ -69,7 +69,6 @@ godbolt 可以实现获取 clang AST
 - https://www.npopov.com/2021/06/02/Design-issues-in-LLVM-IR.html
   - 分析了一下 LLVM 中存在的问题
 
-## 其实最核心就是两个官方文档就可以了
-
+## 官方文档
 ### https://llvm.org/docs/LangRef.html
 ### https://llvm.org/docs/ProgrammersManual.html

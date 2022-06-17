@@ -64,14 +64,11 @@ ejtag 调试器，一直都是使用串口就差不多了，每次都是以为�
 - :neutral_face: 但是在 seabios 中发现了报错
 - :star_struck: 结果发现是 seabios 自己的 bug，没有考虑到物理内存可能没有正确初始化
 - :neutral_face: 运行到 shell 中，但是发现有的 PCIe 设备没有找到
-- :star_struck: 原来是 kvm 中没有正确模拟 PCIe bridge
+- :star_struck: 原来是 kvm 中没有正确模拟 PCIe bridge，在 PCIe bridge 下的设备需要考虑 PCIe bridge window 才可以被正确扫描
 - :neutral_face: 发现 shell 的交互太慢了，而且串口中断根本没有被 Guest 接受过
-- :star_struck:  原来是中断控制器没有正确的初始化，kvm 中和物理机的中断控制器配置不相同
-- :neutral_face:
-- :star_struck:
-- :neutral_face:
-- :star_struck:
-- :neutral_face:
+- :star_struck: 原来是中断控制器没有正确的初始化，kvm 中和物理机的中断控制器配置不相同
+- :neutral_face: 结果测性能发现数据明显不对
+- :star_struck: 发现是因为 hpet 设备没有实现，导致 Guest 内核使用 jiffies 来计算时钟，那个时钟在高负载的时候不准，通过 hacking Guest 内核可以解决
 
 ## 感触
 最开始时候，似乎这个项目似乎是准备当作博士课题的。

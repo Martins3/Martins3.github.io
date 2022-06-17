@@ -82,6 +82,7 @@
 * [timerfd](#timerfd)
 * [ceph](#ceph)
 * [close](#close)
+* [[ ] hugetlbfs](#-hugetlbfs)
 * [用户态](#用户态)
 
 <!-- vim-markdown-toc -->
@@ -2115,6 +2116,10 @@ static struct file_operations kvm_vcpu_fops = {
   KVM_COMPAT(kvm_vcpu_compat_ioctl),
 };
 ```
+
+## [ ] hugetlbfs
+- [ ] 虽然这是 memory 的功能，为什么使用 hugetlbfs 来作为接口
+  - transparent huge tlb 没有使用这个东西吧
 
 ## 用户态
 - https://github.com/juicedata/juicefs
