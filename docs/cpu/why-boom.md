@@ -5,7 +5,7 @@
 
 ## 其他可以选择的项目
 - [XiangShan](https://github.com/OpenXiangShan/XiangShan)
-- T9000
+- [玄铁 C910](https://github.com/T-head-Semi/openc910) : 有 30 万行，一时不知道是不是统计错了
 
 ## 准备基础 Rocket Chip
 - [Rocket chip](https://github.com/chipsalliance/rocket-chip)
@@ -78,6 +78,7 @@ CPU 的基本设计原理:
 ## 下一步
 - 多核 ?
 - 尝试回答这个问题: https://stackoverflow.com/questions/69223201/what-is-the-format-of-the-value-in-the-floating-point-register-in-the-riscv-boom
+- 阅读软硬件融合
 
 ## 阅读材料
 - [ ] ZHAO J, KORPAN B, GONZALEZ A, et al. SonicBOOM: The 3rd Generation Berkeley Outof­Order Machine[J], 2020.

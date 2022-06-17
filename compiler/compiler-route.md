@@ -6,7 +6,6 @@
 - 书籍: 龙书和 eac 就可以了
 
 - https://c9x.me/compile/bib/ : 业余编译器玩家的阅读资源
-- https://github.com/banach-space/llvm-tutor : 按照这个项目，改写之前的 llvm 作业。
 
 - https://github.com/vtil-project/VTIL-Core : 有一个中间表示层，但是似乎和二进制安全更加相关的
 - https://github.com/aalhour/awesome-compilers : **key** 可以学习 llvm 之类的
@@ -26,11 +25,8 @@
 - https://github.com/chapel-lang/chapel : 并发的编程语言。
 - https://github.com/rxi/fe/blob/master/doc/impl.md : 其中可以参考Garbage Collection，Error Handling 的设计。
 - https://github.com/Feral-Lang/Feral : 也许用于学习一下 C++
-- https://blog.josephmorag.com/posts/mcc3/ : 利用llvm 实现 C 语言。
 - https://github.com/TrustInSoft/tis-interpreter : 对于 C 进行检查错误
 - https://github.com/tboox/vm86 : 别的到时没有什么印象，但是说 ida 98% 反汇编可以直接运行，还是非常震惊的。
-- https://github.com/Microsoft/checkedc/wiki : 并不是很清楚是如何做的，这种东西不可以向 llvm 中间插入一个 pass 吗 ?
-- https://github.com/lifting-bits/remill : 人家写好的工具，将各种二进制转化为llvm bytecode
 - https://oneraynyday.github.io/dev/2020/05/03/Analyzing-The-Simplest-C++-Program/#table-of-contents : blog 复写一下链接器
 - https://news.ycombinator.com/item?id=23333891 : 糟糕的面向对象
 - https://cjting.me/2020/06/07/chip8-emulator/ : chip-8 虚拟机
@@ -124,14 +120,6 @@ https://news.ycombinator.com/item?id=24170201 : 感觉完成度还可以的 浏�
 ## deep learning
 - https://tvm.apache.org/2021/12/15/tvm-unity
 
-## llvm
-- https://secret.club/2021/04/09/std-clamp.html
-- https://www.intel.com/content/www/us/en/developer/articles/technical/adoption-of-llvm-complete-icx.html
-  - intel 也是采用 llvm 了，没太看懂
-- https://github.com/lijiansong : 当时的指针分析
-- https://www.npopov.com/2021/06/02/Design-issues-in-LLVM-IR.html
-  - 分析了一下 LLVM 中存在的问题
-
 ## 问题
 1. runtime 和 vm 的关系是什么 ?
     1. JIT 的他们的关系是什么 ?
@@ -148,7 +136,6 @@ https://news.ycombinator.com/item?id=24170201 : 感觉完成度还可以的 浏�
 
 ## lexer
 - https://github.com/Geal/nom : Rust
-
 
 ## 被 review 过的资源
 - [HOW TO LEARN COMPILERS: LLVM EDITION](https://lowlevelbits.org/how-to-learn-compilers-llvm-edition/) : 好吧，似乎其实 llvm 没有什么资源

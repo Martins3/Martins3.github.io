@@ -6,7 +6,7 @@
 2. compiler-rt : https://compiler-rt.llvm.org/
 3. libc
     - [Rich Felker of musl libc comments on Google's LLVM libc proposal](https://news.ycombinator.com/item?id=20280487)
-4. libc++ 
+4. libc++
 5. [lld](https://lld.llvm.org/index.html)
 6. lldb : llvm debugger
 7. https://mlir.llvm.org/ : middle level for accelerator programming language
@@ -42,12 +42,34 @@ lexer-parser:
 - https://youtu.be/5kkMpJpIGYU
 - https://youtu.be/m8G_S5LwlTo
 - https://youtu.be/objxlZg01D0
-  
+
 ## 资源
-godbolt 可以实现获取 clang AST 
+godbolt 可以实现获取 clang AST
 
 ## 操作
 使用 llvm 对于 wren 进行重写
 1. analysis pass : -dot-callgraph -dot-cfg -memdep
-2. transform pass :  
+2. transform pass :
 3. utility pass : -view-dom -view-cfg
+
+## 文章合集
+- https://github.com/banach-space/llvm-tutor : 按照这个项目，改写之前的 llvm 作业。
+- https://www.zhihu.com/people/frankwang-55/posts?page=2
+- https://blog.josephmorag.com/posts/mcc3/ : 利用llvm 实现 C 语言，其实可以阅读一下，虽然作者之后就不更新了，而且是使用 Haskell 写的
+
+## 资源
+- https://github.com/Microsoft/checkedc/wiki : 并不是很清楚是如何做的，这种东西不可以向 llvm 中间插入一个 pass 吗 ?
+- https://github.com/lifting-bits/remill : 人家写好的工具，将各种二进制转化为llvm bytecode
+
+## llvm
+- https://secret.club/2021/04/09/std-clamp.html
+- https://www.intel.com/content/www/us/en/developer/articles/technical/adoption-of-llvm-complete-icx.html
+  - intel 也是采用 llvm 了，没太看懂
+- https://github.com/lijiansong : 当时的指针分析
+- https://www.npopov.com/2021/06/02/Design-issues-in-LLVM-IR.html
+  - 分析了一下 LLVM 中存在的问题
+
+## 其实最核心就是两个官方文档就可以了
+
+### https://llvm.org/docs/LangRef.html
+### https://llvm.org/docs/ProgrammersManual.html

@@ -1,5 +1,8 @@
 # 淦，设计一个裸金属二进制翻译器不可能这么难
 
+> 一件事最可怕的时刻，总是在你开始做之前。[^5]
+
+
 ## 跌宕起伏
 三年前（2019 ）的夏天，那个时候我还在尝试理解 mmap(2) 中的 anonymous  mapping 是什么意思
 老板提到 Transmeta 曾经作出 VLIW CPU 上面直接运行二进制翻译器模拟 x86 指令集，性能甚至比同时期的 X86 CPU 性能更高。
@@ -56,6 +59,19 @@
 然后全村老小一起出动，帮我搞了一台调试的机器，一个串口线和一个 ejtag 调试器，后来发现从来都没有使用过
 ejtag 调试器，一直都是使用串口就差不多了，每次都是以为自己成功了，终于可以结束了，最后总是发现其实还是有一些
 问题，每天的心情都像是做过山车一样的。
+- :neutral_face: 发现无法正常输出，就是一行乱码
+- :star_struck: 从 LoongArch 内核中抄过来串口输出的代码，然后就可以了
+- :neutral_face: 但是在 seabios 中发现了报错
+- :star_struck: 结果发现是 seabios 自己的 bug，没有考虑到物理内存可能没有正确初始化
+- :neutral_face: 运行到 shell 中，但是发现有的 PCIe 设备没有找到
+- :star_struck: 原来是 kvm 中没有正确模拟 PCIe bridge
+- :neutral_face: 发现 shell 的交互太慢了，而且串口中断根本没有被 Guest 接受过
+- :star_struck:  原来是中断控制器没有正确的初始化，kvm 中和物理机的中断控制器配置不相同
+- :neutral_face:
+- :star_struck:
+- :neutral_face:
+- :star_struck:
+- :neutral_face:
 
 ## 感触
 最开始时候，似乎这个项目似乎是准备当作博士课题的。
@@ -93,3 +109,4 @@ ejtag 调试器，一直都是使用串口就差不多了，每次都是以为�
 [^2]: [The Transmeta Code Morphing Software: Using Speculation, Recovery, and Adaptive Retranslation to Address Real-Life Challenges](https://safari.ethz.ch/digitaltechnik/spring2019/lib/exe/fetch.php?media=dehnert_transmeta_code_morphing_software.pdf)
 [^3]: [Captive](https://www.usenix.org/system/files/atc19-spink.pdf)
 [^4]: [A Linux in Unikernel Clothing](https://dl.acm.org/doi/pdf/10.1145/3342195.3387526)
+[^5]: [According to Stephen King: "The Scariest Moment Is Always \_\_\__."](https://gretchenrubin.com/2016/08/according-stephen-king-scariest-moment-always-____)

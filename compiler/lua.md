@@ -10,11 +10,13 @@
 
 - vim
 - 资料多
+
 ## 笔记
 - `lua_State` : per thread state
 
 ## 问题
-- [ ] vm 如何构建的，jit 技术
+- [ ] jit 技术
+- [ ] 如何实现 GC 的
 - [ ] 如何构建的 tail call 的
 - [ ] 如何实现 coroutine 的
 - [ ] hash table 在什么地方
@@ -22,6 +24,7 @@
 - [x] luaD 和 luaV 中的 D 和 V 都是什么意思
     - ldo.c Stack and Call structure of Lua
     - luaV lvm.c
+- [ ] ipairs / setmetatable 这种函数都是在什么地方实现的
 
 ## 学习一下 lua 语言
 - https://learnxinyminutes.com/docs/lua/ : 大致了解
@@ -149,6 +152,9 @@ If you're done before X-Mas and understood all of it, you're good. The informati
 ### lvm.c
 最关键的函数 `luaV_execute`
 
+### ldo.c
+call stack coroutines
+
 ### ltable.c
 ```txt
 #0  luaH_new (L=0x0) at ltable.c:624
@@ -200,11 +206,18 @@ metamethod, 只有 200 行
 ### lcode.c
 - [ ] addK 的调用
 
+### ldebug.c
+The debug library comprises two kinds of functions: introspective functions and hooks
+
+- [ ] ldblib.c 中过来的
+
 ### lparser.c
-- 据说一次遍历的，如何实现的
+- [ ] 据说一次遍历的，如何实现的
 
 ### lgc.c
 - 很难的哇
+
+### ldblib.c
 
 ## [从零开始实现 Lua 虚拟机 ( UniLua 开发过程 )](https://zhuanlan.zhihu.com/p/22476315)
 
@@ -258,6 +271,15 @@ in registers. As a consequence, access to local variables is specially efficient
   - 好家伙，有点麻烦，打住
     - [ ] udata 为什么可以有 metatable 的
     - [ ] 为什么
+
+## [ ] 如何和 C 语言交互的
+https://www.lua.org/pil/28.1.html
+
+## [ ] 什么是 weak table 的哇
+
+
+## 后续
+- eBPF 的 jit 看一下
 
 [^1]: https://github.com/efrederickson/LuaAssemblyTools/blob/master/etc/ChunkSpy.lua
 [^3]: https://www.reddit.com/r/programming/comments/63hth/ask_reddit_which_oss_codebases_out_there_are_so/c02pxbp/

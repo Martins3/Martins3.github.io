@@ -1,6 +1,5 @@
 # all kinds of notes about llvm
 
-
 ## [An Overview of Clang](https://llvm.org/devmtg/2019-10/slides/ClangTutorial-Stulova-vanHaastregt.pdf)
 
 core consists of 830k lines of code plus 33k lines of TableGen definitions.
@@ -11,7 +10,7 @@ core consists of 830k lines of code plus 33k lines of TableGen definitions.
 clang.c
 ```c
 int main(int argc, char *argv[]){
-  
+
   return 0;
 }
 ```
@@ -78,7 +77,7 @@ Token is consumed by include/clang/Parse/Parser.h
 
 
 Sema
-- Tight coupling with parser 
+- Tight coupling with parser
 - Biggest client of the Diagnostics subsystem.
 
 Diagnostics subsystem
