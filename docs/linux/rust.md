@@ -28,8 +28,6 @@
 
 ## 项目
 - [Aims to be compatible with the Linux ABI](https://github.com/nuta/kerla)
-- [Rust WebAssembly](https://rustwasm.github.io/docs/book/introduction.html)
-  - [ ] 所以 WebAssembly 和 Java 字节码是一种类型的东西吗?
 - [rustviz](https://github.com/rustviz/rustviz): Interactively Visualizing Ownership and Borrowing for Rust
 - [bevy](https://github.com/bevyengine/bevy) : data-driven game engine
 - [KVM firmware Rust 实现](https://news.ycombinator.com/item?id=19883626)

@@ -109,6 +109,11 @@ Ubuntu 需要首先安装，利用 iso 制作镜像，然后使用该镜像。
 export http_proxy=http://ip_addr:8889 && export https_proxy=http://ip_addr:8889
 ```
 
+当然可以使用默认映射的 host 的 ip 地址:
+```sh
+export http_proxy=http://10.0.2.2:8889 && export https_proxy=http://10.0.2.2:8889
+```
+
 ## 共享
 
 ### 9p
@@ -121,8 +126,18 @@ arg_share_dir="-virtfs local,path=${share_dir},mount_tag=host0,security_model=ma
 ```sh
 mount -t 9p -o trans=virtio,version=9p2000.L host0 /mnt/9p
 ```
+
 ### ssh
 在 host 通过 `ip addr` 获取 ip 地址，之后和普通的 ssh 使用起来没有差异。
+
+在 guest 中可以直接 ssh host
+```sh
+ssh martins3@10.0.2.2
+```
+使用这个方法可以同步 host 的代码到 guest 中:
+```sh
+git clone  martins3@10.0.2.2:path_to_repo
+```
 
 ### [ ] ftp
 有待开发

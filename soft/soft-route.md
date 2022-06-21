@@ -2,7 +2,6 @@
 
 ## 科学的做法
 - https://github.com/google/eng-practices : Google 的工作方式
-
 - https://github.com/kdn251/interviews : 感觉一般，提供了一些做题的网址，实际意义不大
 - https://github.com/MaximAbramchuck/awesome-interview-questions : 对于经典问题需要深入理解
 - https://github.com/FAQGURU/FAQGURU : 主要针对于后端，但是其中git 之类的还可以看看的
@@ -35,9 +34,9 @@
 - https://github.com/shimohq/chinese-programmer-wrong-pronunciation
 - https://github.com/byoungd/English-level-up-tips-for-Chinese
 - https://englishplusplus.jcj.uj.edu.pl/index.html : 一些听力，写作 和 presentation 的教程
+
 ### 工具
 https://poedit.net/
-
 
 ## 写作
 - https://github.com/ruanyf/document-style-guide : 好好看看吧
