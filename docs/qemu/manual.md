@@ -102,6 +102,8 @@ Ubuntu 需要首先安装，利用 iso 制作镜像，然后使用该镜像。
 ```
 将 Host 8080 端口重定向到 Guest 的 80 端口
 
+<!-- TMP_TODO 的 - [ ]  -netdev user,id=net0,hostfwd=tcp::5556-:22,smb=/home/xieby1/ -->
+
 ### Guest 科学上网
 有时候 Guest 中需要安装某些东西，没有代理几乎没有成功的可能性。在 Host 打开 Qv2ray 或者 Clash，设置为可以代理整个局域网，
 然后获取 host 的 ip 地址，最后在 Guest 中运行一下命令即可。

@@ -33,7 +33,7 @@
 ➜  vn git:(master) ✗
 ```
 
-2. 确定是哪一个 iommu group，如果这个命令失败，那么修改 grub ，内核启动参数中增加上 `intel_iommu=on` [^4]
+2. 检测 iommu 是否支持，如果这个命令失败，那么修改 grub ，内核启动参数中增加上 `intel_iommu=on` [^4]
 ```txt
 ➜  vn git:(master) ✗ readlink /sys/bus/pci/devices/0000:01:00.0/iommu_group
 ../../../../kernel/iommu_groups/11
@@ -49,30 +49,37 @@
 
 如果 GPU 之前在被使用，那么首先需要解绑
 ```sh
+sudo su
 echo 0000:01:00.0 > /sys/bus/pci/devices/0000:01:00.0/driver/unbind
+echo 10de 1d12 > /sys/bus/pci/drivers/vfio-pci/new_id
 ```
 
+如果检查到多个 devices 的，那么上面的两个操作需要对于这个文件夹的所有的设备操作一次:
 ```sh
-sudo su
-echo 10de 1d12 > /sys/bus/pci/drivers/vfio-pci/new_id
+➜  vn git:(master) ✗ ls -l /sys/bus/pci/devices/0000:01:00.0/iommu_group/devices
+lrwxrwxrwx root root 0 B Mon May 30 09:53:28 2022  0000:01:00.0 ⇒ ../../../../devices/pci0000:00/0000:00:1c.0/0000:01:00.0
 ```
 
 5. 无需管理员权限
 ```sh
 ➜  vn git:(master) ✗ sudo chown maritns3:maritns3 /dev/vfio/11
 ```
+实际上，因为 ulimit 的原因，会存在如下报错:
+```txt
+qemu-system-x86_64: -device vfio-pci,host=00:1f.3: vfio 0000:00:1f.3: failed to setup container for group 10: memory listener initialization failed: Region pc.ram: vfio
+_dma_map(0x558becc6b3b0, 0xc0000, 0x7ff40000, 0x7f958bec0000) = -12 (Cannot allocate memory)
+```
+而修改 hard limit 的方法参考[此处](https://docs.oracle.com/cd/E19623-01/820-6168/file-descriptor-requirements.html)，有点麻烦。
 
 6. qemu 中运行
 
-```txt
-➜  vn git:(master) ✗ ls -l /sys/bus/pci/devices/0000:01:00.0/iommu_group/devices
-lrwxrwxrwx root root 0 B Mon May 30 09:53:28 2022  0000:01:00.0 ⇒ ../../../../devices/pci0000:00/0000:00:1c.0/0000:01:00.0
+```sh
+-device vfio-pci,host=01:00.0
 ```
 
 
 ## 基本原理
 [An Introduction with PCI Device Assignment with VFIO](http://events17.linuxfoundation.org/sites/events/files/slides/An%20Introduction%20to%20PCI%20Device%20Assignment%20with%20VFIO%20-%20Williamson%20-%202016-08-30_0.pdf)
-
 
 ## 直通 GPU
 

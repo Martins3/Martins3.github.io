@@ -20,6 +20,7 @@
     * [[ ] sed](#-sed)
     * [[ ] cut](#-cut)
     * [[ ] bash 中容易犯的错误](#-bash-中容易犯的错误)
+    * [[ ] https://effective-shell.com/part-2-core-skills/job-control/](#-httpseffective-shellcompart-2-core-skillsjob-control)
   * [资源和工具](#资源和工具)
 * [一些链接](#一些链接)
   * [一些资源](#一些资源)
@@ -291,6 +292,8 @@ ag -l TODO | xargs sed -i '/TODO/d'
 
 ### [ ] bash 中容易犯的错误
 http://mywiki.wooledge.org/BashPitfalls
+
+### [ ] https://effective-shell.com/part-2-core-skills/job-control/
 
 ## 资源和工具
 1. https://explainshell.com/
