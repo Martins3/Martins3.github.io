@@ -52,20 +52,21 @@ https://www.cs.cmu.edu/afs/cs/academic/class/15213-f12/www/lectures/12-linking.p
 
 ## TODO
 - [ ] 处理一下各个 submodule 注册 memory region，比如 `fw_cfg`
-
 - [ ] 确认一下 : SMM 状态的转换会删除掉所有的 TLB，不然 `iotlb_to_section` 还在使用第一次 TLB miss 注册的 attrs
 - [ ] 现在将很多 MemoryRegion 都切碎了，可能在原来的 QEMU 中是没有越界的，但是现在出现了越界
   - 只要在 MemoryRegion generated topology 不要让其
+- [ ] 似乎重新设计了 IOTLB 的代码
+  - [ ] interface.md 中都是有写过的
 
 ## 重写的函数接口
-
-| function                          | 作用                                                                                                          |
-|-----------------------------------|---------------------------------------------------------------------------------------------------------------|
-| `address_space_translate_for_iotlb` | 根据 addr 得到 memory region 的                                                                               |
+o
+| function                            | 作用                                                                                                            |
+|-------------------------------------|-----------------------------------------------------------------------------------------------------------------|
+| `address_space_translate_for_iotlb` | 根据 addr 得到 memory region 的                                                                                 |
 | `memory_region_section_get_iotlb`   | 计算出来当前的 section 是 `AddressSpaceDispatch` 中的第几个 section, 之后就可以通过 addr 获取 section 了        |
 | `qemu_map_ram_ptr`                  | 这是一个神仙设计的接口，如果参数 `ram_block` 的接口为 NULL, 那么 addr 是 ram addr， 如果不是，那么是 ram 内偏移 |
-| `cpu_addressspace`                  |                                                                                                               |
-| `iotlb_to_section`                  |                                                                                                               |
+| `cpu_addressspace`                  |                                                                                                                 |
+| `iotlb_to_section`                  |                                                                                                                 |
 
 #### 真的需要移除掉 iotlb 机制吗
 而 IOTLB 的 MMIO 移除掉，让 `io_readx` 和 `io_writex` 中直接走 memory region translate 的操作
@@ -91,7 +92,7 @@ https://www.cs.cmu.edu/afs/cs/academic/class/15213-f12/www/lectures/12-linking.p
 | function                            | para                                            | res                       |
 |-------------------------------------|-------------------------------------------------|---------------------------|
 | `address_space_translate_for_iotlb` | [cpu asidx](获取地址) addr [attrs prot](没用的) | MemoryRegionSection, xlat |
-| `address_space_translate`           | as, addr, [`is_write attrs`](没用的)                | MemoryRegion, xlat, len   |
+| `address_space_translate`           | as, addr, [`is_write attrs`](没用的)            | MemoryRegion, xlat, len   |
 | `address_space_translate_internal`  | d, addr, `resolve_subpage`                      | xlat, plen                |
 
 
@@ -99,3 +100,8 @@ https://www.cs.cmu.edu/afs/cs/academic/class/15213-f12/www/lectures/12-linking.p
 - `stl_le_phys` 族的函数只是需要这一个
 - `memory_ldst.h` 无需考虑 `#define SUFFIX                   _cached_slow`, 那是给 virtio 使用的
 - 几乎无需处理 endianness 的问题
+
+## 设备直通
+- MSI / MSIX
+  - 因为首先完成从 QEMU 的测试，而 QEMU 是默认支持 MSIX 的，但是裸机上测试发现有的设备可以同时支持 MSI 和 MSIX，而 Guest 总是选择 MSI
+    - [ ] 但是 Guest 的代码是默认使用 MSIX 的啊

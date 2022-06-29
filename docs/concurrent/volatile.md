@@ -47,6 +47,10 @@ bool static push(struct Data element) volatile;  // 这种形式，不可以
 bool static volatile push(struct Data element); // 这种形式，可以
 ```
 
+## TODO
+- [ ] 在 bmbt 的 env/loongarch/include/linux/nodemask.h 在 `__node_set` 中，本来是从内核中抄过来的，
+我无法理解之前为什么内核需要在此处添加上 volatile 的关键字啊。
+
 [^1]: https://gcc.gnu.org/onlinedocs/gcc/Volatiles.html
 [^2]: https://stackoverflow.com/questions/14785639/may-accesses-to-volatiles-be-reordered
 [^3]: https://stackoverflow.com/questions/4592762/difference-between-const-const-volatile

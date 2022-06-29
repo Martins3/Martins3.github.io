@@ -8,7 +8,7 @@
   - 又是实现了 rust 的，还是把 mit 的实验搞清楚吧
 - [Cmu15445 课程介绍](https://www.qtmuniao.com/2021/02/15/cmu15445-introduction/#more)
 
-- https://15445.courses.cs.cmu.edu/fall2021/
+- https://15445.courses.cs.cmu.edu/fall2021/ : 核心关键，是实现单机数据库理解的基础
   - https://www.bilibili.com/video/BV1bQ4y1Y7iT
 
 - https://github.com/pingcap/awesome-database-learning
