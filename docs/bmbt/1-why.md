@@ -21,3 +21,10 @@
 - https://github.com/matsud224/raspvisor : 在树莓派上运行的 type 1 hypervisor
 - https://github.com/wbenny/hvpp/blob/master/README.md :  使用 Window 驱动, 用 C++ 写的一个 hypervisor, 可以理解为一个简单的 kvm
 - https://github.com/tandasat/MiniVisorPkg : 使用 UEFI driver 来构建 hypervisor
+
+[^1]: [Efficient Cross-architecture Hardware Virtualisation](https://era.ed.ac.uk/handle/1842/25377)
+[^2]: [A Linux in unikernel clothing](https://dl.acm.org/doi/10.1145/3342195.3387526)
+[^3]: [Kernel Mode Linux](http://web.yl.is.s.u-tokyo.ac.jp/~tosh/kml/)
+[^4]: [High Velocity Kernel File Systems with Bento](https://www.usenix.org/conference/fast21/presentation/miller)
+[^5]: [Theseus](https://github.com/theseus-os/Theseus)
+[^6]: [c2rust](https://github.com/immunant/c2rust)

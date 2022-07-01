@@ -85,7 +85,7 @@
 
 ## Linux Environment Programming
 - 🚧 [musl 阅读笔记](./linux/musl.md)
-- 🚧 [认识 elf](./linux/elf.md)
+- 🚧 [认识 ELF](./linux/elf.md)
 - 🚧 [Debugger 的理念，原理和使用](./linux/gdb.md)
 
 ## Linux Kernel
