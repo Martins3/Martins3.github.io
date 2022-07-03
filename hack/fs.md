@@ -83,7 +83,9 @@
 * [ceph](#ceph)
 * [close](#close)
 * [[ ] hugetlbfs](#-hugetlbfs)
+* [cache](#cache)
 * [用户态](#用户态)
+* [https://www.zhihu.com/question/21536660](#httpswwwzhihucomquestion21536660)
 
 <!-- vim-markdown-toc -->
 
@@ -2080,6 +2082,10 @@ https://zonedstorage.io/introduction/zoned-storage/
 ## nfs
 - https://about.gitlab.com/blog/2018/11/14/how-we-spent-two-weeks-hunting-an-nfs-bug/
 - https://github.com/nfs-ganesha/nfs-ganesha
+- [ ] https://zhuanlan.zhihu.com/p/295230549 : 简介
+
+- https://lwn.net/Articles/897917/
+- 如何搭建 nfs 的调试环境？
 
 ## compression fs
 - [ ] https://github.com/mhx/dwarfs
@@ -2121,9 +2127,15 @@ static struct file_operations kvm_vcpu_fops = {
 - [ ] 虽然这是 memory 的功能，为什么使用 hugetlbfs 来作为接口
   - transparent huge tlb 没有使用这个东西吧
 
+## cache
+- 忽然理解了为什么需要将
+https://www.kernel.org/doc/html/latest/filesystems/caching/index.html
+
 ## 用户态
 - https://github.com/juicedata/juicefs
   - Using the JuiceFS to store data, the data itself will be persisted in object storage (e.g. Amazon S3), and the metadata corresponding to the data can be persisted in various database engines such as Redis, MySQL, and SQLite according to the needs of the scene.
+
+## https://www.zhihu.com/question/21536660
 
 [^1]: [kernel doc : Overview of the Linux Virtual File System](https://www.kernel.org/doc/html/latest/filesystems/vfs.html)
 [^2]: [github : aio](https://github.com/littledan/linux-aio)

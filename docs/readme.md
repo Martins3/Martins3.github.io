@@ -96,6 +96,7 @@
 - [mknod](./kernel/mknod.md)
 -  🚧 [Linux 设备模型](./kernel/device.md)
 <!-- - [irq domain](./kernel/irq-domain.md) -->
+- [LWN 阅读笔记](./lwn.md)
 
 ## Database
 <!-- - [leveldb 源码分析](./database/leveldb.md) -->

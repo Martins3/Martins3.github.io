@@ -43,6 +43,8 @@ lexer-parser:
 - https://youtu.be/m8G_S5LwlTo
 - https://youtu.be/objxlZg01D0
 
+- https://hujun1413.github.io/2017/01/15/LLVM/3.LLVM%E7%9A%84%E7%BC%96%E7%A8%8B%E6%8A%80%E5%B7%A7/ : LLVM 编程技巧
+
 ## 资源
 godbolt 可以实现获取 clang AST
 

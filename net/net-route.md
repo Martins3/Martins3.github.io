@@ -298,8 +298,7 @@ emmmmmmm, 只是 DUP 上的封装
 - https://rfc.fyi/ : rfc 搜索
 
 ## nfs
-- [ ] https://zhuanlan.zhihu.com/p/295230549 : 简介
-
+看 fs.md 中内容
 
 ## [ ]  Understanding Host Network Stack Overheads
 > 去 zotero 上看看，其引用
