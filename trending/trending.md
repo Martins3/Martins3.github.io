@@ -1,7 +1,6 @@
 # How to kept myself informed ?
 
-- [ ] awesome virtualizaition
-- [ ] 李存的找文章的方法
+- [ ] 李存的找文章的几个网站
 
 ## 订阅的邮件列表
 
@@ -10,6 +9,7 @@
 - QEMU
 
 - [ ] 更好的邮件阅读器?
+- [ ] 重新搭建一个 zotero，在 mac 上
 
 ## 等待分析
 - https://news.ycombinator.com/item?id=22902204

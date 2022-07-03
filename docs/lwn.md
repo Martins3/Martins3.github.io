@@ -14,7 +14,7 @@ https://lwn.net/Articles/898157/
 
 - LLVM CFI implementation
 - NFS: the early years : 分析 NFS 从 stateless 到 stateful 的演进过程
-- [ ] https://lwn.net/Articles/898029/
+- Disabling an extent optimization : 分析文件系统为了优化 sparse 文件，处理空洞的方式 fs cache 处理不同导致的 bug
 
 ## LWN 经典文章推荐
 
