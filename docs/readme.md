@@ -48,6 +48,7 @@
 - [QEMU 中的面向对象 : QOM](./qemu/qom.md)
 - [QEMU 中的时钟](./qemu/timer.md)
 - [QEMU 字符设备模拟](./qemu/char.md)
+<!-- TMP_TODO 通过 libvirt 最终搞定 --> 
 
 ## 淦，打一把英雄联盟不可能这么难
 - 🚧 [双系统（一）: blockdev](./lol/blockdev.md)

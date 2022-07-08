@@ -2,22 +2,22 @@
 
 <!-- vim-markdown-toc GitLab -->
 
-- [Thread](#thread)
-  - [gmain / gdbus / threaded-ml](#gmain-gdbus-threaded-ml)
-  - [worker](#worker)
-  - [call_rcu](#call_rcu)
-  - [QEMUBH](#qemubh)
-  - [coroutine](#coroutine)
-- [QEMU Event Loop](#qemu-event-loop)
-  - [Event Loop in Linux](#event-loop-in-linux)
-  - [Event Loop in glib](#event-loop-in-glib)
-  - [AioContext](#aiocontext)
-    - [FDMonOps](#fdmonops)
-  - [main loop thread](#main-loop-thread)
-  - [IOThread](#iothread)
-    - [use IOThread](#use-iothread)
-    - [IOThread internals](#iothread-internals)
-- [Question](#question)
+* [Thread](#thread)
+  * [gmain / gdbus / threaded-ml](#gmain-gdbus-threaded-ml)
+  * [worker](#worker)
+  * [call_rcu](#call_rcu)
+  * [QEMUBH](#qemubh)
+  * [coroutine](#coroutine)
+* [QEMU Event Loop](#qemu-event-loop)
+  * [Event Loop in Linux](#event-loop-in-linux)
+  * [Event Loop in glib](#event-loop-in-glib)
+  * [AioContext](#aiocontext)
+    * [FDMonOps](#fdmonops)
+  * [main loop thread](#main-loop-thread)
+  * [IOThread](#iothread)
+    * [use IOThread](#use-iothread)
+    * [IOThread internals](#iothread-internals)
+* [Question](#question)
 
 <!-- vim-markdown-toc -->
 ## Thread
