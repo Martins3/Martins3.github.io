@@ -47,7 +47,7 @@
   - 编译器会进行指令重排 ，循环展开
   - 编译器如何尽量减少 cache miss
 - [ ] LLVM 似乎提供了给体系结构设计人员，需要提供 CPU 的参数信息就可以构建后端的
-- [ ] 性能调优，使用 easy perf 中的信息来补充一下
+- [ ] 性能调优，[easy perf 中存在](http://faculty.cs.niu.edu/~winans/notes/patmc.pdf)
 
 ## TODO
 - 片上总线协议学习(1)——SiFive 的 TileLink 与 ARM 系列总线的概述与对比 : https://zhuanlan.zhihu.com/p/430486422

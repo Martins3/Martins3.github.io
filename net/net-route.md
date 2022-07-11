@@ -116,6 +116,7 @@ https://www.cyberithub.com/list-network-interfaces/
 
 - [网卡的工作模式](https://zdyxry.github.io/2020/03/18/%E7%90%86%E8%A7%A3%E7%BD%91%E5%8D%A1%E6%B7%B7%E6%9D%82%E6%A8%A1%E5%BC%8F/)
 - [什么是 NAPI](https://stackoverflow.com/questions/28090086/what-are-the-advantages-napi-before-the-irq-coalesce)
+  - interrupt 聚合
 - [什么是 GRO](https://stackoverflow.com/questions/47332232/why-is-gro-more-efficient)
   - [ ] [gro 详解](https://abcdxyzk.github.io/blog/2015/04/18/kernel-net-gro/)
   - `napi_gro_receive` 在 NAPI 层次做 GRO
