@@ -57,7 +57,7 @@ qemu-system-x86_64 -netdev help # 查询 QEMU 网络设备支持的后端
 精确模拟一个设备很复杂，效率也不高，所以可以使用半虚拟化技术 virtio 来解决，此时 Guest 中存在的是一个 virtio-blk 设备，Guest 的内核中也需要存在对应的
 virtio-blk 驱动。
 
-当然 QEMU VFIO 设备直通，两者的代码也在 hw 下。
+当然设备直通机制，VFIO，的代码也在 hw 下。
 
 最后看一下相关功能的源码位置:
 

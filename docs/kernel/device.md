@@ -3,7 +3,6 @@
 
 <!-- vim-markdown-toc GitLab -->
 
-* [overview](#overview)
 * [TODO](#todo)
 * [usb](#usb)
 * [device model](#device-model)
@@ -25,16 +24,6 @@
 <!-- vim-markdown-toc -->
 - [ ] 将 Linux Knerle Lab 中的内容合并进来
 - [ ] 只要要求一个事情，将其中的
-
-## overview
-> Let's start with a device[^4]
-> - How does a driver program a device ?
-> - How does a device signal the driver ?
-> - How does a device transfer data ?
-
-And, this page will contains anything related device except pcie, mmio, pio, interupt and dma.
-
-- [ ] maybe tear this page into device model and concrete device
 
 ## TODO
 1. 阅读 /lib/modules/(shell uname -a)/build 下的 makefile 中间的内容
@@ -410,4 +399,3 @@ sudo insmod pci_skel.ko 之后
 [^1]: https://events19.linuxfoundation.org/wp-content/uploads/2017/12/Introduction-to-Linux-Kernel-Driver-Programming-Michael-Opdenacker-Bootlin-.pdf
 [^2]: https://lwn.net/Articles/645810/
 [^3]: https://lwn.net/Articles/646514/
-[^4]: [An Introduction with PCI Device Assignment with VFIO](http://events17.linuxfoundation.org/sites/events/files/slides/An%20Introduction%20to%20PCI%20Device%20Assignment%20with%20VFIO%20-%20Williamson%20-%202016-08-30_0.pdf)

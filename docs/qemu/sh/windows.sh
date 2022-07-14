@@ -25,6 +25,3 @@ fi
 
 "$QEMU" -hda "${img}" -m 8G -smp 8 -machine type=q35,accel=kvm -cpu host -display gtk -vga virtio
 # "$QEMU" -drive file=/dev/nvme0n1p2,format=raw -drive file=/dev/nvme1n1p1,format=raw,readonly=on -m 8G -smp 8 -device vfio-pci,host=01:00.0 -machine type=q35,accel=kvm -soundhw hda
-
-# https://superuser.com/questions/1293112/kvm-gpu-passthrough-of-nvidia-dgpu-on-laptop-with-hybrid-graphics-without-propri
-# https://github.com/jscinoz/optimus-vfio-docs : 很复杂，根本看不懂

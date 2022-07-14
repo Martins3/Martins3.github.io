@@ -50,16 +50,9 @@
 
 ### migration
 - migration[^1] 相关的。因为需要保存所有的 cpu 的状态，所以自然需要持有 BQL 的，其关联的文件为：
-    - migration/block.c
-    - migration/colo.c
-    - migration/migration.c
-    - migration/ram.c
-    - migration/savevm.c
-    - migration/block-dirty-bitmap.c
-    - hw/vfio/migration.c
 
-实际上，和 migration 相关的还有 qemu_mutex_lock_ramlist，从原则上将当持有了 BQL 的时候，就屏蔽了所有的 lock 的。
-但是在 ram_init_bitmaps 首先上锁 BQL，然后是 ramlist 的。
+实际上，和 migration 相关的还有 `qemu_mutex_lock_ramlist`，从原则上将当持有了 BQL 的时候，就屏蔽了所有的 lock 的。
+但是在 `ram_init_bitmaps` 首先上锁 BQL，然后是 ramlist 的。
 具体可以从 `b2a8658ef5dc57ea` 分析，有待进一步跟进。
 
 ### main loop

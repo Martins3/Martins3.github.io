@@ -2,14 +2,13 @@
 
 <!-- vim-markdown-toc GitLab -->
 
-- [docs](#docs)
-- [how to use](#how-to-use)
-- [vfio](#vfio)
-- [pci](#pci)
-- [vhost](#vhost)
-- [virtio](#virtio)
-    - [eventfd](#eventfd)
-- [i8042](#i8042)
+* [docs](#docs)
+* [how to use](#how-to-use)
+* [pci](#pci)
+* [vhost](#vhost)
+* [virtio](#virtio)
+    * [eventfd](#eventfd)
+* [i8042](#i8042)
 
 <!-- vim-markdown-toc -->
 
@@ -26,11 +25,6 @@ lkvm run -k ../linux/arch/x86/boot/bzImage -d /home/maritns3/core/linux-kernel-l
 - [ ] lkvm setup minimi 可以创建一个 rootfs, 但是无法启动
 
 https://www.96boards.org/blog/running-kvm-guest-hikey/
-
-## vfio
-- [ ] device__register is a magic, I believe any device register here will be probe by kernel
-  - [ ] so, I can provide a fake device driver
-    - [ ] provide a tutorial for beginner to learn device model
 
 ## pci
 - [ ]  pci__init
@@ -62,7 +56,7 @@ static struct virtio_ops blk_dev_virtio_ops = {
 ```
 初始化的项目是 ?
 
-- [ ] virtio_blk__init 
+- [ ] virtio_blk__init
   - [ ] virtio_blk__init_one
 
 virtio_pci__data_out
@@ -70,9 +64,9 @@ init_vq : virt_queue , 尤其是 vring 的初始化
 
 virtio_pci__bar_activate:
 - [ ]  bar 的注册规则 ？
-- [ ] ioport__register : 
+- [ ] ioport__register :
 
-virtio_pci__io_ops : 
+virtio_pci__io_ops :
 
 kvm__emulate_io : 然后进入到
 ```c

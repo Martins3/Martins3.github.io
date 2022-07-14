@@ -73,7 +73,7 @@ static struct kvm_x86_ops vmx_x86_ops __initdata = {
 ```
 
 - [ ] shadow interrupt
-- [ ] irq window 
+- [ ] irq window
 
 ```c
 struct kvm_lapic {
@@ -110,7 +110,7 @@ pi_update_irte
       - intel_ir_set_vcpu_affinity
         - modify_irte
       - amd_ir_set_vcpu_affinity
-  
+
 
 ## irq_comm.c
 - kvm_set_routing_entry : seems used for choosing the correct irq chip.
@@ -201,12 +201,7 @@ static const struct read_write_emulator_ops write_emultor = {
 ```
 - [ ] 谁来使用这个东西
     - emulator_write_emulated
-      - emulator_read_write 
-
-
-CCW : 
-1. https://www.kernel.org/doc/html/latest/s390/vfio-ccw.html
-2. https://www.ibm.com/support/knowledgecenter/en/linuxonibm/com.ibm.linux.z.lkdd/lkdd_c_ccwdd.html
+      - emulator_read_write
 
 ## ioapic
 *主要分析 ioapic.c 下面的代码*
@@ -241,7 +236,7 @@ static const struct read_write_emulator_ops write_emultor = {
 
 
 路线 2：
-存在两条路线，第一条是 
+存在两条路线，第一条是
 ```c
 static const struct x86_emulate_ops emulate_ops = {
 	.pio_in_emulated     = emulator_pio_in_emulated,
@@ -421,10 +416,10 @@ I/O APIC 从中断重定向表提取中断信息，而 MSI-X 是从 MSI-X Capabi
 硬件支持的目的是为了减少 vmexit 啊
 
 - virtual-APIC page : 在 Guest 中间拷贝一份 APIC page
-- Guest 模式下的中断评估逻辑 : 
+- Guest 模式下的中断评估逻辑 :
   - Interrupt-window exiting : 当 退出到 host 的时候，如果 guest 此时在屏蔽中断，这样就只能等下一次 vmexit，但是中断不能等待太久，为了让中断快速响应
   - 通过 vmcs_write16(GUEST_INTR_STATUS, status) 直接写入，在 guest 中间就可以处理了
-- posted-interrupt processing : 
+- posted-interrupt processing :
 
 - [ ] 看不出来 posted interrupt processing 和 vmcs_write16(GUEST_INTR_STATUS, status) 有什么区别，不都是在让目标 CPU 在 guest 态中间不用退出
 

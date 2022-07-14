@@ -351,9 +351,7 @@ https://opensource.com/article/17/6/timekeeping-linux-vms
 
 https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/6/html/virtualization_host_configuration_and_guest_installation_guide/chap-virtualization_host_configuration_and_guest_installation_guide-kvm_guest_timing_management
 
-#### kvm_arch_end_assignment
-- [ ] vfio 和 virtual IO 的关系 ?
-- [ ] kvm 下面也有 eventfd
+#### `kvm_arch_end_assignment`
 
 ## memslot
 memslot : HPA 到 GVA 之间的映射关系

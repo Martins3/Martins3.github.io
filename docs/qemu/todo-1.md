@@ -203,9 +203,6 @@ i386/pc_piix.c:235
   - hw/net/virtio-blk.c
   - hw/virtio
 
-- hw/vfio
-
-
 ## chardev
 chardev 的一种使用方法[^2][^3], 可以将在 host 和 guest 中间同时创建设备，然后 guest 和 host 通过该设备进行交互。
 -chardev 表示在 host 创建的设备，需要有一个 id, -device 指定该设备

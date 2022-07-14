@@ -48,13 +48,13 @@
 - [QEMU 中的面向对象 : QOM](./qemu/qom.md)
 - [QEMU 中的时钟](./qemu/timer.md)
 - [QEMU 字符设备模拟](./qemu/char.md)
-<!-- TMP_TODO 通过 libvirt 最终搞定 --> 
+<!-- TMP_TODO 通过 libvirt 最终搞定 -->
 
 ## 淦，打一把英雄联盟不可能这么难
 - 🚧 [双系统（一）: blockdev](./lol/blockdev.md)
 - 🚧 [双系统（二）: bootloader](./lol/bootloader.md)
 - [wine : 如何实现系统调用虚拟化](./lol/wine.md)
-- 🚧 [设备直通: VFIO](./lol/vfio.md)
+- [设备直通: VFIO](./lol/vfio.md)
 
 ## UEFI
 - [Linux 下 UEFI 学习环境搭建](./uefi/uefi-linux.md)

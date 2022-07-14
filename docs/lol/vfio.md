@@ -77,55 +77,11 @@ _dma_map(0x558becc6b3b0, 0xc0000, 0x7ff40000, 0x7f958bec0000) = -12 (Cannot allo
 -device vfio-pci,host=01:00.0
 ```
 
+## 但是
+我始终没有搞定笔记本上的 GPU 的直通，而且在台式机上直通成功的案例中，发现由于英雄联盟的翻作弊机制，也是无法成功运行的，不过可以运行原神。
 
-## 基本原理
-[An Introduction with PCI Device Assignment with VFIO](http://events17.linuxfoundation.org/sites/events/files/slides/An%20Introduction%20to%20PCI%20Device%20Assignment%20with%20VFIO%20-%20Williamson%20-%202016-08-30_0.pdf)
+相关参考:
+- https://superuser.com/questions/1293112/kvm-gpu-passthrough-of-nvidia-dgpu-on-laptop-with-hybrid-graphics-without-propri
+- https://github.com/jscinoz/optimus-vfio-docs
 
-## 直通 GPU
-
-顺便直通一下固态硬盘
-- https://www.baeldung.com/linux/check-monitor-active-gpu
-
-## vfio 基础知识
-https://www.kernel.org/doc/html/latest/driver-api/vfio.html
-https://www.kernel.org/doc/html/latest/driver-api/vfio-mediated-device.html
-https://www.kernel.org/doc/html/latest/driver-api/vfio.html
-https://zhuanlan.zhihu.com/p/27026590
-
-- [x] 似乎可以用于 GPU 虚拟化 (YES)
-
-- [ ] 使用的时候 vfio 为什么需要和驱动解绑， 因为需要绑定到 vfio-pci 上
-    - [ ] vfio-pci 为什么保证覆盖原来的 bind 的驱动的功能
-    - [ ] /sys/bus/pci/drivers/vfio-pci 和 /dev/vfio 的关系是什么 ?
-
-- [ ] vfio 使用何种方式依赖于 iommu 驱动 和 pci
-
-- [ ]  据说 iommu 可以软件实现，从 make meueconfig 中间的说法
-
-- [ ] config `KVM_VFIO`, config VFIO in Kconfig, what's the relation ?
-
-- [ ] ioctl : get irq info / get
-
-## kvmtool/include/linux/vfio.h
-- [ ] software protocol version, or because using different hareware ?
-```c
-#define VFIO_TYPE1_IOMMU        1
-#define VFIO_SPAPR_TCE_IOMMU        2
-#define VFIO_TYPE1v2_IOMMU      3
-```
-- [ ] `vfio_info_cap_header`
-
-## group and container
-
-## uio
-- location : linux/drivers/uio/uio.c
-
-- [ ] VFIO is essential for `uio`  ?
-
-## TODO
-- [ ] 如何启动已经安装在硬盘上的 windows
-
-[^1]: http://www.linux-kvm.org/images/5/54/01x04-Alex_Williamson-An_Introduction_to_PCI_Device_Assignment_with_VFIO.pdf
-[^2]: https://www.kernel.org/doc/html/latest/driver-api/uio-howto.html
-[^3]: [populate the empty /sys/kernel/iommu_groups](https://unix.stackexchange.com/questions/595353/vt-d-support-enabled-but-iommu-groups-are-missing)
 [^4]: https://unix.stackexchange.com/questions/595353/vt-d-support-enabled-but-iommu-groups-are-missing
