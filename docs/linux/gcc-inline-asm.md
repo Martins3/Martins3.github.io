@@ -194,3 +194,14 @@ too basic ?
 
 ## Awesome
 - [ ] https://www.agner.org/optimize/
+
+
+## example
+
+来源: https://zhuanlan.zhihu.com/p/41872203
+```c
+inline void xchg(volatile int *x, volatile int *y) {
+  asm volatile("xchgl %0, %1"
+               : "+r"(x), "+m"(y)::"memory", "cc"); // swap(x, tmp)
+}
+```

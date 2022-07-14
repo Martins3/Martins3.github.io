@@ -66,7 +66,6 @@
 * [mempool](#mempool)
 * [virtual machine](#virtual-machine)
     * [mmu notifier](#mmu-notifier)
-    * [userfault fd](#userfault-fd)
     * [balloon compaction](#balloon-compaction)
 * [hmm](#hmm)
 * [CMA](#cma)
@@ -2702,9 +2701,6 @@ struct mmu_notifier_subscriptions {
 - `mmu_notifier` and `mmu_interval_notifier` are chained into `mmu_notifier_subscriptions`
 - `mmu_notifier_range` is interface for memory management part
 ------------ critical struct -------------------------- end ---
-
-#### userfault fd
-https://lwn.net/Articles/718198/
 
 #### balloon compaction
 // 参考一下 vmware 的论文

@@ -19,6 +19,7 @@
 - [ ] 存在对于 instruction 和 data 各自的 TLB 吗?
 - [ ] chipyard 中如果可以运行 Linux Kernel 的话，那么岂不是也是存在内存控制器的，从 cache 不命中到
 - [ ] Boom 中是如何使用状态机的
+- [ ] 有原子指令的支持吗？
 
 ## 为什么
 - TLB

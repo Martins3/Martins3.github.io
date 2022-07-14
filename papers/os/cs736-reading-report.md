@@ -14,28 +14,28 @@ http://pages.cs.wisc.edu/~dusseau/Classes/CS736/CS736-F13/questions.html
 
 <!-- vim-markdown-toc GitLab -->
 
-- [canonical](#canonical)
-    - [A Hardware Architecture for Implementing Protection Rings](#a-hardware-architecture-for-implementing-protection-rings)
-    - [Threads and Input/Output in the Synthesis Kernel](#threads-and-inputoutput-in-the-synthesis-kernel)
-    - [The Duality of Memory and Communication in the Implementation of a Multiprocessor Operating System](#the-duality-of-memory-and-communication-in-the-implementation-of-a-multiprocessor-operating-system)
-    - [Plan 9 from Bell Labs](#plan-9-from-bell-labs)
-    - [Obsevation on the Development of the Operating System](#obsevation-on-the-development-of-the-operating-system)
-- [File System](#file-system)
-    - [The Design and Implementation of a Log-Structured File System](#the-design-and-implementation-of-a-log-structured-file-system)
-    - [Journaling the Linux ext2fs Filesystem](#journaling-the-linux-ext2fs-filesystem)
-    - [F2FS: A New File System for Flash Storage](#f2fs-a-new-file-system-for-flash-storage)
-- [Memory Management](#memory-management)
-    - [Practical, transparent operating system support for superpages](#practical-transparent-operating-system-support-for-superpages)
-- [Multicore](#multicore)
-    - [An Analysis of Linux Scalability to Many Cores](#an-analysis-of-linux-scalability-to-many-cores)
-- [Techniques](#techniques)
-    - [Information and Control in Gray-Box Systems](#information-and-control-in-gray-box-systems)
-    - [Fine-Grained Dynamic Instrumentation of Commodity Operating System Kernels](#fine-grained-dynamic-instrumentation-of-commodity-operating-system-kernels)
-- [Virtual](#virtual)
-    - [Memory Resource Management in VMware ESX Server](#memory-resource-management-in-vmware-esx-server)
-    - [An Updated Performance Comparison of Virtual Machines and Linux Containers](#an-updated-performance-comparison-of-virtual-machines-and-linux-containers)
-- [Process](#process)
-    - [A fork in the road](#a-fork-in-the-road)
+* [canonical](#canonical)
+    * [A Hardware Architecture for Implementing Protection Rings](#a-hardware-architecture-for-implementing-protection-rings)
+    * [Threads and Input/Output in the Synthesis Kernel](#threads-and-inputoutput-in-the-synthesis-kernel)
+    * [The Duality of Memory and Communication in the Implementation of a Multiprocessor Operating System](#the-duality-of-memory-and-communication-in-the-implementation-of-a-multiprocessor-operating-system)
+    * [Plan 9 from Bell Labs](#plan-9-from-bell-labs)
+    * [Obsevation on the Development of the Operating System](#obsevation-on-the-development-of-the-operating-system)
+* [File System](#file-system)
+    * [The Design and Implementation of a Log-Structured File System](#the-design-and-implementation-of-a-log-structured-file-system)
+    * [Journaling the Linux ext2fs Filesystem](#journaling-the-linux-ext2fs-filesystem)
+    * [F2FS: A New File System for Flash Storage](#f2fs-a-new-file-system-for-flash-storage)
+* [Memory Management](#memory-management)
+    * [Practical, transparent operating system support for superpages](#practical-transparent-operating-system-support-for-superpages)
+* [Multicore](#multicore)
+    * [An Analysis of Linux Scalability to Many Cores](#an-analysis-of-linux-scalability-to-many-cores)
+* [Techniques](#techniques)
+    * [Information and Control in Gray-Box Systems](#information-and-control-in-gray-box-systems)
+    * [Fine-Grained Dynamic Instrumentation of Commodity Operating System Kernels](#fine-grained-dynamic-instrumentation-of-commodity-operating-system-kernels)
+* [Virtual](#virtual)
+    * [Memory Resource Management in VMware ESX Server](#memory-resource-management-in-vmware-esx-server)
+    * [An Updated Performance Comparison of Virtual Machines and Linux Containers](#an-updated-performance-comparison-of-virtual-machines-and-linux-containers)
+* [Process](#process)
+    * [A fork in the road](#a-fork-in-the-road)
 
 <!-- vim-markdown-toc -->
 
@@ -85,7 +85,7 @@ protection ring 要求硬件的功能:
 2. SDW : address + length 描述该 segment 范围，R1 R2 R3 R W E 描述 read write exe 以及 gate extension 的范围，GATE 描述该 gates 的数量。描述的范围如下:
   - write 从 0 到 R1
   - exe R1 到 R2
-  - gate R2 +1 到 R3 
+  - gate R2 +1 到 R3
   - read 0 到 R2
 3. IPR && TPR : 当前进程所在的 ring。segno 和 wordno 共同描述下一条指令的地址。TPR 表示是临时IPR，在硬件进行地址翻译的过程中间使用。
 4. program accessible pointer register(简称PR) 和 inst 格式: PR 指向一个特定的地址，inst 利用PRNUM 表示基准的PR，offset 表示在 PR 指向的地址的偏移量来说明操作数的位置。 PR 的作用有两个: 一个作用是访问在 higher-numbered ring 的指令，其次可以用作 stack pointer
@@ -178,7 +178,7 @@ quabject 是一组程序，数据和硬件资源的集合，大多数 quabject �
 
 专题分析1:
 本文核心分析的内容是，thread 和 IO，
-1. thread 部分讲解了什么东西 ? 就像讲解 thread 是什么，如何运行，并且分析其中两个关键问题，如何进行 context switch 和 scheduling 
+1. thread 部分讲解了什么东西 ? 就像讲解 thread 是什么，如何运行，并且分析其中两个关键问题，如何进行 context switch 和 scheduling
 2. kernel code synthesize 对于其的支持是什么 ? 比如 context switch  利用的 executable data structures
 
 专题分析2:
@@ -190,21 +190,21 @@ Kernel code systhesize 到底指的是 ?
 Physical I/O devices are encapsulated in quabject called device servers.
 Each device server may have its own threads or not.
 A polling I/O server would run continuously on its own thread. An interrupt-driven server would block after its initialization.
-High-level servers may be composed from more basicservers. 
+High-level servers may be composed from more basicservers.
 The implementation of the stream model of I/O in Synthesis can be summarized using the well-known producer/consumer paradigm.
-Synthesis interrupt handling differs from some traditional OS’s (such as UNIX) in that each thread in Synthesis synthesizes it's own interrupt handling routine, as well as system calls. 
+Synthesis interrupt handling differs from some traditional OS’s (such as UNIX) in that each thread in Synthesis synthesizes it's own interrupt handling routine, as well as system calls.
 
 专题分析4:
 interrupt 是如何分析的 ?
 1. Synthesis interrupt handling differs from some tra.ditional OS’s (such as UNIX) in that each threa.d in Synthesis synthesizes it,s own interrupt ha.ndling routine, as
-well as system calls. 
+well as system calls.
 
-#### The Duality of Memory and Communication in the Implementation of a Multiprocessor Operating System 
-Mach 从 Accent 继承了四种抽象: task, thread, port and message. 
+#### The Duality of Memory and Communication in the Implementation of a Multiprocessor Operating System
+Mach 从 Accent 继承了四种抽象: task, thread, port and message.
 其中taks 和 thread 表示进程和线程，port 是消息队列，message 表示消息，也就是 task 或者 thread 用 port 进行传递 message
 在这些基础上，Mach 提供用于处理二级存储的缓存的 memory object 新的抽象，这也是 Mach 的核心设计。
 
-主要内容为: 
+主要内容为:
 1. Mach 设计，也就是介绍API
     0. Message Operatiation
     1. Port Operatiation
@@ -290,7 +290,7 @@ Pilot 是单用户，多任务的Mesa语言编写的操作系统，Pilot的作�
 启发和想法:
 1. 可以阅读 Pilot: An Operating System for a Personal Computer 获取更加深刻的理解
 
-## File System 
+## File System
 
 #### The Design and Implementation of a Log-Structured File System
 log-structures fs 的开山之作，由于操作系统使用内存作为二级存储的缓存，大多数的读都会被缓存拦截，这让读操作的性能变得不在重要，此外大多数的读写都是小文件，而LFS的写的顺序性让写变得很快。
@@ -362,7 +362,7 @@ crash 发生的时机
 2. 第二种是CR 的写
 
 专题分析4:
-To restore consistency between directories and inodes, Sprite LFS outputs a special record in the log for each directory change. 
+To restore consistency between directories and inodes, Sprite LFS outputs a special record in the log for each directory change.
 
 directory change log 中间包含的内容是什么 ?
 1. The record includes an operation code (create, link, rename, or unlink), the location of the directory entry (i-number for the directory and the position within the directory), the contents of the directory entry
@@ -376,7 +376,7 @@ ext2fs 采用 Journaling 的主要原因是为了处理系统崩溃之后，快�
 但是，一旦出现crash，导致fs不一致出现的地方只能是在journal 中间，而主要数据区用于都是维持一致性的。
 
 crash之后恢复fs一致性的方法:
-As a result, filesystem recovery can be achieved by scanning the journal and copying back all committed data into the main filesystem area. 
+As a result, filesystem recovery can be achieved by scanning the journal and copying back all committed data into the main filesystem area.
 
 文件系统的 transaction 和数据库的 transaction 的区别是什么，这种区别带来的好处是什么 ?
 1. 没有 transaction abort，在数据库的 transaction 中间支持操作进行了一半撤销，并且将之前的产生的影响消除掉。但是文件系统的 transaction 在进行之前就已经进行了必要的检查，因此不会出现 transaction abort，由此不用考虑撤销操作，简化了 transaction commit
@@ -547,7 +547,7 @@ fsync 的 naive 操作是，建立 checkpoint，然后 roll-back 的，而 roll-
 
 special flag 是什么东西 ? 似乎找到那些在 roll-back 依旧被选中的数据
 
-1. F2FS collects the *direct node blocks* having the　special flag located in N+n, 
+1. F2FS collects the *direct node blocks* having the　special flag located in N+n,
 
 专题分析5: 为什么需要冷热分离 ?
 
@@ -568,7 +568,7 @@ special flag 是什么东西 ? 似乎找到那些在 roll-back 依旧被选中�
 4. 分析superpage demotion 和 dirty page 写回的问题
 
 Pages in the cache list are clean and unmapped and hence can be easily freed under memory pressure.
-Inactive pages are those mapped into the address space of some process, and have not been referenced for a long time. 
+Inactive pages are those mapped into the address space of some process, and have not been referenced for a long time.
 Active pages are those that have been accessed recently, but may or may not have their reference bit set.
 
 主要设计思路:
@@ -593,7 +593,7 @@ superpage 对于 FreeBSD's A-LRU 的修改:
 
 启发和想法:
 2. superpage 的使用需要显示的指出吗，还是操作系统默认的?
-3. 使用不同大小的superpage 会导致了内存碎片化，为什么 ? 
+3. 使用不同大小的superpage 会导致了内存碎片化，为什么 ?
 1. fragmentation 控制 : 所谓的 contiguity-aware page daemon 应该没有说的那么神奇，
 4. dirty page 写回被作者不了了之了
 
@@ -668,11 +668,11 @@ Gray Box 的核心在于插入ICL，也就是 获取Information 和 施加Contro
 
 专题分析1:
 为什么说是gray-box ?
-When treating the operating system as a gray-box, one recognizes that not changing the OS restricts, but does not completely obviate, both the information one can acquire about the internal state of the OS and the control one can impose on the OS. 
+When treating the operating system as a gray-box, one recognizes that not changing the OS restricts, but does not completely obviate, both the information one can acquire about the internal state of the OS and the control one can impose on the OS.
 The thesis of this paper is that a surprisingly large class of "OS-like" services can be provided to applications without any modification to the OS itself.
 Experienced programmers tend to exploit their knowledge of the behavior of the underlying system; we believe that this knowledge should be encapsulated in ICLs, so that these techniques can be used by all programmers.
 
-专题分析2: 
+专题分析2:
 gray-box knowledge : 前面详细的说明为什么
 We begin by assuming only the coarsest level of algorithmic knowledge:
 when the buffer cache for files is full, some page must be replaced in order to fit a new page.
@@ -720,7 +720,7 @@ the prediction unit can be made smaller than the access unit, as desired.
 gbp : 在文件没有访问之前，首先提交
 
 Our implementation must
-address three problems: 
+address three problems:
 1. how to differentiate between probe times that are in cache and out of cache, (获取访问 cache 和时间差别)
 2. the amount of data the application should access as a unit. (**为什么application 需要按照 unit 的访问数据**)
 3. and the number of pages whose state is predicted from a single probe. (**通过一个 probe 就可以推测出来状态的页面的数量**)
@@ -851,7 +851,7 @@ Kerninstd cannot allocate kernel memory, so it has /dev/kerninst perform the nec
 4. 代码插入 :
 
 
-Splicing at the delay slot of a control transfer instruction is difficult because the branch to the code patch will occur before the control transfer instruction has changed the PC. 
+Splicing at the delay slot of a control transfer instruction is difficult because the branch to the code patch will occur before the control transfer instruction has changed the PC.
 > delay slot 会非常的麻烦，前面分析过，如果替换掉的跳转指令，那么需要将delay slot 中的指令带着。
 > 这里分析是如果一不小心替换的指令是 slot，在 code patch 的可能先执行，而当 code patch 返回的时候，其不能跳转到下一条指令中间，而是跳转到 branch instruction 指向的位置。
 > 但是如果 branch instruction 是条件跳转，patch code 返回的位置有两个。
@@ -866,7 +866,7 @@ returning. This case is detected by noticing a delay slot instruction at the sta
 Note that instructions whose semantics are PC-dependent, such as branches, cannot
 be relocated verbatim to the code patch. In these cases, kerninstd emits a sequence of instructions with combined semantics equivalent to the original instruction.
 > 替换的指令如果是 PC-dependent 的，那么需要小心处理
-Patch code ends with a jump back to the instruction following the instrumentation point. 
+Patch code ends with a jump back to the instruction following the instrumentation point.
 > 需要考虑的第二个问题，如果替换掉正好是
 If a single branch instruction
 does not have sufficient range, a scratch register is written with the destination address and then used for the
@@ -890,7 +890,7 @@ stack4. Kerninstd generates the relocated instrumentation point instruction and 
 当一个host中间同时运行多个虚拟机的时候，给每一个虚拟机分配的内存之和可以超过实际的物理内存。为了实现内存资源利用率的最大化，
 本文介绍了ballooning，idle memory tax，Content-based page sharing，hot I/O page remapping等技术，从分析了虚拟内存，页面回收，共享内存方面加以分析。
 
-虚拟内存的实现:  
+虚拟内存的实现:
 1. ESX Server 利用pmap 数据结构实现从guest 的物理地址到host 的物理地址的装换。
 2. guest 用于操作page table 和 TLB 的指令会被截断，防止直接更新host 的 MMU 状态。
 3. 使用 shadow page tables 来实现从 guest 的虚拟地址直接到 host 的物理地址，减少访存的 overhead.
@@ -948,7 +948,7 @@ hot I/O page remapping : 由于PCI总线只有32bit等原因，DMA只能访问�
   - Network bandwidth—nuttcp : 就传输速度而言，都没有差别，区别在于在进行全速传输的时候，对于CPU的消耗的多少。Docker在没有添加NAT的时候，和native的性能几乎没有区别，否则存在明显的CPU消耗量增加。KVM利用 vhost-net，其在发送时性能损失小，但是接受性能损失很大。
   - Network latency—netperf : 添加了
   - Block I/O—fio : 访问顺序差别不打，但是随机KVM下降明显。
-  - Redis && MySQL : 
+  - Redis && MySQL :
 
 3. 基本结论是什么 ?
 对于CPU和memory，KVM 和Docker几乎不会增加overhead，但是对于IO，网络等会增加开销，粒度越小，开销越大，开销体现的形式为CPU使用率和延迟。
@@ -989,7 +989,7 @@ fork 曾经是一个天才设计，但是对于现在的操作系统以及硬件
 2. fork 不是线程安全的。当parent是一个多线程，fork只会对于所在的 thread 进行。
 3. fork 不安全。fork可能会继承不该继承的东西，除非显示的设置。
 4. fork 性能不好。在如今的程序中间，单单是建立 copy-on-write mappings 就需要 100m
-5. fork 可扩展性(scale)不好。具体含义参考:The scalable commutativity rule: Designing scalable software for multicore processors. 
+5. fork 可扩展性(scale)不好。具体含义参考:The scalable commutativity rule: Designing scalable software for multicore processors.
 6. fork 鼓励 memory overcommit。copy-on-write page mappings 会消耗内存，同时保守的策略要求首先具备备用的内存才可以。
 
 fork 的限制 ?

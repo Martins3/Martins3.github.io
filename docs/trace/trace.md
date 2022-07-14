@@ -167,6 +167,9 @@ https://load-balancer.inlab.net/manual/performance/measuring-internal-bandwidth-
 
 ## [ ] https://github.com/sysstat/sysstat
 
+## [ ] https://man7.org/linux/man-pages/man1/ipcs.1.html
+分析 ipc 的性能的
+
 ## 参考
 - https://github.com/adriannovegil/awesome-observability
 

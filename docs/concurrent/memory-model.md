@@ -1,4 +1,5 @@
 # memory model
+- 简短有力的分析: https://zhuanlan.zhihu.com/p/41872203
 
 ## 问题
 - [ ] 能不能稳定的复现，或者制作出来这些 memory model 的效果
