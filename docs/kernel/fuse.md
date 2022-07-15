@@ -20,8 +20,6 @@ virtio fs 一探究竟。
 
 ### virtio
 
-### vhost-user
-
 ## virtio fs
 
 重点参考:
@@ -29,6 +27,3 @@ https://vmsplice.net/~stefan/virtio-fs_%20A%20Shared%20File%20System%20for%20Vir
 
 - [ ] 没有太搞清楚整个执行流程啊
   - [ ] 为什么 guest 是和 virtiofd 沟通的，应该是首先和 QEMU 沟通才对啊
-- [ ] vhost 是啥
-  - https://www.redhat.com/en/blog/journey-vhost-users-realm
-  - https://www.redhat.com/en/blog/deep-dive-virtio-networking-and-vhost-net

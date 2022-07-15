@@ -65,32 +65,15 @@ Device Driver ==> SCSI device support ==> SCSI low-level drivers ==> virtio-scsi
 # TODO
 
 - [ ] /home/maritns3/core/firecracker/src/devices/src/virtio/vsock/csm/connection.rs has a small typo
-
 - [ ] virtiofs 的代码很少，资料很多，其实值得分析一下
-
 - [ ] virtio and msi:
-
 - [ ] We're over optimistic about the meaning of the complexity of virtio, try to read **/home/maritns3/core/linux/drivers/virtio**, please.
-
 - [ ] what's scsi : https://www.linux-kvm.org/images/archive/f/f5/20110823142849!2011-forum-virtio-scsi.pdf
-
-[ ](https://www.redhat.com/en/blog/deep-dive-virtio-networking-and-vhost-net)
-[ ](https://www.redhat.com/en/blog/introduction-virtio-networking-and-vhost-net)
-
 - [ ] 有的设备不支持 PCI 总线，需要使用 MMIO 的方式，但是kvmtool 怎么知道这个设备需要使用 MMIO
-
 - [ ] 约定是第一个 bar 指向的 IO 空间在内核那一侧是怎么分配的 ?
-
 - [ ] virtio_bus 是挂载到哪里的?
-
 - [ ] virtio_console 的具体实现是怎么样子的 ?
-
 - [ ] 现在对于 eventfd 都是从 virt-blk 角度理解的，其实如何利用 eventfd 实现 guest 到 kernel 的通知，比如 irqfd 来实现 Qemu 直接将 irq 注入到 guest 中
-
-- [ ] LoyenWang 页分析过 virtio
-
-## vhost
-https://terenceli.github.io/%E6%8A%80%E6%9C%AF/2020/04/18/vsock-internals
 
 ## virtiofs
 - [ ] https://libvirt.org/kbase/virtiofs.html

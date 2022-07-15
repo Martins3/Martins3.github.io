@@ -1,5 +1,6 @@
 # RCU
 
+- [ ] 思考一下，RCU 在用户态和内核态中实现的差异
 - [ ] 将 QEMU 中对于 RCU 的使用移动到这里
 - [ ] https://liburcu.org/ : 提供了三个很好的资源
 - https://mp.weixin.qq.com/s/SZqmxMGMyruYUH5n_kobYQ
@@ -56,6 +57,27 @@ void synchronize_rcu(void)
 ```
 
 ## SRCU
-e.g., kvm_mmu_notifier_invalidate_range_start
+e.g., `kvm_mmu_notifier_invalidate_range_start`
 
 sleepable rcu
+
+## 中断也是和 RCU 相关的
+```c
+void irq_exit(void)
+{
+#ifndef __ARCH_IRQ_EXIT_IRQS_DISABLED
+	local_irq_disable();
+#else
+	lockdep_assert_irqs_disabled();
+#endif
+	account_irq_exit_time(current);
+	preempt_count_sub(HARDIRQ_OFFSET);
+	if (!in_interrupt() && local_softirq_pending())
+		invoke_softirq(); ==================================》 __do_softirq
+
+	tick_irq_exit();
+	rcu_irq_exit();
+	trace_hardirq_exit(); /* must be last! */
+}
+```
+调用了 `rcu_irq_exit`

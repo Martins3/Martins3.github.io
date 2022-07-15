@@ -5,9 +5,6 @@
 2. 求求了，什么时候学一下 x86 汇编吧，然后出一个利用 kvm 给别人写一个教程
 4. [^6] 虚拟化入门，各种 hypervisor 分类
 5. 我心心念念的 TLB 切换在哪里啊 ?
-6. virtio 的两个文章:
-    1. https://www.redhat.com/en/blog/introduction-virtio-networking-and-vhost-net
-    2. https://www.redhat.com/en/blog/virtio-devices-and-drivers-overview-headjack-and-phone
 7. 所以 kvm 是怎么和 virtio 产生联系的 ？
 8. virtio 如何处理 GPU 的 ?
 

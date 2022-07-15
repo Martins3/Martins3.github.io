@@ -59,6 +59,12 @@ System software performing directed EOIs must retain a mapping associating level
 
 - [ ] 实际上，ioapic 也是存在 eoi 的, 而且还在两个调用位置, 放到 tcg ioapic 中间分析吧
 
+实际上，这个在 kvm 中也是很重要的:
+
+> pv eoi 经过posted interrupt技术优化后，注入irq不发生vm exit。但是guest在应答irq的时候，还是要发生vm exit。 所以有了pv eoi技术： a，guest和host通过msr寄存器，协商出来一个地址，用作eoi使用。前提是host和guest都支持pv eoi。 b，guest的pa，和host的va，通过映射计算，就是在操作同一块内存。 那么就不用发生vm exit的情况下，达到guest和host内外通信的目的。同样原理的还有kvm clock、steal time等。
+>
+> 参考: https://cloud.tencent.com/developer/article/1087271
+
 #### lvt
 lvt  中的取值总是在发生改变的, 但是
 apic_timer => apic_local_deliver => apic_set_irq 的过程中，本来 apic 的中断是 APIC_LVT_TIMER 的，但是最后装换为 236 了

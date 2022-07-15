@@ -7,7 +7,7 @@
 参考[内核文档](https://www.kernel.org/doc/html/latest/driver-api/vfio.html)，我这里记录一下操作:
 
 
-1. 确定 GPU 的 bdf
+1. 确定 GPU 的 bdf (*B*us *D*evice *F*unction)
 ```txt
 ➜  vn git:(master) ✗ lspci
 00:00.0 Host bridge: Intel Corporation Xeon E3-1200 v6/7th Gen Core Processor Host Bridge/DRAM Registers (rev 08)
@@ -39,7 +39,7 @@
 ../../../../kernel/iommu_groups/11
 ```
 
-3. 获取 ref ff :)
+3. 获取 ... (这是啥来着)
 ```txt
 ➜  vn git:(master) ✗ lspci -n -s 0000:01:00.0
 01:00.0 0302: 10de:1d12 (rev ff)
@@ -60,7 +60,7 @@ echo 10de 1d12 > /sys/bus/pci/drivers/vfio-pci/new_id
 lrwxrwxrwx root root 0 B Mon May 30 09:53:28 2022  0000:01:00.0 ⇒ ../../../../devices/pci0000:00/0000:00:1c.0/0000:01:00.0
 ```
 
-5. 无需管理员权限
+5. 无需管理员权限运行
 ```sh
 ➜  vn git:(master) ✗ sudo chown maritns3:maritns3 /dev/vfio/11
 ```
@@ -83,5 +83,22 @@ _dma_map(0x558becc6b3b0, 0xc0000, 0x7ff40000, 0x7f958bec0000) = -12 (Cannot allo
 相关参考:
 - https://superuser.com/questions/1293112/kvm-gpu-passthrough-of-nvidia-dgpu-on-laptop-with-hybrid-graphics-without-propri
 - https://github.com/jscinoz/optimus-vfio-docs
+
+
+<script src="https://giscus.app/client.js"
+        data-repo="martins3/martins3.github.io"
+        data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="
+        data-category="Show and tell"
+        data-category-id="MDE4OkRpc2N1c3Npb25DYXRlZ29yeTMyMDMzNjY4"
+        data-mapping="pathname"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-theme="light"
+        data-lang="zh-CN"
+        crossorigin="anonymous"
+        async>
+</script>
+
+本站所有文章转发 **CSDN** 将按侵权追究法律责任，其它情况随意。
 
 [^4]: https://unix.stackexchange.com/questions/595353/vt-d-support-enabled-but-iommu-groups-are-missing

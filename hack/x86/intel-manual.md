@@ -2,20 +2,20 @@
 
 <!-- vim-markdown-toc GitLab -->
 
-- [Volume 1 : Basic Architecture](#volume-1-basic-architecture)
-- [Volume 2 : Instruction Set Reference](#volume-2-instruction-set-reference)
-- [Volume 3 : System Programming Guide](#volume-3-system-programming-guide)
-  - [10 ADVANCED PROGRAMMABLE INTERRUPT CONTROLLER (APIC)](#10-advanced-programmable-interrupt-controller-apic)
-    - [10.12 EXTENDED XAPIC (X2APIC)](#1012-extended-xapic-x2apic)
-      - [25.1.2 Instructions That Cause VM Exits Unconditionally](#2512-instructions-that-cause-vm-exits-unconditionally)
-  - [29 APIC VIRTUALIZATION AND VIRTUAL INTERRUPTS](#29-apic-virtualization-and-virtual-interrupts)
-    - [29.1 VIRTUAL APIC STATE](#291-virtual-apic-state)
-      - [29.1.1 Virtualized APIC Registers](#2911-virtualized-apic-registers)
-    - [29.2 EVALUATION AND DELIVERY OF VIRTUAL INTERRUPTS](#292-evaluation-and-delivery-of-virtual-interrupts)
-    - [29.2.2 Virtual-Interrupt Delivery](#2922-virtual-interrupt-delivery)
-    - [29.6 POSTED-INTERRUPT PROCESSING](#296-posted-interrupt-processing)
-  - [CHAPTER 34 SYSTEM MANAGEMENT MODE](#chapter-34-system-management-mode)
-- [questions](#questions)
+* [Volume 1 : Basic Architecture](#volume-1-basic-architecture)
+* [Volume 2 : Instruction Set Reference](#volume-2-instruction-set-reference)
+* [Volume 3 : System Programming Guide](#volume-3-system-programming-guide)
+  * [10 ADVANCED PROGRAMMABLE INTERRUPT CONTROLLER (APIC)](#10-advanced-programmable-interrupt-controller-apic)
+    * [10.12 EXTENDED XAPIC (X2APIC)](#1012-extended-xapic-x2apic)
+      * [25.1.2 Instructions That Cause VM Exits Unconditionally](#2512-instructions-that-cause-vm-exits-unconditionally)
+  * [29 APIC VIRTUALIZATION AND VIRTUAL INTERRUPTS](#29-apic-virtualization-and-virtual-interrupts)
+    * [29.1 VIRTUAL APIC STATE](#291-virtual-apic-state)
+      * [29.1.1 Virtualized APIC Registers](#2911-virtualized-apic-registers)
+    * [29.2 EVALUATION AND DELIVERY OF VIRTUAL INTERRUPTS](#292-evaluation-and-delivery-of-virtual-interrupts)
+    * [29.2.2 Virtual-Interrupt Delivery](#2922-virtual-interrupt-delivery)
+    * [29.6 POSTED-INTERRUPT PROCESSING](#296-posted-interrupt-processing)
+  * [CHAPTER 34 SYSTEM MANAGEMENT MODE](#chapter-34-system-management-mode)
+* [questions](#questions)
 
 <!-- vim-markdown-toc -->
 # Volume 1 : Basic Architecture
@@ -25,16 +25,15 @@
 # Volume 3 : System Programming Guide
 
 ## 10 ADVANCED PROGRAMMABLE INTERRUPT CONTROLLER (APIC)
-- [ ] When a local APIC has sent an interrupt to its processor core for handling, the processor uses the interrupt and 
+- [ ] When a local APIC has sent an interrupt to its processor core for handling, the processor uses the interrupt and
 exception handling mechanism described in Chapter 6, “Interrupt and Exception Handling.” See Section 6.1, “Interrupt and Exception Overview,” for an introduction to interrupt and exception handling.
 
-Local APICs can receive interrupts from the following sources:
-1. ...
+Local APICs can receive interrupts from the following sources: 1. ...
 2. ...
 
 - [ ]the local APIC delivers the interrupt to the processor core using an interrupt delivery protocol that has been set up through a group of APIC registers called the local vector table or LVT
 
-- [ ] A processor can generate IPIs by programming the interrupt command register (ICR) in its local APIC (see Section 10.6.1, “Interrupt Command Register (ICR)”). 
+- [ ] A processor can generate IPIs by programming the interrupt command register (ICR) in its local APIC (see Section 10.6.1, “Interrupt Command Register (ICR)”).
 
 
 - [ ] Descriptions of how to program the local APIC are given in Section 10.5.1, “Local Vector Table,” and Section 10.6.1, “Interrupt Command Register (ICR).”
@@ -48,7 +47,7 @@ Local APICs can receive interrupts from the following sources:
 - The following instructions cause VM exits when they are executed in VMX non-root operation: CPUID, GETSEC, INVD, and XSETBV.
 - This is also true of instructions introduced with VMX, which include: INVEPT, INVVPID, VMCALL, VMCLEAR, VMLAUNCH, VMPTRLD, VMPTRST, VMRESUME, VMXOFF, and VMXON.
 
-- [ ] invd : invalid cache, but why invalid tlb isn't unconditionally 
+- [ ] invd : invalid cache, but why invalid tlb isn't unconditionally
 
 
 ## 29 APIC VIRTUALIZATION AND VIRTUAL INTERRUPTS
@@ -79,6 +78,7 @@ posted interrupts by copying them into the virtual-APIC page (Section 29.6)
 - [ ] TPR : task priority, and interrupt priority
 - [ ] Upon receipt of the notification, the target processor will process the posted interrupts by copying them into the virtual-APIC page
 - [ ] APIC-access page : It directs memory-mapped writes to the APIC-access page to the virtual-APIC page.
+
 
 ### 29.1 VIRTUAL APIC STATE
 Depending on the settings of certain VM-execution controls, the processor may virtualize certain fields on the virtual-APIC page with functionality analogous to that performed by the local APIC.
@@ -144,11 +144,10 @@ SMM is a special-purpose operating mode provided for handling system-wide functi
 It is intended for use only by system firmware, not by applications software or general-purpose systems software.
 The main benefit of SMM is that it offers a distinct and easily isolated processor environment that operates transparently to the operating system or executive and software applications.
 
-The execution environment after entering SMM is in real address mode with paging disabled (CR0.PE = CR0.PG = 0). In this initial execution environment, the SMI handler 
+The execution environment after entering SMM is in real address mode with paging disabled (CR0.PE = CR0.PG = 0). In this initial execution environment, the SMI handler
 can address up to 4 GBytes of memory and can execute all I/O and system instructions.
 
 
 # questions
-flat and cluster 
+flat and cluster
 > huxueshi : my comments for the question, please provide enough background about the question, make it clear for latter reference.
-

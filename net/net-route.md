@@ -224,8 +224,6 @@ static const struct net_device_ops veth_netdev_ops = {
 - [ ] 虽然可以找到 `struct netns_ipv4`，但是暂时不能理解 namespace 可以隔离 IPv4
 
 
-## vhost-net / virtio-net / vhost-sock
-
 ## arp
 https://github.com/liexusong/linux-source-code-analyze/blob/master/arp-neighbour.md
 
@@ -307,8 +305,7 @@ emmmmmmm, 只是 DUP 上的封装
 ## 一些 backtrace 的内容
 在启动 dhcp 的时候，可以检测到两次 `irq_msi_compose_msg` 和写入网络的操作。
 
-```c
-/*
+```txt
 #0  irq_msi_compose_msg (data=0xc71af010, msg=0xc7337d14) at arch/x86/kernel/apic/msi.c:29
 #1  0xc1097bd7 in irq_chip_compose_msi_msg (data=<optimized out>, msg=<optimized out>) at kernel/irq/chip.c:1087
 #2  0xc109a7c7 in msi_domain_activate (domain=<optimized out>, irq_data=0xc71af010) at kernel/irq/msi.c:88
@@ -341,7 +338,7 @@ emmmmmmm, 只是 DUP 上的封装
 Backtrace stopped: previous frame inner to this frame (corrupt stack?)
 ```
 
-```c
+```txt
 #0  irq_msi_compose_msg (data=0xc71af010, msg=0xc7337d0c) at arch/x86/kernel/apic/msi.c:29
 #1  0xc1097bd7 in irq_chip_compose_msi_msg (data=<optimized out>, msg=<optimized out>) at kernel/irq/chip.c:1087
 #2  0xc109a782 in msi_domain_set_affinity (irq_data=0xc71af010, mask=<optimized out>, force=<optimized out>) at kernel/irq/msi.c:76
@@ -373,6 +370,46 @@ Backtrace stopped: previous frame inner to this frame (corrupt stack?)
 #28 0xbf94d27c in ?? ()
 Backtrace stopped: previous frame inner to this frame (corrupt stack?)
 ```
+
+## [ ] 分析一下这些 flags，比如 `SOCK_ZEROCOPY`
+
+```c
+/* Sock flags */
+enum sock_flags {
+	SOCK_DEAD,
+	SOCK_DONE,
+	SOCK_URGINLINE,
+	SOCK_KEEPOPEN,
+	SOCK_LINGER,
+	SOCK_DESTROY,
+	SOCK_BROADCAST,
+	SOCK_TIMESTAMP,
+	SOCK_ZAPPED,
+	SOCK_USE_WRITE_QUEUE, /* whether to call sk->sk_write_space in sock_wfree */
+	SOCK_DBG, /* %SO_DEBUG setting */
+	SOCK_RCVTSTAMP, /* %SO_TIMESTAMP setting */
+	SOCK_RCVTSTAMPNS, /* %SO_TIMESTAMPNS setting */
+	SOCK_LOCALROUTE, /* route locally only, %SO_DONTROUTE setting */
+	SOCK_MEMALLOC, /* VM depends on this socket for swapping */
+	SOCK_TIMESTAMPING_RX_SOFTWARE,  /* %SOF_TIMESTAMPING_RX_SOFTWARE */
+	SOCK_FASYNC, /* fasync() active */
+	SOCK_RXQ_OVFL,
+	SOCK_ZEROCOPY, /* buffers from userspace */
+	SOCK_WIFI_STATUS, /* push wifi status to userspace */
+	SOCK_NOFCS, /* Tell NIC not to do the Ethernet FCS.
+		     * Will use last 4 bytes of packet sent from
+		     * user-space instead.
+		     */
+	SOCK_FILTER_LOCKED, /* Filter cannot be changed anymore */
+	SOCK_SELECT_ERR_QUEUE, /* Wake select on error queue */
+	SOCK_RCU_FREE, /* wait rcu grace period in sk_destruct() */
+	SOCK_TXTIME,
+	SOCK_XDP, /* XDP is attached */
+	SOCK_TSTAMP_NEW, /* Indicates 64 bit timestamps always */
+	SOCK_RCVMARK, /* Receive SO_MARK  ancillary data with packet */
+};
+```
+
 
 [^2]: 用芯探核:基于龙芯的 Linux 内核探索解析
 [^4]: http://yuba.stanford.edu/rcp/
