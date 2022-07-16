@@ -36,7 +36,15 @@
 
 - QEMU
 - Linux
+  - virtio vhost OVS
+- DPDK
 - Rust
-- CloudHppervisor
+  - CloudHppervisor
+- 找一些 Data Center 相关的文章看看。
+  - 量化中相关的章节
 - CPU
   - [ ] 虽然，但是很难找到和多核相关的 CPU
+
+## pending blog
+- user mode Linux
+- library OS

@@ -32,9 +32,6 @@
 ## Unix domain socket
 [Introduction](https://stackoverflow.com/questions/21032562/example-to-explain-unix-domain-socket-af-inet-vs-af-unix)
 
-## dpdk
-- [ ] https://github.com/F-Stack/f-stack : 似乎是对于 dpdk 的封装
-- [ ] https://blog.selectel.com/introduction-dpdk-architecture-principles/
 
 ## [ ] openvswitch
 - [openvswitch](https://www.zhihu.com/column/software-defined-network)
@@ -129,10 +126,12 @@ https://www.cyberithub.com/list-network-interfaces/
   - 存在好几种情况，可以让内核分配 port ，例如在 bind 之前 connect 或者 listen，可以通过 getsockname 来获取
 - [Why does DHCP use UDP and not TCP?](https://networkengineering.stackexchange.com/questions/64401/why-does-dhcp-use-udp-and-not-tcp)
   - 因为 TCP 是 connection-oriented 的，负责两个 Host 之间的联系，无法进行 broadcast 的操作
-
 - [ICMP vs IGMP](https://www.jianshu.com/p/4bd8758f9fbd)
 - [Wireshark 的工作原理](https://stackoverflow.com/questions/29620590/where-does-the-wireshark-capture-the-packets)
   - [How does the `AF_PACKET` socket work in Linux?](https://stackoverflow.com/questions/62866943/how-does-the-af-packet-socket-work-in-linux)
+- [flow control vs congestion control](https://stackoverflow.com/questions/16473038/whats-the-difference-between-flow-control-and-congestion-control-in-tcp)
+  - Congestion control is a global issue – involves every router and host within the subnet
+  - Flow control, that is scoped from point to point, involves just sender and receiver.
 
 ## packet
 - [ ] wireshark 使用 `AF_PACKET` ，那么 bpf filter 发生在什么位置啊?

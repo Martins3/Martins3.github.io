@@ -142,7 +142,6 @@ http://www.linuxfromscratch.org/lfs/view/10.0-rc1/prologue/foreword.html
 ## another os
 - [popcorn os](https://news.ycombinator.com/item?id=23060695) linux kernel 的基础上为异构体系统提供支持
 - [minos](https://github.com/minosproject/minos) : 国人开发的 RTOS
-- https://github.com/demikernel/demikernel
 - https://github.com/bottlerocket-os/bottlerocket : 基于linux 为容器而生的操作系统, 类似还有很多, 可以在[awesome linux containers](https://github.com/Friz-zy/awesome-linux-containers) 中间找
 - https://www.freebsd.org/
 - https://www.minix3.org/

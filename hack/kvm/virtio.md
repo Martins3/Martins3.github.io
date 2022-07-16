@@ -4,7 +4,7 @@
 2. Device Driver => Block devices => Virtio block io
 3. Device Driver => Network Device support => Virtio network driver
 
-- [ ] 打开 console 的方法, 不然 mini-img 中的串口无法使用
+- [ ] 打开 console 的方法, 不然 kvm 中的 mini-img 中的串口无法使用
   - 如果不打开 block device driver 的，直接无法启动
 
 
@@ -65,7 +65,6 @@ Device Driver ==> SCSI device support ==> SCSI low-level drivers ==> virtio-scsi
 # TODO
 
 - [ ] /home/maritns3/core/firecracker/src/devices/src/virtio/vsock/csm/connection.rs has a small typo
-- [ ] virtiofs 的代码很少，资料很多，其实值得分析一下
 - [ ] virtio and msi:
 - [ ] We're over optimistic about the meaning of the complexity of virtio, try to read **/home/maritns3/core/linux/drivers/virtio**, please.
 - [ ] what's scsi : https://www.linux-kvm.org/images/archive/f/f5/20110823142849!2011-forum-virtio-scsi.pdf
@@ -95,9 +94,9 @@ static inline int driver_match_device(struct device_driver *drv,
 }
 ```
 
-device_attach 是提供给外部的一个常用的函数，会调用 `bus->probe`，在当前的上下文就是 pci_device_probe 了。
+`device_attach` 是提供给外部的一个常用的函数，会调用 `bus->probe`，在当前的上下文就是 pci_device_probe 了。
 
-- [ ] pci_device_probe 的内容是很简单, 根据设备找驱动的地方在哪里？
+- [ ] `pci_device_probe` 的内容是很简单, 根据设备找驱动的地方在哪里？
   - 根据参数 struct device 获取 pc_driver 和 pci_device
   - 分配 irq number
   - 回调 `pci_driver->probe`, 使用 virtio_pci_probe 为例子
@@ -556,7 +555,7 @@ static int notify_vq(struct kvm *kvm, void *dev, u32 vq)
 - 这些消息都是放到 : kvmtool/x86/mptable.c 中间的，之后 guest kernel 启动的时候，这些数据就可以静态的确定了
 
 
-在 vp_find_vqs_intx 中间注册的函数:
+在 `vp_find_vqs_intx` 中间注册的函数:
 ```c
   rr = request_irq(vp_dev->pci_dev->irq, vp_interrupt, IRQF_SHARED,
       dev_name(&vdev->dev), vp_dev);
