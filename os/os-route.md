@@ -133,7 +133,6 @@ http://www.linuxfromscratch.org/lfs/view/10.0-rc1/prologue/foreword.html
 - [syzkaller](https://github.com/google/syzkaller/blob/master/docs/setup.md) : @todo 暂时不知道如何实现 fuzzer 的
 - [kernelci](https://kernelci.org/)
 - https://github.com/linux-test-project/ltp
-- https://systemd.io/ 了解一下其中的内容
 - https://github.com/jarun/keysniffer
 - https://github.com/orhun/kmon : 内核包管理器，
 - [idea4good](https://gitee.com/idea4good) : 和内核没有什么关系，只是利用 fb 和 shmem，绕过 X 来实现显示让人觉得很有意思

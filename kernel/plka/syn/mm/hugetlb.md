@@ -1,14 +1,13 @@
+# hugetlbfs
+如何分配 1G 的 page
+- https://github.com/lagopus/lagopus/blob/master/docs/how-to-allocate-1gb-hugepages.md
+
 1. 每一个 pagesize 都是添加一个大小
-2. gather_bootmem_prealloc : 似乎的确对于 bootmem 存在特殊处理
+2. `gather_bootmem_prealloc` : 似乎的确对于 bootmem 存在特殊处理
 3. 阅读 linhugetlbfs ，其大致的功能是 : 在该文件系统中间的 mmap 出来的都是 hugepage，但是现在不知道如何测试！
-
-
-
 4. subpool 和 reserved map 都是为了 alloc huge page 处理的。
-5. alloc_huge_page 还会处理 numa 之类的各种业务
-
-6. enqueue_huge_page : huge page 的关系需要单独的分析。
-
+5. `alloc_huge_page` 还会处理 numa 之类的各种业务
+6. `enqueue_huge_page` : huge page 的关系需要单独的分析。
 7. page cache 相关的
 
 ```c
@@ -75,7 +74,7 @@ struct hstate {
 };
 ```
 
-## hugepage_subpool 
+## hugepage_subpool
 ```c
 struct hugepage_subpool *hugepage_new_subpool(struct hstate *h, long max_hpages,
 						long min_hpages);
@@ -84,7 +83,7 @@ void hugepage_put_subpool(struct hugepage_subpool *spool);
 
 被 hugetlbfs_fill_super 调用，也就是一个 mount point 对应一个.
 
-pool 就会用于预留 hugepage 
+pool 就会用于预留 hugepage
 
 
 1. get pages
@@ -202,7 +201,7 @@ hugetlb_reserve_pages :  hugetlb_file_setup 和 hugetlbfs_file_mmap
  * Return the number of new huge pages added to the map.  This
  * number is greater than or equal to zero.
  */
-static long region_add(struct resv_map *resv, long f, long t) // 
+static long region_add(struct resv_map *resv, long f, long t) //
 
 /*
  * vma_needs_reservation, vma_commit_reservation and vma_end_reservation
@@ -385,7 +384,7 @@ int hugetlb_reserve_pages(struct inode *inode,
 ```
 
 ## core two : hugetlb_fault
-  
+
 
 ```c
 /*
@@ -403,7 +402,7 @@ static vm_fault_t hugetlb_cow(struct mm_struct *mm, struct vm_area_struct *vma,
 
 mm/Makefile
 ```c
-obj-$(CONFIG_HUGETLBFS)	+= hugetlb.o 
+obj-$(CONFIG_HUGETLBFS)	+= hugetlb.o
 obj-$(CONFIG_CGROUP_HUGETLB) += hugetlb_cgroup.o
 obj-$(CONFIG_TRANSPARENT_HUGEPAGE) += huge_memory.o khugepaged.o
 ```

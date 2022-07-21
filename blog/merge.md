@@ -638,8 +638,6 @@ c++ 心里苦啊!
 
 ## [little Handbook of Statistical Practice](http://www.jerrydallal.com/LHSP/LHSP.htm)
 
-## [htop 中间含义解释](https://peteris.rocks/blog/htop/)
-
 ## [异步编程](https://luminousmen.com/post/asynchronous-programming-blocking-and-non-blocking)
 
 似乎一直都没有从本质上搞清楚这一个问题，从硬件支持，操作系统，　运行时库文件，以及用户层次
@@ -758,9 +756,6 @@ Rust,绝对不是浅尝辄止的内容。
 
 ## [needs an alternative web](https://www.forbes.com/sites/cognitiveworld/2019/03/15/society-desperately-needs-an-alternative-web/#6bba5f5c24e3)
 文章是好文章，只是GRE还是需要背啊!
-
-## [systemd](https://medium.com/@benmorel/creating-a-linux-service-with-systemd-611b5c8b91d6)
-将长时间运行的程序转化为systemd
 
 ## [如何避免失败](https://blog.ycombinator.com/how-not-to-fail/)
 

@@ -160,16 +160,3 @@ eval "$cmd"
 
 # mount -t 9p -o trans=virtio,version=9p2000.L host0 /mnt/9p
 # 内核参数 : pci=nomsi
-
-# x86 上运行运行 32bit 内核
-# 1 编译出来对应的 qemu
-# mkdir 32bit
-# cd 32bit
-# ../configure --target-list=i386-softmmu
-# kernel_dir=/home/maritns3/core/ld/guest-src/linux-4.4.142 # 指向 32bit 内核
-# qemu=/home/maritns3/core/xqm/32bit/i386-softmmu/qemu-system-i386 # 使用 32bit 的 qemu
-#
-# 实际上，没有必要，因为 kvm 可以运行 32bit 的 guest 内核的，但是调试有点问题
-# 所以正确的操作是
-# 1. 一个终端 k -st
-# 2. 另一个 k -k
