@@ -22,7 +22,11 @@ sudo apt install linux-tools-common linux-tools-generic linux-tools-`uname -r`
 最终效果如下，可以在新的窗口中打开从而可以动态交互。
 ![](./img/dd.svg)
 
-这个工具我使用的非常频繁，所以构建了简单的[一个脚本](https://github.com/Martins3/Martins3.github.io/blob/master/docs/kernel/code/flamegraph.sh)
+这个工具我使用的非常频繁，所以构建了简单的[一个脚本](https://github.com/Martins3/Martins3.github.io/blob/master/docs/kernel/code/flamegraph.sh)，例如:
+
+```sh
+./flamegraph.sh -c 'iperf -c localhost' -g iperf
+```
 
 ## bpftrace
 使用 bpftrace 的 kprobe 可以很容易的动态的获取内核函数的 backtrace

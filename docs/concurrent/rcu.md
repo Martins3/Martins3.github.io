@@ -81,3 +81,5 @@ void irq_exit(void)
 }
 ```
 调用了 `rcu_irq_exit`
+
+## 同时 DPDK 中间也是有 RCU 的: https://doc.dpdk.org/guides/prog_guide/rcu_lib.html

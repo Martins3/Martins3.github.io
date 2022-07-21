@@ -11,15 +11,14 @@
 - 记录笔记是输入的过程，写笔记是输出的过程，从而实现对于知识的完全理解。
 - 总体来说，中文社区的质量比英文的差很多，而且 CSDN 之类的毒瘤，鼓励抄袭盗版，搞中文社区更加是乌烟瘴气。改善这种情况，我认为每一个都从自己做起，尽量输出一些自己的原创内容。
 
-## 方法
+## 搭建方法
 之前也尝试将 blog 放到知乎或者简书上，但是这些平台和我的 github + vim 的笔记记录模式存在较大的冲突，
 虽然可以获得不错的流量，但是最后还是放弃了。
 
 #### 将仓库初始化为 blog
-基础操作 : https://guides.github.com/features/pages/
+基础操作参考这里 : https://guides.github.com/features/pages/
 
-- Github 提供了几个不错的主题，只需要在 `docs/_config.yml` 配置即可
-- 我选择的是 : https://github.com/pages-themes/cayman
+- Github 提供了几个不错的主题，只需要在 `docs/_config.yml` 配置即可，我选择的是 : https://github.com/pages-themes/cayman
 - 我建议将需要 docs/ 作为 blog 而不是整个仓库，如此，其他的位置都是草稿区，而 docs/ 中作为发布的
 
 #### 添加评论
@@ -51,7 +50,7 @@
 
 ## 想法
 看了一些 blog, 谈谈自己的想法:
-- blog 是一个人构建知识体系的过程
+- blog 是一个人构建知识体系的过程。
 - 写 blog 应该是系统的，深入的，而不是零散的，blog 不是笔记，而是思考过程的体现。在 blog 中应该存在互联网中之前没有的东西。
 
 <script src="https://giscus.app/client.js"

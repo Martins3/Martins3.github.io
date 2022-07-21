@@ -30,21 +30,29 @@
 ## 长期计划
 - 分布式
 - 编译
-- 微结构
+- CPU 微结构
+- 操作系统，虚拟化
 
 ## 短期计划
-
 - QEMU
 - Linux
   - virtio vhost OVS
+  - folio
 - DPDK
+- OVS
 - Rust
   - CloudHppervisor
 - 找一些 Data Center 相关的文章看看。
   - 量化中相关的章节
 - CPU
   - [ ] 虽然，但是很难找到和多核相关的 CPU
+- 数据密集型应用
 
 ## pending blog
 - user mode Linux
 - library OS
+- loopback block / loopback network devices
+- Dive into Folio
+- 内核中的编译知识
+  - MaskRay yyds
+- kdump / kexec 以及 initramfs 的 gsG

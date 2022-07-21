@@ -284,7 +284,6 @@ emmmmmmm, 只是 DUP 上的封装
   - [ ] tls 和 wireless 没有深入分析
 - [liexusong](https://github.com/liexusong/linux-source-code-analyze)
 - [sdn book](https://tonydeng.github.io/sdn-handbook/)
-  - [ ] dpdk
   - [ ] vpn
   - [ ] ovs
   - [ ] 以及后面的 sdn 的所有内容

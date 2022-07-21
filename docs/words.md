@@ -39,6 +39,8 @@ Working hard is not just a dial you turn up to 11. It's a complicated, dynamic s
 
 任何一个你不喜欢又离不开的地方，任何一种你不喜欢又摆脱不了的生活，就是监狱。如果你感到痛苦和不自由，希望你心里永远有一团不会熄灭的火焰，不要麻木，不要被同化。[^12]
 
+如果所有做题家的人生目标只是考个编制，带着安全感俯瞰其他人的艰难生活，就算编制到手也不会有真安全。[^13]
+
 [^1]: https://www.zhihu.com/question/443850977/answer/1754327421
 [^2]: https://mp.weixin.qq.com/s/4kN65Eu_mYKmC-GLig082g
 [^3]: https://github.com/cdk8s/cdk8s-team-style/blob/master/other/read-write.md
@@ -51,3 +53,4 @@ Working hard is not just a dial you turn up to 11. It's a complicated, dynamic s
 [^10]: http://paulgraham.com/hwh.html
 [^11]: https://github.com/ruanyf/weekly/blob/master/docs/issue-208.md
 [^12]:《肖申克的救赎》
+[^13]: https://www.bilibili.com/video/BV1cG411W7dx

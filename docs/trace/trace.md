@@ -66,11 +66,6 @@ https://stackoverflow.com/questions/5134891/how-do-i-use-valgrind-to-find-memory
 sudo apt install systemtap-sdt-dev
 ```
 
-## kdump
-when linux crashed, kexec and kdump will dump kernel memory to vmcore
-- https://github.com/crash-utility/crash
-- drgn : 具有明显的速度优势
-
 ## [ ] QEMU 中的 trace
 - [ ] 测试一下, 添加新的 Trace 的方法
 - [ ]  为什么会支持各种 backend, 甚至有的 dtrace 的内容?
@@ -198,6 +193,11 @@ https://load-balancer.inlab.net/manual/performance/measuring-internal-bandwidth-
 
 ## top
 - [ ] 打开 top, 按数值 1 的时候，可以观测那个 CPU 上的 softirq 发生的频率
+
+## dperf
+dpdk 测试工具
+
+- https://github.com/baidu/dperf
 
 
 ## 参考

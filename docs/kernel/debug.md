@@ -1,10 +1,7 @@
 # Kernel 调试
 
-https://github.com/kexecboot/kexecboot
-
 - [disassemble with code and line](https://stackoverflow.com/questions/9970636/view-both-assembly-and-c-code)
 - [如何增大 dmesg buffer 的大小](https://unix.stackexchange.com/questions/412182/how-to-increase-dmesg-buffer-size-in-centos-7-2)
-
 
 # 通过插入预防错误的方法实现
 ```c
@@ -39,6 +36,3 @@ objdump -dS --adjust-vma=0xffffffff85037434 vmlinux
 - https://www.kernel.org/doc/html/latest/kernel-hacking/index.html
 - https://www.kernel.org/doc/html/latest/trace/index.html#
 - https://www.kernel.org/doc/html/latest/dev-tools/index.html
-
-## kexec and kdump
-- [知乎专栏: 5 分钟搞懂 kexec 工作原理](https://zhuanlan.zhihu.com/p/105284305)

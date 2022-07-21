@@ -5,8 +5,6 @@
 
 https://github.com/spdk/spdk : 配合 dpdk 了解一下，还可以分析一下 build your own x 的 tcp stack 的构建过程
 
-https://github.com/linux-rdma/rdma-core
-  - https://www.youtube.com/watch?v=QAIAoNheX-8 : RDMA 的想法应该很简单吧!
 
 https://link.springer.com/chapter/10.1007/978-94-017-7512-0_10
 
