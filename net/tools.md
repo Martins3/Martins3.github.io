@@ -41,3 +41,13 @@ https://github.com/shemminger/iproute2
 
 ## smap
 https://github.com/s0md3v/Smap
+
+## [ ] netstat
+## [ ] dropwatch
+## [ ] ip
+## [ ] ethtool
+## netdata
+- https://github.com/netdata/netdata
+
+## tuned-adm
+- https://linux.die.net/man/1/tuned-adm

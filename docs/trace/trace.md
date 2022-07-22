@@ -17,6 +17,15 @@
 - [ ] 感觉 perf 能做的事情，bpftrace 和 ebpf 都可以做，而且更加好
   - 例如 hardware monitor 在 bpftrace 中和 bcc 中 llcstat-bpfcc 都是可以做的
 
+## perf
+
+1. 记录所有的到达 `tcp_sendmsg` 的 backtrace 和比例
+```sh
+perf probe 'tcp_sendmsg'
+perf record -e probe:tcp_sendmsg -a -g sleep 10
+```
+得到的数据可以使用 flamegraph 处理一下，可以得到非常形象的图形。
+
 ## ftrace-cmd
 https://lwn.net/Articles/410200/ 的记录
 

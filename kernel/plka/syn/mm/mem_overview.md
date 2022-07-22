@@ -1,7 +1,7 @@
 | File                 | blank | comment | code | desc                                                                                                                                                         |
 |----------------------|-------|---------|------|--------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | page_alloc.c         | 1119  | 1988    | 5012 | 分配page frame                                                                                                                                               |
-| memcontrol.c         | 943   | 1399    | 4362 | cgroup                                                                                                                                                              |
+| memcontrol.c         | 943   | 1399    | 4362 | cgroup                                                                                                                                                       |
 | slub.c               | 911   | 991     | 3974 |                                                                                                                                                              |
 | hugetlb.c            | 640   | 1130    | 3158 | superpage 相关的内容吧 @todo                                                                                                                                 |
 | memory.c             | 548   | 1136    | 3100 | pagefault 以及辅助函数，类似于 pagetable 各种操控函数 @todo 分析的清楚 pgfault 那么这个问题就没有什么意义了                                                  |
@@ -19,8 +19,8 @@
 | vmalloc.c            | 383   | 678     | 1689 | vmalloc 实现物理页面和虚拟页面的建立映射                                                                                                                     |
 | vmstat.c             | 325   | 337     | 1479 | 各种统计                                                                                                                                                     |
 | page-writeback.c     | 329   | 1031    | 1472 | Contains functions related to writing back dirty pages at the  address_space level.                                                                          |
-| khugepaged.c         | 243   | 289     | 1417 | transparent hugetlb 的守护进程                                                                                                                                                             |
-| kmemleak.c           | 249   | 615     | 1260 | 识别内核中间内存泄露的工具                                                                                |
+| khugepaged.c         | 243   | 289     | 1417 | transparent hugetlb 的守护进程                                                                                                                               |
+| kmemleak.c           | 249   | 615     | 1260 | 识别内核中间内存泄露的工具                                                                                                                                   |
 | memory_hotplug.c     | 301   | 374     | 1231 | 应该是numa，默认不会编译进去的                                                                                                                               |
 | nommu.c              | 288   | 431     | 1231 | nommu 处理没有mmu的情况                                                                                                                                      |
 | compaction.c         | 338   | 605     | 1215 | 依托于memory migration 实现减少 external fragmentation，但是page_alloc.c 中间不是已经处理过这一个事情了吗 ?　各自侧重在于何处 ?                              |
@@ -40,7 +40,7 @@
 | swap_state.c         | 95    | 184     | 574  | swap cache ? 熟悉的内容.                                                                                                                                     |
 | sparse.c             | 109   | 110     | 572  | 处理sparese memory model                                                                                                                                     |
 | bootmem.c            | 150   | 144     | 517  | memblock的出现已经取消掉东西                                                                                                                                 |
-| list_lru.c           | 101   | 48      | 511  | 依赖于MEMCG_KMEM，默认不使用，好像也不是                                                                                                                               |
+| list_lru.c           | 101   | 48      | 511  | 依赖于MEMCG_KMEM，默认不使用，好像也不是                                                                                                                     |
 | truncate.c           | 86    | 324     | 507  | 将 page 从 page cache 中间删除                                                                                                                               |
 | mlock.c              | 109   | 267     | 492  | 用于mlock系统调用，将有的 vma 需要 lock，到底其上映射的 page 不会被清理掉                                                                                    |
 | page_owner.c         | 124   | 59      | 456  | https://www.kernel.org/doc/html/latest/vm/page_owner.html 内核的检查错误机制，默认被 disable 掉                                                              |
@@ -48,10 +48,10 @@
 | slob.c               | 92    | 124     | 447  | 含有详细的分配器代码，如果开始逐行分析，是一个好入口!                                                                                                        |
 | util.c               | 107   | 241     | 442  | 各种辅助函数，@todo 内容有点杂                                                                                                                               |
 | mremap.c             | 82    | 115     | 440  | mremap 系统调用支持 @todo 查一下tlpi 系统调用的作用吧!                                                                                                       |
-| userfaultfd.c        | 70    | 130     | 387  | 用于支持虚拟机的，似乎defconfig 模式没有将其编译进去                                                                        |
+| userfaultfd.c        | 70    | 130     | 387  | 用于支持虚拟机的，似乎defconfig 模式没有将其编译进去                                                                                                         |
 | kasan/kasan_init.c   | 80    | 41      | 368  |                                                                                                                                                              |
 | slab.h               | 85    | 86      | 360  |                                                                                                                                                              |
-| dmapool.c            | 63    | 112     | 358  | dmapool 用于支持dma 的，                                                                                                     |
+| dmapool.c            | 63    | 112     | 358  | dmapool 用于支持dma 的，                                                                                                                                     |
 | kasan/report.c       | 74    | 34      | 343  |                                                                                                                                                              |
 | zbud.c               | 64    | 236     | 336  | zbud is an special purpose allocator for storing compressed pages.                                                                                           |
 | mempool.c            | 63    | 158     | 328  | 似乎就是基于kmalloc实现的内存池，@todo 所以为什么我们需要内存池啊!0                                                                                          |
@@ -64,7 +64,7 @@
 | highmem.c            | 68    | 141     | 276  |                                                                                                                                                              |
 | page_ext.c           | 64    | 94      | 266  | https://en.wikipedia.org/wiki/Physical_Address_Extension 使用page ext                                                                                        |
 | pagewalk.c           | 44    | 62      | 252  | 各种page walk @todo 没有分析谁来调用!                                                                                                                        |
-| mmu_notifier.c       | 51    | 135     | 251  | 用于支持虚拟机实现hardwared处理                                                                                             |
+| mmu_notifier.c       | 51    | 135     | 251  | 用于支持虚拟机实现hardwared处理                                                                                                                              |
 | process_vm_access.c  | 46    | 84      | 246  | 支持系统调用process_vm_readv 和 process_vm_writev @todo 但是不知道谁在使用这一个东西!                                                                        |
 | nobootmem.c          | 72    | 133     | 240  | 感觉只是为了处理当 bootmem 被取消之后，为了保证interface 的一致而已 ?                                                                                        |
 | swap_slots.c         | 38    | 84      | 238  | 为了降低对于swap_info的锁的争用而是用的                                                                                                                      |
@@ -99,8 +99,8 @@
 | balloon_compaction.c | 20    | 62      | 95   | 和ballon 机制相关                                                                                                                                            |
 | memtest.c            | 16    | 3       | 94   | 测试物理内存是否可用                                                                                                                                         |
 | Makefile             | 10    | 7       | 90   |                                                                                                                                                              |
-| page_poison.c        | 22    | 13      | 89   | 也是为了处理物理内存错误                                                                                                    |
-| interval_tree.c      | 16    | 8       | 88   | interval tree for `mapping->i_mmap`                                                                                                                            |
+| page_poison.c        | 22    | 13      | 89   | 也是为了处理物理内存错误                                                                                                                                     |
+| interval_tree.c      | 16    | 8       | 88   | interval tree for `mapping->i_mmap`                                                                                                                          |
 | gup_benchmark.c      | 21    | 0       | 82   |                                                                                                                                                              |
 | mmzone.c             | 20    | 14      | 81   | management codes for pgdats, zones and page flagsmanagement codes for pgdats, zones and page flags                                                           |
 | vmacache.c           | 18    | 21      | 79   | mm 访问 vma 依赖于此加速                                                                                                                                     |
@@ -108,7 +108,7 @@
 | kmemleak-test.c      | 14    | 32      | 65   |                                                                                                                                                              |
 | quicklist.c          | 18    | 22      | 63   |                                                                                                                                                              |
 | failslab.c           | 14    | 2       | 51   |                                                                                                                                                              |
-| maccess.c            | 15    | 43      | 49   | @todo 看似简单，其实根本不知道是干什么的                                                                                                                                                              |
+| maccess.c            | 15    | 43      | 49   | @todo 看似简单，其实根本不知道是干什么的                                                                                                                     |
 | debug_page_ref.c     | 8     | 1       | 46   |                                                                                                                                                              |
 | mmu_context.c        | 7     | 20      | 37   | use_mm 和 unuse_mm 来切换到特定的mm context,并不是非常清楚会有代码使用这种功能                                                                               |
 | rodata_test.c        | 8     | 16      | 33   |                                                                                                                                                              |

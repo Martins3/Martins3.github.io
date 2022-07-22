@@ -82,7 +82,6 @@
 * [profiler](#profiler)
 * [skbuff](#skbuff)
 * [struct page](#struct-page)
-* [hardware](#hardware)
 * [idel page](#idel-page)
 * [mprotect](#mprotect)
 * [vma](#vma)
@@ -2836,16 +2835,6 @@ extend 主要完成从 kernel 获取的内存地址页的管理，由 per arena 
 
 ## struct page
 - [ ] TODO read it and write a article about it : https://lwn.net/Articles/565097/
-
-## hardware
-https://people.freebsd.org/~lstewart/articles/cpumemory.pdf
-
-1. RAM hardware design (speed and parallelism).
-2. Memory controller designs.
-3. CPU caches.
-4. Direct memory access (DMA) for devices
-
-- [ ] 内存控制器的代码在哪里可以找到， 如何实现查找对应
 
 ## idel page
 - [ ] page_is_young()

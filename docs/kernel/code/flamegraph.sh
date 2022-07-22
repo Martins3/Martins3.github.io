@@ -8,8 +8,7 @@
 
 WORKDIR=/home/maritns3/core/vn/tmp/flame
 
-set -eu
-set -o xtrace
+set -e
 function usage() {
   echo "Usage :   [options] [--]
 
