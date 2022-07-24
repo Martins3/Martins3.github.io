@@ -375,3 +375,4 @@ docs/qemu/glib/glib
 .vim-bookmarks
 tmp/
 *.bkp
+.DS_Store

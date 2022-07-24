@@ -606,7 +606,7 @@ x86_allocate_cpu_irq 会创建出来一个 qemu_irq 出来，其 handler 为 pic
 Backtrace stopped: Cannot access memory at address 0xffffc90000004010
 */
 ```
-这里留下一个问题，在 common_interrupt 的参数 vector = 37 和 nvme_irq 的参数 irq=24 分别值得是什么?
+这里留下一个问题，在 `common_interrupt` 的参数 vector = 37 和 `nvme_irq` 的参数 irq=24 分别值得是什么?
 
 #### start from idt
 
@@ -689,7 +689,7 @@ idtentry.h 会分别被 c 源文件和 asm 源文件 include，所以其定义�
   idtentry_irq vector func
 ```
 
-在 `arch/x86/entry/entry_64.S` 中间定义了 idtentry_irq，下面分析其是如何被一步步展开的:
+在 `arch/x86/entry/entry_64.S` 中间定义了 `idtentry_irq`，下面分析其是如何被一步步展开的:
 ```asm
 .macro idtentry_irq vector cfunc
   idtentry \vector asm_\cfunc \cfunc has_error_code=1
@@ -742,25 +742,25 @@ asm_common_interrupt
   call  common_interrupt
   jmp error_return
 ```
-common_interrupt 是一般设备中断的入口, 例如 ipi 以及 timer 等中断的走的入口不同。
+`common_interrupt` 是一般设备中断的入口, 例如 ipi 以及 timer 等中断的走的入口不同。
 
 #### route to interrupt handler
-不同的中断会走不同的 idt 入口，但是那些常规中断最后到达 common_interrupt, 在 idt 不同入口体现在其调用 common_interrupt 的参数 vector 不同。
+不同的中断会走不同的 idt 入口，但是那些常规中断最后到达 `common_interrupt`, 在 idt 不同入口体现在其调用 `common_interrupt` 的参数 vector 不同。
 
-- common_interrupt : 查看 DEFINE_IDTENTRY_IRQ 的定义，common_interrupt 接受两个参数 `struct pt_regs *regs, u32 vector`
-  - 从 percpu irq_desc 数组也就是 `vector_irq` 中找到获取 irq_desc
-  - handle_irq
-    - generic_handle_irq_desc : 调用 irq_desc::handle_irq 来选择 edge 还是 level 的处理
-      - handle_edge_irq
-        - handle_irq_event
-          - handle_irq_event_percpu
+- `common_interrupt` : 查看 `DEFINE_IDTENTRY_IRQ` 的定义，`common_interrupt` 接受两个参数 `struct pt_regs *regs, u32 vector`
+  - 从 `percpu irq_desc` 数组也就是 `vector_irq` 中找到获取 `irq_desc`
+  - `handle_irq`
+    - `generic_handle_irq_desc` : 调用 `irq_desc::handle_irq` 来选择 edge 还是 level 的处理
+      - `handle_edge_irq`
+        - `handle_irq_event`
+          - `handle_irq_event_percpu`
             - `__handle_irq_event_percpu`
-              - for_each_action_of_desc(desc, action)
-              - action->handler(irq, action->dev_id);
+              - `for_each_action_of_desc(desc, action)`
+              - `action->handler(irq, action->dev_id)`
 
-irq_desc 同时存在 handle_irq 和 action，前者来注册 handle_edge_irq ，后者注册 nvme_irq
-在 Professional Linux Kerne Architecture 的 14.1.5 Interrupt Flow Handling 的分析是很有道理的，通过 irq_desc::handle_irq 来处理 flow 的，
-通过 irq_desc::action 实现具体 irq 需要执行的动作。
+`irq_desc` 同时存在 `handle_irq` 和 action，前者来注册 `handle_edge_irq` ，后者注册 `nvme_irq`
+在 Professional Linux Kerne Architecture 的 14.1.5 Interrupt Flow Handling 的分析是很有道理的，通过 `irq_desc::handle_irq` 来处理 flow 的，
+通过 `irq_desc::action` 实现具体 irq 需要执行的动作。
 
 ```c
 struct irq_desc {
@@ -773,7 +773,7 @@ struct irq_desc {
 ioapic 的作用的输入是引脚编号，其最后会告知一个 lapic 的哪一个中断到了
 
 简单来说，这个引脚编号，就是对应着 gsi, 在内核中，也称之为 linux irq
-通过调用函数 irq_to_desc 可以索引到 irq_desc
+通过调用函数 `irq_to_desc` 可以索引到 `irq_desc`
 ```c
 struct irq_desc *irq_to_desc(unsigned int irq)
 {
@@ -1168,7 +1168,7 @@ struct PICCommonState {
 }
 ```
 
-在 pic_set_irq 中可以看到 PICCommonState::elcr 如何影响中断的
+在 `pic_set_irq` 中可以看到 PICCommonState::elcr 如何影响中断的
 ```c
 static void pic_set_irq(void *opaque, int irq, int level)
 {

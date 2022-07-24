@@ -50,7 +50,6 @@ https://doc.rust-lang.org/stable/rust-by-example/mod/split.html
 4. https://github.com/aylei/leetcode-rust
 
 
-
 #### This is fun
 3. https://blog.subnetzero.io/post/building-language-vm-part-00/
 4. https://vnduongthanhtung.gitbooks.io/migrate-from-c-to-rust/content/string-manipulations.html

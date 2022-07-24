@@ -1,4 +1,3 @@
--> martins3 <-
 # 深入理解 context switch
 
 - [ ] Documentation/x86/entry_64.rst 特别的说明了 swapgs 的问题
@@ -9,20 +8,20 @@
 4. interrupt
 
 - `__schedule`
-  - pick_next_task
-  - context_switch 
+  - `pick_next_task`
+  - `context_switch`
     - `__switch_to_asm`
       - `__switch_to`
-        - switch_fpu_prepare
-        - save_fsgs : 将 prev task 的 fs(gs)index(base) 保存一下
-        - load_TLS : 设置 next task 的 gdt 中间的 TLS 
-    	  - savesegment(es, prev->es);
-		    - loadsegment(es, next->es);
+        - `switch_fpu_prepare`
+        - `save_fsgs` : 将 prev task 的 fs(gs)index(base) 保存一下
+        - `load_TLS` : 设置 next task 的 gdt 中间的 TLS
+    	  - `savesegment(es, prev->es);`
+		    - `loadsegment(es, next->es);`
 	      - savesegment(ds, prev->ds);
 		    - loadsegment(ds, next->ds);
-        - x86_fsgsbase_load
-        - this_cpu_write(cpu_current_top_of_stack, task_top_of_stack(next_p)); // 可能是访问 TSS 过于费劲，所以将数值保存在此处 ?
-        - update_task_stack
+        - `x86_fsgsbase_load`
+        - `this_cpu_write(cpu_current_top_of_stack, task_top_of_stack(next_p));` // 可能是访问 TSS 过于费劲，所以将数值保存在此处 ?
+        - `update_task_stack`
 
 
 | preserved registers               | scratch registers                         |
@@ -87,7 +86,7 @@ struct pt_regs {
 
 
 [^4] 的笔记整理:
-其中论述的核心在 switch_to 这个 macro 
+其中论述的核心在 switch_to 这个 macro
 
 The short list context switching tasks:
 - Repointing the work space: Restore the stack (SS:SP)
@@ -264,7 +263,7 @@ static inline void switch_fpu_prepare(struct fpu *old_fpu, int cpu)
 实现修改kernel stack 的目的.
 
 > https://en.wikipedia.org/wiki/Task_state_segment
-> 
+>
 > The TSS may reside anywhere in memory. A segment register called the task register (TR) holds a segment selector that points to a valid TSS segment descriptor which resides in the GDT (a TSS descriptor may not reside in the LDT). Therefore, to use a TSS the following must be done by the operating system kernel:
 > 1. Create a TSS descriptor entry in the GDT
 > 2. Load the TR with the segment selector for that segment

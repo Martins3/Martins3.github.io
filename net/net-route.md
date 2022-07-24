@@ -374,42 +374,49 @@ Backtrace stopped: previous frame inner to this frame (corrupt stack?)
 ```c
 /* Sock flags */
 enum sock_flags {
-	SOCK_DEAD,
-	SOCK_DONE,
-	SOCK_URGINLINE,
-	SOCK_KEEPOPEN,
-	SOCK_LINGER,
-	SOCK_DESTROY,
-	SOCK_BROADCAST,
-	SOCK_TIMESTAMP,
-	SOCK_ZAPPED,
-	SOCK_USE_WRITE_QUEUE, /* whether to call sk->sk_write_space in sock_wfree */
-	SOCK_DBG, /* %SO_DEBUG setting */
-	SOCK_RCVTSTAMP, /* %SO_TIMESTAMP setting */
-	SOCK_RCVTSTAMPNS, /* %SO_TIMESTAMPNS setting */
-	SOCK_LOCALROUTE, /* route locally only, %SO_DONTROUTE setting */
-	SOCK_MEMALLOC, /* VM depends on this socket for swapping */
-	SOCK_TIMESTAMPING_RX_SOFTWARE,  /* %SOF_TIMESTAMPING_RX_SOFTWARE */
-	SOCK_FASYNC, /* fasync() active */
-	SOCK_RXQ_OVFL,
-	SOCK_ZEROCOPY, /* buffers from userspace */
-	SOCK_WIFI_STATUS, /* push wifi status to userspace */
-	SOCK_NOFCS, /* Tell NIC not to do the Ethernet FCS.
-		     * Will use last 4 bytes of packet sent from
-		     * user-space instead.
-		     */
-	SOCK_FILTER_LOCKED, /* Filter cannot be changed anymore */
-	SOCK_SELECT_ERR_QUEUE, /* Wake select on error queue */
-	SOCK_RCU_FREE, /* wait rcu grace period in sk_destruct() */
-	SOCK_TXTIME,
-	SOCK_XDP, /* XDP is attached */
-	SOCK_TSTAMP_NEW, /* Indicates 64 bit timestamps always */
-	SOCK_RCVMARK, /* Receive SO_MARK  ancillary data with packet */
+    SOCK_DEAD,
+    SOCK_DONE,
+    SOCK_URGINLINE,
+    SOCK_KEEPOPEN,
+    SOCK_LINGER,
+    SOCK_DESTROY,
+    SOCK_BROADCAST,
+    SOCK_TIMESTAMP,
+    SOCK_ZAPPED,
+    SOCK_USE_WRITE_QUEUE, /* whether to call sk->sk_write_space in sock_wfree */
+    SOCK_DBG, /* %SO_DEBUG setting */
+    SOCK_RCVTSTAMP, /* %SO_TIMESTAMP setting */
+    SOCK_RCVTSTAMPNS, /* %SO_TIMESTAMPNS setting */
+    SOCK_LOCALROUTE, /* route locally only, %SO_DONTROUTE setting */
+    SOCK_MEMALLOC, /* VM depends on this socket for swapping */
+    SOCK_TIMESTAMPING_RX_SOFTWARE,  /* %SOF_TIMESTAMPING_RX_SOFTWARE */
+    SOCK_FASYNC, /* fasync() active */
+    SOCK_RXQ_OVFL,
+    SOCK_ZEROCOPY, /* buffers from userspace */
+    SOCK_WIFI_STATUS, /* push wifi status to userspace */
+    SOCK_NOFCS, /* Tell NIC not to do the Ethernet FCS.
+             * Will use last 4 bytes of packet sent from
+             * user-space instead.
+             */
+    SOCK_FILTER_LOCKED, /* Filter cannot be changed anymore */
+    SOCK_SELECT_ERR_QUEUE, /* Wake select on error queue */
+    SOCK_RCU_FREE, /* wait rcu grace period in sk_destruct() */
+    SOCK_TXTIME,
+    SOCK_XDP, /* XDP is attached */
+    SOCK_TSTAMP_NEW, /* Indicates 64 bit timestamps always */
+    SOCK_RCVMARK, /* Receive SO_MARK  ancillary data with packet */
 };
 ```
 
 ## [ ] 分析一下 /proc/net
 ## [ ] 分析目录 /proc/sys/net
+
+## firewall
+
+nixos 默认是打开防火墙的：
+- https://nixos.org/manual/nixos/unstable/options.html#opt-networking.firewall.enable
+
+这导致了机器可以 ping，但是 iperf 或者 python -m http.server 无法链接。
 
 [^2]: 用芯探核:基于龙芯的 Linux 内核探索解析
 [^4]: http://yuba.stanford.edu/rcp/

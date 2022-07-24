@@ -115,3 +115,6 @@ sudo ln -f -s llvm-as-11 llvm-as
 sudo ln -f -s clangd-11  clangd
 sudo ln -f -s clang-tidy-11 clang-tidy
 ```
+
+## static key
+- `sched_dynamic_update`

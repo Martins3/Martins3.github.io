@@ -38,6 +38,7 @@
 ## 工具
 - [cxx](https://github.com/dtolnay/cxx) : safe FFI between Rust and C++
 - [pyo3](https://github.com/PyO3/pyo3) : Calling Rust from Python using PyO3
+- [rust-clippy](https://github.com/rust-lang/rust-clippy) : 更加优雅的报错
 
 ## kernel
 - https://security.googleblog.com/2021/04/rust-in-linux-kernel.html
