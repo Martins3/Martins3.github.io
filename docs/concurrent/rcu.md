@@ -6,23 +6,8 @@
 - https://mp.weixin.qq.com/s/SZqmxMGMyruYUH5n_kobYQ
 
 
-What is Rcu, Really[^1]:
+## What is Rcu
 
-RCU ensures that reads are coherent by maintaining multiple versions of objects and ensuring that they are not freed up until all pre-existing read-side critical sections complete.
-
-[LoyenWang](https://www.cnblogs.com/LoyenWang/p/12681494.html)
-
-- Reader
-    - 使用 rcu_read_lock 和 rcu_read_unlock 来界定读者的临界区，访问受 RCU 保护的数据时，需要始终在该临界区域内访问；
-    - 在访问受保护的数据之前，需要使用 rcu_dereference 来获取 RCU-protected 指针；
-    - *当使用不可抢占的 RCU 时，rcu_read_lock/rcu_read_unlock 之间不能使用可以睡眠的代码；*
-- Updater
-    - 多个 Updater 更新数据时，需要使用互斥机制进行保护；
-    - Updater 使用`rcu_assign_pointer`来移除旧的指针指向，指向更新后的临界资源；
-    - Updater 使用 synchronize_rcu 或 call_rcu 来启动 Reclaimer，对旧的临界资源进行回收，其中 synchronize_rcu 表示同步等待回收，call_rcu 表示异步回收；
-- Reclaimer
-    - Reclaimer 回收的是旧的临界资源；
-    - 为了确保没有读者正在访问要回收的临界资源，Reclaimer 需要等待所有的读者退出临界区，这个等待的时间叫做宽限期（Grace Period）；
 ```c
 // if debug config is closed
 static __always_inline void rcu_read_lock(void)
@@ -31,28 +16,28 @@ static __always_inline void rcu_read_lock(void)
   // NO !!!!!!!!!!!!! this is impossible
 }
 
-#define rcu_assign_pointer(p, v)					      \
-do {									      \
-	uintptr_t _r_a_p__v = (uintptr_t)(v);				      \
-									      \
-	if (__builtin_constant_p(v) && (_r_a_p__v) == (uintptr_t)NULL)	      \
-		WRITE_ONCE((p), (typeof(p))(_r_a_p__v));		      \
-	else								      \
-		smp_store_release(&p, RCU_INITIALIZER((typeof(p))_r_a_p__v)); \
+#define rcu_assign_pointer(p, v)                          \
+do {                                          \
+    uintptr_t _r_a_p__v = (uintptr_t)(v);                     \
+                                          \
+    if (__builtin_constant_p(v) && (_r_a_p__v) == (uintptr_t)NULL)        \
+        WRITE_ONCE((p), (typeof(p))(_r_a_p__v));              \
+    else                                      \
+        smp_store_release(&p, RCU_INITIALIZER((typeof(p))_r_a_p__v)); \
 } while (0)
 
 void synchronize_rcu(void)
 {
-	RCU_LOCKDEP_WARN(lock_is_held(&rcu_bh_lock_map) ||
-			 lock_is_held(&rcu_lock_map) ||
-			 lock_is_held(&rcu_sched_lock_map),
-			 "Illegal synchronize_rcu() in RCU read-side critical section");
-	if (rcu_blocking_is_gp())
-		return;
-	if (rcu_gp_is_expedited())
-		synchronize_rcu_expedited();
-	else
-		wait_rcu_gp(call_rcu);
+    RCU_LOCKDEP_WARN(lock_is_held(&rcu_bh_lock_map) ||
+             lock_is_held(&rcu_lock_map) ||
+             lock_is_held(&rcu_sched_lock_map),
+             "Illegal synchronize_rcu() in RCU read-side critical section");
+    if (rcu_blocking_is_gp())
+        return;
+    if (rcu_gp_is_expedited())
+        synchronize_rcu_expedited();
+    else
+        wait_rcu_gp(call_rcu);
 }
 ```
 
@@ -66,18 +51,18 @@ sleepable rcu
 void irq_exit(void)
 {
 #ifndef __ARCH_IRQ_EXIT_IRQS_DISABLED
-	local_irq_disable();
+    local_irq_disable();
 #else
-	lockdep_assert_irqs_disabled();
+    lockdep_assert_irqs_disabled();
 #endif
-	account_irq_exit_time(current);
-	preempt_count_sub(HARDIRQ_OFFSET);
-	if (!in_interrupt() && local_softirq_pending())
-		invoke_softirq(); ==================================》 __do_softirq
+    account_irq_exit_time(current);
+    preempt_count_sub(HARDIRQ_OFFSET);
+    if (!in_interrupt() && local_softirq_pending())
+        invoke_softirq(); ==================================》 __do_softirq
 
-	tick_irq_exit();
-	rcu_irq_exit();
-	trace_hardirq_exit(); /* must be last! */
+    tick_irq_exit();
+    rcu_irq_exit();
+    trace_hardirq_exit(); /* must be last! */
 }
 ```
 调用了 `rcu_irq_exit`
@@ -86,3 +71,62 @@ void irq_exit(void)
 
 ## kernel functions
 - [ ] `rcu_read_lock_bh` ：使用 ./hack/iperf.svg 中可以参考，就是因为在此处
+
+## 读读 LoyenWang 的 blog
+
+###  https://www.cnblogs.com/LoyenWang/p/12681494.html
+
+- [ ] 没有优先级反转的问题；
+- [ ] 当使用不可抢占的 RCU 时，`rcu_read_lock`/`rcu_read_unlock`之间不能使用可以睡眠的代码
+  - [ ] 什么代码会导致睡眠?
+
+### https://www.cnblogs.com/LoyenWang/p/12770878.html
+
+- [ ] 为什么需要组织成为 tree 的啊?
+
+### 代码分析
+
+softirq：
+1. 时钟中断的时候
+```txt
+invoke_rcu_core+1
+rcu_sched_clock_irq+497
+update_process_times+147
+tick_sched_handle+34
+tick_sched_timer+109
+__hrtimer_run_queues+298
+hrtimer_interrupt+262
+__sysvec_apic_timer_interrupt+127
+sysvec_apic_timer_interrupt+157
+asm_sysvec_apic_timer_interrupt+18
+native_safe_halt+11
+default_idle+10
+default_idle_call+50
+do_idle+478
+cpu_startup_entry+25
+start_secondary+278
+secondary_startup_64_no_verify+213
+```
+
+2. 中断结束的位置开始执行 softirq 的
+```txt
+rcu_core_si+1
+__softirqentry_text_start+238
+__irq_exit_rcu+181
+sysvec_apic_timer_interrupt+162
+asm_sysvec_apic_timer_interrupt+18
+native_safe_halt+11
+default_idle+10
+default_idle_call+50
+do_idle+478
+cpu_startup_entry+25
+start_secondary+278
+secondary_startup_64_no_verify+213
+```
+- 为什么 `__irq_exit_rcu` 会调用到 `__softirqentry_text_start`，是 backtrace 的 bug 吧！
+
+### 参考资料
+- [What is RCU, Fundamentally?](https://lwn.net/Articles/262464/)
+- [What is RCU? Part 2: Usage](https://lwn.net/Articles/263130/)
+- [RCU part 3: the RCU API](https://lwn.net/Articles/264090/)
+- [kernel doc](https://www.kernel.org/doc/Documentation/RCU/)
