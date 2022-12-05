@@ -1,0 +1,2 @@
+- https://blogs.vmware.com/virtualblocks/2022/08/30/announcing-vsan-8-with-vsan-express-storage-architecture/
+- https://www.yellow-bricks.com/2022/08/30/introducing-vsphere-8/

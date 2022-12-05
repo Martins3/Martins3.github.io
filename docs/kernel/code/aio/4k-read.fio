@@ -1,0 +1,12 @@
+[global]
+ioengine=libaio
+iodepth=128
+
+[trash]
+bs=4k
+direct=1
+# filename=/dev/ublkb0
+filename=/root/x
+rw=readwrite
+runtime=10
+time_based

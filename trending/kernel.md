@@ -1,0 +1,75 @@
+# kernel 中没有看懂的 commit
+
+- 415d832497098030241605c52ea83d4e2cfa7879 : 因为 out-of-order 修复 test_and_set_bit
+- spi 是啥？
+- kmap_atomic 转换为 kmap_local_page
+- 4ba4f41942745f1906c06868a4acc6c926463f53: kvm_create_vm_debugfs 是做啥的
+- d3b38596875dbc709b4e721a5873f4663d8a9ea : blk mq 的一个 bug 修复
+- abfcf55d8b07a990589301bc64d82a5d26680956 : acl 相关的
+- 95607ad99b5a4e3e69e025621165753718a6ea98 : 一系列 memory 模块的修复patch
+- 41a55567b9e31cb852670684404654ec4fd0d8d6 : CONFIG enable 是什么意思
+- c40e8341e3b3bb27e3a65b06b5b454626234c4f0 : 一系列的 schduler 的修复
+- 0c4a95417ee4b1013ddf115fb6dbe36a2503a598 : 连续的修复了很多 data race 的问题，感觉是通过什么工具找出来
+- c40e8341e3b3bb27e3a65b06b5b454626234c4f0 : cgroup 和 scheduler 的修复
+- d92725256b4f22d084b813b37ddc394da79aacab : avoid unnecessary page fault retires on shared memory types
+- 581711c46612c1fd7f98960f9ad53f04fdb89853 : io uring 中的网络问题
+- drivers/thermal/thermal_core.c 是做啥的，和 scheduler 什么关系 ?
+  - drivers/cpufreq/cpufreq.c
+  - drivers/acpi/processor_thermal.c
+- d6ffe6067a54972564552ea45d320fb98db1ac5e : memory model，一生之敌
+- b467192ec7070d2d6d14ab5e6774a8afdcc9e89d : a serila kernel memory fix
+- 0495e337b7039191dfce6e03f5f830454b1fae6b : 修复 slub 的一个 deadlock 问题
+- 2555283eb40df89945557273121e9393ef9b542b : 修复一个 rmap 的问题
+- 8782fb61cc848364e1e1599d76d3c9dd58a1cc06 : mmap 和 page walk 的 race
+- 685ed983e2dc330680a076a1fd37ebe04017df91 : 多个 x86 kvm 的修复
+- 2f79cdfe58c13949bbbb65ba5926abfe9561d0ec : fs 中的一个 barrier 问题
+- e35be05d748a1b82c0bd3f62dafbad859a3bd027 : driver core
+- d2b768c3d44af4ea19c0f52e718acca01ebb22e8 : 一系列的 io uring 的修复
+- 873aefb376bbc0ed1dd2381ea1d6ec88106fdbd4 : vfio refercount 的 bug 修复
+- 8cbb2b50ee2dcb082675237eaaa48fe8479f8aa5 ：softirq on stack
+- 2ccd4502f512e04b6cc01995da730e8754529cf9 ：iommu
+- drivers/tty/serial/sifive.c : 为什么 RISC-V 需要一个额外的 tty 设备
+- c0feea594e058223973db94c1c32a830c9807c86 : workqueue
+- e775f93f2ab976a2cdb4a7b53063cbe890904f73 : io uring
+- 317fab7ec55d5a150bce46f37efbc942013a8c5b : 几个 KVM fix
+- e45cc288724f0cfd497bb5920bcfa60caa335729 : memory 相关的 patch
+- 3800a713b6070d4f03fb43613a7b7d536a99b2b7 : memory hotfix
+- 06bbaa6dc53cb72040db952053432541acb9adc7
+- 195624d9c26b64c6856863da30ec578a790feec4 : tun , 顺便补充到 qemu manual 中如何使用网络吧
+- 70575e77839f4c5337ce2653b39b86bb365a870e : vhost
+- /home/martins3/core/linux/arch/x86/kernel/cpu/microcode/ : 和 firmware 相关的 microcode
+  - https://www.intel.com/content/www/us/en/developer/articles/technical/software-security-guidance/secure-coding/loading-microcode-os.html
+- 890f242084c9eac18ef87031d95e0bdbaac01ed4 : rcu
+- driver/dma 下的代码到底在处理什么 ?
+- 513389809e138ae903b6ef43c1d5d2ffaf4dca17 : 开始怀疑，现在这种方法看内核真的有用吗 ?
+- ef688f8b8cd3eb20547a6543f03e3d8952b87769 : kvm
+- 8aeab132e05fefc3a1a5277878629586bd7a3547 : virtio vDPA
+- 6ad931a232e71620c6dbb8d573ccef51f84f2566 : iommu
+- adf4bfc4a9ab86be0b72fa9cadc9e7ab6ad15dfe : cgroup
+- 52abb27abfff8c5ddf44eef4d759f3d1e9f166c5 : slab
+- 30c999937f69abf935b0228b8411713737377d9e : scheduer
+- d3cf40513330752238ae585fdb0e46ec6baa588b : vfio
+- fac35ba763ed07ba93154c95ffc0c4a55023707f : hugetlb
+- f311d498be8f1aa49d5cfca0b18d6db4f77845b7 : kvm
+- init_osnoise_tracer : trace 实际上比我想想的更加有趣
+- bd9a3dba185ce6701b41f0341470d3f53bbbbaed : sched/psi
+- 5e714bf1713b4b096d20ec75c13880b7086964bd : memory 的
+- 440b7895c990a63869a9d55e5c2502dd501a124e : memory fix
+- a3ccea6ed80db39e8aaed22d896099be477e1f85 : device mapper
+- 31d8aaa87fcef1be5932f3813ea369e21bd3b11d : rcu
+- 05b4ebd2c7cbb3671c376754b37b4963dd08a3a2 : kvm
+- c70055d8d9a0b2c500446065c1b80d9836789596 : scheduler
+- c6e0e874a8fa055b6b2f536c282a523b9439b209 : nvme tcp
+- 3c339dbd139e14c612c521083023eabfcadfd8a5 : 一系列的 memory fix
+- f526d6a82242f7ee72d2a4448eb492622cb7d556 : kvm
+- 089d1c31224e6b266ece3ee555a3ea2c9acbe5c2 : kvm
+- d7c2b1f64e44c98206752a1599b0203ae5e92f27 : memory
+- 4e6b2b2e4f30c29caf89ecfa9ed4d9f97d151102 : iouring
+- 74bd160fd59f104ca15f4582fee97807146a3a7e : kvm
+- 328687151b2a29fe93db4736bfb90da134e52fbf : slab
+- 5b47348fc0b18a78c96f8474cc90b7525ad1bbfe
+- https://www.kernel.org/doc/html/latest/filesystems/zonefs.html
+- 0b1dcc2cf55ae6523c6fbd0d741b3ac28c9f4536 : memory
+- 10bc8e4af65946b727728d7479c028742321b60a : vfs
+- bf82d38c91f857083f2d1b9770fa3df55db2ca3b
+- bdaa78c6aa861f0e8c612a0b2272423d92f0071c : memory

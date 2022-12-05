@@ -1,0 +1,2 @@
+- https://hardwarelottery.github.io/
+- https://www.karanpratapsingh.com/courses/system-design : 解释了一下 API Gateway 是啥
