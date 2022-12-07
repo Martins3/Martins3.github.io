@@ -270,3 +270,7 @@ static inline int driver_match_device(struct device_driver *drv,
       - 回调 `virtio_driver->probe`, 使用 virtnet_probe 作为例子
 
 - [ ] 什么 file operation 的 direct IO 是什么情况 ?
+
+- `__alloc_contig_migrate_range`
+  - fatal_signal_pending 为什么要在这里调用?
+    - 或者说，调用 fatal_signal_pending 的原理是什么?

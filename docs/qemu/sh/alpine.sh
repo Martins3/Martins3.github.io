@@ -9,6 +9,7 @@ hacking_memory="virtio-pmem"
 hacking_memory="none"
 hacking_memory="virtio-mem"
 hacking_memory="numa"
+hacking_memory="prealloc"
 
 hacking_migration=true
 # @todo 尝试在 guest 中搭建一个 vIOMMU
@@ -48,6 +49,8 @@ arg_hacking=""
 arg_img="-drive aio=io_uring,file=${disk_img},format=qcow2,if=virtio"
 root=/dev/vdb2
 
+arg_share_dir="-virtfs local,path=$(pwd),mount_tag=host0,security_model=mapped,id=host0"
+
 if [[ $use_nvme_as_root = true ]]; then
   arg_img="-device nvme,drive=nvme3,serial=foo -drive file=${disk_img},format=qcow2,if=none,id=nvme3"
   root=/dev/nvme1n1
@@ -56,7 +59,7 @@ fi
 # 在 guset 中使用 sudo dmidecode -t bios 查看
 arg_smbios='-smbios type=0,vendor="martins3",version=12,date="2022-2-2", -smbios type=1,manufacturer="Martins3 Inc",product="Hacking Alpine",version=12,serial="1234-4567-abc"'
 arg_hugetlb="default_hugepagesz=2M hugepagesz=1G hugepages=1 hugepagesz=2M hugepages=512"
-arg_hugetlb="default_hugepagesz=1G"
+# arg_hugetlb="default_hugepagesz=1G"
 arg_hugetlb=""
 # 可选参数
 arg_mem_cpu="-m 12G -cpu host -smp 2 -numa node"
@@ -67,11 +70,18 @@ case $hacking_memory in
 "numa")
   # TMP_TODO 有没有什么方法来模拟超级大的内存，例如 100T 的内存
   arg_mem_cpu="-cpu host -m 8G -smp cpus=5"
-  arg_mem_cpu="$arg_mem_cpu -object memory-backend-ram,size=2148M,id=m0 -numa node,memdev=m0,cpus=0-1,nodeid=0"
-  arg_mem_cpu="$arg_mem_cpu -object memory-backend-ram,size=6044M,id=m1 -numa node,memdev=m1,cpus=2-3,nodeid=1"
+  arg_mem_cpu="$arg_mem_cpu -object memory-backend-ram,size=2G,id=m0 -numa node,memdev=m0,cpus=0-1,nodeid=0"
+  arg_mem_cpu="$arg_mem_cpu -object memory-backend-ram,size=6G,id=m1 -numa node,memdev=m1,cpus=2-3,nodeid=1"
   arg_mem_cpu="$arg_mem_cpu -numa node,cpus=4,nodeid=2" # 只有 CPU ，但是没有内存
+  # @todo
   ;;
-
+"prealloc")
+  arg_mem_cpu="-cpu host -m 1G -smp cpus=1"
+  arg_mem_cpu="$arg_mem_cpu -object memory-backend-file,size=1G,prealloc=on,share=on,id=m2,mem-path=/dev/hugepages -numa node,memdev=m2,cpus=0,nodeid=0"
+  if [[ $(cat /sys/kernel/mm/hugepages/hugepages-2048kB/nr_hugepages) != 1000 ]]; then
+    echo 1000 | sudo tee /sys/kernel/mm/hugepages/hugepages-2048kB/nr_hugepages
+  fi
+  ;;
 "virtio-mem")
   # arg_mem_cpu="-m 12G,maxmem=12G"
   # arg_mem_cpu="$arg_mem_cpu -smp sockets=2,cores=2"
@@ -282,6 +292,6 @@ fi
 cmd="${debug_qemu} ${qemu} ${arg_trace} ${debug_kernel} ${arg_img} ${arg_mem_cpu}  \
   ${arg_kernel} ${arg_seabios} ${arg_bridge} ${arg_nvme} ${arg_disk} ${arg_network} \
   ${arg_machine} ${arg_monitor} ${arg_initrd} ${arg_mem_balloon} ${arg_hacking} \
-  ${arg_qmp} ${arg_vfio} ${arg_smbios} ${arg_scsi} ${arg_migration_target}"
+  ${arg_qmp} ${arg_vfio} ${arg_smbios} ${arg_scsi} ${arg_migration_target} ${arg_share_dir}"
 echo "$cmd"
 eval "$cmd"

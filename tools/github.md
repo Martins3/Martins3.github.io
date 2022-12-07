@@ -20,3 +20,16 @@ https://martins3:token@github.com
 
 ## 目前为止，应该是最好的一个显示贡献的
 https://honzaap.github.io/GithubCity/?name=martins3&year=2022
+
+## 如何清空仓库
+- https://stackoverflow.com/questions/4922104/is-it-possible-to-completely-empty-a-remote-git-repository
+
+简单来说:
+```sh
+rm -rf .git
+git init
+git add .
+git commit -m 'Initial commit'
+git remote add origin git@github.com:XXX/xxx.git
+git push --force --set-upstream origin master
+```

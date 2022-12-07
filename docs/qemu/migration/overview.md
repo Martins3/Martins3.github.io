@@ -33,12 +33,14 @@ qemu-system-x86_64: load of migration failed: Invalid argument
 
 - 观测 host swap 的处理
 - 观测 qcow2 的处理
-- 迁移的时候
+  - qcow2 的文件锁的转移
+
+- host swap 似乎会让热升级很难做人的哇
 
 ## 参考这个
 - https://balamuruhans.github.io/2019/01/15/kvm-migration-with-qemu.html
 
+实际上，只是需要这一条命令就可以了:
 ```txt
-migrate_set_capability postcopy-ram off
 migrate -d tcp:localhost:4000
 ```

@@ -428,7 +428,277 @@ hugetlb_vm_op_fault 是一定不会触发的，因为很早的时候就已经被
 
 - [ ] 但是为什么不使用常规路径哇，而是非要改动主线代码?
 
-## reservation
+## 使用 QEMU 分析一下 reservation
+
+```sh
+arg_mem_cpu="$arg_mem_cpu -object memory-backend-file,size=1G,prealloc=off,share=on,id=m2,mem-path=/dev/hugepages -numa node,memdev=m2,cpus=5-7,nodeid=2"
+```
+
+### 分析 on
+
+on 的时候:
+```txt
+HugePages_Total:    1000
+HugePages_Free:      741
+HugePages_Rsvd:        0
+HugePages_Surp:        0
+```
+使用： 259
+
+但是在 guest 中 stress-ng 的时候：
+```txt
+HugePages_Total:    1000
+HugePages_Free:      488
+HugePages_Rsvd:        0
+HugePages_Surp:        0
+Hugepagesize:       2048 kB
+```
+
+echo 0 之后:
+```txt
+HugePages_Total:     205
+HugePages_Free:        0
+HugePages_Rsvd:        0
+HugePages_Surp:      205
+```
+
+- 将 guest 杀掉之后
+
+```txt
+HugePages_Total:       0
+HugePages_Free:        0
+HugePages_Rsvd:        0
+HugePages_Surp:        0
+```
+
+看来，我们对于 prealloc = on 的参数理解有问题，以为是直接就会使用掉，但是实际上，并没有。
+
+### 分析 off 的时候
+
+- [ ] 所以，只要 mmap 的时候，总是可以 reserve 吗?
+
+off 的时候:
+```txt
+HugePages_Total:    1000
+HugePages_Free:      847
+HugePages_Rsvd:      359
+HugePages_Surp:        0
+Hugepagesize:       2048 kB
+```
+153 + 359 = 512 的
+
+echo 0 之后：
+```txt
+HugePages_Total:     512
+HugePages_Free:      303
+HugePages_Rsvd:      303
+HugePages_Surp:      512
+```
+- guest stress 之后
+```txt
+HugePages_Total:     512
+HugePages_Free:        0
+HugePages_Rsvd:        0
+HugePages_Surp:      512
+```
+- 将 guest 杀掉之后
+
+```txt
+HugePages_Total:       0
+HugePages_Free:        0
+HugePages_Rsvd:        0
+HugePages_Surp:        0
+```
+
+- file_backend_memory_alloc 中，首先创建文件，然后 unlink，然后 mmap 该文件的。
+
+### 似乎 QEMU 实现的有问题
+QEMU 中的 backtrace :
+```txt
+#0  qemu_prealloc_mem (fd=22, area=area@entry=0x7ffda3a00000 "", sz=sz@entry=1073741824, max_threads=max_threads@entry=8, tc=tc@entry=0x0, errp=errp@en
+try=0x7fffffffac80) at ../util/oslib-posix.c:508
+#1  0x00005555559ef30b in host_memory_backend_memory_complete (uc=<optimized out>, errp=0x7fffffffacd0) at ../backends/hostmem.c:387
+#2  0x0000555555c1e9c3 in user_creatable_complete (uc=0x5555567ef800, errp=errp@entry=0x7fffffffad18) at ../qom/object_interfaces.c:28
+#3  0x0000555555c1ec7f in user_creatable_add_type (type=<optimized out>, id=id@entry=0x55555664a620 "m2", qdict=qdict@entry=0x555556647f10, v=v@entry=0
+x5555568bd850, errp=0x7fffffffad20, errp@entry=0x5555565b9bb0 <error_fatal>) at ../qom/object_interfaces.c:125
+#4  0x0000555555c1eec6 in user_creatable_add_qapi (options=<optimized out>, errp=errp@entry=0x5555565b9bb0 <error_fatal>) at ../qom/object_interfaces.c
+:157
+#5  0x00005555559e5c60 in object_option_foreach_add (type_opt_predicate=type_opt_predicate@entry=0x5555559e63f0 <object_create_late>) at ../softmmu/vl.
+c:1714
+#6  0x00005555559ead04 in qemu_create_late_backends () at ../softmmu/vl.c:1935
+#7  qemu_init (argc=<optimized out>, argv=<optimized out>) at ../softmmu/vl.c:3581
+#8  0x00005555558301e9 in main (argc=<optimized out>, argv=<optimized out>) at ../softmmu/main.c:47
+```
+
+似乎最近有些 update:
+```diff
+History:        #0
+Commit:         a384bfa32ed8d616d766cb33360011157ae2f5c7
+Author:         David Hildenbrand <david@redhat.com>
+Committer:      Michael S. Tsirkin <mst@redhat.com>
+Author Date:    Fri 17 Dec 2021 09:46:05 PM CST
+Committer Date: Fri 07 Jan 2022 06:19:55 PM CST
+
+util/oslib-posix: Support MADV_POPULATE_WRITE for os_mem_prealloc()
+
+Let's sense support and use it for preallocation. MADV_POPULATE_WRITE
+does not require a SIGBUS handler, doesn't actually touch page content,
+and avoids context switches; it is, therefore, faster and easier to handle
+than our current approach.
+
+While MADV_POPULATE_WRITE is, in general, faster than manual
+prefaulting, and especially faster with 4k pages, there is still value in
+prefaulting using multiple threads to speed up preallocation.
+
+More details on MADV_POPULATE_WRITE can be found in the Linux commits
+4ca9b3859dac ("mm/madvise: introduce MADV_POPULATE_(READ|WRITE) to prefault
+page tables") and eb2faa513c24 ("mm/madvise: report SIGBUS as -EFAULT for
+MADV_POPULATE_(READ|WRITE)"), and in the man page proposal [1].
+
+This resolves the TODO in do_touch_pages().
+
+In the future, we might want to look into using fallocate(), eventually
+combined with MADV_POPULATE_READ, when dealing with shared file/fd
+mappings and not caring about memory bindings.
+
+[1] https://lkml.kernel.org/r/20210816081922.5155-1-david@redhat.com
+
+ Reviewed-by: Pankaj Gupta <pankaj.gupta@ionos.com>
+ Reviewed-by: Daniel P. Berrangé <berrange@redhat.com>
+ Reviewed-by: Michal Privoznik <mprivozn@redhat.com>
+ Signed-off-by: David Hildenbrand <david@redhat.com>
+ Message-Id: <20211217134611.31172-3-david@redhat.com>
+ Reviewed-by: Michael S. Tsirkin <mst@redhat.com>
+ Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
+```
+
+- 只有当 vcpu > 1 的时候触发这个场景
+```txt
+#0  qemu_madvise (addr=0x7ffddba00000, len=134217728, advice=23) at ../util/osdep.c:53
+#1  0x0000555555d77db8 in do_madv_populate_write_pages (arg=arg@entry=0x55555664edd0) at ../util/oslib-posix.c:396
+#2  0x0000555555d790a9 in qemu_thread_start (args=<optimized out>) at ../util/qemu-thread-posix.c:505
+#3  0x00007ffff6a88e86 in start_thread () from /nix/store/4nlgxhb09sdr51nc9hdm8az5b08vzkgx-glibc-2.35-163/lib/libc.so.6
+#4  0x00007ffff6b0fc60 in clone3 () from /nix/store/4nlgxhb09sdr51nc9hdm8az5b08vzkgx-glibc-2.35-163/lib/libc.so.6
+```
+
+- MADV_POPULATE_WRITE
+```txt
+#0  qemu_madvise (addr=0x7fffa3e00000, len=2097152, advice=23) at ../util/osdep.c:53
+#1  0x0000555555d7863a in madv_populate_write_possible (pagesize=2097152, area=0x7fffa3e00000 "") at ../util/oslib-posix.c:504
+#2  qemu_prealloc_mem (fd=<optimized out>, area=area@entry=0x7fffa3e00000 "", sz=sz@entry=1073741824, max_threads=max_threads@entry=1, tc=tc@entry=0x0,
+ errp=errp@entry=0x7fffffff1c10) at ../util/oslib-posix.c:522
+#3  0x00005555559ef30b in host_memory_backend_memory_complete (uc=<optimized out>, errp=0x7fffffff1c60) at ../backends/hostmem.c:387
+#4  0x0000555555c1e9c3 in user_creatable_complete (uc=0x555556843800, errp=errp@entry=0x7fffffff1ca8) at ../qom/object_interfaces.c:28
+#5  0x0000555555c1ec7f in user_creatable_add_type (type=<optimized out>, id=id@entry=0x5555566495d0 "m2", qdict=qdict@entry=0x555556647f10, v=v@entry=0
+x555556646870, errp=0x7fffffff1cb0, errp@entry=0x5555565b9bb0 <error_fatal>) at ../qom/object_interfaces.c:125
+#6  0x0000555555c1eec6 in user_creatable_add_qapi (options=<optimized out>, errp=errp@entry=0x5555565b9bb0 <error_fatal>) at ../qom/object_interfaces.c
+:157
+#7  0x00005555559e5c60 in object_option_foreach_add (type_opt_predicate=type_opt_predicate@entry=0x5555559e63f0 <object_create_late>) at ../softmmu/vl.
+c:1714
+#8  0x00005555559ead04 in qemu_create_late_backends () at ../softmmu/vl.c:1935
+#9  qemu_init (argc=<optimized out>, argv=<optimized out>) at ../softmmu/vl.c:3581
+#10 0x00005555558301e9 in main (argc=<optimized out>, argv=<optimized out>) at ../softmmu/main.c:47
+```
+
+- [ ] ram_block_add : MADV_NOHUGEPAGE : 感觉哪里有点问题，已经是大页，何必 madvise
+```txt
+#0  qemu_madvise (addr=0x7fffa3e00000, len=1073741824, advice=14) at ../util/osdep.c:53
+#1  0x0000555555b81eaf in ram_block_add (new_block=<optimized out>, errp=<optimized out>) at ../softmmu/physmem.c:2035
+#2  0x0000555555b84c6e in qemu_ram_alloc_from_fd (size=size@entry=1073741824, mr=mr@entry=0x555556843870, ram_flags=ram_flags@entry=2, fd=fd@entry=22,
+offset=offset@entry=0, readonly=readonly@entry=false, errp=0x7fffffff1b60) at ../softmmu/physmem.c:2103
+#3  0x0000555555b851b1 in qemu_ram_alloc_from_file (size=size@entry=1073741824, mr=mr@entry=0x555556843870, ram_flags=ram_flags@entry=2, mem_path=mem_p
+ath@entry=0x5555568c3d00 "/dev/hugepages", readonly=readonly@entry=false, errp=errp@entry=0x7fffffff1b60) at ../softmmu/physmem.c:2128
+#4  0x0000555555b7bd43 in memory_region_init_ram_from_file (mr=mr@entry=0x555556843870, owner=owner@entry=0x555556843800, name=name@entry=0x55555664ab6
+0 "m2", size=1073741824, align=0, ram_flags=2, path=0x5555568c3d00 "/dev/hugepages", readonly=false, errp=0x7fffffff1c10) at ../softmmu/memory.c:1614
+#5  0x00005555559f0e4a in file_backend_memory_alloc (backend=0x555556843800, errp=0x7fffffff1c10) at ../backends/hostmem-file.c:59
+#6  0x00005555559ef26f in host_memory_backend_memory_complete (uc=<optimized out>, errp=0x7fffffff1c60) at ../backends/hostmem.c:327
+#7  0x0000555555c1e9c3 in user_creatable_complete (uc=0x555556843800, errp=errp@entry=0x7fffffff1ca8) at ../qom/object_interfaces.c:28
+#8  0x0000555555c1ec7f in user_creatable_add_type (type=<optimized out>, id=id@entry=0x5555566495d0 "m2", qdict=qdict@entry=0x555556647f10, v=v@entry=0
+x555556646870, errp=0x7fffffff1cb0, errp@entry=0x5555565b9bb0 <error_fatal>) at ../qom/object_interfaces.c:125
+#9  0x0000555555c1eec6 in user_creatable_add_qapi (options=<optimized out>, errp=errp@entry=0x5555565b9bb0 <error_fatal>) at ../qom/object_interfaces.c
+:157
+#10 0x00005555559e5c60 in object_option_foreach_add (type_opt_predicate=type_opt_predicate@entry=0x5555559e63f0 <object_create_late>) at ../softmmu/vl.
+c:1714
+#11 0x00005555559ead04 in qemu_create_late_backends () at ../softmmu/vl.c:1935
+#12 qemu_init (argc=<optimized out>, argv=<optimized out>) at ../softmmu/vl.c:3581
+#13 0x00005555558301e9 in main (argc=<optimized out>, argv=<optimized out>) at ../softmmu/main.c:47
+```
+
+似乎也不是多线程的问题。
+
+- [ ] 很奇怪，guest 是如何使用大页的，为什么申请不到大页，QEMU 的错误处理路径是什么
+- [ ] echo 的清理方法正确吗?
+
+### 并不是 QEMU 的问题
+
+似乎开始的
+```txt
+@[
+    enqueue_huge_page+1
+    free_huge_page+548
+    release_pages+491
+    __pagevec_release+27
+    remove_inode_hugepages+776
+    hugetlbfs_fallocate+1152
+    vfs_fallocate+328
+    __x64_sys_fallocate+60
+    do_syscall_64+56
+    entry_SYSCALL_64_after_hwframe+99
+]: 310
+@[
+    enqueue_huge_page+1
+    free_huge_page+548
+    release_pages+491
+    __pagevec_release+27
+    remove_inode_hugepages+776
+    hugetlbfs_evict_inode+26
+    evict+204
+    __dentry_kill+223
+    dput+324
+    __fput+221
+    task_work_run+89
+    do_exit+805
+    do_group_exit+45
+    get_signal+2520
+    arch_do_signal_or_restart+54
+    exit_to_user_mode_prepare+267
+    syscall_exit_to_user_mode+23
+    do_syscall_64+72
+    entry_SYSCALL_64_after_hwframe+99
+]: 319
+```
+谁在调用 hugetlbfs_fallocate 啊?
+
+```txt
+#0  0x00007ffff6b03300 in fallocate64 () from /nix/store/4nlgxhb09sdr51nc9hdm8az5b08vzkgx-glibc-2.35-163/lib/libc.so.6
+#1  0x0000555555b8c732 in ram_block_discard_range (rb=rb@entry=0x555556646220, start=486539264, length=length@entry=4194304) at ../softmmu/physmem.c:36
+17
+#2  0x0000555555b5a1f5 in virtio_balloon_handle_report (vdev=0x555557868970, vq=0x7fffe3eb1270) at ../hw/virtio/virtio-balloon.c:380
+#3  0x0000555555b4410c in virtio_queue_notify (vdev=0x555557868970, n=<optimized out>) at ../hw/virtio/virtio.c:2867
+#4  0x0000555555b79de0 in memory_region_write_accessor (mr=mr@entry=0x555557861440, addr=16, value=value@entry=0x7fffa3dfe518, size=size@entry=2, shift
+=<optimized out>, mask=mask@entry=65535, attrs=...) at ../softmmu/memory.c:493
+#5  0x0000555555b775c6 in access_with_adjusted_size (addr=addr@entry=16, value=value@entry=0x7fffa3dfe518, size=size@entry=2, access_size_min=<optimize
+d out>, access_size_max=<optimized out>, access_fn=0x555555b79d60 <memory_region_write_accessor>, mr=0x555557861440, attrs=...) at ../softmmu/memory.c:
+555
+#6  0x0000555555b7b88a in memory_region_dispatch_write (mr=mr@entry=0x555557861440, addr=16, data=<optimized out>, op=<optimized out>, attrs=attrs@entr
+y=...) at ../softmmu/memory.c:1522
+#7  0x0000555555b82bc0 in flatview_write_continue (fv=fv@entry=0x7fff947f4490, addr=addr@entry=4263555088, attrs=..., attrs@entry=..., ptr=ptr@entry=0x
+7ffff53ef028, len=len@entry=2, addr1=<optimized out>, l=<optimized out>, mr=0x555557861440) at /home/martins3/core/qemu/include/qemu/host-utils.h:166
+#8  0x0000555555b82e80 in flatview_write (fv=0x7fff947f4490, addr=addr@entry=4263555088, attrs=attrs@entry=..., buf=buf@entry=0x7ffff53ef028, len=len@e
+ntry=2) at ../softmmu/physmem.c:2867
+#9  0x0000555555b865e9 in address_space_write (len=2, buf=0x7ffff53ef028, attrs=..., addr=4263555088, as=0x55555659cc80 <address_space_memory>) at ../s
+oftmmu/physmem.c:2963
+#10 address_space_rw (as=0x55555659cc80 <address_space_memory>, addr=4263555088, attrs=attrs@entry=..., buf=buf@entry=0x7ffff53ef028, len=2, is_write=<
+optimized out>) at ../softmmu/physmem.c:2973
+#11 0x0000555555c08cae in kvm_cpu_exec (cpu=cpu@entry=0x5555568e1b40) at ../accel/kvm/kvm-all.c:2900
+#12 0x0000555555c0a19d in kvm_vcpu_thread_fn (arg=arg@entry=0x5555568e1b40) at ../accel/kvm/kvm-accel-ops.c:51
+#13 0x0000555555d78fe9 in qemu_thread_start (args=<optimized out>) at ../util/qemu-thread-posix.c:505
+#14 0x00007ffff6a88e86 in start_thread () from /nix/store/4nlgxhb09sdr51nc9hdm8az5b08vzkgx-glibc-2.35-163/lib/libc.so.6
+#15 0x00007ffff6b0fc60 in clone3 () from /nix/store/4nlgxhb09sdr51nc9hdm8az5b08vzkgx-glibc-2.35-163/lib/libc.so.6
+```
+
+
+## 内核中处理 reservation 的过程
 - [ ] hugetlb_vm_op_open 处理 reservation 的
 
 ```txt

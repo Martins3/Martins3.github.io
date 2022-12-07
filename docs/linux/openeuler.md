@@ -17,14 +17,3 @@
 
 ## openEuler pkgship 查询包的方法
 - https://pkgmanage.openeuler.org/Packagemanagement
-
-## Guest 初始化
-- stress-ng
-
-```sh
-wget https://download-ib01.fedoraproject.org/pub/epel/7/x86_64/Packages/s/stress-ng-0.07.29-2.el7.x86_64.rpm
-yum install stress-ng-0.13.00-5.el8.x86_64.rpm
-
-yum install -y zsh
-sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
-```

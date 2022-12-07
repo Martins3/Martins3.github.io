@@ -19,6 +19,11 @@ TODO:
 - [ ] vhost
 - [ ] 到底什么是 failover 啊? `PCIDevice::net_failover`
 
+## memory_region 重启和热迁移
+
+- memory region 在重启的会被注销吗?
+- 热迁移的时候，如果 memory region 被注销了，如果通知对方?
+
 ## TODO
 - [ ] `qemu_event_wait` 中存在 `smp_mb_acquire`
 - [ ] 正在注入的中断怎么如何迁移
@@ -227,9 +232,7 @@ channel-file.c 的 `qio_channel_file_new_fd` 存在多个调用者
 - `notifier_list_add` ：将 Notifier 加入到 list 中
 - `notifier_list_notify` ：让这些 Notifier 都开始执行自己的 hook
 
-## 文件的分析
-
-### migration.c
+## migration.c
 - `migrate_params_apply`
 - `migrate_params_test_apply`
 - `qmp_query_migrate_parameters`
@@ -240,6 +243,7 @@ channel-file.c 的 `qio_channel_file_new_fd` 存在多个调用者
 - [ ] `migration_state_notifiers` 是如何工作的?
     - 只有唯一的 `virtio_net_device_realize` 才会使用。
 
+## capability
 - [ ] `MIGRATION_CAPABILITY_XBZRLE`
 - [ ] `MIGRATION_CAPABILITY_RDMA_PIN_ALL`
 - [ ] `MIGRATION_CAPABILITY_AUTO_CONVERGE`
@@ -264,6 +268,7 @@ channel-file.c 的 `qio_channel_file_new_fd` 存在多个调用者
 
 - [ ] 每一个都分析一下吧。
 
+## status 转换
 ```c
 typedef enum MigrationStatus {
     MIGRATION_STATUS_NONE,
@@ -303,6 +308,38 @@ ram_mig_ram_block_resized 中的注释说:
     }
 ```
 那么，precopy 的时候，一共可能的状态是什么?
+
+常规流程:
+
+- src 端:
+```txt
+[huxueshi:migrate_set_state:1865] none -> setup
+[huxueshi:migrate_set_state:1865] setup -> active
+[huxueshi:migrate_set_state:1865] active -> completed
+```
+- target 端
+```txt
+[huxueshi:migrate_set_state:1865] none -> active
+[huxueshi:migrate_set_state:1865] active -> completed
+```
+
+为什么没有做任何操作，就已经初始化好了。
+
+### current_migration
+- 什么时候初始化的?
+```txt
+#0  migration_object_init () at ../migration/migration.c:204
+#1  0x00005555559eacd7 in qemu_init (argc=<optimized out>, argv=<optimized out>) at ../softmmu/vl.c:3579
+#2  0x00005555558301e9 in main (argc=<optimized out>, argv=<optimized out>) at ../softmmu/main.c:47
+```
+
+- [ ] active == 0 ?
+```txt
+[huxueshi:migrate_set_state:1865] none -> active
+[huxueshi:migration_is_idle:2122] 0
+[huxueshi:migrate_set_state:1865] active -> completed
+```
+
 
 ## qemu-file.c
 > 是不是对于 file 存在什么误解
@@ -384,9 +421,6 @@ enum mig_rp_message_type {
 #8  qemu_init (argc=<optimized out>, argv=<optimized out>) at ../softmmu/vl.c:3601
 #9  0x00005555558301e9 in main (argc=<optimized out>, argv=<optimized out>) at ../softmmu/main.c:47
 ```
-
-## current_migration
-- 什么时候初始化的?
 
 ## VMStateDescription
 ```c

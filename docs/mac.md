@@ -13,7 +13,7 @@
 
 但是也存在很多问题或者我难以习惯的地方:
 - 合上盖子，必须插上电源。
-- 无线鼠标，和无线键盘非常的卡，几乎没有办法用[^2]，我花了 20 块钱买了一个有线的鼠标。
+- 无线鼠标，和无线键盘非常的卡，几乎没有办法用[^1][^2]，我花了 20 块钱买了一个有线的鼠标。
 - 没有原生的 nfs 支持，所以没有 sshfs，我只好使用 syncthing 来同步。
 - Ctrl Win Alt 键的重新定义，目前只会在外接键盘上使用电脑。
 
@@ -71,6 +71,7 @@ sudo apt install ubuntu-desktop
 [^2]: 不过对于 Apple 的鼠标应该是没有问题的，那将是另外的一笔巨款。
 [^3]: https://stackoverflow.com/questions/52801814/this-syntax-requires-an-imported-helper-but-module-tslib-cannot-be-found-wit
 [^4]: https://askubuntu.com/questions/1405124/install-ubuntu-desktop-22-04-arm64-on-macos-apple-silicon-m1-pro-max-in-parall
+[^5]: https://github.com/noah-nuebling/mac-mouse-fix
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

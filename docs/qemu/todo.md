@@ -419,3 +419,9 @@ dmidecode is a tool for dumping a computer's DMI (some say SMBIOS ) table conten
 
 ## dirty ring 的机制
 - https://lwn.net/Articles/825743/
+
+## host_memory_backend_memory_complete 存在四个 hook 可以调用
+- ram
+- epc
+- file
+- memfd

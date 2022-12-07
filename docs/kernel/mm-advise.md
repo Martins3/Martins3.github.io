@@ -118,3 +118,33 @@ VM_PFNMAP pages.
 
 [1] https://lore.kernel.org/lkml/20190710194719.GS29695@dhcp22.suse.cz/
 ```
+
+## MADV_POPULATE_WRITE
+
+使用多线程的性能就是会比单线程性能更好吗?
+
+- madvise_populate 会申请 mmap_read_lock
+
+- faultin_vma_page_range 中，同时出现这两个代码，看来 lock 的含义是我不懂的
+```c
+	mmap_assert_locked(mm);
+
+	ret = __get_user_pages(mm, start, nr_pages, gup_flags,
+				NULL, NULL, locked);
+```
+
+其实 QEMU 是存在考虑的:
+```c
+    /*
+     * On Linux, the page faults from the loop below can cause mmap_sem
+     * contention with allocation of the thread stacks.  Do not start
+     * clearing until all threads have been created.
+     */
+    qemu_mutex_lock(&page_mutex);
+    while (!memset_args->context->all_threads_created) {
+        qemu_cond_wait(&page_cond, &page_mutex);
+    }
+    qemu_mutex_unlock(&page_mutex);
+```
+
+看上去也不是 QEMU 的问题。

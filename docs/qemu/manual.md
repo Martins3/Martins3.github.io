@@ -188,7 +188,7 @@ arg_share_dir="-virtfs local,path=${share_dir},mount_tag=host0,security_model=ma
 
 在 guest 中
 ```sh
-mount -t 9p -o trans=virtio,version=9p2000.L host0 /mnt/9p
+mount -t 9p -o trans=virtio,version=9p2000.L host0 /root/share
 ```
 
 ### sshfs
@@ -275,8 +275,33 @@ open vnc://192.168.23.126:5900
 
 - https://futurewei-cloud.github.io/ARM-Datacenter/qemu/how-to-configure-qemu-numa-nodes/
 
-## 删除 Guest 机器代码
+## 删除 Guest 机器密码
 参考[这里](https://askubuntu.com/questions/281074/can-i-set-my-user-account-to-have-no-password)
+
+## 为了方便调试，我一般使用如下脚本初始化 Guest
+- stress-ng
+
+```sh
+wget https://download-ib01.fedoraproject.org/pub/epel/7/x86_64/Packages/s/stress-ng-0.07.29-2.el7.x86_64.rpm
+yum install stress-ng-0.13.00-5.el8.x86_64.rpm
+
+yum install -y zsh
+sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+
+cat << 'EOF'  > /etc/systemd/system/share.service
+[Unit]
+Description=reboot
+
+[Service]
+Type=oneshot
+ExecStart=mount -t 9p -o trans=virtio,version=9p2000.L host0 /root/share
+
+[Install]
+WantedBy=getty.target
+EOF
+
+systemctl enable share
+```
 
 ## TODO
 - [ ] 利用 QEMU 给一个分区安装操作系统

@@ -1,21 +1,22 @@
-## 如何设置不同的大小
+## 基本的测试
 ```txt
 qemu-system-x86_64: Size mismatch: 0000:00:05.0/virtio-net-pci.rom: 0x1000 != 0x8000000: Invalid argument
 qemu-system-x86_64: error while loading state for instance 0x0 of device 'ram'
 qemu-system-x86_64: load of migration failed: Invalid argument
 ```
 
+
+## resizable ROM
+
+常规路径中:
 - memory_region_init_rom
   - memory_region_init_rom_nomigrate
     - memory_region_init_ram_flags_nomigrate
-
 - memory_region_init_ram
 
-## 到底为什么存在
+比较有趣的是，在 ARM 环境中 中才会调用 memory_region_init_rom
 
-好吧，声明样的设备是 resizable 的
-
-实际上，就是我们常规简单的 ROM 而已，并没有什么奇怪，但是对于 PCI 的 ROM 并没有这种操作，所以非常奇怪的:
+实际上，就是我们常规简单的 ROM 使用 resizable，并没有什么奇怪，但是对于 PCI 的 ROM 并没有这种操作，还是有点奇怪的:
 - rom_add_blob
 - rom_add_file
   - rom_set_mr
@@ -28,8 +29,13 @@ ssize_t rom_add_option(const char *file, int32_t bootindex)
 }
 ```
 
-- pci_add_option_rom
+- pci_add_option_rom 中
   - 如果 pci 设备不支持 ROM bar ，使用 fw_cfg 的方式加载，那么就可以的，从很早之前，这些代码都是没用的。
+
+## 看懂这个 thread
+https://lists.gnu.org/archive/html/qemu-devel/2020-02/msg03626.html
+
+## qemu_ram_resize : 处理 resize 机制
 
 resizeable ram 提出来的时候 patch
 ```diff
@@ -64,34 +70,9 @@ Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
 Reviewed-by: Paolo Bonzini <pbonzini@redhat.com>
 ```
 
-- [ ] QEMU : 的含义 c7c0e72408df5e7821c0e995122fb2fe0ac001f1
-
-- [ ] resize 的含义是什么?
-  - 直接注册好吗?
-  - [ ] 其他人的处理方法是什么?
-  - [ ] 其他函数的方法的操作的是什么?
-  - [ ] 会出现引用计数的增加吗?
-
 - fw_cfg_resized : 只是更改一下，给 firmware config 做个修改
 
-- [ ] qemu_ram_resize : 这个逻辑没有完全看懂哇!
-
-```c
-    if (block->used_length == newsize) {
-        /*
-         * We don't have to resize the ram block (which only knows aligned
-         * sizes), however, we have to notify if the unaligned size changed.
-         */
-        if (unaligned_size != memory_region_size(block->mr)) {
-            memory_region_set_size(block->mr, unaligned_size);
-            if (block->resized) {
-                block->resized(block->idstr, unaligned_size, block->host);
-            }
-        }
-        return 0;
-    }
-```
-qemu_ram_resize 中是不会检查当前的 size
+## 不要在热迁移的时候动态修改源端的 size
 
 ```diff
 commit c7c0e72408df5e7821c0e995122fb2fe0ac001f1
@@ -125,22 +106,26 @@ Date:   Thu Apr 29 13:27:02 2021 +0200
     Signed-off-by: Dr. David Alan Gilbert <dgilbert@redhat.com>
       Manual merge
 ```
-- [ ] 所以，到底是会出现什么问题呀?
 
-- 但是，因为当初在 resizable 检查的时候，就被发现有问题啊！
+在 ram_mig_ram_block_resized 中的代码中，增加检查的 hook
+```c
+static RAMBlockNotifier ram_mig_ram_notifier = {
+    .ram_block_resized = ram_mig_ram_block_resized,
+};
+```
 
-- 因为对于这个问题，所以:
-  - ram_mig_ram_block_resized : 就是用于检查 migration 的
+- 如何实现在 ram_mig_ram_block_resized 中检测，然后造成失败啊?
+  - [ ] 猜测 migraiton 的过程中，source 端有时候会成为 active 的，当 ram 被修改大小，
+那么，就会调用到这个 notifier 的。
 
-- 但是他说的情况是如何触发的，无法理解。
+## 为什么会出现 guest 天生的修改这些 memory region 的大小
 
-## guest 中主动进行 resize 的时候
+guest 中主动进行 resize 的场景：
 - fw_cfg_acpi_mr_restore_post_load -> fw_cfg_update_mr
 - acpi_ram_update
   - memory_region_ram_resize
     - qemu_ram_resize
 
-- 有点难理解，为什么会出现 guest 天生的修改这些 memory region 的大小：
 
 ```txt
 $ p mr.name

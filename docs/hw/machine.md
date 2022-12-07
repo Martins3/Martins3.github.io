@@ -50,6 +50,44 @@ Nixos ，如何实现各个平台数据同步，在机器里面如何管理虚�
 大致测试了一下内核编译，QEMU 编译和 clangd 索引内核，速度惊人。
 因为不用使用远程，可以感觉到 vim 的延迟也是显著降低的。
 
+编译 Linux 内核，CPU 频率为:
+```txt
+🧀  cat /proc/cpuinfo | grep Hz
+cpu MHz         : 5299.946
+cpu MHz         : 5300.053
+cpu MHz         : 5300.053
+cpu MHz         : 5300.000
+cpu MHz         : 5300.000
+cpu MHz         : 5300.000
+cpu MHz         : 5200.052
+cpu MHz         : 5199.947
+cpu MHz         : 5271.533
+cpu MHz         : 5271.533
+cpu MHz         : 5300.000
+cpu MHz         : 5300.053
+cpu MHz         : 5300.053
+cpu MHz         : 5299.946
+cpu MHz         : 5300.053
+cpu MHz         : 5300.000
+cpu MHz         : 4199.971
+cpu MHz         : 4199.843
+cpu MHz         : 4199.937
+cpu MHz         : 4200.017
+cpu MHz         : 4199.919
+cpu MHz         : 4200.043
+cpu MHz         : 4200.063
+cpu MHz         : 4200.142
+cpu MHz         : 4200.124
+cpu MHz         : 4200.111
+cpu MHz         : 4200.066
+cpu MHz         : 4200.084
+cpu MHz         : 4199.927
+cpu MHz         : 4199.960
+cpu MHz         : 4200.069
+cpu MHz         : 4200.059
+```
+其中 8 个大核 5.3GHz，16 个小核 4.2GHz
+
 ## 感想
 本科时代用的电脑是联想的 Thinkpad T450，刚开始购买的时候只有 4G 内存，128G 固态，续航大约两小时，分辨率也非常垃圾，后来实在是忍无可忍，还重新购买了电池和内存，体验还是非常差，从此联想一生黑。
 
@@ -65,6 +103,7 @@ Nixos ，如何实现各个平台数据同步，在机器里面如何管理虚�
 ## 参考
 - [ZKV 的攒机简史](https://cerr.cc/post/zkv%E7%9A%84%E6%94%92%E6%9C%BA%E7%AE%80%E5%8F%B2/)
 - [cinebench-scores](https://nanoreview.net/en/cpu-list/cinebench-scores)
+- [Intel Core i9 13900K Linux Benchmarks - Performing Very Well On Ubuntu](https://www.phoronix.com/review/intel-core-i9-13900k)
 
 [^1]: https://github.com/ZSaberLv0/ZFVimIM
 

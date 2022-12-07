@@ -149,3 +149,25 @@ void hmp_info_balloon(Monitor *mon, const QDict *qdict)
 
 - [ ] /home/martins3/core/qemu/build/hmp-commands-info.h 是如何生成的
 - [ ] /home/martins3/core/qemu/build/qapi/qapi-commands-machine.h 中包含了 qmp_query_balloon
+
+## 总结一些和 qobject 纠缠在一起的功能
+
+- object_register_sugar_prop
+
+```c
+static void qemu_process_sugar_options(void)
+{
+    if (mem_prealloc) {
+        QObject *smp = qdict_get(machine_opts_dict, "smp");
+        if (smp && qobject_type(smp) == QTYPE_QDICT) {
+            QObject *cpus = qdict_get(qobject_to(QDict, smp), "cpus");
+            if (cpus && qobject_type(cpus) == QTYPE_QSTRING) {
+                const char *val = qstring_get_str(qobject_to(QString, cpus));
+                object_register_sugar_prop("memory-backend", "prealloc-threads",
+                                           val, false);
+            }
+        }
+        object_register_sugar_prop("memory-backend", "prealloc", "on", false);
+    }
+}
+```

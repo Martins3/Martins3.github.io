@@ -66,6 +66,9 @@
 0xffffffff82807980 <jiffies_64>:        0x00000000fffb6c20
 ```
 
+### attach
+gdb -p PID
+
 ### thread
 - thread apply all bt
 
