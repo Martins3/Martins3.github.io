@@ -79,7 +79,6 @@
 ### Lua 解释器源码分析
 
 ## Tips
-- [How to cross Great Fire Wall](./gfw.md)
 - [计算机学习的一点经验之谈](./learn-cs.md)
 - [虚拟化学习的一点经验之谈](./learn-virtualization.md)
 - [使用 Github 记录笔记和搭建 blog](./setup-github-pages.md)
