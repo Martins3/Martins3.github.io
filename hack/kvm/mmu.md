@@ -1922,3 +1922,55 @@ static int FNAME(fetch)(struct kvm_vcpu *vcpu, gpa_t addr,
 			 kvm_pfn_t pfn, bool map_writable, bool prefault,
 			 bool lpage_disallowed)
 ```
+
+
+## hva_to_pfn 的 backtrace
+
+```txt
+@[
+    hva_to_pfn+1
+    gfn_to_page+76
+    vmx_vcpu_create+1161
+    kvm_arch_vcpu_create+544
+    kvm_vm_ioctl+1961
+    __x64_sys_ioctl+135
+    do_syscall_64+56
+    entry_SYSCALL_64_after_hwframe+99
+]: 1
+@[
+    hva_to_pfn+1
+    kvm_gfn_to_pfn_cache_refresh+417
+    kvm_set_msr_common+1717
+    vmx_set_msr+1637
+    __kvm_set_msr+127
+    kvm_emulate_wrmsr+82
+    vmx_handle_exit+1756
+    kvm_arch_vcpu_ioctl_run+3658
+    kvm_vcpu_ioctl+625
+    __x64_sys_ioctl+135
+    do_syscall_64+56
+    entry_SYSCALL_64_after_hwframe+99
+]: 7
+@[
+    hva_to_pfn+1
+    gfn_to_page+76
+    vmx_set_apic_access_page_addr+57
+    kvm_arch_vcpu_ioctl_run+5980
+    kvm_vcpu_ioctl+625
+    __x64_sys_ioctl+135
+    do_syscall_64+56
+    entry_SYSCALL_64_after_hwframe+99
+]: 11
+@[
+    hva_to_pfn+1
+    kvm_faultin_pfn+145
+    direct_page_fault+777
+    kvm_mmu_page_fault+272
+    vmx_handle_exit+370
+    kvm_arch_vcpu_ioctl_run+3658
+    kvm_vcpu_ioctl+625
+    __x64_sys_ioctl+135
+    do_syscall_64+56
+    entry_SYSCALL_64_after_hwframe+99
+]: 1868
+```

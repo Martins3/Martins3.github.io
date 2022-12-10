@@ -8,8 +8,8 @@ hacking_memory="hotplug"
 hacking_memory="virtio-pmem"
 hacking_memory="none"
 hacking_memory="virtio-mem"
-hacking_memory="numa"
 hacking_memory="prealloc"
+hacking_memory="numa"
 
 hacking_migration=true
 # @todo 尝试在 guest 中搭建一个 vIOMMU
@@ -59,7 +59,7 @@ fi
 # 在 guset 中使用 sudo dmidecode -t bios 查看
 arg_smbios='-smbios type=0,vendor="martins3",version=12,date="2022-2-2", -smbios type=1,manufacturer="Martins3 Inc",product="Hacking Alpine",version=12,serial="1234-4567-abc"'
 arg_hugetlb="default_hugepagesz=2M hugepagesz=1G hugepages=1 hugepagesz=2M hugepages=512"
-# arg_hugetlb="default_hugepagesz=1G"
+arg_hugetlb="default_hugepagesz=2M"
 arg_hugetlb=""
 # 可选参数
 arg_mem_cpu="-m 12G -cpu host -smp 2 -numa node"
@@ -69,10 +69,11 @@ arg_mem_balloon="-device virtio-balloon,id=balloon0,deflate-on-oom=true,page-poi
 case $hacking_memory in
 "numa")
   # TMP_TODO 有没有什么方法来模拟超级大的内存，例如 100T 的内存
-  arg_mem_cpu="-cpu host -m 8G -smp cpus=5"
+  arg_mem_cpu="-cpu host -m 8G -smp cpus=6"
   arg_mem_cpu="$arg_mem_cpu -object memory-backend-ram,size=2G,id=m0 -numa node,memdev=m0,cpus=0-1,nodeid=0"
-  arg_mem_cpu="$arg_mem_cpu -object memory-backend-ram,size=6G,id=m1 -numa node,memdev=m1,cpus=2-3,nodeid=1"
-  arg_mem_cpu="$arg_mem_cpu -numa node,cpus=4,nodeid=2" # 只有 CPU ，但是没有内存
+  arg_mem_cpu="$arg_mem_cpu -object memory-backend-ram,size=2G,id=m1 -numa node,memdev=m1,cpus=2-3,nodeid=1"
+  arg_mem_cpu="$arg_mem_cpu -object memory-backend-ram,size=4G,id=m2 -numa node,memdev=m2,cpus=4,nodeid=2"
+  arg_mem_cpu="$arg_mem_cpu -numa node,cpus=5,nodeid=3" # 只有 CPU ，但是没有内存
   # @todo
   ;;
 "prealloc")

@@ -27,7 +27,6 @@
 * [PSI](#psi)
 * [thread](#thread)
 * [page counter](#page-counter)
-* [hugetlb cgroup](#hugetlb-cgroup)
 * [cgroup.procs](#cgroupprocs)
 * [TODO](#todo)
 * [cgorup inode](#cgorup-inode)
@@ -823,14 +822,8 @@ https://www.kernel.org/doc/html/latest/accounting/psi.html#
 ## thread
 https://lwn.net/Articles/656115/
 
-
 ## page counter
 - [ ] mm/page_counter.c
-
-
-## hugetlb cgroup
-
-
 
 ## cgroup.procs
 ```c

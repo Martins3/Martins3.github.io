@@ -1,4 +1,9 @@
 #!/usr/bin/env bash
 
-# @todo 如何设置 page size
-mount -t hugetlbfs -o min_size=100M,nr_inodes=100 none /mnt/huge
+set -x
+
+gcc -g mapfile.c
+mkdir -p /mnt/huge
+umount /mnt/huge
+mount -t hugetlbfs -o nr_inodes=1000 none /mnt/huge
+./a.out

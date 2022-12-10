@@ -149,20 +149,23 @@ sudo grubby --update-kernel=ALL --args=systemd.unified_cgroup_hierarchy=1
 cgcreate: libcgroup initialization failed: Cgroup is not mounted
 ```
 
-centos 8 上手动安装
+## libcgroup 的基本使用手册
+centos 8 / openEuler 上手动安装
 
 ```sh
-sudo yum install autoconf
-sudo yum install aclocal
-sudo yum install automake
-sudo yum install libtool
-sudo yum install pam-devel
+yum install autoconf
+yum install aclocal
+yum install automake
+yum install libtool
+yum install pam-devel
+yum install systemd-devel
 ```
+
+git clone https://github.com/libcgroup/libcgroup
 
 然后参考此处: https://askubuntu.com/questions/27677/cannot-find-install-sh-install-sh-or-shtool-in-ac-aux
 ```c
-libtoolize --force
-aclocal
+libtoolize --force aclocal
 autoheader
 automake --force-missing --add-missing
 autoconf
@@ -172,3 +175,5 @@ autoconf
 ```c
 ./configure; make; make install
 ```
+### 基本的使用方法
+1. cgcreate -g memory,hugeltb:duck

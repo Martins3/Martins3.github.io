@@ -303,6 +303,21 @@ EOF
 systemctl enable share
 ```
 
+配置其 zsh
+```sh
+function write() {
+  node=$1
+  num=$2
+  echo $num >/sys/devices/system/node/node$node/hugepages/hugepages-2048kB/nr_hugepages
+  numastat -m | grep -E "Node|HugePages_"
+}
+
+function global() {
+  echo $1 >/sys/kernel/mm/hugepages/hugepages-2048kB/nr_hugepages
+  numastat -m | grep -E "Node|HugePages_"
+}
+```
+
 ## TODO
 - [ ] 利用 QEMU 给一个分区安装操作系统
 - [ ] 內核启动参数中需要指定 root=/dev/sda3 如何确定

@@ -1,12 +1,19 @@
 # hugetlb
 
-- /dev/hugepages 是做啥的?
-
+相对于普通页，可以被简化的部分:
 - 无需考虑碎片化的问题。
 - 内核不用使用这些页面。
 - 不用 swap 的。
 - 其 cgroup 是单独分析的。
 - 不会用在 page cache 上的。
+- 支持 migration
+  - 也许要支持 rmap
+
+依旧保留的部分:
+- cgroup
+- mempolicy
+- cpuset
+
 
 首先，注意区分一下
 ```txt
@@ -26,12 +33,69 @@ obj-$(CONFIG_TRANSPARENT_HUGEPAGE) += huge_memory.o khugepaged.o
   - /sys/kernel/mm/hugepages/hugepages-2048kB/nr_hugepages_mempolicy
 - 这些外部接口太混乱了，使用 nuamstat -m 会更加清晰
 
+- 这些接口的内核代码开始的位置： hugetlb_sysctl_handler_common
 
+## 使用大页的方法
+
+### mount
 默认的 mount 点:
 ```txt
 hugetlbfs /dev/hugepages hugetlbfs rw,seclabel,relatime,pagesize=1024M 0 0
 ```
 libhugetlbfs 中有个函数 : `hugetlbfs_find_path_for_size`
+
+
+```sh
+mount -t hugetlbfs \
+-o mode=777,pagesize=2048K,size=1G,min_size=500M none /mnt/huge
+```
+可以得到如下结果 /proc/mounts
+```txt
+hugetlbfs /dev/hugepages hugetlbfs rw,seclabel,relatime,pagesize=2M 0 0
+```
+然后映射其中的文件。
+TODO
+
+### mmap
+```c
+#include <assert.h> // assert
+#include <errno.h>
+#include <fcntl.h>   // open
+#include <limits.h>  // INT_MAX
+#include <math.h>    // sqrt
+#include <stdbool.h> // bool false true
+#include <stdio.h>
+#include <stdlib.h> // malloc sort
+#include <string.h> // strcmp ..
+#include <unistd.h> // sleep
+
+#include <sys/mman.h>
+
+#define PG_SIZE (1 << 21)
+int main(int argc, char *argv[]) {
+  int num = 100;
+  printf("[huxueshi:%s:%d] \n", __FUNCTION__, __LINE__);
+  char *ptr = (char *)mmap(NULL, num * PG_SIZE, PROT_READ | PROT_WRITE,
+                           MAP_PRIVATE | MAP_ANONYMOUS | MAP_HUGETLB, -1, 0);
+  if (ptr == MAP_FAILED) {
+    printf("no hugepages  %s\n", strerror(errno));
+    exit(1);
+  }
+  // prealloc
+  for (int i = 0; i < num; ++i) {
+    char *addr = ptr + i * PG_SIZE;
+    *addr = 'x';
+  }
+  sleep(1000);
+  return 0;
+}
+```
+
+### shmem
+参考 linux/tools/testing/selftests/vm/hugepage-shm.c
+- https://stackoverflow.com/questions/45910849/shmget-operation-not-permitted
+  - setcap cap_ipc_lock=ep a.out
+  - 处理属性的问题
 
 - hugetlb_file_setup
   - hugetlb_reserve_pages
@@ -66,16 +130,35 @@ struct hugetlbfs_inode_info {
 - [ ] 预留机制和 cpuset 似乎是互相冲突的，详情参考 `hugetlb_acct_memory`
 - [ ] 为什么 hugetlb 的预留机制这么复杂，在 memory overcommit 中也是存在预留的哇。
 
-## hugetlb 的使用
+## 常用接口触发的经典路径
+通过触发 /proc/sys/vm/nr_hugepages 来控制数量:
+```txt
+#0  remove_pool_huge_page (h=h@entry=0xffffffff834abe20 <hstates>, nodes_allowed=nodes_allowed@entry=0xffffffff82cf8218 <node_states+24>, acct_surplus=acct_surplu
+s@entry=false) at mm/hugetlb.c:2041
+#1  0xffffffff812f0321 in set_max_huge_pages (h=h@entry=0xffffffff834abe20 <hstates>, count=count@entry=4, nid=nid@entry=-1, nodes_allowed=0xffffffff82cf8218 <nod
+e_states+24>) at mm/hugetlb.c:3393
+#2  0xffffffff812f05c8 in __nr_hugepages_store_common (len=2, count=4, nid=-1, h=0xffffffff834abe20 <hstates>, obey_mempolicy=false) at mm/hugetlb.c:3582
+#3  hugetlb_sysctl_handler_common (obey_mempolicy=<optimized out>, table=<optimized out>, write=<optimized out>, buffer=<optimized out>, length=<optimized out>, p
+pos=<optimized out>) at mm/hugetlb.c:4385
+#4  0xffffffff813a9c2e in proc_sys_call_handler (iocb=0xffffc90000a63ea0, iter=0xffffc90000a63e78, write=<optimized out>) at fs/proc/proc_sysctl.c:611
+#5  0xffffffff8131d309 in call_write_iter (iter=0xffffffff82cf8218 <node_states+24>, kio=0xffffffff834abe20 <hstates>, file=0xffff88830ec92200) at include/linux/f
+s.h:2187
+#6  new_sync_write (ppos=0xffffc90000a63f08, len=2, buf=0x7f90eb632000 "4\n", filp=0xffff88830ec92200) at fs/read_write.c:491
+#7  vfs_write (file=file@entry=0xffff88830ec92200, buf=buf@entry=0x7f90eb632000 "4\n", count=count@entry=2, pos=pos@entry=0xffffc90000a63f08) at fs/read_write.c:5
+78
+#8  0xffffffff8131d6da in ksys_write (fd=<optimized out>, buf=0x7f90eb632000 "4\n", count=2) at fs/read_write.c:631
+#9  0xffffffff81ea93c8 in do_syscall_x64 (nr=<optimized out>, regs=0xffffc90000a63f58) at arch/x86/entry/common.c:50
+#10 do_syscall_64 (regs=0xffffc90000a63f58, nr=<optimized out>) at arch/x86/entry/common.c:80
+#11 0xffffffff8200009b in entry_SYSCALL_64 () at arch/x86/entry/entry_64.S:120
+#12 0x0000000000000000 in ?? ()
+```
 
-- 如何检查系统中，到底谁在使用 hugepage 的
-  - https://unix.stackexchange.com/questions/167451/how-to-monitor-use-of-huge-pages-per-process
+## 如何检查系统中，到底那些进程在使用 hugepages
+- https://unix.stackexchange.com/questions/167451/how-to-monitor-use-of-huge-pages-per-process
 
 ## hugetlb 是如何影响文件系统的
 - 不能作为 page cache 的？
 - 对于文件系统是透明的吗?
-
-## [ ] 如果一个共享的 vma ，两个 thread 同时读一个位置，如何保证不会出现错误
 
 ## alloc_huge_page && hugetlb_reserve_pages
 都是 hugepage_subpool_get_pages 打交道，只是一个在 page fault 的时候处理，一个是在 mmap 的时候
@@ -134,10 +217,8 @@ free 1G 也是类似的，但是需要注意的，当把数值降低之后，是
 
 ## [ ] 如何查看系统中启动预留的内存，其中的内存是不是永远不会被 buddy 使用的
 
-## [ ] 一个 mmap 的时候，其中是否可以同时包含两种 size 大小的 page
-- 不是有一个 mask 吗, 是有好几个的吗?
-
-## 分配过程中，如何逐个地被 memory policy ，cpuset 和 cgroup 管理
+## 一个 mmap 的时候，其中是否可以同时包含两种 size 大小的 page
+不可以
 
 ## 理解一下核心结构体
 
@@ -188,27 +269,31 @@ struct hstate {
 
 ## [ ] folio 是如何影响 hugetlb 的
 
-## [ ] alloc_buddy_huge_page_with_mpol 为什么正好在  dequeue_huge_page_vma 分配不出来的时候进行
-
-dequeue_huge_page_vma 中还是有 memory policy 的代码的啊
-
-之后还有
-```c
-    hugetlb_cgroup_commit_charge(idx, pages_per_huge_page(h), h_cg, page);
-```
-
 ## cgroup 是如何影响的
 - hugetlb_cgroup_charge_cgroup 和 hugetlb_cgroup_commit_charge_rsvd 在 alloc_huge_page 的时候被检查
+
+```txt
+hugetlb.2MB.current
+hugetlb.2MB.max
+hugetlb.2MB.events
+hugetlb.2MB.events.local
+hugetlb.2MB.numa_stat
+hugetlb.2MB.rsvd.current
+hugetlb.2MB.rsvd.max
+```
+- events : `__hugetlb_cgroup_charge_cgroup` 中，在分配或者 reserve 的时候
+- numa_stat : 展示在每一个 cgroup 在每一个 node 中的分布
 
 ## cpuset 是如何影响的
 - dequeue_huge_page_nodemask 中会检查 cpuset_zone_allowed
 - hugetlb_reserve_pages 中，会调用 hugetlb_acct_memory ->  allowed_mems_nr 的，在预留的时候会检查 cpuset / cgroup 的限制的
 
-## TODO
+## reservation
 - [ ] /home/martins3/core/linux/Documentation/translations/zh_CN/mm/hugetlbfs_reserv.rst
-- [ ] https://lwn.net/Articles/839737/
+
+- [Reducing page structures for huge pages](https://lwn.net/Articles/839737/]
   - https://lwn.net/ml/linux-kernel/20201210035526.38938-1-songmuchun@bytedance.com/
-- https://zhuanlan.zhihu.com/p/392703566
+  - https://zhuanlan.zhihu.com/p/392703566
 
 ## CONFIG_CONTIG_ALLOC 是做什么
 
@@ -291,7 +376,33 @@ const struct vm_operations_struct hugetlb_vm_ops = {
 ## gup
 - follow_huge_pud 和类似的一堆函数 follow 函数
 
-## nr_hugepages_mempolicy 的含义
+## mempolicy
+
+### memory policy 只是在调整 nr_hugepages 的时候有用，在 fault 的时候应该也是效果的才对吧
+- 是的，在分配的环节中，dequeue_huge_page_vma => huge_node ，在其中分配的时候，将会
+
+### [ ] hugetlbfs_inode_info::policy 似乎根本没有用过
+```c
+struct hugetlbfs_inode_info {
+    struct shared_policy policy;
+    struct inode vfs_inode;
+    unsigned int seals;
+};
+```
+- 什么叫做 shared policy ?
+
+
+### [ ] alloc_buddy_huge_page_with_mpol 为什么正好在 dequeue_huge_page_vma 分配不出来的时候进行
+
+dequeue_huge_page_vma 中还是有 memory policy 的代码的啊
+
+之后还有
+```c
+    hugetlb_cgroup_commit_charge(idx, pages_per_huge_page(h), h_cg, page);
+```
+
+
+### nr_hugepages_mempolicy 的含义
 
 ```txt
 numactl -m <node-list> echo 20 >/proc/sys/vm/nr_hugepages_mempolicy
@@ -316,19 +427,6 @@ HugePages_Free:     1835
 而同时大小为 1G 的页面还是那么多，看来 demote 是有点难以触发的。
 
 ## [ ] copy_hugetlb_page_range
-
-## memory policy 只是在调整 nr_hugepages 的时候有用，在 fault 的时候应该也是效果的才对吧
-- 是的，在分配的环节中，dequeue_huge_page_vma => huge_node ，在其中分配的时候，将会
-
-## [ ] hugetlbfs_inode_info::policy 似乎根本没有用过
-```c
-struct hugetlbfs_inode_info {
-    struct shared_policy policy;
-    struct inode vfs_inode;
-    unsigned int seals;
-};
-```
-- 什么叫做 shared policy ?
 
 ## seal
 
@@ -511,6 +609,13 @@ HugePages_Surp:        0
 ```
 
 - file_backend_memory_alloc 中，首先创建文件，然后 unlink，然后 mmap 该文件的。
+  - memory_region_init_ram_from_file
+    - qemu_ram_alloc_from_file
+      - file_ram_open : 获取 fd
+        - mkstemp
+        - unlink
+
+- [ ] 为什么我的例子不行?
 
 ### 似乎 QEMU 实现的有问题
 QEMU 中的 backtrace :
@@ -773,80 +878,6 @@ de40, mm=0xffff888300246c00) at mm/hugetlb.c:5622
 ```
 
 reservation 应该是创建的时候就存在的，但是为什么要设计出来 commit 之类的操作
-
-## pool
-
-通过触发 /proc/sys/vm/nr_hugepages 来控制 pool 中的 pages 的数量
-```txt
-#0  remove_pool_huge_page (h=h@entry=0xffffffff834abe20 <hstates>, nodes_allowed=nodes_allowed@entry=0xffffffff82cf8218 <node_states+24>, acct_surplus=acct_surplu
-s@entry=false) at mm/hugetlb.c:2041
-#1  0xffffffff812f0321 in set_max_huge_pages (h=h@entry=0xffffffff834abe20 <hstates>, count=count@entry=4, nid=nid@entry=-1, nodes_allowed=0xffffffff82cf8218 <nod
-e_states+24>) at mm/hugetlb.c:3393
-#2  0xffffffff812f05c8 in __nr_hugepages_store_common (len=2, count=4, nid=-1, h=0xffffffff834abe20 <hstates>, obey_mempolicy=false) at mm/hugetlb.c:3582
-#3  hugetlb_sysctl_handler_common (obey_mempolicy=<optimized out>, table=<optimized out>, write=<optimized out>, buffer=<optimized out>, length=<optimized out>, p
-pos=<optimized out>) at mm/hugetlb.c:4385
-#4  0xffffffff813a9c2e in proc_sys_call_handler (iocb=0xffffc90000a63ea0, iter=0xffffc90000a63e78, write=<optimized out>) at fs/proc/proc_sysctl.c:611
-#5  0xffffffff8131d309 in call_write_iter (iter=0xffffffff82cf8218 <node_states+24>, kio=0xffffffff834abe20 <hstates>, file=0xffff88830ec92200) at include/linux/f
-s.h:2187
-#6  new_sync_write (ppos=0xffffc90000a63f08, len=2, buf=0x7f90eb632000 "4\n", filp=0xffff88830ec92200) at fs/read_write.c:491
-#7  vfs_write (file=file@entry=0xffff88830ec92200, buf=buf@entry=0x7f90eb632000 "4\n", count=count@entry=2, pos=pos@entry=0xffffc90000a63f08) at fs/read_write.c:5
-78
-#8  0xffffffff8131d6da in ksys_write (fd=<optimized out>, buf=0x7f90eb632000 "4\n", count=2) at fs/read_write.c:631
-#9  0xffffffff81ea93c8 in do_syscall_x64 (nr=<optimized out>, regs=0xffffc90000a63f58) at arch/x86/entry/common.c:50
-#10 do_syscall_64 (regs=0xffffc90000a63f58, nr=<optimized out>) at arch/x86/entry/common.c:80
-#11 0xffffffff8200009b in entry_SYSCALL_64 () at arch/x86/entry/entry_64.S:120
-#12 0x0000000000000000 in ?? ()
-```
-
-## subpool
-
-通过 vma 必然找到其关联的文件，然后找到对应的 fs, 然后就是关联的 subpool
-```c
-static inline struct hugepage_subpool *subpool_inode(struct inode *inode)
-{
-    return HUGETLBFS_SB(inode->i_sb)->spool;
-}
-
-static inline struct hugepage_subpool *subpool_vma(struct vm_area_struct *vma)
-{
-    return subpool_inode(file_inode(vma->vm_file));
-}
-```
-从 hugetlbfs_fill_super 看，默认的 subpool 为 NULL，这导致 hugepage_subpool_get_pages 必然成功。
-
-
-## hugepage_subpool_get_pages
-
-居然是在 mmap 的时候创建分配的
-```txt
-#0  hugepage_subpool_get_pages (delta=1, spool=0x0 <fixed_percpu_data>) at mm/hugetlb.c:169
-#1  hugetlb_reserve_pages (inode=inode@entry=0xffff888302fbc298, from=0, to=1, vma=vma@entry=0xffff888309e5b240, vm_flags=<optimized out>) at mm/hugetlb.c:6510
-#2  0xffffffff81432f48 in hugetlbfs_file_mmap (file=0xffff888301e4cc00, vma=0xffff888309e5b240) at fs/hugetlbfs/inode.c:167
-#3  0xffffffff812c9800 in call_mmap (vma=0xffff888309e5b240, file=0xffff888301e4cc00) at include/linux/fs.h:2192
-#4  mmap_region (file=file@entry=0xffff888301e4cc00, addr=addr@entry=139922518310912, len=len@entry=1073741824, vm_flags=vm_flags@entry=115, pgoff=<optimized out>
-, uf=uf@entry=0xffffc90000c43eb0) at mm/mmap.c:1749
-#5  0xffffffff812c9dbe in do_mmap (file=file@entry=0xffff888301e4cc00, addr=139922518310912, addr@entry=0, len=len@entry=1073741824, prot=<optimized out>, prot@en
-try=3, flags=flags@entry=262178, pgoff=<optimized out>, pgoff@entry=0, populate=0xffffc90000c43ea8, uf=0xffffc90000c43eb0) at mm/mmap.c:1540
-#6  0xffffffff8129ec35 in vm_mmap_pgoff (file=file@entry=0xffff888301e4cc00, addr=addr@entry=0, len=len@entry=1073741824, prot=prot@entry=3, flag=flag@entry=26217
-8, pgoff=pgoff@entry=0) at mm/util.c:552
-#7  0xffffffff812c7133 in ksys_mmap_pgoff (addr=0, len=1073741824, prot=3, flags=262178, fd=<optimized out>, pgoff=0) at mm/mmap.c:1586
-#8  0xffffffff81ea93c8 in do_syscall_x64 (nr=<optimized out>, regs=0xffffc90000c43f58) at arch/x86/entry/common.c:50
-#9  do_syscall_64 (regs=0xffffc90000c43f58, nr=<optimized out>) at arch/x86/entry/common.c:80
-#10 0xffffffff8200009b in entry_SYSCALL_64 () at arch/x86/entry/entry_64.S:120
-#11 0x0000000000000003 in fixed_percpu_data ()
-#12 0xffffffffffffffff in ?? ()
-#13 0x0000000000000000 in ?? ()
-```
-
-这个 backtrace 这个结果:
-```c
-  void *ptr = mmap(NULL, 8 * TwoMega, PROT_READ | PROT_WRITE,
-                   MAP_PRIVATE | MAP_ANONYMOUS | MAP_HUGETLB, -1, 0);
-```
-但是，的确是有逻辑的，hugetlb 的 mapping 总是带有文件，所以，总是会掉用到
-`hugepage_subpool_get_pages` 上。
-
-
 ## alloc_huge_page 中间干了什么
 
 - alloc_huge_page
@@ -1152,43 +1183,7 @@ Further, there are important differences between shared and private mappings dep
 **TO BE CONTINUE**
 - [ ] 这个文档还是没有看完的，感觉 hugetlb 设计有点问题
 
-# hugetlbfs
-```c
-/*
- * node_hstate/s - associate per node hstate attributes, via their kobjects,
- * with node devices in node_devices[] using a parallel array.  The array
- * index of a node device or _hstate == node id.
- * This is here to avoid any static dependency of the node device driver, in
- * the base kernel, on the hugetlb module.
- */
-struct node_hstate {
-    struct kobject      *hugepages_kobj;
-    struct kobject      *hstate_kobjs[HUGE_MAX_HSTATE];
-};
-static struct node_hstate node_hstates[MAX_NUMNODES];
-
-struct hugepage_subpool {
-    spinlock_t lock;
-    long count;
-    long max_hpages;    /* Maximum huge pages or -1 if no maximum. */
-    long used_hpages;   /* Used count against maximum, includes */
-                /* both alloced and reserved pages. */
-    struct hstate *hstate;
-    long min_hpages;    /* Minimum huge pages or -1 if no minimum. */
-    long rsv_hpages;    /* Pages reserved against global pool to */
-                /* sasitfy minimum size. */
-};
-
-struct resv_map {
-    struct kref refs;
-    spinlock_t lock;
-    struct list_head regions;
-    long adds_in_progress;
-    struct list_head region_cache;
-    long region_cache_count;
-};
-```
-
+## hugetlbfs
 
 ## hugepage_subpool
 
@@ -1213,7 +1208,7 @@ entry=3236757504, data_page=data_page@entry=0xffff88830a771000) at fs/namespace.
 
 - [ ] hugepage_subpool_get_pages 和 hugepage_subpool_put_pages 是如何使用的
 
-## inode
+### 文件的创建
 
 ```txt
 #0  hugetlbfs_create (mnt_userns=0xffffffff82a618e0 <init_user_ns>, dir=0xffff88830c764010, dentry=0xffff8883081b39c0, mode=33188, excl=false) at fs/hugetlbfs/inode.c:931
@@ -1248,10 +1243,8 @@ entry=3236757504, data_page=data_page@entry=0xffff88830a771000) at fs/namespace.
 #9  0x0000000000000000 in ?? ()
 ```
 
-## [ ] 如何处理 rmap 的情况，需要单独处理吗
-
 ## resv_map 面对文件的伸缩，如何处理
-- [x] file : 直接预留，根本无需 reserve 的
+- [ ] file
 - [ ] shared 的
 - [ ] private 的
 
@@ -1435,3 +1428,220 @@ unsigned long reclaim_clean_pages_from_list(struct zone *zone,
 但是也不是将所有的内存都赶到 swap 中，现在不知道是什么原因
 
 ## 大页的 migration 如何
+
+
+## 深入理解一下 surplus 到
+
+```txt
+➜  share ./huge.sh
+# 清空所有大页
+                          Node 0          Node 1          Node 2          Node 3           Total
+HugePages_Total             0.00            0.00            0.00            0.00            0.00
+HugePages_Free              0.00            0.00            0.00            0.00            0.00
+HugePages_Surp              0.00            0.00            0.00            0.00            0.00
+# node 0 上创建 100 个大页
+                          Node 0          Node 1          Node 2          Node 3           Total
+HugePages_Total           200.00            0.00            0.00            0.00          200.00
+HugePages_Free            200.00            0.00            0.00            0.00          200.00
+HugePages_Surp              0.00            0.00            0.00            0.00            0.00
+# 消耗 node 0 上的 100 个大页
+                          Node 0          Node 1          Node 2          Node 3           Total
+HugePages_Total           200.00            0.00            0.00            0.00          200.00
+HugePages_Free              0.00            0.00            0.00            0.00            0.00
+HugePages_Surp            200.00            0.00            0.00            0.00          200.00
+# echo 100 到 node 2
+                          Node 0          Node 1          Node 2          Node 3           Total
+HugePages_Total           200.00          400.00            0.00            0.00          600.00
+HugePages_Free              0.00          400.00            0.00            0.00          400.00
+HugePages_Surp            200.00            0.00            0.00            0.00          200.00
+# echo 100 到 global 中
+                          Node 0          Node 1          Node 2          Node 3           Total
+HugePages_Total           200.00          200.00            0.00            0.00          400.00
+HugePages_Free              0.00          200.00            0.00            0.00          200.00
+HugePages_Surp            200.00            0.00            0.00            0.00          200.00
+# 释放
+                          Node 0          Node 1          Node 2          Node 3           Total
+HugePages_Total             0.00          200.00            0.00            0.00          200.00
+HugePages_Free              0.00          200.00            0.00            0.00          200.00
+HugePages_Surp              0.00            0.00            0.00            0.00            0.00
+```
+
+- 看看 node 的接口有什么问题吧！
+
+- set_max_huge_pages
+
+## node 接口和 /sys/kernel/mm/hugepages 的接口居然是一样的
+```txt
+#0  set_max_huge_pages (h=h@entry=0xffffffff83523428 <hstates+6088>, count=100, nid=0, nodes_allowed=0xffffc90002073e10) at mm/hugetlb.c:3278
+#1  0xffffffff81315f5c in __nr_hugepages_store_common (len=4, count=<optimized out>, nid=<optimized out>, h=0xffffffff83523428 <hstates+6088>, obey_mem
+policy=false) at mm/hugetlb.c:3591
+#2  nr_hugepages_store_common (obey_mempolicy=<optimized out>, kobj=<optimized out>, buf=<optimized out>, len=4) at mm/hugetlb.c:3610
+#3  0xffffffff8140589b in kernfs_fop_write_iter (iocb=0xffffc90002073ea0, iter=<optimized out>) at fs/kernfs/file.c:330
+#4  0xffffffff8136c8a9 in call_write_iter (iter=0x64, kio=0xffffffff83523428 <hstates+6088>, file=0xffff88800ae07400) at ./include/linux/fs.h:2199
+#5  new_sync_write (ppos=0xffffc90002073f08, len=4, buf=0x55f6626a3510 "100\n", filp=0xffff88800ae07400) at fs/read_write.c:491
+#6  vfs_write (file=file@entry=0xffff88800ae07400, buf=buf@entry=0x55f6626a3510 "100\n", count=count@entry=4, pos=pos@entry=0xffffc90002073f08) at fs/r
+ead_write.c:584
+#7  0xffffffff8136cb0a in ksys_write (fd=<optimized out>, buf=0x55f6626a3510 "100\n", count=4) at fs/read_write.c:637
+#8  0xffffffff81fae018 in do_syscall_x64 (nr=<optimized out>, regs=0xffffc90002073f58) at arch/x86/entry/common.c:50
+#9  do_syscall_64 (regs=0xffffc90002073f58, nr=<optimized out>) at arch/x86/entry/common.c:80
+```
+
+## 深入理解一下 reserve 机制吧
+- 大页存在对于虚拟地址空间吗?
+
+- 如果 guest mmap 100 一个，然后马上 global 0，那么就会得到这个结果:
+```txt
+HugePages_Total:     100
+HugePages_Free:      100
+HugePages_Rsvd:      100
+HugePages_Surp:      100
+```
+这个时候，无法继续分配额外的，也无法注销掉大页的。
+
+## 理解 shmem hugepage 的基本工作流程
+
+其实流程和 mmap 几乎相同的:
+- do_shmat
+  - alloc_file_clone
+  - do_mmap
+
+申请:
+```txt
+#0  dequeue_huge_page_node_exact (nid=1, h=0xffffffff83523428 <hstates+6088>) at ./arch/x86/include/asm/current.h:15
+#1  dequeue_huge_page_nodemask (h=h@entry=0xffffffff83523428 <hstates+6088>, gfp_mask=1051850, nid=<optimized out>, nmask=0x0 <fixed_percpu_data>) at m
+m/hugetlb.c:1193
+#2  0xffffffff81316e94 in dequeue_huge_page_vma (chg=<optimized out>, avoid_reserve=<optimized out>, address=140111190687744, vma=0xffff888102ee2688, h
+=0xffffffff83523428 <hstates+6088>) at mm/hugetlb.c:1242
+#3  alloc_huge_page (vma=vma@entry=0xffff888102ee2688, addr=addr@entry=140111190687744, avoid_reserve=avoid_reserve@entry=0) at mm/hugetlb.c:2931
+#4  0xffffffff8131b6bc in hugetlb_no_page (flags=597, old_pte=..., ptep=0xffff88821f029b70, address=140111190687744, idx=0, mapping=0xffff888101318410,
+ vma=0xffff888102ee2688, mm=0xffff8881018ef2c0) at mm/hugetlb.c:5649
+#5  hugetlb_fault (mm=0xffff8881018ef2c0, vma=vma@entry=0xffff888102ee2688, address=address@entry=140111190687744, flags=flags@entry=597) at mm/hugetlb
+.c:5881
+#6  0xffffffff812dde7b in handle_mm_fault (vma=0xffff888102ee2688, address=address@entry=140111190687744, flags=flags@entry=597, regs=regs@entry=0xffff
+c90001e67f58) at mm/memory.c:5215
+#7  0xffffffff810f3ca3 in do_user_addr_fault (regs=regs@entry=0xffffc90001e67f58, error_code=error_code@entry=6, address=address@entry=140111190687744)
+ at arch/x86/mm/fault.c:1428
+#8  0xffffffff81fb2342 in handle_page_fault (address=140111190687744, error_code=6, regs=0xffffc90001e67f58) at arch/x86/mm/fault.c:1519
+#9  exc_page_fault (regs=0xffffc90001e67f58, error_code=6) at arch/x86/mm/fault.c:1575
+#10 0xffffffff82000b62 in asm_exc_page_fault () at ./arch/x86/include/asm/idtentry.h:570
+```
+
+释放:
+```txt
+#0  enqueue_huge_page (h=h@entry=0xffffffff83523428 <hstates+6088>, page=page@entry=0xffffea00040f8000) at mm/hugetlb.c:1132
+#1  0xffffffff8131506f in free_huge_page (page=0xffffea00040f8000) at mm/hugetlb.c:1761
+#2  0xffffffff812a767d in __folio_put_large (folio=<optimized out>) at mm/swap.c:118
+#3  release_pages (pages=pages@entry=0xffffc90001e67db8, nr=<optimized out>) at mm/swap.c:1021
+#4  0xffffffff812a8406 in __pagevec_release (pvec=pvec@entry=0xffffc90001e67db0) at mm/swap.c:1075
+#5  0xffffffff81486ed8 in pagevec_release (pvec=0xffffc90001e67db0) at ./include/linux/pagevec.h:71
+#6  folio_batch_release (fbatch=0xffffc90001e67db0) at ./include/linux/pagevec.h:135
+#7  remove_inode_hugepages (inode=inode@entry=0xffff888101318298, lstart=lstart@entry=0, lend=lend@entry=9223372036854775807) at fs/hugetlbfs/inode.c:6
+48
+#8  0xffffffff81487305 in hugetlbfs_evict_inode (inode=0xffff888101318298) at fs/hugetlbfs/inode.c:660
+#9  0xffffffff8138dedb in evict (inode=0xffff888101318298) at fs/inode.c:664
+#10 0xffffffff81389cb1 in __dentry_kill (dentry=0xffff888008afecc0) at fs/dcache.c:607
+#11 0xffffffff8138a888 in dentry_kill (dentry=<optimized out>) at fs/dcache.c:733
+#12 0xffffffff8136e748 in __fput (file=0xffff888100687b00) at fs/file_table.c:328
+#13 0xffffffff81130e11 in task_work_run () at kernel/task_work.c:179
+#14 0xffffffff8119bf62 in resume_user_mode_work (regs=0xffffc90001e67f58) at ./include/linux/resume_user_mode.h:49
+#15 exit_to_user_mode_loop (ti_work=<optimized out>, regs=<optimized out>) at kernel/entry/common.c:171
+#16 exit_to_user_mode_prepare (regs=0xffffc90001e67f58) at kernel/entry/common.c:203
+#17 0xffffffff81fb253d in __syscall_exit_to_user_mode_work (regs=regs@entry=0xffffc90001e67f58) at kernel/entry/common.c:285
+#18 syscall_exit_to_user_mode (regs=regs@entry=0xffffc90001e67f58) at kernel/entry/common.c:296
+#19 0xffffffff81fae028 in do_syscall_64 (regs=0xffffc90001e67f58, nr=<optimized out>) at arch/x86/entry/common.c:86
+#20 0xffffffff8200009b in entry_SYSCALL_64 () at arch/x86/entry/entry_64.S:120
+```
+
+## reserve 的基本过程
+
+- ksys_mmap_pgoff
+  - hugetlb_file_setup
+    - hugetlb_reserve_pages
+      - [ ] 进入到 cgroup 和 subpool 中了，暂时打住
+
+
+do_mmap 中，这到底会成为什么的计算内容:
+```c
+		/* hugetlb applies strict overcommit unless MAP_NORESERVE */
+		if (file && is_file_hugepages(file))
+			vm_flags |= VM_NORESERVE;
+```
+
+## QEMU 无法申请大页，结果如何?
+
+- 制作一个简化的例子出来吧，也许有什么不得了的发现
+
+## pool 和 subpool
+- hugetlbfs_fill_super 中调用 hugepage_new_subpool，那么 subpool 就是和 mount 在一起的概念。
+
+通过 vma 必然找到其关联的文件，然后找到对应的 fs, 然后就是关联的 subpool
+```c
+static inline struct hugepage_subpool *subpool_inode(struct inode *inode)
+{
+    return HUGETLBFS_SB(inode->i_sb)->spool;
+}
+
+static inline struct hugepage_subpool *subpool_vma(struct vm_area_struct *vma)
+{
+    return subpool_inode(file_inode(vma->vm_file));
+}
+```
+从 hugetlbfs_fill_super 看，默认的 subpool 为 NULL，这导致 hugepage_subpool_get_pages 中检查必然
+成功。
+
+mmap 的时候，如果该文件是在 mount 点构建的，那么需要将：
+```txt
+#0  hugepage_subpool_get_pages (delta=1, spool=0x0 <fixed_percpu_data>) at mm/hugetlb.c:169
+#1  hugetlb_reserve_pages (inode=inode@entry=0xffff888302fbc298, from=0, to=1, vma=vma@entry=0xffff888309e5b240, vm_flags=<optimized out>) at mm/hugetlb.c:6510
+#2  0xffffffff81432f48 in hugetlbfs_file_mmap (file=0xffff888301e4cc00, vma=0xffff888309e5b240) at fs/hugetlbfs/inode.c:167
+#3  0xffffffff812c9800 in call_mmap (vma=0xffff888309e5b240, file=0xffff888301e4cc00) at include/linux/fs.h:2192
+#4  mmap_region (file=file@entry=0xffff888301e4cc00, addr=addr@entry=139922518310912, len=len@entry=1073741824, vm_flags=vm_flags@entry=115, pgoff=<optimized out>
+, uf=uf@entry=0xffffc90000c43eb0) at mm/mmap.c:1749
+#5  0xffffffff812c9dbe in do_mmap (file=file@entry=0xffff888301e4cc00, addr=139922518310912, addr@entry=0, len=len@entry=1073741824, prot=<optimized out>, prot@en
+try=3, flags=flags@entry=262178, pgoff=<optimized out>, pgoff@entry=0, populate=0xffffc90000c43ea8, uf=0xffffc90000c43eb0) at mm/mmap.c:1540
+#6  0xffffffff8129ec35 in vm_mmap_pgoff (file=file@entry=0xffff888301e4cc00, addr=addr@entry=0, len=len@entry=1073741824, prot=prot@entry=3, flag=flag@entry=26217
+8, pgoff=pgoff@entry=0) at mm/util.c:552
+#7  0xffffffff812c7133 in ksys_mmap_pgoff (addr=0, len=1073741824, prot=3, flags=262178, fd=<optimized out>, pgoff=0) at mm/mmap.c:1586
+#8  0xffffffff81ea93c8 in do_syscall_x64 (nr=<optimized out>, regs=0xffffc90000c43f58) at arch/x86/entry/common.c:50
+#9  do_syscall_64 (regs=0xffffc90000c43f58, nr=<optimized out>) at arch/x86/entry/common.c:80
+#10 0xffffffff8200009b in entry_SYSCALL_64 () at arch/x86/entry/entry_64.S:120
+#11 0x0000000000000003 in fixed_percpu_data ()
+#12 0xffffffffffffffff in ?? ()
+#13 0x0000000000000000 in ?? ()
+```
+
+这个 backtrace 这个结果:
+```c
+  void *ptr = mmap(NULL, 8 * TwoMega, PROT_READ | PROT_WRITE,
+                   MAP_PRIVATE | MAP_ANONYMOUS | MAP_HUGETLB, -1, 0);
+```
+但是，的确是有逻辑的，hugetlb 的 mapping 总是带有文件，所以，总是会掉用到
+`hugepage_subpool_get_pages` 上。
+
+各个字段的还是相当简单的:
+```c
+struct hugepage_subpool {
+	spinlock_t lock;
+	long count;
+	long max_hpages;	/* Maximum huge pages or -1 if no maximum. */
+	long used_hpages;	/* Used count against maximum, includes */
+				/* both allocated and reserved pages. */
+	struct hstate *hstate;
+	long min_hpages;	/* Minimum huge pages or -1 if no minimum. */
+	long rsv_hpages;	/* Pages reserved against global pool to */
+				/* satisfy minimum size. */
+};
+```
+
+## 如果让内存 FALLOC_FL_PUNCH_HOLE 了，如果是用户态程序，将会 SIGBUS 的
+- 但是为什么 QEMU 没有问题，难道是因为 kernel 制作的吗?
+
+## max_huge_pages 是什么含义
+
+从 set_max_huge_pages 中看，
+- max_huge_pages = nr_hugepages - surplus_huge_pages
+
+但是为什么需要维护这个只读数据啊
+
+## 如果映射的是普通文件，但是携带了 HUGETLB  的参数
+mmap 直接失败

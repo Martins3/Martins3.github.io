@@ -147,4 +147,5 @@ VM_PFNMAP pages.
     qemu_mutex_unlock(&page_mutex);
 ```
 
-看上去也不是 QEMU 的问题。
+调查一下这个，是不是没有考虑到这个问题哇?
+https://mp.weixin.qq.com/s/R8BVIrps5UPXVncvbGkkug

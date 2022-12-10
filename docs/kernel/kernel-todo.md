@@ -274,3 +274,30 @@ static inline int driver_match_device(struct device_driver *drv,
 - `__alloc_contig_migrate_range`
   - fatal_signal_pending 为什么要在这里调用?
     - 或者说，调用 fatal_signal_pending 的原理是什么?
+
+
+## soft lockup
+set_max_huge_pages
+```c
+	while (count > persistent_huge_pages(h)) {
+		/*
+		 * If this allocation races such that we no longer need the
+		 * page, free_huge_page will handle it by freeing the page
+		 * and reducing the surplus.
+		 */
+		spin_unlock_irq(&hugetlb_lock);
+
+		/* yield cpu to avoid soft lockup */
+		cond_resched();
+
+		ret = alloc_pool_huge_page(h, nodes_allowed,
+						node_alloc_noretry);
+		spin_lock_irq(&hugetlb_lock);
+		if (!ret)
+			goto out;
+
+		/* Bail for signals. Probably ctrl-c from user */
+		if (signal_pending(current))
+			goto out;
+	}
+```

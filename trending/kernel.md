@@ -74,3 +74,6 @@
 - bf82d38c91f857083f2d1b9770fa3df55db2ca3b
 - bdaa78c6aa861f0e8c612a0b2272423d92f0071c : memory
 - 0ba09b1733878afe838fe35c310715fda3d46428 : 我靠，我真的不知道这么小的性能 regression 是如何找到的。
+- 5b3e0cd872b09c3c771e19464db9dfc20972c39f : kvm
+- 998b30c3948e4d0b1097e639918c5cff332acac5 :  Syzkaller 汇报了一个 bug
+- fbf8321238bac04368f57af572e05a9c01347a0b : memcg 的问题
