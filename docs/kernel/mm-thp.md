@@ -474,3 +474,13 @@ bool transparent_hugepage_enabled(struct vm_area_struct *vma)
     - vma_alloc_folio : 分配 page
       - `__do_huge_pmd_anonymous_page` : 将分配的 page 和 page table 组装
   - vmf->vma->vm_ops->huge_fault : 文件映射，如果文件系统注册了
+
+## /proc/meminfo 中的这几个都是描述 transparent hugepage 的吗?
+
+```txt
+AnonHugePages:      6144 kB
+ShmemHugePages:  1011712 kB
+ShmemPmdMapped:        0 kB
+FileHugePages:         0 kB
+FilePmdMapped:         0 kB
+```

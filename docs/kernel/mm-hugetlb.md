@@ -35,6 +35,8 @@ obj-$(CONFIG_TRANSPARENT_HUGEPAGE) += huge_memory.o khugepaged.o
 
 - 这些接口的内核代码开始的位置： hugetlb_sysctl_handler_common
 
+
+
 ## 使用大页的方法
 
 ### mount
@@ -215,8 +217,6 @@ free 1G 也是类似的，但是需要注意的，当把数值降低之后，是
 
 ## [ ] 大页如何 KSM
 
-## [ ] 如何查看系统中启动预留的内存，其中的内存是不是永远不会被 buddy 使用的
-
 ## 一个 mmap 的时候，其中是否可以同时包含两种 size 大小的 page
 不可以
 
@@ -330,11 +330,8 @@ static int alloc_pool_huge_page(struct hstate *h, nodemask_t *nodes_allowed,
 				nodemask_t *node_alloc_noretry)
 ```
 
-## [ ] 预留的时候需要制定每一种大小的 page 的数量吗
-
 ## [x] 如果 hugetlb_file_setup 是入口，那个文件系统还需要使用吗
-ksys_mmap_pgoff 中处理过，
-
+ksys_mmap_pgoff 中处理过
 
 ## [ ] vm_operations_struct
 
@@ -356,7 +353,7 @@ ksys_mmap_pgoff 中处理过，
 #14 0x0000000000000000 in ?? ()
 ```
 
-```txt
+```c
 const struct vm_operations_struct hugetlb_vm_ops = {
     .fault = hugetlb_vm_op_fault,
     .open = hugetlb_vm_op_open,
@@ -413,18 +410,23 @@ echo 20 > /proc/sys/vm/nr_hugepages_mempolicy
 ```
 的区别是什么 ?
 
-在函数 `__nr_hugepages_store_common` 中调用 `init_nodemask_of_mempolicy` 会根据 current 的 mempolicy 来构建。
+从 nr_hugepages_mempolicy 中 echo 的时候，在函数 `__nr_hugepages_store_common` 中调用 `init_nodemask_of_mempolicy` 会根据 current 的 mempolicy 来构建。
 
-是不是说，新增加的 page 的是按照 memory policy 来分配
+
+```c
+echo 0 > /proc/sys/vm/nr_hugepages
+echo 1000 > /proc/sys/vm/nr_hugepages
+numactl -m 1 echo 200 > /proc/sys/vm/nr_hugepages_mempolicy && numastat -m | grep "Huge"
+
+echo 0 > /proc/sys/vm/nr_hugepages
+echo 1000 > /proc/sys/vm/nr_hugepages
+numactl -m 1 echo 200 >  /sys/kernel/mm/hugepages/hugepages-2048kB/nr_hugepages_mempolicy && numastat -m | grep "Huge"
+```
+为什么当已经存在 page 的时候，这会将已经存在的大页清理掉?
+这是因为希望将所有的 hugepages 设置为 0，但是现在只能在特性的 numa 上操作，所以最后会导致为 0 。
+
 
 会出现 /proc/sys/vm/nr_hugepages 和 /proc/sys/vm/nr_hugepages_mempolicy 的数值不同的情况吗?
-
-按照当前配置，强行提高 2M 的页面 /proc/sys/vm/nr_hugepages，其最大可以设置为:
-```plain
-HugePages_Total:    1835
-HugePages_Free:     1835
-```
-而同时大小为 1G 的页面还是那么多，看来 demote 是有点难以触发的。
 
 ## [ ] copy_hugetlb_page_range
 
@@ -1387,13 +1389,11 @@ static inline bool is_file_hugepages(struct file *file)
 ## 细节
 - flush_free_hpage_work ：为什么额外的需要 workfn 来处理
 
-## TODO
-- https://biscuitos.github.io/blog/Hugetlbfs/
-- https://www.cnblogs.com/arnoldlu/p/14028825.html
-
+## 是否支持 1G 大页
 通过这个可以检查是否支持 1GB 大页:
 - cat /proc/cpuinfo | grep pdpe1gb | head -n 1
 
+## [ ] 为什么不支持 1G 大页
 但是不知道为什么，现在的 alpine.sh 拉起来的虚拟机中并不能支持 1gb 大页
 
 ## hugepage anon mmap 的时候，大页的大小是不可以混合使用的
@@ -1645,3 +1645,15 @@ struct hugepage_subpool {
 
 ## 如果映射的是普通文件，但是携带了 HUGETLB  的参数
 mmap 直接失败
+
+从的位置找找，具体是哪里失败？
+- [ ]  ksys_mmap_pgoff
+
+## /proc/sys/vm/nr_hugepages
+这个东西是如何决定使用哪一个大页的?
+
+## TODO
+- https://biscuitos.github.io/blog/Hugetlbfs/
+
+## 有件事情无法理解，对于普通页的虚拟地址空间也是存在 reserver 的，为什么唯独大页的 reservation 单独的设计这么复杂？
+- 普通页的 overcommit 默认是打开的吗?

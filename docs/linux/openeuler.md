@@ -17,3 +17,7 @@
 
 ## openEuler pkgship 查询包的方法
 - https://pkgmanage.openeuler.org/Packagemanagement
+
+## 安装包下载
+- exe: https://mirrors.aliyun.com/openeuler/openEuler-22.03-LTS/everything/x86_64/Packages/
+- src: https://repo.openeuler.org/openEuler-22.03-LTS/source/Packages/

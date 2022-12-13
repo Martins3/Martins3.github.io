@@ -9,7 +9,7 @@ hacking_memory="virtio-pmem"
 hacking_memory="none"
 hacking_memory="virtio-mem"
 hacking_memory="prealloc"
-hacking_memory="numa"
+# hacking_memory="numa"
 
 hacking_migration=true
 # @todo 尝试在 guest 中搭建一个 vIOMMU
@@ -64,7 +64,7 @@ arg_hugetlb=""
 # 可选参数
 arg_mem_cpu="-m 12G -cpu host -smp 2 -numa node"
 arg_machine="-machine pc,accel=kvm,kernel-irqchip=on"
-arg_mem_balloon="-device virtio-balloon,id=balloon0,deflate-on-oom=true,page-poison=true,free-page-reporting=true,free-page-hint=true,iothread=io1 -object iothread,id=io1"
+arg_mem_balloon="-device virtio-balloon,id=balloon0,deflate-on-oom=true,page-poison=true,free-page-reporting=false,free-page-hint=true,iothread=io1 -object iothread,id=io1"
 
 case $hacking_memory in
 "numa")
@@ -158,7 +158,12 @@ arg_network="-netdev user,id=net1,hostfwd=tcp::5556-:22 -device e1000e,netdev=ne
 arg_network="-netdev user,id=net1,hostfwd=tcp::5556-:22 -device virtio-net-pci,netdev=net1,romfile=/home/martins3/core/zsh/README.md"
 arg_qmp="-qmp tcp:localhost:4444,server,wait=off"
 
-arg_monitor="-serial mon:stdio -display none"
+mon_socket_path=/tmp/qemu-monitor-socket
+serial_socket_path=/tmp/qemu-serial-socket
+arg_monitor="-serial stdio:monitor -display none"
+
+arg_monitor="-serial stdio -display none"
+arg_monitor="$arg_monitor -monitor unix:$mon_socket_path,server,nowait"
 arg_initrd="-initrd /home/martins3/initramfs-6.0.0-rc2-00159-g4c612826bec1-dirty.img"
 arg_initrd=""
 arg_trace="--trace 'memory_region_ops_\*'"
@@ -185,8 +190,6 @@ show_help() {
   echo "-a 表示作为热迁移的 target 端"
   exit 0
 }
-mon_socket_path=/tmp/qemu-monitor-socket
-serial_socket_path=/tmp/qemu-serial-socket
 
 while getopts "adskthpcmq" opt; do
   case $opt in
@@ -194,7 +197,7 @@ while getopts "adskthpcmq" opt; do
     debug_qemu="gdb -ex \"handle SIGUSR1 nostop noprint\" --args"
     # gdb 的时候，让 serial 输出从 unix domain socket 输出
     # https://unix.stackexchange.com/questions/426652/connect-to-running-qemu-instance-with-qemu-monitor
-    arg_monitor="-serial unix:$serial_socket_path,server,nowait -monitor unix:$mon_socket_path,server,nowait -display none"
+    arg_monitor="-serial unix:$serial_socket_path,server,nowait -display none"
     cd "${qemu_dir}" || exit 1
     ;;
   p) debug_qemu="perf record -F 1000" ;;

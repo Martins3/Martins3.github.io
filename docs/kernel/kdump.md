@@ -448,8 +448,15 @@ chmod a+x crash.sh
 - bt -FF -c 12
 
 ## 如何 ubuntu crash 之后
+我发现直接执行安装
+```txt
+sudo apt-get install linux-image-`uname -r`-dbgsym
+```
+是不可以的，应该默认没有打开 debug 库:
+
+
 - 获取 debuginfo
-- https://askubuntu.com/questions/197016/how-to-install-a-package-that-contains-ubuntu-kernel-debug-symbols
+- 关键参考: https://askubuntu.com/questions/197016/how-to-install-a-package-that-contains-ubuntu-kernel-debug-symbols
 - https://superuser.com/questions/62575/where-is-vmlinux-on-my-ubuntu-installation
 
 echo "deb http://ddebs.ubuntu.com $(lsb_release -cs)-updates main restricted universe multiverse

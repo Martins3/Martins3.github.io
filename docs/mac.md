@@ -62,7 +62,7 @@ sudo apt install ubuntu-desktop
 
 ### 安装 Linux
 
-使用 asahilinux ，安装过程非常简单:
+使用 asahi linux ，安装过程非常简单:
 
 ![](./img/asahilinux.jpeg)
 
