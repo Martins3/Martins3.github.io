@@ -371,20 +371,12 @@ growing stack |bp |argc| argv poninter | argv | PATH |
 2. 从parent 哪里继承PATH (你确定)
 3. 程序开始执行的时候，syscall 比如 execvp 之类必定含有包含main 函数的参数
 4. 将参数复制到stack 上
+
 #### (block) 显然disk 和固态使用的驱动不可能是同一个驱动，都使用gendisk 表示岂不是很尴尬
 1. 典型的block 设备有什么 ? disk sdd floppy 网卡(?)
 2. block layer 真的对于抽象和封装　block 设备有效吗 ? 他的假设是什么(推测预取数据，将多次读取合并)
-3. 但是似乎ssd 不是数据分离的吗 ? (也许是谣言，也许理解不正确，数据被放到一起不应该是正确的操作吗 ?)
+3. 但是似乎 ssd 不像 ? (也许是谣言，也许理解不正确，数据被放到一起不应该是正确的操作吗 ?)
 
-
-#### (misc) control group 是什么回事 ?
-1. control group 在应用层和内核说的一个东西吗？
-2. 内核中间主要出现的位置是什么, 现在知道swap 分区中间编译选项控制，恐怖的一匹
-3. control group 是在控制一组thread 中间的 CPU mem 等使用量吗 ?
-    1. 谁和谁应该被划分一个cgroup
-    2. 资源的额度如何设置 ?
-    3. 如何保证其强制性
-4. cgroup 是为了解决什么问题
 
 #### (fs) fread 实现机制
 fread 需要参数 用户地址空间的指针 和 文件描述符
@@ -561,9 +553,6 @@ static int run_init_process(const char *init_filename)
 #### (lock) might_sleep 作用是什么，谁会使用 ?
 
 #### (sched) 调度启如何实现两个高运行的出现在不同的CPU中间
-
-#### (block layer) CONFIG_BLOCK
-如果这个CONFIG 被取消掉了，那么.... ?
 
 #### (mmap) 对于文件的映射，是不是都是只读的?
 不然，为什么file的反向映射需要简单的多 ?
@@ -765,13 +754,6 @@ struct cgroup_subsys memory_cgrp_subsys = {
 
 2. 感觉 fs/block_dev.c 似乎会告诉我们很多关键的信息点。
 #### (fs block) block 和 sector 之间是如何装换的 ? block = n * sector 的时候，n 的取值有什么讲究吗 ?
-
-#### (block) io scheduler
-
-提供给 io scheduler 的interface 是什么？
-1. request queue ?
-
-#### (dma) dma 和 block layer 的关系是什么 ?
 
 #### (device) disk 初始化的过程，为什么不咨询一下 ucore
 

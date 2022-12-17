@@ -45,3 +45,5 @@ https://tinylab-1.gitbook.io/cbook/02-chapter4
 
 ## 工具
 - https://github.com/horsicq/XELFViewer
+
+- https://github.com/NixOS/patchelf

@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 set -e
 
+# @todo 用 https://github.com/charmbracelet/gum 来重写这个项目
 use_nvme_as_root=false
+minimal=false
 replace_kernel=true
 
 hacking_memory="hotplug"
@@ -9,9 +11,9 @@ hacking_memory="virtio-pmem"
 hacking_memory="none"
 hacking_memory="virtio-mem"
 hacking_memory="prealloc"
-# hacking_memory="numa"
+hacking_memory="numa"
 
-hacking_migration=true
+hacking_migration=false
 # @todo 尝试在 guest 中搭建一个 vIOMMU
 #
 if [[ $hacking_migration = true ]]; then
@@ -74,7 +76,6 @@ case $hacking_memory in
   arg_mem_cpu="$arg_mem_cpu -object memory-backend-ram,size=2G,id=m1 -numa node,memdev=m1,cpus=2-3,nodeid=1"
   arg_mem_cpu="$arg_mem_cpu -object memory-backend-ram,size=4G,id=m2 -numa node,memdev=m2,cpus=4,nodeid=2"
   arg_mem_cpu="$arg_mem_cpu -numa node,cpus=5,nodeid=3" # 只有 CPU ，但是没有内存
-  # @todo
   ;;
 "prealloc")
   arg_mem_cpu="-cpu host -m 1G -smp cpus=1"
@@ -150,6 +151,8 @@ fi
 
 arg_disk="-device virtio-blk-pci,drive=nvme2,iothread=io0 -drive file=${workstation}/img2,format=raw,if=none,id=nvme2 -object iothread,id=io0"
 arg_scsi="-device virtio-scsi-pci,id=scsi0,bus=pci.0,addr=0xa -device scsi-hd,bus=scsi0.0,channel=0,scsi-id=0,lun=0,drive=scsi-drive -drive file=${workstation}/img3,format=raw,id=scsi-drive,if=none"
+arg_sata="-drive file=${workstation}/img4,media=disk,format=raw"
+arg_sata="$arg_sata -drive file=${workstation}/img5,media=disk,format=raw"
 
 # @todo 尝试一下这个
 # -netdev tap,id=nd0,ifname=tap0 -device e1000,netdev=nd0
@@ -163,6 +166,7 @@ serial_socket_path=/tmp/qemu-serial-socket
 arg_monitor="-serial stdio:monitor -display none"
 
 arg_monitor="-serial stdio -display none"
+# screen 的限制，那就单独移动出来吧
 arg_monitor="$arg_monitor -monitor unix:$mon_socket_path,server,nowait"
 arg_initrd="-initrd /home/martins3/initramfs-6.0.0-rc2-00159-g4c612826bec1-dirty.img"
 arg_initrd=""
@@ -243,13 +247,12 @@ if [ ! -f "$iso" ] && [ ! -f $disk_img ]; then
   exit 0
 fi
 
-# 创建额外的两个 disk 用于测试 nvme 和 scsi
+# 创建额外的两个 disk 用于测试 nvme 和 scsi 等
 # mount -o loop /path/to/data /mnt
-for ((i = 0; i < 3; i++)); do
+for ((i = 0; i < 5; i++)); do
   ext4_img="${workstation}/img$((i + 1))"
   if [ ! -f "$ext4_img" ]; then
-    sure "create ${ext4_img}"
-    dd if=/dev/null of="${ext4_img}" bs=1M seek=100
+    dd if=/dev/null of="${ext4_img}" bs=1M seek=1000
     mkfs.ext4 -F "${ext4_img}"
   fi
 done
@@ -278,24 +281,33 @@ if [ $launch_gdb = true ]; then
   exit 0
 fi
 
-if [[ -z ${replace_kernel+x} ]]; then
-  qemu=qemu-system-x86_64
+if [[ ${minimal} = true ]]; then
   arg_monitor="-vnc :0,password=on -monitor stdio"
   # arg_monitor="-nographic"
-  # arg_monitor=""
-  # @todo 应该是无需如此复杂的
+  arg_monitor="-monitor stdio"
   ${qemu} \
     -cpu host $arg_img \
     -enable-kvm \
     -m 2G \
-    -smp 2 $arg_monitor $debug_kernel
+    -smp 2 $arg_monitor
   exit 0
+fi
+
+if [[ -z ${replace_kernel+x} ]]; then
+  arg_kernel=""
+  arg_monitor=""
+
+  # @todo 不知道为什么需要将无关的 storage 设备都去掉
+  arg_sata=""
+  arg_scsi=""
+  arg_nvme=""
+  arg_disk=""
 fi
 
 # @todo 将这个图形在终端中更加清晰的输出出来
 cmd="${debug_qemu} ${qemu} ${arg_trace} ${debug_kernel} ${arg_img} ${arg_mem_cpu}  \
-  ${arg_kernel} ${arg_seabios} ${arg_bridge} ${arg_nvme} ${arg_disk} ${arg_network} \
+  ${arg_kernel} ${arg_seabios} ${arg_bridge} ${arg_network} \
   ${arg_machine} ${arg_monitor} ${arg_initrd} ${arg_mem_balloon} ${arg_hacking} \
-  ${arg_qmp} ${arg_vfio} ${arg_smbios} ${arg_scsi} ${arg_migration_target} ${arg_share_dir}"
+  ${arg_qmp} ${arg_vfio} ${arg_smbios} ${arg_migration_target} ${arg_share_dir} ${arg_sata} ${arg_scsi} ${arg_nvme} ${arg_disk} "
 echo "$cmd"
 eval "$cmd"

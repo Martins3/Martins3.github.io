@@ -78,3 +78,5 @@
 - 998b30c3948e4d0b1097e639918c5cff332acac5 :  Syzkaller 汇报了一个 bug
 - fbf8321238bac04368f57af572e05a9c01347a0b : memcg 的问题
 - 4cee37b3a4e68c42b867c87a6218e11bc571ba66
+- drivers/clk : 这个是在搞什么，为什么代码那么多
+- 8fa590bf344816c925810331eea8387627bbeb40 : kvm 的改动真快啊

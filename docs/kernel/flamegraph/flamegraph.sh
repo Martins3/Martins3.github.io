@@ -1,10 +1,9 @@
 #!/usr/bin/env bash
 
 # 开始之前
-# sudo su
-# echo 0 > /proc/sys/kernel/perf_event_paranoid
-# echo 0 > /proc/sys/kernel/kptr_restrict
-# echo 10000 > /proc/sys/kernel/perf_event_max_sample_rate
+# echo 0 | sudo tee /proc/sys/kernel/perf_event_paranoid
+# echo 0 | sudo tee /proc/sys/kernel/kptr_restrict
+# echo 10000 | sudo tee /proc/sys/kernel/perf_event_max_sample_rate
 
 WORKDIR=/home/martins3/flame
 
@@ -15,16 +14,17 @@ function usage() {
     Options:
     -h|help       Display this message
     -g|grep       Only display what you care about
-    -c|cmd        The command to perf"
+    -c|cmd        The command to perf
+    -b|bind       The cpu to bind"
 }
 
 target=""
 cmd=""
-cpu_bind="-a"
+cpu=""
 while getopts "hg:c:b:" opt; do
   case $opt in
   c) cmd=${OPTARG} ;;
-  b) cpu_bind="--cpu ${OPTARG}" ;;
+  b) cpu="${OPTARG}" ;;
   h)
     usage
     exit 0
@@ -53,7 +53,13 @@ if [[ ! -d ${WORKDIR} ]]; then
   wget https://raw.githubusercontent.com/brendangregg/FlameGraph/master/flamegraph.pl -O ${flamegraph_pl}
 fi
 
-perf record ${cpu_bind} -g -- ${cmd}
+if [[ -z $cpu ]]; then
+  cpu_bind="-a"
+else
+  cpu_bind="--cpu ${cpu}"
+fi
+
+perf record ${cpu_bind} -g -- taskset -c $cpu ${cmd}
 perf script | perl ${stackcollapse_pl} >${perf_data}
 
 if [[ -z ${target} ]]; then
@@ -61,6 +67,6 @@ if [[ -z ${target} ]]; then
 else
   grep "${target}" ${perf_data} | perl ${flamegraph_pl} --title "trace" >${img}
 fi
-# microsoft-edge-dev "${img}"
+microsoft-edge-dev "${img}"
 
 # taskset -c 5 fio 4k-read.fio

@@ -1,8 +1,176 @@
+## 从上到达此处
+
+blk-core.c 核心:
+
+```txt
+#0  submit_bio (bio=0xffff88822baa1f00) at block/blk-cgroup.h:398
+#1  0xffffffff813bc63d in iomap_readahead (rac=<optimized out>, ops=0xffffffff8246d090 <xfs_read_iomap_ops>) at fs/iomap/buffered-io.c:422
+#2  0xffffffff8128a334 in read_pages (rac=rac@entry=0xffffc900020afad0) at mm/readahead.c:158
+#3  0xffffffff8128a6b0 in page_cache_ra_unbounded (ractl=ractl@entry=0xffffc900020afad0, nr_to_read=35, lookahead_size=<optimized out>) at mm/readahead.c:263
+#4  0xffffffff8128ac39 in do_page_cache_ra (lookahead_size=<optimized out>, nr_to_read=<optimized out>, ractl=0xffffc900020afad0) at mm/readahead.c:293
+#5  0xffffffff8127fc77 in do_sync_mmap_readahead (vmf=0xffffc900020afb98) at mm/filemap.c:3028
+#6  filemap_fault (vmf=0xffffc900020afb98) at mm/filemap.c:3120
+#7  0xffffffff812bacaf in __do_fault (vmf=vmf@entry=0xffffc900020afb98) at mm/memory.c:4173
+#8  0xffffffff812bf1bf in do_cow_fault (vmf=0xffffc900020afb98) at mm/memory.c:4548
+#9  do_fault (vmf=vmf@entry=0xffffc900020afb98) at mm/memory.c:4649
+#10 0xffffffff812c3ba0 in handle_pte_fault (vmf=0xffffc900020afb98) at mm/memory.c:4911
+#11 __handle_mm_fault (vma=vma@entry=0xffff8882235f1000, address=address@entry=93979750306376, flags=flags@entry=533) at mm/memory.c:5053
+#12 0xffffffff812c4440 in handle_mm_fault (vma=0xffff8882235f1000, address=address@entry=93979750306376, flags=flags@entry=533, regs=regs@entry=0xffffc900020afcf8) at mm/memory.c:5151
+#13 0xffffffff810f2983 in do_user_addr_fault (regs=regs@entry=0xffffc900020afcf8, error_code=error_code@entry=2, address=address@entry=93979750306376) at arch/x86/mm/fault.c:1397
+#14 0xffffffff81edffa2 in handle_page_fault (address=93979750306376, error_code=2, regs=0xffffc900020afcf8) at arch/x86/mm/fault.c:1488
+#15 exc_page_fault (regs=0xffffc900020afcf8, error_code=2) at arch/x86/mm/fault.c:1544
+#16 0xffffffff82000b62 in asm_exc_page_fault () at ./arch/x86/include/asm/idtentry.h:570
+```
+
+- blk_start_plug : 用于积累，当执行对应的 blk_finish_plug 的时候，再将 io 提交上去
+
+## write
+- submit_bio
+  - submit_bio_noacct
+    - submit_bio_noacct_nocheck
+      - __submit_bio_noacct
+        - __submit_bio : 有点看不懂，好几个循环
+          - blk_mq_submit_bio : 进入到 blk-mq.c 中了
+            - blk_mq_get_cached_request
+            - blk_insert_flush
+              - blk_flush_queue_rq
+                - blk_mq_add_to_requeue_list
+                  - blk_mq_kick_requeue_list
+
+```txt
+#0  virtio_queue_rq (hctx=0xffff8880056b5e00, bd=0xffffc900011d7d70) at drivers/block/virtio_blk.c:342
+#1  0xffffffff816ce470 in blk_mq_dispatch_rq_list (hctx=hctx@entry=0xffff8880056b5e00, list=list@entry=0xffffc900011d7dc0, nr_budgets=nr_budgets@entry=0) at block/blk-mq.c:2056
+#2  0xffffffff816d4d46 in __blk_mq_sched_dispatch_requests (hctx=hctx@entry=0xffff8880056b5e00) at block/blk-mq-sched.c:306
+#3  0xffffffff816d4e54 in blk_mq_sched_dispatch_requests (hctx=hctx@entry=0xffff8880056b5e00) at block/blk-mq-sched.c:339
+#4  0xffffffff816ca8ec in __blk_mq_run_hw_queue (hctx=0xffff8880056b5e00) at block/blk-mq.c:2174
+#5  0xffffffff816cad70 in __blk_mq_delay_run_hw_queue (hctx=<optimized out>, async=<optimized out>, msecs=msecs@entry=0) at block/blk-mq.c:2250
+#6  0xffffffff816cb018 in blk_mq_run_hw_queue (hctx=<optimized out>, async=async@entry=false) at block/blk-mq.c:2298
+#7  0xffffffff816cb2b4 in blk_mq_run_hw_queues (q=q@entry=0xffff888005748368, async=async@entry=false) at block/blk-mq.c:2346
+#8  0xffffffff816cc20f in blk_mq_requeue_work (work=0xffff888005748578) at block/blk-mq.c:1481
+#9  0xffffffff8114bd04 in process_one_work (worker=worker@entry=0xffff888004b20000, work=0xffff888005748578) at kernel/workqueue.c:2289
+#10 0xffffffff8114bf2c in worker_thread (__worker=0xffff888004b20000) at kernel/workqueue.c:2436
+#11 0xffffffff81154674 in kthread (_create=0xffff8881007f38c0) at kernel/kthread.c:376
+#12 0xffffffff81002659 in ret_from_fork () at arch/x86/entry/entry_64.S:308
+#13 0x0000000000000000 in ?? ()
+```
+
+kick queue 的来源:
+```txt
+#0  0xffffffff816cd803 in blk_mq_kick_requeue_list (q=0xffff888005748368) at block/blk-mq.c:1511
+#1  blk_mq_add_to_requeue_list (rq=<optimized out>, at_head=at_head@entry=true, kick_requeue_list=kick_requeue_list@entry=true) at block/blk-mq.c:1506
+#2  0xffffffff816c2fe7 in blk_flush_queue_rq (add_front=true, rq=<optimized out>) at block/blk-flush.c:143
+#3  blk_flush_complete_seq (rq=<optimized out>, fq=fq@entry=0xffff8880055f5240, seq=<optimized out>, error=error@entry=0 '\000') at block/blk-flush.c:198
+#4  0xffffffff816c34ae in flush_end_io (flush_rq=<optimized out>, error=0 '\000') at block/blk-flush.c:268
+#5  0xffffffff816cbaa6 in __blk_mq_end_request (rq=0xffff8880056b6000, error=<optimized out>) at block/blk-mq.c:1043
+#6  0xffffffff81a99ca9 in virtblk_done (vq=0xffff88810067d000) at drivers/block/virtio_blk.c:291
+#7  0xffffffff818035c6 in vring_interrupt (irq=<optimized out>, _vq=0xffffffff) at drivers/virtio/virtio_ring.c:2470
+#8  vring_interrupt (irq=<optimized out>, _vq=0xffffffff) at drivers/virtio/virtio_ring.c:2445
+#9  0xffffffff811a3c72 in __handle_irq_event_percpu (desc=desc@entry=0xffff8880056b4400) at kernel/irq/handle.c:158
+#10 0xffffffff811a3e53 in handle_irq_event_percpu (desc=0xffff8880056b4400) at kernel/irq/handle.c:193
+#11 handle_irq_event (desc=desc@entry=0xffff8880056b4400) at kernel/irq/handle.c:210
+#12 0xffffffff811a8b2e in handle_edge_irq (desc=0xffff8880056b4400) at kernel/irq/chip.c:819
+#13 0xffffffff810ce1d5 in generic_handle_irq_desc (desc=0xffff8880056b4400) at ./include/linux/irqdesc.h:158
+#14 handle_irq (regs=<optimized out>, desc=0xffff8880056b4400) at arch/x86/kernel/irq.c:231
+#15 __common_interrupt (regs=<optimized out>, vector=35) at arch/x86/kernel/irq.c:250
+#16 0xffffffff82178827 in common_interrupt (regs=0xffffffff82c03df8, error_code=<optimized out>) at arch/x86/kernel/irq.c:240
+```
+
+## 关键参考
+- [IO 子系统全流程介绍](https://zhuanlan.zhihu.com/p/545906763)
+
+# blk-core.c
+request_queue
+
+## TODO
+1. 希望搞清楚 bio request 和 request_queue 的关系
+
+## 对于 queue 的各种操作
+1. 从 280 行之后的一段位置，前面的内容并不知道是干什么的
+
+```c
+/**
+ * blk_sync_queue - cancel any pending callbacks on a queue
+ * @q: the queue
+ *
+ * Description:
+ *     The block layer may perform asynchronous callback activity
+ *     on a queue, such as calling the unplug function after a timeout.
+ *     A block device may call blk_sync_queue to ensure that any
+ *     such activity is cancelled, thus allowing it to release resources
+ *     that the callbacks might use. The caller must already have made sure
+ *     that its ->make_request_fn will not re-add plugging prior to calling
+ *     this function.
+ *
+ *     This function does not cancel any asynchronous activity arising
+ *     out of elevator or throttling code. That would require elevator_exit()
+ *     and blkcg_exit_queue() to be called with queue lock initialized.
+ *
+ */
+void blk_sync_queue(struct request_queue *q)
+{
+	del_timer_sync(&q->timeout);
+	cancel_work_sync(&q->timeout_work);
+}
+```
+
+```c
+bool blk_get_queue(struct request_queue *q)
+{
+	if (likely(!blk_queue_dying(q))) {
+		__blk_get_queue(q);
+		return true;
+	}
+
+	return false;
+}
+
+void blk_put_queue(struct request_queue *q)
+{
+	kobject_put(&q->kobj);
+}
+```
+1. 我是万万没有想到 : 居然我们可以使用 kobject 管理 request_queue
+2. 这些调用位置也是异常的神奇。
+
+
+```c
+/**
+ * blk_cleanup_queue - shutdown a request queue
+ * @q: request queue to shutdown
+ *
+ * Mark @q DYING, drain all pending requests, mark @q DEAD, destroy and
+ * put it.  All future requests will be failed immediately with -ENODEV.
+ */
+void blk_cleanup_queue(struct request_queue *q)
+```
+
+```c
+struct request_queue *blk_alloc_queue(gfp_t gfp_mask)  // 对于简单的封装 driver md 是唯一调用者
+struct request_queue *blk_mq_init_queue(struct blk_mq_tag_set *set) // mq 是其唯一调用者
+      /**
+       * blk_alloc_queue_node - allocate a request queue
+       * @gfp_mask: memory allocation flags
+       * @node_id: NUMA node to allocate memory from
+       */
+      struct request_queue *blk_alloc_queue_node(gfp_t gfp_mask, int node_id) // 唯一创建 request_queue 的函数
+```
+
+## merge
+1. 各种 try merge 函数，其使用位置都是各种 mq 了
+
+
+## submit_bio
+1. 这是 fs 和 dev 进行 io 的唯一的接口吗 ?
+2. submit_bio 和 generic_make_request 的关系是什么 ? 两者都是类似接口，但是 submit_bio 做出部分检查，最后调用 generic_make_request
+
+iomap 直接来调用 submit_bio，有趣:
+
+## account
+
 ## 代码浏览
 - block/partitions : 处理各种分区
 - `*-iosched.c` : 集中 scheduler
 - `blk-mq.c` : multiqueue
--
 
 | name                   | blank | comment | code | desc                                                                       |
 |------------------------|-------|---------|------|----------------------------------------------------------------------------|
@@ -24,7 +192,7 @@
 | blk-iolatency.c        | 151   | 162     | 739  | wawawa                                                                     |
 | scsi_ioctl.c           | 116   | 82      | 646  | https://en.wikipedia.org/wiki/SCSI                                         |
 | blk-wbt.c              | 131   | 163     | 566  |                                                                            |
-| elevator.c             | 156   | 127     | 560  | 管理各种 io scheduler ，似乎由于历史原因，io scheduler 被叫做elevator_type |
+| elevator.c             | 156   | 127     | 560  | 管理各种 io scheduler ，似乎由于历史原因，io scheduler 被叫做 elevator_type |
 | blk-merge.c            | 144   | 221     | 550  | @todo 猜测各种调用 `elevator_type->ops` 实现将 request merge               |
 | mq-deadline.c          | 124   | 148     | 545  |                                                                            |
 | ioctl.c                | 69    | 36      | 480  |                                                                            |
@@ -118,8 +286,6 @@
 8. blk-flush 和 blk-core 的作用是什么 ?
 8. submit_bio 开始分析
 
-对于 IO scheduler 我早就非常的不爽了，和当前的 SSD 的原理完全不符合，所以对于 ssd 之类 driver 是如何绕过这一个东西, 从 bio 层次开始分析。
-
 ## question
 1. 为什么需要 io scheduler ?
     1. bfq 之外的还有什么类型的
@@ -132,56 +298,3 @@
 	blkcg_policy_unregister(&blkcg_policy_bfq);
 ```
 elv_unregister 和 blkcg_policy_unregister : elv 的才是真正的管理吧  blkcg 显然又是处理 cgroup 的!
-
-## cgroup 注入影响是什么 ?
-
-## io scheduelr
-blkcg_policy_register 的调用位置:
-
-1. block/blk-iolatency.c
-3. block/blk-throttle.c
-4. block/blk-iocost.c (实际上，这一个没有被注册上去)
-
-2. block/bfq-iosched.c (按道理来说，不应该，可能自己特有的)
-
-很尴尬，从 Kconfig 上分析一共只有三个 io scheduler , 所以说明不是所有的调度器都需要这个。
-
-## multi queue
-- [](https://www.thomas-krenn.com/en/wiki/Linux_Multi-Queue_Block_IO_Queueing_Mechanism_(blk-mq))
-
-To use a device with blk-mq, the device must support the respective driver.
-
-- [](https://kernel.dk/blk-mq.pdf)
-
-Large internal data parallelism in SSDs disks enables many
-concurrent IO operations which, in turn, allows single devices to achieve close to a million IOs per second (IOPS)
-for random accesses, as opposed to just hundreds on traditional magnetic hard drives.
-> 1. 高速的设备需要多核维持生活吗，不是说好的 dma 之类的不需要 CPU 处理 ? 不是，由于每一个 block 的处理可能是需要处理的 ?
-> 2. 那为什么需要多核啊 ? 难道 CPU 的速度已经赶不上 ssd 了
-
-sockets 在此处是什么 ?
-
-Scalability problem of block layer:
-1. Request Queue Locking:
-2. Hardware Interrupts
-3. Remote Memory Accesses
-
-Based on our analysis of the Linux block layer, we identify three major requirements for a block layer:
-- Single Device Fairness
-- Single and Multiple Device Accounting
-- Single Device IO Staging Area
-
-The number of entries in the software level queue can dynamically grow and shrink as needed to support the outstanding queue depth maintained by the application, though
-queue expansion and contraction is a relatively costly operation compared to the memory overhead of maintaining
-enough free IO slots to support most application use. Conversely, the size of the hardware dispatch queue is bounded
-and correspond to the maximum queue depth that is supported by the device driver and hardware.
-
-- [](https://lwn.net/Articles/552904/)
-
-It offers two ways for a block driver to hook into the system, one of which is the "request" interface.
-
-The second block driver mode — the "make request" interface — allows a driver to do exactly that. It hooks the driver into a much higher part of the stack, shorting out the request queue and handing I/O requests directly to the driver.
-
-The multiqueue block layer work tries to fix this problem by adding a third mode for drivers to use. In this mode, the request queue is split into a number of separate queues:
-  - Submission queues are set up on a per-CPU or per-node basis. Each CPU submits I/O operations into its own queue, with no interaction with the other CPUs. Contention for the submission queue lock is thus eliminated (when per-CPU queues are used) or greatly reduced (for per-node queues).
-  - One or more hardware dispatch queues simply buffer I/O requests for the driver.

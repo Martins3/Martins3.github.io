@@ -92,54 +92,6 @@ WantedBy=multi-user.target
 ## [ ] service 的 Type 是 dbus 该如何理解
 
 
-## 如何让内核不断 reboot
-
-在 /root 中:
-[root@localhost ~]# cat reboot.sh
-```sh
-cat << 'EOF' > /root/reboot.sh
-#!/bin/bash
-
-C=/root/counter
-
-if [[ ! -f $C ]];then
-echo 1 > $C
-fi
-
-a=$(cat $C)
-echo $a
-a=$((a+1))
-echo $a > $C
-if [[ $a == 1000 ]];then
-exit 1
-fi
-reboot
-EOF
-
-cat << 'EOF'  > /etc/systemd/system/reboot.service
-[Unit]
-Description=reboot
-
-[Service]
-Type=oneshot
-ExecStart=/root/reboot.sh
-
-[Install]
-WantedBy=getty.target
-EOF
-
-systemctl enable reboot
-chmod +x /root/reboot.sh
-```
-
-结束重启: 修改 grub 中的 init=/bin/bash
-此时如果遇到了磁盘 readonly 的情况，参考这里:
-- https://askubuntu.com/questions/197459/how-to-fix-sudo-unable-to-open-read-only-file-system
-
-```sh
-mount -o remount,rw /
-```
-
 ### 如果是检测另一个 sytemd 进程
 
 reboot.sh 中增加

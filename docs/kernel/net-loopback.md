@@ -159,3 +159,40 @@ void irq_exit(void)
 	trace_hardirq_exit(); /* must be last! */
 }
 ```
+
+
+## 问题
+如何理解这里的 tcp_delack_timer_handler
+```txt
+#0  loopback_xmit (skb=0xffff888009358700, dev=0xffff8880045d0000) at drivers/net/loopback.c:71
+#1  0xffffffff81db57c8 in __netdev_start_xmit (more=false, dev=0xffff8880045d0000, skb=0xffff888009358700, ops=0xffffffff82521c60 <loopback_ops>) at ./include/linux/netdevice.h:4865
+#2  netdev_start_xmit (more=false, txq=0xffff88810017c800, dev=0xffff8880045d0000, skb=0xffff888009358700) at ./include/linux/netdevice.h:4879
+#3  xmit_one (more=false, txq=0xffff88810017c800, dev=0xffff8880045d0000, skb=0xffff888009358700) at net/core/dev.c:3583
+#4  dev_hard_start_xmit (first=first@entry=0xffff888009358700, dev=dev@entry=0xffff8880045d0000, txq=txq@entry=0xffff88810017c800, ret=ret@entry=0xffffc9000013ccec) at net/core/dev.c:3599
+#5  0xffffffff81db6422 in __dev_queue_xmit (skb=skb@entry=0xffff888009358700, sb_dev=sb_dev@entry=0x0 <fixed_percpu_data>) at net/core/dev.c:4249
+#6  0xffffffff81e6e438 in dev_queue_xmit (skb=0xffff888009358700) at ./include/linux/netdevice.h:3035
+#7  neigh_hh_output (skb=<optimized out>, hh=<optimized out>) at ./include/net/neighbour.h:530
+#8  neigh_output (skip_cache=<optimized out>, skb=0xffff888009358700, n=0xffff8881424f5200) at ./include/net/neighbour.h:544
+#9  ip_finish_output2 (net=<optimized out>, sk=<optimized out>, skb=0xffff888009358700) at net/ipv4/ip_output.c:228
+#10 0xffffffff81e709fb in __ip_queue_xmit (sk=0xffff8881035488c0, skb=0xffff888009358700, fl=0xffff888103548c30, tos=<optimized out>) at net/ipv4/ip_output.c:532
+#11 0xffffffff81e70c80 in ip_queue_xmit (sk=<optimized out>, skb=<optimized out>, fl=<optimized out>) at net/ipv4/ip_output.c:546
+#12 0xffffffff81e93c5f in __tcp_transmit_skb (sk=sk@entry=0xffff8881035488c0, skb=0xffff888009358700, clone_it=clone_it@entry=0, gfp_mask=gfp_mask@entry=0, rcv_nxt=<optimized out>) at net/ipv4/tcp_output.c:1399
+#13 0xffffffff81e94af4 in __tcp_send_ack (sk=sk@entry=0xffff8881035488c0, rcv_nxt=<optimized out>) at net/ipv4/tcp_output.c:3983
+#14 0xffffffff81e978a7 in __tcp_send_ack (rcv_nxt=<optimized out>, sk=0xffff8881035488c0) at net/ipv4/tcp_output.c:3950
+#15 0xffffffff81e98339 in tcp_delack_timer_handler (sk=sk@entry=0xffff8881035488c0) at net/ipv4/tcp_timer.c:316
+#16 0xffffffff81e983cc in tcp_delack_timer (t=0xffff888103548d20) at net/ipv4/tcp_timer.c:339
+#17 0xffffffff811d5ccf in call_timer_fn (timer=timer@entry=0xffff888103548d20, fn=fn@entry=0xffffffff81e98390 <tcp_delack_timer>, baseclk=baseclk@entry=4296484559) at kernel/time/timer.c:1700
+#18 0xffffffff811d5fde in expire_timers (head=0xffffc9000013cf00, base=0xffff88807dd1cdc0) at kernel/time/timer.c:1751
+#19 __run_timers (base=base@entry=0xffff88807dd1cdc0) at kernel/time/timer.c:2022
+#20 0xffffffff811d60b0 in __run_timers (base=0xffff88807dd1cdc0) at kernel/time/timer.c:2000
+#21 run_timer_softirq (h=<optimized out>) at kernel/time/timer.c:2035
+#22 0xffffffff8217f704 in __do_softirq () at kernel/softirq.c:571
+#23 0xffffffff811308ba in invoke_softirq () at kernel/softirq.c:445
+#24 __irq_exit_rcu () at kernel/softirq.c:650
+#25 0xffffffff8216c876 in sysvec_apic_timer_interrupt (regs=0xffffc900000e7e38) at arch/x86/kernel/apic/apic.c:1107
+```
+
+## 接受是如何处理的
+只见到了 loopback_xmit 的，对应的 revice
+
+之前说是，在 softirq 的位置会进行接收的。

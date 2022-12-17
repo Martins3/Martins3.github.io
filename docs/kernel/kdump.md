@@ -429,13 +429,6 @@ vim /boot/grub/grub.cfg
 
 然后 crash vmlinux g.dump
 
-```sh
-rpm2cpio xxx.rpm | cpio -idm
-find . -name "vmlinux"
-echo  crash  g.dump  `!!` >> crash.sh
-chmod a+x crash.sh
-```
-
 - foreach bt : 所有进程的 backtrace
 - bt -a : 所有的 CPU 的 backtrace
 - bt -FF  264 : CPU

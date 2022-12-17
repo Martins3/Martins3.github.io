@@ -6,7 +6,9 @@ iodepth=128
 bs=4k
 direct=1
 # filename=/dev/ublkb0
-filename=/root/x
-rw=readwrite
+# filename=/root/x
+# filename=/home/martins3/hack/mnt/x
+filename=/home/martins3/core/x
+rw=randread
 runtime=10
 time_based

@@ -1657,3 +1657,17 @@ mmap 直接失败
 
 ## 有件事情无法理解，对于普通页的虚拟地址空间也是存在 reserver 的，为什么唯独大页的 reservation 单独的设计这么复杂？
 - 普通页的 overcommit 默认是打开的吗?
+
+## subpool 让数值接口的终极离谱的现象
+```sh
+mkdir -p /mnt/huge
+mount -t hugetlbfs -o min_size=2M none /mnt/huge
+echo 0 | sudo tee /proc/sys/vm/nr_hugepages
+```
+
+```txt
+HugePages_Total:       1
+HugePages_Free:        1
+HugePages_Rsvd:        1
+HugePages_Surp:        1
+```

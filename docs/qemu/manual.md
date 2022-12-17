@@ -318,6 +318,12 @@ function global() {
 }
 ```
 
+初始化 disk
+
+
+parted /dev/sda -- mklabel gpt
+parted /dev/sda -- mkpart primary 1MiB -1MiB
+
 ## TODO
 - [ ] 利用 QEMU 给一个分区安装操作系统
 - [ ] 內核启动参数中需要指定 root=/dev/sda3 如何确定

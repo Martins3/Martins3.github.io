@@ -233,3 +233,79 @@ static __init int ftrace_init_dyn_tracefs(struct dentry *d_tracer)
 - [ ] set_ftrace_filter set_ftrace_notrace  available_filter_functions : 确认一下前面两个就是为了给最后一个进行筛选的
 
 [^1] https://jvns.ca/blog/2016/03/12/how-does-perf-work-and-some-questions/
+
+
+## kernel/trace/ftrace.c
+```c
+
+static __init int ftrace_init_dyn_tracefs(struct dentry *d_tracer)
+{
+
+	trace_create_file("available_filter_functions", 0444,
+			d_tracer, NULL, &ftrace_avail_fops);
+
+	trace_create_file("enabled_functions", 0444,
+			d_tracer, NULL, &ftrace_enabled_fops);
+
+	ftrace_create_filter_files(&global_ops, d_tracer);
+
+#ifdef CONFIG_FUNCTION_GRAPH_TRACER
+	trace_create_file("set_graph_function", 0644, d_tracer,
+				    NULL,
+				    &ftrace_graph_fops);
+	trace_create_file("set_graph_notrace", 0644, d_tracer,
+				    NULL,
+				    &ftrace_graph_notrace_fops);
+#endif /* CONFIG_FUNCTION_GRAPH_TRACER */
+
+	return 0;
+}
+```
+
+
+### ftrace 对于编译的时候有要求
+```txt
+crash> dis ktime_get
+0xffffffff82105a30 <ktime_get>: nopl   0x0(%rax,%rax,1) [FTRACE NOP]
+0xffffffff82105a35 <ktime_get+5>:       push   %rbp
+0xffffffff82105a36 <ktime_get+6>:       mov    0xc54e68(%rip),%eax        # 0xffffffff82d5a8a4
+0xffffffff82105a3c <ktime_get+12>:      mov    %rsp,%rbp
+0xffffffff82105a3f <ktime_get+15>:      push   %r14
+0xffffffff82105a41 <ktime_get+17>:      test   %eax,%eax
+0xffffffff82105a43 <ktime_get+19>:      push   %r13
+0xffffffff82105a45 <ktime_get+21>:      push   %r12
+0xffffffff82105a47 <ktime_get+23>:      push   %rbx
+```
+
+### 这种操作的基础是什么
+https://lore.kernel.org/lkml/YmU2izhF0HDlgbrW@casper.infradead.org/T/
+```c
+root@pepe-kvm:~# mkfs.xfs /dev/sdb
+root@pepe-kvm:~# mount /dev/sdb /mnt/
+root@pepe-kvm:~# truncate -s 10G /mnt/bigfile
+root@pepe-kvm:~# echo 1 >/sys/kernel/tracing/events/filemap/mm_filemap_add_to_page_cache/enable
+root@pepe-kvm:~# dd if=/mnt/bigfile of=/dev/null bs=100K count=4
+root@pepe-kvm:~# cat /sys/kernel/tracing/trace
+```
+
+### 简单看看 kernel/trace/bpf_trace.c 的实现
+
+```txt
+#0  kprobe_prog_func_proto (func_id=BPF_FUNC_get_current_pid_tgid, prog=0xffffc90001563000) at kernel/trace/bpf_trace.c:1525
+#1  0xffffffff8124b6fb in check_helper_call (env=env@entry=0xffff888219a68000, insn=insn@entry=0xffffc90001563060, insn_idx_p=insn_idx_p@entry=0xffff888219a68000) at kernel/bpf/verifier.c:7724
+#2  0xffffffff8124fd21 in do_check (env=0x3 <fixed_percpu_data+3>) at kernel/bpf/verifier.c:13970
+#3  do_check_common (env=env@entry=0xffff888219a68000, subprog=subprog@entry=0) at kernel/bpf/verifier.c:16289
+#4  0xffffffff8125470e in do_check_main (env=0xffff888219a68000) at kernel/bpf/verifier.c:16352
+#5  bpf_check (prog=prog@entry=0xffffc90001e17d50, attr=attr@entry=0xffffc90001e17e58, uattr=...) at kernel/bpf/verifier.c:16936
+#6  0xffffffff81235397 in bpf_prog_load (attr=attr@entry=0xffffc90001e17e58, uattr=...) at kernel/bpf/syscall.c:2619
+#7  0xffffffff81236dfb in __sys_bpf (cmd=5, uattr=..., size=120) at kernel/bpf/syscall.c:4979
+#8  0xffffffff81238c65 in __do_sys_bpf (size=<optimized out>, uattr=<optimized out>, cmd=<optimized out>) at kernel/bpf/syscall.c:5083
+#9  __se_sys_bpf (size=<optimized out>, uattr=<optimized out>, cmd=<optimized out>) at kernel/bpf/syscall.c:5081
+#10 __x64_sys_bpf (regs=<optimized out>) at kernel/bpf/syscall.c:5081
+#11 0xffffffff81fc8d08 in do_syscall_x64 (nr=<optimized out>, regs=0xffffc90001e17f58) at arch/x86/entry/common.c:50
+#12 do_syscall_64 (regs=0xffffc90001e17f58, nr=<optimized out>) at arch/x86/entry/common.c:80
+#13 0xffffffff8200009b in entry_SYSCALL_64 () at arch/x86/entry/entry_64.S:120
+```
+- kprobe_prog_func_proto
+  - bpf_tracing_func_proto
+    - bpf_base_func_proto : 这里在 kernel/bpf/helper 的位置了

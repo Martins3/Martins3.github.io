@@ -1,5 +1,11 @@
 # scsi
 
+cd /sys/bus/pseudo/drivers/scsi_debug
+echo 1 > max_luns
+echo 1 > add_host
+
+
+
 - [ ] 看看内核日志
 - [ ] 如何没有理解错误，那么 scsi 应该是在 nvme 差不多的层次，也就是在 multiqueue 的下面
 - [ ] scsi disk / scsi cd-rom / scsi - 磁带 / scsi - generic
@@ -89,6 +95,95 @@
   - scsi_ioctl
     - scsi_ioctl_reset :star:
 
+## scsi debug
+- https://sg.danny.cz/sg/scsi_debug.html
+
+一个专门用于调试的设备。
+
+- vzalloc 不会创建空间吗?
+
+做这个做后端，iscsi 有问题?
+```txt
+[ 1576.866364] Unable to recover from DataOut timeout while in ERL=0, closing iSCSI connection for I_T Nexus iqn.2003-01.org.linux-iscsi.localhost.x8664:sn.a6b106aa84c2:xsk,i,0x00023d000004,iqn.2003-01.org.linux-iscsi.localhost.x8664:sn.a6b106aa84c2,t,0x01
+[ 1584.148092]  connection4:0: ping timeout of 5 secs expired, recv timeout 5, last rx 4296241093, last ping 4296246144, now 4296251392
+[ 1584.148816]  connection4:0: detected conn error (1022)
+[ 1601.556022] iSCSI Login timeout on Network Portal 0.0.0.0:3260
+[ 1617.428294] Did not receive response to NOPIN on CID: 0, failing connection for I_T Nexus iqn.2003-01.org.linux-iscsi.localhost.x8664:sn.a6b106aa84c2:xsk,i,0x00023d000004,iqn.2003-01.org.linux-iscsi.localhost.x8664:sn.a6b106aa84c2,t,0x01
+[ 1704.980737]  session4: session recovery timed out after 120 secs
+[ 1704.984660] sd 6:0:0:0: rejecting I/O to offline device
+[ 1704.984883] I/O error, dev sdf, sector 401408 op 0x1:(WRITE) flags 0x2004000 phys_seg 128 prio class 2
+[ 1704.985221] I/O error, dev sdf, sector 399360 op 0x1:(WRITE) flags 0x2004000 phys_seg 128 prio class 2
+[ 1704.985543] I/O error, dev sdf, sector 398336 op 0x1:(WRITE) flags 0x2004000 phys_seg 128 prio class 2
+[ 1704.985874] I/O error, dev sdf, sector 397312 op 0x1:(WRITE) flags 0x2004000 phys_seg 128 prio class 2
+[ 1704.986199] I/O error, dev sdf, sector 285696 op 0x1:(WRITE) flags 0x2000000 phys_seg 128 prio class 2
+[ 1704.986528] I/O error, dev sdf, sector 284672 op 0x1:(WRITE) flags 0x2004000 phys_seg 128 prio class 2
+[ 1704.986534] I/O error, dev sdf, sector 530432 op 0x1:(WRITE) flags 0x2004000 phys_seg 128 prio class 2
+[ 1704.986579] I/O error, dev sdf, sector 531456 op 0x1:(WRITE) flags 0x2000000 phys_seg 128 prio class 2
+[ 1704.986582] I/O error, dev sdf, sector 532480 op 0x1:(WRITE) flags 0x2004000 phys_seg 128 prio class 2
+[ 1704.986584] I/O error, dev sdf, sector 533504 op 0x1:(WRITE) flags 0x2004000 phys_seg 128 prio class 2
+[ 1704.986590] Write-error on swap-device (8:80:535552)
+[ 1704.986598] Write-error on swap-device (8:80:662528)
+[ 1704.986599] Write-error on swap-device (8:80:666624)
+[ 1704.986605] Write-error on swap-device (8:80:670720)
+[ 1704.986606] Write-error on swap-device (8:80:674816)
+[ 1704.986608] Write-error on swap-device (8:80:793600)
+[ 1704.986610] Write-error on swap-device (8:80:797696)
+[ 1704.986611] Write-error on swap-device (8:80:801792)
+[ 1704.986616] Write-error on swap-device (8:80:1059840)
+[ 1704.986616] Write-error on swap-device (8:80:805888)
+[ 1704.987260] iscsi_trx (1489) used greatest stack depth: 12736 bytes left
+[ 1704.990926] iSCSI Login negotiation failed.
+[ 1704.991308] iSCSI Login negotiation failed.
+[ 1704.991478] iSCSI Login negotiation failed.
+[ 1704.991641] iSCSI Login negotiation failed.
+[ 1704.991806] iSCSI Login negotiation failed.
+[ 1704.991966] iSCSI Login negotiation failed.
+[ 1704.992127] iSCSI Login negotiation failed.
+[ 1704.992486] stress-ng (1609) used greatest stack depth: 12352 bytes left
+```
+看来是是网络的问题吧，只要这样配置就会有问题吗？
+
+
+是不可以通过网络吗?
+```txt
+[ 1926.637286] sd 5:0:0:0: [sde] tag#148 CDB: Read(10) 28 00 00 19 93 d8 00 00 08 00
+[ 1926.637547] I/O error, dev sde, sector 1676248 op 0x0:(READ) flags 0x0 phys_seg 1 prio class 2
+[ 1926.637843] Read-error on swap-device (8:64:1676248)
+[ 1926.638025] sd 5:0:0:0: [sde] tag#149 FAILED Result: hostbyte=DID_TIME_OUT driverbyte=DRIVER_OK cmd_age=124s
+[ 1926.638379] sd 5:0:0:0: [sde] tag#149 CDB: Read(10) 28 00 00 02 35 c0 00 00 08 00
+[ 1926.638639] I/O error, dev sde, sector 144832 op 0x0:(READ) flags 0x0 phys_seg 1 prio class 2
+[ 1926.638931] Read-error on swap-device (8:64:144832)
+[ 1926.639102] sd 5:0:0:0: [sde] tag#150 FAILED Result: hostbyte=DID_TIME_OUT driverbyte=DRIVER_OK cmd_age=121s
+[ 1926.639452] sd 5:0:0:0: [sde] tag#150 CDB: Read(10) 28 00 00 04 77 a0 00 00 08 00
+[ 1926.639711] I/O error, dev sde, sector 292768 op 0x0:(READ) flags 0x0 phys_seg 1 prio class 2
+[ 1926.640002] Read-error on swap-device (8:64:292768)
+[ 1926.640180] sd 5:0:0:0: rejecting I/O to offline device
+[ 1926.640317] I/O error, dev sde, sector 1084688 op 0x1:(WRITE) flags 0x2000000 phys_seg 1 prio class 2
+[ 1926.640366] I/O error, dev sde, sector 39184 op 0x0:(READ) flags 0x0 phys_seg 1 prio class 2
+[ 1926.640896] Write-error on swap-device (8:64:1084688)
+[ 1926.641791] Read-error on swap-device (8:64:39184)
+[ 1926.642676] I/O error, dev sde, sector 1113808 op 0x1:(WRITE) flags 0x2000000 phys_seg 1 prio class 2
+[ 1926.643217] Write-error on swap-device (8:64:1113808)
+[ 1926.643395] I/O error, dev sde, sector 1486552 op 0x1:(WRITE) flags 0x2000000 phys_seg 1 prio class 2
+[ 1926.643890] Write-error on swap-device (8:64:1486552)
+[ 1926.644115] I/O error, dev sde, sector 397880 op 0x1:(WRITE) flags 0x2000000 phys_seg 1 prio class 2
+[ 1926.644430] Write-error on swap-device (8:64:397880)
+[ 1926.644617] I/O error, dev sde, sector 589592 op 0x1:(WRITE) flags 0x2000000 phys_seg 1 prio class 2
+[ 1926.645294] Write-error on swap-device (8:64:589592)
+[ 1926.645527] I/O error, dev sde, sector 601712 op 0x1:(WRITE) flags 0x2000000 phys_seg 1 prio class 2
+[ 1926.645953] Write-error on swap-device (8:64:601712)
+[ 1926.646127] Write-error on swap-device (8:64:649976)
+[ 1926.679777] Read-error on swap-device (8:64:1200712)
+[ 1926.681659] Read-error on swap-device (8:64:1200736)
+[ 1926.681812] htop (1453) used greatest stack depth: 11088 bytes left
+[ 1926.685040] Read-error on swap-device (8:64:1356296)
+[ 1926.685273] Read-error on swap-device (8:64:1078848)
+[ 1926.685728] Read-error on swap-device (8:64:1078448)
+[ 1926.685907] Read-error on swap-device (8:64:1080016)
+```
+
+## scsi 的四个层次
+https://tldp.org/HOWTO/SCSI-2.4-HOWTO/scsiaddr.html
 
 ## scsi 的经典 backtrace
 
@@ -102,8 +197,56 @@
 | sg.c|
 
 ### sg.c
-- sg_add_device : 注册 sg_fops，这是为了将 scsi device 直接暴露为文件吗? 那么为什么不使用 block layer 的哇
 
+- sg_add_device : 注册 sg_fops，这是为了将 scsi device 直接暴露为文件吗? 那么为什么不使用 block layer 的哇
+```txt
+#0  sg_add_device (cl_dev=0xffff88801af49490, cl_intf=0xffffffff82e250e0 <sg_interface>) at drivers/scsi/sg.c:1492
+#1  0xffffffff81a68eaf in device_add (dev=0xffff88801af49490) at drivers/base/core.c:3541
+#2  0xffffffff81acce4d in scsi_sysfs_add_sdev (sdev=sdev@entry=0xffff88801af49000) at drivers/scsi/scsi_sysfs.c:1393
+#3  0xffffffff81ac9641 in scsi_add_lun (async=0, bflags=<synthetic pointer>, inq_result=0xffff888100e0ba00 "", sdev=0xffff88801af49000) at drivers/scsi/scsi_scan.c:1094
+#4  scsi_probe_and_add_lun (starget=starget@entry=0xffff8880054f5c00, lun=lun@entry=0, bflagsp=bflagsp@entry=0xffffc9000005fb98, sdevp=<optimized out>, rescan=<optimized out>, hostdata=<optimized out>) at drivers/scsi/scsi_scan.c:1260
+#5  0xffffffff81ac9f0b in __scsi_scan_target (parent=parent@entry=0xffff888100730258, channel=channel@entry=0, id=0, lun=lun@entry=18446744073709551615, rescan=rescan@entry=SCSI_SCAN_INITIAL) at drivers/scsi/scsi_scan.c:1665
+#6  0xffffffff81aca513 in scsi_scan_channel (id=0, rescan=<optimized out>, lun=<optimized out>, channel=<optimized out>, shost=<optimized out>) at drivers/scsi/scsi_scan.c:1753
+#7  scsi_scan_channel (shost=0xffff888100730000, channel=0, id=<optimized out>, lun=18446744073709551615, rescan=SCSI_SCAN_INITIAL) at drivers/scsi/scsi_scan.c:1729
+#8  0xffffffff81aca63e in scsi_scan_host_selected (shost=0xffff888100730000, channel=0, channel@entry=4294967295, id=id@entry=4294967295, lun=lun@entry=18446744073709551615, rescan=rescan@entry=SCSI_SCAN_INITIAL) at drivers/scsi/scsi_scan.c:1782
+#9  0xffffffff81aca710 in do_scsi_scan_host (shost=shost@entry=0xffff888100730000) at drivers/scsi/scsi_scan.c:1921
+#10 0xffffffff81aca8a5 in scsi_scan_host (shost=0xffff888100730000) at drivers/scsi/scsi_scan.c:1951
+#11 scsi_scan_host (shost=shost@entry=0xffff888100730000) at drivers/scsi/scsi_scan.c:1939
+#12 0xffffffff81afa267 in sdebug_driver_probe (dev=0xffff88810017e820) at drivers/scsi/scsi_debug.c:7930
+#13 0xffffffff81a6d9a1 in call_driver_probe (drv=0xffffffff82e25940 <sdebug_driverfs_driver>, dev=0xffff88810017e820) at drivers/base/dd.c:560
+#14 really_probe (dev=dev@entry=0xffff88810017e820, drv=drv@entry=0xffffffff82e25940 <sdebug_driverfs_driver>) at drivers/base/dd.c:639
+#15 0xffffffff81a6dbdd in __driver_probe_device (drv=drv@entry=0xffffffff82e25940 <sdebug_driverfs_driver>, dev=dev@entry=0xffff88810017e820) at drivers/base/dd.c:778
+#16 0xffffffff81a6dc69 in driver_probe_device (drv=drv@entry=0xffffffff82e25940 <sdebug_driverfs_driver>, dev=dev@entry=0xffff88810017e820) at drivers/base/dd.c:808
+#17 0xffffffff81a6e36e in __device_attach_driver (drv=0xffffffff82e25940 <sdebug_driverfs_driver>, _data=0xffffc9000005fd78) at drivers/base/dd.c:936
+#18 0xffffffff81a6b62a in bus_for_each_drv (bus=<optimized out>, start=start@entry=0x0 <fixed_percpu_data>, data=data@entry=0xffffc9000005fd78, fn=fn@entry=0xffffffff81a6e2f0 <__device_attach_driver>) at drivers/base/bus.c:427
+#19 0xffffffff81a6df67 in __device_attach (dev=dev@entry=0xffff88810017e820, allow_async=allow_async@entry=true) at drivers/base/dd.c:1008
+#20 0xffffffff81a6e5be in device_initial_probe (dev=dev@entry=0xffff88810017e820) at drivers/base/dd.c:1057
+#21 0xffffffff81a6cadd in bus_probe_device (dev=dev@entry=0xffff88810017e820) at drivers/base/bus.c:487
+#22 0xffffffff81a68e10 in device_add (dev=dev@entry=0xffff88810017e820) at drivers/base/core.c:3517
+#23 0xffffffff81a69386 in device_register (dev=dev@entry=0xffff88810017e820) at drivers/base/core.c:3598
+#24 0xffffffff81afe7dd in sdebug_add_host_helper (per_host_idx=per_host_idx@entry=0) at drivers/scsi/scsi_debug.c:7325
+#25 0xffffffff835e7669 in scsi_debug_init () at drivers/scsi/scsi_debug.c:7115
+#26 0xffffffff81001940 in do_one_initcall (fn=0xffffffff835e7023 <scsi_debug_init>) at init/main.c:1306
+#27 0xffffffff83596818 in do_initcall_level (command_line=0xffff888003c5cc00 "root", level=6) at init/main.c:1379
+#28 do_initcalls () at init/main.c:1395
+#29 do_basic_setup () at init/main.c:1414
+#30 kernel_init_freeable () at init/main.c:1634
+#31 0xffffffff8217c3d5 in kernel_init (unused=<optimized out>) at init/main.c:1522
+#32 0xffffffff81002659 in ret_from_fork () at arch/x86/entry/entry_64.S:308
+```
+
+```c
+#define SCSI_GENERIC_MAJOR	21
+```
+
+ls /dev | grep 21
+
+```txt
+crw-rw----.  1 root disk     21,   0 Dec 16 20:42 sg0
+crw-rw----.  1 root disk     21,   1 Dec 16 20:42 sg1
+crw-rw----.  1 root disk     21,   2 Dec 16 20:42 sg2
+```
+这个设备是和创建的 disk 对应的，每多个 /dev/sdx 就会增加一个这个。
 
 ## 参考资料
 
@@ -137,6 +280,45 @@ static const struct blk_mq_ops scsi_mq_ops = {
 	.get_rq_budget_token = scsi_mq_get_rq_budget_token,
 };
 ```
+```txt
+#0  scsi_queue_rq (hctx=0xffff88800453b000, bd=0xffffc9000182bdf0) at drivers/scsi/scsi_lib.c:1714
+#1  0xffffffff81640fbc in blk_mq_dispatch_rq_list (hctx=hctx@entry=0xffff88800453b000, list=list@entry=0xffffc9000182be40, nr_budgets=nr_budgets@entry=0) at block/blk-mq.c:2056
+#2  0xffffffff816471d3 in __blk_mq_sched_dispatch_requests (hctx=hctx@entry=0xffff88800453b000) at block/blk-mq-sched.c:306
+#3  0xffffffff816472b0 in blk_mq_sched_dispatch_requests (hctx=hctx@entry=0xffff88800453b000) at block/blk-mq-sched.c:339
+#4  0xffffffff8163da4c in __blk_mq_run_hw_queue (hctx=0xffff88800453b000) at block/blk-mq.c:2174
+#5  0xffffffff8112c274 in process_one_work (worker=worker@entry=0xffff888004458180, work=0xffff88800453b040) at kernel/workqueue.c:2289
+#6  0xffffffff8112c488 in worker_thread (__worker=0xffff888004458180) at kernel/workqueue.c:2436
+#7  0xffffffff81133d60 in kthread (_create=0xffff888004459080) at kernel/kthread.c:376
+#8  0xffffffff81001a6f in ret_from_fork () at arch/x86/entry/entry_64.S:306
+#9  0x0000000000000000 in ?? ()
+```
+
+```txt
+@[
+    ata_scsi_queuecmd+1
+    scsi_queue_rq+902
+    blk_mq_dispatch_rq_list+539
+    blk_mq_do_dispatch_sched+830
+    __blk_mq_sched_dispatch_requests+240
+    blk_mq_sched_dispatch_requests+53
+    __blk_mq_run_hw_queue+53
+    blk_mq_sched_insert_requests+106
+    blk_mq_flush_plug_list+284
+    __blk_flush_plug+258
+    blk_finish_plug+37
+    __iomap_dio_rw+1413
+    iomap_dio_rw+14
+    ext4_file_read_iter+145
+    aio_read+236
+    io_submit_one+546
+    __x64_sys_io_submit+128
+    do_syscall_64+56
+    entry_SYSCALL_64_after_hwframe+99
+]: 32
+```
+- scsi_queue_rq
+  - scsi_dispatch_cmd
+    - host->hostt->queuecommand(host, cmd) 如果是 sata 总线，那么就是 ata_scsi_queuecmd
 
 ## scsi
 ```txt
