@@ -84,15 +84,6 @@ from https://nvmexpress.org/education/drivers/linux-driver-information/
 
 - [ ] 从 /dev/nvme0n1p1 到 genhd 的过程是什么样子的啊
 
-## ldd3 的驱动理解
-
-- [ ] `register_blkdev` , `add_disk`, `get_gendisk`
-  - [x] `register_blkdev` 注册了 major number 在 `major_names` 中间，但是 `major_names` 除了使用在 `blkdev_show` (cat /proc/devices) 之外没有看到其他的用处
-    - https://linux-kernel-labs.github.io/refs/heads/master/labs/block_device_drivers.html : 中说，`register_blkdev` 是会取消掉的
-    - 从 virtio_blk.c 中间来看 : major 放到局部变量中间，所以实际功能是分配 major number
-
-- [ ] `alloc_disk` 分配 `struct gendisk`，其中由于保存分区的
-
 ## bio layer
 - [A block layer introduction part 1: the bio layer](https://lwn.net/Articles/736534/) https://yq.aliyun.com/articles/609907
 

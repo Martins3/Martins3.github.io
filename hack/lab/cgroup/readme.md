@@ -112,6 +112,12 @@ a 4c 01 e0 49 39 c7 7f f3 48 85 db 0f 84 ec 01 00 00
 [52243.454169] Memory cgroup out of memory: Killed process 259541 (stress) total-vm:157064kB, anon-rss:101976kB, file-rss:204kB, shmem-rss:0kB, UID:0 pgtables:252
 ```
 
+## io
+cgcreate -g io:duck
+cd /sys/fs/cgroup/duck
+echo "8:16  wiops=1000" > io.max
+cgexec -g io:duck dd if=/dev/zero of=/dev/sdb bs=1M count=1000
+
 ## cpu
 
 - https://oakbytes.wordpress.com/2012/09/02/cgroup-cpu-allocation-cpu-shares-examples/

@@ -9,7 +9,7 @@ fixed-size chunk of data, the size being determined by the kernel.
 A sector, in contrast, is a small block whose size is usually determined by the underlying hardware.
 > block 和 sector 有什么区别，获取为什么需要定义出来两个类型来。
 
-## 16.1 Registration 
+## 16.1 Registration
 
 #### 16.1.1 Block Driver Registration
 
@@ -70,115 +70,8 @@ must use to manage individual drives.
 > where is the separate registration interface !
 
 #### 16.1.3 Block device operations
-Char devices make their operations available to the system by way of the `file_operations` structure. A similar structure is used with block devices; it is `struct
-block_device_operations`, which is declared in `<linux/blkdev.h>`. 
-```c
-struct block_device_operations {
-	int (*open) (struct block_device *, fmode_t);
-	void (*release) (struct gendisk *, fmode_t);
-	int (*rw_page)(struct block_device *, sector_t, struct page *, int rw);
-	int (*ioctl) (struct block_device *, fmode_t, unsigned, unsigned long);
-	int (*compat_ioctl) (struct block_device *, fmode_t, unsigned, unsigned long);
-	long (*direct_access)(struct block_device *, sector_t, void __pmem **,
-			unsigned long *pfn);
-	unsigned int (*check_events) (struct gendisk *disk,
-				      unsigned int clearing);
-	/* ->media_changed() is DEPRECATED, use ->check_events() instead */
-	int (*media_changed) (struct gendisk *);
-	void (*unlock_native_capacity) (struct gendisk *);
-	int (*revalidate_disk) (struct gendisk *);
-	int (*getgeo)(struct block_device *, struct hd_geometry *);
-	/* this callback is with swap_lock and sometimes page table lock held */
-	void (*swap_slot_free_notify) (struct block_device *, unsigned long);
-	struct module *owner;
-	const struct pr_ops *pr_ops;
-};
-```
-1. 这些函数的注册都是让驱动完成的
-2. 这些函数的使用位置在哪里啊 ?
-    1. open : blkdev_get : @todo 当设备出现在 /dev/nvme0n1p1 上的时候，此时 blkdev_get 被调用过没有，blkdev_get 会被调用吗 ? 如果不调用，那么似乎驱动就没有被初始化，那么连 aops 的实现基础 bio request 之类的实现似乎无从谈起了。
-
-
-> 书上还有解释每一个成员的含义
-
 
 #### 16.1.4 The gendisk structure
-**`struct gendisk` (declared in `<linux/genhd.h>`) is the kernel’s representation of an individual disk device**
-In fact, the kernel also uses gendisk structures to represent partitions, but driver authors need not be aware of that.
-> partitions的内容，参考tlpi的内容吧!
-
-
-```c
-struct gendisk {
-	/* major, first_minor and minors are input parameters only,
-	 * don't use directly.  Use disk_devt() and disk_max_parts().
-	 */
-	int major;			/* major number of driver */
-	int first_minor;
-	int minors;                     /* maximum number of minors, =1 for
-                                         * disks that can't be partitioned. */
-
-	char disk_name[DISK_NAME_LEN];	/* name of major driver */
-	char *(*devnode)(struct gendisk *gd, umode_t *mode);
-
-	unsigned int events;		/* supported events */
-	unsigned int async_events;	/* async events, subset of all */
-
-	/* Array of pointers to partitions indexed by partno.
-	 * Protected with matching bdev lock but stat and other
-	 * non-critical accesses use RCU.  Always access through
-	 * helpers.
-	 */
-	struct disk_part_tbl __rcu *part_tbl;
-	struct hd_struct part0;
-
-	const struct block_device_operations *fops;
-	struct request_queue *queue;
-	void *private_data;
-
-	int flags;
-	struct device *driverfs_dev;  // FIXME: remove
-	struct kobject *slave_dir;
-
-	struct timer_rand_state *random;
-	atomic_t sync_io;		/* RAID */
-	struct disk_events *ev;
-#ifdef  CONFIG_BLK_DEV_INTEGRITY
-	struct kobject integrity_kobj;
-#endif	/* CONFIG_BLK_DEV_INTEGRITY */
-	int node_id;
-};
-```
-> 书上还有解释每一个成员的含义
-
-
-`struct gendisk` is a dynamically allocated structure that requires special kernel
-manipulation to be initialized; drivers cannot allocate the structure on their own.
-Instead, you must call:
-```c
-struct gendisk *alloc_disk(int minors);
-```
-
-Allocating a gendisk structure does not make the disk available to the system. To do
-that, you must initialize the structure and call `add_disk`.
-you should not call add_disk until your driver
-is completely initialized and ready to respond to requests on that disk.
-```c
-void add_disk(struct gendisk *gd);
-```
-
-
-When a disk is no longer needed, it should be freed with:
-```c
-void del_gendisk(struct gendisk *gd);
-```
-
-A gendisk is a reference-counted structure (it contains a kobject). There are `get_disk`
-and `put_disk` functions available to manipulate the reference count, but drivers
-should never need to do that. 
-
-> struct gendisk 就是 device driver 的代表，介绍 alloc_disk 和 add_disk 两个初始化函数
-
 #### 16.1.5 Initialization in sbull
 ```
 static void setup_device(struct sbull_dev *dev, int which)
@@ -204,7 +97,7 @@ typedef struct Sbull_Dev {
 > 这一个结构体的设计来源是什么?
 
 Here, `sbull_request` is our request function—the function that actually performs
-block read and write requests. 
+block read and write requests.
 
 When we set the first minor number for each device, we must take into account all of
 the numbers taken by prior devices. The name of the disk is set such that the first
@@ -212,20 +105,20 @@ one is sbulla, the second sbullb, and so on. User space can then add partition n
 
 #### 16.1.6 A Note on Sector Sizes
 As we have mentioned before,
-the kernel treats every disk as a linear array of 512-byte sectors. 
+the kernel treats every disk as a linear array of 512-byte sectors.
 Not all hardware uses that sector size, however.
 
 The sbull device exports a `hardsect_size` parameter that can be used
 to change the “hardware” sector size of the device;
 
-The first of those details is to inform the kernel of the sector size your device supports. 
+The first of those details is to inform the kernel of the sector size your device supports.
 
 
 Once that is done, the kernel adheres to your device’s hardware sector size. All I/O
 requests are properly aligned at the beginning of a hardware sector, and the length of
 each request is an integral number of sectors. You must remember, however, that the
 kernel always expresses itself in 512-byte sectors; thus, it is necessary to translate all
-sector numbers accordingly. 
+sector numbers accordingly.
 ```c
 set_capacity(dev->gd, nsectors*(hardsect_size/KERNEL_SECTOR_SIZE));
 ```
@@ -246,14 +139,14 @@ an sbull device after creating a filesystem on it.*
 
 When an inode refers to a block
 device, the field `i_bdev->bd_disk` contains a pointer to the associated gendisk structure;
-this pointer can be used to get to a driver’s internal data structures for the device. 
+this pointer can be used to get to a driver’s internal data structures for the device.
 > 能不能总结一下private 这一个字段的用法
 
 The task of the release method is, in contrast, to decrement the user count and, if
 indicated, start the media removal timer
 > 打开和关闭的主要作用，处理引用计数 和 计时器
 
-#### 16.2.3 The ioctl Method 
+#### 16.2.3 The ioctl Method
 The sbull ioctl method handles only one command—a request for the device’s `geometry`
 > 接下俩解释了到底 geometry 是什么以及为什么需要它。
 > 但是这一个概念是针对于 disk的，固态硬盘怎么说？
@@ -267,7 +160,7 @@ The sbull ioctl method handles only one command—a request for the device’s `
 
 
 #### 16.3.1 Introduction to the request Method
-The core of every block driver is its `request` function. 
+The core of every block driver is its `request` function.
 
 ```c
 typedef void (request_fn_proc) (struct request_queue *q);
@@ -342,7 +235,7 @@ contained within the structures passed to you via the request queue
 `struct request` represents a block I/O request for us to execute.
 
 A block request queue can contain requests that do not actually move blocks to and
-from a disk. 
+from a disk.
 
 ```c
 static void sbull_request(struct request_queue *q)
@@ -363,13 +256,13 @@ It is not, however, a realistic driver for many types of devices, for a couple o
 If you look under the hood, a request queue turns out to be a surprisingly
 complex data structure
 
-Request queues keep track of **outstanding** block I/O requests. 
+Request queues keep track of **outstanding** block I/O requests.
 > outstanding : remaining to be paid, done, or dealt with.
 
 Request queues also implement a plug-in interface that allows the use of multiple I/O
-schedulers (or **elevators**) to be used. 
+schedulers (or **elevators**) to be used.
 > 果然，在 request_queue 上存在 interface 给 io scheduler 使用
-> 但是实际上，找到的内容 : 
+> 但是实际上，找到的内容 :
 > 还是不知道 bfs 以及 elevator 之类的如何和mq的关联是什么:
 ```c
 /**
@@ -513,7 +406,7 @@ The bio structure is a low-level description of a portion of a block I/O request
 The bio structure, which is defined in `<linux/blk_types.h>`, contains a number of fields that
 may be of use to driver authors:
 ```c
-sector_t bi_sector; //The first (512-byte) sector to be transferred for this bio. 
+sector_t bi_sector; //The first (512-byte) sector to be transferred for this bio.
 unsigned int bi_size; // The size of the data to be transferred, in bytes. Instead, it is often easier to use bio_sectors(bio), a macro that gives the size in sectors.
 unsigned long bi_flags; // Aset of flags describing the bio; the least significant bit is set if this is a write request (although the macro bio_data_dir(bio) should be used instead of looking at the flags directly).
 unsigned short bio_phys_segments;
@@ -624,7 +517,7 @@ The `2.6` block layer addresses this problem with the concept of a barrier reque
 > 后面提供了两个相关的代码，但是已经消失了，@todo 没有没有找到相关的代码证据
 
 #### 16.3.5 Request Completion Functions
-There are, as we will see, several different ways of *working through* a request structure. 
+There are, as we will see, several different ways of *working through* a request structure.
 All of them make use of a couple of common functions, however, which handle the completion of an I/O request or parts of a request.
 Both of these functions are atomic and can be safely called from an atomic context.
 

@@ -298,3 +298,12 @@ iomap 直接来调用 submit_bio，有趣:
 	blkcg_policy_unregister(&blkcg_policy_bfq);
 ```
 elv_unregister 和 blkcg_policy_unregister : elv 的才是真正的管理吧  blkcg 显然又是处理 cgroup 的!
+
+## 这几个文件都是做什么的
+blkcg_policy_register 的调用位置:
+
+1. block/blk-iolatency.c
+3. block/blk-throttle.c
+4. block/blk-iocost.c (实际上，这一个没有被注册上去)
+
+2. block/bfq-iosched.c (按道理来说，不应该，可能自己特有的)

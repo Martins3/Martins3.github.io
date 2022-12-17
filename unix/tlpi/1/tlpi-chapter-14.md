@@ -8,11 +8,11 @@ pseudo-file system mounted under /sys.
 
 Each device file has a major ID number and a minor ID number. The major ID identifies the general class of device, and is used by the kernel to look up the appropriate
 driver for this type of device. The minor ID uniquely identifies a particular device
-within a general class. 
+within a general class.
 
 Each device driver registers its association
 with a specific major device ID, and this association provides the connection
-between the device special file and the device driver. 
+between the device special file and the device driver.
 
 Each disk is divided into one or more (nonoverlapping) partitions. Each partition is
 treated by the kernel as a separate device residing under the /dev directory.
@@ -22,9 +22,6 @@ The system administrator determines the number, type, and size of partitions
 on a disk using the fdisk command. The command fdisk –l lists all partitions on
 a disk. The Linux-specific /proc/partitions file lists the major and minor device
 numbers, size, and name of each disk partition on the system.
-> 神奇的操作，所以
-> 1. 如果fdisk，gendisk , block device , inode 等等现在所有接触到的概念，都是对于disk 和 ssd 通用的，so when the path diverge to two
-> 2. what is driver name of disk and ssd in my computer ?
 
 A swap area is created using the mkswap(8) command. A privileged (CAP_SYS_ADMIN)
 process can use the swapon() system call to notify the kernel that a disk partition is
@@ -74,7 +71,7 @@ mount(8), umount(8), and fsck(8) commands
 ## 14.9 Advanced Mount Features
 > @todo mount 的一些骚操作
 
-##　14.10 A Virtual Memory File System: tmpfs
+## 14.10 A Virtual Memory File System: tmpfs
 By default, a tmpfs file system is permitted to grow to half the size of RAM, but
 the size=nbytes mount option can be used to set a different ceiling for the file-system
 size, either when the file system is created or during a later remount. (A tmpfs file
