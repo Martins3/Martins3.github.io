@@ -18,7 +18,7 @@
 # 进入指定目录下
 /> cd /backstores/block
 # 创建共享设备，命名为 “disk0”
-/backstores/block> create disk0 /dev/sdb4
+/backstores/block> create disk0 /dev/sda
 
 # 进入指定目录
 cd /iscsi
@@ -44,6 +44,8 @@ iscsiadm -m node -T iqn.2003-01.org.linux-iscsi.localhost.x8664:sn.037746bdcf2d 
 
 ```sh
 vim /etc/iscsi/initiatorname.iscsi
+systemctl restart iscsid
+systemctl enable iscsid
 ```
 
 原来是

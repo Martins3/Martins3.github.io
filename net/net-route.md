@@ -548,6 +548,11 @@ ens4: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
   - https://www.youtube.com/watch?v=DAN-7sWFxLw&list=PLrninrcyMo3L-hsJv23hFyDGRaeBY1EJO&index=2
 
 
+## netem
+https://wiki.linuxfoundation.org/networking/netem
+
+tc qdisc add dev eth0 root netem delay 100ms
+
 [^2]: 用芯探核:基于龙芯的 Linux 内核探索解析
 [^4]: http://yuba.stanford.edu/rcp/
 [^6]: [An Introduction to Computer Networks](http://intronetworks.cs.luc.edu/current2/html/)

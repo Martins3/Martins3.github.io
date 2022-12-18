@@ -1,11 +1,5 @@
 # scsi
 
-cd /sys/bus/pseudo/drivers/scsi_debug
-echo 1 > max_luns
-echo 1 > add_host
-
-
-
 - [ ] 看看内核日志
 - [ ] 如何没有理解错误，那么 scsi 应该是在 nvme 差不多的层次，也就是在 multiqueue 的下面
 - [ ] scsi disk / scsi cd-rom / scsi - 磁带 / scsi - generic

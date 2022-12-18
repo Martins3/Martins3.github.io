@@ -100,3 +100,6 @@ xfs_file_read_iter
 - [ ] I don't know how iomap_dio_rw write page to disk ?
 
 IOMAP_F_BUFFER_HEAD
+
+## 参考
+[IO 子系统全流程介绍](https://zhuanlan.zhihu.com/p/545906763)

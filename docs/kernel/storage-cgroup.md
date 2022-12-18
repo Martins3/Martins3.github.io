@@ -29,6 +29,10 @@
 
 具体的分析应该是很有趣的，但是没时间了。
 
+## 参考
+- http://127.0.0.1:3434/admin-guide/cgroup-v2.html
+- https://facebookmicrosites.github.io/cgroup2/docs/io-controller.html
+
 ## iolatency
 
 - iolatency_set_min_lat_nsec
@@ -81,3 +85,69 @@
 #18 do_syscall_64 (regs=0xffffc900402eff58, nr=<optimized out>) at arch/x86/entry/common.c:80
 #19 0xffffffff822000ae in entry_SYSCALL_64 () at arch/x86/entry/entry_64.S:120
 ```
+
+## 似乎存在一个通用框架
+
+```c
+enum rq_qos_id {
+	RQ_QOS_WBT,
+	RQ_QOS_LATENCY,
+	RQ_QOS_COST,
+};
+
+static struct rq_qos_ops wbt_rqos_ops = {
+	.throttle = wbt_wait,
+	.issue = wbt_issue,
+	.track = wbt_track,
+	.requeue = wbt_requeue,
+	.done = wbt_done,
+	.cleanup = wbt_cleanup,
+	.queue_depth_changed = wbt_queue_depth_changed,
+	.exit = wbt_exit,
+#ifdef CONFIG_BLK_DEBUG_FS
+	.debugfs_attrs = wbt_debugfs_attrs,
+#endif
+};
+
+static struct rq_qos_ops blkcg_iolatency_ops = {
+	.throttle = blkcg_iolatency_throttle,
+	.done_bio = blkcg_iolatency_done_bio,
+	.exit = blkcg_iolatency_exit,
+};
+
+static struct rq_qos_ops ioc_rqos_ops = {
+	.throttle = ioc_rqos_throttle,
+	.merge = ioc_rqos_merge,
+	.done_bio = ioc_rqos_done_bio,
+	.done = ioc_rqos_done,
+	.queue_depth_changed = ioc_rqos_queue_depth_changed,
+	.exit = ioc_rqos_exit,
+};
+```
+
+当 disk 出现错误，为什么最后是在 wbt_wait 上:
+
+## buffered writeback throttling
+```c
+/*
+ * buffered writeback throttling. loosely based on CoDel. We can't drop
+ * packets for IO scheduling, so the logic is something like this:
+ *
+ * - Monitor latencies in a defined window of time.
+ * - If the minimum latency in the above window exceeds some target, increment
+ *   scaling step and scale down queue depth by a factor of 2x. The monitoring
+ *   window is then shrunk to 100 / sqrt(scaling step + 1).
+ * - For any window where we don't have solid data on what the latencies
+ *   look like, retain status quo.
+ * - If latencies look good, decrement scaling step.
+ * - If we're only doing writes, allow the scaling step to go negative. This
+ *   will temporarily boost write performance, snapping back to a stable
+ *   scaling step of 0 if reads show up or the heavy writers finish. Unlike
+ *   positive scaling steps where we shrink the monitoring window, a negative
+ *   scaling step retains the default step==0 window size.
+ *
+ * Copyright (C) 2016 Jens Axboe
+ *
+ */
+```
+但是 blk-wq.c 中没有关联任何 cgroup 的内容。

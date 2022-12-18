@@ -160,7 +160,7 @@ https://github.com/iovisor/bpftrace/blob/master/docs/reference_guide.md
 - [ ] 但是 fio 的时候，或者 echo 的时候，必然出现错误的。
 
 
-- 我不理解，按道理来说，应该
+- 我不理解，按道理来说，应该的数量绝对不会发生改变才对的
 ```txt
 ➜  ~ cat /proc/meminfo | grep Swap
 SwapCached:         9752 kB
@@ -175,6 +175,8 @@ Filename                                Type            Size            Used    
 ```
 
 ## 为什么分配失败，没有接受到 kill 信号
+
+已经无法浮现了！
 
 ## 为什么还是存在数据写入到 swap 中
 1. fault injection 存在 bug 吗?
@@ -199,3 +201,316 @@ Filename                                Type            Size            Used    
 ## 似乎 cgroup 的机制是有问题的
 
 ## swap 在什么时候释放 page 的?
+
+错误浮现的步骤:
+
+```sh
+cd /sys/bus/pseudo/drivers/scsi_debug
+echo 1 > max_luns
+echo 1 > add_host
+
+sleep 1
+mkswap /dev/sde
+swapon /dev/sde
+
+cd /sys/bus/pseudo/drivers/scsi_debug
+echo 1 > every_nth
+echo 0x10 > opts
+
+cgcreate -g memory:mem
+cgset -r memory.max=100m mem
+
+swapoff /dev/vdb3
+cd ~/share
+gcc a.c && cgexec -g memory:mem  ./a.out
+```
+
+哇，我操，为什么又可以恢复了!
+
+echo 1 > /sys/bus/pseudo/drivers/scsi_debug/every_nth
+echo 0 > /sys/bus/pseudo/drivers/scsi_debug/every_nth
+
+```sh
+
+cd /sys/kernel/debug/fail_make_request
+echo 0 > interval
+echo -1 > times
+echo 100 > probability
+
+mkswap /dev/sda
+swapon /dev/sda
+echo 1 > /sys/block/sda/make-it-fail
+
+cgcreate -g memory:mem
+cgset -r memory.max=100m mem
+
+swapoff /dev/vdb3
+cd ~/share
+gcc a.c && cgexec -g memory:mem  ./a.out
+```
+
+- [ ] 好像打开一个选项之后，就不再吵闹了
+
+```txt
+[<0>] rq_qos_wait+0xba/0x130
+[<0>] wbt_wait+0x9b/0x100
+[<0>] __rq_qos_throttle+0x1f/0x40
+[<0>] blk_mq_submit_bio+0x266/0x510
+[<0>] submit_bio_noacct_nocheck+0x25a/0x2b0
+[<0>] __swap_writepage+0x13c/0x480
+[<0>] pageout+0xcf/0x260
+[<0>] shrink_folio_list+0x5e2/0xbd0
+[<0>] shrink_lruvec+0x5f4/0xbe0
+[<0>] shrink_node+0x2ce/0x6f0
+[<0>] do_try_to_free_pages+0xd0/0x560
+[<0>] try_to_free_mem_cgroup_pages+0x107/0x230
+[<0>] try_charge_memcg+0x19a/0x820
+[<0>] charge_memcg+0x2d/0xa0
+[<0>] __mem_cgroup_charge+0x28/0x80
+[<0>] __filemap_add_folio+0x355/0x430
+[<0>] filemap_add_folio+0x36/0xa0
+[<0>] __filemap_get_folio+0x1fc/0x330
+[<0>] filemap_fault+0x150/0xa00
+[<0>] __do_fault+0x2c/0xb0
+[<0>] do_fault+0x1e1/0x590
+[<0>] __handle_mm_fault+0x5eb/0x12a0
+[<0>] handle_mm_fault+0xe4/0x2c0
+[<0>] do_user_addr_fault+0x1c7/0x670
+[<0>] exc_page_fault+0x66/0x150
+[<0>] asm_exc_page_fault+0x26/0x30
+```
+- blk_mq_submit_bio
+  - blk_mq_get_cached_request
+    - blk_mq_get_cached_request
+      - rq_qos_throttle
+
+
+其实这种是更加好的，勉强还存在一个补救的机会。
+
+## 会让 scsi_debug 似乎无法正常回复
+
+其大小为 0 :
+```txt
+sde       8:64   0    0B  0 disk
+```
+
+## 测试是不是，只是这个选项的原因
+也许只是这个选项的原因:
+```txt
+config BLK_WBT
+	bool "Enable support for block device writeback throttling"
+	help
+	Enabling this option enables the block layer to throttle buffered
+	background writeback from the VM, making it more smooth and having
+	less impact on foreground operations. The throttling is done
+	dynamically on an algorithm loosely based on CoDel, factoring in
+	the realtime performance of the disk.
+```
+
+## 将 BLK_WBT 关掉之后，得到的结果是
+
+1. 瞬间 kill 了，效果如下:
+
+但是，看上去完全没有使用过 swap 的，这个现象是为什么?
+```txt
+#0  send_signal_locked (sig=sig@entry=9, info=info@entry=0x1 <fixed_percpu_data+1>, t=t@entry=0xffff888021fd4300, type=type@entry=PIDTYPE_TGID) at kernel/signal.c:1222
+#1  0xffffffff8113e188 in do_send_sig_info (sig=sig@entry=9, info=info@entry=0x1 <fixed_percpu_data+1>, p=p@entry=0xffff888021fd4300, type=type@entry=PIDTYPE_TGID) at kernel/signal.c:1296
+#2  0xffffffff812e6fa1 in __oom_kill_process (victim=0xffff888021fd4300, message=0xffffffff829b40c2 "Memory cgroup out of memory") at mm/oom_kill.c:947
+#3  0xffffffff812e72dc in oom_kill_process (oc=0xffffc900402efa60, message=0xffffffff829b40c2 "Memory cgroup out of memory") at mm/oom_kill.c:1045
+#4  0xffffffff812e7c75 in out_of_memory (oc=oc@entry=0xffffc900402efa60) at mm/oom_kill.c:1174
+#5  0xffffffff8139bd51 in mem_cgroup_out_of_memory (memcg=memcg@entry=0xffff8881559c6000, gfp_mask=gfp_mask@entry=1051850, order=order@entry=0) at mm/memcontrol.c:1711
+#6  0xffffffff813a0f04 in mem_cgroup_oom (order=0, mask=1051850, memcg=0xffff8881559c6000) at mm/memcontrol.c:1941
+#7  try_charge_memcg (memcg=memcg@entry=0xffff8881559c6000, gfp_mask=gfp_mask@entry=1051850, nr_pages=<optimized out>) at mm/memcontrol.c:2736
+#8  0xffffffff813a18dd in try_charge (nr_pages=1, gfp_mask=1051850, memcg=0xffff8881559c6000) at mm/memcontrol.c:2830
+#9  charge_memcg (folio=folio@entry=0xffffea000460de80, memcg=memcg@entry=0xffff8881559c6000, gfp=gfp@entry=1051850) at mm/memcontrol.c:6947
+#10 0xffffffff813a31d8 in __mem_cgroup_charge (folio=folio@entry=0xffffea000460de80, mm=mm@entry=0x0 <fixed_percpu_data>, gfp=gfp@entry=1051850) at mm/memcontrol.c:6968
+#11 0xffffffff812de845 in mem_cgroup_charge (mm=0x0 <fixed_percpu_data>, gfp=1051850, folio=0xffffea000460de80) at ./include/linux/memcontrol.h:671
+#12 __filemap_add_folio (mapping=mapping@entry=0xffff888118a686f8, folio=folio@entry=0xffffea000460de80, index=index@entry=1, gfp=gfp@entry=1051850, shadowp=shadowp@entry=0xffffc900402efc38) at mm/filemap.c:853
+#13 0xffffffff812de966 in filemap_add_folio (mapping=mapping@entry=0xffff888118a686f8, folio=folio@entry=0xffffea000460de80, index=index@entry=1, gfp=gfp@entry=1051850) at mm/filemap.c:935
+#14 0xffffffff812e16fc in __filemap_get_folio (mapping=mapping@entry=0xffff888118a686f8, index=index@entry=1, fgp_flags=fgp_flags@entry=68, gfp=1051850) at mm/filemap.c:1977
+#15 0xffffffff812e1c30 in filemap_fault (vmf=0xffffc900402efdf8) at mm/filemap.c:3164
+#16 0xffffffff81320a9c in __do_fault (vmf=vmf@entry=0xffffc900402efdf8) at mm/memory.c:4163
+#17 0xffffffff81325271 in do_read_fault (vmf=0xffffc900402efdf8) at mm/memory.c:4514
+#18 do_fault (vmf=vmf@entry=0xffffc900402efdf8) at mm/memory.c:4643
+#19 0xffffffff8132a07b in handle_pte_fault (vmf=0xffffc900402efdf8) at mm/memory.c:4931
+#20 __handle_mm_fault (vma=vma@entry=0xffff8881164cc428, address=address@entry=4199050, flags=flags@entry=852) at mm/memory.c:5073
+#21 0xffffffff8132ae24 in handle_mm_fault (vma=0xffff8881164cc428, address=address@entry=4199050, flags=<optimized out>, flags@entry=852, regs=regs@entry=0xffffc900402eff58) at mm/memory.c:5219
+#22 0xffffffff8110d947 in do_user_addr_fault (regs=regs@entry=0xffffc900402eff58, error_code=error_code@entry=20, address=address@entry=4199050) at arch/x86/mm/fault.c:1428
+#23 0xffffffff821805a6 in handle_page_fault (address=4199050, error_code=20, regs=0xffffc900402eff58) at arch/x86/mm/fault.c:1519
+#24 exc_page_fault (regs=0xffffc900402eff58, error_code=20) at arch/x86/mm/fault.c:1575
+#25 0xffffffff82201286 in asm_exc_page_fault () at ./arch/x86/include/asm/idtentry.h:570
+```
+- [ ] 一时间找不到为什么会是 filemap_fault 了
+只是因为这次出现了问题
+```txt
+#0  do_anonymous_page (vmf=0xffffc900402b3df8) at mm/memory.c:4029
+#1  handle_pte_fault (vmf=0xffffc900402b3df8) at mm/memory.c:4929
+#2  __handle_mm_fault (vma=vma@entry=0xffff88801d6a34c0, address=address@entry=140605407756288, flags=flags@entry=597) at mm/memory.c:5073
+#3  0xffffffff8132ae24 in handle_mm_fault (vma=0xffff88801d6a34c0, address=address@entry=140605407756288, flags=<optimized out>, flags@entry=597, regs=regs@entry=0xffffc900402b3f58) at mm/memory.c:5219
+#4  0xffffffff8110d947 in do_user_addr_fault (regs=regs@entry=0xffffc900402b3f58, error_code=error_code@entry=6, address=address@entry=140605407756288) at arch/x86/mm/fault.c:1428
+#5  0xffffffff821805a6 in handle_page_fault (address=140605407756288, error_code=6, regs=0xffffc900402b3f58) at arch/x86/mm/fault.c:1519
+#6  exc_page_fault (regs=0xffffc900402b3f58, error_code=6) at arch/x86/mm/fault.c:1575
+#7  0xffffffff82201286 in asm_exc_page_fault () at ./arch/x86/include/asm/idtentry.h:570
+```
+
+1. 获取 fault 的函数
+
+pburst:init.scoperint (((struct vm_fault *)0xffffc900402b3df8)->vma->vm_file->f_path.dentry->d_iname)
+$12 = "a.out\000.events\000-burst:init.scope"
+
+$ print ((struct vm_fault *)0xffffc900403d3df8)->vma->vm_mm->owner->comm
+$13 = "a.out\000\000\000\000\000\000\000\000\000\000"
+
+$ print ((struct vm_fault *)0xffffc900403d3df8)->vma->vm_start
+$14 = 4198400
+$ print ((struct vm_fault *)0xffffc900403d3df8)->vma->vm_end
+$15 = 4202496
+
+原来是加载代码段，看上去，其中的结果是，感觉有的 code 的确可以 swap 出去，但是实际上并没有:
+$ print  /x ((struct vm_fault *)0xffffc9004053bdf8)->vma->vm_end
+$17 = 0x402000
+```txt
+➜  share gcc a.c && cgexec -g memory:mem2 ./a.out
+
+00400000-00401000 r--p 00000000 00:22 29231568                           /root/share/a.out
+00401000-00402000 r-xp 00001000 00:22 29231568                           /root/share/a.out
+00402000-00403000 r--p 00002000 00:22 29231568                           /root/share/a.out
+00403000-00404000 r--p 00002000 00:22 29231568                           /root/share/a.out
+00404000-00405000 rw-p 00003000 00:22 29231568                           /root/share/a.out
+008af000-008d0000 rw-p 00000000 00:00 0                                  [heap]
+7f2b9a763000-7f2ba3d66000 rw-p 00000000 00:00 0
+7f2ba3d66000-7f2ba3d92000 r--p 00000000 fd:12 1314351                    /usr/lib64/libc.so.6
+7f2ba3d92000-7f2ba3f01000 r-xp 0002c000 fd:12 1314351                    /usr/lib64/libc.so.6
+7f2ba3f01000-7f2ba3f51000 r--p 0019b000 fd:12 1314351                    /usr/lib64/libc.so.6
+7f2ba3f51000-7f2ba3f52000 ---p 001eb000 fd:12 1314351                    /usr/lib64/libc.so.6
+7f2ba3f52000-7f2ba3f55000 r--p 001eb000 fd:12 1314351                    /usr/lib64/libc.so.6
+7f2ba3f55000-7f2ba3f58000 rw-p 001ee000 fd:12 1314351                    /usr/lib64/libc.so.6
+7f2ba3f58000-7f2ba3f65000 rw-p 00000000 00:00 0
+7f2ba3f73000-7f2ba3f75000 rw-p 00000000 00:00 0
+7f2ba3f75000-7f2ba3f77000 r--p 00000000 fd:12 1314348                    /usr/lib64/ld-linux-x86-64.so.2
+7f2ba3f77000-7f2ba3f9f000 r-xp 00002000 fd:12 1314348                    /usr/lib64/ld-linux-x86-64.so.2
+7f2ba3f9f000-7f2ba3fa9000 r--p 0002a000 fd:12 1314348                    /usr/lib64/ld-linux-x86-64.so.2
+7f2ba3faa000-7f2ba3fac000 r--p 00034000 fd:12 1314348                    /usr/lib64/ld-linux-x86-64.so.2
+7f2ba3fac000-7f2ba3fae000 rw-p 00036000 fd:12 1314348                    /usr/lib64/ld-linux-x86-64.so.2
+7ffc38cbd000-7ffc38cde000 rw-p 00000000 00:00 0                          [stack]
+7ffc38cf5000-7ffc38cf9000 r--p 00000000 00:00 0                          [vvar]
+7ffc38cf9000-7ffc38cfb000 r-xp 00000000 00:00 0                          [vdso]
+ffffffffff600000-ffffffffff601000 --xp 00000000 00:00 0                  [vsyscall]
+```
+
+但是失败的位置总是在此处。
+
+在被 kill 之前，会在此处多次的尝试，似乎没有 BLK_WBT 机制会让这个总是失败:
+```txt
+#0  __swap_writepage (page=0xffffea00046dd300, wbc=0xffffc900403d38e0) at mm/page_io.c:337
+#1  0xffffffff812f649f in pageout (folio=folio@entry=0xffffea00046dd300, mapping=mapping@entry=0xffff88801b354600, plug=plug@entry=0xffffc900403d39a8) at mm/vmscan.c:1298
+#2  0xffffffff812f78f2 in shrink_folio_list (folio_list=folio_list@entry=0xffffc900403d3a90, pgdat=pgdat@entry=0xffff88813fffc000, sc=sc@entry=0xffffc900403d3c68, stat=stat@entry=0xffffc900403d3b18, ignore_references=ignore_references@entry=false) at mm/vmscan.c:1947
+#3  0xffffffff812f9614 in shrink_inactive_list (lru=LRU_INACTIVE_ANON, sc=0xffffc900403d3c68, lruvec=0xffff888116e12800, nr_to_scan=<optimized out>) at mm/vmscan.c:2526
+#4  shrink_list (sc=0xffffc900403d3c68, lruvec=0xffff888116e12800, nr_to_scan=<optimized out>, lru=LRU_INACTIVE_ANON) at mm/vmscan.c:2767
+#5  shrink_lruvec (lruvec=lruvec@entry=0xffff888116e12800, sc=sc@entry=0xffffc900403d3c68) at mm/vmscan.c:5954
+#6  0xffffffff812f9ede in shrink_node_memcgs (sc=0xffffc900403d3c68, pgdat=0xffff88813fffc000) at mm/vmscan.c:6141
+#7  shrink_node (pgdat=pgdat@entry=0xffff88813fffc000, sc=sc@entry=0xffffc900403d3c68) at mm/vmscan.c:6172
+#8  0xffffffff812fb120 in shrink_zones (sc=0xffffc900403d3c68, zonelist=<optimized out>) at mm/vmscan.c:6410
+#9  do_try_to_free_pages (zonelist=zonelist@entry=0xffff88813fffdb00, sc=sc@entry=0xffffc900403d3c68) at mm/vmscan.c:6472
+#10 0xffffffff812fc037 in try_to_free_mem_cgroup_pages (memcg=memcg@entry=0xffff8881199ef000, nr_pages=nr_pages@entry=1, gfp_mask=gfp_mask@entry=3264, reclaim_options=reclaim_options@entry=2, nodemask=nodemask@entry=0x0 <fixed_percpu_data>) at mm/vmscan.c:6789
+#11 0xffffffff813a095a in try_charge_memcg (memcg=memcg@entry=0xffff8881199ef000, gfp_mask=gfp_mask@entry=3264, nr_pages=1) at mm/memcontrol.c:2687
+#12 0xffffffff813a18dd in try_charge (nr_pages=1, gfp_mask=3264, memcg=0xffff8881199ef000) at mm/memcontrol.c:2830
+#13 charge_memcg (folio=folio@entry=0xffffea00046d71c0, memcg=memcg@entry=0xffff8881199ef000, gfp=gfp@entry=3264) at mm/memcontrol.c:6947
+#14 0xffffffff813a31d8 in __mem_cgroup_charge (folio=0xffffea00046d71c0, mm=<optimized out>, gfp=gfp@entry=3264) at mm/memcontrol.c:6968
+#15 0xffffffff8132a3a8 in mem_cgroup_charge (gfp=3264, mm=<optimized out>, folio=<optimized out>) at ./include/linux/memcontrol.h:671
+#16 do_anonymous_page (vmf=0xffffc900403d3df8) at mm/memory.c:4078
+#17 handle_pte_fault (vmf=0xffffc900403d3df8) at mm/memory.c:4929
+#18 __handle_mm_fault (vma=vma@entry=0xffff88801cc15d10, address=address@entry=140134835929088, flags=flags@entry=597) at mm/memory.c:5073
+#19 0xffffffff8132ae24 in handle_mm_fault (vma=0xffff88801cc15d10, address=address@entry=140134835929088, flags=<optimized out>, flags@entry=597, regs=regs@entry=0xffffc900403d3f58) at mm/memory.c:5219
+#20 0xffffffff8110d947 in do_user_addr_fault (regs=regs@entry=0xffffc900403d3f58, error_code=error_code@entry=6, address=address@entry=140134835929088) at arch/x86/mm/fault.c:1428
+#21 0xffffffff821805a6 in handle_page_fault (address=140134835929088, error_code=6, regs=0xffffc900403d3f58) at arch/x86/mm/fault.c:1519
+#22 exc_page_fault (regs=0xffffc900403d3f58, error_code=6) at arch/x86/mm/fault.c:1575
+#23 0xffffffff82201286 in asm_exc_page_fault () at ./arch/x86/include/asm/idtentry.h:570
+```
+应该是在此处失败了。
+
+我真的不理解，为什么说，swap 也是使用了 100M 是什么情况：
+```txt
+[ 3075.130889] memory: usage 102400kB, limit 102400kB, failcnt 684
+[ 3075.131093] swap: usage 102728kB, limit 9007199254740988kB, failcnt 0
+```
+
+## CONFIG_BLK_WBT 应该是一个完全没有任何作用的 config 了吧!
+5f6776ba413ce273f7cb211f1cf8771f0cde7c81 将其挪动了一下位置
+
+git show 87760e5eef359 的时候引入的，当时在考虑 SQ 的问题。
+
+## 为什么 swap 的速度这么慢啊
+对不起，是 scsi 的问题
+
+## 尝试注入一下网络
+
+tc qdisc add dev lo root netem delay 100ms
+tc qdisc change dev lo root netem delay 1000ms
+tc qdisc change dev lo root netem loss 0.1%
+
+为什么 1000ms 的延迟这么大！
+
+## iscsi 原来的盘中注入错误
+
+其实，在 guest 这一侧的效果差不多。
+```txt
+#19 0xffffffff81759b0b in should_fail (attr=attr@entry=0xffffffff82df2de0 <fail_make_request>, size=<optimized out>) at lib/fault-inject.c:157
+#20 0xffffffff816bfe02 in should_fail_request (bytes=<optimized out>, part=<optimized out>) at block/blk-core.c:488
+#21 should_fail_bio (bio=bio@entry=0xffff88801b4c2c00) at block/blk-core.c:515
+#22 0xffffffff816c0a04 in submit_bio_noacct (bio=0xffff88801b4c2c00) at block/blk-core.c:732
+#23 0xffffffff81b7225f in iblock_submit_bios (list=0xffffc900402ffd48) at drivers/target/target_core_iblock.c:383
+#24 0xffffffff81b72d90 in iblock_execute_rw (cmd=0xffff88811decacf0, sgl=<optimized out>, sgl_nents=<optimized out>, data_direction=<optimized out>) at drivers/target/target_core_iblock.c:819
+#25 0xffffffff81b687f2 in __target_execute_cmd (cmd=cmd@entry=0xffff88811decacf0, do_checks=do_checks@entry=true) at drivers/target/target_core_transport.c:2131
+#26 0xffffffff81b689f4 in target_execute_cmd (cmd=0xffff88811decacf0) at drivers/target/target_core_transport.c:2263
+#27 0xffffffff81b87a6c in iscsit_check_dataout_payload (cmd=cmd@entry=0xffff88811decab00, hdr=hdr@entry=0xffff8881168fbe80, data_crc_failed=<optimized out>) at drivers/target/iscsi/iscsi_target.c:1723
+#28 0xffffffff81b8b1ea in iscsit_handle_data_out (buf=0xffff8881168fbe80 "\005\200", conn=0xffff888117a67800) at drivers/target/iscsi/iscsi_target.c:1751
+#29 iscsi_target_rx_opcode (buf=0xffff8881168fbe80 "\005\200", conn=0xffff888117a67800) at drivers/target/iscsi/iscsi_target.c:3992
+#30 iscsit_get_rx_pdu (conn=0xffff888117a67800) at drivers/target/iscsi/iscsi_target.c:4159
+#31 0xffffffff81b8bdab in iscsi_target_rx_thread (arg=0xffff888117a67800) at drivers/target/iscsi/iscsi_target.c:4189
+#32 0xffffffff811546c4 in kthread (_create=0xffff88811bfc3fc0) at kernel/kthread.c:376
+#33 0xffffffff81002659 in ret_from_fork () at arch/x86/entry/entry_64.S:308
+```
+
+## 为什么会将 SIGBUS 信号丢失掉了
+因为 vmcore
+```txt
+#20 0xffffffff816bfe12 in should_fail_request (bytes=<optimized out>, part=<optimized out>) at block/blk-core.c:488
+#21 should_fail_bio (bio=bio@entry=0xffff88811cc2cf00) at block/blk-core.c:515
+#22 0xffffffff816c0a14 in submit_bio_noacct (bio=0xffff88811cc2cf00) at block/blk-core.c:732
+#23 0xffffffff81357f6c in __swap_writepage (page=0xffffea0004943540, wbc=<optimized out>) at mm/page_io.c:368
+#24 0xffffffff812f649f in pageout (folio=folio@entry=0xffffea0004943540, mapping=mapping@entry=0xffff88811b25a0c0, plug=plug@entry=0xffffc900402e3298) at mm/vmscan.c:1298
+#25 0xffffffff812f78f2 in shrink_folio_list (folio_list=folio_list@entry=0xffffc900402e3380, pgdat=pgdat@entry=0xffff88813fffc000, sc=sc@entry=0xffffc900402e3558, stat=stat@entry=0xffffc900402e3408, ignore_references=ignore_references@entry=false) at mm/vmscan.c:1947
+#26 0xffffffff812f9614 in shrink_inactive_list (lru=LRU_INACTIVE_ANON, sc=0xffffc900402e3558, lruvec=0xffff88811be06800, nr_to_scan=<optimized out>) at mm/vmscan.c:2526
+#27 shrink_list (sc=0xffffc900402e3558, lruvec=0xffff88811be06800, nr_to_scan=<optimized out>, lru=LRU_INACTIVE_ANON) at mm/vmscan.c:2767
+#28 shrink_lruvec (lruvec=lruvec@entry=0xffff88811be06800, sc=sc@entry=0xffffc900402e3558) at mm/vmscan.c:5954
+#29 0xffffffff812f9ede in shrink_node_memcgs (sc=0xffffc900402e3558, pgdat=0xffff88813fffc000) at mm/vmscan.c:6141
+#30 shrink_node (pgdat=pgdat@entry=0xffff88813fffc000, sc=sc@entry=0xffffc900402e3558) at mm/vmscan.c:6172
+#31 0xffffffff812fb120 in shrink_zones (sc=0xffffc900402e3558, zonelist=<optimized out>) at mm/vmscan.c:6410
+#32 do_try_to_free_pages (zonelist=zonelist@entry=0xffff88813fffdb00, sc=sc@entry=0xffffc900402e3558) at mm/vmscan.c:6472
+#33 0xffffffff812fc037 in try_to_free_mem_cgroup_pages (memcg=memcg@entry=0xffff88811b25d000, nr_pages=nr_pages@entry=1, gfp_mask=gfp_mask@entry=1051850, reclaim_options=reclaim_options@entry=2, nodemask=nodemask@entry=0x0 <fixed_percpu_data>) at mm/vmscan.c:6789
+#34 0xffffffff813a096a in try_charge_memcg (memcg=memcg@entry=0xffff88811b25d000, gfp_mask=1051850, gfp_mask@entry=76583872, nr_pages=1) at mm/memcontrol.c:2687
+#35 0xffffffff813a18ed in try_charge (nr_pages=1, gfp_mask=76583872, memcg=0xffff88811b25d000) at mm/memcontrol.c:2830
+#36 charge_memcg (folio=folio@entry=0xffffea00049093c0, memcg=memcg@entry=0xffff88811b25d000, gfp=gfp@entry=1051850) at mm/memcontrol.c:6947
+#37 0xffffffff813a32a4 in mem_cgroup_swapin_charge_folio (folio=folio@entry=0xffffea00049093c0, mm=mm@entry=0x0 <fixed_percpu_data>, gfp=gfp@entry=1051850, entry=..., entry@entry=...) at mm/memcontrol.c:7003
+#38 0xffffffff813598e7 in __read_swap_cache_async (entry=entry@entry=..., gfp_mask=gfp_mask@entry=1051850, vma=vma@entry=0xffff88811b1a8260, addr=addr@entry=140156937367552, new_page_allocated=new_page_allocated@entry=0xffffc900402e375e) at mm/swap_state.c:483
+#39 0xffffffff81359b5a in swap_cluster_readahead (entry=..., gfp_mask=gfp_mask@entry=1051850, vmf=vmf@entry=0xffffc900402e3850) at mm/swap_state.c:638
+#40 0xffffffff8135a0f3 in swapin_readahead (entry=..., entry@entry=..., gfp_mask=gfp_mask@entry=1051850, vmf=vmf@entry=0xffffc900402e3850) at mm/swap_state.c:852
+#41 0xffffffff81325a14 in do_swap_page (vmf=vmf@entry=0xffffc900402e3850) at mm/memory.c:3787
+#42 0xffffffff8132a28e in handle_pte_fault (vmf=0xffffc900402e3850) at mm/memory.c:4940
+#43 __handle_mm_fault (vma=vma@entry=0xffff88811b1a8260, address=address@entry=140156937367552, flags=flags@entry=20) at mm/memory.c:5078
+#44 0xffffffff8132ae34 in handle_mm_fault (vma=vma@entry=0xffff88811b1a8260, address=140156937367552, flags=<optimized out>, flags@entry=20, regs=regs@entry=0x0 <fixed_percpu_data>) at mm/memory.c:5224
+#45 0xffffffff8131c926 in faultin_page (locked=0xffffc900402e39fc, unshare=<optimized out>, flags=<synthetic pointer>, address=<optimized out>, vma=0xffff88811b1a8260) at mm/gup.c:926
+#46 __get_user_pages (mm=mm@entry=0xffff88801aa3d580, start=<optimized out>, start@entry=140156937367552, nr_pages=<optimized out>, nr_pages@entry=1, gup_flags=gup_flags@entry=28, pages=pages@entry=0xffffc900402e3a00, vmas=vmas@entry=0x0 <fixed_percpu_data>, locked=0xffffc900402e39fc) at mm/gup.c:1153
+#47 0xffffffff8131efb1 in __get_user_pages_locked (flags=<optimized out>, locked=0xffffc900402e39fc, vmas=0x0 <fixed_percpu_data>, pages=0xffffc900402e3a00, nr_pages=1, start=140156937367552, mm=0xffff88801aa3d580) at mm/gup.c:1373
+#48 get_dump_page (addr=addr@entry=140156937367552) at mm/gup.c:1871
+#49 0xffffffff8143dcfe in dump_user_range (cprm=cprm@entry=0xffffc900402e3d90, start=<optimized out>, len=<optimized out>) at fs/coredump.c:913
+#50 0xffffffff814344f2 in elf_core_dump (cprm=<optimized out>) at fs/binfmt_elf.c:2137
+#51 0xffffffff8143d69c in do_coredump (siginfo=siginfo@entry=0xffffc900402e3ec8) at fs/coredump.c:762
+#52 0xffffffff811410bb in get_signal (ksig=ksig@entry=0xffffc900402e3ea8) at kernel/signal.c:2845
+#53 0xffffffff810caf59 in arch_do_signal_or_restart (regs=0xffffc900402e3f58) at arch/x86/kernel/signal.c:306
+#54 0xffffffff811ca0ab in exit_to_user_mode_loop (ti_work=16390, regs=<optimized out>) at kernel/entry/common.c:168
+#55 exit_to_user_mode_prepare (regs=0xffffc900402e3f58) at kernel/entry/common.c:203
+#56 0xffffffff821849a9 in irqentry_exit_to_user_mode (regs=<optimized out>) at kernel/entry/common.c:309
+#57 0xffffffff82201286 in asm_exc_page_fault () at ./arch/x86/include/asm/idtentry.h:570
+```

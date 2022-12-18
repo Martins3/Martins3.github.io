@@ -75,3 +75,40 @@ void seq_puts(struct seq_file *m, const char *s)
 EXPORT_SYMBOL(seq_puts);
 ```
 
+## 记录一个小问题
+```c
+static int show_partition(struct seq_file *seqf, void *v)
+{
+	struct gendisk *sgp = v;
+	struct block_device *part;
+	unsigned long idx;
+
+	if (!get_capacity(sgp) || (sgp->flags & GENHD_FL_HIDDEN))
+		return 0;
+
+	rcu_read_lock();
+	xa_for_each(&sgp->part_tbl, idx, part) {
+		if (!bdev_nr_sectors(part))
+			continue;
+		seq_printf(seqf, "%4d  %7d %10llu %pg\n",
+			   MAJOR(part->bd_dev), MINOR(part->bd_dev),
+			   bdev_nr_sectors(part) >> 1, part);
+	}
+	rcu_read_unlock();
+	return 0;
+}
+```
+
+为什么 %pg 是输出 partion 的 name ，而且 part 也不是 name 啊
+```txt
+major minor  #blocks  name
+
+ 259        0 1000204632 nvme1n1
+ 259        1 1000203264 nvme1n1p1
+ 259        2 1000204632 nvme0n1
+ 259        3  984080384 nvme0n1p1
+ 259        4   15624192 nvme0n1p2
+ 259        5     498688 nvme0n1p3
+   8        0 1953514584 sda
+   8        1 1953513472 sda1
+```

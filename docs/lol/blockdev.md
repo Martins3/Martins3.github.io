@@ -1,60 +1,8 @@
-# 双系统: blockdevblockde
+# 双系统: blockdev
 
 ## 给电脑增加一个新的硬盘
 ![](./img/xx.jpg)
 ![](./img/yy.jpg)
-
-## 使用 gpart 创建新的分区
-
-## 安装操作系统
-- [ ] 可以在 bios 中看到一个新的条目
-
-## 更新 grub
-```sh
-sudo update-grub
-```
-在 grub 中看到一个新的条目
-
-## 问题
-- [ ] gendisk 之类的到底是啥
-- [ ] 直接对于 dev 进行读的时候，其 flamegraph 看看一下
-- [ ] partion id 和 UUID 的区别是什么?
-- [ ] UUID 存储在哪里了，为什么可以让 bootloader 可以分析
-  - [ ] 我感觉分区信息中存在一些让 disk driver 知道在那个位置有数据的操作
-- [ ] /etc/fstab 的作用是什么
-- [ ] 我无法理解 BMBT 中，为什么一会是 UUID，一会是 PARTUUID 的
-- [ ] 谁会去创建 /dev/nvme1n1p2 的，udev 的那个工具吗 ?
-- [ ] 理解一下 IO scheduler 和 blkmq 的关系:
-  - https://kernel.dk/blk-mq.pdf
-  - [ ] 还是使用 flamegraph 分析一下吧，根本
-- [ ] 从 ldd3 的 driver 的角度分析一下
-- [ ] block/bfq-iosched.c 真的有人使用吗
-- [ ] 将 Linux Block Driver 的实验写一下吧
-- [ ] block 下存在一个 partitions 的文件夹，说实话，一直都不是非常理解啊
-- [ ] 我的印象中，`def_blk_fops` 和下面的这种 ops 不是
-  - [ ] Understanding Linux Kernel 的 14 章中的最后一部分分析过 `def_blk_fops` 的 open 操作的
-  - [ ] gendisk 持有了 `block_device_operations` 又是做什么的
-  - [x] block 设备提供给 multiqueue 的标准接口是啥 : 就是 `mq_ops`
-```c
-static const struct blk_mq_ops nbd_mq_ops = {
-    .queue_rq   = nbd_queue_rq,
-    .complete   = nbd_complete_rq,
-    .init_request   = nbd_init_request,
-    .timeout    = nbd_xmit_timeout,
-};
-```
-- [ ] 检查 sd_open 之前的调用路径
-- [ ] request queue 和 multiqueue 的关系是什么 ?
-  - [ ] block/blk-core.c 中，几乎所有的函数的参数都是有 `request_queue` 的
-- [ ] 可能更加有意思的问题是，为什么需要设计 /dev/ 和 major number 和 minor number 出来啊
-- [ ] 为什么一会是 PARTUUID，在 grub 中又是 UUID 的，而且 PARTUUID 两个的长短完全不同
-```c
-    ms->kernel_cmdline = "console=ttyS0 earlyprintk=serial "
-                         "root=PARTUUID=ee917107-01 init=/bin/bash";
-
-    ms->kernel_cmdline = "root=PARTUUID=616e86aa-a573-4d60-bb44-b1b701d5a552 "
-                         "rw console=ttyS0 init=/bin/bash";
-```
 
 ## overview
 <p align="center">
@@ -63,8 +11,6 @@ static const struct blk_mq_ops nbd_mq_ops = {
 <p align="center">
 from https://nvmexpress.org/education/drivers/linux-driver-information/
 </p>
-
-![](./img/fio.svg)
 
 ## 关键的路径
 
@@ -77,97 +23,39 @@ from https://nvmexpress.org/education/drivers/linux-driver-information/
 #5  0xffffffff83003c06 in loop_init () at drivers/block/loop.c:2268
 ```
 
-## 关键的 ops
-1. block/genhd.c 和 fs/block_dev.c 的关系是什么 ?
-    1. genhd.c 处理都是 genhd 这个结构体 : 和具体的驱动处理
-    2. block_dev 处理的是 block_device 这个内容 : 似乎是用来和 vfs
+![](../kernel/flamegraph/scsi-sata-block-direct.svg)
 
-- [ ] 从 /dev/nvme0n1p1 到 genhd 的过程是什么样子的啊
+## /dev/sda1 这个路径是谁创建的
+本来以为是 udev 在系统启动的时候创建的，但是曾经使用 initramfs 的，/dev 一旦 mount 上，里面啥都有了。
+
+drivers/base/devtmpfs.c:devtmpfs_work_loop 中打点，可以看到如下设备都是内核直接添加的:
+```txt
+rfkill vga_arbiter mem null port zero full random urandom kmsg
+tty console tty0 vcs vcsu vcsa vcs1 vcsu1 vcsa1 tty1
+tty2 tty3 tty4 tty5 tty6 tty7 tty8 tty9 tty10 tty11
+tty12 tty13 tty14 tty15 tty16 tty17 tty18 tty19 tty20 tty21
+tty22 tty23 tty24 tty25 tty26 tty27 tty28 tty29 tty30 tty31
+tty32 tty33 tty34 tty35 tty36 tty37 tty38 tty39 tty40 tty41
+tty42 tty43 tty44 tty45 tty46 tty47 tty48 tty49 tty50 tty51
+tty52 tty53 tty54 tty55 tty56 tty57 tty58 tty59 tty60 tty61
+tty62 tty63 hwrng kvm cpu/0/msr cpu/1/msr cpu/2/msr cpu/3/msr cpu/4/msr cpu/5/msr
+cpu/0/cpuid cpu/1/cpuid cpu/2/cpuid cpu/3/cpuid cpu/4/cpuid cpu/5/cpuid snapshot userfaultfd autofs fuse
+ptmx ttyS0 ttyS1 ttyS2 ttyS3 hpet nvram loop-control loop0 loop1
+loop2 loop3 loop4 loop5 loop6 loop7 vda vdb vdb1 vdb2
+vdb3 ublk-control bsg/0:0:0:0 sda sg0 sg1 bsg/1:0:0:0 nvme-fabrics nvme0 net/tun
+usbmon0 sdb input/event0 rtc0 ptp0 mapper/control snd/timer input/event1 snd/seq nvme0n1
+ng0n1 cpu_dma_latency sg2 bsg/2:0:0:0 sg3 bsg/2:0:1:0 sdc sdd input/event2 vcs6
+vcsu6 vcsa6 vcs2 vcsu2 vcsa2 vcs3 vcsu3 vcsa3 vcs4 vcsu4
+vcsa4 vcs5 vcsu5 vcsa5
+```
 
 ## bio layer
-- [A block layer introduction part 1: the bio layer](https://lwn.net/Articles/736534/) https://yq.aliyun.com/articles/609907
-
+- [A block layer introduction part 1: the bio layer](https://lwn.net/Articles/736534/)
 - [Block layer introduction part 2: the request layer](https://lwn.net/Articles/738449/)
-- [ ] 重新确定一下，request layer 的位置
-
-http://byteliu.com/2019/05/10/Linux-The-block-I-O-layer/
-
-http://byteliu.com/2019/05/21/What-is-the-major-difference-between-the-buffer-cache-and-the-page-cache-Why-were-they-separate-entities-in-older-kernels-Why-were-they-merged-later-on/
 
 1. bio 给上下两个层次提供的接口是什么 ?
 2. https://zhuanlan.zhihu.com/p/39199521
     1. bio 机制核心 : 合并请求
-
-- [ ] 那么 bio 真的会合并请求吗 ?
-
-## kernel
-```plain
-#0  __register_blkdev (major=major@entry=259, name=name@entry=0xffffffff825c1b9e "blkext", probe=probe@entry=0x0 <fixed_percpu_data>) at block/genhd.c:247
-#1  0xffffffff82ff48bb in genhd_device_init () at block/genhd.c:876
-#2  0xffffffff81000dbf in do_one_initcall (fn=0xffffffff82ff4879 <genhd_device_init>) at init/main.c:1298
-#3  0xffffffff82fc5405 in do_initcall_level (command_line=0xffff888003546040 "root", level=4) at ./include/linux/compiler.h:234
-#4  do_initcalls () at init/main.c:1387
-#5  do_basic_setup () at init/main.c:1406
-#6  kernel_init_freeable () at init/main.c:1613
-#7  0xffffffff81c9e851 in kernel_init (unused=<optimized out>) at init/main.c:1502
-#8  0xffffffff810019a2 in ret_from_fork () at arch/x86/entry/entry_64.S:298
-#9  0x0000000000000000 in ?? ()
-
-#0  __register_blkdev (major=major@entry=9, name=name@entry=0xffffffff8262944f "md", probe=probe@entry=0xffffffff818b5c60 <md_probe>) at block/genhd.c:247
-#1  0xffffffff830071ad in md_init () at drivers/md/md.c:9619
-#2  0xffffffff81000dbf in do_one_initcall (fn=0xffffffff8300712a <md_init>) at init/main.c:1298
-#3  0xffffffff82fc5405 in do_initcall_level (command_line=0xffff888003546040 "root", level=4) at ./include/linux/compiler.h:234
-#4  do_initcalls () at init/main.c:1387
-#5  do_basic_setup () at init/main.c:1406
-#6  kernel_init_freeable () at init/main.c:1613
-#7  0xffffffff81c9e851 in kernel_init (unused=<optimized out>) at init/main.c:1502
-#8  0xffffffff810019a2 in ret_from_fork () at arch/x86/entry/entry_64.S:298
-#9  0x0000000000000000 in ?? ()
-
-#0  __register_blkdev (major=major@entry=7, name=name@entry=0xffffffff826229bf "loop", probe=probe@entry=0xffffffff81742760 <loop_probe>) at block/genhd.c:247
-#1  0xffffffff83003bdc in loop_init () at drivers/block/loop.c:2261
-#2  0xffffffff81000dbf in do_one_initcall (fn=0xffffffff83003b33 <loop_init>) at init/main.c:1298
-#3  0xffffffff82fc5405 in do_initcall_level (command_line=0xffff888003546040 "root", level=6) at ./include/linux/compiler.h:234
-#4  do_initcalls () at init/main.c:1387
-#5  do_basic_setup () at init/main.c:1406
-#6  kernel_init_freeable () at init/main.c:1613
-#7  0xffffffff81c9e851 in kernel_init (unused=<optimized out>) at init/main.c:1502
-#8  0xffffffff810019a2 in ret_from_fork () at arch/x86/entry/entry_64.S:298
-#9  0x0000000000000000 in ?? ()
-
-#0  __register_blkdev (major=major@entry=0, name=name@entry=0xffffffff82622a3c "virtblk", probe=probe@entry=0x0 <fixed_percpu_data>) at block/genhd.c:247
-#1  0xffffffff83003c50 in virtio_blk_init () at drivers/block/virtio_blk.c:1031
-#2  0xffffffff81000dbf in do_one_initcall (fn=0xffffffff83003c1c <virtio_blk_init>) at init/main.c:1298
-#3  0xffffffff82fc5405 in do_initcall_level (command_line=0xffff888003546040 "root", level=6) at ./include/linux/compiler.h:234
-#4  do_initcalls () at init/main.c:1387
-#5  do_basic_setup () at init/main.c:1406
-#6  kernel_init_freeable () at init/main.c:1613
-#7  0xffffffff81c9e851 in kernel_init (unused=<optimized out>) at init/main.c:1502
-#8  0xffffffff810019a2 in ret_from_fork () at arch/x86/entry/entry_64.S:298
-#9  0x0000000000000000 in ?? ()
-
-#0  __register_blkdev (major=8, name=name@entry=0xffffffff8267346b "sd", probe=probe@entry=0xffffffff81760bf0 <sd_default_probe>) at block/genhd.c:247
-#1  0xffffffff8300403e in init_sd () at drivers/scsi/sd.c:3729
-#2  0xffffffff81000dbf in do_one_initcall (fn=0xffffffff8300401e <init_sd>) at init/main.c:1298
-#3  0xffffffff82fc5405 in do_initcall_level (command_line=0xffff888003546040 "root", level=6) at ./include/linux/compiler.h:234
-#4  do_initcalls () at init/main.c:1387
-#5  do_basic_setup () at init/main.c:1406
-#6  kernel_init_freeable () at init/main.c:1613
-#7  0xffffffff81c9e851 in kernel_init (unused=<optimized out>) at init/main.c:1502
-#8  0xffffffff810019a2 in ret_from_fork () at arch/x86/entry/entry_64.S:298
-#9  0x0000000000000000 in ?? ()
-
-#0  __register_blkdev (major=65, name=name@entry=0xffffffff8267346b "sd", probe=probe@entry=0xffffffff81760bf0 <sd_default_probe>) at block/genhd.c:247
-#1  0xffffffff8300403e in init_sd () at drivers/scsi/sd.c:3729
-#2  0xffffffff81000dbf in do_one_initcall (fn=0xffffffff8300401e <init_sd>) at init/main.c:1298
-#3  0xffffffff82fc5405 in do_initcall_level (command_line=0xffff888003546040 "root", level=6) at ./include/linux/compiler.h:234
-#4  do_initcalls () at init/main.c:1387
-#5  do_basic_setup () at init/main.c:1406
-#6  kernel_init_freeable () at init/main.c:1613
-#7  0xffffffff81c9e851 in kernel_init (unused=<optimized out>) at init/main.c:1502
-#8  0xffffffff810019a2 in ret_from_fork () at arch/x86/entry/entry_64.S:298
-#9  0x0000000000000000 in ?? ()
-```
 
 ## struct
 - gendisk : 侧重和硬件交互
@@ -176,14 +64,9 @@ http://byteliu.com/2019/05/21/What-is-the-major-difference-between-the-buffer-ca
 - `block_device` : 侧重和文件系统交互
 - `struct hd_struct` : 描述分区信息
 
-## md
-
-```plain
-#1  0xffffffff830071ad in md_init () at drivers/md/md.c:9619
-```
-
 ## partitions
-构建多个分区显然是一个很划算的事情。
+
+对应的源码，在 block/partion 的位置
 
 - https://www.baeldung.com/linux/partitioning-disks
 > Instead of loading a boot loader from the MBR, UEFI uses efi images from the EFI System Partition. With UEFI and GPT, we can have large disk support.
@@ -209,23 +92,11 @@ bpftrace -e 'kprobe:blk_add_partitions { @[kstack] = count(); }'
 ]: 4
 ```
 
-## nbd
-将 `blk_mq_ops` 替换成为网络的接口就可以了
-
-```c
-static const struct blk_mq_ops nbd_mq_ops = {
-    .queue_rq   = nbd_queue_rq,
-    .complete   = nbd_complete_rq,
-    .init_request   = nbd_init_request,
-    .timeout    = nbd_xmit_timeout,
-};
-```
-
 ## 一些基本理论
 
 ### /etc/fstab
-- [ ] 所以 /etc/fstab 到底是如何被使用的呀
 
+指挥 systemd 如何加载 disk 的:
 ```txt
 ➜  vn git:(master) ✗ cat /etc/fstab
 # /etc/fstab: static file system information.
@@ -243,8 +114,6 @@ UUID=9EDC-2FD6  /boot/efi       vfat    umask=0077      0       1
 /dev/disk/by-uuid/12855c04-ce76-47a0-840c-206253052ccf /home/maritns3/hack auto nosuid,nodev,nofail,x-gvfs-show 0 0
 ```
 
-### /sys/dev/block/ 的构建位置
-
 ## gui tools
 ### gpart
 创建分区表和格式化分区
@@ -257,12 +126,9 @@ https://askubuntu.com/questions/164926/how-to-make-partitions-mount-at-startup
 ### parted
 
 ```sh
-parted /dev/sda -- mklabel msdos
-parted /dev/sda -- mkpart primary 1MiB 100%
-```
-
 parted /dev/nvme0n1 -- mklabel gpt
 parted /dev/nvme0n1 -- mkpart primary 1MiB 100%
+```
 
 ### fdisk
 - 处理分区表的
@@ -336,10 +202,7 @@ nvme1n1     259:2    0 238.5G  0 disk
 └─nvme1n1p2 259:4    0   238G  0 part /
 ```
 
-- /sys/dev/block/
-- /dev/nvme1n1p1
-
-- [ ] 找到对应的内核源代码，然后 ptrace 一下:
+主要读取如下: /sys/dev/block/
 
 ## Doc
 1. https://terenceli.github.io/%E6%8A%80%E6%9C%AF/2018/06/14/linux-block-device-driver
@@ -436,22 +299,257 @@ const struct file_operations def_blk_fops = {
 从上面的过程中，可以看到直接读写裸盘的时候，也是存在 page cahce 的，而 page cache 总是关联 inode 作为来构建映射的，
 所以，需要一个 super_operations 来创建 inode 的。
 
-## dm
-- [ ] device-mapper 和 lvm2 是什么关系 ?
+## ldd3 的驱动理解
 
-- https://docs.kernel.org/admin-guide/device-mapper/index.html#
-  - 内核文档，相关内容好多啊
-- 相关的代码所在的位置: drivers/dm/md*.c
+- gendisk : 对应的一个设备
+- block_device : 对应一个 partion
 
-- https://en.wikipedia.org/wiki/Logical_Volume_Manager_(Linux)
-- https://wiki.archlinux.org/index.php/LVM : 卷 逻辑卷 到底是啥 ?
-- https://opensource.com/business/16/9/linux-users-guide-lvm
 
-最近安装 Ubunut server 作为 root，其启动参数如下，
-```sh
-root=/dev/mapper/ubuntu--vg-ubuntu--lv
+- [ ] `register_blkdev` , `add_disk`, `get_gendisk`
+  - [x] `register_blkdev` 注册了 major number 在 `major_names` 中间，但是 `major_names` 除了使用在 `blkdev_show` (cat /proc/devices) 之外没有看到其他的用处
+    - https://linux-kernel-labs.github.io/refs/heads/master/labs/block_device_drivers.html : 中说，`register_blkdev` 是会取消掉的
+    - 从 virtio_blk.c 中间来看 : major 放到局部变量中间，所以实际功能是分配 major number
+
+- [ ] `alloc_disk` 分配 `struct gendisk`，其中由于保存分区的
+
+block_device_operations
+
+Char devices make their operations available to the system by way of the `file_operations` structure. A similar structure is used with block devices; it is `struct
+block_device_operations`, which is declared in `<linux/blkdev.h>`.
+
+```c
+struct block_device_operations {
+	int (*open) (struct block_device *, fmode_t);
+	void (*release) (struct gendisk *, fmode_t);
+	int (*rw_page)(struct block_device *, sector_t, struct page *, int rw);
+	int (*ioctl) (struct block_device *, fmode_t, unsigned, unsigned long);
+	int (*compat_ioctl) (struct block_device *, fmode_t, unsigned, unsigned long);
+	long (*direct_access)(struct block_device *, sector_t, void __pmem **,
+			unsigned long *pfn);
+	unsigned int (*check_events) (struct gendisk *disk,
+				      unsigned int clearing);
+	/* ->media_changed() is DEPRECATED, use ->check_events() instead */
+	int (*media_changed) (struct gendisk *);
+	void (*unlock_native_capacity) (struct gendisk *);
+	int (*revalidate_disk) (struct gendisk *);
+	int (*getgeo)(struct block_device *, struct hd_geometry *);
+	/* this callback is with swap_lock and sometimes page table lock held */
+	void (*swap_slot_free_notify) (struct block_device *, unsigned long);
+	struct module *owner;
+	const struct pr_ops *pr_ops;
+};
 ```
-这种模式，常规的切换内核是没有办法的。
+1. 这些函数的注册都是让驱动完成的
+2. 这些函数的使用位置在哪里啊 ?
+    1. open : blkdev_get : @todo 当设备出现在 /dev/nvme0n1p1 上的时候，此时 blkdev_get 被调用过没有，blkdev_get 会被调用吗 ? 如果不调用，那么似乎驱动就没有被初始化，那么连 aops 的实现基础 bio request 之类的实现似乎无从谈起了。
+
+
+## 使用 drivers/scsi/sd.c 作为例子分析一下
+
+
+## block/genhd.c
+
+```c
+static int __init proc_genhd_init(void)
+{
+	proc_create_seq("diskstats", 0, NULL, &diskstats_op);
+	proc_create_seq("partitions", 0, NULL, &partitions_op);
+	return 0;
+}
+
+static DEVICE_ATTR(range, 0444, disk_range_show, NULL);
+static DEVICE_ATTR(ext_range, 0444, disk_ext_range_show, NULL);
+static DEVICE_ATTR(removable, 0444, disk_removable_show, NULL);
+static DEVICE_ATTR(hidden, 0444, disk_hidden_show, NULL);
+static DEVICE_ATTR(ro, 0444, disk_ro_show, NULL);
+static DEVICE_ATTR(size, 0444, part_size_show, NULL);
+static DEVICE_ATTR(alignment_offset, 0444, disk_alignment_offset_show, NULL);
+static DEVICE_ATTR(discard_alignment, 0444, disk_discard_alignment_show, NULL);
+static DEVICE_ATTR(capability, 0444, disk_capability_show, NULL);
+static DEVICE_ATTR(stat, 0444, part_stat_show, NULL);
+static DEVICE_ATTR(inflight, 0444, part_inflight_show, NULL);
+static DEVICE_ATTR(badblocks, 0644, disk_badblocks_show, disk_badblocks_store);
+static DEVICE_ATTR(diskseq, 0444, diskseq_show, NULL);
+```
+
+对应的接口为:
+1. /proc/partitions
+2. /proc/diskstats
+3. /sys/block/sda/ 的各种
+
+register_blkdev 的调用，只要内存存在这个模块，就会进行对应的注册。
+
+## add_disk
+```plain
+#0  device_add_disk (parent=parent@entry=0xffff888100c22010, disk=0xffff8880055f3400, groups=groups@entry=0xffffffff82e1b8d0 <virtblk_attr_groups>) at block/genhd.c:393
+#1  0xffffffff81aa2ba1 in virtblk_probe (vdev=0xffff888100c22000) at drivers/block/virtio_blk.c:1150
+#2  0xffffffff81809e6b in virtio_dev_probe (_d=0xffff888100c22010) at drivers/virtio/virtio.c:305
+#3  0xffffffff81a75481 in call_driver_probe (drv=0xffffffff82e1b760 <virtio_blk>, dev=0xffff888100c22010) at drivers/base/dd.c:560
+#4  really_probe (dev=dev@entry=0xffff888100c22010, drv=drv@entry=0xffffffff82e1b760 <virtio_blk>) at drivers/base/dd.c:639
+#5  0xffffffff81a756bd in __driver_probe_device (drv=drv@entry=0xffffffff82e1b760 <virtio_blk>, dev=dev@entry=0xffff888100c22010) at drivers/base/dd.c:778
+#6  0xffffffff81a75749 in driver_probe_device (drv=drv@entry=0xffffffff82e1b760 <virtio_blk>, dev=dev@entry=0xffff888100c22010) at drivers/base/dd.c:808
+#7  0xffffffff81a759c5 in __driver_attach (data=0xffffffff82e1b760 <virtio_blk>, dev=0xffff888100c22010) at drivers/base/dd.c:1194
+#8  __driver_attach (dev=0xffff888100c22010, data=0xffffffff82e1b760 <virtio_blk>) at drivers/base/dd.c:1134
+#9  0xffffffff81a72fc4 in bus_for_each_dev (bus=<optimized out>, start=start@entry=0x0 <fixed_percpu_data>, data=data@entry=0xffffffff82e1b760 <virtio_blk>, fn=fn@entry=0xffffffff81a75940 <__driver_attach>) at drivers/base/bus.c:301
+#10 0xffffffff81a74e79 in driver_attach (drv=drv@entry=0xffffffff82e1b760 <virtio_blk>) at drivers/base/dd.c:1211
+#11 0xffffffff81a74810 in bus_add_driver (drv=drv@entry=0xffffffff82e1b760 <virtio_blk>) at drivers/base/bus.c:618
+#12 0xffffffff81a76c2e in driver_register (drv=drv@entry=0xffffffff82e1b760 <virtio_blk>) at drivers/base/driver.c:246
+#13 0xffffffff8180958b in register_virtio_driver (driver=driver@entry=0xffffffff82e1b760 <virtio_blk>) at drivers/virtio/virtio.c:357
+#14 0xffffffff835eb0fb in virtio_blk_init () at drivers/block/virtio_blk.c:1284
+#15 0xffffffff81001940 in do_one_initcall (fn=0xffffffff835eb0aa <virtio_blk_init>) at init/main.c:1306
+#16 0xffffffff8359b818 in do_initcall_level (command_line=0xffff888003c5cc00 "root", level=6) at init/main.c:1379
+#17 do_initcalls () at init/main.c:1395
+#18 do_basic_setup () at init/main.c:1414
+#19 kernel_init_freeable () at init/main.c:1634
+#20 0xffffffff82183405 in kernel_init (unused=<optimized out>) at init/main.c:1522
+#21 0xffffffff81002659 in ret_from_fork () at arch/x86/entry/entry_64.S:308
+```
+
+
+## partion 的生成
+在读取系统的 partion table 的时候
+```txt
+#0  add_partition (disk=disk@entry=0xffff8880044ccc00, partno=partno@entry=1, start=start@entry=2048, len=1024000, flags=0, info=0xffffc90001562095) at block/partitions/core.c:318
+#1  0xffffffff816dae18 in blk_add_partition (p=1, state=0xffff8880054ba840, disk=0xffff8880044ccc00) at block/partitions/core.c:576
+#2  blk_add_partitions (disk=0xffff8880044ccc00) at block/partitions/core.c:646
+#3  bdev_disk_changed (invalidate=<optimized out>, disk=<optimized out>) at block/partitions/core.c:688
+#4  bdev_disk_changed (disk=disk@entry=0xffff8880044ccc00, invalidate=invalidate@entry=false) at block/partitions/core.c:655
+#5  0xffffffff816b6ab5 in blkdev_get_whole (bdev=bdev@entry=0xffff888140803c00, mode=mode@entry=1) at block/bdev.c:685
+#6  0xffffffff816b779d in blkdev_get_by_dev (dev=<optimized out>, mode=mode@entry=1, holder=holder@entry=0x0 <fixed_percpu_data>) at block/bdev.c:822
+#7  0xffffffff816b79c0 in blkdev_get_by_dev (dev=<optimized out>, mode=mode@entry=1, holder=holder@entry=0x0 <fixed_percpu_data>) at block/bdev.c:856
+#8  0xffffffff816d845b in disk_scan_partitions (disk=disk@entry=0xffff8880044ccc00, mode=mode@entry=1, owner=owner@entry=0x0 <fixed_percpu_data>) at block/genhd.c:374
+#9  0xffffffff816d8822 in device_add_disk (parent=parent@entry=0xffff8880045f2810, disk=0xffff8880044ccc00, groups=groups@entry=0xffffffff82e1b8d0 <virtblk_attr_groups>) at block/genhd.c:502
+#10 0xffffffff81aa2bc1 in virtblk_probe (vdev=0xffff8880045f2800) at drivers/block/virtio_blk.c:1150
+#11 0xffffffff81809e8b in virtio_dev_probe (_d=0xffff8880045f2810) at drivers/virtio/virtio.c:305
+#12 0xffffffff81a754a1 in call_driver_probe (drv=0xffffffff82e1b760 <virtio_blk>, dev=0xffff8880045f2810) at drivers/base/dd.c:560
+#13 really_probe (dev=dev@entry=0xffff8880045f2810, drv=drv@entry=0xffffffff82e1b760 <virtio_blk>) at drivers/base/dd.c:639
+#14 0xffffffff81a756dd in __driver_probe_device (drv=drv@entry=0xffffffff82e1b760 <virtio_blk>, dev=dev@entry=0xffff8880045f2810) at drivers/base/dd.c:778
+#15 0xffffffff81a75769 in driver_probe_device (drv=drv@entry=0xffffffff82e1b760 <virtio_blk>, dev=dev@entry=0xffff8880045f2810) at drivers/base/dd.c:808
+#16 0xffffffff81a759e5 in __driver_attach (data=0xffffffff82e1b760 <virtio_blk>, dev=0xffff8880045f2810) at drivers/base/dd.c:1194
+#17 __driver_attach (dev=0xffff8880045f2810, data=0xffffffff82e1b760 <virtio_blk>) at drivers/base/dd.c:1134
+#18 0xffffffff81a72fe4 in bus_for_each_dev (bus=<optimized out>, start=start@entry=0x0 <fixed_percpu_data>, data=data@entry=0xffffffff82e1b760 <virtio_blk>, fn=fn@entry=0xffffffff81a75960 <__driver_attach>) at drivers/base/bus.c:301
+#19 0xffffffff81a74e99 in driver_attach (drv=drv@entry=0xffffffff82e1b760 <virtio_blk>) at drivers/base/dd.c:1211
+#20 0xffffffff81a74830 in bus_add_driver (drv=drv@entry=0xffffffff82e1b760 <virtio_blk>) at drivers/base/bus.c:618
+#21 0xffffffff81a76c4e in driver_register (drv=drv@entry=0xffffffff82e1b760 <virtio_blk>) at drivers/base/driver.c:246
+#22 0xffffffff818095ab in register_virtio_driver (driver=driver@entry=0xffffffff82e1b760 <virtio_blk>) at drivers/virtio/virtio.c:357
+#23 0xffffffff835eb0fb in virtio_blk_init () at drivers/block/virtio_blk.c:1284
+#24 0xffffffff81001940 in do_one_initcall (fn=0xffffffff835eb0aa <virtio_blk_init>) at init/main.c:1306
+#25 0xffffffff8359b818 in do_initcall_level (command_line=0xffff888003c5cc00 "root", level=6) at init/main.c:1379
+#26 do_initcalls () at init/main.c:1395
+#27 do_basic_setup () at init/main.c:1414
+#28 kernel_init_freeable () at init/main.c:1634
+#29 0xffffffff821854a5 in kernel_init (unused=<optimized out>) at init/main.c:1522
+#30 0xffffffff81002659 in ret_from_fork () at arch/x86/entry/entry_64.S:308
+```
+
+## Block Device Operations
+
+1. block/genhd.c 和 block/fops.c
+    1. genhd.c 处理都是 genhd 这个结构体 : 和具体的驱动处理
+    2. block_dev 处理的是 block_device 这个内容 : 似乎是用来和 vfs
+
+```c
+const struct file_operations def_blk_fops = {
+	.open		= blkdev_open,
+	.release	= blkdev_close,
+	.llseek		= blkdev_llseek,
+	.read_iter	= blkdev_read_iter,
+	.write_iter	= blkdev_write_iter,
+	.iopoll		= iocb_bio_iopoll,
+	.mmap		= generic_file_mmap,
+	.fsync		= blkdev_fsync,
+	.unlocked_ioctl	= blkdev_ioctl,
+#ifdef CONFIG_COMPAT
+	.compat_ioctl	= compat_blkdev_ioctl,
+#endif
+	.splice_read	= generic_file_splice_read,
+	.splice_write	= iter_file_splice_write,
+	.fallocate	= blkdev_fallocate,
+};
+```
+
+```c
+static const struct block_device_operations sd_fops = {
+	.owner			= THIS_MODULE,
+	.open			= sd_open,
+	.release		= sd_release,
+	.ioctl			= sd_ioctl,
+	.getgeo			= sd_getgeo,
+	.compat_ioctl		= blkdev_compat_ptr_ioctl,
+	.check_events		= sd_check_events,
+	.unlock_native_capacity	= sd_unlock_native_capacity,
+	.report_zones		= sd_zbc_report_zones,
+	.get_unique_id		= sd_get_unique_id,
+	.free_disk		= scsi_disk_free_disk,
+	.pr_ops			= &sd_pr_ops,
+};
+```
+
+```c
+struct block_device_operations {
+	int (*open) (struct block_device *, fmode_t);
+	void (*release) (struct gendisk *, fmode_t);
+	int (*rw_page)(struct block_device *, sector_t, struct page *, int rw);
+	int (*ioctl) (struct block_device *, fmode_t, unsigned, unsigned long);
+	int (*compat_ioctl) (struct block_device *, fmode_t, unsigned, unsigned long);
+	long (*direct_access)(struct block_device *, sector_t, void __pmem **,
+			unsigned long *pfn);
+	unsigned int (*check_events) (struct gendisk *disk,
+				      unsigned int clearing);
+	/* ->media_changed() is DEPRECATED, use ->check_events() instead */
+	int (*media_changed) (struct gendisk *);
+	void (*unlock_native_capacity) (struct gendisk *);
+	int (*revalidate_disk) (struct gendisk *);
+	int (*getgeo)(struct block_device *, struct hd_geometry *);
+	/* this callback is with swap_lock and sometimes page table lock held */
+	void (*swap_slot_free_notify) (struct block_device *, unsigned long);
+	struct module *owner;
+	const struct pr_ops *pr_ops;
+};
+```
+
+从通用的 vfs 到达具体的 block device :
+```txt
+#0  sd_open (bdev=0xffff8880053b0000, mode=1207959582) at drivers/scsi/sd.c:1316
+#1  0xffffffff816b6a5d in blkdev_get_whole (bdev=bdev@entry=0xffff8880053b0000, mode=mode@entry=1207959582) at block/bdev.c:672
+#2  0xffffffff816b779d in blkdev_get_by_dev (dev=<optimized out>, mode=1207959582, holder=holder@entry=0xffff8881161a7700) at block/bdev.c:822
+#3  0xffffffff816b79c0 in blkdev_get_by_dev (dev=<optimized out>, mode=<optimized out>, holder=holder@entry=0xffff8881161a7700) at block/bdev.c:856
+#4  0xffffffff816b826b in blkdev_open (inode=<optimized out>, filp=0xffff8881161a7700) at block/fops.c:478
+#5  0xffffffff813bfd97 in do_dentry_open (f=f@entry=0xffff8881161a7700, inode=0xffff888100c35258, open=0xffffffff816b8220 <blkdev_open>, open@entry=0x0 <fixed_percpu_data>) at fs/open.c:882
+#6  0xffffffff813c1cdd in vfs_open (path=path@entry=0xffffc90040513dc0, file=file@entry=0xffff8881161a7700) at fs/open.c:1013
+#7  0xffffffff813d8e4b in do_open (op=0xffffc90040513edc, file=0xffff8881161a7700, nd=0xffffc90040513dc0) at fs/namei.c:3557
+#8  path_openat (nd=nd@entry=0xffffc90040513dc0, op=op@entry=0xffffc90040513edc, flags=flags@entry=65) at fs/namei.c:3714
+#9  0xffffffff813da411 in do_filp_open (dfd=dfd@entry=-100, pathname=pathname@entry=0xffff888100785000, op=op@entry=0xffffc90040513edc) at fs/namei.c:3741
+#10 0xffffffff813c1fd5 in do_sys_openat2 (dfd=-100, filename=<optimized out>, how=how@entry=0xffffc90040513f18) at fs/open.c:1310
+#11 0xffffffff813c24d2 in do_sys_open (mode=<optimized out>, flags=<optimized out>, filename=<optimized out>, dfd=<optimized out>) at fs/open.c:1326
+#12 __do_sys_openat (mode=<optimized out>, flags=<optimized out>, filename=<optimized out>, dfd=<optimized out>) at fs/open.c:1342
+#13 __se_sys_openat (mode=<optimized out>, flags=<optimized out>, filename=<optimized out>, dfd=<optimized out>) at fs/open.c:1337
+#14 __x64_sys_openat (regs=<optimized out>) at fs/open.c:1337
+#15 0xffffffff8217fc5c in do_syscall_x64 (nr=<optimized out>, regs=0xffffc90040513f58) at arch/x86/entry/common.c:50
+#16 do_syscall_64 (regs=0xffffc90040513f58, nr=<optimized out>) at arch/x86/entry/common.c:80
+#17 0xffffffff822000ae in entry_SYSCALL_64 () at arch/x86/entry/entry_64.S:120
+```
+
+初始化的时候，系统也会使用:
+```txt
+#0  sd_open (bdev=0xffff8880053b0000, mode=1) at drivers/scsi/sd.c:1316
+#1  0xffffffff816b6a5d in blkdev_get_whole (bdev=bdev@entry=0xffff8880053b0000, mode=mode@entry=1) at block/bdev.c:672
+#2  0xffffffff816b779d in blkdev_get_by_dev (dev=<optimized out>, mode=mode@entry=1, holder=holder@entry=0x0 <fixed_percpu_data>) at block/bdev.c:822
+#3  0xffffffff816b79c0 in blkdev_get_by_dev (dev=<optimized out>, mode=mode@entry=1, holder=holder@entry=0x0 <fixed_percpu_data>) at block/bdev.c:856
+#4  0xffffffff816d845b in disk_scan_partitions (disk=disk@entry=0xffff8880054c6000, mode=mode@entry=1, owner=owner@entry=0x0 <fixed_percpu_data>) at block/genhd.c:374
+#5  0xffffffff816d8822 in device_add_disk (parent=parent@entry=0xffff88800567a1b8, disk=disk@entry=0xffff8880054c6000, groups=groups@entry=0x0 <fixed_percpu_data>) at block/genhd.c:502
+#6  0xffffffff81af740d in sd_probe (dev=0xffff88800567a1b8) at drivers/scsi/sd.c:3536
+#7  0xffffffff81a75620 in call_driver_probe (drv=0xffffffff82e25f00 <sd_template>, dev=0xffff88800567a1b8) at drivers/base/dd.c:560
+#8  really_probe (dev=dev@entry=0xffff88800567a1b8, drv=drv@entry=0xffffffff82e25f00 <sd_template>) at drivers/base/dd.c:639
+#9  0xffffffff81a756dd in __driver_probe_device (drv=0xffffffff82e25f00 <sd_template>, dev=dev@entry=0xffff88800567a1b8) at drivers/base/dd.c:778
+#10 0xffffffff81a75769 in driver_probe_device (drv=<optimized out>, dev=dev@entry=0xffff88800567a1b8) at drivers/base/dd.c:808
+#11 0xffffffff81a75b3e in __driver_attach_async_helper (_dev=0xffff88800567a1b8, cookie=<optimized out>) at drivers/base/dd.c:1126
+#12 0xffffffff8115c6bc in async_run_entry_fn (work=0xffff8880054baec0) at kernel/async.c:127
+#13 0xffffffff8114bd54 in process_one_work (worker=worker@entry=0xffff888003c5ba80, work=0xffff8880054baec0) at kernel/workqueue.c:2289
+#14 0xffffffff8114bf7c in worker_thread (__worker=0xffff888003c5ba80) at kernel/workqueue.c:2436
+#15 0xffffffff811546c4 in kthread (_create=0xffff8880046f0040) at kernel/kthread.c:376
+#16 0xffffffff81002659 in ret_from_fork () at arch/x86/entry/entry_64.S:308
+```
 
 ## 结束语
 好的，你现在对于 Linux 如何处理 Block 设备有了一个大概的认识，记得奖励自己一把英雄联盟哦。

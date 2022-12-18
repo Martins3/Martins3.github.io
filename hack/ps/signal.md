@@ -1,6 +1,6 @@
 # kernel/signal.md
 
-## TODO 
+## TODO
 - [ ] force_sigsegv
 
 ## man signal(7)
@@ -22,7 +22,7 @@
 - [ ] sigret 的工作原理
 - [x] 一个进程在什么时候检查自己的信号(执行 signal handler)
   - [x] syscall 返回的时候 ? (不是，int / syscall 返回到用户态的时候)
-      - 如果这是真的，那么 SA_RESTART 的作用无法解释，syscall 都返回了，怎么可能被 handler 打断 
+      - 如果这是真的，那么 SA_RESTART 的作用无法解释，syscall 都返回了，怎么可能被 handler 打断
         - 此时解释 syscall_restart 的理由就是，其实有的系统调用，在执行的会检查 signal_pending, 如果发生了 signal_pending, 会提前结束。
       - 通过检查 x86 的 signal.c 发生检查的位置在 	exit_to_user_mode_prepare 的调用下
       - arm64 的代码在 ret_to_user 的时候检查, 这一点是统一的
@@ -62,7 +62,7 @@
 - [ ] A child created via fork(2) inherits a copy of its parent's signal mask; the signal mask is preserved across execve(2).
   - [ ] 都改朝换代了，为什么还要保持 signal mask
 
-- 才发现 mask 的含义就是 block 
+- 才发现 mask 的含义就是 block
 
 - [x] 被 mask 的信号，当 unmask 之后，还可以处理，还是永久的丢失了 ?
   - Standard  signals  do  not  queue.  If multiple instances of a standard signal are generated while that signal is blocked, then only one instance of the signal is marked as pending (and the signal will be delivered just once when it is un‐
@@ -117,7 +117,7 @@ struct {				\
 	int si_signo;			\
 	int si_errno;			\
 	int si_code;			\
-	union __sifields _sifields;	\ 
+	union __sifields _sifields;	\
 }
 
 /*
@@ -222,18 +222,18 @@ bool do_notify_parent(struct task_struct *tsk, int sig)
 ```
 - kill_pgrp : 被 tty driver 疯狂调用(tty, 永远的痛)
   - `__kill_pgrp_info` : 对于 process group 的循环调用
-    - group_send_sig_info 
+    - group_send_sig_info
       - do_send_sig_info
         - do_send_sig_info
           - send_signal
 
 flush : 只是一些表示 pending 上的信号清理掉
-- flush_sigqueue_mask:780   
-- flush_signal_handlers:539 
+- flush_sigqueue_mask:780
+- flush_signal_handlers:539
 - `__flush_itimer_signals`:489
-- flush_sigqueue:461        
-- flush_signals:476         
-- flush_itimer_signals:512  
+- flush_sigqueue:461
+- flush_signals:476
+- flush_itimer_signals:512
 
 ## send_sig : 发送信号
 - send_sig
@@ -430,7 +430,7 @@ to stop it after attach (or at any other time) without sending it any signals, u
        ignored.  (When restarting a tracee from a ptrace-stop other than signal-delivery-stop, recommended practice is to always  pass  0
        in sig.)
 
-- [ ] 还是很奇怪的机制，当我被 STOP 了，然后首先向 tracer 发送信号，tracer 发送了信号之后，才可以让其他的 thread 停止 ？                                           
+- [ ] 还是很奇怪的机制，当我被 STOP 了，然后首先向 tracer 发送信号，tracer 发送了信号之后，才可以让其他的 thread 停止 ？
   - [ ] 是发送信号，还是首先 STOP 吗 ?
 
 - [ ] https://www.cnblogs.com/mysky007/p/11047943.html : ptrace 的更加高级应用
@@ -441,3 +441,6 @@ https://stackoverflow.com/questions/9305992/if-threads-share-the-same-pid-how-ca
 课代表总结：
 用户看到的是tgid: thread group id
 kernel看到的是pid
+
+## 一个技巧
+可以在 send_signal_locked 的这个地方打点，从而知道一个进程是如何被杀掉的。

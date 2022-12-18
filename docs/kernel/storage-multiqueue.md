@@ -130,7 +130,7 @@ struct blk_mq_hw_ctx
 
 To use a device with blk-mq, the device must support the respective driver.
 
-- [](https://kernel.dk/blk-mq.pdf)
+- [Linux Block IO: Introducing Multi-queue SSD Access on Multi-core Systems](https://kernel.dk/blk-mq.pdf)
 
 Large internal data parallelism in SSDs disks enables many
 concurrent IO operations which, in turn, allows single devices to achieve close to a million IOs per second (IOPS)

@@ -168,8 +168,8 @@ arg_monitor="-serial stdio:monitor -display none"
 arg_monitor="-serial stdio -display none"
 # screen 的限制，那就单独移动出来吧
 arg_monitor="$arg_monitor -monitor unix:$mon_socket_path,server,nowait"
-arg_initrd="-initrd /home/martins3/initramfs-6.0.0-rc2-00159-g4c612826bec1-dirty.img"
-arg_initrd=""
+arg_initrd="-initrd /home/martins3/hack/vm/initramfs-6.1.0-rc7-00200-gc2bf05db6c78-dirty.img"
+# arg_initrd=""
 arg_trace="--trace 'memory_region_ops_\*'"
 
 arg_vfio="-device vfio-pci,host=02:00.0" # 将音频设备直通到 Guest 中

@@ -167,6 +167,9 @@ qemu tcg-lock-status -- Display TCG Execution Status
 qemu timers -- Display the current QEMU timers
 ```
 
+## [ ] 配合 coredump 使用
+- https://linux-audit.com/understand-and-configure-core-dumps-work-on-linux/
+
 ## TODO
 - [ ] https://stackoverflow.com/questions/43701428/gdb-proc-info-mapping-vs-proc-pid-mapping
 - [ ] 调查一下 https://github.com/smcdef/kprobe-template 难道 ebpf 不能实现这个功能 ?

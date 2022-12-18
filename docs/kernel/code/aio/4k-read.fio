@@ -8,7 +8,8 @@ direct=1
 # filename=/dev/ublkb0
 # filename=/root/x
 # filename=/home/martins3/hack/mnt/x
-filename=/home/martins3/core/x
+# filename=/home/martins3/core/x
+filename=/dev/sda1
 rw=randread
 runtime=10
 time_based
