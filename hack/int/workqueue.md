@@ -24,7 +24,7 @@
 /* the per-cpu worker pools */
 static DEFINE_PER_CPU_SHARED_ALIGNED(struct worker_pool [NR_STD_WORKER_POOLS], cpu_worker_pools);
 ```
-  
+
 
 总体来说，queue_work 将 work 放到 workqueue 上，然后转移到 worker_pool 上，最后被 worker 执行
 
@@ -38,13 +38,13 @@ alloc_and_link_pwqs
 > workqueue 划分为 bounded 和 unbounded 的属性, 划分优先级
 
 > 针对非绑定类型的工作队列，worker_pool创建后会添加到unbound_pool_hash哈希表中；
-> 
+>
 > 存在 unbounded 的 worker pool 吗?
 
 > 判断workqueue的类型，如果是bound类型，根据CPU来获取pool_workqueue，如果是unbound类型，通过node号来获取pool_workqueue；
 
 - `__queue_work`
-  - wq_select_unbound_cpu : 如果是 unbounded, 最好是使用当前 cpu 
+  - wq_select_unbound_cpu : 如果是 unbounded, 最好是使用当前 cpu
   - unbound_pwq_by_node : 否则使用 `___queue_work` 的内容, 这两个函数最终是为了找到 pwq, 实际上为了进一步的获取 worker_pool
   - get_work_pool : 直接获取到 worker_pool 的内容
   - find_worker_executing_work : 如果 work 上一次执行的 worker_pool 和 unbound_pwq_by_node/wq_select_unbound_cpu 得到 pwq 指向的 worker 不是一个东西，那么就要考虑 cache 的问题
@@ -186,7 +186,7 @@ For this reason there are functions for creating additional queues.
 
 
 > 总体来说(外部接口)
-> 1. work item 的操作(delay cancel init) 
+> 1. work item 的操作(delay cancel init)
 > 2. work queue 的维护(flush create )
 > 3. schedule 的操作
 
@@ -299,3 +299,9 @@ static struct virtio_driver virtio_blk = {
 
 有的是使用系统的 workqueue:
 snd_timer_interrupt => `queue_work(system_highpri_wq, &timer->task_work);`
+
+
+## INIT_DELAYED_WORK
+
+例如这个，和其他的workqueue 有什么区别吗?
+INIT_DELAYED_WORK(&wb->dwork, wb_workfn);

@@ -71,3 +71,30 @@ https://kernel-recipes.org/en/2019/talks/faster-io-through-io_uring/
 [^7]: [io uring and eBPF](https://thenewstack.io/how-io_uring-and-ebpf-will-revolutionize-programming-in-linux/)
 [^8]: [zhihu : io_uring introduction](https://zhuanlan.zhihu.com/p/62682475?utm_source=wechat_timeline)
 [^10]: [Efficient IO with io_uring](https://kernel.dk/io_uring.pdf)
+
+
+
+## 问题
+- 为什么 def_blk_fops iopoll 完全没有办法用上啊
+  - 似乎 iopoll 的用户似乎只有 iouring 的
+
+- 难道是我的 fio 有问题，也许 fio 使用的 liburing 的动态库有问题?
+```c
+const struct file_operations def_blk_fops = {
+	.open		= blkdev_open,
+	.release	= blkdev_close,
+	.llseek		= blkdev_llseek,
+	.read_iter	= blkdev_read_iter,
+	.write_iter	= blkdev_write_iter,
+	.iopoll		= iocb_bio_iopoll,
+	.mmap		= generic_file_mmap,
+	.fsync		= blkdev_fsync,
+	.unlocked_ioctl	= blkdev_ioctl,
+#ifdef CONFIG_COMPAT
+	.compat_ioctl	= compat_blkdev_ioctl,
+#endif
+	.splice_read	= generic_file_splice_read,
+	.splice_write	= iter_file_splice_write,
+	.fallocate	= blkdev_fallocate,
+};
+```

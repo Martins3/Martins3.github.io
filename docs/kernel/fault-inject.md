@@ -251,60 +251,11 @@ gcc a.c && cgexec -g memory:mem  ./a.out
 
 - [ ] 好像打开一个选项之后，就不再吵闹了
 
-```txt
-[<0>] rq_qos_wait+0xba/0x130
-[<0>] wbt_wait+0x9b/0x100
-[<0>] __rq_qos_throttle+0x1f/0x40
-[<0>] blk_mq_submit_bio+0x266/0x510
-[<0>] submit_bio_noacct_nocheck+0x25a/0x2b0
-[<0>] __swap_writepage+0x13c/0x480
-[<0>] pageout+0xcf/0x260
-[<0>] shrink_folio_list+0x5e2/0xbd0
-[<0>] shrink_lruvec+0x5f4/0xbe0
-[<0>] shrink_node+0x2ce/0x6f0
-[<0>] do_try_to_free_pages+0xd0/0x560
-[<0>] try_to_free_mem_cgroup_pages+0x107/0x230
-[<0>] try_charge_memcg+0x19a/0x820
-[<0>] charge_memcg+0x2d/0xa0
-[<0>] __mem_cgroup_charge+0x28/0x80
-[<0>] __filemap_add_folio+0x355/0x430
-[<0>] filemap_add_folio+0x36/0xa0
-[<0>] __filemap_get_folio+0x1fc/0x330
-[<0>] filemap_fault+0x150/0xa00
-[<0>] __do_fault+0x2c/0xb0
-[<0>] do_fault+0x1e1/0x590
-[<0>] __handle_mm_fault+0x5eb/0x12a0
-[<0>] handle_mm_fault+0xe4/0x2c0
-[<0>] do_user_addr_fault+0x1c7/0x670
-[<0>] exc_page_fault+0x66/0x150
-[<0>] asm_exc_page_fault+0x26/0x30
-```
-- blk_mq_submit_bio
-  - blk_mq_get_cached_request
-    - blk_mq_get_cached_request
-      - rq_qos_throttle
-
-
-其实这种是更加好的，勉强还存在一个补救的机会。
-
 ## 会让 scsi_debug 似乎无法正常回复
 
 其大小为 0 :
 ```txt
 sde       8:64   0    0B  0 disk
-```
-
-## 测试是不是，只是这个选项的原因
-也许只是这个选项的原因:
-```txt
-config BLK_WBT
-	bool "Enable support for block device writeback throttling"
-	help
-	Enabling this option enables the block layer to throttle buffered
-	background writeback from the VM, making it more smooth and having
-	less impact on foreground operations. The throttling is done
-	dynamically on an algorithm loosely based on CoDel, factoring in
-	the realtime performance of the disk.
 ```
 
 ## 将 BLK_WBT 关掉之后，得到的结果是

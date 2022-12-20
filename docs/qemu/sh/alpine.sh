@@ -12,6 +12,7 @@ hacking_memory="none"
 hacking_memory="virtio-mem"
 hacking_memory="prealloc"
 hacking_memory="numa"
+hacking_memory="sockets"
 
 hacking_migration=false
 # @todo 尝试在 guest 中搭建一个 vIOMMU
@@ -115,6 +116,9 @@ case $hacking_memory in
   pmem_img=${workstation}/virtio_pmem.img
   arg_hacking="${arg_hacking} -object memory-backend-file,id=nvmem1,share=on,mem-path=${pmem_img},size=4G"
   arg_hacking="${arg_hacking} -device virtio-pmem-pci,memdev=nvmem1,id=nv1"
+  ;;
+"sockets")
+  arg_mem_cpu="-m 8G -smp 8,sockets=2,cores=2,threads=2,maxcpus=8"
   ;;
 esac
 

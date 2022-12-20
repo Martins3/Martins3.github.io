@@ -1,5 +1,6 @@
 # page-writeback.c 分析
 
+
 ## ref && doc
 - [](http://www.wowotech.net/memory_management/327.html)
 
@@ -551,9 +552,108 @@ int generic_writepages(struct address_space *mapping,
 	if (!mapping->a_ops->writepage)
 		return 0;
 
-	blk_start_plug(&plug); // todo blk plug 的作用是什么 ?
+	blk_start_plug(&plug);
 	ret = write_cache_pages(mapping, wbc, __writepage, mapping);
 	blk_finish_plug(&plug);
 	return ret;
 }
+```
+
+难道，generic_writepages 是专用的吗?
+```txt
+#0  generic_writepages (wbc=0xffffc9003f807ca0, mapping=0xffff888103d80508) at mm/page-writeback.c:2559
+#1  do_writepages (mapping=mapping@entry=0xffff888103d80508, wbc=wbc@entry=0xffffc9003f807ca0) at mm/page-writeback.c:2583
+#2  0xffffffff81404b4c in __writeback_single_inode (inode=inode@entry=0xffff888103d80390, wbc=wbc@entry=0xffffc9003f807ca0) at fs/fs-writeback.c:1598
+#3  0xffffffff81405304 in writeback_sb_inodes (sb=sb@entry=0xffff888100059800, wb=wb@entry=0xffff88811ce51000, work=work@entry=0xffffc9003f807e30) at fs/fs-writeback.c:1889
+#4  0xffffffff814055f7 in __writeback_inodes_wb (wb=wb@entry=0xffff88811ce51000, work=work@entry=0xffffc9003f807e30) at fs/fs-writeback.c:1960
+#5  0xffffffff81405872 in wb_writeback (wb=wb@entry=0xffff88811ce51000, work=work@entry=0xffffc9003f807e30) at fs/fs-writeback.c:2065
+#6  0xffffffff81406be9 in wb_check_background_flush (wb=0xffff88811ce51000) at fs/fs-writeback.c:2131
+#7  wb_do_writeback (wb=0xffff88811ce51000) at fs/fs-writeback.c:2219
+#8  wb_workfn (work=0xffff88811ce51188) at fs/fs-writeback.c:2246
+#9  0xffffffff8114cd57 in process_one_work (worker=worker@entry=0xffff8881487da3c0, work=0xffff88811ce51188) at kernel/workqueue.c:2289
+#10 0xffffffff8114cf7c in worker_thread (__worker=0xffff8881487da3c0) at kernel/workqueue.c:2436
+#11 0xffffffff811556c7 in kthread (_create=0xffff8881037f3640) at kernel/kthread.c:376
+#12 0xffffffff8100265c in ret_from_fork () at arch/x86/entry/entry_64.S:308
+```
+
+## 记录一些 backtrace
+
+为什么这里也是存在时间的周期性的 writeback 的操作:
+```txt
+#0  writeout_period (t=0xffffffff838afb18 <global_wb_domain+56>) at mm/page-writeback.c:608
+#1  0xffffffff811d7c82 in call_timer_fn (timer=timer@entry=0xffffffff838afb18 <global_wb_domain+56>, fn=fn@entry=0xffffffff812e9980 <writeout_period>, baseclk=baseclk@entry=4296110016) at kernel/time/timer.c:1700
+#2  0xffffffff811d7f8e in expire_timers (head=0xffffc90000124f10, base=0xffff888237c9e040) at kernel/time/timer.c:1751
+#3  __run_timers (base=0xffff888237c9e040) at kernel/time/timer.c:2022
+#4  0xffffffff82197e57 in __do_softirq () at kernel/softirq.c:571
+#5  0xffffffff811328aa in invoke_softirq () at kernel/softirq.c:445
+#6  __irq_exit_rcu () at kernel/softirq.c:650
+#7  0xffffffff82184fc6 in sysvec_apic_timer_interrupt (regs=0xffffc9000009be38) at arch/x86/kernel/apic/apic.c:1107
+```
+
+## /proc/sys/vm/ 下的一些接口
+
+DEVICE_ATTR_RW(max_bytes);
+
+static DEVICE_ATTR_RW(strict_limit);
+
+```c
+static struct ctl_table vm_page_writeback_sysctls[] = {
+	{
+		.procname   = "dirty_background_ratio",
+		.data       = &dirty_background_ratio,
+		.maxlen     = sizeof(dirty_background_ratio),
+		.mode       = 0644,
+		.proc_handler   = dirty_background_ratio_handler,
+		.extra1     = SYSCTL_ZERO,
+		.extra2     = SYSCTL_ONE_HUNDRED,
+	},
+	{
+		.procname   = "dirty_background_bytes",
+		.data       = &dirty_background_bytes,
+		.maxlen     = sizeof(dirty_background_bytes),
+		.mode       = 0644,
+		.proc_handler   = dirty_background_bytes_handler,
+		.extra1     = SYSCTL_LONG_ONE,
+	},
+	{
+		.procname   = "dirty_ratio",
+		.data       = &vm_dirty_ratio,
+		.maxlen     = sizeof(vm_dirty_ratio),
+		.mode       = 0644,
+		.proc_handler   = dirty_ratio_handler,
+		.extra1     = SYSCTL_ZERO,
+		.extra2     = SYSCTL_ONE_HUNDRED,
+	},
+	{
+		.procname   = "dirty_bytes",
+		.data       = &vm_dirty_bytes,
+		.maxlen     = sizeof(vm_dirty_bytes),
+		.mode       = 0644,
+		.proc_handler   = dirty_bytes_handler,
+		.extra1     = (void *)&dirty_bytes_min,
+	},
+	{
+		.procname   = "dirty_writeback_centisecs",
+		.data       = &dirty_writeback_interval,
+		.maxlen     = sizeof(dirty_writeback_interval),
+		.mode       = 0644,
+		.proc_handler   = dirty_writeback_centisecs_handler,
+	},
+	{
+		.procname   = "dirty_expire_centisecs",
+		.data       = &dirty_expire_interval,
+		.maxlen     = sizeof(dirty_expire_interval),
+		.mode       = 0644,
+		.proc_handler   = proc_dointvec_minmax,
+		.extra1     = SYSCTL_ZERO,
+	},
+	{
+		.procname	= "laptop_mode",
+		.data		= &laptop_mode,
+		.maxlen		= sizeof(laptop_mode),
+		.mode		= 0644,
+		.proc_handler	= proc_dointvec_jiffies,
+	},
+	{}
+};
 ```

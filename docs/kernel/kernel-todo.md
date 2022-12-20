@@ -301,3 +301,26 @@ set_max_huge_pages
 			goto out;
 	}
 ```
+
+## 为什么修改为 indirect 之后的性能差这么多
+
+direct=1 修改为 direct=0 之后，性能大约只有 1/10
+
+```c
+[global]
+ioengine=libaio
+iodepth=128
+
+[trash]
+bs=4k
+direct=1
+# filename=/dev/ublkb0
+# filename=/root/x
+# filename=/home/martins3/hack/mnt/x
+# filename=/home/martins3/core/x
+# filename=/dev/sda1
+filename=/dev/nvme1n1p1
+rw=randread
+runtime=10
+time_based
+```

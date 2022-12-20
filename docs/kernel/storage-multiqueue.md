@@ -1,5 +1,7 @@
 # multiqueue
 
+![](./img/multiqueue.png)
+
 ## 收集一点 backtrace
 ```txt
 #0  blk_mq_start_request (rq=rq@entry=0xffff888140d83180) at block/blk-mq.c:1249
@@ -38,6 +40,7 @@
 #12 __common_interrupt (regs=<optimized out>, vector=34) at arch/x86/kernel/irq.c:250
 #13 0xffffffff82178827 in common_interrupt (regs=0xffffc900402bbd68, error_code=<optimize
 ```
+
 
 ## multiqueue
 [lwn : The multiqueue block layer](https://lwn.net/Articles/552904/)
@@ -179,5 +182,173 @@ struct blk_mq_hw_ctx ;
 /**
  * struct blk_mq_ctx - State for a software queue facing the submitting CPUs
  */
-struct blk_mq_ctx {
+struct blk_mq_ctx ;
 ```
+
+```c
+#define queue_for_each_hw_ctx(q, hctx, i)				\
+	xa_for_each(&(q)->hctx_table, (i), (hctx))
+
+#define hctx_for_each_ctx(hctx, ctx, i)					\
+	for ((i) = 0; (i) < (hctx)->nr_ctx &&				\
+	     ({ ctx = (hctx)->ctxs[(i)]; 1; }); (i)++)
+```
+
+似乎一个 request_queue 创建多少个 hw_ctx 是和 hardware 有关，nvme 和 scsi 就不同的吧！
+
+```txt
+#0  blk_mq_init_hctx (hctx_idx=7, hctx=0xffff888100c90600, set=0xffff888100bb2630, q=0xffff888102089b80) at block/blk-mq.c:3625
+#1  blk_mq_alloc_and_init_hctx (set=set@entry=0xffff888100bb2630, q=q@entry=0xffff888102089b80, hctx_idx=hctx_idx@entry=7, node=node@entry=0) at block/blk-mq.c:4145
+#2  0xffffffff816ce5ce in blk_mq_realloc_hw_ctxs (set=set@entry=0xffff888100bb2630, q=q@entry=0xffff888102089b80) at block/blk-mq.c:4174
+#3  0xffffffff816d201b in blk_mq_init_allocated_queue (set=set@entry=0xffff888100bb2630, q=q@entry=0xffff888102089b80) at block/blk-mq.c:4233
+#4  0xffffffff816d2bf9 in blk_mq_init_queue_data (queuedata=0xffff888100bb2600, set=0xffff888100bb2630) at block/blk-mq.c:4047
+#5  __blk_mq_alloc_disk (set=set@entry=0xffff888100bb2630, queuedata=queuedata@entry=0xffff888100bb2600, lkclass=lkclass@entry=0xffffffff838e9200 <virtblk_queue_depth>) at block/blk-mq.c:4093
+#6  0xffffffff81aabac9 in virtblk_probe (vdev=0xffff888100e2b800) at drivers/block/virtio_blk.c:967
+```
+
+从 blk_mq_init_hctx 中看，似乎每一个 hw_ctx 都会创建 nr_cpu_ids 个 blk_mq_ctx 的。
+
+## tagging
+用于确定到底那些提交的 IO 已经完成了。
+
+应该是在这个位置的: block/blk-mq-tag.c
+
+
+### 分配
+```txt
+#0  blk_mq_get_tag (data=data@entry=0xffffc9000038f968) at block/blk-mq-tag.c:127
+#1  0xffffffff816cb3bd in __blk_mq_alloc_requests (data=data@entry=0xffffc9000038f968) at block/blk-mq.c:526
+#2  0xffffffff816d07f1 in blk_mq_get_new_requests (nsegs=1, bio=0xffff88819e9e5b00, plug=0xffffc9000038fd90, q=0xffff8881008f9ef0) at block/blk-mq.c:2878
+#3  blk_mq_submit_bio (bio=<optimized out>) at block/blk-mq.c:2966
+#4  0xffffffff816c1382 in __submit_bio (bio=<optimized out>) at block/blk-core.c:604
+#5  0xffffffff816c190a in __submit_bio_noacct_mq (bio=<optimized out>) at block/blk-core.c:681
+#6  submit_bio_noacct_nocheck (bio=<optimized out>) at block/blk-core.c:698
+#7  submit_bio_noacct_nocheck (bio=<optimized out>) at block/blk-core.c:687
+#8  0xffffffff81415843 in __block_write_full_page (inode=<optimized out>, page=0xffffea0004481800, get_block=0xffffffff816b8f10 <blkdev_get_block>, wbc=0xffffc9000038fca0, handler=0xffffffff81414610 <end_buffer_async_write>) at fs/buffer.c:1792
+#9  0xffffffff812e9c39 in __writepage (page=page@entry=0xffffea0004481800, wbc=wbc@entry=0xffffc9000038fca0, data=data@entry=0xffff888101bac708) at mm/page-writeback.c:2537
+#10 0xffffffff812eac8b in write_cache_pages (mapping=mapping@entry=0xffff888101bac708, wbc=wbc@entry=0xffffc9000038fca0, writepage=writepage@entry=0xffffffff812e9c20 <__writepage>, data=data@entry=0xffff888101bac708) at mm/page-writeback.c:2472
+#11 0xffffffff812ed738 in generic_writepages (wbc=0xffffc9000038fca0, mapping=0xffff888101bac708) at mm/page-writeback.c:2563
+#12 generic_writepages (wbc=0xffffc9000038fca0, mapping=0xffff888101bac708) at mm/page-writeback.c:2552
+#13 do_writepages (mapping=mapping@entry=0xffff888101bac708, wbc=wbc@entry=0xffffc9000038fca0) at mm/page-writeback.c:2583
+#14 0xffffffff81404b4c in __writeback_single_inode (inode=inode@entry=0xffff888101bac590, wbc=wbc@entry=0xffffc9000038fca0) at fs/fs-writeback.c:1598
+#15 0xffffffff81405304 in writeback_sb_inodes (sb=sb@entry=0xffff888100059800, wb=wb@entry=0xffff888101d5c400, work=work@entry=0xffffc9000038fe30) at fs/fs-writeback.c:1889
+#16 0xffffffff814055f7 in __writeback_inodes_wb (wb=wb@entry=0xffff888101d5c400, work=work@entry=0xffffc9000038fe30) at fs/fs-writeback.c:1960
+#17 0xffffffff81405872 in wb_writeback (wb=wb@entry=0xffff888101d5c400, work=work@entry=0xffffc9000038fe30) at fs/fs-writeback.c:2065
+#18 0xffffffff81406be9 in wb_check_background_flush (wb=0xffff888101d5c400) at fs/fs-writeback.c:2131
+#19 wb_do_writeback (wb=0xffff888101d5c400) at fs/fs-writeback.c:2219
+#20 wb_workfn (work=0xffff888101d5c588) at fs/fs-writeback.c:2246
+#21 0xffffffff8114cd57 in process_one_work (worker=worker@entry=0xffff8881009d6180, work=0xffff888101d5c588) at kernel/workqueue.c:2289
+#22 0xffffffff8114cf7c in worker_thread (__worker=0xffff8881009d6180) at kernel/workqueue.c:2436
+#23 0xffffffff811556c7 in kthread (_create=0xffff8881009d7040) at kernel/kthread.c:376
+#24 0xffffffff8100265c in ret_from_fork () at arch/x86/entry/entry_64.S:308
+```
+
+```txt
+#0  blk_mq_put_tag (tags=0xffff888103ae2900, ctx=ctx@entry=0xffffe8ffffd42700, tag=211) at block/blk-mq-tag.c:220
+#1  0xffffffff816ca4de in __blk_mq_free_request (rq=0xffff8881041d3d80) at block/blk-mq.c:720
+#2  0xffffffff81aa26f9 in virtblk_done (vq=0xffff888100897200) at drivers/block/virtio_blk.c:291
+#3  0xffffffff8180bf09 in vring_interrupt (irq=<optimized out>, _vq=<optimized out>) at drivers/virtio/virtio_ring.c:2470
+#4  vring_interrupt (irq=<optimized out>, _vq=<optimized out>) at drivers/virtio/virtio_ring.c:2445
+#5  0xffffffff811a4d05 in __handle_irq_event_percpu (desc=desc@entry=0xffff888100ce7e00) at kernel/irq/handle.c:158
+#6  0xffffffff811a4ee3 in handle_irq_event_percpu (desc=0xffff888100ce7e00) at kernel/irq/handle.c:193
+#7  handle_irq_event (desc=desc@entry=0xffff888100ce7e00) at kernel/irq/handle.c:210
+#8  0xffffffff811a9bbe in handle_edge_irq (desc=0xffff888100ce7e00) at kernel/irq/chip.c:819
+#9  0xffffffff810ce1d8 in generic_handle_irq_desc (desc=0xffff888100ce7e00) at ./include/linux/irqdesc.h:158
+#10 handle_irq (regs=<optimized out>, desc=0xffff888100ce7e00) at arch/x86/kernel/irq.c:231
+#11 __common_interrupt (regs=<optimized out>, vector=34) at arch/x86/kernel/irq.c:250
+#12 0xffffffff821828d7 in common_interrupt (regs=0xffffc900000b3e38, error_code=<optimized out>) at arch/x86/kernel/irq.c:240
+```
+
+- virtblk_done
+  - blk_mq_complete_request
+    - virtblk_request_done
+      - blk_mq_end_request
+        - `__blk_mq_end_request`
+          - blk_mq_free_request
+            - `__blk_mq_free_request`
+              - blk_mq_put_tag
+
+- request::tag 每一个 request 一个 tag 的
+- blk_mq_hw_ctx::tags 中来记录所有的
+
+```txt
+#0  blk_mq_put_tags (tags=0xffff88810242a840, tag_array=tag_array@entry=0xffffc900001d4e70, nr_tags=nr_tags@entry=1) at block/blk-mq-tag.c:232
+#1  0xffffffff816cd975 in blk_mq_flush_tag_batch (nr_tags=<optimized out>, tag_array=0xffffc900001d4e70, hctx=<optimized out>) at block/blk-mq.c:1073
+#2  blk_mq_end_request_batch (iob=iob@entry=0xffffc900001d4f38) at block/blk-mq.c:1121
+#3  0xffffffff81b1f474 in nvme_complete_batch (fn=<optimized out>, iob=0xffffc900001d4f38) at drivers/nvme/host/nvme.h:729
+#4  0xffffffff81b2031e in nvme_irq (irq=<optimized out>, data=<optimized out>) at drivers/nvme/host/pci.c:1136
+#5  0xffffffff811a4d05 in __handle_irq_event_percpu (desc=desc@entry=0xffff888103932200) at kernel/irq/handle.c:158
+#6  0xffffffff811a4ee3 in handle_irq_event_percpu (desc=0xffff888103932200) at kernel/irq/handle.c:193
+#7  handle_irq_event (desc=desc@entry=0xffff888103932200) at kernel/irq/handle.c:210
+#8  0xffffffff811a9bbe in handle_edge_irq (desc=0xffff888103932200) at kernel/irq/chip.c:819
+#9  0xffffffff810ce1d8 in generic_handle_irq_desc (desc=0xffff888103932200) at ./include/linux/irqdesc.h:158
+#10 handle_irq (regs=<optimized out>, desc=0xffff888103932200) at arch/x86/kernel/irq.c:231
+#11 __common_interrupt (regs=<optimized out>, vector=38) at arch/x86/kernel/irq.c:250
+#12 0xffffffff821828d7 in common_interrupt (regs=0xffffc900000bbe38, error_code=<optimized out>) at arch/x86/kernel/irq.c:240
+```
+
+### 所以 tag 起到对应的作用了吗？
+从设备接受中断，就怎么知道
+
+```c
+/**
+ * blk_mq_rq_from_pdu - cast a PDU to a request
+ * @pdu: the PDU (Protocol Data Unit) to be casted
+ *
+ * Return: request
+ *
+ * Driver command data is immediately after the request. So subtract request
+ * size to get back to the original request.
+ */
+static inline struct request *blk_mq_rq_from_pdu(void *pdu)
+{
+	return pdu - sizeof(struct request);
+}
+```
+从 virtio queue 中读取，也就是返回的数据正好在 request 前面？
+
+## 分析一下 nvme 的结束的过程
+`nvme_handle_cqe` 中，command_id 是通过读 cqe 获取的:
+
+```c
+	req = nvme_find_rq(nvme_queue_tagset(nvmeq), command_id);
+```
+
+```c
+static inline struct request *blk_mq_tag_to_rq(struct blk_mq_tags *tags,
+					       unsigned int tag)
+{
+	if (tag < tags->nr_tags) {
+		prefetch(tags->rqs[tag]);
+		return tags->rqs[tag];
+	}
+
+	return NULL;
+}
+```
+分析了一下，tag 其实就是 queue 中 request 的编号而已，当 nvme 结束之后，会知道完成的请求的
+tag，然后查询到 request。
+
+## inflight
+
+每一个 block 设备都存在，但是为什么不是 queue 中的:
+```sh
+cat /sys/block/sda/inflight
+```
+
+```c
+struct mq_inflight {
+	struct block_device *part;
+	unsigned int inflight[2];
+};
+```
+
+对应的 backtrace 为:
+```txt
+#0  blk_mq_in_flight_rw (q=0xffff8881047a14a0, part=part@entry=0xffff888101a0ce00, inflight=inflight@entry=0xffffc900400a3db8) at block/blk-mq.c:156
+#1  0xffffffff816d862a in part_inflight_show (dev=0xffff888101a0ce48, attr=<optimized out>, buf=0xffff888145862000 "") at block/genhd.c:1009
+#2  0xffffffff81a6d9e8 in dev_attr_show (kobj=<optimized out>, attr=0xffffffff82df5740 <dev_attr_inflight>, buf=<optimized out>) at drivers/base/core.c:2196
+#3  0xffffffff8146dc8b in sysfs_kf_seq_show (sf=0xffff8881460b1258, v=<optimized out>) at fs/sysfs/file.c:59
+```
+
+一个 gendisk 对应 request_queue，但是一个 request_queue 对应的

@@ -127,27 +127,125 @@ static struct rq_qos_ops ioc_rqos_ops = {
 
 当 disk 出现错误，为什么最后是在 wbt_wait 上:
 
-## buffered writeback throttling
-```c
-/*
- * buffered writeback throttling. loosely based on CoDel. We can't drop
- * packets for IO scheduling, so the logic is something like this:
- *
- * - Monitor latencies in a defined window of time.
- * - If the minimum latency in the above window exceeds some target, increment
- *   scaling step and scale down queue depth by a factor of 2x. The monitoring
- *   window is then shrunk to 100 / sqrt(scaling step + 1).
- * - For any window where we don't have solid data on what the latencies
- *   look like, retain status quo.
- * - If latencies look good, decrement scaling step.
- * - If we're only doing writes, allow the scaling step to go negative. This
- *   will temporarily boost write performance, snapping back to a stable
- *   scaling step of 0 if reads show up or the heavy writers finish. Unlike
- *   positive scaling steps where we shrink the monitoring window, a negative
- *   scaling step retains the default step==0 window size.
- *
- * Copyright (C) 2016 Jens Axboe
- *
- */
+## 选项 CONFIG_BLK_DEV_THROTTLING 是做什么的
+- 2000 行?
+
+## qos 的注册内容
+
+两个的注册位置是不同的:
+```txt
+#0  rq_qos_add (rqos=<optimized out>, q=<optimized out>) at block/blk-rq-qos.h:99
+#1  wbt_init (q=q@entry=0xffff8881008f9ef0) at block/blk-wbt.c:871
+#2  0xffffffff816f8eef in wbt_enable_default (q=q@entry=0xffff8881008f9ef0) at block/blk-wbt.c:673
+#3  0xffffffff816c3e03 in blk_register_queue (disk=disk@entry=0xffff888103981400) at block/blk-sysfs.c:820
+#4  0xffffffff816d9692 in device_add_disk (parent=parent@entry=0xffff8881008e3010, disk=0xffff888103981400, groups=groups@entry=0xffffffff82e1b8d0 <virtblk_attr_groups>) at block/genhd.c:485
+#5  0xffffffff81aa3ba1 in virtblk_probe (vdev=0xffff8881008e3000) at drivers/block/virtio_blk.c:1150
+#6  0xffffffff8180ae6e in virtio_dev_probe (_d=0xffff8881008e3010) at drivers/virtio/virtio.c:305
+#7  0xffffffff81a76484 in call_driver_probe (drv=0xffffffff82e1b760 <virtio_blk>, dev=0xffff8881008e3010) at drivers/base/dd.c:560
+#8  really_probe (dev=dev@entry=0xffff8881008e3010, drv=drv@entry=0xffffffff82e1b760 <virtio_blk>) at drivers/base/dd.c:639
+#9  0xffffffff81a766bd in __driver_probe_device (drv=drv@entry=0xffffffff82e1b760 <virtio_blk>, dev=dev@entry=0xffff8881008e3010) at drivers/base/dd.c:778
+#10 0xffffffff81a76749 in driver_probe_device (drv=drv@entry=0xffffffff82e1b760 <virtio_blk>, dev=dev@entry=0xffff8881008e3010) at drivers/base/dd.c:808
+#11 0xffffffff81a769c5 in __driver_attach (data=0xffffffff82e1b760 <virtio_blk>, dev=0xffff8881008e3010) at drivers/base/dd.c:1194
+#12 __driver_attach (dev=0xffff8881008e3010, data=0xffffffff82e1b760 <virtio_blk>) at drivers/base/dd.c:1134
+#13 0xffffffff81a73fc7 in bus_for_each_dev (bus=<optimized out>, start=start@entry=0x0 <fixed_percpu_data>, data=data@entry=0xffffffff82e1b760 <virtio_blk>, fn=fn@entry=0xffffffff81a76940 <__driver_attach>) at drivers/base/bus.c:301
+#14 0xffffffff81a75e79 in driver_attach (drv=drv@entry=0xffffffff82e1b760 <virtio_blk>) at drivers/base/dd.c:1211
+#15 0xffffffff81a75810 in bus_add_driver (drv=drv@entry=0xffffffff82e1b760 <virtio_blk>) at drivers/base/bus.c:618
+#16 0xffffffff81a77c2e in driver_register (drv=drv@entry=0xffffffff82e1b760 <virtio_blk>) at drivers/base/driver.c:246
+#17 0xffffffff8180a58b in register_virtio_driver (driver=driver@entry=0xffffffff82e1b760 <virtio_blk>) at drivers/virtio/virtio.c:357
+#18 0xffffffff835eb0fb in virtio_blk_init () at drivers/block/virtio_blk.c:1284
+#19 0xffffffff81001943 in do_one_initcall (fn=0xffffffff835eb0aa <virtio_blk_init>) at init/main.c:1306
+#20 0xffffffff8359b818 in do_initcall_level (command_line=0xffff888100129b40 "root", level=6) at init/main.c:1379
+#21 do_initcalls () at init/main.c:1395
+#22 do_basic_setup () at init/main.c:1414
+#23 kernel_init_freeable () at init/main.c:1634
+#24 0xffffffff82186485 in kernel_init (unused=<optimized out>) at init/main.c:1522
+#25 0xffffffff8100265c in ret_from_fork () at arch/x86/entry/entry_64.S:308
 ```
-但是 blk-wq.c 中没有关联任何 cgroup 的内容。
+
+- `__alloc_disk_node`
+  - blkcg_init_disk
+    - blk_ioprio_init
+    - blk_throtl_init
+    - blk_iolatency_init
+
+
+## block layer queue depth 和 nr_requests
+- https://www.ibm.com/docs/en/linux-on-systems?topic=wsd-setting-queue-depth
+
+cat /sys/block/sd<X>/queue/nr_requests
+
+```c
+struct request_queue {
+
+	unsigned int		queue_depth;
+
+	unsigned long		nr_requests;	/* Max # of requests */
+```
+
+```txt
+#0  wbt_queue_depth_changed (rqos=0xffff888102204858) at block/blk-wbt.c:703
+#1  0xffffffff816dd69c in __rq_qos_queue_depth_changed (rqos=0xffff888102204858) at block/blk-rq-qos.c:102
+#2  0xffffffff816c5095 in rq_qos_queue_depth_changed (q=<optimized out>) at block/blk-rq-qos.h:230
+#3  0xffffffff81ac4ff9 in scsi_change_queue_depth (sdev=0xffff888100e93000, depth=<optimized out>) at drivers/scsi/scsi.c:227
+#4  0xffffffff81ad4b51 in sdev_store_queue_depth (dev=0xffff888100e931b8, attr=<optimized out>, buf=<optimized out>, count=4) at drivers/scsi/scsi_sysfs.c:1036
+#5  0xffffffff8146c957 in kernfs_fop_write_iter (iocb=0xffffc9003f72bea0, iter=<optimized out>) at fs/kernfs/file.c:334
+#6  0xffffffff813c70c0 in call_write_iter (iter=0xffffc9003f72be78, kio=0xffffc9003f72bea0, file=0xffff8881485de400) at ./include/linux/fs.h:2186
+#7  new_sync_write (ppos=0xffffc9003f72bf08, len=4, buf=0x55de5904c8c0 "100\nho\033\\s/0:0:0:0\033\\.15\nm0.32\033[0m\non Dec 19 02:52:33 PM CST 2022\n\n", filp=0xffff8881485de400) at fs/read_write.c:491
+#8  vfs_write (file=file@entry=0xffff8881485de400, buf=buf@entry=0x55de5904c8c0 "100\nho\033\\s/0:0:0:0\033\\.15\nm0.32\033[0m\non Dec 19 02:52:33 PM CST 2022\n\n", count=count@entry=4, pos=pos@entry=0xffffc9003f72bf08) at fs/read_write.c:584
+#9  0xffffffff813c750e in ksys_write (fd=<optimized out>, buf=0x55de5904c8c0 "100\nho\033\\s/0:0:0:0\033\\.15\nm0.32\033[0m\non Dec 19 02:52:33 PM CST 2022\n\n", count=4) at fs/read_write.c:637
+#10 0xffffffff82180c3f in do_syscall_x64 (nr=<optimized out>, regs=0xffffc9003f72bf58) at arch/x86/entry/common.c:50
+#11 do_syscall_64 (regs=0xffffc9003f72bf58, nr=<optimized out>) at arch/x86/entry/common.c:80
+#12 0xffffffff822000ae in entry_SYSCALL_64 () at arch/x86/entry/entry_64.S:120
+```
+
+
+两者的关系非常的微妙啊！
+```c
+static inline unsigned int blk_queue_depth(struct request_queue *q)
+{
+	if (q->queue_depth)
+		return q->queue_depth;
+
+	return q->nr_requests;
+}
+```
+
+对于一些老设备，queue_depth 比 nr_requests 更加科学的。
+
+```diff
+History:        #0
+Commit:         d278d4a8892f13b6a9eb6102b356402f0e062324
+Author:         Jens Axboe <axboe@fb.com>
+Author Date:    Thu 31 Mar 2016 12:21:08 AM CST
+Committer Date: Sun 06 Nov 2016 07:09:53 AM CST
+
+block: add code to track actual device queue depth
+
+For blk-mq, ->nr_requests does track queue depth, at least at init
+time. But for the older queue paths, it's simply a soft setting.
+On top of that, it's generally larger than the hardware setting
+on purpose, to allow backup of requests for merging.
+
+Fill a hole in struct request with a 'queue_depth' member, that
+drivers can call to more closely inform the block layer of the
+real queue depth.
+
+Signed-off-by: Jens Axboe <axboe@fb.com>
+Reviewed-by: Jan Kara <jack@suse.cz>
+```
+
+想不到，nvme 的 nr_requests 更加大:
+```txt
+➜  ~ cat /sys/block/nvme0n1/queue/nr_requests
+1024
+➜  ~ cat /sys/block/sda/queue/nr_requests
+256
+```
+
+## nr_requests 是描述 queue 的深度
+
+- blk_mq_update_nr_requests 让用户态来控制的 nr_requests
+
+? 什么是描述 queue 中实际上包含了多少个 request
+
+## 如果 queue 满了，会如何？
