@@ -324,3 +324,5 @@ rw=randread
 runtime=10
 time_based
 ```
+
+## numa_balancing 是如何实现的
