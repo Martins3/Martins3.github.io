@@ -252,7 +252,19 @@ xqm/include/block/aio.h:433
 - timer_mod_anticipate_ns 和 timer_mod_ns 的区别: 前者要求，只有提前这个 timer 的时候，才可以修改 timerlist，否则此次操作为空
 - 因为 QEMU_CLOCK_VIRTUAL 类型的 clock 只有在 CPU 运行的时候才可以运行的
 
-<script src="https://utteranc.es/client.js" repo="Martins3/Martins3.github.io" issue-term="url" theme="github-light" crossorigin="anonymous" async> </script>
+<script src="https://giscus.app/client.js"
+        data-repo="martins3/martins3.github.io"
+        data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="
+        data-category="Show and tell"
+        data-category-id="MDE4OkRpc2N1c3Npb25DYXRlZ29yeTMyMDMzNjY4"
+        data-mapping="pathname"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-theme="light"
+        data-lang="zh-CN"
+        crossorigin="anonymous"
+        async>
+</script>
 
 本站所有文章转发 **CSDN** 将按侵权追究法律责任，其它情况随意。
 

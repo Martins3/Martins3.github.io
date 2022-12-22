@@ -123,7 +123,7 @@ case $hacking_memory in
 esac
 
 arg_bridge="-device pci-bridge,id=mybridge,chassis_nr=1"
-seabios=/home/martins3/core/seabios/out/bios.bin
+# seabios=/home/martins3/core/seabios/out/bios.bin
 if [[ -z ${seabios+x} ]]; then
   arg_seabios=""
 else
@@ -167,11 +167,7 @@ arg_qmp="-qmp tcp:localhost:4444,server,wait=off"
 
 mon_socket_path=/tmp/qemu-monitor-socket
 serial_socket_path=/tmp/qemu-serial-socket
-arg_monitor="-serial stdio:monitor -display none"
-
-arg_monitor="-serial stdio -display none"
-# screen 的限制，那就单独移动出来吧
-arg_monitor="$arg_monitor -monitor unix:$mon_socket_path,server,nowait"
+arg_monitor="-serial mon:stdio -display none"
 arg_initrd="-initrd /home/martins3/hack/vm/initramfs-6.1.0-rc7-00200-gc2bf05db6c78-dirty.img"
 # arg_initrd=""
 arg_trace="--trace 'memory_region_ops_\*'"
@@ -199,7 +195,7 @@ show_help() {
   exit 0
 }
 
-while getopts "adskthpcmq" opt; do
+while getopts "adskthpcmqr" opt; do
   case $opt in
   d)
     debug_qemu="gdb -ex \"handle SIGUSR1 nostop noprint\" --args"
@@ -207,6 +203,11 @@ while getopts "adskthpcmq" opt; do
     # https://unix.stackexchange.com/questions/426652/connect-to-running-qemu-instance-with-qemu-monitor
     arg_monitor="-serial unix:$serial_socket_path,server,nowait -display none"
     cd "${qemu_dir}" || exit 1
+    ;;
+  r)
+    # @todo 不知道为什么，-serial stdio:monitor 的时候会失败
+    arg_monitor="-serial stdio -display none"
+    arg_monitor="$arg_monitor -monitor unix:$mon_socket_path,server,nowait"
     ;;
   p) debug_qemu="perf record -F 1000" ;;
   s) debug_kernel="-S -s" ;;

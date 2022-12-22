@@ -53,4 +53,15 @@ aio=aio
 调用 BlockDriver:: bdrv_co_preadv_part / bdrv_co_preadv / bdrv_aio_preadv / bdrv_co_readv
 在 bdrv_driver_preadv 中，这个是有优先级的。
 
+## qemu_notify_event 这个函数是做什么的
+
+```c
+static void notify_event_cb(void *opaque)
+{
+    /* No need to do anything; this bottom half is only used to
+     * kick the kernel out of ppoll/poll/WaitForMultipleObjects.
+     */
+}
+```
+
 [^1]: [Towards Multi-threaded Device Emulation in QEMU](https://www.linux-kvm.org/images/a/a7/02x04-MultithreadedDevices.pdf)

@@ -553,6 +553,11 @@ https://wiki.linuxfoundation.org/networking/netem
 
 tc qdisc add dev eth0 root netem delay 100ms
 
+## traceroute
+https://cv6.poinsignon.org/ : 使用 traceroute 来展示自己的简历
+
+## cs 144
+
 [^2]: 用芯探核:基于龙芯的 Linux 内核探索解析
 [^4]: http://yuba.stanford.edu/rcp/
 [^6]: [An Introduction to Computer Networks](http://intronetworks.cs.luc.edu/current2/html/)

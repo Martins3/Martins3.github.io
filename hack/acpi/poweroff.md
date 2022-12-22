@@ -5,12 +5,17 @@
 - 那么在 poweroff 如何实现的 ?
   - [ ] 执行 /sbin/poweroff, 但是 /sbin/poweroff 无法被 strace
 
+在 QEMU 中的执行流程
 acpi_pm1_cnt_write
 ```txt
 #0  acpi_pm1_cnt_write (val=1, ar=0x555557b97d00) at ../hw/acpi/core.c:602
 #1  acpi_pm_cnt_write (opaque=0x555557b97d00, addr=0, val=1, width=2) at ../hw/acpi/core.c:602
 #2  0x0000555555b8d820 in memory_region_write_accessor (mr=mr@entry=0x555557b97f30, addr=0, value=value@entry=0x7fffd9ff90a8, size=size@entry=2, shift=<optimized out>,
 ```
+
+- qemu_system_shutdown_request(SHUTDOWN_CAUSE_GUEST_SHUTDOWN);
+  - 设置 shutdown_requested
+  - 调用函数 qemu_notify_event，让 QEMU 从 poll 中返回出来，就是在 qemu_main_loop 中的死循环中离开。
 
 
 内核调用流程:
@@ -33,3 +38,5 @@ acpi_pm1_cnt_write
 #4  0xffffffff81b945d0 in do_syscall_64 (nr=<optimized out>, regs=0xffffc90002007f58) at arch/x86/entry/common.c:47
 #5  0xffffffff81c0007c in entry_SYSCALL_64 () at arch/x86/entry/entry_64.S:112
 ```
+
+## 测试 Guest 机器的关机速度

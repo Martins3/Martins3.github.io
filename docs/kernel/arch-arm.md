@@ -127,5 +127,11 @@ fwnode 只是一个通用的部分，而 device_node 则是 dtb 的具体的实�
 
 > - [ ] 从这里分析，可以理解其中的 irq 的映射过程，但是，无法理解层级的概念，或者，多个中断控制器是如何工作的 ?
 
+## psci 框架
+https://www.cnblogs.com/loyenwang/p/11370557.html
+
+## SMCCC
+- https://developer.arm.com/Architectures/Secure%20Monitor%20Calling%20Convention
+
 [^1]: 奔跑吧 linux 内核 第二版 卷 2
 [^2]: https://stackoverflow.com/questions/58577825/what-does-fwnode-in-struct-device-do-in-linux-kernel

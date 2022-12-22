@@ -24,7 +24,7 @@
 QEMU 的执行流程大致来说是分为 io thread 和 vCPU thread 的。
 
 <p align="center">
-  <img src="https://martins3.github.io/ppt/images/QEMU-ARCH.svg" />
+  <img src="https://martins3.github.io/slides/images/QEMU-ARCH.svg" />
 </p>
 
 **一般来说**:
@@ -537,25 +537,36 @@ iothread_run 中实际上会首先使用 aio_poll 然后 g_main_loop_run 来监�
 
 
 ## Question
-- [ ] io/ 下的 qio
+- [ ] io/ 下的 qio 是做什么的
 - [ ] 似乎 io 是可以划分为 external 的，例如 aio_node_check
 - [ ] 什么是 callback hell 为什么 coroutine 可以解决
 - [ ] iohandler_ctx 和 qemu_aio_context 有什么区别
 - [ ] 异步 io 例如 io uring 如何和 event fd 联系到一起的
 
-<script src="https://utteranc.es/client.js" repo="Martins3/Martins3.github.io" issue-term="url" theme="github-light" crossorigin="anonymous" async> </script>
+<script src="https://giscus.app/client.js"
+        data-repo="martins3/martins3.github.io"
+        data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="
+        data-category="Show and tell"
+        data-category-id="MDE4OkRpc2N1c3Npb25DYXRlZ29yeTMyMDMzNjY4"
+        data-mapping="pathname"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-theme="light"
+        data-lang="zh-CN"
+        crossorigin="anonymous"
+        async>
+</script>
+
+本站所有文章转发 **CSDN** 将按侵权追究法律责任，其它情况随意。
 
 [^1]: https://github.com/chiehmin/gdbus_test
 [^2]: http://blog.vmsplice.net/2014/01/coroutines-in-qemu-basics.html
 [^3]: [QEMU RCU 文档](https://github.com/qemu/qemu/blob/master/docs/devel/rcu.txt)
 [^4]: [terenceli 的 blog : QEMU RCU implementation](https://terenceli.github.io/%E6%8A%80%E6%9C%AF/2021/03/14/qemu-rcu)
 [^5]: https://stackoverflow.com/questions/39251287/rcu-dereference-vs-rcu-dereference-protected
-
 [^8]: https://stackoverflow.com/questions/21926549/get-thread-name-in-gdb
 [^9]: https://stackoverflow.com/questions/8944236/gdb-how-to-get-thread-name-displayed
 [^10]: https://man7.org/linux/man-pages/man2/poll.2.html
-
 [^11]: [io_uring in QEMU: high-performance disk IO for Linux](https://archive.fosdem.org/2020/schedule/event/vai_io_uring_in_qemu/attachments/slides/4145/export/events/attachments/vai_io_uring_in_qemu/slides/4145/io_uring_fosdem.pdf)
 [^12]: [Improving the QEMU Event Loop](http://events17.linuxfoundation.org/sites/events/files/slides/Improving%20the%20QEMU%20Event%20Loop%20-%203.pdf)
-
 [^13]: [Effective multi-threading in QEMU](https://www.linux-kvm.org/images/1/17/Kvm-forum-2013-Effective-multithreading-in-QEMU.pdf)

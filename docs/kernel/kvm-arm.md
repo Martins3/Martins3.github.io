@@ -298,3 +298,52 @@ UNHANDLED(el1t, 64, irq)
 UNHANDLED(el1t, 64, fiq)
 UNHANDLED(el1t, 64, error)
 ```
+
+## 简单分析一下 ARM 的热迁移
+
+- [ ] 显然，为什么只是分析 coprocessor 的内容
+
+- cpu_post_load
+  - write_list_to_kvmstate : 将 ArchCPU::cpreg_values 加载到 kvm 中
+  - write_list_to_cpustate : 应该是写入到软件中
+  - kvm_arm_cpu_post_load
+
+- kvm_cpu_synchronize_state : 保存一下 CPU 的状态
+  - do_kvm_cpu_synchronize_state
+    - kvm_arch_get_registers
+      - 保存 KVM_REG_ARM_CORE 和 KVM_REG_ARM64_SVE 寄存器
+      - write_kvmstate_to_list
+      - [ ] write_list_to_cpustate
+
+- 似乎没有考虑 firmware 的
+  - 是自动保存的
+
+```c
+bool kvm_arm_reg_syncs_via_cpreg_list(uint64_t regidx)
+{
+    /* Return true if the regidx is a register we should synchronize
+     * via the cpreg_tuples array (ie is not a core or sve reg that
+     * we sync by hand in kvm_arch_get/put_registers())
+     */
+    switch (regidx & KVM_REG_ARM_COPROC_MASK) {
+    case KVM_REG_ARM_CORE:
+    case KVM_REG_ARM64_SVE:
+        return false;
+    default:
+        return true;
+    }
+}
+```
+
+只有 core / sve 是使用 kvm_arch_get 和 ut_registers ，其他的寄存器不是这种方法?
+
+- kvm_arm_init_cpreg_list
+  - kvm_vcpu_ioctl(cs, KVM_GET_REG_LIST, rlp) : 的确是获取所有的 regs，但是进一步调用的是 copy_core_reg_indices ，只是在获取 reg 的种类的而已
+  - write_kvmstate_to_list : 在这里，将寄存器真正的数值保存在 ArchCPU::cpreg_values 中
+
+- [ ]  ArchCPU::cpreg_array_len 和 ArchCPU::cpreg_vmstate_array_len 是什么关系？
+
+## arm fw 的作用
+- kvm_arm_set_fw_reg
+
+- 被忽视的，需要被初始化吗?
