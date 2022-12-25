@@ -29,8 +29,8 @@ blk-core.c 核心:
 - submit_bio
   - submit_bio_noacct
     - submit_bio_noacct_nocheck
-      - __submit_bio_noacct
-        - __submit_bio : 有点看不懂，好几个循环
+      - `__submit_bio_noacct`
+        - `__submit_bio` : 有点看不懂，好几个循环
           - blk_mq_submit_bio : 进入到 blk-mq.c 中了
             - blk_mq_get_cached_request
             - blk_insert_flush
@@ -81,9 +81,6 @@ kick queue 的来源:
 
 # blk-core.c
 request_queue
-
-## TODO
-1. 希望搞清楚 bio request 和 request_queue 的关系
 
 ## 对于 queue 的各种操作
 1. 从 280 行之后的一段位置，前面的内容并不知道是干什么的
@@ -159,12 +156,6 @@ struct request_queue *blk_mq_init_queue(struct blk_mq_tag_set *set) // mq 是其
 ## merge
 1. 各种 try merge 函数，其使用位置都是各种 mq 了
 
-
-## submit_bio
-1. 这是 fs 和 dev 进行 io 的唯一的接口吗 ?
-2. submit_bio 和 generic_make_request 的关系是什么 ? 两者都是类似接口，但是 submit_bio 做出部分检查，最后调用 generic_make_request
-
-iomap 直接来调用 submit_bio，有趣:
 
 ## account
 

@@ -80,3 +80,5 @@
 - 4cee37b3a4e68c42b867c87a6218e11bc571ba66
 - drivers/clk : 这个是在搞什么，为什么代码那么多
 - 8fa590bf344816c925810331eea8387627bbeb40 : kvm 的改动真快啊
+- 699aee7b47dbb1d3c30bf24f3c905eff366d9571 : memory fix
+- 569c3a283c96a9efbf7ee32dda10905b8684de07 : block

@@ -303,6 +303,9 @@ UNHANDLED(el1t, 64, error)
 
 - [ ] 显然，为什么只是分析 coprocessor 的内容
 
+- SVE 和 coprocessor 的迁移是如何进行的?
+  - vmstate_arm_cpu : 中直接包含了这些内容
+
 - cpu_post_load
   - write_list_to_kvmstate : 将 ArchCPU::cpreg_values 加载到 kvm 中
   - write_list_to_cpustate : 应该是写入到软件中
@@ -343,7 +346,61 @@ bool kvm_arm_reg_syncs_via_cpreg_list(uint64_t regidx)
 
 - [ ]  ArchCPU::cpreg_array_len 和 ArchCPU::cpreg_vmstate_array_len 是什么关系？
 
-## arm fw 的作用
-- kvm_arm_set_fw_reg
+## sys_reg_desc
 
-- 被忽视的，需要被初始化吗?
+分析下这个超长数组:
+```c
+static const struct sys_reg_desc sys_reg_descs[] = {
+```
+
+```c
+/*
+ * sys_reg_desc initialiser for architecturally unallocated cpufeature ID
+ * register with encoding Op0=3, Op1=0, CRn=0, CRm=crm, Op2=op2
+ * (1 <= crm < 8, 0 <= Op2 < 8).
+ */
+#define ID_UNALLOCATED(crm, op2) {			\
+	Op0(3), Op1(0), CRn(0), CRm(crm), Op2(op2),	\
+	.access = access_id_reg,			\
+	.get_user = get_id_reg,				\
+	.set_user = set_id_reg,				\
+	.visibility = raz_visibility			\
+}
+```
+- [ ] 有些 reg 的访问是 access_id_reg ，但是有的是 access_vm_reg，没有搞清楚他们的关系
+
+### RAZ
+参考: https://developer.arm.com/documentation/aeg0014/g/Glossary
+
+1. RAZ : read as zero
+2. WI : write ignore
+
+```c
+#define REG_HIDDEN		(1 << 0) /* hidden from userspace and guest */
+#define REG_RAZ			(1 << 1) /* RAZ from userspace and guest */
+#define REG_USER_WI		(1 << 2) /* WI from userspace only */
+```
+
+- [ ] REG_RAZ : 是不是默认包含 WI 的功能的?
+- [ ] REG_RAZ 和 REG_USER_WI 的区别是什么？
+
+```c
+static unsigned int id_visibility(const struct kvm_vcpu *vcpu,
+				  const struct sys_reg_desc *r)
+{
+	u32 id = reg_to_encoding(r);
+
+	switch (id) {
+	case SYS_ID_AA64ZFR0_EL1:
+		if (!vcpu_has_sve(vcpu))
+			return REG_RAZ;
+		break;
+	}
+
+	return 0;
+}
+```
+
+## 会影响进一步的升级吗?
+
+## 重写之前，workaround 寄存器就已经被删除了

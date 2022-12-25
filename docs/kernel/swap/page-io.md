@@ -68,5 +68,61 @@ swap 的 read 是一个异步的行为:
 #11 0xffffffff82183fa6 in sysvec_apic_timer_interrupt (regs=0xffffffff82c03df8) at arch/x86/kernel/apic/apic.c:1107
 ```
 
+如果出现错误 do_swap_page 可以走到这个位置上去，
+```c
+	if (unlikely(!folio_test_uptodate(folio))) {
+		ret = VM_FAULT_SIGBUS;
+		goto out_nomap;
+	}
+```
+
+如果 end_swap_bio_read 失败了:
+```c
+static void end_swap_bio_read(struct bio *bio)
+{
+	struct page *page = bio_first_page_all(bio);
+	struct task_struct *waiter = bio->bi_private;
+
+	if (bio->bi_status) {
+		SetPageError(page);
+		ClearPageUptodate(page);
+		pr_alert_ratelimited("Read-error on swap-device (%u:%u:%llu)\n",
+				     MAJOR(bio_dev(bio)), MINOR(bio_dev(bio)),
+				     (unsigned long long)bio->bi_iter.bi_sector);
+		goto out;
+	}
+
+	SetPageUptodate(page);
+out:
+	unlock_page(page);
+	WRITE_ONCE(bio->bi_private, NULL);
+	bio_put(bio);
+	if (waiter) {
+		blk_wake_io_task(waiter);
+		put_task_struct(waiter);
+	}
+}
+```
+如果是采用 fault inject 机制注入错误，submit_bio_noacct 中直接跳转到最后，开始执行 bio_endio ，
+进而调用到 end_swap_bio_read
+
+如果是 scsi debug 机制的:
+```txt
+[   49.130061] Hardware name: Martins3 Inc Hacking Alpine, BIOS 12 2022-2-2
+[   49.130373] Call Trace:
+[   49.130483]  <IRQ>
+[   49.130578]  dump_stack_lvl+0x38/0x4c
+[   49.130724]  end_swap_bio_read.cold+0x35/0x3a
+[   49.130901]  blk_update_request+0xfc/0x410
+[   49.131060]  scsi_end_request+0x22/0x1b0
+[   49.131215]  scsi_io_completion+0x4db/0x880
+[   49.131378]  blk_complete_reqs+0x3b/0x50
+[   49.131532]  __do_softirq+0xf7/0x301
+[   49.131672]  __irq_exit_rcu+0xca/0x110
+[   49.131817]  sysvec_apic_timer_interrupt+0xa6/0xd0
+[   49.132003]  </IRQ>
+```
+所以，正常来说，只要是注入错误，都是要立刻挂掉的。
+
 ### write swap
 submit_bio_noacct 的位置本身就是一个异步的操作。

@@ -213,16 +213,16 @@ sleep 1
 mkswap /dev/sde
 swapon /dev/sde
 
-cd /sys/bus/pseudo/drivers/scsi_debug
-echo 1 > every_nth
-echo 0x10 > opts
-
 cgcreate -g memory:mem
 cgset -r memory.max=100m mem
 
 swapoff /dev/vdb3
 cd ~/share
 gcc a.c && cgexec -g memory:mem  ./a.out
+
+cd /sys/bus/pseudo/drivers/scsi_debug
+echo 1 > every_nth
+echo 0x10 > opts
 ```
 
 哇，我操，为什么又可以恢复了!
@@ -231,7 +231,6 @@ echo 1 > /sys/bus/pseudo/drivers/scsi_debug/every_nth
 echo 0 > /sys/bus/pseudo/drivers/scsi_debug/every_nth
 
 ```sh
-
 cd /sys/kernel/debug/fail_make_request
 echo 0 > interval
 echo -1 > times

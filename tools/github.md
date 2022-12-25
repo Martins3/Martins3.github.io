@@ -24,7 +24,7 @@ https://honzaap.github.io/GithubCity/?name=martins3&year=2022
 ## 如何清空仓库
 - https://stackoverflow.com/questions/4922104/is-it-possible-to-completely-empty-a-remote-git-repository
 
-简单来说:
+简单来说，你可以将任何仓库 push force 到仓库上，所以直接清空:
 ```sh
 rm -rf .git
 git init
