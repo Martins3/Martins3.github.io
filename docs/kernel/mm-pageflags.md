@@ -164,3 +164,25 @@ enum pageflags {
 	PG_isolated = PG_reclaim,
 };
 ```
+## page writeback
+
+- `__swap_writepage`
+  - set_page_writeback
+
+如果真的处理完成了，那么在注册的 bio:bi_end_io 注册的  end_swap_bio_write 中 end_page_writeback
+
+## folio_set_reclaim
+- pageout 中
+
+在这里调用:
+```c
+		res = mapping->a_ops->writepage(&folio->page, &wbc);
+```
+那么说明，而且当 writeback 之后，就清理掉，所以
+```c
+		if (!folio_test_writeback(folio)) {
+			/* synchronous write or broken a_ops? */
+			folio_clear_reclaim(folio);
+		}
+```
+当含有 reclaim 的 flag 的时候，这个 page 正处于 cache 的 write back 中。

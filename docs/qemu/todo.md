@@ -307,3 +307,17 @@ https://qemu.readthedocs.io/en/latest/tools/qemu-pr-helper.html
 - epc
 - file
 - memfd
+
+## 简单分析一下 QEMU 中的信号机制，如果够复杂，可以单独整理一下
+
+- kill -s SIGBUS $(pgrep qemu)  导致的结果就是 QEMU 死掉
+
+- [ ] kvm_init_cpu_signals : 可以进一步深入调查下
+
+简而言之，就是如果 host 遇到了 SIGBUS 信号，那么错误首先会注入给 Guest 一下，最终 QEMU 会因为 SIGBUS 信号而挂掉。
+- qemu_init_sigbus
+  - sigbus_handler
+    - kvm_on_sigbus_vcpu
+      - kvm_on_sigbus
+        - kvm_arch_on_sigbus_vcpu
+      - sigbus_reraise

@@ -32,10 +32,9 @@
 #12 0xffffffff81001a72 in ret_from_fork () at arch/x86/entry/entry_64.S:306
 ```
 
-## swap 的 io 是一个异步的行为
-### read swap
+## swap io
+### read swap 是一个不同的行为
 
-swap 的 read 是一个异步的行为:
 ```txt
 #0  folio_wait_bit_common (folio=0xffffea000100c700, bit_nr=0, state=258, behavior=SHARED) at mm/filemap.c:1220
 #1  0xffffffff812e37b1 in folio_wait_bit_killable (bit_nr=0, folio=0xffffea000100c700) at mm/filemap.c:1447
@@ -126,3 +125,187 @@ out:
 
 ### write swap
 submit_bio_noacct 的位置本身就是一个异步的操作。
+
+```txt
+#0  swap_writepage (page=0xffffea00054bddc0, wbc=0xffffc9003f1ab8e0) at mm/page_io.c:184
+#1  0xffffffff812f67d2 in pageout (folio=folio@entry=0xffffea00054bddc0, mapping=mapping@entry=0xffff88814743b600, plug=plug@entry=0xffffc9003f1ab9a8) at mm/vmscan.c:1298
+#2  0xffffffff812f7c22 in shrink_folio_list (folio_list=folio_list@entry=0xffffc9003f1aba90, pgdat=pgdat@entry=0xffff88823fff9000, sc=sc@entry=0xffffc9003f1abc68, stat=stat@entry=0xffffc9003f1abb18, ignore_references=ignore_references@entry=false) at mm/vmscan.c:1947
+#3  0xffffffff812f9944 in shrink_inactive_list (lru=LRU_INACTIVE_ANON, sc=0xffffc9003f1abc68, lruvec=0xffff8881022f2800, nr_to_scan=<optimized out>) at mm/vmscan.c:2526
+#4  shrink_list (sc=0xffffc9003f1abc68, lruvec=0xffff8881022f2800, nr_to_scan=<optimized out>, lru=LRU_INACTIVE_ANON) at mm/vmscan.c:2767
+#5  shrink_lruvec (lruvec=lruvec@entry=0xffff8881022f2800, sc=sc@entry=0xffffc9003f1abc68) at mm/vmscan.c:5951
+#6  0xffffffff812fa20e in shrink_node_memcgs (sc=0xffffc9003f1abc68, pgdat=0xffff88823fff9000) at mm/vmscan.c:6138
+#7  shrink_node (pgdat=pgdat@entry=0xffff88823fff9000, sc=sc@entry=0xffffc9003f1abc68) at mm/vmscan.c:6169
+#8  0xffffffff812fb450 in shrink_zones (sc=0xffffc9003f1abc68, zonelist=<optimized out>) at mm/vmscan.c:6407
+#9  do_try_to_free_pages (zonelist=zonelist@entry=0xffff88823fffab00, sc=sc@entry=0xffffc9003f1abc68) at mm/vmscan.c:6469
+#10 0xffffffff812fc367 in try_to_free_mem_cgroup_pages (memcg=memcg@entry=0xffff8881022f8000, nr_pages=nr_pages@entry=1, gfp_mask=gfp_mask@entry=3264, reclaim_options=reclaim_options@entry=2, nodemask=nodemask@entry=0x0 <fixed_percpu_data>) at mm/vmscan.c:6786
+#11 0xffffffff813a0bfa in try_charge_memcg (memcg=memcg@entry=0xffff8881022f8000, gfp_mask=gfp_mask@entry=3264, nr_pages=1) at mm/memcontrol.c:2687
+#12 0xffffffff813a1b6d in try_charge (nr_pages=1, gfp_mask=3264, memcg=0xffff8881022f8000) at mm/memcontrol.c:2830
+#13 charge_memcg (folio=folio@entry=0xffffea00052ceb00, memcg=memcg@entry=0xffff8881022f8000, gfp=gfp@entry=3264) at mm/memcontrol.c:6947
+#14 0xffffffff813a3468 in __mem_cgroup_charge (folio=0xffffea00052ceb00, mm=<optimized out>, gfp=gfp@entry=3264) at mm/memcontrol.c:6968
+#15 0xffffffff8132a69b in mem_cgroup_charge (gfp=3264, mm=<optimized out>, folio=<optimized out>) at ./include/linux/memcontrol.h:671
+#16 do_anonymous_page (vmf=0xffffc9003f1abdf8) at mm/memory.c:4078
+#17 handle_pte_fault (vmf=0xffffc9003f1abdf8) at mm/memory.c:4929
+#18 __handle_mm_fault (vma=vma@entry=0xffff88812842de40, address=address@entry=139790768721920, flags=flags@entry=597) at mm/memory.c:5073
+#19 0xffffffff8132b104 in handle_mm_fault (vma=0xffff88812842de40, address=address@entry=139790768721920, flags=<optimized out>, flags@entry=597, regs=regs@entry=0xffffc9003f1abf58) at mm/memory.c:5219
+#20 0xffffffff8110d937 in do_user_addr_fault (regs=regs@entry=0xffffc9003f1abf58, error_code=error_code@entry=6, address=address@entry=139790768721920) at arch/x86/mm/fault.c:1428
+#21 0xffffffff8218d606 in handle_page_fault (address=139790768721920, error_code=6, regs=0xffffc9003f1abf58) at arch/x86/mm/fault.c:1519
+#22 exc_page_fault (regs=0xffffc9003f1abf58, error_code=6) at arch/x86/mm/fault.c:1575
+#23 0xffffffff82201286 in asm_exc_page_fault () at ./arch/x86/include/asm/idtentry.h:570
+```
+最后，应该无论如何都不会卡到 blk wbt 上啊发，中间都在干什么哇？
+
+- 似乎如果是普通的 readwrite 是立刻死掉的。
+
+然后马上进入到 end_swap_bio_write 中，
+
+- 最后经过超级长的时间，程序才会被 kill 掉。
+
+是同步的吗？
+
+- swap_writepage
+  - `__swap_writepage`
+    - bdev_write_page
+    - set_page_writeback
+    - submit_bio
+
+- end_swap_bio_write
+  - end_page_writeback
+  - folio_wake(folio, PG_writeback); // 这个到底是在唤醒谁？
+
+- folio_wait_writeback : 等待者
+- folio_wait_writeback_killable
+
+ 换一个角度思考:
+ page-io.md 中，直接看看，有没有什么等待之类的：
+ ```txt
+#0  swap_writepage (page=0xffffea00054bddc0, wbc=0xffffc9003f1ab8e0) at mm/page_io.c:184
+#1  0xffffffff812f67d2 in pageout (folio=folio@entry=0xffffea00054bddc0, mapping=mapping@entry=0xffff88814743b600, plug=plug@entry=0xffffc9003f1ab9a8) at mm/vmscan.c:1298
+#2  0xffffffff812f7c22 in shrink_folio_list (folio_list=folio_list@entry=0xffffc9003f1aba90, pgdat=pgdat@entry=0xffff88823fff9000, sc=sc@entry=0xffffc9003f1abc68, stat=stat@entry=0xffffc9003f1abb18, ignore_references=ignore_references@entry=false) at mm/vmscan.c:1947
+#3  0xffffffff812f9944 in shrink_inactive_list (lru=LRU_INACTIVE_ANON, sc=0xffffc9003f1abc68, lruvec=0xffff8881022f2800, nr_to_scan=<optimized out>) at mm/vmscan.c:2526
+#4  shrink_list (sc=0xffffc9003f1abc68, lruvec=0xffff8881022f2800, nr_to_scan=<optimized out>, lru=LRU_INACTIVE_ANON) at mm/vmscan.c:2767
+#5  shrink_lruvec (lruvec=lruvec@entry=0xffff8881022f2800, sc=sc@entry=0xffffc9003f1abc68) at mm/vmscan.c:5951
+#6  0xffffffff812fa20e in shrink_node_memcgs (sc=0xffffc9003f1abc68, pgdat=0xffff88823fff9000) at mm/vmscan.c:6138
+#7  shrink_node (pgdat=pgdat@entry=0xffff88823fff9000, sc=sc@entry=0xffffc9003f1abc68) at mm/vmscan.c:6169
+#8  0xffffffff812fb450 in shrink_zones (sc=0xffffc9003f1abc68, zonelist=<optimized out>) at mm/vmscan.c:6407
+#9  do_try_to_free_pages (zonelist=zonelist@entry=0xffff88823fffab00, sc=sc@entry=0xffffc9003f1abc68) at mm/vmscan.c:6469
+#10 0xffffffff812fc367 in try_to_free_mem_cgroup_pages (memcg=memcg@entry=0xffff8881022f8000, nr_pages=nr_pages@entry=1, gfp_mask=gfp_mask@entry=3264, reclaim_options=reclaim_options@entry=2, nodemask=nodemask@entry=0x0 <fixed_percpu_data>) at mm/vmscan.c:6786
+#11 0xffffffff813a0bfa in try_charge_memcg (memcg=memcg@entry=0xffff8881022f8000, gfp_mask=gfp_mask@entry=3264, nr_pages=1) at mm/memcontrol.c:2687
+#12 0xffffffff813a1b6d in try_charge (nr_pages=1, gfp_mask=3264, memcg=0xffff8881022f8000) at mm/memcontrol.c:2830
+#13 charge_memcg (folio=folio@entry=0xffffea00052ceb00, memcg=memcg@entry=0xffff8881022f8000, gfp=gfp@entry=3264) at mm/memcontrol.c:6947
+#14 0xffffffff813a3468 in __mem_cgroup_charge (folio=0xffffea00052ceb00, mm=<optimized out>, gfp=gfp@entry=3264) at mm/memcontrol.c:6968
+#15 0xffffffff8132a69b in mem_cgroup_charge (gfp=3264, mm=<optimized out>, folio=<optimized out>) at ./include/linux/memcontrol.h:671
+#16 do_anonymous_page (vmf=0xffffc9003f1abdf8) at mm/memory.c:4078
+#17 handle_pte_fault (vmf=0xffffc9003f1abdf8) at mm/memory.c:4929
+#18 __handle_mm_fault (vma=vma@entry=0xffff88812842de40, address=address@entry=139790768721920, flags=flags@entry=597) at mm/memory.c:5073
+#19 0xffffffff8132b104 in handle_mm_fault (vma=0xffff88812842de40, address=address@entry=139790768721920, flags=<optimized out>, flags@entry=597, regs=regs@entry=0xffffc9003f1abf58) at mm/memory.c:5219
+#20 0xffffffff8110d937 in do_user_addr_fault (regs=regs@entry=0xffffc9003f1abf58, error_code=error_code@entry=6, address=address@entry=139790768721920) at arch/x86/mm/fault.c:1428
+#21 0xffffffff8218d606 in handle_page_fault (address=139790768721920, error_code=6, regs=0xffffc9003f1abf58) at arch/x86/mm/fault.c:1519
+#22 exc_page_fault (regs=0xffffc9003f1abf58, error_code=6) at arch/x86/mm/fault.c:1575
+#23 0xffffffff82201286 in asm_exc_page_fault () at ./arch/x86/include/asm/idtentry.h:570
+ ```
+
+#### 分析普通的 io 的如何处理错误
+
+完成 write 之后，是如何将 page 释放掉的?
+
+因为一直在推迟 write 的，一直都是正常的，只有等到 sync 之后才会开始 write 的。
+
+取决于是否为同步 IO，如果是，那么问题反映非常及时。
+
+如果是 buffer io 的话 ，注入错误之后，需要 umount 一次，否则错误一直出现。
+
+肯定是有问题的，如果同步 IO 出现错误是立刻的，那么在
+
+#### [ ]  wbt 延长了错误的出现时间而已，应该，总是会出现错误的
+
+#### pageout 调用 address_space_operations::writepage，但是文件系统都是不注册这个 hook 的
+- [ ] 等价于，dirty file 的 flush 是谁在做？
+
+#### 如何释放被 swap 的页
+- end_swap_bio_write
+  - end_page_writeback : 这里的时候 folio 还是存在一个 reference count 的!
+    - 忽然意识到，这个 jb 玩意儿实际上是在 swap cache 中存在一个 referenced
+
+
+怎么有 hugepage 啊？
+```txt
+#0  free_swap_cache (page=page@entry=0xffffea00087ab740) at mm/swap_state.c:281
+#1  0xffffffff8135961d in free_page_and_swap_cache (page=0xffffea00087ab740) at mm/swap_state.c:297
+#2  0xffffffff8138f56b in __split_huge_page (end=18446744073709551615, list=0xffffea00087a8000, page=0x0 <fixed_percpu_data>) at mm/huge_memory.c:2613
+#3  split_huge_page_to_list (page=page@entry=0xffffea00087a8000, list=list@entry=0xffffc90042bf7b90) at mm/huge_memory.c:2778
+#4  0xffffffff812f801a in split_folio_to_list (list=0xffffc90042bf7b90, folio=0xffffea00087a8000) at ./include/linux/huge_mm.h:444
+#5  shrink_folio_list (folio_list=folio_list@entry=0xffffc90042bf7b90, pgdat=pgdat@entry=0xffff88833fffc000, sc=sc@entry=0xffffc90042bf7d68, stat=stat@entry=0xffffc90042bf7c18, ignore_references=ignore_references@entry=false) at mm/vmscan.c:1856
+#6  0xffffffff812f9944 in shrink_inactive_list (lru=LRU_INACTIVE_ANON, sc=0xffffc90042bf7d68, lruvec=0xffff8881036bd000, nr_to_scan=<optimized out>) at mm/vmscan.c:2526
+#7  shrink_list (sc=0xffffc90042bf7d68, lruvec=0xffff8881036bd000, nr_to_scan=<optimized out>, lru=LRU_INACTIVE_ANON) at mm/vmscan.c:2767
+#8  shrink_lruvec (lruvec=lruvec@entry=0xffff8881036bd000, sc=sc@entry=0xffffc90042bf7d68) at mm/vmscan.c:5951
+#9  0xffffffff812fa20e in shrink_node_memcgs (sc=0xffffc90042bf7d68, pgdat=0xffff88833fffc000) at mm/vmscan.c:6138
+#10 shrink_node (pgdat=pgdat@entry=0xffff88833fffc000, sc=sc@entry=0xffffc90042bf7d68) at mm/vmscan.c:6169
+#11 0xffffffff812fb450 in shrink_zones (sc=0xffffc90042bf7d68, zonelist=<optimized out>) at mm/vmscan.c:6407
+#12 do_try_to_free_pages (zonelist=zonelist@entry=0xffff8884bfff3700, sc=sc@entry=0xffffc90042bf7d68) at mm/vmscan.c:6469
+#13 0xffffffff812fc367 in try_to_free_mem_cgroup_pages (memcg=memcg@entry=0xffff888358a97000, nr_pages=<optimized out>, gfp_mask=gfp_mask@entry=3264, reclaim_options=reclaim_options@entry=2, nodemask=nodemask@entry=0x0 <fixed_percpu_data>) at mm/vmscan.c:6786
+#14 0xffffffff8139ecb2 in memory_max_write (of=<optimized out>, buf=<optimized out>, nbytes=5, off=<optimized out>) at mm/memcontrol.c:6481
+#15 0xffffffff8146bbf4 in kernfs_fop_write_iter (iocb=0xffffc90042bf7ea0, iter=<optimized out>) at fs/kernfs/file.c:334
+#16 0xffffffff813c634d in call_write_iter (iter=0x7f898e5ff, kio=0xffffea00087ab740, file=0xffff88810438f800) at ./include/linux/fs.h:2186
+#17 new_sync_write (ppos=0xffffc90042bf7f08, len=5, buf=0x18f49f0 "1000m", filp=0xffff88810438f800) at fs/read_write.c:491
+#18 vfs_write (file=file@entry=0xffff88810438f800, buf=buf@entry=0x18f49f0 "1000m", count=count@entry=5, pos=pos@entry=0xffffc90042bf7f08) at fs/read_write.c:584
+#19 0xffffffff813c679e in ksys_write (fd=<optimized out>, buf=0x18f49f0 "1000m", count=5) at fs/read_write.c:637
+#20 0xffffffff82188c1c in do_syscall_x64 (nr=<optimized out>, regs=0xffffc90042bf7f58) at arch/x86/entry/common.c:50
+#21 do_syscall_64 (regs=0xffffc90042bf7f58, nr=<optimized out>) at arch/x86/entry/common.c:80
+#22 0xffffffff822000ae in entry_SYSCALL_64 () at arch/x86/entry/entry_64.S:120
+```
+- add_to_swap_cache ?
+
+### 如果 swap 正在 writeback 的过程中，对于该 page 进行了一次写，如何？
+folio_mark_dirty 中会调用 folio_clear_reclaim，该 page 重新为 dirty 的，并且进入到 lru 的队列尾部。
+
+### 如果 swap 正在 writeback 的过程中，对于该 page 进行了一次读，如何？
+感觉这会导致，page 进入到 lru 队列尾。但是这会产生一个 swap cache 吗?
+
+### [ ] SetPageError 为什么是没有结果的?
+
+```c
+static __always_inline bool folio_test_error(struct folio *folio) {
+  return test_bit(PG_error, folio_flags(folio, FOLIO_PF_NO_TAIL));
+}
+static __always_inline int PageError(struct page *page) {
+  return test_bit(PG_error, &PF_NO_TAIL(page, 0)->flags);
+}
+static __always_inline void folio_set_error(struct folio *folio) {
+  set_bit(PG_error, folio_flags(folio, FOLIO_PF_NO_TAIL));
+}
+static __always_inline void SetPageError(struct page *page) {
+  set_bit(PG_error, &PF_NO_TAIL(page, 1)->flags);
+}
+static __always_inline void folio_clear_error(struct folio *folio) {
+  clear_bit(PG_error, folio_flags(folio, FOLIO_PF_NO_TAIL));
+}
+static __always_inline void ClearPageError(struct page *page) {
+  clear_bit(PG_error, &PF_NO_TAIL(page, 1)->flags);
+}
+static __always_inline bool folio_test_clear_error(struct folio *folio) {
+  return test_and_clear_bit(PG_error, folio_flags(folio, FOLIO_PF_NO_TAIL));
+}
+static __always_inline int TestClearPageError(struct page *page) {
+  return test_and_clear_bit(PG_error, &PF_NO_TAIL(page, 1)->flags);
+}
+```
+几个 Test 的使用者就是如下的:
+感觉根本没有人使用这个东西！
+```c
+mm/migrate.c
+539:    if (folio_test_error(folio))
+
+fs/gfs2/lops.c
+477:    if (folio_test_error(folio))
+```
+
+```c
+fs/f2fs/node.c
+2082:           if (TestClearPageError(page))
+```
+
+mm/migrate.c 这个代码有意义吗?
+```c
+	if (folio_test_error(folio))
+		folio_set_error(newfolio);
+```

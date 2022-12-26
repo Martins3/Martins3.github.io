@@ -269,8 +269,7 @@ SYSCALL_DEFINE2(munmap, unsigned long, addr, size_t, len)
 }
 ```
 
-## special
-> @maybe_todo
+## special mapping 是 vdso 有关的
 ```c
 static const struct vm_operations_struct special_mapping_vmops = {
 	.close = special_mapping_close,
@@ -283,11 +282,9 @@ static const struct vm_operations_struct legacy_special_mapping_vmops = {
 	.close = special_mapping_close,
 	.fault = special_mapping_fault,
 };
-```plain
+```
 
-## reserve
-> @maybe_todo
-
+## reserve 机制
 
 ```c
 /*
@@ -311,6 +308,21 @@ static int init_user_reserve(void)
 }
 subsys_initcall(init_user_reserve);
 ```
+
+## overcommit
+
+vm 统计的位置
+```plain
+    __vm_enough_memory+1
+    shmem_alloc_and_acct_folio+341
+    shmem_getpage_gfp+989
+    shmem_fallocate+954
+    vfs_fallocate+328
+    __x64_sys_fallocate+60
+    do_syscall_64+56
+    entry_SYSCALL_64_after_hwframe+99
+```
+之后进一步调用 `vm_acct_memory` 。
 
 # vm
 > 主要在 mmap.c 中

@@ -11,8 +11,8 @@ hacking_memory="virtio-pmem"
 hacking_memory="none"
 hacking_memory="virtio-mem"
 hacking_memory="prealloc"
-hacking_memory="numa"
 hacking_memory="sockets"
+hacking_memory="numa"
 
 hacking_migration=false
 # @todo 尝试在 guest 中搭建一个 vIOMMU
@@ -34,8 +34,6 @@ workstation="$(jq -r ".workstation" <"$configuration")"
 qemu=${qemu_dir}/build/x86_64-softmmu/qemu-system-x86_64
 kernel=${kernel_dir}/arch/x86/boot/bzImage
 
-distribution=ubuntu-server-22.04
-distribution=centos7
 distribution=CentOS-Stream-8-x86_64         # good
 distribution=openEuler-22.03-LTS-x86_64-dvd # good
 distribution=openEuler-22.09-x86_64-dvd
@@ -65,15 +63,15 @@ arg_hugetlb="default_hugepagesz=2M hugepagesz=1G hugepages=1 hugepagesz=2M hugep
 arg_hugetlb="default_hugepagesz=2M"
 arg_hugetlb=""
 # 可选参数
-arg_mem_cpu="-m 12G -cpu host -smp 2 -numa node"
+arg_mem_cpu="-m 12G -cpu host -smp 2"
 arg_machine="-machine pc,accel=kvm,kernel-irqchip=on"
 arg_mem_balloon="-device virtio-balloon,id=balloon0,deflate-on-oom=true,page-poison=true,free-page-reporting=false,free-page-hint=true,iothread=io1 -object iothread,id=io1"
 
 case $hacking_memory in
 "numa")
-  # TMP_TODO 有没有什么方法来模拟超级大的内存，例如 100T 的内存
-  arg_mem_cpu="-cpu host -m 8G -smp cpus=6"
-  arg_mem_cpu="$arg_mem_cpu -object memory-backend-ram,size=2G,id=m0 -numa node,memdev=m0,cpus=0-1,nodeid=0"
+  # 通过 reserve = false 让 mmap 携带参数 MAP_NORESERVE，从而可以模拟超级大内存的 Guest
+  arg_mem_cpu="-cpu host -m 18G -smp cpus=6"
+  arg_mem_cpu="$arg_mem_cpu -object memory-backend-ram,size=12G,id=m0,reserve=false -numa node,memdev=m0,cpus=0-1,nodeid=0"
   arg_mem_cpu="$arg_mem_cpu -object memory-backend-ram,size=2G,id=m1 -numa node,memdev=m1,cpus=2-3,nodeid=1"
   arg_mem_cpu="$arg_mem_cpu -object memory-backend-ram,size=4G,id=m2 -numa node,memdev=m2,cpus=4,nodeid=2"
   arg_mem_cpu="$arg_mem_cpu -numa node,cpus=5,nodeid=3" # 只有 CPU ，但是没有内存

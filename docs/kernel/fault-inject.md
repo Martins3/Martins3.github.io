@@ -216,13 +216,13 @@ swapon /dev/sde
 cgcreate -g memory:mem
 cgset -r memory.max=100m mem
 
-swapoff /dev/vdb3
-cd ~/share
-gcc a.c && cgexec -g memory:mem  ./a.out
-
 cd /sys/bus/pseudo/drivers/scsi_debug
 echo 1 > every_nth
 echo 0x10 > opts
+
+swapoff /dev/vdb3
+cd ~/share
+gcc a.c && cgexec -g memory:mem  ./a.out
 ```
 
 哇，我操，为什么又可以恢复了!

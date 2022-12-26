@@ -133,5 +133,11 @@ https://www.cnblogs.com/loyenwang/p/11370557.html
 ## SMCCC
 - https://developer.arm.com/Architectures/Secure%20Monitor%20Calling%20Convention
 
+## ARM 汇编
+- https://news.ycombinator.com/item?id=34128776 : 基于 MacOs 平台的
+- https://github.com/TheAlgorithms/AArch64_Assembly : the Algorithm 的 ARM 实现
+
+## [ ] 分析下 ARM 的 memory model，尤其是对比普通 arm 和 Mac arm 的区别
+
 [^1]: 奔跑吧 linux 内核 第二版 卷 2
 [^2]: https://stackoverflow.com/questions/58577825/what-does-fwnode-in-struct-device-do-in-linux-kernel

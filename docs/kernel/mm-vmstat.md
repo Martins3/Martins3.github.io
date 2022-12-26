@@ -50,62 +50,62 @@ Swap:           2104         126        1978
 
 ## /proc/meminfo
 
-| 名称            | 数值           | 含义 |
-|-----------------|----------------|--|
-| MemTotal        | 32690904 kB    | 所有的物理页面，调用 totalram_pages_add ，在启动的时候通过 memblock 获取，在 virtio mem ，virtio balloon 以及 memory hotplug 的时候修改。 |
-| MemFree         | 25368728 kB    |  |
-| MemAvailable    | 28847852 kB    |  |
-| Buffers         | 251576 kB      |  |
-| Cached          | 3339012 kB     |  |
-| SwapCached      | 0 kB           |  |
-| Active          | 2638452 kB     |  |
-| Inactive        | 3996836 kB     |  |
-| Active(anon)    | 68656 kB       |  |
-| Inactive(anon)  | 2896668 kB     |  |
-| Active(file)    | 2569796 kB     |  |
-| Inactive(file)  | 1100168 kB     |  |
-| Unevictable     | 3408 kB        |  |
-| Mlocked         | 1872 kB        |  |
-| SwapTotal       | 0 kB           |  |
-| SwapFree        | 0 kB           |  |
-| Zswap           | 0 kB           |  |
-| Zswapped        | 0 kB           |  |
-| Dirty           | 104 kB         |  |
-| Writeback       | 0 kB           |  |
-| AnonPages       | 3040592 kB     |  |
-| Mapped          | 341680 kB      |  |
-| Shmem           | 10912 kB       |  |
-| KReclaimable    | 274160 kB      |  |
-| Slab            | 412500 kB      |  |
-| SReclaimable    | 274160 kB      |  |
-| SUnreclaim      | 138340 kB      |  |
-| KernelStack     | 16304 kB       |  |
-| PageTables      | 23136 kB       |  |
-| NFS_Unstable    | 0 kB           |  |
-| Bounce          | 0 kB           |  |
-| WritebackTmp    | 0 kB           |  |
-| CommitLimit     | 16345452 kB    |  |
-| Committed_AS    | 12958700 kB    |  |
-| VmallocTotal    | 34359738367 kB |  |
-| VmallocUsed     | 102404 kB      |  |
-| VmallocChunk    | 0 kB           |  |
-| Percpu          | 114240 kB      |  |
-| AnonHugePages   | 301056 kB      |  |
-| ShmemHugePages  | 0 kB           |  |
-| ShmemPmdMapped  | 0 kB           |  |
-| FileHugePages   | 0 kB           |  |
-| FilePmdMapped   | 0 kB           |  |
-| CmaTotal        | 0 kB           |  |
-| CmaFree         | 0 kB           |  |
-| HugePages_Total | 0              |  |
-| HugePages_Free  | 0              |  |
-| HugePages_Rsvd  | 0              |  |
-| HugePages_Surp  | 0              |  |
-| Hugepagesize    | 2048 kB        |  |
-| Hugetlb         | 0 kB           |  |
-| DirectMap4k     | 294756 kB      |  |
-| DirectMap2M     | 4947968 kB     |  |
-| DirectMap1G     | 30408704 kB    |  |
+| 名称            | 数值           | 含义                                                                                                                                                                                |
+|-----------------|----------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| MemTotal        | 32690904 kB    | 所有的物理页面，调用 totalram_pages_add ，在启动的时候通过 memblock 获取，在 virtio mem ，virtio balloon 以及 memory hotplug 的时候修改。                                           |
+| MemFree         | 25368728 kB    |                                                                                                                                                                                     |
+| MemAvailable    | 28847852 kB    |                                                                                                                                                                                     |
+| Buffers         | 251576 kB      | buffer 就是 inode cache 之类的，如果进行一次 disk 使用统计，就很刺激了，https://stackoverflow.com/questions/6345020/what-is-the-difference-between-buffer-and-cache-memory-in-linux |
+| Cached          | 3339012 kB     |                                                                                                                                                                                     |
+| SwapCached      | 0 kB           |                                                                                                                                                                                     |
+| Active          | 2638452 kB     |                                                                                                                                                                                     |
+| Inactive        | 3996836 kB     |                                                                                                                                                                                     |
+| Active(anon)    | 68656 kB       |                                                                                                                                                                                     |
+| Inactive(anon)  | 2896668 kB     |                                                                                                                                                                                     |
+| Active(file)    | 2569796 kB     |                                                                                                                                                                                     |
+| Inactive(file)  | 1100168 kB     |                                                                                                                                                                                     |
+| Unevictable     | 3408 kB        |                                                                                                                                                                                     |
+| Mlocked         | 1872 kB        |                                                                                                                                                                                     |
+| SwapTotal       | 0 kB           |                                                                                                                                                                                     |
+| SwapFree        | 0 kB           |                                                                                                                                                                                     |
+| Zswap           | 0 kB           |                                                                                                                                                                                     |
+| Zswapped        | 0 kB           |                                                                                                                                                                                     |
+| Dirty           | 104 kB         |                                                                                                                                                                                     |
+| Writeback       | 0 kB           |                                                                                                                                                                                     |
+| AnonPages       | 3040592 kB     |                                                                                                                                                                                     |
+| Mapped          | 341680 kB      |                                                                                                                                                                                     |
+| Shmem           | 10912 kB       |                                                                                                                                                                                     |
+| KReclaimable    | 274160 kB      |                                                                                                                                                                                     |
+| Slab            | 412500 kB      |                                                                                                                                                                                     |
+| SReclaimable    | 274160 kB      |                                                                                                                                                                                     |
+| SUnreclaim      | 138340 kB      |                                                                                                                                                                                     |
+| KernelStack     | 16304 kB       |                                                                                                                                                                                     |
+| PageTables      | 23136 kB       |                                                                                                                                                                                     |
+| NFS_Unstable    | 0 kB           |                                                                                                                                                                                     |
+| Bounce          | 0 kB           |                                                                                                                                                                                     |
+| WritebackTmp    | 0 kB           |                                                                                                                                                                                     |
+| CommitLimit     | 16345452 kB    | 可以 overmmit 的数量                                                                                                                                                                                     |
+| Committed_AS    | 12958700 kB    | 已经提交的量，如果 mmap 是 MAP_NORESERVE 的，那么将不会统计在此处                                                                                                                                                                                     |
+| VmallocTotal    | 34359738367 kB |                                                                                                                                                                                     |
+| VmallocUsed     | 102404 kB      |                                                                                                                                                                                     |
+| VmallocChunk    | 0 kB           |                                                                                                                                                                                     |
+| Percpu          | 114240 kB      |                                                                                                                                                                                     |
+| AnonHugePages   | 301056 kB      |                                                                                                                                                                                     |
+| ShmemHugePages  | 0 kB           |                                                                                                                                                                                     |
+| ShmemPmdMapped  | 0 kB           |                                                                                                                                                                                     |
+| FileHugePages   | 0 kB           |                                                                                                                                                                                     |
+| FilePmdMapped   | 0 kB           |                                                                                                                                                                                     |
+| CmaTotal        | 0 kB           |                                                                                                                                                                                     |
+| CmaFree         | 0 kB           |                                                                                                                                                                                     |
+| HugePages_Total | 0              |                                                                                                                                                                                     |
+| HugePages_Free  | 0              |                                                                                                                                                                                     |
+| HugePages_Rsvd  | 0              |                                                                                                                                                                                     |
+| HugePages_Surp  | 0              |                                                                                                                                                                                     |
+| Hugepagesize    | 2048 kB        |                                                                                                                                                                                     |
+| Hugetlb         | 0 kB           |                                                                                                                                                                                     |
+| DirectMap4k     | 294756 kB      |                                                                                                                                                                                     |
+| DirectMap2M     | 4947968 kB     |                                                                                                                                                                                     |
+| DirectMap1G     | 30408704 kB    |                                                                                                                                                                                     |
 
 ```txt
 $ free -m
@@ -113,6 +113,7 @@ $ free -m
 Mem:        5527225     5524113        1559          29        1552         135
 Swap:             0           0           0
 ```
+- [ ] shared 是个什么概念，是 used 的一部分吗?
 
 这里， available 比 free 和 buffer/cache 少
 1. 因为 available 表示创建新的程序可以使用的内存，而内核会将部分内存预留下来
