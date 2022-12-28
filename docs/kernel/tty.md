@@ -191,6 +191,7 @@ https://www.quora.com/How-do-I-understand-the-tmux-design-architecture-and-inter
 - [Linux Device Driver 3 : Chapter 18](https://lwn.net/images/pdf/LDD3/ch18.pdf)
   - 其中分别构建了 mini 的 `tty_operations` 和 `uart_ops` 的实现
 - [The Linux Programming Interface : Chapter 62](https://man7.org/tlpi/)
+- [A Guide to the Terminal, Console, and Shell](https://thevaluable.dev/guide-terminal-shell-console/)
 
 ## 扩展阅读
 - [A toy remote login server](https://jvns.ca/blog/2022/07/28/toy-remote-login-server/)

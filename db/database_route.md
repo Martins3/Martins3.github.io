@@ -20,8 +20,7 @@
 - https://fly.io/blog/sqlite-internals-wal/ : How SQLite Scales Read Concurrency
 - https://liyafu.com/2022-07-31-sqlite-untold-story/ : sqlite 背后的趣事
 - https://github.com/sudeep9/mojo : 分析,学习 sqlite 的小工具 ?
-- https://news.ycombinator.com/item?id=32684424 : 比较 duckdb 和 sqlite
-- https://news.ycombinator.com/item?id=32675861 : SQLite: Past, Present, and Future
+- https://news.ycombinator.com/item?id=32684424 : 比较 duckdb 和 sqlite https://news.ycombinator.com/item?id=32675861 : SQLite: Past, Present, and Future
 - https://news.ycombinator.com/item?id=32478907 : sqlite is not a toy database
 - https://news.ycombinator.com/item?id=32539360
 - https://fly.io/blog/
@@ -55,6 +54,9 @@
 
 ## 问题
 - 什么是时序数据库
+
+## when boring
+- https://www.simplethread.com/relational-databases-arent-dinosaurs-theyre-sharks/
 
 ## 所有资料的整理
 https://github.com/huachaohuang/awesome-dbdev

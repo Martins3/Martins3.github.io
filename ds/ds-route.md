@@ -21,8 +21,6 @@ https://github.com/stateright/stateright : 一个图新界面，用于辅助分�
 - https://github.com/binhnguyennus/awesome-scalability : 指向各种文章，有点高级
   - https://github.com/toutiaoio/awesome-architecture : 类似的，但是更加侧重分布式一点
 - https://github.com/erikgrinaker/readings/blob/master/distributed-systems.md : 作者还写过 toydb
-- https://architecturenotes.co/fallacies-of-distributed-systems/
-
 ## 细节
 - https://www.programmableweb.com/news/what-grpc-api-and-how-does-it-work/analysis/2020/10/08 : grpc 的分析
   - https://github.com/grpc/grpc/tree/master/src/cpp : grpc 尝试一下如何使用即可
@@ -53,3 +51,12 @@ https://github.com/upgundecha/howtheysre : 各个公司关于 SRE 的报告吧
 
 ## 论文阅读
 - https://www.micahlerner.com/2022/07/03/sundial-fault-tolerant-clock-synchronization-for-datacenters.html
+
+## 记录
+- https://architecturenotes.co/fallacies-of-distributed-systems/
+  - 网络是同构的
+  - 网络是免费的
+  - 只有一个 admin
+  - 网络 topo 不会改变
+  - 网络是安全的
+  - 带宽无线，延迟为 0，网络是 reliable 的

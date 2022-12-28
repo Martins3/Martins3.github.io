@@ -8,7 +8,32 @@
 
 - 分析一下 swap cache
 
-#### swap fs 到底是什么 fs
+## 使用接口
+- /proc/sys/vm/vfs_cache_pressure
+- /proc/swaps
+
+### /proc/sys/vm/swappiness
+看这种文章，实际上，描述的不是很清楚，从代码上分析一下:
+
+- mem_cgroup_swappiness 起作用的位置在 get_scan_count，而 shrink_lruvec 是 get_scan_count 的位置。
+- lru_note_cost
+
+```txt
+#0  lru_note_cost (lruvec=lruvec@entry=0xffff8883422ea800, file=file@entry=true, nr_io=0, nr_rotated=0) at mm/swap.c:301
+#1  0xffffffff812f99f0 in shrink_inactive_list (lru=LRU_INACTIVE_FILE, sc=0xffffc90003d6bdd8, lruvec=0xffff8883422ea800, nr_to_scan=<optimized out>) at mm/vmscan.c:2539
+#2  shrink_list (sc=0xffffc90003d6bdd8, lruvec=0xffff8883422ea800, nr_to_scan=<optimized out>, lru=LRU_INACTIVE_FILE) at mm/vmscan.c:2767
+#3  shrink_lruvec (lruvec=lruvec@entry=0xffff8883422ea800, sc=sc@entry=0xffffc90003d6bdd8) at mm/vmscan.c:5951
+#4  0xffffffff812fa20e in shrink_node_memcgs (sc=0xffffc90003d6bdd8, pgdat=0xffff8883bfffc000) at mm/vmscan.c:6138
+#5  shrink_node (pgdat=pgdat@entry=0xffff8883bfffc000, sc=sc@entry=0xffffc90003d6bdd8) at mm/vmscan.c:6169
+#6  0xffffffff812fa957 in kswapd_shrink_node (sc=0xffffc90003d6bdd8, pgdat=0xffff8883bfffc000) at mm/vmscan.c:6960
+#7  balance_pgdat (pgdat=pgdat@entry=0xffff8883bfffc000, order=order@entry=0, highest_zoneidx=highest_zoneidx@entry=2) at mm/vmscan.c:7150
+#8  0xffffffff812faf2f in kswapd (p=0xffff8883bfffc000) at mm/vmscan.c:7410
+#9  0xffffffff811546e4 in kthread (_create=0xffff888101ca1680) at kernel/kthread.c:376
+#10 0xffffffff81002659 in ret_from_fork () at arch/x86/entry/entry_64.S:308
+#11 0x0000000000000000 in ?? ()
+```
+
+## swap fs 到底是什么 fs
 https://askubuntu.com/questions/846163/does-swap-space-have-a-filesystem?newreg=e3aeff4154e3447891d7a686d502ea20
 
 
@@ -59,7 +84,7 @@ union swap_header {
 
 @todo 所以关于描述每一个页的信息保存在什么地方 ? bitmap ?
 
-#### 定义的几个类型
+## 定义的几个类型
 swp_entry_t
 sector_t
 
@@ -93,23 +118,7 @@ static inline pgoff_t swp_offset(swp_entry_t entry)
 @todo pte 和 swp_entry_t 之间装换关系是什么 ?
 
 
-#### page 的 private 都可以搞什么事情
-
-```c
-/*
- * Returns the page offset into bdev for the specified page's swap entry.
- */
-sector_t map_swap_page(struct page *page, struct block_device **bdev)
-{
-    swp_entry_t entry;
-    entry.val = page_private(page);
-    return map_swap_entry(entry, bdev);
-}
-```
-1. 可以在物理页面中间存储该页面在 swap 中间的偏移量，显然是不可能放到 pte 中间的，中间最多放一个 flag 位表示被换到 swap 中间了，理解错误的地方
-
-
-#### swap 中如何添加 page 到各种 list 中间
+## swap 中如何添加 page 到各种 list 中间
 
 ```c
 /**
@@ -178,7 +187,7 @@ struct lruvec {
 ```
 
 
-#### swap 中间的小问题
+## swap 中间的小问题
 
 
 
@@ -446,7 +455,7 @@ static inline void zone_page_state_add(long x, struct zone *zone,
 pageset 的作用在于管理冷热 page 的，通过统计数据，从而进行设置冷热 cache
 https://www.halolinux.us/kernel-architecture/hotncold-pages.html
 
-# swap cache
+## swap cache
 `swap_state.c` 中间:
 
 // 初始化
@@ -590,11 +599,11 @@ static inline unsigned swp_type(swp_entry_t entry)
 }
 ```
 
-# swap 的 readahead cluster
+## swap 的 readahead cluster
 
 
 
-# swap 和 反向映射
+## swap 和 反向映射
 如果没有 swap 机制，rmap 马上就是一个几乎没有任何作用的东西了，
 1. 暂时无法想象没有 swap　机制
 
@@ -614,21 +623,9 @@ and describes which swap file the page is being held in together with its locati
 If a swap cache entry is non-zero, it represents a page.
 
 
-# swp_entry_t 为什么会出现在 page->private 中间的
-```c
-            /**
-             * @private: Mapping-private opaque data.
-             * Usually used for buffer_heads if PagePrivate.
-             * Used for swp_entry_t if PageSwapCache.
-             * Indicates order in the buddy system if PageBuddy.
-             */
-            unsigned long private;
-```
-1. PageSwapCache 是什么东西 ? 只有当在 page swap cache 中间的才有意义
-2. add_to_swap 被调用的条件 是什么 ? 分析 shrink_page_list
-3. swap cache 不是加快操作，而是必须存在的
-
 ## 问题
 - 在多个盘上设置多个 swap 分区，会提升性能吗?
 - 在一个盘上设置多个 swap 分区，可以提升性能吗?
 - 如果 swap 盘坏了，怎么办?
+
+## 测试 swap 的速度

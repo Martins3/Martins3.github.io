@@ -41,5 +41,3 @@ error: End of file while reading data: virt-ssh-helper: could not proxy traffic:
 --------------> 可以从 B 中的 journal 中看看。
 
 > 好的，现在虚拟机挂掉了。
-
-## 不借助 virsh 可以吗?

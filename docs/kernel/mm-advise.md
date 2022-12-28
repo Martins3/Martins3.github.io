@@ -149,3 +149,6 @@ VM_PFNMAP pages.
 
 调查一下这个，是不是没有考虑到这个问题哇?
 https://mp.weixin.qq.com/s/R8BVIrps5UPXVncvbGkkug
+
+## [ ] 我一时间分不清楚 MAP_NONEED 和 MADV_FREE 了
+- https://news.ycombinator.com/item?id=23216590

@@ -444,3 +444,5 @@ kernel看到的是pid
 
 ## 一个技巧
 可以在 send_signal_locked 的这个地方打点，从而知道一个进程是如何被杀掉的。
+
+采用 fault injection 的时候，不应该是还没有到达 wbt 吗?

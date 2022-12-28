@@ -51,9 +51,9 @@
 Richard Stevens 英年早逝，这导致 Advanced Unix Programming 这本书接近 20 年没有更新了，书中的很多例子实际上运行起来有一些小毛病。
 
 ### 参考书
-然后就可以阅读 [Understand Linux Kernel](https://book.douban.com/subject/1767120/), 这是大家公认的经典教材，唯一的问题和现在和内核有些出入。
+[奔跑吧 Linux 内核](https://book.douban.com/subject/35283154/) 我阅读了其中部分章节，感觉还行，比较推荐。
 
-[奔跑吧 Linux 内核](https://book.douban.com/subject/35283154/) 我阅读了其中部分章节，感觉还行。
+[Understand Linux Kernel](https://book.douban.com/subject/1767120/), 这是大家公认的经典教材，唯一的问题和现在和内核有些出入。
 
 如果你恰好有一台龙芯电脑，并且想要了解 MIPS 内核的实现，[用"芯"探核 基于龙芯的 Linux 内核探索解析](https://book.douban.com/subject/35166926/) 可以说相当的不错。
 

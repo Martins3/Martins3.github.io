@@ -370,7 +370,4 @@ enum {
 ### 2
 - [Determine the specific benefit of Writeback Throttling (CONFIG_WBT)](https://unix.stackexchange.com/questions/483269/determine-the-specific-benefit-of-writeback-throttling-config-wbt)
   - 尝试回答这个问题
-    - 简单看了下，很难。
-
-### 4
-- [ ] 注入的错误最后返回给谁？
+    - 似乎并不是很好回答。

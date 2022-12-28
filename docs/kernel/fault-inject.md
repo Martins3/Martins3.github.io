@@ -305,6 +305,7 @@ sde       8:64   0    0B  0 disk
 
 1. 获取 fault 的函数
 
+```txt
 pburst:init.scoperint (((struct vm_fault *)0xffffc900402b3df8)->vma->vm_file->f_path.dentry->d_iname)
 $12 = "a.out\000.events\000-burst:init.scope"
 
@@ -319,6 +320,8 @@ $15 = 4202496
 原来是加载代码段，看上去，其中的结果是，感觉有的 code 的确可以 swap 出去，但是实际上并没有:
 $ print  /x ((struct vm_fault *)0xffffc9004053bdf8)->vma->vm_end
 $17 = 0x402000
+```
+
 ```txt
 ➜  share gcc a.c && cgexec -g memory:mem2 ./a.out
 

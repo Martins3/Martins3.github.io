@@ -44,3 +44,6 @@ qemu-system-x86_64: load of migration failed: Invalid argument
 ```txt
 migrate -d tcp:localhost:4000
 ```
+
+## 分析其他 Hypervisor 上是如何进行热迁移的
+- https://github.com/cloud-hypervisor/cloud-hypervisor

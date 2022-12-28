@@ -10,6 +10,7 @@ https://github.com/LearnOpenGL-CN/LearnOpenGL-CN : OpenGL 教程
 
 - https://book.douban.com/subject/30426701/ DirectX 12 3D 游戏开发实战
 
+- https://members.newdesigncongress.org/the-coming-game-engine-inflection-point/ : 游戏引擎的现状介绍
 
 
 - 基于颜色的绘制

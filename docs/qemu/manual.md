@@ -320,9 +320,39 @@ function global() {
 
 初始化 disk
 
-
 parted /dev/sda -- mklabel gpt
 parted /dev/sda -- mkpart primary 1MiB -1MiB
+
+
+## [ ] 在 guest 中 perf
+https://stackoverflow.com/questions/21155354/perf-data-file-has-no-samples
+
+```txt
+[    0.152649] unchecked MSR access error: WRMSR to 0x38f (tried to write 0x0001000f0000003f) at rIP: 0xffffffffb901006a (__intel_pmu_enable_all.constprop.0+0x5a/0x100)
+[    0.153291] Call Trace:
+[    0.153291]  <TASK>
+[    0.153291]  perf_ctx_enable+0x3c/0x60
+[    0.153291]  __perf_install_in_context+0x169/0x210
+[    0.153291]  ? __pfx_remote_function+0x10/0x10
+[    0.153291]  remote_function+0x49/0x60
+[    0.153291]  generic_exec_single+0x79/0xb0
+[    0.153291]  smp_call_function_single+0xb8/0x180
+[    0.153291]  ? __pfx_remote_function+0x10/0x10
+[    0.153291]  perf_install_in_context+0x16f/0x200
+[    0.153291]  ? __pfx___perf_install_in_context+0x10/0x10
+[    0.153291]  perf_event_create_kernel_counter+0x168/0x1b0
+[    0.153291]  hardlockup_detector_event_create+0x34/0x50
+[    0.153291]  hardlockup_detector_perf_init+0xb/0x43
+[    0.153291]  lockup_detector_init+0x31/0x82
+[    0.153291]  kernel_init_freeable+0xf1/0x20c
+[    0.153291]  ? __pfx_kernel_init+0x10/0x10
+[    0.153291]  kernel_init+0x15/0x120
+[    0.153291]  ret_from_fork+0x29/0x50
+[    0.153291]  </TASK>
+```
+默认 -cpu host 就可以实现在 guset 中 perf ，但是存在上面的报错，最后导致无法正确使用。
+
+perf record -e cpu-clock
 
 ## TODO
 - [ ] 利用 QEMU 给一个分区安装操作系统

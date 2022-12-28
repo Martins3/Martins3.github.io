@@ -186,3 +186,22 @@ enum pageflags {
 		}
 ```
 当含有 reclaim 的 flag 的时候，这个 page 正处于 cache 的 write back 中。
+
+## folio_test_swapbacked
+
+只要是，anon 和 shmem 就会有
+```c
+/*
+ * PG_swapbacked is set when a page uses swap as a backing storage.  This are
+ * usually PageAnon or shmem pages but please note that even anonymous pages
+ * might lose their PG_swapbacked flag when they simply can be dropped (e.g. as
+ * a result of MADV_FREE).
+ */
+```
+
+这么说，任何时候，只要发生 pgfault 的时候，只要是 anon，就应该设置上。
+是的，的确如此:
+- page_add_new_anon_rmap : anon page fault 代码总是会调用到此处的
+
+这个 flag 存在什么时候起作用?
+- 太多了

@@ -141,7 +141,7 @@ fi
 
 arg_cgroupv2="systemd.unified_cgroup_hierarchy=1"
 # scsi_mod.scsi_logging_level=0x3fffffff
-arg_kernel_args="root=$root nokaslr console=ttyS0,9600 earlyprink=serial $arg_hugetlb $arg_cgroupv2"
+arg_kernel_args="root=$root nokaslr console=ttyS0,9600 earlyprink=serial $arg_hugetlb $arg_cgroupv2 transparent_hugepage=never"
 arg_kernel="--kernel ${kernel} -append \"${arg_kernel_args}\""
 
 if [[ $hacking_migration = true ]]; then
@@ -298,9 +298,11 @@ fi
 
 if [[ -z ${replace_kernel+x} ]]; then
   arg_kernel=""
+  arg_initrd=""
   arg_monitor=""
 
-  # @todo 不知道为什么需要将无关的 storage 设备都去掉
+  # @todo 不知道为什么需要将无关的 storage 设备都去掉，才可以正确启动
+  # @todo lsblk 的为什么还有一个 sda 和 sr0 啊？
   arg_sata=""
   arg_scsi=""
   arg_nvme=""
