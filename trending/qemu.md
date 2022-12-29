@@ -16,3 +16,8 @@
 - a11f65ec1b8adcb012b89c92819cbda4dc25aaf1
 - 2281c822ee74072659d247a2eb3abf2b786f73b3
 - bb00d0aa620e821cc2fbf2e0c5de45a8c957626c : block
+- 113f00e38737d6616a18a465916ae880a67ff342 : virtio vhost vDPA
+- 928eac953918cbd9b237d7cb8b937a6fc575d009 : migration
+- 42f3253c349ac2f03e73d2dab0c7456ff4f0c9fc
+- subprojects/libvhost-user/libvhost-user.c 是做什么的？
+- af29446f32df4f369d4ee32d721fc3c989095731

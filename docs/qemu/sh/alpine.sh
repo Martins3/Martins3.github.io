@@ -48,6 +48,7 @@ arg_migration_target=
 
 arg_hacking=""
 arg_img="-drive aio=io_uring,file=${disk_img},format=qcow2,if=virtio"
+arg_img="-drive aio=native,cache.direct=on,file=${disk_img},format=qcow2,if=virtio"
 root=/dev/vdb2
 
 arg_share_dir="-virtfs local,path=$(pwd),mount_tag=host0,security_model=mapped,id=host0"
@@ -66,6 +67,7 @@ arg_hugetlb=""
 arg_mem_cpu="-m 12G -cpu host -smp 2"
 arg_machine="-machine pc,accel=kvm,kernel-irqchip=on"
 arg_mem_balloon="-device virtio-balloon,id=balloon0,deflate-on-oom=true,page-poison=true,free-page-reporting=false,free-page-hint=true,iothread=io1 -object iothread,id=io1"
+arg_mem_balloon=""
 
 case $hacking_memory in
 "numa")

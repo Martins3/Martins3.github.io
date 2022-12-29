@@ -1,5 +1,11 @@
 # page-writeback.c 分析
 
+- page cache only
+  - echo 1 > /proc/sys/vm/drop_caches
+- inode / dentry
+  - echo 2 > /proc/sys/vm/drop_caches
+- all
+  - echo 3 > /proc/sys/vm/drop_caches
 
 ## ref && doc
 - [](http://www.wowotech.net/memory_management/327.html)

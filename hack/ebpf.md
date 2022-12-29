@@ -263,6 +263,8 @@ python : 各种 attach 函数， 分析 map 以及输出
 - [ ] cilium 有开源的一个工具: https://icloudnative.io/posts/tetragon/
 - [ ] 使用 go 实现一个基于 bpf 的 tracer
 - [ ] https://buoyant.io/blog/ebpf-sidecars-and-the-future-of-the-service-mesh
+- [ ] 编译内核的时候，似乎打包了大量的 BTF 文件，这些文件的内容都在哪里?
+  - [ ] 似乎而且依赖 pathoe 的一个程序，但是具体是什么来着
 
 ## verifier
 https://twitter.com/shunghsiyu/status/1553592644219318272?s=20&t=Tn6g5qhu7pNHCr0-DnKVng

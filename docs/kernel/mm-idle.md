@@ -58,3 +58,20 @@ Date:   Wed Sep 9 15:35:45 2015 -0700
 
 ## wss 估算
 https://www.brendangregg.com/blog/2018-01-17/measure-working-set-size.html
+
+## check idle 比 mark idle 慢这么多啊
+
+```txt
+mark idle cost 2.113708 s
+check idle cost 15.767617 s
+```
+
+将设置为 16 的时候，非常 great 了：
+```txt
+mark idle cost 0.159411 s
+check idle cost 1.022445 s
+```
+
+和采样没有关系啊，因为都是 page size = 1 了
+
+## 为什么

@@ -69,6 +69,7 @@ https://www.golinuxcloud.com/grubby-command-examples/
   - https://stackoverflow.com/questions/31799336/how-to-build-grub2-bootloader-from-its-source-and-test-it-with-qemu-emulator
 - 如何自己手写一个 bootloader
   - https://news.ycombinator.com/item?id=33360830
+  <!-- 这个整理一下 /home/martins3/core/vn/kernel/bootloader/ -->
 
 
 [^1]: https://askubuntu.com/questions/1288580/sudo-grub2-mkconfig-command-not-found
