@@ -285,6 +285,10 @@ https://github.com/libbpf/libbpf
 - 使用 eBPF 来加速存储栈
 - https://www.usenix.org/conference/osdi22/presentation/zhong
 
+## 基本的功能检查
+- bpftool feature
+- sudo bpftrace --info
+
 [^1]: [Outlook : future of eBPF](https://docs.google.com/presentation/d/1AcB4x7JCWET0ysDr0gsX-EIdQSTyBtmi6OAW7bE0jm0/preview?slide=id.g704abb5039_2_106)
 [^2]: [A thorough introduction to eBPF](https://lwn.net/Articles/740157/)
 [^3]: [An introduction to the BPF Compiler Collection](https://lwn.net/Articles/742082/)

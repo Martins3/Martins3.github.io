@@ -45,10 +45,6 @@ yum install -y neovim python3-neovim
 ## dd
 - dd if=/dev/zero of=pmem count=4 bs=10M
 
-## git
-- git ls-files --others --exclude-standard >> .gitignore
-  - 将没有被跟踪的文件添加到 .gitignore 中
-
 ## centos
 - nmcli networking off
 - nmcli networking on
@@ -57,7 +53,12 @@ yum install -y neovim python3-neovim
 - 让 sudo https://unix.stackexchange.com/questions/83191/how-to-make-sudo-preserve-path
 
 ## git
+- git ls-files --others --exclude-standard >> .gitignore
+  - 将没有被跟踪的文件添加到 .gitignore 中
 - git reset : 将所有的内容 unstage
 - git commit --amend -m "an updated commit message"
 - git fetch origin && git reset --hard origin/master : 和远程完全相同
-- git checkout -- fs/ : 将 unstage 的取消掉
+- git checkout -- fs/ : 将 unstage 的修改删除掉
+
+## bpftrace
+- 获取函数返回值: sudo bpftrace -e 'kretprobe:page_idle_get_page { printf("returned: %d\n", retval); }'

@@ -2,13 +2,16 @@
 
 - https://wiki.libvirt.org/page/Main_Page
 - https://libvirt.org/drvqemu.html
+- https://libvirt.org/manpages/virsh.html
 
 
-- [ ] 使用 virsh 安装系统 : https://unix.stackexchange.com/questions/309788/how-to-create-a-vm-from-scratch-with-virsh
-- virsh console 中退出: https://superuser.com/questions/637669/how-to-exit-a-virsh-console-connection
+## 使用 virsh 安装系统
+- https://unix.stackexchange.com/questions/309788/how-to-create-a-vm-from-scratch-with-virsh
+
+## Ctrl+] 从 virsh console 中退出
+参考 https://superuser.com/questions/637669/how-to-exit-a-virsh-console-connection
 
 ## 环境搭建: https://wiki.libvirt.org/page/UbuntuKVMWalkthrough
-
 
 - [ ] python-virtinst : 是做什么的?
 
@@ -17,10 +20,8 @@
 
 ## what's the domiain in the libvirt
 
-
 ## patch
 - https://libvirt.org/intro.html : not found
-
 
 ## TODO
 
@@ -42,8 +43,10 @@ This should list /run/libvirt/nix-emulators/qemu-kvm in the <emulator> tag. If b
 kvm : no hardware support
 ```
 
-## 和 virsh 来操作 hmp
+## 使用 virsh 来操作 hmp
 - https://gist.github.com/orimanabu/815fc2453966f50f5d5281ea58b0058e
+
+## 使用 virsh 操作 qmp
 
 ## 使用 virsh 安装系统
 ```sh

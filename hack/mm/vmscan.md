@@ -6,6 +6,7 @@
 - get_scan_count : 没有 swap 分区的时候，不会处理 anonymous page lru
 
 ## TODO
+- [ ] 对于 THP 的页面，如何进行 reclaim 的
 - [ ] 奔跑吧 P310 对于 shrink 函数逐行分析，并没有阅读
 
 

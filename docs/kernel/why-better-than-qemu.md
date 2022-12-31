@@ -23,7 +23,7 @@ static void virtio_balloon_instance_init(Object *obj)
 }
 ```
 
-而 balloon 的大小是从:
+而 balloon 的大小是使用 hmp:
 ```c
 void hmp_info_balloon(Monitor *mon, const QDict *qdict)
 {

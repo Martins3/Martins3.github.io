@@ -4,7 +4,6 @@
 - https://lwn.net/Articles/461461/
 - https://lwn.net/Articles/643578/ : 原始的 patch
 
-
 - 原来 page idle 和 page young 和这个有关系:
 
 ```diff
@@ -53,8 +52,6 @@ Date:   Wed Sep 9 15:35:45 2015 -0700
 - 采用 page young 的原因: 因为 idle page tracking 机制让会清理掉 reference bit，影响 page reclaim 的正常工作
 所以，将原来的 page reference 放到 page young 中来保存。
 
-## 终于可以理解
-- [ ] page_is_young()
 
 ## wss 估算
 https://www.brendangregg.com/blog/2018-01-17/measure-working-set-size.html
@@ -74,4 +71,62 @@ check idle cost 1.022445 s
 
 和采样没有关系啊，因为都是 page size = 1 了
 
-## 为什么
+## 但是为什么会存在两个 flags 的
+
+## 会被 THP 影响吗?
+我猜测，看这个代码，似乎完全没有考虑 THP 的意思啊!
+
+```c
+static ssize_t page_idle_bitmap_read(struct file *file, struct kobject *kobj,
+				     struct bin_attribute *attr, char *buf,
+				     loff_t pos, size_t count)
+{
+	u64 *out = (u64 *)buf;
+	struct page *page;
+	unsigned long pfn, end_pfn;
+	int bit;
+
+	if (pos % BITMAP_CHUNK_SIZE || count % BITMAP_CHUNK_SIZE)
+		return -EINVAL;
+
+	pfn = pos * BITS_PER_BYTE;
+	if (pfn >= max_pfn)
+		return 0;
+
+	end_pfn = pfn + count * BITS_PER_BYTE;
+	if (end_pfn > max_pfn)
+		end_pfn = max_pfn;
+
+	for (; pfn < end_pfn; pfn++) {
+		bit = pfn % BITMAP_CHUNK_BITS;
+		if (!bit)
+			*out = 0ULL;
+		page = page_idle_get_page(pfn);
+		if (page) {
+			if (page_is_idle(page)) {
+				/*
+				 * The page might have been referenced via a
+				 * pte, in which case it is not idle. Clear
+				 * refs and recheck.
+				 */
+				page_idle_clear_pte_refs(page);
+				if (page_is_idle(page))
+					*out |= 1ULL << bit;
+			}
+			put_page(page);
+		}
+		if (bit == BITMAP_CHUNK_BITS - 1)
+			out++;
+		cond_resched();
+	}
+	return (char *)out - buf;
+}
+```
+
+## pagemap
+https://www.kernel.org/doc/Documentation/vm/pagemap.txt 介绍了四个接口：
+
+- /proc/pid/pagemap
+- /proc/kpagecount
+- /proc/kpageflags
+- /proc/kpagecgroup

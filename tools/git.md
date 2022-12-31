@@ -366,3 +366,21 @@ https://ohshitgit.com/ : 常见的 git 出现问题的修复的, 学到的两点
 
 - 如何删除远程的 tag
   - git push --delete origin tagname
+
+## log
+
+```sh
+latest_commit=$(git rev-parse --abbrev-ref HEAD)
+git log -1
+git log HEAD --pretty=format:"%h"
+read -ra stringarray <<< "$(git log --pretty=%P -n 1 "$latest_commit")"
+echo ${stringarray[0]}
+echo ${stringarray[1]}
+git show -s --format=%ci
+git log --committer='Linus Torvalds' --merges --pretty=format:"%h" --after="$(date --date="yesterday" +"%d-%m-%y")"
+```
+
+
+## tag
+- 推送一个 tag 上去: git push origin  4.20.90-2222.8.0.0432
+- 删除一个 tag  git tag --delete  4.20.90-2222.8.0.0432

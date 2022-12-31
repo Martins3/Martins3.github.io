@@ -271,12 +271,6 @@ blockdev 文件夹下为了支持各种种类 image 访问方法，甚至可以�
 
 ## migration
 - [ ] 有意思的东西
-
-## monitor
-qmp 让 virsh 可以和 qemu 交互
-
-- [ ] 学会使用 :  https://libvirt.org/manpages/virsh.html
-
 ## scsi
 scsi 多增加了一个抽象层次，导致其性能上有稍微的损失，但是存在别的优势。[^5][^6]
 > Shortcomings of virtio-blk include a small feature set (requiring frequent updates to both the host and the guests) and limited scalability. [^7]
