@@ -61,4 +61,3 @@ yum install -y neovim python3-neovim
 - git checkout -- fs/ : 将 unstage 的修改删除掉
 
 ## bpftrace
-- 获取函数返回值: sudo bpftrace -e 'kretprobe:page_idle_get_page { printf("returned: %d\n", retval); }'

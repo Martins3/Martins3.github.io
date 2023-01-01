@@ -21,9 +21,6 @@ tmpfs           7.8G  4.3M  7.8G   1% /tmp
 - tmpfs 是可以限制大小，而 ramfs 不会
   - https://askubuntu.com/questions/296038/what-is-the-difference-between-tmpfs-and-ramfs
 
-## 回答这个问题
-- https://stackoverflow.com/questions/67991417/how-to-use-hugepages-with-tmpfs
-
 ## inode operations
 
 shmem_inode_operations 应该是给 file 使用的，所以创建文件之类的操作都是没有的:

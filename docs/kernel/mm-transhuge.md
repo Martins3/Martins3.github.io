@@ -2,13 +2,7 @@
 - 原来的那个文章找过来看看
 
 - [ ] PageDoubleMap
-- [ ] THP only support PMD ? so can it support more than 2M space (21bit) ?
-- [ ] https://gist.github.com/shino/5d9aac68e7ebf03d4962a4c07c503f7d, check references in it
-- [ ] 提供的硬件支持是什么 ?
-    - [ ] 除了在 pml4 pud pmd 的 page table 上的 flags
-        - [ ] /sys/kernel/mm/transparent_hugepage/hpage_pmd_size 的含义看，实际上，内核只是支持一共大小的 hugepage
-    - [ ] 需要提供 TLB 知道自己正在访问虚拟地址是否被 hugetlb 映射
-
+- [x] THP only support PMD ? so can it support more than 2M space (21bit) ?
 
 使用 transparent hugepage 的原因:
 1. TLB 的覆盖更大，可以降低 TLB miss rate
@@ -19,9 +13,85 @@
 2. reference 的问题
 3. split 和 merge
 
-## transparent hugepage 和 swap 是相关的吗
+## 使用接口
 
-## How to use hugepages with tmpfs
+在 /sys/kernel/mm/transparent_hugepage/ 下
+
+```txt
+├── defrag
+├── enabled
+├── hpage_pmd_size
+├── khugepaged
+│   ├── alloc_sleep_millisecs
+│   ├── defrag
+│   ├── full_scans
+│   ├── max_ptes_none
+│   ├── max_ptes_shared
+│   ├── max_ptes_swap
+│   ├── pages_collapsed
+│   ├── pages_to_scan
+│   └── scan_sleep_millisecs
+├── shmem_enabled
+└── use_zero_page
+```
+/tmp 的 hugepage 模型是 mount 的时候确定，但是 shmat() 和 anon share 是通过这个接口的
+
+🧀  cat shmem_enabled
+always within_size advise [never] deny force
+
+🧀  cat defrag
+always defer defer+madvise [madvise] never
+
+🧀  cat enabled
+always madvise [never]
+
+#### 内核文档
+[用户手册](https://www.kernel.org/doc/html/latest/admin-guide/mm/transhuge.html)
+
+The THP behaviour is controlled via `sysfs` interface and using `madvise(2)` and `prctl(2)` system calls.
+> 其中 prctl 可以让一个程序直接 disable 掉 hugepage ，从而规避系统的设置
+
+## TODO
+```c
+/*
+ * By default, transparent hugepage support is disabled in order to avoid
+ * risking an increased memory footprint for applications that are not
+ * guaranteed to benefit from it. When transparent hugepage support is
+ * enabled, it is for all mappings, and khugepaged scans all mappings.
+ * Defrag is invoked by khugepaged hugepage allocations and by page faults
+ * for all hugepage allocations.
+ */
+unsigned long transparent_hugepage_flags __read_mostly =
+#ifdef CONFIG_TRANSPARENT_HUGEPAGE_ALWAYS
+	(1<<TRANSPARENT_HUGEPAGE_FLAG)|
+#endif
+#ifdef CONFIG_TRANSPARENT_HUGEPAGE_MADVISE
+	(1<<TRANSPARENT_HUGEPAGE_REQ_MADV_FLAG)|
+#endif
+	(1<<TRANSPARENT_HUGEPAGE_DEFRAG_REQ_MADV_FLAG)|
+	(1<<TRANSPARENT_HUGEPAGE_DEFRAG_KHUGEPAGED_FLAG)|
+	(1<<TRANSPARENT_HUGEPAGE_USE_ZERO_PAGE_FLAG);
+```
+
+- [ ]  page cache can't work with THP ?
+
+## defrag
+  - [ ] /sys/kernel/mm/transparent_hugepage/defrag 的 always 无法理解，或者说，什么时候应该触发 defrag, 不是分配的时候就是决定了吗 ?
+- [ ] THP has to defrag pages, so check the compaction.c and find out how thp deal with it !
+  - [ ] how defrag wake kcompactd ?
+
+## page cache
+- [ ] git show d68eccad370665830e16e5c77611fde78cd749b3
+- [ ] 分析下 `__filemap_add_folio`
+
+[Transparent huge pages for filesystems](https://lwn.net/Articles/789159/)
+
+> It is using the [Binary Optimization and Layout Tool (BOLT)](https://github.com/facebookincubator/BOLT) to profile its code in order to identify the hot functions. Those functions are collected up into an 8MB region in the generated executable.
+
+## [ ] swap
+顺着 CONFIG_THP_SWAP 找找
+
+## shmem hugepage : 让 tmpfs 使用上 hugepage
 https://stackoverflow.com/questions/67991417/how-to-use-hugepages-with-tmpfs
 
 ```sh
@@ -45,48 +115,22 @@ mount 的过程中的一个调用:
 #12 0xffffffff8200009b in entry_SYSCALL_64 () at arch/x86/entry/entry_64.S:120
 ```
 
-## [The transparent huge page shrinker](https://lwn.net/Articles/906511/)
-
-lwn 作者认为如果加上这个，那么 thp 就可以成为默认参数。
-
-## how to disable thp
-- https://www.thegeekdiary.com/centos-rhel-7-how-to-disable-transparent-huge-pages-thp/
-  - 实际上，不仅仅需要在 grub 中 disable 的，而且需要考虑 tune
-
-
-#### THP admin manual
-[用户手册](https://www.kernel.org/doc/html/latest/admin-guide/mm/transhuge.html)
-
-The THP behaviour is controlled via `sysfs` interface and using `madvise(2)` and `prctl(2)` system calls.
-
-- [ ] how madvise and prctl control the THP
-
-Currently THP **only works for** anonymous memory mappings and tmpfs/shmem. But in the future it can expand to other filesystems.
-
-- [ ] so page cache can't work with THP ?
-
-THP 相对于 hugetlbfs 的优势:
-- Transparent Hugepage Support maximizes the usefulness of free memory if compared to the reservation approach of hugetlbfs by allowing all unused memory to be used as cache or other movable (or even unmovable entities).
-- It doesn’t require reservation to prevent hugepage allocation failures to be noticeable from userland. *It allows paging and all other advanced VM features to be available on the hugepages.*
-- It requires no modifications for applications to take advantage of it.
-
-- [x] 在 hugepage 上可以使用 paging 等 advanced VM feaures. ( Paging is a mechanism that translates a linear memory address to a physical address.)
-    - [x] paging sometimes meaning page fault
-
-interface in sysfs :
-1. /sys/kernel/mm/transparent_hugepage : always madvise never
-2. /sys/kernel/mm/transparent_hugepage/defrag : always defer defer + madvise madvise never
-3. You can control hugepage allocation policy in tmpfs with mount option huge=. It can have following values: always never advise deny force
-
-- [ ] 应该按照手册，将手册中间的说明在内核中间一个个的找到
-  - [ ] /sys/kernel/mm/transparent_hugepage
-    - [ ] always 指的是任何位置都需要 hugepage 处理吗?
-  - [ ] /sys/kernel/mm/transparent_hugepage/defrag 的 always 无法理解，或者说，什么时候应该触发 defrag, 不是分配的时候就是决定了吗 ?
-- [ ] THP has to defrag pages, so check the compaction.c and find out how thp deal with it !
-  - [ ] how defrag wake kcompactd ?
-
-- [x] mmap 添加上 hugepage 的参数，是不是几乎等价于普通 mmap，然后 madvice
-  - 不是，一个是 madvise， 一个是 thp
+1. 显示的 mount :
+```txt
+#0  shmem_fill_super (sb=0xffff8883d8af0000, fc=0xffff888104de2600) at mm/shmem.c:3753
+#1  0xffffffff813cb606 in vfs_get_super (fc=0xffff888104de2600, reconf=<optimized out>, test=<optimized out>, fill_super=0xffffffff81300550 <shmem_fill_super>) at fs/super.c:1128
+#2  0xffffffff813c92e1 in vfs_get_tree (fc=0xffff8883d8af0000, fc@entry=0xffff888104de2600) at fs/super.c:1489
+#3  0xffffffff813f6157 in do_new_mount (data=0xffff88811d513000, name=0xffff88810006ec58 "tmpfs", mnt_flags=32, sb_flags=<optimized out>, fstype=0x20 <fixed_percpu_data+32> <error: Cannot access memory at address 0x20>, path=0xffffc900431ebef8) at fs/namespace.c:3145
+#4  path_mount (dev_name=dev_name@entry=0xffff88810006ec58 "tmpfs", path=path@entry=0xffffc900431ebef8, type_page=type_page@entry=0xffff88810006ec50 "tmpfs", flags=<optimized out>, flags@entry=0, data_page=data_page@entry=0xffff88811d513000) at fs/namespace.c:3475
+#5  0xffffffff813f6a16 in do_mount (data_page=0xffff88811d513000, flags=0, type_page=0xffff88810006ec50 "tmpfs", dir_name=0x55b015d3c540 "/root/tmp", dev_name=0xffff88810006ec58 "tmpfs") at fs/namespace.c:3488
+#6  __do_sys_mount (data=<optimized out>, flags=0, type=<optimized out>, dir_name=0x55b015d3c540 "/root/tmp", dev_name=<optimized out>) at fs/namespace.c:3697
+#7  __se_sys_mount (data=<optimized out>, flags=0, type=<optimized out>, dir_name=94214768805184, dev_name=<optimized out>) at fs/namespace.c:3674
+#8  __x64_sys_mount (regs=<optimized out>) at fs/namespace.c:3674
+#9  0xffffffff82189c3c in do_syscall_x64 (nr=<optimized out>, regs=0xffffc900431ebf58) at arch/x86/entry/common.c:50
+#10 do_syscall_64 (regs=0xffffc900431ebf58, nr=<optimized out>) at arch/x86/entry/common.c:80
+#11 0xffffffff822000ae in entry_SYSCALL_64 () at arch/x86/entry/entry_64.S:120
+```
+2. shmem_init : 为 anon shared 和 shmem 的构建的，用户态看不到。
 
 #### THP kernel
 - mmap 和配合 hugetlb 使用的
@@ -95,7 +139,6 @@ interface in sysfs :
 - [ ] khugepaged.c 用于 scan page 将 base page 转化为 hugepage
 - [ ] 内核态分析: 透明的性质在于 `__handle_mm_fault` 中间就开始检查是否可以 由于 hugepage 会修改 page walk ，所以 pud_none 和 `__transparent_hugepage_enabled`
   - [ ] 检查更多的细节
-
 
 - [ ] 从 madvise 到启动 THP
     - [ ] hugepage_vma_check : 到底那些 memory 不适合 thp
@@ -118,23 +161,262 @@ interface in sysfs :
 不关键问题 A : vm_operations_struct::huge_fault 和 DAX 的关系不一般
 不关键问题 A2 : vm_operations_struct 几乎没有一个可以理解的
 
-khugepaged.c 中间的 hugepage 守护进程的工作是什么 ?
+
+## reference counting
+- [ ] total_mapcount
 
 [Transparent huge page reference counting](https://lwn.net/Articles/619738/)
 
-> In particular, he has eliminated the hard separation between normal and huge pages in the system. In current kernels, a specific 4KB page can be treated as an individual page, or it can be part of a huge page, but not both. If a huge page must be split into individual pages, it is split completely for all users, the compound page structure is torn down, and the huge page no longer exists. The fundamental change in Kirill's patch set is to allow a huge page to be split in one process's address space, while remaining a huge page in any other address space where it is found.
+> In particular, he has eliminated the hard separation between normal and huge pages in the system.
+> In current kernels, a specific 4KB page can be treated as an individual page,
+> or it can be part of a huge page, but not both. If a huge page must be split into individual pages, it is split completely for all users,
+> the compound page structure is torn down, and the huge page no longer exists.
+> The fundamental change in Kirill's patch set is to allow a huge page to be split in one process's address space, while remaining a huge page in any other address space where it is found.
 
-- [ ] what's the flag in PMD page table entry used to suggest the page is huge page ? verify it in intel manual.
+龟龟，split page 让共享的物理页，在一个映射中是 hugepage，在另一个的映射中分散的
 
-- [ ] page_trans_huge_mapcount
-- [ ] total_mapcount
+```c
+/*
+ * Mapcount of 0-order page; when compound sub-page, includes
+ * compound_mapcount of compound_head of page.
+ *
+ * Result is undefined for pages which cannot be mapped into userspace.
+ * For example SLAB or special types of pages. See function page_has_type().
+ * They use this place in struct page differently.
+ */
+static inline int page_mapcount(struct page *page)
+{
+	int mapcount = atomic_read(&page->_mapcount) + 1;
 
-[Transparent huge pages for filesystems](https://lwn.net/Articles/789159/)
+	if (likely(!PageCompound(page)))
+		return mapcount;
+	page = compound_head(page);
+	return head_compound_mapcount(page) + mapcount;
+}
 
-> It is using the [Binary Optimization and Layout Tool (BOLT)](https://github.com/facebookincubator/BOLT) to profile its code in order to identify the hot functions. Those functions are collected up into an 8MB region in the generated executable.
+int total_compound_mapcount(struct page *head);
+
+/**
+ * folio_mapcount() - Calculate the number of mappings of this folio.
+ * @folio: The folio.
+ *
+ * A large folio tracks both how many times the entire folio is mapped,
+ * and how many times each individual page in the folio is mapped.
+ * This function calculates the total number of times the folio is
+ * mapped.
+ *
+ * Return: The number of times this folio is mapped.
+ */
+static inline int folio_mapcount(struct folio *folio)
+{
+	if (likely(!folio_test_large(folio)))
+		return atomic_read(&folio->_mapcount) + 1;
+	return total_compound_mapcount(&folio->page);
+}
+```
+
+### 深入理解 struct page
+```c
+		struct {	/* Tail pages of compound page */
+			unsigned long compound_head;	/* Bit zero is set */
+
+			/* First tail page only */
+			unsigned char compound_dtor;
+			unsigned char compound_order;
+			atomic_t compound_mapcount;
+			atomic_t subpages_mapcount;
+			atomic_t compound_pincount;
+#ifdef CONFIG_64BIT
+			unsigned int compound_nr; /* 1 << compound_order */
+#endif
+		};
+		struct {	/* Second tail page of transparent huge page */
+			unsigned long _compound_pad_1;	/* compound_head */
+			unsigned long _compound_pad_2;
+			/* For both global and memcg */
+			struct list_head deferred_list;
+		};
+		struct {	/* Second tail page of hugetlb page */
+			unsigned long _hugetlb_pad_1;	/* compound_head */
+			void *hugetlb_subpool;
+			void *hugetlb_cgroup;
+			void *hugetlb_cgroup_rsvd;
+			void *hugetlb_hwpoison;
+			/* No more space on 32-bit: use third tail if more */
+		};
+```
+
+分析下 first tail page 是如何使用的:
+
+- prep_compound_page
+  - `__SetPageHead`
+  - prep_compound_head
+  - prep_compound_tail
+
+#### compound_dtor
+- compound_dtor: 可以用来区分是那种类型的 page，例如在 PageHuge
+
+- destroy_large_folio
+
+看来这个时间上是存在三个 page 的；
+```c
+compound_page_dtor * const compound_page_dtors[NR_COMPOUND_DTORS] = {
+	[NULL_COMPOUND_DTOR] = NULL,
+	[COMPOUND_PAGE_DTOR] = free_compound_page,
+#ifdef CONFIG_HUGETLB_PAGE
+	[HUGETLB_PAGE_DTOR] = free_huge_page,
+#endif
+#ifdef CONFIG_TRANSPARENT_HUGEPAGE
+	[TRANSHUGE_PAGE_DTOR] = free_transhuge_page,
+#endif
+};
+```
+
+观察两个 hook 的使用:
+
+-- free_transhuge_page
+```txt
+@[
+    free_transhuge_page+1
+    release_pages+491
+    tlb_batch_pages_flush+61
+    tlb_finish_mmu+101
+    unmap_region+218
+    do_mas_align_munmap+800
+    do_mas_munmap+215
+    mmap_region+260
+    do_mmap+980
+    vm_mmap_pgoff+218
+    do_syscall_64+56
+    entry_SYSCALL_64_after_hwframe+99
+]: 339
+```
+-- free_compound_page
+```txt
+@[
+    free_compound_page+1
+    skb_release_data+202
+    consume_skb+57
+    unix_stream_read_generic+2326
+    unix_stream_recvmsg+136
+    ____sys_recvmsg+135
+    ___sys_recvmsg+124
+    __sys_recvmsg+86
+    do_syscall_64+56
+    entry_SYSCALL_64_after_hwframe+99
+]: 6320
+```
+
+```txt
+@[
+    destroy_large_folio+1
+    release_pages+491
+    __pagevec_release+27
+    shmem_undo_range+692
+    shmem_evict_inode+262
+    evict+204
+    __dentry_kill+223
+    __fput+221
+    task_work_run+86
+    do_exit+835
+    do_group_exit+45
+    get_signal+2423
+    arch_do_signal_or_restart+54
+    exit_to_user_mode_prepare+267
+    syscall_exit_to_user_mode+23
+    do_syscall_64+72
+    entry_SYSCALL_64_after_hwframe+99
+]: 106
+@[
+    destroy_large_folio+1
+    skb_release_data+202
+    consume_skb+57
+    unix_stream_read_generic+2326
+    unix_stream_recvmsg+136
+    ____sys_recvmsg+135
+    ___sys_recvmsg+124
+    __sys_recvmsg+86
+    do_syscall_64+56
+    entry_SYSCALL_64_after_hwframe+99
+]: 125
+```
+### 分析下 compound page
+
+- free_transhuge_page
+  - free_compound_page
+
+验证一个基本想法，那就是 compound_page 就是连续的几个小页面而已。
+```txt
+$ p page[1].compound_order
+$2 = 3 '\003'
+$ bt
+#0  compound_order (page=0xffffea00048d7600) at ./include/linux/mm.h:721
+#1  free_compound_page (page=0xffffea00048d7600) at mm/page_alloc.c:773
+#2  0xffffffff81bd827d in folio_put (folio=<optimized out>) at ./include/linux/mm.h:1250
+#3  put_page (page=0xffffea00048d7600) at ./include/linux/mm.h:1319
+#4  page_to_skb (vi=vi@entry=0xffff8883c1af6900, rq=rq@entry=0xffff888102526000, page=page@entry=0xffffea00048d7600, offset=<optimized out>, len=<optimized out>, len@entry=66, truesize=2048, hdr_valid=true, metasize=0, headroom=0) at drivers/net/virtio_net.c:558
+#5  0xffffffff81bdb0a6 in receive_mergeable (stats=0xffffc900022d0e80, xdp_xmit=<optimized out>, len=<optimized out>, ctx=<optimized out>, buf=<optimized out>, rq=0xffff888102526000, vi=0xffff8883c1af6900, dev=0xffff8883c1af6000) at drivers/net/virtio_net.c:1126
+#6  receive_buf (vi=0xffff8883c1af6900, rq=0xffff888102526000, buf=<optimized out>, len=<optimized out>, ctx=<optimized out>, xdp_xmit=<optimized out>, stats=0xffffc900022d0e80) at drivers/net/virtio_net.c:1265
+#7  0xffffffff81bdc910 in virtnet_receive (xdp_xmit=0xffffc900022d0e70, budget=64, rq=0xffff888102526000) at drivers/net/virtio_net.c:1560
+#8  virtnet_poll (napi=0xffff888102526008, budget=<optimized out>) at drivers/net/virtio_net.c:1678
+#9  0xffffffff81dd8424 in __napi_poll (n=0xffffea00048d7600, n@entry=0xffff888102526008, repoll=repoll@entry=0xffffc900022d0f37) at net/core/dev.c:6485
+#10 0xffffffff81dd8974 in napi_poll (repoll=0xffffc900022d0f48, n=0xffff888102526008) at net/core/dev.c:6552
+#11 net_rx_action (h=<optimized out>) at net/core/dev.c:6663
+#12 0xffffffff821a0e34 in __do_softirq () at kernel/softirq.c:571
+#13 0xffffffff811328ca in invoke_softirq () at kernel/softirq.c:445
+#14 __irq_exit_rcu () at kernel/softirq.c:650
+#15 0xffffffff8218b8dc in common_interrupt (regs=0xffffc900001d7e38, error_code=<optimized out>) at arch/x86/kernel/irq.c:240
+Backtrace stopped: Cannot access memory at address 0xffffc900022d1018
+```
+
+#### 如何创建的
+为什么这个根本无法拦截到任何东西：
+```sh
+sudo bpftrace -e 'kfunc:prep_compound_page { @reads[args->order] = count(); }'
+```
 
 
-#### THP khugepaged
+### 判断 page 类型
+那么如何判断一个 page 是不是 transparent hugepage 的哇？
+```c
+/*
+ * PageHuge() only returns true for hugetlbfs pages, but not for normal or
+ * transparent huge pages.  See the PageTransHuge() documentation for more
+ * details.
+ */
+int PageHuge(struct page *page)
+{
+	if (!PageCompound(page))
+		return 0;
+
+	page = compound_head(page);
+	return page[1].compound_dtor == HUGETLB_PAGE_DTOR;
+}
+```
+
+实际上，这个测试只是测试 head 而已，但是限制了使用范围
+```c
+static inline bool folio_test_transhuge(struct folio *folio)
+{
+	return folio_test_head(folio);
+}
+
+/*
+ * PageHuge() only returns true for hugetlbfs pages, but not for
+ * normal or transparent huge pages.
+ *
+ * PageTransHuge() returns true for both transparent huge and
+ * hugetlbfs pages, but not normal pages. PageTransHuge() can only be
+ * called only in the core VM paths where hugetlbfs pages can't exist.
+ */
+static inline int PageTransHuge(struct page *page)
+{
+	VM_BUG_ON_PAGE(PageTail(page), page);
+	return PageHead(page);
+}
+```
+
+## khugepaged
 - [ ] if `kcompactd` compact pages used by hugepage, and defrag pages by `split_huge_page_to_list`, so what's the purpose of khugepaged ?
 
 1. /sys/kernel/mm/transparent_hugepage/enabled => start_stop_khugepaged => khugepaged => khugepaged_do_scan => khugepaged_scan_mm_slot => khugepaged_scan_pmd
@@ -190,76 +472,6 @@ khugepaged.c 中间的 hugepage 守护进程的工作是什么 ?
 ## khugepaged
 
 - set_recommended_min_free_kbytes
-
-# sysfs
-
-由于 linux-kernel-labs 的试验基础，sysfs 实现机制简单，
-
-sysfs_create_group 的含义暂时无法理解。
-
-
-```c
-static int __init hugepage_init_sysfs(struct kobject **hugepage_kobj)
-{
-	int err;
-
-	*hugepage_kobj = kobject_create_and_add("transparent_hugepage", mm_kobj);
-	if (unlikely(!*hugepage_kobj)) {
-		pr_err("failed to create transparent hugepage kobject\n");
-		return -ENOMEM;
-	}
-
-	err = sysfs_create_group(*hugepage_kobj, &hugepage_attr_group);
-	if (err) {
-		pr_err("failed to register transparent hugepage group\n");
-		goto delete_obj;
-	}
-
-	err = sysfs_create_group(*hugepage_kobj, &khugepaged_attr_group);
-	if (err) {
-		pr_err("failed to register transparent hugepage group\n");
-		goto remove_hp_group;
-	}
-
-	return 0;
-
-remove_hp_group:
-	sysfs_remove_group(*hugepage_kobj, &hugepage_attr_group);
-delete_obj:
-	kobject_put(*hugepage_kobj);
-	return err;
-}
-
-static struct attribute *hugepage_attr[] = {
-	&enabled_attr.attr,
-	&defrag_attr.attr,
-	&use_zero_page_attr.attr,
-	&hpage_pmd_size_attr.attr,
-#if defined(CONFIG_SHMEM) && defined(CONFIG_TRANSPARENT_HUGE_PAGECACHE)
-	&shmem_enabled_attr.attr, // 除了这个以外，其他都是处理 transparent_hugepage_flags 的标志位
-#endif
-	NULL,
-};
-
-/*
- * By default, transparent hugepage support is disabled in order to avoid
- * risking an increased memory footprint for applications that are not
- * guaranteed to benefit from it. When transparent hugepage support is
- * enabled, it is for all mappings, and khugepaged scans all mappings.
- * Defrag is invoked by khugepaged hugepage allocations and by page faults
- * for all hugepage allocations.
- */
-unsigned long transparent_hugepage_flags __read_mostly =
-#ifdef CONFIG_TRANSPARENT_HUGEPAGE_ALWAYS
-	(1<<TRANSPARENT_HUGEPAGE_FLAG)|
-#endif
-#ifdef CONFIG_TRANSPARENT_HUGEPAGE_MADVISE
-	(1<<TRANSPARENT_HUGEPAGE_REQ_MADV_FLAG)|
-#endif
-	(1<<TRANSPARENT_HUGEPAGE_DEFRAG_REQ_MADV_FLAG)|
-	(1<<TRANSPARENT_HUGEPAGE_DEFRAG_KHUGEPAGED_FLAG)|
-	(1<<TRANSPARENT_HUGEPAGE_USE_ZERO_PAGE_FLAG);
-```
 
 ## zero page
 By default kernel tries to use huge zero page on read page fault to anonymous mapping. It’s possible to disable huge zero page by writing 0 or enable it back by writing 1:
@@ -475,12 +687,53 @@ bool transparent_hugepage_enabled(struct vm_area_struct *vma)
       - `__do_huge_pmd_anonymous_page` : 将分配的 page 和 page table 组装
   - vmf->vma->vm_ops->huge_fault : 文件映射，如果文件系统注册了
 
-## /proc/meminfo 中的这几个都是描述 transparent hugepage 的吗?
+## ShmemHugePages 在我的个人机器上总是不为 0
+
+设置参数为 transparent_hugepage=never，但是结果为：
 
 ```txt
-AnonHugePages:      6144 kB
-ShmemHugePages:  1011712 kB
+AnonHugePages:         0 kB
+ShmemHugePages:   845824 kB
 ShmemPmdMapped:        0 kB
 FileHugePages:         0 kB
 FilePmdMapped:         0 kB
 ```
+
+检查那些进程在使用大页:
+```sh
+sudo grep -e AnonHugePages  /proc/*/smaps | awk  '{ if($2>4) print $0} ' |  awk -F "/"  '{print $0; system("ps -fp " $3)} '
+```
+
+```sh
+sudo grep -e ShmemHugePages /proc/*/smaps | awk  '{ if($2>4) print $0} ' |  awk -F "/"  '{print $0; system("ps -fp " $3)} '
+```
+
+检查不到任何进程使用过 thp，但是
+- shmem_add_to_page_cache
+  - 检查 cat /proc/vmstat 发现有很多
+
+所以，应该是显卡驱动的问题:
+```txt
+@[
+    shmem_add_to_page_cache+1
+    shmem_get_folio_gfp+580
+    shmem_read_mapping_page_gfp+75
+    shmem_sg_alloc_table+364
+    shmem_get_pages+182
+    __i915_gem_object_get_pages+56
+    i915_gem_set_domain_ioctl+616
+    drm_ioctl_kernel+178
+    drm_ioctl+479
+    __x64_sys_ioctl+135
+    do_syscall_64+56
+    entry_SYSCALL_64_after_hwframe+99
+]: 64977
+```
+
+## Transparent hugepage 是如何进行 lru 的
+
+## rmap 如何支持 thp
+
+## idle page tracking 为什么无法处理 thp ?
+
+## 可以主动释放掉 thp 为普通页吗?

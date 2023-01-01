@@ -1,10 +1,8 @@
 # idle page tracking
 
-- https://www.kernel.org/doc/html/latest/admin-guide/mm/idle_page_tracking.html
-- https://lwn.net/Articles/461461/
+- [Idle Page Tracking](https://www.kernel.org/doc/html/latest/admin-guide/mm/idle_page_tracking.html)
+- [Idle and stale page tracking](https://lwn.net/Articles/461461/)
 - https://lwn.net/Articles/643578/ : 原始的 patch
-
-- 原来 page idle 和 page young 和这个有关系:
 
 ```diff
 commit 33c3fc71c8cfa3cc3a98beaa901c069c177dc295
@@ -48,30 +46,21 @@ Date:   Wed Sep 9 15:35:45 2015 -0700
     uses extended page flags when compiled on 32 bit.
 ```
 
-- 因为默认状态下，将 page 设置为 idle，如果访问了，那么调用 folio_clear_idle 将这个 bit 清理掉。
-- 采用 page young 的原因: 因为 idle page tracking 机制让会清理掉 reference bit，影响 page reclaim 的正常工作
-所以，将原来的 page reference 放到 page young 中来保存。
+- 从在用户态中才可以将 page 设置为 idle，如果通过 page_referenced 或者 mark_page_accessed 访问过，那么调用 folio_clear_idle 将这个 bit 清理掉。
 
+- 采用 page young 的原因: 因为 idle page tracking 机制让会清理掉 reference bit，影响 page reclaim 的正常工作
+
+
+## 为什么需要 young flag
+
+folio_referenced_one
+
+不要 young flags 可以保证 folio_referenced 返回值是正确的，但是 PG_referenced 是存在特殊含义的:
+
+从 folio_check_references 中，不是简单的将
 
 ## wss 估算
 https://www.brendangregg.com/blog/2018-01-17/measure-working-set-size.html
-
-## check idle 比 mark idle 慢这么多啊
-
-```txt
-mark idle cost 2.113708 s
-check idle cost 15.767617 s
-```
-
-将设置为 16 的时候，非常 great 了：
-```txt
-mark idle cost 0.159411 s
-check idle cost 1.022445 s
-```
-
-和采样没有关系啊，因为都是 page size = 1 了
-
-## 但是为什么会存在两个 flags 的
 
 ## 会被 THP 影响吗?
 我猜测，看这个代码，似乎完全没有考虑 THP 的意思啊!
@@ -123,6 +112,16 @@ static ssize_t page_idle_bitmap_read(struct file *file, struct kobject *kobj,
 }
 ```
 
+## /proc/self/clear_refs
+
+对于所有的映射的 page 调用:
+```c
+		/* Clear accessed and referenced bits. */
+		ptep_test_and_clear_young(vma, addr, pte);
+		test_and_clear_page_young(page);
+		ClearPageReferenced(page);
+```
+
 ## pagemap
 https://www.kernel.org/doc/Documentation/vm/pagemap.txt 介绍了四个接口：
 
@@ -130,3 +129,102 @@ https://www.kernel.org/doc/Documentation/vm/pagemap.txt 介绍了四个接口：
 - /proc/kpagecount
 - /proc/kpageflags
 - /proc/kpagecgroup
+
+### kpagecgroup 可以处理大页吗？似乎不行吧
+
+虽然测试的时候为 0，但是按照道理来说
+```c
+static void commit_charge(struct folio *folio, struct mem_cgroup *memcg)
+{
+	VM_BUG_ON_FOLIO(folio_memcg(folio), folio);
+	/*
+	 * Any of the following ensures page's memcg stability:
+	 *
+	 * - the page lock
+	 * - LRU isolation
+	 * - lock_page_memcg()
+	 * - exclusive reference
+	 * - mem_cgroup_trylock_pages()
+	 */
+	folio->memcg_data = (unsigned long)memcg;
+}
+```
+难道 hugepage 的 charge 是怎么走的哇?
+
+sudo cgcreate -g memory,hugetlb:mem
+
+才意识到，原来，memcg 和 cgroup 走的是两个道路啊
+```txt
+@[
+    hugetlb_cgroup_commit_charge+1
+    alloc_huge_page+1108
+    hugetlb_fault+2995
+    handle_mm_fault+637
+    do_user_addr_fault+460
+    exc_page_fault+103
+    asm_exc_page_fault+34
+]: 1024
+```
+- charge_memcg -> commit_charge 中会设置，但是 hugetlb 中不会。
+
+## idle page tracking 是无法处理大页的
+- page_idle_get_page 中 `PageLRU` 无法满足。
+
+## `__split_huge_page_tail` 中
+
+page_idle_clear_pte_refs_one 也是被 referenced 过的啊
+
+```c
+	if (page_is_young(head))
+		set_page_young(page_tail);
+```
+
+## 和 mmu notifer 的关系
+
+```c
+#define ptep_clear_young_notify(__vma, __address, __ptep)		\
+({									\
+	int __young;							\
+	struct vm_area_struct *___vma = __vma;				\
+	unsigned long ___address = __address;				\
+	__young = ptep_test_and_clear_young(___vma, ___address, __ptep);\
+	__young |= mmu_notifier_clear_young(___vma->vm_mm, ___address,	\
+					    ___address + PAGE_SIZE);	\
+	__young;							\
+})
+```
+
+```c
+static const struct mmu_notifier_ops kvm_mmu_notifier_ops = {
+	.invalidate_range	= kvm_mmu_notifier_invalidate_range,
+	.invalidate_range_start	= kvm_mmu_notifier_invalidate_range_start,
+	.invalidate_range_end	= kvm_mmu_notifier_invalidate_range_end,
+	.clear_flush_young	= kvm_mmu_notifier_clear_flush_young,
+	.clear_young		= kvm_mmu_notifier_clear_young,
+	.test_young		= kvm_mmu_notifier_test_young,
+	.change_pte		= kvm_mmu_notifier_change_pte,
+	.release		= kvm_mmu_notifier_release,
+};
+```
+- [ ] `__collapse_huge_page_isolate` -> test_young : 之后分析透明大页的时候再说吧
+- page_idle_clear_pte_refs_one -> clear_young : 收集 page 是否被访问过
+```txt
+@[
+    kvm_tdp_mmu_age_gfn_range+1
+    kvm_age_gfn+436
+    kvm_mmu_notifier_clear_young+217
+    __mmu_notifier_clear_young+84
+    page_idle_clear_pte_refs_one+348
+    rmap_walk_anon+360
+    page_idle_bitmap_write+148
+    kernfs_fop_write_iter+289
+    vfs_write+702
+    __x64_sys_pwrite64+144
+    do_syscall_64+56
+    entry_SYSCALL_64_after_hwframe+99
+]
+```
+- folio_referenced_one -> clear_flush_young : 为什么这个需要 flush tdp 中的二级 TLB 啊，难道 tdp 中的二级 TLB 中含有 dirty bit 吗?
+
+## idle page tracking 支持嵌套虚拟化吗?
+- [ ] 理解下，嵌套虚拟化下，访存是如何进行的。

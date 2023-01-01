@@ -143,7 +143,7 @@ fi
 
 arg_cgroupv2="systemd.unified_cgroup_hierarchy=1"
 # scsi_mod.scsi_logging_level=0x3fffffff
-arg_kernel_args="root=$root nokaslr console=ttyS0,9600 earlyprink=serial $arg_hugetlb $arg_cgroupv2 transparent_hugepage=never"
+arg_kernel_args="root=$root nokaslr console=ttyS0,9600 earlyprink=serial $arg_hugetlb $arg_cgroupv2 transparent_hugepage=always"
 arg_kernel="--kernel ${kernel} -append \"${arg_kernel_args}\""
 
 if [[ $hacking_migration = true ]]; then
