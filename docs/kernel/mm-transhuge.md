@@ -1,5 +1,6 @@
-# THP
-- 原来的那个文章找过来看看
+# Transhuge
+
+涉及文件 huge_memory.c 和 khugepaged.c
 
 - [ ] PageDoubleMap
 - [x] THP only support PMD ? so can it support more than 2M space (21bit) ?
@@ -12,6 +13,15 @@
 1. swap
 2. reference 的问题
 3. split 和 merge
+
+1. rmap 如何支持 thp
+  - page_add_anon_rmap 之类的位置维持 compound page 的计数
+2. thp page 是 PageLRU 的吗?
+  - 是的，例如 move_folios_to_lru
+3. 可以主动释放掉 thp 为普通页吗?
+  - 可以，例如使用 madvise 和 prctl 可以释放指定进程的，或者特定 vma 的
+  - 但是，不存在一下子释放整个系统的 transhuge 的行为
+
 
 ## 使用接口
 
@@ -133,10 +143,6 @@ mount 的过程中的一个调用:
 2. shmem_init : 为 anon shared 和 shmem 的构建的，用户态看不到。
 
 #### THP kernel
-- mmap 和配合 hugetlb 使用的
-
-- [ ] huge_memory.c 用于处理 split 和 各种参数
-- [ ] khugepaged.c 用于 scan page 将 base page 转化为 hugepage
 - [ ] 内核态分析: 透明的性质在于 `__handle_mm_fault` 中间就开始检查是否可以 由于 hugepage 会修改 page walk ，所以 pud_none 和 `__transparent_hugepage_enabled`
   - [ ] 检查更多的细节
 
@@ -154,7 +160,31 @@ mount 的过程中的一个调用:
         - [x] do_huge_pmd_anonymous_page : 在 page fault 的时候，会首先进行 hugepage 检查，如果是 always, 那么**所有的 vma 都会被转换为 transparent hugepage**
             - [x] create_huge_pmd <= `__handle_mm_fault`
 
-- [ ] 好吧，transparent hugepage 只是支持 pmd(从 /proc/meminfo 的 HugePagesize 和 /sys/kernel/mm/transparent_hugepage/hpage_pmd_size)，但是实际上 pud 也是支持的.
+- [ ] 为什么 anonymous 的不支持 transparet hugepage 的啊?
+```c
+static vm_fault_t wp_huge_pud(struct vm_fault *vmf, pud_t orig_pud)
+{
+#if defined(CONFIG_TRANSPARENT_HUGEPAGE) &&			\
+	defined(CONFIG_HAVE_ARCH_TRANSPARENT_HUGEPAGE_PUD)
+	vm_fault_t ret;
+
+	/* No support for anonymous transparent PUD pages yet */
+	if (vma_is_anonymous(vmf->vma))
+		goto split;
+	if (vmf->vma->vm_flags & (VM_SHARED | VM_MAYSHARE)) {
+		if (vmf->vma->vm_ops->huge_fault) {
+			ret = vmf->vma->vm_ops->huge_fault(vmf, PE_SIZE_PUD);
+			if (!(ret & VM_FAULT_FALLBACK))
+				return ret;
+		}
+	}
+split:
+	/* COW or write-notify not handled on PUD level: split pud.*/
+	__split_huge_pud(vmf->vma, vmf->pud, vmf->address);
+#endif /* CONFIG_TRANSPARENT_HUGEPAGE && CONFIG_HAVE_ARCH_TRANSPARENT_HUGEPAGE_PUD */
+	return VM_FAULT_FALLBACK;
+}
+```
 
 关键问题 B : split_huge_page_to_list
 
@@ -252,6 +282,44 @@ static inline int folio_mapcount(struct folio *folio)
   - `__SetPageHead`
   - prep_compound_head
   - prep_compound_tail
+
+参考内核文档 [Transparent Hugepage Support](http://127.0.0.1:3434/mm/transhuge.html)
+
+> - get_page()/put_page() and GUP operate on head page's ->_refcount.
+>
+>  - ->_refcount in tail pages is always zero: get_page_unless_zero() never
+>    succeeds on tail pages.
+>
+>  - map/unmap of PMD entry for the whole compound page increment/decrement
+>    ->compound_mapcount, stored in the first tail page of the compound page;
+>    and also increment/decrement ->subpages_mapcount (also in the first tail)
+>    by COMPOUND_MAPPED when compound_mapcount goes from -1 to 0 or 0 to -1.
+>
+>  - map/unmap of sub-pages with PTE entry increment/decrement ->_mapcount
+>    on relevant sub-page of the compound page, and also increment/decrement
+>    ->subpages_mapcount, stored in first tail page of the compound page, when
+>    _mapcount goes from -1 to 0 or 0 to -1: counting sub-pages mapped by PTE.
+
+- refcount 只是 head 维护
+- 整体的 map count 在 compound_mapcount 中维护
+- mapcount 每一个 page 都需要维护，而且 subpages 总数需要在 subpages_mapcount 中维护
+
+#### compound_mapcount
+```c
+/*
+ * If a 16GB hugetlb page were mapped by PTEs of all of its 4kB sub-pages,
+ * its subpages_mapcount would be 0x400000: choose the COMPOUND_MAPPED bit
+ * above that range, instead of 2*(PMD_SIZE/PAGE_SIZE).  Hugetlb currently
+ * leaves subpages_mapcount at 0, but avoid surprise if it participates later.
+ */
+#define COMPOUND_MAPPED	0x800000
+#define SUBPAGES_MAPPED	(COMPOUND_MAPPED - 1)
+```
+一个 COMPOUND_MAPPED 表示被映射为大页，而被 SUBPAGES_MAPPED 下的，计算 basepage 的映射次数。
+
+
+
+#### subpages_mapcount
 
 #### compound_dtor
 - compound_dtor: 可以用来区分是那种类型的 page，例如在 PageHuge
@@ -369,12 +437,50 @@ $ bt
 Backtrace stopped: Cannot access memory at address 0xffffc900022d1018
 ```
 
-#### 如何创建的
+#### compound page 如何创建的
 为什么这个根本无法拦截到任何东西：
 ```sh
 sudo bpftrace -e 'kfunc:prep_compound_page { @reads[args->order] = count(); }'
 ```
+但是在 QEMU 中间打点的时候，在这里是可以获取到很多内容的，也许是 ebpf 的问题，也许内核版本有点小区别，也是环境配置不同。
 
+
+```sh
+sudo bpftrace -e 'kfunc:__alloc_pages { @reads[args->order] = count(); }'
+```
+可以得到:
+```txt
+@reads[2]: 2185
+@reads[1]: 3076
+@reads[3]: 6123
+@reads[0]: 57084
+```
+
+sudo bpftrace -e 'kfunc:alloc_pages { if (args->order >= 3) { @[kstack] = count(); } }'
+
+可以得到如下位置，
+```tx
+@[
+    alloc_pages+5
+    alloc_skb_with_frags+183
+    sock_alloc_send_pskb+569
+    unix_stream_sendmsg+487
+    sock_sendmsg+95
+    __sys_sendto+252
+    __x64_sys_sendto+32
+    do_syscall_64+56
+    entry_SYSCALL_64_after_hwframe+99
+]: 2688
+```
+
+文件系统中的使用:
+- ra_alloc_folio
+  - filemap_alloc_folio 中是文件系统也是会创建出来 compound page 的
+
+alloc_pages_exact 是分配的时候不要 `__GFP_COMP`，因为其需要的不是 2^^order 个，而是特定大小的，首先分配，然后将页释放掉。
+因为 compound page 只能是是 2 ^^ order 分配的。
+
+- [ ] prep_new_page : 如果没有 `__GFP_COMP`，所有的 page 的 flags 是如何初始化的?
 
 ### 判断 page 类型
 那么如何判断一个 page 是不是 transparent hugepage 的哇？
@@ -417,7 +523,7 @@ static inline int PageTransHuge(struct page *page)
 ```
 
 ## khugepaged
-- [ ] if `kcompactd` compact pages used by hugepage, and defrag pages by `split_huge_page_to_list`, so what's the purpose of khugepaged ?
+kcompactd 用来 defrag，而 khugepaged 来扫描，确定到底那些已经映射的可以设置为 page table
 
 1. /sys/kernel/mm/transparent_hugepage/enabled => start_stop_khugepaged => khugepaged => khugepaged_do_scan => khugepaged_scan_mm_slot => khugepaged_scan_pmd
 2. in `khugepaged_scan_pmd`, we will check pages one by one, if enough base pages are found,  call `collapse_huge_page` to merge base page to huge page
@@ -427,7 +533,23 @@ static inline int PageTransHuge(struct page *page)
   - khugepaged is consumer of hugepage, it's scan base pages and collapse them
   - [ ] khugepaged 是用于扫描 base page 的 ? It’s the responsibility of khugepaged to then install the THP pages.
 
-#### THP split
+```txt
+#0  prep_transhuge_page (page=0xffffea000d998000) at mm/huge_memory.c:582
+#1  0xffffffff81394907 in hpage_collapse_alloc_page (nmask=0xffffc9000234fe28, node=<optimized out>, gfp=1844426, hpage=0xffffc9000234fd20) at mm/khugepaged.c:808
+#2  alloc_charge_hpage (hpage=hpage@entry=0xffffc9000234fd20, mm=mm@entry=0xffff888341a3bdc0, cc=cc@entry=0xffffffff82d75980 <khugepaged_collapse_control>) at mm/khugepaged.c:957
+#3  0xffffffff81394c3b in collapse_huge_page (mm=mm@entry=0xffff888341a3bdc0, address=address@entry=140576452247552, referenced=referenced@entry=512, unmapped=unmapped@entry=0, cc=cc@entry=0xffffffff82d75980 <khugepaged_collapse_control>) at mm/khugepaged.c:989
+#4  0xffffffff813963e9 in hpage_collapse_scan_pmd (mm=mm@entry=0xffff888341a3bdc0, vma=vma@entry=0xffff8883d8e1c130, address=140576452247552, mmap_locked=mmap_locked@entry=0xffffc9000234fe97, cc=cc@entry=0xffffffff82d75980 <khugepaged_collapse_control>) at mm/khugepaged.c:1275
+#5  0xffffffff81398edb in khugepaged_scan_mm_slot (cc=0xffffffff82d75980 <khugepaged_collapse_control>, result=<synthetic pointer>, pages=4096) at mm/khugepaged.c:2316
+#6  khugepaged_do_scan (cc=0xffffffff82d75980 <khugepaged_collapse_control>) at mm/khugepaged.c:2422
+#7  khugepaged (none=<optimized out>) at mm/khugepaged.c:2478
+#8  0xffffffff811556a4 in kthread (_create=0xffff88834128b300) at kernel/kthread.c:376
+#9  0xffffffff81002659 in ret_from_fork () at arch/x86/entry/entry_64.S:308
+#10 0x0000000000000000 in ?? ()
+```
+- [ ] 似乎在 page fault 的时候就会构造，khugepaged 来制作 thp 的意义是什么
+  - 应该是存在开始的时候，没有 thp ，之后被 khugepaged 合并上的。
+
+## THP split
 这几个文章都是讲解两种方案，很烦!
 [Transparent huge pages in the page cache](https://lwn.net/Articles/686690/)
 > Finally, a file may be used without being mapped into process memory at all, while anonymous memory is always mapped. So any changes to a filesystem to support transparent huge page mapping must not negatively impact normal read/write performance on an unmapped file.
@@ -461,17 +583,11 @@ static inline int PageTransHuge(struct page *page)
       - [x] 在 huge page 中间拆分出来几个当做其他的 page 正常使用, 虽然从中间抠出来的页面不可以继续当做内核，但是可以给用户使用
           - [ ] 是否存在 flag 说明那些页面可以分配给用户，那些是内核 ?
 
-
-
 - [ ] `__split_huge_pmd` : 处理各种 lock 包括 pmd_lock
   - [ ] `__split_huge_pmd_locked`
     - 取回 pmd_huge_pte，向其中填充 pte, 然后将 pmd entry 填充该位置
   - `pgtable_t page::(anonymous union)::(anonymous struct)::pmd_huge_pte`
       - [ ]  从 `__split_huge_pmd_locked` 的代码: `pgtable_trans_huge_withdraw` 看，这一个 page table 从来没有被删除过
-
-## khugepaged
-
-- set_recommended_min_free_kbytes
 
 ## zero page
 By default kernel tries to use huge zero page on read page fault to anonymous mapping. It’s possible to disable huge zero page by writing 0 or enable it back by writing 1:
@@ -479,192 +595,15 @@ By default kernel tries to use huge zero page on read page fault to anonymous ma
 Contrary to the zero page's original preferential use,
 some modern operating systems such as FreeBSD, Linux and Microsoft Windows[2] actually make the zero page inaccessible to trap uses of null pointers.
 
-## pmd && pud 的含义
-1. 如果 vma 是可以写的，那么 pmd 就是设置为可写的
+## transhuge 对于其他模块的支持
 
-```c
-pmd_t maybe_pmd_mkwrite(pmd_t pmd, struct vm_area_struct *vma)
-{
-	if (likely(vma->vm_flags & VM_WRITE))
-		pmd = pmd_mkwrite(pmd);
-	return pmd;
-}
-```
+### copy page
+1. copy_huge_pmd
+2. copy_huge_pud
 
-2. 应该是用于 pgfault 的
-```c
-static void insert_pfn_pud(struct vm_area_struct *vma, unsigned long addr,
-		pud_t *pud, pfn_t pfn, pgprot_t prot, bool write)
-
-vm_fault_t vmf_insert_pfn_pud(struct vm_fault *vmf, pfn_t pfn, bool write)
-```
-
-
-## copy_huge_pmd : memory.c 使用，实现 copy_pmd_range
 dup_mmap 中间逐级下沉下来的
 
-## follow_devmap_pmd : 被 gup 使用
-
-
-## deferred_split
-
-
-
-## prep_transhuge_page
-1. 利用 deferred_split 来收集什么 ?
-2. dtor 是什么 ?
-```c
-void prep_transhuge_page(struct page *page)
-{
-	/*
-	 * we use page->mapping and page->indexlru in second tail page
-	 * as list_head: assuming THP order >= 2
-	 */
-	INIT_LIST_HEAD(page_deferred_list(page));
-	set_compound_page_dtor(page, TRANSHUGE_PAGE_DTOR);
-}
-```
-
-## do_huge_pmd_anonymous_page
-```c
-/*
- * By the time we get here, we already hold the mm semaphore
- *
- * The mmap_sem may have been released depending on flags and our
- * return value.  See filemap_fault() and __lock_page_or_retry().
- */
-static vm_fault_t __handle_mm_fault(struct vm_area_struct *vma,
-		unsigned long address, unsigned int flags)
-    // pud_none : 只有说 pud 为 none
-    // 1. 那么 cow 机制怎么处理 TODO
-    // 2. 应该不会处理 swap 机制吧 TODO
-	if (pud_none(*vmf.pud) && __transparent_hugepage_enabled(vma)) {  // __transparent_hugepage_enabled 中间会检查其中的各种 enable 机制
-
-static inline vm_fault_t create_huge_pmd(struct vm_fault *vmf)
-{
-	if (vma_is_anonymous(vmf->vma)) //  只有是 anonymous 或者
-		return do_huge_pmd_anonymous_page(vmf); //
-	if (vmf->vma->vm_ops->huge_fault)
-		return vmf->vma->vm_ops->huge_fault(vmf, PE_SIZE_PMD); // shared
-	return VM_FAULT_FALLBACK;
-}
-
-static vm_fault_t create_huge_pud(struct vm_fault *vmf)
-{
-#ifdef CONFIG_TRANSPARENT_HUGEPAGE
-	/* No support for anonymous transparent PUD pages yet */
-	if (vma_is_anonymous(vmf->vma))
-		return VM_FAULT_FALLBACK;
-	if (vmf->vma->vm_ops->huge_fault)
-		return vmf->vma->vm_ops->huge_fault(vmf, PE_SIZE_PUD);
-#endif /* CONFIG_TRANSPARENT_HUGEPAGE */
-	return VM_FAULT_FALLBACK;
-}
-```
-
-```c
-static vm_fault_t wp_huge_pud(struct vm_fault *vmf, pud_t orig_pud)
-{
-#ifdef CONFIG_TRANSPARENT_HUGEPAGE
-	/* No support for anonymous transparent PUD pages yet */  // PUD 一个内容太大了，但是为什么 file 就可以呀 !
-	if (vma_is_anonymous(vmf->vma))
-		return VM_FAULT_FALLBACK;
-	if (vmf->vma->vm_ops->huge_fault)
-		return vmf->vma->vm_ops->huge_fault(vmf, PE_SIZE_PUD);
-#endif /* CONFIG_TRANSPARENT_HUGEPAGE */
-	return VM_FAULT_FALLBACK;
-}
-
-/* `inline' is required to avoid gcc 4.1.2 build error */
-static inline vm_fault_t wp_huge_pmd(struct vm_fault *vmf, pmd_t orig_pmd)
-{
-	if (vma_is_anonymous(vmf->vma))
-		return do_huge_pmd_wp_page(vmf, orig_pmd);
-	if (vmf->vma->vm_ops->huge_fault)
-		return vmf->vma->vm_ops->huge_fault(vmf, PE_SIZE_PMD);
-
-	/* COW handled on pte level: split pmd */
-	VM_BUG_ON_VMA(vmf->vma->vm_flags & VM_SHARED, vmf->vma);
-	__split_huge_pmd(vmf->vma, vmf->pmd, vmf->address, false, NULL);
-
-	return VM_FAULT_FALLBACK;
-}
-```
-
-## core function : do_huge_pmd_anonymous_page
-1. 检查是否 vma 中间是否可以容纳 hugepage
-2. 假如可以使用 zero page 机制
-3. 利用 alloc_hugepage_direct_gfpmask 计算出来 buddy allocator
-4. prep_transhuge_page @todo 不知道干嘛的
-5. `__do_huge_pmd_anonymous_page` : 将分配的 page 和 page table 组装
-
-```c
-vm_fault_t do_huge_pmd_anonymous_page(struct vm_fault *vmf)
-
-
-#define alloc_hugepage_vma(gfp_mask, vma, addr, order) \
-	alloc_pages_vma(gfp_mask, order, vma, addr, numa_node_id(), true)
-
-void prep_transhuge_page(struct page *page)
-{
-	/*
-	 * we use page->mapping and page->indexlru in second tail page
-	 * as list_head: assuming THP order >= 2
-	 */
-
-	INIT_LIST_HEAD(page_deferred_list(page));
-	set_compound_page_dtor(page, TRANSHUGE_PAGE_DTOR);
-}
-```
-
-## core function : split_huge_page_to_list
-
-```c
-/* Racy check whether the huge page can be split */
-bool can_split_huge_page(struct page *page, int *pextra_pins)
-{
-	int extra_pins;
-
-	/* Additional pins from page cache */
-	if (PageAnon(page))
-		extra_pins = PageSwapCache(page) ? HPAGE_PMD_NR : 0; // TODO 难道 swap 也要处理 hugepage
-	else
-		extra_pins = HPAGE_PMD_NR;
-	if (pextra_pins)
-		*pextra_pins = extra_pins;
-	return total_mapcount(page) == page_count(page) - extra_pins - 1;
-}
-```
-
-
-## core function : 合并
-
-
-
-## anonymous 和 shared 都是如何初始化的
-
-
-## 如何判断
-
-
-```c
-bool transparent_hugepage_enabled(struct vm_area_struct *vma)
-{
-	/* The addr is used to check if the vma size fits */
-	unsigned long addr = (vma->vm_end & HPAGE_PMD_MASK) - HPAGE_PMD_SIZE;
-
-	if (!transhuge_vma_suitable(vma, addr))
-		return false;
-	if (vma_is_anonymous(vma))
-		return __transparent_hugepage_enabled(vma);
-	if (vma_is_shmem(vma))
-		return shmem_huge_enabled(vma);
-
-	return false;
-}
-```
-
-## page fault
+### page fault
 
 ```txt
 #0  __do_huge_pmd_anonymous_page (gfp=<optimized out>, page=<optimized out>, vmf=<optimized out>) at mm/huge_memory.c:837
@@ -686,6 +625,47 @@ bool transparent_hugepage_enabled(struct vm_area_struct *vma)
     - vma_alloc_folio : 分配 page
       - `__do_huge_pmd_anonymous_page` : 将分配的 page 和 page table 组装
   - vmf->vma->vm_ops->huge_fault : 文件映射，如果文件系统注册了
+
+## prep_transhuge_page 分配 thp 之后的准备
+
+- `__folio_alloc` 一定是分配 hugepage
+
+```sh
+sudo bpftrace -e 'kfunc:__folio_alloc { if (args->order > 1) { @reads[kstack] = count(); }}'
+```
+
+得到如下内容:
+```txt
+@reads[
+    __folio_alloc+5
+    vma_alloc_folio+663
+    do_huge_pmd_anonymous_page+179
+    __handle_mm_fault+2322
+    handle_mm_fault+178
+    do_user_addr_fault+460
+    exc_page_fault+103
+    asm_exc_page_fault+34
+]: 3
+@reads[
+    __folio_alloc+5
+    vma_alloc_folio+663
+    shmem_alloc_hugefolio+199
+    shmem_alloc_and_acct_folio+169
+    shmem_get_folio_gfp+499
+    shmem_read_mapping_page_gfp+75
+    shmem_sg_alloc_table+364
+    shmem_get_pages+182
+    __i915_gem_object_get_pages+56
+    i915_gem_set_domain_ioctl+616
+    drm_ioctl_kernel+178
+    drm_ioctl+479
+    __x64_sys_ioctl+135
+    do_syscall_64+56
+    entry_SYSCALL_64_after_hwframe+99
+]: 196
+```
+
+## anonymous 和 shared 都是如何初始化的
 
 ## ShmemHugePages 在我的个人机器上总是不为 0
 
@@ -732,8 +712,37 @@ sudo grep -e ShmemHugePages /proc/*/smaps | awk  '{ if($2>4) print $0} ' |  awk 
 
 ## Transparent hugepage 是如何进行 lru 的
 
-## rmap 如何支持 thp
+没有什么特殊处理，就是当作一个 page 了
 
-## idle page tracking 为什么无法处理 thp ?
+## split_huge_page_to_list
 
-## 可以主动释放掉 thp 为普通页吗?
+transparet hugeapge 会因为 memory pressure 而被拆分吗?
+
+会的，在 shrink_folio_list 中，只要发现一个 transparent hugepage 是 inactive 的，那么首先就会进行拆分，进而就像是普通页一样被 swap 的
+```txt
+#0  __split_huge_pmd_locked (freeze=<optimized out>, haddr=<optimized out>, pmd=<optimized out>, vma=<optimized out>) at mm/huge_memory.c:2308
+#1  __split_huge_pmd (vma=vma@entry=0xffff8883dd144260, pmd=0xffff8883588cb210, address=address@entry=139950574010368, freeze=true, folio=folio@entry=0xffffea000de68000) at mm/huge_memory.c:2308
+#2  0xffffffff8138f4dd in split_huge_pmd_address (vma=vma@entry=0xffff8883dd144260, address=address@entry=139950574010368, freeze=freeze@entry=true, folio=folio@entry=0xffffea000de68000) at mm/huge_memory.c:2337
+#3  0xffffffff813418c0 in try_to_migrate_one (folio=0xffffea000de68000, vma=0xffff8883dd144260, address=139950574010368, arg=<optimized out>) at mm/rmap.c:1858
+#4  0xffffffff8133ebe3 in rmap_walk_anon (folio=folio@entry=0xffffea000de68000, rwc=rwc@entry=0xffffc90003d63a00, locked=locked@entry=true) at mm/rmap.c:2443
+#5  0xffffffff81341b66 in rmap_walk_locked (rwc=0xffffc90003d63a00, folio=0xffffea000de68000) at mm/rmap.c:2530
+#6  try_to_migrate (folio=folio@entry=0xffffea000de68000, flags=flags@entry=(TTU_SPLIT_HUGE_PMD | TTU_SYNC | TTU_RMAP_LOCKED)) at mm/rmap.c:2173
+#7  0xffffffff8138faa8 in unmap_folio (folio=<optimized out>) at mm/huge_memory.c:2388
+#8  split_huge_page_to_list (page=page@entry=0xffffea000de68000, list=list@entry=0xffffc90003d63c30) at mm/huge_memory.c:2741
+#9  0xffffffff812f8f5a in split_folio_to_list (list=0xffffc90003d63c30, folio=0xffffea000de68000) at ./include/linux/huge_mm.h:444
+#10 shrink_folio_list (folio_list=folio_list@entry=0xffffc90003d63c30, pgdat=pgdat@entry=0xffff8883bfffc000, sc=sc@entry=0xffffc90003d63dd8, stat=stat@entry=0xffffc90003d63cb8, ignore_references=ignore_references@entry=false) at mm/vmscan.c:1856
+#11 0xffffffff812fa884 in shrink_inactive_list (lru=LRU_INACTIVE_ANON, sc=0xffffc90003d63dd8, lruvec=0xffff88835698e800, nr_to_scan=<optimized out>) at mm/vmscan.c:2526
+#12 shrink_list (sc=0xffffc90003d63dd8, lruvec=0xffff88835698e800, nr_to_scan=<optimized out>, lru=LRU_INACTIVE_ANON) at mm/vmscan.c:2767
+#13 shrink_lruvec (lruvec=lruvec@entry=0xffff88835698e800, sc=sc@entry=0xffffc90003d63dd8) at mm/vmscan.c:5951
+#14 0xffffffff812fb14e in shrink_node_memcgs (sc=0xffffc90003d63dd8, pgdat=0xffff8883bfffc000) at mm/vmscan.c:6138
+#15 shrink_node (pgdat=pgdat@entry=0xffff8883bfffc000, sc=sc@entry=0xffffc90003d63dd8) at mm/vmscan.c:6169
+#16 0xffffffff812fb897 in kswapd_shrink_node (sc=0xffffc90003d63dd8, pgdat=0xffff8883bfffc000) at mm/vmscan.c:6960
+#17 balance_pgdat (pgdat=pgdat@entry=0xffff8883bfffc000, order=order@entry=0, highest_zoneidx=highest_zoneidx@entry=3) at mm/vmscan.c:7150
+#18 0xffffffff812fbe6f in kswapd (p=0xffff8883bfffc000) at mm/vmscan.c:7410
+#19 0xffffffff811556a4 in kthread (_create=0xffff8883c18e01c0) at kernel/kthread.c:376
+#20 0xffffffff81002659 in ret_from_fork () at arch/x86/entry/entry_64.S:308
+```
+
+## [ ] 为什么 transparent hugepage 会让 idle page tracking 不准
+
+## [ ] 到底是使用 pmd 还是使用 pud 的

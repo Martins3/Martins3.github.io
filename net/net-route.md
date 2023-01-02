@@ -558,6 +558,10 @@ https://cv6.poinsignon.org/ : 使用 traceroute 来展示自己的简历
 
 ## cs 144
 
+## ssh
+- [ ] https://iximiuz.com/en/posts/ssh-tunnels/ : 这个哥们写过不少内容，这只是其一
+- [ ] https://plantegg.github.io/2019/06/02/%E5%8F%B2%E4%B8%8A%E6%9C%80%E5%85%A8_SSH_%E6%9A%97%E9%BB%91%E6%8A%80%E5%B7%A7%E8%AF%A6%E8%A7%A3--%E6%94%B6%E8%97%8F%E4%BF%9D%E5%B9%B3%E5%AE%89/
+
 [^2]: 用芯探核:基于龙芯的 Linux 内核探索解析
 [^4]: http://yuba.stanford.edu/rcp/
 [^6]: [An Introduction to Computer Networks](http://intronetworks.cs.luc.edu/current2/html/)

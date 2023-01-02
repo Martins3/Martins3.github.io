@@ -72,8 +72,8 @@ arg_mem_balloon=""
 case $hacking_memory in
 "numa")
   # 通过 reserve = false 让 mmap 携带参数 MAP_NORESERVE，从而可以模拟超级大内存的 Guest
-  arg_mem_cpu="-cpu host -m 18G -smp cpus=6"
-  arg_mem_cpu="$arg_mem_cpu -object memory-backend-ram,size=12G,id=m0,reserve=false -numa node,memdev=m0,cpus=0-1,nodeid=0"
+  arg_mem_cpu="-cpu host -m 8G -smp cpus=6"
+  arg_mem_cpu="$arg_mem_cpu -object memory-backend-ram,size=2G,id=m0,reserve=false -numa node,memdev=m0,cpus=0-1,nodeid=0"
   arg_mem_cpu="$arg_mem_cpu -object memory-backend-ram,size=2G,id=m1 -numa node,memdev=m1,cpus=2-3,nodeid=1"
   arg_mem_cpu="$arg_mem_cpu -object memory-backend-ram,size=4G,id=m2 -numa node,memdev=m2,cpus=4,nodeid=2"
   arg_mem_cpu="$arg_mem_cpu -numa node,cpus=5,nodeid=3" # 只有 CPU ，但是没有内存

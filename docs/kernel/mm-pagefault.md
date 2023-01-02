@@ -2,6 +2,15 @@
 
 主要分析 mm/memory.c 中的内容
 
+- handle_mm_fault
+  - hugetlb_fault : 非透明大页
+  - `__handle_mm_fault`
+    - create_huge_pud
+    - wp_huge_pud
+    - create_huge_pmd
+    - wp_huge_pmd
+    - handle_pte_fault
+
 - handle_pte_fault
   - do_anonymous_page : 处理匿名映射
   - do_fault : 处理文件映射

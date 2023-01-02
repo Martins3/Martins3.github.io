@@ -1,5 +1,8 @@
 # vmscan
 
+- shrink_inactive_list
+  - shrink_folio_list : 在这里进行终极回收工作
+
 ## 问题
 - lruvec 是基于 Node 的，会出现一个 Node 开始 swap 而另一个 Node 上还是内存很多的情况吗?
 - 对于 dirty memory 和 clean mmeory 的 scan 应该是不同的吧

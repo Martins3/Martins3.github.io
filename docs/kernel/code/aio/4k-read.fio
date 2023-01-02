@@ -9,8 +9,8 @@ direct=1
 # filename=/root/x
 # filename=/home/martins3/hack/mnt/x
 # filename=/home/martins3/core/x
-# filename=/dev/sda1
-filename=/dev/nvme1n1p1
+filename=/dev/sda1
+# filename=/dev/nvme1n1p1
 rw=randread
 runtime=10
 time_based
