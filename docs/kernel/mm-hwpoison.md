@@ -49,3 +49,6 @@ patch just extends it so that khugepaged also correctly rolls back when
 it fails to copy poisoned 4K pages.
 
 > 没看代码，这段不知道什么意思，但是这个 patch 描述的含义非常清楚，khugepage 经常扫描内存，如果遇到，那么就负责将其保留起来。
+
+## 测试工具
+- https://www.memtest.org/dev

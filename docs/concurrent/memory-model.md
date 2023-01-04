@@ -130,6 +130,13 @@ https://www.linuxjournal.com/article/8212
 
 - 浅谈多核系统的缓存一致性协议与非均一缓存访问 : https://zhuanlan.zhihu.com/p/162099300
 
+## 工具
+- https://github.com/herd/herdtools7
+
+- 内核自带的 memory testing 工具:
+
+- tools/testing/selftests/membarrier/
+
 ## 具体案例
 ### `__setup_APIC_LVTT`
 ```c

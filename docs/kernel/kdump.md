@@ -452,6 +452,7 @@ sudo apt-get install linux-image-`uname -r`-dbgsym
 - 关键参考: https://askubuntu.com/questions/197016/how-to-install-a-package-that-contains-ubuntu-kernel-debug-symbols
 - https://superuser.com/questions/62575/where-is-vmlinux-on-my-ubuntu-installation
 
-echo "deb http://ddebs.ubuntu.com $(lsb_release -cs)-updates main restricted universe multiverse
-deb http://ddebs.ubuntu.com $(lsb_release -cs)-proposed main restricted universe multiverse" | \
-sudo tee -a /etc/apt/sources.list.d/ddebs.list
+- 完了，现在我遇到完全相同的问题了:
+  - https://askubuntu.com/questions/1446930/there-is-no-kernel-dbgsym-package-for-my-ubuntu-22-04
+
+## 可以使用 crash 获取到 dmesg

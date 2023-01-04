@@ -42,7 +42,7 @@ iscsiadm -m discovery -t st -p 127.0.0.1
 iscsiadm -m node -T iqn.2003-01.org.linux-iscsi.localhost.x8664:sn.037746bdcf2d -p 127.0.0.1 --login
 ```
 
-```sh
+```txt
 vim /etc/iscsi/initiatorname.iscsi
 systemctl restart iscsid
 systemctl enable iscsid

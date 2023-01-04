@@ -121,6 +121,10 @@ https://trstringer.com/simple-vs-oneshot-systemd-service/
 - https://www.loggly.com/ultimate-guide/using-journalctl/
 - https://unix.stackexchange.com/questions/139513/how-to-clear-journalctl
 
+### 显示所有的 dmesg 信息
+- journalctl -t kernel
+- journalctl -k
+
 ## 常见疑问
 - https://unix.stackexchange.com/questions/506347/why-do-most-systemd-examples-contain-wantedby-multi-user-target
 
