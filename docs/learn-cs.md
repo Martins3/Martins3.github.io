@@ -83,6 +83,10 @@
 - 将自己的操作系统换成 Linux，不要过多的使用 Windows，越早越好。
 - 学好 [mit 的这个课程](https://missing-semester-cn.github.io/)；
 
+<!-- ## 非线性式学习 -->
+
+<!-- ## 不要浅尝辄止 -->
+
 ## 自学推荐
 https://github.com/PKUFlyingPig/cs-self-learning
 

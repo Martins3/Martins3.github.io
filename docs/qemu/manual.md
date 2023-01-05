@@ -191,25 +191,6 @@ arg_share_dir="-virtfs local,path=${share_dir},mount_tag=host0,security_model=ma
 mount -t 9p -o trans=virtio,version=9p2000.L host0 /root/share
 ```
 
-### sshfs
-在 host 通过 `ip addr` 获取 ip 地址，之后和普通的 ssh 使用起来没有差异。
-
-在 guest 中可以直接 ssh host
-```sh
-ssh martins3@10.0.2.2
-```
-使用这个方法可以同步 host 的代码到 guest 中:
-```sh
-git clone martins3@10.0.2.2:path_to_repo
-```
-
-当然最方便的方法还是 sshfs
-
-```sh
-mkdir mnt
-sshfs martins3@10.0.2.2:path_to_repo  ~/mnt
-```
-
 ### virtio-fs
 现在的推荐的方法，但是我还没搞清楚其中的原理和使用方法。
 

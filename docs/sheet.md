@@ -61,3 +61,9 @@ yum install -y neovim python3-neovim
 - git checkout -- fs/ : 将 unstage 的修改删除掉
 
 ## bpftrace
+
+## sshfs
+```sh
+mkdir mnt
+sshfs martins3@10.0.2.2:path_to_repo  ~/mnt
+```

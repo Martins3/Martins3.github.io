@@ -30,6 +30,11 @@
 * [cgroup.procs](#cgroupprocs)
 * [TODO](#todo)
 * [cgorup inode](#cgorup-inode)
+* [cgroup 支持将进程动态的迁移进入 cgroup 中的](#cgroup-支持将进程动态的迁移进入-cgroup-中的)
+* [在 v1 中有 tasks 来查看 cgroup 中包含那些进程，但是 v2 中似乎没有了](#在-v1-中有-tasks-来查看-cgroup-中包含那些进程但是-v2-中似乎没有了)
+* [v1 特别关注](#v1-特别关注)
+  * [[ ] 这两个是什么区别](#-这两个是什么区别)
+* [[ ] 实际上，cgroup 的热迁移是默认不迁移内存的](#-实际上cgroup-的热迁移是默认不迁移内存的)
 * [reference](#reference)
 
 <!-- vim-markdown-toc -->
@@ -1057,6 +1062,26 @@ done
 8526
 /sys/fs/cgroup/system.slice/systemd-journald.service
 ```
+- [ ] 根本没有搞清楚为什么 systemd 是这样建立 cgroup 的原因
+
+## cgroup 支持将进程动态的迁移进入 cgroup 中的
+
+```sh
+cgclassify -g subsystems:path_to_cgroup pidlist
+```
+
+## 在 v1 中有 tasks 来查看 cgroup 中包含那些进程，但是 v2 中似乎没有了
+
+但是 v2 中可以通过 /proc/pid/
+
+## v1 特别关注
+### [ ] 这两个是什么区别
+- memory.usage_in_bytes
+- memory.memsw.usage_in_bytes
+
+## [ ] 实际上，cgroup 的热迁移是默认不迁移内存的
+- https://docs.kernel.org/admin-guide/cgroup-v1/memory.html#move-charges-at-task-migration
+
 
 ## reference
 [^1]: v1 https://www.kernel.org/doc/html/latest/admin-guide/cgroup-v1/index.html
