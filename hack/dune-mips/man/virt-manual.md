@@ -55,4 +55,4 @@ if (GuestCtl0_G1 = 1)
 
 下面两个的含义:
 - [ ] GuestCtl1_RID
-- [ ] GuestCtl0_G1 
+- [ ] GuestCtl0_G1

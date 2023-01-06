@@ -9,10 +9,16 @@
 
 
 
+## zswap
 - http://www.wowotech.net/memory_management/zram.html : 就是这个吗 ?
   - https://github.com/maximumadmin/zramd
 
-## https://lwn.net/Articles/454795/
+- [ ] 和 drivers/block/zram/ 是什么关系？
+
+- [ ] zswap 压缩的内存还可以进一步的被 swap 出去的?
+
+## [Transcendent memory in a nutshell](https://lwn.net/Articles/454795/)
+> 这东西应该没用了吧
 
 Exactly how the kernel talks to tmem will be described in **Part 2**,
 but there are certain classes of data maintained by the kernel that are suitable.

@@ -2,7 +2,7 @@
 
 lazy mode 其实非常的麻烦, 默认是 eager mode, 为此 x86 添加专门的指令来处理 FPU save.[^1]
 
-- [ ] 如何测试 ? 
+- [ ] 如何测试 ?
 
 - /home/maritns3/core/loongson-dune/cross/arch/mips/include/asm/fpu.h:lose_fpu_inatomic
 - in dune, process always has fpu enabed.
@@ -127,4 +127,3 @@ kvm_own_fpu:
 2. `__kvm_restore_fpu`
 
 [^1]: https://tthtlc.wordpress.com/2016/12/17/understanding-fpu-usage-in-linux-kernel/
-

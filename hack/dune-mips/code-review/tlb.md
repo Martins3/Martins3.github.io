@@ -30,7 +30,7 @@ static int kvm_vz_vcpu_run(struct kvm_run *run, struct kvm_vcpu *vcpu)
 ## remote tlb shot : kvm_vz_check_requests
 
 ## guestid : kvm_vz_vcpu_load_tlb
-- [ ] 两个 load 的关系是什么，部署的位置 
+- [ ] 两个 load 的关系是什么，部署的位置
   - schedu_in / schedu_out
 
 	.vcpu_load = kvm_vz_vcpu_load,

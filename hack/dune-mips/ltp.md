@@ -3,7 +3,7 @@
 大致阅读了一下 ltp 的所用的项目，几乎所有的测试项目都是在 testcases 下，将 testcases/kernel/syscall 主要的测试内容，其余的测试项目主要是 shell 或者测试内核的功能选项的，比较难以进行和 dune 的正确性关联不大。
 
 主要有下面几种
-1. 标准 Makefile : 从 .c 直接编译为 exe 文件，修改 .o 规则，通过检测是否链接 -lltp， 
+1. 标准 Makefile : 从 .c 直接编译为 exe 文件，修改 .o 规则，通过检测是否链接 -lltp，
 2. 独立 main / 独立 Makefile : 首先编译为 .o 然后编译为 exe ，这种生成两个 .o, 在编译为 exe 的时候判断是否依赖于
 3. nfwn
 

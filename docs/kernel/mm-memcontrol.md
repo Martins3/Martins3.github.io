@@ -977,3 +977,122 @@ memory.zswap.max
 - 如果总内存充足的时候，但是一个 cgroup 的内存不足，那么 kswapd 会启动吗?
   - 不会，因为首先，只有每个 node 才会创建一个 kswapd
   - kswapd 是否开始启动，没有考虑 cgroup
+
+## reclaim
+
+### memory.reclaim
+
+分析下这个新增的接口:
+```diff
+History:   #0
+Commit:    94968384dde15d48263bfc59d280cd71b1259d8c
+Author:    Shakeel Butt <shakeelb@google.com>
+Committer: Andrew Morton <akpm@linux-foundation.org>
+Date:      Sat 30 Apr 2022 05:36:59 AM CST
+
+memcg: introduce per-memcg reclaim interface
+
+This patch series adds a memory.reclaim proactive reclaim interface.
+The rationale behind the interface and how it works are in the first
+patch.
+
+
+This patch (of 4):
+
+Introduce a memcg interface to trigger memory reclaim on a memory cgroup.
+
+Use case: Proactive Reclaim
+---------------------------
+
+A userspace proactive reclaimer can continuously probe the memcg to
+reclaim a small amount of memory.  This gives more accurate and up-to-date
+workingset estimation as the LRUs are continuously sorted and can
+potentially provide more deterministic memory overcommit behavior.  The
+memory overcommit controller can provide more proactive response to the
+changing behavior of the running applications instead of being reactive.
+
+A userspace reclaimer's purpose in this case is not a complete replacement
+for kswapd or direct reclaim, it is to proactively identify memory savings
+opportunities and reclaim some amount of cold pages set by the policy to
+free up the memory for more demanding jobs or scheduling new jobs.
+
+A user space proactive reclaimer is used in Google data centers.
+Additionally, Meta's TMO paper recently referenced a very similar
+interface used for user space proactive reclaim:
+https://dl.acm.org/doi/pdf/10.1145/3503222.3507731
+
+Benefits of a user space reclaimer:
+-----------------------------------
+
+1) More flexible on who should be charged for the cpu of the memory
+   reclaim.  For proactive reclaim, it makes more sense to be centralized.
+
+2) More flexible on dedicating the resources (like cpu).  The memory
+   overcommit controller can balance the cost between the cpu usage and
+   the memory reclaimed.
+
+3) Provides a way to the applications to keep their LRUs sorted, so,
+   under memory pressure better reclaim candidates are selected.  This
+   also gives more accurate and uptodate notion of working set for an
+   application.
+
+Why memory.high is not enough?
+------------------------------
+
+- memory.high can be used to trigger reclaim in a memcg and can
+  potentially be used for proactive reclaim.  However there is a big
+  downside in using memory.high.  It can potentially introduce high
+  reclaim stalls in the target application as the allocations from the
+  processes or the threads of the application can hit the temporary
+  memory.high limit.
+
+- Userspace proactive reclaimers usually use feedback loops to decide
+  how much memory to proactively reclaim from a workload.  The metrics
+  used for this are usually either refaults or PSI, and these metrics will
+  become messy if the application gets throttled by hitting the high
+  limit.
+
+- memory.high is a stateful interface, if the userspace proactive
+  reclaimer crashes for any reason while triggering reclaim it can leave
+  the application in a bad state.
+
+- If a workload is rapidly expanding, setting memory.high to proactively
+  reclaim memory can result in actually reclaiming more memory than
+  intended.
+
+The benefits of such interface and shortcomings of existing interface were
+further discussed in this RFC thread:
+https://lore.kernel.org/linux-mm/5df21376-7dd1-bf81-8414-32a73cea45dd@google.com/
+
+Interface:
+----------
+
+Introducing a very simple memcg interface 'echo 10M > memory.reclaim' to
+trigger reclaim in the target memory cgroup.
+
+The interface is introduced as a nested-keyed file to allow for future
+optional arguments to be easily added to configure the behavior of
+reclaim.
+
+Possible Extensions:
+--------------------
+
+- This interface can be extended with an additional parameter or flags
+  to allow specifying one or more types of memory to reclaim from (e.g.
+  file, anon, ..).
+
+- The interface can also be extended with a node mask to reclaim from
+  specific nodes. This has use cases for reclaim-based demotion in memory
+  tiering systens.
+
+- A similar per-node interface can also be added to support proactive
+  reclaim and reclaim-based demotion in systems without memcg.
+
+- Add a timeout parameter to make it easier for user space to call the
+  interface without worrying about being blocked for an undefined amount
+  of time.
+
+For now, let's keep things simple by adding the basic functionality.
+```
+
+### mem_cgroup_soft_limit_reclaim 这个函数是做什么用的

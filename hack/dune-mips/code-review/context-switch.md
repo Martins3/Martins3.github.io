@@ -24,7 +24,7 @@
 MIPS64-III-Priviledge :
 
 - [ ] lddir : get pte specified by `PWCtl` `PWBase` `PWField`, `PWSize` and pgd pointer
-  - [ ] PWBase : *virtual*  base directy address 
+  - [ ] PWBase : *virtual*  base directy address
   - loongson manual says : load pte as PWField and PWsize indicates
 
 - [ ] build_loongson3_tlb_refill_handler

@@ -1,4 +1,4 @@
-# x86 Dune 
+# x86 Dune
 
 <!-- vim-markdown-toc GitLab -->
 

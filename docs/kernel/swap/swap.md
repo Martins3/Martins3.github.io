@@ -127,18 +127,18 @@ swap 机制主要组成部分是什么 :
     4. 特殊的 swap
 
 在 mm/ 文件夹下涉及到 swap 的文件，和对于 swap 的作用:
-| Name        | description                 |
-|-------------|-----------------------------|
-| swapfile    |                             |
-| swap_state  | 维护 swap cache，swap 的 readahead                           |
+| Name        | description                                       |
+|-------------|---------------------------------------------------|
+| swapfile    |                                                   |
+| swap_state  | 维护 swap cache，swap 的 readahead                |
 | swap        | pagevec 和 lrulist 的操作，其实和 swap 的关系不大 |
-| swap_slot   |                             |
-| page_io     | 进行通往底层的 io                             |
-| mlock       |                             |
-| workingset  |                             |
-| frontswap   |                             |
-| zswap       |                             |
-| swap_cgroup |                             |
+| swap_slot   |                                                   |
+| page_io     | 进行通往底层的 io                                 |
+| mlock       |                                                   |
+| workingset  |                                                   |
+| frontswap   |                                                   |
+| zswap       |                                                   |
+| swap_cgroup |                                                   |
 
 struct page 的支持
 1. `page->private` 用于存储 swp_entry_t.val，表示其中的
@@ -167,3 +167,8 @@ swp_entry_t get_swap_page(struct page *page)
 也就是 swap_slots.c 其实是 slots cache 机制。
 
 2. 为什么 `page->private` 需要保存 `swp_entry_t`　的内容, 难道不是 page table entry 保存吗 ? (当其需要再次被写回的时候，依靠这个确定位置，和删除在 radix tree 的关系!)
+
+## [Reconsidering swapping](https://lwn.net/Articles/690079/)
+> As a general rule, reclaiming anonymous pages (swapping) is seen as being considerably more expensive than reclaiming file-backed pages. One of the key reasons for this difference is that file-backed pages can be read from (and written to) persistent storage in large, contiguous chunks, while anonymous pages tend to be scattered randomly on the swap device.
+
+确实，因为内存的访问是随机的，进而导致 swap 访问很容易随机。

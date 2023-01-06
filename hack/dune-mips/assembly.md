@@ -1,7 +1,7 @@
 ## links
 - [`.no at`](https://stackoverflow.com/questions/7911964/is-set-noat-unsupported-for-mips-assembly)
 - [mips doesn't allow access pc directly](https://stackoverflow.com/questions/54830168/mips-assembler-can-we-initialize-the-program-counter-on-our-own)
-    - https://stackoverflow.com/questions/15331033/how-to-get-current-pc-register-value-on-mips-arch 
+    - https://stackoverflow.com/questions/15331033/how-to-get-current-pc-register-value-on-mips-arch
 - https://stackoverflow.com/questions/744055/gcc-inline-assembly-jump-to-label-outside-block
 ```c
 #include <stdio.h>
