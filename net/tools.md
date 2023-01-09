@@ -84,3 +84,18 @@ https://github.com/s0md3v/Smap
 https://news.ycombinator.com/item?id=32257852
 
 ## packetdrill
+
+## 检查 gateway
+route -n
+ip r
+
+setup gateway:
+```txt
+🧀  netstat -rn
+Kernel IP routing table
+Destination     Gateway         Genmask         Flags   MSS Window  irtt Iface
+0.0.0.0         192.168.8.1     0.0.0.0         UG        0 0          0 wlan0
+10.0.0.0        0.0.0.0         255.255.255.240 U         0 0          0 eth0
+172.17.0.0      0.0.0.0         255.255.0.0     U         0 0          0 docker0
+192.168.8.0     0.0.0.0         255.255.252.0   U         0 0          0 wlan0
+```

@@ -125,6 +125,8 @@ https://trstringer.com/simple-vs-oneshot-systemd-service/
 - journalctl -t kernel
 - journalctl -k
 
+## https://systemd-by-example.com/
+
 ## 常见疑问
 - https://unix.stackexchange.com/questions/506347/why-do-most-systemd-examples-contain-wantedby-multi-user-target
 

@@ -47,3 +47,6 @@ memory 中 Transparent Huge Page 和
 
 ## 参考
 - https://www.zhihu.com/question/35484429/answer/62964898
+
+## 和其他各种建议操作系统的对比
+- https://github.com/vvaltchev/tilck

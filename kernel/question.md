@@ -662,10 +662,6 @@ struct audit_context
 1. audit.c : kauditd_thread
 2. vmscan.c : kswapd(好像这个名字)
 
-
-#### (misc) 编译系统 Kconfig 那个make menu 以及各种 dep 文件
-如果可以掌握这个，那么岂不是可以应对所有的挑战了
-
 #### (misc) 我想知道 /lib 下那么多的东西都有啥 ?
 
 #### (mm) 内存空洞
@@ -682,8 +678,6 @@ struct audit_context
 
 #### (todo) 找到或者总结一下 SMP 和 NUMA 带来的挑战
 1. 是在不行就到 reddit 或者 知乎 上去问
-#### (todo) https://github.com/LearningOS/aos-lectures/blob/master/aos-course-outline.md
-需要操作系统进阶的内容，现在太过于局限于细节之中了
 
 #### (lock) seqlock 是什么东西?
 

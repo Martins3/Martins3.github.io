@@ -3,8 +3,7 @@ set -e
 
 # @todo 用 https://github.com/charmbracelet/gum 来重写这个项目
 use_nvme_as_root=false
-minimal=false
-replace_kernel=true
+replace_kernel=false
 
 hacking_memory="hotplug"
 hacking_memory="virtio-pmem"
@@ -34,9 +33,19 @@ workstation="$(jq -r ".workstation" <"$configuration")"
 qemu=${qemu_dir}/build/x86_64-softmmu/qemu-system-x86_64
 kernel=${kernel_dir}/arch/x86/boot/bzImage
 
-distribution=CentOS-Stream-8-x86_64         # good
-distribution=openEuler-22.03-LTS-x86_64-dvd # good
 distribution=openEuler-22.09-x86_64-dvd
+distribution=openEuler-20.03-LTS-SP3-x86_64-dvd
+# distribution=CentOS-7-x86_64-DVD-2207-02
+
+if [[ $distribution != "openEuler-22.09-x86_64-dvd" ]]; then
+  replace_kernel=true
+fi
+
+
+if [[ $distribution == "CentOS-7-x86_64-DVD-2207-02" ]]; then
+  replace_kernel=true
+  minimal=true
+fi
 
 iso=${workstation}/${distribution}.iso
 disk_img=${workstation}/${distribution}.qcow2
@@ -290,15 +299,17 @@ if [[ ${minimal} = true ]]; then
   arg_monitor="-vnc :0,password=on -monitor stdio"
   # arg_monitor="-nographic"
   arg_monitor="-monitor stdio"
+  arg_network="-netdev user,id=net1,hostfwd=tcp::5558-:22 -device e1000e,netdev=net1"
   ${qemu} \
     -cpu host $arg_img \
     -enable-kvm \
     -m 2G \
-    -smp 2 $arg_monitor
+    -smp 2 $arg_monitor $arg_network
   exit 0
 fi
 
-if [[ -z ${replace_kernel+x} ]]; then
+if [[ ${replace_kernel} == true ]]; then
+  arg_network="-netdev user,id=net1,hostfwd=tcp::5557-:22 -device e1000e,netdev=net1"
   arg_kernel=""
   arg_initrd=""
   arg_monitor=""

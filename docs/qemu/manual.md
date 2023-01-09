@@ -259,52 +259,6 @@ open vnc://192.168.23.126:5900
 ## 删除 Guest 机器密码
 参考[这里](https://askubuntu.com/questions/281074/can-i-set-my-user-account-to-have-no-password)
 
-## 为了方便调试，我一般使用如下脚本初始化 Guest
-- stress-ng
-
-```sh
-wget https://download-ib01.fedoraproject.org/pub/epel/7/x86_64/Packages/s/stress-ng-0.07.29-2.el7.x86_64.rpm
-yum install stress-ng-0.13.00-5.el8.x86_64.rpm
-
-yum install -y zsh
-sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
-
-cat << 'EOF'  > /etc/systemd/system/share.service
-[Unit]
-Description=reboot
-
-[Service]
-Type=oneshot
-ExecStart=mount -t 9p -o trans=virtio,version=9p2000.L host0 /root/share
-
-[Install]
-WantedBy=getty.target
-EOF
-
-systemctl enable share
-```
-
-配置其 zsh
-```sh
-function write() {
-  node=$1
-  num=$2
-  echo $num >/sys/devices/system/node/node$node/hugepages/hugepages-2048kB/nr_hugepages
-  numastat -m | grep -E "Node|HugePages_"
-}
-
-function global() {
-  echo $1 >/sys/kernel/mm/hugepages/hugepages-2048kB/nr_hugepages
-  numastat -m | grep -E "Node|HugePages_"
-}
-```
-
-初始化 disk
-
-parted /dev/sda -- mklabel gpt
-parted /dev/sda -- mkpart primary 1MiB -1MiB
-
-
 ## [ ] 在 guest 中 perf
 https://stackoverflow.com/questions/21155354/perf-data-file-has-no-samples
 

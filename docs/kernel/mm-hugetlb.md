@@ -35,7 +35,21 @@ obj-$(CONFIG_TRANSPARENT_HUGEPAGE) += huge_memory.o khugepaged.o
 
 - 这些接口的内核代码开始的位置： hugetlb_sysctl_handler_common
 
+## 常用脚本
+配置其 zsh
+```sh
+function write() {
+  node=$1
+  num=$2
+  echo $num >/sys/devices/system/node/node$node/hugepages/hugepages-2048kB/nr_hugepages
+  numastat -m | grep -E "Node|HugePages_"
+}
 
+function global() {
+  echo $1 >/sys/kernel/mm/hugepages/hugepages-2048kB/nr_hugepages
+  numastat -m | grep -E "Node|HugePages_"
+}
+```
 
 ## 使用大页的方法
 

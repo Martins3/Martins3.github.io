@@ -123,11 +123,16 @@ https://askubuntu.com/questions/164926/how-to-make-partitions-mount-at-startup
 
 ## cli tools
 
-### parted
+### parted : 格式化设备
 
 ```sh
 parted /dev/nvme0n1 -- mklabel gpt
 parted /dev/nvme0n1 -- mkpart primary 1MiB 100%
+```
+
+```sh
+parted /dev/sda -- mklabel gpt
+parted /dev/sda -- mkpart primary 1MiB -1MiB
 ```
 
 ### fdisk

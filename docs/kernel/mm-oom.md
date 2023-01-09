@@ -20,7 +20,8 @@ struct oom_control {
 在 `oom_kill_process` 中，将那些**已经被杀死**进程持有的内存直接释放掉[^1]。
 
 ## TODO
-- https://github.com/rfjakob/earlyoom : 了解这个工具的原理
+- Taming the OOM killer : https://lwn.net/Articles/317814/
+- https://github.com/facebookincubator/oomd : 了解这个工具的原理
 - https://superuser.com/questions/1150215/disabling-oom-killer-on-ubuntu-14-04
 
 ## 其他参考

@@ -17,6 +17,72 @@ static __always_inline void spin_lock_bh(spinlock_t *lock)
 - 检测的代码：暂时没有找到。
   - 应该是，
 
+- 安装 bcc ，可以使用 sudo softirqs 来观测
+```txt
+🤒  sudo softirqs
+Tracing soft irq event time... Hit Ctrl-C to end.
+^C
+SOFTIRQ          TOTAL_usecs
+tasklet                    0
+hi                        45
+rcu                      354
+timer                    441
+net_rx                   468
+sched                   1340
+```
+
+## 有那么多中断，最后都汇集在 softirq 上，如何区分的?
+
+使用网络为例，其实是存在很多网卡的，只有一个 softirq 。
+
+```c
+void blk_mq_complete_request(struct request *rq)
+{
+	if (!blk_mq_complete_request_remote(rq))
+		rq->q->mq_ops->complete(rq);
+}
+```
+这个函数可以解释。
+
+## 基本流程
+触发:
+```txt
+@[
+    trigger_load_balance+1
+    update_process_times+134
+    tick_sched_handle+34
+    tick_sched_timer+113
+    __hrtimer_run_queues+271
+    hrtimer_interrupt+262
+    __sysvec_apic_timer_interrupt+124
+    sysvec_apic_timer_interrupt+157
+    asm_sysvec_apic_timer_interrupt+22
+    cpuidle_enter_state+222
+    cpuidle_enter+41
+    do_idle+492
+    cpu_startup_entry+25
+    start_secondary+271
+    secondary_startup_64_no_verify+224
+]: 14144
+```
+
+执行 hook 的时间:
+```txt
+@[
+    run_rebalance_domains+1
+    __softirqentry_text_start+237
+    __irq_exit_rcu+216
+    sysvec_apic_timer_interrupt+162
+    asm_sysvec_apic_timer_interrupt+22
+    cpuidle_enter_state+222
+    cpuidle_enter+41
+    do_idle+492
+    cpu_startup_entry+25
+    start_secondary+271
+    secondary_startup_64_no_verify+224
+]: 1228
+```
+
 ## TODO
 - [ ] /proc/stat 关于 softirq 的统计是什么 ？
 

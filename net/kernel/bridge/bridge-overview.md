@@ -12,4 +12,8 @@ https://www.cnblogs.com/zmkeil/archive/2013/04/21/3034733.html
 [The rise of Linux-based networking hardware](https://lwn.net/Articles/720313/)
 > 似乎，其实 linux 并没有在 switch 上占据优势
 
+- https://developers.redhat.com/articles/2022/04/06/introduction-linux-bridging-commands-and-features#spanning_tree_protocol
+
+## 似乎 wifi 很难增加 bridge 啊?
+
 [^1]: https://www.zhihu.com/question/20279620/answer/67985156

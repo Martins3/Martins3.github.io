@@ -562,6 +562,57 @@ https://cv6.poinsignon.org/ : 使用 traceroute 来展示自己的简历
 - [ ] https://iximiuz.com/en/posts/ssh-tunnels/ : 这个哥们写过不少内容，这只是其一
 - [ ] https://plantegg.github.io/2019/06/02/%E5%8F%B2%E4%B8%8A%E6%9C%80%E5%85%A8_SSH_%E6%9A%97%E9%BB%91%E6%8A%80%E5%B7%A7%E8%AF%A6%E8%A7%A3--%E6%94%B6%E8%97%8F%E4%BF%9D%E5%B9%B3%E5%AE%89/
 
+## how to connect two network with ip a
+
+13900K :
+
+- 10.0.0.1
+- 255.255.255
+- 网关 192.168.8.1 : 确认下，非要使用这个吗
+
+M2
+
+- 10.0.0.1
+- netmask: 255.255.255
+- 网关 10.0.0.2
+
+### [ ] 如何删除其他的 profile
+
+### [ ] 总是自带默认路由的
+
+增加了之后的:
+```
+default via 192.168.8.1 dev enp4s0 proto static metric 100
+default via 192.168.8.1 dev wlo1 proto dhcp src 192.168.11.3 metric 600
+10.0.0.0/24 dev enp4s0 proto kernel scope link src 10.0.0.1 metric 100
+172.17.0.0/16 dev docker0 proto kernel scope link src 172.17.0.1 linkdown
+192.168.8.0/22 dev wlo1 proto kernel scope link src 192.168.11.3 metric 600
+192.168.8.1 dev enp4s0 proto static scope link metric 100
+```
+
+没有增加的
+```txt
+default via 192.168.8.1 dev enp4s0 proto static metric 100
+default via 192.168.8.1 dev wlo1 proto dhcp src 192.168.11.3 metric 600
+10.0.0.0/24 dev enp4s0 proto kernel scope link src 10.0.0.1 metric 100
+172.17.0.0/16 dev docker0 proto kernel scope link src 172.17.0.1 linkdown
+192.168.8.0/22 dev wlo1 proto kernel scope link src 192.168.11.3 metric 600
+192.168.8.1 dev enp4s0 proto static scope link metric 100
+~
+🧀  ip r
+default via 192.168.8.1 dev wlo1 proto dhcp src 192.168.11.3 metric 600
+172.17.0.0/16 dev docker0 proto kernel scope link src 172.17.0.1 linkdown
+192.168.8.0/22 dev wlo1 proto kernel scope link src 192.168.11.3 metric 600
+```
+
+参考这个答案，将这个默认项目删除就可以了
+https://serverfault.com/questions/181094/how-do-i-delete-a-route-from-linux-routing-table
+
+🧀  sudo route del -net 0.0.0.0 gw 10.0.0.1 netmask 0.0.0.0 dev enp4s0
+
+### virsh 创建的网关还是不能使用
+
+
 [^2]: 用芯探核:基于龙芯的 Linux 内核探索解析
 [^4]: http://yuba.stanford.edu/rcp/
 [^6]: [An Introduction to Computer Networks](http://intronetworks.cs.luc.edu/current2/html/)

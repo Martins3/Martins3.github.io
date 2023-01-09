@@ -7,6 +7,10 @@
 - Memory Barriers: a Hardware View for Software Hackers
 - What every systems programmer should know about concurrency
 
+- 现在才知道在 C++ 11 才开始定义的 memory model 的
+- https://github.com/LearningOS/aos-lectures/blob/master/lec12/slide-12-01.tex
+   - 但是不知道这个 slides 如何编译
+
 ## dma
 - dma_alloc_coherent
 
