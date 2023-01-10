@@ -11,7 +11,7 @@ tags: acm
 
 1. sort int slice
 
-```
+```go
 	sort.Slice(nums, func(i, j int) bool {
 		return nums[i] < nums[j]
 	})
@@ -19,14 +19,14 @@ tags: acm
 
 2. sort struct
 
-```
+```go
 	sort.Slice(people, func(i, j int) bool {
 		return people[i].age < people[j].age
 	})
 ```
 
 3. int heap
-```
+```go
 type IntHeap []int
 
 // h.Len()
@@ -56,7 +56,7 @@ func (h *IntHeap) Pop() interface{} {
 [doc](https://golang.org/pkg/strings/?m=all)
 
 1. reverse
-```
+```go
 func Reverse(s string) string {
 	r := []rune(s)
 	for i, j := 0, len(r)-1; i < len(r)/2; i, j = i+1, j-1 {
@@ -79,14 +79,14 @@ func main() {
 ```
 
 3. empty string
-```
+```go
 var s string
 fmt.Println(s=="") // prints "true"
 ```
 
 ## slice
 1. Add a element at the first
-```
+```go
 data := []string{"A", "B", "C", "D"}
 data = append([]string{"Prepend Item"}, data...)
 fmt.Println(data)
@@ -95,7 +95,7 @@ fmt.Println(data)
 2. push back
 
 ## stack
-```
+```go
 // A unsafe thread !
 
 type stack []int

@@ -27,6 +27,7 @@ sudo apt install linux-tools-common linux-tools-generic linux-tools-`uname -r`
 ```sh
 ./flamegraph.sh -c 'iperf -c localhost' -g iperf
 ```
+## 使用 BCC 也是不错的
 
 ## bpftrace
 使用 bpftrace 的 kprobe 可以很容易的动态的获取内核函数的 backtrace

@@ -9,3 +9,15 @@
 
 ## 一些技巧
 - [利用 git 和 makefile 来构建测试](https://chrismorgan.info/blog/make-and-git-diff-test-harness/)
+
+## 遇到的过问题
+
+使用数组：
+```mk
+KENREL_MODULES= a b c
+$(info $(KENREL_MODULES))
+all:
+	@for module in $(KENREL_MODULES); do \
+		echo "$$module"; \
+		done;
+```

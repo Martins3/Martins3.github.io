@@ -28,7 +28,58 @@
 - [ ] 为什么需要指定 build 目录
 
 ## 各种小问题
+
+### make compile_commands.json 是如何生成的
 https://stackoverflow.com/questions/23774582/in-kernel-makefile-call-cmd-tags-what-is-the-cmd-here-refers-to
+
+```txt
+🧀  rm compile_commands.json && make compile_commands.json -j
+  DESCEND objtool
+  CALL    scripts/checksyscalls.sh
+  GEN     compile_commands.json
+linux on  master [!+?] via C v11.3.0-gcc via ❄️  impure (kernel)
+🧀  rm compile_commands.json && V=1 make compile_commands.json -j
+mkdir -p /home/martins3/core/linux/tools/objtool && make O=/home/martins3/core/linux subdir=tools/objtool --no-print-directory -C objtool
+make -f /home/martins3/core/linux/tools/build/Makefile.build dir=. obj=fixdep
+make -f /home/martins3/core/linux/tools/build/Makefile.build dir=./arch/x86 obj=objtool
+  CALL    scripts/checksyscalls.sh
+make -f /home/martins3/core/linux/tools/build/Makefile.build dir=. obj=fixdep
+  GEN     compile_commands.json
+```
+
+为什么可以自动将 cmd 忽视掉
+```txt
+quiet_cmd_gen_good = GEN     $@
+      cmd_gen_good = echo "good"
+```
+
+- [ ] 3.12 Command change detection : 进一步的补充说明，但是不是本质。
+  - https://docs.kernel.org/kbuild/makefiles.html
+
+```sh
+quiet_cmd_tags = GEN     $@
+      cmd_tags = $(BASH) $(srctree)/scripts/tags.sh $@
+
+tags TAGS cscope gtags: FORCE
+	$(call cmd,tags)
+```
+
+
+```sh
+make -p | grep -B1 -E '^cmd '
+```
+得到
+```c
+cmd = @set -e; $(echo-cmd) $($(quiet)redirect) $(delete-on-interrupt) $(cmd_$(1))
+```
+其实就是 echo 命令，并且执行命令，stackoverflow 上总结的很对
+
+### What are the `some_name.o.cmd` files?
+- https://unix.stackexchange.com/questions/186577/what-are-the-some-name-o-cmd-files
+
+### Makefile 和 Kbuild 是什么关系?
+
+- 暂时只是知道，会首先选择 Kbuild 的，然后
 
 # build system
 [各种 make defconfig 生成的过程 .config 的过程是什么?](https://stackoverflow.com/questions/41885015/what-exactly-does-linux-kernels-make-defconfig-do)
