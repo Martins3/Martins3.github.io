@@ -746,3 +746,9 @@ transparet hugeapge 会因为 memory pressure 而被拆分吗?
 ## [ ] 为什么 transparent hugepage 会让 idle page tracking 不准
 
 ## [ ] 到底是使用 pmd 还是使用 pud 的
+
+## MADV_COLLAPSE
+commit 写的很详细的了；
+- 7d8faaf155454f8798ec56404faca29a82689c77
+- https://lwn.net/Articles/887753/
+7d8faaf155454f8798ec56404faca29a82689c77

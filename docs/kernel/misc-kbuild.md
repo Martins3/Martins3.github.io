@@ -79,7 +79,7 @@ cmd = @set -e; $(echo-cmd) $($(quiet)redirect) $(delete-on-interrupt) $(cmd_$(1)
 
 ### Makefile 和 Kbuild 是什么关系?
 
-- 暂时只是知道，会首先选择 Kbuild 的，然后
+- 暂时只是知道，会首先选择 Kbuild 的，而且 Kbuild 的语法和 Makefile 相同的。
 
 # build system
 [各种 make defconfig 生成的过程 .config 的过程是什么?](https://stackoverflow.com/questions/41885015/what-exactly-does-linux-kernels-make-defconfig-do)

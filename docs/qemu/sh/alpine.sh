@@ -3,7 +3,7 @@ set -e
 
 # @todo 用 https://github.com/charmbracelet/gum 来重写这个项目
 use_nvme_as_root=false
-replace_kernel=false
+replace_kernel=true
 
 hacking_memory="hotplug"
 hacking_memory="virtio-pmem"
@@ -35,17 +35,27 @@ kernel=${kernel_dir}/arch/x86/boot/bzImage
 
 distribution=openEuler-22.09-x86_64-dvd
 distribution=openEuler-20.03-LTS-SP3-x86_64-dvd
-# distribution=CentOS-7-x86_64-DVD-2207-02
+distribution=CentOS-7-x86_64-DVD-2207-02
+distribution=ubuntu-22.04.1-live-server-amd64
 
-if [[ $distribution != "openEuler-22.09-x86_64-dvd" ]]; then
-  replace_kernel=true
-fi
-
-
-if [[ $distribution == "CentOS-7-x86_64-DVD-2207-02" ]]; then
-  replace_kernel=true
+guest_port=5556
+case $distribution in
+openEuler-22.09-x86_64-dvd)
+  ;;
+openEuler-20.03-LTS-SP3-x86_64-dvd)
+  guest_port=5557
+  replace_kernel=false
+  ;;
+CentOS-7-x86_64-DVD-2207-02)
+  replace_kernel=false
   minimal=true
-fi
+  guest_port=5558
+  ;;
+ubuntu-22.04.1-live-server-amd64)
+  replace_kernel=false
+  guest_port=5559
+  ;;
+esac
 
 iso=${workstation}/${distribution}.iso
 disk_img=${workstation}/${distribution}.qcow2
@@ -170,8 +180,8 @@ arg_sata="$arg_sata -drive file=${workstation}/img5,media=disk,format=raw"
 # @todo 尝试一下这个
 # -netdev tap,id=nd0,ifname=tap0 -device e1000,netdev=nd0
 # @todo 做成一个计数器吧，自动增加访问的接口
-arg_network="-netdev user,id=net1,hostfwd=tcp::5556-:22 -device e1000e,netdev=net1"
-arg_network="-netdev user,id=net1,hostfwd=tcp::5556-:22 -device virtio-net-pci,netdev=net1,romfile=/home/martins3/core/zsh/README.md"
+arg_network="-netdev user,id=net1,hostfwd=tcp::$guest_port-:22 -device e1000e,netdev=net1"
+arg_network="-netdev user,id=net1,hostfwd=tcp::$guest_port-:22 -device virtio-net-pci,netdev=net1,romfile=/home/martins3/core/zsh/README.md"
 arg_qmp="-qmp tcp:localhost:4444,server,wait=off"
 
 mon_socket_path=/tmp/qemu-monitor-socket
@@ -299,7 +309,6 @@ if [[ ${minimal} = true ]]; then
   arg_monitor="-vnc :0,password=on -monitor stdio"
   # arg_monitor="-nographic"
   arg_monitor="-monitor stdio"
-  arg_network="-netdev user,id=net1,hostfwd=tcp::5558-:22 -device e1000e,netdev=net1"
   ${qemu} \
     -cpu host $arg_img \
     -enable-kvm \
@@ -308,8 +317,7 @@ if [[ ${minimal} = true ]]; then
   exit 0
 fi
 
-if [[ ${replace_kernel} == true ]]; then
-  arg_network="-netdev user,id=net1,hostfwd=tcp::5557-:22 -device e1000e,netdev=net1"
+if [[ ${replace_kernel} == false ]]; then
   arg_kernel=""
   arg_initrd=""
   arg_monitor=""

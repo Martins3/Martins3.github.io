@@ -613,6 +613,18 @@ https://serverfault.com/questions/181094/how-do-i-delete-a-route-from-linux-rout
 ### virsh 创建的网关还是不能使用
 
 
+> mac
+
+sudo ifconfig eth0 10.0.0.2/24
+sudo ip route add default via 10.0.0.1 dev eth0
+
+> 13900K
+sudo ip ad add 10.0.0.1/24 dev enp5s0
+
+目前就这样配置吧
+
+- [ ] 非要设置 gateway 吗？
+
 [^2]: 用芯探核:基于龙芯的 Linux 内核探索解析
 [^4]: http://yuba.stanford.edu/rcp/
 [^6]: [An Introduction to Computer Networks](http://intronetworks.cs.luc.edu/current2/html/)

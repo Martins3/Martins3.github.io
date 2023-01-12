@@ -55,8 +55,10 @@ echo 10de 1d12 > /sys/bus/pci/drivers/vfio-pci/new_id
 ```
 
 
-<!-- 看看这个文章: https://wiki.gentoo.org/wiki/GPU_passthrough_with_libvirt_qemu_kvm
+<!--
+看看这个文章: https://wiki.gentoo.org/wiki/GPU_passthrough_with_libvirt_qemu_kvm
 这个教程也不错：https://github.com/bryansteiner/gpu-passthrough-tutorial
+ -device vfio-pci,host=01:00.0,multifunction=on,x-vga=on 中的 x-vga 是什么含义？
 -->
 <!-- @todo 似乎 lspci -nn 就可以获取上面说的两个东西 -->
 <!-- @todo 可以集成显卡直通吗? -->

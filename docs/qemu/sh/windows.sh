@@ -6,7 +6,7 @@ configuration=${abs_loc}/config.json
 
 qemu_dir=$(jq -r ".qemu_dir" <"$configuration")
 workstation=$(jq -r ".workstation" <"$configuration")
-version=8
+version=11
 arg_win11=""
 case $version in
 8)
@@ -21,6 +21,10 @@ case $version in
   iso="$workstation/Win11_22H2_Chinese_Simplified_x64v1.iso"
   img="$workstation/windows11.img"
   arg_win11="-chardev socket,id=chrtpm,path=/tmp/emulated_tpm/swtpm-sock -tpmdev emulator,id=tpm0,chardev=chrtpm -device tpm-tis,tpmdev=tpm0"
+  # swtpm socket --tpmstate dir=/tmp/emulated_tpm --ctrl type=unixio,path=/tmp/emulated_tpm/swtpm-sock --log level=20 --tpm2
+  # nixos 不行，直接下载一个就可以了: http://mirror.centos.org/centos/8-stream/AppStream/x86_64/os/Packages/
+  arg_win11="$arg_win11 -machine q35,smm=on"
+  arg_win11="$arg_win11 -global driver=cfi.pflash01,property=secure,value=on -drive if=pflash,format=raw,unit=0,file=/home/martins3/hack/vm/ovmf/usr/share/edk2/ovmf/OVMF_CODE.secboot.fd,readonly=on -drive if=pflash,format=raw,unit=1,file=/home/martins3/hack/vm/ovmf/usr/share/edk2/ovmf/OVMF_VARS.secboot.fd"
   ;;
 esac
 
@@ -30,12 +34,11 @@ https://www.microsoft.com/en-us/software-download/windows10ISO
 and rename it as $iso"
 fi
 
-
 # arg_vnc="-vnc :0,password=on"
 arg_monitor="-monitor stdio"
 if [ ! -f "$img" ]; then
-  qemu-img create -f qcow2 "$img" 100G
-  qemu-system-x86_64 -cdrom "$iso" -hda "$img" -m 8G -smp 8 -cpu host --enable-kvm $arg_monitor $arg_win11
+  qemu-img create -f qcow2 "$img" 200G
+  qemu-system-x86_64 -cdrom "$iso" -hda "$img" -m 16G -smp 16 -cpu host --enable-kvm $arg_monitor $arg_win11
   exit 0
 fi
 
@@ -43,7 +46,7 @@ fi
 
 qemu=${qemu_dir}/build/x86_64-softmmu/qemu-system-x86_64
 arg_mem_balloon="-device virtio-balloon-pci,id=balloon0,deflate-on-oom=true"
-arg_qmp="-qmp tcp:localhost:4444,server,wait=off"
+arg_qmp="-qmp tcp:localhost:4445,server,wait=off"
 arg_img="-drive aio=native,cache.direct=on,file=${img},format=qcow2,media=disk,index=0"
 # https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/archive-virtio/virtio-win-0.1.208-1/
 arg_virtio="-drive aio=native,cache.direct=on,file=$workstation/virtio-win-0.1.208.iso,media=cdrom,index=2"

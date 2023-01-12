@@ -1,7 +1,3 @@
-- [ ] 一个 QEMU 可以混合使用不同大小的大页吗?
-- [ ] QEMU 的启动参数
-  - -m 24G -mem-prealloc -mem-path /dev/hugepages/test_vm
-- [ ] 一个 mmap 可以混合使用各种大页吗?
 - [ ] for_each_zone_zonelist_nodemask
 - highatomic 是做什么意思的
 - [ ] tools/vm directory
@@ -13,7 +9,7 @@
   - https://stackoverflow.com/questions/8126311/how-much-of-what-every-programmer-should-know-about-memory-is-still-valid
 - numa remote access 是如何确定的
 - vmpressure.c 是做什么的
-- mmu notifier
+  - 似乎是 memorycontrol 的一个子功能，但是和 psi 是什么关系啊？
 
 ## 似乎 numastat -p 的结果是错误的
 
@@ -87,3 +83,16 @@ enum migratetype {
   - [ ] I think, if a page can be evicted to swap, so it can movable too.
 
 - put_page : 理解一下 reference counting 机制
+
+## memory 中的代办
+- vmmem hugeapge : page struct
+- vmscan
+- migration
+- ksm
+- compaction
+- pageflags
+- hw poison 机制
+- shmem
+- damon
+- memory hotplug
+- memfd

@@ -425,7 +425,7 @@ vim /boot/grub/grub.cfg
 将 [/boot/vmlinuz 转换为 vmlinux](https://superuser.com/questions/298826/how-do-i-uncompress-vmlinuz-to-vmlinux) 是不行的，里面没有调试信息
 
 ## 补充的操作
-- virsh dump --memory-only --live <vm uuid>  g.dump
+- virsh dump --memory-only --live e5fb54af-98ec-46d7-a69b-5a8fb6b52996 g.dump
 
 然后 crash vmlinux g.dump
 
@@ -451,6 +451,20 @@ sudo apt-get install linux-image-`uname -r`-dbgsym
 - 获取 debuginfo
 - 关键参考: https://askubuntu.com/questions/197016/how-to-install-a-package-that-contains-ubuntu-kernel-debug-symbols
 - https://superuser.com/questions/62575/where-is-vmlinux-on-my-ubuntu-installation
+
+官方文档:
+https://wiki.ubuntu.com/Debug%20Symbol%20Packages
+```sh
+echo "deb http://ddebs.ubuntu.com $(lsb_release -cs) main restricted universe multiverse
+deb http://ddebs.ubuntu.com $(lsb_release -cs)-updates main restricted universe multiverse
+deb http://ddebs.ubuntu.com $(lsb_release -cs)-proposed main restricted universe multiverse" | \
+sudo tee -a /etc/apt/sources.list.d/ddebs.list
+
+sudo apt install ubuntu-dbgsym-keyring
+
+sudo apt-get update
+sudo apt-get install linux-image-$(uname -r)-dbgsym
+```
 
 - 完了，现在我遇到完全相同的问题了:
   - https://askubuntu.com/questions/1446930/there-is-no-kernel-dbgsym-package-for-my-ubuntu-22-04
