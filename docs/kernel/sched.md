@@ -1615,3 +1615,12 @@ config IRQ_TIME_ACCOUNTING
 
 	  If in doubt, say N here.
 ```
+
+## current 的 disassemble
+
+```txt
+0xffffffffb24da3bb <try_to_wake_up+27>: mov    %gs:0x28,%rax
+0xffffffffb24da3c4 <try_to_wake_up+36>: mov    %rax,-0x30(%rbp)
+0xffffffffb24da3c8 <try_to_wake_up+40>: xor    %eax,%eax
+0xffffffffb24da3ca <try_to_wake_up+42>: mov    %gs:0x16bc0,%rax
+```

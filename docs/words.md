@@ -50,6 +50,8 @@ Absence of a signal is itself a signal.[^15]
 
 Great teams are allowed more — some teams are just faster than others at delivering the value. They get bored with what they do more easily. These teams can introduce new technologies more often. That’s no excuse not to use spikes and do hackathons. On the other hand, if the team has troubles delivering — proceed with caution.[^17]
 
+有人不喜欢自由，因为自由意味着人必须对自己的命运负责。他宁愿把自己的命运交给别人控制，这样可以活得轻松一些。
+
 [^1]: https://www.zhihu.com/question/443850977/answer/1754327421
 [^2]: https://mp.weixin.qq.com/s/4kN65Eu_mYKmC-GLig082g
 [^3]: https://github.com/cdk8s/cdk8s-team-style/blob/master/other/read-write.md

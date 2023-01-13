@@ -439,6 +439,7 @@ vim /boot/grub/grub.cfg
   - `-s` : 展示 k
 
 - bt -FF -c 12
+- struct hrtimer 0xffff8faa7e095ee0
 
 ## 如何 ubuntu crash 之后
 我发现直接执行安装

@@ -625,6 +625,28 @@ sudo ip ad add 10.0.0.1/24 dev enp5s0
 
 - [ ] 非要设置 gateway 吗？
 
+```txt
+× NetworkManager-wait-online.service - Network Manager Wait Online
+     Loaded: loaded (/etc/systemd/system/NetworkManager-wait-online.service; enabled; preset: enabled)
+    Drop-In: /nix/store/hpvakps2qbzk4y06jgwkrwfhl77zrf3j-system-units/NetworkManager-wait-online.service.d
+             └─overrides.conf
+     Active: failed (Result: exit-code) since Fri 2023-01-13 10:24:33 CST; 30s ago
+   Duration: 1d 23h 2min 45.146s
+       Docs: man:nm-online(1)
+    Process: 1599312 ExecStart=/nix/store/v60qxy59png2dfp6zryjw54xii8vp58m-networkmanager-1.40.6/bin/nm-online -s -q (code=exited, status=1/FAILURE)
+   Main PID: 1599312 (code=exited, status=1/FAILURE)
+         IP: 0B in, 0B out
+        CPU: 18ms
+
+Jan 13 10:23:33 nixos systemd[1]: Starting Network Manager Wait Online...
+Jan 13 10:24:33 nixos systemd[1]: NetworkManager-wait-online.service: Main process exited, code=exited, status=1/FAILURE
+Jan 13 10:24:33 nixos systemd[1]: NetworkManager-wait-online.service: Failed with result 'exit-code'.
+Jan 13 10:24:33 nixos systemd[1]: Failed to start Network Manager Wait Online.
+warning: error(s) occurred while switching to the new configuration
+```
+- 了解下其中的原理：
+- https://askubuntu.com/questions/1018576/what-does-networkmanager-wait-online-service-do
+
 [^2]: 用芯探核:基于龙芯的 Linux 内核探索解析
 [^4]: http://yuba.stanford.edu/rcp/
 [^6]: [An Introduction to Computer Networks](http://intronetworks.cs.luc.edu/current2/html/)

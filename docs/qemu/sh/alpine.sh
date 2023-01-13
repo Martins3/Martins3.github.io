@@ -34,26 +34,32 @@ qemu=${qemu_dir}/build/x86_64-softmmu/qemu-system-x86_64
 kernel=${kernel_dir}/arch/x86/boot/bzImage
 
 distribution=openEuler-22.09-x86_64-dvd
-distribution=openEuler-20.03-LTS-SP3-x86_64-dvd
-distribution=CentOS-7-x86_64-DVD-2207-02
-distribution=ubuntu-22.04.1-live-server-amd64
+# distribution=openEuler-20.03-LTS-SP3-x86_64-dvd
+# distribution=CentOS-7-x86_64-DVD-2207-02
+# distribution=ubuntu-22.04.1-live-server-amd64
 
 guest_port=5556
+qmp_port=4444
 case $distribution in
 openEuler-22.09-x86_64-dvd)
+  use_ovmf=true
   ;;
 openEuler-20.03-LTS-SP3-x86_64-dvd)
   guest_port=5557
+  qmp_port=4445
   replace_kernel=false
   ;;
 CentOS-7-x86_64-DVD-2207-02)
   replace_kernel=false
   minimal=true
   guest_port=5558
+  qmp_port=4446
   ;;
 ubuntu-22.04.1-live-server-amd64)
   replace_kernel=false
   guest_port=5559
+  qmp_port=4447
+  use_ovmf=true
   ;;
 esac
 
@@ -73,6 +79,7 @@ root=/dev/vdb2
 arg_share_dir="-virtfs local,path=$(pwd),mount_tag=host0,security_model=mapped,id=host0"
 
 if [[ $use_nvme_as_root = true ]]; then
+  # @todo 这个应该只是缺少 bootindex 吧？
   arg_img="-device nvme,drive=nvme3,serial=foo -drive file=${disk_img},format=qcow2,if=none,id=nvme3"
   root=/dev/nvme1n1
 fi
@@ -149,15 +156,19 @@ else
   arg_seabios="-chardev file,path=/tmp/seabios.log,id=seabios -device isa-debugcon,iobase=0x402,chardev=seabios -bios ${seabios}"
 fi
 
+# @todo 不知道为什么现在使用 ovmf 界面没有办法正常刷新了
+# 但是还可以正常使用的机器
+# 当然，如果是 ubuntu ，问题更加严重，直接卡在哪里了
 if [[ $use_ovmf == true ]]; then
-  # @todo nixos 上暂时没有搞清楚 OVMF 的安装，暂时使用这种方法了
-  ovmf=$workstation/OVMF.fd
-  if [[ ! -f "$ovmf" ]]; then
-    wget https://github.com/clearlinux/common/blob/master/OVMF.fd -O "$ovmf"
-  fi
-  arg_seabios="-drive file=$ovmf,if=pflash,format=raw,unit=0,readonly=on"
-  arg_seabios="$arg_seabios -drive file=/tmp/OVMF_VARS.secboot.fd,if=pflash,format=raw,unit=1"
-  # arg_seabios="-bios /tmp/OVMF.fd"
+  # sudo cp /run/libvirt/nix-ovmf/OVMF_VARS.fd /tmp/OVMF_VARS.fd
+  # sudo chmod 666 /tmp/OVMF_VARS.fd
+  ovmf_code=/run/libvirt/nix-ovmf/OVMF_CODE.fd
+  ovmf_code=$workstation/OVMF.fd
+  ovmf_var=/tmp/OVMF_VARS.fd
+  arg_seabios="-drive file=$ovmf_code,if=pflash,format=raw,unit=0,readonly=on"
+  arg_seabios="$arg_seabios -drive file=$ovmf_var,if=pflash,format=raw,unit=1"
+
+  # arg_seabios="-bios $workstation/OVMF.fd"
 fi
 
 arg_cgroupv2="systemd.unified_cgroup_hierarchy=1"
@@ -182,7 +193,7 @@ arg_sata="$arg_sata -drive file=${workstation}/img5,media=disk,format=raw"
 # @todo 做成一个计数器吧，自动增加访问的接口
 arg_network="-netdev user,id=net1,hostfwd=tcp::$guest_port-:22 -device e1000e,netdev=net1"
 arg_network="-netdev user,id=net1,hostfwd=tcp::$guest_port-:22 -device virtio-net-pci,netdev=net1,romfile=/home/martins3/core/zsh/README.md"
-arg_qmp="-qmp tcp:localhost:4444,server,wait=off"
+arg_qmp="-qmp tcp:localhost:$qmp_port,server,wait=off"
 
 mon_socket_path=/tmp/qemu-monitor-socket
 serial_socket_path=/tmp/qemu-serial-socket
@@ -242,12 +253,12 @@ while getopts "adskthpcmqr" opt; do
     exit 0
     ;;
   q)
-    telnet localhost 4444
+    telnet localhost $qmp_port
     exit 0
     ;;
   a)
     # @todo 丑陋的代码，从原则上将，option 应该在最上面的才对，修改参数
-    arg_qmp="-qmp tcp:localhost:4445,server,wait=off"
+    arg_qmp="-qmp tcp:localhost:5444,server,wait=off"
     arg_network="-netdev user,id=net1,hostfwd=tcp::5557-:22 -device e1000e,netdev=net1"
     arg_network="-netdev user,id=net1,hostfwd=tcp::5557-:22 -device virtio-net-pci,netdev=net1,romfile=/home/martins3/hack/vm/img1"
     arg_migration_target="-incoming tcp:0:4000"
@@ -320,7 +331,7 @@ fi
 if [[ ${replace_kernel} == false ]]; then
   arg_kernel=""
   arg_initrd=""
-  arg_monitor=""
+  arg_monitor="-monitor stdio"
 
   # @todo 不知道为什么需要将无关的 storage 设备都去掉，才可以正确启动
   # @todo lsblk 的为什么还有一个 sda 和 sr0 啊？
