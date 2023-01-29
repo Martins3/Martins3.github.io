@@ -2,27 +2,44 @@
 
 <!-- vim-markdown-toc GitLab -->
 
-* [basic](#basic)
-* [init](#init)
-  * [type_init](#type_init)
-  * [init static part](#init-static-part)
-  * [init Non-static part](#init-non-static-part)
-* [cast](#cast)
-* [property](#property)
-  * [Non-object](#non-object)
-  * [QOM composition tree](#qom-composition-tree)
-    * [child](#child)
-    * [link](#link)
-  * [alias](#alias)
-  * [GlobalProperty](#globalproperty)
-  * [struct Property](#struct-property)
-* [qdev](#qdev)
-  * [realize](#realize)
-  * [qtree](#qtree)
-* [QOM in action](#qom-in-action)
-  * [cpu type](#cpu-type)
-  * [qdev realize](#qdev-realize)
-* [misc](#misc)
+  * [basic](#basic)
+  * [init](#init)
+    * [type_init](#type_init)
+    * [init static part](#init-static-part)
+    * [init Non-static part](#init-non-static-part)
+  * [cast](#cast)
+  * [property](#property)
+    * [Non-object](#non-object)
+    * [QOM composition tree](#qom-composition-tree)
+      * [child](#child)
+      * [link](#link)
+    * [alias](#alias)
+    * [GlobalProperty](#globalproperty)
+    * [struct Property](#struct-property)
+  * [qdev](#qdev)
+    * [realize](#realize)
+    * [qtree](#qtree)
+  * [QOM in action](#qom-in-action)
+    * [cpu type](#cpu-type)
+    * [qdev realize](#qdev-realize)
+  * [misc](#misc)
+* [0  x86_cpu_set_bit_prop (obj=0x5555569523c0, v=0x5555569597a0, name=0x555556946c50 "vmx", opaque=0x5555566a0ed0, errp=0x7fffffff0d00) at ../target/i3](#0-x86_cpu_set_bit_prop-obj0x5555569523c0-v0x5555569597a0-name0x555556946c50-vmx-opaque0x5555566a0ed0-errp0x7fffffff0d00-at-targeti3)
+* [1  0x0000555555c3b904 in object_property_set (obj=obj@entry=0x5555569523c0, name=name@entry=0x555556946c50 "vmx", v=v@entry=0x5555569597a0, errp=errp](#1-0x0000555555c3b904-in-object_property_set-objobjentry0x5555569523c0-namenameentry0x555556946c50-vmx-vventry0x5555569597a0-errperrp)
+* [2  0x0000555555c3bc33 in object_property_parse (errp=0x7fffffff0d00, string=<optimized out>, name=0x555556946c50 "vmx", obj=0x5555569523c0) at ../qom](#2-0x0000555555c3bc33-in-object_property_parse-errp0x7fffffff0d00-stringoptimized-out-name0x555556946c50-vmx-obj0x5555569523c0-at-qom)
+* [3  object_apply_global_props (obj=0x5555569523c0, props=0x55555685da00, errp=0x555556600c70 <error_fatal>) at ../qom/object.c:412](#3-object_apply_global_props-obj0x5555569523c0-props0x55555685da00-errp0x555556600c70-error_fatal-at-qomobjectc412)
+* [4  0x0000555555c3acf1 in object_post_init_with_type (ti=0x555556684170, obj=<optimized out>) at ../qom/object.c:384](#4-0x0000555555c3acf1-in-object_post_init_with_type-ti0x555556684170-objoptimized-out-at-qomobjectc384)
+* [5  object_initialize_with_type (obj=obj@entry=0x5555569523c0, size=size@entry=18928, type=type@entry=0x555556674120) at ../qom/object.c:520](#5-object_initialize_with_type-objobjentry0x5555569523c0-sizesizeentry18928-typetypeentry0x555556674120-at-qomobjectc520)
+* [6  0x0000555555c3ae79 in object_new_with_type (type=0x555556674120) at ../qom/object.c:739](#6-0x0000555555c3ae79-in-object_new_with_type-type0x555556674120-at-qomobjectc739)
+* [7  0x0000555555c3af19 in object_new (typename=<optimized out>) at ../qom/object.c:754](#7-0x0000555555c3af19-in-object_new-typenameoptimized-out-at-qomobjectc754)
+* [8  0x0000555555a93cd6 in x86_cpu_new (x86ms=<optimized out>, apic_id=0, errp=0x555556600c70 <error_fatal>) at ../hw/i386/x86.c:98](#8-0x0000555555a93cd6-in-x86_cpu_new-x86msoptimized-out-apic_id0-errp0x555556600c70-error_fatal-at-hwi386x86c98)
+* [9  0x0000555555a93e1a in x86_cpus_init (x86ms=x86ms@entry=0x5555568ce310, default_cpu_version=<optimized out>) at ../hw/i386/x86.c:149](#9-0x0000555555a93e1a-in-x86_cpus_init-x86msx86msentry0x5555568ce310-default_cpu_versionoptimized-out-at-hwi386x86c149)
+* [10 0x0000555555a9a6c5 in pc_init1 (machine=0x5555568ce310, pci_type=0x555555e811ee "i440FX", host_type=0x555555e8120d "i440FX-pcihost") at ../hw/i386](#10-0x0000555555a9a6c5-in-pc_init1-machine0x5555568ce310-pci_type0x555555e811ee-i440fx-host_type0x555555e8120d-i440fx-pcihost-at-hwi386)
+* [11 0x00005555558b2a6c in machine_run_board_init (machine=0x5555568ce310, mem_path=<optimized out>, errp=<optimized out>) at ../hw/core/machine.c:1404](#11-0x00005555558b2a6c-in-machine_run_board_init-machine0x5555568ce310-mem_pathoptimized-out-errpoptimized-out-at-hwcoremachinec1404)
+* [12 0x0000555555a066f6 in qemu_init_board () at ../softmmu/vl.c:2507](#12-0x0000555555a066f6-in-qemu_init_board-at-softmmuvlc2507)
+* [13 qmp_x_exit_preconfig (errp=<optimized out>) at ../softmmu/vl.c:2603](#13-qmp_x_exit_preconfig-errpoptimized-out-at-softmmuvlc2603)
+* [14 0x0000555555a0a29f in qmp_x_exit_preconfig (errp=<optimized out>) at ../softmmu/vl.c:2598](#14-0x0000555555a0a29f-in-qmp_x_exit_preconfig-errpoptimized-out-at-softmmuvlc2598)
+* [15 qemu_init (argc=<optimized out>, argv=<optimized out>) at ../softmmu/vl.c:3602](#15-qemu_init-argcoptimized-out-argvoptimized-out-at-softmmuvlc3602)
+* [16 0x0000555555836969 in main (argc=<optimized out>, argv=<optimized out>) at ../softmmu/main.c:47](#16-0x0000555555836969-in-main-argcoptimized-out-argvoptimized-out-at-softmmumainc47)
 
 <!-- vim-markdown-toc -->
 因为 QEMU 整个项目是 C 语言写的，但是 QEMU 处理的对象例如主板，CPU, 总线，外设实际上存在很多继承的关系。
@@ -561,8 +578,7 @@ static Property pci_props[] = {
 						- prop->init = object_property_init_defval; // 同时注册 hook
 
 结合下面的 backtrace 可以分析出来，即使 property 是 class 的，但是依旧可以设置 object 的属性上。
-```c
-/*
+```txt
 #0  0x0000555555d3ae20 in set_uint8 () at ../hw/core/qdev-properties.c:269
 #1  0x0000555555d23479 in object_property_init_defval (obj=0x5555569e84d0, prop=0x5555567cbc60) at ../qom/object.c:1537
 #2  0x0000555555d249b5 in object_class_property_init_all (obj=0x5555569e84d0) at ../qom/object.c:499
@@ -602,6 +618,7 @@ PCIDevice *pci_new_multifunction(int devfn, bool multifunction,
 ```
 通过 qdev_prop_set_bit 之类的最后可以设置到 pci_props 描述的 PCIDevice 上的成员上。
 
+
 ## qdev
 qdev 出现的位置比 qom 要早，当 qom 出现之后，qdev 按照 qom 的模式重写过。
 
@@ -617,8 +634,7 @@ object_class_property_add_bool(class, "realized", device_get_realized, device_se
 		- device_set_realized
 			- DeviceClass::realized : 调用注册的 hook 函数，将两个函数
 
-```c
-/*
+```txt
 #8  0x0000555555be2653 in x86_cpu_realizefn (dev=0x555556b08d50, errp=0x7fffffffcd20) at ../target/i386/cpu.c:6299
 #9  0x0000555555d3e027 in device_set_realized (obj=<optimized out>, value=true, errp=0x7fffffffcda0) at ../hw/core/qdev.c:761
 #10 0x0000555555d22caa in property_set_bool (obj=0x555556b08d50, v=<optimized out>, name=<optimized out>, opaque=0x55555670c430, errp=0x7fffffffcda0) at ../qom/object.c:2285
@@ -743,8 +759,7 @@ X86CPUModel(因为 version 的原因)
 ```
 6. 在 kvm 或者 tcg 的初始化中可以调用 x86_cpu_apply_props 来进行 accel related feature 进行设置。
 kvm
-```c
-/*
+```txt
 #0  x86_cpu_set_bit_prop (obj=0x555555e64ac8 <object_property_find_err+43>, v=0x7fffffffd0a0, name=0x55555689ee30 "\220\356\211VUU", opaque=0x555556963e80, errp=0x555556c32070) at ../target/i386/cpu.c:4001
 #1  0x0000555555e64f5a in object_property_set (obj=0x555556c32070, name=0x55555608fef1 "kvmclock", v=0x555556b55070, errp=0x5555567a1ee8 <error_abort>) at ../qom/object.c:1402
 #2  0x0000555555e65b0f in object_property_parse (obj=0x555556c32070, name=0x55555608fef1 "kvmclock", string=0x55555608fefa "on", errp=0x5555567a1ee8 <error_abort>) at ../qom/object.c:1642
@@ -755,8 +770,7 @@ kvm
 ```
 
 tcg
-```c
-/*
+```txt
 #0  x86_cpu_set_bit_prop (obj=0x555555e64ac8 <object_property_find_err+43>, v=0x7fffffffd090, name=0x5555568963e0 "@d\211VUU", opaque=0x555556974ba0, errp=0x555556c28050) at ../target/i386/cpu.c:4001
 #1  0x0000555555e64f5a in object_property_set (obj=0x555556c28050, name=0x5555560a7af1 "vme", v=0x555556b56000, errp=0x5555567a1ee8 <error_abort>) at ../qom/object.c:14
 #2  0x0000555555e65b0f in object_property_parse (obj=0x555556c28050, name=0x5555560a7af1 "vme", string=0x5555560a7af5 "off", errp=0x5555567a1ee8 <error_abort>) at ../qom/object.c:1642
@@ -806,8 +820,7 @@ WARNING - Timeout at nvme_wait:144!   <- 报错之后继续
 ```
 
 最后在 @niugenen 和 @rrwhx 的帮助下，终于找到了下面的 backtrace
-```c
-/*
+```txt
 #0  pci_bus_realize (qbus=0x555556937d20, errp=0x7fffffffcb70) at /home/maritns3/core/xqm/hw/pci/pci.c:121
 #1  0x0000555555a2852a in bus_set_realized (obj=<optimized out>, value=<optimized out>, errp=0x7fffffffcc60) at /home/maritns3/core/xqm/hw/core/bus.c:225
 #2  0x0000555555bb206b in property_set_bool (obj=0x555556937d20, v=<optimized out>, name=<optimized out>, opaque=0x5555566cda50, errp=0x7fffffffcc60) at /home/maritns3
@@ -843,6 +856,51 @@ device_set_realized 除了调用 DeviceClass::realize 的这个 hook 之外，�
 ## misc
 - 注意区分 QObject 和 Object，前者是放到 QList 之类 visitor 数据类型中的
 - 通过 InterfaceClass QEMU 可以模拟 interface，具体例子参考 HotplugHandlerClass
+
+<!--
+
+@todo -cpu host,vmx=off 分析下 vmx=off 是如何实现的
+
+分析下这个 backtrace ！
+
+#0  x86_cpu_set_bit_prop (obj=0x5555569523c0, v=0x5555569597a0, name=0x555556946c50 "vmx", opaque=0x5555566a0ed0, errp=0x7fffffff0d00) at ../target/i3
+86/cpu.c:6680
+#1  0x0000555555c3b904 in object_property_set (obj=obj@entry=0x5555569523c0, name=name@entry=0x555556946c50 "vmx", v=v@entry=0x5555569597a0, errp=errp
+@entry=0x7fffffff0d00) at ../qom/object.c:1420
+#2  0x0000555555c3bc33 in object_property_parse (errp=0x7fffffff0d00, string=<optimized out>, name=0x555556946c50 "vmx", obj=0x5555569523c0) at ../qom
+/object.c:1659
+#3  object_apply_global_props (obj=0x5555569523c0, props=0x55555685da00, errp=0x555556600c70 <error_fatal>) at ../qom/object.c:412
+#4  0x0000555555c3acf1 in object_post_init_with_type (ti=0x555556684170, obj=<optimized out>) at ../qom/object.c:384
+#5  object_initialize_with_type (obj=obj@entry=0x5555569523c0, size=size@entry=18928, type=type@entry=0x555556674120) at ../qom/object.c:520
+#6  0x0000555555c3ae79 in object_new_with_type (type=0x555556674120) at ../qom/object.c:739
+#7  0x0000555555c3af19 in object_new (typename=<optimized out>) at ../qom/object.c:754
+#8  0x0000555555a93cd6 in x86_cpu_new (x86ms=<optimized out>, apic_id=0, errp=0x555556600c70 <error_fatal>) at ../hw/i386/x86.c:98
+#9  0x0000555555a93e1a in x86_cpus_init (x86ms=x86ms@entry=0x5555568ce310, default_cpu_version=<optimized out>) at ../hw/i386/x86.c:149
+#10 0x0000555555a9a6c5 in pc_init1 (machine=0x5555568ce310, pci_type=0x555555e811ee "i440FX", host_type=0x555555e8120d "i440FX-pcihost") at ../hw/i386
+/pc_piix.c:174
+#11 0x00005555558b2a6c in machine_run_board_init (machine=0x5555568ce310, mem_path=<optimized out>, errp=<optimized out>) at ../hw/core/machine.c:1404
+#12 0x0000555555a066f6 in qemu_init_board () at ../softmmu/vl.c:2507
+#13 qmp_x_exit_preconfig (errp=<optimized out>) at ../softmmu/vl.c:2603
+#14 0x0000555555a0a29f in qmp_x_exit_preconfig (errp=<optimized out>) at ../softmmu/vl.c:2598
+#15 qemu_init (argc=<optimized out>, argv=<optimized out>) at ../softmmu/vl.c:3602
+#16 0x0000555555836969 in main (argc=<optimized out>, argv=<optimized out>) at ../softmmu/main.c:47
+-->
+
+<script src="https://giscus.app/client.js"
+        data-repo="martins3/martins3.github.io"
+        data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="
+        data-category="Show and tell"
+        data-category-id="MDE4OkRpc2N1c3Npb25DYXRlZ29yeTMyMDMzNjY4"
+        data-mapping="pathname"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-theme="light"
+        data-lang="zh-CN"
+        crossorigin="anonymous"
+        async>
+</script>
+
+本站所有文章转发 **CSDN** 将按侵权追究法律责任，其它情况随意。
 
 [^1]: https://www.linux-kvm.org/images/9/90/Kvmforum14-qom.pdf
 [^2]: https://wiki.qemu.org/Features/QAPI

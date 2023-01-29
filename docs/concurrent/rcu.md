@@ -10,6 +10,9 @@
 - `__d_lookup_rcu`
   - 实际上，rcu 的组件比想想的更加多
 
+- 分析下，内核中的各种数据结构都是如何支持 RCU 的
+  - xarray : xa_head
+
 
 ## What is Rcu
 
@@ -274,6 +277,55 @@ tec[t e d  3b8.631092]  entry_SYSCALL_64_after_hwframe+0x63/0xcd
 [   38.631092] Kernel Offset: disabled
 [   38.631092] ---[ end Kernel panic - not syncing: Attempted to kill init! exitcode=0x00007f00 ]---
 ```
+
+## 从基本的代码探险开始
+xa_head 的展开:
+```c
+static inline __attribute__((__gnu_inline__)) __attribute__((__unused__))
+__attribute__((no_instrument_function)) void *
+xa_headx(const struct xarray *xa)
+{
+	return ({
+		typeof(*(xa->xa_head)) *__UNIQUE_ID_rcu149 = (typeof(*(
+			xa->xa_head)) *)({
+			do {
+				__attribute__((__noreturn__)) extern void
+				__compiletime_assert_150(void) __attribute__((__error__(
+					"Unsupported access size for {READ,WRITE}_ONCE().")));
+				if (!((sizeof((xa->xa_head)) == sizeof(char) ||
+				       sizeof((xa->xa_head)) == sizeof(short) ||
+				       sizeof((xa->xa_head)) == sizeof(int) ||
+				       sizeof((xa->xa_head)) == sizeof(long)) ||
+				      sizeof((xa->xa_head)) ==
+					      sizeof(long long)))
+					__compiletime_assert_150();
+			} while (0);
+			(*(const volatile typeof(_Generic(
+				((xa->xa_head)), char
+				: (char)0, unsigned char
+				: (unsigned char)0, signed char
+				: (signed char)0, unsigned short
+				: (unsigned short)0, signed short
+				: (signed short)0, unsigned int
+				: (unsigned int)0, signed int
+				: (signed int)0, unsigned long
+				: (unsigned long)0, signed long
+				: (signed long)0, unsigned long long
+				: (unsigned long long)0, signed long long
+				: (signed long long)0, default
+				: ((xa->xa_head)))) *)&((xa->xa_head)));
+		});
+		do {
+		} while (0 && (!((lockdep_is_held(&xa->xa_lock)) ||
+				 rcu_read_lock_held())));
+		;
+		((typeof(*(xa->xa_head)) *)(__UNIQUE_ID_rcu149));
+	});
+}
+```
+但是将其编译为代码，似乎只有一条指针。
+
+这个也是支持 RCU 的哇。
 
 ### maple tree 支持 rcu 的?
 

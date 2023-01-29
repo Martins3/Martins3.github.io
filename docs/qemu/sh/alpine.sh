@@ -12,6 +12,7 @@ hacking_memory="virtio-mem"
 hacking_memory="prealloc"
 hacking_memory="sockets"
 hacking_memory="numa"
+hacking_memory="none"
 
 hacking_migration=false
 # @todo 尝试在 guest 中搭建一个 vIOMMU
@@ -42,7 +43,7 @@ guest_port=5556
 qmp_port=4444
 case $distribution in
 openEuler-22.09-x86_64-dvd)
-  use_ovmf=true
+  use_ovmf=false;
   ;;
 openEuler-20.03-LTS-SP3-x86_64-dvd)
   guest_port=5557
@@ -90,12 +91,14 @@ arg_hugetlb="default_hugepagesz=2M hugepagesz=1G hugepages=1 hugepagesz=2M hugep
 arg_hugetlb="default_hugepagesz=2M"
 arg_hugetlb=""
 # 可选参数
-arg_mem_cpu="-m 12G -cpu host -smp 2"
+arg_mem_cpu="-m 12G -cpu host,vmx=off -smp 2"
 arg_machine="-machine pc,accel=kvm,kernel-irqchip=on"
 arg_mem_balloon="-device virtio-balloon,id=balloon0,deflate-on-oom=true,page-poison=true,free-page-reporting=false,free-page-hint=true,iothread=io1 -object iothread,id=io1"
 arg_mem_balloon=""
 
 case $hacking_memory in
+"none")
+  ;;
 "numa")
   # 通过 reserve = false 让 mmap 携带参数 MAP_NORESERVE，从而可以模拟超级大内存的 Guest
   arg_mem_cpu="-cpu host -m 8G -smp cpus=6"
