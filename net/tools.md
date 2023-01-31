@@ -46,6 +46,14 @@ https://www.kawabangga.com/posts/4515 中间提到 nc -l  9999 的操作可以�
 
 ## ip
 
+1. 创建 bridge
+```sh
+ip link add name virbr0 type bridge
+ip link set dev virbr0 up
+```
+
+https://wiki.archlinux.org/title/network_bridge
+
 ## ifconfig
 
 ## arp

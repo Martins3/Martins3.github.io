@@ -60,3 +60,6 @@
 
 ## 所有资料的整理
 https://github.com/huachaohuang/awesome-dbdev
+
+## build your own redis
+https://build-your-own.org/blog/20230127_byor/

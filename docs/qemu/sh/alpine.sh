@@ -3,7 +3,7 @@ set -e
 
 # @todo 用 https://github.com/charmbracelet/gum 来重写这个项目
 use_nvme_as_root=false
-replace_kernel=true
+replace_kernel=false
 
 hacking_memory="hotplug"
 hacking_memory="virtio-pmem"
@@ -91,7 +91,7 @@ arg_hugetlb="default_hugepagesz=2M hugepagesz=1G hugepages=1 hugepagesz=2M hugep
 arg_hugetlb="default_hugepagesz=2M"
 arg_hugetlb=""
 # 可选参数
-arg_mem_cpu="-m 12G -cpu host,vmx=off -smp 2"
+arg_mem_cpu="-m 12G -cpu SandyBridge,vmx=on -smp 2"
 arg_machine="-machine pc,accel=kvm,kernel-irqchip=on"
 arg_mem_balloon="-device virtio-balloon,id=balloon0,deflate-on-oom=true,page-poison=true,free-page-reporting=false,free-page-hint=true,iothread=io1 -object iothread,id=io1"
 arg_mem_balloon=""
@@ -324,7 +324,8 @@ if [[ ${minimal} = true ]]; then
   # arg_monitor="-nographic"
   arg_monitor="-monitor stdio"
   ${qemu} \
-    -cpu host $arg_img \
+    -cpu SandyBridge,vmx=on \
+    $arg_img \
     -enable-kvm \
     -m 2G \
     -smp 2 $arg_monitor $arg_network

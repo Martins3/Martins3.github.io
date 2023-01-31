@@ -28,3 +28,5 @@
   - 后端: dearpygui
 - https://tauri.app/v1/guides/getting-started/setup/html-css-js
   - 号称是 electorn 的替代品
+
+- https://siboehm.com/articles/22/CUDA-MMM

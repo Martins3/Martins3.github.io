@@ -702,4 +702,15 @@ P215[^1] 指出，一共五种情况，从本地无锁(kmem_cache_cpu::freelist)
 ## `__slab_free`
 - [ ] page 214 深入的分析了 `__slab_free`，这个之后，算是就清楚了
 
+## 为什么可以直接探测到是那个进程在使用 slab
+```txt
+crash> kmem -s ffff918c35453fe0
+CACHE             OBJSIZE  ALLOCATED     TOTAL  SLABS  SSIZE  NAME
+ffff918d34fe24c0      576        101       224      4    32k  radix_tree_node(167:systemd-journald.service)
+  SLAB              MEMORY            NODE  TOTAL  ALLOCATED  FREE
+  fffff2a500d51400  ffff918c35450000     0     56         17    39
+  FREE / [ALLOCATED]
+  [ffff918c35453fe0]
+```
+
 [^1]: 用芯探核:基于龙芯的 Linux 内核探索解析

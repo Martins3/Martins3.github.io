@@ -91,18 +91,12 @@ Linux 内核相关的有趣资源，欢迎补充。
 - [知乎 : 如何学习内核 ?](https://www.zhihu.com/question/304179651/answer/561395663)
 - https://embeddedbits.org/how-is-the-linux-kernel-tested/
 - https://news.ycombinator.com/item?id=22987747 : telefork() 将进程发送到另一个计算机上
-- [meltdown 和 spectrum 相关](https://mp.weixin.qq.com/s?__biz=Mzg2MjE0NDE5OA==&mid=2247484455&idx=1&sn=3ce685da00fb31579c08ce585bfda135&chksm=ce0d178ef97a9e98fc8e77cc57a9efe91cba607ee235d5c1e28bce23453b72298f7372b04f18&scene=0&xtrack=1#rd)
 - [what cs major should know](http://matt.might.net/articles/what-cs-majors-should-know/)
 - [制作一个启动到 bash 的最小内核](https://weeraman.com/building-a-tiny-linux-kernel-8c07579ae79d)
 - [品读 Linux 0.11 核心代码](https://github.com/sunym1993/flash-linux0.11-talk)
 
 ## project
-- [syzkaller](https://github.com/google/syzkaller/blob/master/docs/setup.md) : @todo 暂时不知道如何实现 fuzzer 的
-- [kernelci](https://kernelci.org/)
-- https://github.com/linux-test-project/ltp
-- https://github.com/jarun/keysniffer
-- https://github.com/orhun/kmon : 内核包管理器，
-- [idea4good](https://gitee.com/idea4good) : 和内核没有什么关系，只是利用 fb 和 shmem，绕过 X 来实现显示让人觉得很有意思
+- [spy](https://github.com/jarun/spy) : 一个两百行的内核模块，教学作用。
 - [build you own OS](https://github.com/danistefanovic/build-your-own-x#build-your-own-operating-system) 写自己的操作系统
 
 ## another os

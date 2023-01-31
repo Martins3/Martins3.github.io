@@ -51,6 +51,49 @@ bool static volatile push(struct Data element); // 这种形式，可以
 - [ ] 在 bmbt 的 env/loongarch/include/linux/nodemask.h 在 `__node_set` 中，本来是从内核中抄过来的，
 我无法理解之前为什么内核需要在此处添加上 volatile 的关键字啊。
 
+## 一个例子说明白，这个就是给 compiler 用的
+https://github.com/google/kernel-sanitizers/blob/master/kcsan/LPC2020-KCSAN.pdf
+
+```c
+void badwait(int *stop)
+{
+	while (!*stop) {
+	}
+}
+```
+```txt
+$ disass badwait
+Dump of assembler code for function badwait:
+   0x0000000000401120 <+0>:     mov    (%rdi),%eax
+   0x0000000000401122 <+2>:     test   %eax,%eax
+   0x0000000000401124 <+4>:     jne    0x401130 <badwait+16>
+   0x0000000000401126 <+6>:     jmp    0x401126 <badwait+6>
+   0x0000000000401128 <+8>:     nopl   0x0(%rax,%rax,1)
+   0x0000000000401130 <+16>:    ret
+End of assembler dump.
+```
+
+```c
+#define __READ_ONCE(x) (*(const volatile int *)&(x))
+
+#define READ_ONCE(x) ({ __READ_ONCE(x); })
+
+void badwait(int *stop)
+{
+	while (!READ_ONCE(*stop)) {
+	}
+}
+```
+
+```txt
+$ disass badwait
+Dump of assembler code for function badwait:
+   0x0000000000401120 <+0>:     mov    (%rdi),%eax
+   0x0000000000401122 <+2>:     test   %eax,%eax
+   0x0000000000401124 <+4>:     je     0x401120 <badwait>
+   0x0000000000401126 <+6>:     ret
+```
+
 [^1]: https://gcc.gnu.org/onlinedocs/gcc/Volatiles.html
 [^2]: https://stackoverflow.com/questions/14785639/may-accesses-to-volatiles-be-reordered
 [^3]: https://stackoverflow.com/questions/4592762/difference-between-const-const-volatile

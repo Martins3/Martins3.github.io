@@ -70,7 +70,7 @@ https://www.golinuxcloud.com/grubby-command-examples/
 - 如何自己手写一个 bootloader
   - https://news.ycombinator.com/item?id=33360830
   <!-- 这个整理一下 /home/martins3/core/vn/kernel/bootloader/ -->
-
+  <!-- @todo 这个链接下存在好几个关于如何启动的 https://github.com/codecrafters-io/build-your-own-x#build-your-own-operating-system -->
 
 [^1]: https://askubuntu.com/questions/1288580/sudo-grub2-mkconfig-command-not-found
 

@@ -1,5 +1,10 @@
 # Kernel 调试
 
+## 基本按照这个操作
+- https://sergioprado.blog/how-is-the-linux-kernel-tested/
+
+
+
 - [disassemble with code and line](https://stackoverflow.com/questions/9970636/view-both-assembly-and-c-code)
 - [如何增大 dmesg buffer 的大小](https://unix.stackexchange.com/questions/412182/how-to-increase-dmesg-buffer-size-in-centos-7-2)
 

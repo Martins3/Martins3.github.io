@@ -109,7 +109,7 @@ Litmus Test: Independent Reads of Independent Writes (IRIW)
 ## memory consistency
 - [ ] https://zhuanlan.zhihu.com/cpu-cache : read posts writen by muchun
 
-- [ ] barrier() Documentation/memory-barriers.txt : 彻底理解让人窒息的 memory-barriers.txt
+- [ ] barrier()
 
 当分析那么多窒息的例子，都是由于同时访问相同位置的内存，但是访问相同位置的内存的时候，难道不是采用 lock 保护的吗 ? smp_mb 的使用位置和实现方式是什么 ?
 
@@ -165,8 +165,6 @@ date: 2017-05-04 15:59:00
 tags: papre
 ---
 
-> Warning: Published in 1995. Older than me !
-
 # Abstraction
 parallel systems that support the shared memory abstraction are becoming widely accepted in many areas of computing
 > shared memory abstraction : different from OS ? by hardware ?
@@ -197,7 +195,5 @@ The last part of the article describes the programmer-centric view of relaxed me
 # 5 Implementing Sequential Consistency
 
 > Is Sequential and Consistency are controversial words ?
-
----
 
 [^1]: https://zhuanlan.zhihu.com/p/191660613

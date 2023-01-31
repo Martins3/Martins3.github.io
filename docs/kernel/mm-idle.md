@@ -111,6 +111,7 @@ static ssize_t page_idle_bitmap_read(struct file *file, struct kobject *kobj,
 	return (char *)out - buf;
 }
 ```
+我猜测是因为 page_idle_clear_pte_refs 无人安排的。
 
 ## /proc/self/clear_refs
 
