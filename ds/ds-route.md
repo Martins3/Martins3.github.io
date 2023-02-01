@@ -60,3 +60,12 @@ https://github.com/upgundecha/howtheysre : 各个公司关于 SRE 的报告吧
   - 网络 topo 不会改变
   - 网络是安全的
   - 带宽无线，延迟为 0，网络是 reliable 的
+
+## 常见的分布式文件系统
+
+- glusterfs : Ceph is basically an object-oriented memory for unstructured data, whereas GlusterFS uses hierarchies of file system trees in block storage.
+- ceph
+- lustre
+- minio : MinIO works as an object storage system while GlusterFS works as a file storage system.
+- longhorn : https://github.com/longhorn/longhorn : Cloud-Native distributed storage built on and for Kubernetes
+- brdb

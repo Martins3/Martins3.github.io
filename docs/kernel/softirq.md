@@ -315,5 +315,4 @@ void __local_bh_enable_ip(unsigned long ip, unsigned int cnt)
     cpu_startup_entry+25
     secondary_startup_64_no_verify+194
 ]: 1832
-➜  tmp-trace-softirq git:(master) ✗
 ```

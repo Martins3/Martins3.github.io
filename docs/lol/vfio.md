@@ -54,13 +54,25 @@ echo 0000:01:00.0 > /sys/bus/pci/devices/0000:01:00.0/driver/unbind
 echo 10de 1d12 > /sys/bus/pci/drivers/vfio-pci/new_id
 ```
 
+## 重新操作一下
+ls -nn
+```txt
+01:00.0 VGA compatible controller [0300]: NVIDIA Corporation GP106 [GeForce GTX 1060 3GB] [10de:1c02] (rev a1)
+01:00.1 Audio device [0403]: NVIDIA Corporation GP106 High Definition Audio Controller [10de:10f1] (rev a1)
+```
+
+```sh
+echo 0000:01:00.0 > /sys/bus/pci/devices/0000:01:00.0/driver/unbind
+echo 0000:01:00.1 > /sys/bus/pci/devices/0000:01:00.1/driver/unbind
+echo 10de 1d12 > /sys/bus/pci/drivers/vfio-pci/new_id
+echo 10de 10f1 > /sys/bus/pci/drivers/vfio-pci/new_id
+```
 
 <!--
 看看这个文章: https://wiki.gentoo.org/wiki/GPU_passthrough_with_libvirt_qemu_kvm
 这个教程也不错：https://github.com/bryansteiner/gpu-passthrough-tutorial
  -device vfio-pci,host=01:00.0,multifunction=on,x-vga=on 中的 x-vga 是什么含义？
 -->
-<!-- @todo 似乎 lspci -nn 就可以获取上面说的两个东西 -->
 <!-- @todo 可以集成显卡直通吗? -->
 <!-- @todo 如何实现 QEMU 的复制粘贴 -->
 

@@ -107,3 +107,28 @@ Destination     Gateway         Genmask         Flags   MSS Window  irtt Iface
 172.17.0.0      0.0.0.0         255.255.0.0     U         0 0          0 docker0
 192.168.8.0     0.0.0.0         255.255.252.0   U         0 0          0 wlan0
 ```
+
+## iptable
+算是讲解的很好的啦!
+
+- https://www.zsythink.net/archives/category/%e8%bf%90%e7%bb%b4%e7%9b%b8%e5%85%b3/iptables
+
+## iptables详解（1）：iptables概念
+- https://www.zsythink.net/archives/1199
+
+iptables 操作 netfilter 来实现
+
+完成封包过滤、封包重定向和网络地址转换（NAT）等功能。
+
+Netfilter是Linux操作系统核心层内部的一个数据包处理模块，它具有如下功能：
+- 网络地址转换(Network Address Translate)
+- 数据包内容修改
+- 以及数据包过滤的防火墙功能
+
+
+iptables为我们提供了如下规则的分类，或者说，iptables为我们提供了如下”表”
+- filter表：负责过滤功能，防火墙；内核模块：iptables_filter
+- nat表：network address translation，网络地址转换功能；内核模块：iptable_nat
+- mangle表：拆解报文，做出修改，并重新封装 的功能；iptable_mangle
+- raw表：关闭nat表上启用的连接追踪机制；iptable_raw
+也就是说，我们自定义的所有规则，都是这四种分类中的规则，或者说，所有规则都存在于这4张”表”中。

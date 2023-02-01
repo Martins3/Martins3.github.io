@@ -1,4 +1,4 @@
-# Avocado
+# Avocado : 这个东西真垃圾啊
 
 ## 安装
 yum install xz tcpdump iproute iputils gcc glibc-headers nc git python3-devel
@@ -12,10 +12,21 @@ avocado run type_specific.io-github-autotest-qemu.migrate.default.tcp
 
 avocado run io-github-autotest-qemu.shutdown
 
+似乎这个命令执行之后，就无法使用 avocado 这个命令了:
+pip3 install avocado
+这个命令应该是不可以重复执行的
+## 常用命令
+- avocado plugings
+
 ## 文档
-- https://avocado-vt.readthedocs.io/en/stable/GetStartedGuide.html#installing-via-system-package-manager
+- vt : https://avocado-vt.readthedocs.io/en/stable/GetStartedGuide.html#installing-via-system-package-manager
+  - https://avocado-vt.readthedocs.io/en/latest/
+- 本身 : https://avocado-framework.readthedocs.io/en/latest/guides/user/chapters/plugins.html
+
 
 ## 问题
+
+### 安装
 启动之后遇到如下报错:
 ```txt
 ➜  ~ avocado vt-bootstrap --vt-type qemu
@@ -50,17 +61,19 @@ to get rid of this message") :
 
 第一个问题，可以通过 `pip install Pillow` 解决
 
-## 这个检测有问题的
+### kvm Intel
 ```txt
 9 - Checking for modules kvm, kvm-intel
 Module kvm is not loaded. You might want to load it
 Module kvm-intel is not loaded. You might want to load it
 ```
 
-## [ ] 似乎内核有点问题，自己编译的内核总是有 ovs 的报错
-bridge 开机之后自动出现的
+### avocado-vt 的 TestProviders 是什么？
+https://avocado-vt.readthedocs.io/en/stable/WritingTests/TestProviders.html
 
-## 使用 centos 7 也是遇到了问题
+### 运行第一个例子遇到问题
+似乎内核有点问题，自己编译的内核总是有 ovs 的报错
+bridge 开机之后自动出现的:
 
 ```txt
 (1/3) type_specific.io-github-autotest-qemu.migrate.default.tcp.default: STARTED
@@ -79,7 +92,7 @@ bridge 开机之后自动出现的
 2023-01-31 01:08:56,112 avocado.virttest.env_process INFO | Test requires qemu version: [4.0.0,)
 ```
 
-## 切换 QEMU 版本之后
+切换 QEMU 版本之后
 ```txt
 (1/3) type_specific.io-github-autotest-qemu.migrate.default.tcp.default: STARTED
 (1/3) type_specific.io-github-autotest-qemu.migrate.default.tcp.default:  PASS (89.85 s)
@@ -91,3 +104,62 @@ bridge 开机之后自动出现的
 
 ## [ ] oe22.04 中似乎 ovs 安装不正常
 注意，是无需手动配置 bridge 的
+
+## 分析下如何实现一个测试
+cd $AVOCADO_DATA/avocado-vt/test-providers.d/downloads/io-github-autotest-qemu
+上面说的似乎目录是不对的
+/root/avocado/data/avocado-vt/virttest/test-providers.d/downloads/io-github-autotest-qemu
+
+## 如何使用 Cartesian
+
+## 在我的环境中搭建可以，需要解决 redir 的问题
+
+## Autotest 的关系是什么？
+看上去是 Autotest，实际上根本不是如此的，Python 最基本的执行都会出现问题:
+https://autotest.readthedocs.io/en/latest/main/local/ClientQuickStart.html
+
+## erroa
+- https://avocado-framework.readthedocs.io/en/latest/guides/user/chapters/installing.html
+  - 最后一段命令的渲染有问题
+- https://avocado-framework.readthedocs.io/en/latest/guides/user/chapters/assets.html
+  - -help 应该是 --help
+- https://avocado-framework.readthedocs.io/en/latest/guides/user/chapters/advanced.html#custom-runnable-identifier
+  - 第一个 JOB ID 的位置
+
+## 记录
+- virtest 是什么？
+  - 之前 Autotest 下的 virttest 现在的 avocado 下使用 vt
+  - https://avocado-vt.readthedocs.io/en/latest/Introduction.html#about-virt-test-1
+
+## [ ] Python 编程框架中，到底提供了什么接口
+
+## 参数传递
+
+### 为什么这种方法不行
+```sh
+avocado run sleeptest.py --test-parameter sleep_length=10
+```
+
+```txt
+➜  share avocado run sleeptest.py --test-parameter sleep_length=10
+
+JOB ID     : cf40aad1cbe85905158f0bd784fb00b34c34b4ea
+JOB LOG    : /root/avocado/job-results/job-2023-02-01T16.03-cf40aad/job.log
+ (1/1) sleeptest.py:SleepTest.test: STARTED
+ (1/1) sleeptest.py:SleepTest.test:  ERROR: must be real number, not str (0.03 s)
+RESULTS    : PASS 0 | ERROR 1 | FAIL 0 | SKIP 0 | WARN 0 | INTERRUPT 0 | CANCEL 0
+JOB TIME   : 1.00 s
+
+Test summary:
+sleeptest.py:SleepTest.test: ERROR
+```
+
+### 这个方法是可以的
+的确是可以显示的:
+avocado variants --mux-yaml sleeptest-example.yaml --json-variants-dump variants.json
+
+似乎需要安装这个 plugin
+- https://avocado-framework.readthedocs.io/en/latest/plugins/optional/varianter_yaml_to_mux.html#yaml-to-mux-plugin
+- pip install avocado-framework-plugin-varianter-yaml-to-mux
+
+avocado run sleeptest.py --mux-yaml sleeptest-example.yaml

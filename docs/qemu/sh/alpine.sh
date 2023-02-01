@@ -3,7 +3,7 @@ set -e
 
 # @todo 用 https://github.com/charmbracelet/gum 来重写这个项目
 use_nvme_as_root=false
-replace_kernel=false
+replace_kernel=true
 
 hacking_memory="hotplug"
 hacking_memory="virtio-pmem"
@@ -185,7 +185,6 @@ else
   arg_nvme="-device nvme,drive=nvme1,serial=foo,bus=mybridge,addr=0x1 -drive file=${workstation}/img1,format=raw,if=none,id=nvme1"
   # @todo virtio-blk-pci vs virtio-blk-device ?
 fi
-
 arg_disk="-device virtio-blk-pci,drive=nvme2,iothread=io0 -drive file=${workstation}/img2,format=raw,if=none,id=nvme2 -object iothread,id=io0"
 arg_scsi="-device virtio-scsi-pci,id=scsi0,bus=pci.0,addr=0xa -device scsi-hd,bus=scsi0.0,channel=0,scsi-id=0,lun=0,drive=scsi-drive -drive file=${workstation}/img3,format=raw,id=scsi-drive,if=none"
 arg_sata="-drive file=${workstation}/img4,media=disk,format=raw"
@@ -203,7 +202,8 @@ serial_socket_path=/tmp/qemu-serial-socket
 arg_monitor="-serial mon:stdio -display none"
 arg_initrd="-initrd /home/martins3/hack/vm/initramfs-6.1.0-rc7-00200-gc2bf05db6c78-dirty.img"
 # arg_initrd=""
-arg_trace="--trace 'memory_region_ops_\*'"
+arg_trace="--trace 'memory_region_ops_read'" # 打开这个选项，输出内容很多
+arg_trace=""
 
 arg_vfio="-device vfio-pci,host=02:00.0" # 将音频设备直通到 Guest 中
 arg_vfio=""

@@ -30,14 +30,14 @@ https://github.com/zoidbergwill/awesome-ebpf
 
 ## overview
 
-为什么使用eBPF ?[^1]
-3. 为了向内核中间添加功能，如果修改kernel source code，需要等到用户更新内核。如果使用kernel module，每次内核升级，都需要发布对应的kernel module.
+为什么使用 eBPF ?[^1]
+3. 为了向内核中间添加功能，如果修改 kernel source code，需要等到用户更新内核。如果使用 kernel module，每次内核升级，都需要发布对应的 kernel module.
 1. eBPF 是 100% modular and composable 的
 2. eBPF 可以实现 hotpatching
 
 1. safety & security : verifier 保证内核中间发
 2. continuous delivery : 程序可以动态修改
-3. performance : JIT compiler ensures native execution performance (为什么JIT可以实现 native f)
+3. performance : JIT compiler ensures native execution performance (为什么 JIT 可以实现 native f)
 
 bpf 可以加入的位置 : kprobe uprobe syscall fentry/fexit, some network related stuff
 
@@ -45,7 +45,7 @@ eBPF map 的作用，eBPF helper ，function calls
 
 eBPF 的升级内容:[^2]
 1. 64bit 的寄存器
-2. 寄存器数量从2个到10个
+2. 寄存器数量从 2 个到 10 个
 3. `BPF_CALL` : Plus, a new `BPF_CALL` instruction made it possible to call in-kernel functions cheaply.
 4. The ease of mapping eBPF to native instructions lends itself to just-in-time compilation, yielding improved performance.
 
@@ -56,7 +56,7 @@ Because eBPF programs can access kernel data structures, developers can write an
 
 
 eBPF verifier :
-1. 对于CFG进行DFS，保证其中不会出现递归，死循环，以及不可执行的代码
+1. 对于 CFG 进行 DFS，保证其中不会出现递归，死循环，以及不可执行的代码
 2. 对于每条指令都进行模拟执行，保证程序的执行总是正常的
 3. secure mode 下，不可以使用指针运算
 4. Registers with uninitialized contents (those that have never been written to) cannot be read;
@@ -74,7 +74,7 @@ int bpf(int cmd, union bpf_attr *attr, unsigned int size);
 3. The `size` argument gives the size of the `bpf_attr` union object in bytes.
 
 cmd 类型包括:
-1. 修改用于eBPF程序和kernel或者user space 沟通的 eBPF map
+1. 修改用于 eBPF 程序和 kernel 或者 user space 沟通的 eBPF map
 2. 将 eBPF 附着于特定的位置(socket file descriptor)
 
 Though there appear to be many different commands, they can be broken down into three categories:
@@ -220,7 +220,7 @@ bpf_struct_ops_types.h                    1              2              6
 
 ## 资源和总结
 1. 为什么 package filter 和 IO, monitoring , tracing 的功能呢在一起？
-2. 为什么需要在内核中间插入代码，而且必须使用llvm 的 ?
+2. 为什么需要在内核中间插入代码，而且必须使用 llvm 的 ?
 
 https://lwn.net/Articles/740157/  : 分析 bpf 的内核工作模式(感觉主要是 checker)
 

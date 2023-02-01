@@ -87,6 +87,8 @@ https://asmjit.com/
 ## vm
 - v8 自带几个小文件例子.
 - https://github.com/lazyparser/v8-internals
+  - 通过 Chromium 然后在网页中访问网页
+  - https://github.com/fathyb/carbonyl
   - https://github.com/danbev/learning-v8
   - https://news.ycombinator.com/item?id=25663403 : 相关的报道
 
@@ -123,7 +125,8 @@ https://news.ycombinator.com/item?id=24170201 : 感觉完成度还可以的 浏�
 - https://tip.golang.org/doc/gc-guide : go 语言 GC 介绍
 - [A simple garbage collector for C](https://news.ycombinator.com/item?id=21841368)
 - https://www.cs.cornell.edu/courses/cs6120/2019fa/blog/unified-theory-gc/
-
+- https://github.com/cksystemsteaching/selfie
+  - https://github.com/cksystemsteaching/selfie/blob/main/tools/boehm-gc.c
 
 ## deep learning
 - https://tvm.apache.org/2021/12/15/tvm-unity

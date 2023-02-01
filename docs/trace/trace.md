@@ -18,6 +18,7 @@
 - [ ] 感觉 perf 能做的事情，bpftrace 和 ebpf 都可以做，而且更加好
   - 例如 hardware monitor 在 bpftrace 中和 bcc 中 llcstat-bpfcc 都是可以做的
 - [ ] bpf 相对于 perf 有什么优势吗?
+- [ ] QEMU 的编译选项中:
 
 ## perf
 
