@@ -127,6 +127,15 @@ https://trstringer.com/simple-vs-oneshot-systemd-service/
 
 ## https://systemd-by-example.com/
 
+## [ ] 到底是直接执行脚本还是需要借助 bash
+
+不知道为什么，遇到了这个错误:
+Failed at step EXEC spawning /root/IPTV/xteve: Permission denied
+
+```txt
+ExecStart=bash /root/share/pkg/main.sh
+```
+
 ## 常见疑问
 - https://unix.stackexchange.com/questions/506347/why-do-most-systemd-examples-contain-wantedby-multi-user-target
 

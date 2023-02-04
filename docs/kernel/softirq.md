@@ -3,6 +3,16 @@
 softirq 是内核中非常重要的一个议题，基本上属于已经被反反复复的分析过，我看完各种教程之后，去看对应的代码，
 总是还是感觉迷迷糊糊的，所以在这里总结的一下我的理解。
 
+## 执行的位置
+```txt
+#0  __do_softirq () at kernel/softirq.c:529
+#1  0xffffffff81132cca in invoke_softirq () at kernel/softirq.c:445
+#2  __irq_exit_rcu () at kernel/softirq.c:650
+#3  0xffffffff821df836 in sysvec_apic_timer_interrupt (regs=0xffffc90000093e38) at arch/x86/kernel/apic/apic.c:1107
+```
+等到 hardware irq 几乎结束的时候，在 `__do_softirq` 中，才会打开中断，这些 softriq 的 action 继续执行在
+interrupt stack 上。
+
 ## 深入理解一下，为什么需要 `spin_lock_bh`
 - https://www.kernel.org/doc/htmldocs/kernel-locking/lock-user-bh.html
 
@@ -166,7 +176,7 @@ inline void raise_softirq_irqoff(unsigned int nr)
       - 虽然在 ksoftirqd 中间是可以睡眠的，但是无法保证所有的 `softirq_action` 都是在其中执行的
 
 ## softirq 是一定在 中断的上下文中执行吗
-### 需要自习观察一下，从中断上下文到的 task 的切换
+### 需要观察一下，从中断上下文到的 task 的切换
 
 ## `rcu_read_lock_bh`
 - `rcu_read_unlock_bh` 的时候，就可以发生 softirq

@@ -22,9 +22,16 @@ pip3 install avocado
 - vt : https://avocado-vt.readthedocs.io/en/stable/GetStartedGuide.html#installing-via-system-package-manager
   - https://avocado-vt.readthedocs.io/en/latest/
 - 本身 : https://avocado-framework.readthedocs.io/en/latest/guides/user/chapters/plugins.html
+- QEMU 的测试:
+  - https://github.com/autotest/tp-qemu
+
+
 
 
 ## 问题
+
+### 这个文件在哪里？
+examples/tests/sleeptenmin.py.data/sleeptenmin.yaml
 
 ### 安装
 启动之后遇到如下报错:
@@ -114,8 +121,8 @@ cd $AVOCADO_DATA/avocado-vt/test-providers.d/downloads/io-github-autotest-qemu
 
 ## 在我的环境中搭建可以，需要解决 redir 的问题
 
-## Autotest 的关系是什么？
-看上去是 Autotest，实际上根本不是如此的，Python 最基本的执行都会出现问题:
+## Autotest
+Autotest 的最基本的执行都会出现问题:
 https://autotest.readthedocs.io/en/latest/main/local/ClientQuickStart.html
 
 ## erroa
@@ -163,3 +170,19 @@ avocado variants --mux-yaml sleeptest-example.yaml --json-variants-dump variants
 - pip install avocado-framework-plugin-varianter-yaml-to-mux
 
 avocado run sleeptest.py --mux-yaml sleeptest-example.yaml
+
+```txt
+sleep_length: 2
+timeout: 3
+```
+
+- [ ] 尝试写一个参数试试
+
+examples/tests/sleeptenmin.py.data/sleeptenmin.yaml
+
+调试 : avocado --show test run sleeptest.py
+提前展示运行的内容 : avocado variants -m sleeptest.yaml --summary 2 --variants 2
+
+## [ ] 解决 redir 的问题
+
+avocado-vt io-github-autotest-qemu.shutdown

@@ -7,6 +7,7 @@
 - https://github.com/lhvy/pipes-rs : 在终端上绘制管道
 - https://uchinoko-maker.jp/ : 猫猫生成器
 - https://github.com/Cveinnt/LiveTerm : 构建 terminal 样式的网站
+- https://www.withdiode.com/ : 面包板模拟器
 
 ## 有趣的思想
 https://veekaybee.github.io/2019/05/10/java8/ : 你所处于的环境会让你觉得整个世界就是如此，一个经常阅读 HN 的人觉得这个世界都是运行在 Rust Go CI cloud 上的，但是其实大多数人都在使用 Java8，所以面对新技术，需要正确的衡量

@@ -1,6 +1,7 @@
 # 中断是嵌套的吗?
 
-- [ ] 异常会自动屏蔽 interrupt 吗？
+- [x] 异常会自动屏蔽 interrupt 吗？
+  - 应该是会的
 - [ ] 真的会存在只是 disable 一个 number 的中断的操作吗？
 
 ```txt
@@ -119,3 +120,55 @@ noinstr irqentry_state_t irqentry_enter(struct pt_regs *regs)
 虽然没有十足的证据，但是基本可以确定，是在 softirq 的时候才会打开中断的。
 
 感觉回顾一下 do_softirq 和 raise_softirq 大约就可以理解了吧!
+
+## 补充一个 exception 的例子
+```txt
+Dump of assembler code for function asm_exc_page_fault:
+   0xffffffff82201260 <+0>:     endbr64
+   0xffffffff82201264 <+4>:     nopl   (%rax)
+   0xffffffff82201267 <+7>:     cld
+   0xffffffff82201268 <+8>:     call   0xffffffff82201990 <error_entry>
+   0xffffffff8220126d <+13>:    mov    %rax,%rsp
+   0xffffffff82201270 <+16>:    mov    %rsp,%rdi
+   0xffffffff82201273 <+19>:    mov    0x78(%rsp),%rsi
+   0xffffffff82201278 <+24>:    movq   $0xffffffffffffffff,0x78(%rsp)
+   0xffffffff82201281 <+33>:    call   0xffffffff821dfda0 <exc_page_fault>
+   0xffffffff82201286 <+38>:    jmp    0xffffffff82201ad0 <error_return>
+```
+
+- irq_exit
+  - `__irq_exit_rcu`
+
+## 应该是无论是在用户态还是内核态，中断的时候 stack 都是 CPU 对应的 stack
+
+map_irq_stack 中设置 stack 的位置是:
+
+```txt
+$1 = (void *) 0xffffc90000000000
+```
+0xffffc900000c8f58 <---- interrupt
+0xffffc90000d63d30 <---- exception
+
+0xffffc90001253f18 <----- syscall 的
+
+对于 double fault 之类的，stack 在其他的位置:
+https://www.kernel.org/doc/Documentation/x86/kernel-stacks
+
+> Like the split thread and interrupt stacks on i386, this gives more room
+>  for kernel interrupt processing without having to increase the size
+>  of every per thread stack.
+
+用户态中断存在两次装换？
+> https://unix.stackexchange.com/questions/491437/how-does-linux-kernel-switches-from-kernel-stack-to-interrupt-stack
+> 这个回答应该是误导人的吧?
+> 分析 asm_common_interrupt 以及 asm_exc_page_fault 中，都是直接就开始上下文保存
+
+
+https://stackoverflow.com/questions/38360312/how-does-linux-kernel-switch-between-user-mode-and-kernel-mode-stack
+- 在 TSS 中保存了用户态进程的 kernel stack，当出现 exception 的时候，自动使用该 stack
+
+总结：
+- TSS : thread kernel stack；
+- IST : interrupt stack；
+- 内核和用户态使用的 stack 不做区分；
+- exception 应该是 kernel stack，因为 syscall 就是这个 stack 的。

@@ -143,6 +143,10 @@ static struct page *page_idle_get_page(unsigned long pfn)
 
 ## 搞清楚如何展开 kernel 的 macro
 
+## Unreliable Guide To Locking : http://127.0.0.1:3434/kernel-hacking/locking.html
+
+## Local locks in the kernel : https://lwn.net/Articles/828477/
+
 [^1]: https://lwn.net/Articles/262464/
 [^2]: https://eli.thegreenplace.net/2018/basics-of-futexes/
 [^3]: https://stackoverflow.com/questions/6975098/when-is-the-system-call-set-tid-address-used
