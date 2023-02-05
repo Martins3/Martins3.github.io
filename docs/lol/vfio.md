@@ -39,50 +39,40 @@
 ../../../../kernel/iommu_groups/11
 ```
 
-3. 获取 ... (这是啥来着)
-```txt
-➜  vn git:(master) ✗ lspci -n -s 0000:01:00.0
-01:00.0 0302: 10de:1d12 (rev ff)
-```
-
-4. 将 GPU 和 vfio 驱动绑定
-
-如果 GPU 之前在被使用，那么首先需要解绑
+3. 如果 GPU 之前在被使用，那么首先需要解绑
 ```sh
 sudo su
 echo 0000:01:00.0 > /sys/bus/pci/devices/0000:01:00.0/driver/unbind
-echo 10de 1d12 > /sys/bus/pci/drivers/vfio-pci/new_id
 ```
 
-## 重新操作一下
-ls -nn
+4. lspci -nn 获取设备的 vender 和 device id
 ```txt
 01:00.0 VGA compatible controller [0300]: NVIDIA Corporation GP106 [GeForce GTX 1060 3GB] [10de:1c02] (rev a1)
 01:00.1 Audio device [0403]: NVIDIA Corporation GP106 High Definition Audio Controller [10de:10f1] (rev a1)
 ```
 
+5. 创建 vfio
+
+因为
 ```sh
-echo 0000:01:00.0 > /sys/bus/pci/devices/0000:01:00.0/driver/unbind
-echo 0000:01:00.1 > /sys/bus/pci/devices/0000:01:00.1/driver/unbind
-echo 10de 1d12 > /sys/bus/pci/drivers/vfio-pci/new_id
-echo 10de 10f1 > /sys/bus/pci/drivers/vfio-pci/new_id
+echo 0000:01:00.0 | sudo tee /sys/bus/pci/devices/0000:01:00.0/driver/unbind
+echo 10de 1c02 | sudo tee /sys/bus/pci/drivers/vfio-pci/new_id
+
+echo 0000:01:00.1 | sudo tee /sys/bus/pci/devices/0000:01:00.1/driver/unbind
+echo 10de 10f1 | sudo tee /sys/bus/pci/drivers/vfio-pci/new_id
 ```
 
 <!--
 看看这个文章: https://wiki.gentoo.org/wiki/GPU_passthrough_with_libvirt_qemu_kvm
 这个教程也不错：https://github.com/bryansteiner/gpu-passthrough-tutorial
  -device vfio-pci,host=01:00.0,multifunction=on,x-vga=on 中的 x-vga 是什么含义？
+
+nixos 下非常之好的讲解: https://astrid.tech/2022/09/22/0/nixos-gpu-vfio/
 -->
 <!-- @todo 可以集成显卡直通吗? -->
 <!-- @todo 如何实现 QEMU 的复制粘贴 -->
 
-如果检查到多个 devices 的，那么上面的两个操作需要对于这个文件夹的所有的设备操作一次:
-```txt
-➜  vn git:(master) ✗ ls -l /sys/bus/pci/devices/0000:01:00.0/iommu_group/devices
-lrwxrwxrwx root root 0 B Mon May 30 09:53:28 2022  0000:01:00.0 ⇒ ../../../../devices/pci0000:00/0000:00:1c.0/0000:01:00.0
-```
-
-5. 无需管理员权限运行
+6. 无需管理员权限运行
 ```txt
 ➜  vn git:(master) ✗ sudo chown maritns3:maritns3 /dev/vfio/11
 ```
@@ -97,35 +87,6 @@ _dma_map(0x558becc6b3b0, 0xc0000, 0x7ff40000, 0x7f958bec0000) = -12 (Cannot allo
 
 ```sh
 -device vfio-pci,host=01:00.0
-```
-
-运行记录为:
-```sh
-#!/usr/bin/env bash
-
-id="00:1f.3"
-readlink /sys/bus/pci/devices/0000:00:1f.3/iommu_group
-ls -l /sys/bus/pci/devices/0000:00:1f.3/iommu_group/devices
-
-lspci -n -s 0000:00:1f.3
-# 00:1f.3 0403: 8086:9d71 (rev 21)
-echo 0000:00:1f.3 >/sys/bus/pci/devices/0000:00:1f.3/driver/unbind
-echo 8086 9d71 >/sys/bus/pci/drivers/vfio-pci/new_id
-
-lspci -n -s 0000:00:1f.0
-# 00:1f.0 0601: 8086:9d4e (rev 21)
-echo 0000:00:1f.0 >/sys/bus/pci/devices/0000:00:1f.0/driver/unbind
-echo 8086 9d4e >/sys/bus/pci/drivers/vfio-pci/new_id
-
-lspci -n -s 0000:00:1f.2
-# 00:1f.2 0580: 8086:9d21 (rev 21)
-echo 0000:00:1f.2 >/sys/bus/pci/devices/0000:00:1f.2/driver/unbind
-echo 8086 9d21 >/sys/bus/pci/drivers/vfio-pci/new_id
-
-lspci -n -s 0000:00:1f.4
-# 00:1f.4 0c05: 8086:9d23 (rev 21)
-echo 0000:00:1f.4 >/sys/bus/pci/devices/0000:00:1f.4/driver/unbind
-echo 8086 9d23 >/sys/bus/pci/drivers/vfio-pci/new_id
 ```
 
 ## 但是

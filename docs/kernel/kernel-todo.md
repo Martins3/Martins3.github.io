@@ -470,3 +470,11 @@ time_based
 1 I root     1005724       2  0  80   0 -     0 -      16:22 ?        00:00:00 [kworker/0:1-events]
 0 S martins3 1007175 1006549  0  80   0 - 55616 pipe_r 16:25 pts/13   00:00:00 grep --color=auto --exclude-dir=.bzr --exclude-dir=CVS --exclude-dir=.git --exclude-dir=.hg --exclude-dir=.svn --exclude-dir=.idea --exclude-dir=.tox kworker
 ```
+
+## kernel hacking -> tracer 中有很多内容都没有打开，也不知道是做啥的
+
+## DEBUG_PREEMPT
+
+## CONFIG_DEBUG_IRQFLAGS
+
+## CONFIG_DEBUG_KOBJECT

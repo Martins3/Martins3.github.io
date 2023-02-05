@@ -10,11 +10,9 @@
     - 显然是可以实现的，但是似乎没有见到过
     - 似乎是被替代为 wait queue 了，如果的确是，为什么？
 
-## preempt
-- 中断的屏蔽和 preempt 的 disable 是两个事情
-- [ ] 那些地方是必须 `preempt_disable` 但是无需屏蔽中断
-
 ## qspinlock
+
+### 虚拟化下的 spin lock
 首先，大致看看代码吧!
 ```c
 /*
@@ -44,7 +42,235 @@ struct qnode {
 #endif
 };
 ```
-1. PV 是什么概念 ?
+
+```c
+typedef struct qspinlock {
+	union {
+		atomic_t val;
+
+		/*
+		 * By using the whole 2nd least significant byte for the
+		 * pending bit, we can allow better optimization of the lock
+		 * acquisition for the pending bit holder.
+		 */
+#ifdef __LITTLE_ENDIAN
+		struct {
+			u8	locked;
+			u8	pending;
+		};
+		struct {
+			u16	locked_pending;
+			u16	tail;
+		};
+#else
+		struct {
+			u16	tail;
+			u16	locked_pending;
+		};
+		struct {
+			u8	reserved[2];
+			u8	pending;
+			u8	locked;
+		};
+#endif
+	};
+} arch_spinlock_t;
+```
+
+各种蛇皮封装之后:
+```c
+static inline void __raw_spin_lock(raw_spinlock_t *lock)
+{
+	preempt_disable();
+	spin_acquire(&lock->dep_map, 0, 0, _RET_IP_);
+	LOCK_CONTENDED(lock, do_raw_spin_trylock, do_raw_spin_lock);
+}
+```
+
+展开为:
+```c
+static inline void __raw_spin_lock(raw_spinlock_t *lock)
+{
+ do { preempt_count_add(1); __asm__ __volatile__("": : :"memory"); } while (0);
+ do { } while (0);
+ do_raw_spin_lock(lock);
+}
+```
+
+```c
+static inline void do_raw_spin_lock(raw_spinlock_t *lock) __acquires(lock)
+{
+	__acquire(lock);
+	arch_spin_lock(&lock->raw_lock);
+	mmiowb_spin_lock();
+}
+```
+展开为:
+```c
+static inline  void do_raw_spin_lock(raw_spinlock_t *lock)
+{
+ (void)0;
+ queued_spin_lock(&lock->raw_lock);
+ do { } while (0);
+}
+```
+
+```c
+static __always_inline void queued_spin_lock(struct qspinlock *lock)
+{
+	int val = 0;
+
+	if (likely(atomic_try_cmpxchg_acquire(&lock->val, &val, _Q_LOCKED_VAL)))
+		return;
+
+	queued_spin_lock_slowpath(lock, val);
+}
+```
+
+- [ ] 为什么要 preempt_disable 啊？
+  -
+
+```c
+static inline void queued_spin_lock_slowpath(struct qspinlock *lock, u32 val)
+{
+	pv_queued_spin_lock_slowpath(lock, val);
+}
+```
+
+### pv qspinlock
+注释说的很清楚了:
+```c
+/*
+ * Implement paravirt qspinlocks; the general idea is to halt the vcpus instead
+ * of spinning them.
+ *
+ * This relies on the architecture to provide two paravirt hypercalls:
+ *
+ *   pv_wait(u8 *ptr, u8 val) -- suspends the vcpu if *ptr == val
+ *   pv_kick(cpu)             -- wakes a suspended vcpu
+ *
+ * Using these we implement __pv_queued_spin_lock_slowpath() and
+ * __pv_queued_spin_unlock() to replace native_queued_spin_lock_slowpath() and
+ * native_queued_spin_unlock().
+ */
+```
+
+```c
+#ifdef CONFIG_PARAVIRT_SPINLOCKS
+extern void native_queued_spin_lock_slowpath(struct qspinlock *lock, u32 val);
+extern void __pv_init_lock_hash(void);
+extern void __pv_queued_spin_lock_slowpath(struct qspinlock *lock, u32 val);
+extern void __raw_callee_save___pv_queued_spin_unlock(struct qspinlock *lock);
+extern bool nopvspin;
+
+#define	queued_spin_unlock queued_spin_unlock
+/**
+ * queued_spin_unlock - release a queued spinlock
+ * @lock : Pointer to queued spinlock structure
+ *
+ * A smp_store_release() on the least-significant byte.
+ */
+static inline void native_queued_spin_unlock(struct qspinlock *lock)
+{
+	smp_store_release(&lock->locked, 0);
+}
+
+static inline void queued_spin_lock_slowpath(struct qspinlock *lock, u32 val) // 在正常模式，可以直接调用 queued_spin_lock_slowpath
+{
+	pv_queued_spin_lock_slowpath(lock, val);
+}
+
+static inline void queued_spin_unlock(struct qspinlock *lock)
+{
+	kcsan_release();
+	pv_queued_spin_unlock(lock);
+}
+
+#define vcpu_is_preempted vcpu_is_preempted
+static inline bool vcpu_is_preempted(long cpu)
+{
+	return pv_vcpu_is_preempted(cpu);
+}
+#endif
+```
+
+```c
+struct pv_lock_ops {
+ void (*queued_spin_lock_slowpath)(struct qspinlock *lock, u32 val);
+ struct paravirt_callee_save queued_spin_unlock;
+
+ void (*wait)(u8 *ptr, u8 val);
+ void (*kick)(int cpu);
+
+ struct paravirt_callee_save vcpu_is_preempted;
+} ;
+```
+
+#ifdef CONFIG_PARAVIRT_SPINLOCKS
+#define queued_spin_lock_slowpath	native_queued_spin_lock_slowpath
+#endif
+
+```c
+/**
+ * queued_spin_lock_slowpath - acquire the queued spinlock
+ * @lock: Pointer to queued spinlock structure
+ * @val: Current value of the queued spinlock 32-bit word
+ *
+ * (queue tail, pending bit, lock value)
+ *
+ *              fast     :    slow                                  :    unlock
+ *                       :                                          :
+ * uncontended  (0,0,0) -:--> (0,0,1) ------------------------------:--> (*,*,0)
+ *                       :       | ^--------.------.             /  :
+ *                       :       v           \      \            |  :
+ * pending               :    (0,1,1) +--> (0,1,0)   \           |  :
+ *                       :       | ^--'              |           |  :
+ *                       :       v                   |           |  :
+ * uncontended           :    (n,x,y) +--> (n,0,0) --'           |  :
+ *   queue               :       | ^--'                          |  :
+ *                       :       v                               |  :
+ * contended             :    (*,x,y) +--> (*,0,0) ---> (*,0,1) -'  :
+ *   queue               :         ^--'                             :
+ */
+void __lockfunc queued_spin_lock_slowpath(struct qspinlock *lock, u32 val)
+```
+
+
+pv_queued_spin_lock_slowpath 的展开是编译技术上的黑科技，但是最后是调用 :
+- pv_lock_ops::queued_spin_lock_slowpath
+
+注册者分别是:
+- `__pv_queued_spin_lock_slowpath` : kvm 在 kvm_spinlock_init 中注册的，通过一些技术，应该是最后变为 queued_spin_lock_slowpath 的。
+- native_queued_spin_lock_slowpath
+
+- `__pv_queued_spin_unlock_slowpath`
+  - pv_kick(node->cpu); : 告诉正在等待的 CPU
+
+
+参考 https://www.kernel.org/doc/Documentation/virtual/kvm/hypercalls.txt
+
+```txt
+5. KVM_HC_KICK_CPU
+------------------------
+Architecture: x86
+Status: active
+Purpose: Hypercall used to wakeup a vcpu from HLT state
+Usage example : A vcpu of a paravirtualized guest that is busywaiting in guest
+kernel mode for an event to occur (ex: a spinlock to become available) can
+execute HLT instruction once it has busy-waited for more than a threshold
+time-interval. Execution of HLT instruction would cause the hypervisor to put
+the vcpu to sleep until occurrence of an appropriate event. Another vcpu of the
+same guest can wakeup the sleeping vcpu by issuing KVM_HC_KICK_CPU hypercall,
+specifying APIC ID (a1) of the vcpu to be woken up. An additional argument (a0)
+is used in the hypercall for future use.
+```
+1. busywaiting 导致执行 halt 指令；
+2. guest 执行 halt 指令导致 Host 让 guest 睡眠，去做其他的事情；
+3. KVM_HC_KICK_CPU 主动告诉 Host 可以启动了。
+
+
+
+
 
 [术道经纬](https://zhuanlan.zhihu.com/p/100546935) 比 奔跑吧更加好，大致的想法是:
 
@@ -56,69 +282,56 @@ struct qnode {
 ## seqlock
 dcache.c:d_lookup 的锁
 
-### https://github.com/rigtorp/Seqlock
-超级简单清晰的分析
+简而言之:
+```c
+static inline void write_seqlock(seqlock_t *sl)
+{
+	spin_lock(&sl->lock);
+	do_write_seqcount_begin(&sl->seqcount.seqcount);
+}
 
-使用 segnum 当 reader 在临界区的时候，writer 是否进行过操作，如果是，那么重新尝试。
+static inline void do_raw_write_seqcount_end(seqcount_t *s)
+{
+	smp_wmb();
+	s->sequence++;
+}
 
-其实关键在于 memory order 的
+static inline unsigned read_seqbegin(const seqlock_t *sl)
+{
+	return read_seqcount_begin(&sl->seqcount);
+}
+```
+
+- 为什么需要使用 memory barrier ?
+  - spin lock 可以保证只有一个 writer 存在。
+  - 如果不使用，write barrier ，可以相当于 writer 不写该字段了，对于 read barrier 类似。那么就可能让 reader 直接通过了。
+
+### QEMU 的实现感觉有 bug 啊！
+
+include/qemu/seqlock.h 中，更加简洁明了:
+
+```c
+/* Lock out other writers and update the count.  */
+static inline void seqlock_write_lock_impl(QemuSeqLock *sl, QemuLockable *lock)
+{
+    qemu_lockable_lock(lock);
+    seqlock_write_begin(sl);
+}
+```
+
+### 其他
+- 其他的实现 https://github.com/rigtorp/Seqlock
 
 ## lockless
 让人想起了 slab 的内容:
 https://lwn.net/SubscriberLink/827180/a1c1305686bfea67/
 
-## futex
-基本介绍 [^2]
-
-这个解释了，既然可以使用 userspace 的 spinlock，为什么还是要使用内核:
-https://linuxplumbersconf.org/event/4/contributions/286/attachments/225/398/LPC-2019-OptSpin-Locks.pdf
-
-用户态的 spinlock 就是直接使用 原子操作的:
-```c
-int pthread_spin_lock(pthread_spinlock_t *s)
-{
-    while (*(volatile int *)s || a_cas(s, 0, EBUSY)) a_spin();
-    return 0;
-}
-```
-但是 mutex 的实现, 最终会调用的 futex 的:
-```c
-int __pthread_mutex_lock(pthread_mutex_t *m)
-{
-    if ((m->_m_type&15) == PTHREAD_MUTEX_NORMAL
-        && !a_cas(&m->_m_lock, 0, EBUSY))
-        return 0;
-
-    return __pthread_mutex_timedlock(m, 0);
-}
-```
-
-> 这个时候, 再来说明一下，为什么 futex 的要义:
-
-The futex() system call provides a method for waiting until a certain condition becomes true.  It is typically used
-as a blocking construct in the context of shared-memory synchronization.  When using futexes, the majority  of  the
-synchronization  operations are performed in user space.  A user-space program employs the futex() system call only
-when it is likely that the program has to block for a longer time until the condition becomes true.  Other  futex()
-operations can be used to wake any processes or threads waiting for a particular condition.
-
-在用户态, 如果仅仅靠 spinlock，两个毫不相关的进程上锁，当一个进程 pthread_mutex_unlock 之后，根本无法无法去通知另一个等待在其上的 process
-
-比如 `FUTEX_WAKE` 在内核对应代码:
-- `futex_wake`
-  - `wake_up_q`
-    - `wake_up_process`
-
-## set_tid_address
-从 man 和 [^3] 看，似乎是配合 pthread 用于 pthread_join，而且会进一步依赖于 futex 来操作
 
 ## TODO
 面试:
 - [ ]  spinlock 和 spinlock_bh
 - [ ]  ksoftirqd 的优先级
-- [ ]  memcg 如何操作 slab (本来认为 slab 作为内核的部分，不会被 memcg 控制)
 - [ ]  ticket spinlock
-
-- https://lkml.org/lkml/2021/4/27/1208
 
 ## 记录一下遇到的问题
 
@@ -141,12 +354,8 @@ static struct page *page_idle_get_page(unsigned long pfn)
 }
 ```
 
-## 搞清楚如何展开 kernel 的 macro
+## [ ] Unreliable Guide To Locking : http://127.0.0.1:3434/kernel-hacking/locking.html
 
-## Unreliable Guide To Locking : http://127.0.0.1:3434/kernel-hacking/locking.html
-
-## Local locks in the kernel : https://lwn.net/Articles/828477/
+## [ ] Local locks in the kernel : https://lwn.net/Articles/828477/
 
 [^1]: https://lwn.net/Articles/262464/
-[^2]: https://eli.thegreenplace.net/2018/basics-of-futexes/
-[^3]: https://stackoverflow.com/questions/6975098/when-is-the-system-call-set-tid-address-used

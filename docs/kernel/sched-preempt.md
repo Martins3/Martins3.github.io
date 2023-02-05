@@ -929,3 +929,7 @@ CONFIG_DEBUG_PREEMPT=y
 # CONFIG_PREEMPT_TRACER is not set
 CONFIG_PREEMPTIRQ_DELAY_TEST=m
 ```
+
+## preempt
+- 中断的屏蔽和 preempt 的 disable 是两个事情
+- [ ] 那些地方是必须 `preempt_disable` 但是无需屏蔽中断

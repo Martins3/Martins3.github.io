@@ -71,3 +71,46 @@ static inline __attribute__((__gnu_inline__)) __attribute__((__unused__)) __attr
  queued_spin_lock_slowpath(lock, val);
 }
 ```
+
+## barrier
+```c
+# define barrier() __asm__ __volatile__("": : :"memory")
+```
+
+## qatomic_add
+```c
+void *trythis(void *arg) {
+  unsigned long i = 10000000;
+  printf("[huxueshi:%s:%d] \n", __FUNCTION__, __LINE__);
+  while (i--) {
+    // qatomic_set(&counter, counter + 1);
+    qatomic_add(&counter, 1);
+  }
+  return NULL;
+}
+```
+
+$ disass trythis
+Dump of assembler code for function trythis:
+   0x00000000004011e6 <+0>:     push   %rbp
+   0x00000000004011e7 <+1>:     mov    %rsp,%rbp
+   0x00000000004011ea <+4>:     sub    $0x20,%rsp
+   0x00000000004011ee <+8>:     call   0x401060 <mcount@plt>
+   0x00000000004011f3 <+13>:    mov    %rdi,-0x18(%rbp)
+   0x00000000004011f7 <+17>:    movq   $0x989680,-0x8(%rbp)
+   0x00000000004011ff <+25>:    mov    $0x21,%edx
+   0x0000000000401204 <+30>:    mov    $0x402058,%esi
+   0x0000000000401209 <+35>:    mov    $0x402008,%edi
+   0x000000000040120e <+40>:    mov    $0x0,%eax
+   0x0000000000401213 <+45>:    call   0x401040 <printf@plt>
+   0x0000000000401218 <+50>:    jmp    0x401222 <trythis+60>
+   0x000000000040121a <+52>:    lock addl $0x1,0x2e4e(%rip)        # 0x404070 <counter>
+   0x0000000000401222 <+60>:    mov    -0x8(%rbp),%rax
+   0x0000000000401226 <+64>:    lea    -0x1(%rax),%rdx
+   0x000000000040122a <+68>:    mov    %rdx,-0x8(%rbp)
+   0x000000000040122e <+72>:    test   %rax,%rax
+   0x0000000000401231 <+75>:    jne    0x40121a <trythis+52>
+   0x0000000000401233 <+77>:    mov    $0x0,%eax
+   0x0000000000401238 <+82>:    leave
+   0x0000000000401239 <+83>:    ret
+End of assembler dump.

@@ -98,6 +98,3 @@ void *qht_lookup(const struct qht *ht, const void *userp, uint32_t hash)
 而使用 qht_lookup_func_t 来实现比较的，那么只能采用
 几乎所有的都是使用 qht_lookup 的，除了 tb 的查询 qht_lookup_custom 的
 > 的确是因为比较的两个内容不同造成的
-
-## 分析一下 qht.c 的实现
-1. seqlock 是干啥的?

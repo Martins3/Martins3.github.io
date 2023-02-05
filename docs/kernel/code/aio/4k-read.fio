@@ -3,7 +3,7 @@ ioengine=libaio
 iodepth=128
 
 [trash]
-bs=4k
+bs=256k
 direct=1
 # filename=/dev/ublkb0
 # filename=/root/x
@@ -11,6 +11,6 @@ direct=1
 # filename=/home/martins3/core/x
 filename=/dev/sda
 # filename=/dev/nvme1n1p1
-rw=randread
+rw=read
 runtime=10
 time_based

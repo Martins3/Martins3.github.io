@@ -14,20 +14,20 @@
     - [ClangBuiltLinux](https://github.com/ClangBuiltLinux/tc-build)
 
 - [使用 clang 的交叉编译](https://github.com/MaskRay/ccls/wiki/Example-Projects)
-```
+```plain
 make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- LLVM=1 defconfig
 make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- LLVM=1 -j10
 make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- LLVM=1 -k Image.gz modules // 好吧，-k Image.gz modules 是什么意思
 ```
 
 也可以使用 gcc 来实现交叉编译 :
-```
+```plain
 ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- make defconfig
 ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- make
 ```
 
 使用 LLVM 编译 x86
-```
+```plain
 # Use clang 9 or newer.
 make ARCH=x86_64 LLVM=1 defconfig
 make ARCH=x86_64 LLVM=1 -j10
@@ -37,7 +37,7 @@ make ARCH=x86_64 LLVM=1 -j10
 Tried, but faile to find the compiler
 
 ### Cross Compile Riscv
-```
+```plain
 make ARCH=riscv CROSS_COMPILE=riscv64-linux-gnu-
 ```
 https://risc-v-getting-started-guide.readthedocs.io/en/latest/linux-introduction.html
@@ -91,3 +91,49 @@ sudo ln -f -s clang-tidy-11 clang-tidy
 ## static key
 - `sched_dynamic_update`
 - 在函数 page_fixed_fake_head 有 static_branch_unlikely
+
+## `__x86_return_thunk`
+我们发现空函数实际上是跳转到 `__x86_return_thunk` 的
+```txt
+$ disass that
+Dump of assembler code for function that:
+0xffffffff81d7a8e0 <+0>: endbr64
+0xffffffff81d7a8e4 <+4>: jmp 0xffffffff821f3544 <__x86_return_thunk>
+End of assembler dump.
+
+$ disass __x86_return_thunk
+Dump of assembler code for function __x86_return_thunk:
+   0xffffffff821f3604 <+5>:     ret
+   0xffffffff821f3605 <+6>:     int3
+```
+1. endbr64 的作用 ： https://stackoverflow.com/questions/56905811/what-does-the-endbr64-instruction-actually-do
+  - 处理安全问题。
+
+2. `__x86_return_thunk`
+```c
+#if defined(CONFIG_RETHUNK) && !defined(__DISABLE_EXPORTS) && !defined(BUILD_VDSO)
+#define RET	jmp __x86_return_thunk
+#else /* CONFIG_RETPOLINE */
+#ifdef CONFIG_SLS
+#define RET	ret; int3
+#else
+#define RET	ret
+#endif
+#endif /* CONFIG_RETPOLINE */
+```
+
+```txt
+config RETHUNK
+	bool "Enable return-thunks"
+	depends on RETPOLINE && CC_HAS_RETURN_THUNK
+	select OBJTOOL if HAVE_OBJTOOL
+	default y if X86_64
+	help
+	  Compile the kernel with the return-thunks compiler option to guard
+	  against kernel-to-user data leaks by avoiding return speculation.
+	  Requires a compiler with -mfunction-return=thunk-extern
+	  support for full protection. The kernel may run slower.
+```
+也是安全问题。
+
+具体细节有待深入。
