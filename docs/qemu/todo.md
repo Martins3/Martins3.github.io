@@ -296,12 +296,6 @@ https://qemu.readthedocs.io/en/latest/tools/qemu-pr-helper.html
 ## dirty ring 的机制
 - https://lwn.net/Articles/825743/
 
-## host_memory_backend_memory_complete 存在四个 hook 可以调用
-- ram
-- epc
-- file
-- memfd
-
 ## 简单分析一下 QEMU 中的信号机制，如果够复杂，可以单独整理一下
 
 - kill -s SIGBUS $(pgrep qemu)  导致的结果就是 QEMU 死掉

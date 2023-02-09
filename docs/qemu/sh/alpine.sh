@@ -2,7 +2,7 @@
 set -e
 
 # @todo 用 https://github.com/charmbracelet/gum 来重写这个项目
-use_nvme_as_root=false
+use_nvme_as_root=false # @todo nvme 的这个事情走通一下
 replace_kernel=true
 
 hacking_memory="hotplug"
@@ -91,7 +91,7 @@ arg_hugetlb="default_hugepagesz=2M hugepagesz=1G hugepages=1 hugepagesz=2M hugep
 arg_hugetlb="default_hugepagesz=2M"
 arg_hugetlb=""
 # 可选参数
-arg_mem_cpu="-m 12G -cpu SandyBridge,vmx=on -smp 2"
+arg_mem_cpu="-m 12G -cpu host -smp $(($(getconf _NPROCESSORS_ONLN) - 1))"
 arg_machine="-machine pc,accel=kvm,kernel-irqchip=on"
 arg_mem_balloon="-device virtio-balloon,id=balloon0,deflate-on-oom=true,page-poison=true,free-page-reporting=false,free-page-hint=true,iothread=io1 -object iothread,id=io1"
 arg_mem_balloon=""
@@ -160,6 +160,8 @@ else
 fi
 
 # @todo 不知道为什么现在使用 ovmf 界面没有办法正常刷新了
+# 使用 ovmf 的时候，windows 也是无法启动
+#
 # 但是还可以正常使用的机器
 # 当然，如果是 ubuntu ，问题更加严重，直接卡在哪里了
 if [[ $use_ovmf == true ]]; then

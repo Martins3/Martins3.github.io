@@ -29,3 +29,18 @@ set 本身就是 atomic 的
 ```
 
 只是为了告诉 sanitizers 而已。
+
+## 为什么 pause 指令可以拯救 memory order 啊？
+- https://www.felixcloutier.com/x86/pause
+
+## 看 smp_store_release 的展开最后就是 barrier
+
+```c
+# define barrier() __asm__ __volatile__("": : :"memory")
+```
+但是这条指令展开似乎没有没有指令，我们需要理解下
+
+## 仔细阅读这个
+- https://stackoverflow.com/questions/50323347/how-many-memory-barriers-instructions-does-an-x86-cpu-have
+
+intel 指令的 ，lock 是自带 memory barrier 的

@@ -1,14 +1,10 @@
 # memfd
 
-两个 memfd 的功能:
-- https://mp.weixin.qq.com/s/CI9ZZurCXjY9xF75lK8NjA
-- https://mp.weixin.qq.com/s/orDF_F2iTY-M5tYKY7cvCQ
+memfd 的主要功能是
+- [Keeping secrets in memfd areas](https://mp.weixin.qq.com/s/CI9ZZurCXjY9xF75lK8NjA)
+- [Private memory for KVM guests](https://mp.weixin.qq.com/s/orDF_F2iTY-M5tYKY7cvCQ)
 
-从 seal 机制算是知道了一点 memfd 功能，但是只是仅仅如此吗?
-- 那么是否可以将
+## 类似，但是处理安全
+- mm/secretmem.c
 
-- https://lwn.net/Articles/768785/
-
-- https://lwn.net/Articles/835342/
-
-- memfd 是不是创建出来了可以共享的 anonymous 映射，而再次之前，这是做不到的 ?
+更多参考 [Two address-space-isolation patches get closer](https://lwn.net/Articles/835342/)

@@ -384,12 +384,6 @@ static bool is_mmio_spte(u64 spte)
 ```
 
 
-## for_each_shadow_entry_lockless
-
-- [ ] lockless 的实现方法
-- [ ] 为什么需要 lock
-- [ ] fast_page_fault 是怎么回事
-
 ## write_flooding_count
 
 > write_flooding_count:

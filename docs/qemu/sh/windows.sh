@@ -43,6 +43,8 @@ if [ ! -f "$img" ]; then
   exit 0
 fi
 
+arg_vfio="-device vfio-pci,host=01:00.0 -device vfio-pci,host=01:00.1 -device vfio-pci,host=00:17.0"
+
 # "$QEMU" -hda "${img}" -enable-kvm -m 8G -smp 8 -vga virtio -soundhw
 
 qemu=${qemu_dir}/build/x86_64-softmmu/qemu-system-x86_64
@@ -52,5 +54,5 @@ arg_img="-drive aio=native,cache.direct=on,file=${img},format=qcow2,media=disk,i
 # https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/archive-virtio/virtio-win-0.1.208-1/
 arg_virtio="-drive aio=native,cache.direct=on,file=$workstation/virtio-win-0.1.208.iso,media=cdrom,index=2"
 # https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/archive-virtio/virtio-win-0.1.208-1/virtio-win-0.1.208.iso
-"$qemu" $arg_img -m 16G -smp 24 --enable-kvm -cpu host $arg_monitor $arg_mem_balloon $arg_qmp $arg_virtio -display gtk $arg_win11 -device vfio-pci,host=01:00.0 -device vfio-pci,host=01:00.1
+"$qemu" $arg_img -m 16G -smp $(($(getconf _NPROCESSORS_ONLN) - 1)) --enable-kvm -cpu host $arg_monitor $arg_mem_balloon $arg_qmp $arg_virtio -display gtk $arg_win11 $arg_vfio
 # "$QEMU" -drive file=/dev/nvme0n1p2,format=raw -drive file=/dev/nvme1n1p1,format=raw,readonly=on -m 8G -smp 8 -device vfio-pci,host=01:00.0 -machine type=q35,accel=kvm -soundhw hda

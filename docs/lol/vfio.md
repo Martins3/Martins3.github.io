@@ -60,6 +60,11 @@ echo 10de 1c02 | sudo tee /sys/bus/pci/drivers/vfio-pci/new_id
 
 echo 0000:01:00.1 | sudo tee /sys/bus/pci/devices/0000:01:00.1/driver/unbind
 echo 10de 10f1 | sudo tee /sys/bus/pci/drivers/vfio-pci/new_id
+
+
+# 00:17.0 SATA controller [0106]: Intel Corporation Alder Lake-S PCH SATA Controller [AHCI Mode] [8086:7ae2] (rev 11)
+echo 0000:00:17.0 | sudo tee /sys/bus/pci/devices/0000:00:17.0/driver/unbind
+echo 8086 7ae2 | sudo tee /sys/bus/pci/drivers/vfio-pci/new_id
 ```
 
 <!--
@@ -92,7 +97,10 @@ _dma_map(0x558becc6b3b0, 0xc0000, 0x7ff40000, 0x7f958bec0000) = -12 (Cannot allo
 ## 但是
 我始终没有搞定笔记本上的 GPU 的直通，而且在台式机上直通成功的案例中，发现由于英雄联盟的翻作弊机制，也是无法成功运行的，不过可以运行原神。
 
-相关参考:
+## 关键参考
+- https://wiki.archlinux.org/title/PCI_passthrough_via_OVMF#Passing_through_a_device_that_does_not_support_resetting
+
+
 - https://superuser.com/questions/1293112/kvm-gpu-passthrough-of-nvidia-dgpu-on-laptop-with-hybrid-graphics-without-propri
 - https://github.com/jscinoz/optimus-vfio-docs
 

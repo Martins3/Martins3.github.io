@@ -135,7 +135,7 @@
 <!-- - [leveldb 源码分析](./database/leveldb.md) -->
 
 ## Loongson
-- [X86 上阅读 Loongarch 内核](./loongarch/ccls.md)
+- [X86 上阅读 Loongarch 内核](./loongarch/hacking-ccls.md)
 - [使用 3A5000 作为我的主力机](./loongarch/neovim.md)
 
 ## Multiprocessor Programming

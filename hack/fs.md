@@ -81,6 +81,7 @@
 * [ext4_fiemap && do_vfs_ioctl 是做啥的](#ext4_fiemap-do_vfs_ioctl-是做啥的)
 * [erofs](#erofs)
 * [引用计数](#引用计数)
+* [TODO](#todo-2)
 
 <!-- vim-markdown-toc -->
 
@@ -1836,6 +1837,11 @@ fs/erofs : 什么场景下需要只读文件系统。
 
 ## 引用计数
 - https://zhuanlan.zhihu.com/p/93228807
+
+## TODO
+- 一个 a.out 正在被调试，但是此时 gcc 同时生成一个新的 a.out，似乎两者不会产生任何干扰.
+  - 文件可以被一个进程使用的过程中删除
+  - 一个目录似乎也是可以在正在使用的过程中删除
 
 [^1]: [kernel doc : Overview of the Linux Virtual File System](https://www.kernel.org/doc/html/latest/filesystems/vfs.html)
 [^2]: [github : aio](https://github.com/littledan/linux-aio)

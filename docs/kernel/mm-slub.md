@@ -1,5 +1,24 @@
 # mm/slub.md
 
+## 解决几个基础的观测问题
+
+sudo cat /proc/slabinfo
+| name            <active_objs> <num_objs> <objsize> <objperslab> <pagesperslab> | tunables <limit> <batchcount> <sharedfactor> | slabdata <active_slabs> <num_slabs> <sharedavail> |
+|--------------------------------------------------------------------------------|----------------------------------------------|---------------------------------------------------|
+| ovl_inode             45    270    720   45    8                               | tunables    0    0    0                      | slabdata      6      6      0                     |
+| QIPCRTR                2     39    832   39    8                               | tunables    0    0    0                      | slabdata      1      1      0                     |
+| i915_dependency     1152   1152    128   32    1                               | tunables    0    0    0                      | slabdata     36     36      0                     |
+| execute_cb             0      0     64   64    1                               | tunables    0    0    0                      | slabdata      0      0      0                     |
+| i915_request        4794   4794    640   51    8                               | tunables    0    0    0                      | slabdata     94     94      0                     |
+| intel_context       1058   1058    704   46    8                               | tunables    0    0    0                      | slabdata     23     23      0                     |
+| fat_inode_cache       50    123    784   41    8                               | tunables    0    0    0                      | slabdata      3      3      0                     |
+| fat_cache              1    102     40  102    1                               | tunables    0    0    0                      | slabdata      1      1      0                     |
+| nf_conntrack        2073   2240    256   32    2                               | tunables    0    0    0                      | slabdata     70     70      0                     |
+| kvm_async_pf        1080   1080    136   30    1                               | tunables    0    0    0                      | slabdata     36     36      0                     |
+
+- [ ] debugfs 也是可以处理的
+- [ ] slab_sysfs_init
+
 ## Keynote
 
 1. If all of the objects within a given slab (as tracked by the **inuse** counter) are freed, the entire slab is given back to the page allocator for reuse.

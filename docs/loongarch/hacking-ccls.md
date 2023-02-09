@@ -7,7 +7,7 @@ X86 机器上阅读 X86 内核的配置可以参考[我之前的文章](https://
 
 阅读内核我喜欢 ccls + coc.nvim 的机制，lsp 的机制都是需要 compile_commands.json 的生成。
 正确的编译内核，然后使用内核中下面的脚本即可。
-```c
+```txt
 ➜  linux git:(master) scripts/clang-tools/gen_compile_commands.py
 ```
 但是阅读 Loongarch 的内核时候，ccls 很快就会停止工作，最后整个项目也没有办法索引。
@@ -68,6 +68,9 @@ bear make -j10
 2. 将 compile_commands.json 拷贝到 intel 机器上
 3. 替换 "cc" 为 "mips64el-linux-gnu-gcc"
 4. 替换路径
+
+## 后来
+这不是 loongson 的问题，实际上，在 ARM 上也有这个问题。
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

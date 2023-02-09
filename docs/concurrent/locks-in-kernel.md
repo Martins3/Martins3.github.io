@@ -322,11 +322,6 @@ static inline void seqlock_write_lock_impl(QemuSeqLock *sl, QemuLockable *lock)
 ### 其他
 - 其他的实现 https://github.com/rigtorp/Seqlock
 
-## lockless
-让人想起了 slab 的内容:
-https://lwn.net/SubscriberLink/827180/a1c1305686bfea67/
-
-
 ## TODO
 面试:
 - [ ]  spinlock 和 spinlock_bh

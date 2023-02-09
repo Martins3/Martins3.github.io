@@ -8,6 +8,7 @@
 - export PS1="\W" : 命令提示符只有 working dir
 
 ## rpm
+- rpm -qa 查询当前系统中安装的所有的包
 - rpm -ivh --force --nodeps url
 - rpm -qf 可以找到一个文件对应的包
 - rpm2cpio shim-15.4-2.oe2203.src.rpm | cpio -idmv  : 解压一个 rpm 包
@@ -28,8 +29,9 @@ yum install -y neovim python3-neovim
 - sudo yum list installed : 展示自动安装的内核
 
 ## tar
-- tar czf name_of_archive_file.tar.gz name_of_directory_to_tar
+- tar cvzf name_of_archive_file.tar.gz name_of_directory_to_tar
   - https://unix.stackexchange.com/questions/46969/compress-a-folder-with-tar
+- tar -xvf
 
 ## tools
 - ipcs : 查看 share memory 的
