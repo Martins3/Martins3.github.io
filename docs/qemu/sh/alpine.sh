@@ -207,8 +207,13 @@ arg_initrd="-initrd /home/martins3/hack/vm/initramfs-6.1.0-rc7-00200-gc2bf05db6c
 arg_trace="--trace 'memory_region_ops_read'" # 打开这个选项，输出内容很多
 arg_trace=""
 
-arg_vfio="-device vfio-pci,host=02:00.0" # 将音频设备直通到 Guest 中
-arg_vfio=""
+# lspci -nn
+# 03:00.0 Non-Volatile memory controller [0108]: Yangtze Memory Technologies Co.,Ltd Device [1e49:0071] (rev 01)
+# echo 0000:03:00.0 | sudo tee /sys/bus/pci/devices/0000:03:00.0/driver/unbind
+# echo 1e49 0071 | sudo tee /sys/bus/pci/drivers/vfio-pci/new_id
+# sudo chown martins3 /dev/vfio/17
+
+arg_vfio="-device vfio-pci,host=03:00.0" # 将音频设备直通到 Guest 中
 # -soundhw pcspk
 
 show_help() {
@@ -236,7 +241,9 @@ while getopts "adskthpcmqr" opt; do
     debug_qemu="gdb -ex \"handle SIGUSR1 nostop noprint\" --args"
     # gdb 的时候，让 serial 输出从 unix domain socket 输出
     # https://unix.stackexchange.com/questions/426652/connect-to-running-qemu-instance-with-qemu-monitor
-    arg_monitor="-serial unix:$serial_socket_path,server,nowait -display none"
+    arg_monitor="-serial unix:$serial_socket_path,server,nowait"
+    arg_monitor="$arg_monitor -monitor unix:$mon_socket_path,server,nowait"
+    arg_monitor="$arg_monitor -display none"
     cd "${qemu_dir}" || exit 1
     ;;
   r)

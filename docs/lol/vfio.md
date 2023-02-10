@@ -53,18 +53,12 @@ echo 0000:01:00.0 > /sys/bus/pci/devices/0000:01:00.0/driver/unbind
 
 5. 创建 vfio
 
-因为
 ```sh
 echo 0000:01:00.0 | sudo tee /sys/bus/pci/devices/0000:01:00.0/driver/unbind
 echo 10de 1c02 | sudo tee /sys/bus/pci/drivers/vfio-pci/new_id
 
 echo 0000:01:00.1 | sudo tee /sys/bus/pci/devices/0000:01:00.1/driver/unbind
 echo 10de 10f1 | sudo tee /sys/bus/pci/drivers/vfio-pci/new_id
-
-
-# 00:17.0 SATA controller [0106]: Intel Corporation Alder Lake-S PCH SATA Controller [AHCI Mode] [8086:7ae2] (rev 11)
-echo 0000:00:17.0 | sudo tee /sys/bus/pci/devices/0000:00:17.0/driver/unbind
-echo 8086 7ae2 | sudo tee /sys/bus/pci/drivers/vfio-pci/new_id
 ```
 
 <!--
@@ -94,8 +88,52 @@ _dma_map(0x558becc6b3b0, 0xc0000, 0x7ff40000, 0x7f958bec0000) = -12 (Cannot allo
 -device vfio-pci,host=01:00.0
 ```
 
+## usb 直通
+- https://unix.stackexchange.com/questions/452934/can-i-pass-through-a-usb-port-via-qemu-command-line
+
+```txt
+/:  Bus 02.Port 1: Dev 1, Class=root_hub, Driver=xhci_hcd/9p, 20000M/x2
+    |__ Port 8: Dev 2, If 0, Class=Hub, Driver=hub/4p, 5000M
+/:  Bus 01.Port 1: Dev 1, Class=root_hub, Driver=xhci_hcd/16p, 480M
+    |__ Port 1: Dev 21, If 1, Class=Human Interface Device, Driver=usbhid, 12M
+    |__ Port 1: Dev 21, If 2, Class=Human Interface Device, Driver=usbhid, 12M
+    |__ Port 1: Dev 21, If 0, Class=Human Interface Device, Driver=usbhid, 12M
+    |__ Port 2: Dev 3, If 2, Class=Human Interface Device, Driver=usbhid, 12M
+    |__ Port 2: Dev 3, If 0, Class=Vendor Specific Class, Driver=, 12M
+    |__ Port 7: Dev 15, If 2, Class=Human Interface Device, Driver=usbhid, 12M
+    |__ Port 7: Dev 15, If 0, Class=Human Interface Device, Driver=usbhid, 12M
+    |__ Port 7: Dev 15, If 3, Class=Human Interface Device, Driver=usbhid, 12M
+    |__ Port 7: Dev 15, If 1, Class=Human Interface Device, Driver=usbhid, 12M
+    |__ Port 9: Dev 4, If 0, Class=Hub, Driver=hub/4p, 480M
+        |__ Port 4: Dev 20, If 0, Class=Human Interface Device, Driver=usbhid, 12M
+        |__ Port 4: Dev 20, If 1, Class=Human Interface Device, Driver=usbhid, 12M
+    |__ Port 11: Dev 5, If 0, Class=Human Interface Device, Driver=usbhid, 1.5M
+    |__ Port 14: Dev 7, If 0, Class=Wireless, Driver=btusb, 12M
+    |__ Port 14: Dev 7, If 1, Class=Wireless, Driver=btusb, 12M
+```
+
+```txt
+Bus 002 Device 002: ID 174c:3074 ASMedia Technology Inc. ASM1074 SuperSpeed hub
+Bus 002 Device 001: ID 1d6b:0003 Linux Foundation 3.0 root hub
+Bus 001 Device 020: ID 0c45:7638 Microdia AKKO 3084BT
+Bus 001 Device 004: ID 174c:2074 ASMedia Technology Inc. ASM1074 High-Speed hub
+Bus 001 Device 015: ID 2717:003b Xiaomi Inc. MI Wireless Mouse
+Bus 001 Device 003: ID 0b05:19af ASUSTek Computer, Inc. AURA LED Controller
+Bus 001 Device 007: ID 8087:0026 Intel Corp. AX201 Bluetooth
+Bus 001 Device 005: ID 17ef:6019 Lenovo M-U0025-O Mouse
+Bus 001 Device 021: ID 2f68:0082 Hoksi Technology DURGOD Taurus K320
+Bus 001 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
+```
+
 ## 但是
 我始终没有搞定笔记本上的 GPU 的直通，而且在台式机上直通成功的案例中，发现由于英雄联盟的翻作弊机制，也是无法成功运行的，不过可以运行原神。
+
+## 其他的 vfio 尝试
+```txt
+# 00:17.0 SATA controller [0106]: Intel Corporation Alder Lake-S PCH SATA Controller [AHCI Mode] [8086:7ae2] (rev 11)
+echo 0000:00:17.0 | sudo tee /sys/bus/pci/devices/0000:00:17.0/driver/unbind
+echo 8086 7ae2 | sudo tee /sys/bus/pci/drivers/vfio-pci/new_id
+```
 
 ## 关键参考
 - https://wiki.archlinux.org/title/PCI_passthrough_via_OVMF#Passing_through_a_device_that_does_not_support_resetting

@@ -347,3 +347,102 @@ ccw 可以使用这个进行 ioctl ，和 io
     - 通过 VFIOGroup::fd 调用 `VFIO_GROUP_GET_DEVICE_FD`
 
 ## platform.c
+
+## 处理下这个问题
+```txt
+VFIO_MAP_DMA failed: Cannot allocate memory
+```
+
+## iommu group ?
+
+
+## 观测下 QEMU
+
+
+### 中断注入 ?
+```txt
+#0  vfio_intx_eoi (vbasedev=0x5555577baa10) at ../hw/vfio/pci.c:106
+#1  vfio_intx_update (vdev=vdev@entry=0x5555577b9ff0, route=route@entry=0x7fffe28fe380) at ../hw/vfio/pci.c:233
+#2  0x0000555555af8277 in vfio_intx_routing_notifier (pdev=<optimized out>) at ../hw/vfio/pci.c:248
+#3  0x00005555559529be in pci_bus_fire_intx_routing_notifier (bus=0x555556a52bd0) at ../hw/pci/pci.c:1631
+#4  0x00005555558fa297 in piix3_write_config (address=<optimized out>, val=<optimized out>, len=<optimized out>, dev=<optimized out>)
+    at ../hw/isa/piix3.c:118
+#5  piix3_write_config (dev=<optimized out>, address=<optimized out>, val=<optimized out>, len=<optimized out>) at ../hw/isa/piix3.c:110
+#6  0x0000555555b399c0 in memory_region_write_accessor (mr=mr@entry=0x555556935230, addr=0, value=value@entry=0x7fffe28fe518, size=size@entry=1,
+    shift=<optimized out>, mask=mask@entry=255, attrs=...) at ../softmmu/memory.c:493
+#7  0x0000555555b371a6 in access_with_adjusted_size (addr=addr@entry=0, value=value@entry=0x7fffe28fe518, size=size@entry=1,
+    access_size_min=<optimized out>, access_size_max=<optimized out>, access_fn=0x555555b39940 <memory_region_write_accessor>, mr=0x555556935230,
+    attrs=...) at ../softmmu/memory.c:555
+#8  0x0000555555b3b46a in memory_region_dispatch_write (mr=mr@entry=0x555556935230, addr=0, data=<optimized out>, op=<optimized out>,
+    attrs=attrs@entry=...) at ../softmmu/memory.c:1522
+#9  0x0000555555b423c0 in flatview_write_continue (fv=fv@entry=0x7ffcd4260740, addr=addr@entry=3324, attrs=..., attrs@entry=...,
+    ptr=ptr@entry=0x7ffff4e0b000, len=len@entry=1, addr1=<optimized out>, l=<optimized out>, mr=0x555556935230)
+    at /home/martins3/core/qemu/include/qemu/host-utils.h:165
+#10 0x0000555555b42680 in flatview_write (fv=0x7ffcd4260740, addr=addr@entry=3324, attrs=attrs@entry=..., buf=buf@entry=0x7ffff4e0b000,
+    len=len@entry=1) at ../softmmu/physmem.c:2868
+#11 0x0000555555b45a89 in address_space_write (len=1, buf=0x7ffff4e0b000, attrs=..., addr=3324, as=0x5555564c9a00 <address_space_io>)
+    at ../softmmu/physmem.c:2964
+#12 address_space_rw (as=0x5555564c9a00 <address_space_io>, addr=addr@entry=3324, attrs=attrs@entry=..., buf=0x7ffff4e0b000, len=len@entry=1,
+    is_write=is_write@entry=true) at ../softmmu/physmem.c:2974
+#13 0x0000555555b6390b in kvm_handle_io (count=1, size=1, direction=<optimized out>, data=<optimized out>, attrs=..., port=3324)
+    at ../accel/kvm/kvm-all.c:2719
+#14 kvm_cpu_exec (cpu=cpu@entry=0x555556826160) at ../accel/kvm/kvm-all.c:2970
+#15 0x0000555555b64d9d in kvm_vcpu_thread_fn (arg=arg@entry=0x555556826160) at ../accel/kvm/kvm-accel-ops.c:51
+#16 0x0000555555cdb249 in qemu_thread_start (args=<optimized out>) at ../util/qemu-thread-posix.c:505
+#17 0x00007ffff6888e86 in start_thread () from /nix/store/9xfad3b5z4y00mzmk2wnn4900q0qmxns-glibc-2.35-224/lib/libc.so.6
+#18 0x00007ffff690fd70 in clone3 () from /nix/store/9xfad3b5z4y00mzmk2wnn4900q0qmxns-glibc-2.35-224/lib/libc.so.6
+```
+- 为什么写 piix3 最后会到
+
+### 是不是所有的写都需要 QEMU 抓发给 Guest ?
+
+## 解决一个小问题
+- `vfio_pin_map_dma`
+  - vfio_pin_pages_remote ?
+  - vfio_iommu_map
+
+调试这个，速度太慢了!
+```txt
+[139455.344323] vfio_pin_pages_remote: RLIMIT_MEMLOCK (8388608) exceeded
+[139455.347374] vfio_pin_pages_remote: RLIMIT_MEMLOCK (8388608) exceeded
+[139508.784534] vfio_pin_pages_remote: RLIMIT_MEMLOCK (8388608) exceeded
+[139508.787581] vfio_pin_pages_remote: RLIMIT_MEMLOCK (8388608) exceeded
+```
+
+## 分析下 memlock 为什么是 GPU 需要的
+
+kvm notifier 和这个是什么关系？
+
+应该是 IOMMNU
+
+## iommu=pt
+
+
+## /dev/vfio/10 是做什么的
+
+## echo 1e49 0071 | sudo tee /sys/bus/pci/drivers/vfio-pci/new_id 的行为是什么
+这是 generic 的
+https://www.kernel.org/doc/Documentation/ABI/testing/sysfs-bus-pci
+
+```c
+static struct pci_driver vfio_pci_driver = {
+	.name			= "vfio-pci",
+	.id_table		= vfio_pci_table,
+	.probe			= vfio_pci_probe,
+	.remove			= vfio_pci_remove,
+	.sriov_configure	= vfio_pci_sriov_configure,
+	.err_handler		= &vfio_pci_core_err_handlers,
+	.driver_managed_dma	= true,
+};
+```
+
+分析 probe 的过程:
+- vfio_pci_core_register_device
+  - vfio_register_group_dev
+    - `__vfio_register_dev`
+
+## vfio_pci_ioeventfd 不知道为什么，完全没有人用
+
+
+## iommufd.c 中主要是做什么的？
+- [ ]

@@ -43,7 +43,19 @@ if [ ! -f "$img" ]; then
   exit 0
 fi
 
-arg_vfio="-device vfio-pci,host=01:00.0 -device vfio-pci,host=01:00.1 -device vfio-pci,host=00:17.0"
+cat <<'_EOF_'
+# @todo add this to systemd scripts
+# echo 0000:01:00.0 | sudo tee /sys/bus/pci/devices/0000:01:00.0/driver/unbind
+echo 10de 1c02 | sudo tee /sys/bus/pci/drivers/vfio-pci/new_id
+echo 0000:01:00.1 | sudo tee /sys/bus/pci/devices/0000:01:00.1/driver/unbind
+echo 10de 10f1 | sudo tee /sys/bus/pci/drivers/vfio-pci/new_id
+
+sudo chown martins3 /dev/vfio/15
+_EOF_
+
+arg_vfio="-device vfio-pci,host=01:00.0 -device vfio-pci,host=01:00.1"
+# https://gist.github.com/ichisadashioko/cfc6446764516bf7eccaffdb3799f041
+arg_usb="-usb -device usb-host,bus=usb-bus.0,hostbus=1,hostport=7  -device usb-host,bus=usb-bus.0,hostbus=1,hostport=9.4"
 
 # "$QEMU" -hda "${img}" -enable-kvm -m 8G -smp 8 -vga virtio -soundhw
 
@@ -54,5 +66,5 @@ arg_img="-drive aio=native,cache.direct=on,file=${img},format=qcow2,media=disk,i
 # https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/archive-virtio/virtio-win-0.1.208-1/
 arg_virtio="-drive aio=native,cache.direct=on,file=$workstation/virtio-win-0.1.208.iso,media=cdrom,index=2"
 # https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/archive-virtio/virtio-win-0.1.208-1/virtio-win-0.1.208.iso
-"$qemu" $arg_img -m 16G -smp $(($(getconf _NPROCESSORS_ONLN) - 1)) --enable-kvm -cpu host $arg_monitor $arg_mem_balloon $arg_qmp $arg_virtio -display gtk $arg_win11 $arg_vfio
-# "$QEMU" -drive file=/dev/nvme0n1p2,format=raw -drive file=/dev/nvme1n1p1,format=raw,readonly=on -m 8G -smp 8 -device vfio-pci,host=01:00.0 -machine type=q35,accel=kvm -soundhw hda
+"$qemu" $arg_img -m 16G -smp $(($(getconf _NPROCESSORS_ONLN) - 1)) --enable-kvm -cpu host $arg_monitor $arg_mem_balloon $arg_qmp $arg_virtio -display gtk $arg_win11 $arg_vfio $arg_usb
+# "$QEMU" -drive file=/dev/nvme0n1p2,format=raw -drive file=/dev/nvme1n1p1,format=raw,readonly=on -m 8G -smp 8 -device vfio-pci,host=01:00.0 -machine type=q35,accel=kvm
