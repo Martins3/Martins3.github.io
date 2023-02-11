@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -e
+set -E -e -u -o pipefail
 
 # @todo 用 https://github.com/charmbracelet/gum 来重写这个项目
 use_nvme_as_root=false # @todo nvme 的这个事情走通一下
@@ -14,14 +14,18 @@ hacking_memory="sockets"
 hacking_memory="numa"
 hacking_memory="none"
 
+share_memory_option="9p"
+# share_memory_option="virtiofs"
+
 hacking_migration=false
 # @todo 尝试在 guest 中搭建一个 vIOMMU
-#
 if [[ $hacking_migration = true ]]; then
   use_nvme_as_root=false
 fi
 
 use_ovmf=false
+minimal=false
+
 
 abs_loc=$(dirname "$(realpath "$0")")
 configuration=${abs_loc}/config.json
@@ -32,6 +36,7 @@ qemu_dir=$(jq -r ".qemu_dir" <"$configuration")
 workstation="$(jq -r ".workstation" <"$configuration")"
 # ------------------------------------------------------------------------------
 qemu=${qemu_dir}/build/x86_64-softmmu/qemu-system-x86_64
+virtiofsd=${qemu_dir}/build/tools/virtiofsd/virtiofsd
 kernel=${kernel_dir}/arch/x86/boot/bzImage
 
 distribution=openEuler-22.09-x86_64-dvd
@@ -43,7 +48,7 @@ guest_port=5556
 qmp_port=4444
 case $distribution in
 openEuler-22.09-x86_64-dvd)
-  use_ovmf=false;
+  use_ovmf=false
   ;;
 openEuler-20.03-LTS-SP3-x86_64-dvd)
   guest_port=5557
@@ -77,7 +82,22 @@ arg_img="-drive aio=io_uring,file=${disk_img},format=qcow2,if=virtio"
 arg_img="-drive aio=native,cache.direct=on,file=${disk_img},format=qcow2,if=virtio"
 root=/dev/vdb2
 
-arg_share_dir="-virtfs local,path=$(pwd),mount_tag=host0,security_model=mapped,id=host0"
+arg_share_dir=""
+case $share_memory_option in
+"9p")
+  arg_share_dir="-virtfs local,path=$(pwd),mount_tag=host0,security_model=mapped,id=host0"
+  ;;
+"virtiofs")
+  # @todo drop_supplementary_groups 让 virtiofd 的启动有问题
+  # sudo /home/martins3/core/qemu//build/tools/virtiofsd/virtiofsd --socket-path=/tmp/vhostqemu -o source=/tmp -o cache=always
+  # unshare 也导致的权限问题
+  zellij run -- sudo "$virtiofsd" --socket-path=/tmp/vhostqemu -o source="$(pwd)" -o cache=always
+  # sudo chown martins3 /tmp/vhostqemu ，否则 QEMU 需要 root 启动
+  arg_share_dir="-device vhost-user-fs-pci,queue-size=1024,chardev=char0,tag=myfs"
+  arg_share_dir="$arg_share_dir -chardev socket,id=char0,path=/tmp/vhostqemu"
+  arg_share_dir="$arg_share_dir -m 4G -object memory-backend-file,id=mem,size=4G,mem-path=/dev/shm,share=on -numa node,memdev=mem"
+  ;;
+esac
 
 if [[ $use_nvme_as_root = true ]]; then
   # @todo 这个应该只是缺少 bootindex 吧？
@@ -97,8 +117,8 @@ arg_mem_balloon="-device virtio-balloon,id=balloon0,deflate-on-oom=true,page-poi
 arg_mem_balloon=""
 
 case $hacking_memory in
-"none")
-  ;;
+"none") ;;
+
 "numa")
   # 通过 reserve = false 让 mmap 携带参数 MAP_NORESERVE，从而可以模拟超级大内存的 Guest
   arg_mem_cpu="-cpu host -m 8G -smp cpus=6"
@@ -207,13 +227,15 @@ arg_initrd="-initrd /home/martins3/hack/vm/initramfs-6.1.0-rc7-00200-gc2bf05db6c
 arg_trace="--trace 'memory_region_ops_read'" # 打开这个选项，输出内容很多
 arg_trace=""
 
+# 直通一个 nvme 盘进去
 # lspci -nn
 # 03:00.0 Non-Volatile memory controller [0108]: Yangtze Memory Technologies Co.,Ltd Device [1e49:0071] (rev 01)
 # echo 0000:03:00.0 | sudo tee /sys/bus/pci/devices/0000:03:00.0/driver/unbind
 # echo 1e49 0071 | sudo tee /sys/bus/pci/drivers/vfio-pci/new_id
 # sudo chown martins3 /dev/vfio/17
+arg_vfio="-device vfio-pci,host=03:00.0"
+arg_vfio=""
 
-arg_vfio="-device vfio-pci,host=03:00.0" # 将音频设备直通到 Guest 中
 # -soundhw pcspk
 
 show_help() {

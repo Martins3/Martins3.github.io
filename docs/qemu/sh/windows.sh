@@ -58,6 +58,7 @@ arg_vfio="-device vfio-pci,host=01:00.0 -device vfio-pci,host=01:00.1"
 arg_usb="-usb -device usb-host,bus=usb-bus.0,hostbus=1,hostport=7  -device usb-host,bus=usb-bus.0,hostbus=1,hostport=9.4"
 
 # "$QEMU" -hda "${img}" -enable-kvm -m 8G -smp 8 -vga virtio -soundhw
+arg_cpu="-cpu host,-hypervisor,+kvm_pv_unhalt,+kvm_pv_eoi,hv_spinlocks=0x1fff,hv_vapic,hv_time,hv_reset,hv_vpindex,hv_runtime,hv_relaxed,kvm=off,hv_vendor_id=intel"
 
 qemu=${qemu_dir}/build/x86_64-softmmu/qemu-system-x86_64
 arg_mem_balloon="-device virtio-balloon-pci,id=balloon0,deflate-on-oom=true"
@@ -66,5 +67,5 @@ arg_img="-drive aio=native,cache.direct=on,file=${img},format=qcow2,media=disk,i
 # https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/archive-virtio/virtio-win-0.1.208-1/
 arg_virtio="-drive aio=native,cache.direct=on,file=$workstation/virtio-win-0.1.208.iso,media=cdrom,index=2"
 # https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/archive-virtio/virtio-win-0.1.208-1/virtio-win-0.1.208.iso
-"$qemu" $arg_img -m 16G -smp $(($(getconf _NPROCESSORS_ONLN) - 1)) --enable-kvm -cpu host $arg_monitor $arg_mem_balloon $arg_qmp $arg_virtio -display gtk $arg_win11 $arg_vfio $arg_usb
+"$qemu" $arg_img -m 16G -smp $(($(getconf _NPROCESSORS_ONLN) - 1)) --enable-kvm $arg_cpu  $arg_monitor $arg_mem_balloon $arg_qmp $arg_virtio -display gtk $arg_win11 $arg_vfio $arg_usb
 # "$QEMU" -drive file=/dev/nvme0n1p2,format=raw -drive file=/dev/nvme1n1p1,format=raw,readonly=on -m 8G -smp 8 -device vfio-pci,host=01:00.0 -machine type=q35,accel=kvm

@@ -7,3 +7,6 @@
 - [How linker works in llvm](https://www.youtube.com/watch?v=a5L66zguFe4)
 - MaskRay 写的一堆小例子: https://github.com/MaskRay/ElfHacks
 - https://www.lurklurk.org/linkers/linkers.html : 初学者入门
+
+## 想不到 loader 可以直接加载 a.out
+LD_DEBUG=all /nix/store/9xfad3b5z4y00mzmk2wnn4900q0qmxns-glibc-2.35-224/lib/ld-linux-x86-64.so.2 ./a.out
