@@ -108,6 +108,9 @@ cpu MHz         : 4200.059
 - 可以方便的测试嵌套虚拟化，GPU 直通等。
 - 可以使用 sshfs ，从而方便的将本地编辑的代码共享到远程。rsync 之类，syncthing 之类都没有 sshfs 好用，但是后者需要 fuse 支持，而 mac 中这个功能的打开还挺麻烦的。
 
+## 事后反思
+- 存储应该直接上 2T SSD 的，发现 1T SSD 很快就要开始手动垃圾回收了，非常难受。
+
 ## 参考
 - [ZKV 的攒机简史](https://cerr.cc/post/zkv%E7%9A%84%E6%94%92%E6%9C%BA%E7%AE%80%E5%8F%B2/)
 - [cinebench-scores](https://nanoreview.net/en/cpu-list/cinebench-scores)

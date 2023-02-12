@@ -601,6 +601,7 @@ static struct pci_driver vfio_pci_driver = {
 - 1 https://www.openeuler.org/zh/blog/wxggg/2020-11-29-vfio-passthrough-1.html
 - 2 https://www.openeuler.org/zh/blog/wxggg/2020-11-29-vfio-passthrough-2.html
 - 3 https://www.openeuler.org/zh/blog/wxggg/2020-11-21-iommu-smmu-intro.html
+- https://terenceli.github.io/%E6%8A%80%E6%9C%AF/2019/08/31/vfio-passthrough
 
 ## iommu container
 
@@ -719,26 +720,64 @@ memory-region: pci_bridge_pci
 ## 直接转发给 kvm 直接注入，不用切换到用户态来注入的
 - https://stackoverflow.com/questions/29461518/interrupt-handling-for-assigned-device-through-vfio#:~:text=An%20interrupt%20from%20the%20device,QEMU)%20has%20configured%20via%20ioctl.
 
-```txt
-🧀  sudo stackcount kvm_arch_irq_bypass_add_producer
+## intel-iommu 如何设置
+```plain
+       -device intel-iommu[,option=...]
+              This  is  only  supported by -machine q35, which will enable Intel VT-d emulation within the guest.  It sup‐
+              ports below options:
 
-  kvm_arch_irq_bypass_add_producer
-  __connect
-  irq_bypass_register_producer
-  vfio_msi_set_vector_signal
-  vfio_msi_set_block
-  vfio_pci_set_msi_trigger
-  vfio_pci_core_ioctl
-  vfio_device_fops_unl_ioctl
-  __x64_sys_ioctl
-  do_syscall_64
-  entry_SYSCALL_64_after_hwframe
-  [unknown]
-    44
+              intremap=on|off (default: auto)
+                     This enables interrupt remapping feature.  It's required to enable  complete  x2apic.   Currently  it
+                     only  supports kvm kernel-irqchip modes off or split, while full kernel-irqchip is not yet supported.
+                     The default value is "auto", which will be decided by the mode of kernel-irqchip.
 
-Detaching...
+              caching-mode=on|off (default: off)
+                     This enables caching mode for the VT-d emulated device.  When caching-mode is enabled, each guest DMA
+                     buffer  mapping  will generate an IOTLB invalidation from the guest IOMMU driver to the vIOMMU device
+                     in a synchronous way.  It is required for -device vfio-pci to work with the VT-d device, because host
+                     assigned devices requires to setup the DMA mapping on the host before guest DMA starts.
+
+              device-iotlb=on|off (default: off)
+                     This enables device-iotlb capability for the emulated VT-d device.  So far virtio/vhost should be the
+                     only real user for this parameter, paired with ats=on configured for the device.
+
+              aw-bits=39|48 (default: 39)
+                     This decides the address width of IOVA address space.  The  address  space  has  39  bits  width  for
+                     3-level IOMMU page tables, and 48 bits for 4-level IOMMU page tables.
+
+              Please   also   refer   to   the   wiki   page   for   general   scenarios   of   VT-d  emulation  in  QEMU:
+              https://wiki.qemu.org/Features/VT-d.
 ```
 
+## 分析下 DMA 映射的规则
+
+观测 QEMU 侧的: vfio_dma_map
+```txt
+#0  vfio_dma_map (container=container@entry=0x5555577c2090, iova=iova@entry=4294967296, size=size@entry=9663676416, vaddr=vaddr@entry=0x7ffd9be00000, readonly=false) at ../hw/vfio/common.c:496
+#1  0x0000555555aeb7c1 in vfio_listener_region_add (listener=0x5555577c20a0, section=0x7fffffff0f00) at /home/martins3/core/qemu/include/qemu/int128.h:33
+#2  0x0000555555b3f606 in listener_add_address_space (as=<optimized out>, listener=0x5555577c20a0) at ../softmmu/memory.c:2975
+#3  memory_listener_register (listener=0x5555577c20a0, as=<optimized out>) at ../softmmu/memory.c:3045
+#4  0x0000555555aed2e0 in vfio_connect_container (errp=0x7fffffff2210, as=<optimized out>, group=0x5555577c2010) at ../hw/vfio/common.c:2164
+#5  vfio_get_group (groupid=17, as=<optimized out>, errp=errp@entry=0x7fffffff2210) at ../hw/vfio/common.c:2290
+#6  0x0000555555afbdba in vfio_realize (pdev=0x5555577bab70, errp=0x7fffffff2210) at ../hw/vfio/pci.c:2905
+```
+vfio_dma_map 传递给内核， host 的虚拟地址 和 guest 的物理地址
+
+然后在 host 中，将 host 的虚拟地址装换为物理地址，最后 host 的物理地址转换为虚拟地址。
+
+在内核中，大致的流程为:
+```txt
+@[
+    __domain_mapping+1
+    intel_iommu_map_pages+177
+    __iommu_map+211
+    iommu_map+65
+    vfio_iommu_type1_ioctl+1956
+    __x64_sys_ioctl+135
+    do_syscall_64+56
+    entry_SYSCALL_64_after_hwframe+99
+]: 641774
+```
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

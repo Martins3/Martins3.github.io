@@ -55,10 +55,10 @@
 ## 淦，打一把英雄联盟不可能这么难
 这里介绍三种方法在 Linux 上打英雄联盟的方法和背后的原理。
 
-- [双系统（一）: 块设备](./lol/blockdev.md)
+- 🚧[双系统（一）: 块设备](./lol/blockdev.md)
 - [双系统（二）: bootloader](./lol/grub.md)
 - [wine : 利用系统调用虚拟化来在 Linux 上模拟运行 Window 程序](./lol/wine.md)
-- [VFIO : 利用设备直通将 GPU 提供给 Guest 使用](./lol/vfio.md)
+- 🚧[VFIO : 利用设备直通将 GPU 提供给 Guest 使用](./lol/vfio.md)
 
 ## UEFI
 - [Linux 下 UEFI 学习环境搭建](./uefi/uefi-linux.md)
