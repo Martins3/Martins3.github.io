@@ -234,7 +234,7 @@ arg_trace=""
 # echo 1e49 0071 | sudo tee /sys/bus/pci/drivers/vfio-pci/new_id
 # sudo chown martins3 /dev/vfio/17
 arg_vfio="-device vfio-pci,host=03:00.0"
-arg_vfio=""
+# arg_vfio=""
 
 # -soundhw pcspk
 

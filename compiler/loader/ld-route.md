@@ -41,3 +41,6 @@ https://ftp.gnu.org/old-gnu/Manuals/ld-2.9.1/html_chapter/ld_3.html 官方的文
 
 ## PIC 和 PIE 的问题
 - https://stackoverflow.com/questions/36968287/why-doesnt-gcc-reference-the-plt-for-function-calls
+
+## PLCT 的基于 mold 的 linker
+- https://github.com/ksco/rvld

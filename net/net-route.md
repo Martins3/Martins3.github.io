@@ -647,6 +647,8 @@ warning: error(s) occurred while switching to the new configuration
 - 了解下其中的原理：
 - https://askubuntu.com/questions/1018576/what-does-networkmanager-wait-online-service-do
 
+## Gateway API
+
 [^2]: 用芯探核:基于龙芯的 Linux 内核探索解析
 [^4]: http://yuba.stanford.edu/rcp/
 [^6]: [An Introduction to Computer Networks](http://intronetworks.cs.luc.edu/current2/html/)

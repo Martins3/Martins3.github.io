@@ -58,7 +58,7 @@ Martins3 is hacking wine!
 ## 虚拟化技术的粗率总结
 1. 硬件辅助虚拟化，代表为 vt-x + kvm，可以实现 Windows 操作系统在 Linux 中运行。
 2. 二进制翻译，代表是 QEMU ，可以实现 ARM 程序在 x86 上运行。
-3. JVM, LLVM, V8 等语言虚拟机。v8 可以让 js 代码在任何支持 v8 的平台运行（当然 v8 的平台支持非常麻烦）；
+3. JVM, LLVM, V8, WebAssembly 等语言虚拟机。v8 可以让 js 代码在任何支持 v8 的平台运行（当然 v8 的平台支持非常麻烦）；
 4. 容器，实现隔离，可以让 Ubuntu 在 Centos 上运行。
 5. [cosmopolitan](https://github.com/jart/cosmopolitan) 之类的跨平台的库。
 6. microcode 可以"翻译" CPU 实际上执行指令。

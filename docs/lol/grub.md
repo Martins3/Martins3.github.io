@@ -1,4 +1,4 @@
-# 我所知道 grub 的全部
+# grub
 
 ## 为什么需要 bootloader
 在计算上电的时候，首先会执行 ROM 中代码，这个 ROM 代码将将代码加载到内存中，然后进行各种初始化，这些程序以前是 BIOS，现在是 UEFI，如果有兴趣，可以看看 UEFI 的开源实现 edk2 .
@@ -64,7 +64,6 @@ https://www.golinuxcloud.com/grubby-command-examples/
 - https://askubuntu.com/questions/760875/any-downside-to-using-refind-instead-of-grub
 
 ## 更多
-
 - 你可以使用 QEMU 来调试 grub :
   - https://stackoverflow.com/questions/31799336/how-to-build-grub2-bootloader-from-its-source-and-test-it-with-qemu-emulator
 - 如何自己手写一个 bootloader

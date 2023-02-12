@@ -55,7 +55,7 @@
 ## 淦，打一把英雄联盟不可能这么难
 这里介绍三种方法在 Linux 上打英雄联盟的方法和背后的原理。
 
-- 🚧 [双系统（一）: partition](./lol/blockdev.md)
+- [双系统（一）: 块设备](./lol/blockdev.md)
 - [双系统（二）: bootloader](./lol/grub.md)
 - [wine : 利用系统调用虚拟化来在 Linux 上模拟运行 Window 程序](./lol/wine.md)
 - [VFIO : 利用设备直通将 GPU 提供给 Guest 使用](./lol/vfio.md)
@@ -70,12 +70,12 @@
 <!-- - 如何设计一个 Hypervisor，通过对比 HyperV, Xen 和 ESXi -->
 <!-- - 如何设计一个虚拟化指令 -->
 
-#### BOOM 源码阅读: 从静态 5 级 MIPS 流水线到乱序多发射 RISC-V CPU
+<!-- #### BOOM 源码阅读: 从静态 5 级 MIPS 流水线到乱序多发射 RISC-V CPU -->
 <!-- - [准备工作]() -->
 
 ## Compiler
 
-### Lua 解释器源码分析
+<!-- ### Lua 解释器源码分析 -->
 
 ## Tips
 - [计算机学习的一点经验之谈](./learn-cs.md)
