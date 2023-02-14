@@ -55,6 +55,8 @@ Martins3 is hacking wine!
 0024:fixme:kernelbase:AppPolicyGetProcessTerminationMethod FFFFFFFFFFFFFFFA, 000000000012FC20
 ```
 
+@todo 不知道为什么，虽然打开了调试信息，但是 gdb 看到的 backtrace 全部都是问号。
+
 ## 虚拟化技术的粗率总结
 1. 硬件辅助虚拟化，代表为 vt-x + kvm，可以实现 Windows 操作系统在 Linux 中运行。
 2. 二进制翻译，代表是 QEMU ，可以实现 ARM 程序在 x86 上运行。

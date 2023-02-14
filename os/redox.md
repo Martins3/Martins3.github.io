@@ -66,7 +66,6 @@ fn main() {
 
 - [ ] trace 一下这些信息的来源吧
 ```c
-/*
 Main kernel thread exited with status 9
 kernel::arch::x86_64::stop:INFO -- Running kstop()
 kernel::arch::x86_64::stop:INFO -- Notifying any potential ACPI driver

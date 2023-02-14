@@ -35,6 +35,9 @@ kernel_dir=$(jq -r ".kernel_dir" <"$configuration")
 qemu_dir=$(jq -r ".qemu_dir" <"$configuration")
 workstation="$(jq -r ".workstation" <"$configuration")"
 # ------------------------------------------------------------------------------
+# @todo 使用 3.10 内核，不知道为什么，最后无法正常启动
+# kernel_dir=/home/martins3/kernel/centos-3.10.0-1160.11.1-x86_64
+
 qemu=${qemu_dir}/build/x86_64-softmmu/qemu-system-x86_64
 virtiofsd=${qemu_dir}/build/tools/virtiofsd/virtiofsd
 kernel=${kernel_dir}/arch/x86/boot/bzImage
@@ -199,6 +202,8 @@ fi
 arg_cgroupv2="systemd.unified_cgroup_hierarchy=1"
 # scsi_mod.scsi_logging_level=0x3fffffff
 arg_kernel_args="root=$root nokaslr console=ttyS0,9600 earlyprink=serial $arg_hugetlb $arg_cgroupv2 transparent_hugepage=always"
+# @todo 可以看到，先会启动 initramfs 才会开始执行 /bin/bash 的
+# arg_kernel_args="root=$root nokaslr console=ttyS0,9600 earlyprink=serial init=/bin/bash"
 arg_kernel="--kernel ${kernel} -append \"${arg_kernel_args}\""
 
 if [[ $hacking_migration = true ]]; then
@@ -222,6 +227,9 @@ arg_qmp="-qmp tcp:localhost:$qmp_port,server,wait=off"
 mon_socket_path=/tmp/qemu-monitor-socket
 serial_socket_path=/tmp/qemu-serial-socket
 arg_monitor="-serial mon:stdio -display none"
+# @todo 原来这个选项不打开，内核无法启动啊
+# @todo 才意识到，这个打开之后，在 kernel cmdline 中的 init=/bin/bash 是无效的
+# @todo 为什么配合 3.10 内核无法正常使用
 arg_initrd="-initrd /home/martins3/hack/vm/initramfs-6.1.0-rc7-00200-gc2bf05db6c78-dirty.img"
 # arg_initrd=""
 arg_trace="--trace 'memory_region_ops_read'" # 打开这个选项，输出内容很多

@@ -55,12 +55,11 @@ _EOF_
 
 arg_vfio="-device vfio-pci,host=01:00.0 -device vfio-pci,host=01:00.1"
 # https://gist.github.com/ichisadashioko/cfc6446764516bf7eccaffdb3799f041
-arg_usb="-usb -device usb-host,bus=usb-bus.0,hostbus=1,hostport=7  -device usb-host,bus=usb-bus.0,hostbus=1,hostport=9.4"
+arg_usb="-usb -device usb-host,bus=usb-bus.0,hostbus=1,hostport=1"
 
 # "$QEMU" -hda "${img}" -enable-kvm -m 8G -smp 8 -vga virtio -soundhw
 arg_cpu="-cpu host,-hypervisor,+kvm_pv_unhalt,+kvm_pv_eoi,hv_spinlocks=0x1fff,hv_vapic,hv_time,hv_reset,hv_vpindex,hv_runtime,hv_relaxed,kvm=off,hv_vendor_id=intel"
 arg_qemu_mon="-vga virtio -display gtk,gl=on"
-arg_qemu_mon=""
 
 qemu=${qemu_dir}/build/x86_64-softmmu/qemu-system-x86_64
 arg_mem_balloon="-device virtio-balloon-pci,id=balloon0,deflate-on-oom=true"

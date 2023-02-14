@@ -213,6 +213,10 @@ find ./foo -type f -name "*.txt" | xargs rm
 cat foo.txt | xargs -I % sh -c 'echo %; mkdir %'
 ```
 
+```sh
+find usr -type f -print | xargs stat -c '%a %n' *
+```
+
 ### awk
 基本参考这篇 [blog](https://earthly.dev/blog/awk-examples/)，其内容还是非常容易的。
 
