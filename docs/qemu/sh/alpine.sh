@@ -26,7 +26,6 @@ fi
 use_ovmf=false
 minimal=false
 
-
 abs_loc=$(dirname "$(realpath "$0")")
 configuration=${abs_loc}/config.json
 
@@ -222,7 +221,8 @@ arg_sata="$arg_sata -drive file=${workstation}/img5,media=disk,format=raw"
 # @todo 做成一个计数器吧，自动增加访问的接口
 arg_network="-netdev user,id=net1,hostfwd=tcp::$guest_port-:22 -device e1000e,netdev=net1"
 arg_network="-netdev user,id=net1,hostfwd=tcp::$guest_port-:22 -device virtio-net-pci,netdev=net1,romfile=/home/martins3/core/zsh/README.md"
-arg_qmp="-qmp tcp:localhost:$qmp_port,server,wait=off"
+# arg_qmp="-qmp tcp:localhost:$qmp_port,server,wait=off"
+arg_qmp="-qmp unix:/tmp/qmp-sock,server,wait=off"
 
 mon_socket_path=/tmp/qemu-monitor-socket
 serial_socket_path=/tmp/qemu-serial-socket
@@ -236,11 +236,13 @@ arg_trace="--trace 'memory_region_ops_read'" # 打开这个选项，输出内容
 arg_trace=""
 
 # 直通一个 nvme 盘进去
-# lspci -nn
+cat <<_EOF_
+lspci -nn
 # 03:00.0 Non-Volatile memory controller [0108]: Yangtze Memory Technologies Co.,Ltd Device [1e49:0071] (rev 01)
-# echo 0000:03:00.0 | sudo tee /sys/bus/pci/devices/0000:03:00.0/driver/unbind
-# echo 1e49 0071 | sudo tee /sys/bus/pci/drivers/vfio-pci/new_id
-# sudo chown martins3 /dev/vfio/17
+echo 0000:03:00.0 | sudo tee /sys/bus/pci/devices/0000:03:00.0/driver/unbind
+echo 1e49 0071 | sudo tee /sys/bus/pci/drivers/vfio-pci/new_id
+sudo chown martins3 /dev/vfio/17
+_EOF_
 arg_vfio="-device vfio-pci,host=03:00.0"
 # arg_vfio=""
 

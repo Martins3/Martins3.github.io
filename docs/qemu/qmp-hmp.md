@@ -171,3 +171,5 @@ static void qemu_process_sugar_options(void)
     }
 }
 ```
+## 才意识到 qmp 也是可以使用 shell 交互的
+- https://wiki.qemu.org/Documentation/QMP
