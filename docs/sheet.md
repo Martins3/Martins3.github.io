@@ -27,10 +27,20 @@ yum install -y neovim python3-neovim
 ```
 
 - sudo yum list installed : 展示自动安装的内核
+- 新安装的 Centos8 无法安装任何软件:
+  - 报错： Error: Failed to download metadata for repo 'appstream': Cannot prepare internal mirrorlist: No URLs in mirrorlist
+  - https://stackoverflow.com/questions/70963985/error-failed-to-download-metadata-for-repo-appstream-cannot-prepare-internal
+```txt
+# sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-*
+# sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-*
+# dnf distro-sync
+# dnf -y install java
+```
 
 ## tar
 - tar cvzf name_of_archive_file.tar.gz name_of_directory_to_tar
   - https://unix.stackexchange.com/questions/46969/compress-a-folder-with-tar
+  - z : 使用 gzip 压缩
 - tar -xvf
 
 ## tools

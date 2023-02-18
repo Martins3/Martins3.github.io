@@ -61,6 +61,7 @@ arg_usb="-usb -device usb-host,bus=usb-bus.0,hostbus=1,hostport=1"
 arg_cpu="-cpu host,-hypervisor,+kvm_pv_unhalt,+kvm_pv_eoi,hv_spinlocks=0x1fff,hv_vapic,hv_time,hv_reset,hv_vpindex,hv_runtime,hv_relaxed,kvm=off,hv_vendor_id=intel"
 arg_qemu_mon="-vga virtio -display gtk,gl=on" # 打开 gl=on 只是显示 1/4，比较怀疑是整体缩放之后导致的
 arg_qemu_mon="-vga virtio -display gtk"
+arg_qemu_mon="-vga none"
 
 qemu=${qemu_dir}/build/x86_64-softmmu/qemu-system-x86_64
 arg_mem_balloon="-device virtio-balloon-pci,id=balloon0,deflate-on-oom=true"
@@ -72,6 +73,11 @@ arg_qmp="-qmp tcp:localhost:4445,server,wait=off"
 if [[ $version == 10 ]]; then
   img=/home/martins3/hack/mnt/windows10.img.cur
 fi
+
+if [[ $version == 8 ]]; then
+  img=/home/martins3/hack/mnt/windows8.img
+fi
+
 arg_img="-drive aio=native,cache.direct=on,file=${img},format=qcow2,media=disk,index=0"
 # https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/archive-virtio/virtio-win-0.1.208-1/
 arg_virtio="-drive aio=native,cache.direct=on,file=$workstation/virtio-win-0.1.208.iso,media=cdrom,index=2"

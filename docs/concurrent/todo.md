@@ -47,3 +47,5 @@ intel 指令的 ，lock 是自带 memory barrier 的
 
 ## 如何和外设进行同步
 - cxl 似乎处理过这个
+
+## 内核中的 readwrite lock 没有分析

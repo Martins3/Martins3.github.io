@@ -136,6 +136,9 @@ Failed at step EXEC spawning /root/IPTV/xteve: Permission denied
 ExecStart=bash /root/share/pkg/main.sh
 ```
 
+## 等待网络的方法
+- network-online.target
+
 ## 常见疑问
 - https://unix.stackexchange.com/questions/506347/why-do-most-systemd-examples-contain-wantedby-multi-user-target
 

@@ -353,4 +353,10 @@ static struct page *page_idle_get_page(unsigned long pfn)
 
 ## [ ] Local locks in the kernel : https://lwn.net/Articles/828477/
 
+## local locks
+https://lwn.net/Articles/828477/ : 目前唯一的资料
+对于访问 percpu 的数据，就像是单核执行一下，是需要屏蔽 preempt_disable 的
+
+但是无法理解，如果允许抢占了，之后只要抢占的 process 运行到相同的位置，那么不是一定 dead lock 吗？
+
 [^1]: https://lwn.net/Articles/262464/

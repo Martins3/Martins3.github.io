@@ -128,8 +128,7 @@
 <!-- -  🚧 [LWN 阅读笔记](./lwn.md) -->
 <!-- -  🚧 [softirq](./kernel/softirq.md) -->
 <!-- - [iommu 基本原理介绍](.) -->
-<!-- - [vfio : Linux 内核实现](.) -->
-<!-- - [vfio : QEMU 实现](.) -->
+- /proc/cpuinfo
 
 <!-- ## Database -->
 <!-- - [leveldb 源码分析](./database/leveldb.md) -->
