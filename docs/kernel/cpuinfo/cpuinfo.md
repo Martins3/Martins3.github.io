@@ -1,22 +1,61 @@
 # cpuinfo
 
 ## 概括
+```txt
+processor       : 31
+vendor_id       : GenuineIntel
+cpu family      : 6
+model           : 183
+model name      : 13th Gen Intel(R) Core(TM) i9-13900K
+stepping        : 1
+microcode       : 0x112
+cpu MHz         : 3000.000
+cache size      : 36864 KB
+physical id     : 0
+siblings        : 32
+core id         : 47
+cpu cores       : 24
+apicid          : 94
+initial apicid  : 94
+fpu             : yes
+fpu_exception   : yes
+cpuid level     : 32
+wp              : yes
+flags           : fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc art arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc cpuid aperfmperf tsc_known_freq pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 sdbg fma cx16 xtpr pdcm pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm abm 3dnowprefetch cpuid_fault epb invpcid_single ssbd ibrs ibpb stibp ibrs_enhanced tpr_shadow vnmi flexpriority ept vpid ept_ad fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt clwb intel_pt sha_ni xsaveopt xsavec xgetbv1 xsaves split_lock_detect avx_vnni dtherm ida arat pln pts hwp hwp_notify hwp_act_window hwp_epp hwp_pkg_req hfi umip pku ospke waitpkg gfni vaes vpclmulqdq tme rdpid movdiri movdir64b fsrm md_clear serialize pconfig arch_lbr ibt flush_l1d arch_capabilities
+vmx flags       : vnmi preemption_timer posted_intr invvpid ept_x_only ept_ad ept_1gb flexpriority apicv tsc_offset vtpr mtf vapic ept vpid unrestricted_guest vapic_reg vid ple shadow_vmcs ept_mode_based_exec tsc_scaling usr_wait_pause
+bugs            : spectre_v1 spectre_v2 spec_store_bypass swapgs eibrs_pbrsb
+bogomips        : 5990.40
+clflush size    : 64
+cache_alignment : 64
+address sizes   : 46 bits physical, 48 bits virtual
+power management:
+```
+
+## https://unix.stackexchange.com/questions/43539/what-do-the-flags-in-proc-cpuinfo-mean
+
+## https://unix.stackexchange.com/questions/146051/number-of-processors-in-proc-cpuinfo
 
 ## processor : 0 - 31
-
+通过 cpu_detect 中调用
 ## vendor_id : GenuineIntel
-
 ## cpu family	: 6
-
 ## model		: 183
 ## model name	: 13th Gen Intel(R) Core(TM) i9-13900K
+```c
+#define INTEL_FAM6_RAPTORLAKE		0xB7
+#define INTEL_FAM6_RAPTORLAKE_P		0xBA
+#define INTEL_FAM6_RAPTORLAKE_S		0xBF
+```
+- [ ] 这里的 cpu model 和 QEMU 中的 cpu model 相同吗？
 
 ## stepping	: 1
+- https://en.wikipedia.org/wiki/Stepping_level
 
 ## microcode	: 0x112
 
 ## cpu MHz
-cpu MHz : 5500.000
+```txt
+cpu MHz     : 5500.000
 cpu MHz		: 3000.000
 cpu MHz		: 5500.105
 cpu MHz		: 3000.000
@@ -48,6 +87,7 @@ cpu MHz		: 3000.000
 cpu MHz		: 3000.000
 cpu MHz		: 3000.000
 cpu MHz		: 3000.000
+```
 
 ## cache size	: 36864 KB
 
@@ -183,3 +223,5 @@ initial apicid	: 94
 ## address sizes	: 46 bits physical, 48 bits virtual
 
 ## power management
+
+https://cpuid.apps.poly.nomial.co.uk/

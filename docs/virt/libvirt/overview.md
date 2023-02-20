@@ -399,7 +399,7 @@ virsh qemu-monitor-command $domain --hmp 'balloon 4000'
 | 作用        | 说明                |
 |-------------|---------------------|
 | actual      | QEMU 参数配置的内存 |
-| swap_in     |                     |
+| swap_in     |   累加数值                  |
 | swap_out    |                     |
 | major_fault |                     |
 | minor_fault |                     |

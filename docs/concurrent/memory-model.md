@@ -155,6 +155,8 @@ https://www.linuxjournal.com/article/8212
 ###  wait_on_bit
 kernel 8238b4579866b7c1bb99883cfe102a43db5506ff
 
+### do_idle 中的 memory model
+
 ### virtio_wmb
 
 ## io uring 的使用似乎是需要实现用户态和系统态的同步，使用 memory barrier 的
@@ -195,5 +197,6 @@ The last part of the article describes the programmer-centric view of relaxed me
 # 5 Implementing Sequential Consistency
 
 > Is Sequential and Consistency are controversial words ?
+
 
 [^1]: https://zhuanlan.zhihu.com/p/191660613

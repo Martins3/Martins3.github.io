@@ -29,6 +29,37 @@ case $version in
   ;;
 esac
 
+arg_img="-drive aio=native,cache.direct=on,file=${img},format=qcow2,media=disk,index=0"
+
+arg_vfio=""
+if [[ $version == 10 ]]; then
+  img=/home/martins3/hack/mnt/windows10.img.cur
+  # @todo 修改点
+  arg_img="-drive aio=native,cache.direct=on,file=/home/martins3/hack/mnt/windows10.img.cur,format=qcow2,media=disk,index=0"
+  # arg_img="-drive aio=native,cache.direct=on,file=/dev/nvme1n1,format=raw,media=disk,index=3"
+  # 发现了一个事情，当安装的操作系统的时候，需要先使用直通，之后可以整个 disk 访问的
+  # 这个是可以复现的
+  #
+  # 使用 disk 是需要将 participation 的信息清理一下
+  # sudo dd if=/dev/zero of=/dev/nvme1n1  bs=512  count=1
+
+  # @todo 修改点
+  # use_vfio=false
+  # if [[ $use_vfio == true ]]; then
+  #   arg_vfio="-device vfio-pci,host=03:00.0"
+  #   arg_img=""
+  # else
+  #   arg_vfio=""
+  #   arg_img="-drive file=/dev/nvme1n1,index=0,format=raw"
+  # fi
+
+
+fi
+
+if [[ $version == 8 ]]; then
+  img=/home/martins3/hack/mnt/windows8.img
+fi
+
 if [[ ! -f ${iso} ]] && [[ ! -f ${img} ]]; then
   echo "Download the ISO from
 https://www.microsoft.com/en-us/software-download/windows10ISO
@@ -37,11 +68,16 @@ fi
 
 # arg_vnc="-vnc :0,password=on"
 arg_monitor="-monitor stdio"
-if [ ! -f "$img" ]; then
-  qemu-img create -f qcow2 "$img" 200G
-  qemu-system-x86_64 -cdrom "$iso" -hda "$img" -m 16G -smp 16 -cpu host --enable-kvm $arg_monitor $arg_win11
-  exit 0
-fi
+
+# @todo 修改点
+# qemu-system-x86_64 $arg_vfio -cdrom "$iso" $arg_img -m 16G -smp 16 -cpu host --enable-kvm $arg_monitor $arg_win11
+# exit 0
+
+# if [ ! -f "$img" ]; then
+#   qemu-img create -f qcow2 "$img" 200G
+#   qemu-system-x86_64 -cdrom "$iso" $arg_img -m 16G -smp 16 -cpu host --enable-kvm $arg_monitor $arg_win11
+#   exit 0
+# fi
 
 cat <<'_EOF_'
 # @todo add this to systemd scripts
@@ -49,36 +85,27 @@ cat <<'_EOF_'
 echo 10de 1c02 | sudo tee /sys/bus/pci/drivers/vfio-pci/new_id
 echo 0000:01:00.1 | sudo tee /sys/bus/pci/devices/0000:01:00.1/driver/unbind
 echo 10de 10f1 | sudo tee /sys/bus/pci/drivers/vfio-pci/new_id
-
 sudo chown martins3 /dev/vfio/15
 _EOF_
 
-arg_vfio="-device vfio-pci,host=01:00.0 -device vfio-pci,host=01:00.1"
+# arg_vfio="$arg_vfio -device vfio-pci,host=01:00.0 -device vfio-pci,host=01:00.1"
 # https://gist.github.com/ichisadashioko/cfc6446764516bf7eccaffdb3799f041
-arg_usb="-usb -device usb-host,bus=usb-bus.0,hostbus=1,hostport=1"
+# arg_usb="-usb -device usb-host,bus=usb-bus.0,hostbus=1,hostport=1"
+arg_usb=""
 
 # "$QEMU" -hda "${img}" -enable-kvm -m 8G -smp 8 -vga virtio -soundhw
 arg_cpu="-cpu host,-hypervisor,+kvm_pv_unhalt,+kvm_pv_eoi,hv_spinlocks=0x1fff,hv_vapic,hv_time,hv_reset,hv_vpindex,hv_runtime,hv_relaxed,kvm=off,hv_vendor_id=intel"
-arg_qemu_mon="-vga virtio -display gtk,gl=on" # 打开 gl=on 只是显示 1/4，比较怀疑是整体缩放之后导致的
+# arg_qemu_mon="-vga virtio -display gtk,gl=on" # 打开 gl=on 只是显示 1/4，比较怀疑是整体缩放之后导致的
 arg_qemu_mon="-vga virtio -display gtk"
-arg_qemu_mon="-vga none"
 
-qemu=${qemu_dir}/build/x86_64-softmmu/qemu-system-x86_64
+qemu="qemu-system-x86_64"
 arg_mem_balloon="-device virtio-balloon-pci,id=balloon0,deflate-on-oom=true"
 
 # @todo 内存 prealloc 无法关闭？
 arg_mem="-machine memory-backend=m2 -object memory-backend-ram,size=8G,prealloc=off,id=m2"
 
 arg_qmp="-qmp tcp:localhost:4445,server,wait=off"
-if [[ $version == 10 ]]; then
-  img=/home/martins3/hack/mnt/windows10.img.cur
-fi
 
-if [[ $version == 8 ]]; then
-  img=/home/martins3/hack/mnt/windows8.img
-fi
-
-arg_img="-drive aio=native,cache.direct=on,file=${img},format=qcow2,media=disk,index=0"
 # https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/archive-virtio/virtio-win-0.1.208-1/
 arg_virtio="-drive aio=native,cache.direct=on,file=$workstation/virtio-win-0.1.208.iso,media=cdrom,index=2"
 # https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/archive-virtio/virtio-win-0.1.208-1/virtio-win-0.1.208.iso

@@ -57,4 +57,63 @@ QEMU 中 cpu_is_bsp 和 do_cpu_sipi
 
 - [ ] 理解一下: secondary_startup_64
 
+## 火焰图中的 swapper 到底是什么
+
+实际上：
+```txt
+sudo bpftrace -e 'kfunc:do_idle { @[comm] = count(); }'
+
+Attaching 1 probe...
+^C
+
+@[swapper/15]: 3
+@[swapper/13]: 3
+@[swapper/31]: 3
+@[swapper/28]: 4
+@[swapper/23]: 5
+@[swapper/27]: 5
+@[swapper/5]: 6
+@[swapper/26]: 6
+@[swapper/1]: 7
+@[swapper/22]: 10
+@[swapper/7]: 10
+@[swapper/9]: 12
+@[swapper/11]: 15
+@[swapper/3]: 17
+@[swapper/20]: 24
+@[swapper/18]: 27
+@[swapper/25]: 30
+@[swapper/24]: 54
+@[swapper/17]: 70
+@[swapper/21]: 74
+@[swapper/30]: 84
+@[swapper/16]: 172
+@[swapper/12]: 213
+@[swapper/29]: 226
+@[swapper/19]: 248
+@[swapper/14]: 259
+@[swapper/0]: 287
+@[swapper/8]: 303
+@[swapper/10]: 305
+@[swapper/4]: 433
+@[swapper/2]: 436
+@[swapper/6]: 480
+```
+
+```txt
+sudo bpftrace -e 'kfunc:do_idle { @[pid] = count(); }'
+
+Attaching 1 probe...
+^C
+
+@[0]: 3804
+```
+也就是说，他们的 pid 都相同，但是他们
+
+cpu_startup_entry 中打断点
+```txt
+$ p &$lx_current()
+$8 = (struct task_struct *) 0xffff8881002f10c0
+```
+
 [^1]: https://zhuanlan.zhihu.com/p/67989330

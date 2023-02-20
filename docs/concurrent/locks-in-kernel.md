@@ -351,12 +351,13 @@ static struct page *page_idle_get_page(unsigned long pfn)
 
 ## [ ] Unreliable Guide To Locking : http://127.0.0.1:3434/kernel-hacking/locking.html
 
-## [ ] Local locks in the kernel : https://lwn.net/Articles/828477/
-
 ## local locks
 https://lwn.net/Articles/828477/ : 目前唯一的资料
 对于访问 percpu 的数据，就像是单核执行一下，是需要屏蔽 preempt_disable 的
 
 但是无法理解，如果允许抢占了，之后只要抢占的 process 运行到相同的位置，那么不是一定 dead lock 吗？
+
+## 代码收集
+- arch_freq_get_on_cpu 中为什么使用 read_seqcount_retry
 
 [^1]: https://lwn.net/Articles/262464/

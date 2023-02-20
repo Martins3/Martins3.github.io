@@ -126,8 +126,8 @@ https://askubuntu.com/questions/164926/how-to-make-partitions-mount-at-startup
 ### parted : 格式化设备
 
 ```sh
-parted /dev/nvme0n1 -- mklabel gpt
-parted /dev/nvme0n1 -- mkpart primary 1MiB 100%
+parted /dev/nvme1n1 -- mklabel gpt
+parted /dev/nvme1n1 -- mkpart primary 1MiB 100%
 ```
 
 ```sh
@@ -559,6 +559,9 @@ struct block_device_operations {
 ## 结束语
 好的，你现在对于 Linux 如何处理 Block 设备有了一个大概的认识，记得奖励自己一把英雄联盟哦。
 
+## 使用 QEMU 直接在一个 partion 上安装系统？
+
+## 使用 QEMU 直接在
 
 ## TODO
 
@@ -1209,6 +1212,7 @@ struct block_device_operations {
 linux on  master [!+?] via C v11.3.0-gcc via ❄️  impure (kernel) took 51s
 🧀
 ```
+
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

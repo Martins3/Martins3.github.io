@@ -1,14 +1,68 @@
 # Linux scheduelr
 
+## /proc/cpuinfo | grep 'cpu MHz'
+- show_cpuinfo
+
+```c
+	if (cpu_has(c, X86_FEATURE_TSC)) {
+		unsigned int freq = arch_freq_get_on_cpu(cpu);
+
+		seq_printf(m, "cpu MHz\t\t: %u.%03u\n", freq / 1000, (freq % 1000));
+	}
+```
+- [ ] 为什么需要 tsc 啊
+```c
+#define X86_FEATURE_TSC			( 0*32+ 4) /* Time Stamp Counter */
+#define X86_FEATURE_APERFMPERF		( 3*32+28) /* P-State hardware coordination feedback capability (APERF/MPERF MSRs) */
+```
+- scheduler_tick
+  - arch_scale_freq_tick : 通过 msr 寄存器获取
+
+## 一共存在那些指令来进入睡眠
+mwait
+halt
+pause
+
+
+任何 cpu 都有 init 进程:
+- start_secondary
+- rest_init
+都会调用到 `cpu_startup_entry` 中
+
+
+## 更加深度的睡眠为什么不可以
 
 - https://mp.weixin.qq.com/s/0LM25OrpFCCcokSCMv--Mg
   - 大致分析 idle driver 的作用已经整个 idle 代码的流程
+
+- cpuidle core
+- cpuidle governors
+- cpuidle drivers
+
+- do_idle
+
 
 - https://vstinner.github.io/intel-cpus.html : cstate pstate 的介绍
 
 - 关键的内核文档: https://docs.kernel.org/admin-guide/pm/working-state.html
 
 - cpuidle.off = 1
+
+## 一些系统的接口
+/sys/devices/system/cpu/intel_pstate
+/sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq
+/sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq
+
+## 工具
+cpupower idle-info
+
+## 更多的参数
+idle=poll
+cpuidle.off=1
+processor.max_cstate=1
+intel_idle.max_cstate=
+intel_pstate=
+processor.max_cstate=
 
 ## https://stackoverflow.com/questions/57471862/uses-of-the-monitor-mwait-instructions
 - 不知道为什么，mwait 会导致 guest 退出

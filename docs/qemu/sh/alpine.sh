@@ -23,6 +23,8 @@ if [[ $hacking_migration = true ]]; then
   use_nvme_as_root=false
 fi
 
+hacking_vfio=false
+
 use_ovmf=false
 minimal=false
 
@@ -235,16 +237,21 @@ arg_initrd="-initrd /home/martins3/hack/vm/initramfs-6.1.0-rc7-00200-gc2bf05db6c
 arg_trace="--trace 'memory_region_ops_read'" # 打开这个选项，输出内容很多
 arg_trace=""
 
-# 直通一个 nvme 盘进去
-cat <<_EOF_
+arg_vfio=""
+if [[ $hacking_vfio == true ]]; then
+  # 直通一个 nvme 盘进去
+  cat <<_EOF_
 lspci -nn
 # 03:00.0 Non-Volatile memory controller [0108]: Yangtze Memory Technologies Co.,Ltd Device [1e49:0071] (rev 01)
 echo 0000:03:00.0 | sudo tee /sys/bus/pci/devices/0000:03:00.0/driver/unbind
 echo 1e49 0071 | sudo tee /sys/bus/pci/drivers/vfio-pci/new_id
 sudo chown martins3 /dev/vfio/17
+## 恢复方法
+echo 0000:03:00.0 | sudo tee /sys/bus/pci/devices/0000:03:00.0/driver/unbind
+echo 1e49 0071 | sudo tee /sys/bus/pci/drivers/nvme/new_id
 _EOF_
-arg_vfio="-device vfio-pci,host=03:00.0"
-# arg_vfio=""
+  arg_vfio="-device vfio-pci,host=03:00.0"
+fi
 
 # -soundhw pcspk
 
