@@ -448,8 +448,7 @@ sudo apt-get install linux-image-`uname -r`-dbgsym
 ```
 是不可以的，应该默认没有打开 debug 库:
 
-
-- 获取 debuginfo
+### 获取 debuginfo
 - 关键参考: https://askubuntu.com/questions/197016/how-to-install-a-package-that-contains-ubuntu-kernel-debug-symbols
 - https://superuser.com/questions/62575/where-is-vmlinux-on-my-ubuntu-installation
 
@@ -470,4 +469,54 @@ sudo apt-get install linux-image-$(uname -r)-dbgsym
 - 完了，现在我遇到完全相同的问题了:
   - https://askubuntu.com/questions/1446930/there-is-no-kernel-dbgsym-package-for-my-ubuntu-22-04
 
-## 可以使用 crash 获取到 dmesg
+### 获取 srouce code
+```sh
+echo "deb-src http://archive.ubuntu.com/ubuntu $(lsb_release -cs) main restricted universe multiverse
+deb-src http://archive.ubuntu.com/ubuntu $(lsb_release -cs)-updates main restricted universe multiverse
+deb-src http://security.ubuntu.com/ubuntu $(lsb_release -cs)-security main restricted universe multiverse" | \
+sudo tee -a /etc/apt/sources.list
+
+sudo apt-get update
+sudo apt-get install dpkg-dev -y
+sudo apt-get source linux-image-$(uname -r)
+```
+但是实际上，可以有更加简单的方法:
+- https://git.launchpad.net/~ubuntu-kernel/ubuntu/+source/linux/+git/focal
+
+## 问题
+```txt
+[466129.927345]  <TASK>
+[466129.927348]  show_stack+0x52/0x5c
+[466129.927357]  dump_stack_lvl+0x4a/0x63
+[466129.927363]  dump_stack+0x10/0x16
+[466129.927366]  ubsan_epilogue+0x9/0x49
+[466129.927370]  __ubsan_handle_shift_out_of_bounds.cold+0x61/0xef
+[466129.927378]  ? generic_write_end+0xf9/0x160
+[466129.927384]  __radix_tree_lookup.cold+0x1f/0x5a
+[466129.927388]  ? ext4_da_write_end+0x77/0x210
+[466129.927394]  radix_tree_lookup+0xd/0x20
+[466129.927400]  balance_dirty_pages_ratelimited+0x17c/0x3d0
+[466129.927408]  generic_perform_write+0x140/0x1f0
+[466129.927412]  ext4_buffered_write_iter+0xac/0x180
+[466129.927417]  ext4_file_write_iter+0x43/0x60
+[466129.927420]  new_sync_write+0x114/0x1a0
+[466129.927425]  vfs_write+0x1d5/0x270
+[466129.927429]  ksys_write+0x67/0xf0
+[466129.927432]  __x64_sys_write+0x19/0x20
+[466129.927436]  do_syscall_64+0x5c/0xc0
+[466129.927441]  ? syscall_exit_to_user_mode+0x27/0x50
+[466129.927446]  ? __x64_sys_recvmsg+0x1d/0x30
+[466129.927452]  ? do_syscall_64+0x69/0xc0
+[466129.927455]  ? exit_to_user_mode_prepare+0x37/0xb0
+[466129.927460]  ? syscall_exit_to_user_mode+0x27/0x50
+[466129.927464]  ? __x64_sys_sendto+0x24/0x30
+[466129.927467]  ? do_syscall_64+0x69/0xc0
+[466129.927470]  ? syscall_exit_to_user_mode+0x27/0x50
+[466129.927474]  ? __x64_sys_recvmsg+0x1d/0x30
+[466129.927478]  ? do_syscall_64+0x69/0xc0
+[466129.927481]  ? syscall_exit_to_user_mode+0x27/0x50
+```
+- [ ] 有的 backtrace 中含有 ? 是什么原因啊
+- [ ] `__radix_tree_lookup.cold` 中的 cold 是什么意思啊
+
+## 可以使用 crash 获取到 dmesg，而且更加准确

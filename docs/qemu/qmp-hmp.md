@@ -173,3 +173,9 @@ static void qemu_process_sugar_options(void)
 ```
 ## 才意识到 qmp 也是可以使用 shell 交互的
 - https://wiki.qemu.org/Documentation/QMP
+
+## 为什么 libvirt 是需要 -pidfile，不是
+
+/run/current-system/sw/bin/qemu-system-x86_64 -S -no-user-config -nodefaults -nographic -machine none,accel=kvm:tcg
+-qmp unix:/home/martins3/.config/libvirt/qemu/lib/qmp-LEY2Z1/qmp.monitor,server=on,wait=off
+-pidfile /home/martins3/.config/libvirt/qemu/lib/qmp-LEY2Z1/qmp.pid
