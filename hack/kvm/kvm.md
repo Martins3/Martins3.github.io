@@ -2,38 +2,6 @@
 
 ## shadow page table 严重的干扰了视线，有必要使用 kcov 来覆盖一下
 
-## 使用 `kvm_stat` 可以观测最核心的函数
-
-```txt
-Event                                         Total %Total CurAvg/s
-kvm_entry                                    337793   15.4    26107
-kvm_exit                                     337787   15.4    26107
-kvm_ack_irq                                  457205   20.9    25548
-kvm_emulate_insn                             192824    8.8    16726
-kvm_fast_mmio                                192514    8.8    16709
-kvm_apic_accept_irq                          168566    7.7    15209
-kvm_apicv_accept_irq                         168559    7.7    15209
-kvm_msi_set_irq                              151693    6.9    13865
-kvm_eoi                                       91441    4.2     5110
-kvm_hv_timer_state                            22948    1.0     1818
-kvm_msr                                       18642    0.9     1495
-kvm_wait_lapic_expire                         14466    0.7     1166
-kvm_pv_tlb_flush                               5097    0.2      384
-kvm_pic_set_irq                                4832    0.2      369
-kvm_set_irq                                    4788    0.2      369
-kvm_ioapic_set_irq                             4788    0.2      369
-kvm_fpu                                        3718    0.2      268
-kvm_vcpu_wakeup                                3178    0.1      243
-kvm_userspace_exit                             1860    0.1      134
-kvm_pio                                        1600    0.1      119
-kvm_hypercall                                  1188    0.1       83
-kvm_mmio                                        484    0.0       27
-vcpu_match_mmio                                 274    0.0       15
-kvm_apic                                       1524    0.1        8
-kvm_pvclock_update                               13    0.0        4
-kvm_halt_poll_ns                                 42    0.0        3
-Total                                       2187824          167463
-```
 ## 有趣的 patch
 - a54d806688fe1e482350ce759a8a0fc9ebf814b0
 

@@ -30,3 +30,10 @@ fi
 
 "$QEMU" -hda "${img}" -enable-kvm -m 8G -smp 8
 # "$QEMU" -hda "${img}" -enable-kvm -kernel "${KERNEL}" -cpu host -m 8G -smp 8 -append "root=/dev/sda" -soundhw -vga virtio
+
+# 如果是在其他的环境中使用，可以尝试一下这个
+# 1. -nographic 的使用需要在 guest 中设置命令行参数 console=ttyS0,9600 earlyprink=serial
+cat <<_EOF_
+img="/home/martins3/hack/vm/ubuntu-22.04.1-live-server-amd64.qcow2"
+qemu-system-x87_64 -hda "${img}" -enable-kvm -m 8G -smp 8  -netdev user,id=net1,hostfwd=tcp::5559-:22 -device e1000e,netdev=net1 -nographic
+_EOF_

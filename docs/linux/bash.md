@@ -210,7 +210,7 @@ find ./foo -type f -name "*.txt" | xargs rm
 
 使用 `-I` 来确定参数:
 ```sh
-cat foo.txt | xargs -I % sh -c 'echo %; mkdir %'
+cat foo.txt | xargs -t -I % sh -c 'echo %; mkdir %'
 ```
 
 ```sh
@@ -220,7 +220,7 @@ find usr -type f -print | xargs stat -c '%a %n' *
 ### awk
 基本参考这篇 [blog](https://earthly.dev/blog/awk-examples/)，其内容还是非常容易的。
 
-- $0 是所有的函数
+- $0 是所有的参数
 - $1  ... 是之后的逐个
 ```sh
 echo "one two

@@ -90,7 +90,6 @@ virsh qemu-monitor-command $domain --hmp 'info balloon'
 virsh qemu-monitor-command $domain --hmp 'balloon 4000'
 ```
 
-> 观察 libvirt 的代码，cmdDomMemStat 和 qemuMonitorJSONGetMemoryStats 中 VIR_DOMAIN_MEMORY_STAT_USABLE 这个宏的使用，那么就是 avaliable 的含义了
 
 | 作用        | 说明                               |
 |-------------|------------------------------------|
@@ -103,7 +102,7 @@ virsh qemu-monitor-command $domain --hmp 'balloon 4000'
 | available   | MemTotal                           |
 | usable      | MemAvailable                       |
 | last_update |                                    |
-| disk_caches | Buffers + Cached                   |
+| disk_caches | Buffers + Cached + swapcache                   |
 | rss         | /proc/$qemu_pid/status \| grep RSS |
 
 理解下各个字段的含义
@@ -136,6 +135,11 @@ usable 2034620
 last_update 1676350443
 disk_caches 1213132
 rss 67288
+
+# 如果没有 balloon 的数据
+actual 8388608
+last_update 1676945856
+rss 8462616
 ```
 
 ```txt
@@ -191,6 +195,67 @@ DirectMap4k:     1498984 kB
 DirectMap2M:     2695168 kB
 DirectMap1G:     2097152 kB
 ```
+
+### 从代码上确认一下
+
+> 观察 libvirt 的代码，cmdDomMemStat 和 qemuMonitorJSONGetMemoryStats 中 VIR_DOMAIN_MEMORY_STAT_USABLE 这个宏的使用，那么就是 avaliable 的含义了
+
+```c
+    for (i = 0; i < nr_stats; i++) {
+        if (stats[i].tag == VIR_DOMAIN_MEMORY_STAT_SWAP_IN)
+            vshPrint(ctl, "swap_in %llu\n", stats[i].val);
+        if (stats[i].tag == VIR_DOMAIN_MEMORY_STAT_SWAP_OUT)
+            vshPrint(ctl, "swap_out %llu\n", stats[i].val);
+        if (stats[i].tag == VIR_DOMAIN_MEMORY_STAT_MAJOR_FAULT)
+            vshPrint(ctl, "major_fault %llu\n", stats[i].val);
+        if (stats[i].tag == VIR_DOMAIN_MEMORY_STAT_MINOR_FAULT)
+            vshPrint(ctl, "minor_fault %llu\n", stats[i].val);
+        if (stats[i].tag == VIR_DOMAIN_MEMORY_STAT_UNUSED)
+            vshPrint(ctl, "unused %llu\n", stats[i].val);
+        if (stats[i].tag == VIR_DOMAIN_MEMORY_STAT_AVAILABLE)
+            vshPrint(ctl, "available %llu\n", stats[i].val);
+        if (stats[i].tag == VIR_DOMAIN_MEMORY_STAT_USABLE)
+            vshPrint(ctl, "usable %llu\n", stats[i].val);
+        if (stats[i].tag == VIR_DOMAIN_MEMORY_STAT_ACTUAL_BALLOON)
+            vshPrint(ctl, "actual %llu\n", stats[i].val);
+        if (stats[i].tag == VIR_DOMAIN_MEMORY_STAT_RSS)
+            vshPrint(ctl, "rss %llu\n", stats[i].val);
+        if (stats[i].tag == VIR_DOMAIN_MEMORY_STAT_LAST_UPDATE)
+            vshPrint(ctl, "last_update %llu\n", stats[i].val);
+        if (stats[i].tag == VIR_DOMAIN_MEMORY_STAT_DISK_CACHES)
+            vshPrint(ctl, "disk_caches %llu\n", stats[i].val);
+        if (stats[i].tag == VIR_DOMAIN_MEMORY_STAT_HUGETLB_PGALLOC)
+            vshPrint(ctl, "hugetlb_pgalloc %llu\n", stats[i].val);
+        if (stats[i].tag == VIR_DOMAIN_MEMORY_STAT_HUGETLB_PGFAIL)
+            vshPrint(ctl, "hugetlb_pgfail %llu\n", stats[i].val);
+    }
+```
+
+```c
+    GET_BALLOON_STATS(statsdata, "stat-swap-in",
+                      VIR_DOMAIN_MEMORY_STAT_SWAP_IN, 1024);
+    GET_BALLOON_STATS(statsdata, "stat-swap-out",
+                      VIR_DOMAIN_MEMORY_STAT_SWAP_OUT, 1024);
+    GET_BALLOON_STATS(statsdata, "stat-major-faults",
+                      VIR_DOMAIN_MEMORY_STAT_MAJOR_FAULT, 1);
+    GET_BALLOON_STATS(statsdata, "stat-minor-faults",
+                      VIR_DOMAIN_MEMORY_STAT_MINOR_FAULT, 1);
+    GET_BALLOON_STATS(statsdata, "stat-free-memory",
+                      VIR_DOMAIN_MEMORY_STAT_UNUSED, 1024);
+    GET_BALLOON_STATS(statsdata, "stat-total-memory",
+                      VIR_DOMAIN_MEMORY_STAT_AVAILABLE, 1024);
+    GET_BALLOON_STATS(statsdata, "stat-available-memory",
+                      VIR_DOMAIN_MEMORY_STAT_USABLE, 1024);
+    GET_BALLOON_STATS(data, "last-update",
+                      VIR_DOMAIN_MEMORY_STAT_LAST_UPDATE, 1);
+    GET_BALLOON_STATS(statsdata, "stat-disk-caches",
+                      VIR_DOMAIN_MEMORY_STAT_DISK_CACHES, 1024);
+    GET_BALLOON_STATS(statsdata, "stat-htlb-pgalloc",
+                      VIR_DOMAIN_MEMORY_STAT_HUGETLB_PGALLOC, 1);
+    GET_BALLOON_STATS(statsdata, "stat-htlb-pgfail",
+                      VIR_DOMAIN_MEMORY_STAT_HUGETLB_PGFAIL, 1);
+```
+
 
 ## vish dommemstat 是如何实现的
 snoopexec 中

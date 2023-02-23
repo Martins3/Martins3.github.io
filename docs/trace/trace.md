@@ -36,6 +36,9 @@ perf record -e probe:tcp_sendmsg -a -g sleep 10
 sudo perf stat -e 'kvm:*' -a sleep 1s
 ```
 
+3. 实现
+perf top -e kvm:kvm_nested_vmrun
+
 ### [ ] 处理一下 perf 中 unknow 的数值情况
 
 例如下面，几乎显示所有的函数都是被一个 unknow 的函数调用的，是不是
