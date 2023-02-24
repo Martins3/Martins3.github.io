@@ -1,5 +1,9 @@
 # Linux scheduelr
 
+- 研究下休眠的原理，这个时候，应该来说，内核中
+- 研究下 pstate 和 cstate 的原理，编译的时候，CPU 频率提升，是操作系统来控制频率的吗
+- 测试 suspend 的原理
+
 ## /proc/cpuinfo | grep 'cpu MHz'
 - show_cpuinfo
 
