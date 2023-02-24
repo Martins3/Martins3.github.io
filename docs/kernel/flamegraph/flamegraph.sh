@@ -15,7 +15,11 @@ function usage() {
     -h|help       Display this message
     -g|grep       Only display what you care about
     -c|cmd        The command to perf
-    -b|bind       The cpu to bind"
+    -b|bind       The cpu to bind
+
+Examples:
+    f -c \"sudo fio /home/martins3/core/vn/docs/kernel/code/aio/4k-read.fio\"
+"
 }
 
 target=""
@@ -56,10 +60,11 @@ fi
 if [[ -z $cpu ]]; then
   cpu_bind="-a"
 else
-  cpu_bind="--cpu ${cpu}"
+  cpu_bind="--cpu ${cpu} "
+  cmd="sudo taskset -c $cpu ${cmd}"
 fi
 
-perf record ${cpu_bind} -g -- taskset -c $cpu ${cmd}
+perf record ${cpu_bind} -g -- $cmd
 perf script | perl ${stackcollapse_pl} >${perf_data}
 
 if [[ -z ${target} ]]; then

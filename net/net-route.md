@@ -216,6 +216,7 @@ sudo dhclient en0
 
 ## [ ] tun & tap
 - https://jvns.ca/blog/2022/09/06/send-network-packets-python-tun-tap/
+- https://zu1k.com/posts/coding/tun-mode/ : 不明绝厉
 
 ## [ ] bridge
 

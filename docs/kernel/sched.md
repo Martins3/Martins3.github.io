@@ -1624,3 +1624,64 @@ config IRQ_TIME_ACCOUNTING
 0xffffffffb24da3c8 <try_to_wake_up+40>: xor    %eax,%eax
 0xffffffffb24da3ca <try_to_wake_up+42>: mov    %gs:0x16bc0,%rax
 ```
+
+## 通过 CONFIG_SCHEDSTAT 可以获取到生命周期
+```c
+config SCHEDSTATS
+	bool "Collect scheduler statistics"
+	depends on DEBUG_KERNEL && PROC_FS
+	select SCHED_INFO
+	help
+	  If you say Y here, additional code will be inserted into the
+	  scheduler and related routines to collect statistics about
+	  scheduler behavior and provide them in /proc/schedstat.  These
+	  stats may be useful for both tuning and debugging the scheduler
+	  If you aren't debugging the scheduler or trying to tune a specific
+	  application, you can say N to avoid the very slight overhead
+	  this adds.
+
+e
+```
+```c
+struct sched_statistics {
+#ifdef CONFIG_SCHEDSTATS
+	u64				wait_start;
+	u64				wait_max;
+	u64				wait_count;
+	u64				wait_sum;
+	u64				iowait_count;
+	u64				iowait_sum;
+
+	u64				sleep_start;
+	u64				sleep_max;
+	s64				sum_sleep_runtime;
+
+	u64				block_start;
+	u64				block_max;
+	s64				sum_block_runtime;
+
+	u64				exec_max;
+	u64				slice_max;
+
+	u64				nr_migrations_cold;
+	u64				nr_failed_migrations_affine;
+	u64				nr_failed_migrations_running;
+	u64				nr_failed_migrations_hot;
+	u64				nr_forced_migrations;
+
+	u64				nr_wakeups;
+	u64				nr_wakeups_sync;
+	u64				nr_wakeups_migrate;
+	u64				nr_wakeups_local;
+	u64				nr_wakeups_remote;
+	u64				nr_wakeups_affine;
+	u64				nr_wakeups_affine_attempts;
+	u64				nr_wakeups_passive;
+	u64				nr_wakeups_idle;
+
+#ifdef CONFIG_SCHED_CORE
+	u64				core_forceidle_sum;
+#endif
+#endif /* CONFIG_SCHEDSTATS */
+} ____cacheline_aligned;
+```

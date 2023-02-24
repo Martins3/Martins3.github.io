@@ -7,6 +7,13 @@
 ## TODO
 - [ ] 测试延迟
 
+## nmap
+- https://security.stackexchange.com/questions/36198/how-to-find-live-hosts-on-my-network
+
+检查局域网中所有的 host:
+nmap -sP 192.168.11.3/8
+
+
 ## iperf
 - 测试带宽
 

@@ -101,8 +101,9 @@ arg_qemu_mon="-vga virtio -display gtk"
 qemu="qemu-system-x86_64"
 arg_mem_balloon="-device virtio-balloon-pci,id=balloon0,deflate-on-oom=true"
 
-# @todo 内存 prealloc 无法关闭？
-arg_mem="-machine memory-backend=m2 -object memory-backend-ram,size=8G,prealloc=off,id=m2"
+# @todo 不知道为什么，windows 启动之后，所有的内存都会被踩一遍
+ramsize=12G
+arg_mem="-object memory-backend-ram,id=pc.ram,size=$ramsize,prealloc=off,share=off -machine memory-backend=pc.ram -m $ramsize "
 
 arg_qmp="-qmp tcp:localhost:4445,server,wait=off"
 

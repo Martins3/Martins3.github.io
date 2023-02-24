@@ -56,6 +56,7 @@ tracepoint_is_child
 
 
 ## 两个来源是相同的吗？
+-f help 展示是哪里的来源:
 ```txt
 sudo /home/martins3/kernel/centos-4.18.0-193.28.1-x86_64/tools/kvm/kvm_stat/kvm_stat -f help
   kvm_ack_irq
@@ -151,4 +152,11 @@ sudo /home/martins3/kernel/centos-4.18.0-193.28.1-x86_64/tools/kvm/kvm_stat/kvm_
   vcpu_match_mmio
 ```
 
+这里的一个基本案例上，表示来源可以多个
+```txt
+ExecStart=/usr/bin/kvm_stat -dtcz -s 10 -L /var/log/kvm_stat.csv
+```
+
 ### 如果是从 tracepoints 获取，会导致和 kernel 版本关联吗?
+
+### 如何最小化 kvm_stat 的影响
