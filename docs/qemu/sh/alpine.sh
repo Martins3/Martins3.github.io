@@ -76,6 +76,9 @@ esac
 iso=${workstation}/${distribution}.iso
 disk_img=${workstation}/${distribution}.qcow2
 
+mkdir -p /tmp/martins3-alpine
+arg_pdifile="-pidfile /tmp/martins3-alpine/qemu-pid"
+
 debug_qemu=
 debug_kernel=
 launch_gdb=false
@@ -127,7 +130,7 @@ case $hacking_memory in
   arg_mem_cpu="-m 12G -cpu host -smp $(($(getconf _NPROCESSORS_ONLN) - 1))"
   arg_mem_cpu="$arg_mem_cpu -object memory-backend-ram,id=pc.ram,size=$ramsize,prealloc=off,share=on -machine memory-backend=pc.ram -m $ramsize "
   ;;
-  "numa")
+"numa")
   # 通过 reserve = false 让 mmap 携带参数 MAP_NORESERVE，从而可以模拟超级大内存的 Guest
   arg_mem_cpu="-cpu host -m 8G -smp cpus=6"
   arg_mem_cpu="$arg_mem_cpu -object memory-backend-ram,size=2G,id=m0,reserve=false -numa node,memdev=m0,cpus=0-1,nodeid=0"
@@ -401,6 +404,6 @@ fi
 cmd="${debug_qemu} ${qemu} ${arg_trace} ${debug_kernel} ${arg_img} ${arg_mem_cpu}  \
   ${arg_kernel} ${arg_seabios} ${arg_bridge} ${arg_network} \
   ${arg_machine} ${arg_monitor} ${arg_initrd} ${arg_mem_balloon} ${arg_hacking} \
-  ${arg_qmp} ${arg_vfio} ${arg_smbios} ${arg_migration_target} ${arg_share_dir} ${arg_sata} ${arg_scsi} ${arg_nvme} ${arg_disk} "
+  ${arg_qmp} ${arg_vfio} ${arg_smbios} ${arg_migration_target} ${arg_share_dir} ${arg_sata} ${arg_scsi} ${arg_nvme} ${arg_disk} ${arg_pdifile}"
 echo "$cmd"
 eval "$cmd"

@@ -179,3 +179,12 @@ static void qemu_process_sugar_options(void)
 /run/current-system/sw/bin/qemu-system-x86_64 -S -no-user-config -nodefaults -nographic -machine none,accel=kvm:tcg
 -qmp unix:/home/martins3/.config/libvirt/qemu/lib/qmp-LEY2Z1/qmp.monitor,server=on,wait=off
 -pidfile /home/martins3/.config/libvirt/qemu/lib/qmp-LEY2Z1/qmp.pid
+
+## qemu 中的 -object 参数
+```txt
+       -object typename[,prop1=value1,...]
+              Create  a  new object of type typename setting properties in the order they are specified. Note that the 'id'
+              property must be set. These objects are placed in the '/objects' path.
+```
+
+- [ ] 这里的 typename 是什么，有没有什么方便的方法实现查询一个 typename 的 property 机制
