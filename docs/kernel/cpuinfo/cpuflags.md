@@ -514,3 +514,75 @@ index 9bab7a8a4293..c3328d0e13f0 100644
 
  	setup_force_cpu_cap(X86_FEATURE_ALWAYS);
 ```
+## 对比下虚拟机中到底有何区别
+```txt
+processor       : 30
+vendor_id       : GenuineIntel
+cpu family      : 6
+model           : 183
+model name      : 13th Gen Intel(R) Core(TM) i9-13900K
+stepping        : 1
+microcode       : 0x112
+cpu MHz         : 2995.200
+cache size      : 16384 KB
+physical id     : 0
+siblings        : 31
+core id         : 30
+cpu cores       : 31
+apicid          : 30
+initial apicid  : 30
+fpu             : yes
+fpu_exception   : yes
+cpuid level     : 31
+wp              : yes
+flags           : fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ss ht syscall nx pdpe1gb rdtscp lm
+ constant_tsc arch_perfmon rep_good nopl xtopology cpuid tsc_known_freq pni pclmulqdq vmx ssse3 fma cx16 pdcm pcid sse4_1 sse4_2 x2apic movbe popcnt t
+sc_deadline_timer aes xsave avx f16c rdrand hypervisor lahf_lm abm 3dnowprefetch cpuid_fault invpcid_single ssbd ibrs ibpb stibp ibrs_enhanced tpr_sha
+dow vnmi flexpriority ept vpid ept_ad fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt clwb sha_ni xsaveopt xsavec xget
+bv1 xsaves avx_vnni arat umip pku ospke waitpkg gfni vaes vpclmulqdq rdpid movdiri movdir64b fsrm md_clear serialize arch_capabilities
+vmx flags       : vnmi preemption_timer posted_intr invvpid ept_x_only ept_ad ept_1gb flexpriority apicv tsc_offset vtpr mtf vapic ept vpid unrestrict
+ed_guest vapic_reg vid shadow_vmcs pml tsc_scaling
+bugs            : spectre_v1 spectre_v2 spec_store_bypass swapgs mmio_unknown eibrs_pbrsb
+bogomips        : 5990.40
+clflush size    : 64
+cache_alignment : 64
+address sizes   : 46 bits physical, 48 bits virtual
+power management:
+```
+
+```txt
+processor       : 31
+vendor_id       : GenuineIntel
+cpu family      : 6
+model           : 183
+model name      : 13th Gen Intel(R) Core(TM) i9-13900K
+stepping        : 1
+microcode       : 0x112
+cpu MHz         : 3000.000
+cache size      : 36864 KB
+physical id     : 0
+siblings        : 32
+core id         : 47
+cpu cores       : 24
+apicid          : 94
+initial apicid  : 94
+fpu             : yes
+fpu_exception   : yes
+cpuid level     : 32
+wp              : yes
+flags           : fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx p
+dpe1gb rdtscp lm constant_tsc art arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc cpuid aperfmperf tsc_known_freq pni pclmulqdq dtes64 monit
+or ds_cpl vmx smx est tm2 ssse3 sdbg fma cx16 xtpr pdcm pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm ab
+m 3dnowprefetch cpuid_fault epb invpcid_single ssbd ibrs ibpb stibp ibrs_enhanced tpr_shadow vnmi flexpriority ept vpid ept_ad fsgsbase tsc_adjust bmi
+1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt clwb intel_pt sha_ni xsaveopt xsavec xgetbv1 xsaves split_lock_detect avx_vnni dtherm ida ara
+t pln pts hwp hwp_notify hwp_act_window hwp_epp hwp_pkg_req hfi umip pku ospke waitpkg gfni vaes vpclmulqdq tme rdpid movdiri movdir64b fsrm md_clear
+serialize pconfig arch_lbr ibt flush_l1d arch_capabilities
+vmx flags       : vnmi preemption_timer posted_intr invvpid ept_x_only ept_ad ept_1gb flexpriority apicv tsc_offset vtpr mtf vapic ept vpid unrestrict
+ed_guest vapic_reg vid ple shadow_vmcs ept_mode_based_exec tsc_scaling usr_wait_pause
+bugs            : spectre_v1 spectre_v2 spec_store_bypass swapgs eibrs_pbrsb
+bogomips        : 5990.40
+clflush size    : 64
+cache_alignment : 64
+address sizes   : 46 bits physical, 48 bits virtual
+power management:
+```

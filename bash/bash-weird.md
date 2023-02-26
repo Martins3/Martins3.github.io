@@ -30,3 +30,6 @@ $((1 + 2))
 
 ## 如何命令成功，这个是不是和 [[ [ 之类描述是反过来的
 https://unix.stackexchange.com/questions/22726/how-to-conditionally-do-something-if-a-command-succeeded-or-failed
+
+## 这是什么高级操作
+sudo bpftrace -e "kretprobe:${@: -1} { printf(\"returned: %lx\\n\", retval); }"

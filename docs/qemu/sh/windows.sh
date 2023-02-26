@@ -44,16 +44,14 @@ if [[ $version == 10 ]]; then
   # sudo dd if=/dev/zero of=/dev/nvme1n1  bs=512  count=1
 
   # @todo 修改点
-  use_vfio=false
-  if [[ $use_vfio == true ]]; then
-    arg_vfio="-device vfio-pci,host=03:00.0"
-    arg_img=""
-  else
-    arg_vfio=""
-    arg_img="-drive file=/dev/nvme1n1,format=raw"
-  fi
-
-
+  # use_vfio=false
+  # if [[ $use_vfio == true ]]; then
+  #   arg_vfio="-device vfio-pci,host=03:00.0"
+  #   arg_img=""
+  # else
+  #   arg_vfio=""
+  #   arg_img="-drive file=/dev/nvme1n1,format=raw"
+  # fi
 fi
 
 if [[ $version == 8 ]]; then
@@ -70,8 +68,8 @@ fi
 arg_monitor="-monitor stdio"
 
 # @todo 修改点
-qemu-system-x86_64 $arg_vfio -cdrom "$iso" $arg_img -m 16G -smp 16 -cpu host --enable-kvm $arg_monitor $arg_win11
-exit 0
+# qemu-system-x86_64 $arg_vfio -cdrom "$iso" $arg_img -m 16G -smp 16 -cpu host --enable-kvm $arg_monitor $arg_win11
+# exit 0
 
 # if [ ! -f "$img" ]; then
 #   qemu-img create -f qcow2 "$img" 200G
