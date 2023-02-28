@@ -8,12 +8,6 @@
 - export PS1="\W" : 命令提示符只有 working dir
 
 ## rpm
-- rpm -qa 查询当前系统中安装的所有的包
-- rpm -ivh --force --nodeps url
-- rpm -qf 可以找到一个文件对应的包
-- rpm2cpio shim-15.4-2.oe2203.src.rpm | cpio -idmv  : 解压一个 rpm 包
-- rpm -i --force -nodeps url 可以自动下载安装内核
-- yum install whatprovides xxd
 - yum install epel-release
   - 为了安装 sshfs
   - https://support.moonpoint.com/os/unix/linux/centos/epel_repository.php
@@ -42,9 +36,6 @@ yum install -y neovim python3-neovim
   - https://unix.stackexchange.com/questions/46969/compress-a-folder-with-tar
   - z : 使用 gzip 压缩
 - tar -xvf
-
-## tools
-- ipcs : 查看 share memory 的
 
 ## systemd
 - systemctl --user list-timers --all

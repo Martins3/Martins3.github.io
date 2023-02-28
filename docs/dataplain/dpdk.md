@@ -4,6 +4,8 @@
 - https://talawah.io/blog/linux-kernel-vs-dpdk-http-performance-showdown/
 - https://doc.dpdk.org/guides/prog_guide/index.html#
 
+- https://zhuanlan.zhihu.com/p/608143587
+
 ## 如何使用 none root 来执行 dpdk
 https://stackoverflow.com/questions/66571932/can-you-run-dpdk-in-a-non-privileged-container-as-as-non-root-user/69178969#comment122283933_69178969
 - https://github.com/IfanTsai/oceanus : 有趣的参考
