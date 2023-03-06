@@ -21,6 +21,12 @@
 1. get-job
 2. create-job
 
+
+## 基本操作
+1. 添加 node
+    1. 安装 docker java
+    2. 帐号，密码和设置目录
+
 ## 应该使用 docker 的方式来控制 jenkins
 
 ## 备忘

@@ -1,2 +1,3 @@
 - [bridge 和 ovs 的对比](https://www.fiber-optic-transceiver-module.com/ovs-vs-linux-bridge-who-is-the-winner.html)
 - https://zhuanlan.zhihu.com/p/66216907
+- [openvswitch](https://www.zhihu.com/column/software-defined-network)

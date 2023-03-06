@@ -3,7 +3,7 @@ set -E -e -u -o pipefail
 
 # @todo 用 https://github.com/charmbracelet/gum 来重写这个项目
 use_nvme_as_root=false # @todo nvme 的这个事情走通一下
-replace_kernel=true
+replace_kernel=false
 
 hacking_memory="hotplug"
 hacking_memory="virtio-pmem"
@@ -43,8 +43,8 @@ qemu=${qemu_dir}/build/x86_64-softmmu/qemu-system-x86_64
 virtiofsd=${qemu_dir}/build/tools/virtiofsd/virtiofsd
 kernel=${kernel_dir}/arch/x86/boot/bzImage
 
-distribution=openEuler-22.09-x86_64-dvd
-# distribution=openEuler-20.03-LTS-SP3-x86_64-dvd
+# distribution=openEuler-22.09-x86_64-dvd
+distribution=openEuler-20.03-LTS-SP3-x86_64-dvd
 # distribution=CentOS-7-x86_64-DVD-2207-02
 # distribution=ubuntu-22.04.1-live-server-amd64
 

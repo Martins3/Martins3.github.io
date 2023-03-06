@@ -31,18 +31,3 @@ for ((i = 0; i < 10; i++)); do
   echo $i
 done
 foomatic-rip
-
-# 如果不希望发生变量替换，可以把 Here 文档的开始标记放在单引号之中。
-# << '_EOF_'
-# text
-# _EOF_
-
-# 将 heredoc 导入到文档中
-# cat << _EOF_ > /tmp/yourfile
-# text
-# _EOF_
-
-# 此外 here string
-# $ cat <<< 'hi there'
-# 等同于
-# $ echo 'hi there' | cat

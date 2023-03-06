@@ -58,9 +58,6 @@
 [Introduction](https://stackoverflow.com/questions/21032562/example-to-explain-unix-domain-socket-af-inet-vs-af-unix)
 
 
-## [ ] openvswitch
-- [openvswitch](https://www.zhihu.com/column/software-defined-network)
-
 ## network flow[^2]
 - [ ] watch dog
 
