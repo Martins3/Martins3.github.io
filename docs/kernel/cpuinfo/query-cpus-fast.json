@@ -1,0 +1,345 @@
+{
+  "return": [
+    {
+      "thread-id": 382764,
+      "props": {
+        "core-id": 0,
+        "thread-id": 0,
+        "socket-id": 0
+      },
+      "qom-path": "/machine/unattached/device[0]",
+      "cpu-index": 0,
+      "target": "x86_64"
+    },
+    {
+      "thread-id": 382765,
+      "props": {
+        "core-id": 1,
+        "thread-id": 0,
+        "socket-id": 0
+      },
+      "qom-path": "/machine/unattached/device[2]",
+      "cpu-index": 1,
+      "target": "x86_64"
+    },
+    {
+      "thread-id": 382766,
+      "props": {
+        "core-id": 2,
+        "thread-id": 0,
+        "socket-id": 0
+      },
+      "qom-path": "/machine/unattached/device[3]",
+      "cpu-index": 2,
+      "target": "x86_64"
+    },
+    {
+      "thread-id": 382767,
+      "props": {
+        "core-id": 3,
+        "thread-id": 0,
+        "socket-id": 0
+      },
+      "qom-path": "/machine/unattached/device[4]",
+      "cpu-index": 3,
+      "target": "x86_64"
+    },
+    {
+      "thread-id": 382768,
+      "props": {
+        "core-id": 4,
+        "thread-id": 0,
+        "socket-id": 0
+      },
+      "qom-path": "/machine/unattached/device[5]",
+      "cpu-index": 4,
+      "target": "x86_64"
+    },
+    {
+      "thread-id": 382769,
+      "props": {
+        "core-id": 5,
+        "thread-id": 0,
+        "socket-id": 0
+      },
+      "qom-path": "/machine/unattached/device[6]",
+      "cpu-index": 5,
+      "target": "x86_64"
+    },
+    {
+      "thread-id": 382770,
+      "props": {
+        "core-id": 6,
+        "thread-id": 0,
+        "socket-id": 0
+      },
+      "qom-path": "/machine/unattached/device[7]",
+      "cpu-index": 6,
+      "target": "x86_64"
+    },
+    {
+      "thread-id": 382771,
+      "props": {
+        "core-id": 7,
+        "thread-id": 0,
+        "socket-id": 0
+      },
+      "qom-path": "/machine/unattached/device[8]",
+      "cpu-index": 7,
+      "target": "x86_64"
+    },
+    {
+      "thread-id": 382772,
+      "props": {
+        "core-id": 8,
+        "thread-id": 0,
+        "socket-id": 0
+      },
+      "qom-path": "/machine/unattached/device[9]",
+      "cpu-index": 8,
+      "target": "x86_64"
+    },
+    {
+      "thread-id": 382773,
+      "props": {
+        "core-id": 9,
+        "thread-id": 0,
+        "socket-id": 0
+      },
+      "qom-path": "/machine/unattached/device[10]",
+      "cpu-index": 9,
+      "target": "x86_64"
+    },
+    {
+      "thread-id": 382774,
+      "props": {
+        "core-id": 10,
+        "thread-id": 0,
+        "socket-id": 0
+      },
+      "qom-path": "/machine/unattached/device[11]",
+      "cpu-index": 10,
+      "target": "x86_64"
+    },
+    {
+      "thread-id": 382775,
+      "props": {
+        "core-id": 11,
+        "thread-id": 0,
+        "socket-id": 0
+      },
+      "qom-path": "/machine/unattached/device[12]",
+      "cpu-index": 11,
+      "target": "x86_64"
+    },
+    {
+      "thread-id": 382776,
+      "props": {
+        "core-id": 12,
+        "thread-id": 0,
+        "socket-id": 0
+      },
+      "qom-path": "/machine/unattached/device[13]",
+      "cpu-index": 12,
+      "target": "x86_64"
+    },
+    {
+      "thread-id": 382777,
+      "props": {
+        "core-id": 13,
+        "thread-id": 0,
+        "socket-id": 0
+      },
+      "qom-path": "/machine/unattached/device[14]",
+      "cpu-index": 13,
+      "target": "x86_64"
+    },
+    {
+      "thread-id": 382778,
+      "props": {
+        "core-id": 14,
+        "thread-id": 0,
+        "socket-id": 0
+      },
+      "qom-path": "/machine/unattached/device[15]",
+      "cpu-index": 14,
+      "target": "x86_64"
+    },
+    {
+      "thread-id": 382779,
+      "props": {
+        "core-id": 15,
+        "thread-id": 0,
+        "socket-id": 0
+      },
+      "qom-path": "/machine/unattached/device[16]",
+      "cpu-index": 15,
+      "target": "x86_64"
+    },
+    {
+      "thread-id": 382780,
+      "props": {
+        "core-id": 16,
+        "thread-id": 0,
+        "socket-id": 0
+      },
+      "qom-path": "/machine/unattached/device[17]",
+      "cpu-index": 16,
+      "target": "x86_64"
+    },
+    {
+      "thread-id": 382781,
+      "props": {
+        "core-id": 17,
+        "thread-id": 0,
+        "socket-id": 0
+      },
+      "qom-path": "/machine/unattached/device[18]",
+      "cpu-index": 17,
+      "target": "x86_64"
+    },
+    {
+      "thread-id": 382782,
+      "props": {
+        "core-id": 18,
+        "thread-id": 0,
+        "socket-id": 0
+      },
+      "qom-path": "/machine/unattached/device[19]",
+      "cpu-index": 18,
+      "target": "x86_64"
+    },
+    {
+      "thread-id": 382783,
+      "props": {
+        "core-id": 19,
+        "thread-id": 0,
+        "socket-id": 0
+      },
+      "qom-path": "/machine/unattached/device[20]",
+      "cpu-index": 19,
+      "target": "x86_64"
+    },
+    {
+      "thread-id": 382784,
+      "props": {
+        "core-id": 20,
+        "thread-id": 0,
+        "socket-id": 0
+      },
+      "qom-path": "/machine/unattached/device[21]",
+      "cpu-index": 20,
+      "target": "x86_64"
+    },
+    {
+      "thread-id": 382785,
+      "props": {
+        "core-id": 21,
+        "thread-id": 0,
+        "socket-id": 0
+      },
+      "qom-path": "/machine/unattached/device[22]",
+      "cpu-index": 21,
+      "target": "x86_64"
+    },
+    {
+      "thread-id": 382786,
+      "props": {
+        "core-id": 22,
+        "thread-id": 0,
+        "socket-id": 0
+      },
+      "qom-path": "/machine/unattached/device[23]",
+      "cpu-index": 22,
+      "target": "x86_64"
+    },
+    {
+      "thread-id": 382787,
+      "props": {
+        "core-id": 23,
+        "thread-id": 0,
+        "socket-id": 0
+      },
+      "qom-path": "/machine/unattached/device[24]",
+      "cpu-index": 23,
+      "target": "x86_64"
+    },
+    {
+      "thread-id": 382788,
+      "props": {
+        "core-id": 24,
+        "thread-id": 0,
+        "socket-id": 0
+      },
+      "qom-path": "/machine/unattached/device[25]",
+      "cpu-index": 24,
+      "target": "x86_64"
+    },
+    {
+      "thread-id": 382789,
+      "props": {
+        "core-id": 25,
+        "thread-id": 0,
+        "socket-id": 0
+      },
+      "qom-path": "/machine/unattached/device[26]",
+      "cpu-index": 25,
+      "target": "x86_64"
+    },
+    {
+      "thread-id": 382790,
+      "props": {
+        "core-id": 26,
+        "thread-id": 0,
+        "socket-id": 0
+      },
+      "qom-path": "/machine/unattached/device[27]",
+      "cpu-index": 26,
+      "target": "x86_64"
+    },
+    {
+      "thread-id": 382791,
+      "props": {
+        "core-id": 27,
+        "thread-id": 0,
+        "socket-id": 0
+      },
+      "qom-path": "/machine/unattached/device[28]",
+      "cpu-index": 27,
+      "target": "x86_64"
+    },
+    {
+      "thread-id": 382792,
+      "props": {
+        "core-id": 28,
+        "thread-id": 0,
+        "socket-id": 0
+      },
+      "qom-path": "/machine/unattached/device[29]",
+      "cpu-index": 28,
+      "target": "x86_64"
+    },
+    {
+      "thread-id": 382793,
+      "props": {
+        "core-id": 29,
+        "thread-id": 0,
+        "socket-id": 0
+      },
+      "qom-path": "/machine/unattached/device[30]",
+      "cpu-index": 29,
+      "target": "x86_64"
+    },
+    {
+      "thread-id": 382794,
+      "props": {
+        "core-id": 30,
+        "thread-id": 0,
+        "socket-id": 0
+      },
+      "qom-path": "/machine/unattached/device[31]",
+      "cpu-index": 30,
+      "target": "x86_64"
+    }
+  ]
+}

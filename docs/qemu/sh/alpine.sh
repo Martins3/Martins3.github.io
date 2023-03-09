@@ -27,6 +27,7 @@ hacking_vfio=false
 
 use_ovmf=false
 minimal=false
+qmp_shell=true # 使用 qmp_shell 可以交互，否则就是输入 json
 
 abs_loc=$(dirname "$(realpath "$0")")
 configuration=${abs_loc}/config.json
@@ -123,11 +124,12 @@ arg_machine="-machine pc,accel=kvm,kernel-irqchip=on"
 arg_mem_balloon="-device virtio-balloon,id=balloon0,deflate-on-oom=true,page-poison=true,free-page-reporting=false,free-page-hint=true,iothread=io1 -object iothread,id=io1"
 arg_mem_balloon=""
 
+# @todo -cpu 可以单独抽出来，和 -smp 解耦合
 case $hacking_memory in
 "none")
 
   ramsize=12G
-  arg_mem_cpu="-m 12G -cpu host -smp $(($(getconf _NPROCESSORS_ONLN) - 1))"
+  arg_mem_cpu="-m 12G -cpu Skylake-Client-IBRS,hle=off,rtm=off -smp $(($(getconf _NPROCESSORS_ONLN) - 1))"
   arg_mem_cpu="$arg_mem_cpu -object memory-backend-ram,id=pc.ram,size=$ramsize,prealloc=off,share=on -machine memory-backend=pc.ram -m $ramsize "
   ;;
 "numa")
@@ -230,8 +232,11 @@ arg_sata="$arg_sata -drive file=${workstation}/img5,media=disk,format=raw"
 # @todo 做成一个计数器吧，自动增加访问的接口
 arg_network="-netdev user,id=net1,hostfwd=tcp::$guest_port-:22 -device e1000e,netdev=net1"
 arg_network="-netdev user,id=net1,hostfwd=tcp::$guest_port-:22 -device virtio-net-pci,netdev=net1,romfile=/home/martins3/core/zsh/README.md"
-# arg_qmp="-qmp tcp:localhost:$qmp_port,server,wait=off"
-arg_qmp="-qmp unix:/tmp/qmp-sock,server,wait=off"
+
+arg_qmp="-qmp tcp:localhost:$qmp_port,server,wait=off"
+if [[ $qmp_shell == true ]]; then
+  arg_qmp="-qmp unix:/tmp/qmp-sock,server,wait=off"
+fi
 
 mon_socket_path=/tmp/qemu-monitor-socket
 serial_socket_path=/tmp/qemu-serial-socket
@@ -311,7 +316,13 @@ while getopts "adskthpcmqr" opt; do
     exit 0
     ;;
   q)
-    telnet localhost $qmp_port
+
+    if [[ $qmp_shell == true ]]; then
+       qmp_shell=${qemu_dir}/scripts/qmp/qmp-shell
+       $qmp_shell /tmp/qmp-sock
+    else
+      telnet localhost $qmp_port
+    fi
     exit 0
     ;;
   a)
