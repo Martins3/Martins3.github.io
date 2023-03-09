@@ -106,7 +106,7 @@ arg_mem="-object memory-backend-ram,id=pc.ram,size=$ramsize,prealloc=off,share=o
 arg_qmp="-qmp tcp:localhost:4445,server,wait=off"
 
 # https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/archive-virtio/virtio-win-0.1.208-1/
-arg_virtio="-drive aio=native,cache.direct=on,file=$workstation/virtio-win-0.1.208.iso,media=cdrom,index=2"
+arg_virtio="-drive aio=native,cache.direct=on,file=$HOME/hack/iso/virtio-win-0.1.208.iso,media=cdrom,index=2"
 # https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/archive-virtio/virtio-win-0.1.208-1/virtio-win-0.1.208.iso
 "$qemu" $arg_img $arg_mem -smp $(($(getconf _NPROCESSORS_ONLN) - 1)) $arg_qemu_mon --enable-kvm $arg_cpu $arg_monitor $arg_mem_balloon $arg_qmp $arg_virtio $arg_win11 $arg_vfio $arg_usb
 # "$QEMU" -drive file=/dev/nvme0n1p2,format=raw -drive file=/dev/nvme1n1p1,format=raw,readonly=on -m 8G -smp 8 -device vfio-pci,host=01:00.0 -machine type=q35,accel=kvm

@@ -125,7 +125,6 @@ ifcfg-ens3
     link/ether 52:54:00:12:34:56 brd ff:ff:ff:ff:ff:ff
 3: sit0@NONE: <NOARP> mtu 1480 qdisc noop state DOWN group default qlen 1000
     link/sit 0.0.0.0 brd 0.0.0.0
-[martins3@localhost network-scripts]$
 ```
 
 参考[这个文档](https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/7/html/networking_guide/sec-configuring_ip_networking_with_ifcg_files)，解决方法是在 /etc/sysconfig/network-scripts/ 创建一个

@@ -43,8 +43,8 @@ qemu=${qemu_dir}/build/x86_64-softmmu/qemu-system-x86_64
 virtiofsd=${qemu_dir}/build/tools/virtiofsd/virtiofsd
 kernel=${kernel_dir}/arch/x86/boot/bzImage
 
-# distribution=openEuler-22.09-x86_64-dvd
-distribution=openEuler-20.03-LTS-SP3-x86_64-dvd
+distribution=openEuler-22.09-x86_64-dvd
+# distribution=openEuler-20.03-LTS-SP3-x86_64-dvd
 # distribution=CentOS-7-x86_64-DVD-2207-02
 # distribution=ubuntu-22.04.1-live-server-amd64
 

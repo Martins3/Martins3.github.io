@@ -172,6 +172,9 @@ s.h:2187
 ## 如何检查系统中，到底那些进程在使用 hugepages
 - https://unix.stackexchange.com/questions/167451/how-to-monitor-use-of-huge-pages-per-process
 
+## 如果获取到一个进程的使用的大页的分布情况
+numastat -p $pid
+
 ## hugetlb 是如何影响文件系统的
 - 不能作为 page cache 的？
 - 对于文件系统是透明的吗?

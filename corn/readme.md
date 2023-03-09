@@ -60,3 +60,11 @@ journalctl -u systemd-udevd.service
 ## 能否直接访问网络
 
 ## 搭建 bios 调试环境
+
+## 测试 cpu 和内存的热插拔
+
+## 一些 Guest 的细节问题
+
+- oe20.04 的网卡无法自动打开
+
+将 /etc/sysconfig/network-scripts/enp1s0 中的 onboot 修改为 yes

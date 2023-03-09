@@ -41,13 +41,6 @@ yum install -y neovim python3-neovim
 - systemctl --user list-timers --all
 - systemctl list-timers --all
 
-## ps
-- ps --ppid 2 -p 2 -o uname,pid,ppid,cmd,cls
-  - 列举出来所有的内核线程
-  - https://unix.stackexchange.com/questions/411159/linux-is-it-possible-to-see-only-kernel-space-threads-process
-
-## dd
-- dd if=/dev/zero of=pmem count=4 bs=10M
 
 ## centos
 - nmcli networking off
@@ -63,8 +56,6 @@ yum install -y neovim python3-neovim
 - git commit --amend -m "an updated commit message"
 - git fetch origin && git reset --hard origin/master : 和远程完全相同
 - git checkout -- fs/ : 将 unstage 的修改删除掉
-
-## bpftrace
 
 ## sshfs
 ```sh

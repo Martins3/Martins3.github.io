@@ -85,6 +85,12 @@ ejtag 调试器，一直都是使用串口就差不多了，每次都是以为�
 总体来说，这个项目体验还是不错的，代码量很大，什么都触碰了一遍，从 QEMU ，内核，到裸机环境的调试，
 而且还是有一点微小的创新的。
 
+[^1]: [ramooflax](https://github.com/airbus-seclab/ramooflax)
+[^2]: [The Transmeta Code Morphing Software: Using Speculation, Recovery, and Adaptive Retranslation to Address Real-Life Challenges](https://safari.ethz.ch/digitaltechnik/spring2019/lib/exe/fetch.php?media=dehnert_transmeta_code_morphing_software.pdf)
+[^3]: [Captive](https://www.usenix.org/system/files/atc19-spink.pdf)
+[^4]: [A Linux in Unikernel Clothing](https://dl.acm.org/doi/pdf/10.1145/3342195.3387526)
+[^5]: [According to Stephen King: "The Scariest Moment Is Always \_\_\__."](https://gretchenrubin.com/2016/08/according-stephen-king-scariest-moment-always-____)
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="
@@ -100,8 +106,3 @@ ejtag 调试器，一直都是使用串口就差不多了，每次都是以为�
 </script>
 
 本站所有文章转发 **CSDN** 将按侵权追究法律责任，其它情况随意。
-[^1]: [ramooflax](https://github.com/airbus-seclab/ramooflax)
-[^2]: [The Transmeta Code Morphing Software: Using Speculation, Recovery, and Adaptive Retranslation to Address Real-Life Challenges](https://safari.ethz.ch/digitaltechnik/spring2019/lib/exe/fetch.php?media=dehnert_transmeta_code_morphing_software.pdf)
-[^3]: [Captive](https://www.usenix.org/system/files/atc19-spink.pdf)
-[^4]: [A Linux in Unikernel Clothing](https://dl.acm.org/doi/pdf/10.1145/3342195.3387526)
-[^5]: [According to Stephen King: "The Scariest Moment Is Always \_\_\__."](https://gretchenrubin.com/2016/08/according-stephen-king-scariest-moment-always-____)
