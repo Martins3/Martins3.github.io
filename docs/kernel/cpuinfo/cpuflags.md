@@ -9,7 +9,7 @@
 -pidfile /home/martins3/.config/libvirt/qemu/lib/qmp-LEY2Z1/qmp.pid
 
 
--cpu SandyBridge 的时候，Guest 居然没有 vmx 指针。
+- [ ] -cpu SandyBridge 的时候，Guest 居然没有 vmx 的。
 ## eagerfpu
 ```diff
 commit e63650840e8b053aa09ad934877e87e9941ed135

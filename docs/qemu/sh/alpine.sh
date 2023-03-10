@@ -3,7 +3,7 @@ set -E -e -u -o pipefail
 
 # @todo 用 https://github.com/charmbracelet/gum 来重写这个项目
 use_nvme_as_root=false # @todo nvme 的这个事情走通一下
-replace_kernel=false
+replace_kernel=true
 
 hacking_memory="hotplug"
 hacking_memory="virtio-pmem"
@@ -119,29 +119,32 @@ arg_hugetlb="default_hugepagesz=2M hugepagesz=1G hugepages=1 hugepagesz=2M hugep
 arg_hugetlb="default_hugepagesz=2M"
 arg_hugetlb=""
 # 可选参数
-# arg_mem_cpu="-m 12G -cpu host -smp $(($(getconf _NPROCESSORS_ONLN) - 1))"
+# arg_mem_cpu="-m 12G  -smp $(($(getconf _NPROCESSORS_ONLN) - 1))"
 arg_machine="-machine pc,accel=kvm,kernel-irqchip=on"
 arg_mem_balloon="-device virtio-balloon,id=balloon0,deflate-on-oom=true,page-poison=true,free-page-reporting=false,free-page-hint=true,iothread=io1 -object iothread,id=io1"
 arg_mem_balloon=""
 
-# @todo -cpu 可以单独抽出来，和 -smp 解耦合
+arg_cpu_model="-cpu Skylake-Client-IBRS,hle=off,rtm=off"
+# 如果 see=off ，系统直接无法启动
+arg_cpu_model="-cpu Skylake-Client-IBRS,hle=off,rtm=off"
+
 case $hacking_memory in
 "none")
 
   ramsize=12G
-  arg_mem_cpu="-m 12G -cpu Skylake-Client-IBRS,hle=off,rtm=off -smp $(($(getconf _NPROCESSORS_ONLN) - 1))"
+  arg_mem_cpu="-m 12G -smp $(($(getconf _NPROCESSORS_ONLN) - 1))"
   arg_mem_cpu="$arg_mem_cpu -object memory-backend-ram,id=pc.ram,size=$ramsize,prealloc=off,share=on -machine memory-backend=pc.ram -m $ramsize "
   ;;
 "numa")
   # 通过 reserve = false 让 mmap 携带参数 MAP_NORESERVE，从而可以模拟超级大内存的 Guest
-  arg_mem_cpu="-cpu host -m 8G -smp cpus=6"
+  arg_mem_cpu=" -m 8G -smp cpus=6"
   arg_mem_cpu="$arg_mem_cpu -object memory-backend-ram,size=2G,id=m0,reserve=false -numa node,memdev=m0,cpus=0-1,nodeid=0"
   arg_mem_cpu="$arg_mem_cpu -object memory-backend-ram,size=2G,id=m1 -numa node,memdev=m1,cpus=2-3,nodeid=1"
   arg_mem_cpu="$arg_mem_cpu -object memory-backend-ram,size=4G,id=m2 -numa node,memdev=m2,cpus=4,nodeid=2"
   arg_mem_cpu="$arg_mem_cpu -numa node,cpus=5,nodeid=3" # 只有 CPU ，但是没有内存
   ;;
 "prealloc")
-  arg_mem_cpu="-cpu host -m 1G -smp cpus=1"
+  arg_mem_cpu=" -m 1G -smp cpus=1"
   arg_mem_cpu="$arg_mem_cpu -object memory-backend-file,size=1G,prealloc=on,share=on,id=m2,mem-path=/dev/hugepages -numa node,memdev=m2,cpus=0,nodeid=0"
   if [[ $(cat /sys/kernel/mm/hugepages/hugepages-2048kB/nr_hugepages) != 1000 ]]; then
     echo 1000 | sudo tee /sys/kernel/mm/hugepages/hugepages-2048kB/nr_hugepages
@@ -370,7 +373,6 @@ if [ ! -f "${disk_img}" ]; then
   qemu-system-x86_64 \
     -boot d \
     -cdrom "$iso" \
-    -cpu host \
     -hda "${disk_img}" \
     -enable-kvm \
     -m 2G \
@@ -415,6 +417,6 @@ fi
 cmd="${debug_qemu} ${qemu} ${arg_trace} ${debug_kernel} ${arg_img} ${arg_mem_cpu}  \
   ${arg_kernel} ${arg_seabios} ${arg_bridge} ${arg_network} \
   ${arg_machine} ${arg_monitor} ${arg_initrd} ${arg_mem_balloon} ${arg_hacking} \
-  ${arg_qmp} ${arg_vfio} ${arg_smbios} ${arg_migration_target} ${arg_share_dir} ${arg_sata} ${arg_scsi} ${arg_nvme} ${arg_disk} ${arg_pdifile}"
+  ${arg_qmp} ${arg_vfio} ${arg_smbios} ${arg_migration_target} ${arg_share_dir} ${arg_sata} ${arg_scsi} ${arg_nvme} ${arg_disk} ${arg_pdifile} ${arg_cpu_model}"
 echo "$cmd"
 eval "$cmd"

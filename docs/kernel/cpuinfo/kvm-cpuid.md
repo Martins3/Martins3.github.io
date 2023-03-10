@@ -20,6 +20,16 @@ void get_cpu_cap(struct cpuinfo_x86 *c)
 - https://dannorth.net/2022/02/10/cupid-for-joyful-coding/
   - 哈哈，只是巧合而已
 
+## [ ] 如果真的不提供，那么 Guest 使用对应的能力的下场是什么
+KVM_SET_CPUID : 就是会修改 Guest 使用 cpuid 获取到能力。
+
+- kvm_vcpu_ioctl_set_cpuid
+  - kvm_set_cpuid
+    - `__kvm_update_cpuid_runtime`
+
+## [ ] acpi 这个 cpuid 是怎么被去掉的
+
+
 ## QEMU 是如何调用的
 关键描述:
 - kvm_arch_get_supported_cpuid
@@ -31,6 +41,53 @@ void get_cpu_cap(struct cpuinfo_x86 *c)
 - cpu_x86_cpuid
 
 - kvm_request_xsave_components
+
+## 分析
+
+```c
+enum cpuid_leafs
+{
+	CPUID_1_EDX		= 0,
+	CPUID_8000_0001_EDX,
+	CPUID_8086_0001_EDX,
+	CPUID_LNX_1,
+	CPUID_1_ECX,
+	CPUID_C000_0001_EDX,
+	CPUID_8000_0001_ECX,
+	CPUID_LNX_2,
+	CPUID_LNX_3,
+	CPUID_7_0_EBX,
+	CPUID_D_1_EAX,
+	CPUID_LNX_4,
+	CPUID_7_1_EAX,
+	CPUID_8000_0008_EBX,
+	CPUID_6_EAX,
+	CPUID_8000_000A_EDX,
+	CPUID_7_ECX,
+	CPUID_8000_0007_EBX,
+	CPUID_7_EDX,
+	CPUID_8000_001F_EAX,
+	CPUID_8000_0021_EAX,
+};
+```
+```c
+static struct kvm_x86_init_ops vmx_init_ops __initdata = {
+	.hardware_setup = hardware_setup,
+	.handle_intel_pt_intr = NULL,
+
+	.runtime_ops = &vmx_x86_ops,
+	.pmu_ops = &intel_pmu_ops,
+};
+```
+
+- hardware_setup
+  - vmx_set_cpu_caps
+    - kvm_set_cpu_caps : vmx 和 svm 的公共路径
+
+
+- vmx_init
+  - kvm_x86_vendor_init
+    - `__kvm_x86_vendor_init`
 
 ## `do_host_cpuid`
 

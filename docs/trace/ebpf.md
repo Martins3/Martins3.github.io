@@ -289,6 +289,9 @@ https://github.com/libbpf/libbpf
 - bpftool feature
 - sudo bpftrace --info
 
+## bpf hid driver
+https://www.kernel.org/doc/html/next/hid/hid-bpf.html
+
 [^1]: [Outlook : future of eBPF](https://docs.google.com/presentation/d/1AcB4x7JCWET0ysDr0gsX-EIdQSTyBtmi6OAW7bE0jm0/preview?slide=id.g704abb5039_2_106)
 [^2]: [A thorough introduction to eBPF](https://lwn.net/Articles/740157/)
 [^3]: [An introduction to the BPF Compiler Collection](https://lwn.net/Articles/742082/)

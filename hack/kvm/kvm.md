@@ -185,25 +185,6 @@ int kvm_arch_vcpu_create(struct kvm_vcpu *vcpu)
 - `struct x86_kvm_ops` : `vmx_x86_ops` 也是其中一种
 - `x86_kvm_ops` : 一个经常访问的变量
 
-
-```c
-static struct kvm_x86_init_ops vmx_init_ops __initdata = {
-    .cpu_has_kvm_support = cpu_has_kvm_support,
-    .disabled_by_bios = vmx_disabled_by_bios,
-    .check_processor_compatibility = vmx_check_processor_compat,
-    .hardware_setup = hardware_setup,
-
-    .runtime_ops = &vmx_x86_ops,
-};
-
-// 在 KVM init 的时候，确定使用何种硬件设置，但是 emulate 还是存在的
-int kvm_arch_hardware_setup(void *opaque)
-{
-  // ...
-    memcpy(&kvm_x86_ops, ops->runtime_ops, sizeof(kvm_x86_ops));
-  // ...
-```
-
 ## hyperv.c
 模拟 HyperV 的内容, 但是为什么需要模拟 HyperV ?
 
