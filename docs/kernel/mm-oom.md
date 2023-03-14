@@ -1,5 +1,6 @@
 # oom
 
+## 代码结构
 核心结构体 `oom_control`，主要记录事发现场。
 
 主要的入口为 `out_of_memory`，调用着有三个
@@ -7,7 +8,7 @@
 - `page_alloc.c:__alloc_pages_may_oom` : 在此处失败，是因为不受 cgroup 管理的用户进程分配内存失败。
 - `sysrq:moom_callback` : 通过  sudo echo f > /proc/sysrq-trigger 手动触发
 
-1. 为什么 oom 会因为 cpuset ？
+1. 为什么会因为 cpuset 而 oom ？
 ```c
 struct oom_control {
 	/* Used to determine cpuset */
@@ -19,14 +20,25 @@ struct oom_control {
 
 在 `oom_kill_process` 中，将那些**已经被杀死**进程持有的内存直接释放掉[^1]。
 
-<!-- ## TODO
-- Taming the OOM killer : https://lwn.net/Articles/317814/
-- https://superuser.com/questions/1150215/disabling-oom-killer-on-ubuntu-14-04
-- 为什么 OOM 的调用时间那么长
--->
+## 为什么 OOM 的时候，需要等待那么长时间
+因为 vm.oom_kill_allocating_task 为 0 的时候，内核需要扫描所有的进程，这个过程非常的缓慢。
 
 ## 一次 oom 可以告诉我们什么
-5.10.0-60.18.0.50.oe2203.x86_64
+
+```c
+static void dump_header(struct oom_control *oc, struct task_struct *p)
+```
+- dump_unreclaimable_slab
+- `__show_mem`
+  - 整个系统的信息
+  - 每一个 Node / zone 的信息
+  - zone 中 buddy 的信息
+- dump_tasks : 取决于是否在 cgroup 中，打印每一个 process 的信息，其中
+  - total_vm : 所有映射的虚拟地址空间
+  - rss : 映射的物理页面数量
+- dump_oom_summary
+  - 当前的上下文，cpuset 等
+
 ```txt
 [  112.939900] Out of memory: Killed process 5515 (a.out) total-vm:22022692kB, anon-rss:10875852kB, file-rss:1336kB, shmem-rss:0kB, UID:0 pgtables:41296kB oom_score_adj:0
 [  113.314803] oom_reaper: reaped process 5515 (a.out), now anon-rss:0kB, file-rss:0kB, shmem-rss:0kB
@@ -133,41 +145,26 @@ struct oom_control {
 [  130.843472] oom_reaper: reaped process 5532 (a.out), now anon-rss:0kB, file-rss:0kB, shmem-rss:0kB
 ```
 
-## 在 guest 中 gdb 调试，结果导致 double fault
-```txt
-#0  native_halt () at ./arch/x86/include/asm/irqflags.h:67
-#1  0xffffffff8105ce45 in halt () at ./arch/x86/include/asm/paravirt.h:99
-#2  kvm_wait (ptr=0xffffffff82ab060c <logbuf_lock> "\003", val=3 '\003') at arch/x86/kernel/kvm.c:798
-#3  0xffffffff811083f1 in pv_wait (val=<optimized out>, ptr=<optimized out>) at ./arch/x86/include/asm/paravirt.h:689
-#4  pv_wait_head_or_lock (node=<optimized out>, lock=<optimized out>) at kernel/locking/qspinlock_paravirt.h:469
-#5  __pv_queued_spin_lock_slowpath (lock=0xffffffff82ab060c <logbuf_lock>, val=<optimized out>) at kernel/locking/qspinlock.c:541
-#6  0xffffffff818c9a7d in pv_queued_spin_lock_slowpath (val=<optimized out>, lock=<optimized out>) at ./arch/x86/include/asm/paravirt.h:679
-#7  queued_spin_lock_slowpath (val=<optimized out>, lock=<optimized out>) at ./arch/x86/include/asm/qspinlock.h:58
-#8  queued_spin_lock (lock=<optimized out>) at ./include/asm-generic/qspinlock.h:88
-#9  do_raw_spin_lock (lock=<optimized out>) at ./include/linux/spinlock.h:180
-#10 __raw_spin_lock (lock=<optimized out>) at ./include/linux/spinlock_api_smp.h:143
-#11 _raw_spin_lock (lock=0xffffffff82ab060c <logbuf_lock>) at kernel/locking/spinlock.c:144
-#12 0xffffffff81116fcb in vprintk_emit (facility=<optimized out>, level=3, dict=0xffff88807ffac300 "\f\006\253\202\377\377\377\377\200\065r}\200\210\3
-77\377", dictlen=8, fmt=0x8 <irq_stack_union+8> <error: Cannot access memory at address 0x8>, args=0x44 <irq_stack_union+68>) at kernel/printk/printk.
-c:1968
-#13 0xffffffff8111761c in vprintk_deferred (fmt=<optimized out>, args=<optimized out>) at kernel/printk/printk.c:2997
-#14 0xffffffff811179ce in printk_deferred (fmt=<optimized out>) at kernel/printk/printk.c:3009
-#15 0xffffffff81024057 in get_stack_info (stack=0xfffffe0000217000, task=0xffff88800b978000, info=0xfffffe0000217e70, visit_mask=0xfffffe0000217e68) a
-t arch/x86/kernel/dumpstack_64.c:140
-#16 0xffffffff81024929 in show_trace_log_lvl (task=0xffff88800b978000, regs=0x0 <irq_stack_union>, stack=0xfffffe0000217000, log_lvl=<optimized out>)
-at arch/x86/kernel/dumpstack.c:196
-#17 0xffffffff81024ce3 in show_regs (regs=<optimized out>) at arch/x86/kernel/dumpstack.c:418
-#18 0xffffffff810595ed in df_debug (regs=0xfffffe0000217f58, error_code=<optimized out>) at arch/x86/kernel/doublefault.c:80
-#19 0xffffffff810218ef in do_double_fault (regs=0xffffffff82ab060c <logbuf_lock>, error_code=0) at arch/x86/kernel/traps.c:444
-#20 0xffffffff81a00d2e in double_fault () at arch/x86/entry/entry_64.S:1039
-#21 0x0000000000000000 in ?? ()
+## oomd 和 earlyoom
+- https://github.com/facebookincubator/oomd
+- https://github.com/rfjakob/earlyoom
+
+没有什么特别惊艳的技术，就是周期性的扫描内核中的一些指标，oomd 比 earlyoom 观测的内容更多。
+
+## oom score
+- /proc/$pid/oom_score_adj 可以设置-1000 到 1000，当设置为-1000 时表示不会被 oom killer 选中
+- /proc/$pid/oom_adj 它的值从-17 到 15，值越大越容易被 oom killer 选中，值越小表示选中的可能性越小。当值为-17 是，表示该进程永远不会被选中。这个 oom_adj 是要被 oom_score_adj 替代的，只是为了兼容旧的内核版本，暂时保留，以后会被废弃。
+- /proc/$pid/oom_score 表示当前进程的 oom 分数
+
+
+分析下内核的代码:
+```c
+	ONE("oom_score",  S_IRUGO, proc_oom_score),
+	REG("oom_adj",    S_IRUGO|S_IWUSR, proc_oom_adj_operations),
+	REG("oom_score_adj", S_IRUGO|S_IWUSR, proc_oom_score_adj_operations),
 ```
+proc_oom_score_adj_operations  和 proc_oom_adj_operations 都会调用到 `__set_oom_adj`，两者唯一的区别就是就是做了下数值换算。
 
-## oomd 源码分析
-- https://github.com/facebookincubator/oomd : 了解这个工具的原理
-
-## 其他参考
-- http://linux.laoqinren.net/linux/out-of-memory/
 
 [^1]: https://lwn.net/Articles/666024/
 <script src="https://giscus.app/client.js"

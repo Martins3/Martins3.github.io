@@ -47,6 +47,8 @@ dracut --add-drivers mymod initramfs-with-mymod.img
 - https://www.suse.com/support/kb/doc/?id=000019945 : 配置 drucut 来实现假如模块
 - [How to unpack/uncompress and repack/re-compress an initial ramdisk (initrd/initramfs) boot image file on RHEL 5,6 ?](https://access.redhat.com/solutions/24029)
 
+更多细节参考 : https://man7.org/linux/man-pages/man7/dracut.cmdline.7.html
+
 ## grubby
 如果你经常需要修改内核参数，不停使用 vim 打开 /boot/grub2/grub.cfg ，很麻烦，无法脚本化。
 

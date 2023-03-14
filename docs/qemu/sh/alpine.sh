@@ -3,7 +3,7 @@ set -E -e -u -o pipefail
 
 # @todo 用 https://github.com/charmbracelet/gum 来重写这个项目
 use_nvme_as_root=false # @todo nvme 的这个事情走通一下
-replace_kernel=true
+replace_kernel=false
 
 hacking_memory="hotplug"
 hacking_memory="virtio-pmem"

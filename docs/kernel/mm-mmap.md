@@ -324,6 +324,11 @@ vm 统计的位置
 ```
 之后进一步调用 `vm_acct_memory` 。
 
+核心位置在 : `__vm_enough_memory`
+- OVERCOMMIT_GUESS		: 单次分配不能超过 ram + swap 的大小
+- OVERCOMMIT_ALWAYS		: 不检查
+- OVERCOMMIT_NEVER		: 虚拟内存不能超过 ram + swap 的大小
+
 # vm
 > 主要在 mmap.c 中
 

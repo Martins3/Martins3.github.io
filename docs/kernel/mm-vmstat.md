@@ -556,6 +556,21 @@ atomic_long_t vm_node_stat[NR_VM_NODE_STAT_ITEMS] __cacheline_aligned_in_smp;
 atomic_long_t vm_numa_event[NR_VM_NUMA_EVENT_ITEMS] __cacheline_aligned_in_smp;
 ```
 
+### mm_struct 中的统计
+```c
+struct mm_struct {
+        // ..
+		unsigned long total_vm;	   /* Total pages mapped */
+		unsigned long locked_vm;   /* Pages that have PG_mlocked set */
+		atomic64_t    pinned_vm;   /* Refcount permanently increased */
+		unsigned long data_vm;	   /* VM_WRITE & ~VM_SHARED & ~VM_STACK */
+		unsigned long exec_vm;	   /* VM_EXEC & ~VM_WRITE & ~VM_STACK */
+		unsigned long stack_vm;	   /* VM_STACK */
+        // ...
+		struct percpu_counter rss_stat[NR_MM_COUNTERS];
+```
+
+
 
 ## /proc/pid/status : 进行每一个 process 的内存统计
 - [ ] cat /proc/self/stat 是什么关系
@@ -638,7 +653,7 @@ nonvoluntary_ctxt_switches:     0
 MM_SWAPENTS 的使用非常奇怪:
 - 有时候是直接修改，有时候是调用 inc_mm_counter，关系是什么?
 
-## vmstate
+## vmstate.c
 // 搞清楚如何使用这个代码吧 !
 
 `vmstat.h/vmstat.c`
@@ -657,7 +672,9 @@ static inline void count_vm_event(enum vm_event_item item)
     // 两个统计的机制，但是并不清楚各自统计的内容是什么包含什么区别
 ```
 
-## 从 cgroup 可以观测数据
+## cgroup
+### memory.numa_stat
+### memory.stat
 
 ```txt
 [root@nixos:/sys/fs/cgroup/mem]# cat memory.stat
