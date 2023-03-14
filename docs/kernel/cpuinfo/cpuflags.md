@@ -1,13 +1,15 @@
 ## [ ] 找到 qemu qmp 中是如何实现
 - virsh domcapabilities ：可以查询该 qemu 支持的所有内容
 
-- qmp : query-cpu-definitions 是如何实现的
+- [x] qmp : query-cpu-definitions 是如何实现的
+
+## arch/x86/include/asm/cpufeatures.h
+
 
 ## qemu 的 machine model
 /run/current-system/sw/bin/qemu-system-x86_64 -S -no-user-config -nodefaults -nographic -machine none,accel=kvm:tcg
 -qmp unix:/home/martins3/.config/libvirt/qemu/lib/qmp-LEY2Z1/qmp.monitor,server=on,wait=off
 -pidfile /home/martins3/.config/libvirt/qemu/lib/qmp-LEY2Z1/qmp.pid
-
 
 - [ ] -cpu SandyBridge 的时候，Guest 居然没有 vmx 的。
 ## eagerfpu

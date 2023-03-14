@@ -12,3 +12,6 @@ https://github.com/zlotus/notes-linear-algebra : 线性代数，你值得拥有
 - [category theory](https://github.com/hmemcpy/milewski-ctfp-pdf)
 
 - https://aimath.org/textbooks/approved-textbooks/ : 美国。。认可的教科书
+
+## 数论
+- https://explained-from-first-principles.com/number-theory/ : 还写过其他内容的

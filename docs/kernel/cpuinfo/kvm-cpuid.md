@@ -20,12 +20,17 @@ void get_cpu_cap(struct cpuinfo_x86 *c)
 - https://dannorth.net/2022/02/10/cupid-for-joyful-coding/
   - 哈哈，只是巧合而已
 
+## 似乎处理 hyperv 也是在处理 cpuid 相关的
+
 ## [ ] 如果真的不提供，那么 Guest 使用对应的能力的下场是什么
 KVM_SET_CPUID : 就是会修改 Guest 使用 cpuid 获取到能力。
 
 - kvm_vcpu_ioctl_set_cpuid
   - kvm_set_cpuid
     - `__kvm_update_cpuid_runtime`
+    - kvm_vcpu_after_set_cpuid
+      - vmx_vcpu_after_set_cpuid
+        - vmx_update_exception_bitmap : 其实这个也不对啊
 
 ## [ ] acpi 这个 cpuid 是怎么被去掉的
 

@@ -14,7 +14,7 @@ perf record -e probe:tcp_sendmsg -a -g sleep 10
 sudo perf stat -e 'kvm:*' -a sleep 1s
 ```
 
-3. 实现
+3. 实时统计
 perf top -e kvm:kvm_nested_vmrun
 
 ### [ ] 处理一下 perf 中 unknow 的数值情况

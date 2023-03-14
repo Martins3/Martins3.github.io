@@ -12,6 +12,7 @@ hacking_memory="virtio-mem"
 hacking_memory="prealloc"
 hacking_memory="sockets"
 hacking_memory="numa"
+hacking_memory="file"
 hacking_memory="none"
 
 share_memory_option="9p"
@@ -34,6 +35,8 @@ configuration=${abs_loc}/config.json
 
 # ----------------------- 配置区 -----------------------------------------------
 kernel_dir=$(jq -r ".kernel_dir" <"$configuration")
+# 为什么 -kernel 的时候 @todo 的 centos  kernel 不行啊
+# kernel_dir=/home/martins3/kernel/centos-upstream
 qemu_dir=$(jq -r ".qemu_dir" <"$configuration")
 workstation="$(jq -r ".workstation" <"$configuration")"
 # ------------------------------------------------------------------------------
@@ -48,6 +51,11 @@ distribution=openEuler-22.09-x86_64-dvd
 # distribution=openEuler-20.03-LTS-SP3-x86_64-dvd
 # distribution=CentOS-7-x86_64-DVD-2207-02
 # distribution=ubuntu-22.04.1-live-server-amd64
+#
+# @todo fedora 内核只能在 centos 上，不能在 oe 上安装，因为 linux-install 这个包的原因
+# https://kojipkgs.fedoraproject.org/packages/kernel/4.19.16/200.fc28/
+
+cgroup_limit=""
 
 guest_port=5556
 qmp_port=4444
@@ -125,15 +133,21 @@ arg_mem_balloon="-device virtio-balloon,id=balloon0,deflate-on-oom=true,page-poi
 arg_mem_balloon=""
 
 arg_cpu_model="-cpu Skylake-Client-IBRS,hle=off,rtm=off"
-# 如果 see=off ，系统直接无法启动
-arg_cpu_model="-cpu Skylake-Client-IBRS,hle=off,rtm=off"
+# @todo 如果 see=off 或者 see2=off ，系统直接无法启动
+arg_cpu_model="-cpu Skylake-Client-IBRS,hle=off,rtm=off,sse4_2=off,sse4_1=off,ssse3=off,sep=off"
+arg_cpu_model="-cpu host"
 
 case $hacking_memory in
 "none")
-
+  ramsize=2G
+  arg_mem_cpu="-smp $(($(getconf _NPROCESSORS_ONLN) - 1))"
+  arg_mem_cpu="$arg_mem_cpu -object memory-backend-ram,id=pc.ram,size=$ramsize,prealloc=off,share=off -machine memory-backend=pc.ram -m $ramsize"
+  ;;
+"file")
+  # 只有使用这种方式才会启动 async page fault
   ramsize=12G
-  arg_mem_cpu="-m 12G -smp $(($(getconf _NPROCESSORS_ONLN) - 1))"
-  arg_mem_cpu="$arg_mem_cpu -object memory-backend-ram,id=pc.ram,size=$ramsize,prealloc=off,share=on -machine memory-backend=pc.ram -m $ramsize "
+  arg_mem_cpu="-smp $(($(getconf _NPROCESSORS_ONLN) - 1))"
+  arg_mem_cpu="$arg_mem_cpu -object memory-backend-file,id=id0,size=$ramsize,mem-path=$workstation/qemu.ram -machine memory-backend=id0 -m $ramsize"
   ;;
 "numa")
   # 通过 reserve = false 让 mmap 携带参数 MAP_NORESERVE，从而可以模拟超级大内存的 Guest
@@ -196,6 +210,7 @@ else
 fi
 
 # @todo 不知道为什么现在使用 ovmf 界面没有办法正常刷新了
+# 将 ovmf 的环境一起集成过来，让 gdb 也可以调试 ovmf
 # 使用 ovmf 的时候，windows 也是无法启动
 #
 # 但是还可以正常使用的机器
@@ -289,8 +304,27 @@ show_help() {
   exit 0
 }
 
-while getopts "adskthpcmqr" opt; do
+while getopts "abcdhkmpqst" opt; do
   case $opt in
+  a)
+    # @todo 丑陋的代码，从原则上将，option 应该在最上面的才对，修改参数
+    arg_qmp="-qmp tcp:localhost:5444,server,wait=off"
+    arg_network="-netdev user,id=net1,hostfwd=tcp::5557-:22 -device e1000e,netdev=net1"
+    arg_network="-netdev user,id=net1,hostfwd=tcp::5557-:22 -device virtio-net-pci,netdev=net1,romfile=/home/martins3/hack/vm/img1"
+    arg_migration_target="-incoming tcp:0:4000"
+    ;;
+  b)
+    # 可以带上虚拟机唯一标识
+    if [[ ! -d /sys/fs/cgroup/mem ]];then
+      sudo cgcreate -g memory:mem
+      sudo cgset -r memory.max=4G mem
+    fi
+    cgroup_limit="sudo cgexec -g memory:mem"
+    ;;
+  c)
+    socat -,echo=0,icanon=0 unix-connect:$serial_socket_path
+    exit 0
+    ;;
   d)
     debug_qemu="gdb -ex \"handle SIGUSR1 nostop noprint\" --args"
     # gdb 的时候，让 serial 输出从 unix domain socket 输出
@@ -300,20 +334,11 @@ while getopts "adskthpcmqr" opt; do
     arg_monitor="$arg_monitor -display none"
     cd "${qemu_dir}" || exit 1
     ;;
-  r)
-    # @todo 不知道为什么，-serial stdio:monitor 的时候会失败
-    arg_monitor="-serial stdio -display none"
-    arg_monitor="$arg_monitor -monitor unix:$mon_socket_path,server,nowait"
-    ;;
   p) debug_qemu="perf record -F 1000" ;;
   s) debug_kernel="-S -s" ;;
   k) launch_gdb=true ;;
   t) arg_machine="--accel tcg,thread=single" arg_mem_cpu="" ;;
   h) show_help ;;
-  c)
-    socat -,echo=0,icanon=0 unix-connect:$serial_socket_path
-    exit 0
-    ;;
   m)
     socat -,echo=0,icanon=0 unix-connect:$mon_socket_path
     exit 0
@@ -321,19 +346,12 @@ while getopts "adskthpcmqr" opt; do
   q)
 
     if [[ $qmp_shell == true ]]; then
-       qmp_shell=${qemu_dir}/scripts/qmp/qmp-shell
-       $qmp_shell /tmp/qmp-sock
+      qmp_shell=${qemu_dir}/scripts/qmp/qmp-shell
+      $qmp_shell /tmp/qmp-sock
     else
       telnet localhost $qmp_port
     fi
     exit 0
-    ;;
-  a)
-    # @todo 丑陋的代码，从原则上将，option 应该在最上面的才对，修改参数
-    arg_qmp="-qmp tcp:localhost:5444,server,wait=off"
-    arg_network="-netdev user,id=net1,hostfwd=tcp::5557-:22 -device e1000e,netdev=net1"
-    arg_network="-netdev user,id=net1,hostfwd=tcp::5557-:22 -device virtio-net-pci,netdev=net1,romfile=/home/martins3/hack/vm/img1"
-    arg_migration_target="-incoming tcp:0:4000"
     ;;
   *) exit 0 ;;
   esac
@@ -383,6 +401,8 @@ fi
 if [ $launch_gdb = true ]; then
   echo "debug kernel"
   cd "${kernel_dir}" || exit 1
+  # gdb /home/martins3/kernel/openeuler-4.19.90-2112.8.0.0131-x86_64/vmlinux -ex "target remote :1234" -ex "hbreak start_kernel" -ex "continue"
+  # 才意识到，cd 到不同的位置，最后展示出来的代码是不同的，vmlinux 中不存放源代码的
   gdb vmlinux -ex "target remote :1234" -ex "hbreak start_kernel" -ex "continue"
   exit 0
 fi
@@ -414,7 +434,7 @@ if [[ ${replace_kernel} == false ]]; then
 fi
 
 # @todo 将这个图形在终端中更加清晰的输出出来
-cmd="${debug_qemu} ${qemu} ${arg_trace} ${debug_kernel} ${arg_img} ${arg_mem_cpu}  \
+cmd="${cgroup_limit} ${debug_qemu} ${qemu} ${arg_trace} ${debug_kernel} ${arg_img} ${arg_mem_cpu}  \
   ${arg_kernel} ${arg_seabios} ${arg_bridge} ${arg_network} \
   ${arg_machine} ${arg_monitor} ${arg_initrd} ${arg_mem_balloon} ${arg_hacking} \
   ${arg_qmp} ${arg_vfio} ${arg_smbios} ${arg_migration_target} ${arg_share_dir} ${arg_sata} ${arg_scsi} ${arg_nvme} ${arg_disk} ${arg_pdifile} ${arg_cpu_model}"

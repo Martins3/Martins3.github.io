@@ -43,8 +43,7 @@ Mem:            7962        7592         316           1          53         154
 Swap:           2104         126        1978
 ```
 
-
-## /proc/stat
+## proc/\*/numa_maps
 
 ## /proc/\*/stat
 

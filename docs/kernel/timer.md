@@ -239,24 +239,6 @@ secondary_startup_64_no_verify+213
 
 ## clocksource
 
-## tick
-```config
-#
-# Timers subsystem
-
-CONFIG_TICK_ONESHOT=y
-
-CONFIG_NO_HZ_COMMON=y
-# CONFIG_HZ_PERIODIC is not set
-CONFIG_NO_HZ_IDLE=y
-# CONFIG_NO_HZ_FULL is not set
-
-CONFIG_NO_HZ=y
-CONFIG_HIGH_RES_TIMERS=y
-CONFIG_CLOCKSOURCE_WATCHDOG_MAX_SKEW_US=100
-# end of Timers subsystem
-```
-
 ## vdso
 
 ## kvm
@@ -706,6 +688,19 @@ http://www.wowotech.net/timer_subsystem/tick-broadcast-framework.html
     secondary_startup_64_no_verify+213
 ]: 1
 ```
+
+## tick-sched.c : 分析 tick 模式
+如何观察当前系统是否为 tickless 的
+
+目前的 tick 一共三个模式:
+- HZ_PERIODIC
+- NO_HZ_IDLE : 默认模式，只有 idle 的时候才会关闭
+- NO_HZ_FULL
+
+- do_idle
+  - tick_nohz_idle_enter : 如果配置为 HZ_PERIODIC，这个函数是空函数，如果额外配置了 NO_HZ_FULL，那么其对应的一些系列函数都会展开
+  - idle 子系统
+  - tick_nohz_idle_exit
 
 
 [^1]: https://www.kernel.org/doc/html/latest/virt/kvm/timekeeping.html

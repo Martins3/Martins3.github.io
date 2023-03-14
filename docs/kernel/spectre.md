@@ -310,3 +310,6 @@ index db189945e9b0..02dabc9e77b0 100644
 
  #endif /* _ASM_X86_CPUFEATURES_H */
 ```
+
+## 如何在 bios 中关闭 spectre
+- 为什么 spectre 的有些选项是必须在 bios 中设置的

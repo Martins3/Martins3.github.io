@@ -1207,3 +1207,13 @@ retry_pud:
 #9  exc_page_fault (regs=0xffffc90001a2bce8, error_code=2) at arch/x86/mm/fault.c:1575
 #10 0xffffffff82000b62 in asm_exc_page_fault () at ./arch/x86/include/asm/idtentry.h:570
 ```
+
+## 是 segfault 还是 oom
+```txt
+#0  show_signal_msg (tsk=<optimized out>, address=<optimized out>, error_code=<optimized out>, regs=<optimized out>) at arch/x86/mm/fault.c:841
+#1  __bad_area_nosemaphore (regs=0xffffc90002633e47, error_code=7, address=7, pkey=0x0 <irq_stack_union>, si_code=1) at arch/x86/mm/fault.c:904
+#2  0xffffffff81064bb0 in bad_area_nosemaphore (regs=<optimized out>, error_code=<optimized out>, address=<optimized out>, pkey=<optimized out>) at arch/x86/mm/fault.c:925
+#3  0xffffffff81064f48 in __do_page_fault (regs=0xffffc90002633f58, error_code=6, address=18446744073709551615) at arch/x86/mm/fault.c:1344
+#4  0xffffffff81065381 in do_page_fault (regs=0xffffc90002633f58, error_code=6) at arch/x86/mm/fault.c:1485
+#5  0xffffffff81a0119e in async_page_fault () at arch/x86/entry/entry_64.S:1207
+```

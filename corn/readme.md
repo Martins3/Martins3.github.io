@@ -51,8 +51,8 @@ journalctl -u systemd-udevd.service
 ## dracut 的源码可以分析下，主要是 dracut install 中，还是非常简单的
 
 ## 使用 grubby 自动切换内核，修改 kernel cmdline，从而
-
-## 正常安装，然后也能够编译
+- 对于所有的内核增加 nokaslr nokaslr console=ttyS0,9600 earlyprink=serial
+- 当然调查清楚，如何让各种 distribution 内核是否可以 -kernel 也是很不错的
 
 ## 能否让 ci 运行在 github ci 中？
 或者提交给 github，让本地的 ci 自动检测

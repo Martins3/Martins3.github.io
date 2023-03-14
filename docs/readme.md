@@ -113,7 +113,7 @@
 - [tty 到底是什么](./kernel/tty.md)
 - [mknod](./kernel/mknod.md)
 - 内存管理
-  - [oom](./kernel/mm-oom.md)
+  <!-- - [oom](./kernel/mm-oom.md) -->
   - [memblock](./kernel/mm-memblock.md)
   - [cma](./kernel/mm-cma.md)
   - [sparse vmemmap](./kernel/mm-vmemmap.md)
