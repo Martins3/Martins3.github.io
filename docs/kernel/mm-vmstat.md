@@ -42,10 +42,73 @@ Swap:           2104          39        2065
 Mem:            7962        7592         316           1          53         154
 Swap:           2104         126        1978
 ```
+## proc/pid/smaps
 
-## proc/\*/numa_maps
+- 和 proc/pid/maps 的有啥区别？
 
-## /proc/\*/stat
+## proc/pid/numa_maps
+
+代码:
+```c
+static const struct mm_walk_ops show_numa_ops = {
+	.hugetlb_entry = gather_hugetlb_stats,
+	.pmd_entry = gather_pte_stats,
+};
+```
+这个 walk 是分析每一个真正被使用的物理页面的，但是如果一个文件被反复映射，这个数值就不会正确的统计。
+
+调用路径:
+```txt
+@[
+    gather_pte_stats+5
+    walk_pgd_range+1263
+    __walk_page_range+400
+    walk_page_vma+90
+    show_numa_map+286
+    seq_read_iter+711
+    seq_read+167
+    vfs_read+163
+    ksys_read+99
+    do_syscall_64+60
+    entry_SYSCALL_64_after_hwframe+114
+]: 42
+```
+使用 ./code/numa_maps.c 来测试:
+```txt
+00400000 default file=/home/martins3/core/vn/docs/kernel/code/a.out mapped=1 active=0 N0=1 kernelpagesize_kB=4
+00401000 default file=/home/martins3/core/vn/docs/kernel/code/a.out mapped=1 active=0 N0=1 kernelpagesize_kB=4
+00402000 default file=/home/martins3/core/vn/docs/kernel/code/a.out mapped=1 active=0 N0=1 kernelpagesize_kB=4
+00403000 default file=/home/martins3/core/vn/docs/kernel/code/a.out anon=1 dirty=1 active=0 N0=1 kernelpagesize_kB=4
+00404000 default file=/home/martins3/core/vn/docs/kernel/code/a.out anon=1 dirty=1 active=0 N0=1 kernelpagesize_kB=4
+01d3f000 default heap anon=1 dirty=1 active=0 N0=1 kernelpagesize_kB=4
+7fd249e00000 default file=/home/martins3/hack/vm/windows8.img mapped=524288 mapmax=10 active=0 N0=524288 kernelpagesize_kB=4
+7fd2ca000000 default file=/home/martins3/hack/vm/windows8.img mapped=524288 mapmax=10 active=0 N0=524288 kernelpagesize_kB=4
+7fd34a200000 default file=/home/martins3/hack/vm/windows8.img mapped=524288 mapmax=10 active=0 N0=524288 kernelpagesize_kB=4
+7fd3ca400000 default file=/home/martins3/hack/vm/windows8.img mapped=524288 mapmax=10 active=0 N0=524288 kernelpagesize_kB=4
+7fd44a600000 default file=/home/martins3/hack/vm/windows8.img mapped=524288 mapmax=10 active=0 N0=524288 kernelpagesize_kB=4
+7fd4ca800000 default file=/home/martins3/hack/vm/windows8.img mapped=524288 mapmax=10 active=0 N0=524288 kernelpagesize_kB=4
+7fd54aa00000 default file=/home/martins3/hack/vm/windows8.img mapped=524288 mapmax=10 active=0 N0=524288 kernelpagesize_kB=4
+7fd5cac00000 default file=/home/martins3/hack/vm/windows8.img mapped=524288 mapmax=10 active=0 N0=524288 kernelpagesize_kB=4
+7fd64ae00000 default file=/home/martins3/hack/vm/windows8.img mapped=524288 mapmax=10 active=0 N0=524288 kernelpagesize_kB=4
+7fd6cb000000 default file=/home/martins3/hack/vm/windows8.img mapped=524288 mapmax=10 active=0 N0=524288 kernelpagesize_kB=4
+7fd74b200000 default file=/nix/store/2j8jqmnd9l7plihhf713yf291c9vyqjm-glibc-2.35-224/lib/libc.so.6 mapped=40 mapmax=152 active=0 N0=40 kernelpagesize_kB=4
+7fd74b228000 default file=/nix/store/2j8jqmnd9l7plihhf713yf291c9vyqjm-glibc-2.35-224/lib/libc.so.6 mapped=228 mapmax=158 active=0 N0=228 kernelpagesize_kB=4
+7fd74b39e000 default file=/nix/store/2j8jqmnd9l7plihhf713yf291c9vyqjm-glibc-2.35-224/lib/libc.so.6 mapped=16 mapmax=158 active=0 N0=16 kernelpagesize_kB=4
+7fd74b3f6000 default file=/nix/store/2j8jqmnd9l7plihhf713yf291c9vyqjm-glibc-2.35-224/lib/libc.so.6 anon=4 dirty=4 active=0 N0=4 kernelpagesize_kB=4
+7fd74b3fa000 default file=/nix/store/2j8jqmnd9l7plihhf713yf291c9vyqjm-glibc-2.35-224/lib/libc.so.6 anon=2 dirty=2 active=0 N0=2 kernelpagesize_kB=4
+7fd74b3fc000 default anon=5 dirty=5 active=0 N0=5 kernelpagesize_kB=4
+7fd74b5c0000 default anon=3 dirty=3 active=0 N0=3 kernelpagesize_kB=4
+7fd74b5c5000 default file=/nix/store/2j8jqmnd9l7plihhf713yf291c9vyqjm-glibc-2.35-224/lib/ld-linux-x86-64.so.2 mapped=2 mapmax=152 active=0 N0=2 kernelpagesize_kB=4
+7fd74b5c7000 default file=/nix/store/2j8jqmnd9l7plihhf713yf291c9vyqjm-glibc-2.35-224/lib/ld-linux-x86-64.so.2 mapped=39 mapmax=157 active=0 N0=39 kernelpagesize_kB=4
+7fd74b5ee000 default file=/nix/store/2j8jqmnd9l7plihhf713yf291c9vyqjm-glibc-2.35-224/lib/ld-linux-x86-64.so.2 mapped=12 mapmax=152 active=0 N0=12 kernelpagesize_kB=4
+7fd74b5fa000 default file=/nix/store/2j8jqmnd9l7plihhf713yf291c9vyqjm-glibc-2.35-224/lib/ld-linux-x86-64.so.2 anon=2 dirty=2 active=0 N0=2 kernelpagesize_kB=4
+7fd74b5fc000 default file=/nix/store/2j8jqmnd9l7plihhf713yf291c9vyqjm-glibc-2.35-224/lib/ld-linux-x86-64.so.2 anon=2 dirty=2 active=0 N0=2 kernelpagesize_kB=4
+7ffdc21c5000 default stack anon=6 dirty=6 active=0 N0=6 kernelpagesize_kB=4
+7ffdc21fa000 default
+7ffdc21fe000 default
+```
+
+## /proc/pid/stat
 
 ## /proc/meminfo
 
