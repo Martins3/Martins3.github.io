@@ -37,6 +37,7 @@ Hardware and Software Support for Virtualization : 作者[Edouard Bugnion](https
 - [kernelgo](https://kernelgo.org/) :star: :star:
   - [作者整理的 gitbook](https://luohao-brian.gitbooks.io/interrupt-virtualization/content/qemuzhi-network-device-quan-xu-ni-fang-an-4e8c3a-xu-ni-wang-qia.html)
 - [terenceli](https://terenceli.github.io/) :star:
+- [kvm forum](https://events.linuxfoundation.org/kvm-forum/)
   - 值得一个个的翻阅, 在 youtube 上有对应的[录像](https://www.youtube.com/channel/UCRCSQmAOh7yzgheq-emy1xA)
 - [Redhat blog](https://www.redhat.com/en/blog) 的 virtualization 板块
   - [All you need to know about KVM userspace](https://www.redhat.com/en/blog/all-you-need-know-about-kvm-userspace)

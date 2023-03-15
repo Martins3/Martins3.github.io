@@ -191,3 +191,8 @@ static void qemu_process_sugar_options(void)
 ```
 
 - [ ] 这里的 typename 是什么，有没有什么方便的方法实现查询一个 typename 的 property 机制
+
+## 如何快速定位到代码
+hmp 中提供了一个 mce 命令，如何找到对应的实现:
+
+hmp_mce 直接搜索 hmp_mce 即可

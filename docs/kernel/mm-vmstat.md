@@ -108,6 +108,8 @@ static const struct mm_walk_ops show_numa_ops = {
 7ffdc21fe000 default
 ```
 
+numad 就是通过这个来实现的。
+
 ## /proc/pid/stat
 
 ## /proc/meminfo

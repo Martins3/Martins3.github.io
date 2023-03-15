@@ -11,10 +11,48 @@
 - https://docs.kernel.org/driver-api/edac.html : edac 的文档
 - https://lwn.net/Articles/480575/ : edac 的更新 patch
 
+## rasdaemon 的一段 log
 
-## 能不能注册 ecc 的错误给 guest
+- aer_event
+```txt
+systemd[1]: Starting RAS daemon to log the RAS events...
+rasdaemon[644709]: rasdaemon: ras:mc_event event enabled
+rasdaemon[644709]: rasdaemon: Enabled event ras:mc_event
+rasdaemon[644709]: rasdaemon: ras:aer_event event enabled
+rasdaemon[644709]: rasdaemon: Enabled event ras:aer_event
+rasdaemon[644709]: rasdaemon: mce:mce_record event enabled
+rasdaemon[644709]: rasdaemon: Enabled event mce:mce_record
+rasdaemon[644709]: rasdaemon: ras:extlog_mem_event event enabled
+rasdaemon[644709]: rasdaemon: Enabled event ras:extlog_mem_event
+rasdaemon[644709]: ras:mc_event event enabled
+rasdaemon[644709]: Enabled event ras:mc_event
+rasdaemon[644709]: ras:aer_event event enabled
+rasdaemon[644709]: Enabled event ras:aer_event
+rasdaemon[644709]: mce:mce_record event enabled
+rasdaemon[644709]: Enabled event mce:mce_record
+rasdaemon[644709]: ras:extlog_mem_event event enabled
+rasdaemon[644709]: Enabled event ras:extlog_mem_event
+systemd[1]: Started RAS daemon to log the RAS events.
+rasdaemon[644709]: wait_access() failed, /sys/kernel/debug/tracing/instances/rasdaemon/events>
+rasdaemon[644709]: rasdaemon: wait_access() failed, /sys/kernel/debug/tracing/instances/rasda>
+rasdaemon[644709]: rasdaemon: Can't get net:net_dev_xmit_timeout traces. Perhaps this feature>
+rasdaemon[644709]: wait_access() failed, /sys/kernel/debug/tracing/instances/rasdaemon/events>
+rasdaemon[644709]: rasdaemon: wait_access() failed, /sys/kernel/debug/tracing/instances/rasda>
+rasdaemon[644709]: rasdaemon: Can't get devlink:devlink_health_report traces. Perhaps this fe>
+rasdaemon[644709]: rasdaemon: Can't get traces from devlink:devlink_health_report
+rasdaemon[644709]: rasdaemon: block:block_rq_complete event enabled
+rasdaemon[644709]: rasdaemon: Enabled event block:block_rq_complete
+rasdaemon[644709]: rasdaemon: Listening to events for cpus 0 to 0
+rasdaemon[644709]: overriding event (1153) ras:mc_event with new print handler
+rasdaemon[644709]: overriding event (1150) ras:aer_event with new print handler
+rasdaemon[644709]: overriding event (113) mce:mce_record with new print handler
+rasdaemon[644709]: overriding event (1154) ras:extlog_mem_event with new print handler
+rasdaemon[644709]: overriding event (978) block:block_rq_c
+```
 
-ecc 是 mce 的一种才对
+## manual
+Intel 64 and IA32 Architectures Software Developer's manual, Volume 3, System programming guide Parts 1 and 2. Machine checks are described in Chapter 14 in Part1 and in Append ix E in Part2.
+
 
 ## mce
 
@@ -254,7 +292,7 @@ https://lkml.iu.edu/hypermail/linux/kernel/1903.0/02742.html
 
 - mce_init : machine check exception, 初始化之后，那些 helper 就可以正确工作了
 
-## kvm 如何支持 mce
+## 如何通过 kvm 中向 Guest 注入 mce 错误
 
 - kvm_vcpu_ioctl_x86_setup_mce
 - kvm_vcpu_ioctl_x86_set_mce 向 guest 注入 mce
@@ -315,45 +353,21 @@ Otherwise, if the MCE is a corrected error, KVM will just
 store it in the corresponding bank (provided this bank is
 not holding a previously reported uncorrected error).
 ```
-
-## rasdaemon 的一段 log
-
-- aer_event
+- https://stackoverflow.com/questions/43158596/mce-injection-on-qemu : 似乎尝试过，但是失败了
+- 这个 patch 合并了一个
+  - https://patchwork.kernel.org/project/kvm/patch/1245722714.22246.424.camel@yhuang-dev.sh.intel.com/
+  - 但是仅仅限制为 tcg 模式下的:
 ```txt
-systemd[1]: Starting RAS daemon to log the RAS events...
-rasdaemon[644709]: rasdaemon: ras:mc_event event enabled
-rasdaemon[644709]: rasdaemon: Enabled event ras:mc_event
-rasdaemon[644709]: rasdaemon: ras:aer_event event enabled
-rasdaemon[644709]: rasdaemon: Enabled event ras:aer_event
-rasdaemon[644709]: rasdaemon: mce:mce_record event enabled
-rasdaemon[644709]: rasdaemon: Enabled event mce:mce_record
-rasdaemon[644709]: rasdaemon: ras:extlog_mem_event event enabled
-rasdaemon[644709]: rasdaemon: Enabled event ras:extlog_mem_event
-rasdaemon[644709]: ras:mc_event event enabled
-rasdaemon[644709]: Enabled event ras:mc_event
-rasdaemon[644709]: ras:aer_event event enabled
-rasdaemon[644709]: Enabled event ras:aer_event
-rasdaemon[644709]: mce:mce_record event enabled
-rasdaemon[644709]: Enabled event mce:mce_record
-rasdaemon[644709]: ras:extlog_mem_event event enabled
-rasdaemon[644709]: Enabled event ras:extlog_mem_event
-systemd[1]: Started RAS daemon to log the RAS events.
-rasdaemon[644709]: wait_access() failed, /sys/kernel/debug/tracing/instances/rasdaemon/events>
-rasdaemon[644709]: rasdaemon: wait_access() failed, /sys/kernel/debug/tracing/instances/rasda>
-rasdaemon[644709]: rasdaemon: Can't get net:net_dev_xmit_timeout traces. Perhaps this feature>
-rasdaemon[644709]: wait_access() failed, /sys/kernel/debug/tracing/instances/rasdaemon/events>
-rasdaemon[644709]: rasdaemon: wait_access() failed, /sys/kernel/debug/tracing/instances/rasda>
-rasdaemon[644709]: rasdaemon: Can't get devlink:devlink_health_report traces. Perhaps this fe>
-rasdaemon[644709]: rasdaemon: Can't get traces from devlink:devlink_health_report
-rasdaemon[644709]: rasdaemon: block:block_rq_complete event enabled
-rasdaemon[644709]: rasdaemon: Enabled event block:block_rq_complete
-rasdaemon[644709]: rasdaemon: Listening to events for cpus 0 to 0
-rasdaemon[644709]: overriding event (1153) ras:mc_event with new print handler
-rasdaemon[644709]: overriding event (1150) ras:aer_event with new print handler
-rasdaemon[644709]: overriding event (113) mce:mce_record with new print handler
-rasdaemon[644709]: overriding event (1154) ras:extlog_mem_event with new print handler
-rasdaemon[644709]: overriding event (978) block:block_rq_c
+(qemu) help mce
+mce [-b] cpu bank status mcgstatus addr misc -- inject a MCE on the given CPU [and broadcast to other CPUs with -b option]
 ```
+可以使用 `mce 0 0 0x8000000000000000 1 1 1`
 
-## manual
-Intel 64 and IA32 Architectures Software Developer's manual, Volume 3, System programming guide Parts 1 and 2. Machine checks are described in Chapter 14 in Part1 and in Append ix E in Part2.
+但是在 kvm 模式下，没有任何的反应。
+
+### [ ]  mce-test/cases/function/kvm/README
+- mce 的测试: https://git.kernel.org/pub/scm/utils/cpu/mce/mce-test.git
+
+### 测试一下内存错误注入，分析内核中如何处理 uncorrectable error
+
+ecc 是 mce 的一种才对

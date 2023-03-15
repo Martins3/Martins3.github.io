@@ -139,7 +139,7 @@ arg_cpu_model="-cpu host"
 
 case $hacking_memory in
 "none")
-  ramsize=2G
+  ramsize=4G
   arg_mem_cpu="-smp $(($(getconf _NPROCESSORS_ONLN) - 1))"
   arg_mem_cpu="$arg_mem_cpu -object memory-backend-ram,id=pc.ram,size=$ramsize,prealloc=off,share=off -machine memory-backend=pc.ram -m $ramsize"
   ;;
@@ -337,7 +337,11 @@ while getopts "abcdhkmpqst" opt; do
   p) debug_qemu="perf record -F 1000" ;;
   s) debug_kernel="-S -s" ;;
   k) launch_gdb=true ;;
-  t) arg_machine="--accel tcg,thread=single" arg_mem_cpu="" ;;
+  t)
+    arg_machine="--accel tcg,thread=single"
+    arg_mem_cpu="-m 8G" # cpu 数量最好还是 1，内存需要指定一下，不然就
+    arg_cpu_model="" # cpu model 不能支持 host 了
+    ;;
   h) show_help ;;
   m)
     socat -,echo=0,icanon=0 unix-connect:$mon_socket_path
