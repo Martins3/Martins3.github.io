@@ -1950,19 +1950,229 @@ static int FNAME(fetch)(struct kvm_vcpu *vcpu, gpa_t addr,
     - `__kvm_mmu_slot_lpages` : 似乎是为了处理大页的场景
     - kvm_page_track_create_memslot
 
-kvm_page_track_create_memslot 创建的内容和 kvm_memory_slot::dirty_bitmap 关系是啥？
+- kvm_page_track_create_memslot 创建的内容和 kvm_memory_slot::dirty_bitmap 关系是啥？
+  - 没啥关系，kvm_page_track_create_memslot 应该是处理
+  - 这个无法避免啊
 
 - [ ] 为什么每一个页面需要分配两次？
 
+## rmap 是如何用上的
+- memslot_rmap_alloc : 会给每一个 node 分配
+```c
+    memslot_rmap_alloc+5
+    kvm_mmu_load+993
+    kvm_arch_vcpu_ioctl_run+4482
+    kvm_vcpu_ioctl+629
+    __x64_sys_ioctl+139
+    do_syscall_64+60
+    entry_SYSCALL_64_after_hwframe+114
+```
+- kvm_mmu_load
+  - mmu_first_shadow_root_alloc
+    - mmu_alloc_shadow_roots
+      - memslot_rmap_alloc
+
+### KVM_EXTERNAL_WRITE_TRACKING
+
+```config
+config KVM_EXTERNAL_WRITE_TRACKING
+	bool
+```
+
+```diff
+History:        #0
+Commit:         deae4a10f16649d9c8bfb89f38b61930fb938284
+Author:         David Stevens <stevensd@chromium.org>
+Committer:      Paolo Bonzini <pbonzini@redhat.com>
+Author Date:    Wed 22 Sep 2021 12:58:59 PM CST
+Committer Date: Fri 01 Oct 2021 03:44:58 PM CST
+
+KVM: x86: only allocate gfn_track when necessary
+
+Avoid allocating the gfn_track arrays if nothing needs them. If there
+are no external to KVM users of the API (i.e. no GVT-g), then page
+tracking is only needed for shadow page tables. This means that when tdp
+is enabled and there are no external users, then the gfn_track arrays
+can be lazily allocated when the shadow MMU is actually used. This avoid
+allocations equal to .05% of guest memory when nested virtualization is
+not used, if the kernel is compiled without GVT-g.
+
+Signed-off-by: David Stevens <stevensd@chromium.org>
+Message-Id: <20210922045859.2011227-3-stevensd@google.com>
+Signed-off-by: Paolo Bonzini <pbonzini@redhat.com>
+```
+- intel 显卡: VGT-g 技术
+  - https://wiki.archlinux.org/title/Intel_GVT-g
+  - https://news.ycombinator.com/item?id=28944426 : 但是支持的不咋样
+
 ## 有没有办法让打开 spte ?
 
-## 读读这个文档吧 : https://www.kernel.org/doc/Documentation/virtual/kvm/mmu.txt
+## [The x86 kvm shadow mmu](https://www.kernel.org/doc/Documentation/virtual/kvm/mmu.txt)
 
-## 嵌套虚拟化必须使用 spte 吗？
 
 ### [Nested EPT to Make Nested VMX Faster](https://www.linux-kvm.org/images/8/8c/Kvm-forum-2013-nested-ept.pdf)
+- [x] 嵌套虚拟化必须使用 spte 吗？
+  - 是的
 
-- shadow paging code is a template
-- All differences are template parameters
-- Template code is compiled for each paging mode
-- `vcpu->mmu` is initialized according to current guest mode
+> - shadow paging code is a template
+> - All differences are template parameters
+> - Template code is compiled for each paging mode
+> - `vcpu->mmu` is initialized according to current guest mode
+
+- [ ] 为什么需要使用 tempalte 来处理 guest 的各种模式？
+
+- 这里有一个考虑，到底是将 nGVA 到 GPA 设置为 shadow page table 还是 GVA HPA 的设置为 shadow page table
+  - 如果使用第一种方法，此时 host 对于 L1 Guest 使用了虚拟化完全不知道，L1 Guest 来使用 spte 来处理
+     - L0 对于 L1
+
+- 但是如何热迁移?
+  - shadow page table : 是从 GVA 到 HPA 中映射的压缩，GVA 到 HPA 因为持有 vmcs 中，然后软件来 page walk 来找到的
+
+### [ ] template 文件是做啥的？
+- 猜测是为了处理不同的 L1 guest 的软件的 page walk 的
+
+
+template 文件最终为了提供如下 hook
+```c
+static void paging64_init_context(struct kvm_mmu *context)
+{
+	context->page_fault = paging64_page_fault;
+	context->gva_to_gpa = paging64_gva_to_gpa;
+	context->sync_page = paging64_sync_page;
+	context->invlpg = paging64_invlpg;
+}
+```
+
+- kvm_init_shadow_ept_mmu : ept_page_fault
+
+```txt
+@[
+    ept_page_fault+5
+    kvm_mmu_page_fault+935
+    vmx_handle_exit+374
+    kvm_arch_vcpu_ioctl_run+3286
+    kvm_vcpu_ioctl+629
+    __x64_sys_ioctl+139
+    do_syscall_64+60
+    entry_SYSCALL_64_after_hwframe+114
+]: 19411
+```
+- [ ] 没想到居然是 ept_page_fault 啊，和 paging 64 是啥关系，中间没有任何时候调用
+
+```txt
+@[
+    kvm_init_shadow_ept_mmu+5
+    prepare_vmcs02.constprop.0+3599
+    nested_vmx_enter_non_root_mode+4489
+    nested_vmx_run+264
+    vmx_handle_exit+374
+    kvm_arch_vcpu_ioctl_run+3286
+    kvm_vcpu_ioctl+629
+    __x64_sys_ioctl+139
+    do_syscall_64+60
+    entry_SYSCALL_64_after_hwframe+114
+]: 1125613
+```
+
+## kvm_init_mmu
+```txt
+@[
+    kvm_init_mmu+5
+    nested_vmx_load_cr3+92
+    load_vmcs12_host_state+273
+    vmx_check_nested_events+678
+    kvm_check_and_inject_events+454
+    kvm_arch_vcpu_ioctl_run+2166
+    kvm_vcpu_ioctl+629
+    __x64_sys_ioctl+139
+    do_syscall_64+60
+    entry_SYSCALL_64_after_hwframe+114
+]: 2932
+@[
+    kvm_init_mmu+5
+    nested_vmx_load_cr3+92
+    load_vmcs12_host_state+273
+    vmx_check_nested_events+1064
+    kvm_check_and_inject_events+454
+    kvm_arch_vcpu_ioctl_run+2166
+    kvm_vcpu_ioctl+629
+    __x64_sys_ioctl+139
+    do_syscall_64+60
+    entry_SYSCALL_64_after_hwframe+114
+]: 10099
+@[
+    kvm_init_mmu+5
+    nested_vmx_load_cr3+92
+    load_vmcs12_host_state+273
+    nested_ept_inject_page_fault+84
+    ept_page_fault+582
+    kvm_mmu_page_fault+935
+    vmx_handle_exit+374
+    kvm_arch_vcpu_ioctl_run+3286
+    kvm_vcpu_ioctl+629
+    __x64_sys_ioctl+139
+    do_syscall_64+60
+    entry_SYSCALL_64_after_hwframe+114
+]: 223463
+@[
+    kvm_init_mmu+5
+    nested_vmx_load_cr3+92
+    load_vmcs12_host_state+273
+    nested_vmx_reflect_vmexit+580
+    vmx_handle_exit+193
+    kvm_arch_vcpu_ioctl_run+3286
+    kvm_vcpu_ioctl+629
+    __x64_sys_ioctl+139
+    do_syscall_64+60
+    entry_SYSCALL_64_after_hwframe+114
+]: 1060892
+@[
+    kvm_init_mmu+5
+    nested_vmx_load_cr3+92
+    prepare_vmcs02.constprop.0+746
+    nested_vmx_enter_non_root_mode+4489
+    nested_vmx_run+264
+    vmx_handle_exit+374
+    kvm_arch_vcpu_ioctl_run+3286
+    kvm_vcpu_ioctl+629
+    __x64_sys_ioctl+139
+    do_syscall_64+60
+    entry_SYSCALL_64_after_hwframe+114
+]: 1297386
+```
+
+### 找到一个 shadow page fault 的过程
+- kvm_mmu_do_page_fault
+  - kvm_tdp_page_fault
+  - `vcpu->arch.mmu->page_fault(vcpu, &fault);`
+
+### 找到一个 shadow page table 被清理的过程
+
+## 到底启用了 rmap 没有
+应该是在 guest 中是否使用嵌套虚拟化会导致是否分配这些内存
+
+- kvm_memslots_have_rmaps
+
+```c
+static inline bool kvm_memslots_have_rmaps(struct kvm *kvm)
+{
+	return !tdp_mmu_enabled || kvm_shadow_root_allocated(kvm);
+}
+```
+
+## 分析嵌套虚拟化如何影响 Guest 实现的
+```txt
+@[
+    kvm_mmu_load+5
+    kvm_arch_vcpu_ioctl_run+4482
+    kvm_vcpu_ioctl+629
+    __x64_sys_ioctl+139
+    do_syscall_64+60
+    entry_SYSCALL_64_after_hwframe+114
+]: 50973
+```
+在 kvm_mmu_load 取决于 `vcpu->arch.mmu->root_role.direct`
+- mmu_alloc_direct_roots
+- mmu_alloc_shadow_roots
+
+## [ ] 嵌套虚拟化如何处理中断的

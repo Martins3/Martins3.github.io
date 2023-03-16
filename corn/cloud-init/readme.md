@@ -74,3 +74,22 @@ sudo grubby --update-kernel=ALL --args="nokaslr console=ttyS0,9600 earlyprink=se
 ### 删除 guest 密码
 
 ### guest 中 oh-my-zsh 的基本命令
+
+## 自动启动嵌套虚拟化
+```c
+function share() {
+	cat <<'EOF' >/etc/systemd/system/nested.service
+[Unit]
+Description=nested virtualization setup
+
+[Service]
+Type=oneshot
+ExecStart=/root/core/vn/docs/qemu/sh/alpine.sh
+
+[Install]
+WantedBy=getty.target
+EOF
+
+systemctl enable nested
+}
+```

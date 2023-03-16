@@ -3,7 +3,7 @@ set -E -e -u -o pipefail
 
 # @todo 用 https://github.com/charmbracelet/gum 来重写这个项目
 use_nvme_as_root=false # @todo nvme 的这个事情走通一下
-replace_kernel=false
+replace_kernel=true
 
 hacking_memory="hotplug"
 hacking_memory="virtio-pmem"
@@ -48,8 +48,11 @@ virtiofsd=${qemu_dir}/build/tools/virtiofsd/virtiofsd
 kernel=${kernel_dir}/arch/x86/boot/bzImage
 
 in_guest=false
-if grep hypervisor /proc/cpuinfo ;then
+if grep hypervisor /proc/cpuinfo >/dev/null; then
   in_guest=true
+  replace_kernel=false
+  # @todo 需要让 guest 中安装的 kernel
+  workstation="/root/hack/vm"
 fi
 
 distribution=openEuler-22.09-x86_64-dvd
@@ -61,7 +64,7 @@ distribution=openEuler-22.09-x86_64-dvd
 # @todo fedora 内核只能在 centos 上，不能在 oe 上安装，因为 linux-install 这个包的原因
 # https://kojipkgs.fedoraproject.org/packages/kernel/4.19.16/200.fc28/
 
-if [[ $in_guest == true ]];then
+if [[ $in_guest == true ]]; then
   distribution=CentOS-7-x86_64-DVD-2207-02
 fi
 
@@ -144,8 +147,13 @@ arg_mem_balloon=""
 
 arg_cpu_model="-cpu Skylake-Client-IBRS,hle=off,rtm=off"
 # @todo 如果 see=off 或者 see2=off ，系统直接无法启动
-arg_cpu_model="-cpu Skylake-Client-IBRS,hle=off,rtm=off,sse4_2=off,sse4_1=off,ssse3=off,sep=off"
-arg_cpu_model="-cpu host"
+# arg_cpu_model="-cpu Skylake-Client-IBRS,hle=off,rtm=off,sse4_2=off,sse4_1=off,ssse3=off,sep=off"
+# arg_cpu_model="-cpu host"
+arg_cpu_model="-cpu Skylake-Client-IBRS,vmx=on,hle=off,rtm=off"
+
+if [[ $in_guest == true ]]; then
+  arg_cpu_model="$arg_cpu_model,vmx=off"
+fi
 
 case $hacking_memory in
 "none")
@@ -257,9 +265,15 @@ arg_sata="$arg_sata -drive file=${workstation}/img5,media=disk,format=raw"
 
 # @todo 尝试一下这个
 # -netdev tap,id=nd0,ifname=tap0 -device e1000,netdev=nd0
+# arg_network="-netdev user,id=net1,hostfwd=tcp::$guest_port-:22 -device e1000e,netdev=net1"
+# arg_network="-netdev user,id=net1,$arg_fwd -device virtio-net-pci,netdev=net1,romfile=/home/martins3/core/zsh/README.md" # 替代 romfile
 # @todo 做成一个计数器吧，自动增加访问的接口
-arg_network="-netdev user,id=net1,hostfwd=tcp::$guest_port-:22 -device e1000e,netdev=net1"
-# arg_network="-netdev user,id=net1,hostfwd=tcp::$guest_port-:22 -device virtio-net-pci,netdev=net1,romfile=/home/martins3/core/zsh/README.md"
+arg_fwd="hostfwd=tcp::5556-:22"
+if [[ $in_guest == false ]]; then
+  arg_fwd="hostfwd=tcp::$guest_port-:22"     # @todo 最好是 guest 和 host 都是相同内容
+  arg_fwd="$arg_fwd,hostfwd=tcp::5900-:5900" # 为了让 guest 中 vnc 穿透出来
+fi
+arg_network="-netdev user,id=net1,$arg_fwd -device virtio-net-pci,netdev=net1"
 
 arg_qmp="-qmp tcp:localhost:$qmp_port,server,wait=off"
 if [[ $qmp_shell == true ]]; then
@@ -325,7 +339,7 @@ while getopts "abcdhkmpqst" opt; do
     ;;
   b)
     # 可以带上虚拟机唯一标识
-    if [[ ! -d /sys/fs/cgroup/mem ]];then
+    if [[ ! -d /sys/fs/cgroup/mem ]]; then
       sudo cgcreate -g memory:mem
       sudo cgset -r memory.max=4G mem
     fi
@@ -350,7 +364,7 @@ while getopts "abcdhkmpqst" opt; do
   t)
     arg_machine="--accel tcg,thread=single"
     arg_mem_cpu="-m 8G" # cpu 数量最好还是 1，内存需要指定一下，不然就
-    arg_cpu_model="" # cpu model 不能支持 host 了
+    arg_cpu_model=""    # cpu model 不能支持 host 了
     ;;
   h) show_help ;;
   m)
@@ -421,22 +435,32 @@ if [ $launch_gdb = true ]; then
   exit 0
 fi
 
-if [[ ${minimal} = true ]]; then
+# @todo 现在编译的 qemu 存在这个问题
+# (qemu) qemu-system-x86_64: -vnc :0,password=on: Cipher backend does not support DES algorithm
+if [[ $in_guest == true ]]; then
   arg_monitor="-vnc :0,password=on -monitor stdio"
+  qemu="qemu-system-x86_64"
+fi
+
+if [[ ${minimal} = true ]]; then
+  arg_monitor="-vnc :0 -monitor stdio"
   # arg_monitor="-nographic"
-  arg_monitor="-monitor stdio"
+  # arg_monitor="-monitor stdio"
+  # arg_monitor="-serial mon:stdio -display none"
   ${qemu} \
-    -cpu SandyBridge,vmx=on \
+    $arg_cpu_model \
     $arg_img \
     -enable-kvm \
     -m 2G \
-    -smp 2 $arg_monitor $arg_network
+    -smp 2 $arg_monitor
+  # @todo 不知道为什么 guest 中不能携带 arg_network 了
   exit 0
 fi
 
 if [[ ${replace_kernel} == false ]]; then
   arg_kernel=""
   arg_initrd=""
+  # @todo 如果使用 stdio 作为 minitor ，那么 grub 是不是没有办法选择了
   arg_monitor="-monitor stdio"
 
   # @todo 不知道为什么需要将无关的 storage 设备都去掉，才可以正确启动

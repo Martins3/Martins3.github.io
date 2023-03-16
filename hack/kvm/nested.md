@@ -16,7 +16,6 @@ Operating system hypervisors (Linux/KVM, WinXP mode in newer versions of Windows
 [Improving KVM nVMX](https://www.linux-kvm.org/images/8/8e/Improving_KVM_nVMX.pdf)
 
 - [ ] eVMCS 是做什么的 ?
-- [ ] vmcs02 如何同步到 vmcs01 ?
 - [ ] 那些 vmexit 让 L0 处理，那些让 L1 处理 ?
     - [ ] 是靠 inject 一个 vmexit 信号过去吗 ?
     - [ ] 如果 Emulate L2→L1
@@ -34,7 +33,7 @@ Basic KVM event-injection
 - [ ] event injection 的模拟 : 在没有 nested 的时候，需要靠 event injection 告知
   - [ ] kvm_inject_page_fault : 居然存在 async page fault
       - [ ] kvm_queue_exception_e
-        - [ ] kvm_multiple_exception 
+        - [ ] kvm_multiple_exception
           - [ ] kvm_make_request : **各种地方调用 : step 1**
   - [ ] vcpu_enter_guest **在此处检查 : step 2**
     - [ ] kvm_check_request && inject_pending_event
@@ -126,7 +125,7 @@ static struct kvm_x86_ops vmx_x86_ops __initdata = {
 - [ ] 对比一下 struct vmcs 和 struct vmcs12 的内容
 
 - [ ] check shadow vmcs 的工作方法 ?
-    - copy_shadow_to_vmcs12 : 有些是 writable 的, 
+    - copy_shadow_to_vmcs12 : 有些是 writable 的,
     - [ ] 所以，shadow 和 enlightened vmcs 的并行的两种方法吗?
 
 - [ ] enlightened_vmcs_enabled : nested_enable_evmcs() 中间调用
@@ -150,7 +149,7 @@ static struct kvm_x86_ops vmx_x86_ops __initdata = {
 - [ ] nested_vmx_vmexit : 显然不存在 VMEXIT 指令，只是当 L1 执行各种 vmx 指令的时候, 需要进行模拟
   - 想要达到的效果，L1 意味自己靠 vmlaunch 维持了 L2 的运行(其 ept, vmcs 之类的)，其实这些事情 L0 给 L1 模拟的
   - [ ] 为什么类似于 ept violation 不需要调用 nested_vmx_vmexit
-  - [ ] sync_vmcs02_to_vmcs12 : 
+  - [ ] sync_vmcs02_to_vmcs12 :
   - [ ] prepare_vmcs12 : Note that we do not have to copy here all VMCS fields, just those that could have changed by the L2 guest or the exit - i.e.,
   - [ ] vmx_switch_vmcs : *迷惑*
 
@@ -174,7 +173,7 @@ void nested_vmx_vmexit(struct kvm_vcpu *vcpu, u32 vm_exit_reason,
   - [ ] vmx_check_nested_events
 
 
-- [x] vmx_get_nested_state : ioctl [KVM_GET_NESTED_STATE](https://www.kernel.org/doc/html/latest/virt/kvm/api.html#kvm-get-nested-state) 直接到达此处 
+- [x] vmx_get_nested_state : ioctl [KVM_GET_NESTED_STATE](https://www.kernel.org/doc/html/latest/virt/kvm/api.html#kvm-get-nested-state) 直接到达此处
   - sync_vmcs02_to_vmcs12 && sync_vmcs02_to_vmcs12_rare : 拷贝到 vmcs12 中间
   - get_shadow_vmcs12(vcpu) : 拷贝到 shadow_vmcs12 中间
   - [ ] 所以 shadow 和 vmcs02 到底是什么关系 ?
@@ -246,9 +245,27 @@ huxueshi : 其实我不是很懂，机制是 event deliver 的时候出现 vmexi
 
 ## 等待处理的文档
 https://www.usenix.org/conference/osdi10/turtles-project-design-and-implementation-nested-virtualization
-
-# TODO
 https://archive.fosdem.org/2018/schedule/event/vai_kvm_on_hyperv/attachments/slides/2200/export/events/attachments/vai_kvm_on_hyperv/slides/2200/slides_fosdem2018_vkuznets.pdf
 https://archive.fosdem.org/2019/schedule/event/vai_enlightening_kvm/attachments/slides/2860/export/events/attachments/vai_enlightening_kvm/slides/2860/vkuznets_fosdem2019_enlightening_kvm.pdf
 
-[^1]: https://www.linux-kvm.org/images/8/8e/Improving_KVM_nVMX.pdf
+## 是如何处理 vmcs 的
+- prepare_vmcs12 : L1 给 L2 准备的
+- sync_vmcs02_to_vmcs12 :
+- prepare_vmcs02 : L0 给 L2 准备
+
+当 vmexit 的时候，需要将 vmcs02 同步到 vmcs12 中:
+```txt
+@[
+    sync_vmcs02_to_vmcs12+1
+    nested_vmx_vmexit+245
+    nested_vmx_reflect_vmexit+580
+    vmx_handle_exit+193
+    kvm_arch_vcpu_ioctl_run+3286
+    kvm_vcpu_ioctl+629
+    __x64_sys_ioctl+139
+    do_syscall_64+60
+    entry_SYSCALL_64_after_hwframe+114
+]: 1255147
+```
+
+- [ ] vmcs02 如何同步到 vmcs01 ? 找到具体的那个写动作
