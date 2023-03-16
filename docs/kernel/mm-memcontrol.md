@@ -435,7 +435,7 @@ Legacy consumer-oriented counters
 soft_limit_excess : 简单的比较两个数值
 
 ## events
-![](../../kernel/plka/img/source//mem_cgroup_update_tree.png)
+![](../../kernel/plka/img/source/mem_cgroup_update_tree.png)
 
 ```c
 /*

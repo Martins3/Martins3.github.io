@@ -150,6 +150,9 @@ static void dump_header(struct oom_control *oc, struct task_struct *p)
 - https://github.com/rfjakob/earlyoom
 
 没有什么特别惊艳的技术，就是周期性的扫描内核中的一些指标，oomd 比 earlyoom 观测的内容更多。
+- psi
+- memory.evetns
+- cgroup.events : populated
 
 ## oom score
 - /proc/$pid/oom_score_adj 可以设置-1000 到 1000，当设置为-1000 时表示不会被 oom killer 选中

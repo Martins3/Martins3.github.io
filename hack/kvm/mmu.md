@@ -1944,3 +1944,25 @@ static int FNAME(fetch)(struct kvm_vcpu *vcpu, gpa_t addr,
     entry_SYSCALL_64_after_hwframe+99
 ]: 1868
 ```
+## 我们到底会为 memory region 分配什么东西
+- kvm_arch_prepare_memory_region
+  - kvm_alloc_memslot_metadata
+    - `__kvm_mmu_slot_lpages` : 似乎是为了处理大页的场景
+    - kvm_page_track_create_memslot
+
+kvm_page_track_create_memslot 创建的内容和 kvm_memory_slot::dirty_bitmap 关系是啥？
+
+- [ ] 为什么每一个页面需要分配两次？
+
+## 有没有办法让打开 spte ?
+
+## 读读这个文档吧 : https://www.kernel.org/doc/Documentation/virtual/kvm/mmu.txt
+
+## 嵌套虚拟化必须使用 spte 吗？
+
+### [Nested EPT to Make Nested VMX Faster](https://www.linux-kvm.org/images/8/8c/Kvm-forum-2013-nested-ept.pdf)
+
+- shadow paging code is a template
+- All differences are template parameters
+- Template code is compiled for each paging mode
+- `vcpu->mmu` is initialized according to current guest mode

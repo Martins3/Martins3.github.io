@@ -365,6 +365,8 @@ mce [-b] cpu bank status mcgstatus addr misc -- inject a MCE on the given CPU [a
 
 但是在 kvm 模式下，没有任何的反应。
 
+以上命令在 tcg 中也是没有任何反应的。
+
 ### [ ]  mce-test/cases/function/kvm/README
 - mce 的测试: https://git.kernel.org/pub/scm/utils/cpu/mce/mce-test.git
 

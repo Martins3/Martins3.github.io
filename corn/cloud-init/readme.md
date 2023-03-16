@@ -65,3 +65,12 @@ sudo apt install dpkg-dev rsync kmod cpio
 ### 实际上，我们发现，只要是
 1. make defconfig kvm_guest.config 几乎任何内核都可以拉起来的
 2. 就是编译的内核有点大，不知道为什么。
+
+## 需求
+### 使用 grubby 自动切换内核，修改 kernel cmdline
+```sh
+sudo grubby --update-kernel=ALL --args="nokaslr console=ttyS0,9600 earlyprink=serial"
+```
+### 删除 guest 密码
+
+### guest 中 oh-my-zsh 的基本命令

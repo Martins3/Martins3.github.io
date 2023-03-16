@@ -47,13 +47,23 @@ qemu=${qemu_dir}/build/x86_64-softmmu/qemu-system-x86_64
 virtiofsd=${qemu_dir}/build/tools/virtiofsd/virtiofsd
 kernel=${kernel_dir}/arch/x86/boot/bzImage
 
+in_guest=false
+if grep hypervisor /proc/cpuinfo ;then
+  in_guest=true
+fi
+
 distribution=openEuler-22.09-x86_64-dvd
 # distribution=openEuler-20.03-LTS-SP3-x86_64-dvd
 # distribution=CentOS-7-x86_64-DVD-2207-02
 # distribution=ubuntu-22.04.1-live-server-amd64
+# distribution=ubuntu2204
 #
 # @todo fedora 内核只能在 centos 上，不能在 oe 上安装，因为 linux-install 这个包的原因
 # https://kojipkgs.fedoraproject.org/packages/kernel/4.19.16/200.fc28/
+
+if [[ $in_guest == true ]];then
+  distribution=CentOS-7-x86_64-DVD-2207-02
+fi
 
 cgroup_limit=""
 
@@ -139,7 +149,7 @@ arg_cpu_model="-cpu host"
 
 case $hacking_memory in
 "none")
-  ramsize=4G
+  ramsize=44G
   arg_mem_cpu="-smp $(($(getconf _NPROCESSORS_ONLN) - 1))"
   arg_mem_cpu="$arg_mem_cpu -object memory-backend-ram,id=pc.ram,size=$ramsize,prealloc=off,share=off -machine memory-backend=pc.ram -m $ramsize"
   ;;
@@ -249,7 +259,7 @@ arg_sata="$arg_sata -drive file=${workstation}/img5,media=disk,format=raw"
 # -netdev tap,id=nd0,ifname=tap0 -device e1000,netdev=nd0
 # @todo 做成一个计数器吧，自动增加访问的接口
 arg_network="-netdev user,id=net1,hostfwd=tcp::$guest_port-:22 -device e1000e,netdev=net1"
-arg_network="-netdev user,id=net1,hostfwd=tcp::$guest_port-:22 -device virtio-net-pci,netdev=net1,romfile=/home/martins3/core/zsh/README.md"
+# arg_network="-netdev user,id=net1,hostfwd=tcp::$guest_port-:22 -device virtio-net-pci,netdev=net1,romfile=/home/martins3/core/zsh/README.md"
 
 arg_qmp="-qmp tcp:localhost:$qmp_port,server,wait=off"
 if [[ $qmp_shell == true ]]; then

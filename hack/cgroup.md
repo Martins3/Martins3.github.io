@@ -35,6 +35,7 @@
 * [v1 特别关注](#v1-特别关注)
   * [[ ] 这两个是什么区别](#-这两个是什么区别)
 * [[ ] 实际上，cgroup 的热迁移是默认不迁移内存的](#-实际上cgroup-的热迁移是默认不迁移内存的)
+* [cgroup.events](#cgroupevents)
 * [reference](#reference)
 
 <!-- vim-markdown-toc -->
@@ -1082,6 +1083,13 @@ cgclassify -g subsystems:path_to_cgroup pidlist
 ## [ ] 实际上，cgroup 的热迁移是默认不迁移内存的
 - https://docs.kernel.org/admin-guide/cgroup-v1/memory.html#move-charges-at-task-migration
 
+## cgroup.events
+```txt
+populated 0
+frozen 0
+```
+1. populated : 描述一个 cgroup 中是否存在进程
+2. frozen : @todo
 
 ## reference
 [^1]: v1 https://www.kernel.org/doc/html/latest/admin-guide/cgroup-v1/index.html

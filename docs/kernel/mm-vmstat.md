@@ -42,11 +42,13 @@ Swap:           2104          39        2065
 Mem:            7962        7592         316           1          53         154
 Swap:           2104         126        1978
 ```
-## proc/pid/smaps
+## /proc/pid/smaps
 
 - 和 proc/pid/maps 的有啥区别？
 
-## proc/pid/numa_maps
+## /proc/pid/status
+
+## /proc/pid/numa_maps
 
 代码:
 ```c
@@ -818,3 +820,26 @@ pgscan_file 13860263
 pgsteal_anon 1025690
 pgsteal_file 13649446
 ```
+
+### memory.events
+
+统计内容如下:
+```c
+enum memcg_memory_event {
+	MEMCG_LOW,
+	MEMCG_HIGH,
+	MEMCG_MAX,
+	MEMCG_OOM,
+	MEMCG_OOM_KILL,
+	MEMCG_OOM_GROUP_KILL,
+	MEMCG_SWAP_HIGH,
+	MEMCG_SWAP_MAX,
+	MEMCG_SWAP_FAIL,
+	MEMCG_NR_MEMORY_EVENTS,
+};
+```
+- MEMCG_LOW shrink_node_memcgs
+- MEMCG_HIGH reclaim_high
+- MEMCG_MAX try_charge_memcg : 将要超过数值
+
+- 具体的参考这里: https://facebookmicrosites.github.io/cgroup2/docs/memory-controller.html

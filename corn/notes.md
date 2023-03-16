@@ -50,10 +50,6 @@ journalctl -u systemd-udevd.service
 
 ## dracut 的源码可以分析下，主要是 dracut install 中，还是非常简单的
 
-## 使用 grubby 自动切换内核，修改 kernel cmdline，从而
-- 对于所有的内核增加 nokaslr nokaslr console=ttyS0,9600 earlyprink=serial
-- 当然调查清楚，如何让各种 distribution 内核是否可以 -kernel 也是很不错的
-
 ## 能否让 ci 运行在 github ci 中？
 或者提交给 github，让本地的 ci 自动检测
 
@@ -68,3 +64,11 @@ journalctl -u systemd-udevd.service
 - oe20.04 的网卡无法自动打开
 
 将 /etc/sysconfig/network-scripts/enp1s0 中的 onboot 修改为 yes
+
+## 嵌套虚拟机化的支持
+- 继续使用 oe 来测试
+- 使用 Guest 自动登录的为 tmux 的方法
+- 自动备份机制
+  - 真的需要使用逐个字节拷贝的方式吗？qemu 存在什么好的机制来辅助吗？
+
+### 测试嵌套虚拟化的性能问题
