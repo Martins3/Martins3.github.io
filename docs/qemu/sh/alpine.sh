@@ -157,7 +157,7 @@ fi
 
 case $hacking_memory in
 "none")
-  ramsize=44G
+  ramsize=40G
   arg_mem_cpu="-smp $(($(getconf _NPROCESSORS_ONLN) - 1))"
   arg_mem_cpu="$arg_mem_cpu -object memory-backend-ram,id=pc.ram,size=$ramsize,prealloc=off,share=off -machine memory-backend=pc.ram -m $ramsize"
   ;;
@@ -338,10 +338,10 @@ while getopts "abcdhkmpqst" opt; do
     arg_migration_target="-incoming tcp:0:4000"
     ;;
   b)
-    # 可以带上虚拟机唯一标识
+    # 可以带上虚拟机唯一标识，而不是使用 mem
     if [[ ! -d /sys/fs/cgroup/mem ]]; then
       sudo cgcreate -g memory:mem
-      sudo cgset -r memory.max=4G mem
+      sudo cgset -r memory.max=10G mem
     fi
     cgroup_limit="sudo cgexec -g memory:mem"
     ;;

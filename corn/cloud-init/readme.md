@@ -93,3 +93,5 @@ EOF
 systemctl enable nested
 }
 ```
+
+## 增加 edk2 的环境搭建

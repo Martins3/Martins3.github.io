@@ -23,7 +23,7 @@ case $version in
   arg_win11="-chardev socket,id=chrtpm,path=/tmp/emulated_tpm/swtpm-sock -tpmdev emulator,id=tpm0,chardev=chrtpm -device tpm-tis,tpmdev=tpm0"
   # 关于 secure boot : https://wiki.debian.org/SecureBoot/VirtualMachine
   # swtpm socket --tpmstate dir=/tmp/emulated_tpm --ctrl type=unixio,path=/tmp/emulated_tpm/swtpm-sock --log level=20 --tpm2
-  # nixos 不行，直接下载一个就可以了: http://mirror.centos.org/centos/8-stream/AppStream/x86_64/os/Packages/
+  # nixos 的不行，直接下载一个就可以了: http://mirror.centos.org/centos/8-stream/AppStream/x86_64/os/Packages/
   # arg_win11="$arg_win11 -machine q35,smm=on"
   arg_win11="$arg_win11 -global driver=cfi.pflash01,property=secure,value=on -drive if=pflash,format=raw,unit=0,file=/home/martins3/hack/vm/ovmf/usr/share/edk2/ovmf/OVMF_CODE.secboot.fd,readonly=on -drive if=pflash,format=raw,unit=1,file=/home/martins3/hack/vm/ovmf/usr/share/edk2/ovmf/OVMF_VARS.secboot.fd"
   ;;

@@ -2,44 +2,28 @@
 
 <!-- vim-markdown-toc GitLab -->
 
-  * [basic](#basic)
-  * [init](#init)
-    * [type_init](#type_init)
-    * [init static part](#init-static-part)
-    * [init Non-static part](#init-non-static-part)
-  * [cast](#cast)
-  * [property](#property)
-    * [Non-object](#non-object)
-    * [QOM composition tree](#qom-composition-tree)
-      * [child](#child)
-      * [link](#link)
-    * [alias](#alias)
-    * [GlobalProperty](#globalproperty)
-    * [struct Property](#struct-property)
-  * [qdev](#qdev)
-    * [realize](#realize)
-    * [qtree](#qtree)
-  * [QOM in action](#qom-in-action)
-    * [cpu type](#cpu-type)
-    * [qdev realize](#qdev-realize)
-  * [misc](#misc)
-* [0  x86_cpu_set_bit_prop (obj=0x5555569523c0, v=0x5555569597a0, name=0x555556946c50 "vmx", opaque=0x5555566a0ed0, errp=0x7fffffff0d00) at ../target/i3](#0-x86_cpu_set_bit_prop-obj0x5555569523c0-v0x5555569597a0-name0x555556946c50-vmx-opaque0x5555566a0ed0-errp0x7fffffff0d00-at-targeti3)
-* [1  0x0000555555c3b904 in object_property_set (obj=obj@entry=0x5555569523c0, name=name@entry=0x555556946c50 "vmx", v=v@entry=0x5555569597a0, errp=errp](#1-0x0000555555c3b904-in-object_property_set-objobjentry0x5555569523c0-namenameentry0x555556946c50-vmx-vventry0x5555569597a0-errperrp)
-* [2  0x0000555555c3bc33 in object_property_parse (errp=0x7fffffff0d00, string=<optimized out>, name=0x555556946c50 "vmx", obj=0x5555569523c0) at ../qom](#2-0x0000555555c3bc33-in-object_property_parse-errp0x7fffffff0d00-stringoptimized-out-name0x555556946c50-vmx-obj0x5555569523c0-at-qom)
-* [3  object_apply_global_props (obj=0x5555569523c0, props=0x55555685da00, errp=0x555556600c70 <error_fatal>) at ../qom/object.c:412](#3-object_apply_global_props-obj0x5555569523c0-props0x55555685da00-errp0x555556600c70-error_fatal-at-qomobjectc412)
-* [4  0x0000555555c3acf1 in object_post_init_with_type (ti=0x555556684170, obj=<optimized out>) at ../qom/object.c:384](#4-0x0000555555c3acf1-in-object_post_init_with_type-ti0x555556684170-objoptimized-out-at-qomobjectc384)
-* [5  object_initialize_with_type (obj=obj@entry=0x5555569523c0, size=size@entry=18928, type=type@entry=0x555556674120) at ../qom/object.c:520](#5-object_initialize_with_type-objobjentry0x5555569523c0-sizesizeentry18928-typetypeentry0x555556674120-at-qomobjectc520)
-* [6  0x0000555555c3ae79 in object_new_with_type (type=0x555556674120) at ../qom/object.c:739](#6-0x0000555555c3ae79-in-object_new_with_type-type0x555556674120-at-qomobjectc739)
-* [7  0x0000555555c3af19 in object_new (typename=<optimized out>) at ../qom/object.c:754](#7-0x0000555555c3af19-in-object_new-typenameoptimized-out-at-qomobjectc754)
-* [8  0x0000555555a93cd6 in x86_cpu_new (x86ms=<optimized out>, apic_id=0, errp=0x555556600c70 <error_fatal>) at ../hw/i386/x86.c:98](#8-0x0000555555a93cd6-in-x86_cpu_new-x86msoptimized-out-apic_id0-errp0x555556600c70-error_fatal-at-hwi386x86c98)
-* [9  0x0000555555a93e1a in x86_cpus_init (x86ms=x86ms@entry=0x5555568ce310, default_cpu_version=<optimized out>) at ../hw/i386/x86.c:149](#9-0x0000555555a93e1a-in-x86_cpus_init-x86msx86msentry0x5555568ce310-default_cpu_versionoptimized-out-at-hwi386x86c149)
-* [10 0x0000555555a9a6c5 in pc_init1 (machine=0x5555568ce310, pci_type=0x555555e811ee "i440FX", host_type=0x555555e8120d "i440FX-pcihost") at ../hw/i386](#10-0x0000555555a9a6c5-in-pc_init1-machine0x5555568ce310-pci_type0x555555e811ee-i440fx-host_type0x555555e8120d-i440fx-pcihost-at-hwi386)
-* [11 0x00005555558b2a6c in machine_run_board_init (machine=0x5555568ce310, mem_path=<optimized out>, errp=<optimized out>) at ../hw/core/machine.c:1404](#11-0x00005555558b2a6c-in-machine_run_board_init-machine0x5555568ce310-mem_pathoptimized-out-errpoptimized-out-at-hwcoremachinec1404)
-* [12 0x0000555555a066f6 in qemu_init_board () at ../softmmu/vl.c:2507](#12-0x0000555555a066f6-in-qemu_init_board-at-softmmuvlc2507)
-* [13 qmp_x_exit_preconfig (errp=<optimized out>) at ../softmmu/vl.c:2603](#13-qmp_x_exit_preconfig-errpoptimized-out-at-softmmuvlc2603)
-* [14 0x0000555555a0a29f in qmp_x_exit_preconfig (errp=<optimized out>) at ../softmmu/vl.c:2598](#14-0x0000555555a0a29f-in-qmp_x_exit_preconfig-errpoptimized-out-at-softmmuvlc2598)
-* [15 qemu_init (argc=<optimized out>, argv=<optimized out>) at ../softmmu/vl.c:3602](#15-qemu_init-argcoptimized-out-argvoptimized-out-at-softmmuvlc3602)
-* [16 0x0000555555836969 in main (argc=<optimized out>, argv=<optimized out>) at ../softmmu/main.c:47](#16-0x0000555555836969-in-main-argcoptimized-out-argvoptimized-out-at-softmmumainc47)
+* [basic](#basic)
+* [init](#init)
+  * [type_init](#type_init)
+  * [init static part](#init-static-part)
+  * [init Non-static part](#init-non-static-part)
+* [cast](#cast)
+* [property](#property)
+  * [Non-object](#non-object)
+  * [QOM composition tree](#qom-composition-tree)
+    * [child](#child)
+    * [link](#link)
+  * [alias](#alias)
+  * [GlobalProperty](#globalproperty)
+  * [struct Property](#struct-property)
+* [qdev](#qdev)
+  * [realize](#realize)
+  * [qtree](#qtree)
+* [QOM in action](#qom-in-action)
+  * [cpu type](#cpu-type)
+  * [qdev realize](#qdev-realize)
+* [misc](#misc)
+* [todo](#todo)
 
 <!-- vim-markdown-toc -->
 因为 QEMU 整个项目是 C 语言写的，但是 QEMU 处理的对象例如主板，CPU, 总线，外设实际上存在很多继承的关系。
@@ -857,12 +841,10 @@ device_set_realized 除了调用 DeviceClass::realize 的这个 hook 之外，�
 - 注意区分 QObject 和 Object，前者是放到 QList 之类 visitor 数据类型中的
 - 通过 InterfaceClass QEMU 可以模拟 interface，具体例子参考 HotplugHandlerClass
 
-<!--
-
-@todo -cpu host,vmx=off 分析下 vmx=off 是如何实现的
-
-分析下这个 backtrace ！
-
+## todo
+- -cpu host,vmx=off 分析下 vmx=off 是如何实现的
+- 分析下这个 backtrace 如何理解
+```txt
 #0  x86_cpu_set_bit_prop (obj=0x5555569523c0, v=0x5555569597a0, name=0x555556946c50 "vmx", opaque=0x5555566a0ed0, errp=0x7fffffff0d00) at ../target/i3
 86/cpu.c:6680
 #1  0x0000555555c3b904 in object_property_set (obj=obj@entry=0x5555569523c0, name=name@entry=0x555556946c50 "vmx", v=v@entry=0x5555569597a0, errp=errp
@@ -884,7 +866,13 @@ device_set_realized 除了调用 DeviceClass::realize 的这个 hook 之外，�
 #14 0x0000555555a0a29f in qmp_x_exit_preconfig (errp=<optimized out>) at ../softmmu/vl.c:2598
 #15 qemu_init (argc=<optimized out>, argv=<optimized out>) at ../softmmu/vl.c:3602
 #16 0x0000555555836969 in main (argc=<optimized out>, argv=<optimized out>) at ../softmmu/main.c:47
--->
+```
+- 如何通过命令行设置 class property
+```txt
+    object_class_property_add(oc, X86_MACHINE_SMM, "OnOffAuto",
+        x86_machine_get_smm, x86_machine_set_smm,
+        NULL, NULL);
+```
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

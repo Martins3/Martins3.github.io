@@ -1956,7 +1956,7 @@ static int FNAME(fetch)(struct kvm_vcpu *vcpu, gpa_t addr,
 
 - [ ] 为什么每一个页面需要分配两次？
 
-## rmap 是如何用上的
+## rmap : 从 gfn 到
 - memslot_rmap_alloc : 会给每一个 node 分配
 ```c
     memslot_rmap_alloc+5
@@ -1971,6 +1971,21 @@ static int FNAME(fetch)(struct kvm_vcpu *vcpu, gpa_t addr,
   - mmu_first_shadow_root_alloc
     - mmu_alloc_shadow_roots
       - memslot_rmap_alloc
+
+### rmap 的销毁
+- kvm_unmap_gfn_range
+
+rmap 是
+```c
+static struct kvm_rmap_head *gfn_to_rmap(gfn_t gfn, int level,
+					 const struct kvm_memory_slot *slot)
+{
+	unsigned long idx;
+
+	idx = gfn_to_index(gfn, slot->base_gfn, level);
+	return &slot->arch.rmap[level - PG_LEVEL_4K][idx];
+}
+```
 
 ### KVM_EXTERNAL_WRITE_TRACKING
 
@@ -2148,7 +2163,7 @@ static void paging64_init_context(struct kvm_mmu *context)
 
 ### 找到一个 shadow page table 被清理的过程
 
-## 到底启用了 rmap 没有
+## rmap 是否启动
 应该是在 guest 中是否使用嵌套虚拟化会导致是否分配这些内存
 
 - kvm_memslots_have_rmaps
@@ -2159,6 +2174,8 @@ static inline bool kvm_memslots_have_rmaps(struct kvm *kvm)
 	return !tdp_mmu_enabled || kvm_shadow_root_allocated(kvm);
 }
 ```
+如果不使用 rmap，如何在 swap 的时候怎么办？
+
 
 ## 分析嵌套虚拟化如何影响 Guest 实现的
 ```txt
