@@ -98,6 +98,12 @@ esac
 iso=${workstation}/${distribution}.iso
 disk_img=${workstation}/${distribution}.qcow2
 
+# dir=/nix/store/rlf9m7zzhdcsp4mv78jfi2f6scfcvbp7-nixos-disk-image
+# if [[ ! -f /tmp/nixos.qcow2 ]]; then
+#   install -m644 $dir/nixos.qcow2 /tmp/nixos.qcow2
+# fi
+# disk_img=/tmp/nixos.qcow2 # nixos
+
 mkdir -p /tmp/martins3-alpine
 arg_pdifile="-pidfile /tmp/martins3-alpine/qemu-pid"
 
@@ -110,6 +116,7 @@ arg_hacking=""
 arg_img="-drive aio=io_uring,file=${disk_img},format=qcow2,if=virtio"
 arg_img="-drive aio=native,cache.direct=on,file=${disk_img},format=qcow2,if=virtio"
 root=/dev/vdb2
+# root=/dev/vda2 # nixos
 
 arg_share_dir=""
 case $share_memory_option in
@@ -149,7 +156,7 @@ arg_cpu_model="-cpu Skylake-Client-IBRS,hle=off,rtm=off"
 # @todo 如果 see=off 或者 see2=off ，系统直接无法启动
 # arg_cpu_model="-cpu Skylake-Client-IBRS,hle=off,rtm=off,sse4_2=off,sse4_1=off,ssse3=off,sep=off"
 # arg_cpu_model="-cpu host"
-arg_cpu_model="-cpu Skylake-Client-IBRS,vmx=on,hle=off,rtm=off"
+arg_cpu_model="-cpu Skylake-Client-IBRS,hle=off,rtm=off"
 
 if [[ $in_guest == true ]]; then
   arg_cpu_model="$arg_cpu_model,vmx=off"
@@ -287,6 +294,7 @@ arg_monitor="-serial mon:stdio -display none"
 # @todo 才意识到，这个打开之后，在 kernel cmdline 中的 init=/bin/bash 是无效的
 # @todo 为什么配合 3.10 内核无法正常使用
 arg_initrd="-initrd /home/martins3/hack/vm/initramfs-6.1.0-rc7-00200-gc2bf05db6c78-dirty.img"
+arg_initrd=""
 # arg_initrd=""
 arg_trace="--trace 'memory_region_ops_read'" # 打开这个选项，输出内容很多
 arg_trace=""

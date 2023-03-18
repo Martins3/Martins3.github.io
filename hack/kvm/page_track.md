@@ -166,3 +166,9 @@ static bool is_obsolete_sp(struct kvm *kvm, struct kvm_mmu_page *sp)
            unlikely(sp->mmu_valid_gen != kvm->arch.mmu_valid_gen);
 }
 ```
+
+## 问题
+1. kvm_page_track_create_memslot
+2. kvm_page_track_write_tracking_alloc
+
+kvm_page_track_create_memslot

@@ -383,3 +383,24 @@ int kvm_emulate_hypercall(struct kvm_vcpu *vcpu)
 
 ## manual notes
 - Table C-1. Basic Exit Reasons
+
+## 如何理解这 macro KVM_ADDRESS_SPACE_NUM
+
+## 为什么需要 arch/x86/kvm/mmu/paging_tmpl.h 来处理各种情况
+- 当发生 shadow page table 的 exception 的时候，需要 page walk L1 guest
+
+## [ ] L1 和 L2 需要分别创建两个 vCPU 吗？
+
+## [ ] 分析下 kvm_mmu_page
+
+## [ ] 为什么需要这么多 cache
+```c
+/* Caches used when allocating a new shadow page. */
+struct shadow_page_caches {
+	struct kvm_mmu_memory_cache *page_header_cache;
+	struct kvm_mmu_memory_cache *shadow_page_cache;
+	struct kvm_mmu_memory_cache *shadowed_info_cache;
+};
+```
+
+## [ ] 哪里还是存在好多个 cache 的，只是统计 mmu 中的内存是没用的

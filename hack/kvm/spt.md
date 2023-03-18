@@ -354,4 +354,156 @@ pte_prefetch_gfn_to_pfn
 - 最后被 `__direct_map` 调用
 
 
-## TODO : shadow flood
+## shadow write flood
+- 相关函数:
+  - detect_write_flooding
+  - shadow_page_table_clear_flood
+  - clear_sp_write_flooding_count
+
+- kvm_mmu_pte_write
+  - mmu_pte_write_fetch_gpte
+  - for_each_gfn_valid_sp_with_gptes
+    * detect_write_misaligned
+    * detect_write_flooding
+    * kvm_mmu_prepare_zap_page : 如果发生如上的检测，处理掉
+    * get_written_sptes
+
+- 如果 guest 中发生了写操作，那么
+```txt
+@[
+    kvm_mmu_pte_write+5
+    kvm_page_track_write+107
+    write_emulate+63
+    emulator_read_write_onepage+266
+    emulator_read_write+202
+    x86_emulate_insn+2202
+    x86_emulate_instruction+824
+    vmx_handle_exit+374
+    kvm_arch_vcpu_ioctl_run+3286
+    kvm_vcpu_ioctl+629
+    __x64_sys_ioctl+139
+    do_syscall_64+60
+    entry_SYSCALL_64_after_hwframe+114
+]: 206
+@[
+    kvm_mmu_pte_write+5
+    kvm_page_track_write+107
+    write_emulate+63
+    emulator_read_write_onepage+266
+    emulator_read_write+202
+    x86_emulate_insn+2202
+    x86_emulate_instruction+824
+    kvm_arch_vcpu_ioctl_run+4080
+    kvm_vcpu_ioctl+629
+    __x64_sys_ioctl+139
+    do_syscall_64+60
+    entry_SYSCALL_64_after_hwframe+114
+]: 1011
+@[
+    kvm_mmu_pte_write+5
+    kvm_page_track_write+107
+    emulator_cmpxchg_emulated+472
+    writeback+323
+    x86_emulate_insn+2202
+    x86_emulate_instruction+824
+    vmx_handle_exit+374
+    kvm_arch_vcpu_ioctl_run+3286
+    kvm_vcpu_ioctl+629
+    __x64_sys_ioctl+139
+    do_syscall_64+60
+    entry_SYSCALL_64_after_hwframe+114
+]: 80000
+```
+
+## rmap 的维护是如何进行的
+
+## 所以 page_track 实际上是用来处理 write protect page 的
+目前注册的 kvm_page_track_write，所以很清楚了，就是通过 gfn track 来跟踪的
+
+```txt
+drivers/gpu/drm/i915/gvt/kvmgt.c
+109:static void kvmgt_page_track_write(struct kvm_vcpu *vcpu, gpa_t gpa,
+667:    vgpu->track_node.track_write = kvmgt_page_track_write;
+1607:static void kvmgt_page_track_write(struct kvm_vcpu *vcpu, gpa_t gpa,
+```
+
+- kvm_slot_page_track_remove_page
+- kvm_slot_page_track_add_page
+
+- 增加监控的时候:
+  -
+```txt
+@[
+    kvm_slot_page_track_add_page+5
+    __kvm_mmu_get_shadow_page+1275
+    mmu_alloc_root+157
+    kvm_mmu_load+1827
+    kvm_arch_vcpu_ioctl_run+4482
+    kvm_vcpu_ioctl+629
+    __x64_sys_ioctl+139
+    do_syscall_64+60
+    entry_SYSCALL_64_after_hwframe+114
+]: 7325
+@[
+    kvm_slot_page_track_add_page+5
+    __kvm_mmu_get_shadow_page+1275
+    kvm_mmu_get_child_sp+129
+    ept_page_fault+1040 <---- arch/x86/kvm/mmu/paging_tmpl.h 中生成的函数
+    kvm_mmu_page_fault+935
+    vmx_handle_exit+374
+    kvm_arch_vcpu_ioctl_run+3286
+    kvm_vcpu_ioctl+629
+    __x64_sys_ioctl+139
+    do_syscall_64+60
+    entry_SYSCALL_64_after_hwframe+114
+]: 18314
+```
+
+```c
+/*
+ * Page fault handler.  There are several causes for a page fault:
+ *   - there is no shadow pte for the guest pte
+ *   - write access through a shadow pte marked read only so that we can set
+ *     the dirty bit
+ *   - write access to a shadow pte marked read only so we can update the page
+ *     dirty bitmap, when userspace requests it
+ *   - mmio access; in this case we will never install a present shadow pte
+ *   - normal guest page fault due to the guest pte marked not present, not
+ *     writable, or not executable
+ *
+ *  Returns: 1 if we need to emulate the instruction, 0 otherwise, or
+ *           a negative value on error.
+ */
+static int FNAME(page_fault)(struct kvm_vcpu *vcpu, struct kvm_page_fault *fault)
+```
+
+- ept_page_fault
+  - ept_walk_addr : 尝试 page walk L1 guest
+  - kvm_faultin_pfn
+    - `__kvm_faultin_pfn`
+  - ept_fetch
+    - kvm_mmu_get_shadow_page
+      - `__kvm_mmu_get_shadow_page`
+        - kvm_mmu_find_shadow_page
+        - kvm_mmu_alloc_shadow_page
+          - account_shadowed
+            - kvm_slot_page_track_add_page : 将 shadow page 关联的 page 监控起来
+    - link_shadow_page
+
+- 我猜测， shadow page 是一一对应的，每一个 guest 的 page table 的页，都存在一个 host 的结构体来监控，
+这个结构体就是 kvm_mmu_page
+
+```c
+static bool sp_has_gptes(struct kvm_mmu_page *sp)
+{
+	if (sp->role.direct)
+		return false;
+
+	if (sp->role.passthrough)
+		return false;
+
+	return true;
+}
+```
+
+- [ ] 如果看 ept_page_fault 的参数 vcpu，这个到底是 L1 的 vcpu 还是 L2 的 vcpu 啊
