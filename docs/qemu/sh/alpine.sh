@@ -46,6 +46,7 @@ workstation="$(jq -r ".workstation" <"$configuration")"
 qemu=${qemu_dir}/build/x86_64-softmmu/qemu-system-x86_64
 virtiofsd=${qemu_dir}/build/tools/virtiofsd/virtiofsd
 kernel=${kernel_dir}/arch/x86/boot/bzImage
+# kernel="/nix/store/g4zdxdxj8sfbv08grmpahzajrm1gm4s8-linux-5.15.97/bzImage"
 
 in_guest=false
 if grep hypervisor /proc/cpuinfo >/dev/null; then
@@ -293,8 +294,8 @@ arg_monitor="-serial mon:stdio -display none"
 # @todo 原来这个选项不打开，内核无法启动啊
 # @todo 才意识到，这个打开之后，在 kernel cmdline 中的 init=/bin/bash 是无效的
 # @todo 为什么配合 3.10 内核无法正常使用
-arg_initrd="-initrd /home/martins3/hack/vm/initramfs-6.1.0-rc7-00200-gc2bf05db6c78-dirty.img"
-arg_initrd=""
+arg_initrd="-initrd /home/martins3/hack/vm/initramfs-6.3.0-rc2.img"
+# arg_initrd="-initrd /nix/store/kfaz0nv43qwyvj4s7c5ak4lgdyzdf51s-initrd/initrd" # nixos 的 initrd
 # arg_initrd=""
 arg_trace="--trace 'memory_region_ops_read'" # 打开这个选项，输出内容很多
 arg_trace=""

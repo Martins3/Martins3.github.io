@@ -108,7 +108,7 @@
   <!-- - 使用 flamegraph 来学习内核 -->
   <!-- - 使用 kcov 来学习内核 -->
   <!-- - 各种 fuzzer -->
-  <!-- - 各种 tlpi 学习内核 fuzzer -->
+  <!-- - 各种 tlpi 学习内核 -->
   <!-- - [使用 QEMU, FlameGraph 和 bpftrace 阅读内核](./kernel/tips-reading-kernel.md) -->
 - [tty 到底是什么](./kernel/tty.md)
 - [mknod](./kernel/mknod.md)
