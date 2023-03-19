@@ -404,3 +404,15 @@ struct shadow_page_caches {
 ```
 
 ## [ ] 哪里还是存在好多个 cache 的，只是统计 mmu 中的内存是没用的
+
+
+## [x] 用这个来判断当前执行的 vcpu 是如何控制的
+```c
+static inline bool is_guest_mode(struct kvm_vcpu *vcpu)
+{
+	return vcpu->arch.hflags & HF_GUEST_MASK;
+}
+```
+- enter_guest_mode : 这个函数进入的
+
+## [ ] handle_apic_access 居然从来没有人调用过

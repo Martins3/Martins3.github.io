@@ -156,7 +156,7 @@ arg_cpu_model="-cpu Skylake-Client-IBRS,hle=off,rtm=off"
 # @todo 如果 see=off 或者 see2=off ，系统直接无法启动
 # arg_cpu_model="-cpu Skylake-Client-IBRS,hle=off,rtm=off,sse4_2=off,sse4_1=off,ssse3=off,sep=off"
 # arg_cpu_model="-cpu host"
-arg_cpu_model="-cpu Skylake-Client-IBRS,hle=off,rtm=off"
+arg_cpu_model="-cpu Skylake-Client-IBRS,vmx=on,hle=off,rtm=off"
 
 if [[ $in_guest == true ]]; then
   arg_cpu_model="$arg_cpu_model,vmx=off"

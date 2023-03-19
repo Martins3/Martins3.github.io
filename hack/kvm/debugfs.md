@@ -1,3 +1,68 @@
+## 了解下 dbugfs 的中记录
+```txt
+blocking
+directed_yield_attempted
+directed_yield_successful
+exits
+fpu_reload
+guest_mode
+halt_attempted_poll
+halt_exits
+halt_poll_fail_hist
+halt_poll_fail_ns
+halt_poll_invalid
+halt_poll_success_hist
+halt_poll_success_ns
+halt_successful_poll
+halt_wait_hist
+halt_wait_ns
+halt_wakeup
+host_state_reload
+hypercalls
+insn_emulation
+insn_emulation_fail
+invlpg
+io_exits
+irq_exits
+irq_injections
+irq_window_exits
+l1d_flush
+max_mmu_page_hash_collisions
+max_mmu_rmap_size
+mmio_exits
+mmu_cache_miss
+mmu_flooded
+mmu_pde_zapped
+mmu_pte_write
+mmu_recycled
+mmu_shadow_zapped
+mmu_unsync
+nested_run
+nmi_injections
+nmi_window_exits
+notify_window_exits
+nx_lpage_splits
+pages_1g
+pages_2m
+pages_4k
+pf_emulate
+pf_fast
+pf_fixed
+pf_guest
+pf_mmio_spte_created
+pf_spurious
+pf_taken
+preemption_other
+preemption_reported
+remote_tlb_flush
+remote_tlb_flush_requests
+req_event
+request_irq_exits
+signal_exits
+tlb_flush
+```
+- [ ] 而且还存在一个函数 KVM_GET_STATS_FD
+
 # kvm_stat
 
 ## 基本的使用
@@ -158,5 +223,3 @@ ExecStart=/usr/bin/kvm_stat -dtcz -s 10 -L /var/log/kvm_stat.csv
 ```
 
 ### 如果是从 tracepoints 获取，会导致和 kernel 版本关联吗?
-
-### 如何最小化 kvm_stat 的影响
