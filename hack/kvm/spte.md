@@ -507,3 +507,21 @@ static bool sp_has_gptes(struct kvm_mmu_page *sp)
 ```
 
 - [ ] 如果看 ept_page_fault 的参数 vcpu，这个到底是 L1 的 vcpu 还是 L2 的 vcpu 啊
+
+## kvm_is_mmio_pfn 是做啥的
+
+初始化 spte 的 flags ，如果是 mmio，其 cache 策略不同。
+```txt
+@[
+    make_spte+5
+    mmu_set_spte+217
+    ept_page_fault+1602
+    kvm_mmu_page_fault+935
+    vmx_handle_exit+374
+    kvm_arch_vcpu_ioctl_run+3286
+    kvm_vcpu_ioctl+629
+    __x64_sys_ioctl+139
+    do_syscall_64+60
+    entry_SYSCALL_64_after_hwframe+114
+]: 188404
+```

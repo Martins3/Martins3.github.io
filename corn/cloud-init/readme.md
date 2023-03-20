@@ -97,3 +97,11 @@ systemctl enable nested
 ## 增加 edk2 的环境搭建
 
 ## 使用 libvirt 也是可以装系统的，但是需要 ovs
+
+## 打包方式
+```txt
+Kernel packaging:
+  rpm-pkg             - Build both source and binary RPM kernel packages
+  srcrpm-pkg          - Build only the source kernel RPM package
+  binrpm-pkg          - Build only the binary kernel RPM package
+```

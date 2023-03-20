@@ -167,7 +167,7 @@ case $hacking_memory in
 "none")
   ramsize=40G
   arg_mem_cpu="-smp $(($(getconf _NPROCESSORS_ONLN) - 1))"
-  arg_mem_cpu="$arg_mem_cpu -object memory-backend-ram,id=pc.ram,size=$ramsize,prealloc=off,share=off -machine memory-backend=pc.ram -m $ramsize"
+  arg_mem_cpu="$arg_mem_cpu -object memory-backend-ram,id=pc.ram,size=$ramsize,prealloc=off,share=on -machine memory-backend=pc.ram -m $ramsize"
   ;;
 "file")
   # 只有使用这种方式才会启动 async page fault
@@ -301,7 +301,8 @@ tracepoint=()
 arg_trace=""
 # tracepoint+=(kvm_set_user_memory)
 # tracepoint+=(memory_region_ops_read)
-if [[ ${#tracepoint[@]} -eq 0 ]]; then
+if [[ ${#tracepoint[@]} -gt 0 ]]; then
+  echo "${#tracepoint[@]}"
   arg_trace="--trace"
   for i in "${tracepoint[@]}"; do
     arg_trace+=" '$i' "

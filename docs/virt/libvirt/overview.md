@@ -102,7 +102,7 @@ virsh qemu-monitor-command $domain --hmp 'balloon 4000'
 | available   | MemTotal                           |
 | usable      | MemAvailable                       |
 | last_update |                                    |
-| disk_caches | Buffers + Cached + swapcache                   |
+| disk_caches | Buffers + Cached + swapcache       |
 | rss         | /proc/$qemu_pid/status \| grep RSS |
 
 理解下各个字段的含义

@@ -115,63 +115,64 @@ numad 就是通过这个来实现的。
 ## /proc/pid/stat
 
 ## /proc/meminfo
+具体内容都在: https://github.com/torvalds/linux/blob/master/Documentation/filesystems/proc.rst#meminfo
 
-| 名称            | 数值           | 含义                                                                                                                                                                                |
-|-----------------|----------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| MemTotal        | 32690904 kB    | 所有的物理页面，调用 totalram_pages_add ，在启动的时候通过 memblock 获取，在 virtio mem ，virtio balloon 以及 memory hotplug 的时候修改。                                           |
-| MemFree         | 25368728 kB    |                                                                                                                                                                                     |
-| MemAvailable    | 28847852 kB    |                                                                                                                                                                                     |
-| Buffers         | 251576 kB      | buffer 就是 inode cache 之类的，如果进行一次 disk 使用统计，就很刺激了，https://stackoverflow.com/questions/6345020/what-is-the-difference-between-buffer-and-cache-memory-in-linux |
-| Cached          | 3339012 kB     |                                                                                                                                                                                     |
-| SwapCached      | 0 kB           |                                                                                                                                                                                     |
-| Active          | 2638452 kB     |                                                                                                                                                                                     |
-| Inactive        | 3996836 kB     |                                                                                                                                                                                     |
-| Active(anon)    | 68656 kB       |                                                                                                                                                                                     |
-| Inactive(anon)  | 2896668 kB     |                                                                                                                                                                                     |
-| Active(file)    | 2569796 kB     |                                                                                                                                                                                     |
-| Inactive(file)  | 1100168 kB     |                                                                                                                                                                                     |
-| Unevictable     | 3408 kB        |                                                                                                                                                                                     |
-| Mlocked         | 1872 kB        |                                                                                                                                                                                     |
-| SwapTotal       | 0 kB           |                                                                                                                                                                                     |
-| SwapFree        | 0 kB           |                                                                                                                                                                                     |
-| Zswap           | 0 kB           |                                                                                                                                                                                     |
-| Zswapped        | 0 kB           |                                                                                                                                                                                     |
-| Dirty           | 104 kB         |                                                                                                                                                                                     |
-| Writeback       | 0 kB           |                                                                                                                                                                                     |
-| AnonPages       | 3040592 kB     |                                                                                                                                                                                     |
-| Mapped          | 341680 kB      |                                                                                                                                                                                     |
-| Shmem           | 10912 kB       |                                                                                                                                                                                     |
-| KReclaimable    | 274160 kB      |                                                                                                                                                                                     |
-| Slab            | 412500 kB      |                                                                                                                                                                                     |
-| SReclaimable    | 274160 kB      |                                                                                                                                                                                     |
-| SUnreclaim      | 138340 kB      |                                                                                                                                                                                     |
-| KernelStack     | 16304 kB       |                                                                                                                                                                                     |
-| PageTables      | 23136 kB       |                                                                                                                                                                                     |
-| NFS_Unstable    | 0 kB           |                                                                                                                                                                                     |
-| Bounce          | 0 kB           |                                                                                                                                                                                     |
-| WritebackTmp    | 0 kB           |                                                                                                                                                                                     |
-| CommitLimit     | 16345452 kB    | 可以 overmmit 的数量                                                                                                                                                                                     |
-| Committed_AS    | 12958700 kB    | 已经提交的量，如果 mmap 是 MAP_NORESERVE 的，那么将不会统计在此处                                                                                                                                                                                     |
-| VmallocTotal    | 34359738367 kB |                                                                                                                                                                                     |
-| VmallocUsed     | 102404 kB      |                                                                                                                                                                                     |
-| VmallocChunk    | 0 kB           |                                                                                                                                                                                     |
-| Percpu          | 114240 kB      |                                                                                                                                                                                     |
-| AnonHugePages   | 301056 kB      |                                                                                                                                                                                     |
-| ShmemHugePages  | 0 kB           |                                                                                                                                                                                     |
-| ShmemPmdMapped  | 0 kB           |                                                                                                                                                                                     |
-| FileHugePages   | 0 kB           |                                                                                                                                                                                     |
-| FilePmdMapped   | 0 kB           |                                                                                                                                                                                     |
-| CmaTotal        | 0 kB           |                                                                                                                                                                                     |
-| CmaFree         | 0 kB           |                                                                                                                                                                                     |
-| HugePages_Total | 0              |                                                                                                                                                                                     |
-| HugePages_Free  | 0              |                                                                                                                                                                                     |
-| HugePages_Rsvd  | 0              |                                                                                                                                                                                     |
-| HugePages_Surp  | 0              |                                                                                                                                                                                     |
-| Hugepagesize    | 2048 kB        |                                                                                                                                                                                     |
-| Hugetlb         | 0 kB           |                                                                                                                                                                                     |
-| DirectMap4k     | 294756 kB      |                                                                                                                                                                                     |
-| DirectMap2M     | 4947968 kB     |                                                                                                                                                                                     |
-| DirectMap1G     | 30408704 kB    |                                                                                                                                                                                     |
+| 名称            | 数值           | 含义                                                                                                                                      |
+|-----------------|----------------|-------------------------------------------------------------------------------------------------------------------------------------------|
+| MemTotal        | 32690904 kB    | 所有的物理页面，调用 totalram_pages_add ，在启动的时候通过 memblock 获取，在 virtio mem ，virtio balloon 以及 memory hotplug 的时候修改。 |
+| MemFree         | 25368728 kB    |                                                                                                                                           |
+| MemAvailable    | 28847852 kB    |                                                                                                                                           |
+| Buffers         | 251576 kB      | raw disk 的 cache                                                                                                                               |
+| Cached          | 3339012 kB     | page cache + shmem                                                                                                                                           |
+| SwapCached      | 0 kB           |                                                                                                                                           |
+| Active          | 2638452 kB     |                                                                                                                                           |
+| Inactive        | 3996836 kB     |                                                                                                                                           |
+| Active(anon)    | 68656 kB       |                                                                                                                                           |
+| Inactive(anon)  | 2896668 kB     |                                                                                                                                           |
+| Active(file)    | 2569796 kB     |                                                                                                                                           |
+| Inactive(file)  | 1100168 kB     |                                                                                                                                           |
+| Unevictable     | 3408 kB        |                                                                                                                                           |
+| Mlocked         | 1872 kB        |                                                                                                                                           |
+| SwapTotal       | 0 kB           |                                                                                                                                           |
+| SwapFree        | 0 kB           |                                                                                                                                           |
+| Zswap           | 0 kB           |                                                                                                                                           |
+| Zswapped        | 0 kB           |                                                                                                                                           |
+| Dirty           | 104 kB         |                                                                                                                                           |
+| Writeback       | 0 kB           |                                                                                                                                           |
+| AnonPages       | 3040592 kB     |                                                                                                                                           |
+| Mapped          | 341680 kB      |                                                                                                                                           |
+| Shmem           | 10912 kB       |                                                                                                                                           |
+| KReclaimable    | 274160 kB      |                                                                                                                                           |
+| Slab            | 412500 kB      |                                                                                                                                           |
+| SReclaimable    | 274160 kB      |                                                                                                                                           |
+| SUnreclaim      | 138340 kB      |                                                                                                                                           |
+| KernelStack     | 16304 kB       |                                                                                                                                           |
+| PageTables      | 23136 kB       |                                                                                                                                           |
+| NFS_Unstable    | 0 kB           |                                                                                                                                           |
+| Bounce          | 0 kB           |                                                                                                                                           |
+| WritebackTmp    | 0 kB           |                                                                                                                                           |
+| CommitLimit     | 16345452 kB    | 可以 overmmit 的数量                                                                                                                      |
+| Committed_AS    | 12958700 kB    | 已经提交的量，如果 mmap 是 MAP_NORESERVE 的，那么将不会统计在此处                                                                         |
+| VmallocTotal    | 34359738367 kB |                                                                                                                                           |
+| VmallocUsed     | 102404 kB      |                                                                                                                                           |
+| VmallocChunk    | 0 kB           |                                                                                                                                           |
+| Percpu          | 114240 kB      |                                                                                                                                           |
+| AnonHugePages   | 301056 kB      |                                                                                                                                           |
+| ShmemHugePages  | 0 kB           |                                                                                                                                           |
+| ShmemPmdMapped  | 0 kB           |                                                                                                                                           |
+| FileHugePages   | 0 kB           |                                                                                                                                           |
+| FilePmdMapped   | 0 kB           |                                                                                                                                           |
+| CmaTotal        | 0 kB           |                                                                                                                                           |
+| CmaFree         | 0 kB           |                                                                                                                                           |
+| HugePages_Total | 0              |                                                                                                                                           |
+| HugePages_Free  | 0              |                                                                                                                                           |
+| HugePages_Rsvd  | 0              |                                                                                                                                           |
+| HugePages_Surp  | 0              |                                                                                                                                           |
+| Hugepagesize    | 2048 kB        |                                                                                                                                           |
+| Hugetlb         | 0 kB           |                                                                                                                                           |
+| DirectMap4k     | 294756 kB      |                                                                                                                                           |
+| DirectMap2M     | 4947968 kB     |                                                                                                                                           |
+| DirectMap1G     | 30408704 kB    |                                                                                                                                           |
 
 ```txt
 $ free -m
@@ -196,6 +197,30 @@ SwapTotal:      10239996 kB
 SwapFree:        5998016 kB
 ```
 所以，htop 是将 SwapCached 不算的:
+
+### Direct Link
+```txt
+DirectMap4k:       36680 kB
+DirectMap2M:     3108864 kB
+DirectMap1G:    11534336 kB
+```
+
+### Cached 不仅仅是 page cache
+```c
+	cached = global_node_page_state(NR_FILE_PAGES) -
+			total_swapcache_pages() - i.bufferram;
+```
+
+### bufferram
+就是 ram 的
+
+在 virtio balloon 中，disk_caches 指的是:
+```c
+	caches = global_node_page_state(NR_FILE_PAGES);
+```
+所以其内容是 meminfo-cache + meminfo-buffer + meminfo-swapcache
+
+### Buffers 是
 
 ## /proc/vmstat
 
@@ -396,6 +421,39 @@ extern atomic_long_t vm_numa_event[NR_VM_NUMA_EVENT_ITEMS];
 
 ## /proc/pagetypeinfo
 
+- sudo cat /proc/pagetypeinfo
+```txt
+Page block order: 9
+Pages per block:  512
+
+Free pages count per migrate type at order       0      1      2      3      4      5      6      7      8      9     10
+Node    0, zone      DMA, type    Unmovable      0      0      0      0      0      0      0      0      1      0      0
+Node    0, zone      DMA, type      Movable      0      0      0      0      0      0      0      0      0      1      3
+Node    0, zone      DMA, type  Reclaimable      0      0      0      0      0      0      0      0      0      0      0
+Node    0, zone      DMA, type   HighAtomic      0      0      0      0      0      0      0      0      0      0      0
+Node    0, zone      DMA, type          CMA      0      0      0      0      0      0      0      0      0      0      0
+Node    0, zone      DMA, type      Isolate      0      0      0      0      0      0      0      0      0      0      0
+Node    0, zone    DMA32, type    Unmovable     62    106    153    134    119     72     44     15      5      0      0
+Node    0, zone    DMA32, type      Movable    417    197     98     86     84     90     64     65     71     90    137
+Node    0, zone    DMA32, type  Reclaimable     41     57     62     61     64     59     48     35     27      0      0
+Node    0, zone    DMA32, type   HighAtomic      0      0      0      0      0      0      0      0      0      0      0
+Node    0, zone    DMA32, type          CMA      0      0      0      0      0      0      0      0      0      0      0
+Node    0, zone    DMA32, type      Isolate      0      0      0      0      0      0      0      0      0      0      0
+Node    0, zone   Normal, type    Unmovable     53    105    830    360     80     48     52     30     18     14     16
+Node    0, zone   Normal, type      Movable >100000  93493  41359  17188   5937   3527   2269   1339    842   1269   1170
+Node    0, zone   Normal, type  Reclaimable     88     86    457      3    198    466    360    245    106      1      0
+Node    0, zone   Normal, type   HighAtomic      0      0     16     15      6      3      1      0      0      0      0
+Node    0, zone   Normal, type          CMA      0      0      0      0      0      0      0      0      0      0      0
+Node    0, zone   Normal, type      Isolate      0      0      0      0      0      0      0      0      0      0      0
+
+Number of blocks type     Unmovable      Movable  Reclaimable   HighAtomic          CMA      Isolate
+Node 0, zone      DMA            1            7            0            0            0            0
+Node 0, zone    DMA32           25         1466           37            0            0            0
+Node 0, zone   Normal          298        10165          288            1            0            0
+```
+- [ ] 为什么 Movable 中有那么多 order=10 的页
+
+
 ## /proc/buddyinfo
 
 ## /proc/sys/vm
@@ -460,46 +518,6 @@ int main(int argc, char *argv[]) {
 - zone_batchsize
 - zone_highsize
 
-## /proc/meminfo 中这些是啥
-```txt
-DirectMap4k:       36680 kB
-DirectMap2M:     3108864 kB
-DirectMap1G:    11534336 kB
-```
-
-- sudo cat /proc/pagetypeinfo
-```txt
-Page block order: 9
-Pages per block:  512
-
-Free pages count per migrate type at order       0      1      2      3      4      5      6      7      8      9     10
-Node    0, zone      DMA, type    Unmovable      0      0      0      0      0      0      0      0      1      0      0
-Node    0, zone      DMA, type      Movable      0      0      0      0      0      0      0      0      0      1      3
-Node    0, zone      DMA, type  Reclaimable      0      0      0      0      0      0      0      0      0      0      0
-Node    0, zone      DMA, type   HighAtomic      0      0      0      0      0      0      0      0      0      0      0
-Node    0, zone      DMA, type          CMA      0      0      0      0      0      0      0      0      0      0      0
-Node    0, zone      DMA, type      Isolate      0      0      0      0      0      0      0      0      0      0      0
-Node    0, zone    DMA32, type    Unmovable     62    106    153    134    119     72     44     15      5      0      0
-Node    0, zone    DMA32, type      Movable    417    197     98     86     84     90     64     65     71     90    137
-Node    0, zone    DMA32, type  Reclaimable     41     57     62     61     64     59     48     35     27      0      0
-Node    0, zone    DMA32, type   HighAtomic      0      0      0      0      0      0      0      0      0      0      0
-Node    0, zone    DMA32, type          CMA      0      0      0      0      0      0      0      0      0      0      0
-Node    0, zone    DMA32, type      Isolate      0      0      0      0      0      0      0      0      0      0      0
-Node    0, zone   Normal, type    Unmovable     53    105    830    360     80     48     52     30     18     14     16
-Node    0, zone   Normal, type      Movable >100000  93493  41359  17188   5937   3527   2269   1339    842   1269   1170
-Node    0, zone   Normal, type  Reclaimable     88     86    457      3    198    466    360    245    106      1      0
-Node    0, zone   Normal, type   HighAtomic      0      0     16     15      6      3      1      0      0      0      0
-Node    0, zone   Normal, type          CMA      0      0      0      0      0      0      0      0      0      0      0
-Node    0, zone   Normal, type      Isolate      0      0      0      0      0      0      0      0      0      0      0
-
-Number of blocks type     Unmovable      Movable  Reclaimable   HighAtomic          CMA      Isolate
-Node 0, zone      DMA            1            7            0            0            0            0
-Node 0, zone    DMA32           25         1466           37            0            0            0
-Node 0, zone   Normal          298        10165          288            1            0            0
-```
-- [ ] 为什么 Movable 中有那么多 order=10 的页
-
-## /proc/meminfo 中关于 hugepage 的统计真奇怪啊
 
 ## 3. zone 和 node 中间都含有统计信息，分别统计什么
 1. 这些统计信息是通过什么接口提供给用户程序的，或者内核如何使用它们?

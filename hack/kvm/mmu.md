@@ -638,7 +638,7 @@ static void kvm_flush_pml_buffers(struct kvm *kvm)
 #### dirty flags
 - [ ]  https://events.static.linuxfound.org/sites/events/files/slides/Guangrong-fast-write-protection.pdf
 
-- [ ] 应该存在软件 和 硬件方式实现 dirty log
+- [x] 应该存在软件 和 硬件方式实现 dirty log
 
 kvm_mmu_slot_set_dirty : 将 slot 对应 spte 全部设置为 dirty
 

@@ -420,3 +420,42 @@ static inline bool is_guest_mode(struct kvm_vcpu *vcpu)
 ## [ ] 考虑一下大页的情况
 1. 如果 L0 提供大页给 L1
 2. 如果 L1 提供大页给 L2
+
+## [ ] KVM_REQ_TLB_FLUSH
+tlb flush 相关
+
+
+```txt
+@[
+    vmx_vcpu_load_vmcs+5
+    vmx_vcpu_load+23
+    kvm_arch_vcpu_load+54
+    finish_task_switch.isra.0+273
+    __schedule+789
+    schedule+97
+    kvm_vcpu_block+104
+    kvm_vcpu_halt+107
+    kvm_arch_vcpu_ioctl_run+2419
+    kvm_vcpu_ioctl+629
+    __x64_sys_ioctl+139
+    do_syscall_64+60
+    entry_SYSCALL_64_after_hwframe+114
+]: 46081
+```
+
+如果发现了切换成为新的 vCPU，那么需要将 pCPU 上原来的 vCPU 的上
+```c
+		/*
+		 * Flush all EPTP/VPID contexts, the new pCPU may have stale
+		 * TLB entries from its previous association with the vCPU.
+		 */
+		kvm_make_request(KVM_REQ_TLB_FLUSH, vcpu);
+```
+
+其实更多的调用是这个: KVM_REQ_TLB_FLUSH_GUEST
+
+- KVM_REQ_TLB_FLUSH_CURRENT
+
+- KVM_REQ_HV_TLB_FLUSH
+
+- x86 的指令存在那些指令？

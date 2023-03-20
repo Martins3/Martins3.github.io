@@ -27,6 +27,7 @@
 * [PSI](#psi)
 * [thread](#thread)
 * [page counter](#page-counter)
+* [cgroup_kf_ops](#cgroup_kf_ops)
 * [cgroup.procs](#cgroupprocs)
 * [TODO](#todo)
 * [cgorup inode](#cgorup-inode)
@@ -831,45 +832,7 @@ https://lwn.net/Articles/656115/
 ## page counter
 - [ ] mm/page_counter.c
 
-## cgroup.procs
-```c
-static void *cgroup_seqfile_start(struct seq_file *seq, loff_t *ppos)
-{
-  return seq_cft(seq)->seq_start(seq, ppos);
-}
-
-static void *cgroup_seqfile_next(struct seq_file *seq, void *v, loff_t *ppos)
-{
-  return seq_cft(seq)->seq_next(seq, v, ppos);
-}
-
-static void cgroup_seqfile_stop(struct seq_file *seq, void *v)
-{
-  if (seq_cft(seq)->seq_stop)
-    seq_cft(seq)->seq_stop(seq, v);
-}
-
-static int cgroup_seqfile_show(struct seq_file *m, void *arg)
-{
-  struct cftype *cft = seq_cft(m);
-  struct cgroup_subsys_state *css = seq_css(m);
-
-  if (cft->seq_show)
-    return cft->seq_show(m, arg);
-
-  if (cft->read_u64)
-    seq_printf(m, "%llu\n", cft->read_u64(css, cft));
-  else if (cft->read_s64)
-    seq_printf(m, "%lld\n", cft->read_s64(css, cft));
-  else
-    return -EINVAL;
-  return 0;
-}
-
-static ssize_t cgroup_file_write(struct kernfs_open_file *of, char *buf,
-         size_t nbytes, loff_t off)
-```
-
+## cgroup_kf_ops
 They are registered at here:
 ```c
 static struct kernfs_ops cgroup_kf_single_ops = {
@@ -898,14 +861,14 @@ static struct kernfs_ops cgroup_kf_ops = {
   - cgroup_init_cftypes : some files contains multiple value while someone only contains one value
 - [ ] Maybe we can do a survey about why not register theese `write`, `poll`, `seq_show` directly to seq_file ?
 
+## cgroup.procs
 
-
+为什么还会支持 write 啊？
 - [ ] `__cgroup1_procs_write`
   - [ ] cgroup_kn_lock_live
   - [ ] cgroup_procs_write_start(find pid by find_task_by_vpid, and do some locks)
   - [ ] cgroup_attach_task
     - [ ] cgroup_migrate_add_src
-
 
 - [ ] css_set_move_task : used by migrate, but should have
 
@@ -968,6 +931,7 @@ static struct cgroup *cset_cgroup_from_root(struct css_set *cset,
   return res;
 }
 ```
+利用整体框架的，内容就是展示 cgroup 中的进程
 
 ## TODO
 - [ ] css, css_set, ss, cgroup, memcg, so how are they create init and destroyed

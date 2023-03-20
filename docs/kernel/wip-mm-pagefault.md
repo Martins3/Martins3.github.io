@@ -115,3 +115,19 @@ struct iommu_flush_ops {
 ```
 
 ## qemu 中 tcg 的 page fault
+
+## 使用 BOOM 来看下硬件如何是如何实现的
+- TLB 和 cache 是同时查找的
+
+## vmid 还是 mmid 啥的，就是每一个 process 一个 id 的技术，找一下
+
+## 总结
+- 如果减少不命中的开销
+  - 大页
+- 减少 miss rate 的方法
+  - 大页，mmid 的那个
+
+## 原因
+  - 缺页
+  - protection
+    - dirty bit tracking
