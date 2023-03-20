@@ -416,3 +416,7 @@ static inline bool is_guest_mode(struct kvm_vcpu *vcpu)
 - enter_guest_mode : 这个函数进入的
 
 ## [ ] handle_apic_access 居然从来没有人调用过
+
+## [ ] 考虑一下大页的情况
+1. 如果 L0 提供大页给 L1
+2. 如果 L1 提供大页给 L2

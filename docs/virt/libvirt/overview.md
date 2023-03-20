@@ -291,3 +291,7 @@ virsh dom
 - [ ] 为什么 dom 是和 libvirt 绑定的
 
 为什么 ccls 没有索引 remoteConnectGetDomainCapabilities
+
+## 如何使用 numad
+
+src/qemu/qemu_process.c:qemuProcessPrepareDomainNUMAPlacement 中确定 qemu 所在的 numa 节点

@@ -309,3 +309,8 @@ https://qemu.readthedocs.io/en/latest/tools/qemu-pr-helper.html
       - kvm_on_sigbus
         - kvm_arch_on_sigbus_vcpu
       - sigbus_reraise
+
+## [ ] MemoryListener::commit 的注册用户可以专门分析下
+
+## [ ] 嵌套虚拟化的环境如果搭建的完善之后
+1. vIOMMU 可以分析调试一下如何使用

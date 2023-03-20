@@ -86,3 +86,32 @@ static const struct mmu_notifier_ops kvm_mmu_notifier_ops = {
 ## 测试
 1. 一次 page fault 的开销
 2. 一次 tlb 不命中的开销
+
+## iommu 偶尔发现的，原来还需要 flush tlb 啊
+```c
+/**
+ * struct iommu_flush_ops - IOMMU callbacks for TLB and page table management.
+ *
+ * @tlb_flush_all:  Synchronously invalidate the entire TLB context.
+ * @tlb_flush_walk: Synchronously invalidate all intermediate TLB state
+ *                  (sometimes referred to as the "walk cache") for a virtual
+ *                  address range.
+ * @tlb_add_page:   Optional callback to queue up leaf TLB invalidation for a
+ *                  single page.  IOMMUs that cannot batch TLB invalidation
+ *                  operations efficiently will typically issue them here, but
+ *                  others may decide to update the iommu_iotlb_gather structure
+ *                  and defer the invalidation until iommu_iotlb_sync() instead.
+ *
+ * Note that these can all be called in atomic context and must therefore
+ * not block.
+ */
+struct iommu_flush_ops {
+	void (*tlb_flush_all)(void *cookie);
+	void (*tlb_flush_walk)(unsigned long iova, size_t size, size_t granule,
+			       void *cookie);
+	void (*tlb_add_page)(struct iommu_iotlb_gather *gather,
+			     unsigned long iova, size_t granule, void *cookie);
+};
+```
+
+## qemu 中 tcg 的 page fault

@@ -2194,3 +2194,158 @@ static inline bool kvm_memslots_have_rmaps(struct kvm *kvm)
 - mmu_alloc_shadow_roots
 
 ## [ ] 嵌套虚拟化如何处理中断的
+
+## [x] 三个 cache 到底占用多少内存
+
+为什么需要存在这样的 cache
+```c
+#ifdef KVM_ARCH_NR_OBJS_PER_MEMORY_CACHE
+/*
+ * Memory caches are used to preallocate memory ahead of various MMU flows,
+ * e.g. page fault handlers.  Gracefully handling allocation failures deep in
+ * MMU flows is problematic, as is triggering reclaim, I/O, etc... while
+ * holding MMU locks.  Note, these caches act more like prefetch buffers than
+ * classical caches, i.e. objects are not returned to the cache on being freed.
+ *
+ * The @capacity field and @objects array are lazily initialized when the cache
+ * is topped up (__kvm_mmu_topup_memory_cache()).
+ */
+struct kvm_mmu_memory_cache {
+	int nobjs;
+	gfp_t gfp_zero;
+	gfp_t gfp_custom;
+	struct kmem_cache *kmem_cache;
+	int capacity;
+	void **objects;
+};
+#endif
+```
+这个注释已经说很清楚了，在处理 page fault 的过程中再去 swap 之类的非常麻烦，因为持有 MMU locks 。
+但是不知道为什么 kernel 不是如此。
+
+
+```c
+/* Caches used when allocating a new shadow page. */
+struct shadow_page_caches {
+	struct kvm_mmu_memory_cache *page_header_cache; // kvm_mmu_memory_cache
+	struct kvm_mmu_memory_cache *shadow_page_cache; // 就是一个 page
+	struct kvm_mmu_memory_cache *shadowed_info_cache; // 给 shadow page table 映射
+};
+```
+
+但是这里定义了四个 cache 的:
+```c
+struct kvm_vcpu_arch {
+
+	struct kvm_mmu_memory_cache mmu_pte_list_desc_cache; // 似乎是处理 rmap 的
+	struct kvm_mmu_memory_cache mmu_shadow_page_cache;
+	struct kvm_mmu_memory_cache mmu_shadowed_info_cache;
+	struct kvm_mmu_memory_cache mmu_page_header_cache;
+```
+
+- 不对啊，映射一个 44G 的虚拟机，需要多少个 shadow page 啊
+  - 取决于 Guest 是否使用大页
+
+## kvm_mmu_page
+
+### shadowed_translation
+```c
+	/*
+	 * Stores the result of the guest translation being shadowed by each
+	 * SPTE.  KVM shadows two types of guest translations: nGPA -> GPA
+	 * (shadow EPT/NPT) and GVA -> GPA (traditional shadow paging). In both
+	 * cases the result of the translation is a GPA and a set of access
+	 * constraints.
+	 *
+	 * The GFN is stored in the upper bits (PAGE_SHIFT) and the shadowed
+	 * access permissions are stored in the lower bits. Note, for
+	 * convenience and uniformity across guests, the access permissions are
+	 * stored in KVM format (e.g.  ACC_EXEC_MASK) not the raw guest format.
+	 */
+	u64 *shadowed_translation;
+```
+
+以前将 gfn 命名为 shadowed_translation 了
+
+```diff
+History:        #0
+Commit:         6a97575d5cffb71aa9a95d33f0ca03c8a4bb3b2b
+Author:         David Matlack <dmatlack@google.com>
+Committer:      Paolo Bonzini <pbonzini@redhat.com>
+Author Date:    Thu 23 Jun 2022 03:27:04 AM CST
+Committer Date: Fri 24 Jun 2022 04:51:58 PM CST
+
+KVM: x86/mmu: Cache the access bits of shadowed translations
+
+Splitting huge pages requires allocating/finding shadow pages to replace
+the huge page. Shadow pages are keyed, in part, off the guest access
+permissions they are shadowing. For fully direct MMUs, there is no
+shadowing so the access bits in the shadow page role are always ACC_ALL.
+But during shadow paging, the guest can enforce whatever access
+permissions it wants.
+
+In particular, eager page splitting needs to know the permissions to use
+for the subpages, but KVM cannot retrieve them from the guest page
+tables because eager page splitting does not have a vCPU.  Fortunately,
+the guest access permissions are easy to cache whenever page faults or
+FNAME(sync_page) update the shadow page tables; this is an extension of
+the existing cache of the shadowed GFNs in the gfns array of the shadow
+page.  The access bits only take up 3 bits, which leaves 61 bits left
+over for gfns, which is more than enough.
+
+Now that the gfns array caches more information than just GFNs, rename
+it to shadowed_translation.
+
+While here, preemptively fix up the WARN_ON() that detects gfn
+mismatches in direct SPs. The WARN_ON() was paired with a
+pr_err_ratelimited(), which means that users could sometimes see the
+WARN without the accompanying error message. Fix this by outputting the
+error message as part of the WARN splat, and opportunistically make
+them WARN_ONCE() because if these ever fire, they are all but guaranteed
+to fire a lot and will bring down the kernel.
+
+Signed-off-by: David Matlack <dmatlack@google.com>
+Message-Id: <20220516232138.1783324-18-dmatlack@google.com>
+Signed-off-by: Paolo Bonzini <pbonzini@redhat.com>
+```
+
+初始化的位置:
+- kvm_mmu_page_set_translation : 在其中存储 gfn 和 access bit
+
+```txt
+@[
+    kvm_mmu_page_set_translation+1
+    __rmap_add+125
+    mmu_set_spte+366
+    direct_pte_prefetch_many+301
+    ept_page_fault+2296
+    kvm_mmu_page_fault+935
+    vmx_handle_exit+374
+    kvm_arch_vcpu_ioctl_run+3286
+    kvm_vcpu_ioctl+629
+    __x64_sys_ioctl+139
+    do_syscall_64+60
+    entry_SYSCALL_64_after_hwframe+114
+]: 97671
+@[
+    kvm_mmu_page_set_translation+1
+    __rmap_add+125
+    mmu_set_spte+366
+    ept_page_fault+1602
+    kvm_mmu_page_fault+935
+    vmx_handle_exit+374
+    kvm_arch_vcpu_ioctl_run+3286
+    kvm_vcpu_ioctl+629
+    __x64_sys_ioctl+139
+    do_syscall_64+60
+    entry_SYSCALL_64_after_hwframe+114
+]: 186478
+```
+- 使用的位置 : 有一些和大页有关。
+
+
+## [ ] 找到证据，其实 shadow page table 使用的页 和 guest 中的页是一一对应的
+- `__rmap_add` 一路找上去即可。
+
+- 如何处理好几种模式的差别？ept nonpaging page32 page64 的？
+- 如果 guest 使用大页？

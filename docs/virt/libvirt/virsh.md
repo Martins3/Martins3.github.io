@@ -301,3 +301,5 @@
     quit                           quit this interactive terminal
     connect                        (re)connect to hypervisor
 ```
+
+## [ ] console 和 ttyconsole 有啥区别

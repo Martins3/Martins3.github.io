@@ -149,7 +149,7 @@ arg_hugetlb="default_hugepagesz=2M"
 arg_hugetlb=""
 # 可选参数
 # arg_mem_cpu="-m 12G  -smp $(($(getconf _NPROCESSORS_ONLN) - 1))"
-arg_machine="-machine pc,accel=kvm,kernel-irqchip=on"
+arg_machine="-machine pc,accel=kvm,kernel-irqchip=on,smm=on"
 arg_mem_balloon="-device virtio-balloon,id=balloon0,deflate-on-oom=true,page-poison=true,free-page-reporting=false,free-page-hint=true,iothread=io1 -object iothread,id=io1"
 arg_mem_balloon=""
 
@@ -297,8 +297,16 @@ arg_monitor="-serial mon:stdio -display none"
 arg_initrd="-initrd /home/martins3/hack/vm/initramfs-6.3.0-rc2.img"
 # arg_initrd="-initrd /nix/store/kfaz0nv43qwyvj4s7c5ak4lgdyzdf51s-initrd/initrd" # nixos 的 initrd
 # arg_initrd=""
-arg_trace="--trace 'memory_region_ops_read'" # 打开这个选项，输出内容很多
+tracepoint=()
 arg_trace=""
+# tracepoint+=(kvm_set_user_memory)
+# tracepoint+=(memory_region_ops_read)
+if [[ ${#tracepoint[@]} -eq 0 ]]; then
+  arg_trace="--trace"
+  for i in "${tracepoint[@]}"; do
+    arg_trace+=" '$i' "
+  done
+fi
 
 arg_vfio=""
 if [[ $hacking_vfio == true ]]; then

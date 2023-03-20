@@ -23,3 +23,5 @@ Emulating hardware Interfaces can be slow
         - We can try writing device drivers for such OSes
           - ... but some core features (interrupt handling, timekeeping,...) are not devices
             - Emulate an already supported (proprietary) hypervisor interfaces solving the exact same issues!
+
+## https://kernel.love/hyperv-enlightenment.html
