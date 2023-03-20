@@ -276,4 +276,8 @@ t>, below_4g_mem_size=<optimized out>, above_4g_mem_size=39728447488, pci_addres
 
 ## 为什么 smm 需要导致增加这么多的 KVM_SET_USER_MEMORY_REGION
 
-## smm 的实现原理
+## smm : arch/x86/kvm/smm.c
+
+## 为什么 smm 对于 secure boot 来说是必须的
+
+## register_smram_listene

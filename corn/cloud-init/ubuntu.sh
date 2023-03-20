@@ -77,7 +77,7 @@ function setup_env() {
   install libpixman-1-dev
   install shellcheck
   install shfmt
-  install default-jre # docker 需要
+  install default-jre # jenkins 需要
 
   pip install pynvim
 }
@@ -137,6 +137,13 @@ function service_http() {
   echo "todo"
 }
 
+function enable_docker() {
+	# https://askubuntu.com/questions/477551/how-can-i-use-docker-without-sudo
+	sudo groupadd docker
+	sudo gpasswd -a "$USER" docker
+	echo "logout to make it work"
+}
+
 # setup_env
 # setup_zsh
 # install_nodejs
@@ -144,3 +151,4 @@ function service_http() {
 # install_neovim_from_source
 # setup_syncthing
 # install_tig_from_source
+# enable_docker
