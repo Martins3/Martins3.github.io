@@ -512,8 +512,8 @@ static bool is_dirty_spte(u64 spte)
 	return dirty_mask ? spte & dirty_mask : spte & PT_WRITABLE_MASK;
 }
 ```
-
 - [ ] 找到传输 dirty map 的内容
+- [ ] 这是函数是处理 shadow page table 的吧
 
 ```c
 /**
@@ -536,18 +536,6 @@ static bool is_dirty_spte(u64 spte)
  *   4. Flush TLB's if needed.
  */
 static int kvm_vm_ioctl_get_dirty_log(struct kvm *kvm,
-				      struct kvm_dirty_log *log)
-{
-	int r;
-
-	mutex_lock(&kvm->slots_lock);
-
-  // 核心函数
-	r = kvm_get_dirty_log_protect(kvm, log);
-
-	mutex_unlock(&kvm->slots_lock);
-	return r;
-}
 ```
 
 ```c
@@ -572,7 +560,6 @@ static int kvm_vm_ioctl_get_dirty_log(struct kvm *kvm,
  * exiting to userspace will be logged for the next call.
  *
  */
- // TODO 上面的注释
 static int kvm_get_dirty_log_protect(struct kvm *kvm, struct kvm_dirty_log *log)
 
 	dirty_bitmap = memslot->dirty_bitmap;
@@ -763,9 +750,6 @@ static inline bool is_access_track_spte(u64 spte)
 }
 ```
 
-[](Documentation/virt/kvm/locking.rst)
-
-
 ## PFERR_WRITE_MASK
 1. page_fault_can_be_fast 自己就是 error_code 的判断，其中包含的注释:
 
@@ -821,6 +805,7 @@ https://stackoverflow.com/questions/32093036/setting-of-intel-ept-accessed-and-d
 https://stackoverflow.com/questions/55589131/what-is-the-relation-between-ept-pte-and-host-pte-entry
 > 当访问的时候，host pte 和 ept 都会设置 access / dirty bit (前提是 enable 了)
 
+- [ ] 嵌套虚拟化的中的虚拟机还可以迁移吗？
 - [ ] 那么 shadow page table 的 ad bit 是如何处理的
 
 #### ad bit manual

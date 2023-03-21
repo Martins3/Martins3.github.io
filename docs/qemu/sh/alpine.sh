@@ -18,7 +18,7 @@ hacking_memory="none"
 share_memory_option="9p"
 # share_memory_option="virtiofs"
 
-hacking_migration=false
+hacking_migration=true
 # @todo 尝试在 guest 中搭建一个 vIOMMU
 if [[ $hacking_migration = true ]]; then
   use_nvme_as_root=false
@@ -105,8 +105,12 @@ disk_img=${workstation}/${distribution}.qcow2
 # fi
 # disk_img=/tmp/nixos.qcow2 # nixos
 
-mkdir -p /tmp/martins3-alpine
-arg_pdifile="-pidfile /tmp/martins3-alpine/qemu-pid"
+# @todo 这个地方应该调整下，源端和目标端冲突了
+arg_pdifile=""
+if [[ $hacking_migration == false ]]; then
+  mkdir -p /tmp/martins3-alpine
+  arg_pdifile="-pidfile /tmp/martins3-alpine/qemu-pid"
+fi
 
 debug_qemu=
 debug_kernel=
@@ -135,6 +139,12 @@ case $share_memory_option in
   arg_share_dir="$arg_share_dir -m 4G -object memory-backend-file,id=mem,size=4G,mem-path=/dev/shm,share=on -numa node,memdev=mem"
   ;;
 esac
+
+if [[ $hacking_migration == true ]]; then
+  # @todo 遇到了这个报错，但是似乎之前没有遇到过
+  # Error: Migration is disabled when VirtFS export path '/home/martins3/core/vn' is mounted in the guest using mount_tag 'host0'
+  arg_share_dir=""
+fi
 
 if [[ $use_nvme_as_root = true ]]; then
   # @todo 这个应该只是缺少 bootindex 吧？
@@ -165,7 +175,7 @@ fi
 
 case $hacking_memory in
 "none")
-  ramsize=40G
+  ramsize=12G
   arg_mem_cpu="-smp $(($(getconf _NPROCESSORS_ONLN) - 1))"
   arg_mem_cpu="$arg_mem_cpu -object memory-backend-ram,id=pc.ram,size=$ramsize,prealloc=off,share=on -machine memory-backend=pc.ram -m $ramsize"
   ;;
@@ -342,7 +352,7 @@ show_help() {
   echo "   -m 调试 QEMU 的时候，打开 monitor"
   echo "   -c 调试 QEMU 的时候，打开 console"
   echo "-q 连接上 QEMU 的 qmp"
-  echo "-a 表示作为热迁移的 target 端"
+  echo "-a 表示作为热迁移的 target 端，此时需要将 hacking_migration 设置为 true"
   exit 0
 }
 
@@ -352,7 +362,9 @@ while getopts "abcdhkmpqst" opt; do
     # @todo 丑陋的代码，从原则上将，option 应该在最上面的才对，修改参数
     arg_qmp="-qmp tcp:localhost:5444,server,wait=off"
     arg_network="-netdev user,id=net1,hostfwd=tcp::5557-:22 -device e1000e,netdev=net1"
-    arg_network="-netdev user,id=net1,hostfwd=tcp::5557-:22 -device virtio-net-pci,netdev=net1,romfile=/home/martins3/hack/vm/img1"
+    arg_network="-netdev user,id=net1,hostfwd=tcp::5557-:22 -device virtio-net-pci,netdev=net1"
+    # 需要保证迁移的两侧的 romfile 内容一致才可以
+    # arg_network="$arg_network,romfile=/home/martins3/hack/vm/img1"
     arg_migration_target="-incoming tcp:0:4000"
     ;;
   b)

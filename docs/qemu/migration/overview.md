@@ -40,10 +40,11 @@ qemu-system-x86_64: load of migration failed: Invalid argument
 ## 参考这个
 - https://balamuruhans.github.io/2019/01/15/kvm-migration-with-qemu.html
 
-实际上，只是需要这一条命令就可以了:
+- 源端运行: rk，在其中的 qmp 中执行:
 ```txt
 migrate -d tcp:localhost:4000
 ```
+- 目标端运行: rk -a
 
 ## 分析其他 Hypervisor 上是如何进行热迁移的
 - https://github.com/cloud-hypervisor/cloud-hypervisor

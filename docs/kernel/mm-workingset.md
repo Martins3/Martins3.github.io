@@ -3,6 +3,18 @@
 参考内容:
 - [ ] 奔跑吧 P315 5.3.11
 
+## /proc/vmstat
+```txt
+workingset_nodes 146606
+workingset_refault_anon 4079
+workingset_refault_file 5127
+workingset_activate_anon 0
+workingset_activate_file 0
+workingset_restore_anon 3594
+workingset_restore_file 839
+workingset_nodereclaim 51530
+```
+
 ## PG_workingset
 
 ```c
@@ -39,8 +51,6 @@ static __always_inline int TestClearPageWorkingset(struct page *page) {
   return test_and_clear_bit(PG_workingset, &PF_HEAD(page, 1)->flags);
 }
 ```
-
-## workingset_refault
 
 ## working set
 - folio_mark_accessed 唯一调用 workingset_activation
@@ -197,6 +207,12 @@ flush 的过程是因为统计数据需要向上汇总，从而实现 memcg_vmst
 mod_lruvec_state(lruvec, WORKINGSET_ACTIVATE_BASE + file, nr);
 ```
 
+- workingset_age_nonresident 中增加 non-resident
+  - unpack_shadow(shadow, &memcgid, &pgdat, &eviction, &workingset);
+    - shadow 作为 key 来查询数值，其他数值的
+  - refault = atomic_long_read(&eviction_lruvec->nonresident_age);
+  - refault_distance = (refault - eviction) & EVICTION_MASK;
+
 ## workingset_eviction
 ```txt
 #0  workingset_eviction (folio=folio@entry=0xffffea00060c7fc0, target_memcg=target_memcg@entry=0xffff88816a1ab000) at mm/workingset.c:353
@@ -209,3 +225,32 @@ mod_lruvec_state(lruvec, WORKINGSET_ACTIVATE_BASE + file, nr);
 - `__read_swap_cache_async`
   - add_to_swap_cache
   - workingset_refault
+
+
+总结，大致了解，但是不理解的是，shadow 这个结构体，之前都释放了，之后重新获取到的，都不是一个 page ，为什么有意义吗？
+add_to_swap_cache 中获取的逻辑
+```c
+	do {
+		xas_lock_irq(&xas);
+		xas_create_range(&xas);
+		if (xas_error(&xas))
+			goto unlock;
+		for (i = 0; i < nr; i++) {
+			VM_BUG_ON_FOLIO(xas.xa_index != idx + i, folio);
+			old = xas_load(&xas);
+			if (xa_is_value(old)) {
+				if (shadowp)
+					*shadowp = old;
+			}
+			set_page_private(folio_page(folio, i), entry.val + i);
+			xas_store(&xas, folio);
+			xas_next(&xas);
+		}
+		address_space->nrpages += nr;
+		__node_stat_mod_folio(folio, NR_FILE_PAGES, nr);
+		__lruvec_stat_mod_folio(folio, NR_SWAPCACHE, nr);
+unlock:
+		xas_unlock_irq(&xas);
+	} while (xas_nomem(&xas, gfp));
+```
+这里到底在查询什么？

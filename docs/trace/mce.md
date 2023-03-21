@@ -373,3 +373,12 @@ mce [-b] cpu bank status mcgstatus addr misc -- inject a MCE on the given CPU [a
 ### 测试一下内存错误注入，分析内核中如何处理 uncorrectable error
 
 ecc 是 mce 的一种才对
+
+## 检查 dimm 是否有 bug
+```txt
+        ue_count=`cat /sys/devices/system/edac/mc/mc$mc/dimm$dimm/dimm_ue_count`
+        if [ $ue_count -gt 0 ]; then
+            echo "mc $mc dimm $dimm corrupted"
+        fi
+done
+```
