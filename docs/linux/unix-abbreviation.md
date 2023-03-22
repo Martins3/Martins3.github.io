@@ -1,7 +1,6 @@
 # 命令缩写
 su:switch user 切换用户
 ps: process status(进程状态，类似于 windows 的任务管理器) 常用参数：－auxf
-fsck：File system check
 cat: Concatenate
 uname: Unix name
 df: Disk free
@@ -71,7 +70,6 @@ fd = file descriptors
 fg = foreground
 fgrep = fixed grep
 fmt = format
-fsck = file system check
 fstab = filesystem table
 
 fvwm = fuck virtual window manager
@@ -150,8 +148,6 @@ xlfd = x logical font description
 xmms = x multimedia system
 xrdb = x resources database
 xwd = x window dump
-yacc = yet another compiler compiler
-fish = the friendly interactive shell
 su = switch user
 mime = multipurpose internet mail extensions
 ecma = european computer manufacturers association

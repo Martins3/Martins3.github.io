@@ -397,6 +397,13 @@ check the code in `mprotect.c:mprotect_fixup`, above claim can be verified
 ## pageblock
 https://richardweiyang-2.gitbook.io/kernel-exploring/00-memory_a_bottom_up_view/13-physical-layer-partition
 
+- pgdat
+- zone
+- memory_block : 热插拔
+- mem_section
+- pageblock
+- page
+
 ## user address space
 /home/maritns3/core/vn/hack/lab/proc-self-maps/main.c
 ```plain

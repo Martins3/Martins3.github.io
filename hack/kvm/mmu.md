@@ -806,6 +806,7 @@ https://stackoverflow.com/questions/55589131/what-is-the-relation-between-ept-pt
 > 当访问的时候，host pte 和 ept 都会设置 access / dirty bit (前提是 enable 了)
 
 - [ ] 嵌套虚拟化的中的虚拟机还可以迁移吗？
+  - [ ] shadow page table 的 tracking 和 ad bit 的 tracking 可以分别观察下
 - [ ] 那么 shadow page table 的 ad bit 是如何处理的
 
 #### ad bit manual
@@ -2334,3 +2335,20 @@ Signed-off-by: Paolo Bonzini <pbonzini@redhat.com>
 
 - 如何处理好几种模式的差别？ept nonpaging page32 page64 的？
 - 如果 guest 使用大页？
+
+## mmu cache
+```c
+/* Caches used when allocating a new shadow page. */
+struct shadow_page_caches {
+	struct kvm_mmu_memory_cache *page_header_cache;
+	struct kvm_mmu_memory_cache *shadow_page_cache;
+	struct kvm_mmu_memory_cache *shadowed_info_cache;
+};
+
+
+struct kvm_vcpu_arch {
+	struct kvm_mmu_memory_cache mmu_pte_list_desc_cache; // 也是给 shadow page 使用的
+	struct kvm_mmu_memory_cache mmu_shadow_page_cache; // 给 shadow page 使用的
+	struct kvm_mmu_memory_cache mmu_shadowed_info_cache;
+	struct kvm_mmu_memory_cache mmu_page_header_cache;
+```

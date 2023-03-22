@@ -861,3 +861,81 @@ enum memcg_memory_event {
 - MEMCG_MAX try_charge_memcg : 将要超过数值
 
 - 具体的参考这里: https://facebookmicrosites.github.io/cgroup2/docs/memory-controller.html
+
+## 综合问题
+
+### 如果获取 page table size
+- cat /proc/meminfo | grep PageTables
+- /proc/<pid>/status
+
+**kvm_tdp_mmu_map** 中存在一个 tracepoint 为 trace_kvm_mmu_spte_requested
+
+```c
+sudo perf stat -e 'kvm:kvm_mmu_spte_requested' -a sleep infinity
+sudo bpftrace -e 'tracepoint:kvmmmu:kvm_mmu_spte_requested { @[comm] = count(); }'
+```
+
+12G 内存中，进行一次数值统计:
+```txt
+🧀  sudo bpftrace -e 'tracepoint:kvmmmu:kvm_mmu_spte_requested { @[comm] = count(); }'
+@[qemu-system-x86]: 3247337
+```
+就是 ept page fault 的数量
+
+但是
+```c
+static struct kvm_mmu_page *tdp_mmu_alloc_sp(struct kvm_vcpu *vcpu)
+{
+	struct kvm_mmu_page *sp;
+
+	sp = kvm_mmu_memory_cache_alloc(&vcpu->arch.mmu_page_header_cache);
+	sp->spt = kvm_mmu_memory_cache_alloc(&vcpu->arch.mmu_shadow_page_cache);
+
+	return sp;
+}
+```
+- kvm_total_used_mmu_pages : 靠，这个 counter 是给 shadow page 用的，最后用来 shrink 的
+
+其他的初始化流程:
+```c
+struct kmem_cache *mmu_page_header_cache;
+```
+1. kvm_mmu_vendor_module_init 中初始化 cache
+2. 然后在 kvm_mmu_create 中赋值给具体的 vcpu 吧
+
+- 但是关于 page 的唯独没有统计，因为其中是直接获取 page 数量的:
+```c
+static inline void *mmu_memory_cache_alloc_obj(struct kvm_mmu_memory_cache *mc,
+					       gfp_t gfp_flags)
+{
+	gfp_flags |= mc->gfp_zero;
+
+	if (mc->kmem_cache)
+		return kmem_cache_alloc(mc->kmem_cache, gfp_flags);
+	else
+		return (void *)__get_free_page(gfp_flags);
+}
+```
+
+如果向看到底使用了多少个 ept page，可以查看 `trace_kvm_mmu_get_page` 来分析
+sudo bpftrace -e 'tracepoint:kvmmmu:kvm_mmu_get_page {  @[comm] = count(); }'
+
+```txt
+🧀  sudo bpftrace -e 'tracepoint:kvmmmu:kvm_mmu_get_page {  @[comm] = count(); }'
+@[qemu-system-x86]: 7064
+```
+
+### 如何获取到 page struct 占用的空间
+cat /proc/zoneinfo | grep managed | awk -F' ' '{sum+=$2;} END{print sum;}'
+
+- 获取 struct page 的大小？
+
+```txt
+sudo bpftrace -e 'tracepoint:syscalls:sys_exit_openat {  printf("%ld\n", sizeof(struct page)); exit(); }'
+```
+64 byte
+
+在 512G 的机器上，这需要 8G 的空间。
+
+### 分析存在内存是不被物理内存管理的
+memblock=debug

@@ -72,3 +72,5 @@ journalctl -u systemd-udevd.service
   - 真的需要使用逐个字节拷贝的方式吗？qemu 存在什么好的机制来辅助吗？
 
 ### 测试嵌套虚拟化的性能问题
+
+## jenkins 的 node 是本地的虚拟机，而且本地虚拟机被 cgroup 约束

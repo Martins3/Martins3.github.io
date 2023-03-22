@@ -394,14 +394,6 @@ int kvm_emulate_hypercall(struct kvm_vcpu *vcpu)
 ## [ ] 分析下 kvm_mmu_page
 
 ## [ ] 为什么需要这么多 cache
-```c
-/* Caches used when allocating a new shadow page. */
-struct shadow_page_caches {
-	struct kvm_mmu_memory_cache *page_header_cache;
-	struct kvm_mmu_memory_cache *shadow_page_cache;
-	struct kvm_mmu_memory_cache *shadowed_info_cache;
-};
-```
 
 ## [ ] 哪里还是存在好多个 cache 的，只是统计 mmu 中的内存是没用的
 
@@ -459,3 +451,5 @@ tlb flush 相关
 - KVM_REQ_HV_TLB_FLUSH
 
 - x86 的指令存在那些指令？
+
+## register_shrinker : 这个到底是可以用来收缩谁的，ept page table 可以吗？

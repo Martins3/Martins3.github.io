@@ -19,6 +19,17 @@ sudo cat /proc/slabinfo
 - [ ] debugfs 也是可以处理的
 - [ ] slab_sysfs_init
 
+## [ ] 不知道为什么，qemu 都关闭了，这些 cache 也清理不掉
+```txt
+slabinfo - version: 2.1
+# name            <active_objs> <num_objs> <objsize> <objperslab> <pagesperslab> : tunables <limit> <batchcount> <sharedfactor> : slabdata <active_slabs> <num_slabs> <sharedavail>
+kvm_async_pf         930    930    136   30    1 : tunables    0    0    0 : slabdata     31     31      0
+kvm_vcpu             159    171   9280    3    8 : tunables    0    0    0 : slabdata     57     57      0
+kvm_mmu_page_header   5060   5236    184   44    2 : tunables    0    0    0 : slabdata    119    119      0
+x86_emulator         360    360   2656   12    8 : tunables    0    0    0 : slabdata     30     30      0
+```
+无论如何，这里的内容分析下。
+
 ## Keynote
 
 1. If all of the objects within a given slab (as tracked by the **inuse** counter) are freed, the entire slab is given back to the page allocator for reuse.

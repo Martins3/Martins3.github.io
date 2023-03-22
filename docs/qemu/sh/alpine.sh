@@ -263,6 +263,7 @@ if [[ $use_ovmf == true ]]; then
   # arg_seabios="-bios $workstation/OVMF.fd"
 fi
 
+# arg_debug_memblock="memblock=debug"
 arg_cgroupv2="systemd.unified_cgroup_hierarchy=1"
 # scsi_mod.scsi_logging_level=0x3fffffff
 arg_kernel_args="root=$root nokaslr console=ttyS0,9600 earlyprink=serial $arg_hugetlb $arg_cgroupv2 transparent_hugepage=always"
