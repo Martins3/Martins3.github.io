@@ -336,4 +336,5 @@ int ptrace_writedata(struct task_struct *tsk, char __user *src, unsigned long ds
 ## [年轻人的第一个 gdb](https://blog.tartanllama.xyz/writing-a-linux-debugger-setup/)
 利用的 ptrace 相当有限，不过其中对于 dwarf 和 elf 还是存在不少有意思的探讨的.
 
+
 - [ ] personality : 进一步的调查一下

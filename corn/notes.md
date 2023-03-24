@@ -74,3 +74,6 @@ journalctl -u systemd-udevd.service
 ### 测试嵌套虚拟化的性能问题
 
 ## jenkins 的 node 是本地的虚拟机，而且本地虚拟机被 cgroup 约束
+
+## 虚拟机中搭建这个
+https://github.com/meienberger/runtipi

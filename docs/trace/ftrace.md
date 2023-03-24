@@ -42,3 +42,8 @@ echo > set_graph_function
 echo 1 > options/funcgraph-irqs || true
 echo 0 > max_graph_depth
 ```
+
+## 分析下这个
+- CONFIG_BOOTTIME_TRACING=y
+
+## 实际上，当 make menuconfig 的时候， CONFIG_BOOTTIME_TRACING 同级下面存在很多内容

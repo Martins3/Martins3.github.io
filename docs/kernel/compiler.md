@@ -137,3 +137,6 @@ config RETHUNK
 也是安全问题。
 
 具体细节有待深入。
+
+## dwarf vs frame pointer
+https://news.ycombinator.com/item?id=34789247
