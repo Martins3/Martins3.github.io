@@ -168,6 +168,13 @@ static void dump_header(struct oom_control *oc, struct task_struct *p)
 ```
 proc_oom_score_adj_operations  和 proc_oom_adj_operations 都会调用到 `__set_oom_adj`，两者唯一的区别就是就是做了下数值换算。
 
+如果调整 oom score:
+- https://askubuntu.com/questions/60672/how-do-i-use-oom-score-adj
+  - systemd
+  - 动态调整
+  - choom
+
+
 
 [^1]: https://lwn.net/Articles/666024/
 <script src="https://giscus.app/client.js"

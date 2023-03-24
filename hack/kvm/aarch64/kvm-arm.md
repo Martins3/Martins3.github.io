@@ -404,3 +404,11 @@ static unsigned int id_visibility(const struct kvm_vcpu *vcpu,
 ## 会影响进一步的升级吗?
 
 ## 重写之前，workaround 寄存器就已经被删除了
+
+## [ ] ARM 中如何记录 dirty page 的
+
+## [x] arm 需要额外分配很多空间吗？
+- kvm_prepare_memory_region
+  - kvm_arch_prepare_memory_region
+
+看上去并不会！

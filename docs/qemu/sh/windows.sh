@@ -94,13 +94,13 @@ arg_usb=""
 # "$QEMU" -hda "${img}" -enable-kvm -m 8G -smp 8 -vga virtio -soundhw
 arg_cpu="-cpu host,-hypervisor,+kvm_pv_unhalt,+kvm_pv_eoi,hv_spinlocks=0x1fff,hv_vapic,hv_time,hv_reset,hv_vpindex,hv_runtime,hv_relaxed,kvm=off,hv_vendor_id=intel"
 # arg_qemu_mon="-vga virtio -display gtk,gl=on" # 打开 gl=on 只是显示 1/4，比较怀疑是整体缩放之后导致的
-arg_qemu_mon="-vga virtio -display gtk"
+arg_qemu_mon=""
 
 qemu="qemu-system-x86_64"
 arg_mem_balloon="-device virtio-balloon-pci,id=balloon0,deflate-on-oom=true"
 
 # @todo 不知道为什么，windows 启动之后，所有的内存都会被踩一遍
-ramsize=12G
+ramsize=8G
 arg_mem="-object memory-backend-ram,id=pc.ram,size=$ramsize,prealloc=off,share=off -machine memory-backend=pc.ram -m $ramsize "
 
 arg_qmp="-qmp tcp:localhost:4445,server,wait=off"

@@ -596,6 +596,10 @@ long nr_blockdev_pages(void)
 想不到 ACHI 就是硬盘使用的协议，真的让人更加迷茫了:
 看 ahci_qc_issue 的 backtrace 在 ./ahci.txt 中
 
+## 问题
+- /dev/sda 和 /dev/sdb 之类的名称是如何确定的？
+- 如何修改一个 partion 的 UUID
+  - [ ] 找到 kernel 处理 partion UUID 的位置
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

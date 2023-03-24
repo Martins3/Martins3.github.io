@@ -33,8 +33,23 @@
 /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq
 /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq
 
+
+
 ## 工具
+### cpupower
 cpupower idle-info
+
+```txt
+sudo cpupower frequency-info -g governor
+
+sudo cpupower frequency-set -g performance
+```
+实际上就是去设置:
+- /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
+
+- /sys/devices/system/cpu/cpu0/acpi_cppc/
+
+### turbostat
 
 ## 更多的参数
 idle=poll
@@ -316,3 +331,5 @@ config HALTPOLL_CPUIDLE
 [ 4680.574360] done.
 [ 4680.574366] random: crng reseeded on system resumption
 ```
+
+## 资源

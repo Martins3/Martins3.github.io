@@ -562,17 +562,55 @@ https://cv6.poinsignon.org/ : 使用 traceroute 来展示自己的简历
 
 ## how to connect two network with ip a
 
+需要在图形界面中设置:
 13900K :
-
 - 10.0.0.1
-- 255.255.255
+- 255.255.255.0
 - 网关 192.168.8.1 : 确认下，非要使用这个吗
 
 M2
-
 - 10.0.0.1
 - netmask: 255.255.255
 - 网关 10.0.0.2
+
+也可以直接使用命令行配置:
+```txt
+sudo ifconfig eth0 10.0.0.2/24
+sudo ip route add default via 10.0.0.1 dev eth0
+```
+
+但是这样操作完成之后，就无法 13900K 的浏览器就无法上网了，因为当时是这种状态的:
+```txt
+default via 192.168.8.1 dev enp5s0 proto static metric 100
+default via 192.168.8.1 dev wlo1 proto dhcp src 192.168.11.3 metric 600
+10.0.0.0/24 dev enp5s0 proto kernel scope link src 10.0.0.1 metric 100
+172.17.0.0/16 dev docker0 proto kernel scope link src 172.17.0.1 linkdown
+192.168.8.0/22 dev wlo1 proto kernel scope link src 192.168.11.3 metric 600
+192.168.8.1 dev enp5s0 proto static scope link metric 100
+```
+
+```txt
+🧀  route -n
+Kernel IP routing table
+Destination     Gateway         Genmask         Flags Metric Ref    Use Iface
+0.0.0.0         192.168.8.1     0.0.0.0         UG    100    0        0 enp5s0
+0.0.0.0         192.168.8.1     0.0.0.0         UG    600    0        0 wlo1
+10.0.0.0        0.0.0.0         255.255.255.0   U     100    0        0 enp5s0
+172.17.0.0      0.0.0.0         255.255.0.0     U     0      0        0 docker0
+192.168.8.0     0.0.0.0         255.255.252.0   U     600    0        0 wlo1
+192.168.8.1     0.0.0.0         255.255.255.255 UH    100    0        0 enp5s0
+```
+
+```txt
+sudo route del -net 0.0.0.0 gw         192.168.8.1   netmask   0.0.0.0 dev enp5s0
+sudo route del -net 192.168.8.1 gw         0.0.0.0   netmask   255.255.255.255 dev enp5s0
+```
+- [ ] 不知道为什么，127.0.0.1 的那个代理现在没有办法使用了
+
+在 M2 中需要类似的设置:
+```txt
+sudo route del -net 0.0.0.0 gw   10.0.0.1   netmask   0.0.0.0 dev eth0
+```
 
 ### [ ] 如何删除其他的 profile
 
@@ -619,9 +657,9 @@ sudo ip route add default via 10.0.0.1 dev eth0
 > 13900K
 sudo ip ad add 10.0.0.1/24 dev enp5s0
 
-目前就这样配置吧
+这样配置实际上有问题的。
 
-- [ ] 非要设置 gateway 吗？
+- [ ] 非要设置 gateway192.168.8.1 吗？
 
 ```txt
 × NetworkManager-wait-online.service - Network Manager Wait Online
