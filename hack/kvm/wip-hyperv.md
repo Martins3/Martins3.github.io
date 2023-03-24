@@ -25,3 +25,5 @@ Emulating hardware Interfaces can be slow
             - Emulate an already supported (proprietary) hypervisor interfaces solving the exact same issues!
 
 ## https://kernel.love/hyperv-enlightenment.html
+
+## 启动 windows 的时候会调用到这里: kvm_get_hv_cpuid
