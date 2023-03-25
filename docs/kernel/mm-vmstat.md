@@ -174,6 +174,9 @@ numad 就是通过这个来实现的。
 | DirectMap2M     | 4947968 kB     |                                                                                                                                           |
 | DirectMap1G     | 30408704 kB    |                                                                                                                                           |
 
+- [x] Cached 和 Shmem : 前者是包含了部分后者吗？
+  - Cache 指的是文件映射的，而 Shmem 包括 anon 的，两者不是完全包含的
+
 ```txt
 $ free -m
               total        used        free      shared  buff/cache   available

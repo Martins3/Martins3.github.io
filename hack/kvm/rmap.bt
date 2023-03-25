@@ -10,6 +10,11 @@
 //     @bytes = hist(args->emulation_type);
 // }
 
-kfunc:vmx_handle_exit {
-  @bytes = hist(args->vcpu->arch.hflags & 1);
-}
+// kfunc:vmx_handle_exit {
+//   @bytes = hist(args->vcpu->arch.hflags & 1);
+// }
+
+// curtask
+// kfunc:arch_freq_get_on_cpu {
+//   printf("--> %d\n", curtask->flags);
+// }

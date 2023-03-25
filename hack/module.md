@@ -1,4 +1,3 @@
-
 # nvme
 1. /dev/nvme 的接口的处理
   1. 是如何通过 block 的 ioctl 最后指向了 nvme 的 ioctl 的啊 ?
@@ -9,7 +8,7 @@ https://hyunyoung2.github.io/2016/05/20/NVMe/
 http://ari-ava.blogspot.com/2014/07/opw-linux-block-io-layer-part-4-multi.html
 https://www.thomas-krenn.com/en/wiki/Linux_Multi-Queue_Block_IO_Queueing_Mechanism_(blk-mq)_Details
 
-# PCIe
+## PCIe
 > 1. PCIe 存在多种消息类型，message 似乎可以处理中断了，为什么还需要中断芯片
 > 2. PCIe 配置了 IRQ number
 > 3. 如果 PCIe 需要使用内核的代码，
@@ -28,7 +27,6 @@ The PCI device driver is not really a device driver at all but a function of the
 ## sys
 ls -la /sys/module/sis900/parameters/
 
-
 ## merge
 cat /proc/modules 可以查看所有的 module 的链接位置
 
@@ -36,3 +34,21 @@ Most PCIe devices are DMA masters, so the driver transfers the command to the de
 [^1]: https://nvmexpress.org/wp-content/uploads/NVM_Express_1_2_Gold_20141209.pdf
 [^2]: https://www.tldp.org/LDP/tlk/dd/pci.html
 [^3]: https://stackoverflow.com/questions/27470885/how-does-dma-work-with-pci-express-devices
+
+## module 加载的基本原理
+
+## 准备一个经典的 module 例子
+nixos 的和 centos 的，最好是可以统一的
+
+## weak modules 基本原理
+
+## dracut 的基本原理
+- softdep 之类的
+- 中 modinfo 之类的
+
+## 解决 gdb kernel modules 调试
+
+## 我希望既可以 -kernel 参数，也可以实现增加模块，应该可以吧
+
+## udev 的原理
+udev 是如何拉起来各种驱动的

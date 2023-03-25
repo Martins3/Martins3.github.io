@@ -933,3 +933,10 @@ CONFIG_PREEMPTIRQ_DELAY_TEST=m
 ## preempt
 - 中断的屏蔽和 preempt 的 disable 是两个事情
 - [ ] 那些地方是必须 `preempt_disable` 但是无需屏蔽中断
+
+## 分析一下这个函数
+
+```c
+#define rcu_is_idle_cpu(cpu) \
+	(is_idle_task(current) && !in_nmi() && !in_irq() && !in_serving_softirq())
+```

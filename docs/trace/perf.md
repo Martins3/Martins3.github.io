@@ -17,6 +17,11 @@ sudo perf stat -e 'kvm:*' -a sleep 1s
 3. 实时统计
 perf top -e kvm:kvm_nested_vmrun
 
+4. kprobe 获取返回值
+  - perf probe cpufreq_cpu_get%return
+    -
+
+
 ### [ ] 处理一下 perf 中 unknow 的数值情况
 
 例如下面，几乎显示所有的函数都是被一个 unknow 的函数调用的，是不是

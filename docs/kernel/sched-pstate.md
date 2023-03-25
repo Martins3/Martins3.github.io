@@ -333,3 +333,36 @@ config HALTPOLL_CPUIDLE
 ```
 
 ## 资源
+
+## 需要访问的代码
+
+```c
+unsigned int cpufreq_quick_get(unsigned int cpu)
+{
+	struct cpufreq_policy *policy;
+	unsigned int ret_freq = 0;
+	unsigned long flags;
+
+	read_lock_irqsave(&cpufreq_driver_lock, flags);
+
+	if (cpufreq_driver && cpufreq_driver->setpolicy && cpufreq_driver->get) {
+		ret_freq = cpufreq_driver->get(cpu);
+		read_unlock_irqrestore(&cpufreq_driver_lock, flags);
+		return ret_freq;
+	}
+
+	read_unlock_irqrestore(&cpufreq_driver_lock, flags);
+
+	policy = cpufreq_cpu_get(cpu);
+	if (policy) {
+		ret_freq = policy->cur;
+		cpufreq_cpu_put(policy);
+	}
+
+	return ret_freq;
+}
+```
+- [ ] 如何理解这里的 cpurfreq_policy 啊？
+
+## UEIF 中存在调整 cstate 的代码
+- 当然啊

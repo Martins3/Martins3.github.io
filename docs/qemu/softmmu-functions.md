@@ -2,17 +2,17 @@
 
 <!-- vim-markdown-toc GitLab -->
 
-- [背景介绍](#背景介绍)
-  - [access size](#access-size)
-  - [endianness](#endianness)
-- [softmmu 慢速路径访存](#softmmu-慢速路径访存)
-- [CPU 访存](#cpu-访存)
-  - [CPU 访问物理内存](#cpu-访问物理内存)
-  - [CPU 访问虚拟内存](#cpu-访问虚拟内存)
-- [CPU 访问 IO](#cpu-访问-io)
-- [设备访存](#设备访存)
-- [PCI 设备访存](#pci-设备访存)
-- [总结](#总结)
+* [背景介绍](#背景介绍)
+  * [access size](#access-size)
+  * [endianness](#endianness)
+* [softmmu 慢速路径访存](#softmmu-慢速路径访存)
+* [CPU 访存](#cpu-访存)
+  * [CPU 访问物理内存](#cpu-访问物理内存)
+  * [CPU 访问虚拟内存](#cpu-访问虚拟内存)
+* [CPU 访问 IO](#cpu-访问-io)
+* [设备访存](#设备访存)
+* [PCI 设备访存](#pci-设备访存)
+* [总结](#总结)
 
 <!-- vim-markdown-toc -->
 QEMU 为了处理大端小端(le/be), 不同大小(size = 1/2/4/8), 以及访存方向(load/store)，定义了一堆类似的 helper。
@@ -306,6 +306,18 @@ PCI_DMA_DEFINE_LDST(q_be, q_be, 64);
 
 而在 memory_region_dispatch_write 将会处理 endianness 和 size 的大小。
 
-<script src="https://utteranc.es/client.js" repo="Martins3/Martins3.github.io" issue-term="url" theme="github-light" crossorigin="anonymous" async> </script>
+<script src="https://giscus.app/client.js"
+        data-repo="martins3/martins3.github.io"
+        data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="
+        data-category="Show and tell"
+        data-category-id="MDE4OkRpc2N1c3Npb25DYXRlZ29yeTMyMDMzNjY4"
+        data-mapping="pathname"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-theme="light"
+        data-lang="zh-CN"
+        crossorigin="anonymous"
+        async>
+</script>
 
 本站所有文章转发 **CSDN** 将按侵权追究法律责任，其它情况随意。

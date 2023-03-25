@@ -488,3 +488,27 @@ time_based
 ## UBSAN
 
 ## 可以持续更新一下 misc-power.md 的内容
+
+## 关注下这些中断
+cat /proc/interrupts 中截获的:
+```txt
+Non-maskable interrupts
+Local timer interrupts
+Spurious interrupts
+Performance monitoring interrupts
+IRQ work interrupts
+APIC ICR read retries
+Rescheduling interrupts
+Function call interrupts
+TLB shootdowns
+Thermal event interrupts
+Threshold APIC interrupts
+Deferred Error APIC interrupts
+Machine check exceptions
+Machine check polls
+
+
+Posted-interrupt notification event
+Nested posted-interrupt event
+Posted-interrupt wakeup event
+```
