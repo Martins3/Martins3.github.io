@@ -512,3 +512,11 @@ Posted-interrupt notification event
 Nested posted-interrupt event
 Posted-interrupt wakeup event
 ```
+
+## 使用 watch 来观测 /proc/interrupts
+我发现 Local timer interrupts 的数量变化既不是 1000 每秒，也不是几十每秒？
+这很不正常！
+
+## 为什么时钟中断没有办法线程化
+
+## 整理下如何如何极致优化 kernel 编译的性能

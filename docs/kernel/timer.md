@@ -702,6 +702,17 @@ http://www.wowotech.net/timer_subsystem/tick-broadcast-framework.html
   - idle 子系统
   - tick_nohz_idle_exit
 
+## 一次时钟中断需要做的工作
+It performs many jobs:
+- Run expired general purpose timer callbacks
+- Elapse posix CPU timers and run those that have expired
+- Timekeeping: maintain internal clock (jiffies) and external clock (gettimeofday())
+- Scheduler: maintain internal state, fairness and priorities (task preemption)
+- Maintain global load average
+- Maintain perf events, etc……
+
+参考 : https://www.suse.com/c/cpu-isolation-introduction-part-1/
+
 
 [^1]: https://www.kernel.org/doc/html/latest/virt/kvm/timekeeping.html
 [^2]: https://github.com/dterei/tsc

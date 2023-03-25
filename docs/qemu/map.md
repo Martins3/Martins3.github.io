@@ -96,8 +96,12 @@ page_collection_lock(tb_page_addr_t start, tb_page_addr_t end)
 在 page_find_alloc 进行查询。
 
 ## 根据 retaddr 找到其关联的 TranslationBlock
-对于每一段 guest 的 translation block, QEMU 都会创建一个 TranslationBlock,
-TranslationBlock 就是生成的代码左侧, 但是当生成的代码(也地址为 retaddr) 中退出的时候，是无法知道其关联的 TranslationBlock 的位置的。
+对于每一段 guest 的 translation block, QEMU 都会创建一个 `struct TranslationBlock` 和翻译出对应的 host 代码。
+TranslationBlock 就是存放在所生成的代码左侧, 但是当生成的代码(其地址为 retaddr) 中退出的时候，是无法知道其关联的 TranslationBlock 的位置的。
+
+```txt
+| struct TranslationBlock | generated code |
+```
 
 tcg_tb_alloc 的注释说道
 ```c
