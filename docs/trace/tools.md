@@ -95,3 +95,7 @@ https://serverfault.com/questions/180711/what-exactly-do-the-colors-in-htop-stat
 - [ ] top 是如何统计 usr 和 sys 的
 
 [^9]: https://peteris.rocks/blog/htop/
+
+## 这里的工具都需要掌握一下
+- https://github.com/util-linux/util-linux
+  - https://en.wikipedia.org/wiki/Util-linux

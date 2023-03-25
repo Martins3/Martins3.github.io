@@ -269,3 +269,7 @@ https://archive.fosdem.org/2019/schedule/event/vai_enlightening_kvm/attachments/
 ```
 
 - [ ] vmcs02 如何同步到 vmcs01 ? 找到具体的那个写动作
+
+## 关键文档 : 原始的 kvm forum
+- https://www.linux-kvm.org/images/e/e9/Kvm-forum-2013-nested-virtualization-shadow-turtles.pdf
+- https://www.linux-kvm.org/images/8/8c/Kvm-forum-2013-nested-ept.pdf

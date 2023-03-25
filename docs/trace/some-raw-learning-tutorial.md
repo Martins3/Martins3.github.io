@@ -40,7 +40,6 @@ argdist -p $(pidof server) -H 'p::SyS_nanosleep(struct timespec *time):u64:time-
 - [x] perf_events 在内核中间的位置在哪里 ? kernel/events 中间
 - [ ] perf 可以实现什么，不可以实现什么东西 ? 从 perf man 的最下面的几个方向。
 - [ ] 为什么可以定位符号，gcc -g 到底生成了什么东西
-- [ ] ftrace 和 perf 是什么关系呀 ? 至少应该是功能不同的东西吧，如果 perf 采用 sampling 的技术，而 ftrace 可以知道其中
 - [ ] hardware breakpoint 是什么东西 ?
 
 
@@ -71,13 +70,6 @@ measure scheduler latency:
 ```plain
 perf sched record sleep 10
 perf sched latency
-```
-
-也可以作为 ftrace 使用:
-perf ftrace is a simple *wrapper* for kernel's ftrace functionality, and only supports single thread tracing now.
-```plain
-perf ftrace -T __kmalloc ./add_vec
-perf ftrace ./add_vec
 ```
 
 `perf diff` command is used to displays the performance difference amongst two or more perf.data files captured via perf record command.

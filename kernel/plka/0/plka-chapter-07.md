@@ -18,7 +18,7 @@ License issues can also be resolved with the help of modules.
 > modprobe 是什么东西
 
 The actions needed when loading a module show strong similarities with the linking of application
-programs by means of ld and with the use of dynamic libraries with ld.so. 
+programs by means of ld and with the use of dynamic libraries with ld.so.
 Externally, **modules are just normal relocatable object files**, as a `file` call will quickly confirm
 They are, of course, neither executable files nor program libraries as normally found in system programming; however, the basic structure of the binary module file is based on the same scheme also used for
 the above purposes.
@@ -53,11 +53,11 @@ the modules of a system
 cat /lib/modules/5.1.18-1-MANJARO/modules.dep
 ```
 This information is processed by modprobe, which is used to insert modules into the kernel if existing
-dependencies are to be resolved automatically. 
+dependencies are to be resolved automatically.
 
 Most symbols to which the modules refer are not defined in other modules but in the kernel itself.
 For this reason, the file `/lib/modules/version/System.map` is generated (likewise using depmod) when
-modules are installed. 
+modules are installed.
 > 这一个选项消失了
 
 #### 7.2.3 Querying Module Information
@@ -116,7 +116,7 @@ kernel side. It is required not only to load modules but also to implement hotpl
 struct module的编译选项:
 1. `KALLSYMS` is a configuration option (but only for embedded systems — it is always enabled on
 regular machines) that holds in memory a list of all symbols defined in the kernel itself and in the
-loaded modules (otherwise only the exported functions are stored). 
+loaded modules (otherwise only the exported functions are stored).
 This is useful if oops messages (which are used if the kernel detects a deviation from the normal behavior, for example, if
 a NULL pointer is de-referenced) are to output not only hexadecimal numbers but also the names
 of the functions involved.
@@ -144,7 +144,7 @@ enum module_state {
 ```
 2. `list` is a standard list element used by the kernel to keep all loaded modules in a doubly linked
 list
-3. `name` specifies the name of the module. 
+3. `name` specifies the name of the module.
 4. `syms`, `num_syms`, and `crc` are used to manage the symbols exported by the module. syms is an
 array of num_syms entries of the kernel_symbol type and is responsible for assigning identifiers
 (name) to memory addresses (value).
@@ -235,7 +235,7 @@ by GPL-compatible parts, and those in `__ksymtab_gpl_future` only by GPL-compati
 the future.
 
 2. `__kcrctab`, `__kcrctab_gpl`, and `__kcrctab_gpl_future` contain checksums for all (GPL, or
-future-GPL) exported functions of the module. `__versions` includes the checksums for all 
+future-GPL) exported functions of the module. `__versions` includes the checksums for all
 references used by the module from external sources.
 3. `__param` stores information on the parameters accepted by a module.
 4. `__ex_table` is used to define new entries for the exception table of the kernel in case the module
@@ -368,84 +368,8 @@ The `init_module` system call is the interface between userspace and kernel and 
   static int load_module(struct load_info *info, const char __user *uargs,
              int flags)
   {
-    struct module *mod;
-    long err;
-    char *after_dashes;
-
-    err = module_sig_check(info, flags);
-
-    err = elf_header_check(info);
-
-    /* Figure out module layout, and allocate all the memory. */
-    mod = layout_and_allocate(info, flags);
-
-    /* Reserve our place in the list. */
-    err = add_unformed_module(mod);
-
-#ifdef CONFIG_MODULE_SIG
-    mod->sig_ok = info->sig_ok;
-    if (!mod->sig_ok) {
-      pr_notice_once("%s: module verification failed: signature "
-               "and/or required key missing - tainting "
-               "kernel\n", mod->name);
-      add_taint_module(mod, TAINT_UNSIGNED_MODULE, LOCKDEP_STILL_OK);
-    }
-#endif
-
-    /* To avoid stressing percpu allocator, do this once we're unique. */
-    err = percpu_modalloc(mod, info);
-
-    /* Now module is in final location, initialize linked lists, etc. */
-    err = module_unload_init(mod);
-
-    init_param_lock(mod);
-
-    /* Now we've got everything in the final locations, we can
-     * find optional sections. */
-    err = find_module_sections(mod, info);
-
-    err = check_module_license_and_versions(mod);
-
-    /* Set up MODINFO_ATTR fields */
-    setup_modinfo(mod, info);
-
-    /* Fix up syms, so that st_value is a pointer to location. */
-    err = simplify_symbols(mod, info);
-
-    err = apply_relocations(mod, info);
-
-    err = post_relocation(mod, info);
-
-    flush_module_icache(mod);
-
-    /* Now copy in args */
-    mod->args = strndup_user(uargs, ~0UL >> 1);
-
-    dynamic_debug_setup(info->debug, info->num_debug);
-
-    /* Ftrace init must be called in the MODULE_STATE_UNFORMED state */
-    ftrace_module_init(mod);
-
-    /* Finally it's fully formed, ready to start executing. */
-    err = complete_formation(mod, info);
-
-    /* Module is ready to execute: parsing args may do that. */
-    after_dashes = parse_args(mod->name, mod->args, mod->kp, mod->num_kp,
-            -32768, 32767, mod,
-            unknown_module_param_cb);
-
-    /* Link in to syfs. */
-    err = mod_sysfs_setup(mod, info, mod->kp, mod->num_kp);
-
-    /* Get rid of temporary copy. */
-    free_copy(info);
-
-    /* Done! */
-    trace_module_load(mod);
-
-    return do_init_module(mod);
-  }
 ```
+
 The binary data are transferred into the kernel address space using `load_module`. All required relocations
 are performed, and all references are resolved. The arguments are converted into a form that is easy to
 analyze (a table of `kernel_param` instances), and an instance of the module data structure is created with
@@ -527,7 +451,7 @@ their header
 
 ```c
 	/* Figure out module layout, and allocate all the memory. */
-static struct module *layout_and_allocate(struct load_info *info, int flags) // 在layout_and_allocate 中间分别调用 layout_sections 和 move_module 
+static struct module *layout_and_allocate(struct load_info *info, int flags) // 在layout_and_allocate 中间分别调用 layout_sections 和 move_module
 
 
 /* Lay out the SHF_ALLOC sections in a way not dissimilar to how ld
@@ -624,80 +548,8 @@ const struct kernel_symbol *find_symbol(const char *name,
 ```c
 SYSCALL_DEFINE2(delete_module, const char __user *, name_user,
 		unsigned int, flags)
-{
-	struct module *mod;
-	char name[MODULE_NAME_LEN];
-	int ret, forced = 0;
-
-	if (!capable(CAP_SYS_MODULE) || modules_disabled)
-		return -EPERM;
-
-	if (strncpy_from_user(name, name_user, MODULE_NAME_LEN-1) < 0)
-		return -EFAULT;
-	name[MODULE_NAME_LEN-1] = '\0';
-
-	audit_log_kern_module(name);
-
-	if (mutex_lock_interruptible(&module_mutex) != 0)
-		return -EINTR;
-
-	mod = find_module(name);
-	if (!mod) {
-		ret = -ENOENT;
-		goto out;
-	}
-
-	if (!list_empty(&mod->source_list)) {
-		/* Other modules depend on us: get rid of them first. */
-		ret = -EWOULDBLOCK;
-		goto out;
-	}
-
-	/* Doing init or already dying? */
-	if (mod->state != MODULE_STATE_LIVE) {
-		/* FIXME: if (force), slam module count damn the torpedoes */
-		pr_debug("%s already dying\n", mod->name);
-		ret = -EBUSY;
-		goto out;
-	}
-
-	/* If it has an init func, it must have an exit func to unload */
-	if (mod->init && !mod->exit) {
-		forced = try_force_unload(flags);
-		if (!forced) {
-			/* This module can't be removed */
-			ret = -EBUSY;
-			goto out;
-		}
-	}
-
-	/* Stop the machine so refcounts can't move and disable module. */
-	ret = try_stop_module(mod, flags, &forced);
-	if (ret != 0)
-		goto out;
-
-	mutex_unlock(&module_mutex);
-	/* Final destruction now no one is using it. */
-	if (mod->exit != NULL)
-		mod->exit();
-	blocking_notifier_call_chain(&module_notify_list,
-				     MODULE_STATE_GOING, mod);
-	klp_module_going(mod);
-	ftrace_release_mod(mod);
-
-	async_synchronize_full();
-
-	/* Store the name of the last unloaded module for diagnostic purposes */
-	strlcpy(last_unloaded_module, mod->name, sizeof(last_unloaded_module));
-
-	free_module(mod);
-	return 0;
-out:
-	mutex_unlock(&module_mutex);
-	return ret;
 ```
 > 这一个函数结构清晰明了，大概就是　找到，检查依赖关系，调用`mod->exit()`，释放内存
-
 
 ## 7.4 Automation and Hotplugging
 Modules can be loaded not only on the initiative of the user or by means of an automated script, but can
@@ -729,10 +581,10 @@ detects the new device and automatically loads the module with the appropriate d
 
 
 **TODO**  问题:
-1. 模块和设备的关系是什么? 
+1. 模块和设备的关系是什么?
 https://unix.stackexchange.com/questions/47208/what-is-the-difference-between-kernel-drivers-and-kernel-modules
 没有包含的关系，只是含有很大的交集而已。
 
 
-2. initrd 
+2. initrd
 https://en.wikipedia.org/wiki/Initial_ramdisk

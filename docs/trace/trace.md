@@ -15,45 +15,8 @@
 - [ ] 所以 lttng 相对于 bpf 有什么优势吗?
 - [ ] perf 工具比我想想的要强大，应该好好的重新分析一下
   - https://www.brendangregg.com/FlameGraphs/cpuflamegraphs.html
-- [ ] 感觉 perf 能做的事情，bpftrace 和 ebpf 都可以做，而且更加好
-  - 例如 hardware monitor 在 bpftrace 中和 bcc 中 llcstat-bpfcc 都是可以做的
 - [ ] bpf 相对于 perf 有什么优势吗?
 - [ ] QEMU 的编译选项中:
-
-
-## ftrace-cmd
-https://lwn.net/Articles/410200/ 的记录
-
-- [ ] 两个用户层次的前端工具 : perf + trace-cmd 分别读取的内容是从哪里的呀 ?
-- [ ] trace-cmd
-
-1. ftrace-cmd 的 record 原理: 为每一个 cpu 创建出来一个 process，读取 /sys/kernel/debug/tracing/per_cpu/cpu0，最后主函数将所有的 concatenate 起来
-2. -e 可以选择一个 trace event 或者一个 subsystem 的 trace point。The -e option enables an event. The argument following the -e can be an event name, event subsystem name, or the special name all.
-3. 四种功能 : Ftrace also has special plugin tracers that do not simply trace specific events. These tracers include the function, function graph, and latency tracers.
-    1. trace function 指的是 ?
-    2. `current_tracer` 可以放置的内容那么多，为什么只有这几个 plugin
-    3. 当 latency tracer 和 perf 的关系是什么 ?
-4. 解释下面的程序:
-    1. -p 添加 function plugin
-    2. -e 选择需要被 trace 的 events
-    3. The `-l` option is the same as echoing its argument into `set_ftrace_filter`, and the `-n` option is the same as echoing its argument into `set_ftrace_notrace`.
-```sh
-trace-cmd record -p function -l 'sched_*' -n 'sched_slice'
-```
-5. 解释下面的程序: TODO 应该是采用，
-```txt
-trace-cmd record -p function_graph -l do_IRQ -e irq_handler_entry sleep 10
-```
-
-> TODO : 到底 dynamic ftrace 是什么 ?
-
-
-> 让我们解决一个小问题，为什么没有办法写入到 `set_ftrace_filter`
-https://superuser.com/questions/287371/obtain-kernel-config-from-currently-running-linux-system
-
-> 引出了一个小问题:
-`tracing_on` 和 `/proc/sys/kernel/ftrace_enabled` 分别表示什么 ?
-
 
 ## [valgrind](http://valgrind.org/)
 使用上很简单:
@@ -253,7 +216,6 @@ dpdk 测试工具
 [^7]: [kernelshark](https://www.cnblogs.com/arnoldlu/p/9014365.html)
 [^8]: [Linux Performance](http://www.brendangregg.com/linuxperf.html)
 [^9]: [Linux tracing systems & how they fit together](https://jvns.ca/blog/2017/07/05/linux-tracing-systems/)
-[^10]: [lwn : A look at ftrace](https://lwn.net/Articles/322666/)
 [^11]: [perf tutorial](https://perf.wiki.kernel.org/index.php/Tutorial)
 [^12]: https://github.com/NanXiao/perf-little-book
 [^13]: https://pingcap.com/blog/why-we-switched-from-bcc-to-libbpf-for-linux-bpf-performance-analysis

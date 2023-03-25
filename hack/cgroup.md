@@ -37,6 +37,7 @@
   * [[ ] 这两个是什么区别](#-这两个是什么区别)
 * [[ ] 实际上，cgroup 的热迁移是默认不迁移内存的](#-实际上cgroup-的热迁移是默认不迁移内存的)
 * [cgroup.events](#cgroupevents)
+* [cgroup.misc](#cgroupmisc)
 * [reference](#reference)
 
 <!-- vim-markdown-toc -->
@@ -1054,6 +1055,18 @@ frozen 0
 ```
 1. populated : 描述一个 cgroup 中是否存在进程
 2. frozen : @todo
+
+## cgroup.misc
+细节看 : https://lwn.net/Articles/856438/
+
+处理一些 ASID 之类的分配:
+
+```txt
+/sys/fs/cgroup/misc.capacity
+user.slice/misc.current
+user.slice/misc.events
+user.slice/misc.max
+```
 
 ## reference
 [^1]: v1 https://www.kernel.org/doc/html/latest/admin-guide/cgroup-v1/index.html

@@ -4,7 +4,6 @@
 1. sched_fork && wake_up_new_task : 一生之敌
 2. copy_process 中间的 copy 函数真的让人窒息
     1. copy_semundo : IPC 需要拷贝吗 ?
-3. ftrace_graph_exit_task : ftrace_graph 是个啥
 4. task_struct::stack task_struct::thread_info 的作用
 
 4. 内核如何产生自己的线程的 ?

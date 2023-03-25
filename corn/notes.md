@@ -16,8 +16,7 @@
 - [ ] core latency
 - [ ] cache latency
 - [ ] numa latency
-- [ ] 各种 perf ，bpftrace 之类的
-- [ ] 收集各种 backtrace 和 bpftrace 的
+- [ ] 各种 perf ，bpftrace，ftrace 之类的
 - [ ] 错误注入
 
 
@@ -77,3 +76,15 @@ journalctl -u systemd-udevd.service
 
 ## 虚拟机中搭建这个
 https://github.com/meienberger/runtipi
+
+
+## 参考 goffinet 的 packer 脚本
+- https://github.com/goffinet/packer-kvm
+- https://github.com/goffinet/virt-scripts
+
+```txt
+qemu-system-x86  141151  141073    0 /home/martins3/core/qemu/build/qemu-system-x86_64 -vnc 127.0.0.1:26 -drive file=artifacts/qemu/centos9/packer-cen
+tos9,if=virtio,cache=none,discard=unmap,format=qcow2 -drive file=/home/martins3/.cache/packer/7df0e601c1b6b1d629ebd8ddb382c34f976417d6.iso,media=cdrom
+ -netdev user,id=user.0,hostfwd=tcp::4053-:22 -cpu host -boot once=d -name packer-centos9 -machine type=pc,accel=kvm -device virtio-net,netdev=user.0
+-m
+```
