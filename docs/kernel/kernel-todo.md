@@ -520,3 +520,7 @@ Posted-interrupt wakeup event
 ## 为什么时钟中断没有办法线程化
 
 ## 整理下如何如何极致优化 kernel 编译的性能
+
+## tracing 是自动挂载到 /sys/kernel/debug 下的，还是 kernel 启动之后，手动挂载到上面的
+
+## 才发现 /sys/kernel/debug 下面有这么多内容，ftrace 只是启动的一个小文件夹

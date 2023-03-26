@@ -401,11 +401,10 @@ ftrace 是一个功能十分强大的导出方法，其形式一个 debugfs，�
 ****
 perf 是内核源码 tools/下的一个文件夹，其一个主要侧重于性能分析，kprobe，uprobe 等各种数据也兼顾的。
 
-trace-cmd 是为了解决更加方便的使用 ftrace 接口，例如自动 mount，开机记录前自动清理 trace 等工作，而 kernelshark 是一个基于 trace-cmd 的图形化工具。
-
 sysdig 的一个特性是对于容器的原生支持，非常适合在云计算业务上，例如 kubunate 或者 docker 等基础设施上进行调试。除此之外，其他功能比较齐全。
 
-SystemTap 是最强大的 trace 工具，其甚至提供自定义的语言，但是 SystemTap 的全部功能的实现需要编译内核的时候 CONFIG_DEBUG_INFO 的选项打开，对于一般的发行版而言，这个功能是没有打开的，不过，在添加 dirty cow 漏洞的时候，可以一并加入。
+SystemTap 是最强大的 trace 工具，其甚至提供自定义的语言，
+但是 SystemTap 的全部功能的实现需要编译内核的时候 CONFIG_DEBUG_INFO 的选项打开，
 
 ## 试验步骤
 实现的步骤的非常麻烦的一步在于环境的搭建，而核心在于在含有 dirty cow 漏洞的内核上，使用各种工具加以探测分析，为今后分析内核大小基础。

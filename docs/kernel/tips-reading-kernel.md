@@ -57,9 +57,11 @@ kprobe:task_tick_fair
     asm_sysvec_apic_timer_interrupt+18
 ]: 171
 ```
+## debug 目录
+- kvm_stat
 
-<!-- ## [ ] gcov -->
+## [ ] gcov
 
-<!-- ## TODO -->
-<!-- - [ ] 将 QEMU 的基本使用变为一个单独的文章分析一下 -->
-<!--   - 分析各种常用的技术 -->
+## 观测内核
+- mm-vmstat.md
+- systeroid --tui

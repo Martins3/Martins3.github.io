@@ -38,15 +38,6 @@ void perf_event_update_userpage(struct perf_event *event)
 ## 关键问题 : 到底实现什么功能，以及不可以做什么
 - [ ] `available_filter_functions` : dynamic ftrace 的含义
 
-> 记录一个小问题 :
-[shen-pc tracing]# cat ksys_read > set_ftrace_filter
-cat: ksys_read: No such file or directory
-[shen-pc tracing]# cat ksys_read > s^C_ftrace_filter
-[shen-pc tracing]# trace 'ksys_read'^C
-
-## 关键问题 : 可以做的事情
-- 所有的工具的功能的整理 : dtrace SystemTap 等
-
 ## (tmp)branch trace
 2. /sys/kernel/debug/tracing 可以对应 branch_print_header 的输出内容啊
 

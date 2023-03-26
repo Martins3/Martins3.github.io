@@ -73,9 +73,12 @@ Richard Stevens 英年早逝，这导致 Advanced Unix Programming 这本书接�
 ### 其他的学习资源
 我在自己的学习过程中间收集了一些资源，放到了[这里](https://github.com/Martins3/Martins3.github.io/blob/master/os/os-route.md), 可以作为参考。
 
+<!-- @todo 补充一下相关的会议，论文 -->
+
 ### 个人想法
 我个人感觉，如果想要真正深入理解内核，其实是要向上和向下扩展才可以的:
-- 深入理解硬件的原理，至少要搞搞 FPGA，写写 CPU
+- 深入理解硬件的原理，至少要搞搞 FPGA，写写 CPU 。
+- 搞搞编译器。
 - 深入理解应用的需求
 
 当然从简单的来说，QEMU 应该是每个搞 Linux 最后都会掌握的吧。

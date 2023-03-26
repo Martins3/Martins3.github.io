@@ -11,26 +11,227 @@ blk function_graph wakeup_dl wakeup_rt wakeup function nop
 
 总体的教程 : 直接在 debugfs 上的操作，然后 trace-cmd，最后图形化的 kernelshark
 
-## 分析下这个
-- CONFIG_BOOTTIME_TRACING=y
+## 问题
+- [ ] function and latency tracers : 为什么 ftrace 可以跟踪 latency tracer
+- [ ] 为什么 ftrace 可以跟踪 kprobe 和 uprobe
+- [ ] 无法理解 `CONFIG_FUNCTION_GRAPH_TRACER`
+- [ ] set_ftrace_filter 到底可以设置什么内容？
+  - 至少 kprobe 对于 inline 函数是非常敏感的
+- [ ] function 和 function graph 有啥区别
+- [ ] 这些 tracer 都是做啥的: blk function_graph wakeup_dl wakeup_rt wakeup function nop
+- [ ] trace-cmd 的 event 不就是 tracepoint 机制吗？
 
-## 实际上，当 make menuconfig 的时候， CONFIG_BOOTTIME_TRACING 同级下面存在很多内容
+## Kernel hacking -> Tracker
 
-## ftrace
-lwn 关于 ftrace 的介绍 [^10]
+### Trace syscalls
+- 不知道怎么用
 
-The name ftrace comes from "function tracer", which was its original purpose, but it can do more than that. Various additional tracers have been added to look at things like context switches, how long interrupts are disabled, how long it takes for high-priority tasks to run after they have been woken up, and so on. Its genesis in the realtime tree is evident in the tracers so far available, but ftrace also includes a plugin framework that allows new tracers to be added easily.
+## CONFIG_BOOTTIME_TRACING
+
+设置如下等效于
+```txt
+   ftrace_notrace=rcu_read_lock,rcu_read_unlock,spin_lock,spin_unlock
+   ftrace_filter=kfree,kmalloc,schedule,vmalloc_fault,spurious_fault
+```
+在开机的时候设置 ftrace_notrace 和 ftrace_filter 中的内容。
+
+## [官方文档](https://www.kernel.org/doc/html/latest/trace/ftrace.html)
+
+### dynamic ftrace
+
+## [A look at ftrace](https://lwn.net/Articles/322666/)
+The name ftrace comes from "function tracer", which was its original purpose, but it can do more than that.
+Various additional tracers have been added to look at things like context switches, how long interrupts are disabled,
+how long it takes for high-priority tasks to run after they have been woken up, and so on.
+Its genesis in the realtime tree is evident in the tracers so far available, but ftrace also includes a plugin framework that allows new tracers to be added easily.
 > 起源，ftrace 的功能后来逐渐增加，并且提供框架
 
-// TODO 为什么感觉所有的内容都是可以挂载在 debug 下面的
+- [ ] 还没看完
 
-观察一下 /sys/kernel/debug/tracing 的 README
+## [Secrets of the Ftrace function tracer](https://lwn.net/Articles/370423/)
+```txt
+echo set* > set_ftrace_filter # 可以 regex
+echo ':mod:ext4' > set_ftrace_filter # 显示一个模块
+echo '__bad_area_nosemaphore:traceoff' > set_ftrace_filter # 禁用
+```
 
-https://jvns.ca/blog/2017/03/19/getting-started-with-ftrace/
+```txt
+echo '!*lock*' >> set_ftrace_filter
+```
+不是存在 `set_ftrace_notrace`，为什么想要这个代码？
+
+- [ ] ./code/ftrace-two.sh 中的代码无法产生任何结果
+
+## [Debugging the kernel using Ftrace - part 1](https://lwn.net/Articles/365835/)
+-[ ] trace_prink 没有看到输出
+
+## [Debugging the kernel using Ftrace - part 2](https://lwn.net/Articles/366796/)
+- tracing_off() 在内核中直接调控 tracing_on
+- cat /proc/sys/kernel/ftrace_dump_on_oops
+- You can also trigger a dump of the Ftrace buffer to the console with sysrq-z.
+
+> To choose a particular location for the kernel dump, the kernel may call ftrace_dump() directly. Note, this may permanently disable Ftrace and a reboot may be necessary to enable it again. This is because ftrace_dump() reads the buffer. The buffer is made to be written to in all contexts (interrupt, NMI, scheduling) but the reading of the buffer requires locking. To be able to perform ftrace_dump() the locking is disabled and the buffer may end up being corrupted after the output.
+
+这个什么意思？
+
+- /sys/kernel/debug/tracing/stack_trace : 记录每次最大深度的 kernel stack 的
+
+## /sys/kernel/debug/tracing/README
+
+```txt
+tracing mini-HOWTO:
+
+# echo 0 > tracing_on : quick way to disable tracing
+# echo 1 > tracing_on : quick way to re-enable tracing
+
+ Important files:
+  trace                 - The static contents of the buffer
+                          To clear the buffer write into this file: echo > trace
+  trace_pipe            - A consuming read to see the contents of the buffer
+  current_tracer        - function and latency tracers
+  available_tracers     - list of configured tracers for current_tracer
+  error_log     - error log for failed commands (that support it)
+  buffer_size_kb        - view and modify size of per cpu buffer
+  buffer_total_size_kb  - view total size of all cpu buffers
+
+  trace_clock           - change the clock used to order events
+       local:   Per cpu clock but may not be synced across CPUs
+      global:   Synced across CPUs but slows tracing down.
+     counter:   Not a clock, but just an increment
+      uptime:   Jiffy counter from time of boot
+        perf:   Same clock that perf events use
+     x86-tsc:   TSC cycle counter
+
+  timestamp_mode        - view the mode used to timestamp events
+       delta:   Delta difference against a buffer-wide timestamp
+    absolute:   Absolute (standalone) timestamp
+
+  trace_marker          - Writes into this file writes into the kernel buffer
+
+  trace_marker_raw              - Writes into this file writes binary data into the kernel buffer
+  tracing_cpumask       - Limit which CPUs to trace
+  instances             - Make sub-buffers with: mkdir instances/foo
+                          Remove sub-buffer with rmdir
+  trace_options         - Set format or modify how tracing happens
+                          Disable an option by prefixing 'no' to the
+                          option name
+  saved_cmdlines_size   - echo command number in here to store comm-pid list
+
+  available_filter_functions - list of functions that can be filtered on
+  set_ftrace_filter     - echo function name in here to only trace these
+                          functions
+             accepts: func_full_name or glob-matching-pattern
+             modules: Can select a group via module
+              Format: :mod:<module-name>
+             example: echo :mod:ext3 > set_ftrace_filter
+            triggers: a command to perform when function is hit
+              Format: <function>:<trigger>[:count]
+             trigger: traceon, traceoff
+                      enable_event:<system>:<event>
+                      disable_event:<system>:<event>
+                      stacktrace
+                      snapshot
+                      dump
+                      cpudump
+             example: echo do_fault:traceoff > set_ftrace_filter
+                      echo do_trap:traceoff:3 > set_ftrace_filter
+             The first one will disable tracing every time do_fault is hit
+             The second will disable tracing at most 3 times when do_trap is hit
+               The first time do trap is hit and it disables tracing, the
+               counter will decrement to 2. If tracing is already disabled,
+               the counter will not decrement. It only decrements when the
+               trigger did work
+             To remove trigger without count:
+               echo '!<function>:<trigger> > set_ftrace_filter
+             To remove trigger with a count:
+               echo '!<function>:<trigger>:0 > set_ftrace_filter
+  set_ftrace_notrace    - echo function name in here to never trace.
+            accepts: func_full_name, *func_end, func_begin*, *func_middle*
+            modules: Can select a group via module command :mod:
+            Does not accept triggers
+  set_ftrace_pid        - Write pid(s) to only function trace those pids
+                    (function)
+  set_ftrace_notrace_pid        - Write pid(s) to not function trace those pids
+                    (function)
+  set_graph_function    - Trace the nested calls of a function (function_graph)
+  set_graph_notrace     - Do not trace the nested calls of a function (function_graph)
+  max_graph_depth       - Trace a limited depth of nested calls (0 is unlimited)
+
+  snapshot              - Like 'trace' but shows the content of the static
+                          snapshot buffer. Read the contents for more
+                          information
+  stack_trace           - Shows the max stack trace when active
+  stack_max_size        - Shows current max stack size that was traced
+                          Write into this file to reset the max size (trigger a
+                          new trace)
+  stack_trace_filter    - Like set_ftrace_filter but limits what stack_trace
+                          traces
+  dynamic_events                - Create/append/remove/show the generic dynamic events
+                          Write into this file to define/undefine new trace events.
+  kprobe_events         - Create/append/remove/show the kernel dynamic events
+                          Write into this file to define/undefine new trace events.
+  uprobe_events         - Create/append/remove/show the userspace dynamic events
+                          Write into this file to define/undefine new trace events.
+          accepts: event-definitions (one definition per line)
+           Format: p[:[<group>/][<event>]] <place> [<args>]
+                   r[maxactive][:[<group>/][<event>]] <place> [<args>]
+                   e[:[<group>/][<event>]] <attached-group>.<attached-event> [<args>]
+                   -:[<group>/][<event>]
+            place: [<module>:]<symbol>[+<offset>]|<memaddr>
+place (kretprobe): [<module>:]<symbol>[+<offset>]%return|<memaddr>
+   place (uprobe): <path>:<offset>[%return][(ref_ctr_offset)]
+             args: <name>=fetcharg[:type]
+         fetcharg: (%<register>|$<efield>), @<address>, @<symbol>[+|-<offset>],
+                   $stack<index>, $stack, $retval, $comm, $arg<N>,
+                   +|-[u]<offset>(<fetcharg>), \imm-value, \"imm-string"
+             type: s8/16/32/64, u8/16/32/64, x8/16/32/64, string, symbol,
+                   b<bit-width>@<bit-offset>/<container-size>, ustring,
+                   symstr, <type>\[<array-size>\]
+            efield: For event probes ('e' types), the field is on of the fields
+                    of the <attached-group>/<attached-event>.
+  events/               - Directory containing all trace event subsystems:
+      enable            - Write 0/1 to enable/disable tracing of all events
+  events/<system>/      - Directory containing all trace events for <system>:
+      enable            - Write 0/1 to enable/disable tracing of all <system>
+                          events
+      filter            - If set, only events passing filter are traced
+  events/<system>/<event>/      - Directory containing control files for
+                          <event>:
+      enable            - Write 0/1 to enable/disable tracing of <event>
+      filter            - If set, only events passing filter are traced
+      trigger           - If set, a command to perform when event is hit
+            Format: <trigger>[:count][if <filter>]
+           trigger: traceon, traceoff
+                    enable_event:<system>:<event>
+                    disable_event:<system>:<event>
+                    stacktrace
+                    snapshot
+           example: echo traceoff > events/block/block_unplug/trigger
+                    echo traceoff:3 > events/block/block_unplug/trigger
+                    echo 'enable_event:kmem:kmalloc:3 if nr_rq > 1' > \
+                          events/block/block_unplug/trigger
+           The first disables tracing every time block_unplug is hit.
+           The second disables tracing the first 3 times block_unplug is hit.
+           The third enables the kmalloc event the first 3 times block_unplug
+             is hit and has value of greater than 1 for the 'nr_rq' event field.
+           Like function triggers, the counter is only decremented if it
+            enabled or disabled tracing.
+           To remove a trigger without a count:
+             echo '!<trigger> > <system>/<event>/trigger
+           To remove a trigger with a count:
+             echo '!<trigger>:0 > <system>/<event>/trigger
+           Filters can be ignored when removing a trigger.
+```
+- [ ] trace_marker
+
+## [ftrace: trace your kernel functions!](https://jvns.ca/blog/2017/03/19/getting-started-with-ftrace/)
 
 > ftrace 就像是打印函数调用路径，但是远远不止于此:
 
-https://elinux.org/images/6/64/Elc2011_rostedt.pdf : kernelshark 使用介绍
+- [ ] 最后有一系列的附录
+
+## kernelshark 使用介绍
+https://elinux.org/images/6/64/Elc2011_rostedt.pdf
 
 
 对的，ftrace 下的内容就是:
@@ -112,9 +313,6 @@ static __init int ftrace_init_dyn_tracefs(struct dentry *d_tracer)
 }
 ```
 
-- https://lwn.net/Articles/370423/
-
-
 ### ftrace 对于编译的时候有要求
 ```txt
 crash> dis ktime_get
@@ -176,9 +374,8 @@ Dump of assembler code for function ktime_get:
 End of assembler dump.
 ```
 
-## TODO
-3. ftrace_graph_exit_task : ftrace_graph 是个啥
 
+## ftrace 和 perf 怎么感觉关系存在耦合啊
 - [ ] ftrace 和 perf 是什么关系呀 ? 至少应该是功能不同的东西吧，如果 perf 采用 sampling 的技术，而 ftrace 可以知道其中
 
 也可以作为 ftrace 使用:
@@ -224,16 +421,14 @@ static __init int ftrace_init_dyn_tracefs(struct dentry *d_tracer)
     ftrace_module_init(mod);
 ```
 
-## 分析下这个
-[^10]: [lwn : A look at ftrace](https://lwn.net/Articles/322666/)
+## 代码分析
+3. ftrace_graph_exit_task : ftrace_graph 是个啥
 
 ## 问题
 - [ ] 感觉 perf 能做的事情，bpftrace 和 ebpf 都可以做，而且更加好
   - 例如 hardware monitor 在 bpftrace 中和 bcc 中 llcstat-bpfcc 都是可以做的
 
-## ftrace-cmd
-https://lwn.net/Articles/410200/ 的记录
-
+## [https://lwn.net/Articles/410200/](trace-cmd: A front-end for Ftrace)
 - [ ] 两个用户层次的前端工具 : perf + trace-cmd 分别读取的内容是从哪里的呀 ?
 - [ ] trace-cmd
 

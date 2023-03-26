@@ -129,9 +129,9 @@
 <!-- -  🚧 [softirq](./kernel/softirq.md) -->
 <!-- - [iommu 基本原理介绍](.) -->
 <!-- - /proc/cpuinfo -->
-- kvm
-  - shadow page table
-  - nested virtualization
+<!-- - kvm -->
+<!--   - shadow page table -->
+<!--   - nested virtualization -->
 
 <!-- ## Database -->
 <!-- - [leveldb 源码分析](./database/leveldb.md) -->
