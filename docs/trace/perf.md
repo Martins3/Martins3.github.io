@@ -19,7 +19,6 @@ perf top -e kvm:kvm_nested_vmrun
 
 4. kprobe 获取返回值
   - perf probe cpufreq_cpu_get%return
-    -
 
 
 ### [ ] 处理一下 perf 中 unknow 的数值情况
@@ -45,3 +44,11 @@ perf report 的比例明显不对啊
 
 ## perf 还可以支持 python
 - https://docs.python.org/pt-br/dev/howto/perf_profiling.html
+
+## perf 可以作为 ftrace 的前端
+也可以作为 ftrace 使用:
+perf ftrace is a simple *wrapper* for kernel's ftrace functionality, and only supports single thread tracing now.
+```plain
+perf ftrace -T __kmalloc ./add_vec
+perf ftrace ./add_vec
+```

@@ -27,7 +27,7 @@ echo -n "current trace functions:  "
 cat set_graph_function
 echo 1 >tracing_on
 
-timeout 15 cat trace_pipe
+timeout 3 cat trace_pipe
 echo 0 >tracing_on
 echo nop >current_tracer
 echo >set_graph_function

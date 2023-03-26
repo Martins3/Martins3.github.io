@@ -15,18 +15,203 @@ blk function_graph wakeup_dl wakeup_rt wakeup function nop
 - [ ] function and latency tracers : 为什么 ftrace 可以跟踪 latency tracer
 - [ ] 为什么 ftrace 可以跟踪 kprobe 和 uprobe
 - [ ] 无法理解 `CONFIG_FUNCTION_GRAPH_TRACER`
-- [ ] set_ftrace_filter 到底可以设置什么内容？
-  - 至少 kprobe 对于 inline 函数是非常敏感的
+- [ ] set_ftrace_filter 和 kprobe 中的内容应该是完全相同的吧
 - [ ] function 和 function graph 有啥区别
-- [ ] 这些 tracer 都是做啥的: blk function_graph wakeup_dl wakeup_rt wakeup function nop
 - [ ] trace-cmd 的 event 不就是 tracepoint 机制吗？
+- [ ] ftrace_trace_onoff_callback 这种 ftrace 的代码都是不能跟踪的，看来 kprobe 也是和 ftrace 有关系的哇
+- [ ] trace 目录下这个文件是做啥的 dyn_ftrace_total_info
+- [ ] ftrace 实现 kprobe 吗？
+
+总结下这五种格式:
+- [ ] print_trace_header
+- [ ] print_func_help_header_irq
+- [ ] print_func_help_header
+- [ ] print_event_info
+- [ ] print_lat_help_header
+
+- ftrace_filter_write
+  - ftrace_regex_write
+    - ftrace_process_regex
+
+根据使用的函数，调用到此处:
+```c
+static struct ftrace_func_command ftrace_traceoff_cmd = {
+	.name			= "traceoff",
+	.func			= ftrace_trace_onoff_callback,
+};
+```
+- ftrace_trace_onoff_callback 注册 traceon_probe_ops 或者 traceon_count_probe_ops
+
+### ftrace 和 kprobe 是啥关系
+```c
+/* Is this kprobe uses ftrace ? */
+static inline bool kprobe_ftrace(struct kprobe *p)
+{
+	return p->flags & KPROBE_FLAG_FTRACE;
+}
+```
+
+```txt
+➜  tracing cat kprobe_events
+r62:probe/cpufreq_cpu_get__return _text+14836256
+p:probe/cpufreq_cpu_get _text+14836256
+➜  tracing cat kprobe_profile
+  cpufreq_cpu_get__return                                    2               0
+  cpufreq_cpu_get                                            0               0
+```
+
+- [ ]  `echo function > current_tracer` 的时候，在 trace buffer 中产生大量的数据，这是基于 kprobe 实现的吗？
+
+
+才发现，输入的内容是在这里的:
+```c
+FTRACE_ENTRY_PACKED(funcgraph_entry, ftrace_graph_ent_entry,
+
+	TRACE_GRAPH_ENT,
+
+	F_STRUCT(
+		__field_struct(	struct ftrace_graph_ent,	graph_ent	)
+		__field_packed(	unsigned long,	graph_ent,	func		)
+		__field_packed(	int,		graph_ent,	depth		)
+	),
+
+	F_printk("--> %ps (%d)", (void *)__entry->func, __entry->depth)
+);
+```
+
+使用这个代码来控制:
+```sh
+echo function_graph > current_tracer
+echo cpufreq_cpu_get > set_ftrace_filter
+```
+可以触发如下内容:
+```txt
+#0  __trace_graph_entry (tr=tr@entry=0xffffffff82f6f780 <global_trace>, trace=trace@entry=0xffffc900006bfc8c, trace_ctx=1) at kernel/trace/trace_functions_graph.c:100
+#1  0xffffffff8127a8b2 in trace_graph_entry (trace=0xffffc900006bfc8c) at kernel/trace/trace_functions_graph.c:177
+#2  0xffffffff8127f77d in function_graph_enter (ret=18446744071593681754, func=func@entry=18446744071593681444, frame_pointer=frame_pointer@entry=0, retp=retp@entry=0xffffc900006bfdb0) at kernel/trace/fgraph.c:145
+#3  0xffffffff81111577 in prepare_ftrace_return (ip=18446744071593681444, parent=0xffffc900006bfdb0, frame_pointer=0) at arch/x86/kernel/ftrace.c:653
+#4  0xffffffffc000409b in ?? ()
+#5  0xffffffff82bc9458 in .LC43 ()
+#6  0xffffc900006bfd78 in ?? ()
+#7  0xffffffff82bc9457 in .LC43 ()
+#8  0xffffffff82260c2a in vsnprintf (buf=0x0 <fixed_percpu_data>, size=18446612686421889064, fmt=0x0 <fixed_percpu_data>, args=0x0 <fixed_percpu_data>)
+at lib/vsprintf.c:2758
+#9  0x0000000000000000 in ?? ()
+```
+到 trace 目录下:
+1. available_filter_functions : 其实就是 kprobe 的 function 而已
+2. available_events : 就是 tracepoint 而已
+
 
 ## Kernel hacking -> Tracker
 
-### Trace syscalls
-- 不知道怎么用
+### [x] CONFIG_FTRACE_SYSCALLS
+cd /sys/kernel/debug/tracing/events/syscalls/sys_enter_execve
+echo 1 > enable
+cat /sys/kernel/debug/tracing/trace
 
-## CONFIG_BOOTTIME_TRACING
+当让可以直接打开所有 syscall 的 tracing
+echo 1 >  /sys/kernel/debug/tracing/events/syscalls/enable
+
+### CONFIG_BLK_DEV_IO_TRACE
+`config BLK_DEV_IO_TRACE` 已经告诉了如何使用
+
+  echo 1 > /sys/block/vdb/vdb2/trace/enable
+  echo blk > /sys/kernel/tracing/current_tracer
+  cat /sys/kernel/tracing/trace_pipe
+
+我超，实现的位置居然就是 kernel/trace/blktrace.c
+
+### CONFIG_SCHED_TRACER
+echo wakeup > current_tracer
+cat trace
+```txt
+# tracer: wakeup
+#
+# wakeup latency trace v1.1.5 on 6.3.0-rc3-00338-gda8e7da11e4b-dirty
+# --------------------------------------------------------------------
+# latency: 171 us, #42/42, CPU#1 | (M:desktop VP:0, KP:0, SP:0 HP:0 #P:31)
+#    -----------------
+#    | task: migration/1-22 (uid:0 nice:0 policy:1 rt_prio:99)
+#    -----------------
+#
+#                    _------=> CPU#
+#                   / _-----=> irqs-off/BH-disabled
+#                  | / _----=> need-resched
+#                  || / _---=> hardirq/softirq
+#                  ||| / _--=> preempt-depth
+#                  |||| / _-=> migrate-disable
+#                  ||||| /     delay
+#  cmd     pid     |||||| time  |   caller
+#     \   /        ||||||  \    |    /
+ rcuog/0-16       14d..6.    7us!:       16:120:S   + [001]      22:  0:R migration/1
+ rcuog/0-16       14d..6.  121us : <stack trace>
+ => __ftrace_trace_stack
+ => probe_wakeup
+ => ttwu_do_activate.constprop.0
+ => try_to_wake_up
+ => wake_up_q
+ => cpu_stop_queue_work
+ => load_balance
+ => newidle_balance.constprop.0
+ => pick_next_task_fair
+ => __schedule
+ => schedule
+ => rcu_nocb_gp_kthread
+ => kthread
+ => ret_from_fork
+ rcuog/0-16       14d..6.  121us : 0
+   <...>-1427      1dn.3.  123us : preempt_count_sub <-__schedule
+   <...>-1427      1dn.2.  123us : put_prev_task_balance <-__schedule
+   <...>-1427      1dn.2.  123us : balance_fair <-put_prev_task_balance
+   <...>-1427      1dn.2.  124us : put_prev_task_fair <-__schedule
+   <...>-1427      1dn.2.  124us : put_prev_entity <-put_prev_task_fair
+   <...>-1427      1dn.2.  124us : update_curr <-put_prev_entity
+   <...>-1427      1dn.2.  124us : update_min_vruntime <-update_curr
+   <...>-1427      1dn.2.  124us : cpuacct_charge <-update_curr
+   <...>-1427      1dn.2.  124us : __cgroup_account_cputime <-update_curr
+   <...>-1427      1dn.2.  124us : preempt_count_add <-__cgroup_account_cputime
+   <...>-1427      1dn.3.  124us : cgroup_rstat_updated <-__cgroup_account_cputime
+   <...>-1427      1dn.3.  124us : _raw_spin_lock_irqsave <-cgroup_rstat_updated
+   <...>-1427      1dn.3.  124us : preempt_count_add <-_raw_spin_lock_irqsave
+   <...>-1427      1dn.4.  125us : _raw_spin_unlock_irqrestore <-__cgroup_account_cputime
+   <...>-1427      1dn.4.  125us : preempt_count_sub <-_raw_spin_unlock_irqrestore
+   <...>-1427      1dn.3.  125us : preempt_count_sub <-__cgroup_account_cputime
+   <...>-1427      1dn.2.  125us : check_cfs_rq_runtime <-put_prev_entity
+   <...>-1427      1dn.2.  125us : __update_load_avg_se <-update_load_avg
+   <...>-1427      1dn.2.  125us : __update_load_avg_cfs_rq <-update_load_avg
+   <...>-1427      1dn.2.  125us : put_prev_entity <-put_prev_task_fair
+   <...>-1427      1dn.2.  125us : update_curr <-put_prev_entity
+   <...>-1427      1dn.2.  126us : __calc_delta <-update_curr
+   <...>-1427      1dn.2.  126us : update_min_vruntime <-update_curr
+   <...>-1427      1dn.2.  126us : check_cfs_rq_runtime <-put_prev_entity
+   <...>-1427      1dn.2.  126us : __update_load_avg_se <-update_load_avg
+   <...>-1427      1dn.2.  126us : __update_load_avg_cfs_rq <-update_load_avg
+   <...>-1427      1dn.2.  126us : pick_next_task_stop <-__schedule
+   <...>-1427      1d..2.  126us : psi_task_switch <-__schedule
+   <...>-1427      1d..2.  126us : psi_flags_change <-psi_task_switch
+   <...>-1427      1d..2.  126us : psi_flags_change <-psi_task_switch
+   <...>-1427      1d..2.  127us : psi_group_change <-psi_task_switch
+   <...>-1427      1d..2.  127us : record_times <-psi_group_change
+   <...>-1427      1d..2.  127us : psi_group_change <-psi_task_switch
+   <...>-1427      1d..2.  127us : record_times <-psi_group_change
+   <...>-1427      1d..2.  127us : psi_group_change <-psi_task_switch
+   <...>-1427      1d..2.  127us : record_times <-psi_group_change
+   <...>-1427      1d..3.  127us : __schedule
+   <...>-1427      1d..3.  127us+:     1427:120:R ==> [001]      22:  0:R migration/1
+   <...>-1427      1d..3.  171us : <stack trace>
+ => __ftrace_trace_stack
+ => probe_wakeup_sched_switch
+ => __schedule
+ => schedule
+ => exit_to_user_mode_prepare
+ => syscall_exit_to_user_mode
+ => do_syscall_64
+ => entry_SYSCALL_64_after_hwframe
+```
+- [ ] 这个结果有点看不懂哇
+
+### CONFIG_BOOTTIME_TRACING
 
 设置如下等效于
 ```txt
@@ -39,7 +224,40 @@ blk function_graph wakeup_dl wakeup_rt wakeup function nop
 
 ### dynamic ftrace
 
-## [A look at ftrace](https://lwn.net/Articles/322666/)
+1. Although ftrace is typically considered the function tracer, it is really a framework of several assorted tracing utilities.
+2. One of the most common uses of ftrace is the event tracing.
+Throughout the kernel is hundreds of static event points that can be enabled via the tracefs file system to see what is going on in certain parts of the kernel.
+
+After mounting tracefs you will have access to the control and output files of ftrace. Here is a list of some of the key files:
+1. current_tracer available_tracers
+```plain
+[shen-pc tracing]# cat available_tracers
+hwlat blk mmiotrace function_graph wakeup_dl wakeup_rt wakeup function nop
+```
+2. This tracer is similar to the function tracer except that it probes a function on its entry and its exit.
+This is done by using a dynamically allocated stack of return addresses in each `task_struct`. On function entry the tracer overwrites the return address of each function traced to set a custom probe.
+Thus the original return address is stored on the stack of return address in the `task_struct`.
+> 似乎合乎想象，在内核到处插入 checkpoint，然后从这些 checkpoint 找到需要知道
+3. Note, the proc sysctl ftrace_enable is a big on/off switch for the function tracer. By default it is enabled (when function tracing is enabled in the kernel). If it is disabled, all function tracing is disabled. This includes not only the function tracers for ftrace, but also for any other uses (perf, kprobes, stack tracing, profiling, etc).
+
+
+- [ ] event tracing 如何使用的 ?
+- [ ] ftrace.c 和 trace.c 的各自的作用是什么?  ftrace 提供 function 相关的东西, available_filter_functions 之类的 ，trace 提供整个框架，其实 ftrace 变成了一个无所不包的东西了。
+- [ ] kernel dynamic 和 kernel static tracing 指的是 ? 猜测，有的是动态插入，利用 kprobe 和 uprobe 的技术插入代码中间，而 static 指的是各种地方插入的 tracing 的内容。
+- [ ] ftrace function (/sys/kernel/debug/tracing/available_filter_functions 采用的) 利用 mcount 实现的效果和 kprobe 有什么区别吗 ?
+- [ ] kprobe 实际上是借助 ftrace 实现的吗？
+
+## 文摘
+
+### [ftrace: trace your kernel functions!](https://jvns.ca/blog/2017/03/19/getting-started-with-ftrace/)
+
+> ftrace 就像是打印函数调用路径，但是远远不止于此:
+
+- [ ] 最后有一系列的附录
+
+### [kernelshark 使用介绍](https://elinux.org/images/6/64/Elc2011_rostedt.pdf)
+
+### [A look at ftrace](https://lwn.net/Articles/322666/)
 The name ftrace comes from "function tracer", which was its original purpose, but it can do more than that.
 Various additional tracers have been added to look at things like context switches, how long interrupts are disabled,
 how long it takes for high-priority tasks to run after they have been woken up, and so on.
@@ -48,7 +266,7 @@ Its genesis in the realtime tree is evident in the tracers so far available, but
 
 - [ ] 还没看完
 
-## [Secrets of the Ftrace function tracer](https://lwn.net/Articles/370423/)
+### [Secrets of the Ftrace function tracer](https://lwn.net/Articles/370423/)
 ```txt
 echo set* > set_ftrace_filter # 可以 regex
 echo ':mod:ext4' > set_ftrace_filter # 显示一个模块
@@ -62,10 +280,10 @@ echo '!*lock*' >> set_ftrace_filter
 
 - [ ] ./code/ftrace-two.sh 中的代码无法产生任何结果
 
-## [Debugging the kernel using Ftrace - part 1](https://lwn.net/Articles/365835/)
+### [Debugging the kernel using Ftrace - part 1](https://lwn.net/Articles/365835/)
 -[ ] trace_prink 没有看到输出
 
-## [Debugging the kernel using Ftrace - part 2](https://lwn.net/Articles/366796/)
+### [Debugging the kernel using Ftrace - part 2](https://lwn.net/Articles/366796/)
 - tracing_off() 在内核中直接调控 tracing_on
 - cat /proc/sys/kernel/ftrace_dump_on_oops
 - You can also trigger a dump of the Ftrace buffer to the console with sysrq-z.
@@ -222,98 +440,11 @@ place (kretprobe): [<module>:]<symbol>[+<offset>]%return|<memaddr>
              echo '!<trigger>:0 > <system>/<event>/trigger
            Filters can be ignored when removing a trigger.
 ```
-- [ ] trace_marker
-
-## [ftrace: trace your kernel functions!](https://jvns.ca/blog/2017/03/19/getting-started-with-ftrace/)
-
-> ftrace 就像是打印函数调用路径，但是远远不止于此:
-
-- [ ] 最后有一系列的附录
-
-## kernelshark 使用介绍
-https://elinux.org/images/6/64/Elc2011_rostedt.pdf
+- [x] trace_marker : 给 trace 增加标记的
+- /events : tracepoint 的内容
 
 
-对的，ftrace 下的内容就是:
-https://www.kernel.org/doc/html/latest/trace/ftrace.html : 讲解了如何使用
-2. Although ftrace is typically considered the function tracer, it is really a framework of several assorted tracing utilities.
-1. One of the most common uses of ftrace is the event tracing. Throughout the kernel is hundreds of static event points that can be enabled via the tracefs file system to see what is going on in certain parts of the kernel.
-
-After mounting tracefs you will have access to the control and output files of ftrace. Here is a list of some of the key files:
-1. current_tracer available_tracers
-```plain
-[shen-pc tracing]# cat available_tracers
-hwlat blk mmiotrace function_graph wakeup_dl wakeup_rt wakeup function nop
-```
-2. This tracer is similar to the function tracer except that it probes a function on its entry and its exit.
-This is done by using a dynamically allocated stack of return addresses in each `task_struct`. On function entry the tracer overwrites the return address of each function traced to set a custom probe.
-Thus the original return address is stored on the stack of return address in the `task_struct`.
-> 似乎合乎想象，在内核到处插入 checkpoint，然后从这些 checkpoint 找到需要知道
-3. Note, the proc sysctl ftrace_enable is a big on/off switch for the function tracer. By default it is enabled (when function tracing is enabled in the kernel). If it is disabled, all function tracing is disabled. This includes not only the function tracers for ftrace, but also for any other uses (perf, kprobes, stack tracing, profiling, etc).
-
-
-- [ ] event tracing 如何使用的 ?
-- [ ] ftrace.c 和 trace.c 的各自的作用是什么?  ftrace 提供 function 相关的东西, available_filter_functions 之类的 ，trace 提供整个框架，其实 ftrace 变成了一个无所不包的东西了。
-- [ ] kernel dynamic 和 kernel static tracing 指的是 ? 猜测，有的是动态插入，利用 kprobe 和 uprobe 的技术插入代码中间，而 static 指的是各种地方插入的 tracing 的内容。
-- [ ] ftrace function (/sys/kernel/debug/tracing/available_filter_functions 采用的) 利用 mcount 实现的效果和 kprobe 有什么区别吗 ?
-
-
-```c
-static const struct file_operations ftrace_avail_fops = {
-  .open = ftrace_avail_open,
-  .read = seq_read,
-  .llseek = seq_lseek,
-  .release = seq_release_private,
-};
-
-static const struct file_operations ftrace_enabled_fops = {
-  .open = ftrace_enabled_open,
-  .read = seq_read,
-  .llseek = seq_lseek,
-  .release = seq_release_private,
-};
-
-static const struct file_operations ftrace_filter_fops = {
-  .open = ftrace_filter_open,
-  .read = seq_read,
-  .write = ftrace_filter_write,
-  .llseek = tracing_lseek,
-  .release = ftrace_regex_release,
-};
-
-static const struct file_operations ftrace_notrace_fops = {
-  .open = ftrace_notrace_open,
-  .read = seq_read,
-  .write = ftrace_notrace_write,
-  .llseek = tracing_lseek,
-  .release = ftrace_regex_release,
-};
-
-static __init int ftrace_init_dyn_tracefs(struct dentry *d_tracer)
-{
-
-  trace_create_file("available_filter_functions", 0444,
-      d_tracer, NULL, &ftrace_avail_fops);
-
-  trace_create_file("enabled_functions", 0444,
-      d_tracer, NULL, &ftrace_enabled_fops);
-
-  ftrace_create_filter_files(&global_ops, d_tracer);
-
-#ifdef CONFIG_FUNCTION_GRAPH_TRACER
-  trace_create_file("set_graph_function", 0644, d_tracer,
-            NULL,
-            &ftrace_graph_fops);
-  trace_create_file("set_graph_notrace", 0644, d_tracer,
-            NULL,
-            &ftrace_graph_notrace_fops);
-#endif /* CONFIG_FUNCTION_GRAPH_TRACER */
-
-  return 0;
-}
-```
-
-### ftrace 对于编译的时候有要求
+## ftrace 对于编译的时候有要求
 ```txt
 crash> dis ktime_get
 0xffffffff82105a30 <ktime_get>: nopl   0x0(%rax,%rax,1) [FTRACE NOP]
@@ -326,6 +457,7 @@ crash> dis ktime_get
 0xffffffff82105a45 <ktime_get+21>:      push   %r12
 0xffffffff82105a47 <ktime_get+23>:      push   %rbx
 ```
+
 实际上，我现在可以看到:
 ```txt
 $ disass ktime_get
@@ -373,44 +505,16 @@ Dump of assembler code for function ktime_get:
    0xffffffff81202ed5 <+149>:   jmp    0xffffffff81202e57 <ktime_get+23>
 End of assembler dump.
 ```
+ftrace 和 tracepoint 应该是分别都插入点的，ftrace 要求所有的函数头都插入点，而 tracepoint 在函数中间。
 
-
-## ftrace 和 perf 怎么感觉关系存在耦合啊
-- [ ] ftrace 和 perf 是什么关系呀 ? 至少应该是功能不同的东西吧，如果 perf 采用 sampling 的技术，而 ftrace 可以知道其中
-
-也可以作为 ftrace 使用:
-perf ftrace is a simple *wrapper* for kernel's ftrace functionality, and only supports single thread tracing now.
-```plain
-perf ftrace -T __kmalloc ./add_vec
-perf ftrace ./add_vec
-```
-
-## kernel/trace/ftrace.c
+## 代码分析
+- kernel/trace/ftrace.c
 ```c
-
 static __init int ftrace_init_dyn_tracefs(struct dentry *d_tracer)
-{
-
-	trace_create_file("available_filter_functions", 0444,
-			d_tracer, NULL, &ftrace_avail_fops);
-
-	trace_create_file("enabled_functions", 0444,
-			d_tracer, NULL, &ftrace_enabled_fops);
-
-	ftrace_create_filter_files(&global_ops, d_tracer);
-
-#ifdef CONFIG_FUNCTION_GRAPH_TRACER
-	trace_create_file("set_graph_function", 0644, d_tracer,
-				    NULL,
-				    &ftrace_graph_fops);
-	trace_create_file("set_graph_notrace", 0644, d_tracer,
-				    NULL,
-				    &ftrace_graph_notrace_fops);
-#endif /* CONFIG_FUNCTION_GRAPH_TRACER */
-
-	return 0;
-}
 ```
+
+## [ ] 是如何实现 graph 的
+- ftrace_graph_exit_task
 
 ## 想不到这里也和 kernel
 - delete_module :
@@ -420,9 +524,6 @@ static __init int ftrace_init_dyn_tracefs(struct dentry *d_tracer)
     /* Ftrace init must be called in the MODULE_STATE_UNFORMED state */
     ftrace_module_init(mod);
 ```
-
-## 代码分析
-3. ftrace_graph_exit_task : ftrace_graph 是个啥
 
 ## 问题
 - [ ] 感觉 perf 能做的事情，bpftrace 和 ebpf 都可以做，而且更加好

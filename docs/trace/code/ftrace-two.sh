@@ -31,4 +31,4 @@ function profile() {
   cat trace_stat/function 0 | head
 }
 
-profile
+graph
