@@ -88,3 +88,8 @@ tos9,if=virtio,cache=none,discard=unmap,format=qcow2 -drive file=/home/martins3/
  -netdev user,id=user.0,hostfwd=tcp::4053-:22 -cpu host -boot once=d -name packer-centos9 -machine type=pc,accel=kvm -device virtio-net,netdev=user.0
 -m
 ```
+
+尝试一下下面的集中方法:
+- https://github.com/linuxkit/linuxkit
+- https://fedoraproject.org/wiki/Changes/OstreeNativeContainerStable
+- https://coreos.github.io/rpm-ostree/container/

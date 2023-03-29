@@ -213,6 +213,9 @@ dpdk 测试工具
 
 ## dtrace 真的还有人用吗？
 
+## https://github.com/benfred/py-spy
+- [ ] 为什么每一个语言都是需要存在一个对应的观测工具呀？
+
 [^4]: [An introduction to KProbes](https://lwn.net/Articles/132196/)
 [^5]: [Using user-space tracepoints with BPF](https://lwn.net/Articles/753601/)
 [^7]: [kernelshark](https://www.cnblogs.com/arnoldlu/p/9014365.html)

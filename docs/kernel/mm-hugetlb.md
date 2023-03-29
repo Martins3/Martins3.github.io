@@ -50,6 +50,9 @@ function global() {
   numastat -m | grep -E "Node|HugePages_"
 }
 ```
+## 使用大页的好处
+- 减少 page table 的使用量
+- 减少 page struct 的使用量，需要
 
 ## 使用大页的方法
 

@@ -65,6 +65,11 @@ distribution=openEuler-22.09-x86_64-dvd
 # @todo fedora 内核只能在 centos 上，不能在 oe 上安装，因为 linux-install 这个包的原因
 # https://kojipkgs.fedoraproject.org/packages/kernel/4.19.16/200.fc28/
 
+arch=$(uname -m)
+if [[ $arch == aarch64 ]];then
+  distribution=
+fi
+
 if [[ $in_guest == true ]]; then
   distribution=CentOS-7-x86_64-DVD-2207-02
 fi
@@ -96,8 +101,8 @@ ubuntu-22.04.1-live-server-amd64)
   ;;
 esac
 
-iso=${workstation}/${distribution}.iso
-disk_img=${workstation}/${distribution}.qcow2
+iso=${workstation}/iso/${distribution}.iso
+disk_img=${workstation}/vm/${distribution}.qcow2
 
 # dir=/nix/store/rlf9m7zzhdcsp4mv78jfi2f6scfcvbp7-nixos-disk-image
 # if [[ ! -f /tmp/nixos.qcow2 ]]; then

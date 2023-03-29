@@ -47,6 +47,7 @@ Swap:           2104         126        1978
 - 和 proc/pid/maps 的有啥区别？
 
 ## /proc/pid/status
+- VmData: 主要是 `vm_stat_account` 负责统计，就是 vma 中那些权限为代码的数据
 
 ## /proc/pid/numa_maps
 

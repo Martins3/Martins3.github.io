@@ -7,7 +7,8 @@
 ## 常见使用路径
 1. /var/run/libvirt/qemu
   - 存储 uuid.xml 和 uuid.pid
-
+2. /etc/libvirt/qemu/
+  - 配置 uuid.xml
 
 ## 使用 virsh 安装系统
 - https://unix.stackexchange.com/questions/309788/how-to-create-a-vm-from-scratch-with-virsh

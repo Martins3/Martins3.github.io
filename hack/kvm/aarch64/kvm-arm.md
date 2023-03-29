@@ -411,4 +411,8 @@ static unsigned int id_visibility(const struct kvm_vcpu *vcpu,
 - kvm_prepare_memory_region
   - kvm_arch_prepare_memory_region
 
-看上去并不会！
+## 为什么 ARM 分配那么多内存
+- kvm_handle_guest_abort
+  - user_mem_abort
+
+- kvm_mmu_topup_memory_cache : 调查一下次数
