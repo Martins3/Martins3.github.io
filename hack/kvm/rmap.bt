@@ -18,3 +18,16 @@
 // kfunc:arch_freq_get_on_cpu {
 //   printf("--> %d\n", curtask->flags);
 // }
+
+// from Ch14_Kernel/kmem.bt
+BEGIN
+{
+	printf("Tracing kmem allocation stacks (kmalloc, kmem_cache_alloc). ");
+	printf("Hit Ctrl-C to end.\n");
+}
+
+tracepoint:kmem:kmalloc,
+tracepoint:kmem:kmem_cache_alloc
+{
+	@bytes[kstack(5), comm] = stats(args->bytes_alloc);
+}

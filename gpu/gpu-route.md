@@ -30,3 +30,7 @@
   - 号称是 electorn 的替代品
 
 - https://siboehm.com/articles/22/CUDA-MMM
+
+## webGPU
+- [0x00F - WebGPU](https://news.ycombinator.com/item?id=34701833)
+  - webGPU 是 webGL 的下一个

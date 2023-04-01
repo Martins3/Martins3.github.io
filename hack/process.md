@@ -53,6 +53,7 @@
 * [pt_regs](#pt_regs)
 * [ipc](#ipc)
 * [zombie 和 orphan](#zombie-和-orphan)
+* [uid euid suid](#uid-euid-suid)
 
 <!-- vim-markdown-toc -->
 
@@ -808,7 +809,8 @@ some x86 kernel notes:[^5]
   - [ ] may review the article later
 
 ## pidfd
-https://man7.org/linux/man-pages/man2/pidfd_open.2.html
+- https://man7.org/linux/man-pages/man2/pidfd_open.2.html
+- [Completing the pidfd API](https://lwn.net/Articles/794707/)
 
 rust 封装:
 https://github.com/pop-os/pidfd
@@ -1612,6 +1614,8 @@ https://stackoverflow.com/questions/20688982/zombie-process-vs-orphan-process
 - orphan 根本不是一个问题，只是为了描述一种情况，parent 挂了, child 自动挂载到 init 上
 - zombie : 因为 parent 需要利用 wait 来获取 child 的状态，如果 child 挂掉了, parent 不回收，那就出现问题
 
+## uid euid suid
+参考: [hacktricks: euid, ruid, suid](https://github.com/carlospolop/hacktricks/blob/master/linux-hardening/privilege-escalation/euid-ruid-suid.md)
 
 [^2]: https://man7.org/linux/man-pages/man7/signal.7.html
 [^3]: https://0xax.gitbooks.io/linux-insides/content/SysCall/linux-syscall-2.html
