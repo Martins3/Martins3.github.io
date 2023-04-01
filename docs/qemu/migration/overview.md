@@ -17,10 +17,6 @@ https://balamuruhans.github.io/2019/01/15/kvm-migration-with-qemu.html
 qemu-system-ppc64 --enable-kvm --nographic -vga none -machine pseries -m 4G,slots=32,maxmem=32G -smp 16,maxcpus=32 -device virtio-blk-pci,drive=rootdisk -drive file=/var/lib/libvirt/images/avocado/data/avocado-vt/images/rhel72-ppc64le.qcow2,if=none,cache=none,format=qcow2,id=rootdisk -monitor telnet:127.0.0.1:1234,server,nowait -net nic,model=virtio -net user -redir tcp:2000::22
 
 ## 我靠，为什么 nvme 不是一个可以迁移的项目？
-```txt
-(qemu)  migrate -d tcp:localhost:4444
-Error: State blocked by non-migratable device '0000:00:03.0:01.0/nvme'
-```
 
 ## 似乎操作 vhost user 是有问题的
 - loadvm_postcopy_handle_advise 中触发了这个错误：

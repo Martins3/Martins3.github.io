@@ -225,3 +225,8 @@ initial apicid	: 94
 ## power management
 
 https://cpuid.apps.poly.nomial.co.uk/
+
+## 补充其他内容
+- [ ] ARM 中的
+  - server ？
+  - ashia  linux

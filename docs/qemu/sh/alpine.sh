@@ -18,7 +18,7 @@ hacking_memory="none"
 share_memory_option="9p"
 # share_memory_option="virtiofs"
 
-hacking_migration=false
+hacking_migration=true
 # @todo 尝试在 guest 中搭建一个 vIOMMU
 if [[ $hacking_migration = true ]]; then
   use_nvme_as_root=false
@@ -164,7 +164,9 @@ arg_hugetlb="default_hugepagesz=2M"
 arg_hugetlb=""
 # 可选参数
 # arg_mem_cpu="-m 12G  -smp $(($(getconf _NPROCESSORS_ONLN) - 1))"
-arg_machine="-machine pc,accel=kvm,kernel-irqchip=on,smm=on"
+
+arg_machine="-machine pc,accel=kvm,kernel-irqchip=on,smm=off"
+# @todo 对于 smm 是否打开，热迁移没有检查，似乎这是一个 bug 吧
 arg_mem_balloon="-device virtio-balloon,id=balloon0,deflate-on-oom=true,page-poison=true,free-page-reporting=false,free-page-hint=true,iothread=io1 -object iothread,id=io1"
 arg_mem_balloon=""
 
@@ -173,6 +175,7 @@ arg_cpu_model="-cpu Skylake-Client-IBRS,hle=off,rtm=off"
 # arg_cpu_model="-cpu Skylake-Client-IBRS,hle=off,rtm=off,sse4_2=off,sse4_1=off,ssse3=off,sep=off"
 # arg_cpu_model="-cpu host"
 arg_cpu_model="-cpu Skylake-Client-IBRS,vmx=on,hle=off,rtm=off"
+arg_cpu_model="-cpu Broadwell-noTSX-IBRS,vmx=on,hle=off,rtm=off"
 
 if [[ $in_guest == true ]]; then
   arg_cpu_model="$arg_cpu_model,vmx=off"
@@ -372,6 +375,8 @@ while getopts "abcdhkmpqst" opt; do
     # 需要保证迁移的两侧的 romfile 内容一致才可以
     # arg_network="$arg_network,romfile=/home/martins3/hack/vm/img1"
     arg_migration_target="-incoming tcp:0:4000"
+    # 测试发现，目标端是否为 smm 不影响迁移
+    arg_machine="-machine pc,accel=kvm,kernel-irqchip=on,smm=on"
     ;;
   b)
     # 可以带上虚拟机唯一标识，而不是使用 mem

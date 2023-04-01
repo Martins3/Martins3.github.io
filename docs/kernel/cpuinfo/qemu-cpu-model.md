@@ -148,3 +148,5 @@ cpu MHz         : 2995.200
 将 avx 指令禁用掉。
 
 - https://github.com/kshitijl/avx2-examples
+
+- [ ] 但是在 kvm 中没有找到证据哇。

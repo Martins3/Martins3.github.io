@@ -452,4 +452,9 @@ tlb flush 相关
 
 - x86 的指令存在那些指令？
 
-## register_shrinker : 这个到底是可以用来收缩谁的，ept page table 可以吗？
+## [ ] register_shrinker : 这个到底是可以用来收缩谁的，ept page table 可以吗？
+
+## [ ] 可以分析一下 vCPU 的调度问题
+- sched_in 和 sched_out 的 hook
+  - 上下文切换需要那些工作
+- 分析一下: 当一个 v

@@ -53,3 +53,19 @@ loongson ➜  .vim
   "git.virtualTextPrefix": "👋 ",
 }
 ```
+
+## nvim
+对于 .nu 的文件保存，自动执行命令
+```lua
+vim.api.nvim_create_autocmd('FileType', {
+  desc = 'auto check nushell code on save',
+  pattern = 'nu',
+  group = vim.api.nvim_create_augroup('check nushell', { clear = true }),
+  callback = function(opts)
+    vim.api.nvim_create_autocmd('BufWritePost', {
+      buffer = opts.buf,
+      command = 'RunCode'
+    })
+  end,
+})
+```

@@ -520,3 +520,8 @@ sudo apt-get source linux-image-$(uname -r)
 - [ ] `__radix_tree_lookup.cold` 中的 cold 是什么意思啊
 
 ## 可以使用 crash 获取到 dmesg，而且更加准确
+
+## crash 源码分析
+主要是解析各种格式:
+- lkcd_v8.c
+- diskdump.c

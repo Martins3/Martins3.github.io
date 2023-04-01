@@ -227,3 +227,7 @@ struct virtio_user_backend_ops virtio_ops_kernel = {
 - `vhost_user_set_vring_kick` : 有两个实现
     - `lib/vhost_user.c` 的版本，作为和 QEMU 的 server 来通信的
     - `drivers/net/virtio/virtio_user/` 的版本，当 dpdk 在虚拟机中的用户态的时候，这就是一个驱动，和 virtio device 打交道
+
+## 文摘
+- [DPDK Graph Pipeline 框架简介与实现原理](https://mp.weixin.qq.com/s/hyb0BQXa6pqgEKLqGUEICw)
+  - 想不到这个居然是 simd 的执行流
