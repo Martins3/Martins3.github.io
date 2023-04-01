@@ -293,3 +293,6 @@ https://mp.weixin.qq.com/s/EqKU052H5LxRjE68jeiaDg
 - 非实时调度类：非实时调度类就是完全公平调度 CFS(Completely Fair Scheduler)，在内核定义中是 SCHED_OTHER 或者 SCHED_NORMAL，**这两个代表同样的含义**。
 
 SCHED_FIFO 是一种先入先出的调度策略（First In First Out）。该策略简单来说就是一旦进程占用 CPU 则一直运行，直到有更高优先级的任务达到或者自己放弃运行，并且运行期间不响应软中断。
+
+## rt 选核
+[Linux Scheduler 之 rt 选核流程](https://mp.weixin.qq.com/s/3lNF_o8_RvD8kGxxo5VCfw)

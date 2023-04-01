@@ -18,7 +18,7 @@ hacking_memory="none"
 share_memory_option="9p"
 # share_memory_option="virtiofs"
 
-hacking_migration=true
+hacking_migration=false
 # @todo 尝试在 guest 中搭建一个 vIOMMU
 if [[ $hacking_migration = true ]]; then
   use_nvme_as_root=false

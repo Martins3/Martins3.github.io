@@ -7,30 +7,6 @@
 ## Shell
 - export PS1="\W" : 命令提示符只有 working dir
 
-## rpm
-- yum install epel-release
-  - 为了安装 sshfs
-  - https://support.moonpoint.com/os/unix/linux/centos/epel_repository.php
-  - 但是在 Centos 8 中，这个方法没有用: yum --enablerepo=powertools install fuse-sshfs
-- rpm -qp --scripts ls.rpm
-  - 查询 rpm 安装的执行脚本
-- Centos 8 安装 neovim
-```sh
-yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm
-yum install -y neovim python3-neovim
-```
-
-- sudo yum list installed : 展示自动安装的内核
-- 新安装的 Centos8 无法安装任何软件:
-  - 报错： Error: Failed to download metadata for repo 'appstream': Cannot prepare internal mirrorlist: No URLs in mirrorlist
-  - https://stackoverflow.com/questions/70963985/error-failed-to-download-metadata-for-repo-appstream-cannot-prepare-internal
-```txt
-# sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-*
-# sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-*
-# dnf distro-sync
-# dnf -y install java
-```
-
 ## tar
 - tar cvzf name_of_archive_file.tar.gz name_of_directory_to_tar
   - https://unix.stackexchange.com/questions/46969/compress-a-folder-with-tar

@@ -153,3 +153,31 @@ static void yield_task_fair(struct rq *rq)
   - update_load_avg
   - rebalance_domains : 处理 idle , balance 的时机
     - load_balance
+
+## [CFS 线程调度机制分析](https://mp.weixin.qq.com/s/PgqfGi5Yd6lQFbf9fV6kSQ)
+
+```txt
+#0  wakeup_gran (se=0xffff888104446680) at kernel/sched/fair.c:7731
+#1  wakeup_preempt_entity (curr=0xffff888104162280, curr=0xffff888104162280, se=0xffff888104446680) at kernel/sched/fair.c:7756
+#2  check_preempt_wakeup (rq=0xffff888333bee200, p=<optimized out>, wake_flags=<optimized out>) at kernel/sched/fair.c:7861
+#3  0xffffffff81186831 in check_preempt_curr (rq=rq@entry=0xffff888333bee200, p=p@entry=0xffff888104446600, flags=flags@entry=0) at kernel/sched/core.c:2182
+#4  0xffffffff811868bd in ttwu_do_activate (rq=rq@entry=0xffff888333bee200, p=p@entry=0xffff888104446600, wake_flags=wake_flags@entry=0, rf=<optimized
+ out>) at kernel/sched/core.c:3713
+#5  0xffffffff811877eb in ttwu_queue (wake_flags=0, cpu=<optimized out>, p=0xffff888104446600) at kernel/sched/core.c:3956
+#6  try_to_wake_up (p=0xffff888104446600, state=state@entry=3, wake_flags=wake_flags@entry=0) at kernel/sched/core.c:4278
+#7  0xffffffff81187b95 in wake_up_process (p=<optimized out>) at kernel/sched/core.c:4412
+#8  0xffffffff81164780 in wake_up_worker (pool=<optimized out>) at kernel/workqueue.c:859
+#9  insert_work (extra_flags=0, head=<optimized out>, work=0xffff888333beaea0, pwq=0xffff888333bf4600) at kernel/workqueue.c:1369
+#10 __queue_work (cpu=23, wq=<optimized out>, work=0xffff888333beaea0) at kernel/workqueue.c:1524
+#11 0xffffffff81203657 in call_timer_fn (timer=timer@entry=0xffff888333beaec0, fn=fn@entry=0xffffffff811650e0 <delayed_work_timer_fn>, baseclk=baseclk
+@entry=4294686976) at kernel/time/timer.c:1700
+#12 0xffffffff812038ee in expire_timers (head=0xffffc90002073e50, base=0xffff888333bde300) at kernel/time/timer.c:1746
+#13 __run_timers (base=0xffff888333bde300) at kernel/time/timer.c:2022
+#14 0xffffffff822983c7 in __do_softirq () at kernel/softirq.c:571
+#15 0xffffffff81149646 in invoke_softirq () at kernel/softirq.c:445
+#16 __irq_exit_rcu () at kernel/softirq.c:650
+#17 0xffffffff81149e4e in irq_exit_rcu () at kernel/softirq.c:662
+#18 0xffffffff822821a0 in sysvec_apic_timer_interrupt (regs=0xffffc90002073f58) at arch/x86/kernel/apic/apic.c:1107
+#19 0xffffffff8240148a in asm_sysvec_apic_timer_interrupt () at ./arch/x86/include/asm/idtentry.h:645
+```
+其中还有几个小实验可以分析下。

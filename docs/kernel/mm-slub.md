@@ -2,22 +2,98 @@
 
 ## 解决几个基础的观测问题
 
-sudo cat /proc/slabinfo
+- [ ] debugfs 也是可以提供 slab
+- [ ] slab_sysfs_init
+
+### /proc/slabinfo
+```txt
 | name            <active_objs> <num_objs> <objsize> <objperslab> <pagesperslab> | tunables <limit> <batchcount> <sharedfactor> | slabdata <active_slabs> <num_slabs> <sharedavail> |
 |--------------------------------------------------------------------------------|----------------------------------------------|---------------------------------------------------|
-| ovl_inode             45    270    720   45    8                               | tunables    0    0    0                      | slabdata      6      6      0                     |
-| QIPCRTR                2     39    832   39    8                               | tunables    0    0    0                      | slabdata      1      1      0                     |
-| i915_dependency     1152   1152    128   32    1                               | tunables    0    0    0                      | slabdata     36     36      0                     |
-| execute_cb             0      0     64   64    1                               | tunables    0    0    0                      | slabdata      0      0      0                     |
-| i915_request        4794   4794    640   51    8                               | tunables    0    0    0                      | slabdata     94     94      0                     |
-| intel_context       1058   1058    704   46    8                               | tunables    0    0    0                      | slabdata     23     23      0                     |
-| fat_inode_cache       50    123    784   41    8                               | tunables    0    0    0                      | slabdata      3      3      0                     |
-| fat_cache              1    102     40  102    1                               | tunables    0    0    0                      | slabdata      1      1      0                     |
-| nf_conntrack        2073   2240    256   32    2                               | tunables    0    0    0                      | slabdata     70     70      0                     |
-| kvm_async_pf        1080   1080    136   30    1                               | tunables    0    0    0                      | slabdata     36     36      0                     |
+| ovl_inode             45        270        720        45            8          | tunables    0    0    0                      | slabdata      6      6      0                     |
+| QIPCRTR                2         39        832        39            8          | tunables    0    0    0                      | slabdata      1      1      0                     |
+| i915_dependency     1152       1152        128        32            1          | tunables    0    0    0                      | slabdata     36     36      0                     |
+| execute_cb             0          0         64        64            1          | tunables    0    0    0                      | slabdata      0      0      0                     |
+| i915_request        4794       4794        640        51            8          | tunables    0    0    0                      | slabdata     94     94      0                     |
+| intel_context       1058       1058        704        46            8          | tunables    0    0    0                      | slabdata     23     23      0                     |
+| fat_inode_cache       50        123        784        41            8          | tunables    0    0    0                      | slabdata      3      3      0                     |
+| fat_cache              1        102         40       102            1          | tunables    0    0    0                      | slabdata      1      1      0                     |
+| nf_conntrack        2073       2240        256        32            2          | tunables    0    0    0                      | slabdata     70     70      0                     |
+| kvm_async_pf        1080       1080        136        30            1          | tunables    0    0    0                      | slabdata     36     36      0                     |
+```
 
-- [ ] debugfs 也是可以处理的
-- [ ] slab_sysfs_init
+- active_objs: 目前使用中的 object 数量
+- num_objs: 总共能够分配的 object 数量
+- objsize: 每个 object 的大小
+- objperslab: 每个 slab 可以有多少个 object
+- pagesperslab: 每个 slab 对应几个 page
+
+参考 [redhat : 5.2.26. /proc/slabinfo](https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/4/html/reference_guide/s2-proc-slabinfo)
+
+```c
+static void cache_show(struct kmem_cache *s, struct seq_file *m)
+{
+	struct slabinfo sinfo;
+
+	memset(&sinfo, 0, sizeof(sinfo));
+	get_slabinfo(s, &sinfo);
+
+	seq_printf(m, "%-17s %6lu %6lu %6u %4u %4d",
+		   s->name, sinfo.active_objs, sinfo.num_objs, s->size,
+		   sinfo.objects_per_slab, (1 << sinfo.cache_order));
+
+	seq_printf(m, " : tunables %4u %4u %4u",
+		   sinfo.limit, sinfo.batchcount, sinfo.shared);
+	seq_printf(m, " : slabdata %6lu %6lu %6lu",
+		   sinfo.active_slabs, sinfo.num_slabs, sinfo.shared_avail);
+	slabinfo_show_stats(m, s);
+	seq_putc(m, '\n');
+}
+```
+
+```c
+struct slabinfo {
+	unsigned long active_objs;
+	unsigned long num_objs;
+	unsigned long active_slabs;
+	unsigned long num_slabs;
+	unsigned long shared_avail;
+	unsigned int limit;
+	unsigned int batchcount;
+	unsigned int shared;
+	unsigned int objects_per_slab;
+	unsigned int cache_order;
+};
+```
+
+## 如何理解 objperslab 和 pagesperslab
+```c
+static inline unsigned int oo_order(struct kmem_cache_order_objects x)
+{
+	return x.x >> OO_SHIFT;
+}
+
+static inline unsigned int oo_objects(struct kmem_cache_order_objects x)
+{
+	return x.x & OO_MASK;
+}
+```
+
+```txt
+#0  calculate_sizes (s=s@entry=0xffff888100042400) at mm/slub.c:4351
+#1  0xffffffff813d989d in kmem_cache_open (flags=<optimized out>, s=s@entry=0xffff888100042400) at mm/slub.c:4494
+#2  __kmem_cache_create (s=s@entry=0xffff888100042400, flags=<optimized out>) at mm/slub.c:5091
+#3  0xffffffff83861eff in create_boot_cache (s=s@entry=0xffff888100042400, name=name@entry=0xffffffff82bdfc8c "kmalloc-32", size=size@entry=32, flags=
+flags@entry=4096, useroffset=useroffset@entry=0, usersize=usersize@entry=32) at mm/slab_common.c:653
+#4  0xffffffff83861f93 in create_kmalloc_cache (name=name@entry=0xffffffff82bdfc8c "kmalloc-32", size=size@entry=32, flags=<optimized out>, flags@entr
+y=0, useroffset=useroffset@entry=0, usersize=usersize@entry=32) at mm/slab_common.c:671
+#5  0xffffffff83862048 in new_kmalloc_cache (idx=idx@entry=5, type=type@entry=KMALLOC_NORMAL, flags=flags@entry=0) at mm/slab_common.c:882
+#6  0xffffffff8386222c in create_kmalloc_caches (flags=flags@entry=0) at mm/slab_common.c:911
+#7  0xffffffff838690aa in kmem_cache_init () at mm/slub.c:5041
+#8  0xffffffff8382502f in mm_init () at init/main.c:852
+#9  start_kernel () at init/main.c:1005
+#10 0xffffffff81000145 in secondary_startup_64 () at arch/x86/kernel/head_64.S:358
+```
+一次分配 slab 可能需要多个页，数量由 oo_order 确定，而 oo_objects 就是 slab 中分配的。
 
 ## [ ] 不知道为什么，qemu 都关闭了，这些 cache 也清理不掉
 ```txt

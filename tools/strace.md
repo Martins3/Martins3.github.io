@@ -5,11 +5,6 @@ strace 可以监控的内容:
 - 信号
 - process state
 
-过滤掉特定的 syscall
-```sh
-#!/usr/bin/env bash
-strace -e 'trace=!read,writev' tcpdump -A -s0 port 80
-```
 
 ```sh
 strace -A -o a.log ls
@@ -33,6 +28,17 @@ strace 执行的时候，可以修改执行的 trace 以及 修改指令执行�
 -I interruptible 用于屏蔽信号
 
 strace -p <PID> attach 到一个进程上[^2]
+
+## 过滤掉特定的 syscall
+```sh
+#!/usr/bin/env bash
+strace -e 'trace=!read,writev' tcpdump -A -s0 port 80
+```
+
+## 跟踪和文件相关的调用
+```sh
+sudo strace -f -t -e trace=file ls
+```
 
 [^1]: [strace little book](https://github.com/NanXiao/strace-little-book)
 

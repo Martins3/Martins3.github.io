@@ -9,3 +9,4 @@
 - [ ] 可以不借助迁移来测试一下 userfaultfd 吗?
 
 - https://lwn.net/Articles/615086/
+- http://brieflyx.me/2020/linux-tools/userfaultfd-internals/
