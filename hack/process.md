@@ -376,6 +376,8 @@ notes from [^8]:
   - [ ] Not all syscall will lead to `TASK_UNINTERRUPTIBLE`, find a example to lead to `TASK_INTERRUPTIBLE` and it has to do that.
 
 
+- TASK_PARKED : 主要是给 kthread 使用，处于该状态的时候，就在执行 `__kthread_parkme`，其中一直睡眠，然后等待其他人唤醒。
+
 ## process relation
 - [ ] zombie
 - [ ] orphan
@@ -1333,7 +1335,7 @@ static inline void kthread_frame_init(struct inactive_task_frame *frame,
 }
 ```
 
-```
+```c
 /*
  * A newly forked process directly context switches into this address.
  *
@@ -1381,6 +1383,14 @@ SYM_CODE_END(ret_from_fork)
 
 - [ ] kthread_queue_work : we encounter this function in the /home/maritns3/core/linux/arch/x86/kvm/i8254.c
   - my question is : what's the meaning of queue in the context of kthread ?
+
+- [ ]  do_exit 是用户 process 结束方法，那么 kernel thread 是如何结束的 ?
+
+
+- kthread
+  - smpboot_thread_fn
+    - kthread_should_stop
+    - kthread_should_park
 
 ## first user process
 ```c
@@ -1616,6 +1626,8 @@ https://stackoverflow.com/questions/20688982/zombie-process-vs-orphan-process
 
 ## uid euid suid
 参考: [hacktricks: euid, ruid, suid](https://github.com/carlospolop/hacktricks/blob/master/linux-hardening/privilege-escalation/euid-ruid-suid.md)
+
+每次 ssh 登录的时候，都会 `__sys_setuid`
 
 [^2]: https://man7.org/linux/man-pages/man7/signal.7.html
 [^3]: https://0xax.gitbooks.io/linux-insides/content/SysCall/linux-syscall-2.html

@@ -1,0 +1,321 @@
+# tracer: function_graph
+#
+# CPU  DURATION                  FUNCTION CALLS
+# |     |   |                     |   |   |   |
+  6)               |  __perf_event_task_sched_out() {
+  6)   0.125 us    |    perf_cgroup_switch();
+  6)   1.221 us    |  }
+  6)               |  switch_mm_irqs_off() {
+  6)   0.134 us    |    load_new_mm_cr3();
+  6)   0.064 us    |    switch_ldt();
+  6)   0.489 us    |  }
+ ------------------------------------------
+  6)    <idle>-0    => printf1-1575510
+ ------------------------------------------
+
+  6)               |  finish_task_switch.isra.0() {
+  6)               |    __perf_event_task_sched_in() {
+  6)   0.054 us    |      __rcu_read_lock();
+  6)   0.052 us    |      __rcu_read_unlock();
+  6)   0.274 us    |    }
+  6)               |    raw_spin_rq_unlock() {
+  6)               |      _raw_spin_unlock() {
+  6)   0.048 us    |        preempt_count_sub();
+  6)   0.138 us    |      }
+  6)   0.227 us    |    }
+  6)   0.816 us    |  }
+  6)   0.058 us    |  preempt_count_sub();
+  6)               |  hrtimer_try_to_cancel() {
+  6)   0.046 us    |    hrtimer_active();
+  6)   0.138 us    |  }
+  6)   0.053 us    |  syscall_exit_to_user_mode_prepare();
+  6)               |  exit_to_user_mode_prepare() {
+  6)   0.050 us    |    mem_cgroup_handle_over_high();
+  6)   0.052 us    |    blkcg_maybe_throttle_current();
+  6)   0.437 us    |    __rseq_handle_notify_resume();
+  6)   0.044 us    |    fpregs_assert_state_consistent();
+  6)               |    switch_fpu_return() {
+  6)               |      restore_fpregs_from_fpstate() {
+  6)   0.064 us    |        xfd_validate_state();
+  6)   0.253 us    |      }
+  6)   0.404 us    |    }
+  6)   1.333 us    |  }
+  6)               |  __x64_sys_write() {
+  6)               |    ksys_write() {
+  6)               |      __fdget_pos() {
+  6)   0.945 us    |        __fget_light();
+  6)   1.076 us    |      }
+  6)               |      vfs_write() {
+  6)               |        rw_verify_area() {
+  6)               |          security_file_permission() {
+  6)               |            selinux_file_permission() {
+  6)               |              inode_security() {
+  6)   0.131 us    |                __cond_resched();
+  6)   0.249 us    |              }
+  6)   0.051 us    |              avc_policy_seqno();
+  6)   0.739 us    |            }
+  6)   0.046 us    |            bpf_lsm_file_permission();
+  6)   1.049 us    |          }
+  6)   1.152 us    |        }
+  6)   0.053 us    |        __get_task_ioprio();
+  6)               |        tty_write() {
+  6)               |          file_tty_write.constprop.0() {
+  6)               |            tty_ldisc_ref_wait() {
+  6)               |              ldsem_down_read() {
+  6)   0.043 us    |                __cond_resched();
+  6)   0.139 us    |              }
+  6)   0.360 us    |            }
+  6)   0.056 us    |            mutex_trylock();
+  6)               |            __check_object_size() {
+  6)   0.051 us    |              check_stack_object();
+  6)   0.050 us    |              is_vmalloc_addr();
+  6)   0.109 us    |              __virt_addr_valid();
+  6)   0.060 us    |              __check_heap_object();
+  6)   0.748 us    |            }
+  6)               |            n_tty_write() {
+  6)               |              down_read() {
+  6)   0.049 us    |                __cond_resched();
+  6)   0.149 us    |              }
+  6)   0.279 us    |              process_echoes();
+  6)               |              add_wait_queue() {
+  6)               |                _raw_spin_lock_irqsave() {
+  6)   0.082 us    |                  preempt_count_add();
+  6)   0.179 us    |                }
+  6)               |                _raw_spin_unlock_irqrestore() {
+  6)   0.044 us    |                  preempt_count_sub();
+  6)   0.141 us    |                }
+  6)   0.477 us    |              }
+  6)   0.048 us    |              tty_hung_up_p();
+  6)               |              mutex_lock() {
+  6)   0.044 us    |                __cond_resched();
+  6)   0.160 us    |              }
+  6)               |              tty_write_room() {
+  6)               |                pty_write_room() {
+  6)   0.118 us    |                  tty_buffer_space_avail();
+  6)   0.275 us    |                }
+  6)   0.375 us    |              }
+  6)               |              pty_write() {
+  6)               |                tty_insert_flip_string_and_push_buffer() {
+  6)               |                  _raw_spin_lock_irqsave() {
+  6)   0.070 us    |                    preempt_count_add();
+  6)   0.433 us    |                  }
+  6)               |                  tty_insert_flip_string_fixed_flag() {
+  6)   0.145 us    |                    __tty_buffer_request_room();
+  6)   0.236 us    |                  }
+  6)               |                  _raw_spin_unlock_irqrestore() {
+  6)   0.045 us    |                    preempt_count_sub();
+  6)   0.133 us    |                  }
+  6)               |                  queue_work_on() {
+  6)               |                    __queue_work() {
+  6)   0.047 us    |                      __rcu_read_lock();
+  6)               |                      _raw_spin_lock() {
+  6)   0.044 us    |                        preempt_count_add();
+  6)   0.132 us    |                      }
+  6)               |                      insert_work() {
+  6)               |                        wake_up_process() {
+  6)               |                          try_to_wake_up() {
+  6)   0.051 us    |                            preempt_count_add();
+  6)               |                            _raw_spin_lock_irqsave() {
+  6)   0.044 us    |                              preempt_count_add();
+  6)   0.168 us    |                            }
+  6)               |                            select_task_rq_fair() {
+  6)   0.043 us    |                              __rcu_read_lock();
+  6)   0.066 us    |                              available_idle_cpu();
+  6)   0.077 us    |                              available_idle_cpu();
+  6)   0.043 us    |                              available_idle_cpu();
+  6)   0.049 us    |                              __rcu_read_unlock();
+  6)   0.626 us    |                            }
+  6)   0.071 us    |                            kthread_is_per_cpu();
+  6)               |                            ttwu_queue_wakelist() {
+  6)               |                              __smp_call_single_queue() {
+  6)   0.098 us    |                                send_call_function_single_ipi();
+  6)   0.224 us    |                              }
+  6)   0.351 us    |                            }
+  6)               |                            _raw_spin_unlock_irqrestore() {
+  6)   0.046 us    |                              preempt_count_sub();
+  6)   0.134 us    |                            }
+  6)   0.043 us    |                            preempt_count_sub();
+  6)   1.792 us    |                          }
+  6)   1.885 us    |                        }
+  6)   1.982 us    |                      }
+  6)               |                      _raw_spin_unlock() {
+  6)   0.042 us    |                        preempt_count_sub();
+  6)   0.130 us    |                      }
+  6)   0.047 us    |                      __rcu_read_unlock();
+  6)   2.749 us    |                    }
+  6)   2.870 us    |                  }
+  6)   3.885 us    |                }
+  6)   4.071 us    |              }
+  6)   0.050 us    |              mutex_unlock();
+  6)               |              mutex_lock() {
+  6)   0.045 us    |                __cond_resched();
+  6)   0.134 us    |              }
+  6)               |              tty_write_room() {
+  6)               |                pty_write_room() {
+  6)   0.048 us    |                  tty_buffer_space_avail();
+  6)   0.130 us    |                }
+  6)   0.214 us    |              }
+  6)               |              do_output_char() {
+  6)               |                pty_write() {
+  6)               |                  tty_insert_flip_string_and_push_buffer() {
+  6)               |                    _raw_spin_lock_irqsave() {
+  6)   0.054 us    |                      preempt_count_add();
+  6)   0.153 us    |                    }
+  6)               |                    tty_insert_flip_string_fixed_flag() {
+  6)   0.045 us    |                      __tty_buffer_request_room();
+  6)   0.222 us    |                    }
+  6)               |                    _raw_spin_unlock_irqrestore() {
+  6)   0.046 us    |                      preempt_count_sub();
+  6)   0.146 us    |                    }
+  6)   0.064 us    |                    queue_work_on();
+  6)   0.814 us    |                  }
+  6)   0.915 us    |                }
+  6)   1.024 us    |              }
+  6)   0.052 us    |              mutex_unlock();
+  6)               |              remove_wait_queue() {
+  6)               |                _raw_spin_lock_irqsave() {
+  6)   0.056 us    |                  preempt_count_add();
+  6)   0.145 us    |                }
+  6)               |                _raw_spin_unlock_irqrestore() {
+  6)   0.044 us    |                  preempt_count_sub();
+  6)   0.134 us    |                }
+  6)   0.409 us    |              }
+  6)   0.046 us    |              up_read();
+  6)   8.471 us    |            }
+  6)   0.047 us    |            ktime_get_real_seconds();
+  6)   0.049 us    |            mutex_unlock();
+  6)               |            __wake_up() {
+  6)               |              __wake_up_common_lock() {
+  6)               |                _raw_spin_lock_irqsave() {
+  6)   0.046 us    |                  preempt_count_add();
+  6)   0.139 us    |                }
+  6)   0.054 us    |                __wake_up_common();
+  6)               |                _raw_spin_unlock_irqrestore() {
+  6)   0.047 us    |                  preempt_count_sub();
+  6)   0.132 us    |                }
+  6)   0.499 us    |              }
+  6)   0.656 us    |            }
+  6)               |            tty_ldisc_deref() {
+  6)   0.048 us    |              ldsem_up_read();
+  6)   0.203 us    |            }
+  6) + 11.526 us   |          }
+  6) + 11.666 us   |        }
+  6) + 14.049 us   |      }
+  6) + 15.291 us   |    }
+  6) + 15.442 us   |  }
+  6)   0.046 us    |  syscall_exit_to_user_mode_prepare();
+  6)               |  exit_to_user_mode_prepare() {
+  6)   0.088 us    |    fpregs_assert_state_consistent();
+  6)   0.189 us    |  }
+  6)               |  __x64_sys_clock_nanosleep() {
+  6)   0.088 us    |    get_timespec64();
+  6)               |    common_nsleep() {
+  6)               |      hrtimer_nanosleep() {
+  6)   0.062 us    |        __hrtimer_init();
+  6)               |        do_nanosleep() {
+  6)               |          hrtimer_start_range_ns() {
+  6)               |            _raw_spin_lock_irqsave() {
+  6)   0.047 us    |              preempt_count_add();
+  6)   0.151 us    |            }
+  6)   0.058 us    |            ktime_get();
+  6)   0.048 us    |            get_nohz_timer_target();
+  6)   0.262 us    |            enqueue_hrtimer();
+  6)               |            _raw_spin_unlock_irqrestore() {
+  6)   0.045 us    |              preempt_count_sub();
+  6)   0.134 us    |            }
+  6)   0.966 us    |          }
+  6)               |          schedule() {
+  6)   0.052 us    |            preempt_count_add();
+  6)               |            rcu_note_context_switch() {
+  6)   0.052 us    |              rcu_qs();
+  6)   0.163 us    |            }
+  6)               |            raw_spin_rq_lock_nested() {
+  6)   0.052 us    |              preempt_count_add();
+  6)               |              _raw_spin_lock() {
+  6)   0.051 us    |                preempt_count_add();
+  6)   0.139 us    |              }
+  6)   0.043 us    |              preempt_count_sub();
+  6)   0.414 us    |            }
+  6)   0.067 us    |            update_rq_clock();
+  6)               |            dequeue_task_fair() {
+  6)               |              dequeue_entity() {
+  6)               |                update_curr() {
+  6)   0.049 us    |                  update_min_vruntime();
+  6)   0.066 us    |                  cpuacct_charge();
+  6)               |                  __cgroup_account_cputime() {
+  6)   0.047 us    |                    preempt_count_add();
+  6)   0.046 us    |                    cgroup_rstat_updated();
+  6)   0.043 us    |                    preempt_count_sub();
+  6)   0.311 us    |                  }
+  6)   0.719 us    |                }
+  6)   0.071 us    |                __update_load_avg_se();
+  6)   0.075 us    |                __update_load_avg_cfs_rq();
+  6)   0.043 us    |                clear_buddies();
+  6)   0.043 us    |                update_cfs_group();
+  6)   0.051 us    |                update_min_vruntime();
+  6)   1.350 us    |              }
+  6)               |              dequeue_entity() {
+  6)               |                update_curr() {
+  6)   0.066 us    |                  __calc_delta();
+  6)   0.050 us    |                  update_min_vruntime();
+  6)   0.263 us    |                }
+  6)   0.067 us    |                __update_load_avg_se();
+  6)   0.054 us    |                __update_load_avg_cfs_rq();
+  6)   0.042 us    |                clear_buddies();
+  6)               |                update_cfs_group() {
+  6)   0.044 us    |                  reweight_entity();
+  6)   0.134 us    |                }
+  6)   0.049 us    |                update_min_vruntime();
+  6)   0.936 us    |              }
+  6)   0.044 us    |              hrtick_update();
+  6)   2.675 us    |            }
+  6)               |            pick_next_task_fair() {
+  6)               |              newidle_balance() {
+  6)   0.046 us    |                __rcu_read_lock();
+  6)   0.042 us    |                __msecs_to_jiffies();
+  6)   0.043 us    |                __rcu_read_unlock();
+  6)   0.374 us    |              }
+  6)   0.486 us    |            }
+  6)               |            put_prev_task_fair() {
+  6)               |              put_prev_entity() {
+  6)   0.046 us    |                check_cfs_rq_runtime();
+  6)   0.148 us    |              }
+  6)               |              put_prev_entity() {
+  6)   0.044 us    |                check_cfs_rq_runtime();
+  6)   0.125 us    |              }
+  6)   0.426 us    |            }
+  6)               |            pick_next_task_idle() {
+  6)               |              __update_idle_core() {
+  6)   0.048 us    |                __rcu_read_lock();
+  6)   0.045 us    |                __rcu_read_unlock();
+  6)   0.259 us    |              }
+  6)   0.359 us    |            }
+  6)               |            psi_task_switch() {
+  6)   0.044 us    |              psi_flags_change();
+  6)               |              psi_group_change() {
+  6)   0.052 us    |                record_times();
+  6)   0.254 us    |              }
+  6)               |              psi_group_change() {
+  6)   0.043 us    |                record_times();
+  6)   0.150 us    |              }
+  6)               |              psi_group_change() {
+  6)   0.043 us    |                record_times();
+  6)   0.133 us    |              }
+  6)               |              psi_group_change() {
+  6)   0.043 us    |                record_times();
+  6)   0.133 us    |              }
+  6)               |              psi_group_change() {
+  6)   0.045 us    |                record_times();
+  6)   0.133 us    |              }
+  6)               |              psi_group_change() {
+  6)   0.044 us    |                record_times();
+  6)   0.130 us    |              }
+  6)   1.367 us    |            }
+  6)               |            __traceiter_sched_switch() {
+  6)               |              _raw_spin_lock_irqsave() {
+  6)   0.041 us    |                preempt_count_add();
+  6)   0.153 us    |              }
+  6)               |              _raw_spin_unlock_irqrestore() {
+  6)   0.045 us    |                preempt_count_sub();
+  6)   0.135 us    |              }
+  6)   0.608 us    |            }

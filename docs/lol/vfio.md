@@ -779,6 +779,10 @@ vfio_dma_map 传递给内核， host 的虚拟地址 和 guest 的物理地址
 ]: 641774
 ```
 
+## [VFIO User - Using VFIO as the IPC Protocol in Multi-process QEMU - John Johnson & Jagannathan Raman](https://www.youtube.com/watch?v=NBT8rImx3VE)
+
+## [An Introduction to IOMMU Infrastructure in the Linux Kernel](https://lenovopress.lenovo.com/lp1467.pdf)
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

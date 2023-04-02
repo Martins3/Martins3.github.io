@@ -23,3 +23,4 @@ https://blog.acrossapp.com/how-a-2-person-startup-already-uses-28-other-tools/ :
 
 ## 有趣的工具
 - https://github.com/phiresky/ripgrep-all : 对于 pdf tar 等也可以 ag
+- https://waydro.id/ : 基于容器使用 Android

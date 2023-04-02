@@ -3,17 +3,17 @@
 
 <!-- vim-markdown-toc GitLab -->
 
-- [KeyNote](#keynote)
-- [1 Processes, Lightweight Processes, and Threads](#1-processes-lightweight-processes-and-threads)
-- [2 Process Descriptor](#2-process-descriptor)
-    - [2.1 Process State](#21-process-state)
-    - [2.2 Identifying a Process](#22-identifying-a-process)
-    - [2.3 Relationships Among Processes](#23-relationships-among-processes)
-    - [2.4 How Processes Are Organized](#24-how-processes-are-organized)
-    - [2.5 Process Resource Limits](#25-process-resource-limits)
-- [3 Process Switch](#3-process-switch)
-- [4 Creating Processes](#4-creating-processes)
-- [5 Destroying Processes](#5-destroying-processes)
+* [KeyNote](#keynote)
+* [1 Processes, Lightweight Processes, and Threads](#1-processes-lightweight-processes-and-threads)
+* [2 Process Descriptor](#2-process-descriptor)
+    * [2.1 Process State](#21-process-state)
+    * [2.2 Identifying a Process](#22-identifying-a-process)
+    * [2.3 Relationships Among Processes](#23-relationships-among-processes)
+    * [2.4 How Processes Are Organized](#24-how-processes-are-organized)
+    * [2.5 Process Resource Limits](#25-process-resource-limits)
+* [3 Process Switch](#3-process-switch)
+* [4 Creating Processes](#4-creating-processes)
+* [5 Destroying Processes](#5-destroying-processes)
 
 <!-- vim-markdown-toc -->
 
@@ -106,7 +106,7 @@ of execution that execute `wait()`-like calls on the same process (see Chapter 5
 #define EXIT_DEAD			0x0010
 #define EXIT_ZOMBIE			0x0020
 #define EXIT_TRACE			(EXIT_ZOMBIE | EXIT_DEAD)
-/* Used in tsk->state again: */ // todo 下面都是做什么的 ?
+/* Used in tsk->state again: */
 #define TASK_PARKED			0x0040
 #define TASK_DEAD			0x0080
 #define TASK_WAKEKILL			0x0100
@@ -234,7 +234,7 @@ called wait queues and are discussed next.
 
 * ***Wait queues***
 
-Wait queues have several uses in the kernel, particularly for interrupt handling, process synchronization, and timing. 
+Wait queues have several uses in the kernel, particularly for interrupt handling, process synchronization, and timing.
 
 
 

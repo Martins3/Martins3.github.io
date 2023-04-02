@@ -1,1 +1,0 @@
-- [ ]  do_exit 是用户 process 结束方法，那么 kernel thread 是如何结束的 ?
