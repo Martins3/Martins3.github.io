@@ -300,3 +300,7 @@ virsh dom
 ## 如何使用 numad
 
 src/qemu/qemu_process.c:qemuProcessPrepareDomainNUMAPlacement 中确定 qemu 所在的 numa 节点
+
+## 热迁移也可以使用的
+- virsh domjobinfo domain_id
+- virsh getdirtyrate domain_id

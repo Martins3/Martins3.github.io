@@ -5,6 +5,9 @@
 - [ ] 和 PCIe 的关系
 - [ ] ACPI 实现电源管理是通过什么硬件做到的，硬件需要何种适配
 
+## man acpi(1)
+看看这个命令如何使用
+
 ## 基本内容
 - https://en.wikipedia.org/wiki/Advanced_Configuration_and_Power_Interface
 

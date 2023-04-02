@@ -34,6 +34,7 @@ Hardware and Software Support for Virtualization : 作者[Edouard Bugnion](https
 - [ASPLOS IOMMU tutorial](http://pages.cs.wisc.edu/~basu/isca_iommu_tutorial/IOMMU_TUTORIAL_ASPLOS_2016.pdf) 介绍了 IOMMU，学习 vt-d 之前可以阅读一下。
 
 ## 一些有用的 blog
+- [Hypervisor From Scratch](https://rayanfam.com/) :star: :star:
 - [KVM forum](https://www.linux-kvm.org/page/KVM_Forum) :star: :star: :star: kvm forum 每年的会议 slides 都是精华
 - [kernelgo](https://kernelgo.org/) :star: :star:
   - [作者整理的 gitbook](https://luohao-brian.gitbooks.io/interrupt-virtualization/content/qemuzhi-network-device-quan-xu-ni-fang-an-4e8c3a-xu-ni-wang-qia.html)

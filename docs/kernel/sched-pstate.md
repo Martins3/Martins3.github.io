@@ -366,3 +366,6 @@ unsigned int cpufreq_quick_get(unsigned int cpu)
 
 ## UEIF 中存在调整 cstate 的代码
 - 当然啊
+
+## sudo acpi -t
+这个命令居然可以看温度

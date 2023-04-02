@@ -15,16 +15,16 @@ iso=${workstation}/${distribution}.iso
 img=${workstation}/${distribution}.qcow2
 
 if [[ ! -f $iso ]]; then
-  wget https://mirror.nju.edu.cn/rocky/9.1/isos/x86_64/Rocky-9.1-x86_64-dvd.iso -O $iso
+	wget https://mirror.nju.edu.cn/rocky/9.1/isos/x86_64/Rocky-9.1-x86_64-dvd.iso -O $iso
 fi
 
 virt-install \
-  -n $distribution \
-  --description "$distribution" \
-  --os-variant=$os_variant \
-  --ram=2048 \
-  --vcpus=2 \
-  --disk path=$img,bus=virtio,size=100 \
-  --graphics none \
-  --cdrom $iso \
-  --network bridge:br0
+	-n $distribution \
+	--description "$distribution" \
+	--os-variant=$os_variant \
+	--ram=2048 \
+	--vcpus=2 \
+	--disk path=$img,bus=virtio,size=100 \
+	--graphics none \
+	--cdrom $iso \
+	--network bridge:br0

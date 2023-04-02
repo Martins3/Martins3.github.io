@@ -57,3 +57,9 @@ https://serverfault.com/questions/82193/creating-symlink-in-usr-bin-when-creatin
 ```txt
 %{__ln_s} libcursor.so.%{version} %{buildroot}/usr/lib64/libcursor.so.1
 ```
+
+## 文档
+http://ftp.rpm.org/max-rpm/
+
+## [ ] https://unix.stackexchange.com/questions/330186/where-does-modprobe-load-a-driver-that-udev-requests
+modporbe 是如何工作的
