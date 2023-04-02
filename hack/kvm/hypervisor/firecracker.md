@@ -131,3 +131,7 @@ https://aws.amazon.com/cn/blogs/china/deep-analysis-aws-firecracker-principle-vi
 
 ## blog
 https://www.talhoffman.com/2021/07/18/firecracker-internals/
+
+## 更多资料
+- https://news.ycombinator.com/item?id=34964197
+  - 文章本身不错，comment 里面资料也不少

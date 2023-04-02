@@ -22,3 +22,6 @@ SUM:                            18            825            429           4019
 ```
 
 QEMU 的代码数量差不多。
+
+## mesa 似乎存在类似的支持
+https://docs.mesa3d.org/drivers/virgl

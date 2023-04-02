@@ -69,3 +69,6 @@ https://github.com/upgundecha/howtheysre : 各个公司关于 SRE 的报告吧
 - minio : MinIO works as an object storage system while GlusterFS works as a file storage system.
 - longhorn : https://github.com/longhorn/longhorn : Cloud-Native distributed storage built on and for Kubernetes
 - brdb
+
+## 库
+- gRPC : https://github.com/hyperium/tonic

@@ -89,10 +89,11 @@ https://asmjit.com/
 - v8 自带几个小文件例子.
 - https://github.com/lazyparser/v8-internals
   - 通过 Chromium 然后在网页中访问网页
-  - https://github.com/fathyb/carbonyl
-  - https://github.com/danbev/learning-v8
-    - https://fathy.fr/carbonyl : blog
-  - https://news.ycombinator.com/item?id=25663403 : 相关的报道
+
+- https://github.com/fathyb/carbonyl
+- https://github.com/danbev/learning-v8
+  - https://fathy.fr/carbonyl : blog
+- https://news.ycombinator.com/item?id=25663403 : 相关的报道
 
 https://github.com/marcobambini/gravity : 16000 ，也是使用了 vm, 文档非常的详细
 https://github.com/KCreate/charly-vm : 80个star, vm 很大(4000)，其余都是很模块性质的几百行

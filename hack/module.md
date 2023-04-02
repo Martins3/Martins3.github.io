@@ -52,3 +52,37 @@ nixos 的和 centos 的，最好是可以统一的
 
 ## udev 的原理
 udev 是如何拉起来各种驱动的
+
+## 如何理解 /proc/sys/kernel/modprobe
+- https://docs.kernel.org/next/admin-guide/sysctl/kernel.html#modprobe
+
+```txt
+#ifdef CONFIG_MODULES
+	{
+		.procname	= "modprobe",
+		.data		= &modprobe_path,
+		.maxlen		= KMOD_PATH_LEN,
+		.mode		= 0644,
+		.proc_handler	= proc_dostring,
+	},
+	{
+		.procname	= "modules_disabled",
+		.data		= &modules_disabled,
+		.maxlen		= sizeof(int),
+		.mode		= 0644,
+		/* only handle a transition from default "0" to "1" */
+		.proc_handler	= proc_dointvec_minmax,
+		.extra1		= SYSCTL_ONE,
+		.extra2		= SYSCTL_ONE,
+	},
+#endif
+```
+
+不知道是谁初始化的!
+```txt
+🧀  cat /proc/sys/kernel/modprobe
+/nix/store/1z6hk4iky1wv6gaa8s0isn35489x0fa2-kmod-30/bin/modprobe
+```
+其使用位置是:
+- `__request_module` : 调用位置非常多，我猜测是，这个的作用是，内核想要调用 modprobe 的时候，就需要知道 modprobe 的位置。
+  - call_modprobe

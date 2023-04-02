@@ -114,6 +114,55 @@ static const struct mm_walk_ops show_numa_ops = {
 numad 就是通过这个来实现的。
 
 ## /proc/pid/stat
+主要是关于进程调度，信号的信息，关于内存的部分，包括:
+```txt
+              (10) minflt  %lu
+                     The number of minor faults the process has made
+                     which have not required loading a memory page from
+                     disk.
+
+              (11) cminflt  %lu
+                     The number of minor faults that the process's
+                     waited-for children have made.
+
+              (12) majflt  %lu
+                     The number of major faults the process has made
+                     which have required loading a memory page from
+                     disk.
+
+              (13) cmajflt  %lu
+                     The number of major faults that the process's
+                     waited-for children have made.
+
+              (23) vsize  %lu
+                     Virtual memory size in bytes.
+
+              (24) rss  %ld
+                     Resident Set Size: number of pages the process has
+                     in real memory.  This is just the pages which count
+                     toward text, data, or stack space.  This does not
+                     include pages which have not been demand-loaded in,
+                     or which are swapped out.  This value is
+                     inaccurate; see /proc/[pid]/statm below.
+
+              (25) rsslim  %lu
+                     Current soft limit in bytes on the rss of the
+                     process; see the description of RLIMIT_RSS in
+                     getrlimit(2).
+
+              (36) nswap  %lu
+                     Number of pages swapped (not maintained).
+
+              (37) cnswap  %lu
+                     Cumulative nswap for child processes (not
+                     maintained).
+
+```
+信息来源: https://man7.org/linux/man-pages/man5/procfs.5.html
+
+- [ ] cminflt 和 cmajflt 是啥意思？
+
+## /proc/pid/statm
 
 ## /proc/meminfo
 具体内容都在: https://github.com/torvalds/linux/blob/master/Documentation/filesystems/proc.rst#meminfo

@@ -27,6 +27,7 @@ Hardware and Software Support for Virtualization : 作者[Edouard Bugnion](https
 - https://github.com/ionescu007/SimpleVisor : Window Driver 或者 UEFI driver 方式执行的 hypervisor
 - [Write your Own Virtual Machine](https://justinmeiners.github.io/lc3-vm)
 - [mvisor](https://github.com/78/mvisor) : 一个 QEMU 的 mini 替代，可以运行 Windows 的图形界面
+- [Hypervisor-101-in-Rust](https://github.com/tandasat/Hypervisor-101-in-Rust)
 
 ## 一些补充资料
 - [cpu internals](https://github.com/LordNoteworthy/cpu-internals) 是 intel SDM 的笔记，其中覆盖了 intel CPU 在硬件上如何支持虚拟化的, 阅读 kvm 的时候可以配合这阅读一下。
