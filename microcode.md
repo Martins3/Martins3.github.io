@@ -4,3 +4,6 @@
   - 修改 CPU 的指令映射
 - https://winraid.level1techs.com/t/intel-amd-via-freescale-cpu-microcode-repositories-discussion/32301
   - 这里包含具体的资源
+
+代码在这里
+arch/x86/kernel/cpu/microcode/

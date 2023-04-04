@@ -7,3 +7,5 @@
 通过这个 feature 来获取 CPU 的频率的:
 
 相关的初始化位置: arch/x86/kernel/cpu/aperfmperf.c
+
+## 其实现在的也不准

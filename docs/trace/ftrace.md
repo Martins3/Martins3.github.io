@@ -220,6 +220,8 @@ cat trace
 ```
 在开机的时候设置 ftrace_notrace 和 ftrace_filter 中的内容。
 
+https://docs.kernel.org/trace/boottime-trace.html
+
 ## [官方文档](https://www.kernel.org/doc/html/latest/trace/ftrace.html)
 
 ### dynamic ftrace

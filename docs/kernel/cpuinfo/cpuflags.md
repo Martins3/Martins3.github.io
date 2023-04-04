@@ -6,6 +6,7 @@
 ## arch/x86/include/asm/cpufeatures.h
 
 
+
 ## qemu 的 machine model
 /run/current-system/sw/bin/qemu-system-x86_64 -S -no-user-config -nodefaults -nographic -machine none,accel=kvm:tcg
 -qmp unix:/home/martins3/.config/libvirt/qemu/lib/qmp-LEY2Z1/qmp.monitor,server=on,wait=off
@@ -13,6 +14,8 @@
 
 - [ ] -cpu SandyBridge 的时候，Guest 居然没有 vmx 的。
 ## eagerfpu
+其中 eagerfpu 并不是硬件特性，而是操作系统用户态程序具有某项能力。
+
 ```diff
 commit e63650840e8b053aa09ad934877e87e9941ed135
 Author: Andy Lutomirski <luto@kernel.org>

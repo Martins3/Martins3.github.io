@@ -69,3 +69,18 @@ static struct syscore_ops kvm_syscore_ops = {
 	.resume		= kvm_resume,
 };
 ```
+
+## 当 online CPU 的时候，类似 boot CPU 启动
+```txt
+
+🧀  t tsx_dev_mode_disable
+Attaching 1 probe...
+^C
+@[
+    tsx_dev_mode_disable+1
+    tsx_ap_init+15
+    smp_store_cpu_info+73
+    start_secondary+81
+    secondary_startup_64_no_verify+224
+]: 1
+```

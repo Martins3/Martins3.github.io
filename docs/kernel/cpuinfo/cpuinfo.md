@@ -1,5 +1,7 @@
 # cpuinfo
 
+代码 : `show_cpuinfo`
+
 ## 概括
 ```txt
 processor       : 31
@@ -31,7 +33,7 @@ address sizes   : 46 bits physical, 48 bits virtual
 power management:
 ```
 
-## https://unix.stackexchange.com/questions/43539/what-do-the-flags-in-proc-cpuinfo-mean
+## https://unix.stackexchange.com/questionhttps://a4lg.com/tech/x86/database/x86-families-and-models.en.htmls/43539/what-do-the-flags-in-proc-cpuinfo-mean
 
 ## https://unix.stackexchange.com/questions/146051/number-of-processors-in-proc-cpuinfo
 
@@ -39,7 +41,57 @@ power management:
 通过 cpu_detect 中调用
 ## vendor_id : GenuineIntel
 ## cpu family	: 6
+intel 6
+AMD 24
+
 ## model		: 183
+应该是每一款 CPU 都有自己的，但是很难找到完全的数据:
+- https://a4lg.com/tech/x86/database/x86-families-and-models.en.html
+
+这个文件中存在部分的定义
+/home/martins3/core/linux/arch/x86/include/asm/intel-family.h
+
+想不到字符串也是存储到 model name 中的:
+```c
+static void get_model_name(struct cpuinfo_x86 *c)
+{
+	unsigned int *v;
+	char *p, *q, *s;
+
+	if (c->extended_cpuid_level < 0x80000004)
+		return;
+
+	v = (unsigned int *)c->x86_model_id;
+	cpuid(0x80000002, &v[0], &v[1], &v[2], &v[3]);
+	cpuid(0x80000003, &v[4], &v[5], &v[6], &v[7]);
+	cpuid(0x80000004, &v[8], &v[9], &v[10], &v[11]);
+	c->x86_model_id[48] = 0;
+
+	/* Trim whitespace */
+	p = q = s = &c->x86_model_id[0];
+
+	while (*p == ' ')
+		p++;
+
+	while (*p) {
+		/* Note the last non-whitespace index */
+		if (!isspace(*p))
+			s = q;
+
+		*q++ = *p++;
+	}
+
+	*(s + 1) = '\0';
+}
+```
+
+在 Guest 中观测到的:
+```txt
+model           : 61
+model name      : Intel Core Processor (Broadwell, no TSX, IBRS)
+```
+而且 qemu 中也的确定义了。
+
 ## model name	: 13th Gen Intel(R) Core(TM) i9-13900K
 ```c
 #define INTEL_FAM6_RAPTORLAKE		0xB7
@@ -47,6 +99,28 @@ power management:
 #define INTEL_FAM6_RAPTORLAKE_S		0xBF
 ```
 - [ ] 这里的 cpu model 和 QEMU 中的 cpu model 相同吗？
+
+openAI 的回答:
+```txt
+    NetBurst (Pentium 4): Launched in November 2000
+    Core (Yonah): Launched in January 2006
+    Penryn (Core 2): Launched in November 2007
+    Nehalem: Launched in November 2008
+    Westmere: Launched in January 2010
+    Sandy Bridge: Launched in January 2011
+    Ivy Bridge: Launched in April 2012
+    Haswell: Launched in June 2013
+    Broadwell: Launched in September 2014
+    Skylake: Launched in August 2015
+    Kaby Lake: Launched in August 2016
+    Coffee Lake: Launched in October 2017
+    Cannon Lake: Launched in May 2018
+    Ice Lake: Launched in August 2019
+    Comet Lake: Launched in August 2019
+    Tiger Lake: Launched in September 2020
+    Rocket Lake: Launched in March 2021
+```
+我发现，一个 model 可以对应多个 model name !
 
 ## stepping	: 1
 - https://en.wikipedia.org/wiki/Stepping_level
