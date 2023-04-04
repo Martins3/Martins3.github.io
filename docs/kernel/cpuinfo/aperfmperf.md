@@ -9,3 +9,40 @@
 相关的初始化位置: arch/x86/kernel/cpu/aperfmperf.c
 
 ## 其实现在的也不准
+
+## aperfmperf 是无法透传给 vCPU 的
+从 guest 中获取的 /proc/cpuinfo 完全是错的
+```txt
+➜  ~ cat /proc/cpuinfo | grep MHz
+cpu MHz         : 2995.200
+cpu MHz         : 2995.200
+cpu MHz         : 2995.200
+cpu MHz         : 2995.200
+cpu MHz         : 2995.200
+cpu MHz         : 2995.200
+cpu MHz         : 2995.200
+cpu MHz         : 2995.200
+cpu MHz         : 2995.200
+cpu MHz         : 2995.200
+cpu MHz         : 2995.200
+cpu MHz         : 2995.200
+cpu MHz         : 2995.200
+cpu MHz         : 2995.200
+cpu MHz         : 2995.200
+cpu MHz         : 2995.200
+cpu MHz         : 2995.200
+cpu MHz         : 2995.200
+cpu MHz         : 2995.200
+cpu MHz         : 2995.200
+cpu MHz         : 2995.200
+cpu MHz         : 2995.200
+cpu MHz         : 2995.200
+cpu MHz         : 2995.200
+cpu MHz         : 2995.200
+cpu MHz         : 2995.200
+cpu MHz         : 2995.200
+cpu MHz         : 2995.200
+cpu MHz         : 2995.200
+cpu MHz         : 2995.200
+cpu MHz         : 2995.200
+```

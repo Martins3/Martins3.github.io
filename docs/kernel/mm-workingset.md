@@ -254,3 +254,18 @@ unlock:
 	} while (xas_nomem(&xas, gfp));
 ```
 这里到底在查询什么？
+
+## 问了下 chatgpt !
+```txt
+/proc/vmstat is a file in the Linux proc filesystem that provides various statistics about the virtual memory subsystem. It includes counters related to memory management, such as page allocation, swapping, and page faults.
+
+workingset_nodes is one of the counters in /proc/vmstat, and it refers to the number of shadow nodes created for the working set management mechanism. In the context of Linux kernel memory management, the working set refers to the set of pages that are actively in use by a process or the system at a given time.
+
+The Linux kernel uses a technique called "shadow nodes" to track the working set of processes more efficiently. A shadow node represents a part of a process's address space that has been evicted from memory but is still being tracked. The kernel maintains these nodes to make better decisions about which pages to evict from memory when under memory pressure.
+
+When a page is evicted, its corresponding entry in the process's page table is replaced with a "shadow entry," and a shadow node is created to store information about the evicted page. If the process later tries to access the evicted page, a page fault occurs, and the kernel can use the information in the shadow node to decide whether to bring the page back into memory or to evict another page.
+
+The workingset_nodes counter in /proc/vmstat provides the total number of shadow nodes created since the system was booted. This number can be useful to understand how often pages are being evicted and whether the system is under memory pressure.
+
+Keep in mind that the workingset_nodes counter may not be present on all systems, as it depends on the kernel configuration and version. In some cases, you may need to enable the CONFIG_WORKINGSET kernel configuration option to see this counter.
+```
