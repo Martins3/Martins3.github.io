@@ -40,6 +40,9 @@ strace -e 'trace=!read,writev' tcpdump -A -s0 port 80
 sudo strace -f -t -e trace=file ls
 ```
 
+## 更加复杂的工具在单独的文件中
+- ./strace.md
+
 [^1]: [strace little book](https://github.com/NanXiao/strace-little-book)
 
 [^2]: https://stackoverflow.com/questions/7482076/how-does-strace-connect-to-an-already-running-process
