@@ -146,10 +146,6 @@ dpdk 测试工具
 
 - https://github.com/baidu/dperf
 
-## sar
-- https://medium.com/@malith.jayasinghe/network-monitoring-using-sar-37bab6ce9f68
-- sar -n DEV 1
-
 ## 参考
 - https://github.com/adriannovegil/awesome-observability
 

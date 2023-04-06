@@ -137,17 +137,11 @@ bcc 也提供了各种工具，包括 trace argdist 以及 funccount 等等
 
 Before using bcc, you should start with the Linux basics. One reference is the [Linux Performance Analysis in 60s](http://techblog.netflix.com/2015/11/linux-performance-analysis-in-60s.html) post, which covers these commands:
 
-1. uptime
-1. dmesg | tail
-1. vmstat 1
 1. mpstat -P ALL 1
 1. pidstat 1
 1. iostat -xz 1
-1. sar -n DEV 1
-1. sar -n TCP,ETCP 1
 1. top
 
-> TODO 传统的分析工具都是从 /proc 中间读取数据的
 
 分析各种 domain specific 工具:
 1. runqlat

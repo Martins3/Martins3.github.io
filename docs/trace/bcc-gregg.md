@@ -1,4 +1,4 @@
-# bcc-gregg
+# 洞悉 Linux 系统和发应性能
 
 nixos 下是 execsnoop 而 debian execsnoop-bpfcc
 

@@ -39,6 +39,9 @@ strace -e 'trace=!read,writev' tcpdump -A -s0 port 80
 ```sh
 sudo strace -f -t -e trace=file ls
 ```
+- -f 跟踪到 fork 出来的 child 里面
+- -e traec=syscall_set
+- -t Prefix each line of the trace with the wall clock time.
 
 ## 更加复杂的工具在单独的文件中
 - ./strace.md

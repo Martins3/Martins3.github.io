@@ -9,13 +9,9 @@
 
 [What does aux mean in `ps aux`?](https://unix.stackexchange.com/questions/106847/what-does-aux-mean-in-ps-aux)
 
-### ps f
-
-### pstree
 
 ## vmstat
-
-各种基础功能:
+感觉不是一个很强的工具
 ```txt
 🧀  vmstat -h
 
@@ -40,7 +36,17 @@ Options:
 
 For more details see vmstat(8).
 ```
-- [ ] 这里统计了从开机到现在的 fork 数量吗？
+
+- vmstat 1
+
+## pidstat
+可以只是监控一个程序
+
+## mpstat
+- mpstat -P ALL 1
+  - 使用 -P 来展示部分 CPU 的
+- mpstat 1
+  - 展示整个系统的
 
 ## ipcs
 
@@ -78,9 +84,22 @@ t    stopped by debugger during the tracing
 X    dead (should never be seen)
 ```
 
-### top
+## top
 - [ ] 打开 top, 按数值 1 的时候，可以观测那个 CPU 上的 softirq 发生的频率
 - [ ] top 是如何统计 usr 和 sys 的
+
+## iostat
+
+## sar
+- https://medium.com/@malith.jayasinghe/network-monitoring-using-sar-37bab6ce9f68
+- sar -n DEV 1 : 监控 nic 的流量
+- sar -n EDEV : 监控 nic 的错误
+- sar -n TCP,ETCP 1
+- sar -d 1 : disk
+- sar -B 1 : 内存管理之类的
+
+
+## pstree
 
 ## 文摘
 
