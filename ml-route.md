@@ -23,3 +23,6 @@ https://github.com/FavioVazquez/ds-cheatsheets
 - https://github.com/tsherif/space-shooter.c
 - https://github.com/coding-horror/basic-computer-games
 - https://github.com/shlomnissan/t-rex-runner-c : Chrome 的小霸王龙
+
+## chatgpt 相关
+- https://news.ycombinator.com/item?id=34796611

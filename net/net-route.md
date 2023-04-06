@@ -691,6 +691,9 @@ warning: error(s) occurred while switching to the new configuration
 通过 /proc/sys/net/ipv4/tcp_retries2 可以实现
 - https://stackoverflow.com/questions/5907527/application-control-of-tcp-retransmission-on-linux
 
+## fwmask
+- https://utcc.utoronto.ca/~cks/space/blog/linux/LinuxIpFwmarkMasks
+
 
 [^2]: 用芯探核:基于龙芯的 Linux 内核探索解析
 [^4]: http://yuba.stanford.edu/rcp/
