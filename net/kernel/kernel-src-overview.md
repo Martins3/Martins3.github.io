@@ -1,5 +1,32 @@
 # 记录一下网络栈的一些源码分析
 
+## 摘抄从 gregg 的 BCC book
+> Sockets are defined by a sock struct embedded at the start of protocol
+variants such as tcp_sock.
+Network protocols are attached to socket using a struct proto,
+such that there a tcp_prot,udp_prot,etc;
+this struct defines callback functions for operating
+the protocol,including for connect,sendmsg,and recvmsg.
+
+> These include the new API(NAPI) interface
+Receive Side Scaling(RSS), Receive Packet Steering(RPS)
+Receive Flow Steering(RFS),
+Accelerated RFS, and Transmit Packet Steering(XPS).
+
+SO_REUSEPORT 可以让多个 process 使用相同的 port
+
+使用 SYN Backlog 和 listen Backlog 来两个队列来构建
+方式 SYN flooding 攻击。
+
+> 最后，这里还有有一些高级的 perfermance optimizations 话题一带而过，在 P395
+> 1. Nagle
+> 2. Byte Queue Limits(BQL)
+> 3. Pacing
+> 4. TCP Small Queues(TSQ)
+> 5. Early Departure Time(EDT)
+
+
+
 ## 调试 bmbt 的时候，打过断点的位置
 
 ### arch/x86/kernel/apic/msi.c: `irq_msi_compose_msg`

@@ -52,3 +52,7 @@ perf ftrace is a simple *wrapper* for kernel's ftrace functionality, and only su
 perf ftrace -T __kmalloc ./add_vec
 perf ftrace ./add_vec
 ```
+
+## perf sched
+- perf sched record
+- perf report

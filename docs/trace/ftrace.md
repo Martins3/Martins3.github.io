@@ -11,6 +11,13 @@ blk function_graph wakeup_dl wakeup_rt wakeup function nop
 
 总体的教程 : 直接在 debugfs 上的操作，然后 trace-cmd，最后图形化的 kernelshark
 
+## 直接操作的教程
+- https://github.com/brendangregg/perf-tools
+
+主要是: https://github.com/brendangregg/perf-tools/tree/master/kernel
+
+这个是 perf 和 ftrace 直接使用的很好的工具了。
+
 ## 问题
 - [ ] function and latency tracers : 为什么 ftrace 可以跟踪 latency tracer
 - [ ] 为什么 ftrace 可以跟踪 kprobe 和 uprobe

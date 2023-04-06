@@ -5,6 +5,9 @@
 - [ ] debugfs 也是可以提供 slab
 - [ ] slab_sysfs_init
 
+### slabtop
+- slabtop -s c : 按照 cache size 排序
+
 ### /proc/slabinfo
 ```txt
 | name            <active_objs> <num_objs> <objsize> <objperslab> <pagesperslab> | tunables <limit> <batchcount> <sharedfactor> | slabdata <active_slabs> <num_slabs> <sharedavail> |
