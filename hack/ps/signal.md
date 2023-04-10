@@ -20,12 +20,6 @@
 - [ ] 如果 invalid 的 pagefault 发生了，如果导致 process 被 killed, 这个流程分析一下
 
 - [ ] sigret 的工作原理
-- [x] 一个进程在什么时候检查自己的信号(执行 signal handler)
-  - [x] syscall 返回的时候 ? (不是，int / syscall 返回到用户态的时候)
-      - 如果这是真的，那么 SA_RESTART 的作用无法解释，syscall 都返回了，怎么可能被 handler 打断
-        - 此时解释 syscall_restart 的理由就是，其实有的系统调用，在执行的会检查 signal_pending, 如果发生了 signal_pending, 会提前结束。
-      - 通过检查 x86 的 signal.c 发生检查的位置在 	exit_to_user_mode_prepare 的调用下
-      - arm64 的代码在 ret_to_user 的时候检查, 这一点是统一的
 
 - do_notify_resume : 从目前的分析看，signal handler 的处理是在 syscall return 的时候，将返回的 pt_regs 修改
   - do_signal : TODO 需要处理一些 syscall restart 的东西

@@ -12,3 +12,14 @@ logout
 
 - [ ] https://console.dev/articles/ssh-alternatives-for-mobile-high-latency-unreliable-connections/
 - [ ] https://project-awesome.org/moul/awesome-ssh : 没有想到，原来 ssh 也是存在 awesome 项目的
+
+> 对 ssh 设置做一些小优化可能是很有用的，例如这个 ~/.ssh/config 文件包含了防止特定网络环境下连接断开、压缩数据、多通道等选项：
+>
+>       TCPKeepAlive=yes
+>       ServerAliveInterval=15
+>       ServerAliveCountMax=6
+>       Compression=yes
+>       ControlMaster auto
+>       ControlPath /tmp/%r@%h:%p
+>       ControlPersist yes
+> 一些其他的关于 ssh 的选项是与安全相关的，应当小心翼翼的使用。例如你应当只能在可信任的网络中启用 StrictHostKeyChecking=no，ForwardAgent=yes。

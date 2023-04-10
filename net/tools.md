@@ -80,6 +80,7 @@ https://github.com/shemminger/iproute2
 https://github.com/s0md3v/Smap
 
 ## netstat
+> 使用 netstat -lntp 或 ss -plat 检查哪些进程在监听端口（默认是检查 TCP 端口; 添加参数 -u 则检查 UDP 端口）或者 lsof -iTCP -sTCP:LISTEN -P -n (这也可以在 OS X 上运行)。
 
 > This program is obsolete. Replacement for netstat is ss. Replacement for netstat -r is ip route. Replacement for netstat -i is ip -s link. Replacement for netstat -g is ip maddr.
 
@@ -146,3 +147,11 @@ iptables为我们提供了如下规则的分类，或者说，iptables为我们�
 
 - 顺便可以看看:
   - https://www.zhihu.com/question/20100901
+
+## [ ] dig
+
+## [ ] mtr
+
+## tshark
+
+## ngrep

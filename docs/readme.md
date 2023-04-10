@@ -119,6 +119,7 @@
   - [sparse vmemmap](./kernel/mm-vmemmap.md)
   - [watermark](./kernel/mm-watermark.md)
   - [rmap](./kernel/mm-rmap.md)
+  <!-- - [singal 和 syscall restart](./kernel/signal-pending.md) -->
 <!-- -  🚧 [folio](./kernel/mm-folio.md) -->
 <!-- - [swap](./kernel/swap.md) -->
 <!-- - [为什么 Linux 6.0 相比于 Linux 0.1 复杂那么多](./kernel/why-so-complex.md) -->

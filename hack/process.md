@@ -464,15 +464,6 @@ Man clone(2)
   - [ ] ucontext ?
   - [ ] 文章并没有看!
 
-- [ ] A signal comes when I'm sleeping ?
-  - [ ] Is there a mechanism to run action handler immediately even the process is sleeping
-
-- [ ] Why everyone has to check signal_pending ?
-```
-➜  linux git:(master) ag signal_pending |wc -l
-741
-```
-
 1. 还是先把信号的机制的 tlpi 看完看懂，写代码，做习题完成在看吧，其实挺重要的
 2. fork 是如何处理 signal 共享的 ?
 
@@ -480,9 +471,6 @@ Man clone(2)
 1. 提供给用户操作进程的状态的接口，kill 等
 2. 内核之间的通信
 2. debug
-
-需要的分析的细节:
-2. generic_file_buffered_read 中间会调用 fatal_signal_pending，那么各种检查函数的要求是什么 ?
 
 Man 分析的很清楚[^2] :
 1. 发送
@@ -498,11 +486,6 @@ Man 分析的很清楚[^2] :
 - [ ] 执行完成 handler 是在用户态 还是 内核态，如果是内核态，没有安全，如果用户态，这个上下文如何构造 ?
 - [x] 当用户的 handler 执行完成之后，用户靠什么回到内核，此外，用户程序要是拒绝回到内核怎么办
   - [ ] 好吧，CNM, 居然在 x86/kernel/signal 中间
-
-- [ ] find the caller of `signal_pending` ?
-
-实际上的代码在 kernel/entry/
-irqentry_exit_to_user_mode 和 syscall_exit_to_user_mode
 
 #### signal fork
 - [ ] how exit_signal registered to the newborn process

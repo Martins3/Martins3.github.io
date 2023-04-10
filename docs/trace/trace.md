@@ -181,10 +181,6 @@ dpdk 测试工具
 ## numactl
 - numactl -H
 
-## cpupower
-
-## mpstat -P 0-16
-
 ## fgprof
 - https://github.com/felixge/fgprof
 
@@ -205,12 +201,13 @@ dpdk 测试工具
 
 ## tiptop
 
-## ps
-
 ## dtrace 真的还有人用吗？
 
 ## https://github.com/benfred/py-spy
 - [ ] 为什么每一个语言都是需要存在一个对应的观测工具呀？
+
+## 针对于特定语言的
+- python : py-spy
 
 [^4]: [An introduction to KProbes](https://lwn.net/Articles/132196/)
 [^5]: [Using user-space tracepoints with BPF](https://lwn.net/Articles/753601/)

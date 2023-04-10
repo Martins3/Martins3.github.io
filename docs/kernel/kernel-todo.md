@@ -23,19 +23,6 @@
 - kobj_to_hstate
   - 当内核中写 /sys/devices/system/node/node0/hugepages/hugepages-1048576kB/nr_hugepages 的时候，通过这个可以知道当前的 node 是什么
 
-- hugetlbfs_fallocate : 根本看不懂这个哇
-```c
-        cond_resched();
-
-        /*
-         * fallocate(2) manpage permits EINTR; we may have been
-         * interrupted because we are using up too much memory.
-         */
-        if (signal_pending(current)) {
-            error = -EINTR;
-            break;
-        }
-```
 - 热升级如何实现?
 
 - 我发现了一个这个问题 backtrace, 那么有什么办法通过 bpftrace 知道谁在使用 io_uring 吗?
@@ -270,11 +257,6 @@ static inline int driver_match_device(struct device_driver *drv,
       - 回调 `virtio_driver->probe`, 使用 virtnet_probe 作为例子
 
 - [ ] 什么 file operation 的 direct IO 是什么情况 ?
-
-- `__alloc_contig_migrate_range`
-  - fatal_signal_pending 为什么要在这里调用?
-    - 或者说，调用 fatal_signal_pending 的原理是什么?
-
 
 ## soft lockup
 set_max_huge_pages
