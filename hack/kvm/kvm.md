@@ -458,3 +458,5 @@ tlb flush 相关
 - sched_in 和 sched_out 的 hook
   - 上下文切换需要那些工作
 - 分析一下: 当一个 v
+
+## kvm_dev_ioctl 和 kvm_vm_ioctl 都存在选项 KVM_CHECK_EXTENSION ，而且调用相同的函数

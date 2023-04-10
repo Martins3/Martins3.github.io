@@ -18,7 +18,7 @@ hacking_memory="none"
 share_memory_option="9p"
 # share_memory_option="virtiofs"
 
-hacking_migration=false
+hacking_migration=true
 # @todo 尝试在 guest 中搭建一个 vIOMMU
 if [[ $hacking_migration == true ]]; then
 	use_nvme_as_root=false
@@ -176,8 +176,9 @@ arg_cpu_model="-cpu Skylake-Client-IBRS,hle=off,rtm=off"
 # arg_cpu_model="-cpu host"
 arg_cpu_model="-cpu Skylake-Client-IBRS,vmx=on,hle=off,rtm=off"
 arg_cpu_model="-cpu Broadwell-noTSX-IBRS,vmx=on,hle=off,rtm=off"
-arg_cpu_model="-cpu host"
-arg_cpu_model="-cpu Denverton"
+# arg_cpu_model="-cpu host"
+# arg_cpu_model="-cpu Denverton"
+arg_cpu_model="-cpu Broadwell-IBRS"
 
 if [[ $in_guest == true ]]; then
 	arg_cpu_model="$arg_cpu_model,vmx=off"
@@ -187,6 +188,7 @@ case $hacking_memory in
 	"none")
 		ramsize=12G
 		arg_mem_cpu="-smp $(($(getconf _NPROCESSORS_ONLN) - 1))"
+		arg_mem_cpu="-smp 1"
 		arg_mem_cpu="$arg_mem_cpu -object memory-backend-ram,id=pc.ram,size=$ramsize,prealloc=off,share=on -machine memory-backend=pc.ram -m $ramsize"
 		;;
 	"file")
@@ -379,8 +381,10 @@ while getopts "abcdhkmpqst" opt; do
 			# 需要保证迁移的两侧的 romfile 内容一致才可以
 			# arg_network="$arg_network,romfile=/home/martins3/hack/vm/img1"
 			arg_migration_target="-incoming tcp:0:4000"
-			# 测试发现，目标端是否为 smm 不影响迁移
+			# @todo 测试发现，目标端是否为 smm 不影响迁移
 			arg_machine="-machine pc,accel=kvm,kernel-irqchip=on,smm=on"
+			# target 端是啥 cpu model 根本没影响啊
+			arg_cpu_model="-cpu Broadwell-IBRS"
 			;;
 		b)
 			# 可以带上虚拟机唯一标识，而不是使用 mem

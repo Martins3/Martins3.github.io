@@ -146,12 +146,10 @@ lockup 检测。使能 perf nmi，能更精确的进行性
 
 ## virtiofs
 - [ ] https://libvirt.org/kbase/virtiofs.html
-  - [ ] ali 的人建议 : https://virtio-fs.gitlab.io/ : /home/maritns3/core/54-linux/fs/fuse/virtio_fs.c : 只有 1000 多行，9pfs 也很小，这些东西有什么特殊的地方吗 ?
+  - [ ] https://virtio-fs.gitlab.io/ : /home/maritns3/core/54-linux/fs/fuse/virtio_fs.c : 只有 1000 多行，9pfs 也很小，这些东西有什么特殊的地方吗 ?
 
 首先将 virtiofs 用起来: https://www.tauceti.blog/post/qemu-kvm-share-host-directory-with-vm-with-virtio/
 > virtio-fs on the other side is designed to offer local file system semantics and performance. virtio-fs takes advantage of the virtual machine’s co-location with the hypervisor to avoid overheads associated with network file systems. virtio-fs uses FUSE as the foundation. Unlike traditional FUSE where the file system daemon runs in userspace, the virtio-fs daemon runs on the host. A VIRTIO device carries FUSE messages and provides extensions for advanced features not available in traditional FUSE.
-
-似乎需要 Qemu 5.0 才可以。
 
 ## 整理一个 blog ，作为一个导航的存在
 
@@ -161,10 +159,7 @@ lockup 检测。使能 perf nmi，能更精确的进行性
 5. 多核让 PIC 升级成为了 APIC，我们开始需要分析如何正确负载
 6. 多核出现形成了一个新的学科，memory consistency and cache coherency
 
-
-## copy_to_user 实现机制
-
-# 操作性试验
+## 操作性试验
 一个有意思的实践
 https://stackoverflow.com/questions/36346835/active-inactive-list-in-linux-kernel?rq=1
 

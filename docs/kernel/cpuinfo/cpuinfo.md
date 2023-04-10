@@ -304,3 +304,5 @@ https://cpuid.apps.poly.nomial.co.uk/
 - [ ] ARM 中的
   - server ？
   - ashia  linux
+
+## [ ] 当 CPU 被 hotunplug 之后，会在 /proc/cpuinfo 中看到不同吗？

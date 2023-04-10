@@ -79,6 +79,23 @@ QEMU 中的 get_supported_cpuid 继续下去:
         - `__do_cpuid_func`
           - do_host_cpuid
 
+CPUArchState::features 中存储了当前 CPU 的 capability ，使用 `cpu_x86_cpuid` 来查询该
+
+
+-> 启动过程中检查是如何进行的
+
+- x86_cpu_filter_features 中
+```c
+    for (w = 0; w < FEATURE_WORDS; w++) {
+        uint64_t host_feat =
+            x86_cpu_get_supported_feature_word(w, false);
+        uint64_t requested_features = env->features[w];
+        uint64_t unavailable_features = requested_features & ~host_feat;
+        mark_unavailable_features(cpu, w, unavailable_features, prefix);
+    }
+```
+其实大家走的一个路径的
+
 ## QEMU 似乎在错误的使用一些全局变量
 使用 `-cpu Skylake-Client-IBRS,hle=off,rtm=off` 之后，感觉
 ```c
@@ -141,3 +158,4 @@ static GList *plus_features, *minus_features;
 - [ ] 但是在 kvm 中没有找到证据哇。
 
 ## 在 Denverton 中存在 SPEC_CTRL 最后是怎么通过检查的
+因为最后调用是通过 ioctl 询问 kvm 模块获取到的

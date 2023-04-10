@@ -1,5 +1,5 @@
 ## QEMU 初始化过程分析
-基于 v4.1.0，但是对于 v6.0 也很有参考意义
+基于 v4.1.0，但是对于 latest 的 QEMU 也很有参考意义，基础框架改动比较小。
 
 <!-- vim-markdown-toc GitLab -->
 

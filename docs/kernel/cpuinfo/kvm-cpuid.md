@@ -25,33 +25,6 @@ KVM_SET_CPUID : 就是会修改 Guest 使用 cpuid 获取到能力。
 - kvm_request_xsave_components
 
 ## 分析
-
-```c
-enum cpuid_leafs
-{
-	CPUID_1_EDX		= 0,
-	CPUID_8000_0001_EDX,
-	CPUID_8086_0001_EDX,
-	CPUID_LNX_1,
-	CPUID_1_ECX,
-	CPUID_C000_0001_EDX,
-	CPUID_8000_0001_ECX,
-	CPUID_LNX_2,
-	CPUID_LNX_3,
-	CPUID_7_0_EBX,
-	CPUID_D_1_EAX,
-	CPUID_LNX_4,
-	CPUID_7_1_EAX,
-	CPUID_8000_0008_EBX,
-	CPUID_6_EAX,
-	CPUID_8000_000A_EDX,
-	CPUID_7_ECX,
-	CPUID_8000_0007_EBX,
-	CPUID_7_EDX,
-	CPUID_8000_001F_EAX,
-	CPUID_8000_0021_EAX,
-};
-```
 ```c
 static struct kvm_x86_init_ops vmx_init_ops __initdata = {
 	.hardware_setup = hardware_setup,
@@ -260,3 +233,117 @@ Duration: 5598272250
   30|  0.00| 99.98|  0.00|  0.00||  0.00|100.00|  4370||  0.00|  0.00|  0.00| 100.0
   31|  0.00| 99.74|  0.00|  0.00||  0.22| 99.78|  4295||  0.00|  0.00|  0.00| 99.78
 ```
+
+## 分析下组织结构到底是怎么样子的
+
+这是 Linux 定义的:
+```c
+enum cpuid_leafs
+{
+	CPUID_1_EDX		= 0,
+	CPUID_8000_0001_EDX,
+	CPUID_8086_0001_EDX,
+	CPUID_LNX_1,
+	CPUID_1_ECX,
+	CPUID_C000_0001_EDX,
+	CPUID_8000_0001_ECX,
+	CPUID_LNX_2,
+	CPUID_LNX_3,
+	CPUID_7_0_EBX,
+	CPUID_D_1_EAX,
+	CPUID_LNX_4,
+	CPUID_7_1_EAX,
+	CPUID_8000_0008_EBX,
+	CPUID_6_EAX,
+	CPUID_8000_000A_EDX,
+	CPUID_7_ECX,
+	CPUID_8000_0007_EBX,
+	CPUID_7_EDX,
+	CPUID_8000_001F_EAX,
+	CPUID_8000_0021_EAX,
+};
+```
+- [ ]  CPUID_1_EDX 之类的这种是什么意思?
+
+分析函数 `get_cpu_cap` 可以看的比较清楚:
+
+或者分析
+```c
+static const struct cpuid_reg reverse_cpuid[] = {
+	[CPUID_1_EDX]         = {         1, 0, CPUID_EDX},
+	[CPUID_8000_0001_EDX] = {0x80000001, 0, CPUID_EDX},
+	[CPUID_8086_0001_EDX] = {0x80860001, 0, CPUID_EDX},
+	[CPUID_1_ECX]         = {         1, 0, CPUID_ECX},
+	[CPUID_C000_0001_EDX] = {0xc0000001, 0, CPUID_EDX},
+	[CPUID_8000_0001_ECX] = {0x80000001, 0, CPUID_ECX},
+	[CPUID_7_0_EBX]       = {         7, 0, CPUID_EBX},
+	[CPUID_D_1_EAX]       = {       0xd, 1, CPUID_EAX},
+	[CPUID_8000_0008_EBX] = {0x80000008, 0, CPUID_EBX},
+	[CPUID_6_EAX]         = {         6, 0, CPUID_EAX},
+	[CPUID_8000_000A_EDX] = {0x8000000a, 0, CPUID_EDX},
+	[CPUID_7_ECX]         = {         7, 0, CPUID_ECX},
+	[CPUID_8000_0007_EBX] = {0x80000007, 0, CPUID_EBX},
+	[CPUID_7_EDX]         = {         7, 0, CPUID_EDX},
+	[CPUID_7_1_EAX]       = {         7, 1, CPUID_EAX},
+	[CPUID_12_EAX]        = {0x00000012, 0, CPUID_EAX},
+	[CPUID_8000_001F_EAX] = {0x8000001f, 0, CPUID_EAX},
+	[CPUID_7_1_EDX]       = {         7, 1, CPUID_EDX},
+	[CPUID_8000_0007_EDX] = {0x80000007, 0, CPUID_EDX},
+	[CPUID_8000_0021_EAX] = {0x80000021, 0, CPUID_EAX},
+};
+```
+所以，
+
+
+这是 QEMU 定义的，两侧基本对应的
+```c
+/* CPUID feature words */
+typedef enum FeatureWord {
+    FEAT_1_EDX,         /* CPUID[1].EDX */
+    FEAT_1_ECX,         /* CPUID[1].ECX */
+    FEAT_7_0_EBX,       /* CPUID[EAX=7,ECX=0].EBX */
+    FEAT_7_0_ECX,       /* CPUID[EAX=7,ECX=0].ECX */
+    FEAT_7_0_EDX,       /* CPUID[EAX=7,ECX=0].EDX */
+    FEAT_7_1_EAX,       /* CPUID[EAX=7,ECX=1].EAX */
+    FEAT_8000_0001_EDX, /* CPUID[8000_0001].EDX */
+    FEAT_8000_0001_ECX, /* CPUID[8000_0001].ECX */
+    FEAT_8000_0007_EDX, /* CPUID[8000_0007].EDX */
+    FEAT_8000_0008_EBX, /* CPUID[8000_0008].EBX */
+    FEAT_C000_0001_EDX, /* CPUID[C000_0001].EDX */
+    FEAT_KVM,           /* CPUID[4000_0001].EAX (KVM_CPUID_FEATURES) */
+    FEAT_KVM_HINTS,     /* CPUID[4000_0001].EDX */
+    FEAT_SVM,           /* CPUID[8000_000A].EDX */
+    FEAT_XSAVE,         /* CPUID[EAX=0xd,ECX=1].EAX */
+    FEAT_6_EAX,         /* CPUID[6].EAX */
+    FEAT_XSAVE_XCR0_LO, /* CPUID[EAX=0xd,ECX=0].EAX */
+    FEAT_XSAVE_XCR0_HI, /* CPUID[EAX=0xd,ECX=0].EDX */
+    FEAT_ARCH_CAPABILITIES,
+    FEAT_CORE_CAPABILITY,
+    FEAT_PERF_CAPABILITIES,
+    FEAT_VMX_PROCBASED_CTLS,
+    FEAT_VMX_SECONDARY_CTLS,
+    FEAT_VMX_PINBASED_CTLS,
+    FEAT_VMX_EXIT_CTLS,
+    FEAT_VMX_ENTRY_CTLS,
+    FEAT_VMX_MISC,
+    FEAT_VMX_EPT_VPID_CAPS,
+    FEAT_VMX_BASIC,
+    FEAT_VMX_VMFUNC,
+    FEAT_14_0_ECX,
+    FEAT_SGX_12_0_EAX,  /* CPUID[EAX=0x12,ECX=0].EAX (SGX) */
+    FEAT_SGX_12_0_EBX,  /* CPUID[EAX=0x12,ECX=0].EBX (SGX MISCSELECT[31:0]) */
+    FEAT_SGX_12_1_EAX,  /* CPUID[EAX=0x12,ECX=1].EAX (SGX ATTRIBUTES[31:0]) */
+    FEAT_XSAVE_XSS_LO,     /* CPUID[EAX=0xd,ECX=1].ECX */
+    FEAT_XSAVE_XSS_HI,     /* CPUID[EAX=0xd,ECX=1].EDX */
+    FEATURE_WORDS,
+} FeatureWord;
+```
+对比下 arch/x86/include/asm/cpufeatures.h 中的含义:
+```c
+#define X86_FEATURE_FPU			( 0*32+ 0) /* Onboard FPU */
+```
+这个具体的数值并没有任何硬件意义，在使用数组记录硬件数组而已:
+```c
+cpu_feature_enabled(X86_FEATURE_VME)
+```
+他们都是和 `cpuid_leafs` 中的定义是对应的:
