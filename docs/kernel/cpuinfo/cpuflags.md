@@ -3,26 +3,13 @@
 
 - [x] qmp : query-cpu-definitions 是如何实现的
 
-## arch/x86/include/asm/cpufeatures.h
-
-## 并不是真的看不到
-
-cpuid -1 可以检测到
-```txt
-      IBRS/IBPB: indirect branch restrictions  = true
-```
-但是 /proc/cpuinfo 不能
-```c
-#define X86_FEATURE_SPEC_CTRL		(18*32+26) /* "" Speculation Control (IBRS + IBPB) */
-```
-这个并不会导致，这个是一个判断失误。
-
 ## qemu 的 machine model
 /run/current-system/sw/bin/qemu-system-x86_64 -S -no-user-config -nodefaults -nographic -machine none,accel=kvm:tcg
 -qmp unix:/home/martins3/.config/libvirt/qemu/lib/qmp-LEY2Z1/qmp.monitor,server=on,wait=off
 -pidfile /home/martins3/.config/libvirt/qemu/lib/qmp-LEY2Z1/qmp.pid
 
 - [ ] -cpu SandyBridge 的时候，Guest 居然没有 vmx 的。
+
 ## eagerfpu
 其中 eagerfpu 并不是硬件特性，而是操作系统用户态程序具有某项能力。
 

@@ -1,7 +1,5 @@
 [cpuid 必然导致 vmexit 的](https://stackoverflow.com/questions/63214415/does-hypervisor-like-kvm-need-to-vm-exit-on-cpuid)
 
-## 似乎处理 hyperv 也是在处理 cpuid 相关的
-
 ## [ ] 如果真的不提供，那么 Guest 使用对应的能力的下场是什么
 KVM_SET_CPUID : 就是会修改 Guest 使用 cpuid 获取到能力。
 
@@ -11,6 +9,8 @@ KVM_SET_CPUID : 就是会修改 Guest 使用 cpuid 获取到能力。
     - kvm_vcpu_after_set_cpuid
       - vmx_vcpu_after_set_cpuid
         - vmx_update_exception_bitmap : 其实这个也不对啊
+
+## arch/x86/include/asm/cpufeatures.h
 
 ## QEMU 是如何调用的
 关键描述:
@@ -43,111 +43,6 @@ static struct kvm_x86_init_ops vmx_init_ops __initdata = {
 - vmx_init
   - kvm_x86_vendor_init
     - `__kvm_x86_vendor_init`
-
-## `do_host_cpuid`
-
-```txt
-  do_host_cpuid
-  __do_cpuid_func
-  kvm_dev_ioctl_get_cpuid
-  kvm_arch_dev_ioctl
-  __x64_sys_ioctl
-  do_syscall_64
-  entry_SYSCALL_64_after_hwframe
-  [unknown]
-    2
-
-  do_host_cpuid
-  __do_cpuid_func
-  kvm_dev_ioctl_get_cpuid
-  kvm_arch_dev_ioctl
-  __x64_sys_ioctl
-  do_syscall_64
-  entry_SYSCALL_64_after_hwframe
-  [unknown]
-    3
-
-  do_host_cpuid
-  __do_cpuid_func
-  kvm_dev_ioctl_get_cpuid
-  kvm_arch_dev_ioctl
-  __x64_sys_ioctl
-  do_syscall_64
-  entry_SYSCALL_64_after_hwframe
-  [unknown]
-    4
-
-  do_host_cpuid
-  __do_cpuid_func
-  kvm_dev_ioctl_get_cpuid
-  kvm_arch_dev_ioctl
-  __x64_sys_ioctl
-  do_syscall_64
-  entry_SYSCALL_64_after_hwframe
-  [unknown]
-    9
-
-  do_host_cpuid
-  __do_cpuid_func
-  kvm_dev_ioctl_get_cpuid
-  kvm_arch_dev_ioctl
-  __x64_sys_ioctl
-  do_syscall_64
-  entry_SYSCALL_64_after_hwframe
-  [unknown]
-    16
-
-  do_host_cpuid
-  __do_cpuid_func
-  kvm_dev_ioctl_get_cpuid
-  kvm_arch_dev_ioctl
-  __x64_sys_ioctl
-  do_syscall_64
-  entry_SYSCALL_64_after_hwframe
-```
-
-## cpuid 的 spec_ctrl 的
-
-```c
-#define X86_FEATURE_SPEC_CTRL		(18*32+26) /* "" Speculation Control (IBRS + IBPB) */
-```
-
-
--cpu SandyBridge-IBRS
-```txt
-model name      : Intel Xeon E312xx (Sandy Bridge, IBRS update)
-```
-
--cpu SandyBridge
-```txt
-model name      : Intel Xeon E312xx (Sandy Bridge)
-```
-
-这是因为中的定义:
-```c
-static const X86CPUDefinition builtin_x86_defs[] = {
-```
-```c
-        .versions = (X86CPUVersionDefinition[]) {
-            { .version = 1 },
-            {
-                .version = 2,
-                .alias = "SandyBridge-IBRS",
-                .props = (PropValue[]) {
-                    { "spec-ctrl", "on" },
-                    { "model-id",
-                      "Intel Xeon E312xx (Sandy Bridge, IBRS update)" },
-                    { /* end of list */ }
-                }
-            },
-```
-但是在 Guest 中都是看不到这个的。
-
-是存在这个 flag 的啊
-```txt
-[    0.000000] [huxueshi:init_speculation_control:996] we found this
-```
-- [ ] 如果内核已经作出了修改，那么也是需要对应的改动吗？
 
 ## 为什么 Host 中没有看到，但是 Guest 中有看到
 分析下，为什么 host 上不显示这个
@@ -347,3 +242,139 @@ typedef enum FeatureWord {
 cpu_feature_enabled(X86_FEATURE_VME)
 ```
 他们都是和 `cpuid_leafs` 中的定义是对应的:
+
+## [x] 为什么会存在 CPUID_LNX_4 ，是为了告诉用户态什么东西吗？
+
+例如 X86_FEATURE_SPLIT_LOCK_DETECT
+- 似乎很多都隐藏了，这是一个特殊点
+
+- split_lock_setup
+  - `__split_lock_setup`
+
+有时候，其实就是像是全局变量一样，用于通知剩下的各个模块。
+
+## [x] 简单分析一下 arch/x86/kvm/cpuid.c 到底说了什么?
+
+1. 对于 QEMU 提供查询服务
+QEMU 侧
+- kvm_arch_get_supported_cpuid
+  - get_supported_cpuid
+    - try_get_cpuid
+      - kvm_ioctl(s, KVM_GET_SUPPORTED_CPUID, cpuid);
+
+kernel 侧
+- kvm_dev_ioctl_get_cpuid
+  - sanity_check_entries
+  - get_cpuid_func
+    - do_cpuid_func
+      - `__do_cpuid_func_emulated`
+      - `__do_cpuid_func`
+        - do_host_cpuid : 全部都是被 `__do_cpuid_func` 调用
+
+2.  查询
+- kvm_find_cpuid_entry_index
+  - cpuid_entry2_find
+
+3. 初始化 : 直接从 QEMU 中拷贝过来的
+- kvm_vcpu_ioctl_set_cpuid2
+  - kvm_set_cpuid
+
+4. kvm 初始化
+- vmx_set_cpu_caps
+  - kvm_set_cpu_caps : 这里规定了 kvm 中总共可以使用那些 flags
+    - `__kvm_cpu_cap_mask`
+    - cpuid_count : 当然需要 host 中也提供才可以，但是只能访问两个
+
+## 有的 cpuflags 是看不到的，例如 spec_ctrl
+cpuid -1 可以检测到
+```txt
+      IBRS/IBPB: indirect branch restrictions  = true
+```
+但是 /proc/cpuinfo 不能
+```c
+#define X86_FEATURE_SPEC_CTRL		(18*32+26) /* "" Speculation Control (IBRS + IBPB) */
+```
+这个并不会导致，这个是一个判断失误。
+
+## [ ] 如何理解 KVM_CPUID_FLAG_SIGNIFCANT_INDEX
+
+
+## 当向 kvm 的 cpuid 的时候，kvm 是不做检查需要的 flags 的
+- kvm_arch_init_vcpu 中
+```c
+
+        case 0x12:
+            for (j = 0; ; j++) {
+                c->function = i;
+                c->flags = KVM_CPUID_FLAG_SIGNIFCANT_INDEX;
+                c->index = j;
+                cpu_x86_cpuid(env, i, j, &c->eax, &c->ebx, &c->ecx, &c->edx);
+                // 去掉 avx2 的时候
+                /* [huxueshi:kvm_arch_init_vcpu:2006] 1 219c078b 1840072c ac004410 */
+                /* [huxueshi:kvm_arch_init_vcpu:2006] 810 0 0 0 */
+                /* [huxueshi:kvm_arch_init_vcpu:2006] 0 0 0 0 */
+                /* [huxueshi:kvm_arch_init_vcpu:2006] 0 0 0 0 */
+                /* [huxueshi:kvm_arch_init_vcpu:2006] 0 0 0 0 */
+                /* [huxueshi:kvm_arch_init_vcpu:2006] 0 0 0 0 */
+                printf("[huxueshi:%s:%d] %x %x %x %x\n", __FUNCTION__, __LINE__, c->eax, c->ebx, c->ecx, c->edx);
+
+                // 增加 rtm 的 flag
+                if (c->ebx == 0x219c07ab){
+                    c->ebx = c->ebx | (1 << 11);
+                }
+                // 增加 avx2
+                /* [huxueshi:kvm_arch_init_vcpu:2006] 1 219c07ab 1840072c ac004410 */
+                /* [huxueshi:kvm_arch_init_vcpu:2006] 810 0 0 0 */
+                /* [huxueshi:kvm_arch_init_vcpu:2006] 0 0 0 0 */
+                /* [huxueshi:kvm_arch_init_vcpu:2006] 0 0 0 0 */
+                /* [huxueshi:kvm_arch_init_vcpu:2006] 0 0 0 0 */
+                /* [huxueshi:kvm_arch_init_vcpu:2006] 0 0 0 0 */
+
+                if (j > 1 && (c->eax & 0xf) != 1) {
+                    break;
+                }
+
+                if (cpuid_i == KVM_MAX_CPUID_ENTRIES) {
+                    fprintf(stderr, "cpuid_data is full, no space for "
+                                "cpuid(eax:0x12,ecx:0x%x)\n", j);
+                    abort();
+                }
+                c = &cpuid_data.entries[cpuid_i++];
+            }
+            break;
+```
+
+```txt
+[    0.743907] Run /init as init process
+[    0.745631] traps: init[1] trap invalid opcode ip:7f480c569f49 sp:7ffc5c6e76b8 error:0 in libc.so.6[7f480c40a000+16f000]
+[    0.746049] Kernel panic - not syncing: Attempted to kill init! exitcode=0x00000004
+[    0.746323] CPU: 0 PID: 1 Comm: init Not tainted 6.3.0-rc6-dirty #214
+[    0.746554] Hardware name: Martins3 Inc Hacking Alpine, BIOS 12 2022-2-2
+[    0.746794] Call Trace:
+[    0.746900]  <TASK>
+[    0.746976]  dump_stack_lvl+0x4b/0x80
+[    0.747115]  panic+0x32b/0x350
+[    0.747235]  do_exit+0x988/0xb30
+[    0.747355]  do_group_exit+0x31/0x80
+[    0.747486]  get_signal+0xa17/0xa40
+[    0.747617]  ? __schedule+0x312/0x11b0
+[    0.747756]  arch_do_signal_or_restart+0x2e/0x270
+[    0.747930]  exit_to_user_mode_prepare+0xea/0x130
+[    0.748105]  irqentry_exit_to_user_mode+0x9/0x20
+[    0.748276]  asm_exc_invalid_op+0x1a/0x20
+[    0.748426] RIP: 0033:0x7f480c569f49
+[    0.748558] Code: 20 c5 dd 74 d9 c5 fd d7 ca c5 fd d7 c3 09 c1 74 90 85 c0 75 2c 85 d2 0f 84 84 00 00 00 89 d0 48 89 f7 0f bd c0 48 8d 44 07 e0 <0f
+> 01 d6 74 04 c5 fc 77 c3 c5 f8 77 c3 66 2e 0f 1f 84 00 00 00 00
+[    0.749213] RSP: 002b:00007ffc5c6e76b8 EFLAGS: 00010206
+[    0.749393] RAX: 00007ffc5c6e7fc0 RBX: 00007ffc5c6e7758 RCX: 0000000080102020
+[    0.749647] RDX: 00007ffc5c6e7770 RSI: 000000000000002f RDI: 00007ffc5c6e7fe0
+[    0.749904] RBP: 00007ffc5c6e7fc0 R08: 000000000000003f R09: 00007f480c3e9c50
+[    0.750159] R10: 00007ffc5c6e7300 R11: 0000000000000202 R12: 00007ffc5c6e7758
+[    0.750414] R13: 00007ffc5c6e7770 R14: 00007f480c5ca5a0 R15: 0000000000000000
+[    0.750668]  </TASK>
+[    0.750778] Kernel Offset: disabled
+[    0.750907] ---[ end Kernel panic - not syncing: Attempted to kill init! exitcode=0x00000004 ]---
+```
+得到的结果如上。
+
+可见，kvm 是对于 QEMU 设置何种 flags 是不做检查的。

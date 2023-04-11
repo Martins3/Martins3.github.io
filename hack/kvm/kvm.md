@@ -460,3 +460,7 @@ tlb flush 相关
 - 分析一下: 当一个 v
 
 ## kvm_dev_ioctl 和 kvm_vm_ioctl 都存在选项 KVM_CHECK_EXTENSION ，而且调用相同的函数
+
+## kvm 如何发现自己在虚拟机中
+
+## 似乎处理 hyperv 也是在处理 cpuid 相关的

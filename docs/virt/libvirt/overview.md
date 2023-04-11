@@ -304,3 +304,32 @@ src/qemu/qemu_process.c:qemuProcessPrepareDomainNUMAPlacement 中确定 qemu 所
 ## 热迁移也可以使用的
 - virsh domjobinfo domain_id
 - virsh getdirtyrate domain_id
+
+## libvirt 热迁移代码分析
+
+- libvirt 检测两边目标端是否可以迁移吗？
+
+```c
+    {.name = "cpu-compare",
+     .handler = cmdCPUCompare,
+     .opts = opts_cpu_compare,
+     .info = info_cpu_compare,
+     .flags = 0
+    },
+
+    {.name = "hypervisor-cpu-baseline",
+     .handler = cmdHypervisorCPUBaseline,
+     .opts = opts_hypervisor_cpu_baseline,
+     .info = info_hypervisor_cpu_baseline,
+     .flags = 0
+    },
+    {.name = "hypervisor-cpu-compare",
+     .handler = cmdHypervisorCPUCompare,
+     .opts = opts_hypervisor_cpu_compare,
+     .info = info_hypervisor_cpu_compare,
+     .flags = 0
+    },
+```
+
+## 简要分析下 hostAndHypervisorCmds 中提供的命令
+virsh cpu-models x86_64

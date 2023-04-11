@@ -58,8 +58,10 @@ static void x86_register_cpu_model_type(const char *name, X86CPUModel *model)
   - x86_cpu_filter_features
     - x86_cpu_filter_features
       - x86_cpu_get_supported_feature_word : CPUID_FEATURE_WORD
-        - get_supported_cpuid : 大多数查询 kvm 就可以了
-        - host_cpuid : 为什么有的从 host 上询问，有的使用 kvm 询问啊
+        - kvm_arch_get_supported_cpuid
+          - get_supported_cpuid : 大多数查询 kvm 就可以了
+          - host_cpuid : 但是有的是查询 cpuid， 为什么有的直接 host 上询问，有的使用 kvm 询问啊
+        - kvm_arch_get_supported_msr_feature
       - kvm_arch_get_supported_msr_feature : MSR_FEATURE_WORD : 想不到啊，针对于 ARM 的确实
     - CPUID_7_0_EBX_INTEL_PT 被特殊检查了
   - x86_cpu_list_feature_names

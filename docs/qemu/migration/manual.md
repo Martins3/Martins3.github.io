@@ -41,3 +41,15 @@ error: End of file while reading data: virt-ssh-helper: could not proxy traffic:
 --------------> 可以从 B 中的 journal 中看看。
 
 > 好的，现在虚拟机挂掉了。
+
+## 其他的有趣尝试
+
+没有办法自己热迁移自己的
+```sh
+virsh migrate --live b60d27f7-a198-45d4-8a7d-d2b816bc4bd6 qemu+ssh://martins3@127.0.0.1/system
+```
+
+到某一台机器上:
+```txt
+error: authentication unavailable: no polkit agent available to authenticate action 'org.libvirt.unix.manage'
+```

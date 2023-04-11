@@ -131,3 +131,37 @@ struct iommu_flush_ops {
   - 缺页
   - protection
     - dirty bit tracking
+
+## 分析一下函数细节
+- do_user_addr_fault : 不知道为什么，这个函数充满了 `fatal_signal_pending` 的检测
+  - fault_signal_pending
+
+```c
+	if (fault & VM_FAULT_OOM) {
+		/* Kernel mode? Handle exceptions or die: */
+		if (!user_mode(regs)) {
+			kernelmode_fixup_or_oops(regs, error_code, address,
+						 SIGSEGV, SEGV_MAPERR,
+						 ARCH_DEFAULT_PKEY);
+			return;
+		}
+
+		/*
+		 * We ran out of memory, call the OOM killer, and return the
+		 * userspace (which will retry the fault, or kill us if we got
+		 * oom-killed):
+		 */
+		pagefault_out_of_memory();
+	} else {
+		if (fault & (VM_FAULT_SIGBUS|VM_FAULT_HWPOISON|
+			     VM_FAULT_HWPOISON_LARGE))
+			do_sigbus(regs, error_code, address, fault);
+		else if (fault & VM_FAULT_SIGSEGV)
+			bad_area_nosemaphore(regs, error_code, address);
+		else
+			BUG();
+	}
+```
+在 page fault 的过程中，其中返回 `VM_FAULT_SIGBUS` 的位置超级多。
+
+## 分析一下，如何在 copy_to_user 的过程中出现 page fault ，是如何处理的
