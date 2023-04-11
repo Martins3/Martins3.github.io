@@ -164,3 +164,15 @@ static int mem_cgroup_force_empty(struct mem_cgroup *memcg)
 
 ## 问题并不简单
 - https://stackoverflow.com/questions/41474299/checking-if-errno-eintr-what-does-it-mean
+
+- [What is the rationale behind EINTR?](https://unix.stackexchange.com/questions/253349/what-is-the-rationale-behind-eintr)
+
+- https://notes.shichao.io/apue/ch10/#slow-system-calls 从这里开始
+
+- [ ] Linux Programming Interface 也可以看看
+
+- https://stackoverflow.com/questions/31157370/a-signal-interrupts-the-send-method-in-blocking-mode
+
+- http://www.club.cc.cmu.edu/~cmccabe/blog_short_io.html
+
+## [ ] 处理被打断的事情，也许是交给 fwrite 做的，可以测试一下
