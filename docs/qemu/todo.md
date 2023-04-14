@@ -314,3 +314,25 @@ https://qemu.readthedocs.io/en/latest/tools/qemu-pr-helper.html
 
 ## [ ] 嵌套虚拟化的环境如果搭建的完善之后
 1. vIOMMU 可以分析调试一下如何使用
+
+## 最近调试脚本的遇到的问题
+-bootindex 为什么只能跟在 -device 后面，而不是跟在 -drive 后面
+
+- 才发现 -device 到底是如何实现的?
+  - qemu-system-x86_64 -device help 可以查看后面可以跟什么？
+
+```sh
+arg_sata="-device virtio-scsi-pci,id=scsi -device scsi-hd,drive=jj,bootindex=10 -drive file=${workstation}/img4,format=raw,id=jj"
+```
+
+```txt
+(qemu) qemu-system-x86_64: -device scsi-hd,drive=jj,bootindex=10: Drive 'jj' is already in use because it has been automatically connected to another
+device (did you need 'if=none' in the drive options?)
+```
+这里的 if=none 是什么意思？
+
+
+如果想要使用 -device scsi-hd 的时候，那么必须增加上
+```txt
+-device virtio-scsi-pci,id=scsi
+```

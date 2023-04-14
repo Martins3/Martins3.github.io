@@ -3,7 +3,7 @@ set -E -e -u -o pipefail
 
 # @todo 用 https://github.com/charmbracelet/gum 来重写这个项目
 use_nvme_as_root=false # @todo nvme 的这个事情走通一下
-replace_kernel=true
+replace_kernel=false
 
 hacking_memory="hotplug"
 hacking_memory="virtio-pmem"
@@ -18,7 +18,7 @@ hacking_memory="none"
 share_memory_option="9p"
 # share_memory_option="virtiofs"
 
-hacking_migration=true
+hacking_migration=false
 # @todo 尝试在 guest 中搭建一个 vIOMMU
 if [[ $hacking_migration == true ]]; then
 	use_nvme_as_root=false
@@ -123,8 +123,12 @@ launch_gdb=false
 arg_migration_target=
 
 arg_hacking=""
+
 arg_img="-drive aio=io_uring,file=${disk_img},format=qcow2,if=virtio"
 arg_img="-drive aio=native,cache.direct=on,file=${disk_img},format=qcow2,if=virtio"
+# 如果不替换内核，那么就需要使用 bootindex=1 来指定，bootindex 是 -device 的参数，所以需要显示的指出 -device 的类型
+# 这里的 virtio-blk-pci 也可以修改 scsi-hd，总之 qemu-system-x86_64 -device help  中的代码是可以看看的
+arg_img="-device virtio-blk-pci,drive=boot_img,bootindex=1 -drive if=none,file=${disk_img},format=qcow2,id=boot_img,aio=native,cache.direct=on"
 root=/dev/vdb2
 # root=/dev/vda2 # nixos
 
@@ -292,9 +296,10 @@ else
 	# @todo virtio-blk-pci vs virtio-blk-device ?
 fi
 arg_disk="-device virtio-blk-pci,drive=nvme2,iothread=io0 -drive file=${workstation}/img2,format=raw,if=none,id=nvme2 -object iothread,id=io0"
-arg_scsi="-device virtio-scsi-pci,id=scsi0,bus=pci.0,addr=0xa -device scsi-hd,bus=scsi0.0,channel=0,scsi-id=0,lun=0,drive=scsi-drive -drive file=${workstation}/img3,format=raw,id=scsi-drive,if=none"
+arg_scsi="-device virtio-scsi-pci,id=scsi0,bus=pci.0,addr=0xa  -device scsi-hd,bus=scsi0.0,channel=0,scsi-id=0,lun=0,drive=scsi-drive -drive file=${workstation}/img3,format=raw,id=scsi-drive,if=none"
 arg_sata="-drive file=${workstation}/img4,media=disk,format=raw"
 arg_sata="$arg_sata -drive file=${workstation}/img5,media=disk,format=raw"
+# arg_sata="-device scsi-hd,drive=jj,bootindex=10 -drive if=none,file=${workstation}/img4,format=raw,id=jj"
 
 # @todo 尝试一下这个
 # -netdev tap,id=nd0,ifname=tap0 -device e1000,netdev=nd0
@@ -509,21 +514,15 @@ fi
 if [[ ${replace_kernel} == false ]]; then
 	arg_kernel=""
 	arg_initrd=""
-	# @todo 如果使用 stdio 作为 minitor ，那么 grub 是不是没有办法选择了
+	# 如果不修改如下选项 ，那么 grub 是不是没有办法选择
 	arg_monitor="-monitor stdio"
-
-	# @todo 不知道为什么需要将无关的 storage 设备都去掉，才可以正确启动
-	# @todo lsblk 的为什么还有一个 sda 和 sr0 啊？
-	arg_sata=""
-	arg_scsi=""
-	arg_nvme=""
-	arg_disk=""
 fi
 
 # @todo 将这个图形在终端中更加清晰的输出出来
 cmd="${cgroup_limit} ${debug_qemu} ${qemu} ${arg_trace} ${debug_kernel} ${arg_img} ${arg_mem_cpu}  \
   ${arg_kernel} ${arg_seabios} ${arg_bridge} ${arg_network} \
   ${arg_machine} ${arg_monitor} ${arg_initrd} ${arg_mem_balloon} ${arg_hacking} \
-  ${arg_qmp} ${arg_vfio} ${arg_smbios} ${arg_migration_target} ${arg_share_dir} ${arg_sata} ${arg_scsi} ${arg_nvme} ${arg_disk} ${arg_pdifile} ${arg_cpu_model}"
+  ${arg_qmp} ${arg_vfio} ${arg_smbios} ${arg_migration_target} ${arg_share_dir} ${arg_sata} ${arg_scsi} ${arg_nvme} ${arg_disk} ${arg_pdifile} \
+  ${arg_cpu_model}"
 echo "$cmd"
 eval "$cmd"

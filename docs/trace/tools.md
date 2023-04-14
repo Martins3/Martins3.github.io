@@ -95,7 +95,8 @@ X    dead (should never be seen)
 - sar -n DEV 1 : 监控 nic 的流量
 - sar -n EDEV : 监控 nic 的错误
 - sar -n TCP,ETCP 1
-- sar -d 1 : disk
+- sar -d -p 1 : disk
+  - -p 显示的更加科学点
 - sar -B 1 : 内存管理之类的
 
 
