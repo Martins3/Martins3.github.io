@@ -2,7 +2,6 @@
 set -E -e -u -o pipefail
 
 # @todo 用 https://github.com/charmbracelet/gum 来重写这个项目
-use_nvme_as_root=false # @todo nvme 的这个事情走通一下
 replace_kernel=false
 
 hacking_memory="hotplug"
@@ -20,10 +19,6 @@ share_memory_option="9p"
 
 hacking_migration=false
 # @todo 尝试在 guest 中搭建一个 vIOMMU
-if [[ $hacking_migration == true ]]; then
-	use_nvme_as_root=false
-fi
-
 hacking_vfio=false
 
 use_ovmf=false
@@ -126,6 +121,8 @@ arg_hacking=""
 
 arg_img="-drive aio=io_uring,file=${disk_img},format=qcow2,if=virtio"
 arg_img="-drive aio=native,cache.direct=on,file=${disk_img},format=qcow2,if=virtio"
+# 当前端是 nvme ，那么可以看到非常酷炫的结果
+arg_img="-device nvme,drive=boot_img,serial=foo,bootindex=1 -drive if=none,file=${disk_img},format=qcow2,id=boot_img,aio=native,cache.direct=on"
 # 如果不替换内核，那么就需要使用 bootindex=1 来指定，bootindex 是 -device 的参数，所以需要显示的指出 -device 的类型
 # 这里的 virtio-blk-pci 也可以修改 scsi-hd，总之 qemu-system-x86_64 -device help  中的代码是可以看看的
 arg_img="-device virtio-blk-pci,drive=boot_img,bootindex=1 -drive if=none,file=${disk_img},format=qcow2,id=boot_img,aio=native,cache.direct=on"
@@ -153,12 +150,6 @@ if [[ $hacking_migration == true ]]; then
 	# @todo 遇到了这个报错，但是似乎之前没有遇到过
 	# Error: Migration is disabled when VirtFS export path '/home/martins3/core/vn' is mounted in the guest using mount_tag 'host0'
 	arg_share_dir=""
-fi
-
-if [[ $use_nvme_as_root == true ]]; then
-	# @todo 这个应该只是缺少 bootindex 吧？
-	arg_img="-device nvme,drive=nvme3,serial=foo -drive file=${disk_img},format=qcow2,if=none,id=nvme3"
-	root=/dev/nvme1n1
 fi
 
 # 在 guset 中使用 sudo dmidecode -t bios 查看
@@ -273,8 +264,8 @@ if [[ $use_ovmf == true ]]; then
 	ovmf_code=/run/libvirt/nix-ovmf/OVMF_CODE.fd
 	ovmf_code=$workstation/OVMF.fd
 	ovmf_var=/tmp/OVMF_VARS.fd
-	arg_seabios="-drive file=$ovmf_code,if=pflash,format=raw,unit=0,readonly=on"
-	arg_seabios="$arg_seabios -drive file=$ovmf_var,if=pflash,format=raw,unit=1"
+	arg_seabios="-drive file=$ovmf_code,if=pflash,format=qcow2,unit=0,readonly=on"
+	arg_seabios="$arg_seabios -drive file=$ovmf_var,if=pflash,format=qcow2,unit=1"
 
 	# arg_seabios="-bios $workstation/OVMF.fd"
 fi
@@ -292,14 +283,14 @@ arg_kernel="--kernel ${kernel} -append \"${arg_kernel_args}\""
 if [[ $hacking_migration == true ]]; then
 	arg_nvme=""
 else
-	arg_nvme="-device nvme,drive=nvme1,serial=foo,bus=mybridge,addr=0x1 -drive file=${workstation}/img1,format=raw,if=none,id=nvme1"
+	arg_nvme="-device nvme,drive=nvme1,serial=foo,bus=mybridge,addr=0x1 -drive file=${workstation}/img1,format=qcow2,if=none,id=nvme1"
 	# @todo virtio-blk-pci vs virtio-blk-device ?
 fi
-arg_disk="-device virtio-blk-pci,drive=nvme2,iothread=io0 -drive file=${workstation}/img2,format=raw,if=none,id=nvme2 -object iothread,id=io0"
-arg_scsi="-device virtio-scsi-pci,id=scsi0,bus=pci.0,addr=0xa  -device scsi-hd,bus=scsi0.0,channel=0,scsi-id=0,lun=0,drive=scsi-drive -drive file=${workstation}/img3,format=raw,id=scsi-drive,if=none"
-arg_sata="-drive file=${workstation}/img4,media=disk,format=raw"
-arg_sata="$arg_sata -drive file=${workstation}/img5,media=disk,format=raw"
-# arg_sata="-device scsi-hd,drive=jj,bootindex=10 -drive if=none,file=${workstation}/img4,format=raw,id=jj"
+arg_disk="-device virtio-blk-pci,drive=nvme2,iothread=io0 -drive file=${workstation}/img2,format=qcow2,if=none,id=nvme2 -object iothread,id=io0"
+arg_scsi="-device virtio-scsi-pci,id=scsi0,bus=pci.0,addr=0xa  -device scsi-hd,bus=scsi0.0,channel=0,scsi-id=0,lun=0,drive=scsi-drive -drive file=${workstation}/img3,format=qcow2,id=scsi-drive,if=none"
+arg_sata="-drive file=${workstation}/img4,media=disk,format=qcow2"
+arg_sata="$arg_sata -drive file=${workstation}/img5,media=disk,format=qcow2"
+# arg_sata="-device scsi-hd,drive=jj,bootindex=10 -drive if=none,file=${workstation}/img4,format=qcow2,id=jj"
 
 # @todo 尝试一下这个
 # -netdev tap,id=nd0,ifname=tap0 -device e1000,netdev=nd0
@@ -454,13 +445,15 @@ if [ ! -f "$iso" ] && [ ! -f $disk_img ]; then
 	exit 0
 fi
 
-# 创建额外的两个 disk 用于测试 nvme 和 scsi 等
+# 创建额外的 disk 用于测试 nvme 和 scsi 等
 # mount -o loop /path/to/data /mnt
 for ((i = 0; i < 5; i++)); do
 	ext4_img="${workstation}/img$((i + 1))"
 	if [ ! -f "$ext4_img" ]; then
-		dd if=/dev/null of="${ext4_img}" bs=1M seek=1000
-		mkfs.ext4 -F "${ext4_img}"
+		# raw 格式的太浪费内存了
+		# dd if=/dev/null of="${ext4_img}" bs=1M seek=1000
+		# mkfs.ext4 -F "${ext4_img}"
+		qemu-img create -f qcow2 "${ext4_img}" 100G
 	fi
 done
 
