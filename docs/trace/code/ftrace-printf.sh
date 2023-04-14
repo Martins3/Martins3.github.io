@@ -10,7 +10,7 @@ function finish {
 trap finish EXIT
 
 echo "" | sudo tee /sys/kernel/debug/tracing/trace
-gcc printf.c -o printf1_s.out
+gcc ftrace-printf.c -o printf1_s.out
 echo function_graph | sudo tee /sys/kernel/debug/tracing/current_tracer
 ./printf1_s.out &
 printpid=$!

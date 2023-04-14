@@ -132,8 +132,9 @@ gdb -p PID
 ### record debugger
 记录下一个程序所有的状态，从而可以切入到任何一个时间点来调试
 
-- [qita](https://github.com/geohot/qira)
-- [rr](https://github.com/rr-debugger/rr)
+- [qita](https://github.com/geohot/qira) : 大名鼎鼎的 George Hotz 写的基于 QEMU 的调试器
+- [rr](https://github.com/rr-debugger/rr) : 真的可以用的，虽然存在一些限制
+  - [相关论文](https://www.usenix.org/system/files/conference/atc17/atc17-o_callahan.pdf)
 
 ### 内存泄露调试技术
 - valgrind

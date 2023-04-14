@@ -131,8 +131,8 @@ parted /dev/nvme1n1 -- mkpart primary 1MiB 100%
 ```
 
 ```sh
-parted /dev/sda -- mklabel gpt
-parted /dev/sda -- mkpart primary 1MiB -1MiB
+parted /dev/sdd -- mklabel gpt
+parted /dev/sdd -- mkpart primary 1MiB -1MiB
 ```
 
 ### fdisk

@@ -525,3 +525,9 @@ sudo apt-get source linux-image-$(uname -r)
 主要是解析各种格式:
 - lkcd_v8.c
 - diskdump.c
+
+## 加载模块和源码
+
+mod -s  raid1 lib/modules/3.10.0-1062.1.2.el7.smartx.1.x86_64/kernel/drivers/md/raid1.ko
+
+当然可以直接加载 debug 的，这样就可以在 dis -l function_name 来勉强维持生活了

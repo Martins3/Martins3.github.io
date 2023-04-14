@@ -129,30 +129,6 @@
     domtime                        domain time
     list                           list domains
 
- Host and Hypervisor (help keyword 'host')
-    allocpages                     Manipulate pages pool size
-    capabilities                   capabilities
-    cpu-baseline                   compute baseline CPU
-    cpu-compare                    compare host CPU with a CPU described by an XML file
-    cpu-models                     CPU models
-    domcapabilities                domain capabilities
-    freecell                       NUMA free memory
-    freepages                      NUMA free pages
-    hostname                       print the hypervisor hostname
-    hypervisor-cpu-baseline        compute baseline CPU usable by a specific hypervisor
-    hypervisor-cpu-compare         compare a CPU with the CPU created by a hypervisor on the host
-    maxvcpus                       connection vcpu maximum
-    node-memory-tune               Get or set node memory parameters
-    nodecpumap                     node cpu map
-    nodecpustats                   Prints cpu stats of the node.
-    nodeinfo                       node information
-    nodememstats                   Prints memory stats of the node.
-    nodesevinfo                    node SEV information
-    nodesuspend                    suspend the host node for a given time duration
-    sysinfo                        print the hypervisor sysinfo
-    uri                            print the hypervisor canonical URI
-    version                        show version
-
  Checkpoint (help keyword 'checkpoint')
     checkpoint-create              Create a checkpoint from XML
     checkpoint-create-as           Create a checkpoint from a set of args
@@ -303,3 +279,81 @@
 ```
 
 ## [ ] console 和 ttyconsole 有啥区别
+
+## host
+```txt
+ Host and Hypervisor (help keyword 'host')
+    allocpages                     Manipulate pages pool size
+    capabilities                   capabilities
+    cpu-baseline                   compute baseline CPU
+    cpu-compare                    compare host CPU with a CPU described by an XML file
+    cpu-models                     CPU models
+    domcapabilities                domain capabilities
+    freecell                       NUMA free memory
+    freepages                      NUMA free pages
+    hostname                       print the hypervisor hostname
+    hypervisor-cpu-baseline        compute baseline CPU usable by a specific hypervisor
+    hypervisor-cpu-compare         compare a CPU with the CPU created by a hypervisor on the host
+    maxvcpus                       connection vcpu maximum
+    node-memory-tune               Get or set node memory parameters
+    nodecpumap                     node cpu map
+    nodecpustats                   Prints cpu stats of the node.
+    nodeinfo                       node information
+    nodememstats                   Prints memory stats of the node.
+    nodesevinfo                    node SEV information
+    nodesuspend                    suspend the host node for a given time duration
+    sysinfo                        print the hypervisor sysinfo
+    uri                            print the hypervisor canonical URI
+    version                        show version
+```
+- capabilities 和 domcapabilities 什么关系？
+- cpu-baseline 和 hypervisor-cpu-baseline ?
+
+
+```c
+typedef struct _virCPUDef virCPUDef;
+struct _virCPUDef {
+    int refs;
+    int type;           /* enum virCPUType */
+    int mode;           /* enum virCPUMode */
+    virCPUMatch match;
+    virCPUCheck check;
+    virArch arch;
+    char *model;
+    char *vendor_id;    /* vendor id returned by CPUID in the guest */
+    int fallback;       /* enum virCPUFallback */
+    char *vendor;
+    unsigned int microcodeVersion;
+    unsigned int sockets;
+    unsigned int dies;
+    unsigned int cores;
+    unsigned int threads;
+    unsigned int sigFamily;
+    unsigned int sigModel;
+    unsigned int sigStepping;
+    size_t nfeatures;
+    size_t nfeatures_max;
+    virCPUFeatureDef *features;
+    virCPUCacheDef *cache;
+    virCPUMaxPhysAddrDef *addr;
+    virHostCPUTscInfo *tsc;
+    virTristateSwitch migratable; /* for host-passthrough mode */
+};
+```
+- cmdHypervisorCPUCompare
+
+
+这个比较真简陋
+```c
+static int
+virCPUFeatureCompare(const void *p1,
+                     const void *p2)
+{
+    const virCPUFeatureDef *f1 = p1;
+    const virCPUFeatureDef *f2 = p2;
+
+    return strcmp(f1->name, f2->name);
+}
+```
+
+好像是这个 virQEMUCapsInitHostCPUModel 来控制的
