@@ -34,3 +34,5 @@
 - https://landlock.io/ : 内核中看到的
 
 - https://github.com/marin-m/vmlinux-to-elf : 内核的逆向工具
+
+- https://offsec.tools : 各种工具合计

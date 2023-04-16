@@ -39,3 +39,48 @@ static DEVICE_ATTR(timeout, S_IRUGO | S_IWUSR, sdev_show_timeout, sdev_store_tim
 
 - 似乎是最后会调用到这里:
   - blk_mq_timeout_work
+
+应该是这个来搞的吧
+/home/martins3/core/linux/block/blk-timeout.c
+
+## 一个 struct request 到底代表什么？
+`struct request_queue` 和什么对应的?
+
+```c
+	struct request_queue *q = bdev_get_queue(bio->bi_bdev);
+```
+
+## 研究下什么是 zone device
+
+```c
+/*
+ * blk_mq_plug() - Get caller context plug
+ * @bio : the bio being submitted by the caller context
+ *
+ * Plugging, by design, may delay the insertion of BIOs into the elevator in
+ * order to increase BIO merging opportunities. This however can cause BIO
+ * insertion order to change from the order in which submit_bio() is being
+ * executed in the case of multiple contexts concurrently issuing BIOs to a
+ * device, even if these context are synchronized to tightly control BIO issuing
+ * order. While this is not a problem with regular block devices, this ordering
+ * change can cause write BIO failures with zoned block devices as these
+ * require sequential write patterns to zones. Prevent this from happening by
+ * ignoring the plug state of a BIO issuing context if it is for a zoned block
+ * device and the BIO to plug is a write operation.
+ *
+ * Return current->plug if the bio can be plugged and NULL otherwise
+ */
+static inline struct blk_plug *blk_mq_plug( struct bio *bio)
+{
+	/* Zoned block device write operation case: do not plug the BIO */
+	if (IS_ENABLED(CONFIG_BLK_DEV_ZONED) &&
+	    bdev_op_is_zoned_write(bio->bi_bdev, bio_op(bio)))
+		return NULL;
+
+	/*
+	 * For regular block devices or read operations, use the context plug
+	 * which may be NULL if blk_start_plug() was not executed.
+	 */
+	return current->plug;
+}
+```

@@ -126,8 +126,6 @@ struct blk_mq_hw_ctx
 ```
 应该只是支持 block/mq-deadline.c ，但是实际上并不会采用任何的 scheduler 的。
 
-从函数 `blk_start_plug` 的注释说，plug 表示向 block layer 添加数据。
-
 ## multi queue
 - [](https://www.thomas-krenn.com/en/wiki/Linux_Multi-Queue_Block_IO_Queueing_Mechanism_(blk-mq))
 

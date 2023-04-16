@@ -53,6 +53,9 @@ Hardware and Software Support for Virtualization : 作者[Edouard Bugnion](https
 - [kraxel](https://www.kraxel.org/blog/) : 主要关于 GPU 之类的
 - [空客的 QEMU 源码分析](https://github.com/airbus-seclab/qemu_blog)
 
+## 未经检查的资源
+- https://news.ycombinator.com/item?id=35579876
+
 ## 一些有意思的项目
 - [VivienneVMM](https://github.com/changeofpace/VivienneVMM) : 使用 vmx 实现的调试器
 

@@ -287,9 +287,14 @@ else
 	# @todo virtio-blk-pci vs virtio-blk-device ?
 fi
 arg_disk="-device virtio-blk-pci,drive=nvme2,iothread=io0 -drive file=${workstation}/img2,format=qcow2,if=none,id=nvme2 -object iothread,id=io0"
+arg_disk="$arg_disk -device virtio-blk-pci,drive=d2 -drive file=${workstation}/img9,format=qcow2,if=none,id=d2"
 arg_scsi="-device virtio-scsi-pci,id=scsi0,bus=pci.0,addr=0xa  -device scsi-hd,bus=scsi0.0,channel=0,scsi-id=0,lun=0,drive=scsi-drive -drive file=${workstation}/img3,format=qcow2,id=scsi-drive,if=none"
+
 arg_sata="-drive file=${workstation}/img4,media=disk,format=qcow2"
 arg_sata="$arg_sata -drive file=${workstation}/img5,media=disk,format=qcow2"
+arg_sata="$arg_sata -drive file=${workstation}/img6,media=disk,format=qcow2"
+arg_sata="$arg_sata -drive file=${workstation}/img7,media=disk,format=qcow2"
+
 # arg_sata="-device scsi-hd,drive=jj,bootindex=10 -drive if=none,file=${workstation}/img4,format=qcow2,id=jj"
 
 # @todo 尝试一下这个
@@ -446,11 +451,12 @@ if [ ! -f "$iso" ] && [ ! -f $disk_img ]; then
 fi
 
 # 创建额外的 disk 用于测试 nvme 和 scsi 等
-# mount -o loop /path/to/data /mnt
-for ((i = 0; i < 5; i++)); do
+for ((i = 0; i < 10; i++)); do
 	ext4_img="${workstation}/img$((i + 1))"
 	if [ ! -f "$ext4_img" ]; then
 		# raw 格式的太浪费内存了
+		# 但是可以通过这种方法预设内容
+		# mount -o loop /path/to/data /mnt
 		# dd if=/dev/null of="${ext4_img}" bs=1M seek=1000
 		# mkfs.ext4 -F "${ext4_img}"
 		qemu-img create -f qcow2 "${ext4_img}" 100G

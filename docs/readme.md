@@ -169,6 +169,7 @@
 - [SPC 的自由天空](https://blog.spcsky.com/)
 - [utopianfuture](https://utopianfuture.github.io/)
 - [xieby1](https://xieby1.github.io/)
+- [qaqcxh](https://qaqcxh.github.io/Blogs/)
 
 
 <!-- @todo 将 blog 再完善一下，然后投稿到 https://github.com/timqian/chinese-independent-blogs -->
