@@ -3,6 +3,7 @@ set -E -e -u -o pipefail
 
 # @todo 用 https://github.com/charmbracelet/gum 来重写这个项目
 replace_kernel=false
+# replace_kernel=true
 
 hacking_memory="hotplug"
 hacking_memory="virtio-pmem"
@@ -126,8 +127,7 @@ arg_img="-device nvme,drive=boot_img,serial=foo,bootindex=1 -drive if=none,file=
 # 如果不替换内核，那么就需要使用 bootindex=1 来指定，bootindex 是 -device 的参数，所以需要显示的指出 -device 的类型
 # 这里的 virtio-blk-pci 也可以修改 scsi-hd，总之 qemu-system-x86_64 -device help  中的代码是可以看看的
 arg_img="-device virtio-blk-pci,drive=boot_img,bootindex=1 -drive if=none,file=${disk_img},format=qcow2,id=boot_img,aio=native,cache.direct=on"
-root=/dev/vdb2
-# root=/dev/vda2 # nixos
+root="PARTUUID=2c4eb5c7-02"
 
 arg_share_dir=""
 case $share_memory_option in
@@ -183,7 +183,7 @@ case $hacking_memory in
 	"none")
 		ramsize=12G
 		arg_mem_cpu="-smp $(($(getconf _NPROCESSORS_ONLN) - 1))"
-		arg_mem_cpu="-smp 1"
+		# arg_mem_cpu="-smp 1"
 		arg_mem_cpu="$arg_mem_cpu -object memory-backend-ram,id=pc.ram,size=$ramsize,prealloc=off,share=on -machine memory-backend=pc.ram -m $ramsize"
 		;;
 	"file")
@@ -274,11 +274,11 @@ fi
 arg_cgroupv2="systemd.unified_cgroup_hierarchy=1"
 # scsi_mod.scsi_logging_level=0x3fffffff
 # @todo 这个 function graph 为什么没有办法打印全部啊
-arg_boot_trace="ftrace=function_graph ftrace_filter=arch_freq_get_on_cpu"
+arg_boot_trace="ftrace=function_graph ftrace_filter=arch_freq_get_on_cpu raid=noautodetect"
 arg_kernel_args="root=$root nokaslr console=ttyS0,9600 earlyprink=serial $arg_boot_trace $arg_hugetlb $arg_cgroupv2 transparent_hugepage=always"
 # @todo 可以看到，先会启动 initramfs 才会开始执行 /bin/bash 的
 # arg_kernel_args="root=$root nokaslr console=ttyS0,9600 earlyprink=serial init=/bin/bash"
-arg_kernel="--kernel ${kernel} -append \"${arg_kernel_args}\""
+arg_kernel="-kernel ${kernel} -append \"${arg_kernel_args}\""
 
 if [[ $hacking_migration == true ]]; then
 	arg_nvme=""
@@ -291,9 +291,9 @@ arg_disk="$arg_disk -device virtio-blk-pci,drive=d2 -drive file=${workstation}/i
 arg_scsi="-device virtio-scsi-pci,id=scsi0,bus=pci.0,addr=0xa  -device scsi-hd,bus=scsi0.0,channel=0,scsi-id=0,lun=0,drive=scsi-drive -drive file=${workstation}/img3,format=qcow2,id=scsi-drive,if=none"
 
 arg_sata="-drive file=${workstation}/img4,media=disk,format=qcow2"
-arg_sata="$arg_sata -drive file=${workstation}/img5,media=disk,format=qcow2"
-arg_sata="$arg_sata -drive file=${workstation}/img6,media=disk,format=qcow2"
-arg_sata="$arg_sata -drive file=${workstation}/img7,media=disk,format=qcow2"
+# arg_sata="$arg_sata -drive file=${workstation}/img5,media=disk,format=qcow2"
+# arg_sata="$arg_sata -drive file=${workstation}/img6,media=disk,format=qcow2"
+# arg_sata="$arg_sata -drive file=${workstation}/img7,media=disk,format=qcow2"
 
 # arg_sata="-device scsi-hd,drive=jj,bootindex=10 -drive if=none,file=${workstation}/img4,format=qcow2,id=jj"
 
@@ -320,7 +320,7 @@ arg_monitor="-serial mon:stdio -display none"
 # @todo 原来这个选项不打开，内核无法启动啊
 # @todo 才意识到，这个打开之后，在 kernel cmdline 中的 init=/bin/bash 是无效的
 # @todo 为什么配合 3.10 内核无法正常使用
-arg_initrd="-initrd /home/martins3/hack/vm/initramfs-6.3.0-rc2.img"
+arg_initrd="-initrd /home/martins3/hack/vm/initramfs-6.3.0-rc6-00188-g3e7bb4f24617-dirty.img"
 # arg_initrd="-initrd /nix/store/kfaz0nv43qwyvj4s7c5ak4lgdyzdf51s-initrd/initrd" # nixos 的 initrd
 # arg_initrd=""
 tracepoint=()
@@ -482,9 +482,15 @@ fi
 if [ $launch_gdb = true ]; then
 	echo "debug kernel"
 	cd "${kernel_dir}" || exit 1
-	# gdb /home/martins3/kernel/openeuler-4.19.90-2112.8.0.0131-x86_64/vmlinux -ex "target remote :1234" -ex "hbreak start_kernel" -ex "continue"
-	# 才意识到，cd 到不同的位置，最后展示出来的代码是不同的，vmlinux 中不存放源代码的
-	gdb vmlinux -ex "target remote :1234" -ex "hbreak start_kernel" -ex "continue"
+	# 可以使用任意的
+	# @todo 如果 ext4.ko 是无法调试的
+	vmlinux="vmlinux"
+	if [[ $replace_kernel != true && -f ~/kernel/target ]]; then
+		vmlinux="$(cat ~/kernel/target)"
+	fi
+	gdb "$vmlinux" -ex "target remote :1234" \
+		-ex "hbreak start_kernel" -ex "hbreak __crash_kexec" -ex "continue"
+
 	exit 0
 fi
 
@@ -500,12 +506,7 @@ if [[ ${minimal} == true ]]; then
 	# arg_monitor="-nographic"
 	# arg_monitor="-monitor stdio"
 	# arg_monitor="-serial mon:stdio -display none"
-	${qemu} \
-		$arg_cpu_model \
-		$arg_img \
-		-enable-kvm \
-		-m 2G \
-		-smp 2 $arg_monitor
+	${qemu} $arg_cpu_model $arg_img -enable-kvm -m 2G -smp 2 $arg_monitor
 	# @todo 不知道为什么 guest 中不能携带 arg_network 了
 	exit 0
 fi
@@ -514,7 +515,7 @@ if [[ ${replace_kernel} == false ]]; then
 	arg_kernel=""
 	arg_initrd=""
 	# 如果不修改如下选项 ，那么 grub 是不是没有办法选择
-	arg_monitor="-monitor stdio"
+	arg_monitor="-serial mon:stdio"
 fi
 
 # @todo 将这个图形在终端中更加清晰的输出出来

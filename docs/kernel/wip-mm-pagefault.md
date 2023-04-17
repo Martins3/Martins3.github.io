@@ -165,3 +165,19 @@ struct iommu_flush_ops {
 在 page fault 的过程中，其中返回 `VM_FAULT_SIGBUS` 的位置超级多。
 
 ## 分析一下，如何在 copy_to_user 的过程中出现 page fault ，是如何处理的
+
+## 整理一下这个
+
+```txt
+[ 2884.290877]  [<ffffffff8107e8d8>] native_flush_tlb_others+0xb8/0xc0
+[ 2884.291268]  [<ffffffff8107e94b>] flush_tlb_mm_range+0x6b/0x140
+[ 2884.291638]  [<ffffffff811edf0f>] tlb_flush_mmu_tlbonly+0x2f/0xc0
+[ 2884.292217]  [<ffffffff811efa4f>] arch_tlb_finish_mmu+0x3f/0x80
+[ 2884.292590]  [<ffffffff811efb73>] tlb_finish_mmu+0x23/0x30
+[ 2884.292931]  [<ffffffff811fcf1b>] exit_mmap+0xdb/0x1a0
+[ 2884.293254]  [<ffffffff81097bb7>] mmput+0x67/0xf0
+[ 2884.293550]  [<ffffffff810a1938>] do_exit+0x288/0xa20
+[ 2884.293864]  [<ffffffff810a214f>] do_group_exit+0x3f/0xa0
+[ 2884.294204]  [<ffffffff810a21c4>] SyS_exit_group+0x14/0x20
+[ 2884.294549]  [<ffffffff81794f92>] system_call_fastpath+0x25/0x2a
+```

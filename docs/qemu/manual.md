@@ -290,7 +290,31 @@ perf record -e cpu-clock
 
 ## TODO
 - [ ] 利用 QEMU 给一个分区安装操作系统
-- [ ] 內核启动参数中需要指定 root=/dev/sda3 如何确定
+
+## root=/dev/sda3
+內核启动参数中需要指定 root=/dev/sda3 但是这种方法存在问题，因为切换 /dev/sda3 这种名称不是固定的
+切换内核之后，该名称就可能发生改变:
+
+```txt
+[  177.906625] dracut-initqueue[515]: Warning: /lib/dracut/hooks/initqueue/finished/devexists-\x2fdev\x2fvdb2.sh: "if ! grep -q After=remote-fs-pre.target /run/systemd/generator/systemd-cryptsetup@*.service 2>/dev/null; then
+[  177.907758] dracut-initqueue[515]:     [ -e "/dev/vdb2" ]
+[  177.908078] dracut-initqueue[515]: fi"
+[  177.908312] dracut-initqueue[515]: Warning: dracut-initqueue: starting timeout scripts
+[  178.423651] dracut-initqueue[515]: Warning: dracut-initqueue: timeout, still waiting for following initqueue hooks:
+[  178.424660] dracut-initqueue[515]: Warning: /lib/dracut/hooks/initqueue/finished/devexists-\x2fdev\x2fvdb2.sh: "if ! grep -q After=remote-fs-pre.ta
+```
+正常启动之后，获取名称:
+```txt
+blkid -s PARTUUID -o value /dev/vda2
+```
+然后:
+```txt
+root="PARTUUID=2c4eb5c7-02"
+```
+但是 crash 报错为:
+```txt
+[  133.418477] dracut-initqueue[171]: Warning: /lib/dracut/hooks/initqueue/finished/devexists-\x2fdev\x2fdisk\x2fby-uuid\x2fae225bc6-e617-4956-82f8-b9b3db3f113a.sh: "[ -e "/dev/disk/by-uuid/ae225bc6-e617-4956-82f8-b9b3db3f113a" ]"
+```
 
 [^1]: https://askubuntu.com/questions/1108334/how-to-boot-and-install-the-ubuntu-server-image-on-qemu-nographic-without-the-g
 [^2]: https://unix.stackexchange.com/questions/124681/how-to-ssh-from-host-to-guest-using-qemu

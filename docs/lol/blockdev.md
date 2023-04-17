@@ -601,6 +601,29 @@ long nr_blockdev_pages(void)
 - 如何修改一个 partion 的 UUID
   - [ ] 找到 kernel 处理 partion UUID 的位置
 
+
+## block_device_operations::submit_bio
+
+当 `__submit_bio` 中继续向下该，到底是提交给 multiqueue 还是继续向下，取决于 `disk->fops` 的:
+
+```c
+static void __submit_bio(struct bio *bio)
+{
+	struct gendisk *disk = bio->bi_bdev->bd_disk;
+
+	if (unlikely(!blk_crypto_bio_prep(&bio)))
+		return;
+
+	if (!disk->fops->submit_bio) {
+		blk_mq_submit_bio(bio);
+	} else if (likely(bio_queue_enter(bio) == 0)) {
+		disk->fops->submit_bio(bio);
+		blk_queue_exit(disk->queue);
+	}
+}
+```
+
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

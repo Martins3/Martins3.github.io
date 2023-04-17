@@ -501,3 +501,5 @@ Posted-interrupt wakeup event
 ## tracing 是自动挂载到 /sys/kernel/debug 下的，还是 kernel 启动之后，手动挂载到上面的
 
 ## 才发现 /sys/kernel/debug 下面有这么多内容，ftrace 只是启动的一个小文件夹
+
+## block_device_operations::submit_bio

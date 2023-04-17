@@ -54,6 +54,10 @@ EOF
 	systemctl enable share
 }
 
+# only zsh 安装
+# https://github.com/zsh-users/zsh-autosuggestions/blob/master/INSTALL.md#oh-my-zsh
+
+
 install autoconf
 install automake
 install libtool

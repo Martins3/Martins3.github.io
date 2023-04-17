@@ -694,6 +694,10 @@ warning: error(s) occurred while switching to the new configuration
 ## fwmask
 - https://utcc.utoronto.ca/~cks/space/blog/linux/LinuxIpFwmarkMasks
 
+## [ ] big tcp
+- [Going big with TCP packets](https://lwn.net/Articles/884104/)
+  - https://netdevconf.info/0x15/session.html?BIG-TCP
+
 
 [^2]: 用芯探核:基于龙芯的 Linux 内核探索解析
 [^4]: http://yuba.stanford.edu/rcp/
