@@ -471,3 +471,8 @@ index 87a6a59fe667..4cce92706c4a 100644
 Step 2 : 复现 bug
 
 运行测试 `代码 <https://github.com/dirtycow/dirtycow.github.io/blob/master/dirtyc0w.c>`
+
+## 扩展
+连 page table 都要 copy on write 的设计:
+- https://www.cs.purdue.edu/homes/pfonseca/papers/eurosys21-odf.pdf
+- https://lore.kernel.org/lkml/20220521040301.GA1508050@strix-laptop/T/#m78a5ce920c0bacde410f38768f4892eb0bb4f818

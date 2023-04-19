@@ -85,7 +85,7 @@
 ## PCIe
 <!-- - 🚧 [PCIe 的基本原理](.) -->
 <!-- - 🚧 [Seabios 如何探测 PCIe](.) -->
--  🚧 [Linux Kernel 如何管理 PCIe 设备](./pci/kernel.md)
+<!-- - 🚧 [Linux Kernel 如何管理 PCIe 设备](./pci/kernel.md) -->
 <!-- - 🚧 [QEMU 如何模拟 PCIe 设备](.) -->
 
 ## Tools
@@ -109,7 +109,7 @@
   <!-- - 使用 kcov 来学习内核 -->
   <!-- - 使用 perf scirpts 来学习内核 -->
   <!-- - 各种 fuzzer -->
-  <!-- - 各种 tlpi 学习内核 -->
+  <!-- - 各种 tlpi 学习内核，搭建一个更加清楚的 tlpi 环境 -->
   <!-- - [使用 QEMU, FlameGraph 和 bpftrace 阅读内核](./kernel/tips-reading-kernel.md) -->
 - [tty 到底是什么](./kernel/tty.md)
 - [mknod](./kernel/mknod.md)

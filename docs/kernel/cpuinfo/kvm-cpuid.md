@@ -378,3 +378,37 @@ cpuid -1 可以检测到
 得到的结果如上。
 
 可见，kvm 是对于 QEMU 设置何种 flags 是不做检查的。
+
+## 那些 cpuid 是需要从 kvm 退出到 QEMU 来处理的
+应该是不需要的
+
+## 如何模拟 cache
+
+在 `cpu_x86_cpuid` 中的:
+```c
+        /* cache info: needed for Pentium Pro compatibility */
+        if (cpu->cache_info_passthrough) {
+            x86_cpu_get_cache_cpuid(index, 0, eax, ebx, ecx, edx);
+            break;
+        } else if (cpu->vendor_cpuid_only && IS_AMD_CPU(env)) {
+            *eax = *ebx = *ecx = *edx = 0;
+            break;
+        }
+```
+
+## kvm 会如何过滤 cpuid ?
+
+
+## kvm 如何向 QEMU 返回系统中支持的 cpuid 的
+
+其实，系统中，比较的应该是
+
+```c
+static __always_inline u32 kvm_cpu_cap_get(unsigned int x86_feature)
+{
+	unsigned int x86_leaf = __feature_leaf(x86_feature);
+
+	reverse_cpuid_check(x86_leaf);
+	return kvm_cpu_caps[x86_leaf] & __feature_bit(x86_feature);
+}
+```

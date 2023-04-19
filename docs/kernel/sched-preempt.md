@@ -940,3 +940,10 @@ CONFIG_PREEMPTIRQ_DELAY_TEST=m
 #define rcu_is_idle_cpu(cpu) \
 	(is_idle_task(current) && !in_nmi() && !in_irq() && !in_serving_softirq())
 ```
+
+## 分析一下这两个 macro
+
+```c
+#define get_cpu()		({ preempt_disable(); __smp_processor_id(); })
+#define put_cpu()		preempt_enable()
+```
