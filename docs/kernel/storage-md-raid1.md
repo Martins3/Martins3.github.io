@@ -151,3 +151,85 @@ static struct md_personality raid1_personality =
 `raid1_make_request` 中注册了 `raid1_end_write_request`
 
 ## 分析下
+
+## 如何理解其中的 barrier
+- raid1_reshape
+  - freeze_array(conf, 1 ) :
+  - 更新 conf->raid_disks = mddev->raid_disks = raid_disks;
+  - unfreeze_array(conf);
+
+- wait_read_barrier
+- wait_barrier
+
+- 机制加入的时间 : fd76863e37fef26fe05547fddfa6e3d05e1682e6
+
+思考一个很牛逼的场景
+
+## 第一个 freeze_array 还没执行完成，结果第二个开始执行了？
+- [ ] freeze_array 到底是阻碍别人，还是别别人阻碍？
+
+## 提交一个 bio，还没返回的时候，首先将一个 devices 删除，然后新增一个新的 devices
+
+
+
+## 基本的数据结构
+```c
+	struct r1conf *conf = mddev->private;
+
+	conf->mirrors = newmirrors;
+	kfree(conf->poolinfo);
+	conf->poolinfo = newpoolinfo;
+```
+mddev 是 generic 的，而 r1conf 并不是
+
+
+## io 返回的场景
+```txt
+18660 [  998.657409]  [<ffffffffc042abee>] free_r1bio+0x5e/0x80 [raid1]
+18661 [  998.657826]  [<ffffffffc042ad68>] close_write+0xb8/0xc0 [raid1]
+18662 [  998.658228]  [<ffffffffc042b3e5>] r1_bio_write_done+0x25/0x50 [raid1]
+18663 [  998.658664]  [<ffffffffc042bc78>] raid1_end_write_request+0x118/0x2f0 [raid1] # 注册的 hook
+18664 [  998.659150]  [<ffffffffc0137b57>] ? ata_scsi_qc_complete+0x67/0x450 [libata]
+18665 [  998.659622]  [<ffffffff8128d83c>] bio_endio+0x8c/0x130
+18666 [  998.659969]  [<ffffffff81355a40>] blk_update_request+0x90/0x370
+18667 [  998.660374]  [<ffffffff814ed944>] scsi_end_request+0x34/0x1e0
+18668 [  998.660763]  [<ffffffff814edcb8>] scsi_io_completion+0x168/0x720
+18669 [  998.661174]  [<ffffffffc0145053>] ? __ata_sff_port_intr+0xa3/0x130 [libata]
+18670 [  998.661757]  [<ffffffff814e2fac>] scsi_finish_command+0xdc/0x140
+18671 [  998.662164]  [<ffffffff814ed200>] scsi_softirq_done+0x130/0x160
+18672 [  998.662569]  [<ffffffff8135d3c6>] blk_done_softirq+0x96/0xc0
+18673 [  998.662955]  [<ffffffff810a4c15>] __do_softirq+0xf5/0x280
+18674 [  998.663326]  [<ffffffff817984ec>] call_softirq+0x1c/0x30
+18675 [  998.663690]  [<ffffffff8102f715>] do_softirq+0x65/0xa0
+18676 [  998.664041]  [<ffffffff810a4f95>] irq_exit+0x105/0x110
+18677 [  998.664384]  [<ffffffff81799936>] do_IRQ+0x56/0xf0
+18678 [  998.664711]  [<ffffffff8178b36a>] common_interrupt+0x16a/0x16a
+```
+
+最后的位置:
+```c
+static void put_all_bios(struct r1conf *conf, struct r1bio *r1_bio)
+{
+	int i;
+
+	for (i = 0; i < conf->raid_disks * 2; i++) {
+		struct bio **bio = r1_bio->bios + i;
+		if (!BIO_SPECIAL(*bio))
+			bio_put(*bio);
+		*bio = NULL;
+	}
+}
+
+static void free_r1bio(struct r1bio *r1_bio)
+{
+	struct r1conf *conf = r1_bio->mddev->private;
+
+	put_all_bios(conf, r1_bio);
+	mempool_free(r1_bio, &conf->r1bio_pool);
+}
+```
+
+其实并不会，因为 `raid1_end_write_request`
+
+## 在 raid1 中，每一个 r1bio 在每一个 disk 中都会持有一个对应的 io
+- [ ] 需要等到所有人返回的再返回吧?

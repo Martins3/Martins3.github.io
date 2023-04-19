@@ -135,11 +135,14 @@ Tracing kprobe raid1_reshape. Ctrl-C to end.
  => SyS_ioctl
  => system_call_fastpath
 ```
+感觉很类似。
 
 ## 似乎 raid1_write_request 中的 wait 可以触发 softlock
 - raid1_error 设置 rdev 为 Blocked 和 Faulty
 
 在 raid1_write_request 中如果遇到 Blocked，几乎一定会等待
+
+
 
 
 ## MD

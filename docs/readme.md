@@ -107,6 +107,7 @@
   <!-- - 使用 crash 来学习内核 -->
   <!-- - 使用 flamegraph 来学习内核 -->
   <!-- - 使用 kcov 来学习内核 -->
+  <!-- - 使用 perf scirpts 来学习内核 -->
   <!-- - 各种 fuzzer -->
   <!-- - 各种 tlpi 学习内核 -->
   <!-- - [使用 QEMU, FlameGraph 和 bpftrace 阅读内核](./kernel/tips-reading-kernel.md) -->

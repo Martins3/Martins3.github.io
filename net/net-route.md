@@ -181,6 +181,8 @@ sudo dhclient -r 
 sudo dhclient en0
 ```
 
+sudo dhclient -r  && dhclient 如果 ifup 没用
+
 ## [ ] tls
 - https://tls13.xargs.org/
 

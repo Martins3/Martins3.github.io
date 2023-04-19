@@ -1,9 +1,8 @@
 #!/usr/bin/env bash
 set -E -e -u -o pipefail
 
-# @todo 用 https://github.com/charmbracelet/gum 来重写这个项目
 replace_kernel=false
-# replace_kernel=true
+replace_kernel=true
 
 hacking_memory="hotplug"
 hacking_memory="virtio-pmem"
@@ -284,13 +283,16 @@ if [[ $hacking_migration == true ]]; then
 	arg_nvme=""
 else
 	arg_nvme="-device nvme,drive=nvme1,serial=foo,bus=mybridge,addr=0x1 -drive file=${workstation}/img1,format=qcow2,if=none,id=nvme1"
+	# @todo serial 的含义是什么，如果两个 nvme 都填写 serial=foo，那么就会在 guest 中得到如下的报错
+	# [    0.686202] nvme nvme1: Duplicate cntlid 0 with nvme0, subsys nqn.2019-08.org.qemu:foo, rejecting
+	arg_nvme="$arg_nvme -device nvme,drive=nvme2,serial=foo2 -drive file=${workstation}/img2,format=qcow2,if=none,id=nvme2"
 	# @todo virtio-blk-pci vs virtio-blk-device ?
 fi
-arg_disk="-device virtio-blk-pci,drive=nvme2,iothread=io0 -drive file=${workstation}/img2,format=qcow2,if=none,id=nvme2 -object iothread,id=io0"
-arg_disk="$arg_disk -device virtio-blk-pci,drive=d2 -drive file=${workstation}/img9,format=qcow2,if=none,id=d2"
-arg_scsi="-device virtio-scsi-pci,id=scsi0,bus=pci.0,addr=0xa  -device scsi-hd,bus=scsi0.0,channel=0,scsi-id=0,lun=0,drive=scsi-drive -drive file=${workstation}/img3,format=qcow2,id=scsi-drive,if=none"
+arg_disk="-device virtio-blk-pci,drive=blk2,iothread=io0 -drive file=${workstation}/img3,format=qcow2,if=none,id=blk2 -object iothread,id=io0"
+arg_disk="$arg_disk -device virtio-blk-pci,drive=d2 -drive file=${workstation}/img4,format=qcow2,if=none,id=d2"
+arg_scsi="-device virtio-scsi-pci,id=scsi0,bus=pci.0,addr=0xa  -device scsi-hd,bus=scsi0.0,channel=0,scsi-id=0,lun=0,drive=scsi-drive -drive file=${workstation}/img5,format=qcow2,id=scsi-drive,if=none"
 
-arg_sata="-drive file=${workstation}/img4,media=disk,format=qcow2"
+arg_sata="-drive file=${workstation}/img6,media=disk,format=qcow2"
 # arg_sata="$arg_sata -drive file=${workstation}/img5,media=disk,format=qcow2"
 # arg_sata="$arg_sata -drive file=${workstation}/img6,media=disk,format=qcow2"
 # arg_sata="$arg_sata -drive file=${workstation}/img7,media=disk,format=qcow2"

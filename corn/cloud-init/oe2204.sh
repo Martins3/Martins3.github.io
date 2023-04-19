@@ -57,6 +57,17 @@ EOF
 # only zsh 安装
 # https://github.com/zsh-users/zsh-autosuggestions/blob/master/INSTALL.md#oh-my-zsh
 
+# guest crash 太频繁
+cat <<'EOF' >~/fix
+#!/usr/bin/zsh
+
+set -e
+cd ~
+mv .zsh_history .zsh_history_bad
+strings -eS .zsh_history_bad > .zsh_history
+fc -R .zsh_history
+EOF
+echo "alias f=fix" >> ~/.zshrc
 
 install autoconf
 install automake
