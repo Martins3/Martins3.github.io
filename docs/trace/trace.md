@@ -156,9 +156,6 @@ dpdk 测试工具
 - fs/proc/stat.c 中的信息才是 top 如何统计的
 - 通过 `vtime_guest_enter` 去理解为什么 qemu 在运行起来的时候，发现 user 是占据大多数的，因为统计将 non-root 中的运行统计到 user 中了。
 
-## blktrace
-- https://developer.aliyun.com/article/698568
-
 ## [ ] cflow
 - https://graphviz.org/
 - https://graphviz.org/pdf/gvpr.1.pdf

@@ -70,12 +70,10 @@ extern __pid_t waitpid (__pid_t __pid, int *__stat_loc, int __options);
           - wait_task_stopped
           - wait_task_continued
 
-- [ ] 比如一个 child exit 了，怎么知道那些 parent 都在等待, 让后去 wake up 他们?
-
-- do_notify_parent : Let a parent know about the death of a child. For a stopped/continued status change, use do_notify_parent_cldstop instead.
+- 一个 child exit 了，怎么知道那些 parent 都在等待, 让后去 wake up 他们?
+  - 就是通过 do_notify_parent : Let a parent know about the death of a child. For a stopped/continued status change, use do_notify_parent_cldstop instead.
 
 - do_notify_parent_cldstop
-
 
 ```c
 void __wake_up_parent(struct task_struct *p, struct task_struct *parent)

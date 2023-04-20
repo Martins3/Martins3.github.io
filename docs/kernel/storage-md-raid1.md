@@ -84,6 +84,102 @@ unused devices: <none>
 
 ### 为什么增加设备是两个动作呀
 
+```txt
+/dev/md10:
+           Version : 1.2
+     Creation Time : Thu Apr 20 16:48:53 2023
+        Raid Level : raid1
+        Array Size : 974848 (952.00 MiB 998.24 MB)
+     Used Dev Size : 974848 (952.00 MiB 998.24 MB)
+      Raid Devices : 1
+     Total Devices : 1
+       Persistence : Superblock is persistent
+
+       Update Time : Thu Apr 20 16:49:13 2023
+             State : clean
+    Active Devices : 1
+   Working Devices : 1
+    Failed Devices : 0
+     Spare Devices : 0
+
+Consistency Policy : resync
+
+              Name : localhost.localdomain:10  (local to host localhost.localdomain)
+              UUID : 4ee51c30:88e90ae8:1084fc8a:96826272
+            Events : 23
+
+    Number   Major   Minor   RaidDevice State
+       1       8       33        0      active sync   /dev/sdc1
+
+
+```
+
+```txt
+dev/md10:
+           Version : 1.2
+     Creation Time : Thu Apr 20 16:48:53 2023
+        Raid Level : raid1
+        Array Size : 974848 (952.00 MiB 998.24 MB)
+     Used Dev Size : 974848 (952.00 MiB 998.24 MB)
+      Raid Devices : 1
+     Total Devices : 2
+       Persistence : Superblock is persistent
+
+       Update Time : Thu Apr 20 16:49:23 2023
+             State : clean
+    Active Devices : 1
+   Working Devices : 2
+    Failed Devices : 0
+     Spare Devices : 1
+
+Consistency Policy : resync
+
+              Name : localhost.localdomain:10  (local to host localhost.localdomain)
+              UUID : 4ee51c30:88e90ae8:1084fc8a:96826272
+            Events : 24
+
+    Number   Major   Minor   RaidDevice State
+       1       8       33        0      active sync   /dev/sdc1
+
+       2       8        1        -      spare   /dev/sda1
+```
+
+```txt
+/dev/md10:
+           Version : 1.2
+     Creation Time : Thu Apr 20 16:48:53 2023
+        Raid Level : raid1
+        Array Size : 974848 (952.00 MiB 998.24 MB)
+     Used Dev Size : 974848 (952.00 MiB 998.24 MB)
+      Raid Devices : 2
+     Total Devices : 2
+       Persistence : Superblock is persistent
+
+       Update Time : Thu Apr 20 16:49:23 2023
+             State : active, degraded
+    Active Devices : 1
+   Working Devices : 2
+    Failed Devices : 0
+     Spare Devices : 1
+
+Consistency Policy : resync
+
+              Name : localhost.localdomain:10  (local to host localhost.localdomain)
+              UUID : 4ee51c30:88e90ae8:1084fc8a:96826272
+            Events : 26
+
+    Number   Major   Minor   RaidDevice State
+       1       8       33        0      active sync   /dev/sdc1
+       -       0        0        1      removed
+
+       2       8        1        -      spare   /dev/sda1
+```
+被管理的，未必是一定被使用的，但是为什么需要这样被设计呀？
+
+### 第一步，增加 disk
+
+## reshape 的过程中，是如何知道是增加什么 disk 呀?
+
 
 ## 一些 backtrace
 
@@ -322,6 +418,55 @@ static void free_r1bio(struct r1bio *r1_bio)
 
 
 ## [ ] 为什么总是乘以 2 :  disks = conf->raid_disks * 2
+
+- `raid1_reshape`
+```c
+    // 导致 r1bio 中持有的 2 倍的 bio
+	newpoolinfo->raid_disks = raid_disks * 2;
+
+	ret = mempool_init(&newpool, NR_RAID_BIOS, r1bio_pool_alloc,
+			   rbio_pool_free, newpoolinfo);
+
+    // 导致 r1conf 中持有的 raid1_info::rdev 是 disk 的两倍
+	newmirrors = kzalloc(array3_size(sizeof(struct raid1_info),
+					 raid_disks, 2),
+			     GFP_KERNEL);
+```
+
+- 为什么 put_all_bios 中会出现所有的 bio 都是 NULL
+
+
+常见模式
+```txt
+[  424.962244] . .
+[  424.962441] . .
+[  424.962640] . .
+[  424.973235] x .
+[  491.093996] . . . .
+[  491.094225] . . . .
+[  491.094445] . . . .
+[  491.094666] . . . .
+[  491.094888] . . . .
+```
+其实后面两个从来没有赋值。
+
+很多 io 其实都是一个设备，甚至没有
+
+- raid1_end_write_request
+  - r1_bio_write_done
+    - raid_end_bio_io
+      - call_bio_endio
+      - allow_barrier
+      - free_r1bio
+
+不知道出于何种原因，在 `raid1_end_write_request` 中会 `r1_bio->bios[mirror] = NULL`，
+表示直接 bio 结束了。
+
+不太理解，难道不需要释放吗？
+
+## raid1 的状态
+
+- `1BIO_Returned`
 
 ## [ ] 当有的盘拔掉后，那些 bio 是在哪里被清理的
 

@@ -84,3 +84,8 @@ static inline struct blk_plug *blk_mq_plug( struct bio *bio)
 	return current->plug;
 }
 ```
+
+## blktrace
+- https://developer.aliyun.com/article/698568
+
+- call_bio_endio 中最后会调用到 `bio_end_io_acct`，是给 blktrace 来处理的吗?
