@@ -326,3 +326,20 @@ void __local_bh_enable_ip(unsigned long ip, unsigned int cnt)
     secondary_startup_64_no_verify+194
 ]: 1832
 ```
+
+## 看一个从存储的 softirq 的场景
+
+```txt
+#0  reschedule_retry (r1_bio=0xffff888172f0d080) at drivers/md/raid1.c:279
+#1  0xffffffff8174bb11 in req_bio_endio (error=0 '\000', nbytes=65536, bio=0xffff888172d78600, rq=0xffff8881067d7280) at block/blk-mq.c:795
+#2  blk_update_request (req=req@entry=0xffff8881067d7280, error=error@entry=0 '\000', nr_bytes=196608, nr_bytes@entry=262144) at block/blk-mq.c:927
+#3  0xffffffff81ba1d47 in scsi_end_request (req=req@entry=0xffff8881067d7280, error=error@entry=0 '\000', bytes=bytes@entry=262144) at drivers/scsi/scsi_lib.c:538
+#4  0xffffffff81ba288e in scsi_io_completion (cmd=0xffff8881067d7388, good_bytes=262144) at drivers/scsi/scsi_lib.c:976
+#5  0xffffffff817482ed in blk_complete_reqs (list=<optimized out>) at block/blk-mq.c:1132
+#6  0xffffffff822a98d4 in __do_softirq () at kernel/softirq.c:571
+#7  0xffffffff811496e6 in invoke_softirq () at kernel/softirq.c:445
+#8  __irq_exit_rcu () at kernel/softirq.c:650
+#9  0xffffffff81149eee in irq_exit_rcu () at kernel/softirq.c:662
+#10 0xffffffff82290dd4 in common_interrupt (regs=0xffffc900000e7e38, error_code=<optimized out>) at arch/x86/kernel/irq.c:240
+Backtrace stopped: Cannot access memory at address 0xffffc90000349010
+```

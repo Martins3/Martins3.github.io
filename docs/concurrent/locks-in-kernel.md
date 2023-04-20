@@ -423,4 +423,21 @@ failed:
 }
 ```
 
+## raise_barrier
+
+为什么 raise_barrier 中非要使用 smp_mb__after_atomic
+
+而且 raise_barrier 和 `_wait_barrier` 中的顺序是反过来的，是故意的这么设计的吧!
+```c
+	/*
+	 * In raise_barrier() we firstly increase conf->barrier[idx] then
+	 * check conf->nr_pending[idx]. In _wait_barrier() we firstly
+	 * increase conf->nr_pending[idx] then check conf->barrier[idx].
+	 * A memory barrier here to make sure conf->nr_pending[idx] won't
+	 * be fetched before conf->barrier[idx] is increased. Otherwise
+	 * there will be a race between raise_barrier() and _wait_barrier().
+	 */
+```
+## llist_for_each_entry_safe : 我靠， lockless 的接口
+
 [^1]: https://lwn.net/Articles/262464/

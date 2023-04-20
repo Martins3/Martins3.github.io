@@ -31,7 +31,7 @@
 | taskstats.c            | 109   | 81      | 511  |                                                                                                                                         |
 | softirq.c              | 114   | 175     | 474  |                                                                                                                                         |
 | kallsyms.c             | 102   | 154     | 454  | 处理syms的东西，@todo 检查一下其中的使用位置                                                                                            |
-| watchdog.c             | 109   | 218     | 453  | 大名鼎鼎的watchdog机制，其实                                                                                                      |
+| watchdog.c             | 109   | 218     | 453  |                                                                                                       |
 | profile.c              | 75    | 70      | 420  | http://www.pixelbeat.org/programming/profiling/　具体内容不知道，很有可能是sched 的debug工具                                            |
 | umh.c                  | 85    | 184     | 417  | https://kernelnewbies.org/KernelProjects/usermode-helper-enhancements @todo 尚且没有阅读                                                |
 | smp.c                  | 116   | 269     | 414  | 提供一些辅助函数来实现 cpu                                                                                                              |

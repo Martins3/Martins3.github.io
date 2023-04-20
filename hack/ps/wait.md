@@ -10,7 +10,7 @@ wait 和 exit 都在 kernel/exit.c 下
 > waitid()
 >
 > > The waitid() system call (available since Linux 2.6.9) provides more precise control over which child state changes to wait for.
-> 
+>
 > The wait3() and wait4() system calls are similar to waitpid(2), but additionally re‐
 > turn  resource  usage  information  about  the  child in the structure pointed to by
 > rusage.
@@ -75,7 +75,7 @@ extern __pid_t waitpid (__pid_t __pid, int *__stat_loc, int __options);
 - do_notify_parent : Let a parent know about the death of a child. For a stopped/continued status change, use do_notify_parent_cldstop instead.
 
 - do_notify_parent_cldstop
-  
+
 
 ```c
 void __wake_up_parent(struct task_struct *p, struct task_struct *parent)
@@ -84,5 +84,3 @@ void __wake_up_parent(struct task_struct *p, struct task_struct *parent)
 			   TASK_INTERRUPTIBLE, p);
 }
 ```
-
-

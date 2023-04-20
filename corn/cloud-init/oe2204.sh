@@ -67,7 +67,15 @@ mv .zsh_history .zsh_history_bad
 strings -eS .zsh_history_bad > .zsh_history
 fc -R .zsh_history
 EOF
-echo "alias f=fix" >> ~/.zshrc
+echo "alias f=fix" >>~/.zshrc
+
+function setup_ncdu() {
+	version=2.2.1
+	wget https://dev.yorhel.nl/download/ncdu-$version-linux-x86_64.tar.gz
+	tar -xvf ncdu-$version-linux-x86_64.tar.gz
+	mv ncdu /usr/local/bin
+	rm ncdu-$version-linux-x86_64.tar.gz
+}
 
 install autoconf
 install automake

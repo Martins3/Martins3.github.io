@@ -14,3 +14,6 @@ If any CPU in the system does not receive any hrtimer interrupt during that time
 kernel/watchdog.c
 kernel/watchdog_hld.c
 driver/watchdog/
+
+## 内核参数
+nmi_watchdog=panic

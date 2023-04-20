@@ -7,6 +7,13 @@
 ## 常规的函数分析
 - md_init
 
+## md 中存在大量的 store 操作
+- level_store : 从用户态了解下这都可以干什么？
+
+## md_register_thread
+
+md_wakeup_thread
+
 ## io
 
 - md_write_start

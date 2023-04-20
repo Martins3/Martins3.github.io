@@ -126,7 +126,7 @@ struct blk_mq_hw_ctx
 ```
 应该只是支持 block/mq-deadline.c ，但是实际上并不会采用任何的 scheduler 的。
 
-## multi queue
+## multiqueue
 - [](https://www.thomas-krenn.com/en/wiki/Linux_Multi-Queue_Block_IO_Queueing_Mechanism_(blk-mq))
 
 To use a device with blk-mq, the device must support the respective driver.

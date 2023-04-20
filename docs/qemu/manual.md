@@ -316,8 +316,10 @@ root="PARTUUID=2c4eb5c7-02"
 [  133.418477] dracut-initqueue[171]: Warning: /lib/dracut/hooks/initqueue/finished/devexists-\x2fdev\x2fdisk\x2fby-uuid\x2fae225bc6-e617-4956-82f8-b9b3db3f113a.sh: "[ -e "/dev/disk/by-uuid/ae225bc6-e617-4956-82f8-b9b3db3f113a" ]"
 ```
 
+
 [^1]: https://askubuntu.com/questions/1108334/how-to-boot-and-install-the-ubuntu-server-image-on-qemu-nographic-without-the-g
 [^2]: https://unix.stackexchange.com/questions/124681/how-to-ssh-from-host-to-guest-using-qemu
+
 
 
 <script src="https://giscus.app/client.js"

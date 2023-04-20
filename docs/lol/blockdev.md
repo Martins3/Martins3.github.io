@@ -49,14 +49,6 @@ vcsu6 vcsa6 vcs2 vcsu2 vcsa2 vcs3 vcsu3 vcsa3 vcs4 vcsu4
 vcsa4 vcs5 vcsu5 vcsa5
 ```
 
-## bio layer
-- [A block layer introduction part 1: the bio layer](https://lwn.net/Articles/736534/)
-- [Block layer introduction part 2: the request layer](https://lwn.net/Articles/738449/)
-
-1. bio 给上下两个层次提供的接口是什么 ?
-2. https://zhuanlan.zhihu.com/p/39199521
-    1. bio 机制核心 : 合并请求
-
 ## struct
 - gendisk : 侧重和硬件交互
   - `add_disk` : 删除

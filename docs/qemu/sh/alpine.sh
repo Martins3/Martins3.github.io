@@ -288,8 +288,10 @@ else
 	arg_nvme="$arg_nvme -device nvme,drive=nvme2,serial=foo2 -drive file=${workstation}/img2,format=qcow2,if=none,id=nvme2"
 	# @todo virtio-blk-pci vs virtio-blk-device ?
 fi
+# 显示的是 vda，所以 virtio-blk-pci 应该和 -drive 中 if=virtio 等价吧 @todo 代码中确认一下
 arg_disk="-device virtio-blk-pci,drive=blk2,iothread=io0 -drive file=${workstation}/img3,format=qcow2,if=none,id=blk2 -object iothread,id=io0"
 arg_disk="$arg_disk -device virtio-blk-pci,drive=d2 -drive file=${workstation}/img4,format=qcow2,if=none,id=d2"
+
 arg_scsi="-device virtio-scsi-pci,id=scsi0,bus=pci.0,addr=0xa  -device scsi-hd,bus=scsi0.0,channel=0,scsi-id=0,lun=0,drive=scsi-drive -drive file=${workstation}/img5,format=qcow2,id=scsi-drive,if=none"
 
 arg_sata="-drive file=${workstation}/img6,media=disk,format=qcow2"
@@ -298,6 +300,11 @@ arg_sata="-drive file=${workstation}/img6,media=disk,format=qcow2"
 # arg_sata="$arg_sata -drive file=${workstation}/img7,media=disk,format=qcow2"
 
 # arg_sata="-device scsi-hd,drive=jj,bootindex=10 -drive if=none,file=${workstation}/img4,format=qcow2,id=jj"
+
+# arg_disk=""
+# arg_scsi=""
+# arg_sata=""
+# arg_nvme=""
 
 # @todo 尝试一下这个
 # -netdev tap,id=nd0,ifname=tap0 -device e1000,netdev=nd0

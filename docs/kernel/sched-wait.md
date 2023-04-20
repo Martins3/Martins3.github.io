@@ -40,3 +40,7 @@ __out:  __ret;                                  \
 })
 // 其中的，init_wait_entry 将会设置被移动出来队列的时候，设置的 function 导致其被自动运行
 ```
+
+## 一些有趣的接口
+- `wait_event_lock_irq`
+- #define wait_event_lock_irq_cmd(wq_head, condition, lock, cmd)			\

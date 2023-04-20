@@ -1,4 +1,9 @@
-# raid1 使用尝试
+# raid1
+
+## 问题
+1. `_wait_barrier` : r1conf::nr_pending 被反复增加减少好多次，这是在干嘛呀
+
+## raid1 使用尝试
 
 sudo mdadm --create --verbose /dev/md0 --level=1 --raid-devices=2 /dev/sdb /dev/sdc
 
@@ -76,9 +81,13 @@ md0 : active raid1 sdd1[3](S) sdc1[2] sda1[0]
 
 unused devices: <none>
 ```
+
+### 为什么增加设备是两个动作呀
+
+
 ## 一些 backtrace
 
-## 删除
+### 删除
 
 mdadm /dev/md0 --fail /dev/sdc1
 
@@ -122,7 +131,7 @@ mdadm /dev/md0 --remove /dev/sdc1
               See the GROW MODE section below on RAID-DEVICES CHANGES.  The file must be stored on a separate device, not on the RAID array being reshaped.
 ```
 
-## 分析
+## raid1_personality
 
 ```c
 static struct md_personality raid1_personality =
@@ -150,7 +159,84 @@ static struct md_personality raid1_personality =
 
 `raid1_make_request` 中注册了 `raid1_end_write_request`
 
-## 分析下
+## r1conf
+
+```c
+struct r1conf {
+	struct mddev		*mddev;
+	struct raid1_info	*mirrors;	/* twice 'raid_disks' to
+						 * allow for replacements.
+						 */
+	int			raid_disks;
+
+	spinlock_t		device_lock;
+
+	/* list of 'struct r1bio' that need to be processed by raid1d,
+	 * whether to retry a read, writeout a resync or recovery
+	 * block, or anything else.
+	 */
+	struct list_head	retry_list;
+	/* A separate list of r1bio which just need raid_end_bio_io called.
+	 * This mustn't happen for writes which had any errors if the superblock
+	 * needs to be written.
+	 */
+	struct list_head	bio_end_io_list;
+
+	/* queue pending writes to be submitted on unplug */
+	struct bio_list		pending_bio_list;
+
+	/* for use when syncing mirrors:
+	 * We don't allow both normal IO and resync/recovery IO at
+	 * the same time - resync/recovery can only happen when there
+	 * is no other IO.  So when either is active, the other has to wait.
+	 * See more details description in raid1.c near raise_barrier().
+	 */
+	wait_queue_head_t	wait_barrier;
+	spinlock_t		resync_lock;
+	atomic_t		nr_sync_pending;
+	atomic_t		*nr_pending;
+	atomic_t		*nr_waiting;
+	atomic_t		*nr_queued;
+	atomic_t		*barrier;
+	int			array_frozen;
+
+	/* Set to 1 if a full sync is needed, (fresh device added).
+	 * Cleared when a sync completes.
+	 */
+	int			fullsync;
+
+	/* When the same as mddev->recovery_disabled we don't allow
+	 * recovery to be attempted as we expect a read error.
+	 */
+	int			recovery_disabled;
+
+	/* poolinfo contains information about the content of the
+	 * mempools - it changes when the array grows or shrinks
+	 */
+	struct pool_info	*poolinfo;
+	mempool_t		r1bio_pool;
+	mempool_t		r1buf_pool;
+
+	struct bio_set		bio_split;
+
+	/* temporary buffer to synchronous IO when attempting to repair
+	 * a read error.
+	 */
+	struct page		*tmppage;
+
+	/* When taking over an array from a different personality, we store
+	 * the new thread here until we fully activate the array.
+	 */
+	struct md_thread	*thread;
+
+	/* Keep track of cluster resync window to send to other
+	 * nodes.
+	 */
+	sector_t		cluster_sync_low;
+	sector_t		cluster_sync_high;
+
+};
+```
 
 ## 如何理解其中的 barrier
 - raid1_reshape
@@ -233,3 +319,272 @@ static void free_r1bio(struct r1bio *r1_bio)
 
 ## 在 raid1 中，每一个 r1bio 在每一个 disk 中都会持有一个对应的 io
 - [ ] 需要等到所有人返回的再返回吧?
+
+
+## [ ] 为什么总是乘以 2 :  disks = conf->raid_disks * 2
+
+## [ ] 当有的盘拔掉后，那些 bio 是在哪里被清理的
+
+```c
+/*
+ * this is our 'private' RAID1 bio.
+ *
+ * it contains information about what kind of IO operations were started
+ * for this RAID1 operation, and about their status:
+ */
+
+struct r1bio {
+	atomic_t		remaining; /* 'have we finished' count,
+					    * used from IRQ handlers
+					    */
+	atomic_t		behind_remaining; /* number of write-behind ios remaining
+						 * in this BehindIO request
+						 */
+    }
+```
+
+- `raid1_end_write_request`
+  - find_bio_disk : 必须找到对应的 mirror，但是
+  - r1_bio_write_done : 根据 `r1_bio->remaining` 来分析
+
+
+- raid1_write_request
+  - atomic_inc(&r1_bio->remaining); :
+
+## 如何理解 raid1_remove_disk
+
+哇，完全无法理解这个逻辑，我靠
+
+```c
+    // 所有的逻辑都在这个前提下:
+	if (rdev == p->rdev) {
+```
+
+
+- raid1_remove_disk
+  - freeze_array
+    - [ ] 这个是等待所有的 io 都返回吗？
+
+freeze_array 只是将 io 放到 queue 中间:
+```c
+static void freeze_array(struct r1conf *conf, int extra)
+{
+	/* Stop sync I/O and normal I/O and wait for everything to
+	 * go quiet.
+	 * This is called in two situations:
+	 * 1) management command handlers (reshape, remove disk, quiesce).
+	 * 2) one normal I/O request failed.
+
+	 * After array_frozen is set to 1, new sync IO will be blocked at
+	 * raise_barrier(), and new normal I/O will blocked at _wait_barrier()
+	 * or wait_read_barrier(). The flying I/Os will either complete or be
+	 * queued. When everything goes quite, there are only queued I/Os left.
+
+	 * Every flying I/O contributes to a conf->nr_pending[idx], idx is the
+	 * barrier bucket index which this I/O request hits. When all sync and
+	 * normal I/O are queued, sum of all conf->nr_pending[] will match sum
+	 * of all conf->nr_queued[]. But normal I/O failure is an exception,
+	 * in handle_read_error(), we may call freeze_array() before trying to
+	 * fix the read error. In this case, the error read I/O is not queued,
+	 * so get_unqueued_pending() == 1.
+	 *
+	 * Therefore before this function returns, we need to wait until
+	 * get_unqueued_pendings(conf) gets equal to extra. For
+	 * normal I/O context, extra is 1, in rested situations extra is 0.
+	 */
+	spin_lock_irq(&conf->resync_lock);
+	conf->array_frozen = 1;
+	raid1_log(conf->mddev, "wait freeze");
+	wait_event_lock_irq_cmd(
+		conf->wait_barrier,
+		get_unqueued_pending(conf) == extra,
+		conf->resync_lock,
+		flush_pending_writes(conf));
+	spin_unlock_irq(&conf->resync_lock);
+}
+```
+直接提交为 `submit_bio_noacct` 而已。
+
+
+在 reshape 中也是使用 `freeze_array` 和 `unfreeze_array` 来保护。
+
+深入理解一下 `_wait_barrier` 吧！
+
+## barrier
+同步应该不是整个盘停下来的，而是 sector 级别的，如果正在对于一个 sector 同步，那么就不要让另一个 thread 写
+
+```c
+	/* for use when syncing mirrors:
+	 * We don't allow both normal IO and resync/recovery IO at
+	 * the same time - resync/recovery can only happen when there
+	 * is no other IO.  So when either is active, the other has to wait.
+	 * See more details description in raid1.c near raise_barrier().
+	 */
+	wait_queue_head_t	wait_barrier;
+	spinlock_t		resync_lock;
+	atomic_t		nr_sync_pending;
+	atomic_t		*nr_pending;      // 表示是当时的 normal io 的数量
+	atomic_t		*nr_waiting;
+	atomic_t		*nr_queued;       //
+	atomic_t		*barrier;         // raise_barrier 来增加 1
+	int			array_frozen;         // 当前 array 是否在 frozen
+```
+
+```c
+/* Barriers....
+ * Sometimes we need to suspend IO while we do something else,
+ * either some resync/recovery, or reconfigure the array.
+ * To do this we raise a 'barrier'.
+ * The 'barrier' is a counter that can be raised multiple times
+ * to count how many activities are happening which preclude
+ * normal IO.
+ * We can only raise the barrier if there is no pending IO.
+ * i.e. if nr_pending == 0.
+ * We choose only to raise the barrier if no-one is waiting for the
+ * barrier to go down.  This means that as soon as an IO request
+ * is ready, no other operations which require a barrier will start
+ * until the IO request has had a chance.
+ *
+ * So: regular IO calls 'wait_barrier'.  When that returns there
+ *    is no backgroup IO happening,  It must arrange to call
+ *    allow_barrier when it has finished its IO.
+ * backgroup IO calls must call raise_barrier.  Once that returns
+ *    there is no normal IO happeing.  It must arrange to call
+ *    lower_barrier when the particular background IO completes.
+ *
+ * If resync/recovery is interrupted, returns -EINTR;
+ * Otherwise, returns 0.
+ */
+static int raise_barrier(struct r1conf *conf, sector_t sector_nr)
+```
+
+- `RESYNC_DEPTH`
+
+### `_wait_barrier` 中的同步技术
+
+- [ ] 至少两个 read 在一起，确实非常奇怪
+
+```c
+	if (!READ_ONCE(conf->array_frozen) &&
+	    !atomic_read(&conf->barrier[idx]))
+		return ret;
+```
+
+### 什么时候会 `freeze_array`
+
+当 `freeze_array` 是需要阻碍住所有的文件:
+
+- raid1_remove_disk
+- handle_write_finished 被 raid1d 调用
+- raid1_reshape
+- raid1_quiesce
+
+是不是存在 io 的时候，就没有办法 sync 内存吗?
+
+使用 `get_unqueued_pending` 来判断的: `nr_pending` - `nr_queued` 等于 0 的时候。
+
+
+r1conf:nr_pending 增加的位置：
+- 在 `raid1_write_request` -> `wait_barrier` -> `_wait_barrier` 中，增加 r1conf::nr_pending
+- wait_read_barrier
+
+
+r1conf:nr_pending 减少的位置：
+- `raid_end_bio_io` -> `allow_barrier`
+
+所以 `nr_pending` 的含义就是还写写入到盘中的数据。
+
+
+r1conf::nr_queued 增加的位置:
+- reschedule_retry : 其调用位置
+  * raid1_end_read_request
+  * r1_bio_write_done
+  * put_sync_write_buf
+- handle_write_finished : 似乎没什么人调用
+
+在 raid1d 中 conf::nr_queued 会减少，所以 queue 的含义很清楚了，就是 r1conf::retry_list 中的大小
+
+所以，freeze_array 的时候，之前的 bio 都返回了。
+
+### [x] 为什么要使用一个 page 来同步
+因为只是 page 的
+
+### resync/recovery 行为是什么?
+
+## raid1d 是做什么的?
+- 每创建一个 raid 的时候，需要增加一个
+
+- md_thread
+
+- r1conf::retry_list 中挂载一堆之后需要重新提交的 r1bio
+
+
+## recovery_flags 是什么状态？
+
+```c
+enum recovery_flags {
+	/*
+	 * If neither SYNC or RESHAPE are set, then it is a recovery.
+	 */
+	MD_RECOVERY_RUNNING,	/* a thread is running, or about to be started */
+	MD_RECOVERY_SYNC,	/* actually doing a resync, not a recovery */
+	MD_RECOVERY_RECOVER,	/* doing recovery, or need to try it. */
+	MD_RECOVERY_INTR,	/* resync needs to be aborted for some reason */
+	MD_RECOVERY_DONE,	/* thread is done and is waiting to be reaped */
+	MD_RECOVERY_NEEDED,	/* we might need to start a resync/recover */
+	MD_RECOVERY_REQUESTED,	/* user-space has requested a sync (used with SYNC) */
+	MD_RECOVERY_CHECK,	/* user-space request for check-only, no repair */
+	MD_RECOVERY_RESHAPE,	/* A reshape is happening */
+	MD_RECOVERY_FROZEN,	/* User request to abort, and not restart, any action */
+	MD_RECOVERY_ERROR,	/* sync-action interrupted because io-error */
+	MD_RECOVERY_WAIT,	/* waiting for pers->start() to finish */
+	MD_RESYNCING_REMOTE,	/* remote node is running resync thread */
+};
+```
+
+## end_sync_write : 难道同步写和异步的差别需要 raid1 来处理？
+
+这个应该不是 aio 的 sync 吧，而是普通的 synchronous write 的场景。
+
+```txt
+#0  end_sync_write (bio=0xffff8881093ea200) at drivers/md/raid1.c:1962
+#1  0xffffffff8174bb11 in req_bio_endio (error=0 '\000', nbytes=65536, bio=0xffff8881093ea200, rq=0xffff88810b472d80) at block/blk-mq.c:795
+#2  blk_update_request (req=req@entry=0xffff88810b472d80, error=error@entry=0 '\000', nr_bytes=196608, nr_bytes@entry=262144) at block/blk-mq.c:927
+#3  0xffffffff81ba1d47 in scsi_end_request (req=req@entry=0xffff88810b472d80, error=error@entry=0 '\000', bytes=bytes@entry=262144) at drivers/scsi/scsi_lib.c:538
+#4  0xffffffff81ba288e in scsi_io_completion (cmd=0xffff88810b472e88, good_bytes=262144) at drivers/scsi/scsi_lib.c:976
+#5  0xffffffff81bc8880 in virtscsi_vq_done (fn=0xffffffff81bc8640 <virtscsi_complete_cmd>, virtscsi_vq=0xffff88810a750b38, vscsi =0xffff88810a750810) at drivers/scsi/virtio_scsi.c:183
+#6  virtscsi_req_done (vq=<optimized out>) at drivers/scsi/virtio_scsi.c:198
+#7  0xffffffff818b364b in vring_interrupt (irq=<optimized out>, _vq=0xffff8881093ea200) at drivers/virtio/virtio_ring.c:2491
+#8  vring_interrupt (irq=<optimized out>, _vq=0xffff8881093ea200) at drivers/virtio/virtio_ring.c:2466
+#9  0xffffffff811c912d in __handle_irq_event_percpu (desc=desc@entry=0xffff88810a562a00) at kernel/irq/handle.c:158
+#10 0xffffffff811c9338 in handle_irq_event_percpu (desc=0xffff88810a562a00) at kernel/irq/handle.c:193
+#11 handle_irq_event (desc=desc@entry=0xffff88810a562a00) at kernel/irq/handle.c:210
+#12 0xffffffff811ce25b in handle_edge_irq (desc=0xffff88810a562a00) at kernel/irq/chip.c:819
+#13 0xffffffff810d9d9f in generic_handle_irq_desc (desc=0xffff88810a562a00) at ./include/linux/irqdesc.h:158
+#14 handle_irq (regs=<optimized out>, desc=0xffff88810a562a00) at arch/x86/kernel/irq.c:231
+#15 __common_interrupt (regs=<optimized out>, vector=155099648) at arch/x86/kernel/irq.c:250
+#16 0xffffffff82290dcf in common_interrupt (regs=0xffffc90000137e38, error_code=<optimized out>) at arch/x86/kernel/irq.c:240
+Backtrace stopped: Cannot access memory at address 0xffffc90000561010
+```
+
+### mbio->bi_end_io	= raid1_end_write_request
+```txt
+#0  raid1_end_write_request (bio=0xffff888173ad9400) at drivers/md/raid1.c:448
+#1  0xffffffff8174bb11 in req_bio_endio (error=0 '\000', nbytes=4096, bio=0xffff888173ad9400, rq=0xffff88810b0b98c0) at block/blk-mq.c:795
+#2  blk_update_request (req=req@entry=0xffff88810b0b98c0, error=error@entry=0 '\000', nr_bytes=nr_bytes@entry=4096) at block/blk-mq.c:927
+#3  0xffffffff81ba1d47 in scsi_end_request (req=req@entry=0xffff88810b0b98c0, error=error@entry=0 '\000', bytes=bytes@entry=4096) at drivers/scsi/scsi_lib.c:538
+#4  0xffffffff81ba288e in scsi_io_completion (cmd=0xffff88810b0b99c8, good_bytes=4096) at drivers/scsi/scsi_lib.c:976
+#5  0xffffffff81bc8880 in virtscsi_vq_done (fn=0xffffffff81bc8640 <virtscsi_complete_cmd>, virtscsi_vq=0xffff88810a750a68, vscsi=0xffff88810a750810) at drivers/scsi/virtio_scsi.c:183
+#6  virtscsi_req_done (vq=<optimized out>) at drivers/scsi/virtio_scsi.c:198
+#7  0xffffffff818b364b in vring_interrupt (irq=<optimized out>, _vq=0xffff888173ad9400) at drivers/virtio/virtio_ring.c:2491
+#8  vring_interrupt (irq=<optimized out>, _vq=0xffff888173ad9400) at drivers/virtio/virtio_ring.c:2466
+#9  0xffffffff811c912d in __handle_irq_event_percpu (desc=desc@entry=0xffff88810a561000) at kernel/irq/handle.c:158
+#10 0xffffffff811c9338 in handle_irq_event_percpu (desc=0xffff88810a561000) at kernel/irq/handle.c:193
+#11 handle_irq_event (desc=desc@entry=0xffff88810a561000) at kernel/irq/handle.c:210
+#12 0xffffffff811ce25b in handle_edge_irq (desc=0xffff88810a561000) at kernel/irq/chip.c:819
+#13 0xffffffff810d9d9f in generic_handle_irq_desc (desc=0xffff88810a561000) at ./include/linux/irqdesc.h:158
+#14 handle_irq (regs=<optimized out>, desc=0xffff88810a561000) at arch/x86/kernel/irq.c:231
+#15 __common_interrupt (regs=<optimized out>, vector=1940755456) at arch/x86/kernel/irq.c:250
+#16 0xffffffff82290dcf in common_interrupt (regs=0xffffc900000cfe38, error_code=<optimized out>) at arch/x86/kernel/irq.c:240
+Backtrace stopped: Cannot access memory at address 0xffffc900002a5010
+```
