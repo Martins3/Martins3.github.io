@@ -464,6 +464,21 @@ static void free_r1bio(struct r1bio *r1_bio)
 
 不太理解，难道不需要释放吗？
 
+## r1bio 的生命周期
+
+`r1bio_pool_alloc` : 组件初始化
+
+```c
+	newpoolinfo->mddev = mddev;
+	newpoolinfo->raid_disks = raid_disks * 2;
+
+	ret = mempool_init(&newpool, NR_RAID_BIOS, r1bio_pool_alloc,
+			   rbio_pool_free, newpoolinfo);
+```
+r1bio 构成的数据也是两倍的。
+
+- `raid1_write_request` : 创建
+
 ## raid1 的状态
 
 - `1BIO_Returned`

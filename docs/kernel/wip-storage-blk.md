@@ -1,28 +1,3 @@
-## bio layer
-- [A block layer introduction part 1: the bio layer](https://lwn.net/Articles/736534/)
-- [Block layer introduction part 2: the request layer](https://lwn.net/Articles/738449/)
-
-1. bio 给上下两个层次提供的接口是什么 ?
-2. https://zhuanlan.zhihu.com/p/39199521
-    1. bio 机制核心 : 合并请求
-
-## request
-
-```c
-	/*
-	 * The hash is used inside the scheduler, and killed once the
-	 * request reaches the dispatch list. The ipi_list is only used
-	 * to queue the request for softirq completion, which is long
-	 * after the request has been unhashed (and even removed from
-	 * the dispatch list).
-	 */
-	union {
-		struct hlist_node hash;	/* merge hash */
-		struct llist_node ipi_list;
-	};
-```
-- [ ] `ipi_list` 的使用大致知道了，但是 `hash` 如何操作来着?
-
 ### 在硬中断中加入 request / bio
 
 ```c

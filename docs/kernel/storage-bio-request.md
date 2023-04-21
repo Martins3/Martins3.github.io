@@ -1,5 +1,7 @@
 ## TODO
-1. 希望搞清楚 bio request 和 request_queue 的关系
+- [ ]  希望搞清楚 bio request 和 request_queue 的关系
+- [ ] bio 机制是如何实现 : 合并请求
+- [ ] bio 给上下两个层次提供的接口是什么 ?
 
 ## submit_bio
 1. 这是 fs 和 dev 进行 io 的唯一的接口吗 ?
@@ -8,6 +10,7 @@
 iomap 直接来调用 submit_bio，有趣
 
 ## bio
+参考:
 
 ### bio::bi_end_io
 
@@ -53,7 +56,27 @@ submit_bio 是异步的，但是可以修改为同步的，通过设置 bio::bi_
 
 几乎每一个和 bio 打交道的都会对应的注册 bio::bi_end_io
 
+## request
+
+```c
+	/*
+	 * The hash is used inside the scheduler, and killed once the
+	 * request reaches the dispatch list. The ipi_list is only used
+	 * to queue the request for softirq completion, which is long
+	 * after the request has been unhashed (and even removed from
+	 * the dispatch list).
+	 */
+	union {
+		struct hlist_node hash;	/* merge hash */
+		struct llist_node ipi_list;
+	};
+```
+- [ ] `ipi_list` 的使用大致知道了，但是 `hash` 如何操作来着?
+
 
 ## 关键参考
+
+- [A block layer introduction part 1: the bio layer](https://lwn.net/Articles/736534/)
+- [Block layer introduction part 2: the request layer](https://lwn.net/Articles/738449/)
+- [Linux IO 请求处理流程-bio 和 request](https://zhuanlan.zhihu.com/p/39199521)
 - [IO 子系统全流程介绍](https://zhuanlan.zhihu.com/p/545906763)
-- [ ] 还有两个 lwn 的文章

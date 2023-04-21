@@ -503,3 +503,5 @@ Posted-interrupt wakeup event
 ## 才发现 /sys/kernel/debug 下面有这么多内容，ftrace 只是启动的一个小文件夹
 
 ## block_device_operations::submit_bio
+
+## 整理一下 /home/martins3/core/vn/hack/ps/ 中的内容

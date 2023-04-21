@@ -77,6 +77,8 @@ function setup_ncdu() {
 	rm ncdu-$version-linux-x86_64.tar.gz
 }
 
+# @todo tig 需要升级一下版本
+
 install autoconf
 install automake
 install libtool
