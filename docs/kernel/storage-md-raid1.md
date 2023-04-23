@@ -748,3 +748,23 @@ Backtrace stopped: Cannot access memory at address 0xffffc90000561010
 #16 0xffffffff82290dcf in common_interrupt (regs=0xffffc900000cfe38, error_code=<optimized out>) at arch/x86/kernel/irq.c:240
 Backtrace stopped: Cannot access memory at address 0xffffc900002a5010
 ```
+
+## 分析一下 read 的锁
+
+- raid1_read_request : 几乎进去的瞬间上锁
+  - `wait_read_barrier`
+
+- raid1_end_read_request : 等到结束的时候
+  - raid_end_bio_io
+    - allow_barrier : 开锁
+
+write 的时候 : raid1_end_write_request : 类似的
+
+## 有时候存在这个报错
+
+```txt
+[ 2862.632964] md: could not open unknown-block(8,1).
+[ 2862.633525] md: md_import_device returned -16
+[ 2862.634200] md: could not open unknown-block(8,1).
+[ 2862.635155] md: md_import_device returned -16
+```
