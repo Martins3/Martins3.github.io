@@ -56,6 +56,11 @@ dracut --add-drivers mymod initramfs-with-mymod.img
 
 https://www.golinuxcloud.com/grubby-command-examples/
 
+```sh
+grubby --update-kernel=/boot/vmlinuz-$(uname -r) --add-args="rootflags=data=journal"
+grubby --update-kernel=ALL --args="rootflags=data=journal"
+```
+
 ## 其他小问题
 1. grub-mkconfig || grub2-mkconfig : 扫描 /boot 然后更新 grub.conf
 2. 从 grub rescue 模式下恢复: https://linuxhint.com/grub_rescue_ubuntu_1804/

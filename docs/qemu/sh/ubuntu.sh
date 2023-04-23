@@ -20,7 +20,7 @@ img="/home/martins3/core/packer-kvm/artifacts/qemu/centos9/packer-centos9"
 snap_img="$workstation/ubuntu_bak-20.04-server.img"
 
 
-qemu-system-x86_64 -m 10G -hda /home/martins3/hack/vm/openEuler-22.09-x86_64-dvd.qcow2 -kernel /home/martins3/core/linux//arch/x86/boot/bzImage -append "root=/dev/vdb2 nokaslr console=ttyS0,9600 earlyprink=serial" -initrd /home/martins3/hack/vm/initramfs-6.3.0-rc6-00188-g3e7bb4f24617-dirty.img -serial stdio
+# qemu-system-x86_64 -m 10G -hda /home/martins3/hack/vm/openEuler-22.09-x86_64-dvd.qcow2 -kernel /home/martins3/core/linux//arch/x86/boot/bzImage -append "root=/dev/vdb2 nokaslr console=ttyS0,9600 earlyprink=serial" -initrd /home/martins3/hack/vm/initramfs-6.3.0-rc6-00188-g3e7bb4f24617-dirty.img -serial stdio
 
 # if [[ ! -f ${iso} ]]; then
 #   wget https://releases.ubuntu.com/22.04/ubuntu-22.04-desktop-amd64.iso -O "${iso}"
