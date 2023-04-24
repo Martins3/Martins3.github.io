@@ -663,3 +663,7 @@ static struct ctl_table vm_page_writeback_sysctls[] = {
 	{}
 };
 ```
+
+## systeroid --tui 中搜索 dirty 看看
+
+似乎是存在 background 和非 background 的两个部分

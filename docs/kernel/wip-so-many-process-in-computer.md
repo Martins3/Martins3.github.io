@@ -37,3 +37,5 @@ man proc 中可以看到:
 有时候多，有时候少！
 
 因为 namespace 的影响? 我本身就是在 root 啊
+
+/proc/pid 似乎就是按照 thread 来显示的吧，使用 QEMU 可以测试的

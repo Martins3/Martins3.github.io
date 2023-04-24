@@ -44,3 +44,5 @@ migrate -d tcp:localhost:4000
 
 ## 分析其他 Hypervisor 上是如何进行热迁移的
 - https://github.com/cloud-hypervisor/cloud-hypervisor
+
+## 热迁移的时候，如果 guest 当时在 perf，pmu 的状态可以维护吗？

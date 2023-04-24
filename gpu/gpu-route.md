@@ -34,3 +34,5 @@
 ## webGPU
 - [0x00F - WebGPU](https://news.ycombinator.com/item?id=34701833)
   - webGPU 是 webGL 的下一个
+
+- https://webgpufundamentals.org/

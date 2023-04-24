@@ -270,7 +270,7 @@ if [[ $use_ovmf == true ]]; then
 fi
 
 # arg_debug_memblock="memblock=debug"
-arg_cgroupv2="systemd.unified_cgroup_hierarchy=1 init=/bin/sh"
+arg_cgroupv2="systemd.unified_cgroup_hierarchy=1"
 # scsi_mod.scsi_logging_level=0x3fffffff
 # @todo 这个 function graph 为什么没有办法打印全部啊
 arg_boot_trace="ftrace=function_graph ftrace_filter=arch_freq_get_on_cpu raid=noautodetect rootfs=data=journal"

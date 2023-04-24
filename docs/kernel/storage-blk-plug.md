@@ -1,5 +1,13 @@
 # storage blk plug 机制
 
+## 基本原理
+使用 read_pages 作为例子:
+- struct blk_plug plug; : 在 stack 上分配
+- blk_start_plug(&plug); : 初始化
+- while ((folio = readahead_folio(rac)) != NULL) : 多次提交 io
+- blk_finish_plug(&plug); : 真正的提交
+
+
 ```c
 /*
  * blk_plug permits building a queue of related requests by holding the I/O
@@ -28,8 +36,8 @@ struct blk_plug {
 	struct list_head cb_list; /* md requires an unplug callback */
 };
 ```
-- 为什么可以不用关闭抢占?
-- request_queue 的锁是如何获取的？
+
+- [ ] request_queue 的锁是如何获取的？
 
 
 > it is used for I/O request batching and merging to improve I/O performance.
@@ -58,7 +66,7 @@ struct blk_plug {
   - blk_add_rq_to_plug : 将 request 放到 rq 中
   - blk_mq_try_issue_directly : 直接提交了
 
-增加到 plug 中例子 ：
+使用 plug 中例子
 ```txt
 blk_add_rq_to_plug+1
 blk_mq_submit_bio+853
@@ -98,10 +106,8 @@ do_syscall_64+60
 entry_SYSCALL_64_after_hwframe+114
 ```
 
-## 基本使用方法
-`struct blk_plug`
 
-- [ ] 但是  总是放在 stack 的，被回收了怎么办？
+## 什么时候真正的提交
 
 ```c
 /**
@@ -138,12 +144,6 @@ EXPORT_SYMBOL(blk_start_plug);
 - BLK_PLUG_FLUSH_SIZE
 - 被调度走的时候
 
-使用 read_pages 作为例子:
-- struct blk_plug plug; : 在 stack 上分配
-- blk_start_plug(&plug); : 初始化
-- while ((folio = readahead_folio(rac)) != NULL) : 多次提交 io
-- blk_finish_plug(&plug); : 真正的提交
-
 关于被调度的时候，finish plug 的内容
 - io_schedule
   - io_schedule_prepare
@@ -153,5 +153,49 @@ EXPORT_SYMBOL(blk_start_plug);
   - sched_submit_work
     - blk_flush_plug
 
+## plug hook
+主要的使用者都是几个 raid :
+
+在 `raid1_write_request` 中调用 `blk_check_plugged` 来注册
+```txt
+#0  raid1_write_request (max_write_sectors=8, bio=0xffff888112c2c700, mddev=0xffff888100326000) at drivers/md/raid1.c:1356
+#1  raid1_make_request (mddev=0xffff888100326000, bio=0xffff888112c2c700) at drivers/md/raid1.c:1660
+#2  0xffffffff81e22962 in md_handle_request (mddev=0xffff888100326000, bio=0xffff888112c2c700) at drivers/md/md.c:431
+#3  0xffffffff8173e7e6 in __submit_bio (bio=bio@entry=0xffff888112c2c700) at block/blk-core.c:604
+#4  0xffffffff8173ecaf in __submit_bio_noacct (bio=0xffff888112c2c700) at block/blk-core.c:647
+#5  submit_bio_noacct_nocheck (bio=<optimized out>) at block/blk-core.c:710
+#6  0xffffffff8173f060 in submit_bio_noacct (bio=<optimized out>) at block/blk-core.c:807
+#7  0xffffffff81472d4e in submit_bh_wbc (opf=<optimized out>, opf@entry=1048577, bh=<optimized out>, wbc=wbc@entry=0xffffc90000057ca0) at fs/buffer.c:2750
+#8  0xffffffff81475a18 in __block_write_full_page (inode=<optimized out>, page=0xffffea0004681340, get_block=0xffffffff81735f30 <blkdev_get_block>, wbc=0xffffc90000057ca0, handler=0xffffffff814736f0 <end_buffer_async_write>) at fs/buffer.c:1835
+#9  0xffffffff8133aa9b in writepage_cb (folio=0xffffffff822a86d1 <_raw_spin_unlock_irqrestore+49>, wbc=0x0 <fixed_percpu_data>, data=0x0 <fixed_percpu_data>) at mm/page-writeback.c:2535
+#10 0xffffffff8133bb3c in write_cache_pages (mapping=mapping@entry=0xffff888100480b08, wbc=wbc@entry=0xffffc90000057ca0, writepage=writepage@entry=0xffffffff8133aa80 <writepage_cb>, data=data@entry=0xffff888100480b08) at mm/page-writeback.c:2473
+#11 0xffffffff8133e311 in do_writepages (mapping=mapping@entry=0xffff888100480b08, wbc=wbc@entry=0xffffc90000057ca0) at mm/page-writeback.c:2556
+#12 0xffffffff814636d1 in __writeback_single_inode (inode=inode@entry=0xffff888100480990, wbc=wbc@entry=0xffffc90000057ca0) at fs/fs-writeback.c:1603
+#13 0xffffffff81463ea9 in writeback_sb_inodes (sb=sb@entry=0xffff888100161800, wb=wb@entry=0xffff88810712cc00, work=work@entry=0xffffc90000057e30) at fs/fs-writeback.c:1894
+#14 0xffffffff8146419c in __writeback_inodes_wb (wb=wb@entry=0xffff88810712cc00, work=work@entry=0xffffc90000057e30) at fs/fs-writeback.c:1965
+#15 0xffffffff81464417 in wb_writeback (wb=wb@entry=0xffff88810712cc00, work=work@entry=0xffffc90000057e30) at fs/fs-writeback.c:2070
+#16 0xffffffff8146581e in wb_check_background_flush (wb=0xffff88810712cc00) at fs/fs-writeback.c:2136
+#17 wb_do_writeback (wb=0xffff88810712cc00) at fs/fs-writeback.c:2224
+#18 wb_workfn (work=0xffff88810712cd88) at fs/fs-writeback.c:2251
+#19 0xffffffff81165899 in process_one_work (worker=worker@entry=0xffff88810082e0c0, work=0xffff88810712cd88) at kernel/workqueue.c:2390
+#20 0xffffffff81165ea1 in worker_thread (__worker=0xffff88810082e0c0) at kernel/workqueue.c:2537
+#21 0xffffffff8116eb49 in kthread (_create=0xffff8881003e7480) at kernel/kthread.c:376
+#22 0xffffffff81002939 in ret_from_fork () at arch/x86/entry/entry_64.S:308
+```
+
+```txt
+flush_bio_list at ffffffffc03f3f28 [raid1]
+raid1_unplug at ffffffffc03f48fc [raid1]
+blk_flush_plug_list at ffffffffac36f297
+blk_finish_plug at ffffffffac36f8a4
+ext4_writepages at ffffffffc076946f [ext4]
+do_writepages at ffffffffac1d8a38
+__filemap_fdatawrite_range at ffffffffac1cbcf3
+filemap_write_and_wait_range at ffffffffac1cbe61
+ext4_sync_file at ffffffffc075fcf1 [ext4]
+vfs_fsync at ffffffffac29683e
+loop_thread at ffffffffc09de3cc [loop]
+kthread at ffffffffac0cc871
+```
 
 ## [ ] https://lwn.net/Articles/438256/
