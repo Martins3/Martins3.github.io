@@ -39,9 +39,6 @@ void get_cpu_cap(struct cpuinfo_x86 *c)
     - `__do_cpuid_func`
       - 部分 cpuid 会被 cpuid_entry_override 修正
 
-- kvm_emulate_cpuid
-  - kvm_cpuid
-    - kvm_find_cpuid_entry_index : 直接在数组中找，不去调用 cpuid 的
 
 其实还存在一些模拟属性
 

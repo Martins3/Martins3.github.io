@@ -327,10 +327,12 @@ xa_headx(const struct xarray *xa)
 
 这个也是支持 RCU 的哇。
 
-### maple tree 支持 rcu 的?
+## maple tree 支持 rcu 的?
 
-### 参考资料
+## 参考资料
 - [What is RCU, Fundamentally?](https://lwn.net/Articles/262464/)
 - [What is RCU? Part 2: Usage](https://lwn.net/Articles/263130/)
 - [RCU part 3: the RCU API](https://lwn.net/Articles/264090/)
 - [kernel doc](https://www.kernel.org/doc/Documentation/RCU/)
+
+## https://www.kernel.org/doc/Documentation/RCU/Design/Requirements/Requirements.html

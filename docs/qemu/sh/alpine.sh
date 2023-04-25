@@ -138,10 +138,11 @@ case $share_memory_option in
 		# sudo /home/martins3/core/qemu//build/tools/virtiofsd/virtiofsd --socket-path=/tmp/vhostqemu -o source=/tmp -o cache=always
 		# unshare 也导致的权限问题
 		zellij run -- sudo "$virtiofsd" --socket-path=/tmp/vhostqemu -o source="$(pwd)" -o cache=always
+		echo "到 zellij 中输入命令吧"
 		# sudo chown martins3 /tmp/vhostqemu ，否则 QEMU 需要 root 启动
 		arg_share_dir="-device vhost-user-fs-pci,queue-size=1024,chardev=char0,tag=myfs"
-		arg_share_dir="$arg_share_dir -chardev socket,id=char0,path=/tmp/vhostqemu"
-		arg_share_dir="$arg_share_dir -m 4G -object memory-backend-file,id=mem,size=4G,mem-path=/dev/shm,share=on -numa node,memdev=mem"
+		arg_share_dir+=" -chardev socket,id=char0,path=/tmp/vhostqemu"
+		arg_share_dir+=" -m 4G -object memory-backend-file,id=mem,size=4G,mem-path=/dev/shm,share=on -numa node,memdev=mem"
 		;;
 esac
 
@@ -194,10 +195,10 @@ case $hacking_memory in
 	"numa")
 		# 通过 reserve = false 让 mmap 携带参数 MAP_NORESERVE，从而可以模拟超级大内存的 Guest
 		arg_mem_cpu=" -m 8G -smp cpus=6"
-		arg_mem_cpu="$arg_mem_cpu -object memory-backend-ram,size=2G,id=m0,reserve=false -numa node,memdev=m0,cpus=0-1,nodeid=0"
-		arg_mem_cpu="$arg_mem_cpu -object memory-backend-ram,size=2G,id=m1 -numa node,memdev=m1,cpus=2-3,nodeid=1"
-		arg_mem_cpu="$arg_mem_cpu -object memory-backend-ram,size=4G,id=m2 -numa node,memdev=m2,cpus=4,nodeid=2"
-		arg_mem_cpu="$arg_mem_cpu -numa node,cpus=5,nodeid=3" # 只有 CPU ，但是没有内存
+		arg_mem_cpu+=" -object memory-backend-ram,size=2G,id=m0,reserve=false -numa node,memdev=m0,cpus=0-1,nodeid=0"
+		arg_mem_cpu+=" -object memory-backend-ram,size=2G,id=m1 -numa node,memdev=m1,cpus=2-3,nodeid=1"
+		arg_mem_cpu+=" -object memory-backend-ram,size=4G,id=m2 -numa node,memdev=m2,cpus=4,nodeid=2"
+		arg_mem_cpu+=" -numa node,cpus=5,nodeid=3" # 只有 CPU ，但是没有内存
 		;;
 	"prealloc")
 		arg_mem_cpu=" -m 1G -smp cpus=1"
@@ -214,13 +215,13 @@ case $hacking_memory in
 		# arg_mem_cpu="$arg_mem_cpu -object memory-backend-ram,id=mem1,size=6G"
 		# arg_mem_cpu="$arg_mem_cpu -device virtio-mem-pci,memdev=mem1,node=1,size=3G"
 		arg_mem_cpu="-m 4G,maxmem=20G -smp sockets=2,cores=2"
-		arg_mem_cpu="$arg_mem_cpu -numa node,nodeid=0,cpus=0-1,nodeid=0,memdev=mem0 -numa node,nodeid=1,cpus=2-3,nodeid=1,memdev=mem1"
-		arg_mem_cpu="$arg_mem_cpu -object memory-backend-ram,id=mem0,size=2G"
-		arg_mem_cpu="$arg_mem_cpu -object memory-backend-ram,id=mem1,size=2G"
-		arg_mem_cpu="$arg_mem_cpu -object memory-backend-ram,id=mem2,size=2G"
-		arg_mem_cpu="$arg_mem_cpu -object memory-backend-ram,id=mem3,size=2G"
-		arg_mem_cpu="$arg_mem_cpu -device virtio-mem-pci,id=vm0,memdev=mem2,node=0,requested-size=1G"
-		arg_mem_cpu="$arg_mem_cpu -device virtio-mem-pci,id=vm1,memdev=mem3,node=1,requested-size=1G"
+		arg_mem_cpu+=" -numa node,nodeid=0,cpus=0-1,nodeid=0,memdev=mem0 -numa node,nodeid=1,cpus=2-3,nodeid=1,memdev=mem1"
+		arg_mem_cpu+=" -object memory-backend-ram,id=mem0,size=2G"
+		arg_mem_cpu+=" -object memory-backend-ram,id=mem1,size=2G"
+		arg_mem_cpu+=" -object memory-backend-ram,id=mem2,size=2G"
+		arg_mem_cpu+=" -object memory-backend-ram,id=mem3,size=2G"
+		arg_mem_cpu+=" -device virtio-mem-pci,id=vm0,memdev=mem2,node=0,requested-size=1G"
+		arg_mem_cpu+=" -device virtio-mem-pci,id=vm1,memdev=mem3,node=1,requested-size=1G"
 
 		arg_hugetlb="crashkernel=300M"
 		;;
@@ -235,8 +236,8 @@ case $hacking_memory in
 		# 还有其他问题
 		arg_mem_cpu="-m 1G,slots=7,maxmem=8G"
 		pmem_img=${workstation}/virtio_pmem.img
-		arg_hacking="${arg_hacking} -object memory-backend-file,id=nvmem1,share=on,mem-path=${pmem_img},size=4G"
-		arg_hacking="${arg_hacking} -device virtio-pmem-pci,memdev=nvmem1,id=nv1"
+		arg_hacking+=" -object memory-backend-file,id=nvmem1,share=on,mem-path=${pmem_img},size=4G"
+		arg_hacking+=" -device virtio-pmem-pci,memdev=nvmem1,id=nv1"
 		;;
 	"sockets")
 		arg_mem_cpu="-m 8G -smp 8,sockets=2,cores=2,threads=2,maxcpus=8"
@@ -274,6 +275,7 @@ arg_cgroupv2="systemd.unified_cgroup_hierarchy=1"
 # scsi_mod.scsi_logging_level=0x3fffffff
 # @todo 这个 function graph 为什么没有办法打印全部啊
 arg_boot_trace="ftrace=function_graph ftrace_filter=arch_freq_get_on_cpu raid=noautodetect rootfs=data=journal"
+arg_boot_trace+=" clearcpuid=156"
 arg_kernel_args="root=$root nokaslr console=ttyS0,9600 earlyprink=serial $arg_boot_trace $arg_hugetlb $arg_cgroupv2 transparent_hugepage=always"
 # @todo 可以看到，先会启动 initramfs 才会开始执行 /bin/bash 的
 # arg_kernel_args="root=$root nokaslr console=ttyS0,9600 earlyprink=serial init=/bin/bash"
@@ -285,12 +287,12 @@ else
 	arg_nvme="-device nvme,drive=nvme1,serial=foo,bus=mybridge,addr=0x1 -drive file=${workstation}/img1,format=qcow2,if=none,id=nvme1"
 	# @todo serial 的含义是什么，如果两个 nvme 都填写 serial=foo，那么就会在 guest 中得到如下的报错
 	# [    0.686202] nvme nvme1: Duplicate cntlid 0 with nvme0, subsys nqn.2019-08.org.qemu:foo, rejecting
-	arg_nvme="$arg_nvme -device nvme,drive=nvme2,serial=foo2 -drive file=${workstation}/img2,format=qcow2,if=none,id=nvme2"
+	arg_nvme+=" -device nvme,drive=nvme2,serial=foo2 -drive file=${workstation}/img2,format=qcow2,if=none,id=nvme2"
 	# @todo virtio-blk-pci vs virtio-blk-device ?
 fi
 # 显示的是 vda，所以 virtio-blk-pci 应该和 -drive 中 if=virtio 等价吧 @todo 代码中确认一下
 arg_disk="-device virtio-blk-pci,drive=blk2,iothread=io0 -drive file=${workstation}/img3,format=qcow2,if=none,id=blk2 -object iothread,id=io0"
-arg_disk="$arg_disk -device virtio-blk-pci,drive=d2 -drive file=${workstation}/img4,format=qcow2,if=none,id=d2"
+arg_disk+=" -device virtio-blk-pci,drive=d2 -drive file=${workstation}/img4,format=qcow2,if=none,id=d2"
 
 arg_scsi="-device virtio-scsi-pci,id=scsi0,bus=pci.0,addr=0xa  -device scsi-hd,bus=scsi0.0,channel=0,scsi-id=0,lun=0,drive=scsi-drive -drive file=${workstation}/img5,format=qcow2,id=scsi-drive,if=none"
 

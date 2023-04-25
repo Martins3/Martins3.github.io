@@ -9,14 +9,6 @@
 
 
 
-## zswap
-- http://www.wowotech.net/memory_management/zram.html : 就是这个吗 ?
-  - https://github.com/maximumadmin/zramd
-
-- [ ] 和 drivers/block/zram/ 是什么关系？
-
-- [ ] zswap 压缩的内存还可以进一步的被 swap 出去的?
-
 ## [Transcendent memory in a nutshell](https://lwn.net/Articles/454795/)
 > 这东西应该没用了吧
 

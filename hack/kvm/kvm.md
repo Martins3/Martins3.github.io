@@ -122,7 +122,6 @@ struct kvm_mmu {
   - [ ] 为什么要进行这些模拟, vmx 的各种 handle 函数为什么反而不能处理这些简单的指令
   - [ ] 很多操作依赖于 vcs read / write ，但是这里仅仅是利用 `ctxt->ops` 然后读 vcpu 中的内容
 - [ ] vcpu 的 regs 和 vmcs 的 regs 的关系是什么 ?
-- [ ] cpuid.c 为什么有 1000 行,  kvm_emulate_cpuid  和 ioctl API
 - [ ] 调查一下 kvm_vcpu_gfn_to_hva
 - [x] kvm 的 host va 的地址在哪里 ? 在使用 kvm 的线程的用户空间中
 - [ ] mmu 和 flush 和 zap 有什么区别 ?

@@ -3,6 +3,13 @@
 ## 资料
 - https://raid.wiki.kernel.org/index.php/Linux_Raid
 
+## md cluster
+
+> The Distributed Lock Manager (DLM) in the kernel is the base component used by OCFS2, GFS2, Cluster MD, and Cluster LVM (lvmlockd) to provide active-active storage at each respective layer.
+
+[Cluster support for MD/RAID 1](https://lwn.net/Articles/674085/)
+
+基于 DLM 自动使用远程的磁盘作为来制作 raid1
 
 ## 常规的函数分析
 - md_init

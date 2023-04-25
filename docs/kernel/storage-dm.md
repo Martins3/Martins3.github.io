@@ -61,4 +61,4 @@ root=/dev/mapper/ubuntu--vg-ubuntu--lv
 这种模式，常规的切换内核是没有办法的，还是因为当时内核没有装上？
 
 ## 内核代码简单分析一下
-### [](https://docs.kernel.org/admin-guide/device-mapper/index.html#)
+### [kernel doc : Device Mapper](https://docs.kernel.org/admin-guide/device-mapper/index.html#)

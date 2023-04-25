@@ -49,6 +49,8 @@ dracut --add-drivers mymod initramfs-with-mymod.img
 
 更多细节参考 : https://man7.org/linux/man-pages/man7/dracut.cmdline.7.html
 
+如果直接替换 /lib/modules/ 下的模块，可能内核加载的还是老的内核模块，可以使用 dracut -f 来将新的模块重新刷到 initramfs 中。
+
 ## grubby
 如果你经常需要修改内核参数，不停使用 vim 打开 /boot/grub2/grub.cfg ，很麻烦，无法脚本化。
 
