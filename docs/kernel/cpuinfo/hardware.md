@@ -5,7 +5,7 @@ https://stackoverflow.com/questions/13965178/how-do-i-disable-avx-instructions-o
 
 clearcpuid=156 来屏蔽 flags ，但是观察其实现，并没有什么特别的
 
-的确是 invalid code 的错误:
+的确是 invalid code 的错误，在内核和用户态都可以验证到:
 ```txt
 [   22.507434] traps: wc[5360] trap invalid opcode ip:4d6b4b sp:7ffc29d5aaa0 error:0 in coreutils[408000+cf000]
 [   28.486690] input: WH-1000XM3 (AVRCP) as /devices/virtual/input/input27
@@ -42,4 +42,10 @@ clearcpuid=156 来屏蔽 flags ，但是观察其实现，并没有什么特别�
 [ 1375.392674] traps: 01-hello[25643] trap invalid opcode ip:40154c sp:7ffec69d1ae0 error:0 in 01-hello[401000+8c000]
 [ 1404.288893] traps: 01-hello[25782] trap invalid opcode ip:40154c sp:7fff3d9592c0 error:0 in 01-hello[401000+8c000]
 [ 1478.821069] traps: 01-hello[26143] trap invalid opcode ip:40154c sp:7ffed98bcda0 error:0 in 01-hello[401000+8c000]
+```
+
+## 但是通过 AVX 得到的是 2
+
+```c
+#define X86_FEATURE_AVX			( 4*32+28) /* Advanced Vector Extensions */
 ```

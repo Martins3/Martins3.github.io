@@ -2,7 +2,7 @@
 set -E -e -u -o pipefail
 
 replace_kernel=false
-replace_kernel=true
+# replace_kernel=true
 
 hacking_memory="hotplug"
 hacking_memory="virtio-pmem"
@@ -184,13 +184,13 @@ case $hacking_memory in
 		ramsize=12G
 		arg_mem_cpu="-smp $(($(getconf _NPROCESSORS_ONLN) - 1))"
 		# arg_mem_cpu="-smp 1"
-		arg_mem_cpu="$arg_mem_cpu -object memory-backend-ram,id=pc.ram,size=$ramsize,prealloc=off,share=on -machine memory-backend=pc.ram -m $ramsize"
+		arg_mem_cpu+=" -object memory-backend-ram,id=pc.ram,size=$ramsize,prealloc=off,share=on -machine memory-backend=pc.ram -m $ramsize"
 		;;
 	"file")
 		# 只有使用这种方式才会启动 async page fault
 		ramsize=12G
 		arg_mem_cpu="-smp $(($(getconf _NPROCESSORS_ONLN) - 1))"
-		arg_mem_cpu="$arg_mem_cpu -object memory-backend-file,id=id0,size=$ramsize,mem-path=$workstation/qemu.ram -machine memory-backend=id0 -m $ramsize"
+		arg_mem_cpu+=" -object memory-backend-file,id=id0,size=$ramsize,mem-path=$workstation/qemu.ram -machine memory-backend=id0 -m $ramsize"
 		;;
 	"numa")
 		# 通过 reserve = false 让 mmap 携带参数 MAP_NORESERVE，从而可以模拟超级大内存的 Guest
@@ -202,7 +202,7 @@ case $hacking_memory in
 		;;
 	"prealloc")
 		arg_mem_cpu=" -m 1G -smp cpus=1"
-		arg_mem_cpu="$arg_mem_cpu -object memory-backend-file,size=1G,prealloc=on,share=on,id=m2,mem-path=/dev/hugepages -numa node,memdev=m2,cpus=0,nodeid=0"
+		arg_mem_cpu+=" -object memory-backend-file,size=1G,prealloc=on,share=on,id=m2,mem-path=/dev/hugepages -numa node,memdev=m2,cpus=0,nodeid=0"
 		if [[ $(cat /sys/kernel/mm/hugepages/hugepages-2048kB/nr_hugepages) != 1000 ]]; then
 			echo 1000 | sudo tee /sys/kernel/mm/hugepages/hugepages-2048kB/nr_hugepages
 		fi
@@ -275,7 +275,9 @@ arg_cgroupv2="systemd.unified_cgroup_hierarchy=1"
 # scsi_mod.scsi_logging_level=0x3fffffff
 # @todo 这个 function graph 为什么没有办法打印全部啊
 arg_boot_trace="ftrace=function_graph ftrace_filter=arch_freq_get_on_cpu raid=noautodetect rootfs=data=journal"
-arg_boot_trace+=" clearcpuid=156"
+
+# 通过这个参数可以直接 disable avx2
+# arg_boot_trace+=" clearcpuid=156"
 arg_kernel_args="root=$root nokaslr console=ttyS0,9600 earlyprink=serial $arg_boot_trace $arg_hugetlb $arg_cgroupv2 transparent_hugepage=always"
 # @todo 可以看到，先会启动 initramfs 才会开始执行 /bin/bash 的
 # arg_kernel_args="root=$root nokaslr console=ttyS0,9600 earlyprink=serial init=/bin/bash"

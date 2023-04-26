@@ -176,7 +176,7 @@ Filename                                Type            Size            Used    
 
 ## 为什么分配失败，没有接受到 kill 信号
 
-已经无法浮现了！
+已经无法复现了！
 
 ## 为什么还是存在数据写入到 swap 中
 1. fault injection 存在 bug 吗?
@@ -202,7 +202,12 @@ Filename                                Type            Size            Used    
 
 ## swap 在什么时候释放 page 的?
 
-错误浮现的步骤:
+错误复现的步骤:
+
+1. 修改 scsi 的大小，因为现在内置模块的，所以
+```c
+#define DEF_DEV_SIZE_MB   8
+```
 
 ```sh
 cd /sys/bus/pseudo/drivers/scsi_debug
@@ -216,9 +221,12 @@ swapon /dev/sde
 cgcreate -g memory:mem
 cgset -r memory.max=100m mem
 
-cd /sys/bus/pseudo/drivers/scsi_debug
-echo 1 > every_nth
-echo 0x10 > opts
+cd /sys/bus/pseudo/drivers/scsi_debug/
+echo 1 > /sys/bus/pseudo/drivers/scsi_debug/every_nth
+#   8  -  causes "nth" READ or WRITE command to yield a RECOVERED_ERROR.
+echo 8 > /sys/bus/pseudo/drivers/scsi_debug/opts
+# 0x10 -  causes "nth" command to yield an ABORTED_COMMAND (ack/nak timeout) which is a transport error.
+echo 0x10 > /sys/bus/pseudo/drivers/scsi_debug/opts
 
 swapoff /dev/vdb3
 cd ~/share
@@ -466,4 +474,19 @@ tc qdisc change dev lo root netem loss 0.1%
 #55 exit_to_user_mode_prepare (regs=0xffffc900402e3f58) at kernel/entry/common.c:203
 #56 0xffffffff821849a9 in irqentry_exit_to_user_mode (regs=<optimized out>) at kernel/entry/common.c:309
 #57 0xffffffff82201286 in asm_exc_page_fault () at ./arch/x86/include/asm/idtentry.h:570
+```
+
+## 也可以在 raid1 中触发错误
+
+```c
+		/*
+		 * oops, read error:
+		 */
+		pr_err_ratelimited("md/raid1:%s: %pg: rescheduling sector %llu\n",
+				   mdname(conf->mddev),
+				   rdev->bdev,
+				   (unsigned long long)r1_bio->sector);
+		set_bit(R1BIO_ReadError, &r1_bio->state);
+		reschedule_retry(r1_bio);
+		/* don't drop the reference on read_disk yet */
 ```

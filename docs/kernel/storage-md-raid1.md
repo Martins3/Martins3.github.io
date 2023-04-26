@@ -585,7 +585,7 @@ static void freeze_array(struct r1conf *conf, int extra)
 	atomic_t		nr_sync_pending;
 	atomic_t		*nr_pending;      // 表示是当时的 normal io 的数量
 	atomic_t		*nr_waiting;
-	atomic_t		*nr_queued;       //
+	atomic_t		*nr_queued;       // 失败的 io , 放到 raid1d 来重新尝试的列表
 	atomic_t		*barrier;         // raise_barrier 来增加 1
 	int			array_frozen;         // 当前 array 是否在 frozen
 ```
@@ -629,6 +629,17 @@ static int raise_barrier(struct r1conf *conf, sector_t sector_nr)
 	    !atomic_read(&conf->barrier[idx]))
 		return ret;
 ```
+这会让 `freeze_array` 和 resync 无法并发执行。
+
+### nr_sync_pending
+
+- raid1_sync_request
+  - raise_barrier
+    - atomic_inc(&conf->nr_sync_pending);
+
+- put_sync_write_buf
+  - put_buf
+    - lower_barrier
 
 ### 什么时候会 `freeze_array`
 
@@ -660,7 +671,7 @@ r1conf::nr_queued 增加的位置:
   * raid1_end_read_request
   * r1_bio_write_done
   * put_sync_write_buf
-- handle_write_finished : 似乎没什么人调用
+  * handle_write_finished : 似乎没什么人调用
 
 在 raid1d 中 conf::nr_queued 会减少，所以 queue 的含义很清楚了，就是 r1conf::retry_list 中的大小
 
@@ -676,8 +687,44 @@ r1conf::nr_queued 增加的位置:
 
 - md_thread
 
-- r1conf::retry_list 中挂载一堆之后需要重新提交的 r1bio
+reschedule_retry 中将无法发送下去的 r1bio 放到 r1conf::retry_list 中
+如上所说，`reschedule_retry` 的调用位置就是 `end_bio` 的位置了:
 
+- raid1d
+  - r1conf::retry_list 中取出一个 r1bio 出来
+  - atomic_dec(&conf->nr_queued[idx]);
+  - 针对情况分别提交下去:
+    - handle_sync_write_finished
+    - sync_request_write
+    - handle_write_finished
+    - handle_read_error
+
+`reschedule_retry` 中的代码为什么不会导致 race condition 啊!
+
+```txt
+#0  reschedule_retry (r1_bio=0xffff888107995d00) at drivers/md/raid1.c:295
+#1  0xffffffff8174bf01 in req_bio_endio (error=0 '\000', nbytes=65536, bio=0xffff8881145ad800, rq=0xffff88810b5e7840) at block/blk-mq.c:795
+#2  blk_update_request (req=req@entry=0xffff88810b5e7840, error=error@entry=0 '\000', nr_bytes=458752, nr_bytes@entry=720896) at block/blk-mq.c:927
+#3  0xffffffff81ba20a7 in scsi_end_request (req=req@entry=0xffff88810b5e7840, error=error@entry=0 '\000', bytes=bytes@entry=720896) at drivers/scsi/scsi_lib.c:538
+#4  0xffffffff81ba2bee in scsi_io_completion (cmd=0xffff88810b5e7948, good_bytes=720896) at drivers/scsi/scsi_lib.c:976
+#5  0xffffffff81bc8be0 in virtscsi_vq_done (fn=0xffffffff81bc89a0 <virtscsi_complete_cmd>, virtscsi_vq=0xffff88810a675b68, vscsi=0xffff88810a675810) at drivers/scsi/virtio_scsi.c:183
+#6  virtscsi_req_done (vq=<optimized out>) at drivers/scsi/virtio_scsi.c:198
+#7  0xffffffff818b39ab in vring_interrupt (irq=<optimized out>, _vq=0xffff888107995d00) at drivers/virtio/virtio_ring.c:2491
+#8  vring_interrupt (irq=<optimized out>, _vq=0xffff888107995d00) at drivers/virtio/virtio_ring.c:2466
+#9  0xffffffff811c926d in __handle_irq_event_percpu (desc=desc@entry=0xffff88810ae01e00) at kernel/irq/handle.c:158
+#10 0xffffffff811c9478 in handle_irq_event_percpu (desc=0xffff88810ae01e00) at kernel/irq/handle.c:193
+#11 handle_irq_event (desc=desc@entry=0xffff88810ae01e00) at kernel/irq/handle.c:210
+#12 0xffffffff811ce39b in handle_edge_irq (desc=0xffff88810ae01e00) at kernel/irq/chip.c:819
+#13 0xffffffff810d9d9f in generic_handle_irq_desc (desc=0xffff88810ae01e00) at ./include/linux/irqdesc.h:158
+#14 handle_irq (regs=<optimized out>, desc=0xffff88810ae01e00) at arch/x86/kernel/irq.c:231
+#15 __common_interrupt (regs=<optimized out>, vector=341497856) at arch/x86/kernel/irq.c:250
+#16 0xffffffff82290e7f in common_interrupt (regs=0xffffc9000014fe38, error_code=<optimized out>) at arch/x86/kernel/irq.c:240
+```
+来源是 `end_sync_read`
+
+- req_bio_endio
+  - bio_endio
+    - end_sync_read : 创建的 md 阵列的时候会使用这部分代码
 
 ## recovery_flags 是什么状态？
 
@@ -768,3 +815,29 @@ write 的时候 : raid1_end_write_request : 类似的
 [ 2862.634200] md: could not open unknown-block(8,1).
 [ 2862.635155] md: md_import_device returned -16
 ```
+
+## 难道，实际上，考虑到盘的变化?
+显然不可能，在 `handle_sync_write_finished` 中
+
+## r1conf::pending_bio_list
+raid1_write_request 将 bio 放到该链表中
+
+
+## 似乎是 bug 的
+`handle_write_finished` 中的注释:
+
+```c
+		list_add(&r1_bio->retry_list, &conf->bio_end_io_list);
+		/*
+		 * In case freeze_array() is waiting for condition
+		 * get_unqueued_pending() == extra to be true.
+		 */
+```
+如果将 r1bio 挂到列表中，是不能将 `freeze_array` 直接释放的，此事 reshape，
+导致所有的 r1bio 全部都释放。
+
+## raid1 容错性测试
+运行过程中，一块盘可以掉了，例如是 sda，但是如果此时让 sda 正常，sdb 挂掉，那么 fio 直接出错。
+
+## [ ] mddev::degraded 是做什么的?
+给 md 用的
