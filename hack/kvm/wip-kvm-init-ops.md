@@ -23,3 +23,23 @@ int kvm_arch_hardware_setup(void *opaque)
       - vmx_init_ops::hardware_setup -> hardware_setup()
         - vmx_set_cpu_caps
           - `u32 kvm_cpu_caps[NR_KVM_CPU_CAPS] __read_mostly;` : 最后都是初始化这变量，这应该是 kvm 可以对外提供的最多的能力
+
+## 分析
+```c
+static struct kvm_x86_init_ops vmx_init_ops __initdata = {
+	.hardware_setup = hardware_setup,
+	.handle_intel_pt_intr = NULL,
+
+	.runtime_ops = &vmx_x86_ops,
+	.pmu_ops = &intel_pmu_ops,
+};
+```
+
+- hardware_setup
+  - vmx_set_cpu_caps
+    - kvm_set_cpu_caps : vmx 和 svm 的公共路径
+    - vmx 特有的一些，最终设置到 `kvm_cpu_caps` 中间
+
+- vmx_init
+  - kvm_x86_vendor_init
+    - `__kvm_x86_vendor_init`

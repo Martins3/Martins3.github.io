@@ -298,3 +298,21 @@ static struct cpufreq_driver acpi_cpufreq_driver = {
     - 调用 `struct cpufreq_driver` 来处理，但是 `cpufreq_driver` 是如何赋值的，不清楚哇
 
 - [ ] 可以顺这这个文档继续看看吧!
+
+## 调查下这个，看看打开之后， guest 中是否可以正常的使用 pstate 和 cstate
+```txt
+       -overcommit mem-lock=on|off
+
+       -overcommit cpu-pm=on|off
+              Run qemu with hints about host resource overcommit. The default is to assume that host over‐
+              commits all resources.
+
+              Locking  qemu  and  guest  memory can be enabled via mem-lock=on (disabled by default). This
+              works when host memory is not overcommitted and reduces the worst-case latency for guest.
+
+              Guest ability to manage power state of host cpus (increasing latency for other processes  on
+              the  same host cpu, but decreasing latency for guest) can be enabled via cpu-pm=on (disabled
+              by default). This works best when host CPU is not overcommitted. When used,  host  estimates
+              of  CPU  cycle  and  power utilization will be incorrect, not taking into account guest idle
+              time.
+```

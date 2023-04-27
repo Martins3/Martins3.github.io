@@ -1,4 +1,4 @@
-简化 https://github.com/tycho/cpuid 的
+简化 https://github.com/tycho/cpuid 的实现
 
 仅仅实现 `./cpuid -d -c 1` 这个功能
 

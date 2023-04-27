@@ -26,25 +26,6 @@ KVM_SET_CPUID2 : 就是会修改 Guest 使用 cpuid 获取到能力。
 
 - kvm_request_xsave_components
 
-## 分析
-```c
-static struct kvm_x86_init_ops vmx_init_ops __initdata = {
-	.hardware_setup = hardware_setup,
-	.handle_intel_pt_intr = NULL,
-
-	.runtime_ops = &vmx_x86_ops,
-	.pmu_ops = &intel_pmu_ops,
-};
-```
-
-- hardware_setup
-  - vmx_set_cpu_caps
-    - kvm_set_cpu_caps : vmx 和 svm 的公共路径
-    - vmx 特有的一些，最终设置到 `kvm_cpu_caps` 中间
-
-- vmx_init
-  - kvm_x86_vendor_init
-    - `__kvm_x86_vendor_init`
 
 ## 为什么 Host 中没有看到，但是 Guest 中有看到
 分析下，为什么 host 上不显示这个
@@ -174,6 +155,17 @@ cpu_feature_enabled(X86_FEATURE_VME)
 ```
 他们都是和 `cpuid_leafs` 中的定义是对应的:
 
+
+### 整理思路
+- 首先，存在一个 ./cpuid -d -c 1 的
+```txt
+CPUID 00000007:00 = 00000001 219c07ab 1840073c ac004410 | .......!<.@..D..
+```
+- cpu_x86_cpuid : index count
+  - index 为 7 ，count 为 0 其中 ebx 为 219c07ab
+- `kvm_arch_get_supported_cpuid` 为 function index
+
+
 ## [x] 为什么会存在 CPUID_LNX_4 ，是为了告诉用户态什么东西吗？
 
 例如 X86_FEATURE_SPLIT_LOCK_DETECT
@@ -188,13 +180,15 @@ cpu_feature_enabled(X86_FEATURE_VME)
 
 1. 对于 QEMU 提供查询服务
 QEMU 侧
-- kvm_arch_get_supported_cpuid
-  - get_supported_cpuid
-    - try_get_cpuid
-      - kvm_ioctl(s, KVM_GET_SUPPORTED_CPUID, cpuid);
+- x86_cpu_expand_features
+  - kvm_arch_get_supported_cpuid
+    - get_supported_cpuid
+      - try_get_cpuid
+        - kvm_ioctl(s, KVM_GET_SUPPORTED_CPUID, cpuid);
+    - 后面还存在一系列的 fixup
 
 kernel 侧:
-- kvm_dev_ioctl_get_cpuid :
+- kvm_dev_ioctl_get_cpuid : 使用命令 KVM_GET_SUPPORTED_CPUID 和 KVM_GET_EMULATED_CPUID
   - sanity_check_entries : 一些无关痛痒的检查
   - 初始化 kvm_cpuid_array
   - get_cpuid_func
@@ -203,11 +197,20 @@ kernel 侧:
       - `__do_cpuid_func`
         - do_host_cpuid : 全部都是被 `__do_cpuid_func` 调用，
           - `get_next_cpuid`
-        - kvm_cpu_cap_has : 访问数组 `kvm_cpu_caps`，检查一些
+        - kvm_cpu_cap_has : 访问数组 `kvm_cpu_caps`，检查一些比较特殊的 flags
+        - cpuid_entry_override : 访问数组 `kvm_cpu_caps`，保证只有 kvm 支持的内容才会传递出去
+
+- kvm_arch_vcpu_ioctl:
+  - kvm_vcpu_ioctl_get_cpuid2 : 一个简单的拷贝，将 vcpu->arch.cpuid_entries 拷贝出来，QEMU 没有使用这个
+
+2. QEMU 设置 cpuid
+
+- kvm_arch_init_vcpu
+  - 在 stack 中声明 cpuid_data
+  - 通过调用 cpu_x86_cpuid 来获取，而 cpu_x86_cpuid 通过访问 CPUX86State::features
 
 
-
-2. 查询
+3. kvm 内查询
 - kvm_find_cpuid_entry_index
   - cpuid_entry2_find
 
@@ -215,11 +218,19 @@ kernel 侧:
 - kvm_vcpu_ioctl_set_cpuid2
   - kvm_set_cpuid
 
-4. kvm 初始化
+4. kvm 初始化获取参数:
 - vmx_set_cpu_caps
   - kvm_set_cpu_caps : 这里规定了 kvm 中总共可以使用那些 flags
     - `__kvm_cpu_cap_mask`
     - cpuid_count : 当然需要 host 中也提供才可以，但是只能访问两个
+
+## 微调的位置
+所以，现在一共存在三次微调
+1. kvm 中 kvm_set_cpu_caps 的过滤的，表示是 kvm 支持的 cpu flags
+
+QEMU:
+1. kvm_arch_init_vcpu : 如果确定是 kvm，那么需要进行对应的调整
+2. cpu_x86_cpuid : 因为是 QEMU 模拟的，很多特性需要进行修改
 
 ## 有的 cpuflags 是看不到的，例如 spec_ctrl
 cpuid -1 可以检测到
@@ -238,7 +249,7 @@ cpuid -1 可以检测到
 ## 当向 kvm 的 cpuid 的时候，kvm 是不做检查需要的 flags 的
 - kvm_arch_init_vcpu 中
 ```c
-
+        case 0x7:
         case 0x12:
             for (j = 0; ; j++) {
                 c->function = i;
@@ -397,3 +408,8 @@ static __always_inline u32 kvm_cpu_cap_get(unsigned int x86_feature)
 ## [ ] 是如何修改 Guest 运行的状态时候的 CPUID 的，在硬件中?
 
 ## [ ] 是如何被过滤的?
+
+## 思考一个问题
+既然 model 如何难以定义，凭什么说，model 支持就可以传递过来。
+
+是如何 check 一个 model 的?

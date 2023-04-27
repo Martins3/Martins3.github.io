@@ -161,3 +161,16 @@ static GList *plus_features, *minus_features;
 
 ## 在 Denverton 中存在 SPEC_CTRL 最后是怎么通过检查的
 因为最后调用是通过 ioctl 询问 kvm 模块获取到的
+
+
+## 分析下 -cpu host 是什么含义
+
+- `x86_cpu_expand_features`
+
+ArchCPU::`max_features` 的属性
+
+- x86_cpu_expand_features
+
+- CPUArchState::features 的作用是什么?
+
+x86_cpu_expand_features

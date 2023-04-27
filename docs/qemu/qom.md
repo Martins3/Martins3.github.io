@@ -874,6 +874,30 @@ device_set_realized 除了调用 DeviceClass::realize 的这个 hook 之外，�
         NULL, NULL);
 ```
 
+无法理解 x86_cpu_expand_features 这两个手动的触发最后调用到哪里了:
+```c
+void x86_cpu_expand_features(X86CPU *cpu, Error **errp)
+{
+    CPUX86State *env = &cpu->env;
+    FeatureWord w;
+    int i;
+    GList *l;
+
+    for (l = plus_features; l; l = l->next) {
+        const char *prop = l->data;
+        if (!object_property_set_bool(OBJECT(cpu), prop, true, errp)) {
+            return;
+        }
+    }
+
+    for (l = minus_features; l; l = l->next) {
+        const char *prop = l->data;
+        if (!object_property_set_bool(OBJECT(cpu), prop, false, errp)) {
+            return;
+        }
+    }
+```
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="
