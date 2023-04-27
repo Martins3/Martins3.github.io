@@ -841,3 +841,19 @@ raid1_write_request 将 bio 放到该链表中
 
 ## [ ] mddev::degraded 是做什么的?
 给 md 用的
+
+## rcu 是在保护谁的?
+
+`raid1_status`
+
+`print_conf`
+
+似乎是这里的:
+```c
+rcu_assign_pointer(p->rdev, rdev);
+```
+`raid1_spare_active`
+
+`raid1_remove_disk`
+
+保护的 rdev ，而不是 mirror ，那么很遗憾

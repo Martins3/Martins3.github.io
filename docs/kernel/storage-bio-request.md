@@ -253,6 +253,7 @@ struct bvec_iter {
 #15 0xffffffff82290e7f in common_interrupt (regs=0xffffc900000d7e38, error_code=<optimized out>) at arch/x86/kernel/irq.c:240
 ```
 
+而且从 raid1 中使用的 `bio_split` 也可以发现 bio 的返回就是做左向右的。
 
 ### bio::bi_end_io
 

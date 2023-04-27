@@ -40,7 +40,7 @@ static struct kvm_x86_init_ops vmx_init_ops __initdata = {
 - hardware_setup
   - vmx_set_cpu_caps
     - kvm_set_cpu_caps : vmx 和 svm 的公共路径
-
+    - vmx 特有的一些，最终设置到 `kvm_cpu_caps` 中间
 
 - vmx_init
   - kvm_x86_vendor_init
@@ -193,16 +193,21 @@ QEMU 侧
     - try_get_cpuid
       - kvm_ioctl(s, KVM_GET_SUPPORTED_CPUID, cpuid);
 
-kernel 侧
-- kvm_dev_ioctl_get_cpuid
-  - sanity_check_entries
+kernel 侧:
+- kvm_dev_ioctl_get_cpuid :
+  - sanity_check_entries : 一些无关痛痒的检查
+  - 初始化 kvm_cpuid_array
   - get_cpuid_func
     - do_cpuid_func
       - `__do_cpuid_func_emulated`
       - `__do_cpuid_func`
-        - do_host_cpuid : 全部都是被 `__do_cpuid_func` 调用
+        - do_host_cpuid : 全部都是被 `__do_cpuid_func` 调用，
+          - `get_next_cpuid`
+        - kvm_cpu_cap_has : 访问数组 `kvm_cpu_caps`，检查一些
 
-2.  查询
+
+
+2. 查询
 - kvm_find_cpuid_entry_index
   - cpuid_entry2_find
 
@@ -387,8 +392,8 @@ static __always_inline u32 kvm_cpu_cap_get(unsigned int x86_feature)
 
 ### [ ] 存在 `em_cpuid` 无人调用
 
-## cpuid 是如何被
-
 ## windows 的 CPUID 还是在这个体系下面的吗?
 
 ## [ ] 是如何修改 Guest 运行的状态时候的 CPUID 的，在硬件中?
+
+## [ ] 是如何被过滤的?

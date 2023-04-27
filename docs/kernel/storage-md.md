@@ -157,7 +157,9 @@ Tracing kprobe raid1_reshape. Ctrl-C to end.
 在 raid1_write_request 中如果遇到 Blocked，几乎一定会等待
 
 
+## 分析 --grow 参数
 
+- [ ] 只是调用了 reshape 吗?
 
 ## MD
 暂时放到这里，方便查询

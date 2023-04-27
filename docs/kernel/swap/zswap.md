@@ -13,5 +13,4 @@ cat /proc/swaps 如何调整一下 priority
 
 如果在 centos 中打开?
 
-
 `__zswap_pool_release` 中存在 `synchronize_rcu` 开始分析

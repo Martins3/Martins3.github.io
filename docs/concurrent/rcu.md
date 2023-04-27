@@ -3,6 +3,7 @@
 - https://www.zhihu.com/question/27943222/answer/2174857178
 
 - [ ] 思考一下，RCU 在用户态和内核态中实现的差异
+  - [ ] 为什么 kernel 的实现比 kernel 的复杂那么多
 - [ ] 将 QEMU 中对于 RCU 的使用移动到这里
 - [ ] https://liburcu.org/ : 提供了三个很好的资源
 - https://mp.weixin.qq.com/s/SZqmxMGMyruYUH5n_kobYQ
@@ -334,5 +335,46 @@ xa_headx(const struct xarray *xa)
 - [What is RCU? Part 2: Usage](https://lwn.net/Articles/263130/)
 - [RCU part 3: the RCU API](https://lwn.net/Articles/264090/)
 - [kernel doc](https://www.kernel.org/doc/Documentation/RCU/)
+
+## 具体分析一些代码
+### synchronize_rcu
+
+> all currently executing RCU read-side critical sections have completed.
+
+这段注释都没有看懂:
+> In addition, each CPU having
+>  an RCU read-side critical section that extends beyond the return from
+>  synchronize_rcu() is guaranteed to have executed a full memory barrier
+>  after the beginning of synchronize_rcu() and before the beginning of
+>  that RCU read-side critical section.
+
+
+- [ ] kernel/locking/percpu-rwsem.c : 原来和 percpu 有关啊
+```txt
+#0  synchronize_rcu () at kernel/rcu/tree.c:3489
+#1  0xffffffff811df698 in rcu_sync_enter (rsp=rsp@entry=0xffffffff831694c0 <cgroup_threadgroup_rwsem>) at kernel/rcu/sync.c:149
+#2  0xffffffff822ab414 in percpu_down_write (sem=sem@entry=0xffffffff831694c0 <cgroup_threadgroup_rwsem>) at kernel/locking/percpu-rwsem.c:231
+#3  0xffffffff8122f78c in cgroup_attach_lock (lock_threadgroup=true) at kernel/cgroup/cgroup.c:2437
+#4  cgroup_procs_write_start (buf=buf@entry=0xffff888106689140 "1416", threadgroup=threadgroup@entry=true, threadgroup_locked=threadgroup_locked@entry=0xffffc90000017def) at kernel/cgroup/cgroup.c:2939
+#5  0xffffffff8123298a in __cgroup_procs_write (of=0xffff888106716780, buf=0xffff888106689140 "1416", threadgroup=threadgroup@entry=true) at kernel/cgroup/cgroup.c:5139
+#6  0xffffffff81232af7 in cgroup_procs_write (of=<optimized out>, buf=<optimized out>, nbytes=5, off=<optimized out>) at kernel/cgroup/cgroup.c:5175
+#7  0xffffffff814d3de9 in kernfs_fop_write_iter (iocb=0xffffc90000017ea0, iter=<optimized out>) at fs/kernfs/file.c:334
+#8  0xffffffff81423ceb in call_write_iter (iter=0x0 <fixed_percpu_data>, kio=0xffffffff822aec19 <_raw_spin_unlock_irq+41>, file=0xffff8881064c4b00) at ./include/linux/fs.h:1851
+#9  new_sync_write (ppos=0xffffc90000017f08, len=5, buf=0x7ffe667e979a "1416\n", filp=0xffff8881064c4b00) at fs/read_write.c:491
+#10 vfs_write (file=file@entry=0xffff8881064c4b00, buf=buf@entry=0x7ffe667e979a "1416\n", count=count@entry=5, pos=pos@entry=0xffffc90000017f08) at fs/read_write.c:584
+#11 0xffffffff81424153 in ksys_write (fd=<optimized out>, buf=0x7ffe667e979a "1416\n", count=5) at fs/read_write.c:637
+#12 0xffffffff82294f2c in do_syscall_x64 (nr=<optimized out>, regs=0xffffc90000017f58) at arch/x86/entry/common.c:50
+#13 do_syscall_64 (regs=0xffffc90000017f58, nr=<optimized out>) at arch/x86/entry/common.c:80
+#14 0xffffffff824000ae in entry_SYSCALL_64 () at arch/x86/entry/entry_64.S:120
+```
+
+- [ ]  `__zswap_pool_release` 中存在 `synchronize_rcu` 开始分析
+
+### rcu_read_lock() / rcu_read_unlock()
+> In addition, but only in
+>  v5.0 and later, regions of code across which interrupts, preemption,
+>  or softirqs have been disabled also serve as RCU read-side critical
+>  sections.  This includes hardware interrupt handlers, softirq handlers,
+>  and NMI handlers.
 
 ## https://www.kernel.org/doc/Documentation/RCU/Design/Requirements/Requirements.html
