@@ -43,3 +43,5 @@ void get_cpu_cap(struct cpuinfo_x86 *c)
 其实还存在一些模拟属性
 
 ## 应该 `kvm_arch_dev_ioctl` 才是关键吧
+
+## 如何方便的获取到 guest 中的 cpuid 呀

@@ -203,20 +203,22 @@ kernel 侧:
 - kvm_arch_vcpu_ioctl:
   - kvm_vcpu_ioctl_get_cpuid2 : 一个简单的拷贝，将 vcpu->arch.cpuid_entries 拷贝出来，QEMU 没有使用这个
 
-2. QEMU 设置 cpuid
+2. QEMU 真正 cpuid
 
 - kvm_arch_init_vcpu
   - 在 stack 中声明 cpuid_data
   - 通过调用 cpu_x86_cpuid 来获取，而 cpu_x86_cpuid 通过访问 CPUX86State::features
+  - kvm_vcpu_ioctl : 设置 cpuid 了
+
+
+- kvm_vcpu_ioctl_set_cpuid2
+  - kvm_set_cpuid
 
 
 3. kvm 内查询
 - kvm_find_cpuid_entry_index
   - cpuid_entry2_find
 
-3. 初始化 : 直接从 QEMU 中拷贝过来的
-- kvm_vcpu_ioctl_set_cpuid2
-  - kvm_set_cpuid
 
 4. kvm 初始化获取参数:
 - vmx_set_cpu_caps

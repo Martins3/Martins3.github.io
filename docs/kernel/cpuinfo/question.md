@@ -13,3 +13,8 @@
 - [ ] filter 是什么含义?
 
 ## KVM_CPUID_FLAG_SIGNIFCANT_INDEX : 这个是什么含义?
+
+## msr
+- `kvm_emulate_cpuid` 可以给 guest 提供 msr 吗?
+
+## [ ] kvm_init_msrs : 这个是做啥的
