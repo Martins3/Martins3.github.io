@@ -1,4 +1,4 @@
-# PROCESS GROUPS, SESSIONS, AND JOB CONTROL 
+# PROCESS GROUPS, SESSIONS, AND JOB CONTROL
 
 ## task_struct::thread_group
 
@@ -91,7 +91,7 @@ SYSCALL_DEFINE2(setpgid, pid_t, pid, pid_t, pgid)
 ```
 
 主要使用:
-pid.c : 
+pid.c :
 1. find_task_by_vpid
 2. taks_pid_vnr
 6. find_vpid
@@ -186,4 +186,10 @@ static inline struct pid *task_pid(struct task_struct *task)
 {
 	return task->thread_pid;
 }
+```
+
+## 分析下 for_each_process_thread ，其实 kernel 是明确的 process thread 概念的
+
+```c
+	struct task_struct *g, *p;
 ```
