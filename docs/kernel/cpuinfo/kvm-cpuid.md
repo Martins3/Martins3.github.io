@@ -178,7 +178,7 @@ CPUID 00000007:00 = 00000001 219c07ab 1840073c ac004410 | .......!<.@..D..
 
 ## [x] 简单分析一下 arch/x86/kvm/cpuid.c 到底说了什么?
 
-1. 对于 QEMU 提供查询服务
+1. 咨询 kernel 一共存在多少 flags :
 QEMU 侧
 - x86_cpu_expand_features
   - kvm_arch_get_supported_cpuid
