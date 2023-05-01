@@ -25,5 +25,26 @@ Emulating hardware Interfaces can be slow
             - Emulate an already supported (proprietary) hypervisor interfaces solving the exact same issues!
 
 ## https://kernel.love/hyperv-enlightenment.html
+分析的很好，看一个例子就可以立刻理解.
 
 ## 启动 windows 的时候会调用到这里: kvm_get_hv_cpuid
+
+# hyperv 到底是如何影响的?
+
+## kvm_hv_set_msr_common
+
+
+# docs/kernel/cpuinfo/material/window.txt
+将参数修改为，那么 CPUID 会发生修改：
+arg_cpu_model="-cpu host,hv_relaxed,hv_vpindex,hv_time"
+```txt
+< CPUID 40000000:00 = 40000001 4b4d564b 564b4d56 0000004d | ...@KVMKVMKVM...
+< CPUID 40000001:00 = 01007afb 00000000 00000000 00000000 | .z..............
+---
+> CPUID 40000000:00 = 40000005 7263694d 666f736f 76482074 | ...@Microsoft Hv
+> CPUID 40000001:00 = 31237648 00000000 00000000 00000000 | Hv#1............
+> CPUID 40000002:00 = 00003839 000a0000 00000000 00000000 | 98..............
+> CPUID 40000003:00 = 00000262 00000000 00000000 00000008 | b...............
+> CPUID 40000004:00 = 00000020 ffffffff 00000000 00000000 |  ...............
+> CPUID 40000005:00 = ffffffff 00000040 00000000 00000000 | ....@...........
+```

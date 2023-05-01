@@ -173,7 +173,8 @@ arg_cpu_model="-cpu Skylake-Client-IBRS,vmx=on,hle=off,rtm=off"
 arg_cpu_model="-cpu Broadwell-noTSX-IBRS,vmx=on,hle=off,rtm=off"
 # arg_cpu_model="-cpu Denverton"
 # arg_cpu_model="-cpu Broadwell-IBRS"
-arg_cpu_model="-cpu host"
+arg_cpu_model="-cpu host,hv_relaxed,hv_vpindex,hv_time,"
+
 
 if [[ $in_guest == true ]]; then
 	arg_cpu_model="$arg_cpu_model,vmx=off"
