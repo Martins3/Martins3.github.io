@@ -2,23 +2,33 @@
 
 主要分析 mm/memory.c 中的内容
 
+```txt
+@[
+    handle_mm_fault+5
+    do_user_addr_fault+464
+    exc_page_fault+107
+    asm_exc_page_fault+38
+]: 72
+```
+
 - handle_mm_fault
-  - hugetlb_fault : 非透明大页
-  - `__handle_mm_fault`
+  - hugetlb_fault : 如果缺页是大页
+  - `__handle_mm_fault` : 逐级向下，但是需要考虑是不是透明大页
     - create_huge_pud
     - wp_huge_pud
     - create_huge_pmd
     - wp_huge_pmd
     - handle_pte_fault
+      - do_pte_missing
+        - do_anonymous_page : 处理匿名映射
+        - do_fault : 处理文件映射
+          - do_read_fault
+          - do_cow_fault : 如果 vma 不是共享的
+          - do_shared_fault
+      - do_swap_page : 主要处理被换出的页面
+      - do_numa_page : numa 之前的迁移
 
-- handle_pte_fault
-  - do_anonymous_page : 处理匿名映射
-  - do_fault : 处理文件映射
-    - do_read_fault
-    - do_cow_fault
-    - do_shared_fault
-
-do_read_fault
+- do_read_fault / do_cow_fault / do_shared_fault
   - `__do_fault`
     - vma->vm_ops->fault(vmf);
       - filemap_fault : 一般注册的是这个
@@ -31,6 +41,7 @@ do_read_fault
   - do_set_pte
     - page_add_file_rmap : 完全无法理解
 
+
 ## KeyNote
 1. swapbacked 似乎用于表示 : 这个 page 是 anon vma 中间的，所有 anon vma 中间 page 都是需要走这一个(tmpfs 暂时不知道怎么回事)，
     page_add_new_anon_rmap(page, vma, vmf->address, false); // 无条件调用 `__SetPageSwapBacked`
@@ -39,8 +50,6 @@ do_read_fault
     2. PageAnon 和 PageSwapBacked 有什么区别吗 ?
 
 ## 问题
-1. do_wp_page 的作用是什么
-    1. anon 和 file 都被处理，其需要处理什么位置的 ?
 2. 检查一下使用 pte_same 的位置，是不是为了处理 page table 上锁的情况 ?
 3. pte_mkdirty pte_mkyoung
 4. pte_lockptr
@@ -52,249 +61,78 @@ do_read_fault
 将会产生一个新的 page B，那么是不是要拷贝 1000 个 page A 出来给 child 使用
 
 
-## page table 的操作
-```c
-// 似乎并没有什么神奇的，page 和 权限，page 提供物理地址
-
-/*
- * Conversion functions: convert a page and protection to a page entry,
- * and a page entry and page directory to the page they refer to.
- *
- * (Currently stuck as a macro because of indirect forward reference
- * to linux/mm.h:page_to_nid())
- */
-#define mk_pte(page, pgprot)   pfn_pte(page_to_pfn(page), (pgprot))
-
-
-static inline pte_t pfn_pte(unsigned long page_nr, pgprot_t pgprot)
-{
-	phys_addr_t pfn = (phys_addr_t)page_nr << PAGE_SHIFT;
-	pfn ^= protnone_mask(pgprot_val(pgprot));
-	pfn &= PTE_PFN_MASK;
-	return __pte(pfn | check_pgprot(pgprot));
-}
-
-
-#define __pte(x)	native_make_pte(x)
-
-static inline pte_t native_make_pte(pteval_t val)
-{
-	return (pte_t) { .pte = val };
-}
-
-typedef struct { pteval_t pte; } pte_t;
-
-// /home/shen/linux/arch/x86/include/asm/pgtable_64_types.h 最后的封装类型 unsigned long
-```
-
-> mm/memory.c 中间，其实是一些熟悉的内容。
-1. pte 和 tlb 的操作，主要是为 pg_fault 支持的
-2. page_fault
-
-> 总是都是修改 page table 之类的事情
-
-
-```c
-int __pte_alloc(struct mm_struct *mm, pmd_t *pmd, unsigned long address)
-{
-	spinlock_t *ptl;
-  // 申请一个内存
-	pgtable_t new = pte_alloc_one(mm, address);
-	if (!new)
-		return -ENOMEM;
-
-	/*
-	 * Ensure all pte setup (eg. pte page lock and page clearing) are
-	 * visible before the pte is made visible to other CPUs by being
-	 * put into page tables.
-	 *
-	 * The other side of the story is the pointer chasing in the page
-	 * table walking code (when walking the page table without locking;
-	 * ie. most of the time). Fortunately, these data accesses consist
-	 * of a chain of data-dependent loads, meaning most CPUs (alpha
-	 * being the notable exception) will already guarantee loads are
-	 * seen in-order. See the alpha page table accessors for the
-	 * smp_read_barrier_depends() barriers in page table walking code.
-	 */
-	smp_wmb(); /* Could be smp_wmb__xxx(before|after)_spin_lock */
-
-	ptl = pmd_lock(mm, pmd);
-	if (likely(pmd_none(*pmd))) {	/* Has another populated it ? */
-		mm_inc_nr_ptes(mm);
-		pmd_populate(mm, pmd, new);
-		new = NULL;
-	}
-	spin_unlock(ptl);
-	if (new)
-		pte_free(mm, new);
-	return 0;
-}
-
-
-typedef struct page *pgtable_t;
-
-pgtable_t pte_alloc_one(struct mm_struct *mm, unsigned long address)
-{
-	struct page *pte;
-
-	pte = alloc_pages(__userpte_alloc_gfp, 0);
-	if (!pte)
-		return NULL;
-	if (!pgtable_page_ctor(pte)) {
-		__free_page(pte);
-		return NULL;
-	}
-	return pte;
-}
-```
-
-
 ## handle_pte_fault : 万恶之源
-1. 谁在调用我 ?
+
 2. vmf 的中间的每一个参数的含义是什么 ?
     1. orig_pte : 当发生 pgfault 的时候的 pte, hardware 如何对其初始化的
     2. pte : 那我是什么 ?
     3. flags :
     4. address : 这个在 需要被 `__page_set_anon_rmap` 用于设置 `page->index`
 
-```c
-/*
- * These routines also need to handle stuff like marking pages dirty
- * and/or accessed for architectures that don't do it in hardware (most
- * RISC architectures).  The early dirtying is also good on the i386.
- *
- * There is also a hook called "update_mmu_cache()" that architectures
- * with external mmu caches can use to update those (ie the Sparc or
- * PowerPC hashed page tables that act as extended TLBs).
- *
- * We enter with non-exclusive mmap_sem (to exclude vma changes, but allow
- * concurrent faults).
- *
- * The mmap_sem may have been released depending on flags and our return value.
- * See filemap_fault() and __lock_page_or_retry().
- */
-static vm_fault_t handle_pte_fault(struct vm_fault *vmf)
-{
-	pte_t entry;
-
-	if (unlikely(pmd_none(*vmf->pmd))) { // todo 一共存在五级，为什么只是询问这一个姐比的
-		/*
-		 * Leave __pte_alloc() until later: because vm_ops->fault may
-		 * want to allocate huge page, and if we expose page table
-		 * for an instant, it will be difficult to retract from
-		 * concurrent faults and from rmap lookups.
-		 */
-		vmf->pte = NULL;
-	} else {
-		/* See comment in pte_alloc_one_map() */
-		if (pmd_devmap_trans_unstable(vmf->pmd)) // todo
-			return 0;
-		/*
-		 * A regular pmd is established and it can't morph into a huge
-		 * pmd from under us anymore at this point because we hold the
-		 * mmap_sem read mode and khugepaged takes it in write mode.
-		 * So now it's safe to run pte_offset_map().
-		 */
-		vmf->pte = pte_offset_map(vmf->pmd, vmf->address);
-		vmf->orig_pte = *vmf->pte;
-
-		/*
-		 * some architectures can have larger ptes than wordsize,
-		 * e.g.ppc44x-defconfig has CONFIG_PTE_64BIT=y and
-		 * CONFIG_32BIT=y, so READ_ONCE cannot guarantee atomic
-		 * accesses.  The code below just needs a consistent view
-		 * for the ifs and we later double check anyway with the
-		 * ptl lock held. So here a barrier will do.
-		 */
-		barrier();
-		if (pte_none(vmf->orig_pte)) { // todo pte_none 的原理
-			pte_unmap(vmf->pte); // nop
-			vmf->pte = NULL;
-		}
-	}
-
-	if (!vmf->pte) { // 没有 pte
-		if (vma_is_anonymous(vmf->vma))
-			return do_anonymous_page(vmf); // XXX
-		else
-			return do_fault(vmf); // XXX
-	}
-
-	if (!pte_present(vmf->orig_pte))
-		return do_swap_page(vmf); // XXX
-
-	if (pte_protnone(vmf->orig_pte) && vma_is_accessible(vmf->vma)) // todo 神奇啊，numa 也是可以支持 page fault 的
-		return do_numa_page(vmf);
-
-	vmf->ptl = pte_lockptr(vmf->vma->vm_mm, vmf->pmd); // todo plt 的作用是什么 ? 为什么上锁 ?
-	spin_lock(vmf->ptl);
-	entry = vmf->orig_pte;
-	if (unlikely(!pte_same(*vmf->pte, entry)))
-		goto unlock;
-	if (vmf->flags & FAULT_FLAG_WRITE) {
-		if (!pte_write(entry)) // 测试 entry 上的 flag, 查看是否可以写，如果不能写，那么就是 cow
-			return do_wp_page(vmf);
-		entry = pte_mkdirty(entry); // 可以，那就通知一下
-	}
-
-  // todo 下面的部分的作用是什么 ?
-	entry = pte_mkyoung(entry);
-	if (ptep_set_access_flags(vmf->vma, vmf->address, vmf->pte, entry,
-				vmf->flags & FAULT_FLAG_WRITE)) {
-		update_mmu_cache(vmf->vma, vmf->address, vmf->pte);
-	} else {
-		/*
-		 * This is needed only for protection faults but the arch code
-		 * is not yet telling us if this is a protection fault or not.
-		 * This still avoids useless tlb flushes for .text page faults
-		 * with threads.
-		 */
-		if (vmf->flags & FAULT_FLAG_WRITE)
-			flush_tlb_fix_spurious_fault(vmf->vma, vmf->address);
-	}
-unlock:
-	pte_unmap_unlock(vmf->pte, vmf->ptl);
-	return 0;
-}
-```
-
-
 ## do_swap_page
-1. 为什么需要调用 do_wp_page ?
+
+- [ ] 其中调用的 migration_entry_wait 和 do_numa_page 什么关系?
 
 ```c
 /*
- * We enter with non-exclusive mmap_sem (to exclude vma changes,
+ * We enter with non-exclusive mmap_lock (to exclude vma changes,
  * but allow concurrent faults), and pte mapped but not yet locked.
  * We return with pte unmapped and unlocked.
  *
- * We return with the mmap_sem locked or unlocked in the same cases
+ * We return with the mmap_lock locked or unlocked in the same cases
  * as does filemap_fault().
  */
 vm_fault_t do_swap_page(struct vm_fault *vmf)
 {
 	struct vm_area_struct *vma = vmf->vma;
-	struct page *page = NULL, *swapcache;
-	struct mem_cgroup *memcg;
+	struct folio *swapcache, *folio = NULL;
+	struct page *page;
+	struct swap_info_struct *si = NULL;
+	rmap_t rmap_flags = RMAP_NONE;
+	bool exclusive = false;
 	swp_entry_t entry;
 	pte_t pte;
 	int locked;
-	int exclusive = 0;
 	vm_fault_t ret = 0;
+	void *shadow = NULL;
 
-	if (!pte_unmap_same(vma->vm_mm, vmf->pmd, vmf->pte, vmf->orig_pte)) // 检查 vmf->pte 和 vmf->orig_pte 相等
+	if (!pte_unmap_same(vmf))
 		goto out;
 
+	if (vmf->flags & FAULT_FLAG_VMA_LOCK) {
+		ret = VM_FAULT_RETRY;
+		goto out;
+	}
+
 	entry = pte_to_swp_entry(vmf->orig_pte);
-	if (unlikely(non_swap_entry(entry))) { // 处理各种骚操作
+	if (unlikely(non_swap_entry(entry))) {                   // 不仅仅 swap 还有其他情况
 		if (is_migration_entry(entry)) {
 			migration_entry_wait(vma->vm_mm, vmf->pmd,
 					     vmf->address);
+		} else if (is_device_exclusive_entry(entry)) {
+			vmf->page = pfn_swap_entry_to_page(entry);
+			ret = remove_device_exclusive_entry(vmf);
 		} else if (is_device_private_entry(entry)) {
-			vmf->page = device_private_entry_to_page(entry);
+			vmf->page = pfn_swap_entry_to_page(entry);
+			vmf->pte = pte_offset_map_lock(vma->vm_mm, vmf->pmd,
+					vmf->address, &vmf->ptl);
+			if (unlikely(!pte_same(*vmf->pte, vmf->orig_pte))) {
+				spin_unlock(vmf->ptl);
+				goto out;
+			}
+
+			/*
+			 * Get a page reference while we know the page can't be
+			 * freed.
+			 */
+			get_page(vmf->page);
+			pte_unmap_unlock(vmf->pte, vmf->ptl);
 			ret = vmf->page->pgmap->ops->migrate_to_ram(vmf);
+			put_page(vmf->page);
 		} else if (is_hwpoison_entry(entry)) {
 			ret = VM_FAULT_HWPOISON;
+		} else if (is_pte_marker_entry(entry)) {
+			ret = handle_pte_marker(vmf);
 		} else {
 			print_bad_pte(vma, vmf->address, vmf->orig_pte, NULL);
 			ret = VM_FAULT_SIGBUS;
@@ -302,33 +140,55 @@ vm_fault_t do_swap_page(struct vm_fault *vmf)
 		goto out;
 	}
 
+	/* Prevent swapoff from happening to us. */
+	si = get_swap_device(entry);
+	if (unlikely(!si))
+		goto out;
 
-	delayacct_set_flag(DELAYACCT_PF_SWAPIN);
-	page = lookup_swap_cache(entry, vma, vmf->address); // 查询 swap cache : 位于 swap_state.c
-	swapcache = page;
+	folio = swap_cache_get_folio(entry, vma, vmf->address); // 查询 swap cache : 位于 swap_state.c
+	if (folio)
+		page = folio_file_page(folio, swp_offset(entry));
+	swapcache = folio;
 
-	if (!page) {
-		struct swap_info_struct *si = swp_swap_info(entry);
+	if (!folio) {
+		if (data_race(si->flags & SWP_SYNCHRONOUS_IO) &&    // 如果只是被一个 process 映射，并且必须同步 IO ，那么就不使用 swap cache
+		    __swap_count(entry) == 1) {                     // 因为 swapin_readahead 是会处理 cache 的
+			/* skip swapcache */
+			folio = vma_alloc_folio(GFP_HIGHUSER_MOVABLE, 0,
+						vma, vmf->address, false);
+			page = &folio->page;
+			if (folio) {
+				__folio_set_locked(folio);
+				__folio_set_swapbacked(folio);
 
-		if (si->flags & SWP_SYNCHRONOUS_IO &&
-				__swap_count(entry) == 1) { // __swap_count 表示当前在 page table 中间还有多少 swp_entry_t 指向这个 page , 此处，表示，该 page 生前没有被共享。todo 当然，为什么在这种条件下需要，就是 skip swapcache ，以及 skip swapcache 的含义是什么，我是不清楚的
-			/* skip swapcache */ // XXX 表示新创建的 page 不要出现在 swap cache 中间，
-			page = alloc_page_vma(GFP_HIGHUSER_MOVABLE, vma, // 具体不知道，也许是持有 policy 的 alloc 一个 page 吧 !
-							vmf->address);
-			if (page) {
-				__SetPageLocked(page);  // todo 为什么需要这一个标志
-				__SetPageSwapBacked(page); // 因为 skip swap cache，所以仅仅设置 SwapBacked
-				set_page_private(page, entry.val);
-				lru_cache_add_anon(page); // 的确是无人幸免，比如加入到 lru cache 中间
-				swap_readpage(page, true);
+				if (mem_cgroup_swapin_charge_folio(folio,
+							vma->vm_mm, GFP_KERNEL,
+							entry)) {
+					ret = VM_FAULT_OOM;
+					goto out_page;
+				}
+				mem_cgroup_swapin_uncharge_swap(entry);
+
+				shadow = get_shadow_from_swap_cache(entry);
+				if (shadow)
+					workingset_refault(folio, shadow);
+
+				folio_add_lru(folio);
+
+				/* To provide entry to swap_readpage() */
+				folio_set_swap_entry(folio, entry);
+				swap_readpage(page, true, NULL);
+				folio->private = NULL;
 			}
 		} else {
-			page = swapin_readahead(entry, GFP_HIGHUSER_MOVABLE, // 这里会自动将
-						vmf); // swapin_readahead 将上面的操作也搞过一边，只是自带 readahead 而已
-			swapcache = page;
+			page = swapin_readahead(entry, GFP_HIGHUSER_MOVABLE, // 会经过 swap cache 的
+						vmf);
+			if (page)
+				folio = page_folio(page);
+			swapcache = folio;
 		}
 
-		if (!page) { // 两种方法都失败
+		if (!folio) {
 			/*
 			 * Back out if somebody else faulted in this pte
 			 * while we released the pte lock.
@@ -337,7 +197,6 @@ vm_fault_t do_swap_page(struct vm_fault *vmf)
 					vmf->address, &vmf->ptl);
 			if (likely(pte_same(*vmf->pte, vmf->orig_pte)))
 				ret = VM_FAULT_OOM;
-			delayacct_clear_flag(DELAYACCT_PF_SWAPIN);
 			goto unlock;
 		}
 
@@ -345,35 +204,61 @@ vm_fault_t do_swap_page(struct vm_fault *vmf)
 		ret = VM_FAULT_MAJOR;
 		count_vm_event(PGMAJFAULT);
 		count_memcg_event_mm(vma->vm_mm, PGMAJFAULT);
-	} else if (PageHWPoison(page)) { // 几乎不可能的事情吧!
+	} else if (PageHWPoison(page)) {
 		/*
 		 * hwpoisoned dirty swapcache pages are kept for killing
 		 * owner processes (which may be unknown at hwpoison time)
 		 */
 		ret = VM_FAULT_HWPOISON;
-		delayacct_clear_flag(DELAYACCT_PF_SWAPIN);
 		goto out_release;
 	}
 
-  // 对于刚刚得到的 page 当然不会出现问题，当对于从 page cache 中间找到的需要上锁的
-	locked = lock_page_or_retry(page, vma->vm_mm, vmf->flags); // todo 这个函数很诡异的!
+	locked = folio_lock_or_retry(folio, vma->vm_mm, vmf->flags);
 
-	delayacct_clear_flag(DELAYACCT_PF_SWAPIN);
 	if (!locked) {
 		ret |= VM_FAULT_RETRY;
 		goto out_release;
 	}
 
-	/*
-	 * Make sure try_to_free_swap or reuse_swap_page or swapoff did not
-	 * release the swapcache from under us.  The page pin, and pte_same
-	 * test below, are not enough to exclude that.  Even if it is still
-	 * swapcache, we need to check that the page's swap has not changed.
-	 */
-   // todo try_to_free_swap reuse_swap_page swapoff 可以消除掉 PageSwapCache 的 flags
-	if (unlikely((!PageSwapCache(page) ||
-			page_private(page) != entry.val)) && swapcache)
-		goto out_page;
+	if (swapcache) {
+		/*
+		 * Make sure folio_free_swap() or swapoff did not release the
+		 * swapcache from under us.  The page pin, and pte_same test
+		 * below, are not enough to exclude that.  Even if it is still
+		 * swapcache, we need to check that the page's swap has not
+		 * changed.
+		 */
+		if (unlikely(!folio_test_swapcache(folio) ||
+			     page_private(page) != entry.val))
+			goto out_page;
+
+		/*
+		 * KSM sometimes has to copy on read faults, for example, if
+		 * page->index of !PageKSM() pages would be nonlinear inside the
+		 * anon VMA -- PageKSM() is lost on actual swapout.
+		 */
+		page = ksm_might_need_to_copy(page, vma, vmf->address);
+		if (unlikely(!page)) {
+			ret = VM_FAULT_OOM;
+			goto out_page;
+		} else if (unlikely(PTR_ERR(page) == -EHWPOISON)) {
+			ret = VM_FAULT_HWPOISON;
+			goto out_page;
+		}
+		folio = page_folio(page);
+
+		/*
+		 * If we want to map a page that's in the swapcache writable, we
+		 * have to detect via the refcount if we're really the exclusive
+		 * owner. Try removing the extra reference from the local LRU
+		 * pagevecs if required.
+		 */
+		if ((vmf->flags & FAULT_FLAG_WRITE) && folio == swapcache &&
+		    !folio_test_ksm(folio) && !folio_test_lru(folio))
+			lru_add_drain();
+	}
+
+	folio_throttle_swaprate(folio, GFP_KERNEL);
 
 	/*
 	 * Back out if somebody else already faulted in this pte.
@@ -383,54 +268,107 @@ vm_fault_t do_swap_page(struct vm_fault *vmf)
 	if (unlikely(!pte_same(*vmf->pte, vmf->orig_pte)))
 		goto out_nomap;
 
-	if (unlikely(!PageUptodate(page))) { // 这个 flag 什么时候处理过 ?
+	if (unlikely(!folio_test_uptodate(folio))) { // 一般是因为 swap device 出现故障了
 		ret = VM_FAULT_SIGBUS;
 		goto out_nomap;
 	}
 
 	/*
-	 * The page isn't present yet, go ahead with the fault.
-	 *
-	 * Be careful about the sequence of operations here.
-	 * To get its accounting right, reuse_swap_page() must be called
-	 * while the page is counted on swap but not yet in mapcount i.e.
-	 * before page_add_anon_rmap() and swap_free(); try_to_free_swap()
-	 * must be called after the swap_free(), or it will never succeed.
+	 * PG_anon_exclusive reuses PG_mappedtodisk for anon pages. A swap pte
+	 * must never point at an anonymous page in the swapcache that is
+	 * PG_anon_exclusive. Sanity check that this holds and especially, that
+	 * no filesystem set PG_mappedtodisk on a page in the swapcache. Sanity
+	 * check after taking the PT lock and making sure that nobody
+	 * concurrently faulted in this page and set PG_anon_exclusive.
 	 */
+	BUG_ON(!folio_test_anon(folio) && folio_test_mappedtodisk(folio));
+	BUG_ON(folio_test_anon(folio) && PageAnonExclusive(page));
 
-	inc_mm_counter_fast(vma->vm_mm, MM_ANONPAGES);
-	dec_mm_counter_fast(vma->vm_mm, MM_SWAPENTS);
-	pte = mk_pte(page, vma->vm_page_prot); // 根据 page 的物理地址 和 权限创建出来 pte
-	if ((vmf->flags & FAULT_FLAG_WRITE) && reuse_swap_page(page, NULL)) { // todo reuse_swap_page 的含义非常诡异
-		pte = maybe_mkwrite(pte_mkdirty(pte), vma);
-		vmf->flags &= ~FAULT_FLAG_WRITE;
-		ret |= VM_FAULT_WRITE;
-		exclusive = RMAP_EXCLUSIVE; // todo 这个flag的添加是在关于 huge page 之类添加的，够神奇啊!
+	/*
+	 * Check under PT lock (to protect against concurrent fork() sharing
+	 * the swap entry concurrently) for certainly exclusive pages.
+	 */
+	if (!folio_test_ksm(folio)) {
+		exclusive = pte_swp_exclusive(vmf->orig_pte);
+		if (folio != swapcache) {
+			/*
+			 * We have a fresh page that is not exposed to the
+			 * swapcache -> certainly exclusive.
+			 */
+			exclusive = true;
+		} else if (exclusive && folio_test_writeback(folio) &&
+			  data_race(si->flags & SWP_STABLE_WRITES)) {
+			/*
+			 * This is tricky: not all swap backends support
+			 * concurrent page modifications while under writeback.
+			 *
+			 * So if we stumble over such a page in the swapcache
+			 * we must not set the page exclusive, otherwise we can
+			 * map it writable without further checks and modify it
+			 * while still under writeback.
+			 *
+			 * For these problematic swap backends, simply drop the
+			 * exclusive marker: this is perfectly fine as we start
+			 * writeback only if we fully unmapped the page and
+			 * there are no unexpected references on the page after
+			 * unmapping succeeded. After fully unmapped, no
+			 * further GUP references (FOLL_GET and FOLL_PIN) can
+			 * appear, so dropping the exclusive marker and mapping
+			 * it only R/O is fine.
+			 */
+			exclusive = false;
+		}
+	}
+
+	/*
+	 * Remove the swap entry and conditionally try to free up the swapcache.
+	 * We're already holding a reference on the page but haven't mapped it
+	 * yet.
+	 */
+	swap_free(entry); // 加载了一个 page 进来，那么对应的 swap 空间就可以释放了
+	if (should_try_to_free_swap(folio, vma, vmf->flags)) // 如果可以释放 swap cache 的空间
+		folio_free_swap(folio);
+
+	inc_mm_counter(vma->vm_mm, MM_ANONPAGES);
+	dec_mm_counter(vma->vm_mm, MM_SWAPENTS);
+	pte = mk_pte(page, vma->vm_page_prot);
+
+	/*
+	 * Same logic as in do_wp_page(); however, optimize for pages that are
+	 * certainly not shared either because we just allocated them without
+	 * exposing them to the swapcache or because the swap entry indicates
+	 * exclusivity.
+	 */
+	if (!folio_test_ksm(folio) &&
+	    (exclusive || folio_ref_count(folio) == 1)) {
+		if (vmf->flags & FAULT_FLAG_WRITE) {
+			pte = maybe_mkwrite(pte_mkdirty(pte), vma);
+			vmf->flags &= ~FAULT_FLAG_WRITE;
+		}
+		rmap_flags |= RMAP_EXCLUSIVE;
 	}
 	flush_icache_page(vma, page);
 	if (pte_swp_soft_dirty(vmf->orig_pte))
 		pte = pte_mksoft_dirty(pte);
-	set_pte_at(vma->vm_mm, vmf->address, vmf->pte, pte); // 更新 page table
-	arch_do_swap_page(vma->vm_mm, vma, vmf->address, pte, vmf->orig_pte); // nop
+	if (pte_swp_uffd_wp(vmf->orig_pte))
+		pte = pte_mkuffd_wp(pte);
 	vmf->orig_pte = pte;
 
 	/* ksm created a completely new copy */
-	if (unlikely(page != swapcache && swapcache)) {
-    //  只有新创建的 anon 才会到此处吗 ?
-		page_add_new_anon_rmap(page, vma, vmf->address, false); // 无论如何，都是需要添加到 anon 的，
-		lru_cache_add_active_or_unevictable(page, vma);
+	if (unlikely(folio != swapcache && swapcache)) {
+		page_add_new_anon_rmap(page, vma, vmf->address);
+		folio_add_lru_vma(folio, vma);
 	} else {
-    // todo 独享的时候，其实也不是很懂为什么会出现独享
-		do_page_add_anon_rmap(page, vma, vmf->address, exclusive); // do_swap_page 特供的, todo 存在什么特别之处
-		activate_page(page);
+		page_add_anon_rmap(page, vma, vmf->address, rmap_flags);
 	}
 
-	swap_free(entry); // 加载了一个 page 进来，todo 当初写入的时候，计数的初始化，应该在 unmap 之类的地方吧!
-	if (mem_cgroup_swap_full(page) ||
-	    (vma->vm_flags & VM_LOCKED) || PageMlocked(page))
-		try_to_free_swap(page);  // todo swap_free 难道没有清理掉这个蛇皮吗 ? 表示两个内容
-	unlock_page(page);
-	if (page != swapcache && swapcache) {
+	VM_BUG_ON(!folio_test_anon(folio) ||
+			(pte_write(pte) && !PageAnonExclusive(page)));
+	set_pte_at(vma->vm_mm, vmf->address, vmf->pte, pte); // 更新 page table
+	arch_do_swap_page(vma->vm_mm, vma, vmf->address, pte, vmf->orig_pte);
+
+	folio_unlock(folio);
+	if (folio != swapcache && swapcache) {
 		/*
 		 * Hold the lock to avoid the swap entry to be reused
 		 * until we take the PT lock for the pte_same() check
@@ -439,12 +377,12 @@ vm_fault_t do_swap_page(struct vm_fault *vmf)
 		 * so that the swap count won't change under a
 		 * parallel locked swapcache.
 		 */
-		unlock_page(swapcache);
-		put_page(swapcache);
+		folio_unlock(swapcache);
+		folio_put(swapcache);
 	}
 
 	if (vmf->flags & FAULT_FLAG_WRITE) {
-		ret |= do_wp_page(vmf); // 其实此处非常的有道理的，即使是写入disk 中间还是可以发生
+		ret |= do_wp_page(vmf);
 		if (ret & VM_FAULT_ERROR)
 			ret &= VM_FAULT_ERROR;
 		goto out;
@@ -455,23 +393,24 @@ vm_fault_t do_swap_page(struct vm_fault *vmf)
 unlock:
 	pte_unmap_unlock(vmf->pte, vmf->ptl);
 out:
+	if (si)
+		put_swap_device(si);
 	return ret;
 out_nomap:
-	mem_cgroup_cancel_charge(page, memcg, false);
 	pte_unmap_unlock(vmf->pte, vmf->ptl);
 out_page:
-	unlock_page(page);
+	folio_unlock(folio);
 out_release:
-	put_page(page);
-	if (page != swapcache && swapcache) {
-		unlock_page(swapcache);
-		put_page(swapcache);
+	folio_put(folio);
+	if (folio != swapcache && swapcache) {
+		folio_unlock(swapcache);
+		folio_put(swapcache);
 	}
+	if (si)
+		put_swap_device(si);
 	return ret;
 }
 ```
-1. 其中关于 swapcache 变量的使用，感到非常的迷惑
-
 
 ## do_wp_page
 1. do_swap_page 为什么会调用这一个 ?

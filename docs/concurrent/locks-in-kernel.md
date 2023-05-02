@@ -440,4 +440,5 @@ failed:
 ```
 ## llist_for_each_entry_safe : 我靠， lockless 的接口
 
+## 如何理解 data_race
 [^1]: https://lwn.net/Articles/262464/

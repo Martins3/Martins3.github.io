@@ -31,3 +31,16 @@ https://www.kernel.org/doc/htmldocs/kernel-locking/index.html
 
 ## sched 目录下有这个文件，可以看看
 - linux/kernel/sched/membarrier.c
+
+# 同步，并发和锁
+
+## 吐槽
+为什么操作系统中的大多数内容都是讲锁?
+- [ ] 使用 Modern OS 做一个验证
+
+## 资源
+- 并发编程艺术
+
+## 用户态的常用技术
+- 从 Java 并发编程中总结一下
+  - 然后对应将 cpp 和 c 中总结一下
