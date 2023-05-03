@@ -206,6 +206,20 @@ dpdk 测试工具
 ## 针对于特定语言的
 - python : py-spy
 
+## do_user_addr_fault 中的这个 perf_sw_event
+```c
+	perf_sw_event(PERF_COUNT_SW_PAGE_FAULTS, 1, regs, address);
+```
+
+## 为什么这个函数无法 trace 啊 trace_kprobe
+```txt
+[  323.274009] trace_kprobe: Could not probe notrace function sg_miter_stop
+[  323.274155] trace_kprobe: Could not probe notrace function sg_miter_stop
+[  361.337420] trace_kprobe: Could not probe notrace function sg_miter_stop
+[  361.337512] trace_kprobe: Could not probe notrace function sg_miter_stop
+[  379.112269] trace_kprobe: Could not probe notrace function sg_miter_skip
+[  379.112361] trace_kprobe: Could not probe notrace function sg_miter_skip
+```
 [^4]: [An introduction to KProbes](https://lwn.net/Articles/132196/)
 [^5]: [Using user-space tracepoints with BPF](https://lwn.net/Articles/753601/)
 [^7]: [kernelshark](https://www.cnblogs.com/arnoldlu/p/9014365.html)

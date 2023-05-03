@@ -306,7 +306,7 @@ static inline unsigned read_seqbegin(const seqlock_t *sl)
   - spin lock 可以保证只有一个 writer 存在。
   - 如果不使用，write barrier ，可以相当于 writer 不写该字段了，对于 read barrier 类似。那么就可能让 reader 直接通过了。
 
-### QEMU 的实现感觉有 bug 啊！
+### QEMU 的实现
 
 include/qemu/seqlock.h 中，更加简洁明了:
 
@@ -319,37 +319,20 @@ static inline void seqlock_write_lock_impl(QemuSeqLock *sl, QemuLockable *lock)
 }
 ```
 
+### rwlock 和 seqlock 的差别
+https://stackoverflow.com/questions/55746320/why-rwlock-is-more-popular-than-seqlock-in-linux-kernel
+
 ### 其他
 - 其他的实现 https://github.com/rigtorp/Seqlock
 
 ## TODO
-面试:
 - [ ]  spinlock 和 spinlock_bh
 - [ ]  ksoftirqd 的优先级
 - [ ]  ticket spinlock
 
-## 记录一下遇到的问题
 
-```c
-static struct page *page_idle_get_page(unsigned long pfn)
-{
-    struct page *page = pfn_to_online_page(pfn);
-
-    if (!page || !PageLRU(page) ||
-        !get_page_unless_zero(page))
-        return NULL;
-
-    if (unlikely(!PageLRU(page))) {
-    // 这一段的内容是啥意思，在上面的检查中，这不是必然 not
-    // 如果是从 lock 的角度考虑，还是存在问题的啊，就算这个地方通过，那么也没有上锁，下面直接过去了，怎么办?
-        put_page(page);
-        page = NULL;
-    }
-    return page;
-}
-```
-
-## [ ] Unreliable Guide To Locking : http://127.0.0.1:3434/kernel-hacking/locking.html
+## [Unreliable Guide To Locking](https://www.kernel.org/doc/html/latest/kernel-hacking/locking.html)
+介绍各种 kernel 的 lock interface
 
 ## local locks
 https://lwn.net/Articles/828477/ : 目前唯一的资料
@@ -357,8 +340,6 @@ https://lwn.net/Articles/828477/ : 目前唯一的资料
 
 但是无法理解，如果允许抢占了，之后只要抢占的 process 运行到相同的位置，那么不是一定 dead lock 吗？
 
-## 代码收集
-- arch_freq_get_on_cpu 中为什么使用 read_seqcount_retry
 
 ### 如何避免一个 CAS
 ```c
@@ -423,22 +404,6 @@ failed:
 }
 ```
 
-## raise_barrier
-
-为什么 raise_barrier 中非要使用 smp_mb__after_atomic
-
-而且 raise_barrier 和 `_wait_barrier` 中的顺序是反过来的，是故意的这么设计的吧!
-```c
-	/*
-	 * In raise_barrier() we firstly increase conf->barrier[idx] then
-	 * check conf->nr_pending[idx]. In _wait_barrier() we firstly
-	 * increase conf->nr_pending[idx] then check conf->barrier[idx].
-	 * A memory barrier here to make sure conf->nr_pending[idx] won't
-	 * be fetched before conf->barrier[idx] is increased. Otherwise
-	 * there will be a race between raise_barrier() and _wait_barrier().
-	 */
-```
-## llist_for_each_entry_safe : 我靠， lockless 的接口
 
 ## 如何理解 data_race
 [^1]: https://lwn.net/Articles/262464/

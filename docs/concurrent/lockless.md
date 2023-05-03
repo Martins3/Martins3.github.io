@@ -1,6 +1,6 @@
 # 收集一些真正的 lockless 设计
 
-- https://doc.dpdk.org/guides/prog_guide/ring_lib.html?highlight=lockless
+- https://doc.dpdk.org/guides/prog_guide/ring_lib.html
 
 ## 收集一些内核中 lockless 的内容
 

@@ -248,3 +248,28 @@ sector_t map_swap_page(struct page *page, struct block_device **bdev)
   2. add_to_swap 被调用的条件 是什么 ? 分析 shrink_page_list
   3. swap cache 不是加快操作，而是必须存在的
 - [ ] 似乎也是可以存放 page 的 order 的
+
+
+## folio 的改进让 idle page tracking 可以跟踪 transparent hugepage 吗？
+```diff
+History:        #0
+Commit:         5acc17fd35e62780a14e4198deb2a6d1d57aa372
+Author:         Kefeng Wang <wangkefeng.wang@huawei.com>
+Committer:      Andrew Morton <akpm@linux-foundation.org>
+Author Date:    Fri 30 Dec 2022 03:08:43 PM CST
+Committer Date: Thu 19 Jan 2023 09:12:52 AM CST
+
+mm: page_idle: convert page idle to use a folio
+
+Firstly, make page_idle_get_page() return a folio, also rename it to
+page_idle_get_folio(), then, use it to convert page_idle_bitmap_read() and
+page_idle_bitmap_write() functions.
+
+Link: https://lkml.kernel.org/r/20221230070849.63358-3-wangkefeng.wang@huawei.com
+Signed-off-by: Kefeng Wang <wangkefeng.wang@huawei.com>
+Reviewed-by: SeongJae Park <sj@kernel.org>
+Cc: David Hildenbrand <david@redhat.com>
+Cc: Matthew Wilcox (Oracle) <willy@infradead.org>
+Cc: Vishal Moola (Oracle) <vishal.moola@gmail.com>
+Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+```
