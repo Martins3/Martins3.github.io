@@ -505,3 +505,7 @@ Posted-interrupt wakeup event
 ## block_device_operations::submit_bio
 
 ## 整理一下 /home/martins3/core/vn/hack/ps/ 中的内容
+
+## sar 是如何监控 zram 和 loop devices 的 io 速度的
+
+## /dev/loop0 是如何实现的

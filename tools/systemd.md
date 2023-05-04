@@ -122,8 +122,9 @@ https://trstringer.com/simple-vs-oneshot-systemd-service/
 - https://unix.stackexchange.com/questions/139513/how-to-clear-journalctl
 
 ### 显示所有的 dmesg 信息
-- journalctl -t kernel
-- journalctl -k
+- journalctl -t kernel : 所有的 kernel 日志
+- journalctl -k : 这一次
+- journalctl --boot=-1 -k : 上一次的 kernel 日志
 
 ## https://systemd-by-example.com/
 

@@ -48,3 +48,9 @@ arg_cpu_model="-cpu host,hv_relaxed,hv_vpindex,hv_time"
 > CPUID 40000004:00 = 00000020 ffffffff 00000000 00000000 |  ...............
 > CPUID 40000005:00 = ffffffff 00000040 00000000 00000000 | ....@...........
 ```
+
+## 原来 cpuid leaf 40000000 是提供给 hypervisor 提供信息的
+
+进一步参考:
+- https://www.kernel.org/doc/Documentation/virtual/kvm/cpuid.txt
+- https://learn.microsoft.com/en-us/virtualization/hyper-v-on-windows/tlfs/feature-discovery

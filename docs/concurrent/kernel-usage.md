@@ -113,6 +113,8 @@ static struct folio *page_idle_get_folio(unsigned long pfn)
 ## [ ] llist_for_each_entry_safe : 我靠， lockless 的接口
 似乎和我们想象的 lockless 没有关系，但是这还存在类似的好几个接口，可以分析下 safe 体现在何处?
 
+## 3af4a9e61e71117d5df2df3e1605fa062e04b869
+
 ## TODO
 Code that is safe from concurrent access from an interrupt handler is said to be
 **interrupt-safe**. Code that is safe from concurrency on symmetrical multiprocessing

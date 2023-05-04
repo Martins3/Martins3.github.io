@@ -588,3 +588,7 @@ cache_alignment : 64
 address sizes   : 46 bits physical, 48 bits virtual
 power management:
 ```
+
+## umip
+https://lwn.net/Articles/705877/
+## xsave

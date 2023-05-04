@@ -179,16 +179,3 @@ t -r kvm_faultin_pfn 的返回值总是 0
 ]: 280751
 ```
 不知道那一环出现了问题:
-
-## 类似的技术 : remote tlb flush
-- https://kernel.love/para-virt-remote-tlb-flush.html
-
-record_steal_time 中有一个 trace_point，这个可以深入分析一下:
-
-```c
-		trace_kvm_pv_tlb_flush(vcpu->vcpu_id,
-				       st_preempted & KVM_VCPU_FLUSH_TLB);
-
-		if (st_preempted & KVM_VCPU_FLUSH_TLB)
-			kvm_vcpu_flush_tlb_guest(vcpu);
-```

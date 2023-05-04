@@ -1,6 +1,6 @@
-简化 https://github.com/tycho/cpuid 的实现
+https://github.com/tycho/cpuid 非常的方便
 
-仅仅实现 `./cpuid -d -c 1` 这个功能
+`./cpuid -d -c 1` 这个功能
 
 ```txt
 🧀  ./cpuid -d -c 1
