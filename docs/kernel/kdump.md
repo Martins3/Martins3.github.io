@@ -75,6 +75,25 @@ kexec -s uImage --ramdisk=./ramdisk.bin
 - [ ] linux-crashdump
   - 这个工具似乎来源于 debian 的： https://www.cyberciti.biz/faq/how-to-on-enable-kernel-crash-dump-on-debian-linux/
 
+## 如何系统中没有安装 crash ，最后会到哪里
+
+```txt
+#0  0xffffffff822a1aaa in delay_halt_tpause (start=161261877846, cycles=2794575) at arch/x86/lib/delay.c:118
+#1  0xffffffff822a1d1c in delay_halt (__cycles=<optimized out>) at arch/x86/lib/delay.c:163
+#2  delay_halt (__cycles=<optimized out>) at arch/x86/lib/delay.c:149
+#3  0xffffffff81140b61 in panic (fmt=fmt@entry=0xffffffff82c0b400 "sysrq triggered crash\n") at kernel/panic.c:452
+#4  0xffffffff818dac9a in sysrq_handle_crash (key=<optimized out>) at drivers/tty/sysrq.c:155
+#5  0xffffffff818db323 in __handle_sysrq (key=99, check_mask=check_mask@entry=false) at drivers/tty/sysrq.c:602
+#6  0xffffffff818db948 in write_sysrq_trigger (file=<optimized out>, buf=<optimized out>, count=2, ppos=<optimized out>) at drivers/tty/sysrq.c:1163
+#7  0xffffffff814c5c36 in pde_write (ppos=<optimized out>, count=<optimized out>, buf=<optimized out>, file=0x258bf4fa56, pde=0xffff8881054ded80) at fs/proc/inode.c:340
+#8  proc_reg_write (file=0x258bf4fa56, buf=0x2aa44f <error: Cannot access memory at address 0x2aa44f>, count=37, ppos=0x0 <fixed_percpu_data>) at fs/proc/inode.c:352
+#9  0xffffffff8142d386 in vfs_write (file=file@entry=0xffff888107118100, buf=buf@entry=0x56243bfa08c0 "c\n1;echo\ac > /proc/sysrq-trigger\aroot\ay  5 07:05:46 PM CST 2023\n\n", count=count@entry=2, pos=pos@entry=0xffffc90002127f08) at fs/read_write.c:582
+#10 0xffffffff8142d9e3 in ksys_write (fd=<optimized out>, buf=0x56243bfa08c0 "c\n1;echo\ac > /proc/sysrq-trigger\aroot\ay  5 07:05:46 PM CST 2023\n\n", count=2) at fs/read_write.c:637
+#11 0xffffffff822a4e9c in do_syscall_x64 (nr=<optimized out>, regs=0xffffc90002127f58) at arch/x86/entry/common.c:50
+#12 do_syscall_64 (regs=0xffffc90002127f58, nr=<optimized out>) at arch/x86/entry/common.c:80
+#13 0xffffffff824000ae in entry_SYSCALL_64 () at arch/x86/entry/entry_64.S:120
+```
+
 ## 支持 kernel dump 的功能
 否则找不到 /proc/vmcore
 

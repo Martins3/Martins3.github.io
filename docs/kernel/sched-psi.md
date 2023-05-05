@@ -1,5 +1,7 @@
 # psi
 
+https://docs.kernel.org/accounting/psi.html
+
 memory 记录有：
 - psi_memstall_enter
 - psi_memstall_leave

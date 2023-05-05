@@ -700,6 +700,9 @@ warning: error(s) occurred while switching to the new configuration
 - [Going big with TCP packets](https://lwn.net/Articles/884104/)
   - https://netdevconf.info/0x15/session.html?BIG-TCP
 
+## 8.8.8.8
+https://developers.google.com/speed/public-dns?hl=zh-cn
+https://stackoverflow.com/questions/24821521/wget-unable-to-resolve-host-address-http
 
 [^2]: 用芯探核:基于龙芯的 Linux 内核探索解析
 [^4]: http://yuba.stanford.edu/rcp/

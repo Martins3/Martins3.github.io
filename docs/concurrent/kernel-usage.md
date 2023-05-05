@@ -121,3 +121,66 @@ static struct folio *page_idle_get_folio(unsigned long pfn)
 Code that is safe from concurrent access from an interrupt handler is said to be
 **interrupt-safe**. Code that is safe from concurrency on symmetrical multiprocessing
 machines is **SMP-safe**. Code that is safe from concurrency with kernel preemption is **preempt-safe**.
+
+### page_counter_try_charge 中说明自己自己是如何避免一个 CSA 操作的
+```c
+/**
+ * page_counter_try_charge - try to hierarchically charge pages
+ * @counter: counter
+ * @nr_pages: number of pages to charge
+ * @fail: points first counter to hit its limit, if any
+ *
+ * Returns %true on success, or %false and @fail if the counter or one
+ * of its ancestors has hit its configured limit.
+ */
+bool page_counter_try_charge(struct page_counter *counter,
+			     unsigned long nr_pages,
+			     struct page_counter **fail)
+{
+	struct page_counter *c;
+
+	for (c = counter; c; c = c->parent) {
+		long new;
+		/*
+		 * Charge speculatively to avoid an expensive CAS.  If
+		 * a bigger charge fails, it might falsely lock out a
+		 * racing smaller charge and send it into reclaim
+		 * early, but the error is limited to the difference
+		 * between the two sizes, which is less than 2M/4M in
+		 * case of a THP locking out a regular page charge.
+		 *
+		 * The atomic_long_add_return() implies a full memory
+		 * barrier between incrementing the count and reading
+		 * the limit.  When racing with page_counter_set_max(),
+		 * we either see the new limit or the setter sees the
+		 * counter has changed and retries.
+		 */
+		new = atomic_long_add_return(nr_pages, &c->usage);
+		if (new > c->max) {
+			atomic_long_sub(nr_pages, &c->usage);
+			/*
+			 * This is racy, but we can live with some
+			 * inaccuracy in the failcnt which is only used
+			 * to report stats.
+			 */
+			data_race(c->failcnt++);
+			*fail = c;
+			goto failed;
+		}
+		propagate_protected_usage(c, new);
+		/*
+		 * Just like with failcnt, we can live with some
+		 * inaccuracy in the watermark.
+		 */
+		if (new > READ_ONCE(c->watermark))
+			WRITE_ONCE(c->watermark, new);
+	}
+	return true;
+
+failed:
+	for (c = counter; c != *fail; c = c->parent)
+		page_counter_cancel(c, nr_pages);
+
+	return false;
+}
+```
