@@ -155,3 +155,7 @@ iptables为我们提供了如下规则的分类，或者说，iptables为我们�
 ## tshark
 
 ## ngrep
+
+
+## nslookup
+nslookup ww.baidu.com

@@ -86,3 +86,6 @@ udev 是如何拉起来各种驱动的
 其使用位置是:
 - `__request_module` : 调用位置非常多，我猜测是，这个的作用是，内核想要调用 modprobe 的时候，就需要知道 modprobe 的位置。
   - call_modprobe
+
+## cat /sys/module/kvm_intel/parameters/nested
+分析下这个目录是如何形成的

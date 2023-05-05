@@ -74,3 +74,12 @@ direct=1 非常重要
 #6  0xffffffff81f18ceb in do_syscall_x64 (nr=<optimized out>, regs=0xffffc9000117ff58) at arch/x86/entry/common.c:50
 #7  do_syscall_64 (regs=0xffffc9000117ff58, nr=<optimized out>) at arch/x86/entry/common.c:80
 ```
+
+## 先来点最基本的认识
+
+- [How io-uring implementation is different from AIO?](https://stackoverflow.com/questions/65075339/how-io-uring-implementation-is-different-from-aio)
+
+- [asynchronous IO io_submit latency in Ubuntu Linux](https://stackoverflow.com/questions/34572559/asynchronous-io-io-submit-latency-in-ubuntu-linux)
+
+- [ ] aio 无法完全无法在 buffer 上 aio 吗?
+  - 即使是 read ? 或者是 write clean 的 page ?

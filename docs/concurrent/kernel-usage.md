@@ -115,6 +115,8 @@ static struct folio *page_idle_get_folio(unsigned long pfn)
 
 ## 3af4a9e61e71117d5df2df3e1605fa062e04b869
 
+## io uring 的 memory barrier 于用户态和内核态之间
+
 ## TODO
 Code that is safe from concurrent access from an interrupt handler is said to be
 **interrupt-safe**. Code that is safe from concurrency on symmetrical multiprocessing

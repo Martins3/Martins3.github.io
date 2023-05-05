@@ -98,3 +98,19 @@ const struct file_operations def_blk_fops = {
 	.fallocate	= blkdev_fallocate,
 };
 ```
+
+## Welcome to Lord of the io_uring
+https://news.ycombinator.com/item?id=23132549
+
+## [io_uring is not an event system](https://news.ycombinator.com/item?id=27540248)
+
+看了半天，一会搞出什么?  都是类似这种:
+> epoll is based on a "readiness" model (i.e. it tells when when you can start I/O). io_uring is based on a "completion" model (i.e. it tells you when I/O is finished).
+
+相比 aio，似乎只是少了一次 getevent 那个系统调用而已。
+
+## 也不知道相对于 epoll 存在什么优势
+虽然存在测试
+https://github.com/frevib/io_uring-echo-server
+
+我感觉更多的是因为 aio 搞不好就不是真的 aio 吧
