@@ -22,3 +22,6 @@
 - exe: https://mirrors.aliyun.com/openeuler/openEuler-22.03-LTS/everything/x86_64/Packages/
 - src: https://repo.openeuler.org/openEuler-22.03-LTS/source/Packages/
 - debug: https://repo.openeuler.org/openEuler-20.03-LTS/debuginfo/aarch64/Packages/
+
+## 最新在 sp3
+https://mirrors.aliyun.com/openeuler/openEuler-20.03-LTS-SP3/update/aarch64/Packages/

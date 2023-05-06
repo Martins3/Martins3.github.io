@@ -25,7 +25,9 @@ https://linux.die.net/man/8/hping3
 https://github.com/wg/wrk
 
 ## tcpdump
+
 - [tcpdump](https://jvns.ca/tcpdump-zine.pdf)
+  - https://jvns.ca/blog/2016/03/16/tcpdump-is-amazing/
 - [ ] https://blog.cloudflare.com/bpf-the-forgotten-bytecode/ : bpf, the kernel counterpart of tcpdump
 
 - loopback interface
@@ -159,3 +161,6 @@ iptables为我们提供了如下规则的分类，或者说，iptables为我们�
 
 ## nslookup
 nslookup ww.baidu.com
+
+## arp-scan
+https://www.kali.org/tools/arp-scan/

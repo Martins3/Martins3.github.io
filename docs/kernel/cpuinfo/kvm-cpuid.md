@@ -231,8 +231,14 @@ kernel 侧:
 1. kvm 中 kvm_set_cpu_caps 的过滤的，表示是 kvm 支持的 cpu flags
 
 QEMU:
-1. kvm_arch_init_vcpu : 如果确定是 kvm，那么需要进行对应的调整
-2. cpu_x86_cpuid : 因为是 QEMU 模拟的，很多特性需要进行修改
+1. kvm_arch_get_supported_cpuid : 通过 kvm KVM_GET_SUPPORTED_CPUID 查询完成之后，需要进行一些调整
+2. cpu_x86_cpuid : 一些特性可以微调，例如根据 QEMU 的选项
+3. kvm_arch_init_vcpu : 如果确定是 kvm，那么需要进行对应的调整
+
+## hyperv cpuid 的增加流程是如何实现的
+1. x86_cpu_expand_features : 根据参数来增加 features
+2. kvm_arch_init_vcpu : 将数组 CPUArchState::features 中的内容同步到操作系统中
+
 
 ## 有的 cpuflags 是看不到的，例如 spec_ctrl
 cpuid -1 可以检测到

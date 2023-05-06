@@ -27,6 +27,8 @@ Emulating hardware Interfaces can be slow
 ## https://kernel.love/hyperv-enlightenment.html
 分析的很好，看一个例子就可以立刻理解.
 
+https://www.qemu.org/docs/master/system/i386/hyperv.html
+
 ## 启动 windows 的时候会调用到这里: kvm_get_hv_cpuid
 
 # hyperv 到底是如何影响的?
@@ -54,3 +56,16 @@ arg_cpu_model="-cpu host,hv_relaxed,hv_vpindex,hv_time"
 进一步参考:
 - https://www.kernel.org/doc/Documentation/virtual/kvm/cpuid.txt
 - https://learn.microsoft.com/en-us/virtualization/hyper-v-on-windows/tlfs/feature-discovery
+
+## QEMU
+```c
+static struct {
+    const char *desc;
+    struct {
+        uint32_t func;
+        int reg;
+        uint32_t bits;
+    } flags[2];
+    uint64_t dependencies;
+} kvm_hyperv_properties[] = {
+```

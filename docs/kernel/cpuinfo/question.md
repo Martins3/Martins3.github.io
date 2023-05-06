@@ -23,3 +23,5 @@
 3. QEMU 和 kvm 如何模拟
 4. msr
 5. 从 cpuid 到 cpuinfo 的实现
+
+## 关于问题 cpuid 的

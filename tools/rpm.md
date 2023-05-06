@@ -63,3 +63,7 @@ http://ftp.rpm.org/max-rpm/
 
 ## [ ] https://unix.stackexchange.com/questions/330186/where-does-modprobe-load-a-driver-that-udev-requests
 modporbe 是如何工作的
+
+## 查找 changelog
+
+rpm -q --changelog php | less
