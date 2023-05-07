@@ -142,24 +142,6 @@ https://www.linuxjournal.com/article/8212
 - tools/testing/selftests/membarrier/
 
 ## 具体案例
-### `__setup_APIC_LVTT`
-```c
-		/*
-		 * See Intel SDM: TSC-Deadline Mode chapter. In xAPIC mode,
-		 * writing to the APIC LVTT and TSC_DEADLINE MSR isn't serialized.
-		 * According to Intel, MFENCE can do the serialization here.
-		 */
-		asm volatile("mfence" : : : "memory");
-		return;
-```
-###  wait_on_bit
-kernel 8238b4579866b7c1bb99883cfe102a43db5506ff
-
-### do_idle 中的 memory model
-
-### virtio_wmb
-
-## io uring 的使用似乎是需要实现用户态和系统态的同步，使用 memory barrier 的
 
 ---
 title: 'Shared Memory Consistency Models: A Tutorial'
@@ -203,3 +185,6 @@ The last part of the article describes the programmer-centric view of relaxed me
 
 ## 如果分析了二进制翻译器的代码，那么将是绝杀!
 https://github.com/saagarjha/TSOEnabler
+
+## ARM 的文档
+- https://developer.arm.com/documentation/den0024/a/Memory-Ordering

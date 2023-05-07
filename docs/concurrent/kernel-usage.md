@@ -184,3 +184,21 @@ failed:
 	return false;
 }
 ```
+
+## 几个 memory model 的例子
+### `__setup_APIC_LVTT`
+```c
+		/*
+		 * See Intel SDM: TSC-Deadline Mode chapter. In xAPIC mode,
+		 * writing to the APIC LVTT and TSC_DEADLINE MSR isn't serialized.
+		 * According to Intel, MFENCE can do the serialization here.
+		 */
+		asm volatile("mfence" : : : "memory");
+		return;
+```
+### wait_on_bit
+kernel 8238b4579866b7c1bb99883cfe102a43db5506ff
+
+### do_idle 中的 memory model
+
+### virtio_wmb

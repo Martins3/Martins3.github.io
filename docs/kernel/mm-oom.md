@@ -174,7 +174,10 @@ proc_oom_score_adj_operations  和 proc_oom_adj_operations 都会调用到 `__se
   - 动态调整
   - choom
 
+## process_mrelease
 
+- [ ] [Hastening process cleanup with process_mrelease()](https://lwn.net/Articles/864184/)
+- [ ] 884a7e5964e06ed93c7771c0d7cf19c09a8946f1
 
 [^1]: https://lwn.net/Articles/666024/
 <script src="https://giscus.app/client.js"

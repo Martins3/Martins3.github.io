@@ -14,6 +14,6 @@ int main() {
 
   vector1 = _mm_shuffle_ps(vector1, vector1, _MM_SHUFFLE(0, 1, 2, 3));
   // vector1 is now (1, 2, 3, 4) (above shuffle reversed it)
-  printf("[huxueshi:%s:%d] \n", __FUNCTION__, __LINE__);
+  // TODO 靠，怎么输出啊
   return 0;
 }

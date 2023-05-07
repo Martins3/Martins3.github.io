@@ -6,16 +6,18 @@
   - 有点没有看懂，很烦啊！
 
 <p align="center">
-  <img src="./img/arm-kvm.png" alt="drawing" align="center"/>
+  <img src="../../../docs/kernel/img/arm-kvm.png" alt="drawing" align="center"/>
 </p>
 <p align="center">
 from https://lia.disi.unibo.it/Courses/som1516/materiale/VOSYS_BolognaKVMARM_2_12_2015.pdf
 </p>
 
+## 问题
+- [ ] ARM 中的特权集如何理解? 对于普通程序应该没有什么影响吧，但是对于虚拟化影响比较大?
+
 ## 很难的哇
 - https://systems.cs.columbia.edu/projects/kvm-arm/
 - https://www.cnblogs.com/LoyenWang/tag/%E8%99%9A%E6%8B%9F%E5%8C%96/ : LoyenWang 讲解的虚拟化是基于 ARM 的
-
 - https://lists.cs.columbia.edu/pipermail/kvmarm/2020-July/041733.html ：对于 ARM 最好的总结
 
 ## 资源
@@ -416,3 +418,10 @@ static unsigned int id_visibility(const struct kvm_vcpu *vcpu,
   - user_mem_abort
 
 - kvm_mmu_topup_memory_cache : 调查一下次数
+
+## ARM 中断虚拟化
+
+参考 LoyenWang 的 [【原创】Linux虚拟化KVM-Qemu分析（六）之中断虚拟化](https://www.cnblogs.com/LoyenWang/p/14017052.html)
+
+
+## [ ] 如何判断当前 KVM 是 VHE 还是 non-VHE 的?

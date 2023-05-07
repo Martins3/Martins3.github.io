@@ -72,3 +72,7 @@ https://stackoverflow.com/questions/55746320/why-rwlock-is-more-popular-than-seq
 对于访问 percpu 的数据，就像是单核执行一下，是需要屏蔽 preempt_disable 的
 
 但是无法理解，如果允许抢占了，之后只要抢占的 process 运行到相同的位置，那么不是一定 dead lock 吗？
+
+## mutex
+
+实现起来比想想的复杂

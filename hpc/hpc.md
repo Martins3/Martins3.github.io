@@ -16,3 +16,8 @@ more information on modal distributions, skewness, and other related topics.
 
 - [ARM’s Scalable Vector Extensions: A Critical Look at SVE2 For Integer Workloads](https://gist.github.com/zingaburga/805669eb891c820bd220418ee3f0d6bd)
   - 非常有趣
+
+
+- [Getting started with Intel x86 SSE SIMD instructions](https://stackoverflow.com/questions/1389712/getting-started-with-intel-x86-sse-simd-instructions)
+
+- [popcount 算法分析](https://zhuanlan.zhihu.com/p/341488123)

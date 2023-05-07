@@ -146,3 +146,8 @@ Kind of tricky to read without preliminary knowledge about GenSim.
 - [如何阅读学术论文](https://deardrops.github.io/post/how-to-read-academic-papers/)
 - [体系结构，操作系统相关学术资源](https://github.com/rajesh-s/computer-engineering-resources) :star:
 - [readpaper](https://readpaper.com/) :star:
+
+
+## 用上 AI
+- https://chatpaper.org/
+- https://www.chatpdf.com/
