@@ -188,3 +188,13 @@ https://github.com/saagarjha/TSOEnabler
 
 ## ARM 的文档
 - https://developer.arm.com/documentation/den0024/a/Memory-Ordering
+
+[lock would enforce a memory barrier, like an mfence](https://stackoverflow.com/questions/42820121/why-cannot-the-load-part-of-the-atomic-rmw-instruction-pass-the-earlier-store-to)
+> 1. Loads may be reordered with older stores to different locations but not with older stores to the same location
+> 2. Locked instructions have a total order
+
+https://www.arangodb.com/2021/02/cpp-memory-model-migrating-from-x86-to-arm/
+
+
+## 只有 store-load 存在乱序
+分别是 store-store，store-load，load-load 和 load-store。TSO 模型中，只存在 store-load 存在乱序，另外 3 种内存操作不存在乱序。

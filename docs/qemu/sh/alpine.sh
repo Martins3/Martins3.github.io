@@ -2,7 +2,7 @@
 set -E -e -u -o pipefail
 
 replace_kernel=false
-# replace_kernel=true
+replace_kernel=true
 
 hacking_memory="hotplug"
 hacking_memory="virtio-pmem"

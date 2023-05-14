@@ -76,3 +76,5 @@ https://stackoverflow.com/questions/55746320/why-rwlock-is-more-popular-than-seq
 ## mutex
 
 实现起来比想想的复杂
+
+## barrier 函数只是 compiler fence ?
