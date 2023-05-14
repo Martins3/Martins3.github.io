@@ -31,8 +31,8 @@ seq 3
 
 ### [ ] sed
 删除掉文件夹中所有含有 TODO 的行
-```plain
-ag -l TODO | xargs sed -i '/TODO/d'
+```txt
+ag -l TODO | xargs sed -i '/TODO/TODODO'
 ```
 
 ## awk

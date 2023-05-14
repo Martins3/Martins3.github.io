@@ -62,3 +62,14 @@ root=/dev/mapper/ubuntu--vg-ubuntu--lv
 
 ## 内核代码简单分析一下
 ### [kernel doc : Device Mapper](https://docs.kernel.org/admin-guide/device-mapper/index.html#)
+
+
+## 如何动态增加盘
+ubuntu 默认设置是 100G，但是 partion 却
+- https://packetpushers.net/ubuntu-extend-your-default-lvm-space/
+
+
+- lvextend -l +100%FREE /dev/ubuntu-vg/ubuntu-lv
+- resize2fs /dev/mapper/ubuntu--vg-ubuntu--lv
+
+## [ ]  似乎没有必要将 ubuntu guest 的安装为非 LVM 的格式吗?

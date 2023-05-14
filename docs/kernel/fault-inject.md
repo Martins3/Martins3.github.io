@@ -1,5 +1,8 @@
 # 错误注入
 
+## scsi debug
+- https://sg.danny.cz/sg/sdebug26.html
+
 ## dm-dust
 - https://blogs.oracle.com/linux/post/error-injection-using-dm-dust
   - dm-dust is a Linux kernel module which can be used to simulate the bad  blocks behavior on a physical disk.

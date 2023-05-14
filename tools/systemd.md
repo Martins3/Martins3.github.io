@@ -126,6 +126,14 @@ https://trstringer.com/simple-vs-oneshot-systemd-service/
 - journalctl -k : 这一次
 - journalctl --boot=-1 -k : 上一次的 kernel 日志
 
+### 打开持久化的 journal
+有的机器默认是没有持久化的
+```txt
+mkdir -p /var/log/journal
+systemctl restart systemd-journald.service
+```
+接下来，检查 /var/log/journal 中是否存在对应的数据。
+
 ## https://systemd-by-example.com/
 
 ## [ ] 到底是直接执行脚本还是需要借助 bash

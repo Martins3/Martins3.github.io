@@ -93,6 +93,9 @@ arg_usb=""
 
 # "$QEMU" -hda "${img}" -enable-kvm -m 8G -smp 8 -vga virtio -soundhw
 arg_cpu="-cpu host,-hypervisor,+kvm_pv_unhalt,+kvm_pv_eoi,hv_spinlocks=0x1fff,hv_vapic,hv_time,hv_reset,hv_vpindex,hv_runtime,hv_relaxed,kvm=off,hv_vendor_id=intel"
+# 这种还是 40% ~200% 的 CPU 消耗
+# s-kernel-tools
+arg_cpu="-cpu host,hv-relaxed=on,hv-vapic=on,hv-spinlocks=1000,hv-vpindex=on"
 # arg_qemu_mon="-vga virtio -display gtk,gl=on" # 打开 gl=on 只是显示 1/4，比较怀疑是整体缩放之后导致的
 # 现在因为显示问题，"只要让 qemu 不要去截获 ctrl + number ，然后调整一下声音，剪切板“ 这些计划都取消
 arg_qemu_mon=""
