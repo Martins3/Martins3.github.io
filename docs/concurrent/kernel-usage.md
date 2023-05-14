@@ -205,3 +205,5 @@ kernel 8238b4579866b7c1bb99883cfe102a43db5506ff
 
 ## get_task_cred 有	rcu_read_lock 和 rcu_read_unlock，似乎默认这个是不会产生任何代码的
 但是 rcu 说好了，是有 lock 的啊
+
+get_mem_cgroup_from_mm 也是类似的结构，但是其中的 try 也不同
