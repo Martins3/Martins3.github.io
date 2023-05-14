@@ -24,7 +24,6 @@
 * [cgroup_add_dfl_cftypes 和 cgroup_add_legacy_cftypes](#cgroup_add_dfl_cftypes-和-cgroup_add_legacy_cftypes)
 * [cgroup core files](#cgroup-core-files)
 * [v1 v2](#v1-v2)
-* [PSI](#psi)
 * [thread](#thread)
 * [page counter](#page-counter)
 * [cgroup_kf_ops](#cgroup_kf_ops)
@@ -47,7 +46,7 @@
 | desc                                                                                                                             | lines |
 |----------------------------------------------------------------------------------------------------------------------------------|-------|
 | 对于 cgroup_root 的各种处理，css 的 thread populated 等等的, idr  `*_from_root`, 似乎提供了各种辅助函数 @todo 但是不知道被谁使用 | 1300  |
-| 搞了半天的root 的事情，似乎都是为了处理 mount                                                                                    | 2000  |
+| 搞了半天的 root 的事情，似乎都是为了处理 mount                                                                                    | 2000  |
 | cftype 的各种函数: cgroup_base_files cgroup_kf_single_ops                                                                        | 4000  |
 | `css_task_iter_*`                                                                                                                | 4500  |
 | css destruction fork init 以及 `cgroup_get_from_*`                                                                               |
@@ -68,7 +67,7 @@ Linux kernel provides support for following twelve control group subsystems:
 
 Entries list above can be verified in sys and proc.
 
-```
+```plain
 +-------------+         +---------------------+    +------------->+---------------------+          +----------------+
 | task_struct |         |       css_set       |    |              | cgroup_subsys_state |          |     cgroup     |
 +-------------+         |                     |    |              +---------------------+          +----------------+
@@ -104,7 +103,7 @@ Entries list above can be verified in sys and proc.
 
 - [ ] what's relation with `css` and `cgroup`
 
-```
+```plain
 cgroup_mkdir         |
                      |==> cgroup_apply_control_enable ==> css_create
 cgroup_apply_control |
@@ -158,38 +157,38 @@ static int cgroup_apply_control(struct cgroup *cgrp)
 
 
 
-[Linux Cgroup系列（01）：Cgroup概述](https://segmentfault.com/a/1190000006917884)
+[Linux Cgroup 系列（01）：Cgroup 概述](https://segmentfault.com/a/1190000006917884)
 
 /proc/cgroups's entry *hierarchy*
-subsystem所关联到的cgroup树的ID，如果多个subsystem关联到同一颗cgroup树，那么他们的这个字段将一样，比如这里的cpu和cpuacct就一样，表示他们绑定到了同一颗树。如果出现下面的情况，这个字段将为0：
-- 当前subsystem没有和任何cgroup树绑定
-- 当前subsystem已经和cgroup v2的树绑定
-- 当前subsystem没有被内核开启
+subsystem 所关联到的 cgroup 树的 ID，如果多个 subsystem 关联到同一颗 cgroup 树，那么他们的这个字段将一样，比如这里的 cpu 和 cpuacct 就一样，表示他们绑定到了同一颗树。如果出现下面的情况，这个字段将为 0：
+- 当前 subsystem 没有和任何 cgroup 树绑定
+- 当前 subsystem 已经和 cgroup v2 的树绑定
+- 当前 subsystem 没有被内核开启
 
-挂载一颗和所有subsystem关联的cgroup树到/sys/fs/cgroup
+挂载一颗和所有 subsystem 关联的 cgroup 树到/sys/fs/cgroup
 
-    mount -t cgroup xxx /sys/fs/cgroup
+   plain mount -t cgroup xxx /sys/fs/cgroup
 
-挂载一颗和cpuset subsystem关联的cgroup树到/sys/fs/cgroup/cpuset
+挂载一颗和 cpuset subsystem 关联的 cgroup 树到/sys/fs/cgroup/cpuset
 
-    mkdir /sys/fs/cgroup/cpuset
+   plain mkdir /sys/fs/cgroup/cpuset
     mount -t cgroup -o cpuset xxx /sys/fs/cgroup/cpuset
 
-挂载一颗与cpu和cpuacct subsystem关联的cgroup树到/sys/fs/cgroup/cpu,cpuacct
+挂载一颗与 cpu 和 cpuacct subsystem 关联的 cgroup 树到/sys/fs/cgroup/cpu,cpuacct
 
-    mkdir /sys/fs/cgroup/cpu,cpuacct
+   plain mkdir /sys/fs/cgroup/cpu,cpuacct
     mount -t cgroup -o cpu,cpuacct xxx /sys/fs/cgroup/cpu,cpuacct
 
-挂载一棵cgroup树，但不关联任何subsystem，下面就是systemd所用到的方式
+挂载一棵 cgroup 树，但不关联任何 subsystem，下面就是 systemd 所用到的方式
 
-    mkdir /sys/fs/cgroup/systemd
+   plain mkdir /sys/fs/cgroup/systemd
     mount -t cgroup -o none,name=systemd xxx /sys/fs/cgroup/systemd
 
 
 ## proc
 - **WARN_ON(!proc_create_single("cgroups", 0, NULL, proc_cgroupstats_show));**
 
-```
+```plain
 ➜  vn git:(master) ✗ cat /proc/cgroups
 #subsys_name  hierarchy num_cgroups enabled
 cpuset  11  1 1
@@ -221,7 +220,7 @@ rdma  2 1 1
 
 - **proc_cgroup_show()**
 
-```
+```plain
 ➜  vn git:(master) ✗ cat /proc/self/cgroup
 12:hugetlb:/
 11:cpuset:/
@@ -333,7 +332,7 @@ cgroup fs is mount at /proc/fs/cgroup
   - [ ] check the code that we mount all kinds all subsystem seperately.
   - I guess, because cgroup can mount multiple times, everytime we mount with different option which specify the subsystem to use.
 
-```
+```plain
 cgroup2 /sys/fs/cgroup/unified cgroup2 rw,nosuid,nodev,noexec,relatime,nsdelegate 0 0
 cgroup /sys/fs/cgroup/net_cls,net_prio cgroup rw,nosuid,nodev,noexec,relatime,net_cls,net_prio 0 0
 cgroup /sys/fs/cgroup/systemd cgroup rw,nosuid,nodev,noexec,relatime,xattr,name=systemd 0 0
@@ -466,7 +465,7 @@ int cgroup_attach_task(struct cgroup *dst_cgrp, struct task_struct *leader,
 
 
 ## structure
-There are so many structures such as cgroup, cgroup_subsys_state, css_set, ....
+There are so many structures such as cgroup, cgroup_subsys_state, css_set, ……
 
 #### structure struct
 ```c
@@ -718,7 +717,7 @@ static void cgroup_exit_root_id(struct cgroup_root *root)
 - [ ] so, what's ssid ?
 
 ## cgroup_add_dfl_cftypes 和 cgroup_add_legacy_cftypes
-实际上，两个函数只有cft-> flags 的区别
+实际上，两个函数只有 cft-> flags 的区别
 
 但是，legacy_cftypes 就是 cgroup-v1
 
@@ -768,7 +767,7 @@ https://github.com/opencontainers/runc/blob/master/docs/cgroup-v2.md
 
 
 It's clear v1 and v2 core files is different.
-```
+```plain
 ➜  v2 ls
  cgroup.controllers   cgroup.max.descendants   cgroup.stat              cgroup.threads   init.scope    machine.slice     system.slice
  cgroup.max.depth     cgroup.procs             cgroup.subtree_control   cpu.pressure     io.pressure   memory.pressure   user.slice
@@ -781,7 +780,7 @@ It's clear v1 and v2 core files is different.
 
 
 memory subsystem's control file:
-```
+```plain
  cgroup.clone_children        memory.kmem.max_usage_in_bytes       memory.limit_in_bytes             memory.stat
  cgroup.event_control         memory.kmem.slabinfo                 memory.max_usage_in_bytes         memory.swappiness
  cgroup.procs                 memory.kmem.tcp.failcnt              memory.move_charge_at_immigrate   memory.usage_in_bytes
@@ -825,8 +824,6 @@ In cgroup v2, the device access control is implemented by attaching an eBPF prog
 - [ ] https://lwn.net/Articles/679786/
 - [ ] man : https://man7.org/linux/man-pages/man7/cgroups.7.html
 
-## PSI
-https://www.kernel.org/doc/html/latest/accounting/psi.html#
 ## thread
 https://lwn.net/Articles/656115/
 

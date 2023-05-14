@@ -3,8 +3,6 @@ http://www.ece.lsu.edu/ee4720/2014/lfp.s.html  浮点向量
 https://github.com/YosysHQ/yosys
 https://www.veripool.org/wiki/verilator
 
-https://github.com/riscv-boom/riscv-boom
-
 https://avrillion.com/stf/363/How-to-Build-1-Bit-of-RAM-Using-Transistors : 制造一个bit 的RAM
 
 Dennard Scaling
