@@ -1,5 +1,6 @@
 # cgroup
 
+## 用户态简单介绍
 > Linux kernel provides support for following twelve control group subsystems:
 > - cpuset - assigns individual processor(s) and memory nodes to task(s) in a group;
 > - cpu - uses the scheduler to provide cgroup tasks access to the processor resources;
@@ -18,8 +19,6 @@
 
 ## overview
 
-- [ ] cset_cgroup_from_root / task_cgroup_from_root
-
 - `css_task_iter_start`
 ```txt
 #0  css_task_iter_start (it=0xffff88811ca47bd8, flags=3, css=0xffff888108a42000) at kernel/cgroup/cgroup.c:4925
@@ -27,52 +26,42 @@
 #2  0xffffffff814ddfed in kernfs_seq_start (sf=0xffff888110735000, ppos=0xffff888110735028) at fs/kernfs/file.c:160
 #3  0xffffffff81460b08 in seq_read_iter (iocb=0xffffc90001843e98, iter=0xffffc90001843e70) at fs/seq_file.c:225
 ```
-- [ ] `cgroup_get_from_*` : 各种类似的函数
-
-- [ ] what's relation with `css` and `cgroup`
-
-```plain
-cgroup_mkdir         |
-                     |==> cgroup_apply_control_enable ==> css_create
-cgroup_apply_control |
 
 
-cgroup_mkdir         |==> cgroup_create(only called here)
+## 基础查询函数
+- cgroup_get_from_fd
+- cgroup_get_from_file
+- cgroup_get_from_id
+- cgroup_get_from_path
+
+- task_cgroup_from_root
+- cset_cgroup_from_root
+
+## 创建
+- cgroup_mkdir
+    - cgroup_create
+    - cgroup_apply_control_enable : 对于每一个层次 和 controller 创建
+      - css_populate_dir : 填充文件, if `struct cgroup_subsys_state` doesn’t attach to any subsystem, only base file will be create.
+      - css_create : 创建 css
+
+- 因为 threaded mode 导致 css_set 和 cgroup 不是完全对应的，其实一个 cgroup 关联的 css 可能是从多个 cgroup 中找到的 subset 的
+- find_css_set : 首先查询，如果无法查询到，那么就创建
+```txt
+#0  find_css_set (old_cset=old_cset@entry=0xffff888106ce3c00, cgrp=0xffff8881068f1000) at kernel/cgroup/cgroup.c:1208
+#1  0xffffffff81230a58 in cgroup_migrate_prepare_dst (mgctx=mgctx@entry=0xffffc90001d5bd30) at kernel/cgroup/cgroup.c:2814
+#2  0xffffffff81231b0b in cgroup_attach_task (dst_cgrp=dst_cgrp@entry=0xffff8881068f1000, leader=leader@entry=0xffff88810d20a300, threadgroup=threadgroup@entry=true) at kernel/cgroup/cgroup.c:2918
+#3  0xffffffff81233f34 in __cgroup_procs_write (of=0xffff888105ebc900, buf=<optimized out>, threadgroup=threadgroup@entry=true) at kernel/cgroup/cgroup.c:5172
+#4  0xffffffff81234007 in cgroup_procs_write (of=<optimized out>, buf=<optimized out>, nbytes=4, off=<optimized out>) at kernel/cgroup/cgroup.c:5185
+#5  0xffffffff814de799 in kernfs_fop_write_iter (iocb=0xffffc90001d5bea0, iter=<optimized out>) at fs/kernfs/file.c:334
 ```
-
-In v1, css is one-to-one mapped to cgroup because every hierarchy only support one subsystem.
-
-- css_populate_dir : if `struct cgroup_subsys_state` doesn’t attach to any subsystem, only base file will be create.
-
-
-## userland api
-
-[Linux Cgroup 系列（01）：Cgroup 概述](https://segmentfault.com/a/1190000006917884)
-
-挂载一颗和所有 subsystem 关联的 cgroup 树到/sys/fs/cgroup
-
-   plain mount -t cgroup xxx /sys/fs/cgroup
-
-挂载一颗和 cpuset subsystem 关联的 cgroup 树到/sys/fs/cgroup/cpuset
-
-   plain mkdir /sys/fs/cgroup/cpuset
-    mount -t cgroup -o cpuset xxx /sys/fs/cgroup/cpuset
-
-挂载一颗与 cpu 和 cpuacct subsystem 关联的 cgroup 树到/sys/fs/cgroup/cpu,cpuacct
-
-   plain mkdir /sys/fs/cgroup/cpu,cpuacct
-    mount -t cgroup -o cpu,cpuacct xxx /sys/fs/cgroup/cpu,cpuacct
-
-挂载一棵 cgroup 树，但不关联任何 subsystem，下面就是 systemd 所用到的方式
-
-   plain mkdir /sys/fs/cgroup/systemd
-    mount -t cgroup -o none,name=systemd xxx /sys/fs/cgroup/systemd
-
 
 ## proc
 
+### [ ] /sys/kernel/cgroup/delegate
+不太懂，delegate 是什么意思
 
-## /proc/kpagecgroup
+
+### /proc/kpagecgroup
 记录每一个页所属的 kpagecgroup 的 inode
 
 ```sh
@@ -181,64 +170,41 @@ LIST_HEAD(cgroup_roots);
 - cgroup_setup_root() add root to `cgroup_roots`
     -  if we only use cgroup v2, then there is only one caller for `cgroup_setup_root`
 
-## v1 v2
-[aaa](https://chrisdown.name/talks/cgroupv2/cgroupv2-fosdem.pdf)
+## v1 v2 的差别
+可以用来搞清楚，那些代码是 v1 的，那些是 v2 的。
 
-https://github.com/opencontainers/runc/blob/master/docs/cgroup-v2.md
-> /sys/fs/cgroup/cgroup.controllers is present.
+- [cgroupv2: Linux’s new unified control group system](https://chrisdown.name/talks/cgroupv2/cgroupv2-fosdem.pdf)
+
+1. unified hierarchy: a process can belong only to a single subgroup.
+  - All controller behaviors are hierarchical - if a controller is enabled on a cgroup, it affects all processes which belong to the cgroups consisting the inclusive sub-hierarchy of the cgroup.
+  如图所示 ![loading](https://miro.medium.com/max/557/1*P7ZLLF_F4TMgGfaJ2XIfuQ.png)
+2. 使用类型 BPF_PROG_TYPE_CGROUP_DEVICE 来控制 bpf 程序
+3. You cannot attach a process to an **internal subgroup**，process 只能挂载到末端上。
+4. All threads of a process belong to the same cgroup.
+
+
+1. https://github.com/opencontainers/runc/blob/master/docs/cgroup-v2.md
+  -  /sys/fs/cgroup/cgroup.controllers is present.
+
+- [](https://lwn.net/Articles/679786/)
 
 [Man cgroup(7)](https://man7.org/linux/man-pages/man7/cgroups.7.html)
 
-*In cgroups v1, the ability to mount different controllers against
-different hierarchies was intended to allow great flexibility for
-application design.*  In practice, though, the flexibility turned out
-to be less useful than expected, and in many cases added complexity.
-
-[The current adoption status of cgroup v2 in containers](https://medium.com/nttlabs/cgroup-v2-596d035be4d7)
-cgroup v1 has independent trees for each of controllers. eg. a process can join group "foo” for CPU (/sys/fs/cgroup/cpu/foo ) while joining group “bar” for memory ( /sys/fs/cgroup/memory/bar ).
-While this design seemed to provide good flexibility, it wasn’t proved to be useful in practice.
-
-- [x] one process can join multiple subsystem hierarchy
-
-cgroup v2 focuses on simplicity: `/sys/fs/cgroup/cpu/$GROUPNAME` and `/sys/fs/cgroup/memory/$GROUPNAME` in v1 are now unified as `/sys/fs/cgroup/$GROUPNAME` ,
-and a process can no longer join different groups for different controllers. If the process joins foo ( /sys/fs/cgroup/foo ), all controllers enabled for foo will take the control of the process.
-
-In cgroup v2, the device access control is implemented by attaching an eBPF program (`BPF_PROG_TYPE_CGROUP_DEVICE`)to the file descriptor of `/sys/fs/cgroup/foo` directory.
-
-
 [TLDR Understanding the new cgroups v2 API by Rami Rosen](https://medium.com/some-tldrs/tldr-understanding-the-new-control-groups-api-by-rami-rosen-980df476f633)
 
-1. single hierarchy
-  如图所示 ![loading](https://miro.medium.com/max/557/1*P7ZLLF_F4TMgGfaJ2XIfuQ.png)
-2. You cannot attach a process to an **internal subgroup**，process 只能挂载到末端上。
-3. cgroups v2, a process can belong only to a single subgroup.
 
-- [ ] https://man7.org/conf/lca2019/cgroups_v2-LCA2019-Kerrisk.pdf
-- [ ] https://lwn.net/Articles/679786/
-- [ ] man : https://man7.org/linux/man-pages/man7/cgroups.7.html
 
 [kernel doc](https://www.kernel.org/doc/html/latest/admin-guide/cgroup-v2.html)
-- cgroup is largely composed of two parts - the core and controllers.
-    - cgroup core is primarily responsible for **hierarchically** organizing processes.
-    - A cgroup controller is usually responsible for distributing a specific type of system resource along the hierarchy although there are utility controllers which serve purposes other than resource distribution.
-- cgroups form a tree structure and every process in the system belongs to one and only one cgroup.
-- All threads of a process belong to the same cgroup.
-- On creation, all processes are put in the cgroup that the parent process belongs to at the time.
-- A process can be *migrated* to another cgroup. Migration of a process doesn’t affect already existing descendant processes.
 
-- All controller behaviors are hierarchical - if a controller is enabled on a cgroup, it affects all processes which belong to the cgroups consisting the inclusive sub-hierarchy of the cgroup.
-
-## cgroup 支持将进程动态的迁移进入 cgroup 中的
-
-```sh
-cgclassify -g subsystems:path_to_cgroup pidlist
-```
 
 ## 一些接口的使用说明
 ### memory.usage_in_bytes 和 memory.memsw.usage_in_bytes 区别
 在 v1 中，memsw 包括 memory + swap
 
 v2 中使用 `memory.swap.*` 来描述。
+
+###  cgroup.controllers 和  cgroup.subtree_control
+前者只读，后者控制，来控制一个 cgroup 中存在那些 controller
 
 ### cgroup.procs
 v1 以前叫 tasks，后来都是
@@ -250,6 +216,8 @@ frozen 0
 ```
 1. populated : 描述一个 cgroup 中是否存在进程
 2. frozen : @todo
+
+可以通过 epoll 来监听这些文件，从而判断那些 cgroup 变为空了，内部靠 `cgroup_file_notify` 来实现。
 
 ### cgroup.misc
 细节看 : https://lwn.net/Articles/856438/
@@ -263,24 +231,14 @@ user.slice/misc.events
 user.slice/misc.max
 ```
 
-## 其他的实现
-- ./mm-memcontrol.md
-- ./storage-blk-wbt.md
-- ./sched-cgroup-cpuset.md
-- ./sched-cgroup-cpu.md
-- hugepage_cgroup
-- blk-throttle.c
-
-- mm/page_counter.c 是 memcontrol 和 hugepage_cgroup 的公共部分组件
 
 ## reference
 
 - [内核 v1](https://www.kernel.org/doc/html/latest/admin-guide/cgroup-v1/index.html)
-
-## 这个函数做啥用的
-```c
-static int cgroup_apply_control(struct cgroup *cgrp)
-```
+- [内核 v2](https://www.kernel.org/doc/html/latest/admin-guide/cgroup-v2.html)
+- [Man cgroup(7)](https://man7.org/linux/man-pages/man7/cgroups.7.html)
+- [What’s new in control groups](https://man7.org/conf/lca2019/cgroups_v2-LCA2019-Kerrisk.pdf)
+  - 分析 v2 中的特性，而且提到了一些高级特性，delegation 和 thread mode，这个 slides 常看常新。
 
 ## 如何理解
 这几个结构体的基本关系:
@@ -319,3 +277,12 @@ struct css_set init_css_set = {
 	.dfl_cgrp		= &cgrp_dfl_root.cgrp,
 };
 ```
+
+## controller 的实现分析
+- ./mm-memcontrol.md
+- ./storage-blk-wbt.md
+- ./sched-cgroup-cpuset.md
+- ./sched-cgroup-cpu.md
+- hugepage_cgroup
+- blk-throttle.c
+- mm/page_counter.c 是 memcontrol 和 hugepage_cgroup 的公共部分组件

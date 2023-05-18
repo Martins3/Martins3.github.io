@@ -25,3 +25,6 @@
 
 ## 最新在 sp3
 https://mirrors.aliyun.com/openeuler/openEuler-20.03-LTS-SP3/update/aarch64/Packages/
+
+## 找到历史上所有的包
+https://repo.openeuler.org/openEuler-20.03-LTS/update/x86_64/Packages/

@@ -174,6 +174,13 @@ struct cgroup_taskset {
       - cgroup_migrate
         - cgroup_migrate_add_task
 
+- A process can be *migrated* to another cgroup. Migration of a process doesn’t affect already existing descendant processes.
+
+操作方法:
+```sh
+cgclassify -g subsystems:path_to_cgroup pidlist
+```
+
 ## [ ] 实际上，cgroup 的热迁移是默认不迁移内存的
 - https://docs.kernel.org/admin-guide/cgroup-v1/memory.html#move-charges-at-task-migration
 

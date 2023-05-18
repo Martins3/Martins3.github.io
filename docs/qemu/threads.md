@@ -48,7 +48,7 @@ QEMU 的执行流程大致来说是分为 io thread 和 vCPU thread 的。
 ```
 
 在 `qemu_thread_create` 中添加调试语句:
-```plain
+```txt
 call_rcu
 IO io0
 CPU 0/KVM

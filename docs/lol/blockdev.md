@@ -593,6 +593,8 @@ long nr_blockdev_pages(void)
 - 如何修改一个 partion 的 UUID
   - [ ] 找到 kernel 处理 partion UUID 的位置
 
+- 为什么需要设置 /dev/disk/by-** 之类的名称，这个是如何组织的
+
 
 ## block_device_operations::submit_bio
 

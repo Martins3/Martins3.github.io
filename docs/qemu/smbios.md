@@ -148,3 +148,51 @@ done
                 }
             }
 ```
+
+## 物理上的实现
+
+```txt
+16:46:41 openat(AT_FDCWD, "/sys/firmware/dmi/tables/smbios_entry_point", O_RDONLY) = 3
+16:46:41 newfstatat(3, "", {st_mode=S_IFREG|0400, st_size=24, ...}, AT_EMPTY_PATH) = 0
+16:46:41 openat(AT_FDCWD, "/sys/firmware/dmi/tables/DMI", O_RDONLY) = 3
+```
+
+```txt
+└── id
+    ├── bios_date
+    ├── bios_release
+    ├── bios_vendor
+    ├── bios_version
+    ├── board_asset_tag
+    ├── board_name
+    ├── board_serial
+    ├── board_vendor
+    ├── board_version
+    ├── chassis_asset_tag
+    ├── chassis_serial
+    ├── chassis_type
+    ├── chassis_vendor
+    ├── chassis_version
+    ├── modalias
+    ├── power
+    │   ├── async
+    │   ├── autosuspend_delay_ms
+    │   ├── control
+    │   ├── runtime_active_kids
+    │   ├── runtime_active_time
+    │   ├── runtime_enabled
+    │   ├── runtime_status
+    │   ├── runtime_suspended_time
+    │   └── runtime_usage
+    ├── product_family
+    ├── product_name
+    ├── product_serial
+    ├── product_sku
+    ├── product_uuid
+    ├── product_version
+    ├── subsystem -> ../../../../class/dmi
+    ├── sys_vendor
+    └── uevent
+```
+
+操作系统的实现: linux/drivers/firmware/dmi_scan.c

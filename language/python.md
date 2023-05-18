@@ -85,3 +85,5 @@ c.x = 'foo'  # setter called
 foo = c.x    # getter called
 del c.x      # deleter called
 ```
+
+## 比较 a array of dict
