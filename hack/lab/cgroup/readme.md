@@ -5,6 +5,14 @@
 ## cpuset.sh
 https://www.redhat.com/en/blog/world-domination-cgroups-part-6-cpuset
 
+```sh
+#!/usr/bin/env bash
+sudo cgcreate -g cpuset:testset
+sudo cgset -r cpuset.cpus=3 testset
+sudo cgset -r cpuset.mems=0 testset
+sudo cgexec -g cpuset:testset stress-ng --vm-bytes 6500M --vm-keep --vm 3
+```
+
 ## memcontrol
 - https://www.rittmanmead.com/blog/2015/12/using-linux-control-groups-to-constrain-process-memory/
 
@@ -122,6 +130,7 @@ cgexec -g io:duck dd if=/dev/zero of=/dev/sdb bs=1M count=1000
 
 - https://oakbytes.wordpress.com/2012/09/02/cgroup-cpu-allocation-cpu-shares-examples/
 
+-> 这都是 v1 的代码，实际上是有问题的。
 sudo cgcreate -g cpu:A
 sudo cgget -r cpu.shares A
 sudo cgexec -g cpu:A dd if=/dev/zero of=/dev/null &
@@ -129,57 +138,8 @@ sudo cgset -r cpu.shares=768 A
 
 sudo cgexec -g cpu:C dd if=/dev/zero of=/dev/null &
 
-## TODO
-1. https://segmentfault.com/a/1190000007468509
+## 这个真的存在吗?
+cgset -r cpu.cfs_quota_us=50000 mygroup
 
-- systemd-cgls : 从 systemd 的架构展示
-
-## 如何切换 cgroup v2 来测试
-检测当前是那个版本: https://kubernetes.io/docs/concepts/architecture/cgroups/
-
-```sh
-stat -fc %T /sys/fs/cgroup/
-```
-- tmpfs : v1
-- cgroup2fs : v2
-
-```sh
-sudo grubby --update-kernel=ALL --args=systemd.unified_cgroup_hierarchy=1
-```
-
-老版本的 libcgroup 不能支持 cgroup v2 :
-```txt
-➜ sudo cgcreate -g cpu:A
-
-[sudo] password for martins3:
-cgcreate: libcgroup initialization failed: Cgroup is not mounted
-```
-
-## libcgroup 的基本使用手册
-centos 8 / openEuler 上手动安装
-
-```sh
-yum install autoconf
-yum install aclocal
-yum install automake
-yum install libtool
-yum install pam-devel
-yum install systemd-devel
-```
-
-git clone https://github.com/libcgroup/libcgroup
-
-然后参考此处: https://askubuntu.com/questions/27677/cannot-find-install-sh-install-sh-or-shtool-in-ac-aux
-```c
-libtoolize --force aclocal
-autoheader
-automake --force-missing --add-missing
-autoconf
-```
-
-最后参考官方文档:
-```c
-./configure; make; make install
-```
-### 基本的使用方法
+## 常见
 1. cgcreate -g memory,hugeltb:duck

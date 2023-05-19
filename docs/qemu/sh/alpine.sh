@@ -480,7 +480,7 @@ done
 
 if [ ! -f "${disk_img}" ]; then
 	sure "use ${iso} install ${disk_img}"
-	qemu-img create -f qcow2 "${disk_img}" 100G
+	qemu-img create -f qcow2 "${disk_img}" 10G
 	# 很多发行版的安装必须使用图形界面，如果在远程，那么需要 vnc
 	arg_monitor="-vnc :0,password=on -monitor stdio"
 	arg_monitor=""

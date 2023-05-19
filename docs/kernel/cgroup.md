@@ -17,6 +17,9 @@
 >
 > from : https://0xax.gitbooks.io/linux-insides/content/Cgroups/linux-cgroups-1.html
 
+- systemd-cgls : 从 systemd 的架构展示 cgroup 的控制关系。
+- systemd-cgtop
+
 ## overview
 
 - `css_task_iter_start`
@@ -171,6 +174,28 @@ LIST_HEAD(cgroup_roots);
     -  if we only use cgroup v2, then there is only one caller for `cgroup_setup_root`
 
 ## v1 v2 的差别
+### 如何切换 cgroup v2 来测试
+检测当前是那个版本: https://kubernetes.io/docs/concepts/architecture/cgroups/
+
+```sh
+stat -fc %T /sys/fs/cgroup/
+```
+- tmpfs : v1
+- cgroup2fs : v2
+
+```sh
+sudo grubby --update-kernel=ALL --args=systemd.unified_cgroup_hierarchy=1
+```
+
+老版本的 libcgroup 不能支持 cgroup v2 :
+```txt
+➜ sudo cgcreate -g cpu:A
+
+[sudo] password for martins3:
+cgcreate: libcgroup initialization failed: Cgroup is not mounted
+```
+
+
 可以用来搞清楚，那些代码是 v1 的，那些是 v2 的。
 
 - [cgroupv2: Linux’s new unified control group system](https://chrisdown.name/talks/cgroupv2/cgroupv2-fosdem.pdf)

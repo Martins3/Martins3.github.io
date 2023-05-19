@@ -857,3 +857,11 @@ rcu_assign_pointer(p->rdev, rdev);
 `raid1_remove_disk`
 
 保护的 rdev ，而不是 mirror ，那么很遗憾
+
+## resync 行为到底是什么行为?
+
+似乎在最开始创建的时候，存在如下的内容:
+- raid1d
+  - sync_request_write
+
+## md_wait_for_blocked_rdev 这个同步机制是做什么的?

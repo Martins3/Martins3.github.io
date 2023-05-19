@@ -30,6 +30,7 @@ function libcgroup() {
 	rm -fr autom4te.cache
 
 	./configure && make -j && make install
+	# 将会自动安装到 /usr/local/bin/cgexec 中
 	popd
 }
 
@@ -84,5 +85,6 @@ install automake
 install libtool
 install pam-devel
 install numactl
+install flex flex-devel bios bison-devel
 ohmyzsh
 share
