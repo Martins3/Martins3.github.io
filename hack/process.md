@@ -31,7 +31,6 @@
 * [pid](#pid)
 * [green thread](#green-thread)
 * [cpp thread keyword](#cpp-thread-keyword)
-* [cpu](#cpu)
 * [syscall](#syscall)
     * [x86 syscall(merge)](#x86-syscallmerge)
     * [syscall int](#syscall-int)
@@ -44,11 +43,7 @@
 * [kthread](#kthread)
 * [first user process](#first-user-process)
 * [TODO](#todo)
-* [process group](#process-group)
-* [sched_class ops](#sched_class-ops)
     * [enqueue](#enqueue)
-* [runtime vruntime](#runtime-vruntime)
-* [cfs](#cfs)
 * [pt_regs](#pt_regs)
 * [ipc](#ipc)
 * [zombie 和 orphan](#zombie-和-orphan)
@@ -944,12 +939,6 @@ https://github.com/google/marl : 为什么用户层可以控制 scheduler ?
 ## cpp thread keyword
 如何实现的 ?
 
-
-## cpu
-https://superuser.com/questions/1217454/how-do-you-control-thread-affinity-across-multiple-processes-on-linux
-1. cat /proc/cpuinfo |grep -P 'processor|physical id|core id' 中间的各种 id 的含义是什么 ?
-2. 更进一步，/proc/cpuinfo 中的每一个含义是什么，数据从哪里导出的
-
 ## syscall
 [What did hardware do in syscall](https://www.felixcloutier.com/x86/syscall)
 
@@ -1394,53 +1383,15 @@ https://phoenixnap.com/kb/create-a-sudo-user-on-debian : 首先搞清楚这种�
 > 3. https://stackoverflow.com/questions/2711044/why-doesnt-linux-use-the-hardware-context-switch-via-the-tss
 > > 再次印证TSS 在 context switch 中间并没有什么作用，但是 @todo TSS 中间存储了ESP0 和 SS0 用于实现interrupt
 
-## process group
-- [ ] maybe build a shell: https://github.com/danistefanovic/build-your-own-x#build-your-own-shell, then process group is simple
-
-
-![loading](https://unixism.net/wp-content/uploads/2020/06/Process-Group-Signals.png)
-
-
-## sched_class ops
-```c
-struct sched_class {
-}
-```
-
-
 #### enqueue
 ```c
 enqueue_task
 
 	p->sched_class->enqueue_task(rq, p, flags);
-
 ```
 
 With post of [LoyenWang](https://www.cnblogs.com/LoyenWang/p/12495319.html), we will understand every class function.
 
-## runtime vruntime
-
-
-## cfs
-- [ ] 运行时间runtime可以转换成虚拟运行时间vruntime；
-- [ ] what if vruntime overflow ?
-
-
-```c
-struct sched_entity {
-	/* For load-balancing: */
-	struct load_weight		load;     //调度实体的负载权重值
-	struct rb_node			run_node;   //用于连接到CFS运行队列的红黑树中的节点
-	struct list_head		group_node; //用于连接到CFS运行队列的cfs_tasks链表中的节点
-	unsigned int			on_rq;        //用于表示是否在运行队列中
-
-	u64				exec_start;           //当前调度实体的开始执行时间
-	u64				sum_exec_runtime;     //调度实体执行的总时间
-	u64				vruntime;             //虚拟运行时间，这个时间用于在CFS运行队列中排队
-	u64				prev_sum_exec_runtime;//上一个调度实体运行的总时间
-
-	u64				nr_migrations;        //负载均衡
-```
 
 ## pt_regs
 ```c

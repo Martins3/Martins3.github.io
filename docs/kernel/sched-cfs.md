@@ -181,3 +181,29 @@ static void yield_task_fair(struct rq *rq)
 #19 0xffffffff8240148a in asm_sysvec_apic_timer_interrupt () at ./arch/x86/include/asm/idtentry.h:645
 ```
 其中还有几个小实验可以分析下。
+
+## runtime vruntime
+
+## cfs
+- [ ] 运行时间 runtime 可以转换成虚拟运行时间 vruntime；
+- [ ] what if vruntime overflow ?
+
+
+```c
+struct sched_entity {
+	/* For load-balancing: */
+	struct load_weight		load;     //调度实体的负载权重值
+	struct rb_node			run_node;   //用于连接到CFS运行队列的红黑树中的节点
+	struct list_head		group_node; //用于连接到CFS运行队列的cfs_tasks链表中的节点
+	unsigned int			on_rq;        //用于表示是否在运行队列中
+
+	u64				exec_start;           //当前调度实体的开始执行时间
+	u64				sum_exec_runtime;     //调度实体执行的总时间
+	u64				vruntime;             //虚拟运行时间，这个时间用于在CFS运行队列中排队
+	u64				prev_sum_exec_runtime;//上一个调度实体运行的总时间
+
+	u64				nr_migrations;        //负载均衡
+```
+
+## 致命问题
+- [ ] what's relation with `load`, `priority` , `weight` and `share` ?

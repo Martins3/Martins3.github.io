@@ -39,6 +39,8 @@ workstation="$(jq -r ".workstation" <"$configuration")"
 # kernel_dir=/home/martins3/kernel/centos-3.10.0-1160.11.1-x86_64
 
 qemu=${qemu_dir}/build/x86_64-softmmu/qemu-system-x86_64
+# 最近的编出来的 qemu 似乎不能调试了 2023-05-20
+qemu="qemu-system-x86_64"
 virtiofsd=${qemu_dir}/build/tools/virtiofsd/virtiofsd
 kernel=${kernel_dir}/arch/x86/boot/bzImage
 # kernel="/nix/store/g4zdxdxj8sfbv08grmpahzajrm1gm4s8-linux-5.15.97/bzImage"
