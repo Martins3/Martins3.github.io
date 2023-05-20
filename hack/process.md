@@ -6,7 +6,6 @@
 * [task_struct](#task_struct)
 * [sched class and policy](#sched-class-and-policy)
 * [runqueue](#runqueue)
-* [task_group](#task_group)
 * [rt](#rt)
 * [schedule](#schedule)
 * [load](#load)
@@ -225,53 +224,6 @@ struct rq {
     /* ... */
 }
 ```
-
-## task_group
-![](https://img2020.cnblogs.com/blog/1771657/202003/1771657-20200310214009477-225815245.png)
-- task_group会为每个CPU再维护一个cfs_rq，这个cfs_rq用于组织挂在这个任务组上的任务以及子任务组，参考图中的Group A；
-- 调度器在调度的时候，比如调用`pick_next_task_fair`时，会从遍历队列，选择sched_entity，如果发现sched_entity对应的是task_group，则会继续往下选择；
-- 由于sched_entity结构中存在parent指针，指向它的父结构，因此，系统的运行也能从下而上的进行遍历操作，通常使用函数walk_tg_tree_from进行遍历；
-
-- [ ] please notice that, when CONFIG_CFS_BADNWIDTH turned off, walk_tg_tree_from's users are disapeared, so why `bandwidth` need `walk_tg_tree_from` ?
-
-- [ ] we create a `cfs_rq` for every group, verfiy it
-- [ ] what kinds of process will be added to same process group ?
-
-
-```c
-/* task group related information */
-struct task_group {
-    /* ... */
-
-    /* 为每个CPU都分配一个CFS调度实体和CFS运行队列 */
-#ifdef CONFIG_FAIR_GROUP_SCHED
-	/* schedulable entities of this group on each cpu */
-	struct sched_entity **se;
-	/* runqueue "owned" by this group on each cpu */
-	struct cfs_rq **cfs_rq;
-	unsigned long shares;
-#endif
-
-    /* 为每个CPU都分配一个RT调度实体和RT运行队列 */
-#ifdef CONFIG_RT_GROUP_SCHED
-	struct sched_rt_entity **rt_se;
-	struct rt_rq **rt_rq;
-
-	struct rt_bandwidth rt_bandwidth;
-#endif
-
-    /* task_group之间的组织关系 */
-	struct rcu_head rcu;
-	struct list_head list;
-
-	struct task_group *parent;
-	struct list_head siblings;
-	struct list_head children;
-
-    /* ... */
-};
-```
-
 
 ## rt
 

@@ -23,19 +23,6 @@ struct rq {
 
 - sched_class
 
-- sched_entity : 应该有时候，指的是一个 thread ，而有的时候是 task group 的
-  - [ ] 有待验证
-  - [ ] 为什么不搞成 group 中的 entry 也是公平调度的
-```c
-#ifdef CONFIG_FAIR_GROUP_SCHED
-/* An entity is a task if it doesn't "own" a runqueue */
-#define entity_is_task(se)	(!se->my_q)
-#else
-#define entity_is_task(se)	1
-#endif
-// 有的 entity 是用于对应的用于管理的，而有的才是真的对应于process 的
-```
-
 sched_class 有几种实现：
 * stop_sched_class 优先级最高的任务会使用这种策略，会中断所有其他线程，且不会被其他任务打断；
 * dl_sched_class 就对应上面的 deadline 调度策略；
@@ -97,15 +84,6 @@ sched_class 有几种实现：
 1. include/linux/sched.h:400 的注释
 2. task_group::shares 的计算
 3. 关于新创建的 cfs_rq 的位置，可以查看一下 online 和 offline 的函数
-
-```c
-#ifdef CONFIG_FAIR_GROUP_SCHED
-	/* list of leaf cfs_rq on this CPU: */
-	struct list_head	leaf_cfs_rq_list;
-	struct list_head	*tmp_alone_branch;
-#endif /* CONFIG_FAIR_GROUP_SCHED */
-```
-> 其中的 rq 的更新的内容是什么 ?
 
 5. attach_entity_cfs_rq 和向 group 中间添加 setsid 之后 fork 出来的，有没有关系 ?
 
@@ -685,9 +663,6 @@ entity 就是一个 group 的代表
 
 > 1. malloc 出来的如何关联上去 ?
 > 2. 和 rq 中间的关系是什么 ?
-
-task_group  CONFIG_FAIR_GROUP_SCHED 以及 CONFIG_CFS_BANDWIDTH 三者逐渐递进的
-
 
 ## group 之间如何均衡
 

@@ -53,7 +53,7 @@ also needed in userspace to complete implementation. Examples of such libraries 
 `Next Generation Posix Threads`.
 
 > 1. 产生新的进程的方法 :  fork 和 exec
-> 2. 实现 Posix Thread 的方法 : clone 
+> 2. 实现 Posix Thread 的方法 : clone
 
 #### 2.3.2 Namespaces
 > @todo 这一个章节就是分析了 Namespaces 的内容，和 process 关系不打，到时候过来分析!
@@ -72,7 +72,7 @@ With Linux namespaces, one can have this data structure cloned, so that processe
 ------
 
 Namespaces provide a lightweight form of virtualization by allowing us to view the global properties of
-a running system under different aspects. 
+a running system under different aspects.
 
 Using virtualized environments as provided
 by KVM or VMWare is one way to solve the problem, but does not distribute resources very well: One
@@ -93,13 +93,13 @@ above, changing a — from its point of view — global property will not propag
 The situation is more involved for filesystems where the sharing mechanisms are very powerful and allow a plethora of possibilities, as discussed in Chapter 8.
 
 
-The implementation of namespaces requires two components: 
-1. per-subsystem namespace structures that wrap *all* *formerly* global components on a per-namespace basis, 
+The implementation of namespaces requires two components:
+1. per-subsystem namespace structures that wrap *all* *formerly* global components on a per-namespace basis,
 2. and a mechanism that associates a given process with the individual namespaces to which it belongs.
 > all 就是由　`struct nsproxy` 实现，其中持有多个类型namespace的指针
 
 Formerly global properties of subsystems are wrapped up in namespaces, and each process is associated
-with a particular selection of namespaces. 
+with a particular selection of namespaces.
 > 在重复说一遍
 
 
@@ -184,13 +184,13 @@ the function `copy_utsname`. The function is called when a process is forked and
 specifies that a new UTS namespace is to be established.
 In this case, a copy of the previous instance
 of `uts_namespace` is generated, and a corresponding pointer is installed into the nsproxy instance of the
-current task. Nothing more is required! 
+current task. Nothing more is required!
 
 How does the kernel go about creating a new UTS namespace? This falls under the responsibility of
 the function `copy_utsname`. The function is called when a process is forked and the flag `CLONE_NEWUTS`
 specifies that a new UTS namespace is to be established. In this case, a copy of the previous instance
 of uts_namespace is generated, and a corresponding pointer is installed into the nsproxy instance of the
-current task. Nothing more is required! 
+current task. Nothing more is required!
 Since the kernel makes sure to always operate on the task-specific
 `uts_namespace` instance whenever a UTS value is read or set, changes for the current process will not be
 reflected in the parent, and changes in the parent will also not propagate toward the children.
@@ -204,7 +204,7 @@ reflected in the parent, and changes in the parent will also not propagate towar
 
 Each process is, however, not only characterized by its PID but also by other identifiers.
 Several types are possible:
-1. All processes in a thread group (i.e., different execution contexts of a process created by calling clone with CLONE_THREAD as we will see below) 
+1. All processes in a thread group (i.e., different execution contexts of a process created by calling clone with CLONE_THREAD as we will see below)
 have a uniform thread group id (`TGID`). If a process does not use threads, its PID and TGID are identical.
 
 The main process in a thread group is called the group leader. The `group_leader` element of the
@@ -638,7 +638,7 @@ parent and child. These include the following:
 concentrate on the flags used by user thread libraries (above all, NPTL) to implement multithreading capabilities
 
 > 讲解三个3个flag
-> 处理`_do_fork`参数 : tidptr 
+> 处理`_do_fork`参数 : tidptr
 
 https://en.wikipedia.org/wiki/Native_POSIX_Thread_Library
 
@@ -745,7 +745,7 @@ search_binary_handler
 ```
 `bprm_init` then handles several administrative tasks:
 1. `mm_alloc` generates a new instance of mm_struct to
-manage the process address space (see Chapter 4). 
+manage the process address space (see Chapter 4).
 2. `init_new_context` is an architecture-specific function
 that initializes the instance,
 3. and `__bprm_mm_init` sets up an initial stack
@@ -769,11 +769,11 @@ that the main function of the program is executed when the scheduler selects the
 Suffice it to say that the implementation of this function consists essentially of decrementing reference
 counters and returning memory areas to memory management once the reference counter has reverted
 to 0 and the corresponding structure is no longer being used by any process in the system
-> 如果单独分析的话，那么没有什么神奇的，就是一堆free dec 
+> 如果单独分析的话，那么没有什么神奇的，就是一堆free dec
 
 ## 2.5 Implementation of the Scheduler
 Scheduler's task is split into two different parts
-1. scheduling policy 
+1. scheduling policy
 2. context switching
 
 #### 2.5.1 Overview
@@ -793,10 +793,10 @@ sense.
 Besides the red-black tree, a run queue is also equipped with a virtual clock.
 
 #### 2.5.2 Data Structures
-Scheduling can be activated in two ways: 
+Scheduling can be activated in two ways:
 1. (generic scheduler) either directly if a task goes to sleep or wants to yield the CPU for other reasons
 2. (core scheduler) or by a periodic mechanism that is run with constant frequency and that checks
-from time to time if switching tasks is necessary. 
+from time to time if switching tasks is necessary.
 
 There are several scheduling-relevant elements in the task structure of each process.
 ```c
@@ -834,7 +834,7 @@ struct sched_rt_entity {
 #endif
 } __randomize_layout;
 ```
-1. 
+1.
     * `static_prio` the static priority of a process.
   The static priority is the priority assigned to the process when it was started. It can be modified
   with the `nice` and `sched_setscheduler` system calls, but remains otherwise constant during the
@@ -843,11 +843,11 @@ struct sched_rt_entity {
   scheduling policy of the process. When a process forks, the child process will inherit the normal priority
     * However, the priority considered by the scheduler is kept in `prio`.
 > @todo 似乎normal 和 rr 并不共享，优先级的表示
-> @todo static_prio normal_prio 以及 prio 之间的计算方法是什么 ? 
+> @todo static_prio normal_prio 以及 prio 之间的计算方法是什么 ?
 
-2. `rt_priority` denotes the priority of a real-time process. 
+2. `rt_priority` denotes the priority of a real-time process.
 3. `sched_class` denotes the scheduler class the process is in.
-4. The scheduler is not limited to schedule processes, but can also work with larger entities. 
+4. The scheduler is not limited to schedule processes, but can also work with larger entities.
 This generality requires that the scheduler does not directly operate on processes but works with
 schedulable entities. An entity is represented by an instance of `sched_entity`
 5. `policy` holds the scheduling policy applied to the process. Linux supports five possible values:
@@ -864,7 +864,7 @@ completely fair scheduler. `run_list` is a list head used to hold the process on
 * ***Scheduler Classes***
 
 The `next` element connects the `sched_class` instances of the different scheduling
-classes in the described order. 
+classes in the described order.
 
 1. `enqueue_task` adds a new process to the run queue. This happens when a process changes from
 a sleeping into a runnable state.
@@ -984,153 +984,7 @@ void check_preempt_curr(struct rq *rq, struct task_struct *p, int flags)
  * acquire operations must be ordered by ascending &runqueue.
  */
 struct rq {
-	/* runqueue lock: */
-	raw_spinlock_t		lock;
-
-	/*
-	 * nr_running and cpu_load should be in the same cacheline because
-	 * remote CPUs use both these fields when doing load calculation.
-	 */
-	unsigned int		nr_running;
-#ifdef CONFIG_NUMA_BALANCING
-	unsigned int		nr_numa_running;
-	unsigned int		nr_preferred_running;
-	unsigned int		numa_migrate_on;
-#endif
-	#define CPU_LOAD_IDX_MAX 5
-	unsigned long		cpu_load[CPU_LOAD_IDX_MAX];
-#ifdef CONFIG_NO_HZ_COMMON
-#ifdef CONFIG_SMP
-	unsigned long		last_load_update_tick;
-	unsigned long		last_blocked_load_update_tick;
-	unsigned int		has_blocked_load;
-#endif /* CONFIG_SMP */
-	unsigned int		nohz_tick_stopped;
-	atomic_t nohz_flags;
-#endif /* CONFIG_NO_HZ_COMMON */
-
-	/* capture load from *all* tasks on this CPU: */
-	struct load_weight	load;
-	unsigned long		nr_load_updates;
-	u64			nr_switches;
-
-	struct cfs_rq		cfs;
-	struct rt_rq		rt;
-	struct dl_rq		dl;
-
-#ifdef CONFIG_FAIR_GROUP_SCHED
-	/* list of leaf cfs_rq on this CPU: */
-	struct list_head	leaf_cfs_rq_list;
-	struct list_head	*tmp_alone_branch;
-#endif /* CONFIG_FAIR_GROUP_SCHED */
-
-	/*
-	 * This is part of a global counter where only the total sum
-	 * over all CPUs matters. A task can increase this counter on
-	 * one CPU and if it got migrated afterwards it may decrease
-	 * it on another CPU. Always updated under the runqueue lock:
-	 */
-	unsigned long		nr_uninterruptible;
-
-	struct task_struct	*curr;
-	struct task_struct	*idle;
-	struct task_struct	*stop;
-	unsigned long		next_balance;
-	struct mm_struct	*prev_mm;
-
-	unsigned int		clock_update_flags;
-	u64			clock;
-	/* Ensure that all clocks are in the same cache line */
-	u64			clock_task ____cacheline_aligned;
-	u64			clock_pelt;
-	unsigned long		lost_idle_time;
-
-	atomic_t		nr_iowait;
-
-#ifdef CONFIG_SMP
-	struct root_domain	*rd;
-	struct sched_domain	*sd;
-
-	unsigned long		cpu_capacity;
-	unsigned long		cpu_capacity_orig;
-
-	struct callback_head	*balance_callback;
-
-	unsigned char		idle_balance;
-
-	unsigned long		misfit_task_load;
-
-	/* For active balancing */
-	int			active_balance;
-	int			push_cpu;
-	struct cpu_stop_work	active_balance_work;
-
-	/* CPU of this runqueue: */
-	int			cpu;
-	int			online;
-
-	struct list_head cfs_tasks;
-
-	struct sched_avg	avg_rt;
-	struct sched_avg	avg_dl;
-#ifdef CONFIG_HAVE_SCHED_AVG_IRQ
-	struct sched_avg	avg_irq;
-#endif
-	u64			idle_stamp;
-	u64			avg_idle;
-
-	/* This is used to determine avg_idle's max value */
-	u64			max_idle_balance_cost;
-#endif
-
-#ifdef CONFIG_IRQ_TIME_ACCOUNTING
-	u64			prev_irq_time;
-#endif
-#ifdef CONFIG_PARAVIRT
-	u64			prev_steal_time;
-#endif
-#ifdef CONFIG_PARAVIRT_TIME_ACCOUNTING
-	u64			prev_steal_time_rq;
-#endif
-
-	/* calc_load related fields */
-	unsigned long		calc_load_update;
-	long			calc_load_active;
-
-#ifdef CONFIG_SCHED_HRTICK
-#ifdef CONFIG_SMP
-	int			hrtick_csd_pending;
-	call_single_data_t	hrtick_csd;
-#endif
-	struct hrtimer		hrtick_timer;
-#endif
-
-#ifdef CONFIG_SCHEDSTATS
-	/* latency stats */
-	struct sched_info	rq_sched_info;
-	unsigned long long	rq_cpu_time;
-	/* could above be rq->cfs_rq.exec_clock + rq->rt_rq.rt_runtime ? */
-
-	/* sys_sched_yield() stats */
-	unsigned int		yld_count;
-
-	/* schedule() stats */
-	unsigned int		sched_count;
-	unsigned int		sched_goidle;
-
-	/* try_to_wake_up() stats */
-	unsigned int		ttwu_count;
-	unsigned int		ttwu_local;
-#endif
-
-#ifdef CONFIG_SMP
-	struct llist_head	wake_list;
-#endif
-
-#ifdef CONFIG_CPU_IDLE
-	/* Must be inspected within a rcu lock section */
-	struct cpuidle_state	*idle_state;
-#endif
+  // ...
 };
 ```
 The central data structure of the core scheduler that is used to manage active processes is known as the
@@ -1138,9 +992,9 @@ run queue. Each CPU has its own run queue, and each active process appears on ju
 not possible to run a process on several CPUs at the same time
 
 
-**The run queue is the starting point for many actions of the global scheduler.** 
+**The run queue is the starting point for many actions of the global scheduler.**
 Note, however, that processes are not directly managed by the general elements of the run queue!
-This is the responsibility of the individual scheduler classes, 
+This is the responsibility of the individual scheduler classes,
 and a class-specific sub-run queue is therefore *embedded* in each run
 queue.
 > sched_class 通过事先注册的函数处理具体事物，而rq 则是调度中心,对于SMP，每一个processor 都定义一个.
@@ -1196,40 +1050,6 @@ Since the scheduler can operate with more general entities than tasks, an approp
 required to describe such an entity. It is defined as follows:
 ```c
 struct sched_entity {
-	/* For load-balancing: */
-	struct load_weight		load;
-	unsigned long			runnable_weight;
-	struct rb_node			run_node;
-	struct list_head		group_node;
-	unsigned int			on_rq;
-
-	u64				exec_start;
-	u64				sum_exec_runtime;
-	u64				vruntime;
-	u64				prev_sum_exec_runtime;
-
-	u64				nr_migrations;
-
-	struct sched_statistics		statistics;
-
-#ifdef CONFIG_FAIR_GROUP_SCHED
-	int				depth;
-	struct sched_entity		*parent;
-	/* rq on which this entity is (to be) queued: */
-	struct cfs_rq			*cfs_rq;
-	/* rq "owned" by this entity/group: */
-	struct cfs_rq			*my_q;
-#endif
-
-#ifdef CONFIG_SMP
-	/*
-	 * Per entity load average tracking.
-	 *
-	 * Put into separate cache line so it does not
-	 * collide with read-mostly values above.
-	 */
-	struct sched_avg		avg;
-#endif
 };
 ```
 - `load` specifies a weight for each entity that contributes to the total load of the queue. Computing the load weight is an important task of the scheduler because the speed of the virtual clock
@@ -1256,12 +1076,12 @@ static void set_next_entity(struct cfs_rq *cfs_rq, struct sched_entity *se)
 static void check_preempt_tick(struct cfs_rq *cfs_rq, struct sched_entity *curr)
 // 需要计算 sum_exec_runtime和 prev_exec_runtime 之间的差值
 ```
-> @todo 又是preemption 
+> @todo 又是preemption
 
 #### 2.5.3 Dealing with Priorities
 
 **Kernel Representation of Priorities**
-The range from 0 to 99 is reserved for real-time processes. The nice 
+The range from 0 to 99 is reserved for real-time processes. The nice
 values [−20,+19] are mapped to the range from 100 to 139,
 
 
@@ -1341,7 +1161,7 @@ static inline int rt_prio(int prio)
 ```
 > 更新 normal 简单 : normal_prio
 > 更新 prio 则是取决于 prio 的数值 : effective_prio
-> @todo 到底什么时候刷新啊 
+> @todo 到底什么时候刷新啊
 > rt_prio 使用原因如下 : (@todo rt_mutex 是什么, 之前的问题, 为什么使用这个诡异的方法解决，为什么这一个方法可以解决)
 
 However, one question remains: Why does the kernel base the real-time check in effective_prio on the
@@ -1423,8 +1243,8 @@ the **main scheduler** function. I discuss how priority scheduling is implemente
 
 **The Periodic Scheduler**
 
-The periodic scheduler is implemented in `scheduler_tick`. 
-The function is automatically called by the kernel with the frequency HZ if system activity is going on. 
+The periodic scheduler is implemented in `scheduler_tick`.
+The function is automatically called by the kernel with the frequency HZ if system activity is going on.
 ```c
 /*
  * This function gets called by the timer code, with HZ frequency.
@@ -1475,7 +1295,7 @@ flag in the task structure to express this request, and the kernel fulfills it a
 
 **The Main Scheduler**
 The main scheduler function (schedule) is invoked directly at many points in the kernel to allocate the
-CPU to a process other than the currently active one. 
+CPU to a process other than the currently active one.
 
 Before I discuss schedule in detail, I need to make one remark that concerns the `__sched` prefix. This is
 used for functions that can potentially call schedule, including the schedule function itself.
@@ -1643,14 +1463,14 @@ switch.
 **Interaction with fork**
 Whenever a new process is created using the fork system call or one of its variants, the scheduler gets a
 chance to hook into the process with the `sched_fork` function. On a single-processor system, the function
-performs essentially three actions: 
+performs essentially three actions:
 1. Initialize the scheduling-related fields of the new process,
-2. set up data structures (this is rather straightforward), 
+2. set up data structures (this is rather straightforward),
 3. and determine the dynamic priority of the process:
 
 > sched_fork 函数仅仅被 copy_process 调用
 
-When a new task is woken up using `wake_up_new_task`, 
+When a new task is woken up using `wake_up_new_task`,
 a second opportunity for the scheduler to interact with task creation presents itself: The kernel calls the `task_new` function of the scheduling class. This
 gives an opportunity to enqueue the new process into the run queue of the respective class.
 > `task_new` 并不存在，而且这一段的英语我看不懂.
@@ -1719,7 +1539,7 @@ context_switch(struct rq *rq, struct task_struct *prev,
 }
 ```
 1. Immediately before a task switch, the `prepare_arch_switch` hook that must be defined by every architecture is called from `prepare_task_switch`. This enables the kernel to execute architecture-specific code
-to prepare for the switch. 
+to prepare for the switch.
 ```c
 /**
  * prepare_task_switch - prepare to switch tasks
@@ -1744,7 +1564,7 @@ prepare_task_switch(struct rq *rq, struct task_struct *prev,
 	rseq_preempt(prev);
 	fire_sched_out_preempt_notifiers(prev, next);
 	prepare_task(next);
-	prepare_arch_switch(next); // 
+	prepare_arch_switch(next); //
 }
 
 
@@ -1793,7 +1613,7 @@ Remember, however, that kernel threads do not have their own userspace memory co
       * exchanging the userspace portion of the virtual address space is not required.
       * This speeds up the context switch and is known as the lazy TLB technique.
       */
-		enter_lazy_tlb(oldmm, next); 
+		enter_lazy_tlb(oldmm, next);
 	} else
 		switch_mm_irqs_off(oldmm, mm, next);
 ```
@@ -1914,56 +1734,13 @@ but since usually only the leftmost element is of interest, this speeds up the a
 4. `curr` points to the schedulable entity of the currently executing process.
 
 #### 2.6.2 CFS Operations
-```c
-/*
- * All the scheduling class methods:
- */
-const struct sched_class fair_sched_class = {
-	.next			= &idle_sched_class,
-	.enqueue_task		= enqueue_task_fair,
-	.dequeue_task		= dequeue_task_fair,
-	.yield_task		= yield_task_fair,
-	.yield_to_task		= yield_to_task_fair,
 
-	.check_preempt_curr	= check_preempt_wakeup,
-
-	.pick_next_task		= pick_next_task_fair,
-	.put_prev_task		= put_prev_task_fair,
-
-#ifdef CONFIG_SMP
-	.select_task_rq		= select_task_rq_fair,
-	.migrate_task_rq	= migrate_task_rq_fair,
-
-	.rq_online		= rq_online_fair,
-	.rq_offline		= rq_offline_fair,
-
-	.task_dead		= task_dead_fair,
-	.set_cpus_allowed	= set_cpus_allowed_common,
-#endif
-
-	.set_curr_task          = set_curr_task_fair,
-	.task_tick		= task_tick_fair,
-	.task_fork		= task_fork_fair,
-
-	.prio_changed		= prio_changed_fair,
-	.switched_from		= switched_from_fair,
-	.switched_to		= switched_to_fair,
-
-	.get_rr_interval	= get_rr_interval_fair,
-
-	.update_curr		= update_curr_fair,
-
-#ifdef CONFIG_FAIR_GROUP_SCHED
-	.task_change_group	= task_change_group_fair,
-#endif
-};
-```
 * ***The Virtual Clock***
 
 All required information can be inferred from the existing real-time clocks combined with the
 *load weight associated with every process*. All calculations related to the virtual clock are performed in
-`update_curr`, which is called from various places in the system including the periodic scheduler. 
-> task_tick 和 update_curr 的关系是什么 ? 
+`update_curr`, which is called from various places in the system including the periodic scheduler.
+> task_tick 和 update_curr 的关系是什么 ?
 > @todo 我猜测一个就是时钟周期触发的，而一个应该是运行结束(或者运行中)进行时间统计的一个东西
 
 
@@ -2063,7 +1840,7 @@ entity is computed as follows:
 
 > 此处让人混乱概念:(这个东西的Man 在哪里呀 ?)
 > https://www.systutorials.com/239998/sched_min_granularity_ns-sched_latency_ns-cfs-affect-timeslice-processes/
-> 1. sched_latency_ns 
+> 1. sched_latency_ns
 > 2. period 的含义是什么呀 ?
 
 
@@ -2220,7 +1997,7 @@ large vruntime values are good to schedule early.
 Let us go back to `enqueue_entity`: After place_entity has determined the proper virtual run time for
 the process, it is placed on the red-black tree with `__enqueue_entity`. I have already noted before that
 this is a purely mechanical function that uses standard methods of the kernel to sort the task into the red-black tree.
-> `__enqueue_entity` 就是RB tree 的简单的实现，奇怪的在于判断 `cfs_rq->curr == se` 中间的判断而已，请问 `cfs_rq->curr` 和 current 是一个东西吗 
+> `__enqueue_entity` 就是RB tree 的简单的实现，奇怪的在于判断 `cfs_rq->curr == se` 中间的判断而已，请问 `cfs_rq->curr` 和 current 是一个东西吗
 > rq 中间的RB tree 仅仅用于存储 runable 的，而`rq->curr` 并不在其中
 
 #### 2.6.4 Selecting the Next Task
@@ -2347,7 +2124,7 @@ check_preempt_tick(struct cfs_rq *cfs_rq, struct sched_entity *curr)
 
 When a running task is preempted by a new task, the kernel ensures that the old one has at least
 been running for a certain minimum amount of time. The minimum is kept in `sysctl_sched_wakeup_granularity`,
-which crossed our path before. Recall that it is per default set to 4 ms. 
+which crossed our path before. Recall that it is per default set to 4 ms.
 
 The purpose of the function is to ensure that no process runs longer than specified by its share of
 the latency period. This length of this share in real-time is computed in `sched_slice`,
@@ -2363,7 +2140,7 @@ When tasks are woken up in `try_to_wake_up` and `wake_up_new_task`, the kernel u
 `check_preempt_curr` to see if the new task can preempt the currently running one. *Notice that
 the core scheduler is not involved in this process!* For completely fair handled tasks, the function
 `check_preempt_wakeup` performs the desired check.
-> @todo 什么jb是 core scheduler 啊? 
+> @todo 什么jb是 core scheduler 啊?
 
 ```c
 /**
@@ -2439,7 +2216,7 @@ static void check_preempt_wakeup(struct rq *rq, struct task_struct *p, int wake_
 
 #### 2.6.7 Handling New Tasks
 The last operation of the completely fair scheduler that we need to consider is the hook function that
-is called when new tasks are created: `task_new_fair`. 
+is called when new tasks are created: `task_new_fair`.
 > 这一个部分，似乎并不存在，也许在 taks_fork 中间吧!
 
 ## 2.7 The Real-Time Scheduling Class
@@ -2457,7 +2234,7 @@ groups and then fair among all processes in the group.
 
 On multiprocessor systems, the kernel must consider a few additional issues in order to ensure good scheduling:
 1. The CPU load must be shared as fairly as possible over the available processors.
-2. The affinity of a task to certain processors in the system must be selectable. 
+2. The affinity of a task to certain processors in the system must be selectable.
 3. The kernel must be able to migrate processes from one CPU to another.
 
 * ***Extensions to the Data Structures***
@@ -2639,7 +2416,7 @@ sorted into multiple hierarchies
 #### 2.8.3 Kernel Preemption and Low Latency Efforts
 As described above, the scheduler is invoked before returning to user mode after system calls or at
 certain designated points in the kernel. This ensures that the kernel, unlike user processes, cannot be
-interrupted unless it explicitly wants to be. 
+interrupted unless it explicitly wants to be.
 > 用户其实一直都是没有问题的，只要保证在interrupt 返回的时候 !
 > 但是从ucore的经验中间，所有的内核返回都是采用相同的方法啊 !
 
@@ -2653,7 +2430,7 @@ the kernel is working inside a critical region when it is preempted. The next ta
 mode, and unfortunately also wants to access the same critical region. This is effectively equivalent to
 two processors working in the critical region at the same time and must be prevented. Every time the
 kernel is inside a critical region, kernel preemption must be disabled.
-> 和一些长久相信的论断不一致啊 ! 我认为 : kernel 进入到 critical region 的时候上锁即可，根本不需要关闭 preemption 
+> 和一些长久相信的论断不一致啊 ! 我认为 : kernel 进入到 critical region 的时候上锁即可，根本不需要关闭 preemption
 
 
 > 还要利用一个preempt count 而不是一个bit ?
@@ -2695,7 +2472,7 @@ static inline int _cond_resched(void) { return 0; }
 
 - https://askubuntu.com/questions/656771/process-niceness-vs-priority
 > It is important to note that for real time processes, the nice value is not used.
-> 
+>
 > for normal processes: PR = 20 + NI (NI is nice and ranges from -20 to 19)
 > for real time processes: PR = - 1 - real_time_priority (real_time_priority ranges from 1 to 99)
 
@@ -2705,4 +2482,3 @@ The scheduler is the kernel component that decides which runnable thread will be
 
 For threads scheduled under one of the normal scheduling policies (SCHED_OTHER, SCHED_IDLE, SCHED_BATCH), sched_priority is not used in scheduling decisions (it must be specified as 0).
 > 虽然的确是映射为 1~140 之间，描述两个区间的词汇其实都是不同的 sched_priority 和 nice
-

@@ -77,6 +77,23 @@ struct rq {
 }
 ```
 
+### CONFIG_CFS_BANDWIDTH
+
+参考资料:
+- https://www.kernel.org/doc/Documentation/scheduler/sched-bwc.txt
+
+> CFS bandwidth control is a `CONFIG_FAIR_GROUP_SCHED` extension which allows the
+> specification of the maximum CPU bandwidth available to a group or hierarchy.
+>
+> The bandwidth allowed for a group is specified using a quota and period. Within
+> each given "period" (microseconds), a group is allowed to consume only up to
+> "quota" microseconds of CPU time.  When the CPU bandwidth consumption of a
+> group exceeds this limit (for that period), the tasks belonging to its
+> hierarchy will be throttled and are not allowed to run again until the next
+> period.
+
+总结到位。
+
 ## 依赖关系是什么?
 
 ```txt
@@ -105,3 +122,71 @@ CGROUP 下才有 FAIR_GROUP_SCHED，之后才有 auto group
   - 是可以没有的!
 
 - [ ] group sched 是 cgroup 特有的
+
+
+了解下这个结构体的作用
+```c
+/* Task group related information */
+struct task_group {
+```
+
+task_group  CONFIG_FAIR_GROUP_SCHED 以及 CONFIG_CFS_BANDWIDTH 三者逐渐递进的
+
+## task_group
+
+- task_group 会为每个 CPU 再维护一个 cfs_rq，这个 cfs_rq 用于组织挂在这个任务组上的任务以及子任务组，参考图中的 Group A；
+- 调度器在调度的时候，比如调用`pick_next_task_fair`时，会从遍历队列，选择 sched_entity，如果发现 sched_entity 对应的是 task_group，则会继续往下选择；
+- 由于 sched_entity 结构中存在 parent 指针，指向它的父结构，因此，系统的运行也能从下而上的进行遍历操作，通常使用函数 walk_tg_tree_from 进行遍历；
+
+- [ ] please notice that, when CONFIG_CFS_BADNWIDTH turned off, walk_tg_tree_from's users are disapeared, so why `bandwidth` need `walk_tg_tree_from` ?
+
+- [ ] we create a `cfs_rq` for every group, verfiy it
+- [ ] what kinds of process will be added to same process group ?
+
+```c
+/* task group related information */
+struct task_group {
+    /* ... */
+
+    /* 为每个CPU都分配一个CFS调度实体和CFS运行队列 */
+#ifdef CONFIG_FAIR_GROUP_SCHED
+	/* schedulable entities of this group on each cpu */
+	struct sched_entity **se;
+	/* runqueue "owned" by this group on each cpu */
+	struct cfs_rq **cfs_rq;
+	unsigned long shares;
+#endif
+
+    /* 为每个CPU都分配一个RT调度实体和RT运行队列 */
+#ifdef CONFIG_RT_GROUP_SCHED
+	struct sched_rt_entity **rt_se;
+	struct rt_rq **rt_rq;
+
+	struct rt_bandwidth rt_bandwidth;
+#endif
+
+    /* task_group之间的组织关系 */
+	struct rcu_head rcu;
+	struct list_head list;
+
+	struct task_group *parent;
+	struct list_head siblings;
+	struct list_head children;
+
+    /* ... */
+};
+```
+
+## 直接
+- sched_entity : 应该有时候，指的是一个 thread ，而有的时候是 task group 的
+  - [ ] 有待验证
+  - [ ] 为什么不搞成 group 中的 entry 也是公平调度的
+```c
+#ifdef CONFIG_FAIR_GROUP_SCHED
+/* An entity is a task if it doesn't "own" a runqueue */
+#define entity_is_task(se)	(!se->my_q)
+#else
+#define entity_is_task(se)	1
+#endif
+// 有的 entity 是用于对应的用于管理的，而有的才是真的对应于process 的
+```

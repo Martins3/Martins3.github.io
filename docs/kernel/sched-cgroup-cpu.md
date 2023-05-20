@@ -17,22 +17,22 @@
 - list_add_leaf_cfs_rq
 - [ ] init_tg_cfs_entry
 
-### CONFIG_CFS_BANDWIDTH
+## 重新认识下
+v2 的代码:
+```txt
+-rw-r--r--.  1 root root 0 May 20 13:23 cpu.idle
+-rw-r--r--.  1 root root 0 May 20 13:23 cpu.max
+-rw-r--r--.  1 root root 0 May 20 13:23 cpu.max.burst
+-rw-r--r--.  1 root root 0 May 20 13:23 cpu.pressure
+-r--r--r--.  1 root root 0 May 20 13:23 cpu.stat
+-rw-r--r--.  1 root root 0 May 20 13:23 cpu.uclamp.max
+-rw-r--r--.  1 root root 0 May 20 13:23 cpu.uclamp.min
+-rw-r--r--.  1 root root 0 May 20 13:23 cpu.weight
+-rw-r--r--.  1 root root 0 May 20 13:23 cpu.weight.nice
+```
 
-参考资料:
-- https://www.kernel.org/doc/Documentation/scheduler/sched-bwc.txt
-
-> CFS bandwidth control is a `CONFIG_FAIR_GROUP_SCHED` extension which allows the
-> specification of the maximum CPU bandwidth available to a group or hierarchy.
->
-> The bandwidth allowed for a group is specified using a quota and period. Within
-> each given "period" (microseconds), a group is allowed to consume only up to
-> "quota" microseconds of CPU time.  When the CPU bandwidth consumption of a
-> group exceeds this limit (for that period), the tasks belonging to its
-> hierarchy will be throttled and are not allowed to run again until the next
-> period.
-
-总结到位。
+这是 v1 的代码:
+- cpu_legacy_files
 
 ## 创建
 - sudo cgcreate -g cpu:A

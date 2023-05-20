@@ -1,4 +1,10 @@
-# fs/seq_file.c
+# seq_file.c
+
+## [内核文档](https://www.kernel.org/doc/html/next/filesystems/seq_file.html)
+
+文档写的有点复杂，简单来说:
+1. next 移动指针，show 展示内容，让内核可以方面的保留出来一个数组或者链表之类的东西到用户态空间。
+
 
 1. 这里各种东西的辅助函数，似乎划分为 file operations 和 seq hlist 两个类别的。
 2. struct seq_file 如何初始化的 ? 谁来使用
