@@ -629,3 +629,193 @@ out_free:
 	return ERR_PTR(retval);
 }
 ```
+
+
+## pid
+- [ ] 真的需要好好看看了，在目錄下 ag pid 出來的內容那麼多。。。。。, check 這些文件的內容
+
+当我们发现
+1. pid 在 namespace 的层次结构，需要在上层每一个都需分配一个 pid，
+2. thread group, process group, session group 都存在對應的 id
+3. task_struct::pid, task_struct::tgid 是顶层 namespace 的对应 pid tgid 的快捷表示, 具體代碼可以看 copy_process 對於 pid 的賦值
+4. task_struct::thread_pid 是該 threadk
+
+那么剩下的都很简单了:
+
+```c
+struct task_struct {
+	pid_t				pid; // global pid
+	pid_t				tgid; // global thread group pid
+
+	/* PID/PID hash table linkage. */
+	struct pid			*thread_pid;
+	struct hlist_node		pid_links[PIDTYPE_MAX];
+	struct list_head		thread_group;
+	struct list_head		thread_node; // TODO
+```
+
+```c
+/*
+ * the helpers to get the pid's id seen from different namespaces
+ *
+ * pid_nr()    : global id, i.e. the id seen from the init namespace;
+ * pid_vnr()   : virtual id, i.e. the id seen from the pid namespace of
+ *               current.
+ * pid_nr_ns() : id seen from the ns specified.
+ *
+ * see also task_xid_nr() etc in include/linux/sched.h
+ */
+
+static inline pid_t pid_nr(struct pid *pid)
+{
+	pid_t nr = 0;
+	if (pid)
+		nr = pid->numbers[0].nr;
+	return nr;
+}
+```
+
+
+```c
+/*
+ * struct upid is used to get the id of the struct pid, as it is
+ * seen in particular namespace. Later the struct pid is found with
+ * find_pid_ns() using the int nr and struct pid_namespace *ns.
+ */
+
+struct upid {
+	int nr;
+	struct pid_namespace *ns;
+};
+
+struct pid
+{
+	refcount_t count;
+	unsigned int level; // 每一個 task 都會對應一個 pid, level 表示 task 當前所在 thread 的位置
+	spinlock_t lock;
+  // 用於指向其所在的 thread group, process group, session group 的 pid
+  // 參考 attach_pid, 通過成員 tasks 可以將其掛在 task_struct::
+	/* lists of tasks that use this pid */
+	struct hlist_head tasks[PIDTYPE_MAX];
+	struct hlist_head inodes; // TODO 應該是 pidfd
+	/* wait queue for pidfd notifications */
+	wait_queue_head_t wait_pidfd;
+	struct rcu_head rcu;
+	struct upid numbers[1];
+};
+```
+
+attach_pid : 讓 thread group, process group, session group 的 leader 知道自己掌控的 pid 有那些
+init_task_pid : 让 task 知道其 thread group, prcess group, session group leader 的 pid
+
+```c
+static inline void
+init_task_pid(struct task_struct *task, enum pid_type type, struct pid *pid)
+{
+	if (type == PIDTYPE_PID)
+		task->thread_pid = pid;
+	else
+		task->signal->pids[type] = pid;
+}
+
+/*
+ * attach_pid() must be called with the tasklist_lock write-held.
+ */
+void attach_pid(struct task_struct *task, enum pid_type type)
+{
+	struct pid *pid = *task_pid_ptr(task, type);
+	hlist_add_head_rcu(&task->pid_links[type], &pid->tasks[type]);
+}
+```
+
+最後理解一下 pid 和 namespace :
+```c
+struct pid_namespace *task_active_pid_ns(struct task_struct *tsk)
+{
+  // task_pid(tsk) : task_struct->thread_pid
+  // task_struct::thread_pid 就是該 task 的 pid
+	return ns_of_pid(task_pid(tsk));
+}
+
+static inline struct pid_namespace *ns_of_pid(struct pid *pid)
+{
+	struct pid_namespace *ns = NULL;
+	if (pid)
+    // pid 是跟随 thread 的，通过 level 就可以知道其 ns
+		ns = pid->numbers[pid->level].ns;
+	return ns;
+}
+
+// ns 控制了一个 pid 空间，idr 加速访问
+struct pid *find_pid_ns(int nr, struct pid_namespace *ns)
+{
+	return idr_find(&ns->idr, nr);
+}
+```
+
+- 从 alloc_pid 中，對於一個 thread, 會給每一個 namespace 中間存放一個 id
+
+
+綜合實踐，syscall getpid 是如何實現的 ?
+```c
+/**
+ * sys_getpid - return the thread group id of the current process
+ *
+ * Note, despite the name, this returns the tgid not the pid.  The tgid and
+ * the pid are identical unless CLONE_THREAD was specified on clone() in
+ * which case the tgid is the same in all threads of the same group.
+ *
+ * This is SMP safe as current->tgid does not change.
+ */
+SYSCALL_DEFINE0(getpid)
+{
+	return task_tgid_vnr(current);
+}
+
+static inline pid_t task_tgid_vnr(struct task_struct *tsk)
+{
+	return __task_pid_nr_ns(tsk, PIDTYPE_TGID, NULL);
+}
+
+
+pid_t __task_pid_nr_ns(struct task_struct *task, enum pid_type type,
+			struct pid_namespace *ns)
+{
+	pid_t nr = 0;
+
+	rcu_read_lock();
+	if (!ns)
+		ns = task_active_pid_ns(current); // 获取到 ns
+	nr = pid_nr_ns(rcu_dereference(*task_pid_ptr(task, type)), ns); // 通过 task->thread_pid 获取 thread 对应的 pid
+	rcu_read_unlock();
+
+	return nr;
+}
+
+pid_t pid_nr_ns(struct pid *pid, struct pid_namespace *ns)
+{
+	struct upid *upid;
+	pid_t nr = 0;
+
+	if (pid && ns->level <= pid->level) {
+		upid = &pid->numbers[ns->level]; // 获取到该 level 上的
+		if (upid->ns == ns)
+			nr = upid->nr;
+	}
+	return nr;
+}
+
+static struct pid **task_pid_ptr(struct task_struct *task, enum pid_type type)
+{
+	return (type == PIDTYPE_PID) ?
+		&task->thread_pid :
+		&task->signal->pids[type];
+}
+```
+
+## pidfd
+- https://man7.org/linux/man-pages/man2/pidfd_open.2.html
+- [Completing the pidfd API](https://lwn.net/Articles/794707/)
+
+rust 封装:
+https://github.com/pop-os/pidfd

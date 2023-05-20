@@ -44,3 +44,21 @@ __out:  __ret;                                  \
 ## 一些有趣的接口
 - `wait_event_lock_irq`
 - #define wait_event_lock_irq_cmd(wq_head, condition, lock, cmd)			\
+
+## waitqueue
+1. https://github.com/cirosantilli/linux-kernel-module-cheat/blob/master/kernel_modules/wait_queue.c : 还是要好好分析一下其中的代码呀 !
+
+
+do_wait() : 每个 `task_struct->signal->wait_chldexit` 上放置 wait queue
+```c
+  // TODO child_wait_callback 函数调用的时机 : 元素加入 还是 元素离开
+  // child_wait_callback 会唤醒 current
+	init_waitqueue_func_entry(&wo->child_wait, child_wait_callback);
+	wo->child_wait.private = current; // 用于唤醒
+	add_wait_queue(&current->signal->wait_chldexit, &wo->child_wait);
+
+ // 最终去掉，如果捕获了多个 thread
+ remove_wait_queue
+```
+
+wake up : do_notify_parent_cldstop 和 do_notify_parent
