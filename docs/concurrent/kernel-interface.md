@@ -78,3 +78,9 @@ https://stackoverflow.com/questions/55746320/why-rwlock-is-more-popular-than-seq
 实现起来比想想的复杂
 
 ## barrier 函数只是 compiler fence ?
+
+## rtmutex 什么鬼
+/home/martins3/core/linux/kernel/locking/rtmutex.c
+
+## lockref
+- https://lwn.net/Articles/565734/

@@ -29,13 +29,15 @@ case $version in
   ;;
 esac
 
-arg_img="-drive aio=native,cache.direct=on,file=${img},format=qcow2,media=disk,index=0"
+arg_img="-drive aio=native,cache.direct=on,file=${img},format=qcow2,if=virtio,index=0"
 
 arg_vfio=""
 if [[ $version == 10 ]]; then
   img=/home/martins3/hack/mnt/windows10.img.cur
   # @todo 修改点
   arg_img="-drive aio=native,cache.direct=on,file=/home/martins3/hack/mnt/windows10.img.cur,format=qcow2,media=disk,index=0"
+  # arg_img="-drive aio=io_uring,cache.direct=on,file=/home/martins3/hack/mnt/windows10.img.cur,format=qcow2,if=virtio,index=0"
+	arg_img+=" -device virtio-scsi-pci,id=scsi0,bus=pci.0,addr=0xa  -device scsi-hd,bus=scsi0.0,channel=0,scsi-id=0,lun=0,drive=scsi-drive -drive file=/home/martins3/hack/mnt/test.img,format=qcow2,id=scsi-drive,if=none"
   # arg_img="-drive aio=native,cache.direct=on,file=/dev/nvme1n1,format=raw,media=disk,index=3"
   # 发现了一个事情，当安装的操作系统的时候，需要先使用直通，之后可以整个 disk 访问的
   # 这个是可以复现的

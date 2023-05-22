@@ -255,6 +255,8 @@ static struct md_personality raid1_personality =
 
 `raid1_make_request` 中注册了 `raid1_end_write_request`
 
+### [ ]  raid1_spare_active
+
 ## r1conf
 
 ```c

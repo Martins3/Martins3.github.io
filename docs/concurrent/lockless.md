@@ -16,3 +16,6 @@ https://lwn.net/SubscriberLink/827180/a1c1305686bfea67/
 - [An introduction to lockless algorithms](https://lwn.net/Articles/844224/) : 本来以为 lockless 实际上没有什么作用，但是实际上在 Linux 中是存在很多使用的
 
 https://news.ycombinator.com/item?id=35684232
+
+## 偶尔收集的用户态的库
+https://github.com/DNedic/lockfree

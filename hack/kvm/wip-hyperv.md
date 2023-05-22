@@ -69,3 +69,6 @@ static struct {
     uint64_t dependencies;
 } kvm_hyperv_properties[] = {
 ```
+
+## 这里的内容都足够了
+- https://www.qemu.org/docs/master/system/i386/hyperv.html

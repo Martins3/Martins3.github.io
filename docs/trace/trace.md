@@ -212,6 +212,7 @@ dpdk 测试工具
 ```
 
 ## 为什么这个函数无法 trace 啊 trace_kprobe
+这是特地标注的
 ```txt
 [  323.274009] trace_kprobe: Could not probe notrace function sg_miter_stop
 [  323.274155] trace_kprobe: Could not probe notrace function sg_miter_stop
@@ -220,6 +221,9 @@ dpdk 测试工具
 [  379.112269] trace_kprobe: Could not probe notrace function sg_miter_skip
 [  379.112361] trace_kprobe: Could not probe notrace function sg_miter_skip
 ```
+##
+
+
 [^4]: [An introduction to KProbes](https://lwn.net/Articles/132196/)
 [^5]: [Using user-space tracepoints with BPF](https://lwn.net/Articles/753601/)
 [^7]: [kernelshark](https://www.cnblogs.com/arnoldlu/p/9014365.html)

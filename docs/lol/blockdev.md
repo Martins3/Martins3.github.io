@@ -118,7 +118,7 @@ https://askubuntu.com/questions/164926/how-to-make-partitions-mount-at-startup
 ### parted : 格式化设备
 
 ```sh
-parted /dev/nvme1n1 -- mklabel gpt
+parted /dev/nvme1n1 -- mklabel gpt # 制作分区表
 parted /dev/nvme1n1 -- mkpart primary 1MiB 100%
 ```
 
