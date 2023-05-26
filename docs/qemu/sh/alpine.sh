@@ -40,7 +40,7 @@ workstation="$(jq -r ".workstation" <"$configuration")"
 
 qemu=${qemu_dir}/build/x86_64-softmmu/qemu-system-x86_64
 # 最近的编出来的 qemu 似乎不能调试了 2023-05-20
-qemu="qemu-system-x86_64"
+# qemu="qemu-system-x86_64"
 virtiofsd=${qemu_dir}/build/tools/virtiofsd/virtiofsd
 kernel=${kernel_dir}/arch/x86/boot/bzImage
 # kernel="/nix/store/g4zdxdxj8sfbv08grmpahzajrm1gm4s8-linux-5.15.97/bzImage"
@@ -185,10 +185,11 @@ fi
 
 case $hacking_memory in
 	"none")
-		ramsize=12G
+		ramsize=80G
 		arg_mem_cpu="-smp $(($(getconf _NPROCESSORS_ONLN) - 1))"
 		# arg_mem_cpu="-smp 1"
-		arg_mem_cpu+=" -object memory-backend-ram,id=pc.ram,size=$ramsize,prealloc=off,share=on -machine memory-backend=pc.ram -m $ramsize"
+		# echo 1 | sudo  tee /proc/sys/vm/overcommit_memory
+		arg_mem_cpu+=" -object memory-backend-ram,id=pc.ram,size=$ramsize,prealloc=off,share=off -machine memory-backend=pc.ram -m $ramsize"
 		;;
 	"file")
 		# 只有使用这种方式才会启动 async page fault
@@ -276,6 +277,7 @@ fi
 
 # arg_debug_memblock="memblock=debug"
 arg_cgroupv2="systemd.unified_cgroup_hierarchy=1"
+arg_cgroupv2=""
 # scsi_mod.scsi_logging_level=0x3fffffff
 # @todo 这个 function graph 为什么没有办法打印全部啊
 arg_boot_trace="ftrace=function_graph ftrace_filter=arch_freq_get_on_cpu raid=noautodetect rootfs=data=journal"

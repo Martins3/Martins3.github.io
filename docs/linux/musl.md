@@ -33,6 +33,7 @@
   * [bits/loongarch/strnlen.S](#bitsloongarchstrnlens)
 * [TODO](#todo)
 * [一些奇怪的事情](#一些奇怪的事情)
+* [相关项目](#相关项目)
 
 <!-- vim-markdown-toc -->
 
@@ -511,6 +512,9 @@ crtendS.o%s /usr/local/musl/lib/crtn.o
 
 ## 一些奇怪的事情
 - errno 和 signal 的编号都是和架构相关的
+
+## 相关项目
+- kernel 里面有一个 [nolibc](https://lwn.net/Articles/920158/)，真的精简的妈都不认识了
 
 [^1]: https://stackoverflow.com/questions/68123943/advantages-of-mmap-over-sbrk
 [^2]: https://0xax.gitbooks.io/linux-insides/content/SysCall/linux-syscall-2.html

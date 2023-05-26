@@ -64,4 +64,5 @@ cgdelete -g cpu:C
 ```
 
 ## 其他的 libcgroup
-1. cgcreate -g memory,hugeltb:duck
+1. cgcreate -g memory,hugeltb:duck # 多个限制
+2. cgcreate -g cpu:a/b/c 创建嵌套的

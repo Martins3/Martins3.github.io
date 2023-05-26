@@ -49,3 +49,5 @@ intel 指令的 ，lock 是自带 memory barrier 的
 - cxl 似乎处理过这个
 
 ## 内核中的 readwrite lock 没有分析
+
+## Linux programming interface 中间分析过 process 之间的同步方法

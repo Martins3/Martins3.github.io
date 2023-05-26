@@ -211,3 +211,28 @@ get_mem_cgroup_from_mm 也是类似的结构，但是其中的 try 也不同
 
 ## TODO
 - https://lore.kernel.org/all/20230227173632.3292573-9-surenb@google.com/T/#m2b041c67b39980bafcd16bc5f897297212b5ee36
+
+## 所有调用 find_task_by_pid_ns 的位置都需要 rcu_read_lock
+
+- cgroup_procs_write_start 中
+  - get_task_struct : 是如何阻止被释放的
+
+释放的位置在:
+```txt
+__put_task_struct+5
+rcu_do_batch+486
+rcu_core+666
+__do_softirq+199
+__irq_exit_rcu+171
+sysvec_apic_timer_interrupt+118
+asm_sysvec_apic_timer_interrupt+26
+cpuidle_enter_state+204
+cpuidle_enter+45
+do_idle+452
+cpu_startup_entry+29
+start_secondary+277
+secondary_startup_64_no_verify+224
+```
+所以，task_struct 到底如何释放的，意味着
+
+无所谓，但是需要等到 rcu_read_unlock 的时候才可以释放，但是
