@@ -898,6 +898,28 @@ void x86_cpu_expand_features(X86CPU *cpu, Error **errp)
     }
 ```
 
+理解下这个行为:
+```txt
+#0  host_memory_backend_set_prealloc (obj=0x555556a5dc00, value=true, errp=0x7ffffffef988) at ../backends/hostmem.c:221
+#1  0x0000555555ca8496 in property_set_bool (obj=0x555556a5dc00, v=<optimized out>, name=<optimized out>, opaque=0x5555568999a0, errp=0x7ffffffef988) at .
+./qom/object.c:2285
+#2  0x0000555555cab554 in object_property_set (obj=obj@entry=0x555556a5dc00, name=0x555556ac08b0 "prealloc", v=v@entry=0x555556b19d70, errp=errp@entry=0x7
+ffffffef988) at ../qom/object.c:1420
+#3  0x0000555555cadc15 in object_set_properties_from_qdict (obj=0x555556a5dc00, qdict=0x5555567d6e10, v=0x555556b19d70, errp=0x7ffffffef988) at ../qom/obj
+ect_interfaces.c:55
+#4  0x0000555555cadf33 in object_set_properties_from_qdict (errp=0x7ffffffef988, v=0x555556b19d70, qdict=0x5555567d6e10, obj=0x555556a5dc00) at ../qom/obj
+ect_interfaces.c:81
+#5  user_creatable_add_type (type=<optimized out>, id=id@entry=0x5555567da990 "pc.ram", qdict=qdict@entry=0x5555567d6e10, v=v@entry=0x555556b19d70, errp=0
+x7ffffffef990, errp@entry=0x5555567443b8 <error_fatal>) at ../qom/object_interfaces.c:112
+#6  0x0000555555cae1d6 in user_creatable_add_qapi (options=<optimized out>, errp=errp@entry=0x5555567443b8 <error_fatal>) at ../qom/object_interfaces.c:15
+7
+#7  0x0000555555a6cb50 in object_option_foreach_add (type_opt_predicate=type_opt_predicate@entry=0x555555a6d2e0 <object_create_late>) at ../softmmu/vl.c:1
+733
+#8  0x0000555555a71e91 in qemu_create_late_backends () at ../softmmu/vl.c:1952
+#9  qemu_init (argc=<optimized out>, argv=<optimized out>) at ../softmmu/vl.c:3622
+#10 0x000055555586aed9 in main (argc=<optimized out>, argv=<optimized out>) at ../softmmu/main.c:47
+```
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

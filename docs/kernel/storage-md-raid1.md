@@ -251,11 +251,10 @@ static struct md_personality raid1_personality =
 	.takeover	= raid1_takeover,
 };
 ```
-好像也没什么可以看的。
 
 `raid1_make_request` 中注册了 `raid1_end_write_request`
 
-### [ ]  raid1_spare_active
+### raid1_spare_active
 
 ## r1conf
 
@@ -465,6 +464,8 @@ static void free_r1bio(struct r1bio *r1_bio)
 表示直接 bio 结束了。
 
 不太理解，难道不需要释放吗？
+
+分析下 `raid1_remove_disk` 的逻辑感觉有点逆天.
 
 ## r1bio 的生命周期
 

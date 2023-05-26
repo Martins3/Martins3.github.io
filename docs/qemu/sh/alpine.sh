@@ -12,7 +12,7 @@ hacking_memory="prealloc"
 hacking_memory="sockets"
 hacking_memory="numa"
 hacking_memory="file"
-hacking_memory="none"
+# hacking_memory="none"
 
 share_memory_option="9p"
 # share_memory_option="virtiofs"
