@@ -56,3 +56,5 @@ perf ftrace ./add_vec
 ## perf sched
 - perf sched record
 - perf report
+
+## 使用 perf stat -e cycles 是不是可以测试 CPU 频率

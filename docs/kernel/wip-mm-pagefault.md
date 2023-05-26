@@ -182,6 +182,8 @@ struct iommu_flush_ops {
 [ 2884.294549]  [<ffffffff81794f92>] system_call_fastpath+0x25/0x2a
 ```
 
-## 补充这个
+## 补充这个 mmap_lock
 - https://lore.kernel.org/all/20230227173632.3292573-9-surenb@google.com/T/#m2b041c67b39980bafcd16bc5f897297212b5ee36
   - https://lwn.net/Articles/906852/
+
+## 分析 gup

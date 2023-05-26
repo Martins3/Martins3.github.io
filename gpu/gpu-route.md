@@ -36,3 +36,7 @@
   - webGPU 是 webGL 的下一个
 
 - https://webgpufundamentals.org/
+
+
+## 这个 GPU driver 将我的 1060 显卡驱动吗?
+https://github.com/NVIDIA/open-gpu-kernel-modules

@@ -221,7 +221,8 @@ dpdk 测试工具
 [  379.112269] trace_kprobe: Could not probe notrace function sg_miter_skip
 [  379.112361] trace_kprobe: Could not probe notrace function sg_miter_skip
 ```
-##
+
+## intel pcm 了解一下
 
 
 [^4]: [An introduction to KProbes](https://lwn.net/Articles/132196/)

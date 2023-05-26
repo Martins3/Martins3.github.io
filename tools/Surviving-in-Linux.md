@@ -1,13 +1,3 @@
-## 更新 Go
-https://gist.github.com/nikhita/432436d570b89cab172dcf2894465753
-
-## env 美化
-- https://github.com/adi1090x : 壁纸，系统等
-
-## tar
-https://www.cyberciti.biz/faq/how-do-i-compress-a-whole-linux-or-unix-directory/
-
-
 ## kdiff3
 // 相比diff有什么好处吗？
 
@@ -15,10 +5,6 @@ https://www.cyberciti.biz/faq/how-do-i-compress-a-whole-linux-or-unix-directory/
 
 [小而精的命令行教程](https://linuxtools-rst.readthedocs.io/zh_CN/latest/base/index.html)
 https://github.com/chenzhiwei/linux
-
-## install software without admin
-1. [安装 zsh](https://stackoverflow.com/questions/15293406/install-zsh-without-root-access)
-
 
 ## user
 useradd -m -G wheel -s /bin/bash shen # add one user
@@ -28,52 +14,6 @@ su - shen # change to user
 ## arch linux
 pacman -Syyu # 当某些软件无法下载的时候，可以参考使用这种方法实现检查
 
-
-# Ubuntu(deepin)
-
-## 终端版本
-gawk, sed, wc, grep, etc.
-
-1. cowsay
-2. lolcat
-3. nyancat
-4. musicbox
-5. nmap 网络诊断
-6. dig dns分析
-7. aria2c ：度盘下载全靠它
-8. iptraf-ng ：网络流量分析
-9. bwm-ng ：实时网速查看
-10. glances ：综合信息查看
-11. smartctl ：监视硬盘健康
-12. heepie
-15. figlet  艺术字体
-
-## 安装Java
-
-### Install Oracle Java
-1. http://www.oracle.com/technetwork/java/javase/downloads/index-jdk5-jsp-142662.html
-2. 需要注册，除了邮件地址, others aren't necessary to be true.
-3. usermail is your email address
-4. extract it
-5. set the PATH in zsh
-```sh
-export JAVA_HOME=/develop/jdk1.5.0_22
-export JRE_HOME=JAVA_HOME/jre
-export CLASSPATH=JAVAHOME/lib:JRE_HOME/lib:$CLASSPATH
-export PATH=JAVAHOME/bin:JRE_HOME/bin:$PATH
-```
-
-# Deepin 切换软件源
-1. [deepin](https://www.deepin.org/mirrors/packages/) 提供可替换列表
-2. 直接sudo vim 替换 将原来的
-```
-deb [by-hash=force] http://packages.deepin.com/deepin unstable main contrib non-free
-#deb-src http://packages.deepin.com/deepin unstable main contrib non-free
-```
-中间的 `http://packages.deepin.com/deepin` 中间替换为该目录中间的任意的网址，　比如在华科的话，
-可以替换为`http://mirrors.hustunique.com/deepin/`
-3. sudo apt update
-当链接的网络需要认证的时候，本步骤一般会报错。
 
 ## 去除Linux 密码
 在某些特殊情况下，我们不想反复输入密码，其实是可以将密码删除掉的。

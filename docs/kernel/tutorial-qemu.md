@@ -47,3 +47,6 @@ https://blogs.oracle.com/linux/post/how-to-emulate-block-devices-with-qemu
 [    2.292321]  [<ffffffff81767b60>] ? rest_init+0x80/0x80
 [    2.292321] Kernel Offset: disabled
 ```
+
+## 这里传授了如何处理模块的场景，编译还是太慢了
+https://stackoverflow.com/questions/28607538/how-to-debug-linux-kernel-modules-with-qemu

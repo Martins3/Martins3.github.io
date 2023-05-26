@@ -151,3 +151,6 @@ Kind of tricky to read without preliminary knowledge about GenSim.
 ## 用上 AI
 - https://chatpaper.org/
 - https://www.chatpdf.com/
+
+## 读博经验
+https://github.com/pengsida/learning_research
