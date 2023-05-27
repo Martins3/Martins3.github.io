@@ -3,30 +3,36 @@
 
 - 基于 io-uring 的 ubd： https://lwn.net/Articles/900690/
 
-- [迟先生 : io_uring 的接口与实现](https://www.skyzh.dev/posts/articles/2021-06-14-deep-dive-io-uring/)
+## 系统调用
+- io_uring_setup : 初始化
+- io_uring_enter : 提交系统调用
+- io_uring_register : 构建将要进行何种 io
 
-![](https://kernel.taobao.org/2020/09/IO_uring_Optimization_for_Nginx/3.png)
+## [迟先生 : io_uring 的接口与实现](https://www.skyzh.dev/posts/articles/2021-06-14-deep-dive-io-uring/)
+> SQ_RING 中只存储 SQE 在 SQEs 区域中的序号，CQ_RING 存储完整的任务完成数据
+
+
 - [ ] https://github.com/frevib/io_uring-echo-server : 别 手高眼低 了，先学会如何使用吧。
 
-https://despairlabs.com/posts/2021-06-16-io-uring-is-not-an-event-system/
+## [io_uring is not an event system](https://despairlabs.com/posts/2021-06-16-io-uring-is-not-an-event-system/)
 
-- [A journey to io_uring, AIO and modern storage devices](https://clickhouse.com/blog/en/2021/reading-from-external-memory/)
+## [zhihu : io_uring introduction](https://zhuanlan.zhihu.com/p/62682475?utm_source=wechat_timeline)
+> io_uring 有如此出众的性能，主要来源于以下几个方面：
+> 1. 用户态和内核态共享提交队列（submission queue）和完成队列（completion queue）
+> 2. IO 提交和收割可以 offload 给 Kernel，且提交和完成不需要经过系统调用（system call）
+> 3. 支持 Block 层的 Polling 模式
+> 4. 通过提前注册用户态内存地址，减少地址映射的开销
+> 5. 不仅如此，io_uring 还可以完美支持 buffered IO，而 libaio 对于 buffered IO 的支持则一直是被诟病的地方。
 
- - [ ] [^8]
-io_uring 有如此出众的性能，主要来源于以下几个方面：
-1. 用户态和内核态共享提交队列（submission queue）和完成队列（completion queue）
-2. IO 提交和收割可以 offload 给 Kernel，且提交和完成不需要经过系统调用（system call）
-3. 支持 Block 层的 Polling 模式
-4. 通过提前注册用户态内存地址，减少地址映射的开销
-5. 不仅如此，io_uring 还可以完美支持 buffered IO，而 libaio 对于 buffered IO 的支持则一直是被诟病的地方。
+- [ ] polling mode
+- [ ] 支持 buffer io 到底是什么含义?
 
-- [ ] TODO doc should be read later
-
-[Linux I/O 原理和 Zero-copy 技术全面揭秘](https://zhuanlan.zhihu.com/p/308054212)
+## [Linux I/O 原理和 Zero-copy 技术全面揭秘](https://zhuanlan.zhihu.com/p/308054212)
 - [ ] sendfile, etc
 
+各种零拷贝的技术的总结
 
-[^10]
+## [Efficient IO with io_uring](https://kernel.dk/io_uring.pdf)
 read the doc :
 aio's limitation :
 1. only support async IO for O_DIRECT
@@ -68,9 +74,7 @@ https://kernel-recipes.org/en/2019/talks/faster-io-through-io_uring/
 - https://unixism.net/2020/04/io-uring-by-example-article-series/
 - https://lwn.net/Articles/776703/
 
-[^7]: [io uring and eBPF](https://thenewstack.io/how-io_uring-and-ebpf-will-revolutionize-programming-in-linux/)
-[^8]: [zhihu : io_uring introduction](https://zhuanlan.zhihu.com/p/62682475?utm_source=wechat_timeline)
-[^10]: [Efficient IO with io_uring](https://kernel.dk/io_uring.pdf)
+[io uring and eBPF](https://thenewstack.io/how-io_uring-and-ebpf-will-revolutionize-programming-in-linux/)
 
 
 
@@ -114,3 +118,170 @@ https://news.ycombinator.com/item?id=23132549
 https://github.com/frevib/io_uring-echo-server
 
 我感觉更多的是因为 aio 搞不好就不是真的 aio 吧
+
+## 代码细节分析
+
+| Files         | Lines | Code | Comments | Blanks | details |
+|---------------|-------|------|----------|--------|--|
+| ./io_uring.c  | 4557  | 3341 | 583      | 633    |
+| ./net.c       | 1498  | 1236 | 49       | 213    |
+| ./rsrc.c      | 1305  | 1015 | 109      | 181    |
+| ./io-wq.c     | 1349  | 1005 | 131      | 213    |
+| ./rw.c        | 1083  | 782  | 154      | 147    | 似乎是进行 rw 的主要位置
+| ./poll.c      | 1045  | 737  | 165      | 143    |
+| ./opdef.c     | 673   | 657  | 5        | 11     |
+| ./timeout.c   | 692   | 538  | 51       | 103    |
+| ./kbuf.c      | 636   | 482  | 56       | 98     |
+| ./sqpoll.c    | 419   | 328  | 22       | 69     |
+| ./tctx.c      | 334   | 264  | 17       | 53     |
+| ./cancel.c    | 314   | 254  | 13       | 47     |
+| ./msg_ring.c  | 300   | 236  | 19       | 45     |
+| ./fs.c        | 293   | 228  | 1        | 64     |
+| ./openclose.c | 262   | 205  | 14       | 43     |
+| ./xattr.c     | 254   | 200  | 1        | 53     |
+| ./fdinfo.c    | 216   | 177  | 13       | 26     |
+| ./filetable.c | 181   | 145  | 5        | 31     |
+| ./uring_cmd.c | 158   | 126  | 6        | 26     |
+| ./splice.c    | 121   | 101  | 1        | 19     |
+| ./advise.c    | 104   | 86   | 1        | 17     |
+| ./sync.c      | 112   | 85   | 4        | 23     |
+| ./notif.c     | 86    | 73   | 0        | 13     |
+| ./statx.c     | 73    | 56   | 1        | 16     |
+| ./epoll.c     | 65    | 51   | 1        | 13     |
+| ./nop.c       | 25    | 17   | 4        | 4      |
+
+如何理解?
+```txt
+enum io_uring_op {
+	IORING_OP_NOP,
+	IORING_OP_READV,
+  // ...
+}
+```
+
+```c
+struct io_kiocb {
+
+	u8				opcode;
+```
+
+- 这个流程很平常啊!
+
+- io_issue_sqe => io_issue_def::issue
+  - io_iter_do_read
+    - call_read_iter
+      - file->f_op->read_iter(kio, iter)
+
+> 如果没有在创建 io_uring 时指定 IORING_SETUP_IOPOLL 选项，io_uring 的操作就会放进 io-wq 中执行。
+
+## 分析
+- io_uring_register
+  - `__io_uring_register` : 可以注册 buffer file eventfd 之类的
+
+
+### sqe->flags
+
+```c
+/*
+ * sqe->flags
+ */
+/* use fixed fileset */
+#define IOSQE_FIXED_FILE	(1U << IOSQE_FIXED_FILE_BIT)
+/* issue after inflight IO */
+#define IOSQE_IO_DRAIN		(1U << IOSQE_IO_DRAIN_BIT)
+/* links next sqe */
+#define IOSQE_IO_LINK		(1U << IOSQE_IO_LINK_BIT)
+/* like LINK, but stronger */
+#define IOSQE_IO_HARDLINK	(1U << IOSQE_IO_HARDLINK_BIT)
+/* always go async */
+#define IOSQE_ASYNC		(1U << IOSQE_ASYNC_BIT)
+/* select buffer from sqe->buf_group */
+#define IOSQE_BUFFER_SELECT	(1U << IOSQE_BUFFER_SELECT_BIT)
+/* don't post CQE if request succeeded */
+#define IOSQE_CQE_SKIP_SUCCESS	(1U << IOSQE_CQE_SKIP_SUCCESS_BIT)
+```
+
+### 区分 IORING_SETUP_IOPOLL 和 IOSQE_ASYNC
+
+### 难道所谓的 async io on buffered io 是通过 io wq 实现的吗?
+
+
+### 分析 IOSQE_ASYNC 的效果
+
+### 为什么将 workqueue 替代为 wq-io
+
+https://lore.kernel.org/linux-block/20191024134439.28498-1-axboe@kernel.dk/T/
+
+> This adds support for io-wq, a smaller and specialized thread pool
+> implementation. This is meant to replace workqueues for io_uring. Among
+> the reasons for this addition are:
+> 
+> - We can assign memory context smarter and more persistently if we
+>   manage the life time of threads.
+> 
+> - We can drop various work-arounds we have in io_uring, like the
+>   async_list.
+> 
+> - We can implement hashed work insertion, to manage concurrency of
+>   buffered writes without needing a) an extra workqueue, or b)
+>   needlessly making the concurrency of said workqueue very low
+>   which hurts performance of multiple buffered file writers.
+> 
+> - We can implement cancel through signals, for cancelling
+>   interruptible work like read/write (or send/recv) to/from sockets.
+> 
+> - We need the above cancel for being able to assign and use file tables
+>   from a process.
+> 
+> - We can implement a more thorough cancel operation in general.
+> 
+> - We need it to move towards a syslet/threadlet model for even faster
+>   async execution. For that we need to take ownership of the used
+>   threads.
+> 
+> This list is just off the top of my head. Performance should be the
+> same, or better, at least that's what I've seen in my testing. io-wq
+> supports basic NUMA functionality, setting up a pool per node.
+> 
+> io-wq hooks up to the scheduler schedule in/out just like workqueue
+> and uses that to drive the need for more/less workers.
+
+
+## 三种基本模式?
+https://blogs.oracle.com/linux/post/an-introduction-to-the-io-uring-asynchronous-io-framework
+1. interrupt driven
+2. Polled
+3. Kernel polled 
+
+## 还是先会使用再说吧 liburing/examples/
+
+io_uring-udp.c 不会用
+
+send-zerocopy.c
+
+ucontext-cp.c
+
+### io_uring-close-test.c
+- io_uring_queue_init
+- io_uring_register_ring_fd
+- io_uring_close_ring_fd : 为什么要立刻关闭这个 fd 啊
+
+```c
+io_uring_setup(4, {flags=0, sq_thread_cpu=0, sq_thread_idle=0, sq_entries=4, cq_entries=8, features=IORING_FEAT_SINGLE_MMAP|IORING_FEAT_NODROP|IORING_FEAT_SUBMIT_STABLE|IORING_FEAT_RW_CUR_POS|IORING_FEAT_CUR_PERSONALITY|IORING_FEAT_FAST_POLL|IORING_FEAT_POLL_32BITS|IORING_FEAT_SQPOLL_NONFIXED|IORING_FEAT_EXT_ARG|IORING_FEAT_NATIVE_WORKERS|IORING_FEAT_RSRC_TAGS|IORING_FEAT_CQE_SKIP|IORING_FEAT_LINKED_FILE|IORING_FEAT_REG_REG_RING, sq_off={head=0, tail=64, ring_mask=256, ring_entries=264, flags=276, dropped=272, array=448}, cq_off={head=128, tail=192, ring_mask=260, ring_entries=268, overflow=284, cqes=320, flags=280}}) = 3
+mmap(NULL, 464, PROT_READ|PROT_WRITE, MAP_SHARED|MAP_POPULATE, 3, 0) = 0x7fcf6bfc3000
+mmap(NULL, 256, PROT_READ|PROT_WRITE, MAP_SHARED|MAP_POPULATE, 3, 0x10000000) = 0x7fcf6bfc2000
+io_uring_register(3, IORING_REGISTER_RING_FDS, [{offset=-1, data=3}], 1) = 1
+close(3)                                = 0
+openat(AT_FDCWD, "io_uring-test.c", O_RDONLY) = 3
+newfstatat(3, "", {st_mode=S_IFREG|0644, st_size=2256, ...}, AT_EMPTY_PATH) = 0
+getrandom("\xa3\x66\xe0\xfb\xb2\x13\x7d\xb1", 8, GRND_NONBLOCK) = 8
+brk(NULL)                               = 0x1a0c000
+brk(0x1a2d000)                          = 0x1a2d000
+io_uring_enter(0, 1, 0, IORING_ENTER_REGISTERED_RING, NULL, 8) = 1
+newfstatat(1, "", {st_mode=S_IFCHR|0620, st_rdev=makedev(0x88, 0x4), ...}, AT_EMPTY_PATH) = 0
+write(1, "Submitted=1, completed=1, bytes="..., 37Submitted=1, completed=1, bytes=2256)  = 37
+close(3)                                = 0
+munmap(0x7fcf6bfc2000, 256)             = 0
+munmap(0x7fcf6bfc3000, 464)             = 0
+io_uring_register(0, 0x80000015 /* IORING_REGISTER_??? */, 0x7ffda4ab94f0, 1) = 1
+```

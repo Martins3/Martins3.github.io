@@ -525,6 +525,7 @@ ens4: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
 - linux/net/sched/ : 例如 RED ，主要是队列的管理
 
 ## wireguard
+- https://news.ycombinator.com/item?id=36040803
 
 ## net/core/flow_dissector 是干啥的
 
@@ -699,6 +700,8 @@ warning: error(s) occurred while switching to the new configuration
 ## [ ] big tcp
 - [Going big with TCP packets](https://lwn.net/Articles/884104/)
   - https://netdevconf.info/0x15/session.html?BIG-TCP
+
+
 
 ## 8.8.8.8
 https://developers.google.com/speed/public-dns?hl=zh-cn
