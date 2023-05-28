@@ -1,7 +1,8 @@
 # io uring
-- https://blog.vmsplice.net/2022/06/comparing-virtio-nvme-and-iouring-queue.html
 
-- 基于 io-uring 的 ubd： https://lwn.net/Articles/900690/
+## [Comparing VIRTIO, NVMe, and io_uring queue designs](https://blog.vmsplice.net/2022/06/comparing-virtio-nvme-and-iouring-queue.html)
+
+## 基于 io-uring 的 ubd： https://lwn.net/Articles/900690/
 
 ## 系统调用
 - io_uring_setup : 初始化
@@ -128,11 +129,11 @@ https://github.com/frevib/io_uring-echo-server
 | ./rsrc.c      | 1305  | 1015 | 109      | 181    |
 | ./io-wq.c     | 1349  | 1005 | 131      | 213    |
 | ./rw.c        | 1083  | 782  | 154      | 147    | 似乎是进行 rw 的主要位置
-| ./poll.c      | 1045  | 737  | 165      | 143    |
+| ./poll.c      | 1045  | 737  | 165      | 143    | 感觉就像是普通的 poll 机制
 | ./opdef.c     | 673   | 657  | 5        | 11     |
 | ./timeout.c   | 692   | 538  | 51       | 103    |
 | ./kbuf.c      | 636   | 482  | 56       | 98     |
-| ./sqpoll.c    | 419   | 328  | 22       | 69     |
+| ./sqpoll.c    | 419   | 328  | 22       | 69     | 对于 submission 进行 poll
 | ./tctx.c      | 334   | 264  | 17       | 53     |
 | ./cancel.c    | 314   | 254  | 13       | 47     |
 | ./msg_ring.c  | 300   | 236  | 19       | 45     |
@@ -215,34 +216,34 @@ https://lore.kernel.org/linux-block/20191024134439.28498-1-axboe@kernel.dk/T/
 > This adds support for io-wq, a smaller and specialized thread pool
 > implementation. This is meant to replace workqueues for io_uring. Among
 > the reasons for this addition are:
-> 
+>
 > - We can assign memory context smarter and more persistently if we
 >   manage the life time of threads.
-> 
+>
 > - We can drop various work-arounds we have in io_uring, like the
 >   async_list.
-> 
+>
 > - We can implement hashed work insertion, to manage concurrency of
 >   buffered writes without needing a) an extra workqueue, or b)
 >   needlessly making the concurrency of said workqueue very low
 >   which hurts performance of multiple buffered file writers.
-> 
+>
 > - We can implement cancel through signals, for cancelling
 >   interruptible work like read/write (or send/recv) to/from sockets.
-> 
+>
 > - We need the above cancel for being able to assign and use file tables
 >   from a process.
-> 
+>
 > - We can implement a more thorough cancel operation in general.
-> 
+>
 > - We need it to move towards a syslet/threadlet model for even faster
 >   async execution. For that we need to take ownership of the used
 >   threads.
-> 
+>
 > This list is just off the top of my head. Performance should be the
 > same, or better, at least that's what I've seen in my testing. io-wq
 > supports basic NUMA functionality, setting up a pool per node.
-> 
+>
 > io-wq hooks up to the scheduler schedule in/out just like workqueue
 > and uses that to drive the need for more/less workers.
 
@@ -251,7 +252,7 @@ https://lore.kernel.org/linux-block/20191024134439.28498-1-axboe@kernel.dk/T/
 https://blogs.oracle.com/linux/post/an-introduction-to-the-io-uring-asynchronous-io-framework
 1. interrupt driven
 2. Polled
-3. Kernel polled 
+3. Kernel polled
 
 ## 还是先会使用再说吧 liburing/examples/
 
@@ -266,7 +267,7 @@ ucontext-cp.c
 - io_uring_register_ring_fd
 - io_uring_close_ring_fd : 为什么要立刻关闭这个 fd 啊
 
-```c
+```txt
 io_uring_setup(4, {flags=0, sq_thread_cpu=0, sq_thread_idle=0, sq_entries=4, cq_entries=8, features=IORING_FEAT_SINGLE_MMAP|IORING_FEAT_NODROP|IORING_FEAT_SUBMIT_STABLE|IORING_FEAT_RW_CUR_POS|IORING_FEAT_CUR_PERSONALITY|IORING_FEAT_FAST_POLL|IORING_FEAT_POLL_32BITS|IORING_FEAT_SQPOLL_NONFIXED|IORING_FEAT_EXT_ARG|IORING_FEAT_NATIVE_WORKERS|IORING_FEAT_RSRC_TAGS|IORING_FEAT_CQE_SKIP|IORING_FEAT_LINKED_FILE|IORING_FEAT_REG_REG_RING, sq_off={head=0, tail=64, ring_mask=256, ring_entries=264, flags=276, dropped=272, array=448}, cq_off={head=128, tail=192, ring_mask=260, ring_entries=268, overflow=284, cqes=320, flags=280}}) = 3
 mmap(NULL, 464, PROT_READ|PROT_WRITE, MAP_SHARED|MAP_POPULATE, 3, 0) = 0x7fcf6bfc3000
 mmap(NULL, 256, PROT_READ|PROT_WRITE, MAP_SHARED|MAP_POPULATE, 3, 0x10000000) = 0x7fcf6bfc2000
@@ -285,3 +286,122 @@ munmap(0x7fcf6bfc2000, 256)             = 0
 munmap(0x7fcf6bfc3000, 464)             = 0
 io_uring_register(0, 0x80000015 /* IORING_REGISTER_??? */, 0x7ffda4ab94f0, 1) = 1
 ```
+
+## [x] 很多函数上都有 `__cold`
+
+```c
+/*
+ *   gcc: https://gcc.gnu.org/onlinedocs/gcc/Common-Function-Attributes.html#index-cold-function-attribute
+ *   gcc: https://gcc.gnu.org/onlinedocs/gcc/Label-Attributes.html#index-cold-label-attribute
+ *
+ * When -falign-functions=N is in use, we must avoid the cold attribute as
+ * contemporary versions of GCC drop the alignment for cold functions. Worse,
+ * GCC can implicitly mark callees of cold functions as cold themselves, so
+ * it's not sufficient to add __function_aligned here as that will not ensure
+ * that callees are correctly aligned.
+ *
+ * See:
+ *
+ *   https://lore.kernel.org/lkml/Y77%2FqVgvaJidFpYt@FVFF77S0Q05N
+ *   https://gcc.gnu.org/bugzilla/show_bug.cgi?id=88345#c9
+ */
+#if !defined(CONFIG_CC_IS_GCC) || (CONFIG_FUNCTION_ALIGNMENT == 0)
+#define __cold				__attribute__((__cold__))
+#else
+#define __cold
+#endif
+```
+
+文档： https://gcc.gnu.org/onlinedocs/gcc/Label-Attributes.html
+
+表示该函数执行概率很低。
+
+- io_queue_async
+
+- io_wq_submit_work
+  - io_arm_poll_handler
+     - `__io_arm_poll_handler`
+- io_poll_check_events
+
+## 分析下 https://unixism.net/loti/tutorial/sq_poll.html
+
+- IORING_SETUP_SQPOLL : 存在一个 kernel thread 来 poll sq_thread_idle
+
+
+```c
+/*
+ * Passed in for io_uring_setup(2). Copied back with updated info on success
+ */
+struct io_uring_params {
+	__u32 sq_entries;
+	__u32 cq_entries;
+	__u32 flags;
+	__u32 sq_thread_cpu;
+	__u32 sq_thread_idle;
+	__u32 features;
+	__u32 wq_fd;
+	__u32 resv[3];
+	struct io_sqring_offsets sq_off;
+	struct io_cqring_offsets cq_off;
+};
+```
+
+- io_uring_setup
+   - io_sq_offload_create : io_uring_params::sq_thread_idle 传递到 io_ring_ctx::sq_thread_idle
+   - create_io_thread(io_sq_thread, sqd, NUMA_NO_NODE)
+
+- io_sq_thread
+
+
+## poll.c 是做什么的
+
+https://vmsplice.net/~stefan/stefanha-fosdem-2021.pdf
+
+```c
+const struct io_issue_def io_issue_defs[] = {
+  // ...
+	[IORING_OP_POLL_ADD] = {
+		.needs_file		= 1,
+		.unbound_nonreg_file	= 1,
+		.audit_skip		= 1,
+		.prep			= io_poll_add_prep,
+		.issue			= io_poll_add,
+	},
+	[IORING_OP_POLL_REMOVE] = {
+		.audit_skip		= 1,
+		.prep			= io_poll_remove_prep,
+		.issue			= io_poll_remove,
+	},
+```
+
+## io wq
+- io_wq_submit_work
+  - while loop { io_issue_sqe; io_arm_poll_handler; }
+  - io_issue_sqe
+  - io_arm_poll_handler
+    - `__io_arm_poll_handler`
+      - vfs_poll
+
+## rsrc.c 主要做啥的?
+
+资源管理的:
+
+- io_sqe_buffers_register
+  - io_buffers_map_alloc
+
+看一个典型的结构:
+```txt
+@[
+    io_sqe_buffers_register+5
+    __do_sys_io_uring_register+2556
+    do_syscall_64+60
+    entry_SYSCALL_64_after_hwframe+114
+]: 1
+```
+
+至于能够注册什么资源，参考一下 : `__io_uring_register`
+
+参考下这个深入理解下，到底在注册什么鸡儿东西:
+https://unixism.net/loti/ref-iouring/io_uring_register.html
+
+应该是，先 register 之后，才能提交 io_uring_prep_readv  io_uring_enter

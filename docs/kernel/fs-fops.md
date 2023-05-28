@@ -103,3 +103,77 @@ const struct file_operations ext4_file_operations = {
 - nvme_poll
   - nvme_poll_cq
     - while nvme_cqe_pending; do nvme_handle_cqe; nvme_update_cq_head; done
+
+
+## poll
+
+- vfs_poll 来调用这个 hook，主要给 select 和 aio 使用
+
+
+- io_uring_poll
+  - poll_wait
+
+
+一种触发的路径:
+- io_cqring_ev_posted_iopoll
+  - io_commit_cqring_flush
+    - `__io_commit_cqring_flush`
+      - io_poll_wq_wake
+
+
+## show_fdinfo
+
+```txt
+[root@nixos:/proc/118496/fdinfo]# cat 4
+pos:    0
+flags:  02000002
+mnt_id: 14
+ino:    240059
+SqMask: 0x7f
+SqHead: 3777186
+SqTail: 3777186
+CachedSqHead:   3777186
+CqMask: 0x7f
+CqHead: 3777060
+CqTail: 3777091
+CachedCqTail:   3777091
+SQEs:   0
+CQEs:   31
+   36: user_data:0, res:4096, flag:0
+   37: user_data:0, res:4096, flag:0
+   38: user_data:0, res:4096, flag:0
+   39: user_data:0, res:4096, flag:0
+   40: user_data:0, res:4096, flag:0
+   41: user_data:0, res:4096, flag:0
+   42: user_data:0, res:4096, flag:0
+   43: user_data:0, res:4096, flag:0
+   44: user_data:0, res:4096, flag:0
+   45: user_data:0, res:4096, flag:0
+   46: user_data:0, res:4096, flag:0
+   47: user_data:0, res:4096, flag:0
+   48: user_data:0, res:4096, flag:0
+   49: user_data:0, res:4096, flag:0
+   50: user_data:0, res:4096, flag:0
+   51: user_data:0, res:4096, flag:0
+   52: user_data:0, res:4096, flag:0
+   53: user_data:0, res:4096, flag:0
+   54: user_data:0, res:4096, flag:0
+   55: user_data:0, res:4096, flag:0
+   56: user_data:0, res:4096, flag:0
+   57: user_data:0, res:4096, flag:0
+   58: user_data:0, res:4096, flag:0
+   59: user_data:0, res:4096, flag:0
+   60: user_data:0, res:4096, flag:0
+   61: user_data:0, res:4096, flag:0
+   62: user_data:0, res:4096, flag:0
+   63: user_data:0, res:4096, flag:0
+   64: user_data:0, res:4096, flag:0
+   65: user_data:0, res:4096, flag:0
+   66: user_data:0, res:4096, flag:0
+SqThread:       -1
+SqThreadCpu:    -1
+UserFiles:      1
+UserBufs:       128
+PollList:
+CqOverflowList:
+```
