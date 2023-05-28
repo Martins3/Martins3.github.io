@@ -36,34 +36,6 @@ Asynchronous page fault is a way to try and use guest vcpu more efficiently by a
 
 
 - [ ] 和 KVM_FEATURE_ASYNC_PF 的关系是什么？ KVM_FEATURE_ASYNC_PF 似乎根本没用啊
-```c
-/* This CPUID returns two feature bitmaps in eax, edx. Before enabling
- * a particular paravirtualization, the appropriate feature bit should
- * be checked in eax. The performance hint feature bit should be checked
- * in edx.
- */
-#define KVM_CPUID_FEATURES	0x40000001
-#define KVM_FEATURE_CLOCKSOURCE		0
-#define KVM_FEATURE_NOP_IO_DELAY	1
-#define KVM_FEATURE_MMU_OP		2
-/* This indicates that the new set of kvmclock msrs
- * are available. The use of 0x11 and 0x12 is deprecated
- */
-#define KVM_FEATURE_CLOCKSOURCE2        3
-#define KVM_FEATURE_ASYNC_PF		4
-#define KVM_FEATURE_STEAL_TIME		5
-#define KVM_FEATURE_PV_EOI		6
-#define KVM_FEATURE_PV_UNHALT		7
-#define KVM_FEATURE_PV_TLB_FLUSH	9
-#define KVM_FEATURE_ASYNC_PF_VMEXIT	10
-#define KVM_FEATURE_PV_SEND_IPI	11
-#define KVM_FEATURE_POLL_CONTROL	12
-#define KVM_FEATURE_PV_SCHED_YIELD	13
-#define KVM_FEATURE_ASYNC_PF_INT	14
-#define KVM_FEATURE_MSI_EXT_DEST_ID	15
-#define KVM_FEATURE_HC_MAP_GPA_RANGE	16
-#define KVM_FEATURE_MIGRATION_CONTROL	17
-```
 
 ## 资料
 - [ ] https://terenceli.github.io/%E6%8A%80%E6%9C%AF/2019/03/24/kvm-async-page-fault
@@ -86,6 +58,7 @@ Asynchronous page fault is a way to try and use guest vcpu more efficiently by a
 
 ## 基本代码流程
 
+host 的流程:
 ```txt
 @[
     kvm_faultin_pfn+1
@@ -107,7 +80,6 @@ Asynchronous page fault is a way to try and use guest vcpu more efficiently by a
 
 ```txt
   kvm:kvm_try_async_get_page                         [Tracepoint event]
-
   kvm:kvm_async_pf_completed                         [Tracepoint event]
   kvm:kvm_async_pf_not_present                       [Tracepoint event]
   kvm:kvm_async_pf_ready                             [Tracepoint event]
@@ -133,6 +105,7 @@ t -r kvm_faultin_pfn 的返回值总是 0
     - hva_to_pfn
       - hva_to_pfn_slow
 
+如果不是使用文件
 ```txt
 @[
     get_user_pages_unlocked+5
@@ -149,21 +122,7 @@ t -r kvm_faultin_pfn 的返回值总是 0
 ]: 206272
 ```
 
-使用文件之后，这个 gup 才让进入到下面的判断，实际上，async page fault 的情况很少:
-```txt
-@[
-    kvm_can_do_async_pf+5
-    kvm_faultin_pfn+181
-    direct_page_fault+774
-    kvm_mmu_page_fault+276
-    vmx_handle_exit+374
-    kvm_arch_vcpu_ioctl_run+3286
-    kvm_vcpu_ioctl+629
-    __x64_sys_ioctl+139
-    do_syscall_64+60
-    entry_SYSCALL_64_after_hwframe+114
-]: 79
-```
+使用文件作为 backend 的时候，这个 gup 才让进入到下面的判断，实际上，async page fault 的情况很少:
 ```txt
 @[
     kvm_can_do_async_pf+5
@@ -178,4 +137,21 @@ t -r kvm_faultin_pfn 的返回值总是 0
     entry_SYSCALL_64_after_hwframe+114
 ]: 280751
 ```
-不知道那一环出现了问题:
+
+不知道 kvm_can_do_async_pf 的哪一个判断失败的
+
+- `__kvm_faultin_pfn`
+		- kvm_make_request(KVM_REQ_APF_HALT, vcpu);
+
+- 将任务发送到 workqueue
+
+导致 vcpu 重新进入的时候 ：
+- vcpu_enter_guest
+  - vcpu->arch.apf.halted = true;
+
+
+## 分析 KVM_FEATURE_ASYNC_PF_INT
+
+- sysvec_kvm_asyncpf_interrupt
+  - kvm_async_pf_task_wake
+  - wrmsrl(MSR_KVM_ASYNC_PF_ACK, 1);

@@ -2,7 +2,7 @@
 set -E -e -u -o pipefail
 
 replace_kernel=false
-replace_kernel=true
+# replace_kernel=true
 
 hacking_memory="hotplug"
 hacking_memory="virtio-pmem"
@@ -99,6 +99,7 @@ case $distribution in
 esac
 
 iso=${workstation}/iso/${distribution}.iso
+mkdir -p vm
 disk_img=${workstation}/vm/${distribution}.qcow2
 
 # dir=/nix/store/rlf9m7zzhdcsp4mv78jfi2f6scfcvbp7-nixos-disk-image
@@ -478,22 +479,23 @@ for ((i = 0; i < 10; i++)); do
 		# mount -o loop /path/to/data /mnt
 		# dd if=/dev/null of="${ext4_img}" bs=1M seek=1000
 		# mkfs.ext4 -F "${ext4_img}"
-		qemu-img create -f qcow2 "${ext4_img}" 100G
+		qemu-img create -f qcow2 "${ext4_img}" 10G
 	fi
 done
 
 if [ ! -f "${disk_img}" ]; then
 	sure "use ${iso} install ${disk_img}"
-	qemu-img create -f qcow2 "${disk_img}" 10G
+	qemu-img create -f qcow2 "${disk_img}" 200G
 	# 很多发行版的安装必须使用图形界面，如果在远程，那么需要 vnc
 	arg_monitor="-vnc :0,password=on -monitor stdio"
+	# 否则本地安装即可
 	arg_monitor=""
 	qemu-system-x86_64 \
 		-boot d \
 		-cdrom "$iso" \
 		-hda "${disk_img}" \
 		-enable-kvm \
-		-m 2G \
+		-m 8G \
 		-smp 2 $arg_monitor
 	exit 0
 fi
