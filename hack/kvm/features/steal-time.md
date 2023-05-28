@@ -16,4 +16,3 @@
 #11 __sysvec_apic_timer_interrupt (regs=<optimized out>) at arch/x86/kernel/apic/apic.c:1112
 #12 0xffffffff822a94d1 in sysvec_apic_timer_interrupt (regs=0xffffc90000137e38) at arch/x86/kernel/apic/apic.c:1106
 ```
-

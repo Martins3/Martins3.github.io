@@ -378,3 +378,6 @@ xa_headx(const struct xarray *xa)
 >  and NMI handlers.
 
 ## https://www.kernel.org/doc/Documentation/RCU/Design/Requirements/Requirements.html
+
+
+### rcuwait_wake_up

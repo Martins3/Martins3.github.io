@@ -58,26 +58,6 @@ Asynchronous page fault is a way to try and use guest vcpu more efficiently by a
 
 ## 基本代码流程
 
-host 的流程:
-```txt
-@[
-    kvm_faultin_pfn+1
-    direct_page_fault+774
-    kvm_mmu_page_fault+276
-    vmx_handle_exit+374
-    kvm_arch_vcpu_ioctl_run+3286
-    kvm_vcpu_ioctl+629
-    __x64_sys_ioctl+139
-    do_syscall_64+60
-    entry_SYSCALL_64_after_hwframe+114
-]: 275741
-```
-
-- direct_page_fault
-  - kvm_faultin_pfn
-    - `__kvm_faultin_pfn`
-      - kvm_make_request(KVM_REQ_APF_HALT, vcpu);
-
 ```txt
   kvm:kvm_try_async_get_page                         [Tracepoint event]
   kvm:kvm_async_pf_completed                         [Tracepoint event]
@@ -105,7 +85,7 @@ t -r kvm_faultin_pfn 的返回值总是 0
     - hva_to_pfn
       - hva_to_pfn_slow
 
-如果不是使用文件
+如果不是使用文件的时候:
 ```txt
 @[
     get_user_pages_unlocked+5
@@ -140,18 +120,54 @@ t -r kvm_faultin_pfn 的返回值总是 0
 
 不知道 kvm_can_do_async_pf 的哪一个判断失败的
 
+一般来说 host 的执行流程:
 - `__kvm_faultin_pfn`
+    - kvm_find_async_pf_gfn : 这是在查询缓存吗?
 		- kvm_make_request(KVM_REQ_APF_HALT, vcpu);
+    - kvm_arch_setup_async_pf : 启动一个 workqueue 来处理
+      - kvm_setup_async_pf
+        - async_pf_execute : 这是实际上执行的内容
+          - get_user_pages_remote : 完成 page fault 的过程
+          - kvm_arch_async_page_present : 通知 guest 事情搞定了
+          - `__kvm_vcpu_wake_up` : 执行完成之后，让 vCPU 开始启动
 
-- 将任务发送到 workqueue
-
-导致 vcpu 重新进入的时候 ：
-- vcpu_enter_guest
-  - vcpu->arch.apf.halted = true;
-
+guest 的执行流程:
+- kvm_handle_async_pf
+  - `__kvm_handle_async_pf`
+    - kvm_async_pf_task_wait_schedule : 被 swapout 的 page，所以睡眠
 
 ## 分析 KVM_FEATURE_ASYNC_PF_INT
 
 - sysvec_kvm_asyncpf_interrupt
   - kvm_async_pf_task_wake
   - wrmsrl(MSR_KVM_ASYNC_PF_ACK, 1);
+
+```diff
+History:        #0
+Commit:         2635b5c4a0e407b84f68e188c719f28ba0e9ae1b
+Author:         Vitaly Kuznetsov <vkuznets@redhat.com>
+Committer:      Paolo Bonzini <pbonzini@redhat.com>
+Author Date:    2020年05月25日 星期一 22时41分20秒
+Committer Date: 2020年06月01日 星期一 16时26分07秒
+
+KVM: x86: interrupt based APF 'page ready' event delivery
+
+Concerns were expressed around APF delivery via synthetic #PF exception as
+in some cases such delivery may collide with real page fault. For 'page
+ready' notifications we can easily switch to using an interrupt instead.
+Introduce new MSR_KVM_ASYNC_PF_INT mechanism and deprecate the legacy one.
+
+One notable difference between the two mechanisms is that interrupt may not
+get handled immediately so whenever we would like to deliver next event
+(regardless of its type) we must be sure the guest had read and cleared
+previous event in the slot.
+
+While on it, get rid on 'type 1/type 2' names for APF events in the
+documentation as they are causing confusion. Use 'page not present'
+and 'page ready' everywhere instead.
+
+Signed-off-by: Vitaly Kuznetsov <vkuznets@redhat.com>
+Message-Id: <20200525144125.143875-6-vkuznets@redhat.com>
+Signed-off-by: Paolo Bonzini <pbonzini@redhat.com>
+```
+看上去为来方式 exception ，所以专门做了一个新的入口。
