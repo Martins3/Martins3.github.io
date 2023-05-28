@@ -204,8 +204,6 @@ When pages within a VMA are backed by a file on disk, the interface used is stra
 
 This is a very clean interface that is conceptually easy to understand but it does not help anonymous pages as there is no file backing. To keep this nice interface, Linux creates an artifical file-backing for anonymous pages using a RAM-based filesystem where each VMA is backed by a “file” in this filesystem.
 
-huxueshi : I think with this correct and clean perspective, we can shmem easily and use it correct misunderstandings of other parts.
-
 总结:
 1. 为了 tmpfs 建立的配套机制
 2. fallocate : hole
@@ -335,3 +333,95 @@ For faulting in pages and writing them to backing storage, two structs called `s
 
 ## 验证一下这个项目
 https://unix.stackexchange.com/questions/348464/if-i-mmap-a-file-from-tmpfs-will-it-double-the-memory-usage
+
+## shmem_mmap
+
+```c
+static const struct file_operations shmem_file_operations = {
+	.mmap		= shmem_mmap,
+```
+
+根据 nlink ，采取分别注册如下不同的 hook
+```c
+static const struct vm_operations_struct shmem_vm_ops = {
+	.fault		= shmem_fault,
+	.map_pages	= filemap_map_pages,
+#ifdef CONFIG_NUMA
+	.set_policy     = shmem_set_policy,
+	.get_policy     = shmem_get_policy,
+#endif
+};
+
+static const struct vm_operations_struct shmem_anon_vm_ops = {
+	.fault		= shmem_fault,
+	.map_pages	= filemap_map_pages,
+#ifdef CONFIG_NUMA
+	.set_policy     = shmem_set_policy,
+	.get_policy     = shmem_get_policy,
+#endif
+};
+```
+
+内容完全相同，只是为了名称
+```c
+bool vma_is_anon_shmem(struct vm_area_struct *vma)
+{
+	return vma->vm_ops == &shmem_anon_vm_ops;
+}
+```
+
+```diff
+History:        #0
+Commit:         d09e8ca6cb93bb4b97517a18fbbf7eccb0e9ff43
+Author:         Pasha Tatashin <pasha.tatashin@soleen.com>
+Committer:      Andrew Morton <akpm@linux-foundation.org>
+Author Date:    2022年11月15日 星期二 10时06分01秒
+Committer Date: 2022年12月01日 星期四 07时58分55秒
+
+mm: anonymous shared memory naming
+
+Since commit 9a10064f5625 ("mm: add a field to store names for private
+anonymous memory"), name for private anonymous memory, but not shared
+anonymous, can be set.  However, naming shared anonymous memory just as
+useful for tracking purposes.
+
+Extend the functionality to be able to set names for shared anon.
+
+There are two ways to create anonymous shared memory, using memfd or
+directly via mmap():
+1. fd = memfd_create(...)
+   mem = mmap(..., MAP_SHARED, fd, ...)
+2. mem = mmap(..., MAP_SHARED | MAP_ANONYMOUS, -1, ...)
+
+In both cases the anonymous shared memory is created the same way by
+mapping an unlinked file on tmpfs.
+
+The memfd way allows to give a name for anonymous shared memory, but
+not useful when parts of shared memory require to have distinct names.
+
+Example use case: The VMM maps VM memory as anonymous shared memory (not
+private because VMM is sandboxed and drivers are running in their own
+processes).  However, the VM tells back to the VMM how parts of the memory
+are actually used by the guest, how each of the segments should be backed
+(i.e.  4K pages, 2M pages), and some other information about the segments.
+The naming allows us to monitor the effective memory footprint for each
+of these segments from the host without looking inside the guest.
+
+Sample output:
+  /* Create shared anonymous segmenet */
+  anon_shmem = mmap(NULL, SIZE, PROT_READ | PROT_WRITE,
+                    MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+  /* Name the segment: "MY-NAME" */
+  rv = prctl(PR_SET_VMA, PR_SET_VMA_ANON_NAME,
+             anon_shmem, SIZE, "MY-NAME");
+
+cat /proc/<pid>/maps (and smaps):
+7fc8e2b4c000-7fc8f2b4c000 rw-s 00000000 00:01 1024 [anon_shmem:MY-NAME]
+
+If the segment is not named, the output is:
+7fc8e2b4c000-7fc8f2b4c000 rw-s 00000000 00:01 1024 /dev/zero (deleted)
+
+Link: https://lkml.kernel.org/r/20221115020602.804224-1-pasha.tatashin@soleen.com
+Signed-off-by: Pasha Tatashin <pasha.tatashin@soleen.com>
+Acked-by: David Hildenbrand <david@redhat.com>
+```

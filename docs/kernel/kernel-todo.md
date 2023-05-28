@@ -509,3 +509,12 @@ Posted-interrupt wakeup event
 ## sar 是如何监控 zram 和 loop devices 的 io 速度的
 
 ## /dev/loop0 是如何实现的
+
+## 分析  hook 中 filemap_map_pages 和 ext4_page_mkwrite 是如何实现的
+```c
+static const struct vm_operations_struct ext4_file_vm_ops = {
+	.fault		= filemap_fault,
+	.map_pages	= filemap_map_pages,
+	.page_mkwrite   = ext4_page_mkwrite,
+};
+```

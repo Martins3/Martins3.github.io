@@ -13,4 +13,5 @@ static inline struct task_struct *get_task_struct(struct task_struct *t)
 }
 ```
 
-## page 的
+## unlink
+让 inode ref 减去 1 ，当没有进程 open 之后，那么就会自动删除。

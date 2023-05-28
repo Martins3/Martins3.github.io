@@ -1,5 +1,5 @@
-## VFS standard file operation
-1.
+# VFS standard file operation
+
 ```c
 /*
  * Support for read() - Find the page attached to f_mapping and copy out the
@@ -9,7 +9,7 @@
 static ssize_t hugetlbfs_read_iter(struct kiocb *iocb, struct iov_iter *to)
 ```
 
-2. 很窒息，为什么 disk fs 和 nobev 的fs 的 address_space_operations 的内容是相同的。
+2. 很窒息，为什么 disk fs 和 nobev 的 fs 的 address_space_operations 的内容是相同的。
     1. simple_readpage : 将对应的 page 的内容清空
     2. simple_write_begin : 将需要加载的页面排列好
     3. 所以说不过去
@@ -29,54 +29,12 @@ static const struct address_space_operations minfs_aops = {
 ```
 
 
-#### inode_operations::fiemap
-// TODO
-// 啥功能呀 ?
+## mmap
+
+- 主调调用位置 : mmap_region
+  - call_mmap : file_operations::mmap
 
 ```c
-const struct inode_operations ext2_file_inode_operations = {
-#ifdef CONFIG_EXT2_FS_XATTR
-  .listxattr  = ext2_listxattr,
-#endif
-  .getattr  = ext2_getattr,
-  .setattr  = ext2_setattr,
-  .get_acl  = ext2_get_acl,
-  .set_acl  = ext2_set_acl,
-  .fiemap   = ext2_fiemap,
-};
-
-/**
- * generic_block_fiemap - FIEMAP for block based inodes
- * @inode: The inode to map
- * @fieinfo: The mapping information
- * @start: The initial block to map
- * @len: The length of the extect to attempt to map
- * @get_block: The block mapping function for the fs
- *
- * Calls __generic_block_fiemap to map the inode, after taking
- * the inode's mutex lock.
- */
-
-int generic_block_fiemap(struct inode *inode,
-       struct fiemap_extent_info *fieinfo, u64 start,
-       u64 len, get_block_t *get_block)
-{
-  int ret;
-  inode_lock(inode);
-  ret = __generic_block_fiemap(inode, fieinfo, start, len, get_block);
-  inode_unlock(inode);
-  return ret;
-}
-```
-
-#### file_operations::mmap
-
-唯一的调用位置: mmap_region
-```c
-static inline int call_mmap(struct file *file, struct vm_area_struct *vma) {
-  return file->f_op->mmap(file, vma);
-}
-
 /* This is used for a general mmap of a disk file */
 int generic_file_mmap(struct file * file, struct vm_area_struct * vma)
 {
@@ -85,15 +43,23 @@ int generic_file_mmap(struct file * file, struct vm_area_struct * vma)
   if (!mapping->a_ops->readpage)
     return -ENOEXEC;
   file_accessed(file);
-  vma->vm_ops = &generic_file_vm_ops; // TODO 追踪一下
+  vma->vm_ops = &generic_file_vm_ops;
   return 0;
 }
 ```
-#### file_operations::write_iter
-- [x] trace function from `io_uring_enter` to `file_operations::write_iter`
 
-io_issue_sqe ==>
-io_write ==> call_write_iter ==> file_operations::write_iter
+这个注册位置比较多，暂时分析几个有趣的:
+- io_uring_mmap : 通过 mmap 这个 fd ，用户态空间获取到 se cq 这些共享队列
+- ext4_file_mmap
+  - 注册 vm_area_struct::vm_ops
+- shmem_mmap : 见 shmem 的分析吧
+
+## write_iter
+
+- io_issue_sqe
+  - io_write
+    - call_write_iter
+      - file_operations::write_iter
 
 ```c
 static int io_write(struct io_kiocb *req, bool force_nonblock,
@@ -118,15 +84,22 @@ static inline ssize_t call_write_iter(struct file *file, struct kiocb *kio,
 There are many similar calling chain in read_write.c which summaries io models except aio and io_uring
 
 
-#### file_operations::iopoll
-example user: io_uring::io_do_iopoll
+## iopoll
+使用用户: io_uring::io_do_iopoll
 
-类似的行为:
 ```c
-struct block_device_operations {
-	int (*poll_bio)(struct bio *bio, struct io_comp_batch *iob,
-			unsigned int flags);
+const struct file_operations ext4_file_operations = {
+   // ...
+	.iopoll		= iocb_bio_iopoll,
   // ...
-}
 ```
-这个也值得仔细调查。
+
+- iocb_bio_iopoll
+  - bio_poll
+    - blk_mq_poll : 如果是 multiqueue
+      - 循环调用: request_queue::mq_ops::poll，主要分析 virtblk_poll nvme_tcp_poll nvme_poll
+    - gendisk::fops::poll_bio
+
+- nvme_poll
+  - nvme_poll_cq
+    - while nvme_cqe_pending; do nvme_handle_cqe; nvme_update_cq_head; done
