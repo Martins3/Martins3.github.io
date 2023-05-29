@@ -1,5 +1,5 @@
 [global]
-ioengine=liburing
+ioengine=libaio
 iodepth=128
 
 [trash]

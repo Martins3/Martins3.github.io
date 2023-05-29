@@ -187,5 +187,6 @@ struct iommu_flush_ops {
   - https://lwn.net/Articles/906852/
 
 ## 分析 gup
+还可以 page fault 到其他人的地址空间上的感觉。
 
 ## 文件和磁盘也是类似的关系，创建一个巨大的文件，应该文件和磁盘的映射不会立刻建立的

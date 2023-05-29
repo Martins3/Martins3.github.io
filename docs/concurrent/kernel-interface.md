@@ -84,3 +84,10 @@ https://stackoverflow.com/questions/55746320/why-rwlock-is-more-popular-than-seq
 
 ## lockref
 - https://lwn.net/Articles/565734/
+
+## 这个啥意思?
+```c
+might_sleep_if(gfp_mask & __GFP_WAIT);
+```
+
+## smp_wmb

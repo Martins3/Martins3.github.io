@@ -14,3 +14,13 @@ mempool_t::curr_nr : 现在还有多少存粮
 - mempool_exit : 调用 mempool_t::free 接口将没有使用的元素的全部释放掉
 
 - [ ] 如果存粮用玩了，如何?
+
+## 如果一个正在 alloc ，但是正在调用 mempool_exit
+
+- mempool_alloc
+  - 使用特殊的 gfp_mask 首先分配一次，走标准路径
+  - 如果失败，走 remove_element
+
+在 mempool_init_node 预先分配内存
+
+通过 mempool_t::lock 来实现互斥

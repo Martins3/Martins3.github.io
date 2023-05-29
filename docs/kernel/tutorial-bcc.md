@@ -29,13 +29,13 @@ bpflist dbslower ext4dist hardirqs llcstat offcputime phpstat rubyflow sofdsnoop
 btrfsdist dbstat ext4slower javacalls mdflush offwaketime pidpersec rubygc softirqs tclobjnew tcptop xfsslower
 btrfsslower dcsnoop filelife javaflow memleak oomkill profile rubyobjnew solisten tclstat tcptracer
 
-## 目录 usr/share/bcc/tools 
+## 目录 usr/share/bcc/tools
 
 ## deadlock 这个组件如何来分析内核的
 
 
 ## 这个程序让我有点蒙
-bpftool prog help  
+bpftool prog help
 o
 
 
@@ -62,3 +62,5 @@ https://github.com/iovisor/bcc
 
 ## 什么，还可以使用这个生成火焰图
 /usr/share/bcc/tools/profile -p `pidof fio` -f
+
+## kvm_stat 也是一个好工具啊
