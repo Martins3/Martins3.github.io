@@ -42,8 +42,8 @@
 ```
 
 
-## multiqueue
-[lwn : The multiqueue block layer](https://lwn.net/Articles/552904/)
+## [lwn : The multiqueue block layer](https://lwn.net/Articles/552904/)
+
 > While requests are in the submission queue, they can be operated on by the block layer in the usual manner. Reordering of requests for locality offers **little** or no benefit on solid-state devices;
 > indeed, spreading requests out across the device might help with the parallel processing of requests.
 > So reordering will not be done, but coalescing requests will reduce the total number of I/O operations, improving performance somewhat.
@@ -51,7 +51,140 @@
 > With no empirical evidence whatsoever, your editor would guess that adjacent requests are most likely to come from the same process and,
 > thus, will automatically find their way into the same submission queue, so the lack of cross-CPU coalescing is probably not a big problem.
 
-[Linux Block IO: Introducing Multi-queue SSD Access on Multi-core Systems](https://kernel.dk/systor13-final18.pdf)
+> The block layer will move requests from the submission queues into the hardware queues up to the maximum number specified by the driver
+
+- [ ] per cpu 一个 queue
+- [ ] per hw 一个 queue
+- [ ] per cpu 内部可以合并，但是外部不可以
+- [ ] 超过设置的数值，将会一次性提交
+
+## percpu 的软件队列: blk_mq_ctx
+```c
+/**
+ * struct blk_mq_ctx - State for a software queue facing the submitting CPUs
+ */
+struct blk_mq_ctx {
+	struct {
+		spinlock_t		lock;
+		struct list_head	rq_lists[HCTX_MAX_TYPES];
+	} ____cacheline_aligned_in_smp;
+
+	unsigned int		cpu;
+	unsigned short		index_hw[HCTX_MAX_TYPES];
+	struct blk_mq_hw_ctx 	*hctxs[HCTX_MAX_TYPES];
+
+	struct request_queue	*queue;
+	struct blk_mq_ctxs      *ctxs;
+	struct kobject		kobj;
+} ____cacheline_aligned_in_smp;
+```
+
+观察下是如何初始化的:
+```txt
+#0  blk_mq_init_allocated_queue (set=set@entry=0xffff88810091b830, q=q@entry=0xffff8881036d8de0) at block/blk-mq.c:4207
+#1  0xffffffff81765cbe in blk_mq_init_queue_data (queuedata=0xffff88810091b800, set=set@entry=0xffff88810091b830) at block/blk-mq.c:4041
+#2  __blk_mq_alloc_disk (set=set@entry=0xffff88810091b830, queuedata=queuedata@entry=0xffff88810091b800, lkclass=lkclass@entry=0xffffffff83a37ae0 <virtblk_queue_depth>) at block/blk-mq.c:4088
+#3  0xffffffff81970e96 in virtblk_probe (vdev=0xffff8881063fa800) at drivers/block/virtio_blk.c:1397
+#4  0xffffffff818c1670 in virtio_dev_probe (_d=0xffff8881063fa810) at drivers/virtio/virtio.c:305
+#5  0xffffffff8194006f in call_driver_probe (drv=0xffffffff82e4a560 <virtio_blk>, dev=0xffff8881063fa810) at drivers/base/dd.c:579
+```
+- blk_mq_init_allocated_queue
+  - blk_mq_alloc_ctxs : 分配软件队列
+  - blk_mq_realloc_hw_ctxs : 分配硬件队列
+  - blk_mq_init_cpu_queues
+
+## 是如何提交到软件队列中去的
+- 为什么 request_queue::queue_ctx 来做什么
+
+
+- `__submit_bio`
+
+### 从 request 中加入到 blk_mq_ctx 软件队列
+
+- `__submit_bio`
+  - blk_mq_submit_bio
+    - blk_mq_get_cached_request
+      - blk_mq_attempt_bio_merge : 在这里尝试 merge bio 到现有的 request 中
+    - blk_mq_sched_insert_request
+      - `__blk_mq_insert_request`
+        - `__blk_mq_insert_req_list` : 在这里，将 blk_mq_ctx::rq_lists
+
+### 从 blk_mq_ctx 加入到 blk_mq_hw_ctx
+
+syscall 中提交:
+```txt
+__blk_mq_delay_run_hw_queue+1
+blk_mq_sched_insert_requests+110
+blk_mq_flush_plug_list+291
+__blk_flush_plug+262
+io_schedule+65
+rq_qos_wait+191
+wbt_wait+160
+__rq_qos_throttle+36
+blk_mq_submit_bio+645
+submit_bio_noacct_nocheck+607
+ext4_bio_write_page+484
+mpage_submit_page+76
+mpage_process_page_bufs+279
+mpage_prepare_extent_to_map+512
+ext4_do_writepages+673
+ext4_writepages+161
+do_writepages+208
+__writeback_single_inode+65
+writeback_sb_inodes+521
+__writeback_inodes_wb+76
+wb_writeback+471
+wb_workfn+675
+process_one_work+482
+worker_thread+84
+kthread+233
+ret_from_fork+41
+```
+
+异步的向 disk 发送 reuest
+```txt
+@[
+    blk_mq_dispatch_rq_list+5
+    __blk_mq_sched_dispatch_requests+171
+    blk_mq_sched_dispatch_requests+57
+    __blk_mq_run_hw_queue+145
+    blk_mq_run_hw_queues+105
+    blk_mq_requeue_work+340
+    process_one_work+482
+    worker_thread+84
+    kthread+233
+    ret_from_fork+41
+]: 15
+```
+
+- `blk_mq_dispatch_rq_list`
+  - request_queue::mq_ops::queue_rq : 从这里就进入到 virtio-blk 中间了
+
+
+## [ ] blk_mq_tag_set : 这个是做啥的?
+
+- nvme_alloc_admin_tag_set
+  - blk_mq_alloc_tag_set 将会分配如下内容:
+    - blk_mq_tags : Tag address space map
+    - blk_mq_queue_map : Map software queues to hardware queues
+
+- [ ] 似乎是用于确定到底那些提交的 IO 已经完成了。
+
+应该是在这个位置的: block/blk-mq-tag.c
+
+分配 tag :
+```txt
+#0  blk_mq_get_tag (data=data@entry=0xffffc90001d03a78) at block/blk-mq-tag.c:129
+#1  0xffffffff8175de22 in __blk_mq_alloc_requests (data=data@entry=0xffffc90001d03a78) at block/blk-mq.c:492
+#2  0xffffffff8176368b in blk_mq_get_new_requests (nsegs=2, bio=0xffff888107d72300, plug=0xffffc90001d03c40, q=0xffff8881036d8de0) at block/blk-mq.c:2858
+#3  blk_mq_submit_bio (bio=<optimized out>) at block/blk-mq.c:2954
+#4  0xffffffff81753d7e in __submit_bio_noacct_mq (bio=0xffff888107d72300) at block/blk-core.c:673
+#5  submit_bio_noacct_nocheck (bio=<optimized out>) at block/blk-core.c:702
+#6  0xffffffff81753fc7 in submit_bio_noacct (bio=<optimized out>) at block/blk-core.c:801
+```
+- [ ] 我不理解的问题，非要使用如此逆天的技术吗?
+
+## [Linux Block IO: Introducing Multi-queue SSD Access on Multi-core Systems](https://kernel.dk/systor13-final18.pdf)
 Why we need block layer:
 1. It is a convenience library to hide the complexity and diversity of storage devices from the application while providing common services that are valuable to applications.
 2. In addition, the block layer implements IO-fairness, IO-error handling, IO-statistics, and IO-scheduling that improve performance and help protect end-users from poor or malicious implementations of other applications or device drivers.
@@ -90,8 +223,7 @@ with hardware supporting native command queuing. A tag is an integer value that 
 block IO in the driver submission queue, so when completed the tag is passed back from the device indicating which IO has been completed.
 2. Second, to support fine grained IO accounting we have
 modified the internal Linux accounting library to provide
-statistics for the states of both the software queues and dis-
-patch queues. We have also modified the existing tracing
+statistics for the states of both the software queues and dispatch queues. We have also modified the existing tracing
 and profiling mechanisms in blktrace, to support IO tracing
 for future devices that are multi-queue aware.
 
@@ -101,8 +233,8 @@ unchanged, our design introduces these following requirements:
 block layer can allocate the matching hardware dispatch queues.
 - HW submission queue mapping function: The device driver must export a function that returns a mapping
 between a given software level queue (associated to core i or NUMA node i), and the appropriate hardware dispatch queue.
-- IO tag handling: The device driver tag management mechanism must be revised so that it accepts tags generated by the block layer. While not strictly required,
-using a single data tag will result in optimal CPU usage between the device driver and block layer.
+- IO tag handling: The device driver tag management mechanism must be revised so that it accepts tags generated by the block layer.
+While not strictly required, using a single data tag will result in optimal CPU usage between the device driver and block layer.
 
 ## [x] io scheduler 和 multiqueue
 - Kernel Documentaion : https://www.kernel.org/doc/html/latest/block/blk-mq.html
@@ -119,7 +251,7 @@ struct blk_mq_hw_ctx
 - https://askubuntu.com/questions/78682/how-do-i-change-to-the-noop-scheduler
 
 检查了一下自己的机器的:
-```c
+```txt
 ➜ cat /sys/block/nvme0n1/queue/scheduler
 
 [none] mq-deadline
@@ -205,12 +337,6 @@ struct blk_mq_ctx ;
 ```
 
 从 blk_mq_init_hctx 中看，似乎每一个 hw_ctx 都会创建 nr_cpu_ids 个 blk_mq_ctx 的。
-
-## tagging
-用于确定到底那些提交的 IO 已经完成了。
-
-应该是在这个位置的: block/blk-mq-tag.c
-
 
 ### 分配
 ```txt

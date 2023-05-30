@@ -9,11 +9,6 @@
     1. bdget 吗 ? : def_blk_aops : 不会吧!
 
 ```c
-static struct buffer_head *
-__find_get_block_slow(struct block_device *bdev, sector_t block) {
-	struct inode *bd_inode = bdev->bd_inode;
-	struct address_space *bd_mapping = bd_inode->i_mapping; // 利用此处的 address_space 搜索
-
 struct block_device *bdget(dev_t dev)  // 此处初始化 dev  // todo 但是并不知道如何初始化inode 的 i_data
 {
 	struct block_device *bdev;
@@ -48,7 +43,7 @@ struct block_device *bdget(dev_t dev)  // 此处初始化 dev  // todo 但是并
 }
 ```
 
-2. 到底到底怎样的 page 和 buffer head 不会发生关联, 只要是利用了　block_read_full_page 的函数，都是会观念上的 
+2. 到底到底怎样的 page 和 buffer head 不会发生关联, 只要是利用了　block_read_full_page 的函数，都是会观念上的
 
 3. get_block_t 的作用到底是什么 ?
     1. 从 block_read_full_page 中间分析 : get_block_t 是提供inode, page 在inode 中间的偏移量，以及 bh 指针，最后提交了 bh 所需要的内容。
@@ -72,7 +67,7 @@ struct block_device *bdget(dev_t dev)  // 此处初始化 dev  // todo 但是并
  * set/clear_buffer_uptodate() functions propagate buffer state into the
  * page struct once IO has completed.
  */
-int block_read_full_page(struct page *page, get_block_t *get_block) 
+int block_read_full_page(struct page *page, get_block_t *get_block)
 
 /*
  * The generic ->writepage function for buffer-backed address_spaces
@@ -146,8 +141,8 @@ int ext2_get_block(struct inode *inode, sector_t iblock,
 ## buffer_head
 1. 似乎注释说: buffer 和 cache 功能没有任何蛇皮关系 ? 其功能曾经是 bio 功能，位于 fs 和 blocklayer 之间的
 2. @todo buffer_head 新的三个功能逐个分析一下 !
-    1. get_block_t : 感觉功能其实是 : 
-    2. 
+    1. get_block_t : 感觉功能其实是 :
+    2.
 
 ```c
 /*
@@ -208,7 +203,7 @@ enum bh_state_bits {
 > @todo
 1. BH_Dirty 和 page cache 中间 page 的 dirty 的功能是不是出现了重复了
 2. BH_Mapped 此处的 map 的含义是什么 ?
-3. 
+3.
 
 
 
@@ -267,7 +262,7 @@ grow_dev_page(struct block_device *bdev, sector_t block,
  * is already excluded via the page lock.
  */
 void create_empty_buffers(struct page *page,
-			unsigned long blocksize, unsigned long b_state) // map_buffer_to_page 调用此函数，可以追踪到此处的 page 就是page cache 的 page 
+			unsigned long blocksize, unsigned long b_state) // map_buffer_to_page 调用此函数，可以追踪到此处的 page 就是page cache 的 page
 {
 	struct buffer_head *bh, *head, *tail;
 
@@ -298,7 +293,7 @@ EXPORT_SYMBOL(create_empty_buffers);
 
 ```
 
-## `__getblk_gfp` : getblk 
+## `__getblk_gfp` : getblk
 
 ```c
 /*
@@ -498,4 +493,3 @@ out:
 	return ret;
 }
 ```
-

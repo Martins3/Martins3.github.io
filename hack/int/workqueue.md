@@ -305,3 +305,14 @@ snd_timer_interrupt => `queue_work(system_highpri_wq, &timer->task_work);`
 
 例如这个，和其他的workqueue 有什么区别吗?
 INIT_DELAYED_WORK(&wb->dwork, wb_workfn);
+
+```c
+struct delayed_work {
+	struct work_struct work;
+	struct timer_list timer;
+
+	/* target workqueue and CPU ->timer uses to queue ->work */
+	struct workqueue_struct *wq;
+	int cpu;
+};
+```

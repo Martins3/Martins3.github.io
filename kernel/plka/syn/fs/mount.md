@@ -2,12 +2,6 @@
 1. 系统的初始化的过程挂载根系统
 2. 插入u盘的挂载
 
-```c
-// 除了那些标准操作之外，被mount_bdev唯一调用
-struct block_device *blkdev_get_by_path(const char *path, fmode_t mode,
-					void *holder)
-```
-
 ## blkdev_get_by_path && blkdev_get_by_dev
 1. blkdev_get_by_path
     1. rely on `lookup_bdev => kern_path`

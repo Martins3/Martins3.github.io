@@ -50,11 +50,17 @@ vcsa4 vcs5 vcsu5 vcsa5
 ```
 
 ## struct
-- gendisk : 侧重和硬件交互
+- gendisk : 侧重和硬件交互，一个硬件一个
   - `add_disk` : 删除
   - `alloc_disk` : 创建
-- `block_device` : 侧重和文件系统交互
-- `struct hd_struct` : 描述分区信息
+- `block_device` : 侧重和文件系统交互，一个分区一个，因为每个分区的文件系统都不同
+- `struct hd_struct` : 描述分区信息，一个分区一个
+
+```c
+// 除了那些标准操作之外，被mount_bdev唯一调用
+struct block_device *blkdev_get_by_path(const char *path, fmode_t mode,
+					void *holder)
+```
 
 ## partitions
 
