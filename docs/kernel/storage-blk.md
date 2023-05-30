@@ -44,6 +44,23 @@
     ret_from_fork+41
 ]: 92
 ```
+- 为什么 `blk_freeze_queue_start` 调用 blk_mq_run_hw_queues 来刷新，而不是刷新软件的 queue
+
+应该等待在 struct request_queue::mq_freeze_wq 应该在位置被阻塞，但是测试了一下，都无法调用到:
+- blk_queue_enter
+- `__bio_queue_enter`
+- blk_mq_freeze_queue_wait
+
+当 ref = 0，调用:
+```c
+static void blk_queue_usage_counter_release(struct percpu_ref *ref)
+{
+	struct request_queue *q =
+		container_of(ref, struct request_queue, q_usage_counter);
+
+	wake_up_all(&q->mq_freeze_wq);
+}
+```
 
 
 ```txt

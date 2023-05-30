@@ -2,6 +2,9 @@
 
 ![](./img/multiqueue.png)
 
+- [ ] io scheduler 在什么地方?
+- [ ] 这里一堆 workqueue 是做啥的?
+
 ## 收集一点 backtrace
 ```txt
 #0  blk_mq_start_request (rq=rq@entry=0xffff888140d83180) at block/blk-mq.c:1249
@@ -103,11 +106,15 @@ struct blk_mq_ctx {
 
 - `__submit_bio`
   - blk_mq_submit_bio
+    - blk_mq_get_new_requests
+      - blk_mq_attempt_bio_merge : 在这里尝试 merge
     - blk_mq_get_cached_request
       - blk_mq_attempt_bio_merge : 在这里尝试 merge bio 到现有的 request 中
-    - blk_mq_sched_insert_request
+    - blk_mq_sched_insert_request : 这个应该是加入到软件队列的位置，但是实际上，根本没有 trace 到
       - `__blk_mq_insert_request`
         - `__blk_mq_insert_req_list` : 在这里，将 blk_mq_ctx::rq_lists
+
+- blk_mq_init_cpu_queues : 所有的 blk_mq_ctx 都指向相同的 request_queue 了
 
 ### 从 blk_mq_ctx 加入到 blk_mq_hw_ctx
 
@@ -259,17 +266,11 @@ struct blk_mq_hw_ctx
 应该只是支持 block/mq-deadline.c ，但是实际上并不会采用任何的 scheduler 的。
 
 ## multiqueue
-- [](https://www.thomas-krenn.com/en/wiki/Linux_Multi-Queue_Block_IO_Queueing_Mechanism_(blk-mq))
-
-To use a device with blk-mq, the device must support the respective driver.
-
 - [Linux Block IO: Introducing Multi-queue SSD Access on Multi-core Systems](https://kernel.dk/blk-mq.pdf)
 
 Large internal data parallelism in SSDs disks enables many
 concurrent IO operations which, in turn, allows single devices to achieve close to a million IOs per second (IOPS)
 for random accesses, as opposed to just hundreds on traditional magnetic hard drives.
-> 1. 高速的设备需要多核维持生活吗，不是说好的 dma 之类的不需要 CPU 处理 ? 不是，由于每一个 block 的处理可能是需要处理的 ?
-> 2. 那为什么需要多核啊 ? 难道 CPU 的速度已经赶不上 ssd 了
 
 sockets 在此处是什么 ?
 
@@ -288,7 +289,7 @@ queue expansion and contraction is a relatively costly operation compared to the
 enough free IO slots to support most application use. Conversely, the size of the hardware dispatch queue is bounded
 and correspond to the maximum queue depth that is supported by the device driver and hardware.
 
-- [](https://lwn.net/Articles/552904/)
+- [The multiqueue block layer](https://lwn.net/Articles/552904/)
 
 It offers two ways for a block driver to hook into the system, one of which is the "request" interface.
 
@@ -476,3 +477,34 @@ struct mq_inflight {
 ```
 
 一个 gendisk 对应 request_queue，但是一个 request_queue 对应的
+
+
+## [ ] request_queue 到底有多少个
+
+至少一个 block_device 会存在一个。
+
+```c
+static inline struct request_queue *bdev_get_queue(struct block_device *bdev)
+{
+	return bdev->bd_queue;	/* this is never NULL */
+}
+```
+
+## 分析下提交过程
+
+- blk_flush_plug : 从软件到硬件提交的过程
+  - `__blk_flush_plug`
+    - blk_mq_flush_plug_list
+      - blk_mq_dispatch_plug_list
+        - 如果 queue 存在调度器
+          - blk_mq_dispatch_plug_list::queue->elevator->type->ops.insert_requests
+          - blk_mq_run_hw_queue
+        - 否则，直接向下提交
+          - blk_mq_insert_requests
+            - list_splice_tail_init : 存放到软件队列中
+            - blk_mq_run_hw_queue
+              - blk_mq_sched_dispatch_requests
+                - blk_mq_dispatch_rq_list
+                  - q->mq_ops->queue_rq(hctx, &bd);
+
+## 提交过程中，其他的组件是如何穿插进来的
