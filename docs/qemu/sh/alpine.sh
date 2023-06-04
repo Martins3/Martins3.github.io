@@ -14,6 +14,9 @@ hacking_memory="numa"
 hacking_memory="file"
 # hacking_memory="none"
 
+hacking_kcov=false
+hacking_kcov=true
+
 share_memory_option="9p"
 # share_memory_option="virtiofs"
 
@@ -42,7 +45,11 @@ qemu=${qemu_dir}/build/x86_64-softmmu/qemu-system-x86_64
 # 最近的编出来的 qemu 似乎不能调试了 2023-05-20
 qemu="qemu-system-x86_64"
 virtiofsd=${qemu_dir}/build/tools/virtiofsd/virtiofsd
-kernel=${kernel_dir}/arch/x86/boot/bzImage
+if [[ $hacking_kcov == true ]]; then
+	kernel=${kernel_dir}/kcov/arch/x86/boot/bzImage
+else
+	kernel=${kernel_dir}/arch/x86/boot/bzImage
+fi
 # kernel="/nix/store/g4zdxdxj8sfbv08grmpahzajrm1gm4s8-linux-5.15.97/bzImage"
 
 in_guest=false
@@ -99,7 +106,7 @@ case $distribution in
 esac
 
 iso=${workstation}/iso/${distribution}.iso
-mkdir -p vm
+mkdir -p "${workstation}/vm"
 disk_img=${workstation}/vm/${distribution}.qcow2
 
 # dir=/nix/store/rlf9m7zzhdcsp4mv78jfi2f6scfcvbp7-nixos-disk-image
@@ -129,7 +136,6 @@ arg_img="-device nvme,drive=boot_img,serial=foo,bootindex=1 -drive if=none,file=
 # 如果不替换内核，那么就需要使用 bootindex=1 来指定，bootindex 是 -device 的参数，所以需要显示的指出 -device 的类型
 # 这里的 virtio-blk-pci 也可以修改 scsi-hd，总之 qemu-system-x86_64 -device help  中的代码是可以看看的
 arg_img="-device virtio-blk-pci,drive=boot_img,bootindex=1 -drive if=none,file=${disk_img},format=qcow2,id=boot_img,aio=native,cache.direct=on"
-root="PARTUUID=2c4eb5c7-02"
 
 arg_share_dir=""
 case $share_memory_option in
@@ -178,7 +184,6 @@ arg_cpu_model="-cpu Broadwell-noTSX-IBRS,vmx=on,hle=off,rtm=off"
 # arg_cpu_model="-cpu Broadwell-IBRS"
 # arg_cpu_model="-cpu host,hv_relaxed,hv_vpindex,hv_time,"
 arg_cpu_model="-cpu host"
-
 
 if [[ $in_guest == true ]]; then
 	arg_cpu_model="$arg_cpu_model,vmx=off"
@@ -285,6 +290,12 @@ arg_boot_trace="ftrace=function_graph ftrace_filter=arch_freq_get_on_cpu raid=no
 
 # 通过这个参数可以直接 disable avx2
 # arg_boot_trace+=" clearcpuid=156"
+# 获取 PARTUUID 的方法: 在 guest 中，直接
+root="PARTUUID=2c4eb5c7-02"
+if [[ -f ${workstation}/vm/${distribution}.partuuid ]]; then
+	partuuid=$(cat "${workstation}"/vm/${distribution}.partuuid)
+fi
+root="PARTUUID=$partuuid"
 arg_kernel_args="root=$root nokaslr console=ttyS0,9600 earlyprink=serial $arg_boot_trace $arg_hugetlb $arg_cgroupv2 transparent_hugepage=always"
 # @todo 可以看到，先会启动 initramfs 才会开始执行 /bin/bash 的
 # arg_kernel_args="root=$root nokaslr console=ttyS0,9600 earlyprink=serial init=/bin/bash"
@@ -340,7 +351,7 @@ arg_monitor="-serial mon:stdio -display none"
 # @todo 原来这个选项不打开，内核无法启动啊
 # @todo 才意识到，这个打开之后，在 kernel cmdline 中的 init=/bin/bash 是无效的
 # @todo 为什么配合 3.10 内核无法正常使用
-arg_initrd="-initrd /home/martins3/hack/vm/initramfs-6.3.0-rc6-00188-g3e7bb4f24617-dirty.img"
+arg_initrd="-initrd ${workstation}/vm/${distribution}.initramfs"
 # arg_initrd="-initrd /nix/store/kfaz0nv43qwyvj4s7c5ak4lgdyzdf51s-initrd/initrd" # nixos 的 initrd
 # arg_initrd=""
 tracepoint=()

@@ -493,3 +493,6 @@ out:
 	return ret;
 }
 ```
+
+- https://lwn.net/Articles/932674/
+- https://lwn.net/Articles/930173/
