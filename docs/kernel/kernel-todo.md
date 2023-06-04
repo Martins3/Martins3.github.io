@@ -518,3 +518,6 @@ static const struct vm_operations_struct ext4_file_vm_ops = {
 	.page_mkwrite   = ext4_page_mkwrite,
 };
 ```
+
+## 了解一下 jbd2 是什么
+- fs/jbd2/revoke.c

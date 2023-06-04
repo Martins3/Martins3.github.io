@@ -140,3 +140,8 @@ config RETHUNK
 
 ## dwarf vs frame pointer
 https://news.ycombinator.com/item?id=34789247
+
+## `__init`
+
+初始化的代码只会运行一次，因此可以之后释放掉:
+https://stackoverflow.com/questions/8832114/what-does-init-mean-in-the-linux-kernel-code

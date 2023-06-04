@@ -35,6 +35,24 @@ obj-$(CONFIG_TRANSPARENT_HUGEPAGE) += huge_memory.o khugepaged.o
 
 - 这些接口的内核代码开始的位置： hugetlb_sysctl_handler_common
 
+## 测试数据
+
+测试的是虚拟机中编译内核，可见，当让 Guest 使用大页之后，存在明显的性能提升。
+
+file :
+```txt
+make -j31  1933.04s user 251.73s system 2139% cpu 1:42.10 total
+```
+memory:
+```txt
+make -j31  1912.18s user 249.34s system 2131% cpu 1:41.42 total
+```
+huge:
+```c
+make -j31  1840.78s user 208.05s system 2168% cpu 1:34.49 total
+```
+
+
 ## 常用脚本
 配置其 zsh
 ```sh

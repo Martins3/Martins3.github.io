@@ -1,5 +1,8 @@
 # fs/buffer.c
 
+- https://lwn.net/Articles/932674/
+- [A kernel without buffer heads](https://lwn.net/Articles/930173/)
+
 
 ## 总结一下
 1. bh_lru 是如何管理的 ? bh_lru_install
@@ -7,46 +10,10 @@
 ## questions && todo
 1. 找到 dev 的 address_spaces 是怎么注册上的
     1. bdget 吗 ? : def_blk_aops : 不会吧!
-
-```c
-struct block_device *bdget(dev_t dev)  // 此处初始化 dev  // todo 但是并不知道如何初始化inode 的 i_data
-{
-	struct block_device *bdev;
-	struct inode *inode;
-
-	inode = iget5_locked(blockdev_superblock, hash(dev),
-			bdev_test, bdev_set, &dev);
-
-	if (!inode)
-		return NULL;
-
-	bdev = &BDEV_I(inode)->bdev;
-
-	if (inode->i_state & I_NEW) {
-		bdev->bd_contains = NULL;
-		bdev->bd_super = NULL;
-		bdev->bd_inode = inode;
-		bdev->bd_block_size = i_blocksize(inode);
-		bdev->bd_part_count = 0;
-		bdev->bd_invalidated = 0;
-		inode->i_mode = S_IFBLK;
-		inode->i_rdev = dev;
-		inode->i_bdev = bdev;
-		inode->i_data.a_ops = &def_blk_aops; // 只是知道此处处理了 aops 而已
-		mapping_set_gfp_mask(&inode->i_data, GFP_USER);
-		spin_lock(&bdev_lock);
-		list_add(&bdev->bd_list, &all_bdevs);
-		spin_unlock(&bdev_lock);
-		unlock_new_inode(inode);
-	}
-	return bdev;
-}
-```
-
 2. 到底到底怎样的 page 和 buffer head 不会发生关联, 只要是利用了　block_read_full_page 的函数，都是会观念上的
 
 3. get_block_t 的作用到底是什么 ?
-    1. 从 block_read_full_page 中间分析 : get_block_t 是提供inode, page 在inode 中间的偏移量，以及 bh 指针，最后提交了 bh 所需要的内容。
+    1. 从 block_read_full_page 中间分析 : get_block_t 是提供 inode, page 在 inode 中间的偏移量，以及 bh 指针，最后提交了 bh 所需要的内容。
 
 4. buffer.c 是唯一和 bio 打交道的地方吗 ? page-writeback.c page-io.c 中间存在吗 ?
 
@@ -142,7 +109,7 @@ int ext2_get_block(struct inode *inode, sector_t iblock,
 1. 似乎注释说: buffer 和 cache 功能没有任何蛇皮关系 ? 其功能曾经是 bio 功能，位于 fs 和 blocklayer 之间的
 2. @todo buffer_head 新的三个功能逐个分析一下 !
     1. get_block_t : 感觉功能其实是 :
-    2.
+
 
 ```c
 /*
@@ -203,7 +170,7 @@ enum bh_state_bits {
 > @todo
 1. BH_Dirty 和 page cache 中间 page 的 dirty 的功能是不是出现了重复了
 2. BH_Mapped 此处的 map 的含义是什么 ?
-3.
+
 
 
 
@@ -248,7 +215,7 @@ grow_dev_page(struct block_device *bdev, sector_t block,
 
 ## `__set_page_dirty_buffers`
 1. 其主要调用者为 : set_page_dirty
-2. 具体工作分为两个部分 : dirty page : 在radix tree 上插入 tag ，第二个是 dirty inode ，将 inode 加入到 sb 的 dirty node 的链表上去
+2. 具体工作分为两个部分 : dirty page : 在 radix tree 上插入 tag ，第二个是 dirty inode ，将 inode 加入到 sb 的 dirty node 的链表上去
 3. 这些维护的内容最终是在 : `__writeback_single_inode` 中间使用
 
 
@@ -494,5 +461,13 @@ out:
 }
 ```
 
-- https://lwn.net/Articles/932674/
-- https://lwn.net/Articles/930173/
+## buffer head 似乎还是存在的
+
+例如
+```c
+static int blkdev_writepage(struct page *page, struct writeback_control *wbc)
+{
+	return block_write_full_page(page, blkdev_get_block, wbc);
+}
+```
+中的 blkdev_get_block，其参数为 buffer_head

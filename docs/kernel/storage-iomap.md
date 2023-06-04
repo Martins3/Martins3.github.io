@@ -88,32 +88,30 @@ struct iomap_ops {
 #15 0xffffffff822000ae in entry_SYSCALL_64 () at arch/x86/entry/entry_64.S:120
 ```
 
-## iomap
+## 分析下基本执行流程
 ext4/xfs's direct IO call `iomap_dio_rw`
 
-- [ ] iomap_dio_rw
+- iomap_dio_rw
+  - `__iomap_dio_rw`
+    - filemap_write_and_wait_range
+      - iomap_dio_iter
+        - iomap_dio_hole_iter
+        - iomap_dio_bio_iter
+          - iomap_dio_alloc_bio
+          - iomap_dio_submit_bio
 
-xfs_file_read_iter
-==> xfs_file_dio_aio_read ==> iomap_dio_rw
-==> xfs_file_buffered_aio_read ==> generic_file_read_iter
+- xfs_file_read_iter
+  - xfs_file_dio_aio_read ==> iomap_dio_rw
+  - xfs_file_buffered_aio_read ==> generic_file_read_iter
 
-- [ ] I don't know how iomap_dio_rw write page to disk ?
+似乎简单来说，就是通过 iter 将 io 切分为多个，然后通过 bio 提交下去。
 
-IOMAP_F_BUFFER_HEAD
+## IOMAP_F_BUFFER_HEAD
+
+## https://kernelnewbies.org/KernelProjects/iomap
 
 ## 参考
 [IO 子系统全流程介绍](https://zhuanlan.zhihu.com/p/545906763)
-
-## buffer head 似乎还是存在的
-
-例如
-```c
-static int blkdev_writepage(struct page *page, struct writeback_control *wbc)
-{
-	return block_write_full_page(page, blkdev_get_block, wbc);
-}
-```
-中的 blkdev_get_block，其参数为 buffer_head
 
 ## xfs 注册
 正常的路径

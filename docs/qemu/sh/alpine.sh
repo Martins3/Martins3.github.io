@@ -12,10 +12,11 @@ hacking_memory="prealloc"
 hacking_memory="sockets"
 hacking_memory="numa"
 hacking_memory="file"
+hacking_memory="huge"
 # hacking_memory="none"
 
 hacking_kcov=false
-hacking_kcov=true
+# hacking_kcov=true
 
 share_memory_option="9p"
 # share_memory_option="virtiofs"
@@ -191,7 +192,7 @@ fi
 
 case $hacking_memory in
 	"none")
-		ramsize=80G
+		ramsize=18G
 		arg_mem_cpu="-smp $(($(getconf _NPROCESSORS_ONLN) - 1))"
 		# arg_mem_cpu="-smp 1"
 		# echo 1 | sudo  tee /proc/sys/vm/overcommit_memory
@@ -202,6 +203,12 @@ case $hacking_memory in
 		ramsize=12G
 		arg_mem_cpu="-smp $(($(getconf _NPROCESSORS_ONLN) - 1))"
 		arg_mem_cpu+=" -object memory-backend-file,id=id0,size=$ramsize,mem-path=$workstation/qemu.ram -machine memory-backend=id0 -m $ramsize"
+		;;
+	"huge")
+		ramsize=12G
+		# echo 6144 | sudo tee /sys/kernel/mm/hugepages/hugepages-2048kB/nr_hugepages
+		arg_mem_cpu="-smp $(($(getconf _NPROCESSORS_ONLN) - 1))"
+		arg_mem_cpu+=" -object memory-backend-file,id=id0,size=$ramsize,mem-path=/dev/hugepages/martins3-qemu -machine memory-backend=id0 -m $ramsize"
 		;;
 	"numa")
 		# 通过 reserve = false 让 mmap 携带参数 MAP_NORESERVE，从而可以模拟超级大内存的 Guest
