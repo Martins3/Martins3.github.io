@@ -83,3 +83,33 @@ direct=1 非常重要
 
 - [ ] aio 无法完全无法在 buffer 上 aio 吗?
   - 即使是 read ? 或者是 write clean 的 page ?
+
+
+## 具体代码分析
+- io_destroy
+  - init_completion : 初始化 struct ctx_rq_wait
+  - kill_ioctx :  让所有的 ioctx 都是 : ctx->rq_wait = wait;
+
+```c
+struct kioctx {
+
+	/*
+	 * signals when all in-flight requests are done
+	 */
+	struct ctx_rq_wait	*rq_wait;
+
+	struct {
+		struct mutex	ring_lock;
+		wait_queue_head_t wait;       // 这个 wait 的使用位置特别奇怪
+	} ____cacheline_aligned_in_smp;
+}
+```
+
+当 reqs 的引用计数为 0 的时候:
+
+```c
+	if (percpu_ref_init(&ctx->reqs, free_ioctx_reqs, 0, GFP_KERNEL))
+		goto err;
+```
+
+当 free_ioctx_reqs 的时候，调用 complete

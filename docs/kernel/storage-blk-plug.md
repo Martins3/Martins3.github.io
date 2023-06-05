@@ -199,3 +199,25 @@ kthread at ffffffffac0cc871
 ```
 
 ## [ ] https://lwn.net/Articles/438256/
+
+
+## 当使用 fio 测试磁盘的时候，发现 plug 机制几乎不会触发，不知道当时走的是什么路径
+```txt
+blk_mq_flush_plug_list+9
+blk_add_rq_to_plug+69
+blk_mq_submit_bio+853
+submit_bio_noacct_nocheck+834
+ext4_io_submit+36
+ext4_do_writepages+1318
+ext4_writepages+134
+do_writepages+208
+__writeback_single_inode+65
+writeback_sb_inodes+521
+__writeback_inodes_wb+76
+wb_writeback+471
+wb_workfn+608
+process_one_work+482
+worker_thread+84
+kthread+218
+ret_from_fork+41
+```

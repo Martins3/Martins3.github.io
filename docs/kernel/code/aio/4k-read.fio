@@ -1,6 +1,6 @@
 [global]
 ioengine=libaio
-iodepth=128
+iodepth=1
 
 [trash]
 bs=4k

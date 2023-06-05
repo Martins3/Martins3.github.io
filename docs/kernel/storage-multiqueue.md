@@ -508,3 +508,105 @@ static inline struct request_queue *bdev_get_queue(struct block_device *bdev)
                   - q->mq_ops->queue_rq(hctx, &bd);
 
 ## 提交过程中，其他的组件是如何穿插进来的
+
+
+## 一些调用链条
+
+```txt
+blk_mq_sched_insert_requests+5
+blk_mq_flush_plug_list+314
+__blk_flush_plug+262
+io_schedule+65
+rq_qos_wait+191
+wbt_wait+160
+__rq_qos_throttle+36
+blk_mq_submit_bio+645
+submit_bio_noacct_nocheck+834
+ext4_bio_write_page+484
+mpage_submit_page+76
+mpage_process_page_bufs+279
+mpage_prepare_extent_to_map+751
+ext4_do_writepages+673
+ext4_writepages+134
+do_writepages+208
+__writeback_single_inode+65
+writeback_sb_inodes+521
+__writeback_inodes_wb+76
+wb_writeback+471
+wb_workfn+675
+process_one_work+482
+worker_thread+84
+kthread+218
+ret_from_fork+41
+```
+
+- blk_mq_sched_insert_requests
+  - blk_mq_insert_requests
+    - blk_mq_hctx_mark_pending : 这里有点看不懂的感觉
+
+简单分析下，几乎总是走的这个 backtrace 的
+
+## 理解下 freeze queue
+
+考虑到 blk_mq_freeze_queue 的
+
+通过等待
+```c
+	wait_event(q->mq_freeze_wq, percpu_ref_is_zero(&q->q_usage_counter));
+```
+
+put 的位置，主要是三个地方:
+- blk_mq_dispatch_plug_list : blk_mq_run_hw_queue 或者 blk_mq_insert_requests 就开始 percpu_ref_put，这个有点不符合理解
+- blk_mq_end_request_batch
+  - blk_mq_flush_tag_batch
+    - percpu_ref_put_many : 这个符合预期
+- blk_queue_exit : 这是一个主要调用的位置
+
+- blk_queue_enter
+- bio_queue_enter
+
+从 blk_queue_exit 向下分析:
+- blk_mq_get_new_requests
+  - bio_queue_enter :
+
+
+## blk_mq_queue_tag_busy_iter 中为什么只有 blk_queue_exit
+
+## 对于 raid 或者 device mapper 以及 loop 之类的内容
+如何理解 gendisk ，以及 request_queue 在 raid 时候的结构:
+```c
+	struct request_queue *queue;
+```
+
+- [ ] 会给 md 建立一个 gendisk 吗?
+- [ ] 同样也会给创建一个 queue 吗?
+- [ ] request 是如何在 md 和真正的 disk 的 queue 中流转的
+
+## 为什么 fio 压力下
+
+居然只有这几个 backtrace
+```txt
+@[
+    blk_queue_exit+5
+    blk_flush_complete_seq+352
+    mq_flush_data_end_io+130
+    __blk_mq_end_request+70
+    nvme_poll_cq+442
+    nvme_irq+69
+    __handle_irq_event_percpu+74
+    handle_irq_event+62
+    handle_edge_irq+157
+    __common_interrupt+66
+    common_interrupt+127
+    asm_common_interrupt+38
+    cpuidle_enter_state+204
+    cpuidle_enter+45
+    do_idle+452
+    cpu_startup_entry+29
+    start_secondary+277
+    secondary_startup_64_no_verify+224
+]: 52
+```
+
+## 参考这个看看吧，有点难
+- https://www.cnblogs.com/Linux-tech/p/12961279.html

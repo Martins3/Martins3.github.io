@@ -13,10 +13,10 @@ hacking_memory="sockets"
 hacking_memory="numa"
 hacking_memory="file"
 hacking_memory="huge"
-# hacking_memory="none"
+hacking_memory="none"
 
 hacking_kcov=false
-# hacking_kcov=true
+hacking_kcov=true
 
 share_memory_option="9p"
 # share_memory_option="virtiofs"
@@ -192,7 +192,7 @@ fi
 
 case $hacking_memory in
 	"none")
-		ramsize=18G
+		ramsize=100G
 		arg_mem_cpu="-smp $(($(getconf _NPROCESSORS_ONLN) - 1))"
 		# arg_mem_cpu="-smp 1"
 		# echo 1 | sudo  tee /proc/sys/vm/overcommit_memory
@@ -202,13 +202,13 @@ case $hacking_memory in
 		# 只有使用这种方式才会启动 async page fault
 		ramsize=12G
 		arg_mem_cpu="-smp $(($(getconf _NPROCESSORS_ONLN) - 1))"
-		arg_mem_cpu+=" -object memory-backend-file,id=id0,size=$ramsize,mem-path=$workstation/qemu.ram -machine memory-backend=id0 -m $ramsize"
+		arg_mem_cpu+=" -object memory-backend-file,id=id0,size=$ramsize,prealloc=off,mem-path=$workstation/qemu.ram -machine memory-backend=id0 -m $ramsize"
 		;;
 	"huge")
 		ramsize=12G
 		# echo 6144 | sudo tee /sys/kernel/mm/hugepages/hugepages-2048kB/nr_hugepages
 		arg_mem_cpu="-smp $(($(getconf _NPROCESSORS_ONLN) - 1))"
-		arg_mem_cpu+=" -object memory-backend-file,id=id0,size=$ramsize,mem-path=/dev/hugepages/martins3-qemu -machine memory-backend=id0 -m $ramsize"
+		arg_mem_cpu+=" -object memory-backend-file,id=id0,size=$ramsize,prealloc=off,mem-path=/dev/hugepages/martins3-qemu -machine memory-backend=id0 -m $ramsize"
 		;;
 	"numa")
 		# 通过 reserve = false 让 mmap 携带参数 MAP_NORESERVE，从而可以模拟超级大内存的 Guest
@@ -297,16 +297,21 @@ arg_boot_trace="ftrace=function_graph ftrace_filter=arch_freq_get_on_cpu raid=no
 
 # 通过这个参数可以直接 disable avx2
 # arg_boot_trace+=" clearcpuid=156"
-# 获取 PARTUUID 的方法: 在 guest 中，直接
-root="PARTUUID=2c4eb5c7-02"
-if [[ -f ${workstation}/vm/${distribution}.partuuid ]]; then
-	partuuid=$(cat "${workstation}"/vm/${distribution}.partuuid)
+# 获取 PARTUUID 的方法: 在 guest 中，blkid 看根分区的
+if [[ $replace_kernel == true ]]; then
+	if [[ -f ${workstation}/vm/${distribution}.partuuid ]]; then
+		partuuid=$(cat "${workstation}"/vm/${distribution}.partuuid)
+	else
+		echo "${workstation}/vm/${distribution}.partuuid missed"
+		echo "boot vm with --kernel, kernel cmdline need partuuid cmdline"
+		exit 0
+	fi
+	root="PARTUUID=$partuuid"
+	arg_kernel_args="root=$root nokaslr console=ttyS0,9600 earlyprink=serial $arg_boot_trace $arg_hugetlb $arg_cgroupv2 transparent_hugepage=always"
+	# @todo 可以看到，先会启动 initramfs 才会开始执行 /bin/bash 的
+	# arg_kernel_args="root=$root nokaslr console=ttyS0,9600 earlyprink=serial init=/bin/bash"
+	arg_kernel="-kernel ${kernel} -append \"${arg_kernel_args}\""
 fi
-root="PARTUUID=$partuuid"
-arg_kernel_args="root=$root nokaslr console=ttyS0,9600 earlyprink=serial $arg_boot_trace $arg_hugetlb $arg_cgroupv2 transparent_hugepage=always"
-# @todo 可以看到，先会启动 initramfs 才会开始执行 /bin/bash 的
-# arg_kernel_args="root=$root nokaslr console=ttyS0,9600 earlyprink=serial init=/bin/bash"
-arg_kernel="-kernel ${kernel} -append \"${arg_kernel_args}\""
 
 if [[ $hacking_migration == true ]]; then
 	arg_nvme=""
