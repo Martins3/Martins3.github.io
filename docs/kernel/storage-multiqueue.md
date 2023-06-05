@@ -490,7 +490,24 @@ static inline struct request_queue *bdev_get_queue(struct block_device *bdev)
 }
 ```
 
-## 分析下提交过程
+## 总的提交过程
+
+```txt
+@[
+    nvme_queue_rq+5
+    __blk_mq_try_issue_directly+348
+    blk_mq_try_issue_directly+22
+    blk_mq_submit_bio+1199
+    submit_bio_noacct_nocheck+818
+    __blkdev_direct_IO_async+260
+    blkdev_read_iter+295
+    aio_read+306
+    io_submit_one+1451
+    __x64_sys_io_submit+173
+    do_syscall_64+59
+    entry_SYSCALL_64_after_hwframe+114
+]: 533618
+```
 
 - blk_flush_plug : 从软件到硬件提交的过程
   - `__blk_flush_plug`
@@ -506,6 +523,21 @@ static inline struct request_queue *bdev_get_queue(struct block_device *bdev)
               - blk_mq_sched_dispatch_requests
                 - blk_mq_dispatch_rq_list
                   - q->mq_ops->queue_rq(hctx, &bd);
+
+- submit_bio
+  - `__submit_bio_noacct`
+    - `__submit_bio`
+      - blk_mq_submit_bio
+        - blk_mq_get_cached_request : 获取到 request 中，从这里分析如何
+        -  blk_mq_get_new_requests
+        - blk_mq_try_issue_directly
+          - blk_mq_run_hw_queue
+            - blk_mq_sched_dispatch_requests
+
+- blk_mq_try_issue_directly
+- blk_mq_request_issue_directly
+  - `__blk_mq_issue_directly`
+
 
 ## 提交过程中，其他的组件是如何穿插进来的
 
@@ -582,7 +614,7 @@ put 的位置，主要是三个地方:
 - [ ] 同样也会给创建一个 queue 吗?
 - [ ] request 是如何在 md 和真正的 disk 的 queue 中流转的
 
-## 为什么 fio 压力下
+## [ ] 似乎这种 writeback 的机制的最后都是走的 plug ?
 
 居然只有这几个 backtrace
 ```txt
@@ -610,3 +642,10 @@ put 的位置，主要是三个地方:
 
 ## 参考这个看看吧，有点难
 - https://www.cnblogs.com/Linux-tech/p/12961279.html
+
+## [ ] 队列深度是如何确定，可以动态修改吗?
+
+
+## [ ] 确定 tag 就是数组下标而已
+
+## [ ] aio 的队列是放在那里的

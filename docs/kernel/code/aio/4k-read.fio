@@ -10,7 +10,8 @@ direct=1
 # filename=/home/martins3/hack/mnt/x
 # filename=/home/martins3/core/x
 # filename=/dev/sdb
-filename=/dev/nvme1n1p1
+# filename=/dev/nvme1n1p1
+filename=/dev/nvme0n1p2
 rw=read
 runtime=10
 time_based
