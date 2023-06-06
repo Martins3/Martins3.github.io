@@ -492,22 +492,21 @@ static inline struct request_queue *bdev_get_queue(struct block_device *bdev)
 
 ## 总的提交过程
 
-```txt
-@[
-    nvme_queue_rq+5
-    __blk_mq_try_issue_directly+348
-    blk_mq_try_issue_directly+22
-    blk_mq_submit_bio+1199
-    submit_bio_noacct_nocheck+818
-    __blkdev_direct_IO_async+260
-    blkdev_read_iter+295
-    aio_read+306
-    io_submit_one+1451
-    __x64_sys_io_submit+173
-    do_syscall_64+59
-    entry_SYSCALL_64_after_hwframe+114
-]: 533618
-```
+- submit_bio
+  - `__submit_bio_noacct`
+    - `__submit_bio`
+      - blk_mq_submit_bio
+        - blk_mq_get_cached_request : 获取到 request 中，从这里分析如何
+        - blk_mq_get_new_requests
+          - bio_queue_enter : 增加 queue 的引用计数，如果 queeu 被 freeze ，那么阻塞在此处
+          - rq_qos_throttle : 在这里进行限流
+          - `__blk_mq_alloc_requests`
+          - blk_queue_exit : 如果中途出现了失败，需要释放 rq
+        - blk_mq_try_issue_directly
+          - __blk_mq_try_issue_directly
+
+
+plug 机制的(待完善)
 
 - blk_flush_plug : 从软件到硬件提交的过程
   - `__blk_flush_plug`
@@ -523,20 +522,6 @@ static inline struct request_queue *bdev_get_queue(struct block_device *bdev)
               - blk_mq_sched_dispatch_requests
                 - blk_mq_dispatch_rq_list
                   - q->mq_ops->queue_rq(hctx, &bd);
-
-- submit_bio
-  - `__submit_bio_noacct`
-    - `__submit_bio`
-      - blk_mq_submit_bio
-        - blk_mq_get_cached_request : 获取到 request 中，从这里分析如何
-        -  blk_mq_get_new_requests
-        - blk_mq_try_issue_directly
-          - blk_mq_run_hw_queue
-            - blk_mq_sched_dispatch_requests
-
-- blk_mq_try_issue_directly
-- blk_mq_request_issue_directly
-  - `__blk_mq_issue_directly`
 
 
 ## 提交过程中，其他的组件是如何穿插进来的
@@ -587,6 +572,10 @@ ret_from_fork+41
 	wait_event(q->mq_freeze_wq, percpu_ref_is_zero(&q->q_usage_counter));
 ```
 
+进入的时候可能需要等待:
+- blk_queue_enter
+
+
 put 的位置，主要是三个地方:
 - blk_mq_dispatch_plug_list : blk_mq_run_hw_queue 或者 blk_mq_insert_requests 就开始 percpu_ref_put，这个有点不符合理解
 - blk_mq_end_request_batch
@@ -594,13 +583,63 @@ put 的位置，主要是三个地方:
     - percpu_ref_put_many : 这个符合预期
 - blk_queue_exit : 这是一个主要调用的位置
 
-- blk_queue_enter
-- bio_queue_enter
+似乎总是 blk_queue_enter 和 bio_queue_enter，和 blk_queue_exit 匹配的
 
 从 blk_queue_exit 向下分析:
 - blk_mq_get_new_requests
-  - bio_queue_enter :
+  - bio_queue_enter
 
+
+但是实际上，主要的提交位置是，这个应该不是常用路径吧
+```txt
+@[
+    blk_queue_exit+5
+    blk_mq_submit_bio+1301
+    submit_bio_noacct_nocheck+818
+    __block_write_full_page+509
+    writepage_cb+26
+    write_cache_pages+319
+    do_writepages+356
+    __writeback_single_inode+61
+    writeback_sb_inodes+493
+    __writeback_inodes_wb+76
+    wb_writeback+516
+    wb_workfn+852
+    process_one_work+453
+    worker_thread+81
+    kthread+219
+    ret_from_fork+41
+]: 1376
+```
+
+应该是在这个线条上查找才对:
+```txt
+@[
+    __blk_mq_try_issue_directly+1
+    blk_mq_try_issue_directly+22
+    blk_mq_submit_bio+1199
+    submit_bio_noacct_nocheck+818
+    __blkdev_direct_IO_async+260
+    blkdev_read_iter+295
+    aio_read+306
+    io_submit_one+1451
+    __x64_sys_io_submit+173
+    do_syscall_64+59
+    entry_SYSCALL_64_after_hwframe+114
+]: 1629776
+```
+
+找到释放 request 的位置: blk_mq_free_request
+
+所以，实际上，只要还存在 request 的时候，数量就不是 1 的。
+
+
+逻辑上应该是没有问题的，这里也可以印证:
+- del_gendisk
+  - blk_queue_start_drain : 从这里开始阻塞新的 io
+    - blk_freeze_queue_start
+  - 处理其他的事情
+  - blk_mq_freeze_queue_wait : 等待 io 结束
 
 ## blk_mq_queue_tag_busy_iter 中为什么只有 blk_queue_exit
 

@@ -443,23 +443,6 @@ vim /boot/grub/grub.cfg
 
 将 [/boot/vmlinuz 转换为 vmlinux](https://superuser.com/questions/298826/how-do-i-uncompress-vmlinuz-to-vmlinux) 是不行的，里面没有调试信息
 
-## 补充的操作
-- virsh dump --memory-only --live e5fb54af-98ec-46d7-a69b-5a8fb6b52996 g.dump
-
-然后 crash vmlinux g.dump
-
-- foreach bt : 所有进程的 backtrace
-- bt -a : 所有的 CPU 的 backtrace
-- bt -FF  264 : CPU
-  - [ ] -FF 的数据，好吧，需要重新理解 kmalloc 和 stack 的关系
-- search sd_fops : 搜索 sd_fops，我靠，根本不能理解为什么这个东西的实现原理啊
-- dev : 展示所有的 device
-- kmem
-  - `-s` : 展示 k
-
-- bt -FF -c 12
-- struct hrtimer 0xffff8faa7e095ee0
-
 ## 如何 ubuntu crash 之后
 我发现直接执行安装
 ```txt

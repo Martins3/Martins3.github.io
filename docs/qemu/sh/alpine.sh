@@ -16,7 +16,7 @@ hacking_memory="huge"
 hacking_memory="none"
 
 hacking_kcov=false
-hacking_kcov=true
+# hacking_kcov=true
 
 share_memory_option="9p"
 # share_memory_option="virtiofs"
@@ -119,8 +119,8 @@ disk_img=${workstation}/vm/${distribution}.qcow2
 # @todo 这个地方应该调整下，源端和目标端冲突了
 arg_pdifile=""
 if [[ $hacking_migration == false ]]; then
-	mkdir -p /tmp/martins3-alpine
-	arg_pdifile="-pidfile /tmp/martins3-alpine/qemu-pid"
+	mkdir -p /tmp/martins3
+	arg_pdifile="-pidfile /tmp/martins3/qemu-pid"
 fi
 
 debug_qemu=

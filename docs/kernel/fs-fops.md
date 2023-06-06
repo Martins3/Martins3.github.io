@@ -83,6 +83,12 @@ static inline ssize_t call_write_iter(struct file *file, struct kiocb *kio,
 
 There are many similar calling chain in read_write.c which summaries io models except aio and io_uring
 
+### write 和 write_iter 的区别
+
+write 几乎没有什么用户，read 面前有点
+
+`__kernel_read`
+
 
 ## iopoll
 使用用户: io_uring::io_do_iopoll

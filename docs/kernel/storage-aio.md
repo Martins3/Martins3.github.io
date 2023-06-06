@@ -1,8 +1,93 @@
 # aio
 
+## 大致原理
+写的还行: https://juejin.cn/post/6956566854500515870
+
+## 结构体
+- aio_ring
+- aio_kiocb
+- kioctx
+  - ring_pages : 这个什么 page 的
+  - reqs :
+  - rq_wait
+  - wait :
+
+
+## 如何理解 kioctx 中的两个 wait
+### rq_wait
+- kill_ioctx 中赋值 : ctx->rq_wait = wait;
+
+看上去，就是在等待所有的 ioctx 结束
+- exit_aio
+  - 初始化 wait 机制
+  - kill_ioctx
+    - ctx->rq_wait = wait;
+  - wait_for_completion : 等待
+
+当 free_ioctx_reqs 的时候，
+会 dec ctx->rq_wait->count 计数，当计数修改为 0 的，统计结束。
+
+### wait
+通过这个来实现 read_events 的等待的结束。
+
+两个通知的方法:
+1. aio_complete
+```c
+	if (waitqueue_active(&ctx->wait))
+		wake_up(&ctx->wait);
+```
+2. kill_ioctx 中 wake_up_all
+
+当 read_events 中，使用 ctx->wait 来等待存储子系统的返回。
+
+那么 wake_up 和 wake_up_all 的区别，在
+kill_ioctx 中使用的是 wake_up_all ，而 aio_complete 中使用的是 wake_up
+
+## 如何理解 kioctx 中的两个引用计数
+```c
+	if (percpu_ref_init(&ctx->users, free_ioctx_users, 0, GFP_KERNEL))
+		goto err;
+
+	if (percpu_ref_init(&ctx->reqs, free_ioctx_reqs, 0, GFP_KERNEL))
+		goto err;
+```
+
+- kill_ioctx
+  - percpu_ref_kill(&ctx->users);
+
+## 基本流程
+
+- io_submit_one
+  - `__io_submit_one`
+    - aio_read
+      - aio_setup_rw
+      - call_read_iter : 调用 file_operations::read_iter ：其实普通的 read write 也是走的这个路径，应该是参数设置的不同，导致是否需要等待。
+      - aio_rw_done
+    - aio_write
+    - aio_fsync
+    - aio_poll : 是我们常规意义上的 poll ，还是 epoll 机制 ?
+
+当结束之后，接收到问题:
+```txt
+@[
+    aio_complete+1
+    aio_complete_rw+300
+    blkdev_bio_end_io_async+52
+    blk_mq_end_request_batch+266
+    nvme_irq+114
+    ...
+]: 604453
+```
+
+- do_io_getevents
+  - read_events
+    - aio_read_events
+      - aio_read_events_ring
+
 
 ## 基本使用
 - https://github.com/littledan/linux-aio
+  - 尤其是其中的 : Performance considerations
 - https://gist.github.com/larytet/87f90b08643ac3de934df2cadff4989c : 这个的代码更加好
 
 ## aio 可以替代 epoll

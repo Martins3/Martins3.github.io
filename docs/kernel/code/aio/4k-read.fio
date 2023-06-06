@@ -1,6 +1,6 @@
 [global]
 ioengine=libaio
-iodepth=1
+iodepth=128
 
 [trash]
 bs=4k
@@ -11,7 +11,7 @@ direct=1
 # filename=/home/martins3/core/x
 # filename=/dev/sdb
 # filename=/dev/nvme1n1p1
-filename=/dev/nvme0n1p2
+filename=/dev/nvme0n1p1
 rw=read
-runtime=10
+runtime=30
 time_based
