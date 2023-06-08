@@ -229,9 +229,6 @@ In struct address_space, for example, there is a radix tree called page_tree tha
 填充的内容都是物理地址，同时，page_alloc 返回空间是虚拟地址，所以需要virt_to_phys 的数值
 
 
-#### (mem) https://www.kernel.org/doc/html/v4.14/dev-tools/kasan.html
-KASAN 的工作原理是什么 ?
-
 #### (arch) 同时编译一份RISC-V 的代码
 1. 交叉编译
 2. ccls 处理交叉编译

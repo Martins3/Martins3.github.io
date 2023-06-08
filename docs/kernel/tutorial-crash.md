@@ -23,3 +23,7 @@ kmem -s 0xffffffff81619500
 - struct hrtimer 0xffff8faa7e095ee0
 
 ptype /o struct task_struct
+
+struct -x o task_struct.group_leader
+
+search

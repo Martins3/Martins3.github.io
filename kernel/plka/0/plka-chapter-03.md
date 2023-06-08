@@ -1390,16 +1390,6 @@ extern unsigned int __VMALLOC_RESERVE;
 ```
 
 `pgtable_64_types.h`
-```c
-/*
- * See Documentation/x86/x86_64/mm.txt for a description of the memory map.
- *
- * Be very careful vs. KASLR when changing anything here. The KASLR address
- * range must not overlap with anything except the KASAN shadow area, which
- * is correct as KASAN disables KASLR.
- */
-#define MAXMEM      (1UL << MAX_PHYSMEM_BITS)
-```
 > 上面介绍了内存地址空间的分配，接下来在代码中间查找对应的证据(也就是头文件中间的一些macro)
 
 For some purposes

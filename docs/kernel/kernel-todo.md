@@ -95,9 +95,7 @@ unbound kthreads 隔离，增强 CPU 核的隔离性，
 计、异构内存、热插拔等功能，并提供更有效的
 用户控制接口。热点锁及信号量优化，激进内存
 和碎片整理，优化 VMAP、vmalloc 机制，显著
-提升内存申请效率。KASAN、kmemleak、slub_
-debug、OOM 等内存维测特性增强，提升定位和
-解决内存问题的效率。
+提升内存申请效率。
 5. cgroup 优化单线程迁移性能：消除对 Thread
 Group 读写信号量的依赖；引入 Time
 Namespace 方便容器迁移。

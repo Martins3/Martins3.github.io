@@ -276,37 +276,6 @@ DAX 设置 : 到时候在分析吧!
 
 ## mremap
 
-## debug
-> 从内核的选项来看，对于 debug 一无所知啊 !
-- Extend memmap on extra space for more information on page
-- Debug page memory allocations
-- Track page owner
-- Poison pages after freeing
-- Enable tracepoint to track down page reference manipulation
-- Testcase for the marking rodata read-only
-- Export kernel pagetable layout to userspace via debugfs
-- Debug object operations
-- SLUB debugging on by default
-- Enable SLUB performance statistics
-- Kernel memory leak detector
-- Stack utilization instrumentation
-- Detect stack corruption on calls to schedule()
-- Debug VM
-- Debug VM translations
-- Debug access to per_cpu maps
-- KASAN: runtime memory debugger
-
-#### page owner
-
-page owner is for the tracking about who allocated each page.
-
-#### KASAN
-Finding places where the kernel accesses memory that it shouldn't is the goal for the kernel address sanitizer (KASan).
-
-#### kmemleak
-Kmemleak provides a way of detecting possible kernel memory leaks in a way similar to a tracing garbage collector, with the difference that the orphan objects are not freed but only reported via /sys/kernel/debug/kmemleak. [^18]
-
-
 ## dmapool
 https://lwn.net/Articles/69402/
 
