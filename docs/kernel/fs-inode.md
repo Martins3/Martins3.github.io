@@ -45,7 +45,7 @@ An inode created with new_inode() is not in the hash table, and unless you have 
 
 
 inode 可以分析的方面:
-1. disk inode 如何加载到 memory inode : iget_locked 使用inode cache 查询， super_operations::alloc_inode 分配空间， ext2_iget 中间进行读取和装配。
+1. disk inode 如何加载到 memory inode : iget_locked 使用 inode cache 查询， super_operations::alloc_inode 分配空间， ext2_iget 中间进行读取和装配。
 2. inode 如何关联上 struct file 的 ?
 3. inode 如何关联上 下层设备的 ?
 4. inode 在 fs-writeback 的作用 ?
@@ -57,4 +57,4 @@ inode 可以分析的方面:
 1. fs/inode.c (inode 的各种管理，evict 等操作) fs/namei.c (查询)
 2. ext2/inode.c (这里居然放置的内容是 address_space_operation 的系统) ext2/namei.c (查询的支持，和查询到之后的操作)
 
-inode 在查询的过程，inode 在 inode_operation 的工作体现，inode 
+inode 在查询的过程，inode 在 inode_operation 的工作体现，inode
