@@ -157,7 +157,6 @@
 - [有缘再见，龙芯](./abaaba/loongson.md)
 
 ## For Girlfriend
-- [How long will I love you](https://martins3.github.io/theday/)
 - [Garden](http://martins3.gitee.io/garden/)
 
 ## Friends
