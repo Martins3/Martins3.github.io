@@ -27,3 +27,12 @@ ptype /o struct task_struct
 struct -x o task_struct.group_leader
 
 search
+
+
+## 模块
+mod -s ext2 path/to/ext2.ko.debug
+
+## 问题
+- kmem -s 真好用啊，但是如果不是 slub 中的数据，怎么处理?
+
+## https://crash-utility.github.io/crash_whitepaper.html
