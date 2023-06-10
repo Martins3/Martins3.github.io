@@ -180,6 +180,7 @@ export http_proxy=http://10.0.2.2:8889 && export https_proxy=http://10.0.2.2:888
 ## 共享
 
 ### 9p
+
 QEMU 启动参数增加
 ```sh
 arg_share_dir="-virtfs local,path=${share_dir},mount_tag=host0,security_model=mapped,id=host0"
@@ -189,6 +190,7 @@ arg_share_dir="-virtfs local,path=${share_dir},mount_tag=host0,security_model=ma
 ```sh
 mount -t 9p -o trans=virtio,version=9p2000.L host0 /root/share
 ```
+https://wiki.qemu.org/Documentation/9psetup
 
 ### virtio-fs
 现在的推荐的方法，但是我还没搞清楚其中的原理和使用方法。
@@ -316,10 +318,26 @@ root="PARTUUID=2c4eb5c7-02"
 [  133.418477] dracut-initqueue[171]: Warning: /lib/dracut/hooks/initqueue/finished/devexists-\x2fdev\x2fdisk\x2fby-uuid\x2fae225bc6-e617-4956-82f8-b9b3db3f113a.sh: "[ -e "/dev/disk/by-uuid/ae225bc6-e617-4956-82f8-b9b3db3f113a" ]"
 ```
 
+## 构建各个 distribution 的内核 rpm
+- centos : https://git.centos.org/rpms/kernel/releases
+
+- [ ] ubuntu 之类的整理过来
+
 
 [^1]: https://askubuntu.com/questions/1108334/how-to-boot-and-install-the-ubuntu-server-image-on-qemu-nographic-without-the-g
 [^2]: https://unix.stackexchange.com/questions/124681/how-to-ssh-from-host-to-guest-using-qemu
 
+
+## 构建更加容易调试的内核
+希望不要如何激进的 inline
+- https://stackoverflow.com/questions/41638178/is-building-the-linux-kernel-with-fno-inline-supported
+  - 增加 -fno-inline 不行的
+
+Makefile 增加这个:
+```txt
+KBUILD_CFLAGS	+= -fno-inline-small-functions
+```
+验证一下吧
 
 
 <script src="https://giscus.app/client.js"

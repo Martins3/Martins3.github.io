@@ -707,6 +707,9 @@ warning: error(s) occurred while switching to the new configuration
 https://developers.google.com/speed/public-dns?hl=zh-cn
 https://stackoverflow.com/questions/24821521/wget-unable-to-resolve-host-address-http
 
+## 0 结尾的 ip address : 正常的
+- https://stackoverflow.com/questions/14915188/ip-address-ending-with-zero
+
 [^2]: 用芯探核:基于龙芯的 Linux 内核探索解析
 [^4]: http://yuba.stanford.edu/rcp/
 [^6]: [An Introduction to Computer Networks](http://intronetworks.cs.luc.edu/current2/html/)

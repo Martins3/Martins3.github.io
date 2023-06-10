@@ -185,6 +185,31 @@ signed long __sched schedule_timeout_idle(signed long timeout)
 ## `__TASK_STOPPED`
 程序接受到了 stop 信号。
 
+## 理解 ps, top 以及 htop 的输出
+
+ps 的:
+```txt
+PROCESS STATE CODES
+       Here are the different values that the s, stat and state output specifiers (header "STAT" or "S") will display to describe the
+       state of a process:
+
+               D    uninterruptible sleep (usually IO)
+               I    Idle kernel thread
+               R    running or runnable (on run queue)
+               S    interruptible sleep (waiting for an event to complete)
+               T    stopped by job control signal
+               t    stopped by debugger during the tracing
+               W    paging (not valid since the 2.6.xx kernel)
+               Z    defunct ("zombie") process, terminated but not reaped by its parent
+```
+关于 job control signal 的:
+```txt
+🧀  sleep infinity
+^Z
+[1]  + 200239 suspended  sleep infinity
+```
+
+top 的更加简单，编码完全相同。
 
 ## 问题
 

@@ -47,6 +47,7 @@ https://blog.llvm.org/posts/2020-12-21-interactive-cpp-for-data-science/ : cpp i
   - 人人都应该知道的 compiler 优化
 - https://blog.matthieud.me/2020/exploring-clang-llvm-optimization-on-programming-horror/
   - 探索 LLVM 实现的优化
+- https://news.ycombinator.com/item?id=36102865
 
 ## 想法
 1. 各种内存分析工具都是如何实现的: 靠编译器静态分析，或者内核的动态分析。

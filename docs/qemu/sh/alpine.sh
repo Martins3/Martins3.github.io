@@ -45,7 +45,6 @@ workstation="$(jq -r ".workstation" <"$configuration")"
 qemu=${qemu_dir}/build/x86_64-softmmu/qemu-system-x86_64
 # 最近的编出来的 qemu 似乎不能调试了 2023-05-20
 qemu="qemu-system-x86_64"
-virtiofsd=${qemu_dir}/build/tools/virtiofsd/virtiofsd
 if [[ $hacking_kcov == true ]]; then
 	kernel=${kernel_dir}/kcov/arch/x86/boot/bzImage
 else
@@ -144,15 +143,18 @@ case $share_memory_option in
 		arg_share_dir="-virtfs local,path=$(pwd),mount_tag=host0,security_model=mapped,id=host0"
 		;;
 	"virtiofs")
-		# @todo drop_supplementary_groups 让 virtiofd 的启动有问题
-		# sudo /home/martins3/core/qemu//build/tools/virtiofsd/virtiofsd --socket-path=/tmp/vhostqemu -o source=/tmp -o cache=always
-		# unshare 也导致的权限问题
-		zellij run -- sudo "$virtiofsd" --socket-path=/tmp/vhostqemu -o source="$(pwd)" -o cache=always
-		echo "到 zellij 中输入命令吧"
-		# sudo chown martins3 /tmp/vhostqemu ，否则 QEMU 需要 root 启动
+		virtfs_sock=/tmp/martins3/qemu-vfsd.sock
+		zellij run -- podman unshare -- virtiofsd --socket-path="$virtfs_sock" --shared-dir "$(pwd)" \
+			--announce-submounts --sandbox chroot
+		# guest 报错:
+		# [   47.949744] SELinux: (dev virtiofs, type virtiofs) getxattr errno 4
+		# virtiofsd 报错:
+		# [2023-06-10T08:39:30Z ERROR virtiofsd] Waiting for daemon failed: HandleRequest(InvalidParam)
+
+		# TODO 感觉这个工具成熟度还需要时间, 最后用来理解 vhost-user, Rust 和 fuse 的
 		arg_share_dir="-device vhost-user-fs-pci,queue-size=1024,chardev=char0,tag=myfs"
-		arg_share_dir+=" -chardev socket,id=char0,path=/tmp/vhostqemu"
-		arg_share_dir+=" -m 4G -object memory-backend-file,id=mem,size=4G,mem-path=/dev/shm,share=on -numa node,memdev=mem"
+		arg_share_dir+=" -chardev socket,id=char0,path=$virtfs_sock"
+		# arg_share_dir+=" -m 4G -object memory-backend-file,id=mem,size=4G,mem-path=/dev/shm,share=on -numa node,memdev=mem"
 		;;
 esac
 
