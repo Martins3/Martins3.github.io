@@ -1,5 +1,8 @@
 # aio
 
+## 关键问题，和普通 io 的流程从那里开始出现差别的
+
+
 ## 大致原理
 写的还行: https://juejin.cn/post/6956566854500515870
 
@@ -11,7 +14,6 @@
   - reqs :
   - rq_wait
   - wait :
-
 
 ## 如何理解 kioctx 中的两个 wait
 ### rq_wait

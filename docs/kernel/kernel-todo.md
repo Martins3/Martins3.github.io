@@ -519,3 +519,8 @@ static const struct vm_operations_struct ext4_file_vm_ops = {
 
 ## 了解一下 jbd2 是什么
 - fs/jbd2/revoke.c
+
+## 为什么创建出来 inode 是需要 super_block 的啊
+```c
+static struct inode *alloc_inode(struct super_block *sb)
+```

@@ -1,13 +1,13 @@
-# sysfs  
+# sysfs
 
 <!-- vim-markdown-toc GitLab -->
 
-- [Implementation](#implementation)
-    - [filesystem part](#filesystem-part)
-    - [device model part](#device-model-part)
-- [function](#function)
-    - [](#)
-- [kobject](#kobject)
+* [Implementation](#implementation)
+    * [filesystem part](#filesystem-part)
+    * [device model part](#device-model-part)
+* [function](#function)
+    * [](#)
+* [kobject](#kobject)
 
 <!-- vim-markdown-toc -->
 
@@ -80,12 +80,12 @@ Documentation/filesystems/sysfs.txt : 说对于每一个文件，其 show 和 st
 
 ## function
 
-1. 为什么需要 sfsfs ? 
+1. 为什么需要 sfsfs ?
 2. 如何将设备的信息通过 sfsfs export 出来 ?
 > 分析一下 /sys/ 的内容
 
 
-#### 
+####
 More information can driver-model specific features can be found in
 Documentation/driver-api/driver-model/.
 
@@ -94,7 +94,7 @@ The kernel provides a representation of its model in userspace through the sysfs
 block - all block devices available in the system (disks, partitions)
 bus - types of bus to which physical devices are connected (pci, ide, usb).两个子目录 devices 和 drivers 表示关联到该 bus 的设备和驱动
 class - drivers classes that are available in the system (net, sound, usb)
-devices - the hierarchical structure of devices connected to the system. 
+devices - the hierarchical structure of devices connected to the system.
 firmware - information from system firmware (ACPI)
 fs - information about mounted file systems: 提供文件系统以及设备的信息。
 kernel - kernel status information (logged-in users, hotplug)
@@ -115,13 +115,13 @@ sysfs 是可有可无的，
 sysfs is always compiled in if CONFIG_SYSFS is defined. You can access
 it by doing:
 
-    mount -t sysfs sysfs /sys 
+    mount -t sysfs sysfs /sys
 
 1. For every kobject that is registered with the system, a directory is created for it in sysfs.
 > 每一个 kobject 在 sysfs 中间对应一个文件夹
-2. That directory is created as a subdirectory of the kobject's parent, expressing internal object hierarchies to userspace. 
+2. That directory is created as a subdirectory of the kobject's parent, expressing internal object hierarchies to userspace.
 > 一个 kobject 对应的文件夹在其 parent 对应的文件夹中间
-3. Top-level directories in sysfs represent the common ancestors of object hierarchies; i.e. the subsystems the objects belong to. 
+3. Top-level directories in sysfs represent the common ancestors of object hierarchies; i.e. the subsystems the objects belong to.
 
 4. Attributes can be exported for *kobjects* in the form of *regular files* in the filesystem.
 并且提供文件属性
@@ -138,7 +138,7 @@ kernel_kobj = kobject_create_and_add("kernel", NULL);
 dev_kobj = kobject_create_and_add("dev", NULL);
 firmware_kobj = kobject_create_and_add("firmware", NULL);
 block_depr = kobject_create_and_add("block", NULL);
- 
+
 devices_kset = kset_create_and_add("devices", &device_uevent_ops, NULL);
 class_kset = kset_create_and_add("class", NULL, NULL);
 module_kset = kset_create_and_add("module", &module_uevent_ops, NULL);
@@ -157,11 +157,10 @@ struct kobject *kobject_create_and_add(const char *name, struct kobject *parent)
 					int sysfs_create_dir_ns(struct kobject *kobj, const void *ns)  //sysfs_root_kn
 						struct kernfs_node *kernfs_create_dir_ns(struct kernfs_node *parent,
 							struct kernfs_node *kernfs_new_node(struct kernfs_node *parent,
- 
+
 kset创建：
 --------
 struct kset *kset_create_and_add(const char *name,
 	int kset_register(struct kset *k)
 		static int kobject_add_internal(struct kobject *kobj)
 ```
-

@@ -24,7 +24,4 @@ int sysfs_create_group(struct kobject *kobj,
 {
 	return internal_create_group(kobj, 0, grp);
 }
-
-
 ```
-

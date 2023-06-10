@@ -1,5 +1,11 @@
 # VFS standard file operation
 
+## 基本总结
+1. fops 是注册到 inode::i_fop 中，毕竟对于文件的 io 是底层属性控制的
+  - get_pipe_inode
+
+
+## 问题
 ```c
 /*
  * Support for read() - Find the page attached to f_mapping and copy out the
