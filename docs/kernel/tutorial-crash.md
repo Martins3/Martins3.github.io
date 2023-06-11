@@ -36,3 +36,31 @@ mod -s ext2 path/to/ext2.ko.debug
 - kmem -s 真好用啊，但是如果不是 slub 中的数据，怎么处理?
 
 ## https://crash-utility.github.io/crash_whitepaper.html
+
+先从 help 的输出说起:
+
+## kmem
+
+### 分析一个地址属于那个 slab 的
+```txt
+crash> kmem -s ffff8040a10b8688
+CACHE OBJSIZE ALLOCATED TOTAL SLABS SSIZE NAME
+ffff80408001ac00 632 54215 77214 757 64k inode_cache
+SLAB MEMORY NODE TOTAL ALLOCATED FREE
+ffff7fe0102842c0 ffff8040a10b0000 0 102 12 90
+FREE / [ALLOCATED]
+[ffff8040a10b8480]
+```
+
+## ps
+
+### 直接使用名称，而且支持正则
+注意: 是单引号
+```txt
+crash> ps 'tmux*'
+      PID    PPID  CPU       TASK        ST  %MEM      VSZ      RSS  COMM
+     1752    1665  28  ffff88800a8317c0  IN   0.4    23648     3788  tmux: client
+     1754       1   0  ffff888012852f80  IN   0.4    24188     4060  tmux: server
+```
+
+### ps -y 限制 policy

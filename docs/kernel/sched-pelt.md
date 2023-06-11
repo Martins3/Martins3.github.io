@@ -10,6 +10,8 @@
 ## 主要参考
 
 - https://www.cnblogs.com/LoyenWang/p/12316660.html
+- https://hackmd.io/@RinHizakura/Bk4y_5o-9
+- http://www.wowotech.net/process_management/450.html
 
 ## 基本流程
 

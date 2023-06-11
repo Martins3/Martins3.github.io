@@ -666,88 +666,8 @@ entity 就是一个 group 的代表
 
 ## group 之间如何均衡
 
-```c
-int alloc_fair_sched_group(struct task_group *tg, struct task_group *parent)
-
-	tg->shares = NICE_0_LOAD;
-```
-
-1. tg->shares 相关的计算
-    1. 赋值永远都是 NICE_0_LOAD
-
-```c
-
-/*
- * Increase resolution of nice-level calculations for 64-bit architectures.
- * The extra resolution improves shares distribution and load balancing of
- * low-weight task groups (eg. nice +19 on an autogroup), deeper taskgroup
- * hierarchies, especially on larger systems. This is not a user-visible change
- * and does not change the user-interface for setting shares/weights.
- *
- * We increase resolution only if we have enough bits to allow this increased
- * resolution (i.e. 64-bit). The costs for increasing resolution when 32-bit
- * are pretty high and the returns do not justify the increased costs.
- *
- * Really only required when CONFIG_FAIR_GROUP_SCHED=y is also set, but to
- * increase coverage and consistency always enable it on 64-bit platforms.
- */
-#ifdef CONFIG_64BIT
-# define NICE_0_LOAD_SHIFT	(SCHED_FIXEDPOINT_SHIFT + SCHED_FIXEDPOINT_SHIFT)
-# define scale_load(w)		((w) << SCHED_FIXEDPOINT_SHIFT)
-# define scale_load_down(w)	((w) >> SCHED_FIXEDPOINT_SHIFT)
-#else
-# define NICE_0_LOAD_SHIFT	(SCHED_FIXEDPOINT_SHIFT)
-# define scale_load(w)		(w)
-# define scale_load_down(w)	(w)
-#endif
-
-/*
- * Task weight (visible to users) and its load (invisible to users) have
- * independent resolution, but they should be well calibrated. We use
- * scale_load() and scale_load_down(w) to convert between them. The
- * following must be true:
- *
- *  scale_load(sched_prio_to_weight[USER_PRIO(NICE_TO_PRIO(0))]) == NICE_0_LOAD
- *
- */
-#define NICE_0_LOAD		(1L << NICE_0_LOAD_SHIFT)
-
-
-/*
- * Integer metrics need fixed point arithmetic, e.g., sched/fair
- * has a few: load, load_avg, util_avg, freq, and capacity.
- *
- * We define a basic fixed point arithmetic range, and then formalize
- * all these metrics based on that basic range.
- */
-# define SCHED_FIXEDPOINT_SHIFT		10
-# define SCHED_FIXEDPOINT_SCALE		(1L << SCHED_FIXEDPOINT_SHIFT)
-```
-> @todo 还有 freq capacity load_avg 等
-
-A priority number of 120, which is the priority of a normal task, is mapped to a load of 1024, which is the value that the kernel uses to represent the capacity of a single standard CPU.
-> @todo 为什么会映射到 1024 上，利用 prio_to_weight 吗 ?
-
 A run queue (`struct cfs_rq`) is also characterized by a "weight" value that is the accumulation of weights of all tasks on its run queue.
 
-```c
-struct sched_entity {
-	/* For load-balancing: */
-	struct load_weight		load;
-	unsigned long			runnable_weight; // 难道 bandwidth 使用的 ?
-	struct rb_node			run_node;
-	struct list_head		group_node; // task group ?
-	unsigned int			on_rq; // why not boolean ?
-
-  // @todo how runtime works ?
-	u64				exec_start;
-	u64				sum_exec_runtime;
-	u64				vruntime;
-	u64				prev_sum_exec_runtime;
-
-	u64				nr_migrations;
-```
-> 1. load 和 runnable_weight 之间的关系是什么 ?
 
 The time slice can now be calculated as:
     time_slice = (sched_period() * se.load.weight) / cfs_rq.load.weight;

@@ -200,14 +200,7 @@ notes from [^8]:
 
 - [ ] what's relation with hrtick and schedule_tick ?
 
-## load
-  - [ ] calc_group_shares
-
 ## process relation
-- [ ] zombie
-- [ ] orphan
-
-
 - [ ] check code in kernel/exit.c
 - [ ] why we need parent and real_parent fields in task_struct ?
 

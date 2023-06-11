@@ -32,6 +32,14 @@ qmp_shell=true # 使用 qmp_shell 可以交互，否则就是输入 json
 abs_loc=$(dirname "$(realpath "$0")")
 configuration=${abs_loc}/config.json
 
+# ------------------------- 常量 -----------------------------------------------
+mkdir -p /tmp/martins3
+pid_file_path=/tmp/martins3/qemu-pid
+dump_guest_path=/tmp/martins3/guest
+mon_socket_path=/tmp/martins3/qemu-monitor-socket
+serial_socket_path=/tmp/martins3/qemu-serial-socket
+# ------------------------------------------------------------------------------
+
 # ----------------------- 配置区 -----------------------------------------------
 kernel_dir=$(jq -r ".kernel_dir" <"$configuration")
 # 为什么 -kernel 的时候 @todo 的 centos  kernel 不行啊
@@ -118,8 +126,7 @@ disk_img=${workstation}/vm/${distribution}.qcow2
 # @todo 这个地方应该调整下，源端和目标端冲突了
 arg_pdifile=""
 if [[ $hacking_migration == false ]]; then
-	mkdir -p /tmp/martins3
-	arg_pdifile="-pidfile /tmp/martins3/qemu-pid"
+	arg_pdifile="-pidfile $pid_file_path"
 fi
 
 debug_qemu=
@@ -194,7 +201,7 @@ fi
 
 case $hacking_memory in
 	"none")
-		ramsize=100G
+		ramsize=1G
 		arg_mem_cpu="-smp $(($(getconf _NPROCESSORS_ONLN) - 1))"
 		# arg_mem_cpu="-smp 1"
 		# echo 1 | sudo  tee /proc/sys/vm/overcommit_memory
@@ -356,12 +363,12 @@ arg_network="-netdev user,id=net1,$arg_fwd -device virtio-net-pci,netdev=net1"
 
 arg_qmp="-qmp tcp:localhost:$qmp_port,server,wait=off"
 if [[ $qmp_shell == true ]]; then
-	arg_qmp="-qmp unix:/tmp/qmp-sock,server,wait=off"
+	arg_qmp="-qmp unix:/tmp/martins3/qmp-sock,server,wait=off"
 fi
 
-mon_socket_path=/tmp/qemu-monitor-socket
-serial_socket_path=/tmp/qemu-serial-socket
-arg_monitor="-serial mon:stdio -display none"
+arg_monitor="-monitor unix:$mon_socket_path,server,nowait"
+arg_stdio="-serial stdio -display none"
+
 # @todo 原来这个选项不打开，内核无法启动啊
 # @todo 才意识到，这个打开之后，在 kernel cmdline 中的 init=/bin/bash 是无效的
 # @todo 为什么配合 3.10 内核无法正常使用
@@ -410,6 +417,7 @@ show_help() {
 	echo "-k 调试内核，启动 gdb 部分"
 	echo "-t 使用 tcg 作为执行引擎而不是 kvm"
 	echo "-d 调试 QEMU"
+	echo "-e examine guest with crash utility"
 	echo "   -m 调试 QEMU 的时候，打开 monitor"
 	echo "   -c 调试 QEMU 的时候，打开 console"
 	echo "-q 连接上 QEMU 的 qmp"
@@ -417,7 +425,7 @@ show_help() {
 	exit 0
 }
 
-while getopts "abcdhkmpqst" opt; do
+while getopts "abcdehkmpqst" opt; do
 	case $opt in
 		a)
 			# @todo 丑陋的代码，从原则上将，option 应该在最上面的才对，修改参数
@@ -448,10 +456,22 @@ while getopts "abcdhkmpqst" opt; do
 			debug_qemu='gdb -ex "handle SIGUSR1 nostop noprint" --args'
 			# gdb 的时候，让 serial 输出从 unix domain socket 输出
 			# https://unix.stackexchange.com/questions/426652/connect-to-running-qemu-instance-with-qemu-monitor
-			arg_monitor="-serial unix:$serial_socket_path,server,nowait"
-			arg_monitor="$arg_monitor -monitor unix:$mon_socket_path,server,nowait"
-			arg_monitor="$arg_monitor -display none"
+			arg_stdio="-serial unix:$serial_socket_path,server,nowait"
+			arg_stdio="$arg_stdio -display none"
 			cd "${qemu_dir}" || exit 1
+			;;
+		e)
+			# 此外似乎 gdb 还可以 https://github.com/qemu/qemu/blob/master/scripts/dump-guest-memory.py
+			set -x
+			rm -f "$dump_guest_path"
+
+			# echo "help" | socat - unix-connect:$mon_socket_path
+			echo "dump-guest-memory -z $dump_guest_path"
+			socat -,echo=0,icanon=0 unix-connect:$mon_socket_path
+			# echo "dump-guest-memory -z $dump_guest_path" | socat - unix-connect:$mon_socket_path
+			# TODO 这种模式无法阻塞 ? 导致我无法阻塞啊
+			/home/martins3/core/crash/crash "${kernel_dir}/vmlinux" $dump_guest_path
+			exit 0
 			;;
 		p) debug_qemu="perf record -F 1000" ;;
 		s) debug_kernel="-S -s" ;;
@@ -570,6 +590,6 @@ cmd="${cgroup_limit} ${debug_qemu} ${qemu} ${arg_trace} ${debug_kernel} ${arg_im
   ${arg_kernel} ${arg_seabios} ${arg_bridge} ${arg_network} \
   ${arg_machine} ${arg_monitor} ${arg_initrd} ${arg_mem_balloon} ${arg_hacking} \
   ${arg_qmp} ${arg_vfio} ${arg_smbios} ${arg_migration_target} ${arg_share_dir} ${arg_sata} ${arg_scsi} ${arg_nvme} ${arg_disk} ${arg_pdifile} \
-  ${arg_cpu_model}"
+  ${arg_cpu_model} ${arg_stdio}"
 echo "$cmd"
 eval "$cmd"

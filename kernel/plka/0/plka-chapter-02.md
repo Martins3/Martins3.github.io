@@ -1182,59 +1182,6 @@ This ensures that priority boosts caused by RT-Mutexes are not transferred to th
 
 **Computing Load Weights**
 
-> 之前一直load weight 就是 CPU 使用的时间
-
-The importance of a task is not only specified by its priority, but also by the load weight stored in
-`task_struct->se.load`. `set_load_weight` is responsible to compute the load weight depending on
-the process type and its static priority.
-> load weight 似乎和自己想象的完全不同，`set_load_weight` 在 fork 以及两个用户接口函数来调整
-> 还有，到底是谁在使用 load_weight ?
-
-The kernel not only keeps the load itself, but also another quantity that can be used to perform divisions
-by the weight.
-
-```c
-static void set_load_weight(struct task_struct *p, bool update_load)
-{
-	int prio = p->static_prio - MAX_RT_PRIO;
-  // static_prio 的含义，经过nice 装换的，而且是给normal 使用的，可以保证在此处计算出来的 prio 是在 [0 40] 之间的。
-	struct load_weight *load = &p->se.load;
-
-	/*
-	 * SCHED_IDLE tasks get minimal weight:
-	 */
-	if (idle_policy(p->policy)) {
-		load->weight = scale_load(WEIGHT_IDLEPRIO);
-		load->inv_weight = WMULT_IDLEPRIO;
-		return;
-	}
-
-	/*
-	 * SCHED_OTHER tasks have to update their load when changing their
-	 * weight
-	 */
-	if (update_load && p->sched_class == &fair_sched_class) {
-		reweight_task(p, prio);
-	} else {
-		load->weight = scale_load(sched_prio_to_weight[prio]);
-		load->inv_weight = sched_prio_to_wmult[prio];
-	}
-}
-
-struct load_weight {
-	unsigned long			weight;
-	u32				inv_weight; // 只是用于辅助实现分数之类的吧!
-};
-```
-
-Recall that not only processes, but also run queues are associated with a load weight. Every time a process
-is added to a run queue, the kernel calls `inc_nr_running`. This not only ensures that the run queue keeps
-track of how many processes are running, but also adds the process weight to the weight of the run
-queue:
-> @todo 非常的迷茫，load weight 成为了分数，对于rq 的load weight 和 每一个entity 的更新的关系是什么啊 ?
-> 怀疑，之所以rq 需要计算出 load weight 是因为分析出来到底谁比较忙
-> 其二，htop 中间的CPU usage 其实不是实时统计，而是通过runqueue 中间entity 得到的。
-
 #### 2.5.4 Core Scheduler
 As mentioned above, scheduler implementation is based on two functions — the **periodic scheduler** and
 the **main scheduler** function. I discuss how priority scheduling is implemented in this section.

@@ -439,7 +439,7 @@ maybe because of user space address randomization
 ## 基本的测试方法
 
 ### stress-ng
-```c
+```sh
 cgexec -g memory:mem stress-ng --vm-bytes 150M --vm-keep --vm 1
 ```
 - --vm N : worker 的数量
