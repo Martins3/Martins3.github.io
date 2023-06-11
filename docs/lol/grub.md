@@ -66,11 +66,10 @@ grubby --update-kernel=ALL --args="rootflags=data=journal"
 设置默认内核
 ```sh
 grubby --info=ALL | grep -E "^kernel|^index"
+grubby --info=ALL # 也差不多
 grubby --set-default-index=2
 grubby --default-kernel
 ```
-
-
 
 ## 其他小问题
 1. grub-mkconfig || grub2-mkconfig : 扫描 /boot 然后更新 grub.conf

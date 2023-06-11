@@ -40,3 +40,7 @@
 
 ## 这个 GPU driver 将我的 1060 显卡驱动吗?
 https://github.com/NVIDIA/open-gpu-kernel-modules
+
+
+## GPU
+https://github.com/vortexgpgpu/vortex_tutorials : RISC-V 的 GPGPU MICRO 文章

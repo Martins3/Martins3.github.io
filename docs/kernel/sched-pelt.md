@@ -211,3 +211,9 @@ it is accumulated in a field called `runnable_load_avg` in the `cfs_rq` data str
 This is roughly a measure of how heavily contended the CPU is. The kernel also tracks the load associated with blocked tasks. When a task gets blocked, its load is accumulated in the blocked_load_avg metric of the cfs_rq structure.
 
 - [ ] [Per-entity load tracking in presence of task groups](https://lwn.net/Articles/639543/) : Continue the reading if other parts finished.
+
+## CPU 的 utilization 是如何获取的
+
+## 通过获取到 load 是计算实现 load balancing ，但是
+
+读读这个文档: https://tanelpoder.com/posts/high-system-load-low-cpu-utilization-on-linux/

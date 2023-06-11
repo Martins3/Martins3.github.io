@@ -103,4 +103,6 @@ static struct pci_driver e1000_driver = {
 > - Initialize non-PCI (i.e. LAN/SCSI/etc parts of the chip)
 > - Enable DMA/processing engines
 
+## [ ] pci 的 remove 和 unbind 的行为差别是什么?
+
 [^3]: https://www.kernel.org/doc/html/latest/PCI/index.html

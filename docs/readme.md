@@ -27,7 +27,6 @@
 - [淦，写一个裸金属二进制翻译器不可能这么难](./bmbt/4-emotion.md)
 
 #### QEMU 源码分析
-<!-- - [QEMU 的基本使用方法](./qemu/manual.md) -->
 - [QEMU 源码概叙](./qemu/introduction.md)
 - [QEMU 初始化过程分析](./qemu/init.md)
 - [QEMU 的 memory model 设计](./qemu/memory.md)

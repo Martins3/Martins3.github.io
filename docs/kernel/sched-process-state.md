@@ -218,3 +218,6 @@ top 的更加简单，编码完全相同。
 ```
 为什么 TASK_UNINTERRUPTIBLE 和 TASK_NOLOAD 组合起来叫做 TASK_IDLE
 或者说，为什么 TASK_IDLE 非要 TASK_UNINTERRUPTIBLE
+
+## [ ] 阅读一下这个： The Unix process API is unreliable and unsafe
+https://news.ycombinator.com/item?id=35264487

@@ -425,3 +425,7 @@ static unsigned int id_visibility(const struct kvm_vcpu *vcpu,
 
 
 ## [ ] 如何判断当前 KVM 是 VHE 还是 non-VHE 的?
+
+## 了解下 ARM 中的 virt machine type
+最大支持的内存修改的好随意啊
+- https://lists.gnu.org/archive/html/qemu-arm/2016-02/msg00453.html
