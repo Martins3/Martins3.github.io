@@ -2,9 +2,11 @@
 
 ## 关键问题，和普通 io 的流程从那里开始出现差别的
 
+## [ ] 如何理解 aio 和 io uring 处理的 cache io 的差异
 
 ## 大致原理
 写的还行: https://juejin.cn/post/6956566854500515870
+https://github.com/liexusong/linux-source-code-analyze/blob/master/native-aio.md
 
 ## 结构体
 - aio_ring
@@ -200,3 +202,41 @@ struct kioctx {
 ```
 
 当 free_ioctx_reqs 的时候，调用 complete
+
+## 为什么需要一个文件 : 为了 ring 的 page migration
+
+- io_setup
+  - ioctx_alloc
+    - `aio_setup_ring`
+      - file = aio_private_file(ctx, nr_pages); : 页面大小为 aio_ring 和 io_event
+
+最终存储在:
+```c
+struct kioctx {
+  // ...
+	unsigned long		mmap_base;
+	unsigned long		mmap_size;
+  // ...
+	struct page		*internal_pages[AIO_RING_PAGES];
+	struct file		*aio_ring_file;
+```
+
+```txt
+static const struct vm_operations_struct aio_ring_vm_ops = {
+	.mremap		= aio_ring_mremap,
+#if IS_ENABLED(CONFIG_MMU)
+	.fault		= filemap_fault,
+	.map_pages	= filemap_map_pages,
+	.page_mkwrite	= filemap_page_mkwrite,
+#endif
+};
+```
+
+居然是为了页面迁移，我的龟龟
+```c
+static const struct address_space_operations aio_ctx_aops = {
+	.dirty_folio	= noop_dirty_folio,
+	.migrate_folio	= aio_migrate_folio,
+};
+```
+该文件用户不可见的。

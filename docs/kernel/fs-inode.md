@@ -191,3 +191,39 @@ unsigned int get_next_ino(void)
 }
 EXPORT_SYMBOL(get_next_ino);
 ```
+
+## address_space 是嵌入到 inode 中的
+
+```c
+struct inode {
+  // ...
+	struct address_space	i_data;
+```
+
+编译内核的时候：
+```txt
+    inode_init_always+5
+    alloc_inode+49
+    iget_locked+231
+    __ext4_iget+305
+    ext4_lookup+267
+    __lookup_slow+131
+    walk_component+219
+    path_lookupat+103
+    filename_lookup+232
+    vfs_statx+158
+    vfs_fstatat+85
+    __do_sys_newfstatat+63
+    do_syscall_64+59
+    entry_SYSCALL_64_after_hwframe+114
+]: 14039
+```
+
+
+之后传递给映射文件的 page 上:
+```c
+struct address_space *page_mapping(struct page *page)
+{
+	return folio_mapping(page_folio(page));
+}
+```

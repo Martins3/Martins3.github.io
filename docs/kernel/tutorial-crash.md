@@ -35,6 +35,8 @@ mod -s ext2 path/to/ext2.ko.debug
 ## 问题
 - kmem -s 真好用啊，但是如果不是 slub 中的数据，怎么处理?
 
+
+
 ## https://crash-utility.github.io/crash_whitepaper.html
 
 先从 help 的输出说起:
@@ -51,6 +53,7 @@ ffff7fe0102842c0 ffff8040a10b0000 0 102 12 90
 FREE / [ALLOCATED]
 [ffff8040a10b8480]
 ```
+我猜测是通过遍历所有的 slub cache 来实现的。
 
 ## ps
 
