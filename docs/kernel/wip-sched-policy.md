@@ -57,7 +57,6 @@ chrt -i 0 make -j32
 
 https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/8/html/monitoring_and_managing_system_status_and_performance/tuning-scheduling-policy_monitoring-and-managing-system-status-and-performance
 
-## chrt 似乎没有出现过 SCHED_NORMAL
 
 ## 分析 man sched(7)
 
@@ -192,3 +191,8 @@ static inline struct cfs_rq *cfs_rq_of(struct sched_entity *se)
 	return se->cfs_rq;
 }
 ```
+
+## 总结
+感觉，就是 sched_class 是内核概念, policy 是用户态的概念，而 SCHED_IDLE, SCHED_BATCH , SCHED_NORMAL 之类的都是一个在
+一个 sched_class 存在细微的调整。
+注意 SCHED_IDLE 和 idle scheduler 不是一个东西。

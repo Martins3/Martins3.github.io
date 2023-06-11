@@ -48,96 +48,36 @@ struct task_struct 一共存在四个 prio
 
 - set_load_weight 中设置
 
+update_curr 中的计算方法就是教科书中的说的
+```c
+	curr->vruntime += calc_delta_fair(delta_exec, curr);
+```
+
 ## share
-group sched
+就是 group 的 share 的数值几乎就是 weight ，都是 nice 通过 sched_prio_to_weight 来计算得到的
 
-- update_cfs_group
-  - calc_group_shares
+- `__sched_group_set_shares`
+  - tg->shares = shares;
+  - update_cfs_group
+    - calc_group_shares : 近似计算分析的非常复杂，但是总体就是跟踪
+    - reweight_entity : for_each_possible_cpu 来计算 sched_entity 的 weight
 
-- sched_group_set_shares
 
-## 更多的计算
-```c
-int alloc_fair_sched_group(struct task_group *tg, struct task_group *parent)
 
-	tg->shares = NICE_0_LOAD;
+可以从多个位置写入:
+1. 第一个是 cgroup 中 cpu.weight
+```txt
+#0  __sched_group_set_shares (tg=0xffff888141e9a300, shares=104448) at kernel/sched/fair.c:11845
+#1  0xffffffff8114be9a in sched_group_set_shares (tg=0xffff888141e9a300, shares=104448) at kernel/sched/fair.c:11880
+#2  0xffffffff811bb84b in cgroup_file_write (of=<optimized out>, buf=0xffff8881547244a0 "10\n", nbytes=3, off=<optimized out>) at kernel/cgroup/cgroup.c:3983
 ```
 
-1. tg->shares 相关的计算
-    1. 赋值永远都是 NICE_0_LOAD
+默认的是 100，范围是 `[1, 10000]`， 控制粒度的更加精细。
 
-```c
+2. 第二个是 cgroup.weight.nice ，范围是 `[-20, 19]`
 
-/*
- * Increase resolution of nice-level calculations for 64-bit architectures.
- * The extra resolution improves shares distribution and load balancing of
- * low-weight task groups (eg. nice +19 on an autogroup), deeper taskgroup
- * hierarchies, especially on larger systems. This is not a user-visible change
- * and does not change the user-interface for setting shares/weights.
- *
- * We increase resolution only if we have enough bits to allow this increased
- * resolution (i.e. 64-bit). The costs for increasing resolution when 32-bit
- * are pretty high and the returns do not justify the increased costs.
- *
- * Really only required when CONFIG_FAIR_GROUP_SCHED=y is also set, but to
- * increase coverage and consistency always enable it on 64-bit platforms.
- */
-#ifdef CONFIG_64BIT
-# define NICE_0_LOAD_SHIFT	(SCHED_FIXEDPOINT_SHIFT + SCHED_FIXEDPOINT_SHIFT)
-# define scale_load(w)		((w) << SCHED_FIXEDPOINT_SHIFT)
-# define scale_load_down(w)	((w) >> SCHED_FIXEDPOINT_SHIFT)
-#else
-# define NICE_0_LOAD_SHIFT	(SCHED_FIXEDPOINT_SHIFT)
-# define scale_load(w)		(w)
-# define scale_load_down(w)	(w)
-#endif
-
-/*
- * Task weight (visible to users) and its load (invisible to users) have
- * independent resolution, but they should be well calibrated. We use
- * scale_load() and scale_load_down(w) to convert between them. The
- * following must be true:
- *
- *  scale_load(sched_prio_to_weight[USER_PRIO(NICE_TO_PRIO(0))]) == NICE_0_LOAD
- *
- */
-#define NICE_0_LOAD		(1L << NICE_0_LOAD_SHIFT)
-
-
-/*
- * Integer metrics need fixed point arithmetic, e.g., sched/fair
- * has a few: load, load_avg, util_avg, freq, and capacity.
- *
- * We define a basic fixed point arithmetic range, and then formalize
- * all these metrics based on that basic range.
- */
-# define SCHED_FIXEDPOINT_SHIFT		10
-# define SCHED_FIXEDPOINT_SCALE		(1L << SCHED_FIXEDPOINT_SHIFT)
-```
-> @todo 还有 freq capacity load_avg 等
-
-A priority number of 120, which is the priority of a normal task, is mapped to a load of 1024, which is the value that the kernel uses to represent the capacity of a single standard CPU.
-> @todo 为什么会映射到 1024 上，利用 prio_to_weight 吗 ?
-
-
-```c
-struct sched_entity {
-	/* For load-balancing: */
-	struct load_weight		load;
-	unsigned long			runnable_weight; // 难道 bandwidth 使用的 ?
-	struct rb_node			run_node;
-	struct list_head		group_node; // task group ?
-	unsigned int			on_rq; // why not boolean ?
-
-  // @todo how runtime works ?
-	u64				exec_start;
-	u64				sum_exec_runtime;
-	u64				vruntime;
-	u64				prev_sum_exec_runtime;
-
-	u64				nr_migrations;
-```
-> 1. load 和 runnable_weight 之间的关系是什么 ?
+2. 第二个是 /proc/pdi/autogroup
+- proc_sched_autogroup_set_nice ，范围是 `[-20, 19]`
 
 
 

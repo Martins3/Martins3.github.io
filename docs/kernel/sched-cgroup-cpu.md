@@ -71,23 +71,6 @@ period 时钟注册的 hook : sched_cfs_period_timer -> do_sched_cfs_period_time
 
 ### CONFIG_FAIR_GROUP_SCHED
 
-## 设置
-
-```txt
-#0  __sched_group_set_shares (tg=0xffff888141e9a300, shares=104448) at kernel/sched/fair.c:11845
-#1  0xffffffff8114be9a in sched_group_set_shares (tg=0xffff888141e9a300, shares=104448) at kernel/sched/fair.c:11880
-#2  0xffffffff811bb84b in cgroup_file_write (of=<optimized out>, buf=0xffff8881547244a0 "10\n", nbytes=3, off=<optimized out>) at kernel/cgroup/cgroup.c:3983
-#3  0xffffffff813ee51b in kernfs_fop_write_iter (iocb=0xffffc9000099bea0, iter=<optimized out>) at fs/kernfs/file.c:354
-#4  0xffffffff813559c9 in call_write_iter (iter=0x19800 <bts_ctx+10240>, kio=0xffff888141e9a300, file=0xffff888155f80e00) at include/linux/fs.h:2187
-#5  new_sync_write (ppos=0xffffc9000099bf08, len=3, buf=0x5588fa0d60c0 "10\n", filp=0xffff888155f80e00) at fs/read_write.c:491
-#6  vfs_write (file=file@entry=0xffff888155f80e00, buf=buf@entry=0x5588fa0d60c0 "10\n", count=count@entry=3, pos=pos@entry=0xffffc9000099bf08) at fs/read_write.c:578
-#7  0xffffffff81355d9a in ksys_write (fd=<optimized out>, buf=0x5588fa0d60c0 "10\n", count=3) at fs/read_write.c:631
-#8  0xffffffff81f3d6e8 in do_syscall_x64 (nr=<optimized out>, regs=0xffffc9000099bf58) at arch/x86/entry/common.c:50
-#9  do_syscall_64 (regs=0xffffc9000099bf58, nr=<optimized out>) at arch/x86/entry/common.c:80
-```
-
-应该是将 weight 更新，从而导致让 weight 小的使用量更小。
-
 ## cfs_bandwidth::period_timer 和 cfs_bandwidth::slack_timer
 
 start_cfs_bandwidth : 似乎是开始计时的函数。

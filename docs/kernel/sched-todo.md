@@ -41,3 +41,23 @@ clock-delta                                  :                   21
 https://news.ycombinator.com/item?id=21919988
 
 ## htop 中的 CPU % 是怎么得到的
+
+## 之前的几个问题
+```c
+struct sched_entity {
+	/* For load-balancing: */
+	struct load_weight		load;
+	unsigned long			runnable_weight; // 难道 bandwidth 使用的 ?
+	struct rb_node			run_node;
+	struct list_head		group_node; // task group ?
+	unsigned int			on_rq; // why not boolean ?
+
+  // @todo how runtime works ?
+	u64				exec_start;
+	u64				sum_exec_runtime;
+	u64				vruntime;
+	u64				prev_sum_exec_runtime;
+
+	u64				nr_migrations;
+```
+> 1. load 和 runnable_weight 之间的关系是什么 ?
