@@ -6,4 +6,10 @@ sudo bpftrace -e 'kfunc:do_idle { @[pid] = count(); }'
 
 sudo bpftrace -e 'kfunc:exit_signals { printf("%px\n", args->tsk->cred); }'
 
+## 可以获取到行号的
+通过这个方法是找到 vmlinux 的，但是如使用 nixos 获取到准确的当前 linux 的 vmlinux 不知道
+```sh
+find /nix/store -name vmlinux
+```
 
+用 bpftrace 可以获取到 blk_mq_submit_bio+1301 ，这里的 1301 实际上是可以解析的。
