@@ -9,7 +9,6 @@
 
 
 
-
 ##  create entry(2) : proc_mkdir => proc_mkdir_data
 
 ```c
@@ -57,7 +56,7 @@ struct proc_dir_entry *proc_create_single_data(const char *name, umode_t mode,
 		return NULL;
 	p->proc_ops = &proc_single_ops; // XXX difference between proc_create_data
 	p->single_show = show;
-	return proc_register(parent, p); // subdir insert 
+	return proc_register(parent, p); // subdir insert
 }
 
 struct proc_dir_entry *proc_create_data(const char *name, umode_t mode,
@@ -109,3 +108,5 @@ int single_open(struct file *file, int (*show)(struct seq_file *, void *),
 EXPORT_SYMBOL(single_open);
 ```
 
+
+## TODO : /home/martins3/core/vn/kernel/plka/syn/fs/proc/ 中的内容可以一并整理过来

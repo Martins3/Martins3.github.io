@@ -12,7 +12,7 @@ https://www.kernel.org/doc/html/latest/filesystems/proc.html
 
 ## /proc/kcore
 2. dynamic kernel image : 128T
-```
+```plain
 ➜  .SpaceVim.d git:(master) ✗ l /proc/kcore
 .r-------- root root 128 TB Tue Mar 17 18:47:48 2020   kcore
 ```
@@ -42,8 +42,10 @@ struct machine_ops machine_ops __ro_after_init = {
 #3  do_syscall_64 (regs=0xffffc90000017f58, nr=<optimized out>) at arch/x86/entry/common.c:80
 #4  0xffffffff824000ae in entry_SYSCALL_64 () at arch/x86/entry/entry_64.S:120
 ```
+## /proc/pid
 
-# proc
+### /proc/pid/pwd
+
 
 ## /proc/stat
 
