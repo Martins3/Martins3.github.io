@@ -2,7 +2,7 @@
 
 ## 关键问题，和普通 io 的流程从那里开始出现差别的
 
-## [ ] 如何理解 aio 和 io uring 处理的 cache io 的差异
+## [ ] 如何理解 aio 和 io uring 处理的 buffer io 的差异
 
 ## 大致原理
 写的还行: https://juejin.cn/post/6956566854500515870

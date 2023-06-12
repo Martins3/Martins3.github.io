@@ -874,7 +874,7 @@ device_set_realized 除了调用 DeviceClass::realize 的这个 hook 之外，�
         NULL, NULL);
 ```
 
-无法理解 x86_cpu_expand_features 这两个手动的触发最后调用到哪里了:
+- 无法理解 x86_cpu_expand_features 这两个手动的触发最后调用到哪里了:
 ```c
 void x86_cpu_expand_features(X86CPU *cpu, Error **errp)
 {
@@ -898,7 +898,7 @@ void x86_cpu_expand_features(X86CPU *cpu, Error **errp)
     }
 ```
 
-理解下这个行为:
+- 理解下这个行为:
 ```txt
 #0  host_memory_backend_set_prealloc (obj=0x555556a5dc00, value=true, errp=0x7ffffffef988) at ../backends/hostmem.c:221
 #1  0x0000555555ca8496 in property_set_bool (obj=0x555556a5dc00, v=<optimized out>, name=<optimized out>, opaque=0x5555568999a0, errp=0x7ffffffef988) at .
@@ -919,6 +919,8 @@ x7ffffffef990, errp@entry=0x5555567443b8 <error_fatal>) at ../qom/object_interfa
 #9  qemu_init (argc=<optimized out>, argv=<optimized out>) at ../softmmu/vl.c:3622
 #10 0x000055555586aed9 in main (argc=<optimized out>, argv=<optimized out>) at ../softmmu/main.c:47
 ```
+
+- -object 是如何实现的
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

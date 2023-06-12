@@ -22,3 +22,5 @@ https://github.com/NixOS/nixpkgs/blob/nixos-23.05/pkgs/os-specific/linux/firmwar
 
 可以找到:
 https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git
+
+下载之后，发现几乎全都都是二进制。
