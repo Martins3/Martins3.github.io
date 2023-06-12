@@ -7,3 +7,5 @@ https://kernel.love/vfio-mdev.html
 https://open-iov.org/index.php/GPU_Support
 
 https://news.ycombinator.com/item?id=28944426
+
+https://github.com/k8snetworkplumbingwg/sriov-network-device-plugin

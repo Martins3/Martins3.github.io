@@ -139,5 +139,10 @@ https://www.cnblogs.com/loyenwang/p/11370557.html
 
 ## [ ] 分析下 ARM 的 memory model，尤其是对比普通 arm 和 Mac arm 的区别
 
+## MAC 搭建好之后，可以通过这个学学汇编
+- https://github.com/pkivolowitz/asm_book#table-of-contents
+
+## 分析下 arm 的 memory layout https://docs.kernel.org/arm64/memory.html
+
 [^1]: 奔跑吧 linux 内核 第二版 卷 2
 [^2]: https://stackoverflow.com/questions/58577825/what-does-fwnode-in-struct-device-do-in-linux-kernel

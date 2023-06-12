@@ -67,3 +67,6 @@ crash> ps 'tmux*'
 ```
 
 ### ps -y 限制 policy
+
+### 回答这个问题
+https://stackoverflow.com/questions/74196308/how-to-get-source-line-numbers-with-crash-utility-in-kernel-crash-debugging

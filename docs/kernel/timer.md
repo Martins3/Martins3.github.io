@@ -713,6 +713,9 @@ It performs many jobs:
 
 参考 : https://www.suse.com/c/cpu-isolation-introduction-part-1/
 
+## ntp
+为什么 ntp 还需要这种服务: https://developer.aliyun.com/mirror/NTP
+
 
 [^1]: https://www.kernel.org/doc/html/latest/virt/kvm/timekeeping.html
 [^2]: https://github.com/dterei/tsc

@@ -45,6 +45,26 @@ struct machine_ops machine_ops __ro_after_init = {
 ## /proc/pid
 
 ### /proc/pid/pwd
+- proc_cwd_link
+  - get_fs_pwd
+    - path_get
+
+然后获取:
+```c
+struct task_struct {
+  // ...
+	/* Filesystem information: */
+	struct fs_struct		*fs;
+  // ...
+```
+
+如果一个进程的 pwd 被删除了，在 /proc/10204/cwd 将是:
+```txt
+cwd -> '/root/gg (deleted)'
+```
+如果重新创建 /root/gg ，输出还是如此。
+
+这个现象可以继续跟踪一下。
 
 
 ## /proc/stat

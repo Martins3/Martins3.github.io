@@ -851,6 +851,9 @@ acpi_table_fadt::sci_interrupt  提供了
 [    0.846164] [<9000000000203cc8>] ret_from_kernel_thread+0xc/0x10
 ```
 
+## 一些资源
+https://github.com/rust-osdev/acpi
+
 [^1]: https://blog.csdn.net/tiantao2012/article/details/73775993
 [^2]: https://blog.csdn.net/woai110120130/article/details/93318611
 [^3]: https://uefi.org/sites/default/files/resources/ACPI%206_2_A_Sept29.pdf

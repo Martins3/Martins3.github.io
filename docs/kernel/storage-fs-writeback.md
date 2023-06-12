@@ -215,3 +215,6 @@ void wb_workfn(struct work_struct *work)
 static void wakeup_dirtytime_writeback(struct work_struct *w);
 static DECLARE_DELAYED_WORK(dirtytime_work, wakeup_dirtytime_writeback);
 ```
+
+## 验证这个回答的正确性
+https://stackoverflow.com/questions/27900221/difference-between-vm-dirty-ratio-and-vm-dirty-background-ratio

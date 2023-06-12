@@ -26,3 +26,6 @@ https://github.com/FavioVazquez/ds-cheatsheets
 
 ## chatgpt 相关
 - https://news.ycombinator.com/item?id=34796611
+
+## 基础设施
+- [带你从零实现一个高性能的深度学习推理库](https://github.com/zjhellofss/KuiperInfer)

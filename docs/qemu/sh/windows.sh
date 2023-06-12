@@ -111,6 +111,9 @@ arg_mem="-object memory-backend-ram,id=pc.ram,size=$ramsize,prealloc=off,share=o
 
 arg_qmp="-qmp tcp:localhost:4445,server,wait=off"
 
+# 尝试用这个解决 windows 的剪切板问题
+# https://github.com/quackduck/uniclip
+
 # https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/archive-virtio/virtio-win-0.1.208-1/
 arg_virtio="-drive aio=native,cache.direct=on,file=$HOME/hack/iso/virtio-win-0.1.208.iso,media=cdrom,index=2"
 # https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/archive-virtio/virtio-win-0.1.208-1/virtio-win-0.1.208.iso
