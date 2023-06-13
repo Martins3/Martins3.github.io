@@ -44,6 +44,8 @@ struct machine_ops machine_ops __ro_after_init = {
 ```
 ## /proc/pid
 
+### /proc/pid/net
+
 ### /proc/pid/pwd
 - proc_cwd_link
   - get_fs_pwd

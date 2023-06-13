@@ -41,6 +41,20 @@ mod -s ext2 path/to/ext2.ko.debug
 
 先从 help 的输出说起:
 
+## vtop
+
+vtop -u addres
+
+- 为什么 vtop -u 是怎么区分这是那个程序的地址 ?
+  - [ ] 看看 `vm` 这个程序吧
+
+
+## ptov
+
+## rd
+
+rd 0xffffa0428fa70000 8
+
 ## kmem
 
 ### 分析一个地址属于那个 slab 的
@@ -68,5 +82,5 @@ crash> ps 'tmux*'
 
 ### ps -y 限制 policy
 
-### 回答这个问题
+## 回答这个问题
 https://stackoverflow.com/questions/74196308/how-to-get-source-line-numbers-with-crash-utility-in-kernel-crash-debugging
