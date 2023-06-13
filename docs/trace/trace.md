@@ -127,6 +127,8 @@ csysdig -l
 ### [ ] https://github.com/aquasecurity/tracee
 ### [ ] https://github.com/cloudflare/ebpf_exporter
 ### [ ] https://github.com/bytedance/trace-irqoff
+### [ ] https://perfetto.dev/docs/
+似乎是 android 的 trace 工具
 
 ### [ ] iperf
 https://load-balancer.inlab.net/manual/performance/measuring-internal-bandwidth-with-iperf/

@@ -100,13 +100,6 @@
 ## Linux Kernel
 - 内核学习
   - [内核学习的一点经验之谈](./kernel/learn-linux-kernel.md)
-  <!-- - 熟悉基本使用 /proc /sys -->
-  <!-- - 使用 ebpf 来学习内核 -->
-  <!-- - 使用 flamegraph 来学习内核 -->
-  <!-- - 使用 perf scirpts 来学习内核 -->
-  <!-- - 各种 fuzzer -->
-  <!-- - 各种 tlpi 学习内核，搭建一个更加清楚的 tlpi 环境 -->
-  <!-- - [使用 QEMU, FlameGraph 和 bpftrace 阅读内核](./kernel/tips-reading-kernel.md) -->
 - [tty 到底是什么](./kernel/tty.md)
 - [mknod](./kernel/mknod.md)
 - 内存管理
@@ -148,7 +141,6 @@
 ## Potpourri
 - [what is x86 IA-32 IA-64 x86-64 and amd64 ?](./x86-names.md)
 - [言论](./words.md)
-- [Martins3 的 Check Sheet](./sheet.md)
 
 ## Guff
 - [About](./abaaba/about.md)
