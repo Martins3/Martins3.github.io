@@ -3,7 +3,7 @@
 ## TODO
 
 1. lspci 显示在 pci 下接入了一个 ISA bridge
-```
+```plain
 00:1f.0 ISA bridge: Intel Corporation Sunrise Point LPC Controller/eSPI Controller (rev 21)
 ```
 所以，在 isa 下到底存在设备吗?[^1]
@@ -17,7 +17,7 @@
 ### [Platform Devices and Drivers](https://www.kernel.org/doc/html/latest/driver-api/driver-model/platform.html)
 
 ### Others
-Platform devices are inherently not discoverable.[^2] 
+Platform devices are inherently not discoverable.[^2]
 
 Platform devices are devices that typically appear as autonomous entities in the system. This includes legacy port-based devices and host bridges to peripheral buses, and most controllers integrated into system-on-chip platforms. What they usually have in common is direct addressing from a CPU bus. Rarely, a platform_device will be connected through a segment of some other kind of bus; but its registers will still be directly addressable.[^4]
 
@@ -95,9 +95,9 @@ platform_probe 在 [^4] 中描述是用于探测真正的物理设备是否存�
 - [x] 所以这五个设备如何探测的 ?
 - [x] acpi 真的会探测设备, 但是不是所有的设备都是从 acpi 中探测的
 
-```
+```plain
 QEMU0002:00
-PNP0103:00 
+PNP0103:00
 regulatory
 pcspkr
 platform-framebuffer
@@ -105,7 +105,7 @@ platform-framebuffer
 这些设备的探测划分为两种情况, 但是这些都是存在一个共同点，会通过一个公共入口 ： platform_device_register_full
 
 
-1. QEMU0002 和 PNP0103 是通过 acpi_bus_scan 
+1. QEMU0002 和 PNP0103 是通过 acpi_bus_scan
 ```c
 /*
 [    0.582758] huxueshi device: 'QEMU0002:00': device_add
@@ -320,7 +320,7 @@ fn@entry=0xffffffff8168b9f0 <__driver_attach>) at drivers/base/bus.c:305
 在 ./platform_match_dmesg.txt 中，platform_match 调用 i8042 / serial8250 的时候其行为很奇怪:
 具体原因是在 [^4] 的 Legacy Drivers: Device Probing 提到过，只是这个接口现在变成了 platform_device_add
 
-```
+```plain
 // 添加 device
 [    1.320115] Call Trace:
 [    1.320115]  dump_stack+0x64/0x7c
@@ -361,7 +361,7 @@ fn@entry=0xffffffff8168b9f0 <__driver_attach>) at drivers/base/bus.c:305
 ```
 
 一般人走的道 : device 已经探测完成，直接进行 driver 的探测
-```
+```plain
 [    1.396540] Call Trace:
 [    1.396540]  dump_stack+0x64/0x7c
 [    1.396540]  platform_match+0x2b/0xc0

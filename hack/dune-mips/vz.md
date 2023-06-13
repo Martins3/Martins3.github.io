@@ -100,7 +100,7 @@ static unsigned long kvm_mips_num_regs(struct kvm_vcpu *vcpu)
 }
 ```
 - [ ] kvm_mips_guest_can_have_fpu
-- [x] kvm_mips_guest_can_have_msa : MSA2 是MIPS科技公司继 MSA 后推出的新向量指令集，在龙芯3A/B4000中首次实现。龙芯中科以此拓展出256位的 LASX 向量指令集。
+- [x] kvm_mips_guest_can_have_msa : MSA2 是 MIPS 科技公司继 MSA 后推出的新向量指令集，在龙芯 3A/B4000 中首次实现。龙芯中科以此拓展出 256 位的 LASX 向量指令集。
 - [x] kvm_mips_guest_has_lasx : SIMD
 
 So, we can understand mips arch now:

@@ -140,7 +140,7 @@ static void mark_unsync(u64 *spte)
 link_shadow_page : mark_unsync 的唯一调用位置
 kvm_unsync_page : kvm_mmu_mark_parents_unsync 唯一调用位置
 
-mmu_need_write_protect : 对于sp
+mmu_need_write_protect : 对于 sp
 
 #### mmu_need_write_protect
 for_each_gfn_indirect_valid_sp : 一个 gfn 可以

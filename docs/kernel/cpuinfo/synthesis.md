@@ -45,3 +45,5 @@ void get_cpu_cap(struct cpuinfo_x86 *c)
 ## 应该 `kvm_arch_dev_ioctl` 才是关键吧
 
 ## 如何方便的获取到 guest 中的 cpuid 呀
+
+## cpuid_query_maxphyaddr : 原来 la57 和 cpu 具体的物理位宽两个不同的属性啊

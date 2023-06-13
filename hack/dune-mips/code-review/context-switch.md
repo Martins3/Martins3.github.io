@@ -6,7 +6,7 @@
 - [ ] Cp0 寄存器 NestedExc 的作用 ?
 
 ## tlbex
-```
+```plain
  History:        #0
  Commit:         380cd582c08831217ae693c86411902e6300ba6b
  Author:         Huacai Chen <chenhc@lemote.com>

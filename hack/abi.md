@@ -3,7 +3,7 @@
 ### 3.2 Function Calling Sequence
 The AMD64 architecture provides **16** general purpose 64-bit registers.
 In addition the architecture provides **16** SSE registers, each 128 bits wide
-and **8** x87 floating point registers, each 80 bits wide. 
+and **8** x87 floating point registers, each 80 bits wide.
 
 This subsection discusses usage of each register. Registers `%rbp`, `%rbx` and
 `%r12` through `%r15` “belong” to the calling function and the called function is
@@ -20,7 +20,7 @@ function. If a calling function wants to preserve such a register value across a
 - [ ] 下面的内容需要参考 System V Application Binary Interface 重新分析一下
 
 1. syscall ?
-2. interrupt ? 
+2. interrupt ?
 3. 一般的 ?
 4. 32bit 和 64bit 区分 ?
 
@@ -30,12 +30,12 @@ int callee(int, int, int);
 int caller(void)
 {
 	return callee(1, 2, 3) + 5;
-}   
+}
 ```
 
 使用 `-O0 -m32` 的来实现 32bit 的设置:
 
-```
+```plain
 caller():
         push    ebp
         mov     ebp, esp
@@ -52,7 +52,7 @@ caller():
 ```
 
 64bit
-```
+```plain
 caller():
         push    rbp
         mov     rbp, rsp
@@ -72,7 +72,7 @@ caller():
 
 
 clang10 -m32 -O0 的结果:
-```
+```plain
 caller():                             # @caller()
         push    ebp
         mov     ebp, esp
@@ -91,7 +91,7 @@ caller():                             # @caller()
 
 
 ➜  /tmp clang -c -o a.o  -O0 -m32 a.c && objdump -d a.o
-```
+```plain
 00000000 <caller>:
    0:   55                      push   %ebp
    1:   89 e5                   mov    %esp,%ebp

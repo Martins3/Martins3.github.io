@@ -27,7 +27,7 @@ void vcpu_load(struct kvm_vcpu *vcpu)
 
 ## How mmu notifier works
 
-## Please analyze the complex arch_kvm_cpu , arch_kvm, kvm_run and ...
+## Please analyze the complex arch_kvm_cpu , arch_kvm, kvm_run and
 
 ## some code route has been analyzed
 

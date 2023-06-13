@@ -47,7 +47,7 @@ Basic KVM event-injection
                     - sync_vmcs02_to_vmcs12 : 准备基本内容
                     - 比如利用 prepare_vmcs12 将 event (比如 page fault ) 写入到 vmcs12 中间
                       - [ ] 但是注入的消息，L1 如何读去 vmcs12 中间的 `vmcs12->vm_exit_reason` `vmcs12->exit_qualification` `vmcs12->vm_exit_intr_info`
-                        - 应该是利用指令 VMREAD/VMWRITE/VMCLEAR/VMPTRLD 访问，然后从guest L1 中间弹出来，最后进入到 L1 中间，L1 检查到的原因就是这些
+                        - 应该是利用指令 VMREAD/VMWRITE/VMCLEAR/VMPTRLD 访问，然后从 guest L1 中间弹出来，最后进入到 L1 中间，L1 检查到的原因就是这些
                           - [ ] check 一下代码，如何让 L0 的 vmlaunch 正好进入到 L1 的 vmexit 的处理位置
                 - [ ] L0 是处理力所能及的事情, 既然已经到了 host 中间，减少在虚拟化中间的执行（L1 中执行）才是最高效的
                   - [ ] 如果处理力所能及的事情，会不会导致 L1 的逻辑不正确

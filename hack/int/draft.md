@@ -61,7 +61,7 @@ System software performing directed EOIs must retain a mapping associating level
 
 实际上，这个在 kvm 中也是很重要的:
 
-> pv eoi 经过posted interrupt技术优化后，注入irq不发生vm exit。但是guest在应答irq的时候，还是要发生vm exit。 所以有了pv eoi技术： a，guest和host通过msr寄存器，协商出来一个地址，用作eoi使用。前提是host和guest都支持pv eoi。 b，guest的pa，和host的va，通过映射计算，就是在操作同一块内存。 那么就不用发生vm exit的情况下，达到guest和host内外通信的目的。同样原理的还有kvm clock、steal time等。
+> pv eoi 经过 posted interrupt 技术优化后，注入 irq 不发生 vm exit。但是 guest 在应答 irq 的时候，还是要发生 vm exit。 所以有了 pv eoi 技术： a，guest 和 host 通过 msr 寄存器，协商出来一个地址，用作 eoi 使用。前提是 host 和 guest 都支持 pv eoi。 b，guest 的 pa，和 host 的 va，通过映射计算，就是在操作同一块内存。 那么就不用发生 vm exit 的情况下，达到 guest 和 host 内外通信的目的。同样原理的还有 kvm clock、steal time 等。
 >
 > 参考: https://cloud.tencent.com/developer/article/1087271
 

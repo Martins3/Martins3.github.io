@@ -37,13 +37,13 @@ https://stackoverflow.com/questions/26539603/why-bootloaders-for-x86-use-16bit-c
 ### macro
 - http://web.mit.edu/rhel-doc/3/rhel-as-en-3/irp.html
 
-```
+```plain
 .irp    param,1,2,3
 move    d\param,sp@-
 .endr
 ```
 is equivalent to assembling
-```
+```plain
 move    d1,sp@-
 move    d2,sp@-
 move    d3,sp@-
@@ -63,7 +63,7 @@ move    d3,sp@-
 1. include 源文件
 
 https://stackoverflow.com/questions/39457263/include-assembly-file-in-another-assembly-file
-```
+```plain
 # include "test.S"
 ```
 
@@ -121,7 +121,7 @@ https://github.com/nemasu/asmttpd : 终极实战项目
  [main maybe is not a function](https://jroweboy.github.io/c/asm/2015/01/26/when-is-main-not-a-function.html)
 
 https://www.nasm.us/doc/nasmdoc0.html : nasm 的教程，nasm 和 gcc 的关系是什么 ? gcc 会调用 nasm 吗 ?
-，似乎 linux 使用的是as 作为汇编器，从 Makefile 中间可以找到证据吗 ?
+，似乎 linux 使用的是 as 作为汇编器，从 Makefile 中间可以找到证据吗 ?
 
 2. 项目 : 找到那个 assembly 的 http 作为项目练手。
 
@@ -132,9 +132,9 @@ https://github.com/cirosantilli/x86-assembly-cheat : 看来如何编译这些代
 https://github.com/cirosantilli/x86-bare-metal-examples
   - https://stackoverflow.com/questions/22054578/how-to-run-a-program-without-an-operating-system/32483545#32483545
 
-https://news.ycombinator.com/item?id=22279051 : 学习amd64的最佳教程
+https://news.ycombinator.com/item?id=22279051 : 学习 amd64 的最佳教程
 
-https://blog.stephenmarz.com/2020/05/20/assemblys-perspective : 汇编blog
+https://blog.stephenmarz.com/2020/05/20/assemblys-perspective : 汇编 blog
 
 https://blog.yossarian.net/2020/06/13/How-x86_64-addresses-memory : 终于看到总结 x86 寻址的总结了
 

@@ -21,7 +21,7 @@ Modern Intel and AMD CPUs provide a constant Time Stamp Counter (TSC). The count
 A CPU with a **constant TSC frequency** is necessary in order to use the TSC as a clock source for KVM guests.
 
 - [ ] What we get in the kvmtool, kind of dispointed.
-```
+```plain
 root@qemux86:~# cat /sys/devices/system/clocksource/clocksource0/available_clocksource
 refined-jiffies jiffies
 ```

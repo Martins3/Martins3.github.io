@@ -24,7 +24,7 @@ BIOS 主要提供了显示，键盘，disk 和 memory, pci 等功能[^6]，内�
 - [ ] Timer
   - [x] rtc.S : 0x70 端口
   - linux 使用的是
-  - [ ] pit 和 
+  - [ ] pit 和
 
 - [ ] UEFI 作者也没有搞定，所以 seabios , coreboot 和 tianocore 的关系是什么 ?
 
@@ -50,11 +50,11 @@ boot sector 存在标准格式的，bios 来执行这个代码。
 - [x] initrd / initramdisk 是做什么 ? 猜测是，靠 grub 加载进来的，在内存的文件系统，然后内核靠他将真正的文件系统 mount 进来
     - 但是此时还是没有 驱动 ？
 
-多个 partition 都可以作为 boot sector 是因为 disk 的第一个 sector 存储 MBR[^1] 
+多个 partition 都可以作为 boot sector 是因为 disk 的第一个 sector 存储 MBR[^1]
 
 
-- [ ] `make -C printf run` : 如果将 
-```
+- [ ] `make -C printf run` : 如果将
+```plain
 	# printf '\125\252' >> '$(MAIN)'
 	printf '\x55\xAA' >> '$(MAIN)'
 ```
@@ -88,7 +88,7 @@ end:
 
 - [ ] ./c_hello_world
   - [ ] linker.ld  : 里面两个 stackoverflow
-  - [ ] main.c 为什么将 s[i] 做 mask ? / 
+  - [ ] main.c 为什么将 s[i] 做 mask ? /
   - [ ] objdump 看看内容
   - [ ] bootloader 和 cpp :  http://3zanders.co.uk/2017/10/18/writing-a-bootloader3/
 

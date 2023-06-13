@@ -153,13 +153,13 @@ struct scan_control {
 };
 ```
 - nr_to_reclaim：需要回收的页面数量；
-- gfp_mask：申请分配的掩码，用户申请页面时可以通过设置标志来限制调用底层文件系统或不允许读写存储设备，最终传递给LRU处理；
+- gfp_mask：申请分配的掩码，用户申请页面时可以通过设置标志来限制调用底层文件系统或不允许读写存储设备，最终传递给 LRU 处理；
 - order：申请分配的阶数值，最终期望内存回收后能满足申请要求；
 - nodemask：内存节点掩码，空指针则访问所有的节点；
-- priority：扫描LRU链表的优先级，用于计算每次扫描页面的数量(total_size >> priority，初始值12)，值越小，扫描的页面数越大，逐级增加扫描粒度；
+- priority：扫描 LRU 链表的优先级，用于计算每次扫描页面的数量(total_size >> priority，初始值 12)，值越小，扫描的页面数越大，逐级增加扫描粒度；
 - may_writepage：是否允许把修改过文件页写回存储设备；
 - may_unmap：是否取消页面的映射并进行回收处理；
-- may_swap：是否将匿名页交换到swap分区，并进行回收处理；
+- may_swap：是否将匿名页交换到 swap 分区，并进行回收处理；
 - nr_scanned：统计扫描过的非活动页面总数；
 - nr_reclaimed：统计回收了的页面总数
 
@@ -182,7 +182,7 @@ https://lwn.net/Articles/851184/ 似乎现在又发布了一个 LRU 了
  #endif
  };
 ```
-> 从其中跟踪的代码看，似乎只有inode 的管理在使用lru_list
+> 从其中跟踪的代码看，似乎只有 inode 的管理在使用 lru_list
 
 - [ ] enum pageflags::PG_lru ? why is special ? why we need time for it ?
   - [ ] check `SetPageLRU`

@@ -113,7 +113,7 @@ number, it will ignore the cached MMIO information and handle the page
 fault through the slow path.
 
 #### role
->  role.level:
+> role.level:
 >    The level in the shadow paging hierarchy that this shadow page belongs to.
 >    1=4k sptes, 2=2M sptes, 3=1G sptes, etc.
 
@@ -386,7 +386,7 @@ static bool is_mmio_spte(u64 spte)
 
 - [ ] detect_write_flooding
     - [ ] Skip write-flooding detected for the sp whose level is 1, because it can become unsync, then the guest page is not write-protected.
-        - 不需要对于 level 1 (leaf 进行write procet 保护), 反正总是 invlpg 会主动同步的 的想法不对，进行了保护那么就可以知道那些 sp 是 unsync 的，在 tlb flush 的时候进行 unsync 就可以了
+        - 不需要对于 level 1 (leaf 进行 write procet 保护), 反正总是 invlpg 会主动同步的 的想法不对，进行了保护那么就可以知道那些 sp 是 unsync 的，在 tlb flush 的时候进行 unsync 就可以了
         - 所以，所有人都需要保护，从而可以截获消息，但是 leaf 可以标记为 unsync, 而 non leaf 需要立刻同步
     - [ ] 调用者 `kvm_mmu_pte_write` : 含义，如果出现了多次模拟, 如果 detect_write_flooding 条件成立，那么调用 kvm_mmu_prepare_zap_page 清理 sp 以及下面的所有的 page table, 递归的向下。
         - [ ] 似乎现在同步体系中间，存在如果一个 guest shadow page table 没有对应的 sp, 并不会因此而创建 sp, 而是等到在 page fault 的再创建
@@ -1376,7 +1376,7 @@ static int rmap_add(struct kvm_vcpu *vcpu, u64 *spte, gfn_t gfn)
 	return pte_list_add(vcpu, spte, rmap_head);
 }
 ```
-所以，gfns 就是shadow page 用于存放自己关联的 guest page table 的内容。
+所以，gfns 就是 shadow page 用于存放自己关联的 guest page table 的内容。
 
 下面分析 gfn 的作用:
 1. kvm_mmu_get_page 是唯一赋值的位置
@@ -1432,7 +1432,7 @@ write protect 的时候，显然可以知道是在哪一个 spte 上的，更新
 mmu_need_write_protect 的注释:
 CPU1: 正确的顺序是 `sp->unsync`，然后 spte writable。
 
-- [ ] 是不是host 使用的页面，只有页表被设置为 write protect 的 ?
+- [ ] 是不是 host 使用的页面，只有页表被设置为 write protect 的 ?
 
 **当修改 guest page table 的时候，该页面由于被 write protection,
 退出，根据 gfn(也就是) 可以找到其对应的 spte,
@@ -1697,7 +1697,7 @@ segmented_write ==> emulate_ops::write_emulated
 
 direct_page_fault 和 paging64_page_fault 的位置都调用，page_fault_handle_page_track 检查，如果访问的 page 被 track 那么访问需要被 emulate，具体在 `kvm_mmu_page_fault` 中间。
 
-- [ ] git show .... : 这是一个主线
+- [ ] git show …… : 这是一个主线
     - [ ] 猜测，使用 write track ，在 `emulator_write_phys` 中:
         - [ ] kvm_vcpu_write_guest : 完成写的模拟
         - [ ] 通知所有人，将写操作可以同步到 sync 中间了
@@ -1866,7 +1866,7 @@ but what we currently interests in  is `init_kvm_tdp_mmu`
     3. https://events.static.linuxfound.org/sites/events/files/slides/Guangrong-fast-write-protection.pdf
     4. 再次从 mmu notifier 入手，理解其中的基本问题
     5. 理解这一个注释的含义
-```
+```plain
 /*
  * Fetch a shadow pte for a specific level in the paging hierarchy.
  * If the guest tries to write a write-protected page, we need to
@@ -2351,4 +2351,53 @@ struct kvm_vcpu_arch {
 	struct kvm_mmu_memory_cache mmu_shadow_page_cache; // 给 shadow page 使用的
 	struct kvm_mmu_memory_cache mmu_shadowed_info_cache;
 	struct kvm_mmu_memory_cache mmu_page_header_cache;
+```
+
+## pae 在这里到底是个什么概念
+
+在 `__kvm_mmu_create` 中存在
+```c
+	mmu->pae_root = page_address(page);
+```
+
+## 分析下，为什么
+
+```c
+static __init int svm_hardware_setup(void)
+{
+  // ...
+	/* Force VM NPT level equal to the host's paging level */
+	kvm_configure_mmu(npt_enabled, get_npt_level(),
+			  get_npt_level(), PG_LEVEL_1G);
+```
+
+搞了半天，就是为了这个接口提供的数值:
+```c
+static inline int kvm_mmu_get_tdp_level(struct kvm_vcpu *vcpu)
+```
+
+影响:
+- kvm_calc_tdp_mmu_root_page_role
+  - 不理解，为什么需要将 kvm_mmu_page_role 中初始化 kvm_mmu_page_role ，这不是给 shadow page table 用的吗?
+- kvm_init_shadow_npt_mmu
+
+这个做啥的?
+```diff
+tree 5bb406f69834e69eedde8e263eaa67757d76c611
+parent f83a4a6932f002701db19f968938ada1289f5e3c
+author Sean Christopherson <sean.j.christopherson@intel.com> Wed Jul 15 20:41:20 2020 -0700
+committer Paolo Bonzini <pbonzini@redhat.com> Thu Jul 30 18:17:16 2020 -0400
+
+KVM: x86: Dynamically calculate TDP level from max level and MAXPHYADDR
+
+Calculate the desired TDP level on the fly using the max TDP level and
+MAXPHYADDR instead of doing the same when CPUID is updated.  This avoids
+the hidden dependency on cpuid_maxphyaddr() in vmx_get_tdp_level() and
+also standardizes the "use 5-level paging iff MAXPHYADDR > 48" behavior
+across x86.
+
+Suggested-by: Paolo Bonzini <pbonzini@redhat.com>
+Signed-off-by: Sean Christopherson <sean.j.christopherson@intel.com>
+Message-Id: <20200716034122.5998-8-sean.j.christopherson@intel.com>
+Signed-off-by: Paolo Bonzini <pbonzini@redhat.com>
 ```

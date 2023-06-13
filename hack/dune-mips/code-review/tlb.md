@@ -76,6 +76,6 @@ PF_VCPU 表示当前的进程执行 `r = kvm_mips_callbacks->vcpu_run(run, vcpu)
 
 
 从源代码分析，以前取决于 guest 的 wired 寄存器的数值, 只要初始化的时候，将 wired 处理掉，那么就可以了
-```
+```plain
 	unsigned int wired = read_gc0_wired();
 ```

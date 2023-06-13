@@ -79,7 +79,7 @@ that whenever a power button event is received, the shutdown command is
 executed.
 
 ## Official Documents
-### [ ](https://uefi.org/specs/ACPI/6.4/06_Device_Configuration/Device_Configuration.html)
+### [](https://uefi.org/specs/ACPI/6.4/06_Device_Configuration/Device_Configuration.html)
 
 https://lwn.net/Articles/367630/
 
@@ -119,12 +119,12 @@ https://lwn.net/Articles/367630/
 
 acpi 的解析[^2]
 
-原来kernel中最终是通过acpi_evaluate_object 来调用bios中在asl中定义好的函数啊 [^1]
+原来 kernel 中最终是通过 acpi_evaluate_object 来调用 bios 中在 asl 中定义好的函数啊 [^1]
 
 ## 在 Guest 中间 disassembly acpi
 参考 : https://01.org/linux-acpi/utilities
 
-```
+```plain
 $ acpidump > acpidump.out
 $ acpixtract -a acpidump.out
 $ iasl -d TABLE.dat
@@ -144,7 +144,7 @@ acpi_build 会进行两次配置
 - [ ] 既然 i440fx 已经是一个 pcie 设备了，为什么需要将自己的端口通过 acpi 提供出去
 
 #### i440fx-pm 配置 acpi-evt 的端口
-```
+```plain
 0000-0cf7 : PCI Bus 0000:00
   0000-001f : dma1
   0020-0021 : pic1
@@ -187,7 +187,7 @@ acpi_build 会进行两次配置
 ```
 
 从 pci -vvv 中间部分截取的信息:
-```
+```plain
 00:01.3 Bridge: Intel Corporation 82371AB/EB/MB PIIX4 ACPI (rev 03)
     Subsystem: Red Hat, Inc. Qemu virtual machine
     Control: I/O+ Mem+ BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR+ FastB2B- DisINTx-
@@ -507,7 +507,7 @@ acpi 是内核上的设计
 
 
 在 acpi_pci_root_add 中，调用 pci_acpi_scan_root
-```
+```plain
 #0  acpi_pci_root_add (device=0xffff888100217000, not_used=0xffffffff82063c60 <root_device_ids>) at drivers/acpi/pci_root.c:517
 #1  0xffffffff8146a1c3 in acpi_scan_attach_handler (device=0xffff888100217000) at drivers/acpi/scan.c:2038
 #2  acpi_bus_attach (device=device@entry=0xffff888100217000, first_pass=first_pass@entry=true) at drivers/acpi/scan.c:2086
@@ -527,7 +527,7 @@ acpi 是内核上的设计
 ```
 
 pcibios_add_bus 就是 acpi_pci_add_bus，最后调用到 bios 的处理函数，利用 bios 的功能实现 pci host bridge 的查找:
-```
+```plain
 #0  acpi_evaluate_object (handle=handle@entry=0xffff8881000efde0, pathname=pathname@entry=0xffffffff822a918e "_DSM", external_params=external_params@entry=0xffffc900000 13a80, return_buffer=return_buffer@entry=0xffffc90000013a70) at drivers/acpi/acpica/nsxfeval.c:167
 #1  0xffffffff81464717 in acpi_evaluate_dsm (handle=handle@entry=0xffff8881000efde0, guid=guid@entry=0xffffffff8205f340 <pci_acpi_dsm_guid>, rev=rev@entry=3, func=func@ entry=8, argv4=argv4@entry=0x0 <fixed_percpu_data>) at drivers/acpi/utils.c:664
 #2  0xffffffff81448751 in acpi_pci_add_bus (bus=0xffff888100259c00) at ./include/linux/acpi.h:40

@@ -12,7 +12,7 @@
   - [apic](#apic)
   - [io apic](#io-apic)
   - [question](#question)
-- [关于amd64 架构的疑问](#关于amd64-架构的疑问)
+- [关于 amd64 架构的疑问](#关于amd64-架构的疑问)
   - [tss](#tss)
 - [要不要学一波汇编语言](#要不要学一波汇编语言)
 
@@ -24,7 +24,7 @@ https://wki.osdev.org/Setting_Up_Long_Modei
 ## control register
 https://e.wikipedia.org/wiki/Control_registern
 
-https://wiki.odev.org/CPU_Registers_x86-64#IA32_EFERs : x86 到底有多少 register 
+https://wiki.odev.org/CPU_Registers_x86-64#IA32_EFERs : x86 到底有多少 register
 
 #### cr0
 [wiki](https://en.wikipedia.org/wiki/Control_register#CR0)
@@ -96,7 +96,7 @@ I guess it's mainly used for enter user mode and return from user mode whne hand
 
 ## question
 > 关于需要硬件的问题:
-> 1. context switch 的硬件支持，以前使用TSS 为什么现在不使用了
+> 1. context switch 的硬件支持，以前使用 TSS 为什么现在不使用了
 > 2. exception interrupt syscall 需要的支持
 > 3. io 映射， inb outb 的实现 ?
 > 4. 用户和内核，用户和用户之间如何实现的保护的
@@ -104,20 +104,20 @@ I guess it's mainly used for enter user mode and return from user mode whne hand
 > 6. 内存屏障指令
 
 
-# 关于amd64 架构的疑问
-1. cs gs fs 三个segment 寄存器的作用是什么 ?
+# 关于 amd64 架构的疑问
+1. cs gs fs 三个 segment 寄存器的作用是什么 ?
 2. gdt  tss  idt 各自运行机制是什么
 3. msr 寄存器等作用
 
 
 4. swapfs 等各种特权指令
-> 直接参考v3 中的特权指令
+> 直接参考 v3 中的特权指令
 
 
 
 
 > 需要最终可以看的懂 entry_64.S(32 到 64 的切换) 和 head_64.S 中间的所有的内容即可。
-```
+```plain
  * entry.S contains the system-call and fault low-level handling routines.
  *
  * Some of this is documented in Documentation/x86/entry_64.txt

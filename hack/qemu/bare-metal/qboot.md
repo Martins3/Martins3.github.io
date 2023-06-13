@@ -24,7 +24,7 @@ static inline void int10_putchar(struct biosregs *args)
 
 
 分析一下 Qemu 的加载过程:
-```
+```plain
 #0  x86_bios_rom_init (rom_memory=0x5555564456b0, isapc_ram_fw=false) at /home/maritns3/core/qemu/hw/i386/x86.c:657
 #1  0x00005555558e4294 in pc_system_firmware_init (pcms=0x555556306e30, rom_memory=0x5555564456b0) at /home/maritns3/core/qemu/hw/i386/pc_sysfw.c:242
 #2  0x00005555558dd98a in pc_memory_init (pcms=pcms@entry=0x555556306e30, system_memory=system_memory@entry=0x555556375800, rom_memory=rom_memory@entry=0x5555564456b0,
@@ -45,7 +45,7 @@ struct Object // 所有对象的 base class
 ```c
     MachineClass *machine_class = MACHINE_GET_CLASS(machine);
 ```
-将 machine 转化为 Object 类型，Object 类型中间持有了其所属的Class 指针。
+将 machine 转化为 Object 类型，Object 类型中间持有了其所属的 Class 指针。
 
 ```c
 DEFINE_I440FX_MACHINE(v4_2, "pc-i440fx-4.2", NULL,

@@ -377,7 +377,7 @@ static void ptrace_unfreeze_traced(struct task_struct *task)
 }
 ```
 
-```
+```plain
 
        PTRACE_ATTACH
               Attach to the process specified in pid, making it a tracee of the calling process.  The tracee is sent a SIGSTOP, but  will
@@ -409,7 +409,7 @@ Only a PTRACE_SEIZEd process can accept PTRACE_INTERRUPT and PTRACE_LISTEN comma
 - [ ] PTRACE_ATTACH 会自动向 tracee 发送一个 SIGSTOP，但是如果此时，tracee 接受到了来自于其他来源的 SIGSTOP，可能其会忽视。
 
 
-       Since attaching sends SIGSTOP and the tracer usually suppresses it, this may cause a stray EINTR return from the currently execut‐
+     plain  Since attaching sends SIGSTOP and the tracer usually suppresses it, this may cause a stray EINTR return from the currently execut‐
        ing system call in the tracee, as described in the "Signal injection and suppression" section.
 
 - [ ] 所以，为什么要进行 suppress signal 啊
@@ -419,7 +419,7 @@ Since Linux 3.4, PTRACE_SEIZE can be used instead of PTRACE_ATTACH.  PTRACE_SEIZ
 to stop it after attach (or at any other time) without sending it any signals, use **PTRACE_INTERRUPT** command.
 
 
-       where cmd is PTRACE_CONT, PTRACE_LISTEN, PTRACE_DETACH, PTRACE_SYSCALL, PTRACE_SINGLESTEP,  PTRACE_SYSEMU,  or  PTRACE_SYSEMU_SIN‐
+   plain    where cmd is PTRACE_CONT, PTRACE_LISTEN, PTRACE_DETACH, PTRACE_SYSCALL, PTRACE_SINGLESTEP,  PTRACE_SYSEMU,  or  PTRACE_SYSEMU_SIN‐
        GLESTEP.   If  the  tracee is in signal-delivery-stop, sig is the signal to be injected (if it is nonzero).  Otherwise, sig may be
        ignored.  (When restarting a tracee from a ptrace-stop other than signal-delivery-stop, recommended practice is to always  pass  0
        in sig.)
@@ -433,8 +433,8 @@ to stop it after attach (or at any other time) without sending it any signals, u
 
 https://stackoverflow.com/questions/9305992/if-threads-share-the-same-pid-how-can-they-be-identified
 课代表总结：
-用户看到的是tgid: thread group id
-kernel看到的是pid
+用户看到的是 tgid: thread group id
+kernel 看到的是 pid
 
 ## 一个技巧
 可以在 send_signal_locked 的这个地方打点，从而知道一个进程是如何被杀掉的。

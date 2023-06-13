@@ -18,7 +18,7 @@ x86_64 also has a feature which is not available on i386, the ability to automat
 https://unix.stackexchange.com/questions/491437/how-does-linux-kernel-switches-from-kernel-stack-to-interrupt-stack
 - [ ] 代码上的证据在哪里 ?
 
-## abstract 
+## abstract
 不同的架构如何支持 stack 的 ?　使用的指令不同，在内核中间的配置不同 ?
 1. x86-32
 2. amd64
@@ -31,7 +31,7 @@ https://unix.stackexchange.com/questions/491437/how-does-linux-kernel-switches-f
 3. stack 和 calling convention 的效果
 4. glibc 是如何帮助用户程序初始化 stack 的 ?
 5. 用户程序的 argc 和 argv 以及 环境变量是放在 stack 的哪一个位置的 ?
-6. 从编译器的角度，stack 是如何实现的 ? llvm 
+6. 从编译器的角度，stack 是如何实现的 ? llvm
 
 内核态的 stack :
 2. exception 的 stack 在哪里 ?
@@ -41,13 +41,13 @@ https://unix.stackexchange.com/questions/491437/how-does-linux-kernel-switches-f
 5. stack 和 resource limit
 
 
-1. stack 的增长和缩减的时机和方法，如果由于递归创建出来了一个巨大的 stack，然后逐级return 之后，这些 stack 的空间会被回收吗 ?
+1. stack 的增长和缩减的时机和方法，如果由于递归创建出来了一个巨大的 stack，然后逐级 return 之后，这些 stack 的空间会被回收吗 ?
 2. stack 和 一般的 anon mmap 的区别是什么 ? 或者说从内核的角度来说，
 3. stack 是使用系统调用分配的 ? 还是 fork 的时候创建的 ? stack 对应的 vma 是什么创建的 ?
 
 
-4. cat /proc/self/maps : vma 有名字吗，他怎么知道是 stack 
-```
+4. cat /proc/self/maps : vma 有名字吗，他怎么知道是 stack
+```plain
 7ffc83f45000-7ffc83f67000 rw-p 00000000 00:00 0                          [stack]
 ```
 
@@ -56,12 +56,12 @@ https://unix.stackexchange.com/questions/491437/how-does-linux-kernel-switches-f
 
 
 程序中发生函数调用时，计算机做如下操作：
-- 首先把指令寄存器EIP（它指向当前CPU将要运行的 下一条指令的地址）中的内容压入栈，作为程序的返 回地址（下文中用RET表示）；
-- 之后放入栈的是基址寄存器EBP，它指向当前函数栈 帧（stack frame） 的底部；
-- 然后把当前的栈指针ESP拷贝到EBP，作为新的基地 址，
-- 最后为本地变量的动态存储分配留出一定空间，并把 ESP减去适当的数值
+- 首先把指令寄存器 EIP（它指向当前 CPU 将要运行的 下一条指令的地址）中的内容压入栈，作为程序的返 回地址（下文中用 RET 表示）；
+- 之后放入栈的是基址寄存器 EBP，它指向当前函数栈 帧（stack frame） 的底部；
+- 然后把当前的栈指针 ESP 拷贝到 EBP，作为新的基地 址，
+- 最后为本地变量的动态存储分配留出一定空间，并把 ESP 减去适当的数值
 
-提高成功率的两种方法 : 
+提高成功率的两种方法 :
 1. 在 shellcode 前面添加填充代码
 2. 在返回值附近重复跳转地址
 

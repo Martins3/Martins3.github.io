@@ -7,7 +7,7 @@
 https://busybox.busybox.narkive.com/KfWYHoQf/no-such-device-tty2-tty3-tty4-on-embedded-system
 
 使用了一个解决方法:
-```
+```plain
 ln -sf null tty2
 ln -sf null tty3
 ln -sf null tty4

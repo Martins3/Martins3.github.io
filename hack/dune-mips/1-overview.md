@@ -208,7 +208,7 @@ vmx_handle_syscall 的作用:
 - SYSCALL_TBL 启动的位置的确定是 dune 加载的时候确定的，前提是内核地址空间是固定的
 
 - [x] 最后如何进入到 user land 注册到的 syscall
-  - `__dune_syscall` 理解说明，是存在两个syscall table, user mode 采用 vmcall，然后进入到 vmx_handle_syscall 中间
+  - `__dune_syscall` 理解说明，是存在两个 syscall table, user mode 采用 vmcall，然后进入到 vmx_handle_syscall 中间
   - kernel mode 采用取决于 dune_register_syscall_handler 使用
 
 - [ ] 为什么可以切换到内核态，那么这就需要 sandbox 的理解了

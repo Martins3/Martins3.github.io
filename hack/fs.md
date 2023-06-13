@@ -2,7 +2,7 @@
 
 <!-- vim-markdown-toc GitLab -->
 
-* [打通fs的方法](#打通fs的方法)
+* [打通 fs 的方法](#打通fs的方法)
     * [TODO](#todo)
 * [VFS](#vfs)
     * [lookup](#lookup)
@@ -100,7 +100,7 @@
 感觉需要快速浏览一下书才可以心中有个大致的概念。
 
 
-## 打通fs的方法
+## 打通 fs 的方法
 1. journal 的实现了解一下
 2. lfs 的实现 (了解)
 3. 文件系统的启动过程
@@ -136,12 +136,12 @@ VFS 提供的功能:
 2. 提供一些 generic 的实现 :
 3. 一些需要具体文件系统实现的接口 :
 
-file_operations::mkdir 作为 file 的inode 和 dir 有区别吗 ?
+file_operations::mkdir 作为 file 的 inode 和 dir 有区别吗 ?
 
 | x    | inode_operations                                | file_operations     |
 |------|-------------------------------------------------|---------------------|
 | dir  | inode operation 应该是主要提供给 dir 的操作的， | 主要是 readdir 操作 |
-| file | attr acl 相关                                   | 各种IO              |
+| file | attr acl 相关                                   | 各种 IO              |
 
 所以，不相关的功能被放到同一个 operation 结构体中间了。
 
@@ -160,7 +160,7 @@ file_operations::mkdir 作为 file 的inode 和 dir 有区别吗 ?
 
 * ***核心数据结构***
 1. 都是在什么时候装配的 ?
-2.
+
 
 ```c
 struct nameidata {
@@ -200,7 +200,7 @@ lookup_fast : 调用 `__d_lookup`
 1. d_alloc_parallel : ?
 2. `old = inode->i_op->lookup(inode, dentry, flags);` : vfs 提供 looup 接口
 
-使用ext2作为例子:
+使用 ext2 作为例子:
 ```c
 static struct dentry *ext2_lookup(struct inode * dir, struct dentry *dentry, unsigned int flags)
 {
@@ -358,11 +358,11 @@ struct file_operations {
 } __randomize_layout;
 ```
 
-2.
+
 
 #### aio(dated)
 1. 但是似乎是可以替代 read 和 write 的功能，比如 ext2 中间就没有为 ext2_file_operation 注册 read 和 write
-2. read_iter 和 write_iter 是用来实现 异步IO 的。 为什么可以实现 aio ? aio 在用户层的体现是什么 ?
+2. read_iter 和 write_iter 是用来实现 异步 IO 的。 为什么可以实现 aio ? aio 在用户层的体现是什么 ?
 
 aio 在工程上的具体使用 libaio 的库， https://oxnz.github.io/2016/10/13/linux-aio/
 
@@ -376,7 +376,7 @@ SYSCALL_DEFINE3(write, unsigned int, fd, const char __user *, buf, size_t, count
 
 vfs_write
 1. file_start_write 和 file_end_write 处理锁相关的(应该吧)
-2. `__vfs_write` : 首先尝试使用file_operation::write，然后尝试使用 new_sync_write
+2. `__vfs_write` : 首先尝试使用 file_operation::write，然后尝试使用 new_sync_write
 3. new_sync_write : 首先初始化 aio 相关的结构体，然后调用 write_iter
 
 ```c
@@ -479,12 +479,12 @@ io_getevents => read_events => aio_read_events => aio_read_events_ring
 aio_read_events_ring 会访问 kioctx::ring_pages 来提供给用户就绪的 io，使用 aio_complete 向其中添加。
 aio_complete 会调用 eventfd_signal，这是实现 epoll 机制的核心。
 
-> 1. io_submit 提交请求之后，然后返回到用户空间，用于完成IO的内核线程是如何管理的 ?　暂时没有找到，io_submit 开始返回的位置。
+> 1. io_submit 提交请求之后，然后返回到用户空间，用于完成 IO 的内核线程是如何管理的 ?　暂时没有找到，io_submit 开始返回的位置。
 > 2. aio 不能使用 page cache, 那么对于 metadata 的读取， aio 可以实现异步吗 ? (我猜测，应该所有的文件系统都是不支持的吧!)
 
 ## file writeback
 fs/file-writeback.c 中间到底完成什么工作
-// 具体内容有点迷惑，但是file-writeback.c 绝对不是 page-writeback.c 更加底层的东西
+// 具体内容有点迷惑，但是 file-writeback.c 绝对不是 page-writeback.c 更加底层的东西
 // 其利用 flusher thread ，然后调用 do_writepages 实现将整个文件，甚至整个文件系统写回，
 
 - [ ] so file-writeback and page-writeback.c are one of two base modules of vmscan, another base moduler is swap.
@@ -595,7 +595,7 @@ The callback function set here is `ep_ptable_queue_proc`
 
 ## flock
 首先，区分一件事情 :
-https://www.kernel.org/doc/html/latest/filesystems/locking.html : 说明几乎VFS api 调用的时候需要持有的锁
+https://www.kernel.org/doc/html/latest/filesystems/locking.html : 说明几乎 VFS api 调用的时候需要持有的锁
 
 主要内容在 : fs/locks.c
 
@@ -631,7 +631,7 @@ tmp proc sysfs
 
 ramfs 和 ext2 fs 应该可以作为两个典型
 
-> 怀疑这个分类有点问题，正确的分类应该参考几个mount 函数
+> 怀疑这个分类有点问题，正确的分类应该参考几个 mount 函数
 
 
 sysfs : device model 的形象显示，更加重要的是，让驱动有一个和用户沟通的快捷方式。
@@ -694,7 +694,7 @@ struct dentry_operations {
 4. 所以标准输入，标准输出的 fd 为 0 1 2 设置于支持都是如何形成的 ?
 
 
-[^1] 提供了所有的API的解释说明，主要是几个 operation，需要解释一下:
+[^1] 提供了所有的 API 的解释说明，主要是几个 operation，需要解释一下:
 
 ```c
 int generic_file_mmap(struct file * file, struct vm_area_struct * vma)
@@ -716,7 +716,7 @@ struct vm_operations_struct generic_file_vm_ops = {
 ```
 
 ext2 的内容:
-```
+```plain
 #define ext2_file_mmap  generic_file_mmap
 ```
 
@@ -789,12 +789,12 @@ TODO
 
 | function    | explaination                                                                                                                                                                                             |
 |-------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| lock_mount  | 后挂载的文件系统会在挂载到前一次挂载的文件系统的根dentry上。lock_mount这个函数的一部分逻辑就保证了在多文件系统挂载同路径的时候，让每个新挂载的文件系统都顺序的挂载（覆盖）上一次挂载实例的根dentry。[^5] |
+| lock_mount  | 后挂载的文件系统会在挂载到前一次挂载的文件系统的根 dentry 上。lock_mount 这个函数的一部分逻辑就保证了在多文件系统挂载同路径的时候，让每个新挂载的文件系统都顺序的挂载（覆盖）上一次挂载实例的根 dentry。[^5] |
 | lokup_mount | 通过 parent fs 的 vfsmount 和 dentry 找到在该位置上的 mount 实例，lock_mount 需要调用从而找到多次在同一个位置 mount 的最终 mount 点                                                                      |
 
 
 
-两种特殊的mount 情况:
+两种特殊的 mount 情况:
 1. 同一个设备可以 mount 到不同的位置
     1. 可以理解为多个进入到该文件系统可以多个入口
 2. 多个设备可以 mount 到同一个目录中间
@@ -806,15 +806,15 @@ loop device: The loop device driver transforms operations on the associated bloc
 > 1. 问题是，loop device 的实现方法在哪里，不会是 deriver/block/loop 吧
 > 2. dev/loop 的文件是做什么的 ?  `mkfs.xfs -f /dev/loop0` 的作用是啥 ?
 
-理解一下mount系统调用:
-实际上flags + data对应mount命令的所有-o选项。那怎么区分哪些属于flags哪些属于data呢？
-在深入内核代码一探究竟之前（本篇不深入了）我们可以通俗的认为flags就是所有文件系统通用的挂载选项，由VFS层解析。data是每个文件系统特有的挂载选项，由文件系统自己解析。[^4]
+理解一下 mount 系统调用:
+实际上 flags + data 对应 mount 命令的所有-o 选项。那怎么区分哪些属于 flags 哪些属于 data 呢？
+在深入内核代码一探究竟之前（本篇不深入了）我们可以通俗的认为 flags 就是所有文件系统通用的挂载选项，由 VFS 层解析。data 是每个文件系统特有的挂载选项，由文件系统自己解析。[^4]
 > 其中还总结了，/mnt/mi/linux/tools/include/uapi/linux/mount.h MS 之类的宏和 mount -o 的对应关系
 
 
-file_system_type + super block + mount的关系 : file_system_type 一个文件系统中间只有一个，每一个 partitions 被 mount 之后，都可以创建一个 superblock，当其中的
-1. sda1同时挂在了/mnt/a和/mnt/x上，所以它有两个挂载实例对应同一个super_block. : 当一个设备被mount的了，就会存在一个 superblock，但是之后无论 mount 多少次，都是只有一个
-2. 每mount一次就会存在一个 mount 实例
+file_system_type + super block + mount 的关系 : file_system_type 一个文件系统中间只有一个，每一个 partitions 被 mount 之后，都可以创建一个 superblock，当其中的
+1. sda1 同时挂在了/mnt/a 和/mnt/x 上，所以它有两个挂载实例对应同一个 super_block. : 当一个设备被 mount 的了，就会存在一个 superblock，但是之后无论 mount 多少次，都是只有一个
+2. 每 mount 一次就会存在一个 mount 实例
 
 
 
@@ -876,7 +876,7 @@ struct mount {
 
 
 老版本的记录:
-1. register_filesystem => file_system_type::mount => 调用文件系统自定义mount函数，该函数只是 mount_nodev 的封装，作用是提供自己的 fill_super
+1. register_filesystem => file_system_type::mount => 调用文件系统自定义 mount 函数，该函数只是 mount_nodev 的封装，作用是提供自己的 fill_super
 2. fill_super 完成的基本任务 :
 
 
@@ -936,17 +936,17 @@ do_mount
     2. vfs_get_tree :  sget and fill_super
     3. vfs_create_mount : init vfsmount
 
-从do_mount的代码可以它主要就是：
-- 将dir_name解析为path格式到内核
-- 一路解析flags位表，将flags拆分位mnt_flags和sb_flags
-- 根据flags中的标记，决定下面做哪一个mount操作。
+从 do_mount 的代码可以它主要就是：
+- 将 dir_name 解析为 path 格式到内核
+- 一路解析 flags 位表，将 flags 拆分位 mnt_flags 和 sb_flags
+- 根据 flags 中的标记，决定下面做哪一个 mount 操作。
 
-do_add_mount函数主要做两件事：
-1. lock_mount确定本次挂载要挂载到哪个父挂载实例parent的哪个挂载点mp上。
-2. 把newmnt挂载到parent的mp下，完成newmnt到全局的安装。安装后的样子就像我们前文讲述的那样。
+do_add_mount 函数主要做两件事：
+1. lock_mount 确定本次挂载要挂载到哪个父挂载实例 parent 的哪个挂载点 mp 上。
+2. 把 newmnt 挂载到 parent 的 mp 下，完成 newmnt 到全局的安装。安装后的样子就像我们前文讲述的那样。
 
 #### pivot_root
-1. 为什么更改 root 的mount 位置存在这种诡异的需求啊
+1. 为什么更改 root 的 mount 位置存在这种诡异的需求啊
     1. 找到使用这个的软件
 
 
@@ -957,7 +957,7 @@ super 作为一个文件系统实例的信息管理中心，很多动态信息�
 
 mount 的时候，首先需要加载 superblock
 
-问题1 : kill super 到底是在做什么 ?
+问题 1 : kill super 到底是在做什么 ?
 ```c
 void kill_anon_super(struct super_block *sb)
 {
@@ -993,7 +993,7 @@ An example for a file system without disk support is the ramfs_mount() function 
 > 但是检查了一下 reference ，感觉存在疑惑 !
 > 其次 TODO 这些 kill_super 函数 和 super_operation::put_super 的关系是什么 ?
 
-问题2 : 各种 mount 辅助函数，搞不清楚到底谁在使用新版本的接口
+问题 2 : 各种 mount 辅助函数，搞不清楚到底谁在使用新版本的接口
 - mount_bdev(), which mounts a file system stored on a block device
 - mount_single(), which mounts a file system that shares an instance between all mount operations
 - mount_nodev(), which mounts a file system that is not on a physical device
@@ -1090,7 +1090,7 @@ negative dentry [^6] :
 ## helper
 1. `inode_init_owner` :
 
-3. `d_make_root` : 通过 root inode 创建出来对应的 dentry，所有的inode 都是存在对应的 dentry 并且存放在 parent direcory file 中间，但是唯独 root 不行。
+3. `d_make_root` : 通过 root inode 创建出来对应的 dentry，所有的 inode 都是存在对应的 dentry 并且存放在 parent direcory file 中间，但是唯独 root 不行。
 
 ```c
 struct dentry *d_make_root(struct inode *root_inode)
@@ -1224,7 +1224,7 @@ inode.c 中间存在的函数:
 
 
 
-1. inode.c 中间存在好几个结尾数字为5的函数，表示什么含义啊 ?
+1. inode.c 中间存在好几个结尾数字为 5 的函数，表示什么含义啊 ?
 
 其中的集大成者是 iget5_locked ?
 ```c
@@ -1530,7 +1530,7 @@ https://github.com/filebench/filebench/issues/130
 似乎有的需要添加上 `run time`
 
 https://github.com/filebench/filebench/issues/112
-```
+```plain
 echo 0 > /proc/sys/kernel/ranomize_va_spaced
 ```
 解决 wait pid 的问题
@@ -1697,12 +1697,12 @@ fs/erofs : 什么场景下需要只读文件系统。
 
 1. dirty page 除了 address_space 的跟踪，还有什么位置？
     - 用什么方法将 dirty page 链接起来?
-2. 每一个process 对应一个address_space 还是，一类对应一个?
-3. 控制page 是不是dirty 和 page belong to which process 的实现是不是含有重叠的位置？
-4. address_space 同时在支持swap file , page cache 和　swap 如此相似，难道代码实现没有公用的部分吗 ?
+2. 每一个 process 对应一个 address_space 还是，一类对应一个?
+3. 控制 page 是不是 dirty 和 page belong to which process 的实现是不是含有重叠的位置？
+4. address_space 同时在支持 swap file , page cache 和　swap 如此相似，难道代码实现没有公用的部分吗 ?
 5. radix_tree 进行管理，整个内核中间其实只有一个
-6. 应该并不是每一个进程管理一个 address_space ,但是实际上，每一个inode 对应一个 address_space
-7. 通过mmap 的实现，所有的vm_struct 都是和　inod 对应的吗，当为匿名映射的时候，虽然没有inode, 但是含有swap 的管理工作
+6. 应该并不是每一个进程管理一个 address_space ,但是实际上，每一个 inode 对应一个 address_space
+7. 通过 mmap 的实现，所有的 vm_struct 都是和　inod 对应的吗，当为匿名映射的时候，虽然没有 inode, 但是含有 swap 的管理工作
 
 todo:
 1. radix_tree 的工作原理: radix_tree 的键和值是什么 ?
@@ -1726,11 +1726,11 @@ todo:
 > of the following operation:
 >     anon_vma = (struct anon_vma *) (mapping - PAGE_MAPPING_ANON)
 
-这样说: page cache 使用address_space 而匿名映射实际上被替换为 anao_vma
+这样说: page cache 使用 address_space 而匿名映射实际上被替换为 anao_vma
 
 mm/rmap.c 中间实现了反向映射，而且它的头注释介绍了锁的层级结构
 
-> page_get_anon_vma 获取上含有锁的tricky 的机制，感觉其实没有什么特殊，那岂不是访问page 的所有变量都是需要锁机制的吗 ?
+> page_get_anon_vma 获取上含有锁的 tricky 的机制，感觉其实没有什么特殊，那岂不是访问 page 的所有变量都是需要锁机制的吗 ?
 ```c
 struct anon_vma *page_get_anon_vma(struct page *page){
 ...
@@ -1742,14 +1742,14 @@ struct anon_vma *page_get_anon_vma(struct page *page){
 
 
 
-address_space 仅仅在page　cache 含有作用，实际上反向映射没有什么关系(不对吧，fs.txt 中间已经说明了含有连个，而且rmap 中间也是大量的使用了该文件)
+address_space 仅仅在 page　cache 含有作用，实际上反向映射没有什么关系(不对吧，fs.txt 中间已经说明了含有连个，而且 rmap 中间也是大量的使用了该文件)
 
 > Of course, I have shown the situation in simplified form because file data are not generally stored contiguously on hard disk but are distributed over several smaller areas (this is discussed in Chapter 9). The
-> kernel makes use of the address_space data structure4 to provide a set of methods to read data from
-> a backing store — from a filesystem, for example. address_spaces therefore form an auxiliary layer to
-> represent the mapped data as a contiguous linear area to memory management.
-是不是说: 如何将一个disk 文件mapped 内存中间，由于disk 本身不是连续的，而且
-而且此时address_space 的功能变化成为了，读写磁盘中间商（是virtual process　和 ***?***)
+kernel makes use of the address_space data structure4 to provide a set of methods to read data from
+a backing store — from a filesystem, for example. address_spaces therefore form an auxiliary layer to
+represent the mapped data as a contiguous linear area to memory management.
+是不是说: 如何将一个 disk 文件 mapped 内存中间，由于 disk 本身不是连续的，而且
+而且此时 address_space 的功能变化成为了，读写磁盘中间商（是 virtual process　和 ***?***)
 
 其中定义了 readpage 和 writepage 的功能，aops 的赋值在
 ```c
@@ -1757,7 +1757,7 @@ void ext4_set_aops(struct inode *inode)
 ```
 但是其中的函数进一步被谁调用目前不清楚啊!
 
-@todo 据说ext2_readpage 的内容非常简单。也说明了address_space的内容穿透到了vfs 层次。
+@todo 据说 ext2_readpage 的内容非常简单。也说明了 address_space 的内容穿透到了 vfs 层次。
 
 > **Filesystem and block layers are linked by the address_space_operations discussed in Chapter 4.** In the
 > Ext2 filesystem, these operations are filled with the following entries
@@ -1770,7 +1770,7 @@ static int ext2_writepage(struct page *page, struct writeback_control *wbc) {
   return block_write_full_page(page, ext2_get_block, wbc);
 }
 ```
-> 这就是一直想知道的fs 通向底层的道路啊，再一次ext_readpage 很麻烦，被单独放到ext4/readpage 中间了。
+> 这就是一直想知道的 fs 通向底层的道路啊，再一次 ext_readpage 很麻烦，被单独放到 ext4/readpage 中间了。
 
 
 ```c
@@ -1794,7 +1794,7 @@ static int ext2_writepage(struct page *page, struct writeback_control *wbc) {
                       * page_table_lock */
     struct anon_vma *anon_vma;  /* Serialized by page_table_lock */
 ```
-> mm_area_struct 中间的内容，注释说: 对于含有backing store 的 area, 那么放到i_mmap
+> mm_area_struct 中间的内容，注释说: 对于含有 backing store 的 area, 那么放到 i_mmap
 
 i_mmap 在 address_space 中间定义
 ```c
@@ -1803,26 +1803,26 @@ i_mmap 在 address_space 中间定义
 @todo i_mmap 的具体使用规则也是不清楚的
 
 doc:
-1. 观察page 的定义，page 中间的定义支持各种类型，
+1. 观察 page 的定义，page 中间的定义支持各种类型，
 其中，包括:  *page cache and anonymous pages*
-> 1. 从buddy 系统中间分配的page 含有确定的类型吗, 除了上面的两个类型还有什么类型
-> 2. ucore 如何管理page cache
-> 3. 其他类型的page 都没有含有address_space, 是不是意味着这些page 永远不会被刷新出去，只是被内核使用的
+> 1. 从 buddy 系统中间分配的 page 含有确定的类型吗, 除了上面的两个类型还有什么类型
+> 2. ucore 如何管理 page cache
+> 3. 其他类型的 page 都没有含有 address_space, 是不是意味着这些 page 永远不会被刷新出去，只是被内核使用的
 
-在16章才是对于address_space的终极描述:
+在 16 章才是对于 address_space 的终极描述:
 1. host  page_tree 的作用:
 The link with the areas managed by an address space is established by means of a pointer to
 an inode instance (of type struct inode) to specify the backing store and a root radix tree
-(page_tree) with a list of all physical memory pages in the address space.(@question 这是说明一个backstore (disk ssd partition)对应一个文档，还是说仅仅对应一个file)
-@question 所以什么时候创建的address_space
+(page_tree) with a list of all physical memory pages in the address space.(@question 这是说明一个 backstore (disk ssd partition)对应一个文档，还是说仅仅对应一个 file)
+@question 所以什么时候创建的 address_space
 
 * **filep**
 1. filep 出现的位置在什么层次 ?
 2. filep 包含的内容是什么 ?
-3. filep 的出现就是为了支持process可以访问同一个文件，谁持有文件，也就是持有inode, 在inode 中间包含进程需要的信息，比如引用计数不就可以了吗,
+3. filep 的出现就是为了支持 process 可以访问同一个文件，谁持有文件，也就是持有 inode, 在 inode 中间包含进程需要的信息，比如引用计数不就可以了吗,
 为什么需要单独独立出来信息 ?
 5. file_operations 什么时候赋值 ?
-6. 问题是inode 中间也包含file_operations 结构体，所以和struct file　的 file_operations 有什么区别 ?
+6. 问题是 inode 中间也包含 file_operations 结构体，所以和 struct file　的 file_operations 有什么区别 ?
 
 
 ## TODO

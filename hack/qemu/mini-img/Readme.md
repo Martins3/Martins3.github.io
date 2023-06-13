@@ -10,7 +10,7 @@
 例如使用 raw.sh ，构建一个 `-serial pipe:gg` 那么:
 
 将内核日志导出:
-```
+```plain
 cat gg.out
 --------- 省略内核日志 --------------
 Poky (Yocto Project Reference Distro) 3.1 qemux86-64 /dev/ttyS0
@@ -21,7 +21,7 @@ qemux86-64 login: [    3.953029] urandom_read: 3 callbacks suppressed
 ```
 
 将 root 写入，然后提供两个
-```
+```plain
 ➜  mini-img git:(master) ✗ printf "root\n" > gg.in
 ➜  mini-img git:(master) ✗ cat gg.out
 [   32.300536] EXT4-fs error (device vda): ext4_validate_block_bitmap:390: comm kworker/u2:0: bg 2: bad block bitmap checksum

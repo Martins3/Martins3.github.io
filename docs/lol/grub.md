@@ -65,10 +65,9 @@ grubby --update-kernel=ALL --args="rootflags=data=journal"
 
 设置默认内核
 ```sh
-grubby --info=ALL | grep -E "^kernel|^index"
-grubby --info=ALL # 也差不多
+grubby --info=ALL
 grubby --set-default-index=2
-grubby --default-kernel
+grubby --default-kernel # 检查一下
 ```
 
 ## 其他小问题

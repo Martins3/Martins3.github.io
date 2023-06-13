@@ -15,7 +15,7 @@ sed 采用类似于 vim 的方法进行替换，默认全部替换，似乎是�
 https://forums.gentoo.org/viewtopic-t-1110110-start-0.html
 
 可以确定，make 和 make bzImage 是不同的:
-```
+```plain
 arch/x86/Makefile
 251:PHONY += bzImage $(BOOT_TARGETS)
 254:all: bzImage
@@ -25,14 +25,14 @@ arch/x86/Makefile
 299:  echo  '* bzImage      - Compressed kernel image (arch/x86/boot/bzImage)'
 ```
 当执行了完成 make 之后，然后可以执行 bzImage，从观察上看，没有任何的区别:
-```
+```plain
 ➜  linux git:(master) ✗ make bzImage
   CALL    scripts/checksyscalls.sh
   CALL    scripts/atomic/check-atomics.sh
   DESCEND  objtool
   CHK     include/generated/compile.h
 Kernel: arch/x86/boot/bzImage is ready  (#1)
-➜  linux git:(master) ✗ l arch/x86_64/boot/bzImage 
+➜  linux git:(master) ✗ l arch/x86_64/boot/bzImage
 lrwxrwxrwx shen shen 22 B Tue Jun 16 17:59:02 2020   bzImage ⇒ ../../x86/boot/bzImage
 ```
 
@@ -91,7 +91,7 @@ lrwxrwxrwx shen shen 22 B Tue Jun 16 17:59:02 2020   bzImage ⇒ ../../x86/bo
 
 ## 15
 1. 那么能不能利用 busy box 制作一个最最基本的 image
-2. 
+
 
 
 - 说明如何制作 docker 镜像的方法
@@ -103,7 +103,7 @@ lrwxrwxrwx shen shen 22 B Tue Jun 16 17:59:02 2020   bzImage ⇒ ../../x86/bo
 
 ## 关于 qemu 综合的问题
 1. 为什么 hdd 的内容消失了，是因为都是从头启动的吗 ?
-3. 之前的几个智障bundle 为什么最后没有办法添加到内核中间 ? 
+3. 之前的几个智障 bundle 为什么最后没有办法添加到内核中间 ?
 4. 比较一下 docker 和 qemu 的内容的不同
 
 7. 考虑一下将 sysroot 的所有东西全部拷贝到其中
@@ -150,7 +150,7 @@ qemu-system-x86_64 -kernel $KERNEL_INSTALLED/kernel -initrd $WORK_DIR/rootfs.cpi
 3. cttyhack 是 busybox 自己提供的，连 sbin/init 也是其提供的，但是两者的功能的作用是什么，现在并不清楚
 4. minimal_rootfs/etc/04_bootscript.sh 是如何被指定执行的 ?
 
-```
+```plain
 ::sysinit:/etc/04_bootscript.sh
 ::restart:/sbin/init
 ::shutdown:echo -e "\nSyncing all file buffers."

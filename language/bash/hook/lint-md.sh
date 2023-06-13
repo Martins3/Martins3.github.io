@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
-lint-md "docs/**/*" -c .lintmdrc.json --threads
+check_dir=(docs hack)
 
-if [[ $? ]]; then
-  lint-md -f "docs/**/*" -c .lintmdrc.json --threads
-else
-  exit 1
-fi
+for i in "${check_dir[@]}"; do
+	if ! lint-md "$i/**/*" -c .lintmdrc.json --threads; then
+		lint-md -f "$i/**/*" -c .lintmdrc.json --threads
+		exit 1
+	fi
+done

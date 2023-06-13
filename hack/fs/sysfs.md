@@ -100,7 +100,7 @@ fs - information about mounted file systems: 提供文件系统以及设备的�
 kernel - kernel status information (logged-in users, hotplug)
 modules - the list of modules currently loaded
 power - information related to the power management subsystem
-dev -  *It can be used to automatically create entries in the /dev directory*. 包含char 和 block 两个文件夹，其中都是 symbol link
+dev -  *It can be used to automatically create entries in the /dev directory*. 包含 char 和 block 两个文件夹，其中都是 symbol link
 dev/ contains two directories char/ and block/. Inside these two
 directories there are symlinks named <major>:<minor>.  These symlinks
 point to the sysfs directory for the given device.  /sys/dev provides a
@@ -115,7 +115,7 @@ sysfs 是可有可无的，
 sysfs is always compiled in if CONFIG_SYSFS is defined. You can access
 it by doing:
 
-    mount -t sysfs sysfs /sys
+   plain mount -t sysfs sysfs /sys
 
 1. For every kobject that is registered with the system, a directory is created for it in sysfs.
 > 每一个 kobject 在 sysfs 中间对应一个文件夹
@@ -146,7 +146,7 @@ bus_kset = kset_create_and_add("bus", &bus_uevent_ops, NULL);
 ```
 
 
-```
+```plain
 kobject创建：
 -----------
 struct kobject *kobject_create_and_add(const char *name, struct kobject *parent)

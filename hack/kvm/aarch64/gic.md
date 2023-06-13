@@ -152,8 +152,8 @@ struct kvm_device_ops kvm_arm_vgic_v3_ops = {
 
 ## [骏的世界](http://www.lujun.org.cn/?tag=gic)
 
-## [ARM GICv3 ITS介绍及代码分析](https://blog.csdn.net/yhb1047818384/article/details/89061672)
+## [ARM GICv3 ITS 介绍及代码分析](https://blog.csdn.net/yhb1047818384/article/details/89061672)
 
-## [ARM GICv3中断控制器](https://blog.csdn.net/yhb1047818384/article/details/86708769)
+## [ARM GICv3 中断控制器](https://blog.csdn.net/yhb1047818384/article/details/86708769)
 
 ## [GIC 中断虚拟化](https://zhuanlan.zhihu.com/p/535997324)

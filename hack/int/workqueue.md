@@ -37,11 +37,11 @@ alloc_and_link_pwqs
 > 一个 workqueue 可以持有多个 pwq, 比如给每一个 cpu 的 worker_pool 分配对应优先级的
 > workqueue 划分为 bounded 和 unbounded 的属性, 划分优先级
 
-> 针对非绑定类型的工作队列，worker_pool创建后会添加到unbound_pool_hash哈希表中；
+> 针对非绑定类型的工作队列，worker_pool 创建后会添加到 unbound_pool_hash 哈希表中；
 >
 > 存在 unbounded 的 worker pool 吗?
 
-> 判断workqueue的类型，如果是bound类型，根据CPU来获取pool_workqueue，如果是unbound类型，通过node号来获取pool_workqueue；
+> 判断 workqueue 的类型，如果是 bound 类型，根据 CPU 来获取 pool_workqueue，如果是 unbound 类型，通过 node 号来获取 pool_workqueue；
 
 - `__queue_work`
   - wq_select_unbound_cpu : 如果是 unbounded, 最好是使用当前 cpu
@@ -52,7 +52,7 @@ alloc_and_link_pwqs
 
 给定一个 pwq，其唯一定位出来一个 workqueue 和 worker_pool
 
-worker_thread在开始执行时，设置标志位PF_WQ_WORKER，调度器在进行调度处理时会对task进行判断，针对workerqueue worker有特殊处理；
+worker_thread 在开始执行时，设置标志位 PF_WQ_WORKER，调度器在进行调度处理时会对 task 进行判断，针对 workerqueue worker 有特殊处理；
 - 在 `__schedule` 和 `ttwu_active` 的时候，会对于 `pool->nr_running` 进行统计，并且同时辅助 worker 的唤醒，创建等操作
 
 #### struct work_struct
@@ -80,53 +80,53 @@ flush_work : 利用 barrier work 的方法，一直阻塞，直到目标工作�
 
 ## principal
 
-1. 和这个workqueue相关的pool_workqueue被挂入一个链表，链表头就是workqueue_struct中的pwqs成员。
+1. 和这个 workqueue 相关的 pool_workqueue 被挂入一个链表，链表头就是 workqueue_struct 中的 pwqs 成员。
 
 ## doc && ref
 
-- [Concurrency Managed Workqueue之（二）：CMWQ概述](http://www.wowotech.net/irq_subsystem/cmwq-intro.html)
+- [Concurrency Managed Workqueue 之（二）：CMWQ 概述](http://www.wowotech.net/irq_subsystem/cmwq-intro.html)
 
 保持 workqueue 的接口不变，利用 work pool 和 worker thread
 
-用户可以创建workqueue（不创建worker pool）并通过flag来约束挂入该workqueue上work的处理方式。
-workqueue会根据其flag将work交付给系统中某个worker pool处理。
-例如如果该workqueue是bounded类型并且设定了high priority，那么挂入该workqueue的work将由per cpu的highpri worker-pool来处理。
+用户可以创建 workqueue（不创建 worker pool）并通过 flag 来约束挂入该 workqueue 上 work 的处理方式。
+workqueue 会根据其 flag 将 work 交付给系统中某个 worker pool 处理。
+例如如果该 workqueue 是 bounded 类型并且设定了 high priority，那么挂入该 workqueue 的 work 将由 per cpu 的 highpri worker-pool 来处理。
 
 > 由此看来，workqueue 只是简单的前端接口，像是一个入口，之后放到此处的 work 由此导入到具体的 workqueue 中间
 > 但是，workqueue 还会持有一些限制在其中。
 
-- [Concurrency Managed Workqueue之（三）：创建workqueue代码分析](http://www.wowotech.net/irq_subsystem/alloc_workqueue.html)
+- [Concurrency Managed Workqueue 之（三）：创建 workqueue 代码分析](http://www.wowotech.net/irq_subsystem/alloc_workqueue.html)
 
-在kernel中，有两种线程池，一种是线程池是per cpu的，也就是说，系统中有多少个cpu，就会创建多少个线程池，cpu x上的线程池创建的worker线程也只会运行在cpu x上。另外一种是unbound thread pool，该线程池创建的worker线程可以调度到任意的cpu上去。
+在 kernel 中，有两种线程池，一种是线程池是 per cpu 的，也就是说，系统中有多少个 cpu，就会创建多少个线程池，cpu x 上的线程池创建的 worker 线程也只会运行在 cpu x 上。另外一种是 unbound thread pool，该线程池创建的 worker 线程可以调度到任意的 cpu 上去。
 > cpu x 上创建的，只会在 cpu x 上的 worker pool 上运行，如何实现这一个效果。
 
 
-和旧的workqueue机制一样，系统维护了一个所有workqueue的list，list head定义如下：
+和旧的 workqueue 机制一样，系统维护了一个所有 workqueue 的 list，list head 定义如下：
 ```c
 static LIST_HEAD(workqueues);		/* PR: list of all workqueues */
 ```
 
 
-挂入workqueue的work终究是需要worker线程来处理，针对worker线程有下面几个考量点（我们称之attribute）：
-1. 该worker线程的优先级
-2. 该worker线程运行在哪一个CPU上
-3. 如果worker线程可以运行在多个CPU上，且这些CPU属于不同的NUMA node，那么是否在所有的NUMA node中都可以获取良好的性能。
+挂入 workqueue 的 work 终究是需要 worker 线程来处理，针对 worker 线程有下面几个考量点（我们称之 attribute）：
+1. 该 worker 线程的优先级
+2. 该 worker 线程运行在哪一个 CPU 上
+3. 如果 worker 线程可以运行在多个 CPU 上，且这些 CPU 属于不同的 NUMA node，那么是否在所有的 NUMA node 中都可以获取良好的性能。
 
-对于per-CPU的workqueue，2和3不存在问题，哪个cpu上queue的work就在哪个cpu上执行，由于只能在一个确定的cpu上执行，
-因此起NUMA的node也是确定的（一个CPU不可能属于两个NUMA node）。置于优先级，per-CPU的workqueue使用WQ_HIGHPRI来标记。
-综上所述，per-CPU的workqueue不需要单独定义一个workqueue attribute，这也是为何在workqueue_struct中只有unbound_attrs这个成员来记录unbound workqueue的属性。
+对于 per-CPU 的 workqueue，2 和 3 不存在问题，哪个 cpu 上 queue 的 work 就在哪个 cpu 上执行，由于只能在一个确定的 cpu 上执行，
+因此起 NUMA 的 node 也是确定的（一个 CPU 不可能属于两个 NUMA node）。置于优先级，per-CPU 的 workqueue 使用 WQ_HIGHPRI 来标记。
+综上所述，per-CPU 的 workqueue 不需要单独定义一个 workqueue attribute，这也是为何在 workqueue_struct 中只有 unbound_attrs 这个成员来记录 unbound workqueue 的属性。
 
-NUMA是内存管理的范畴，本文不会深入描述，我们暂且放开NUMA，先思考这样的一个问题：一个确定属性的unbound workqueue需要几个线程池？
-看起来一个就够了，毕竟workqueue的属性已经确定了，一个线程池创建相同属性的worker thread就行了。
-但是我们来看一个例子：假设workqueue的work是可以在node 0中的CPU A和B，以及node 1中CPU C和D上处理，如果只有一个thread pool，
-那么就会存在worker thread在不同node之间的迁移问题。**为了解决这个问题，实际上unbound workqueue实际上是创建了per node的pool_workqueue（thread pool)**
+NUMA 是内存管理的范畴，本文不会深入描述，我们暂且放开 NUMA，先思考这样的一个问题：一个确定属性的 unbound workqueue 需要几个线程池？
+看起来一个就够了，毕竟 workqueue 的属性已经确定了，一个线程池创建相同属性的 worker thread 就行了。
+但是我们来看一个例子：假设 workqueue 的 work 是可以在 node 0 中的 CPU A 和 B，以及 node 1 中 CPU C 和 D 上处理，如果只有一个 thread pool，
+那么就会存在 worker thread 在不同 node 之间的迁移问题。**为了解决这个问题，实际上 unbound workqueue 实际上是创建了 per node 的 pool_workqueue（thread pool)**
 
-- [Concurrency Managed Workqueue之（四）：workqueue如何处理work](http://www.wowotech.net/irq_subsystem/queue_and_handle_work.html)
+- [Concurrency Managed Workqueue 之（四）：workqueue 如何处理 work](http://www.wowotech.net/irq_subsystem/queue_and_handle_work.html)
 
 > 可以细品，总体来说，内容是清晰的
 
 
-分配pool workqueue的内存并建立workqueue和pool workqueue的关系，这部分的代码主要涉及alloc_and_link_pwqs函数
+分配 pool workqueue 的内存并建立 workqueue 和 pool workqueue 的关系，这部分的代码主要涉及 alloc_and_link_pwqs 函数
 
 
 ```c
@@ -156,7 +156,7 @@ Special purpose threads, called worker threads, execute the functions
 off of the queue, one after the other.  If no work is queued, the
 worker threads become idle.  These worker threads are managed in so
 called worker-pools.
-> 特殊线程来分别执行这些函数，类似于syscall 一样吗 ?
+> 特殊线程来分别执行这些函数，类似于 syscall 一样吗 ?
 
 For any worker pool implementation, managing the concurrency level
 **(how many execution contexts are active)** is an important issue.  cmwq
@@ -182,7 +182,7 @@ and they run in the context of the events/x thread, as noted above.
 Although this is sufficient in most cases,
 *it is a shared resource and large delays in work items handlers can cause delays for other queue users.*
 For this reason there are functions for creating additional queues.
-> 默认的叫做 events，但是为什么share resource 和 large delays 啊 !
+> 默认的叫做 events，但是为什么 share resource 和 large delays 啊 !
 
 
 > 总体来说(外部接口)
@@ -195,7 +195,7 @@ For this reason there are functions for creating additional queues.
 1. worker 和 workqeue 之间的 attach  detach bind 以及 worker 的各种操作
 2. attr
 
-一些sfsfs 和 watch dog 的内容:
+一些 sfsfs 和 watch dog 的内容:
 
 ```c
 // 各种work 没有仔细分析了
@@ -303,7 +303,7 @@ snd_timer_interrupt => `queue_work(system_highpri_wq, &timer->task_work);`
 
 ## INIT_DELAYED_WORK
 
-例如这个，和其他的workqueue 有什么区别吗?
+例如这个，和其他的 workqueue 有什么区别吗?
 INIT_DELAYED_WORK(&wb->dwork, wb_workfn);
 
 ```c

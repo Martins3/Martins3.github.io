@@ -5,7 +5,7 @@
 
 ## compile
 一般的编译方法
-```
+```plain
 mkdir build
 cd build
 ../configure --target-list=x86_64-softmmu,aarch64-softmmu,aarch64-linux-user
@@ -17,7 +17,7 @@ make
 为了生成的 compile_commands.json 可以正常使用，--target-list 最好不要同时支持多个，否则会出现一些诡异的问题。
 
 编译一个仅仅支持 kvm 的代码:
-```
+```plain
 ../configure --target-list=x86_64-softmmu  --disable-werror --enable-debug
 ```
 

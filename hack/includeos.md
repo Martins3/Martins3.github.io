@@ -19,7 +19,7 @@
 <!-- vim-markdown-toc -->
 
 in `your_build_dir`, `run.sh` `source activete.sh` `boot hello` to run the data.
-```
+```plain
 ➜  incOs ls
  hello_world   IncludeOS   your_build_dir
 
@@ -36,7 +36,7 @@ cmake --build .
 
 ## env setup
 in `IncludeOS`:
-```
+```plain
 # init operation
 # clang-6.0-linux-x86_64
 

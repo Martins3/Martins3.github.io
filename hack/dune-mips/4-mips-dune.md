@@ -320,7 +320,7 @@ vcpu::guest_kernel_gs_base
 - wedge 遇到的 bug : 如果是 trap.c 的 handler 中间调用 printf, 因为 SIMD(SSE) 指令和 stack 对齐的问题，造成 double fault
   - [ ] 但是 printf 在进入 dune 之后似乎变成了线程不安全的，例如下面的效果，实际上，和线程安全性没有关系，因为每次都是下面的效果。
   - [ ] dune_printf 和 printf 的区别
-```
+```plain
 Creating a new sthread 3
 stack addresss 0x7f163a9b4000
 writable addresss 0x7f163a984000

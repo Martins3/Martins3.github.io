@@ -99,7 +99,7 @@ following conditions all hold:
 *(4) the “interrupt-window exiting” VM-execution control is 0.*
 
 The following pseudocode details the behavior of virtual interrupt delivery (see Section 29.1.1 for definition of VISR, VIRR, and VPPR):
-```
+```plain
 Vector ← RVI;
 VISR[Vector] ← 1;
 SVI ← Vector;

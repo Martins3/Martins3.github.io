@@ -3,6 +3,11 @@
 2. governor 最终选择规则是什么
 3. 进入到那个 state 是如何确定的
 
+## 简单来说
+- intel idle : 执行 mwait 指令
+- acpi idle : 执行 mwait hlt 以及 ioport
+- halt poll : halt 之前 poll 一段时间
+
 ## sleep 的等级
 - https://docs.kernel.org/admin-guide/pm/sleep-states.html
 

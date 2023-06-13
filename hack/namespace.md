@@ -16,6 +16,7 @@ This is achieved with three different system calls: *clone*, *unshare* and *setn
 
 * Man clone
 
+```txt
        clone() creates a new process, in a manner similar to fork(2).
 
        This page describes both the glibc clone() wrapper function and the underlying system call on which it is based.  The main text describes the wrapper function; the differences for the raw system call are described toward the end of this page.
@@ -23,17 +24,22 @@ This is achieved with three different system calls: *clone*, *unshare* and *setn
        Unlike fork(2), clone() allows the child process to share parts of its execution context with the calling process, such as the virtual address space, the table of file descriptors, and the table of signal handlers.  (Note that on this manual page, "calling process" normally corresponds to "parent process".  But see the description of CLONE_PARENT below.)
 
        One use of clone() is to implement threads: multiple flows of control in a program that run concurrently in a shared address space.
+```
 
 * Man unshare
 
+```txt
        unshare() allows a process (or thread) to disassociate parts of its execution context that are currently being shared with other processes (or threads).  Part of the execution context, such as the mount namespace, is shared implicitly when a new process is created using fork(2) or vfork(2), while other parts, such as virtual memory, may be shared by explicit request when creating a process or thread using clone(2).
 
        The main use of unshare() is to allow a process to control its shared execution context without creating a new process.
+```
 
 
 * Man setns
 
+```txt
         So, how do you place processes into namespaces? This is achieved with three different system calls: clone, unshare and setns.
+```
 
 The files are special symlinks bearing the namespace type (e.g. mnt), which point to inodes which represent unique namespaces, which the kernel reports as a conjugation of the namespace type and the inode number. Hence, if two different processes exist in the same namespace, their symlinks will point to the same inodes.
 
@@ -47,7 +53,7 @@ The files are special symlinks bearing the namespace type (e.g. mnt), which poin
 
 ## general
 The namespace API consists of three system calls—clone(), unshare(), and setns()—and a number of /proc files. [^2]
-```
+```plain
 ls -l /proc/$$/ns
 ```
 两种 让当前 fs 不被销毁的方法 :
@@ -500,7 +506,7 @@ static int graft_tree(struct mount *mnt, struct mount *p, struct mountpoint *mp)
 1. kernel/utsname.c 同样的只有简单的 200 多行的样子，感觉完全就是对称的
     1. @todo  hostname domain , 为什么不和网络的放在一起呀 ?
 
-2.
+
 
 ## 瞎几把复制
 

@@ -24,7 +24,7 @@
 <!-- vim-markdown-toc -->
 
 
-## src tree layout 
+## src tree layout
 1. iname.c : 处理各种 inode.c 的东西，
 2. file.c : 处理各种 file operations 的内容
 
@@ -59,11 +59,11 @@ translate a block of a file into a block on the device.
 #### ext2_iget
 
 1. 初步分析 ino 是什么 ?
-ext2 被反复挂载，这些 root inode 的 ino 都是 EXT2_ROOT_INO 
+ext2 被反复挂载，这些 root inode 的 ino 都是 EXT2_ROOT_INO
 ```c
 root = ext2_iget(sb, EXT2_ROOT_INO);
 ```
-关键问题在于: find_inode_fast，由于也使用 sb 作为hash，
+关键问题在于: find_inode_fast，由于也使用 sb 作为 hash，
 让即使两个 inode 的 ino 相同，被定位在一起的概率也很小。
 所以 ino 是文件系统和磁盘之间的通信，但是 VFS 之间沟通应该更多的是直接使用
 vfs inode 的指针吧。
@@ -72,11 +72,11 @@ vfs inode 的指针吧。
 1. iget_locked : ino 作为真正的索引，用于快速定位某一个 inode 是否存在于操作系统中间。
     1. 使用 find_inode_fast 来在 inode cache 中间查找
     2. alloc_inode 实现加载和基本初始化，并且使用 ino 初始化 inode。注意，此时获取的 inode 并没有磁盘信息，还是一个空的。
-2. ext2_get_inode : 使用参数 ino 从磁盘中间加载需要的raw_inode.
-3. 利用 ext2_get_inode 的返回值初始化inode 磁盘中间的信息，除此之外，需要进行各种运行时信息的初始化:
-    1. ext2_set_file_ops 
+2. ext2_get_inode : 使用参数 ino 从磁盘中间加载需要的 raw_inode.
+3. 利用 ext2_get_inode 的返回值初始化 inode 磁盘中间的信息，除此之外，需要进行各种运行时信息的初始化:
+    1. ext2_set_file_ops
     2. init_special_inode
-    3. .. 
+    3. ..
 
 #### ext2_fill_super
 
@@ -130,7 +130,7 @@ static int ext2_rmdir (struct inode * dir, struct dentry *dentry)
 #### ext2_symlink
 hardlink 中间是，两个 dentry 指向同一个 inode
 
-symlink 是创建一个自己的inode ，并且存储指向的位置的地址，如果指向的文件被删除了，当访问 symlink 就直接消失了
+symlink 是创建一个自己的 inode ，并且存储指向的位置的地址，如果指向的文件被删除了，当访问 symlink 就直接消失了
 
 1. fast symlink 和 slow symlink 的区别:
 如果指向的路径的名称可以存储在 : `ext2_inode_info->i_data`，那么就是 fast，否则就需要访问数据盘获取路径。
@@ -157,7 +157,7 @@ dentry 已经创建，现在创建与其关键的 inode
  * is so far negative - it has no inode.
  *
  * If the create succeeds, we fill in the inode information
- * with d_instantiate(). 
+ * with d_instantiate().
  */
 static int ext2_create (struct inode * dir, struct dentry * dentry, umode_t mode, bool excl)
 {
@@ -178,7 +178,7 @@ static int ext2_create (struct inode * dir, struct dentry * dentry, umode_t mode
 }
 ```
 
-中 ext2_new_inode 调用 new_inode 在内存中间分配一个该文件系统的inode，然后查询磁盘找到空闲的inode，并且进行初始化。
+中 ext2_new_inode 调用 new_inode 在内存中间分配一个该文件系统的 inode，然后查询磁盘找到空闲的 inode，并且进行初始化。
 
 主要的四个步骤:
 - Introduces a new entry into the physical structure on the disk; the update of the bit maps on the disk must not be forgotten.
@@ -190,7 +190,7 @@ static int ext2_create (struct inode * dir, struct dentry * dentry, umode_t mode
 
 代码分析: 将 inode 和 dentry 关联起来
 ```c
-int ext2_add_link (struct dentry *dentry, struct inode *inode) // 
+int ext2_add_link (struct dentry *dentry, struct inode *inode) //
 ```
 
 
@@ -222,7 +222,7 @@ static int ext2_link (struct dentry * old_dentry, struct inode * dir,
 }
 ```
 
-2. ext2_add_nondir : 这不就是 ext2_link 的简化版，直接提供了 inode 而已，应该就是创建新的inode 的时候调用的吧，调用位置:
+2. ext2_add_nondir : 这不就是 ext2_link 的简化版，直接提供了 inode 而已，应该就是创建新的 inode 的时候调用的吧，调用位置:
     1. ext2_create
     2. ext2_mknod
     3. ext2_symlink
@@ -255,9 +255,9 @@ void d_instantiate_new(struct dentry *entry, struct inode *inode)
 #### ext2_mknod && ext2_create
 几乎是相同的套路:
 1. dquot_initialize
-2. ext2_new_inode : 创建一个 inode，应该是由于inode 号码不可以随意分配，所以，即使是 mknod 也是需要让　访问磁盘寻找合适的inode，如此销毁也可以复用通用的处理，考虑到 mknod 调用也不是很频繁。
+2. ext2_new_inode : 创建一个 inode，应该是由于 inode 号码不可以随意分配，所以，即使是 mknod 也是需要让　访问磁盘寻找合适的 inode，如此销毁也可以复用通用的处理，考虑到 mknod 调用也不是很频繁。
 3. mark_inode_dirty
-4. ext2_add_nondir 
+4. ext2_add_nondir
 不同的位置 : init_special_inode 和 ext2_set_file_ops，只是设置一下 file operation 不同而已。
 
 之所以还是被拆分为不同的函数，是因为 rdev 这个参数。
@@ -268,7 +268,7 @@ void d_instantiate_new(struct dentry *entry, struct inode *inode)
  * is so far negative - it has no inode.
  *
  * If the create succeeds, we fill in the inode information
- * with d_instantiate(). 
+ * with d_instantiate().
  */
 static int ext2_create (struct inode * dir, struct dentry * dentry, umode_t mode, bool excl)
 {
@@ -317,7 +317,7 @@ Searces in the directory indicated by dir the entry having the name `dentry->d_n
 If the entry is found, it will return NULL and associate the inode with the name using the d_add() function.
 
 1. ext2_inode_by_name : 对于 dir 中间搜索，获取 ino
-2. ext2_iget : 利用 ino 获取 inode 
+2. ext2_iget : 利用 ino 获取 inode
 3. d_splice_alias : TODO 处理文件的很简单，将 dentry 和 inode 关联起来就可以了，由于 link 的原因，inode 可以对应多个 dentry，所以需要使用链表管理起来，很正常的。
 
 `d_alias` links the dentry objects of identical files. This situation arises when links are used to

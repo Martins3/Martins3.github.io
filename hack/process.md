@@ -7,7 +7,7 @@
 3. 启动 : fork
     1. 第一个进程启动 : ?
     2. 启动第一个用户进程 : ?
-    3. Posix 规定的 25个 flags
+    3. Posix 规定的 25 个 flags
 4. 执行 : exec
 4. 暂停 : yield
 5. 死亡 : kill exit
@@ -18,7 +18,7 @@
 1. exit.c
 2. pidfd
 3. pidnamespace : 据说 namespace 下，可以没有 pid = 1
-.....
+……
 
 - [ ] How to make so many policy work together ?
     - bandwidth :
@@ -33,7 +33,7 @@
 
 | 主要内容       | 一句话说明要点                                                                                                     | 涉及的文件 | 关键的函数          |
 |----------------|--------------------------------------------------------------------------------------------------------------------|------------|---------------------|
-| 进程的层级关系 | thread group, process group 和 session, 逐级包含的关系，其中 thread group 用于pthread 线程的实现，后者主要用于终端 | fork.c     | fork.c:copy_process |
+| 进程的层级关系 | thread group, process group 和 session, 逐级包含的关系，其中 thread group 用于 pthread 线程的实现，后者主要用于终端 | fork.c     | fork.c:copy_process |
 | 创建进程       | clone fork, vfork 全部汇集到 `_do_fork`, 其参数决定了复制的内容                                                    | fork.c     |
 | 销毁进程       |
 | 进程通信       | IPC 和 signal :
@@ -183,10 +183,10 @@ notes from [^8]:
 ![](https://img2018.cnblogs.com/blog/1771657/202002/1771657-20200201170715768-1838632136.png)
 
 2. 周期调度 - schedule_tick()
-    - 时钟中断处理程序中，调用schedule_tick()函数；
-    - 时钟中断是调度器的脉搏，内核依靠周期性的时钟来处理器CPU的控制权；
+    - 时钟中断处理程序中，调用 schedule_tick()函数；
+    - 时钟中断是调度器的脉搏，内核依靠周期性的时钟来处理器 CPU 的控制权；
     - 时钟中断处理程序，检查当前进程的执行时间是否超额，如果超额则设置重新调度标志(_TIF_NEED_RESCHED)；
-    - 时钟中断处理函数返回时，被中断的进程如果在用户模式下运行，需要检查是否有重新调度标志，设置了则调用schedule()调度；
+    - 时钟中断处理函数返回时，被中断的进程如果在用户模式下运行，需要检查是否有重新调度标志，设置了则调用 schedule()调度；
 
 ![](https://img2018.cnblogs.com/blog/1771657/202002/1771657-20200201170736505-296291185.png)
 
@@ -196,7 +196,7 @@ notes from [^8]:
 
 4. wake_up_process()
 ![](https://img2018.cnblogs.com/blog/1771657/202002/1771657-20200201170804248-1658303951.png)
-唤醒进程时调用wake_up_process()函数，被唤醒的进程可能抢占当前的进程；
+唤醒进程时调用 wake_up_process()函数，被唤醒的进程可能抢占当前的进程；
 
 - [ ] what's relation with hrtick and schedule_tick ?
 
@@ -323,7 +323,7 @@ Man 分析的很清楚[^2] :
 >
 > A call to vfork() is equivalent to calling clone(2) with flags specified as:
 >
->     CLONE_VM | CLONE_VFORK | SIGCHLD
+>    plain CLONE_VM | CLONE_VFORK | SIGCHLD
 >
 > Man clone(2)
 >
@@ -395,7 +395,7 @@ http://longwei.github.io/How-Debuger-Works/
 > fork 工作完成之后，通知一下 tracer
 
 signal.c :
-```
+```plain
 ptrace_notify
   ptrace_stop
     do_notify_parent_cldstop
@@ -675,7 +675,7 @@ https://lwn.net/Articles/604287/
 - [ ] Something interesting wait for clear:
 
 gcc a.c -v 可以获取很多东西:
-```
+```plain
 Using built-in specs.
 COLLECT_GCC=gcc
 COLLECT_LTO_WRAPPER=/usr/lib/gcc/x86_64-pc-linux-gnu/10.1.0/lto-wrapper
@@ -1018,28 +1018,28 @@ https://phoenixnap.com/kb/create-a-sudo-user-on-debian : 首先搞清楚这种�
 
 整理一下
 > # ptrace 的代价是什么 ?
-> 1. 为了支持ptrace syscall的努力是什么
-> 2. ptrace 是不是实现debug 的基础
+> 1. 为了支持 ptrace syscall 的努力是什么
+> 2. ptrace 是不是实现 debug 的基础
 > 3. fork 等机制做出了何种支持
 >
 >
 > # 内核和用户态之间拷贝数据
-> 1. 用户读写文件　文件内容　是如何传递到达用户的 ?　显然不可能是通过copy_to_user 之类的函数
-> 2. copy_to_user 的两个参数，都是虚拟地址，但是实际上，但是这两个地址是位于不同的pgdir 中间的
-> 3. copy_to_user 检查内容是看该addr 是不是在对应用户的地址空间的 segment 而且保证没有segment fault，这一个函数从哪里获取的 mm_struct
+> 1. 用户读写文件　文件内容　是如何传递到达用户的 ?　显然不可能是通过 copy_to_user 之类的函数
+> 2. copy_to_user 的两个参数，都是虚拟地址，但是实际上，但是这两个地址是位于不同的 pgdir 中间的
+> 3. copy_to_user 检查内容是看该 addr 是不是在对应用户的地址空间的 segment 而且保证没有 segment fault，这一个函数从哪里获取的 mm_struct
 >
 >
-> # 到底如何实现context switch
+> # 到底如何实现 context switch
 >
 > 1. http://www.maizure.org/projects/evolution_x86_context_switch_linux/
 > > 绝对清晰的讲解
 > Many of these tasks float between the `switch_to()` and the scheduler across kernel versions. All I can guarantee is that we'll always see stack swaps and FPU switching in every version
 >
-> 2. https://eli.thegreenplace.net/2018/measuring-context-switching-and-memory-overheads-for-linux-threads/　
-> > 分析context switch 的代价是什么 ?
+> 2. https://eli.thegreenplace.net/2018/measuring-context-switching-and-memory-overheads-for-linux-threads/
+> > 分析 context switch 的代价是什么 ?
 >
 > 3. https://stackoverflow.com/questions/2711044/why-doesnt-linux-use-the-hardware-context-switch-via-the-tss
-> > 再次印证TSS 在 context switch 中间并没有什么作用，但是 @todo TSS 中间存储了ESP0 和 SS0 用于实现interrupt
+> > 再次印证 TSS 在 context switch 中间并没有什么作用，但是 @todo TSS 中间存储了 ESP0 和 SS0 用于实现 interrupt
 
 #### enqueue
 ```c

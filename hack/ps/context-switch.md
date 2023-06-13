@@ -260,7 +260,7 @@ static inline void switch_fpu_prepare(struct fpu *old_fpu, int cpu)
 从此之后，从此之后，总是直接修改 tss.x86_tss 来修改 kernel stack.
 
 我感觉 : 显然 tr 只是一个 segment selector，用于指向 GDT 中间，TSS 的所在的位置, 但是并没有进行缓存，所以修改 tss.x86_tss 就可以
-实现修改kernel stack 的目的.
+实现修改 kernel stack 的目的.
 
 > https://en.wikipedia.org/wiki/Task_state_segment
 >

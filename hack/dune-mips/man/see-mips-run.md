@@ -47,8 +47,8 @@ A MIPS CPU runs at one of two privilege levels: user and kernel.
 4. Memory management unit control
 5. Miscellaneous: There’s always more: timers, event counters, parity error detection
 
-> 为什么需要单独设置C0 出来，Intel对应的策略是什么 ?
-> 哪一个策略更加好
+> 为什么需要单独设置 C0 出来，Intel 对应的策略是什么 ?
+哪一个策略更加好
 
 - CP3 has been invaded by floating-point instructions from MIPS32/64 and is now only usable where you are sure you’ll *never want to implement floating point*.
 - CP2 is available and occasionally used for custom ISA extensions or to provide application-specific registers in a few SoC applications.
@@ -58,7 +58,7 @@ Special MIPS Use of the *Word Coprocessor*. The word coprocessor is normally use
 optional part of a processor that takes responsibility for some extension to the instruction set.
 
 ## CPU Control Instructions
-```
+```plain
 mtc0 s, <n> # Move to coprocessor 0
 mfc0 d,$n # Move from coprocessor 0
 
@@ -66,7 +66,7 @@ mtc0 s,$12,1 # 64 位向下兼容指令
 ```
 
 ## Which Registers Are Relevant When?
->  为什么都是和中断有关的， cache等就是没有关系的
+> 为什么都是和中断有关的， cache 等就是没有关系的
 
 1. After power-up
   SR config
@@ -108,7 +108,7 @@ mtc0 s,$12,1 # 64 位向下兼容指令
 
 The instruction causing (or suffering) the exception is at EPC, unless Cause (BD),
 in which case EPC points to the previous (branch) instruction.
->  Cause(BD) 是什么东西，为什么会有两种情况出来的
+> Cause(BD) 是什么东西，为什么会有两种情况出来的
 
 EPC is 64 bits wide if the CPU is.
 
@@ -182,14 +182,14 @@ which is kept to monitor accesses that may cause a future store conditional to f
 Software access to LLAddr is for diagnostic use only
 
 ## CP0 Hazards—A Trap for the Unwary
-> 分析了一下Coprocessor 和　流水线的关系，但是感觉说的不是非常的清楚
+> 分析了一下 Coprocessor 和　流水线的关系，但是感觉说的不是非常的清楚
 
 MIPS32/64 distinguishes two flavors of CP0 hazard, depending on which
 stage of a dependent instruction’s operation may be affected.
 **Execution hazards** are those where the dependent instruction will not be affected until it reads a CP0 register value;
 **instruction hazards** are those where the dependent instruction is affected in its very earliest stages—at worst, at the time it is fetched from
 cache or memory
-> 从来没有见到过的hazard 的处理
+> 从来没有见到过的 hazard 的处理
 
 
 > !!!! 下面的三个全部没有看，但是很短的
@@ -223,8 +223,8 @@ cache or memory
 
 # How Caches Work on MIPS Processors
 > 这一章的核心问题解决了什么东西
-> 对于Cache实现那些操作，如何实现，　使用那些指令
-> 需要注意的问题是什么
+对于 Cache 实现那些操作，如何实现，　使用那些指令
+需要注意的问题是什么
 >
 
 0. the way MIPS caches work and what the software has to do to make caches useful and reliable.
@@ -274,7 +274,7 @@ L2 caches typically have smaller L1s, with dual 16-KB L1 caches a favored “swe
 
 ### The Cache Instruction
 
-```
+```plain
 cache OP,addr
 ```
 
@@ -310,11 +310,11 @@ For diagnostic and maintenance purposes it’s good to be able to read and write
 
 MIPS32/64 defines a pair of 32-bit registers **TagLo** and **TagHi** to stage data between the tag part
 of the cache and management software.
-> 如何理解stage data的含义
+> 如何理解 stage data 的含义
 
 The fields in the two registers(**TagLo** and **TagHi**) reflect the tag field in the cache and are CPU
 dependent.
-> 如何理解CPU dependent 如何解释
+> 如何理解 CPU dependent 如何解释
 
 
 Only one thing is guaranteed: An all-zero value in the tag register(s)
@@ -395,7 +395,7 @@ Some things do not cause exceptions, though you’d expect them to.
 The way that a MIPS CPU starts up after system reset is implemented as a kind of exception and borrows functions from exceptions
 
 ## Precise Exception
->　分支延迟槽　在中断中间，　如何分析和处理
+> 　分支延迟槽　在中断中间，　如何分析和处理
 
 
 We’ll explain why MIPS exceptions are called “precise,” discuss **exception entry points**, and discuss some **software conventions**.
@@ -406,7 +406,7 @@ floating-point operations often take many pipeline stages to run. The instructio
 its own exception-determination point) until the hardware can be sure that the
 FP instruction won’t produce an exception
 
-> 为什么流水线长就precise exception会导致消耗很大
+> 为什么流水线长就 precise exception 会导致消耗很大
 
 ## Exception Vector
 
@@ -421,7 +421,7 @@ Any MIPS exception handler routine has to go through the same stages:
 4. Processing the exception
 5. Preparing to return
   The high-level function is usually called as a subroutine and therefore returns into the low-level dispatch code
-> **low level dispatch code** 是什么东西，为什么preparing to return 和 return 需要拆分成为两个部分出来的
+> **low level dispatch code** 是什么东西，为什么 preparing to return 和 return 需要拆分成为两个部分出来的
 
 6. Returning from an exception
 
@@ -446,11 +446,11 @@ usually arranged on a stack.
   2. Other kinds of exceptions can be avoided by appropriate software discipline.
 For example, privilege violations can’t happen in kernel mode (used by most exception processing software), and programs can avoid the possibility of addressing
 errors and TLB misses. It’s essential to do so when processing higher-priority exceptions
-> 到底和如何区分exception 和 interrupt的
+> 到底和如何区分 exception 和 interrupt 的
 
 ## An Exception Routine
-将counter ++ 的中断
-```
+将 counter ++ 的中断
+```plain
 .set noreorder
 .set noat
 xcptgen:
@@ -481,7 +481,7 @@ Three important aspects of interrupt：
 
 
 ### Interrupt Resources in MIPS CPUs
-> 似乎是Cause 接受中断， SR 来处理中断
+> 似乎是 Cause 接受中断， SR 来处理中断
 0. **Cause** register has seven eight independent interrupt bits, five or six of these are signals from external logic into the CPU,
 while two of them are purely software accessible
 1. An active level on any input signal is sensed in each cycle and will cause an
@@ -490,7 +490,7 @@ exception if enabled
 The CPU’s willingness to respond to an interrupt is affected by bits in **SR**. There are three relevant fields
 1. The global interrupt enable bit SR(IE) must be set to 1, or no interrupt will be serviced
 2. The **SR(EXL)** (exception level) and **SR(ERL)** (error level) bits will inhibit interrupts if set (as one of them will be immediately after any exception)
-> 括号中间的话什么意思， 这两个bit会被设置为1当发生exception 的时候，为什么只是其中的一个，**SR(ERL)** 是为什么?
+> 括号中间的话什么意思， 这两个 bit 会被设置为 1 当发生 exception 的时候，为什么只是其中的一个，**SR(ERL)** 是为什么?
 3. The status register also has eight individual interrupt mask bits **SR(IM)**, one for each interrupt bit in Cause. Each SR(IM) bit should be set to 1 to enable the corresponding interrupt so that programs can determine exactly which interrupts can happen and which cannot
 
 
@@ -537,21 +537,21 @@ While there are other ways of doing it, the simplest schemes have the following 
 1. Fixed priorities
 > 似乎表达的是高优先级可以打断低优先级
 2. IPL relates to code being run
-> 问题是piece of code 说的是什么东西
+> 问题是 piece of code 说的是什么东西
 3. Simple nested scheduling
 > Except at the lowest level, any interrupted code will be returned to as soon as there are no more active interrupts at a higher level. At the lowest level there’s quite likely a scheduler that shares the CPU out among various tasks, and it’s common to take the opportunity to reschedule after a period of interrupt activity
-> 表示不知道在说什么JB玩意儿啊，难受啊
+表示不知道在说什么 JB 玩意儿啊，难受啊
 
 On a MIPS CPU a transition between interrupt levels must (at least) be
 accompanied by a change in the status register SR, since that register contains
 all the interrupt control bits.
-> **cause** 寄存器是做什么的， 既然SR 包含所有的中断控制bits
+> **cause** 寄存器是做什么的， 既然 SR 包含所有的中断控制 bits
 
 
 Any change in the IPL, therefore,
 requires a piece of code that reads, modifies, and writes back the SR in
 separate operations:
-```
+```plain
 mfc0 t0, SR
 1:
 or t0, things_to_set
@@ -565,14 +565,14 @@ The code implementing the atomic change is sometimes called a critical region
 
 So in a uniprocessor system, any critical region can be simply
 protected by disabling all interrupts around it; this is crude but effective
-> 难道multiprocessor 还有更加麻烦的问题吗 ？
+> 难道 multiprocessor 还有更加麻烦的问题吗 ？
 
 The interrupt-disabling sequence (requiring a read-modify-write sequence on SR) is itself not
 guaranteed to be atomic. I know of four ways of fixing this impasse and one way to avoid it.
 
 
 In MIPS32 Release 2, **di** instruction atomically clears the SR(IE) bit, returning the original value of SR in a general-purpose register.
-> 当关中断需要三个步骤， 所以关中断的过程中间也是可能含有中断， 使用di指令实现原子操作
+> 当关中断需要三个步骤， 所以关中断的过程中间也是可能含有中断， 使用 di 指令实现原子操作
 
 
 A more general fix is to insist that no interrupt may change the value of
@@ -596,14 +596,14 @@ it to update the status register accordingly). Since a syscall instruction works
 by causing an exception, it disables interrupts atomically. Under this protection
 your bit-set and bit-clear can proceed cheerfully. When the system call exception handler returns, the global interrupt enable status is restored (once again
 atomically).
-> syscall 是 exception, 而exception 是无法多级中断的， 为什么需要采用如此曲折的方法
+> syscall 是 exception, 而 exception 是无法多级中断的， 为什么需要采用如此曲折的方法
 
 
 
 A system call sounds pretty heavyweight, but it actually doesn’t need to take
 long to run; however, you will have to untangle this system call from the rest of
 the system’s exception-dispatching code.
-> 不知道exception-dispatching code是什么， untangle 指的是什么东西
+> 不知道 exception-dispatching code 是什么， untangle 指的是什么东西
 
 The third solution—which all substantial systems should use for at least
 some critical regions—is to use the load-linked and store-conditional instructions to build critical regions without disabling interrupts at all, as described
@@ -636,7 +636,7 @@ been one such.
 > 有点看不懂
 
 Here’s wait() for the binary semaphore sem:
-```
+```plain
 wait:
   la t0, sem
 TryAgain:
@@ -650,7 +650,7 @@ TryAgain:
 ```
 
 ### Vectored and EIC Interrupts in MIPS32/64 CPUs
-> 真的讲了EIC mode 吗 ？
+> 真的讲了 EIC mode 吗 ？
 
 
 ### Shadow Register
@@ -682,7 +682,7 @@ Debuggers and other system tools may sometimes want to do this too.
 Finding the exception-causing instruction is easy; it’s usually pointed to by
 EPC, unless it was in a branch delay slot, in which case Cause(BD) is set and
 the exception victim is at the address EPC + 4
-> 找到EPC 和 Cause(BD) 来解释这两个东西
+> 找到 EPC 和 Cause(BD) 来解释这两个东西
 
 
 
@@ -730,7 +730,7 @@ the exception victim is at the address EPC + 4
 
 
 # Low-level Memory Management and the TLB
-> 查看14.4
+> 查看 14.4
 
 > what's page table
 
@@ -762,15 +762,15 @@ Most modern MIPS CPUs (and all MIPS32/64 CPUs) double up, with each TLB entry ho
 
 
 ## TLB/MMU Registers Described
-> 图6.1是真的迷糊，G是什么，　位的长度是什么,　ASID是什么
-> TLB refill trap是什么东西
+> 图 6.1 是真的迷糊，G 是什么，　位的长度是什么,　ASID 是什么
+TLB refill trap 是什么东西
 
 All TLB entries being written or read are staged through the registers **EntryHi**, **EntryLo0-1**, and **PageMask**
 > 但是实际上，文档的表格还有补充的内容
 
 Address Space Identifier(ASID)  is normally left holding the operating system’s idea of the current address space
 
-**Random** 配合 **tlbwr** 使用，用于处理refill trap
+**Random** 配合 **tlbwr** 使用，用于处理 refill trap
 
 **Context**和**XContext**也是辅助实现**refill trap** 更快实现的寄存器。
 
@@ -789,12 +789,12 @@ Address Space Identifier(ASID)  is normally left holding the operating system’
 
 
 ## Programming the TLB
-> TLB的programming的处理到底是谁来做的事情， 据说TLB 和 Cache 非常的相似，那么两者具体是如何使用的
+> TLB 的 programming 的处理到底是谁来做的事情， 据说 TLB 和 Cache 非常的相似，那么两者具体是如何使用的
 
 TLB entries are set up by writing the required fields into EntryHi and EntryLo,
 then using a **tlbwr** or **tlbwi** instruction to copy that entry into the TLB proper
 
-> 这两个指令的specification是什么
+> 这两个指令的 specification 是什么
 
 If the TLB contains duplicate entries, then maybe **SR(TS)** bit being set
 TLB entry matching some particular program address using **tlbp** to set up the Index register
@@ -843,7 +843,7 @@ of unmapped memory maps hidden inside it.
 
 # Floating porint
 
->
+
 
 
 
@@ -874,7 +874,7 @@ of unmapped memory maps hidden inside it.
 2. `#inlcude`和`macro`
   1. LEAF is used to define a simple subroutine (one that calls no other subroutine and hence is a “leaf” on the calling tree
   2. Nonleaf functions have to do much more work saving variables, returning addresses, and so on
-> 显然这两个关于LEAF的定义含有互相冲突的地方
+> 显然这两个关于 LEAF 的定义含有互相冲突的地方
 
 ## Syntax Overview
 
@@ -882,7 +882,7 @@ of unmapped memory maps hidden inside it.
 1. Assembly code is line oriented and `;` makes multiple instructions same line possible
 2. comments
 
-3.
+
 
 
 ###
@@ -904,13 +904,13 @@ then the assembler helps out again. It automatically loads the constant into the
 Assembly instructions that expand into multiple machine instructions are
 troublesome if you’re using **.set noreorder** directives to take control of
 managing branch delay slots
-> 既然noreorder了， 为什么还是会导致
+> 既然 noreorder 了， 为什么还是会导致
 
 ### Regarding 64-Bit and 32-Bit Instructions
   1. the execution of MIPS32 instructions always leaves the upper 32 bits of any GP register set either to all ones or all zeros (reflecting the value of bit 31)
   2. arithmetic functions can not carry over directly to 64-bit systems. Adds, subtracts, shifts, multiplies, and divides all need new versions. The new instructions
 are named by prefixing the old mnemonic with d (double)
-> 为什么arithmetic function 就是这么特殊了啊。
+> 为什么 arithmetic function 就是这么特殊了啊。
 
 
 ## Addressing Modes
@@ -926,7 +926,7 @@ are named by prefixing the old mnemonic with d (double)
 
 
 3. **lui** The immediate value is shifted left 16 bits and stored in the register. The lower 16 bits are zeroes.
-  ```
+  ```plain
   lui at, %hi(addr) /* 将addr中的高16bit放置到 */
   ```
 
@@ -951,7 +951,7 @@ different fix-up types
 middle of this region. (The linker creates a special symbol, gp, whose address is the middle of this region. The address of gp must then be loaded into the gp
 register by the start-up code, before any load or store instructions are used.)
 
-3.
+
 
 
 # 14 How Hardware and Software Work Together
@@ -967,7 +967,7 @@ register by the start-up code, before any load or store instructions are used.)
 
 ## Explicit Cache Management
 I/O-cache coherent
-> DMA 直接对于内存写入数据导致内存比cache ...
+> DMA 直接对于内存写入数据导致内存比 cache ...
 
 # manual
 

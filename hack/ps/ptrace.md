@@ -13,7 +13,7 @@ options.
 - [ ] when a signal is delivered, the kernel checks whether the `PT_TRACED` flag is set  ?
   - 这种机制是不存在的吧 ？
 
-> 信号来自于 architecture 相关的代码: 比如 strace 的syscall 的，当设置 TIF 上的相关的flags，然后触发
+> 信号来自于 architecture 相关的代码: 比如 strace 的 syscall 的，当设置 TIF 上的相关的 flags，然后触发
 
 [GDB Remote Serial Protocol](https://www.embecosm.com/appnotes/ean4/embecosm-howto-rsp-server-ean4-issue-2.html#id3056712)
 [strace](https://github.com/strace/strace)
@@ -137,7 +137,7 @@ group-stop : 当一个收到 stop 信号，所有 thread 都应该被 stop，
 
 > CLONE_PTRACE (since Linux 2.2)
 >
->        If  CLONE_PTRACE  is  specified,  and  the calling process is being
+>    plain    If  CLONE_PTRACE  is  specified,  and  the calling process is being
 >        traced, then trace the child also (see ptrace(2)).
 
 - [ ] 很怪异，为什么 CLONE_PTRACE 表示 calling process 被 traced
@@ -147,7 +147,7 @@ group-stop : 当一个收到 stop 信号，所有 thread 都应该被 stop，
 >        not  necessarily  have stopped by the completion of this call; use waitpid(2) to wait for the tracee to stop.  See the "At‐
 >        taching and detaching" subsection for additional information.  (addr and data are ignored.)
 >
->        Permission to perform a PTRACE_ATTACH is governed by a ptrace access mode PTRACE_MODE_ATTACH_REALCREDS check; see below.
+>    plain    Permission to perform a PTRACE_ATTACH is governed by a ptrace access mode PTRACE_MODE_ATTACH_REALCREDS check; see below.
 >
 > PTRACE_SEIZE (since Linux 3.4)
 >        Attach to the process specified in pid, making it a tracee of the calling process.  Unlike PTRACE_ATTACH, PTRACE_SEIZE does
@@ -158,7 +158,7 @@ group-stop : 当一个收到 stop 信号，所有 thread 都应该被 stop，
 >        tached  using  PTRACE_O_TRACEFORK,  PTRACE_O_TRACEVFORK,  and PTRACE_O_TRACECLONE.  addr must be zero.  data contains a bit
 >        mask of ptrace options to activate immediately.
 >
->        Permission to perform a PTRACE_SEIZE is governed by a ptrace access mode PTRACE_MODE_ATTACH_REALCREDS check; see below.
+>    plain    Permission to perform a PTRACE_SEIZE is governed by a ptrace access mode PTRACE_MODE_ATTACH_REALCREDS check; see below.
 
 
 ## kernel/trace/ 下的内容

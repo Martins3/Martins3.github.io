@@ -421,7 +421,7 @@ static unsigned int id_visibility(const struct kvm_vcpu *vcpu,
 
 ## ARM 中断虚拟化
 
-参考 LoyenWang 的 [【原创】Linux虚拟化KVM-Qemu分析（六）之中断虚拟化](https://www.cnblogs.com/LoyenWang/p/14017052.html)
+参考 LoyenWang 的 [【原创】Linux 虚拟化 KVM-Qemu 分析（六）之中断虚拟化](https://www.cnblogs.com/LoyenWang/p/14017052.html)
 
 
 ## [ ] 如何判断当前 KVM 是 VHE 还是 non-VHE 的?

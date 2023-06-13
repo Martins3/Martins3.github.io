@@ -3,7 +3,7 @@
 - [ ] https://gist.github.com/mcastelino/47c1fcec1b364d5e82d42e6f341eba78 : 调试的方法
 
 info mtree
-```
+```plain
       0000000000000600-0000000000000603 (prio 0, i/o): acpi-evt
       0000000000000604-0000000000000605 (prio 0, i/o): acpi-cnt
       0000000000000608-000000000000060b (prio 0, i/o): acpi-tmr

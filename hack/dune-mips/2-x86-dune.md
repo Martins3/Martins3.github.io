@@ -16,7 +16,7 @@
 ## Debug 1
 为了解决 sched_getcpu 这一个 bug，将 setup_gdt 放到了 create_percpu 中间
 
-```
+```plain
 static struct dune_percpu *create_percpu(void)
 
   // setup_gdt(percpu);
@@ -142,7 +142,7 @@ static void *sys_st(void *arg) {
 ```
 
 glibc 对于 open 函数的封装，实际上调用的是 openat syscall
-```
+```plain
 ➜  c strace ./open-openat.out
 execve("./open-openat.out", ["./open-openat.out"], 0x7fff52b75d70 /* 80 vars */) = 0
 brk(NULL)                               = 0x11f3000
@@ -237,7 +237,7 @@ exit_group(0)                           = ?
 # ref
 https://wiki.osdev.org/Paging
 
-```
+```plain
 Bit 0 (P) is the Present flag.
 Bit 1 (R/W) is the Read/Write flag.
 Bit 2 (U/S) is the User/Supervisor flag.
@@ -245,7 +245,7 @@ Bit 2 (U/S) is the User/Supervisor flag.
 
 The combination of these flags specify the details of the page fault and indicate what action to take:
 
-```
+```plain
 US RW  P - Description
 0  0  0 - Supervisory process tried to read a non-present page entry
 0  0  1 - Supervisory process tried to read a page and caused a protection fault

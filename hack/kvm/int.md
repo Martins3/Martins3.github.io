@@ -1,7 +1,7 @@
 # intel 中断虚拟化，基于 狮子书
 
 ## 中断虚拟化
-中断虚拟化的关键在于对中断控制器的模拟，我们知道x86上中断控制器主要有旧的中断控制器PIC(intel 8259a)和适应于SMP框架的IOAPIC/LAPIC两种。
+中断虚拟化的关键在于对中断控制器的模拟，我们知道 x86 上中断控制器主要有旧的中断控制器 PIC(intel 8259a)和适应于 SMP 框架的 IOAPIC/LAPIC 两种。
 
 https://luohao-brian.gitbooks.io/interrupt-virtualization/content/qemu-kvm-zhong-duan-xu-ni-hua-kuang-jia-fen-679028-4e2d29.html
 
@@ -424,7 +424,7 @@ int kvm_set_irq(struct kvm *kvm, int irq_source_id, u32 irq, int level,
 ## 3.4 MSI(X) 虚拟化
 MSI 让中断不在受管脚约束，MSI 能够支持的中断数大大增加。支持 MSI 的设备绕过 I/O APIC，直接和 LAPIC 通过系统总线相连。
 
-I/O APIC 从中断重定向表提取中断信息，而 MSI-X 是从 MSI-X Capability 提取信息，找到目标CPU，可以，MSI-X 就是将 I/O APIC的功能下沉到外设中间。
+I/O APIC 从中断重定向表提取中断信息，而 MSI-X 是从 MSI-X Capability 提取信息，找到目标 CPU，可以，MSI-X 就是将 I/O APIC 的功能下沉到外设中间。
 
 - [x] I/O APIC 的转发在什么位置?
   - arch/x86/kvm/ioapic.c:ioapic_set_irq 可以看到 `entry = ioapic->redirtbl[irq];`

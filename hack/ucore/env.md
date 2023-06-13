@@ -1,6 +1,6 @@
 # install i32 gcc
 1. Add env
-```
+```plain
 export PREFIX="~Application/i386elfgcc"
 export TARGET=i386-elf
 export PATH="$PREFIX/bin:$PATH"

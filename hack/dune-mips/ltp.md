@@ -12,14 +12,14 @@
 
 
 糟糕，原来是需要 pan-ltp 驱动的
-```
+```plain
 + /opt/ltp/bin/ltp-pan -e -S -a 406798 -n 406798 -p -f /tmp/ltp-F64qpmJ1zw/alltests -l /opt/ltp/results/LTP_RUN_ON-2021_03_15-00h_34m_23s.log -C /opt/ltp/output/LTP_RUN
 _ON-2021_03_15-00h_34m_23s.failed -T /opt/ltp/output/LTP_RUN_ON-2021_03_15-00h_34m_23s.tconf
 ```
 其中，alltests 是装配的内容吧 !
 
 ## install
-```
+```plain
 define generate_install_rule
 
 INSTALL_FILES		+= $$(abspath $$(DESTDIR)/$(3)/$(1))

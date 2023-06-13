@@ -26,15 +26,15 @@ static inline bool is_tdp_mmu(struct kvm_mmu *mmu)
 
 #### https://luohao-brian.gitbooks.io/interrupt-virtualization/content/kvmzhi-nei-cun-xu-ni531628-kvm-mmu-virtualization.html
 
-获得缺页异常发生时的CR2,及当时访问的虚拟地址；
+获得缺页异常发生时的 CR2,及当时访问的虚拟地址；
 进入
-```
+```plain
 kvm_mmu_page_fault()(vmx.c)->
 r = vcpu->arch.mmu.page_fault(vcpu, cr2, error_code);(mmu.c)->
 FNAME(page_fault)(struct kvm_vcpu *vcpu, gva_t addr, u32 error_code)(paging_tmpl.h)->
 FNAME(walk_addr)()
 ```
-查guest页表，物理地址是否存在， 这时肯定是不存在的
+查 guest 页表，物理地址是否存在， 这时肯定是不存在的
 The page is not mapped by the guest. Let the guest handle it.
 `inject_page_fault()->kvm_inject_page_fault()` 异常注入流程；
 
@@ -43,9 +43,9 @@ The page is not mapped by the guest. Let the guest handle it.
 > Guest 搞定之后，那么
 > TODO TLB 的查找不到，被 VMM 截获应该是需要 硬件支持的吧!
 
-为了快速检索GUEST页表所对应的的影子页表，KVM 为每个GUEST都维护了一个哈希
-表，影子页表和GUEST页表通过此哈希表进行映射。对于每一个GUEST来说，GUEST
-的页目录和页表都有唯一的GUEST物理地址，通过页目录/页表的客户机物理地址就
+为了快速检索 GUEST 页表所对应的的影子页表，KVM 为每个 GUEST 都维护了一个哈希
+表，影子页表和 GUEST 页表通过此哈希表进行映射。对于每一个 GUEST 来说，GUEST
+的页目录和页表都有唯一的 GUEST 物理地址，通过页目录/页表的客户机物理地址就
 可以在哈希链表中快速地找到对应的影子页目录/页表。
 > 显然不可能使用保存所有的物理地址，从虚拟机只会将虚拟机使用的物理地址处理掉
 
@@ -198,7 +198,7 @@ static void shadow_mmu_init_context(struct kvm_vcpu *vcpu, struct kvm_mmu *conte
     - [x] guest page table 的内容 ? GVA 也就是 host 的虚拟地址
 - [x] `FNAME(walk_addr)()` 存储的地址都是 guest 的虚拟地址 ? 是的，所以应该很容易 walk.
 
-> FNAME(walk_addr)() 查 guest页表，物理地址是否存在，这时肯定是不存在的
+> FNAME(walk_addr)() 查 guest 页表，物理地址是否存在，这时肯定是不存在的
 `inject_page_fault()->kvm_inject_page_fault()` 异常注入流程；
 
 在 Host 中间检查发现不存在，然后在使用 inject pg 到 guest.
@@ -209,7 +209,7 @@ static void shadow_mmu_init_context(struct kvm_vcpu *vcpu, struct kvm_mmu *conte
 -> *那么当 guest 通过 cr3 进行修改 shadow page table 的时候，通过 write protection 可以找到 ?*
 -> *好像 shadow page 只能存放 512 个 page table entry,  利用 cr3 访问真的没有问题吗 ?*
 
-> 影子页表又是载入到CR3中真正为物理MMU所利用进行寻址的页表，因此开始时任何的内存访问操作都会引起缺页异常；导致vm发生VM Exit；进入handle_exception();
+> 影子页表又是载入到 CR3 中真正为物理 MMU 所利用进行寻址的页表，因此开始时任何的内存访问操作都会引起缺页异常；导致 vm 发生 VM Exit；进入 handle_exception();
 
 ## 找到 shadow 以及 ept 的 page table entry
 
@@ -217,9 +217,9 @@ static void shadow_mmu_init_context(struct kvm_vcpu *vcpu, struct kvm_mmu *conte
 ## rmap
 https://www.cnblogs.com/ck1020/p/6920765.html
 
-在KVM中，逆向映射机制的作用是类似的，但是完成的却不是从HPA到对应的EPT页表项的定位，
-而是从gfn到*对应的页表项*的定位。
-*理论上讲根据gfn一步步遍历EPT也未尝不可，但是效率较低*况且在EPT所维护的页面不同于host的页表，*理论上讲是虚拟机之间是禁止主动的共享内存的*，为了提高效率，就有了当前的逆向映射机制。
+在 KVM 中，逆向映射机制的作用是类似的，但是完成的却不是从 HPA 到对应的 EPT 页表项的定位，
+而是从 gfn 到*对应的页表项*的定位。
+*理论上讲根据 gfn 一步步遍历 EPT 也未尝不可，但是效率较低*况且在 EPT 所维护的页面不同于 host 的页表，*理论上讲是虚拟机之间是禁止主动的共享内存的*，为了提高效率，就有了当前的逆向映射机制。
 
 - rmap: from guest page to shadow ptes that map it
 - Shadow hash: from guest page to its shadow
@@ -430,7 +430,7 @@ drivers/gpu/drm/i915/gvt/kvmgt.c
 - kvm_slot_page_track_remove_page
 - kvm_slot_page_track_add_page
 
-- 增加监控的时候:
+- 增加监控的时候
   -
 ```txt
 @[

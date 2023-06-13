@@ -18,7 +18,7 @@ https://github.com/adamdunkels/uip
 - [ ] 阅读资料 : https://mp.weixin.qq.com/s/CWqUagksabj4kDFQhTlgUA
 
 ## how to use
-```
+```plain
 lkvm run -k ../linux/arch/x86/boot/bzImage -d /home/maritns3/core/linux-kernel-labs/tools/labs/core-image-minimal-qemux86.ext4
 ```
 

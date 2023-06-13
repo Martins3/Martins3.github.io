@@ -89,8 +89,6 @@ emulate.c : 各种指令的模拟
 
 ## 关键的数据结构
 ```c
-struct kvm_x86_ops // 难道是为了将 kvm_get_msr 对于不同的 x86 架构上 ?
-
 struct x86_emulate_ops // 定义的函数都是给 emulate.c 使用
 
 struct vcpu_vmx {
@@ -218,8 +216,8 @@ static bool mmu_spte_update(u64 *sptep, u64 new_spte)
 ## ept
 
 tdp_page_fault()->
-gfn_to_pfn(); GPA到HPA的转化分两步完成，分别通过gfn_to_hva、hva_to_pfn两个函数完成
-`__direct_map()`; 建立EPT页表结构
+gfn_to_pfn(); GPA 到 HPA 的转化分两步完成，分别通过 gfn_to_hva、hva_to_pfn 两个函数完成
+`__direct_map()`; 建立 EPT 页表结构
 
 为什么 ept 也是需要建立一个 shadow page table ?
 
@@ -234,11 +232,11 @@ ept : 应该是 GPA 到 HPA
 
 - init_kvm_tdp_mmu
 - kvm_mmu_alloc_page  : 申请 kvm_mmu_page 空间，该结构表示 EPT 页表项
-- vmx_load_mmu_pgd : 传入的root_hpa也就直接当Guest CR3用，其实就是影子页表的基址。
+- vmx_load_mmu_pgd : 传入的 root_hpa 也就直接当 Guest CR3 用，其实就是影子页表的基址。
 
-- 当CPU访问EPT页表查找HPA时，发现相应的页表项不存在，则会发生EPT Violation异常，导致VM-Exit
+- 当 CPU 访问 EPT 页表查找 HPA 时，发现相应的页表项不存在，则会发生 EPT Violation 异常，导致 VM-Exit
 
-**GPA到HPA的映射关系由EPT页表来维护**
+**GPA 到 HPA 的映射关系由 EPT 页表来维护**
 
 ## ept 和 shadow page table 中间的内容
 - ept 和 shadow page table 的格式相同，让硬件访问可以格式相同

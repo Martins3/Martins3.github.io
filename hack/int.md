@@ -264,18 +264,18 @@ struct irq_data {
 
 ![img](https://img2020.cnblogs.com/blog/1771657/202005/1771657-20200531111554895-528341955.png)
 - `struct irq_chip`结构，描述的是中断控制器的底层操作函数集，这些函数集最终完成对控制器硬件的操作；
-- `struct irq_domain`结构，用于硬件中断号和Linux IRQ中断号（virq，虚拟中断号）之间的映射；
-- `irq_chip` 结构体中的每个函数指针，都会携带一个指向struct irq_data的指针作为参数
+- `struct irq_domain`结构，用于硬件中断号和 Linux IRQ 中断号（virq，虚拟中断号）之间的映射；
+- `irq_chip` 结构体中的每个函数指针，都会携带一个指向 struct irq_data 的指针作为参数
 
 
 ![img](https://img2020.cnblogs.com/blog/1771657/202005/1771657-20200531111647851-1005315068.png)
 
-- 每个中断控制器都对应一个IRQ Domain；
-- 中断控制器驱动通过`irq_domain_add_*()`接口来创建IRQ Domain；
-- IRQ Domain支持三种映射方式：linear map（线性映射），tree map（树映射），no map（不映射）；
+- 每个中断控制器都对应一个 IRQ Domain；
+- 中断控制器驱动通过`irq_domain_add_*()`接口来创建 IRQ Domain；
+- IRQ Domain 支持三种映射方式：linear map（线性映射），tree map（树映射），no map（不映射）；
   - linear map：维护固定大小的表，索引是硬件中断号，如果硬件中断最大数量固定，并且数值不大，可以选择线性映射；
   - tree map：硬件中断号可能很大，可以选择树映射；
-  - no map：硬件中断号直接就是Linux的中断号；
+  - no map：硬件中断号直接就是 Linux 的中断号；
 
 ![](https://img2020.cnblogs.com/blog/1771657/202005/1771657-20200531111718514-879227841.png)
 
@@ -317,7 +317,7 @@ struct irqaction {
 ```
 
 - [ ] /proc/interrupts : proc.c:show_interrupts() 的最后的描述，其实就是相关的 chip
-```
+```plain
             CPU0       CPU1       CPU2       CPU3       CPU4       CPU5       CPU6       CPU7
    0:          8          0          0          0          0          0          0          0  IR-IO-APIC    2-edge      timer
    1:      19619          0          0          0          0          0          0       3444  IR-IO-APIC    1-edge      i8042
