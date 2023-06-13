@@ -190,3 +190,44 @@ struct opcode {
 ## emulate_ops 和 vmx_x86_ops 的操作对比
 - vmx_x86_ops 提供了各种操作的硬件支持.
 - vmx 的 kvm_vmx_exit_handlers 需要 emulate 的，但是 emulator 的工作需要从 emulator 中间得到数据
+
+## 一些 backtrace
+
+### `x86_decode_insn`
+```txt
+@[
+    x86_decode_insn+1
+    x86_decode_emulated_instruction+54
+    x86_emulate_instruction+162
+    skip_emulated_instruction+320
+    kvm_skip_emulated_instruction+28
+    vmx_handle_exit+1838
+    kvm_arch_vcpu_ioctl_run+3623
+    kvm_vcpu_ioctl+621
+    __x64_sys_ioctl+130
+    do_syscall_64+59
+    entry_SYSCALL_64_after_hwframe+68
+]: 5
+@[
+    x86_decode_insn+1
+    x86_decode_emulated_instruction+54
+    x86_emulate_instruction+162
+    vmx_handle_exit+369
+    kvm_arch_vcpu_ioctl_run+3623
+    kvm_vcpu_ioctl+621
+    __x64_sys_ioctl+130
+    do_syscall_64+59
+    entry_SYSCALL_64_after_hwframe+68
+]: 18
+@[
+    x86_decode_insn+1
+    x86_decode_emulated_instruction+54
+    x86_emulate_instruction+162
+    vmx_handle_exit+1838
+    kvm_arch_vcpu_ioctl_run+3623
+    kvm_vcpu_ioctl+621
+    __x64_sys_ioctl+130
+    do_syscall_64+59
+    entry_SYSCALL_64_after_hwframe+68
+]: 184
+```
