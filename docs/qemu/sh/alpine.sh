@@ -11,9 +11,9 @@ hacking_memory="virtio-mem"
 hacking_memory="prealloc"
 hacking_memory="sockets"
 hacking_memory="numa"
-# hacking_memory="file"
-# hacking_memory="huge"
-# hacking_memory="none"
+hacking_memory="file"
+hacking_memory="huge"
+hacking_memory="none"
 
 hacking_kcov=false
 # hacking_kcov=true
@@ -23,11 +23,22 @@ share_memory_option="9p"
 
 hacking_migration=false
 # @todo 尝试在 guest 中搭建一个 vIOMMU
-hacking_vfio=false
+hacking_vfio=true
 
 use_ovmf=false
 minimal=false
 qmp_shell=true # 使用 qmp_shell 可以交互，否则就是输入 json
+
+host_cpu_arch=none
+
+if grep "GenuineIntel" /proc/cpuinfo; then
+	host_cpu_arch="intel"
+	# TODO 这个名称修改的正规点
+elif grep "AMD" /proc/cpuinfo;then
+	host_cpu_arch="amd"
+else
+	host_cpu_arch="arm"
+fi
 
 abs_loc=$(dirname "$(realpath "$0")")
 configuration=${abs_loc}/config.json

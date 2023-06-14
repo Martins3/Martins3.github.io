@@ -783,20 +783,14 @@ vfio_dma_map 传递给内核， host 的虚拟地址 和 guest 的物理地址
 
 ## [An Introduction to IOMMU Infrastructure in the Linux Kernel](https://lenovopress.lenovo.com/lp1467.pdf)
 
-<script src="https://giscus.app/client.js"
-        data-repo="martins3/martins3.github.io"
-        data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="
-        data-category="Show and tell"
-        data-category-id="MDE4OkRpc2N1c3Npb25DYXRlZ29yeTMyMDMzNjY4"
-        data-mapping="pathname"
-        data-reactions-enabled="1"
-        data-emit-metadata="0"
-        data-theme="light"
-        data-lang="zh-CN"
-        crossorigin="anonymous"
-        async>
-</script>
+## 操作的内容
+1. 找到支持 srIOV 的设备
+2. mddev
+3. QEMU 中测试下 CONFIG_VIRTIO_IOMMU
+4. iommu 的参数收集下
+5. vfio 如何实现 iommu 接口的?
 
-本站所有文章转发 **CSDN** 将按侵权追究法律责任，其它情况随意。
+## http://xillybus.com/tutorials/iommu-swiotlb-linux
+
 
 [^4]: https://unix.stackexchange.com/questions/595353/vt-d-support-enabled-but-iommu-groups-are-missing
