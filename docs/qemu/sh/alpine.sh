@@ -11,9 +11,9 @@ hacking_memory="virtio-mem"
 hacking_memory="prealloc"
 hacking_memory="sockets"
 hacking_memory="numa"
-hacking_memory="file"
-hacking_memory="huge"
-hacking_memory="none"
+# hacking_memory="file"
+# hacking_memory="huge"
+# hacking_memory="none"
 
 hacking_kcov=false
 # hacking_kcov=true

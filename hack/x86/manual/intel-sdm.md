@@ -2,7 +2,12 @@
 
 # Volume 2 : Instruction Set Reference
 
+##
+
 # Volume 3 : System Programming Guide
+
+## 4 PAGING
+关于 page table entry 中 bit 的定义可以在这里查询。
 
 ## 10 ADVANCED PROGRAMMABLE INTERRUPT CONTROLLER (APIC)
 - [ ] When a local APIC has sent an interrupt to its processor core for handling, the processor uses the interrupt and
@@ -23,7 +28,7 @@ Local APICs can receive interrupts from the following sources: 1. ...
 
 ### 10.12 EXTENDED XAPIC (X2APIC)
 
-## VMX NON-ROOT OPERATION
+## 25 VMX NON-ROOT OPERATION
 分析了导致 vmexit 的指令和其他的原因，有些执行的行为在 non-root 中是存在变化的，最后，25.5 不知道在干什么?
 
 #### 25.1.2 Instructions That Cause VM Exits Unconditionally

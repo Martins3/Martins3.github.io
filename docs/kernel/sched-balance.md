@@ -431,23 +431,6 @@ struct sd_data {
   - 这个 sched_domain 包含一定数量的 cpu
   - sched_domain 指向一个链表的 sched_group
 
-## CONFIG_NUMA_BALANCING
-
-This option adds support for automatic NUMA aware memory/task placement.
-The mechanism is quite primitive and is based on migrating memory when it has references to the node the task is running on.
-
-This system will be inactive on UMA systems.
-
-> 似乎是为了处理当其中的 NUMA 远程访问，然后直接将 CPU 迁移过去的操作。
-
-
-```c
-// 请问 numa
-void init_numa_balancing(unsigned long clone_flags, struct task_struct *p)
-
-struct numa_group{
-```
-
 ## TODO
 - [ ] cpu_attach_domain
 - [ ] sched_group_span

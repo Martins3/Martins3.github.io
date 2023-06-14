@@ -39,7 +39,7 @@
 <!-- vim-markdown-toc -->
 
 ## Overview
-原图来自于 kernelgo.org, 这里进行一些小小的修改, 在浏览器中打开新的标签可以看大图。
+原图来自于 kernel.love, 这里进行一些小小的修改, 在浏览器中打开新的标签可以看大图。
 ![](../img/qemu-address-space.svg)
 
 首先感受一下 memory model 是什么, 在 QEMU 的 monitor console 中 `info mtree` 可以下面是一个例子，guest 机器的配置使用[这个脚本](https://github.com/Martins3/Martins3.github.io/blob/master/hack/qemu/x64-e1000/alpine.sh)生成的。

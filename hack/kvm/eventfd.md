@@ -248,4 +248,4 @@ On arm64, gsi routing being supported, the following can happen:
 ## 回答这个问题
 - https://stackoverflow.com/questions/66937301/what-is-irq-bypass-and-how-to-use-it-in-linux
 
-[^1]: https://kernelgo.org/mmio.html
+[^1]: https://kernel.love/mmio.html

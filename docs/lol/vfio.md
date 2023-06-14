@@ -597,7 +597,7 @@ static struct pci_driver vfio_pci_driver = {
 
 
 ## 参考
-- https://kernelgo.org/vfio-insight.html
+- https://kernel.love/vfio-insight.html
 - 1 https://www.openeuler.org/zh/blog/wxggg/2020-11-29-vfio-passthrough-1.html
 - 2 https://www.openeuler.org/zh/blog/wxggg/2020-11-29-vfio-passthrough-2.html
 - 3 https://www.openeuler.org/zh/blog/wxggg/2020-11-21-iommu-smmu-intro.html
