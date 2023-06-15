@@ -5,6 +5,32 @@
 - [ ] Documentation/userspace-api/iommufd.rst
 - [ ] Documentation/userspace-api/iommu.rst
 
+## [ ] 看看 iommu 的用户态接口
+
+intel 上观察到的
+```txt
+class/iommu/
+class/misc/iommu
+devices/pci0000:00/0000:00:02.0/iommu
+devices/pci0000:00/0000:00:02.0/iommu_group
+devices/virtual/iommu/
+devices/virtual/iommu/dmar0/intel-iommu/
+devices/virtual/iommu/dmar1/intel-iommu/
+devices/virtual/misc/iommu/
+kernel/btf/iommufd
+kernel/btf/vfio_iommu_type1
+kernel/iommu_groups/
+kernel/slab/iommu_iova
+module/iommufd/
+module/vfio/holders/vfio_iommu_type1
+module/vfio_iommu_type1/
+```
+
+## [ ] iommu 的 kernel 参数理解
+
+
+
+
 ## 问题 && TODO
 - [ ] drivers/iommu/hyperv-iommu.c 是个什么概念 ?
 - [ ] 能不能 hacking 一个 minimal 的用户态 nvme 驱动，能够读取一个 block 上来的那种
