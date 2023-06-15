@@ -274,7 +274,6 @@ static int FNAME(page_fault)(struct kvm_vcpu *vcpu, gpa_t addr, u32 error_code,
 #### ept page fault
 
 - [ ] where is  paging64_gva_to_gpa ?
-- [ ] mtrr : https://zhuanlan.zhihu.com/p/51023864 : 还是很迷，这个到底是做什么
 
 https://stackoverflow.com/questions/60694243/how-does-kvm-qemu-and-guest-os-handles-page-fault
 

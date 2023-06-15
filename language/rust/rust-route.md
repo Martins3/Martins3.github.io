@@ -611,3 +611,6 @@ pub mod blog {
     }
 }
 ```
+
+## Effective Rust
+https://news.ycombinator.com/item?id=36338529

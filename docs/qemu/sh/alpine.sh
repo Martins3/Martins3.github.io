@@ -33,8 +33,7 @@ host_cpu_arch=none
 
 if grep "GenuineIntel" /proc/cpuinfo; then
 	host_cpu_arch="intel"
-	# TODO 这个名称修改的正规点
-elif grep "AMD" /proc/cpuinfo;then
+elif grep "AuthenticAMD" /proc/cpuinfo; then
 	host_cpu_arch="amd"
 else
 	host_cpu_arch="arm"
@@ -62,8 +61,7 @@ workstation="$(jq -r ".workstation" <"$configuration")"
 # kernel_dir=/home/martins3/kernel/centos-3.10.0-1160.11.1-x86_64
 
 qemu=${qemu_dir}/build/x86_64-softmmu/qemu-system-x86_64
-# 最近的编出来的 qemu 似乎不能调试了 2023-05-20
-qemu="qemu-system-x86_64"
+# qemu="qemu-system-x86_64"
 if [[ $hacking_kcov == true ]]; then
 	kernel=${kernel_dir}/kcov/arch/x86/boot/bzImage
 else
@@ -204,7 +202,7 @@ arg_cpu_model="-cpu Broadwell-noTSX-IBRS,vmx=on,hle=off,rtm=off"
 # arg_cpu_model="-cpu Denverton"
 # arg_cpu_model="-cpu Broadwell-IBRS"
 # arg_cpu_model="-cpu host,hv_relaxed,hv_vpindex,hv_time,"
-arg_cpu_model="-cpu host"
+arg_cpu_model="-cpu host,phys_bits=37,host-phys-bits=off"
 
 if [[ $in_guest == true ]]; then
 	arg_cpu_model="$arg_cpu_model,vmx=off"
