@@ -8,6 +8,39 @@
 - acpi idle : 执行 mwait hlt 以及 ioport
 - halt poll : halt 之前 poll 一段时间
 
+## 感觉 AMD crash 可能和这个有关
+```txt
+    cpuidle.off=1   [CPU_IDLE]
+                        disable the cpuidle sub-system
+
+    cpuidle.governor=
+                    [CPU_IDLE] Name of the cpuidle governor to use.
+
+        idle=           [X86]
+                        Format: idle=poll, idle=halt, idle=nomwait
+                        Poll forces a polling idle loop that can slightly
+                        improve the performance of waking up a idle CPU, but
+                        will use a lot of power and make the system run hot.
+                        Not recommended.
+                        idle=halt: Halt is forced to be used for CPU idle.
+                        In such case C2/C3 won't be used again.
+                        idle=nomwait: Disable mwait for CPU C-states
+```
+
+```txt
+🧀  cat /sys/devices/system/cpu/cpuidle/available_governors
+menu
+🧀  cat /sys/devices/system/cpu/cpuidle/current_driver
+acpi_idle
+```
+先修改为 idle=halt 尝试一下
+```txt
+🧀  cat /sys/devices/system/cpu/cpuidle/available_governors
+menu
+🧀  cat /sys/devices/system/cpu/cpuidle/current_driver
+none
+```
+
 ## sleep 的等级
 - https://docs.kernel.org/admin-guide/pm/sleep-states.html
 

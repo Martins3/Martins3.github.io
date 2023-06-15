@@ -7,12 +7,64 @@
 
 ## [ ] 看看 iommu 的用户态接口
 
+cd /sys 然后 fd iommu
+
 intel 上观察到的
 ```txt
 class/iommu/
 class/misc/iommu
+devices/pci0000:00/0000:00:00.0/iommu
+devices/pci0000:00/0000:00:00.0/iommu_group
+devices/pci0000:00/0000:00:01.0/0000:01:00.0/iommu
+devices/pci0000:00/0000:00:01.0/0000:01:00.0/iommu_group
+devices/pci0000:00/0000:00:01.0/0000:01:00.1/iommu
+devices/pci0000:00/0000:00:01.0/0000:01:00.1/iommu_group
+devices/pci0000:00/0000:00:01.0/iommu
+devices/pci0000:00/0000:00:01.0/iommu_group
 devices/pci0000:00/0000:00:02.0/iommu
 devices/pci0000:00/0000:00:02.0/iommu_group
+devices/pci0000:00/0000:00:06.0/0000:02:00.0/iommu
+devices/pci0000:00/0000:00:06.0/0000:02:00.0/iommu_group
+devices/pci0000:00/0000:00:06.0/iommu
+devices/pci0000:00/0000:00:06.0/iommu_group
+devices/pci0000:00/0000:00:0a.0/iommu
+devices/pci0000:00/0000:00:0a.0/iommu_group
+devices/pci0000:00/0000:00:0e.0/iommu
+devices/pci0000:00/0000:00:0e.0/iommu_group
+devices/pci0000:00/0000:00:14.0/iommu
+devices/pci0000:00/0000:00:14.0/iommu_group
+devices/pci0000:00/0000:00:14.2/iommu
+devices/pci0000:00/0000:00:14.2/iommu_group
+devices/pci0000:00/0000:00:14.3/iommu
+devices/pci0000:00/0000:00:14.3/iommu_group
+devices/pci0000:00/0000:00:15.0/iommu
+devices/pci0000:00/0000:00:15.0/iommu_group
+devices/pci0000:00/0000:00:15.1/iommu
+devices/pci0000:00/0000:00:15.1/iommu_group
+devices/pci0000:00/0000:00:15.2/iommu
+devices/pci0000:00/0000:00:15.2/iommu_group
+devices/pci0000:00/0000:00:16.0/iommu
+devices/pci0000:00/0000:00:16.0/iommu_group
+devices/pci0000:00/0000:00:17.0/iommu
+devices/pci0000:00/0000:00:17.0/iommu_group
+devices/pci0000:00/0000:00:1a.0/0000:03:00.0/iommu
+devices/pci0000:00/0000:00:1a.0/0000:03:00.0/iommu_group
+devices/pci0000:00/0000:00:1a.0/iommu
+devices/pci0000:00/0000:00:1a.0/iommu_group
+devices/pci0000:00/0000:00:1c.0/iommu
+devices/pci0000:00/0000:00:1c.0/iommu_group
+devices/pci0000:00/0000:00:1c.2/0000:05:00.0/iommu
+devices/pci0000:00/0000:00:1c.2/0000:05:00.0/iommu_group
+devices/pci0000:00/0000:00:1c.2/iommu
+devices/pci0000:00/0000:00:1c.2/iommu_group
+devices/pci0000:00/0000:00:1f.0/iommu
+devices/pci0000:00/0000:00:1f.0/iommu_group
+devices/pci0000:00/0000:00:1f.3/iommu
+devices/pci0000:00/0000:00:1f.3/iommu_group
+devices/pci0000:00/0000:00:1f.4/iommu
+devices/pci0000:00/0000:00:1f.4/iommu_group
+devices/pci0000:00/0000:00:1f.5/iommu
+devices/pci0000:00/0000:00:1f.5/iommu_group
 devices/virtual/iommu/
 devices/virtual/iommu/dmar0/intel-iommu/
 devices/virtual/iommu/dmar1/intel-iommu/
@@ -26,9 +78,218 @@ module/vfio/holders/vfio_iommu_type1
 module/vfio_iommu_type1/
 ```
 
+```txt
+00:00.0 Host bridge: Intel Corporation Device a700 (rev 01)
+00:01.0 PCI bridge: Intel Corporation Device a70d (rev 01)
+00:02.0 VGA compatible controller: Intel Corporation Raptor Lake-S GT1 [UHD Graphics 770] (rev 04)
+00:06.0 PCI bridge: Intel Corporation Device a74d (rev 01)
+00:0a.0 Signal processing controller: Intel Corporation Device a77d (rev 01)
+00:0e.0 RAID bus controller: Intel Corporation Volume Management Device NVMe RAID Controller Intel Corporation
+00:14.0 USB controller: Intel Corporation Alder Lake-S PCH USB 3.2 Gen 2x2 XHCI Controller (rev 11)
+00:14.2 RAM memory: Intel Corporation Alder Lake-S PCH Shared SRAM (rev 11)
+00:14.3 Network controller: Intel Corporation Alder Lake-S PCH CNVi WiFi (rev 11)
+00:15.0 Serial bus controller: Intel Corporation Alder Lake-S PCH Serial IO I2C Controller #0 (rev 11)
+00:15.1 Serial bus controller: Intel Corporation Alder Lake-S PCH Serial IO I2C Controller #1 (rev 11)
+00:15.2 Serial bus controller: Intel Corporation Alder Lake-S PCH Serial IO I2C Controller #2 (rev 11)
+00:16.0 Communication controller: Intel Corporation Alder Lake-S PCH HECI Controller #1 (rev 11)
+00:17.0 SATA controller: Intel Corporation Alder Lake-S PCH SATA Controller [AHCI Mode] (rev 11)
+00:1a.0 PCI bridge: Intel Corporation Alder Lake-S PCH PCI Express Root Port #25 (rev 11)
+00:1c.0 PCI bridge: Intel Corporation Alder Lake-S PCH PCI Express Root Port #1 (rev 11)
+00:1c.2 PCI bridge: Intel Corporation Device 7aba (rev 11)
+00:1f.0 ISA bridge: Intel Corporation Device 7a86 (rev 11)
+00:1f.3 Audio device: Intel Corporation Alder Lake-S HD Audio Controller (rev 11)
+00:1f.4 SMBus: Intel Corporation Alder Lake-S PCH SMBus Controller (rev 11)
+00:1f.5 Serial bus controller: Intel Corporation Alder Lake-S PCH SPI Controller (rev 11)
+01:00.0 VGA compatible controller: NVIDIA Corporation GP106 [GeForce GTX 1060 3GB] (rev a1)
+01:00.1 Audio device: NVIDIA Corporation GP106 High Definition Audio Controller (rev a1)
+02:00.0 Non-Volatile memory controller: Yangtze Memory Technologies Co.,Ltd ZHITAI TiPro7000 (rev 01)
+03:00.0 Non-Volatile memory controller: Yangtze Memory Technologies Co.,Ltd Device 0071 (rev 01)
+05:00.0 Ethernet controller: Intel Corporation Ethernet Controller I225-V (rev 03)
+```
+
+amd 上观察到的:
+```txt
+bus/event_source/devices/amd_iommu_0
+class/iommu/
+class/misc/iommu
+devices/amd_iommu_0/
+devices/amd_iommu_0/events/mem_iommu_tlb_pde_hit
+devices/amd_iommu_0/events/mem_iommu_tlb_pde_mis
+devices/amd_iommu_0/events/mem_iommu_tlb_pte_hit
+devices/amd_iommu_0/events/mem_iommu_tlb_pte_mis
+devices/pci0000:00/0000:00:00.2/iommu/
+devices/pci0000:00/0000:00:00.2/iommu/ivhd0/amd-iommu/
+devices/pci0000:00/0000:00:01.0/iommu
+devices/pci0000:00/0000:00:01.0/iommu_group
+devices/pci0000:00/0000:00:01.1/0000:01:00.0/iommu
+devices/pci0000:00/0000:00:01.1/0000:01:00.0/iommu_group
+devices/pci0000:00/0000:00:01.1/0000:01:00.1/iommu
+devices/pci0000:00/0000:00:01.1/0000:01:00.1/iommu_group
+devices/pci0000:00/0000:00:01.1/iommu
+devices/pci0000:00/0000:00:01.1/iommu_group
+devices/pci0000:00/0000:00:01.2/0000:02:00.0/iommu
+devices/pci0000:00/0000:00:01.2/0000:02:00.0/iommu_group
+devices/pci0000:00/0000:00:01.2/iommu
+devices/pci0000:00/0000:00:01.2/iommu_group
+devices/pci0000:00/0000:00:02.0/iommu
+devices/pci0000:00/0000:00:02.0/iommu_group
+devices/pci0000:00/0000:00:02.1/iommu
+devices/pci0000:00/0000:00:02.1/iommu_group
+devices/pci0000:00/0000:00:02.2/0000:04:00.0/iommu
+devices/pci0000:00/0000:00:02.2/0000:04:00.0/iommu_group
+devices/pci0000:00/0000:00:02.2/iommu
+devices/pci0000:00/0000:00:02.2/iommu_group
+devices/pci0000:00/0000:00:03.0/iommu
+devices/pci0000:00/0000:00:03.0/iommu_group
+devices/pci0000:00/0000:00:03.1/iommu
+devices/pci0000:00/0000:00:03.1/iommu_group
+devices/pci0000:00/0000:00:03.2/iommu
+devices/pci0000:00/0000:00:03.2/iommu_group
+devices/pci0000:00/0000:00:03.3/0000:07:00.0/iommu
+devices/pci0000:00/0000:00:03.3/0000:07:00.0/iommu_group
+devices/pci0000:00/0000:00:03.3/iommu
+devices/pci0000:00/0000:00:03.3/iommu_group
+devices/pci0000:00/0000:00:04.0/iommu
+devices/pci0000:00/0000:00:04.0/iommu_group
+devices/pci0000:00/0000:00:08.0/iommu
+devices/pci0000:00/0000:00:08.0/iommu_group
+devices/pci0000:00/0000:00:08.1/0000:08:00.0/iommu
+devices/pci0000:00/0000:00:08.1/0000:08:00.0/iommu_group
+devices/pci0000:00/0000:00:08.1/0000:08:00.2/iommu
+devices/pci0000:00/0000:00:08.1/0000:08:00.2/iommu_group
+devices/pci0000:00/0000:00:08.1/0000:08:00.3/iommu
+devices/pci0000:00/0000:00:08.1/0000:08:00.3/iommu_group
+devices/pci0000:00/0000:00:08.1/0000:08:00.4/iommu
+devices/pci0000:00/0000:00:08.1/0000:08:00.4/iommu_group
+devices/pci0000:00/0000:00:08.1/0000:08:00.5/iommu
+devices/pci0000:00/0000:00:08.1/0000:08:00.5/iommu_group
+devices/pci0000:00/0000:00:08.1/0000:08:00.6/iommu
+devices/pci0000:00/0000:00:08.1/0000:08:00.6/iommu_group
+devices/pci0000:00/0000:00:08.1/iommu
+devices/pci0000:00/0000:00:08.1/iommu_group
+devices/pci0000:00/0000:00:08.3/0000:09:00.0/iommu
+devices/pci0000:00/0000:00:08.3/0000:09:00.0/iommu_group
+devices/pci0000:00/0000:00:08.3/iommu
+devices/pci0000:00/0000:00:08.3/iommu_group
+devices/pci0000:00/0000:00:14.0/iommu
+devices/pci0000:00/0000:00:14.0/iommu_group
+devices/pci0000:00/0000:00:14.3/iommu
+devices/pci0000:00/0000:00:14.3/iommu_group
+devices/pci0000:00/0000:00:18.0/iommu
+devices/pci0000:00/0000:00:18.0/iommu_group
+devices/pci0000:00/0000:00:18.1/iommu
+devices/pci0000:00/0000:00:18.1/iommu_group
+devices/pci0000:00/0000:00:18.2/iommu
+devices/pci0000:00/0000:00:18.2/iommu_group
+devices/pci0000:00/0000:00:18.3/iommu
+devices/pci0000:00/0000:00:18.3/iommu_group
+devices/pci0000:00/0000:00:18.4/iommu
+devices/pci0000:00/0000:00:18.4/iommu_group
+devices/pci0000:00/0000:00:18.5/iommu
+devices/pci0000:00/0000:00:18.5/iommu_group
+devices/pci0000:00/0000:00:18.6/iommu
+devices/pci0000:00/0000:00:18.6/iommu_group
+devices/pci0000:00/0000:00:18.7/iommu
+devices/pci0000:00/0000:00:18.7/iommu_group
+devices/virtual/misc/iommu/
+kernel/btf/iommufd
+kernel/btf/vfio_iommu_type1
+kernel/iommu_groups/
+kernel/slab/iommu_iova
+module/iommufd/
+module/vfio/holders/vfio_iommu_type1
+module/vfio_iommu_type1/
+```
+
+```txt
+00:00.0 Host bridge: Advanced Micro Devices, Inc. [AMD] Device 14d8
+00:00.2 IOMMU: Advanced Micro Devices, Inc. [AMD] Device 14d9
+00:01.0 Host bridge: Advanced Micro Devices, Inc. [AMD] Device 14da
+00:01.1 PCI bridge: Advanced Micro Devices, Inc. [AMD] Device 14db
+00:01.2 PCI bridge: Advanced Micro Devices, Inc. [AMD] Device 14db
+00:02.0 Host bridge: Advanced Micro Devices, Inc. [AMD] Device 14da
+00:02.1 PCI bridge: Advanced Micro Devices, Inc. [AMD] Device 14db
+00:02.2 PCI bridge: Advanced Micro Devices, Inc. [AMD] Device 14db
+00:03.0 Host bridge: Advanced Micro Devices, Inc. [AMD] Device 14da
+00:03.1 PCI bridge: Advanced Micro Devices, Inc. [AMD] Device 14db
+00:03.2 PCI bridge: Advanced Micro Devices, Inc. [AMD] Device 14db
+00:03.3 PCI bridge: Advanced Micro Devices, Inc. [AMD] Device 14db
+00:04.0 Host bridge: Advanced Micro Devices, Inc. [AMD] Device 14da
+00:08.0 Host bridge: Advanced Micro Devices, Inc. [AMD] Device 14da
+00:08.1 PCI bridge: Advanced Micro Devices, Inc. [AMD] Device 14dd
+00:08.3 PCI bridge: Advanced Micro Devices, Inc. [AMD] Device 14dd
+00:14.0 SMBus: Advanced Micro Devices, Inc. [AMD] FCH SMBus Controller (rev 71)
+00:14.3 ISA bridge: Advanced Micro Devices, Inc. [AMD] FCH LPC Bridge (rev 51)
+00:18.0 Host bridge: Advanced Micro Devices, Inc. [AMD] Device 14e0
+00:18.1 Host bridge: Advanced Micro Devices, Inc. [AMD] Device 14e1
+00:18.2 Host bridge: Advanced Micro Devices, Inc. [AMD] Device 14e2
+00:18.3 Host bridge: Advanced Micro Devices, Inc. [AMD] Device 14e3
+00:18.4 Host bridge: Advanced Micro Devices, Inc. [AMD] Device 14e4
+00:18.5 Host bridge: Advanced Micro Devices, Inc. [AMD] Device 14e5
+00:18.6 Host bridge: Advanced Micro Devices, Inc. [AMD] Device 14e6
+00:18.7 Host bridge: Advanced Micro Devices, Inc. [AMD] Device 14e7
+01:00.0 VGA compatible controller: NVIDIA Corporation AD107M [GeForce RTX 4060 Max-Q / Mobile] (rev a1)
+01:00.1 Audio device: NVIDIA Corporation Device 22be (rev a1)
+02:00.0 Non-Volatile memory controller: Samsung Electronics Co Ltd NVMe SSD Controller PM9A1/PM9A3/980PRO
+04:00.0 Network controller: MEDIATEK Corp. MT7922 802.11ax PCI Express Wireless Network Adapter
+07:00.0 Ethernet controller: Realtek Semiconductor Co., Ltd. RTL8111/8168/8411 PCI Express Gigabit Ethernet Controller (rev 15)
+08:00.0 Non-Essential Instrumentation [1300]: Advanced Micro Devices, Inc. [AMD] Device 14de (rev d8)
+08:00.2 Encryption controller: Advanced Micro Devices, Inc. [AMD] VanGogh PSP/CCP
+08:00.3 USB controller: Advanced Micro Devices, Inc. [AMD] Device 15b6
+08:00.4 USB controller: Advanced Micro Devices, Inc. [AMD] Device 15b7
+08:00.5 Multimedia controller: Advanced Micro Devices, Inc. [AMD] ACP/ACP3X/ACP6x Audio Coprocessor (rev 62)
+08:00.6 Audio device: Advanced Micro Devices, Inc. [AMD] Family 17h/19h HD Audio Controller
+09:00.0 USB controller: Advanced Micro Devices, Inc. [AMD] Device 15b8
+```
+
+- [ ] PCI 和 Host Bridge 是什么关系?
+
 ## [ ] iommu 的 kernel 参数理解
 
+```txt
+        amd_iommu=      [HW,X86-64]
+                        Pass parameters to the AMD IOMMU driver in the system.
+                        Possible values are:
+                        fullflush - Deprecated, equivalent to iommu.strict=1
+                        off       - do not initialize any AMD IOMMU found in
+                                    the system
+                        force_isolation - Force device isolation for all
+                                          devices. The IOMMU driver is not
+                                          allowed anymore to lift isolation
+                                          requirements as needed. This option
+                                          does not override iommu=pt
+                        force_enable - Force enable the IOMMU on platforms known
+                                       to be buggy with IOMMU enabled. Use this
+                                       option with care.
+                        pgtbl_v1     - Use v1 page table for DMA-API (Default).
+                        pgtbl_v2     - Use v2 page table for DMA-API.
 
+        amd_iommu_dump= [HW,X86-64]
+                        Enable AMD IOMMU driver option to dump the ACPI table
+                        for AMD IOMMU. With this option enabled, AMD IOMMU
+                        driver will print ACPI tables for AMD IOMMU during
+                        IOMMU initialization.
+
+        amd_iommu_intr= [HW,X86-64]
+                        Specifies one of the following AMD IOMMU interrupt
+                        remapping modes:
+                        legacy     - Use legacy interrupt remapping mode.
+                        vapic      - Use virtual APIC mode, which allows IOMMU
+                                     to inject interrupts directly into guest.
+                                     This mode requires kvm-amd.avic=1.
+                                     (Default when IOMMU HW support is present.)
+```
+
+```c
+__setup("amd_iommu_dump",	parse_amd_iommu_dump);
+__setup("amd_iommu=",		parse_amd_iommu_options);
+__setup("amd_iommu_intr=",	parse_amd_iommu_intr);
+__setup("ivrs_ioapic",		parse_ivrs_ioapic);
+__setup("ivrs_hpet",		parse_ivrs_hpet);
+__setup("ivrs_acpihid",		parse_ivrs_acpihid);
+```
+
+## 既然说，如果不用，就不要开启，那么是否还是可以看到 iommu 代码在内核的调用?
 
 
 ## 问题 && TODO
@@ -347,5 +608,8 @@ This chapter discuss architecture and hardware details for interrupt-remapping a
 Xen Implementation Details:
 - Update IRET according to guest’s modification to the interrupt configuration (MSI address, data)
 - Interrupt migration during VCPU scheduling
+
+## manual
+- https://www.amd.com/en/support/tech-docs/amd-io-virtualization-technology-iommu-specification
 
 [^3]: Inside the Linux Virtualization : Principle and Implementation

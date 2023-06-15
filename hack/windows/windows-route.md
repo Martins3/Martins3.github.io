@@ -35,3 +35,7 @@ https://learn.microsoft.com/zh-cn/windows-hardware/drivers/kernel/
 ## 一些技巧
 - vsVim
 - PowerToys 来切换键盘的键位映射
+
+## 调试工具
+- https://github.com/HyperDbg/HyperDbg
+  - 也是理解虚拟化的项目
