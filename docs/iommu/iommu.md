@@ -7,6 +7,9 @@
 
 ## [ ] 看看 iommu 的用户态接口
 
+### debugfs
+
+### sys
 cd /sys 然后 fd iommu
 
 intel 上观察到的
@@ -279,6 +282,7 @@ module/vfio_iommu_type1/
                                      This mode requires kvm-amd.avic=1.
                                      (Default when IOMMU HW support is present.)
 ```
+看内核参数:
 
 ```c
 __setup("amd_iommu_dump",	parse_amd_iommu_dump);
