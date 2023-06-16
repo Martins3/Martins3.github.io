@@ -5,6 +5,10 @@
 - [ ] Documentation/userspace-api/iommufd.rst
 - [ ] Documentation/userspace-api/iommu.rst
 
+## 问题
+- iommu=pt 是导致不可用的原因吗?
+
+
 ## [ ] 看看 iommu 的用户态接口
 
 ### debugfs
@@ -249,6 +253,7 @@ module/vfio_iommu_type1/
 
 ## [ ] iommu 的 kernel 参数理解
 
+### AMD 的参数
 ```txt
         amd_iommu=      [HW,X86-64]
                         Pass parameters to the AMD IOMMU driver in the system.
@@ -293,7 +298,139 @@ __setup("ivrs_hpet",		parse_ivrs_hpet);
 __setup("ivrs_acpihid",		parse_ivrs_acpihid);
 ```
 
-## 既然说，如果不用，就不要开启，那么是否还是可以看到 iommu 代码在内核的调用?
+### Intel 参数
+```txt
+        intel_iommu=    [DMAR] Intel IOMMU driver (DMAR) option
+                on
+                        Enable intel iommu driver.
+                off
+                        Disable intel iommu driver.
+                igfx_off [Default Off]
+                        By default, gfx is mapped as normal device. If a gfx
+                        device has a dedicated DMAR unit, the DMAR unit is
+                        bypassed by not enabling DMAR with this option. In
+                        this case, gfx device will use physical address for
+                        DMA.
+                strict [Default Off]
+                        Deprecated, equivalent to iommu.strict=1.
+                sp_off [Default Off]
+                        By default, super page will be supported if Intel IOMMU
+                        has the capability. With this option, super page will
+                        not be supported.
+                sm_on
+                        Enable the Intel IOMMU scalable mode if the hardware
+                        advertises that it has support for the scalable mode
+                        translation.
+                sm_off
+                        Disallow use of the Intel IOMMU scalable mode.
+                tboot_noforce [Default Off]
+                        Do not force the Intel IOMMU enabled under tboot.
+                        By default, tboot will force Intel IOMMU on, which
+                        could harm performance of some high-throughput
+                        devices like 40GBit network cards, even if identity
+                        mapping is enabled.
+                        Note that using this option lowers the security
+                        provided by tboot because it makes the system
+                        vulnerable to DMA attacks.
+
+        intremap=       [X86-64, Intel-IOMMU]
+                        on      enable Interrupt Remapping (default)
+                        off     disable Interrupt Remapping
+                        nosid   disable Source ID checking
+                        no_x2apic_optout
+                                BIOS x2APIC opt-out request will be ignored
+                        nopost  disable Interrupt Posting
+```
+
+### 通用的参数
+```txt
+        iommu=          [X86]
+                off
+                force
+                noforce
+                biomerge
+                panic
+                nopanic
+                merge
+                nomerge
+                soft
+                pt              [X86]
+                nopt            [X86]
+                nobypass        [PPC/POWERNV]
+                        Disable IOMMU bypass, using IOMMU for PCI devices.
+
+        iommu.forcedac= [ARM64, X86] Control IOVA allocation for PCI devices.
+                        Format: { "0" | "1" }
+                        0 - Try to allocate a 32-bit DMA address first, before
+                          falling back to the full range if needed.
+                        1 - Allocate directly from the full usable range,
+                          forcing Dual Address Cycle for PCI cards supporting
+                          greater than 32-bit addressing.
+
+        iommu.strict=   [ARM64, X86] Configure TLB invalidation behaviour
+                        Format: { "0" | "1" }
+                        0 - Lazy mode.
+                          Request that DMA unmap operations use deferred
+                          invalidation of hardware TLBs, for increased
+                          throughput at the cost of reduced device isolation.
+                          Will fall back to strict mode if not supported by
+                          the relevant IOMMU driver.
+                        1 - Strict mode.
+                          DMA unmap operations invalidate IOMMU hardware TLBs
+                          synchronously.
+                        unset - Use value of CONFIG_IOMMU_DEFAULT_DMA_{LAZY,STRICT}.
+                        Note: on x86, strict mode specified via one of the
+                        legacy driver-specific options takes precedence.
+
+        iommu.passthrough=
+                        [ARM64, X86] Configure DMA to bypass the IOMMU by default.
+                        Format: { "0" | "1" }
+                        0 - Use IOMMU translation for DMA.
+                        1 - Bypass the IOMMU for DMA.
+                        unset - Use value of CONFIG_IOMMU_DEFAULT_PASSTHROUGH.
+```
+
+#### iommu.passthrough
+
+```c
+/*
+ * This are the possible domain-types
+ *
+ *	IOMMU_DOMAIN_BLOCKED	- All DMA is blocked, can be used to isolate
+ *				  devices
+ *	IOMMU_DOMAIN_IDENTITY	- DMA addresses are system physical addresses
+ *	IOMMU_DOMAIN_UNMANAGED	- DMA mappings managed by IOMMU-API user, used
+ *				  for VMs
+ *	IOMMU_DOMAIN_DMA	- Internally used for DMA-API implementations.
+ *				  This flag allows IOMMU drivers to implement
+ *				  certain optimizations for these domains
+ *	IOMMU_DOMAIN_DMA_FQ	- As above, but definitely using batched TLB
+ *				  invalidation.
+ *	IOMMU_DOMAIN_SVA	- DMA addresses are shared process addresses
+ *				  represented by mm_struct's.
+ */
+```
+- [ ] IOMMU_DOMAIN_SVA 这个是给 dpdk 使用吗?
+
+
+```c
+phys_addr_t iommu_iova_to_phys(struct iommu_domain *domain, dma_addr_t iova)
+{
+	if (domain->type == IOMMU_DOMAIN_IDENTITY)
+		return iova;
+
+	if (domain->type == IOMMU_DOMAIN_BLOCKED)
+		return 0;
+
+	return domain->ops->iova_to_phys(domain, iova);
+}
+```
+
+#### [ ] iommu=pt 为什么还是可以使用 GPU 直通，无法理解啊
+
+#### [ ] iommu=pt 和 swiotlb 啥关系?
+
+## 既然说，如果不用，就不要开启，那么是否还是可以看到 iommu 代码在内核的调用的差异
 
 
 ## 问题 && TODO
@@ -617,3 +754,19 @@ Xen Implementation Details:
 - https://www.amd.com/en/support/tech-docs/amd-io-virtualization-technology-iommu-specification
 
 [^3]: Inside the Linux Virtualization : Principle and Implementation
+
+## 到底什么是 domain
+- https://docs.kernel.org/driver-api/vfio.html
+
+- vfio_remove_dma
+  - vfio_unmap_unpin : vfio_unmap_unpin 中存在两个 pin
+    - unmap_unpin_fast
+      - vfio_sync_unpin
+
+vfio_iommu::domain_list 持有一系列的 vfio_domain
+
+每次启动的时候都会使用:
+- vfio_iommu_type1_attach_group
+
+- vfio_group_fops_unl_ioctl
+  - vfio_group_ioctl_set_container

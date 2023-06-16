@@ -27,6 +27,7 @@
                         idle=nomwait: Disable mwait for CPU C-states
 ```
 
+amd 的机器上:
 ```txt
 🧀  cat /sys/devices/system/cpu/cpuidle/available_governors
 menu

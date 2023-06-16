@@ -563,9 +563,6 @@ kvm notifier 和这个是什么关系？
 
 应该是 IOMMNU
 
-## iommu=pt
-
-
 ## /dev/vfio/10 是做什么的
 
 ## echo 1e49 0071 | sudo tee /sys/bus/pci/drivers/vfio-pci/new_id 的行为是什么

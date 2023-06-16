@@ -39,3 +39,9 @@ https://learn.microsoft.com/zh-cn/windows-hardware/drivers/kernel/
 ## 调试工具
 - https://github.com/HyperDbg/HyperDbg
   - 也是理解虚拟化的项目
+
+## 记录下 windows 真正可用的还需要的东西
+1. 额外的一个显示器
+2. 尝试用这个解决 windows 的剪切板问题
+  1. https://github.com/quackduck/uniclip
+3. windows 静态情况存在 20% 的 CPU ，不知道为什么?
