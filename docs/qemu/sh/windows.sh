@@ -84,14 +84,13 @@ if ! mountpoint -q -- "$image_dir"; then
 	sudo mount /dev/disk/by-uuid/f4f5d9b6-1006-49c4-8ed7-c0f2a1eec890 $image_dir
 fi
 
-cat <<'_EOF_'
-# @todo add this to systemd scripts
-echo 0000:01:00.0 | sudo tee /sys/bus/pci/devices/0000:01:00.0/driver/unbind
-echo 10de 1c02 | sudo tee /sys/bus/pci/drivers/vfio-pci/new_id
-echo 0000:01:00.1 | sudo tee /sys/bus/pci/devices/0000:01:00.1/driver/unbind
-echo 10de 10f1 | sudo tee /sys/bus/pci/drivers/vfio-pci/new_id
-sudo chown martins3 /dev/vfio/15
-_EOF_
+if [[ ! -f /dev/vfio/15 ]]; then
+	echo 0000:01:00.0 | sudo tee /sys/bus/pci/devices/0000:01:00.0/driver/unbind
+	echo 10de 1c02 | sudo tee /sys/bus/pci/drivers/vfio-pci/new_id
+	echo 0000:01:00.1 | sudo tee /sys/bus/pci/devices/0000:01:00.1/driver/unbind
+	echo 10de 10f1 | sudo tee /sys/bus/pci/drivers/vfio-pci/new_id
+	sudo chown martins3 /dev/vfio/15
+fi
 
 arg_vfio="$arg_vfio -device vfio-pci,host=01:00.0 -device vfio-pci,host=01:00.1"
 # https://gist.github.com/ichisadashioko/cfc6446764516bf7eccaffdb3799f041
