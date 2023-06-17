@@ -1,24 +1,15 @@
-# 真正的分析 vfio
-
-```c
-static const struct vfio_iommu_driver_ops vfio_iommu_driver_ops_type1 = {
-	.name			= "vfio-iommu-type1",
-	.owner			= THIS_MODULE,
-	.open			= vfio_iommu_type1_open,
-	.release		= vfio_iommu_type1_release,
-	.ioctl			= vfio_iommu_type1_ioctl,
-	.attach_group		= vfio_iommu_type1_attach_group,
-	.detach_group		= vfio_iommu_type1_detach_group,
-	.pin_pages		= vfio_iommu_type1_pin_pages,
-	.unpin_pages		= vfio_iommu_type1_unpin_pages,
-	.register_device	= vfio_iommu_type1_register_device,
-	.unregister_device	= vfio_iommu_type1_unregister_device,
-	.dma_rw			= vfio_iommu_type1_dma_rw,
-	.group_iommu_domain	= vfio_iommu_type1_group_iommu_domain,
-};
+## new_id 是什么含义?
+```sh
+echo 1e49 0071 | sudo tee /sys/bus/pci/drivers/vfio-pci/new_id
 ```
 
-- [ ] vfio 只是支持 type1 ?
+当使用 vendor 和 device id 告知进去:
+
+- vfio_pci_probe
+  - vfio_pci_core_register_device
+    - __vfio_register_dev
+      - vfio_device_set_group
+        - vfio_group_find_or_alloc
 
 ## 需要被 ebpf trace 的东西
 - `vfio_pci_mmap_fault`
@@ -56,12 +47,6 @@ static struct pci_driver vfio_pci_driver = {
     .sriov_configure    = vfio_pci_sriov_configure,
     .err_handler        = &vfio_pci_core_err_handlers,
     .driver_managed_dma = true,
-};
-
-static const struct file_operations vfio_device_fops = {
-
- // - [ ] 简单的跟踪一下，发现 vfio_pci_core_read 最后就是对于设备的 PCI 配置空间读写，将这个 backtrace 在小米上用 bpf 打印一下
-static const struct vfio_device_ops vfio_pci_ops = {
 };
 
 // - [ ] 下面两个 vfio fops 的关系是什么?
@@ -174,23 +159,9 @@ echo 10de 1d12 > /sys/bus/pci/drivers/vfio-pci/new_id
 
 暂时，不看，但是 vfio.c 中的内容是需要使用其中的内容的:
 
+- [ ] vfio 只是支持 type1 ?
 ```c
-static const struct vfio_iommu_driver_ops vfio_iommu_driver_ops_type1 = {
-    .name           = "vfio-iommu-type1",
-    .owner          = THIS_MODULE,
-    .open           = vfio_iommu_type1_open,
-    .release        = vfio_iommu_type1_release,
-    .ioctl          = vfio_iommu_type1_ioctl,
-    .attach_group       = vfio_iommu_type1_attach_group, // 深渊
-    .detach_group       = vfio_iommu_type1_detach_group,
-    .pin_pages      = vfio_iommu_type1_pin_pages,
-    .unpin_pages        = vfio_iommu_type1_unpin_pages,
-    .register_notifier  = vfio_iommu_type1_register_notifier,
-    .unregister_notifier    = vfio_iommu_type1_unregister_notifier,
-    .dma_rw         = vfio_iommu_type1_dma_rw,
-    .group_iommu_domain = vfio_iommu_type1_group_iommu_domain,
-    .notify         = vfio_iommu_type1_notify,
-};
+static const struct vfio_iommu_driver_ops vfio_iommu_driver_ops_type1;
 ```
 
 - [ ] `vfio_iommu_type1_group_iommu_domain`
@@ -203,3 +174,60 @@ static const struct vfio_iommu_driver_ops vfio_iommu_driver_ops_type1 = {
 
 ## 结构体
 - `VFIO_DEVICE_GET_INFO` : 可以获取 `struct vfio_device_info`
+提供 ioctl
+
+## group 行为
+
+### VFIO_IOMMU_MAP_DMA
+
+- vfio_iommu_type1_map_dma
+  - vfio_dma_do_map
+    - vfio_find_dma
+      - vfio_pin_map_dma
+        - vfio_pin_pages_remote : 好家伙啊，所有的内存全部 pin 住啊
+        - vfio_iommu_map
+
+## 一会来清理
+不懂，为什么启动的时候还是 unmap
+```txt
+@[
+    iommu_iova_to_phys+5
+    vfio_unmap_unpin+258
+    vfio_remove_dma+42
+    vfio_iommu_type1_ioctl+2815
+    __x64_sys_ioctl+145
+    do_syscall_64+59
+    entry_SYSCALL_64_after_hwframe+114
+]: 76685
+@[
+    iommu_iova_to_phys+5
+    vfio_unmap_unpin+340
+    vfio_remove_dma+42
+    vfio_iommu_type1_ioctl+2815
+    __x64_sys_ioctl+145
+    do_syscall_64+59
+    entry_SYSCALL_64_after_hwframe+114
+]: 814635
+```
+
+## 关闭 qemu
+```txt
+@[
+    iommu_iova_to_phys+5
+    vfio_unmap_unpin+340
+    vfio_remove_dma+42
+    vfio_iommu_type1_detach_group+1531
+    vfio_group_detach_container+80
+    vfio_group_fops_release+72
+    __fput+134
+    task_work_run+90
+    do_exit+834
+    do_group_exit+49
+    get_signal+2440
+    arch_do_signal_or_restart+62
+    exit_to_user_mode_prepare+415
+    syscall_exit_to_user_mode+27
+    do_syscall_64+74
+    entry_SYSCALL_64_after_hwframe+114
+]: 266265
+```

@@ -1,104 +1,6 @@
 
 - qemu/hw/vfio/pci.c
 
-
-## new_id 是什么含义?
-```sh
-echo 1e49 0071 | sudo tee /sys/bus/pci/drivers/vfio-pci/new_id
-```
-
-当使用 vendor 和 device id 告知进去:
-
-- vfio_pci_probe
-  - vfio_pci_core_register_device
-    - __vfio_register_dev
-      - vfio_device_set_group
-        - vfio_group_find_or_alloc
-
-
-## 分析下对于 /dev/vfio/vfio 的行为
-
-- VFIO_IOMMU_MAP_DMA
-```txt
-#0  vfio_dma_map (container=container@entry=0x555557bd85f0, iova=iova@entry=0, size=size@entry=655360, vaddr=vaddr@entry=0x7fffa3e00000, readonly=false) at ../hw/vfio/common.c:663
-#1  0x0000555555bc577c in vfio_listener_region_add (listener=0x555557bd8600, section=0x7ffffffedee0) at /home/martins3/core/qemu/include/qemu/int128.h:33
-#2  0x0000555555c104b3 in listener_add_address_space (as=<optimized out>, listener=0x555557bd8600) at ../softmmu/memory.c:3007
-#3  memory_listener_register (listener=0x555557bd8600, as=<optimized out>) at ../softmmu/memory.c:3077
-#4  0x0000555555bc7258 in vfio_connect_container (errp=0x7ffffffef230, as=<optimized out>, group=0x555557bd8570) at ../hw/vfio/common.c:2677
-#5  vfio_get_group (groupid=2, as=<optimized out>, errp=errp@entry=0x7ffffffef230) at ../hw/vfio/common.c:2803
-#6  0x0000555555bd5219 in vfio_realize (pdev=0x555557bd0f60, errp=0x7ffffffef230) at ../hw/vfio/pci.c:2959
-#7  0x00005555559b49e7 in pci_qdev_realize (qdev=<optimized out>, errp=<optimized out>) at ../hw/pci/pci.c:2115
-#8  0x0000555555c74d1b in device_set_realized (obj=<optimized out>, value=<optimized out>, errp=0x7ffffffef460) at ../hw/core/qdev.c:510
-#9  0x0000555555c78ba8 in property_set_bool (obj=0x555557bd0f60, v=<optimized out>, name=<optimized out>, opaque=0x5555567c8370, errp=0x7ffffffef460) at ../qom/object.c:2285
-#10 0x0000555555c7bc47 in object_property_set (obj=obj@entry=0x555557bd0f60, name=name@entry=0x555555f5e0c7 "realized", v=v@entry=0x555557bd3030, errp=errp@entry=0x7ffffffef460) at ../qom/object.c:1420
-#11 0x0000555555c7efaf in object_property_set_qobject (obj=obj@entry=0x555557bd0f60, name=name@entry=0x555555f5e0c7 "realized", value=value@entry=0x555557bd2e00, errp=errp@entry=0x7ffffffef460) at ../qom/qom-qobject.c:28
-#12 0x0000555555c7c264 in object_property_set_bool (obj=obj@entry=0x555557bd0f60, name=name@entry=0x555555f5e0c7 "realized", value=value@entry=true, errp=errp@entry=0x7ffffffef460) at ../qom/object.c:1489
-#13 0x0000555555c757bc in qdev_realize (dev=dev@entry=0x555557bd0f60, bus=bus@entry=0x555556d50c60, errp=errp@entry=0x7ffffffef460) at ../hw/core/qdev.c:292
-#14 0x0000555555a68553 in qdev_device_add_from_qdict (opts=opts@entry=0x555557869e20, from_json=from_json@entry=false, errp=0x7ffffffef460, errp@entry=0x555556737338 <error_fatal>) at ../softmmu/qdev-monitor.c:714
-#15 0x0000555555a689b1 in qdev_device_add (opts=0x5555567c14b0, errp=errp@entry=0x555556737338 <error_fatal>) at ../softmmu/qdev-monitor.c:733
-#16 0x0000555555a6d50f in device_init_func (opaque=<optimized out>, opts=<optimized out>, errp=0x555556737338 <error_fatal>) at ../softmmu/vl.c:1152
-#17 0x0000555555df8121 in qemu_opts_foreach (list=<optimized out>, func=func@entry=0x555555a6d500 <device_init_func>, opaque=opaque@entry=0x0, errp=errp@entry=0x555556737338 <error_fatal>) at ../util/qemu-option.c:1135
-#18 0x0000555555a6fc7a in qemu_create_cli_devices () at ../softmmu/vl.c:2573
-#19 qmp_x_exit_preconfig (errp=<optimized out>) at ../softmmu/vl.c:2641
-#20 0x0000555555a7369e in qmp_x_exit_preconfig (errp=<optimized out>) at ../softmmu/vl.c:2635
-#21 qemu_init (argc=<optimized out>, argv=<optimized out>) at ../softmmu/vl.c:3648
-#22 0x000055555586ad79 in main (argc=<optimized out>, argv=<optimized out>) at ../softmmu/main.c:47
-```
-
-- VFIO_GROUP_SET_CONTAINER
-
-```txt
-#0  vfio_init_container (errp=<optimized out>, group_fd=<optimized out>, container=<optimized out>) at ../hw/vfio/common.c:2370
-#1  vfio_connect_container (errp=0x7ffffffef230, as=<optimized out>, group=0x555557bd8570) at ../hw/vfio/common.c:2554
-#2  vfio_get_group (groupid=2, as=<optimized out>, errp=errp@entry=0x7ffffffef230) at ../hw/vfio/common.c:2803
-#3  0x0000555555bd5219 in vfio_realize (pdev=0x555557bd0f60, errp=0x7ffffffef230) at ../hw/vfio/pci.c:2959
-#4  0x00005555559b49e7 in pci_qdev_realize (qdev=<optimized out>, errp=<optimized out>) at ../hw/pci/pci.c:2115
-#5  0x0000555555c74d1b in device_set_realized (obj=<optimized out>, value=<optimized out>, errp=0x7ffffffef460) at ../hw/core/qdev.c:510
-#6  0x0000555555c78ba8 in property_set_bool (obj=0x555557bd0f60, v=<optimized out>, name=<optimized out>, opaque=0x5555567c8370, errp=0x7ffffffef460) at ../qom/object.c:2285
-#7  0x0000555555c7bc47 in object_property_set (obj=obj@entry=0x555557bd0f60, name=name@entry=0x555555f5e0c7 "realized", v=v@entry=0x555557bd3030,
-    errp=errp@entry=0x7ffffffef460) at ../qom/object.c:1420
-#8  0x0000555555c7efaf in object_property_set_qobject (obj=obj@entry=0x555557bd0f60, name=name@entry=0x555555f5e0c7 "realized", value=value@entry=0x555557bd2e00,
-    errp=errp@entry=0x7ffffffef460) at ../qom/qom-qobject.c:28
-#9  0x0000555555c7c264 in object_property_set_bool (obj=obj@entry=0x555557bd0f60, name=name@entry=0x555555f5e0c7 "realized", value=value@entry=true,
-    errp=errp@entry=0x7ffffffef460) at ../qom/object.c:1489
-#10 0x0000555555c757bc in qdev_realize (dev=dev@entry=0x555557bd0f60, bus=bus@entry=0x555556d50c60, errp=errp@entry=0x7ffffffef460) at ../hw/core/qdev.c:292
-#11 0x0000555555a68553 in qdev_device_add_from_qdict (opts=opts@entry=0x555557869e20, from_json=from_json@entry=false, errp=0x7ffffffef460,
-    errp@entry=0x555556737338 <error_fatal>) at ../softmmu/qdev-monitor.c:714
-#12 0x0000555555a689b1 in qdev_device_add (opts=0x5555567c14b0, errp=errp@entry=0x555556737338 <error_fatal>) at ../softmmu/qdev-monitor.c:733
-#13 0x0000555555a6d50f in device_init_func (opaque=<optimized out>, opts=<optimized out>, errp=0x555556737338 <error_fatal>) at ../softmmu/vl.c:1152
-#14 0x0000555555df8121 in qemu_opts_foreach (list=<optimized out>, func=func@entry=0x555555a6d500 <device_init_func>, opaque=opaque@entry=0x0,
-    errp=errp@entry=0x555556737338 <error_fatal>) at ../util/qemu-option.c:1135
-#15 0x0000555555a6fc7a in qemu_create_cli_devices () at ../softmmu/vl.c:2573
-#16 qmp_x_exit_preconfig (errp=<optimized out>) at ../softmmu/vl.c:2641
-#17 0x0000555555a7369e in qmp_x_exit_preconfig (errp=<optimized out>) at ../softmmu/vl.c:2635
-#18 qemu_init (argc=<optimized out>, argv=<optimized out>) at ../softmmu/vl.c:3648
-#19 0x000055555586ad79 in main (argc=<optimized out>, argv=<optimized out>) at ../softmmu/main.c:47
-```
-
-合格比较难触发，和热迁移相关的:
-- vfio_get_dirty_bitmap
-  - vfio_query_dirty_bitmap
-
-## util/vfio-helpers.c
-看上去，当直通的是网卡的时候，这里的函数都无人调用
-
-
-## qemu 基本的初始化路径
-
-需要处理各种平台的支持:
-
-- vfio_realize
-  - VFIODevice::ops 注册为 vfio_pci_ops
-  - 通过 host 的 bdf 可以找到 group 路径
-  - vfio_bars_register
-
-几乎没有什么代码处理 iova，都是处理中断相关的代码
-
-
-# QEMU vfio
-secure userspace driver framework
-
-
 IOMMU API(type 1)
 ## TODO
 - [ ] 嵌套虚拟化中，如何处理 iommu
@@ -210,18 +112,10 @@ ccw 可以使用这个进行 ioctl ，和 io
 - `vfio_get_device`
     - 通过 VFIOGroup::fd 调用 `VFIO_GROUP_GET_DEVICE_FD`
 
-## platform.c
 
-## 处理下这个问题
 ```txt
 VFIO_MAP_DMA failed: Cannot allocate memory
 ```
-
-## iommu group ?
-
-
-## 观测下 QEMU
-
 
 ### 中断注入 ?
 ```txt
