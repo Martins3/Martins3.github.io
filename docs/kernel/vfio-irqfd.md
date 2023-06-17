@@ -1,4 +1,46 @@
-## 中断特别说明
+## Documentation
+```txt
+4.75 KVM_IRQFD
+--------------
+
+:Capability: KVM_CAP_IRQFD
+:Architectures: x86 s390 arm64
+:Type: vm ioctl
+:Parameters: struct kvm_irqfd (in)
+:Returns: 0 on success, -1 on error
+
+Allows setting an eventfd to directly trigger a guest interrupt.
+kvm_irqfd.fd specifies the file descriptor to use as the eventfd and
+kvm_irqfd.gsi specifies the irqchip pin toggled by this event.  When
+an event is triggered on the eventfd, an interrupt is injected into
+the guest using the specified gsi pin.  The irqfd is removed using
+the KVM_IRQFD_FLAG_DEASSIGN flag, specifying both kvm_irqfd.fd
+and kvm_irqfd.gsi.
+
+With KVM_CAP_IRQFD_RESAMPLE, KVM_IRQFD supports a de-assert and notify
+mechanism allowing emulation of level-triggered, irqfd-based
+interrupts.  When KVM_IRQFD_FLAG_RESAMPLE is set the user must pass an
+additional eventfd in the kvm_irqfd.resamplefd field.  When operating
+in resample mode, posting of an interrupt through kvm_irq.fd asserts
+the specified gsi in the irqchip.  When the irqchip is resampled, such
+as from an EOI, the gsi is de-asserted and the user is notified via
+kvm_irqfd.resamplefd.  It is the user's responsibility to re-queue
+the interrupt if the device making use of it still requires service.
+Note that closing the resamplefd is not sufficient to disable the
+irqfd.  The KVM_IRQFD_FLAG_RESAMPLE is only necessary on assignment
+and need not be specified with KVM_IRQFD_FLAG_DEASSIGN.
+
+On arm64, gsi routing being supported, the following can happen:
+
+- in case no routing entry is associated to this gsi, injection fails
+- in case the gsi is associated to an irqchip routing entry,
+  irqchip.pin + 32 corresponds to the injected SPI ID.
+- in case the gsi is associated to an MSI routing entry, the MSI
+  message and device ID are translated into an LPI (support restricted
+  to GICv3 ITS in-kernel emulation).
+```
+
+## QEMU 侧处理
 当时之后，会修改为 msix
 
 ```txt
@@ -22,12 +64,8 @@ vfio_msi_enable 从来没有被调用过
 
 但是 vfio_msi_interrupt 一次没有被调用过
 
-## 注册 producer 的过程
 
-```c
-    ret = ioctl(vdev->vbasedev.fd, VFIO_DEVICE_SET_IRQS, irq_set);
-```
-
+## kernel 侧的处理
 ```txt
 vmx_pi_update_irte+1
 kvm_arch_irq_bypass_add_producer+67
@@ -128,50 +166,8 @@ int vmx_pi_update_irte(struct kvm *kvm, unsigned int host_irq,
 ]: 40
 ```
 
-
-```txt
-4.75 KVM_IRQFD
---------------
-
-:Capability: KVM_CAP_IRQFD
-:Architectures: x86 s390 arm64
-:Type: vm ioctl
-:Parameters: struct kvm_irqfd (in)
-:Returns: 0 on success, -1 on error
-
-Allows setting an eventfd to directly trigger a guest interrupt.
-kvm_irqfd.fd specifies the file descriptor to use as the eventfd and
-kvm_irqfd.gsi specifies the irqchip pin toggled by this event.  When
-an event is triggered on the eventfd, an interrupt is injected into
-the guest using the specified gsi pin.  The irqfd is removed using
-the KVM_IRQFD_FLAG_DEASSIGN flag, specifying both kvm_irqfd.fd
-and kvm_irqfd.gsi.
-
-With KVM_CAP_IRQFD_RESAMPLE, KVM_IRQFD supports a de-assert and notify
-mechanism allowing emulation of level-triggered, irqfd-based
-interrupts.  When KVM_IRQFD_FLAG_RESAMPLE is set the user must pass an
-additional eventfd in the kvm_irqfd.resamplefd field.  When operating
-in resample mode, posting of an interrupt through kvm_irq.fd asserts
-the specified gsi in the irqchip.  When the irqchip is resampled, such
-as from an EOI, the gsi is de-asserted and the user is notified via
-kvm_irqfd.resamplefd.  It is the user's responsibility to re-queue
-the interrupt if the device making use of it still requires service.
-Note that closing the resamplefd is not sufficient to disable the
-irqfd.  The KVM_IRQFD_FLAG_RESAMPLE is only necessary on assignment
-and need not be specified with KVM_IRQFD_FLAG_DEASSIGN.
-
-On arm64, gsi routing being supported, the following can happen:
-
-- in case no routing entry is associated to this gsi, injection fails
-- in case the gsi is associated to an irqchip routing entry,
-  irqchip.pin + 32 corresponds to the injected SPI ID.
-- in case the gsi is associated to an MSI routing entry, the MSI
-  message and device ID are translated into an LPI (support restricted
-  to GICv3 ITS in-kernel emulation).
-```
-
-## 回答这个问题
 - https://stackoverflow.com/questions/66937301/what-is-irq-bypass-and-how-to-use-it-in-linux
+## 回答这个问题
 
 - https://stackoverflow.com/questions/29461518/interrupt-handling-for-assigned-device-through-vfio
   - 中断让 vfio 机制来注册

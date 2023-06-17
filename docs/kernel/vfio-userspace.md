@@ -56,8 +56,10 @@
   - vfio_get_device
     - **VFIO_GROUP_GET_DEVICE_FD** : 获取的到 fd 为在内核中为 `vfio_device_fops`，因为在内核中用的是 pci 的实现，所以操作都会调用到 `vfio_pci_ops` 上
   - vfio_bars_register
-  - vfio_intx_enable
+  - vfio_intx_enable : msi 和 msix 差不多的调用流程，但是不是在这里调用的
     - event_notifier_get_fd
+    - vfio_set_irq_signaling
+      - **VFIO_DEVICE_SET_IRQS** : 注册 irqfd
 
 
 ## container 的接口

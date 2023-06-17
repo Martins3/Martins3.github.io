@@ -412,11 +412,6 @@ if [[ $hacking_vfio == true ]]; then
 		arg_vfio="-device vfio-pci,host=03:00.0"
 	elif [[ $host_cpu_arch == amd ]]; then
 		if [[ ! -c /dev/vfio/2 ]]; then
-			# 09:00.0 USB controller [0c03]: Advanced Micro Devices, Inc. [AMD] Device [1022:15b8]
-			# echo 0000:09:00.0 | sudo tee /sys/bus/pci/devices/0000:09:00.0/driver/unbind
-			# echo 1022 15b8 | sudo tee /sys/bus/pci/drivers/vfio-pci/new_id
-			# sudo chown martins3 /dev/vfio/4
-
 			# 04:00.0 Network controller [0280]: MEDIATEK Corp. MT7922 802.11ax PCI Express Wireless Network Adapter [14c3:0616]
 			# echo 0000:04:00.0 | sudo tee /sys/bus/pci/devices/0000:04:00.0/driver/unbind
 			# echo 14c3 0616 | sudo tee /sys/bus/pci/drivers/vfio-pci/new_id
