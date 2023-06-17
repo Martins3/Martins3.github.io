@@ -110,3 +110,21 @@ Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 https://www.cs.cmu.edu/~412/lectures/L05_xHCI.pdf
 
 TBR :
+
+当从将 USB controller 去掉的时候:
+```txt
+09:00.0 USB controller: Advanced Micro Devices, Inc. [AMD] Device 15b8
+```
+```sh
+echo 0000:09:00.0 | sudo tee /sys/bus/pci/devices/0000:09:00.0/driver/unbind
+```
+```txt
+[ 3105.455424] xhci_hcd 0000:09:00.0: remove, state 4 [ 3105.455429] usb usb6: USB disconnect, device number 1
+[ 3105.455528] xhci_hcd 0000:09:00.0: USB bus 6 deregistered
+[ 3105.455538] xhci_hcd 0000:09:00.0: remove, state 1
+[ 3105.455540] usb usb5: USB disconnect, device number 1
+[ 3105.455541] usb 5-1: USB disconnect, device number 2
+[ 3105.455541] usb 5-1.1: USB disconnect, device number 3
+[ 3105.457767] usb 5-1.2: USB disconnect, device number 4
+[ 3105.651330] xhci_hcd 0000:09:00.0: USB bus 5 deregistered
+```

@@ -7,7 +7,7 @@
 
 ## 问题
 - iommu=pt 是导致不可用的原因吗?
-
+- 有什么方法提前获取到 vfio cgroup 的数值
 
 ## [ ] 看看 iommu 的用户态接口
 
@@ -287,6 +287,13 @@ module/vfio_iommu_type1/
                                      This mode requires kvm-amd.avic=1.
                                      (Default when IOMMU HW support is present.)
 ```
+
+似乎当没有 amd_iommu=on 中启动的时候，存在如下的
+```txt
+qemu-system-x86_64: -device vfio-pci,host=09:00.0: vfio 0000:09:00.0: group 4 is not viable
+Please ensure all devices within the iommu_group are bound to their vfio bus driver.
+```
+
 看内核参数:
 
 ```c
@@ -765,8 +772,8 @@ Xen Implementation Details:
 
 vfio_iommu::domain_list 持有一系列的 vfio_domain
 
-每次启动的时候都会使用:
-- vfio_iommu_type1_attach_group
-
-- vfio_group_fops_unl_ioctl
+- vfio_group_fops_unl_ioctl : 这个是 /dev/vfio/2 这种设备的操作的结果
   - vfio_group_ioctl_set_container
+    - vfio_container_attach_group
+      - vfio_iommu_type1_attach_group
+      - vfio_group_ioctl_set_container

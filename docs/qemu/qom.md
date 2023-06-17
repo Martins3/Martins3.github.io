@@ -922,6 +922,38 @@ x7ffffffef990, errp@entry=0x5555567443b8 <error_fatal>) at ../qom/object_interfa
 
 - -object 是如何实现的
 
+理解下这个行为，
+```c
+const PropertyInfo qdev_prop_pci_host_devaddr = {
+    .name = "str",
+    .description = "Address (bus/device/function) of "
+                   "the host device, example: 04:10.0",
+    .get = get_pci_host_devaddr,
+    .set = set_pci_host_devaddr,
+};
+```
+```txt
+#0  set_pci_host_devaddr (obj=0x555557bd0ce0, v=0x555557bd2b80, name=0x5555567c08f0 "host", opaque=0x5555566408c0 <vfio_pci_dev_properties>, errp=0x7ffffffef440)
+    at ../hw/core/qdev-properties-system.c:853
+#1  0x0000555555c7bc47 in object_property_set (obj=obj@entry=0x555557bd0ce0, name=0x5555567c08f0 "host", v=v@entry=0x555557bd2b80, errp=errp@entry=0x7ffffffef440)
+    at ../qom/object.c:1420
+#2  0x0000555555c7e204 in object_set_properties_from_qdict (obj=0x555557bd0ce0, qdict=0x555557bd1b30, v=0x555557bd2b80, errp=0x7ffffffef440) at ../qom/object_interfaces.c:55
+#3  0x0000555555c7e398 in object_set_properties_from_qdict (errp=0x7ffffffef440, v=0x555557bd2b80, qdict=0x555557bd1b30, obj=0x555557bd0ce0) at ../qom/object_interfaces.c:51
+#4  object_set_properties_from_keyval (obj=0x555557bd0ce0, qdict=0x555557bd1b30, from_json=<optimized out>, errp=0x7ffffffef440) at ../qom/object_interfaces.c:73
+#5  0x0000555555a68539 in qdev_device_add_from_qdict (opts=opts@entry=0x555557869cf0, from_json=from_json@entry=false, errp=0x7ffffffef440,
+    errp@entry=0x555556737338 <error_fatal>) at ../softmmu/qdev-monitor.c:708
+#6  0x0000555555a689b1 in qdev_device_add (opts=0x5555567c14b0, errp=errp@entry=0x555556737338 <error_fatal>) at ../softmmu/qdev-monitor.c:733
+#7  0x0000555555a6d50f in device_init_func (opaque=<optimized out>, opts=<optimized out>, errp=0x555556737338 <error_fatal>) at ../softmmu/vl.c:1152
+#8  0x0000555555df8121 in qemu_opts_foreach (list=<optimized out>, func=func@entry=0x555555a6d500 <device_init_func>, opaque=opaque@entry=0x0,
+    errp=errp@entry=0x555556737338 <error_fatal>) at ../util/qemu-option.c:1135
+#9  0x0000555555a6fc7a in qemu_create_cli_devices () at ../softmmu/vl.c:2573
+#10 qmp_x_exit_preconfig (errp=<optimized out>) at ../softmmu/vl.c:2641
+#11 0x0000555555a7369e in qmp_x_exit_preconfig (errp=<optimized out>) at ../softmmu/vl.c:2635
+#12 qemu_init (argc=<optimized out>, argv=<optimized out>) at ../softmmu/vl.c:3648
+#13 0x000055555586ad79 in main (argc=<optimized out>, argv=<optimized out>) at ../softmmu/main.c:47
+```
+如何保证这个 property 的初始化一定早于 vfio_realize
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

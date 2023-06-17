@@ -31,9 +31,9 @@ qmp_shell=true # 使用 qmp_shell 可以交互，否则就是输入 json
 
 host_cpu_arch=none
 
-if grep "GenuineIntel" /proc/cpuinfo; then
+if grep "GenuineIntel" /proc/cpuinfo >/dev/null; then
 	host_cpu_arch="intel"
-elif grep "AuthenticAMD" /proc/cpuinfo; then
+elif grep "AuthenticAMD" /proc/cpuinfo >/dev/null; then
 	host_cpu_arch="amd"
 else
 	host_cpu_arch="arm"
@@ -196,13 +196,13 @@ arg_mem_balloon=""
 arg_cpu_model="-cpu Skylake-Client-IBRS,hle=off,rtm=off"
 # 如果 see=off 或者 see2=off ，系统直接无法启动
 # arg_cpu_model="-cpu Skylake-Client-IBRS,hle=off,rtm=off,sse4_2=off,sse4_1=off,ssse3=off,sep=off"
-# arg_cpu_model="-cpu host"
-arg_cpu_model="-cpu Skylake-Client-IBRS,vmx=on,hle=off,rtm=off"
-arg_cpu_model="-cpu Broadwell-noTSX-IBRS,vmx=on,hle=off,rtm=off"
+# arg_cpu_model="-cpu Skylake-Client-IBRS,vmx=on,hle=off,rtm=off"
+# arg_cpu_model="-cpu Broadwell-noTSX-IBRS,vmx=on,hle=off,rtm=off"
 # arg_cpu_model="-cpu Denverton"
 # arg_cpu_model="-cpu Broadwell-IBRS"
 # arg_cpu_model="-cpu host,hv_relaxed,hv_vpindex,hv_time,"
-arg_cpu_model="-cpu host,phys_bits=37,host-phys-bits=off"
+# arg_cpu_model="-cpu host,phys_bits=37,host-phys-bits=off"
+arg_cpu_model="-cpu host"
 
 if [[ $in_guest == true ]]; then
 	arg_cpu_model="$arg_cpu_model,vmx=off"
@@ -397,18 +397,40 @@ fi
 
 arg_vfio=""
 if [[ $hacking_vfio == true ]]; then
-	# 直通一个 nvme 盘进去
-	cat <<_EOF_
-lspci -nn
-# 03:00.0 Non-Volatile memory controller [0108]: Yangtze Memory Technologies Co.,Ltd Device [1e49:0071] (rev 01)
-echo 0000:03:00.0 | sudo tee /sys/bus/pci/devices/0000:03:00.0/driver/unbind
-echo 1e49 0071 | sudo tee /sys/bus/pci/drivers/vfio-pci/new_id
-sudo chown martins3 /dev/vfio/17
-## 恢复方法
-echo 0000:03:00.0 | sudo tee /sys/bus/pci/devices/0000:03:00.0/driver/unbind
-echo 1e49 0071 | sudo tee /sys/bus/pci/drivers/nvme/new_id
-_EOF_
-	arg_vfio="-device vfio-pci,host=03:00.0"
+	if [[ $host_cpu_arch == intel ]]; then
+		if [[ ! -c /dev/vfio/17 ]]; then
+			# lspci -nn
+			# 03:00.0 Non-Volatile memory controller [0108]: Yangtze Memory Technologies Co.,Ltd Device [1e49:0071] (rev 01)
+			## 恢复方法
+			# echo 0000:03:00.0 | sudo tee /sys/bus/pci/devices/0000:03:00.0/driver/unbind
+			# echo 1e49 0071 | sudo tee /sys/bus/pci/drivers/nvme/new_id
+			echo 0000:03:00.0 | sudo tee /sys/bus/pci/devices/0000:03:00.0/driver/unbind
+			echo 1e49 0071 | sudo tee /sys/bus/pci/drivers/vfio-pci/new_id
+			sudo chown martins3 /dev/vfio/17
+		fi
+		arg_vfio="-device vfio-pci,host=03:00.0"
+	elif [[ $host_cpu_arch == amd ]]; then
+		if [[ ! -c /dev/vfio/2 ]]; then
+			# 09:00.0 USB controller [0c03]: Advanced Micro Devices, Inc. [AMD] Device [1022:15b8]
+			# echo 0000:09:00.0 | sudo tee /sys/bus/pci/devices/0000:09:00.0/driver/unbind
+			# echo 1022 15b8 | sudo tee /sys/bus/pci/drivers/vfio-pci/new_id
+			# sudo chown martins3 /dev/vfio/4
+
+			# 04:00.0 Network controller [0280]: MEDIATEK Corp. MT7922 802.11ax PCI Express Wireless Network Adapter [14c3:0616]
+			# echo 0000:04:00.0 | sudo tee /sys/bus/pci/devices/0000:04:00.0/driver/unbind
+			# echo 14c3 0616 | sudo tee /sys/bus/pci/drivers/vfio-pci/new_id
+			# sudo chown martins3 /dev/vfio/1
+
+			# 07:00.0 Ethernet controller [0200]: Realtek Semiconductor Co., Ltd. RTL8111/8168/8411 PCI Express Gigabit Ethernet Controller [10ec:8168] (rev 15)
+			echo 0000:07:00.0 | sudo tee /sys/bus/pci/devices/0000:07:00.0/driver/unbind
+			echo 10ec 8168 | sudo tee /sys/bus/pci/drivers/vfio-pci/new_id
+			sudo chown martins3 /dev/vfio/2
+		fi
+		arg_vfio="-device vfio-pci,host=07:00.0"
+	else
+		echo "not supported yet"
+	fi
+
 fi
 
 # -soundhw pcspk
