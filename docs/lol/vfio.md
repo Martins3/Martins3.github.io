@@ -6,6 +6,8 @@
 参考[内核文档](https://www.kernel.org/doc/html/latest/driver-api/vfio.html)，我这里记录一下操作:
 
 看看这个文章: https://wiki.gentoo.org/wiki/GPU_passthrough_with_libvirt_qemu_kvm
+  - 我被这个文档严重误导了，他告诉参数使用 iommu=pt ，这个让 nvme 直通存在 bug 的
+
 这个教程也不错：https://github.com/bryansteiner/gpu-passthrough-tutorial
  -device vfio-pci,host=01:00.0,multifunction=on,x-vga=on 中的 x-vga 是什么含义？
 
@@ -28,33 +30,6 @@ echo 8086 7ae2 | sudo tee /sys/bus/pci/drivers/vfio-pci/new_id
 - https://superuser.com/questions/1293112/kvm-gpu-passthrough-of-nvidia-dgpu-on-laptop-with-hybrid-graphics-without-propri
 - https://github.com/jscinoz/optimus-vfio-docs
 
-## 其他扩展阅读
-
-# 具体的代码分析
-
-- [ ] 类似 RISC-V 中存在用户态中断，那么是不是可以设计出来更加酷炫的用户态 driver 来。
-- [ ] 内核文档 iommu.rst 中的
-- [ ] 如何理解 container 中的内容: `vfio_group_set_container`
-    - 所以 container 是个什么概念
-- `vfio_iommu_type1_group_iommu_domain` 中的 domain 是个什么含义
-- [ ] 应该是 container 中含有 group 的
-- [ ] 难道一个主板上可以有多个 IOMMU，否则，为什么会存在 `iommu_group`
-
-## 如何理解 kvm_device_ioctl
-
-只有 kvm_vfio_ops 被 kvm_device_ioctl 使用过:
-```c
-static struct kvm_device_ops kvm_vfio_ops = {
-	.name = "kvm-vfio",
-	.create = kvm_vfio_create,
-	.destroy = kvm_vfio_destroy,
-	.set_attr = kvm_vfio_set_attr,
-	.has_attr = kvm_vfio_has_attr,
-};
-```
-
 ## 其他
 - https://github.com/gnif/vendor-reset
 - https://github.com/nutanix/libvfio-user : nutanix 的这个是做个啥的?
-
-## 什么是 virt/kvm/vfio.c

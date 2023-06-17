@@ -3,7 +3,6 @@
 
 <!-- vim-markdown-toc GitLab -->
 
-* [中断特别说明](#中断特别说明)
 * [container 的接口](#container-的接口)
   * [VFIO_IOMMU_MAP_DMA](#vfio_iommu_map_dma)
 * [device 的接口](#device-的接口)
@@ -60,30 +59,6 @@
   - vfio_intx_enable
     - event_notifier_get_fd
 
-
-## 中断特别说明
-当时之后，会修改为 msix
-
-```txt
-#0  vfio_msix_enable (vdev=vdev@entry=0x555557bd0f60) at ../hw/vfio/pci.c:610
-#1  0x0000555555bd34a0 in vfio_pci_write_config (pdev=0x555557bd0f60, addr=178, val=49155, len=2) at ../hw/vfio/pci.c:1232
-#2  0x0000555555c0c320 in memory_region_write_accessor (mr=0x555556c4eda0, addr=2, value=<optimized out>, size=2, shift=<optimized out>, mask=<optimized out>, attrs=...) at ../softmmu/memory.c:493
-```
-vfio_msi_enable 从来没有被调用过
-
-- vfio_msix_enable
-  - msix_set_vector_notifiers : 注册 vfio_msix_vector_use
-
-```txt
-#0  vfio_msix_vector_use (pdev=0x555557bd0f60, nr=0, msg=...) at ../hw/vfio/pci.c:559
-#1  0x00005555559ae942 in msix_fire_vector_notifier (is_masked=false, vector=0, dev=0x555557bd0f60) at ../hw/pci/msix.c:120
-#2  msix_handle_mask_update (dev=0x555557bd0f60, vector=0, was_masked=<optimized out>) at ../hw/pci/msix.c:140
-#3  0x0000555555c0c320 in memory_region_write_accessor (mr=0x555557bd15a0, addr=12, value=<optimized out>, size=4, shift=<optimized out>, mask=<optimized out>, attrs=...) at ../softmmu/memory.c:493
-```
-- vfio_msix_vector_use
-  - qemu_set_fd_handler : 给 eventfd 注册上 vfio_msi_interrupt
-
-- [ ] 但是 vfio_msi_interrupt 一次没有被调用过
 
 ## container 的接口
 

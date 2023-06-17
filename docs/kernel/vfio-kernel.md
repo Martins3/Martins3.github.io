@@ -210,7 +210,7 @@ static const struct vfio_iommu_driver_ops vfio_iommu_driver_ops_type1;
 ]: 814635
 ```
 
-## 关闭 qemu
+关闭 qemu
 ```txt
 @[
     iommu_iova_to_phys+5
@@ -231,3 +231,16 @@ static const struct vfio_iommu_driver_ops vfio_iommu_driver_ops_type1;
     entry_SYSCALL_64_after_hwframe+114
 ]: 266265
 ```
+
+
+## 其他扩展阅读
+
+# 具体的代码分析
+
+- [ ] 类似 RISC-V 中存在用户态中断，那么是不是可以设计出来更加酷炫的用户态 driver 来。
+- [ ] 内核文档 iommu.rst 中的
+- [ ] 如何理解 container 中的内容: `vfio_group_set_container`
+    - 所以 container 是个什么概念
+- `vfio_iommu_type1_group_iommu_domain` 中的 domain 是个什么含义
+- [ ] 应该是 container 中含有 group 的
+- [ ] 难道一个主板上可以有多个 IOMMU，否则，为什么会存在 `iommu_group`

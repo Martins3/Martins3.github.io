@@ -572,13 +572,6 @@ intremap=nosid
 ## AMD 手册
 - https://www.amd.com/system/files/TechDocs/48882_IOMMU.pdf
 
-## vfio interrupt
-
-- https://stackoverflow.com/questions/29461518/interrupt-handling-for-assigned-device-through-vfio
-  - 中断让 vfio 机制来注册
-
-- [ ] 还是需要使用 bpftrace 来分析一下吧
-
 ## [An Introduction to IOMMU Infrastructure in the Linux Kernel](https://lenovopress.lenovo.com/lp1467.pdf)
 
 - 主要是，这 DMA coherent 是什么关系哇
