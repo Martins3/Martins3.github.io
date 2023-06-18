@@ -1,44 +1,18 @@
-## new_id 是什么含义?
+## 初始化过程
+
+当使用 vendor 和 device id 告知进去，会自动创建 group 出来。
 ```sh
 echo 1e49 0071 | sudo tee /sys/bus/pci/drivers/vfio-pci/new_id
 ```
-
-当使用 vendor 和 device id 告知进去:
-
 - vfio_pci_probe
   - vfio_pci_core_register_device
     - __vfio_register_dev
       - vfio_device_set_group
         - vfio_group_find_or_alloc
 
-## 需要被 ebpf trace 的东西
-- `vfio_pci_mmap_fault`
-
-
-当打开 vifo 选项，重新编译的内容:
-```txt
-CC      arch/x86/kvm/x86.o
-CC      drivers/virtio/virtio_pci_common.o
-CC      drivers/vfio/vfio.o
-CC      drivers/vfio/vfio_iommu_type1.o
-CC      drivers/pci/msi/msi.o
-```
-
-```txt
-  CC      drivers/vfio/vfio.o
-  CC      drivers/vfio/vfio_iommu_type1.o
-  CC      drivers/vfio/virqfd.o
-  CC      drivers/vfio/pci/vfio_pci_core.o
-  CC      drivers/vfio/pci/vfio_pci_intrs.o
-  CC      drivers/vfio/pci/vfio_pci_rdwr.o
-  CC      drivers/vfio/pci/vfio_pci_config.o
-  CC      drivers/vfio/pci/vfio_pci.o
-  CC      drivers/vfio/pci/vfio_pci_igd.o
-```
-
+## 基本的代码结构
 
 ```c
-// - [ ] 其中的 probe 函数是如何被联系上的；我感觉就是普通的 pci driver 就可以 bind 上的。
 static struct pci_driver vfio_pci_driver = {
     .name           = "vfio-pci",
     .id_table       = vfio_pci_table,
@@ -48,8 +22,57 @@ static struct pci_driver vfio_pci_driver = {
     .err_handler        = &vfio_pci_core_err_handlers,
     .driver_managed_dma = true,
 };
+```
 
-// - [ ] 下面两个 vfio fops 的关系是什么?
+最核心的数据结构:
+```c
+static const struct vfio_device_ops vfio_pci_ops = {
+	.name		= "vfio-pci",
+	.init		= vfio_pci_core_init_dev,
+	.release	= vfio_pci_core_release_dev,
+	.open_device	= vfio_pci_open_device,
+	.close_device	= vfio_pci_core_close_device,
+	.ioctl		= vfio_pci_core_ioctl,
+	.device_feature = vfio_pci_core_ioctl_feature,
+	.read		= vfio_pci_core_read,
+	.write		= vfio_pci_core_write,
+	.mmap		= vfio_pci_core_mmap,
+	.request	= vfio_pci_core_request,
+	.match		= vfio_pci_core_match,
+	.bind_iommufd	= vfio_iommufd_physical_bind,
+	.unbind_iommufd	= vfio_iommufd_physical_unbind,
+	.attach_ioas	= vfio_iommufd_physical_attach_ioas,
+};
+
+static const struct vfio_iommu_driver_ops vfio_iommu_driver_ops_type1 = {
+	.name			= "vfio-iommu-type1",
+	.owner			= THIS_MODULE,
+	.open			= vfio_iommu_type1_open,
+	.release		= vfio_iommu_type1_release,
+	.ioctl			= vfio_iommu_type1_ioctl,
+	.attach_group		= vfio_iommu_type1_attach_group,
+	.detach_group		= vfio_iommu_type1_detach_group,
+	.pin_pages		= vfio_iommu_type1_pin_pages,
+	.unpin_pages		= vfio_iommu_type1_unpin_pages,
+	.register_device	= vfio_iommu_type1_register_device,
+	.unregister_device	= vfio_iommu_type1_unregister_device,
+	.dma_rw			= vfio_iommu_type1_dma_rw,
+	.group_iommu_domain	= vfio_iommu_type1_group_iommu_domain,
+};
+```
+
+- `vfio_pci_ops` 和 qemu 外层的函数对应，这里只是处理 pci 相关的情况，出现在 drivers/vfio/pci/vfio_pci_core.c
+- `vfio_iommu_driver_ops_type1` 就是 vfio 的实现了，出现在 drivers/vfio/vfio_iommu_type1.c
+
+对外提供的三个 fops:
+
+| fops            | 获取 fd 的方法                |
+|-----------------|-------------------------------|
+| vfio_group_fops | /dev/vfio/2                   |
+| vfio_fops       | /dev/vfio/vfio                |
+| vfio_fops       | 通过 VFIO_GROUP_GET_DEVICE_FD |
+
+```c
 static const struct file_operations vfio_group_fops = {
     .owner      = THIS_MODULE,
     .unlocked_ioctl = vfio_group_fops_unl_ioctl,
@@ -78,50 +101,35 @@ static const struct file_operations vfio_device_fops = {
 };
 ```
 
-## `vfio_pci_igd.c`
+### QEMU 如何访问 mmio 的
+QEMU 的映射函数 vfio_region_mmap
 
-只是为了特殊支持 VFIO PCI Intel Graphics
-
-## `vfio_pci_rdwr.c`
-- [ ] 如何理解其中的 eventfd 的
-
-## `vfio_pci_intrs.c`
-
-- `vfio_intx_set_signal` : 注册中断
-
-## `vfio_pci_core.c`
-
-如何理解?
 ```c
+const struct file_operations vfio_device_fops = {
+  // ...
+	.mmap		= vfio_device_fops_mmap, // 当 mmap 的时候，调用这个
+};
+
+
+static const struct vfio_device_ops vfio_pci_ops = {
+  // ...
+	.mmap		= vfio_pci_core_mmap, // 因为平台 pci ，所以调用这个
+}
+```
+
+```c
+const struct file_operations vfio_device_fops = {
+   // ...
+	.mmap		= vfio_device_fops_mmap, // page fault 从这里开始
+};
+
+
 static const struct vm_operations_struct vfio_pci_mmap_ops = {
-    .open = vfio_pci_mmap_open,
-    .close = vfio_pci_mmap_close,
-    .fault = vfio_pci_mmap_fault,
+   // ...
+	.fault = vfio_pci_mmap_fault, // 调用到这个，这是注册的 hook
 };
 ```
-这是 `vfio_pci_ops::mmap` 注册的时候需要使用的 hook :
-
-
-## `vfio_pic.c`
-在此处注册了一个 pci 驱动: `vfio_pci_driver`
-
-
-应该查看一下，下面还有什么 device 的。
-```sh
-echo 10de 1d12 > /sys/bus/pci/drivers/vfio-pci/new_id
-```
-
 ## vfio.c
-- [ ] group 是什么概念
-- [ ] 这个操作是?
-- [ ] `vfio_fops`
-
-
-
- - `vfio_init` ：调用 chadev 的标准接口注册 IO
-    - `misc_register` ： 注册 `vfio_fops`
-    - `alloc_chrdev_region`
-
 
 - `vfio_fops_unl_ioctl`
     - 其他的几个功能都不重要的
@@ -171,10 +179,6 @@ static const struct vfio_iommu_driver_ops vfio_iommu_driver_ops_type1;
 - `vfio_group_fops_unl_ioctl`
     - `vfio_group_set_container` ： 两个参数 group 和 `containter_fd`，其中 `containter_fd` 是用户传递的
         - `vfio_iommu_type1_attach_group`
-
-## 结构体
-- `VFIO_DEVICE_GET_INFO` : 可以获取 `struct vfio_device_info`
-提供 ioctl
 
 ## group 行为
 
