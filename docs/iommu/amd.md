@@ -50,3 +50,39 @@ static const struct irq_domain_ops intcapxt_domain_ops = {
 	.deactivate		= intcapxt_irqdomain_deactivate,
 };
 ```
+
+```c
+const struct iommu_ops amd_iommu_ops = {
+	.capable = amd_iommu_capable,
+	.domain_alloc = amd_iommu_domain_alloc,
+	.probe_device = amd_iommu_probe_device,
+	.release_device = amd_iommu_release_device,
+	.probe_finalize = amd_iommu_probe_finalize,
+	.device_group = amd_iommu_device_group,
+	.get_resv_regions = amd_iommu_get_resv_regions,
+	.is_attach_deferred = amd_iommu_is_attach_deferred,
+	.pgsize_bitmap	= AMD_IOMMU_PGSIZES,
+	.def_domain_type = amd_iommu_def_domain_type,
+	.default_domain_ops = &(const struct iommu_domain_ops) {
+		.attach_dev	= amd_iommu_attach_device,
+		.map_pages	= amd_iommu_map_pages,
+		.unmap_pages	= amd_iommu_unmap_pages,
+		.iotlb_sync_map	= amd_iommu_iotlb_sync_map,
+		.iova_to_phys	= amd_iommu_iova_to_phys,
+		.flush_iotlb_all = amd_iommu_flush_iotlb_all,
+		.iotlb_sync	= amd_iommu_iotlb_sync,
+		.free		= amd_iommu_domain_free,
+		.enforce_cache_coherency = amd_iommu_enforce_cache_coherency,
+	}
+};
+```
+
+- amd_iommu_domain_alloc
+  - protection_domain_alloc
+    - protection_domain_init_v1
+    - protection_domain_init_v2
+    - alloc_io_pgtable_ops
+
+- amd_iommu_attach_device
+  - attach_device
+    - do_attach

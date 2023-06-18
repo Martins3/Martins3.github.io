@@ -131,16 +131,6 @@ static const struct vm_operations_struct vfio_pci_mmap_ops = {
 ```
 ## vfio.c
 
-- `vfio_fops_unl_ioctl`
-    - 其他的几个功能都不重要的
-    - `vfio_group_get_device_fd`
-        - `vfio_device_open` ：注册上 `vfio_device_fops`
-    - `vfio_ioctl_set_iommu`
-        - 对于所有的 `vfio.iommu_drivers_list` 依次尝试:
-            - `driver->ops->open(arg);`
-            - `__vfio_container_attach_groups`
-                - `driver->ops->attach_group`
-
 - `vfio_group_fops_unl_ioctl`
     - `VFIO_GROUP_GET_DEVICE_FD` ： `vfio_group_get_device_fd`
         - `vfio_device_open`
@@ -180,6 +170,18 @@ static const struct vfio_iommu_driver_ops vfio_iommu_driver_ops_type1;
     - `vfio_group_set_container` ： 两个参数 group 和 `containter_fd`，其中 `containter_fd` 是用户传递的
         - `vfio_iommu_type1_attach_group`
 
+## container 行为
+- `vfio_ioctl_set_iommu`
+    - 对于所有的 `vfio.iommu_drivers_list` 依次尝试，当然实际上就是 vfio_iommu_driver_ops_type1
+        - `driver->ops->open(arg);` 也就是 vfio_iommu_type1_open
+        - `__vfio_container_attach_groups`
+            - 对于 container 中的每一个 group 调用 `driver->ops->attach_group` : 也就是 vfio_iommu_type1_attach_group
+              - vfio_iommu_domain_alloc
+                - bus->iommu_ops->domain_alloc(type) : 也就是 **amd_iommu_domain_alloc**
+              - iommu_attach_group : 将 iommu domain 和 iommu group 联系起来
+                - `__iommu_attach_group`
+                  - iommu_group_do_attach_device
+                    - `__iommu_attach_device` 最后调用到 **amd_iommu_attach_device**
 ## group 行为
 
 ### VFIO_IOMMU_MAP_DMA
@@ -190,6 +192,11 @@ static const struct vfio_iommu_driver_ops vfio_iommu_driver_ops_type1;
       - vfio_pin_map_dma
         - vfio_pin_pages_remote : 好家伙啊，所有的内存全部 pin 住啊
         - vfio_iommu_map
+          - iommu_map : 参数是 iommu_domain
+            - `__iommu_map`
+              - `__iommu_map_pages`
+                - iommu_domain_ops::map_pages : **amd_iommu_map_pages**
+            - iommu_domain_ops::iotlb_sync_map : **amd_iommu_iotlb_sync_map**
 
 ## 一会来清理
 不懂，为什么启动的时候还是 unmap

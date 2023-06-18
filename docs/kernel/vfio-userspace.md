@@ -80,6 +80,7 @@
         - vfio_get_iommu_type
           - 通过 **VFIO_CHECK_EXTENSION** 获取到 iommu 的类型，在 AMD 上测试得到是 VFIO_TYPE1v2_IOMMU
         - **VFIO_GROUP_SET_CONTAINER** : 将 group 和 container 联系起来，也就是 /dev/vfio/2 和 /dev/vfio/vfio 联系起来
+        - **VFIO_SET_IOMMU** : 设置 iommu 的类型，其实最后就是用内核中 `vfio_iommu_driver_ops_type1`
       - memory_listener_register
         - listener_add_address_space
           - vfio_listener_region_add
