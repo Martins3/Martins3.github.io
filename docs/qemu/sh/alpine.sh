@@ -307,14 +307,17 @@ if [[ $use_ovmf == true ]]; then
 	# arg_seabios="-bios $workstation/OVMF.fd"
 fi
 
-# arg_debug_memblock="memblock=debug"
-arg_cgroupv2="systemd.unified_cgroup_hierarchy=1"
-# scsi_mod.scsi_logging_level=0x3fffffff
+# kernel_cmdline+="scsi_mod.scsi_logging_level=0x3fffffff"
+kernel_cmdline="nokaslr console=ttyS0,9600 earlyprink=serial"
 # @todo 这个 function graph 为什么没有办法打印全部啊
-arg_boot_trace="ftrace=function_graph ftrace_filter=arch_freq_get_on_cpu raid=noautodetect rootfs=data=journal"
-
+kernel_cmdline+="ftrace=function_graph ftrace_filter=arch_freq_get_on_cpu"
+# 进入之后 cat /sys/kernel/debug/tracing/trace
+# kernel_cmdline+="memblock=debug"
+kernel_cmdline+="systemd.unified_cgroup_hierarchy=1"
 # 通过这个参数可以直接 disable avx2
-# arg_boot_trace+=" clearcpuid=156"
+# kernel_cmdline+=" clearcpuid=156"
+kernel_cmdline+="transparent_hugepage=always"
+
 # 获取 PARTUUID 的方法: 在 guest 中，blkid 看根分区的
 if [[ $replace_kernel == true ]]; then
 	if [[ -f ${workstation}/vm/${distribution}.partuuid ]]; then
@@ -325,7 +328,7 @@ if [[ $replace_kernel == true ]]; then
 		exit 0
 	fi
 	root="PARTUUID=$partuuid"
-	arg_kernel_args="root=$root nokaslr console=ttyS0,9600 earlyprink=serial $arg_boot_trace $arg_hugetlb $arg_cgroupv2 transparent_hugepage=always"
+	arg_kernel_args="root=$root $kernel_cmdline $arg_hugetlb"
 	# @todo 可以看到，先会启动 initramfs 才会开始执行 /bin/bash 的
 	# arg_kernel_args="root=$root nokaslr console=ttyS0,9600 earlyprink=serial init=/bin/bash"
 	arg_kernel="-kernel ${kernel} -append \"${arg_kernel_args}\""

@@ -951,3 +951,86 @@ CONFIG_PREEMPTIRQ_DELAY_TEST=m
 #define get_cpu()		({ preempt_disable(); __smp_processor_id(); })
 #define put_cpu()		preempt_enable()
 ```
+
+## 这种错误的检查方法是什么?
+```txt
+[ 1029.769437] ------------[ cut here ]------------
+[ 1029.769442] WARNING: CPU: 24 PID: 2360 at block/blk-mq.c:1275 blk_mq_start_request+0x117/0x140
+[ 1029.769450] Modules linked in: tcp_diag inet_diag nf_conntrack_netlink xfrm_user xfrm_algo xt_addrtype xt_MASQUERADE xt_mark
+ nft_chain_nat overlay qrtr rfcomm snd_seq_dummy snd_hrtimer snd_seq snd_seq_device ccm wireguard curve25519_x86_64 libchacha20
+poly1305 chacha_x86_64 poly1305_x86_64 libcurve25519_generic libchacha ip6_udp_tunnel udp_tunnel af_packet cmac algif_hash algi
+f_skcipher af_alg bnep ip6_tables xt_conntrack ip6t_rpfilter ipt_rpfilter joydev mousedev hid_multitouch xt_pkttype xt_LOG nf_l
+og_syslog mt7921e xt_tcpudp nft_compat mt7921_common mt76_connac_lib snd_sof_amd_rembrandt snd_sof_amd_renoir nf_tables nls_iso
+8859_1 snd_sof_amd_acp sch_fq_codel mt76 nls_cp437 snd_sof_pci snd_sof_xtensa_dsp vfat fat nfnetlink snd_sof snd_hda_codec_real
+tek mac80211 snd_hda_codec_generic snd_sof_utils ledtrig_audio uvcvideo snd_soc_core snd_hda_codec_hdmi videobuf2_vmalloc uvc v
+ideobuf2_memops videobuf2_v4l2 snd_compress videodev ac97_bus snd_hda_intel snd_pcm_dmaengine snd_intel_dspcfg snd_pci_ps snd_i
+ntel_sdw_acpi
+[ 1029.769501]  snd_rpl_pci_acp6x snd_acp_pci snd_hda_codec snd_pci_acp6x videobuf2_common edac_mce_amd snd_pci_acp5x mc snd_hd
+a_core edac_core intel_rapl_msr snd_rn_pci_acp3x snd_hwdep intel_rapl_common snd_acp_config cfg80211 crc32_pclmul snd_pcm snd_s
+oc_acpi btusb nvidia_drm(PO) polyval_clmulni snd_pci_acp3x polyval_generic gf128mul r8169 ghash_clmulni_intel btrtl drm_kms_hel
+per ideapad_laptop btbcm sha512_ssse3 snd_timer sha512_generic btintel realtek ucsi_acpi hid_generic sparse_keymap syscopyarea
+sp5100_tco snd aesni_intel mdio_devres nvidia_modeset(PO) btmtk typec_ucsi wdat_wdt platform_profile sysfillrect crypto_simd vi
+deo wmi_bmof cryptd nvidia_uvm(PO) rapl typec bluetooth libphy watchdog k10temp i2c_piix4 libarc4 i2c_hid_acpi soundcore sysimg
+blt roles battery i2c_hid wmi tpm_crb tpm_tis tpm_tis_core tiny_power_button i2c_designware_platform evdev acpi_cpufreq i2c_des
+ignware_core input_leds ac led_class button mac_hid serio_raw usbhid ecdh_generic rfkill ecc hid libaes nvidia(PO) ctr loop xt_
+nat br_netfilter
+[ 1029.769552]  veth tap macvlan bridge stp llc openvswitch nsh nf_conncount nf_nat nf_conntrack nf_defrag_ipv6 nf_defrag_ipv4
+libcrc32c tun kvm_amd ccp kvm drm fuse deflate backlight efi_pstore i2c_core configfs efivarfs tpm rng_core dmi_sysfs ip_tables
+ x_tables autofs4 ext4 crc32c_generic crc16 mbcache jbd2 xhci_pci xhci_pci_renesas xhci_hcd nvme atkbd usbcore libps2 vivaldi_f
+map nvme_core t10_pi crc64_rocksoft crc64 crc_t10dif crc32c_intel usb_common crct10dif_generic crct10dif_pclmul i8042 crct10dif
+_common rtc_cmos serio dm_mod dax vfio_pci vfio_pci_core irqbypass vfio_iommu_type1 vfio iommufd
+[ 1029.769597] CPU: 24 PID: 2360 Comm: kworker/u64:5 Tainted: P           O       6.3.5 #1-NixOS
+[ 1029.769599] Hardware name: LENOVO 82WM/LNVNB161216, BIOS LPCN41WW 05/24/2023
+[ 1029.769602] Workqueue: writeback wb_workfn (flush-259:0)
+[ 1029.769607] RIP: 0010:blk_mq_start_request+0x117/0x140
+[ 1029.769610] Code: c1 e8 09 66 89 43 7a 48 8b 7d 28 48 85 ff 0f 84 21 ff ff ff 48 89 de e8 17 44 01 00 8b 83 84 00 00 00 85 c
+0 0f 84 19 ff ff ff <0f> 0b e9 12 ff ff ff 48 8b 85 98 00 00 00 48 89 df 48 8b 40 10 ff
+[ 1029.769611] RSP: 0018:ffffb064c3e87808 EFLAGS: 00010202
+[ 1029.769613] RAX: 00000000000000ec RBX: ffff8d060d034000 RCX: 0000000000000019
+[ 1029.769614] RDX: 0000055ba9851786 RSI: ffff8d060d034000 RDI: ffff8d060227e758
+[ 1029.769615] RBP: ffff8d0604d58ab0 R08: 00000000f5a97000 R09: ffff8d0906440000
+[ 1029.769616] R10: 0000000000001000 R11: 0000000000000000 R12: ffff8d06072ee000
+[ 1029.769616] R13: 0000000000000000 R14: 000000000000004b R15: 0000000000000000
+[ 1029.769617] FS:  0000000000000000(0000) GS:ffff8d14edc00000(0000) knlGS:0000000000000000
+[ 1029.769618] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[ 1029.769619] CR2: 00007ffff7dd4a10 CR3: 000000047a620000 CR4: 0000000000750ee0
+[ 1029.769620] PKRU: 55555554
+[ 1029.769621] Call Trace:
+[ 1029.769623]  <TASK>
+[ 1029.769623]  ? blk_mq_start_request+0x117/0x140
+[ 1029.769626]  ? __warn+0x81/0x130
+[ 1029.769631]  ? blk_mq_start_request+0x117/0x140
+[ 1029.769634]  ? report_bug+0x171/0x1a0
+[ 1029.769637]  ? handle_bug+0x41/0x70
+[ 1029.769640]  ? exc_invalid_op+0x17/0x70
+[ 1029.769641]  ? asm_exc_invalid_op+0x1a/0x20
+[ 1029.769656]  ? blk_mq_start_request+0x117/0x140
+[ 1029.769658]  ? blk_mq_start_request+0x109/0x140
+[ 1029.769661]  nvme_prep_rq.part.0+0x3a6/0x810 [nvme]
+[ 1029.769667]  nvme_queue_rqs+0xbd/0x290 [nvme]
+[ 1029.769671]  blk_mq_flush_plug_list+0x2dd/0x300
+[ 1029.769673]  ? __blk_mq_alloc_requests+0x191/0x2e0
+[ 1029.769675]  blk_add_rq_to_plug+0xa4/0x150
+[ 1029.769677]  blk_mq_submit_bio+0x342/0x550
+[ 1029.769679]  submit_bio_noacct_nocheck+0x332/0x370
+[ 1029.769682]  ? submit_bio_noacct+0x5b/0x390
+[ 1029.769683]  ext4_io_submit+0x24/0x40 [ext4]
+[ 1029.769716]  ext4_do_writepages+0x424/0xcb0 [ext4]
+[ 1029.769736]  ext4_writepages+0xaf/0x160 [ext4]
+[ 1029.769755]  do_writepages+0xcf/0x1e0
+[ 1029.769758]  __writeback_single_inode+0x3d/0x360
+[ 1029.769760]  ? wbc_detach_inode+0x101/0x220
+[ 1029.769762]  writeback_sb_inodes+0x1ed/0x4a0
+[ 1029.769767]  __writeback_inodes_wb+0x4c/0xf0
+[ 1029.769770]  wb_writeback+0x204/0x2f0
+[ 1029.769772]  wb_workfn+0x354/0x4f0
+[ 1029.769774]  ? __schedule+0x3eb/0x1380
+[ 1029.769777]  process_one_work+0x1c5/0x3c0
+[ 1029.769787]  worker_thread+0x51/0x390
+[ 1029.769790]  ? __pfx_worker_thread+0x10/0x10
+[ 1029.769791]  kthread+0xdb/0x110
+[ 1029.769793]  ? __pfx_kthread+0x10/0x10
+[ 1029.769795]  ret_from_fork+0x29/0x50
+[ 1029.769799]  </TASK>
+[ 1029.769800] ---[ end trace 0000000000000000 ]---
+```
