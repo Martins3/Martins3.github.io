@@ -24,7 +24,7 @@ share_memory_option="9p"
 hacking_migration=false
 # @todo 尝试在 guest 中搭建一个 vIOMMU
 hacking_vfio=false
-hacking_vfio=true
+# hacking_vfio=true
 
 use_ovmf=false
 minimal=false

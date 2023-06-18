@@ -49,4 +49,35 @@
 #43 0xffffffff8112ac73 in kthread (_create=0xffff8881006742c0) at kernel/kthread.c:376
 #44 0xffffffff81001a72 in ret_from_fork () at arch/x86/entry/entry_64.S:306
 #45 0x0000000000000000 in ?? ()
+``
+
+看上去，根本没人用啊
+```txt
+[root@nixos:/sys/kernel/debug/swiotlb]# cat io_tlb_nslabs
+32768
+
+[root@nixos:/sys/kernel/debug/swiotlb]# cat io_tlb_used
+0
 ```
+
+## https://wiki.gentoo.org/wiki/IOMMU_SWIOTLB
+
+## https://lwn.net/Articles/786558/
+
+
+## gpt4 给出的回答感觉非常正确
+
+> Swiotlb provides a bounce buffer, which is a contiguous region of memory that the limited DMA-capable devices can access. The bounce buffer acts as an intermediary between the device and the actual memory location where the data should be read/written.
+> Here's an overview of how swiotlb works:
+>
+> Initialization: During boot, the kernel reserves a contiguous region of memory for the swiotlb buffer. The size of this buffer can be specified with the swiotlb kernel parameter, e.g., swiotlb=65536 for a 64 MB buffer.
+>
+> DMA mapping: When a device driver wants to perform a DMA operation, it calls the DMA mapping functions provided by the kernel, such as dma_map_single() or dma_map_sg(). These functions check if the specified buffer is within the device's DMA addressable range.
+>
+> If the buffer is within the range, no swiotlb is needed, and the physical address of the buffer is returned to the device driver.
+> If the buffer is outside the device's addressable range, swiotlb is triggered. The kernel allocates a portion of the swiotlb buffer and copies the data from the original buffer to the bounce buffer (for DMA read operations).
+> DMA transfer: The device performs the DMA operation using the physical address provided by the DMA mapping functions. If swiotlb is involved, the device reads/writes data from/to the bounce buffer.
+>
+> DMA unmapping: After the DMA operation is complete, the device driver calls the DMA unmapping functions, such as dma_unmap_single() or dma_unmap_sg(). If swiotlb was involved, the kernel copies the data from the bounce buffer back to the original buffer (for DMA write operations) and frees the swiotlb buffer space for use by other devices.
+>
+> Swiotlb is a fallback mechanism, and the kernel prefers using hardware IOMMU (Input/Output Memory Management Unit) when available, as it can provide better performance and more efficient memory management. However, swiotlb is an important compatibility feature for systems without IOMMU or when dealing with devices with DMA limitations.
