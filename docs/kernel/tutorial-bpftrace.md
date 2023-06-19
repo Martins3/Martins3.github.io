@@ -13,3 +13,12 @@ find /nix/store -name vmlinux
 ```
 
 用 bpftrace 可以获取到 blk_mq_submit_bio+1301 ，这里的 1301 实际上是可以解析的。
+
+## 如何使用 if else
+
+就像是普通的使用:
+```sh
+sudo bpftrace -e "kfunc:filemap_alloc_folio { if (args->order > 0) { @[kstack]=count(); } }"
+```
+
+## 如何可以实时的输出

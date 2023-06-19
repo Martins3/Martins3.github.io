@@ -62,7 +62,6 @@ workstation="$(jq -r ".workstation" <"$configuration")"
 # kernel_dir=/home/martins3/kernel/centos-3.10.0-1160.11.1-x86_64
 
 qemu=${qemu_dir}/build/x86_64-softmmu/qemu-system-x86_64
-# qemu="qemu-system-x86_64"
 if [[ $hacking_kcov == true ]]; then
 	kernel=${kernel_dir}/kcov/arch/x86/boot/bzImage
 else
@@ -503,7 +502,11 @@ while getopts "abcdehkmpqst" opt; do
 			exit 0
 			;;
 		p) debug_qemu="perf record -F 1000" ;;
-		s) debug_kernel="-S -s" ;;
+		s)
+			debug_kernel="-S -s"
+			# 感觉最近编译出来的 QEMU 调试有点问题，先这样将就着用着吧!
+			qemu="qemu-system-x86_64"
+			;;
 		k) launch_gdb=true ;;
 		t)
 			arg_machine="--accel tcg,thread=single"
@@ -576,7 +579,7 @@ fi
 
 if [ $launch_gdb = true ]; then
 	echo "debug kernel"
-	cd "${kernel_dir}" || exit 1
+	cd "${kernel_dir}"
 	# 可以使用任意的
 	# @todo 如果 ext4.ko 是无法调试的
 	vmlinux="vmlinux"

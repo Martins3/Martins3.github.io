@@ -195,3 +195,23 @@ struct iommu_flush_ops {
 paravirt tlb flush
 
 vmid 来减少 tlb flush
+
+## 这个流程我无法理解
+```txt
+#0  do_sync_mmap_readahead (vmf=<optimized out>) at ./include/linux/rcupdate.h:806
+#1  filemap_fault (vmf=0xffffc90000017b98) at mm/filemap.c:3288
+#2  0xffffffff8138511e in __do_fault (vmf=vmf@entry=0xffffc90000017b98) at mm/memory.c:4176
+#3  0xffffffff8138a041 in do_cow_fault (vmf=0xffffc90000017b98) at mm/memory.c:4560
+#4  do_fault (vmf=vmf@entry=0xffffc90000017b98) at mm/memory.c:4661
+#5  0xffffffff8138ef26 in do_pte_missing (vmf=0xffffc90000017b98) at mm/memory.c:3647
+#6  handle_pte_fault (vmf=0xffffc90000017b98) at mm/memory.c:4947
+#7  __handle_mm_fault (vma=vma@entry=0xffff888110406398, address=address@entry=94909939613964, flags=flags@entry=533) at mm/memory.c:5089
+#8  0xffffffff8138f6e7 in handle_mm_fault (vma=vma@entry=0xffff888110406398, address=address@entry=94909939613964, flags=<optimized out>, flags@entry=533, regs=regs@entry=0xffffc90000017ce8) at mm/memory.c:5243
+#9  0xffffffff81123608 in do_user_addr_fault (regs=0xffffc90000017ce8, error_code=2, address=94909939613964) at arch/x86/mm/fault.c:1440
+#10 0xffffffff820d1d11 in handle_page_fault (address=94909939613964, error_code=2, regs=0xffffc90000017ce8) at arch/x86/mm/fault.c:1534
+#11 exc_page_fault (regs=0xffffc90000017ce8, error_code=2) at arch/x86/mm/fault.c:1590
+#12 0xffffffff82201286 in asm_exc_page_fault () at ./arch/x86/include/asm/idtentry.h:570
+```
+如果发生了 do_cow_fault ，那么就应该是 child process 在写这个，但是为什么最后内容却要从文件中加载 ？？？？？？
+
+复现方法，qemu 调试，break do_sync_mmap_readahead

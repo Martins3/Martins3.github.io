@@ -770,9 +770,101 @@ ShmemPmdMapped:   862208 kB
 映射文件总是失败.
 
 似乎有点难触发。
-## [ ] 找到 FileHugePages 特性这个代码什么时候增加的
+
+## page cache
+根本没办法让其不为 0
 
 ```txt
 FileHugePages:         0 kB
 FilePmdMapped:         0 kB
 ```
+
+存在两个位置:
+- filemap_unaccount_folio : 删除的时候
+- `__filemap_add_folio`
+  - 其调用位置为 : filemap_add_folio hugetlb_add_to_page_cache
+
+- filemap_add_folio 的调用位置在 filemap.c 和 readahead.c 但是通过调用 **filemap_alloc_folio** 创建 folio ，当 folio 的 order 超过 HPAGE_PMD_ORDER ，那么就认为是
+大页了。
+
+但是，fio 以及 ccls index 显示全部都是 order = 1
+```txt
+🧀  sudo bpftrace -e "kfunc:filemap_alloc_folio { @order = lhist(args->order, 0, 100, 1); }"
+
+Attaching 1 probe...
+^C
+
+@order:
+[0, 1)            136239 |@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@|
+```
+
+换言之，这个过程根本无法触发:
+```sh
+sudo bpftrace -e "kfunc:filemap_alloc_folio { if (args->order > 0) { print(\"good\") } }"
+```
+
+通过不断的查找 filemap_alloc_folio 的 reference ，最后可以找到:
+- filemap_fault 中，所在的 vma 被 madvise 了 MADV_HUGEPAGE，那么就会使用大页
+
+```c
+#include <errno.h>
+#include <stdio.h>
+#include <string.h>
+#include <sys/mman.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <stdlib.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
+
+const unsigned long PAGE_SIZE = 4 * 1024;
+unsigned long MAP_SIZE = 4000L * 1024 * 1024;
+
+int get_file() {
+  int fd = open("/root/huge", O_RDWR | O_CREAT, 0644);
+  if (fd == -1)
+    goto err;
+
+  if (ftruncate(fd, MAP_SIZE) < 0)
+    goto err;
+  return fd;
+err:
+  printf("%s\n", strerror(errno));
+  exit(1);
+}
+
+int main() {
+  void *ptr =
+      mmap(NULL, MAP_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, get_file(), 0);
+  if (ptr == MAP_FAILED)
+    goto err;
+
+  if (madvise(ptr, MAP_SIZE, MADV_HUGEPAGE) == -1)
+    goto err;
+
+  char m = '1';
+  for (unsigned long i = 0; i < MAP_SIZE; i += PAGE_SIZE) {
+    m += *((char *)(ptr + i));
+  }
+  return 0;
+
+err:
+  printf("munmap failed: %s\n", strerror(errno));
+  return 1;
+}
+```
+
+通过这个测试，的确可以走到 do_sync_mmap_readahead，但是数值还是没有变化。
+最后，检查一下，发现 ext4 根本不支持，需要使用 xfs
+
+修改之后，得到如下内容:
+```txt
+AnonHugePages:     20480 kB
+ShmemHugePages:        0 kB
+ShmemPmdMapped:        0 kB
+FileHugePages:   4096000 kB
+FilePmdMapped:   4096000 kB
+```
+
+## [ ] 如果 order = 3 这种和文件系统沟通的 folio 暂时不知道如何分配的
