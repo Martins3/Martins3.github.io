@@ -22,8 +22,13 @@
   - 可以，例如使用 madvise 和 prctl 可以释放指定进程的，或者特定 vma 的
   - 但是，不存在一下子释放整个系统的 transhuge 的行为
 
+## 内核文档
+[用户手册](https://www.kernel.org/doc/html/latest/admin-guide/mm/transhuge.html)
 
-## 使用接口
+The THP behaviour is controlled via `sysfs` interface and using `madvise(2)` and `prctl(2)` system calls.
+
+1. 其中 prctl 可以让一个程序直接 disable 掉 hugepage ，从而规避系统的设置，具体参考 `PR_SET_THP_DISABLE`
+2. shmem_enabled : The mount is used for SysV SHM, memfds, shared anonymous mmaps (of /dev/zero or MAP_ANONYMOUS), GPU drivers' DRM objects, Ashmem.
 
 在 /sys/kernel/mm/transparent_hugepage/ 下
 
@@ -55,12 +60,6 @@ always defer defer+madvise [madvise] never
 🧀  cat enabled
 always madvise [never]
 
-#### 内核文档
-[用户手册](https://www.kernel.org/doc/html/latest/admin-guide/mm/transhuge.html)
-
-The THP behaviour is controlled via `sysfs` interface and using `madvise(2)` and `prctl(2)` system calls.
-> 其中 prctl 可以让一个程序直接 disable 掉 hugepage ，从而规避系统的设置
-
 ## TODO
 ```c
 /*
@@ -83,7 +82,8 @@ unsigned long transparent_hugepage_flags __read_mostly =
 	(1<<TRANSPARENT_HUGEPAGE_USE_ZERO_PAGE_FLAG);
 ```
 
-- [ ]  page cache can't work with THP ?
+- [ ] page cache can't work with THP ?
+- [ ] 验证 shmem_enabled 的说法?
 
 ## defrag
   - [ ] /sys/kernel/mm/transparent_hugepage/defrag 的 always 无法理解，或者说，什么时候应该触发 defrag, 不是分配的时候就是决定了吗 ?
@@ -522,33 +522,6 @@ static inline int PageTransHuge(struct page *page)
 }
 ```
 
-## khugepaged
-kcompactd 用来 defrag，而 khugepaged 来扫描，确定到底那些已经映射的可以设置为 page table
-
-1. /sys/kernel/mm/transparent_hugepage/enabled => start_stop_khugepaged => khugepaged => khugepaged_do_scan => khugepaged_scan_mm_slot => khugepaged_scan_pmd
-2. in `khugepaged_scan_pmd`, we will check pages one by one, if enough base pages are found,  call `collapse_huge_page` to merge base page to huge page
-3. `collapse_huge_page` = `khugepaged_alloc_page` + `__collapse_huge_page_copy` + many initialization for huge page + `__collapse_huge_page_isolate` (free base page)
-
-- [x] it seems khugepaged scan pages and collapse it into huge pages, so what's difference between kcompactd
-  - khugepaged is consumer of hugepage, it's scan base pages and collapse them
-  - [ ] khugepaged 是用于扫描 base page 的 ? It’s the responsibility of khugepaged to then install the THP pages.
-
-```txt
-#0  prep_transhuge_page (page=0xffffea000d998000) at mm/huge_memory.c:582
-#1  0xffffffff81394907 in hpage_collapse_alloc_page (nmask=0xffffc9000234fe28, node=<optimized out>, gfp=1844426, hpage=0xffffc9000234fd20) at mm/khugepaged.c:808
-#2  alloc_charge_hpage (hpage=hpage@entry=0xffffc9000234fd20, mm=mm@entry=0xffff888341a3bdc0, cc=cc@entry=0xffffffff82d75980 <khugepaged_collapse_control>) at mm/khugepaged.c:957
-#3  0xffffffff81394c3b in collapse_huge_page (mm=mm@entry=0xffff888341a3bdc0, address=address@entry=140576452247552, referenced=referenced@entry=512, unmapped=unmapped@entry=0, cc=cc@entry=0xffffffff82d75980 <khugepaged_collapse_control>) at mm/khugepaged.c:989
-#4  0xffffffff813963e9 in hpage_collapse_scan_pmd (mm=mm@entry=0xffff888341a3bdc0, vma=vma@entry=0xffff8883d8e1c130, address=140576452247552, mmap_locked=mmap_locked@entry=0xffffc9000234fe97, cc=cc@entry=0xffffffff82d75980 <khugepaged_collapse_control>) at mm/khugepaged.c:1275
-#5  0xffffffff81398edb in khugepaged_scan_mm_slot (cc=0xffffffff82d75980 <khugepaged_collapse_control>, result=<synthetic pointer>, pages=4096) at mm/khugepaged.c:2316
-#6  khugepaged_do_scan (cc=0xffffffff82d75980 <khugepaged_collapse_control>) at mm/khugepaged.c:2422
-#7  khugepaged (none=<optimized out>) at mm/khugepaged.c:2478
-#8  0xffffffff811556a4 in kthread (_create=0xffff88834128b300) at kernel/kthread.c:376
-#9  0xffffffff81002659 in ret_from_fork () at arch/x86/entry/entry_64.S:308
-#10 0x0000000000000000 in ?? ()
-```
-- [ ] 似乎在 page fault 的时候就会构造，khugepaged 来制作 thp 的意义是什么
-  - 应该是存在开始的时候，没有 thp ，之后被 khugepaged 合并上的。
-
 ## THP split
 这几个文章都是讲解两种方案，很烦!
 [Transparent huge pages in the page cache](https://lwn.net/Articles/686690/)
@@ -752,3 +725,54 @@ commit 写的很详细的了；
 - 7d8faaf155454f8798ec56404faca29a82689c77
 - https://lwn.net/Articles/887753/
 7d8faaf155454f8798ec56404faca29a82689c77
+
+## 看看为什么数据库不喜欢
+- https://www.mongodb.com/docs/manual/tutorial/transparent-huge-pages/
+- https://www.pingcap.com/blog/transparent-huge-pages-why-we-disable-it-for-databases/
+
+## [ ] 这些操作需要解决掉
+
+```txt
+AnonHugePages:   3448832 kB
+ShmemHugePages:  2045952 kB
+ShmemPmdMapped:        0 kB
+FileHugePages:         0 kB
+FilePmdMapped:         0 kB
+```
+
+目前只有第一个成功的实现的调整过，其他的不受控制。
+
+使用这种可以增加: AnonHugePages
+```c
+  void *ptr = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
+```
+
+但是使用这个不会增加任何数值:
+```c
+  void *ptr = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_SHARED, -1, 0);
+```
+
+使用 QEMU 测试 share=off 也是类似的效果
+
+但是 shmem_enabled 之后
+```txt
+🧀  cat /sys/kernel/mm/transparent_hugepage/shmem_enabled
+always within_size advise [never] deny force
+```
+
+这两个都可以发生变化
+
+```txt
+ShmemHugePages:  2998272 kB
+ShmemPmdMapped:   862208 kB
+```
+
+映射文件总是失败.
+
+似乎有点难触发。
+## [ ] 找到 FileHugePages 特性这个代码什么时候增加的
+
+```txt
+FileHugePages:         0 kB
+FilePmdMapped:         0 kB
+```

@@ -91,5 +91,14 @@
 - dma_map_single : 主要使用这个
   - dma_map_single_attrs
     - dma_map_page_attrs
+      - dma_map_direct : 如果是，走 dma_direct_map_page
+        - is_swiotlb_force_bounce && swiotlb_map : 如果必须 bounce 的，那么走这里
+	      - dma_addr_t dma_addr = phys_to_dma(dev, phys); : 不做任何装换，直接返回的
+      - dma_direct_map_page : 如果不是，走 `iommu_dma_ops` 中注册的 hook
 
-## 但是如何实现保护的?
+- swiotlb_map
+  - swiotlb_tbl_map_single
+    - swiotlb_find_slots
+      - swiotlb_bounce
+
+## 但是, swiotlb 是如何实现保护的?

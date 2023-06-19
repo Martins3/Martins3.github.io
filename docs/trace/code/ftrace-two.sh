@@ -17,6 +17,7 @@ function func() {
 }
 
 function graph() {
+	# TODO 写入到 set_graph_function 和 set_ftrace_filter 的区别是什么?
   echo do_fault >set_graph_function
   echo function_graph >current_tracer
   sleep 3

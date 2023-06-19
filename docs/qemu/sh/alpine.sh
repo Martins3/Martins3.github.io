@@ -211,11 +211,11 @@ fi
 
 case $hacking_memory in
 	"none")
-		ramsize=2G
+		ramsize=20G
 		arg_mem_cpu="-smp $(($(getconf _NPROCESSORS_ONLN) - 1))"
 		# arg_mem_cpu="-smp 1"
 		# echo 1 | sudo  tee /proc/sys/vm/overcommit_memory
-		arg_mem_cpu+=" -object memory-backend-ram,id=pc.ram,size=$ramsize,prealloc=off,share=off -machine memory-backend=pc.ram -m $ramsize"
+		arg_mem_cpu+=" -object memory-backend-ram,id=pc.ram,size=$ramsize,prealloc=off,share=on -machine memory-backend=pc.ram -m $ramsize"
 		;;
 	"file")
 		# 只有使用这种方式才会启动 async page fault
@@ -611,6 +611,7 @@ if [[ ${replace_kernel} == false ]]; then
 	arg_initrd=""
 	# 如果不修改如下选项 ，那么 grub 是不是没有办法选择
 	arg_monitor="-serial mon:stdio"
+	arg_stdio=""
 fi
 
 # @todo 将这个图形在终端中更加清晰的输出出来
