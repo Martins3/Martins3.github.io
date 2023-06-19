@@ -24,7 +24,7 @@ share_memory_option="9p"
 hacking_migration=false
 # @todo 尝试在 guest 中搭建一个 vIOMMU
 hacking_vfio=false
-# hacking_vfio=true
+hacking_vfio=true
 
 use_ovmf=false
 minimal=false
@@ -413,18 +413,13 @@ if [[ $hacking_vfio == true ]]; then
 		fi
 		arg_vfio="-device vfio-pci,host=03:00.0"
 	elif [[ $host_cpu_arch == amd ]]; then
-		if [[ ! -c /dev/vfio/2 ]]; then
-			# 04:00.0 Network controller [0280]: MEDIATEK Corp. MT7922 802.11ax PCI Express Wireless Network Adapter [14c3:0616]
-			# echo 0000:04:00.0 | sudo tee /sys/bus/pci/devices/0000:04:00.0/driver/unbind
-			# echo 14c3 0616 | sudo tee /sys/bus/pci/drivers/vfio-pci/new_id
-			# sudo chown martins3 /dev/vfio/1
-
-			# 07:00.0 Ethernet controller [0200]: Realtek Semiconductor Co., Ltd. RTL8111/8168/8411 PCI Express Gigabit Ethernet Controller [10ec:8168] (rev 15)
-			echo 0000:07:00.0 | sudo tee /sys/bus/pci/devices/0000:07:00.0/driver/unbind
-			echo 10ec 8168 | sudo tee /sys/bus/pci/drivers/vfio-pci/new_id
-			sudo chown martins3 /dev/vfio/2
+		if [[ ! -c /dev/vfio/1 ]]; then
+			# 03:00.0 Non-Volatile memory controller [0108]: MAXIO Technology (Hangzhou) Ltd. Device [1e4b:1602] (rev 01)
+			echo 0000:03:00.0 | sudo tee /sys/bus/pci/devices/0000:03:00.0/driver/unbind
+			echo 1e4b 1602 | sudo tee /sys/bus/pci/drivers/vfio-pci/new_id
+			sudo chown martins3 /dev/vfio/1
 		fi
-		arg_vfio="-device vfio-pci,host=07:00.0"
+		arg_vfio="-device vfio-pci,host=03:00.0"
 	else
 		echo "not supported yet"
 	fi
