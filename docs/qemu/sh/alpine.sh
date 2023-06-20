@@ -24,7 +24,11 @@ share_memory_option="9p"
 hacking_migration=false
 # @todo 尝试在 guest 中搭建一个 vIOMMU
 hacking_vfio=false
-hacking_vfio=true
+# hacking_vfio=true
+# qemu-system-x86_64: We need to set caching-mode=on for intel-iommu to enable device assignment with IOMMU protection.
+
+hacking_virtio_iommu=false
+hacking_virtio_iommu=true
 
 use_ovmf=false
 minimal=false
@@ -190,6 +194,13 @@ arg_hugetlb=""
 
 arg_machine="-machine pc,accel=kvm,kernel-irqchip=on,smm=off"
 # @todo 对于 smm 是否打开，热迁移没有检查，似乎这是一个 bug 吧
+if [[ $hacking_virtio_iommu == true ]]; then
+	arg_machine="-machine q35,accel=kvm,kernel-irqchip=split"
+	arg_machine+=" -device intel-iommu,intremap=on,caching-mode=on"
+
+	# arg_machine+=" -device virtio-iommu-pci"
+fi
+
 arg_mem_balloon="-device virtio-balloon,id=balloon0,deflate-on-oom=true,page-poison=true,free-page-reporting=false,free-page-hint=true,iothread=io1 -object iothread,id=io1"
 arg_mem_balloon=""
 
@@ -210,7 +221,7 @@ fi
 
 case $hacking_memory in
 	"none")
-		ramsize=20G
+		ramsize=2G
 		arg_mem_cpu="-smp $(($(getconf _NPROCESSORS_ONLN) - 1))"
 		# arg_mem_cpu="-smp 1"
 		# echo 1 | sudo  tee /proc/sys/vm/overcommit_memory
@@ -347,6 +358,11 @@ arg_disk="-device virtio-blk-pci,drive=blk2,iothread=io0 -drive file=${workstati
 arg_disk+=" -device virtio-blk-pci,drive=d2 -drive file=${workstation}/img4,format=qcow2,if=none,id=d2"
 
 arg_scsi="-device virtio-scsi-pci,id=scsi0,bus=pci.0,addr=0xa  -device scsi-hd,bus=scsi0.0,channel=0,scsi-id=0,lun=0,drive=scsi-drive -drive file=${workstation}/img5,format=qcow2,id=scsi-drive,if=none"
+if [[ $hacking_virtio_iommu == true ]]; then
+	# TODO 不知道为什么，使用上 virtio iommu 的时候，pci.0 这个 bus 消失了
+	# bus=pci.0,addr=0xa
+	arg_scsi="-device virtio-scsi-pci,id=scsi0  -device scsi-hd,bus=scsi0.0,channel=0,scsi-id=0,lun=0,drive=scsi-drive -drive file=${workstation}/img5,format=qcow2,id=scsi-drive,if=none"
+fi
 
 arg_sata="-drive file=${workstation}/img6,media=disk,format=qcow2"
 # arg_sata="$arg_sata -drive file=${workstation}/img5,media=disk,format=qcow2"

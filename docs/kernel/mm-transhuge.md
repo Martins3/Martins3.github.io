@@ -14,8 +14,7 @@
 2. reference 的问题
 3. split 和 merge
 
-1. rmap 如何支持 thp
-  - page_add_anon_rmap 之类的位置维持 compound page 的计数
+
 2. thp page 是 PageLRU 的吗?
   - 是的，例如 move_folios_to_lru
 3. 可以主动释放掉 thp 为普通页吗?
@@ -81,9 +80,6 @@ unsigned long transparent_hugepage_flags __read_mostly =
 	(1<<TRANSPARENT_HUGEPAGE_DEFRAG_KHUGEPAGED_FLAG)|
 	(1<<TRANSPARENT_HUGEPAGE_USE_ZERO_PAGE_FLAG);
 ```
-
-- [ ] page cache can't work with THP ?
-- [ ] 验证 shmem_enabled 的说法?
 
 ## defrag
   - [ ] /sys/kernel/mm/transparent_hugepage/defrag 的 always 无法理解，或者说，什么时候应该触发 defrag, 不是分配的时候就是决定了吗 ?

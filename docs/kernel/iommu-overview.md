@@ -346,6 +346,38 @@ __setup("ivrs_acpihid",		parse_ivrs_acpihid);
                         nopost  disable Interrupt Posting
 ```
 
+才知道 intel 是默认不打开的 iommu 的(和 distrubution 有关?)，打开之后，可以搜索到如下的内容:
+```txt
+[    0.678026] iommu: Default domain type: Translated
+[    0.678027] iommu: DMA domain TLB invalidation policy: lazy mode
+[    0.736751] pci 0000:00:02.0: Adding to iommu group 0
+[    0.737027] pci 0000:00:00.0: Adding to iommu group 1
+[    0.737031] pci 0000:00:01.0: Adding to iommu group 2
+[    0.737035] pci 0000:00:06.0: Adding to iommu group 3
+[    0.737038] pci 0000:00:0a.0: Adding to iommu group 4
+[    0.737042] pci 0000:00:0e.0: Adding to iommu group 5
+[    0.737048] pci 0000:00:14.0: Adding to iommu group 6
+[    0.737052] pci 0000:00:14.2: Adding to iommu group 6
+[    0.737055] pci 0000:00:14.3: Adding to iommu group 7
+[    0.737063] pci 0000:00:15.0: Adding to iommu group 8
+[    0.737066] pci 0000:00:15.1: Adding to iommu group 8
+[    0.737069] pci 0000:00:15.2: Adding to iommu group 8
+[    0.737073] pci 0000:00:16.0: Adding to iommu group 9
+[    0.737076] pci 0000:00:17.0: Adding to iommu group 10
+[    0.737089] pci 0000:00:1a.0: Adding to iommu group 11
+[    0.737095] pci 0000:00:1c.0: Adding to iommu group 12
+[    0.737100] pci 0000:00:1c.2: Adding to iommu group 13
+[    0.737109] pci 0000:00:1f.0: Adding to iommu group 14
+[    0.737113] pci 0000:00:1f.3: Adding to iommu group 14
+[    0.737116] pci 0000:00:1f.4: Adding to iommu group 14
+[    0.737120] pci 0000:00:1f.5: Adding to iommu group 14
+[    0.737127] pci 0000:01:00.0: Adding to iommu group 15
+[    0.737131] pci 0000:01:00.1: Adding to iommu group 15
+[    0.737135] pci 0000:02:00.0: Adding to iommu group 16
+[    0.737148] pci 0000:03:00.0: Adding to iommu group 17
+[    0.737152] pci 0000:05:00.0: Adding to iommu group 18
+```
+
 ### 通用的参数
 ```txt
         iommu=          [X86]
@@ -634,12 +666,8 @@ static const struct dma_map_ops iommu_dma_ops = {
 
 - 为什么 IOMMU 需要搞出来 iommu group，需要更加详细的解释。
 
-## [ ] vIOMMU 和 virtio iommu 是一个东西吗
-- QEMU 的解释 : https://wiki.qemu.org/Features/VT-d
-
 ## [ ] IOMMU interrupt remapping 是如何实现的
 参考 intel vt-d 标准吧！
-
 
 # VT-d
 How to enable `IRQ_REMAP` in `make menuconfig`:
