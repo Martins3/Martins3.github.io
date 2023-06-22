@@ -589,7 +589,7 @@ x86_vector_domain_ops 和 mp_ioapic_irqdomain_ops 其实就是对应 lapic 和 i
   - [ ] 虽然 0 号 pin 没有连接上
 
 从 mp_register_handler 到达的：
-```c
+```txt
 /*
 #0  x86_vector_alloc_irqs (domain=0xffff88810004d180, virq=1, nr_irqs=1, arg=0xffffffff82403df0) at arch/x86/kernel/apic/vector.c:533
 #1  0xffffffff8104a2f1 in mp_irqdomain_alloc (domain=0xffff8881000fe000, virq=1, nr_irqs=1, arg=0xffffffff82403df0) at arch/x86/kernel/apic/io_apic.c:3020
@@ -611,7 +611,7 @@ rch/x86/kernel/apic/io_apic.c:1057
 ```
 
 从 msi_domain_alloc 到达的 :
-```c
+```txt
 /*
 #0  x86_vector_alloc_irqs (domain=0xffff88810004d180, virq=24, nr_irqs=1, arg=0xffffc90000043c18) at arch/x86/kernel/apic/vector.c:533
 #1  0xffffffff810c3982 in msi_domain_alloc (domain=0xffff88810004df00, virq=24, nr_irqs=1, arg=0xffffc90000043c18) at kernel/irq/msi.c:150

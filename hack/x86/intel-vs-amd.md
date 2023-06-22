@@ -20,3 +20,8 @@ config X86_MCE_AMD
 	  Additional support for AMD specific MCE features such as
 	  the DRAM Error Threshold.
 ```
+
+## cpu flags 中的内容可以逐个查询下
+
+
+## iommu

@@ -174,4 +174,6 @@ qemu timers -- Display the current QEMU timers
 - [ ] https://stackoverflow.com/questions/43701428/gdb-proc-info-mapping-vs-proc-pid-mapping
 - [ ] 调查一下 https://github.com/smcdef/kprobe-template 难道 ebpf 不能实现这个功能 ?
 
+## [ ] 介绍下 coredump 的生成原理
+
 [^1]: 如果 data type 是一个结构体，而且这个结构体很大，那怎么办 ?
