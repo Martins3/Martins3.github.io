@@ -19,6 +19,8 @@ blk function_graph wakeup_dl wakeup_rt wakeup function nop
 这个是 perf 和 ftrace 直接使用的很好的工具了。
 
 ## 问题
+- [ ] 长久无法理解的问题，ftrace 和 blktrace 的关系是什么?
+
 - [ ] function and latency tracers : 为什么 ftrace 可以跟踪 latency tracer
 - [ ] 为什么 ftrace 可以跟踪 kprobe 和 uprobe
 - [ ] 无法理解 `CONFIG_FUNCTION_GRAPH_TRACER`
@@ -218,7 +220,8 @@ cat trace
 ```
 - [ ] 这个结果有点看不懂哇
 
-### CONFIG_BOOTTIME_TRACING
+### boottime tracking
+检查内核选项: CONFIG_BOOTTIME_TRACING
 
 设置如下等效于
 ```txt
@@ -228,6 +231,9 @@ cat trace
 在开机的时候设置 ftrace_notrace 和 ftrace_filter 中的内容。
 
 https://docs.kernel.org/trace/boottime-trace.html
+https://lpc.events/event/4/contributions/445/attachments/289/487/LPC_2019_-_boottime_tracing.pdf
+
+- 使用 "kprobe_event=" 来检测 kernel trace 机制
 
 ## [官方文档](https://www.kernel.org/doc/html/latest/trace/ftrace.html)
 
@@ -393,7 +399,7 @@ tracing mini-HOWTO:
                           new trace)
   stack_trace_filter    - Like set_ftrace_filter but limits what stack_trace
                           traces
-  dynamic_events                - Create/append/remove/show the generic dynamic events
+  dynamic_events        - Create/append/remove/show the generic dynamic events
                           Write into this file to define/undefine new trace events.
   kprobe_events         - Create/append/remove/show the kernel dynamic events
                           Write into this file to define/undefine new trace events.
@@ -449,8 +455,55 @@ place (kretprobe): [<module>:]<symbol>[+<offset>]%return|<memaddr>
              echo '!<trigger>:0 > <system>/<event>/trigger
            Filters can be ignored when removing a trigger.
 ```
-- [x] trace_marker : 给 trace 增加标记的
+- [ ] trace_marker : 给 trace 增加标记的
 - /events : tracepoint 的内容
+- 似乎 available_filter_functions 中包含了 ftrace 啊
+```txt
+[root@nixos:/sys/kernel/debug/tracing]# cat available_filter_functions | grep swiotlb_bounced
+__traceiter_swiotlb_bounced
+
+[root@nixos:/sys/kernel/debug/tracing]# cat available_events | grep iotlb
+swiotlb:swiotlb_bounced
+```
+### [ ] 如何理解 options 目录
+
+### kprobe_events 和 kprobe_profile dynamic_events
+https://docs.kernel.org/trace/kprobetrace.html
+
+> You can also use /sys/kernel/tracing/dynamic_events instead of kprobe_events. That interface will provide unified access to other dynamic events too.
+
+跟着操作一波:
+```txt
+echo 'p:myprobe2 do_sys_openat2 dfd=%ax filename=%dx open_how=%cx usize=+4($stack)' > kprobe_events
+```
+然后可以看到:
+```txt
+[root@nixos:/sys/kernel/debug/tracing/events/kprobes]# pwd
+/sys/kernel/debug/tracing/events/kprobes
+
+[root@nixos:/sys/kernel/debug/tracing/events/kprobes]# ls
+enable  filter  myprobe2
+
+[root@nixos:/sys/kernel/debug/tracing]# cat available_events | grep my
+kprobes:myprobe2
+```
+
+echo "kprobes:myprobe2" > set_event
+
+```txt
+    systemd-oomd-1336    [028] .....  2481.115079: myprobe2: (do_sys_openat2+0x0/0x170) dfd=0x0 filename=0xffffb7d3416bff18 open_how=0x88000 usize=0x88000ffffffff
+    systemd-oomd-1336    [028] .....  2481.365370: myprobe2: (do_sys_openat2+0x0/0x170) dfd=0x0 filename=0xffffb7d3416bff18 open_how=0x88000 usize=0x88000ffffffff
+             cat-18962   [028] .....  2481.424814: myprobe2: (do_sys_openat2+0x0/0x170) dfd=0x0 filename=0xffffb7d355cd3f18 open_how=0x88000 usize=0x88000ffffffff
+```
+
+```txt
+[root@nixos:/sys/kernel/debug/tracing]# cat kprobe_profile
+  myprobe2                                               25721               0
+
+[root@nixos:/sys/kernel/debug/tracing]# cat dynamic_events
+p:kprobes/myprobe2 do_sys_openat2 dfd=%ax filename=%dx open_how=%cx usize=+4($stack)
+```
+
 
 
 ## ftrace 对于编译的时候有要求

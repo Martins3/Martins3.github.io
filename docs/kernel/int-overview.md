@@ -14,8 +14,7 @@
 * [tasklet](#tasklet)
 * [pic](#pic)
 * [apic](#apic)
-* [request irq](#request-irq)
-* [affinity](#affinity)
+* [affinityintover](#affinityintover)
 * [gpio](#gpio)
 * [idt](#idt)
   * [Exception Handling](#exception-handling)
@@ -394,14 +393,7 @@ lapic_timer_set_periodic_oneshot(struct clock_event_device *evt, bool oneshot)
 }
 ```
 
-## request irq
-devm_request_threaded_irq ==> request_threaded_irq
-
-![loading](https://img2020.cnblogs.com/blog/1771657/202006/1771657-20200605223042609-247616444.png)
-- [ ] 上面讲解了 thread ，shared 的处理，问题是，参数 irq 必须找到对应的 irq_desc, 新分配的只是 irq_action
-    - [ ] 通过 irq_domain_alloc_descs 可以分配 irq_desc, 但是现在找不到这些函数的调用位置
-
-## affinity
+## affinityintover
 
 ```c
 static int __init irq_affinity_setup(char *str)

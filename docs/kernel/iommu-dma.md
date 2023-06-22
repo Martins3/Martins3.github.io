@@ -119,3 +119,12 @@ static const struct dma_map_ops iommu_dma_ops = {
 ```c
 	const struct dma_map_ops *ops = get_dma_ops(dev);
 ```
+
+仔细分析下，iommu 如何初始化 pci 设备的
+
+```txt
+[    2.554817] pci 0000:00:01.0: Adding to iommu group 1
+[    2.555020] pci 0000:00:02.0: Adding to iommu group 2
+[    2.555223] pci 0000:00:03.0: Adding to iommu group 3
+[    2.555421] pci 0000:00:04.0: Adding to iommu group 4
+```

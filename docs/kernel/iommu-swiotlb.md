@@ -90,8 +90,7 @@
 
 - dma_map_single : 主要使用这个
   - dma_map_single_attrs
-    - dma_map_page_attrs
-      - dma_map_direct : 如果是，走 dma_direct_map_page
+    - dma_map_page_attrs dma_map_direct : 如果是，走 dma_direct_map_page
         - is_swiotlb_force_bounce && swiotlb_map : 如果必须 bounce 的，那么走这里
 	      - dma_addr_t dma_addr = phys_to_dma(dev, phys); : 不做任何装换，直接返回的
       - dma_direct_map_page : 如果不是，走 `iommu_dma_ops` 中注册的 hook
@@ -102,3 +101,24 @@
       - swiotlb_bounce
 
 ## 但是, swiotlb 是如何实现保护的?
+
+这里是说和 trusted 有关，但是 iommu 不就是用来做保护的吗?
+```c
+static bool dev_is_untrusted(struct device *dev)
+{
+	return dev_is_pci(dev) && to_pci_dev(dev)->untrusted;
+}
+
+static bool dev_use_swiotlb(struct device *dev)
+{
+	return IS_ENABLED(CONFIG_SWIOTLB) && dev_is_untrusted(dev);
+}
+```
+而且
+
+iommu_dma_map_page 是注册在 iommu 下的 hook ，兄弟啊!
+
+## 默认虚拟机中用的 swiotlb 吗?
+并不是，似乎 debugfs 下直接是空的。
+
+那么怎么办?

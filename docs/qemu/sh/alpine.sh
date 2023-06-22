@@ -24,7 +24,7 @@ share_memory_option="9p"
 hacking_migration=false
 # @todo 尝试在 guest 中搭建一个 vIOMMU
 hacking_vfio=false
-hacking_vfio=true
+# hacking_vfio=true
 # qemu-system-x86_64: We need to set caching-mode=on for intel-iommu to enable device assignment with IOMMU protection.
 
 hacking_virtio_iommu=false
@@ -318,15 +318,17 @@ if [[ $use_ovmf == true ]]; then
 fi
 
 # kernel_cmdline+="scsi_mod.scsi_logging_level=0x3fffffff"
-kernel_cmdline="nokaslr console=ttyS0,9600 earlyprink=serial"
-# @todo 这个 function graph 为什么没有办法打印全部啊
-kernel_cmdline+="ftrace=function_graph ftrace_filter=arch_freq_get_on_cpu"
+kernel_cmdline="nokaslr console=ttyS0,9600 earlyprink=serial "
+# 使用 function_graph 是分析从该函数开始的结果
+kernel_cmdline+="ftrace=function_graph ftrace_filter=arch_freq_get_on_cpu "
+kernel_cmdline+="ftrace=function ftrace_filter=arch_freq_get_on_cpu stacktrace"
+
 # 进入之后 cat /sys/kernel/debug/tracing/trace
 # kernel_cmdline+="memblock=debug"
-kernel_cmdline+="systemd.unified_cgroup_hierarchy=1"
+kernel_cmdline+="systemd.unified_cgroup_hierarchy=1 "
 # 通过这个参数可以直接 disable avx2
 # kernel_cmdline+=" clearcpuid=156"
-kernel_cmdline+="transparent_hugepage=always"
+kernel_cmdline+="transparent_hugepage=always "
 
 # 获取 PARTUUID 的方法: 在 guest 中，blkid 看根分区的
 if [[ $replace_kernel == true ]]; then

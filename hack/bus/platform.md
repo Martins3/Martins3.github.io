@@ -392,7 +392,7 @@ int platform_device_add(struct platform_device *pdev)
 ```
 
 ## 奇怪的 rtc
-```c
+```txt
 [    2.308385] huxueshi:platform_match alarmtimer == alarmtimer
 [    2.309065] CPU: 0 PID: 1 Comm: swapper/0 Not tainted 5.12.0+ #39
 [    2.309766] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS rel-1.14.0-14-g748d619-dirty-20210524_151541-maritns3-pc 04/01/2014
