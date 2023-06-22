@@ -198,6 +198,7 @@ if [[ $hacking_virtio_iommu == true ]]; then
 	# arg_machine="-machine q35,accel=kvm,kernel-irqchip=split"
 	# arg_machine+=" -device intel-iommu,intremap=on,caching-mode=on"
 
+	# 这种模式应该是有 bug，如果不加上内核参数 iommu=pt，那么会卡半天
 	arg_machine+=" -device virtio-iommu-pci"
 fi
 
@@ -329,6 +330,7 @@ kernel_cmdline+="systemd.unified_cgroup_hierarchy=1 "
 # 通过这个参数可以直接 disable avx2
 # kernel_cmdline+=" clearcpuid=156"
 kernel_cmdline+="transparent_hugepage=always "
+# kernel_cmdline+="iommu=pt "
 
 # 获取 PARTUUID 的方法: 在 guest 中，blkid 看根分区的
 if [[ $replace_kernel == true ]]; then

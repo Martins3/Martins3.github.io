@@ -863,6 +863,50 @@ initrd=\efi\nixos\zkf5v40bsl6lzvgbi9a4mnf5wm55aqh6-initrd-linux-6.3.5-initrd.efi
 - dma_map_page_attrs
 
 
+```txt
+#0  set_dma_ops (dma_ops=0x0 <fixed_percpu_data>, dev=0xffff888007ccf0c8) at ./include/linux/dma-map-ops.h:99
+#1  viommu_probe_finalize (dev=0xffff888007ccf0c8) at drivers/iommu/virtio-iommu.c:984
+#2  0xffffffff81955f1d in iommu_probe_device (dev=0xffff888007ccf0c8) at drivers/iommu/iommu.c:449
+#3  iommu_probe_device (dev=dev@entry=0xffff888007ccf0c8) at drivers/iommu/iommu.c:404
+#4  0xffffffff8187ddf6 in acpi_iommu_configure_id ( id_in=0x0 <fixed_percpu_data>, dev=0xffff888007ccf0c8) at drivers/acpi/scan.c:1583
+```
+
+没有 iommu=pt
+```txt
+[    0.693169] virtio_iommu: [huxueshi:set_dma_ops:99] 0000000000000000
+[    0.694918] [huxueshi:iommu_setup_dma_ops:1597] 0000000000000000
+```
+存在 iommu=pt 的时候
+```txt
+[    0.558555] virtio_iommu: [huxueshi:set_dma_ops:99] 0000000000000000
+[    0.559772] virtio_iommu: [huxueshi:set_dma_ops:99] 0000000000000000
+```
+其调用路径为:
+```txt
+#0  iommu_setup_dma_ops (dev=0xffff888007bba0c8, dma_base=0, dma_limit=18446744073709551615) at drivers/iommu/dma-iommu.c:1584
+#1  0xffffffff81955f7d in iommu_probe_device ( dev=0xffff888007bba0c8) at drivers/iommu/iommu.c:449
+#2  iommu_probe_device (dev=dev@entry=0xffff888007bba0c8) at drivers/iommu/iommu.c:404
+#3  0xffffffff8187de0d in acpi_iommu_configure_id ( id_in=0x0 <fixed_percpu_data>, dev=0xffff888007bba0c8) at drivers/acpi/scan.c:1583
+```
+
+原来是在
+```c
+static inline bool iommu_is_dma_domain(struct iommu_domain *domain)
+{
+	return domain->type & __IOMMU_DOMAIN_DMA_API;
+}
+
+void iommu_set_default_translated(bool cmd_line)
+{
+	if (cmd_line)
+		iommu_cmd_line |= IOMMU_CMD_LINE_DMA_API;
+	iommu_def_domain_type = IOMMU_DOMAIN_DMA;
+}
+```
+
+## [ ] iommu=pt 为什么还可以直通?
+
+
 ## 分析下 typo 结构
 
 ```txt
