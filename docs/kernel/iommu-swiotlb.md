@@ -122,3 +122,37 @@ iommu_dma_map_page 是注册在 iommu 下的 hook ，兄弟啊!
 并不是，似乎 debugfs 下直接是空的。
 
 那么怎么办?
+
+
+## 分析下
+```txt
+@[
+    swiotlb_tbl_map_single+5
+    swiotlb_map+115
+    dma_map_page_attrs+268
+    page_pool_dma_map+48
+    __page_pool_alloc_pages_slow+307
+    page_pool_alloc_frag+332
+    mt76_dma_rx_fill.isra.0+306
+    mt7921_wpdma_reset+408
+    mt7921_wpdma_reinit_cond+115
+    mt7921e_mcu_drv_pmctrl+33
+    mt7921_mcu_drv_pmctrl+56
+    mt7921_pm_wake_work+48
+    process_one_work+453
+    worker_thread+81
+    kthread+219
+    ret_from_fork+41
+]: 42368
+```
+
+- dma_map_page_attrs
+  - dma_direct_map_page
+    - swiotlb_map
+
+看来是 dma_map_direct 判断成功了
+
+但是:
+```txt
+[    0.497884] pci 0000:00:04.0: Adding to iommu group 3
+```

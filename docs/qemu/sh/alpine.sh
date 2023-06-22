@@ -195,10 +195,10 @@ arg_hugetlb=""
 arg_machine="-machine pc,accel=kvm,kernel-irqchip=on,smm=off"
 # @todo 对于 smm 是否打开，热迁移没有检查，似乎这是一个 bug 吧
 if [[ $hacking_virtio_iommu == true ]]; then
-	arg_machine="-machine q35,accel=kvm,kernel-irqchip=split"
-	arg_machine+=" -device intel-iommu,intremap=on,caching-mode=on"
+	# arg_machine="-machine q35,accel=kvm,kernel-irqchip=split"
+	# arg_machine+=" -device intel-iommu,intremap=on,caching-mode=on"
 
-	# arg_machine+=" -device virtio-iommu-pci"
+	arg_machine+=" -device virtio-iommu-pci"
 fi
 
 arg_mem_balloon="-device virtio-balloon,id=balloon0,deflate-on-oom=true,page-poison=true,free-page-reporting=false,free-page-hint=true,iothread=io1 -object iothread,id=io1"

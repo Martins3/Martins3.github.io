@@ -466,6 +466,50 @@ __traceiter_swiotlb_bounced
 swiotlb:swiotlb_bounced
 ```
 ### [ ] 如何理解 options 目录
+检查这里: https://www.kernel.org/doc/Documentation/trace/ftrace.txt
+
+```txt
+[root@nixos:/sys/kernel/debug/tracing/options]# ls
+annotate     block            funcgraph-abstime   funcgraph-overrun  function-fork   irq-info        printk-msg-only  sleep-time   test_nop_accept
+bin          context-info     funcgraph-cpu       funcgraph-proc     function-trace  latency-format  print-parent     stacktrace   test_nop_refuse
+blk_cgname   disable_on_free  funcgraph-duration  funcgraph-tail     graph-time      markers         raw              sym-addr     trace_printk
+blk_cgroup   display-graph    funcgraph-irqs      func-no-repeats    hash-ptr        overwrite       record-cmd       sym-offset   userstacktrace
+blk_classic  event-fork       funcgraph-overhead  func_stack_trace   hex             pause-on-trace  record-tgid      sym-userobj  verbose
+```
+
+```txt
+[root@nixos:/sys/kernel/debug/tracing]# cat trace_options
+print-parent
+nosym-offset
+nosym-addr
+noverbose
+noraw
+nohex
+nobin
+noblock
+trace_printk
+annotate
+nouserstacktrace
+nosym-userobj
+noprintk-msg-only
+context-info
+nolatency-format
+record-cmd
+norecord-tgid
+overwrite
+nodisable_on_free
+irq-info
+markers
+noevent-fork
+nopause-on-trace
+hash-ptr
+function-trace
+nofunction-fork
+nodisplay-graph
+nostacktrace
+notest_nop_accept
+notest_nop_refuse
+```
 
 ### kprobe_events 和 kprobe_profile dynamic_events
 https://docs.kernel.org/trace/kprobetrace.html

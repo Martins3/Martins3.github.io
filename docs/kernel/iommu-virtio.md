@@ -97,3 +97,11 @@ qemu-system-x86_64: virtio_iommu_translate no mapping for 0xa86b100 for sid=32
 
 
 ## https://michael2012z.medium.com/virtio-iommu-789369049443
+
+## gdb 中分析下
+
+dma_map_page_attrs
+```txt
+$ p dev->dma_ops
+$1 = (const struct dma_map_ops *) 0xffffffff824c1960 <iommu_dma_ops>
+```

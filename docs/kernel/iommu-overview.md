@@ -861,3 +861,76 @@ initrd=\efi\nixos\zkf5v40bsl6lzvgbi9a4mnf5wm55aqh6-initrd-linux-6.3.5-initrd.efi
 代码上的证据: `iommu_def_domain_type = IOMMU_DOMAIN_IDENTITY`
 
 - dma_map_page_attrs
+
+
+## 分析下 typo 结构
+
+```txt
+[    0.497832] pci 0000:00:01.0: Adding to iommu group 0
+[    0.497836] pci 0000:00:01.1: Adding to iommu group 0
+[    0.497840] pci 0000:00:01.2: Adding to iommu group 0
+[    0.497848] pci 0000:00:02.0: Adding to iommu group 1
+[    0.497852] pci 0000:00:02.1: Adding to iommu group 1
+[    0.497856] pci 0000:00:02.2: Adding to iommu group 1
+[    0.497867] pci 0000:00:03.0: Adding to iommu group 2
+[    0.497871] pci 0000:00:03.1: Adding to iommu group 2
+[    0.497875] pci 0000:00:03.2: Adding to iommu group 2
+[    0.497879] pci 0000:00:03.3: Adding to iommu group 2
+[    0.497884] pci 0000:00:04.0: Adding to iommu group 3
+[    0.497893] pci 0000:00:08.0: Adding to iommu group 4
+[    0.497897] pci 0000:00:08.1: Adding to iommu group 4
+[    0.497901] pci 0000:00:08.3: Adding to iommu group 4
+[    0.497909] pci 0000:00:14.0: Adding to iommu group 5
+[    0.497914] pci 0000:00:14.3: Adding to iommu group 5
+[    0.497931] pci 0000:00:18.0: Adding to iommu group 6
+[    0.497935] pci 0000:00:18.1: Adding to iommu group 6
+[    0.497940] pci 0000:00:18.2: Adding to iommu group 6
+[    0.497944] pci 0000:00:18.3: Adding to iommu group 6
+[    0.497949] pci 0000:00:18.4: Adding to iommu group 6
+[    0.497953] pci 0000:00:18.5: Adding to iommu group 6
+[    0.497957] pci 0000:00:18.6: Adding to iommu group 6
+[    0.497961] pci 0000:00:18.7: Adding to iommu group 6
+[    0.497964] pci 0000:01:00.0: Adding to iommu group 0
+[    0.497965] pci 0000:01:00.1: Adding to iommu group 0
+[    0.497967] pci 0000:02:00.0: Adding to iommu group 0
+[    0.497969] pci 0000:03:00.0: Adding to iommu group 1
+[    0.497972] pci 0000:04:00.0: Adding to iommu group 1
+[    0.497975] pci 0000:07:00.0: Adding to iommu group 2
+[    0.497977] pci 0000:08:00.0: Adding to iommu group 4
+[    0.497980] pci 0000:08:00.2: Adding to iommu group 4
+[    0.497982] pci 0000:08:00.3: Adding to iommu group 4
+[    0.497984] pci 0000:08:00.4: Adding to iommu group 4
+[    0.497986] pci 0000:08:00.5: Adding to iommu group 4
+[    0.497988] pci 0000:08:00.6: Adding to iommu group 4
+[    0.497990] pci 0000:09:00.0: Adding to iommu group 4
+```
+
+想不到 iommu=pt 之后，根本没有人走 iommu_dma_unmap_page
+
+nvme 也是走的这个路线:
+```txt
+dma_map_page_attrs+5
+nvme_prep_rq.part.0+1460
+nvme_queue_rq+123
+__blk_mq_try_issue_directly+348
+blk_mq_try_issue_directly+22
+blk_mq_submit_bio+1199
+submit_bio_noacct_nocheck+818
+__blkdev_direct_IO_async+260
+blkdev_read_iter+295
+aio_read+306
+io_submit_one+1451
+__x64_sys_io_submit+173
+do_syscall_64+59
+entry_SYSCALL_64_after_hwframe+114
+```
+
+```sh
+sudo bpftrace -e 'kfunc:dma_map_page_attrs {  @[args->dev->dma_ops]=count() }'
+```
+得到：
+```txt
+@[0x0]: 562818
+```
+
+看来的确是所有的 guest 都没有的。

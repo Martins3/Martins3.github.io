@@ -22,3 +22,12 @@ sudo bpftrace -e "kfunc:filemap_alloc_folio { if (args->order > 0) { @[kstack]=c
 ```
 
 ## 如何可以实时的输出
+printf 和 print 就是的
+
+## 统计参数
+
+```sh
+sudo bpftrace -e 'kfunc:dma_map_page_attrs {  @[args->dev->dma_ops]=count() }'
+
+@[0x0]: 562818
+```
