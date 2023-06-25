@@ -291,6 +291,17 @@ qemu-system-x86_64: -device vfio-pci,host=09:00.0: vfio 0000:09:00.0: group 4 is
 Please ensure all devices within the iommu_group are bound to their vfio bus driver.
 ```
 
+```txt
+	amd_iommu_intr=	[HW,X86-64]
+			Specifies one of the following AMD IOMMU interrupt
+			remapping modes:
+			legacy     - Use legacy interrupt remapping mode.
+			vapic      - Use virtual APIC mode, which allows IOMMU
+			             to inject interrupts directly into guest.
+			             This mode requires kvm-amd.avic=1.
+			             (Default when IOMMU HW support is present.)
+```
+
 看内核参数:
 
 ```c
@@ -462,9 +473,42 @@ phys_addr_t iommu_iova_to_phys(struct iommu_domain *domain, dma_addr_t iova)
 }
 ```
 
-#### [ ] iommu=pt 为什么还是可以使用 GPU 直通，无法理解啊
+#### [x] iommu=pt 为什么还是可以使用 GPU 直通，无法理解啊
+因为 iommu=pt 应该是只是管理 dma
 
-#### [ ] iommu=pt 和 swiotlb 啥关系?
+想不到 iommu=pt 之后，根本没有人走 iommu_dma_unmap_page
+
+nvme 也是走的这个路线:
+```txt
+dma_map_page_attrs+5
+nvme_prep_rq.part.0+1460
+nvme_queue_rq+123
+__blk_mq_try_issue_directly+348
+blk_mq_try_issue_directly+22
+blk_mq_submit_bio+1199
+submit_bio_noacct_nocheck+818
+__blkdev_direct_IO_async+260
+blkdev_read_iter+295
+aio_read+306
+io_submit_one+1451
+__x64_sys_io_submit+173
+do_syscall_64+59
+entry_SYSCALL_64_after_hwframe+114
+```
+
+```sh
+sudo bpftrace -e 'kfunc:dma_map_page_attrs {  @[args->dev->dma_ops]=count() }'
+```
+得到：
+```txt
+@[0x0]: 562818
+```
+
+看来的确是所有的 guest 都没有的。
+
+#### [x] iommu=pt 和 swiotlb 啥关系?
+当使用 iommu=pt 的时候，自动将会采用 swiotlb 的如果
+无法满足 4G 的分配需求的时候。
 
 ## 问题 && TODO
 - [ ] drivers/iommu/hyperv-iommu.c 是个什么概念 ?
@@ -949,32 +993,52 @@ void iommu_set_default_translated(bool cmd_line)
 [    0.497990] pci 0000:09:00.0: Adding to iommu group 4
 ```
 
-想不到 iommu=pt 之后，根本没有人走 iommu_dma_unmap_page
-
-nvme 也是走的这个路线:
 ```txt
-dma_map_page_attrs+5
-nvme_prep_rq.part.0+1460
-nvme_queue_rq+123
-__blk_mq_try_issue_directly+348
-blk_mq_try_issue_directly+22
-blk_mq_submit_bio+1199
-submit_bio_noacct_nocheck+818
-__blkdev_direct_IO_async+260
-blkdev_read_iter+295
-aio_read+306
-io_submit_one+1451
-__x64_sys_io_submit+173
-do_syscall_64+59
-entry_SYSCALL_64_after_hwframe+114
+IOMMU Group 0:
+        00:01.0 Host bridge [0600]: Advanced Micro Devices, Inc. [AMD] Device [1022:14da]
+        00:01.1 PCI bridge [0604]: Advanced Micro Devices, Inc. [AMD] Device [1022:14db]
+        00:01.2 PCI bridge [0604]: Advanced Micro Devices, Inc. [AMD] Device [1022:14db]
+        01:00.0 VGA compatible controller [0300]: NVIDIA Corporation AD107M [GeForce RTX 4060 Max-Q / Mobile] [10de:28e0] (rev a1)
+        01:00.1 Audio device [0403]: NVIDIA Corporation Device [10de:22be] (rev a1)
+        02:00.0 Non-Volatile memory controller [0108]: Samsung Electronics Co Ltd NVMe SSD Controller PM9A1/PM9A3/980PRO [144d:a80a]
+IOMMU Group 1:
+        00:02.0 Host bridge [0600]: Advanced Micro Devices, Inc. [AMD] Device [1022:14da]
+        00:02.1 PCI bridge [0604]: Advanced Micro Devices, Inc. [AMD] Device [1022:14db]
+        00:02.2 PCI bridge [0604]: Advanced Micro Devices, Inc. [AMD] Device [1022:14db]
+        03:00.0 Non-Volatile memory controller [0108]: MAXIO Technology (Hangzhou) Ltd. Device [1e4b:1602] (rev 01)
+        04:00.0 Network controller [0280]: MEDIATEK Corp. MT7922 802.11ax PCI Express Wireless Network Adapter [14c3:0616]
+IOMMU Group 2:
+        00:03.0 Host bridge [0600]: Advanced Micro Devices, Inc. [AMD] Device [1022:14da]
+        00:03.1 PCI bridge [0604]: Advanced Micro Devices, Inc. [AMD] Device [1022:14db]
+        00:03.2 PCI bridge [0604]: Advanced Micro Devices, Inc. [AMD] Device [1022:14db]
+        00:03.3 PCI bridge [0604]: Advanced Micro Devices, Inc. [AMD] Device [1022:14db]
+        07:00.0 Ethernet controller [0200]: Realtek Semiconductor Co., Ltd. RTL8111/8168/8411 PCI Express Gigabit Ethernet Controller [10ec:8168] (rev 15)
+IOMMU Group 3:
+        00:04.0 Host bridge [0600]: Advanced Micro Devices, Inc. [AMD] Device [1022:14da]
+IOMMU Group 4:
+        00:08.0 Host bridge [0600]: Advanced Micro Devices, Inc. [AMD] Device [1022:14da]
+        00:08.1 PCI bridge [0604]: Advanced Micro Devices, Inc. [AMD] Device [1022:14dd]
+        00:08.3 PCI bridge [0604]: Advanced Micro Devices, Inc. [AMD] Device [1022:14dd]
+        08:00.0 Non-Essential Instrumentation [1300]: Advanced Micro Devices, Inc. [AMD] Device [1022:14de] (rev d8)
+        08:00.2 Encryption controller [1080]: Advanced Micro Devices, Inc. [AMD] VanGogh PSP/CCP [1022:1649]
+        08:00.3 USB controller [0c03]: Advanced Micro Devices, Inc. [AMD] Device [1022:15b6]
+        08:00.4 USB controller [0c03]: Advanced Micro Devices, Inc. [AMD] Device [1022:15b7]
+        08:00.5 Multimedia controller [0480]: Advanced Micro Devices, Inc. [AMD] ACP/ACP3X/ACP6x Audio Coprocessor [1022:15e2] (rev 62)
+        08:00.6 Audio device [0403]: Advanced Micro Devices, Inc. [AMD] Family 17h/19h HD Audio Controller [1022:15e3]
+        09:00.0 USB controller [0c03]: Advanced Micro Devices, Inc. [AMD] Device [1022:15b8]
+IOMMU Group 5:
+        00:14.0 SMBus [0c05]: Advanced Micro Devices, Inc. [AMD] FCH SMBus Controller [1022:790b] (rev 71)
+        00:14.3 ISA bridge [0601]: Advanced Micro Devices, Inc. [AMD] FCH LPC Bridge [1022:790e] (rev 51)
+IOMMU Group 6:
+        00:18.0 Host bridge [0600]: Advanced Micro Devices, Inc. [AMD] Device [1022:14e0]
+        00:18.1 Host bridge [0600]: Advanced Micro Devices, Inc. [AMD] Device [1022:14e1]
+        00:18.2 Host bridge [0600]: Advanced Micro Devices, Inc. [AMD] Device [1022:14e2]
+        00:18.3 Host bridge [0600]: Advanced Micro Devices, Inc. [AMD] Device [1022:14e3]
+        00:18.4 Host bridge [0600]: Advanced Micro Devices, Inc. [AMD] Device [1022:14e4]
+        00:18.5 Host bridge [0600]: Advanced Micro Devices, Inc. [AMD] Device [1022:14e5]
+        00:18.6 Host bridge [0600]: Advanced Micro Devices, Inc. [AMD] Device [1022:14e6]
+        00:18.7 Host bridge [0600]: Advanced Micro Devices, Inc. [AMD] Device [1022:14e7]
 ```
 
-```sh
-sudo bpftrace -e 'kfunc:dma_map_page_attrs {  @[args->dev->dma_ops]=count() }'
-```
-得到：
-```txt
-@[0x0]: 562818
-```
-
-看来的确是所有的 guest 都没有的。
+- [ ] 在一个 group 上这种事情，是如何发现的, acpi 还是扫描 pci 的 typo 结构
+- [ ] 如何查看 pci 的 typo 结构如何查看来着

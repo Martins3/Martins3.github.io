@@ -273,3 +273,23 @@ Cc: Matthew Wilcox (Oracle) <willy@infradead.org>
 Cc: Vishal Moola (Oracle) <vishal.moola@gmail.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ```
+
+## 如何理解 can_split_folio 中的计数问题
+
+```c
+/* Racy check whether the huge page can be split */
+bool can_split_folio(struct folio *folio, int *pextra_pins)
+{
+	int extra_pins;
+
+	/* Additional pins from page cache */
+	if (folio_test_anon(folio))
+		extra_pins = folio_test_swapcache(folio) ?
+				folio_nr_pages(folio) : 0;
+	else
+		extra_pins = folio_nr_pages(folio);
+	if (pextra_pins)
+		*pextra_pins = extra_pins;
+	return folio_mapcount(folio) == folio_ref_count(folio) - extra_pins - 1;
+}
+```

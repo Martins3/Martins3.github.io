@@ -1,8 +1,9 @@
 ## khugepaged
+
 kcompactd 用来 defrag，而 khugepaged 来扫描，确定到底那些已经映射的可以设置为 page table
 
 1. /sys/kernel/mm/transparent_hugepage/enabled => start_stop_khugepaged => khugepaged => khugepaged_do_scan => khugepaged_scan_mm_slot => khugepaged_scan_pmd
-2. in `khugepaged_scan_pmd`, we will check pages one by one, if enough base pages are found,  call `collapse_huge_page` to merge base page to huge page
+2. in `khugepaged_scan_pmd`, we will check pages one by one, if enough base pages are found, call `collapse_huge_page` to merge base page to huge page
 3. `collapse_huge_page` = `khugepaged_alloc_page` + `__collapse_huge_page_copy` + many initialization for huge page + `__collapse_huge_page_isolate` (free base page)
 
 - [x] it seems khugepaged scan pages and collapse it into huge pages, so what's difference between kcompactd
@@ -22,5 +23,15 @@ kcompactd 用来 defrag，而 khugepaged 来扫描，确定到底那些已经映
 #9  0xffffffff81002659 in ret_from_fork () at arch/x86/entry/entry_64.S:308
 #10 0x0000000000000000 in ?? ()
 ```
+
 - [ ] 似乎在 page fault 的时候就会构造，khugepaged 来制作 thp 的意义是什么
   - 应该是存在开始的时候，没有 thp ，之后被 khugepaged 合并上的。
+
+## 触发方法
+
+
+## 基本流程
+- khugepaged_scan_mm_slot : madvise_collapse 也会向下调用
+  - hpage_collapse_scan_pmd
+    - collapse_huge_page
+      - `__collapse_huge_page_isolate`

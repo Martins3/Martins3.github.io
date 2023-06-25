@@ -3,23 +3,56 @@
 - madvise 告知内核该范围的内存如何访问
 - fadvise 告知内核该范围的文件如何访问，内核从而可以调节 readahead 的参数，或者清理掉该范围的 page cache
 
-fadvise 很简单，阅读
-2. mm/fadvise.c 的源代码只有 200 行，具体可以看看 Man fadvise(2)
+fadvise 很简单，阅读 2. mm/fadvise.c 的源代码只有 200 行，具体可以看看 Man fadvise(2)
 
 ## 总体分析
+
+
+| Name                 | Comment |
+|----------------------|---------|--------------------------------------------------------------------------|
+| MADV_NORMAL          | 0       | no further special treatment                                             |
+| MADV_RANDOM          | 1       | expect random page references                                            |
+| MADV_SEQUENTIAL      | 2       | expect sequential page references                                        |
+| MADV_WILLNEED        | 3       | will need these pages                                                    |
+| MADV_DONTNEED        | 4       | don't need these pages                                                   |
+| MADV_FREE            | 8       | free pages only if memory pressure                                       |
+| MADV_REMOVE          | 9       | remove these pages & resources                                           |
+| MADV_DONTFORK        | 10      | don't inherit across fork                                                |
+| MADV_DOFORK          | 11      | do inherit across fork                                                   |
+| MADV_HWPOISON        | 100     | poison a page for testing                                                |
+| MADV_SOFT_OFFLINE    | 101     | soft offline page for testing                                            |
+| MADV_MERGEABLE       | 12      | KSM may merge identical pages                                            |
+| MADV_UNMERGEABLE     | 13      | KSM may not merge identical pages                                        |
+| MADV_HUGEPAGE        | 14      | Worth backing with hugepages                                             |
+| MADV_NOHUGEPAGE      | 15      | Not worth backing with hugepages                                         |
+| MADV_DONTDUMP        | 16      | Explicity exclude from the core dump, overrides the coredump filter bits |
+| MADV_DODUMP          | 17      | Clear the MADV_DONTDUMP flag                                             |
+| MADV_WIPEONFORK      | 18      | Zero memory on fork, child only                                          |
+| MADV_KEEPONFORK      | 19      | Undo MADV_WIPEONFORK                                                     |
+| MADV_COLD            | 20      | deactivate these pages                                                   |
+| MADV_PAGEOUT         | 21      | reclaim these pages                                                      |
+| MADV_POPULATE_READ   | 22      | populate (prefault) page tables readable                                 |
+| MADV_POPULATE_WRITE  | 23      | populate (prefault) page tables writable                                 |
+| MADV_DONTNEED_LOCKED | 24      | like DONTNEED, but drop locked pages too                                 |
+| MADV_COLLAPSE        | 25      | Synchronous hugepage collapse                                            |
+
 - MADV_COLD : deactivate_page : 将 page active 的 lru 中放到 inactive 中
 - MADV_PAGEOUT : reclaim_pages -> shrink_list -> reclaim_page_list -> shrink_page_list 将 page 写回。
-- MADV_REMOVE
-- MADV_DONTNEED
-- MADV_WILLNEED :
+## madvise_collapse
+
+- madvise_collapse
+  - hpage_collapse_scan_file : 文件映射，或者匿名映射
+  - hpage_collapse_scan_pmd : anon 映射
+
+khugepaged 的替代品，让一个区域映射之后进行，当然，需要一个范围中已经存在足够多的页才可以。
 
 ## MAP_COLD
+
 其中的 page walk 框架可以分析一下。
 
 - 核心: madvise_cold_or_pageout_pte_range
 
 - [ ] 似乎很多位置都是这个类似的这种结构
-
 
 ```c
 static long madvise_cold(struct vm_area_struct *vma,
@@ -41,6 +74,7 @@ static long madvise_cold(struct vm_area_struct *vma,
     return 0;
 }
 ```
+
 - madvise_cold_page_range
   - tlb_start_vma
   - walk_page_range
@@ -67,14 +101,14 @@ man madvise(2)
 ```
 
 - [ ] 为什么是在 pmd 上注册的哇?
+
 ```c
 static const struct mm_walk_ops cold_walk_ops = {
     .pmd_entry = madvise_cold_or_pageout_pte_range,
 };
 ```
 
-- MADV_COLD 和 MADV_PAGEOUT 共用这一个 handler :  madvise_cold_or_pageout_pte_range
-
+- MADV_COLD 和 MADV_PAGEOUT 共用这一个 handler : madvise_cold_or_pageout_pte_range
 
 ```diff
 History:        #0
@@ -126,6 +160,7 @@ VM_PFNMAP pages.
 - madvise_populate 会申请 mmap_read_lock
 
 - faultin_vma_page_range 中，同时出现这两个代码，看来 lock 的含义是我不懂的
+
 ```c
 	mmap_assert_locked(mm);
 
@@ -134,6 +169,7 @@ VM_PFNMAP pages.
 ```
 
 其实 QEMU 是存在考虑的:
+
 ```c
     /*
      * On Linux, the page faults from the loop below can cause mmap_sem
@@ -151,4 +187,5 @@ VM_PFNMAP pages.
 https://mp.weixin.qq.com/s/R8BVIrps5UPXVncvbGkkug
 
 ## [ ] 我一时间分不清楚 MAP_NONEED 和 MADV_FREE 了
+
 - https://news.ycombinator.com/item?id=23216590
