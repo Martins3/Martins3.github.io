@@ -293,3 +293,97 @@ bool can_split_folio(struct folio *folio, int *pextra_pins)
 	return folio_mapcount(folio) == folio_ref_count(folio) - extra_pins - 1;
 }
 ```
+
+```diff
+History:        #0
+Commit:         b8f593cd0896b8b14c2b494a9776531b5cd54d98
+Author:         Huang Ying <ying.huang@intel.com>
+Committer:      Linus Torvalds <torvalds@linux-foundation.org>
+Author Date:    2017年07月07日 星期五 06时37分28秒
+Committer Date: 2017年07月07日 星期五 07时24分31秒
+
+mm, THP, swap: check whether THP can be split firstly
+
+To swap out THP (Transparent Huage Page), before splitting the THP, the
+swap cluster will be allocated and the THP will be added into the swap
+cache.  But it is possible that the THP cannot be split, so that we must
+delete the THP from the swap cache and free the swap cluster.  To avoid
+that, in this patch, whether the THP can be split is checked firstly.
+The check can only be done racy, but it is good enough for most cases.
+
+With the patch, the swap out throughput improves 3.6% (from about
+4.16GB/s to about 4.31GB/s) in the vm-scalability swap-w-seq test case
+with 8 processes.  The test is done on a Xeon E5 v3 system.  The swap
+device used is a RAM simulated PMEM (persistent memory) device.  To test
+the sequential swapping out, the test case creates 8 processes, which
+sequentially allocate and write to the anonymous pages until the RAM and
+part of the swap device is used up.
+
+Link: http://lkml.kernel.org/r/20170515112522.32457-5-ying.huang@intel.com
+Signed-off-by: "Huang, Ying" <ying.huang@intel.com>
+Acked-by: Kirill A. Shutemov <kirill.shutemov@linux.intel.com> [for can_split_huge_page()]
+Cc: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Andrea Arcangeli <aarcange@redhat.com>
+Cc: Ebru Akagunduz <ebru.akagunduz@gmail.com>
+Cc: Hugh Dickins <hughd@google.com>
+Cc: Michal Hocko <mhocko@kernel.org>
+Cc: Minchan Kim <minchan@kernel.org>
+Cc: Rik van Riel <riel@redhat.com>
+Cc: Shaohua Li <shli@kernel.org>
+Cc: Tejun Heo <tj@kernel.org>
+Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+Signed-off-by: Linus Torvalds <torvalds@linux-foundation.org>
+
+diff --git a/mm/huge_memory.c b/mm/huge_memory.c
+index 1a168e4bac4b..86975dec0ba1 100644
+--- a/mm/huge_memory.c
++++ b/mm/huge_memory.c
+@@ -2390,6 +2390,21 @@ int page_trans_huge_mapcount(struct page *page, int *total_mapcount)
+ 	return ret;
+ }
+
++/* Racy check whether the huge page can be split */
++bool can_split_huge_page(struct page *page, int *pextra_pins)
++{
++	int extra_pins;
++
++	/* Additional pins from radix tree */
++	if (PageAnon(page))
++		extra_pins = PageSwapCache(page) ? HPAGE_PMD_NR : 0;
++	else
++		extra_pins = HPAGE_PMD_NR;
++	if (pextra_pins)
++		*pextra_pins = extra_pins;
++	return total_mapcount(page) == page_count(page) - extra_pins - 1;
++}
++
+ /*
+  * This function splits huge page into normal pages. @page can point to any
+  * subpage of huge page to split. Split doesn't change the position of @page.
+@@ -2437,7 +2452,6 @@ int split_huge_page_to_list(struct page *page, struct list_head *list)
+ 			ret = -EBUSY;
+ 			goto out;
+ 		}
+-		extra_pins = PageSwapCache(page) ? HPAGE_PMD_NR : 0;
+ 		mapping = NULL;
+ 		anon_vma_lock_write(anon_vma);
+ 	} else {
+@@ -2449,8 +2463,6 @@ int split_huge_page_to_list(struct page *page, struct list_head *list)
+ 			goto out;
+ 		}
+
+-		/* Addidional pins from radix tree */
+-		extra_pins = HPAGE_PMD_NR;
+ 		anon_vma = NULL;
+ 		i_mmap_lock_read(mapping);
+ 	}
+@@ -2459,7 +2471,7 @@ int split_huge_page_to_list(struct page *page, struct list_head *list)
+ 	 * Racy check if we can split the page, before freeze_page() will
+ 	 * split PMDs
+ 	 */
+-	if (total_mapcount(head) != page_count(head) - extra_pins - 1) {
++	if (!can_split_huge_page(head, &extra_pins)) {
+ 		ret = -EBUSY;
+ 		goto out_unlock;
+ 	}
+```
