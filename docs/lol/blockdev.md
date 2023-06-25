@@ -59,7 +59,7 @@ vcsa4 vcs5 vcsu5 vcsa5
 ```c
 // 除了那些标准操作之外，被mount_bdev唯一调用
 struct block_device *blkdev_get_by_path(const char *path, fmode_t mode,
-					void *holder)
+          void *holder)
 ```
 
 ## partitions
@@ -207,6 +207,18 @@ nvme1n1     259:2    0 238.5G  0 disk
 
 主要读取如下: /sys/dev/block/
 
+### ventoy
+
+大多数时候制作启动盘可以通过这个方法:
+sudo dd if=openEuler-22.09-x86_64-dvd.iso of=/dev/sda
+
+但是有几次，windows 的启动盘 dd 的方法没用，可以采用这个工具:
+
+https://www.ventoy.net/cn/index.html
+
+1. 首先: sudo ventoy -i /dev/sda ，这会构建两个 partion 出来
+2. 然后 mount 其中较大的那个，将 iso 拷贝进去即可。
+
 ## Doc
 1. https://terenceli.github.io/%E6%8A%80%E6%9C%AF/2018/06/14/linux-block-device-driver
 
@@ -322,24 +334,24 @@ block_device_operations`, which is declared in `<linux/blkdev.h>`.
 
 ```c
 struct block_device_operations {
-	int (*open) (struct block_device *, fmode_t);
-	void (*release) (struct gendisk *, fmode_t);
-	int (*rw_page)(struct block_device *, sector_t, struct page *, int rw);
-	int (*ioctl) (struct block_device *, fmode_t, unsigned, unsigned long);
-	int (*compat_ioctl) (struct block_device *, fmode_t, unsigned, unsigned long);
-	long (*direct_access)(struct block_device *, sector_t, void __pmem **,
-			unsigned long *pfn);
-	unsigned int (*check_events) (struct gendisk *disk,
-				      unsigned int clearing);
-	/* ->media_changed() is DEPRECATED, use ->check_events() instead */
-	int (*media_changed) (struct gendisk *);
-	void (*unlock_native_capacity) (struct gendisk *);
-	int (*revalidate_disk) (struct gendisk *);
-	int (*getgeo)(struct block_device *, struct hd_geometry *);
-	/* this callback is with swap_lock and sometimes page table lock held */
-	void (*swap_slot_free_notify) (struct block_device *, unsigned long);
-	struct module *owner;
-	const struct pr_ops *pr_ops;
+  int (*open) (struct block_device *, fmode_t);
+  void (*release) (struct gendisk *, fmode_t);
+  int (*rw_page)(struct block_device *, sector_t, struct page *, int rw);
+  int (*ioctl) (struct block_device *, fmode_t, unsigned, unsigned long);
+  int (*compat_ioctl) (struct block_device *, fmode_t, unsigned, unsigned long);
+  long (*direct_access)(struct block_device *, sector_t, void __pmem **,
+      unsigned long *pfn);
+  unsigned int (*check_events) (struct gendisk *disk,
+              unsigned int clearing);
+  /* ->media_changed() is DEPRECATED, use ->check_events() instead */
+  int (*media_changed) (struct gendisk *);
+  void (*unlock_native_capacity) (struct gendisk *);
+  int (*revalidate_disk) (struct gendisk *);
+  int (*getgeo)(struct block_device *, struct hd_geometry *);
+  /* this callback is with swap_lock and sometimes page table lock held */
+  void (*swap_slot_free_notify) (struct block_device *, unsigned long);
+  struct module *owner;
+  const struct pr_ops *pr_ops;
 };
 ```
 1. 这些函数的注册都是让驱动完成的
@@ -355,9 +367,9 @@ struct block_device_operations {
 ```c
 static int __init proc_genhd_init(void)
 {
-	proc_create_seq("diskstats", 0, NULL, &diskstats_op);
-	proc_create_seq("partitions", 0, NULL, &partitions_op);
-	return 0;
+  proc_create_seq("diskstats", 0, NULL, &diskstats_op);
+  proc_create_seq("partitions", 0, NULL, &partitions_op);
+  return 0;
 }
 
 static DEVICE_ATTR(range, 0444, disk_range_show, NULL);
@@ -453,61 +465,61 @@ register_blkdev 的调用，只要内存存在这个模块，就会进行对应�
 
 ```c
 const struct file_operations def_blk_fops = {
-	.open		= blkdev_open,
-	.release	= blkdev_close,
-	.llseek		= blkdev_llseek,
-	.read_iter	= blkdev_read_iter,
-	.write_iter	= blkdev_write_iter,
-	.iopoll		= iocb_bio_iopoll,
-	.mmap		= generic_file_mmap,
-	.fsync		= blkdev_fsync,
-	.unlocked_ioctl	= blkdev_ioctl,
+  .open   = blkdev_open,
+  .release  = blkdev_close,
+  .llseek   = blkdev_llseek,
+  .read_iter  = blkdev_read_iter,
+  .write_iter = blkdev_write_iter,
+  .iopoll   = iocb_bio_iopoll,
+  .mmap   = generic_file_mmap,
+  .fsync    = blkdev_fsync,
+  .unlocked_ioctl = blkdev_ioctl,
 #ifdef CONFIG_COMPAT
-	.compat_ioctl	= compat_blkdev_ioctl,
+  .compat_ioctl = compat_blkdev_ioctl,
 #endif
-	.splice_read	= generic_file_splice_read,
-	.splice_write	= iter_file_splice_write,
-	.fallocate	= blkdev_fallocate,
+  .splice_read  = generic_file_splice_read,
+  .splice_write = iter_file_splice_write,
+  .fallocate  = blkdev_fallocate,
 };
 ```
 
 ```c
 static const struct block_device_operations sd_fops = {
-	.owner			= THIS_MODULE,
-	.open			= sd_open,
-	.release		= sd_release,
-	.ioctl			= sd_ioctl,
-	.getgeo			= sd_getgeo,
-	.compat_ioctl		= blkdev_compat_ptr_ioctl,
-	.check_events		= sd_check_events,
-	.unlock_native_capacity	= sd_unlock_native_capacity,
-	.report_zones		= sd_zbc_report_zones,
-	.get_unique_id		= sd_get_unique_id,
-	.free_disk		= scsi_disk_free_disk,
-	.pr_ops			= &sd_pr_ops,
+  .owner      = THIS_MODULE,
+  .open     = sd_open,
+  .release    = sd_release,
+  .ioctl      = sd_ioctl,
+  .getgeo     = sd_getgeo,
+  .compat_ioctl   = blkdev_compat_ptr_ioctl,
+  .check_events   = sd_check_events,
+  .unlock_native_capacity = sd_unlock_native_capacity,
+  .report_zones   = sd_zbc_report_zones,
+  .get_unique_id    = sd_get_unique_id,
+  .free_disk    = scsi_disk_free_disk,
+  .pr_ops     = &sd_pr_ops,
 };
 ```
 
 ```c
 struct block_device_operations {
-	int (*open) (struct block_device *, fmode_t);
-	void (*release) (struct gendisk *, fmode_t);
-	int (*rw_page)(struct block_device *, sector_t, struct page *, int rw);
-	int (*ioctl) (struct block_device *, fmode_t, unsigned, unsigned long);
-	int (*compat_ioctl) (struct block_device *, fmode_t, unsigned, unsigned long);
-	long (*direct_access)(struct block_device *, sector_t, void __pmem **,
-			unsigned long *pfn);
-	unsigned int (*check_events) (struct gendisk *disk,
-				      unsigned int clearing);
-	/* ->media_changed() is DEPRECATED, use ->check_events() instead */
-	int (*media_changed) (struct gendisk *);
-	void (*unlock_native_capacity) (struct gendisk *);
-	int (*revalidate_disk) (struct gendisk *);
-	int (*getgeo)(struct block_device *, struct hd_geometry *);
-	/* this callback is with swap_lock and sometimes page table lock held */
-	void (*swap_slot_free_notify) (struct block_device *, unsigned long);
-	struct module *owner;
-	const struct pr_ops *pr_ops;
+  int (*open) (struct block_device *, fmode_t);
+  void (*release) (struct gendisk *, fmode_t);
+  int (*rw_page)(struct block_device *, sector_t, struct page *, int rw);
+  int (*ioctl) (struct block_device *, fmode_t, unsigned, unsigned long);
+  int (*compat_ioctl) (struct block_device *, fmode_t, unsigned, unsigned long);
+  long (*direct_access)(struct block_device *, sector_t, void __pmem **,
+      unsigned long *pfn);
+  unsigned int (*check_events) (struct gendisk *disk,
+              unsigned int clearing);
+  /* ->media_changed() is DEPRECATED, use ->check_events() instead */
+  int (*media_changed) (struct gendisk *);
+  void (*unlock_native_capacity) (struct gendisk *);
+  int (*revalidate_disk) (struct gendisk *);
+  int (*getgeo)(struct block_device *, struct hd_geometry *);
+  /* this callback is with swap_lock and sometimes page table lock held */
+  void (*swap_slot_free_notify) (struct block_device *, unsigned long);
+  struct module *owner;
+  const struct pr_ops *pr_ops;
 };
 ```
 
@@ -561,15 +573,15 @@ struct block_device_operations {
 ```c
 long nr_blockdev_pages(void)
 {
-	struct inode *inode;
-	long ret = 0;
+  struct inode *inode;
+  long ret = 0;
 
-	spin_lock(&blockdev_superblock->s_inode_list_lock);
-	list_for_each_entry(inode, &blockdev_superblock->s_inodes, i_sb_list)
-		ret += inode->i_mapping->nrpages;
-	spin_unlock(&blockdev_superblock->s_inode_list_lock);
+  spin_lock(&blockdev_superblock->s_inode_list_lock);
+  list_for_each_entry(inode, &blockdev_superblock->s_inodes, i_sb_list)
+    ret += inode->i_mapping->nrpages;
+  spin_unlock(&blockdev_superblock->s_inode_list_lock);
 
-	return ret;
+  return ret;
 }
 ```
 - 创建一个文件系统，其中每一个 inode 都是关联一个 block 设备的。
@@ -609,17 +621,17 @@ long nr_blockdev_pages(void)
 ```c
 static void __submit_bio(struct bio *bio)
 {
-	struct gendisk *disk = bio->bi_bdev->bd_disk;
+  struct gendisk *disk = bio->bi_bdev->bd_disk;
 
-	if (unlikely(!blk_crypto_bio_prep(&bio)))
-		return;
+  if (unlikely(!blk_crypto_bio_prep(&bio)))
+    return;
 
-	if (!disk->fops->submit_bio) {
-		blk_mq_submit_bio(bio);
-	} else if (likely(bio_queue_enter(bio) == 0)) {
-		disk->fops->submit_bio(bio);
-		blk_queue_exit(disk->queue);
-	}
+  if (!disk->fops->submit_bio) {
+    blk_mq_submit_bio(bio);
+  } else if (likely(bio_queue_enter(bio) == 0)) {
+    disk->fops->submit_bio(bio);
+    blk_queue_exit(disk->queue);
+  }
 }
 ```
 

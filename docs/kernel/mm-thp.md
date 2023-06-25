@@ -864,3 +864,1214 @@ FilePmdMapped:   4096000 kB
 ```
 
 ## [ ] 如果 order = 3 这种和文件系统沟通的 folio 暂时不知道如何分配的
+
+
+## 理解下 transparent hugepage 的 swap
+
+38d8b4e6bdc872f07a3149309ab01719c96f3894
+
+```diff
+tree a4bdf8e41a90f49465829b98a46645af64b0103d
+parent 9d85e15f1d552653c989dbecf051d8eea5937be8
+author Huang Ying <ying.huang@intel.com> Thu Jul 6 15:37:18 2017 -0700
+committer Linus Torvalds <torvalds@linux-foundation.org> Thu Jul 6 16:24:31 2017 -0700
+
+mm, THP, swap: delay splitting THP during swap out
+
+Patch series "THP swap: Delay splitting THP during swapping out", v11.
+
+This patchset is to optimize the performance of Transparent Huge Page
+(THP) swap.
+
+Recently, the performance of the storage devices improved so fast that
+we cannot saturate the disk bandwidth with single logical CPU when do
+page swap out even on a high-end server machine.  Because the
+performance of the storage device improved faster than that of single
+logical CPU.  And it seems that the trend will not change in the near
+future.  On the other hand, the THP becomes more and more popular
+because of increased memory size.  So it becomes necessary to optimize
+THP swap performance.
+
+The advantages of the THP swap support include:
+
+ - Batch the swap operations for the THP to reduce lock
+   acquiring/releasing, including allocating/freeing the swap space,
+   adding/deleting to/from the swap cache, and writing/reading the swap
+   space, etc. This will help improve the performance of the THP swap.
+
+ - The THP swap space read/write will be 2M sequential IO. It is
+   particularly helpful for the swap read, which are usually 4k random
+   IO. This will improve the performance of the THP swap too.
+
+ - It will help the memory fragmentation, especially when the THP is
+   heavily used by the applications. The 2M continuous pages will be
+   free up after THP swapping out.
+
+ - It will improve the THP utilization on the system with the swap
+   turned on. Because the speed for khugepaged to collapse the normal
+   pages into the THP is quite slow. After the THP is split during the
+   swapping out, it will take quite long time for the normal pages to
+   collapse back into the THP after being swapped in. The high THP
+   utilization helps the efficiency of the page based memory management
+   too.
+
+There are some concerns regarding THP swap in, mainly because possible
+enlarged read/write IO size (for swap in/out) may put more overhead on
+the storage device.  To deal with that, the THP swap in should be turned
+on only when necessary.  For example, it can be selected via
+"always/never/madvise" logic, to be turned on globally, turned off
+globally, or turned on only for VMA with MADV_HUGEPAGE, etc.
+
+This patchset is the first step for the THP swap support.  The plan is
+to delay splitting THP step by step, finally avoid splitting THP during
+the THP swapping out and swap out/in the THP as a whole.
+
+As the first step, in this patchset, the splitting huge page is delayed
+from almost the first step of swapping out to after allocating the swap
+space for the THP and adding the THP into the swap cache.  This will
+reduce lock acquiring/releasing for the locks used for the swap cache
+management.
+
+With the patchset, the swap out throughput improves 15.5% (from about
+3.73GB/s to about 4.31GB/s) in the vm-scalability swap-w-seq test case
+with 8 processes.  The test is done on a Xeon E5 v3 system.  The swap
+device used is a RAM simulated PMEM (persistent memory) device.  To test
+the sequential swapping out, the test case creates 8 processes, which
+sequentially allocate and write to the anonymous pages until the RAM and
+part of the swap device is used up.
+
+This patch (of 5):
+
+In this patch, splitting huge page is delayed from almost the first step
+of swapping out to after allocating the swap space for the THP
+(Transparent Huge Page) and adding the THP into the swap cache.  This
+will batch the corresponding operation, thus improve THP swap out
+throughput.
+
+This is the first step for the THP swap optimization.  The plan is to
+delay splitting the THP step by step and avoid splitting the THP
+finally.
+
+In this patch, one swap cluster is used to hold the contents of each THP
+swapped out.  So, the size of the swap cluster is changed to that of the
+THP (Transparent Huge Page) on x86_64 architecture (512).  For other
+architectures which want such THP swap optimization,
+ARCH_USES_THP_SWAP_CLUSTER needs to be selected in the Kconfig file for
+the architecture.  In effect, this will enlarge swap cluster size by 2
+times on x86_64.  Which may make it harder to find a free cluster when
+the swap space becomes fragmented.  So that, this may reduce the
+continuous swap space allocation and sequential write in theory.  The
+performance test in 0day shows no regressions caused by this.
+
+In the future of THP swap optimization, some information of the swapped
+out THP (such as compound map count) will be recorded in the
+swap_cluster_info data structure.
+
+The mem cgroup swap accounting functions are enhanced to support charge
+or uncharge a swap cluster backing a THP as a whole.
+
+The swap cluster allocate/free functions are added to allocate/free a
+swap cluster for a THP.  A fair simple algorithm is used for swap
+cluster allocation, that is, only the first swap device in priority list
+will be tried to allocate the swap cluster.  The function will fail if
+the trying is not successful, and the caller will fallback to allocate a
+single swap slot instead.  This works good enough for normal cases.  If
+the difference of the number of the free swap clusters among multiple
+swap devices is significant, it is possible that some THPs are split
+earlier than necessary.  For example, this could be caused by big size
+difference among multiple swap devices.
+
+The swap cache functions is enhanced to support add/delete THP to/from
+the swap cache as a set of (HPAGE_PMD_NR) sub-pages.  This may be
+enhanced in the future with multi-order radix tree.  But because we will
+split the THP soon during swapping out, that optimization doesn't make
+much sense for this first step.
+
+The THP splitting functions are enhanced to support to split THP in swap
+cache during swapping out.  The page lock will be held during allocating
+the swap cluster, adding the THP into the swap cache and splitting the
+THP.  So in the code path other than swapping out, if the THP need to be
+split, the PageSwapCache(THP) will be always false.
+
+The swap cluster is only available for SSD, so the THP swap optimization
+in this patchset has no effect for HDD.
+
+[ying.huang@intel.com: fix two issues in THP optimize patch]
+  Link: http://lkml.kernel.org/r/87k25ed8zo.fsf@yhuang-dev.intel.com
+[hannes@cmpxchg.org: extensive cleanups and simplifications, reduce code size]
+Link: http://lkml.kernel.org/r/20170515112522.32457-2-ying.huang@intel.com
+Signed-off-by: "Huang, Ying" <ying.huang@intel.com>
+Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+Suggested-by: Andrew Morton <akpm@linux-foundation.org> [for config option]
+Acked-by: Kirill A. Shutemov <kirill.shutemov@linux.intel.com> [for changes in huge_memory.c and huge_mm.h]
+Cc: Andrea Arcangeli <aarcange@redhat.com>
+Cc: Ebru Akagunduz <ebru.akagunduz@gmail.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Michal Hocko <mhocko@kernel.org>
+Cc: Tejun Heo <tj@kernel.org>
+Cc: Hugh Dickins <hughd@google.com>
+Cc: Shaohua Li <shli@kernel.org>
+Cc: Minchan Kim <minchan@kernel.org>
+Cc: Rik van Riel <riel@redhat.com>
+Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+Signed-off-by: Linus Torvalds <torvalds@linux-foundation.org>
+
+diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
+index e767ed24aeb4..1dbbe38f6ec0 100644
+--- a/arch/x86/Kconfig
++++ b/arch/x86/Kconfig
+@@ -72,6 +72,7 @@ config X86
+ 	select ARCH_WANT_BATCHED_UNMAP_TLB_FLUSH
+ 	select ARCH_WANT_FRAME_POINTERS
+ 	select ARCH_WANTS_DYNAMIC_TASK_STRUCT
++	select ARCH_WANTS_THP_SWAP		if X86_64
+ 	select BUILDTIME_EXTABLE_SORT
+ 	select CLKEVT_I8253
+ 	select CLOCKSOURCE_VALIDATE_LAST_CYCLE
+diff --git a/include/linux/page-flags.h b/include/linux/page-flags.h
+index 6b5818d6de32..d33e3280c8ad 100644
+--- a/include/linux/page-flags.h
++++ b/include/linux/page-flags.h
+@@ -326,11 +326,14 @@ PAGEFLAG_FALSE(HighMem)
+ #ifdef CONFIG_SWAP
+ static __always_inline int PageSwapCache(struct page *page)
+ {
++#ifdef CONFIG_THP_SWAP
++	page = compound_head(page);
++#endif
+ 	return PageSwapBacked(page) && test_bit(PG_swapcache, &page->flags);
+
+ }
+-SETPAGEFLAG(SwapCache, swapcache, PF_NO_COMPOUND)
+-CLEARPAGEFLAG(SwapCache, swapcache, PF_NO_COMPOUND)
++SETPAGEFLAG(SwapCache, swapcache, PF_NO_TAIL)
++CLEARPAGEFLAG(SwapCache, swapcache, PF_NO_TAIL)
+ #else
+ PAGEFLAG_FALSE(SwapCache)
+ #endif
+diff --git a/include/linux/swap.h b/include/linux/swap.h
+index ba5882419a7d..d18876384de0 100644
+--- a/include/linux/swap.h
++++ b/include/linux/swap.h
+@@ -386,9 +386,9 @@ static inline long get_nr_swap_pages(void)
+ }
+
+ extern void si_swapinfo(struct sysinfo *);
+-extern swp_entry_t get_swap_page(void);
++extern swp_entry_t get_swap_page(struct page *page);
+ extern swp_entry_t get_swap_page_of_type(int);
+-extern int get_swap_pages(int n, swp_entry_t swp_entries[]);
++extern int get_swap_pages(int n, bool cluster, swp_entry_t swp_entries[]);
+ extern int add_swap_count_continuation(swp_entry_t, gfp_t);
+ extern void swap_shmem_alloc(swp_entry_t);
+ extern int swap_duplicate(swp_entry_t);
+@@ -515,7 +515,7 @@ static inline int try_to_free_swap(struct page *page)
+ 	return 0;
+ }
+
+-static inline swp_entry_t get_swap_page(void)
++static inline swp_entry_t get_swap_page(struct page *page)
+ {
+ 	swp_entry_t entry;
+ 	entry.val = 0;
+@@ -548,7 +548,7 @@ static inline int mem_cgroup_swappiness(struct mem_cgroup *mem)
+ #ifdef CONFIG_MEMCG_SWAP
+ extern void mem_cgroup_swapout(struct page *page, swp_entry_t entry);
+ extern int mem_cgroup_try_charge_swap(struct page *page, swp_entry_t entry);
+-extern void mem_cgroup_uncharge_swap(swp_entry_t entry);
++extern void mem_cgroup_uncharge_swap(swp_entry_t entry, unsigned int nr_pages);
+ extern long mem_cgroup_get_nr_swap_pages(struct mem_cgroup *memcg);
+ extern bool mem_cgroup_swap_full(struct page *page);
+ #else
+@@ -562,7 +562,8 @@ static inline int mem_cgroup_try_charge_swap(struct page *page,
+ 	return 0;
+ }
+
+-static inline void mem_cgroup_uncharge_swap(swp_entry_t entry)
++static inline void mem_cgroup_uncharge_swap(swp_entry_t entry,
++					    unsigned int nr_pages)
+ {
+ }
+
+@@ -577,5 +578,13 @@ static inline bool mem_cgroup_swap_full(struct page *page)
+ }
+ #endif
+
++#ifdef CONFIG_THP_SWAP
++extern void swapcache_free_cluster(swp_entry_t entry);
++#else
++static inline void swapcache_free_cluster(swp_entry_t entry)
++{
++}
++#endif
++
+ #endif /* __KERNEL__*/
+ #endif /* _LINUX_SWAP_H */
+diff --git a/include/linux/swap_cgroup.h b/include/linux/swap_cgroup.h
+index 145306bdc92f..b2b8ec7bda3f 100644
+--- a/include/linux/swap_cgroup.h
++++ b/include/linux/swap_cgroup.h
+@@ -7,7 +7,8 @@
+
+ extern unsigned short swap_cgroup_cmpxchg(swp_entry_t ent,
+ 					unsigned short old, unsigned short new);
+-extern unsigned short swap_cgroup_record(swp_entry_t ent, unsigned short id);
++extern unsigned short swap_cgroup_record(swp_entry_t ent, unsigned short id,
++					 unsigned int nr_ents);
+ extern unsigned short lookup_swap_cgroup_id(swp_entry_t ent);
+ extern int swap_cgroup_swapon(int type, unsigned long max_pages);
+ extern void swap_cgroup_swapoff(int type);
+@@ -15,7 +16,8 @@ extern void swap_cgroup_swapoff(int type);
+ #else
+
+ static inline
+-unsigned short swap_cgroup_record(swp_entry_t ent, unsigned short id)
++unsigned short swap_cgroup_record(swp_entry_t ent, unsigned short id,
++				  unsigned int nr_ents)
+ {
+ 	return 0;
+ }
+diff --git a/mm/Kconfig b/mm/Kconfig
+index 665cb370ad38..9870baafb096 100644
+--- a/mm/Kconfig
++++ b/mm/Kconfig
+@@ -446,6 +446,18 @@ choice
+ 	  benefit.
+ endchoice
+
++config ARCH_WANTS_THP_SWAP
++       def_bool n
++
++config THP_SWAP
++	def_bool y
++	depends on TRANSPARENT_HUGEPAGE && ARCH_WANTS_THP_SWAP
++	help
++	  Swap transparent huge pages in one piece, without splitting.
++	  XXX: For now this only does clustered swap space allocation.
++
++	  For selection by architectures with reasonable THP sizes.
++
+ config	TRANSPARENT_HUGE_PAGECACHE
+ 	def_bool y
+ 	depends on TRANSPARENT_HUGEPAGE
+diff --git a/mm/huge_memory.c b/mm/huge_memory.c
+index f4d5f9d0f9b7..1a168e4bac4b 100644
+--- a/mm/huge_memory.c
++++ b/mm/huge_memory.c
+@@ -2203,7 +2203,7 @@ static void __split_huge_page_tail(struct page *head, int tail,
+ 	 * atomic_set() here would be safe on all archs (and not only on x86),
+ 	 * it's safer to use atomic_inc()/atomic_add().
+ 	 */
+-	if (PageAnon(head)) {
++	if (PageAnon(head) && !PageSwapCache(head)) {
+ 		page_ref_inc(page_tail);
+ 	} else {
+ 		/* Additional pin to radix tree */
+@@ -2214,6 +2214,7 @@ static void __split_huge_page_tail(struct page *head, int tail,
+ 	page_tail->flags |= (head->flags &
+ 			((1L << PG_referenced) |
+ 			 (1L << PG_swapbacked) |
++			 (1L << PG_swapcache) |
+ 			 (1L << PG_mlocked) |
+ 			 (1L << PG_uptodate) |
+ 			 (1L << PG_active) |
+@@ -2276,7 +2277,11 @@ static void __split_huge_page(struct page *page, struct list_head *list,
+ 	ClearPageCompound(head);
+ 	/* See comment in __split_huge_page_tail() */
+ 	if (PageAnon(head)) {
+-		page_ref_inc(head);
++		/* Additional pin to radix tree of swap cache */
++		if (PageSwapCache(head))
++			page_ref_add(head, 2);
++		else
++			page_ref_inc(head);
+ 	} else {
+ 		/* Additional pin to radix tree */
+ 		page_ref_add(head, 2);
+@@ -2432,7 +2437,7 @@ int split_huge_page_to_list(struct page *page, struct list_head *list)
+ 			ret = -EBUSY;
+ 			goto out;
+ 		}
+-		extra_pins = 0;
++		extra_pins = PageSwapCache(page) ? HPAGE_PMD_NR : 0;
+ 		mapping = NULL;
+ 		anon_vma_lock_write(anon_vma);
+ 	} else {
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index d75b38b66ef6..fc51a33ddcd1 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -2376,10 +2376,9 @@ void mem_cgroup_split_huge_fixup(struct page *head)
+
+ #ifdef CONFIG_MEMCG_SWAP
+ static void mem_cgroup_swap_statistics(struct mem_cgroup *memcg,
+-					 bool charge)
++				       int nr_entries)
+ {
+-	int val = (charge) ? 1 : -1;
+-	this_cpu_add(memcg->stat->count[MEMCG_SWAP], val);
++	this_cpu_add(memcg->stat->count[MEMCG_SWAP], nr_entries);
+ }
+
+ /**
+@@ -2405,8 +2404,8 @@ static int mem_cgroup_move_swap_account(swp_entry_t entry,
+ 	new_id = mem_cgroup_id(to);
+
+ 	if (swap_cgroup_cmpxchg(entry, old_id, new_id) == old_id) {
+-		mem_cgroup_swap_statistics(from, false);
+-		mem_cgroup_swap_statistics(to, true);
++		mem_cgroup_swap_statistics(from, -1);
++		mem_cgroup_swap_statistics(to, 1);
+ 		return 0;
+ 	}
+ 	return -EINVAL;
+@@ -5445,7 +5444,7 @@ void mem_cgroup_commit_charge(struct page *page, struct mem_cgroup *memcg,
+ 		 * let's not wait for it.  The page already received a
+ 		 * memory+swap charge, drop the swap entry duplicate.
+ 		 */
+-		mem_cgroup_uncharge_swap(entry);
++		mem_cgroup_uncharge_swap(entry, nr_pages);
+ 	}
+ }
+
+@@ -5873,9 +5872,9 @@ void mem_cgroup_swapout(struct page *page, swp_entry_t entry)
+ 	 * ancestor for the swap instead and transfer the memory+swap charge.
+ 	 */
+ 	swap_memcg = mem_cgroup_id_get_online(memcg);
+-	oldid = swap_cgroup_record(entry, mem_cgroup_id(swap_memcg));
++	oldid = swap_cgroup_record(entry, mem_cgroup_id(swap_memcg), 1);
+ 	VM_BUG_ON_PAGE(oldid, page);
+-	mem_cgroup_swap_statistics(swap_memcg, true);
++	mem_cgroup_swap_statistics(swap_memcg, 1);
+
+ 	page->mem_cgroup = NULL;
+
+@@ -5902,19 +5901,20 @@ void mem_cgroup_swapout(struct page *page, swp_entry_t entry)
+ 		css_put(&memcg->css);
+ }
+
+-/*
+- * mem_cgroup_try_charge_swap - try charging a swap entry
++/**
++ * mem_cgroup_try_charge_swap - try charging swap space for a page
+  * @page: page being added to swap
+  * @entry: swap entry to charge
+  *
+- * Try to charge @entry to the memcg that @page belongs to.
++ * Try to charge @page's memcg for the swap space at @entry.
+  *
+  * Returns 0 on success, -ENOMEM on failure.
+  */
+ int mem_cgroup_try_charge_swap(struct page *page, swp_entry_t entry)
+ {
+-	struct mem_cgroup *memcg;
++	unsigned int nr_pages = hpage_nr_pages(page);
+ 	struct page_counter *counter;
++	struct mem_cgroup *memcg;
+ 	unsigned short oldid;
+
+ 	if (!cgroup_subsys_on_dfl(memory_cgrp_subsys) || !do_swap_account)
+@@ -5929,25 +5929,27 @@ int mem_cgroup_try_charge_swap(struct page *page, swp_entry_t entry)
+ 	memcg = mem_cgroup_id_get_online(memcg);
+
+ 	if (!mem_cgroup_is_root(memcg) &&
+-	    !page_counter_try_charge(&memcg->swap, 1, &counter)) {
++	    !page_counter_try_charge(&memcg->swap, nr_pages, &counter)) {
+ 		mem_cgroup_id_put(memcg);
+ 		return -ENOMEM;
+ 	}
+
+-	oldid = swap_cgroup_record(entry, mem_cgroup_id(memcg));
++	/* Get references for the tail pages, too */
++	if (nr_pages > 1)
++		mem_cgroup_id_get_many(memcg, nr_pages - 1);
++	oldid = swap_cgroup_record(entry, mem_cgroup_id(memcg), nr_pages);
+ 	VM_BUG_ON_PAGE(oldid, page);
+-	mem_cgroup_swap_statistics(memcg, true);
++	mem_cgroup_swap_statistics(memcg, nr_pages);
+
+ 	return 0;
+ }
+
+ /**
+- * mem_cgroup_uncharge_swap - uncharge a swap entry
++ * mem_cgroup_uncharge_swap - uncharge swap space
+  * @entry: swap entry to uncharge
+- *
+- * Drop the swap charge associated with @entry.
++ * @nr_pages: the amount of swap space to uncharge
+  */
+-void mem_cgroup_uncharge_swap(swp_entry_t entry)
++void mem_cgroup_uncharge_swap(swp_entry_t entry, unsigned int nr_pages)
+ {
+ 	struct mem_cgroup *memcg;
+ 	unsigned short id;
+@@ -5955,18 +5957,18 @@ void mem_cgroup_uncharge_swap(swp_entry_t entry)
+ 	if (!do_swap_account)
+ 		return;
+
+-	id = swap_cgroup_record(entry, 0);
++	id = swap_cgroup_record(entry, 0, nr_pages);
+ 	rcu_read_lock();
+ 	memcg = mem_cgroup_from_id(id);
+ 	if (memcg) {
+ 		if (!mem_cgroup_is_root(memcg)) {
+ 			if (cgroup_subsys_on_dfl(memory_cgrp_subsys))
+-				page_counter_uncharge(&memcg->swap, 1);
++				page_counter_uncharge(&memcg->swap, nr_pages);
+ 			else
+-				page_counter_uncharge(&memcg->memsw, 1);
++				page_counter_uncharge(&memcg->memsw, nr_pages);
+ 		}
+-		mem_cgroup_swap_statistics(memcg, false);
+-		mem_cgroup_id_put(memcg);
++		mem_cgroup_swap_statistics(memcg, -nr_pages);
++		mem_cgroup_id_put_many(memcg, nr_pages);
+ 	}
+ 	rcu_read_unlock();
+ }
+diff --git a/mm/shmem.c b/mm/shmem.c
+index 9100c4952698..bbb987c58dad 100644
+--- a/mm/shmem.c
++++ b/mm/shmem.c
+@@ -1291,7 +1291,7 @@ static int shmem_writepage(struct page *page, struct writeback_control *wbc)
+ 		SetPageUptodate(page);
+ 	}
+
+-	swap = get_swap_page();
++	swap = get_swap_page(page);
+ 	if (!swap.val)
+ 		goto redirty;
+
+diff --git a/mm/swap_cgroup.c b/mm/swap_cgroup.c
+index 3405b4ee1757..fcd2740f4ed7 100644
+--- a/mm/swap_cgroup.c
++++ b/mm/swap_cgroup.c
+@@ -61,21 +61,27 @@ static int swap_cgroup_prepare(int type)
+ 	return -ENOMEM;
+ }
+
++static struct swap_cgroup *__lookup_swap_cgroup(struct swap_cgroup_ctrl *ctrl,
++						pgoff_t offset)
++{
++	struct page *mappage;
++	struct swap_cgroup *sc;
++
++	mappage = ctrl->map[offset / SC_PER_PAGE];
++	sc = page_address(mappage);
++	return sc + offset % SC_PER_PAGE;
++}
++
+ static struct swap_cgroup *lookup_swap_cgroup(swp_entry_t ent,
+ 					struct swap_cgroup_ctrl **ctrlp)
+ {
+ 	pgoff_t offset = swp_offset(ent);
+ 	struct swap_cgroup_ctrl *ctrl;
+-	struct page *mappage;
+-	struct swap_cgroup *sc;
+
+ 	ctrl = &swap_cgroup_ctrl[swp_type(ent)];
+ 	if (ctrlp)
+ 		*ctrlp = ctrl;
+-
+-	mappage = ctrl->map[offset / SC_PER_PAGE];
+-	sc = page_address(mappage);
+-	return sc + offset % SC_PER_PAGE;
++	return __lookup_swap_cgroup(ctrl, offset);
+ }
+
+ /**
+@@ -108,25 +114,39 @@ unsigned short swap_cgroup_cmpxchg(swp_entry_t ent,
+ }
+
+ /**
+- * swap_cgroup_record - record mem_cgroup for this swp_entry.
+- * @ent: swap entry to be recorded into
++ * swap_cgroup_record - record mem_cgroup for a set of swap entries
++ * @ent: the first swap entry to be recorded into
+  * @id: mem_cgroup to be recorded
++ * @nr_ents: number of swap entries to be recorded
+  *
+  * Returns old value at success, 0 at failure.
+  * (Of course, old value can be 0.)
+  */
+-unsigned short swap_cgroup_record(swp_entry_t ent, unsigned short id)
++unsigned short swap_cgroup_record(swp_entry_t ent, unsigned short id,
++				  unsigned int nr_ents)
+ {
+ 	struct swap_cgroup_ctrl *ctrl;
+ 	struct swap_cgroup *sc;
+ 	unsigned short old;
+ 	unsigned long flags;
++	pgoff_t offset = swp_offset(ent);
++	pgoff_t end = offset + nr_ents;
+
+ 	sc = lookup_swap_cgroup(ent, &ctrl);
+
+ 	spin_lock_irqsave(&ctrl->lock, flags);
+ 	old = sc->id;
+-	sc->id = id;
++	for (;;) {
++		VM_BUG_ON(sc->id != old);
++		sc->id = id;
++		offset++;
++		if (offset == end)
++			break;
++		if (offset % SC_PER_PAGE)
++			sc++;
++		else
++			sc = __lookup_swap_cgroup(ctrl, offset);
++	}
+ 	spin_unlock_irqrestore(&ctrl->lock, flags);
+
+ 	return old;
+diff --git a/mm/swap_slots.c b/mm/swap_slots.c
+index 58f6c78f1dad..90c1032a8ac3 100644
+--- a/mm/swap_slots.c
++++ b/mm/swap_slots.c
+@@ -263,7 +263,8 @@ static int refill_swap_slots_cache(struct swap_slots_cache *cache)
+
+ 	cache->cur = 0;
+ 	if (swap_slot_cache_active)
+-		cache->nr = get_swap_pages(SWAP_SLOTS_CACHE_SIZE, cache->slots);
++		cache->nr = get_swap_pages(SWAP_SLOTS_CACHE_SIZE, false,
++					   cache->slots);
+
+ 	return cache->nr;
+ }
+@@ -301,11 +302,19 @@ int free_swap_slot(swp_entry_t entry)
+ 	return 0;
+ }
+
+-swp_entry_t get_swap_page(void)
++swp_entry_t get_swap_page(struct page *page)
+ {
+ 	swp_entry_t entry, *pentry;
+ 	struct swap_slots_cache *cache;
+
++	entry.val = 0;
++
++	if (PageTransHuge(page)) {
++		if (IS_ENABLED(CONFIG_THP_SWAP))
++			get_swap_pages(1, true, &entry);
++		return entry;
++	}
++
+ 	/*
+ 	 * Preemption is allowed here, because we may sleep
+ 	 * in refill_swap_slots_cache().  But it is safe, because
+@@ -317,7 +326,6 @@ swp_entry_t get_swap_page(void)
+ 	 */
+ 	cache = raw_cpu_ptr(&swp_slots);
+
+-	entry.val = 0;
+ 	if (check_cache_active()) {
+ 		mutex_lock(&cache->alloc_lock);
+ 		if (cache->slots) {
+@@ -337,7 +345,7 @@ swp_entry_t get_swap_page(void)
+ 			return entry;
+ 	}
+
+-	get_swap_pages(1, &entry);
++	get_swap_pages(1, false, &entry);
+
+ 	return entry;
+ }
+diff --git a/mm/swap_state.c b/mm/swap_state.c
+index 539b8885e3d1..16ff89d058f4 100644
+--- a/mm/swap_state.c
++++ b/mm/swap_state.c
+@@ -19,6 +19,7 @@
+ #include <linux/migrate.h>
+ #include <linux/vmalloc.h>
+ #include <linux/swap_slots.h>
++#include <linux/huge_mm.h>
+
+ #include <asm/pgtable.h>
+
+@@ -38,6 +39,7 @@ struct address_space *swapper_spaces[MAX_SWAPFILES];
+ static unsigned int nr_swapper_spaces[MAX_SWAPFILES];
+
+ #define INC_CACHE_INFO(x)	do { swap_cache_info.x++; } while (0)
++#define ADD_CACHE_INFO(x, nr)	do { swap_cache_info.x += (nr); } while (0)
+
+ static struct {
+ 	unsigned long add_total;
+@@ -90,39 +92,46 @@ void show_swap_cache_info(void)
+  */
+ int __add_to_swap_cache(struct page *page, swp_entry_t entry)
+ {
+-	int error;
++	int error, i, nr = hpage_nr_pages(page);
+ 	struct address_space *address_space;
++	pgoff_t idx = swp_offset(entry);
+
+ 	VM_BUG_ON_PAGE(!PageLocked(page), page);
+ 	VM_BUG_ON_PAGE(PageSwapCache(page), page);
+ 	VM_BUG_ON_PAGE(!PageSwapBacked(page), page);
+
+-	get_page(page);
++	page_ref_add(page, nr);
+ 	SetPageSwapCache(page);
+-	set_page_private(page, entry.val);
+
+ 	address_space = swap_address_space(entry);
+ 	spin_lock_irq(&address_space->tree_lock);
+-	error = radix_tree_insert(&address_space->page_tree,
+-				  swp_offset(entry), page);
+-	if (likely(!error)) {
+-		address_space->nrpages++;
+-		__inc_node_page_state(page, NR_FILE_PAGES);
+-		INC_CACHE_INFO(add_total);
++	for (i = 0; i < nr; i++) {
++		set_page_private(page + i, entry.val + i);
++		error = radix_tree_insert(&address_space->page_tree,
++					  idx + i, page + i);
++		if (unlikely(error))
++			break;
+ 	}
+-	spin_unlock_irq(&address_space->tree_lock);
+-
+-	if (unlikely(error)) {
++	if (likely(!error)) {
++		address_space->nrpages += nr;
++		__mod_node_page_state(page_pgdat(page), NR_FILE_PAGES, nr);
++		ADD_CACHE_INFO(add_total, nr);
++	} else {
+ 		/*
+ 		 * Only the context which have set SWAP_HAS_CACHE flag
+ 		 * would call add_to_swap_cache().
+ 		 * So add_to_swap_cache() doesn't returns -EEXIST.
+ 		 */
+ 		VM_BUG_ON(error == -EEXIST);
+-		set_page_private(page, 0UL);
++		set_page_private(page + i, 0UL);
++		while (i--) {
++			radix_tree_delete(&address_space->page_tree, idx + i);
++			set_page_private(page + i, 0UL);
++		}
+ 		ClearPageSwapCache(page);
+-		put_page(page);
++		page_ref_sub(page, nr);
+ 	}
++	spin_unlock_irq(&address_space->tree_lock);
+
+ 	return error;
+ }
+@@ -132,7 +141,7 @@ int add_to_swap_cache(struct page *page, swp_entry_t entry, gfp_t gfp_mask)
+ {
+ 	int error;
+
+-	error = radix_tree_maybe_preload(gfp_mask);
++	error = radix_tree_maybe_preload_order(gfp_mask, compound_order(page));
+ 	if (!error) {
+ 		error = __add_to_swap_cache(page, entry);
+ 		radix_tree_preload_end();
+@@ -146,8 +155,10 @@ int add_to_swap_cache(struct page *page, swp_entry_t entry, gfp_t gfp_mask)
+  */
+ void __delete_from_swap_cache(struct page *page)
+ {
+-	swp_entry_t entry;
+ 	struct address_space *address_space;
++	int i, nr = hpage_nr_pages(page);
++	swp_entry_t entry;
++	pgoff_t idx;
+
+ 	VM_BUG_ON_PAGE(!PageLocked(page), page);
+ 	VM_BUG_ON_PAGE(!PageSwapCache(page), page);
+@@ -155,12 +166,15 @@ void __delete_from_swap_cache(struct page *page)
+
+ 	entry.val = page_private(page);
+ 	address_space = swap_address_space(entry);
+-	radix_tree_delete(&address_space->page_tree, swp_offset(entry));
+-	set_page_private(page, 0);
++	idx = swp_offset(entry);
++	for (i = 0; i < nr; i++) {
++		radix_tree_delete(&address_space->page_tree, idx + i);
++		set_page_private(page + i, 0);
++	}
+ 	ClearPageSwapCache(page);
+-	address_space->nrpages--;
+-	__dec_node_page_state(page, NR_FILE_PAGES);
+-	INC_CACHE_INFO(del_total);
++	address_space->nrpages -= nr;
++	__mod_node_page_state(page_pgdat(page), NR_FILE_PAGES, -nr);
++	ADD_CACHE_INFO(del_total, nr);
+ }
+
+ /**
+@@ -178,20 +192,12 @@ int add_to_swap(struct page *page, struct list_head *list)
+ 	VM_BUG_ON_PAGE(!PageLocked(page), page);
+ 	VM_BUG_ON_PAGE(!PageUptodate(page), page);
+
+-	entry = get_swap_page();
++retry:
++	entry = get_swap_page(page);
+ 	if (!entry.val)
+-		return 0;
+-
+-	if (mem_cgroup_try_charge_swap(page, entry)) {
+-		swapcache_free(entry);
+-		return 0;
+-	}
+-
+-	if (unlikely(PageTransHuge(page)))
+-		if (unlikely(split_huge_page_to_list(page, list))) {
+-			swapcache_free(entry);
+-			return 0;
+-		}
++		goto fail;
++	if (mem_cgroup_try_charge_swap(page, entry))
++		goto fail_free;
+
+ 	/*
+ 	 * Radix-tree node allocations from PF_MEMALLOC contexts could
+@@ -206,17 +212,33 @@ int add_to_swap(struct page *page, struct list_head *list)
+ 	 */
+ 	err = add_to_swap_cache(page, entry,
+ 			__GFP_HIGH|__GFP_NOMEMALLOC|__GFP_NOWARN);
+-
+-	if (!err) {
+-		return 1;
+-	} else {	/* -ENOMEM radix-tree allocation failure */
++	/* -ENOMEM radix-tree allocation failure */
++	if (err)
+ 		/*
+ 		 * add_to_swap_cache() doesn't return -EEXIST, so we can safely
+ 		 * clear SWAP_HAS_CACHE flag.
+ 		 */
+-		swapcache_free(entry);
+-		return 0;
++		goto fail_free;
++
++	if (PageTransHuge(page)) {
++		err = split_huge_page_to_list(page, list);
++		if (err) {
++			delete_from_swap_cache(page);
++			return 0;
++		}
+ 	}
++
++	return 1;
++
++fail_free:
++	if (PageTransHuge(page))
++		swapcache_free_cluster(entry);
++	else
++		swapcache_free(entry);
++fail:
++	if (PageTransHuge(page) && !split_huge_page_to_list(page, list))
++		goto retry;
++	return 0;
+ }
+
+ /*
+@@ -237,8 +259,12 @@ void delete_from_swap_cache(struct page *page)
+ 	__delete_from_swap_cache(page);
+ 	spin_unlock_irq(&address_space->tree_lock);
+
+-	swapcache_free(entry);
+-	put_page(page);
++	if (PageTransHuge(page))
++		swapcache_free_cluster(entry);
++	else
++		swapcache_free(entry);
++
++	page_ref_sub(page, hpage_nr_pages(page));
+ }
+
+ /*
+@@ -295,7 +321,7 @@ struct page * lookup_swap_cache(swp_entry_t entry)
+
+ 	page = find_get_page(swap_address_space(entry), swp_offset(entry));
+
+-	if (page) {
++	if (page && likely(!PageTransCompound(page))) {
+ 		INC_CACHE_INFO(find_success);
+ 		if (TestClearPageReadahead(page))
+ 			atomic_inc(&swapin_readahead_hits);
+@@ -506,7 +532,7 @@ struct page *swapin_readahead(swp_entry_t entry, gfp_t gfp_mask,
+ 						gfp_mask, vma, addr);
+ 		if (!page)
+ 			continue;
+-		if (offset != entry_offset)
++		if (offset != entry_offset && likely(!PageTransCompound(page)))
+ 			SetPageReadahead(page);
+ 		put_page(page);
+ 	}
+diff --git a/mm/swapfile.c b/mm/swapfile.c
+index 4f6cba1b6632..984f0dd94948 100644
+--- a/mm/swapfile.c
++++ b/mm/swapfile.c
+@@ -199,7 +199,11 @@ static void discard_swap_cluster(struct swap_info_struct *si,
+ 	}
+ }
+
++#ifdef CONFIG_THP_SWAP
++#define SWAPFILE_CLUSTER	HPAGE_PMD_NR
++#else
+ #define SWAPFILE_CLUSTER	256
++#endif
+ #define LATENCY_LIMIT		256
+
+ static inline void cluster_set_flag(struct swap_cluster_info *info,
+@@ -374,6 +378,14 @@ static void swap_cluster_schedule_discard(struct swap_info_struct *si,
+ 	schedule_work(&si->discard_work);
+ }
+
++static void __free_cluster(struct swap_info_struct *si, unsigned long idx)
++{
++	struct swap_cluster_info *ci = si->cluster_info;
++
++	cluster_set_flag(ci + idx, CLUSTER_FLAG_FREE);
++	cluster_list_add_tail(&si->free_clusters, ci, idx);
++}
++
+ /*
+  * Doing discard actually. After a cluster discard is finished, the cluster
+  * will be added to free cluster list. caller should hold si->lock.
+@@ -394,10 +406,7 @@ static void swap_do_scheduled_discard(struct swap_info_struct *si)
+
+ 		spin_lock(&si->lock);
+ 		ci = lock_cluster(si, idx * SWAPFILE_CLUSTER);
+-		cluster_set_flag(ci, CLUSTER_FLAG_FREE);
+-		unlock_cluster(ci);
+-		cluster_list_add_tail(&si->free_clusters, info, idx);
+-		ci = lock_cluster(si, idx * SWAPFILE_CLUSTER);
++		__free_cluster(si, idx);
+ 		memset(si->swap_map + idx * SWAPFILE_CLUSTER,
+ 				0, SWAPFILE_CLUSTER);
+ 		unlock_cluster(ci);
+@@ -415,6 +424,34 @@ static void swap_discard_work(struct work_struct *work)
+ 	spin_unlock(&si->lock);
+ }
+
++static void alloc_cluster(struct swap_info_struct *si, unsigned long idx)
++{
++	struct swap_cluster_info *ci = si->cluster_info;
++
++	VM_BUG_ON(cluster_list_first(&si->free_clusters) != idx);
++	cluster_list_del_first(&si->free_clusters, ci);
++	cluster_set_count_flag(ci + idx, 0, 0);
++}
++
++static void free_cluster(struct swap_info_struct *si, unsigned long idx)
++{
++	struct swap_cluster_info *ci = si->cluster_info + idx;
++
++	VM_BUG_ON(cluster_count(ci) != 0);
++	/*
++	 * If the swap is discardable, prepare discard the cluster
++	 * instead of free it immediately. The cluster will be freed
++	 * after discard.
++	 */
++	if ((si->flags & (SWP_WRITEOK | SWP_PAGE_DISCARD)) ==
++	    (SWP_WRITEOK | SWP_PAGE_DISCARD)) {
++		swap_cluster_schedule_discard(si, idx);
++		return;
++	}
++
++	__free_cluster(si, idx);
++}
++
+ /*
+  * The cluster corresponding to page_nr will be used. The cluster will be
+  * removed from free cluster list and its usage counter will be increased.
+@@ -426,11 +463,8 @@ static void inc_cluster_info_page(struct swap_info_struct *p,
+
+ 	if (!cluster_info)
+ 		return;
+-	if (cluster_is_free(&cluster_info[idx])) {
+-		VM_BUG_ON(cluster_list_first(&p->free_clusters) != idx);
+-		cluster_list_del_first(&p->free_clusters, cluster_info);
+-		cluster_set_count_flag(&cluster_info[idx], 0, 0);
+-	}
++	if (cluster_is_free(&cluster_info[idx]))
++		alloc_cluster(p, idx);
+
+ 	VM_BUG_ON(cluster_count(&cluster_info[idx]) >= SWAPFILE_CLUSTER);
+ 	cluster_set_count(&cluster_info[idx],
+@@ -454,21 +488,8 @@ static void dec_cluster_info_page(struct swap_info_struct *p,
+ 	cluster_set_count(&cluster_info[idx],
+ 		cluster_count(&cluster_info[idx]) - 1);
+
+-	if (cluster_count(&cluster_info[idx]) == 0) {
+-		/*
+-		 * If the swap is discardable, prepare discard the cluster
+-		 * instead of free it immediately. The cluster will be freed
+-		 * after discard.
+-		 */
+-		if ((p->flags & (SWP_WRITEOK | SWP_PAGE_DISCARD)) ==
+-				 (SWP_WRITEOK | SWP_PAGE_DISCARD)) {
+-			swap_cluster_schedule_discard(p, idx);
+-			return;
+-		}
+-
+-		cluster_set_flag(&cluster_info[idx], CLUSTER_FLAG_FREE);
+-		cluster_list_add_tail(&p->free_clusters, cluster_info, idx);
+-	}
++	if (cluster_count(&cluster_info[idx]) == 0)
++		free_cluster(p, idx);
+ }
+
+ /*
+@@ -558,6 +579,60 @@ static bool scan_swap_map_try_ssd_cluster(struct swap_info_struct *si,
+ 	return found_free;
+ }
+
++static void swap_range_alloc(struct swap_info_struct *si, unsigned long offset,
++			     unsigned int nr_entries)
++{
++	unsigned int end = offset + nr_entries - 1;
++
++	if (offset == si->lowest_bit)
++		si->lowest_bit += nr_entries;
++	if (end == si->highest_bit)
++		si->highest_bit -= nr_entries;
++	si->inuse_pages += nr_entries;
++	if (si->inuse_pages == si->pages) {
++		si->lowest_bit = si->max;
++		si->highest_bit = 0;
++		spin_lock(&swap_avail_lock);
++		plist_del(&si->avail_list, &swap_avail_head);
++		spin_unlock(&swap_avail_lock);
++	}
++}
++
++static void swap_range_free(struct swap_info_struct *si, unsigned long offset,
++			    unsigned int nr_entries)
++{
++	unsigned long end = offset + nr_entries - 1;
++	void (*swap_slot_free_notify)(struct block_device *, unsigned long);
++
++	if (offset < si->lowest_bit)
++		si->lowest_bit = offset;
++	if (end > si->highest_bit) {
++		bool was_full = !si->highest_bit;
++
++		si->highest_bit = end;
++		if (was_full && (si->flags & SWP_WRITEOK)) {
++			spin_lock(&swap_avail_lock);
++			WARN_ON(!plist_node_empty(&si->avail_list));
++			if (plist_node_empty(&si->avail_list))
++				plist_add(&si->avail_list, &swap_avail_head);
++			spin_unlock(&swap_avail_lock);
++		}
++	}
++	atomic_long_add(nr_entries, &nr_swap_pages);
++	si->inuse_pages -= nr_entries;
++	if (si->flags & SWP_BLKDEV)
++		swap_slot_free_notify =
++			si->bdev->bd_disk->fops->swap_slot_free_notify;
++	else
++		swap_slot_free_notify = NULL;
++	while (offset <= end) {
++		frontswap_invalidate_page(si->type, offset);
++		if (swap_slot_free_notify)
++			swap_slot_free_notify(si->bdev, offset);
++		offset++;
++	}
++}
++
+ static int scan_swap_map_slots(struct swap_info_struct *si,
+ 			       unsigned char usage, int nr,
+ 			       swp_entry_t slots[])
+@@ -676,18 +751,7 @@ static int scan_swap_map_slots(struct swap_info_struct *si,
+ 	inc_cluster_info_page(si, si->cluster_info, offset);
+ 	unlock_cluster(ci);
+
+-	if (offset == si->lowest_bit)
+-		si->lowest_bit++;
+-	if (offset == si->highest_bit)
+-		si->highest_bit--;
+-	si->inuse_pages++;
+-	if (si->inuse_pages == si->pages) {
+-		si->lowest_bit = si->max;
+-		si->highest_bit = 0;
+-		spin_lock(&swap_avail_lock);
+-		plist_del(&si->avail_list, &swap_avail_head);
+-		spin_unlock(&swap_avail_lock);
+-	}
++	swap_range_alloc(si, offset, 1);
+ 	si->cluster_next = offset + 1;
+ 	slots[n_ret++] = swp_entry(si->type, offset);
+
+@@ -766,6 +830,52 @@ static int scan_swap_map_slots(struct swap_info_struct *si,
+ 	return n_ret;
+ }
+
++#ifdef CONFIG_THP_SWAP
++static int swap_alloc_cluster(struct swap_info_struct *si, swp_entry_t *slot)
++{
++	unsigned long idx;
++	struct swap_cluster_info *ci;
++	unsigned long offset, i;
++	unsigned char *map;
++
++	if (cluster_list_empty(&si->free_clusters))
++		return 0;
++
++	idx = cluster_list_first(&si->free_clusters);
++	offset = idx * SWAPFILE_CLUSTER;
++	ci = lock_cluster(si, offset);
++	alloc_cluster(si, idx);
++	cluster_set_count_flag(ci, SWAPFILE_CLUSTER, 0);
++
++	map = si->swap_map + offset;
++	for (i = 0; i < SWAPFILE_CLUSTER; i++)
++		map[i] = SWAP_HAS_CACHE;
++	unlock_cluster(ci);
++	swap_range_alloc(si, offset, SWAPFILE_CLUSTER);
++	*slot = swp_entry(si->type, offset);
++
++	return 1;
++}
++
++static void swap_free_cluster(struct swap_info_struct *si, unsigned long idx)
++{
++	unsigned long offset = idx * SWAPFILE_CLUSTER;
++	struct swap_cluster_info *ci;
++
++	ci = lock_cluster(si, offset);
++	cluster_set_count_flag(ci, 0, 0);
++	free_cluster(si, idx);
++	unlock_cluster(ci);
++	swap_range_free(si, offset, SWAPFILE_CLUSTER);
++}
++#else
++static int swap_alloc_cluster(struct swap_info_struct *si, swp_entry_t *slot)
++{
++	VM_WARN_ON_ONCE(1);
++	return 0;
++}
++#endif /* CONFIG_THP_SWAP */
++
+ static unsigned long scan_swap_map(struct swap_info_struct *si,
+ 				   unsigned char usage)
+ {
+@@ -781,13 +891,17 @@ static unsigned long scan_swap_map(struct swap_info_struct *si,
+
+ }
+
+-int get_swap_pages(int n_goal, swp_entry_t swp_entries[])
++int get_swap_pages(int n_goal, bool cluster, swp_entry_t swp_entries[])
+ {
++	unsigned long nr_pages = cluster ? SWAPFILE_CLUSTER : 1;
+ 	struct swap_info_struct *si, *next;
+ 	long avail_pgs;
+ 	int n_ret = 0;
+
+-	avail_pgs = atomic_long_read(&nr_swap_pages);
++	/* Only single cluster request supported */
++	WARN_ON_ONCE(n_goal > 1 && cluster);
++
++	avail_pgs = atomic_long_read(&nr_swap_pages) / nr_pages;
+ 	if (avail_pgs <= 0)
+ 		goto noswap;
+
+@@ -797,7 +911,7 @@ int get_swap_pages(int n_goal, swp_entry_t swp_entries[])
+ 	if (n_goal > avail_pgs)
+ 		n_goal = avail_pgs;
+
+-	atomic_long_sub(n_goal, &nr_swap_pages);
++	atomic_long_sub(n_goal * nr_pages, &nr_swap_pages);
+
+ 	spin_lock(&swap_avail_lock);
+
+@@ -823,10 +937,13 @@ int get_swap_pages(int n_goal, swp_entry_t swp_entries[])
+ 			spin_unlock(&si->lock);
+ 			goto nextsi;
+ 		}
+-		n_ret = scan_swap_map_slots(si, SWAP_HAS_CACHE,
+-					    n_goal, swp_entries);
++		if (cluster)
++			n_ret = swap_alloc_cluster(si, swp_entries);
++		else
++			n_ret = scan_swap_map_slots(si, SWAP_HAS_CACHE,
++						    n_goal, swp_entries);
+ 		spin_unlock(&si->lock);
+-		if (n_ret)
++		if (n_ret || cluster)
+ 			goto check_out;
+ 		pr_debug("scan_swap_map of si %d failed to find offset\n",
+ 			si->type);
+@@ -852,7 +969,8 @@ int get_swap_pages(int n_goal, swp_entry_t swp_entries[])
+
+ check_out:
+ 	if (n_ret < n_goal)
+-		atomic_long_add((long) (n_goal-n_ret), &nr_swap_pages);
++		atomic_long_add((long)(n_goal - n_ret) * nr_pages,
++				&nr_swap_pages);
+ noswap:
+ 	return n_ret;
+ }
+@@ -1008,32 +1126,8 @@ static void swap_entry_free(struct swap_info_struct *p, swp_entry_t entry)
+ 	dec_cluster_info_page(p, p->cluster_info, offset);
+ 	unlock_cluster(ci);
+
+-	mem_cgroup_uncharge_swap(entry);
+-	if (offset < p->lowest_bit)
+-		p->lowest_bit = offset;
+-	if (offset > p->highest_bit) {
+-		bool was_full = !p->highest_bit;
+-
+-		p->highest_bit = offset;
+-		if (was_full && (p->flags & SWP_WRITEOK)) {
+-			spin_lock(&swap_avail_lock);
+-			WARN_ON(!plist_node_empty(&p->avail_list));
+-			if (plist_node_empty(&p->avail_list))
+-				plist_add(&p->avail_list,
+-					  &swap_avail_head);
+-			spin_unlock(&swap_avail_lock);
+-		}
+-	}
+-	atomic_long_inc(&nr_swap_pages);
+-	p->inuse_pages--;
+-	frontswap_invalidate_page(p->type, offset);
+-	if (p->flags & SWP_BLKDEV) {
+-		struct gendisk *disk = p->bdev->bd_disk;
+-
+-		if (disk->fops->swap_slot_free_notify)
+-			disk->fops->swap_slot_free_notify(p->bdev,
+-							  offset);
+-	}
++	mem_cgroup_uncharge_swap(entry, 1);
++	swap_range_free(p, offset, 1);
+ }
+
+ /*
+@@ -1065,6 +1159,33 @@ void swapcache_free(swp_entry_t entry)
+ 	}
+ }
+
++#ifdef CONFIG_THP_SWAP
++void swapcache_free_cluster(swp_entry_t entry)
++{
++	unsigned long offset = swp_offset(entry);
++	unsigned long idx = offset / SWAPFILE_CLUSTER;
++	struct swap_cluster_info *ci;
++	struct swap_info_struct *si;
++	unsigned char *map;
++	unsigned int i;
++
++	si = swap_info_get(entry);
++	if (!si)
++		return;
++
++	ci = lock_cluster(si, offset);
++	map = si->swap_map + offset;
++	for (i = 0; i < SWAPFILE_CLUSTER; i++) {
++		VM_BUG_ON(map[i] != SWAP_HAS_CACHE);
++		map[i] = 0;
++	}
++	unlock_cluster(ci);
++	mem_cgroup_uncharge_swap(entry, SWAPFILE_CLUSTER);
++	swap_free_cluster(si, idx);
++	spin_unlock(&si->lock);
++}
++#endif /* CONFIG_THP_SWAP */
++
+ void swapcache_free_entries(swp_entry_t *entries, int n)
+ {
+ 	struct swap_info_struct *p, *prev;
+```

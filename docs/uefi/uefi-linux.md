@@ -175,6 +175,9 @@ build -p AppPkg/AppPkg.dsc
   DEBUG((DEBUG_INFO, "%s\n", "hello"));
 ```
 
+QEMU 的配置方法和 seabios 的类似:
+https://github.com/tianocore/tianocore.github.io/wiki/How-to-debug-OVMF-with-QEMU-using-GDB
+
 ## 生成 compile_commands.json
 虽然 edk2 是一个和操作系统无关，但是 edk2 编译出来了的 efi 格式实际上是 Windows 二进制格式，项目的构建也是 VS 的风格。
 想要在 vim 愉快阅读代码需要生成 compile_commands.json，但是这个编译系统不是 CMake, Make, Ninja 之类的，想要生成，并不容易。

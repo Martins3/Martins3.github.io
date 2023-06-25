@@ -458,7 +458,6 @@ stress-ng --memrate 1 --memrate-wr 200 --memrate-rd 100 --memrate-bytes 6000M -v
 [^8]: [kernel doc : pin_user_pages() and related calls](https://www.kernel.org/doc/html/latest/core-api/pin_user_pages.html)
 [^9]: [lwn : Explicit pinning of user-space pages](https://lwn.net/Articles/807108/)
 [^13]: [lwn : Smarter shrinkers](https://lwn.net/Articles/550463/)
-[^14]: [kernel doc : page owner: Tracking about who allocated each page](https://www.kernel.org/doc/html/latest/vm/page_owner.html)
 [^17]: [stackoverflow : Why do we need DMA pool ?](https://stackoverflow.com/questions/60574054/why-do-we-need-dma-pool)
 [^18]: [kernel doc : Kernel Memory Leak Detector](https://www.kernel.org/doc/html/latest/dev-tools/kmemleak.html)
 [^19]: [kernel doc : Heterogeneous Memory Management (HMM)](https://www.kernel.org/doc/html/latest/vm/hmm.html)
@@ -466,5 +465,4 @@ stress-ng --memrate 1 --memrate-wr 200 --memrate-rd 100 --memrate-bytes 6000M -v
 [^21]: [lwn : A reworked contiguous memory allocator](https://lwn.net/Articles/447405/)
 [^22]: [lwn : A deep dive into dma](https://lwn.net/Articles/486301/)
 [^23]: [kernel doc : z3fold](https://www.kernel.org/doc/html/latest/vm/z3fold.html)
-[^27]: https://lwn.net/Articles/619738/
 [^29]: https://my.oschina.net/u/3857782/blog/1854548

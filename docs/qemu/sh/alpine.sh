@@ -24,7 +24,7 @@ share_memory_option="9p"
 hacking_migration=false
 # @todo 尝试在 guest 中搭建一个 vIOMMU
 hacking_vfio=false
-hacking_vfio=true
+# hacking_vfio=true
 # qemu-system-x86_64: We need to set caching-mode=on for intel-iommu to enable device assignment with IOMMU protection.
 
 hacking_virtio_iommu=false

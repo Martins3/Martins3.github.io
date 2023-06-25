@@ -721,3 +721,17 @@ config HALTPOLL_CPUIDLE
 [ 4680.574360] done.
 [ 4680.574366] random: crng reseeded on system resumption
 ```
+
+## [ ] 为什么 amd 机器上也存在 intel_idle
+
+```txt
+cd /sys/module/intel_idle/parameters🔒
+🧀  l
+Permissions Size User Date Modified Name
+.r--r--r--  4.1k root 25 6月  10:38  force_irq_on
+.r--r--r--  4.1k root 25 6月  10:38  max_cstate
+.r--r--r--  4.1k root 25 6月  10:38  no_acpi
+.r--r--r--  4.1k root 25 6月  10:38  preferred_cstates
+.r--r--r--  4.1k root 25 6月  10:38  states_off
+.r--r--r--  4.1k root 25 6月  10:38  use_acpi
+```

@@ -187,7 +187,7 @@ enum pageflags {
 ```
 当含有 reclaim 的 flag 的时候，这个 page 正处于 cache 的 write back 中。
 
-## folio_test_swapbacked
+## folio_test_swapbacked : 指的是该 page 被写入到 swap 中
 
 只要是，anon 和 shmem 就会有
 ```c
@@ -204,4 +204,22 @@ enum pageflags {
 - page_add_new_anon_rmap : anon page fault 代码总是会调用到此处的
 
 这个 flag 存在什么时候起作用?
-- 太多了
+- 调用的位置太多了
+
+## folio_test_swapcache
+
+```c
+static __always_inline bool folio_test_swapcache(struct folio *folio)
+{
+	return folio_test_swapbacked(folio) &&
+			test_bit(PG_swapcache, folio_flags(folio, 0));
+}
+```
+一般来说，是不是，其实 `PG_swapcache` 不就已经是 swapcache 了吗？
+
+mm/memory-failure.c 中也是存在类似的定义:
+```c
+#define sc		((1UL << PG_swapcache) | (1UL << PG_swapbacked))
+```
+
+我猜测应该也是没有什么特殊的原因吧，
