@@ -419,7 +419,7 @@ __setup("ivrs_acpihid",		parse_ivrs_acpihid);
                         0 - Lazy mode.
                           Request that DMA unmap operations use deferred
                           invalidation of hardware TLBs, for increased
-                          throughput at the cost of reduced device isolation.
+txt                         throughput at the cost of reduced device isolation.
                           Will fall back to strict mode if not supported by
                           the relevant IOMMU driver.
                         1 - Strict mode.
@@ -1042,3 +1042,16 @@ IOMMU Group 6:
 
 - [ ] 在一个 group 上这种事情，是如何发现的, acpi 还是扫描 pci 的 typo 结构
 - [ ] 如何查看 pci 的 typo 结构如何查看来着
+
+## intel dmar 有什么特殊之处吗?
+drivers/iommu/intel/dmar.c
+
+-  /sys/devices/virtual/iommu/dmar0/intel-iommu/ecap
+-  /sys/devices/virtual/iommu/dmar1/intel-iommu/ecap
+
+```txt
+[    0.181268] DMAR-IR: Queued invalidation will be enabled to support x2apic and Intr-remapping.
+[    0.182790] DMAR-IR: Enabled IRQ remapping in x2apic mode
+[    0.182791] x2apic enabled
+[    0.182814] Switched APIC routing to cluster x2apic.
+```

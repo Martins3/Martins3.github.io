@@ -720,6 +720,7 @@ Rust,绝对不是浅尝辄止的内容。
 ## [提交自己第一个patch](https://etsai.site/2019/04/18/your-first-linux-kernel-patch/)
 1. 问题是什么时候，可以开始读arvix 上的操作系统文章
 2. 什么时候开始提交kernel patch
+
 ## [漫画](https://code2048.com/)
 
 ## [csapp试验](http://csapp.cs.cmu.edu/3e/labs.html)

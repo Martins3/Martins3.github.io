@@ -48,3 +48,30 @@ static int iommu_setup_msi(struct amd_iommu *iommu)
 ```
 
 cat /sys/module/kvm_amd/parameters/avic
+
+
+## 似乎 interrupt remapping 是默认启动的
+
+```txt
+🤒  dmesg | grep AMD-Vi
+[    0.129050] AMD-Vi: ivrs, add hid:AMDI0020, uid:\_SB.FUR0, rdevid:160
+[    0.129051] AMD-Vi: ivrs, add hid:AMDI0020, uid:\_SB.FUR1, rdevid:160
+[    0.129052] AMD-Vi: ivrs, add hid:AMDI0020, uid:\_SB.FUR2, rdevid:160
+[    0.129052] AMD-Vi: ivrs, add hid:AMDI0020, uid:\_SB.FUR3, rdevid:160
+[    0.129053] AMD-Vi: Using global IVHD EFR:0x246577efa2254afa, EFR2:0x0
+[    0.514728] pci 0000:00:00.2: AMD-Vi: IOMMU performance counters supported
+[    0.515027] pci 0000:00:00.2: AMD-Vi: Found IOMMU cap 0x40
+[    0.515028] AMD-Vi: Extended features (0x246577efa2254afa, 0x0): PPR NX GT [5] IA GA PC GA_vAPIC
+[    0.515031] AMD-Vi: Interrupt remapping enabled
+[    0.515270] AMD-Vi: Virtual APIC enabled
+```
+
+- amd_iommu_xt_mode 这是什么东西?
+
+## intel 中测试到的发
+
+```txt
+PIN:      15536          1       3904          1      19275          3       1119          0        120          2        158          0         16          5          3          3          4          2         44          9         20          9          8          3          7         16         15         20         13          4          4          2   Posted-interrupt notification event
+NPI:          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0   Nested posted-interrupt event
+PIW:          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0   Posted-interrupt wakeup event
+```

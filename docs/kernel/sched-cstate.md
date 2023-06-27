@@ -735,3 +735,159 @@ Permissions Size User Date Modified Name
 .r--r--r--  4.1k root 25 6月  10:38  states_off
 .r--r--r--  4.1k root 25 6月  10:38  use_acpi
 ```
+
+## material
+
+amd 中:
+processor.max_cstate=1 intel_idle.max_cstate=0
+```txt
+[nix-shell:~]$ cpupower idle-info
+CPUidle driver: acpi_idle
+CPUidle governor: menu
+analyzing CPU 30:
+
+Number of idle states: 2
+Available idle states: POLL C1
+POLL:
+Flags/Description: CPUIDLE CORE POLL IDLE
+Latency: 0
+Usage: 1355
+Duration: 58461
+C1:
+Flags/Description: ACPI FFH MWAIT 0x0
+Latency: 1
+Usage: 285497
+Duration: 7742516699
+```
+
+processor.max_cstate=0 intel_idle.max_cstate=0
+```txt
+CPUidle driver: acpi_idle
+CPUidle governor: menu
+analyzing CPU 3:
+
+Number of idle states: 2
+Available idle states: POLL C1
+POLL:
+Flags/Description: CPUIDLE CORE POLL IDLE
+Latency: 0
+Usage: 259
+Duration: 14922
+C1:
+Flags/Description: ACPI FFH MWAIT 0x0
+Latency: 1
+Usage: 24263
+Duration: 118205206
+```
+
+amd 去掉参数:
+```txt
+[nix-shell:~]$  cpupower idle-info
+CPUidle driver: acpi_idle
+CPUidle governor: menu
+analyzing CPU 12:
+
+Number of idle states: 4
+Available idle states: POLL C1 C2 C3
+POLL:
+Flags/Description: CPUIDLE CORE POLL IDLE
+Latency: 0
+Usage: 370
+Duration: 12570
+C1:
+Flags/Description: ACPI FFH MWAIT 0x0
+Latency: 1
+Usage: 8766
+Duration: 532364
+C2:
+Flags/Description: ACPI IOPORT 0x414
+Latency: 18
+Usage: 7982
+Duration: 2914635
+C3:
+Flags/Description: ACPI IOPORT 0x415
+Latency: 350
+Usage: 11615
+Duration: 53058960
+```
+
+intel
+```txt
+🧀  cpupower idle-info
+
+CPUidle driver: intel_idle
+CPUidle governor: menu
+analyzing CPU 12:
+
+Number of idle states: 4
+Available idle states: POLL C1_ACPI C2_ACPI C3_ACPI
+POLL:
+Flags/Description: CPUIDLE CORE POLL IDLE
+Latency: 0
+Usage: 45923
+Duration: 1045586
+C1_ACPI:
+Flags/Description: ACPI FFH MWAIT 0x0
+Latency: 1
+Usage: 1991675
+Duration: 318432463
+C2_ACPI:
+Flags/Description: ACPI FFH MWAIT 0x21
+Latency: 127
+Usage: 1977297
+Duration: 1396686456
+C3_ACPI:
+Flags/Description: ACPI FFH MWAIT 0x60
+Latency: 1048
+Usage: 2351264
+Duration: 39850857801
+```
+
+
+amd 中的这个真有趣啊，
+frequency should be within 1.50 GHz and 2.50 GHz.
+
+```txt
+[nix-shell:~]$ cpupower frequency-info
+analyzing CPU 24:
+  driver: acpi-cpufreq
+  CPUs which run at the same hardware frequency: 24
+  CPUs which need to have their frequency coordinated by software: 24
+  maximum transition latency:  Cannot determine or is not supported.
+  hardware limits: 1.50 GHz - 5.46 GHz
+  available frequency steps:  2.50 GHz, 1.50 GHz
+  available cpufreq governors: performance schedutil
+  current policy: frequency should be within 1.50 GHz and 2.50 GHz.
+                  The governor "performance" may decide which speed to use
+                  within this range.
+  current CPU frequency: Unable to call hardware
+  current CPU frequency: 3.49 GHz (asserted by call to kernel)
+  boost state support:
+    Supported: yes
+    Active: no
+```
+
+## pcm 中显示有 c7 ?
+```txt
+ Instructions retired:  332 M ; Active cycles:  405 M ; Time (TSC): 2996 Mticks ; C0 (active,non-halted) core residency: 0.24 %
+
+ C1 core residency: 7.11 %; C3 core residency: 0.00 %; C6 core residency: 50.74 %; C7 core residency: 41.90 %;
+ C0 package residency: 100.00 %; C2 package residency: 0.00 %; C4 package residency: 0.00 %; C6 package residency: 0.00 %;
+                             ┌─────────────────────────────────────────────────────────────────────────────────┐
+ Core    C-state distribution│111111666666666666666666666666666666666666666667777777777777777777777777777777777│
+                             └─────────────────────────────────────────────────────────────────────────────────┘
+                             ┌────────────────────────────────────────────────────────────────────────────────┐
+ Package C-state distribution│00000000000000000000000000000000000000000000000000000000000000000000000000000000│
+                             └────────────────────────────────────────────────────────────────────────────────┘
+
+ PHYSICAL CORE IPC                 : 1.64 => corresponds to 27.38 % utilization for cores in active state
+ Instructions per nominal CPU cycle: 0.01 => corresponds to 0.12 % core utilization over time interval
+ SMI count: 0
+ ---------------------------------------------------------------------------------------------------------------
+ MEM (GB)->|  READ |  WRITE | CPU energy |
+ ---------------------------------------------------------------------------------------------------------------
+  SKT   0     0.57     0.26      17.73
+ ---------------------------------------------------------------------------------------------------------------
+```
+
+## https://metebalci.com/blog/a-minimum-complete-tutorial-of-cpu-power-management-c-states-and-p-states/

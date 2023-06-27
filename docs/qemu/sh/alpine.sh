@@ -2,7 +2,7 @@
 set -E -e -u -o pipefail
 
 replace_kernel=false
-replace_kernel=true
+# replace_kernel=true
 
 hacking_memory="hotplug"
 hacking_memory="virtio-pmem"
@@ -421,7 +421,8 @@ fi
 arg_vfio=""
 if [[ $hacking_vfio == true ]]; then
 	if [[ $host_cpu_arch == intel ]]; then
-		if [[ ! -c /dev/vfio/17 ]]; then
+		# TODO 这个数值是随便切换的吗?
+		if [[ ! -c /dev/vfio/16 ]]; then
 			# lspci -nn
 			# 03:00.0 Non-Volatile memory controller [0108]: Yangtze Memory Technologies Co.,Ltd Device [1e49:0071] (rev 01)
 			## 恢复方法
@@ -429,7 +430,7 @@ if [[ $hacking_vfio == true ]]; then
 			# echo 1e49 0071 | sudo tee /sys/bus/pci/drivers/nvme/new_id
 			echo 0000:03:00.0 | sudo tee /sys/bus/pci/devices/0000:03:00.0/driver/unbind
 			echo 1e49 0071 | sudo tee /sys/bus/pci/drivers/vfio-pci/new_id
-			sudo chown martins3 /dev/vfio/17
+			sudo chown martins3 /dev/vfio/16
 		fi
 		arg_vfio="-device vfio-pci,host=03:00.0"
 	elif [[ $host_cpu_arch == amd ]]; then
