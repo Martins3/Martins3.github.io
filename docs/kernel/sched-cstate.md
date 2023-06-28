@@ -8,6 +8,8 @@
 - acpi idle : 执行 mwait hlt 以及 ioport
 - halt poll : halt 之前 poll 一段时间
 
+> https://github.com/ChinaLinuxKernel/CLK/blob/master/CLK2021/3-1%20AMD%E6%9E%B6%E6%9E%84%E8%99%9A%E6%8B%9F%E6%9C%BA%E6%80%A7%E8%83%BD%E6%8E%A2%E7%B4%A2%E4%B8%8E%E5%AE%9E%E8%B7%B5.pdf
+
 ## 感觉 AMD crash 可能和这个有关
 ```txt
     cpuidle.off=1   [CPU_IDLE]
@@ -16,7 +18,8 @@
     cpuidle.governor=
                     [CPU_IDLE] Name of the cpuidle governor to use.
 
-        idle=           [X86]
+
+    idle=           [X86]
                         Format: idle=poll, idle=halt, idle=nomwait
                         Poll forces a polling idle loop that can slightly
                         improve the performance of waking up a idle CPU, but
@@ -41,10 +44,39 @@ menu
 🧀  cat /sys/devices/system/cpu/cpuidle/current_driver
 none
 ```
+设置命令行参数为:
+processor.max_cstate=1 intel_idle.max_cstate=0
+```txt
+cat /sys/devices/system/cpu/cpuidle/current_driver
+```
+
+- [ ] 这个 max_cstate 可以动态修改吗?
+- [ ] 这两个 cstate 是啥关系啊
+  - [ ] https://jeremyeder.com/2012/11/14/processor-max_cstate-intel_idle-max_cstate-and-devcpu_dma_latency/
+
+## 什么东西？？？？
+https://groups.google.com/g/mechanical-sympathy/c/Ubm9_71ONTc
+
+> 有这种事情?
+>
+> idle=poll will force c0 state, removing that would lock in to c1.
+
+
+## https://access.redhat.com/solutions/2895271
+tuned : 这是什么程序?
+
+> 似乎代码有点问题，最后的解决方法是:
+> intel_idle.max_cstate=0 processor.max_cstate=1 intel_pstate=disable
+
+
+
+## cstate 状态表格
+https://gist.github.com/Brainiarc7/8dfd6bb189b8e6769bb5817421aec6d1
 
 ## sleep 的等级
 - https://docs.kernel.org/admin-guide/pm/sleep-states.html
 
+## 怎么观察下，一般进入的都是什么 c state 状态?
 
 ### 介绍各种 /sys/power 的接口
 

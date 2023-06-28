@@ -341,3 +341,9 @@ KBUILD_CFLAGS	+= -fno-inline-small-functions
 
 ## 调试内核模块模块
 - https://stackoverflow.com/questions/28607538/how-to-debug-linux-kernel-modules-with-qemu
+
+## 问题，这个警告明显是错误的
+```txt
+[ 0.001000] Unknown kernel command line parameters "nokaslr", will be passed to user space.
+```
+这似乎不对吧

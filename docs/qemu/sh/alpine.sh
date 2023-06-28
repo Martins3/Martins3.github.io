@@ -24,7 +24,7 @@ share_memory_option="9p"
 hacking_migration=false
 # @todo 尝试在 guest 中搭建一个 vIOMMU
 hacking_vfio=false
-# hacking_vfio=true
+hacking_vfio=true
 # qemu-system-x86_64: We need to set caching-mode=on for intel-iommu to enable device assignment with IOMMU protection.
 
 hacking_virtio_iommu=false
@@ -319,10 +319,10 @@ if [[ $use_ovmf == true ]]; then
 fi
 
 # kernel_cmdline+="scsi_mod.scsi_logging_level=0x3fffffff"
-kernel_cmdline="nokaslr console=ttyS0,9600 earlyprink=serial "
+kernel_cmdline="nokaslr console=ttyS0,9600 earlyprintk=serial "
 # 使用 function_graph 是分析从该函数开始的结果
 kernel_cmdline+="ftrace=function_graph ftrace_filter=arch_freq_get_on_cpu "
-kernel_cmdline+="ftrace=function ftrace_filter=arch_freq_get_on_cpu stacktrace"
+kernel_cmdline+="ftrace=function ftrace_filter=arch_freq_get_on_cpu stacktrace "
 
 # 进入之后 cat /sys/kernel/debug/tracing/trace
 # kernel_cmdline+="memblock=debug"
@@ -434,18 +434,14 @@ if [[ $hacking_vfio == true ]]; then
 		fi
 		arg_vfio="-device vfio-pci,host=03:00.0"
 	elif [[ $host_cpu_arch == amd ]]; then
-		pt_nvme=true
+		pt_nvme=false
 
 		if [[ $pt_nvme == false ]]; then
 			if [[ ! -c /dev/vfio/2 ]]; then
-				# 04:00.0 Network controller [0280]: MEDIATEK Corp. MT7922 802.11ax PCI Express Wireless Network Adapter [14c3:0616]
-				# echo 0000:04:00.0 | sudo tee /sys/bus/pci/devices/0000:04:00.0/driver/unbind
-				# echo 14c3 0616 | sudo tee /sys/bus/pci/drivers/vfio-pci/new_id
-				# sudo chown martins3 /dev/vfio/1
-
 				# 07:00.0 Ethernet controller [0200]: Realtek Semiconductor Co., Ltd. RTL8111/8168/8411 PCI Express Gigabit Ethernet Controller [10ec:8168] (rev 15)
 				echo 0000:07:00.0 | sudo tee /sys/bus/pci/devices/0000:07:00.0/driver/unbind
 				echo 10ec 8168 | sudo tee /sys/bus/pci/drivers/vfio-pci/new_id
+				sudo chown martins3 /dev/vfio/2
 			fi
 			arg_vfio="-device vfio-pci,host=07:00.0"
 		else
@@ -637,12 +633,15 @@ if [[ $in_guest == true ]]; then
 	qemu="qemu-system-x86_64"
 fi
 
+# for nested guest
 if [[ ${minimal} == true ]]; then
 	arg_monitor="-vnc :0 -monitor stdio"
 	# arg_monitor="-nographic"
 	# arg_monitor="-monitor stdio"
 	# arg_monitor="-serial mon:stdio -display none"
-	${qemu} $arg_cpu_model $arg_img -enable-kvm -m 2G -smp 2 $arg_monitor
+	cmd="${qemu} $arg_cpu_model $arg_img -enable-kvm -m 2G -smp 2 $arg_monitor"
+	echo "$cmd"
+	eval "$cmd"
 	# @todo 不知道为什么 guest 中不能携带 arg_network 了
 	exit 0
 fi
