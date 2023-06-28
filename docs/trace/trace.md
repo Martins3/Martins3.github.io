@@ -198,8 +198,6 @@ dpdk 测试工具
 
 ## iftop
 
-## tiptop
-
 ## dtrace 真的还有人用吗？
 
 ## https://github.com/benfred/py-spy
@@ -226,6 +224,11 @@ dpdk 测试工具
 
 ## intel pcm 了解一下
 
+
+## [ ] tiptop
+为什么 13900K 中 tiptop 数据如此不完整啊，再 amd 中也是
+
+无论如何，可以从 tiptop 中观察如何和内核沟通来实现观测的。
 
 [^4]: [An introduction to KProbes](https://lwn.net/Articles/132196/)
 [^5]: [Using user-space tracepoints with BPF](https://lwn.net/Articles/753601/)

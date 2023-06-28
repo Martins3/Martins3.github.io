@@ -10,6 +10,19 @@ sudo cgset -r cpuset.mems=0 testset
 sudo cgexec -g cpuset:testset stress-ng --vm-bytes 6500M --vm-keep --vm 3
 ```
 
+## io
+```sh
+sudo cgcreate -g io:A
+sudo cgexec -g io:A fio test.fio
+```
+
+```txt
+➜  ~ cat /sys/fs/cgroup/A/io.stat
+259:0 rbytes=859275264 wbytes=0 rios=209784 wios=0 dbytes=0 dios=0
+253:0 rbytes=5566464 wbytes=0 rios=13 wios=0 dbytes=0 dios=0
+```
+
+
 ## memcontrol
 1. 在第一个终端中运行运行
 

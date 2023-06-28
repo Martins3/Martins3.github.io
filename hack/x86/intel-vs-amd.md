@@ -23,5 +23,10 @@ config X86_MCE_AMD
 
 ## cpu flags 中的内容可以逐个查询下
 
+## 电源管理的方式不同
 
 ## iommu
+
+## 相同地方
+
+intel_idle 驱动

@@ -15,3 +15,7 @@ https://www.youtube.com/watch?v=NtkKHhXf3V4
 - nvme_init
   - qemu_vfio_open_pci
     - qemu_vfio_init_pci
+
+## 了解下什么是 multipath
+https://spdk.io/doc/nvme_multipath.html
+https://www.ibm.com/docs/en/flashsystem-7x00/8.4.x?topic=nhtrlos-multipath-configuration-fc-nvme-hosts-1

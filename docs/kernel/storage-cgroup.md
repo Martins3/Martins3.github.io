@@ -3,31 +3,43 @@
 | cgroup interface | source     code |
 |------------------|-----------------|
 | io.latency       | blk-iolatency.c |
-| io.max           | blk-throttle.c  |
+| io.max io.low           | blk-throttle.c  |
 | io.prio.class    | blk-ioprio.c    |
-| io.stat          | blk-stat.c      |
+| io.stat          | blk-cgroup.c      |
 | io.weight        | blk-iocost.c    |
+| io.pressure| ???|
 
-## 基本使用
-为什么这样执行之后:
-- duck echo "8:16  wiops=100000" > io.max
-- cgexec -g io:duck dd if=/dev/zero of=/dev/sdb bs=1M count=1000
+blk-stat.c 到底是做啥的，应该只是基础组建而已
+
+
+## 基本使用和观察
+
+```sh
+cgcreate -g io:A
+echo "8:16  wiops=100" > io.max
+cgexec -g io:A dd if=/dev/zero of=/dev/sda bs=1M count=1000
+```
 
 结果 kernel 卡到了这里啊:
 ```txt
-➜  cat /proc/1624/stack
-[<0>] blkdev_get_by_dev.part.0+0xf7/0x2f0
-[<0>] blkdev_open+0x4b/0x90
-[<0>] do_dentry_open+0x157/0x430
-[<0>] path_openat+0xb6b/0x1030
-[<0>] do_filp_open+0xb1/0x160
-[<0>] do_sys_openat2+0x95/0x160
-[<0>] __x64_sys_openat+0x52/0xa0
-[<0>] do_syscall_64+0x3c/0x90
+cat /proc/200624/stack
+
+[<0>] balance_dirty_pages+0x3be/0xd60
+[<0>] balance_dirty_pages_ratelimited_flags+0x2c3/0x3b0
+[<0>] generic_perform_write+0x152/0x210
+[<0>] __generic_file_write_iter+0xd5/0x190
+[<0>] blkdev_write_iter+0x112/0x1b0
+[<0>] vfs_write+0x241/0x410
+[<0>] ksys_write+0x6f/0xf0
+[<0>] do_syscall_64+0x3e/0x90
 [<0>] entry_SYSCALL_64_after_hwframe+0x72/0xdc
 ```
 
-具体的分析应该是很有趣的，但是没时间了。
+- iomap_write_iter
+  - balance_dirty_pages_ratelimited_flags
+    - balance_dirty_pages
+
+
 
 ## 参考
 - http://127.0.0.1:3434/admin-guide/cgroup-v2.html
@@ -37,7 +49,7 @@
 
 - iolatency_set_min_lat_nsec
 
-## throttle
+## throttle : io.max io.low
 
 ```txt
 #0  blk_cgroup_bio_start (bio=bio@entry=0xffff8881374a7800) at block/blk-cgroup.c:1992
@@ -60,6 +72,19 @@
 #17 do_syscall_64 (regs=0xffffc900402eff58, nr=<optimized out>) at arch/x86/entry/common.c:80
 #18 0xffffffff822000ae in entry_SYSCALL_64 () at arch/x86/entry/entry_64.S:120
 ```
+
+```txt
+#0  blk_cgroup_bio_start (bio=bio@entry=0xffff88803ef38d00) at block/blk-cgroup.c:2069
+#1  0xffffffff8176c45c in submit_bio_noacct_nocheck (bio=0xffff88803ef38d00) at block/blk-core.c:681
+#2  0xffffffff8178ffac in blk_throtl_dispatch_work_fn (work=0xffff888007c6a890) at block/blk-throttle.c:1265
+#3  0xffffffff8116a75e in process_one_work (worker=worker@entry=0xffff8880136f8780, work=0xffff888007c6a890) at kernel/workqueue.c:2408
+#4  0xffffffff8116ad5e in worker_thread (__worker=0xffff8880136f8780) at kernel/workqueue.c:2555
+#5  0xffffffff81172e07 in kthread (_create=0xffff88801590fb40) at kernel/kthread.c:379
+#6  0xffffffff81002aec in ret_from_fork () at arch/x86/entry/entry_64.S:308
+#7  0x0000000000000000 in ?? ()
+```
+
+这两个 backtrace 没什么关系吧
 
 ## io.stat
 
@@ -249,3 +274,5 @@ Reviewed-by: Jan Kara <jack@suse.cz>
 ? 什么是描述 queue 中实际上包含了多少个 request
 
 ## 如果 queue 满了，会如何？
+
+## blk-wbt 机制和 memory cgroup 中的 wbt 啥关系啊
