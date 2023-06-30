@@ -5,6 +5,7 @@
 ## 问题
 - 有什么方法提前获取到 vfio cgroup 的数值
 - [ ] 必须深入理解 dma 的 coherent 的行为
+- [ ] iommu group 的数量是什么决定的，是硬件吗?
 
 ## 看看 iommu 的用户态接口
 

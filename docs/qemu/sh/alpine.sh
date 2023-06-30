@@ -2,7 +2,7 @@
 set -E -e -u -o pipefail
 
 replace_kernel=false
-# replace_kernel=true
+replace_kernel=true
 
 hacking_memory="hotplug"
 hacking_memory="virtio-pmem"
@@ -22,9 +22,10 @@ share_memory_option="9p"
 # share_memory_option="virtiofs"
 
 hacking_migration=false
-# @todo 尝试在 guest 中搭建一个 vIOMMU
+
 hacking_vfio=false
 hacking_vfio=true
+# @todo 这个报错是什么意思
 # qemu-system-x86_64: We need to set caching-mode=on for intel-iommu to enable device assignment with IOMMU protection.
 
 hacking_virtio_iommu=false
@@ -195,11 +196,13 @@ arg_hugetlb=""
 arg_machine="-machine pc,accel=kvm,kernel-irqchip=on,smm=off"
 # @todo 对于 smm 是否打开，热迁移没有检查，似乎这是一个 bug 吧
 if [[ $hacking_virtio_iommu == true ]]; then
-	# arg_machine="-machine q35,accel=kvm,kernel-irqchip=split"
-	# arg_machine+=" -device intel-iommu,intremap=on,caching-mode=on"
+	arg_machine="-machine q35,accel=kvm,kernel-irqchip=split"
+	arg_machine+=" -device intel-iommu,intremap=on,caching-mode=on"
+	# amd 上存在这个警告: qemu-system-x86_64: -device virtio-iommu-pci: QEMU does not support multiple vIOMMUs for x86 yet.
+	# @todo 这个警告可以优化下
 
 	# 这种模式应该是有 bug，如果不加上内核参数 iommu=pt，那么会卡半天
-	arg_machine+=" -device virtio-iommu-pci"
+	# arg_machine+=" -device virtio-iommu-pci"
 fi
 
 arg_mem_balloon="-device virtio-balloon,id=balloon0,deflate-on-oom=true,page-poison=true,free-page-reporting=false,free-page-hint=true,iothread=io1 -object iothread,id=io1"
@@ -399,6 +402,8 @@ fi
 
 arg_monitor="-monitor unix:$mon_socket_path,server,nowait"
 arg_stdio="-serial stdio -display none"
+# 曾经最经典的组合
+# arg_stdio="-serial mon:stdio -display none"
 
 # @todo 原来这个选项不打开，内核无法启动啊
 # @todo 才意识到，这个打开之后，在 kernel cmdline 中的 init=/bin/bash 是无效的
@@ -575,7 +580,7 @@ sure() {
 	esac
 }
 
-if [ ! -f "$iso" ] && [ ! -f $disk_img ]; then
+if [ ! -f "$iso" ] && [ ! -f "$disk_img" ]; then
 	echo "please download ${distribution}"
 	# wget http://mirrors.ustc.edu.cn/centos/8-stream/isos/x86_64/CentOS-Stream-8-x86_64-latest-boot.iso
 	exit 0
@@ -601,13 +606,9 @@ if [ ! -f "${disk_img}" ]; then
 	arg_monitor="-vnc :0,password=on -monitor stdio"
 	# 否则本地安装即可
 	arg_monitor=""
-	qemu-system-x86_64 \
-		-boot d \
-		-cdrom "$iso" \
-		-hda "${disk_img}" \
-		-enable-kvm \
-		-m 8G \
-		-smp 2 $arg_monitor
+	# shellcheck disable=SC2086
+	qemu-system-x86_64 -boot d -cdrom "$iso" -hda "${disk_img}" -enable-kvm \
+		-m 8G -smp 8 $arg_monitor
 	exit 0
 fi
 

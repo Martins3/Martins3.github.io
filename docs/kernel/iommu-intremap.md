@@ -68,10 +68,18 @@ cat /sys/module/kvm_amd/parameters/avic
 
 - amd_iommu_xt_mode 这是什么东西?
 
-## intel 中测试到的发
+## intel 中测试到的
 
 ```txt
 PIN:      15536          1       3904          1      19275          3       1119          0        120          2        158          0         16          5          3          3          4          2         44          9         20          9          8          3          7         16         15         20         13          4          4          2   Posted-interrupt notification event
+NPI:          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0   Nested posted-interrupt event
+PIW:          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0   Posted-interrupt wakeup event
+```
+
+## 的确，普通设备也是会使用 posted-interrupt 的
+
+```txt
+PIN:        106          3         34          2         22          1         24          2         10          4         24          3         29         11         16          4         24         26         33        400         11         22         11         19        133         18         14         19         13          8          8          4   Posted-interrupt notification event
 NPI:          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0   Nested posted-interrupt event
 PIW:          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0   Posted-interrupt wakeup event
 ```

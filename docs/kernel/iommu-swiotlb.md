@@ -156,3 +156,18 @@ iommu_dma_map_page 是注册在 iommu 下的 hook ，兄弟啊!
 ```txt
 [    0.497884] pci 0000:00:04.0: Adding to iommu group 3
 ```
+
+## 看上去，amd 的机器上的行为和 intel 的完全不同，intel 是打死都不会使用 swiotlb 的
+
+```txt
+[root@nixos:/home/martins3/core/vn]# cat /sys/kernel/debug/swiotlb/*
+32768
+0
+
+[root@nixos:/home/martins3/core/vn]# cat /proc/cmdline
+BOOT_IMAGE=(hd3,gpt3)//kernels/ch1fb1rvcmdcvi110rjsi0ns0x1v50ms-linux-6.3.5-bzImage init=/nix/store/65f1jm02izzhnhnn7aw6xkf8djrnrqn9-nixos-system-nixos-23.05.553.e760
+3eba51f/init intel_iommu=on intremap=on iommu=pt amd_iommu_intr=vapic kvm-amd.avic=1 ftrace=function ftrace_filter=amd_iommu_int_thread fsck.mode=force fsck.repair=ye
+s loglevel=4
+
+[root@nixos:/home/martins3/core/vn]#
+```
