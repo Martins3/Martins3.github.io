@@ -2,6 +2,9 @@
 
 - https://luohao-brian.gitbooks.io/interrupt-virtualization/content/vt-d-interrupt-remapping-fen-xi.html
 
+## 官方文档需要分析下
+/home/martins3/core/linux/Documentation/arch/x86/iommu.rst
+
 ## 问题
 - 有什么方法提前获取到 vfio cgroup 的数值
 - [ ] 必须深入理解 dma 的 coherent 的行为

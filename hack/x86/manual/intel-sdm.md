@@ -26,6 +26,10 @@ Local APICs can receive interrupts from the following sources: 1. ...
 
 - [ ] Figure 10-4. Local APIC Structure
 
+
+### 10.3 THE INTEL® 82489DX EXTERNAL APIC, THE APIC, THE XAPIC, AND THE X2APIC
+一小段话总结
+
 ### 10.12 EXTENDED XAPIC (X2APIC)
 
 ## 25 VMX NON-ROOT OPERATION

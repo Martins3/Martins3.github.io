@@ -697,8 +697,6 @@ Rust,绝对不是浅尝辄止的内容。
 
 ## [linux mm, newbie 的sub web](https://linux-mm.org/)
 
-## [Fuchsia Hacker News 上的讨论](https://news.ycombinator.com/item?id=19485121)
-
 ## [100 个gcc 技巧](https://github.com/hellogcc/100-gcc-tips)
 
 ## [100个gdb 技巧](https://github.com/hellogcc/100-gdb-tips)
@@ -710,16 +708,8 @@ Rust,绝对不是浅尝辄止的内容。
 
 ## [基于chrome的android模拟器](https://archon-runtime.github.io/)
 
-## [latex 的作图](https://castel.dev/post/lecture-notes-2/#)
-
-
 
 ## [rust 嵌入式编程教学](https://rust-embedded.github.io/book/intro/index.html)
-
-
-## [提交自己第一个patch](https://etsai.site/2019/04/18/your-first-linux-kernel-patch/)
-1. 问题是什么时候，可以开始读arvix 上的操作系统文章
-2. 什么时候开始提交kernel patch
 
 ## [漫画](https://code2048.com/)
 
