@@ -161,7 +161,48 @@ Tracing kprobe raid1_reshape. Ctrl-C to end.
 
 - [ ] 只是调用了 reshape 吗?
 
-## MD
+
+## [ ] drivers/md/md.c::state_store
+
+```c
+static struct rdev_sysfs_entry rdev_state =
+__ATTR_PREALLOC(state, S_IRUGO|S_IWUSR, state_show, state_store);
+
+
+static struct attribute *rdev_default_attrs[] = {
+	&rdev_state.attr,
+	&rdev_errors.attr,
+	&rdev_slot.attr,
+	&rdev_offset.attr,
+	&rdev_new_offset.attr,
+	&rdev_size.attr,
+	&rdev_recovery_start.attr,
+	&rdev_bad_blocks.attr,
+	&rdev_unack_bad_blocks.attr,
+	&rdev_ppl_sector.attr,
+	&rdev_ppl_size.attr,
+	NULL,
+};
+ATTRIBUTE_GROUPS(rdev_default); // 有趣的 ATTRIBUTE_GROUPS 啊
+
+
+static const struct kobj_type rdev_ktype = {
+	.release	= rdev_free,
+	.sysfs_ops	= &rdev_sysfs_ops,
+	.default_groups	= rdev_default_groups,
+};
+```
+
+哇，真的是服了，最后结构体为什么是在这里啊
+```sh
+cat /sys/devices/virtual/block/md10/md/dev-sda1/state
+```
+
+## 辅助内容
+
+- https://superuser.com/questions/942886/fail-device-in-md-raid-when-ata-stops-responding
+
+## man MDADM(8)
 暂时放到这里，方便查询
 ```txt
 MDADM(8)                                                                                                        System Manager's Manual                                                                                                        MDADM(8)

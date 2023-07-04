@@ -139,3 +139,62 @@ Song Liu <song@kernel.org> (supporter:SOFTWARE RAID (Multiple Disks) SUPPORT)
 linux-raid@vger.kernel.org (open list:SOFTWARE RAID (Multiple Disks) SUPPORT)
 linux-kernel@vger.kernel.org (open list)
 ```
+
+这里写了如何 reply 的:
+- https://lore.kernel.org/linux-raid/658e3fbc-d7bd-3fc9-b82e-0ecb86fd8c49@huawei.com/#R
+
+如何描述一个 race 的问题:
+```txt
+     shrink_slab                 unregister_shrinker
+     ===========                 ===================
+
+				/* wait for B */
+			         wait_for_completion()
+   rcu_read_lock()
+
+   shrinker_put() --> (B)
+				list_del_rcu()
+                                 /* wait for rcu_read_unlock() */
+				kfree_rcu()
+```
+
+## 记录 2
+
+```txt
+🧀  ./scripts/get_maintainer.pl 0001-docs-fix-typo-in-zh_TW-and-zh_CN-translation.patch
+Alex Shi <alexs@kernel.org> (maintainer:CHINESE DOCUMENTATION)
+Yanteng Si <siyanteng@loongson.cn> (maintainer:CHINESE DOCUMENTATION)
+Jonathan Corbet <corbet@lwn.net> (maintainer:DOCUMENTATION)
+Hu Haowen <src.res@email.cn> (maintainer:TRADITIONAL CHINESE DOCUMENTATION)
+Xueshi Hu <xueshi.hu@smartx.com> (commit_signer:1/1=100%,authored:1/1=100%,added_lines:1/1=100%,removed_lines:1/1=100%)
+linux-doc@vger.kernel.org (open list:DOCUMENTATION)
+linux-kernel@vger.kernel.org (open list)
+linux-doc-tw-discuss@lists.sourceforge.net (moderated list:TRADITIONAL CHINESE DOCUMENTATION)
+```
+cc 就是所有的都带上就可以了。
+
+## 看上去，邮件实际上是在这个位置的
+- https://kernel.org/lore.html
+  - https://lore.kernel.org/lists.html : 这里找到的才是正确的
+
+- [ ] 这里可以将所有的邮件全部都 mirror 下来
+
+## [ ] 如果 maintainer 要求发起修改，如何处理
+
+## 如何发送一个 patch set
+- https://unix.stackexchange.com/questions/672247/how-do-i-send-a-git-patch-series-from-within-mutt
+
+
+> It can be helpful to manually add In-Reply-To: headers to a patch (e.g., when using git send-email)
+to associate the patch with previous relevant discussion,
+e.g. to link a bug fix to the email with the bug report.
+However, for a multi-patch series, it is generally best to avoid using In-Reply-To: to link to older versions of the series. This way multiple versions of the patch don’t become an unmanageable forest of references in email clients. If a link is helpful,
+you can use the https://lkml.kernel.org/ redirector (e.g., in the cover email text) to link to an earlier version of the patch series.
+
+- [ ] 这里有告诉 Fix 的引用的写法
+
+### [ ]  patch set 中的 commit 应该如何写
+
+## [ ] 格式化自己的代码片段
+
+## [ ] 确认一件事情，patch 从 mutt 打开之后，被

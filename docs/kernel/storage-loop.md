@@ -78,3 +78,8 @@ static const struct blk_mq_ops loop_mq_ops = {
 #7  0xffffffff81133870 in kthread (_create=0xffff88810072b000) at kernel/kthread.c:376
 #8  0xffffffff81001a6f in ret_from_fork () at arch/x86/entry/entry_64.S:306
 ```
+
+## loop 可以让 md 是基于 file 的，真神奇啊
+
+- https://unix.stackexchange.com/questions/302766/persistent-use-of-loop-block-device-in-mdadm
+- https://stackoverflow.com/questions/4519761/programming-a-loopback-device-consisting-of-several-files-in-linux

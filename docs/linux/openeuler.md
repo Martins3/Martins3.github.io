@@ -26,5 +26,8 @@
 ## 最新在 sp3
 https://mirrors.aliyun.com/openeuler/openEuler-20.03-LTS-SP3/update/aarch64/Packages/
 
+## 找到最新的内核 : 在这个链接中找最新的年份
+https://mirrors.aliyun.com/openeuler/
+
 ## 找到历史上所有的包
 https://repo.openeuler.org/openEuler-20.03-LTS/update/x86_64/Packages/

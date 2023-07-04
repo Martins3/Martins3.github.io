@@ -24,7 +24,7 @@ share_memory_option="9p"
 hacking_migration=false
 
 hacking_vfio=false
-hacking_vfio=true
+# hacking_vfio=true
 # @todo 这个报错是什么意思
 # qemu-system-x86_64: We need to set caching-mode=on for intel-iommu to enable device assignment with IOMMU protection.
 
