@@ -83,3 +83,5 @@ PIN:        106          3         34          2         22          1         2
 NPI:          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0   Nested posted-interrupt event
 PIW:          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0   Posted-interrupt wakeup event
 ```
+
+## AMD 中虽然 /proc/interrupts 显示 IR 开启，但是 renammping 无法实现

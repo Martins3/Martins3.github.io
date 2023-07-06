@@ -1059,3 +1059,5 @@ drivers/iommu/intel/dmar.c
 [    0.182791] x2apic enabled
 [    0.182814] Switched APIC routing to cluster x2apic.
 ```
+
+## 不知道为什么将 R9000P 的网卡直通之后，重启之后网卡无法使用，需要进入到 windows 去一下
