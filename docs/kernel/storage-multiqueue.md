@@ -688,3 +688,12 @@ put 的位置，主要是三个地方:
 ## [ ] 确定 tag 就是数组下标而已
 
 ## [ ] aio 的队列是放在那里的
+
+
+## 检查默认 queue 的类型
+
+走 sata 的 scheduler 是默认 mq-deadline 类型的
+```txt
+none [mq-deadline] kyber
+none [mq-deadline] kyber
+```

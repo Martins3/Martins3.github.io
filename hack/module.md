@@ -89,3 +89,70 @@ udev 是如何拉起来各种驱动的
 
 ## cat /sys/module/kvm_intel/parameters/nested
 分析下这个目录是如何形成的
+
+## 这是哪里有点问题吗?
+
+```txt
+[    3.386040] i40e: loading out-of-tree module taints kernel.
+[    3.386041] i40e: loading out-of-tree module taints kernel.
+[    3.386409] i40e: module verification failed: signature and/or required key missing - tainting kernel
+```
+
+
+## 内核和驱动是如何匹配的
+
+### 如何内核的探测过程
+
+
+### 如何编写驱动
+
+
+### 如何提前探测
+
+
+
+## 模块相关工具总结
+
+### modinfo
+```txt
+🤒  modinfo ./drivers/net/ethernet/intel/i40e/i40e.ko
+
+filename:       /home/martins3/core/linux/./drivers/net/ethernet/intel/i40e/i40e.ko
+license:        GPL v2
+description:    Intel(R) Ethernet Connection XL710 Network Driver
+author:         Intel Corporation, <e1000-devel@lists.sourceforge.net>
+alias:          pci:v00008086d0000158Bsv*sd*bc*sc*i*
+alias:          pci:v00008086d0000158Asv*sd*bc*sc*i*
+alias:          pci:v00008086d00000D58sv*sd*bc*sc*i*
+alias:          pci:v00008086d00000CF8sv*sd*bc*sc*i*
+alias:          pci:v00008086d00001588sv*sd*bc*sc*i*
+alias:          pci:v00008086d00001587sv*sd*bc*sc*i*
+alias:          pci:v00008086d00000DDAsv*sd*bc*sc*i*
+alias:          pci:v00008086d000037D3sv*sd*bc*sc*i*
+alias:          pci:v00008086d000037D2sv*sd*bc*sc*i*
+alias:          pci:v00008086d000037D1sv*sd*bc*sc*i*
+alias:          pci:v00008086d000037D0sv*sd*bc*sc*i*
+alias:          pci:v00008086d000037CFsv*sd*bc*sc*i*
+alias:          pci:v00008086d000037CEsv*sd*bc*sc*i*
+alias:          pci:v00008086d0000104Fsv*sd*bc*sc*i*
+alias:          pci:v00008086d0000104Esv*sd*bc*sc*i*
+alias:          pci:v00008086d000015FFsv*sd*bc*sc*i*
+alias:          pci:v00008086d00001589sv*sd*bc*sc*i*
+alias:          pci:v00008086d00001586sv*sd*bc*sc*i*
+alias:          pci:v00008086d00000DD2sv*sd*bc*sc*i*
+alias:          pci:v00008086d00001585sv*sd*bc*sc*i*
+alias:          pci:v00008086d00001584sv*sd*bc*sc*i*
+alias:          pci:v00008086d00001583sv*sd*bc*sc*i*
+alias:          pci:v00008086d00001581sv*sd*bc*sc*i*
+alias:          pci:v00008086d00001580sv*sd*bc*sc*i*
+alias:          pci:v00008086d00001574sv*sd*bc*sc*i*
+alias:          pci:v00008086d00001572sv*sd*bc*sc*i*
+depends:
+retpoline:      Y
+intree:         Y
+name:           i40e
+vermagic:       6.4.0-12069-gc17414a273b8-dirty SMP preempt mod_unload modversions
+parm:           debug:Debug level (0=none,...,16=all), Debug mask (0x8XXXXXXX) (uint)
+```
+
+这

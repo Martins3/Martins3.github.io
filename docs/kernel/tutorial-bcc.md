@@ -36,7 +36,6 @@ btrfsslower dcsnoop filelife javaflow memleak oomkill profile rubyobjnew soliste
 
 ## 这个程序让我有点蒙
 bpftool prog help
-o
 
 
 ## https://github.com/iovisor/bcc/tree/master/libbpf-tools

@@ -665,3 +665,11 @@ https://superuser.com/questions/287371/obtain-kernel-config-from-currently-runni
 
 > 引出了一个小问题:
 `tracing_on` 和 `/proc/sys/kernel/ftrace_enabled` 分别表示什么 ?
+
+
+## 才知道原来 ftrace 是可以放到多个位置的
+
+例如
+```c
+trace_cpu_idle_rcuidle(1, smp_processor_id());
+```

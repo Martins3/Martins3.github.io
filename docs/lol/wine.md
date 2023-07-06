@@ -75,6 +75,8 @@ Martins3 is hacking wine!
 - [CrossOver](https://en.wikipedia.org/wiki/CrossOver_(software))
 - [Proton](https://github.com/ValveSoftware/Proton/)
 
+<!-- https://news.ycombinator.com/item?id=36592930 -->
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

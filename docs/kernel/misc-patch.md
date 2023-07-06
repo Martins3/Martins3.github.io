@@ -15,9 +15,6 @@
 
 ## -mm 还是 linux-next ?
 
-## 等待确认的事情
-- [ ] 用户名应该如何?
-
 https://etsai.site/your-first-linux-kernel-patch/
 
 
@@ -191,10 +188,62 @@ e.g. to link a bug fix to the email with the bug report.
 However, for a multi-patch series, it is generally best to avoid using In-Reply-To: to link to older versions of the series. This way multiple versions of the patch don’t become an unmanageable forest of references in email clients. If a link is helpful,
 you can use the https://lkml.kernel.org/ redirector (e.g., in the cover email text) to link to an earlier version of the patch series.
 
-- [ ] 这里有告诉 Fix 的引用的写法
+- [x] 这里有告诉 fix 的引用的写法
+
+
+看一个经典的例子:
+```txt
+From: Li Nan <linan122@huawei.com>
+
+Commit 2ae6aaf76912 ("md/raid10: fix io loss while replacement replace
+rdev") reads replacement first to prevent io loss. However, there are same
+issue in wait_blocked_dev() and raid10_handle_discard(), too. Fix it by
+using dereference_rdev_and_rrdev() to get devices.
+
+Fixes: d30588b2731f ("md/raid10: improve raid10 discard request")
+Fixes: f2e7e269a752 ("md/raid10: pull the code that wait for blocked dev into one function")
+Signed-off-by: Li Nan <linan122@huawei.com>
+```
 
 ### [ ]  patch set 中的 commit 应该如何写
+
+邮件里面都是存在 patchset 0 的啊
+
 
 ## [ ] 格式化自己的代码片段
 
 ## [ ] 确认一件事情，patch 从 mutt 打开之后，被
+
+
+## 固化常用的命令
+git show HEAD | perl scripts/get_maintainer.pl --separator , --nokeywords --nogit --nogit-fallback --norolestats --nol
+
+## 如何说明当前应用项目
+
+```sh
+git log -1 --pretty=fixes 54a4f0239f2e
+```
+
+## 引用 Link 的格式
+
+```sh
+Link: https://lore.kernel.org/r/30th.anniversary.repost@klaava.Helsinki.FI/
+```
+
+## 举个例子怎么写 v2 patch
+
+- https://lore.kernel.org/linux-raid/20230704074149.58863-1-jinpu.wang@ionos.com/T/#u
+
+注意看，里面的最后三个 `---` 补充一下修改了什么:
+
+v2: addressed comments from Kuai
+* Removed newline
+* change the missing case in raid1_write_request
+* I still kept the change for _wait_barrier and wait_read_barrier, as I did
+ performance tests without them there are still lock contention from
+ __wake_up_common_lock
+
+
+## [ ] 似乎 kernelnewbies 的内容还没看
+
+- https://kernelnewbies.org/PatchPhilosophy

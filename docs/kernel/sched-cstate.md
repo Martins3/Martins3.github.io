@@ -923,3 +923,10 @@ analyzing CPU 24:
 ```
 
 ## https://metebalci.com/blog/a-minimum-complete-tutorial-of-cpu-power-management-c-states-and-p-states/
+
+
+## processor.max_cstate=1 意味着什么
+
+## 这个文件夹下的内容都需要仔细读读
+
+- Documentation/admin-guide/pm/intel_idle.rst
