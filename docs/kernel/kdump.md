@@ -533,3 +533,15 @@ sudo apt-get source linux-image-$(uname -r)
 mod -s  raid1 lib/modules/3.10.0-1062.1.2.el7.smartx.1.x86_64/kernel/drivers/md/raid1.ko
 
 当然可以直接加载 debug 的，这样就可以在 dis -l function_name 来勉强维持生活了
+
+## 检查代码行数的
+看上去没有那么难啊:
+- https://ruffell.nz/programming/writeups/2020/09/02/debugging-a-zero-page-reference-counter-overflow-on-4-15-kernel.html
+
+```txt
+$ dpkg -x linux-image-unsigned-4.15.0-106-generic-dbgsym_4.15.0-106.107~16.04.1_amd64.ddeb linux
+$ cd linux/usr/lib/debug/boot
+$ eu-addr2line -e ./vmlinux-4.15.0-106-generic -f follow_page_pte+0x6f4
+try_get_page inlined at /build/linux-hwe-FEhT7y/linux-hwe-4.15.0/mm/gup.c:156 in follow_page_pte
+/build/linux-hwe-FEhT7y/linux-hwe-4.15.0/mm/gup.c:170
+```

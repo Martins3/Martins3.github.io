@@ -280,3 +280,70 @@ static inline pte_t maybe_mkwrite(pte_t pte, struct vm_area_struct *vma)
 [^1]: https://v1ckydxp.github.io/2020/04/22/2020-04-22-CVE-2016-5195%20%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/
 [^2]: https://medium.com/bindecy/huge-dirty-cow-cve-2017-1000405-110eca132de0
 [^3]: https://github.com/dirtycow/dirtycow.github.io/blob/master/dirtyc0w.c
+
+## 从 kvm 到 zero page
+
+- kvm_pfn_to_refcounted_page
+
+```diff
+commit b14b2690c50e02145bb867dfcde8845eb17aa8a4
+Author: Sean Christopherson <seanjc@google.com>
+Date:   Fri Apr 29 01:04:15 2022 +0000
+
+    KVM: Rename/refactor kvm_is_reserved_pfn() to kvm_pfn_to_refcounted_page()
+
+    Rename and refactor kvm_is_reserved_pfn() to kvm_pfn_to_refcounted_page()
+    to better reflect what KVM is actually checking, and to eliminate extra
+    pfn_to_page() lookups.  The kvm_release_pfn_*() an kvm_try_get_pfn()
+    helpers in particular benefit from "refouncted" nomenclature, as it's not
+    all that obvious why KVM needs to get/put refcounts for some PG_reserved
+    pages (ZERO_PAGE and ZONE_DEVICE).
+
+    Add a comment to call out that the list of exceptions to PG_reserved is
+    all but guaranteed to be incomplete.  The list has mostly been compiled
+    by people throwing noodles at KVM and finding out they stick a little too
+    well, e.g. the ZERO_PAGE's refcount overflowed and ZONE_DEVICE pages
+    didn't get freed.
+
+    No functional change intended.
+
+    Signed-off-by: Sean Christopherson <seanjc@google.com>
+    Message-Id: <20220429010416.2788472-10-seanjc@google.com>
+    Signed-off-by: Paolo Bonzini <pbonzini@redhat.com>
+```
+
+## 如何理解 PageReserved 的含义 ?
+
+
+```txt
+@[
+    kvm_pfn_to_refcounted_page+5
+    kvm_release_pfn_clean+28
+    kvm_tdp_page_fault+363
+    kvm_mmu_page_fault+613
+    vmx_handle_exit+301
+    kvm_arch_vcpu_ioctl_run+1713
+    kvm_vcpu_ioctl+587
+    __x64_sys_ioctl+145
+    do_syscall_64+59
+    entry_SYSCALL_64_after_hwframe+114
+]: 191074
+```
+
+```c
+Attaching 1 probe...
+^C
+
+@[
+    kvm_pfn_to_refcounted_page+5
+    kvm_release_pfn_clean+28
+    kvm_tdp_page_fault+363
+    kvm_mmu_page_fault+613
+    vmx_handle_exit+301
+    kvm_arch_vcpu_ioctl_run+1713
+    kvm_vcpu_ioctl+587
+    __x64_sys_ioctl+145
+    do_syscall_64+59
+    entry_SYSCALL_64_after_hwframe+114
+]: 50
+```

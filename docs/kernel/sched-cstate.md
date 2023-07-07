@@ -1,9 +1,11 @@
 ## 主要的问题
+
 1. 是如何选择的 driver 的，为什么最后选择的 intel_idle
 2. governor 最终选择规则是什么
 3. 进入到那个 state 是如何确定的
 
 ## 简单来说
+
 - intel idle : 执行 mwait 指令
 - acpi idle : 执行 mwait hlt 以及 ioport
 - halt poll : halt 之前 poll 一段时间
@@ -11,6 +13,7 @@
 > https://github.com/ChinaLinuxKernel/CLK/blob/master/CLK2021/3-1%20AMD%E6%9E%B6%E6%9E%84%E8%99%9A%E6%8B%9F%E6%9C%BA%E6%80%A7%E8%83%BD%E6%8E%A2%E7%B4%A2%E4%B8%8E%E5%AE%9E%E8%B7%B5.pdf
 
 ## 感觉 AMD crash 可能和这个有关
+
 ```txt
     cpuidle.off=1   [CPU_IDLE]
                         disable the cpuidle sub-system
@@ -31,49 +34,55 @@
 ```
 
 amd 的机器上:
+
 ```txt
 🧀  cat /sys/devices/system/cpu/cpuidle/available_governors
 menu
 🧀  cat /sys/devices/system/cpu/cpuidle/current_driver
 acpi_idle
 ```
+
 先修改为 idle=halt 尝试一下
+
 ```txt
 🧀  cat /sys/devices/system/cpu/cpuidle/available_governors
 menu
 🧀  cat /sys/devices/system/cpu/cpuidle/current_driver
 none
 ```
+
 设置命令行参数为:
 processor.max_cstate=1 intel_idle.max_cstate=0
+
 ```txt
 cat /sys/devices/system/cpu/cpuidle/current_driver
 ```
 
 - [ ] 这个 max_cstate 可以动态修改吗?
 - [ ] 这两个 cstate 是啥关系啊
-  - [ ] https://jeremyeder.com/2012/11/14/processor-max_cstate-intel_idle-max_cstate-and-devcpu_dma_latency/
+     - [ ] https://jeremyeder.com/2012/11/14/processor-max_cstate-intel_idle-max_cstate-and-devcpu_dma_latency/
 
 ## 什么东西？？？？
+
 https://groups.google.com/g/mechanical-sympathy/c/Ubm9_71ONTc
 
 > 有这种事情?
 >
 > idle=poll will force c0 state, removing that would lock in to c1.
 
-
 ## https://access.redhat.com/solutions/2895271
+
 tuned : 这是什么程序?
 
 > 似乎代码有点问题，最后的解决方法是:
 > intel_idle.max_cstate=0 processor.max_cstate=1 intel_pstate=disable
 
-
-
 ## cstate 状态表格
+
 https://gist.github.com/Brainiarc7/8dfd6bb189b8e6769bb5817421aec6d1
 
 ## sleep 的等级
+
 - https://docs.kernel.org/admin-guide/pm/sleep-states.html
 
 ## 怎么观察下，一般进入的都是什么 c state 状态?
@@ -81,9 +90,10 @@ https://gist.github.com/Brainiarc7/8dfd6bb189b8e6769bb5817421aec6d1
 ### 介绍各种 /sys/power 的接口
 
 ## suspend 的时候
+
 - 大致流程:
-  - https://askubuntu.com/questions/792166/how-does-exactly-suspend-works-in-ubuntu
-  - https://docs.kernel.org/admin-guide/pm/suspend-flows.html ：更加详细
+     - https://askubuntu.com/questions/792166/how-does-exactly-suspend-works-in-ubuntu
+     - https://docs.kernel.org/admin-guide/pm/suspend-flows.html ：更加详细
 
 1. 为什么 gnome 可以可以来设置系统的 suspend 时间
 2. 而且 gnome 可以设置 power button 是关机还是 suspend
@@ -94,13 +104,13 @@ https://gist.github.com/Brainiarc7/8dfd6bb189b8e6769bb5817421aec6d1
 
 感觉 suspend 技术在 qemu 中不是太正常啊。
 
-
 - systemd 中是什么角色
 - kernel driver 的如何处理 pm 之类的
 
+## s2idle
 
-##  s2idle
 cpuidle_idle_call 中注释:
+
 ```c
 	/*
 	 * Suspend-to-idle ("s2idle") is a system state in which all user space
@@ -112,25 +122,25 @@ cpuidle_idle_call 中注释:
 	 * until a proper wakeup interrupt happens.
 	 */
 ```
+
 只有中断才可以导致出来。
 
 ## 一共存在那些指令来进入睡眠
+
 mwait
 halt
 pause
 
-
 任何 cpu 都有 init 进程:
+
 - start_secondary
 - rest_init
-都会调用到 `cpu_startup_entry` 中
-
-
+  都会调用到 `cpu_startup_entry` 中
 
 ## 更加深度的睡眠为什么不可以
 
 - https://mp.weixin.qq.com/s/0LM25OrpFCCcokSCMv--Mg
-  - 大致分析 idle driver 的作用已经整个 idle 代码的流程
+     - 大致分析 idle driver 的作用已经整个 idle 代码的流程
 
 cat /sys/devices/system/cpu/cpuidle/available_governors
 
@@ -139,29 +149,31 @@ cat /sys/devices/system/cpu/cpuidle/available_governors
 - cpuidle drivers
 
 - do_idle
-  - cpu_idle_poll : 命令行参数可以选择这个
-  - cpuidle_idle_call
-    - cpuidle_get_device
-    - cpuidle_get_cpu_driver
-    - default_idle_call
-    - idle_should_enter_s2idle
-    - cpuidle_find_deepest_state
-    - tick_nohz_idle_stop_tick : 如果
-    - cpuidle_select
-      - cpuidle_governor::select : 给定 driver 和 device，进行选择如何进入下一个 C state 状态。
-    - call_cpuidle
-      - cpuidle_enter
-        - cpuidle_enter_state
-          - tick_broadcast_enter : 告诉其他 CPU，我要进入睡眠了，到时候唤醒我
-          - cpuidle_state::enter
 
+     - cpu_idle_poll : 命令行参数可以选择这个
+     - cpuidle_idle_call
+          - cpuidle_get_device
+          - cpuidle_get_cpu_driver
+          - default_idle_call
+          - idle_should_enter_s2idle
+          - cpuidle_find_deepest_state
+          - tick_nohz_idle_stop_tick : 如果
+          - cpuidle_select
+               - cpuidle_governor::select : 给定 driver 和 device，进行选择如何进入下一个 C state 状态。
+          - call_cpuidle
+               - cpuidle_enter
+                    - cpuidle_enter_state
+                         - tick_broadcast_enter : 告诉其他 CPU，我要进入睡眠了，到时候唤醒我
+                         - cpuidle_state::enter
 
 - cpuidle_get_device 是做啥的
 
 问题:
+
 1. 如果 nohz，是如何唤醒的?
 
 ## 看 driver 是如何注册的
+
 ```txt
 #0  acpi_processor_power_init (pr=pr@entry=0xffff888101045400) at drivers/acpi/processor_idle.c:1377
 #1  0xffffffff81849d02 in __acpi_processor_start (device=device@entry=0xffff888100f96800) at drivers/acpi/processor_driver.c:172
@@ -186,6 +198,7 @@ cat /sys/devices/system/cpu/cpuidle/available_governors
 #20 0xffffffff81002999 in ret_from_fork () at arch/x86/entry/entry_64.S:308
 #21 0x0000000000000000 in ?? ()
 ```
+
 - haltpoll_init at drivers/cpuidle/cpuidle-haltpoll.c:103
 - intel_idle_init at drivers/idle/intel_idle.c:2036
 
@@ -194,8 +207,6 @@ cat /sys/devices/system/cpu/cpuidle/available_governors
 - cpuidle_register_device 的注册是类似的方法，但是虚拟机中没有调用位置。
 
 居然是 x86_match_cpu 的 stepping 匹配不上。
-
-
 
 ## 分析下 cpuidle_state::enter 的注册者
 
@@ -217,8 +228,10 @@ void cpuidle_poll_state_init(struct cpuidle_driver *drv)
 ```
 
 ### POLL
+
 drivers/cpuidle/poll_state.c 中 poll_idle
 最后只是调用
+
 ```c
 static __always_inline void rep_nop(void)
 {
@@ -229,13 +242,13 @@ static __always_inline void rep_nop(void)
 - [ ] 既然 idle=poll 可以调用到 cpuidle_idle_call
 - [ ] cpu_idle_poll
 
-
 idle_setup 中，存在三个 idle=poll, nomwait, halt
 
-- [ ]  select_idle_routine 中似乎有选择
-  - 如何才可以让这个选择到 POLL
+- [ ] select_idle_routine 中似乎有选择
+     - 如何才可以让这个选择到 POLL
 
 ### acpi_processor_setup_cstates
+
 才发现，也是调用到 mwait_idle_with_hints 中的.
 
 ### acpi_processor_setup_lpi_states
@@ -243,10 +256,11 @@ idle_setup 中，存在三个 idle=poll, nomwait, halt
 ### haltpoll_exit
 
 ### drivers/idle/intel_idle.c
+
 - 这里定义这么多，是做啥的？
 
 - intel_idle_init
-  - x86_match_cpu
+     - x86_match_cpu
 
 ```c
 static const struct x86_cpu_id intel_idle_ids[] __initconst = {
@@ -307,6 +321,7 @@ static struct cpuidle_state snb_cstates[] __initdata = {
 ```
 
 随手一观测，结果发现了这么多:
+
 ```txt
 [sudo] password for martins3:
 Attaching 1 probe...
@@ -335,6 +350,7 @@ Attaching 1 probe...
 ```
 
 最核心的位置:
+
 ```c
 /*
  * This uses new MONITOR/MWAIT instructions on P4 processors with PNI,
@@ -412,6 +428,7 @@ struct cpuidle_state {
 ## cpuidle_governor
 
 这是物理机上观测到的:
+
 ```txt
 @[
     menu_select+1
@@ -432,6 +449,7 @@ struct cpuidle_state {
 ```
 
 这个不知道为什么，连断点都打不上:
+
 ```c
 static struct cpuidle_governor haltpoll_governor = {
 	.name =			"haltpoll",
@@ -449,7 +467,9 @@ static int __init init_haltpoll(void)
 	return 0;
 }
 ```
+
 ### 通过 sysfs 可以观测到这些
+
 ```c
 static DEVICE_ATTR(available_governors, 0444, show_available_governors, NULL);
 static DEVICE_ATTR(current_driver, 0444, show_current_driver, NULL);
@@ -457,9 +477,11 @@ static DEVICE_ATTR(current_governor, 0644, show_current_governor,
 				   store_current_governor);
 static DEVICE_ATTR(current_governor_ro, 0444, show_current_governor, NULL);
 ```
+
 ### 为什么 periodic timer tick system 中使用，menu 在 tickless system 中使用
 
 ## 为什么虚拟机中最后总是走到这里的，或者说，虚拟化中一共存在那些特殊处理
+
 ```c
 /*
  * We use this if we don't have any better idle routine..
@@ -470,11 +492,13 @@ void __cpuidle default_idle(void)
 	raw_local_irq_disable();
 }
 ```
+
 相关的介绍为:
+
 - https://www.kernel.org/doc/Documentation/cpuidle/sysfs.txt
 
-
 在一个正经虚拟机中效果如下:
+
 ```txt
 :/sys/devices/system/cpu/cpuidle# cat available_governors
 ladder menu teo haltpoll
@@ -486,8 +510,6 @@ menu
 
 - ladder 是阶梯式的，需要逐级向下
 - menu 是
-
-
 
 ## governor
 
@@ -522,10 +544,10 @@ static struct cpuidle_governor haltpoll_governor = {
 };
 ```
 
-
 ## [ ] 为什么 firmware 可以修改 cstate 的状态
 
 ## 虚拟机为什么是这个 idle 选择，不能进入到 acpi_idle_enter 中
+
 ```txt
 0  default_idle () at arch/x86/kernel/process.c:730
 #1  0xffffffff81f46f0c in default_idle_call () at kernel/sched/idle.c:109
@@ -538,15 +560,15 @@ static struct cpuidle_governor haltpoll_governor = {
 ```
 
 - do_idle
-  - cpu_idle_poll
-    - cpu_relax : 使用 nop 指令
-  - cpuidle_idle_call
-    - cpuidle_select
-    - call_cpuidle
-      - cpuidle_enter
-        - cpuidle_enter_state
-          - cpuidle_state::enter
 
+     - cpu_idle_poll
+          - cpu_relax : 使用 nop 指令
+     - cpuidle_idle_call
+          - cpuidle_select
+          - call_cpuidle
+               - cpuidle_enter
+                    - cpuidle_enter_state
+                         - cpuidle_state::enter
 
 - [ ] acpi_processor_setup_cstates
 
@@ -621,6 +643,7 @@ config HALTPOLL_CPUIDLE
 ```
 
 ## 记录下内核 suspend 的时候日志
+
 ```txt
 [ 4676.538450] Freezing user space processes ... (elapsed 0.001 seconds) done.
 [ 4676.539462] OOM killer disabled.
@@ -772,6 +795,7 @@ Permissions Size User Date Modified Name
 
 amd 中:
 processor.max_cstate=1 intel_idle.max_cstate=0
+
 ```txt
 [nix-shell:~]$ cpupower idle-info
 CPUidle driver: acpi_idle
@@ -793,6 +817,7 @@ Duration: 7742516699
 ```
 
 processor.max_cstate=0 intel_idle.max_cstate=0
+
 ```txt
 CPUidle driver: acpi_idle
 CPUidle governor: menu
@@ -813,6 +838,7 @@ Duration: 118205206
 ```
 
 amd 去掉参数:
+
 ```txt
 [nix-shell:~]$  cpupower idle-info
 CPUidle driver: acpi_idle
@@ -844,6 +870,7 @@ Duration: 53058960
 ```
 
 intel
+
 ```txt
 🧀  cpupower idle-info
 
@@ -875,7 +902,6 @@ Usage: 2351264
 Duration: 39850857801
 ```
 
-
 amd 中的这个真有趣啊，
 frequency should be within 1.50 GHz and 2.50 GHz.
 
@@ -900,6 +926,7 @@ analyzing CPU 24:
 ```
 
 ## pcm 中显示有 c7 ?
+
 ```txt
  Instructions retired:  332 M ; Active cycles:  405 M ; Time (TSC): 2996 Mticks ; C0 (active,non-halted) core residency: 0.24 %
 
@@ -924,9 +951,47 @@ analyzing CPU 24:
 
 ## https://metebalci.com/blog/a-minimum-complete-tutorial-of-cpu-power-management-c-states-and-p-states/
 
-
 ## processor.max_cstate=1 意味着什么
 
 ## 这个文件夹下的内容都需要仔细读读
 
 - Documentation/admin-guide/pm/intel_idle.rst
+
+- do_idle
+     - cpuidle_idle_call
+          - call_cpuidle
+               - cpuidle_enter
+                    - cpuidle_enter_state
+                         - acpi_idle_enter
+          - acpi_idle_do_entry - acpi_safe_halt
+
+- acpi_idle_enter_s2idle
+- acpi_idle_enter : 标准注册的
+- acpi_idle_enter_bm : enters C3 with proper BM handling
+     - acpi_idle_do_entry
+
+进行 io idle 的。
+
+```c
+/**
+ * acpi_idle_do_entry - enter idle state using the appropriate method
+ * @cx: cstate data
+ *
+ * Caller disables interrupt before call and enables interrupt after return.
+ */
+static void __cpuidle acpi_idle_do_entry(struct acpi_processor_cx *cx)
+{
+	perf_lopwr_cb(true);
+
+	if (cx->entry_method == ACPI_CSTATE_FFH) {
+		/* Call into architectural FFH based C-state */
+		acpi_processor_ffh_cstate_enter(cx);
+	} else if (cx->entry_method == ACPI_CSTATE_HALT) {
+		acpi_safe_halt();
+	} else {
+		io_idle(cx->address);
+	}
+
+	perf_lopwr_cb(false);
+}
+```
