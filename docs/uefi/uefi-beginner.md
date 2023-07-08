@@ -4,20 +4,20 @@
 
 * [和用户态编程的根本性区别](#和用户态编程的根本性区别)
 * [UEFI 的基本启动过程](#uefi-的基本启动过程)
-  * [DXE](#dxe)
+	* [DXE](#dxe)
 * [UEFI System Table](#uefi-system-table)
 * [Handle 和 Protocol](#handle-和-protocol)
 * [Image](#image)
-  * [Image Load](#image-load)
+	* [Image Load](#image-load)
 * [Event](#event)
-  * [Signal Event](#signal-event)
-  * [Wait Event](#wait-event)
+	* [Signal Event](#signal-event)
+	* [Wait Event](#wait-event)
 * [UEFI Driver Model](#uefi-driver-model)
-  * [Driver Binding Protocol](#driver-binding-protocol)
-    * [e.g. pci](#eg-pci)
+	* [Driver Binding Protocol](#driver-binding-protocol)
+		* [e.g. pci](#eg-pci)
 * [Device Path](#device-path)
 * [Os Loader](#os-loader)
-  * [CoreExitBootServices](#coreexitbootservices)
+	* [CoreExitBootServices](#coreexitbootservices)
 * [Timer](#timer)
 * [Shell Application](#shell-application)
 * [编程风格](#编程风格)
@@ -32,12 +32,12 @@
 主要参考 [Beyond BIOS: Developing with the Unified Extensible Firmware Interface, Third Edition](https://www.amazon.com/Beyond-BIOS-Developing-Extensible-Interface/dp/1501514784)
 同时 [官方文档](https://edk2-docs.gitbook.io/edk-ii-uefi-driver-writer-s-guide) 也是重要参考。
 
-[uefi.org specifications]( https://uefi.org/specifications) 就太专业了，大多数时候是用不着的。
+[uefi.org specifications](https://uefi.org/specifications) 就太专业了，大多数时候是用不着的。
 
 下面的内容对应的代码主要在 MdeModulePkg/Core/Dxe 中，实际上，edk2 中大多数的代码都是各种 driver，基本是对称的，Dxe 算是最为核心的部分了
 
-
 Assuming you are new to UEFI, the following introduction explains a few of the key UEFI concepts in a helpful framework to keep in mind as you study the specification:[^6]
+
 - Objects managed by UEFI-based firmware - used to manage system state, including I/O devices, memory, and events
 - The UEFI System Table - the primary data structure with data information tables and function calls to interface with the systems
 - Handle database and protocols - the means by which callable interfaces are registered
@@ -46,12 +46,14 @@ Assuming you are new to UEFI, the following introduction explains a few of the k
 - Device paths - a data structure that describes the hardware location of an entity, such as the bus, spindle, partition, and file name of an UEFI image on a formatted disk.
 
 ## 和用户态编程的根本性区别
+
 使用上 StdLib 之后，很多编程几乎看似和用户态已无区别，比如一个 HelloWorld.c 可以直接编译为 .efi 并且在 UefiShell 中运行。
 但是仔细观察，我们会发现诸多和用户态编程的根本性区别。
 
 **没有虚拟进程地址空间**
 
 在用户态的程序在 gdb 中 backtrace[^1] 的时候，backtrace 最远的位置就是程序开始的位置 `_start`
+
 ```txt
 #1  0x000000000040113b in main (argc=1, argv=0x7fffffffd638) at a.c:4
 #2  0x00007ffff7db40b3 in __libc_start_main (main=0x401120 <main>, argc=1, argv=0x7fffffffd638, init=<optimized out>, fini=<optimized out>, rtld_fini=<optimized out>,
@@ -61,6 +63,7 @@ stack_end=0x7fffffffd628) at ../csu/libc-start.c:308
 
 但是在 edk2 中 backtrace 可以看到 Dxe 的整个执行流程，从下面的 backtrace 中可以清晰的看到从 Boot Manager 加载 Shell，然后 Shell 去加载 Main.efi 的过程，
 他们使用的 stack 在同一个地址空间中。
+
 ```txt
 -   #0  malloc (Size=Size@entry=7900) at /home/maritns3/core/ld/edk2-workstation/edk2/StdLib/LibC/StdLib/Malloc.c:85
 -   #1  0x000000007e5cc40c in tzsetwall () at /home/maritns3/core/ld/edk2-workstation/edk2/StdLib/LibC/Time/ZoneProc.c:778
@@ -107,6 +110,7 @@ stack_end=0x7fffffffd628) at ../csu/libc-start.c:308
 *   #27 0x000000007fee10cf in InternalSwitchStack ()
 *   #28 0x0000000000000000 in ?? ()
 ```
+
 没有虚拟地址空间还存在一个大问题，那就是不会出现 segment fault 的错误，随意访问物理地址不会被立刻检测出来，错误往往可能传递到更远的位置才会被发现。
 所以 UEFI 对于程序的访存安全要求更高。
 
@@ -118,7 +122,6 @@ stack_end=0x7fffffffd628) at ../csu/libc-start.c:308
 UEFI 中程序都在物理地址空间中，一个程序可以随意访问另一个程序的各种数据，当然你最好不要这么做，因为这会大大增加
 编程的复杂度，但是 UEFI 中程序还是需要进行交互的，那么就必须显示地使用统一的接口，这个接口就是 handle / protocol 了。
 
-
 **没有 parallel 和 context switch**
 
 在 edk2 中，程序就是一个接着一个执行的，即使运行的平台含有多个 core, 但是只会使用其中一个运行。
@@ -128,10 +131,13 @@ UEFI 中程序都在物理地址空间中，一个程序可以随意访问另一
 
 一般来说，用户态程序是无需考虑中断的，因为中断相关的事情都被 os 处理掉了。
 在 Linux 中，设备主要是通过中断来通知 CPU，而在 edk2 中，设备不能给 CPU 发射中断，需要靠 CPU 主动来 poll 设备。
+
 ## UEFI 的基本启动过程
+
 ![load img failed](https://edk2-docs.gitbook.io/~/files/v0/b/gitbook-28427.appspot.com/o/assets%2F-M5spcVt2sqlUZOWmnXY%2F-M5sphJDWD7_iUuoREya%2F-M5spjTOFjRbcY8ckkSh%2Fimage3.png?generation=1587944061697998&alt=media)
 
 主要是:
+
 - pre-EFI initialization (PEI)
 - Driver Execution Environment (DXE)
 - Boot Device Selection (BDS)
@@ -143,6 +149,7 @@ As a result, both the DXE Core and DXE drivers share many of the attributes of U
 The DXE phase is the phase where most of the system initialization is performed. The Pre-EFI Initialization (PEI) phase is responsible for initializing permanent memory in the platform so the DXE phase can be loaded and executed.
 The state of the system at the end of the PEI phase is passed to the DXE phase through a list of position-independent data structures called Hand-Off Blocks (HOBs).
 The DXE phase consists of several components:
+
 - DXE Core
 - DXE Dispatcher
 - DXE Drivers
@@ -154,14 +161,16 @@ These components work together to initialize the platform and provide the servic
 
 The DXE Core produces the EFI System Table and its associated set of EFI Boot Services and EFI Runtime Services. The DXE Core also contains the DXE Dispatcher, whose main purpose is to discover and execute DXE drivers stored in firmware volumes.
 
-
 ## UEFI System Table
+
 通过 UEFI System Table 可以访问到三种 services:
+
 - UEFI Boot Services
 - UEFI Runtime Services
 - Protocol services
 
 在 MdePkg/Include/Uefi/UefiSpec.h 中定义了 EFI_RUNTIME_SERVICES EFI_BOOT_SERVICES 和 EFI_SYSTEM_TABLE
+
 ```c
   ///
   /// A pointer to the EFI Runtime Services Table.
@@ -184,6 +193,7 @@ The DXE Core produces the EFI System Table and its associated set of EFI Boot Se
 ```
 
 在 DXE 早期 UefiBootServicesTableLibConstructor 中，会初始化 UEFI 中为数不多的全局变量，各种 driver 就是靠访问 gST 来获取各种服务。
+
 ```c
 EFI_HANDLE         gImageHandle = NULL;
 EFI_SYSTEM_TABLE   *gST         = NULL;
@@ -191,6 +201,7 @@ EFI_BOOT_SERVICES  *gBS         = NULL;
 ```
 
 类似的全局变量还有 gDS
+
 ```c
 //
 // Cache copy of the DXE Services Table
@@ -199,6 +210,7 @@ EFI_DXE_SERVICES  *gDS      = NULL;
 ```
 
 ## Handle 和 Protocol
+
 ![](./uefi/img/handle-category.png)
 
 - The handle database is composed of objects called handles and protocols.
@@ -208,10 +220,11 @@ EFI_DXE_SERVICES  *gDS      = NULL;
 - CoreInstallProtocolInterfaceNotify : 将需要安装的 handle 放到 database 中 `gHandleList`
 - CoreGetProtocolInterface : 在 handle 根据 protocol guid 查询 protocol
 
-
 Handle 的定义[^12]:
+
 - AllHandles : 将自己挂入到 database 中
 - Protocols : 获取所有的 protocol
+
 ```c
 ///
 /// IHANDLE - contains a list of protocol handles
@@ -227,8 +240,10 @@ typedef struct {
   UINT64              Key;
 } IHANDLE;
 ```
+
 实际上，IHANDLE 并不是直接使用，在各种参数传递的过程中，总是使用的 EFI_HANDLE 的，我猜测
 是为了隐藏 IHANDLE 的实现。
+
 ```c
 ///
 /// A collection of related interfaces.
@@ -236,11 +251,12 @@ typedef struct {
 typedef VOID                      *EFI_HANDLE;
 ```
 
-
 单看这个几个定义 database 管理了多个 handle，handle 包含了多个 protocol。
 实际上，handle 更像是 object，而 protocol 像是这个 object 的 field (method and variable)
 下面使用 ps2 键盘进行具体的分析:
+
 - 在 KbdControllerDriverStart 中安装:
+
 ```c
   //
   // Install protocol interfaces for the keyboard device.
@@ -254,9 +270,11 @@ typedef VOID                      *EFI_HANDLE;
                   NULL
                   );
 ```
+
 这里的 handle 是 `Controller`，而 protocol 是 `ConsoleIn->ConIn` 和 `ConsoleIn->ConInEx`。
 
 - ConSplitterConInDriverBindingStart => ConSplitterStart 中获取
+
 ```c
   //
   // Open InterfaceGuid on the virtual handle.
@@ -294,6 +312,7 @@ le.c:672
 
 在 ConSplitterTextInPrivateReadKeyStroke 中就可以持有 EFI_SIMPLE_TEXT_INPUT_PROTOCOL 来调用其函数指针 EFI_INPUT_READ_KEY
 也就是 KeyboardReadKeyStroke [^11]
+
 ```c
     // Private->TextInList[Index] 就是 EFI_SIMPLE_TEXT_INPUT_PROTOCOL 了
     Status = Private->TextInList[Index]->ReadKeyStroke (
@@ -302,8 +321,8 @@ le.c:672
                                           );
 ```
 
-
 ## Image
+
 ![](./uefi/img/image-category.png)
 
 The driver entry point is the function called when a UEFI driver is started with the `StartImage()` service.
@@ -320,37 +339,39 @@ and the pointer to the UEFI system table allows the UEFI driver to make UEFI Boo
 在 CoreLoadImageCommon 中还会 EFI_LOADED_IMAGE_PROTOCOL
 
 - CoreStartImage
-  - `Image->EntryPoint (ImageHandle, Image->Info.SystemTable);` 其实就是 `_ModuleEntryPoint`，其 SystemTable 就是在此处传递的
-    - ProcessModuleEntryPointList
-      - UefiMain
+     - `Image->EntryPoint (ImageHandle, Image->Info.SystemTable);` 其实就是 `_ModuleEntryPoint`，其 SystemTable 就是在此处传递的
+          - ProcessModuleEntryPointList
+               - UefiMain
 
 ## Event
+
 ![](./uefi/img/event-category.png)
 
 官方文档[^5]中给出了 event 和 tpl 的简单定义:
 
 - Event types
 
-| **Type of events**            | **Description**                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
-|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Wait event                    | An event whose notification function is executed whenever the event is checked or waited upon.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
-| Signal event                  | An event whose notification function is scheduled for execution whenever the event goes from the waiting state to the signaled state.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| Timer event                   | A type of signal event that is moved from the waiting state to the signaled state when at least a specified amount of time has elapsed. Both periodic and one-shot timers are supported. The event's notification function is scheduled for execution when a specific amount of time has elapsed.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-| Periodic timer event          | A type of timer event that is moved from the waiting state to the signaled state at a specified frequency. The event's notification function is scheduled for execution when a specific amount of time has elapsed.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| One-shot timer event          | A type of timer event that is moved from the waiting state to the signaled state after the specified time period has elapsed. The event's notification function is scheduled for execution when a specific amount of time has elapsed. The following three elements are associated with every event: * The task priority level (TPL) of the event * A notification function * A notification context The notification function for a wait event is executed when the state of the event is checked or when the event is being waited upon. The notification function of a signal event is executed whenever the event transitions from the waiting state to the signaled state. The notification context is passed into the notification function each time the notification function is executed. The TPL is the priority at which the notification function is executed. The four TPL levels that are defined in UEFI are listed in the table below. |
-| Exit Boot Services event      | A special type of signal event that is moved from the waiting state to the signaled state when the EFI Boot Service `ExitBootServices()` is called. This call is the point in time when ownership of the platform is transferred from the firmware to an operating system. The event's notification function is scheduled for execution when `ExitBootServices()` is called.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
-| Set Virtual Address Map event | A special type of signal event that is moved from the waiting state to the signaled state when the UEFI runtime service `SetVirtualAddressMap()` is called. This call is the point in time when the operating system is making a request for the runtime components of UEFI to be converted from a physical addressing mode to a virtual addressing mode. The operating system provides the map of virtual addresses to use. The event's notification function is scheduled for execution when `SetVirtualAddressMap()` is called.                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| **Type of events**            | **Description**                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Wait event                    | An event whose notification function is executed whenever the event is checked or waited upon.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| Signal event                  | An event whose notification function is scheduled for execution whenever the event goes from the waiting state to the signaled state.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| Timer event                   | A type of signal event that is moved from the waiting state to the signaled state when at least a specified amount of time has elapsed. Both periodic and one-shot timers are supported. The event's notification function is scheduled for execution when a specific amount of time has elapsed.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| Periodic timer event          | A type of timer event that is moved from the waiting state to the signaled state at a specified frequency. The event's notification function is scheduled for execution when a specific amount of time has elapsed.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| One-shot timer event          | A type of timer event that is moved from the waiting state to the signaled state after the specified time period has elapsed. The event's notification function is scheduled for execution when a specific amount of time has elapsed. The following three elements are associated with every event: _ The task priority level (TPL) of the event _ A notification function \* A notification context The notification function for a wait event is executed when the state of the event is checked or when the event is being waited upon. The notification function of a signal event is executed whenever the event transitions from the waiting state to the signaled state. The notification context is passed into the notification function each time the notification function is executed. The TPL is the priority at which the notification function is executed. The four TPL levels that are defined in UEFI are listed in the table below. |
+| Exit Boot Services event      | A special type of signal event that is moved from the waiting state to the signaled state when the EFI Boot Service `ExitBootServices()` is called. This call is the point in time when ownership of the platform is transferred from the firmware to an operating system. The event's notification function is scheduled for execution when `ExitBootServices()` is called.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| Set Virtual Address Map event | A special type of signal event that is moved from the waiting state to the signaled state when the UEFI runtime service `SetVirtualAddressMap()` is called. This call is the point in time when the operating system is making a request for the runtime components of UEFI to be converted from a physical addressing mode to a virtual addressing mode. The operating system provides the map of virtual addresses to use. The event's notification function is scheduled for execution when `SetVirtualAddressMap()` is called.                                                                                                                                                                                                                                                                                                                                                                                                                      |
 
 - Task priority levels defined in UEFI
 
 | **Task Priority Level** | **Description**                                                                           |
-|-------------------------|-------------------------------------------------------------------------------------------|
+| ----------------------- | ----------------------------------------------------------------------------------------- |
 | TPL_APPLICATION         | The priority level at which UEFI images are executed.                                     |
 | TPL_CALLBACK            | The priority level for most notification functions.                                       |
 | TPL_NOTIFY              | The priority level at which most I/O operations are performed.                            |
 | TPL_HIGH_LEVEL          | The priority level for the one timer interrupt supported in UEFI. (Not usable by drivers) |
 
 The type of event determines when an event's notification function is invoked.
+
 - The notification function for signal type events is invoked when an event is placed into the signaled state with a call to `SignalEvent()`.
 - The notification function for wait type events is invoked when the event is passed to the `CheckEvent()` or `WaitForEvent()` services.
 
@@ -358,6 +379,7 @@ event 的分类是按照触发的方式，Exit Boot Services event 和 Set Virtu
 Timer event 的触发方式就是时钟中断。
 
 如果一个 event 想要通过 SignalEvent() 来触发，同时想要被时钟中断触发，那么就可以这么声明了:
+
 ```c
   //
   // Create the timer for packet timeout check.
@@ -370,24 +392,29 @@ Timer event 的触发方式就是时钟中断。
                   &MnpDeviceData->TimeoutCheckTimer
                   );
 ```
+
 ### Signal Event
+
 - CoreSignalEvent
-  - CoreAcquireEventLock
-  - CoreNotifySignalList : 如果 notify 是一个 group，那么将这个 group 的 Event 全部 notify 一下
-    - CoreNotifyEvent
-  - CoreNotifyEvent
-    - 将 Event 加入到 gEventQueue
-  - CoreReleaseEventLock
-    - CoreDispatchEventNotifies
-      - `Event->NotifyFunction` : 注意，这里只会执行 tpl 高于当前的 tpl 的 event 的
+     - CoreAcquireEventLock
+     - CoreNotifySignalList : 如果 notify 是一个 group，那么将这个 group 的 Event 全部 notify 一下
+          - CoreNotifyEvent
+     - CoreNotifyEvent
+          - 将 Event 加入到 gEventQueue
+     - CoreReleaseEventLock
+          - CoreDispatchEventNotifies
+               - `Event->NotifyFunction` : 注意，这里只会执行 tpl 高于当前的 tpl 的 event 的
 
 这里存在两个点需要注意一下:
+
 - event 可以构成一个 event group 的，如果 signal 其中一个，所有都会被 signal
-  - 比如 IdleLoopEventCallback 和 EfiEventEmptyFunction 就是一个 event group 的 callback，当 `CoreSignalEvent (gIdleLoopEvent)` 的时候，两者都会调用
+     - 比如 IdleLoopEventCallback 和 EfiEventEmptyFunction 就是一个 event group 的 callback，当 `CoreSignalEvent (gIdleLoopEvent)` 的时候，两者都会调用
 - 首先是将 evnet 放到 gEventQueue 中
 
 ### Wait Event
+
 在 UEFI 持续运行，然后在 gdb 中 Ctrl+C 然后 backtrace 可以得到下面的记录:
+
 ```txt
 #0  0x000000007f16f841 in CpuSleep ()
 #1  0x000000007feac77d in CoreDispatchEventNotifies (Priority=16) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/Event/Event.c:194
@@ -421,7 +448,9 @@ Pkg/Core/Dxe/DxeMain/DEBUG/AutoGen.c:489
 #20 0x000000007fee10cf in InternalSwitchStack ()
 #21 0x0000000000000000 in ?? ()
 ```
+
 在 gdb 中 disass CPUSleep:
+
 ```txt
 Dump of assembler code for function CpuSleep:
    0x000000007fed6760 <+0>:     hlt
@@ -429,27 +458,30 @@ Dump of assembler code for function CpuSleep:
    0x000000007fed6762 <+2>:     nopw   %cs:0x0(%rax,%rax,1)
    0x000000007fed676c <+12>:    nopl   0x0(%rax)
 ```
+
 进而找到 MdePkg/Library/BaseCpuLib/BaseCpuLib.inf 可以找到和架构相关的汇编实现
 
 这其实非常有意思，在 Linux 中，一个 shell 如果没有什么事情可以做，其实会一直等待用户输入，或者说是等待在 poll 中，而 UEFI 程序实际上运行在内核态，所以实际上会通过 hlt 来
 进入低功耗模式。通过调用 CoreWaitForEvent 来等待各种键盘输入的 event，直到存在用户的输入。
 
 等待过程中:
+
 - FileInterfaceStdInRead
-  - CoreWaitForEvent : 循环执行下面两个函数
-    - CpuSleep
-    - FileInterfaceStdInRead : 如果没有检测到输入，那么就继续等待
+     - CoreWaitForEvent : 循环执行下面两个函数
+          - CpuSleep
+          - FileInterfaceStdInRead : 如果没有检测到输入，那么就继续等待
 
 ## UEFI Driver Model
 
 ### Driver Binding Protocol
+
 UEFI drivers following the UEFI driver model are required to implement the Driver Binding Protocol. This requirement includes the following drivers:
+
 - Device drivers
 - Bus drivers
 - Hybrid drivers
 
-*Root bridge driver, service drivers, and initializing drivers* do not produce this protocol.
-
+_Root bridge driver, service drivers, and initializing drivers_ do not produce this protocol.
 
 The EFI_DRIVER_BINDING_PROTOCOL is installed onto the driver's image handle.
 
@@ -458,7 +490,9 @@ It is possible for a driver to produce more than one instance of the Driver Bind
 The Driver Binding Protocol can be installed directly using the UEFI Boot Service `InstallMultipleProtocolInterfaces()`.
 
 #### e.g. pci
+
 主要参考
+
 - [Driver Binding Protocol](https://edk2-docs.gitbook.io/edk-ii-uefi-driver-writer-s-guide/9_driver_binding_protocol)
 - [PCI Driver Design Guidelines](https://edk2-docs.gitbook.io/edk-ii-uefi-driver-writer-s-guide/18_pci_driver_design_guidelines)
 
@@ -469,16 +503,17 @@ As a result, the PCI bus driver produces three child handles with the `EFI_DEVIC
 分析对应的代码流程:
 
 - PciBusDriverBindingStart
-  - PciEnumerator : 扫描出来一个 root 下的所有的 device
-    - PciHostBridgeEnumerator
-      - InsertRootBridge
-  - StartPciDevices :
-    - StartPciDevicesOnBridge
-      - RegisterPciDevice
-        - // Install the pciio protocol, device path protocol
-        - 处理 option rom 之类的操作
+     - PciEnumerator : 扫描出来一个 root 下的所有的 device
+          - PciHostBridgeEnumerator
+               - InsertRootBridge
+     - StartPciDevices :
+          - StartPciDevicesOnBridge
+               - RegisterPciDevice
+                    - // Install the pciio protocol, device path protocol
+                    - 处理 option rom 之类的操作
 
 扫描过程中，对于创建出来的 pcidev, 为其创建 handle 并且注册上 `EFI_DEVICE_PATH_PROTOCOL` 和 `EFI_PCI_IO_PROTOCOL`
+
 ```c
   //
   // Install the pciio protocol, device path protocol
@@ -494,13 +529,16 @@ As a result, the PCI bus driver produces three child handles with the `EFI_DEVIC
 ```
 
 再看一个经典的 pci 设备 nvme:
+
 - NvmExpressDriverBindingSupported
-  - 首先比较 Device Path 来判断是否匹配
-  - 使用 gEfiPciIoProtocolGuid 获取 EFI_PCI_IO_PROTOCOL 也即是这个设备配置空间访问的 protocol
-  - `PciIo->Pci.Read` 访问设备进行比对
+     - 首先比较 Device Path 来判断是否匹配
+     - 使用 gEfiPciIoProtocolGuid 获取 EFI_PCI_IO_PROTOCOL 也即是这个设备配置空间访问的 protocol
+     - `PciIo->Pci.Read` 访问设备进行比对
 
 ## Device Path
+
 主要参考:
+
 - https://zhuanlan.zhihu.com/p/351065844
 - https://zhuanlan.zhihu.com/p/351926214
 
@@ -508,18 +546,18 @@ As a result, the PCI bus driver produces three child handles with the `EFI_DEVIC
 
 UEFI Bus Driver Connect 时为 Child Device Controller 产生 Device Path
 
-
 - [ ] 分析一下 load image 的效果
 
 At this time, applications developed with the EADK are intended to reside
-on, and be loaded from, storage separate from the core firmware.  This is
+on, and be loaded from, storage separate from the core firmware. This is
 primarily due to size and environmental requirements.
 
-This release of the EADK should only be used to produce UEFI Applications.  Due to the execution
+This release of the EADK should only be used to produce UEFI Applications. Due to the execution
 environment built by the StdLib component, execution as a UEFI driver can cause system stability
 issues.
 
 ## Os Loader
+
 Os loader 和普通的 Application 没有什么区别，只是调用了一下 ExitBootServices 而已。[^4]
 
 当调用 CoreExitBootServices 之后，表示 loader 已经准备好了接手整个设备的管理。
@@ -533,6 +571,7 @@ Os loader 和普通的 Application 没有什么区别，只是调用了一下 Ex
 - ZeroMem (gBS, sizeof (EFI_BOOT_SERVICES)); : EFI_BOOT_SERVICES 被清空之后，各种服务都将无法使用
 
 对于 gEfiEventExitBootServicesGuid 搜索，发现 edk2 使用 Signal 机制主要都是用于实现设备的 reset 的。
+
 ```txt
 ArmPkg/Drivers/MmCommunicationDxe/MmCommunication.c:259:  &gEfiEventExitBootServicesGuid,
 OvmfPkg/Csm/BiosThunk/VideoDxe/BiosVideo.c:601:                    &gEfiEventExitBootServicesGuid,
@@ -563,10 +602,13 @@ MdePkg/MdePkg.dec:403:  gEfiEventExitBootServicesGuid  = { 0x27ABF055, 0xB1B8, 0
 SecurityPkg/Tcg/TcgDxe/TcgDxe.c:1436:                    &gEfiEventExitBootServicesGuid,
 SecurityPkg/Tcg/Tcg2Dxe/Tcg2Dxe.c:2765:                    &gEfiEventExitBootServicesGuid,
 ```
+
 ## Timer
+
 处理时钟中断的代码主要分布在 ./UefiCpuPkg/Library/CpuExceptionHandlerLib/X64/ExceptionHandlerAsm.nasm 中
 
 在 CoreCheckTimers 中间打一个断点，得到下面的 backtrace，这就是时钟中断的基本处理过程。
+
 ```txt
 #0  CoreCheckTimers (CheckEvent=0x7f8edc18, Context=0x0) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/Event/Timer.c:98
 #1  0x000000007feac77d in CoreDispatchEventNotifies (Priority=30) at /home/maritns3/core/ld/edk2-workstation/edk2/MdeModulePkg/Core/Dxe/Event/Event.c:194
@@ -585,52 +627,54 @@ on/edk2/UefiCpuPkg/Library/CpuExceptionHandlerLib/X64/ArchExceptionHandler.c:94
 ```
 
 时钟中断的注册和注册过程:
+
 - AsmGetTemplateAddressMap : 制作入口
-  - AsmIdtVectorBegin : 之后这就是 idt 的入口了
-    - CommonInterruptEntry
-      - DrFinish
-        - CommonExceptionHandler
-          - ExternalInterruptHandler = ExceptionHandlerData->ExternalInterruptHandler; 获取 hook，其实就是 TimerInterruptHandler 了
-            - TimerInterruptHandler
-              - `gBS->RaiseTPL (TPL_HIGH_LEVEL);` : 这个区间是需要屏蔽中断的
-              - mTimerNotifyFunction : 被注册为 CoreTimerTick
-                - mEfiSystemTime += Duration; : 刷新系统时间
-                - CoreSignalEvent (mEfiCheckTimerEvent);
-              - `gBS->RestoreTPL (OriginalTPL);`
+     - AsmIdtVectorBegin : 之后这就是 idt 的入口了
+          - CommonInterruptEntry
+               - DrFinish
+                    - CommonExceptionHandler
+                         - ExternalInterruptHandler = ExceptionHandlerData->ExternalInterruptHandler; 获取 hook，其实就是 TimerInterruptHandler 了
+                              - TimerInterruptHandler
+                                   - `gBS->RaiseTPL (TPL_HIGH_LEVEL);` : 这个区间是需要屏蔽中断的
+                                   - mTimerNotifyFunction : 被注册为 CoreTimerTick
+                                        - mEfiSystemTime += Duration; : 刷新系统时间
+                                        - CoreSignalEvent (mEfiCheckTimerEvent);
+                                   - `gBS->RestoreTPL (OriginalTPL);`
 - UpdateIdtTable : 进行安装
 
-* 注册 ExternalInterruptHandler 为 TimerInterruptHandler 的位置 :  TimerDriverInitialize => `mCpu->RegisterInterruptHandler`
+* 注册 ExternalInterruptHandler 为 TimerInterruptHandler 的位置 : TimerDriverInitialize => `mCpu->RegisterInterruptHandler`
 * TimerInterruptHandler 中将 mTimerNotifyFunction 注册为 : CoreTimerTick
 * OvmfPkg/8254TimerDxe/Timer.c:TimerDriverRegisterHandler 中将 mEfiCheckTimerEvent 注册为 CoreCheckTimers
 
 时钟触发的周期是固定的，如果想要修改时钟中断的频率:
+
 - TimerDriverInitialize
-  - TimerDriverSetTimerPeriod
-    - SetPitCount
-
-
+     - TimerDriverSetTimerPeriod
+          - SetPitCount
 
 ## Shell Application
+
 分析一下 Shell 创建 Application 的过程:
 
 - InternalShellExecuteDevicePath
-  - `gBS->LoadImage` : 加载需要执行的程序镜像, 这会创建出来一个 image handle 来
-  - `gBS->OpenProtocol(NewHandle, &gEfiLoadedImageProtocolGuid, (VOID**)&LoadedImage, gImageHandle, NULL, EFI_OPEN_PROTOCOL_GET_PROTOCOL);` : 向 handle 添加 EFI_LOADED_IMAGE_PROTOCOL
-  - `gBS->InstallProtocolInterface(&NewHandle, &gEfiShellParametersProtocolGuid, EFI_NATIVE_INTERFACE, &ShellParamsProtocol);` : 向 handle 添加 EFI_SHELL_PARAMETERS_PROTOCOL
-  - `gBS->StartImage(NewHandle, 0, NULL );` : 开始执行程序
-    - `_ModuleEntryPoint` : 从这里就是程序执行的位置了
-      - ProcessLibraryConstructorList
-      - ProcessModuleEntryPointList
-        - ShellCEntryLib
-          - `SystemTable->BootServices->OpenProtocol` : 利用 EfiShellParametersProtocol 来获取参数，获取标准输入输出
-            - CoreOpenProtocol : 使用 gEfiShellInterfaceGuid 来填充 EFI_SHELL_PARAMETERS_PROTOCOL
-              - CoreGetProtocolInterface : 使用 EFI_GUID 也就是 gEfiShellInterfaceGuid 获取 PROTOCOL_INTERFACE
-          - ShellAppMain
-            - `gMD = AllocateZeroPool(sizeof(struct __MainData))` : `__MainData` 记录一些 argc argV 之类的东西，是的，我们的程序是不需要链接器的
-            - main
-      - ProcessLibraryDestructorList
+     - `gBS->LoadImage` : 加载需要执行的程序镜像, 这会创建出来一个 image handle 来
+     - `gBS->OpenProtocol(NewHandle, &gEfiLoadedImageProtocolGuid, (VOID**)&LoadedImage, gImageHandle, NULL, EFI_OPEN_PROTOCOL_GET_PROTOCOL);` : 向 handle 添加 EFI_LOADED_IMAGE_PROTOCOL
+     - `gBS->InstallProtocolInterface(&NewHandle, &gEfiShellParametersProtocolGuid, EFI_NATIVE_INTERFACE, &ShellParamsProtocol);` : 向 handle 添加 EFI_SHELL_PARAMETERS_PROTOCOL
+     - `gBS->StartImage(NewHandle, 0, NULL );` : 开始执行程序
+          - `_ModuleEntryPoint` : 从这里就是程序执行的位置了
+               - ProcessLibraryConstructorList
+               - ProcessModuleEntryPointList
+                    - ShellCEntryLib
+                         - `SystemTable->BootServices->OpenProtocol` : 利用 EfiShellParametersProtocol 来获取参数，获取标准输入输出
+                              - CoreOpenProtocol : 使用 gEfiShellInterfaceGuid 来填充 EFI_SHELL_PARAMETERS_PROTOCOL
+                                   - CoreGetProtocolInterface : 使用 EFI_GUID 也就是 gEfiShellInterfaceGuid 获取 PROTOCOL_INTERFACE
+                         - ShellAppMain
+                              - `gMD = AllocateZeroPool(sizeof(struct __MainData))` : `__MainData` 记录一些 argc argV 之类的东西，是的，我们的程序是不需要链接器的
+                              - main
+               - ProcessLibraryDestructorList
 
 UEFI shell 自带的各种命令出现在 ShellPkg/Library 中，
+
 - UefiShellDebug1CommandsLib : edit
 - UefiShellDriver1CommandsLib : connect unconnect 之类的
 - UefiShellInstall1CommandsLib : install
@@ -642,26 +686,35 @@ UEFI shell 自带的各种命令出现在 ShellPkg/Library 中，
 他们的使用方法可以参考[这里](https://linuxhint.com/use-uefi-interactive-shell-and-its-common-commands/)，简单明了。
 
 ## 编程风格
+
 edk2 的函数中有 EFIAPI 的标签，这是通过编译选项确定:
-> DEFIAPI=__attribute__((ms_abi))
+
+> DEFIAPI=**attribute**((ms_abi))
 
 ## 资源
+
 - https://github.com/Openwide-Ingenierie/uefi-musl
-  - 使用 edk2 APIs 来实现 syscall 从而将 musl 库包含进去
+     - 使用 edk2 APIs 来实现 syscall 从而将 musl 库包含进去
 - https://github.com/Openwide-Ingenierie/Pong-UEFI
-  - 弹球游戏
+     - 弹球游戏
 - https://github.com/linuxboot/linuxboot
-  - UEFI 的 DXE 截断可以使用 linuxboot 替代，因为其很多功能和内核是重叠的
+     - UEFI 的 DXE 截断可以使用 linuxboot 替代，因为其很多功能和内核是重叠的
 - https://blog.system76.com/post/139138591598/howto-uefi-qemu-guest-on-ubuntu-xenial-host
-  - 分析了一下使用 ovmf 的事情，但是没有仔细看
+     - 分析了一下使用 ovmf 的事情，但是没有仔细看
+- https://krinkinmu.github.io/2020/10/11/efi-getting-started.html
+- https://krinkinmu.github.io/2020/10/18/handles-guids-and-protocols.html
+- https://krinkinmu.github.io/2020/10/31/efi-file-access.html
 
 ## 疑惑
+
 - [ ] 所有的 UEFI 的书籍开始的时候都会讲解曾经痛苦的 bios 时代，说实话，我没有经历过，不是非常理解。
 - [ ] 如果执行了 illegal instruction，其现象是什么?
 - [ ] 在 edk2 的语境中，似乎总是默认运行在物理地址上的，但是 Loongarch 的这种总是在虚拟地址上的怎么处理的呀
 
 ## 总结
+
 经过一段时间对于 UEFI 的学习，我感觉我不太喜欢 edk2 的实现，也不喜欢 UEFI 这个协议。
+
 - 一方面感觉 UEFI 实现的太复杂了
 - [What’s scary about UEFI is that it has both direct hardware access and a massive attack surface: GUI, Ethernet stack, occasionally an 802.11 stack, etc.](https://news.ycombinator.com/item?id=30651295#30651767)
 

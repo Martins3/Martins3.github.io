@@ -82,6 +82,13 @@ md0 : active raid1 sdd1[3](S) sdc1[2] sda1[0]
 unused devices: <none>
 ```
 
+## 访问 raid 信息
+https://serverfault.com/questions/650151/how-do-i-list-which-drives-are-part-of-each-raid-array
+
+1. /dev/mdstat
+2. mdadm -v --detail --scan /dev/md/raid1
+3. mdadm -vQD /dev/md/raid1
+
 ### 为什么增加设备是两个动作呀
 
 ```txt

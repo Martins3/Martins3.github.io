@@ -40,3 +40,7 @@
 [    2.919750] Console: switching to colour frame buffer device 480x135
 [    2.938955] i915 0000:00:02.0: [drm] fb0: i915drmfb frame buffer device
 ```
+
+## drm
+
+- https://embear.ch/blog/drm-framebuffer : 分析 drm 实现

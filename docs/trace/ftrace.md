@@ -19,8 +19,6 @@ blk function_graph wakeup_dl wakeup_rt wakeup function nop
 这个是 perf 和 ftrace 直接使用的很好的工具了。
 
 ## 问题
-- [ ] 长久无法理解的问题，ftrace 和 blktrace 的关系是什么?
-
 - [ ] function and latency tracers : 为什么 ftrace 可以跟踪 latency tracer
 - [ ] 为什么 ftrace 可以跟踪 kprobe 和 uprobe
 - [ ] 无法理解 `CONFIG_FUNCTION_GRAPH_TRACER`
@@ -123,13 +121,6 @@ cat /sys/kernel/debug/tracing/trace
 echo 1 >  /sys/kernel/debug/tracing/events/syscalls/enable
 
 ### CONFIG_BLK_DEV_IO_TRACE
-`config BLK_DEV_IO_TRACE` 已经告诉了如何使用
-
-  echo 1 > /sys/block/vdb/vdb2/trace/enable
-  echo blk > /sys/kernel/tracing/current_tracer
-  cat /sys/kernel/tracing/trace_pipe
-
-我超，实现的位置居然就是 kernel/trace/blktrace.c
 
 ### CONFIG_SCHED_TRACER
 echo wakeup > current_tracer

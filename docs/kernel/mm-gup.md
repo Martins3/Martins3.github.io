@@ -330,7 +330,7 @@ Date:   Fri Apr 29 01:04:15 2022 +0000
 ]: 191074
 ```
 
-```c
+```txt
 Attaching 1 probe...
 ^C
 

@@ -381,3 +381,8 @@ xa_headx(const struct xarray *xa)
 
 
 ### rcuwait_wake_up
+
+
+## 这两个接口是做啥的
+/sys/kernel/rcu_expedited
+/sys/kernel/rcu_normal
