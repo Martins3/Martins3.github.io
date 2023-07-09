@@ -155,4 +155,6 @@ http://blog.coderhuo.tech/2020/07/18/flash_basics/ : 讲解的不错
 
 - https://pages.cs.wisc.edu/~remzi/OSTEP/file-ssd.pdf : 似乎是一个教程中的一部分
 
+- https://www.jinbuguo.com/storage/ssd_intro.html
+
 [^1]: https://phoenixnap.com/kb/nvme-vs-sata-vs-m-2-comparison

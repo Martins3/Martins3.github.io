@@ -73,11 +73,3 @@ ubuntu 默认设置是 100G，但是 partion 却
 - resize2fs /dev/mapper/ubuntu--vg-ubuntu--lv
 
 ## [ ]  似乎没有必要将 ubuntu guest 的安装为非 LVM 的格式吗?
-
-
-## dm raid
-
-```sh
-sudo mdadm --create /dev/md0 --level=1 --raid-devices=2 /dev/sda1 /dev/sdb1 # 创建一个 raid
-sudo dmsetup create myraid --table "0 $(blockdev --getsize /dev/md0) raid1 /dev/md0 0" # 这个错误无法找到啊
-```
