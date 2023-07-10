@@ -493,3 +493,12 @@ tc qdisc change dev lo root netem loss 0.1%
 		reschedule_retry(r1_bio);
 		/* don't drop the reference on read_disk yet */
 ```
+
+## 使用 ndbkit
+
+https://news.ycombinator.com/item?id=35899527
+> nbdkit memory 10G --filter=error error-rate=1%
+
+https://www.libguestfs.org/nbdkit-error-filter.1.html
+
+https://www.kernel.org/doc/html/latest/admin-guide/device-mapper/dm-flakey.html

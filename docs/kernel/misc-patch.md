@@ -53,7 +53,7 @@ https://superuser.com/questions/927632/configuring-offlineimap-for-gmail-ssl-err
 Sign in with app passwords
 
 
-## 看看 Greg 的 work
+## [ ]  看看 Greg 的 work
 http://kroah.com/log/blog/2019/08/14/patch-workflow-with-mutt-2019/
 
 
@@ -215,9 +215,6 @@ Signed-off-by: Li Nan <linan122@huawei.com>
 ## [ ] 确认一件事情，patch 从 mutt 打开之后，被
 
 
-## 固化常用的命令
-git show HEAD | perl scripts/get_maintainer.pl --separator , --nokeywords --nogit --nogit-fallback --norolestats --nol
-
 ## 如何说明当前应用项目
 
 ```sh
@@ -244,6 +241,45 @@ v2: addressed comments from Kuai
  __wake_up_common_lock
 
 
+发送一个 patchset
+```txt
+git format-patch -n --subject-prefix="PATCH vY" --cover-letter -o /tmp/
+ or you can use commit hash to do this: <hash1>^..<hash2>
+
+git send-email /tmp/*.patch
+```
+
+发送 v2 patchset
+```txt
+git format-patch --subject-prefix="PATCH vY" -o /tmp/ HEAD^
+```
+
+
 ## [ ] 似乎 kernelnewbies 的内容还没看
 
-- https://kernelnewbies.org/PatchPhilosophy
+### https://kernelnewbies.org/PatchPhilosophy
+
+Once you've reorganized your patchset, you should resend it via email. You'll need to do three additional things for subsequent versions:
+1. use PATCHv2 (or PATCHv3 and so on) in the subject lines instead of PATCH,
+2. add a patch changelog to the patch (for single patches) or cover letter (for patchsets),
+3. and send the new patch series a reply to the previous one.
+
+
+To document what changed in the new patchset, put a patch changelog at the bottom of your cover letter, just above the diffstat. A patch changelog should consist of a series of entries like this:
+
+```txt
+v2: Fixed ..., noted by Some Person <some.person@example.org>
+    Reworked to use ..., as suggested by ...
+
+v3: ...
+If you're just sending a single patch, put the patch changelog after your commit message, below the -- line, but above the diffstat.
+```
+
+Finally, send your new patch or patch series as a new thread rather than as a reply to the previous patch or patch series. I.e., a new version of a patch (series) should begin a new thread.
+
+我靠，这里我不懂，为什么一会是需要 reply ，一会是不要 reply
+
+## [How do I send a Git patch series from within Mutt?](https://unix.stackexchange.com/questions/672247/how-do-i-send-a-git-patch-series-from-within-mutt)
+- 解决之后，回答这个问题。
+
+## 如何使用 git 发送邮件，这个也是说的很清楚的

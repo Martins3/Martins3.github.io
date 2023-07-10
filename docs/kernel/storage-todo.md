@@ -84,3 +84,13 @@ static inline struct blk_plug *blk_mq_plug( struct bio *bio)
 	return current->plug;
 }
 ```
+
+## bcache
+- https://docs.kernel.org/admin-guide/bcache.html
+
+## 看看什么叫做功能齐全的 fs
+看上去大家都很激动，但是进入主线再说吧，文件系统最好也是简单看看
+- https://bcachefs.org/bcachefs-principles-of-operation.pdf
+
+- https://lwn.net/Articles/394672/
+- https://lwn.net/Articles/895266/

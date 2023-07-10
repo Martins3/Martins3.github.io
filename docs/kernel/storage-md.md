@@ -11,11 +11,11 @@
 
 基于 DLM 自动使用远程的磁盘作为来制作 raid1
 
+## 从用户态理解
+- level_store
+
 ## 常规的函数分析
 - md_init
-
-## md 中存在大量的 store 操作
-- level_store : 从用户态了解下这都可以干什么？
 
 ## md_register_thread
 
@@ -201,6 +201,8 @@ cat /sys/devices/virtual/block/md10/md/dev-sda1/state
 ## 辅助内容
 
 - https://superuser.com/questions/942886/fail-device-in-md-raid-when-ata-stops-responding
+
+## md.c 源码简单分析
 
 ## man MDADM(8)
 暂时放到这里，方便查询

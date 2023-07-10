@@ -263,6 +263,8 @@ static struct md_personality raid1_personality =
 
 ### raid1_spare_active
 
+### raid1_quiesce
+
 ## r1conf
 
 ```c
@@ -875,3 +877,6 @@ rcu_assign_pointer(p->rdev, rdev);
   - sync_request_write
 
 ## md_wait_for_blocked_rdev 这个同步机制是做什么的?
+
+
+## wait_read_barrier 和 wait_barrier 有什么区别

@@ -136,3 +136,5 @@ ext4/xfs's direct IO call `iomap_dio_rw`
 ```
 
 ## https://mp.weixin.qq.com/s/M9cK2if7rxG5bH-1nEwqfQ
+
+## https://news.ycombinator.com/item?id=35813950
