@@ -5,6 +5,9 @@
 - fault_in_writable
 - [ ] copy from user 到底是如何进行的，必然需要 pin 吗?
 
+## 官方文档需要看看: Documentation/core-api/pin_user_pages.rst
+
+
 ## follow_page
 - 根据虚拟地址找到物理地址，例如 move_pages(2) 中查找每一个 page 中所在的 Node
 
@@ -313,37 +316,198 @@ Date:   Fri Apr 29 01:04:15 2022 +0000
 ```
 
 ## 如何理解 PageReserved 的含义 ?
-
-
-```txt
-@[
-    kvm_pfn_to_refcounted_page+5
-    kvm_release_pfn_clean+28
-    kvm_tdp_page_fault+363
-    kvm_mmu_page_fault+613
-    vmx_handle_exit+301
-    kvm_arch_vcpu_ioctl_run+1713
-    kvm_vcpu_ioctl+587
-    __x64_sys_ioctl+145
-    do_syscall_64+59
-    entry_SYSCALL_64_after_hwframe+114
-]: 191074
+在函数 `kvm_pfn_to_refcounted_page` 中为什么需要处理这个
+```c
+	if (!PageReserved(page))
+		return page;
 ```
 
-```txt
-Attaching 1 probe...
-^C
+## 如何理解这个
 
-@[
-    kvm_pfn_to_refcounted_page+5
-    kvm_release_pfn_clean+28
-    kvm_tdp_page_fault+363
-    kvm_mmu_page_fault+613
-    vmx_handle_exit+301
-    kvm_arch_vcpu_ioctl_run+1713
-    kvm_vcpu_ioctl+587
-    __x64_sys_ioctl+145
-    do_syscall_64+59
-    entry_SYSCALL_64_after_hwframe+114
-]: 50
+```c
+	/* FOLL_GET and FOLL_PIN are mutually exclusive. */
+	if (WARN_ON_ONCE((flags & (FOLL_PIN | FOLL_GET)) ==
+			 (FOLL_PIN | FOLL_GET)))
 ```
+
+进一步在 `__get_user_pages_locked` 中:
+```c
+	/*
+	 * FOLL_PIN and FOLL_GET are mutually exclusive. Traditional behavior
+	 * is to set FOLL_GET if the caller wants pages[] filled in (but has
+	 * carelessly failed to specify FOLL_GET), so keep doing that, but only
+	 * for FOLL_GET, not for the newer FOLL_PIN.
+	 *
+	 * FOLL_PIN always expects pages to be non-null, but no need to assert
+	 * that here, as any failures will be obvious enough.
+	 */
+	if (pages && !(flags & FOLL_PIN))
+		flags |= FOLL_GET;
+```
+
+## 如何理解这个
+
+如何理解 follow_page_pte 中的:
+```c
+	/* try_grab_page() does nothing unless FOLL_GET or FOLL_PIN is set. */
+	ret = try_grab_page(page, flags);
+	if (unlikely(ret)) {
+		page = ERR_PTR(ret);
+		goto out;
+	}
+
+```
+
+```c
+/**
+ * try_grab_folio() - Attempt to get or pin a folio.
+ * @page:  pointer to page to be grabbed
+ * @refs:  the value to (effectively) add to the folio's refcount
+ * @flags: gup flags: these are the FOLL_* flag values.
+ *
+ * "grab" names in this file mean, "look at flags to decide whether to use
+ * FOLL_PIN or FOLL_GET behavior, when incrementing the folio's refcount.
+ *
+ * Either FOLL_PIN or FOLL_GET (or neither) must be set, but not both at the
+ * same time. (That's true throughout the get_user_pages*() and
+ * pin_user_pages*() APIs.) Cases:
+ *
+ *    FOLL_GET: folio's refcount will be incremented by @refs.
+ *
+ *    FOLL_PIN on large folios: folio's refcount will be incremented by
+ *    @refs, and its pincount will be incremented by @refs.
+ *
+ *    FOLL_PIN on single-page folios: folio's refcount will be incremented by
+ *    @refs * GUP_PIN_COUNTING_BIAS.
+ *
+ * Return: The folio containing @page (with refcount appropriately
+ * incremented) for success, or NULL upon failure. If neither FOLL_GET
+ * nor FOLL_PIN was set, that's considered failure, and furthermore,
+ * a likely bug in the caller, so a warning is also emitted.
+ */
+struct folio *try_grab_folio(struct page *page, int refs, unsigned int flags)
+```
+
+理解下 `FOLL_PIN`
+
+居然这是 internal 的
+```c
+enum {
+	/* mark page accessed */
+	FOLL_TOUCH = 1 << 16,
+	/* a retry, previous pass started an IO */
+	FOLL_TRIED = 1 << 17,
+	/* we are working on non-current tsk/mm */
+	FOLL_REMOTE = 1 << 18,
+	/* pages must be released via unpin_user_page */
+	FOLL_PIN = 1 << 19,
+	/* gup_fast: prevent fall-back to slow gup */
+	FOLL_FAST_ONLY = 1 << 20,
+	/* allow unlocking the mmap lock */
+	FOLL_UNLOCKABLE = 1 << 21,
+};
+```
+FOLL_PIN 都是内存 mk 的内部用户
+
+
+```c
+/*
+ * FOLL_PIN and FOLL_LONGTERM may be used in various combinations with each
+ * other. Here is what they mean, and how to use them:
+ *
+ *
+ * FIXME: For pages which are part of a filesystem, mappings are subject to the
+ * lifetime enforced by the filesystem and we need guarantees that longterm
+ * users like RDMA and V4L2 only establish mappings which coordinate usage with
+ * the filesystem.  Ideas for this coordination include revoking the longterm
+ * pin, delaying writeback, bounce buffer page writeback, etc.  As FS DAX was
+ * added after the problem with filesystems was found FS DAX VMAs are
+ * specifically failed.  Filesystem pages are still subject to bugs and use of
+ * FOLL_LONGTERM should be avoided on those pages.
+ *
+ * In the CMA case: long term pins in a CMA region would unnecessarily fragment
+ * that region.  And so, CMA attempts to migrate the page before pinning, when
+ * FOLL_LONGTERM is specified.
+ *
+ * FOLL_PIN indicates that a special kind of tracking (not just page->_refcount,
+ * but an additional pin counting system) will be invoked. This is intended for
+ * anything that gets a page reference and then touches page data (for example,
+ * Direct IO). This lets the filesystem know that some non-file-system entity is
+ * potentially changing the pages' data. In contrast to FOLL_GET (whose pages
+ * are released via put_page()), FOLL_PIN pages must be released, ultimately, by
+ * a call to unpin_user_page().
+ *
+ * FOLL_PIN is similar to FOLL_GET: both of these pin pages. They use different
+ * and separate refcounting mechanisms, however, and that means that each has
+ * its own acquire and release mechanisms:
+ *
+ *     FOLL_GET: get_user_pages*() to acquire, and put_page() to release.
+ *
+ *     FOLL_PIN: pin_user_pages*() to acquire, and unpin_user_pages to release.
+ *
+ * FOLL_PIN and FOLL_GET are mutually exclusive for a given function call.
+ * (The underlying pages may experience both FOLL_GET-based and FOLL_PIN-based
+ * calls applied to them, and that's perfectly OK. This is a constraint on the
+ * callers, not on the pages.)
+ *
+ * FOLL_PIN should be set internally by the pin_user_pages*() APIs, never
+ * directly by the caller. That's in order to help avoid mismatches when
+ * releasing pages: get_user_pages*() pages must be released via put_page(),
+ * while pin_user_pages*() pages must be released via unpin_user_page().
+ *
+ * Please see Documentation/core-api/pin_user_pages.rst for more information.
+ */
+
+enum {
+	/* check pte is writable */
+	FOLL_WRITE = 1 << 0,
+	/* do get_page on page */
+	FOLL_GET = 1 << 1,
+	/* give error on hole if it would be zero */
+	FOLL_DUMP = 1 << 2,
+	/* get_user_pages read/write w/o permission */
+	FOLL_FORCE = 1 << 3,
+	/*
+	 * if a disk transfer is needed, start the IO and return without waiting
+	 * upon it
+	 */
+	FOLL_NOWAIT = 1 << 4,
+	/* do not fault in pages */
+	FOLL_NOFAULT = 1 << 5,
+	/* check page is hwpoisoned */
+	FOLL_HWPOISON = 1 << 6,
+	/* don't do file mappings */
+	FOLL_ANON = 1 << 7,
+	/*
+	 * FOLL_LONGTERM indicates that the page will be held for an indefinite
+	 * time period _often_ under userspace control.  This is in contrast to
+	 * iov_iter_get_pages(), whose usages are transient.
+	 */
+	FOLL_LONGTERM = 1 << 8,
+	/* split huge pmd before returning */
+	FOLL_SPLIT_PMD = 1 << 9,
+	/* allow returning PCI P2PDMA pages */
+	FOLL_PCI_P2PDMA = 1 << 10,
+	/* allow interrupts from generic signals */
+	FOLL_INTERRUPTIBLE = 1 << 11,
+
+	/* See also internal only FOLL flags in mm/internal.h */
+};
+```
+
+## is_valid_gup_args() FOLL flags 的进一步说明
+
+但是如何理解这个?
+```c
+	/* Pages input must be given if using GET/PIN */
+	if (WARN_ON_ONCE((gup_flags & (FOLL_GET | FOLL_PIN)) && !pages))
+		return false;
+```
+
+## [The ongoing trouble with get_user_pages()](https://lwn.net/Articles/930667/)
+
+[LWN：get_user_pages() 仍在带来麻烦！](https://mp.weixin.qq.com/s/FD7XRvyAyUERaad-DBR0TA)
+
+看完更加迷茫了。
+
+## 如果调用 gup 增加了一个 page 的 reference ，这个 page 需要从 lru 中取出来吗?

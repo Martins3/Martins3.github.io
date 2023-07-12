@@ -223,3 +223,27 @@ mm/memory-failure.c 中也是存在类似的定义:
 ```
 
 我猜测应该也是没有什么特殊的原因吧，
+
+
+
+## reserve
+
+```txt
+#0  reserve_bootmem_region (start=0, end=1048576, nid=0) at mm/mm_init.c:742
+#1  0xffffffff835d0428 in memmap_init_reserved_pages () at mm/memblock.c:2117
+#2  free_low_memory_core_early () at mm/memblock.c:2129
+#3  memblock_free_all () at mm/memblock.c:2176
+#4  0xffffffff835b35cd in mem_init () at arch/x86/mm/init_64.c:1338
+#5  0xffffffff835cca23 in mm_core_init () at mm/mm_init.c:2790
+#6  0xffffffff8358cef9 in start_kernel () at init/main.c:928
+#7  0xffffffff83598898 in x86_64_start_reservations (
+    real_mode_data=real_mode_data@entry=0x13b10 <exception_stacks+31504> <error: Cannot access mem
+ory at address 0x13b10>) at arch/x86/kernel/head64.c:556
+#8  0xffffffff835989d5 in x86_64_start_kernel (
+    real_mode_data=0x13b10 <exception_stacks+31504> <error: Cannot access memory at address 0x13b1
+0>) at arch/x86/kernel/head64.c:537
+#9  0xffffffff810001ce in secondary_startup_64 () at arch/x86/kernel/head_64.S:441
+#10 0x0000000000000000 in ?? ()
+```
+
+## PG_private

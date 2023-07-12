@@ -714,6 +714,15 @@ https://stackoverflow.com/questions/24821521/wget-unable-to-resolve-host-address
 
 https://github.com/networkx/networkx
 
+## vlan
+参考 https://www.practicalnetworking.net/stand-alone/vlans/
+
+A simple representation of a single entry in a MAC address table would be: MAC Address | Port.
+
+A simple representation of a single entry in a MAC address table of a VLAN aware switch would be: VLAN# | MAC Address | Port.
+
+The primary benefit of extending a VLAN to different physical switches is that the Layer 2 topology no longer has to be tied to the Physical Topology.
+
 [^2]: 用芯探核:基于龙芯的 Linux 内核探索解析
 [^4]: http://yuba.stanford.edu/rcp/
 [^6]: [An Introduction to Computer Networks](http://intronetworks.cs.luc.edu/current2/html/)

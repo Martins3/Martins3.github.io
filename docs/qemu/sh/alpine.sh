@@ -225,7 +225,7 @@ fi
 
 case $hacking_memory in
 	"none")
-		ramsize=2G
+		ramsize=32G
 		arg_mem_cpu="-smp $(($(getconf _NPROCESSORS_ONLN) - 1))"
 		# arg_mem_cpu="-smp 1"
 		# echo 1 | sudo  tee /proc/sys/vm/overcommit_memory
@@ -334,6 +334,8 @@ kernel_cmdline+="systemd.unified_cgroup_hierarchy=1 "
 # kernel_cmdline+=" clearcpuid=156"
 kernel_cmdline+="transparent_hugepage=always "
 # kernel_cmdline+="iommu=pt "
+#
+kernel_cmdline+="memblock=debug "
 
 # 获取 PARTUUID 的方法: 在 guest 中，blkid 看根分区的
 if [[ $replace_kernel == true ]]; then

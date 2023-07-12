@@ -2400,3 +2400,45 @@ Signed-off-by: Sean Christopherson <sean.j.christopherson@intel.com>
 Message-Id: <20200716034122.5998-8-sean.j.christopherson@intel.com>
 Signed-off-by: Paolo Bonzini <pbonzini@redhat.com>
 ```
+
+## [ ] 为什么 kvm_tdp_mmu_page_fault 最后需要调用 kvm_release_pfn_clean
+
+```txt
+@[
+    kvm_pfn_to_refcounted_page+5
+    kvm_release_pfn_clean+28
+    kvm_tdp_page_fault+363
+    kvm_mmu_page_fault+613
+    vmx_handle_exit+301
+    kvm_arch_vcpu_ioctl_run+1713
+    kvm_vcpu_ioctl+587
+    __x64_sys_ioctl+145
+    do_syscall_64+59
+    entry_SYSCALL_64_after_hwframe+114
+]: 191074
+```
+
+```txt
+Attaching 1 probe...
+^C
+
+@[
+    kvm_pfn_to_refcounted_page+5
+    kvm_release_pfn_clean+28
+    kvm_tdp_page_fault+363
+    kvm_mmu_page_fault+613
+    vmx_handle_exit+301
+    kvm_arch_vcpu_ioctl_run+1713
+    kvm_vcpu_ioctl+587
+    __x64_sys_ioctl+145
+    do_syscall_64+59
+    entry_SYSCALL_64_after_hwframe+114
+]: 50
+```
+
+
+### 虚拟机运行过程中，qemu 是否可以主动的，直接的将 page drop 掉，导致 guest 读到的内容为空
+
+### 为什么 kvm 的 ept 是不用增加 refcount 的，这让 migration 和 swap 成为可能?
+
+访问 kvm_release_page_clean 的虚拟机，但是

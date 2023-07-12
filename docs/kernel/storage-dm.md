@@ -71,5 +71,3 @@ ubuntu 默认设置是 100G，但是 partion 却
 
 - lvextend -l +100%FREE /dev/ubuntu-vg/ubuntu-lv
 - resize2fs /dev/mapper/ubuntu--vg-ubuntu--lv
-
-## [ ]  似乎没有必要将 ubuntu guest 的安装为非 LVM 的格式吗?

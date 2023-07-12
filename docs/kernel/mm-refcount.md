@@ -7,6 +7,41 @@
 
 mm/memory.c 中存在 folio_get 的地方就是证据。
 
+## 增加 mapcount 的位置
+
+这两个在 13900K 静态的环境中，调用次数都非常多，
+1. folio_add_new_anon_rmap
+2. page_add_file_rmap
+
+```txt
+@[
+    page_add_file_rmap+5
+    do_set_pte+460
+    finish_fault+545
+    do_fault+798
+    __handle_mm_fault+1618
+    handle_mm_fault+341
+    do_user_addr_fault+561
+    exc_page_fault+109
+    asm_exc_page_fault+38
+]: 3200
+```
+
+```txt
+@[
+    folio_add_new_anon_rmap+5
+    do_anonymous_page+755
+    __handle_mm_fault+2090
+    handle_mm_fault+341
+    do_user_addr_fault+342
+    exc_page_fault+109
+    asm_exc_page_fault+38
+]: 2601
+```
+其实 anon private 的 mapcount 总是 0 所以，在
+page_add_file_rmap 是可以看到 mapcount 增加的，但是
+folio_add_new_anon_rmap 不会增加。
+
 ## 如何理解 can_split_folio 中的计数问题
 
 ```c
@@ -155,4 +190,76 @@ static bool is_refcount_suitable(struct page *page)
 ## 原来 thp 的 reference counting 是一个专门的问题
 https://lwn.net/Articles/619738/
 
-[^27]: https://lwn.net/Articles/619738/
+
+## [ ]  分析下，当决定换出的时候，首先 check 一下 mapcount 和 refcount
+- shrink_folio_list : 这里是最终处理的位置
+
+
+应该就是这部分了:
+```c
+		/*
+		 * If the folio has buffers, try to free the buffer
+		 * mappings associated with this folio. If we succeed
+		 * we try to free the folio as well.
+		 *
+		 * We do this even if the folio is dirty.
+		 * filemap_release_folio() does not perform I/O, but it
+		 * is possible for a folio to have the dirty flag set,
+		 * but it is actually clean (all its buffers are clean).
+		 * This happens if the buffers were written out directly,
+		 * with submit_bh(). ext3 will do this, as well as
+		 * the blockdev mapping.  filemap_release_folio() will
+		 * discover that cleanness and will drop the buffers
+		 * and mark the folio clean - it can be freed.
+		 *
+		 * Rarely, folios can have buffers and no ->mapping.
+		 * These are the folios which were not successfully
+		 * invalidated in truncate_cleanup_folio().  We try to
+		 * drop those buffers here and if that worked, and the
+		 * folio is no longer mapped into process address space
+		 * (refcount == 1) it can be freed.  Otherwise, leave
+		 * the folio on the LRU so it is swappable.
+		 */
+		if (folio_has_private(folio)) {
+			if (!filemap_release_folio(folio, sc->gfp_mask))
+				goto activate_locked;
+			if (!mapping && folio_ref_count(folio) == 1) {
+				folio_unlock(folio);
+				if (folio_put_testzero(folio))
+					goto free_it;
+				else {
+					/*
+					 * rare race with speculative reference.
+					 * the speculative reference will free
+					 * this folio shortly, so we may
+					 * increment nr_reclaimed here (and
+					 * leave it off the LRU).
+					 */
+					nr_reclaimed += nr_pages;
+					continue;
+				}
+			}
+		}
+
+
+		if (folio_test_anon(folio) && !folio_test_swapbacked(folio)) {
+			/* follow __remove_mapping for reference */
+			if (!folio_ref_freeze(folio, 1))
+				goto keep_locked;
+			/*
+			 * The folio has only one reference left, which is
+			 * from the isolation. After the caller puts the
+			 * folio back on the lru and drops the reference, the
+			 * folio will be freed anyway. It doesn't matter
+			 * which lru it goes on. So we don't bother checking
+			 * the dirty flag here.
+			 */
+			count_vm_events(PGLAZYFREED, nr_pages);
+			count_memcg_folio_events(folio, PGLAZYFREED, nr_pages);
+		} else if (!mapping || !__remove_mapping(mapping, folio, true,
+							 sc->target_mem_cgroup))
+			goto keep_locked;
+
+```
+
+但是不是完全的正确，对于 folio_has_private 的理解不到位啊。
