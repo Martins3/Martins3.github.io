@@ -3,6 +3,10 @@
 ## 资料
 - https://raid.wiki.kernel.org/index.php/Linux_Raid
 
+## 核心结构
+mddev
+rdev
+
 ## md cluster
 
 > The Distributed Lock Manager (DLM) in the kernel is the base component used by OCFS2, GFS2, Cluster MD, and Cluster LVM (lvmlockd) to provide active-active storage at each respective layer.
@@ -21,9 +25,15 @@
 
 md_wakeup_thread
 
+## mdev 的操控
+- mddev_suspend
+- mddev_resume
+
 ## io
 
-- md_write_start
+- md_write_start : 对 raid1/raid5/raid10 提供的辅助函数
+	- raid1_make_request 进行写之前首先需要调用
+
 
 ```c
 const struct block_device_operations md_fops =
@@ -1500,3 +1510,8 @@ SEE ALSO
 v4.2          MDADM(8)
 
 ```
+
+## 整体的浏览下代码
+
+1. 如何理解 serial ?
+2. 为什么 resync 需要修改 superblock
