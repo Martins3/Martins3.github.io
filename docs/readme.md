@@ -13,6 +13,16 @@
   </p>
 </p>
 
+```txt
+☁️☁️🌞       ☁
+     ☁  ✈     ☁    🚁
+  🏬🏨🏫🏢🏤🏥🏦🏪
+👬🌲 /  🚶 |🚍   \🌳👫👫
+  🌳/  🚘  |🏃    \🌴🐈
+🌴 /       |🚔     \🌲👯👯
+🌲/🚖      |   🚘   \🌳👭
+```
+
 ## Collections
 - [slides](https://martins3.github.io/slides/)
 
@@ -39,12 +49,10 @@
 - [QEMU 的参数解析](./qemu/options.md)
 - [QEMU 中的线程和事件循环](./qemu/threads.md)
 - [QEMU 中的锁](./qemu/cpus.md)
-- [QEMU 如何模拟中断](./qemu/interrupt.md)
+- [QEMU 如何模拟中断](./qemu/int.md)
 - [QEMU 中的面向对象 : QOM](./qemu/qom.md)
-- [QEMU 中的时钟](./qemu/timer.md)
 - [QEMU 字符设备模拟](./qemu/char.md)
 <!-- - 🚧 [QEMU 二进制翻译基础](./qemu/tcg.md) -->
-<!-- - 🚧 [QEMU 时钟模拟](./qemu/timer.md) -->
 <!-- - 🚧 [QEMU 如何模拟 PCI 设备](./qemu/pci.md) -->
 <!-- - 🚧 [seabios 源码分析](./qemu/seabios.md) -->
 <!-- - 🚧 [QEMU Hash Table 设计](./qemu/qht.md) -->
@@ -57,15 +65,17 @@
 - 🚧[双系统（一）: 块设备](./lol/blockdev.md)
 - [双系统（二）: bootloader](./lol/grub.md)
 - [wine : 利用系统调用虚拟化来在 Linux 上模拟运行 Window 程序](./lol/wine.md)
-- 🚧[VFIO : 利用设备直通将 GPU 提供给 Guest 使用](./lol/vfio.md)
 
 ## UEFI
 - [Linux 下 UEFI 学习环境搭建](./uefi/uefi-linux.md)
 - [UEFI 入门](./uefi/uefi-beginner.md)
 
-## Micro Architecture
+## 重新思考计算机系统结构
 
 - [如何设计一个成功的指令集架构](./cpu/arch-design.md)
+- [如何设计一个成功的文件系统](./kernel/fs-design.md)
+- [如何设计 Hotplug 机制](./kernel/hotplug.md)
+
 <!-- - 如何设计一个 Hypervisor，通过对比 HyperV, Xen 和 ESXi -->
 <!-- - 如何设计一个虚拟化指令 -->
 
@@ -90,12 +100,17 @@
 ## Tools
 - [My Linux Config](https://martins3.github.io/My-Linux-Config/)
 - [Mac，将就着用吧](./mac.md)
-- [年轻人的第一次攒机](./hw/machine.md)
 
 ## Linux Environment Programming
 - 🚧 [musl 阅读笔记](./linux/musl.md)
 - 🚧 [认识 ELF](./linux/elf.md)
 - 🚧 [Debugger 的理念，原理和使用](./linux/gdb.md)
+
+## 深入敌营 18 年
+
+<!-- - [Windows 环境配置](./kernel/windows-route.md) -->
+<!-- - [Windows 驱动开发](./kernel/windows-route.md) -->
+<!-- - [Windows Hyper-V](./kernel/windows-route.md) -->
 
 ## Linux Kernel
 - 内核学习
@@ -128,11 +143,22 @@
 <!-- ## Database -->
 <!-- - [leveldb 源码分析](./database/leveldb.md) -->
 
+## page fault
+
+### [gup](https://example.com)
+### [shadow page table](https://example.com)
+### [iommu](https://example.com)
+
+## kernel by pass ?
+- [why kernel by pass](docs/kernel/why-by-pass.md)
+
+### Perfbook 阅读笔记
+
 ## Loongson
 - [X86 上阅读 Loongarch 内核](./loongarch/hacking-ccls.md)
 - [使用 3A5000 作为我的主力机](./loongarch/neovim.md)
 
-## Multiprocessor Programming
+## 并行，并发，多核，一致性
 - [Quiescent consistency，Sequential consistency 和 Linearizability](./concurrent/linearizability.md)
 - [wait free，lockfree 和 obstruction free 区分](./concurrent/lock-free.md)
 <!-- - 🚧 [memory model](./concurrent/memory-model.md) -->
@@ -142,13 +168,22 @@
 - [what is x86 IA-32 IA-64 x86-64 and amd64 ?](./x86-names.md)
 - [言论](./words.md)
 
+## TODO 还是应该搭建一个 ai workflow
+1. 静态检查
+2. ai 润色
+3. 翻译
+
 ## Guff
 - [About](./abaaba/about.md)
+  - https://bento.me/martins3
 - [2021 秋招总结](./abaaba/job.md)
 - [有缘再见，龙芯](./abaaba/loongson.md)
+<!-- - [为什么我如此讨厌 CSDN](./abaaba/csdn.md) -->
+<!-- - [为什么我不旅游](./abaaba/travel.md) -->
+<!-- - [为什么我不用小红书](./abaaba/xiaohongshu.md) -->
 
-## For Girlfriend
-- [Garden](http://martins3.gitee.io/garden/)
+## Kernel Contribution
+- https://github.com/search?q=repo%3Atorvalds%2Flinux+Xueshi&type=commits
 
 ## Friends
 - [niugenen](https://niugenen.github.io/)
@@ -158,9 +193,6 @@
 - [utopianfuture](https://utopianfuture.github.io/)
 - [xieby1](https://xieby1.github.io/)
 - [qaqcxh](https://qaqcxh.github.io/Blogs/)
-
-
-<!-- @todo 将 blog 再完善一下，然后投稿到 https://github.com/timqian/chinese-independent-blogs -->
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
