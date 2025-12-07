@@ -124,6 +124,9 @@
   - [sparse vmemmap](./kernel/mm-vmemmap.md)
   - [watermark](./kernel/mm-watermark.md)
   - [rmap](./kernel/mm-rmap.md)
+
+### 综合话题
+- [why kernel by pass](docs/kernel/why-by-pass.md)
   <!-- - [singal 和 syscall restart](./kernel/signal-pending.md) -->
 <!-- -  🚧 [folio](./kernel/mm-folio.md) -->
 <!-- - [swap](./kernel/swap.md) -->
@@ -143,14 +146,6 @@
 <!-- ## Database -->
 <!-- - [leveldb 源码分析](./database/leveldb.md) -->
 
-## page fault
-
-### [gup](https://example.com)
-### [shadow page table](https://example.com)
-### [iommu](https://example.com)
-
-## kernel by pass ?
-- [why kernel by pass](docs/kernel/why-by-pass.md)
 
 ### Perfbook 阅读笔记
 
