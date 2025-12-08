@@ -24,19 +24,25 @@
 ```
 
 ## Collections
+
 - [slides](https://martins3.github.io/slides/)
 
 ## Virtualization && Binary Translation
+
 #### Dune
+
 - [Loongson Dune : A Process Level Virtualization framework Base on KVM](https://github.com/Martins3/loongson-dune)
 
 #### 裸金属二进制翻译器的设计和实现
+
 设计思想可以直接参考[硕士毕业论文以及答辩 PPT](https://github.com/Martins3/Bare-Metal-Binary-Translator)，以下是技术细节
+
 - 🚧 [裸金属二进制翻译器的软件架构](./bmbt/2-arch.md)
 - 🚧 [裸金属二进制翻译器的技术细节](./bmbt/3-tech.md)
 - [淦，写一个裸金属二进制翻译器不可能这么难](./bmbt/4-emotion.md)
 
 #### QEMU 源码分析
+
 - [QEMU 源码概叙](./qemu/introduction.md)
 - [QEMU 初始化过程分析](./qemu/init.md)
 - [QEMU 的 memory model 设计](./qemu/memory.md)
@@ -52,6 +58,7 @@
 - [QEMU 如何模拟中断](./qemu/int.md)
 - [QEMU 中的面向对象 : QOM](./qemu/qom.md)
 - [QEMU 字符设备模拟](./qemu/char.md)
+
 <!-- - 🚧 [QEMU 二进制翻译基础](./qemu/tcg.md) -->
 <!-- - 🚧 [QEMU 如何模拟 PCI 设备](./qemu/pci.md) -->
 <!-- - 🚧 [seabios 源码分析](./qemu/seabios.md) -->
@@ -60,6 +67,7 @@
 <!-- 介绍 libvirt -->
 
 ## 淦，打一把英雄联盟不可能这么难
+
 这里介绍三种方法在 Linux 上打英雄联盟的方法和背后的原理。
 
 - 🚧[双系统（一）: 块设备](./lol/blockdev.md)
@@ -67,6 +75,7 @@
 - [wine : 利用系统调用虚拟化来在 Linux 上模拟运行 Window 程序](./lol/wine.md)
 
 ## UEFI
+
 - [Linux 下 UEFI 学习环境搭建](./uefi/uefi-linux.md)
 - [UEFI 入门](./uefi/uefi-beginner.md)
 
@@ -87,21 +96,25 @@
 <!-- ### Lua 解释器源码分析 -->
 
 ## Tips
+
 - [计算机学习的一点经验之谈](./learn-cs.md)
 - [虚拟化学习的一点经验之谈](./learn-virtualization.md)
 - [使用 Github 记录笔记和搭建 blog](./setup-github-pages.md)
 
 ## PCIe
+
 <!-- - 🚧 [PCIe 的基本原理](.) -->
 <!-- - 🚧 [Seabios 如何探测 PCIe](.) -->
 <!-- - 🚧 [Linux Kernel 如何管理 PCIe 设备](./pci/kernel.md) -->
 <!-- - 🚧 [QEMU 如何模拟 PCIe 设备](.) -->
 
 ## Tools
+
 - [My Linux Config](https://martins3.github.io/My-Linux-Config/)
 - [Mac，将就着用吧](./mac.md)
 
 ## Linux Environment Programming
+
 - 🚧 [musl 阅读笔记](./linux/musl.md)
 - 🚧 [认识 ELF](./linux/elf.md)
 - 🚧 [Debugger 的理念，原理和使用](./linux/gdb.md)
@@ -113,6 +126,7 @@
 <!-- - [Windows Hyper-V](./kernel/windows-route.md) -->
 
 ## Linux Kernel
+
 - 内核学习
   - [内核学习的一点经验之谈](./kernel/learn-linux-kernel.md)
 - [tty 到底是什么](./kernel/tty.md)
@@ -126,8 +140,10 @@
   - [rmap](./kernel/mm-rmap.md)
 
 ### 综合话题
+
 - [why kernel by pass](./docs/kernel/why-by-pass.md)
   <!-- - [singal 和 syscall restart](./kernel/signal-pending.md) -->
+
 <!-- -  🚧 [folio](./kernel/mm-folio.md) -->
 <!-- - [swap](./kernel/swap.md) -->
 <!-- - [为什么 Linux 6.0 相比于 Linux 0.1 复杂那么多](./kernel/why-so-complex.md) -->
@@ -146,20 +162,23 @@
 <!-- ## Database -->
 <!-- - [leveldb 源码分析](./database/leveldb.md) -->
 
-
 ### Perfbook 阅读笔记
 
 ## Loongson
+
 - [X86 上阅读 Loongarch 内核](./loongarch/hacking-ccls.md)
 - [使用 3A5000 作为我的主力机](./loongarch/neovim.md)
 
 ## 并行，并发，多核，一致性
+
 - [Quiescent consistency，Sequential consistency 和 Linearizability](./concurrent/linearizability.md)
 - [wait free，lockfree 和 obstruction free 区分](./concurrent/lock-free.md)
+
 <!-- - 🚧 [memory model](./concurrent/memory-model.md) -->
 <!-- - 🚧 [volatile 关键字说明](./concurrent/volatile.md) -->
 
 ## Potpourri
+
 - [what is x86 IA-32 IA-64 x86-64 and amd64 ?](./x86-names.md)
 - [言论](./words.md)
 
@@ -169,18 +188,22 @@
 <!-- 3. 翻译 -->
 
 ## Guff
+
 - [About](./abaaba/about.md)
   - https://bento.me/martins3
 - [2021 秋招总结](./abaaba/job.md)
 - [有缘再见，龙芯](./abaaba/loongson.md)
+
 <!-- - [为什么我如此讨厌 CSDN](./abaaba/csdn.md) -->
 <!-- - [为什么我不旅游](./abaaba/travel.md) -->
 <!-- - [为什么我不用小红书](./abaaba/xiaohongshu.md) -->
 
 ## Kernel Contribution
+
 - https://github.com/search?q=repo%3Atorvalds%2Flinux+Xueshi&type=commits
 
 ## Friends
+
 - [niugenen](https://niugenen.github.io/)
 - [limaomao821](https://limaomao821.github.io/)
 - [foxsen](https://foxsen.github.io)
