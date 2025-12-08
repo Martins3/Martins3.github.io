@@ -58,10 +58,11 @@ vdb                251:16   0   1.5T  0 disk
 将这个 usb 暴露到另外一个物理机上。
 * sg 和 bsg : 通过 /dev/sg* 直接给盘发送 scsi 命令，推荐使用 `libsgutils`
 * I2C 和 SPI : 通过 /dev/i2c-* 进行操作
-* GPIO** 和 **电源稳压器（power regulators） : 只需在设备树（device tree）中添加相应描述，设备就会在 sysfs 中出现，并带有可读写属性文件。
+* GPIO 和 电源稳压器（power regulators）: 只需在设备树（device tree）中添加相应描述，设备就会在 sysfs 中出现，并带有可读写属性文件。
 * 以 `O_DIRECT` 标志打开块设备，可绕过页缓存（page cache）以及其支持的预读（readahead）和写回（write-behind）机制，实现对设备的直接读写。
-* 通过打开 TTY 设备并禁用某些 termios 设置（如 `ECHO` 和 `ICANON`），可实现对串口的直接访问。。
+* 通过打开 TTY 设备并禁用某些 termios 设置（如 `ECHO` 和 `ICANON`），可实现对串口的直接访问。
 * **io_uring uring cmd**  : 实现用户态 nvme 驱动
+- ulef / uinput : 下面的实验会具体提到，这两个代码看了，我估计上面除了 io_uring uring cmd 外，其他都可以理解了。
 
 ### 提供虚拟驱动
 * **文件系统**

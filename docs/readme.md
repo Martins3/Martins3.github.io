@@ -126,7 +126,7 @@
   - [rmap](./kernel/mm-rmap.md)
 
 ### 综合话题
-- [why kernel by pass](docs/kernel/why-by-pass.md)
+- [why kernel by pass](./docs/kernel/why-by-pass.md)
   <!-- - [singal 和 syscall restart](./kernel/signal-pending.md) -->
 <!-- -  🚧 [folio](./kernel/mm-folio.md) -->
 <!-- - [swap](./kernel/swap.md) -->
