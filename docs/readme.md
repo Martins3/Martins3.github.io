@@ -163,10 +163,10 @@
 - [what is x86 IA-32 IA-64 x86-64 and amd64 ?](./x86-names.md)
 - [言论](./words.md)
 
-## TODO 还是应该搭建一个 ai workflow
-1. 静态检查
-2. ai 润色
-3. 翻译
+<!-- ## TODO 还是应该搭建一个 ai workflow -->
+<!-- 1. 静态检查 -->
+<!-- 2. ai 润色 -->
+<!-- 3. 翻译 -->
 
 ## Guff
 - [About](./abaaba/about.md)
