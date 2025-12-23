@@ -33,6 +33,7 @@ Linux 内核并不是为了极致性能而设计的，它追求的是通用性�
 
 中断的解决办法:
 1. 用户态中断。从 vfio 的中断直接注入的到虚拟机中就可以想到，中断也是可以直接注册到用户态的
+	- https://lwn.net/Articles/871113/
 2. 使用轮询
 
 数据面主要使用 iommu 和 共享内存
@@ -62,7 +63,8 @@ vdb                251:16   0   1.5T  0 disk
 * 以 `O_DIRECT` 标志打开块设备，可绕过页缓存（page cache）以及其支持的预读（readahead）和写回（write-behind）机制，实现对设备的直接读写。
 * 通过打开 TTY 设备并禁用某些 termios 设置（如 `ECHO` 和 `ICANON`），可实现对串口的直接访问。
 * **io_uring uring cmd**  : 实现用户态 nvme 驱动
-- ulef / uinput : 下面的实验会具体提到，这两个代码看了，我估计上面除了 io_uring uring cmd 外，其他都可以理解了。
+* ulef / uinput : 下面的实验会具体提到，这两个代码看了，我估计上面除了 io_uring uring cmd 外，其他都可以理解了。
+* 某种意义上讲，qemu 作为 type2 的 vmm 相对于 type 1 vmm 而言，就是 kernel 功能放到用户态
 
 ### 提供虚拟驱动
 * **文件系统**
@@ -103,17 +105,21 @@ vdb                251:16   0   1.5T  0 disk
 
 ## 进一步的思考
 
-1. 相同的功能其实可以放到 用户态，内核态，固件中(nvidia GSP 固件)，CPU 中，加速器中
-virtio 作为案例
-	1. kernel 中的 vhost-net
+1. 相同的功能其实可以放到 用户态，内核态，固件中(nvidia GSP 固件)，CPU 中，加速器中，例如对于
+virtio ，可以存在一下形态
+	1. kernel 中的 vhost-net vhost-scsi
 	2. qemu 中 hw/net/virtio-net.c
 	3. vhost-user : dpdk 实现
-	4. vduse : 用户态进程实现
+	4. vduse : 用户态进程实现 virtio 驱动
 	5. vdpa : 硬件实现，可能是 ASIC 电路，也可能是 FPGA
 	5. 智能网卡，类似的 ovs 也可以放到硬件中
-3. 同样的，存储的案例，内核中的 raid / device mapper / bcache，在用户态的 ceph 之类的存储产品中都有实现
-5. 微内核可以解决这些问题吗？我理解是可以的
+3. 同样的，存储的案例，内核的 block 层的 raid / device mapper / bcache
+	- 在用户态的 ceph 之类的存储产品中都有实现
+	- 也可以在文件系统中实现，例如 zfs 中
+5. 微内核算是一个解决的解决方案吗？我理解是可以的
 3. https://github.com/theseus-os/Theseus 通过 rust 来消除用户态、内核态的操作系统
+5. https://github.com/airbus-seclab/ramooflax : bare metal (type 1) VMM 相当于把 qemu 放到硬件上运行
+6. https://github.com/Martins3/bmbt : 将 QEMU 放到裸机上运行
 8. https://engineering.fb.com/2024/03/12/data-center-engineering/building-metas-genai-infrastructure/
 6. https://github.com/topics/kernel-bypass
 
