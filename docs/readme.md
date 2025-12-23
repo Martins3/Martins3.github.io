@@ -193,8 +193,8 @@
   - https://bento.me/martins3
 - [2021 秋招总结](./abaaba/job.md)
 - [有缘再见，龙芯](./abaaba/loongson.md)
-- [Linux 内核的本质就是英雄联盟](./docs/abaaba/lol-vs-linux.md)
-- [Linux 内核的本质就是原神](./docs/abaaba/genshin-vs-linux.md)
+- [Linux 内核的本质就是英雄联盟](./abaaba/lol-vs-linux.md)
+- [Linux 内核的本质就是原神](./abaaba/genshin-vs-linux.md)
 
 <!-- - [为什么我如此讨厌 CSDN](./abaaba/csdn.md) -->
 <!-- - [为什么我不旅游](./abaaba/travel.md) -->
