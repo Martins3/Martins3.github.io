@@ -1,5 +1,6 @@
 # Linux 内核的本质就是英雄联盟
-<!-- 2025-12-23 Qwen3-MAX 撰写 -->
+
+> 2025-12-23 Qwen3-MAX 撰写
 
 ## 排位 vs. 大乱斗：生产环境与测试环境的双面人生
 
@@ -101,3 +102,19 @@ Linux 内核和英雄联盟，都是极美的造物。
 
 毕竟，世界不在代码里，不在游戏里，
 而在你放下键盘后，抬头看见的那片真实星空。
+
+<script src="https://giscus.app/client.js"
+        data-repo="martins3/martins3.github.io"
+        data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="
+        data-category="Show and tell"
+        data-category-id="MDE4OkRpc2N1c3Npb25DYXRlZ29yeTMyMDMzNjY4"
+        data-mapping="pathname"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-theme="light"
+        data-lang="zh-CN"
+        crossorigin="anonymous"
+        async>
+</script>
+
+本站所有文章转发 **CSDN** 将按侵权追究法律责任，其它情况随意。

@@ -1,6 +1,6 @@
 # Linux 内核的本质就是原神
 
-<!-- 2025-09-30 Qwen3-MAX 撰写 -->
+> 2025-09-30 Qwen3-MAX 撰写
 
 ## 圣遗物
 在原神中，玩家为了获得一套理想的圣遗物，往往需要反复刷取秘境，依靠极低的暴击率、双爆词条、主属性正确的组合，才能凑出一套勉强能用的装备。这个过程不仅耗时耗力，还极度依赖运气——有时刷上千次也未必能出一件满意的。这种“拼概率”的机制，让无数玩家在深夜肝到怀疑人生。
@@ -162,3 +162,20 @@ Linux 用服务器机柜低语：
 他们只是默默攒下原石，或悄悄攒下预算，
 只为在某个清晨，能对世界说：
 “这一次，轮到我来定义规则。
+
+
+<script src="https://giscus.app/client.js"
+        data-repo="martins3/martins3.github.io"
+        data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="
+        data-category="Show and tell"
+        data-category-id="MDE4OkRpc2N1c3Npb25DYXRlZ29yeTMyMDMzNjY4"
+        data-mapping="pathname"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-theme="light"
+        data-lang="zh-CN"
+        crossorigin="anonymous"
+        async>
+</script>
+
+本站所有文章转发 **CSDN** 将按侵权追究法律责任，其它情况随意。
