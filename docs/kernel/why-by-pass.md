@@ -118,7 +118,6 @@ virtio ，可以存在一下形态
 	- 也可以在文件系统中实现，例如 zfs 中
 5. 微内核算是一个解决的解决方案吗？我理解是可以的
 3. https://github.com/theseus-os/Theseus 通过 rust 来消除用户态、内核态的操作系统
-5. https://github.com/airbus-seclab/ramooflax : bare metal (type 1) VMM 相当于把 qemu 放到硬件上运行
 6. https://github.com/Martins3/bmbt : 将 QEMU 放到裸机上运行
 8. https://engineering.fb.com/2024/03/12/data-center-engineering/building-metas-genai-infrastructure/
 6. https://github.com/topics/kernel-bypass
