@@ -70,10 +70,21 @@
 
 这里介绍三种方法在 Linux 上打英雄联盟的方法和背后的原理。
 
-- 使用双系统
+- 双系统
+	- seabios 和 UEFI 的启动分区
+	- [bootloader](./lol/grub.md)
+- 图形虚拟化
+	- cirrus-vga
+	- vga
+	- virtio-gpu
+- 设备直通
+	- vfio
 	- [一盘两用](./kernel/vfio/fun.md)
-	- [双系统: bootloader](./lol/grub.md)
-- [wine : 利用系统调用虚拟化来在 Linux 上模拟运行 Window 程序](./lol/wine.md)
+	- [QEMU tcg 模式设备直通](./kernel/vfio/tcg.md)
+- Wine
+	- [wine 基本介绍](./lol/wine.md)
+	- Proton
+
 
 ## UEFI
 
