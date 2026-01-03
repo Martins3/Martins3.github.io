@@ -1,9 +1,7 @@
 # 使用 Anki 持续思考
 
-为什么我需要 Anki
-
 ## 1. Behavior modification
-https://news.ycombinator.com/item?id=46264492#46266799
+前几天看 [HN](https://news.ycombinator.com/item?id=46264492#46266799)，读到了一段这样的话:
 
 > I think that the real power of spaced repetition is not in flashcard applications like this. It is in behavior modification.
 > Let's take a real example to show how this works.
@@ -63,12 +61,34 @@ https://news.ycombinator.com/item?id=46264492#46266799
 anki 让我持续思考这些事情，例如我长时间不会看 Linux kernel scheduler 相关的内容，但是可以通过 anki 来保证我的理解不会
 出现退化，总是会有一些推进的。
 
-## 如何使用 Anki
+## 具体如何操作
 
-不过我去尝试 Anki ，我发现 Anki 和我现在的笔记体系有点冲突，基本想法和
-[Hashcards: A Plain-Text Spaced Repetition System](https://borretti.me/article/hashcards-plain-text-spaced-repetition)
+我去尝试使用 Anki 的时候发现 ，我发现 Anki 和我现在的笔记体系有点冲突，
+
+我调用了一些项目，发现 Anki 不太满足我需求:
+- https://github.com/badlydrawnrob/anki
+- https://git.foosoft.net/alex/anki-connect
+- https://github.com/Mochitto/Markdown2Anki
+- https://github.com/ankidroid/Anki-Android
+- https://github.com/kerrickstaley/genanki
+- https://addon-docs.ankiweb.net/command-line-use.html
+- https://www.reddit.com/r/Anki/comments/1o4pr8e/new_addon_released_onigiri_a_more_modern_anki_for/
+- https://github.com/HayesBarber/spaced-repetition-learning
+- https://www.zhihu.com/question/57569577/answer/1914530358248055064
+- https://github.com/ZetloStudio/ZeQLplus : sqlite 的 browser
+- https://zhuanlan.zhihu.com/p/1907786810685395276 : FSRS for Anki 发展史 - Jarrett Ye的文章 - 知乎
+
+1. 我想使用我熟悉的 UNIX 工具链，Anki 携带的 GUI 是不可接受的
+2. 我的笔记仓库积累了很多文档，我的目的是以这个仓库为核心，如果我制作 Anki Deck ，如何同步是一个问题
+```txt
+🧀  find . -name "*.md" | wc -l
+1947
+```
+3. Anki 体系下的大部分代码都是 Python 写的，我每次和 Python 打交道都不愉快。我不想使用 Python
+
+
+基本想法和 [Hashcards: A Plain-Text Spaced Repetition System](https://borretti.me/article/hashcards-plain-text-spaced-repetition)
 相似，不过希望我有一个比 Hashcards 更加简单的方法:
-
 1. 如果我想记录下什么问题，那么就在一个 markdown 标题下添加一个 uuid 。提示词就是标题，需要回忆的内容就是标题下的内容。
 2. 仅仅依赖 open-spaced-repetition/fsrs-rs 提供算法
 

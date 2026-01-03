@@ -27,9 +27,10 @@
 
 - [slides](https://martins3.github.io/slides/)
 
-## 关于本 Blog
-- [关于 Blog 的思考](./blog/use-write-to-think.md)
-- [使用 Github Pages 来发布](./blog/setup-github-pages.md)
+## 我的工作流
+- [使用 Github Pages 来搭建 Blog](./blog/setup-github-pages.md)
+- [用写作来重新思考问题](./blog/use-write-to-think.md)
+- [使用 Anki 持续思考](./blog/why-anki.md)
 
 ## Virtualization && Binary Translation
 
