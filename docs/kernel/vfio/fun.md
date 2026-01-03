@@ -173,6 +173,9 @@ nvme2n1         259:5    0   3.6T  0 disk
 └─nvme2n1p3     259:8    0   3.6T  0 part
   └─fedora-root 252:0    0   3.6T  0 lvm
 ```
+
+所以，如果只要想，也可以构建一个双系统，一个系统在 virtio-blk 盘上，
+一个系统运行在 vfio 直通的盘上
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

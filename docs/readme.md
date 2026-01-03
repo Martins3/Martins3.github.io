@@ -27,6 +27,10 @@
 
 - [slides](https://martins3.github.io/slides/)
 
+## 关于本 Blog
+- [关于 Blog 的思考](./blog/use-write-to-think.md)
+- [使用 Github Pages 来发布](./blog/setup-github-pages.md)
+
 ## Virtualization && Binary Translation
 
 #### Dune
@@ -111,7 +115,6 @@
 
 - [计算机学习的一点经验之谈](./learn-cs.md)
 - [虚拟化学习的一点经验之谈](./learn-virtualization.md)
-- [使用 Github 记录笔记和搭建 blog](./setup-github-pages.md)
 
 ## PCIe
 
