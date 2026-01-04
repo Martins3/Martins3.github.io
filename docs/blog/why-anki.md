@@ -92,11 +92,10 @@ anki 让我持续思考这些事情，例如我长时间不会看 Linux kernel s
 2. 仅仅依赖 open-spaced-repetition/fsrs-rs 提供算法
 
 一共就两个代码:
-- ./anki.sh : 使用 gum bat rg neovim 来实现 deck 的制作，交互
-- ./fsrs/src/main.rs : 封装 fsrs-rs 算法库
+- [anki.sh](./anki.sh) : 使用 gum bat rg neovim 来实现 deck 的制作，交互
+- [fsrs/src/main.rs](./fsrs/src/main.rs) : 封装 fsrs-rs 算法库
 
-另外，提供了一个单独的工具来搜索 deck
-- ./anki-fzf.sh :
+另外，提供了一个单独的工具来搜索 deck [anki-fzf](./anki-fzf.sh)
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

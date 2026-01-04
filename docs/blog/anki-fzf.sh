@@ -38,4 +38,5 @@ if env | grep neovim >/dev/null; then
 	exit 1
 fi
 
+cd "$HOME"/data/vn
 check_all
