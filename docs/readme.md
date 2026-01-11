@@ -60,7 +60,6 @@
 - [QEMU 的参数解析](./qemu/options.md)
 - [QEMU 中的线程和事件循环](./qemu/threads.md)
 - [QEMU 中的锁](./qemu/cpus.md)
-- [QEMU 如何模拟中断](./qemu/int.md)
 - [QEMU 中的面向对象 : QOM](./qemu/qom.md)
 - [QEMU 字符设备模拟](./qemu/char.md)
 
@@ -70,6 +69,20 @@
 <!-- - 🚧 [QEMU Hash Table 设计](./qemu/qht.md) -->
 <!-- - 🚧 [QEMU Hotplug 和 Reset](./qemu/reset.md) -->
 <!-- 介绍 libvirt -->
+
+## 如何组装一台电脑
+
+### 如何选购固态
+
+- PCIe 基础
+- DMA
+- 中断
+	- [QEMU KVM 如何中断注入](./kernel/irq/virt-int-inject.md)
+
+### 如何选购内存
+
+### 案例分析
+- [年轻人的第一次攒机](./hw/1-13900k.md)
 
 ## 淦，打一把英雄联盟不可能这么难
 
@@ -86,6 +99,9 @@
 	- vfio
 	- [一盘两用](./kernel/vfio/fun.md)
 	- [QEMU tcg 模式设备直通](./kernel/vfio/tcg.md)
+	- [vfio 如何管理中断](./kernel/vfio/int-vfio.md)
+	- [remapped interrupt](./kernel/vfio/int-remapping.md)
+	- [posted interrupt](./kernel/vfio/int-posted.md)
 - Wine
 	- [wine 基本介绍](./lol/wine.md)
 	- Proton
@@ -117,12 +133,6 @@
 - [计算机学习的一点经验之谈](./learn-cs.md)
 - [虚拟化学习的一点经验之谈](./learn-virtualization.md)
 
-## PCIe
-
-<!-- - 🚧 [PCIe 的基本原理](.) -->
-<!-- - 🚧 [Seabios 如何探测 PCIe](.) -->
-<!-- - 🚧 [Linux Kernel 如何管理 PCIe 设备](./pci/kernel.md) -->
-<!-- - 🚧 [QEMU 如何模拟 PCIe 设备](.) -->
 
 ## Tools
 
@@ -135,8 +145,7 @@
 - 🚧 [认识 ELF](./linux/elf.md)
 - 🚧 [Debugger 的理念，原理和使用](./linux/gdb.md)
 
-## 深入敌营 18 年
-
+<!-- ## 深入敌营 18 年 -->
 <!-- - [Windows 环境配置](./kernel/windows-route.md) -->
 <!-- - [Windows 驱动开发](./kernel/windows-route.md) -->
 <!-- - [Windows Hyper-V](./kernel/windows-route.md) -->
@@ -147,13 +156,6 @@
   - [内核学习的一点经验之谈](./kernel/learn-linux-kernel.md)
 - [tty 到底是什么](./kernel/tty.md)
 - [mknod](./kernel/mknod.md)
-- 内存管理
-  - [oom](./kernel/mm-oom.md)
-  - [memblock](./kernel/mm-memblock.md)
-  - [cma](./kernel/mm-cma.md)
-  - [sparse vmemmap](./kernel/mm-vmemmap.md)
-  - [watermark](./kernel/mm-watermark.md)
-  - [rmap](./kernel/mm-rmap.md)
 
 ### 综合话题
 

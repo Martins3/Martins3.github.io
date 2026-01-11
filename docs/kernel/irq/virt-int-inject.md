@@ -1,4 +1,4 @@
-## KVM 中断注入
+## QEMU KVM 中断注入
 <!-- 7216915c-74d6-4a92-af37-25502a5aa006 -->
 
 一共存在这些方法，我们关注的重点当然是通过 eventfd 来注入
@@ -29,6 +29,8 @@ struct VirtQueue {
 
 - ioeventfd 对于 fd 进行 epoll
 - irqfd 在 qemu 中调用 event_notifier_set
+
+不过，比较有意思的是
 
 ## 1: qemu 通过 ioeventfd 来接受 Guest OS 的通知
 <!-- 78670593-1ba7-4f4d-817a-b33af7b7b5cd -->
