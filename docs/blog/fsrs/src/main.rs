@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::fs;
 use std::path::Path;
 use chrono::{DateTime, Utc, Duration};
@@ -70,13 +70,13 @@ type LogEntries = Vec<LogEntry>;
 #[derive(Debug, Clone, Deserialize, Serialize)]
 struct Database {
     #[serde(flatten)]
-    items: HashMap<String, LogEntries>,
+    items: BTreeMap<String, LogEntries>,
 }
 
 impl Database {
     fn new() -> Self {
         Database {
-            items: HashMap::new(),
+            items: BTreeMap::new(),
         }
     }
 
@@ -122,7 +122,7 @@ struct Args {
     due: bool,
 
     #[arg(long = "insert", num_args = 2)]
-    /// Insert a learning record (UUID and rating: 1=again, 2=hard, 3=good, 4=easy)
+    /// Insert a learning record (UUID and rating: Again/[A], Hard/[H], Good/[G], Easy/[E])
     insert: Option<Vec<String>>,
 
     #[arg(long = "check")]
@@ -192,29 +192,27 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     } else if let Some(insert_args) = args.insert {
         if insert_args.len() != 2 {
-            eprintln!("Error: --insert requires exactly 2 arguments (UUID and OK status)");
+            eprintln!("Error: --insert requires exactly 2 arguments (UUID and rating: Again/[A], Hard/[H], Good/[G], Easy/[E])");
             std::process::exit(1);
         }
 
         let uuid = &insert_args[0];
         let rating_str = &insert_args[1];
-        // Parse rating as integer (1=again, 2=hard, 3=good, 4=easy)
-        let rating = rating_str.parse::<u32>().unwrap_or_else(|_| {
-            match rating_str.as_str() {
-                "again" | "1" => 1,
-                "hard" | "2" => 2,
-                "good" | "3" => 3,
-                "easy" | "4" => 4,
-                _ => {
-                    eprintln!("Error: rating must be 1 (again), 2 (hard), 3 (good), or 4 (easy)");
-                    std::process::exit(1);
-                }
+        // Parse rating as string (Again/[A], Hard/[H], Good/[G], Easy/[E])
+        let rating = match rating_str.to_lowercase().as_str() {
+            "again" | "a" | "1" => 1,
+            "hard" | "h" | "2" => 2,
+            "good" | "g" | "3" => 3,
+            "easy" | "e" | "4" => 4,
+            _ => {
+                eprintln!("Error: rating must be Again/[A], Hard/[H], Good/[G], or Easy/[E]");
+                std::process::exit(1);
             }
-        });
+        };
 
         // Validate rating is between 1 and 4
         if rating < 1 || rating > 4 {
-            eprintln!("Error: rating must be between 1 and 4 (1=again, 2=hard, 3=good, 4=easy)");
+            eprintln!("Error: rating must be Again/[A], Hard/[H], Good/[G], or Easy/[E]");
             std::process::exit(1);
         }
 

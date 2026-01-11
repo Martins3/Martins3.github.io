@@ -46,10 +46,9 @@
 - 记录的所有 check sheet
 - kernel lock api
 
-```txt
-🧀  find . -name "*.md" | wc -l
-1947
-```
+虽然制作了 checksheet ，但是意义不大，发现相同的问题总是查。
+
+- [navi](https://github.com/denisidoro/navi)
 
 ## 3. 持续的思考复杂的问题
 
@@ -64,27 +63,17 @@ anki 让我持续思考这些事情，例如我长时间不会看 Linux kernel s
 
 我去尝试使用 Anki 的时候发现 ，我发现 Anki 和我现在的笔记体系有点冲突，
 
-我调用了一些项目，发现 Anki 不太满足我需求:
-- https://github.com/badlydrawnrob/anki
-- https://git.foosoft.net/alex/anki-connect
-- https://github.com/Mochitto/Markdown2Anki
-- https://github.com/ankidroid/Anki-Android
-- https://github.com/kerrickstaley/genanki
-- https://addon-docs.ankiweb.net/command-line-use.html
-- https://www.reddit.com/r/Anki/comments/1o4pr8e/new_addon_released_onigiri_a_more_modern_anki_for/
-- https://github.com/HayesBarber/spaced-repetition-learning
-- https://www.zhihu.com/question/57569577/answer/1914530358248055064
-- https://github.com/ZetloStudio/ZeQLplus : sqlite 的 browser
-- https://zhuanlan.zhihu.com/p/1907786810685395276 : FSRS for Anki 发展史 - Jarrett Ye的文章 - 知乎
+我调研了一些项目，发现 Anki 不太满足我需求:
 
 1. 我想使用我熟悉的 UNIX 工具链，Anki 携带的 GUI 是不可接受的
-2. 我的笔记仓库积累了很多文档，我的目的是以这个仓库为核心，如果我制作 Anki Deck ，如何同步是一个问题
+2. 遇到感兴趣的东西我就会记录到笔记仓库中，等到有时间就将相关东西全部整理一下，现在笔记仓库积累了很多文档
 ```txt
 🧀  find . -name "*.md" | wc -l
 1947
 ```
-3. Anki 体系下的大部分代码都是 Python 写的，我每次和 Python 打交道都不愉快。我不想使用 Python
-
+我最终目的是持续思考这些记录下东西，所以这个笔记仓库就是核心，使用 neovim 编辑，git 同步
+如果我制作 Anki Deck ，我需要搭建一个新体系，而且如何同步笔记到 Anki Deck 中也是一个问题。
+3. Anki 体系下的大部分代码都是 Python 写的，我每次和 Python 打交道都不愉快，我不想使用 Python 。
 
 基本想法和 [Hashcards: A Plain-Text Spaced Repetition System](https://borretti.me/article/hashcards-plain-text-spaced-repetition)
 相似，不过希望我有一个比 Hashcards 更加简单的方法:
@@ -96,6 +85,22 @@ anki 让我持续思考这些事情，例如我长时间不会看 Linux kernel s
 - [fsrs/src/main.rs](./fsrs/src/main.rs) : 封装 fsrs-rs 算法库
 
 另外，提供了一个单独的工具来搜索 deck [anki-fzf](./anki-fzf.sh)
+
+## 附录
+
+调研过的项目:
+- https://github.com/badlydrawnrob/anki
+- https://git.foosoft.net/alex/anki-connect
+- https://github.com/Mochitto/Markdown2Anki
+- https://github.com/ankidroid/Anki-Android
+- https://github.com/kerrickstaley/genanki
+- https://addon-docs.ankiweb.net/command-line-use.html
+- https://www.reddit.com/r/Anki/comments/1o4pr8e/new_addon_released_onigiri_a_more_modern_anki_for/
+- https://github.com/HayesBarber/spaced-repetition-learning
+- https://www.zhihu.com/question/57569577/answer/1914530358248055064
+- https://github.com/ZetloStudio/ZeQLplus : sqlite 的 browser
+- https://zhuanlan.zhihu.com/p/1907786810685395276 : FSRS for Anki 发展史 - Jarrett Ye的文章 - 知乎
+- https://github.com/shaankhosla/repeater : 类似 Hashcards ，4000 行，TUI
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

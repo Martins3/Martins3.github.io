@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 set -E -e -u -o pipefail
-set -x
 
 MAIN_REPO=$HOME/data/vn
 
@@ -8,10 +7,12 @@ anki=/home/martins3/data/vn/docs/blog/fsrs/target/debug/anki-fsrs
 output=/tmp/output/
 pushd "$MAIN_REPO"
 
-if env | grep neovim >/dev/null; then
-	echo "Don't Run nvim in nvim 😸"
-	exit 1
-fi
+function check_neovim_env() {
+	if env | grep neovim >/dev/null; then
+		echo "Don't Run nvim in nvim 😸"
+		exit 1
+	fi
+}
 
 function error_format() {
 	echo "$1"
@@ -19,8 +20,41 @@ function error_format() {
 	echo ""
 	echo "# title"
 	echo "<!-- uuid -->"
-	echo "weight"
 	exit 1
+}
+
+user_input=""
+function read_user_input() {
+	while true; do
+		echo "Choose one key:"
+		echo "  [A] Again  [H] Hard  [G] Good  [E] Easy"
+		read -r -n 1 -p "> " choice
+		echo
+
+		case "$choice" in
+			A | a)
+				echo "You chose: Again"
+				break
+				;;
+			H | h)
+				echo "You chose: Hard"
+				break
+				;;
+			G | g)
+				echo "You chose: Good"
+				break
+				;;
+			E | e)
+				echo "You chose: Easy"
+				break
+				;;
+			*)
+				echo "Invalid key. Use A/H/G/E."
+				echo
+				;;
+		esac
+	done
+	user_input="$choice"
 }
 
 function extract() {
@@ -87,15 +121,20 @@ function play2() {
 		extract "$file"
 		original_file=$(head -n 1 "$file" | cut -d: -f1)
 		original_line=$(head -n 1 "$file" | cut -d: -f2)
-		if gum confirm "$title "; then
-			$anki --insert "${uuid}" 1
+
+		gum style --foreground 212 \
+			--border-foreground 212 \
+			--border double \
+			--margin "1 1" \
+			--padding "1 1" \
+			"$title"
+
+		read_user_input
+		echo "$user_input"
+		$anki --insert "${uuid}" "$user_input"
+		if [[ $user_input == "Good" ]]; then
 			bat "$file"
 		else
-			if [[ $? -ne 1 ]]; then
-				echo "😼"
-				exit 1
-			fi
-			$anki --insert "${uuid}" 2
 			pushd "$MAIN_REPO"
 			set -x
 			nvim "+$original_line" "$original_file"
@@ -109,7 +148,7 @@ function import() {
 		m=$(basename "$file")
 		m=${m%%.md}
 		if ! $anki --check "$m"; then
-			$anki --insert "$m" 2
+			$anki --insert "$m" 4
 		fi
 	done
 }
@@ -117,7 +156,7 @@ function import() {
 while getopts "r" opt; do
 	case $opt in
 		r)
-			# refinement
+			refinement
 			import
 			exit 0
 			;;
@@ -128,6 +167,7 @@ while getopts "r" opt; do
 			;;
 	esac
 done
+check_neovim_env
 play2
 
 # 给这个自动带上 word 来处理
