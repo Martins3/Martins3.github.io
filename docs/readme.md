@@ -106,6 +106,13 @@
 	- [wine 基本介绍](./lol/wine.md)
 	- Proton
 
+## 调试内核的几种方法
+- 从外部观察
+	- crash
+	- drgn
+	- kvm-dmesg
+	- gdb kernel
+	- perf kvm
 
 ## UEFI
 
@@ -121,8 +128,11 @@
 <!-- - 如何设计一个 Hypervisor，通过对比 HyperV, Xen 和 ESXi -->
 <!-- - 如何设计一个虚拟化指令 -->
 
-<!-- #### BOOM 源码阅读: 从静态 5 级 MIPS 流水线到乱序多发射 RISC-V CPU -->
-<!-- - [准备工作]() -->
+## 生活技能
+- [应急救护 : 深圳市直机关党员应急能力培训](./chores/emergency-medical-care.md)
+
+
+docs/chores/emergency-medical-care.md
 
 ## Compiler
 
@@ -180,7 +190,7 @@
 <!-- ## Database -->
 <!-- - [leveldb 源码分析](./database/leveldb.md) -->
 
-### Perfbook 阅读笔记
+## Perfbook 阅读笔记
 
 ## Loongson
 
