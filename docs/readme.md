@@ -70,6 +70,11 @@
 <!-- - 🚧 [QEMU Hotplug 和 Reset](./qemu/reset.md) -->
 <!-- 介绍 libvirt -->
 
+<!-- ## 开机助手的自我修养 -->
+<!-- - 固件 -->
+<!-- - bootloader -->
+<!-- - kernel -->
+
 ## 如何组装一台电脑
 
 ### 如何选购固态
@@ -106,6 +111,7 @@
 	- [wine 基本介绍](./lol/wine.md)
 	- Proton
 
+<<<<<<< HEAD
 ## 调试内核的几种方法
 - 从外部观察
 	- crash
@@ -113,6 +119,19 @@
 	- kvm-dmesg
 	- gdb kernel
 	- perf kvm
+||||||| parent of 0306458b34e1 (🥑)
+=======
+## 调试内核的几种方法
+- 从外部观察
+	- crash
+		<!-- - [基本操作](./) -->
+		<!-- - [基本原理](./) -->
+		<!-- - [技巧和任务](./) -->
+	- drgn
+	- kvm-dmesg
+	- gdb kernel
+	- perf kvm
+>>>>>>> 0306458b34e1 (🥑)
 
 ## UEFI
 
@@ -128,11 +147,19 @@
 <!-- - 如何设计一个 Hypervisor，通过对比 HyperV, Xen 和 ESXi -->
 <!-- - 如何设计一个虚拟化指令 -->
 
+<<<<<<< HEAD
 ## 生活技能
 - [应急救护 : 深圳市直机关党员应急能力培训](./chores/emergency-medical-care.md)
 
 
 docs/chores/emergency-medical-care.md
+||||||| parent of 0306458b34e1 (🥑)
+<!-- #### BOOM 源码阅读: 从静态 5 级 MIPS 流水线到乱序多发射 RISC-V CPU -->
+<!-- - [准备工作]() -->
+=======
+## 生活技能
+- [应急救护 : 深圳市直机关党员应急能力培训](./chores/emergency-medical-care.md)
+>>>>>>> 0306458b34e1 (🥑)
 
 ## Compiler
 

@@ -118,6 +118,10 @@ function play2() {
 	readarray -t items < <($anki --due)
 	for uuid in "${items[@]}"; do
 		file=$output/${uuid}.md
+		if [[ ! -f $file ]]; then
+			echo "$(basename "$file") not found, skip"
+			continue
+		fi
 		extract "$file"
 		original_file=$(head -n 1 "$file" | cut -d: -f1)
 		original_line=$(head -n 1 "$file" | cut -d: -f2)
