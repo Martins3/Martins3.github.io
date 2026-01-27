@@ -29,7 +29,7 @@
 只是顺手打开电脑，然后看几个 B 站的订阅更新，订阅看完之后，打开英雄联盟。最后，发誓明天要早睡。
 
 <p align="center">
-  <img src="https://github.com/user-attachments/assets/2ffe7f35-7dec-4ee3-89d2-c2a558807103" alt="drawing" height="800" align="center"/>
+  <img src="https://github.com/user-attachments/assets/2ffe7f35-7dec-4ee3-89d2-c2a558807103" alt="drawing" height="400" align="center"/>
 </p>
 <p align="center">
 </p>
