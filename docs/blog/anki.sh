@@ -187,11 +187,15 @@ function import() {
 	fi
 }
 
-while getopts "rc" opt; do
+while getopts "rsc" opt; do
 	case $opt in
 		r)
 			refinement
 			import
+			exit 0
+			;;
+		s)
+			$anki --stats
 			exit 0
 			;;
 		*)

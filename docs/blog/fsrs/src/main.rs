@@ -140,6 +140,10 @@ struct Args {
     #[arg(long = "delete", num_args = 1)]
     /// Delete a card from the database (takes UUID as argument)
     delete: Option<String>,
+
+    #[arg(long = "stats")]
+    /// Statistics: Show number of reviews and unique items per day
+    stats: bool,
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -149,7 +153,35 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let mut db = Database::load(&database_path)?;
 
-    if args.due {
+    if args.stats {
+        // Statistics: count number of reviews and unique items per day
+        let mut daily_reviews = BTreeMap::new();
+        let mut daily_unique_items = BTreeMap::new();
+
+        for (uuid, log_entries) in &db.items {
+            for log in log_entries {
+                let log_time = parse_datetime(&log.time)?;
+                let date_str = log_time.format("%Y-%m-%d").to_string();
+
+                // Count total reviews per day
+                *daily_reviews.entry(date_str.clone()).or_insert(0) += 1;
+
+                // Count unique items per day
+                daily_unique_items
+                    .entry(date_str)
+                    .or_insert_with(|| std::collections::HashSet::new())
+                    .insert(uuid);
+            }
+        }
+
+        // Print the statistics
+        println!("Daily review statistics:");
+        println!("------------------------");
+        for (date, count) in daily_reviews {
+            let unique_items = daily_unique_items.get(&date).unwrap().len();
+            println!("{}: {} reviews, {} unique items", date, count, unique_items);
+        }
+    } else if args.due {
         // Use FSRS to determine which items are due for review
         let fsrs = FSRS::new(Some(&DEFAULT_PARAMETERS))?;
 
@@ -243,6 +275,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             eprintln!("Card with UUID {} not found in database", uuid);
             std::process::exit(1);
         }
+    } else {
+        // Print help if no arguments are provided
+        Args::parse_from(&["anki-fsrs", "--help"]);
     }
 
     Ok(())
