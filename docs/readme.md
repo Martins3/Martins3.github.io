@@ -122,6 +122,9 @@
 	- gdb kernel
 	- perf kvm
 
+## 学习
+- [重新学会如何学习](./learn.md)
+
 ## UEFI
 
 - [Linux 下 UEFI 学习环境搭建](./uefi/uefi-linux.md)

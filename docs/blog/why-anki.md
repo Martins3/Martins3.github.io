@@ -32,23 +32,34 @@
 1. 不要在出租屋放电脑手机
 2. 回去的时候，先用做点其他的事情，让自己不要进入到可以网上冲浪的气氛中。
 
-## 2. 记住任何事情
+## 2. 记忆修改解决问题的成本
 
-很多事情，用 ChatGPT 查询就代价太高了，因为切换了上下文，等浏览器上的操作完成之后，
-我都不知道我刚才想要做什么的:
+我在调试内核的时候，就发现，如果一个问题涉及到物理机重启，最后调试起来都是旷日持久，
+如果不涉及重启，一般会很快。如果统计下来，发现中间重启的次数一共也就十几次，总共两三个小时，
+只是占总调试时间的一小部分。
+
+实际上并不是，如果是重启虚拟机，或者 process ，可能一天会重启几百次，但是是物理机，每一次重启
+都得想一想，导致最后重启次数很少。
+
+同样的，很多事情，用 ChatGPT 查询就代价太高了，因为切换了上下文，等浏览器上的操作完成之后， 我都不知道我刚才想要做什么事情了。
+而且本来很容易的事情，现在还需要上网查一下，成本不知不觉的改变了。
 
 我正在尝试使用 anki 记录下:
-- 将 baidu.fanyi.com 中查询过的单词
+- 查询过的单词
 - 常见的 trace 技术
 - aarch64 的语法
 - memory model 的几个例子
 - x86 汇编
 - 记录的所有 check sheet
 - kernel lock api
+- crash utility 工具
+- GCC inline assembly
+- C++ 语法
+- Rust 语法
 
-虽然制作了 checksheet ，但是意义不大，发现相同的问题总是查。
-
+虽然制作了 checksheet ，但是我发现相同的问题总是在查询:
 - [navi](https://github.com/denisidoro/navi)
+- [xieby1's checksheet](https://xieby1.github.io/cheatsheet.html)
 
 ## 3. 持续的思考复杂的问题
 
@@ -58,6 +69,14 @@
 
 anki 让我持续思考这些事情，例如我长时间不会看 Linux kernel scheduler 相关的内容，但是可以通过 anki 来保证我的理解不会
 出现退化，总是会有一些推进的。
+
+## 4. 使用零散的时间来掌握一些新的技能
+1. 很多东西需要掌握了才可以记住，但是有的东西一次根本没法掌握(例如一个周末)
+例如 Linux kernel 中的 io_uring
+2. Rust / C++ 如果没有使用的项目，日常状态很难学会
+
+
+利用 Anki ，我可以记住那些已经学会的，不然每一次回来，都是重新开始。
 
 ## 具体如何操作
 
@@ -79,12 +98,15 @@ anki 让我持续思考这些事情，例如我长时间不会看 Linux kernel s
 相似，不过希望我有一个比 Hashcards 更加简单的方法:
 1. 如果我想记录下什么问题，那么就在一个 markdown 标题下添加一个 uuid 。提示词就是标题，需要回忆的内容就是标题下的内容。
 2. 仅仅依赖 open-spaced-repetition/fsrs-rs 提供算法
+3. 我不想使用 sqlite 来存储数据，数据就是用 json 格式保存，我现在还没有那么大的数据量了，用 git 来保存同步数据库就可以了。
 
-一共就两个代码:
-- [anki.sh](./anki.sh) : 使用 gum bat rg neovim 来实现 deck 的制作，交互
-- [fsrs/src/main.rs](./fsrs/src/main.rs) : 封装 fsrs-rs 算法库
+主要就使用这几个代码:
+- [nvim 快捷键](https://github.com/Martins3/My-Linux-Config/blob/6835bc4e74e363798c6fd4abfe730d951a4aec8f/nvim/lua/usr/util.lua#L22) : 快速在文本中插入一个 uuid
+这样，我就可以把之前的笔记变成 Anki deck 了。
+- [anki.sh](https://github.com/Martins3/Martins3.github.io/blob/master/docs/blog/anki.sh) : 使用 gum rg neovim 来实现和 deck 交互
+- [fsrs/src/main.rs](https://github.com/Martins3/Martins3.github.io/blob/master/docs/blog/fsrs/src/main.rs) : 封装 fsrs-rs 算法库，将数据存储在 json 中，提供对于这个 json 数据库的 crud 。
 
-另外，提供了一个单独的工具来搜索 deck [anki-fzf](./anki-fzf.sh)
+另外，提供了一个单独的工具来搜索 deck [anki-fzf](https://github.com/Martins3/Martins3.github.io/blob/master/docs/blog/anki-fzf.sh)
 
 ## 附录
 

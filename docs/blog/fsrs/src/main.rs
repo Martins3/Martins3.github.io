@@ -111,6 +111,10 @@ impl Database {
         self.items.contains_key(item_uuid)
     }
 
+    fn delete_item(&mut self, item_uuid: &str) -> bool {
+        self.items.remove(item_uuid).is_some()
+    }
+
 }
 
 #[derive(Parser)]
@@ -132,6 +136,10 @@ struct Args {
     #[arg(long = "when", num_args = 1)]
     /// Query when a card needs to be reviewed (takes UUID as argument)
     when: Option<String>,
+
+    #[arg(long = "delete", num_args = 1)]
+    /// Delete a card from the database (takes UUID as argument)
+    delete: Option<String>,
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -226,6 +234,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     } else if let Some(uuid) = args.when {
         query_review_time(&mut db, &uuid)?;
+    } else if let Some(uuid) = args.delete {
+        if db.check_uuid_exists(&uuid) {
+            db.delete_item(&uuid);
+            println!("Successfully deleted card with UUID: {}", uuid);
+            db.save(&database_path)?;
+        } else {
+            eprintln!("Card with UUID {} not found in database", uuid);
+            std::process::exit(1);
+        }
     }
 
     Ok(())
