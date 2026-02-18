@@ -3,6 +3,8 @@
 ## 1. Behavior modification
 前几天看 [HN](https://news.ycombinator.com/item?id=46264492#46266799)，读到了一段这样的话:
 
+<!-- https://mp.weixin.qq.com/s/UzuZgxLcA-m2SVCMU5qdVQ -->
+
 > I think that the real power of spaced repetition is not in flashcard applications like this. It is in behavior modification.
 > Let's take a real example to show how this works.
 >
@@ -38,8 +40,10 @@
 1. 不要在出租屋放电脑手机
 2. 回去的时候，先用做点其他的事情，让自己不要进入到可以网上冲浪的气氛中。
 
+但是问题是，你未必记得这件事情，过两天就忘记了，即便你早已下定决心。 而 Anki 的作用就是不断的提醒自己，
+在每次提醒的时候，我都会重新想一下，还有什么时候可以做，让自己早睡。
 
-## 2. 记忆修改解决问题的成本
+## 2. 记忆修改解决问题的成本模型
 
 我在调试内核的时候，就发现，如果一个问题涉及到物理机重启，最后调试起来都是旷日持久，
 如果不涉及重启，一般会很快。如果统计下来，发现中间重启的次数一共也就十几次，总共两三个小时，
@@ -71,17 +75,16 @@
 ## 3. 持续的思考复杂的问题
 
 我之前老是认为，如果彻底理解了，就不会忘记，但是这有两个问题:
-1. 很多问题都是一次性没办法完全搞清楚，如果不去持续思考，之前的努力都会浪费
-2. 有的问题即便是想清楚了，随着时间对于细节的磨损，对于问题的理解也会逐渐出现出入。
+1. 根本掌握不了。很多问题都是一次性没办法完全搞清楚，例如 Linux 内核的 io uring ，kvm , scheduler ，
+例如大学数学课程。 如果不去持续思考，过了一段时间，就会发现完全不知道之前干过什么。那么之前的努力就都浪费了。
+2. 掌握了，也会逐渐忘记。有的问题即便是想清楚了，随着时间对于细节的磨损，对于问题的理解也会逐渐消失。
 
-anki 让我持续思考这些事情，例如我长时间不会看 Linux kernel scheduler 相关的内容，但是可以通过 anki 来保证我的理解不会
-出现退化，总是会有一些推进的。
+所以，我现在的做法就是，无论推进多少，只要是确认清楚的，就会记录到 Anki 中，
+在复习的时候，如果发现自己回忆的不太流畅，就继续写一些新的想法。
+直到这些内容我感觉如此自然，就像是喝水一样。
 
-## 4. 使用零散的时间来掌握一些新的技能
-1. 很多东西需要掌握了才可以记住，但是有的东西一次根本没法掌握(例如一个周末)
-例如 Linux kernel 中的 io_uring
+## 4. 使用零散的时间来掌握新的技能
 2. Rust / C++ 如果没有使用的项目，日常状态很难学会
-
 
 利用 Anki ，我可以记住那些已经学会的，不然每一次回来，都是重新开始。
 
@@ -91,18 +94,19 @@ anki 让我持续思考这些事情，例如我长时间不会看 Linux kernel s
 
 我调研了一些项目，发现 Anki 不太满足我需求:
 
-1. 我想使用我熟悉的 UNIX 工具链，Anki 携带的 GUI 是不可接受的
+1. 我想使用我熟悉的 UNIX 工具链，Anki 携带的 GUI 是不可接受的。
 2. 遇到感兴趣的东西我就会记录到笔记仓库中，等到有时间就将相关东西全部整理一下，现在笔记仓库积累了很多文档
 ```txt
-🧀  find . -name "*.md" | wc -l
+# find . -name "*.md" | wc -l
 1947
 ```
 我最终目的是持续思考这些记录下东西，所以这个笔记仓库就是核心，使用 neovim 编辑，git 同步
 如果我制作 Anki Deck ，我需要搭建一个新体系，而且如何同步笔记到 Anki Deck 中也是一个问题。
 3. Anki 体系下的大部分代码都是 Python 写的，我每次和 Python 打交道都不愉快，我不想使用 Python 。
 
-基本想法和 [Hashcards: A Plain-Text Spaced Repetition System](https://borretti.me/article/hashcards-plain-text-spaced-repetition)
-相似，不过希望我有一个比 Hashcards 更加简单的方法:
+一波调研下来，始终没有想好该如何搞，最后 [xieby1](https://github.com/xieby1) 分享我
+[Hashcards: A Plain-Text Spaced Repetition System](https://borretti.me/article/hashcards-plain-text-spaced-repetition)
+我检查后，我确定了现在的想法:
 1. 如果我想记录下什么问题，那么就在一个 markdown 标题下添加一个 uuid 。提示词就是标题，需要回忆的内容就是标题下的内容。
 2. 仅仅依赖 open-spaced-repetition/fsrs-rs 提供算法
 3. 我不想使用 sqlite 来存储数据，数据就是用 json 格式保存，我现在还没有那么大的数据量了，用 git 来保存同步数据库就可以了。

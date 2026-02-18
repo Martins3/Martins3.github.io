@@ -33,7 +33,7 @@ Linux 内核并不是为了极致性能而设计的，它追求的是通用性�
 
 中断的解决办法:
 1. 用户态中断。从 vfio 的中断直接注入的到虚拟机中就可以想到，中断也是可以直接注册到用户态的
-	- https://lwn.net/Articles/871113/
+	- [User-space interrupts](https://lwn.net/Articles/871113/)
 2. 使用轮询
 
 数据面主要使用 iommu 和 共享内存
@@ -78,12 +78,13 @@ vdb                251:16   0   1.5T  0 disk
 	- ovs 相对于 linux bridge 来很多逻辑放到了用户态
 	- AF_ALG 相关问题
 * **网络设备协议**
-    - NVMe-oF
+    - nvme over tcp
     - iSCSI
-    - nbd
+    - [aoe](https://docs.kernel.org/admin-guide/aoe/index.html)
+    - [nbd](https://docs.kernel.org/admin-guide/blockdev/nbd.html)
 * **模拟块设备**
 	* ublk
-	* tcmu : Documentation/target/tcmu-design.rst
+	* [tcmu](https://www.kernel.org/doc/html/latest/target/tcmu-design.html)
 		- https://github.com/containerd/overlaybd/blob/main/docs/README.md
 	* vduse : 让用户态实现 block / net / 其他 virtio 设备
 * **userfaultfd**：用户态 page fault 处理
@@ -97,8 +98,7 @@ vdb                251:16   0   1.5T  0 disk
 
 参考 https://docs.ebpf.io/linux/program-type/BPF_PROG_TYPE_STRUCT_OPS/tcp_congestion_ops/
 
-## 进展
-这些年的进步在于:
+## 这些年在用户态驱动的进展
 - ebpf struct ops
 - io_uring
 - vfio / iommu 替代 UIO

@@ -92,6 +92,8 @@ static void virtio_queue_host_notifier_aio_poll_ready(EventNotifier *n)
 
 ### ioeventfd 需要感知 memory region 的变化，从而让内核知道通知哪一个 eventfd
 
+当 memory region 出现变化的时候，的
+
 - memory_region_write_accessor
   - virtio_pci_common_write
     - virtio_pci_start_ioeventfd
@@ -146,9 +148,165 @@ memory_region_add_eventfd
 ## 2:  qemu 通过来向 Guest OS irqfd 注入中断
 <!-- 88680604-56f8-480d-b3d1-de23cfa2522a -->
 
-虽然 qemu 可以注入中断一路到到 apic 的驱动实现中，但是这样其实降低了 qemu 的速度。
-假如， QEMU 一个核来做 virtio ，一个核来 vCPU ，使用了 irqfd 之后，
-其实中断注入的后半部分就给到第三个物理 CPU 来执行了。
+qemu 在 kvm_irqchip_assign_irqfd 中注册 gsi 和 eventfd
+之后，当写 eventfd 的时候，就是对应的 gsi 被触发的时候:
+```c
+    struct kvm_irqfd irqfd = {
+        .fd = fd,
+        .gsi = virq,
+        .flags = assign ? 0 : KVM_IRQFD_FLAG_DEASSIGN,
+    };
+```
+
+
+### irqfd 基本原理
+```c
+void virtio_blk_req_complete(VirtIOBlockReq *req, unsigned char status)
+{
+    VirtIOBlock *s = req->dev;
+    VirtIODevice *vdev = VIRTIO_DEVICE(s);
+
+    trace_virtio_blk_req_complete(vdev, req, status);
+
+    stb_p(&req->in->status, status);
+    iov_discard_undo(&req->inhdr_undo);
+    iov_discard_undo(&req->outhdr_undo);
+    virtqueue_push(req->vq, &req->elem, req->in_len);
+    if (qemu_in_iothread()) {
+        virtio_notify_irqfd(vdev, req->vq);
+    } else {
+        virtio_notify(vdev, req->vq);
+    }
+}
+```
+qemu 注册的基本流程:
+
+- __clone3
+  - start_thread
+    - qemu_thread_start
+      - iothread_run
+        - aio_poll
+          - aio_bh_poll
+            - blk_aio_complete_bh
+              - blk_aio_complete
+                - blk_aio_complete
+                  - virtio_blk_rw_complete
+                    - virtio_blk_req_complete
+
+在内核中，irqfd 的 irqfd_wakeup() 如何和 gsi 机制协同的工作的
+
+例如这个经典中断注入，可以发现在 irqfd_wakeup 中直接使用
+kvm_kernel_irqfd::irq_entry ，也就是像是一个 eventfd 仅仅关联一个
+kvm_kernel_irq_routing_entry ，但是 gsi 是可以关联多个 kvm_kernel_irq_routing_entry
+```txt
+@[
+    vmx_deliver_interrupt+5
+    __apic_accept_irq+244
+    kvm_irq_delivery_to_apic_fast+320
+    kvm_arch_set_irq_inatomic+184
+    irqfd_wakeup+277
+    __wake_up_common+117
+    eventfd_write+204
+    vfs_write+247
+    ksys_write+111
+    do_syscall_64+193
+    entry_SYSCALL_64_after_hwframe+119
+]: 45307
+```
+答案在 irqfd_update 中，只有当 gsi 只有一个的时候，
+kvm_kernel_irqfd::irq_entry 的 type 才会配置为非 0 ，这个时候
+kvm_arch_set_irq_inatomic 才会继续推进
+
+如果 kvm_arch_set_irq_in_atomic 无法注入中断(即非MSI中断或非HV_SINT中断)，
+那么就调用 irqfd->inject, 即调用irqfd_inject函数。
+参考 : https://www.cnblogs.com/haiyonghao/p/14440723.html
+
+### 如何理解 kvm_irqchip_assign_irqfd 的调用路线?
+<!-- 09aa931d-b10b-48a7-8bf1-8e6dcf43cdcb -->
+
+在 kvm_irqchip_assign_irqfd 中调用
+```txt
+    return kvm_vm_ioctl(s, KVM_IRQFD, &irqfd);
+```
+也就是这里就是实现注册 irqfd 的位置
+
+直接看 KVM_SET_GSI_ROUTING 的实现
+
+- main
+  - qemu_init
+    - qmp_x_exit_preconfig
+      - qemu_init_board
+        - machine_run_board_init
+          - pc_init1
+            - pc_gsi_create
+              - kvm_pc_setup_irq_routing
+                - kvm_irqchip_commit_routes
+
+
+- __clone3
+  - start_thread
+    - qemu_thread_start
+      - kvm_vcpu_thread_fn
+        - kvm_cpu_exec
+          - address_space_rw
+            - address_space_write
+              - flatview_write
+                - flatview_write_continue
+                  - flatview_write_continue_step
+                    - memory_region_dispatch_write
+                      - access_with_adjusted_size
+                        - memory_region_write_accessor
+                          - virtio_pci_common_write
+                            - virtio_set_status
+                              - virtio_net_set_status
+                                - virtio_net_vhost_status
+                                  - vhost_net_start
+                                    - virtio_pci_set_guest_notifiers
+                                      - kvm_virtio_pci_vector_vq_use
+                                        - kvm_virtio_pci_vector_use_one
+                                          - kvm_virtio_pci_vq_vector_use
+                                            - kvm_irqchip_commit_route_changes
+                                              - kvm_irqchip_commit_routes
+
+
+每次识别到一个设备的时候，都会重新注册 irq routing 的。
+- __clone3
+  - start_thread
+    - qemu_thread_start
+      - kvm_vcpu_thread_fn
+        - kvm_cpu_exec
+          - address_space_rw
+            - address_space_write
+              - flatview_write
+                - flatview_write_continue
+                  - flatview_write_continue_step
+                    - memory_region_dispatch_write
+                      - access_with_adjusted_size
+                        - memory_region_write_accessor
+                          - virtio_pci_common_write
+                            - virtio_pci_start_ioeventfd
+                              - virtio_bus_start_ioeventfd
+                                - virtio_scsi_dataplane_start
+                                  - virtio_pci_set_guest_notifiers
+                                    - kvm_virtio_pci_vector_vq_use
+                                      - kvm_virtio_pci_vector_use_one
+                                        - kvm_virtio_pci_vq_vector_use
+                                          - kvm_irqchip_commit_route_changes
+                                            - kvm_irqchip_commit_routes
+
+- virtio_pci_common_write
+  - virtio_set_status
+    - vuf_set_status
+      - vuf_start
+        - virtio_pci_set_guest_notifiers
+          - kvm_virtio_pci_vector_vq_use
+            - kvm_virtio_pci_vector_use_one
+              - kvm_virtio_pci_irqfd_use
+                - kvm_irqchip_add_irqfd_notifier_gsi
+                  - kvm_irqchip_assign_irqfd
+
+所以，当时 Guest 到底是写了什么东西，然后就是让 qemu 开始注册中断的?
+而且，为什么怎么感觉这是一种 memory listener 的感觉?
 
 ### 为什么有时候观察不到 irqfd 的使用
 
@@ -239,7 +397,9 @@ virtio_scsi_complete_req 中:
 ### 不使用 irqfd 的中断注入流程
 <!-- 475c6769-ea8f-4001-bd87-5c4339209a0e -->
 
-QEMU 中:
+低速路径就不谈了，高速路径中，会模拟 msix 中断触发的路径:
+
+QEMU 中
 
 - main
   - qemu_default_main
@@ -294,53 +454,6 @@ static void kvm_apic_mem_write(void *opaque, hwaddr addr,
 设备想要触发那个中断，就从 msix-table 中取出 address / data 来执行
 所以，想要控制中断亲和性，那么虚拟机中修改 msix-table ，然后 qemu 记录，
 之后查询 msix-table ，就可以自动处理了
-
-### 使用 irqfd 基本流程
-```c
-void virtio_blk_req_complete(VirtIOBlockReq *req, unsigned char status)
-{
-    VirtIOBlock *s = req->dev;
-    VirtIODevice *vdev = VIRTIO_DEVICE(s);
-
-    trace_virtio_blk_req_complete(vdev, req, status);
-
-    stb_p(&req->in->status, status);
-    iov_discard_undo(&req->inhdr_undo);
-    iov_discard_undo(&req->outhdr_undo);
-    virtqueue_push(req->vq, &req->elem, req->in_len);
-    if (qemu_in_iothread()) {
-        virtio_notify_irqfd(vdev, req->vq);
-    } else {
-        virtio_notify(vdev, req->vq);
-    }
-}
-```
-qemu 注册的基本流程:
-
-- __clone3
-  - start_thread
-    - qemu_thread_start
-      - iothread_run
-        - aio_poll
-          - aio_bh_poll
-            - blk_aio_complete_bh
-              - blk_aio_complete
-                - blk_aio_complete
-                  - virtio_blk_rw_complete
-                    - virtio_blk_req_complete
-
-内核的接受流程:
-```txt
-@[
-    irqfd_wakeup+5
-    __wake_up_common+117
-    eventfd_write+201
-    vfs_write+267
-    ksys_write+110
-    do_syscall_64+193
-    entry_SYSCALL_64_after_hwframe+119
-]: 8227
-```
 
 ## gsi 简述
 <!-- 62c576a1-7859-4e9a-b126-57f49f291c3f -->
@@ -586,37 +699,6 @@ struct kvm_msi {
 ```
 
 
-## irqfd 的 irqfd_wakeup() 如何和 gsi 机制协同的工作的
-<!-- 3da31ae4-dc94-409a-8d4a-8387d4d5b584 -->
-
-例如这个经典中断注入，可以发现在 irqfd_wakeup 中直接使用
-
-kvm_kernel_irqfd::irq_entry ，也就是像是一个 eventfd 仅仅关联一个
-kvm_kernel_irq_routing_entry
-，但是 gsi 是可以关联多个 kvm_kernel_irq_routing_entry
-```txt
-@[
-    vmx_deliver_interrupt+5
-    __apic_accept_irq+244
-    kvm_irq_delivery_to_apic_fast+320
-    kvm_arch_set_irq_inatomic+184
-    irqfd_wakeup+277
-    __wake_up_common+117
-    eventfd_write+204
-    vfs_write+247
-    ksys_write+111
-    do_syscall_64+193
-    entry_SYSCALL_64_after_hwframe+119
-]: 45307
-```
-答案在 irqfd_update 中，只有当 gsi 只有一个的时候，
-kvm_kernel_irqfd::irq_entry 的 type 才会配置为非 0 ，这个时候
-kvm_arch_set_irq_inatomic 才会继续推进
-
-如果 kvm_arch_set_irq_in_atomic 无法注入中断(即非MSI中断或非HV_SINT中断)，
-那么就调用 irqfd->inject, 即调用irqfd_inject函数。
-参考 : https://www.cnblogs.com/haiyonghao/p/14440723.html
-
 
 ## irq routing
 感觉还是历史原因:
@@ -799,85 +881,6 @@ kvm_pic_set_irq 和 kvm_ioapic_set_irq
 
 
 
-## 如何理解 kvm_irqchip_assign_irqfd 的调用路线?
-<!-- 09aa931d-b10b-48a7-8bf1-8e6dcf43cdcb -->
-
-直接看 KVM_SET_GSI_ROUTING 的实现
-- main
-  - qemu_init
-    - qmp_x_exit_preconfig
-      - qemu_init_board
-        - machine_run_board_init
-          - pc_init1
-            - pc_gsi_create
-              - kvm_pc_setup_irq_routing
-                - kvm_irqchip_commit_routes
-
-
-- __clone3
-  - start_thread
-    - qemu_thread_start
-      - kvm_vcpu_thread_fn
-        - kvm_cpu_exec
-          - address_space_rw
-            - address_space_write
-              - flatview_write
-                - flatview_write_continue
-                  - flatview_write_continue_step
-                    - memory_region_dispatch_write
-                      - access_with_adjusted_size
-                        - memory_region_write_accessor
-                          - virtio_pci_common_write
-                            - virtio_set_status
-                              - virtio_net_set_status
-                                - virtio_net_vhost_status
-                                  - vhost_net_start
-                                    - virtio_pci_set_guest_notifiers
-                                      - kvm_virtio_pci_vector_vq_use
-                                        - kvm_virtio_pci_vector_use_one
-                                          - kvm_virtio_pci_vq_vector_use
-                                            - kvm_irqchip_commit_route_changes
-                                              - kvm_irqchip_commit_routes
-
-
-每次识别到一个设备的时候，都会重新注册 irq routing 的。
-- __clone3
-  - start_thread
-    - qemu_thread_start
-      - kvm_vcpu_thread_fn
-        - kvm_cpu_exec
-          - address_space_rw
-            - address_space_write
-              - flatview_write
-                - flatview_write_continue
-                  - flatview_write_continue_step
-                    - memory_region_dispatch_write
-                      - access_with_adjusted_size
-                        - memory_region_write_accessor
-                          - virtio_pci_common_write
-                            - virtio_pci_start_ioeventfd
-                              - virtio_bus_start_ioeventfd
-                                - virtio_scsi_dataplane_start
-                                  - virtio_pci_set_guest_notifiers
-                                    - kvm_virtio_pci_vector_vq_use
-                                      - kvm_virtio_pci_vector_use_one
-                                        - kvm_virtio_pci_vq_vector_use
-                                          - kvm_irqchip_commit_route_changes
-                                            - kvm_irqchip_commit_routes
-
-- virtio_pci_common_write
-  - virtio_set_status
-    - vuf_set_status
-      - vuf_start
-        - virtio_pci_set_guest_notifiers
-          - kvm_virtio_pci_vector_vq_use
-            - kvm_virtio_pci_vector_use_one
-              - kvm_virtio_pci_irqfd_use
-                - kvm_irqchip_add_irqfd_notifier_gsi
-                  - kvm_irqchip_assign_irqfd
-
-
-所以，当时到底是写了什么东西，然后就是让 qemu 开始注册中断的?
 
 ## virtio-blk 的中断如何处理 vCPU 迁移和虚拟机中的中断绑定
 <!-- 9c52509d-7338-4d25-830b-e62c162c0743 -->

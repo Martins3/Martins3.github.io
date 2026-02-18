@@ -115,7 +115,7 @@ function get_original_info_from_cache() {
 	# 在缓存文件中查找 UUID 对应的信息
 	if ! grep "^${uuid}:" "$cache_file" &> /dev/null ; then
 		$anki --delete "$uuid"
-		echo ""
+		echo "delete $uuid"
 	fi
 	line=$(grep "^${uuid}:" "$cache_file" | head -n 1)
 	if [[ -n $line ]]; then
@@ -153,6 +153,7 @@ function play2() {
 		# 提取标题
 		extract_title_from_file "$original_file" "$original_line"
 
+		"$anki" --inspect "$uuid"
 		if ! gum style --foreground 212 \
 			--border-foreground 212 \
 			--border double \
@@ -206,7 +207,7 @@ while getopts "rsc" opt; do
 			;;
 	esac
 done
-check_neovim_env
+# check_neovim_env
 play2
 
 # 给这个自动带上 word 来处理

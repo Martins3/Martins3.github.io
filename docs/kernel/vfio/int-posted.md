@@ -120,23 +120,23 @@ static inline void kvm_vcpu_trigger_posted_interrupt(struct kvm_vcpu *vcpu,
 	kvm_vcpu_wake_up(vcpu);
 }
 ```
-这里还需要确认一下 IN_GUEST_MODE 和 kvm_get_running_vcpu() 的含义，
-- IN_GUEST_MODE 应该不是说这个 vCPU 正在 guest mode 中
-- kvm_get_running_vcpu() 也不是这个意思，不然怎么可能会是这个 vCPU 又在运行，当前的 CPU 又是这个 vCPU ，而且当前的 CPU 正在执行函数
-
-所以，这里的三个情况是
+所以，这里分析的三种情况就是:
 1. vcpu->mode == IN_GUEST_MODE && vcpu != kvm_get_running_vcpu()
 	- 需要注入的中断在其他的 pCPU 上运行，那么就需要 posted interrupt ipi 通知了，但是如果 vCPU 实际上不是，
-	那么就可以在 /proc/interrupts PIN : Posted-interrupt notification event 来观察到 kvm_posted_intr_ipi() 被调用
+	那么就可以在 /proc/interrupts 中 PIN : Posted-interrupt notification event 来观察到 kvm_posted_intr_ipi() 被调用
 	kvm_posted_intr_ipi() 不需要做太多事情，因为前面已经设置了 pi_test_and_set_pir ，vCPU 开始执行的时候，会检查到这个 bit
 2. vcpu->mode == IN_GUEST_MODE && vcpu == kvm_get_running_vcpu()
-	- vCPU 在 正在 VM-exit 的 fastpath 中 ，马上会重新进入 pCPU 执行中，所以什么都不需要做
+	- IN_GUEST_MODE 不是说这个 vCPU 正在 guest mode 中，也许在 vmexit 处理的快速路径中
+	- kvm_get_running_vcpu() 获取当前 CPU 关联的 vCPU
+	- 所以 vcpu == kvm_get_running_vcpu() 的含义就是，vCPU 正在 VM-exit 的 fastpath 中 ，马上会重新进入 pCPU 执行中，所以什么都不需要做
 3. vcpu->mode != IN_GUEST_MODE
 	- 需要唤醒 vCPU ，走的普通的 process wake up 机制
 
-所以，可以想到，iommu 来注入中断其实非常类似的过程，只是这个 ipi 是 iommu 来触发的。
+所以，可以想到 iommu 来注入中断其实非常类似的过程，iommu 注入中断的时候，
+也是写入 pi_desc 的 bitmap ，然后让 iommu 来触发 ipi POSTED_INTR_VECTOR ，然后在 vCPU 接受 POSTED_INTR_VECTOR
+那么就会检查 pi_desc。
 
-所以，这里在强调一次，posted interrupts 是 iommu 和 APICv 两个功能一起合作才有的。
+这里在强调一次，posted interrupts 是 iommu 和 APICv 两个功能一起合作才有的。
 
 ## pi_desc 只是普通内存吗?
 <!-- bacd0f02-461a-44f2-9c86-0f37fe09ee36 -->
@@ -305,10 +305,12 @@ vmx_vcpu_pi_load 中会配置 ndst 的:
 	} while (pi_try_set_control(pi_desc, &old.control, new.control));
 ```
 
-### 虚拟机中对于直通设备的中断进行绑定的流程
+### 直通设备中断亲和性绑定
 <!-- 3fd71561-51af-46c3-ab18-5fc4787e0389 -->
 
-完全都是相同的机制，让虚拟机去写 msix-table ，然后来做监听
+完全都是相同的机制，让虚拟机去写 msix-table ，qemu 监听到之后
+，例如知道了从 vCPU 1 切换到 vCPU 2 ，那么就会调用 ioctl VFIO_DEVICE_SET_IRQS
+，最后来修改 itre ，让 itre 指向到不同的 pi_desc 上。
 
 - __clone3
   - start_thread

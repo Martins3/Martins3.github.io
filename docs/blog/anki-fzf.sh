@@ -4,7 +4,7 @@ set -E -e -u -o pipefail
 function check_all() {
 	pattern="<!-- [0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12} -->"
 
-	readarray -t array < <(rg --type md "$pattern" -B 1 --no-filename | rg "##")
+	readarray -t array < <(rg --type md "$pattern" -B 1 --no-filename | rg "#")
 	word=$(printf "%s\n" "${array[@]}" | fzf)
 
 	if [[ -z $word ]]; then

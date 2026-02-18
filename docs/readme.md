@@ -114,9 +114,7 @@
 ## 调试内核的几种方法
 - 从外部观察
 	- crash
-		<!-- - [基本操作](./) -->
-		<!-- - [基本原理](./) -->
-		<!-- - [技巧和任务](./) -->
+
 	- drgn
 	- kvm-dmesg
 	- gdb kernel
@@ -155,7 +153,7 @@
 ## Tools
 
 - [My Linux Config](https://martins3.github.io/My-Linux-Config/)
-- [Mac，将就着用吧](./mac.md)
+<!-- - [Mac，将就着用吧](./mac.md) -->
 
 ## Linux Environment Programming
 
@@ -198,7 +196,7 @@
 <!-- ## Database -->
 <!-- - [leveldb 源码分析](./database/leveldb.md) -->
 
-## Perfbook 阅读笔记
+<!-- ## Perfbook 阅读笔记 -->
 
 ## Loongson
 
