@@ -1,0 +1,935 @@
+# Page Writeback
+
+- page cache only
+  - echo 1 > /proc/sys/vm/drop_caches
+- inode / dentry
+  - echo 2 > /proc/sys/vm/drop_caches
+- all
+  - echo 3 > /proc/sys/vm/drop_caches
+
+## ref && doc
+- [](http://www.wowotech.net/memory_management/327.html)
+
+- [](https://lwn.net/Articles/648292/)
+> @todo 理解 writeback 和 cgroup 的关系
+
+## [x] fs-writeback 和 page-writeback 的侧重
+
+fs-writeback 侧重整个文件系统的写回。
+page-writeback
+
+## 此处不处理具体的写回操作，谢谢
+- [ ] 那么具体的写回放到哪里的?
+
+
+## domain node global
+对于 CPU 含有 domain，对于 memory 也是含有 domain 的概念。
+
+## labtop mode
+
+## policy
+
+```c
+/**
+ * balance_dirty_pages_ratelimited - balance dirty memory state
+ * @mapping: address_space which was dirtied
+ *
+ * Processes which are dirtying memory should call in here once for each page
+ * which was newly dirtied.  The function will periodically check the system's
+ * dirty state and will initiate writeback if needed.
+ *
+ * On really big machines, get_writeback_state is expensive, so try to avoid
+ * calling it too often (ratelimiting).  But once we're over the dirty memory
+ * limit we decrease the ratelimiting by a lot, to prevent individual processes
+ * from overshooting the limit by (ratelimit_pages) each.
+ */
+void balance_dirty_pages_ratelimited(struct address_space *mapping)
+// 1. balance_dirty_pages : 300 行的大函数
+// 2.
+```
+
+## ratelimit_pages
+
+两个 ref 位置 :
+```c
+/*
+ * If ratelimit_pages is too high then we can get into dirty-data overload
+ * if a large number of processes all perform writes at the same time.
+ * If it is too low then SMP machines will call the (expensive)
+ * get_writeback_state too often.
+ *
+ * Here we set ratelimit_pages to a level which ensures that when all CPUs are
+ * dirtying in parallel, we cannot go more than 3% (1/32) over the dirty memory
+ * thresholds.
+ */
+
+void writeback_set_ratelimit(void)
+{
+	struct wb_domain *dom = &global_wb_domain; // todo
+	unsigned long background_thresh;
+	unsigned long dirty_thresh;
+
+	global_dirty_limits(&background_thresh, &dirty_thresh);
+	dom->dirty_limit = dirty_thresh;
+	ratelimit_pages = dirty_thresh / (num_online_cpus() * 32);
+	if (ratelimit_pages < 16)
+		ratelimit_pages = 16;
+}
+
+```
+
+
+
+```c
+/**
+ * tag_pages_for_writeback - tag pages to be written by write_cache_pages
+ * @mapping: address space structure to write
+ * @start: starting page index
+ * @end: ending page index (inclusive)
+ *
+ * This function scans the page range from @start to @end (inclusive) and tags
+ * all pages that have DIRTY tag set with a special TOWRITE tag. The idea is
+ * that write_cache_pages (or whoever calls this function) will then use
+ * TOWRITE tag to identify pages eligible for writeback.  This mechanism is
+ * used to avoid livelocking of writeback by a process steadily creating new
+ * dirty pages in the file (thus it is important for this function to be quick
+ * so that it can tag pages faster than a dirtying process can create them).
+ */
+/*
+ * We tag pages in batches of WRITEBACK_TAG_BATCH to reduce the i_pages lock
+ * latency.
+ */
+void tag_pages_for_writeback(struct address_space *mapping,
+			     pgoff_t start, pgoff_t end)
+
+// write_cache_pages ?
+```
+
+
+
+
+
+
+```c
+/*
+ * Dirty a page.
+ *
+ * For pages with a mapping this should be done under the page lock
+ * for the benefit of asynchronous memory errors who prefer a consistent
+ * dirty state. This rule can be broken in some special cases,
+ * but should be better not to.
+ *
+ * If the mapping doesn't provide a set_page_dirty a_op, then
+ * just fall through and assume that it wants buffer_heads.
+ */
+int set_page_dirty(struct page *page)
+// 似乎这是全部的内容了
+```
+
+
+
+
+
+
+## 和外部交互的分析
+
+```c
+int do_writepages(struct address_space *mapping, struct writeback_control *wbc)
+{
+	int ret;
+
+	if (wbc->nr_to_write <= 0)
+		return 0;
+	while (1) {
+		if (mapping->a_ops->writepages)
+			ret = mapping->a_ops->writepages(mapping, wbc);
+		else
+			ret = generic_writepages(mapping, wbc);
+		if ((ret != -ENOMEM) || (wbc->sync_mode != WB_SYNC_ALL))
+			break;
+		cond_resched();
+		congestion_wait(BLK_RW_ASYNC, HZ/50);
+	}
+	return ret;
+}
+
+int generic_writepages(struct address_space *mapping,
+		       struct writeback_control *wbc)
+
+int write_cache_pages(struct address_space *mapping,
+		      struct writeback_control *wbc, writepage_t writepage,
+		      void *data)
+```
+
+
+
+> 分析各种注册到 address_space 上的 writepage !
+
+```c
+// ext2  : 依赖于公共框架
+static int ext2_readpage(struct file *file, struct page *page)
+{
+  // 原来居然只是 read 走 mpage，但是write 在buffer.c 中间
+	return mpage_readpage(page, ext2_get_block);
+}
+
+static int ext2_writepage(struct page *page, struct writeback_control *wbc)
+{
+  // 其实这个就让人觉得特别奇怪
+  // TODO 如果 page cache 连接到 ext2_writepage 中间，但是现在又依赖于 buffer 机制
+	return block_write_full_page(page, ext2_get_block, wbc);
+}
+
+
+// ext4 : 直接进入 block 层，自己实现。
+static int ext4_readpage(struct file *file, struct page *page)
+{
+	int ret = -EAGAIN;
+	struct inode *inode = page->mapping->host;
+
+	trace_ext4_readpage(page);
+
+	if (ext4_has_inline_data(inode))
+		ret = ext4_readpage_inline(inode, page);
+
+	if (ret == -EAGAIN)
+		return ext4_mpage_readpages(page->mapping, NULL, page, 1,
+						false);
+
+	return ret;
+}
+
+int ext4_mpage_readpages(struct address_space *mapping,
+			 struct list_head *pages, struct page *page,
+			 unsigned nr_pages, bool is_readahead)
+// 一个非常长的函数，直接进入到 block layer 层次
+
+
+static int ext4_writepage(struct page *page,
+			  struct writeback_control *wbc)
+// 也是 ext4 自己的负责的内容
+
+
+// 进一步分析 ext4_writepages 和 ext4_readpages，前者其实依赖 generic_writepages 然后反复调用自己的 writepage 函数
+// 但是后者没有 generic 这一部分，因为写会依赖于 page cache 中间的 radix tree 的功能，但是 read 不需要。
+
+// swap : page_io.c 中间实现。
+
+
+// 总体来说，ext2 很奇怪啊 !
+```
+
+> 分析一下各种
+
+```c
+// 所以，其实奇怪的地方不在于 address_space 而是在于为什么ext4 需要同时注册
+// address_space(没有问题) 和 file_operations(有点问题, 似乎过于high level了,
+// 越过了page cache)
+
+// 如果 ext4 中间不持有 file_operations 我猜测 vfs 的设计如何进行 ?
+// 显然不是为了 dax 机制，否则必定含有更简单的方法 ?
+
+// ext2 : 依赖于filemap.c
+static ssize_t ext2_file_read_iter(struct kiocb *iocb, struct iov_iter *to)
+{
+#ifdef CONFIG_FS_DAX
+	if (IS_DAX(iocb->ki_filp->f_mapping->host))
+		return ext2_dax_read_iter(iocb, to);
+#endif
+	return generic_file_read_iter(iocb, to);
+}
+
+static ssize_t ext2_file_write_iter(struct kiocb *iocb, struct iov_iter *from)
+{
+#ifdef CONFIG_FS_DAX
+	if (IS_DAX(iocb->ki_filp->f_mapping->host))
+		return ext2_dax_write_iter(iocb, from);
+#endif
+	return generic_file_write_iter(iocb, from);
+}
+
+// ext4 : 还是依赖于filemap.c
+static ssize_t ext4_file_read_iter(struct kiocb *iocb, struct iov_iter *to)
+{
+	if (unlikely(ext4_forced_shutdown(EXT4_SB(file_inode(iocb->ki_filp)->i_sb))))
+		return -EIO;
+
+	if (!iov_iter_count(to))
+		return 0; /* skip atime */
+
+#ifdef CONFIG_FS_DAX
+	if (IS_DAX(file_inode(iocb->ki_filp)))
+		return ext4_dax_read_iter(iocb, to);
+#endif
+	return generic_file_read_iter(iocb, to);
+}
+
+static ssize_t
+ext4_file_write_iter(struct kiocb *iocb, struct iov_iter *from)
+// 提供了更多的检查之类的操作，然后调用 __generic_file_write_iter
+
+// 就读写而言，一般就是将工作给page cache 或者 绕过 page cache，已经足够说明需要使用为file_operation 提供fs specific 的file io 了。
+// 而且file 的操作不限于io 还有其他的和文件系统相关，所以fs 提供 file_operations 的接口是有必要的。
+```
+
+## page_writeback_init
+
+```c
+/*
+ * Called early on to tune the page writeback dirty limits.
+ *
+ * We used to scale dirty pages according to how total memory
+ * related to pages that could be allocated for buffers (by
+ * comparing nr_free_buffer_pages() to vm_total_pages.
+ *
+ * However, that was when we used "dirty_ratio" to scale with
+ * all memory, and we don't do that any more. "dirty_ratio"
+ * is now applied to total non-HIGHPAGE memory (by subtracting
+ * totalhigh_pages from vm_total_pages), and as such we can't
+ * get into the old insane situation any more where we had
+ * large amounts of dirty pages compared to a small amount of
+ * non-HIGHMEM memory.
+ *
+ * But we might still want to scale the dirty_ratio by how
+ * much memory the box has..
+ */
+void __init page_writeback_init(void)
+{
+	BUG_ON(wb_domain_init(&global_wb_domain, GFP_KERNEL));
+
+	cpuhp_setup_state(CPUHP_AP_ONLINE_DYN, "mm/writeback:online",
+			  page_writeback_cpu_online, NULL);
+	cpuhp_setup_state(CPUHP_MM_WRITEBACK_DEAD, "mm/writeback:dead", NULL,
+			  page_writeback_cpu_online);
+}
+```
+
+
+## set_page_dirty : 不是设置一个标志位的事情，而是
+1. 一般来说调用 `__set_page_dirty_buffers` 完成工作, 同时标记两个内容
+
+> `set_page_dirty` allows an address space to provide a specific method of marking a page as
+> dirty. However, this option is rarely used. In this case, the kernel automatically uses ccode `__set_page_dirty_buffers`
+> to simultaneously mark the page as dirty on the buffer level and to add it to
+> the `dirty_pages` list of the current mapping.
+
+```c
+/*
+ * Dirty a page.
+ *
+ * For pages with a mapping this should be done under the page lock
+ * for the benefit of asynchronous memory errors who prefer a consistent
+ * dirty state. This rule can be broken in some special cases,
+ * but should be better not to.
+ *
+ * If the mapping doesn't provide a set_page_dirty a_op, then
+ * just fall through and assume that it wants buffer_heads.
+ */
+int set_page_dirty(struct page *page)
+{
+	struct address_space *mapping = page_mapping(page);
+
+	page = compound_head(page);
+	if (likely(mapping)) {
+		int (*spd)(struct page *) = mapping->a_ops->set_page_dirty;
+		/*
+		 * readahead/lru_deactivate_page could remain
+		 * PG_readahead/PG_reclaim due to race with end_page_writeback
+		 * About readahead, if the page is written, the flags would be
+		 * reset. So no problem.
+		 * About lru_deactivate_page, if the page is redirty, the flag
+		 * will be reset. So no problem. but if the page is used by readahead
+		 * it will confuse readahead and make it restart the size rampup
+		 * process. But it's a trivial problem.
+		 */
+		if (PageReclaim(page))
+			ClearPageReclaim(page);
+#ifdef CONFIG_BLOCK
+		if (!spd)
+			spd = __set_page_dirty_buffers;
+#endif
+		return (*spd)(page);
+	}
+	if (!PageDirty(page)) {
+		if (!TestSetPageDirty(page))
+			return 1;
+	}
+	return 0;
+}
+EXPORT_SYMBOL(set_page_dirty);
+```
+
+## test_clear_page_writeback && `__test_set_page_writeback`
+1. 实际上的并没有办法区分这三个 flags 的含义是什么 ?
+2. 实际上，这一个 TAG 是可以选择的，当没有取消掉这一个选项的时候，内容立刻变得非常简单了。
+
+
+```diff
+mm: don't use radix tree writeback tags for pages in swap cache
+
+File pages use a set of radix tree tags (DIRTY, TOWRITE, WRITEBACK,
+etc.) to accelerate finding the pages with a specific tag in the radix
+tree during inode writeback.  But for anonymous pages in the swap cache,
+there is no inode writeback.  So there is no need to find the pages with
+some writeback tags in the radix tree.  It is not necessary to touch
+radix tree writeback tags for pages in the swap cache.
+
+Per Rik van Riel's suggestion, a new flag AS_NO_WRITEBACK_TAGS is
+introduced for address spaces which don't need to update the writeback
+tags.  The flag is set for swap caches.  It may be used for DAX file
+systems, etc.
+
+With this patch, the swap out bandwidth improved 22.3% (from ~1.2GB/s to
+~1.48GBps) in the vm-scalability swap-w-seq test case with 8 processes.
+The test is done on a Xeon E5 v3 system.  The swap device used is a RAM
+simulated PMEM (persistent memory) device.  The improvement comes from
+the reduced contention on the swap cache radix tree lock.  To test
+sequential swapping out, the test case uses 8 processes, which
+sequentially allocate and write to the anonymous pages until RAM and
+part of the swap device is used up.
+
+Link: http://lkml.kernel.org/r/1472578089-5560-1-git-send-email-ying.huang@intel.com
+```
+3. @todo 所以什么叫做 inode writeback ? radix tree 利用 tag 为什么可以加速查找的速度 ?
+
+```c
+static inline int mapping_use_writeback_tags(struct address_space *mapping)
+{
+	return !test_bit(AS_NO_WRITEBACK_TAGS, &mapping->flags);
+}
+
+/* XArray tags, for tagging dirty and writeback pages in the pagecache. */
+#define PAGECACHE_TAG_DIRTY	XA_MARK_0
+#define PAGECACHE_TAG_WRITEBACK	XA_MARK_1
+#define PAGECACHE_TAG_TOWRITE	XA_MARK_2
+
+/*
+ * Bits in mapping->flags.
+ */
+enum mapping_flags {
+	AS_EIO		= 0,	/* IO error on async write */
+	AS_ENOSPC	= 1,	/* ENOSPC on async write */
+	AS_MM_ALL_LOCKS	= 2,	/* under mm_take_all_locks() */
+	AS_UNEVICTABLE	= 3,	/* e.g., ramdisk, SHM_LOCK */
+	AS_EXITING	= 4, 	/* final truncate in progress */
+	/* writeback related tags are not used */
+	AS_NO_WRITEBACK_TAGS = 5,
+};
+```
+
+
+```c
+int test_clear_page_writeback(struct page *page)
+{
+	struct address_space *mapping = page_mapping(page);
+	struct mem_cgroup *memcg;
+	struct lruvec *lruvec;
+	int ret;
+
+	memcg = lock_page_memcg(page);
+	lruvec = mem_cgroup_page_lruvec(page, page_pgdat(page));
+	if (mapping && mapping_use_writeback_tags(mapping)) {
+		struct inode *inode = mapping->host;
+		struct backing_dev_info *bdi = inode_to_bdi(inode);
+		unsigned long flags;
+
+		xa_lock_irqsave(&mapping->i_pages, flags);
+		ret = TestClearPageWriteback(page);
+		if (ret) {
+			__xa_clear_mark(&mapping->i_pages, page_index(page),
+						PAGECACHE_TAG_WRITEBACK);
+			if (bdi_cap_account_writeback(bdi)) {
+				struct bdi_writeback *wb = inode_to_wb(inode);
+
+				dec_wb_stat(wb, WB_WRITEBACK);
+				__wb_writeout_inc(wb);
+			}
+		}
+
+		if (mapping->host && !mapping_tagged(mapping,
+						     PAGECACHE_TAG_WRITEBACK))
+			sb_clear_inode_writeback(mapping->host);
+
+		xa_unlock_irqrestore(&mapping->i_pages, flags);
+	} else {
+		ret = TestClearPageWriteback(page); // 这也太简化了吧!
+	}
+	/*
+	 * NOTE: Page might be free now! Writeback doesn't hold a page
+	 * reference on its own, it relies on truncation to wait for
+	 * the clearing of PG_writeback. The below can only access
+	 * page state that is static across allocation cycles.
+	 */
+	if (ret) { // todo 处理一下统计数据，虽然不知道为什么 >
+		dec_lruvec_state(lruvec, NR_WRITEBACK);
+		dec_zone_page_state(page, NR_ZONE_WRITE_PENDING);
+		inc_node_page_state(page, NR_WRITTEN);
+	}
+	__unlock_page_memcg(memcg);
+	return ret;
+}
+
+int __test_set_page_writeback(struct page *page, bool keep_write)
+{
+	struct address_space *mapping = page_mapping(page);
+	int ret;
+
+	lock_page_memcg(page);
+	if (mapping && mapping_use_writeback_tags(mapping)) {
+		XA_STATE(xas, &mapping->i_pages, page_index(page));
+		struct inode *inode = mapping->host;
+		struct backing_dev_info *bdi = inode_to_bdi(inode);
+		unsigned long flags;
+
+		xas_lock_irqsave(&xas, flags);
+		xas_load(&xas);
+		ret = TestSetPageWriteback(page);
+		if (!ret) {
+			bool on_wblist;
+
+			on_wblist = mapping_tagged(mapping,
+						   PAGECACHE_TAG_WRITEBACK);
+
+			xas_set_mark(&xas, PAGECACHE_TAG_WRITEBACK);
+			if (bdi_cap_account_writeback(bdi))
+				inc_wb_stat(inode_to_wb(inode), WB_WRITEBACK);
+
+			/*
+			 * We can come through here when swapping anonymous
+			 * pages, so we don't necessarily have an inode to track
+			 * for sync.
+			 */
+			if (mapping->host && !on_wblist)
+				sb_mark_inode_writeback(mapping->host);
+		}
+		if (!PageDirty(page))
+			xas_clear_mark(&xas, PAGECACHE_TAG_DIRTY);
+		if (!keep_write)
+			xas_clear_mark(&xas, PAGECACHE_TAG_TOWRITE);
+		xas_unlock_irqrestore(&xas, flags);
+	} else {
+		ret = TestSetPageWriteback(page); // 也是非常简化的
+	}
+	if (!ret) { // 也是统计数据
+		inc_lruvec_page_state(page, NR_WRITEBACK);
+		inc_zone_page_state(page, NR_ZONE_WRITE_PENDING);
+	}
+	unlock_page_memcg(page);
+	return ret;
+
+}
+EXPORT_SYMBOL(__test_set_page_writeback);
+```
+
+## do_writepages  : 将整个 inode 中间的 dirty page 全部写会
+```c
+int do_writepages(struct address_space *mapping, struct writeback_control *wbc)
+{
+	int ret;
+
+	if (wbc->nr_to_write <= 0)
+		return 0;
+	while (1) {
+		if (mapping->a_ops->writepages)
+			ret = mapping->a_ops->writepages(mapping, wbc);
+		else
+			ret = generic_writepages(mapping, wbc); //
+		if ((ret != -ENOMEM) || (wbc->sync_mode != WB_SYNC_ALL))
+			break;
+		cond_resched();
+		congestion_wait(BLK_RW_ASYNC, HZ/50);
+	}
+	return ret;
+}
+
+
+/**
+ * generic_writepages - walk the list of dirty pages of the given address space and writepage() all of them.
+ * @mapping: address space structure to write
+ * @wbc: subtract the number of written pages from *@wbc->nr_to_write
+ *
+ * This is a library function, which implements the writepages()
+ * address_space_operation.
+ *
+ * Return: %0 on success, negative error code otherwise
+ */
+int generic_writepages(struct address_space *mapping,
+		       struct writeback_control *wbc)
+{
+	struct blk_plug plug;
+	int ret;
+
+	/* deal with chardevs and other special file */
+	if (!mapping->a_ops->writepage)
+		return 0;
+
+	blk_start_plug(&plug);
+	ret = write_cache_pages(mapping, wbc, __writepage, mapping);
+	blk_finish_plug(&plug);
+	return ret;
+}
+```
+
+难道，generic_writepages 是专用的吗?
+```txt
+#0  generic_writepages (wbc=0xffffc9003f807ca0, mapping=0xffff888103d80508) at mm/page-writeback.c:2559
+#1  do_writepages (mapping=mapping@entry=0xffff888103d80508, wbc=wbc@entry=0xffffc9003f807ca0) at mm/page-writeback.c:2583
+#2  0xffffffff81404b4c in __writeback_single_inode (inode=inode@entry=0xffff888103d80390, wbc=wbc@entry=0xffffc9003f807ca0) at fs/fs-writeback.c:1598
+#3  0xffffffff81405304 in writeback_sb_inodes (sb=sb@entry=0xffff888100059800, wb=wb@entry=0xffff88811ce51000, work=work@entry=0xffffc9003f807e30) at fs/fs-writeback.c:1889
+#4  0xffffffff814055f7 in __writeback_inodes_wb (wb=wb@entry=0xffff88811ce51000, work=work@entry=0xffffc9003f807e30) at fs/fs-writeback.c:1960
+#5  0xffffffff81405872 in wb_writeback (wb=wb@entry=0xffff88811ce51000, work=work@entry=0xffffc9003f807e30) at fs/fs-writeback.c:2065
+#6  0xffffffff81406be9 in wb_check_background_flush (wb=0xffff88811ce51000) at fs/fs-writeback.c:2131
+#7  wb_do_writeback (wb=0xffff88811ce51000) at fs/fs-writeback.c:2219
+#8  wb_workfn (work=0xffff88811ce51188) at fs/fs-writeback.c:2246
+#9  0xffffffff8114cd57 in process_one_work (worker=worker@entry=0xffff8881487da3c0, work=0xffff88811ce51188) at kernel/workqueue.c:2289
+#10 0xffffffff8114cf7c in worker_thread (__worker=0xffff8881487da3c0) at kernel/workqueue.c:2436
+#11 0xffffffff811556c7 in kthread (_create=0xffff8881037f3640) at kernel/kthread.c:376
+#12 0xffffffff8100265c in ret_from_fork () at arch/x86/entry/entry_64.S:308
+```
+
+## 记录一些 backtrace
+
+为什么这里也是存在时间的周期性的 writeback 的操作:
+```txt
+#0  writeout_period (t=0xffffffff838afb18 <global_wb_domain+56>) at mm/page-writeback.c:608
+#1  0xffffffff811d7c82 in call_timer_fn (timer=timer@entry=0xffffffff838afb18 <global_wb_domain+56>, fn=fn@entry=0xffffffff812e9980 <writeout_period>, baseclk=baseclk@entry=4296110016) at kernel/time/timer.c:1700
+#2  0xffffffff811d7f8e in expire_timers (head=0xffffc90000124f10, base=0xffff888237c9e040) at kernel/time/timer.c:1751
+#3  __run_timers (base=0xffff888237c9e040) at kernel/time/timer.c:2022
+#4  0xffffffff82197e57 in __do_softirq () at kernel/softirq.c:571
+#5  0xffffffff811328aa in invoke_softirq () at kernel/softirq.c:445
+#6  __irq_exit_rcu () at kernel/softirq.c:650
+#7  0xffffffff82184fc6 in sysvec_apic_timer_interrupt (regs=0xffffc9000009be38) at arch/x86/kernel/apic/apic.c:1107
+```
+
+## /proc/sys/vm/ 下的一些接口
+
+DEVICE_ATTR_RW(max_bytes);
+
+static DEVICE_ATTR_RW(strict_limit);
+
+```c
+static struct ctl_table vm_page_writeback_sysctls[] = {
+	{
+		.procname   = "dirty_background_ratio",
+		.data       = &dirty_background_ratio,
+		.maxlen     = sizeof(dirty_background_ratio),
+		.mode       = 0644,
+		.proc_handler   = dirty_background_ratio_handler,
+		.extra1     = SYSCTL_ZERO,
+		.extra2     = SYSCTL_ONE_HUNDRED,
+	},
+	{
+		.procname   = "dirty_background_bytes",
+		.data       = &dirty_background_bytes,
+		.maxlen     = sizeof(dirty_background_bytes),
+		.mode       = 0644,
+		.proc_handler   = dirty_background_bytes_handler,
+		.extra1     = SYSCTL_LONG_ONE,
+	},
+	{
+		.procname   = "dirty_ratio",
+		.data       = &vm_dirty_ratio,
+		.maxlen     = sizeof(vm_dirty_ratio),
+		.mode       = 0644,
+		.proc_handler   = dirty_ratio_handler,
+		.extra1     = SYSCTL_ZERO,
+		.extra2     = SYSCTL_ONE_HUNDRED,
+	},
+	{
+		.procname   = "dirty_bytes",
+		.data       = &vm_dirty_bytes,
+		.maxlen     = sizeof(vm_dirty_bytes),
+		.mode       = 0644,
+		.proc_handler   = dirty_bytes_handler,
+		.extra1     = (void *)&dirty_bytes_min,
+	},
+	{
+		.procname   = "dirty_writeback_centisecs",
+		.data       = &dirty_writeback_interval,
+		.maxlen     = sizeof(dirty_writeback_interval),
+		.mode       = 0644,
+		.proc_handler   = dirty_writeback_centisecs_handler,
+	},
+	{
+		.procname   = "dirty_expire_centisecs",
+		.data       = &dirty_expire_interval,
+		.maxlen     = sizeof(dirty_expire_interval),
+		.mode       = 0644,
+		.proc_handler   = proc_dointvec_minmax,
+		.extra1     = SYSCTL_ZERO,
+	},
+	{
+		.procname	= "laptop_mode",
+		.data		= &laptop_mode,
+		.maxlen		= sizeof(laptop_mode),
+		.mode		= 0644,
+		.proc_handler	= proc_dointvec_jiffies,
+	},
+	{}
+};
+```
+
+## systeroid --tui 中搜索 dirty 看看
+
+似乎是存在 background 和非 background 的两个部分
+
+## sync 命令和 echo 3 | sudo tee /proc/sys/vm/drop_caches 的区别
+- https://stackoverflow.com/questions/17500134/is-running-sync-before-drop-caches-necessary
+
+drop cache 删除掉 clean cache
+sync 是将 dirty page 写下去
+
+- 分别检查下代码实现吧
+
+## [ ] cat /proc/meminfo 中这两个调查下
+
+```txt
+Writeback:             0 kB
+Dirty:               728 kB
+WritebackTmp:          0 kB
+```
+
+## 为什么有的用户可以完全不注册 noop_dirty_folio
+
+在 commit b82a96c92533 ("fs: remove noop_set_page_dirty()") 中 commit log 中:
+
+It will have no effect on actually writing the page back, as the pages are not on any LRU lists.
+
+
+简单的使用这个方法
+```txt
+ag -A 10  "const struct address_space_operations.*\{"  > a.txt
+```
+
+- romfs_aops
+- squashfs_symlink_aops
+- squashfs_symlink_inode_ops
+- squashfs_aops
+- udf_symlink_aops
+- efs_aops
+- fuse_symlink_aops
+- efs_aops
+
+大致的样子:
+```c
+static const struct address_space_operations ovl_aops = {
+	/* For O_DIRECT dentry_open() checks f_mapping->a_ops->direct_IO */
+	.direct_IO		= noop_direct_IO,
+};
+```
+
+```c
+const struct address_space_operations nfs_dir_aops = {
+	.free_folio = nfs_readdir_clear_array,
+};
+```
+
+看来，如果是 readonly 的，symlink 这种根本不会管理具体的 page 的都是没必要
+
+### [x] aops 可以一并删除吗
+- fb_deferred_io_aops
+- anon_aops
+- dax
+
+是可以的，因为会自动 fallback 到 empty_aops 中了。
+
+## background 的行为到底在哪里? 在 page-writeback.c 还是 fs-writeback.c
+
+应该是在 page-writeback.c 中，但是刷新的时候
+
+- balance_dirty_pages 会启动
+
+- wb_workfn 中是根据盘的来进行刷的，而不是经过文件系统的
+  - wb_start_background_writeback
+
+## 还是分析下 patch 吧
+patch 的修改方法，然后再去删除掉几个代码:
+```sh
+rg  -l  "\.dirty_folio\s+=\s+noop_dirty_folio" | xargs sed -i  '/\.dirty_folio.*noop_dirty_folio/d'
+```
+
+- [ ] fb_deferred_io_mmap 恐怕是不可以直接删除的
+
+- [ ] 进一步的测试，dax 的代码使用 ext4 的
+
+看来之前是犯过错误的:
+commit 0b78f8bcf495 ("Revert "fb_defio: Remove custom address_space_operations"")
+
+```diff
+Revert "fb_defio: Remove custom address_space_operations"
+
+Commit ccf953d8f3d6 makes framebuffers which use deferred I/O stop
+displaying updates after the first one.  This is because the pages
+handled by fb_defio no longer have a page_mapping().  That prevents
+page_mkclean() from marking the PTEs as clean, and so writes are only
+noticed the first time.
+```
+
+```diff
+fb_defio: Remove custom address_space_operations
+
+There's no need to give the page an address_space.  Leaving the
+page->mapping as NULL will cause the VM to handle set_page_dirty()
+the same way that it's handled now, and that was the only reason to
+set the address_space in the first place.
+```
+
+去掉了
+
+- fb_open 中
+
+
+## buffer write 不能无限的产生 dirty page 的
+
+sudo dd if=/dev/zero of=hugefile bs=100M
+```txt
+@[
+    balance_dirty_pages+1
+    balance_dirty_pages_ratelimited_flags+676
+    fault_dirty_shared_page+150
+    do_wp_page+299
+    __handle_mm_fault+2066
+    handle_mm_fault+341
+    do_user_addr_fault+515
+    exc_page_fault+109
+    asm_exc_page_fault+38
+]: 1
+@[
+    balance_dirty_pages+1
+    balance_dirty_pages_ratelimited_flags+676
+    generic_perform_write+338
+    ext4_buffered_write_iter+132
+    vfs_write+555
+    ksys_write+111
+    do_syscall_64+59
+    entry_SYSCALL_64_after_hwframe+114
+]: 2
+@[
+    balance_dirty_pages+1
+    balance_dirty_pages_ratelimited_flags+676
+    iomap_file_buffered_write+313
+    xfs_file_buffered_write+177
+    vfs_write+555
+    ksys_write+111
+    do_syscall_64+59
+    entry_SYSCALL_64_after_hwframe+114
+]: 3333
+```
+
+## 从 PG_dirty 的角度分析法一下
+
+调用主要是 buffer head 以及 iomap 的位置
+
+### 基本执行路径 : 从 folio_mark_dirty 到 `__folio_mark_dirty` 的路径
+
+- folio_mark_dirty : 外部调用接口，通过 a_ops::dirty_folio 维持生活
+
+- block_dirty_folio : buffer head 的用户注册 a_ops::dirty_folio 的 hook
+- mark_buffer_dirty : buffer head
+- filemap_dirty_folio : 非 buffer head 用户的 a_ops::dirty_folio 的
+  - `__folio_mark_dirty`
+    - folio_account_dirtied
+		- __xa_set_mark(&mapping->i_pages, folio_index(folio), PAGECACHE_TAG_DIRTY); : 设置 aops 的 array
+
+其实这个问题挺复杂的
+
+folio_mark_dirty 被唯一调用 mapping->a_ops->dirty_folio
+
+之所以进行标记，是为了 writeback 知道哪些 page 需要写回
+
+
+可以注册的 hook
+1. filemap_dirty_folio : Mark a folio dirty for filesystems which do not use buffer_heads.
+
+主要做两个工作:
+  - __folio_mark_dirty : 给 as 标记
+  - __mark_inode_dirty : 给 fs 标记
+
+bcachefs 就是使用的这个
+
+xfs 在 filemap_dirty_folio 的基础上稍微的修改了一些，主要是 dirty 的粒度问题。
+
+2. ext4_dirty_folio : buffer cache 的 old school 需要一些特殊的操作
+
+3. noop_dirty_folio : 由于这个 page 不会写回，也只是设置一下 flag 即可。
+
+### 如何知道那些 page 是 dirty 的
+
+```txt
+@[
+    writeback_iter+5
+    write_cache_pages+78
+    blkdev_writepages+86
+    do_writepages+118
+    __writeback_single_inode+61
+    writeback_sb_inodes+540
+    __writeback_inodes_wb+76
+    wb_writeback+403
+    wb_workfn+689
+    process_one_work+399
+    worker_thread+543
+    kthread+220
+    ret_from_fork+49
+    ret_from_fork_asm+26
+]: 62
+```
+
+简单分析之后，可以看到是: filemap_get_folios_tag 来根据
+PAGECACHE_TAG_DIRTY 来测试。
+
+
+### [ ] folio_mark_dirty 可以直接触发 wb 的 thread 吧
+
+甚至不需要直接触发。
+
+用 fio 测试一下看看主要的路径。
+
+### 为什么 swap 是标记为 dirty 的
+
+
+## 经典 backtrace
+
+写完之后，所有的 page 都需要标记 clean 的，标记过程中，都是需要反向映射的:
+```txt
+@[
+    kvm_flush_tlb_multi+5
+    flush_tlb_mm_range+287
+    ptep_clear_flush+65
+    page_vma_mkclean_one+229
+    page_mkclean_one+142
+    rmap_walk_file+307
+    folio_mkclean+182
+    folio_clear_dirty_for_io+93
+    mpage_process_page_bufs+320
+    mpage_prepare_extent_to_map+796
+    ext4_do_writepages+883
+    ext4_writepages+281
+    do_writepages+243
+    __writeback_single_inode+62
+    writeback_sb_inodes+674
+    __writeback_inodes_wb+149
+    wb_writeback+375
+    wb_workfn+945
+    process_scheduled_works+444
+    worker_thread+712
+    kthread+248
+    ret_from_fork+55
+    ret_from_fork_asm+26
+]: 3430640
+```
+
+<script src="https://giscus.app/client.js"
+        data-repo="martins3/martins3.github.io"
+        data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="
+        data-category="Show and tell"
+        data-category-id="MDE4OkRpc2N1c3Npb25DYXRlZ29yeTMyMDMzNjY4"
+        data-mapping="pathname"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-theme="light"
+        data-lang="zh-CN"
+        crossorigin="anonymous"
+        async>
+</script>
+
+本站所有文章转发 **CSDN** 将按侵权追究法律责任，其它情况随意。

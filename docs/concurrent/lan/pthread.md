@@ -1,0 +1,289 @@
+# pthread
+
+似乎的确是没有什么黑科技的，分析下: musl/src/thread/ 的目录
+
+其实还是 :
+1. mutex
+2. condition variable
+3. spin lock
+4. rw lock
+5. [sem](https://man7.org/linux/man-pages/man7/sem_overview.7.html)
+
+```txt
+ __lock.c
+ __set_thread_area.c
+ __syscall_cp.c
+ __timedwait.c
+ __tls_get_addr.c
+ __unmapself.c
+ __wait.c
+ call_once.c
+ clone.c
+ cnd_broadcast.c
+ cnd_destroy.c
+ cnd_init.c
+ cnd_signal.c
+ cnd_timedwait.c
+ cnd_wait.c
+ default_attr.c
+ lock_ptc.c
+ mtx_destroy.c
+ mtx_init.c
+ mtx_lock.c
+ mtx_timedlock.c
+ mtx_trylock.c
+ mtx_unlock.c
+ pthread_atfork.c
+ pthread_attr_destroy.c
+ pthread_attr_get.c
+ pthread_attr_init.c
+ pthread_attr_setdetachstate.c
+ pthread_attr_setguardsize.c
+ pthread_attr_setinheritsched.c
+ pthread_attr_setschedparam.c
+ pthread_attr_setschedpolicy.c
+ pthread_attr_setscope.c
+ pthread_attr_setstack.c
+ pthread_attr_setstacksize.c
+ pthread_barrier_destroy.c
+ pthread_barrier_init.c
+ pthread_barrier_wait.c
+ pthread_barrierattr_destroy.c
+ pthread_barrierattr_init.c
+ pthread_barrierattr_setpshared.c
+ pthread_cancel.c
+ pthread_cleanup_push.c
+ pthread_cond_broadcast.c
+ pthread_cond_destroy.c
+ pthread_cond_init.c
+ pthread_cond_signal.c
+ pthread_cond_timedwait.c
+ pthread_cond_wait.c
+ pthread_condattr_destroy.c
+ pthread_condattr_init.c
+ pthread_condattr_setclock.c
+ pthread_condattr_setpshared.c
+ pthread_create.c
+ pthread_detach.c
+ pthread_equal.c
+ pthread_getattr_np.c
+ pthread_getconcurrency.c
+ pthread_getcpuclockid.c
+ pthread_getname_np.c
+ pthread_getschedparam.c
+ pthread_getspecific.c
+ pthread_join.c
+ pthread_key_create.c
+ pthread_kill.c
+ pthread_mutex_consistent.c
+ pthread_mutex_destroy.c
+ pthread_mutex_getprioceiling.c
+ pthread_mutex_init.c
+ pthread_mutex_lock.c
+ pthread_mutex_setprioceiling.c
+ pthread_mutex_timedlock.c
+ pthread_mutex_trylock.c
+ pthread_mutex_unlock.c
+ pthread_mutexattr_destroy.c
+ pthread_mutexattr_init.c
+ pthread_mutexattr_setprotocol.c
+ pthread_mutexattr_setpshared.c
+ pthread_mutexattr_setrobust.c
+ pthread_mutexattr_settype.c
+ pthread_once.c
+ pthread_rwlock_destroy.c
+ pthread_rwlock_init.c
+ pthread_rwlock_rdlock.c
+ pthread_rwlock_timedrdlock.c
+ pthread_rwlock_timedwrlock.c
+ pthread_rwlock_tryrdlock.c
+ pthread_rwlock_trywrlock.c
+ pthread_rwlock_unlock.c
+ pthread_rwlock_wrlock.c
+ pthread_rwlockattr_destroy.c
+ pthread_rwlockattr_init.c
+ pthread_rwlockattr_setpshared.c
+ pthread_self.c
+ pthread_setattr_default_np.c
+ pthread_setcancelstate.c
+ pthread_setcanceltype.c
+ pthread_setconcurrency.c
+ pthread_setname_np.c
+ pthread_setschedparam.c
+ pthread_setschedprio.c
+ pthread_setspecific.c
+ pthread_sigmask.c
+ pthread_spin_destroy.c
+ pthread_spin_init.c
+ pthread_spin_lock.c
+ pthread_spin_trylock.c
+ pthread_spin_unlock.c
+ pthread_testcancel.c
+ sem_destroy.c
+ sem_getvalue.c
+ sem_init.c
+ sem_open.c
+ sem_post.c
+ sem_timedwait.c
+ sem_trywait.c
+ sem_unlink.c
+ sem_wait.c
+ synccall.c
+ syscall_cp.c
+ thrd_create.c
+ thrd_exit.c
+ thrd_join.c
+ thrd_sleep.c
+ thrd_yield.c
+ tls.c
+ tss_create.c
+ tss_delete.c
+ tss_set.c
+ vmlock.c
+```
+## pthread 仔细分析
+- pthread_barrier 和 memory model 的 barrier 没有关系
+  - [When to use pthread condition variables?](https://stackoverflow.com/questions/20772476/when-to-use-pthread-condition-variables)
+  - barrier 可以实现多个 thread 需要等待在同一个位置上
+
+## spin lock 的基本实现
+通过 cas ，如果其他的 cpu 没有 set flag ，那么我们来 set flag 。
+
+## spinlock
+
+### musl
+pthread_spinlock_t 就是一个 int 而已。
+
+```c
+int pthread_spin_lock(pthread_spinlock_t *s)
+{
+	while (*(volatile int *)s || a_cas(s, 0, EBUSY)) a_spin();
+	return 0;
+}
+
+#define a_cas a_cas
+static inline int a_cas(volatile int *p, int t, int s)
+{
+	__asm__ __volatile__ (
+		"lock ; cmpxchg %3, %1"
+		: "=a"(t), "=m"(*p) : "a"(t), "r"(s) : "memory" );
+	return t;
+}
+
+#define a_spin a_spin
+static inline void a_spin()
+{
+	__asm__ __volatile__( "pause" : : : "memory" );
+}
+```
+- pause 指令就是专门为 spin lock 设计的
+  - https://stackoverflow.com/questions/4725676/how-does-x86-pause-instruction-work-in-spinlock-and-can-it-be-used-in-other-sc
+
+```txt
+$ disass pthread_spin_lock
+Dump of assembler code for function pthread_spin_lock:
+   0x0000000000055f69 <+0>:     mov    $0x10,%edx
+   0x0000000000055f6e <+5>:     mov    (%rdi),%eax
+   0x0000000000055f70 <+7>:     test   %eax,%eax
+   0x0000000000055f72 <+9>:     je     0x55f78 <pthread_spin_lock+15>
+   0x0000000000055f74 <+11>:    pause
+   0x0000000000055f76 <+13>:    jmp    0x55f6e <pthread_spin_lock+5>
+   0x0000000000055f78 <+15>:    lock cmpxchg %edx,(%rdi)
+   0x0000000000055f7c <+19>:    test   %eax,%eax
+   0x0000000000055f7e <+21>:    jne    0x55f74 <pthread_spin_lock+11>
+   0x0000000000055f80 <+23>:    ret
+```
+
+### glibc 的实现
+
+可以在 nptl/pthread_spin_lock.c 中， 可以简化为:
+
+```c
+int __pthread_spin_lock (pthread_spinlock_t *lock)
+{
+  int val = 0;
+
+  if (__glibc_likely (atomic_exchange_acquire (lock, 1) == 0))
+  do {
+    do {
+	    atomic_spin_nop ();
+	    val = atomic_load_relaxed (lock);
+	  } while (val != 0);
+  }
+  while (!atomic_compare_exchange_weak_acquire (lock, &val, 1));
+
+  return 0;
+}
+```
+看上去专业多了。
+
+## 问题
+1. 一共三个 lock ，都检查下如何实现的，都是 cas 吗?
+2. 将他们都反汇编一下试试
+
+## pthread_once
+
+## 为什么 pthread_cond_wait 需要 mutex 来着?
+<!-- da0f4192-6007-4137-a79f-0eb87980f91e -->
+
+```c
+pthread_mutex_lock(&cond_mutex);
+struct vm *vm;
+while ((vm = get_ready_work()) == NULL) {
+	pthread_cond_wait(&swap_cond, &cond_mutex);
+}
+pthread_mutex_unlock(&cond_mutex);
+```
+
+1. pthread_cond_wait 函数有时可能会在没有任何线程调用 pthread_cond_signal 的情况下返回。 所以，需要使用 while 循环
+
+2. 需要 mutex 是为了防止唤醒丢失。
+	- waiter : 检查条件，然后等待，这个 mutex 的保护范围是条件检测
+	- notifier : 配置条件，然后唤醒，mutex 需要保护状态修改到 pthread_cond_wait
+
+不过参考内核中的 rcu wait 可以看到，内核中是不会使用这么傻的版本来防止唤醒丢失的。
+
+唤醒丢失的经典场景:
+```txt
+vm = get_ready_work() → NULL
+准备调用 cond_wait()
+                                                add_work(...)
+                                                pthread_cond_signal()
+调用 cond_wait() ，但信号已发完 → 永久阻塞！
+```
+可以发现，这里的关键在于，pthread_cond_signal 不可以在"检查条件 + wait"之间:
+
+只能是一下这两种情况:
+```txt
+vm = get_ready_work() → NULL
+调用 cond_wait()
+                                                pthread_cond_signal()
+```
+
+```txt
+                                                pthread_cond_signal()
+vm = get_ready_work() → NULL
+调用 cond_wait()
+```
+也就是其实 add_work 可以不用在 mutex 中保护，不过一般来说，访问共享数组，最好是有保护的，
+所以大多数案例中，都是有保护的。
+
+(所以，内核中的 rcu wait 是如何防止唤醒丢失的）
+
+- https://stackoverflow.com/questions/14924469/does-pthread-cond-waitcond-t-mutex-unlock-and-then-lock-the-mutex
+
+<script src="https://giscus.app/client.js"
+        data-repo="martins3/martins3.github.io"
+        data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="
+        data-category="Show and tell"
+        data-category-id="MDE4OkRpc2N1c3Npb25DYXRlZ29yeTMyMDMzNjY4"
+        data-mapping="pathname"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-theme="light"
+        data-lang="zh-CN"
+        crossorigin="anonymous"
+        async>
+</script>
+
+本站所有文章转发 **CSDN** 将按侵权追究法律责任，其它情况随意。

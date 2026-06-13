@@ -1,0 +1,4686 @@
+0:handler:  handle_edge_irq
+0:device:   (null)
+0:status:   0x00004000
+0:istate:   0x00004000
+0:ddepth:   1
+0:wdepth:   0
+0:dstate:   0x35038000
+0:            IRQD_IRQ_DISABLED
+0:            IRQD_IRQ_MASKED
+0:            IRQD_SINGLE_TARGET
+0:            IRQD_MOVE_PCNTXT
+0:            IRQD_AFFINITY_ON_ACTIVATE
+0:            IRQD_CAN_RESERVE
+0:            IRQD_HANDLE_ENFORCE_IRQCTX
+0:node:     0
+0:affinity: 0-31
+0:effectiv: 0
+0:pending:
+0:domain:  IO-APIC-2
+0: hwirq:   0x2
+0: chip:    IR-IO-APIC
+0:  flags:   0x410
+0:             IRQCHIP_SKIP_SET_WAKE
+0: parent:
+0:    domain:  INTEL-IR-0-13
+0:     hwirq:   0x10000
+0:     chip:    INTEL-IR
+0:      flags:   0x0
+0:     parent:
+0:        domain:  VECTOR
+0:         hwirq:   0x0
+0:         chip:    APIC
+0:          flags:   0x0
+0:         Vector:     0
+0:         Target:     0
+0:         move_in_progress: 0
+0:         is_managed:       0
+0:         can_reserve:      1
+0:         has_reserved:     1
+0:         cleanup_pending:  0
+1:handler:  handle_edge_irq
+1:device:   (null)
+1:status:   0x00004000
+1:istate:   0x00004000
+1:ddepth:   1
+1:wdepth:   0
+1:dstate:   0x35038000
+1:            IRQD_IRQ_DISABLED
+1:            IRQD_IRQ_MASKED
+1:            IRQD_SINGLE_TARGET
+1:            IRQD_MOVE_PCNTXT
+1:            IRQD_AFFINITY_ON_ACTIVATE
+1:            IRQD_CAN_RESERVE
+1:            IRQD_HANDLE_ENFORCE_IRQCTX
+1:node:     0
+1:affinity: 0-31
+1:effectiv: 0
+1:pending:
+1:domain:  IO-APIC-2
+1: hwirq:   0x1
+1: chip:    IR-IO-APIC
+1:  flags:   0x410
+1:             IRQCHIP_SKIP_SET_WAKE
+1: parent:
+1:    domain:  INTEL-IR-0-13
+1:     hwirq:   0x0
+1:     chip:    INTEL-IR
+1:      flags:   0x0
+1:     parent:
+1:        domain:  VECTOR
+1:         hwirq:   0x1
+1:         chip:    APIC
+1:          flags:   0x0
+1:         Vector:     0
+1:         Target:     0
+1:         move_in_progress: 0
+1:         is_managed:       0
+1:         can_reserve:      1
+1:         has_reserved:     1
+1:         cleanup_pending:  0
+10:handler:  handle_edge_irq
+10:device:   (null)
+10:status:   0x00004000
+10:istate:   0x00004000
+10:ddepth:   1
+10:wdepth:   0
+10:dstate:   0x35038000
+10:            IRQD_IRQ_DISABLED
+10:            IRQD_IRQ_MASKED
+10:            IRQD_SINGLE_TARGET
+10:            IRQD_MOVE_PCNTXT
+10:            IRQD_AFFINITY_ON_ACTIVATE
+10:            IRQD_CAN_RESERVE
+10:            IRQD_HANDLE_ENFORCE_IRQCTX
+10:node:     0
+10:affinity: 0-31
+10:effectiv: 0
+10:pending:
+10:domain:  IO-APIC-2
+10: hwirq:   0xa
+10: chip:    IR-IO-APIC
+10:  flags:   0x410
+10:             IRQCHIP_SKIP_SET_WAKE
+10: parent:
+10:    domain:  INTEL-IR-0-13
+10:     hwirq:   0x90000
+10:     chip:    INTEL-IR
+10:      flags:   0x0
+10:     parent:
+10:        domain:  VECTOR
+10:         hwirq:   0xa
+10:         chip:    APIC
+10:          flags:   0x0
+10:         Vector:     0
+10:         Target:     0
+10:         move_in_progress: 0
+10:         is_managed:       0
+10:         can_reserve:      1
+10:         has_reserved:     1
+10:         cleanup_pending:  0
+11:handler:  handle_edge_irq
+11:device:   (null)
+11:status:   0x00004000
+11:istate:   0x00004000
+11:ddepth:   1
+11:wdepth:   0
+11:dstate:   0x35038000
+11:            IRQD_IRQ_DISABLED
+11:            IRQD_IRQ_MASKED
+11:            IRQD_SINGLE_TARGET
+11:            IRQD_MOVE_PCNTXT
+11:            IRQD_AFFINITY_ON_ACTIVATE
+11:            IRQD_CAN_RESERVE
+11:            IRQD_HANDLE_ENFORCE_IRQCTX
+11:node:     0
+11:affinity: 0-31
+11:effectiv: 0
+11:pending:
+11:domain:  IO-APIC-2
+11: hwirq:   0xb
+11: chip:    IR-IO-APIC
+11:  flags:   0x410
+11:             IRQCHIP_SKIP_SET_WAKE
+11: parent:
+11:    domain:  INTEL-IR-0-13
+11:     hwirq:   0xa0000
+11:     chip:    INTEL-IR
+11:      flags:   0x0
+11:     parent:
+11:        domain:  VECTOR
+11:         hwirq:   0xb
+11:         chip:    APIC
+11:          flags:   0x0
+11:         Vector:     0
+11:         Target:     0
+11:         move_in_progress: 0
+11:         is_managed:       0
+11:         can_reserve:      1
+11:         has_reserved:     1
+11:         cleanup_pending:  0
+12:handler:  handle_edge_irq
+12:device:   (null)
+12:status:   0x00004000
+12:istate:   0x00004000
+12:ddepth:   1
+12:wdepth:   0
+12:dstate:   0x35038000
+12:            IRQD_IRQ_DISABLED
+12:            IRQD_IRQ_MASKED
+12:            IRQD_SINGLE_TARGET
+12:            IRQD_MOVE_PCNTXT
+12:            IRQD_AFFINITY_ON_ACTIVATE
+12:            IRQD_CAN_RESERVE
+12:            IRQD_HANDLE_ENFORCE_IRQCTX
+12:node:     0
+12:affinity: 0-31
+12:effectiv: 0
+12:pending:
+12:domain:  IO-APIC-2
+12: hwirq:   0xc
+12: chip:    IR-IO-APIC
+12:  flags:   0x410
+12:             IRQCHIP_SKIP_SET_WAKE
+12: parent:
+12:    domain:  INTEL-IR-0-13
+12:     hwirq:   0xb0000
+12:     chip:    INTEL-IR
+12:      flags:   0x0
+12:     parent:
+12:        domain:  VECTOR
+12:         hwirq:   0xc
+12:         chip:    APIC
+12:          flags:   0x0
+12:         Vector:     0
+12:         Target:     0
+12:         move_in_progress: 0
+12:         is_managed:       0
+12:         can_reserve:      1
+12:         has_reserved:     1
+12:         cleanup_pending:  0
+120:handler:  handle_edge_irq
+120:device:   (null)
+120:status:   0x00000000
+120:istate:   0x00004000
+120:ddepth:   0
+120:wdepth:   0
+120:dstate:   0x35400200
+120:            IRQD_ACTIVATED
+120:            IRQD_IRQ_STARTED
+120:            IRQD_SINGLE_TARGET
+120:            IRQD_AFFINITY_ON_ACTIVATE
+120:            IRQD_CAN_RESERVE
+120:            IRQD_HANDLE_ENFORCE_IRQCTX
+120:node:     -1
+120:affinity: 0
+120:effectiv: 0
+120:pending:
+120:domain:  DMAR-MSI
+120: hwirq:   0x0
+120: chip:    DMAR-MSI
+120:  flags:   0x410
+120:             IRQCHIP_SKIP_SET_WAKE
+120: parent:
+120:    domain:  VECTOR
+120:     hwirq:   0x78
+120:     chip:    APIC
+120:      flags:   0x0
+120:     Vector:    33
+120:     Target:     0
+120:     move_in_progress: 0
+120:     is_managed:       0
+120:     can_reserve:      1
+120:     has_reserved:     0
+120:     cleanup_pending:  0
+121:handler:  handle_edge_irq
+121:device:   0000:00:01.0
+121:status:   0x00004000
+121:istate:   0x00004000
+121:ddepth:   1
+121:wdepth:   0
+121:dstate:   0x31038200
+121:            IRQD_ACTIVATED
+121:            IRQD_IRQ_DISABLED
+121:            IRQD_IRQ_MASKED
+121:            IRQD_SINGLE_TARGET
+121:            IRQD_MOVE_PCNTXT
+121:            IRQD_AFFINITY_ON_ACTIVATE
+121:            IRQD_HANDLE_ENFORCE_IRQCTX
+121:node:     -1
+121:affinity: 0-31
+121:effectiv: 2
+121:pending:
+121:domain:  IR-PCI-MSI-0000:00:01.0-11
+121: hwirq:   0x0
+121: chip:    IR-PCI-MSI-0000:00:01.0
+121:  flags:   0x430
+121:             IRQCHIP_SKIP_SET_WAKE
+121:             IRQCHIP_ONESHOT_SAFE
+121: parent:
+121:    domain:  INTEL-IR-0-13
+121:     hwirq:   0x100000
+121:     chip:    INTEL-IR
+121:      flags:   0x0
+121:     parent:
+121:        domain:  VECTOR
+121:         hwirq:   0x79
+121:         chip:    APIC
+121:          flags:   0x0
+121:         Vector:    33
+121:         Target:     2
+121:         move_in_progress: 0
+121:         is_managed:       0
+121:         can_reserve:      0
+121:         has_reserved:     0
+121:         cleanup_pending:  0
+122:handler:  handle_edge_irq
+122:device:   0000:00:06.0
+122:status:   0x00004000
+122:istate:   0x00004000
+122:ddepth:   1
+122:wdepth:   0
+122:dstate:   0x31038200
+122:            IRQD_ACTIVATED
+122:            IRQD_IRQ_DISABLED
+122:            IRQD_IRQ_MASKED
+122:            IRQD_SINGLE_TARGET
+122:            IRQD_MOVE_PCNTXT
+122:            IRQD_AFFINITY_ON_ACTIVATE
+122:            IRQD_HANDLE_ENFORCE_IRQCTX
+122:node:     -1
+122:affinity: 0-31
+122:effectiv: 3
+122:pending:
+122:domain:  IR-PCI-MSI-0000:00:06.0-11
+122: hwirq:   0x0
+122: chip:    IR-PCI-MSI-0000:00:06.0
+122:  flags:   0x430
+122:             IRQCHIP_SKIP_SET_WAKE
+122:             IRQCHIP_ONESHOT_SAFE
+122: parent:
+122:    domain:  INTEL-IR-0-13
+122:     hwirq:   0x120000
+122:     chip:    INTEL-IR
+122:      flags:   0x0
+122:     parent:
+122:        domain:  VECTOR
+122:         hwirq:   0x7a
+122:         chip:    APIC
+122:          flags:   0x0
+122:         Vector:    33
+122:         Target:     3
+122:         move_in_progress: 0
+122:         is_managed:       0
+122:         can_reserve:      0
+122:         has_reserved:     0
+122:         cleanup_pending:  0
+123:handler:  handle_edge_irq
+123:device:   0000:00:1a.0
+123:status:   0x00004000
+123:istate:   0x00004000
+123:ddepth:   1
+123:wdepth:   0
+123:dstate:   0x31038200
+123:            IRQD_ACTIVATED
+123:            IRQD_IRQ_DISABLED
+123:            IRQD_IRQ_MASKED
+123:            IRQD_SINGLE_TARGET
+123:            IRQD_MOVE_PCNTXT
+123:            IRQD_AFFINITY_ON_ACTIVATE
+123:            IRQD_HANDLE_ENFORCE_IRQCTX
+123:node:     -1
+123:affinity: 0-31
+123:effectiv: 4
+123:pending:
+123:domain:  IR-PCI-MSI-0000:00:1a.0-11
+123: hwirq:   0x0
+123: chip:    IR-PCI-MSI-0000:00:1a.0
+123:  flags:   0x430
+123:             IRQCHIP_SKIP_SET_WAKE
+123:             IRQCHIP_ONESHOT_SAFE
+123: parent:
+123:    domain:  INTEL-IR-0-13
+123:     hwirq:   0x130000
+123:     chip:    INTEL-IR
+123:      flags:   0x0
+123:     parent:
+123:        domain:  VECTOR
+123:         hwirq:   0x7b
+123:         chip:    APIC
+123:          flags:   0x0
+123:         Vector:    33
+123:         Target:     4
+123:         move_in_progress: 0
+123:         is_managed:       0
+123:         can_reserve:      0
+123:         has_reserved:     0
+123:         cleanup_pending:  0
+124:handler:  handle_edge_irq
+124:device:   0000:00:1c.0
+124:status:   0x00004000
+124:istate:   0x00004000
+124:ddepth:   1
+124:wdepth:   0
+124:dstate:   0x31038200
+124:            IRQD_ACTIVATED
+124:            IRQD_IRQ_DISABLED
+124:            IRQD_IRQ_MASKED
+124:            IRQD_SINGLE_TARGET
+124:            IRQD_MOVE_PCNTXT
+124:            IRQD_AFFINITY_ON_ACTIVATE
+124:            IRQD_HANDLE_ENFORCE_IRQCTX
+124:node:     -1
+124:affinity: 0-31
+124:effectiv: 5
+124:pending:
+124:domain:  IR-PCI-MSI-0000:00:1c.0-11
+124: hwirq:   0x0
+124: chip:    IR-PCI-MSI-0000:00:1c.0
+124:  flags:   0x430
+124:             IRQCHIP_SKIP_SET_WAKE
+124:             IRQCHIP_ONESHOT_SAFE
+124: parent:
+124:    domain:  INTEL-IR-0-13
+124:     hwirq:   0x140000
+124:     chip:    INTEL-IR
+124:      flags:   0x0
+124:     parent:
+124:        domain:  VECTOR
+124:         hwirq:   0x7c
+124:         chip:    APIC
+124:          flags:   0x0
+124:         Vector:    33
+124:         Target:     5
+124:         move_in_progress: 0
+124:         is_managed:       0
+124:         can_reserve:      0
+124:         has_reserved:     0
+124:         cleanup_pending:  0
+125:handler:  handle_edge_irq
+125:device:   0000:00:1c.2
+125:status:   0x00004000
+125:istate:   0x00004000
+125:ddepth:   1
+125:wdepth:   0
+125:dstate:   0x31038200
+125:            IRQD_ACTIVATED
+125:            IRQD_IRQ_DISABLED
+125:            IRQD_IRQ_MASKED
+125:            IRQD_SINGLE_TARGET
+125:            IRQD_MOVE_PCNTXT
+125:            IRQD_AFFINITY_ON_ACTIVATE
+125:            IRQD_HANDLE_ENFORCE_IRQCTX
+125:node:     -1
+125:affinity: 0-31
+125:effectiv: 6
+125:pending:
+125:domain:  IR-PCI-MSI-0000:00:1c.2-11
+125: hwirq:   0x0
+125: chip:    IR-PCI-MSI-0000:00:1c.2
+125:  flags:   0x430
+125:             IRQCHIP_SKIP_SET_WAKE
+125:             IRQCHIP_ONESHOT_SAFE
+125: parent:
+125:    domain:  INTEL-IR-0-13
+125:     hwirq:   0x160000
+125:     chip:    INTEL-IR
+125:      flags:   0x0
+125:     parent:
+125:        domain:  VECTOR
+125:         hwirq:   0x7d
+125:         chip:    APIC
+125:          flags:   0x0
+125:         Vector:    33
+125:         Target:     6
+125:         move_in_progress: 0
+125:         is_managed:       0
+125:         can_reserve:      0
+125:         has_reserved:     0
+125:         cleanup_pending:  0
+126:handler:  handle_edge_irq
+126:device:   0000:00:1d.0
+126:status:   0x00004000
+126:istate:   0x00004000
+126:ddepth:   1
+126:wdepth:   0
+126:dstate:   0x31038200
+126:            IRQD_ACTIVATED
+126:            IRQD_IRQ_DISABLED
+126:            IRQD_IRQ_MASKED
+126:            IRQD_SINGLE_TARGET
+126:            IRQD_MOVE_PCNTXT
+126:            IRQD_AFFINITY_ON_ACTIVATE
+126:            IRQD_HANDLE_ENFORCE_IRQCTX
+126:node:     -1
+126:affinity: 0-31
+126:effectiv: 7
+126:pending:
+126:domain:  IR-PCI-MSI-0000:00:1d.0-11
+126: hwirq:   0x0
+126: chip:    IR-PCI-MSI-0000:00:1d.0
+126:  flags:   0x430
+126:             IRQCHIP_SKIP_SET_WAKE
+126:             IRQCHIP_ONESHOT_SAFE
+126: parent:
+126:    domain:  INTEL-IR-0-13
+126:     hwirq:   0x170000
+126:     chip:    INTEL-IR
+126:      flags:   0x0
+126:     parent:
+126:        domain:  VECTOR
+126:         hwirq:   0x7e
+126:         chip:    APIC
+126:          flags:   0x0
+126:         Vector:    33
+126:         Target:     7
+126:         move_in_progress: 0
+126:         is_managed:       0
+126:         can_reserve:      0
+126:         has_reserved:     0
+126:         cleanup_pending:  0
+127:handler:  handle_edge_irq
+127:device:   0000:03:00.0
+127:status:   0x00004000
+127:istate:   0x00004000
+127:ddepth:   0
+127:wdepth:   0
+127:dstate:   0x35408200
+127:            IRQD_ACTIVATED
+127:            IRQD_IRQ_STARTED
+127:            IRQD_SINGLE_TARGET
+127:            IRQD_MOVE_PCNTXT
+127:            IRQD_AFFINITY_ON_ACTIVATE
+127:            IRQD_CAN_RESERVE
+127:            IRQD_HANDLE_ENFORCE_IRQCTX
+127:node:     -1
+127:affinity: 0-31
+127:effectiv: 29
+127:pending:
+127:domain:  IR-PCI-MSIX-0000:03:00.0-12
+127: hwirq:   0x0
+127: chip:    IR-PCI-MSIX-0000:03:00.0
+127:  flags:   0x430
+127:             IRQCHIP_SKIP_SET_WAKE
+127:             IRQCHIP_ONESHOT_SAFE
+127: parent:
+127:    domain:  INTEL-IR-0-13
+127:     hwirq:   0x180000
+127:     chip:    INTEL-IR
+127:      flags:   0x0
+127:     parent:
+127:        domain:  VECTOR
+127:         hwirq:   0x7f
+127:         chip:    APIC
+127:          flags:   0x0
+127:         Vector:    35
+127:         Target:    29
+127:         move_in_progress: 0
+127:         is_managed:       0
+127:         can_reserve:      1
+127:         has_reserved:     0
+127:         cleanup_pending:  0
+128:handler:  handle_edge_irq
+128:device:   0000:06:00.0
+128:status:   0x00004000
+128:istate:   0x00004000
+128:ddepth:   0
+128:wdepth:   0
+128:dstate:   0x35408200
+128:            IRQD_ACTIVATED
+128:            IRQD_IRQ_STARTED
+128:            IRQD_SINGLE_TARGET
+128:            IRQD_MOVE_PCNTXT
+128:            IRQD_AFFINITY_ON_ACTIVATE
+128:            IRQD_CAN_RESERVE
+128:            IRQD_HANDLE_ENFORCE_IRQCTX
+128:node:     0
+128:affinity: 0-31
+128:effectiv: 10
+128:pending:
+128:domain:  IR-PCI-MSIX-0000:06:00.0-12
+128: hwirq:   0x0
+128: chip:    IR-PCI-MSIX-0000:06:00.0
+128:  flags:   0x430
+128:             IRQCHIP_SKIP_SET_WAKE
+128:             IRQCHIP_ONESHOT_SAFE
+128: parent:
+128:    domain:  INTEL-IR-0-13
+128:     hwirq:   0x190000
+128:     chip:    INTEL-IR
+128:      flags:   0x0
+128:     parent:
+128:        domain:  VECTOR
+128:         hwirq:   0x80
+128:         chip:    APIC
+128:          flags:   0x0
+128:         Vector:    35
+128:         Target:    10
+128:         move_in_progress: 0
+128:         is_managed:       0
+128:         can_reserve:      1
+128:         has_reserved:     0
+128:         cleanup_pending:  0
+129:handler:  handle_edge_irq
+129:device:   0000:02:00.0
+129:status:   0x00004000
+129:istate:   0x00004000
+129:ddepth:   0
+129:wdepth:   0
+129:dstate:   0x35408200
+129:            IRQD_ACTIVATED
+129:            IRQD_IRQ_STARTED
+129:            IRQD_SINGLE_TARGET
+129:            IRQD_MOVE_PCNTXT
+129:            IRQD_AFFINITY_ON_ACTIVATE
+129:            IRQD_CAN_RESERVE
+129:            IRQD_HANDLE_ENFORCE_IRQCTX
+129:node:     0
+129:affinity: 0-31
+129:effectiv: 11
+129:pending:
+129:domain:  IR-PCI-MSIX-0000:02:00.0-12
+129: hwirq:   0x0
+129: chip:    IR-PCI-MSIX-0000:02:00.0
+129:  flags:   0x430
+129:             IRQCHIP_SKIP_SET_WAKE
+129:             IRQCHIP_ONESHOT_SAFE
+129: parent:
+129:    domain:  INTEL-IR-0-13
+129:     hwirq:   0x1a0000
+129:     chip:    INTEL-IR
+129:      flags:   0x0
+129:     parent:
+129:        domain:  VECTOR
+129:         hwirq:   0x81
+129:         chip:    APIC
+129:          flags:   0x0
+129:         Vector:    36
+129:         Target:    11
+129:         move_in_progress: 0
+129:         is_managed:       0
+129:         can_reserve:      1
+129:         has_reserved:     0
+129:         cleanup_pending:  0
+13:handler:  handle_edge_irq
+13:device:   (null)
+13:status:   0x00004000
+13:istate:   0x00004000
+13:ddepth:   1
+13:wdepth:   0
+13:dstate:   0x35038000
+13:            IRQD_IRQ_DISABLED
+13:            IRQD_IRQ_MASKED
+13:            IRQD_SINGLE_TARGET
+13:            IRQD_MOVE_PCNTXT
+13:            IRQD_AFFINITY_ON_ACTIVATE
+13:            IRQD_CAN_RESERVE
+13:            IRQD_HANDLE_ENFORCE_IRQCTX
+13:node:     0
+13:affinity: 0-31
+13:effectiv: 0
+13:pending:
+13:domain:  IO-APIC-2
+13: hwirq:   0xd
+13: chip:    IR-IO-APIC
+13:  flags:   0x410
+13:             IRQCHIP_SKIP_SET_WAKE
+13: parent:
+13:    domain:  INTEL-IR-0-13
+13:     hwirq:   0xc0000
+13:     chip:    INTEL-IR
+13:      flags:   0x0
+13:     parent:
+13:        domain:  VECTOR
+13:         hwirq:   0xd
+13:         chip:    APIC
+13:          flags:   0x0
+13:         Vector:     0
+13:         Target:     0
+13:         move_in_progress: 0
+13:         is_managed:       0
+13:         can_reserve:      1
+13:         has_reserved:     1
+13:         cleanup_pending:  0
+130:handler:  handle_edge_irq
+130:device:   0000:03:00.0
+130:status:   0x00004000
+130:istate:   0x00004000
+130:ddepth:   0
+130:wdepth:   0
+130:dstate:   0x35408200
+130:            IRQD_ACTIVATED
+130:            IRQD_IRQ_STARTED
+130:            IRQD_SINGLE_TARGET
+130:            IRQD_MOVE_PCNTXT
+130:            IRQD_AFFINITY_ON_ACTIVATE
+130:            IRQD_CAN_RESERVE
+130:            IRQD_HANDLE_ENFORCE_IRQCTX
+130:node:     -1
+130:affinity: 0-31
+130:effectiv: 30
+130:pending:
+130:domain:  IR-PCI-MSIX-0000:03:00.0-12
+130: hwirq:   0x1
+130: chip:    IR-PCI-MSIX-0000:03:00.0
+130:  flags:   0x430
+130:             IRQCHIP_SKIP_SET_WAKE
+130:             IRQCHIP_ONESHOT_SAFE
+130: parent:
+130:    domain:  INTEL-IR-0-13
+130:     hwirq:   0x1b0000
+130:     chip:    INTEL-IR
+130:      flags:   0x0
+130:     parent:
+130:        domain:  VECTOR
+130:         hwirq:   0x82
+130:         chip:    APIC
+130:          flags:   0x0
+130:         Vector:    35
+130:         Target:    30
+130:         move_in_progress: 0
+130:         is_managed:       0
+130:         can_reserve:      1
+130:         has_reserved:     0
+130:         cleanup_pending:  0
+131:handler:  handle_edge_irq
+131:device:   0000:03:00.0
+131:status:   0x00004000
+131:istate:   0x00004000
+131:ddepth:   0
+131:wdepth:   0
+131:dstate:   0x35408200
+131:            IRQD_ACTIVATED
+131:            IRQD_IRQ_STARTED
+131:            IRQD_SINGLE_TARGET
+131:            IRQD_MOVE_PCNTXT
+131:            IRQD_AFFINITY_ON_ACTIVATE
+131:            IRQD_CAN_RESERVE
+131:            IRQD_HANDLE_ENFORCE_IRQCTX
+131:node:     -1
+131:affinity: 0-31
+131:effectiv: 31
+131:pending:
+131:domain:  IR-PCI-MSIX-0000:03:00.0-12
+131: hwirq:   0x2
+131: chip:    IR-PCI-MSIX-0000:03:00.0
+131:  flags:   0x430
+131:             IRQCHIP_SKIP_SET_WAKE
+131:             IRQCHIP_ONESHOT_SAFE
+131: parent:
+131:    domain:  INTEL-IR-0-13
+131:     hwirq:   0x1c0000
+131:     chip:    INTEL-IR
+131:      flags:   0x0
+131:     parent:
+131:        domain:  VECTOR
+131:         hwirq:   0x83
+131:         chip:    APIC
+131:          flags:   0x0
+131:         Vector:    33
+131:         Target:    31
+131:         move_in_progress: 0
+131:         is_managed:       0
+131:         can_reserve:      1
+131:         has_reserved:     0
+131:         cleanup_pending:  0
+132:handler:  handle_edge_irq
+132:device:   0000:03:00.0
+132:status:   0x00004000
+132:istate:   0x00004000
+132:ddepth:   0
+132:wdepth:   0
+132:dstate:   0x35408200
+132:            IRQD_ACTIVATED
+132:            IRQD_IRQ_STARTED
+132:            IRQD_SINGLE_TARGET
+132:            IRQD_MOVE_PCNTXT
+132:            IRQD_AFFINITY_ON_ACTIVATE
+132:            IRQD_CAN_RESERVE
+132:            IRQD_HANDLE_ENFORCE_IRQCTX
+132:node:     -1
+132:affinity: 0-31
+132:effectiv: 9
+132:pending:
+132:domain:  IR-PCI-MSIX-0000:03:00.0-12
+132: hwirq:   0x3
+132: chip:    IR-PCI-MSIX-0000:03:00.0
+132:  flags:   0x430
+132:             IRQCHIP_SKIP_SET_WAKE
+132:             IRQCHIP_ONESHOT_SAFE
+132: parent:
+132:    domain:  INTEL-IR-0-13
+132:     hwirq:   0x1d0000
+132:     chip:    INTEL-IR
+132:      flags:   0x0
+132:     parent:
+132:        domain:  VECTOR
+132:         hwirq:   0x84
+132:         chip:    APIC
+132:          flags:   0x0
+132:         Vector:    34
+132:         Target:     9
+132:         move_in_progress: 0
+132:         is_managed:       0
+132:         can_reserve:      1
+132:         has_reserved:     0
+132:         cleanup_pending:  0
+133:handler:  handle_edge_irq
+133:device:   0000:03:00.0
+133:status:   0x00004000
+133:istate:   0x00004000
+133:ddepth:   0
+133:wdepth:   0
+133:dstate:   0x35408200
+133:            IRQD_ACTIVATED
+133:            IRQD_IRQ_STARTED
+133:            IRQD_SINGLE_TARGET
+133:            IRQD_MOVE_PCNTXT
+133:            IRQD_AFFINITY_ON_ACTIVATE
+133:            IRQD_CAN_RESERVE
+133:            IRQD_HANDLE_ENFORCE_IRQCTX
+133:node:     -1
+133:affinity: 0-31
+133:effectiv: 14
+133:pending:
+133:domain:  IR-PCI-MSIX-0000:03:00.0-12
+133: hwirq:   0x4
+133: chip:    IR-PCI-MSIX-0000:03:00.0
+133:  flags:   0x430
+133:             IRQCHIP_SKIP_SET_WAKE
+133:             IRQCHIP_ONESHOT_SAFE
+133: parent:
+133:    domain:  INTEL-IR-0-13
+133:     hwirq:   0x1e0000
+133:     chip:    INTEL-IR
+133:      flags:   0x0
+133:     parent:
+133:        domain:  VECTOR
+133:         hwirq:   0x85
+133:         chip:    APIC
+133:          flags:   0x0
+133:         Vector:    35
+133:         Target:    14
+133:         move_in_progress: 0
+133:         is_managed:       0
+133:         can_reserve:      1
+133:         has_reserved:     0
+133:         cleanup_pending:  0
+134:handler:  handle_edge_irq
+134:device:   0000:03:00.0
+134:status:   0x00004000
+134:istate:   0x00004000
+134:ddepth:   0
+134:wdepth:   0
+134:dstate:   0x35408200
+134:            IRQD_ACTIVATED
+134:            IRQD_IRQ_STARTED
+134:            IRQD_SINGLE_TARGET
+134:            IRQD_MOVE_PCNTXT
+134:            IRQD_AFFINITY_ON_ACTIVATE
+134:            IRQD_CAN_RESERVE
+134:            IRQD_HANDLE_ENFORCE_IRQCTX
+134:node:     -1
+134:affinity: 0-31
+134:effectiv: 15
+134:pending:
+134:domain:  IR-PCI-MSIX-0000:03:00.0-12
+134: hwirq:   0x5
+134: chip:    IR-PCI-MSIX-0000:03:00.0
+134:  flags:   0x430
+134:             IRQCHIP_SKIP_SET_WAKE
+134:             IRQCHIP_ONESHOT_SAFE
+134: parent:
+134:    domain:  INTEL-IR-0-13
+134:     hwirq:   0x1f0000
+134:     chip:    INTEL-IR
+134:      flags:   0x0
+134:     parent:
+134:        domain:  VECTOR
+134:         hwirq:   0x86
+134:         chip:    APIC
+134:          flags:   0x0
+134:         Vector:    33
+134:         Target:    15
+134:         move_in_progress: 0
+134:         is_managed:       0
+134:         can_reserve:      1
+134:         has_reserved:     0
+134:         cleanup_pending:  0
+135:handler:  handle_edge_irq
+135:device:   0000:03:00.0
+135:status:   0x00004000
+135:istate:   0x00004000
+135:ddepth:   0
+135:wdepth:   0
+135:dstate:   0x35408200
+135:            IRQD_ACTIVATED
+135:            IRQD_IRQ_STARTED
+135:            IRQD_SINGLE_TARGET
+135:            IRQD_MOVE_PCNTXT
+135:            IRQD_AFFINITY_ON_ACTIVATE
+135:            IRQD_CAN_RESERVE
+135:            IRQD_HANDLE_ENFORCE_IRQCTX
+135:node:     -1
+135:affinity: 0-31
+135:effectiv: 16
+135:pending:
+135:domain:  IR-PCI-MSIX-0000:03:00.0-12
+135: hwirq:   0x6
+135: chip:    IR-PCI-MSIX-0000:03:00.0
+135:  flags:   0x430
+135:             IRQCHIP_SKIP_SET_WAKE
+135:             IRQCHIP_ONESHOT_SAFE
+135: parent:
+135:    domain:  INTEL-IR-0-13
+135:     hwirq:   0x200000
+135:     chip:    INTEL-IR
+135:      flags:   0x0
+135:     parent:
+135:        domain:  VECTOR
+135:         hwirq:   0x87
+135:         chip:    APIC
+135:          flags:   0x0
+135:         Vector:    34
+135:         Target:    16
+135:         move_in_progress: 0
+135:         is_managed:       0
+135:         can_reserve:      1
+135:         has_reserved:     0
+135:         cleanup_pending:  0
+136:handler:  handle_edge_irq
+136:device:   0000:03:00.0
+136:status:   0x00004000
+136:istate:   0x00004000
+136:ddepth:   0
+136:wdepth:   0
+136:dstate:   0x35408200
+136:            IRQD_ACTIVATED
+136:            IRQD_IRQ_STARTED
+136:            IRQD_SINGLE_TARGET
+136:            IRQD_MOVE_PCNTXT
+136:            IRQD_AFFINITY_ON_ACTIVATE
+136:            IRQD_CAN_RESERVE
+136:            IRQD_HANDLE_ENFORCE_IRQCTX
+136:node:     -1
+136:affinity: 0-31
+136:effectiv: 17
+136:pending:
+136:domain:  IR-PCI-MSIX-0000:03:00.0-12
+136: hwirq:   0x7
+136: chip:    IR-PCI-MSIX-0000:03:00.0
+136:  flags:   0x430
+136:             IRQCHIP_SKIP_SET_WAKE
+136:             IRQCHIP_ONESHOT_SAFE
+136: parent:
+136:    domain:  INTEL-IR-0-13
+136:     hwirq:   0x210000
+136:     chip:    INTEL-IR
+136:      flags:   0x0
+136:     parent:
+136:        domain:  VECTOR
+136:         hwirq:   0x88
+136:         chip:    APIC
+136:          flags:   0x0
+136:         Vector:    35
+136:         Target:    17
+136:         move_in_progress: 0
+136:         is_managed:       0
+136:         can_reserve:      1
+136:         has_reserved:     0
+136:         cleanup_pending:  0
+137:handler:  handle_edge_irq
+137:device:   0000:03:00.0
+137:status:   0x00004000
+137:istate:   0x00004000
+137:ddepth:   0
+137:wdepth:   0
+137:dstate:   0x35408200
+137:            IRQD_ACTIVATED
+137:            IRQD_IRQ_STARTED
+137:            IRQD_SINGLE_TARGET
+137:            IRQD_MOVE_PCNTXT
+137:            IRQD_AFFINITY_ON_ACTIVATE
+137:            IRQD_CAN_RESERVE
+137:            IRQD_HANDLE_ENFORCE_IRQCTX
+137:node:     -1
+137:affinity: 0-31
+137:effectiv: 18
+137:pending:
+137:domain:  IR-PCI-MSIX-0000:03:00.0-12
+137: hwirq:   0x8
+137: chip:    IR-PCI-MSIX-0000:03:00.0
+137:  flags:   0x430
+137:             IRQCHIP_SKIP_SET_WAKE
+137:             IRQCHIP_ONESHOT_SAFE
+137: parent:
+137:    domain:  INTEL-IR-0-13
+137:     hwirq:   0x220000
+137:     chip:    INTEL-IR
+137:      flags:   0x0
+137:     parent:
+137:        domain:  VECTOR
+137:         hwirq:   0x89
+137:         chip:    APIC
+137:          flags:   0x0
+137:         Vector:    35
+137:         Target:    18
+137:         move_in_progress: 0
+137:         is_managed:       0
+137:         can_reserve:      1
+137:         has_reserved:     0
+137:         cleanup_pending:  0
+138:handler:  handle_edge_irq
+138:device:   0000:06:00.0
+138:status:   0x00004000
+138:istate:   0x00004000
+138:ddepth:   0
+138:wdepth:   0
+138:dstate:   0x31608200
+138:            IRQD_ACTIVATED
+138:            IRQD_IRQ_STARTED
+138:            IRQD_SINGLE_TARGET
+138:            IRQD_MOVE_PCNTXT
+138:            IRQD_AFFINITY_MANAGED
+138:            IRQD_AFFINITY_ON_ACTIVATE
+138:            IRQD_HANDLE_ENFORCE_IRQCTX
+138:node:     0
+138:affinity: 0-1
+138:effectiv: 1
+138:pending:
+138:domain:  IR-PCI-MSIX-0000:06:00.0-12
+138: hwirq:   0x1
+138: chip:    IR-PCI-MSIX-0000:06:00.0
+138:  flags:   0x430
+138:             IRQCHIP_SKIP_SET_WAKE
+138:             IRQCHIP_ONESHOT_SAFE
+138: parent:
+138:    domain:  INTEL-IR-0-13
+138:     hwirq:   0x230000
+138:     chip:    INTEL-IR
+138:      flags:   0x0
+138:     parent:
+138:        domain:  VECTOR
+138:         hwirq:   0x8a
+138:         chip:    APIC
+138:          flags:   0x0
+138:         Vector:    34
+138:         Target:     1
+138:         move_in_progress: 0
+138:         is_managed:       1
+138:         can_reserve:      0
+138:         has_reserved:     0
+138:         cleanup_pending:  0
+139:handler:  handle_edge_irq
+139:device:   0000:06:00.0
+139:status:   0x00004000
+139:istate:   0x00004000
+139:ddepth:   0
+139:wdepth:   0
+139:dstate:   0x31608200
+139:            IRQD_ACTIVATED
+139:            IRQD_IRQ_STARTED
+139:            IRQD_SINGLE_TARGET
+139:            IRQD_MOVE_PCNTXT
+139:            IRQD_AFFINITY_MANAGED
+139:            IRQD_AFFINITY_ON_ACTIVATE
+139:            IRQD_HANDLE_ENFORCE_IRQCTX
+139:node:     0
+139:affinity: 2-3
+139:effectiv: 2
+139:pending:
+139:domain:  IR-PCI-MSIX-0000:06:00.0-12
+139: hwirq:   0x2
+139: chip:    IR-PCI-MSIX-0000:06:00.0
+139:  flags:   0x430
+139:             IRQCHIP_SKIP_SET_WAKE
+139:             IRQCHIP_ONESHOT_SAFE
+139: parent:
+139:    domain:  INTEL-IR-0-13
+139:     hwirq:   0x240000
+139:     chip:    INTEL-IR
+139:      flags:   0x0
+139:     parent:
+139:        domain:  VECTOR
+139:         hwirq:   0x8b
+139:         chip:    APIC
+139:          flags:   0x0
+139:         Vector:    34
+139:         Target:     2
+139:         move_in_progress: 0
+139:         is_managed:       1
+139:         can_reserve:      0
+139:         has_reserved:     0
+139:         cleanup_pending:  0
+14:handler:  handle_fasteoi_irq
+14:device:   (null)
+14:status:   0x00004100
+14:istate:   0x00004000
+14:ddepth:   0
+14:wdepth:   0
+14:dstate:   0x3740a208
+14:            IRQ_TYPE_LEVEL_LOW
+14:            IRQD_LEVEL
+14:            IRQD_ACTIVATED
+14:            IRQD_IRQ_STARTED
+14:            IRQD_SINGLE_TARGET
+14:            IRQD_MOVE_PCNTXT
+14:            IRQD_AFFINITY_ON_ACTIVATE
+14:            IRQD_CAN_RESERVE
+14:            IRQD_DEFAULT_TRIGGER_SET
+14:            IRQD_HANDLE_ENFORCE_IRQCTX
+14:node:     0
+14:affinity: 0-31
+14:effectiv: 14
+14:pending:
+14:domain:  IO-APIC-2
+14: hwirq:   0xe
+14: chip:    IR-IO-APIC
+14:  flags:   0x410
+14:             IRQCHIP_SKIP_SET_WAKE
+14: parent:
+14:    domain:  INTEL-IR-0-13
+14:     hwirq:   0xd0000
+14:     chip:    INTEL-IR
+14:      flags:   0x0
+14:     parent:
+14:        domain:  VECTOR
+14:         hwirq:   0xe
+14:         chip:    APIC
+14:          flags:   0x0
+14:         Vector:    36
+14:         Target:    14
+14:         move_in_progress: 0
+14:         is_managed:       0
+14:         can_reserve:      1
+14:         has_reserved:     0
+14:         cleanup_pending:  0
+140:handler:  handle_edge_irq
+140:device:   0000:06:00.0
+140:status:   0x00004000
+140:istate:   0x00004000
+140:ddepth:   0
+140:wdepth:   0
+140:dstate:   0x31608200
+140:            IRQD_ACTIVATED
+140:            IRQD_IRQ_STARTED
+140:            IRQD_SINGLE_TARGET
+140:            IRQD_MOVE_PCNTXT
+140:            IRQD_AFFINITY_MANAGED
+140:            IRQD_AFFINITY_ON_ACTIVATE
+140:            IRQD_HANDLE_ENFORCE_IRQCTX
+140:node:     0
+140:affinity: 4-5
+140:effectiv: 5
+140:pending:
+140:domain:  IR-PCI-MSIX-0000:06:00.0-12
+140: hwirq:   0x3
+140: chip:    IR-PCI-MSIX-0000:06:00.0
+140:  flags:   0x430
+140:             IRQCHIP_SKIP_SET_WAKE
+140:             IRQCHIP_ONESHOT_SAFE
+140: parent:
+140:    domain:  INTEL-IR-0-13
+140:     hwirq:   0x250000
+140:     chip:    INTEL-IR
+140:      flags:   0x0
+140:     parent:
+140:        domain:  VECTOR
+140:         hwirq:   0x8c
+140:         chip:    APIC
+140:          flags:   0x0
+140:         Vector:    34
+140:         Target:     5
+140:         move_in_progress: 0
+140:         is_managed:       1
+140:         can_reserve:      0
+140:         has_reserved:     0
+140:         cleanup_pending:  0
+141:handler:  handle_edge_irq
+141:device:   0000:06:00.0
+141:status:   0x00004000
+141:istate:   0x00004000
+141:ddepth:   0
+141:wdepth:   0
+141:dstate:   0x31608200
+141:            IRQD_ACTIVATED
+141:            IRQD_IRQ_STARTED
+141:            IRQD_SINGLE_TARGET
+141:            IRQD_MOVE_PCNTXT
+141:            IRQD_AFFINITY_MANAGED
+141:            IRQD_AFFINITY_ON_ACTIVATE
+141:            IRQD_HANDLE_ENFORCE_IRQCTX
+141:node:     0
+141:affinity: 6-7
+141:effectiv: 6
+141:pending:
+141:domain:  IR-PCI-MSIX-0000:06:00.0-12
+141: hwirq:   0x4
+141: chip:    IR-PCI-MSIX-0000:06:00.0
+141:  flags:   0x430
+141:             IRQCHIP_SKIP_SET_WAKE
+141:             IRQCHIP_ONESHOT_SAFE
+141: parent:
+141:    domain:  INTEL-IR-0-13
+141:     hwirq:   0x260000
+141:     chip:    INTEL-IR
+141:      flags:   0x0
+141:     parent:
+141:        domain:  VECTOR
+141:         hwirq:   0x8d
+141:         chip:    APIC
+141:          flags:   0x0
+141:         Vector:    34
+141:         Target:     6
+141:         move_in_progress: 0
+141:         is_managed:       1
+141:         can_reserve:      0
+141:         has_reserved:     0
+141:         cleanup_pending:  0
+142:handler:  handle_edge_irq
+142:device:   0000:06:00.0
+142:status:   0x00004000
+142:istate:   0x00004000
+142:ddepth:   0
+142:wdepth:   0
+142:dstate:   0x31608200
+142:            IRQD_ACTIVATED
+142:            IRQD_IRQ_STARTED
+142:            IRQD_SINGLE_TARGET
+142:            IRQD_MOVE_PCNTXT
+142:            IRQD_AFFINITY_MANAGED
+142:            IRQD_AFFINITY_ON_ACTIVATE
+142:            IRQD_HANDLE_ENFORCE_IRQCTX
+142:node:     0
+142:affinity: 8-9
+142:effectiv: 9
+142:pending:
+142:domain:  IR-PCI-MSIX-0000:06:00.0-12
+142: hwirq:   0x5
+142: chip:    IR-PCI-MSIX-0000:06:00.0
+142:  flags:   0x430
+142:             IRQCHIP_SKIP_SET_WAKE
+142:             IRQCHIP_ONESHOT_SAFE
+142: parent:
+142:    domain:  INTEL-IR-0-13
+142:     hwirq:   0x270000
+142:     chip:    INTEL-IR
+142:      flags:   0x0
+142:     parent:
+142:        domain:  VECTOR
+142:         hwirq:   0x8e
+142:         chip:    APIC
+142:          flags:   0x0
+142:         Vector:    33
+142:         Target:     9
+142:         move_in_progress: 0
+142:         is_managed:       1
+142:         can_reserve:      0
+142:         has_reserved:     0
+142:         cleanup_pending:  0
+143:handler:  handle_edge_irq
+143:device:   0000:06:00.0
+143:status:   0x00004000
+143:istate:   0x00004000
+143:ddepth:   0
+143:wdepth:   0
+143:dstate:   0x31608200
+143:            IRQD_ACTIVATED
+143:            IRQD_IRQ_STARTED
+143:            IRQD_SINGLE_TARGET
+143:            IRQD_MOVE_PCNTXT
+143:            IRQD_AFFINITY_MANAGED
+143:            IRQD_AFFINITY_ON_ACTIVATE
+143:            IRQD_HANDLE_ENFORCE_IRQCTX
+143:node:     0
+143:affinity: 10-11
+143:effectiv: 10
+143:pending:
+143:domain:  IR-PCI-MSIX-0000:06:00.0-12
+143: hwirq:   0x6
+143: chip:    IR-PCI-MSIX-0000:06:00.0
+143:  flags:   0x430
+143:             IRQCHIP_SKIP_SET_WAKE
+143:             IRQCHIP_ONESHOT_SAFE
+143: parent:
+143:    domain:  INTEL-IR-0-13
+143:     hwirq:   0x280000
+143:     chip:    INTEL-IR
+143:      flags:   0x0
+143:     parent:
+143:        domain:  VECTOR
+143:         hwirq:   0x8f
+143:         chip:    APIC
+143:          flags:   0x0
+143:         Vector:    33
+143:         Target:    10
+143:         move_in_progress: 0
+143:         is_managed:       1
+143:         can_reserve:      0
+143:         has_reserved:     0
+143:         cleanup_pending:  0
+144:handler:  handle_edge_irq
+144:device:   0000:06:00.0
+144:status:   0x00004000
+144:istate:   0x00004000
+144:ddepth:   0
+144:wdepth:   0
+144:dstate:   0x31608200
+144:            IRQD_ACTIVATED
+144:            IRQD_IRQ_STARTED
+144:            IRQD_SINGLE_TARGET
+144:            IRQD_MOVE_PCNTXT
+144:            IRQD_AFFINITY_MANAGED
+144:            IRQD_AFFINITY_ON_ACTIVATE
+144:            IRQD_HANDLE_ENFORCE_IRQCTX
+144:node:     0
+144:affinity: 12-13
+144:effectiv: 13
+144:pending:
+144:domain:  IR-PCI-MSIX-0000:06:00.0-12
+144: hwirq:   0x7
+144: chip:    IR-PCI-MSIX-0000:06:00.0
+144:  flags:   0x430
+144:             IRQCHIP_SKIP_SET_WAKE
+144:             IRQCHIP_ONESHOT_SAFE
+144: parent:
+144:    domain:  INTEL-IR-0-13
+144:     hwirq:   0x290000
+144:     chip:    INTEL-IR
+144:      flags:   0x0
+144:     parent:
+144:        domain:  VECTOR
+144:         hwirq:   0x90
+144:         chip:    APIC
+144:          flags:   0x0
+144:         Vector:    33
+144:         Target:    13
+144:         move_in_progress: 0
+144:         is_managed:       1
+144:         can_reserve:      0
+144:         has_reserved:     0
+144:         cleanup_pending:  0
+145:handler:  handle_edge_irq
+145:device:   0000:06:00.0
+145:status:   0x00004000
+145:istate:   0x00004000
+145:ddepth:   0
+145:wdepth:   0
+145:dstate:   0x31608200
+145:            IRQD_ACTIVATED
+145:            IRQD_IRQ_STARTED
+145:            IRQD_SINGLE_TARGET
+145:            IRQD_MOVE_PCNTXT
+145:            IRQD_AFFINITY_MANAGED
+145:            IRQD_AFFINITY_ON_ACTIVATE
+145:            IRQD_HANDLE_ENFORCE_IRQCTX
+145:node:     0
+145:affinity: 14-15
+145:effectiv: 14
+145:pending:
+145:domain:  IR-PCI-MSIX-0000:06:00.0-12
+145: hwirq:   0x8
+145: chip:    IR-PCI-MSIX-0000:06:00.0
+145:  flags:   0x430
+145:             IRQCHIP_SKIP_SET_WAKE
+145:             IRQCHIP_ONESHOT_SAFE
+145: parent:
+145:    domain:  INTEL-IR-0-13
+145:     hwirq:   0x2a0000
+145:     chip:    INTEL-IR
+145:      flags:   0x0
+145:     parent:
+145:        domain:  VECTOR
+145:         hwirq:   0x91
+145:         chip:    APIC
+145:          flags:   0x0
+145:         Vector:    33
+145:         Target:    14
+145:         move_in_progress: 0
+145:         is_managed:       1
+145:         can_reserve:      0
+145:         has_reserved:     0
+145:         cleanup_pending:  0
+146:handler:  handle_edge_irq
+146:device:   0000:06:00.0
+146:status:   0x00004000
+146:istate:   0x00004000
+146:ddepth:   0
+146:wdepth:   0
+146:dstate:   0x31608200
+146:            IRQD_ACTIVATED
+146:            IRQD_IRQ_STARTED
+146:            IRQD_SINGLE_TARGET
+146:            IRQD_MOVE_PCNTXT
+146:            IRQD_AFFINITY_MANAGED
+146:            IRQD_AFFINITY_ON_ACTIVATE
+146:            IRQD_HANDLE_ENFORCE_IRQCTX
+146:node:     0
+146:affinity: 16-17
+146:effectiv: 17
+146:pending:
+146:domain:  IR-PCI-MSIX-0000:06:00.0-12
+146: hwirq:   0x9
+146: chip:    IR-PCI-MSIX-0000:06:00.0
+146:  flags:   0x430
+146:             IRQCHIP_SKIP_SET_WAKE
+146:             IRQCHIP_ONESHOT_SAFE
+146: parent:
+146:    domain:  INTEL-IR-0-13
+146:     hwirq:   0x2b0000
+146:     chip:    INTEL-IR
+146:      flags:   0x0
+146:     parent:
+146:        domain:  VECTOR
+146:         hwirq:   0x92
+146:         chip:    APIC
+146:          flags:   0x0
+146:         Vector:    33
+146:         Target:    17
+146:         move_in_progress: 0
+146:         is_managed:       1
+146:         can_reserve:      0
+146:         has_reserved:     0
+146:         cleanup_pending:  0
+147:handler:  handle_edge_irq
+147:device:   0000:06:00.0
+147:status:   0x00004000
+147:istate:   0x00004000
+147:ddepth:   0
+147:wdepth:   0
+147:dstate:   0x31608200
+147:            IRQD_ACTIVATED
+147:            IRQD_IRQ_STARTED
+147:            IRQD_SINGLE_TARGET
+147:            IRQD_MOVE_PCNTXT
+147:            IRQD_AFFINITY_MANAGED
+147:            IRQD_AFFINITY_ON_ACTIVATE
+147:            IRQD_HANDLE_ENFORCE_IRQCTX
+147:node:     0
+147:affinity: 18-19
+147:effectiv: 18
+147:pending:
+147:domain:  IR-PCI-MSIX-0000:06:00.0-12
+147: hwirq:   0xa
+147: chip:    IR-PCI-MSIX-0000:06:00.0
+147:  flags:   0x430
+147:             IRQCHIP_SKIP_SET_WAKE
+147:             IRQCHIP_ONESHOT_SAFE
+147: parent:
+147:    domain:  INTEL-IR-0-13
+147:     hwirq:   0x2c0000
+147:     chip:    INTEL-IR
+147:      flags:   0x0
+147:     parent:
+147:        domain:  VECTOR
+147:         hwirq:   0x93
+147:         chip:    APIC
+147:          flags:   0x0
+147:         Vector:    33
+147:         Target:    18
+147:         move_in_progress: 0
+147:         is_managed:       1
+147:         can_reserve:      0
+147:         has_reserved:     0
+147:         cleanup_pending:  0
+148:handler:  handle_edge_irq
+148:device:   0000:06:00.0
+148:status:   0x00004000
+148:istate:   0x00004000
+148:ddepth:   0
+148:wdepth:   0
+148:dstate:   0x31608200
+148:            IRQD_ACTIVATED
+148:            IRQD_IRQ_STARTED
+148:            IRQD_SINGLE_TARGET
+148:            IRQD_MOVE_PCNTXT
+148:            IRQD_AFFINITY_MANAGED
+148:            IRQD_AFFINITY_ON_ACTIVATE
+148:            IRQD_HANDLE_ENFORCE_IRQCTX
+148:node:     0
+148:affinity: 20-21
+148:effectiv: 21
+148:pending:
+148:domain:  IR-PCI-MSIX-0000:06:00.0-12
+148: hwirq:   0xb
+148: chip:    IR-PCI-MSIX-0000:06:00.0
+148:  flags:   0x430
+148:             IRQCHIP_SKIP_SET_WAKE
+148:             IRQCHIP_ONESHOT_SAFE
+148: parent:
+148:    domain:  INTEL-IR-0-13
+148:     hwirq:   0x2d0000
+148:     chip:    INTEL-IR
+148:      flags:   0x0
+148:     parent:
+148:        domain:  VECTOR
+148:         hwirq:   0x94
+148:         chip:    APIC
+148:          flags:   0x0
+148:         Vector:    33
+148:         Target:    21
+148:         move_in_progress: 0
+148:         is_managed:       1
+148:         can_reserve:      0
+148:         has_reserved:     0
+148:         cleanup_pending:  0
+149:handler:  handle_edge_irq
+149:device:   0000:06:00.0
+149:status:   0x00004000
+149:istate:   0x00004000
+149:ddepth:   0
+149:wdepth:   0
+149:dstate:   0x31608200
+149:            IRQD_ACTIVATED
+149:            IRQD_IRQ_STARTED
+149:            IRQD_SINGLE_TARGET
+149:            IRQD_MOVE_PCNTXT
+149:            IRQD_AFFINITY_MANAGED
+149:            IRQD_AFFINITY_ON_ACTIVATE
+149:            IRQD_HANDLE_ENFORCE_IRQCTX
+149:node:     0
+149:affinity: 22-23
+149:effectiv: 22
+149:pending:
+149:domain:  IR-PCI-MSIX-0000:06:00.0-12
+149: hwirq:   0xc
+149: chip:    IR-PCI-MSIX-0000:06:00.0
+149:  flags:   0x430
+149:             IRQCHIP_SKIP_SET_WAKE
+149:             IRQCHIP_ONESHOT_SAFE
+149: parent:
+149:    domain:  INTEL-IR-0-13
+149:     hwirq:   0x2e0000
+149:     chip:    INTEL-IR
+149:      flags:   0x0
+149:     parent:
+149:        domain:  VECTOR
+149:         hwirq:   0x95
+149:         chip:    APIC
+149:          flags:   0x0
+149:         Vector:    33
+149:         Target:    22
+149:         move_in_progress: 0
+149:         is_managed:       1
+149:         can_reserve:      0
+149:         has_reserved:     0
+149:         cleanup_pending:  0
+15:handler:  handle_edge_irq
+15:device:   (null)
+15:status:   0x00004000
+15:istate:   0x00004000
+15:ddepth:   1
+15:wdepth:   0
+15:dstate:   0x35038000
+15:            IRQD_IRQ_DISABLED
+15:            IRQD_IRQ_MASKED
+15:            IRQD_SINGLE_TARGET
+15:            IRQD_MOVE_PCNTXT
+15:            IRQD_AFFINITY_ON_ACTIVATE
+15:            IRQD_CAN_RESERVE
+15:            IRQD_HANDLE_ENFORCE_IRQCTX
+15:node:     0
+15:affinity: 0-31
+15:effectiv: 0
+15:pending:
+15:domain:  IO-APIC-2
+15: hwirq:   0xf
+15: chip:    IR-IO-APIC
+15:  flags:   0x410
+15:             IRQCHIP_SKIP_SET_WAKE
+15: parent:
+15:    domain:  INTEL-IR-0-13
+15:     hwirq:   0xe0000
+15:     chip:    INTEL-IR
+15:      flags:   0x0
+15:     parent:
+15:        domain:  VECTOR
+15:         hwirq:   0xf
+15:         chip:    APIC
+15:          flags:   0x0
+15:         Vector:     0
+15:         Target:     0
+15:         move_in_progress: 0
+15:         is_managed:       0
+15:         can_reserve:      1
+15:         has_reserved:     1
+15:         cleanup_pending:  0
+150:handler:  handle_edge_irq
+150:device:   0000:06:00.0
+150:status:   0x00004000
+150:istate:   0x00004000
+150:ddepth:   0
+150:wdepth:   0
+150:dstate:   0x31608200
+150:            IRQD_ACTIVATED
+150:            IRQD_IRQ_STARTED
+150:            IRQD_SINGLE_TARGET
+150:            IRQD_MOVE_PCNTXT
+150:            IRQD_AFFINITY_MANAGED
+150:            IRQD_AFFINITY_ON_ACTIVATE
+150:            IRQD_HANDLE_ENFORCE_IRQCTX
+150:node:     0
+150:affinity: 24-25
+150:effectiv: 25
+150:pending:
+150:domain:  IR-PCI-MSIX-0000:06:00.0-12
+150: hwirq:   0xd
+150: chip:    IR-PCI-MSIX-0000:06:00.0
+150:  flags:   0x430
+150:             IRQCHIP_SKIP_SET_WAKE
+150:             IRQCHIP_ONESHOT_SAFE
+150: parent:
+150:    domain:  INTEL-IR-0-13
+150:     hwirq:   0x2f0000
+150:     chip:    INTEL-IR
+150:      flags:   0x0
+150:     parent:
+150:        domain:  VECTOR
+150:         hwirq:   0x96
+150:         chip:    APIC
+150:          flags:   0x0
+150:         Vector:    33
+150:         Target:    25
+150:         move_in_progress: 0
+150:         is_managed:       1
+150:         can_reserve:      0
+150:         has_reserved:     0
+150:         cleanup_pending:  0
+151:handler:  handle_edge_irq
+151:device:   0000:06:00.0
+151:status:   0x00004000
+151:istate:   0x00004000
+151:ddepth:   0
+151:wdepth:   0
+151:dstate:   0x31608200
+151:            IRQD_ACTIVATED
+151:            IRQD_IRQ_STARTED
+151:            IRQD_SINGLE_TARGET
+151:            IRQD_MOVE_PCNTXT
+151:            IRQD_AFFINITY_MANAGED
+151:            IRQD_AFFINITY_ON_ACTIVATE
+151:            IRQD_HANDLE_ENFORCE_IRQCTX
+151:node:     0
+151:affinity: 26-27
+151:effectiv: 26
+151:pending:
+151:domain:  IR-PCI-MSIX-0000:06:00.0-12
+151: hwirq:   0xe
+151: chip:    IR-PCI-MSIX-0000:06:00.0
+151:  flags:   0x430
+151:             IRQCHIP_SKIP_SET_WAKE
+151:             IRQCHIP_ONESHOT_SAFE
+151: parent:
+151:    domain:  INTEL-IR-0-13
+151:     hwirq:   0x300000
+151:     chip:    INTEL-IR
+151:      flags:   0x0
+151:     parent:
+151:        domain:  VECTOR
+151:         hwirq:   0x97
+151:         chip:    APIC
+151:          flags:   0x0
+151:         Vector:    34
+151:         Target:    26
+151:         move_in_progress: 0
+151:         is_managed:       1
+151:         can_reserve:      0
+151:         has_reserved:     0
+151:         cleanup_pending:  0
+152:handler:  handle_edge_irq
+152:device:   0000:06:00.0
+152:status:   0x00004000
+152:istate:   0x00004000
+152:ddepth:   0
+152:wdepth:   0
+152:dstate:   0x31608200
+152:            IRQD_ACTIVATED
+152:            IRQD_IRQ_STARTED
+152:            IRQD_SINGLE_TARGET
+152:            IRQD_MOVE_PCNTXT
+152:            IRQD_AFFINITY_MANAGED
+152:            IRQD_AFFINITY_ON_ACTIVATE
+152:            IRQD_HANDLE_ENFORCE_IRQCTX
+152:node:     0
+152:affinity: 28-29
+152:effectiv: 29
+152:pending:
+152:domain:  IR-PCI-MSIX-0000:06:00.0-12
+152: hwirq:   0xf
+152: chip:    IR-PCI-MSIX-0000:06:00.0
+152:  flags:   0x430
+152:             IRQCHIP_SKIP_SET_WAKE
+152:             IRQCHIP_ONESHOT_SAFE
+152: parent:
+152:    domain:  INTEL-IR-0-13
+152:     hwirq:   0x310000
+152:     chip:    INTEL-IR
+152:      flags:   0x0
+152:     parent:
+152:        domain:  VECTOR
+152:         hwirq:   0x98
+152:         chip:    APIC
+152:          flags:   0x0
+152:         Vector:    34
+152:         Target:    29
+152:         move_in_progress: 0
+152:         is_managed:       1
+152:         can_reserve:      0
+152:         has_reserved:     0
+152:         cleanup_pending:  0
+153:handler:  handle_edge_irq
+153:device:   0000:06:00.0
+153:status:   0x00004000
+153:istate:   0x00004000
+153:ddepth:   0
+153:wdepth:   0
+153:dstate:   0x31608200
+153:            IRQD_ACTIVATED
+153:            IRQD_IRQ_STARTED
+153:            IRQD_SINGLE_TARGET
+153:            IRQD_MOVE_PCNTXT
+153:            IRQD_AFFINITY_MANAGED
+153:            IRQD_AFFINITY_ON_ACTIVATE
+153:            IRQD_HANDLE_ENFORCE_IRQCTX
+153:node:     0
+153:affinity: 30-31
+153:effectiv: 30
+153:pending:
+153:domain:  IR-PCI-MSIX-0000:06:00.0-12
+153: hwirq:   0x10
+153: chip:    IR-PCI-MSIX-0000:06:00.0
+153:  flags:   0x430
+153:             IRQCHIP_SKIP_SET_WAKE
+153:             IRQCHIP_ONESHOT_SAFE
+153: parent:
+153:    domain:  INTEL-IR-0-13
+153:     hwirq:   0x320000
+153:     chip:    INTEL-IR
+153:      flags:   0x0
+153:     parent:
+153:        domain:  VECTOR
+153:         hwirq:   0x99
+153:         chip:    APIC
+153:          flags:   0x0
+153:         Vector:    34
+153:         Target:    30
+153:         move_in_progress: 0
+153:         is_managed:       1
+153:         can_reserve:      0
+153:         has_reserved:     0
+153:         cleanup_pending:  0
+154:handler:  handle_edge_irq
+154:device:   0000:02:00.0
+154:status:   0x00004000
+154:istate:   0x00004000
+154:ddepth:   0
+154:wdepth:   0
+154:dstate:   0x31608200
+154:            IRQD_ACTIVATED
+154:            IRQD_IRQ_STARTED
+154:            IRQD_SINGLE_TARGET
+154:            IRQD_MOVE_PCNTXT
+154:            IRQD_AFFINITY_MANAGED
+154:            IRQD_AFFINITY_ON_ACTIVATE
+154:            IRQD_HANDLE_ENFORCE_IRQCTX
+154:node:     0
+154:affinity: 0
+154:effectiv: 0
+154:pending:
+154:domain:  IR-PCI-MSIX-0000:02:00.0-12
+154: hwirq:   0x1
+154: chip:    IR-PCI-MSIX-0000:02:00.0
+154:  flags:   0x430
+154:             IRQCHIP_SKIP_SET_WAKE
+154:             IRQCHIP_ONESHOT_SAFE
+154: parent:
+154:    domain:  INTEL-IR-0-13
+154:     hwirq:   0x330000
+154:     chip:    INTEL-IR
+154:      flags:   0x0
+154:     parent:
+154:        domain:  VECTOR
+154:         hwirq:   0x9a
+154:         chip:    APIC
+154:          flags:   0x0
+154:         Vector:    34
+154:         Target:     0
+154:         move_in_progress: 0
+154:         is_managed:       1
+154:         can_reserve:      0
+154:         has_reserved:     0
+154:         cleanup_pending:  0
+155:handler:  handle_edge_irq
+155:device:   0000:02:00.0
+155:status:   0x00004000
+155:istate:   0x00004000
+155:ddepth:   0
+155:wdepth:   0
+155:dstate:   0x31608200
+155:            IRQD_ACTIVATED
+155:            IRQD_IRQ_STARTED
+155:            IRQD_SINGLE_TARGET
+155:            IRQD_MOVE_PCNTXT
+155:            IRQD_AFFINITY_MANAGED
+155:            IRQD_AFFINITY_ON_ACTIVATE
+155:            IRQD_HANDLE_ENFORCE_IRQCTX
+155:node:     0
+155:affinity: 1
+155:effectiv: 1
+155:pending:
+155:domain:  IR-PCI-MSIX-0000:02:00.0-12
+155: hwirq:   0x2
+155: chip:    IR-PCI-MSIX-0000:02:00.0
+155:  flags:   0x430
+155:             IRQCHIP_SKIP_SET_WAKE
+155:             IRQCHIP_ONESHOT_SAFE
+155: parent:
+155:    domain:  INTEL-IR-0-13
+155:     hwirq:   0x340000
+155:     chip:    INTEL-IR
+155:      flags:   0x0
+155:     parent:
+155:        domain:  VECTOR
+155:         hwirq:   0x9b
+155:         chip:    APIC
+155:          flags:   0x0
+155:         Vector:    35
+155:         Target:     1
+155:         move_in_progress: 0
+155:         is_managed:       1
+155:         can_reserve:      0
+155:         has_reserved:     0
+155:         cleanup_pending:  0
+156:handler:  handle_edge_irq
+156:device:   0000:02:00.0
+156:status:   0x00004000
+156:istate:   0x00004000
+156:ddepth:   0
+156:wdepth:   0
+156:dstate:   0x31608200
+156:            IRQD_ACTIVATED
+156:            IRQD_IRQ_STARTED
+156:            IRQD_SINGLE_TARGET
+156:            IRQD_MOVE_PCNTXT
+156:            IRQD_AFFINITY_MANAGED
+156:            IRQD_AFFINITY_ON_ACTIVATE
+156:            IRQD_HANDLE_ENFORCE_IRQCTX
+156:node:     0
+156:affinity: 2
+156:effectiv: 2
+156:pending:
+156:domain:  IR-PCI-MSIX-0000:02:00.0-12
+156: hwirq:   0x3
+156: chip:    IR-PCI-MSIX-0000:02:00.0
+156:  flags:   0x430
+156:             IRQCHIP_SKIP_SET_WAKE
+156:             IRQCHIP_ONESHOT_SAFE
+156: parent:
+156:    domain:  INTEL-IR-0-13
+156:     hwirq:   0x350000
+156:     chip:    INTEL-IR
+156:      flags:   0x0
+156:     parent:
+156:        domain:  VECTOR
+156:         hwirq:   0x9c
+156:         chip:    APIC
+156:          flags:   0x0
+156:         Vector:    35
+156:         Target:     2
+156:         move_in_progress: 0
+156:         is_managed:       1
+156:         can_reserve:      0
+156:         has_reserved:     0
+156:         cleanup_pending:  0
+157:handler:  handle_edge_irq
+157:device:   0000:02:00.0
+157:status:   0x00004000
+157:istate:   0x00004000
+157:ddepth:   0
+157:wdepth:   0
+157:dstate:   0x31608200
+157:            IRQD_ACTIVATED
+157:            IRQD_IRQ_STARTED
+157:            IRQD_SINGLE_TARGET
+157:            IRQD_MOVE_PCNTXT
+157:            IRQD_AFFINITY_MANAGED
+157:            IRQD_AFFINITY_ON_ACTIVATE
+157:            IRQD_HANDLE_ENFORCE_IRQCTX
+157:node:     0
+157:affinity: 3
+157:effectiv: 3
+157:pending:
+157:domain:  IR-PCI-MSIX-0000:02:00.0-12
+157: hwirq:   0x4
+157: chip:    IR-PCI-MSIX-0000:02:00.0
+157:  flags:   0x430
+157:             IRQCHIP_SKIP_SET_WAKE
+157:             IRQCHIP_ONESHOT_SAFE
+157: parent:
+157:    domain:  INTEL-IR-0-13
+157:     hwirq:   0x360000
+157:     chip:    INTEL-IR
+157:      flags:   0x0
+157:     parent:
+157:        domain:  VECTOR
+157:         hwirq:   0x9d
+157:         chip:    APIC
+157:          flags:   0x0
+157:         Vector:    35
+157:         Target:     3
+157:         move_in_progress: 0
+157:         is_managed:       1
+157:         can_reserve:      0
+157:         has_reserved:     0
+157:         cleanup_pending:  0
+158:handler:  handle_edge_irq
+158:device:   0000:02:00.0
+158:status:   0x00004000
+158:istate:   0x00004000
+158:ddepth:   0
+158:wdepth:   0
+158:dstate:   0x31608200
+158:            IRQD_ACTIVATED
+158:            IRQD_IRQ_STARTED
+158:            IRQD_SINGLE_TARGET
+158:            IRQD_MOVE_PCNTXT
+158:            IRQD_AFFINITY_MANAGED
+158:            IRQD_AFFINITY_ON_ACTIVATE
+158:            IRQD_HANDLE_ENFORCE_IRQCTX
+158:node:     0
+158:affinity: 4
+158:effectiv: 4
+158:pending:
+158:domain:  IR-PCI-MSIX-0000:02:00.0-12
+158: hwirq:   0x5
+158: chip:    IR-PCI-MSIX-0000:02:00.0
+158:  flags:   0x430
+158:             IRQCHIP_SKIP_SET_WAKE
+158:             IRQCHIP_ONESHOT_SAFE
+158: parent:
+158:    domain:  INTEL-IR-0-13
+158:     hwirq:   0x370000
+158:     chip:    INTEL-IR
+158:      flags:   0x0
+158:     parent:
+158:        domain:  VECTOR
+158:         hwirq:   0x9e
+158:         chip:    APIC
+158:          flags:   0x0
+158:         Vector:    34
+158:         Target:     4
+158:         move_in_progress: 0
+158:         is_managed:       1
+158:         can_reserve:      0
+158:         has_reserved:     0
+158:         cleanup_pending:  0
+159:handler:  handle_edge_irq
+159:device:   0000:02:00.0
+159:status:   0x00004000
+159:istate:   0x00004000
+159:ddepth:   0
+159:wdepth:   0
+159:dstate:   0x31608200
+159:            IRQD_ACTIVATED
+159:            IRQD_IRQ_STARTED
+159:            IRQD_SINGLE_TARGET
+159:            IRQD_MOVE_PCNTXT
+159:            IRQD_AFFINITY_MANAGED
+159:            IRQD_AFFINITY_ON_ACTIVATE
+159:            IRQD_HANDLE_ENFORCE_IRQCTX
+159:node:     0
+159:affinity: 5
+159:effectiv: 5
+159:pending:
+159:domain:  IR-PCI-MSIX-0000:02:00.0-12
+159: hwirq:   0x6
+159: chip:    IR-PCI-MSIX-0000:02:00.0
+159:  flags:   0x430
+159:             IRQCHIP_SKIP_SET_WAKE
+159:             IRQCHIP_ONESHOT_SAFE
+159: parent:
+159:    domain:  INTEL-IR-0-13
+159:     hwirq:   0x380000
+159:     chip:    INTEL-IR
+159:      flags:   0x0
+159:     parent:
+159:        domain:  VECTOR
+159:         hwirq:   0x9f
+159:         chip:    APIC
+159:          flags:   0x0
+159:         Vector:    35
+159:         Target:     5
+159:         move_in_progress: 0
+159:         is_managed:       1
+159:         can_reserve:      0
+159:         has_reserved:     0
+159:         cleanup_pending:  0
+16:handler:  handle_fasteoi_irq
+16:device:   (null)
+16:status:   0x00004100
+16:istate:   0x00004000
+16:ddepth:   1
+16:wdepth:   0
+16:dstate:   0x3503a000
+16:            IRQD_LEVEL
+16:            IRQD_IRQ_DISABLED
+16:            IRQD_IRQ_MASKED
+16:            IRQD_SINGLE_TARGET
+16:            IRQD_MOVE_PCNTXT
+16:            IRQD_AFFINITY_ON_ACTIVATE
+16:            IRQD_CAN_RESERVE
+16:            IRQD_HANDLE_ENFORCE_IRQCTX
+16:node:     -1
+16:affinity: 0-31
+16:effectiv: 0
+16:pending:
+16:domain:  IO-APIC-2
+16: hwirq:   0x10
+16: chip:    IR-IO-APIC
+16:  flags:   0x410
+16:             IRQCHIP_SKIP_SET_WAKE
+16: parent:
+16:    domain:  INTEL-IR-0-13
+16:     hwirq:   0xf0000
+16:     chip:    INTEL-IR
+16:      flags:   0x0
+16:     parent:
+16:        domain:  VECTOR
+16:         hwirq:   0x10
+16:         chip:    APIC
+16:          flags:   0x0
+16:         Vector:     0
+16:         Target:    29
+16:         move_in_progress: 0
+16:         is_managed:       0
+16:         can_reserve:      1
+16:         has_reserved:     1
+16:         cleanup_pending:  0
+160:handler:  handle_edge_irq
+160:device:   0000:02:00.0
+160:status:   0x00004000
+160:istate:   0x00004000
+160:ddepth:   0
+160:wdepth:   0
+160:dstate:   0x31608200
+160:            IRQD_ACTIVATED
+160:            IRQD_IRQ_STARTED
+160:            IRQD_SINGLE_TARGET
+160:            IRQD_MOVE_PCNTXT
+160:            IRQD_AFFINITY_MANAGED
+160:            IRQD_AFFINITY_ON_ACTIVATE
+160:            IRQD_HANDLE_ENFORCE_IRQCTX
+160:node:     0
+160:affinity: 6
+160:effectiv: 6
+160:pending:
+160:domain:  IR-PCI-MSIX-0000:02:00.0-12
+160: hwirq:   0x7
+160: chip:    IR-PCI-MSIX-0000:02:00.0
+160:  flags:   0x430
+160:             IRQCHIP_SKIP_SET_WAKE
+160:             IRQCHIP_ONESHOT_SAFE
+160: parent:
+160:    domain:  INTEL-IR-0-13
+160:     hwirq:   0x390000
+160:     chip:    INTEL-IR
+160:      flags:   0x0
+160:     parent:
+160:        domain:  VECTOR
+160:         hwirq:   0xa0
+160:         chip:    APIC
+160:          flags:   0x0
+160:         Vector:    35
+160:         Target:     6
+160:         move_in_progress: 0
+160:         is_managed:       1
+160:         can_reserve:      0
+160:         has_reserved:     0
+160:         cleanup_pending:  0
+161:handler:  handle_edge_irq
+161:device:   0000:02:00.0
+161:status:   0x00004000
+161:istate:   0x00004000
+161:ddepth:   0
+161:wdepth:   0
+161:dstate:   0x31608200
+161:            IRQD_ACTIVATED
+161:            IRQD_IRQ_STARTED
+161:            IRQD_SINGLE_TARGET
+161:            IRQD_MOVE_PCNTXT
+161:            IRQD_AFFINITY_MANAGED
+161:            IRQD_AFFINITY_ON_ACTIVATE
+161:            IRQD_HANDLE_ENFORCE_IRQCTX
+161:node:     0
+161:affinity: 7
+161:effectiv: 7
+161:pending:
+161:domain:  IR-PCI-MSIX-0000:02:00.0-12
+161: hwirq:   0x8
+161: chip:    IR-PCI-MSIX-0000:02:00.0
+161:  flags:   0x430
+161:             IRQCHIP_SKIP_SET_WAKE
+161:             IRQCHIP_ONESHOT_SAFE
+161: parent:
+161:    domain:  INTEL-IR-0-13
+161:     hwirq:   0x3a0000
+161:     chip:    INTEL-IR
+161:      flags:   0x0
+161:     parent:
+161:        domain:  VECTOR
+161:         hwirq:   0xa1
+161:         chip:    APIC
+161:          flags:   0x0
+161:         Vector:    35
+161:         Target:     7
+161:         move_in_progress: 0
+161:         is_managed:       1
+161:         can_reserve:      0
+161:         has_reserved:     0
+161:         cleanup_pending:  0
+162:handler:  handle_edge_irq
+162:device:   0000:02:00.0
+162:status:   0x00004000
+162:istate:   0x00004000
+162:ddepth:   0
+162:wdepth:   0
+162:dstate:   0x31608200
+162:            IRQD_ACTIVATED
+162:            IRQD_IRQ_STARTED
+162:            IRQD_SINGLE_TARGET
+162:            IRQD_MOVE_PCNTXT
+162:            IRQD_AFFINITY_MANAGED
+162:            IRQD_AFFINITY_ON_ACTIVATE
+162:            IRQD_HANDLE_ENFORCE_IRQCTX
+162:node:     0
+162:affinity: 8
+162:effectiv: 8
+162:pending:
+162:domain:  IR-PCI-MSIX-0000:02:00.0-12
+162: hwirq:   0x9
+162: chip:    IR-PCI-MSIX-0000:02:00.0
+162:  flags:   0x430
+162:             IRQCHIP_SKIP_SET_WAKE
+162:             IRQCHIP_ONESHOT_SAFE
+162: parent:
+162:    domain:  INTEL-IR-0-13
+162:     hwirq:   0x3b0000
+162:     chip:    INTEL-IR
+162:      flags:   0x0
+162:     parent:
+162:        domain:  VECTOR
+162:         hwirq:   0xa2
+162:         chip:    APIC
+162:          flags:   0x0
+162:         Vector:    34
+162:         Target:     8
+162:         move_in_progress: 0
+162:         is_managed:       1
+162:         can_reserve:      0
+162:         has_reserved:     0
+162:         cleanup_pending:  0
+163:handler:  handle_edge_irq
+163:device:   0000:02:00.0
+163:status:   0x00004000
+163:istate:   0x00004000
+163:ddepth:   0
+163:wdepth:   0
+163:dstate:   0x31608200
+163:            IRQD_ACTIVATED
+163:            IRQD_IRQ_STARTED
+163:            IRQD_SINGLE_TARGET
+163:            IRQD_MOVE_PCNTXT
+163:            IRQD_AFFINITY_MANAGED
+163:            IRQD_AFFINITY_ON_ACTIVATE
+163:            IRQD_HANDLE_ENFORCE_IRQCTX
+163:node:     0
+163:affinity: 9
+163:effectiv: 9
+163:pending:
+163:domain:  IR-PCI-MSIX-0000:02:00.0-12
+163: hwirq:   0xa
+163: chip:    IR-PCI-MSIX-0000:02:00.0
+163:  flags:   0x430
+163:             IRQCHIP_SKIP_SET_WAKE
+163:             IRQCHIP_ONESHOT_SAFE
+163: parent:
+163:    domain:  INTEL-IR-0-13
+163:     hwirq:   0x3c0000
+163:     chip:    INTEL-IR
+163:      flags:   0x0
+163:     parent:
+163:        domain:  VECTOR
+163:         hwirq:   0xa3
+163:         chip:    APIC
+163:          flags:   0x0
+163:         Vector:    35
+163:         Target:     9
+163:         move_in_progress: 0
+163:         is_managed:       1
+163:         can_reserve:      0
+163:         has_reserved:     0
+163:         cleanup_pending:  0
+164:handler:  handle_edge_irq
+164:device:   0000:02:00.0
+164:status:   0x00004000
+164:istate:   0x00004000
+164:ddepth:   0
+164:wdepth:   0
+164:dstate:   0x31608200
+164:            IRQD_ACTIVATED
+164:            IRQD_IRQ_STARTED
+164:            IRQD_SINGLE_TARGET
+164:            IRQD_MOVE_PCNTXT
+164:            IRQD_AFFINITY_MANAGED
+164:            IRQD_AFFINITY_ON_ACTIVATE
+164:            IRQD_HANDLE_ENFORCE_IRQCTX
+164:node:     0
+164:affinity: 10
+164:effectiv: 10
+164:pending:
+164:domain:  IR-PCI-MSIX-0000:02:00.0-12
+164: hwirq:   0xb
+164: chip:    IR-PCI-MSIX-0000:02:00.0
+164:  flags:   0x430
+164:             IRQCHIP_SKIP_SET_WAKE
+164:             IRQCHIP_ONESHOT_SAFE
+164: parent:
+164:    domain:  INTEL-IR-0-13
+164:     hwirq:   0x3d0000
+164:     chip:    INTEL-IR
+164:      flags:   0x0
+164:     parent:
+164:        domain:  VECTOR
+164:         hwirq:   0xa4
+164:         chip:    APIC
+164:          flags:   0x0
+164:         Vector:    34
+164:         Target:    10
+164:         move_in_progress: 0
+164:         is_managed:       1
+164:         can_reserve:      0
+164:         has_reserved:     0
+164:         cleanup_pending:  0
+165:handler:  handle_edge_irq
+165:device:   0000:02:00.0
+165:status:   0x00004000
+165:istate:   0x00004000
+165:ddepth:   0
+165:wdepth:   0
+165:dstate:   0x31608200
+165:            IRQD_ACTIVATED
+165:            IRQD_IRQ_STARTED
+165:            IRQD_SINGLE_TARGET
+165:            IRQD_MOVE_PCNTXT
+165:            IRQD_AFFINITY_MANAGED
+165:            IRQD_AFFINITY_ON_ACTIVATE
+165:            IRQD_HANDLE_ENFORCE_IRQCTX
+165:node:     0
+165:affinity: 11
+165:effectiv: 11
+165:pending:
+165:domain:  IR-PCI-MSIX-0000:02:00.0-12
+165: hwirq:   0xc
+165: chip:    IR-PCI-MSIX-0000:02:00.0
+165:  flags:   0x430
+165:             IRQCHIP_SKIP_SET_WAKE
+165:             IRQCHIP_ONESHOT_SAFE
+165: parent:
+165:    domain:  INTEL-IR-0-13
+165:     hwirq:   0x3e0000
+165:     chip:    INTEL-IR
+165:      flags:   0x0
+165:     parent:
+165:        domain:  VECTOR
+165:         hwirq:   0xa5
+165:         chip:    APIC
+165:          flags:   0x0
+165:         Vector:    34
+165:         Target:    11
+165:         move_in_progress: 0
+165:         is_managed:       1
+165:         can_reserve:      0
+165:         has_reserved:     0
+165:         cleanup_pending:  0
+166:handler:  handle_edge_irq
+166:device:   0000:02:00.0
+166:status:   0x00004000
+166:istate:   0x00004000
+166:ddepth:   0
+166:wdepth:   0
+166:dstate:   0x31608200
+166:            IRQD_ACTIVATED
+166:            IRQD_IRQ_STARTED
+166:            IRQD_SINGLE_TARGET
+166:            IRQD_MOVE_PCNTXT
+166:            IRQD_AFFINITY_MANAGED
+166:            IRQD_AFFINITY_ON_ACTIVATE
+166:            IRQD_HANDLE_ENFORCE_IRQCTX
+166:node:     0
+166:affinity: 12
+166:effectiv: 12
+166:pending:
+166:domain:  IR-PCI-MSIX-0000:02:00.0-12
+166: hwirq:   0xd
+166: chip:    IR-PCI-MSIX-0000:02:00.0
+166:  flags:   0x430
+166:             IRQCHIP_SKIP_SET_WAKE
+166:             IRQCHIP_ONESHOT_SAFE
+166: parent:
+166:    domain:  INTEL-IR-0-13
+166:     hwirq:   0x3f0000
+166:     chip:    INTEL-IR
+166:      flags:   0x0
+166:     parent:
+166:        domain:  VECTOR
+166:         hwirq:   0xa6
+166:         chip:    APIC
+166:          flags:   0x0
+166:         Vector:    33
+166:         Target:    12
+166:         move_in_progress: 0
+166:         is_managed:       1
+166:         can_reserve:      0
+166:         has_reserved:     0
+166:         cleanup_pending:  0
+167:handler:  handle_edge_irq
+167:device:   0000:02:00.0
+167:status:   0x00004000
+167:istate:   0x00004000
+167:ddepth:   0
+167:wdepth:   0
+167:dstate:   0x31608200
+167:            IRQD_ACTIVATED
+167:            IRQD_IRQ_STARTED
+167:            IRQD_SINGLE_TARGET
+167:            IRQD_MOVE_PCNTXT
+167:            IRQD_AFFINITY_MANAGED
+167:            IRQD_AFFINITY_ON_ACTIVATE
+167:            IRQD_HANDLE_ENFORCE_IRQCTX
+167:node:     0
+167:affinity: 13
+167:effectiv: 13
+167:pending:
+167:domain:  IR-PCI-MSIX-0000:02:00.0-12
+167: hwirq:   0xe
+167: chip:    IR-PCI-MSIX-0000:02:00.0
+167:  flags:   0x430
+167:             IRQCHIP_SKIP_SET_WAKE
+167:             IRQCHIP_ONESHOT_SAFE
+167: parent:
+167:    domain:  INTEL-IR-0-13
+167:     hwirq:   0x400000
+167:     chip:    INTEL-IR
+167:      flags:   0x0
+167:     parent:
+167:        domain:  VECTOR
+167:         hwirq:   0xa7
+167:         chip:    APIC
+167:          flags:   0x0
+167:         Vector:    34
+167:         Target:    13
+167:         move_in_progress: 0
+167:         is_managed:       1
+167:         can_reserve:      0
+167:         has_reserved:     0
+167:         cleanup_pending:  0
+168:handler:  handle_edge_irq
+168:device:   0000:02:00.0
+168:status:   0x00004000
+168:istate:   0x00004000
+168:ddepth:   0
+168:wdepth:   0
+168:dstate:   0x31608200
+168:            IRQD_ACTIVATED
+168:            IRQD_IRQ_STARTED
+168:            IRQD_SINGLE_TARGET
+168:            IRQD_MOVE_PCNTXT
+168:            IRQD_AFFINITY_MANAGED
+168:            IRQD_AFFINITY_ON_ACTIVATE
+168:            IRQD_HANDLE_ENFORCE_IRQCTX
+168:node:     0
+168:affinity: 14
+168:effectiv: 14
+168:pending:
+168:domain:  IR-PCI-MSIX-0000:02:00.0-12
+168: hwirq:   0xf
+168: chip:    IR-PCI-MSIX-0000:02:00.0
+168:  flags:   0x430
+168:             IRQCHIP_SKIP_SET_WAKE
+168:             IRQCHIP_ONESHOT_SAFE
+168: parent:
+168:    domain:  INTEL-IR-0-13
+168:     hwirq:   0x410000
+168:     chip:    INTEL-IR
+168:      flags:   0x0
+168:     parent:
+168:        domain:  VECTOR
+168:         hwirq:   0xa8
+168:         chip:    APIC
+168:          flags:   0x0
+168:         Vector:    34
+168:         Target:    14
+168:         move_in_progress: 0
+168:         is_managed:       1
+168:         can_reserve:      0
+168:         has_reserved:     0
+168:         cleanup_pending:  0
+169:handler:  handle_edge_irq
+169:device:   0000:02:00.0
+169:status:   0x00004000
+169:istate:   0x00004000
+169:ddepth:   0
+169:wdepth:   0
+169:dstate:   0x31608200
+169:            IRQD_ACTIVATED
+169:            IRQD_IRQ_STARTED
+169:            IRQD_SINGLE_TARGET
+169:            IRQD_MOVE_PCNTXT
+169:            IRQD_AFFINITY_MANAGED
+169:            IRQD_AFFINITY_ON_ACTIVATE
+169:            IRQD_HANDLE_ENFORCE_IRQCTX
+169:node:     0
+169:affinity: 15
+169:effectiv: 15
+169:pending:
+169:domain:  IR-PCI-MSIX-0000:02:00.0-12
+169: hwirq:   0x10
+169: chip:    IR-PCI-MSIX-0000:02:00.0
+169:  flags:   0x430
+169:             IRQCHIP_SKIP_SET_WAKE
+169:             IRQCHIP_ONESHOT_SAFE
+169: parent:
+169:    domain:  INTEL-IR-0-13
+169:     hwirq:   0x420000
+169:     chip:    INTEL-IR
+169:      flags:   0x0
+169:     parent:
+169:        domain:  VECTOR
+169:         hwirq:   0xa9
+169:         chip:    APIC
+169:          flags:   0x0
+169:         Vector:    34
+169:         Target:    15
+169:         move_in_progress: 0
+169:         is_managed:       1
+169:         can_reserve:      0
+169:         has_reserved:     0
+169:         cleanup_pending:  0
+17:handler:  handle_fasteoi_irq
+17:device:   (null)
+17:status:   0x00004100
+17:istate:   0x00004000
+17:ddepth:   0
+17:wdepth:   0
+17:dstate:   0x3540a200
+17:            IRQD_LEVEL
+17:            IRQD_ACTIVATED
+17:            IRQD_IRQ_STARTED
+17:            IRQD_SINGLE_TARGET
+17:            IRQD_MOVE_PCNTXT
+17:            IRQD_AFFINITY_ON_ACTIVATE
+17:            IRQD_CAN_RESERVE
+17:            IRQD_HANDLE_ENFORCE_IRQCTX
+17:node:     -1
+17:affinity: 0-31
+17:effectiv: 22
+17:pending:
+17:domain:  IO-APIC-2
+17: hwirq:   0x11
+17: chip:    IR-IO-APIC
+17:  flags:   0x410
+17:             IRQCHIP_SKIP_SET_WAKE
+17: parent:
+17:    domain:  INTEL-IR-0-13
+17:     hwirq:   0x5e0000
+17:     chip:    INTEL-IR
+17:      flags:   0x0
+17:     parent:
+17:        domain:  VECTOR
+17:         hwirq:   0x11
+17:         chip:    APIC
+17:          flags:   0x0
+17:         Vector:    36
+17:         Target:    22
+17:         move_in_progress: 0
+17:         is_managed:       0
+17:         can_reserve:      1
+17:         has_reserved:     0
+17:         cleanup_pending:  0
+170:handler:  handle_edge_irq
+170:device:   0000:02:00.0
+170:status:   0x00004000
+170:istate:   0x00004000
+170:ddepth:   0
+170:wdepth:   0
+170:dstate:   0x31608200
+170:            IRQD_ACTIVATED
+170:            IRQD_IRQ_STARTED
+170:            IRQD_SINGLE_TARGET
+170:            IRQD_MOVE_PCNTXT
+170:            IRQD_AFFINITY_MANAGED
+170:            IRQD_AFFINITY_ON_ACTIVATE
+170:            IRQD_HANDLE_ENFORCE_IRQCTX
+170:node:     0
+170:affinity: 16
+170:effectiv: 16
+170:pending:
+170:domain:  IR-PCI-MSIX-0000:02:00.0-12
+170: hwirq:   0x11
+170: chip:    IR-PCI-MSIX-0000:02:00.0
+170:  flags:   0x430
+170:             IRQCHIP_SKIP_SET_WAKE
+170:             IRQCHIP_ONESHOT_SAFE
+170: parent:
+170:    domain:  INTEL-IR-0-13
+170:     hwirq:   0x430000
+170:     chip:    INTEL-IR
+170:      flags:   0x0
+170:     parent:
+170:        domain:  VECTOR
+170:         hwirq:   0xaa
+170:         chip:    APIC
+170:          flags:   0x0
+170:         Vector:    33
+170:         Target:    16
+170:         move_in_progress: 0
+170:         is_managed:       1
+170:         can_reserve:      0
+170:         has_reserved:     0
+170:         cleanup_pending:  0
+171:handler:  handle_edge_irq
+171:device:   0000:02:00.0
+171:status:   0x00004000
+171:istate:   0x00004000
+171:ddepth:   0
+171:wdepth:   0
+171:dstate:   0x31608200
+171:            IRQD_ACTIVATED
+171:            IRQD_IRQ_STARTED
+171:            IRQD_SINGLE_TARGET
+171:            IRQD_MOVE_PCNTXT
+171:            IRQD_AFFINITY_MANAGED
+171:            IRQD_AFFINITY_ON_ACTIVATE
+171:            IRQD_HANDLE_ENFORCE_IRQCTX
+171:node:     0
+171:affinity: 17
+171:effectiv: 17
+171:pending:
+171:domain:  IR-PCI-MSIX-0000:02:00.0-12
+171: hwirq:   0x12
+171: chip:    IR-PCI-MSIX-0000:02:00.0
+171:  flags:   0x430
+171:             IRQCHIP_SKIP_SET_WAKE
+171:             IRQCHIP_ONESHOT_SAFE
+171: parent:
+171:    domain:  INTEL-IR-0-13
+171:     hwirq:   0x440000
+171:     chip:    INTEL-IR
+171:      flags:   0x0
+171:     parent:
+171:        domain:  VECTOR
+171:         hwirq:   0xab
+171:         chip:    APIC
+171:          flags:   0x0
+171:         Vector:    34
+171:         Target:    17
+171:         move_in_progress: 0
+171:         is_managed:       1
+171:         can_reserve:      0
+171:         has_reserved:     0
+171:         cleanup_pending:  0
+172:handler:  handle_edge_irq
+172:device:   0000:02:00.0
+172:status:   0x00004000
+172:istate:   0x00004000
+172:ddepth:   0
+172:wdepth:   0
+172:dstate:   0x31608200
+172:            IRQD_ACTIVATED
+172:            IRQD_IRQ_STARTED
+172:            IRQD_SINGLE_TARGET
+172:            IRQD_MOVE_PCNTXT
+172:            IRQD_AFFINITY_MANAGED
+172:            IRQD_AFFINITY_ON_ACTIVATE
+172:            IRQD_HANDLE_ENFORCE_IRQCTX
+172:node:     0
+172:affinity: 18
+172:effectiv: 18
+172:pending:
+172:domain:  IR-PCI-MSIX-0000:02:00.0-12
+172: hwirq:   0x13
+172: chip:    IR-PCI-MSIX-0000:02:00.0
+172:  flags:   0x430
+172:             IRQCHIP_SKIP_SET_WAKE
+172:             IRQCHIP_ONESHOT_SAFE
+172: parent:
+172:    domain:  INTEL-IR-0-13
+172:     hwirq:   0x450000
+172:     chip:    INTEL-IR
+172:      flags:   0x0
+172:     parent:
+172:        domain:  VECTOR
+172:         hwirq:   0xac
+172:         chip:    APIC
+172:          flags:   0x0
+172:         Vector:    34
+172:         Target:    18
+172:         move_in_progress: 0
+172:         is_managed:       1
+172:         can_reserve:      0
+172:         has_reserved:     0
+172:         cleanup_pending:  0
+173:handler:  handle_edge_irq
+173:device:   0000:02:00.0
+173:status:   0x00004000
+173:istate:   0x00004000
+173:ddepth:   0
+173:wdepth:   0
+173:dstate:   0x31608200
+173:            IRQD_ACTIVATED
+173:            IRQD_IRQ_STARTED
+173:            IRQD_SINGLE_TARGET
+173:            IRQD_MOVE_PCNTXT
+173:            IRQD_AFFINITY_MANAGED
+173:            IRQD_AFFINITY_ON_ACTIVATE
+173:            IRQD_HANDLE_ENFORCE_IRQCTX
+173:node:     0
+173:affinity: 19
+173:effectiv: 19
+173:pending:
+173:domain:  IR-PCI-MSIX-0000:02:00.0-12
+173: hwirq:   0x14
+173: chip:    IR-PCI-MSIX-0000:02:00.0
+173:  flags:   0x430
+173:             IRQCHIP_SKIP_SET_WAKE
+173:             IRQCHIP_ONESHOT_SAFE
+173: parent:
+173:    domain:  INTEL-IR-0-13
+173:     hwirq:   0x460000
+173:     chip:    INTEL-IR
+173:      flags:   0x0
+173:     parent:
+173:        domain:  VECTOR
+173:         hwirq:   0xad
+173:         chip:    APIC
+173:          flags:   0x0
+173:         Vector:    34
+173:         Target:    19
+173:         move_in_progress: 0
+173:         is_managed:       1
+173:         can_reserve:      0
+173:         has_reserved:     0
+173:         cleanup_pending:  0
+174:handler:  handle_edge_irq
+174:device:   0000:02:00.0
+174:status:   0x00004000
+174:istate:   0x00004000
+174:ddepth:   0
+174:wdepth:   0
+174:dstate:   0x31608200
+174:            IRQD_ACTIVATED
+174:            IRQD_IRQ_STARTED
+174:            IRQD_SINGLE_TARGET
+174:            IRQD_MOVE_PCNTXT
+174:            IRQD_AFFINITY_MANAGED
+174:            IRQD_AFFINITY_ON_ACTIVATE
+174:            IRQD_HANDLE_ENFORCE_IRQCTX
+174:node:     0
+174:affinity: 20
+174:effectiv: 20
+174:pending:
+174:domain:  IR-PCI-MSIX-0000:02:00.0-12
+174: hwirq:   0x15
+174: chip:    IR-PCI-MSIX-0000:02:00.0
+174:  flags:   0x430
+174:             IRQCHIP_SKIP_SET_WAKE
+174:             IRQCHIP_ONESHOT_SAFE
+174: parent:
+174:    domain:  INTEL-IR-0-13
+174:     hwirq:   0x470000
+174:     chip:    INTEL-IR
+174:      flags:   0x0
+174:     parent:
+174:        domain:  VECTOR
+174:         hwirq:   0xae
+174:         chip:    APIC
+174:          flags:   0x0
+174:         Vector:    33
+174:         Target:    20
+174:         move_in_progress: 0
+174:         is_managed:       1
+174:         can_reserve:      0
+174:         has_reserved:     0
+174:         cleanup_pending:  0
+175:handler:  handle_edge_irq
+175:device:   0000:02:00.0
+175:status:   0x00004000
+175:istate:   0x00004000
+175:ddepth:   0
+175:wdepth:   0
+175:dstate:   0x31608200
+175:            IRQD_ACTIVATED
+175:            IRQD_IRQ_STARTED
+175:            IRQD_SINGLE_TARGET
+175:            IRQD_MOVE_PCNTXT
+175:            IRQD_AFFINITY_MANAGED
+175:            IRQD_AFFINITY_ON_ACTIVATE
+175:            IRQD_HANDLE_ENFORCE_IRQCTX
+175:node:     0
+175:affinity: 21
+175:effectiv: 21
+175:pending:
+175:domain:  IR-PCI-MSIX-0000:02:00.0-12
+175: hwirq:   0x16
+175: chip:    IR-PCI-MSIX-0000:02:00.0
+175:  flags:   0x430
+175:             IRQCHIP_SKIP_SET_WAKE
+175:             IRQCHIP_ONESHOT_SAFE
+175: parent:
+175:    domain:  INTEL-IR-0-13
+175:     hwirq:   0x480000
+175:     chip:    INTEL-IR
+175:      flags:   0x0
+175:     parent:
+175:        domain:  VECTOR
+175:         hwirq:   0xaf
+175:         chip:    APIC
+175:          flags:   0x0
+175:         Vector:    34
+175:         Target:    21
+175:         move_in_progress: 0
+175:         is_managed:       1
+175:         can_reserve:      0
+175:         has_reserved:     0
+175:         cleanup_pending:  0
+176:handler:  handle_edge_irq
+176:device:   0000:02:00.0
+176:status:   0x00004000
+176:istate:   0x00004000
+176:ddepth:   0
+176:wdepth:   0
+176:dstate:   0x31608200
+176:            IRQD_ACTIVATED
+176:            IRQD_IRQ_STARTED
+176:            IRQD_SINGLE_TARGET
+176:            IRQD_MOVE_PCNTXT
+176:            IRQD_AFFINITY_MANAGED
+176:            IRQD_AFFINITY_ON_ACTIVATE
+176:            IRQD_HANDLE_ENFORCE_IRQCTX
+176:node:     0
+176:affinity: 22
+176:effectiv: 22
+176:pending:
+176:domain:  IR-PCI-MSIX-0000:02:00.0-12
+176: hwirq:   0x17
+176: chip:    IR-PCI-MSIX-0000:02:00.0
+176:  flags:   0x430
+176:             IRQCHIP_SKIP_SET_WAKE
+176:             IRQCHIP_ONESHOT_SAFE
+176: parent:
+176:    domain:  INTEL-IR-0-13
+176:     hwirq:   0x490000
+176:     chip:    INTEL-IR
+176:      flags:   0x0
+176:     parent:
+176:        domain:  VECTOR
+176:         hwirq:   0xb0
+176:         chip:    APIC
+176:          flags:   0x0
+176:         Vector:    34
+176:         Target:    22
+176:         move_in_progress: 0
+176:         is_managed:       1
+176:         can_reserve:      0
+176:         has_reserved:     0
+176:         cleanup_pending:  0
+177:handler:  handle_edge_irq
+177:device:   0000:02:00.0
+177:status:   0x00004000
+177:istate:   0x00004000
+177:ddepth:   0
+177:wdepth:   0
+177:dstate:   0x31608200
+177:            IRQD_ACTIVATED
+177:            IRQD_IRQ_STARTED
+177:            IRQD_SINGLE_TARGET
+177:            IRQD_MOVE_PCNTXT
+177:            IRQD_AFFINITY_MANAGED
+177:            IRQD_AFFINITY_ON_ACTIVATE
+177:            IRQD_HANDLE_ENFORCE_IRQCTX
+177:node:     0
+177:affinity: 23
+177:effectiv: 23
+177:pending:
+177:domain:  IR-PCI-MSIX-0000:02:00.0-12
+177: hwirq:   0x18
+177: chip:    IR-PCI-MSIX-0000:02:00.0
+177:  flags:   0x430
+177:             IRQCHIP_SKIP_SET_WAKE
+177:             IRQCHIP_ONESHOT_SAFE
+177: parent:
+177:    domain:  INTEL-IR-0-13
+177:     hwirq:   0x4a0000
+177:     chip:    INTEL-IR
+177:      flags:   0x0
+177:     parent:
+177:        domain:  VECTOR
+177:         hwirq:   0xb1
+177:         chip:    APIC
+177:          flags:   0x0
+177:         Vector:    34
+177:         Target:    23
+177:         move_in_progress: 0
+177:         is_managed:       1
+177:         can_reserve:      0
+177:         has_reserved:     0
+177:         cleanup_pending:  0
+178:handler:  handle_edge_irq
+178:device:   0000:02:00.0
+178:status:   0x00004000
+178:istate:   0x00004000
+178:ddepth:   0
+178:wdepth:   0
+178:dstate:   0x31608200
+178:            IRQD_ACTIVATED
+178:            IRQD_IRQ_STARTED
+178:            IRQD_SINGLE_TARGET
+178:            IRQD_MOVE_PCNTXT
+178:            IRQD_AFFINITY_MANAGED
+178:            IRQD_AFFINITY_ON_ACTIVATE
+178:            IRQD_HANDLE_ENFORCE_IRQCTX
+178:node:     0
+178:affinity: 24
+178:effectiv: 24
+178:pending:
+178:domain:  IR-PCI-MSIX-0000:02:00.0-12
+178: hwirq:   0x19
+178: chip:    IR-PCI-MSIX-0000:02:00.0
+178:  flags:   0x430
+178:             IRQCHIP_SKIP_SET_WAKE
+178:             IRQCHIP_ONESHOT_SAFE
+178: parent:
+178:    domain:  INTEL-IR-0-13
+178:     hwirq:   0x4b0000
+178:     chip:    INTEL-IR
+178:      flags:   0x0
+178:     parent:
+178:        domain:  VECTOR
+178:         hwirq:   0xb2
+178:         chip:    APIC
+178:          flags:   0x0
+178:         Vector:    33
+178:         Target:    24
+178:         move_in_progress: 0
+178:         is_managed:       1
+178:         can_reserve:      0
+178:         has_reserved:     0
+178:         cleanup_pending:  0
+179:handler:  handle_edge_irq
+179:device:   0000:02:00.0
+179:status:   0x00004000
+179:istate:   0x00004000
+179:ddepth:   0
+179:wdepth:   0
+179:dstate:   0x31608200
+179:            IRQD_ACTIVATED
+179:            IRQD_IRQ_STARTED
+179:            IRQD_SINGLE_TARGET
+179:            IRQD_MOVE_PCNTXT
+179:            IRQD_AFFINITY_MANAGED
+179:            IRQD_AFFINITY_ON_ACTIVATE
+179:            IRQD_HANDLE_ENFORCE_IRQCTX
+179:node:     0
+179:affinity: 25
+179:effectiv: 25
+179:pending:
+179:domain:  IR-PCI-MSIX-0000:02:00.0-12
+179: hwirq:   0x1a
+179: chip:    IR-PCI-MSIX-0000:02:00.0
+179:  flags:   0x430
+179:             IRQCHIP_SKIP_SET_WAKE
+179:             IRQCHIP_ONESHOT_SAFE
+179: parent:
+179:    domain:  INTEL-IR-0-13
+179:     hwirq:   0x4c0000
+179:     chip:    INTEL-IR
+179:      flags:   0x0
+179:     parent:
+179:        domain:  VECTOR
+179:         hwirq:   0xb3
+179:         chip:    APIC
+179:          flags:   0x0
+179:         Vector:    34
+179:         Target:    25
+179:         move_in_progress: 0
+179:         is_managed:       1
+179:         can_reserve:      0
+179:         has_reserved:     0
+179:         cleanup_pending:  0
+18:handler:  handle_fasteoi_irq
+18:device:   (null)
+18:status:   0x00004100
+18:istate:   0x00004000
+18:ddepth:   0
+18:wdepth:   0
+18:dstate:   0x3540a200
+18:            IRQD_LEVEL
+18:            IRQD_ACTIVATED
+18:            IRQD_IRQ_STARTED
+18:            IRQD_SINGLE_TARGET
+18:            IRQD_MOVE_PCNTXT
+18:            IRQD_AFFINITY_ON_ACTIVATE
+18:            IRQD_CAN_RESERVE
+18:            IRQD_HANDLE_ENFORCE_IRQCTX
+18:node:     -1
+18:affinity: 0-31
+18:effectiv: 15
+18:pending:
+18:domain:  IO-APIC-2
+18: hwirq:   0x12
+18: chip:    IR-IO-APIC
+18:  flags:   0x410
+18:             IRQCHIP_SKIP_SET_WAKE
+18: parent:
+18:    domain:  INTEL-IR-0-13
+18:     hwirq:   0x150000
+18:     chip:    INTEL-IR
+18:      flags:   0x0
+18:     parent:
+18:        domain:  VECTOR
+18:         hwirq:   0x12
+18:         chip:    APIC
+18:          flags:   0x0
+18:         Vector:    36
+18:         Target:    15
+18:         move_in_progress: 0
+18:         is_managed:       0
+18:         can_reserve:      1
+18:         has_reserved:     0
+18:         cleanup_pending:  0
+180:handler:  handle_edge_irq
+180:device:   0000:02:00.0
+180:status:   0x00004000
+180:istate:   0x00004000
+180:ddepth:   0
+180:wdepth:   0
+180:dstate:   0x31608200
+180:            IRQD_ACTIVATED
+180:            IRQD_IRQ_STARTED
+180:            IRQD_SINGLE_TARGET
+180:            IRQD_MOVE_PCNTXT
+180:            IRQD_AFFINITY_MANAGED
+180:            IRQD_AFFINITY_ON_ACTIVATE
+180:            IRQD_HANDLE_ENFORCE_IRQCTX
+180:node:     0
+180:affinity: 26
+180:effectiv: 26
+180:pending:
+180:domain:  IR-PCI-MSIX-0000:02:00.0-12
+180: hwirq:   0x1b
+180: chip:    IR-PCI-MSIX-0000:02:00.0
+180:  flags:   0x430
+180:             IRQCHIP_SKIP_SET_WAKE
+180:             IRQCHIP_ONESHOT_SAFE
+180: parent:
+180:    domain:  INTEL-IR-0-13
+180:     hwirq:   0x4d0000
+180:     chip:    INTEL-IR
+180:      flags:   0x0
+180:     parent:
+180:        domain:  VECTOR
+180:         hwirq:   0xb4
+180:         chip:    APIC
+180:          flags:   0x0
+180:         Vector:    33
+180:         Target:    26
+180:         move_in_progress: 0
+180:         is_managed:       1
+180:         can_reserve:      0
+180:         has_reserved:     0
+180:         cleanup_pending:  0
+181:handler:  handle_edge_irq
+181:device:   0000:02:00.0
+181:status:   0x00004000
+181:istate:   0x00004000
+181:ddepth:   0
+181:wdepth:   0
+181:dstate:   0x31608200
+181:            IRQD_ACTIVATED
+181:            IRQD_IRQ_STARTED
+181:            IRQD_SINGLE_TARGET
+181:            IRQD_MOVE_PCNTXT
+181:            IRQD_AFFINITY_MANAGED
+181:            IRQD_AFFINITY_ON_ACTIVATE
+181:            IRQD_HANDLE_ENFORCE_IRQCTX
+181:node:     0
+181:affinity: 27
+181:effectiv: 27
+181:pending:
+181:domain:  IR-PCI-MSIX-0000:02:00.0-12
+181: hwirq:   0x1c
+181: chip:    IR-PCI-MSIX-0000:02:00.0
+181:  flags:   0x430
+181:             IRQCHIP_SKIP_SET_WAKE
+181:             IRQCHIP_ONESHOT_SAFE
+181: parent:
+181:    domain:  INTEL-IR-0-13
+181:     hwirq:   0x4e0000
+181:     chip:    INTEL-IR
+181:      flags:   0x0
+181:     parent:
+181:        domain:  VECTOR
+181:         hwirq:   0xb5
+181:         chip:    APIC
+181:          flags:   0x0
+181:         Vector:    34
+181:         Target:    27
+181:         move_in_progress: 0
+181:         is_managed:       1
+181:         can_reserve:      0
+181:         has_reserved:     0
+181:         cleanup_pending:  0
+182:handler:  handle_edge_irq
+182:device:   0000:02:00.0
+182:status:   0x00004000
+182:istate:   0x00004000
+182:ddepth:   0
+182:wdepth:   0
+182:dstate:   0x31608200
+182:            IRQD_ACTIVATED
+182:            IRQD_IRQ_STARTED
+182:            IRQD_SINGLE_TARGET
+182:            IRQD_MOVE_PCNTXT
+182:            IRQD_AFFINITY_MANAGED
+182:            IRQD_AFFINITY_ON_ACTIVATE
+182:            IRQD_HANDLE_ENFORCE_IRQCTX
+182:node:     0
+182:affinity: 28
+182:effectiv: 28
+182:pending:
+182:domain:  IR-PCI-MSIX-0000:02:00.0-12
+182: hwirq:   0x1d
+182: chip:    IR-PCI-MSIX-0000:02:00.0
+182:  flags:   0x430
+182:             IRQCHIP_SKIP_SET_WAKE
+182:             IRQCHIP_ONESHOT_SAFE
+182: parent:
+182:    domain:  INTEL-IR-0-13
+182:     hwirq:   0x4f0000
+182:     chip:    INTEL-IR
+182:      flags:   0x0
+182:     parent:
+182:        domain:  VECTOR
+182:         hwirq:   0xb6
+182:         chip:    APIC
+182:          flags:   0x0
+182:         Vector:    33
+182:         Target:    28
+182:         move_in_progress: 0
+182:         is_managed:       1
+182:         can_reserve:      0
+182:         has_reserved:     0
+182:         cleanup_pending:  0
+183:handler:  handle_edge_irq
+183:device:   0000:02:00.0
+183:status:   0x00004000
+183:istate:   0x00004000
+183:ddepth:   0
+183:wdepth:   0
+183:dstate:   0x31608200
+183:            IRQD_ACTIVATED
+183:            IRQD_IRQ_STARTED
+183:            IRQD_SINGLE_TARGET
+183:            IRQD_MOVE_PCNTXT
+183:            IRQD_AFFINITY_MANAGED
+183:            IRQD_AFFINITY_ON_ACTIVATE
+183:            IRQD_HANDLE_ENFORCE_IRQCTX
+183:node:     0
+183:affinity: 29
+183:effectiv: 29
+183:pending:
+183:domain:  IR-PCI-MSIX-0000:02:00.0-12
+183: hwirq:   0x1e
+183: chip:    IR-PCI-MSIX-0000:02:00.0
+183:  flags:   0x430
+183:             IRQCHIP_SKIP_SET_WAKE
+183:             IRQCHIP_ONESHOT_SAFE
+183: parent:
+183:    domain:  INTEL-IR-0-13
+183:     hwirq:   0x500000
+183:     chip:    INTEL-IR
+183:      flags:   0x0
+183:     parent:
+183:        domain:  VECTOR
+183:         hwirq:   0xb7
+183:         chip:    APIC
+183:          flags:   0x0
+183:         Vector:    33
+183:         Target:    29
+183:         move_in_progress: 0
+183:         is_managed:       1
+183:         can_reserve:      0
+183:         has_reserved:     0
+183:         cleanup_pending:  0
+184:handler:  handle_edge_irq
+184:device:   0000:02:00.0
+184:status:   0x00004000
+184:istate:   0x00004000
+184:ddepth:   0
+184:wdepth:   0
+184:dstate:   0x31608200
+184:            IRQD_ACTIVATED
+184:            IRQD_IRQ_STARTED
+184:            IRQD_SINGLE_TARGET
+184:            IRQD_MOVE_PCNTXT
+184:            IRQD_AFFINITY_MANAGED
+184:            IRQD_AFFINITY_ON_ACTIVATE
+184:            IRQD_HANDLE_ENFORCE_IRQCTX
+184:node:     0
+184:affinity: 30
+184:effectiv: 30
+184:pending:
+184:domain:  IR-PCI-MSIX-0000:02:00.0-12
+184: hwirq:   0x1f
+184: chip:    IR-PCI-MSIX-0000:02:00.0
+184:  flags:   0x430
+184:             IRQCHIP_SKIP_SET_WAKE
+184:             IRQCHIP_ONESHOT_SAFE
+184: parent:
+184:    domain:  INTEL-IR-0-13
+184:     hwirq:   0x510000
+184:     chip:    INTEL-IR
+184:      flags:   0x0
+184:     parent:
+184:        domain:  VECTOR
+184:         hwirq:   0xb8
+184:         chip:    APIC
+184:          flags:   0x0
+184:         Vector:    33
+184:         Target:    30
+184:         move_in_progress: 0
+184:         is_managed:       1
+184:         can_reserve:      0
+184:         has_reserved:     0
+184:         cleanup_pending:  0
+185:handler:  handle_edge_irq
+185:device:   0000:02:00.0
+185:status:   0x00004000
+185:istate:   0x00004000
+185:ddepth:   0
+185:wdepth:   0
+185:dstate:   0x31608200
+185:            IRQD_ACTIVATED
+185:            IRQD_IRQ_STARTED
+185:            IRQD_SINGLE_TARGET
+185:            IRQD_MOVE_PCNTXT
+185:            IRQD_AFFINITY_MANAGED
+185:            IRQD_AFFINITY_ON_ACTIVATE
+185:            IRQD_HANDLE_ENFORCE_IRQCTX
+185:node:     0
+185:affinity: 31
+185:effectiv: 31
+185:pending:
+185:domain:  IR-PCI-MSIX-0000:02:00.0-12
+185: hwirq:   0x20
+185: chip:    IR-PCI-MSIX-0000:02:00.0
+185:  flags:   0x430
+185:             IRQCHIP_SKIP_SET_WAKE
+185:             IRQCHIP_ONESHOT_SAFE
+185: parent:
+185:    domain:  INTEL-IR-0-13
+185:     hwirq:   0x520000
+185:     chip:    INTEL-IR
+185:      flags:   0x0
+185:     parent:
+185:        domain:  VECTOR
+185:         hwirq:   0xb9
+185:         chip:    APIC
+185:          flags:   0x0
+185:         Vector:    34
+185:         Target:    31
+185:         move_in_progress: 0
+185:         is_managed:       1
+185:         can_reserve:      0
+185:         has_reserved:     0
+185:         cleanup_pending:  0
+186:handler:  handle_edge_irq
+186:device:   0000:00:14.0
+186:status:   0x00004000
+186:istate:   0x00004000
+186:ddepth:   0
+186:wdepth:   0
+186:dstate:   0x31408200
+186:            IRQD_ACTIVATED
+186:            IRQD_IRQ_STARTED
+186:            IRQD_SINGLE_TARGET
+186:            IRQD_MOVE_PCNTXT
+186:            IRQD_AFFINITY_ON_ACTIVATE
+186:            IRQD_HANDLE_ENFORCE_IRQCTX
+186:node:     -1
+186:affinity: 0-31
+186:effectiv: 12
+186:pending:
+186:domain:  IR-PCI-MSI-0000:00:14.0-11
+186: hwirq:   0x0
+186: chip:    IR-PCI-MSI-0000:00:14.0
+186:  flags:   0x430
+186:             IRQCHIP_SKIP_SET_WAKE
+186:             IRQCHIP_ONESHOT_SAFE
+186: parent:
+186:    domain:  INTEL-IR-0-13
+186:     hwirq:   0x530000
+186:     chip:    INTEL-IR
+186:      flags:   0x0
+186:     parent:
+186:        domain:  VECTOR
+186:         hwirq:   0xba
+186:         chip:    APIC
+186:          flags:   0x0
+186:         Vector:    36
+186:         Target:    12
+186:         move_in_progress: 0
+186:         is_managed:       0
+186:         can_reserve:      0
+186:         has_reserved:     0
+186:         cleanup_pending:  0
+187:handler:  handle_edge_irq
+187:device:   0000:00:17.0
+187:status:   0x00004000
+187:istate:   0x00004000
+187:ddepth:   0
+187:wdepth:   0
+187:dstate:   0x31408200
+187:            IRQD_ACTIVATED
+187:            IRQD_IRQ_STARTED
+187:            IRQD_SINGLE_TARGET
+187:            IRQD_MOVE_PCNTXT
+187:            IRQD_AFFINITY_ON_ACTIVATE
+187:            IRQD_HANDLE_ENFORCE_IRQCTX
+187:node:     -1
+187:affinity: 0-31
+187:effectiv: 13
+187:pending:
+187:domain:  IR-PCI-MSI-0000:00:17.0-11
+187: hwirq:   0x0
+187: chip:    IR-PCI-MSI-0000:00:17.0
+187:  flags:   0x430
+187:             IRQCHIP_SKIP_SET_WAKE
+187:             IRQCHIP_ONESHOT_SAFE
+187: parent:
+187:    domain:  INTEL-IR-0-13
+187:     hwirq:   0x540000
+187:     chip:    INTEL-IR
+187:      flags:   0x0
+187:     parent:
+187:        domain:  VECTOR
+187:         hwirq:   0xbb
+187:         chip:    APIC
+187:          flags:   0x0
+187:         Vector:    36
+187:         Target:    13
+187:         move_in_progress: 0
+187:         is_managed:       0
+187:         can_reserve:      0
+187:         has_reserved:     0
+187:         cleanup_pending:  0
+188:handler:  handle_edge_irq
+188:device:   0000:00:16.0
+188:status:   0x00004000
+188:istate:   0x00004000
+188:ddepth:   0
+188:wdepth:   0
+188:dstate:   0x31408200
+188:            IRQD_ACTIVATED
+188:            IRQD_IRQ_STARTED
+188:            IRQD_SINGLE_TARGET
+188:            IRQD_MOVE_PCNTXT
+188:            IRQD_AFFINITY_ON_ACTIVATE
+188:            IRQD_HANDLE_ENFORCE_IRQCTX
+188:node:     -1
+188:affinity: 0-31
+188:effectiv: 16
+188:pending:
+188:domain:  IR-PCI-MSI-0000:00:16.0-11
+188: hwirq:   0x0
+188: chip:    IR-PCI-MSI-0000:00:16.0
+188:  flags:   0x430
+188:             IRQCHIP_SKIP_SET_WAKE
+188:             IRQCHIP_ONESHOT_SAFE
+188: parent:
+188:    domain:  INTEL-IR-0-13
+188:     hwirq:   0x550000
+188:     chip:    INTEL-IR
+188:      flags:   0x0
+188:     parent:
+188:        domain:  VECTOR
+188:         hwirq:   0xbc
+188:         chip:    APIC
+188:          flags:   0x0
+188:         Vector:    36
+188:         Target:    16
+188:         move_in_progress: 0
+188:         is_managed:       0
+188:         can_reserve:      0
+188:         has_reserved:     0
+188:         cleanup_pending:  0
+189:handler:  handle_edge_irq
+189:device:   0000:05:00.0
+189:status:   0x00004000
+189:istate:   0x00004000
+189:ddepth:   0
+189:wdepth:   0
+189:dstate:   0x35408200
+189:            IRQD_ACTIVATED
+189:            IRQD_IRQ_STARTED
+189:            IRQD_SINGLE_TARGET
+189:            IRQD_MOVE_PCNTXT
+189:            IRQD_AFFINITY_ON_ACTIVATE
+189:            IRQD_CAN_RESERVE
+189:            IRQD_HANDLE_ENFORCE_IRQCTX
+189:node:     -1
+189:affinity: 0-31
+189:effectiv: 24
+189:pending:
+189:domain:  IR-PCI-MSIX-0000:05:00.0-12
+189: hwirq:   0x0
+189: chip:    IR-PCI-MSIX-0000:05:00.0
+189:  flags:   0x430
+189:             IRQCHIP_SKIP_SET_WAKE
+189:             IRQCHIP_ONESHOT_SAFE
+189: parent:
+189:    domain:  INTEL-IR-0-13
+189:     hwirq:   0x590000
+189:     chip:    INTEL-IR
+189:      flags:   0x0
+189:     parent:
+189:        domain:  VECTOR
+189:         hwirq:   0xbd
+189:         chip:    APIC
+189:          flags:   0x0
+189:         Vector:    36
+189:         Target:    24
+189:         move_in_progress: 0
+189:         is_managed:       0
+189:         can_reserve:      1
+189:         has_reserved:     0
+189:         cleanup_pending:  0
+19:handler:  handle_fasteoi_irq
+19:device:   (null)
+19:status:   0x00004100
+19:istate:   0x00004000
+19:ddepth:   1
+19:wdepth:   0
+19:dstate:   0x3503a000
+19:            IRQD_LEVEL
+19:            IRQD_IRQ_DISABLED
+19:            IRQD_IRQ_MASKED
+19:            IRQD_SINGLE_TARGET
+19:            IRQD_MOVE_PCNTXT
+19:            IRQD_AFFINITY_ON_ACTIVATE
+19:            IRQD_CAN_RESERVE
+19:            IRQD_HANDLE_ENFORCE_IRQCTX
+19:node:     -1
+19:affinity: 0-31
+19:effectiv: 0
+19:pending:
+19:domain:  IO-APIC-2
+19: hwirq:   0x13
+19: chip:    IR-IO-APIC
+19:  flags:   0x410
+19:             IRQCHIP_SKIP_SET_WAKE
+19: parent:
+19:    domain:  INTEL-IR-0-13
+19:     hwirq:   0x110000
+19:     chip:    INTEL-IR
+19:      flags:   0x0
+19:     parent:
+19:        domain:  VECTOR
+19:         hwirq:   0x13
+19:         chip:    APIC
+19:          flags:   0x0
+19:         Vector:     0
+19:         Target:     0
+19:         move_in_progress: 0
+19:         is_managed:       0
+19:         can_reserve:      1
+19:         has_reserved:     1
+19:         cleanup_pending:  0
+190:handler:  handle_edge_irq
+190:device:   0000:05:00.0
+190:status:   0x00004000
+190:istate:   0x00004000
+190:ddepth:   0
+190:wdepth:   0
+190:dstate:   0x35408200
+190:            IRQD_ACTIVATED
+190:            IRQD_IRQ_STARTED
+190:            IRQD_SINGLE_TARGET
+190:            IRQD_MOVE_PCNTXT
+190:            IRQD_AFFINITY_ON_ACTIVATE
+190:            IRQD_CAN_RESERVE
+190:            IRQD_HANDLE_ENFORCE_IRQCTX
+190:node:     -1
+190:affinity: 0-31
+190:effectiv: 25
+190:pending:
+190:domain:  IR-PCI-MSIX-0000:05:00.0-12
+190: hwirq:   0x1
+190: chip:    IR-PCI-MSIX-0000:05:00.0
+190:  flags:   0x430
+190:             IRQCHIP_SKIP_SET_WAKE
+190:             IRQCHIP_ONESHOT_SAFE
+190: parent:
+190:    domain:  INTEL-IR-0-13
+190:     hwirq:   0x5a0000
+190:     chip:    INTEL-IR
+190:      flags:   0x0
+190:     parent:
+190:        domain:  VECTOR
+190:         hwirq:   0xbe
+190:         chip:    APIC
+190:          flags:   0x0
+190:         Vector:    36
+190:         Target:    25
+190:         move_in_progress: 0
+190:         is_managed:       0
+190:         can_reserve:      1
+190:         has_reserved:     0
+190:         cleanup_pending:  0
+191:handler:  handle_edge_irq
+191:device:   0000:05:00.0
+191:status:   0x00004000
+191:istate:   0x00004000
+191:ddepth:   0
+191:wdepth:   0
+191:dstate:   0x35408200
+191:            IRQD_ACTIVATED
+191:            IRQD_IRQ_STARTED
+191:            IRQD_SINGLE_TARGET
+191:            IRQD_MOVE_PCNTXT
+191:            IRQD_AFFINITY_ON_ACTIVATE
+191:            IRQD_CAN_RESERVE
+191:            IRQD_HANDLE_ENFORCE_IRQCTX
+191:node:     -1
+191:affinity: 0-31
+191:effectiv: 26
+191:pending:
+191:domain:  IR-PCI-MSIX-0000:05:00.0-12
+191: hwirq:   0x2
+191: chip:    IR-PCI-MSIX-0000:05:00.0
+191:  flags:   0x430
+191:             IRQCHIP_SKIP_SET_WAKE
+191:             IRQCHIP_ONESHOT_SAFE
+191: parent:
+191:    domain:  INTEL-IR-0-13
+191:     hwirq:   0x5b0000
+191:     chip:    INTEL-IR
+191:      flags:   0x0
+191:     parent:
+191:        domain:  VECTOR
+191:         hwirq:   0xbf
+191:         chip:    APIC
+191:          flags:   0x0
+191:         Vector:    36
+191:         Target:    26
+191:         move_in_progress: 0
+191:         is_managed:       0
+191:         can_reserve:      1
+191:         has_reserved:     0
+191:         cleanup_pending:  0
+192:handler:  handle_edge_irq
+192:device:   0000:05:00.0
+192:status:   0x00004000
+192:istate:   0x00004000
+192:ddepth:   0
+192:wdepth:   0
+192:dstate:   0x35408200
+192:            IRQD_ACTIVATED
+192:            IRQD_IRQ_STARTED
+192:            IRQD_SINGLE_TARGET
+192:            IRQD_MOVE_PCNTXT
+192:            IRQD_AFFINITY_ON_ACTIVATE
+192:            IRQD_CAN_RESERVE
+192:            IRQD_HANDLE_ENFORCE_IRQCTX
+192:node:     -1
+192:affinity: 0-31
+192:effectiv: 27
+192:pending:
+192:domain:  IR-PCI-MSIX-0000:05:00.0-12
+192: hwirq:   0x3
+192: chip:    IR-PCI-MSIX-0000:05:00.0
+192:  flags:   0x430
+192:             IRQCHIP_SKIP_SET_WAKE
+192:             IRQCHIP_ONESHOT_SAFE
+192: parent:
+192:    domain:  INTEL-IR-0-13
+192:     hwirq:   0x5c0000
+192:     chip:    INTEL-IR
+192:      flags:   0x0
+192:     parent:
+192:        domain:  VECTOR
+192:         hwirq:   0xc0
+192:         chip:    APIC
+192:          flags:   0x0
+192:         Vector:    36
+192:         Target:    27
+192:         move_in_progress: 0
+192:         is_managed:       0
+192:         can_reserve:      1
+192:         has_reserved:     0
+192:         cleanup_pending:  0
+193:handler:  handle_edge_irq
+193:device:   0000:05:00.0
+193:status:   0x00004000
+193:istate:   0x00004000
+193:ddepth:   0
+193:wdepth:   0
+193:dstate:   0x35408200
+193:            IRQD_ACTIVATED
+193:            IRQD_IRQ_STARTED
+193:            IRQD_SINGLE_TARGET
+193:            IRQD_MOVE_PCNTXT
+193:            IRQD_AFFINITY_ON_ACTIVATE
+193:            IRQD_CAN_RESERVE
+193:            IRQD_HANDLE_ENFORCE_IRQCTX
+193:node:     -1
+193:affinity: 0-31
+193:effectiv: 28
+193:pending:
+193:domain:  IR-PCI-MSIX-0000:05:00.0-12
+193: hwirq:   0x4
+193: chip:    IR-PCI-MSIX-0000:05:00.0
+193:  flags:   0x430
+193:             IRQCHIP_SKIP_SET_WAKE
+193:             IRQCHIP_ONESHOT_SAFE
+193: parent:
+193:    domain:  INTEL-IR-0-13
+193:     hwirq:   0x5d0000
+193:     chip:    INTEL-IR
+193:      flags:   0x0
+193:     parent:
+193:        domain:  VECTOR
+193:         hwirq:   0xc1
+193:         chip:    APIC
+193:          flags:   0x0
+193:         Vector:    36
+193:         Target:    28
+193:         move_in_progress: 0
+193:         is_managed:       0
+193:         can_reserve:      1
+193:         has_reserved:     0
+193:         cleanup_pending:  0
+194:handler:  handle_edge_irq
+194:device:   0000:00:1f.3
+194:status:   0x00004000
+194:istate:   0x00004000
+194:ddepth:   0
+194:wdepth:   0
+194:dstate:   0x31408200
+194:            IRQD_ACTIVATED
+194:            IRQD_IRQ_STARTED
+194:            IRQD_SINGLE_TARGET
+194:            IRQD_MOVE_PCNTXT
+194:            IRQD_AFFINITY_ON_ACTIVATE
+194:            IRQD_HANDLE_ENFORCE_IRQCTX
+194:node:     -1
+194:affinity: 0-31
+194:effectiv: 20
+194:pending:
+194:domain:  IR-PCI-MSI-0000:00:1f.3-11
+194: hwirq:   0x0
+194: chip:    IR-PCI-MSI-0000:00:1f.3
+194:  flags:   0x430
+194:             IRQCHIP_SKIP_SET_WAKE
+194:             IRQCHIP_ONESHOT_SAFE
+194: parent:
+194:    domain:  INTEL-IR-0-13
+194:     hwirq:   0x5f0000
+194:     chip:    INTEL-IR
+194:      flags:   0x0
+194:     parent:
+194:        domain:  VECTOR
+194:         hwirq:   0xc2
+194:         chip:    APIC
+194:          flags:   0x0
+194:         Vector:    36
+194:         Target:    20
+194:         move_in_progress: 0
+194:         is_managed:       0
+194:         can_reserve:      0
+194:         has_reserved:     0
+194:         cleanup_pending:  0
+195:handler:  handle_edge_irq
+195:device:   0000:00:14.3
+195:status:   0x00004000
+195:istate:   0x00004000
+195:ddepth:   0
+195:wdepth:   0
+195:dstate:   0x35408200
+195:            IRQD_ACTIVATED
+195:            IRQD_IRQ_STARTED
+195:            IRQD_SINGLE_TARGET
+195:            IRQD_MOVE_PCNTXT
+195:            IRQD_AFFINITY_ON_ACTIVATE
+195:            IRQD_CAN_RESERVE
+195:            IRQD_HANDLE_ENFORCE_IRQCTX
+195:node:     -1
+195:affinity: 0-31
+195:effectiv: 21
+195:pending:
+195:domain:  IR-PCI-MSIX-0000:00:14.3-12
+195: hwirq:   0x0
+195: chip:    IR-PCI-MSIX-0000:00:14.3
+195:  flags:   0x430
+195:             IRQCHIP_SKIP_SET_WAKE
+195:             IRQCHIP_ONESHOT_SAFE
+195: parent:
+195:    domain:  INTEL-IR-0-13
+195:     hwirq:   0x600000
+195:     chip:    INTEL-IR
+195:      flags:   0x0
+195:     parent:
+195:        domain:  VECTOR
+195:         hwirq:   0xc3
+195:         chip:    APIC
+195:          flags:   0x0
+195:         Vector:    36
+195:         Target:    21
+195:         move_in_progress: 0
+195:         is_managed:       0
+195:         can_reserve:      1
+195:         has_reserved:     0
+195:         cleanup_pending:  0
+196:handler:  handle_edge_irq
+196:device:   0000:00:14.3
+196:status:   0x00004000
+196:istate:   0x00004000
+196:ddepth:   0
+196:wdepth:   0
+196:dstate:   0x35409200
+196:            IRQD_ACTIVATED
+196:            IRQD_IRQ_STARTED
+196:            IRQD_SINGLE_TARGET
+196:            IRQD_MOVE_PCNTXT
+196:            IRQD_AFFINITY_SET
+196:            IRQD_AFFINITY_ON_ACTIVATE
+196:            IRQD_CAN_RESERVE
+196:            IRQD_HANDLE_ENFORCE_IRQCTX
+196:node:     -1
+196:affinity: 0
+196:effectiv: 0
+196:pending:
+196:domain:  IR-PCI-MSIX-0000:00:14.3-12
+196: hwirq:   0x1
+196: chip:    IR-PCI-MSIX-0000:00:14.3
+196:  flags:   0x430
+196:             IRQCHIP_SKIP_SET_WAKE
+196:             IRQCHIP_ONESHOT_SAFE
+196: parent:
+196:    domain:  INTEL-IR-0-13
+196:     hwirq:   0x610000
+196:     chip:    INTEL-IR
+196:      flags:   0x0
+196:     parent:
+196:        domain:  VECTOR
+196:         hwirq:   0xc4
+196:         chip:    APIC
+196:          flags:   0x0
+196:         Vector:    38
+196:         Target:     0
+196:         move_in_progress: 0
+196:         is_managed:       0
+196:         can_reserve:      1
+196:         has_reserved:     0
+196:         cleanup_pending:  0
+197:handler:  handle_edge_irq
+197:device:   0000:00:14.3
+197:status:   0x00004000
+197:istate:   0x00004000
+197:ddepth:   0
+197:wdepth:   0
+197:dstate:   0x35409200
+197:            IRQD_ACTIVATED
+197:            IRQD_IRQ_STARTED
+197:            IRQD_SINGLE_TARGET
+197:            IRQD_MOVE_PCNTXT
+197:            IRQD_AFFINITY_SET
+197:            IRQD_AFFINITY_ON_ACTIVATE
+197:            IRQD_CAN_RESERVE
+197:            IRQD_HANDLE_ENFORCE_IRQCTX
+197:node:     -1
+197:affinity: 1
+197:effectiv: 1
+197:pending:
+197:domain:  IR-PCI-MSIX-0000:00:14.3-12
+197: hwirq:   0x2
+197: chip:    IR-PCI-MSIX-0000:00:14.3
+197:  flags:   0x430
+197:             IRQCHIP_SKIP_SET_WAKE
+197:             IRQCHIP_ONESHOT_SAFE
+197: parent:
+197:    domain:  INTEL-IR-0-13
+197:     hwirq:   0x620000
+197:     chip:    INTEL-IR
+197:      flags:   0x0
+197:     parent:
+197:        domain:  VECTOR
+197:         hwirq:   0xc5
+197:         chip:    APIC
+197:          flags:   0x0
+197:         Vector:    38
+197:         Target:     1
+197:         move_in_progress: 0
+197:         is_managed:       0
+197:         can_reserve:      1
+197:         has_reserved:     0
+197:         cleanup_pending:  0
+198:handler:  handle_edge_irq
+198:device:   0000:00:14.3
+198:status:   0x00004000
+198:istate:   0x00004000
+198:ddepth:   0
+198:wdepth:   0
+198:dstate:   0x35409200
+198:            IRQD_ACTIVATED
+198:            IRQD_IRQ_STARTED
+198:            IRQD_SINGLE_TARGET
+198:            IRQD_MOVE_PCNTXT
+198:            IRQD_AFFINITY_SET
+198:            IRQD_AFFINITY_ON_ACTIVATE
+198:            IRQD_CAN_RESERVE
+198:            IRQD_HANDLE_ENFORCE_IRQCTX
+198:node:     -1
+198:affinity: 2
+198:effectiv: 2
+198:pending:
+198:domain:  IR-PCI-MSIX-0000:00:14.3-12
+198: hwirq:   0x3
+198: chip:    IR-PCI-MSIX-0000:00:14.3
+198:  flags:   0x430
+198:             IRQCHIP_SKIP_SET_WAKE
+198:             IRQCHIP_ONESHOT_SAFE
+198: parent:
+198:    domain:  INTEL-IR-0-13
+198:     hwirq:   0x630000
+198:     chip:    INTEL-IR
+198:      flags:   0x0
+198:     parent:
+198:        domain:  VECTOR
+198:         hwirq:   0xc6
+198:         chip:    APIC
+198:          flags:   0x0
+198:         Vector:    38
+198:         Target:     2
+198:         move_in_progress: 0
+198:         is_managed:       0
+198:         can_reserve:      1
+198:         has_reserved:     0
+198:         cleanup_pending:  0
+199:handler:  handle_edge_irq
+199:device:   0000:00:14.3
+199:status:   0x00004000
+199:istate:   0x00004000
+199:ddepth:   0
+199:wdepth:   0
+199:dstate:   0x35409200
+199:            IRQD_ACTIVATED
+199:            IRQD_IRQ_STARTED
+199:            IRQD_SINGLE_TARGET
+199:            IRQD_MOVE_PCNTXT
+199:            IRQD_AFFINITY_SET
+199:            IRQD_AFFINITY_ON_ACTIVATE
+199:            IRQD_CAN_RESERVE
+199:            IRQD_HANDLE_ENFORCE_IRQCTX
+199:node:     -1
+199:affinity: 3
+199:effectiv: 3
+199:pending:
+199:domain:  IR-PCI-MSIX-0000:00:14.3-12
+199: hwirq:   0x4
+199: chip:    IR-PCI-MSIX-0000:00:14.3
+199:  flags:   0x430
+199:             IRQCHIP_SKIP_SET_WAKE
+199:             IRQCHIP_ONESHOT_SAFE
+199: parent:
+199:    domain:  INTEL-IR-0-13
+199:     hwirq:   0x640000
+199:     chip:    INTEL-IR
+199:      flags:   0x0
+199:     parent:
+199:        domain:  VECTOR
+199:         hwirq:   0xc7
+199:         chip:    APIC
+199:          flags:   0x0
+199:         Vector:    38
+199:         Target:     3
+199:         move_in_progress: 0
+199:         is_managed:       0
+199:         can_reserve:      1
+199:         has_reserved:     0
+199:         cleanup_pending:  0
+2:handler:  handle_level_irq
+2:device:   (null)
+2:status:   0x00000100
+2:istate:   0x00004000
+2:ddepth:   1
+2:wdepth:   0
+2:dstate:   0x00032000
+2:            IRQD_LEVEL
+2:            IRQD_IRQ_DISABLED
+2:            IRQD_IRQ_MASKED
+2:node:     0
+2:affinity: 0-31
+2:effectiv:
+2:pending:
+2:domain:
+2: hwirq:   0x0
+2: chip:    XT-PIC
+2:  flags:   0x0
+200:handler:  handle_edge_irq
+200:device:   0000:00:14.3
+200:status:   0x00004000
+200:istate:   0x00004000
+200:ddepth:   0
+200:wdepth:   0
+200:dstate:   0x35409200
+200:            IRQD_ACTIVATED
+200:            IRQD_IRQ_STARTED
+200:            IRQD_SINGLE_TARGET
+200:            IRQD_MOVE_PCNTXT
+200:            IRQD_AFFINITY_SET
+200:            IRQD_AFFINITY_ON_ACTIVATE
+200:            IRQD_CAN_RESERVE
+200:            IRQD_HANDLE_ENFORCE_IRQCTX
+200:node:     -1
+200:affinity: 4
+200:effectiv: 4
+200:pending:
+200:domain:  IR-PCI-MSIX-0000:00:14.3-12
+200: hwirq:   0x5
+200: chip:    IR-PCI-MSIX-0000:00:14.3
+200:  flags:   0x430
+200:             IRQCHIP_SKIP_SET_WAKE
+200:             IRQCHIP_ONESHOT_SAFE
+200: parent:
+200:    domain:  INTEL-IR-0-13
+200:     hwirq:   0x650000
+200:     chip:    INTEL-IR
+200:      flags:   0x0
+200:     parent:
+200:        domain:  VECTOR
+200:         hwirq:   0xc8
+200:         chip:    APIC
+200:          flags:   0x0
+200:         Vector:    38
+200:         Target:     4
+200:         move_in_progress: 0
+200:         is_managed:       0
+200:         can_reserve:      1
+200:         has_reserved:     0
+200:         cleanup_pending:  0
+201:handler:  handle_edge_irq
+201:device:   0000:00:14.3
+201:status:   0x00004000
+201:istate:   0x00004000
+201:ddepth:   0
+201:wdepth:   0
+201:dstate:   0x35409200
+201:            IRQD_ACTIVATED
+201:            IRQD_IRQ_STARTED
+201:            IRQD_SINGLE_TARGET
+201:            IRQD_MOVE_PCNTXT
+201:            IRQD_AFFINITY_SET
+201:            IRQD_AFFINITY_ON_ACTIVATE
+201:            IRQD_CAN_RESERVE
+201:            IRQD_HANDLE_ENFORCE_IRQCTX
+201:node:     -1
+201:affinity: 5
+201:effectiv: 5
+201:pending:
+201:domain:  IR-PCI-MSIX-0000:00:14.3-12
+201: hwirq:   0x6
+201: chip:    IR-PCI-MSIX-0000:00:14.3
+201:  flags:   0x430
+201:             IRQCHIP_SKIP_SET_WAKE
+201:             IRQCHIP_ONESHOT_SAFE
+201: parent:
+201:    domain:  INTEL-IR-0-13
+201:     hwirq:   0x660000
+201:     chip:    INTEL-IR
+201:      flags:   0x0
+201:     parent:
+201:        domain:  VECTOR
+201:         hwirq:   0xc9
+201:         chip:    APIC
+201:          flags:   0x0
+201:         Vector:    37
+201:         Target:     5
+201:         move_in_progress: 0
+201:         is_managed:       0
+201:         can_reserve:      1
+201:         has_reserved:     0
+201:         cleanup_pending:  0
+202:handler:  handle_edge_irq
+202:device:   0000:00:14.3
+202:status:   0x00004000
+202:istate:   0x00004000
+202:ddepth:   0
+202:wdepth:   0
+202:dstate:   0x35409200
+202:            IRQD_ACTIVATED
+202:            IRQD_IRQ_STARTED
+202:            IRQD_SINGLE_TARGET
+202:            IRQD_MOVE_PCNTXT
+202:            IRQD_AFFINITY_SET
+202:            IRQD_AFFINITY_ON_ACTIVATE
+202:            IRQD_CAN_RESERVE
+202:            IRQD_HANDLE_ENFORCE_IRQCTX
+202:node:     -1
+202:affinity: 6
+202:effectiv: 6
+202:pending:
+202:domain:  IR-PCI-MSIX-0000:00:14.3-12
+202: hwirq:   0x7
+202: chip:    IR-PCI-MSIX-0000:00:14.3
+202:  flags:   0x430
+202:             IRQCHIP_SKIP_SET_WAKE
+202:             IRQCHIP_ONESHOT_SAFE
+202: parent:
+202:    domain:  INTEL-IR-0-13
+202:     hwirq:   0x670000
+202:     chip:    INTEL-IR
+202:      flags:   0x0
+202:     parent:
+202:        domain:  VECTOR
+202:         hwirq:   0xca
+202:         chip:    APIC
+202:          flags:   0x0
+202:         Vector:    37
+202:         Target:     6
+202:         move_in_progress: 0
+202:         is_managed:       0
+202:         can_reserve:      1
+202:         has_reserved:     0
+202:         cleanup_pending:  0
+203:handler:  handle_edge_irq
+203:device:   0000:00:14.3
+203:status:   0x00004000
+203:istate:   0x00004000
+203:ddepth:   0
+203:wdepth:   0
+203:dstate:   0x35409200
+203:            IRQD_ACTIVATED
+203:            IRQD_IRQ_STARTED
+203:            IRQD_SINGLE_TARGET
+203:            IRQD_MOVE_PCNTXT
+203:            IRQD_AFFINITY_SET
+203:            IRQD_AFFINITY_ON_ACTIVATE
+203:            IRQD_CAN_RESERVE
+203:            IRQD_HANDLE_ENFORCE_IRQCTX
+203:node:     -1
+203:affinity: 7
+203:effectiv: 7
+203:pending:
+203:domain:  IR-PCI-MSIX-0000:00:14.3-12
+203: hwirq:   0x8
+203: chip:    IR-PCI-MSIX-0000:00:14.3
+203:  flags:   0x430
+203:             IRQCHIP_SKIP_SET_WAKE
+203:             IRQCHIP_ONESHOT_SAFE
+203: parent:
+203:    domain:  INTEL-IR-0-13
+203:     hwirq:   0x680000
+203:     chip:    INTEL-IR
+203:      flags:   0x0
+203:     parent:
+203:        domain:  VECTOR
+203:         hwirq:   0xcb
+203:         chip:    APIC
+203:          flags:   0x0
+203:         Vector:    37
+203:         Target:     7
+203:         move_in_progress: 0
+203:         is_managed:       0
+203:         can_reserve:      1
+203:         has_reserved:     0
+203:         cleanup_pending:  0
+204:handler:  handle_edge_irq
+204:device:   0000:00:14.3
+204:status:   0x00004000
+204:istate:   0x00004000
+204:ddepth:   0
+204:wdepth:   0
+204:dstate:   0x35409200
+204:            IRQD_ACTIVATED
+204:            IRQD_IRQ_STARTED
+204:            IRQD_SINGLE_TARGET
+204:            IRQD_MOVE_PCNTXT
+204:            IRQD_AFFINITY_SET
+204:            IRQD_AFFINITY_ON_ACTIVATE
+204:            IRQD_CAN_RESERVE
+204:            IRQD_HANDLE_ENFORCE_IRQCTX
+204:node:     -1
+204:affinity: 8
+204:effectiv: 8
+204:pending:
+204:domain:  IR-PCI-MSIX-0000:00:14.3-12
+204: hwirq:   0x9
+204: chip:    IR-PCI-MSIX-0000:00:14.3
+204:  flags:   0x430
+204:             IRQCHIP_SKIP_SET_WAKE
+204:             IRQCHIP_ONESHOT_SAFE
+204: parent:
+204:    domain:  INTEL-IR-0-13
+204:     hwirq:   0x690000
+204:     chip:    INTEL-IR
+204:      flags:   0x0
+204:     parent:
+204:        domain:  VECTOR
+204:         hwirq:   0xcc
+204:         chip:    APIC
+204:          flags:   0x0
+204:         Vector:    37
+204:         Target:     8
+204:         move_in_progress: 0
+204:         is_managed:       0
+204:         can_reserve:      1
+204:         has_reserved:     0
+204:         cleanup_pending:  0
+205:handler:  handle_edge_irq
+205:device:   0000:00:14.3
+205:status:   0x00004000
+205:istate:   0x00004000
+205:ddepth:   0
+205:wdepth:   0
+205:dstate:   0x35409200
+205:            IRQD_ACTIVATED
+205:            IRQD_IRQ_STARTED
+205:            IRQD_SINGLE_TARGET
+205:            IRQD_MOVE_PCNTXT
+205:            IRQD_AFFINITY_SET
+205:            IRQD_AFFINITY_ON_ACTIVATE
+205:            IRQD_CAN_RESERVE
+205:            IRQD_HANDLE_ENFORCE_IRQCTX
+205:node:     -1
+205:affinity: 9
+205:effectiv: 9
+205:pending:
+205:domain:  IR-PCI-MSIX-0000:00:14.3-12
+205: hwirq:   0xa
+205: chip:    IR-PCI-MSIX-0000:00:14.3
+205:  flags:   0x430
+205:             IRQCHIP_SKIP_SET_WAKE
+205:             IRQCHIP_ONESHOT_SAFE
+205: parent:
+205:    domain:  INTEL-IR-0-13
+205:     hwirq:   0x6a0000
+205:     chip:    INTEL-IR
+205:      flags:   0x0
+205:     parent:
+205:        domain:  VECTOR
+205:         hwirq:   0xcd
+205:         chip:    APIC
+205:          flags:   0x0
+205:         Vector:    37
+205:         Target:     9
+205:         move_in_progress: 0
+205:         is_managed:       0
+205:         can_reserve:      1
+205:         has_reserved:     0
+205:         cleanup_pending:  0
+206:handler:  handle_edge_irq
+206:device:   0000:00:14.3
+206:status:   0x00004000
+206:istate:   0x00004000
+206:ddepth:   0
+206:wdepth:   0
+206:dstate:   0x35409200
+206:            IRQD_ACTIVATED
+206:            IRQD_IRQ_STARTED
+206:            IRQD_SINGLE_TARGET
+206:            IRQD_MOVE_PCNTXT
+206:            IRQD_AFFINITY_SET
+206:            IRQD_AFFINITY_ON_ACTIVATE
+206:            IRQD_CAN_RESERVE
+206:            IRQD_HANDLE_ENFORCE_IRQCTX
+206:node:     -1
+206:affinity: 10
+206:effectiv: 10
+206:pending:
+206:domain:  IR-PCI-MSIX-0000:00:14.3-12
+206: hwirq:   0xb
+206: chip:    IR-PCI-MSIX-0000:00:14.3
+206:  flags:   0x430
+206:             IRQCHIP_SKIP_SET_WAKE
+206:             IRQCHIP_ONESHOT_SAFE
+206: parent:
+206:    domain:  INTEL-IR-0-13
+206:     hwirq:   0x6b0000
+206:     chip:    INTEL-IR
+206:      flags:   0x0
+206:     parent:
+206:        domain:  VECTOR
+206:         hwirq:   0xce
+206:         chip:    APIC
+206:          flags:   0x0
+206:         Vector:    37
+206:         Target:    10
+206:         move_in_progress: 0
+206:         is_managed:       0
+206:         can_reserve:      1
+206:         has_reserved:     0
+206:         cleanup_pending:  0
+207:handler:  handle_edge_irq
+207:device:   0000:00:14.3
+207:status:   0x00004000
+207:istate:   0x00004000
+207:ddepth:   0
+207:wdepth:   0
+207:dstate:   0x35409200
+207:            IRQD_ACTIVATED
+207:            IRQD_IRQ_STARTED
+207:            IRQD_SINGLE_TARGET
+207:            IRQD_MOVE_PCNTXT
+207:            IRQD_AFFINITY_SET
+207:            IRQD_AFFINITY_ON_ACTIVATE
+207:            IRQD_CAN_RESERVE
+207:            IRQD_HANDLE_ENFORCE_IRQCTX
+207:node:     -1
+207:affinity: 11
+207:effectiv: 11
+207:pending:
+207:domain:  IR-PCI-MSIX-0000:00:14.3-12
+207: hwirq:   0xc
+207: chip:    IR-PCI-MSIX-0000:00:14.3
+207:  flags:   0x430
+207:             IRQCHIP_SKIP_SET_WAKE
+207:             IRQCHIP_ONESHOT_SAFE
+207: parent:
+207:    domain:  INTEL-IR-0-13
+207:     hwirq:   0x6c0000
+207:     chip:    INTEL-IR
+207:      flags:   0x0
+207:     parent:
+207:        domain:  VECTOR
+207:         hwirq:   0xcf
+207:         chip:    APIC
+207:          flags:   0x0
+207:         Vector:    37
+207:         Target:    11
+207:         move_in_progress: 0
+207:         is_managed:       0
+207:         can_reserve:      1
+207:         has_reserved:     0
+207:         cleanup_pending:  0
+208:handler:  handle_edge_irq
+208:device:   0000:00:14.3
+208:status:   0x00004000
+208:istate:   0x00004000
+208:ddepth:   0
+208:wdepth:   0
+208:dstate:   0x35409200
+208:            IRQD_ACTIVATED
+208:            IRQD_IRQ_STARTED
+208:            IRQD_SINGLE_TARGET
+208:            IRQD_MOVE_PCNTXT
+208:            IRQD_AFFINITY_SET
+208:            IRQD_AFFINITY_ON_ACTIVATE
+208:            IRQD_CAN_RESERVE
+208:            IRQD_HANDLE_ENFORCE_IRQCTX
+208:node:     -1
+208:affinity: 12
+208:effectiv: 12
+208:pending:
+208:domain:  IR-PCI-MSIX-0000:00:14.3-12
+208: hwirq:   0xd
+208: chip:    IR-PCI-MSIX-0000:00:14.3
+208:  flags:   0x430
+208:             IRQCHIP_SKIP_SET_WAKE
+208:             IRQCHIP_ONESHOT_SAFE
+208: parent:
+208:    domain:  INTEL-IR-0-13
+208:     hwirq:   0x6d0000
+208:     chip:    INTEL-IR
+208:      flags:   0x0
+208:     parent:
+208:        domain:  VECTOR
+208:         hwirq:   0xd0
+208:         chip:    APIC
+208:          flags:   0x0
+208:         Vector:    37
+208:         Target:    12
+208:         move_in_progress: 0
+208:         is_managed:       0
+208:         can_reserve:      1
+208:         has_reserved:     0
+208:         cleanup_pending:  0
+209:handler:  handle_edge_irq
+209:device:   0000:00:14.3
+209:status:   0x00004000
+209:istate:   0x00004000
+209:ddepth:   0
+209:wdepth:   0
+209:dstate:   0x35409200
+209:            IRQD_ACTIVATED
+209:            IRQD_IRQ_STARTED
+209:            IRQD_SINGLE_TARGET
+209:            IRQD_MOVE_PCNTXT
+209:            IRQD_AFFINITY_SET
+209:            IRQD_AFFINITY_ON_ACTIVATE
+209:            IRQD_CAN_RESERVE
+209:            IRQD_HANDLE_ENFORCE_IRQCTX
+209:node:     -1
+209:affinity: 13
+209:effectiv: 13
+209:pending:
+209:domain:  IR-PCI-MSIX-0000:00:14.3-12
+209: hwirq:   0xe
+209: chip:    IR-PCI-MSIX-0000:00:14.3
+209:  flags:   0x430
+209:             IRQCHIP_SKIP_SET_WAKE
+209:             IRQCHIP_ONESHOT_SAFE
+209: parent:
+209:    domain:  INTEL-IR-0-13
+209:     hwirq:   0x6e0000
+209:     chip:    INTEL-IR
+209:      flags:   0x0
+209:     parent:
+209:        domain:  VECTOR
+209:         hwirq:   0xd1
+209:         chip:    APIC
+209:          flags:   0x0
+209:         Vector:    37
+209:         Target:    13
+209:         move_in_progress: 0
+209:         is_managed:       0
+209:         can_reserve:      1
+209:         has_reserved:     0
+209:         cleanup_pending:  0
+210:handler:  handle_edge_irq
+210:device:   0000:00:14.3
+210:status:   0x00004000
+210:istate:   0x00004000
+210:ddepth:   0
+210:wdepth:   0
+210:dstate:   0x35408200
+210:            IRQD_ACTIVATED
+210:            IRQD_IRQ_STARTED
+210:            IRQD_SINGLE_TARGET
+210:            IRQD_MOVE_PCNTXT
+210:            IRQD_AFFINITY_ON_ACTIVATE
+210:            IRQD_CAN_RESERVE
+210:            IRQD_HANDLE_ENFORCE_IRQCTX
+210:node:     -1
+210:affinity: 0-31
+210:effectiv: 4
+210:pending:
+210:domain:  IR-PCI-MSIX-0000:00:14.3-12
+210: hwirq:   0xf
+210: chip:    IR-PCI-MSIX-0000:00:14.3
+210:  flags:   0x430
+210:             IRQCHIP_SKIP_SET_WAKE
+210:             IRQCHIP_ONESHOT_SAFE
+210: parent:
+210:    domain:  INTEL-IR-0-13
+210:     hwirq:   0x6f0000
+210:     chip:    INTEL-IR
+210:      flags:   0x0
+210:     parent:
+210:        domain:  VECTOR
+210:         hwirq:   0xd2
+210:         chip:    APIC
+210:          flags:   0x0
+210:         Vector:    37
+210:         Target:     4
+210:         move_in_progress: 0
+210:         is_managed:       0
+210:         can_reserve:      1
+210:         has_reserved:     0
+210:         cleanup_pending:  0
+211:handler:  handle_edge_irq
+211:device:   0000:01:00.0
+211:status:   0x00004000
+211:istate:   0x00004000
+211:ddepth:   0
+211:wdepth:   0
+211:dstate:   0x31408200
+211:            IRQD_ACTIVATED
+211:            IRQD_IRQ_STARTED
+211:            IRQD_SINGLE_TARGET
+211:            IRQD_MOVE_PCNTXT
+211:            IRQD_AFFINITY_ON_ACTIVATE
+211:            IRQD_HANDLE_ENFORCE_IRQCTX
+211:node:     -1
+211:affinity: 0-31
+211:effectiv: 23
+211:pending:
+211:domain:  IR-PCI-MSI-0000:01:00.0-11
+211: hwirq:   0x0
+211: chip:    IR-PCI-MSI-0000:01:00.0
+211:  flags:   0x430
+211:             IRQCHIP_SKIP_SET_WAKE
+211:             IRQCHIP_ONESHOT_SAFE
+211: parent:
+211:    domain:  INTEL-IR-0-13
+211:     hwirq:   0x700000
+211:     chip:    INTEL-IR
+211:      flags:   0x0
+211:     parent:
+211:        domain:  VECTOR
+211:         hwirq:   0xd3
+211:         chip:    APIC
+211:          flags:   0x0
+211:         Vector:    36
+211:         Target:    23
+211:         move_in_progress: 0
+211:         is_managed:       0
+211:         can_reserve:      0
+211:         has_reserved:     0
+211:         cleanup_pending:  0
+27:handler:  handle_fasteoi_irq
+27:device:   (null)
+27:status:   0x00004100
+27:istate:   0x00004000
+27:ddepth:   0
+27:wdepth:   0
+27:dstate:   0x3740a200
+27:            IRQD_LEVEL
+27:            IRQD_ACTIVATED
+27:            IRQD_IRQ_STARTED
+27:            IRQD_SINGLE_TARGET
+27:            IRQD_MOVE_PCNTXT
+27:            IRQD_AFFINITY_ON_ACTIVATE
+27:            IRQD_CAN_RESERVE
+27:            IRQD_DEFAULT_TRIGGER_SET
+27:            IRQD_HANDLE_ENFORCE_IRQCTX
+27:node:     -1
+27:affinity: 0-31
+27:effectiv: 17
+27:pending:
+27:domain:  IO-APIC-2
+27: hwirq:   0x1b
+27: chip:    IR-IO-APIC
+27:  flags:   0x410
+27:             IRQCHIP_SKIP_SET_WAKE
+27: parent:
+27:    domain:  INTEL-IR-0-13
+27:     hwirq:   0x560000
+27:     chip:    INTEL-IR
+27:      flags:   0x0
+27:     parent:
+27:        domain:  VECTOR
+27:         hwirq:   0x1b
+27:         chip:    APIC
+27:          flags:   0x0
+27:         Vector:    36
+27:         Target:    17
+27:         move_in_progress: 0
+27:         is_managed:       0
+27:         can_reserve:      1
+27:         has_reserved:     0
+27:         cleanup_pending:  0
+29:handler:  handle_fasteoi_irq
+29:device:   (null)
+29:status:   0x00004100
+29:istate:   0x00004000
+29:ddepth:   0
+29:wdepth:   0
+29:dstate:   0x3740a200
+29:            IRQD_LEVEL
+29:            IRQD_ACTIVATED
+29:            IRQD_IRQ_STARTED
+29:            IRQD_SINGLE_TARGET
+29:            IRQD_MOVE_PCNTXT
+29:            IRQD_AFFINITY_ON_ACTIVATE
+29:            IRQD_CAN_RESERVE
+29:            IRQD_DEFAULT_TRIGGER_SET
+29:            IRQD_HANDLE_ENFORCE_IRQCTX
+29:node:     -1
+29:affinity: 0-31
+29:effectiv: 19
+29:pending:
+29:domain:  IO-APIC-2
+29: hwirq:   0x1d
+29: chip:    IR-IO-APIC
+29:  flags:   0x410
+29:             IRQCHIP_SKIP_SET_WAKE
+29: parent:
+29:    domain:  INTEL-IR-0-13
+29:     hwirq:   0x580000
+29:     chip:    INTEL-IR
+29:      flags:   0x0
+29:     parent:
+29:        domain:  VECTOR
+29:         hwirq:   0x1d
+29:         chip:    APIC
+29:          flags:   0x0
+29:         Vector:    36
+29:         Target:    19
+29:         move_in_progress: 0
+29:         is_managed:       0
+29:         can_reserve:      1
+29:         has_reserved:     0
+29:         cleanup_pending:  0
+3:handler:  handle_edge_irq
+3:device:   (null)
+3:status:   0x00004000
+3:istate:   0x00004000
+3:ddepth:   1
+3:wdepth:   0
+3:dstate:   0x35038000
+3:            IRQD_IRQ_DISABLED
+3:            IRQD_IRQ_MASKED
+3:            IRQD_SINGLE_TARGET
+3:            IRQD_MOVE_PCNTXT
+3:            IRQD_AFFINITY_ON_ACTIVATE
+3:            IRQD_CAN_RESERVE
+3:            IRQD_HANDLE_ENFORCE_IRQCTX
+3:node:     0
+3:affinity: 0-31
+3:effectiv: 0
+3:pending:
+3:domain:  IO-APIC-2
+3: hwirq:   0x3
+3: chip:    IR-IO-APIC
+3:  flags:   0x410
+3:             IRQCHIP_SKIP_SET_WAKE
+3: parent:
+3:    domain:  INTEL-IR-0-13
+3:     hwirq:   0x20000
+3:     chip:    INTEL-IR
+3:      flags:   0x0
+3:     parent:
+3:        domain:  VECTOR
+3:         hwirq:   0x3
+3:         chip:    APIC
+3:          flags:   0x0
+3:         Vector:     0
+3:         Target:     0
+3:         move_in_progress: 0
+3:         is_managed:       0
+3:         can_reserve:      1
+3:         has_reserved:     1
+3:         cleanup_pending:  0
+4:handler:  handle_edge_irq
+4:device:   (null)
+4:status:   0x00004000
+4:istate:   0x00004000
+4:ddepth:   1
+4:wdepth:   0
+4:dstate:   0x35038000
+4:            IRQD_IRQ_DISABLED
+4:            IRQD_IRQ_MASKED
+4:            IRQD_SINGLE_TARGET
+4:            IRQD_MOVE_PCNTXT
+4:            IRQD_AFFINITY_ON_ACTIVATE
+4:            IRQD_CAN_RESERVE
+4:            IRQD_HANDLE_ENFORCE_IRQCTX
+4:node:     0
+4:affinity: 0-31
+4:effectiv: 0
+4:pending:
+4:domain:  IO-APIC-2
+4: hwirq:   0x4
+4: chip:    IR-IO-APIC
+4:  flags:   0x410
+4:             IRQCHIP_SKIP_SET_WAKE
+4: parent:
+4:    domain:  INTEL-IR-0-13
+4:     hwirq:   0x30000
+4:     chip:    INTEL-IR
+4:      flags:   0x0
+4:     parent:
+4:        domain:  VECTOR
+4:         hwirq:   0x4
+4:         chip:    APIC
+4:          flags:   0x0
+4:         Vector:     0
+4:         Target:     0
+4:         move_in_progress: 0
+4:         is_managed:       0
+4:         can_reserve:      1
+4:         has_reserved:     1
+4:         cleanup_pending:  0
+40:handler:  handle_fasteoi_irq
+40:device:   (null)
+40:status:   0x00004100
+40:istate:   0x00004000
+40:ddepth:   0
+40:wdepth:   0
+40:dstate:   0x3740a200
+40:            IRQD_LEVEL
+40:            IRQD_ACTIVATED
+40:            IRQD_IRQ_STARTED
+40:            IRQD_SINGLE_TARGET
+40:            IRQD_MOVE_PCNTXT
+40:            IRQD_AFFINITY_ON_ACTIVATE
+40:            IRQD_CAN_RESERVE
+40:            IRQD_DEFAULT_TRIGGER_SET
+40:            IRQD_HANDLE_ENFORCE_IRQCTX
+40:node:     -1
+40:affinity: 0-31
+40:effectiv: 18
+40:pending:
+40:domain:  IO-APIC-2
+40: hwirq:   0x28
+40: chip:    IR-IO-APIC
+40:  flags:   0x410
+40:             IRQCHIP_SKIP_SET_WAKE
+40: parent:
+40:    domain:  INTEL-IR-0-13
+40:     hwirq:   0x570000
+40:     chip:    INTEL-IR
+40:      flags:   0x0
+40:     parent:
+40:        domain:  VECTOR
+40:         hwirq:   0x28
+40:         chip:    APIC
+40:          flags:   0x0
+40:         Vector:    36
+40:         Target:    18
+40:         move_in_progress: 0
+40:         is_managed:       0
+40:         can_reserve:      1
+40:         has_reserved:     0
+40:         cleanup_pending:  0
+5:handler:  handle_edge_irq
+5:device:   (null)
+5:status:   0x00004000
+5:istate:   0x00004000
+5:ddepth:   1
+5:wdepth:   0
+5:dstate:   0x35038000
+5:            IRQD_IRQ_DISABLED
+5:            IRQD_IRQ_MASKED
+5:            IRQD_SINGLE_TARGET
+5:            IRQD_MOVE_PCNTXT
+5:            IRQD_AFFINITY_ON_ACTIVATE
+5:            IRQD_CAN_RESERVE
+5:            IRQD_HANDLE_ENFORCE_IRQCTX
+5:node:     0
+5:affinity: 0-31
+5:effectiv: 0
+5:pending:
+5:domain:  IO-APIC-2
+5: hwirq:   0x5
+5: chip:    IR-IO-APIC
+5:  flags:   0x410
+5:             IRQCHIP_SKIP_SET_WAKE
+5: parent:
+5:    domain:  INTEL-IR-0-13
+5:     hwirq:   0x40000
+5:     chip:    INTEL-IR
+5:      flags:   0x0
+5:     parent:
+5:        domain:  VECTOR
+5:         hwirq:   0x5
+5:         chip:    APIC
+5:          flags:   0x0
+5:         Vector:     0
+5:         Target:     0
+5:         move_in_progress: 0
+5:         is_managed:       0
+5:         can_reserve:      1
+5:         has_reserved:     1
+5:         cleanup_pending:  0
+6:handler:  handle_edge_irq
+6:device:   (null)
+6:status:   0x00004000
+6:istate:   0x00004000
+6:ddepth:   1
+6:wdepth:   0
+6:dstate:   0x35038000
+6:            IRQD_IRQ_DISABLED
+6:            IRQD_IRQ_MASKED
+6:            IRQD_SINGLE_TARGET
+6:            IRQD_MOVE_PCNTXT
+6:            IRQD_AFFINITY_ON_ACTIVATE
+6:            IRQD_CAN_RESERVE
+6:            IRQD_HANDLE_ENFORCE_IRQCTX
+6:node:     0
+6:affinity: 0-31
+6:effectiv: 0
+6:pending:
+6:domain:  IO-APIC-2
+6: hwirq:   0x6
+6: chip:    IR-IO-APIC
+6:  flags:   0x410
+6:             IRQCHIP_SKIP_SET_WAKE
+6: parent:
+6:    domain:  INTEL-IR-0-13
+6:     hwirq:   0x50000
+6:     chip:    INTEL-IR
+6:      flags:   0x0
+6:     parent:
+6:        domain:  VECTOR
+6:         hwirq:   0x6
+6:         chip:    APIC
+6:          flags:   0x0
+6:         Vector:     0
+6:         Target:     0
+6:         move_in_progress: 0
+6:         is_managed:       0
+6:         can_reserve:      1
+6:         has_reserved:     1
+6:         cleanup_pending:  0
+7:handler:  handle_edge_irq
+7:device:   (null)
+7:status:   0x00004000
+7:istate:   0x00004000
+7:ddepth:   1
+7:wdepth:   0
+7:dstate:   0x35038000
+7:            IRQD_IRQ_DISABLED
+7:            IRQD_IRQ_MASKED
+7:            IRQD_SINGLE_TARGET
+7:            IRQD_MOVE_PCNTXT
+7:            IRQD_AFFINITY_ON_ACTIVATE
+7:            IRQD_CAN_RESERVE
+7:            IRQD_HANDLE_ENFORCE_IRQCTX
+7:node:     0
+7:affinity: 0-31
+7:effectiv: 0
+7:pending:
+7:domain:  IO-APIC-2
+7: hwirq:   0x7
+7: chip:    IR-IO-APIC
+7:  flags:   0x410
+7:             IRQCHIP_SKIP_SET_WAKE
+7: parent:
+7:    domain:  INTEL-IR-0-13
+7:     hwirq:   0x60000
+7:     chip:    INTEL-IR
+7:      flags:   0x0
+7:     parent:
+7:        domain:  VECTOR
+7:         hwirq:   0x7
+7:         chip:    APIC
+7:          flags:   0x0
+7:         Vector:     0
+7:         Target:     0
+7:         move_in_progress: 0
+7:         is_managed:       0
+7:         can_reserve:      1
+7:         has_reserved:     1
+7:         cleanup_pending:  0
+8:handler:  handle_edge_irq
+8:device:   (null)
+8:status:   0x00004000
+8:istate:   0x00004000
+8:ddepth:   0
+8:wdepth:   0
+8:dstate:   0x35408200
+8:            IRQD_ACTIVATED
+8:            IRQD_IRQ_STARTED
+8:            IRQD_SINGLE_TARGET
+8:            IRQD_MOVE_PCNTXT
+8:            IRQD_AFFINITY_ON_ACTIVATE
+8:            IRQD_CAN_RESERVE
+8:            IRQD_HANDLE_ENFORCE_IRQCTX
+8:node:     0
+8:affinity: 0-31
+8:effectiv: 8
+8:pending:
+8:domain:  IO-APIC-2
+8: hwirq:   0x8
+8: chip:    IR-IO-APIC
+8:  flags:   0x410
+8:             IRQCHIP_SKIP_SET_WAKE
+8: parent:
+8:    domain:  INTEL-IR-0-13
+8:     hwirq:   0x70000
+8:     chip:    INTEL-IR
+8:      flags:   0x0
+8:     parent:
+8:        domain:  VECTOR
+8:         hwirq:   0x8
+8:         chip:    APIC
+8:          flags:   0x0
+8:         Vector:    33
+8:         Target:     8
+8:         move_in_progress: 0
+8:         is_managed:       0
+8:         can_reserve:      1
+8:         has_reserved:     0
+8:         cleanup_pending:  0
+9:handler:  handle_fasteoi_irq
+9:device:   (null)
+9:status:   0x00004100
+9:istate:   0x00004000
+9:ddepth:   0
+9:wdepth:   0
+9:dstate:   0x3540a200
+9:            IRQD_LEVEL
+9:            IRQD_ACTIVATED
+9:            IRQD_IRQ_STARTED
+9:            IRQD_SINGLE_TARGET
+9:            IRQD_MOVE_PCNTXT
+9:            IRQD_AFFINITY_ON_ACTIVATE
+9:            IRQD_CAN_RESERVE
+9:            IRQD_HANDLE_ENFORCE_IRQCTX
+9:node:     0
+9:affinity: 0-31
+9:effectiv: 1
+9:pending:
+9:domain:  IO-APIC-2
+9: hwirq:   0x9
+9: chip:    IR-IO-APIC
+9:  flags:   0x410
+9:             IRQCHIP_SKIP_SET_WAKE
+9: parent:
+9:    domain:  INTEL-IR-0-13
+9:     hwirq:   0x80000
+9:     chip:    INTEL-IR
+9:      flags:   0x0
+9:     parent:
+9:        domain:  VECTOR
+9:         hwirq:   0x9
+9:         chip:    APIC
+9:          flags:   0x0
+9:         Vector:    33
+9:         Target:     1
+9:         move_in_progress: 0
+9:         is_managed:       0
+9:         can_reserve:      1
+9:         has_reserved:     0
+9:         cleanup_pending:  0

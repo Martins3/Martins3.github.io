@@ -1,0 +1,7 @@
+#!/usr/bin/bpftrace
+
+# 从来没有监听到任何操作
+kprobe:serial8250_interrupt
+{
+  printf("get serial8250_interrupt irq.\n");
+}

@@ -1,0 +1,466 @@
+PS C:\Users\97936\data\Windows-driver-samples> driverquery
+
+Module Name  Display Name           Driver Type   Link Date
+============ ====================== ============= ======================
+1394ohci     1394 OHCI Compliant Ho Kernel
+3ware        3ware                  Kernel        2015/5/19 6:28:03
+ACE-BASE     ACE-BASE               Kernel        2025/7/13 17:20:41
+ACE-BOOT     ACE-BOOT               Kernel        2025/7/13 16:46:39
+ACE-SSC-DRV6 ACE-SSC-DRV64          Kernel        2025/8/29 12:33:52
+ACPI         Microsoft ACPI Driver  Kernel
+AcpiDev      ACPI 设备驱动程序      Kernel
+acpiex       Microsoft ACPIEx Drive Kernel
+acpipagr     ACPI 处理器聚合器驱动  Kernel
+AcpiPmi      ACPI 电源表驱动程序    Kernel
+acpitime     ACPI 唤醒警报驱动程序  Kernel
+Acx01000     Acx01000               Kernel
+ADP80XX      ADP80XX                Kernel        2015/4/10 4:49:48
+AFD          Ancillary Function Dri Kernel
+afunix       afunix                 Kernel
+ahcache      Application Compatibil Kernel
+ahflt        ahflt                  File System   2025/8/29 17:46:34
+aicusbwifi   AIC 802.11 Wireless De Kernel        2024/11/26 12:10:51
+amdacpbus    Audio Coprocessr Drive Kernel        2024/6/4 2:30:11
+amdfendr     AMD Crash Defender Dri Kernel        2024/5/8 4:05:38
+amdfendrmgr  AMD Crash Defender Man Kernel        2024/5/8 4:05:45
+amdgpio2     AMD GPIO Client Driver Kernel        2020/3/11 19:15:48
+amdi2c       AMD I2C Controller Ser Kernel        2022/12/6 14:53:41
+AmdK8        AMD K8 Processor Drive Kernel
+AMDPCIDev    AMD PCI                Kernel        2022/10/27 13:17:38
+AmdPPM       AMD Processor Driver   Kernel
+amdpsp       AMD PSP Service        Kernel        2022/9/17 3:37:12
+AMDRyzenMast AMDRyzenMasterDriverV1 Kernel        2021/6/25 13:21:58
+amdsata      amdsata                Kernel        2015/5/14 20:14:52
+amdsbs       amdsbs                 Kernel        2012/12/12 5:21:44
+amdxata      amdxata                Kernel        2015/5/1 8:55:35
+AppID        AppID 驱动程序         Kernel
+AppleSSD     Apple 固态驱动器设备   Kernel        2019/11/12 5:24:17
+applockerflt Smartlocker 筛选器驱动 Kernel
+AppvStrm     AppvStrm               File System
+AppvVemgr    AppvVemgr              File System
+AppvVfs      AppvVfs                File System
+arcsas       Adaptec SAS/SATA-II RA Kernel        2015/4/10 3:12:07
+AsyncMac     RAS 异步媒体驱动程序   Kernel
+atapi        IDE 通道               Kernel
+AX88179      ASIX AX88179 USB 3.0   Kernel        2019/12/9 19:28:31
+AX88179A     ASIX USB to Gigabit Et Kernel        2024/3/25 18:45:01
+b06bdrv      QLogic 网络适配器 VBD  Kernel        2016/5/25 15:03:08
+bam          Background Activity Mo Kernel
+BasicDisplay BasicDisplay           Kernel
+BasicRender  BasicRender            Kernel
+bcmfn2       bcmfn2 Service         Kernel        2016/11/1 10:09:15
+Beep         Beep                   Kernel
+bfs          中转文件系统           File System
+bindflt      Windows Bind Filter Dr File System
+bowser       浏览器                 File System
+BthA2dp      Microsoft Bluetooth A2 Kernel
+BthEnum      蓝牙枚举器服务         Kernel
+BthHFAud     Microsoft Bluetooth 免 Kernel
+BthHFEnum    Microsoft Bluetooth 免 Kernel
+BthLEEnum    蓝牙低能耗驱动程序     Kernel
+BthMini      蓝牙无线收发器驱动程序 Kernel
+BTHMODEM     蓝牙调制解调器通信驱动 Kernel
+BthPan       蓝牙设备(个人区域网)   Kernel
+BTHPORT      蓝牙端口驱动程序       Kernel
+BTHUSB       蓝牙无线电收发器 USB   Kernel
+bttflt       Microsoft Hyper-V VHDP Kernel
+buttonconver 针对便携式设备控制装置 Kernel
+CAD          充电均衡驱动程序       Kernel
+cdfs         CD/DVD File System Rea File System
+cdrom        CD-ROM Driver          Kernel
+CH341SER_A64 CH341SER_A64           Kernel        2024/10/10 20:35:36
+cht4iscsi    cht4iscsi              Kernel        2019/2/5 21:51:31
+cht4vbd      Chelsio 虚拟总线驱动程 Kernel        2019/2/5 21:47:51
+CimFS        CimFS                  File System
+circlass     Consumer IR Devices    Kernel
+CldFlt       Windows Cloud Files Fi File System
+CLFS         Common Log (CLFS)      Kernel
+CmBatt       Microsoft ACPI 控制方  Kernel
+CNG          CNG                    Kernel
+cnghwassist  CNG Hardware Assist al Kernel
+CompositeBus 复合总线枚举器驱动程序 Kernel
+condrv       Console Driver         Kernel
+CSC          Offline Files Driver   Kernel
+ctxapdriver  AppProtection Driver   Kernel        2025/4/11 16:19:23
+ctxapinject  AppProtection Driver   Kernel        2025/3/12 22:51:49
+ctxapusbfilt AppProtection USB Filt Kernel        2025/3/12 22:47:33
+ctxusbm      Citrix USB Monitor Dri Kernel        2024/11/7 21:52:01
+dam          Desktop Activity Moder Kernel
+Dfsc         DFS Namespace Client D File System
+disk         磁盘驱动程序           Kernel
+dmvsc        dmvsc                  Kernel
+drmkaud      Microsoft Trusted Audi Kernel
+DXGKrnl      LDDM Graphics Subsyste Kernel
+ebdrv        QLogic 10 Gigabit Ethe Kernel        2020/11/15 18:12:10
+ebdrv0       QLogic Legacy Ethernet Kernel        2020/11/7 18:07:41
+EhStorClass  Enhanced Storage Filte Kernel
+EhStorTcgDrv 支持 IEEE 1667 和 TCG  Kernel
+ErrDev       Microsoft Hardware Err Kernel
+ExecutionCon CPU Scheduler for High Kernel
+exfat        exFAT File System Driv File System
+fastfat      FAT12/16/32 File Syste File System
+fdc          软盘控制器驱动程序     Kernel
+FileCrypt    FileCrypt              File System
+FileInfo     File Information FS Mi File System
+Filetrace    Filetrace              File System
+flpydisk     软盘驱动程序           Kernel
+FltMgr       FltMgr                 File System
+FortiFilter  FortiClient NDIS 6.3 P Kernel        2018/6/8 2:25:16
+Fortips      Fortips                Kernel        2020/8/22 3:36:02
+FortiTransCt FortiTransCtrl         Kernel        2020/8/22 3:31:07
+FsDepends    File System Dependency File System
+fse          Flow steering engine   Kernel
+ftsvnic      Fortinet SSL VPN Virtu Kernel        2020/4/14 1:34:52
+ft_vnic      Fortinet Virtual Minip Kernel        2020/4/10 9:39:01
+fvevol       BitLocker Drive Encryp Kernel
+gencounter   Microsoft Hyper-V 生成 Kernel
+genericusbfn 通用 USB 函数类        Kernel
+GenPass      Microsoft GenPass 驱动 Kernel
+GPIOClx0101  Microsoft GPIO Class E Kernel
+hcmon        VMware hcmon           Kernel        2023/7/5 17:53:56
+HdAudAddServ 用于 High Definition A Kernel
+HDAudBus     用于 High Definition A Kernel
+HidBatt      HID UPS 电池驱动程序   Kernel
+HidBth       Microsoft Bluetooth HI Kernel
+hidi2c       Microsoft I2C HID 微型 Kernel
+hidinterrupt 通过中断实施的 HID 按  Kernel
+HidIr        Microsoft Infrared HID Kernel
+hidspi       Microsoft SPI HID 微型 Kernel
+HidSpiCx     HidSpi KMDF Class Exte Kernel
+HidUsb       Microsoft HID Class Dr Kernel
+hnswfpdriver HNS WFP 驱动程序       Kernel
+HoYoProtect  HoYoProtect            Kernel        2025/6/24 14:14:39
+HpSAMD       HpSAMD                 Kernel        2013/3/27 5:36:54
+Hsp          Microsoft Pluton 服务  Kernel
+HTTP         HTTP Service           Kernel
+hvcrash      hvcrash                Kernel
+hvservice    Microsoft 虚拟机监控程 Kernel
+hvsocketcont hvsocketcontrol        Kernel
+HwNClx0101   Microsoft Hardware Not Kernel
+hwpolicy     Hardware Policy Driver Kernel
+hyperkbd     hyperkbd               Kernel
+HyperVideo   HyperVideo             Kernel
+i8042prt     i8042 键盘和 PS/2 鼠标 Kernel
+iagpio       Intel 串行 IO GPIO 控  Kernel        2018/7/23 17:04:46
+iai2c        Intel(R) 串行 IO I2C   Kernel        2018/7/23 17:04:39
+iaLPSS2i_GPI Intel(R) 串行 IO GPIO  Kernel        2018/4/19 15:53:24
+iaLPSS2i_GPI Intel(R) 串行 IO GPIO  Kernel        2018/4/17 17:25:15
+iaLPSS2i_GPI Intel(R) 串行 IO GPIO  Kernel        2018/4/17 15:07:03
+iaLPSS2i_GPI Intel(R) 串行 IO GPIO  Kernel        2018/5/16 13:46:36
+iaLPSS2i_I2C Intel(R) 串行 IO I2C   Kernel        2018/4/19 15:52:58
+iaLPSS2i_I2C Intel(R) 串行 IO I2C   Kernel        2018/4/17 17:24:40
+iaLPSS2i_I2C Intel(R) 串行 IO I2C   Kernel        2019/7/15 13:12:12
+iaLPSS2i_I2C Intel(R) 串行 IO I2C   Kernel        2018/5/16 13:46:02
+iaLPSSi_GPIO Intel(R) 串行 IO GPIO  Kernel        2015/2/2 17:00:09
+iaLPSSi_I2C  Intel(R) 串行 IO I2C   Kernel        2015/2/24 23:52:07
+iaStorAVC    Intel 芯片集 SATA RAID Kernel        2019/9/5 20:07:32
+iaStorV      Intel RAID Controller  Kernel        2011/4/12 2:48:16
+ibbus        Mellanox InfiniBand 总 Kernel        2019/6/19 21:20:09
+IndirectKmd  Indirect Displays 内核 Kernel
+IntcAzAudAdd Service for Realtek HD Kernel        2024/1/23 17:34:52
+intelide     intelide               Kernel
+intelpep     Intel(R) Power Engine  Kernel
+intelpmax    Intel(R) Dynamic Devic Kernel
+IntelPMT     Intel (R) 平台监控技术 Kernel
+intelppm     Intel Processor Driver Kernel
+iorate       磁盘 I/O 速率筛选器驱  Kernel
+IpFilterDriv IP 流量筛选器驱动程序  Kernel
+IPMIDRV      IPMIDRV                Kernel
+IPNAT        IP Network Address Tra Kernel
+IPT          IPT                    Kernel
+isapnp       isapnp                 Kernel
+iScsiPrt     iScsiPort 驱动程序     Kernel
+ItSas35i     ItSas35i               Kernel        2021/3/1 18:15:20
+kbdclass     Keyboard Class Driver  Kernel
+kbdhid       Keyboard HID Driver    Kernel
+kbldfltr     kbldfltr               Kernel
+kdnic        Microsoft 内核调试网络 Kernel
+KSecDD       KSecDD                 Kernel
+KSecPkg      KSecPkg                Kernel
+KslD         KslD                   Kernel
+ksthunk      Kernel Streaming Thunk Kernel
+l2bridge     桥驱动程序             Kernel
+lltdio       链路层拓扑发现映射器 I Kernel
+LSI_SAS      LSI_SAS                Kernel        2015/3/26 3:36:48
+LSI_SAS2i    LSI_SAS2i              Kernel        2017/8/2 21:29:59
+LSI_SAS3i    LSI_SAS3i              Kernel        2020/8/21 15:33:28
+luafv        UAC File Virtualizatio File System
+lunparser    LUN Parser             Kernel
+mausbhost    MA-USB 主机控制器驱动  Kernel
+mausbip      MA-USB IP 筛选器驱动程 Kernel
+MbbCx        MBB Network Adapter Cl Kernel
+megasas2i    megasas2i              Kernel        2020/1/22 17:57:48
+megasas35i   megasas35i             Kernel        2021/1/12 15:59:10
+megasr       megasr                 Kernel        2013/6/4 6:02:39
+Microsoft_Bl Microsoft 蓝牙 AVRCP   Kernel
+mlx4_bus     Mellanox ConnectX 总线 Kernel        2019/6/19 21:21:08
+MMCSS        Multimedia Class Sched Kernel
+Modem        Modem                  Kernel
+monitor      Microsoft Monitor Clas Kernel
+mouclass     Mouse Class Driver     Kernel
+mouhid       Mouse HID Driver       Kernel
+mountmgr     Mount Point Manager    Kernel
+mpi3drvi     mpi3drvi               Kernel        2021/11/17 6:22:38
+mpsdrv       Windows Defender Firew Kernel
+MRxDAV       WebDav Client Redirect File System
+mrxsmb       SMB MiniRedirector Wra File System
+mrxsmb20     SMB 2.0 MiniRedirector File System
+MsBridge     Microsoft MAC 桥       Kernel
+Msfs         Msfs                   File System
+msgpiowin32  用于按钮、停靠模式和笔 Kernel
+mshidkmdf    Pass-through HID to KM Kernel
+mshidumdf    Pass-through HID to UM Kernel
+msisadrv     msisadrv               Kernel
+MSKSSRV      Microsoft 流服务代理   Kernel
+MsLldp       Microsoft 链路层发现协 Kernel
+MSPCLOCK     Microsoft 流时钟代理   Kernel
+MSPQM        Microsoft 流质量管理器 Kernel
+MsQuic       MsQuic                 Kernel
+MsQuicPrev   MSQUIC                 Kernel        2024/1/18 20:13:48
+MsRPC        MsRPC                  Kernel
+MsSecCore    Microsoft 安全性核心启 Kernel
+MsSecFlt     Microsoft Security Eve Kernel
+MsSecWfp     Microsoft Security WFP Kernel
+mssmbios     Microsoft System Manag Kernel
+MSTEE        Microsoft 流 Tee/Sink- Kernel
+MTConfig     Microsoft Input Config Kernel
+MTKBTFilterx MTK BT Filter Driver   Kernel        2023/5/24 12:29:34
+mtkwlex      Mediatek PCI LE Extens Kernel        2023/5/24 11:55:16
+Mup          Mup                    File System
+mvumis       mvumis                 Kernel        2014/5/24 4:39:04
+NahimicBTLin Nahimic Easy Surround  Kernel        2022/8/18 16:33:52
+NahimicXVAD  Nahimic VAD - Driver   Kernel        2022/8/18 16:38:42
+Nahimic_Mirr Nahimic mirroring devi Kernel        2022/8/18 16:28:44
+NativeWifiP  NativeWiFi 筛选器      Kernel
+ndfltr       NetworkDirect 服务     Kernel        2019/6/19 21:18:42
+NDIS         NDIS System Driver     Kernel
+NdisCap      Microsoft NDIS 捕获    Kernel
+NdisImPlatfo Microsoft 网络适配器多 Kernel
+NdisTapi     远程访问 NDIS TAPI 驱  Kernel
+Ndisuio      NDIS Usermode I/O Prot Kernel
+NdisVirtualB Microsoft 虚拟网络适配 Kernel
+NdisWan      远程访问 NDIS WAN 驱动 Kernel
+ndiswanlegac 远程访问旧版 NDIS WAN  Kernel
+NDKPerf      NDKPerf Driver         Kernel
+NDKPing      NDKPing Driver         Kernel
+ndproxy      NDIS Proxy Driver      Kernel
+Ndu          Windows Network Data U Kernel
+NetAdapterCx Network Adapter Wdf Cl Kernel
+NetBIOS      NetBIOS Interface      File System
+NetBT        NetBT                  Kernel
+netvsc       netvsc                 Kernel
+NPF          NetGroup Packet Filter Kernel        2013/3/1 9:31:24
+Npfs         Npfs                   File System
+npsvctrig    Named pipe service tri Kernel
+nsiproxy     NSI Proxy Service Driv Kernel
+Ntfs         Ntfs                   File System
+Null         Null                   Kernel
+nvdimm       Microsoft NVDIMM 设备  Kernel
+NVHDA        Service for NVIDIA Hig Kernel        2024/2/19 18:44:23
+nvlddmkm     nvlddmkm               Kernel        2024/8/14 13:14:57
+nvmedisk     Microsoft NVMe 磁盘驱  Kernel
+nvpcf        NVPCF Service          Kernel        2024/5/24 4:43:14
+nvraid       nvraid                 Kernel        2014/4/22 2:28:42
+nvstor       nvstor                 Kernel        2014/4/22 2:34:03
+OrayUSBVHCI  OrayUSBVHCI Service    Kernel        2023/3/7 17:19:27
+OrayVGC      Oray Virtual Game Cont Kernel        2022/12/29 15:15:56
+ovpn-dco     ovpn-dco               Kernel
+P9Rdr        Plan 9 Redirector Driv Kernel
+Parport      Parallel port driver   Kernel
+partmgr      Partition driver       Kernel
+passthrupars PassthroughParser      Kernel
+pci          PCI 总线驱动程序       Kernel
+pciide       pciide                 Kernel
+pcip         PCI 代理驱动程序       Kernel
+pcmcia       pcmcia                 Kernel
+pcw          Performance Counters f Kernel
+pdc          pdc                    Kernel
+PEAUTH       PEAUTH                 Kernel
+percsas2i    percsas2i              Kernel        2016/3/15 8:50:11
+percsas3i    percsas3i              Kernel        2018/6/2 5:47:02
+PktMon       Packet Monitor Driver  Kernel
+pmem         Microsoft 持久性内存磁 Kernel
+PNPMEM       Microsoft Memory Modul Kernel
+portcfg      portcfg                Kernel
+pppop        PPPoP WAN Adapter      Kernel        2016/3/23 6:01:28
+PptpMiniport WAN 微型端口(PPTP)     Kernel
+PRM          Microsoft PRM 驱动程序 Kernel
+Processor    处理器驱动程序         Kernel
+Psched       QoS 数据包计划程序     Kernel
+pvhdparser   pvhdparser             Kernel
+pvscsi       pvscsi Storage Control Kernel        2021/5/20 11:55:26
+QWAVEdrv     QWAVE driver           Kernel
+Ramdisk      Windows RAM Disk Drive Kernel
+ramparser    ramparser              Kernel
+RasAcd       Remote Access Auto Con Kernel
+RasAgileVpn  WAN 微型端口(IKEv2)    Kernel
+Rasl2tp      WAN 微型端口(L2TP)     Kernel
+RasPppoe     远程访问 PPPOE 驱动程  Kernel
+RasSstp      WAN 微型端口(SSTP)     Kernel
+rdbss        Redirected Buffering S File System
+rdpbus       远程桌面设备重定向程序 Kernel
+RDPDR        Remote Desktop Device  Kernel
+RdpVideoMini Remote Desktop Video M Kernel
+rdyboost     ReadyBoost             Kernel
+ReFS         ReFS                   File System
+ReFSv1       ReFSv1                 File System
+RFCOMM       Bluetooth Device (RFCO Kernel
+rhproxy      资源中心代理驱动程序   Kernel
+rspndr       链路层拓扑发现响应程序 Kernel
+rt640x64     Realtek RT640 NT Drive Kernel        2023/4/21 14:44:19
+rtcx21       Realtek NetAdapter Dri Kernel        2021/10/4 14:54:20
+s3cap        s3cap                  Kernel
+sbp2port     SBP-2 传输/协议总线驱  Kernel
+scfilter     Smart card PnP Class F Kernel
+scmbus       Microsoft 存储类内存总 Kernel
+sdbus        sdbus                  Kernel
+SDFRd        SDF 反射器             Kernel
+sdstor       SD 存储端口驱动程序    Kernel
+SensorsHIDCl 传感器 HID 类驱动程序  Kernel
+SerCx        Serial UART Support Li Kernel
+SerCx2       Serial UART Support Li Kernel
+Serenum      Serenum Filter Driver  Kernel
+Serial       串行端口驱动程序       Kernel
+sermouse     串行鼠标驱动程序       Kernel
+sfloppy      大容量软盘驱动器       Kernel
+SiSRaid2     SiSRaid2               Kernel        2008/9/25 2:28:20
+SiSRaid4     SiSRaid4               Kernel        2008/10/2 5:56:04
+SmartSAMD    SmartSAMD              Kernel        2019/2/22 1:54:44
+smbdirect    smbdirect              File System
+spaceparser  spaceparser            Kernel
+spaceport    存储空间驱动程序       Kernel
+SpatialGraph Holographic Spatial Gr Kernel
+SpbCx        Simple Peripheral Bus  Kernel
+srv2         Server SMB 2.xxx Drive File System
+srvnet       srvnet                 File System
+stexstor     stexstor               Kernel        2012/11/27 8:02:51
+storahci     Microsoft 标准 SATA AH Kernel
+storflt      Microsoft Hyper-V 存储 Kernel
+stornvme     Microsoft Standard NVM Kernel
+storqosflt   Storage QoS Filter Dri File System
+storufs      Microsoft 通用闪存(UFS Kernel
+storvsc      storvsc                Kernel
+storvsp      storvsp                Kernel
+swenum       软件总线驱动程序       Kernel
+tap0901      TAP-Windows Adapter V9 Kernel        2016/4/21 17:10:05
+tap_ovpnconn TAP-Windows Adapter V9 Kernel        2024/3/20 22:00:50
+Tcpip        TCP/IP Protocol Driver Kernel
+Tcpip6       @todo.dll,-100;Microso Kernel
+tcpipreg     @%SystemRoot%\System32 Kernel
+tdx          NetIO 旧 TDI 支持驱动  Kernel
+terminpt     Microsoft 远程桌面输入 Kernel
+TPM          TPM                    Kernel
+TsUsbFlt     Remote Desktop USB Hub Kernel
+TsUsbGD      远程桌面通用 USB 设备  Kernel
+tsusbhub     Remote Desktop USB Hub Kernel
+tunnel       Microsoft Tunnel Minip Kernel
+UASPStor     USB Attached SCSI (UAS Kernel
+UcmCx0101    USB Connector Manager  Kernel
+UcmTcpciCx01 UCM-TCPCI KMDF Class E Kernel
+UcmUcsiAcpiC UCM-UCSI ACPI 客户端   Kernel
+UcmUcsiCx010 UCM-UCSI KMDF Class Ex Kernel
+UCPD         UCPD                   File System
+Ucx01000     USB Host Support Libra Kernel
+UdeCx        USB Device Emulation S Kernel
+udfs         udfs                   File System
+UEFI         Microsoft UEFI 驱动程  Kernel
+UevAgentDriv UevAgentDriver         File System
+Ufx01000     USB Function Class Ext Kernel
+UfxChipidea  USB Chipidea 控制器    Kernel
+ufxsynopsys  USB Synopsys 控制器    Kernel
+umbus        UMBus Enumerator Drive Kernel
+UmPass       Microsoft UMPass 驱动  Kernel
+UrsChipidea  Chipidea USB 角色切换  Kernel
+UrsCx01000   USB Role-Switch Suppor Kernel
+UrsSynopsys  Synopsys USB 角色切换  Kernel
+Usb4DeviceRo USB4 设备路由器服务    Kernel
+Usb4HostRout USB4 主机路由器服务    Kernel
+usbaudio     USB Audio Driver (WDM) Kernel
+usbaudio2    USB 音频 2.0 服务      Kernel
+usbccgp      Microsoft USB 通用父驱 Kernel
+usbcir       eHome Infrared Receive Kernel
+UsbDk        UsbDk                  Kernel        2023/8/17 18:25:27
+usbehci      Microsoft USB 2.0 Enha Kernel
+usbhub       Microsoft USB 标准集线 Kernel
+USBHUB3      SuperSpeed 集线器      Kernel
+usbohci      Microsoft USB Open Hos Kernel
+usbprint     Microsoft USB PRINTER  Kernel
+usbrndis6    USB RNDIS6 适配器      Kernel
+usbser       Microsoft USB 串行驱动 Kernel
+USBSTOR      USB 大容量存储驱动程序 Kernel
+usbuhci      Microsoft USB Universa Kernel
+usbvideo     USB 视频设备(WDM)      Kernel
+USBXHCI      符合 USB xHCI 的主机控 Kernel
+vdrvroot     Microsoft 虚拟驱动器枚 Kernel
+VerifierExt  驱动程序验证程序扩展   Kernel
+VfpExt       Microsoft Azure VFP Sw Kernel
+vhdmp        vhdmp                  Kernel
+vhdparser    vhdparser              Kernel
+vhf          虚拟 HID 框架(VHF)驱动 Kernel
+Vid          Vid                    Kernel
+Virtual Moni Virtual Monitor Stub   Kernel        2020/4/29 17:35:19
+VirtualRende VirtualRender          Kernel
+vmbus        虚拟机总线             Kernel
+VMBusHID     VMBusHID               Kernel
+vmbusproxy   vmbusproxy             Kernel
+vmbusr       虚拟机总线提供程序     Kernel
+vmci         VMware VMCI Bus Driver Kernel        2021/11/22 10:21:56
+vmgid        Microsoft Hyper-V 来宾 Kernel
+VMnetAdapter VMware Virtual Etherne Kernel        2023/3/28 9:34:11
+VMnetBridge  VMware Bridge Protocol Kernel        2023/3/28 9:34:13
+VMnetuserif  VMware Virtual Etherne Kernel        2023/3/28 9:34:12
+vmsmp        vmsmp                  Kernel
+VMSNPXY      VmSwitch NIC Proxy Dri Kernel
+VMSNPXYMP    VMSNPXYMP              Kernel
+VMSP         VmSwitch Protocol Driv Kernel
+VmsProxy     VmSwitch Proxy Driver  Kernel
+VMSVSF       VmSwitch Extensibility Kernel
+VMSVSP       VmSwitch Extensibility Kernel
+vmusb        VMware USB Client Driv Kernel        2023/2/7 0:22:10
+vmx86        VMware vmx86           Kernel        2023/1/11 15:05:29
+volmgr       卷管理器驱动程序       Kernel
+volmgrx      Dynamic Volume Manager Kernel
+volsnap      卷映像复制驱动程序     Kernel
+volume       卷驱动程序             Kernel
+vpci         Microsoft Hyper-V 虚拟 Kernel
+vpcivsp      Microsoft Hyper-V PCI  Kernel
+vsmraid      vsmraid                Kernel        2014/4/23 3:21:41
+vsock        vSockets Virtual Machi Kernel        2021/11/22 10:22:26
+VSTXRAID     VIA StorX Storage RAID Kernel        2013/1/22 3:00:28
+vwifibus     Virtual Wireless Bus D Kernel
+vwififlt     Virtual WiFi Filter Dr Kernel
+vwifimp      Virtual WiFi Miniport  Kernel
+WacomPen     Wacom Serial Pen HID D Kernel
+wanarp       远程访问 IP ARP 驱动程 Kernel
+wanarpv6     远程访问 IPv6 ARP 驱动 Kernel
+wcifs        Windows Container Isol File System
+WdBoot       Microsoft Defender 防  Kernel
+Wdf01000     Kernel Mode Driver Fra Kernel
+WdFilter     Microsoft Defender 防  File System
+wdiwifi      WDI Driver Framework   Kernel
+WdmCompanion WdmCompanionFilter     Kernel
+WdNisDrv     Microsoft Defender 防  Kernel
+WeGameProcSe WeGameProcService      Kernel        2017/11/30 9:57:39
+WFPLWFS      Microsoft Windows 筛选 Kernel
+WifiCx       Wifi Network Adapter C Kernel
+WIMMount     WIMMount               File System
+WindowsTrust Windows Trusted Execut Kernel
+WindowsTrust Microsoft Windows 可信 Kernel
+WinFsp+20250 WinFsp+20250606T092557 File System   2023/3/16 18:50:12
+WinMad       WinMad 服务            Kernel        2019/6/19 21:18:11
+WinNat       Windows NAT Driver     Kernel
+wintun       wintun                 Kernel        2021/10/13 20:24:47
+WINUSB       WinUsb 驱动程序        Kernel
+WinVerbs     WinVerbs 服务          Kernel        2019/6/19 21:18:12
+WmiAcpi      Microsoft Windows Mana Kernel
+Wof          Windows Overlay File S File System
+WpdUpFltr    WPD Upper Class Filter Kernel
+ws2ifsl      Windows 套接字 2.0 Non Kernel
+wtd          wtd                    Kernel
+WudfPf       User Mode Driver Frame Kernel
+WUDFRd       Windows Driver Foundat Kernel
+WUDFWpdFs    WPD 文件系统驱动程序   Kernel
+WUDFWpdMtp   WUDFWpdMtp             Kernel
+xboxgip      Xbox 游戏输入协议驱动  Kernel
+xinputhid    XINPUT HID 筛选器驱动  Kernel
+PS C

@@ -1,0 +1,42 @@
+<mxfile host="Electron" modified="2021-01-20T13:38:14.543Z" agent="5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/14.1.8 Chrome/87.0.4280.88 Electron/11.1.1 Safari/537.36" etag="rdYD9lW1FsZEiHcvAIh9" compressed="false" version="14.1.8" type="device">
+  <diagram id="m31S7_dKoYv942AULYYC" name="Page-1">
+    <mxGraphModel dx="1102" dy="1827" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" background="#ffffff" math="0" shadow="1">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="Lw4zfLfw3uueiE-ONVv_-4" value="k0 contains user process sp&amp;nbsp;" style="edgeStyle=orthogonalEdgeStyle;orthogonalLoop=1;jettySize=auto;html=1;fontColor=#EA6B66;curved=1;" edge="1" parent="1" source="zoVjleR3WDVhbrQaP13N-2" target="Lw4zfLfw3uueiE-ONVv_-3">
+          <mxGeometry x="-0.0148" y="18" relative="1" as="geometry">
+            <mxPoint y="1" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="zoVjleR3WDVhbrQaP13N-2" value="&lt;div&gt;&lt;span&gt;  &lt;/span&gt;mfc0&lt;span&gt; &lt;/span&gt;k0, CP0_STATUS&lt;/div&gt;&lt;div&gt;&lt;span&gt;  &lt;/span&gt;sll&lt;span&gt; &lt;/span&gt;k0, 3&lt;span&gt;  &lt;/span&gt;/* extract cu0 bit */&lt;/div&gt;&lt;div&gt;&lt;span&gt;  &lt;/span&gt;bltz&lt;span&gt; &lt;/span&gt;k0, 8f&lt;/div&gt;&lt;div&gt;&lt;div&gt;&lt;span&gt;get_saved_sp docfi=\docfi tosp=1&lt;/span&gt;&lt;/div&gt;&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;sketch=1;glass=1;shadow=0;fillStyle=auto;dashed=1;align=left;" parent="1" vertex="1">
+          <mxGeometry x="110" y="-70" width="200" height="56" as="geometry" />
+        </mxCell>
+        <mxCell id="zoVjleR3WDVhbrQaP13N-32" value="&lt;font color=&quot;#999999&quot;&gt;/// user space disable coprocessor 0, so&lt;b&gt; (k0 &amp;lt;&amp;lt; 3) &amp;gt; 0&lt;/b&gt;&lt;/font&gt;" style="text;html=1;resizable=0;points=[];autosize=2;align=left;verticalAlign=top;spacingTop=-4;sketch=0;" parent="1" vertex="1">
+          <mxGeometry x="335" y="-60" width="300" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="XrhrVupYfAPKMNM9SuPb-7" value="8:&lt;br&gt;&lt;div&gt;&lt;span&gt;		&lt;/span&gt;PTR_SUBU sp, PT_SIZE&lt;/div&gt;&lt;div&gt;&lt;div&gt;&lt;span&gt;		&lt;/span&gt;cfi_st&lt;span&gt;	&lt;/span&gt;k0, PT_R29, \docfi&lt;/div&gt;&lt;/div&gt;&lt;div&gt;&lt;div&gt;&lt;span&gt;		&lt;/span&gt;cfi_st&lt;span&gt;	&lt;/span&gt;v1, PT_R3, \docfi&lt;/div&gt;&lt;/div&gt;&lt;div&gt;&lt;div&gt;&lt;span&gt;		&lt;/span&gt;LONG_S&lt;span&gt;	&lt;/span&gt;$0, PT_R0(sp)&lt;/div&gt;&lt;div&gt;&lt;span&gt;		&lt;/span&gt;mfc0&lt;span&gt;	&lt;/span&gt;v1, CP0_STATUS&lt;/div&gt;&lt;div&gt;&lt;span&gt;		&lt;/span&gt;cfi_st&lt;span&gt;	&lt;/span&gt;v0, PT_R2, \docfi&lt;/div&gt;&lt;div&gt;&lt;span&gt;		&lt;/span&gt;LONG_S&lt;span&gt;	&lt;/span&gt;v1, PT_STATUS(sp)&lt;/div&gt;&lt;div&gt;&lt;span&gt;		&lt;/span&gt;cfi_st&lt;span&gt;	&lt;/span&gt;$4, PT_R4, \docfi&lt;/div&gt;&lt;div&gt;&lt;span&gt;		&lt;/span&gt;mfc0&lt;span&gt;	&lt;/span&gt;v1, CP0_CAUSE&lt;/div&gt;&lt;div&gt;&lt;span&gt;		&lt;/span&gt;cfi_st&lt;span&gt;	&lt;/span&gt;$5, PT_R5, \docfi&lt;/div&gt;&lt;div&gt;&lt;span&gt;		&lt;/span&gt;LONG_S&lt;span&gt;	&lt;/span&gt;v1, PT_CAUSE(sp)&lt;/div&gt;&lt;div&gt;&lt;span&gt;		&lt;/span&gt;cfi_st&lt;span&gt;	&lt;/span&gt;$6, PT_R6, \docfi&lt;/div&gt;&lt;div&gt;&lt;span&gt;		&lt;/span&gt;cfi_st&amp;nbsp; ra, PT_R31, \docfi&lt;/div&gt;&lt;div&gt;MFC0&amp;nbsp; &amp;nbsp; ra, CP0_EPC&lt;/div&gt;&lt;div&gt;cfi_st $7, PT_R7, \docfi&lt;/div&gt;&lt;/div&gt;&lt;div&gt;&lt;div&gt;&lt;span&gt;		&lt;/span&gt;cfi_st&lt;span&gt;	&lt;/span&gt;$8, PT_R8, \docfi&lt;/div&gt;&lt;div&gt;&lt;span&gt;		&lt;/span&gt;cfi_st&lt;span&gt;	&lt;/span&gt;$9, PT_R9, \docfi&lt;/div&gt;&lt;/div&gt;&lt;div&gt;&lt;span&gt;LONG_S&lt;/span&gt;&lt;span&gt;	&lt;/span&gt;&lt;span&gt;ra, PT_EPC(sp)&lt;/span&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;&lt;div&gt;&lt;span&gt;		&lt;/span&gt;cfi_st&lt;span&gt;	&lt;/span&gt;$25, PT_R25, \docfi&lt;/div&gt;&lt;div&gt;&lt;span&gt;		&lt;/span&gt;cfi_st&lt;span&gt;	&lt;/span&gt;$28, PT_R28, \docfi&lt;/div&gt;&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;sketch=1;glass=1;shadow=0;fillStyle=auto;dashed=1;align=left;" parent="1" vertex="1">
+          <mxGeometry x="110" y="10" width="200" height="294" as="geometry" />
+        </mxCell>
+        <mxCell id="Lw4zfLfw3uueiE-ONVv_-1" value="&lt;font color=&quot;#999999&quot;&gt;/// &lt;/font&gt;&lt;font color=&quot;#a680b8&quot;&gt;kernelsp&lt;/font&gt;&lt;font color=&quot;#999999&quot;&gt; keeps user process stack pointer&lt;/font&gt;" style="text;html=1;resizable=0;points=[];autosize=2;align=left;verticalAlign=top;spacingTop=-4;sketch=0;" vertex="1" parent="1">
+          <mxGeometry x="335" y="-40" width="300" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="Lw4zfLfw3uueiE-ONVv_-2" value="&lt;span&gt;&lt;div&gt;#define PT_SIZE 304 /* sizeof(struct pt_regs) */&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;/span&gt;" style="text;html=1;resizable=0;points=[];autosize=2;align=left;verticalAlign=top;spacingTop=-4;sketch=0;fontColor=#EA6B66;" vertex="1" parent="1">
+          <mxGeometry x="335" y="10" width="300" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="Lw4zfLfw3uueiE-ONVv_-3" value="&lt;div&gt;/*&lt;/div&gt;&lt;div&gt;&amp;nbsp;* get_saved_sp returns the SP for the current CPU by looking in the&lt;/div&gt;&lt;div&gt;&amp;nbsp;* kernelsp array for it.&amp;nbsp; If tosp is set, it stores the current sp in&lt;/div&gt;&lt;div&gt;&amp;nbsp;* k0 and loads the new value in sp.&amp;nbsp; If not, it clobbers k0 and&lt;/div&gt;&lt;div&gt;&amp;nbsp;* stores the new value in k1, leaving sp unaffected.&lt;/div&gt;&lt;div&gt;&amp;nbsp;*/&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;sketch=0;glass=1;shadow=1;fillStyle=auto;dashed=1;align=left;strokeColor=#9673a6;fillColor=#e1d5e7;" vertex="1" parent="1">
+          <mxGeometry x="290" y="-300" width="390" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="Lw4zfLfw3uueiE-ONVv_-5" value="&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;&lt;span&gt;		&lt;/span&gt;mfc0&lt;span&gt;	&lt;/span&gt;k0, CP0_STATUS&lt;/div&gt;&lt;div&gt;&lt;span&gt;		&lt;/span&gt;sll&lt;span&gt;	&lt;/span&gt;k0, 3&lt;span&gt;		&lt;/span&gt;/* extract cu0 bit */&lt;/div&gt;&lt;div&gt;&lt;span&gt;		&lt;/span&gt;bltz&lt;span&gt;	&lt;/span&gt;k0, 9f&lt;/div&gt;&lt;div&gt;&lt;div&gt;&lt;span&gt;		&lt;/span&gt;ori&lt;span&gt;	&lt;/span&gt;$28, sp, _THREAD_MASK&lt;/div&gt;&lt;div&gt;&lt;span&gt;		&lt;/span&gt;xori&lt;span&gt;	&lt;/span&gt;$28, _THREAD_MASK&lt;/div&gt;&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;shadow=0;glass=1;dashed=1;sketch=1;fillStyle=auto;strokeColor=#b85450;fillColor=#f8cecc;align=left;" vertex="1" parent="1">
+          <mxGeometry x="110" y="321" width="200" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="Lw4zfLfw3uueiE-ONVv_-6" value="9:	&lt;br&gt;&amp;nbsp;.set	pop	&lt;br&gt;&amp;nbsp;.endm" style="rounded=1;whiteSpace=wrap;html=1;shadow=0;glass=1;dashed=1;sketch=1;fillStyle=auto;strokeColor=#82b366;fillColor=#d5e8d4;align=left;" vertex="1" parent="1">
+          <mxGeometry x="112.5" y="420" width="195" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="Lw4zfLfw3uueiE-ONVv_-7" value="&lt;font color=&quot;#999999&quot;&gt;/// move &lt;/font&gt;&lt;font color=&quot;#a680b8&quot;&gt;thread_info&lt;/font&gt;&lt;font color=&quot;#999999&quot;&gt; into&lt;/font&gt;&lt;font color=&quot;#a680b8&quot;&gt; $28&lt;/font&gt;&lt;font color=&quot;#999999&quot;&gt;, &lt;/font&gt;&lt;font color=&quot;#a680b8&quot;&gt;thread_info&lt;/font&gt;&lt;font color=&quot;#999999&quot;&gt; is one the bottom of stack&lt;/font&gt;" style="text;html=1;resizable=0;points=[];autosize=2;align=left;verticalAlign=top;spacingTop=-4;sketch=0;" vertex="1" parent="1">
+          <mxGeometry x="330" y="346" width="300" height="20" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

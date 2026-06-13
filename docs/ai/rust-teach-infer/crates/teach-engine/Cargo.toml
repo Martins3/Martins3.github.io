@@ -1,0 +1,18 @@
+[package]
+name = "teach-engine"
+edition.workspace = true
+license.workspace = true
+version.workspace = true
+
+[lib]
+path = "src/lib.rs"
+
+[features]
+default = []
+cuda = ["teach-model/cuda"]
+
+[dependencies]
+teach-core = { path = "../teach-core" }
+teach-model = { path = "../teach-model" }
+teach-cuda = { path = "../teach-cuda" }
+teach-mode = { path = "../teach-mode" }

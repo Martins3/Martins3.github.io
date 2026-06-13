@@ -1,0 +1,24 @@
+# ansible 记录
+
+https://www.redhat.com/sysadmin/faster-ansible-playbook-execution
+
+1. ansible 中默认是采用 5 个并发的，如果
+
+## 优秀的教程
+https://github.com/geerlingguy/ansible-for-devops-manuscript
+
+<script src="https://giscus.app/client.js"
+        data-repo="martins3/martins3.github.io"
+        data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="
+        data-category="Show and tell"
+        data-category-id="MDE4OkRpc2N1c3Npb25DYXRlZ29yeTMyMDMzNjY4"
+        data-mapping="pathname"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-theme="light"
+        data-lang="zh-CN"
+        crossorigin="anonymous"
+        async>
+</script>
+
+本站所有文章转发 **CSDN** 将按侵权追究法律责任，其它情况随意。

@@ -1,0 +1,33 @@
+#!/usr/bin/env bpftrace
+
+// 为了分析 kvm_memslots_have_rmaps 的返回值，解析之后，直接分析 shadow_root_allocated 的数值
+// kfunc:kvm_arch_vcpu_ioctl_run {
+//   printf("%d\n ", args->vcpu->kvm->arch.shadow_root_allocated);
+//   // @process[comm] = stats(args->vcpu->kvm->arch.shadow_root_allocated);
+// }
+//
+// kfunc:x86_emulate_instruction {
+//     @bytes = hist(args->emulation_type);
+// }
+
+// kfunc:vmx_handle_exit {
+//   @bytes = hist(args->vcpu->arch.hflags & 1);
+// }
+
+// curtask
+// kfunc:arch_freq_get_on_cpu {
+//   printf("--> %d\n", curtask->flags);
+// }
+
+// from Ch14_Kernel/kmem.bt
+BEGIN
+{
+	printf("Tracing kmem allocation stacks (kmalloc, kmem_cache_alloc). ");
+	printf("Hit Ctrl-C to end.\n");
+}
+
+tracepoint:kmem:kmalloc,
+tracepoint:kmem:kmem_cache_alloc
+{
+	@bytes[kstack(5), comm] = stats(args->bytes_alloc);
+}

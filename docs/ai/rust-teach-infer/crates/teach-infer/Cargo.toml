@@ -1,0 +1,25 @@
+[package]
+name = "teach-infer"
+edition.workspace = true
+license.workspace = true
+version.workspace = true
+default-run = "teach-infer"
+
+[[bin]]
+name = "teach-infer"
+path = "src/main.rs"
+
+[[bin]]
+name = "cuda-smoke"
+path = "src/bin/cuda_smoke.rs"
+
+[features]
+default = []
+cuda = ["teach-engine/cuda", "teach-model/cuda"]
+
+[dependencies]
+candle-core.workspace = true
+teach-core = { path = "../teach-core" }
+teach-engine = { path = "../teach-engine" }
+teach-model = { path = "../teach-model" }
+teach-mode = { path = "../teach-mode" }

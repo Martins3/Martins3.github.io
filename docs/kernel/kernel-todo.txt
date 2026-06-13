@@ -1,0 +1,63 @@
+## 似乎是硬件有问题
+
+[五 7月 26 21:17:42 2024] warning: `ThreadPoolForeg' uses wireless extensions which will stop working for Wi-Fi 7 hardware; use nl80211
+[五 7月 26 22:08:43 2024] [drm:drm_new_set_master] *ERROR* [nvidia-drm] [GPU ID 0x00000100] Failed to grab modeset ownership
+
+[五 7月 26 22:50:39 2024] perf: interrupt took too long (2516 > 2500), lowering kernel.perf_event_max_sample_rate to 79000
+[五 7月 26 22:51:08 2024] general protection fault, probably for non-canonical address 0xaf3bbd1a805e25b4: 0000 [#1] PREEMPT SMP NOPTI
+[五 7月 26 22:51:08 2024] CPU: 21 PID: 25257 Comm: ReceiveQueue Tainted: P           O       6.9.7 #1-NixOS
+[五 7月 26 22:51:08 2024] Hardware name: LENOVO 82WM/INVALID, BIOS LPCN39WW 04/28/2023
+[五 7月 26 22:51:08 2024] RIP: 0010:file_has_perm+0x6d/0xf0
+[五 7月 26 22:51:08 2024] Code: 48 c7 04 24 00 00 00 00 48 c7 44 24 08 00 00 00 00 4c 8b a6 a8 00 00 00 48 c7 44 24 10 00 00 00 00 48 c7 44 24 18 00 00 00 00 <8b> 78 04 c6 04 24 0c 48 89 74 24 08 8b 32 39 fe 74 24 49 89 e0 b9
+[五 7月 26 22:51:08 2024] RSP: 0018:ffffb39e58b5faf0 EFLAGS: 00010292
+[五 7月 26 22:51:08 2024] RAX: af3bbd1a805e25b0 RBX: ffff9ea302bdcf00 RCX: ffff9ea3140b9250
+[五 7月 26 22:51:08 2024] RDX: ffff9ea3b0083f38 RSI: ffff9ea437840e00 RDI: ffff9ea302bdcf00
+[五 7月 26 22:51:08 2024] RBP: 0000000000000006 R08: 00000000000000ad R09: ffffffff9a3bdee0
+[五 7月 26 22:51:08 2024] R10: 0000000000000000 R11: ffff9ea35090aa00 R12: ffff9ea3140b9250
+[五 7月 26 22:51:08 2024] R13: ffff9ea437840e00 R14: 0000000000000000 R15: 0000000000000000
+[五 7月 26 22:51:08 2024] FS:  00007fa22f4006c0(0000) GS:ffff9eaa1d880000(0000) knlGS:0000000000000000
+[五 7月 26 22:51:08 2024] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[五 7月 26 22:51:08 2024] CR2: 00007f5cf4039000 CR3: 000000010715a000 CR4: 0000000000f50ef0
+[五 7月 26 22:51:08 2024] PKRU: 55555554
+[五 7月 26 22:51:08 2024] Call Trace:
+[五 7月 26 22:51:08 2024]  <TASK>
+[五 7月 26 22:51:08 2024]  ? die_addr+0x36/0x90
+[五 7月 26 22:51:08 2024]  ? exc_general_protection+0x1c2/0x3d0
+[五 7月 26 22:51:08 2024]  ? asm_exc_general_protection+0x26/0x30
+[五 7月 26 22:51:08 2024]  ? __pfx_simple_copy_to_iter+0x10/0x10
+[五 7月 26 22:51:08 2024]  ? file_has_perm+0x6d/0xf0
+[五 7月 26 22:51:08 2024]  security_file_receive+0x2d/0x50
+[五 7月 26 22:51:08 2024]  receive_fd+0x1f/0xb0
+[五 7月 26 22:51:08 2024]  scm_detach_fds+0xad/0x1b0
+[五 7月 26 22:51:08 2024]  __scm_recv_common.isra.0+0x66/0x180
+[五 7月 26 22:51:08 2024]  ? skb_copy_datagram_iter+0x34/0x90
+[五 7月 26 22:51:08 2024]  __unix_dgram_recvmsg+0x2ee/0x580
+[五 7月 26 22:51:08 2024]  sock_recvmsg+0xbd/0xd0
+[五 7月 26 22:51:08 2024]  ____sys_recvmsg+0x98/0x1f0
+[五 7月 26 22:51:08 2024]  ___sys_recvmsg+0x91/0xe0
+[五 7月 26 22:51:08 2024]  __sys_recvmsg+0x77/0xd0
+[五 7月 26 22:51:08 2024]  do_syscall_64+0xb8/0x200
+[五 7月 26 22:51:08 2024]  entry_SYSCALL_64_after_hwframe+0x77/0x7f
+[五 7月 26 22:51:08 2024] RIP: 0033:0x7fa2c9e8d027
+[五 7月 26 22:51:08 2024] Code: 0f 1f 00 89 54 24 0c 48 89 34 24 89 7c 24 08 e8 0f e5 f7 ff 8b 54 24 0c 48 8b 34 24 41 89 c0 8b 7c 24 08 b8 2f 00 00 00 0f 05 <48> 3d 00 f0 ff ff 77 31 48 63 d8 44 89 c7 e8 66 e5 f7 ff 48 83 c4
+[五 7月 26 22:51:08 2024] RSP: 002b:00007fa22f3ff280 EFLAGS: 00000293 ORIG_RAX: 000000000000002f
+[五 7月 26 22:51:08 2024] RAX: ffffffffffffffda RBX: 0000000000000023 RCX: 00007fa2c9e8d027
+[五 7月 26 22:51:08 2024] RDX: 0000000000004000 RSI: 00007fa22f3ff2f0 RDI: 0000000000000023
+[五 7月 26 22:51:08 2024] RBP: 0000000000000000 R08: 0000000000000000 R09: 0000000000000000
+[五 7月 26 22:51:08 2024] R10: 0000000000000007 R11: 0000000000000293 R12: 00007fa25202c680
+[五 7月 26 22:51:08 2024] R13: 00007fa22f3ff2f0 R14: 0000000100000001 R15: 00007fa252096f40
+[五 7月 26 22:51:08 2024]  </TASK>
+[五 7月 26 22:51:08 2024] ---[ end trace 0000000000000000 ]---
+[五 7月 26 22:51:09 2024] pstore: backend (efi_pstore) writing error (-5)
+[五 7月 26 22:51:09 2024] RIP: 0010:file_has_perm+0x6d/0xf0
+[五 7月 26 22:51:09 2024] Code: 48 c7 04 24 00 00 00 00 48 c7 44 24 08 00 00 00 00 4c 8b a6 a8 00 00 00 48 c7 44 24 10 00 00 00 00 48 c7 44 24 18 00 00 00 00 <8b> 78 04 c6 04 24 0c 48 89 74 24 08 8b 32 39 fe 74 24 49 89 e0 b9
+[五 7月 26 22:51:09 2024] RSP: 0018:ffffb39e58b5faf0 EFLAGS: 00010292
+[五 7月 26 22:51:09 2024] RAX: af3bbd1a805e25b0 RBX: ffff9ea302bdcf00 RCX: ffff9ea3140b9250
+[五 7月 26 22:51:09 2024] RDX: ffff9ea3b0083f38 RSI: ffff9ea437840e00 RDI: ffff9ea302bdcf00
+[五 7月 26 22:51:09 2024] RBP: 0000000000000006 R08: 00000000000000ad R09: ffffffff9a3bdee0
+[五 7月 26 22:51:09 2024] R10: 0000000000000000 R11: ffff9ea35090aa00 R12: ffff9ea3140b9250
+[五 7月 26 22:51:09 2024] R13: ffff9ea437840e00 R14: 0000000000000000 R15: 0000000000000000
+[五 7月 26 22:51:09 2024] FS:  00007fa22f4006c0(0000) GS:ffff9eaa1d880000(0000) knlGS:0000000000000000
+[五 7月 26 22:51:09 2024] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[五 7月 26 22:51:09 2024] CR2: 00007f5cf4039000 CR3: 000000010715a000 CR4: 0000000000f50ef0
+[五 7月 26 22:51:09 2024] PKRU: 55555554

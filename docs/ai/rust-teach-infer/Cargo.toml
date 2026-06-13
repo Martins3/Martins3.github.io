@@ -1,0 +1,32 @@
+[workspace]
+members = [
+    "crates/teach-core",
+    "crates/teach-engine",
+    "crates/teach-model",
+    "crates/teach-cuda",
+    "crates/teach-infer",
+    "crates/teach-mode",
+]
+resolver = "2"
+
+[workspace.package]
+edition = "2024"
+license = "MIT"
+version = "0.1.0"
+
+[workspace.dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+hf-hub = { version = "0.4", default-features = false, features = ["ureq"] }
+tokenizers = { version = "0.21", default-features = false, features = ["onig"] }
+candle-core = "0.9"
+candle-nn = "0.9"
+candle-transformers = "0.9"
+
+[patch.crates-io]
+candle-kernels = { path = "vendor/candle-kernels" }
+
+[workspace.lints.clippy]
+dbg_macro = "deny"
+todo = "deny"
+unwrap_used = "deny"

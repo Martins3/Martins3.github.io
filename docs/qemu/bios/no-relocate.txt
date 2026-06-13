@@ -1,0 +1,122 @@
+SeaBIOS (version rel-1.16.2-14-g1e1da7a96300-dirty-20250319_224350-nixos)
+BUILD: gcc: (GCC) 13.3.0 binutils: (GNU Binutils) 2.43.1
+No Xen hypervisor found.
+Running on QEMU (i440fx)
+physbits: signature="GenuineIntel", pae=yes, lm=yes, phys-bits=40, valid
+=no
+cpuid 0x40000000: eax 40000001, signature 'KVMKVMKVM'
+Running on KVM
+Found QEMU fw_cfg
+QEMU fw_cfg DMA interface supported
+qemu/e820: addr 0x00000000feffc000 len 0x0000000000004000 [reserved]
+qemu/e820: addr 0x0000000000000000 len 0x0000000008000000 [RAM]
+Moving pm_base to 0x600
+kvmclock: at 0xd3940 (msr 0x4b564d01)
+kvmclock: stable tsc, 2994 MHz
+CPU Mhz=2994 (kvmclock)
+=== PCI bus & bridge init ===
+PCI: pci_bios_init_bus_rec bus = 0x0
+=== PCI device probing ===
+Found 6 PCI devices (max PCI bus is 00)
+=== PCI new allocation pass #1 ===
+PCI: check devices
+=== PCI new allocation pass #2 ===
+PCI: IO: c000 - c04f
+PCI: 32: 0000000080000000 - 00000000fec00000
+PCI: map device bdf=00:03.0  bar 1, addr 0000c000, size 00000040 [io]
+PCI: map device bdf=00:01.1  bar 4, addr 0000c040, size 00000010 [io]
+PCI: map device bdf=00:03.0  bar 6, addr feb80000, size 00040000 [mem]
+PCI: map device bdf=00:03.0  bar 0, addr febc0000, size 00020000 [mem]
+PCI: map device bdf=00:02.0  bar 6, addr febe0000, size 00010000 [mem]
+PCI: map device bdf=00:02.0  bar 2, addr febf0000, size 00001000 [mem]
+PCI: map device bdf=00:02.0  bar 0, addr fd000000, size 01000000 [prefme
+m]
+PCI: init bdf=00:00.0 id=8086:1237
+PCI: init bdf=00:01.0 id=8086:7000
+PIIX3/PIIX4 init: elcr=00 0c
+PCI: init bdf=00:01.1 id=8086:7010
+PCI: init bdf=00:01.3 id=8086:7113
+PCI: init bdf=00:02.0 id=1234:1111
+PCI: init bdf=00:03.0 id=8086:100e
+PCI: Using 00:02.0 for primary VGA
+init smm
+Found 1 cpu(s) max supported 1 cpu(s)
+Copying PIR from 0x000e8c00 to 0x000f5560
+Copying MPTABLE from 0x00006cf0/6ff6f00 to 0x000f5480
+Copying SMBIOS from 0x00006cf0 to 0x000f52b0
+table(50434146)=0x07fe2194 (via rsdt)
+ACPI: parse DSDT at 0x07fe0040 (len 8532)
+Scan for VGA option rom
+Running option rom at c000:0003
+Start SeaVGABIOS (version rel-1.16.3-0-ga6ed6b701f0a-prebuilt.qemu.org)
+VGABUILD: gcc: (GCC) 13.2.1 20230728 (Red Hat Cross 13.2.1-1) binutils:
+version 2.40-3.fc39
+enter vga_post:
+   a=00000010  b=0000ffff  c=00000000  d=0000ffff ds=0000 es=f000 ss=000
+0
+  si=00000000 di=000060c0 bp=00000000 sp=00006d0a cs=f000 ip=d012  f=000
+0
+VBE DISPI: bdf 00:02.0, bar 0
+VBE DISPI: lfb_addr=fd000000, size 16 MB
+Removing mode 19a
+Removing mode 19b
+Removing mode 19c
+Removing mode 19d
+Removing mode 19e
+Attempting to allocate 512 bytes lowmem via pmm call to f000:d0c3
+pmm call arg1=0
+VGA stack allocated at d3740
+Turning on vga text mode console
+set VGA mode 3
+SeaBIOS (version rel-1.16.2-14-g1e1da7a96300-dirty-20250319_224350-nixos
+)
+Searching bootorder for: /pci@i0cf8/isa@1/fdc@03f0/floppy@0
+ATA controller 1 at 1f0/3f4/0 (irq 14 dev 9)
+ATA controller 2 at 170/374/0 (irq 15 dev 9)
+Searching bootorder for: HALT
+Found 1 lpt ports
+Found 1 serial ports
+PS2 keyboard initialized
+DVD/CD [ata1-0: QEMU DVD-ROM ATAPI-4 DVD/CD]
+Searching bootorder for: /pci@i0cf8/*@1,1/drive@1/disk@0
+Searching bios-geometry for: /pci@i0cf8/*@1,1/drive@1/disk@0
+Device reports MEDIUM NOT PRESENT - 2 tries left
+Device reports MEDIUM NOT PRESENT - 1 tries left
+Device reports MEDIUM NOT PRESENT - 0 tries left
+All threads complete.
+Scan for option roms
+WARNING - Unable to allocate resource at copy_rom:235!
+Searching bootorder for: /rom@genroms/kvmvapic.bin
+Searching bootorder for: HALT
+Running option rom at ca00:0003
+Space available for UMB: cc800-d2800, f4de0-f51b0
+Returned 16646144 bytes of ZoneHigh
+e820 map has 7 items:
+  0: 0000000000000000 - 000000000009fc00 = 1 RAM
+  1: 000000000009fc00 - 00000000000a0000 = 2 RESERVED
+  2: 00000000000f0000 - 0000000000100000 = 2 RESERVED
+  3: 0000000000100000 - 0000000007fe0000 = 1 RAM
+  4: 0000000007fe0000 - 0000000008000000 = 2 RESERVED
+  5: 00000000feffc000 - 00000000ff000000 = 2 RESERVED
+  6: 00000000fffc0000 - 0000000100000000 = 2 RESERVED
+enter handle_19:
+  NULL
+Booting from Hard Disk...
+Boot failed: could not read the boot disk
+
+enter handle_18:
+  NULL
+Booting from Floppy...
+floppy error: 40 00 00 00 00 01 02
+Boot failed: could not read the boot disk
+
+enter handle_18:
+  NULL
+Booting from DVD/CD...
+Device reports MEDIUM NOT PRESENT - 2 tries left
+Device reports MEDIUM NOT PRESENT - 1 tries left
+Device reports MEDIUM NOT PRESENT - 0 tries left
+Boot failed: Could not read from CDROM (code 0003)
+enter handle_18:
+  NULL
+No bootable device.

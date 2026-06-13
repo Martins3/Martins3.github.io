@@ -1,0 +1,3394 @@
+tree /proc/device-tree
+.
+├── #address-cells
+├── aliases
+│   ├── atcphy0
+│   ├── atcphy1
+│   ├── bluetooth0
+│   ├── dcp
+│   ├── disp0
+│   ├── disp0_piodma
+│   ├── gpu
+│   ├── isp
+│   ├── keyboard
+│   ├── name
+│   ├── nvram
+│   ├── serial0
+│   ├── serial2
+│   ├── touchbar0
+│   └── wifi0
+├── chassis-type
+├── chosen
+│   ├── #address-cells
+│   ├── asahi,efi-system-partition
+│   ├── asahi,iboot1-version
+│   ├── asahi,iboot2-version
+│   ├── asahi,kblang-code
+│   ├── asahi,m1n1-stage2-version
+│   ├── asahi,os-fw-version
+│   ├── asahi,system-fw-version
+│   ├── bootargs
+│   ├── framebuffer@be1e14000
+│   │   ├── compatible
+│   │   ├── format
+│   │   ├── height
+│   │   ├── name
+│   │   ├── panel
+│   │   ├── post-init-providers
+│   │   ├── power-domains
+│   │   ├── reg
+│   │   ├── stride
+│   │   └── width
+│   ├── kaslr-seed
+│   ├── linux,uefi-mmap-desc-size
+│   ├── linux,uefi-mmap-desc-ver
+│   ├── linux,uefi-mmap-size
+│   ├── linux,uefi-mmap-start
+│   ├── linux,uefi-system-table
+│   ├── name
+│   ├── ranges
+│   ├── secure-boot-mode
+│   ├── #size-cells
+│   ├── stdout-path
+│   └── u-boot,version
+├── clock-200m
+│   ├── #clock-cells
+│   ├── clock-frequency
+│   ├── clock-output-names
+│   ├── compatible
+│   ├── name
+│   └── phandle
+├── clock-disp0
+│   ├── #clock-cells
+│   ├── clock-frequency
+│   ├── clock-output-names
+│   ├── compatible
+│   ├── name
+│   └── phandle
+├── clock-dispext0
+│   ├── #clock-cells
+│   ├── clock-frequency
+│   ├── clock-output-names
+│   ├── compatible
+│   ├── name
+│   └── phandle
+├── clock-ref
+│   ├── #clock-cells
+│   ├── clock-frequency
+│   ├── clock-output-names
+│   ├── compatible
+│   ├── name
+│   └── phandle
+├── clock-ref-nco
+│   ├── #clock-cells
+│   ├── clock-frequency
+│   ├── clock-output-names
+│   ├── compatible
+│   ├── name
+│   └── phandle
+├── compatible
+├── cpus
+│   ├── #address-cells
+│   ├── cpu@0
+│   │   ├── capacity-dmips-mhz
+│   │   ├── compatible
+│   │   ├── cpu-release-addr
+│   │   ├── d-cache-size
+│   │   ├── device_type
+│   │   ├── enable-method
+│   │   ├── i-cache-size
+│   │   ├── name
+│   │   ├── next-level-cache
+│   │   ├── operating-points-v2
+│   │   ├── performance-domains
+│   │   ├── phandle
+│   │   └── reg
+│   ├── cpu@1
+│   │   ├── capacity-dmips-mhz
+│   │   ├── compatible
+│   │   ├── cpu-release-addr
+│   │   ├── d-cache-size
+│   │   ├── device_type
+│   │   ├── enable-method
+│   │   ├── i-cache-size
+│   │   ├── name
+│   │   ├── next-level-cache
+│   │   ├── operating-points-v2
+│   │   ├── performance-domains
+│   │   ├── phandle
+│   │   └── reg
+│   ├── cpu@10100
+│   │   ├── capacity-dmips-mhz
+│   │   ├── compatible
+│   │   ├── cpu-release-addr
+│   │   ├── d-cache-size
+│   │   ├── device_type
+│   │   ├── enable-method
+│   │   ├── i-cache-size
+│   │   ├── name
+│   │   ├── next-level-cache
+│   │   ├── operating-points-v2
+│   │   ├── performance-domains
+│   │   ├── phandle
+│   │   └── reg
+│   ├── cpu@10101
+│   │   ├── capacity-dmips-mhz
+│   │   ├── compatible
+│   │   ├── cpu-release-addr
+│   │   ├── d-cache-size
+│   │   ├── device_type
+│   │   ├── enable-method
+│   │   ├── i-cache-size
+│   │   ├── name
+│   │   ├── next-level-cache
+│   │   ├── operating-points-v2
+│   │   ├── performance-domains
+│   │   ├── phandle
+│   │   └── reg
+│   ├── cpu@10102
+│   │   ├── capacity-dmips-mhz
+│   │   ├── compatible
+│   │   ├── cpu-release-addr
+│   │   ├── d-cache-size
+│   │   ├── device_type
+│   │   ├── enable-method
+│   │   ├── i-cache-size
+│   │   ├── name
+│   │   ├── next-level-cache
+│   │   ├── operating-points-v2
+│   │   ├── performance-domains
+│   │   ├── phandle
+│   │   └── reg
+│   ├── cpu@10103
+│   │   ├── capacity-dmips-mhz
+│   │   ├── compatible
+│   │   ├── cpu-release-addr
+│   │   ├── d-cache-size
+│   │   ├── device_type
+│   │   ├── enable-method
+│   │   ├── i-cache-size
+│   │   ├── name
+│   │   ├── next-level-cache
+│   │   ├── operating-points-v2
+│   │   ├── performance-domains
+│   │   ├── phandle
+│   │   └── reg
+│   ├── cpu@2
+│   │   ├── capacity-dmips-mhz
+│   │   ├── compatible
+│   │   ├── cpu-release-addr
+│   │   ├── d-cache-size
+│   │   ├── device_type
+│   │   ├── enable-method
+│   │   ├── i-cache-size
+│   │   ├── name
+│   │   ├── next-level-cache
+│   │   ├── operating-points-v2
+│   │   ├── performance-domains
+│   │   ├── phandle
+│   │   └── reg
+│   ├── cpu@3
+│   │   ├── capacity-dmips-mhz
+│   │   ├── compatible
+│   │   ├── cpu-release-addr
+│   │   ├── d-cache-size
+│   │   ├── device_type
+│   │   ├── enable-method
+│   │   ├── i-cache-size
+│   │   ├── name
+│   │   ├── next-level-cache
+│   │   ├── operating-points-v2
+│   │   ├── performance-domains
+│   │   ├── phandle
+│   │   └── reg
+│   ├── cpu-map
+│   │   ├── cluster0
+│   │   │   ├── core0
+│   │   │   │   ├── cpu
+│   │   │   │   └── name
+│   │   │   ├── core1
+│   │   │   │   ├── cpu
+│   │   │   │   └── name
+│   │   │   ├── core2
+│   │   │   │   ├── cpu
+│   │   │   │   └── name
+│   │   │   ├── core3
+│   │   │   │   ├── cpu
+│   │   │   │   └── name
+│   │   │   └── name
+│   │   ├── cluster1
+│   │   │   ├── core0
+│   │   │   │   ├── cpu
+│   │   │   │   └── name
+│   │   │   ├── core1
+│   │   │   │   ├── cpu
+│   │   │   │   └── name
+│   │   │   ├── core2
+│   │   │   │   ├── cpu
+│   │   │   │   └── name
+│   │   │   ├── core3
+│   │   │   │   ├── cpu
+│   │   │   │   └── name
+│   │   │   └── name
+│   │   └── name
+│   ├── l2-cache-0
+│   │   ├── cache-level
+│   │   ├── cache-size
+│   │   ├── cache-unified
+│   │   ├── compatible
+│   │   ├── name
+│   │   └── phandle
+│   ├── l2-cache-1
+│   │   ├── cache-level
+│   │   ├── cache-size
+│   │   ├── cache-unified
+│   │   ├── compatible
+│   │   ├── name
+│   │   └── phandle
+│   ├── name
+│   └── #size-cells
+├── fixed-regulator-sn012776-sdz
+│   ├── compatible
+│   ├── enable-active-high
+│   ├── gpios
+│   ├── name
+│   ├── phandle
+│   ├── regulator-name
+│   └── startup-delay-us
+├── led-controller
+│   ├── compatible
+│   ├── led-0
+│   │   ├── color
+│   │   ├── default-state
+│   │   ├── function
+│   │   ├── label
+│   │   ├── max-brightness
+│   │   ├── name
+│   │   └── pwms
+│   └── name
+├── memory@800000000
+│   ├── device_type
+│   ├── name
+│   └── reg
+├── model
+├── name
+├── opp-table-0
+│   ├── compatible
+│   ├── name
+│   ├── opp01
+│   │   ├── clock-latency-ns
+│   │   ├── name
+│   │   ├── opp-hz
+│   │   ├── opp-level
+│   │   └── opp-microwatt
+│   ├── opp02
+│   │   ├── clock-latency-ns
+│   │   ├── name
+│   │   ├── opp-hz
+│   │   ├── opp-level
+│   │   └── opp-microwatt
+│   ├── opp03
+│   │   ├── clock-latency-ns
+│   │   ├── name
+│   │   ├── opp-hz
+│   │   ├── opp-level
+│   │   └── opp-microwatt
+│   ├── opp04
+│   │   ├── clock-latency-ns
+│   │   ├── name
+│   │   ├── opp-hz
+│   │   ├── opp-level
+│   │   └── opp-microwatt
+│   ├── opp05
+│   │   ├── clock-latency-ns
+│   │   ├── name
+│   │   ├── opp-hz
+│   │   ├── opp-level
+│   │   └── opp-microwatt
+│   ├── opp06
+│   │   ├── clock-latency-ns
+│   │   ├── name
+│   │   ├── opp-hz
+│   │   ├── opp-level
+│   │   └── opp-microwatt
+│   ├── opp07
+│   │   ├── clock-latency-ns
+│   │   ├── name
+│   │   ├── opp-hz
+│   │   ├── opp-level
+│   │   └── opp-microwatt
+│   ├── opp-shared
+│   └── phandle
+├── opp-table-1
+│   ├── compatible
+│   ├── name
+│   ├── opp01
+│   │   ├── clock-latency-ns
+│   │   ├── name
+│   │   ├── opp-hz
+│   │   ├── opp-level
+│   │   └── opp-microwatt
+│   ├── opp02
+│   │   ├── clock-latency-ns
+│   │   ├── name
+│   │   ├── opp-hz
+│   │   ├── opp-level
+│   │   └── opp-microwatt
+│   ├── opp03
+│   │   ├── clock-latency-ns
+│   │   ├── name
+│   │   ├── opp-hz
+│   │   ├── opp-level
+│   │   └── opp-microwatt
+│   ├── opp04
+│   │   ├── clock-latency-ns
+│   │   ├── name
+│   │   ├── opp-hz
+│   │   ├── opp-level
+│   │   └── opp-microwatt
+│   ├── opp05
+│   │   ├── clock-latency-ns
+│   │   ├── name
+│   │   ├── opp-hz
+│   │   ├── opp-level
+│   │   └── opp-microwatt
+│   ├── opp06
+│   │   ├── clock-latency-ns
+│   │   ├── name
+│   │   ├── opp-hz
+│   │   ├── opp-level
+│   │   └── opp-microwatt
+│   ├── opp07
+│   │   ├── clock-latency-ns
+│   │   ├── name
+│   │   ├── opp-hz
+│   │   ├── opp-level
+│   │   └── opp-microwatt
+│   ├── opp08
+│   │   ├── clock-latency-ns
+│   │   ├── name
+│   │   ├── opp-hz
+│   │   ├── opp-level
+│   │   └── opp-microwatt
+│   ├── opp09
+│   │   ├── clock-latency-ns
+│   │   ├── name
+│   │   ├── opp-hz
+│   │   ├── opp-level
+│   │   └── opp-microwatt
+│   ├── opp10
+│   │   ├── clock-latency-ns
+│   │   ├── name
+│   │   ├── opp-hz
+│   │   ├── opp-level
+│   │   └── opp-microwatt
+│   ├── opp11
+│   │   ├── clock-latency-ns
+│   │   ├── name
+│   │   ├── opp-hz
+│   │   ├── opp-level
+│   │   └── opp-microwatt
+│   ├── opp12
+│   │   ├── clock-latency-ns
+│   │   ├── name
+│   │   ├── opp-hz
+│   │   ├── opp-level
+│   │   └── opp-microwatt
+│   ├── opp13
+│   │   ├── clock-latency-ns
+│   │   ├── name
+│   │   ├── opp-hz
+│   │   ├── opp-level
+│   │   └── opp-microwatt
+│   ├── opp14
+│   │   ├── clock-latency-ns
+│   │   ├── name
+│   │   ├── opp-hz
+│   │   ├── opp-level
+│   │   └── opp-microwatt
+│   ├── opp15
+│   │   ├── clock-latency-ns
+│   │   ├── name
+│   │   ├── opp-hz
+│   │   ├── opp-level
+│   │   ├── opp-microwatt
+│   │   └── turbo-mode
+│   ├── opp16
+│   │   ├── clock-latency-ns
+│   │   ├── name
+│   │   ├── opp-hz
+│   │   ├── opp-level
+│   │   ├── opp-microwatt
+│   │   └── turbo-mode
+│   ├── opp17
+│   │   ├── clock-latency-ns
+│   │   ├── name
+│   │   ├── opp-hz
+│   │   ├── opp-level
+│   │   ├── opp-microwatt
+│   │   └── turbo-mode
+│   ├── opp-shared
+│   └── phandle
+├── opp-table-gpu
+│   ├── compatible
+│   ├── name
+│   ├── opp00
+│   │   ├── name
+│   │   ├── opp-hz
+│   │   ├── opp-microvolt
+│   │   └── opp-microwatt
+│   ├── opp01
+│   │   ├── name
+│   │   ├── opp-hz
+│   │   ├── opp-microvolt
+│   │   └── opp-microwatt
+│   ├── opp02
+│   │   ├── name
+│   │   ├── opp-hz
+│   │   ├── opp-microvolt
+│   │   └── opp-microwatt
+│   ├── opp03
+│   │   ├── name
+│   │   ├── opp-hz
+│   │   ├── opp-microvolt
+│   │   └── opp-microwatt
+│   ├── opp04
+│   │   ├── name
+│   │   ├── opp-hz
+│   │   ├── opp-microvolt
+│   │   └── opp-microwatt
+│   ├── opp05
+│   │   ├── name
+│   │   ├── opp-hz
+│   │   ├── opp-microvolt
+│   │   └── opp-microwatt
+│   ├── opp06
+│   │   ├── name
+│   │   ├── opp-hz
+│   │   ├── opp-microvolt
+│   │   └── opp-microwatt
+│   ├── opp07
+│   │   ├── name
+│   │   ├── opp-hz
+│   │   ├── opp-microvolt
+│   │   └── opp-microwatt
+│   ├── opp08
+│   │   ├── name
+│   │   ├── opp-hz
+│   │   ├── opp-microvolt
+│   │   └── opp-microwatt
+│   └── phandle
+├── pmu-e
+│   ├── compatible
+│   ├── interrupt-parent
+│   ├── interrupts
+│   └── name
+├── pmu-p
+│   ├── compatible
+│   ├── interrupt-parent
+│   ├── interrupts
+│   └── name
+├── reserved-memory
+│   ├── #address-cells
+│   ├── asc-firmware@800828000
+│   │   ├── compatible
+│   │   ├── iommu-addresses
+│   │   ├── name
+│   │   ├── no-map
+│   │   ├── phandle
+│   │   └── reg
+│   ├── asc-firmware@801018000
+│   │   ├── compatible
+│   │   ├── iommu-addresses
+│   │   ├── name
+│   │   ├── no-map
+│   │   ├── phandle
+│   │   └── reg
+│   ├── asc-firmware@8020a8000
+│   │   ├── compatible
+│   │   ├── iommu-addresses
+│   │   ├── name
+│   │   ├── no-map
+│   │   ├── phandle
+│   │   └── reg
+│   ├── dcp_data@be1b10000
+│   │   ├── compatible
+│   │   ├── iommu-addresses
+│   │   ├── name
+│   │   ├── no-map
+│   │   ├── phandle
+│   │   └── reg
+│   ├── flash@80550c000
+│   │   ├── compatible
+│   │   ├── label
+│   │   ├── name
+│   │   ├── phandle
+│   │   └── reg
+│   ├── flash@bde930000
+│   │   ├── compatible
+│   │   ├── label
+│   │   ├── name
+│   │   ├── phandle
+│   │   └── reg
+│   ├── framebuffer@be1e14000
+│   │   ├── compatible
+│   │   ├── iommu-addresses
+│   │   ├── name
+│   │   ├── no-map
+│   │   ├── phandle
+│   │   └── reg
+│   ├── globals
+│   │   ├── name
+│   │   ├── phandle
+│   │   └── status
+│   ├── hw-cal-a
+│   │   ├── name
+│   │   ├── phandle
+│   │   └── status
+│   ├── hw-cal-b
+│   │   ├── name
+│   │   ├── phandle
+│   │   └── status
+│   ├── isp-heap
+│   │   ├── compatible
+│   │   ├── iommu-addresses
+│   │   ├── name
+│   │   ├── no-map
+│   │   ├── phandle
+│   │   └── reg
+│   ├── name
+│   ├── ranges
+│   ├── region57@be5bf0000
+│   │   ├── compatible
+│   │   ├── iommu-addresses
+│   │   ├── name
+│   │   ├── no-map
+│   │   ├── phandle
+│   │   └── reg
+│   ├── region94@be5bec000
+│   │   ├── compatible
+│   │   ├── iommu-addresses
+│   │   ├── name
+│   │   ├── no-map
+│   │   ├── phandle
+│   │   └── reg
+│   ├── region95@be5b2c000
+│   │   ├── compatible
+│   │   ├── iommu-addresses
+│   │   ├── name
+│   │   ├── no-map
+│   │   ├── phandle
+│   │   └── reg
+│   ├── #size-cells
+│   ├── uat-handoff
+│   │   ├── name
+│   │   ├── phandle
+│   │   └── reg
+│   ├── uat-pagetables
+│   │   ├── name
+│   │   ├── phandle
+│   │   └── reg
+│   └── uat-ttbs
+│       ├── name
+│       ├── phandle
+│       └── reg
+├── serial-number
+├── #size-cells
+├── smbios
+│   ├── compatible
+│   ├── name
+│   └── smbios
+│       ├── baseboard
+│       │   ├── manufacturer
+│       │   ├── name
+│       │   └── product
+│       ├── chassis
+│       │   ├── chassis-type
+│       │   ├── manufacturer
+│       │   └── name
+│       ├── name
+│       └── system
+│           ├── manufacturer
+│           ├── name
+│           ├── product
+│           └── serial
+├── soc
+│   ├── #address-cells
+│   ├── aop@24ac00000
+│   │   ├── als
+│   │   │   ├── compatible
+│   │   │   └── name
+│   │   ├── audio
+│   │   │   ├── apple,chassis-name
+│   │   │   ├── apple,machine-kind
+│   │   │   ├── compatible
+│   │   │   ├── dma-names
+│   │   │   ├── dmas
+│   │   │   └── name
+│   │   ├── compatible
+│   │   ├── iommus
+│   │   ├── las
+│   │   │   ├── compatible
+│   │   │   └── name
+│   │   ├── mboxes
+│   │   ├── mbox-names
+│   │   ├── name
+│   │   ├── reg
+│   │   └── status
+│   ├── audio-controller@238330000
+│   │   ├── compatible
+│   │   ├── dma-names
+│   │   ├── dmas
+│   │   ├── name
+│   │   ├── ports
+│   │   │   ├── #address-cells
+│   │   │   ├── name
+│   │   │   ├── port@0
+│   │   │   │   ├── endpoint
+│   │   │   │   │   ├── name
+│   │   │   │   │   ├── phandle
+│   │   │   │   │   └── remote-endpoint
+│   │   │   │   ├── name
+│   │   │   │   └── reg
+│   │   │   └── #size-cells
+│   │   ├── power-domains
+│   │   ├── reg
+│   │   ├── reset-domains
+│   │   └── status
+│   ├── audio-controller@238334000
+│   │   ├── compatible
+│   │   ├── dma-names
+│   │   ├── dmas
+│   │   ├── name
+│   │   ├── ports
+│   │   │   ├── #address-cells
+│   │   │   ├── name
+│   │   │   ├── port@0
+│   │   │   │   ├── endpoint
+│   │   │   │   │   ├── name
+│   │   │   │   │   ├── phandle
+│   │   │   │   │   └── remote-endpoint
+│   │   │   │   ├── name
+│   │   │   │   └── reg
+│   │   │   └── #size-cells
+│   │   ├── power-domains
+│   │   ├── reg
+│   │   ├── reset-domains
+│   │   └── status
+│   ├── clock-controller@23b044000
+│   │   ├── #clock-cells
+│   │   ├── clocks
+│   │   ├── compatible
+│   │   ├── name
+│   │   ├── phandle
+│   │   └── reg
+│   ├── compatible
+│   ├── cpufreq@210e20000
+│   │   ├── compatible
+│   │   ├── name
+│   │   ├── #performance-domain-cells
+│   │   ├── phandle
+│   │   └── reg
+│   ├── cpufreq@211e20000
+│   │   ├── compatible
+│   │   ├── name
+│   │   ├── #performance-domain-cells
+│   │   ├── phandle
+│   │   └── reg
+│   ├── dcp@231c00000
+│   │   ├── #address-cells
+│   │   ├── apple,bw-scratch
+│   │   ├── apple,firmware-compat
+│   │   ├── apple,firmware-version
+│   │   ├── clocks
+│   │   ├── compatible
+│   │   ├── iommus
+│   │   ├── mboxes
+│   │   ├── mbox-names
+│   │   ├── memory-region
+│   │   ├── memory-region-names
+│   │   ├── name
+│   │   ├── panel
+│   │   │   ├── apple,max-brightness
+│   │   │   ├── compatible
+│   │   │   ├── height-mm
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   └── width-mm
+│   │   ├── phandle
+│   │   ├── piodma
+│   │   │   ├── iommus
+│   │   │   ├── memory-region
+│   │   │   ├── memory-region-names
+│   │   │   ├── name
+│   │   │   └── phandle
+│   │   ├── ports
+│   │   │   ├── #address-cells
+│   │   │   ├── name
+│   │   │   ├── port@0
+│   │   │   │   ├── endpoint
+│   │   │   │   │   ├── name
+│   │   │   │   │   ├── phandle
+│   │   │   │   │   └── remote-endpoint
+│   │   │   │   ├── name
+│   │   │   │   └── reg
+│   │   │   └── #size-cells
+│   │   ├── power-domains
+│   │   ├── reg
+│   │   ├── reg-names
+│   │   ├── resets
+│   │   ├── #size-cells
+│   │   └── status
+│   ├── dcp@271c00000
+│   │   ├── #address-cells
+│   │   ├── apple,bw-scratch
+│   │   ├── apple,dcp-index
+│   │   ├── clocks
+│   │   ├── compatible
+│   │   ├── iommus
+│   │   ├── mboxes
+│   │   ├── mbox-names
+│   │   ├── name
+│   │   ├── phandle
+│   │   ├── piodma
+│   │   │   ├── iommus
+│   │   │   └── name
+│   │   ├── ports
+│   │   │   ├── #address-cells
+│   │   │   ├── name
+│   │   │   ├── port@0
+│   │   │   │   ├── endpoint
+│   │   │   │   │   ├── name
+│   │   │   │   │   ├── phandle
+│   │   │   │   │   └── remote-endpoint
+│   │   │   │   ├── name
+│   │   │   │   └── reg
+│   │   │   └── #size-cells
+│   │   ├── power-domains
+│   │   ├── reg
+│   │   ├── reg-names
+│   │   ├── resets
+│   │   ├── #size-cells
+│   │   └── status
+│   ├── display-pipe@228200000
+│   │   ├── compatible
+│   │   ├── interrupt-names
+│   │   ├── interrupt-parent
+│   │   ├── interrupts
+│   │   ├── iommus
+│   │   ├── name
+│   │   ├── port
+│   │   │   ├── endpoint
+│   │   │   │   ├── name
+│   │   │   │   ├── phandle
+│   │   │   │   └── remote-endpoint
+│   │   │   └── name
+│   │   ├── power-domains
+│   │   ├── reg
+│   │   ├── reg-names
+│   │   └── status
+│   ├── display-subsystem
+│   │   ├── compatible
+│   │   ├── iommus
+│   │   ├── memory-region
+│   │   ├── memory-region-names
+│   │   ├── name
+│   │   └── phandle
+│   ├── dma-controller@238200000
+│   │   ├── compatible
+│   │   ├── #dma-cells
+│   │   ├── dma-channels
+│   │   ├── interrupts-extended
+│   │   ├── iommus
+│   │   ├── name
+│   │   ├── phandle
+│   │   ├── power-domains
+│   │   ├── reg
+│   │   └── resets
+│   ├── dma-controller@24a980000
+│   │   ├── compatible
+│   │   ├── #dma-cells
+│   │   ├── dma-channels
+│   │   ├── interrupts-extended
+│   │   ├── iommus
+│   │   ├── name
+│   │   ├── phandle
+│   │   ├── reg
+│   │   └── status
+│   ├── dma-ranges
+│   ├── dsi@228600000
+│   │   ├── #address-cells
+│   │   ├── compatible
+│   │   ├── name
+│   │   ├── panel@0
+│   │   │   ├── compatible
+│   │   │   ├── max-brightness
+│   │   │   ├── name
+│   │   │   ├── port
+│   │   │   │   ├── endpoint
+│   │   │   │   │   ├── name
+│   │   │   │   │   ├── phandle
+│   │   │   │   │   └── remote-endpoint
+│   │   │   │   └── name
+│   │   │   └── reg
+│   │   ├── ports
+│   │   │   ├── #address-cells
+│   │   │   ├── name
+│   │   │   ├── port@0
+│   │   │   │   ├── #address-cells
+│   │   │   │   ├── endpoint@0
+│   │   │   │   │   ├── name
+│   │   │   │   │   ├── phandle
+│   │   │   │   │   ├── reg
+│   │   │   │   │   └── remote-endpoint
+│   │   │   │   ├── name
+│   │   │   │   ├── reg
+│   │   │   │   └── #size-cells
+│   │   │   ├── port@1
+│   │   │   │   ├── #address-cells
+│   │   │   │   ├── endpoint@0
+│   │   │   │   │   ├── name
+│   │   │   │   │   ├── phandle
+│   │   │   │   │   ├── reg
+│   │   │   │   │   └── remote-endpoint
+│   │   │   │   ├── name
+│   │   │   │   ├── reg
+│   │   │   │   └── #size-cells
+│   │   │   └── #size-cells
+│   │   ├── power-domains
+│   │   ├── reg
+│   │   ├── #size-cells
+│   │   └── status
+│   ├── efuse@23d2c8000
+│   │   ├── #address-cells
+│   │   ├── compatible
+│   │   ├── efuse@480,20
+│   │   │   ├── bits
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   └── reg
+│   │   ├── efuse@480,23
+│   │   │   ├── bits
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   └── reg
+│   │   ├── efuse@480,25
+│   │   │   ├── bits
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   └── reg
+│   │   ├── efuse@480,28
+│   │   │   ├── bits
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   └── reg
+│   │   ├── efuse@480,30
+│   │   │   ├── bits
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   └── reg
+│   │   ├── efuse@484,15
+│   │   │   ├── bits
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   └── reg
+│   │   ├── efuse@484,17
+│   │   │   ├── bits
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   └── reg
+│   │   ├── efuse@484,3
+│   │   │   ├── bits
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   └── reg
+│   │   ├── efuse@484,30
+│   │   │   ├── bits
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   └── reg
+│   │   ├── efuse@484,9
+│   │   │   ├── bits
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   └── reg
+│   │   ├── efuse@488,1
+│   │   │   ├── bits
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   └── reg
+│   │   ├── efuse@488,13
+│   │   │   ├── bits
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   └── reg
+│   │   ├── efuse@488,19
+│   │   │   ├── bits
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   └── reg
+│   │   ├── efuse@488,25
+│   │   │   ├── bits
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   └── reg
+│   │   ├── efuse@488,27
+│   │   │   ├── bits
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   └── reg
+│   │   ├── efuse@488,3
+│   │   │   ├── bits
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   └── reg
+│   │   ├── efuse@488,6
+│   │   │   ├── bits
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   └── reg
+│   │   ├── efuse@488,8
+│   │   │   ├── bits
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   └── reg
+│   │   ├── name
+│   │   ├── reg
+│   │   └── #size-cells
+│   ├── fifo@24eb14000
+│   │   ├── #address-cells
+│   │   ├── compatible
+│   │   ├── input@8000
+│   │   │   ├── actuator
+│   │   │   │   └── name
+│   │   │   ├── apple,afe-reset-gpios
+│   │   │   ├── apple,fifo-size
+│   │   │   ├── apple,helper-cpu
+│   │   │   ├── apple,stm-reset-gpios
+│   │   │   ├── compatible
+│   │   │   ├── interrupt-names
+│   │   │   ├── interrupt-parent
+│   │   │   ├── interrupts
+│   │   │   ├── iommus
+│   │   │   ├── keyboard
+│   │   │   │   ├── apple,keyboard-layout-id
+│   │   │   │   ├── hid-country-code
+│   │   │   │   └── name
+│   │   │   ├── multi-touch
+│   │   │   │   ├── firmware-name
+│   │   │   │   └── name
+│   │   │   ├── name
+│   │   │   ├── reg
+│   │   │   ├── reg-names
+│   │   │   ├── stm
+│   │   │   │   └── name
+│   │   │   └── tp_accel
+│   │   │       └── name
+│   │   ├── #interrupt-cells
+│   │   ├── interrupt-controller
+│   │   ├── interrupt-parent
+│   │   ├── interrupts
+│   │   ├── name
+│   │   ├── nonposted-mmio
+│   │   ├── phandle
+│   │   ├── ranges
+│   │   ├── reg
+│   │   ├── reg-names
+│   │   ├── #size-cells
+│   │   └── status
+│   ├── gpu@206400000
+│   │   ├── apple,avg-power-filter-tc-ms
+│   │   ├── apple,avg-power-ki-only
+│   │   ├── apple,avg-power-kp
+│   │   ├── apple,avg-power-min-duty-cycle
+│   │   ├── apple,avg-power-target-filter-tc
+│   │   ├── apple,core-leak-coef
+│   │   ├── apple,fast-die0-integral-gain
+│   │   ├── apple,fast-die0-proportional-gain
+│   │   ├── apple,firmware-abi
+│   │   ├── apple,firmware-compat
+│   │   ├── apple,firmware-version
+│   │   ├── apple,min-sram-microvolt
+│   │   ├── apple,perf-base-pstate
+│   │   ├── apple,perf-boost-ce-step
+│   │   ├── apple,perf-boost-min-util
+│   │   ├── apple,perf-filter-drop-threshold
+│   │   ├── apple,perf-filter-time-constant
+│   │   ├── apple,perf-filter-time-constant2
+│   │   ├── apple,perf-integral-gain
+│   │   ├── apple,perf-integral-gain2
+│   │   ├── apple,perf-integral-min-clamp
+│   │   ├── apple,perf-proportional-gain
+│   │   ├── apple,perf-proportional-gain2
+│   │   ├── apple,perf-tgt-utilization
+│   │   ├── apple,power-sample-period
+│   │   ├── apple,ppm-filter-time-constant-ms
+│   │   ├── apple,ppm-ki
+│   │   ├── apple,ppm-kp
+│   │   ├── apple,pwr-min-duty-cycle
+│   │   ├── apple,sram-leak-coef
+│   │   ├── compatible
+│   │   ├── mboxes
+│   │   ├── memory-region
+│   │   ├── memory-region-names
+│   │   ├── name
+│   │   ├── operating-points-v2
+│   │   ├── power-domains
+│   │   ├── reg
+│   │   └── reg-names
+│   ├── i2c@235010000
+│   │   ├── #address-cells
+│   │   ├── clocks
+│   │   ├── compatible
+│   │   ├── interrupt-parent
+│   │   ├── interrupts
+│   │   ├── name
+│   │   ├── pinctrl-0
+│   │   ├── pinctrl-names
+│   │   ├── power-domains
+│   │   ├── reg
+│   │   ├── #size-cells
+│   │   ├── status
+│   │   ├── usb-pd@38
+│   │   │   ├── compatible
+│   │   │   ├── connector
+│   │   │   │   ├── compatible
+│   │   │   │   ├── data-role
+│   │   │   │   ├── label
+│   │   │   │   ├── name
+│   │   │   │   ├── ports
+│   │   │   │   │   ├── #address-cells
+│   │   │   │   │   ├── name
+│   │   │   │   │   ├── port@0
+│   │   │   │   │   │   ├── endpoint
+│   │   │   │   │   │   │   ├── name
+│   │   │   │   │   │   │   ├── phandle
+│   │   │   │   │   │   │   └── remote-endpoint
+│   │   │   │   │   │   ├── name
+│   │   │   │   │   │   └── reg
+│   │   │   │   │   ├── port@1
+│   │   │   │   │   │   ├── endpoint
+│   │   │   │   │   │   │   ├── name
+│   │   │   │   │   │   │   ├── phandle
+│   │   │   │   │   │   │   └── remote-endpoint
+│   │   │   │   │   │   ├── name
+│   │   │   │   │   │   └── reg
+│   │   │   │   │   └── #size-cells
+│   │   │   │   └── power-role
+│   │   │   ├── interrupt-names
+│   │   │   ├── interrupt-parent
+│   │   │   ├── interrupts
+│   │   │   ├── name
+│   │   │   └── reg
+│   │   └── usb-pd@3f
+│   │       ├── compatible
+│   │       ├── connector
+│   │       │   ├── compatible
+│   │       │   ├── data-role
+│   │       │   ├── label
+│   │       │   ├── name
+│   │       │   ├── ports
+│   │       │   │   ├── #address-cells
+│   │       │   │   ├── name
+│   │       │   │   ├── port@0
+│   │       │   │   │   ├── endpoint
+│   │       │   │   │   │   ├── name
+│   │       │   │   │   │   ├── phandle
+│   │       │   │   │   │   └── remote-endpoint
+│   │       │   │   │   ├── name
+│   │       │   │   │   └── reg
+│   │       │   │   ├── port@1
+│   │       │   │   │   ├── endpoint
+│   │       │   │   │   │   ├── name
+│   │       │   │   │   │   ├── phandle
+│   │       │   │   │   │   └── remote-endpoint
+│   │       │   │   │   ├── name
+│   │       │   │   │   └── reg
+│   │       │   │   └── #size-cells
+│   │       │   └── power-role
+│   │       ├── interrupt-names
+│   │       ├── interrupt-parent
+│   │       ├── interrupts
+│   │       ├── name
+│   │       └── reg
+│   ├── i2c@235014000
+│   │   ├── #address-cells
+│   │   ├── clocks
+│   │   ├── codec@38
+│   │   │   ├── compatible
+│   │   │   ├── interrupts-extended
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   ├── reg
+│   │   │   ├── SDZ-supply
+│   │   │   ├── #sound-dai-cells
+│   │   │   ├── sound-name-prefix
+│   │   │   ├── ti,imon-slot-no
+│   │   │   └── ti,vmon-slot-no
+│   │   ├── codec@39
+│   │   │   ├── compatible
+│   │   │   ├── interrupts-extended
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   ├── reg
+│   │   │   ├── SDZ-supply
+│   │   │   ├── #sound-dai-cells
+│   │   │   ├── sound-name-prefix
+│   │   │   ├── ti,imon-slot-no
+│   │   │   ├── ti,sdout-force-zero-mask
+│   │   │   └── ti,vmon-slot-no
+│   │   ├── compatible
+│   │   ├── interrupt-parent
+│   │   ├── interrupts
+│   │   ├── name
+│   │   ├── pinctrl-0
+│   │   ├── pinctrl-names
+│   │   ├── power-domains
+│   │   ├── reg
+│   │   ├── #size-cells
+│   │   └── status
+│   ├── i2c@235018000
+│   │   ├── #address-cells
+│   │   ├── clocks
+│   │   ├── compatible
+│   │   ├── interrupt-parent
+│   │   ├── interrupts
+│   │   ├── name
+│   │   ├── pinctrl-0
+│   │   ├── pinctrl-names
+│   │   ├── power-domains
+│   │   ├── reg
+│   │   ├── #size-cells
+│   │   └── status
+│   ├── i2c@23501c000
+│   │   ├── #address-cells
+│   │   ├── clocks
+│   │   ├── codec@3b
+│   │   │   ├── compatible
+│   │   │   ├── interrupts-extended
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   ├── reg
+│   │   │   ├── SDZ-supply
+│   │   │   ├── #sound-dai-cells
+│   │   │   ├── sound-name-prefix
+│   │   │   ├── ti,imon-slot-no
+│   │   │   └── ti,vmon-slot-no
+│   │   ├── codec@3c
+│   │   │   ├── compatible
+│   │   │   ├── interrupts-extended
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   ├── reg
+│   │   │   ├── SDZ-supply
+│   │   │   ├── #sound-dai-cells
+│   │   │   ├── sound-name-prefix
+│   │   │   ├── ti,imon-slot-no
+│   │   │   ├── ti,sdout-force-zero-mask
+│   │   │   └── ti,vmon-slot-no
+│   │   ├── codec@4b
+│   │   │   ├── compatible
+│   │   │   ├── interrupts-extended
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   ├── reg
+│   │   │   ├── reset-gpios
+│   │   │   ├── #sound-dai-cells
+│   │   │   └── sound-name-prefix
+│   │   ├── compatible
+│   │   ├── interrupt-parent
+│   │   ├── interrupts
+│   │   ├── name
+│   │   ├── pinctrl-0
+│   │   ├── pinctrl-names
+│   │   ├── power-domains
+│   │   ├── reg
+│   │   ├── #size-cells
+│   │   └── status
+│   ├── i2c@235020000
+│   │   ├── #address-cells
+│   │   ├── clocks
+│   │   ├── compatible
+│   │   ├── interrupt-parent
+│   │   ├── interrupts
+│   │   ├── name
+│   │   ├── pinctrl-0
+│   │   ├── pinctrl-names
+│   │   ├── power-domains
+│   │   ├── reg
+│   │   ├── #size-cells
+│   │   └── status
+│   ├── i2s@238400000
+│   │   ├── clocks
+│   │   ├── compatible
+│   │   ├── dma-names
+│   │   ├── dmas
+│   │   ├── interrupt-parent
+│   │   ├── interrupts
+│   │   ├── name
+│   │   ├── phandle
+│   │   ├── power-domains
+│   │   ├── reg
+│   │   ├── resets
+│   │   └── #sound-dai-cells
+│   ├── interrupt-controller@23b0c0000
+│   │   ├── affinities
+│   │   │   ├── e-core-pmu-affinity
+│   │   │   │   ├── apple,fiq-index
+│   │   │   │   ├── cpus
+│   │   │   │   └── name
+│   │   │   ├── name
+│   │   │   └── p-core-pmu-affinity
+│   │   │       ├── apple,fiq-index
+│   │   │       ├── cpus
+│   │   │       └── name
+│   │   ├── compatible
+│   │   ├── #interrupt-cells
+│   │   ├── interrupt-controller
+│   │   ├── name
+│   │   ├── phandle
+│   │   ├── power-domains
+│   │   ├── reg
+│   │   └── reg-names
+│   ├── iommu@228304000
+│   │   ├── compatible
+│   │   ├── interrupt-parent
+│   │   ├── interrupts
+│   │   ├── #iommu-cells
+│   │   ├── name
+│   │   ├── phandle
+│   │   ├── power-domains
+│   │   ├── reg
+│   │   └── status
+│   ├── iommu@22c4a8000
+│   │   ├── compatible
+│   │   ├── interrupt-parent
+│   │   ├── interrupts
+│   │   ├── #iommu-cells
+│   │   ├── name
+│   │   ├── phandle
+│   │   ├── power-domains
+│   │   ├── reg
+│   │   └── status
+│   ├── iommu@22c4b4000
+│   │   ├── compatible
+│   │   ├── interrupt-parent
+│   │   ├── interrupts
+│   │   ├── #iommu-cells
+│   │   ├── name
+│   │   ├── phandle
+│   │   ├── power-domains
+│   │   ├── reg
+│   │   └── status
+│   ├── iommu@22c4bc000
+│   │   ├── compatible
+│   │   ├── interrupt-parent
+│   │   ├── interrupts
+│   │   ├── #iommu-cells
+│   │   ├── name
+│   │   ├── phandle
+│   │   ├── power-domains
+│   │   ├── reg
+│   │   └── status
+│   ├── iommu@231304000
+│   │   ├── apple,dma-range
+│   │   ├── compatible
+│   │   ├── interrupt-parent
+│   │   ├── interrupts
+│   │   ├── #iommu-cells
+│   │   ├── name
+│   │   ├── phandle
+│   │   ├── power-domains
+│   │   ├── reg
+│   │   └── status
+│   ├── iommu@23130c000
+│   │   ├── apple,dma-range
+│   │   ├── compatible
+│   │   ├── interrupt-parent
+│   │   ├── interrupts
+│   │   ├── #iommu-cells
+│   │   ├── name
+│   │   ├── phandle
+│   │   ├── power-domains
+│   │   └── reg
+│   ├── iommu@235004000
+│   │   ├── compatible
+│   │   ├── interrupt-parent
+│   │   ├── interrupts
+│   │   ├── #iommu-cells
+│   │   ├── name
+│   │   ├── phandle
+│   │   ├── power-domains
+│   │   └── reg
+│   ├── iommu@24a808000
+│   │   ├── compatible
+│   │   ├── interrupt-parent
+│   │   ├── interrupts
+│   │   ├── #iommu-cells
+│   │   ├── name
+│   │   ├── phandle
+│   │   ├── reg
+│   │   └── status
+│   ├── iommu@24e808000
+│   │   ├── compatible
+│   │   ├── interrupt-parent
+│   │   ├── interrupts
+│   │   ├── #iommu-cells
+│   │   ├── name
+│   │   ├── phandle
+│   │   ├── reg
+│   │   └── status
+│   ├── iommu@25d2c0000
+│   │   ├── compatible
+│   │   ├── interrupt-parent
+│   │   ├── interrupts
+│   │   ├── #iommu-cells
+│   │   ├── name
+│   │   ├── phandle
+│   │   └── reg
+│   ├── iommu@271304000
+│   │   ├── apple,dma-range
+│   │   ├── compatible
+│   │   ├── interrupt-parent
+│   │   ├── interrupts
+│   │   ├── #iommu-cells
+│   │   ├── name
+│   │   ├── phandle
+│   │   ├── power-domains
+│   │   ├── reg
+│   │   └── status
+│   ├── iommu@27130c000
+│   │   ├── apple,dma-range
+│   │   ├── compatible
+│   │   ├── interrupt-parent
+│   │   ├── interrupts
+│   │   ├── #iommu-cells
+│   │   ├── name
+│   │   ├── phandle
+│   │   ├── power-domains
+│   │   ├── reg
+│   │   └── status
+│   ├── iommu@382f00000
+│   │   ├── compatible
+│   │   ├── interrupt-parent
+│   │   ├── interrupts
+│   │   ├── #iommu-cells
+│   │   ├── name
+│   │   ├── phandle
+│   │   ├── power-domains
+│   │   └── reg
+│   ├── iommu@382f80000
+│   │   ├── compatible
+│   │   ├── interrupt-parent
+│   │   ├── interrupts
+│   │   ├── #iommu-cells
+│   │   ├── name
+│   │   ├── phandle
+│   │   ├── power-domains
+│   │   └── reg
+│   ├── iommu@502f00000
+│   │   ├── compatible
+│   │   ├── interrupt-parent
+│   │   ├── interrupts
+│   │   ├── #iommu-cells
+│   │   ├── name
+│   │   ├── phandle
+│   │   ├── power-domains
+│   │   └── reg
+│   ├── iommu@502f80000
+│   │   ├── compatible
+│   │   ├── interrupt-parent
+│   │   ├── interrupts
+│   │   ├── #iommu-cells
+│   │   ├── name
+│   │   ├── phandle
+│   │   ├── power-domains
+│   │   └── reg
+│   ├── iommu@681008000
+│   │   ├── compatible
+│   │   ├── interrupt-parent
+│   │   ├── interrupts
+│   │   ├── #iommu-cells
+│   │   ├── name
+│   │   ├── phandle
+│   │   ├── power-domains
+│   │   └── reg
+│   ├── iommu@682008000
+│   │   ├── compatible
+│   │   ├── interrupt-parent
+│   │   ├── interrupts
+│   │   ├── #iommu-cells
+│   │   ├── name
+│   │   ├── phandle
+│   │   ├── power-domains
+│   │   ├── reg
+│   │   └── status
+│   ├── iommu@683008000
+│   │   ├── compatible
+│   │   ├── interrupt-parent
+│   │   ├── interrupts
+│   │   ├── #iommu-cells
+│   │   ├── name
+│   │   ├── phandle
+│   │   ├── power-domains
+│   │   ├── reg
+│   │   └── status
+│   ├── iommu@684008000
+│   │   ├── compatible
+│   │   ├── interrupt-parent
+│   │   ├── interrupts
+│   │   ├── #iommu-cells
+│   │   ├── name
+│   │   ├── phandle
+│   │   ├── power-domains
+│   │   ├── reg
+│   │   └── status
+│   ├── isp@22a000000
+│   │   ├── apple,dart-vm-size
+│   │   ├── apple,firmware-compat
+│   │   ├── apple,firmware-version
+│   │   ├── apple,platform-id
+│   │   ├── apple,temporal-filter
+│   │   ├── compatible
+│   │   ├── interrupt-parent
+│   │   ├── interrupts
+│   │   ├── iommus
+│   │   ├── memory-region
+│   │   ├── memory-region-names
+│   │   ├── name
+│   │   ├── phandle
+│   │   ├── power-domains
+│   │   ├── reg
+│   │   ├── reg-names
+│   │   ├── sensor-presets
+│   │   │   ├── name
+│   │   │   ├── preset0
+│   │   │   │   ├── apple,config-index
+│   │   │   │   ├── apple,crop
+│   │   │   │   ├── apple,input-size
+│   │   │   │   ├── apple,output-size
+│   │   │   │   └── name
+│   │   │   ├── preset1
+│   │   │   │   ├── apple,config-index
+│   │   │   │   ├── apple,crop
+│   │   │   │   ├── apple,input-size
+│   │   │   │   ├── apple,output-size
+│   │   │   │   └── name
+│   │   │   ├── preset2
+│   │   │   │   ├── apple,config-index
+│   │   │   │   ├── apple,crop
+│   │   │   │   ├── apple,input-size
+│   │   │   │   ├── apple,output-size
+│   │   │   │   └── name
+│   │   │   ├── preset3
+│   │   │   │   ├── apple,config-index
+│   │   │   │   ├── apple,crop
+│   │   │   │   ├── apple,input-size
+│   │   │   │   ├── apple,output-size
+│   │   │   │   └── name
+│   │   │   ├── preset4
+│   │   │   │   ├── apple,config-index
+│   │   │   │   ├── apple,crop
+│   │   │   │   ├── apple,input-size
+│   │   │   │   ├── apple,output-size
+│   │   │   │   └── name
+│   │   │   └── preset5
+│   │   │       ├── apple,config-index
+│   │   │       ├── apple,crop
+│   │   │       ├── apple,input-size
+│   │   │       ├── apple,output-size
+│   │   │       └── name
+│   │   └── status
+│   ├── mbox@206408000
+│   │   ├── compatible
+│   │   ├── interrupt-names
+│   │   ├── interrupt-parent
+│   │   ├── interrupts
+│   │   ├── #mbox-cells
+│   │   ├── name
+│   │   ├── phandle
+│   │   └── reg
+│   ├── mbox@231c08000
+│   │   ├── compatible
+│   │   ├── interrupt-names
+│   │   ├── interrupt-parent
+│   │   ├── interrupts
+│   │   ├── #mbox-cells
+│   │   ├── name
+│   │   ├── phandle
+│   │   ├── power-domains
+│   │   ├── reg
+│   │   └── resets
+│   ├── mbox@236408000
+│   │   ├── compatible
+│   │   ├── interrupt-names
+│   │   ├── interrupt-parent
+│   │   ├── interrupts
+│   │   ├── #mbox-cells
+│   │   ├── name
+│   │   ├── phandle
+│   │   ├── power-domains
+│   │   └── reg
+│   ├── mbox@23e408000
+│   │   ├── compatible
+│   │   ├── interrupt-names
+│   │   ├── interrupt-parent
+│   │   ├── interrupts
+│   │   ├── #mbox-cells
+│   │   ├── name
+│   │   ├── phandle
+│   │   └── reg
+│   ├── mbox@24a408000
+│   │   ├── compatible
+│   │   ├── interrupt-names
+│   │   ├── interrupt-parent
+│   │   ├── interrupts
+│   │   ├── #mbox-cells
+│   │   ├── name
+│   │   ├── phandle
+│   │   ├── reg
+│   │   └── status
+│   ├── mbox@24e408000
+│   │   ├── compatible
+│   │   ├── interrupt-names
+│   │   ├── interrupt-parent
+│   │   ├── interrupts
+│   │   ├── #mbox-cells
+│   │   ├── name
+│   │   ├── phandle
+│   │   ├── reg
+│   │   └── status
+│   ├── mbox@25e408000
+│   │   ├── compatible
+│   │   ├── interrupt-names
+│   │   ├── interrupt-parent
+│   │   ├── interrupts
+│   │   ├── #mbox-cells
+│   │   ├── name
+│   │   ├── phandle
+│   │   └── reg
+│   ├── mbox@271c08000
+│   │   ├── compatible
+│   │   ├── interrupt-names
+│   │   ├── interrupt-parent
+│   │   ├── interrupts
+│   │   ├── #mbox-cells
+│   │   ├── name
+│   │   ├── phandle
+│   │   ├── power-domains
+│   │   ├── reg
+│   │   ├── resets
+│   │   └── status
+│   ├── mbox@277408000
+│   │   ├── compatible
+│   │   ├── interrupt-names
+│   │   ├── interrupt-parent
+│   │   ├── interrupts
+│   │   ├── #mbox-cells
+│   │   ├── name
+│   │   ├── phandle
+│   │   ├── power-domains
+│   │   └── reg
+│   ├── mtp@24e400000
+│   │   ├── compatible
+│   │   ├── #helper-cells
+│   │   ├── iommus
+│   │   ├── mboxes
+│   │   ├── name
+│   │   ├── phandle
+│   │   ├── reg
+│   │   ├── reg-names
+│   │   └── status
+│   ├── name
+│   ├── nonposted-mmio
+│   ├── nvme@27bcc0000
+│   │   ├── apple,sart
+│   │   ├── compatible
+│   │   ├── interrupt-parent
+│   │   ├── interrupts
+│   │   ├── mboxes
+│   │   ├── name
+│   │   ├── power-domain-names
+│   │   ├── power-domains
+│   │   ├── reg
+│   │   ├── reg-names
+│   │   └── resets
+│   ├── pcie@690000000
+│   │   ├── #address-cells
+│   │   ├── bus-range
+│   │   ├── compatible
+│   │   ├── device_type
+│   │   ├── dma-coherent
+│   │   ├── interrupt-parent
+│   │   ├── interrupts
+│   │   ├── iommu-map
+│   │   ├── iommu-map-mask
+│   │   ├── msi-controller
+│   │   ├── msi-parent
+│   │   ├── msi-ranges
+│   │   ├── name
+│   │   ├── pci@0,0
+│   │   │   ├── #address-cells
+│   │   │   ├── bluetooth@0,1
+│   │   │   │   ├── brcm,board-type
+│   │   │   │   ├── brcm,taurus-bf-cal-blob
+│   │   │   │   ├── brcm,taurus-cal-blob
+│   │   │   │   ├── compatible
+│   │   │   │   ├── local-bd-address
+│   │   │   │   ├── name
+│   │   │   │   └── reg
+│   │   │   ├── bus-range
+│   │   │   ├── device_type
+│   │   │   ├── #interrupt-cells
+│   │   │   ├── interrupt-controller
+│   │   │   ├── interrupt-map
+│   │   │   ├── interrupt-map-mask
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   ├── pwren-gpios
+│   │   │   ├── ranges
+│   │   │   ├── reg
+│   │   │   ├── reset-gpios
+│   │   │   ├── #size-cells
+│   │   │   └── wifi@0,0
+│   │   │       ├── apple,antenna-sku
+│   │   │       ├── brcm,board-type
+│   │   │       ├── brcm,cal-blob
+│   │   │       ├── compatible
+│   │   │       ├── local-mac-address
+│   │   │       ├── name
+│   │   │       └── reg
+│   │   ├── pci@1,0
+│   │   │   ├── #address-cells
+│   │   │   ├── device_type
+│   │   │   ├── #interrupt-cells
+│   │   │   ├── interrupt-controller
+│   │   │   ├── interrupt-map
+│   │   │   ├── interrupt-map-mask
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   ├── ranges
+│   │   │   ├── reg
+│   │   │   ├── reset-gpios
+│   │   │   ├── #size-cells
+│   │   │   └── status
+│   │   ├── pci@2,0
+│   │   │   ├── #address-cells
+│   │   │   ├── device_type
+│   │   │   ├── #interrupt-cells
+│   │   │   ├── interrupt-controller
+│   │   │   ├── interrupt-map
+│   │   │   ├── interrupt-map-mask
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   ├── ranges
+│   │   │   ├── reg
+│   │   │   ├── reset-gpios
+│   │   │   ├── #size-cells
+│   │   │   └── status
+│   │   ├── pci@3,0
+│   │   │   ├── #address-cells
+│   │   │   ├── device_type
+│   │   │   ├── #interrupt-cells
+│   │   │   ├── interrupt-controller
+│   │   │   ├── interrupt-map
+│   │   │   ├── interrupt-map-mask
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   ├── ranges
+│   │   │   ├── reg
+│   │   │   ├── #size-cells
+│   │   │   └── status
+│   │   ├── phandle
+│   │   ├── pinctrl-0
+│   │   ├── pinctrl-names
+│   │   ├── power-domains
+│   │   ├── ranges
+│   │   ├── reg
+│   │   ├── reg-names
+│   │   └── #size-cells
+│   ├── phy@23c500000
+│   │   ├── compatible
+│   │   ├── name
+│   │   ├── #phy-cells
+│   │   ├── power-domains
+│   │   ├── reg
+│   │   ├── reg-names
+│   │   ├── #reset-cells
+│   │   └── status
+│   ├── phy@383000000
+│   │   ├── apple,tunable-axi2af
+│   │   ├── apple,tunable-common
+│   │   ├── apple,tunable-common-a
+│   │   ├── apple,tunable-common-b
+│   │   ├── apple,tunable-lane0-cio
+│   │   ├── apple,tunable-lane0-dp
+│   │   ├── apple,tunable-lane0-usb
+│   │   ├── apple,tunable-lane1-cio
+│   │   ├── apple,tunable-lane1-dp
+│   │   ├── apple,tunable-lane1-usb
+│   │   ├── compatible
+│   │   ├── mode-switch
+│   │   ├── name
+│   │   ├── nvmem-cell-names
+│   │   ├── nvmem-cells
+│   │   ├── orientation-switch
+│   │   ├── phandle
+│   │   ├── #phy-cells
+│   │   ├── port
+│   │   │   ├── endpoint
+│   │   │   │   ├── name
+│   │   │   │   ├── phandle
+│   │   │   │   └── remote-endpoint
+│   │   │   └── name
+│   │   ├── power-domains
+│   │   ├── reg
+│   │   ├── reg-names
+│   │   ├── #reset-cells
+│   │   └── svid
+│   ├── phy@503000000
+│   │   ├── apple,tunable-axi2af
+│   │   ├── apple,tunable-common
+│   │   ├── apple,tunable-common-a
+│   │   ├── apple,tunable-common-b
+│   │   ├── apple,tunable-lane0-cio
+│   │   ├── apple,tunable-lane0-dp
+│   │   ├── apple,tunable-lane0-usb
+│   │   ├── apple,tunable-lane1-cio
+│   │   ├── apple,tunable-lane1-dp
+│   │   ├── apple,tunable-lane1-usb
+│   │   ├── compatible
+│   │   ├── mode-switch
+│   │   ├── name
+│   │   ├── nvmem-cell-names
+│   │   ├── nvmem-cells
+│   │   ├── orientation-switch
+│   │   ├── phandle
+│   │   ├── #phy-cells
+│   │   ├── port
+│   │   │   ├── endpoint
+│   │   │   │   ├── name
+│   │   │   │   ├── phandle
+│   │   │   │   └── remote-endpoint
+│   │   │   └── name
+│   │   ├── power-domains
+│   │   ├── reg
+│   │   ├── reg-names
+│   │   ├── #reset-cells
+│   │   └── svid
+│   ├── pinctrl@23c100000
+│   │   ├── apple,npins
+│   │   ├── compatible
+│   │   ├── #gpio-cells
+│   │   ├── gpio-controller
+│   │   ├── gpio-ranges
+│   │   ├── i2c0-pins
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   └── pinmux
+│   │   ├── i2c1-pins
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   └── pinmux
+│   │   ├── i2c2-pins
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   └── pinmux
+│   │   ├── i2c3-pins
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   └── pinmux
+│   │   ├── i2c4-pins
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   └── pinmux
+│   │   ├── #interrupt-cells
+│   │   ├── interrupt-controller
+│   │   ├── interrupt-parent
+│   │   ├── interrupts
+│   │   ├── name
+│   │   ├── pcie-pins
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   └── pinmux
+│   │   ├── phandle
+│   │   ├── power-domains
+│   │   ├── reg
+│   │   ├── spi1-pins
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   └── pinmux
+│   │   └── spi3-pins
+│   │       ├── name
+│   │       ├── phandle
+│   │       └── pinmux
+│   ├── pinctrl@23d1f0000
+│   │   ├── apple,npins
+│   │   ├── compatible
+│   │   ├── #gpio-cells
+│   │   ├── gpio-controller
+│   │   ├── gpio-ranges
+│   │   ├── #interrupt-cells
+│   │   ├── interrupt-controller
+│   │   ├── interrupt-parent
+│   │   ├── interrupts
+│   │   ├── name
+│   │   ├── phandle
+│   │   ├── power-domains
+│   │   └── reg
+│   ├── pinctrl@23e820000
+│   │   ├── apple,npins
+│   │   ├── compatible
+│   │   ├── #gpio-cells
+│   │   ├── gpio-controller
+│   │   ├── gpio-ranges
+│   │   ├── #interrupt-cells
+│   │   ├── interrupt-controller
+│   │   ├── interrupt-parent
+│   │   ├── interrupts
+│   │   ├── name
+│   │   ├── phandle
+│   │   └── reg
+│   ├── pinctrl@24a820000
+│   │   ├── apple,npins
+│   │   ├── compatible
+│   │   ├── #gpio-cells
+│   │   ├── gpio-controller
+│   │   ├── gpio-ranges
+│   │   ├── #interrupt-cells
+│   │   ├── interrupt-controller
+│   │   ├── interrupt-parent
+│   │   ├── interrupts
+│   │   ├── name
+│   │   ├── phandle
+│   │   └── reg
+│   ├── power-management@23b3d0000
+│   │   ├── #apple,bw-scratch-cells
+│   │   ├── name
+│   │   ├── phandle
+│   │   ├── reg
+│   │   └── reg-names
+│   ├── power-management@23b700000
+│   │   ├── #address-cells
+│   │   ├── bootph-all
+│   │   ├── compatible
+│   │   ├── name
+│   │   ├── power-controller@100
+│   │   │   ├── apple,always-on
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@10000
+│   │   │   ├── apple,min-state
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── power-domains
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@108
+│   │   │   ├── apple,always-on
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@110
+│   │   │   ├── apple,always-on
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@118
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@120
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@128
+│   │   │   ├── apple,always-on
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@130
+│   │   │   ├── apple,always-on
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@160
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── power-domains
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@168
+│   │   │   ├── apple,always-on
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@170
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── power-domains
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@178
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@180
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@188
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@190
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@198
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@1a0
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@1a8
+│   │   │   ├── apple,always-on
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@1b0
+│   │   │   ├── bootph-all
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── reg
+│   │   │   ├── #reset-cells
+│   │   │   └── u-boot,dm-pre-reloc
+│   │   ├── power-controller@1b8
+│   │   │   ├── apple,always-on
+│   │   │   ├── bootph-all
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── power-domains
+│   │   │   ├── reg
+│   │   │   ├── #reset-cells
+│   │   │   └── u-boot,dm-pre-reloc
+│   │   ├── power-controller@1c0
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── power-domains
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@1c8
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── power-domains
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@1d0
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── power-domains
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@1d8
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── power-domains
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@1e0
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── power-domains
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@1e8
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── power-domains
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@1f0
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── power-domains
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@1f8
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── power-domains
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@200
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── power-domains
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@208
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── power-domains
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@210
+│   │   │   ├── bootph-all
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── power-domains
+│   │   │   ├── reg
+│   │   │   ├── #reset-cells
+│   │   │   └── u-boot,dm-pre-reloc
+│   │   ├── power-controller@218
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── power-domains
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@220
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── power-domains
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@228
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── power-domains
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@230
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── power-domains
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@238
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── power-domains
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@240
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── power-domains
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@248
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── power-domains
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@250
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── power-domains
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@258
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── power-domains
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@260
+│   │   │   ├── bootph-all
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── power-domains
+│   │   │   ├── reg
+│   │   │   ├── #reset-cells
+│   │   │   └── u-boot,dm-pre-reloc
+│   │   ├── power-controller@268
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── power-domains
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@270
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── power-domains
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@278
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── power-domains
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@280
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── power-domains
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@288
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── power-domains
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@290
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── power-domains
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@298
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── power-domains
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@2a0
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── power-domains
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@2a8
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── power-domains
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@2b0
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── power-domains
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@2b8
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── power-domains
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@2c0
+│   │   │   ├── apple,externally-clocked
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── power-domains
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@2c8
+│   │   │   ├── apple,externally-clocked
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── power-domains
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@2d0
+│   │   │   ├── apple,externally-clocked
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── power-domains
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@2d8
+│   │   │   ├── apple,externally-clocked
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── power-domains
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@2e0
+│   │   │   ├── apple,externally-clocked
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── power-domains
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@2e8
+│   │   │   ├── apple,externally-clocked
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── power-domains
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@2f0
+│   │   │   ├── apple,always-on
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@2f8
+│   │   │   ├── apple,always-on
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@300
+│   │   │   ├── apple,always-on
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@308
+│   │   │   ├── apple,always-on
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@310
+│   │   │   ├── apple,always-on
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@318
+│   │   │   ├── apple,always-on
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@320
+│   │   │   ├── apple,always-on
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@328
+│   │   │   ├── apple,always-on
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@330
+│   │   │   ├── apple,always-on
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@338
+│   │   │   ├── apple,always-on
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@340
+│   │   │   ├── apple,always-on
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@348
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── power-domains
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@350
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@358
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@360
+│   │   │   ├── apple,always-on
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@368
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@370
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── power-domains
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@378
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── power-domains
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@380
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── power-domains
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@388
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── power-domains
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@3c8
+│   │   │   ├── apple,min-state
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── power-domains
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@3d8
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@3e0
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── power-domains
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@3e8
+│   │   │   ├── apple,always-on
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── power-domains
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@3f0
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── power-domains
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@3f8
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── power-domains
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@400
+│   │   │   ├── apple,always-on
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── power-domains
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@4000
+│   │   │   ├── apple,force-disable
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@4008
+│   │   │   ├── apple,force-disable
+│   │   │   ├── apple,force-reset
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@4010
+│   │   │   ├── apple,force-disable
+│   │   │   ├── apple,force-reset
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@4018
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@4020
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@4028
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@4030
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@4038
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@4040
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@4048
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@4050
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@4058
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@4060
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@408
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── power-domains
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@410
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@418
+│   │   │   ├── apple,always-on
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@420
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── power-domains
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@428
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── power-domains
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@430
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@438
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── power-domains
+│   │   │   ├── reg
+│   │   │   ├── #reset-cells
+│   │   │   └── status
+│   │   ├── power-controller@440
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── power-domains
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@448
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── power-domains
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@450
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── power-domains
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@458
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── power-domains
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@460
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── power-domains
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@468
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── power-domains
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@470
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── power-domains
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@478
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── power-domains
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@480
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── power-domains
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@488
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── power-domains
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@490
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── power-domains
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@498
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── power-domains
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@4a0
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── power-domains
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@4a8
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── power-domains
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@4b0
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── power-domains
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@8000
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── power-domains
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@8008
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── power-domains
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@8010
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── power-domains
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@8018
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── power-domains
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@8020
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── power-domains
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@c00
+│   │   │   ├── apple,always-on
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── reg
+│   │   ├── #size-cells
+│   │   └── u-boot,dm-pre-reloc
+│   ├── power-management@23d280000
+│   │   ├── #address-cells
+│   │   ├── compatible
+│   │   ├── name
+│   │   ├── power-controller@58
+│   │   │   ├── apple,always-on
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@60
+│   │   │   ├── apple,always-on
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@68
+│   │   │   ├── apple,always-on
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@70
+│   │   │   ├── apple,always-on
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@78
+│   │   │   ├── apple,always-on
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@80
+│   │   │   ├── apple,always-on
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@88
+│   │   │   ├── apple,always-on
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@90
+│   │   │   ├── apple,always-on
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@98
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── power-domains
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@a0
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── phandle
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── power-domains
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@a8
+│   │   │   ├── apple,always-on
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@b0
+│   │   │   ├── apple,always-on
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── power-controller@b8
+│   │   │   ├── apple,always-on
+│   │   │   ├── compatible
+│   │   │   ├── label
+│   │   │   ├── name
+│   │   │   ├── #power-domain-cells
+│   │   │   ├── reg
+│   │   │   └── #reset-cells
+│   │   ├── reg
+│   │   └── #size-cells
+│   ├── pwm@235044000
+│   │   ├── clocks
+│   │   ├── compatible
+│   │   ├── name
+│   │   ├── phandle
+│   │   ├── power-domains
+│   │   ├── #pwm-cells
+│   │   ├── reg
+│   │   └── status
+│   ├── ranges
+│   ├── sart@27bc50000
+│   │   ├── compatible
+│   │   ├── name
+│   │   ├── phandle
+│   │   ├── power-domains
+│   │   └── reg
+│   ├── sep@25e400000
+│   │   ├── compatible
+│   │   ├── iommus
+│   │   ├── mboxes
+│   │   ├── mbox-names
+│   │   ├── name
+│   │   ├── reg
+│   │   └── status
+│   ├── serial@235200000
+│   │   ├── bootph-all
+│   │   ├── clock-names
+│   │   ├── clocks
+│   │   ├── compatible
+│   │   ├── interrupt-parent
+│   │   ├── interrupts
+│   │   ├── name
+│   │   ├── power-domains
+│   │   ├── reg
+│   │   ├── reg-io-width
+│   │   ├── status
+│   │   └── u-boot,dm-pre-reloc
+│   ├── serial@235208000
+│   │   ├── clock-names
+│   │   ├── clocks
+│   │   ├── compatible
+│   │   ├── interrupt-parent
+│   │   ├── interrupts
+│   │   ├── name
+│   │   ├── power-domains
+│   │   ├── reg
+│   │   ├── reg-io-width
+│   │   └── status
+│   ├── sio@236400000
+│   │   ├── compatible
+│   │   ├── #dma-cells
+│   │   ├── dma-channels
+│   │   ├── iommus
+│   │   ├── mboxes
+│   │   ├── name
+│   │   ├── phandle
+│   │   ├── power-domains
+│   │   ├── reg
+│   │   ├── resets
+│   │   └── status
+│   ├── #size-cells
+│   ├── smc@23e400000
+│   │   ├── compatible
+│   │   ├── gpio
+│   │   │   ├── compatible
+│   │   │   ├── #gpio-cells
+│   │   │   ├── gpio-controller
+│   │   │   ├── name
+│   │   │   └── phandle
+│   │   ├── hwmon
+│   │   │   ├── compatible
+│   │   │   ├── current-ID0R
+│   │   │   │   ├── apple,key-id
+│   │   │   │   ├── label
+│   │   │   │   └── name
+│   │   │   ├── fan-F0Ac
+│   │   │   │   ├── apple,fan-maximum
+│   │   │   │   ├── apple,fan-minimum
+│   │   │   │   ├── apple,fan-mode
+│   │   │   │   ├── apple,fan-target
+│   │   │   │   ├── apple,key-id
+│   │   │   │   ├── label
+│   │   │   │   └── name
+│   │   │   ├── name
+│   │   │   ├── power-PDTR
+│   │   │   │   ├── apple,key-id
+│   │   │   │   ├── label
+│   │   │   │   └── name
+│   │   │   ├── power-PHPC
+│   │   │   │   ├── apple,key-id
+│   │   │   │   ├── label
+│   │   │   │   └── name
+│   │   │   ├── power-PMVR
+│   │   │   │   ├── apple,key-id
+│   │   │   │   ├── label
+│   │   │   │   └── name
+│   │   │   ├── power-PSTR
+│   │   │   │   ├── apple,key-id
+│   │   │   │   ├── label
+│   │   │   │   └── name
+│   │   │   ├── temperature-TB0T
+│   │   │   │   ├── apple,key-id
+│   │   │   │   ├── label
+│   │   │   │   └── name
+│   │   │   ├── temperature-TCHP
+│   │   │   │   ├── apple,key-id
+│   │   │   │   ├── label
+│   │   │   │   └── name
+│   │   │   ├── temperature-TH0x
+│   │   │   │   ├── apple,key-id
+│   │   │   │   ├── label
+│   │   │   │   └── name
+│   │   │   ├── temperature-TW0P
+│   │   │   │   ├── apple,key-id
+│   │   │   │   ├── label
+│   │   │   │   └── name
+│   │   │   ├── voltage-SBAV
+│   │   │   │   ├── apple,key-id
+│   │   │   │   ├── label
+│   │   │   │   └── name
+│   │   │   └── voltage-VD0R
+│   │   │       ├── apple,key-id
+│   │   │       ├── label
+│   │   │       └── name
+│   │   ├── mboxes
+│   │   ├── name
+│   │   ├── reboot
+│   │   │   ├── compatible
+│   │   │   ├── name
+│   │   │   ├── nvmem-cell-names
+│   │   │   └── nvmem-cells
+│   │   ├── reg
+│   │   ├── reg-names
+│   │   └── rtc
+│   │       ├── compatible
+│   │       ├── name
+│   │       ├── nvmem-cell-names
+│   │       └── nvmem-cells
+│   ├── spi@235104000
+│   │   ├── #address-cells
+│   │   ├── clocks
+│   │   ├── compatible
+│   │   ├── flash@0
+│   │   │   ├── compatible
+│   │   │   ├── name
+│   │   │   ├── partitions
+│   │   │   │   ├── #address-cells
+│   │   │   │   ├── compatible
+│   │   │   │   ├── name
+│   │   │   │   ├── partition@700000
+│   │   │   │   │   ├── label
+│   │   │   │   │   ├── name
+│   │   │   │   │   ├── reg
+│   │   │   │   │   └── status
+│   │   │   │   └── #size-cells
+│   │   │   ├── reg
+│   │   │   └── spi-max-frequency
+│   │   ├── interrupt-parent
+│   │   ├── interrupts
+│   │   ├── name
+│   │   ├── pinctrl-0
+│   │   ├── pinctrl-names
+│   │   ├── power-domains
+│   │   ├── reg
+│   │   ├── #size-cells
+│   │   └── status
+│   ├── spi@23510c000
+│   │   ├── #address-cells
+│   │   ├── clocks
+│   │   ├── compatible
+│   │   ├── interrupt-parent
+│   │   ├── interrupts
+│   │   ├── name
+│   │   ├── pinctrl-0
+│   │   ├── pinctrl-names
+│   │   ├── power-domains
+│   │   ├── reg
+│   │   ├── #size-cells
+│   │   ├── status
+│   │   └── touchbar@0
+│   │       ├── apple,z2-cal-blob
+│   │       ├── compatible
+│   │       ├── firmware-name
+│   │       ├── interrupts-extended
+│   │       ├── name
+│   │       ├── reg
+│   │       ├── reset-gpios
+│   │       ├── spi-cs-hold-delay-ns
+│   │       ├── spi-cs-setup-delay-ns
+│   │       ├── spi-max-frequency
+│   │       ├── touchscreen-inverted-y
+│   │       ├── touchscreen-size-x
+│   │       └── touchscreen-size-y
+│   ├── spmi@23d714000
+│   │   ├── #address-cells
+│   │   ├── compatible
+│   │   ├── name
+│   │   ├── pmic@e
+│   │   │   ├── compatible
+│   │   │   ├── name
+│   │   │   ├── nvmem-layout
+│   │   │   │   ├── #address-cells
+│   │   │   │   ├── boot-error-count@f702,0
+│   │   │   │   │   ├── bits
+│   │   │   │   │   ├── name
+│   │   │   │   │   ├── phandle
+│   │   │   │   │   └── reg
+│   │   │   │   ├── boot-error-stage@f703
+│   │   │   │   │   ├── name
+│   │   │   │   │   └── reg
+│   │   │   │   ├── boot-stage@f701
+│   │   │   │   │   ├── name
+│   │   │   │   │   ├── phandle
+│   │   │   │   │   └── reg
+│   │   │   │   ├── compatible
+│   │   │   │   ├── fault-shadow@867b
+│   │   │   │   │   ├── name
+│   │   │   │   │   └── reg
+│   │   │   │   ├── name
+│   │   │   │   ├── panic-count@f702,4
+│   │   │   │   │   ├── bits
+│   │   │   │   │   ├── name
+│   │   │   │   │   ├── phandle
+│   │   │   │   │   └── reg
+│   │   │   │   ├── pm-setting@f801
+│   │   │   │   │   ├── name
+│   │   │   │   │   ├── phandle
+│   │   │   │   │   └── reg
+│   │   │   │   ├── rtc-offset@f900
+│   │   │   │   │   ├── name
+│   │   │   │   │   ├── phandle
+│   │   │   │   │   └── reg
+│   │   │   │   ├── shutdown-flag@f70f,3
+│   │   │   │   │   ├── bits
+│   │   │   │   │   ├── name
+│   │   │   │   │   ├── phandle
+│   │   │   │   │   └── reg
+│   │   │   │   ├── #size-cells
+│   │   │   │   └── socd@8b00
+│   │   │   │       ├── name
+│   │   │   │       └── reg
+│   │   │   └── reg
+│   │   ├── reg
+│   │   └── #size-cells
+│   ├── usb@382280000
+│   │   ├── compatible
+│   │   ├── dma-coherent
+│   │   ├── dr_mode
+│   │   ├── interrupt-parent
+│   │   ├── interrupts
+│   │   ├── iommus
+│   │   ├── name
+│   │   ├── phy-names
+│   │   ├── phys
+│   │   ├── port
+│   │   │   ├── endpoint
+│   │   │   │   ├── name
+│   │   │   │   ├── phandle
+│   │   │   │   └── remote-endpoint
+│   │   │   └── name
+│   │   ├── power-domains
+│   │   ├── reg
+│   │   ├── resets
+│   │   ├── role-switch-default-mode
+│   │   └── usb-role-switch
+│   ├── usb@502280000
+│   │   ├── compatible
+│   │   ├── dma-coherent
+│   │   ├── dr_mode
+│   │   ├── interrupt-parent
+│   │   ├── interrupts
+│   │   ├── iommus
+│   │   ├── name
+│   │   ├── phy-names
+│   │   ├── phys
+│   │   ├── port
+│   │   │   ├── endpoint
+│   │   │   │   ├── name
+│   │   │   │   ├── phandle
+│   │   │   │   └── remote-endpoint
+│   │   │   └── name
+│   │   ├── power-domains
+│   │   ├── reg
+│   │   ├── resets
+│   │   ├── role-switch-default-mode
+│   │   └── usb-role-switch
+│   └── watchdog@23d2b0000
+│       ├── clocks
+│       ├── compatible
+│       ├── interrupt-parent
+│       ├── interrupts
+│       ├── name
+│       └── reg
+├── sound
+│   ├── compatible
+│   ├── dai-link@0
+│   │   ├── codec
+│   │   │   ├── name
+│   │   │   └── sound-dai
+│   │   ├── cpu
+│   │   │   ├── name
+│   │   │   └── sound-dai
+│   │   ├── link-name
+│   │   └── name
+│   ├── dai-link@1
+│   │   ├── codec
+│   │   │   ├── name
+│   │   │   └── sound-dai
+│   │   ├── cpu
+│   │   │   ├── name
+│   │   │   └── sound-dai
+│   │   ├── link-name
+│   │   └── name
+│   ├── model
+│   └── name
+└── timer
+    ├── compatible
+    ├── interrupt-names
+    ├── interrupt-parent
+    ├── interrupts
+    └── name
+
+457 directories, 2934 files

@@ -1,0 +1,4 @@
+#! /usr/bin/env stap
+
+
+/* probe syscall.open{printf("%d\n", sizeof(struct page))} */

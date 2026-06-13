@@ -1,0 +1,245 @@
+[    5.165978] iwlwifi 0000:00:14.3: enabling device (0000 -> 0002)
+[    5.167626] iwlwifi 0000:00:14.3: Detected crf-id 0x1300202, cnv-id 0x80400 wfpm id 0x80000030
+[    5.167668] iwlwifi 0000:00:14.3: PCI dev 54f0/0034, rev=0x370, rfid=0x105110
+[    5.169028] iwlwifi 0000:00:14.3: Direct firmware load for iwlwifi-so-a0-jf-b0-86.ucode failed with error -2
+[    5.169058] iwlwifi 0000:00:14.3: Direct firmware load for iwlwifi-so-a0-jf-b0-85.ucode failed with error -2
+[    5.169085] iwlwifi 0000:00:14.3: Direct firmware load for iwlwifi-so-a0-jf-b0-84.ucode failed with error -2
+[    5.169108] iwlwifi 0000:00:14.3: Direct firmware load for iwlwifi-so-a0-jf-b0-83.ucode failed with error -2
+[    5.169130] iwlwifi 0000:00:14.3: Direct firmware load for iwlwifi-so-a0-jf-b0-82.ucode failed with error -2
+[    5.169152] iwlwifi 0000:00:14.3: Direct firmware load for iwlwifi-so-a0-jf-b0-81.ucode failed with error -2
+[    5.169175] iwlwifi 0000:00:14.3: Direct firmware load for iwlwifi-so-a0-jf-b0-80.ucode failed with error -2
+[    5.169197] iwlwifi 0000:00:14.3: Direct firmware load for iwlwifi-so-a0-jf-b0-79.ucode failed with error -2
+[    5.169218] iwlwifi 0000:00:14.3: Direct firmware load for iwlwifi-so-a0-jf-b0-78.ucode failed with error -2
+[    5.203038] RAPL PMU: API unit is 2^-32 Joules, 4 fixed counters, 655360 ms ovfl timer
+[    5.203043] RAPL PMU: hw unit of domain pp0-core 2^-14 Joules
+[    5.203044] RAPL PMU: hw unit of domain package 2^-14 Joules
+[    5.203045] RAPL PMU: hw unit of domain pp1-gpu 2^-14 Joules
+[    5.203046] RAPL PMU: hw unit of domain psys 2^-14 Joules
+[    5.218412] iwlwifi 0000:00:14.3: TLV_FW_FSEQ_VERSION: FSEQ Version: 0.0.2.36
+[    5.218777] iwlwifi 0000:00:14.3: loaded firmware version 77.f92b5fed.0 so-a0-jf-b0-77.ucode op_mode iwlmvm
+[    5.236201] usbcore: registered new interface driver btusb
+[    5.302961] mei_hdcp 0000:00:16.0-b638ab7e-94e2-4ea2-a552-d1c54b627f04: bound 0000:00:02.0 (ops i915_hdcp_ops [i915])
+[    5.337621] mei_pxp 0000:00:16.0-fbf6fcf1-96cf-4e2e-a6a6-1bab8cbe36b1: bound 0000:00:02.0 (ops i915_pxp_tee_component_ops [i915])
+[    5.389194] iTCO_vendor_support: vendor-support=0
+[    5.398628] iTCO_wdt iTCO_wdt: Found a Intel PCH TCO device (Version=6, TCOBASE=0x0400)
+[    5.402626] iTCO_wdt iTCO_wdt: initialized. heartbeat=30 sec (nowayout=0)
+[    5.423361] Creating 1 MTD partitions on "0000:00:1f.5":
+[    5.423367] 0x000000000000-0x000001000000 : "BIOS"
+[    5.447103] snd_hda_intel 0000:00:1f.3: enabling device (0000 -> 0002)
+[    5.447354] snd_hda_intel 0000:00:1f.3: bound 0000:00:02.0 (ops i915_audio_component_bind_ops [i915])
+[    5.507114] intel_tcc_cooling: TCC Offset locked
+[    5.518575] snd_hda_codec_realtek hdaudioC0D0: autoconfig for ALC269VC: line_outs=1 (0x15/0x0/0x0/0x0/0x0) type:hp
+[    5.518582] snd_hda_codec_realtek hdaudioC0D0:    speaker_outs=0 (0x0/0x0/0x0/0x0/0x0)
+[    5.518584] snd_hda_codec_realtek hdaudioC0D0:    hp_outs=0 (0x0/0x0/0x0/0x0/0x0)
+[    5.518586] snd_hda_codec_realtek hdaudioC0D0:    mono: mono_out=0x0
+[    5.518587] snd_hda_codec_realtek hdaudioC0D0:    inputs:
+[    5.518588] snd_hda_codec_realtek hdaudioC0D0:      Mic=0x18
+[    5.518590] snd_hda_codec_realtek hdaudioC0D0:      Internal Mic=0x12
+[    5.519761] iwlwifi 0000:00:14.3: Detected Intel(R) Wireless-AC 9560 160MHz, REV=0x370
+[    5.519854] thermal thermal_zone2: failed to read out thermal zone (-61)
+[    5.529418] iwlwifi 0000:00:14.3: WRT: Invalid buffer destination
+[    5.545176] intel_rapl_msr: PL4 support detected.
+[    5.546792] intel_rapl_common: Found RAPL domain package
+[    5.546795] intel_rapl_common: Found RAPL domain core
+[    5.546796] intel_rapl_common: Found RAPL domain uncore
+[    5.546797] intel_rapl_common: Found RAPL domain psys
+[    5.591987] input: HDA Intel PCH Mic as /devices/pci0000:00/0000:00:1f.3/sound/card0/input8
+[    5.592059] input: HDA Intel PCH Headphone as /devices/pci0000:00/0000:00:1f.3/sound/card0/input9
+[    5.592097] input: HDA Intel PCH HDMI/DP,pcm=3 as /devices/pci0000:00/0000:00:1f.3/sound/card0/input10
+[    5.592131] input: HDA Intel PCH HDMI/DP,pcm=7 as /devices/pci0000:00/0000:00:1f.3/sound/card0/input11
+[    5.592167] input: HDA Intel PCH HDMI/DP,pcm=8 as /devices/pci0000:00/0000:00:1f.3/sound/card0/input12
+[    5.592200] input: HDA Intel PCH HDMI/DP,pcm=9 as /devices/pci0000:00/0000:00:1f.3/sound/card0/input13
+[    5.631936] iwlwifi 0000:00:14.3: WFPM_UMAC_PD_NOTIFICATION: 0x1f
+[    5.632000] iwlwifi 0000:00:14.3: WFPM_LMAC2_PD_NOTIFICATION: 0x1f
+[    5.632038] iwlwifi 0000:00:14.3: WFPM_AUTH_KEY_0: 0x90
+[    5.632047] iwlwifi 0000:00:14.3: CNVI_SCU_SEQ_DATA_DW9: 0x0
+[    5.632064] iwlwifi 0000:00:14.3: RFIm is deactivated, reason = 4
+[    5.632174] iwlwifi 0000:00:14.3: Detected RF JF, rfid=0x105110
+[    5.653786] Bluetooth: BNEP (Ethernet Emulation) ver 1.3
+[    5.653790] Bluetooth: BNEP filters: protocol multicast
+[    5.653795] Bluetooth: BNEP socket layer initialized
+[    5.687574] iwlwifi 0000:00:14.3: base HW address: 4c:49:6c:47:7b:fb
+[    5.888913] iwlwifi 0000:00:14.3: timeout waiting for FW reset ACK (inta_hw=0x0)
+[    5.889038] iwlwifi 0000:00:14.3: Start IWL Error Log Dump:
+[    5.889042] iwlwifi 0000:00:14.3: Transport status: 0x0000004A, valid: 6
+[    5.889048] iwlwifi 0000:00:14.3: Loaded firmware version: 77.f92b5fed.0 so-a0-jf-b0-77.ucode
+[    5.889053] iwlwifi 0000:00:14.3: 0x00000084 | NMI_INTERRUPT_UNKNOWN
+[    5.889058] iwlwifi 0000:00:14.3: 0x000082F0 | trm_hw_status0
+[    5.889061] iwlwifi 0000:00:14.3: 0x00000000 | trm_hw_status1
+[    5.889064] iwlwifi 0000:00:14.3: 0x004D2A06 | branchlink2
+[    5.889067] iwlwifi 0000:00:14.3: 0x004C92BE | interruptlink1
+[    5.889070] iwlwifi 0000:00:14.3: 0x004C92BE | interruptlink2
+[    5.889073] iwlwifi 0000:00:14.3: 0x00011F5A | data1
+[    5.889076] iwlwifi 0000:00:14.3: 0x01000000 | data2
+[    5.889078] iwlwifi 0000:00:14.3: 0x00000000 | data3
+[    5.889081] iwlwifi 0000:00:14.3: 0x00000000 | beacon time
+[    5.889084] iwlwifi 0000:00:14.3: 0x0001B43E | tsf low
+[    5.889086] iwlwifi 0000:00:14.3: 0x00000000 | tsf hi
+[    5.889089] iwlwifi 0000:00:14.3: 0x00000000 | time gp1
+[    5.889091] iwlwifi 0000:00:14.3: 0x00026A5F | time gp2
+[    5.889094] iwlwifi 0000:00:14.3: 0x00000001 | uCode revision type
+[    5.889096] iwlwifi 0000:00:14.3: 0x0000004D | uCode version major
+[    5.889099] iwlwifi 0000:00:14.3: 0xF92B5FED | uCode version minor
+[    5.889102] iwlwifi 0000:00:14.3: 0x00000370 | hw version
+[    5.889105] iwlwifi 0000:00:14.3: 0x00480002 | board version
+[    5.889108] iwlwifi 0000:00:14.3: 0x802FFF00 | hcmd
+[    5.889110] iwlwifi 0000:00:14.3: 0x20020000 | isr0
+[    5.889113] iwlwifi 0000:00:14.3: 0x00000000 | isr1
+[    5.889115] iwlwifi 0000:00:14.3: 0x58F00002 | isr2
+[    5.889118] iwlwifi 0000:00:14.3: 0x00C0000C | isr3
+[    5.889120] iwlwifi 0000:00:14.3: 0x00000000 | isr4
+[    5.889122] iwlwifi 0000:00:14.3: 0x00000000 | last cmd Id
+[    5.889125] iwlwifi 0000:00:14.3: 0x00011F5A | wait_event
+[    5.889127] iwlwifi 0000:00:14.3: 0x00000000 | l2p_control
+[    5.889130] iwlwifi 0000:00:14.3: 0x00000000 | l2p_duration
+[    5.889132] iwlwifi 0000:00:14.3: 0x00000000 | l2p_mhvalid
+[    5.889135] iwlwifi 0000:00:14.3: 0x00000000 | l2p_addr_match
+[    5.889137] iwlwifi 0000:00:14.3: 0x00000009 | lmpm_pmg_sel
+[    5.889140] iwlwifi 0000:00:14.3: 0x00000000 | timestamp
+[    5.889142] iwlwifi 0000:00:14.3: 0x00000028 | flow_handler
+[    5.889250] iwlwifi 0000:00:14.3: 0x00000000 | ADVANCED_SYSASSERT
+[    5.889254] iwlwifi 0000:00:14.3: 0x00000000 | umac branchlink1
+[    5.889256] iwlwifi 0000:00:14.3: 0x00000000 | umac branchlink2
+[    5.889259] iwlwifi 0000:00:14.3: 0x00000000 | umac interruptlink1
+[    5.889261] iwlwifi 0000:00:14.3: 0x00000000 | umac interruptlink2
+[    5.889263] iwlwifi 0000:00:14.3: 0x00000000 | umac data1
+[    5.889266] iwlwifi 0000:00:14.3: 0x00000000 | umac data2
+[    5.889268] iwlwifi 0000:00:14.3: 0x00000000 | umac data3
+[    5.889270] iwlwifi 0000:00:14.3: 0x00000000 | umac major
+[    5.889273] iwlwifi 0000:00:14.3: 0x00000000 | umac minor
+[    5.889275] iwlwifi 0000:00:14.3: 0x00000000 | frame pointer
+[    5.889277] iwlwifi 0000:00:14.3: 0x00000000 | stack pointer
+[    5.889280] iwlwifi 0000:00:14.3: 0x00000000 | last host cmd
+[    5.889282] iwlwifi 0000:00:14.3: 0x00000000 | isr status reg
+[    5.889335] iwlwifi 0000:00:14.3: IML/ROM dump:
+[    5.889337] iwlwifi 0000:00:14.3: 0x00000B03 | IML/ROM error/state
+[    5.889376] iwlwifi 0000:00:14.3: 0x00005018 | IML/ROM data1
+[    5.889427] iwlwifi 0000:00:14.3: 0x00000090 | IML/ROM WFPM_AUTH_KEY_0
+[    5.889472] iwlwifi 0000:00:14.3: Fseq Registers:
+[    5.889477] iwlwifi 0000:00:14.3: 0x20000000 | FSEQ_ERROR_CODE
+[    5.889518] iwlwifi 0000:00:14.3: 0x80330000 | FSEQ_TOP_INIT_VERSION
+[    5.889524] iwlwifi 0000:00:14.3: 0x00010009 | FSEQ_CNVIO_INIT_VERSION
+[    5.889529] iwlwifi 0000:00:14.3: 0x0000A384 | FSEQ_OTP_VERSION
+[    5.889572] iwlwifi 0000:00:14.3: 0xA9135259 | FSEQ_TOP_CONTENT_VERSION
+[    5.889577] iwlwifi 0000:00:14.3: 0x4552414E | FSEQ_ALIVE_TOKEN
+[    5.889582] iwlwifi 0000:00:14.3: 0x00080400 | FSEQ_CNVI_ID
+[    5.889623] iwlwifi 0000:00:14.3: 0x01300202 | FSEQ_CNVR_ID
+[    5.889672] iwlwifi 0000:00:14.3: 0x00080400 | CNVI_AUX_MISC_CHIP
+[    5.889680] iwlwifi 0000:00:14.3: 0x01300202 | CNVR_AUX_MISC_CHIP
+[    5.889726] iwlwifi 0000:00:14.3: 0x0000485B | CNVR_SCU_SD_REGS_SD_REG_DIG_DCDC_VTRIM
+[    5.889791] iwlwifi 0000:00:14.3: 0x0BADCAFE | CNVR_SCU_SD_REGS_SD_REG_ACTIVE_VDIG_MIRROR
+[    5.889826] iwlwifi 0000:00:14.3: 0x00000000 | FSEQ_PREV_CNVIO_INIT_VERSION
+[    5.889832] iwlwifi 0000:00:14.3: 0x00330000 | FSEQ_WIFI_FSEQ_VERSION
+[    5.889837] iwlwifi 0000:00:14.3: 0x9FFCF022 | FSEQ_BT_FSEQ_VERSION
+[    5.889894] iwlwifi 0000:00:14.3: 0x00000118 | FSEQ_CLASS_TP_VERSION
+[    5.889942] iwlwifi 0000:00:14.3: UMAC CURRENT PC: 0x8047e450
+[    5.889984] iwlwifi 0000:00:14.3: LMAC1 CURRENT PC: 0xd0
+[    5.889991] iwlwifi 0000:00:14.3: WRT: Collecting data: ini trigger 4 fired (delay=0ms).
+[    6.351220] RPC: Registered named UNIX socket transport module.
+[    6.351225] RPC: Registered udp transport module.
+[    6.351226] RPC: Registered tcp transport module.
+[    6.351226] RPC: Registered tcp-with-tls transport module.
+[    6.351227] RPC: Registered tcp NFSv4.1 backchannel transport module.
+[    6.359980] iwlwifi 0000:00:14.3 wlo1: renamed from wlan0
+[    6.458969] NET: Registered PF_QIPCRTR protocol family
+[    6.723335] iwlwifi 0000:00:14.3: WRT: Invalid buffer destination
+[    6.819602] iwlwifi 0000:00:14.3: WFPM_UMAC_PD_NOTIFICATION: 0x1f
+[    6.819650] iwlwifi 0000:00:14.3: WFPM_LMAC2_PD_NOTIFICATION: 0x1f
+[    6.819660] iwlwifi 0000:00:14.3: WFPM_AUTH_KEY_0: 0x90
+[    6.819671] iwlwifi 0000:00:14.3: CNVI_SCU_SEQ_DATA_DW9: 0x0
+[    6.820925] iwlwifi 0000:00:14.3: RFIm is deactivated, reason = 4
+[    6.879762] iwlwifi 0000:00:14.3: Registered PHC clock: iwlwifi-PTP, with index: 2
+[    7.096915] iwlwifi 0000:00:14.3: timeout waiting for FW reset ACK (inta_hw=0x0)
+[    7.097043] iwlwifi 0000:00:14.3: Start IWL Error Log Dump:
+[    7.097049] iwlwifi 0000:00:14.3: Transport status: 0x0000004A, valid: 6
+[    7.097057] iwlwifi 0000:00:14.3: Loaded firmware version: 77.f92b5fed.0 so-a0-jf-b0-77.ucode
+[    7.097063] iwlwifi 0000:00:14.3: 0x00000084 | NMI_INTERRUPT_UNKNOWN
+[    7.097070] iwlwifi 0000:00:14.3: 0x000002F0 | trm_hw_status0
+[    7.097075] iwlwifi 0000:00:14.3: 0x00000000 | trm_hw_status1
+[    7.097079] iwlwifi 0000:00:14.3: 0x004D2A06 | branchlink2
+[    7.097084] iwlwifi 0000:00:14.3: 0x004C92BE | interruptlink1
+[    7.097088] iwlwifi 0000:00:14.3: 0x004C92BE | interruptlink2
+[    7.097091] iwlwifi 0000:00:14.3: 0x00011F5A | data1
+[    7.097096] iwlwifi 0000:00:14.3: 0x01000000 | data2
+[    7.097100] iwlwifi 0000:00:14.3: 0x00000000 | data3
+[    7.097104] iwlwifi 0000:00:14.3: 0x00000000 | beacon time
+[    7.097108] iwlwifi 0000:00:14.3: 0x0001D5EF | tsf low
+[    7.097112] iwlwifi 0000:00:14.3: 0x00000000 | tsf hi
+[    7.097115] iwlwifi 0000:00:14.3: 0x00000000 | time gp1
+[    7.097119] iwlwifi 0000:00:14.3: 0x00028AAD | time gp2
+[    7.097122] iwlwifi 0000:00:14.3: 0x00000001 | uCode revision type
+[    7.097126] iwlwifi 0000:00:14.3: 0x0000004D | uCode version major
+[    7.097130] iwlwifi 0000:00:14.3: 0xF92B5FED | uCode version minor
+[    7.097134] iwlwifi 0000:00:14.3: 0x00000370 | hw version
+[    7.097138] iwlwifi 0000:00:14.3: 0x00480002 | board version
+[    7.097142] iwlwifi 0000:00:14.3: 0x805AFF00 | hcmd
+[    7.097145] iwlwifi 0000:00:14.3: 0x00020000 | isr0
+[    7.097149] iwlwifi 0000:00:14.3: 0x00000000 | isr1
+[    7.097152] iwlwifi 0000:00:14.3: 0x48F04802 | isr2
+[    7.097156] iwlwifi 0000:00:14.3: 0x00C3000C | isr3
+[    7.097159] iwlwifi 0000:00:14.3: 0x00000000 | isr4
+[    7.097162] iwlwifi 0000:00:14.3: 0x001C0148 | last cmd Id
+[    7.097166] iwlwifi 0000:00:14.3: 0x00011F5A | wait_event
+[    7.097170] iwlwifi 0000:00:14.3: 0x00000000 | l2p_control
+[    7.097173] iwlwifi 0000:00:14.3: 0x00000000 | l2p_duration
+[    7.097177] iwlwifi 0000:00:14.3: 0x00000000 | l2p_mhvalid
+[    7.097180] iwlwifi 0000:00:14.3: 0x00000000 | l2p_addr_match
+[    7.097184] iwlwifi 0000:00:14.3: 0x00000018 | lmpm_pmg_sel
+[    7.097188] iwlwifi 0000:00:14.3: 0x00000000 | timestamp
+[    7.097191] iwlwifi 0000:00:14.3: 0x00001840 | flow_handler
+[    7.097249] iwlwifi 0000:00:14.3: 0x00000000 | ADVANCED_SYSASSERT
+[    7.097254] iwlwifi 0000:00:14.3: 0x00000000 | umac branchlink1
+[    7.097257] iwlwifi 0000:00:14.3: 0x00000000 | umac branchlink2
+[    7.097261] iwlwifi 0000:00:14.3: 0x00000000 | umac interruptlink1
+[    7.097264] iwlwifi 0000:00:14.3: 0x00000000 | umac interruptlink2
+[    7.097268] iwlwifi 0000:00:14.3: 0x00000000 | umac data1
+[    7.097271] iwlwifi 0000:00:14.3: 0x00000000 | umac data2
+[    7.097274] iwlwifi 0000:00:14.3: 0x00000000 | umac data3
+[    7.097278] iwlwifi 0000:00:14.3: 0x00000000 | umac major
+[    7.097281] iwlwifi 0000:00:14.3: 0x00000000 | umac minor
+[    7.097284] iwlwifi 0000:00:14.3: 0x00000000 | frame pointer
+[    7.097288] iwlwifi 0000:00:14.3: 0x00000000 | stack pointer
+[    7.097291] iwlwifi 0000:00:14.3: 0x00000000 | last host cmd
+[    7.097295] iwlwifi 0000:00:14.3: 0x00000000 | isr status reg
+[    7.097332] iwlwifi 0000:00:14.3: IML/ROM dump:
+[    7.097335] iwlwifi 0000:00:14.3: 0x00000B03 | IML/ROM error/state
+[    7.097383] iwlwifi 0000:00:14.3: 0x00005025 | IML/ROM data1
+[    7.097432] iwlwifi 0000:00:14.3: 0x00000090 | IML/ROM WFPM_AUTH_KEY_0
+[    7.097480] iwlwifi 0000:00:14.3: Fseq Registers:
+[    7.097485] iwlwifi 0000:00:14.3: 0x60000000 | FSEQ_ERROR_CODE
+[    7.097528] iwlwifi 0000:00:14.3: 0x80330000 | FSEQ_TOP_INIT_VERSION
+[    7.097534] iwlwifi 0000:00:14.3: 0x00010009 | FSEQ_CNVIO_INIT_VERSION
+[    7.097577] iwlwifi 0000:00:14.3: 0x0000A384 | FSEQ_OTP_VERSION
+[    7.097583] iwlwifi 0000:00:14.3: 0xA9135259 | FSEQ_TOP_CONTENT_VERSION
+[    7.097628] iwlwifi 0000:00:14.3: 0x4552414E | FSEQ_ALIVE_TOKEN
+[    7.097634] iwlwifi 0000:00:14.3: 0x00080400 | FSEQ_CNVI_ID
+[    7.097678] iwlwifi 0000:00:14.3: 0x01300202 | FSEQ_CNVR_ID
+[    7.097684] iwlwifi 0000:00:14.3: 0x00080400 | CNVI_AUX_MISC_CHIP
+[    7.097731] iwlwifi 0000:00:14.3: 0x01300202 | CNVR_AUX_MISC_CHIP
+[    7.097740] iwlwifi 0000:00:14.3: 0x0000485B | CNVR_SCU_SD_REGS_SD_REG_DIG_DCDC_VTRIM
+[    7.097835] iwlwifi 0000:00:14.3: 0x0BADCAFE | CNVR_SCU_SD_REGS_SD_REG_ACTIVE_VDIG_MIRROR
+[    7.097894] iwlwifi 0000:00:14.3: 0x00010009 | FSEQ_PREV_CNVIO_INIT_VERSION
+[    7.097925] iwlwifi 0000:00:14.3: 0x00330000 | FSEQ_WIFI_FSEQ_VERSION
+[    7.097932] iwlwifi 0000:00:14.3: 0x9FFCF022 | FSEQ_BT_FSEQ_VERSION
+[    7.097976] iwlwifi 0000:00:14.3: 0x00000118 | FSEQ_CLASS_TP_VERSION
+[    7.098031] iwlwifi 0000:00:14.3: UMAC CURRENT PC: 0x8047e450
+[    7.098077] iwlwifi 0000:00:14.3: LMAC1 CURRENT PC: 0xd0
+[    7.098085] iwlwifi 0000:00:14.3: WRT: Collecting data: ini trigger 4 fired (delay=0ms).
+[    7.357711] Bluetooth: hci0: Waiting for firmware download to complete
+[    7.358539] Bluetooth: hci0: Firmware loaded in 2026829 usecs
+[    7.359647] Bluetooth: hci0: Waiting for device to boot
+[    7.375592] Bluetooth: hci0: Device booted in 16637 usecs
+[    7.375602] Bluetooth: hci0: Malformed MSFT vendor event: 0x02
+[    7.378606] Bluetooth: hci0: Found Intel DDC parameters: intel/ibt-0040-2120.ddc
+[    7.380621] Bluetooth: hci0: Applying Intel DDC parameters completed
+[    7.383619] Bluetooth: hci0: Firmware timestamp 2022.50 buildtype 1 build 97
+[    7.383622] Bluetooth: hci0: Firmware SHA1: 0xd719e76a
+[    7.452768] Bluetooth: MGMT ver 1.22
+[    7.577250] iwlwifi 0000:00:14.3: WRT: Invalid buffer destination
+[    7.674118] iwlwifi 0000:00:14.3: WFPM_UMAC_PD_NOTIFICATION: 0x1f
+[    7.674170] iwlwifi 0000:00:14.3: WFPM_LMAC2_PD_NOTIFICATION: 0x1f
+[    7.674219] iwlwifi 0000:00:14.3: WFPM_AUTH_KEY_0: 0x90
+[    7.674269] iwlwifi 0000:00:14.3: CNVI_SCU_SEQ_DATA_DW9: 0x0
+[    7.675231] iwlwifi 0000:00:14.3: RFIm is deactivated, reason = 4
+[   13.553555] igc 0000:01:00.0 enp1s0: NIC Link is Up 1000 Mbps Full Duplex, Flow Control: RX/TX
+root@localhost:~# q

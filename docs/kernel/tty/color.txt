@@ -1,0 +1,13 @@
+直接 cat 这个文件，可以发现是有颜色的，这个颜色支持是那个层次做的?
+
+[2025-4-24 13:26:57.452593] [kfree_skb           ] ICMP: 10.0.19.97 -> 10.0.19.95 ping reply, seq: 286, id: 3422[0;33m *icmp_rcv+0x12a*[0m[0;31m *[0;31mpacket is dropped by kernel[0m*[0m
+---------------- [0;33mANALYSIS RESULT[0m ---------------------
+[1] [0;32mWARNING[0m happens in ping_lookup(icmp-in):
+	[0;32micmp socket is not founded[0m
+    [0;33mfix advice[0m:
+	not support
+
+[2] [0;31mERROR[0m happens in kfree_skb(life):
+	[0;31mpacket is dropped by kernel[0m
+[0;33m    location[0m:
+	icmp_rcv+0x12a

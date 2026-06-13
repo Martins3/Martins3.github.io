@@ -1,0 +1,434 @@
+(qemu) info qtree
+bus: main-system-bus
+  type System
+  dev: hpet, id ""
+    gpio-in "" 2
+    gpio-out "" 1
+    gpio-out "sysbus-irq" 32
+    timers = 3 (0x3)
+    msi = false
+    hpet-intcap = 4 (0x4)
+    hpet-offset-saved = true
+    mmio 00000000fed00000/0000000000000400
+  dev: kvm-ioapic, id ""
+    gpio-in "" 24
+    gsi_base = 0 (0x0)
+    mmio 00000000fec00000/0000000000001000
+  dev: i440FX-pcihost, id ""
+    pci-hole64-size = 2147483648 (2 GiB)
+    short_root_bus = 0 (0x0)
+    x-pci-hole64-fix = true
+    x-config-reg-migration-enabled = true
+    bypass-iommu = false
+    bus: pci.0
+      type PCI
+      dev: virtio-9p-pci, id ""
+        disable-legacy = "off"
+        disable-modern = false
+        ioeventfd = true
+        vectors = 2 (0x2)
+        virtio-pci-bus-master-bug-migration = false
+        migrate-extra = true
+        modern-pio-notify = false
+        x-disable-pcie = false
+        page-per-vq = false
+        x-ignore-backend-features = false
+        ats = false
+        x-ats-page-aligned = true
+        x-pcie-deverr-init = true
+        x-pcie-lnkctl-init = true
+        x-pcie-pm-init = true
+        x-pcie-flr-init = true
+        aer = false
+        addr = 06.0
+        romfile = ""
+        romsize = 4294967295 (0xffffffff)
+        rombar = 1 (0x1)
+        multifunction = false
+        x-pcie-lnksta-dllla = true
+        x-pcie-extcap-init = true
+        failover_pair_id = ""
+        acpi-index = 0 (0x0)
+        class Class 0002, addr 00:06.0, pci id 1af4:1009 (sub 1af4:0009)
+        bar 0: i/o at 0xc0c0 [0xc0df]
+        bar 1: mem at 0xfebf6000 [0xfebf6fff]
+        bar 4: mem at 0xfe004000 [0xfe007fff]
+        bus: virtio-bus
+          type virtio-pci-bus
+          dev: virtio-9p-device, id ""
+            mount_tag = "host0"
+            fsdev = "host0"
+            indirect_desc = true
+            event_idx = true
+            notify_on_empty = true
+            any_layout = true
+            iommu_platform = false
+            packed = false
+            use-started = true
+            use-disabled-flag = true
+            x-disable-legacy-check = false
+      dev: virtio-blk-pci, id ""
+        disable-legacy = "off"
+        disable-modern = false
+        class = 0 (0x0)
+        ioeventfd = true
+        vectors = 3 (0x3)
+        virtio-pci-bus-master-bug-migration = false
+        migrate-extra = true
+        modern-pio-notify = false
+        x-disable-pcie = false
+        page-per-vq = false
+        x-ignore-backend-features = false
+        ats = false
+        x-ats-page-aligned = true
+        x-pcie-deverr-init = true
+        x-pcie-lnkctl-init = true
+        x-pcie-pm-init = true
+        x-pcie-flr-init = true
+        aer = false
+        addr = 05.0
+        romfile = ""
+        romsize = 4294967295 (0xffffffff)
+        rombar = 1 (0x1)
+        multifunction = false
+        x-pcie-lnksta-dllla = true
+        x-pcie-extcap-init = true
+        failover_pair_id = ""
+        acpi-index = 0 (0x0)
+        class SCSI controller, addr 00:05.0, pci id 1af4:1001 (sub 1af4:0002)
+        bar 0: i/o at 0xc000 [0xc07f]
+        bar 1: mem at 0xfebf5000 [0xfebf5fff]
+        bar 4: mem at 0xfe000000 [0xfe003fff]
+        bus: virtio-bus
+          type virtio-pci-bus
+          dev: virtio-blk-device, id ""
+            drive = "nvme2"
+            backend_defaults = "auto"
+            logical_block_size = 512 (512 B)
+            physical_block_size = 512 (512 B)
+            min_io_size = 0 (0 B)
+            opt_io_size = 0 (0 B)
+            discard_granularity = 4294967295 (4 GiB)
+            write-cache = "auto"
+            share-rw = false
+            rerror = "auto"
+            werror = "auto"
+            cyls = 203 (0xcb)
+            heads = 16 (0x10)
+            secs = 63 (0x3f)
+            lcyls = 0 (0x0)
+            lheads = 0 (0x0)
+            lsecs = 0 (0x0)
+            serial = ""
+            config-wce = true
+            scsi = false
+            request-merging = true
+            num-queues = 2 (0x2)
+            queue-size = 256 (0x100)
+            seg-max-adjust = true
+            discard = true
+            report-discard-granularity = true
+            write-zeroes = true
+            max-discard-sectors = 4194303 (0x3fffff)
+            max-write-zeroes-sectors = 4194303 (0x3fffff)
+            x-enable-wce-if-config-wce = true
+            indirect_desc = true
+            event_idx = true
+            notify_on_empty = true
+            any_layout = true
+            iommu_platform = false
+            packed = false
+            use-started = true
+            use-disabled-flag = true
+            x-disable-legacy-check = false
+      dev: nvme, id ""
+        drive = "nvme1"
+        backend_defaults = "auto"
+        logical_block_size = 512 (512 B)
+        physical_block_size = 512 (512 B)
+        min_io_size = 0 (0 B)
+        opt_io_size = 0 (0 B)
+        discard_granularity = 4096 (4 KiB)
+        write-cache = "auto"
+        share-rw = false
+        serial = "foo"
+        cmb_size_mb = 0 (0x0)
+        num_queues = 0 (0x0)
+        max_ioqpairs = 64 (0x40)
+        msix_qsize = 65 (0x41)
+        aerl = 3 (0x3)
+        aer_max_queued = 64 (0x40)
+        mdts = 7 (0x7)
+        vsl = 7 (0x7)
+        use-intel-id = false
+        legacy-cmb = false
+        zoned.zasl = 0 (0x0)
+        zoned.auto_transition = true
+        addr = 04.0
+        romfile = ""
+        romsize = 4294967295 (0xffffffff)
+        rombar = 1 (0x1)
+        multifunction = false
+        x-pcie-lnksta-dllla = true
+        x-pcie-extcap-init = true
+        failover_pair_id = ""
+        acpi-index = 0 (0x0)
+        class Class 0108, addr 00:04.0, pci id 1b36:0010 (sub 1af4:1100)
+        bar 0: mem at 0xfebf0000 [0xfebf3fff]
+        bus: nvme-bus.0
+          type nvme-bus
+      dev: PIIX4_PM, id ""
+        smb_io_base = 1792 (0x700)
+        disable_s3 = 0 (0x0)
+        disable_s4 = 0 (0x0)
+        s4_val = 2 (0x2)
+        acpi-pci-hotplug-with-bridge-support = true
+        acpi-root-pci-hotplug = true
+        memory-hotplug-support = true
+        smm-compat = false
+        addr = 01.3
+        romfile = ""
+        romsize = 4294967295 (0xffffffff)
+        rombar = 1 (0x1)
+        multifunction = false
+        x-pcie-lnksta-dllla = true
+        x-pcie-extcap-init = true
+        failover_pair_id = ""
+        acpi-index = 0 (0x0)
+        class Bridge, addr 00:01.3, pci id 8086:7113 (sub 1af4:1100)
+        bus: i2c
+          type i2c-bus
+          dev: smbus-eeprom, id ""
+            address = 87 (0x57)
+          dev: smbus-eeprom, id ""
+            address = 86 (0x56)
+          dev: smbus-eeprom, id ""
+            address = 85 (0x55)
+          dev: smbus-eeprom, id ""
+            address = 84 (0x54)
+          dev: smbus-eeprom, id ""
+            address = 83 (0x53)
+          dev: smbus-eeprom, id ""
+            address = 82 (0x52)
+          dev: smbus-eeprom, id ""
+            address = 81 (0x51)
+          dev: smbus-eeprom, id ""
+            address = 80 (0x50)
+      dev: piix3-ide, id ""
+        addr = 01.1
+        romfile = ""
+        romsize = 4294967295 (0xffffffff)
+        rombar = 1 (0x1)
+        multifunction = false
+        x-pcie-lnksta-dllla = true
+        x-pcie-extcap-init = true
+        failover_pair_id = ""
+        acpi-index = 0 (0x0)
+        class IDE controller, addr 00:01.1, pci id 8086:7010 (sub 1af4:1100)
+        bar 4: i/o at 0xc0e0 [0xc0ef]
+        bus: ide.1
+          type IDE
+          dev: ide-cd, id ""
+            drive = "ide1-cd0"
+            backend_defaults = "auto"
+            logical_block_size = 512 (512 B)
+            physical_block_size = 512 (512 B)
+            min_io_size = 0 (0 B)
+            opt_io_size = 0 (0 B)
+            discard_granularity = 512 (512 B)
+            write-cache = "auto"
+            share-rw = false
+            rerror = "auto"
+            werror = "auto"
+            ver = "2.5+"
+            wwn = 0 (0x0)
+            serial = "QM00003"
+            model = ""
+            unit = 0 (0x0)
+        bus: ide.0
+          type IDE
+          dev: ide-hd, id ""
+            drive = "ide0-hd0"
+            backend_defaults = "auto"
+            logical_block_size = 512 (512 B)
+            physical_block_size = 512 (512 B)
+            min_io_size = 0 (0 B)
+            opt_io_size = 0 (0 B)
+            discard_granularity = 512 (512 B)
+            write-cache = "auto"
+            share-rw = false
+            rerror = "auto"
+            werror = "auto"
+            ver = "2.5+"
+            wwn = 0 (0x0)
+            serial = "QM00001"
+            model = ""
+            cyls = 16383 (0x3fff)
+            heads = 16 (0x10)
+            secs = 63 (0x3f)
+            lcyls = 0 (0x0)
+            lheads = 0 (0x0)
+            lsecs = 0 (0x0)
+            bios-chs-trans = "lba"
+            rotation_rate = 0 (0x0)
+            unit = 0 (0x0)
+      dev: e1000, id ""
+        mac = "52:54:00:12:34:56"
+        netdev = "hub0port0"
+        autonegotiation = true
+        mitigation = true
+        extra_mac_registers = true
+        migrate_tso_props = true
+        init-vet = true
+        addr = 03.0
+        romfile = "efi-e1000.rom"
+        romsize = 262144 (0x40000)
+        rombar = 1 (0x1)
+        multifunction = false
+        x-pcie-lnksta-dllla = true
+        x-pcie-extcap-init = true
+        failover_pair_id = ""
+        acpi-index = 0 (0x0)
+        class Ethernet controller, addr 00:03.0, pci id 8086:100e (sub 1af4:1100)
+        bar 0: mem at 0xfebc0000 [0xfebdffff]
+        bar 1: i/o at 0xc080 [0xc0bf]
+        bar 6: mem at 0xffffffffffffffff [0x3fffe]
+      dev: VGA, id ""
+        vgamem_mb = 16 (0x10)
+        mmio = true
+        qemu-extended-regs = true
+        edid = true
+        xres = 1024 (0x400)
+        yres = 768 (0x300)
+        xmax = 0 (0x0)
+        ymax = 0 (0x0)
+        refresh_rate = 0 (0x0)
+        global-vmstate = false
+        addr = 02.0
+        romfile = "vgabios-stdvga.bin"
+        romsize = 65536 (0x10000)
+        rombar = 1 (0x1)
+        multifunction = false
+        x-pcie-lnksta-dllla = true
+        x-pcie-extcap-init = true
+        failover_pair_id = ""
+        acpi-index = 0 (0x0)
+        class VGA controller, addr 00:02.0, pci id 1234:1111 (sub 1af4:1100)
+        bar 0: mem at 0xfd000000 [0xfdffffff]
+        bar 2: mem at 0xfebf4000 [0xfebf4fff]
+        bar 6: mem at 0xffffffffffffffff [0xfffe]
+      dev: PIIX3, id ""
+        addr = 01.0
+        romfile = ""
+        romsize = 4294967295 (0xffffffff)
+        rombar = 1 (0x1)
+        multifunction = true
+        x-pcie-lnksta-dllla = true
+        x-pcie-extcap-init = true
+        failover_pair_id = ""
+        acpi-index = 0 (0x0)
+        class ISA bridge, addr 00:01.0, pci id 8086:7000 (sub 1af4:1100)
+        bus: isa.0
+          type ISA
+          dev: isa-debugcon, id ""
+            iobase = 1026 (0x402)
+            chardev = "seabios"
+            readback = 233 (0xe9)
+          dev: port92, id ""
+            gpio-out "a20" 1
+          dev: vmmouse, id ""
+          dev: vmport, id ""
+            x-read-set-eax = true
+            x-signal-unsupported-cmd = true
+            x-report-vmx-type = true
+            x-cmds-v2 = true
+            vmware-vmx-version = 6 (0x6)
+            vmware-vmx-type = 2 (0x2)
+          dev: i8042, id ""
+            gpio-out "a20" 1
+            extended-state = true
+            kbd-throttle = false
+            isa irqs 1,12
+          dev: isa-fdc, id ""
+            iobase = 1008 (0x3f0)
+            irq = 6 (0x6)
+            dma = 2 (0x2)
+            fdtypeA = "auto"
+            fdtypeB = "auto"
+            fallback = "288"
+            isa irq 6
+            bus: floppy-bus.0
+              type floppy-bus
+              dev: floppy, id ""
+                unit = 0 (0x0)
+                drive = "floppy0"
+                backend_defaults = "auto"
+                logical_block_size = 512 (512 B)
+                physical_block_size = 512 (512 B)
+                min_io_size = 0 (0 B)
+                opt_io_size = 0 (0 B)
+                discard_granularity = 4294967295 (4 GiB)
+                write-cache = "auto"
+                share-rw = false
+                drive-type = "288"
+          dev: isa-parallel, id ""
+            index = 0 (0x0)
+            iobase = 888 (0x378)
+            irq = 7 (0x7)
+            chardev = "parallel0"
+            isa irq 7
+          dev: isa-serial, id ""
+            index = 0 (0x0)
+            iobase = 1016 (0x3f8)
+            irq = 4 (0x4)
+            isa irq 4
+          dev: i8257, id ""
+            base = 192 (0xc0)
+            page-base = 136 (0x88)
+            pageh-base = -1 (0xffffffffffffffff)
+            dshift = 1 (0x1)
+          dev: i8257, id ""
+            base = 0 (0x0)
+            page-base = 128 (0x80)
+            pageh-base = -1 (0xffffffffffffffff)
+            dshift = 0 (0x0)
+          dev: isa-pcspk, id ""
+            audiodev = ""
+            iobase = 97 (0x61)
+            migrate = true
+          dev: kvm-pit, id ""
+            gpio-in "" 1
+            iobase = 64 (0x40)
+            lost_tick_policy = "delay"
+          dev: mc146818rtc, id ""
+            gpio-out "" 1
+            base_year = 0 (0x0)
+            lost_tick_policy = "discard"
+          dev: kvm-i8259, id ""
+            iobase = 160 (0xa0)
+            elcr_addr = 1233 (0x4d1)
+            elcr_mask = 222 (0xde)
+            master = false
+          dev: kvm-i8259, id ""
+            iobase = 32 (0x20)
+            elcr_addr = 1232 (0x4d0)
+            elcr_mask = 248 (0xf8)
+            master = true
+      dev: i440FX, id ""
+        addr = 00.0
+        romfile = ""
+        romsize = 4294967295 (0xffffffff)
+        rombar = 1 (0x1)
+        multifunction = false
+        x-pcie-lnksta-dllla = true
+        x-pcie-extcap-init = true
+        failover_pair_id = ""
+        acpi-index = 0 (0x0)
+        class Host bridge, addr 00:00.0, pci id 8086:1237 (sub 1af4:1100)
+  dev: fw_cfg_io, id ""
+    dma_enabled = true
+    x-file-slots = 32 (0x20)
+    acpi-mr-restore = true
+  dev: kvmclock, id ""
+    x-mach-use-reliable-get-clock = true
+  dev: kvmvapic, id ""

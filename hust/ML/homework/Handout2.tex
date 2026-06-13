@@ -1,0 +1,250 @@
+\documentclass{article}
+
+\usepackage{fancyhdr}
+\usepackage{booktabs}
+\usepackage{extramarks}
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage{amssymb}
+\usepackage{enumerate}
+\usepackage{geometry}
+\usepackage{setspace}
+
+\newenvironment{solution}
+  {\renewcommand\qedsymbol{$\blacksquare$}\begin{proof}[Solution]}
+  {\end{proof}}
+
+\author{Bachelar Hu}
+\title{Machine Learning HW2}
+\geometry{left = 2cm, right = 2.0cm, top = 2.5cm, right = 2.5cm}
+\DeclareMathOperator{\E}{\mathbb{E}}
+\DeclareMathOperator{\Prob}{\mathbf{P}}
+
+\begin{document}
+\maketitle
+\setlength{\baselineskip}{15pt}
+\begin{enumerate}
+\item Consider a random variable $X$ that follows the uniform distribution between $0$ and $a$. Please calculate the mean, variance and entropy of $X$. Please show the steps of the calculation.
+\begin{solution}
+    The pdf of $x$
+    \[
+        f(x)=
+            \begin{cases}
+                \frac{1}{a} & \text{x<0 or x>a}\\
+                0           & \text{x>=0 and x<=a}
+            \end{cases}
+    \]
+
+    So
+    \begin{itemize}
+        \item Mean
+            \[E(x) = \int_{-\infty}^{\infty} xf(x) dx =
+            \int_{0}^{a}x\frac{1}{a} = \frac{a}{2}\]
+        \item Variance
+            \[V(x) = \int_{-\infty}^{\infty} (x - E(x))^{2}f(x) dx =
+            \int_{0}^{a}(x - E(x))^{2}\frac{1}{a} = \frac{a^{2}}{12}\]
+        \item Entropy
+            \[
+                H(x) = -\int_{-\infty}^{\infty}f(x) \log_{2}(f(x)) dx =
+                -\int_{0}^{a}f(x)\log_{2}(f(x))
+                = \int_{0}^{a}\frac{1}{a}\log_{2}{a} = \log_{2}{a}
+            \]
+    \end{itemize}
+
+
+\end{solution}
+\bigskip
+\item 	Suppose we have observed $N$ independent random samples of $X$, $(x_1,x_2,\ldots,x_N)$. What is the maximum likelihood estimation of $a$? Please show the derivation steps. Is this estimate unbiased? Please justify your answer too.
+\begin{solution}
+    \[
+        L(\theta) =
+            \prod_{i=1}^n f(x_{i}, \theta) =
+                \begin{cases}
+                    \frac{1}{{\theta}^{n}}  & \text{$0 < x_{1}, x_{2}, ... x_{n} < \theta$} \\
+                    0                       & \text{otherwise}
+                \end{cases}
+    \]
+    To max the $L$, $\hat{\theta} = max(x_{1}, x_{2}, ... x_{n})$.\newline The estimate is
+    biased, because for every $\theta$, $E{(\hat{\theta})} < \theta$
+\end{solution}
+ \bigskip
+\item 	Given two independent Gaussian random variables $U\sim\mathcal{N}(-1,1)$ and $V\sim\mathcal{N}(1,1)$, are the following random variables also Gaussian? If so, what are their means and (co)-variances? Note that $T$ is a vector.
+$Y=U+V$,$Z=U\times V$,$T=\left(\begin{matrix}U+V\\U-2V\\\end{matrix}\right)$,
+$W=\left \{ \begin{matrix}U&with\; 50 \% \; chance\\ V&with\; 50\%\;chance\\ \end{matrix} \right.$
+\begin{solution}
+    \begin{itemize}
+        \item $E(Y) = 0$ $V(Y) = 2$
+        \item $Z$ is not a Gaussian random variables
+        \item
+            \[
+                T = \left(
+                    \begin{matrix} U+V \\
+                        U-2V\\
+                    \end{matrix}
+                \right)
+                 = \left(
+                    \begin{matrix} U \\
+                        U\\
+                    \end{matrix}
+                \right)
+                +
+                \left(
+                    \begin{matrix} V \\
+                        -2V\\
+                    \end{matrix}
+                \right)
+            \]
+            let $A =  \left( \begin{matrix} U \\ U\\ \end{matrix} \right)$
+                and $B =\left( \begin{matrix} V \\ -2V\\
+                \end{matrix}\right)$
+                The $\rho$ of $A$ and $B$ is $1$, so their covariance is
+                $\left( \begin{matrix} 1, 1 \\ 1, 1\\ \end{matrix} \right)$,
+                $\left( \begin{matrix} 1, \sqrt{2} \\1, \sqrt{2}\\ \end{matrix} \right)$
+            So
+            \[
+                E(T) =
+                \left( \begin{matrix} 2 \\ -1\\ \end{matrix} \right)
+            \]
+
+            \[
+                V(T) = \left( \begin{matrix} 2, 1 + \sqrt{2} \\2, 1 + \sqrt{2}\\ \end{matrix} \right)
+            \]
+
+        \item $W$ is not a Gaussian random variables
+    \end{itemize}
+
+\end{solution}
+\bigskip
+\item We have two coins: one is a fair coin -- observing either the head side or the tail side with 50\% probability. 
+The other coin is a fake coin which has head on both sides. Suppose we randomly pick one and toss it (the two coins are otherwise the same so either one would be picked up with a 50\% probability). (Hint: Use the rules of probability and Bayes's rule).
+\begin{enumerate}
+	\item What is the probability we observe head?
+	\item If we indeed observe head, what is the probability we had picked the fake coin?
+\end{enumerate}
+\begin{solution}
+    \begin{itemize}
+        \item $P$(Observe head) = $\frac{3}{4}$
+        \item $P$(Coin is fake / Observe head) = $\frac{2}{3}$
+    \end{itemize}
+\end{solution}
+\bigskip
+%% The questions below are optional. Delete the problems you didn't complete.
+\item 	Show that $f(x)=x^2$ and $g(x)=\ln x$ are convex and concave, respectively.
+\begin{proof}
+    \begin{itemize}
+        \item $f(x)=x^2$ is convex\newline
+            For all values $a, b \in \mathbb{R} $, $\lambda \in (0, 1)$
+            \[
+                f((1- \lambda)a + {\lambda}b) - ((1 - \lambda)f(a) + {\lambda}f(b))
+                =  \lambda^{2}(a-b)^{2} - \lambda^{2}(a-b)^2
+                \leq 0
+            \]
+
+        \item
+            $g(x)=\ln x$ is concave\newline
+            Apprently $f(x) = 1 + x(\frac{b}{a} - 1) - \frac{b}{a}^{x}$ is
+            non-negtive when $x \in [0, 1]$, So for all values $a, b \in \mathbb{R} $, $\lambda \in (0, 1)$
+            \[
+                \implies
+                1 + \lambda(\frac{b}{a} - 1) \geq (\frac{b}{a})^{\lambda}
+            \]
+            \[
+                \implies
+                (1- \lambda)a + {\lambda}b \geq a^{1-\lambda} b^{\lambda}
+            \]
+            \[
+                \implies
+                \frac{(1- \lambda)a + {\lambda}b}{a^{1-\lambda} b^{\lambda}} \geq 1
+            \]
+            \[
+                \implies
+                f((1- \lambda)a + {\lambda}b) - ((1 - \lambda)f(a) + {\lambda}f(b)) \geq 0
+            \]
+    \end{itemize}
+\end{proof}
+\bigskip
+\item Show that $h(x)=\frac{1}{1+e^{-x}}$ is neither convex or concave.
+\begin{proof}
+    \[h\prime(x) =  \frac{1}{(1 + e^{x})^{2}}\]
+    \[h\prime\prime(x) =  \frac{e^{x}(e^{x}-1)(e^{x}+1)}{(1 + e^{x})^{4}}\]
+
+    $h\prime\prime < 0$ for $x \in (\infty, 0)$ and
+    $h\prime\prime > 0$ for $x \in (\infty, 0)$
+    So $h(x)=\frac{1}{1+e^{-x}}$ is neither convex or concave.
+
+\end{proof}
+\bigskip
+\item Show that $-\ln h(x)$ is convex.
+\begin{proof}
+    Let $y(x) = -\ln h(x)$
+    \[y\prime\prime(x) =  \frac{e^{x}}{(1 + e^{x})^{2}}\]
+    apprently $h\prime\prime > 0$ for $x \in (\infty, \infty)$
+    so $-\ln h(x)$ is convex
+
+\end{proof}
+\bigskip
+\item Prove that $x-1\geq \ln x$ for $\forall x>0$.
+\begin{proof}
+    let $f(x) = x - 1 - \ln{x}$
+    \[
+        f\prime(x) = 1 - \frac{1}{x}
+    \]
+
+    we found  that $f\prime(x) < 0$ when $x < 1$ and $f\prime(x) > 0$ when $x >
+    1$, so $f(x)$ is minimum when $x=1$, because $f(1) = 0$, so $x-1\geq \ln x$
+    for $\forall x>0$.
+
+\end{proof}
+\bigskip
+\item Use the above property to show that, for any probability vectors $p=(p_1,\ldots ,p_K)$ and $q=(q_1,\ldots q_K)$,
+$KL(p||q)=\sum_{k=1}^{K}p_k\ln\frac{p_k}{q_k}\geq0$.
+\begin{proof}
+    Because of $x-1\geq \ln x$ for $\forall x>0$, $\ln\frac{p_k}{q_k} \geq
+    (\frac{p_k}{q_k} - 1)$, So
+    \[
+        KL(p||q) =
+        -\sum_{k=1}^{K}p_k\ln\frac{q_k}{p_k} \geq
+        -\sum_{k=1}^{K}p_k(\frac{q_k}{p_k} - 1)
+        \geq
+        -\sum_{k=1}^{K}q_i + \sum_{k=1}^{K}p_i
+        = 0
+    \]
+\end{proof}
+\bigskip
+\item Use the above property to show that, for any probability vector $p=(p_1,\ldots p_k)$ ,
+$H(p)=-\sum_{k=1}^{K}p_k \ln p_k \le \ln K$
+\begin{proof}
+    When the $q_i = \frac{1}{K}$
+\end{proof}
+\bigskip
+\item Consider the following two functions
+\begin{align*}
+f_1(x,y)&=(x-1)^2+(y-1)^2\\
+f_2(x,y)&=(x-3)^2+(y-2)^2
+\end{align*}
+what are their minima if we constrain $x^2+y^2\leq 1$? Please show the derivation steps.
+\begin{solution}
+    Because the geometry meaning of  $f_1(x,y)$ is square of distance from $(x,
+    y)$ to $(1, 1)$. $f_2(x,y)$ has similar geometry meaning. Now $(x, y)$ is
+    restrict to the unit cycle, So
+    \begin{align*}
+        min(f_1(x,y))&=\sqrt{2} - 1\\
+        min(f_2(x,y))&=\sqrt{13} - 1
+    \end{align*}
+
+\end{solution}
+\bigskip
+\item In a $\mathcal{R}^D$ (i.e., D-dimensional Euclidean space), what is the shortest distance from a point $x_0\in R^D$ to a hyperplane $H:w^Tx+b=0$? 
+You need to express this distance in terms of $w$,$b$ and $x_0$. (Hint: Please show the detailed derivation steps. Formulate this problem as a constrained optimization and then use the method of Lagrange multiplier.)
+\begin{solution}
+    \[
+        d=\| \text{proj}_{w} (x_0-X)\| = \left\| \frac{(x_0-X)\cdot w}{w \cdot w} w \right\| = |x_0 \cdot w - X \cdot w|\frac{\|w\|}{\|w\|^2} = \frac{|x_0 \cdot w - X \cdot w|}{\|w\|}
+    \]
+We chose $X$ such that $w\cdot X=-b$ so we get
+\[ d=\| \text{proj}_{w} (x_0-X)\| = \frac{|x_0 \cdot w +b|}{\|w\|} \]
+as desired
+
+\end{solution}
+
+\end{enumerate}
+\end{document}

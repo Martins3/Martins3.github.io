@@ -1,0 +1,12 @@
+[package]
+name = "teach-cuda"
+edition.workspace = true
+license.workspace = true
+version.workspace = true
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+teach-core = { path = "../teach-core" }
+

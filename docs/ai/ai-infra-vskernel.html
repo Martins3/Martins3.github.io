@@ -1,0 +1,1256 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>AI Infra 到底在做什么</title>
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Tektur:wght@400;500;600;700;800;900&family=Chakra+Petch:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&family=Noto+Sans+SC:wght@400;500;700;900&display=swap"
+		rel="stylesheet">
+	<style>
+		/* ===========================================
+           VIEWPORT BASE — MANDATORY FIXED 16:9 STAGE
+           =========================================== */
+		html,
+		body {
+			width: 100%;
+			height: 100%;
+			margin: 0;
+			overflow: hidden;
+			background: #0A0E27;
+		}
+
+		.deck-viewport {
+			position: fixed;
+			inset: 0;
+			overflow: hidden;
+			background: #0A0E27;
+		}
+
+		.deck-stage {
+			position: absolute;
+			left: 0;
+			top: 0;
+			width: 1920px;
+			height: 1080px;
+			overflow: hidden;
+			transform-origin: 0 0;
+			background: #0A0E27;
+		}
+
+		.slide {
+			position: absolute;
+			inset: 0;
+			width: 1920px;
+			height: 1080px;
+			overflow: hidden;
+			display: block;
+			visibility: hidden;
+			opacity: 0;
+			pointer-events: none;
+			background: #0A0E27;
+		}
+
+		.slide.active,
+		.slide.visible {
+			visibility: visible;
+			opacity: 1;
+			pointer-events: auto;
+			z-index: 1;
+		}
+
+		img,
+		video,
+		canvas,
+		svg {
+			max-width: 100%;
+			max-height: 100%;
+		}
+
+		.deck-controls {
+			position: fixed;
+			left: 50%;
+			bottom: 22px;
+			transform: translateX(-50%);
+			z-index: 1000;
+		}
+
+		@media print {
+
+			html,
+			body {
+				width: 1920px;
+				height: auto;
+				overflow: visible;
+				background: #fff;
+			}
+
+			.deck-viewport {
+				position: static;
+				overflow: visible;
+				background: #fff;
+			}
+
+			.deck-stage {
+				position: static;
+				width: auto;
+				height: auto;
+				transform: none !important;
+				background: none;
+			}
+
+			.slide {
+				position: relative;
+				display: block !important;
+				visibility: visible !important;
+				opacity: 1 !important;
+				pointer-events: auto !important;
+				width: 1920px;
+				height: 1080px;
+				break-after: page;
+				page-break-after: always;
+			}
+
+			.slide:last-child {
+				break-after: auto;
+				page-break-after: auto;
+			}
+
+			.deck-controls {
+				display: none !important;
+			}
+		}
+
+		@media (prefers-reduced-motion: reduce) {
+
+			*,
+			*::before,
+			*::after {
+				animation-duration: 0.01ms !important;
+				transition-duration: 0.2s !important;
+			}
+		}
+
+		/* ===========================================
+           8-BIT ORBIT DESIGN SYSTEM
+           =========================================== */
+		:root {
+			--dark-void: #0A0E27;
+			--deep-navy: #0F1B3D;
+			--neon-cyan: #5EDCF4;
+			--neon-pink: #F0A6CA;
+			--neon-yellow: #F4D03F;
+			--soft-lavender: #E2D5F2;
+			--white: #FFFFFF;
+			--pixel-unit: 4px;
+		}
+
+		* {
+			margin: 0;
+			padding: 0;
+			box-sizing: border-box;
+		}
+
+		body {
+			font-family: 'Chakra Petch', 'Noto Sans SC', sans-serif;
+			color: rgba(255, 255, 255, 0.7);
+			cursor: crosshair;
+		}
+
+		.bg-grid {
+			position: absolute;
+			inset: 0;
+			background-color: var(--dark-void);
+			background-image:
+				linear-gradient(rgba(94, 220, 244, 0.07) 1px, transparent 1px),
+				linear-gradient(90deg, rgba(94, 220, 244, 0.07) 1px, transparent 1px);
+			background-size: 40px 40px;
+			z-index: 0;
+		}
+
+		.slide.surface-pink .bg-grid {
+			background-color: var(--neon-pink);
+			background-image:
+				linear-gradient(rgba(15, 27, 61, 0.10) 1px, transparent 1px),
+				linear-gradient(90deg, rgba(15, 27, 61, 0.10) 1px, transparent 1px);
+		}
+
+		.slide.surface-cyan .bg-grid {
+			background-color: var(--neon-cyan);
+			background-image:
+				linear-gradient(rgba(15, 27, 61, 0.10) 1px, transparent 1px),
+				linear-gradient(90deg, rgba(15, 27, 61, 0.10) 1px, transparent 1px);
+		}
+
+		.slide.surface-lavender .bg-grid {
+			background-color: var(--soft-lavender);
+			background-image:
+				linear-gradient(rgba(15, 27, 61, 0.10) 1px, transparent 1px),
+				linear-gradient(90deg, rgba(15, 27, 61, 0.10) 1px, transparent 1px);
+		}
+
+		.grain {
+			position: absolute;
+			inset: 0;
+			background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+			opacity: 0.035;
+			z-index: 49;
+			pointer-events: none;
+		}
+
+		.scanlines {
+			position: absolute;
+			inset: 0;
+			background: repeating-linear-gradient(0deg, transparent 0px, transparent 2px, rgba(10, 14, 39, 0.04) 2px, rgba(10, 14, 39, 0.04) 4px);
+			mix-blend-mode: multiply;
+			z-index: 50;
+			pointer-events: none;
+		}
+
+		.crt-glow {
+			position: absolute;
+			inset: 0;
+			background: radial-gradient(ellipse at center, transparent 50%, rgba(10, 14, 39, 0.25) 100%);
+			z-index: 51;
+			pointer-events: none;
+		}
+
+		.starfield {
+			position: absolute;
+			inset: 0;
+			z-index: 1;
+			overflow: hidden;
+			pointer-events: none;
+		}
+
+		.star {
+			position: absolute;
+			animation: twinkle 3s ease-in-out infinite;
+		}
+
+		.star.cyan {
+			background: var(--neon-cyan);
+			box-shadow: 0 0 8px var(--neon-cyan);
+		}
+
+		.star.pink {
+			background: var(--neon-pink);
+			box-shadow: 0 0 8px var(--neon-pink);
+		}
+
+		.star.yellow {
+			background: var(--neon-yellow);
+			box-shadow: 0 0 8px var(--neon-yellow);
+		}
+
+		@keyframes twinkle {
+
+			0%,
+			100% {
+				opacity: 0.2;
+				transform: scale(0.8);
+			}
+
+			50% {
+				opacity: 1;
+				transform: scale(1.2);
+			}
+		}
+
+		.slide-content {
+			position: relative;
+			z-index: 10;
+			width: 100%;
+			height: 100%;
+			padding: 56px 96px;
+			box-sizing: border-box;
+		}
+
+		h1,
+		h2,
+		h3,
+		h4 {
+			font-family: 'Tektur', 'Noto Sans SC', cursive;
+			margin: 0;
+		}
+
+		h1 {
+			font-size: 120px;
+			font-weight: 900;
+			line-height: 1.05;
+			letter-spacing: 0.04em;
+		}
+
+		h2 {
+			font-size: 58px;
+			font-weight: 700;
+			line-height: 1.15;
+		}
+
+		h3 {
+			font-size: 38px;
+			font-weight: 700;
+			line-height: 1.15;
+		}
+
+		h4 {
+			font-size: 26px;
+			font-weight: 700;
+			line-height: 1.2;
+		}
+
+		p,
+		li {
+			font-size: 22px;
+			line-height: 1.7;
+		}
+
+		.label-pill {
+			display: inline-block;
+			background: var(--deep-navy);
+			color: var(--neon-yellow);
+			padding: 8px 16px;
+			font-family: 'Space Mono', 'Noto Sans SC', monospace;
+			font-size: 12px;
+			font-weight: 700;
+			letter-spacing: 0.2em;
+			text-transform: uppercase;
+			width: fit-content;
+		}
+
+		.hero-badge {
+			border: 2px solid var(--neon-yellow);
+			color: var(--neon-yellow);
+			padding: 10px 18px;
+			font-family: 'Space Mono', 'Noto Sans SC', monospace;
+			font-size: 12px;
+			letter-spacing: 0.1em;
+			text-transform: uppercase;
+		}
+
+		.mono-label {
+			font-family: 'Space Mono', 'Noto Sans SC', monospace;
+			font-size: 13px;
+			letter-spacing: 0.15em;
+			text-transform: uppercase;
+		}
+
+		.slide.surface-pink h1,
+		.slide.surface-pink h2,
+		.slide.surface-pink h3,
+		.slide.surface-pink h4,
+		.slide.surface-cyan h1,
+		.slide.surface-cyan h2,
+		.slide.surface-cyan h3,
+		.slide.surface-cyan h4,
+		.slide.surface-lavender h1,
+		.slide.surface-lavender h2,
+		.slide.surface-lavender h3,
+		.slide.surface-lavender h4 {
+			color: var(--deep-navy);
+		}
+
+		.slide.surface-pink p,
+		.slide.surface-pink li,
+		.slide.surface-cyan p,
+		.slide.surface-cyan li,
+		.slide.surface-lavender p,
+		.slide.surface-lavender li {
+			color: rgba(15, 27, 61, 0.75);
+		}
+
+		.slide:not(.surface-pink):not(.surface-cyan):not(.surface-lavender) h1,
+		.slide:not(.surface-pink):not(.surface-cyan):not(.surface-lavender) h2,
+		.slide:not(.surface-pink):not(.surface-cyan):not(.surface-lavender) h3,
+		.slide:not(.surface-pink):not(.surface-cyan):not(.surface-lavender) h4 {
+			color: var(--neon-cyan);
+		}
+
+		.bracket {
+			position: absolute;
+			width: 24px;
+			height: 24px;
+			border: 4px solid var(--neon-cyan);
+			z-index: 11;
+		}
+
+		.slide.surface-pink .bracket,
+		.slide.surface-cyan .bracket,
+		.slide.surface-lavender .bracket {
+			border-color: var(--deep-navy);
+		}
+
+		.bracket.tl {
+			top: 40px;
+			left: 40px;
+			border-right: none;
+			border-bottom: none;
+		}
+
+		.bracket.br {
+			bottom: 40px;
+			right: 40px;
+			border-left: none;
+			border-top: none;
+		}
+
+		.bracket.tr {
+			top: 40px;
+			right: 40px;
+			border-left: none;
+			border-bottom: none;
+		}
+
+		.bracket.bl {
+			bottom: 40px;
+			left: 40px;
+			border-right: none;
+			border-top: none;
+		}
+
+		.stat-block {
+			background: rgba(94, 220, 244, 0.08);
+			border: 2px solid rgba(94, 220, 244, 0.2);
+			padding: 28px 20px;
+			position: relative;
+		}
+
+		.stat-block .value {
+			font-family: 'Tektur', 'Noto Sans SC', cursive;
+			font-size: 48px;
+			font-weight: 900;
+			color: var(--neon-cyan);
+			text-shadow: 3px 3px 0 var(--deep-navy);
+			line-height: 1;
+		}
+
+		.stat-block .label {
+			font-family: 'Chakra Petch', 'Noto Sans SC', sans-serif;
+			font-size: 16px;
+			color: var(--neon-pink);
+			margin-top: 12px;
+			text-transform: uppercase;
+			letter-spacing: 0.05em;
+		}
+
+		.stat-block .note {
+			font-family: 'Space Mono', 'Noto Sans SC', monospace;
+			font-size: 11px;
+			color: rgba(255, 255, 255, 0.45);
+			margin-top: 6px;
+		}
+
+		.slide.surface-pink .stat-block,
+		.slide.surface-cyan .stat-block,
+		.slide.surface-lavender .stat-block {
+			background: rgba(15, 27, 61, 0.06);
+			border-color: rgba(15, 27, 61, 0.15);
+		}
+
+		.slide.surface-pink .stat-block .value,
+		.slide.surface-cyan .stat-block .value,
+		.slide.surface-lavender .stat-block .value {
+			color: var(--deep-navy);
+			text-shadow: none;
+		}
+
+		.feature-card {
+			background: rgba(255, 255, 255, 0.12);
+			backdrop-filter: blur(8px);
+			border: 2px solid rgba(255, 255, 255, 0.15);
+			padding: 28px;
+		}
+
+		.slide.surface-pink .feature-card,
+		.slide.surface-cyan .feature-card,
+		.slide.surface-lavender .feature-card {
+			background: rgba(255, 255, 255, 0.45);
+			border-color: rgba(15, 27, 61, 0.12);
+		}
+
+		ul.pixel-list {
+			list-style: none;
+			padding: 0;
+		}
+
+		ul.pixel-list li {
+			position: relative;
+			padding-left: 28px;
+			margin-bottom: 14px;
+		}
+
+		ul.pixel-list li::before {
+			content: '';
+			position: absolute;
+			left: 0;
+			top: 14px;
+			width: 12px;
+			height: 12px;
+			background: var(--neon-yellow);
+			box-shadow: 3px 3px 0 var(--deep-navy);
+		}
+
+		.slide.surface-pink ul.pixel-list li::before,
+		.slide.surface-cyan ul.pixel-list li::before,
+		.slide.surface-lavender ul.pixel-list li::before {
+			background: var(--deep-navy);
+			box-shadow: 3px 3px 0 rgba(15, 27, 61, 0.2);
+		}
+
+		.chapter-num {
+			font-family: 'Tektur', 'Noto Sans SC', cursive;
+			font-size: 320px;
+			font-weight: 900;
+			color: var(--deep-navy);
+			opacity: 0.18;
+			position: absolute;
+			right: 80px;
+			bottom: -20px;
+			line-height: 1;
+			z-index: 1;
+		}
+
+		.code-block {
+			background: var(--deep-navy);
+			border: 2px solid rgba(94, 220, 244, 0.3);
+			padding: 24px;
+			font-family: 'Space Mono', 'Noto Sans SC', monospace;
+			font-size: 20px;
+			color: var(--neon-cyan);
+			line-height: 1.6;
+			overflow: auto;
+		}
+
+		.slide.surface-pink .code-block,
+		.slide.surface-cyan .code-block,
+		.slide.surface-lavender .code-block {
+			background: rgba(15, 27, 61, 0.08);
+			border-color: rgba(15, 27, 61, 0.2);
+			color: var(--deep-navy);
+		}
+
+		.reveal {
+			opacity: 0;
+			transform: translateY(24px);
+			transition: opacity 0.55s cubic-bezier(0.16, 1, 0.3, 1), transform 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+		}
+
+		.slide.visible .reveal {
+			opacity: 1;
+			transform: translateY(0);
+		}
+
+		.reveal[data-delay="1"] {
+			transition-delay: 0.08s;
+		}
+
+		.reveal[data-delay="2"] {
+			transition-delay: 0.16s;
+		}
+
+		.reveal[data-delay="3"] {
+			transition-delay: 0.24s;
+		}
+
+		.reveal[data-delay="4"] {
+			transition-delay: 0.32s;
+		}
+
+		.reveal[data-delay="5"] {
+			transition-delay: 0.40s;
+		}
+
+		.reveal[data-delay="6"] {
+			transition-delay: 0.48s;
+		}
+
+		.edit-hotzone {
+			position: fixed;
+			top: 0;
+			left: 0;
+			width: 80px;
+			height: 80px;
+			z-index: 10000;
+			cursor: pointer;
+		}
+
+		.edit-toggle {
+			position: fixed;
+			top: 16px;
+			left: 16px;
+			width: 44px;
+			height: 44px;
+			border-radius: 0;
+			border: 2px solid var(--neon-cyan);
+			background: var(--dark-void);
+			color: var(--neon-cyan);
+			font-family: 'Space Mono', monospace;
+			font-size: 18px;
+			cursor: pointer;
+			opacity: 0;
+			pointer-events: none;
+			transition: opacity 0.3s ease;
+			z-index: 10001;
+		}
+
+		.edit-toggle.show,
+		.edit-toggle.active {
+			opacity: 1;
+			pointer-events: auto;
+		}
+
+		[contenteditable="true"] {
+			outline: 2px dashed var(--neon-yellow);
+			background: rgba(244, 208, 63, 0.08);
+		}
+
+		.flex {
+			display: flex;
+		}
+
+		.flex-col {
+			display: flex;
+			flex-direction: column;
+		}
+
+		.justify-between {
+			justify-content: space-between;
+		}
+
+		.items-center {
+			align-items: center;
+		}
+
+		.gap-4 {
+			gap: 16px;
+		}
+
+		.gap-6 {
+			gap: 24px;
+		}
+
+		.gap-8 {
+			gap: 32px;
+		}
+
+		.grid-2 {
+			display: grid;
+			grid-template-columns: 1fr 1fr;
+			gap: 32px;
+		}
+
+		.grid-3 {
+			display: grid;
+			grid-template-columns: repeat(3, 1fr);
+			gap: 28px;
+		}
+
+		.grid-4 {
+			display: grid;
+			grid-template-columns: repeat(4, 1fr);
+			gap: 24px;
+		}
+
+		.h-full {
+			height: 100%;
+		}
+
+		.mt-2 {
+			margin-top: 8px;
+		}
+
+		.mt-4 {
+			margin-top: 16px;
+		}
+
+		.mt-6 {
+			margin-top: 24px;
+		}
+
+		.mt-8 {
+			margin-top: 32px;
+		}
+
+		.mb-2 {
+			margin-bottom: 8px;
+		}
+
+		.mb-4 {
+			margin-bottom: 16px;
+		}
+
+		.mb-6 {
+			margin-bottom: 24px;
+		}
+
+		.text-white {
+			color: rgba(255, 255, 255, 0.9);
+		}
+
+		.text-cyan {
+			color: var(--neon-cyan);
+		}
+
+		.text-pink {
+			color: var(--neon-pink);
+		}
+
+		.text-yellow {
+			color: var(--neon-yellow);
+		}
+
+		.text-navy {
+			color: var(--deep-navy);
+		}
+
+		.text-muted {
+			color: rgba(255, 255, 255, 0.5);
+		}
+
+		.slide.surface-pink .text-muted,
+		.slide.surface-cyan .text-muted,
+		.slide.surface-lavender .text-muted {
+			color: rgba(15, 27, 61, 0.5);
+		}
+
+		.page-counter {
+			position: fixed;
+			bottom: 24px;
+			right: 24px;
+			background: var(--deep-navy);
+			color: var(--neon-cyan);
+			padding: 8px 14px;
+			font-family: 'Space Mono', 'Noto Sans SC', monospace;
+			font-size: 13px;
+			letter-spacing: 0.15em;
+			z-index: 1000;
+		}
+
+		.nav-hint {
+			position: fixed;
+			bottom: 24px;
+			left: 50%;
+			transform: translateX(-50%);
+			color: rgba(255, 255, 255, 0.35);
+			font-family: 'Space Mono', 'Noto Sans SC', monospace;
+			font-size: 12px;
+			letter-spacing: 0.1em;
+			z-index: 1000;
+		}
+	</style>
+</head>
+
+<body>
+	<div class="edit-hotzone"></div>
+	<button class="edit-toggle" id="editToggle" title="Edit mode (E)">✏️</button>
+	<div class="page-counter" id="pageCounter">01 / 21</div>
+	<div class="nav-hint">USE KEYS ← → OR SPACE</div>
+
+	<div class="deck-viewport">
+		<main class="deck-stage" id="deckStage">
+
+			<!-- Slide 1: Title -->
+			<section class="slide active" data-label="Title">
+				<div class="bg-grid"></div>
+				<div class="grain"></div>
+				<div class="scanlines"></div>
+				<div class="crt-glow"></div>
+				<div class="starfield" data-stars="120"></div>
+				<div class="bracket tl"></div>
+				<div class="bracket br"></div>
+				<div class="slide-content flex-col justify-between">
+					<div>
+						<div class="label-pill reveal">AI Infra 调研笔记</div>
+						<h1 class="reveal mt-6"
+							style="font-size: 110px; text-shadow: 4px 4px 0 var(--neon-yellow), 8px 8px 0 var(--deep-navy);">
+							AI INFRA<br>到底在做什么</h1>
+					</div>
+				</div>
+			</section>
+
+
+			<!-- Slide 2: Storage Compute Network -->
+			<section class="slide" data-label="Storage Compute Network">
+				<div class="bg-grid"></div>
+				<div class="grain"></div>
+				<div class="scanlines"></div>
+				<div class="crt-glow"></div>
+				<div class="bracket tl"></div>
+				<div class="bracket br"></div>
+				<div class="slide-content">
+					<div class="label-pill reveal">Part 1 / 01</div>
+					<h2 class="reveal mt-4">1. 存储、计算、网络</h2>
+					<div class="grid-3 mt-8">
+						<div class="stat-block reveal" data-delay="1">
+							<div class="value">Storage</div>
+							<div class="note">Nvme / fs / Database</div>
+						</div>
+						<div class="stat-block reveal" data-delay="2">
+							<div class="value">Compute</div>
+							<div class="note">GPU / CPU</div>
+						</div>
+						<div class="stat-block reveal" data-delay="3">
+							<div class="value">Network</div>
+							<div class="note">TCP / RDMA</div>
+						</div>
+					</div>
+					<div class="feature-card mt-8 reveal" data-delay="4">
+						<p style="font-size: 24px; color: rgba(255,255,255,0.85);">
+							思考计算机系统结构的三个核心</p>
+					</div>
+				</div>
+			</section>
+
+			<!-- Slide 3: Accelerate Common Case -->
+			<section class="slide" data-label="Accelerate Common Case">
+				<div class="bg-grid"></div>
+				<div class="grain"></div>
+				<div class="scanlines"></div>
+				<div class="crt-glow"></div>
+				<div class="bracket tl"></div>
+				<div class="bracket br"></div>
+				<div class="slide-content">
+					<div class="label-pill reveal">Part 1 / 02</div>
+					<h2 class="reveal mt-4">2. 加速经常性事件</h2>
+				</div>
+			</section>
+
+			<!-- Slide 4: Parallelism Levels -->
+			<section class="slide" data-label="Parallelism Levels">
+				<div class="bg-grid"></div>
+				<div class="grain"></div>
+				<div class="scanlines"></div>
+				<div class="crt-glow"></div>
+				<div class="bracket tl"></div>
+				<div class="bracket br"></div>
+				<div class="slide-content">
+					<div class="label-pill reveal">Part 1 / 03</div>
+					<h2 class="reveal mt-4">3. 并行是加速的关键方法</h2>
+					<div class="grid-2 mt-6" style="gap: 32px;">
+						<div class="feature-card reveal" data-delay="1">
+							<div class="mono-label text-yellow mb-4">ILP</div>
+							<h4 class="text-white mb-2">Instruction-Level Parallelism</h4>
+							<p>CPU 流水线、乱序执行、VLIW。单核内同时执行多条指令。</p>
+						</div>
+						<div class="feature-card reveal" data-delay="2">
+							<div class="mono-label text-pink mb-4">DLP</div>
+							<h4 class="text-white mb-2">Data-Level Parallelism</h4>
+							<p>Vector、SIMD、SIMT。同一条指令处理多个数据。</p>
+						</div>
+						<div class="feature-card reveal" data-delay="3">
+							<div class="mono-label text-cyan mb-4">TLP</div>
+							<h4 class="text-white mb-2">Thread-Level Parallelism</h4>
+							<p>多线程、多核。</p>
+						</div>
+						<div class="feature-card reveal" data-delay="4">
+							<div class="mono-label text-yellow mb-4">RLP / DLP+</div>
+							<h4 class="text-white mb-2">Warehouse-Scale Parallelism</h4>
+							<p>多台机器。</p>
+						</div>
+					</div>
+				</div>
+			</section>
+
+			<!-- Slide 5: Bandwidth vs Latency -->
+			<section class="slide" data-label="Bandwidth vs Latency">
+				<div class="bg-grid"></div>
+				<div class="grain"></div>
+				<div class="scanlines"></div>
+				<div class="crt-glow"></div>
+				<div class="bracket tl"></div>
+				<div class="bracket br"></div>
+				<div class="slide-content">
+					<div class="label-pill reveal">Part 1 / 04</div>
+					<h2 class="reveal mt-4">4. 带宽与延迟</h2>
+					<div class="grid-2 mt-6" style="gap: 48px;">
+						<div class="feature-card reveal" data-delay="1">
+							<h4 class="text-white mb-2">Bandwidth 带宽</h4>
+						</div>
+						<div class="feature-card reveal" data-delay="2">
+							<h4 class="text-white mb-2">Latency 延迟</h4>
+						</div>
+					</div>
+					<div class="feature-card mt-6 reveal" data-delay="3">
+						<p style="font-size: 23px; color: rgba(255,255,255,0.85);">
+							不要小看了一个满载磁盘卡车的带宽</p>
+					</div>
+				</div>
+			</section>
+
+			<!-- Slide 6: Chapter 2 -->
+			<section class="slide surface-pink" data-label="Chapter 2">
+				<div class="bg-grid"></div>
+				<div class="grain"></div>
+				<div class="scanlines"></div>
+				<div class="bracket tl"></div>
+				<div class="bracket br"></div>
+				<div class="chapter-num reveal">02</div>
+				<div class="slide-content flex-col justify-center">
+					<div class="label-pill reveal"
+						style="background: var(--deep-navy); color: var(--neon-pink);">Part 2
+					</div>
+					<h2 class="reveal mt-6" style="font-size: 96px;">AI 工作原理</h2>
+					<h3 class="reveal mt-4 text-navy" style="font-weight: 400;">训练、推理与 Attention
+					</h3>
+					<div class="reveal mt-8"
+						style="font-size: 24px; max-width: 700px; color: rgba(15,27,61,0.7);">
+						先理解 AI 在算什么，才能理解为什么 Infra 要这样设计。</div>
+				</div>
+			</section>
+
+			<!-- Slide 7: AI Basic Workflow -->
+			<section class="slide" data-label="AI Basic Workflow">
+				<div class="bg-grid"></div>
+				<div class="grain"></div>
+				<div class="scanlines"></div>
+				<div class="crt-glow"></div>
+				<div class="bracket tl"></div>
+				<div class="bracket br"></div>
+				<div class="slide-content">
+					<div class="label-pill reveal">Part 2 / 01</div>
+					<h2 class="reveal mt-4">简单来说：AI 在做什么？</h2>
+					<div class="grid-3 mt-8">
+						<div class="feature-card reveal" data-delay="1"
+							style="border-top: 4px solid var(--neon-cyan);">
+							<div class="mono-label text-cyan mb-4">Step 1</div>
+							<h4 class="text-white mb-2">收集知识</h4>
+							<p>汇聚全人类所有可学习的文本、图像、视频、代码等数据。</p>
+						</div>
+						<div class="feature-card reveal" data-delay="2"
+							style="border-top: 4px solid var(--neon-pink);">
+							<div class="mono-label text-pink mb-4">Step 2</div>
+							<h4 class="text-white mb-2">吸收知识</h4>
+							<p>训练：让巨大的权重矩阵通过梯度下降吸收数据中的模式。</p>
+						</div>
+						<div class="feature-card reveal" data-delay="3"
+							style="border-top: 4px solid var(--neon-yellow);">
+							<div class="mono-label text-yellow mb-4">Step 3</div>
+							<h4 class="text-white mb-2">提取答案</h4>
+							<p>推理：给定输入，从权重矩阵中生成最可能的下一个 token。</p>
+						</div>
+					</div>
+					<div class="grid-2 mt-8" style="gap: 48px;">
+						<div class="feature-card reveal" data-delay="4">
+							<h4 class="text-white mb-2">训练框架</h4>
+							<p>PyTorch、JAX —— 负责定义计算图、自动求导、分布式训练。</p>
+						</div>
+						<div class="feature-card reveal" data-delay="5">
+							<h4 class="text-white mb-2">推理框架</h4>
+							<p>vLLM、SGLang —— 负责低延迟、高吞吐地服务已训练好的模型。</p>
+						</div>
+					</div>
+				</div>
+			</section>
+
+			<!-- Slide 8: Attention Formula -->
+			<section class="slide" data-label="Attention Formula">
+				<div class="bg-grid"></div>
+				<div class="grain"></div>
+				<div class="scanlines"></div>
+				<div class="crt-glow"></div>
+				<div class="bracket tl"></div>
+				<div class="bracket br"></div>
+				<div class="slide-content">
+					<div class="label-pill reveal">Part 2 / 02</div>
+					<h2 class="reveal mt-4">核心中的核心：Attention</h2>
+					<div class="reveal mt-8" data-delay="1">
+						<div class="code-block" style="font-size: 26px;">
+							Attention(Q, K, V) = softmax( (Q × K^T) / sqrt(d_k) ) × V
+						</div>
+					</div>
+				</div>
+			</section>
+
+			<!-- Slide 9: Chapter 3 -->
+			<section class="slide surface-cyan" data-label="Chapter 3">
+				<div class="bg-grid"></div>
+				<div class="grain"></div>
+				<div class="scanlines"></div>
+				<div class="bracket tl"></div>
+				<div class="bracket br"></div>
+				<div class="chapter-num reveal">03</div>
+				<div class="slide-content flex-col justify-center">
+					<div class="label-pill reveal"
+						style="background: var(--deep-navy); color: var(--neon-cyan);">Part 3
+					</div>
+					<h2 class="reveal mt-6" style="font-size: 96px;">体系结构重心转移</h2>
+					<h3 class="reveal mt-4 text-navy" style="font-weight: 400;">如果只做一件事，而且要做到最好</h3>
+					<div class="reveal mt-8"
+						style="font-size: 24px; max-width: 700px; color: rgba(15,27,61,0.7);">当
+						AI 成为主导负载，计算机体系结构的优化重心从通用 CPU 转向四大专项领域。</div>
+				</div>
+			</section>
+
+			<!-- Slide 10: Compilers -->
+			<section class="slide" data-label="Compilers">
+				<div class="bg-grid"></div>
+				<div class="grain"></div>
+				<div class="scanlines"></div>
+				<div class="crt-glow"></div>
+				<div class="bracket tl"></div>
+				<div class="bracket br"></div>
+				<div class="slide-content">
+					<div class="label-pill reveal">Part 3 / 01</div>
+					<h2 class="reveal mt-4">编译器</h2>
+					<div class="grid-2 mt-6" style="gap: 48px;">
+						<div class="reveal" data-delay="1">
+							<h4 class="text-white mb-4">为什么需要 AI 编译器？</h4>
+							<ul class="pixel-list">
+								<li>同一算子需要在 NVIDIA、AMD、Intel、国产芯片上跑</li>
+								<li>手动写 CUDA 要求高，产出慢</li>
+							</ul>
+						</div>
+						<div class="reveal" data-delay="2">
+							<h4 class="text-white mb-4">代表项目</h4>
+							<div class="feature-card mb-4">
+								<h4 class="text-white mb-2">MLIR</h4>
+								<p>模块化、可重用的编译器基础设施，支持多层级 IR。</p>
+							</div>
+							<div class="feature-card mb-4">
+								<h4 class="text-white mb-2">Apache TVM</h4>
+								<p>端到端深度学习编译器，自动搜索最优算子实现。</p>
+							</div>
+							<div class="feature-card mb-4">
+								<h4 class="text-white mb-2">Triton</h4>
+								<p>OpenAI 开发的 Python DSL，已成为 GPU Kernel 开发的事实标准。</p>
+							</div>
+							<div class="feature-card">
+								<h4 class="text-white mb-2">TileLang</h4>
+								<p>Domain-specific language designed to streamline the
+									development of high-performance
+									GPU/CPU/Accelerators kernels</p>
+							</div>
+						</div>
+					</div>
+				</div>
+			</section>
+
+			<!-- Slide 11: Compute -->
+			<section class="slide" data-label="Compute">
+				<div class="bg-grid"></div>
+				<div class="grain"></div>
+				<div class="scanlines"></div>
+				<div class="crt-glow"></div>
+				<div class="bracket tl"></div>
+				<div class="bracket br"></div>
+				<div class="slide-content">
+					<div class="label-pill reveal">Part 3 / 02</div>
+					<h2 class="reveal mt-4">计算：从 CPU 到 GPU</h2>
+					<div class="grid-2 mt-6" style="gap: 48px;">
+						<div class="feature-card reveal" data-delay="1">
+							<h4 class="text-white mb-2">CPU：少而强的核心</h4>
+							<p>适合分支多、依赖复杂的任务，例如外卖的后台系统</p>
+						</div>
+						<div class="feature-card reveal" data-delay="2">
+							<h4 class="text-white mb-2">GPU</h4>
+							<p>适合大量数据，互相没有依赖，批量处理，典型应用就是矩阵乘法</p>
+						</div>
+					</div>
+				</div>
+			</section>
+
+			<!-- Slide 12: Network -->
+			<section class="slide" data-label="Network">
+				<div class="bg-grid"></div>
+				<div class="grain"></div>
+				<div class="scanlines"></div>
+				<div class="crt-glow"></div>
+				<div class="bracket tl"></div>
+				<div class="bracket br"></div>
+				<div class="slide-content">
+					<div class="label-pill reveal">Part 3 / 03</div>
+					<h2 class="reveal mt-4">网络：从 TCP 到 RDMA</h2>
+					<div class="grid-2 mt-6" style="gap: 48px;">
+						<div class="feature-card reveal" data-delay="1">
+							<h4 class="text-white mb-2">TCP / IP</h4>
+							<p>可以构建十分灵活的网络控制面，往往需要 CPU 深度介入，用于普通用户接入到数据中心。</p>
+						</div>
+						<div class="feature-card reveal" data-delay="2">
+							<h4 class="text-white mb-2">RDMA</h4>
+							<p>用最快的速度在数据中心内部传输数据，绕过操作系统内核，直接读写远端内存。</p>
+						</div>
+					</div>
+				</div>
+			</section>
+
+			<!-- Slide 13: Storage -->
+			<section class="slide" data-label="Storage">
+				<div class="bg-grid"></div>
+				<div class="grain"></div>
+				<div class="scanlines"></div>
+				<div class="crt-glow"></div>
+				<div class="bracket tl"></div>
+				<div class="bracket br"></div>
+				<div class="slide-content">
+					<div class="label-pill reveal">Part 3 / 04</div>
+					<h2 class="reveal mt-4">存储</h2>
+					<div class="grid-2 mt-6" style="gap: 48px;">
+						<div class="feature-card reveal" data-delay="1">
+							<h4 class="text-white mb-2">3fs</h4>
+							<p>移除掉 posix 语义，不在乎 crash 一致性，尽量绕过 CPU 等多余内容的参与</p>
+						</div>
+					</div>
+				</div>
+			</section>
+
+			<!-- Slide 14: Q&A -->
+			<section class="slide surface-cyan" data-label="Q&A">
+				<div class="bg-grid"></div>
+				<div class="grain"></div>
+				<div class="scanlines"></div>
+				<div class="bracket tl"></div>
+				<div class="bracket br"></div>
+				<div class="slide-content flex-col justify-center items-center"
+					style="text-align: center;">
+					<div class="label-pill reveal"
+						style="background: var(--deep-navy); color: var(--neon-cyan);">Thank You
+					</div>
+					<h2 class="reveal mt-8"
+						style="font-size: 140px; text-shadow: 4px 4px 0 var(--neon-yellow), 8px 8px 0 var(--deep-navy);">
+						Q & A</h2>
+					<div class="reveal mt-8" style="font-size: 28px; color: rgba(15,27,61,0.75);">AI
+						Infra 到底在做什么</div>
+				</div>
+			</section>
+		</main>
+	</div>
+
+	<script>
+		class SlidePresentation {
+			constructor() {
+				this.slides = document.querySelectorAll('.slide');
+				this.stage = document.getElementById('deckStage');
+				this.currentSlide = 0;
+				this.totalSlides = this.slides.length;
+				this.touchStartX = 0;
+				this.touchStartY = 0;
+				this.wheelLocked = false;
+				this.setupStageScale();
+				this.setupKeyboardNav();
+				this.setupTouchNav();
+				this.setupWheelNav();
+				this.setupStarfields();
+				this.updatePageCounter();
+				this.showSlide(0);
+			}
+			setupStageScale() {
+				const scale = () => {
+					const factor = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+					const x = (window.innerWidth - 1920 * factor) / 2;
+					const y = (window.innerHeight - 1080 * factor) / 2;
+					this.stage.style.transform = `translate(${x}px, ${y}px) scale(${factor})`;
+				};
+				scale();
+				window.addEventListener('resize', scale);
+			}
+			setupKeyboardNav() {
+				document.addEventListener('keydown', (e) => {
+					if (e.target.getAttribute('contenteditable') === 'true') return;
+					switch (e.key) {
+						case 'ArrowRight': case 'ArrowDown': case ' ': case 'PageDown':
+							e.preventDefault(); this.next(); break;
+						case 'ArrowLeft': case 'ArrowUp': case 'PageUp':
+							e.preventDefault(); this.prev(); break;
+						case 'Home': e.preventDefault(); this.showSlide(0); break;
+						case 'End': e.preventDefault(); this.showSlide(this.totalSlides - 1); break;
+					}
+				});
+			}
+			setupTouchNav() {
+				document.addEventListener('touchstart', (e) => {
+					this.touchStartX = e.touches[0].clientX;
+					this.touchStartY = e.touches[0].clientY;
+				}, {passive: true});
+				document.addEventListener('touchend', (e) => {
+					const dx = e.changedTouches[0].clientX - this.touchStartX;
+					const dy = e.changedTouches[0].clientY - this.touchStartY;
+					if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 50) dx < 0 ? this.next() : this.prev();
+					else if (Math.abs(dy) > 50) dy < 0 ? this.next() : this.prev();
+				}, {passive: true});
+			}
+			setupWheelNav() {
+				document.addEventListener('wheel', (e) => {
+					if (this.wheelLocked) return;
+					this.wheelLocked = true;
+					e.deltaY > 0 ? this.next() : this.prev();
+					setTimeout(() => {this.wheelLocked = false;}, 800);
+				}, {passive: true});
+			}
+			setupStarfields() {
+				this.slides.forEach((slide) => {
+					const container = slide.querySelector('.starfield');
+					if (!container) return;
+					const count = parseInt(container.dataset.stars || '40', 10);
+					const colors = ['cyan', 'pink', 'yellow'];
+					for (let i = 0; i < count; i++) {
+						const star = document.createElement('div');
+						star.className = 'star ' + colors[Math.floor(Math.random() * colors.length)];
+						star.style.left = Math.random() * 100 + '%';
+						star.style.top = Math.random() * 100 + '%';
+						star.style.animationDelay = Math.random() * 3 + 's';
+						star.style.animationDuration = (2 + Math.random() * 2) + 's';
+						const size = 4 + Math.random() * 4;
+						star.style.width = size + 'px';
+						star.style.height = size + 'px';
+						container.appendChild(star);
+					}
+				});
+			}
+			showSlide(index) {
+				this.currentSlide = Math.max(0, Math.min(index, this.totalSlides - 1));
+				this.slides.forEach((slide, i) => {
+					slide.classList.toggle('active', i === this.currentSlide);
+					slide.classList.toggle('visible', i === this.currentSlide);
+				});
+				this.updatePageCounter();
+				if (window.parent !== window) {
+					window.parent.postMessage({type: 'slideIndexChanged', index: this.currentSlide}, '*');
+				}
+			}
+			next() {if (this.currentSlide < this.totalSlides - 1) this.showSlide(this.currentSlide + 1);}
+			prev() {if (this.currentSlide > 0) this.showSlide(this.currentSlide - 1);}
+			updatePageCounter() {
+				const counter = document.getElementById('pageCounter');
+				if (counter) counter.textContent = `${String(this.currentSlide + 1).padStart(2, '0')} / ${String(this.totalSlides).padStart(2, '0')}`;
+			}
+		}
+
+		class InlineEditor {
+			constructor() {
+				this.isActive = false;
+				this.toggle = document.getElementById('editToggle');
+				this.hotzone = document.querySelector('.edit-hotzone');
+				this.hideTimeout = null;
+				this.editableSelectors = '.slide h1, .slide h2, .slide h3, .slide h4, .slide p, .slide li';
+				this.setup();
+			}
+			setup() {
+				if (!this.toggle || !this.hotzone) return;
+				this.toggle.addEventListener('click', () => this.toggleEditMode());
+				this.hotzone.addEventListener('click', () => this.toggleEditMode());
+				this.hotzone.addEventListener('mouseenter', () => {clearTimeout(this.hideTimeout); this.toggle.classList.add('show');});
+				this.hotzone.addEventListener('mouseleave', () => {this.hideTimeout = setTimeout(() => {if (!this.isActive) this.toggle.classList.remove('show');}, 400);});
+				this.toggle.addEventListener('mouseenter', () => clearTimeout(this.hideTimeout));
+				this.toggle.addEventListener('mouseleave', () => {this.hideTimeout = setTimeout(() => {if (!this.isActive) this.toggle.classList.remove('show');}, 400);});
+				document.addEventListener('keydown', (e) => {if ((e.key === 'e' || e.key === 'E') && !e.target.getAttribute('contenteditable')) this.toggleEditMode();});
+			}
+			toggleEditMode() {
+				this.isActive = !this.isActive;
+				this.toggle.classList.toggle('active', this.isActive);
+				this.toggle.textContent = this.isActive ? '✓' : '✏️';
+				document.querySelectorAll(this.editableSelectors).forEach((el) => {
+					el.setAttribute('contenteditable', this.isActive);
+				});
+			}
+		}
+
+		document.addEventListener('DOMContentLoaded', () => {
+			new SlidePresentation();
+			new InlineEditor();
+		});
+	</script>
+</body>
+
+</html>

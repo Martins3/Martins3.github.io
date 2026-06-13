@@ -1,0 +1,391 @@
+# 关于 pagefault 的一切
+
+## 一般情况
+- mm-pagefault.md 中整理下，重点是 cow 等
+
+## IOMMU 的 pagefault 软件可见吗？
+
+
+## async page fault
+
+## 嵌套虚拟化中的 page fault
+
+### [ ]  L0 将 L1 的内存换走，过程如何？
+1. 设置 qemu 的 page walk 过程
+2. 设置 ept 的 page walk 过程
+
+#### [ ] mmu_shrinker
+- [ ] 如何才可以调用到这里去?
+
+- kvm_mmu_alloc_shadow_page : 中会增加 mmu_shrink_count 的返回值，所以这个特指是 spte 使用的页面
+```c
+static struct shrinker mmu_shrinker = {
+	.count_objects = mmu_shrink_count,
+	.scan_objects = mmu_shrink_scan,
+	.seeks = DEFAULT_SEEKS * 10,
+};
+```
+
+```c
+static const struct mmu_notifier_ops kvm_mmu_notifier_ops = {
+	.invalidate_range	= kvm_mmu_notifier_invalidate_range,
+	.invalidate_range_start	= kvm_mmu_notifier_invalidate_range_start,
+	.invalidate_range_end	= kvm_mmu_notifier_invalidate_range_end,
+	.clear_flush_young	= kvm_mmu_notifier_clear_flush_young,
+	.clear_young		= kvm_mmu_notifier_clear_young,
+	.test_young		= kvm_mmu_notifier_test_young,
+	.change_pte		= kvm_mmu_notifier_change_pte,
+	.release		= kvm_mmu_notifier_release,
+};
+```
+
+将 QEMU 放到 cgroup 中，让 Guest 产生大量的 swap，最后可以看到如下内容:
+```txt
+@[
+    kvm_mmu_notifier_invalidate_range+5
+    __mmu_notifier_invalidate_range_end+109
+    try_to_unmap_one+1084
+    rmap_walk_anon+360
+    try_to_unmap+137
+    shrink_folio_list+1383
+    evict_folios+557
+    shrink_lruvec+552
+    shrink_node+541
+    do_try_to_free_pages+213
+    try_to_free_mem_cgroup_pages+271
+    try_charge_memcg+426
+    charge_memcg+50
+    __mem_cgroup_charge+45
+    __handle_mm_fault+2303
+    handle_mm_fault+259
+    __get_user_pages+463
+    __gup_longterm_locked+216
+    get_user_pages_unlocked+119
+    hva_to_pfn+268
+    kvm_faultin_pfn+146
+    direct_page_fault+774
+    kvm_mmu_page_fault+276
+    vmx_handle_exit+374
+    kvm_arch_vcpu_ioctl_run+3286
+    kvm_vcpu_ioctl+629
+    __x64_sys_ioctl+139
+    do_syscall_64+60
+    entry_SYSCALL_64_after_hwframe+114
+]: 2854446
+```
+- kvm_mmu_notifier_invalidate_range_start
+  - 其 hook 为: kvm_unmap_gfn_range
+    - kvm_memslots_have_rmaps : 清理反向映射
+    - kvm_tdp_mmu_unmap_gfn_range : 清理 ept 的映射
+
+- [ ] guest 中也是执行相同的路径吗？
+
+### [ ]  L1 中 QEMU 的内存被 L0 换出了，对此 L1 并不知情，L2 也不知情，过程是如何的?
+### [ ]  L1 中将 QEMU 的内存换出，L2 不知道，过程如何？
+
+## 测试
+1. 一次 page fault 的开销
+2. 一次 tlb 不命中的开销
+
+## iommu 偶尔发现的，原来还需要 flush tlb 啊
+```c
+/**
+ * struct iommu_flush_ops - IOMMU callbacks for TLB and page table management.
+ *
+ * @tlb_flush_all:  Synchronously invalidate the entire TLB context.
+ * @tlb_flush_walk: Synchronously invalidate all intermediate TLB state
+ *                  (sometimes referred to as the "walk cache") for a virtual
+ *                  address range.
+ * @tlb_add_page:   Optional callback to queue up leaf TLB invalidation for a
+ *                  single page.  IOMMUs that cannot batch TLB invalidation
+ *                  operations efficiently will typically issue them here, but
+ *                  others may decide to update the iommu_iotlb_gather structure
+ *                  and defer the invalidation until iommu_iotlb_sync() instead.
+ *
+ * Note that these can all be called in atomic context and must therefore
+ * not block.
+ */
+struct iommu_flush_ops {
+	void (*tlb_flush_all)(void *cookie);
+	void (*tlb_flush_walk)(unsigned long iova, size_t size, size_t granule,
+			       void *cookie);
+	void (*tlb_add_page)(struct iommu_iotlb_gather *gather,
+			     unsigned long iova, size_t granule, void *cookie);
+};
+```
+
+## qemu 中 tcg 的 page fault
+
+## 使用 BOOM 来看下硬件如何是如何实现的
+- TLB 和 cache 是同时查找的
+
+## vmid 还是 mmid 啥的，就是每一个 process 一个 id 的技术，找一下
+
+## 总结
+- 如果减少不命中的开销
+  - 大页
+- 减少 miss rate 的方法
+  - 大页，mmid 的那个
+
+## 原因
+  - 缺页
+  - protection
+    - dirty bit tracking
+
+## 分析一下函数细节
+- do_user_addr_fault : 不知道为什么，这个函数充满了 `fatal_signal_pending` 的检测
+  - fault_signal_pending
+
+```c
+	if (fault & VM_FAULT_OOM) {
+		/* Kernel mode? Handle exceptions or die: */
+		if (!user_mode(regs)) {
+			kernelmode_fixup_or_oops(regs, error_code, address,
+						 SIGSEGV, SEGV_MAPERR,
+						 ARCH_DEFAULT_PKEY);
+			return;
+		}
+
+		/*
+		 * We ran out of memory, call the OOM killer, and return the
+		 * userspace (which will retry the fault, or kill us if we got
+		 * oom-killed):
+		 */
+		pagefault_out_of_memory();
+	} else {
+		if (fault & (VM_FAULT_SIGBUS|VM_FAULT_HWPOISON|
+			     VM_FAULT_HWPOISON_LARGE))
+			do_sigbus(regs, error_code, address, fault);
+		else if (fault & VM_FAULT_SIGSEGV)
+			bad_area_nosemaphore(regs, error_code, address);
+		else
+			BUG();
+	}
+```
+在 page fault 的过程中，其中返回 `VM_FAULT_SIGBUS` 的位置超级多。
+
+## 分析一下，如何在 copy_to_user 的过程中出现 page fault ，是如何处理的
+
+## 整理一下这个
+
+```txt
+[ 2884.290877]  [<ffffffff8107e8d8>] native_flush_tlb_others+0xb8/0xc0
+[ 2884.291268]  [<ffffffff8107e94b>] flush_tlb_mm_range+0x6b/0x140
+[ 2884.291638]  [<ffffffff811edf0f>] tlb_flush_mmu_tlbonly+0x2f/0xc0
+[ 2884.292217]  [<ffffffff811efa4f>] arch_tlb_finish_mmu+0x3f/0x80
+[ 2884.292590]  [<ffffffff811efb73>] tlb_finish_mmu+0x23/0x30
+[ 2884.292931]  [<ffffffff811fcf1b>] exit_mmap+0xdb/0x1a0
+[ 2884.293254]  [<ffffffff81097bb7>] mmput+0x67/0xf0
+[ 2884.293550]  [<ffffffff810a1938>] do_exit+0x288/0xa20
+[ 2884.293864]  [<ffffffff810a214f>] do_group_exit+0x3f/0xa0
+[ 2884.294204]  [<ffffffff810a21c4>] SyS_exit_group+0x14/0x20
+[ 2884.294549]  [<ffffffff81794f92>] system_call_fastpath+0x25/0x2a
+```
+
+## 补充这个 mmap_lock
+- https://lore.kernel.org/all/20230227173632.3292573-9-surenb@google.com/T/#m2b041c67b39980bafcd16bc5f897297212b5ee36
+  - https://lwn.net/Articles/906852/
+
+## 分析 gup
+还可以 page fault 到其他人的地址空间上的感觉。
+
+## 文件和磁盘也是类似的关系，创建一个巨大的文件，应该文件和磁盘的映射不会立刻建立的
+
+## 一个分析角度: TLB flush
+paravirt tlb flush
+
+vmid 来减少 tlb flush
+
+## 这个流程我无法理解
+```txt
+#0  do_sync_mmap_readahead (vmf=<optimized out>) at ./include/linux/rcupdate.h:806
+#1  filemap_fault (vmf=0xffffc90000017b98) at mm/filemap.c:3288
+#2  0xffffffff8138511e in __do_fault (vmf=vmf@entry=0xffffc90000017b98) at mm/memory.c:4176
+#3  0xffffffff8138a041 in do_cow_fault (vmf=0xffffc90000017b98) at mm/memory.c:4560
+#4  do_fault (vmf=vmf@entry=0xffffc90000017b98) at mm/memory.c:4661
+#5  0xffffffff8138ef26 in do_pte_missing (vmf=0xffffc90000017b98) at mm/memory.c:3647
+#6  handle_pte_fault (vmf=0xffffc90000017b98) at mm/memory.c:4947
+#7  __handle_mm_fault (vma=vma@entry=0xffff888110406398, address=address@entry=94909939613964, flags=flags@entry=533) at mm/memory.c:5089
+#8  0xffffffff8138f6e7 in handle_mm_fault (vma=vma@entry=0xffff888110406398, address=address@entry=94909939613964, flags=<optimized out>, flags@entry=533, regs=regs@entry=0xffffc90000017ce8) at mm/memory.c:5243
+#9  0xffffffff81123608 in do_user_addr_fault (regs=0xffffc90000017ce8, error_code=2, address=94909939613964) at arch/x86/mm/fault.c:1440
+#10 0xffffffff820d1d11 in handle_page_fault (address=94909939613964, error_code=2, regs=0xffffc90000017ce8) at arch/x86/mm/fault.c:1534
+#11 exc_page_fault (regs=0xffffc90000017ce8, error_code=2) at arch/x86/mm/fault.c:1590
+#12 0xffffffff82201286 in asm_exc_page_fault () at ./arch/x86/include/asm/idtentry.h:570
+```
+如果发生了 do_cow_fault ，那么就应该是 child process 在写这个，但是为什么最后内容却要从文件中加载 ？？？？？？
+
+复现方法，qemu 调试，break do_sync_mmap_readahead
+
+## docs/kernel/mm-cow.md 的内容也一并整理到这里
+
+
+## 整理分析一下 amd kvm  4 级页表的问题
+
+## 内核是如何实现动态四级页表的
+
+```c
+static inline int
+copy_p4d_range(struct vm_area_struct *dst_vma, struct vm_area_struct *src_vma,
+	       pgd_t *dst_pgd, pgd_t *src_pgd, unsigned long addr,
+	       unsigned long end)
+{
+	struct mm_struct *dst_mm = dst_vma->vm_mm;
+	p4d_t *src_p4d, *dst_p4d;
+	unsigned long next;
+
+	dst_p4d = p4d_alloc(dst_mm, dst_pgd, addr);
+	if (!dst_p4d)
+		return -ENOMEM;
+	src_p4d = p4d_offset(src_pgd, addr);
+	do {
+		next = p4d_addr_end(addr, end);
+		if (p4d_none_or_clear_bad(src_p4d))
+			continue;
+		if (copy_pud_range(dst_vma, src_vma, dst_p4d, src_p4d,
+				   addr, next))
+			return -ENOMEM;
+	} while (dst_p4d++, src_p4d++, addr = next, addr != end);
+	return 0;
+}
+```
+
+```c
+static inline p4d_t *p4d_alloc(struct mm_struct *mm, pgd_t *pgd,
+		unsigned long address)
+{
+	return (unlikely(pgd_none(*pgd)) && __p4d_alloc(mm, pgd, address)) ?
+		NULL : p4d_offset(pgd, address);
+}
+```
+只要让这里永远都不是 NULL 就可以了。
+
+## 如果在 L2 guest 中使用 idle page tracking ， 执行的流程是怎么样子的
+
+
+## L1 带着一堆 L2 热迁移
+
+## L2 在 L1 里面热迁移
+
+## 这个一些列的 flags 都整理下吧
+FAULT_FLAG_UNSHARE
+
+```c
+/**
+ * enum fault_flag - Fault flag definitions.
+ * @FAULT_FLAG_WRITE: Fault was a write fault.
+ * @FAULT_FLAG_MKWRITE: Fault was mkwrite of existing PTE.
+ * @FAULT_FLAG_ALLOW_RETRY: Allow to retry the fault if blocked.
+ * @FAULT_FLAG_RETRY_NOWAIT: Don't drop mmap_lock and wait when retrying.
+ * @FAULT_FLAG_KILLABLE: The fault task is in SIGKILL killable region.
+ * @FAULT_FLAG_TRIED: The fault has been tried once.
+ * @FAULT_FLAG_USER: The fault originated in userspace.
+ * @FAULT_FLAG_REMOTE: The fault is not for current task/mm.
+ * @FAULT_FLAG_INSTRUCTION: The fault was during an instruction fetch.
+ * @FAULT_FLAG_INTERRUPTIBLE: The fault can be interrupted by non-fatal signals.
+ * @FAULT_FLAG_UNSHARE: The fault is an unsharing request to break COW in a
+ *                      COW mapping, making sure that an exclusive anon page is
+ *                      mapped after the fault.
+ * @FAULT_FLAG_ORIG_PTE_VALID: whether the fault has vmf->orig_pte cached.
+ *                        We should only access orig_pte if this flag set.
+ * @FAULT_FLAG_VMA_LOCK: The fault is handled under VMA lock.
+ *
+ * About @FAULT_FLAG_ALLOW_RETRY and @FAULT_FLAG_TRIED: we can specify
+ * whether we would allow page faults to retry by specifying these two
+ * fault flags correctly.  Currently there can be three legal combinations:
+ *
+ * (a) ALLOW_RETRY and !TRIED:  this means the page fault allows retry, and
+ *                              this is the first try
+ *
+ * (b) ALLOW_RETRY and TRIED:   this means the page fault allows retry, and
+ *                              we've already tried at least once
+ *
+ * (c) !ALLOW_RETRY and !TRIED: this means the page fault does not allow retry
+ *
+ * The unlisted combination (!ALLOW_RETRY && TRIED) is illegal and should never
+ * be used.  Note that page faults can be allowed to retry for multiple times,
+ * in which case we'll have an initial fault with flags (a) then later on
+ * continuous faults with flags (b).  We should always try to detect pending
+ * signals before a retry to make sure the continuous page faults can still be
+ * interrupted if necessary.
+ *
+ * The combination FAULT_FLAG_WRITE|FAULT_FLAG_UNSHARE is illegal.
+ * FAULT_FLAG_UNSHARE is ignored and treated like an ordinary read fault when
+ * applied to mappings that are not COW mappings.
+ */
+enum fault_flag {
+	FAULT_FLAG_WRITE =		1 << 0,
+	FAULT_FLAG_MKWRITE =		1 << 1,
+	FAULT_FLAG_ALLOW_RETRY =	1 << 2,
+	FAULT_FLAG_RETRY_NOWAIT = 	1 << 3,
+	FAULT_FLAG_KILLABLE =		1 << 4,
+	FAULT_FLAG_TRIED = 		1 << 5,
+	FAULT_FLAG_USER =		1 << 6,
+	FAULT_FLAG_REMOTE =		1 << 7,
+	FAULT_FLAG_INSTRUCTION =	1 << 8,
+	FAULT_FLAG_INTERRUPTIBLE =	1 << 9,
+	FAULT_FLAG_UNSHARE =		1 << 10,
+	FAULT_FLAG_ORIG_PTE_VALID =	1 << 11,
+	FAULT_FLAG_VMA_LOCK =		1 << 12,
+};
+```
+
+## QEMU 中使用 iommu ，然后 guest dkdk 一个设备，然后该设备又是直通进去的
+
+## 分析问题
+
+1. 禁止 page fault ，预先填充
+
+2. 为了节省内存，出现 cow ，甚至比 cow 更加激进的（虽然没有合并进去
+2. swap / meltdown page fault
+2. ksm
+
+3. 虚拟化
+3. 嵌套虚拟化
+
+4. iommu
+4. 嵌套 iommu
+
+5. user page fault
+
+## 看上去是基于 user page fault 的 user space swap
+
+- https://gitee.com/openeuler/kernel/blob/98fe1222c00cc7357ff02ed6f4e40d4572243a88/mm/userswap.c
+
+
+#### (process) 整理一下 page fault 流程
+
+page fault 的原理非常简单，其目的也很清晰，但是，现代操作系统出于一下原因让 page fault 变的异常复杂:
+
+## 问题
+1. pf 在中断的过程中间可以触发吗?
+2. pf 出现内核的地址空间意味着什么?
+  - 是不是，除了 copy from user 的时候，其他的时候都不可以吧
+3. pf 为什么需要区分不同类型的 memory，以及都是如何使用的?
+4. pf 处理的如果是 swap 和首次加载有什么不同?
+5. pf 为了提高性能，除了 prefetch，还提供了什么方法?
+
+## 极其复杂
+- [gup](https://example.com)
+- [shadow page table](https://example.com)
+- [iommu](https://example.com)
+
+## 不要忘记一些东西
+
+1. gup 是可以自动对接到 page fault 的 handler 的
+2. 在内核中 copy from user 是可以触发 page fault 的 handler
+
+<script src="https://giscus.app/client.js"
+        data-repo="martins3/martins3.github.io"
+        data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="
+        data-category="Show and tell"
+        data-category-id="MDE4OkRpc2N1c3Npb25DYXRlZ29yeTMyMDMzNjY4"
+        data-mapping="pathname"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-theme="light"
+        data-lang="zh-CN"
+        crossorigin="anonymous"
+        async>
+</script>
+
+本站所有文章转发 **CSDN** 将按侵权追究法律责任，其它情况随意。

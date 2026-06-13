@@ -1,0 +1,6 @@
+#!/usr/bin/bpftrace
+
+kprobe:i8042_interrupt
+{
+  printf("get keyboard irq.\n");
+}

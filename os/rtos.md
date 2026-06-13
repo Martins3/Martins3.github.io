@@ -1,0 +1,3 @@
+- 找一个 STM32 来看看
+- https://github.com/zephyrproject-rtos/zephyr
+- https://www.osrtos.com/rtos/tencent-os-tiny/

@@ -1,0 +1,41 @@
+(qemu) info qtree
+bus: main-system-bus
+  type System
+  dev: ps2-mouse, id ""
+    gpio-out "" 1
+  dev: ps2-kbd, id ""
+    gpio-out "" 1
+  dev: kvm-ioapic, id ""
+    gpio-in "" 24
+    gsi_base = 0 (0x0)
+    mmio 00000000fec00000/0000000000001000
+  dev: fw_cfg_io, id ""
+    dma_enabled = true
+    x-file-slots = 32 (0x20)
+    acpi-mr-restore = true
+  dev: i440FX-pcihost, id ""
+    pci-hole64-size = 2147483648 (2 GiB)
+    below-4g-mem-size = 3221225472 (3 GiB)
+    above-4g-mem-size = 5368709120 (5 GiB)
+    x-pci-hole64-fix = true
+    pci-type = "i440FX"
+    x-config-reg-migration-enabled = true
+    bypass-iommu = false
+    bus: pci.0
+      type PCI
+      dev: virtio-serial-pci, id ""
+      dev: virtio-gpu-pci, id ""
+      dev: virtio-blk-pci, id "virt-blk1"
+      dev: vhost-user-blk-pci, id "blk1"
+      dev: vhost-user-fs-pci, id ""
+      dev: virtio-net-pci, id ""
+      dev: virtio-net-pci, id ""
+      dev: virtio-net-pci, id ""
+      dev: virtio-scsi-pci, id "scsi4"
+      dev: PIIX4_PM, id ""
+      dev: piix3-ide, id ""
+      dev: PIIX3, id ""
+      dev: i440FX, id ""
+  dev: kvmclock, id ""
+    x-mach-use-reliable-get-clock = true
+  dev: kvmvapic, id ""
