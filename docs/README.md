@@ -35,6 +35,17 @@
 
 
 ## 综合总结
+
+- [如何设计一个成功的指令集架构](./cpu/arch-design.md)
+<!-- - [如何设计一个成功的文件系统](./kernel/fs-design.md) -->
+- [为什么 QEMU 这么复杂](./qemu/why-so-complex.md)
+- [为什么 Linux Kernel 这么复杂](./kernel/why-so-complex.md)
+- [为什么 Linux 内核中有如此多 fd](./kernel/why-so-many-fd.md)
+<!-- - [如何设计 Hotplug 机制](./kernel/hotplug.md) -->
+<!-- - 如何设计一个 Hypervisor，通过对比 HyperV, Xen 和 ESXi -->
+<!-- - 如何设计一个虚拟化指令 -->
+- [Linux 内核的本质就是英雄联盟](./abaaba/lol-vs-linux.md)
+- [Linux 内核的本质就是原神](./abaaba/genshin-vs-linux.md)
 - [为什么要 kernel bypass](./kernel/why-by-pass.md)
 <!-- - [命运的织机: 各种 scheduler 杂谈](./kernel/scheduler.md) -->
 - [interrupt, execption , softirq 和 nmi 谁可以打断谁](./kernel/nested-interrupt.md)
@@ -122,17 +133,6 @@
 	- gdb kernel
 	- perf kvm
 
-## 重新思考计算机系统结构
-
-- [如何设计一个成功的指令集架构](./cpu/arch-design.md)
-<!-- - [如何设计一个成功的文件系统](./kernel/fs-design.md) -->
-- [为什么 QEMU 这么复杂](./qemu/why-so-complex.md)
-- [为什么 Linux Kernel 这么复杂](./kernel/why-so-complex.md)
-- [为什么 Linux 内核中有如此多 fd](./kernel/why-so-many-fd.md)
-<!-- - [如何设计 Hotplug 机制](./kernel/hotplug.md) -->
-<!-- - 如何设计一个 Hypervisor，通过对比 HyperV, Xen 和 ESXi -->
-<!-- - 如何设计一个虚拟化指令 -->
-
 ## 生活技能
 - [应急救护 : 深圳市直机关党员应急能力培训](./chores/emergency-medical-care.md)
 
@@ -189,8 +189,6 @@
   - https://bento.me/martins3
 - [2021 秋招总结](./abaaba/job.md)
 - [有缘再见，龙芯](./abaaba/loongson.md)
-- [Linux 内核的本质就是英雄联盟](./abaaba/lol-vs-linux.md)
-- [Linux 内核的本质就是原神](./abaaba/genshin-vs-linux.md)
 
 <!-- - [为什么我如此讨厌 CSDN](./abaaba/csdn.md) -->
 <!-- - [为什么我不旅游](./abaaba/travel.md) -->
