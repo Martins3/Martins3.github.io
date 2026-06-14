@@ -116,6 +116,8 @@ static double measure_cpu_frequency(void)
 	printf("Cycles for " #code ": %" PRIu64 "\n", _end - _start); \
 } while(0)
 
+static void empty_function(void) {}
+
 int main(void)
 {
 	uint64_t tsc1, tsc2;
@@ -189,8 +191,6 @@ int main(void)
 
 	/* ===== 测试 6: 函数调用开销 ===== */
 	uint64_t call_start, call_end;
-
-	auto void empty_function(void) {}
 
 	call_start = rdtsc_serialized();
 	for (int i = 0; i < 1000; i++) {

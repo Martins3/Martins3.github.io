@@ -48,41 +48,6 @@ https://blogs.vmware.com/virtualblocks/2022/08/30/announcing-vsan-8-with-vsan-ex
 ## 检查固件版本
 https://support.huawei.com/enterprise/en/doc/EDOC1100072476/9d516f4b/querying-the-firmware-version-in-the-os
 
-## 使用 20.03 的源
-把这个替换 /etc/yum.repos.d/kernel.repo
-```txt
-[OS]
-name=openEuler-20.03-LTS-OS
-baseurl=https://mirrors.tuna.tsinghua.edu.cn/openeuler/openEuler-20.03-LTS/OS/$basearch/
-enabled=1
-gpgcheck=1
-gpgkey=https://mirrors.tuna.tsinghua.edu.cn/openeuler/openEuler-20.03-LTS/OS/$basearch/RPM-GPG-KEY-openEuler
-
-[everything]
-name=openEuler-20.03-LTS-Everything
-baseurl=https://mirrors.tuna.tsinghua.edu.cn/openeuler/openEuler-20.03-LTS/everything/$basearch/
-enabled=1
-gpgcheck=1
-gpgkey=https://mirrors.tuna.tsinghua.edu.cn/openeuler/openEuler-20.03-LTS/OS/$basearch/RPM-GPG-KEY-openEuler
-```
-
-## 使用 22.03 的源
-```txt
-[OS]
-name=openEuler-22.03-LTS-OS
-baseurl=https://mirrors.tuna.tsinghua.edu.cn/openeuler/openEuler-22.03-LTS/OS/$basearch/
-enabled=1
-gpgcheck=1
-gpgkey=https://mirrors.tuna.tsinghua.edu.cn/openeuler/openEuler-22.03-LTS/OS/$basearch/RPM-GPG-KEY-openEuler
-
-[everything]
-name=openEuler-22.03-LTS-Everything
-baseurl=https://mirrors.tuna.tsinghua.edu.cn/openeuler/openEuler-22.03-LTS/everything/$basearch/
-enabled=1
-gpgcheck=1
-gpgkey=https://mirrors.tuna.tsinghua.edu.cn/openeuler/openEuler-22.03-LTS/OS/$basearch/RPM-GPG-KEY-openEuler
-```
-
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

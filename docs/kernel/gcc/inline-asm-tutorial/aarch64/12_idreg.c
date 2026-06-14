@@ -13,6 +13,7 @@
 #include <assert.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include <inttypes.h>
 
 /* ID 寄存器读取辅助宏 */
 #define READ_SYSREG(name) ({ \

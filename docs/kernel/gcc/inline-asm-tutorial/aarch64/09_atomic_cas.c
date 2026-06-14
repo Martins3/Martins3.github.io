@@ -79,6 +79,9 @@ static inline void spinlock_lock(spinlock_t *sl)
 		/* ARM64 使用 wfe/isb 优化自旋 */
 		__asm__ __volatile__("isb" ::: "memory");
 	}
+
+	/* 获取锁后加入 acquire 屏障，防止临界区内的内存访问被重排序到锁获取之前 */
+	__asm__ __volatile__("dmb ish" ::: "memory");
 }
 
 static inline void spinlock_unlock(spinlock_t *sl)
@@ -163,20 +166,23 @@ int main(void)
 
 	/* ===== 测试 4: 独占加载/存储 ===== */
 	volatile int excl_val = 42;
-	int loaded, status;
+	int loaded, new_val, status;
 
-	__asm__ __volatile__(
-		"ldxr %w0, [%2]\n\t"      /* 独占加载 */
-		"add %w0, %w0, #1\n\t"    /* 修改 */
-		"stxr %w1, %w0, [%2]"     /* 独占存储 */
-		: "=&r" (loaded), "=&r" (status)
-		: "r" (&excl_val)
-		: "memory"
-		);
+	do {
+		__asm__ __volatile__(
+			"ldxr %w0, [%3]\n\t"      /* 独占加载 */
+			"add %w2, %w0, #1\n\t"    /* 修改 */
+			"stxr %w1, %w2, [%3]"     /* 独占存储 */
+			: "=&r" (loaded), "=&r" (status), "=&r" (new_val)
+			: "r" (&excl_val)
+			: "memory"
+			);
+	} while (status != 0);
 
 	printf("Exclusive load/store: loaded=%d, status=%d (expected: 42, 0)\n",
 	       loaded, status);
 	assert(loaded == 42 && status == 0);  /* status=0 表示成功 */
+	assert(excl_val == 43);
 
 	printf("\n=== All atomic CAS tests passed! ===\n");
 	return 0;

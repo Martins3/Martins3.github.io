@@ -1,82 +1,14 @@
-# 最小用户态 NFSv3 server
+# mini NFSv3 server
+<!-- deed2f58-e92b-4d22-b820-f9d5a5567689 -->
 
-这是一个用于理解 NFSv3 基本数据路径的小型用户态 server，不是生产可用的
-NFS server。
+我之前一直好奇这种用户态的 nfs server 如何实现，现在有了 codex ，
+帮构建了一个，发现也不难:
 
-支持的 NFSv3 操作：
+之前简单看了一眼 https://github.com/nfs-ganesha/nfs-ganesha ，
+发现非常的复杂，放弃了。
 
-- `GETATTR`
-- `SETATTR`
-- `LOOKUP`
-- `ACCESS`
-- `FSINFO`
-- `READ`
-- `WRITE`
-- `CREATE`
-- `REMOVE`
-- `READDIR`
-
-其他操作会有意返回 `NFS3ERR_NOTSUPP`。
-
-## 依赖
-
-Fedora:
-
-```sh
-sudo dnf install -y gcc make rpcgen libtirpc-devel nfs-utils
-```
-
-## 构建
-
-```sh
-make -C docs/kernel/fs/nfs/user-nfsd
-```
-
-生成的二进制是 `user-nfsd.out`。`.out` 后缀会被仓库规则忽略。
-
-修改 `nfs3.x` 或 `mount3.x` 之后，使用下面的命令重新生成 rpcgen 文件：
-
-```sh
-make -C docs/kernel/fs/nfs/user-nfsd regenerate
-```
-
-## 运行
-
-```sh
-mkdir -p /tmp/user-nfsd-root /tmp/user-nfsd-mnt
-docs/kernel/fs/nfs/user-nfsd/user-nfsd.out /tmp/user-nfsd-root
-```
-
-在另一个 shell 中挂载：
-
-```sh
-sudo mount -t nfs \
-  -o vers=3,proto=tcp,mountproto=tcp,port=3049,mountport=3050,nolock \
-  127.0.0.1:/ /tmp/user-nfsd-mnt
-```
-
-测试基本文件 I/O：
-
-```sh
-echo hello > /tmp/user-nfsd-mnt/a
-cat /tmp/user-nfsd-mnt/a
-printf world >> /tmp/user-nfsd-mnt/a
-rm /tmp/user-nfsd-mnt/a
-```
-
-卸载：
-
-```sh
-sudo umount /tmp/user-nfsd-mnt
-```
-
-## 限制
-
-- 只支持 NFSv3。
-- 只支持 TCP。
-- 不注册 rpcbind，客户端需要显式指定 `port` 和 `mountport`。
-- 不实现锁、认证、缓存一致性、恢复和 `READDIRPLUS`。
-- file handle 直接编码相对路径，因此只适合较短路径。
+其次，我需要一个环境来验证一个问题
+- nfs server 使用的内存如果需要被 swap out ，那么可能会死锁吗?
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

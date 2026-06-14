@@ -1,9 +1,10 @@
 # nfs rfc
 https://www.rfc-editor.org/rfc/rfc8881.html
 
-状态恢复，分布式锁，缓存策略
+详细状态恢复，分布式锁，缓存策略，非常的复杂。
 
 ## v3 vs v4 的差别
+
 > [!NOTE]
 > 参考神奇海螺的意见，有待验证
 
@@ -26,16 +27,69 @@ https://www.rfc-editor.org/rfc/rfc8881.html
 
   - 如果只想支持基本 io/remove/create，v4 的前置机制会占掉大部分实现量。
 ```
-## 问题
 
-1. nfs 可以基于 tcp ，也可以基于 udp 啊
+## udp
+nfs 曾经可以基于 tcp ，也可以基于 udp 啊 ，不过 UDP 会有问题，
 
+https://datatracker.ietf.org/doc/draft-ietf-nfsv4-rfc8881bis/01/
 
-## 如果 server 退出，client 卡住了，如何解决
-sudo umount -f -l /tmp/user-nfsd-mnt
+~/linux/fs/nfs/Kconfig
 
--f
--l : 延迟退出
+```kconfig
+  config NFS_DISABLE_UDP_SUPPORT
+         bool "NFS: Disable NFS UDP protocol support"
+         depends on NFS_FS
+         default y
+         help
+      Choose Y here to disable the use of NFS over UDP. NFS over UDP
+      on modern networks (1Gb+) can lead to data corruption caused by
+      fragmentation during high loads.
+```
+
+rfc8881 中:
+https://datatracker.ietf.org/doc/draft-ietf-nfsv4-rfc8881bis/01/
+```txt
+5.7.  Transport Layers
+
+5.7.1.  REQUIRED and RECOMMENDED Properties of Transports
+
+   NFSv4.1 works over Remote Direct Memory Access (RDMA) and non-RDMA-
+   based transports with the following attributes:
+
+   *  The transport supports reliable delivery of data, which NFSv4.1
+      requires.  However the possibility of connections breaking is
+      addressed in NFSv4.1 by a session-based replay cache to prevent
+      the spurious re-execution of non-idempotent requests or modifying
+      idempotent requests.
+
+   *  The transport delivers data in the order it was sent.  Ordered
+      delivery simplifies detection of transmit errors, and simplifies
+      the sending of arbitrary sized requests and responses via the
+      record marking protocol [RFC5531].
+
+   Because efficient handling is required when sending large amounts of
+   data, congestion control facilities are a significant concern.
+
+   *  When NFSv4.1 is used over an IP-based network protocol, it is
+      REQUIRED that the transport provide congestion control.
+
+   *  When NFSv4.1 is used over a non-IP network protocol, it is
+      RECOMMENDED that the transport provide congestion control.
+
+   To enhance the possibilities for interoperability, it is strongly
+   recommended that NFSv4.1 client and server implementations support
+   operation over the TCP transport protocol.
+
+   It is permissible for a connectionless transport to be used under
+   NFSv4.1; however, reliable and in-order delivery of data combined
+   with congestion control by the connectionless transport is REQUIRED.
+   As a consequence, UDP by itself MUST NOT be used as an NFSv4.1
+   transport, although transports to be used for NFSv4.1 may be layered
+   on UDP.  NFSv4.1 assumes that a client transport address and server
+   transport address used to send data over a transport together
+   constitute a connection, even if the underlying transport eschews the
+   concept of a connection.
+```
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

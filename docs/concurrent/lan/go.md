@@ -1,4 +1,5 @@
-## 这里有分析过 golang 的 memory model
+# golang 同步设计
+## golang 的 memory model
 https://github.com/cch123/golang-notes?tab=readme-ov-file
 
 在 go 语言中，因为没有考虑到 arm 的弱内存序导致的问题:

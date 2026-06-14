@@ -82,6 +82,8 @@ static inline uint64_t read_cntvct_serialized(void)
 	printf("Cycles for " #code ": %" PRIu64 "\n", _end - _start); \
 } while(0)
 
+static void empty_function(void) {}
+
 int main(void)
 {
 	uint64_t cnt1, cnt2;
@@ -111,8 +113,11 @@ int main(void)
 	printf("Overhead of serialized read: %" PRIu64 " ticks\n", cnt2 - cnt1);
 
 	/* ===== 测试 3: 物理计数器 ===== */
-	cnt1 = read_cntpct();
-	printf("Physical counter: %" PRIu64 "\n", cnt1);
+	/* CNTPCT_EL0 在多数系统上需要 EL1 权限，用户态读取可能触发 Illegal Instruction。
+	 * 这里保留函数实现作为参考，但默认不调用。
+	 */
+	/* cnt1 = read_cntpct(); */
+	/* printf("Physical counter: %" PRIu64 "\n", cnt1); */
 
 	/* ===== 测试 4: 测量不同操作的周期数 ===== */
 	printf("\n=== Measuring operation latencies ===\n");
@@ -153,8 +158,6 @@ int main(void)
 
 	/* ===== 测试 6: 函数调用开销 ===== */
 	uint64_t call_start, call_end;
-
-	auto void empty_function(void) {}
 
 	call_start = read_cntvct_serialized();
 	for (int i = 0; i < 1000; i++) {

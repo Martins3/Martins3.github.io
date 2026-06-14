@@ -77,7 +77,7 @@ int main(void)
 		"mov %0, %2\n\t"        /* out1 = op1 */
 		"mov %1, %3\n\t"        /* out2 = op2 */
 		"add %0, %0, %1"        /* out1 += out2 */
-		: "=r" (out1), "=r" (out2)
+		: "=&r" (out1), "=&r" (out2)
 		: "r" (op1), "r" (op2)
 		);
 
@@ -135,9 +135,9 @@ int main(void)
 
 	/* swp: 交换寄存器和内存的值 (ARM64 已弃用，用 ld/st 替代演示) */
 	__asm__ __volatile__(
-		"ldxr %0, [%2]\n\t"     /* 加载旧值 */
-		"stxr w9, %1, [%2]\n\t" /* 存储新值 */
-		: "=r" (new_val)
+		"ldxr %w0, [%2]\n\t"     /* 加载旧值 */
+		"stxr w9, %w1, [%2]\n\t" /* 存储新值 */
+		: "=&r" (new_val)
 		: "r" (new_val), "r" (ptr)
 		: "w9", "memory"
 		);

@@ -110,13 +110,17 @@ int main(void)
 	size_t len = strlen(msg);
 
 	__asm__ __volatile__(
+		"mov x0, %1\n\t"        /* fd: stdout = 1 (x0) */
+		"mov x1, %2\n\t"        /* buf (x1) */
+		"mov x2, %3\n\t"        /* count (x2) */
 		"mov x8, #64\n\t"       /* syscall: write = 64 */
-		"svc #0"
-		: "=r" (sys_result)
-		: "r" ((long)1),        /* fd: stdout = 1 (x0) */
-		  "r" (msg),            /* buf (x1) */
-		  "r" (len)             /* count (x2) */
-		: "x8", "memory"
+		"svc #0\n\t"
+		"mov %0, x0"            /* 返回值从 x0 取出 */
+		: "=&r" (sys_result)
+		: "r" ((long)1),
+		  "r" (msg),
+		  "r" (len)
+		: "x0", "x1", "x2", "x8", "memory"
 		);
 
 	printf("syscall returned: %ld\n", sys_result);

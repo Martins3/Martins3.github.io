@@ -2,7 +2,7 @@
 
 由 `docs/pub/sync-blog.py` 生成。
 
-跳过文件数: 446
+跳过文件数: 442
 
 ## 发布策略跳过: draft 目录
 
@@ -153,11 +153,13 @@
 - `docs/concurrent/todo.md`
 - `docs/hw/todo.md`
 - `docs/kernel/blk/mq/mq-todo.md`
+- `docs/kernel/blk/raid/not-todo.md`
 - `docs/kernel/blk/raid/todo.md`
 - `docs/kernel/blk/scsi/todo.md`
 - `docs/kernel/blk/todo.md`
 - `docs/kernel/cgroup/todo.md`
 - `docs/kernel/cpuinfo/todo.md`
+- `docs/kernel/fs/nfs/todo.md`
 - `docs/kernel/fs/not-todo.md`
 - `docs/kernel/fs/overview-todo.md`
 - `docs/kernel/fs/simplefs/todo.md`
@@ -233,13 +235,6 @@
 ## 发布策略跳过: 同目录存在 README.md
 
 - `docs/assembly.md`
-- `docs/concurrent/lan/cpp.md`
-- `docs/concurrent/lan/glib.md`
-- `docs/concurrent/lan/glibc.md`
-- `docs/concurrent/lan/go.md`
-- `docs/concurrent/lan/pthread.md`
-- `docs/concurrent/lan/python.md`
-- `docs/concurrent/lan/rust.md`
 - `docs/concurrent/lkmm/zh-cn/README.summary.md`
 - `docs/concurrent/lkmm/zh-cn/README.translation.md`
 - `docs/concurrent/lkmm/zh-cn/access-marking.summary.md`
@@ -268,6 +263,7 @@
 - `docs/concurrent/lkmm/zh-cn/simple.translation.md`
 - `docs/cool.md`
 - `docs/kernel/blk/ds/ceph.md`
+- `docs/kernel/fs/nfs/user-nfsd/usage.md`
 - `docs/kernel/fs/simplefs/env.md`
 - `docs/kernel/fs/simplefs/journal.md`
 - `docs/kernel/fs/simplefs/learn.md`

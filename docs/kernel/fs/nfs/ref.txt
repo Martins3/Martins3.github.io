@@ -1,0 +1,305 @@
+```c
+enum nfs_opnum4 {
+	OP_ACCESS = 3,
+	OP_CLOSE = 4,
+	OP_COMMIT = 5,
+	OP_CREATE = 6,
+	OP_DELEGPURGE = 7,
+	OP_DELEGRETURN = 8,
+	OP_GETATTR = 9,
+	OP_GETFH = 10,
+	OP_LINK = 11,
+	OP_LOCK = 12,
+	OP_LOCKT = 13,
+	OP_LOCKU = 14,
+	OP_LOOKUP = 15,
+	OP_LOOKUPP = 16,
+	OP_NVERIFY = 17,
+	OP_OPEN = 18,
+	OP_OPENATTR = 19,
+	OP_OPEN_CONFIRM = 20,
+	OP_OPEN_DOWNGRADE = 21,
+	OP_PUTFH = 22,
+	OP_PUTPUBFH = 23,
+	OP_PUTROOTFH = 24,
+	OP_READ = 25,
+	OP_READDIR = 26,
+	OP_READLINK = 27,
+	OP_REMOVE = 28,
+	OP_RENAME = 29,
+	OP_RENEW = 30,
+	OP_RESTOREFH = 31,
+	OP_SAVEFH = 32,
+	OP_SECINFO = 33,
+	OP_SETATTR = 34,
+	OP_SETCLIENTID = 35,
+	OP_SETCLIENTID_CONFIRM = 36,
+	OP_VERIFY = 37,
+	OP_WRITE = 38,
+	OP_RELEASE_LOCKOWNER = 39,
+
+	/* nfs41 */
+	OP_BACKCHANNEL_CTL = 40,
+	OP_BIND_CONN_TO_SESSION = 41,
+	OP_EXCHANGE_ID = 42,
+	OP_CREATE_SESSION = 43,
+	OP_DESTROY_SESSION = 44,
+	OP_FREE_STATEID = 45,
+	OP_GET_DIR_DELEGATION = 46,
+	OP_GETDEVICEINFO = 47,
+	OP_GETDEVICELIST = 48,
+	OP_LAYOUTCOMMIT = 49,
+	OP_LAYOUTGET = 50,
+	OP_LAYOUTRETURN = 51,
+	OP_SECINFO_NO_NAME = 52,
+	OP_SEQUENCE = 53,
+	OP_SET_SSV = 54,
+	OP_TEST_STATEID = 55,
+	OP_WANT_DELEGATION = 56,
+	OP_DESTROY_CLIENTID = 57,
+	OP_RECLAIM_COMPLETE = 58,
+
+	/* nfs42 */
+	OP_ALLOCATE = 59,
+	OP_COPY = 60,
+	OP_COPY_NOTIFY = 61,
+	OP_DEALLOCATE = 62,
+	OP_IO_ADVISE = 63,
+	OP_LAYOUTERROR = 64,
+	OP_LAYOUTSTATS = 65,
+	OP_OFFLOAD_CANCEL = 66,
+	OP_OFFLOAD_STATUS = 67,
+	OP_READ_PLUS = 68,
+	OP_SEEK = 69,
+	OP_WRITE_SAME = 70,
+	OP_CLONE = 71,
+
+	/* xattr support (RFC8276) */
+	OP_GETXATTR                = 72,
+	OP_SETXATTR                = 73,
+	OP_LISTXATTRS              = 74,
+	OP_REMOVEXATTR             = 75,
+
+	OP_ILLEGAL = 10044,
+};
+```
+
+client :
+```txt
+                 0      nfs4:nfs4_commit
+                 0      nfs4:nfs4_write
+               252      nfs4:nfs4_read
+                 0      nfs4:nfs4_map_gid_to_group
+                 0      nfs4:nfs4_map_uid_to_name
+             8,175      nfs4:nfs4_map_group_to_gid
+             8,175      nfs4:nfs4_map_name_to_uid
+                 0      nfs4:nfs4_match_stateid
+                 0      nfs4:nfs41_match_stateid
+                 0      nfs4:nfs4_cb_layoutrecall_file
+                 0      nfs4:nfs4_cb_recall
+                 0      nfs4:nfs4_cb_getattr
+                 0      nfs4:nfs4_fsinfo
+                 0      nfs4:nfs4_lookup_root
+               472      nfs4:nfs4_getattr
+                 0      nfs4:nfs4_close_stateid_update_wait
+                 0      nfs4:nfs4_open_stateid_update_wait
+               314      nfs4:nfs4_open_stateid_update
+                 0      nfs4:nfs4_delegreturn
+                 0      nfs4:nfs4_setattr
+                 0      nfs4:nfs4_set_acl
+                 0      nfs4:nfs4_get_acl
+               501      nfs4:nfs4_readdir
+                 0      nfs4:nfs4_readlink
+               574      nfs4:nfs4_access
+                 0      nfs4:nfs4_rename
+                 0      nfs4:nfs4_lookupp
+                 0      nfs4:nfs4_secinfo
+                 0      nfs4:nfs4_get_fs_locations
+                 0      nfs4:nfs4_remove
+                 0      nfs4:nfs4_mknod
+                 0      nfs4:nfs4_mkdir
+                 0      nfs4:nfs4_symlink
+             3,712      nfs4:nfs4_lookup
+                 0      nfs4:nfs4_delegreturn_exit
+                 0      nfs4:nfs_delegation_need_return
+                 0      nfs4:nfs4_detach_delegation
+                 0      nfs4:nfs4_reclaim_delegation
+               154      nfs4:nfs4_set_delegation
+                 0      nfs4:nfs4_state_lock_reclaim
+                 0      nfs4:nfs4_set_lock
+                 0      nfs4:nfs4_unlock
+                 0      nfs4:nfs4_get_lock
+               157      nfs4:nfs4_close
+                56      nfs4:nfs4_cached_open
+               225      nfs4:nfs4_open_file
+                 0      nfs4:nfs4_open_expired
+                 0      nfs4:nfs4_open_reclaim
+                 0      nfs4:nfs_cb_badprinc
+                 0      nfs4:nfs_cb_no_clp
+                 0      nfs4:nfs4_xdr_bad_filehandle
+                54      nfs4:nfs4_xdr_status
+                 0      nfs4:nfs4_xdr_bad_operation
+                 0      nfs4:nfs4_state_mgr_failed
+                 0      nfs4:nfs4_state_mgr
+             5,868      nfs4:nfs4_setup_sequence
+                 0      nfs4:nfs4_renew_async
+                 0      nfs4:nfs4_renew
+                 0      nfs4:nfs4_setclientid_confirm
+                 0      nfs4:nfs4_setclientid
+```
+
+server 端:
+```txt
+                 0      nfsd:nfsd_vfs_statfs
+            10,614      nfsd:nfsd_vfs_getattr
+               502      nfsd:nfsd_vfs_readdir
+                 0      nfsd:nfsd_vfs_rename
+                 0      nfsd:nfsd_vfs_unlink
+                 0      nfsd:nfsd_vfs_link
+                 0      nfsd:nfsd_vfs_symlink
+                 0      nfsd:nfsd_vfs_create
+             4,085      nfsd:nfsd_vfs_lookup
+                 0      nfsd:nfsd_vfs_setattr
+                 0      nfsd:nfsd_copy_async_cancel
+                 0      nfsd:nfsd_copy_async_done
+                 0      nfsd:nfsd_copy_done
+                 0      nfsd:nfsd_copy_async
+                 0      nfsd:nfsd_copy_intra
+                 0      nfsd:nfsd_copy_inter
+                 0      nfsd:nfsd_end_grace
+                 0      nfsd:nfsd_ctl_recoverydir
+                 0      nfsd:nfsd_ctl_time
+                 0      nfsd:nfsd_ctl_maxblksize
+                 0      nfsd:nfsd_ctl_ports_addxprt
+                 0      nfsd:nfsd_ctl_ports_addfd
+                 0      nfsd:nfsd_ctl_version
+                 0      nfsd:nfsd_ctl_pool_threads
+                 0      nfsd:nfsd_ctl_threads
+                 0      nfsd:nfsd_ctl_filehandle
+                 0      nfsd:nfsd_ctl_unlock_fs
+                 0      nfsd:nfsd_ctl_unlock_ip
+                 0      nfsd:nfsd_cb_recall_any_done
+                 0      nfsd:nfsd_cb_getattr_done
+                 0      nfsd:nfsd_cb_offload_done
+                 0      nfsd:nfsd_cb_layout_done
+                 0      nfsd:nfsd_cb_notify_lock_done
+                 0      nfsd:nfsd_cb_recall_done
+                 0      nfsd:nfsd_cb_recall_any
+                 0      nfsd:nfsd_cb_offload
+                 0      nfsd:nfsd_cb_notify_lock
+                 0      nfsd:nfsd_cb_recall
+                 0      nfsd:nfsd_cb_free_slot
+                 0      nfsd:nfsd_cb_seq_status
+                 1      nfsd:nfsd_cb_bc_shutdown
+                 3      nfsd:nfsd_cb_bc_update
+                 0      nfsd:nfsd_cb_restart
+                 1      nfsd:nfsd_cb_destroy
+                 3      nfsd:nfsd_cb_queue
+                 0      nfsd:nfsd_cb_setup_err
+                 2      nfsd:nfsd_cb_setup
+                 0      nfsd:nfsd_cb_rpc_release
+                 0      nfsd:nfsd_cb_rpc_done
+                 0      nfsd:nfsd_cb_rpc_prepare
+                 0      nfsd:nfsd_cb_shutdown
+                 0      nfsd:nfsd_cb_lost
+                 2      nfsd:nfsd_cb_probe
+                 1      nfsd:nfsd_cb_new_state
+                 3      nfsd:nfsd_cb_start
+                 0      nfsd:nfsd_cb_nodelegs
+                 2      nfsd:nfsd_cb_args
+                 0      nfsd:nfsd_drc_mismatch
+                 0      nfsd:nfsd_drc_found
+                 0      nfsd:nfsd_file_close
+                 0      nfsd:nfsd_file_shrinker_removed
+                 0      nfsd:nfsd_file_gc_removed
+                 0      nfsd:nfsd_file_gc_disposed
+                 0      nfsd:nfsd_file_gc_aged
+                 0      nfsd:nfsd_file_gc_referenced
+                 0      nfsd:nfsd_file_gc_writeback
+                 0      nfsd:nfsd_file_gc_in_use
+                 0      nfsd:nfsd_file_lru_del
+                 0      nfsd:nfsd_file_lru_add
+                 0      nfsd:nfsd_file_fsnotify_handle_event
+                 0      nfsd:nfsd_file_is_cached
+                 0      nfsd:nfsd_file_opened
+               161      nfsd:nfsd_file_open
+                 0      nfsd:nfsd_file_cons_err
+                 0      nfsd:nfsd_file_insert_err
+               161      nfsd:nfsd_file_acquire
+               161      nfsd:nfsd_file_get_dio_attrs
+               161      nfsd:nfsd_file_alloc
+                 0      nfsd:nfsd_file_closing
+               417      nfsd:nfsd_file_put
+                 4      nfsd:nfsd_file_unhash
+                 4      nfsd:nfsd_file_free
+                 0      nfsd:nfsd_clid_confirmed_r
+                 1      nfsd:nfsd_clid_fresh
+                 0      nfsd:nfsd_clid_verf_mismatch
+                 0      nfsd:nfsd_clid_cred_mismatch
+                 0      nfsd:nfsd_writeverf_reset
+                 0      nfsd:nfsd_grace_complete
+                 0      nfsd:nfsd_grace_start
+                 0      nfsd:nfsd_mark_client_expired
+                 0      nfsd:nfsd_clid_stale
+                 1      nfsd:nfsd_clid_renew
+                 0      nfsd:nfsd_clid_purged
+                 0      nfsd:nfsd_clid_replaced
+                 0      nfsd:nfsd_clid_admin_expired
+                 0      nfsd:nfsd_clid_destroyed
+                 1      nfsd:nfsd_clid_confirmed
+                 0      nfsd:nfsd_clid_reclaim_complete
+                 0      nfsd:nfsd_clid_expire_unconf
+                 0      nfsd:nfsd_slot_seqid_sequence
+                 0      nfsd:nfsd_slot_seqid_unconf
+                 0      nfsd:nfsd_slot_seqid_conf
+                 0      nfsd:nfsd_seq4_status
+                 0      nfsd:nfsd_stateowner_replay
+                 0      nfsd:nfsd_stid_revoke
+                 4      nfsd:nfsd_open_confirm
+               165      nfsd:nfsd_preprocess
+                 0      nfsd:nfsd_deleg_return
+                 0      nfsd:nfsd_deleg_write
+               157      nfsd:nfsd_deleg_read
+               161      nfsd:nfsd_open
+                 0      nfsd:nfsd_layout_recall_release
+                 0      nfsd:nfsd_layout_recall_fail
+                 0      nfsd:nfsd_layout_recall_done
+                 0      nfsd:nfsd_layout_recall
+                 0      nfsd:nfsd_layout_return_lookup_fail
+                 0      nfsd:nfsd_layout_commit_lookup_fail
+                 0      nfsd:nfsd_layout_get_lookup_fail
+                 0      nfsd:nfsd_layoutstate_free
+                 0      nfsd:nfsd_layoutstate_unhash
+                 0      nfsd:nfsd_layoutstate_alloc
+                 0      nfsd:nfsd_delegret_wakeup
+                 0      nfsd:nfsd_clone_file_range_err
+             4,763      nfsd:nfsd_dirent
+                 0      nfsd:nfsd_write_err
+                 0      nfsd:nfsd_read_err
+                 0      nfsd:nfsd_commit_done
+                 0      nfsd:nfsd_commit_start
+                 0      nfsd:nfsd_write_done
+                 0      nfsd:nfsd_write_io_done
+                 0      nfsd:nfsd_write_opened
+                 0      nfsd:nfsd_write_start
+               256      nfsd:nfsd_read_done
+               256      nfsd:nfsd_read_io_done
+                 0      nfsd:nfsd_read_vector
+               256      nfsd:nfsd_read_splice
+               256      nfsd:nfsd_read_start
+                 5      nfsd:nfsd_export_update
+                 0      nfsd:nfsd_exp_get_by_name
+                 0      nfsd:nfsd_expkey_update
+                 0      nfsd:nfsd_exp_find_key
+                 0      nfsd:nfsd_set_fh_dentry_badhandle
+                 0      nfsd:nfsd_set_fh_dentry_badexport
+                 0      nfsd:nfsd_fh_verify_err
+            27,705      nfsd:nfsd_fh_verify
+                 0      nfsd:nfsd_compound_encode_err
+            31,679      nfsd:nfsd_compound_op_err
+                 0      nfsd:nfsd_compound_decode_err
+            31,679      nfsd:nfsd_compound_status
+            11,596      nfsd:nfsd_compound
+                 0      nfsd:nfsd_cant_encode_err
+                 0      nfsd:nfsd_garbage_args_err
+```

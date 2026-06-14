@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <assert.h>
 #include <stdint.h>
+#include <inttypes.h>
 
 /* 读取 ARM64 通用计时器 (CNTVCT_EL0 - Virtual Counter)
  * 类似于 x86 的 TSC
@@ -61,7 +62,7 @@ int main(void)
 	unsigned int hw_reg_value;
 
 	__asm__ __volatile__(
-		"mov %0, #0xABCD1234"   /* 模拟硬件寄存器读取 */
+		"ldr %0, =0xABCD1234"   /* 模拟硬件寄存器读取 */
 		: "=r" (hw_reg_value)
 		);
 

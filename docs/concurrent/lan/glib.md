@@ -1,4 +1,4 @@
-## glib 中也有很多
+# glib 中也有很多
 https://docs.gtk.org/glib/
 - 简单看看就可以发现有 Atomics 和 Threads
 

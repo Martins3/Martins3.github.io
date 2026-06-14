@@ -34,9 +34,9 @@
 - [使用 Anki 持续思考](./blog/why-anki.md)
 
 
-## 反思
+## 综合总结
 - [为什么要 kernel bypass](./kernel/why-by-pass.md)
-- [命运的织机: 各种调度器杂谈](./kernel/scheduler.md)
+<!-- - [命运的织机: 各种 scheduler 杂谈](./kernel/scheduler.md) -->
 - [interrupt, execption , softirq 和 nmi 谁可以打断谁](./kernel/nested-interrupt.md)
 
 ## 技术细节
@@ -53,6 +53,20 @@
 - [为什么有 sigpipe ?](./kernel/signal/sigpipe.md)
 - [syscall restart](./kernel/signal/syscall-restart.md)
 
+### fuse
+- [fuse-bench](./kernel/fs/fuse/fuse-bench/README.md)
+- [3fs](./kernel/fs/fuse/3fs.md)
+- [fuse](./kernel/fs/fuse/fuse.md)
+- [virtio-fs 简单尝试](./kernel/fs/fuse/virtiofs.md)
+
+### nfs
+
+- [mini NFSv3 server](./kernel/fs/nfs/user-nfsd/README.md)
+- [nfs rfc](./kernel/fs/nfs/doc.md)
+- [netfs](./kernel/fs/nfs/fscache.md)
+- [nfs swap 支持](./kernel/fs/nfs/nfs-swap.md)
+- [samba 配置简单记录](./kernel/fs/nfs/samba.md)
+
 ## Dune
 [Loongson Dune : A Process Level Virtualization framework Base on KVM](https://github.com/Martins3/loongson-dune)
 
@@ -60,7 +74,7 @@
 
 [论文以及答辩 PPT](https://github.com/Martins3/Bare-Metal-Binary-Translator)
 
-## 我的机器
+## 我的硬件
 
 - [年轻人的第一次攒机](./hw/1-13900k.md)
 - [拯救者 R9000P 2023](./hw/2-7950hx.md)
@@ -74,7 +88,7 @@
 ## AI 杂谈
 - AI Infra 到底在做什么?
 	- [slides](./ai/ai-infra-vskernel.html)
-	- [文档](./ai/vs-kernel.md)
+	- [AI Infra 到底在做什么](./ai/vs-kernel.md)
 - [Linux 内核如何随着 AI 来演进](./ai/with-ai.md)
 - [还没结束呢！和 AI 的故事，现在才开始！](./ai/ai-is-amazing.md)
 
@@ -84,7 +98,7 @@
 
 - 双系统
 	- seabios 和 UEFI 的启动分区
-	🚧 - [grub](./grub/grub.md)
+	- [grub](./grub/grub.md)
 - 图形虚拟化
 	- cirrus-vga
 	- vga
@@ -259,7 +273,13 @@
     - [lockdep 实现](./concurrent/kernel/lockdep-internal.md)
     - [lockdep usage](./concurrent/kernel/lockdep-usage.md)
   - `lan/`
-    - [最后，总结对比一下吧](./concurrent/lan/README.md)
+    - [c++ 的同步设计](./concurrent/lan/cpp.md)
+    - [glib 中也有很多](./concurrent/lan/glib.md)
+    - [glibc](./concurrent/lan/glibc.md)
+    - [golang 同步设计](./concurrent/lan/go.md)
+    - [pthread](./concurrent/lan/pthread.md)
+    - [cpython 中锁设计](./concurrent/lan/python.md)
+    - [rust async](./concurrent/lan/rust.md)
   - `perfbook/`
     - `autoread/`
       - `chapters/`
@@ -367,7 +387,6 @@
     - `fio/`
       - [HDD 已死](./kernel/blk/fio/fio-result.md)
     - `mq/`
-      - [flush](./kernel/blk/mq/bakctrace.md)
       - [bio-based 和 request-based 的区分](./kernel/blk/mq/bio-based-device.md)
       - [bio request request_queue 三者的关系](./kernel/blk/mq/bio-request.md)
       - [drivers/md/dm-rq.c](./kernel/blk/mq/dm-rq.md)
@@ -378,12 +397,12 @@
       - [mq 核心结构体](./kernel/blk/mq/mq.md)
       - [storage blk plug 机制](./kernel/blk/mq/plug.md)
       - [sbitmap](./kernel/blk/mq/sbitmap.md)
-      - [看看文档](./kernel/blk/mq/scheduler-deadline.md)
-      - [什么情况下， block_rq_insert 但是无法 block_rq_issue](./kernel/blk/mq/scheduler.md)
-      - [在 blk-mq 里，shared tags 的意思](./kernel/blk/mq/shared-tags.md)
-      - [一个 request 创建的时候就需要 tag ，那么意味着创建的时候就需要知道发送给哪一个盘吗？](./kernel/blk/mq/tag.md)
+      - [deadline scheduler](./kernel/blk/mq/scheduler-deadline.md)
+      - [scheduler](./kernel/blk/mq/scheduler.md)
+      - [shared tags](./kernel/blk/mq/shared-tags.md)
+      - [tag](./kernel/blk/mq/tag.md)
       - [选项 BLK_WBT](./kernel/blk/mq/wbt.md)
-      - [mq 的 queue 的数量就是 hctx 的数量](./kernel/blk/mq/yes.md)
+      - [mq 基础](./kernel/blk/mq/yes.md)
     - `nvme/`
       - [nvme-cli](./kernel/blk/nvme/nvme-cli.md)
       - [深入浅出 SSD](./kernel/blk/nvme/nvme-hardware.md)
@@ -392,7 +411,6 @@
     - `raid/`
       - [资料](./kernel/blk/raid/general.md)
       - [同步模型](./kernel/blk/raid/lock.md)
-      - [多个 raid 共享相同的物理盘会带来什么问题？](./kernel/blk/raid/not.md)
       - [raid1 的开机过程](./kernel/blk/raid/raid1-boot.md)
       - [raid1](./kernel/blk/raid/raid1.md)
       - [sync](./kernel/blk/raid/sync.md)
@@ -476,23 +494,8 @@
       - [fs jbd2](./kernel/fs/ext4/jbd2.md)
       - [dumpe2fs](./kernel/fs/ext4/lab.md)
       - [ext4](./kernel/fs/ext4/overview.md)
-    - `fuse/`
-      - `fuse-bench/`
-        - [fuse-bench](./kernel/fs/fuse/fuse-bench/README.md)
-      - [3fs](./kernel/fs/fuse/3fs.md)
-      - [cuse](./kernel/fs/fuse/fuse-cuse.md)
-      - [FUSE 机制梳理](./kernel/fs/fuse/fuse.codex.md)
-      - [fuse](./kernel/fs/fuse/fuse.md)
-      - [virtio-fs 简单尝试](./kernel/fs/fuse/virtiofs.md)
     - `nfs/`
-      - `user-nfsd/`
-        - [最小用户态 NFSv3 server](./kernel/fs/nfs/user-nfsd/README.md)
-      - [nfs rfc](./kernel/fs/nfs/doc.md)
-      - [fscache](./kernel/fs/nfs/fscache.md)
-      - [为什么 nfs 需要对于 swap 特殊支持](./kernel/fs/nfs/nfs-deadlock.md)
-      - [nfs 的常识](./kernel/fs/nfs/overview.md)
-      - [windows 作为 samba server](./kernel/fs/nfs/samba-windows.md)
-      - [linux 作为 samba server](./kernel/fs/nfs/samba.md)
+      - [常用命令](./kernel/fs/nfs/basic.md)
     - `simplefs/`
       - [我用 ai 写了一个文件系统](./kernel/fs/simplefs/README.md)
     - [acl](./kernel/fs/acl.md)
@@ -1063,6 +1066,7 @@
   - [阅读 musl 学到的一些东西](./linux/musl.md)
   - [omarchy](./linux/omarchy.md)
   - [如何给 OpenEuler 提交打包](./linux/openeuler.md)
+  - [tencentos 的分支](./linux/tos.md)
   - [ubuntu 使用的问题合集](./linux/ubuntu.md)
 - `net/`
   - `demo/`
@@ -1211,7 +1215,6 @@
   - [求求了，彻底搞清楚这个问题](./pci/msix.md)
   - [p2pdma](./pci/p2pdma.md)
   - [dma](./pci/qemu.md)
-  - [qemu 中就是支持 udmabuf 的](./pci/udmabuf.md)
 - `qemu/`
   - `aarch64-user/`
     - [一些细节的说明](./qemu/aarch64-user/Readme.md)

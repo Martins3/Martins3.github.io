@@ -1,32 +1,15 @@
-## fscache
+# netfs
 
-## 基本代码结构
+## 先看文档
+- https://www.kernel.org/doc/html/latest/filesystems/netfs_library.html
+- [netfs, afs, 9p: Delegate high-level I/O to netfslib](https://lwn.net/Articles/955944/)
+- https://www.kernel.org/doc/html/latest/filesystems/caching/index.html
 
-```txt
-config FSCACHE
-	bool "General filesystem local caching manager"
-	depends on NETFS_SUPPORT
-	help
-	  This option enables a generic filesystem caching manager that can be
-	  used by various network and other filesystems to cache data locally.
-	  Different sorts of caches can be plugged in, depending on the
-	  resources available.
+其实一共就没多少代码 fs/netfs/ ，其实基本上可以猜到，就是一些
+网络上的原因让文件系统有一些共性。
 
-	  See Documentation/filesystems/caching/fscache.rst for more information.
-```
+## 基本测试
 
-依赖 fscache 的文件系统
-- 9P
-- AFS
-- CEPH
-- CIFS
-- NFS
-
-他们都是有 CONFIG_NFS_FSCACHE 的代码
-
-但是 coda fs 也是一个文件系统，但是不依赖于 fscache
-
-## /proc
 ```txt
 🧀  l /proc/fs/
 Permissions Size User Date Modified Name
@@ -39,22 +22,6 @@ dr-xr-xr-x     - root 22 Jan 17:05   nfsd
 dr-xr-xr-x     - root 22 Jan 17:05   nfsfs
 ```
 
-为什么建立这个软链接啊，这么说，其实 /proc/ 是有其他的实现的吗?
-
-fs/netfs/fscache_proc.c:fscache_proc_init 中的
-```c
-	if (!proc_symlink("fs/fscache", NULL, "netfs"))
-		goto error_sym;
-```
-
-看来在这一次重构中: commit 7eb5b3e3a0a5 ("netfs, fscache: Move /proc/fs/fscache to /proc/fs/netfs and put in a symlink")
-
-## 关键重构内容
-- [netfs, afs, 9p: Delegate high-level I/O to netfslib](https://lwn.net/Articles/955944/)
-
-## netfs
-fs/netfs/
-
 ```txt
 🧀  tree /proc/fs/netfs
 /proc/fs/netfs
@@ -65,27 +32,94 @@ fs/netfs/
 └── volumes
 ```
 
-## 基本结构
-例如 fs/9p/vfs_file.c 会调用到 v9fs_file_write_iter
+### 启动 cachefiles 后端并注册缓存
 
-- 如何才可以调用到 netfs_file_write_iter 上 ?
+在 VM 中安装并启动 `cachefilesd`:
 
-## 这个就是 netfs cache 吗?
+```sh
+sudo dnf install -y cachefilesd
+sudo sed -i 's/^secctx /# secctx /' /etc/cachefilesd.conf
+sudo systemctl enable --now cachefilesd
+```
+
+（`secctx` 那行需要注释掉，因为本次内核启动时禁用了 SELinux。）
+
+启动后 `/proc/fs/netfs/caches` 出现注册的缓存:
+
+```txt
+$ cat /proc/fs/netfs/caches
+CACHE    REF   VOLS  OBJS  ACCES S NAME
+======== ===== ===== ===== ===== = ===============
+00000001     2     1     0     1 A mycache
+```
+
+结论: cachefiles 后端成功绑定到 fscache，`mycache` 被激活。
+
+### 触发 `nfs_fscache_open_file`
+
+先用 NFSv3 挂载一个带 `fsc` 选项的测试目录:
+
+```sh
+sudo mkdir -p /mnt/nfs-fsc-test
+sudo mount -t nfs -o fsc,vers=3 10.0.0.2:/home/martins3/data /mnt/nfs-fsc-test
+```
+
+挂载选项里可以看到 `fsc`:
+
+```txt
+10.0.0.2:/home/martins3/data /mnt/nfs-fsc-test nfs ... vers=3 ... fsc ...
+```
+
+实验中发现 `mount -t nfs -o fsc,vers=4.1 ...` 时 `fsc` 没有写入 superblock 的挂载选项（`/proc/mounts` 不显示，也没有创建 cookie），而 `vers=3` 可以。当前分析尚未定位具体原因，已记录为待进一步调查的 NFSv4 fscache 路径问题。
+
+### 观察 cookies / volumes / stats
+
+读取文件前:
+
+```txt
+$ cat /proc/fs/netfs/cookies
+COOKIE   VOLUME   REF ACT ACC S FL DEF
+======== ======== === === === = == ================
+
+$ cat /proc/fs/netfs/volumes
+VOLUME   REF   nCOOK ACC FL CACHE           KEY
+======== ===== ===== === == =============== ================
+```
+
+读取 `/mnt/nfs-fsc-test/vn/docs/kernel/fs/nfs/fscache.md` 后:
+
+```txt
+$ cat /proc/fs/netfs/cookies
+COOKIE   VOLUME   REF ACT ACC S FL DEF
+======== ======== === === === = == ================
+00000002 00000010   1   0   0 - 602c 0100078134148076000000005cfef1739c664a12b67a668a9888855d9fa40eb6010000006353d3c3, ...
+
+$ cat /proc/fs/netfs/volumes
+VOLUME   REF   nCOOK ACC FL CACHE           KEY
+======== ===== ===== === == =============== ================
+00000010     2     1   1 00 mycache         nfs,3.0,2,,200000a,4fcfee04f99784ea,,,c0,100000,100000,bb8,ea60,7530,ea60,1
+```
+
+`netfs stats` 也出现了读缓存相关计数:
+
+```txt
+Reads  : DR=0 RA=1 RF=0 RS=0 WB=0 WBZ=0
+Writes : BW=0 WT=0 DW=0 WP=0 2C=1
+...
+-- FS-Cache statistics --
+Cookies: n=1 v=1 vcol=0 voom=0
+Acquire: n=1 ok=1 oom=0
+IO     : rd=0 wr=1 mis=0
+```
+
+结论: 带 `fsc` 的 NFS 挂载会触发 fscache 创建 cookie、volume，并把读取的数据写入本地 cachefiles 缓存。
+
+## 经常观察到的日志
 ```txt
 [   48.833775] netfs: FS-Cache loaded
 ```
-- fs/cachefiles
 
-## 看看文档再说
-- https://www.kernel.org/doc/html/latest/filesystems/caching/index.html
-
-## 关键问题
-1. 先实际上触发一些，然后测试一下效果吧
-```sh
-sudo bpftrace -e 'kprobe:nfs_fscache_open_file { @[kstack(bpftrace)] = count(); }'
-```
-2. 可以写一个基于 netfs 的文件系统吗?
-
+fs/cachefiles
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

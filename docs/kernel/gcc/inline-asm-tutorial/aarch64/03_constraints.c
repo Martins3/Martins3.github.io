@@ -24,10 +24,11 @@ int main(void)
 
 	(void)x8_val;  /* 抑制警告 */
 
-	/* 使用通用约束 */
+	/* 使用通用约束 (AArch64 mov 立即数编码有限，用 ldr = 伪指令加载任意常量) */
 	__asm__ __volatile__(
-		"mov %0, #123456"
+		"ldr %0, =%c1"
 		: "=r" (x0_val)
+		: "i" (123456)
 		);
 
 	printf("x0 = %lu (expected: 123456)\n", x0_val);
@@ -62,9 +63,9 @@ int main(void)
 	/* ===== 立即数约束 ===== */
 	int imm_result;
 
-	/* "i" 约束表示立即数 */
+	/* "i" 约束表示立即数 (AArch64 mov 立即数编码有限，用 ldr = 伪指令加载任意常量) */
 	__asm__ __volatile__(
-		"mov %0, %1"
+		"ldr %0, =%c1"
 		: "=r" (imm_result)
 		: "i" (0xDEADBEEF)    /* 编译时常数 */
 		);

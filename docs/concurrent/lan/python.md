@@ -1,4 +1,4 @@
-## cpython 中锁设计
+# cpython 中锁设计
 - 顺便思考下 interpreter 锁设计问题。
 
 take_gil 一下子搜索到一大堆东西:

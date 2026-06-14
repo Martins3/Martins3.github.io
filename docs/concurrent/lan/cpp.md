@@ -1,4 +1,4 @@
-## c++ 中是怎么设计的
+# c++ 的同步设计
 
 ## 谈谈 C++ 中的内存顺序
 ### https://luyuhuang.tech/2022/06/25/cpp-memory-order.html

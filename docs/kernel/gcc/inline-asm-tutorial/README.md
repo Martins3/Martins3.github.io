@@ -265,10 +265,6 @@ A: 需要交叉编译器，例如 `aarch64-linux-gnu-gcc`。
 - [ARM Architecture Reference Manual for A-profile](https://developer.arm.com/documentation/ddi0487/latest/)
 - [ARM64 System Register Reference](https://developer.arm.com/documentation/ddi0601/latest/)
 
-## 许可
-
-本教程代码供学习和参考使用。
-
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

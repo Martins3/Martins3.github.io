@@ -82,8 +82,8 @@ int main(void)
 	long result;
 
 	__asm__ __volatile__(
-		"mul %0, %2, %3\n\t"    /* result = a * b */
-		"add %0, %0, %2"        /* result += a */
+		"mul %0, %1, %2\n\t"    /* result = a * b */
+		"add %0, %0, %1"        /* result += a */
 		: "=&r" (result)
 		: "r" (a_val), "r" (b_val)
 		);
