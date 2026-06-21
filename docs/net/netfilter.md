@@ -452,7 +452,7 @@ br-in 是 ovs bridge ，qemu 虚拟机通过 tun 和 br-in 连接。
 给如何配置主机的网络。
 ```
 
-alpine/alpine-global.sh
+collei/collei-global.sh
 ```sh
 wifi=wlo1
 vb=br-in # virtual bridge

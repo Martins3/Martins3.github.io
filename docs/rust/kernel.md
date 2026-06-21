@@ -70,20 +70,10 @@ https://mp.weixin.qq.com/s/vfA2PfBl6uVksWQ39SPAkw
 入门rust是读rust语言圣经好还是读微软的教程好？ - Blackbird的回答 - 知乎
 https://www.zhihu.com/question/585031734/answer/3523366806
 
-
-## 6.18 版本中 binder 修改为 rust 了
-
-commit eafedbc7c050 ("rust_binder: add Rust Binder driver")k
-https://lore.kernel.org/all/20250919-rust-binder-v2-1-a384b09f28dd@google.com/
-
 ## 有趣的
 https://mp.weixin.qq.com/s/flQRGWUQDhDea56cTDSNOg
 
 - https://security.googleblog.com/2021/04/rust-in-linux-kernel.html
-
-## 也许可以测试下这个 binder 工具
-commit eafedbc7c050 ("rust_binder: add Rust Binder driver")k
-https://lore.kernel.org/all/20250919-rust-binder-v2-1-a384b09f28dd@google.com/
 
 ## debugfs 的 rust 接口
 
@@ -92,6 +82,8 @@ https://mp.weixin.qq.com/s/QFi-_Xu4fLseqEL7Rs76Bg
 
 ## tyr
 https://lwn.net/Articles/1055590/
+
+mali GPU 驱动
 
 ## lwn
 https://mp.weixin.qq.com/s/DH_bSrQ-Upfpckl9w1Muwg

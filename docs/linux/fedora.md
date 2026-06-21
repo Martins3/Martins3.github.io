@@ -470,6 +470,42 @@ sudo -S systemctl set-default graphical.target
 systemctl is-enabled gdm
 systemctl get-default
 
+## 打印机
+```txt
+sudo dnf install -y cups cups-client cups-filters avahi-tools gutenprint-cups system-config-printer
+
+sudo systemctl enable --now cups cups-browsed
+```
+
+使用 lps 有问题:
+```txt
+sudo lpadmin -p FX_ApeosPort_C2560 -E -v ipps://FX4fb4ac.local/ipp/print -m everywhere
+```
+
+普通的没问题:
+```txt
+sudo lpadmin -p FX_ApeosPort_C2560 -E -v ipp://FX4fb4ac.local/ipp/print -m everywhere
+```
+
+设置默认打印机
+sudo lpadmin -d FX_ApeosPort_C2560
+
+最后结果:
+```txt
+🧀  lpstat -t
+scheduler is running
+system default destination: FX_ApeosPort_C2560
+device for FX_ApeosPort_C2560: ipp://FX4fb4ac.local/ipp/print
+FX_ApeosPort_C2560 accepting requests since Wed 17 Jun 2026 08:33:53 AM CST
+printer FX_ApeosPort_C2560 is idle.  enabled since Wed 17 Jun 2026 08:33:53 AM CST
+```
+
+如果想看扫描结果，直接看就可以了，都是图形界面操作
+就没有好说的了:
+```txt
+http://192.168.1.30/home/index.html
+```
+
 ## 2026-04-26 尝试 fedora 的感触
 
 两个原因:
@@ -489,6 +525,8 @@ systemctl get-default
 6. wine 也变好了很多
 	- https://github.com/Zwhy2025/linux-wxwork
 
+## 参考
+https://world.hey.com/dhh/linux-as-the-new-developer-default-at-37signals-ef0823b7
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

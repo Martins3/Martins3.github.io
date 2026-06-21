@@ -58,174 +58,175 @@ https://lwn.net/Articles/903855/
 
 
 ```txt
-#0  ublk_ch_mmap (filp=0xffff888105420700, vma=0xffff8880067dbd10) at drivers/block/ublk_drv.c:923
-#1  0xffffffff812e6b58 in call_mmap (vma=0xffff8880067dbd10, file=0xffff888105420700) at ./include/linux/fs.h:2204
-#2  mmap_region (file=file@entry=0xffff888105420700, addr=addr@entry=140585578082304, len=len@entry=4096, vm_flags=vm_flags@entry=249, pgoff=<optimized out>, uf=uf@entry=0xffffc90002727eb0) at mm/mmap.c:2625
-#3  0xffffffff812e754f in do_mmap (file=file@entry=0xffff888105420700, addr=140585578082304, addr@entry=0, len=len@entry=4096, prot=<optimized out>, prot@entry=1, flags=flags@entry=32769, pgoff=<optimized out>, pgoff@entry=0, populate=0xffffc90002727ea8, uf=0xffffc90002727eb0) at mm/mmap.c:1412
-#4  0xffffffff812b9f35 in vm_mmap_pgoff (file=file@entry=0xffff888105420700, addr=addr@entry=0, len=len@entry=4096, prot=prot@entry=1, flag=flag@entry=32769, pgoff=pgoff@entry=0) at mm/util.c:520
-#5  0xffffffff812e4442 in ksys_mmap_pgoff (addr=0, len=4096, prot=1, flags=32769, fd=<optimized out>, pgoff=0) at mm/mmap.c:1458
-#6  0xffffffff81fae018 in do_syscall_x64 (nr=<optimized out>, regs=0xffffc90002727f58) at arch/x86/entry/common.c:50
-#7  do_syscall_64 (regs=0xffffc90002727f58, nr=<optimized out>) at arch/x86/entry/common.c:80
-#8  0xffffffff8200009b in entry_SYSCALL_64 () at arch/x86/entry/entry_64.S:120
+- entry_SYSCALL_64
+  - do_syscall_64
+    - do_syscall_x64
+      - ksys_mmap_pgoff
+        - vm_mmap_pgoff
+          - do_mmap
+            - mmap_region
+              - call_mmap
+                - ublk_ch_mmap
 ```
 
 ```txt
-#0  ublk_ch_uring_cmd (cmd=0xffff8881015d0700, issue_flags=2147483653) at drivers/block/ublk_drv.c:1198
-#1  0xffffffff8165dcc6 in io_uring_cmd (req=0xffff8881015d0700, issue_flags=2147483653) at io_uring/uring_cmd.c:131
-#2  0xffffffff8165a4b6 in io_issue_sqe (req=req@entry=0xffff8881015d0700, issue_flags=issue_flags@entry=2147483649) at io_uring/io_uring.c:1743
-#3  0xffffffff8165ae62 in io_queue_sqe (req=0xffff8881015d0700) at io_uring/io_uring.c:1916
-#4  io_submit_sqe (sqe=0xffff888105e70000, req=0xffff8881015d0700, ctx=0xffff888101525000) at io_uring/io_uring.c:2174
-#5  io_submit_sqes (ctx=ctx@entry=0xffff888101525000, nr=nr@entry=128) at io_uring/io_uring.c:2285
-#6  0xffffffff8165b755 in __do_sys_io_uring_enter (fd=<optimized out>, to_submit=128, min_complete=1, flags=25, argp=0x7fdca11ffcf0, argsz=24) at io_uring/io_uring.c:3220
-#7  0xffffffff81fae018 in do_syscall_x64 (nr=<optimized out>, regs=0xffffc90002727f58) at arch/x86/entry/common.c:50
-#8  do_syscall_64 (regs=0xffffc90002727f58, nr=<optimized out>) at arch/x86/entry/common.c:80
-#9  0xffffffff8200009b in entry_SYSCALL_64 () at arch/x86/entry/entry_64.S:120
+- entry_SYSCALL_64
+  - do_syscall_64
+    - do_syscall_x64
+      - __do_sys_io_uring_enter
+        - io_submit_sqes
+          - io_submit_sqe
+            - io_queue_sqe
+              - io_issue_sqe
+                - io_uring_cmd
+                  - ublk_ch_uring_cmd
 ```
 
 ```txt
-#0  ublk_queue_rq (hctx=0xffff8880055f1600, bd=0xffffc90001797d60) at drivers/block/ublk_drv.c:843
-#1  0xffffffff81635c1c in blk_mq_dispatch_rq_list (hctx=hctx@entry=0xffff8880055f1600, list=list@entry=0xffffc90001797de0, nr_budgets=0, nr_budgets@entry=1) at block/blk-mq.c:1992
-#2  0xffffffff8163ba34 in __blk_mq_do_dispatch_sched (hctx=0xffff8880055f1600) at block/blk-mq-sched.c:173
-#3  blk_mq_do_dispatch_sched (hctx=hctx@entry=0xffff8880055f1600) at block/blk-mq-sched.c:187
-#4  0xffffffff8163bd48 in __blk_mq_sched_dispatch_requests (hctx=hctx@entry=0xffff8880055f1600) at block/blk-mq-sched.c:313
-#5  0xffffffff8163bde0 in blk_mq_sched_dispatch_requests (hctx=hctx@entry=0xffff8880055f1600) at block/blk-mq-sched.c:339
-#6  0xffffffff81632860 in __blk_mq_run_hw_queue (hctx=0xffff8880055f1600) at block/blk-mq.c:2110
-#7  0xffffffff8112bd54 in process_one_work (worker=worker@entry=0xffff8881007b10c0, work=0xffff8880055f1640) at kernel/workqueue.c:2289
-#8  0xffffffff8112bf68 in worker_thread (__worker=0xffff8881007b10c0) at kernel/workqueue.c:2436
-#9  0xffffffff81133870 in kthread (_create=0xffff8881007af340) at kernel/kthread.c:376
-#10 0xffffffff81001a6f in ret_from_fork () at arch/x86/entry/entry_64.S:306
+- ret_from_fork
+  - kthread
+    - worker_thread
+      - process_one_work
+        - __blk_mq_run_hw_queue
+          - blk_mq_sched_dispatch_requests
+            - __blk_mq_sched_dispatch_requests
+              - blk_mq_do_dispatch_sched
+                - __blk_mq_do_dispatch_sched
+                  - blk_mq_dispatch_rq_list
+                    - ublk_queue_rq
 ```
 
 ```txt
-#0  ublk_rq_task_work_fn (work=0xffff888025caa110) at drivers/block/ublk_drv.c:801
-#1  0xffffffff81130cd1 in task_work_run () at kernel/task_work.c:179
-#2  0xffffffff8165b338 in io_run_task_work () at io_uring/io_uring.h:250
-#3  io_run_task_work () at io_uring/io_uring.h:239
-#4  io_run_task_work_ctx (ctx=<optimized out>) at io_uring/io_uring.h:272
-#5  io_run_task_work_sig (ctx=<optimized out>) at io_uring/io_uring.c:2351
-#6  0xffffffff8165bb0d in io_cqring_wait_schedule (timeout=<optimized out>, iowq=0xffffc90002727ec8, ctx=0xffff888101525000) at io_uring/io_uring.c:2367
-#7  io_cqring_wait (uts=0x7fdca11ffd80, sigsz=<optimized out>, sig=0x0 <fixed_percpu_data>, min_events=1, ctx=0xffff888101525000) at io_uring/io_uring.c:2449
-#8  __do_sys_io_uring_enter (fd=<optimized out>, to_submit=<optimized out>, min_complete=1, flags=<optimized out>, argp=<optimized out>, argsz=<optimized out>) at io_uring/io_uring.c:3265
-#9  0xffffffff81fae018 in do_syscall_x64 (nr=<optimized out>, regs=0xffffc90002727f58) at arch/x86/entry/common.c:50
-#10 do_syscall_64 (regs=0xffffc90002727f58, nr=<optimized out>) at arch/x86/entry/common.c:80
-#11 0xffffffff8200009b in entry_SYSCALL_64 () at arch/x86/entry/entry_64.S:120
+- entry_SYSCALL_64
+  - do_syscall_64
+    - do_syscall_x64
+      - __do_sys_io_uring_enter
+        - io_cqring_wait
+          - io_cqring_wait_schedule
+            - io_run_task_work_sig
+              - io_run_task_work_ctx
+                - io_run_task_work
+                  - io_run_task_work
+                    - task_work_run
+                      - ublk_rq_task_work_fn
 ```
 
 ```txt
-#0  ublk_copy_user_pages (data=data@entry=0xffffc90002727d88, to_vm=to_vm@entry=false) at drivers/block/ublk_drv.c:432
-#1  0xffffffff819aec5c in ublk_unmap_io (io=0xffff888105df9640, req=0xffff888025caa000, ubq=0xffff888105df9000) at drivers/block/ublk_drv.c:512
-#2  ublk_complete_rq (req=0xffff888025caa000) at drivers/block/ublk_drv.c:621
-#3  ublk_commit_completion (ub_cmd=<optimized out>, ub=<optimized out>) at drivers/block/ublk_drv.c:974
-#4  ublk_ch_uring_cmd (cmd=<optimized out>, issue_flags=<optimized out>) at drivers/block/ublk_drv.c:1274
-#5  0xffffffff8165dcc6 in io_uring_cmd (req=0xffff888103289e00, issue_flags=2147483653) at io_uring/uring_cmd.c:131
-#6  0xffffffff8165a4b6 in io_issue_sqe (req=req@entry=0xffff888103289e00, issue_flags=issue_flags@entry=2147483649) at io_uring/io_uring.c:1743
-#7  0xffffffff8165ae62 in io_queue_sqe (req=0xffff888103289e00) at io_uring/io_uring.c:1916
-#8  io_submit_sqe (sqe=0xffff888105e74080, req=0xffff888103289e00, ctx=0xffff888101525000) at io_uring/io_uring.c:2174
-#9  io_submit_sqes (ctx=ctx@entry=0xffff888101525000, nr=nr@entry=1) at io_uring/io_uring.c:2285
-#10 0xffffffff8165b755 in __do_sys_io_uring_enter (fd=<optimized out>, to_submit=1, min_complete=1, flags=25, argp=0x7fdca11ffcf0, argsz=24) at io_uring/io_uring.c:3220
-#11 0xffffffff81fae018 in do_syscall_x64 (nr=<optimized out>, regs=0xffffc90002727f58) at arch/x86/entry/common.c:50
-#12 do_syscall_64 (regs=0xffffc90002727f58, nr=<optimized out>) at arch/x86/entry/common.c:80
-#13 0xffffffff8200009b in entry_SYSCALL_64 () at arch/x86/entry/entry_64.S:120
+- entry_SYSCALL_64
+  - do_syscall_64
+    - do_syscall_x64
+      - __do_sys_io_uring_enter
+        - io_submit_sqes
+          - io_submit_sqe
+            - io_queue_sqe
+              - io_issue_sqe
+                - io_uring_cmd
+                  - ublk_ch_uring_cmd
+                    - ublk_commit_completion
+                      - ublk_complete_rq
+                        - ublk_unmap_io
+                          - ublk_copy_user_pages
 ```
 
 ```txt
-#0  ublk_rq_task_work_fn (work=0xffff888025d75110) at drivers/block/ublk_drv.c:801
-#1  0xffffffff81130cd1 in task_work_run () at kernel/task_work.c:179
-#2  0xffffffff8165b338 in io_run_task_work () at io_uring/io_uring.h:250
-#3  io_run_task_work () at io_uring/io_uring.h:239
-#4  io_run_task_work_ctx (ctx=<optimized out>) at io_uring/io_uring.h:272
-#5  io_run_task_work_sig (ctx=<optimized out>) at io_uring/io_uring.c:2351
-#6  0xffffffff8165bb0d in io_cqring_wait_schedule (timeout=<optimized out>, iowq=0xffffc90001d3fec8, ctx=0xffff888107e89800) at io_uring/io_uring.c:2367
-#7  io_cqring_wait (uts=0x0 <fixed_percpu_data>, sigsz=<optimized out>, sig=0x0 <fixed_percpu_data>, min_events=1, ctx=0xffff888107e89800) at io_uring/io_uring.c:2449
-#8  __do_sys_io_uring_enter (fd=<optimized out>, to_submit=<optimized out>, min_complete=1, flags=<optimized out>, argp=<optimized out>, argsz=<optimized out>) at io_uring/io_uring.c:3265
-#9  0xffffffff81fae018 in do_syscall_x64 (nr=<optimized out>, regs=0xffffc90001d3ff58) at arch/x86/entry/common.c:50
-#10 do_syscall_64 (regs=0xffffc90001d3ff58, nr=<optimized out>) at arch/x86/entry/common.c:80
-#11 0xffffffff8200009b in entry_SYSCALL_64 () at arch/x86/entry/entry_64.S:120
+- entry_SYSCALL_64
+  - do_syscall_64
+    - do_syscall_x64
+      - __do_sys_io_uring_enter
+        - io_cqring_wait
+          - io_cqring_wait_schedule
+            - io_run_task_work_sig
+              - io_run_task_work_ctx
+                - io_run_task_work
+                  - io_run_task_work
+                    - task_work_run
+                      - ublk_rq_task_work_fn
 ```
 
 ## 运行时间
 ```txt
-#0  arch_atomic_try_cmpxchg (new=1, old=<synthetic pointer>, v=0xffff888005e81530) at ./arch/x86/include/asm/atomic.h:202
-#1  atomic_try_cmpxchg_acquire (new=1, old=<synthetic pointer>, v=0xffff888005e81530) at ./include/linux/atomic/atomic-instrumented.h:543
-#2  queued_spin_lock (lock=0xffff888005e81530) at ./include/asm-generic/qspinlock.h:111
-#3  do_raw_spin_lock (lock=0xffff888005e81530) at ./include/linux/spinlock.h:186
-#4  __raw_spin_lock_irqsave (lock=0xffff888005e81530) at ./include/linux/spinlock_api_smp.h:111
-#5  _raw_spin_lock_irqsave (lock=lock@entry=0xffff888005e81530) at kernel/locking/spinlock.c:162
-#6  0xffffffff816ac6d6 in percpu_counter_add_batch (fbc=0xffff888005e81530, amount=amount@entry=1, batch=<optimized out>) at lib/percpu_counter.c:90
-#7  0xffffffff8141ba2a in percpu_counter_add (amount=1, fbc=<optimized out>) at ./include/linux/percpu_counter.h:59
-#8  percpu_counter_inc (fbc=<optimized out>) at ./include/linux/percpu_counter.h:209
-#9  ext4_es_lookup_extent (inode=inode@entry=0xffff888005bf61a0, lblk=185472, next_lblk=next_lblk@entry=0x0 <fixed_percpu_data>, es=es@entry=0xffffc90001c4fa50) at fs/ext4/extents_status.c:968
-#10 0xffffffff8142b1da in ext4_map_blocks (handle=handle@entry=0x0 <fixed_percpu_data>, inode=inode@entry=0xffff888005bf61a0, map=map@entry=0xffffc90001c4fae0, flags=flags@entry=0) at fs/ext4/inode.c:528
-#11 0xffffffff8142bec0 in ext4_iomap_begin (inode=0xffff888005bf61a0, offset=759693312, length=4096, flags=48, iomap=0xffffc90001c4fbe0, srcmap=<optimized out>) at fs/ext4/inode.c:3466
-#12 0xffffffff813dcb2f in iomap_iter (iter=iter@entry=0xffffc90001c4fbb8, ops=ops@entry=0xffffffff8244dd20 <ext4_iomap_ops>) at fs/iomap/iter.c:74
-#13 0xffffffff813e0947 in __iomap_dio_rw (iocb=iocb@entry=0xffff88800c262900, iter=iter@entry=0xffffc90001c4fd08, ops=0xffffffff8244dd20 <ext4_iomap_ops>, dops=dops@entry=0x0 <fixed_percpu_data>, dio_flags=dio_flags@entry=0, private=private@entry=0x0 <fixed_percpu_data>, done_before=0) at fs/iomap/direct-io.c:601
-#14 0xffffffff813e1099 in iomap_dio_rw (iocb=iocb@entry=0xffff88800c262900, iter=iter@entry=0xffffc90001c4fd08, ops=<optimized out>, dops=dops@entry=0x0 <fixed_percpu_data>, dio_flags=dio_flags@entry=0, private=private@entry=0x0 <fixed_percpu_data>, done_before=0) at fs/iomap/direct-io.c:690
-#15 0xffffffff8141cba1 in ext4_dio_read_iter (to=0xffffc90001c4fd08, iocb=0xffff88800c262900) at fs/ext4/file.c:94
-#16 ext4_file_read_iter (iocb=0xffff88800c262900, to=0xffffc90001c4fd08) at fs/ext4/file.c:145
-#17 0xffffffff8166811e in call_read_iter (iter=0xffffc90001c4fd08, kio=<optimized out>, file=0xffff8881034be900) at ./include/linux/fs.h:2193
-#18 io_iter_do_read (iter=0xffffc90001c4fd08, rw=<optimized out>) at io_uring/rw.c:637
-#19 io_read (req=0xffff88800c262900, issue_flags=2147483649) at io_uring/rw.c:759
-#20 0xffffffff8165a2fc in io_issue_sqe (req=req@entry=0xffff88800c262900, issue_flags=issue_flags@entry=2147483649) at io_uring/io_uring.c:1743
-#21 0xffffffff8165ae62 in io_queue_sqe (req=0xffff88800c262900) at io_uring/io_uring.c:1916
-#22 io_submit_sqe (sqe=0xffff888014319580, req=0xffff88800c262900, ctx=0xffff88800b741800) at io_uring/io_uring.c:2174
-#23 io_submit_sqes (ctx=ctx@entry=0xffff88800b741800, nr=nr@entry=89) at io_uring/io_uring.c:2285
-#24 0xffffffff8165b755 in __do_sys_io_uring_enter (fd=<optimized out>, to_submit=89, min_complete=1, flags=25, argp=0x7f48ea5ffcf0, argsz=24) at io_uring/io_uring.c:3220
-#25 0xffffffff81fae018 in do_syscall_x64 (nr=<optimized out>, regs=0xffffc90001c4ff58) at arch/x86/entry/common.c:50
-#26 do_syscall_64 (regs=0xffffc90001c4ff58, nr=<optimized out>) at arch/x86/entry/common.c:80
-#27 0xffffffff8200009b in entry_SYSCALL_64 () at arch/x86/entry/entry_64.S:120
+- entry_SYSCALL_64
+  - do_syscall_64
+    - do_syscall_x64
+      - __do_sys_io_uring_enter
+        - io_submit_sqes
+          - io_submit_sqe
+            - io_queue_sqe
+              - io_issue_sqe
+                - io_read
+                  - io_iter_do_read
+                    - call_read_iter
+                      - ext4_file_read_iter
+                        - ext4_dio_read_iter
+                          - iomap_dio_rw
+                            - __iomap_dio_rw
+                              - iomap_iter
+                                - ext4_iomap_begin
+                                  - ext4_map_blocks
+                                    - ext4_es_lookup_extent
+                                      - percpu_counter_inc
+                                        - percpu_counter_add
+                                          - percpu_counter_add_batch
+                                            - _raw_spin_lock_irqsave
+                                              - __raw_spin_lock_irqsave
+                                                - do_raw_spin_lock
+                                                  - queued_spin_lock
+                                                    - atomic_try_cmpxchg_acquire
+                                                      - arch_atomic_try_cmpxchg
 ```
+
 ```txt
-#1  0xffffffff8132d654 in new_slab (node=-1, flags=<optimized out>, s=0xffff888004468f00) at mm/slub.c:1992
-#2  ___slab_alloc (s=s@entry=0xffff888004468f00, gfpflags=gfpflags@entry=600192, node=node@entry=-1, addr=addr@entry=18446744071581582474, c=c@entry=0xffff888083e33090, orig_size=orig_size@entry=248) at mm/slub.c:3180
-#3  0xffffffff8132db2d in __slab_alloc (s=s@entry=0xffff888004468f00, gfpflags=gfpflags@entry=600192, node=node@entry=-1, addr=addr@entry=18446744071581582474, orig_size=orig_size@entry=248, c=<optimized out>) at mm/slub.c:3279
-#4  0xffffffff8132e411 in slab_alloc_node (orig_size=248, addr=18446744071581582474, node=-1, gfpflags=600192, lru=0x0 <fixed_percpu_data>, s=0xffff888004468f00) at mm/slub.c:3364
-#5  slab_alloc (orig_size=248, addr=18446744071581582474, gfpflags=600192, lru=0x0 <fixed_percpu_data>, s=0xffff888004468f00) at mm/slub.c:3406
-#6  __kmem_cache_alloc_lru (gfpflags=600192, lru=0x0 <fixed_percpu_data>, s=0xffff888004468f00) at mm/slub.c:3413
-#7  kmem_cache_alloc (s=0xffff888004468f00, gfpflags=600192) at mm/slub.c:3422
-#8  0xffffffff8129c48a in mempool_alloc (pool=pool@entry=0xffffffff8353ab38 <blkdev_dio_pool+24>, gfp_mask=601280, gfp_mask@entry=3264) at mm/mempool.c:392
-#9  0xffffffff81624653 in bio_alloc_bioset (bdev=bdev@entry=0xffff888100c68000, nr_vecs=<optimized out>, nr_vecs@entry=1, opf=opf@entry=34817, gfp_mask=gfp_mask@entry=3264, bs=bs@entry=0xffffffff8353ab20 <blkdev_dio_pool>) at block/bio.c:525
-#10 0xffffffff8162251e in __blkdev_direct_IO_async (iocb=0xffff8882391ffa80, iter=0xffffc9000227fd08, nr_pages=1) at block/fops.c:311
-#11 0xffffffff81299464 in generic_file_direct_write (iocb=iocb@entry=0xffff8882391ffa80, from=from@entry=0xffffc9000227fd08) at mm/filemap.c:3677
-#12 0xffffffff81299640 in __generic_file_write_iter (iocb=iocb@entry=0xffff8882391ffa80, from=from@entry=0xffffc9000227fd08) at mm/filemap.c:3837
-#13 0xffffffff816223ef in blkdev_write_iter (iocb=0xffff8882391ffa80, from=0xffffc9000227fd08) at block/fops.c:541
-#14 0xffffffff813c740f in call_write_iter (iter=0xffffc9000227fd08, kio=0xffff8882391ffa80, file=0xffff888006763000) at ./include/linux/fs.h:2199
-#15 aio_write (req=req@entry=0xffff8882391ffa80, iocb=iocb@entry=0xffffc9000227fe58, vectored=vectored@entry=false, compat=compat@entry=false) at fs/aio.c:1600
-#16 0xffffffff813c969a in __io_submit_one (ctx=0xffff888011a98480, compat=<optimized out>, req=0xffff8882391ffa80, user_iocb=0x55c6b8178780, iocb=<optimized out>) at fs/aio.c:1972
-#17 io_submit_one (ctx=ctx@entry=0xffff888011a98480, user_iocb=0x55c6b8178780, compat=compat@entry=false) at fs/aio.c:2019
-#18 0xffffffff813c9eeb in __do_sys_io_submit (iocbpp=0x55c6b8188f50, nr=1, ctx_id=<optimized out>) at fs/aio.c:2078
-#19 __se_sys_io_submit (iocbpp=94311980502864, nr=<optimized out>, ctx_id=<optimized out>) at fs/aio.c:2048
-#20 __x64_sys_io_submit (regs=<optimized out>) at fs/aio.c:2048
-#21 0xffffffff81fae018 in do_syscall_x64 (nr=<optimized out>, regs=0xffffc9000227ff58) at arch/x86/entry/common.c:50
-#22 do_syscall_64 (regs=0xffffc9000227ff58, nr=<optimized out>) at arch/x86/entry/common.c:80
-#23 0xffffffff8200009b in entry_SYSCALL_64 () at arch/x86/entry/entry_64.S:120
+- entry_SYSCALL_64
+  - do_syscall_64
+    - do_syscall_x64
+      - __x64_sys_io_submit
+        - __se_sys_io_submit
+          - __do_sys_io_submit
+            - io_submit_one
+              - __io_submit_one
+                - aio_write
+                  - call_write_iter
+                    - blkdev_write_iter
+                      - __generic_file_write_iter
+                        - generic_file_direct_write
+                          - __blkdev_direct_IO_async
+                            - bio_alloc_bioset
+                              - mempool_alloc
+                                - kmem_cache_alloc
+                                  - __kmem_cache_alloc_lru
+                                    - slab_alloc
+                                      - slab_alloc_node
+                                        - __slab_alloc
+                                          - ___slab_alloc
+                                            - new_slab
 ```
 - [ ] 为什么这里存在一个 mempool_alloc 的?
 
 ```txt
-#0  0xffffffff812d10f8 in gup_pmd_range (pudp=0xffff8881034b1720, nr=0xffffc9000227fb24, pages=0xffff88822bcd99d8, flags=5, end=140433301229568, addr=140433301225472, pud=...) at mm/gup.c:2813
-#1  gup_pud_range (p4dp=0xffffc9000227fb28, nr=0xffffc9000227fb24, pages=<optimized out>, flags=5, end=140433301229568, addr=<optimized out>, p4d=...) at mm/gup.c:2863
-#2  gup_p4d_range (pgdp=0xffff8881072ba7f8, nr=0xffffc9000227fb24, pages=<optimized out>, flags=5, end=140433301229568, addr=<optimized out>, pgd=...) at mm/gup.c:2888
-#3  gup_pgd_range (nr=0xffffc9000227fb24, pages=<optimized out>, flags=5, end=140433301229568, addr=<optimized out>) at mm/gup.c:2916
-#4  lockless_pages_from_mm (pages=<optimized out>, gup_flags=5, end=140433301229568, start=140433301225472) at mm/gup.c:2992
-#5  internal_get_user_pages_fast (start=start@entry=140433301225472, nr_pages=nr_pages@entry=1, gup_flags=5, pages=<optimized out>) at mm/gup.c:3037
-#6  0xffffffff812d1c5b in get_user_pages_fast (start=start@entry=140433301225472, nr_pages=nr_pages@entry=1, gup_flags=<optimized out>, pages=<optimized out>) at mm/gup.c:3136
-#7  0xffffffff81673b5e in __iov_iter_get_pages_alloc (i=i@entry=0xffffc9000227fd08, pages=pages@entry=0xffffc9000227fc08, maxsize=4096, maxpages=4, start=start@entry=0xffffc9000227fc38) at lib/iov_iter.c:1460
-#8  0xffffffff81674249 in iov_iter_get_pages2 (i=i@entry=0xffffc9000227fd08, pages=<optimized out>, pages@entry=0xffff88822bcd99d8, maxsize=<optimized out>, maxpages=<optimized out>, start=start@entry=0xffffc9000227fc38) at lib/iov_iter.c:1503
-#9  0xffffffff81625253 in __bio_iov_iter_get_pages (iter=0xffffc9000227fd08, bio=0xffff88822bcd9940) at block/bio.c:1218
-#10 bio_iov_iter_get_pages (bio=bio@entry=0xffff88822bcd9940, iter=iter@entry=0xffffc9000227fd08) at block/bio.c:1288
-#11 0xffffffff81622556 in __blkdev_direct_IO_async (iocb=iocb@entry=0xffff88822f72d3c0, iter=iter@entry=0xffffc9000227fd08, nr_pages=1) at block/fops.c:329
-#12 0xffffffff81622ccf in blkdev_direct_IO (iter=0xffffc9000227fd08, iocb=0xffff88822f72d3c0) at block/fops.c:369
-#13 blkdev_direct_IO (iter=0xffffc9000227fd08, iocb=0xffff88822f72d3c0) at block/fops.c:358
-#14 blkdev_read_iter (iocb=0xffff88822f72d3c0, to=0xffffc9000227fd08) at block/fops.c:588
-#15 0xffffffff813c76d7 in call_read_iter (iter=0xffffc9000227fd08, kio=0xffff88822f72d3c0, file=0xffff888006763000) at ./include/linux/fs.h:2193
-#16 aio_read (req=req@entry=0xffff88822f72d3c0, iocb=iocb@entry=0xffffc9000227fe58, vectored=vectored@entry=false, compat=compat@entry=false) at fs/aio.c:1560
-#17 0xffffffff813c946d in __io_submit_one (ctx=0xffff888011a98480, compat=<optimized out>, req=0xffff88822f72d3c0, user_iocb=0x55c6b81a78c0, iocb=<optimized out>) at fs/aio.c:1970
-#18 io_submit_one (ctx=ctx@entry=0xffff888011a98480, user_iocb=0x55c6b81a78c0, compat=compat@entry=false) at fs/aio.c:2019
-#19 0xffffffff813c9eeb in __do_sys_io_submit (iocbpp=0x55c6b8188ec0, nr=1, ctx_id=<optimized out>) at fs/aio.c:2078
-#20 __se_sys_io_submit (iocbpp=94311980502720, nr=<optimized out>, ctx_id=<optimized out>) at fs/aio.c:2048
-#21 __x64_sys_io_submit (regs=<optimized out>) at fs/aio.c:2048
-#22 0xffffffff81fae018 in do_syscall_x64 (nr=<optimized out>, regs=0xffffc9000227ff58) at arch/x86/entry/common.c:50
-#23 do_syscall_64 (regs=0xffffc9000227ff58, nr=<optimized out>) at arch/x86/entry/common.c:80
+- do_syscall_64
+  - do_syscall_x64
+    - __x64_sys_io_submit
+      - __se_sys_io_submit
+        - __do_sys_io_submit
+          - io_submit_one
+            - __io_submit_one
+              - aio_read
+                - call_read_iter
+                  - blkdev_read_iter
+                    - blkdev_direct_IO
+                      - blkdev_direct_IO
+                        - __blkdev_direct_IO_async
+                          - bio_iov_iter_get_pages
+                            - __bio_iov_iter_get_pages
+                              - iov_iter_get_pages2
+                                - __iov_iter_get_pages_alloc
+                                  - get_user_pages_fast
+                                    - internal_get_user_pages_fast
+                                      - lockless_pages_from_mm
+                                        - gup_pgd_range
+                                          - gup_p4d_range
+                                            - gup_pud_range
+                                              - gup_pmd_range
 ```
 - 这里是调用到 gup，似乎是所有的读写都会发送给 userspace 的位置，然后 userspace 通过 iouring 将数据发送到内核中。
 
@@ -242,27 +243,13 @@ https://lwn.net/Articles/903855/
 
 
 ## 思考
-除了 swap ，还有什么地方是需要将 blk 放到用户态的 ?
-
 提供了一些 qcow2 的实现，将 qcow2 直接放到内核态中，
-
-如果将 qemu 的 storage 机制直接放到内核中，如何?
-
-## 无论如何，这个机制是相当有趣的，因为
-当 block device 暴露到用户态之后，中断是如何处理的?
-dma 映射如何处理的 ?
-
-需要如何等待用户态的映射?
 
 ## 的确看上去是有可能的
 
 有趣，相当有启发的讨论:
 
 - https://news.ycombinator.com/item?id=32508659
-
-
-## spdk 的配套实现
-https://spdk.io/doc/ublk.html
 
 ## nbd
 https://libguestfs.org/nbdublk.1.html
@@ -315,19 +302,8 @@ Xiaoguang Wang
 - v3 : https://lore.kernel.org/lkml/8735fg4jhb.fsf@collabora.com/#r
 - v4 : https://lore.kernel.org/lkml/afed0772-3626-44e6-a33c-7134a7d623f0@linux.alibaba.com/T/#r377324cfd01011a246b7c08cdfb5b5df9cdcbfcc
 
-## 原来还有竞品啊，高手啊
+## 原来还有竞品啊
 - https://www.kernel.org/doc/Documentation/target/tcmu-design.txt
-
-
-## 那么 vDUSE 可以 zero copy 吗?
-应该不可以，做的老粗糙了
-
-## 既然有 ublk ，为什么没有 unet ?
-
-因为 vduse 有 net 的版本，其实按道理，是可以有的。
-现在一时间对于网络的理解太弱了，暂时无法回答这个问题。
-
-## nvmf 相对于 nbd 优势是什么，相对于 nvmf 的优势是什么?
 
 ## ublk 可以指定队列的数量吗?
 
@@ -336,14 +312,6 @@ Xiaoguang Wang
   - 其实我感觉，只是需要
 
 ## ublk 和 vDUSE 有什么区别吗?
-
-或者说，ublk 有什么优势吗?
-
-似乎 vDUSE 更加通用，而且后端可以用 dpdk 的，反而 ublk 很奇怪，似乎没有什么使用的必要，
-
-vDUSE 在 virtio 的层级，而 ublk 定义了自己的命令。
-
-如果 vDUSE 用的是 vhost 后端，不是性能吊打 ublk 。
 
 ## 原来通过 tcmu 也可以实现用户态的 ublk
 
@@ -393,6 +361,195 @@ verlaybd 作为 TCMU 的后端存储工作：
             │   / S3      │
             └─────────────┘
 ```
+
+## 真的可以实现这个吗?
+
+```txt
+1. daemon 和 client 都 mmap 同一块共享内存（memfd 或 hugetlbfs，MAP_SHARED），所以它们实际访问的是同一组物理 page。
+2. daemon 通过 UBLK_U_CMD_REG_BUF 把这块共享内存注册给内核；内核把里面的 page pin 住，并用 maple tree 建立 PFN -> (buffer_index, offset) 的查找表。
+3. 当 client 对 /dev/ublkb* 发 direct I/O 时，内核检查该 IO 的 page 是否命中已注册的 PFN：
+    • 命中：在 descriptor 里设置 UBLK_IO_F_SHMEM_ZC，addr 编码成 buffer_index + offset，不再拷贝。
+    • 没命中：静默回退到普通 copy 路径。
+4. daemon 看到 UBLK_IO_F_SHMEM_ZC 后，直接通过自己的 mmap 访问对应偏移的数据。
+
+它的优点是不需要 per-I/O 的 io_uring fixed buffer 注册，一次注册后自动 zero-copy；缺点是需要 client 配合，且只对 O_DIRECT、连续 buffer 有效。
+
+所以对你们 uswap 来说，这相当于“方案 3（固定 buffer / zero-copy）”的一个具体落地方式，但内核和 Rust 复杂度确实最高。先按推荐的“per-tag mmap + copy”做
+MVP，后续再考虑 UBLK_F_SHMEM_ZC 这种路径，是比较稳妥的路线。
+```
+
+## zc 如何实现的
+
+要让 UBLK_F_SHMEM_ZC 真正工作，核心只有一句话：
+
+> 客户端 I/O buffer 对应的物理页，必须和 ublk server 已经注册到内核的共享内存页是同一组物理页。
+
+内核并不关心虚拟地址，它只比较 PFN（物理页帧号）。只要 PFN 匹配，就走零拷贝路径；不匹配则静默回退到普通拷贝路径。
+
+实际应用中有两种典型做法：memfd + SCM_RIGHTS 和 hugetlbfs/文件 MAP_SHARED。下面分别说明。
+
+────────────────────────────────────────────────────────────────────────────────
+
+1. 方案一：memfd + SCM_RIGHTS（进程间传 fd）
+
+适合客户端和 ublk server 是两个独立进程、需要动态协商共享内存的场景。
+
+1.1 客户端侧
+
+```c
+  /* 1. 创建匿名共享内存 */
+  int memfd = memfd_create("ublk_buf", MFD_ALLOW_SEALING);
+  ftruncate(memfd, BUF_SIZE);          /* 必须页对齐 */
+
+  /* 2. 以 MAP_SHARED 映射到客户端地址空间 */
+  void *client_buf = mmap(NULL, BUF_SIZE,
+                          PROT_READ | PROT_WRITE,
+                          MAP_SHARED | MAP_POPULATE,
+                          memfd, 0);
+
+  /* 3. 把 memfd 通过 unix socket 的 SCM_RIGHTS 传给 ublk server */
+  send_fd_over_unix_socket(sock_fd, memfd);
+
+  /* 4. 后续所有针对 /dev/ublkbN 的 I/O 都必须从这个区域分配 buffer
+   *    并且必须用 O_DIRECT */
+  void *io_buf = client_buf + offset;  /* offset 在 BUF_SIZE 内 */
+  preadv2/blk_io(..., io_buf, len, ...);
+```
+
+关键点：
+
+• BUF_SIZE 必须 页对齐（PAGE_ALIGNED），起始地址也要页对齐。
+• I/O 必须是 direct I/O（O_DIRECT）。走 page cache 的 buffer 是内核新分配的页，PFN 不会匹配。
+• 传给 ublk server 的只是 fd，真正的共享靠 MAP_SHARED 实现。
+
+1.2 ublk server 侧
+
+```c
+  /* 1. 通过 SCM_RIGHTS 接收客户端发来的 memfd */
+  int memfd = recv_fd_from_unix_socket(client_fd);
+
+  /* 2. server 也用 MAP_SHARED 映射同一块物理内存 */
+  void *server_buf = mmap(NULL, BUF_SIZE,
+                          PROT_READ | PROT_WRITE,
+                          MAP_SHARED | MAP_POPULATE,
+                          memfd, 0);
+
+  /* 3. 把 server 自己的 VA 范围注册到内核 */
+  struct ublk_shmem_buf_reg reg = {
+      .addr = (__u64)server_buf,
+      .len  = BUF_SIZE,
+      .flags = 0,
+  };
+
+  struct ublksrv_ctrl_cmd cmd = {
+      .dev_id = dev_id,
+      .queue_id = -1,
+      .addr = (__u64)&reg,
+      .len = sizeof(reg),
+  };
+
+  int idx = ioctl(ctrl_fd, UBLK_U_CMD_REG_BUF, &cmd);
+  /* idx >= 0 就是内核返回的 buffer index，I/O 处理时要用 */
+```
+
+内核在 ublk_ctrl_reg_buf() 里会：
+
+1. pin_user_pages_fast() 把这些页 pin 住。
+2. 把 PFN 范围插入 ub->buf_tree。
+3. 返回 buffer index。
+
+1.3 server 处理 I/O 时
+
+当收到一个 I/O descriptor：
+
+```c
+  if (iod->op_flags & UBLK_IO_F_SHMEM_ZC) {
+      __u32 idx = ublk_shmem_zc_index(iod->addr);   /* buffer index */
+      __u32 off = ublk_shmem_zc_offset(iod->addr);  /* 字节偏移 */
+      void *data = shmem_table[idx].mmap_base + off;
+      /* data 就是和客户端共享的同一块内存，直接读/写即可 */
+  }
+```
+
+────────────────────────────────────────────────────────────────────────────────
+
+2. 方案二：hugetlbfs / 普通文件 MAP_SHARED
+
+适合双方都能访问同一个文件路径的场景，不需要 SCM_RIGHTS 传 fd。内核 selftest 里用的就是这种方式。
+
+2.1 准备共享文件
+
+```bash
+  # 分配大页并挂载 hugetlbfs
+  echo 10 > /proc/sys/vm/nr_hugepages
+  mount -t hugetlbfs none /mnt/hugetlb
+
+  # 创建一个共享文件
+  fallocate -l 4M /mnt/hugetlb/ublk_buf
+```
+
+2.2 ublk server 启动时
+
+server 打开并 mmap 这个文件：
+
+```c
+  int fd = open("/mnt/hugetlb/ublk_buf", O_RDWR);
+  void *server_buf = mmap(NULL, 4 * 1024 * 1024,
+                          PROT_READ | PROT_WRITE,
+                          MAP_SHARED | MAP_POPULATE, fd, 0);
+
+  /* 注册给内核 */
+  struct ublk_shmem_buf_reg reg = {
+      .addr = (__u64)server_buf,
+      .len  = 4 * 1024 * 1024,
+  };
+  ioctl(ctrl_fd, UBLK_U_CMD_REG_BUF, &reg);
+```
+
+2.3 客户端侧
+
+用 fio 时可以直接指定从这个 hugetlbfs 文件分配 I/O buffer：
+
+```bash
+  fio --filename=/dev/ublkbN \
+      --direct=1 \
+      --mem=mmaphuge:/mnt/hugetlb/ublk_buf \
+      --bs=4k --size=4M --iodepth=32
+```
+
+--mem=mmaphuge:<file> 会让 fio 以 MAP_SHARED 映射这个文件，并从这块区域分配 I/O buffer。于是客户端和 server 的 PFN 自然相同。
+
+────────────────────────────────────────────────────────────────────────────────
+
+3. 必须满足的条件
+
+┌──────────────────────────────┬────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ 条件                         │ 原因                                                                                           │
+├──────────────────────────────┼────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ 页对齐                       │ UBLK_U_CMD_REG_BUF 要求 addr 和 len 都 PAGE_ALIGNED。                                          │
+├──────────────────────────────┼────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ MAP_SHARED                   │ 只有共享映射才能保证双方看到同一组物理页。MAP_PRIVATE 会触发 COW，PFN 不再相同。               │
+├──────────────────────────────┼────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ O_DIRECT                     │ buffered I/O 的 page cache 页是内核新分配的，不会匹配已注册 buffer。                           │
+├──────────────────────────────┼────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ I/O 数据在单个注册 buffer    │ ublk_try_buf_match() 要求所有 bvec 落在同一个 buffer index 且偏移连续。跨多个注册 buffer 的    │
+│ 内连续                       │ scatter/gather 无法匹配。                                                                      │
+├──────────────────────────────┼────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ 只读 buffer 不能用于 READ    │ UBLK_SHMEM_BUF_READ_ONLY 表示内核不能往里面写，所以 READ I/O 不能匹配。                        │
+├──────────────────────────────┼────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ server 需要 CAP_SYS_ADMIN    │ zero-copy / user-copy server 必须被信任。                                                      │
+└──────────────────────────────┴────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+────────────────────────────────────────────────────────────────────────────────
+
+4. 总结
+
+1. 先让客户端和 ublk server 共享同一组物理页：
+    • 要么用 memfd + SCM_RIGHTS 把 fd 传过去；
+    • 要么用 hugetlbfs/普通文件 + MAP_SHARED，双方 mmap 同一个文件。
+2. ublk server 把自己的映射地址通过 UBLK_U_CMD_REG_BUF 注册给内核。
+3. 客户端所有 I/O buffer 都从这块共享内存分配，并且以 O_DIRECT 方式下发。
+4. 内核在 I/O 到达时通过 PFN 匹配，命中则置 UBLK_IO_F_SHMEM_ZC，server 直接通过 mmap_base + offset 访问数据，实现真正的零拷贝。
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

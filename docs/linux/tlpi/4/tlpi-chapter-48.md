@@ -63,7 +63,7 @@ out.
 
 ## 48.8 Shared Memory Associated Data Structure
 > 内核中间 对于 shmid_ds 的定义　比如下的用户态的定义要麻烦的多。
-```plain
+```c
 struct shmid_ds {
   struct ipc_perm shm_perm; /* Ownership and permissions */
   size_t shm_segsz; /* Size of segment in bytes */
@@ -89,12 +89,6 @@ virtual addresses in different processes. For this reason, any references to
 addresses within the segment should be maintained as relative offsets, rather than
 as absolute pointers.
 > 不同进程中间　shared memory 的起始位置不同，采用相对偏移。
-
-
-
-## 问题
-1. 如果 shared memory 的 id 被泄露出去，那么岂不是通信内容也就被泄露了，还是其中都是加密的
-2. binder 对于 shared memory 的改进是什么
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

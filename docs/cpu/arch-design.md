@@ -85,7 +85,7 @@
 
 将开源的 acpica 支持上。
 
-#### ucode
+#### microcode
 
 ## 硬件设计
 - 指令是否定长，不定长会让译码很难做，但是对齐之后，加载一个 8 字节的指令需要多条指令。
@@ -161,8 +161,13 @@ PCIe host bridge
 - 各种 built-in
 
 ### 加速
+这个就实在五花八门了，可以很容易的想到:
 - SIMD 指令
 - 加解密指令
+
+但是如果你看看内核中如下两个文件，你会发现 CPU 优化各种特性比你要想象的多一点:
+- arch/arm64/kvm/sys_regs.c
+- arch/x86/include/asm/cpufeatures.h
 
 ### 二进制翻译
 存在特殊的指令来加速二进制翻译
@@ -208,8 +213,6 @@ https://www.zhihu.com/question/26655435/answer/1825719171
 [^3]: [One-instruction set computer](https://en.wikipedia.org/wiki/One-instruction_set_computer)
 [^4]: https://en.wikipedia.org/wiki/No_instruction_set_computing
 [^5]: A reconfigurable heterogeneous multicore with a homogeneous ISA
-
-
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

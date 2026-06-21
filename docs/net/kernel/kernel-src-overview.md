@@ -1,4 +1,4 @@
-# 记录一下网络栈的一些源码分析
+# 网络栈的一些源码分析
 
 ## 摘抄从 gregg 的 BCC book
 > Sockets are defined by a sock struct embedded at the start of protocol
@@ -122,7 +122,7 @@ void dev_add_pack(struct packet_type *pt)
 ## 关键目录
 - net/ethernet/eth.c
 
-eth_mac_addr : ethernet 控制 mac  2 
+eth_mac_addr : ethernet 控制 mac  2
 
 - net/8021q
 

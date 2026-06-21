@@ -78,6 +78,9 @@ claude 4.6 opus
 类似的东西:
 https://github.com/wangrunji0408/iJiegeOS
 
+## 经典了
+https://github.com/gitbutlerapp/grit
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

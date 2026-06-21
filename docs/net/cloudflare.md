@@ -1,4 +1,4 @@
-# 赛博活佛
+# cloudflare
 
 https://github.com/zhuima/awesome-cloudflare
 

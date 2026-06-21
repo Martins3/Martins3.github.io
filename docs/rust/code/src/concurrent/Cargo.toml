@@ -1,0 +1,10 @@
+[package]
+name = "concurrent"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1.0.52"
+io-uring = "0.6"
+libc = "0.2.112"
+nix = "0.23.1"

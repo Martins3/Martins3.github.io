@@ -1,4 +1,4 @@
-# 如何给 OpenEuler 提交打包
+# 如何给 OpenEuler 提交打包openeul
 
 ## OpenEuler 背景介绍 - [21.03 发布白皮书](https://www.openeuler.org/whitepaper/openEuler-whitepaper-2103.pdf)
 > 2021 年 3 月 31 日，openEuler 21.03 创新版如期而至，该版本不仅将内核切换到 Linux Kernel 5.10, 还在内核方向实

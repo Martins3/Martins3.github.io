@@ -1,0 +1,32 @@
+[package]
+name = "rust"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+anyhow = "1.0.52"
+io-uring = "0.6"
+libc = "0.2.112"
+nix = "0.23.1"
+structopt = { version = "0.3", default-features = false }
+
+tonic = "0.12"
+prost = "0.13"
+tokio = { version = "1.0", features = ["macros", "rt-multi-thread"] }
+async-trait = "0.1.81"
+clap = "4.5.9"
+log = "0.4.22"
+env_logger = "0.11.3"
+
+[build-dependencies]
+tonic-build = "0.12"
+
+[[bin]] # Bin to run the HelloWorld gRPC server
+name = "helloworld-server"
+path = "src/server.rs"
+
+[[bin]] # Bin to run the HelloWorld gRPC client
+name = "helloworld-client"
+path = "src/client.rs"

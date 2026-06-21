@@ -1,3 +1,5 @@
+# dhcp
+<!-- cae96fec-4b67-4af5-80c6-d8d338908738 -->
 ## dhcp client 的基本操作
 ```sh
 sudo ip addr flush ens5

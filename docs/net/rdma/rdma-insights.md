@@ -2,7 +2,7 @@
 https://www.zhihu.com/column/c_1231181516811390976
 
 - 使用 Soft Roce 进行实验 : https://zhuanlan.zhihu.com/p/361740115
-	- 当时的记录在 : alpine/nvme.sh
+	- 当时的记录在 : collei/nvme.sh
 
 - RDMA之基于Socket API的QP间建链 : https://zhuanlan.zhihu.com/p/476407641
   - 基本通信的各种 key 都说明了

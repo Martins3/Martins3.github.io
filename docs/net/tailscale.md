@@ -1,4 +1,4 @@
-# tailscale
+# tailscale 使用简单记录
 
 ## 客户端部署
 ```sh
@@ -200,6 +200,7 @@ direct connection not established
 ## 记录
 
 2026-04-07 最近经常观察到了一些异常，用这用这就断开了。
+2026-06-15 这个问题消失了。
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

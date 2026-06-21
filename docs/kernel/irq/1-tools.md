@@ -1,4 +1,4 @@
-# 不看代码，先操作一下
+# 中断相关实验
 
 ## docs/kernel/sysfs-irq.md
 

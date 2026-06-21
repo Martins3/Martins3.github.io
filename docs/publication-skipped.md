@@ -2,36 +2,14 @@
 
 由 `docs/pub/sync-blog.py` 生成。
 
-跳过文件数: 442
+跳过文件数: 418
 
 ## 发布策略跳过: draft 目录
 
-- `docs/abaaba/beijing.md`
-- `docs/abaaba/consumerism.md`
-- `docs/abaaba/games.md`
-- `docs/abaaba/genshin-vs-linux.md`
-- `docs/abaaba/great-era.md`
-- `docs/abaaba/gwy.md`
-- `docs/abaaba/life-dev.md`
-- `docs/abaaba/lol-vs-linux.md`
-- `docs/abaaba/lol-vs-linux.promote.md`
-- `docs/abaaba/loongson-v2.md`
-- `docs/abaaba/loongson.md`
-- `docs/abaaba/phd.md`
-- `docs/abaaba/podcast.md`
-- `docs/abaaba/readings.md`
-- `docs/abaaba/shenzhen.md`
-- `docs/abaaba/unrelated-but-similar.md`
-- `docs/abaaba/wfh.md`
-- `docs/abaaba/xiaohongshu.md`
-- `docs/abaaba/year-1.md`
-- `docs/abaaba/year-2.md`
-- `docs/abaaba/year-3.md`
-- `docs/abaaba/year-4.md`
-- `docs/abaaba/young.md`
 - `docs/ai-tools/acp.md`
 - `docs/ai-tools/chrome-devtools-mcp-setup.md`
 - `docs/ai-tools/claude.md`
+- `docs/ai-tools/humanize.md`
 - `docs/ai-tools/inspiration.md`
 - `docs/ai-tools/install.sh`
 - `docs/ai-tools/lsp.md`
@@ -51,6 +29,12 @@
 - `docs/captive/captive.md`
 - `docs/captive/generator.md`
 - `docs/captive/gensim.md`
+- `docs/chatter/provocation/beijing.md`
+- `docs/chatter/provocation/xiaohongshu.md`
+- `docs/chatter/provocation/year-1.md`
+- `docs/chatter/provocation/year-2.md`
+- `docs/chatter/provocation/year-3.md`
+- `docs/chatter/provocation/year-4.md`
 - `docs/chores/badminton.md`
 - `docs/chores/car.md`
 - `docs/chores/dress-up.md`
@@ -203,7 +187,6 @@
 - `docs/kernel/wip-statistic-bat.md`
 - `docs/kernel/wip-storage-blk.md`
 - `docs/kernel/wip-zero-copy.md`
-- `docs/kvm/aarch64/sys_regs/todo.md`
 - `docs/kvm/mmu/todo.md`
 - `docs/kvm/todo.md`
 - `docs/kvm/wip-kvm-init-ops.md`
@@ -234,7 +217,6 @@
 
 ## 发布策略跳过: 同目录存在 README.md
 
-- `docs/assembly.md`
 - `docs/concurrent/lkmm/zh-cn/README.summary.md`
 - `docs/concurrent/lkmm/zh-cn/README.translation.md`
 - `docs/concurrent/lkmm/zh-cn/access-marking.summary.md`
@@ -291,7 +273,6 @@
 - `docs/kernel/release/6.18.md`
 - `docs/kernel/release/6.19.md`
 - `docs/kernel/release/7.0.md`
-- `docs/kvm/aarch64/1-asahi.md`
 - `docs/kvm/aarch64/2-tools.md`
 - `docs/kvm/aarch64/code-overview.md`
 - `docs/kvm/aarch64/mmu.md`
@@ -332,11 +313,10 @@
 
 ## 未被 audit.py 审计
 
-- `docs/abaaba/about.md`
-- `docs/abaaba/job.md`
 - `docs/ai-tools/vendor.md`
+- `docs/chatter/job.md`
+- `docs/kernel/iommu/aarch64.md`
 - `docs/kernel/iommu/amd.md`
-- `docs/kernel/iommu/arm.md`
 - `docs/kernel/iommu/auxd.md`
 - `docs/kernel/iommu/debug.txt.md`
 - `docs/kernel/iommu/debugfs.md`
@@ -352,11 +332,11 @@
 - `docs/kernel/iommu/todo.md`
 - `docs/kernel/iommu/viommu.md`
 - `docs/kernel/ipmi/ipmi.md`
+- `docs/kernel/power/aarch64.md`
 - `docs/kernel/power/acpi_pad.md`
 - `docs/kernel/power/advance/intel-epb.md`
 - `docs/kernel/power/advance/intel-sst.md`
 - `docs/kernel/power/advance/intel-uncore.md`
-- `docs/kernel/power/arm.md`
 - `docs/kernel/power/cstate.md`
 - `docs/kernel/power/doc.md`
 - `docs/kernel/power/firmware.md`
@@ -421,7 +401,7 @@
 - `docs/kernel/time/ptp.md`
 - `docs/kernel/time/sched-clock.md`
 - `docs/kernel/time/tick_device.md`
-- `docs/kernel/time/timer.arm.md`
+- `docs/kernel/time/timer.aarch64.md`
 - `docs/kernel/time/timer.doc.md`
 - `docs/kernel/time/timer.dynamic.md`
 - `docs/kernel/time/timer.qemu.md`
@@ -439,10 +419,6 @@
 - `docs/kernel/vhost/net/net.debug.rec.md`
 - `docs/kernel/vhost/net/net.debug.send.md`
 - `docs/kernel/vhost/net/vhost-net.md`
-- `docs/kvm/aarch64/sys_regs/id/midr.md`
-- `docs/kvm/aarch64/sys_regs/id/mpam.md`
-- `docs/kvm/aarch64/sys_regs/id/pfr0.md`
-- `docs/kvm/aarch64/sys_regs/id/pmmir.md`
 - `docs/kvm/internal-error/internal.error.1.md`
 - `docs/kvm/internal-error/internal.error.md`
 - `docs/kvm/vmx/apicv-yes.md`

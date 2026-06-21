@@ -152,12 +152,37 @@ C:\Users\97936\.glzr\glazewm
 .venv\Scripts\activate.ps1
 ```
 
-## 重新的计划，让 kimi 在这个环境中继续搞，如果可以 ssh 到 guest 中就是极好的了。
-
-想不到现在 CPU 占用很高的问题，是 -smp 太高，应该还是存在其他的原因的吧
-
 ## 关闭动画
 https://guanjia.qq.com/knowledge-base/content/1127?from=clinic
+
+## 键盘速度
+```powershell
+$path = 'HKCU:\Control Panel\Keyboard'
+Set-ItemProperty -Path $path -Name KeyboardDelay -Value '0'
+Set-ItemProperty -Path $path -Name KeyboardSpeed -Value '31'
+
+Add-Type -TypeDefinition @'
+using System;
+using System.Runtime.InteropServices;
+public class KeyboardNative {
+  [DllImport("user32.dll", SetLastError=true)]
+  public static extern bool SystemParametersInfo(uint uiAction, uint uiParam, IntPtr pvParam, uint fWinIni);
+}
+'@
+
+$SPIF_UPDATEINIFILE = 0x01
+$SPIF_SENDCHANGE = 0x02
+
+[KeyboardNative]::SystemParametersInfo(0x0017, 0, [IntPtr]::Zero, $SPIF_UPDATEINIFILE -bor $SPIF_SENDCHANGE) | Out-Null
+[KeyboardNative]::SystemParametersInfo(0x000B, 31, [IntPtr]::Zero, $SPIF_UPDATEINIFILE -bor $SPIF_SENDCHANGE) | Out-Null
+
+Get-ItemProperty -Path $path | Select-Object KeyboardDelay, KeyboardSpeed, InitialKeyboardIndicators
+
+更简单的复现版本也可以只执行：
+
+Set-ItemProperty -Path 'HKCU:\Control Panel\Keyboard' -Name KeyboardDelay -Value '0'
+Set-ItemProperty -Path 'HKCU:\Control Panel\Keyboard' -Name KeyboardSpeed -Value '31'
+```
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

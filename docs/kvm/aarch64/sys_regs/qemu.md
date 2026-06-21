@@ -1,10 +1,14 @@
-## qemu 如何管理 cpreg
+# qemu 如何管理 sys_regs
 <!-- 93ba9162-31e7-48cd-9af2-b03d71c05b1f -->
 
-只能说大致的思路，就是 qemu 为了模拟，会定义出来所有支持的 cp_regs
+## ArchCPU 和 ARMCPRegInfo
+**struct ARMCPRegInfo 和内核中 struct sys_reg_desc 对应的**，
+其中定义类似 readfn 和 writefn ，主要用于 kvm 。
+
+就是 qemu 为了模拟，会定义出来所有支持的 cp_regs
 也就是 register_cp_regs_for_features ，对于每一个 CPU 会先调用
 init_cpreg_list 做初始化，如果支持 kvm ，会去调用 kvm_arm_init_cpreg_list 来重新初始化
-这些 cp_regs
+这些 cp_regs 的。
 
 相关结构体都在这里，对于 kvm 而言，其实 ArchCPU::cp_regs 是不用的，直接从 kvm 中获取:
 
@@ -32,8 +36,22 @@ struct ArchCPU {
      * these fields and is sanity checked in post_load before copying
      * to the working data structures above.
      */
-```
 
+    uint64_t *cpreg_vmstate_indexes;
+    uint64_t *cpreg_vmstate_values;
+    int32_t cpreg_vmstate_array_len;
+```
+这里的结果不是太难理解:
+1. cpreg_indexes : 存储 reg 的编码
+2. cpreg_vmstate_values : 存储 reg 数值
+3. cp_regs : 存储 ARMCPRegInfo
+
+ArchCPU::cpreg_array_len 和 ArchCPU::cpreg_vmstate_array_len 的关系
+注释中也说明了，热迁移过来的不可以立刻使用。
+
+## 基本流程
+
+### 初始化
 - main
   - qemu_init
     - qmp_x_exit_preconfig
@@ -89,10 +107,7 @@ kvm_arm_init_cpreg_list 和 init_cpreg_list 是什么关系?
 [martins3:kvm_arm_init_cpreg_list:825] 256
 ```
 
-struct ARMCPRegInfo 的结构和内核中 struct sys_reg_desc 基本对应的，但是在 kvm 模式，这个结构体
-没有用，这些工作 offload 到 kvm 了。
-
-### 和热迁移的关系
+### 热迁移
 
 ```c
 const VMStateDescription vmstate_arm_cpu = {
@@ -115,62 +130,10 @@ qemu-system-aarch64: error while loading state for instance 0x0 of device 'cpu'
 qemu-system-aarch64: load of migration failed: Operation not permitted
 ```
 
-## 一个调试的小技巧
-
-原来开机的时候有一个配套的 write_list_to_kvmstate 和 write_list_to_kvmstate 来配合使用的。
-所以，如果发现了有热迁移兼容性，那么
-write_list_to_kvmstate 中添加注释，然后启动虚拟机就可以了:
-
-- thread_start
-  - start_thread
-    - qemu_thread_start
-      - kvm_vcpu_thread_fn
-        - qemu_wait_io_event
-          - process_queued_cpu_work
-            - do_kvm_cpu_synchronize_post_init
-              - kvm_arch_put_registers
-                - write_list_to_kvmstate
-
-
-## kvm_one_reg.idx 和寄存器编码的变换关系
-<!-- 515dc9fa-19cc-4eb9-b97f-dbfd4c819600 -->
-
-arch/arm64/kvm/sys_regs.c 中关于用户态接口
-
-| 函数                 | 说明                               |
-|----------------------|------------------------------------|
-| index_to_params      | 核心变换规则                       |
-| get_reg_by_id        | 从 kvm_one_reg::id 到 sys_reg_desc |
-| id_to_sys_reg_desc   |
-| kvm_one_reg_to_id    |
-| kvm_sys_reg_get_user |
-
-配套代码  : code/src/m/arch/aarch64/sysreg.c ，其中说明了如何从
+核心在 kvm_arch_get_registers 和 kvm_arch_put_registers 了
+也就是各种寄存器的维护:
 
 ```c
-struct kvm_one_reg {
-	__u64 id;
-	__u64 addr;
-};
-```
-
-kvm_one_reg.id 如何找到:
-```c
-#define SYS_CTR_EL0                                     sys_reg(3, 3, 0, 0, 1)
-```
-
-面对这个日志，如果找到是哪一个寄存器:
-```txt
-[601122.158666] kvm [1391196]: Unsupported guest sys_reg access at: ffff80001003c2b4 [20400085]
-[601122.172133] kvm [1391179]:  { Op0( 3), Op1( 0), CRn( 9), CRm(14), Op2( 6), func_read },
-```
-现在看，这个就很容易理解了，直接搜
-arch/arm64/include/generated/asm/sysreg-defs.h 就可以了
-
-## 简单分析一下 ARM 的热迁移
-
-- kvm_arch_get_registers : 各种寄存器的状态维护
-```txt
 ret = kvm_get_one_reg(cs, AARCH64_CORE_REG(regs.regs[i]), &env->xregs[i]);
 ret = kvm_get_one_reg(cs, AARCH64_CORE_REG(regs.sp), &env->sp_el[0]);
 ret = kvm_get_one_reg(cs, AARCH64_CORE_REG(sp_el1), &env->sp_el[1]);
@@ -185,41 +148,54 @@ ret = kvm_get_one_reg(cs, AARCH64_SIMD_CTRL_REG(fp_regs.fpsr), &fpr);
 ret = kvm_get_one_reg(cs, AARCH64_SIMD_CTRL_REG(fp_regs.fpcr), &fpr);
 ```
 
-## ArchCPU::cpreg_array_len 和 ArchCPU::cpreg_vmstate_array_len 的关系
+#### 调试技巧
 
-就是 cpreg_vmstate_array_len 可以是
-迁移过来的，而 cpreg_array_len 一定是本机的
+原来开机的时候有一个配套的 write_list_to_kvmstate 和 write_kvmstate_to_list 来配合使用的。
+
+如果发现了有热迁移兼容性问题，那么
+write_list_to_kvmstate 中添加注释，然后启动虚拟机就可以了:
+
+- thread_start
+  - start_thread
+    - qemu_thread_start
+      - kvm_vcpu_thread_fn
+        - qemu_wait_io_event
+          - process_queued_cpu_work
+            - do_kvm_cpu_synchronize_post_init
+              - kvm_arch_put_registers
+                - write_list_to_kvmstate
+
+
+## qemu 也有自己的编码
+
+KVM 初始化 / 迁移时，QEMU 用 cpreg_to_kvm_id() 把 ARMCPRegInfo 的 key 转成 KVM_REG_ARM64_* 的 64 位 ID，
+通过 KVM_GET/SET_ONE_REG 与内核交换寄存器值。内核里的 sys_reg_desc 表就是根据这个 ID 来解码并处理读写的。
 
 ```c
-static int cpu_post_load(void *opaque, int version_id)
-{
-    // ...
-    for (i = 0, v = 0; i < cpu->cpreg_array_len
-             && v < cpu->cpreg_vmstate_array_len; i++) {
-        if (cpu->cpreg_vmstate_indexes[v] > cpu->cpreg_indexes[i]) {
-            /* register in our list but not incoming : skip it */
-            continue;
-        }
+#define ENCODE_AA64_CP_REG(op0, op1, crn, crm, op2) \
+    (CP_REG_AA64_MASK | CP_REG_ARM64_SYSREG |           \
+     ((op0) << CP_REG_ARM64_SYSREG_OP0_SHIFT) |         \
+     ((op1) << CP_REG_ARM64_SYSREG_OP1_SHIFT) |         \
+     ((crn) << CP_REG_ARM64_SYSREG_CRN_SHIFT) |         \
+     ((crm) << CP_REG_ARM64_SYSREG_CRM_SHIFT) |         \
+     ((op2) << CP_REG_ARM64_SYSREG_OP2_SHIFT))
 ```
 
-## 这个函数如何理解?
 ```c
-bool kvm_arm_reg_syncs_via_cpreg_list(uint64_t regidx)
+static inline uint32_t kvm_to_cpreg_id(uint64_t kvmid)
 {
-    /* Return true if the regidx is a register we should synchronize
-     * via the cpreg_tuples array (ie is not a core or sve reg that
-     * we sync by hand in kvm_arch_get/put_registers())
-     */
-    switch (regidx & KVM_REG_ARM_COPROC_MASK) {
-    case KVM_REG_ARM_CORE:
-    case KVM_REG_ARM64_SVE:
-        return false;
-    default:
-        return true;
+    uint32_t cpregid = kvmid;
+    if ((kvmid & CP_REG_ARCH_MASK) == CP_REG_ARM64) {
+        cpregid |= CP_REG_AA64_MASK;
+    } else {
+        ...
+        cpregid |= CP_REG_AA32_NS_MASK;
     }
+    return cpregid;
 }
-```
 
+static inline uint64_t cpreg_to_kvm_id(uint32_t cpregid)
+```
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

@@ -1,0 +1,21 @@
+[package]
+name = "pg"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+
+tonic = "0.12"
+prost = "0.13"
+tokio = { version = "1.0", features = ["macros", "rt-multi-thread"] }
+async-trait = "0.1.81"
+pingora-core = "0.3.0"
+pingora-proxy = "0.3.0"
+pingora-http = "0.3.0"
+pingora-load-balancing = "0.3.0"
+clap = "4.5.9"
+log = "0.4.22"
+env_logger = "0.11.3"
+
+[build-dependencies]
+tonic-build = "0.12"
