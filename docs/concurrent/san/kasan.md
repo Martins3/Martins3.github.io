@@ -1,56 +1,10 @@
-## kasan
+# kasan
 - https://www.kernel.org/doc/html/latest/dev-tools/kasan.html
-- https://github.com/google/kernel-sanitizers
-  - KTSAN 是什么？
 
-#### KASAN
-Finding places where the kernel accesses memory that it shouldn't is the goal for the kernel address sanitizer (KASan).
+Finding places where the kernel accesses memory that it shouldn't is the goal
+for the kernel address sanitizer (KASan).
 
-分析下如下的 config 是做啥的
-```txt
-CONFIG_CONSTRUCTORS=y
-CONFIG_GENERIC_CSUM=y
-CONFIG_KASAN_SHADOW_OFFSET=0xdffffc0000000000
-CONFIG_STACKDEPOT_ALWAYS_INIT=y
-CONFIG_KASAN=y
-CONFIG_KASAN_GENERIC=y
-CONFIG_KASAN_OUTLINE=y
-# CONFIG_KASAN_INLINE is not set
-CONFIG_KASAN_STACK=y
-# CONFIG_KASAN_VMALLOC is not set
-# CONFIG_KASAN_MODULE_TEST is not set
-
-# 分析下 CONFIG_VMAP_STACK=y 是做什么的
-# 打开 KASAN 之后，这个选项就消失了
-```
-#### kmemleak
-Kmemleak provides a way of detecting possible kernel memory leaks in a way similar to a tracing garbage collector, with the difference that the orphan objects are not freed but only reported via /sys/kernel/debug/kmemleak. [^18]
-
-# 2. ASan 和 KASAN 的关系
-
-## 用户态 ASan
-
-用户态 ASan 通常由两部分组成：
-
-```text
-LLVM/GCC ASan pass
-        ↓
-compiler-rt/libasan runtime
-```
-
-运行时负责：
-
-* 管理进程地址空间中的 shadow memory；
-* 包装或拦截 `malloc/free/new/delete`；
-* 在分配对象周围添加 redzone；
-* 对释放对象进行 poison；
-* 将部分释放对象放入 quarantine，延迟重新使用；
-* 处理线程、动态库、libc 函数；
-* 输出报告、符号化栈信息。
-
-ASan 的典型机制是一个 shadow byte 描述 8 字节应用内存，并配合 redzone 与 quarantine 检测越界和 use-after-free。([谷歌研究][2])
-
-## Generic KASAN
+## kasan 和 asan 相同的部分
 
 KASAN 并没有另外发明一种编译器 pass。Linux 构建系统直接传入：
 
@@ -102,7 +56,50 @@ Linux mm/kasan runtime
 kasan_report()
 ```
 
-## KASAN 和 ASan 真正不同的部分
+
+Generic KASAN 与用户态 ASan 的 shadow 编码基本属于同一家族：
+
+```text
+1 shadow byte → 8 bytes kernel memory
+```
+
+典型编码：
+
+```text
+00      8 字节全部可访问
+01..07  前 N 字节可访问
+负值    整个 granule 不可访问
+```
+
+不同的负值表示：
+
+* slab redzone；
+* freed slab object；
+* page free；
+* stack left/mid/right redzone；
+* global redzone；
+* alloca redzone。
+
+Linux 源码甚至把这些值标注为：
+
+```c
+/* Compiler ABI, do not change. */
+```
+
+说明这部分必须与 GCC/LLVM 的 ASan 插桩 ABI 保持一致。([GitHub][7])
+
+不过现在 KASAN 不只有 Generic 模式：
+
+| KASAN 模式                 | 对应思路                        |
+| ------------------------ | --------------------------- |
+| Generic KASAN            | 类似用户态 ASan，1:8 shadow       |
+| Software Tag-Based KASAN | 类似 HWASan，指针 tag 与内存 tag 比较 |
+| Hardware Tag-Based KASAN | 使用 ARM64 MTE 硬件检查           |
+
+Linux 文档也明确将 Generic KASAN 类比为 ASan，将 SW_TAGS KASAN 类比为 HWASan。([Linux内核档案][5])
+
+
+## kasan 和 asan 不同的部分
 
 ### 1. 分配器不同
 
@@ -213,65 +210,35 @@ panic/oops 策略
 
 所以 KASAN 报告可以显示对象所属的 slab cache、分配栈、释放栈以及对应的 `struct page` 信息。([Linux内核档案][5])
 
----
+也就是:
+- 这个地址属于哪个 kmem_cache？
+- 这个对象真实请求大小是多少？
+- SLUB 为对齐额外添加了多少空间？
+- 对象是否是 SLAB_TYPESAFE_BY_RCU？
+- 对象现在能否进入 quarantine？
+- 这个 page 是否是 highmem？
+- vmalloc 区域的 shadow 是否已建立？
+- 模块刚加载时如何建立 shadow？
 
-# 3. Generic KASAN 和 ASan 到底有多像
 
-Generic KASAN 与用户态 ASan 的 shadow 编码基本属于同一家族：
+## 问题
+1. 关联的 config 是什么意思?
+```txt
+CONFIG_CONSTRUCTORS=y
+CONFIG_GENERIC_CSUM=y
+CONFIG_KASAN_SHADOW_OFFSET=0xdffffc0000000000
+CONFIG_STACKDEPOT_ALWAYS_INIT=y
+CONFIG_KASAN=y
+CONFIG_KASAN_GENERIC=y
+CONFIG_KASAN_OUTLINE=y
+# CONFIG_KASAN_INLINE is not set
+CONFIG_KASAN_STACK=y
+# CONFIG_KASAN_VMALLOC is not set
+# CONFIG_KASAN_MODULE_TEST is not set
 
-```text
-1 shadow byte → 8 bytes kernel memory
+# 分析下 CONFIG_VMAP_STACK=y 是做什么的
+# 打开 KASAN 之后，这个选项就消失了
 ```
-
-典型编码：
-
-```text
-00      8 字节全部可访问
-01..07  前 N 字节可访问
-负值    整个 granule 不可访问
-```
-
-不同的负值表示：
-
-* slab redzone；
-* freed slab object；
-* page free；
-* stack left/mid/right redzone；
-* global redzone；
-* alloca redzone。
-
-Linux 源码甚至把这些值标注为：
-
-```c
-/* Compiler ABI, do not change. */
-```
-
-说明这部分必须与 GCC/LLVM 的 ASan 插桩 ABI 保持一致。([GitHub][7])
-
-不过现在 KASAN 不只有 Generic 模式：
-
-| KASAN 模式                 | 对应思路                        |
-| ------------------------ | --------------------------- |
-| Generic KASAN            | 类似用户态 ASan，1:8 shadow       |
-| Software Tag-Based KASAN | 类似 HWASan，指针 tag 与内存 tag 比较 |
-| Hardware Tag-Based KASAN | 使用 ARM64 MTE 硬件检查           |
-
-Linux 文档也明确将 Generic KASAN 类比为 ASan，将 SW_TAGS KASAN 类比为 HWASan。([Linux内核档案][5])
-
-## 对 KASAN 相对于 ASAN 的区别
-
-```text
-这个地址属于哪个 kmem_cache？
-这个对象真实请求大小是多少？
-SLUB 为对齐额外添加了多少空间？
-对象是否是 SLAB_TYPESAFE_BY_RCU？
-对象现在能否进入 quarantine？
-这个 page 是否是 highmem？
-vmalloc 区域的 shadow 是否已建立？
-模块刚加载时如何建立 shadow？
-```
-
-这些信息只存在于 Linux 内存管理器中。
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

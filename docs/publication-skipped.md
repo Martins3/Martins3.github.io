@@ -2,7 +2,7 @@
 
 由 `docs/pub/sync-blog.py` 生成。
 
-跳过文件数: 403
+跳过文件数: 404
 
 ## 发布策略跳过: draft 目录
 
@@ -217,6 +217,7 @@
 - `docs/uefi/todo.md`
 - `docs/virtio/todo.md`
 - `docs/windows/todo.md`
+- `simplefs/docs/simplefs/todo.md`
 
 ## 发布策略跳过: 同目录存在 README.md
 

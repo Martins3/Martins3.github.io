@@ -51,8 +51,7 @@ https://maskray.me/blog/2023-01-29-all-about-undefined-behavior-sanitizer
 然后报错。
 
 ## 类似的 san
-https://github.com/junwha/awesome-sanitizer
-
+- https://github.com/junwha/awesome-sanitizer
 - https://github.com/realtime-sanitizer/rtsan
 
 ## 替换内核启动，有时候可以注意到

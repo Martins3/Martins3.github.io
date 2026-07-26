@@ -509,6 +509,8 @@
     - [CONFIG_TASKS_RCU](./concurrent/rcu/tasks_rcu.md)
     - [用户态 rcu](./concurrent/rcu/userspace-rcu.md)
     - [rcu 杂记](./concurrent/rcu/yes-we-know.md)
+  - `san/`
+    - [kmemleak](./concurrent/san/kmemleak.md)
   - `volatile/`
     - [接受 volatile 和非 volatile 对象](./concurrent/volatile/ai.md)
   - [Linux 内核 Litmus Tests 介绍](./concurrent/1-litmus.md)
@@ -790,7 +792,6 @@
     - [CMA](./kernel/mm/mm-cma.md)
     - [Memory Compaction](./kernel/mm/mm-compaction.md)
     - [Copy-On-Write](./kernel/mm/mm-cow.md)
-    - [Page Poisoning](./kernel/mm/mm-debug.md)
     - [Memory Failure](./kernel/mm/mm-failure.md)
     - [Page Cache](./kernel/mm/mm-filemap.md)
     - [Fixmap](./kernel/mm/mm-fixmap.md)
