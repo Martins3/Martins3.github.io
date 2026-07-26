@@ -1,4 +1,4 @@
-# nvme
+# nvme 模块简述
 
 ## 内核模块的参数
 /sys/module/nvme_core/parameters
@@ -185,54 +185,7 @@ https://github.com/manishrma/nvme-qemu : 这种 qemu 中使用 qemu 的一些高
 - NVMe-over-Fabrics Performance Characterization and the Path to Low-Overhead Flash Disaggregation
   - https://dl.acm.org/doi/pdf/10.1145/3078468.3078483
 
-## multipath
-
-- https://spdk.io/doc/nvme_multipath.html : 这个讲的很深入
-- https://www.ibm.com/docs/en/flashsystem-7x00/8.4.x?topic=nhtrlos-multipath-configuration-fc-nvme-hosts-1
-
-
-```diff
-History:        #0
-Commit:         32acab3181c7053c775ca128c3a5c6ce50197d7f
-Author:         Christoph Hellwig <hch@lst.de>
-Committer:      Jens Axboe <axboe@kernel.dk>
-Author Date:    Thu 02 Nov 2017 07:59:30 PM CST
-Committer Date: Sat 11 Nov 2017 10:53:25 AM CST
-
-nvme: implement multipath access to nvme subsystems
-
-This patch adds native multipath support to the nvme driver.  For each
-namespace we create only single block device node, which can be used
-to access that namespace through any of the controllers that refer to it.
-The gendisk for each controllers path to the name space still exists
-inside the kernel, but is hidden from userspace.  The character device
-nodes are still available on a per-controller basis.  A new link from
-the sysfs directory for the subsystem allows to find all controllers
-for a given subsystem.
-
-Currently we will always send I/O to the first available path, this will
-be changed once the NVMe Asynchronous Namespace Access (ANA) TP is
-ratified and implemented, at which point we will look at the ANA state
-for each namespace.  Another possibility that was prototyped is to
-use the path that is closes to the submitting NUMA code, which will be
-mostly interesting for PCI, but might also be useful for RDMA or FC
-transports in the future.  There is not plan to implement round robin
-or I/O service time path selectors, as those are not scalable with
-the performance rates provided by NVMe.
-
-The multipath device will go away once all paths to it disappear,
-any delay to keep it alive needs to be implemented at the controller
-level.
-
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Keith Busch <keith.busch@intel.com>
-Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
-Reviewed-by: Hannes Reinecke <hare@suse.com>
-Signed-off-by: Jens Axboe <axboe@kernel.dk>
-```
-
 ## nvme 的名称是如何确定
-
 
 ```txt
 #0  nvme_alloc_ns (info=0xffffc9000038fd48, ctrl=0xffff888101ef81f0) at drivers/nvme/host/core.c:3578
@@ -310,57 +263,6 @@ Thu Jan 11 02:54:11 PM CST 2024
 Data Units Written:                 220,749,924 [113 TB]
 ```
 
-
-## multipath 基本
-
-```txt
-lrwxrwxrwx.  1 root root 0 Jan 11 16:34 nvme1c1n1 -> ../../devices/pci0000:00/0000:00:09.0/nvme/nvme1/nvme1c1n1
-lrwxrwxrwx.  1 root root 0 Jan 11 16:34 nvme1c2n1 -> ../../devices/pci0000:00/0000:00:0a.0/nvme/nvme2/nvme1c2n1
-lrwxrwxrwx.  1 root root 0 Jan 11 16:34 nvme1n1 -> ../../devices/virtual/nvme-subsystem/nvme-subsys1/nvme1n1
-```
-
-```txt
-lrwxrwxrwx  1 root root 0 Jan 11 16:07 nvme0c0n1 -> ../devices/pci0000:30/0000:30:02.0/0000:31:00.0/nvme/nvme0/nvme0c0n1
-lrwxrwxrwx  1 root root 0 Jan 11 16:07 nvme0n1 -> ../devices/virtual/nvme-subsystem/nvme-subsys0/nvme0n1
-lrwxrwxrwx  1 root root 0 Jan 11 16:13 nvme1c4n2 -> ../devices/pci0000:30/0000:30:03.0/0000:32:00.0/nvme/nvme4/nvme1c4n2
-lrwxrwxrwx  1 root root 0 Jan 11 16:07 nvme1n1 -> ../devices/virtual/nvme-subsystem/nvme-subsys1/nvme1n1
-lrwxrwxrwx  1 root root 0 Jan 11 16:13 nvme1n2 -> ../devices/virtual/nvme-subsystem/nvme-subsys1/nvme1n2
-lrwxrwxrwx  1 root root 0 Jan 11 16:07 nvme2c2n1 -> ../devices/pci0000:64/0000:64:02.0/0000:65:00.0/nvme/nvme2/nvme2c2n1
-lrwxrwxrwx  1 root root 0 Jan 11 16:07 nvme2n1 -> ../devices/virtual/nvme-subsystem/nvme-subsys2/nvme2n1
-lrwxrwxrwx  1 root root 0 Jan 11 16:07 nvme3c3n1 -> ../devices/pci0000:64/0000:64:03.0/0000:66:00.0/nvme/nvme3/nvme3c3n1
-lrwxrwxrwx  1 root root 0 Jan 11 16:07 nvme3n1 -> ../devices/virtual/nvme-subsystem/nvme-subsys3/nvme3n1
-```
-
-可以修改 io 指向哪一个盘:
-```txt
-# cat /sys/class/nvme-subsystem/nvme-subsys0/iopolicy
-
-round-robin
-```
-
-```txt
-@[
-    nvme_ns_head_submit_bio+5
-    __submit_bio+132
-    submit_bio_noacct_nocheck+345
-    blkdev_direct_IO.part.0+575
-    blkdev_write_iter+427
-    io_write+290
-    io_issue_sqe+96
-    io_submit_sqes+507
-    __do_sys_io_uring_enter+1471
-    do_syscall_64+59
-    entry_SYSCALL_64_after_hwframe+110
-]: 1365299
-```
-
-- nvme_ns_head_submit_bio
-  - nvme_find_path
-  - submit_bio_noacct
-
-- [ ] multipath 下，为什么两个 15G 的盘，组成的盘还是 15G 啊
-
-分析下这个怎么使用吧 : /home/martins3/core/linux/drivers/md/md-multipath.c
 
 ## 文档就算了
 - https://news.ycombinator.com/item?id=40505167

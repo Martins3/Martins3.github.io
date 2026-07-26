@@ -84,6 +84,10 @@ https://bun.com/blog/bun-in-rust
 
 https://andrewkelley.me/post/my-thoughts-bun-rust-rewrite.html
 
+
+## 这个东西也是可以整理下
+context.vm.directory / context.vm.which_qemu
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

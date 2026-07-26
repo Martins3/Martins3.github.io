@@ -71,7 +71,7 @@ qemu-system-x86_64: Machine type received is 'pc-i440fx-9.2' and local is 'pc-i4
 qemu-system-x86_64: load of migration failed: Invalid argument: post load hook failed for: configuration, version_id: 1, minimum_version: 0, ret: -22
 ```
 
-## 热迁移为什么需要有优先级
+## migration 为什么需要有优先级
 <!-- 4ff4b23d-acb0-443c-b87c-dc04ff6fda06 -->
 
 都是和 vfio 热迁移，viommu 有关

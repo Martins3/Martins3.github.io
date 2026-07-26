@@ -1067,6 +1067,8 @@ neovim 使用的 mmap 吗?
 
 获取说，mmap 的性能是什么样的，mmap 只能用于动态库的共享吗?
 
+https://mp.weixin.qq.com/s/R8BVIrps5UPXVncvbGkkug?poc_token=HFenS2qjvwaoVqpMXBbW5FzgfxkvLdJO642kLB8Y
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

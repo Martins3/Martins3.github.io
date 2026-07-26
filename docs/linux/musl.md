@@ -17,12 +17,13 @@
 * [头文件 include 是存在优先级的](#头文件-include-是存在优先级的)
 * [[ ] hidden 的作用](#-hidden-的作用)
 * [[ ] stdint / limits.h / inttypes.h / stdbool](#-stdint-limitsh-inttypesh-stdbool)
-  * [`float_t` 和 long double](#float_t-和-long-double)
+    * [`float_t` 和 long double](#float_t-和-long-double)
 * [redzone](#redzone)
 * [malloc](#malloc)
-  * [多线程的处理](#多线程的处理)
-  * [`week_alias` 和静态链接](#week_alias-和静态链接)
-  * [`a_ctz_32`](#a_ctz_32)
+    * [多线程的处理](#多线程的处理)
+        * [锁的封装: glue.h](#锁的封装-glueh)
+* [`week_alias` 和静态链接](#week_alias-和静态链接)
+* [`a_ctz_32`](#a_ctz_32)
 * [fabs 的定义](#fabs-的定义)
 * [当 exit 的时候会发生什么](#当-exit-的时候会发生什么)
 * [[ ] musl 如何实现 locks](#-musl-如何实现-locks)
@@ -323,21 +324,105 @@ redzone 是
 
 ### 多线程的处理
 - [有人说](https://stackoverflow.com/questions/855763/is-malloc-thread-safe) 中的人都说 malloc 总是安全的，但是似乎只是在 pthread 的时候是安全的
+
+结论: **musl 的 malloc 是线程安全的**。下面从源码(musl 默认的 mallocng 实现，位于 `src/malloc/mallocng/`)逐个确认。整体的设计思路是:
+单线程程序里 malloc 完全不加锁，第一次 `pthread_create` 之后才全程加锁。
+
+
+#### 锁的封装: glue.h
+
+`src/malloc/mallocng/glue.h` 中定义了 `MT` 和一组锁的封装。`MT` 就是 `libc.need_locks`，即"是否需要加锁"是运行时判断的:
+
 ```c
 #define MT (libc.need_locks)
+
+#define RDLOCK_IS_EXCLUSIVE 1
+
+__attribute__((__visibility__("hidden")))
+extern int __malloc_lock[1];
+
+#define LOCK_OBJ_DEF \
+int __malloc_lock[1]; \
+void __malloc_atfork(int who) { malloc_atfork(who); }
+
+static inline void rdlock()
+{
+	if (MT) LOCK(__malloc_lock);
+}
+static inline void wrlock()
+{
+	if (MT) LOCK(__malloc_lock);
+}
+static inline void unlock()
+{
+	UNLOCK(__malloc_lock);
+}
+static inline void upgradelock()
+{
+}
+static inline void resetlock()
+{
+	__malloc_lock[0] = 0;
+}
 ```
-当共享地址空间的时候，才需要上锁的
 
-而且我们构建了一个[clone.c](./malloc_thread_safe/clone.c) [pthread.c](./malloc_thread_safe/pthread.c)
+当共享地址空间的时候，才需要上锁的。
 
-### `week_alias` 和静态链接
+`LOCK` / `UNLOCK` 定义在 `src/internal/lock.h` 中，就是 `__lock` / `__unlock`:
+
+```c
+hidden void __lock(volatile int *);
+hidden void __unlock(volatile int *);
+#define LOCK(x) __lock(x)
+#define UNLOCK(x) __unlock(x)
+```
+
+1. `need_locks` 何时打开
+
+`src/thread/pthread_create.c` 中，第一次创建线程时才把 `need_locks` 置 1:
+
+```c
+__tl_lock();
+if (!libc.threads_minus_1++) libc.need_locks = 1;
+ret = __clone((c11 ? start_c11 : start), stack, flags, args, &new->tid, TP_ADJ(new), &__thread_list_lock);
+```
+
+`src/thread/__lock.c` 中，`__lock` 是 CAS 自旋 + futex 等待的混合锁，而且 fast path 上 `need_locks == 0`(单线程进程)时直接返回，零开销:
+
+2. malloc 中的加锁点
+
+`src/malloc/mallocng/malloc.c` 中:
+- 大块路径(`n >= MMAP_THRESHOLD`): `wrlock()` 保护 `alloc_meta` 和全局 `ctx`
+- 小块路径: 先 `rdlock()`，fast path 用 `a_cas(&g->avail_mask, ...)` 原子地占用一个 slot，失败就 `continue` 重试; 需要分配新 group 时 `upgradelock()` 升级为写锁再走 `alloc_slot`
+
+
+3. free 中的加锁点
+
+`src/malloc/mallocng/free.c` 中:
+- 普通 slot 释放用 `a_cas(&g->freed_mask, ...)` 无锁原子更新
+- 涉及 group 回收/重新挂队列时: `wrlock()` 保护 `nontrivial_free`
+
+4. fork 的处理
+
+`src/malloc/mallocng/glue.h` 中还有 `malloc_atfork`，fork 前后会拿锁/重置锁，避免子进程继承到别的线程持有的锁:
+
+```c
+static inline void malloc_atfork(int who)
+{
+	if (who<0) rdlock();
+	else if (who>0) resetlock();
+	else unlock();
+}
+```
+
+## `week_alias` 和静态链接
 在分析 malloc 的原理的时候，我发现当在静态链接的时候，使用 free 与否会导致实际上调用的 malloc 不同
 - https://stackoverflow.com/questions/23079997/override-weak-symbols-in-static-library
 - https://stackoverflow.com/questions/51656838/attribute-weak-and-static-libraries
 
 其中的原理我们使用了[一个例子](./weak_alias) 来阐述
 
-### `a_ctz_32`
+## `a_ctz_32`
 - https://en.wikipedia.org/wiki/De_Bruijn_sequence
 - https://www.cnblogs.com/brighthoo/p/10649588.html
 

@@ -1,14 +1,10 @@
-## 关于 clash 代理的两个基本问题
+# clash meta 基础
 <!-- beb92ea7-3927-4784-a906-a3ff81ca23e7 -->
 
+## 系统代理到底是如何实现的?
+我们发现，只要在机器上配置了系统代理，那么浏览器什么都不需要做就可以上网了:
 
-### 系统代理到底是如何实现的?
-
-它来自 @mihomo-party/sysproxy。lib/sysproxy.js:1
-也就是说，这个项目自己不直接写 macOS/Windows/Linux 的系统设置细节，而是把“改系统
-代理”这件事外包给这个跨平台库。
-
-也就是基本实现是在这里的:
+基本实现在这里:
 https://github.com/mihomo-party-org/sysproxy-node
 
 
@@ -51,9 +47,7 @@ windows.rs
 linux.rs
 (https://raw.githubusercontent.com/mihomo-party-org/sysproxy-rs/master/src/linux.rs)
 
-
-
-### clash 模式
+## tun 模式
 clash 的 tun 模式，本质上是：
 
 在系统里创建一个虚拟网卡，把原本要发到真实网卡的 IP 包先截进 Clash，再由 Clash
@@ -226,6 +220,72 @@ $ ip -6 route get 2606:4700:4700::1111
 `应用 -> ip rule -> table 2022 -> Meta -> Clash -> 真实出口`
 
 补充一点：当前机器里还能看到 `table 52` 和 `fwmark 0x80000/0xff0000` 相关规则，这看起来是 `tailscale` 注入的策略路由，不是 Clash TUN 本身的核心规则。
+
+## fake-ip
+
+我们观察到一个有趣的事情，在开启了代理后:
+```txt
+🧀  getent hosts genshin.martins3.com
+198.18.0.16     genshin.martins3.com
+```
+
+fake-ip 是代理软件里的一种 DNS 接管机制，常见于 Clash/mihomo、Surge、sing-box 等。
+
+它的核心思路是：
+
+应用请求 DNS：example.com 是多少？
+代理 DNS 返回：198.18.0.123 这种假的 IP
+应用连接：198.18.0.123:443
+代理软件截获这条连接
+代理根据 fake-ip 映射表反查：198.18.0.123 对应 example.com
+再按规则决定：直连、走代理、拒绝、分流
+
+所以 198.18.0.123 并不是真正的服务器地址，它只是代理软件临时分配的“域名占位符”。
+
+为什么要这样做?
+
+传统代理规则按域名分流时有个麻烦：应用最终连接的是 IP，不一定保留原始域名。尤其是浏览器、curl、系统服务、Docker、某些客户端，它们先 DNS 解析，再发起
+TCP/UDP 连接。到了路由层，代理软件可能只看到：
+
+connect 93.184.216.34:443
+
+但不知道这是 example.com，也就不好按 DOMAIN-SUFFIX 这类规则分流。
+
+fake-ip 解决的是这个问题：它让所有 DNS 查询先经过代理，由代理返回一个假的 IP。之后应用连这个假 IP 时，代理就能准确知道这个连接原本属于哪个域名。
+
+为什么常见是 198.18.x.x
+
+198.18.0.0/15 是 RFC 2544 里保留给网络基准测试用的地址段，一般不会出现在公网真实路由中。代理软件喜欢用它做 fake-ip 池，因为冲突概率低。
+
+所以你看到：
+```txt
+genshin.martins3.com -> 198.18.0.16
+```
+
+这通常不是公网 DNS 结果，而是本机代理 DNS 生成的 fake-ip。
+
+fake-ip 的好处
+
+它能让代理软件更精准地做域名规则：
+
+```txt
+DOMAIN-SUFFIX,github.com,PROXY
+DOMAIN-SUFFIX,martins3.com,DIRECT
+GEOIP,CN,DIRECT
+MATCH,PROXY
+```
+
+同时还能避免真实 DNS 污染、减少 DNS 泄漏，并让透明代理/TUN 模式更容易工作。
+
+fake-ip 的问题
+
+它依赖代理软件维护一张映射表：
+
+```txt
+198.18.0.16 -> martins3.com
+198.18.0.17 -> github.com
+198.18.0.18 -> google.com
+```
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

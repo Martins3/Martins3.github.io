@@ -1,16 +1,18 @@
 CC := gcc
-CFLAGS := -Wall -g
-LDLIBS := -lpthread -lm
+CFLAGS := -std=gnu11 -Wall -Wextra -Wpedantic -g
+LDLIBS := -pthread
 
-SRCS := $(wildcard *.c)
-OUTS := $(SRCS:.c=.out)
+OUTS := userfault.out
 
-.PHONY: all clean
+.PHONY: all clean test
 
 all: $(OUTS)
 
-%.out: %.c
+userfault.out: userfault.c
 	$(CC) $(CFLAGS) -o $@ $< $(LDLIBS)
+
+test: userfault.out
+	./userfault.out all
 
 clean:
 	rm -f $(OUTS)

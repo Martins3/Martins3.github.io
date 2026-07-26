@@ -1,9 +1,9 @@
-# 从 cpu feature 到 kvm sys_reg_desc
-
+# aarch64 cpufeature
 <!-- e943dfb8-40ba-4cb4-a1f0-ff2db9f38e66 -->
 
-这个机制和 x86 的机制非常类似的， 可以看到，arm64
-作为后来者，整个结构从硬件实现上就定义的好很多， 代码也清晰很多。
+## 简述
+
+arm64_ftr_bits -> arm64_ftr_reg -> arm64_ftr_regs
 
 arch/arm64/kernel/cpufeature.c 中定义的
 
@@ -17,30 +17,239 @@ static const struct __ftr_reg_entry {
 	/* Op1 = 0, CRn = 0, CRm = 4 */
 	ARM64_FTR_REG_OVERRIDE(SYS_ID_AA64PFR0_EL1, ftr_id_aa64pfr0,
 			       &id_aa64pfr0_override),
-```
 
-arch/arm64/kvm/sys_regs.c 中定义的:
-
-```c
-static const struct sys_reg_desc sys_reg_descs[] = {
 	// ...
-	ID_FILTERED(ID_AA64PFR0_EL1, id_aa64pfr0_el1,
-		    ~(ID_AA64PFR0_EL1_AMU |
-		      ID_AA64PFR0_EL1_MPAM |
-		      ID_AA64PFR0_EL1_SVE |
-		      ID_AA64PFR0_EL1_AdvSIMD |
-		      ID_AA64PFR0_EL1_FP)),
+	/* Op1 = 0, CRn = 0, CRm = 5 */
+	ARM64_FTR_REG(SYS_ID_AA64DFR0_EL1, ftr_id_aa64dfr0),
 ```
 
-这个定义主要用来限制来自于用户态的写操作的，
 
-所以，可以看到经典的这种代码:
+## arm64_ftr_bits
 
 ```c
-struct arm64_ftr_reg *regp = get_arm64_ftr_reg(sys_id);
+struct arm64_ftr_bits {
+	bool		sign;	/* Value is signed ? */
+	bool		visible;
+	bool		strict;	/* CPU Sanity check: strict matching required ? */
+	enum ftr_type	type;
+	u8		shift;
+	u8		width;
+	s64		safe_val; /* safe value for FTR_EXACT features */
+};
 ```
 
-## arm64_cpu_capabilities
+- sign        : 该字段按有符号数还是无符号数解释。true 表示有符号，false 表示无符号。某些 4-bit 字段用 0xf 表示“不支持”，需要解释为 -1。
+- visible     : 是否向用户态暴露该字段。true 时，用户态执行受内核模拟的 MRS 读取 ID 寄存器，可以看到经过归一化的系统值；false 时返回 safe_val。这不直接表示 KVM 是否向 guest 暴露。
+- strict      : 不同 CPU 的该字段是否必须严格相同。若为 true，非启动 CPU 与启动 CPU 的值不同时会打印 SANITY CHECK 警告，并把内 核标记为 TAINT_CPU_OUT_OF_SPEC。
+- shift       : 该字段在寄存器中的最低位位置。
+- width       : 字段宽度，单位为 bit。字段范围为 [shift + width - 1 : shift]。数组末尾用 width == 0 作为结束标志。
+- safe_val    : 预定义安全值。主要用于 FTR_EXACT 字段发生不一致时；当前代码也用它作为隐藏字段向用户态返回的替代值。
+- type        : 当数值不同的时候，如果选择 sanitised val
+
+type 一共四种选择:
+```c
+enum ftr_type {
+      FTR_EXACT,
+      FTR_LOWER_SAFE,
+      FTR_HIGHER_SAFE,
+      FTR_HIGHER_OR_ZERO_SAFE,
+};
+```
+- FTR_EXACT CPU : 值相同时保留原值；不同时直接使用 safe_val。
+- FTR_LOWER_SAFE : 选择所有 CPU 中较小的值，常用于特性版本字段，确保只公开所有 CPU 都支持的能力。
+- FTR_HIGHER_SAFE : 很少的选择了
+- FTR_HIGHER_OR_ZERO_SAFE : 非零值之间选择较大的值，但只要有一个 CPU 的值为 0，最终就是 0。即该字段语义上把 0 看作最大的安全值。
+
+大多数时候，都是 FTR_LOWER_SAFE 定义的，这个很容易理解，因为取 CPU 能力的交集
+
+### 如果 arm64_ftr_bits 没有定义对应的 bit，那么 sanitised val 会被配置为 0
+```c
+static const struct arm64_ftr_bits ftr_id_aa64mmfr1[] = {
+	ARM64_FTR_BITS(FTR_HIDDEN, FTR_STRICT, FTR_LOWER_SAFE, ID_AA64MMFR1_EL1_ECBHB_SHIFT, 4, 0),
+	ARM64_FTR_BITS(FTR_HIDDEN, FTR_NONSTRICT, FTR_LOWER_SAFE, ID_AA64MMFR1_EL1_TIDCP1_SHIFT, 4, 0),
+	ARM64_FTR_BITS(FTR_VISIBLE, FTR_STRICT, FTR_LOWER_SAFE, ID_AA64MMFR1_EL1_AFP_SHIFT, 4, 0),
+	ARM64_FTR_BITS(FTR_HIDDEN, FTR_STRICT, FTR_LOWER_SAFE, ID_AA64MMFR1_EL1_HCX_SHIFT, 4, 0),
+	ARM64_FTR_BITS(FTR_HIDDEN, FTR_STRICT, FTR_LOWER_SAFE, ID_AA64MMFR1_EL1_ETS_SHIFT, 4, 0),
+	ARM64_FTR_BITS(FTR_HIDDEN, FTR_STRICT, FTR_LOWER_SAFE, ID_AA64MMFR1_EL1_TWED_SHIFT, 4, 0),
+	// ARM64_FTR_BITS(FTR_HIDDEN, FTR_STRICT, FTR_LOWER_SAFE, ID_AA64MMFR1_EL1_XNX_SHIFT, 4, 0),
+	ARM64_FTR_BITS(FTR_HIDDEN, FTR_STRICT, FTR_HIGHER_SAFE, ID_AA64MMFR1_EL1_SpecSEI_SHIFT, 4, 0),
+	ARM64_FTR_BITS(FTR_HIDDEN, FTR_STRICT, FTR_LOWER_SAFE, ID_AA64MMFR1_EL1_PAN_SHIFT, 4, 0),
+	ARM64_FTR_BITS(FTR_HIDDEN, FTR_STRICT, FTR_LOWER_SAFE, ID_AA64MMFR1_EL1_LO_SHIFT, 4, 0),
+	ARM64_FTR_BITS(FTR_HIDDEN, FTR_STRICT, FTR_LOWER_SAFE, ID_AA64MMFR1_EL1_HPDS_SHIFT, 4, 0),
+	ARM64_FTR_BITS(FTR_HIDDEN, FTR_STRICT, FTR_LOWER_SAFE, ID_AA64MMFR1_EL1_VH_SHIFT, 4, 0),
+	ARM64_FTR_BITS(FTR_HIDDEN, FTR_STRICT, FTR_LOWER_SAFE, ID_AA64MMFR1_EL1_VMIDBits_SHIFT, 4, 0),
+	ARM64_FTR_BITS(FTR_HIDDEN, FTR_STRICT, FTR_LOWER_SAFE, ID_AA64MMFR1_EL1_HAFDBS_SHIFT, 4, 0),
+	ARM64_FTR_END,
+};
+```
+例如，如果注释掉 ID_AA64MMFR1_EL1_XNX_SHIFT ，那么可以确认，
+```c
+		u64 hw = read_sysreg_s(reg);
+		u64 san = read_sanitised_ftr_reg(reg);
+```
+hw 中的 xnx 为 1 ，但是 san 中会是 0
+
+这非常合理，sanitised 就是用来描述操作系统对于数值的支持。
+
+#### 例子
+commit 011e5f5bf529 ("arm64/cpufeature: Add remaining feature bits in ID_AA64PFR0 register")
+
+```diff
+commit 011e5f5bf529f8ec2988ef7667d1a52f83273c36
+Author: Anshuman Khandual <anshuman.khandual@arm.com>
+Date:   Tue May 19 15:10:47 2020 +0530
+
+    arm64/cpufeature: Add remaining feature bits in ID_AA64PFR0 register
+
+    Enable MPAM and SEL2 features bits in ID_AA64PFR0 register as per ARM DDI
+    0487F.a specification.
+
+    Cc: Catalin Marinas <catalin.marinas@arm.com>
+    Cc: Will Deacon <will@kernel.org>
+    Cc: Mark Rutland <mark.rutland@arm.com>
+    Cc: Suzuki K Poulose <suzuki.poulose@arm.com>
+    Cc: linux-arm-kernel@lists.infradead.org
+    Cc: linux-kernel@vger.kernel.org
+
+    Suggested-by: Will Deacon <will@kernel.org>
+    Signed-off-by: Anshuman Khandual <anshuman.khandual@arm.com>
+    Link: https://lore.kernel.org/r/1589881254-10082-11-git-send-email-anshuman.khandual@arm.com
+    [will: Make SEL2 a NONSTRICT feature per Suzuki]
+    Signed-off-by: Will Deacon <will@kernel.org>
+
+diff --git a/arch/arm64/include/asm/sysreg.h b/arch/arm64/include/asm/sysreg.h
+index ea075cc08c8f..638f6108860f 100644
+--- a/arch/arm64/include/asm/sysreg.h
++++ b/arch/arm64/include/asm/sysreg.h
+@@ -645,6 +645,8 @@
+ #define ID_AA64PFR0_CSV2_SHIFT		56
+ #define ID_AA64PFR0_DIT_SHIFT		48
+ #define ID_AA64PFR0_AMU_SHIFT		44
++#define ID_AA64PFR0_MPAM_SHIFT		40
++#define ID_AA64PFR0_SEL2_SHIFT		36
+ #define ID_AA64PFR0_SVE_SHIFT		32
+ #define ID_AA64PFR0_RAS_SHIFT		28
+ #define ID_AA64PFR0_GIC_SHIFT		24
+diff --git a/arch/arm64/kernel/cpufeature.c b/arch/arm64/kernel/cpufeature.c
+index 41f6e9b26d18..68744871a65d 100644
+--- a/arch/arm64/kernel/cpufeature.c
++++ b/arch/arm64/kernel/cpufeature.c
+@@ -222,6 +222,8 @@ static const struct arm64_ftr_bits ftr_id_aa64pfr0[] = {
+ 	ARM64_FTR_BITS(FTR_HIDDEN, FTR_NONSTRICT, FTR_LOWER_SAFE, ID_AA64PFR0_CSV2_SHIFT, 4, 0),
+ 	ARM64_FTR_BITS(FTR_VISIBLE, FTR_STRICT, FTR_LOWER_SAFE, ID_AA64PFR0_DIT_SHIFT, 4, 0),
+ 	ARM64_FTR_BITS(FTR_HIDDEN, FTR_NONSTRICT, FTR_LOWER_SAFE, ID_AA64PFR0_AMU_SHIFT, 4, 0),
++	ARM64_FTR_BITS(FTR_HIDDEN, FTR_STRICT, FTR_LOWER_SAFE, ID_AA64PFR0_MPAM_SHIFT, 4, 0),
++	ARM64_FTR_BITS(FTR_HIDDEN, FTR_NONSTRICT, FTR_LOWER_SAFE, ID_AA64PFR0_SEL2_SHIFT, 4, 0),
+ 	ARM64_FTR_BITS(FTR_VISIBLE_IF_IS_ENABLED(CONFIG_ARM64_SVE),
+ 				   FTR_STRICT, FTR_LOWER_SAFE, ID_AA64PFR0_SVE_SHIFT, 4, 0),
+ 	ARM64_FTR_BITS(FTR_HIDDEN, FTR_STRICT, FTR_LOWER_SAFE, ID_AA64PFR0_RAS_SHIFT, 4, 0),
+```
+
+
+### FTR_LOWER_SAFE
+
+前面提到了 arm64_ftr_bits::type 的功能，更多从异构的角度，也就是不同的 CPU 能力不同，
+不过这个功能也适用于热迁移功能的。
+
+最经典的例子就是，kvm_arm64_ftr_safe_value ，他禁止不同的 CPU 使用
+ID_AA64DFR0_EL1_PMUVer ID_AA64DFR0_EL1_DebugVer ，但是热迁移，通过修改为 FTR_LOWER_SAFE ，
+允许从版本低的热迁移过来。
+```c
+static s64 kvm_arm64_ftr_safe_value(u32 id, const struct arm64_ftr_bits *ftrp,
+				    s64 new, s64 cur)
+{
+	struct arm64_ftr_bits kvm_ftr = *ftrp;
+
+	/* Some features have different safe value type in KVM than host features */
+	switch (id) {
+	case SYS_ID_AA64DFR0_EL1:
+		switch (kvm_ftr.shift) {
+		case ID_AA64DFR0_EL1_PMUVer_SHIFT:
+			kvm_ftr.type = FTR_LOWER_SAFE;
+			break;
+		case ID_AA64DFR0_EL1_DebugVer_SHIFT:
+			kvm_ftr.type = FTR_LOWER_SAFE;
+			break;
+		}
+		break;
+	case SYS_ID_DFR0_EL1:
+		if (kvm_ftr.shift == ID_DFR0_EL1_PerfMon_SHIFT)
+			kvm_ftr.type = FTR_LOWER_SAFE;
+		break;
+	}
+
+	return arm64_ftr_safe_value(&kvm_ftr, new, cur);
+}
+```
+
+具体的检查逻辑在 arm64_check_features() 中:
+
+在 arm64_check_features() 里，对每个 可写 字段会再调 kvm_arm64_ftr_safe_value()
+检查源端值是不是 target 能安全接受的子集：
+arm64_check_features() 会在第一个失败的字段处直接返回 -E2BIG（内部），
+然后 set_id_reg() 把它转成 -EINVAL（ret=-22）。
+
+
+## arm64_ftr_reg
+
+arm64_ftr_reg 就是核心，
+```c
+/*
+ * @arm64_ftr_reg - Feature register
+ * @strict_mask		Bits which should match across all CPUs for sanity.
+ * @sys_val		Safe value across the CPUs (system view)
+ */
+struct arm64_ftr_reg {
+	const char			*name;
+	u64				strict_mask;
+	u64				user_mask;
+	u64				sys_val;
+	u64				user_val;
+	struct arm64_ftr_override	*override;
+	const struct arm64_ftr_bits	*ftr_bits;
+};
+```
+
+## user_val 的使用
+
+具体分析参考: ./feature-user.md
+
+## sys_val 的使用
+
+就是通过 read_sanitised_ftr_reg 接口获取的:
+```c
+u64 read_sanitised_ftr_reg(u32 id)
+{
+	struct arm64_ftr_reg *regp = get_arm64_ftr_reg(id);
+
+	if (!regp)
+		return 0;
+	return regp->sys_val;
+}
+```
+
+### misc
+
+例如，当 trace 一下 read_sanitised_ftr_reg ，可以发现其调用频率极高:
+```txt
+@[
+        read_sanitised_ftr_reg+0
+        filemap_map_pages+484
+        do_read_fault+232
+        do_fault+256
+        handle_pte_fault+152
+        __handle_mm_fault+444
+        handle_mm_fault+172
+        do_page_fault+376
+        do_translation_fault+84
+        do_mem_abort+72
+        el0_ia+108
+        el0t_64_sync_handler+204
+        el0t_64_sync+420
+]: 14900
+```
+
+### arm64_cpu_capabilities
 
 ```c
 static const struct arm64_cpu_capabilities arm64_features = {
@@ -54,16 +263,18 @@ static const struct arm64_cpu_capabilities arm64_features = {
 	},
 }
 
-
 static const struct arm64_cpu_capabilities arm64_elf_hwcaps[];
 ```
 
 arm64_ftr_regs 是基础，而 arm64_cpu_capabilities 是对于寄存器
 结果的解析，相当于是更加结构化的结果。
 
-例如 kvm 大量的调用 cpus_have_cap
+这些能力会更新到 system_cpucaps 中去，通过调用 .matches 注册的函数
+也就是 has_useable_gicv3_cpuif ，基本上都是走向到 read_scoped_sysreg 中
 
-## 调用细节
+例如 kvm 大量的调用 cpus_have_cap 访问的是 bitmap `system_cpucaps`
+
+### kvm
 
 ```c
 #define ID_DESC_DEFAULT_CALLBACKS		\
@@ -73,21 +284,6 @@ arm64_ftr_regs 是基础，而 arm64_cpu_capabilities 是对于寄存器
 	.visibility = id_visibility,		\
 	.reset = kvm_read_sanitised_id_reg
 ```
-
-read_sanitised_ftr_reg
-
-```c
-u64 read_sanitised_ftr_reg(u32 id)
-{
-	struct arm64_ftr_reg *regp = get_arm64_ftr_reg(id);
-
-	if (!regp)
-		return 0;
-	return regp->sys_val;
-}
-```
-
-read_sanitised_ftr_reg 是如何被调用的:
 
 ```txt
 @[
@@ -112,158 +308,20 @@ read_sanitised_ftr_reg 是如何被调用的:
 
 - kvm_read_sanitised_id_reg 中的工作:
   - __kvm_read_sanitised_id_reg
-    - read_sanitised_ftr_reg : 首先从这里获取，然后对于具体的 sysreg
-      打补丁做修正
+    - read_sanitised_ftr_reg : 首先从这里获取 sys_val，然后对于具体的 sysreg 打补丁做修正
     - sanitise_id_aa64pfr0_el1
 
-## kimi : struct arm64_ftr_reg 和 sys_reg_desc 各个 value 的对比
+#### sys_reg_desc::val
 
-### struct arm64_ftr_reg（cpufeature 子系统）
-
-位于 arch/arm64/include/asm/cpufeature.h，用来描述一颗 CPU 的 feature/ID
-寄存器在多核、异构系统下的“安全值”：
-
-```c
-struct arm64_ftr_reg {
-    const char *name;
-    u64        strict_mask;   // 跨 CPU 必须一致的位
-    u64        user_mask;     // 对用户空间可见/可差异化的位
-    u64        sys_val;       // 系统（内核）视角的 sanitized 值
-    u64        user_val;      // 用户空间视角的基础值
-    struct arm64_ftr_override *override;  // 命令行覆盖
-    const struct arm64_ftr_bits *ftr_bits;// 各字段语义
-};
-```
-
-- sys_val：内核看到的“所有 CPU 都兼容”的安全值。启动时 update_cpu_ftr_reg()
-  会对每颗 CPU 读到的寄存器值做交集/取安全值，最终写入这里。
-- user_val：用户空间视角的基础值。
-- 用户空间实际读到的值 = arm64_ftr_reg_user_value(reg)，即：
-
-```c
-return reg->user_val | (reg->sys_val & reg->user_mask);
-```
-
-### struct sys_reg_desc::val
-
-这是KVM 子系统
-
-位于 arch/arm64/kvm/sys_regs.h，用来描述 KVM guest 可见的某条系统寄存器：
+./sys_regs.md 中已经谈到过，取决于 sys reg 的类型
 
 ```c
 struct sys_reg_desc {
-    ...
-    u64 val;        /* Value (usually reset value), or write mask for idregs */
-    ...
-};
+	/* Sysreg string for debug */
+	// ...
+	/* Value (usually reset value), or write mask for idregs */
+	u64 val;
 ```
-
-这里的 .val 通常是该寄存器的复位默认值。KVM 初始化 vCPU 时会调用 .reset()，把
-.val 写到 vcpu->arch.sys_regs[reg] 里，guest 随后 MRS/MSR
-访问的就是这个数组中的值。
-
-### 它们的关系
-
-对于普通系统寄存器（如 SCTLR_EL1、TCR_EL1 等），sys_reg_desc::val 和
-arm64_ftr_reg 没有直接关系， .val 就是 KVM 硬编码的 reset 值。
-
-对于 ID/feature 寄存器（如 ID_AA64PFR0_EL1、CTR_EL0、ID_AA64MMFR*_EL1
-等），二者就关联起来了：
-
-1. KVM 的 sys_reg_desc 表里，这些 ID 寄存器的 .access 通常是只读陷阱函数。
-2. 它们的复位值不是直接来自 .val，而是通过 read_sanitised_ftr_reg(SYS_xxx) 或
-   arm64_ftr_reg_user_value() 从对应的 arm64_ftr_reg 中获取。
-3. 也就是说：KVM 把 cpufeature 子系统已经算好的、跨核兼容的 sys_val/user_val
-   作为 guest 看到的 ID 寄存器值。
-
-例如 arch/arm64/kvm/sys_regs.c 中有大量：
-
-```c
-u64 ctr = read_sanitised_ftr_reg(SYS_CTR_EL0);
-val = read_sanitised_ftr_reg(id);
-```
-
-## kimi : cpufeature 机制 + kvm sys_regs 的层次结构
-
-内核自己要用它来 根据 CPU 特性决定行为，例如：
-
-1. 启用特性
-   - 读 ID_AA64PFR0_EL1 判断有没有 SVE、FP、EL3；
-   - 读 ID_AA64MMFR0_EL1 决定 ASID 位数、PARange；
-   - 读 ID_AA64ISAR0_EL1 决定是否启用原子指令、RNDR、SHA、AES 等。
-2. Errata / workaround
-   - 很多 CPU bug workaround 是通过 capability 系统触发的，而 capability
-     的检测条件就是读这些 ID 寄存器。
-3. HWCAP / /proc/cpuinfo
-   - 用户空间看到的 ISA 扩展能力（如 hwcap 里的 atomics、asimdrdm 等）是从
-     arm64_ftr_reg 的 user_val 里算出来的。
-4. 异构 CPU 一致性检查
-   - big.LITTLE 系统里，secondary CPU 启动时要用 check_update_ftr_reg() 和 boot
-     CPU 比较，不一致就打 taint。
-5. 启动参数覆盖
-   - 你甚至可以在 cmdline 里写 id_aa64pfr0=...
-     之类的参数来覆盖特性位，这套框架负责解析和应用。
-
-KVM 额外做的工作主要是：
-
-- read_sanitised_ftr_reg() 被 EXPORT_SYMBOL_GPL，KVM 模块可以调用；
-- KVM 的 arm64_check_features() 用 get_arm64_ftr_reg() 来校验用户空间设置的 ID
-  寄存器值；
-- cpufeature.c 里有少量 #ifdef CONFIG_KVM 的代码（比如 protected KVM
-  能力检测）。
-
-但 核心的表、字段描述、合并逻辑、override 机制，都是内核本来就有的。没有 KVM
-时它们照样跑。
-
-例如在 drivers/irqchip/irq-gic-v4.c 就不是 kvm 相关的:
-
-```c
-bool gic_cpuif_has_vsgi(void)
-{
-	unsigned long fld, reg = read_sanitised_ftr_reg(SYS_ID_AA64PFR0_EL1);
-
-	fld = cpuid_feature_extract_unsigned_field(reg, ID_AA64PFR0_EL1_GIC_SHIFT);
-
-	return fld >= ID_AA64PFR0_EL1_GIC_V4P1;
-}
-```
-
-1. arm64_ftr_regs[] 是底层来源
-
-以 ID_AA64PFR0_EL1 为例：
-
-```c
-ARM64_FTR_REG_OVERRIDE(SYS_ID_AA64PFR0_EL1, ftr_id_aa64pfr0, &id_aa64pfr0_override)
-```
-
-它绑定的是：
-
-- SYS_ID_AA64PFR0_EL1：寄存器编码。
-- ftr_id_aa64pfr0[]：描述了每个字段的可见性、严格性、安全值等。
-- id_aa64pfr0_override：允许通过命令行或 DT 覆盖该寄存器值。
-
-后续内核通过 read_sanitised_ftr_reg(SYS_ID_AA64PFR0_EL1)
-读取这个消毒后的值，供调度、能力检测、KVM 等使用。
-
-2. sys_reg_descs[] 是 KVM 的 Guest 视角
-
-```c
-ID_FILTERED(ID_AA64PFR0_EL1, id_aa64pfr0_el1,
-        ~(ID_AA64PFR0_EL1_AMU |
-          ID_AA64PFR0_EL1_MPAM |
-          ID_AA64PFR0_EL1_SVE |
-          ID_AA64PFR0_EL1_AdvSIMD |
-          ID_AA64PFR0_EL1_FP)),
-```
-
-它的含义是：
-
-- 这是一个 ID 寄存器，基础行为用 ID_DESC_DEFAULT_CALLBACKS（Guest 读取时会返回
-  KVM 消毒后的值）。
-- id_aa64pfr0_el1 对应一个自定义的 set_id_aa64pfr0_el1()
-  函数，用于校验用户空间（QEMU）写入的值。
-- val 是“可写掩码”：这里用 ~(...) 表示 AMU、MPAM、SVE、AdvSIMD、FP
-  这几个字段不允许用户空间改写，其余字段可写。
 
 ## kimi : 那些 sys_reg_descs 定义了但是 arm64_ftr_regs 没定义的
 
@@ -361,30 +419,14 @@ SYS_DCZID_EL0 和 SYS_GMID_EL1 在 arm64_ftr_regs[] 里有，但不在 sys_reg_d
   和 LORID_EL1，它们因为直接返回 RAZ 或有专用处理函数，所以不需要进入
   arm64_ftr_regs[]。
 
-┌─────────────────────┬─────────────────┬────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
-│ 宏名（Linux 写法） │ 寄存器名 │ 作用 │
-├─────────────────────┼─────────────────┼────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
-│ SYS_ID_AA64AFR0_EL1 │ ID_AA64AFR0_EL1 │ AArch64 辅助特性寄存器
-0。内容完全由具体实现定义（IMPLEMENTATION DEFINED），用于暴露芯片自定义的
-AArch64 辅助特性。 │
-├─────────────────────┼─────────────────┼────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
-│ SYS_ID_AA64AFR1_EL1 │ ID_AA64AFR1_EL1 │ AArch64 辅助特性寄存器 1。与 AFR0
-类似，也是实现自定义的预留寄存器。 │
-├─────────────────────┼─────────────────┼────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
-│ SYS_ID_AFR0_EL1 │ ID_AFR0_EL1 │ AArch32 辅助特性寄存器 0。用于暴露 AArch32
-状态下的实现自定义特性。 │
-├─────────────────────┼─────────────────┼────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
-│ SYS_LORID_EL1 │ LORID_EL1 │ 有限顺序域 ID 寄存器。报告 Limited Ordering
-Regions（LOR）支持情况，比如支持多少个 LOR 区域。LOR │ │ │ │
-用于在某些弱序内存模型下对特定地址范围施加更严格的顺序约束。 │
-├─────────────────────┼─────────────────┼────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
-│ SYS_DCZID_EL0 │ DCZID_EL0 │ Data Cache Zero ID 寄存器。从 EL0 可读，描述 DC
-ZVA 指令一次清零的缓存块大小，以及该指令是否允许使用。 │
-├─────────────────────┼─────────────────┼────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
-│ SYS_GMID_EL1 │ GMID_EL1 │ MTE Granule Maximum ID 寄存器。报告 Memory Tagging
-Extension（MTE）支持的 tag granule 信息，比如 GCR_EL1 中 PMID/PMEC │ │ │ │
-字段的最大值。 │
-└─────────────────────┴─────────────────┴────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+| 宏名（Linux 写法）   | 寄存器名        | 作用                                                                                                                                                                              |
+| -------------------- | --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| SYS_ID_AA64AFR0_EL1  | ID_AA64AFR0_EL1 | AArch64 辅助特性寄存器 0。内容完全由具体实现定义（IMPLEMENTATION DEFINED），用于暴露芯片自定义的 AArch64 辅助特性。                                                              |
+| SYS_ID_AA64AFR1_EL1  | ID_AA64AFR1_EL1 | AArch64 辅助特性寄存器 1。与 AFR0 类似，也是实现自定义的预留寄存器。                                                                                                              |
+| SYS_ID_AFR0_EL1      | ID_AFR0_EL1     | AArch32 辅助特性寄存器 0。用于暴露 AArch32 状态下的实现自定义特性。                                                                                                               |
+| SYS_LORID_EL1        | LORID_EL1       | 有限顺序域 ID 寄存器。报告 Limited Ordering Regions（LOR）支持情况，比如支持多少个 LOR 区域。LOR 用于在某些弱序内存模型下对特定地址范围施加更严格的顺序约束。                       |
+| SYS_DCZID_EL0        | DCZID_EL0       | Data Cache Zero ID 寄存器。从 EL0 可读，描述 DC ZVA 指令一次清零的缓存块大小，以及该指令是否允许使用。                                                                            |
+| SYS_GMID_EL1         | GMID_EL1        | MTE Granule Maximum ID 寄存器。报告 Memory Tagging Extension（MTE）支持的 tag granule 信息，比如 GCR_EL1 中 PMID/PMEC 字段的最大值。                                               |
 
 共同特点：
 
@@ -393,64 +435,6 @@ Extension（MTE）支持的 tag granule 信息，比如 GCR_EL1 中 PMID/PMEC �
   Linux read_cpuid_*()）中读取。
 - DCZID_EL0 是少数几个可在 EL0 访问的识别寄存器，方便用户态库代码判断 DC ZVA
   能力。
-
-## 经典案例
-
-在操作系统添加一些 feature 的支持:
-
-commit 011e5f5bf529 ("arm64/cpufeature: Add remaining feature bits in
-ID_AA64PFR0 register")
-
-```diff
-commit 011e5f5bf529f8ec2988ef7667d1a52f83273c36
-Author: Anshuman Khandual <anshuman.khandual@arm.com>
-Date:   Tue May 19 15:10:47 2020 +0530
-
-    arm64/cpufeature: Add remaining feature bits in ID_AA64PFR0 register
-
-    Enable MPAM and SEL2 features bits in ID_AA64PFR0 register as per ARM DDI
-    0487F.a specification.
-
-    Cc: Catalin Marinas <catalin.marinas@arm.com>
-    Cc: Will Deacon <will@kernel.org>
-    Cc: Mark Rutland <mark.rutland@arm.com>
-    Cc: Suzuki K Poulose <suzuki.poulose@arm.com>
-    Cc: linux-arm-kernel@lists.infradead.org
-    Cc: linux-kernel@vger.kernel.org
-
-    Suggested-by: Will Deacon <will@kernel.org>
-    Signed-off-by: Anshuman Khandual <anshuman.khandual@arm.com>
-    Link: https://lore.kernel.org/r/1589881254-10082-11-git-send-email-anshuman.khandual@arm.com
-    [will: Make SEL2 a NONSTRICT feature per Suzuki]
-    Signed-off-by: Will Deacon <will@kernel.org>
-
-diff --git a/arch/arm64/include/asm/sysreg.h b/arch/arm64/include/asm/sysreg.h
-index ea075cc08c8f..638f6108860f 100644
---- a/arch/arm64/include/asm/sysreg.h
-+++ b/arch/arm64/include/asm/sysreg.h
-@@ -645,6 +645,8 @@
- #define ID_AA64PFR0_CSV2_SHIFT		56
- #define ID_AA64PFR0_DIT_SHIFT		48
- #define ID_AA64PFR0_AMU_SHIFT		44
-+#define ID_AA64PFR0_MPAM_SHIFT		40
-+#define ID_AA64PFR0_SEL2_SHIFT		36
- #define ID_AA64PFR0_SVE_SHIFT		32
- #define ID_AA64PFR0_RAS_SHIFT		28
- #define ID_AA64PFR0_GIC_SHIFT		24
-diff --git a/arch/arm64/kernel/cpufeature.c b/arch/arm64/kernel/cpufeature.c
-index 41f6e9b26d18..68744871a65d 100644
---- a/arch/arm64/kernel/cpufeature.c
-+++ b/arch/arm64/kernel/cpufeature.c
-@@ -222,6 +222,8 @@ static const struct arm64_ftr_bits ftr_id_aa64pfr0[] = {
- 	ARM64_FTR_BITS(FTR_HIDDEN, FTR_NONSTRICT, FTR_LOWER_SAFE, ID_AA64PFR0_CSV2_SHIFT, 4, 0),
- 	ARM64_FTR_BITS(FTR_VISIBLE, FTR_STRICT, FTR_LOWER_SAFE, ID_AA64PFR0_DIT_SHIFT, 4, 0),
- 	ARM64_FTR_BITS(FTR_HIDDEN, FTR_NONSTRICT, FTR_LOWER_SAFE, ID_AA64PFR0_AMU_SHIFT, 4, 0),
-+	ARM64_FTR_BITS(FTR_HIDDEN, FTR_STRICT, FTR_LOWER_SAFE, ID_AA64PFR0_MPAM_SHIFT, 4, 0),
-+	ARM64_FTR_BITS(FTR_HIDDEN, FTR_NONSTRICT, FTR_LOWER_SAFE, ID_AA64PFR0_SEL2_SHIFT, 4, 0),
- 	ARM64_FTR_BITS(FTR_VISIBLE_IF_IS_ENABLED(CONFIG_ARM64_SVE),
- 				   FTR_STRICT, FTR_LOWER_SAFE, ID_AA64PFR0_SVE_SHIFT, 4, 0),
- 	ARM64_FTR_BITS(FTR_HIDDEN, FTR_STRICT, FTR_LOWER_SAFE, ID_AA64PFR0_RAS_SHIFT, 4, 0),
-```
 
 
 <script src="https://giscus.app/client.js"

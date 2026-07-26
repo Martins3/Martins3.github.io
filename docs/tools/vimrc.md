@@ -74,6 +74,9 @@ https://www.reddit.com/r/neovim/comments/1q3tnz5/10_builtin_neovim_features_your
 
 https://neovim.io/doc/user/quickref.html#Q_qf
 
+## 试试这个命令吧
+`:r!figlet vim`
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

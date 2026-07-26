@@ -74,6 +74,13 @@ echo 10000000 | sudo tee delay
        2        0
 ```
 
+```bash
+echo 1 > /sys/bus/pseudo/drivers/scsi_debug/every_nth
+# RECOVERED_ERROR
+echo 8 > /sys/bus/pseudo/drivers/scsi_debug/opts
+# ABORTED_COMMAND
+echo 0x10 > /sys/bus/pseudo/drivers/scsi_debug/opts
+```
 
 ## dm
 

@@ -1,0 +1,9 @@
+{
+  "typeCheckingMode": "off",
+  "reportMissingImports": false,
+  "reportUndefinedVariable": false,
+  "reportUnboundVariable": false,
+  "reportPossiblyUnboundVariable": false,
+  "reportAttributeAccessIssue": false
+}
+

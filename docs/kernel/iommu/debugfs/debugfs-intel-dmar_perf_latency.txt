@@ -1,0 +1,40 @@
+IOMMU: dmar18 Register Base Address: c87fc000
+                  <0.1us   0.1us-1us    1us-10us  10us-100us   100us-1ms    1ms-10ms      >=10ms     min(us)     max(us) average(us)
+IOMMU: dmar17 Register Base Address: c7ffc000
+                  <0.1us   0.1us-1us    1us-10us  10us-100us   100us-1ms    1ms-10ms      >=10ms     min(us)     max(us) average(us)
+IOMMU: dmar16 Register Base Address: c77fc000
+                  <0.1us   0.1us-1us    1us-10us  10us-100us   100us-1ms    1ms-10ms      >=10ms     min(us)     max(us) average(us)
+IOMMU: dmar15 Register Base Address: c6ffc000
+                  <0.1us   0.1us-1us    1us-10us  10us-100us   100us-1ms    1ms-10ms      >=10ms     min(us)     max(us) average(us)
+IOMMU: dmar14 Register Base Address: c67fc000
+                  <0.1us   0.1us-1us    1us-10us  10us-100us   100us-1ms    1ms-10ms      >=10ms     min(us)     max(us) average(us)
+IOMMU: dmar13 Register Base Address: bcbfc000
+                  <0.1us   0.1us-1us    1us-10us  10us-100us   100us-1ms    1ms-10ms      >=10ms     min(us)     max(us) average(us)
+IOMMU: dmar12 Register Base Address: b2ffc000
+                  <0.1us   0.1us-1us    1us-10us  10us-100us   100us-1ms    1ms-10ms      >=10ms     min(us)     max(us) average(us)
+IOMMU: dmar11 Register Base Address: a93fc000
+                  <0.1us   0.1us-1us    1us-10us  10us-100us   100us-1ms    1ms-10ms      >=10ms     min(us)     max(us) average(us)
+IOMMU: dmar10 Register Base Address: 9f7fc000
+                  <0.1us   0.1us-1us    1us-10us  10us-100us   100us-1ms    1ms-10ms      >=10ms     min(us)     max(us) average(us)
+IOMMU: dmar9 Register Base Address: fb7fc000
+                  <0.1us   0.1us-1us    1us-10us  10us-100us   100us-1ms    1ms-10ms      >=10ms     min(us)     max(us) average(us)
+IOMMU: dmar8 Register Base Address: faffc000
+                  <0.1us   0.1us-1us    1us-10us  10us-100us   100us-1ms    1ms-10ms      >=10ms     min(us)     max(us) average(us)
+IOMMU: dmar7 Register Base Address: fa7fc000
+                  <0.1us   0.1us-1us    1us-10us  10us-100us   100us-1ms    1ms-10ms      >=10ms     min(us)     max(us) average(us)
+IOMMU: dmar6 Register Base Address: f9ffc000
+                  <0.1us   0.1us-1us    1us-10us  10us-100us   100us-1ms    1ms-10ms      >=10ms     min(us)     max(us) average(us)
+IOMMU: dmar5 Register Base Address: d13fc000
+                  <0.1us   0.1us-1us    1us-10us  10us-100us   100us-1ms    1ms-10ms      >=10ms     min(us)     max(us) average(us)
+IOMMU: dmar4 Register Base Address: f97fc000
+                  <0.1us   0.1us-1us    1us-10us  10us-100us   100us-1ms    1ms-10ms      >=10ms     min(us)     max(us) average(us)
+IOMMU: dmar3 Register Base Address: f17fc000
+                  <0.1us   0.1us-1us    1us-10us  10us-100us   100us-1ms    1ms-10ms      >=10ms     min(us)     max(us) average(us)
+IOMMU: dmar2 Register Base Address: e97fc000
+                  <0.1us   0.1us-1us    1us-10us  10us-100us   100us-1ms    1ms-10ms      >=10ms     min(us)     max(us) average(us)
+IOMMU: dmar1 Register Base Address: e17fc000
+                  <0.1us   0.1us-1us    1us-10us  10us-100us   100us-1ms    1ms-10ms      >=10ms     min(us)     max(us) average(us)
+IOMMU: dmar0 Register Base Address: d97fc000
+                  <0.1us   0.1us-1us    1us-10us  10us-100us   100us-1ms    1ms-10ms      >=10ms     min(us)     max(us) average(us)
+IOMMU: dmar19 Register Base Address: 957fc000
+                  <0.1us   0.1us-1us    1us-10us  10us-100us   100us-1ms    1ms-10ms      >=10ms     min(us)     max(us) average(us)

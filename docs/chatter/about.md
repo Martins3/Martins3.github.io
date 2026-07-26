@@ -25,16 +25,13 @@
 
 每天早上起来先看看 Hacker News / Reddit
 
-本人极度厌恶 CSDN
-https://www.landiannews.com/archives/104662.html
+本人极度厌恶 CSDN https://www.landiannews.com/archives/104662.html
 
 非常佩服: [Fabrice Bellard](https://bellard.org/)
 
-## 书影音
-
 ## 其他
 
-<img width="180" height="180" alt="Image" src="https://github.com/user-attachments/assets/25f8c413-7f75-41b2-8b22-46d2c62d9512" />
+<img width="280" height="280" alt="Image" src="https://github.com/user-attachments/assets/25f8c413-7f75-41b2-8b22-46d2c62d9512" />
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

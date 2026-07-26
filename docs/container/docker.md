@@ -1,29 +1,10 @@
-# Docker
+# Docker 基本使用
 
+## 常用工具
 - [lazydocker](https://github.com/jesseduffield/lazydocker)
 
-## docker 如何实现的
-- [如何制作最小的 docker image](https://devopsdirective.com/posts/2021/04/tiny-container-image/) : 将 build 和 run 分开
-- [awesome-docker](https://github.com/veggiemonk/awesome-docker)
-
-
-## 资源
-https://stackoverflow.com/questions/19585028/i-lose-my-data-when-the-container-exits
-
-## 这个东西有什么创新吗?
-https://github.com/google/nsjail
-
-## docker vs podman ?
-- https://github.com/containers 搞了好多项目
-
-## 为什么 podman 不需要一个 daemon ?
-不知道咋实现的
-
-## 其他环境中的的 docker
-https://github.com/sickcodes/Docker-OSX
-https://github.com/dockur/windows
-
-## Failed to start Docker Application Container Engine.
+## 问题排查
+### Failed to start Docker Application Container Engine.
 的解决办法:
 
 极度稀有的场景，都是在虚拟机被外部杀掉的场景:
@@ -54,8 +35,6 @@ docker stats
 save 和 load 一个 docker image 如此简单
 docker save -o hello-world.tar hello-world:latest
 docker load -i hello-world.tar
-
-## 所以，docker build 相对于 docker run 是走的不同的网络吗?
 
 ## docker compose 做什么的
 <!-- 7085ed00-7b54-4d50-8784-15c772d93a94 -->
@@ -144,6 +123,61 @@ docker images -f "dangling=true"
 ```txt
 docker system prune -a
 ```
+
+## docker 网络问题排查
+
+### 为什么开启 docker 后，内部的有的网络我就上不了
+
+解决办法:
+
+1. 找到配置文件
+docker inspect WinBoat --format '{{ index .Config.Labels "com.docker.compose.project.config_files" }}'
+
+然后在这个文件里加顶层配置：
+
+```txt
+  networks:
+    default:
+      ipam:
+        config:
+          - subnet: 192.168.251.0/24
+```
+
+加完以后重建:
+```txt
+docker compose -f $HOME/.winboat/docker-compose.yml down
+docker compose -f $HOME/.winboat/docker-compose.yml up -d
+```
+
+验证：
+```txt
+docker network inspect winboat_default
+
+# 可以看到，原来 172.20 的网段现在是开始走的 clash
+ip route get 172.20.128.62
+
+172.20.128.62 via 198.18.0.2 dev Meta table 2022 src 198.18.0.1 uid 1000
+    cache
+```
+
+
+## 问题
+1. docker vs podman ?
+	- https://github.com/containers 搞了好多项目
+	3. 为什么 podman 不像 docker 不需要一个 daemon ?
+2. 所以，docker build 相对于 docker run 是走的不同的网络吗?
+
+## docker 如何实现的
+- [如何制作最小的 docker image](https://devopsdirective.com/posts/2021/04/tiny-container-image/) : 将 build 和 run 分开
+- [awesome-docker](https://github.com/veggiemonk/awesome-docker)
+
+## Links
+- https://stackoverflow.com/questions/19585028/i-lose-my-data-when-the-container-exits
+- https://github.com/google/nsjail
+	- 这个东西有什么创新吗?
+- 其他环境中的的 docker
+	- https://github.com/sickcodes/Docker-OSX
+	- https://github.com/dockur/windows : docker 中运行 windows
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

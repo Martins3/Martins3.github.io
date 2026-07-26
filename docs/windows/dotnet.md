@@ -1,25 +1,13 @@
-# dotnet
+# dotnet 简述
+<!-- 6147cbdf-947f-476d-82e8-399c07d6eadb -->
 
-windows 编程中为什么 dotnet ，dotnet 的工作是什么?
+简单调查了下，可以发现 dotnet 是 Linux 体系的风格的不同，
+dotnet 是 windows 主要用于写图形界面的一站式解决方案，
+但是 Linux 没有:
 
-## open source ECMA CLI, C# and .NET implementation
 - https://github.com/mono/mono
-
-Linux 下也可以使用 C# 吗?
-.NET 到底是什么?
-
-## 这个 dotnet 在 windows 中是什么定位
-https://github.com/dotnet/runtime
-
-linux 中对应的是什么
-
-# mingw
-
-看看有多少代码吧
-https://www.mingw-w64.org/
-
-那么这是 minGw 的主页吗?
-https://nuwen.net/
+	- open source ECMA CLI, C# and .NET implementation
+- https://github.com/dotnet/runtime
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

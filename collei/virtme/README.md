@@ -3,6 +3,11 @@
 
 2026-04-15 又搞了一下，基本上是没问题了。
 
+相关文档：
+- [virtme-ng-initramfs.md](virtme-ng-initramfs.md): virtme-ng initramfs 机制调研与
+  collei 功能差距对比（2026-07-24）
+- [FEATURE_ANALYSIS.md](FEATURE_ANALYSIS.md): 早期的 virtme-ng 全面功能分析
+
 ### 在 collei.py 中使用 virtme 模式
 
 collei.py 支持 virtme-ng 风格的虚拟机，使用 virtio-fs 共享 host rootfs：
@@ -24,8 +29,12 @@ collei.py 支持 virtme-ng 风格的虚拟机，使用 virtio-fs 共享 host roo
 - `rodir`: 额外的只读目录（格式: `guest_path=host_path`）
 - `rwdir`: 额外的可写目录（格式: `guest_path=host_path`）
 - `virtme_rw`: 启用可写 overlay（/etc, /home, /var 等）
-- `virtme_vsock`: 启用 VSOCK SSH 支持
+- `vsock`: 启用 VSOCK 支持（普通 VM 也会挂 vhost-vsock 设备；
+  virtme 额外在 guest 内启动 VSOCK SSH 服务）
 - `exec`: 启动时执行的命令或脚本
+
+注意：选项文件不能为空，`touch opt/vsock` 不会生效，
+需要写入内容（例如 `echo 1 > opt/vsock`）。
 
 示例：
 ```bash
@@ -42,6 +51,94 @@ touch opt/virtme_rw
 # 运行
 ../../collei/scripts/collei.py
 ```
+
+### 通过 vsock SSH 登录
+
+启用 `vsock` 后，guest 内会启动一个 vsock SSH 服务
+（`virtme-init.sh` 生成的 `/run/tmp/vsock-ssh.py`）：在 guest 里启动
+只监听 127.0.0.1 的 sshd（配置和 host key 在 `/run/vsock-ssh/` 下每次
+启动重新生成，因为 host 的 `/etc/ssh` 是 root-only，virtiofsd 读不到），
+并把 guest 的 vsock:22 转发过去。host 侧通过 collei-action 登录：
+
+```bash
+# 直接登录
+./collei/scripts/collei-action.py -a ssh_vsock -n virtme
+
+# 只输出命令（用于脚本/自动化）
+./collei/scripts/collei-action.py -a ssh_vsock_auto -n virtme
+# ssh -o ... -o 'ProxyCommand=socat - VSOCK-CONNECT:<cid>:22' martins3@virtme
+```
+
+依赖：host 需要 `socat`；guest 复用 host rootfs 里的 `python3` 和 `sshd`。
+登录用户与 `virtme_user` 一致（`opt/user` 或当前用户），使用该用户
+home 下的 `~/.ssh/authorized_keys` 做认证；root 登录不可用，因为
+`/root` 对 virtiofsd 不可读。
+
+virtme VM 同时启用 `virtme` 和 `vsock` 后，普通的 `ssh` action
+（`ge` / `gm` 别名）默认就走 vsock，不再需要显式指定 `ssh_vsock`。
+
+### initramfs 内核模块匹配
+
+`collei/scripts/virtme.py` 生成 initramfs 时会从 `opt/kernel` 指向的
+构建树复制 virtio/vsock 模块。内核版本从实际启动的 bzImage/Image 提取
+（`collei/scripts/kernel.py`），而不是 `include/config/kernel.release`
+—— 后者可能被后续的 make 调用重新生成，与尚未重编的 bzImage/模块不一致。
+复制的模块会去掉 `.BTF` 段，避免增量构建树中
+"failed to validate module BTF: -22" 导致的 insmod 失败。
+
+### guest 里看到全部 ko（.mod 目录）
+
+`build/build.sh` 编译内核时已经执行了
+`make modules_install INSTALL_MOD_PATH=<kernel>.mod INSTALL_MOD_STRIP=1`，
+所以 `<kernel>.mod/lib/modules/<kver>/` 就是一份完整、带 depmod 依赖表的
+模块安装结果。collei 直接复用它：`virtme.py` 把
+`virtme_link_mods=<kernel>.mod/lib/modules/<kver>` 传给 guest init，
+`/lib/modules/<kver>` 指向该目录后 `modinfo`/`modprobe`/`lsmod` 直接可用
+（kver 从实际启动的内核镜像提取，见上一节）。
+
+不需要 collei 再像 virtme-ng 的 `virtme-prep-kdir-mods` 那样自己构造
+`.virtme_mods` 符号链接目录。注意路径同样依赖 host `/` 被整体共享
+（默认 `share_root=/`）。
+
+### drgn / 调试信息（vmlinux）
+
+`prepare_debuginfo()` 会在 `<kernel>.mod/lib/modules/<kver>/` 下恢复
+`build -> 构建树` 的符号链接（`make modules_install` 默认会创建，
+`build/build.sh` 出于打包考虑把它删了）。这样 guest 里的 drgn 通过
+标准搜索路径 `/lib/modules/<kver>/build/vmlinux` 就能找到带 DWARF 的
+vmlinux，配合 cmdline 里的 `nokaslr` 和 guest 的 `/proc/kcore`，
+直接可以调试活内核：
+
+```bash
+sudo drgn /home/martins3/data/vn/docs/kernel/tutorial/drgn/scripts/shmem_usage.py
+```
+
+已知限制：`.mod` 里的 .ko 经过 `INSTALL_MOD_STRIP=1` strip，drgn 会提示
+"missing debugging symbols for <module>"（不影响 vmlinux 本身的分析）。
+如果脚本需要模块的调试信息，对应 .ko 在构建树里的原始文件是未 strip 的。
+
+### sudo 支持
+
+guest 共享 host rootfs 时 sudo/su 有三层障碍（virtiofsd 以普通用户运行）：
+
+1. Fedora 的 `/usr/bin/sudo` 是 `---s--x--x` (4111)，virtiofsd 无法读取，
+   guest 里 exec 直接 permission denied（Ubuntu 是 4755，所以 virtme-ng
+   不会遇到这个问题）
+2. `/etc/sudoers`、`/etc/sudo.conf` 是 root-only，sudo 读不到配置
+3. `/etc/shadow` 不可读，su 和 PAM 账户检查失败
+
+参考 virtme-ng 的 `generate_sudoers`/`generate_shadow`，`virtme-init.sh`
+的 `setup_sudo()` 做了：
+
+- 生成新的 `/etc/sudoers`（root 和 virtme_user 均 NOPASSWD）bind-mount 覆盖
+- 生成全空密码的 `/etc/shadow` bind-mount 覆盖（等价 `--empty-passwords`，
+  `su` 因此可用；Fedora PAM 默认带 nullok）
+- 生成最小 `/etc/sudo.conf` bind-mount 覆盖
+- tmpfs 遮住 `/var/db/sudo`（或 `/var/lib/sudo`）；`/root` 不可读时挂 tmpfs
+- `/usr/bin/sudo` 用 host 侧准备的 4755 副本 bind-mount 覆盖：
+  `virtme.py` 的 `prepare_sudo()` 在启动时用 `sudo install -m 4755` 把
+  `/usr/bin/sudo` 复制到 `vm/<name>/s/sudo.bin`（只在副本缺失或 host sudo
+  更新时执行，不会每次启动都要密码），路径通过 `virtme_sudo_bin=` 传给 init
 
 ---
 
@@ -193,7 +290,7 @@ tmpfs               478M     0  478M   0% /var/cache
 none                478M     0  478M   0% /usr/lib/modules <-- 指向了 kernel 的目录
 ```
 
-可惜不能执行 sudo 命令，当然，这也是必然的:
+~~可惜不能执行 sudo 命令~~（已修复，见下面"sudo 支持"）:
 ```txt
 🤒  sudo ls
 zsh: permission denied: sudo

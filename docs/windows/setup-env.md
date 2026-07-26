@@ -1,5 +1,6 @@
 # windows 环境搭建
 
+## 字体安装
 安装字体:
 https://www.nerdfonts.com/font-downloads
 解压，右键，里面有安装
@@ -9,76 +10,11 @@ https://www.nerdfonts.com/font-downloads
 https://github.com/tonsky/FiraCode/wiki/Installing
 ```
 
-## windows terminal tmux 类似的效果
-https://learn.microsoft.com/en-us/windows/terminal/panes
+## 终端复用
+之前尝试过 windows terminal tmux 类似的效果
+- https://learn.microsoft.com/en-us/windows/terminal/panes
 
-https://vladelaina.github.io/Catime/
-
-## neovide
-1. 字体
-2. 如何放大所有的字体
-
-neovide 也是不错的了
-
-```txt
-Error: Font can't be updated to: FontOptions {
-    normal: [
-        FontDescription {
-            family: "monospace",
-            style: None,
-        },
-    ],
-    italic: None,
-    bold: None,
-    bold_italic: None,
-    features: {},
-    size: 22.666668,
-    width: 0.0,
-    hinting: Full,
-    edging: AntiAlias,
-}
-Following fonts couldn't be loaded: FontKey { font_desc: Some(FontDescription { family: "monospace", style: Some("Bold Italic") }), hinting: Full, edging: AntiAlias },
-FontKey { font_desc: Some(FontDescription { family: "monospace", style: Some("Bold") }), hinting: Full, edging: AntiAlias },
-FontKey { font_desc: Some(FontDescription { family: "monospace", style: Some("Italic") }), hinting: Full, edging: AntiAlias },
-FontKey { font_desc: Some(FontDescription { family: "monospace", style: None }), hinting: Full, edging: AntiAlias }
-
-E354: Invalid register name: '^@'
-```
-
-
-### sln 和 vcproj 作用是什么
-https://stackoverflow.com/questions/7133796/what-are-sln-and-vcproj-files-and-what-do-they-contain
-
-### 下载主题
-工具，选项，调整字体
-
-点 extension 就可以了
-Catppuccin
-
-### 使用 msbuild
-
-https://stackoverflow.com/questions/39798321/generate-clang-compilation-database-for-a-visual-studio-project
-```txt
-msbuild .\01-ErrorShow.vcxproj /t:ClangTidy -t:Rebuild -p:Configuration=Release -p:Platform=X64
-```
-可以自动生成 compile_commands.json
-
-这个工具不靠谱的:
-https://clangpowertools.com/
-
-如何使用:
-- https://learn.microsoft.com/en-us/visualstudio/msbuild/walkthrough-using-msbuild?view=vs-2022
-- https://learn.microsoft.com/en-us/visualstudio/msbuild/msbuild-command-line-reference?view=vs-2022
-
-
-解决 msbuild 的环境变量问题:
-- https://stackoverflow.com/questions/6319274/how-do-i-run-msbuild-from-the-command-line-using-windows-sdk-7-1
-
-目前在这个路径:
-```txt
-PS C:\Program Files> fzf
-Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\MSBuild.exe
-```
+发现 zellij 已经可以用了，简直完美
 
 ## 一些技巧
 - vsVim : Visual Studio 的 vim 模式
@@ -99,8 +35,6 @@ ssh "martins3\97936@10.0.0.8"
 并不容易，也不原生，不知道那些 virt-manager 之类的工具都是如何解决的:
 https://stackoverflow.com/questions/53084815/compile-qemu-under-windows-10-64-bit-for-windows-10-64-bit
 
-## 参考
-https://github.com/jayharris/dotfiles-windows
 
 ## 已经解决的
 ### 为什么我的 git sync 很慢
@@ -128,10 +62,11 @@ https://superuser.com/questions/1526309/hyper-v-default-switch-static-ip
 最后结局办法是定义一个工具在 powershell 中的
 
 ## 还没解决的问题
-### vim 启动太慢了
+
+### vim 首次 启动太慢了
 如果遇到，那么在环境调试
 
-### windows 环境基本配置
+### windows 桌面环境基本配置
 https://github.com/glzr-io/glazewm
 
 配置文件在:
@@ -145,17 +80,10 @@ C:\Users\97936\.glzr\glazewm
     - 这个配置也是有 bug 的
 - https://github.com/pmb6tz/windows-desktop-switcher
 
-## uv 的使用
-
-似乎需要执行这个来激活:
-```pwsh
-.venv\Scripts\activate.ps1
-```
-
 ## 关闭动画
 https://guanjia.qq.com/knowledge-base/content/1127?from=clinic
 
-## 键盘速度
+## 控制键盘速度
 ```powershell
 $path = 'HKCU:\Control Panel\Keyboard'
 Set-ItemProperty -Path $path -Name KeyboardDelay -Value '0'
@@ -183,6 +111,38 @@ Get-ItemProperty -Path $path | Select-Object KeyboardDelay, KeyboardSpeed, Initi
 Set-ItemProperty -Path 'HKCU:\Control Panel\Keyboard' -Name KeyboardDelay -Value '0'
 Set-ItemProperty -Path 'HKCU:\Control Panel\Keyboard' -Name KeyboardSpeed -Value '31'
 ```
+
+## 有趣的软件
+- https://vladelaina.github.io/Catime/
+
+## 参考
+- https://github.com/jayharris/dotfiles-windows
+- [I Fixed Windows Native Development](https://news.ycombinator.com/item?id=47022891)
+
+## Windows 包管理工具
+
+参考 codex 的，但是实话实话，我感觉一般
+前三个都是会提供的
+
+| 工具 | 主要用途 | 管理对象 | 常见场景 |
+| --- | --- | --- | --- |
+| `winget` | Windows 应用安装器 | 桌面软件、CLI 工具、运行时 | 安装 VS Code、Git、CMake、Visual Studio、7-Zip |
+| `scoop` | 面向开发者的命令行包管理器 | CLI 工具、portable app、开发工具 | 安装 `ripgrep`、`fd`、`ninja`、`llvm` |
+| `nuget` | .NET 包管理器 | C# / .NET 项目依赖 | 在 `.csproj` / `.sln` 中引用 .NET 库 |
+| `vcpkg` | C/C++ 库包管理器 | C/C++ 第三方库 | 在 CMake / MSBuild 项目中引用 `fmt`、`boost`、`openssl` |
+
+大致可以按层级区分：
+
+- `winget` / `scoop` 用来安装工具和应用。
+- `nuget` / `vcpkg` 用来管理项目代码依赖。
+
+选择建议：
+
+- 装系统级软件或 GUI 应用，优先看 `winget`。
+- 装开发 CLI 工具，`scoop` 通常更轻量、目录更干净。
+- 写 C# / .NET 项目，用 `nuget`。
+- 写 C/C++ 项目，用 `vcpkg`。
+
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

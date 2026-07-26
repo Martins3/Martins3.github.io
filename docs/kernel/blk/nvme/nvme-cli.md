@@ -1,15 +1,13 @@
-# nvme-cli
+# `nvme id-ns` 输出梳理
 
-nvme id-ns /dev/nvme11n1
+`nvme id-ns` 发送 Identify Namespace 命令，查看的是 namespace 的容量、LBA
+格式和可选能力，并不是控制器的完整信息。当前系统有三块 NVMe 盘，先展示
+Fanxiang S790 对应的 `/dev/nvme1n1` 原始输出，再统一对比三块盘。
 
-### 消费级的盘的观察
-```txt
-06:00.0 Non-Volatile memory controller: MAXIO Technology (Hangzhou) Ltd. NVMe SSD Controller MAP1602 (DRAM-less) (rev 01)
-```
+## 原始输出
 
-```txt
-🤒  sudo nvme id-ns /dev/nvme1n1
-[sudo] password for martins3:
+```console
+$ sudo nvme id-ns /dev/nvme1n1
 NVME Identify Namespace 1:
 nsze    : 0x1d1c0beb0
 ncap    : 0x1d1c0beb0
@@ -47,190 +45,158 @@ eui64   : d0d0d0d0d0d0d0d0
 lbaf  0 : ms:0   lbads:9  rp:0 (in use)
 ```
 
-### 企业盘观察
+## 盘的统一对比
 
-
-这是 `nvme id-ns /dev/nvme11n1`（Identify Namespace）输出，描述的是 **NVMe 命名空间 1 的能力、容量和 LBA 格式**。我按“你最可能关心的点”来解读。
-
-## 一、容量相关（最重要）
-
-```
-nsze : 0x37e3e92b0
-ncap : 0x37e3e92b0
-nuse : 0x37e3e92b0
+```txt
+02:00.0 Non-Volatile memory controller [0108]: Yangtze Memory Technologies Co.,Ltd ZHITAI TiPro7000 [1e49:0041] (rev 01)
+03:00.0 Non-Volatile memory controller [0108]: Yangtze Memory Technologies Co.,Ltd ZHITAI TiPlus7100 [1e49:0071] (rev 01)
+07:00.0 Non-Volatile memory controller [0108]: MAXIO Technology (Hangzhou) Ltd. NVMe SSD Controller MAP1602 (DRAM-less) [1e4b:1602] (rev 01)
 ```
 
-* **nsze (Namespace Size)**
-  命名空间的**总逻辑块数（LBA 数）**
+| 字段              | `/dev/nvme0n1`                     | `/dev/nvme1n1`                     | `/dev/nvme2n1`                     |
+| ---               | ---                                | ---                                | ---                                |
+| `nsze`            | `0x773bd2b0`                       | `0x1d1c0beb0`                      | `0x773bd2b0`                       |
+| `ncap`            | `0x773bd2b0`                       | `0x1d1c0beb0`                      | `0x773bd2b0`                       |
+| `nuse`            | `0x773bd2b0`                       | `0x1d1c0beb0`                      | `0x773bd2b0`                       |
+| `nsfeat`          | `0`                                | `0`                                | `0`                                |
+| `nlbaf`           | `0`                                | `0`                                | `0`                                |
+| `flbas`           | `0x10`                             | `0`                                | `0`                                |
+| `mc`              | `0`                                | `0`                                | `0`                                |
+| `dpc`             | `0`                                | `0`                                | `0`                                |
+| `dps`             | `0`                                | `0`                                | `0`                                |
+| `nmic`            | `0`                                | `0`                                | `0`                                |
+| `rescap`          | `0`                                | `0`                                | `0`                                |
+| `fpi`             | `0`                                | `0`                                | `0`                                |
+| `dlfeat`          | `0`                                | `0`                                | `0`                                |
+| `nawun`           | `0`                                | `0`                                | `0`                                |
+| `nawupf`          | `0`                                | `0`                                | `0`                                |
+| `nacwu`           | `0`                                | `0`                                | `0`                                |
+| `nabsn`           | `0`                                | `0`                                | `0`                                |
+| `nabo`            | `0`                                | `0`                                | `0`                                |
+| `nabspf`          | `0`                                | `0`                                | `0`                                |
+| `noiob`           | `0`                                | `0`                                | `0`                                |
+| `nvmcap`          | `0`                                | `0`                                | `0`                                |
+| `mssrl`           | `0`                                | `0`                                | `0`                                |
+| `mcl`             | `0`                                | `0`                                | `0`                                |
+| `msrc`            | `0`                                | `0`                                | `0`                                |
+| `kpios`           | `0`                                | `0`                                | `0`                                |
+| `nulbaf`          | `0`                                | `0`                                | `0`                                |
+| `kpiodaag`        | `0`                                | `0`                                | `0`                                |
+| `anagrpid`        | `0`                                | `0`                                | `0`                                |
+| `nsattr`          | `0`                                | `0`                                | `0`                                |
+| `nvmsetid`        | `0`                                | `0`                                | `0`                                |
+| `endgid`          | `0`                                | `0`                                | `0`                                |
+| `nguid`           | `0000000000000000a428b75644cedacc` | `0000000000000000d0d0d0d0d0d0d0d0` | `0000000000000000a428b70020d600c2` |
+| `eui64`           | `a428b701f0d70084`                 | `d0d0d0d0d0d0d0d0`                 | `a428b70020d600c2`                 |
+| `lbaf 0`          | `ms:0 lbads:9 rp:0 (in use)`       | `ms:0 lbads:9 rp:0 (in use)`       | `ms:0 lbads:9 rp:0 (in use)`       |
 
-* **ncap (Namespace Capacity)**
-  可用容量（通常 ≤ nsze）
+下面的逐字段讲解只以 Fanxiang S790 4TB（`/dev/nvme1n1`）为例。
 
-* **nuse (Namespace Utilization)**
-  已使用的 LBA 数
+## 容量
 
-👉 三个值相等，说明：
+`nsze`、`ncap` 和 `nuse` 的单位都是逻辑块，而不是 byte：
 
-* 没有 over-provision
-* 整个 namespace 已经被“分配/使用”（即使文件系统里可能是空的）
+| 字段 | 含义 | 当前值 |
+| --- | --- | --- |
+| `nsze` | Namespace Size，可寻址的逻辑块总数 | `0x1d1c0beb0` = 7,814,037,168 |
+| `ncap` | Namespace Capacity，最多可分配的逻辑块数 | 7,814,037,168 |
+| `nuse` | Namespace Utilization，当前已分配的逻辑块数 | 7,814,037,168 |
 
-### 实际容量是多少？
+当前 LBA 大小为 512 B，因此容量为：
 
-当前使用的 LBA 格式是：
-
-```
-flbas : 0x1
-```
-
-`flbas[3:0] = 1` → 使用 **lbaf 1**
-
-```
-lbaf 1 : ms:8  lbads:9  rp:0x1 (in use)
-```
-
-* `lbads:9` → LBA size = 2⁹ = **512 bytes**
-* `nsze = 0x37e3e92b0 = 149,997,707,376 LBA`
-
-计算容量：
-
-```
-149,997,707,376 × 512
-≈ 76,798,902,220,800 bytes
-≈ 76.8 TB (十进制)
-≈ 69.9 TiB (二进制)
-```
-
-✔ 和下面的字段一致：
-
-```
-nvmcap : 7681501126656
-```
-
-> 注意：`nvmcap` 单位是 **bytes / allocation granularity**，厂商实现略有差异，但量级是对的。
-
----
-
-## 二、LBA 格式（是否支持 4K / metadata）
-
-```
-nlbaf : 4
-```
-
-表示 **支持 5 种 LBA 格式（0~4）**
-
-### 各 LBA 格式解释
-
-| lbaf | lbads | LBA 大小 | ms | metadata | 说明              |
-| ---- | ----- | ------ | -- | -------- | --------------- |
-| 0    | 9     | 512B   | 0  | 无        | 传统 512B         |
-| 1    | 9     | 512B   | 8  | 有        | **当前使用**        |
-| 2    | 12    | 4KB    | 64 | 有        | 4K + 大 metadata |
-| 3    | 12    | 4KB    | 0  | 无        | 纯 4K            |
-| 4    | 12    | 4KB    | 8  | 有        | 4K + 小 metadata |
-
-👉 你现在是：
-
-* **512B sector**
-* **带 8B metadata**
-* metadata **与数据分离**（不是 inline）
-
-如果你做数据库 / 对齐 IO / O_DIRECT / SPDK，这个点非常关键。
-
----
-
-## 三、数据保护 / 原子性能力
-
-```
-dpc : 0x1f
-dps : 0x3
+```text
+7,814,037,168 LBA * 512 B = 4,000,787,030,016 B
+                                  = 4.000787030 TB
+                                  = 3.638694607 TiB
 ```
 
-### DPC（Data Protection Capabilities）
+三个字段相等，表示整个 namespace 都具有可用的 LBA 地址。它不表示文件系统已经
+写满，也不能据此判断 SSD 控制器内部是否保留了 over-provisioning 空间。文件系统
+使用量应通过 `df` 等工具观察。
 
-`0x1f` = 所有位都支持：
+`nvmcap` 为 0 表示设备没有在这个字段中报告 namespace 容量，不能将它解释为盘的
+容量为 0；这块盘的容量应由 `nsze * LBA 大小` 得到，也与 `lsblk` 报告一致。
 
-* Type 1 / 2 / 3 protection information
-* First / Last / Separate metadata
+## LBA 格式
 
-👉 说明这是 **企业级盘**，不是消费级 NVMe
-
-### DPS（当前使用的保护方式）
-
-`0x3`：
-
-* 启用 protection
-* Type 1
-* metadata **separate**
-
----
-
-## 四、写入 / 原子性限制（对文件系统、DB 很重要）
-
-```
-nawun  : 0
-nawupf : 0
-nacwu  : 0
+```text
+nlbaf   : 0
+flbas   : 0
+lbaf  0 : ms:0   lbads:9  rp:0 (in use)
 ```
 
-这些是 **写原子性限制**：
+- `nlbaf` 是“支持的 LBA 格式数量减 1”。值为 0，表示只提供 `lbaf 0` 一种格式。
+- `flbas` 的格式索引为 0，所以当前正在使用 `lbaf 0`。
+- `lbads:9` 表示数据长度为 `2^9 = 512 B`。
+- `ms:0` 表示每个 LBA 没有 metadata。
+- `rp:0` 表示该格式的相对性能等级为 Best。
 
-* `0` 表示：
-  **单个 LBA 写入是原子的**
-* 没有对“未对齐写 / partial write”的特殊限制
+因此，这个 namespace 只有 **512 B 数据 + 0 B metadata** 的格式。Identify
+Namespace 数据没有列出 4 KiB LBA 格式，不能通过 `nvme format` 将它切换为 4Kn。
 
-👉 对 ext4 / xfs / dm / md 都是友好的
+## namespace 特性
 
----
+下列字段是位图，值为 0 表示对应能力位都没有置位：
 
-## 五、特性支持概览
+| 字段 | 当前含义 |
+| --- | --- |
+| `nsfeat: 0` | 不支持 thin provisioning 和 Deallocated/Unwritten Logical Block Error；原子写参数使用控制器级的 `AWUN/AWUPF/ACWU` |
+| `mc: 0` | 不支持独立 metadata buffer，也不支持 extended LBA 中的 metadata |
+| `dpc: 0`、`dps: 0` | 不支持且未启用端到端 Protection Information（PI） |
+| `nmic: 0` | namespace 不具备 NVMe multipath/shared namespace 能力 |
+| `rescap: 0` | 不支持 NVMe Reservation |
+| `fpi: 0` | 不支持 Format Progress Indicator |
+| `dlfeat: 0` | 未报告释放后 LBA 的读取值；不支持 Write Zeroes 命令的 Deallocate 位 |
+| `nsattr: 0` | namespace 当前没有写保护 |
+| `kpios: 0` | 未启用，也不支持 Key Per I/O |
 
+`dlfeat: 0` 只描述这里列出的 deallocation 行为，不足以单独判断普通 Dataset
+Management/TRIM 是否可用。
+
+## 原子写、边界和 Copy 限制
+
+```text
+nawun   : 0
+nawupf  : 0
+nacwu   : 0
+nabsn   : 0
+nabo    : 0
+nabspf  : 0
+noiob   : 0
+mssrl   : 0
+mcl     : 0
+msrc    : 0
 ```
-mc     : 0x3
+
+由于 `nsfeat[1]` 为 0，`nawun`、`nawupf` 和 `nacwu` 不是当前 namespace 的有效
+覆盖值，实际原子写能力要继续查看 `nvme id-ctrl /dev/nvme1` 中的控制器级字段。
+同理，不能笼统地把所有数值字段中的 0 都解释成“单个 LBA 写是原子的”。
+
+`nabsn`、`nabo`、`nabspf` 没有给出 namespace 专用原子边界；`noiob: 0` 表示没有
+报告最优 I/O 边界。`mssrl`、`mcl`、`msrc` 也没有在 Identify Namespace 数据中
+给出 Copy 命令的 namespace 限制。
+
+## 分组与标识符
+
+```text
+anagrpid: 0
+nvmsetid: 0
+endgid  : 0
+nguid   : 0000000000000000d0d0d0d0d0d0d0d0
+eui64   : d0d0d0d0d0d0d0d0
 ```
 
-* 支持 **metadata pointer**
-* 支持 **metadata inline**
+- `anagrpid`、`nvmsetid` 和 `endgid` 都为 0，没有报告 ANA group、NVM Set 或
+  Endurance Group 关联；当前 namespace 本身也不是 multipath capable。
+- `nguid` 和 `eui64` 虽然非零，但内容是重复的 `d0` 模式，不宜据此推导型号、
+  序列号或路径关系。
 
-```
-fpi : 0x80
-```
+## 结论
 
-* 支持 **Format Progress Indicator**
-* `nvme format` 可查询进度（企业盘常见）
-
-```
-rescap : 0
-```
-
-* **不支持 namespace reservation**
-* 说明不是为 SCSI-3 PR / 集群仲裁设计的 namespace
-
----
-
-## 六、标识符（用于多路径 / 存储系统）
-
-```
-nguid : 01000000000000005cdfb830761a0150
-eui64 : 0000000000000000
-```
-
-* **NGUID**：全局唯一 namespace ID（多路径非常关键）
-* **EUI64**：未使用
-
-👉 multipath / NVMe-oF / SAN 环境主要靠 `nguid`
-
----
-
-## 七、一句话总结
-
-这是一个：
-
-* **≈ 76.8 TB 企业级 NVMe namespace**
-* 当前使用 **512B sector + 8B metadata（separate）**
-* 支持 **4K LBA**
-* 支持 **完整数据保护（DIF/DIX）**
-* 原子写限制非常宽松
-* 非 reservation / 非集群仲裁型 namespace
+当前 `/dev/nvme1n1` 是一个容量约 4 TB 的 namespace 1。它只提供 512 B LBA，
+没有 metadata 和 PI，不支持 thin provisioning、namespace multipath、NVMe
+Reservation 或写保护。大量为 0 的字段反映的是这块消费级盘没有暴露相应的
+namespace 高级能力，不能脱离字段类型一概解释成数值 0 或 1 LBA。
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

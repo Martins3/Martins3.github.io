@@ -1,8 +1,9 @@
 # net
+
 ## iouring 对于网络存在两个技术优化 : zero copy 和 async
 
-首先，需要意识到网络根本就没有类似 aio 的异步提交的，
-因为网络是需要报文重组的
+首先，需要意识到网络根本就没有类似 aio 的异步提交的感觉
+是我的错觉吗?
 
 ## zero copy
 https://speakerdeck.com/ennael/efficient-zero-copy-networking-using-io-uring
@@ -16,175 +17,8 @@ https://developers.redhat.com/articles/2023/04/12/why-you-should-use-iouring-net
 (这个还是要拷贝的)
 net/core/netdev_rx_queue.c
 
-## tcp devmem (2024 合并的)
-https://lwn.net/Articles/937882/
-
-利用网卡，直接把网卡中的数据写入到 GPU 内存中，也就是
-说，其实也是可以直接写入到 nvme 中?
-```txt
-* TL;DR:
-
-Device memory TCP (devmem TCP) is a proposal for transferring data to and/or
-from device memory efficiently, without bouncing the data to a host memory
-buffer.
-
-* Problem:
-
-A large amount of data transfers have device memory as the source and/or
-destination. Accelerators drastically increased the volume of such transfers.
-Some examples include:
-- ML accelerators transferring large amounts of training data from storage into
-  GPU/TPU memory. In some cases ML training setup time can be as long as 50% of
-  TPU compute time, improving data transfer throughput & efficiency can help
-  improving GPU/TPU utilization.
-
-- Distributed training, where ML accelerators, such as GPUs on different hosts,
-  exchange data among them.
-
-- Distributed raw block storage applications transfer large amounts of data with
-  remote SSDs, much of this data does not require host processing.
-
-Today, the majority of the Device-to-Device data transfers the network are
-implemented as the following low level operations: Device-to-Host copy,
-Host-to-Host network transfer, and Host-to-Device copy.
-
-The implementation is suboptimal, especially for bulk data transfers, and can
-put significant strains on system resources, such as host memory bandwidth,
-PCIe bandwidth, etc. One important reason behind the current state is the
-kernel’s lack of semantics to express device to network transfers.
-
-* Proposal:
-
-In this patch series we attempt to optimize this use case by implementing
-socket APIs that enable the user to:
-
-1. send device memory across the network directly, and
-2. receive incoming network packets directly into device memory.
-
-Packet _payloads_ go directly from the NIC to device memory for receive and from
-device memory to NIC for transmit.
-Packet _headers_ go to/from host memory and are processed by the TCP/IP stack
-normally. The NIC _must_ support header split to achieve this.
-
-Advantages:
-
-- Alleviate host memory bandwidth pressure, compared to existing
- network-transfer + device-copy semantics.
-
-- Alleviate PCIe BW pressure, by limiting data transfer to the lowest level
-  of the PCIe tree, compared to traditional path which sends data through the
-  root complex.
-
-With this proposal we're able to reach ~96.6% line rate speeds with data sent
-and received directly from/to device memory.
-
-* Patch overview:
-
-** Part 1: struct paged device memory
-
-Currently the standard for device memory sharing is DMABUF, which doesn't
-generate struct pages. On the other hand, networking stack (skbs, drivers, and
-page pool) operate on pages. We have 2 options:
-
-1. Generate struct pages for dmabuf device memory, or,
-2. Modify the networking stack to understand a new memory type.
-
-This proposal implements option #1. We implement a small framework to generate
-struct pages for an sg_table returned from dma_buf_map_attachment(). The support
-added here should be generic and easily extended to other use cases interested
-in struct paged device memory. We use this framework to generate pages that can
-be used in the networking stack.
-
-** Part 2: recvmsg() & sendmsg() APIs
-
-We define user APIs for the user to send and receive these dmabuf pages.
-
-** part 3: support for unreadable skb frags
-
-Dmabuf pages are not accessible by the host; we implement changes throughput the
-networking stack to correctly handle skbs with unreadable frags.
-
-** part 4: page pool support
-
-We piggy back on Jakub's page pool memory providers idea:
-https://github.com/kuba-moo/linux/tree/pp-providers
-
-It allows the page pool to define a memory provider that provides the
-page allocation and freeing. It helps abstract most of the device memory TCP
-changes from the driver.
-
-This is not strictly necessary, the driver can choose to allocate dmabuf pages
-and use them directly without going through the page pool (if acceptable to
-their maintainers).
-
-Not included with this RFC is the GVE devmem TCP support, just to
-simplify the review. Code available here if desired:
-https://github.com/mina/linux/tree/tcpdevmem
-
-This RFC is built on top of v6.4-rc7 with Jakub's pp-providers changes
-cherry-picked.
-
-* NIC dependencies:
-
-1. (strict) Devmem TCP require the NIC to support header split, i.e. the
-   capability to split incoming packets into a header + payload and to put
-   each into a separate buffer. Devmem TCP works by using dmabuf pages
-   for the packet payload, and host memory for the packet headers.
-
-2. (optional) Devmem TCP works better with flow steering support & RSS support,
-   i.e. the NIC's ability to steer flows into certain rx queues. This allows the
-   sysadmin to enable devmem TCP on a subset of the rx queues, and steer
-   devmem TCP traffic onto these queues and non devmem TCP elsewhere.
-
-The NIC I have access to with these properties is the GVE with DQO support
-running in Google Cloud, but any NIC that supports these features would suffice.
-I may be able to help reviewers bring up devmem TCP on their NICs.
-
-* Testing:
-
-The series includes a udmabuf kselftest that show a simple use case of
-devmem TCP and validates the entire data path end to end without
-a dependency on a specific dmabuf provider.
-
-Not included in this series is our devmem TCP benchmark, which
-transfers data to/from GPU dmabufs directly.
-
-With this implementation & benchmark we're able to reach ~96.6% line rate
-speeds with 4 GPU/NIC pairs running bi-direction traffic, with all the
-packet payloads going straight to the GPU memory (no host buffer bounce).
-
-** Test Setup
-
-Kernel: v6.4-rc7, with this RFC and Jakub's memory provider API
-cherry-picked locally.
-
-Hardware: Google Cloud A3 VMs.
-
-NIC: GVE with header split & RSS & flow steering support.
-
-Benchmark: custom devmem TCP benchmark not yet open sourced.
-
-Mina Almasry (10):
-  dma-buf: add support for paged attachment mappings
-  dma-buf: add support for NET_RX pages
-  dma-buf: add support for NET_TX pages
-  net: add support for skbs with unreadable frags
-  tcp: implement recvmsg() RX path for devmem TCP
-  net: add SO_DEVMEM_DONTNEED setsockopt to release RX pages
-  tcp: implement sendmsg() TX path for for devmem tcp
-  selftests: add ncdevmem, netcat for devmem TCP
-  memory-provider: updates core provider API for devmem TCP
-  memory-provider: add dmabuf devmem provider
-```
-
-https://docs.kernel.org/networking/devmem.html
-https://netdevconf.info/0x17/sessions/talk/device-memory-tcp.html
-
 ## IORING_OP_SEND_ZC
 测试 code/src/c/iouring/op-send-zc.c
-
-老技术了。
-
 
 ## 存储和网络上存在什么区别?
 网络很喜欢使用 epoll ，因为远程的用户可能永远都不发送。
@@ -254,6 +88,92 @@ io_uring/napi.c 是 Linux 内核 io_uring 子系统的网络轮询（NAPI）集�
 操作时，特别是涉及套接字操作时，该模块可以显著提高性能，通过直接在用户线程中进行网络轮询，减少内核和用户空间之间的上下文切换开销。
 
 这个文件是 Linux 内核中 io_uring 子系统与网络子系统深度集成的一部分，旨在提供高性能的异步 I/O 操作，特别是在网络应用中。
+
+### 再问一次
+
+• 这个文件实现的是：让 io_uring 在等待网络请求完成时，主动轮询网卡的 NAPI 接收队列，以降低中断、调度和唤醒带来的网络延迟。
+
+  它是网络 NAPI busy-poll，不是 IORING_SETUP_IOPOLL 的块设备轮询。
+
+  ### 工作流程
+
+  io_uring 网络请求
+      ↓
+  记录 socket 的 sk_napi_id
+      ↓
+  io_uring_enter() 等待 CQE
+      ↓
+  主动调用 napi_busy_loop_rcu()
+      ↓
+  驱动 NAPI poll 收包
+      ↓
+  请求完成并生成 CQE
+
+  这样可能在进程睡眠前直接把包轮询出来，减少：
+
+  网卡中断 → softirq → 唤醒进程 → 调度
+
+  ### 主要功能
+
+  1. 管理 NAPI ID
+
+  每个网络 socket 会关联一个 sk_napi_id，标识处理该 socket 流量的网卡 RX queue/NAPI 实例。
+
+  动态模式下，io_uring/napi.h:42 从 socket 读取这个 ID：
+
+  __io_napi_add_id(ctx, READ_ONCE(sock->sk->sk_napi_id));
+
+  io_uring/napi.c:41 将 ID 同时保存到：
+
+  - ctx->napi_list：用于遍历并执行 busy poll。
+  - ctx->napi_ht：用于快速查重和查找。
+
+  动态跟踪的 ID 如果 60 秒没有再次使用，会被清理。静态模式的 ID 由用户态显式添加、删除，不会自动过期。
+
+  2. 执行 busy poll
+
+  核心调用在 io_uring/napi.c:163：
+
+  napi_busy_loop_rcu(e->napi_id, ...);
+
+  它让当前线程直接运行对应 NAPI 实例的 poll，从网卡 RX queue 收包。
+
+  循环遇到以下条件会退出：
+
+  - CQ 中已经有足够的完成事件；
+  - io_uring 有待处理工作；
+  - 收到信号；
+  - busy_poll_to 超时。
+
+  3. 接入两种等待路径
+
+  普通 io_uring 等待：
+
+  io_uring/wait.c:249 在真正睡眠之前执行 busy poll。
+
+  SQPOLL 模式：
+
+  io_uring/sqpoll.c:353 由 SQPOLL 内核线程轮询 NAPI。
+
+  4. 提供用户态配置接口
+
+  用户通过 IORING_REGISTER_NAPI 配置：
+
+  - busy-poll 持续时间；
+  - prefer_busy_poll；
+  - 动态或静态 NAPI ID 跟踪模式。
+
+  ABI 定义在 include/uapi/linux/io_uring.h:911。
+
+  ### 并发设计
+
+  这里使用：
+
+  - spinlock：保护添加、删除操作；
+  - RCU：busy-poll 热路径可以无锁遍历；
+  - hash table：快速查重；
+  - kfree_rcu()：避免遍历期间释放对象。
+
 
 ## 网络真的开始发力了
 https://blog.tohojo.dk/2026/02/the-inner-workings-of-tcp-zero-copy.html

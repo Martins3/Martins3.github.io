@@ -170,15 +170,56 @@ TriggeredBy: ● sysstat-collect.timer
 ### iostat
 <!-- 9358447c-fc9a-4505-a80b-8193035738b5 -->
 
-iostat 从 /sys/block/nvme0n1/stat 中获取的:
- Documentation/admin-guide/iostats.rst
+这是 iostat -x（或类似扩展格式）的磁盘统计输出，各列含义如下：
+读相关
+• r/s：每秒读请求数（read requests per second）
+• rMB/s：每秒读取的 MB 数
+• rrqm/s：每秒合并的读请求数（read requests merged per second）
+• %rrqm：读请求中被合并的请求占比
+• r_await：每个读请求的平均等待时间（ms，含队列等待 + 实际 I/O 时间）
+• rareq-sz：读请求的平均大小（KB）
+
+写相关
+• w/s：每秒写请求数
+• wMB/s：每秒写入的 MB 数
+• wrqm/s：每秒合并的写请求数
+• %wrqm：写请求中被合并的请求占比
+• w_await：每个写请求的平均等待时间（ms）
+• wareq-sz：写请求的平均大小（KB）
+
+丢弃/删除相关
+• d/s：每秒 discard/trim 请求数
+• dMB/s：每秒 discard 的 MB 数
+• drqm/s：每秒合并的 discard 请求数
+• %drqm：discard 请求中被合并的请求占比
+• d_await：每个 discard 请求的平均等待时间（ms）
+• dareq-sz：discard 请求的平均大小（KB）
+
+刷新相关
+• f/s：每秒 flush 请求数
+• f_await：每个 flush 请求的平均等待时间（ms）
+
+综合
+• aqu-sz：平均队列长度（average queue size）
+• %util：设备利用率，即设备忙于处理 I/O 请求的时间百分比
+
+快速判断瓶颈的常用经验：
+- r_await / w_await 明显高于平时（如 > 10~20ms），说明 I/O 延迟高。
+- aqu-sz 大且 %util 接近 100%，说明设备饱和，队列堆积。
+- %util 高但 aqu-sz 低，可能只是少量 I/O 把设备占满，未必是应用问题。
+- rrqm/s / wrqm/s 高，说明相邻 I/O 被内核合并得好，随机小 I/O 被优化。
+
+这个结果很清晰了，结果就是如此的。
 
 执行一次 iostat 的结果似乎不对，使用 iostat -xz 1
 ```txt
 🤒  cat /sys/block/nvme0n1/stat
-  250304    54867 17676331    44341   420980   730997 14007220  1718258        0   733693  1910688        0        0        0        0    88034   148089
+
+250304    54867 17676331    44341   420980   730997 14007220  1718258        0   733693  1910688        0        0        0        0    88034   148089
 ```
 
+iostat 从 /sys/block/nvme0n1/stat 中获取的:
+Documentation/admin-guide/iostats.rst
 /sys/block/loop4/stat
 
 

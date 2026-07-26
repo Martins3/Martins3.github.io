@@ -1,4 +1,3 @@
-use nix::unistd::sleep;
 use std::sync::atomic::AtomicBool;
 use std::sync::atomic::AtomicUsize;
 use std::sync::atomic::Ordering::Relaxed;
@@ -12,7 +11,7 @@ pub fn basic() {
     let background_thread = thread::spawn(|| {
         while !STOP.load(Relaxed) {
             println!(".");
-            sleep(1);
+            thread::sleep(Duration::from_secs(1));
         }
     });
 
@@ -39,7 +38,7 @@ pub fn basic2() {
         // A background thread to process all 100 items.
         s.spawn(|| {
             for i in 0..100 {
-                sleep(1);
+                thread::sleep(Duration::from_secs(1));
                 num_done.store(i + 1, Relaxed);
             }
         });

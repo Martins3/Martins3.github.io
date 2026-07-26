@@ -1,0 +1,27 @@
+variant: fcos
+version: 1.5.0
+passwd:
+  users:
+    - name: martins3
+      groups:
+        - wheel
+        - sudo
+      # mkpasswd -m sha-512 $password
+      password_hash: hash-here
+      ssh_authorized_keys:
+        - ssh-ed25519 pub-key-here
+storage:
+  files:
+    - path: /etc/hostname
+      mode: 0644
+      contents:
+        inline: |
+          martins3
+
+kernel_arguments:
+  should_exist:
+  - 'crashkernel=512M'
+systemd:
+  units:
+  - name: kdump.service
+    enabled: true

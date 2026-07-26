@@ -1,4 +1,14 @@
 # vsock
+
+## 为什么需要 vsock
+https://gist.github.com/mcastelino/9a57d00ccf245b98de2129f0efe39857
+才意识到，vsock 也是非常适合放到内核态的，因为物理机和虚拟机沟通，还是需要走物理机的 sock
+虚拟机也是在内核中，这样就少了上下文切换了
+
+- 如何使用上: https://gist.github.com/mcastelino/9a57d00ccf245b98de2129f0efe39857
+- 看上去是用于改善: https://vmsplice.net/~stefan/stefanha-kvm-forum-2015.pdf
+https://github.com/rust-vmm/vhost-device : 哦，原来 vhost 存在这么多的设备啊
+
 - https://static.sched.com/hosted_files/kvmforum2019/50/KVMForum_2019_virtio_vsock_Andra_Paraschiv_Stefano_Garzarella_v1.3.pdf
 - https://stefano-garzarella.github.io/posts/2019-08-22-vsock-iperf3/
   - 作者提供的测试 vsock 的性能
@@ -8,6 +18,9 @@
 - https://kubevirt.io/user-guide/virtual_machines/vsock/ : 分析了 vsock 相对于 guest 的好处
 
 
+个人感受就是，现在不需要配置网卡就可以 ssh 到虚拟机了，对于轻量级虚拟机是很好的。
+
+## 基本代码分析
 看代码实现的位置内容其实不少
 net/vmw_vsock/
 
@@ -21,8 +34,7 @@ CONFIG_VIRTIO_VSOCKETS_COMMON=y
 # CONFIG_VSOCKMON is not set
 ```
 
-## 在 qemu
-
+### qemu 实现
 qemu-system-x86_64 -device help
 
 根据 vsock_transport::cancel_pkt 的注册位置，可以找到
@@ -32,16 +44,11 @@ qemu-system-x86_64 -device help
 
 也就是存在 vsock 的三个实现，
 
-
 - [ ] https://man7.org/linux/man-pages/man7/vsock.7.html
 
-## vsock
-- 如何使用上: https://gist.github.com/mcastelino/9a57d00ccf245b98de2129f0efe39857
-- 看上去是用于改善: https://vmsplice.net/~stefan/stefanha-kvm-forum-2015.pdf
+### 内核实现
+- net.c 和 vsock.c 是两个对称的模块, 但是从 net.c 分析
 
-https://github.com/rust-vmm/vhost-device : 哦，原来 vhost 存在这么多的设备啊
-
-## net.c 和 vsock.c 是两个对称的模块, 但是从 net.c 分析
 - [ ] ioctl 提供了很多让用户态访问的接口，难道不是让 kernel 处理这些事情不就可以了吗 ?
 
 ```c
@@ -92,13 +99,147 @@ static const struct file_operations vhost_vsock_fops = {
 
 - [ ] 为什么需要 vhost-net fd ?
 
-## 似乎的确该配置一下 vsock 了
+## 问题
+1. vhost-vsock 似乎是支持热迁移的，这就有点难以想到如何实现了。
+2. vhost-vsock 之外，还有普通的 vsock 吗? 现在的参数重视这么配置的
+```txt
+-device vhost-vsock-pci,id=vhost-vsock-pci0,guest-cid=1096
+```
 
-fedora3 的启动中有这个:
+## 基本的配置和使用
 
-Try contacting this VM's SSH server via 'ssh vsock%3' from host.
+虚拟机至少需要打开这个模块，其他什么模块还需要打开不需要添加
 
-但是我不知道该如何配置
+CONFIG_VSOCKETS=m
+```txt
+vsock_diag             12288  0
+vmw_vsock_virtio_transport    20480  0
+vmw_vsock_virtio_transport_common    57344  1 vmw_vsock_virtio_transport
+vsock                  69632  5 vmw_vsock_virtio_transport_common,vmw_vsock_virtio_transport,vsock_diag
+```
+
+物理机中需要一下模块:
+```txt
+vhost_vsock            28672  4
+vsock_loopback         12288  0
+vmw_vsock_virtio_transport_common    61440  2 vhost_vsock,vsock_loopback
+vmw_vsock_vmci_transport    57344  0
+vsock                  77824  4 vmw_vsock_virtio_transport_common,vhost_vsock,vsock_loopback,vmw_vsock_vmci_transport
+vmw_vmci              122880  1 vmw_vsock_vmci_transport
+vhost                  77824  2 vhost_vsock,vhost_net
+```
+
+## 问题
+
+### systemd 如何支持 vsock
+
+这相当于实现了一个不用网卡的 vsock 配置方法:
+```txt
+🧀  ssh vsock%1100
+Warning: Permanently added 'vsock%1100' (ED25519) to the list of known hosts.
+Web console: https://fedora44-server:9090/ or https://10.0.2.15:9090/
+
+Last login: Sat Jul 11 09:01:52 2026 from 10.0.2.2
+```
+
+关键不是 Fedora 装了某个额外 SSH 服务，而是 systemd 259 自带的 SSH/vsock 集成：
+
+- host 侧 ssh vsock%1100 命中这个 SSH 配置：
+```txt
+/usr/lib/systemd/ssh_config.d/20-systemd-ssh-proxy.conf
+```
+其中内容为:
+```txt
+  Host unix/* unix%* vsock/* vsock%* vsock-mux/* vsock-mux%* machine/* machine%*
+          ProxyCommand /usr/lib/systemd/systemd-ssh-proxy %h %p
+          ProxyUseFdpass yes
+```
+
+所以 ssh vsock%1100 实际是 OpenSSH 调用：
+
+/usr/lib/systemd/systemd-ssh-proxy vsock%1100 22
+由 systemd-ssh-proxy 建立 AF_VSOCK 连接，再把 fd 交给 ssh。
+
+guest 侧 Fedora 44 自动生成了这个 socket：
+
+```txt
+# /run/systemd/generator/sshd-vsock.socket
+[Socket]
+ListenStream=vsock::22
+Accept=yes
+```
+
+```txt
+/usr/lib/systemd/system-generators/systemd-ssh-generator
+```
+工作方式是：guest 里 systemd 监听 vsock::22，每个连接 socket-activate 一个 sshd@.service，里面跑：
+
+```txt
+/usr/sbin/sshd -i
+```
+
+所以结论是：
+1. ssh vsock%1100 是 systemd 的 SSH proxy 语法，不是 OpenSSH 原生直接懂 vsock。
+2. Fedora 44 guest 里 systemd 自动生成 sshd-vsock.socket，所以不需要 ncat。
+3. 这个方案比我们的 ncat --vsock -l -k ... -c "ncat 127.0.0.1 22" 更正统，也更干净。
+
+我们后面可以把 collei 的 setup_vsock_ssh 改成优先使用 systemd-ssh-generator：如果 guest 有 /usr/lib/systemd/
+system-generators/systemd-ssh-generator，就只需要 systemctl daemon-reload && systemctl start sshd-vsock.socket；
+没有这个能力的旧系统再 fallback 到 ncat service。
+
+#### 简单模拟
+
+ncat --vsock -l -k 2222 -c "ncat 127.0.0.1 22 这个命令如何理解?
+┌────────────────────────┬────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ 参数                   │ 含义                                                                                               │
+├────────────────────────┼────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ ncat                   │ nmap 出品的网络工具（升级版 netcat）                                                               │
+├────────────────────────┼────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ --vsock                │ 使用 VM Socket 协议，而不是 TCP/UDP                                                                │
+├────────────────────────┼────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ -l                     │ 监听模式（listen）                                                                                 │
+├────────────────────────┼────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ -k                     │ keep-open，一个连接断开后继续监听，不退出                                                          │
+├────────────────────────┼────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ $port                  │ 要监听的 vsock 端口号（CID 由上下文决定）                                                          │
+├────────────────────────┼────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ -c "ncat 127.0.0.1 22" │ 每收到一个 vsock 连接，就 fork 执行这条子命令，并把该连接的 stdin/stdout 接到子命令的 stdin/stdout │
+└────────────────────────┴────────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+里面的 ncat 127.0.0.1 22 就是再去连接本机的 TCP 22 端口，也就是 SSH 服务。
+
+所以整体流程是：
+
+1. 某个 VM（或 host）通过 vsock 连到这个监听端
+2. ncat 收到连接后启动子进程 ncat 127.0.0.1 22
+3. 子进程连到本机 SSH
+4. 两个连接的数据被互相转发
+
+也就是，在 vsock 端口上搭了一个“桥”，把 vsock 流量桥接到本地 SSH，方便 VM 免网络配置就能 ssh 到 host。
+
+### 为什么不可以使用 0 1 2 作为 guest-cid=
+
+guest-cid=1100 可以，不能用的是 0/1/2 这些保留 CID。
+
+内核头文件 /usr/include/linux/vm_sockets.h 里定义了：
+
+#define VMADDR_CID_HYPERVISOR 0
+#define VMADDR_CID_LOCAL      1
+#define VMADDR_CID_HOST       2
+
+含义是：
+
+- 0: hypervisor
+- 1: local / loopback，本地 vsock 通信
+- 2: host，也就是 guest 里连接宿主机时常用的目标 CID
+
+所以 QEMU 的：
+
+-device vhost-vsock-pci,guest-cid=...
+
+这里的 guest-cid 是给“这个 guest 自己”的 CID，不能占用这些 well-known CID。实际 guest CID 应该从 3 开始，并且同一 host 上运行的 guest 之间要唯一。
+
+
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

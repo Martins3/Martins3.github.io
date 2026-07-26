@@ -224,45 +224,6 @@ https://github.com/Mellanox/mstflint/blob/master/kernel/mst_kernel.h
 但是 nvme 的固件是架构无关的吧
 3. 如果 BIOS 中关闭了 vmx ，可以在 os 中重新打开吗?
 
-## efibootmgr 源码看看，他最后是操作哪里
-
-```txt
-efibootmgr version 17
-usage: efibootmgr [options]
-        -a | --active         sets bootnum active
-        -A | --inactive       sets bootnum inactive
-        -b | --bootnum XXXX   modify BootXXXX (hex)
-        -B | --delete-bootnum delete bootnum
-        -c | --create         create new variable bootnum and add to bootorder
-        -C | --create-only      create new variable bootnum and do not add to bootorder
-        -D | --remove-dups      remove duplicate values from BootOrder
-        -d | --disk disk       (defaults to /dev/sda) containing loader
-        -r | --driver         Operate on Driver variables, not Boot Variables.
-        -e | --edd [1|3|-1]   force EDD 1.0 or 3.0 creation variables, or guess
-        -E | --device num      EDD 1.0 device number (defaults to 0x80)
-        -g | --gpt            force disk with invalid PMBR to be treated as GPT
-        -i | --iface name     create a netboot entry for the named interface
-        -l | --loader name     (defaults to "\EFI\openEuler\grub.efi")
-        -L | --label label     Boot manager display label (defaults to "Linux")
-        -m | --mirror-below-4G t|f mirror memory below 4GB
-        -M | --mirror-above-4G X percentage memory to mirror above 4GB
-        -n | --bootnext XXXX   set BootNext to XXXX (hex)
-        -N | --delete-bootnext delete BootNext
-        -o | --bootorder XXXX,YYYY,ZZZZ,...     explicitly set BootOrder (hex)
-        -O | --delete-bootorder delete BootOrder
-        -p | --part part        partition containing loader (defaults to 1 on partitioned devices)
-        -q | --quiet            be quiet
-        -t | --timeout seconds  set boot manager timeout waiting for user input.
-        -T | --delete-timeout   delete Timeout.
-        -u | --unicode | --UCS-2  handle extra args as UCS-2 (default is ASCII)
-        -v | --verbose          print additional information
-        -V | --version          return version and exit
-        -w | --write-signature  write unique sig to MBR if needed
-        -y | --sysprep          Operate on SysPrep variables, not Boot Variables.
-        -@ | --append-binary-args file  append extra args from file (use "-" for stdin)
-        -h | --help             show help/usage
-```
-而且这里看到了我们的好朋友 EDD 了
 
 ## UEFI EmulatorPkg
 

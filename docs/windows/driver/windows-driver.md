@@ -121,6 +121,22 @@ C:\Users\97936\data\Windows-driver-samples\setup\devcon\README.md
 
 https://learn.microsoft.com/en-us/windows-hardware/drivers/kernel/introduction-to-wdm
 
+## 可以看看 wireguard 如何在 windows 中写的，也是一个 windows 驱动吧
+
+https://github.com/mrexodia/TitanHide
+
+## windows driver 的最佳入口
+<!-- f7c573e7-a0ec-43a8-8e31-26ffbf1c0b42 -->
+
+https://rayanfam.com/topics/hypervisor-from-scratch-part-1/
+
+- [ ] 似乎只能远程调试。
+
+而且这个看上去相当不错:
+https://github.com/HyperDbg/HyperDbg
+
+有类似的 linux 替代品吗?
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

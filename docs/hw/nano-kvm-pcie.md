@@ -1,23 +1,30 @@
-## nano kvm
+# nano kvm
 
-https://wiki.sipeed.com/hardware/zh/kvm/NanoKVM_PCIe/introduction.html
-
-https://github.com/sipeed/NanoKVM
+首先简单看看他的文档:
+- https://wiki.sipeed.com/hardware/zh/kvm/NanoKVM_PCIe/introduction.html
+- https://github.com/sipeed/NanoKVM
 
 其实就是一个小电脑，还是非常容易理解的东西了。
 
-wifi 默认是控制面的 wifi，然后在控制界面中配置接入互联网的 wifi ，然后就很容易了。
+wifi 默认是控制面的 wifi，然后在控制界面中配置接入互联网的 wifi，然后就很容易了。
 
 管理界面: martins3
-ssh : root
+ssh: root
 可以使用相同的密码为: kvmXXXXXXXX (HC)
 
+## TODO
+
 可以做的其他的配置:
+
 1. 那些引脚都是做什么
 
 ## 暂时无法解决的问题
-7.0.10-201.fc44.x86_64 开机，usb 无法识别。
 
+- 7.0.10-201.fc44.x86_64 开机，usb 无法识别。
+
+## 参考
+
+https://www.jeffgeerling.com/blog/2026/i-tested-every-ip-kvm/
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

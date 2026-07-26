@@ -1,10 +1,20 @@
 # workqueue
 
-workqueue 就是最经典的，还不会用，就开始看原理了。
+workqueue 就是最经典的失败，我都，还不会用，就开始看原理了。
 
 文件看上去有很多，实际上一半是注释，很多是 sysfs 的接口，其实强度还行
 
 - http://127.0.0.1:3434/core-api/workqueue.html
+
+## 使用 drgn 来分析 workqueue
+
+在
+tools/workqueue/wq_monitor.py
+
+在 fedora 6.7.3 的内核中观测到的
+```txt
+```
+- [ ] 应该使用 monitor 来观察自己实现的 workqueue 分析下。
 
 ## TODO
 
@@ -684,109 +694,6 @@ https://docs.kernel.org/core-api/workqueue.html : 连 worker pool 和 workqueue 
 
 ## 了解下: for_each_bh_worker_pool 和 for_each_cpu_worker_pool
 
-## 使用 drgn 来分析 workqueue
-
-tools/workqueue/wq_monitor.py
-
-在 fedora 6.7.3 的内核中观测到的
-```txt
-                            total  infl  CPUtime CPUitsv CMW/RPR  mayday rescued
-events                      13761     0      0.1       1      47       -       -
-events_highpri                 32     0      0.0       0       0       -       -
-events_long                     4     0      0.0       0       0       -       -
-events_unbound              33768     0      0.4       -       0       -       -
-events_freezable                0     0      0.0       0       0       -       -
-events_power_efficient       4920     0      0.0       0       0       -       -
-events_freezable_power_         4     0      0.0       0       0       -       -
-rcu_gp                        621     0      0.0       0     190       0       0
-rcu_par_gp                    602     0      0.0       0       0       0       0
-slub_flushwq                    4     0      0.0       0       0       0       0
-netns                           2     0      0.0       -       0       0       0
-mm_percpu_wq                 3190     0      0.0       0       0       0       0
-cpuset_migrate_mm               0     0      0.0       -       0       -       -
-inet_frag_wq                    6     0      0.0       0       0       0       0
-pm                             65     0      0.0       0       1       -       -
-cgroup_destroy                778     0      0.0       0      17       -       -
-cgroup_pidlist_destroy          0     0      0.0       0       0       -       -
-writeback                     479     0      0.0       -       0       0       0
-cgwb_release                   17     0      0.0       0       1       -       -
-cryptd                          0     0      0.0       0       0       0       0
-kintegrityd                     0     0      0.0       0       0       0       0
-kblockd                      2835     0      0.0       0       0       0       0
-blkcg_punt_bio                  0     0      0.0       -       0       0       0
-kacpid                          0     0      0.0       0       0       -       -
-kacpi_notify                    0     0      0.0       0       0       -       -
-kacpi_hotplug                   0     0      0.0       -       0       -       -
-kec                             0     0      0.0       -       0       -       -
-kec_query                       0     0      0.0       0       0       -       -
-tpm_dev_wq                      0     0      0.0       0       0       0       0
-ata_sff                         0     0      0.0       0       0       0       0
-usb_hub_wq                     14     0      0.0       0      10       -       -
-md                              0     0      0.0       0       0       0       0
-md_misc                         0     0      0.0       0       0       -       -
-md_bitmap                       0     0      0.0       -       0       0       0
-edac-poller                     0     0      0.0       -       0       0       0
-rproc_recovery_wq               0     0      0.0       -       0       -       -
-devfreq_wq                      0     0      0.0       -       0       0       0
-tc_filter_workqueue             0     0      0.0       -       0       -       -
-inode_switch_wbs               39     0      0.0       0       0       -       -
-kthrotld                        0     0      0.0       0       0       0       0
-acpi_thermal_pm                 0     0      0.0       0       0       0       0
-scsi_tmf_0                      0     0      0.0       -       0       0       0
-scsi_tmf_1                      0     0      0.0       -       0       0       0
-psmouse-smbus                   0     0      0.0       0       0       -       -
-kpsmoused                       0     0      0.0       -       0       -       -
-kdmremove                       0     0      0.0       -       0       -       -
-dm_stripe_wq                    0     0      0.0       0       0       -       -
-dm_bufio_cache                 29     0      0.0       0       0       0       0
-dm_raid1_wq                     0     0      0.0       0       0       -       -
-sock_diag_events                0     0      0.0       0       0       -       -
-mld                            65     0      0.0       0       0       0       0
-ipv6_addrconf                  47     0      0.0       0       0       0       0
-kstrp                           0     0      0.0       -       0       0       0
-fscrypt_read_queue              0     0      0.0       -       0       -       -
-fsverity_read_queue             0     0      0.0       0       0       -       -
-tr_max_lat_wq                   0     0      0.0       -       0       -       -
-kmpathd                         0     0      0.0       0       0       0       0
-kmpath_handlerd                 0     0      0.0       -       0       0       0
-dm_mpath_wq                     0     0      0.0       0       0       -       -
-kaluad                          0     0      0.0       0       0       0       0
-kmpath_rdacd                    0     0      0.0       -       0       0       0
-scsi_tmf_2                      0     0      0.0       -       0       0       0
-virtio-blk                      0     0      0.0       0       0       -       -
-scsi_tmf_3                      0     0      0.0       -       0       0       0
-nvme-wq                         9     0      0.0       -       0       0       0
-nvme-reset-wq                   0     0      0.0       -       0       0       0
-nvme-delete-wq                  0     0      0.0       -       0       0       0
-nvme-auth-wq                    0     0      0.0       -       0       0       0
-ttm                             0     0      0.0       0       0       0       0
-xfsalloc                        0     0      0.0       0       0       0       0
-xfsdiscard                      0     0      0.0       -       0       -       -
-xfs_mru_cache                   0     0      0.0       0       0       0       0
-xfs-buf/sda3                 3833     0      0.0       0       0       0       0
-xfs-conv/sda3                1544     0      0.0       0       1       0       0
-xfs-reclaim/sda3              125     0      0.0       0       0       0       0
-xfs-blockgc/sda3                5     0      0.0       -       0       0       0
-xfs-inodegc/sda3             1894     0      0.1       0       1       0       0
-xfs-sync/sda3                  29     0      0.0       0       2       -       -
-xfs-log/sda3                  384     0      0.0       0       0       0       0
-xfs-cil/sda3                  272     0      0.0       -       0       0       0
-virtio_vsock                    1     0      0.0       0       0       -       -
-xfs-buf/sda2                   29     0      0.0       0       0       0       0
-xfs-conv/sda2                   0     0      0.0       0       0       0       0
-xfs-reclaim/sda2                0     0      0.0       0       0       0       0
-xfs-blockgc/sda2                0     0      0.0       -       0       0       0
-xfs-inodegc/sda2                0     0      0.0       0       0       0       0
-xfs-sync/sda2                  29     0      0.0       0       0       -       -
-xfs-log/sda2                    0     0      0.0       0       0       0       0
-xfs-cil/sda2                    0     0      0.0       -       0       0       0
-kvm-irqfd-cleanup               0     0      0.0       0       0       -       -
-rpciod                          0     0      0.0       -       0       0       0
-xprtiod                         0     0      0.0       -       0       0       0
-qrtr_ns_handler                 1     0      0.0       -       0       -       -
-```
-
-- [ ] 应该使用 monitor 来观察自己实现的 workqueue 分析下。
 
 
 ## BH workqueue

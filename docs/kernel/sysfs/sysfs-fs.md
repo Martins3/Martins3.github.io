@@ -50,16 +50,14 @@
 9 directories, 32 files
 ```
 
-/sys/fs 中信息更多，当然在 /sys/fs 最重要的就是 cgroup 了
-
-/proc/fs/ext4/vda1/options
+/sys/fs 中信息更多，当然在 /sys/fs 最重要的就是 cgroup
 
 当然 fs options 还是可以从 fsstat 中获取的，fsstat 应该走的是 ioctl 的。
 
 ## /proc/sys/fs
 - https://docs.kernel.org/admin-guide/sysctl/fs.html
 
-## [ ] /sys/fs/
+## /sys/fs/
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

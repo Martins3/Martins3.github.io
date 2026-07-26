@@ -1,25 +1,21 @@
 # loop device
 
-测试:
-```sh
-sudo mount -o loop test.iso /mnt
-```
+## 基本使用
 
+测试 img
 ```sh
 dd if=/dev/null of=x.ext4 bs=1000M seek=100
 mkfs.ext4 -F x.ext4
-mkdir -p dir
-sudo mount -t ext4 -o loop x.ext4 dir
-sudo chown martins3 dir
+mkdir -p tmp
+sudo mount -t ext4 -o loop x.ext4 tmp
+sudo chown martins3 tmp
 ```
 
-sysfs 中的东西:
+loop 定位就是一个普通的 block 设备，类似其他的所有的 block 设备一样，也会其特殊的属性:
 ```txt
-🧀  pwd
-/sys/block/loop0/loop
+# cd /sys/block/loop0/loop
 
-block/loop0/loop🔒 🐶
- grep . *
+# grep . *
 autoclear:1
 backing_file:/home/martins3/x.ext4
 dio:0
@@ -28,9 +24,26 @@ partscan:0
 sizelimit:0
 ```
 
-0xffffffff83003bdc in loop_init () at drivers/block/loop.c:2261
+每次做  sudo mount virtio-win.iso tmp2 的操作，都会自动的创建
+出来 loop device ，应该是 mount 把工作都完成了:
 
-- loop_add
+```txt
+🧀  ls -la /dev/loop*
+crw-rw---- 10,237 root  1 Jul 10:32 /dev/loop-control
+brw-rw----    7,0 root  3 Jul 17:44 /dev/loop0
+brw-rw----    7,1 root  3 Jul 17:48 /dev/loop1
+brw-rw----    7,2 root  3 Jul 17:49 /dev/loop2
+```
+
+```txt
+losetup -a
+# 等价于
+cat /sys/block/loop*/loop/backing_file
+```
+
+## 基本代码流程
+
+loop 就是让 mount 一个文件作为盘的，就像是 swap file 一样
 
 ```c
 static const struct blk_mq_ops loop_mq_ops = {
@@ -39,7 +52,8 @@ static const struct blk_mq_ops loop_mq_ops = {
 };
 ```
 
-这个在 mount 过程中，总是出现的:
+loop 设备上运行一个 ext4 的时候:
+
 - entry_SYSCALL_64
   - do_syscall_64
     - do_syscall_x64
@@ -68,29 +82,25 @@ static const struct blk_mq_ops loop_mq_ops = {
                                                   - __blk_mq_issue_directly
                                                     - loop_queue_rq
 
-## 运行的路线基本
-
+如果 loop 上运行一个 iso 的时候:
 ```txt
 @[
-        loop_queue_rq+0
-        blk_mq_request_issue_directly+92
-        blk_mq_issue_direct+140
-        blk_mq_dispatch_queue_requests+296
-        blk_mq_flush_plug_list+152
-        __blk_flush_plug+248
-        blk_finish_plug+64
-        __iomap_dio_rw+552
-        iomap_dio_rw+24
-        ext4_file_write_iter+804
-        vfs_write+548
-        ksys_write+120
-        __arm64_sys_write+36
-        invoke_syscall.constprop.0+88
-        do_el0_svc+72
-        el0_svc+92
-        el0t_64_sync_handler+268
-        el0t_64_sync+408
-]: 45241
+        loop_queue_rq+5
+        __blk_mq_issue_directly+68
+        blk_mq_issue_direct+137
+        blk_mq_dispatch_queue_requests+332
+        blk_mq_flush_plug_list+136
+        __blk_flush_plug+274
+        __submit_bio+412
+        submit_bio_noacct_nocheck+255
+        __bread_gfp+125
+        do_isofs_readdir+719
+        isofs_readdir+86
+        iterate_dir+187
+        __x64_sys_getdents64+136
+        do_syscall_64+265
+        entry_SYSCALL_64_after_hwframe+118
+]: 212
 ```
 
 - ret_from_fork
@@ -103,25 +113,36 @@ static const struct blk_mq_ops loop_mq_ops = {
               - lo_write_simple
                 - lo_write_bvec
 
-## loop 可以让 md 是基于 file 的，真神奇啊
+## 细节问题
 
-- https://unix.stackexchange.com/questions/302766/persistent-use-of-loop-block-device-in-mdadm
-- https://stackoverflow.com/questions/4519761/programming-a-loopback-device-consisting-of-several-files-in-linux
+### loop device 的容量
 
-## 简单来说，loop 就是让 mount 一个文件作为盘的，就像是 swap file 一样
+#### 两个获取方法
+- blockdev --getsize64 /dev/loop0
+    - 打开块设备并调用 BLKGETSIZE64 ioctl。
+    - 内核返回 bdev_nr_bytes(bdev)，单位是字节。
+    - 实现在 blkdev_ioctl 中的 BLKGETSIZE64
 
-- loop_queue_rq
-  - loop_queue_work
-    - loop_process_work
-      - 最后一路达到 lo_write_bvec
+- lsblk -bno SIZE /dev/loop0
+    - 主要读取 sysfs： /sys/class/block/loop0/size
 
-## 原来容量是可以设置的
-https://serverfault.com/questions/690192/why-is-my-loop-device-size-0
+```c
+ssize_t part_size_show(struct device *dev,
+		       struct device_attribute *attr, char *buf)
+{
+	return sysfs_emit(buf, "%llu\n", bdev_nr_sectors(dev_to_bdev(dev)));
+}
+```
 
-losetup --set-capacity /dev/loop0
-blockdev --getsize64 /dev/loop0
+#### 容量变化不是自动的检测的
 
-可以主动将设备的容量设置为 0 吗?
+如果增大了 backing_file 的大小，需要手动的配置
+```txt
+  sudo losetup --set-capacity /dev/loop0
+  sudo losetup -c /dev/loop0
+```
+
+它触发 LOOP_SET_CAPACITY ioctl
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

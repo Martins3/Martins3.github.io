@@ -104,6 +104,37 @@ https://lore.kernel.org/all/20230126193752.297968-5-surenb@google.com/T/#m2b9c92
 
 https://zhuanlan.zhihu.com/p/14709946806
 
+似乎一下子就大致知道这些东西做什么的了:
+```txt
+ ● 不能真正并发进行——同一个 mm 上的 fault 和 munmap 由锁互斥，但存在"谁先谁后"的竞争细节。
+
+   常规路径（mmap_lock）
+
+   • do_munmap() 对整个 mm 持有 mmap_lock 写锁（mm/mmap.c:1152 的 mmap_write_lock_killable）。
+   • 缺页异常处理走 handle_mm_fault()，需要 mmap_lock 读锁。
+
+   所以：munmap 期间，该进程任何线程的 page fault（哪怕 fault 的地址和 munmap 范围无关）都会阻塞在 mmap_lock 上，等 munmap 完成后才继续。反过来，如果 fault 先拿到读
+   锁，munmap 会等 fault 结束。二者在同一 mm 上严格串行。
+
+   per-VMA lock 路径（CONFIG_PER_VMA_LOCK）
+
+   这是唯一的"例外"：fault 可以先尝试拿 VMA 粒度的读锁（FAULT_FLAG_VMA_LOCK，见 mm/memory.c:6684），不经过 mmap_lock。但防护依然完整：
+
+   • munmap 摘 VMA 时会先把 VMA 标记为 detached 并等待该 VMA 上的读者退出（vma 读计数）。
+   • fault 拿到 per-VMA 锁后会校验 VMA 是否已 detached；如果 munmap 已经先行，fault 直接 abort，退回到 mmap_lock 读锁路径重试。
+
+   也就是说 per-VMA lock 下 fault 和 munmap 可能在时间上重叠，但 fault 要么在 munmap detach 之前完整执行完，要么发现 VMA 已分离而失败重试——不会出现 fault 往一个已被
+   拆除的 VMA 里装 PTE 的情况。
+
+   容易混淆的点
+
+   • 不同进程（不同 mm）的 fault 和 munmap 当然完全并发，互不影响。
+   • zap_page_range / TLB shootdown 阶段是在写锁内做的，fault 插不进来。
+   • 真正不持 mmap_lock 访问页表的是 GUP-fast、khugepaged（部分路径）等，它们靠 page table lock + 重校验防护，但这不属于 page fault。
+
+   一句话总结：fault 和 munmap 在同一 mm 上不会并发修改页表/VMA 树；它们只会因锁竞争而先后执行，per-VMA lock 只是让不相关的 fault 少被误伤。
+```
+
 ### rmap
 
 page_get_anon_vma 获取上含有锁的 tricky 的机制

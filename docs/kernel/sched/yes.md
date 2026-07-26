@@ -5,30 +5,25 @@ Man clone(2) 中的 CLONE_THREAD 可以看到:
 
 CLONE_THREAD (since Linux 2.4.0)
 ```txt
-    Thread groups were a feature added in Linux 2.4 to support the POSIX threads notion of a set of threads that share a single PID.  Internally, this shared PID is the so-called thread group identifier (TGID) for the thread group.  Since Linux 2.4, calls to getpid(2) return the TGID of the caller.
+Thread groups were a feature added in Linux 2.4 to support the POSIX threads notion of a set of threads that share a single PID.  Internally, this shared PID is the so-called thread group identifier (TGID) for the thread group.  Since Linux 2.4, calls to getpid(2) return the TGID of the caller.
 
-    The threads within a group can be distinguished by their (system-wide) unique thread IDs (TID).  A new thread's TID is available as the function result returned to the caller, and a thread can obtain its own TID using gettid(2).
+The threads within a group can be distinguished by their (system-wide) unique thread IDs (TID).  A new thread's TID is available as the function result returned to the caller, and a thread can obtain its own TID using gettid(2).
 
-    When a clone call is made without specifying CLONE_THREAD, then the resulting thread is placed in a new thread group whose TGID is the same as the thread's TID.  This thread is the leader of the new thread group.
+When a clone call is made without specifying CLONE_THREAD, then the resulting thread is placed in a new thread group whose TGID is the same as the thread's TID.  This thread is the leader of the new thread group.
 
-    Since  Linux  2.5.35,  the  flags  mask  must  also  include   CLONE_SIGHAND   if CLONE_THREAD  is  specified (and note that, since Linux 2.6.0, CLONE_SIGHAND also requires CLONE_VM to be included).
+Since  Linux  2.5.35,  the  flags  mask  must  also  include   CLONE_SIGHAND   if CLONE_THREAD  is  specified (and note that, since Linux 2.6.0, CLONE_SIGHAND also requires CLONE_VM to be included).
 ```
+
 
 1. CLONE_THREAD 描述是否为一个 thread group ，一个 thread group 中来处理信号以及 exec 等机制
 2. CLONE_VM 是处理是否共享地址空间
 3. CLONE_THREAD 会自动选择 CLONE_VM
   - "CLONE_THREAD must take CLONE_SIGHAND and CLONE_VM with it"
-3. 是可以 CLONE_VM 但是不用 CLONE_THREAD
-  - 这里的典型例子就是内核线程的构建: `kernel_thread`
-  - 另外的测试参考 /home/martins3/data/vn/code/src/c/sched/CLONE_VM.c
+3. 但是可以设置 CLONE_VM 的情况下但是不用 CLONE_THREAD
+	- 也就是，两个 process 共享地址空间
+	- 这里的典型例子就是内核线程的构建: `kernel_thread`
+  	- 另外的测试参考 ~/vn/code/src/c/sched/CLONE_VM.c
 
-没有那么复杂，也无需通过 /proc 这么间接的方法理解，看下 man clone(2)
-
-通过 msharefs 来实现多个 process 共享地址空间，现在的系统调用实现约束太大了
-需要让共享的 process 都是从同一个 parent clone 出来的:
-https://mp.weixin.qq.com/s/OavFbBFanLrLiHQI3aAGow
-
-配套分析代码: docs/kernel/sched/code/CLONE_VM.c
 ## SCHED_NORMAL 还是 SCHED_OTHER
 <!-- 3596757f-3263-4993-8a65-5dca2615cb48 -->
 

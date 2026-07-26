@@ -17,9 +17,7 @@ Permissions Size User     Date Modified Name
 lrwxrwxrwx     - martins3 28 Feb 17:22  󰡯 /home/martins3/.cargo/bin/rust-analyzer -> rustup
 ```
 
-
-## rust 继续
-
+## nvim 插件
 先搞这个 "mrcjkb/rustaceanvim",
 
 ## 用 rust 写的工具
@@ -65,6 +63,21 @@ info: default toolchain set to 'stable-x86_64-unknown-linux-gnu'
 
 rustc 1.94.0 (4a4ef493e 2026-03-02)
 ```
+
+## 常见问题排查
+
+LspINfo 中遇到:
+```txt
+[ERROR][2026-06-22 13:04:02] ...p/_transport.lua:36	"rpc"	"rust-analyzer"	"stderr"	"error: Unknown binary 'rust-analyzer' in official toolchain '1.92.0-x86_64-unknown-linux-gnu'.\n"
+```
+
+```txt
+rustup update
+rustup default stable && rustc --version
+rustup component add rust-analyzer
+```
+
+
 
 ## 很好
 https://github.com/emilk/egui

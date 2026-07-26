@@ -555,6 +555,28 @@ git am --rej /path/to/some.patch
 git fetch
 git switch dev
 
+1. 查看了当前仓库状态、远程仓库和分支列表：
+```bash
+     git status
+     git remote -v
+     git branch -a
+```
+
+2. 添加了一个新的远程仓库 martins3，指向你的 fork：
+```bash
+     git remote add martins3 https://git.loongson.com/martins3/dune.git
+```
+
+3. 拉取了 nbd-hotplug 分支：
+```bash
+     git fetch martins3 fix-2
+```
+
+4. 切换到本地新分支 fix-2，并设置跟踪远程分支：
+```bash
+git checkout -b fix-2 martins3/fix-2
+```
+
 ### branch 包含了 tag
 
 git branch --contains $tag
@@ -574,32 +596,6 @@ git rebase --autostash origin/master
 ```
 
 ```txt
-整体策略
-
-┌─────────────────────────────────────────────────────────────┐
-│  主工作目录 (vn)  - 保持当前工作状态，不切换分支              │
-│  ├── 创建 worktree1: anki-rcu  (处理 RCU 相关任务)          │
-│  ├── 创建 worktree2: anki-fuse (处理 fuse 任务)              │
-│  ├── 创建 worktree3: anki-pstore (处理 pstore 任务)          │
-│  └── ... 其他任务以此类推                                    │
-└─────────────────────────────────────────────────────────────┘
-
-具体操作步骤
-
-1. 查看当前分支状态
-
-cd /home/martins3/data/vn
-git status
-git branch -a
-
-2. 为每个任务创建独立 worktree
-
-# 进入项目根目录
-cd /home/martins3/data/vn
-
-# 创建基础目录存放所有 worktree
-mkdir -p ../vn-worktrees
-
 # 示例：为 RCU 任务创建 worktree
 git worktree add ../vn-worktrees/anki-rcu -b anki-rcu
 
@@ -650,25 +646,10 @@ git worktree remove ../vn-worktrees/anki-rcu
 
 # 强制删除 (有未提交修改时)
 git worktree remove -f ../vn-worktrees/anki-rcu
-
-───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-针对你的 todo.anki.md 的建议分组
-
-基于任务内容，我建议这样分组创建 worktree：
-
- Worktree 名称    处理的任务        UUID/描述
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
- anki-rcu         RCU 相关          470edd71-..., 2547aa81-..., 3629f535-...
- anki-fuse        FUSE 文件系统     880cd423-...
- anki-pstore      Pstore            ab68ad3f-...
- anki-vhost       Vhost 重连        a36839e6-...
- anki-kvm-async   KVM async pf      94f5a5a0-...
- anki-qemu        QEMU AIO/CPREGS   93ba9162-..., 44da9544-...
 ```
 
 ## 观察当前分支相当于 master 添加的内容
- git log --oneline master..HEAD
-
+git log --oneline master..HEAD
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

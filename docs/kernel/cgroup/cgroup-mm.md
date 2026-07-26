@@ -76,25 +76,25 @@ static void shrink_zones(struct zonelist *zonelist, struct scan_control *sc)
 ```
 
 ```txt
-#0  try_charge_memcg (memcg=memcg@entry=0xffff88812528b000, gfp_mask=gfp_mask@entry=3264, nr_pages=nr_pages@entry=1) at mm/memcontrol.c:2629
-#1  0xffffffff8134c6d3 in obj_cgroup_charge_pages (nr_pages=1, gfp=3264, objcg=0xffff88812577b500) at mm/memcontrol.c:3095
-#2  obj_cgroup_charge (objcg=objcg@entry=0xffff88812577b500, gfp=gfp@entry=3264, size=<optimized out>) at mm/memcontrol.c:3385
-#3  0xffffffff8132d600 in memcg_slab_pre_alloc_hook (flags=3264, objects=1, objcgp=<synthetic pointer>, lru=0x1138 <cpu_debug_store+312>, s=0xffff888100005300) at mm/slab.h:501
-#4  slab_pre_alloc_hook (flags=3264, size=1, objcgp=<synthetic pointer>, lru=0x1138 <cpu_debug_store+312>, s=0xffff888100005300) at mm/slab.h:715
-#5  slab_alloc_node (orig_size=192, addr=18446744071582522772, node=-1, gfpflags=3264, lru=0x1138 <cpu_debug_store+312>, s=0xffff888100005300) at mm/slub.c:3318
-#6  slab_alloc (orig_size=192, addr=18446744071582522772, gfpflags=3264, lru=0x1138 <cpu_debug_store+312>, s=0xffff888100005300) at mm/slub.c:3406
-#7  __kmem_cache_alloc_lru (gfpflags=<optimized out>, lru=<optimized out>, s=<optimized out>) at mm/slub.c:3413
-#8  kmem_cache_alloc_lru (s=0xffff888100005300, lru=lru@entry=0xffff88812200ec78, gfpflags=gfpflags@entry=3264) at mm/slub.c:3429
-#9  0xffffffff81381d94 in __d_alloc (sb=0xffff88812200e800, name=name@entry=0xffffc9000005fe90) at fs/dcache.c:1769
-#10 0xffffffff81381f70 in d_alloc (parent=parent@entry=0xffff888121f97180, name=name@entry=0xffffc9000005fe90) at fs/dcache.c:1849
-#11 0xffffffff813727de in __lookup_hash (name=name@entry=0xffffc9000005fe90, base=0xffff888121f97180, flags=flags@entry=1536) at fs/namei.c:1597
-#12 0xffffffff81377376 in filename_create (dfd=dfd@entry=-100, name=name@entry=0xffff888100bba000, path=path@entry=0xffffc9000005fed8, lookup_flags=<optimized out>) at fs/namei.c:3807
-#13 0xffffffff8137977f in do_mkdirat (dfd=dfd@entry=-100, name=0xffff888100bba000, mode=mode@entry=493) at fs/namei.c:4050
-#14 0xffffffff813799b3 in __do_sys_mkdir (mode=<optimized out>, pathname=<optimized out>) at fs/namei.c:4080
-#15 __se_sys_mkdir (mode=<optimized out>, pathname=<optimized out>) at fs/namei.c:4078
-#16 __x64_sys_mkdir (regs=<optimized out>) at fs/namei.c:4078
-#17 0xffffffff81fa3beb in do_syscall_x64 (nr=<optimized out>, regs=0xffffc9000005ff58) at arch/x86/entry/common.c:50
-#18 do_syscall_64 (regs=0xffffc9000005ff58, nr=<optimized out>) at arch/x86/entry/common.c:80
+- do_syscall_64
+  - do_syscall_x64
+    - __x64_sys_mkdir
+      - __se_sys_mkdir
+        - __do_sys_mkdir
+          - do_mkdirat
+            - filename_create
+              - __lookup_hash
+                - d_alloc
+                  - __d_alloc
+                    - kmem_cache_alloc_lru
+                      - __kmem_cache_alloc_lru
+                        - slab_alloc
+                          - slab_alloc_node
+                            - slab_pre_alloc_hook
+                              - memcg_slab_pre_alloc_hook
+                                - obj_cgroup_charge
+                                  - obj_cgroup_charge_pages
+                                    - try_charge_memcg
 ```
 
 ## mem_cgroup_migrate
@@ -780,10 +780,6 @@ page -> memcg -> parent memcg -> kernfs_node -> ino
 - [ ] why swap works different with memory_cgrp_subsys ?
   - [ ] mem_cgroup_swap_init
 
-- [ ] mem_cgroup_scan_tasks
-
-- [ ] parent_mem_cgroup
-
 ```c
 struct cgroup_subsys memory_cgrp_subsys = {
   .css_alloc = mem_cgroup_css_alloc,
@@ -803,40 +799,6 @@ struct cgroup_subsys memory_cgrp_subsys = {
 ```
 
 - [ ] css
-
-
-```plain
-.rw-r--r-- root root 0 B Fri Oct 23 13:41:52 2020  cgroup.clone_children
-.-w--w--w- root root 0 B Fri Oct 23 13:41:52 2020  cgroup.event_control
-.rw-r--r-- root root 0 B Fri Oct 23 13:41:52 2020  cgroup.procs
-.rw-r--r-- root root 0 B Fri Oct 23 13:41:52 2020  memory.failcnt
-.-w------- root root 0 B Fri Oct 23 13:41:52 2020  memory.force_empty
-.rw-r--r-- root root 0 B Fri Oct 23 13:41:52 2020  memory.kmem.failcnt
-.rw-r--r-- root root 0 B Fri Oct 23 13:41:52 2020  memory.kmem.limit_in_bytes
-.rw-r--r-- root root 0 B Fri Oct 23 13:41:52 2020  memory.kmem.max_usage_in_bytes
-.r--r--r-- root root 0 B Fri Oct 23 13:41:52 2020  memory.kmem.slabinfo
-.rw-r--r-- root root 0 B Fri Oct 23 13:41:52 2020  memory.kmem.tcp.failcnt
-.rw-r--r-- root root 0 B Fri Oct 23 13:41:52 2020  memory.kmem.tcp.limit_in_bytes
-.rw-r--r-- root root 0 B Fri Oct 23 13:41:52 2020  memory.kmem.tcp.max_usage_in_bytes
-.r--r--r-- root root 0 B Fri Oct 23 13:41:52 2020  memory.kmem.tcp.usage_in_bytes
-.r--r--r-- root root 0 B Fri Oct 23 13:41:52 2020  memory.kmem.usage_in_bytes
-.rw-r--r-- root root 0 B Fri Oct 23 13:41:52 2020  memory.limit_in_bytes
-.rw-r--r-- root root 0 B Fri Oct 23 13:41:52 2020  memory.max_usage_in_bytes
-.rw-r--r-- root root 0 B Fri Oct 23 13:41:52 2020  memory.move_charge_at_immigrate
-.r--r--r-- root root 0 B Fri Oct 23 13:41:52 2020  memory.numa_stat
-.rw-r--r-- root root 0 B Fri Oct 23 13:41:52 2020  memory.oom_control
-.--------- root root 0 B Fri Oct 23 13:41:52 2020  memory.pressure_level
-.rw-r--r-- root root 0 B Fri Oct 23 13:41:52 2020  memory.soft_limit_in_bytes
-.r--r--r-- root root 0 B Fri Oct 23 13:41:52 2020  memory.stat
-.rw-r--r-- root root 0 B Fri Oct 23 13:41:52 2020  memory.swappiness
-.r--r--r-- root root 0 B Fri Oct 23 13:41:52 2020  memory.usage_in_bytes
-.rw-r--r-- root root 0 B Fri Oct 23 13:41:52 2020  memory.use_hierarchy
-.rw-r--r-- root root 0 B Fri Oct 23 13:41:52 2020  notify_on_release
-drwxr-xr-x root root 0 B Fri Oct 23 13:41:52 2020  session-1.scope
-.rw-r--r-- root root 0 B Fri Oct 23 13:41:52 2020  tasks
-drwxr-xr-x root root 0 B Fri Oct 23 13:41:52 2020  user-runtime-dir@1000.service
-drwxr-xr-x root root 0 B Fri Oct 23 10:54:42 2020  user@1000.service
-```
 
 #### memcg force_empty
 
@@ -1175,6 +1137,192 @@ https://docs.kernel.org/admin-guide/cgroup-v2.html#memory-interface-files
 | memory.low  | 软保护 | 优先回收其他不受保护的内存	尽力保护重要服务的内存             | Burstable (请求值)            |
 | memory.high | 软限制 | 节流进程，触发异步内存回收	缓冲压力，避免 OOM                 | Burstable (限制值)            |
 | memory.max  | 硬限制 | 触发 OOM Killer，强制限制内存使用上限                              | Guaranteed/Burstable (限制值) |
+
+
+## cgroup kmem
+
+是的，kmem 仍计入 cgroup 的内存统计和限制，但接口已经统一化。
+
+- cgroup v2：
+    - kmem 计入 memory.current
+    - 受 memory.high / memory.max 限制
+    - 在 memory.stat 中显示为 kernel
+    - 细分包括 kernel_stack、pagetables、percpu、sock、vmalloc、slab_reclaimable、slab_unreclaimable 等
+
+当前源码中，kmem 分配先通过 try_charge_memcg() 计入统一的 memory page counter，
+再更新 MEMCG_KMEM 统计：mm/memcontrol.c:2849。
+
+需要区分：
+
+- memory.stat:kernel 是 kmem 总量。
+- slab、pagetables 等是它的组成部分，不能再和 kernel 相加。
+- 如果启动参数带有 cgroup.memory=nokmem，则不会进行 kmem accounting。
+
+观察的方法
+```txt
+cd /sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice
+grep -E '^(kernel|kernel_stack|pagetables|percpu|sock|vmalloc|slab)' ./memory.stat
+
+kernel 4802588672
+kernel_stack 60817408
+pagetables 222142464
+percpu 14808904
+sock 499712
+vmalloc 921600
+slab_reclaimable 4283794776
+slab_unreclaimable 180386512
+slab 4464181288
+```
+
+### 开启之后的效果 : kimi 总结
+(也算是相当精确了吧)
+
+memcg_online_kmem() 创建的 objcg 本身只是一个“记账桶”，真正的统计能力来自内核在 kmalloc/slab 分配路径 上预埋的 hook。开启 kmem
+accounting 后，这些 hook 被激活，每次分配/释放都会把对应的 objcg 找到并做 charge/uncharge。
+
+1. 全局开关：memcg_kmem_online_key
+
+创建第一个非 root 的 objcg 时：
+
+```c
+  static_branch_enable(&memcg_kmem_online_key);
+```
+
+这会打开一个 static branch（jump label），让 fast path 中的检查几乎没有开销：
+
+```c
+  // include/linux/memcontrol.h
+  static inline bool memcg_kmem_online(void)
+  {
+      return static_branch_likely(&memcg_kmem_online_key);
+  }
+```
+
+只有至少一个 cgroup 启用了 kmem，这个分支才为 true；否则分配路径直接跳过所有 kmem 记账逻辑。
+
+2. 分配路径上的 hook
+
+在 SLUB（mm/slub.c）中，每次 kmem_cache_alloc() / kmalloc() 返回对象后都会调用：
+
+```c
+  static bool memcg_slab_post_alloc_hook(struct kmem_cache *s, struct list_lru *lru,
+                                         gfp_t flags, size_t size, void **p)
+  {
+      if (likely(!memcg_kmem_online()))        // 没开 kmem，直接返回
+          return true;
+
+      if (likely(!(flags & __GFP_ACCOUNT) && !(s->flags & SLAB_ACCOUNT)))
+          return true;                         // 非记账对象，跳过
+
+      if (likely(__memcg_slab_post_alloc_hook(s, lru, flags, size, p)))
+          return true;
+      ...
+  }
+```
+
+• SLAB_ACCOUNT：创建 kmem_cache 时如果允许 memcg 记账，会带上这个 flag。
+• __GFP_ACCOUNT：分配时显式要求记账（如 kvmalloc_node(..., GFP_KERNEL_ACCOUNT)）。
+
+3. 如何找到当前任务对应的 objcg
+
+进入实际记账函数 __memcg_slab_post_alloc_hook() 后：
+
+```c
+  // mm/memcontrol.c
+  objcg = current_obj_cgroup();
+```
+
+current_obj_cgroup() 的查找顺序是：
+
+1. 进程显式设置的 current->active_memcg（set_active_memcg() 作用域）；
+2. 否则取 current->objcg，即当前 task 所属 cgroup 对应的 objcg；
+3. 中断上下文看 this_cpu_read(int_active_memcg)。
+
+如果当前任务不在任何非 root memcg 里，objcg 为 NULL，就不记账。
+
+4. charge 的过程
+
+拿到 objcg 后，对分配对象做 charge：
+
+```c
+  // mm/memcontrol.c
+  if (obj_cgroup_charge_account(objcg, flags, obj_full_size(s),
+                                slab_pgdat(slab), cache_vmstat_idx(s)))
+      return false;
+
+  obj_cgroup_get(objcg);
+  obj_ext->objcg = objcg;   // 把 objcg 指针存到对象的 obj_ext 中
+```
+
+obj_cgroup_charge_account() 最终调用：
+
+```c
+  obj_cgroup_charge_pages(objcg, gfp, nr_pages)
+    -> try_charge_memcg(memcg, gfp, nr_pages)   // 增加 memcg 的 page counter
+    -> account_kmem_nmi_safe(memcg, nr_pages)   // 计入 kmem 统计
+```
+
+也就是说，objcg 只是个代理，真正的计数器仍然在它所属的 mem_cgroup 里。
+
+5. 释放时如何 uncharge
+
+释放对象时，SLUB 调用 memcg_slab_free_hook()，从对象的 obj_ext 中读出之前保存的 objcg，然后：
+
+```c
+  obj_cgroup_uncharge(objcg, size);
+```
+
+最终把对应 page counter 减回去。
+
+6. 大块内存 / 非 slab 路径
+
+除了 slab，内核还在其他会分配内核内存的地方插了同样的 hook：
+
+- `__memcg_kmem_charge_page()`：用于直接分配 page 的路径（如 vm_area 的 pages、alloc_pages 且带 __GFP_ACCOUNT）；
+- obj_cgroup_charge() / obj_cgroup_uncharge()：percpu 分配、zswap 后端内存等；
+- memcg_kmem_charge_page() 是带 static branch 检查的外部入口。
+
+这些路径共同点是：先调 current_obj_cgroup() 拿到 objcg，再调 obj_cgroup_charge_pages() 或 obj_cgroup_charge() 把账记到对应
+memcg。
+
+一句话总结
+
+> memcg_online_kmem() 本身不“统计”任何东西；它只是为 cgroup 创建并发布了一个 obj_cgroup。真正让统计生效的是：它打开了全局 static
+> branch，使得 slab/page/percpu/zswap 等内核分配路径上的 hook 开始工作，这些 hook 通过 current_obj_cgroup() 拿到
+> objcg，再把它换算成所属 mem_cgroup 的 page counter 增减。
+
+
+### kmem hard limit 的衰落
+
+kmem 统计虽然加入了，但 memory.kmem.limit_in_bytes 这个硬限制后来被证明问题很多：
+
+• 很多 kernel memory 是 non-reclaimable 的，超出 limit 后系统无法 shrink 下去；
+• 容易导致意外的 OOM 或 slab_out_of_memory；
+• 实际用途有限。
+
+所以：
+
+• Linux 5.4：kmem.limit_in_bytes is deprecated and will be removed；
+• Linux 5.16 左右：kmem hard limit 的实际限制逻辑被移除；
+• 后来为了兼容老用户态软件，文件保留但写入变成 no-op。
+
+### 总结，就是 kmem 升高还是会导致 oom 的
+
+## shmem 的归属问题
+<!-- f3c6e2ec-e489-4a8d-95e8-097dc8c52b22 -->
+
+mem_cgroup_charge 用来将 folio 归属到哪一个 cgroup ，所以看其调用地方就可以知道了
+```c
+static inline int mem_cgroup_charge(struct folio *folio, struct mm_struct *mm,
+				    gfp_t gfp)
+{
+	if (mem_cgroup_disabled())
+		return 0;
+	return __mem_cgroup_charge(folio, mm, gfp);
+}
+```
+
+和记忆中的一样，什么时候 folio 被分配出来，那么这个 folio 就归属于谁。
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

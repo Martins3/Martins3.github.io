@@ -1,12 +1,22 @@
-## gcc atomic
+# gcc atomic
+<!-- 7c0fd731-df99-4225-95ba-fe6a30ca9510 -->
 
-其实内容并不多:
-https://gcc.gnu.org/onlinedocs/gcc/_005f_005fatomic-Builtins.html
-
-此外，clang 会有不同吗? clang 的文档在哪里，我猜测应该都是一样的吧
+- [gcc](https://gcc.gnu.org/onlinedocs/gcc/_005f_005fatomic-Builtins.html)
+- [clang](https://clang.llvm.org/docs/LanguageExtensions.html#atomic-builtins)
 
 ## __atomic_compare_exchange_n
 <!-- 9bbff50c-0a87-45d4-9e37-a3e426f1ec06 -->
+
+```c
+  bool __atomic_compare_exchange_n(
+      type *ptr,
+      type *expected,
+      type desired,
+      bool weak,
+      int success_memorder,
+      int failure_memorder
+  );
+```
 
 一直在使用这个函数，但是没搞懂这里的几个参数都是做什么的，这里问了一下 codex ，回答应该是非常正确的:
 还有一些疑问这个到底是如何实现的，但是暂时先这样了:
@@ -22,16 +32,6 @@ If desired is written into *ptr then true is returned and memory is affected acc
 ```
 
 
-```c
-  bool __atomic_compare_exchange_n(
-      type *ptr,
-      type *expected,
-      type desired,
-      bool weak,
-      int success_memorder,
-      int failure_memorder
-  );
-```
 核心语义：
 1. 比较 *ptr 和 *expected
 2. 如果相等：
@@ -42,7 +42,7 @@ If desired is written into *ptr then true is returned and memory is affected acc
     - 把当前 *ptr 的值回写到 *expected
     - 返回 false
 
-**weak**
+### weak 参数
 
 - weak = false：强 CAS
     - 只有在 *ptr != *expected 时才会失败
@@ -53,14 +53,28 @@ If desired is written into *ptr then true is returned and memory is affected acc
 
 典型理解：
 
+```c
 do {
     expected = old;
-} while (!__atomic_compare_exchange_n(&x, &expected, new,
-                                      true, ...));
+} while (!__atomic_compare_exchange_n(&x, &expected, new, true, ...));
+```
 
 这里用 weak=true 很常见，因为失败了就继续重试。
 
+这里举一个例子说明下，什么时候 weak 不可以为 false:
 
+
+例如，这里仅仅可以执行 release 业务一次，那么如何才可以:
+```c
+	if (!__atomic_compare_exchange_n(&vi->release, &expected, 1, false,
+					 __ATOMIC_ACQ_REL, __ATOMIC_RELAXED))
+		return;
+	// do the release
+```
+如果 weak = true ，如果出现 “无缘无故失败” ，那么就会放弃了通知
+
+
+### memorder
 **success_memorder**
 
 这个表示：
@@ -104,6 +118,9 @@ do {
   - success = __ATOMIC_ACQ_REL, failure = __ATOMIC_ACQUIRE
   - success = __ATOMIC_SEQ_CST, failure = __ATOMIC_SEQ_CST
 ```
+
+## 细节
+`__atomic_exchange_n` 和 `__atomic_compare_exchange_n`
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

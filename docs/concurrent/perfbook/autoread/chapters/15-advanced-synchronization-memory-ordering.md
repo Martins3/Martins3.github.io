@@ -11,8 +11,6 @@
 3. **陷阱与技巧** (Tricks and Traps)：通过大量 litmus test 展示反直觉的硬件行为，包括变量同时具有多个值、各类重排序、地址/数据/控制依赖等。
 4. **高层原语与硬件细节** (Higher-Level Primitives / Hardware Specifics)：讨论锁、RCU、内存分配器等高层原语背后的内存序语义，以及 x86/ARM/PowerPC 等架构的具体实现差异。
 
----
-
 ## 2. 核心概念详解
 
 ### 2.1 Store Buffer 与内存乱序的根源
@@ -24,7 +22,7 @@
 ```
 CPU 0                      CPU 1
 x0 = 2;                    x1 = 2;
-r2 = x1;  // may read 0   r2 = x0;  // may read 0
+r2 = x1;  // may read 0    r2 = x0;  // may read 0
 ```
 
 在 x86 上，即使该架构被称为"强序模型"(TSO)，上述两个 load 同时读到 0 的情况仍然是允许的。本章给出的测试数据显示，在一亿次试验中，这种反直觉的结果出现了 314 次。本章附带的 `store_buffering.c` 在本机测试中也验证了这一点：100 万次迭代中触发了 3 次（触发率约 0.0003%）。
@@ -34,7 +32,8 @@ r2 = x1;  // may read 0   r2 = x0;  // may read 0
 ### 2.2 Linux 内核内存排序速查表 (memory model api)
 <!-- 94f3dc41-062d-40fe-a69e-49adcb89e9f3 -->
 
-本章提供了一个极为重要的速查表 (Linux-Kernel Memory-Ordering Cheat Sheet)，总结了各类原语提供的排序保证。对日常编程最有价值的几行如下：
+本章提供了一个极为重要的速查表 (Linux-Kernel Memory-Ordering Cheat Sheet)，总结了各类原语提供的排序保证。
+对日常编程最有价值的几行如下：
 
 | 原语                  | 对之前操作排序 | 对之后操作排序 | 备注                             |
 |-----------------------|----------------|----------------|----------------------------------|
@@ -51,7 +50,12 @@ r2 = x1;  // may read 0   r2 = x0;  // may read 0
 我这里解释说明一下，其中 smp_store_release() 和 smp_load_acquire() 语义是最清晰的，
 也就是单向的，只有读或者写。
 
-这张表是理解内核并发代码的基石。例如，为什么 `atomic_inc()` 不提供任何排序？因为它属于 void RMW。为什么 `atomic_add_return()` 提供全序？因为它有返回值，内核要求其成功时必须具备完整屏障语义。
+这张表是理解内核并发代码的基石。例如，为什么 `atomic_inc()` 不提供任何排序？因为它属于 void RMW。
+为什么 `atomic_add_return()` 提供全序？因为它有返回值，内核要求其成功时必须具备完整屏障语义。
+
+2026-07-12 : 我这里有几个疑问，到时候可以为什么有这些疑惑:
+1. smp_store_release() 有参数吗? 按照 store release 的语义，为什么不是 sotre -> store 就可以，还需要排序前面的 load ?
+2. atomic RMW 是否提供 memory model 顺序，为什么关键差别在于是否有返回值?
 
 ### 2.3 经验法则 (Rules of Thumb)
 

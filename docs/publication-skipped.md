@@ -2,7 +2,7 @@
 
 由 `docs/pub/sync-blog.py` 生成。
 
-跳过文件数: 418
+跳过文件数: 403
 
 ## 发布策略跳过: draft 目录
 
@@ -15,6 +15,7 @@
 - `docs/ai-tools/lsp.md`
 - `docs/ai-tools/misc.md`
 - `docs/ai-tools/skills.md`
+- `docs/ai-tools/tools/agents.md`
 - `docs/ai-tools/tools/brower.md`
 - `docs/ai-tools/tools/mcp.md`
 - `docs/ai-tools/tools/misc.md`
@@ -30,26 +31,24 @@
 - `docs/captive/generator.md`
 - `docs/captive/gensim.md`
 - `docs/chatter/provocation/beijing.md`
-- `docs/chatter/provocation/xiaohongshu.md`
 - `docs/chatter/provocation/year-1.md`
 - `docs/chatter/provocation/year-2.md`
 - `docs/chatter/provocation/year-3.md`
 - `docs/chatter/provocation/year-4.md`
-- `docs/chores/badminton.md`
+- `docs/chores/books.md`
 - `docs/chores/car.md`
 - `docs/chores/dress-up.md`
 - `docs/chores/emergency-medical-care.md`
 - `docs/chores/financial.md`
 - `docs/chores/guitar.md`
 - `docs/chores/handicrafts.md`
-- `docs/chores/hiking.md`
-- `docs/chores/law.md`
 - `docs/chores/medical.md`
 - `docs/chores/misc.md`
 - `docs/chores/movies.md`
 - `docs/chores/music.md`
 - `docs/chores/photo-workflow.md`
 - `docs/chores/photo.md`
+- `docs/chores/sports.md`
 - `docs/chores/travel/why.md`
 - `docs/concurrent/kernel/qa/qa-1.md`
 - `docs/concurrent/kernel/qa/qa-10.md`
@@ -116,6 +115,7 @@
 
 ## 发布策略跳过: math 目录仅发布 PDF
 
+- `docs/math/AGENTS.md`
 - `docs/math/auto.dr.can.md`
 - `docs/math/auto.md`
 - `docs/math/linear-algebra.md`
@@ -124,9 +124,9 @@
 
 ## 发布策略跳过: todo.md 或 wip*
 
+- `collei/todo.md`
 - `docs/acpi/todo.md`
 - `docs/ai-tools/todo.md`
-- `docs/ai-tools/tools/agents.md`
 - `docs/blog/anki-todo.md`
 - `docs/concurrent/kernel/todo-usage.md`
 - `docs/concurrent/kernel/todo.md`
@@ -134,23 +134,26 @@
 - `docs/concurrent/perfbook/autoread/chapters/02-introduction/todo-linux-kernel.md`
 - `docs/concurrent/perfbook/autoread/chapters/02-introduction/todo-questions.md`
 - `docs/concurrent/rcu/todo-1.md`
+- `docs/concurrent/san/todo.md`
 - `docs/concurrent/todo.md`
 - `docs/hw/todo.md`
 - `docs/kernel/blk/mq/mq-todo.md`
 - `docs/kernel/blk/raid/not-todo.md`
 - `docs/kernel/blk/raid/todo.md`
 - `docs/kernel/blk/scsi/todo.md`
+- `docs/kernel/blk/todo.2.md`
 - `docs/kernel/blk/todo.md`
+- `docs/kernel/blk/wip-block-debug.md`
 - `docs/kernel/cgroup/todo.md`
 - `docs/kernel/cpuinfo/todo.md`
+- `docs/kernel/fs/ext4/jbd2-todo.md`
 - `docs/kernel/fs/nfs/todo.md`
 - `docs/kernel/fs/not-todo.md`
 - `docs/kernel/fs/overview-todo.md`
-- `docs/kernel/fs/simplefs/todo.md`
 - `docs/kernel/fs/todo-later.md`
 - `docs/kernel/fs/todo.2.md`
 - `docs/kernel/fs/todo.md`
-- `docs/kernel/fs/wip-refcount.md`
+- `docs/kernel/iommu/todo.md`
 - `docs/kernel/iouring/todo.md`
 - `docs/kernel/irq/not-todo.md`
 - `docs/kernel/irq/todo.md`
@@ -160,6 +163,7 @@
 - `docs/kernel/mm/mm-vmscan.todo.md`
 - `docs/kernel/mm/slub/todo-2.md`
 - `docs/kernel/mm/slub/todo.md`
+- `docs/kernel/mm/todo-pgtable.md`
 - `docs/kernel/module/todo.md`
 - `docs/kernel/sched/todo-2.md`
 - `docs/kernel/sched/todo-3.md`
@@ -172,7 +176,7 @@
 - `docs/kernel/tty/tty2-todo.md`
 - `docs/kernel/tty/tty3-todo.md`
 - `docs/kernel/tutorial/crash/pstore-todo.md`
-- `docs/kernel/tutorial/drgn/drgn_analysis/setup-todo.md`
+- `docs/kernel/tutorial/drgn/todo.sh`
 - `docs/kernel/tutorial/initramfs/todo.md`
 - `docs/kernel/vfio/int-todo.md`
 - `docs/kernel/vfio/todo.md`
@@ -186,11 +190,11 @@
 - `docs/kernel/wip-smt.md`
 - `docs/kernel/wip-statistic-bat.md`
 - `docs/kernel/wip-storage-blk.md`
-- `docs/kernel/wip-zero-copy.md`
+- `docs/kernel/zero-zopy/todo.md`
+- `docs/kvm/mmu/todo.2.md`
 - `docs/kvm/mmu/todo.md`
 - `docs/kvm/todo.md`
 - `docs/kvm/wip-kvm-init-ops.md`
-- `docs/math/AGENTS.md`
 - `docs/math/todo-llm.md`
 - `docs/math/todo.md`
 - `docs/net/net-todo.md`
@@ -205,7 +209,6 @@
 - `docs/qemu/thread/todo.md`
 - `docs/qemu/todo.md`
 - `docs/qemu/wolf-book-todo.md`
-- `docs/rust/demo/AGENTS.md`
 - `docs/tools/todo.md`
 - `docs/trace/ebpf/todo.md`
 - `docs/trace/ebpf-doc/todo.md`
@@ -217,6 +220,7 @@
 
 ## 发布策略跳过: 同目录存在 README.md
 
+- `docs/asm/assembly.md`
 - `docs/concurrent/lkmm/zh-cn/README.summary.md`
 - `docs/concurrent/lkmm/zh-cn/README.translation.md`
 - `docs/concurrent/lkmm/zh-cn/access-marking.summary.md`
@@ -246,12 +250,6 @@
 - `docs/cool.md`
 - `docs/kernel/blk/ds/ceph.md`
 - `docs/kernel/fs/nfs/user-nfsd/usage.md`
-- `docs/kernel/fs/simplefs/env.md`
-- `docs/kernel/fs/simplefs/journal.md`
-- `docs/kernel/fs/simplefs/learn.md`
-- `docs/kernel/fs/simplefs/status-1.md`
-- `docs/kernel/fs/simplefs/status-2.md`
-- `docs/kernel/fs/simplefs/using-ai.md`
 - `docs/kernel/module/README-kvm.md`
 - `docs/kernel/module/README-localmodconfig.md`
 - `docs/kernel/module/conf.md`
@@ -296,6 +294,7 @@
 - `docs/net/vxlan-demo/vxlan-fdb-deep-dive.md`
 - `docs/net/vxlan-demo/why-bridge.md`
 - `docs/readme.draft.md`
+- `docs/rust/demo/AGENTS.md`
 - `docs/rust/demo/ai.test.md`
 - `docs/sys-software-developer.md`
 - `docs/trace/ebpf/bootstrap.md`
@@ -315,22 +314,6 @@
 
 - `docs/ai-tools/vendor.md`
 - `docs/chatter/job.md`
-- `docs/kernel/iommu/aarch64.md`
-- `docs/kernel/iommu/amd.md`
-- `docs/kernel/iommu/auxd.md`
-- `docs/kernel/iommu/debug.txt.md`
-- `docs/kernel/iommu/debugfs.md`
-- `docs/kernel/iommu/dma.md`
-- `docs/kernel/iommu/doc.md`
-- `docs/kernel/iommu/intel.md`
-- `docs/kernel/iommu/iommufd.md`
-- `docs/kernel/iommu/overview.md`
-- `docs/kernel/iommu/pasid.md`
-- `docs/kernel/iommu/pt.md`
-- `docs/kernel/iommu/siov.md`
-- `docs/kernel/iommu/swiotlb.md`
-- `docs/kernel/iommu/todo.md`
-- `docs/kernel/iommu/viommu.md`
 - `docs/kernel/ipmi/ipmi.md`
 - `docs/kernel/power/aarch64.md`
 - `docs/kernel/power/acpi_pad.md`
@@ -355,10 +338,11 @@
 - `docs/kernel/security/fips/fips.md`
 - `docs/kernel/time/85ns.md`
 - `docs/kernel/time/basic.md`
-- `docs/kernel/time/calibraction.md`
 - `docs/kernel/time/clockevent.md`
 - `docs/kernel/time/clocksource.md`
+- `docs/kernel/time/code/README.md`
 - `docs/kernel/time/debug-3.md`
+- `docs/kernel/time/done/calibraction.md`
 - `docs/kernel/time/jiffies.md`
 - `docs/kernel/time/kmod-timer.md`
 - `docs/kernel/time/kvm-nested.md`
@@ -407,6 +391,7 @@
 - `docs/kernel/time/timer.qemu.md`
 - `docs/kernel/time/timer.timekeeping.md`
 - `docs/kernel/time/timer.todo.md`
+- `docs/kernel/time/todo.md`
 - `docs/kernel/time/watchdog-2.md`
 - `docs/kernel/time/watchdog.md`
 - `docs/kernel/time/yes-we-know.md`

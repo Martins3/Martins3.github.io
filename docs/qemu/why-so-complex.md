@@ -263,17 +263,6 @@ nullb0          254:0    0   250G  0 disk
 nvme0n1         259:0    0 953.9G  0 disk
 ```
 
-发现存在这个问题，但是没关系，不用直通也有
-```txt
-qemu-system-x86_64: VFIO_MAP_DMA failed: Invalid argument
-qemu-system-x86_64: vfio_container_dma_map(0x555d4815ef40, 0xc000054000, 0x2000, 0x7f4580644000) = -22 (Invalid argument)
-qemu-system-x86_64: VFIO_MAP_DMA failed: Invalid argument
-qemu-system-x86_64: vfio_container_dma_map(0x555d4815ef40, 0xc000057000, 0x1000, 0x7f4580647000) = -22 (Invalid argument)
-qemu-system-x86_64: VFIO_MAP_DMA failed: Invalid argument
-qemu-system-x86_64: vfio_container_dma_map(0x555d4815ef40, 0xc000040000, 0x10000 , 0x7f4580520000) = -22 (Invalid argument)
-qemu-system-x86_64: vfio-pci: Cannot read device rom at 0000:02:00.0
-```
-
 ## 如何解决
 1. async io 模型 : 解决高效模拟的基础，使用 epoll 机制来监听 Guest 事件，然后提交给后端，当后端完成后，注入通知到 Guest 中
 2. qom / qdev : 如何让成千上万的设备

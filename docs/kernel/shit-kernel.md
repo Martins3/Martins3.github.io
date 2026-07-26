@@ -1,5 +1,8 @@
 # 内核屎山评选
 
+1. raid 模块 : 如果不是华为的工程师在不断的优化，真的没法看，太痛苦了
+2. hba 卡驱动 : 如果对比 nvme
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

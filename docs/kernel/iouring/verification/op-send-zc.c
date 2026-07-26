@@ -16,7 +16,6 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <liburing.h>
-#include <errno.h>
 #include <signal.h>
 #include <sys/wait.h>
 

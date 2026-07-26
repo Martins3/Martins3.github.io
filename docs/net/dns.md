@@ -92,6 +92,9 @@ https://serverfault.com/questions/848442/how-to-remove-dnssec-support-from-a-dom
 
 是如何和 systemd-resolve --status 沟通的
 
+## 工具
+https://github.com/514-labs/dnsglobe
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

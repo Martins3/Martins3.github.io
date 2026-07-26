@@ -1,0 +1,108 @@
+dma_coherent 不是 “IOMMU 会不会处理 cache”，而是 “这个设备发起 DMA 时，是否和 CPU cache 硬件一致”。IOMMU 主要管 IOVA 到 PA 的翻译和设备侧访问属性；CPU
+cache 的 clean/invalidate 仍然由 DMA API 的 map/unmap/sync 路径根据 dev->dma_coherent 决定。
+
+按你文档从上到下看：
+
+1. dma_unmap_page_attrs()
+
+当前树里它只是转到 dma_unmap_phys()，然后分三类：
+
+- direct DMA: dma_direct_unmap_phys()
+- generic IOMMU DMA: iommu_dma_unmap_phys()
+- 特殊 dma_map_ops: ops->unmap_phys()
+
+对应源码在 /home/martins3/data/kernel/linux/kernel/dma/mapping.c:211。所以常规路径不是“谁注册了 unmap_page”，而是 DMA core 根据设备是否 direct、是否使
+用 generic IOMMU 来分派。
+
+2. arch_setup_dma_ops() 是否合理
+
+合理。ARM64 的实现就是把固件/平台判断出的 coherence 写到 dev->dma_coherent：
+
+/home/martins3/data/kernel/linux/arch/arm64/mm/dma-mapping.c:41
+
+dev->dma_coherent = coherent;
+
+后面所有 streaming DMA 同步点都会看它。ARM64 上非 coherent 设备的同步动作也很直接：
+
+- 给 device 前：arch_sync_dma_for_device() 做 dcache clean
+- 给 CPU 前：arch_sync_dma_for_cpu() 对非 DMA_TO_DEVICE 做 dcache invalidate
+
+见 /home/martins3/data/kernel/linux/arch/arm64/mm/dma-mapping.c:15。
+
+3. coherent 属性从哪来
+
+DT 路径：
+
+- dma-coherent 表示设备 DMA coherent
+- dma-noncoherent 表示非 coherent
+- 如果都没有，就用平台默认值 dma_default_coherent
+
+见 /home/martins3/data/kernel/linux/drivers/of/address.c:999。
+
+然后 of_dma_configure_id() 先解析 coherent，再配置 IOMMU，最后 arch_setup_dma_ops(dev, coherent)，见 /home/martins3/data/kernel/linux/drivers/of/
+device.c:148。
+
+ACPI 路径：
+
+- _CCA 决定设备是否 cache coherent
+- acpi_dma_configure_id() 先 acpi_iommu_configure_id()，再 arch_setup_dma_ops(dev, attr == DEV_DMA_COHERENT)
+
+见 /home/martins3/data/kernel/linux/drivers/acpi/scan.c:1657 和 /home/martins3/data/kernel/linux/drivers/acpi/scan.c:1684。
+
+4. “为什么不是都放到 IOMMU 中间”
+
+因为 IOMMU 不能替 CPU 清 cache。
+
+非 coherent 的根本问题是：CPU private cache 里可能有 dirty/stale cacheline，而设备 DMA 读写的是内存或系统互联上的可见点。IOMMU 看到的是设备侧 DMA
+transaction，它不知道 CPU L1/L2 里有什么，也不能替 CPU invalidate 某段 cache。
+
+所以 IOMMU 路径也照样做 cache 维护：
+
+/home/martins3/data/kernel/linux/drivers/iommu/dma-iommu.c:1217
+
+- map 给设备前，如果 !coherent，调用 arch_sync_dma_for_device()
+- unmap 给 CPU 前，如果 !dev_is_dma_coherent(dev)，调用 arch_sync_dma_for_cpu()
+
+见 /home/martins3/data/kernel/linux/drivers/iommu/dma-iommu.c:1241 和 /home/martins3/data/kernel/linux/drivers/iommu/dma-iommu.c:1267。
+
+5. IOMMU 到底处理了什么 coherence
+
+IOMMU 处理的是设备侧页表属性。dma_info_to_prot() 会把 coherent 设备映射成 IOMMU_CACHE：
+
+/home/martins3/data/kernel/linux/drivers/iommu/dma-iommu.c:727
+
+prot = coherent ? IOMMU_CACHE : 0;
+
+这会影响 ARM io-pgtable 里的 memory attribute/shareability，例如 cacheable、inner-shareable 等。但这只是告诉 IOMMU/互联“设备访问这段 IOVA 时用什么事务
+属性”，不是 CPU cache maintenance 的替代品。
+
+所以准确说：
+
+- dev->dma_coherent = true: 设备 DMA 和 CPU cache 硬件一致，通常不需要 DMA API 做 clean/invalidate。
+- IOMMU_CACHE: IOMMU 页表允许/要求设备侧用 coherent/cacheable 事务属性。
+- 两者相关，但不是同一层东西。
+
+6. 你在 Mac 上看到 arch_sync_dma_for_cpu
+
+这说明对应设备被内核认为是 non-coherent，或者该 DMA 地址需要同步。USB、brcmf 这种栈在 RX 完成后 unmap/sync 给 CPU，走到 arch_sync_dma_for_cpu() 很正
+常：设备刚写完内存，CPU 准备读，需要 invalidate CPU 可能已有的 stale cacheline。
+
+7. VDUSE / virtio 那段
+
+你文档里 “谁注册这个 unmap_page？drivers/vdpa/vdpa_user/vduse_dev.c” 这里要区分：
+
+VDUSE 的 unmap_page 是 struct virtio_map_ops，不是全局 struct dma_map_ops。见 /home/martins3/data/kernel/linux/drivers/vdpa/vdpa_user/
+vduse_dev.c:1043。
+
+virtio 把 need-sync 暴露出来：
+
+/home/martins3/data/kernel/linux/drivers/virtio/virtio_ring.c:3860
+
+没有自定义 map ops 时，它最终调用 dma_need_sync()；需要时再调用 dma_sync_single_range_for_cpu()，见 /home/martins3/data/kernel/linux/drivers/virtio/
+virtio_ring.c:3887。
+
+所以不是“只有 virtio-net 需要考虑 coherence”，而是多数 virtio 驱动用普通 map/unmap 生命周期就够了；像 virtio-net 这种高性能路径可能长期持有/reuse
+buffer，不能每次都 unmap，于是需要显式 sync。
+
+一句话总结：dma-coherent 描述设备硬件是否参与 CPU cache coherency；DMA API 根据它决定是否在 ownership 切换时 clean/invalidate；IOMMU 只补充地址翻译和设
+备侧 cache/shareability 属性，不能替代 CPU cache 维护。

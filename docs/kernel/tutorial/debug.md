@@ -1,10 +1,5 @@
 # 使用 kernel 中调试工具
 
-## KASAN
-- https://www.kernel.org/doc/html/latest/dev-tools/kasan.html
-- https://github.com/google/kernel-sanitizers
-  - KTSAN 是什么？
-
 ## KASLR
 
 ```c
@@ -41,31 +36,6 @@
 
 page owner is for the tracking about who allocated each page.
 
-#### KASAN
-Finding places where the kernel accesses memory that it shouldn't is the goal for the kernel address sanitizer (KASan).
-
-分析下如下的 config 是做啥的
-```txt
-CONFIG_CONSTRUCTORS=y
-CONFIG_GENERIC_CSUM=y
-CONFIG_KASAN_SHADOW_OFFSET=0xdffffc0000000000
-CONFIG_STACKDEPOT_ALWAYS_INIT=y
-CONFIG_KASAN=y
-CONFIG_KASAN_GENERIC=y
-CONFIG_KASAN_OUTLINE=y
-# CONFIG_KASAN_INLINE is not set
-CONFIG_KASAN_STACK=y
-# CONFIG_KASAN_VMALLOC is not set
-# CONFIG_KASAN_MODULE_TEST is not set
-
-# 分析下 CONFIG_VMAP_STACK=y 是做什么的
-# 打开 KASAN 之后，这个选项就消失了
-```
-
-
-#### kmemleak
-Kmemleak provides a way of detecting possible kernel memory leaks in a way similar to a tracing garbage collector, with the difference that the orphan objects are not freed but only reported via /sys/kernel/debug/kmemleak. [^18]
-
 
 # Kernel 调试
 
@@ -90,11 +60,6 @@ EXPORT_SYMBOL(dump_page);
 ```
 
 > 以后再去慢慢跟踪吧!
-
-## KCSAN
-
-检查下这个 commit，了解下 KCSAN 的原理
-b95273f1272398a9f7145de37703f1930244e465
 
 ## kernel hacking
 

@@ -1,4 +1,5 @@
-# ext4 文档
+# ext4 实现原理
+
 ## 内部文档
 https://docs.kernel.org/filesystems/ext4/
 
@@ -277,6 +278,38 @@ Cluster size:             65536
 - https://mp.weixin.qq.com/s/TbDV-Cd2Ohxqr2qY6Oct4w
 - https://mp.weixin.qq.com/s/QgV2LCLEalLDzurU4rqKoA
 - https://mp.weixin.qq.com/s/BBHRZysRzMSD9EM3mVXxKQ
+- https://ext4.wiki.kernel.org/index.php/Ext4_Disk_Layout
+- https://ext4.wiki.kernel.org/index.php/Frequently_Asked_Questions
+
+
+问题:
+> boot sector
+> group ? inode table ?
+
+## 有趣
+- Visualizing Ext4
+  - https://news.ycombinator.com/item?id=38907821
+
+> 主要扩展
+1. Delayed allocation
+2. extents
+3. multiblock
+
+> simple 从 database 的角度看 linux io stack
+https://www.postgresql.eu/events/fosdem2019/sessions/session/2346/slides/159/fosdem_linux_io.pdf
+
+http://oenhan.com/ext4-mballoc
+- 如何理解这里的 buddy
+
+- https://opensource.com/article/17/5/introduction-ext4-filesystem
+
+> In EXT4, data allocation was changed from fixed blocks to extents.
+> An extent is described by its starting and ending place on the hard drive.
+> This makes it possible to describe very long, physically contiguous files in a single inode pointer entry, which can significantly reduce the number of pointers required to describe the location of all the data in larger files.
+>
+> EXT4 reduces fragmentation by scattering newly created files across the disk so that they are not bunched up in one location at the beginning of the disk, as many early PC filesystems did.
+>
+> Aside from the actual location of the data on the disk, EXT4 uses functional strategies, such as delayed allocation, to allow the filesystem to collect all the data being written to the disk before allocating space to it. This can improve the likelihood that the data space will be contiguous.
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

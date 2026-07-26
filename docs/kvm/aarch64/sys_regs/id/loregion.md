@@ -1,4 +1,4 @@
-# aarch64 loregion
+# aarch64 LOREGION
 <!-- fd42ff0b-1614-409c-8b9f-e482540326dc -->
 
 偶然发现 sys_reg_descs 中定义了很多类似的:
@@ -143,13 +143,10 @@ arch/arm64/include/asm/el2_setup.h：
 
 进入 EL2 时，如果支持 LORegion，就把 LORC_EL1 写 0，禁用所有 LORegion。这是为了防止上一个阶段遗留的配置影响虚拟机。
 
-────────────────────────────────────────────────────────────────────────────────
-
 一句话总结
 - SYS_LORSA_EL1 是 ARMv8.1 LORegion 特性的“区域起始地址”寄存器。
 - LORegion 是一种“局部内存排序”机制，用 LDLAR/STLLR 指令对指定物理区域做比全局屏障更轻量的排序控制。
 - KVM 不把它暴露给 Guest，所以那一组寄存器统一用 trap_loregion 处理成 UNDEF 或 RAZ/WI。
-
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

@@ -1,4 +1,4 @@
-## aarch64 mpam
+## aarch64 MPAM
 <!-- 09ae7eb8-f063-44fe-ad96-9a167525a425 -->
 
 commit 09e6b306f3ba ("arm64: cpufeature: discover CPU support for MPAM")

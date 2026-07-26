@@ -21,6 +21,17 @@ MRS <Xt>, PMMIR_EL1
 
 例如 SYS_ID_AA64MMFR1_EL1 编码就是 180720
 
+## 内核中通过 sys_id 可以索引到 arm64_ftr_reg 和 sys_reg_desc
+```c
+struct arm64_ftr_reg *regp = get_arm64_ftr_reg(sys_id);
+
+static const struct sys_reg_desc *
+id_to_sys_reg_desc(struct kvm_vcpu *vcpu, u64 id,
+		   const struct sys_reg_desc table[], unsigned int num)
+
+```
+
+
 ## kvm index 编码
 ```c
 struct kvm_one_reg {
@@ -79,7 +90,6 @@ static u64 sys_reg_to_index(const struct sys_reg_desc *reg)
 #define SYS_CTR_EL0                                     sys_reg(3, 3, 0, 0, 1)
 ```
 
-
 ### 常见问题
 面对这个日志，如果找到是哪一个寄存器:
 ```txt
@@ -88,8 +98,6 @@ static u64 sys_reg_to_index(const struct sys_reg_desc *reg)
 ```
 现在看，这个就很容易理解了，直接搜
 arch/arm64/include/generated/asm/sysreg-defs.h 就可以了
-
-
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

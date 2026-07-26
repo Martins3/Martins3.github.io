@@ -19,7 +19,7 @@
 - https://pkgmanage.openeuler.org/Packagemanagement
 
 ## 安装包下载
-- exe:
+- rpm:
   - https://mirrors.aliyun.com/openeuler/openEuler-22.03-LTS/everything/x86_64/Packages/
   - https://repo.openeuler.org/openEuler-25.03/OS/x86_64/Packages/
 - src: https://repo.openeuler.org/openEuler-22.03-LTS/source/Packages/

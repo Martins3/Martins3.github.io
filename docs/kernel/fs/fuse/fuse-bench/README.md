@@ -35,23 +35,35 @@ echo Y | sudo tee /sys/module/fuse/parameters/enable_uring
 启动 daemon：
 
 ```sh
-mkdir -p /tmp/fuse-bench-mnt
-truncate -s 1G /tmp/fuse-bench.img
-./fuse-bench.out --backing /tmp/fuse-bench.img --mountpoint /tmp/fuse-bench-mnt --uring --debug
+mkdir -p /tmp/fuse/bench-mnt
+truncate -s 1G /tmp/fuse/bench.img
+./fuse-bench.out --backing /tmp/fuse/bench.img --mountpoint /tmp/fuse/bench-mnt --uring --debug
 ```
 
 在另一个 shell 中运行 benchmark：
 
 ```sh
-./bench.out --path /tmp/fuse-bench-mnt/file --size 256M --bs 128k --mode rw
-./bench.out --path /tmp/fuse-bench.img --size 256M --bs 128k --mode rw
+# 直接处理文件
+./bench.out --path /tmp/fuse/bench-mnt/file --size 256M --bs 128k --mode rw
+# 通过 fuse 来处理
+./bench.out --path /tmp/fuse/bench.img --size 256M --bs 128k --mode rw
+
+# mmap 的结果
+./bench.out --path /tmp/fuse/bench.img --size 256M --bs 128k --mode mmap
+
+# mmap（先写入，再读取，观察 page cache 行为）
+./bench.out --path /tmp/fuse/bench-mnt/file --size 4M --bs 64k --mode mmap
 ```
 
-第二条命令是直接访问 backing file 的基线。把它和挂载路径的结果对比，可以估算
-FUSE 路径的额外开销。
+利用 `trace-fuse.bt`，用 bpftrace 抓取内核 FUSE page cache 事件：
+```text
+FUSE READPAGES   pid=152908 comm=bench.out async=1
+FUSE READPAGES_END pid=152767 comm=fuse-bench.out err=0
+FUSE WRITEPAGES  pid=152908 comm=bench.out
+```
+
 
 如果 daemon 被中断但没有完成清理，可以手动卸载：
-
 ```sh
 fusermount3 -u -z /tmp/fuse-bench-mnt
 ```
@@ -72,7 +84,7 @@ fusermount3 -u -z /tmp/fuse-bench-mnt
 - `--path FILE`：需要测试的文件。
 - `--size N[k|m|g]`：总读写大小。
 - `--bs N[k|m|g]`：块大小。
-- `--mode read|write|rw`：顺序读、顺序写或读写混合。
+- `--mode read|write|rw|mmap`：顺序读、顺序写、读写混合，或 `mmap`。
 - `--direct`：使用 `O_DIRECT` 打开文件；块大小必须按 4096 字节对齐。
 
 ## TODO

@@ -1,6 +1,60 @@
 # Fedora 使用记录 2026
-## 基本记录
-- ccls 居然被删除了 https://src.fedoraproject.org/rpms/ccls
+
+记录于 2026-04-26 ，总体体验极好，全都是我熟悉的图形界面操作，
+终于不用处理各种奇怪的网络问题，例如配置 ovs / linux bridge，
+随时可以调试 Linux 图形界面。
+
+1. fedora 自己改善了很多
+	- 170% 的放大比例，终于 4k 屏幕可以无痛使用了
+	- steam 上我购买的所有的游戏都可以玩
+2. ai 让一些配置容易起来了
+	- rime-ice 的配置，我之前一直以为我配置对了，但是其实根本没有
+	- nvidia 驱动安装
+4. 微信
+	- 居然可以原生支持，虽然有点点小问题，但是影响很小
+5. nvidia 驱动
+	- 多显示器，多 GPU 都支持的很好
+	- 4k 显示器支持的很好
+6. wine 也变好了很多
+	- https://github.com/Zwhy2025/linux-wxwork
+8. steam
+	- 大多数游戏都是可以玩了
+
+这个机器最开始是安装的 Server 版本，安装图形界面很容易:
+```sh
+sudo -S dnf install -y @gnome-desktop gdm
+sudo -S systemctl enable gdm
+sudo -S systemctl set-default graphical.target
+systemctl is-enabled gdm
+systemctl get-default
+```
+## 企业微信
+基于 https://github.com/TibixDev/winboat
+
+使用起来没有那么丝滑，但是目前这就是最佳解决方案。
+
+## QQ 音乐
+原生支持，我立刻直接充钱，从网易云切换到 QQ 音乐
+
+存在问题:
+- 没有托盘: https://github.com/flathub/com.qq.QQmusic/issues/25
+- 过一段时间就会没有声音
+- 每次关闭都需要重新登录
+
+## 腾讯会议
+已经有官方支持，但是只有 .deb 包
+https://meeting.tencent.com/download/
+
+不过可以通过 flatpak 直接安装:
+```sh
+flatpak install com.tencent.wemeet
+```
+
+2026-06-22 不过不知道为什么，登录的时候老是提示有网络问题
+后面没尝试了。
+
+## 安装杂记
+1. ccls 居然被删除了 https://src.fedoraproject.org/rpms/ccls
 
 1. 字体
 https://www.nerdfonts.com/font-downloads
@@ -54,12 +108,13 @@ sudo dnf copr enable wezfurlong/wezterm-nightly
 sudo dnf install wezterm
 ```
 
+## 切换内核
 3. 切换内核到
 sudo dnf copr enable kwizart/kernel-longterm-5.15 fedora-38-x86_64
 https://copr.fedorainfracloud.org/coprs/kwizart/kernel-longterm-5.15/
 这个方法不好用，还不如直接下载 rpm 来安装的，其实也可以直接用我的经典方法
 
-### 6. flameshot
+## flameshot
 
 Fedora 43 + GNOME Wayland 下，推荐使用 Flatpak 版本:
 
@@ -430,21 +485,16 @@ desktop-file-validate ~/.config/autostart/org.flameshot.Flameshot.desktop
 - Flameshot 自动后台启动
 - 右上角显示 Flameshot icon
 
-#### 注意
+### 注意
 我发现了一个非常有意思的问题，似乎 flameshot 解决之后，然后我发现我机器的 icon 机制变正常了，
 现在微信的 icon 也存在了。
 
 我相信这是一个极为 workaround 的解决办法，使用 systemd 服务来加上 fsnotify
 我的天啊，只有 codex 这种天才才可以想到这么 nb 的方法。
 
-## 最后几个有趣的问题
-1. steam
-2. 企业微信
-3. 腾讯会议
 
-## 清理不需要的 kernel 的方法
-
-似乎没有特别好的办法:
+## 内核管理
+1. 清理不需要的 kernel 的方法，似乎没有特别好的办法:
 ```sh
 current=$(uname -r | sed 's/\.x86_64$//')
 sudo rpm -qa | grep -E '^kernel.*-[0-9]+\.[0-9]+\.[0-9]+' | grep -v "$current"
@@ -452,25 +502,23 @@ sudo rpm -qa | grep -E '^kernel.*-[0-9]+\.[0-9]+\.[0-9]+' | grep -v "$current"
 # 用 dnf 来删除，会自动的解决依赖
 sudo dnf remove "kernel-*-6.19.13-200.fc43.x86_64"
 ```
-## 安装 debuginfo 的基本方法
+
+2. 安装 debuginfo 的基本方法
 
 似乎这两种方法都是可以的，但是我遇到问题，就是不是所有的 kernel 都是满足这个需求的:
 因为 fedora 仓库中只有最新的 kernel 包，所以下次安装的时候，一定需要先安装 debuginfo ，然后继续调试:
-```txt
+```sh
 sudo dnf debuginfo-install kernel-$(uname -m)
 sudo dnf --enablerepo=fedora-debuginfo,updates-debuginfo install kernel-debuginfo-$(uname -r)
 ```
 
-## fedora 安装图形界面
-就是这样，完全可以走通的:
+一般来说，自动管理就可以了:
+```sh
+sudo dnf upgrade kernel
+sudo dnf upgrade kernel-debuginfo
+```
 
-sudo -S dnf install -y @gnome-desktop gdm
-sudo -S systemctl enable gdm
-sudo -S systemctl set-default graphical.target
-systemctl is-enabled gdm
-systemctl get-default
-
-## 打印机
+## 打印机使用
 ```txt
 sudo dnf install -y cups cups-client cups-filters avahi-tools gutenprint-cups system-config-printer
 
@@ -505,25 +553,6 @@ printer FX_ApeosPort_C2560 is idle.  enabled since Wed 17 Jun 2026 08:33:53 AM C
 ```txt
 http://192.168.1.30/home/index.html
 ```
-
-## 2026-04-26 尝试 fedora 的感触
-
-两个原因:
-1. fedora 自己改善了很多
-	- 170% 的放大比例，终于 4k 屏幕可以无痛使用了
-	- steam 上我购买的所有的游戏都可以玩
-2. ai 让一些配置容易起来了
-	- rime-ice 的配置，我之前一直以为我配置对了，但是其实根本没有
-	- nvidia 驱动安装
-3. 社区的进步
-	- wine 的网易云
-	- 微信都是可以直接使用的
-4. 微信
-5. nvidia 驱动
-	- 多显示器，多 GPU 都支持的很好
-	- 4k 显示器支持的很好
-6. wine 也变好了很多
-	- https://github.com/Zwhy2025/linux-wxwork
 
 ## 参考
 https://world.hey.com/dhh/linux-as-the-new-developer-default-at-37signals-ef0823b7

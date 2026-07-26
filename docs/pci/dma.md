@@ -1,13 +1,22 @@
 ## 内核中关于 dma 的几个目录做什么的
 <!-- a5d7b3c3-34a3-4dc1-9090-1c86905e7d93 -->
 
+```txt
+[root@nixos:/sys/kernel/debug]# ls | grep dma
+dma_buf
+dmaengine
+dma_pools
+```
+
 - kernel/dma/
+	- pool.c
 	- swiotlb.c : 老朋友了
 	- dummy.c
 	- debug.c : 看下面小结的分析
 	- direct.c : 这就是当没有 iommu 支持的时候，那么就走到这里
 - drivers/dma-buf/
 - drivers/dma/
+	- dmaengine.c
 - kernel/bpf/dmabuf_iter.c : 就是遍历 dma buf 的，就不用说什么的
 
 
@@ -16,6 +25,8 @@
 - drivers/dma/xilinx/ : 也许我们的真的应该找一个 FPGA 卡，编写程序之后，插到物理机中测试一下
 - drivers/dma/stm32/ : 估计是其中一个很简单的控制器了
 此外，drivers/dma/ 的 idxd 是 intel 的 dsa 加速器
+- nvme 都是需要使用 dma_pool_alloc 的
+
 
 ## 关于 kernel/dma/debug.c 的作用
 <!-- b0b60030-18bd-4d91-b565-2361761235bb -->
@@ -243,6 +254,44 @@ index 21a5d058dab4..bbc423e93122 100644
  		reschedule |= gve_tx_poll(block, -1);
  	if (block->rx)
 ```
+
+## dma pool
+dma_pool_alloc
+
+对应的 sysfs 接口 : /sys/devices/pci0000:00/0000:00:08.0/pools
+
+就是 usb nvme wifi 喜欢用这个，其他都不用的:
+```sh
+for file in "/sys/devices/pci0000:00"/*; do
+	a=${file##*/}
+	lspci -s "$a"
+	cat "$file"/pools || :
+done
+```
+
+解释的很清楚了
+https://stackoverflow.com/questions/60574054/why-do-we-need-dma-pool
+
+```txt
+@[
+        dma_pool_alloc+5
+        nvme_pci_setup_data_prp+233
+        nvme_map_data+1034
+        nvme_prep_rq.part.0+34
+        nvme_queue_rqs+284
+        blk_mq_dispatch_queue_requests+370
+        blk_mq_flush_plug_list+136
+        __blk_flush_plug+274
+        blk_finish_plug+38
+        xfs_buf_delwri_submit_nowait+306
+        xfsaild_push+473
+        xfsaild+216
+        kthread+228
+        ret_from_fork+417
+        ret_from_fork_asm+26
+]: 2
+```
+
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

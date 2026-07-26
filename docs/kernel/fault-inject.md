@@ -236,6 +236,48 @@ https://www.kernel.org/doc/html/latest/admin-guide/device-mapper/dm-flakey.html
 ### fuse 注入
 https://medium.com/@siddontang/use-fuse-to-inject-failure-to-i-o-deb5f2e7800a
 
+
+## qemu : kimi
+
+
+有，但不是一个覆盖所有设备的“统一错误注入框架”。QEMU 按子系统提供多种错误注入机制。
+
+  最成熟的是块设备 blkdebug，可以按 I/O 类型、扇区、次数和状态注入 EIO、ENOSPC 等错误。例如：
+
+```txt
+  # blkdebug.conf
+  [inject-error]
+  event = "read_aio"
+  errno = "5"
+  once = "on"
+
+  qemu-system-x86_64 \
+    -drive if=none,file=blkdebug:blkdebug.conf:test.qcow2,id=disk \
+    -device virtio-blk-pci,drive=disk
+```
+
+  第一次匹配的读请求会返回 EIO。它还支持：
+
+  - 指定 read/write/flush/discard
+  - 指定 sector
+  - 只注入一次
+  - 状态机控制注入时机
+  - 暂停并恢复请求
+  - 当前开发版本还支持延迟完成
+
+  实现和文档见 docs/devel/testing/blkdebug.rst:10、block/blkdebug.c:2。
+
+  其他专用入口包括：
+
+  - PCIe AER：HMP pcie_aer_inject_error，见 hmp-commands.hx:1281
+  - CXL poison、可纠正/不可纠正错误：QMP cxl-inject-*，见 qapi/cxl.json:281
+  - ACPI GHES/CPER：QMP inject-ghes-v2-error，见 qapi/acpi-hest.json:15
+  - NMI：QMP inject-nmi，见 qapi/machine.json:433
+  - 测试代码中还有 NBD fault injector、qtest 设备级故障构造等。
+
+  所以，如果目标是模拟磁盘 I/O 故障，优先使用 blkdebug；如果是 CPU、PCIe、内存/RAS 或设备故障，则需要选择对应的专用机制。
+
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

@@ -1,0 +1,133 @@
+(kimi 的尝试，相当震撼)
+
+好问题。WinBoat 确实带了一个 Electron GUI，但我这次做的事完全不需要它的 GUI，因为它本质上是个“启动器 + 配置面板”，真正干活的就两层：
+
+1. Windows 容器层：dockur/windows 镜像，负责跑 Windows VM。
+2. RDP 连接层：FreeRDP，负责把 Windows 桌面或单个应用拉到你 Linux 这边显示。
+
+Electron GUI 只是帮用户把这两步点按钮完成，并把 RDP
+窗口嵌进一个看起来像本地应用的窗口里。我要验证的是“企业微信能不能在这种架构里跑起来”，所以直接用脚本把它底层做的事情复现了一遍。
+
+我实际做的工作
+
+1. 源码调研（WinBoat 仓库）
+
+把 https://github.com/TibixDev/winboat clone 下来后，看了它的结构：
+
+• src/ 是 Electron + Vue3 前端；
+• go/ 是 Guest Server，跑在 Windows 容器里，提供 HTTP API 让前端调用；
+• docker-compose.yml 是它的 Windows 容器配置；
+• 它最终靠 xfreerdp /app:... 做 RemoteApp 无缝窗口。
+
+结论：核心依赖是 dockur/windows 容器 + FreeRDP RemoteApp。
+
+2. 环境准备（脚本化）
+
+我没有去编译那个 Electron 前端，因为编译报错了（jimp 这个依赖在 Vite 生产构建里导出不正常），而且跟我要验证的问题无关。
+
+我只装了真正需要的东西：
+
+```bash
+  sudo dnf install freerdp freerdp-libs Xvfb x11vnc xdotool ImageMagick
+```
+
+3. 启动 Windows 容器
+
+直接复用 WinBoat 的 docker-compose.yml，把端口改了一下避免冲突：
+
+```yaml
+  name: winboat-test
+  services:
+    windows:
+      image: ghcr.io/dockur/windows:5.16
+      container_name: WinBoatTest
+      environment:
+        VERSION: "11"
+        RAM_SIZE: "8G"
+        CPU_CORES: "4"
+        DISK_SIZE: "64G"
+        USERNAME: "WinBoat"
+        PASSWORD: "WinBoat123"
+      ports:
+        - "127.0.0.1:13389:3389/tcp"
+        - "127.0.0.1:13389:3389/udp"
+      volumes:
+        - "./storage:/storage"
+        - "${HOME}:/shared"
+      devices: ["/dev/kvm"]
+```
+
+然后：
+
+```bash
+  cd ~/data/winboat-test
+  docker compose up -d
+```
+
+等它自动下载镜像、装 Windows、过 OOBE。
+
+4. 准备虚拟显示
+
+因为机器没接显示器，我开了一个 Xvfb 虚拟屏幕，让 FreeRDP 有地方画图：
+
+```bash
+  setsid Xvfb :99 -screen 0 1920x1080x24 >/tmp/xvfb.log 2>&1 &
+  export DISPLAY=:99
+```
+
+顺手也起了 x11vnc，方便从外部看画面。
+
+5. 安装企业微信
+
+容器把宿主机 ${HOME} 挂到了 Windows 里的 \\host.lan\Data。所以直接在 Windows 里执行：
+
+```cmd
+  \\host.lan\Data\data\winboat-test\shared\WeCom_5.0.8.6009.exe /S
+```
+
+静默安装完成。
+
+6. 验证 RDP 启动企业微信
+
+方案 A：完整桌面 RDP（成功）
+
+```bash
+  xfreerdp /v:127.0.0.1:13389 /u:WinBoat /p:WinBoat123 /cert:ignore \
+    /dynamic-resolution /bpp:24 +clipboard
+```
+
+连进去之后，在 Windows 里双击企业微信，二维码界面正常出来。
+
+方案 B：RemoteApp 无缝窗口（失败）
+
+```bash
+  xfreerdp /v:127.0.0.1:13389 /u:WinBoat /p:WinBoat123 /cert:ignore \
+    /app:program:"C:\Program Files (x86)\WXWork\WXWork.exe",name:"WeCom" \
+    /wm-class:winboat-wecom +clipboard
+```
+
+FreeRDP 能连，窗口也能创建，但企业微信内容黑屏、进程没稳住。
+
+为什么不用 Electron GUI
+
+Electron GUI 要做的事和我脚本做的事其实一模一样：
+
+┌────────────────────┬─────────────────────┬───────────────────────────┐
+│ 功能               │ WinBoat GUI         │ 我的脚本                  │
+├────────────────────┼─────────────────────┼───────────────────────────┤
+│ 启动 Windows 容器  │ 点按钮              │ docker compose up -d      │
+├────────────────────┼─────────────────────┼───────────────────────────┤
+│ 显示 RDP 画面      │ 内嵌 xfreerdp 窗口  │ 直接用 xfreerdp           │
+├────────────────────┼─────────────────────┼───────────────────────────┤
+│ 传文件/目录共享    │ 配置 volumes        │ docker-compose.yml 里写死 │
+├────────────────────┼─────────────────────┼───────────────────────────┤
+│ RemoteApp 启动应用 │ 填参数调用 xfreerdp │ 命令行 /app:...           │
+└────────────────────┴─────────────────────┴───────────────────────────┘
+
+GUI 只是把这些命令包装得好看一点。我要验证的是底层能不能跑通，所以直接调命令更快，也更容易定位问题。
+
+现在的结论
+
+• 企业微信可以在 WinBoat 这个架构里跑，但不能用 RemoteApp 无缝模式；
+• 要实际使用，最稳的是完整桌面 RDP，或者在这之上再包一层（比如启动后自动打开企业微信，把 RDP 窗口当应用窗口用）；
+• 如果你想继续按 WinBoat 的思路做，需要解决的是“企业微信在 RemoteApp 下黑屏/退出”这个问题，而不是 Electron GUI 本身。

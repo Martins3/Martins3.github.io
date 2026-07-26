@@ -40,7 +40,7 @@ SL_OUTS := $(SL_SRCS:.cpp=.out)
 
 ALL_OUTS := $(ROOT_OUTS) $(PTHREAD_OUTS) $(AO_OUTS) $(CPPSTD_OUTS) $(ARCH_OUTS) $(TOOLS_OUTS) $(CCIA_OUTS) $(SL_OUTS)
 
-.PHONY: all clean drd hel tsan dis arch-dis
+.PHONY: all clean drd hel dis arch-dis
 
 all: $(ALL_OUTS)
 
@@ -92,10 +92,6 @@ drd: tools/drd.out
 
 hel: tools/drd.out
 	valgrind --tool=helgrind ./tools/drd.out
-
-tsan: tools/drd.out
-	clang -fsanitize=thread -O3 -g tools/drd.c -lpthread -o tools/drd.out
-	./tools/drd.out
 
 dis: cpp-std/memory-model/disassembly/mm-dis.out
 	gdb -quiet cpp-std/memory-model/disassembly/mm-dis.out -ex "disass test_cmp_exchange" -ex "q"

@@ -6,12 +6,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/mman.h>
 #include <unistd.h>
 
 enum bench_mode {
 	MODE_READ,
 	MODE_WRITE,
 	MODE_RW,
+	MODE_MMAP,
 };
 
 struct bench_options {
@@ -25,7 +27,7 @@ struct bench_options {
 static void usage(FILE *out)
 {
 	fprintf(out,
-		"usage: bench.out --path FILE --size N[k|m|g] --bs N[k|m|g] --mode read|write|rw [--direct]\n");
+		"usage: bench.out --path FILE --size N[k|m|g] --bs N[k|m|g] --mode read|write|rw|mmap [--direct]\n");
 }
 
 static int parse_mode(const char *text, enum bench_mode *mode)
@@ -40,6 +42,10 @@ static int parse_mode(const char *text, enum bench_mode *mode)
 	}
 	if (strcmp(text, "rw") == 0) {
 		*mode = MODE_RW;
+		return 0;
+	}
+	if (strcmp(text, "mmap") == 0) {
+		*mode = MODE_MMAP;
 		return 0;
 	}
 	return -1;
@@ -90,6 +96,8 @@ static const char *mode_name(enum bench_mode mode)
 		return "write";
 	case MODE_RW:
 		return "rw";
+	case MODE_MMAP:
+		return "mmap";
 	}
 	return "unknown";
 }
@@ -129,6 +137,41 @@ static int run_pass(int fd, void *buf, const struct bench_options *opts,
 		if (do_full_io(fd, buf, len, (off_t)off, write_op) != 0)
 			return -1;
 	}
+	return 0;
+}
+
+static int run_mmap_pass(int fd, void *buf, const struct bench_options *opts,
+			 int write_op)
+{
+	void *map;
+	volatile char *p;
+
+	map = mmap(NULL, (size_t)opts->size,
+		   write_op ? PROT_READ | PROT_WRITE : PROT_READ,
+		   MAP_SHARED, fd, 0);
+	if (map == MAP_FAILED)
+		return -1;
+
+	p = map;
+	for (uint64_t off = 0; off < opts->size; off += opts->block_size) {
+		uint64_t left = opts->size - off;
+		size_t len = left < opts->block_size ? (size_t)left :
+						       (size_t)opts->block_size;
+
+		if (write_op) {
+			memcpy((void *)(p + off), buf, len);
+		} else {
+			/*
+			 * 通过读取每个 block 的第一个字节触发 page fault，
+			 * 让内核把 FUSE 文件内容填充到 page cache。
+			 */
+			for (size_t i = 0; i < len; i += 4096)
+				(void)(p[off + i]);
+		}
+	}
+
+	if (munmap(map, (size_t)opts->size) != 0)
+		return -1;
 	return 0;
 }
 
@@ -177,8 +220,19 @@ int main(int argc, char **argv)
 		perror("read pass");
 		goto out;
 	}
+	if (opts.mode == MODE_MMAP) {
+		if (run_mmap_pass(fd, buf, &opts, 1) != 0) {
+			perror("mmap write pass");
+			goto out;
+		}
+		if (run_mmap_pass(fd, buf, &opts, 0) != 0) {
+			perror("mmap read pass");
+			goto out;
+		}
+	}
 	elapsed = fb_now_nsec() - start;
-	bytes = opts.size * (opts.mode == MODE_RW ? 2ULL : 1ULL);
+	bytes = opts.size *
+		(opts.mode == MODE_RW || opts.mode == MODE_MMAP ? 2ULL : 1ULL);
 
 	printf("mode\tpath\tbytes\tblock_size\tdirect\telapsed_nsec\tmib_per_sec\n");
 	printf("%s\t%s\t%llu\t%llu\t%d\t%llu\t%.2f\n", mode_name(opts.mode),

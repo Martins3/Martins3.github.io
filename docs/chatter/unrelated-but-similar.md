@@ -19,6 +19,8 @@
   - KVM（Keyboard, Video, Mouse）：机房用来切换多台电脑的外设共享设备
 
 不过，我这里需要说下，其实绿联有自己一个 kvm 切换器
+类似的:
+https://github.com/XxMinor/mykvm
 
 ## 地理与国际
 

@@ -41,6 +41,33 @@ root@localhost:/boot/efi/EFI# tree
     └── shimx64.efi
 ```
 
+## 从盘的结构看启动过程
+
+```txt
+nvme1n1         259:2    0   3.6T  0 disk
+├─nvme1n1p1     259:3    0   600M  0 part /boot/efi
+├─nvme1n1p2     259:4    0     1G  0 part /boot
+└─nvme1n1p3     259:5    0   3.6T  0 part
+  └─fedora-root 252:0    0   3.6T  0 lvm  /
+```
+
+```txt
+root@localhost:/boot/efi/EFI# tree
+.
+├── BOOT
+│   ├── BOOTX64.EFI
+│   └── fbx64.efi
+└── fedora
+    ├── BOOTX64.CSV
+    ├── grub.cfg
+    ├── grubx64.efi
+    ├── mmx64.efi
+    ├── shim.efi
+    └── shimx64.efi
+```
+也就是 uefi 启动，最后来执行 /boot/efi 中的 grub ，然后 grub 来
+加载 /boot 中的 kernel ，最后来执行 /
+
 ## 记录一次 grub 修复
 
 系统只能进入的 grub shell 中

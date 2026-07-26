@@ -41,16 +41,20 @@ static const struct file_operations vfio_device_fops = {
 ```
 
 简而言之:
+```txt
 dev_vfio_info.container = open(VFIO_CONTAINER_PATH, O_RDWR);
 dev_vfio_info.group = open(group_addr, O_RDWR);
 ioctl(info->group, VFIO_GROUP_SET_CONTAINER, &info->container);
 
 ioctl(dev_vfio_info.group, VFIO_GROUP_GET_DEVICE_FD, dev.name);
 
-ioctl(info->container, VFIO_IOMMU_MAP_DMA, map);
+ioctl(info->container, VFIO_IOMMU_MAP_DMA, map); // 构建 iova 和 vaddr 的联系
 ioctl(dev_fd, VFIO_DEVICE_GET_INFO, info);
 ioctl(dev->device_fd, VFIO_DEVICE_GET_REGION_INFO, reg);
 ioctl(dev->device_fd, VFIO_DEVICE_GET_IRQ_INFO, irq);
+
+region->mmaps[i].mmap = mmap(..., vfio_region_fd, ...); // mmap BAR 寄存器指向的 region
+```
 
 
 ## VFIO_SET_IOMMU 如何实现的

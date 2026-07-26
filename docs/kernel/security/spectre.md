@@ -415,6 +415,118 @@ INDIRECT_CALLABLE_DECLARE(int tcp_v4_rcv(struct sk_buff *));
 
 似乎网络 和 kvm 都有不同的想法。
 
+## kimi : arch/arm64/kernel/proton-pack.c 是做什么的?
+(2026-06-24 这个分析相当的清晰了)
+
+arch/arm64/kernel/proton-pack.c 是 ARM64 Linux 内核里处理 Spectre 系列推测执行漏洞 的核心文件。名字
+"proton-pack"（《捉鬼敢死队》里的质子背包）来自文件注释里那句 "If there's something strange in your neighbourhood, who you gonna
+call?"——有鬼（漏洞）就call它。
+
+它主要负责 Spectre v1 / v2 / v3a / v4 / Spectre-BHB 的检测、
+缓解（mitigation）和向用户空间报告（/sys/devices/system/cpu/vulnerabilities/*）。
+
+1. 整体结构
+
+文件主要由 5 大块组成：
+
+┌─────────────┬───────────────────────────────────────────────────────────────────┬──────────────────────────────────────────────────┐
+│ 漏洞        │ 主要机制                                                          │ 关键函数                                         │
+├─────────────┼───────────────────────────────────────────────────────────────────┼──────────────────────────────────────────────────┤
+│ Spectre v1  │ 内核用 __user 指针消毒，用户空间自求多福                          │ cpu_show_spectre_v1()                            │
+├─────────────┼───────────────────────────────────────────────────────────────────┼──────────────────────────────────────────────────┤
+│ Spectre v2  │ 分支预测器加固（BP hardening），通过 SMCCC 调 firmware workaround │ spectre_v2_enable_mitigation()                   │
+├─────────────┼───────────────────────────────────────────────────────────────────┼──────────────────────────────────────────────────┤
+│ Spectre v3a │ 让 hypervisor 向量走间接 trampoline，防止 guest 读到 VBAR_EL2     │ spectre_v3a_enable_mitigation()                  │
+├─────────────┼───────────────────────────────────────────────────────────────────┼──────────────────────────────────────────────────┤
+│ Spectre v4  │ SSBS 硬件位 / firmware SSBD workaround，支持 prctl() 按任务控制   │ spectre_v4_enable_mitigation()、ssbd_prctl_set() │
+├─────────────┼───────────────────────────────────────────────────────────────────┼──────────────────────────────────────────────────┤
+│ Spectre-BHB │ loop/clearbhb/firmware 多种缓解，动态 patch 向量                  │ spectre_bhb_enable_mitigation()                  │
+└─────────────┴───────────────────────────────────────────────────────────────────┴──────────────────────────────────────────────────┘
+
+这些函数通过 arch/arm64/kernel/cpu_errata.c 里的 arm64_cpu_capabilities 表注册为 CPU capability，启动时由 __enable_cpu_capabilities() 调用。
+
+2. 缓解状态
+
+```c
+  enum mitigation_state {
+      SPECTRE_UNAFFECTED,   // 不受影响
+      SPECTRE_MITIGATED,    // 已缓解
+      SPECTRE_VULNERABLE,   // 易受攻击
+  };
+```
+
+update_mitigation_state() 用 cmpxchg 保证多个 CPU 上线时状态只往更严重的方向升级（比如一个 CPU 安全、另一个脆弱，系统整体算脆弱）。一旦
+system_capabilities_finalized() 完成，就不能再改，避免用户空间看到状态变化。
+
+3. Spectre v2：分支预测器加固
+
+v2 最复杂，因为 big.LITTLE 里不同核可能处于不同状态：
+
+1. 硬件缓解：ID_AA64PFR0_EL1.CSV2 置位，或在 safelist 里（A35/A53/A55 等）。
+2. Firmware 缓解：通过 SMCCC ARM_SMCCC_ARCH_WORKAROUND_1（WA1）调用 firmware。
+3. 软件缓解：某些 Qualcomm Falkor 需要额外清 link stack。
+4. 纯脆弱。
+
+如果走 firmware 路径，会安装一个 per-cpu 回调 bp_hardening_data.fn，在异常入口调用（arm64_apply_bp_hardening()）。
+
+```c
+  DEFINE_PER_CPU_READ_MOSTLY(struct bp_hardening_data, bp_hardening_data);
+```
+
+bp_hardening_data.slot 用于 KVM hyp vector 的选择（direct / spectre-direct / indirect / spectre-indirect）。
+
+启动参数 nospectre_v2 可关闭。
+
+4. Spectre v3a
+
+这个最简单：只对 Cortex-A57 / A72 生效，让 EL2 的 hyp vector 使用间接 trampoline，防止 guest 通过读取 VBAR_EL2 推断 hypervisor 的虚拟地址布局。
+
+```c
+  if (this_cpu_has_cap(ARM64_SPECTRE_V3A))
+      data->slot += HYP_VECTOR_INDIRECT;
+```
+
+5. Spectre v4：Speculative Store Bypass
+
+依赖 PSTATE.SSBS 或 firmware SSBD。
+
+- 安全列表：A35/A53/A55 等不受影响。
+- 硬件支持：ARM64_SSBS 特性，内核直接置 PSTATE.SSBS。
+- Firmware：通过 SMCCC ARM_SMCCC_ARCH_WORKAROUND_2（WA2）。
+
+ssbd= 启动参数：
+- force-on：强制开启缓解
+- force-off：强制关闭
+- kernel（默认）：动态模式，用户空间可通过 prctl(PR_SPEC_STORE_BYPASS, ...) 自己控制
+
+arch_prctl_spec_ctrl_set/get 是 prctl() 的底层实现，任务切换时会调用 spectre_v4_enable_task_mitigation() 把线程的 SSBS 状态写进
+pt_regs->pstate，这样返回用户空间时自动生效。
+
+6. Spectre-BHB：Branch History Buffer
+
+BHB 是 v2 的变种。缓解方式按优先级：
+
+1. ECBHB（Exception Clears BHB）：硬件特性，无需软件缓解。
+2. CSV2.3：不受影响。
+3. ClearBHB 指令：ARMv8.1+ 新增指令，直接清 BHB。
+4. Loop mitigation：对特定 CPU 执行固定次数的分支环冲刷 BHB（k=8/11/24/32/38/132）。
+5. Firmware WA3：SMCCC ARM_SMCCC_ARCH_WORKAROUND_3。
+
+文件里维护 system_bhb_mitigations 位图和 max_bhb_k，启动后通过 alternative patching 把向量代码里的占位指令 patch 成实际缓解代码：
+
+- spectre_bhb_patch_loop_mitigation_enable()
+- spectre_bhb_patch_clearbhb()
+- spectre_bhb_patch_loop_iter()（把循环次数 patch 成 max_bhb_k）
+- spectre_bhb_patch_wa3()
+
+7. 与其他文件的连接
+
+- arch/arm64/kernel/cpu_errata.c：把这些注册为 ARM64_CPUCAP_LOCAL_CPU_ERRATUM。
+- arch/arm64/include/asm/spectre.h：声明接口、bp_hardening_data、hyp vector 枚举。
+- arch/arm64/kernel/process.c：上下文切换/进程创建时调用 spectre_v4_enable_task_mitigation()。
+- arch/arm64/kernel/suspend.c、hibernate.c：恢复时重新应用缓解。
+- arch/arm64/net/bpf_jit_comp.c：unprivileged eBPF 启用时检查 BHB 状态并告警。
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

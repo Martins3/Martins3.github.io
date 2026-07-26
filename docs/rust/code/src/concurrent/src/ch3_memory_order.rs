@@ -1,4 +1,6 @@
+use std::sync::atomic::AtomicBool;
 use std::sync::atomic::Ordering::SeqCst;
+use std::thread;
 
 static A: AtomicBool = AtomicBool::new(false);
 static B: AtomicBool = AtomicBool::new(false);
@@ -24,4 +26,3 @@ pub fn test1() {
     a.join().unwrap();
     b.join().unwrap();
 }
-

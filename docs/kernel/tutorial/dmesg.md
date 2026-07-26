@@ -188,6 +188,46 @@ cat /proc/sys/kernel/printk_ratelimit_burst : 最多打印多少的信息出来
 
 ## demsg -n 4 可以屏蔽 pr_info 日志
 
+## kimi: /dev/kmsg 与 /proc/kmsg 的区别
+
+本机权限：
+
+```text
+crw-r--r-- 1 root root 1, 11 Jun 27 12:02 /dev/kmsg
+-r-------- 1 root root     0 Jun 30 15:44 /proc/kmsg
+```
+
+两者都是对内核 printk ring buffer 的访问接口，但设计目标、行为、权限模型完全不同。
+
+### 1. /proc/kmsg：旧版只读接口
+
+- **只读**，相当于 `syslog(SYSLOG_ACTION_READ)`。
+- 权限通常为 `0400`，**只有 root 可读**。
+- 使用**全局唯一的读指针**：读取会消费 ring buffer，多个进程同时读会导致各自得到不完整的日志。
+- 历史用途：供 `klogd` 等传统系统日志守护进程读取内核消息。
+- 输出格式较原始，不带结构化元数据（facility/level 虽然以 `<N>` 形式存在，但没有 `/dev/kmsg` 的完整字段）。
+
+> proc(5) 手册提示：一个进程必须具有超级用户权限才能读取此文件，并且只有一个进程应该读取此文件。
+
+### 2. /dev/kmsg：新版字符设备接口
+
+- 自 Linux 3.5 引入，字符设备，主设备号 1，次设备号 11。
+- **可读可写**：
+  - 读：任何有读权限的用户都可以读（默认 `0644`）。
+  - 写：需要 `CAP_SYS_ADMIN`；用户态写入受 `printk.devkmsg=` / `kernel.printk_devkmsg` 控制（可设为 ratelimit/on/off）。
+- **按文件描述符维护读指针**：多个进程可以同时独立读取，不会互相干扰，也不会消费掉 buffer 中的条目。
+- 输出为结构化格式，包含 facility、level、timestamp、seq 等字段，便于 `systemd-journald`、`rsyslog` 的 `imkmsg` 等解析。
+- 支持 `poll()` / 非阻塞读取。
+
+示例输出：
+
+```text
+6,162,1326832146,-;usb 1-1: new high-speed USB device number 2 using xhci_hcd
+ SUBSYSTEM=usb
+ DEVICE=+usb:1-1
+```
+
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

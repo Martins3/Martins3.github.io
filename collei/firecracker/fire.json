@@ -1,0 +1,60 @@
+{
+  "boot-source": {
+    "kernel_image_path": null,
+    "boot_args": "",
+    "initrd_path": null
+  },
+  "drives": [
+    {
+      "drive_id": "rootfs",
+      "partuuid": null,
+      "is_root_device": false,
+      "cache_type": "Unsafe",
+      "is_read_only": false,
+      "path_on_host": null,
+      "io_engine": "Sync",
+      "rate_limiter": null,
+      "socket": null
+    },
+    {
+      "drive_id": "vhost-blk",
+      "is_root_device": false,
+      "socket": null
+    }
+  ],
+  "machine-config": {
+    "vcpu_count": 2,
+    "mem_size_mib": 4096,
+    "gdb_socket_path": null,
+    "smt": true,
+    "track_dirty_pages": true,
+    "huge_pages": "None"
+  },
+  "cpu-config": null,
+  "balloon": null,
+  "network-interfaces": [
+    {
+      "iface_id": "net1",
+      "host_dev_name": null,
+      "guest_mac": null,
+      "rx_rate_limiter": null,
+      "tx_rate_limiter": null
+    }
+  ],
+  "vsock": {
+    "vsock_id": "vsock0",
+    "guest_cid": 3,
+    "uds_path": null
+  },
+  "logger": {
+    "log_path": null,
+    "level": "Info",
+    "show_level": true,
+    "show_log_origin": true
+  },
+  "metrics": {
+    "metrics_path": null
+  },
+  "mmds-config": null,
+  "entropy": null
+}

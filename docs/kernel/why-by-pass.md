@@ -18,9 +18,9 @@ Linux 内核并不是为了极致性能而设计的，它追求的是通用性�
 复杂的文件系统，将功能放到内核中，真的好吗?
 当然是不好的，但是用户态文件系统的性能实在是太差了
 
-## 哪些内核功能可以放到用户态？
+哪些内核功能可以放到用户态？
 
-### 直接访问硬件
+## 1. 直接访问硬件
 * **UIO（简单粗暴的 mmap BAR）**
 * **VFIO（安全隔离 + IOMMU）**
 
@@ -68,30 +68,61 @@ vdb                251:16   0   1.5T  0 disk
 * 某种意义上讲，qemu 作为 type2 的 vmm 相对于 type 1 vmm 而言，就是 kernel 功能放到用户态
 * RDMA : 有待补充
 
-### 提供虚拟驱动
-* **文件系统**
-	- FUSE 是最典型的例子
-	- nfs server
-	- cephfs : 后端是 ceph 集群而非物理磁盘
-* **网络栈**：
-	- TAP sends and receives Ethernet frames, so any networking protocol can be used with a TAP device.
-	- TUN works at the IP level, which is simpler and often sufficient providing there is no need to handle non-IP protocols such as ARP. These can most obviously be used for tunneling and creating virtual private networks (VPNs) but could also be used for user-space monitoring and filtering of network traffic.
-	- 对于网络设备，可通过创建 `AF_PACKET` 地址族、`SOCK_RAW` 类型的套接字实现直接访问。该套接字可绑定到特定网络接口或特定的以太网协议类型。如果使用 `AF_INET` 配合 `SOCK_RAW`，虽然仍会利用 IP 协议通用的路由等功能，但可以完全控制每个 IP 数据包的有效载荷。
-	- ovs 相对于 linux bridge 来很多逻辑放到了用户态
-	- AF_ALG 相关问题
+## 2. 提供虚拟驱动
+
+### 文件系统
+1. fuse
+
+假设你用一个文件构建了一个 ext4 文件系统
+```sh
+dd if=/dev/null of=x.ext4 bs=1000M seek=100
+mkfs.ext4 -F x.ext4
+mkdir -p tmp
+```
+
+一种方法是经过 loop ，通过内核中的 ext4 文件系统:
+```sh
+sudo mount -t ext4 -o loop x.ext4 tmp
+```
+另外一种方法是使用 fuse2fs:
+```sh
+fuse2fs x.ext4 tmp
+```
+
+2. nfs server / samba server
+	- nfs server 可以实现在内核中
+	- 用户态的经典代表是
+
+3. cephfs : 后端是 ceph 集群而非物理磁盘
+4. squashfs
+
+处理 squashfs 文件，可以选择内核驱动和用户态的驱动，不过
+需要注意，squashfs-tools 并没有利用 fuse
+- https://docs.kernel.org/filesystems/squashfs.html
+- https://github.com/plougher/squashfs-tools
+
+### 网络栈
+- TAP sends and receives Ethernet frames, so any networking protocol can be used with a TAP device.
+- TUN works at the IP level, which is simpler and often sufficient providing there is no need to handle non-IP protocols such as ARP. These can most obviously be used for tunneling and creating virtual private networks (VPNs) but could also be used for user-space monitoring and filtering of network traffic.
+- 对于网络设备，可通过创建 `AF_PACKET` 地址族、`SOCK_RAW` 类型的套接字实现直接访问。该套接字可绑定到特定网络接口或特定的以太网协议类型。如果使用 `AF_INET` 配合 `SOCK_RAW`，虽然仍会利用 IP 协议通用的路由等功能，但可以完全控制每个 IP 数据包的有效载荷。
+- ovs 相对于 linux bridge 来很多逻辑放到了用户态
+- AF_ALG 相关问题
+
 * **网络设备协议**
     - nvme over tcp
     - iSCSI
     - [aoe](https://docs.kernel.org/admin-guide/aoe/index.html)
     - [nbd](https://docs.kernel.org/admin-guide/blockdev/nbd.html)
-* **模拟块设备**
-	* ublk
-	* [tcmu](https://www.kernel.org/doc/html/latest/target/tcmu-design.html)
-		- https://github.com/containerd/overlaybd/blob/main/docs/README.md
-	* vduse : 让用户态实现 block / net / 其他 virtio 设备
-* **userfaultfd**：用户态 page fault 处理
+### 模拟块设备
+* ublk
+* [tcmu](https://www.kernel.org/doc/html/latest/target/tcmu-design.html)
+	- https://github.com/containerd/overlaybd/blob/main/docs/README.md
+* vduse : 让用户态实现 block / net / 其他 virtio 设备
 
-### 基于 ebpf 实现用户态策略
+### Userfaultfd
+用户态 page fault 处理
+
+## 3. 基于 ebpf 实现用户态策略
 基于 bpf 的 struct ops 可以将部分逻辑移动到用户态，目前支持的功能为:
 -  scheduler : https://github.com/sched-ext/scx
 -  oom killer (未进入主线)

@@ -1,4 +1,4 @@
-## aarch64 pmmir
+## aarch64 PMMIR
 <!-- d1a3ac18-925e-4ebe-850f-5f1e0492a81e -->
 
 关于指令使用的测试在 ./code/src/m/arch/aarch64/
@@ -92,7 +92,6 @@ CVE: NA
 
 Reference: https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=c854188ea01062f5a5fd7f05658feb1863774eaa
 ```
-
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

@@ -110,6 +110,47 @@ nvme nic cpu memory 的热插拔，
 
 ## 思考一个问题，如何设计一个优秀的 hotplug 机制?
 
+
+## qemu hmp 的 device_del 和 drive_del 的区别是什么?
+假设设备这样创建：
+
+-drive if=none,id=hp_drive0,file=disk.qcow2
+-device virtio-blk-pci,id=hp_disk0,drive=hp_drive0
+
+两者属于不同层：
+
+- device_del hp_disk0
+    - 删除 guest 可见的前端设备，如 virtio-blk/IDE/SCSI/PCI 设备。
+    - 相当于拔掉整块磁盘，guest 会收到热拔事件。
+    - 可能需要 guest 配合，命令返回不代表已经完成；完成以 DEVICE_DELETED
+      事件为准。
+
+    - 对传统 -drive 创建的后端，设备删除后通常会自动清理该 drive。
+
+- drive_del hp_drive0
+    - 删除/断开 host 侧块存储后端。
+    - 不删除 hp_disk0 这个前端设备；guest 仍可能看到磁盘，但后续 I/O 返回 -EIO。
+    - 更像“磁盘设备仍插着，但后面的介质/存储突然失效”。
+
+因此，正常热拔整块磁盘应该使用：
+
+```txt
+device_del hp_disk0
+```
+
+不要仅执行 drive_del hp_drive0，否则容易让 guest 看到一个持续报 I/O 错误的磁盘。
+
+现代 blockdev-add 工作流则通常是：
+
+```txt
+device_del hp_disk0
+# 等待 DEVICE_DELETED
+blockdev-del hp_drive0
+```
+
+源码依据：hmp-commands.hx:207、block/monitor/block-hmp-cmds.c:139、qapi/qdev.json:87。
+
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

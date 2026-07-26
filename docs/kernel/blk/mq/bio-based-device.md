@@ -1,7 +1,5 @@
-## bio-based 和 request-based 的区分
+## bio-based 和 request-based 设备的区别
 <!-- cae10a29-6410-4aae-81de-232a8a8576d1 -->
-
-(这个没写清楚，不知道当时想要表达什么)
 
 两个非 mq 的创建:
 - kernfs_fop_write_iter
@@ -38,7 +36,8 @@ virtio_dev_probe+400
 really_probe+184
 ```
 
-- queue_is_mq 的判断 request_queue::mq_ops ，如果是 multiqueue 的时候，
+- queue_is_mq 的判断 request_queue::mq_ops ，
+如果是 multiqueue 的时候，
 从 blk_mq_init_allocated_queue 中，会来初始化：
 
 blk_mq_init_allocated_queue -> __blk_mq_alloc_disk
@@ -219,7 +218,6 @@ static const struct blk_mq_ops loop_mq_ops = {
 ```
 
 ### 那岂不是 loop 还支持 scheduler 吗?
-
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

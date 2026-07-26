@@ -1,0 +1,12 @@
+{
+  "collei-action.sh": {"comment_lines": 396, "sha256": "18e652b7d9c227456677c962b25d8aef96c74450a6939605af03c879ee92b1f7"},
+  "collei-disk.sh": {"comment_lines": 1, "sha256": "1d95fc04a80c952f49ce4188627c53b0fbe8c44041b952d592acd1de99861466"},
+  "collei-global.sh": {"comment_lines": 63, "sha256": "31c2ec933bfe9174d74cf379001e8d8f9cd3d2cb784d098ddb16f19ef2e7a782"},
+  "collei-hct.sh": {"comment_lines": 22, "sha256": "359afd1e21938b46c95fe064b8c5e693fd9829846190c35515d62a88af7d2a65"},
+  "collei-lib.sh": {"comment_lines": 36, "sha256": "1455ccbf375967cef1d67cd16f640319b5b10f7e4128a1141aca4543e01cf85b"},
+  "collei-net.sh": {"comment_lines": 20, "sha256": "63f8372a362b4b704bc38552f51f054b65e17b69beae1ddb3e329a925ce5868e"},
+  "collei.sh": {"comment_lines": 961, "sha256": "232c44a6eb42b9f04a3f7302438bbc32010a9e7239e62533ab8e4429730d1349"},
+  "rdma-nvme.sh": {"comment_lines": 37, "sha256": "e0d5951e06ef89cbe4d49dc83118736b42ba3d4c8c7d42600e2f33c42d6a3aba"},
+  "vfio.sh": {"comment_lines": 53, "sha256": "2f051fb7c4c14c7d8ddfc763d33f99253a2723605e8c593f1b4e60f2244e7e5a"},
+  "vmtest-init.sh": {"comment_lines": 37, "sha256": "1bcb877ffa25061d61b335e5656a464a3d519d8284f555bf57738e18307d9465"}
+}

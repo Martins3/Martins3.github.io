@@ -101,6 +101,8 @@ gh auth login --hostname github.loongson.com
   gh pr comment 42 --repo kernel/mmoc-server --body "测试评论"
 ```
 
+## CICD 的思考
+https://www.hawkingrei.com/2022/06/26/cicd.html
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

@@ -1,9 +1,9 @@
-## mingw
+# mingw
 
 看看有多少代码吧
 https://www.mingw-w64.org/
 
-## 那么这是 minGw 的主页吗?
+那么这是 minGw 的主页吗?
 https://nuwen.net/
 
 <script src="https://giscus.app/client.js"

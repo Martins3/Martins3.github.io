@@ -1,42 +1,37 @@
 cmake_minimum_required(VERSION 3.15)
-project(WindowsAPITests)
+project(WindowsSystemProgrammingDemos LANGUAGES CXX)
 
-# Enable compile_commands.json generation
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-
-# Set C++ standard
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Windows specific libraries
-# find_package(WindowsSDK REQUIRED) # Removed as it might not be found in all environments
+function(add_win_demo target source)
+    add_executable(${target} ${source})
+    target_include_directories(${target} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/common)
+    target_compile_definitions(${target} PRIVATE UNICODE _UNICODE _WIN32_WINNT=0x0600)
+    target_link_libraries(${target} PRIVATE kernel32.lib)
+    set_target_properties(${target} PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+endfunction()
 
-# Add all test executables directly
-add_executable(win_file_io_demo win_file_io_demo.cpp)
-add_executable(win_heap_demo win_heap_demo.cpp)
-add_executable(win_lock_demo win_lock_demo.cpp)
-add_executable(win_process_demo win_process_demo.cpp)
-add_executable(win_echo_server win_echo_server.cpp)
-add_executable(win_echo_client win_echo_client.cpp)
-add_executable(win_echo_server_iocp win_echo_server_iocp.cpp)
+function(add_winsock_demo target source)
+    add_win_demo(${target} ${source})
+    target_link_libraries(${target} PRIVATE ws2_32.lib)
+endfunction()
 
-# Link Windows libraries
-target_link_libraries(win_file_io_demo PRIVATE kernel32.lib)
-target_link_libraries(win_heap_demo PRIVATE kernel32.lib)
-target_link_libraries(win_lock_demo PRIVATE kernel32.lib)
-target_link_libraries(win_process_demo PRIVATE kernel32.lib)
-target_link_libraries(win_echo_server PRIVATE kernel32.lib ws2_32.lib)
-target_link_libraries(win_echo_client PRIVATE kernel32.lib ws2_32.lib)
-target_link_libraries(win_echo_server_iocp PRIVATE kernel32.lib ws2_32.lib mswsock.lib)
+add_win_demo(process_demo src/process_demo.cpp)
+add_win_demo(thread_demo src/thread_demo.cpp)
+add_win_demo(ctrl_c_demo src/ctrl_c_demo.cpp)
+target_link_libraries(ctrl_c_demo PRIVATE dbghelp.lib)
+add_win_demo(sync_demo src/sync_demo.cpp)
+add_win_demo(affinity_demo src/affinity_demo.cpp)
+add_win_demo(named_semaphore_demo src/named_semaphore_demo.cpp)
+add_win_demo(file_io_demo src/file_io_demo.cpp)
+add_win_demo(file_mapping_demo src/file_mapping_demo.cpp)
+add_win_demo(overlapped_file_demo src/overlapped_file_demo.cpp)
+add_win_demo(memory_demo src/memory_demo.cpp)
+add_win_demo(named_pipe_demo src/named_pipe_demo.cpp)
 
-# Set output directory
-set_target_properties(
-    win_file_io_demo 
-    win_heap_demo 
-    win_lock_demo 
-    win_process_demo 
-    win_echo_server
-    win_echo_client
-    win_echo_server_iocp
-    PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
-)
+add_winsock_demo(echo_client src/echo_client.cpp)
+add_winsock_demo(echo_server_select src/echo_server_select.cpp)
+add_winsock_demo(echo_server_iocp src/echo_server_iocp.cpp)

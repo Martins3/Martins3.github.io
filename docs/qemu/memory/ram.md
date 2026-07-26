@@ -225,7 +225,7 @@ e1000.rom: offset=1808c0000 size=40000
 任何一个 page 的 ram_addr = offset in RAM + `RAMBlock::offset`
 
 
-## dirty tracking 的三个 bitmap
+## migration 中 dirty tracking 的三个 bitmap
 <!-- 7af2190d-6c72-4a60-a3a3-b21b69273d01 -->
 
 由于层次划分问题，dirty bitmap 出现在三个地方，在热迁移的过程中会进行搬移

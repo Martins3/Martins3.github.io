@@ -28,34 +28,42 @@
 - [slides](https://martins3.github.io/slides/)
 
 ## 我的工作流
+
 - [使用 Github Pages 来搭建 Blog](./blog/setup-github-pages.md)
 - [日志压缩式的信息获取](./blog/stream.md)
 - [用写作来重新思考问题](./blog/use-write-to-think.md)
 - [使用 Anki 持续思考](./blog/why-anki.md)
 
-
 ## 综合总结
 
 - [如何设计一个成功的指令集架构](./cpu/arch-design.md)
+
 <!-- - [如何设计一个成功的文件系统](./kernel/fs-design.md) -->
+
 - [为什么 QEMU 这么复杂](./qemu/why-so-complex.md)
 - [为什么 Linux Kernel 这么复杂](./kernel/why-so-complex.md)
 - [为什么 Linux 内核中有如此多 fd](./kernel/why-so-many-fd.md)
+
 <!-- - [如何设计 Hotplug 机制](./kernel/hotplug.md) -->
 <!-- - 如何设计一个 Hypervisor，通过对比 HyperV, Xen 和 ESXi -->
 <!-- - 如何设计一个虚拟化指令 -->
+
 - [Linux 内核的本质就是英雄联盟](./chatter/lol-vs-linux.md)
 - [Linux 内核的本质就是原神](./chatter/genshin-vs-linux.md)
 - [为什么要 kernel bypass](./kernel/why-by-pass.md)
+
 <!-- - [命运的织机: 各种 scheduler 杂谈](./kernel/scheduler.md) -->
+
 - [interrupt, execption , softirq 和 nmi 谁可以打断谁](./kernel/nested-interrupt.md)
 
 ## 技术细节
+
 - [x86 nmi](./kernel/irq/nmi.md)
 - [kvm 如何处理 exception](./kvm/exception.md)
 - [Linux Capabilities 简述](./kernel/security/kernel-capbility.md)
 
 ### signal
+
 - [jobctl](./kernel/signal/jobctl.md)
 - [signal 的简单测试](./kernel/signal/lab.md)
 - [signal](./kernel/signal/overview.md)
@@ -65,6 +73,7 @@
 - [syscall restart](./kernel/signal/syscall-restart.md)
 
 ### fuse
+
 - [fuse-bench](./kernel/fs/fuse/fuse-bench/README.md)
 - [3fs](./kernel/fs/fuse/3fs.md)
 - [fuse](./kernel/fs/fuse/fuse.md)
@@ -72,23 +81,62 @@
 
 ### nfs
 
+- [常用命令](./kernel/fs/nfs/basic.md)
 - [mini NFSv3 server](./kernel/fs/nfs/user-nfsd/README.md)
 - [nfs rfc](./kernel/fs/nfs/doc.md)
 - [netfs](./kernel/fs/nfs/fscache.md)
 - [nfs swap 支持](./kernel/fs/nfs/nfs-swap.md)
 - [samba 配置简单记录](./kernel/fs/nfs/samba.md)
 
+### ext4
+
+- [ext4](./kernel/fs/ext4/overview.md)
+- [ext4 实现原理](./kernel/fs/ext4/doc.md)
+- [ext4 的错误处理路径](./kernel/fs/ext4/error.md)
+- [ext4 中的 iomap 使用](./kernel/fs/ext4/iomap.md)
+- [jbd2](./kernel/fs/ext4/jbd2-orig.md)
+- [ext4 基本使用](./kernel/fs/ext4/basic.md)
+
 ### aarch64 sysregs
-- [从 cpu feature 到 kvm sys_reg_desc](./kvm/aarch64/sys_regs/feature.md)
+
+- [aarch64 cpufeature](./kvm/aarch64/sys_regs/feature.md)
 - [aarch64 sysregs 编解码](./kvm/aarch64/sys_regs/encode.md)
 - [qemu 如何管理 sys_regs](./kvm/aarch64/sys_regs/qemu.md)
 - [sys_regs 基础](./kvm/aarch64/sys_regs/sys_regs.md)
+- [用户态访问 sys_reg 是如何模拟的](./kvm/aarch64/sys_regs/feature-user.md)
 
-细节
+细节:
+
 - [aarch64 ESR.ISS](./kvm/aarch64/sys_regs/id/esr.md)
-- [aarch64 mpam](./kvm/aarch64/sys_regs/id/mpam.md)
+- [aarch64 MPAM](./kvm/aarch64/sys_regs/id/mpam.md)
 - [aarch64 ID_AA64PFR0_EL1](./kvm/aarch64/sys_regs/id/pfr0.md)
-- [aarch64 pmmir](./kvm/aarch64/sys_regs/id/pmmir.md)
+- [aarch64 PMMIR](./kvm/aarch64/sys_regs/id/pmmir.md)
+- [aarch64 AA64MMFR1](./kvm/aarch64/sys_regs/id/aa64mmfr1.md)
+- [aarch64 LOREGION](./kvm/aarch64/sys_regs/id/loregion.md)
+
+## zero copy
+
+- [概述](./kernel/zero-zopy/abstract.md)
+- [存储栈 zero copy](./kernel/zero-zopy/dio.md)
+- [拷贝的成本](./kernel/zero-zopy/page-copy.md)
+- [pipe 和 splice](./kernel/fs/pipe/README.md)
+- [network zero copy](./kernel/zero-zopy/msg_zerocopy.md)
+- [devmem tcp](./kernel/zero-zopy/devmem.md)
+- [vhost zero copy](./kernel/zero-zopy/vhost.md)
+- [NVMe 与 PCI P2PDMA](./kernel/blk/nvme/p2pdma.md)
+
+## memory management
+
+- [madvise](./kernel/mm/madvise/mm-advise.md)
+
+## Linux 内核存储栈
+
+- [loop device](./kernel/blk/loop-device.md)
+- [multipath](./kernel/blk/dm/multipath.md)
+
+## 网络虚拟化
+
+- [vsock](./net/net-vsock.md)
 
 ## Dune
 
@@ -105,71 +153,85 @@
 - [Asahi Linux](./hw/3-asahi.md)
 
 ## 虚拟化杂谈
+
 - PCIe 基础
 - DMA
 - 中断
-	- [QEMU KVM 中断注入](./kernel/irq/virt-int-inject.md)
+  - [QEMU KVM 中断注入](./kernel/irq/virt-int-inject.md)
 
 ## AI 杂谈
+
 - [AI Infra 到底在做什么](./ai/vs-kernel.md)
-	- [slides](./ai/ai-infra-vskernel.html)
+  - [slides](./ai/ai-infra-vskernel.html)
 - [Linux 内核如何随着 AI 来演进](./ai/with-ai.md)
 - [还没结束呢！和 AI 的故事，现在才开始！](./ai/ai-is-amazing.md)
 
 ## 淦，打一把英雄联盟不可能这么难
 
-这里介绍三种方法在 Linux 上打英雄联盟的方法和背后的原理。
+本人从 2018 年开始研究如何在 Linux 上玩 LOL (手动狗头)，一下是技术背景调研:
 
-- 双系统
-	- seabios 和 UEFI 的启动分区
-	- [grub](./grub/grub.md)
-- 图形虚拟化
-	- cirrus-vga
-	- vga
-	- virtio-gpu
-- 设备直通
-	- vfio
-	- [一盘两用](./kernel/vfio/fun.md)
-	- [vfio 如何管理中断](./kernel/vfio/int-vfio.md)
-	- [remapped interrupt](./kernel/vfio/int-remapping.md)
-	- [posted interrupt](./kernel/vfio/int-posted.md)
-- Wine
-	- [wine : 如何实现系统调用虚拟化](./games/wine.md)
-	- Proton
+### 双系统
+
+- seabios 和 UEFI 的启动分区
+- [grub](./grub/grub.md)
+
+### Linux 图形栈
+
+- cirrus-vga
+- vga
+- virtio-gpu
+
+### 设备直通
+
+- [一盘两用](./kernel/vfio/fun.md)
+- [vfio 如何管理中断](./kernel/vfio/int-vfio.md)
+- [remapped interrupt](./kernel/vfio/int-remapping.md)
+- [posted interrupt](./kernel/vfio/int-posted.md)
+- [为什么我的 GPU 直通失败了](./kernel/vfio/debug-gpu.md)
+
+### Wine
+
+- [wine : 如何实现系统调用虚拟化](./games/wine.md)
+- Proton
+
 - 为什么不来玩 Dota 2?
 
 ## 调试内核的几种方法
+
 - 从外部观察
-	- crash
-	- drgn
-	- kvm-dmesg
-	- gdb kernel
-	- perf kvm
+  - crash
+  - drgn
+  - kvm-dmesg
+  - gdb kernel
+  - perf kvm
 
 ## 生活技能
+
 - [应急救护 : 深圳市直机关党员应急能力培训](./chores/emergency-medical-care.md)
 
 ## 数学
 
 - AI 相关
-	- [Attention is all you need](./math/llm.pdf)
-	- [Softmax 数值稳定技巧](./math/softmax-max-trick.pdf)
-	- [Seq2Seq 与注意力机制](./math/seq2seq-attention.pdf)
-	- [LLM PyTorch 数学原理](./math/llm-pytorch-math.pdf)
-	- [GEMM 与卷积](./math/gemm-convolution.pdf)
-	- [MLA 与 vLLM 预填充上下文](./math/mla-vllm-prefill-context.pdf)
+  - [Attention is all you need](./math/llm.pdf)
+  - [Softmax 数值稳定技巧](./math/softmax-max-trick.pdf)
+  - [Seq2Seq 与注意力机制](./math/seq2seq-attention.pdf)
+  - [LLM PyTorch 数学原理](./math/llm-pytorch-math.pdf)
+  - [GEMM 与卷积](./math/gemm-convolution.pdf)
+  - [MLA 与 vLLM 预填充上下文](./math/mla-vllm-prefill-context.pdf)
 - 详细分析
-	- [线性代数](./math/linear-algebra.pdf)
-	- [黎曼猜想](./math/riemann-hypothesis.pdf)
+  - [线性代数](./math/linear-algebra.pdf)
+  - [黎曼猜想](./math/riemann-hypothesis.pdf)
 - 大纲
-	- [概率论](./math/probability-theory.pdf)
-	- [麦克斯韦方程组](./math/maxwell-tutorial.pdf)
-	- [数学分析](./math/math_analysis.pdf)
-	- [控制理论](./math/control-theory.pdf)
-	- [分析学](./math/analysis.pdf)
-	- [代数学](./math/algebra.pdf)
+  - [概率论](./math/probability-theory.pdf)
+  - [麦克斯韦方程组](./math/maxwell.pdf)
+  - [数学分析](./math/math_analysis.pdf)
+  - [控制理论](./math/control-theory.pdf)
+  - [分析学](./math/analysis.pdf)
+  - [代数学](./math/algebra.pdf)
 
 ## Compiler
+
+- [谈谈 kernel 中使用的编译技术](./kernel/compiler.md)
 
 ## Tips
 
@@ -177,38 +239,54 @@
 - [虚拟化学习的一点经验之谈](./learn-virtualization.md)
 - [内核学习经验](./kernel/learn-linux-kernel.md)
 
-
 ## Tools
+
 - [My Linux Config](https://martins3.github.io/My-Linux-Config/)
 - [X86 上阅读 Loongarch 内核](./loongarch/hacking-ccls.md)
 - [使用 3A5000 作为我的主力机](./loongarch/neovim.md)
 - [Fedora 使用记录 2026](./linux/fedora.md)
 - [为什么我开始使用 Windows 作为开发机](./windows/why.md)
 - [tailscale 使用简单记录](./net/tailscale.md)
+- [如何给 nixpkgs 添加一个新的包](./tools/nix.md)
+- [clash meta 基础](./net/proxy.md)
 
 ## 并行，并发，多核，一致性
 
 - [Quiescent consistency，Sequential consistency 和 Linearizability](./concurrent/linearizability.md)
 - [wait free，lockfree 和 obstruction free 区分](./concurrent/lock-free.md)
 
-<!-- - 🚧 [memory model](./concurrent/memory-model.md) -->
-<!-- - 🚧 [volatile 关键字说明](./concurrent/volatile.md) -->
-
 ## Potpourri
 
 - [x86's acronyms](./x86-names.md)
 - [言论](./words.md)
 
-## Guff
+## 杂谈
 
 - [关于](./chatter/about.md)
   - https://bento.me/martins3
+  - [游戏](./games/games.md)
+  - [影视](./chores/movies.md)
+  - [可曾读过什么书](./chores/books.md)
+  - [播客](./chatter/podcast.md)
 - [2021 秋招总结](./chatter/job.md)
 - [有缘再见，龙芯](./chatter/loongson.md)
 
-## 工具
+## 固件
 
-- [如何给 nixpkgs 添加一个新的包](./tools/nix.md)
+- [efibootmgr 和 efivar](./uefi/efibootmgr.md)
+
+## 杂事
+
+- [摄影摄像环境](./chores/photo-workflow.md)
+
+## sanitizer
+
+- [asan](./concurrent/san/asan.md)
+- [kasan](./concurrent/san/kasan.md)
+- [kcsan](./concurrent/san/kcsan.md)
+- [tsan](./concurrent/san/tsan.md)
+- [ubsan](./concurrent/san/ubsan.md)
+- [sanitizer 实验代码](./concurrent/san/code/README.md)
 
 ## Kernel Contribution
 
@@ -223,6 +301,82 @@
 - [utopianfuture](https://utopianfuture.github.io/)
 - [xieby1](https://xieby1.github.io/)
 - [qaqcxh](https://qaqcxh.github.io/Blogs/)
+
+## 整理中
+
+### [ ] nvme
+
+- [nvme 模块简述](./kernel/blk/nvme/nvme.md)
+- [`nvme id-ns` 输出梳理](./kernel/blk/nvme/nvme-cli.md)
+- [《深入浅出 SSD》阅读笔记](./kernel/blk/nvme/nvme-hardware.md)
+- [nvmf](./kernel/blk/nvme/nvme-tcp.md)
+
+### [ ] memory model
+
+- [acquire and release](./concurrent/memory-model.md)
+- [编译器乱序](./concurrent/volatile/doc.md)
+
+### [ ] Yet another libvirt
+
+- collei 设计文档
+- 利用 codex 重写
+
+### [ ] mq
+
+- [bio-based 和 request-based 设备的区别](./kernel/blk/mq/bio-based-device.md)
+- [storage blk plug 机制](./kernel/blk/mq/plug.md)
+- [bio request request_queue 三者的关系](./kernel/blk/mq/bio-request.md)
+- [drivers/md/dm-rq.c](./kernel/blk/mq/dm-rq.md)
+- [Multi-Queue Block IO Queueing Mechanism (blk-mq)](./kernel/blk/mq/doc.md)
+- [Block Layer IO 请求路径详解 - Bypass 机制全梳理](./kernel/blk/mq/io_paths_analysis.md)
+- [Linux Device Driver : Block Drivers](./kernel/blk/mq/ldd-chapter-16.md)
+- [blk-mq-debugfs.c](./kernel/blk/mq/mq-debugfs.md)
+- [mq 核心结构体](./kernel/blk/mq/mq.md)
+- [sbitmap](./kernel/blk/mq/sbitmap.md)
+- [deadline scheduler](./kernel/blk/mq/scheduler-deadline.md)
+- [scheduler](./kernel/blk/mq/scheduler.md)
+- [shared tags](./kernel/blk/mq/shared-tags.md)
+- [tag](./kernel/blk/mq/tag.md)
+- [选项 BLK_WBT](./kernel/blk/mq/wbt.md)
+- [mq 基础](./kernel/blk/mq/yes.md)
+
+### [ ] iommu
+
+- [iommu domain 基本概念](./kernel/iommu/iommu-domain.md)
+- [iommufd](./kernel/iommu/iommufd.md)
+- [blk-mq-dma](./kernel/iommu/blk-dma.md)
+- [vIOMMU](./kernel/iommu/viommu.md)
+- [dma coherence](./kernel/iommu/dma-coherence.md)
+- [swiotlb](./kernel/iommu/swiotlb/swiotlb.md)
+
+- [auxd](./kernel/iommu/auxd.md)
+- [dma pool 是什么](./kernel/iommu/dma-pool.md)
+- [dev->dma_ops](./kernel/iommu/dma_ops.md)
+- [IOMMU](./kernel/iommu/overview.md)
+- [iotlb 什么时候 flush](./kernel/iommu/pasid.md)
+- [SIOV](./kernel/iommu/siov.md)
+- [SWIOTLB 常见疑问整理（结合最新上游代码）](./kernel/iommu/swiotlb-analysis.md)
+
+- arch
+  - [aarch64](./kernel/iommu/arch/aarch64.md)
+  - [amd](./kernel/iommu/arch/amd.md)
+  - [intel](./kernel/iommu/arch/intel.md)
+
+- [intel 的 iommu debugfs](./kernel/iommu/debugfs/debugfs.md)
+
+### [ ] userfaultfd
+
+- [Userfaultfd](./kernel/mm/userfaultfd/basic.md)
+- [userfaultfd 高级话题探讨](./kernel/mm/userfaultfd/advance.md)
+- [userfaultfd UAPI history](./kernel/mm/userfaultfd/uapi-history.md)
+
+### [ ] io_uring
+
+### [ ] cgroup
+
+### [ ] vmscan lru
+
+### [ ] rcu
 
 <!-- BEGIN AUTO DOCS INDEX -->
 ## 自动文档索引
@@ -239,13 +393,11 @@
   - [hack with qemu](./acpi/qemu.md)
   - [UACPI](./acpi/uacpi.md)
 - `asm/`
-  - `asm/`
-    - `aarch64/`
-      - [https://mariokartwii.com/armv8/](./asm/asm/aarch64/README.md)
-    - `x86_64/`
-      - [checksheet](./asm/asm/x86_64/README.md)
-    - [Nasm](./asm/asm/README.md)
-  - [配套代码](./asm/assembly.md)
+  - `aarch64/`
+    - [https://mariokartwii.com/armv8/](./asm/aarch64/README.md)
+  - `x86_64/`
+    - [checksheet](./asm/x86_64/README.md)
+  - [Nasm](./asm/README.md)
 - `benchmark/`
   - [性能基准测试工具](./benchmark/benchmarks.md)
   - [个人性能测试记录](./benchmark/my-result.md)
@@ -261,27 +413,23 @@
   - [QEMU 如何模拟 pcspker](./bmbt/pcspk.md)
 - `chatter/`
   - [consumerism](./chatter/consumerism.md)
-  - [游戏](./chatter/games.md)
   - [不要辜负这个伟大的时代](./chatter/great-era.md)
   - [为什么你不应该考公务员](./chatter/gwy.md)
   - [乱七八糟的想法](./chatter/life-dev.md)
   - [龙芯公司](./chatter/loongson-v2.md)
   - [关于读博的思考](./chatter/phd.md)
-  - [lexfridman](./chatter/podcast.md)
   - [readings](./chatter/readings.md)
   - [深圳](./chatter/shenzhen.md)
+  - [社交媒体](./chatter/social-media.md)
   - [看似有关系，实际上没关系](./chatter/unrelated-but-similar.md)
   - [远程工作体验](./chatter/wfh.md)
 - `concurrent/`
   - `arch/`
     - [简单看看 aarch64 的指令支持](./concurrent/arch/aarch64.md)
-    - [反汇编常见指令](./concurrent/arch/disassmble.md)
-    - [CPU 微架构](./concurrent/arch/instructions.md)
-    - [riscv](./concurrent/arch/riscv.md)
+    - [核心结论](./concurrent/arch/ai.md)
+    - [反汇编常见指令](./concurrent/arch/cpu-arch-atomic.md)
     - [x86](./concurrent/arch/x86.md)
   - `code/`
-    - `tools/`
-      - [tsan](./concurrent/code/tools/README.md)
     - [store-buffer](./concurrent/code/README.md)
   - `kernel/`
     - `api/`
@@ -302,7 +450,6 @@
       - [wait](./concurrent/kernel/api/wait.md)
       - [waitbit](./concurrent/kernel/api/waitbit.md)
       - [ww_mutex](./concurrent/kernel/api/ww_mutex.md)
-    - [kcsan](./concurrent/kernel/kcsan.md)
     - [内核文档](./concurrent/kernel/kernel-doc.md)
     - [kernel 各个模块的锁的设计](./concurrent/kernel/kernel-lock-design.md)
     - [lockdep 实现](./concurrent/kernel/lockdep-internal.md)
@@ -315,6 +462,11 @@
     - [pthread](./concurrent/lan/pthread.md)
     - [cpython 中锁设计](./concurrent/lan/python.md)
     - [rust async](./concurrent/lan/rust.md)
+  - `memory-consistency-models-tutorial/`
+    - [扉页](./concurrent/memory-consistency-models-tutorial/mcm-chinese.md)
+    - [Front Matter](./concurrent/memory-consistency-models-tutorial/mcm-original.md)
+    - [《Shared Memory Consistency Models: A Tutorial》中文总结](./concurrent/memory-consistency-models-tutorial/mcm-summary.md)
+    - [Shared Memory Consistency Models: A Tutorial](./concurrent/memory-consistency-models-tutorial/notes.md)
   - `perfbook/`
     - `autoread/`
       - `chapters/`
@@ -357,26 +509,24 @@
     - [CONFIG_TASKS_RCU](./concurrent/rcu/tasks_rcu.md)
     - [用户态 rcu](./concurrent/rcu/userspace-rcu.md)
     - [rcu 杂记](./concurrent/rcu/yes-we-know.md)
+  - `volatile/`
+    - [接受 volatile 和非 volatile 对象](./concurrent/volatile/ai.md)
   - [Linux 内核 Litmus Tests 介绍](./concurrent/1-litmus.md)
   - [并发锁分析工具 lslocks](./concurrent/2-tools.md)
-  - [Cache Coherence 机制](./concurrent/cache-coherency.md)
   - [并发编程中违反直觉的例子](./concurrent/counter-intuitive.md)
   - [并发数据结构 readerwriterqueue 分析](./concurrent/data-structure.md)
   - [梳理一下多核的基本生存法则](./concurrent/engineerings-perspective.md)
-  - [并发编程趣味资源与工具](./concurrent/fun.md)
   - [memory model: IRIW](./concurrent/iriw.md)
   - [Lockless 无锁设计收集](./concurrent/lockless.md)
-  - [Shared Memory Consistency Models: A Tutorial](./concurrent/m.md)
   - [Host 与 Guest 同步机制](./concurrent/misc.md)
   - [并发编程中 lockless 是什么意思](./concurrent/solutions.md)
-  - [并发调试工具 TSan](./concurrent/tools.md)
   - [事务内存初识](./concurrent/transctiona-memory.md)
   - [并行编程实践记录](./concurrent/usage.md)
   - [为什么并行编程如此困难](./concurrent/why-parallel-is-hard.md)
   - [kernel/sched/membarrier.c syscall](./concurrent/yes.md)
 - `container/`
   - [Podman Rootless 问题记录](./container/container.md)
-  - [Docker](./container/docker.md)
+  - [Docker 基本使用](./container/docker.md)
   - [有一个感觉 nsenter 之类的工具类组成 docker 的](./container/minitools.md)
   - [Podman 使用指南](./container/podman.md)
   - [docker 代理的方法](./container/proxy.md)
@@ -418,32 +568,14 @@
     - `blktrace/`
       - [关键原料](./kernel/blk/blktrace/internal.md)
       - [blktrace 基本使用](./kernel/blk/blktrace/usage.md)
+    - `dm/`
+      - [device mapper](./kernel/blk/dm/device-mapper.md)
     - `ds/`
       - [其他的各种收集](./kernel/blk/ds/README.md)
     - `fio/`
       - [HDD 已死](./kernel/blk/fio/fio-result.md)
     - `mq/`
-      - [bio-based 和 request-based 的区分](./kernel/blk/mq/bio-based-device.md)
-      - [bio request request_queue 三者的关系](./kernel/blk/mq/bio-request.md)
-      - [drivers/md/dm-rq.c](./kernel/blk/mq/dm-rq.md)
-      - [Multi-Queue Block IO Queueing Mechanism (blk-mq)](./kernel/blk/mq/doc.md)
-      - [Block Layer IO 请求路径详解 - Bypass 机制全梳理](./kernel/blk/mq/io_paths_analysis.md)
-      - [Linux Device Driver : Block Drivers](./kernel/blk/mq/ldd-chapter-16.md)
-      - [blk-mq-debugfs.c](./kernel/blk/mq/mq-debugfs.md)
-      - [mq 核心结构体](./kernel/blk/mq/mq.md)
-      - [storage blk plug 机制](./kernel/blk/mq/plug.md)
-      - [sbitmap](./kernel/blk/mq/sbitmap.md)
-      - [deadline scheduler](./kernel/blk/mq/scheduler-deadline.md)
-      - [scheduler](./kernel/blk/mq/scheduler.md)
-      - [shared tags](./kernel/blk/mq/shared-tags.md)
-      - [tag](./kernel/blk/mq/tag.md)
-      - [选项 BLK_WBT](./kernel/blk/mq/wbt.md)
-      - [mq 基础](./kernel/blk/mq/yes.md)
-    - `nvme/`
-      - [nvme-cli](./kernel/blk/nvme/nvme-cli.md)
-      - [深入浅出 SSD](./kernel/blk/nvme/nvme-hardware.md)
-      - [先将 fabrics 也放到这里吧](./kernel/blk/nvme/nvme-tcp.md)
-      - [nvme](./kernel/blk/nvme/nvme.md)
+      - [bio-based、request-based 与 `request_queue` 的关系](./kernel/blk/mq/bio-based-vs-request-based.md)
     - `raid/`
       - [资料](./kernel/blk/raid/general.md)
       - [同步模型](./kernel/blk/raid/lock.md)
@@ -469,11 +601,10 @@
     - [smartctl](./kernel/blk/7-smartctl.md)
     - [bcache](./kernel/blk/bcache.md)
     - [Blockdev 源码分析](./kernel/blk/blockdev.md)
+    - [discard / TRIM](./kernel/blk/discard.md)
     - [block layer integrity](./kernel/blk/integrity.md)
     - [分析下 disk events](./kernel/blk/later.md)
     - [blk layer lock](./kernel/blk/lock.md)
-    - [loop device](./kernel/blk/loop-device.md)
-    - [device mapper](./kernel/blk/lvm.md)
     - [nbd](./kernel/blk/nbd.md)
     - [null blk](./kernel/blk/null-blk.md)
     - [sata](./kernel/blk/sata.md)
@@ -493,7 +624,7 @@
     - [cpu-controller-files](./kernel/cgroup/cpu-controller-files.md)
     - [cgroup 的基础设施](./kernel/cgroup/tmp.md)
     - [cgroup 的操作手册](./kernel/cgroup/usage.md)
-    - [Cgroup V1](./kernel/cgroup/v1.md)
+    - [cgroup V1](./kernel/cgroup/v1.md)
   - `cpuinfo/`
     - `feature/`
       - [aperfmperf](./kernel/cpuinfo/feature/aperfmperf.md)
@@ -525,17 +656,13 @@
     - `epoll/`
       - [epoll 断联之后，可以继续重连](./kernel/fs/epoll/epoll-reconnect.md)
       - [epoll](./kernel/fs/epoll/epoll.md)
-    - `ext4/`
-      - [ext4 文档](./kernel/fs/ext4/doc.md)
-      - [fs jbd2](./kernel/fs/ext4/jbd2.md)
-      - [dumpe2fs](./kernel/fs/ext4/lab.md)
-      - [ext4](./kernel/fs/ext4/overview.md)
     - `nfs/`
       - `sunrpc/`
         - [README](./kernel/fs/nfs/sunrpc/README.md)
-      - [常用命令](./kernel/fs/nfs/basic.md)
-    - `simplefs/`
-      - [我用 ai 写了一个文件系统](./kernel/fs/simplefs/README.md)
+    - `virtual/`
+      - [configfs](./kernel/fs/virtual/configfs.md)
+      - [kernfs](./kernel/fs/virtual/kernfs.md)
+      - [总结一下各种虚拟文件系统](./kernel/fs/virtual/virtual.md)
     - [acl](./kernel/fs/acl.md)
     - [autofs 的作用](./kernel/fs/autofs.md)
     - [bcachefs](./kernel/fs/bcachefs.md)
@@ -547,7 +674,6 @@
     - [cp vs mv 替换运行中二进制](./kernel/fs/etxtbsy.md)
     - [fsfreeze](./kernel/fs/freeze.md)
     - [fsnotify](./kernel/fs/fsnotify.md)
-    - [文件系统功能分类](./kernel/fs/function-checklist.md)
     - [inode](./kernel/fs/inode.md)
     - [fs/iomap](./kernel/fs/iomap.md)
     - [iops](./kernel/fs/iops.md)
@@ -555,11 +681,7 @@
     - [mount](./kernel/fs/mount.md)
     - [关键源码位置](./kernel/fs/namei.md)
     - [基本 io 流程](./kernel/fs/overlay.md)
-    - [pipe](./kernel/fs/pipe.md)
     - [relay fs](./kernel/fs/relay.md)
-    - [configfs](./kernel/fs/virtual-configfs.md)
-    - [kernfs](./kernel/fs/virtual-kernfs.md)
-    - [总结一下各种虚拟文件系统](./kernel/fs/virtual.md)
     - [为什么设计一个文件系统是很难的](./kernel/fs/why-so-complex.md)
     - [writeback](./kernel/fs/writeback.md)
     - [attr && xattr](./kernel/fs/xattr.md)
@@ -650,23 +772,24 @@
     - [2024](./kernel/lsfmmbpf/2024.md)
     - [lsfmmbpf 2026](./kernel/lsfmmbpf/2026.md)
   - `mm/`
+    - `damon/`
+      - [DAMO](./kernel/mm/damon/damo.md)
+      - [DAMON](./kernel/mm/damon/damon.md)
+      - [DAMON Lab 3](./kernel/mm/damon/lab3.md)
+      - [yyds-fs DAMON 局部性实验](./kernel/mm/damon/locality-yyds-fs.md)
+    - `pgtable/`
+      - [msharefs](./kernel/mm/pgtable/msharefs.md)
     - `slub/`
       - [slub 调试记录](./kernel/mm/slub/debug.md)
       - [slub](./kernel/mm/slub/overview.md)
       - [Slub TID](./kernel/mm/slub/tid.md)
       - [Slub Tools](./kernel/mm/slub/tools.md)
-    - `userfaultfd/`
-      - [Userfaultfd](./kernel/mm/userfaultfd/mm-userfault.md)
     - [Idle Page Tracking](./kernel/mm/idle-page-tracking.md)
-    - [madvise](./kernel/mm/mm-advise.md)
     - [Backing Device](./kernel/mm/mm-backing-dev.md)
     - [Buddy System](./kernel/mm/mm-buddy.md)
     - [CMA](./kernel/mm/mm-cma.md)
     - [Memory Compaction](./kernel/mm/mm-compaction.md)
     - [Copy-On-Write](./kernel/mm/mm-cow.md)
-    - [DAMO](./kernel/mm/mm-damon-damo.md)
-    - [DAMON Lab 3](./kernel/mm/mm-damon-lab3.md)
-    - [DAMON](./kernel/mm/mm-damon.md)
     - [Page Poisoning](./kernel/mm/mm-debug.md)
     - [Memory Failure](./kernel/mm/mm-failure.md)
     - [Page Cache](./kernel/mm/mm-filemap.md)
@@ -703,7 +826,6 @@
     - [Page Fault](./kernel/mm/mm-pagefault.md)
     - [Page Flags](./kernel/mm/mm-pageflags.md)
     - [Page Owner](./kernel/mm/mm-pageowner.md)
-    - [Page Table Flags](./kernel/mm/mm-pgtable.md)
     - [Page Poisoning](./kernel/mm/mm-poison.md)
     - [Readahead](./kernel/mm/mm-readahead.md)
     - [Page Refcount](./kernel/mm/mm-refcount.md)
@@ -805,6 +927,8 @@
   - `swap/`
     - [4](./kernel/swap/fj.md)
     - [简单分析一下 folio 在 lru 中移动](./kernel/swap/folio_add_lru.md)
+    - [Q : Linux 现在支持大页 swap out 吗?](./kernel/swap/hugepage.md)
+    - [kvm](./kernel/swap/kvm.md)
     - [备忘](./kernel/swap/lruvec.md)
     - [page-io.c](./kernel/swap/page-io.md)
     - [RDMA Swap](./kernel/swap/rdma-swap.md)
@@ -813,6 +937,7 @@
     - [swap.c 分析](./kernel/swap/swap.md)
     - [理解下这个变化](./kernel/swap/swapcache.md)
     - [swapfile.c](./kernel/swap/swapfile.md)
+    - [分析](./kernel/swap/user.md)
     - [zram 基本使用](./kernel/swap/zram.md)
     - [zswap](./kernel/swap/zswap.md)
   - `sysfs/`
@@ -848,6 +973,7 @@
     - [ssh 的操作会过 tty 机制吗?](./kernel/tty/ssh.md)
     - [sysfs](./kernel/tty/sysfs.md)
     - [sysrq](./kernel/tty/sysrq.md)
+    - [为什么 ssh 会报告 xterm-ghostty 不存在?](./kernel/tty/terminfo.md)
     - [termios](./kernel/tty/termios.md)
     - [tty driver](./kernel/tty/tty-driver.md)
     - [tty 到底是什么](./kernel/tty/tty.md)
@@ -888,7 +1014,6 @@
     - [proxmox 基本使用](./kernel/tutorial/proxmox.md)
     - [sparse && smatch](./kernel/tutorial/sparse.md)
     - [Linux 测试](./kernel/tutorial/test.md)
-    - [ubsan](./kernel/tutorial/ubsan.md)
     - [uml](./kernel/tutorial/uml.md)
     - [记录一些极其奇怪的问题](./kernel/tutorial/wired.md)
   - `usb/`
@@ -929,7 +1054,6 @@
   - [bus](./kernel/bus.md)
   - [CFI in kernel](./kernel/cfi.md)
   - [中国 Linux 大会记录](./kernel/clk.md)
-  - [谈谈 kernel 构建的基本技术](./kernel/compiler.md)
   - [linux 设备驱动](./kernel/device.md)
   - [对 swap device 错误注入](./kernel/fault-inject-swap.md)
   - [错误注入](./kernel/fault-inject.md)
@@ -961,9 +1085,6 @@
   - [kernel-recipes 2025](./kr/2025.md)
 - `kvm/`
   - `aarch64/`
-    - `sys_regs/`
-      - `id/`
-        - [aarch64 loregion](./kvm/aarch64/sys_regs/id/loregion.md)
     - [ARM KVM 的大致代码流程](./kvm/aarch64/README.md)
   - `features/`
     - [kvm feautres](./kvm/features/kvm-features.md)
@@ -1171,13 +1292,12 @@
   - [LWT（Light Weight Tunnel）是什么?](./net/lwt.md)
   - [macvlan](./net/macvlan.md)
   - [mptcp](./net/mptcp.md)
-  - [net zero copy](./net/msg_zerocopy.md)
   - [backlog](./net/napi.md)
   - [neighbour](./net/neighbour.md)
   - [网络基本配置](./net/net-config.md)
   - [网络问题常见排查思路](./net/net-debug.md)
   - [Linux kernel network stack lock](./net/net-lock.md)
-  - [loopback 网卡](./net/net-loopback.md)
+  - [loopback](./net/net-loopback.md)
   - [mlx5](./net/net-mlx5.md)
   - [网络的 namespace](./net/net-namespace.md)
   - [net-phy](./net/net-phy.md)
@@ -1186,7 +1306,6 @@
   - [net-sendfile](./net/net-sendfile.md)
   - [network timestamping](./net/net-timestamping.md)
   - [Network tools internals](./net/net-tools.md)
-  - [vsock](./net/net-vsock.md)
   - [linux 网络基础查漏补缺](./net/net.md)
   - [netconsole](./net/netconsole.md)
   - [这应该就是 kernel network 的会议吧](./net/netdev.md)
@@ -1202,7 +1321,6 @@
   - [网络性能](./net/perfermance.md)
   - [从这里切入的确不错](./net/pingora.md)
   - [mac 会不断的产生这个日志](./net/promiscuous.md)
-  - [关于 clash 代理的两个基本问题](./net/proxy.md)
   - [qdisc](./net/qdisc.md)
   - [quic](./net/quic.md)
   - [raw socket](./net/raw-socket.md)
@@ -1357,7 +1475,7 @@
   - [qmp 和 hmp](./qemu/qmp-hmp.md)
   - [multi-process qemu](./qemu/remote.md)
   - [CPUX86State reset](./qemu/reset.md)
-  - [slirp](./qemu/slirp.md)
+  - [默认模式下，QEMU 是如何保证给一个分配的 10.0.2.15 的](./qemu/slirp.md)
   - [QEMU 中的 trace 机制](./qemu/trace.md)
 - `rust/`
   - `code/`
@@ -1504,19 +1622,21 @@
   - [vmware 简单记录](./vmware/vmware.md)
 - `windows/`
   - `code/`
-    - [Windows API 测试项目](./windows/code/README.md)
+    - `docs/`
+      - [Linux / Windows 系统编程对照](./windows/code/docs/linux_windows_mapping.md)
+    - [Windows 系统编程 Demo](./windows/code/README.md)
   - `driver/`
     - [windows 驱动开发](./windows/driver/windows-driver.md)
-  - [windows 性能测试工具](./windows/benchmarks.md)
-  - [dotnet](./windows/dotnet.md)
+  - [dotnet 简述](./windows/dotnet.md)
+  - [mingw](./windows/mingw.md)
   - [windows 杂谈](./windows/misc.md)
   - [windows 网络](./windows/net.md)
   - [windows powershell 基本命令](./windows/pwsh.md)
   - [rdp](./windows/rdp.md)
   - [windows 环境搭建](./windows/setup-env.md)
+  - [windows 性能测试工具](./windows/tools.md)
   - [如何将 windows 放到虚拟机中](./windows/virt.md)
-  - [windows](./windows/windows-route.md)
-  - [windows 下的基本编程](./windows/windows-via-cpp.md)
+  - [Virual Studio 简记](./windows/vs.md)
 - `xen/`
   - [xen](./xen/README.md)
 <!-- END AUTO DOCS INDEX -->

@@ -128,8 +128,260 @@ static const struct sys_reg_desc sys_reg_descs[] = {
   - LDC, LDC2 (literal)
   - STC, STC2.
 
-## 几个经典回调的分析
-1. access_id_reg
+## sys_reg_desc 中的常见定义
+
+### ID_SANITISED
+只读，reset 直接读 sanitized HW 值
+```c
+static const struct sys_reg_desc sys_reg_descs[] = {
+	// ...
+	ID_SANITISED(ID_AA64MMFR1_EL1),
+```
+
+```c
+/* sys_reg_desc initialiser for known cpufeature ID registers */
+#define ID_SANITISED(name) {			\
+	SYS_DESC(SYS_##name),			\
+	.access	= access_id_reg,		\
+	.get_user = get_id_reg,			\
+	.set_user = set_id_reg,			\
+	.visibility = id_visibility,		\
+	.reset = kvm_read_sanitised_id_reg,	\
+	.val = 0,				\
+}
+```
+
+### ID_WRITABLE
+可写，reset 读 sanitized HW 值，set 用通用 set_id_reg
+
+ID_WRITABLE(name, mask)
+```c
+/* sys_reg_desc initialiser for writable ID registers */
+#define ID_WRITABLE(name, mask) {		\
+	SYS_DESC(SYS_##name),			\
+	.access	= access_id_reg,		\
+	.get_user = get_id_reg,			\
+	.set_user = set_id_reg,			\
+	.visibility = id_visibility,		\
+	.reset = kvm_read_sanitised_id_reg      \
+	.val = mask,				\
+}
+```
+
+## SYS_ID_AA64DFR0_EL1
+
+SYS_ID_AA64DFR0_EL1 实在是太经典了，由于各种失误，导致需要很多特殊的操作
+```c
+  { SYS_DESC(SYS_ID_AA64DFR0_EL1),
+    .access = access_id_reg,
+    .get_user = get_id_reg,
+    .set_user = set_id_aa64dfr0_el1,
+    .reset = read_sanitised_id_aa64dfr0_el1,
+    .val = ID_AA64DFR0_EL1_DoubleLock_MASK |
+           ID_AA64DFR0_EL1_WRPs_MASK |
+           ID_AA64DFR0_EL1_PMUVer_MASK |
+           ID_AA64DFR0_EL1_DebugVer_MASK,
+  },
+```
+
+其实很容易理解:
+1. access : 从 Guest 访问的时候调用
+2. get_user 和 set_user : 从 QEMU 访问
+3. reset 就是默认数值
+4. val 是可写位掩码（write mask）。1 表示 userspace 可以改这些位，其余位强制为硬件 sanitize 后的值。
+
+为什么 ID_AA64DFR0_EL1 要单独注册？
+
+### reset
+
+read_sanitised_id_aa64dfr0_el1() 做的工作：
+
+1. 限制 DebugVer 上限：
+	ID_REG_LIMIT_FIELD_ENUM(val, ID_AA64DFR0_EL1, DebugVer, V8P8)
+	把 DebugVer 限制到 V8P8，不会暴露超过 KVM 支持能力的新 debug 版本。
+2. PMUVer 按 vCPU 配置重写：
+	只有在 kvm_vcpu_has_pmu(vcpu) 时才写入正确的 PMUv3 版本，否则清 0。
+3. 隐藏 SPE / BRBE：
+	KVM 目前不向 guest 暴露 SPE 和 BRBE。
+```c
+    val &= ~ID_AA64DFR0_EL1_PMSVer_MASK;  // SPE
+    val &= ~ID_AA64DFR0_EL1_BRBE_MASK;    // BRBE
+```
+4. Realm / CVM 特殊处理：
+	调用 kvm_realm_reset_id_aa64dfr0_el1(vcpu, val)，针对 confidential VM 再做 BRP/WRP 限制。
+	这些逻辑其他 ID 寄存器没有，所以必须自定义 .reset。
+
+### set_user
+userspace 写时需要额外校验（.set_user 专用函数）
+
+set_id_aa64dfr0_el1() 做的工作：
+
+1. PMUVer IMP_DEF 兼容旧 KVM：
+老版本 KVM 曾错误地把 IMP_DEF PMU 暴露给 userspace；这里把它改写为 0（Not implemented），避免旧 userspace 拿到非法值。
+
+2. 校验 DebugVer、BRPs、WRPs、CTX_CMPs：
+  ```c
+    if (debugver < ID_AA64DFR0_EL1_DebugVer_IMP || !bps || !wps || ctx_cmps > bps)
+        return -EINVAL;
+  ```
+  DebugVer 必须 ≥ IMP，BRP/WRP 数量不能为 0，CTX_CMPs 不能多于 BRPs。
+3. 非 CVM 场景下禁止乱改 BRP/WRP/CTX_CMPs：
+结合 .val 掩码，只允许改 DoubleLock / WRPs / PMUVer / DebugVer 等字段。
+
+通用 set_id_reg 只做“是否超过硬件能力”的检查，不会针对 ID_AA64DFR0_EL1 的字段关系做上述业务校验。
+
+## sys_reg_desc::val
+
+struct sys_reg_desc.val 在 arch/arm64/kvm/sys_regs.h 中是一个复用字段，
+含义取决于这条描述的是普通系统寄存器还是 ID/feature 寄存器：
+
+1. 普通寄存器：reset value
+
+对普通 EL1/EL2 系统寄存器，val 就是该寄存器的复位值（reset value）。
+典型使用函数是 reset_val()：
+
+```c
+  static inline u64 reset_val(struct kvm_vcpu *vcpu, const struct sys_reg_desc *r)
+  {
+      __vcpu_sys_reg(vcpu, r->reg) = r->val;
+      return __vcpu_sys_reg(vcpu, r->reg);
+  }
+```
+
+例如：
+
+```c
+  { SYS_DESC(SYS_SCTLR_EL1), access_vm_reg, reset_val, SCTLR_EL1, 0x00C50078 },
+```
+
+这里 0x00C50078 就是 SCTLR_EL1 的初始值。
+
+2. ID/feature 寄存器：write mask
+
+对 ARM64 的 cpufeature ID 寄存器，val 不是复位值，而是用户空间可写字段掩码（writable mask）。
+
+arch/arm64/kvm/sys_regs.c 里的注释写得很清楚：
+
+```c
+  /*
+   * Since reset() callback and field val are not used for idregs, they will be
+   * used for specific purposes for idregs.
+   * The reset() would return KVM sanitised register value.
+   * The val would be used as a mask indicating writable fields for the idreg.
+   * Only bits with 1 are writable from userspace.
+   */
+```
+
+在 arm64_check_features() 中，rd->val 被直接当作 writable_mask：
+
+```c
+  u64 writable_mask = rd->val;
+  u64 limit = rd->reset(vcpu, rd);
+  ...
+  if ((ftr_mask & writable_mask) != ftr_mask)
+      continue;
+```
+
+逻辑是：
+• 掩码中为 1 的位：表示该字段允许用户空间修改，KVM 只检查新值是否是硬件支持值的“安全子集”。
+• 掩码中为 0 的位：表示不可写，用户写入的值必须等于 KVM 内部 sanitize 后的值。
+
+例如：
+
+```c
+  { SYS_DESC(SYS_ID_AA64PFR0_EL1),
+    .reset = read_sanitised_id_aa64pfr0_el1,
+    .val = ID_AA64PFR0_EL1_CSV2_MASK | ID_AA64PFR0_EL1_CSV3_MASK, },
+```
+
+表示 ID_AA64PFR0_EL1 里只有 CSV2 和 CSV3 两个字段允许 userspace 改。
+
+而大多数 ID 寄存器用 ID_SANITISED() 宏初始化：
+
+```c
+  #define ID_SANITISED(name) {    \
+      ...
+      .reset = kvm_read_sanitised_id_reg, \
+      .val = 0,                \
+  }
+```
+
+.val = 0 表示目前不允许 userspace 修改任何字段。
+
+总结
+┌───────────────────┬────────────────────────┬───────────────────────────────────┐
+│ 寄存器类型        │ val 含义               │ 典型例子                          │
+├───────────────────┼────────────────────────┼───────────────────────────────────┤
+│ 普通系统寄存器    │ reset value            │ SCTLR_EL1 的 0x00C50078           │
+├───────────────────┼────────────────────────┼───────────────────────────────────┤
+│ ID/feature 寄存器 │ userspace 可写字段掩码 │ ID_AA64PFR0_EL1 的 CSV2/CSV3_MASK │
+└───────────────────┴────────────────────────┴───────────────────────────────────┘
+
+所以注释
+```txt
+/* Value (usually reset value), or write mask for idregs */
+```
+里的 “or” 就是表示这种二义性复用。
+
+### sys_reg_desc::val 和 reset 的作用前后
+
+set_id_aa64dfr0_el1 在前，.val 的校验在后。
+
+```txt
+  kvm_sys_reg_set_user()          // 处理 KVM_SET_ONE_REG
+    └── r->set_user(vcpu, r, val) // 即 set_id_aa64dfr0_el1，先拿到 userspace 原始值
+          └── set_id_reg(vcpu, rd, val)
+                └── arm64_check_features(vcpu, rd, val)
+                      └── writable_mask = rd->val;   // 这里才用到 .val
+                          limit = rd->reset(vcpu, rd);
+```
+
+1. 先执行：set_id_aa64dfr0_el1
+
+set_id_aa64dfr0_el1 是第一个拿到 userspace 写入值的函数，做针对该寄存器的特殊业务校验：
+
+• 把老 KVM 误暴露的 PMUVer_IMP_DEF 改写为 0；
+• 检查 DebugVer、BRPs、WRPs、CTX_CMPs 的合法性；
+• 非 CVM 场景下拒绝不合理的 debug 配置。
+
+它不会直接用 .val 去 mask 输入值；它只负责“这个寄存器特有的语义检查”，然后把（可能已被修正的）val 传给 set_id_reg。
+
+2. 后执行：.val 作为可写位掩码
+
+.val 在 arm64_check_features() 中被当作 writable_mask 使用：
+
+```c
+  u64 writable_mask = rd->val;        // 即 ID_AA64DFR0_EL1 的 .val
+  u64 limit = rd->reset(vcpu, rd);    // 即 read_sanitised_id_aa64dfr0_el1 的返回值
+```
+
+这其实很合理，set_id_aa64dfr0_el1 本来就是对于用户态的内容来做修正的，
+做了修正之后，然后和 hw sanitised val 做比对
+
+## kvm exit 如何处理 sysreg
+```c
+static exit_handle_fn arm_exit_handlers[] = {
+	[ESR_ELx_EC_CP15_32]	= kvm_handle_cp15_32,
+	[ESR_ELx_EC_CP15_64]	= kvm_handle_cp15_64,
+	[ESR_ELx_EC_CP14_MR]	= kvm_handle_cp14_32,
+	[ESR_ELx_EC_CP14_LS]	= kvm_handle_cp14_load_store,
+	[ESR_ELx_EC_CP10_ID]	= kvm_handle_cp10_id,
+	[ESR_ELx_EC_CP14_64]	= kvm_handle_cp14_64,
+
+	// ...
+	[ESR_ELx_EC_SYS64]	= kvm_handle_sys_reg,
+```
+
+- kvm_handle_sys_reg
+	- emulate_sys_reg
+		- perform_access
+			- sys_reg_desc::access : 调用对应寄存器的，一般就是 access_id_reg ，最后其实就是 read_id_reg
+
+为什么会切分出来发这些不同的 handler ，这个可能是需要仔细研究下 arm 架构了，
+不过最常用的 sys_insn_descs 和 sys_reg_descs
+是走到 kvm_handle_sys_reg 的
+
+### access_id_reg
 
 access_id_reg — ID 特性寄存器的读回调
 
@@ -169,7 +421,7 @@ ARM 手册里把下面这类寄存器统称为 ID registers：
 └─────────────────────────────────────────────────────────┴────────────────────────────────────────────────────────────────────────────────┘
 
 
-2. access_vm_reg
+### access_vm_reg
 
 处理 EL1 虚拟内存控制寄存器的写访问，例如 SCTLR_EL1、TTBR0_EL1、TTBR1_EL1、TCR_EL1、MAIR_EL1、ESR_EL1、FAR_EL1 等。
 
@@ -187,29 +439,6 @@ BUG_ON(!p->is_write);
 #define REG_RAZ			(1 << 1) /* RAZ from userspace and guest */
 #define REG_USER_WI		(1 << 2) /* WI from userspace only */
 ```
-
-## kvm exit 如何处理 sysreg
-```c
-static exit_handle_fn arm_exit_handlers[] = {
-	[ESR_ELx_EC_CP15_32]	= kvm_handle_cp15_32,
-	[ESR_ELx_EC_CP15_64]	= kvm_handle_cp15_64,
-	[ESR_ELx_EC_CP14_MR]	= kvm_handle_cp14_32,
-	[ESR_ELx_EC_CP14_LS]	= kvm_handle_cp14_load_store,
-	[ESR_ELx_EC_CP10_ID]	= kvm_handle_cp10_id,
-	[ESR_ELx_EC_CP14_64]	= kvm_handle_cp14_64,
-
-	// ...
-	[ESR_ELx_EC_SYS64]	= kvm_handle_sys_reg,
-```
-
-- kvm_handle_sys_reg
-	- emulate_sys_reg
-		- perform_access
-			- sys_reg_desc::access : 调用对应寄存器的，一般就是 access_id_reg ，最后其实就是 read_id_reg
-
-为什么会切分出来发这些不同的 handler ，这个可能是需要仔细研究下 arm 架构了，
-不过最常用的 sys_insn_descs 和 sys_reg_descs
-是走到 kvm_handle_sys_reg 的
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

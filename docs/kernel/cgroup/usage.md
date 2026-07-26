@@ -210,6 +210,14 @@ https://stackoverflow.com/questions/70064457/move-a-process-to-a-new-cgroup-in-c
 
 看看如果限制了 container 的资源之后，结果是什么样的
 
+
+## taskset
+<!-- e414880a-8de9-4662-953f-5fff3e516ef7 -->
+
+taskset -c 0-8 zsh
+
+然后在 zsh 中执行任何命令
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

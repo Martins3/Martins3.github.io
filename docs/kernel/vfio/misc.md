@@ -73,66 +73,6 @@ vfio_init 中
 
 猜测是 uml 下，对于 vfio 机制的模拟，还是有想象力的。
 
-## 不知道为什么现在直通都是会有报错的
-
-当然，也不影响使用哈:
-```txt
-emu-system-aarch64: qemu_vfio_dma_map(0xfffda1ffd000, 8589934592) failed: VFIO_MAP_DMA failed: Cannot allocate memory
-qemu-system-aarch64: qemu_vfio_dma_map(0xfffd97e00000, 67108864) failed: VFIO_MAP_DMA failed: Cannot allocate memory
-qemu-system-aarch64: qemu_vfio_dma_map(0xfffd93c00000, 67108864) failed: VFIO_MAP_DMA failed: Cannot allocate memory
-qemu-system-aarch64: -device virtio-blk-pci,drive=disk_backend: VFIO_MAP_DMA failed: Cannot allocate memory
-```
-
-完全不知道这个东西的规律是什么
-
-### 即便是 VFIO_MAP_DMA 映射错误，系统也是可以正常运行的
-2024-12
-```txt
-qemu-system-x86_64: warning: Number of hotpluggable cpus requested (128) exceeds the recommended cpus supported by KVM (32)
-[martins3:virtio_dummy_instance_init:126] 0x55d4bdd62ef0
-qemu-system-x86_64: VFIO_MAP_DMA failed: Invalid argument
-qemu-system-x86_64: vfio_container_dma_map(0x55d4bc5924f0, 0x380000000000, 0x10000000, 0x7fba00000000) = -22 (Invalid argument)
-qemu-system-x86_64: VFIO_MAP_DMA failed: Invalid argument
-qemu-system-x86_64: vfio_container_dma_map(0x55d4bc5924f0, 0x380010000000, 0x2000000, 0x7fba1c000000) = -22 (Invalid argument)
-qemu-system-x86_64: VFIO_MAP_DMA failed: Invalid argument
-qemu-system-x86_64: vfio_container_dma_map(0x55d4bc5924f0, 0x380000000000, 0x10000000, 0x7fba00000000) = -22 (Invalid argument)
-qemu-system-x86_64: VFIO_MAP_DMA failed: Invalid argument
-qemu-system-x86_64: vfio_container_dma_map(0x55d4bc5924f0, 0x380010000000, 0x2000000, 0x7fba1c000000) = -22 (Invalid argument)
-qemu-system-x86_64: VFIO_MAP_DMA failed: Invalid argument
-qemu-system-x86_64: vfio_container_dma_map(0x55d4bc5924f0, 0x380000000000, 0x10000000, 0x7fba00000000) = -22 (Invalid argument)
-qemu-system-x86_64: VFIO_MAP_DMA failed: Invalid argument
-qemu-system-x86_64: vfio_container_dma_map(0x55d4bc5924f0, 0x380010000000, 0x2000000, 0x7fba1c000000) = -22 (Invalid argument)
-```
-
-原来直通 nvme 的时候也是有 bug 的:
-```txt
-[martins3:virtio_dummy_instance_init:126] 0x55a8c89411b0
-qemu-system-x86_64: VFIO_MAP_DMA failed: Invalid argument
-qemu-system-x86_64: vfio_container_dma_map(0x55a8c7683870, 0x3800000000
-qemu-system-x86_64: VFIO_MAP_DMA failed: Invalid argument
-qemu-system-x86_64: vfio_container_dma_map(0x55a8c7683870, 0x3800000000
-qemu-system-x86_64: VFIO_MAP_DMA failed: Invalid argument
-qemu-system-x86_64: vfio_container_dma_map(0x55a8c7683870, 0x3800000000
-qemu-system-x86_64: VFIO_MAP_DMA failed: Invalid argument
-qemu-system-x86_64: vfio_container_dma_map(0x55a8c7683870, 0x3800000000
-qemu-system-x86_64: VFIO_MAP_DMA failed: Invalid argument
-qemu-system-x86_64: vfio_container_dma_map(0x55a8c7683870, 0x3800000000
-qemu-system-x86_64: VFIO_MAP_DMA failed: Invalid argument
-qemu-system-x86_64: vfio_container_dma_map(0x55a8c7683870, 0x3800000000
-qemu-system-x86_64: VFIO_MAP_DMA failed: Invalid argument
-qemu-system-x86_64: vfio_container_dma_map(0x55a8c7683870, 0x3800000000
-```
-
-可以发现都是在映射一个地方的时候会出现错误，所以认为应该是一个 mmio 空间的问题了。
-
-这个可以用切换内核到 stable 版本看看，也许过一段时间就没有这些问题了。
-
-的确，到了 2025-12-20 的时候，还是之前的硬件，就没有问题
-内核 : 6.17.7-00001-gfd23f075a322
-QEMU : version 10.1.91 (v10.2.0-rc1-78-g9ef49528b528-dirty)
-
-2026-01-11 发现还是有问题，触发原因未知。
-
 ## 和 option rom 的关系
 
 为什么直通的时候，还需要管 option rom ?

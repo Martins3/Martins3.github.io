@@ -921,7 +921,7 @@ make_spte 中的，如果这次 fault 本身已经说明 guest 要写这页了�
 
 如果 swap in 进来，对于 read fault ，那么就自动的配置 shadow_dirty_mask ，这个逻辑太奇怪了。
 
-## 热迁移为什么不会出现 dirty 丢失
+## migration 为什么不会出现 dirty 丢失
 <!-- e014940a-08f6-4727-93d5-4c6978d30bfd -->
 
 问题: 我们发现 log sync 和 log clear 是划分为两个动作的:

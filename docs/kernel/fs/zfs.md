@@ -28,6 +28,9 @@ https://www.reddit.com/r/zfs/comments/107gz3u/a_detailed_guide_to_openzfs_unders
 
 https://jro.io/truenas/openzfs/
 
+为什么存储都喜欢用 zfs
+https://neil.computer/notes/how-to-setup-minimal-zfs-nas-without-truenas/
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="
