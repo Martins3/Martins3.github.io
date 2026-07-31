@@ -1,78 +1,132 @@
-• 严格说，热迁移里“跳过 balloon 页”主要不是靠传统 balloon inflate 本身完成的，而是靠 virtio-balloon 的 free-page-hint 迁移优化。
+## migration 的通知机制就是为了
+- 注册：启用 VIRTIO_BALLOON_F_FREE_PAGE_HINT 时调用 precopy_add_notifier()
+  hw/virtio/virtio-balloon.c:894
 
-  传统 balloon inflate 这条路里，guest 把 PFN 交给 balloon 后，QEMU 在源端只是把对应宿主页做 discard，回收宿主内存
-  balloon_inflate_page() 里直接调用 ram_block_discard_range()；底层通常走 madvise(DONTNEED) 或 fallocate(PUNCH_HOLE)，
-  是“把 host backing 扔掉”，不是直接改迁移位图。
+- 回调处理：
+  hw/virtio/virtio-balloon.c:655
 
-  真正让 precopy “别发这些页”的，是 free-page-hint。QEMU 在每轮 precopy 的 dirty bitmap sync 前后插了 notifier
-  ：sync 前先停 hint，sync 后再让 guest 开始上报当前 free pages，具体看 virtio_balloon_free_page_hint_notify()。
+- 设备销毁时注销：
+  hw/virtio/virtio-balloon.c:925
 
-  guest 通过 free-page virtqueue 把空闲页范围发给 QEMU，QEMU 收到后调用
-  get_free_page_hints -> qemu_guest_free_page_hint(addr, len)。
+各通知目前的用途：
 
-qemu_guest_free_page_hint() 做的事就是核心：
-	- 把这些页从迁移 dirty bitmap rb->bmap 里清掉；
-	- 同时把对应底层 dirty log 也清掉，避免下一轮 sync 又把它们重新加回来；
-	- 于是这些页后续就不会进入发送队列了。 具体看 qemu_guest_free_page_hint()
+```txt
+ Reason                发送位置                              virtio-balloon 行为
+━━━━━━━━━━━━━━━━━━━━  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ SETUP                 migration setup                       无操作
+────────────────────  ────────────────────────────────────  ──────────────────────────────────
+ BEFORE_BITMAP_SYNC    同步脏页 bitmap 前                    停止 guest 上报 free page
+────────────────────  ────────────────────────────────────  ──────────────────────────────────
+ AFTER_BITMAP_SYNC     同步完成后                            重新启动 free-page hint
+────────────────────  ────────────────────────────────────  ──────────────────────────────────
+ COMPLETE              precopy 切换完成                      无操作
+────────────────────  ────────────────────────────────────  ──────────────────────────────────
+ CLEANUP               migration 成功、失败或取消后的清理    通知 guest free-page hint 已结束
+────────────────────  ────────────────────────────────────  ──────────────────────────────────
+ MAX                   不发送                                仅作为枚举上界
+```
 
-另外还有一条独立路径是 RamDiscardManager：对“逻辑上已 unplug/discard”的内存范围，迁移会直接把这些范围从 dirty bitmap 中排除，
-具体看 ramblock_dirty_bitmap_clear_discarded_pages() 像 virtio-mem/sparse RAM 的语义，不是普通 balloon free-page-hint 本身。
 
-问题:
-首先，这里为什么存在一个单独的机制? 还搞的这么复杂
-2. virtio_balloon_free_page_hint_notify 的作用到底是什么?
-3. 哦，我意识到，现在的热迁移机制本来就可以使用这个来搞了。
+核心目的，是防止 guest 异步上报空闲页和 migration dirty bitmap 同步产生竞态：
 
+```txt
+停止 free-page hint
+        ↓
+同步 dirty bitmap
+        ↓
+重新开启 free-page hint
+```
 
----
+另外，如果允许 postcopy，virtio-balloon 回调会直接跳过这个优化，
+因为清掉 dirty bitmap 中的空闲页可能导致目标端 page fault 永久等待。
+也就是说，这套 notifier 名字虽然很通用，但当前基本就是为 virtio-balloon free-page-hint 服务的；
+SETUP 和 COMPLETE 目前甚至没有 实际消费者行为。
 
-  这里的 sync 指的是 migration_bitmap_sync_precopy() 里的 dirty log 同步，也就是把底层脏页记录拉进 QEMU 的迁移位图 rb->bmap
+### 基本调用流程
+这里的 sync 指的是 migration_bitmap_sync_precopy() 里的 dirty log 同步，也就是把底层脏页记录拉进 QEMU 的迁移位图 rb->bmap
  也就是 migration/ram.c:migration_bitmap_sync_precopy()
-  调用顺序是：
 
   1. PRECOPY_NOTIFY_BEFORE_BITMAP_SYNC
   2. migration_bitmap_sync(...)
   3. PRECOPY_NOTIFY_AFTER_BITMAP_SYNC
 
-  virtio_balloon_free_page_hint_notify() 就挂在这两个点上。hw/virtio/virtio-balloon.c:649
 
-  更具体地说：
+## 遇到的问题和解决办法
 
-  - BEFORE_BITMAP_SYNC 时，它调用 virtio_balloon_free_page_stop()，把状态设成 S_STOP。
-  - 然后迁移线程去做这一轮 dirty bitmap 同步。migration/ram.c:1193
-  - AFTER_BITMAP_SYNC 时，如果 VM 还在运行，就调用 virtio_balloon_free_page_start()，把状态设成 S_REQUESTED，通过 config notify 告诉 guest 开启一轮新的 free-page
-    hint。
+可以。假设有一个 guest 物理页 P，migration bitmap 中：
 
-  所以它本质上是在划分一个 epoch：
+- P = 1：需要迁移
+- P = 0：可以跳过
 
-  - 先冻结 hinting
-  - 做一次“官方的” dirty bitmap 快照
-  - 再重新开始收这一轮新的 free-page hints
+考虑没有 notifier 协调时的简化时序：
 
-  这样做的目的，是避免 free-page hint 和 dirty bitmap sync 交错，导致页被重复加入、漏清，或者跨轮次混在一起。
-
-
-因为 get_free_page_hints() 即使被调用，也只有在状态是 S_START 时，才会对收到的 in_sg 调 qemu_guest_free_page_hint()。
-而 qemu_guest_free_page_hint() 才是真正把这些页从 rb->bmap 里清掉的地方。
-
-也就是 get_free_page_hints 中的结果:
-```c
-    if (elem->in_num && dev->free_page_hint_status == FREE_PAGE_HINT_S_START) {
-        for (i = 0; i < elem->in_num; i++) {
-            qemu_guest_free_page_hint(elem->in_sg[i].iov_base,
-                                      elem->in_sg[i].iov_len);
-        }
-    }
+```txt
+Guest/balloon线程          KVM dirty log          Migration线程
+      │                         │                       │
+1. P 当前空闲
+2. 异步上报“P 是空闲页”
+      │
+3. P 被重新分配并写入 ────────► P = dirty
+      │
+      │                                      4. 同步 dirty bitmap
+      │                                         migration bitmap[P] = 1
+      │
+5. 迟到的 free-page hint 被处理
+   migration bitmap[P] = 0
+      │
+      │                                      6. 看到 P=0，不发送 P
 ```
 
-## 问题
-- 那些没有 touch 的页面，都是如何跳过的?
+问题在第 5 步：这个 hint 描述的是“此前观察到 P 空闲”，但处理时 dirty bitmap 已经同步了更新的数据。
+旧 hint 把刚同步出来的 dirty bit 又清掉，目标虚拟机就可能拿不到 P 的最新内容。
+
+反方向也可能产生性能问题：
+
+```txt
+free-page hint：P 已空闲，清成 0
+                  ↓
+dirty bitmap 同步又合入旧的 dirty 记录，把 P 设成 1
+                  ↓
+本来可以跳过的空闲页仍然被发送
+```
+
+所以 QEMU 把 free-page hint 严格放在两次 bitmap sync 之间：
+
+```txt
+同步 dirty bitmap
+        ↓
+AFTER_BITMAP_SYNC (注意，这里是 after ，开启了 dirty 跟踪了)
+
+启动 free-page hint
+        ↓
+guest 上报空闲页，QEMU 将会跳过这些页面 *
+        ↓
+BEFORE_BITMAP_SYNC
+停止上报，并等 hint 处理线程退出
+        ↓
+下一次同步 dirty bitmap
+```
+
+对 * 标记的位置的分析:
+1. AFTER_BITMAP_SYNC 后是开机了 dirty 跟踪的
+2. 如果 free-page hint 报告了页面可以跳过，但是依旧在页面中 dirty write 了，那么
+dirty 会记录到 KVM dirty bit 中，会在下一轮还是会记录下来
 
 
+这样下一次同步开始以后，就不会有“上一轮迟到的 hint”再次清除同步结果。对应代码是：
+- sync 前后发送通知：migration/ram.c:migration_bitmap_sync_precopy
+- hint 清除 migration bitmap：migration/ram.c:qemu_guest_free_page_hint
+- sync 前停止、sync 后启动：hw/virtio/virtio-balloon.c:virtio_balloon_free_page_hint_notify
 
-- [ ] 迁移的时候，guest 没有使用的页不用发送的?
-  - 似乎比到 proc/pid/map 下去检查更加好的
-    - 怀疑，qemu 中是否实现过这个功能
+这里不仅仅是 C 语言层面的数据竞争——bitmap_mutex 已经避免了同时修改数据结构；
+更关键的是跨 guest、KVM dirty log 和 migration 线程的“事件先后顺序”竞争。
+notifier 建立的是语义上的同步边界。
+
+## 其他算法的考虑
+
+1.对于 swap out 到共享存储页面也可以使用此方法
+
+也就是如果检测到页面在 swap 中，那么就跳过
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

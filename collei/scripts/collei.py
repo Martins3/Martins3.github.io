@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
-import getopt
 import json
 import os
 import platform
@@ -11,7 +10,6 @@ import shutil
 import socket
 import sys
 import time
-import uuid
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Protocol, Sequence
@@ -27,13 +25,15 @@ from host_setup import (
     prepare_novnc,
     prepare_ovs_tap,
 )
-from kernel import kernel_image
+from launch_options import LaunchOptions
 from qemu import QemuCommand
 from runtime import ColleiContext, VmRuntime
 from tasks import add_background_task, exec_task_follow
 from ui import print_banner
 from vfio import pci_bind_to_vfio
 from virtme import VirtmeSetup
+
+from kernel import kernel_image
 
 # collei.py 只负责启动虚拟机。
 #
@@ -55,83 +55,18 @@ class QemuProfile(Protocol):
     def mode(self) -> str: ...
 
 
-@dataclass(frozen=True)
-class LaunchOptions:
-    """collei.sh getopts 的 Python 对应；短选项语义保持不变。"""
-
-    dry_run: bool = False
-    migration: str | None = None
-    gdb: bool = False
-    efi_application: bool = False
-    debug_kernel: bool = False
-    foreground: bool = False
-
-    @classmethod
-    def parse(cls, arguments: Sequence[str]) -> LaunchOptions:
-        try:
-            options, remaining = getopt.getopt(
-                list(arguments),
-                "alTLdEhixvstwV",
-                ["dry-run", "foreground", "help"],
-            )
-        except getopt.GetoptError as error:
-            raise ColleiError(str(error)) from error
-        if remaining:
-            raise ColleiError(f"unexpected arguments: {' '.join(remaining)}")
-
-        dry_run = False
-        migration: str | None = None
-        migration_requests: set[str] = set()
-        gdb = False
-        efi_application = False
-        debug_kernel = False
-        foreground = False
-        for option, _ in options:
-            if option in {"-h", "--help"}:
-                raise ColleiHelp
-            if option == "--dry-run":
-                dry_run = True
-            elif option == "-a":
-                migration_requests.add("defer")
-            elif option == "-l":
-                migration_requests.add("file")
-            elif option == "-L":
-                migration_requests.add("cpr")
-            elif option == "-T":
-                migration_requests.add("cpr-transfer")
-            elif option == "-d":
-                gdb = True
-            elif option == "-E":
-                efi_application = True
-            elif option in {"-i", "-x", "-v", "-V"}:
-                raise ColleiError(
-                    "VM installation moved to collei-install.py; "
-                    f"use collei-install.py {option}"
-                )
-            elif option == "-s":
-                debug_kernel = True
-            elif option == "--foreground":
-                foreground = True
-            else:
-                # -t/-w 在原脚本中也没有实现，不能静默忽略。
-                raise ColleiError(f"unsupported option: {option}")
-        # 原脚本按 a -> l -> L -> T 的 if/elif 顺序决定组合选项的优先级。
-        migration = next(
-            (
-                mode
-                for mode in ("defer", "file", "cpr", "cpr-transfer")
-                if mode in migration_requests
-            ),
-            None,
-        )
-        return cls(
-            dry_run=dry_run,
-            migration=migration,
-            gdb=gdb,
-            efi_application=efi_application,
-            debug_kernel=debug_kernel,
-            foreground=foreground,
-        )
+def validate_launch_options(vm: VmRuntime, options: LaunchOptions) -> None:
+    if options.migration != "defer":
+        return
+    passthrough_options = tuple(
+        name for name in ("vfio", "sriov") if vm.config.options.enabled(name)
+    )
+    if not passthrough_options:
+        return
+    configured = ", ".join(f"opt/{name}" for name in passthrough_options)
+    raise ColleiError(
+        f"rk -a does not support passthrough VM {vm.config.name}: {configured}"
+    )
 
 
 def print_help() -> None:
@@ -143,6 +78,7 @@ def print_help() -> None:
 迁移和恢复：
   -a  启动普通热迁移目标
       使用 -incoming defer -only-migratable；必须已经有且只有一个 source QEMU。
+      配置了 opt/vfio 或 opt/sriov 的直通 VM 会直接报错。
   -l  从当前 VM 目录的 vmstate.img 恢复
       对应 save_vm_file，使用 -incoming file:... -only-migratable。
   -L  启动 CPR reboot 恢复目标
@@ -244,6 +180,42 @@ class ColleiQemuBuilder:
         if not self.dry_run:
             create_missing_disk(CommandRunner(), path, size, fmt)
 
+    def _add_disk(
+        self,
+        argv: list[str],
+        name: str,
+        *devices: str,
+        path: Path | None = None,
+        size: str = "10G",
+        fmt: str | None = None,
+        aio: bool = False,
+        read_only: bool = False,
+        create: bool = True,
+    ) -> None:
+        """创建磁盘(幂等)、追加 -device 和稳定的 file + format -blockdev。
+
+        node-name 固定为 <name>-file / <name>,source、target、NBD export、
+        mirror job 都能引用同一个逻辑名字。path 缺省为 image_dir / name;
+        create=False 用于 ISO 等必须已存在、不能自动创建的后端。
+        """
+        disk = path if path is not None else self.image_dir / name
+        if create:
+            self._ensure_disk(disk, size, fmt or "qcow2")
+
+        for device in devices:
+            argv.extend(["-device", device])
+        if fmt is None:
+            # 与 _ensure_disk 默认创建的格式一致;文件已存在时探测真实格式。
+            fmt = _disk_format(disk) if disk.exists() else "qcow2"
+        file_opts = f"driver=file,node-name={name}-file,filename={disk}"
+        if aio:
+            file_opts += ",aio=native,cache.direct=on"
+        format_opts = f"driver={fmt},node-name={name},file={name}-file,discard=unmap"
+        if read_only:
+            file_opts += ",read-only=on"
+            format_opts += ",read-only=on"
+        argv.extend(["-blockdev", file_opts, "-blockdev", format_opts])
+
     def _ensure_nbd_export(self, index: int, backing: Path) -> Path:
         """用 qemu-nbd 把 multipath 后端文件导出到 unix socket，幂等。"""
         sock = self.monitor_dir / f"mpath{index}.nbd"
@@ -271,11 +243,6 @@ class ColleiQemuBuilder:
         except OSError:
             return False
         return True
-
-    def _ensure_scsi_debug_disks(self) -> None:
-        """非 dry-run 时创建 setup_scsi_hba 使用的两个调试盘。"""
-        for index in (1, 2):
-            self._ensure_disk(self.image_dir / f"virtio-scsi_{index}", "10G")
 
     def boot_disks(self) -> list[tuple[str, str, str | None]]:
         if self.vm.config.options.get("disk") is not None:
@@ -372,38 +339,30 @@ class ColleiQemuBuilder:
         self.setup_misc(argv)
         self.setup_uuid(argv)
         self.setup_input_and_usb(argv)
+        self.setup_trace(argv)
         return QemuCommand(tuple(argv))
 
     def setup_storage(self, argv: list[str]) -> None:
         # 也许这是最佳的办法了：
         # 1. 让 virtio-scsi 作为 scsi1.0。
         # 2. 所有 channel=0，然后用 lun 区分设备。
-        self._ensure_scsi_debug_disks()
         argv.extend(["-device", "virtio-scsi,id=scsi1"])
         for index in (1, 2):
             disk_id = f"virtio-scsi_{index}"
-            argv.extend(
-                [
-                    "-device",
-                    f"scsi-hd,drive={disk_id},bus=scsi1.0,channel=0,scsi-id={index},lun=0,id={disk_id}",
-                    "-drive",
-                    f"file={self.image_dir / disk_id},if=none,id={disk_id},discard=unmap",
-                ]
+            self._add_disk(
+                argv,
+                disk_id,
+                f"scsi-hd,drive={disk_id},bus=scsi1.0,channel=0,scsi-id={index},lun=0,id={disk_id}",
             )
 
         if self.vm.config.options.get("virtio_blk") == "1":
             # iothread 需要和具体 virtio-blk 设备绑定。
-            disk = self.image_dir / "virtio_blk_1"
-            self._ensure_disk(disk)
-            argv.extend(
-                [
-                    "-object",
-                    "iothread,id=virtio_blk_io0",
-                    "-device",
-                    "virtio-blk,drive=virtio_blk_1,id=virtio_blk_1,iothread=virtio_blk_io0,num-queues=2",
-                    "-drive",
-                    f"file={disk},format={_disk_format(disk)},if=none,id=virtio_blk_1,aio=native,cache.direct=on,discard=unmap",
-                ]
+            argv.extend(["-object", "iothread,id=virtio_blk_io0"])
+            self._add_disk(
+                argv,
+                "virtio_blk_1",
+                "virtio-blk,drive=virtio_blk_1,id=virtio_blk_1,iothread=virtio_blk_io0,num-queues=2",
+                aio=True,
             )
         self.setup_multipath(argv)
         self.setup_nvme(argv)
@@ -431,8 +390,8 @@ class ColleiQemuBuilder:
                     f"virtio-scsi-pci,id={disk_id}_hba,iothread={io_id}",
                     "-device",
                     f"scsi-hd,drive={disk_id},bus={disk_id}_hba.0,channel=0,scsi-id=0,lun=0,serial=MULTIPATH,id={disk_id}",
-                    "-drive",
-                    f"file=nbd:unix:{nbd_sock},if=none,id={disk_id},aio=native,cache.direct=on,format=raw,discard=unmap",
+                    "-blockdev",
+                    f"driver=nbd,node-name={disk_id},server.type=unix,server.path={nbd_sock},cache.direct=on,discard=unmap",
                 ]
             )
 
@@ -454,67 +413,47 @@ class ColleiQemuBuilder:
     def setup_nvme_basic(self, argv: list[str]) -> None:
         # serial 是 NVMe 控制器身份；重复 serial 会导致 guest 拒绝控制器。
         for index in (1, 2):
-            disk = self.image_dir / f"nvme_basic_{index}"
-            self._ensure_disk(disk)
-            argv.extend(
-                [
-                    "-device",
-                    f"nvme,drive=nvme_basic{index},max_ioqpairs=14,serial={uuid.uuid4()},id=nvme_b{index}",
-                    "-drive",
-                    f"file={disk},format=qcow2,if=none,id=nvme_basic{index},aio=native,cache.direct=on,discard=unmap",
-                ]
+            serial = f"collei-{self.vm.config.guest_id:04d}-{index}"
+            self._add_disk(
+                argv,
+                f"nvme_basic{index}",
+                f"nvme,drive=nvme_basic{index},max_ioqpairs=14,serial={serial},id=nvme_b{index}",
+                aio=True,
             )
 
     def setup_nvme_multipath(self, argv: list[str]) -> None:
-        disk = self.image_dir / "nvme1"
-        self._ensure_disk(disk)
         # NVMe multipath 是同一 subsystem 内的多个 controller 共享一个
         # namespace；每条 path 不能创建独立的 drive/nvme-ns。
-        argv.extend(
-            [
-                "-drive",
-                f"file={disk},format=qcow2,if=none,id=nvme_mpath,discard=unmap",
-                "-device",
-                "nvme-subsys,id=nvme-subsys-0,nqn=subsys0",
-                "-device",
-                "nvme,serial=deadbeef,subsys=nvme-subsys-0,id=nc1",
-                "-device",
-                "nvme,serial=deadbeef,subsys=nvme-subsys-0,id=nc2",
-                "-device",
-                "nvme-ns,drive=nvme_mpath,bus=nc1,nsid=1,shared=on",
-            ]
+        self._add_disk(
+            argv,
+            "nvme_mpath",
+            "nvme-subsys,id=nvme-subsys-0,nqn=subsys0",
+            "nvme,serial=deadbeef,subsys=nvme-subsys-0,id=nc1",
+            "nvme,serial=deadbeef,subsys=nvme-subsys-0,id=nc2",
+            "nvme-ns,drive=nvme_mpath,bus=nc1,nsid=1,shared=on",
+            path=self.image_dir / "nvme1",
         )
 
     def setup_nvme_sriov(self, argv: list[str]) -> None:
-        disk = self.image_dir / "nvme1"
-        self._ensure_disk(disk)
-        argv.extend(
-            [
-                "-device",
-                "pcie-root-port,slot=3,id=pcie_port.3",
-                "-device",
-                "nvme-subsys,id=subsys0",
-                "-device",
-                "nvme,serial=deadbeef,subsys=subsys0,sriov_max_vfs=1,sriov_vq_flexible=2,sriov_vi_flexible=1,bus=pcie_port.3",
-                "-device",
-                "nvme-ns,drive=nvme3,nsid=1",
-                "-drive",
-                f"file={disk},format=qcow2,if=none,id=nvme3,discard=unmap",
-            ]
+        self._add_disk(
+            argv,
+            "nvme3",
+            "pcie-root-port,slot=3,id=pcie_port.3",
+            "nvme-subsys,id=subsys0",
+            "nvme,serial=deadbeef,subsys=subsys0,sriov_max_vfs=1,sriov_vq_flexible=2,sriov_vi_flexible=1,bus=pcie_port.3",
+            "nvme-ns,drive=nvme3,nsid=1",
+            path=self.image_dir / "nvme1",
         )
 
     def setup_many_nvme(self, argv: list[str]) -> None:
         for index in range(10):
-            disk = self.image_dir / f"many_nvme{index}"
             # NVMe 不支持 iothread；每个控制器使用独立 backing file。
-            self._ensure_disk(disk)
-            argv.extend(
-                [
-                    "-device",
-                    f"nvme,drive=many_nvme{index},max_ioqpairs=96,serial={uuid.uuid4()}",
-                    "-drive",
-                    f"file={disk},format=qcow2,if=none,id=many_nvme{index},discard=unmap",
-                ]
+            # serial 必须确定性生成，source 和 target 才一致。
+            serial = f"collei-{self.vm.config.guest_id:04d}-many{index}"
+            self._add_disk(
+                argv,
+                f"many_nvme{index}",
+                f"nvme,drive=many_nvme{index},max_ioqpairs=96,serial={serial}",
             )
 
     def setup_nvme_host(self, argv: list[str]) -> None:
@@ -573,32 +512,18 @@ class ColleiQemuBuilder:
         if not self.vm.config.options.enabled("sata"):
             return
         # AHCI 模式下，两个 ide-hd 分别挂到 ahci.0 和 ahci.1。
-        for index in (1, 2):
-            self._ensure_disk(self.image_dir / f"sata{index}")
         argv.extend(["-device", "ahci,id=ahci"])
         for index in (1, 2):
-            disk = self.image_dir / f"sata{index}"
-            argv.extend(
-                [
-                    "-drive",
-                    f"id=sata{index},file={disk},if=none,discard=unmap",
-                    "-device",
-                    f"ide-hd,drive=sata{index},bus=ahci.{index - 1}",
-                ]
+            self._add_disk(
+                argv,
+                f"sata{index}",
+                f"ide-hd,drive=sata{index},bus=ahci.{index - 1}",
             )
 
     def setup_basic_storage(self, argv: list[str]) -> None:
         # 自动解析 opt/disk；默认不配置 bootindex。
         boot_disks = self.boot_disks()
         for index, (name, drive, bootindex) in enumerate(boot_disks):
-            disk = self.image_dir / name
-            self._ensure_disk(disk, DEFAULT_BOOT_SIZE)
-            argv.extend(
-                [
-                    "-drive",
-                    f"file={disk},format={_disk_format(disk)},id={name},if=none,discard=unmap,media=disk",
-                ]
-            )
             if drive == "virtio-blk":
                 device = f"virtio-blk-pci,drive={name},id={name}"
             elif drive == "virtio-scsi":
@@ -607,12 +532,14 @@ class ColleiQemuBuilder:
                     f"lun={index},drive={name},id={name}"
                 )
             elif drive == "nvme":
-                device = f"nvme,drive={name},serial={uuid.uuid4()},id={name}"
+                # serial 必须确定性生成，source 和 target 才一致。
+                serial = f"collei-{self.vm.config.guest_id:04d}-{name}"
+                device = f"nvme,drive={name},serial={serial},id={name}"
             else:
                 device = f"ide-hd,drive={name},id={name}"
             if bootindex is not None:
                 device += f",bootindex={bootindex}"
-            argv.extend(["-device", device])
+            self._add_disk(argv, name, device, size=DEFAULT_BOOT_SIZE)
         configured = [name for name, _, _ in boot_disks]
         actual = sorted(path.name for path in self.image_dir.glob("boot[1-9]"))
         if configured != actual:
@@ -830,16 +757,14 @@ class ColleiQemuBuilder:
             return
         if mode == "bridge":
             argv.extend(["-device", "pci-bridge,id=mybridge,chassis_nr=1"])
-            disk = self.image_dir / "nvme1"
-            self._ensure_disk(disk)
             for index in range(2):
-                argv.extend(
-                    [
-                        "-device",
-                        f"nvme,drive=nvme{index},serial={uuid.uuid4()},bus=mybridge,addr=0x1",
-                        "-drive",
-                        f"file={disk},format=qcow2,if=none,id=nvme{index}",
-                    ]
+                # serial 必须确定性生成，source 和 target 才一致。
+                serial = f"collei-{self.vm.config.guest_id:04d}-nvme{index}"
+                self._add_disk(
+                    argv,
+                    f"nvme{index}",
+                    f"nvme,drive=nvme{index},serial={serial},bus=mybridge,addr=0x1",
+                    path=self.image_dir / "nvme1",
                 )
             argv.extend(
                 [
@@ -893,22 +818,21 @@ class ColleiQemuBuilder:
 
     def setup_monitor(self, argv: list[str]) -> None:
         # qmp-no-pretty 才可以被 kvm-dmesg 识别，所以单独建立一个。
-        for number, name, mode in (
-            (4, "qmp-no-pretty", "control"),
-            (3, "qmp-shell", "control"),
-            (2, "hmp", ""),
-            (1, "qmp", "control,pretty=on"),
+        # -mon 已废弃，使用 -object monitor-qmp/monitor-hmp。
+        for number, name, monitor in (
+            (4, "qmp-no-pretty", "monitor-qmp,id=mon4,chardev=mon4"),
+            (3, "qmp-shell", "monitor-qmp,id=mon3,chardev=mon3"),
+            (2, "hmp", "monitor-hmp,id=mon2,chardev=mon2,readline=on"),
+            (1, "qmp", "monitor-qmp,id=mon1,chardev=mon1,pretty=on"),
         ):
             argv.extend(
                 [
                     "-chardev",
                     f"socket,id=mon{number},path={self.monitor_dir / name},server=on,wait=off",
+                    "-object",
+                    monitor,
                 ]
             )
-            monitor = f"chardev=mon{number}"
-            if mode:
-                monitor += f",mode={mode}"
-            argv.extend(["-mon", monitor])
 
     def setup_initrd(self, argv: list[str]) -> None:
         kernel_value = self.vm.config.options.get("kernel")
@@ -1108,14 +1032,19 @@ class ColleiQemuBuilder:
             if not iso.is_file():
                 raise UnsupportedNativeConfiguration(f"ISO does not exist: {iso}")
             disk_id = f"cd{index}"
-            argv.extend(
-                [
-                    "-drive",
-                    f"file={iso},format=raw,if=none,id={disk_id},readonly=on",
-                    "-device",
-                    f"scsi-cd,bus=scsi1.0,channel=0,scsi-id=20,lun={index},drive={disk_id}"
-                    + (f",bootindex={fields[1]}" if len(fields) == 2 else ""),
-                ]
+            device = (
+                f"scsi-cd,bus=scsi1.0,channel=0,scsi-id=20,lun={index},drive={disk_id}"
+            )
+            if len(fields) == 2:
+                device += f",bootindex={fields[1]}"
+            self._add_disk(
+                argv,
+                disk_id,
+                device,
+                path=iso,
+                fmt="raw",
+                read_only=True,
+                create=False,
             )
 
     def setup_ipmi(self, argv: list[str]) -> None:
@@ -1190,8 +1119,8 @@ class ColleiQemuBuilder:
                 "chardev:main_char",
                 "-device",
                 "virtconsole,chardev=main_char",
-                "-mon",
-                "chardev=main_char,mode=readline",
+                "-object",
+                "monitor-hmp,id=mon_main,chardev=main_char,readline=on",
                 # 配合 action 中 connect_to_pty 使用。
                 "-chardev",
                 "pty,mux=on,id=char_pty",
@@ -1289,6 +1218,27 @@ class ColleiQemuBuilder:
                 ]
             )
 
+    def setup_trace(self, argv: list[str]) -> None:
+        tracepoint = []
+        script_dir = Path(__file__).resolve().parent / "trace"
+        trace_files = (
+            "mig.txt",
+            "vfio.txt",
+            "misc.txt",
+        )
+        for name in trace_files:
+            trace_file = script_dir / name
+            if not trace_file.is_file():
+                continue
+
+            for line in trace_file.read_text().splitlines():
+                line = line.strip()
+                if line and not line.startswith("#"):
+                    tracepoint.append(line)
+        for tp in tracepoint:
+            argv.extend(["--trace", tp])
+
+
 
 @dataclass(frozen=True)
 class BuildrootQemuBuilder:
@@ -1344,6 +1294,7 @@ class BuildrootQemuBuilder:
         common.setup_misc(argv)
         common.setup_uuid(argv)
         common.setup_input_and_usb(argv)
+        common.setup_trace(argv)
         return QemuCommand(tuple(argv))
 
 
@@ -1951,6 +1902,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         options = LaunchOptions.parse(sys.argv[1:] if argv is None else argv)
         context = ColleiContext.load()
         vm = context.vm()
+        validate_launch_options(vm, options)
         if not options.dry_run:
             color = 112 if vm.which_qemu == "t" else 212
             print_banner(vm.config.name, color=color)

@@ -1,5 +1,0 @@
-#!/usr/bin/bpftrace
-#
-uprobe:./program.out:hello {
-  printf("get keyboard irq.\n");
-}

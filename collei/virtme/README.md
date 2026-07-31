@@ -86,6 +86,12 @@ virtme VM 同时启用 `virtme` 和 `vsock` 后，普通的 `ssh` action
 复制的模块会去掉 `.BTF` 段，避免增量构建树中
 "failed to validate module BTF: -22" 导致的 insmod 失败。
 
+initramfs 有缓存：输入（init 脚本、busybox、模块 .ko、machine/vsock
+选项）没变化时直接复用上次的 `virtme-initramfs.cpio.zst`
+（同目录 `.stamp` 文件记录输入指纹），否则重新打包。模块定位对整个
+构建树只做一次遍历，打包走外部 `zstd -1`——之前每次启动逐模块 rglob
+加 Python gzip level 9 压缩要在 QEMU 启动前白等 ~4s。
+
 ### guest 里看到全部 ko（.mod 目录）
 
 `build/build.sh` 编译内核时已经执行了

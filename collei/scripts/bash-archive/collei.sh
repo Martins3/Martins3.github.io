@@ -2376,44 +2376,6 @@ function setup_display() {
 	# -display sdl,gl=on \
 }
 
-function setup_trace() {
-	arg_trace=""
-	local tracepoint=(
-		# kvm_set_user_memory
-		# memory_region_ops_read
-		# amdvi_ir_intctl
-		# savevm_state_setup
-		# kvm_dirty_ring_reaper
-		# kvm_interrupt_exit_request
-		# kvm_dirty_ring_reaper
-		# kvm_dirty_ring_reaper
-		# uffd_create_fd_nosys
-		# uffd_create_fd_api_failed
-		# uffd_create_fd_api_noioctl
-		# uffd_detect_open_mode
-		# qdev_update_parent_bus
-		# qemu_coroutine_yield
-		# kvm_irqchip_commit_routes
-	)
-	local trace_files=(
-		# collei.mig.trace
-		# collei.vfio.trace
-	)
-	for f in "${trace_files[@]}"; do
-		echo "$f"
-		local trace
-		readarray -t trace < <(grep -v '^[[:space:]]*#' "$PROGDIR"/"$f" | grep -v '^[[:space:]]*$')
-		tracepoint+=("${trace[@]}")
-	done
-
-	arg_trace=""
-	if [[ ${#tracepoint[@]} -gt 0 ]]; then
-		for i in "${tracepoint[@]}"; do
-			arg_trace+=" --trace $i "
-		done
-	fi
-}
-
 arg_virtio_dummy=""
 function setup_virtio_dummy() {
 	if $qemu -device help | grep virtio-dummy &>/dev/null; then
@@ -3536,7 +3498,6 @@ setup_input
 setup_ipmi
 setup_vnc
 setup_display
-setup_trace
 setup_virtio_dummy
 setup_smbios
 # setup_cxl

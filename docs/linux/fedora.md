@@ -116,382 +116,53 @@ https://copr.fedorainfracloud.org/coprs/kwizart/kernel-longterm-5.15/
 
 ## flameshot
 
-Fedora 43 + GNOME Wayland 下，推荐使用 Flatpak 版本:
+Fedora 44 + GNOME Wayland (Shell 50) 下，Flatpak Flameshot 14.0.0 已经开箱即用，不再需要任何 workaround:
 
 ```sh
 flatpak install -y flathub org.flameshot.Flameshot
-sudo dnf install -y wl-clipboard
-```
-
-注意这里必须确认 Fedora 系统的 `wl-clipboard` 已安装。如果 PATH 里 Nix 的 `rpm` 排在 `/usr/bin/rpm` 前面，`rpm -q wl-clipboard` 可能误报没有安装，因为它会去读 Nix rpm 默认的 `/var/lib/rpm`。用下面的命令确认:
-
-```sh
-dnf list --installed wl-clipboard
-/usr/bin/rpm -q wl-clipboard
-```
-
-如果从终端启动遇到:
-
-```txt
-qt.qpa.xcb: could not connect to display
-Could not load the Qt platform plugin "xcb"
-```
-
-通常是当前 shell/tmux/zellij 没有继承 GNOME Wayland 环境，只有 `DISPLAY=:0`，没有 `WAYLAND_DISPLAY=wayland-0`。
-
-临时启动:
-
-```sh
-env WAYLAND_DISPLAY=wayland-0 XDG_SESSION_TYPE=wayland QT_QPA_PLATFORM=wayland \
-  flatpak run org.flameshot.Flameshot gui
-```
-
-用户级 launcher 覆盖:
-
-```txt
-~/.local/share/applications/org.flameshot.Flameshot.desktop
-```
-
-内容:
-
-```ini
-[Desktop Entry]
-Name=Flameshot
-Name[zh_CN]=火焰截图
-GenericName=Screenshot tool
-GenericName[zh_CN]=屏幕截图工具
-Comment=Powerful yet simple to use screenshot software.
-Comment[zh_CN]=强大又易用的屏幕截图软件
-Keywords=flameshot;screenshot;capture;shutter;
-Keywords[zh_CN]=flameshot;screenshot;capture;shutter;截图;屏幕;
-Exec=/usr/bin/env WAYLAND_DISPLAY=wayland-0 XDG_SESSION_TYPE=wayland XDG_CURRENT_DESKTOP=GNOME QT_QPA_PLATFORM=wayland /usr/bin/flatpak run --branch=stable --arch=x86_64 --command=flameshot org.flameshot.Flameshot
-Icon=org.flameshot.Flameshot
-Terminal=false
-Type=Application
-Categories=Graphics;
-StartupNotify=false
-StartupWMClass=flameshot
-Actions=Configure;Capture;Launcher;
-X-Flatpak=org.flameshot.Flameshot
-
-[Desktop Action Configure]
-Name=Configure
-Name[zh_CN]=配置
-Exec=/usr/bin/env WAYLAND_DISPLAY=wayland-0 XDG_SESSION_TYPE=wayland XDG_CURRENT_DESKTOP=GNOME QT_QPA_PLATFORM=wayland /usr/bin/flatpak run --branch=stable --arch=x86_64 --command=flameshot org.flameshot.Flameshot config
-
-[Desktop Action Capture]
-Name=Take screenshot
-Name[zh_CN]=进行截图
-Exec=/home/martins3/.local/bin/flameshot-copy
-
-[Desktop Action Launcher]
-Name=Open launcher
-Name[zh_CN]=打开启动器
-Exec=/usr/bin/env WAYLAND_DISPLAY=wayland-0 XDG_SESSION_TYPE=wayland XDG_CURRENT_DESKTOP=GNOME QT_QPA_PLATFORM=wayland /usr/bin/flatpak run --branch=stable --arch=x86_64 --command=flameshot org.flameshot.Flameshot launcher
-```
-
-刷新和校验:
-
-```sh
-desktop-file-validate ~/.local/share/applications/org.flameshot.Flameshot.desktop
-update-desktop-database ~/.local/share/applications
-```
-
-Fedora 43 + GNOME Wayland 上，Flatpak Flameshot 13.3.0 可能出现“截图可以保存，但是复制到剪切板无效”的问题。日志特征是:
-
-```txt
-flameshot: info: Capture saved to clipboard.
-kf.guiaddons: Could not init WaylandClipboard, falling back to QtClipboard.
-```
-
-此时 screenshot portal 已经可用，坏的是 Flameshot 内置的 Wayland 剪切板路径。绕过方法是不要用内置 copy，而是让 Flameshot 输出 PNG 到 stdout，再交给 `wl-copy`，同时保存一份到 `~/Pictures/Screenshots`:
-
-```sh
-/usr/bin/flatpak run --branch=stable --arch=x86_64 --command=flameshot \
-  org.flameshot.Flameshot gui --delay 500 --raw | wl-copy --type image/png
-```
-
-为了让 GNOME launcher 也能找到 Nix 或系统中的 `wl-copy`，放一个 wrapper:
-
-```sh
-~/.local/bin/flameshot-copy
-```
-
-内容:
-
-```bash
-#!/usr/bin/env bash
-set -E -e -u -o pipefail
-
-SCREENSHOT_PATH=""
-
-function cleanup() {
-  if [[ -n ${SCREENSHOT_PATH:-} ]]; then
-    rm -f -- "$SCREENSHOT_PATH"
-  fi
-}
-
-function screenshot_dir() {
-  local dir="${HOME}/Pictures/Screenshots"
-  mkdir -p -- "$dir"
-  printf '%s\n' "$dir"
-}
-
-function main() {
-  export PATH="/home/martins3/.nix-profile/bin:/nix/var/nix/profiles/default/bin:/usr/local/bin:/usr/bin:/bin:${PATH:-}"
-  export WAYLAND_DISPLAY="${WAYLAND_DISPLAY:-wayland-0}"
-  export XDG_SESSION_TYPE="${XDG_SESSION_TYPE:-wayland}"
-  export XDG_CURRENT_DESKTOP="${XDG_CURRENT_DESKTOP:-GNOME}"
-  export QT_QPA_PLATFORM="${QT_QPA_PLATFORM:-wayland}"
-
-  if (($# > 0)); then
-    /usr/bin/flatpak run --branch=stable --arch=x86_64 --command=flameshot \
-      org.flameshot.Flameshot "$@"
-    return
-  fi
-
-  local wl_copy
-  wl_copy="$(command -v wl-copy)"
-
-  SCREENSHOT_PATH="$(mktemp "${TMPDIR:-/tmp}/flameshot-copy.XXXXXX")"
-  trap cleanup EXIT
-
-  /usr/bin/flatpak run --branch=stable --arch=x86_64 --command=flameshot \
-    org.flameshot.Flameshot gui --delay 500 --raw >"$SCREENSHOT_PATH"
-
-  if [[ -s "$SCREENSHOT_PATH" ]]; then
-    "$wl_copy" --type image/png <"$SCREENSHOT_PATH"
-    cp -- "$SCREENSHOT_PATH" "$(screenshot_dir)/flameshot-$(date +%Y%m%d-%H%M%S).png"
-  fi
-}
-
-main "$@"
-```
-
-```sh
-chmod +x ~/.local/bin/flameshot-copy
-```
-
-注意: 上面的 wrapper 只影响 `.desktop` 的 `Take screenshot` action 或手动执行 `~/.local/bin/flameshot-copy`。右上角托盘 icon 里面的截图按钮属于 Flameshot 进程内部逻辑，不会经过 `.desktop Exec`，所以仍然会走坏掉的 Qt/KSystemClipboard。
-
-托盘 icon 截图也要进入 Wayland 剪切板时，使用这个绕过方案:
-
-1. 让 Flameshot 内部 copy 后自动保存图片。
-2. 用 user systemd path 监控保存目录。
-3. 发现新 PNG 后，用系统的 `/usr/bin/wl-copy --foreground` 持有真正的 Wayland 剪切板。
-
-Flameshot 配置:
-
-```ini
-# ~/.var/app/org.flameshot.Flameshot/config/flameshot/flameshot.ini
-[General]
-contrastOpacity=188
-saveAfterCopy=true
-saveAsFileExtension=png
-savePath=/home/martins3/Pictures/Screenshots
-useGrimAdapter=false
-```
-
-`~/.local/bin/flameshot-wl-copy-file`:
-
-```bash
-#!/usr/bin/env bash
-set -E -e -u -o pipefail
-
-function main() {
-  if (($# != 1)); then
-    printf 'usage: %s IMAGE.png\n' "${0##*/}" >&2
-    return 2
-  fi
-
-  exec /usr/bin/wl-copy --foreground --type image/png <"$1"
-}
-
-main "$@"
-```
-
-`~/.local/bin/flameshot-copy-latest`:
-
-```bash
-#!/usr/bin/env bash
-set -E -e -u -o pipefail
-
-function latest_png() {
-  find "${HOME}/Pictures/Screenshots" -maxdepth 1 -type f -name '*.png' -printf '%T@ %p\n' |
-    sort -rn |
-    sed -n '1{s/^[^ ]* //;p;}'
-}
-
-function wait_until_stable() {
-  local file="$1"
-  local before
-  local after
-
-  for _ in {1..20}; do
-    before="$(stat -c '%s' "$file")"
-    sleep 0.1
-    after="$(stat -c '%s' "$file")"
-    if [[ $before == "$after" && $after != 0 ]]; then
-      return 0
-    fi
-  done
-
-  return 1
-}
-
-function main() {
-  local file
-  file="$(latest_png)"
-  if [[ -z $file ]]; then
-    return 0
-  fi
-
-  wait_until_stable "$file"
-
-  local stamp
-  stamp="$(stat -c '%n:%Y:%s' "$file")"
-
-  local state="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/flameshot-copy-latest.state"
-  if [[ -f $state && $(<"$state") == "$stamp" ]]; then
-    return 0
-  fi
-  printf '%s\n' "$stamp" >"$state"
-
-  systemctl --user stop flameshot-wl-copy.service 2>/dev/null || true
-  systemd-run --user --unit=flameshot-wl-copy --collect \
-    /home/martins3/.local/bin/flameshot-wl-copy-file "$file" >/dev/null
-}
-
-main "$@"
-```
-
-```sh
-chmod +x ~/.local/bin/flameshot-copy-latest ~/.local/bin/flameshot-wl-copy-file
-```
-
-`~/.config/systemd/user/flameshot-copy-latest.service`:
-
-```ini
-[Unit]
-Description=Copy latest Flameshot screenshot to Wayland clipboard
-
-[Service]
-Type=oneshot
-ExecStart=%h/.local/bin/flameshot-copy-latest
-```
-
-`~/.config/systemd/user/flameshot-copy-latest.path`:
-
-```ini
-[Unit]
-Description=Watch Flameshot screenshot directory
-
-[Path]
-PathChanged=%h/Pictures/Screenshots
-PathModified=%h/Pictures/Screenshots
-Unit=flameshot-copy-latest.service
-
-[Install]
-WantedBy=default.target
-```
-
-启动:
-
-```sh
-mkdir -p ~/Pictures/Screenshots
-systemctl --user daemon-reload
-systemctl --user enable --now flameshot-copy-latest.path
-```
-
-验证:
-
-```sh
-systemctl --user status flameshot-copy-latest.path flameshot-wl-copy.service
-wl-paste --list-types
-wl-paste --type image/png | wc -c
-```
-
-如果遇到:
-
-```txt
-The universal wayland screen capture adapter requires Grim as the screen capture component of wayland.
-```
-
-不要在 GNOME Wayland 下继续强制使用 `grim`。`grim` 主要适合 wlroots compositor，例如 sway/hyprland。GNOME 应该走 `xdg-desktop-portal-gnome`。
-
-给 Flatpak Flameshot 授权 screenshot portal:
-
-```sh
 flatpak permission-set screenshot screenshot org.flameshot.Flameshot yes
-flatpak permissions screenshot
 ```
 
-关闭 Flatpak Flameshot 的 grim adapter:
+第二条命令授予 screenshot portal 权限，避免每次截图弹 GNOME 授权对话框。
 
-```ini
-# ~/.var/app/org.flameshot.Flameshot/config/flameshot/flameshot.ini
-[General]
-contrastOpacity=188
-useGrimAdapter=false
-```
+使用方式:
 
-如果有旧的 Flameshot 进程，先杀掉再重启:
+- 应用列表里右键 Flameshot 图标，选 "Take screenshot"（flatpak 自带的 desktop action，无需自定义 .desktop）。
+- 或者绑定自定义快捷键到 `/usr/bin/flatpak run org.flameshot.Flameshot gui`。
+- 框选区域后 Ctrl+C 复制。剪贴板立即可用，且 flameshot 进程退出后内容依然存在（14.0.0 会让捕获窗口存活到 compositor 取走数据为止，日志特征是 `GNOME Wayland detected; keeping capture window alive until clipboard data is fetched.`）。
 
-```sh
-pgrep -af 'flameshot|flatpak run.*Flameshot|/app/bin/flameshot'
-kill <pid>
-```
+注意事项:
 
-注意: 如果 `/usr/bin/flameshot`、`/usr/bin/grim`、`/usr/bin/slurp` 存在，但是 `rpm -qf` 显示不属于任何 rpm 包，说明它们是手工残留文件。此时优先使用 Flatpak 入口，不要使用裸 `flameshot gui`。
+- 不要同时安装 rpm 版 flameshot。两者都注册 `org.flameshot.Flameshot` 的 D-Bus service，D-Bus 激活会把截图请求静默路由给另一个版本。Fedora 44 仓库的 rpm 是 13.3.0，其 Wayland 剪贴板恰好是坏的（日志 `kf.guiaddons: Could not init WaylandClipboard, falling back to QtClipboard`，表现为复制无效）。14.0.0 通过 [PR #4363](https://github.com/flameshot-org/flameshot/pull/4363) 修复，但该修复只对 GUI 捕获窗口内的 copy 有效。
+- `flameshot full -c` 这类无窗口的 CLI copy 在 GNOME Wayland 下依然无效（Wayland 要求设置剪贴板的客户端持有焦点窗口），日常使用 `gui` 即可。
+- GNOME 下不要开 grim adapter（`useGrimAdapter=false`，默认即关闭）。grim 是给 sway/hyprland 这类 wlroots compositor 用的，GNOME 走 xdg-desktop-portal-gnome。遇到 `The universal wayland screen capture adapter requires Grim...` 就是这个原因。
+- 如果误点了 portal 授权对话框的拒绝，重置权限:
 
-GNOME 右上角没有图标，是因为 GNOME 默认不显示传统托盘。安装 AppIndicator/KStatusNotifier 扩展:
+  ```sh
+  dbus-send --session --print-reply=literal --dest=org.freedesktop.impl.portal.PermissionStore /org/freedesktop/impl/portal/PermissionStore org.freedesktop.impl.portal.PermissionStore.DeletePermission string:'screenshot' string:'screenshot' string:''
+  ```
 
-```sh
-sudo dnf install -y gnome-shell-extension-appindicator
-gsettings set org.gnome.shell enabled-extensions "['kimpanel@kde.org', 'BingWallpaper@ineffable-gmail.com', 'appindicatorsupport@rgcjonas.gmail.com']"
-```
+- 确认系统包是否安装时，注意 PATH 里 Nix 的 `rpm` 可能排在 `/usr/bin/rpm` 前面，会误报"未安装"（它去读 Nix rpm 默认的 `/var/lib/rpm`）。用下面的命令确认:
 
-如果当前会话中 `gnome-extensions enable appindicatorsupport@rgcjonas.gmail.com` 报 `does not exist`，通常是 GNOME Shell 还没有加载新安装的扩展。注销后重新登录即可。
+  ```sh
+  dnf list --installed wl-clipboard
+  /usr/bin/rpm -q wl-clipboard
+  ```
 
-让 Flameshot 登录后自动常驻:
+- AppIndicator 扩展仍然建议保留，它修复的是所有应用的托盘图标（微信的托盘 icon 也是装了它之后才正常显示的），只是 flameshot 自己已经不需要常驻托盘 daemon 了:
 
-```txt
-~/.config/autostart/org.flameshot.Flameshot.desktop
-```
+  ```sh
+  sudo dnf install -y gnome-shell-extension-appindicator
+  gnome-extensions enable appindicatorsupport@rgcjonas.gmail.com
+  ```
 
-内容:
+  刚安装后 `gnome-extensions enable` 可能报 `does not exist`，注销重新登录即可。
 
-```ini
-[Desktop Entry]
-Type=Application
-Name=Flameshot
-Name[zh_CN]=火焰截图
-Comment=Start Flameshot in the background
-Exec=/usr/bin/env WAYLAND_DISPLAY=wayland-0 XDG_SESSION_TYPE=wayland XDG_CURRENT_DESKTOP=GNOME QT_QPA_PLATFORM=wayland /usr/bin/flatpak run --branch=stable --arch=x86_64 --command=flameshot org.flameshot.Flameshot
-Icon=org.flameshot.Flameshot
-Terminal=false
-X-GNOME-Autostart-enabled=true
-```
+### 历史
 
-校验:
-
-```sh
-desktop-file-validate ~/.config/autostart/org.flameshot.Flameshot.desktop
-```
-
-最后需要注销并重新登录 GNOME:
-
-- AppIndicator 扩展生效
-- Flameshot 自动后台启动
-- 右上角显示 Flameshot icon
-
-### 注意
-我发现了一个非常有意思的问题，似乎 flameshot 解决之后，然后我发现我机器的 icon 机制变正常了，
-现在微信的 icon 也存在了。
-
-我相信这是一个极为 workaround 的解决办法，使用 systemd 服务来加上 fsnotify
-我的天啊，只有 codex 这种天才才可以想到这么 nb 的方法。
-
+Flameshot 13.3.0 时代，本节的方案是 wl-copy wrapper + systemd path unit 监控保存目录，把每次新截图重新塞进剪贴板，极为逆天。
+14.0.0 修复剪贴板之后，整套机制（`~/.local/bin/flameshot-copy*`、`flameshot-copy-latest.path/.service`、自定义 .desktop override、autostart daemon）
+都已验证不再需要并删除。
 
 ## 内核管理
 1. 清理不需要的 kernel 的方法，似乎没有特别好的办法:

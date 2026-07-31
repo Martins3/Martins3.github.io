@@ -1474,19 +1474,6 @@ function choose_migrate_host() {
 	migrate_host=$host
 }
 
-function cmd_cold_migrate() {
-	if [[ ! -f "$vm_dir"/opt/nbd ]]; then
-		error "not migratable"
-	fi
-	choose_migrate_host
-	if [[ $migrate_host == "127.0.0.1" ]]; then
-		error "冷迁移只是拷贝 config 而已"
-	fi
-	"$PROGDIR"/nbd/c.py --operation migrate \
-		--host "$migrate_host" \
-		--dir "$vm_dir"
-}
-
 function do_migration() {
 	local migrate_cmd="$1"
 	local testcase="$2"
@@ -1497,25 +1484,6 @@ function do_migration() {
 			local cmds=(
 				"migrate_set_capability multifd on"
 				"migrate_set_capability mapped-ram on"
-			)
-			;;
-		postcopy)
-			local cmds=(
-				# Postcopy is not yet compatible with multifd
-				# 默认 multifd 打开的，所以需要关闭一下
-				"migrate_set_capability multifd off"
-				"migrate_set_capability postcopy-ram on"
-			)
-			;;
-		basic)
-			local cmds=()
-			;;
-		zstd)
-			local cmds=(
-				# TODO 一共有哪些压缩方法?
-				"migrate_set_capability multifd on"
-				"migrate_set_parameter multifd-channels 4"
-				"migrate_set_parameter multifd-compression zstd"
 			)
 			;;
 		background-snapshot)
@@ -1643,11 +1611,7 @@ function migrate_to_local() {
 
 function cmd_migrate() {
 	choose_migrate_host
-	if [[ $migrate_host != "127.0.0.1" ]]; then
-		migrate_to_remote
-	else
-		migrate_to_local
-	fi
+	migrate_to_local
 }
 
 function cmd_migrate_cpr() {

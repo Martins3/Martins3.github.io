@@ -23,9 +23,11 @@
 🌲/🚖      |   🚘   \🌳👭
 ```
 
+
 ## Collections
 
 - [slides](https://martins3.github.io/slides/)
+- [Martins3](./blog/threejs-demo/index.html)
 
 ## 我的工作流
 
@@ -279,14 +281,59 @@
 
 - [摄影摄像环境](./chores/photo-workflow.md)
 
+## AI : 作品集
+
+- [Linux 语音输入解决方案](https://github.com/Martins3/VibeCast)
+- [nvim 翻译插件](https://github.com/Martins3/translator.nvim)
+- [nvim rsync 插件](https://github.com/Martins3/rsync.nvim)
+
+
 ## sanitizer
 
 - [asan](./concurrent/san/asan.md)
-- [kasan](./concurrent/san/kasan.md)
-- [kcsan](./concurrent/san/kcsan.md)
+  - [kasan](./concurrent/san/kasan.md)
+- [kfence](./concurrent/san/kfence.md)
+- [kmemleak](./concurrent/san/kmemleak.md)
 - [tsan](./concurrent/san/tsan.md)
+  - [kcsan](./concurrent/san/kcsan.md)
 - [ubsan](./concurrent/san/ubsan.md)
+- [lockdep 实现](./concurrent/san/lockdep-internal.md)
+- [lockdep usage](./concurrent/san/lockdep-usage.md)
+
 - [sanitizer 实验代码](./concurrent/san/code/README.md)
+
+## migration
+
+- [3. 当前 capability 总览](./qemu/migration/feature.md)
+- [3. 源端状态转换图](./qemu/migration/status.md)
+- [CPR](./qemu/migration/cpr.md)
+- [Level 2 : savevm loadvm](./qemu/migration/savevm-loadvm.md)
+- [PCIDevice::net_failover 与热迁移](./qemu/migration/net-failover.md)
+- [RAMBlock ，从热迁移的角度分析](./qemu/migration/state/ram.2.md)
+- [block 热迁移](./qemu/migration/state/block.md)
+- [colo](./qemu/migration/colo.md)
+- [dirty rate](./qemu/migration/dirty.rate.md)
+- [how to migrate with latest QEMU](./qemu/migration/libvirt.md)
+- [io 后端](./qemu/migration/io.md)
+- [migration 基本测试](./qemu/migration/todo.lab.md)
+- [migration 的通知机制就是为了](./qemu/migration/todo.balloon.md)
+- [migration](./qemu/migration/migration.md)
+- [multifd](./qemu/migration/multifd.md)
+- [post copy](./qemu/migration/postcopy.md)
+- [qemu 中 yank 的含义](./qemu/migration/yank.md)
+- [qemu 存在哪些状态控制](./qemu/migration/overview.md)
+- [share memory auto touch](./qemu/migration/zero-page/zero-page.md) -
+- [stop / continue](./qemu/migration/stop-continue.md)
+- [stop / continue](./qemu/migration/stop-continue.md)
+- [vfio migration](./qemu/migration/state/vfio.md)
+- [vhost](./qemu/migration/vhost.md)
+- [virtio 有特殊的封装](./qemu/migration/state/virtio.md)
+- [xbzrle](./qemu/migration/xbzrle.md)
+- [为什么 QEMU 中不支持](./qemu/migration/state/nvme.md)
+- [内存拷贝相关](./qemu/migration/state/ram.md)
+- [分析 rom 的热迁移行为](./qemu/migration/state/rom.md)
+- [文档细读](./qemu/migration/doc.md)
+- [核心结构体](./qemu/migration/state/vmstate.md)
 
 ## Kernel Contribution
 
@@ -350,7 +397,6 @@
 - [swiotlb](./kernel/iommu/swiotlb/swiotlb.md)
 
 - [auxd](./kernel/iommu/auxd.md)
-- [dma pool 是什么](./kernel/iommu/dma-pool.md)
 - [dev->dma_ops](./kernel/iommu/dma_ops.md)
 - [IOMMU](./kernel/iommu/overview.md)
 - [iotlb 什么时候 flush](./kernel/iommu/pasid.md)
@@ -423,6 +469,16 @@
   - [社交媒体](./chatter/social-media.md)
   - [看似有关系，实际上没关系](./chatter/unrelated-but-similar.md)
   - [远程工作体验](./chatter/wfh.md)
+- `chores/`
+  - [汽车](./chores/car.md)
+  - [打扮](./chores/dress-up.md)
+  - [反向开票](./chores/financial.md)
+  - [电吉他](./chores/guitar.md)
+  - [手工](./chores/handicrafts.md)
+  - [医疗](./chores/medical.md)
+  - [爱我还是他](./chores/music.md)
+  - [基本](./chores/photo.md)
+  - [运动](./chores/sports.md)
 - `concurrent/`
   - `arch/`
     - [简单看看 aarch64 的指令支持](./concurrent/arch/aarch64.md)
@@ -452,8 +508,6 @@
       - [ww_mutex](./concurrent/kernel/api/ww_mutex.md)
     - [内核文档](./concurrent/kernel/kernel-doc.md)
     - [kernel 各个模块的锁的设计](./concurrent/kernel/kernel-lock-design.md)
-    - [lockdep 实现](./concurrent/kernel/lockdep-internal.md)
-    - [lockdep usage](./concurrent/kernel/lockdep-usage.md)
   - `lan/`
     - [c++ 的同步设计](./concurrent/lan/cpp.md)
     - [glib 中也有很多](./concurrent/lan/glib.md)
@@ -509,8 +563,6 @@
     - [CONFIG_TASKS_RCU](./concurrent/rcu/tasks_rcu.md)
     - [用户态 rcu](./concurrent/rcu/userspace-rcu.md)
     - [rcu 杂记](./concurrent/rcu/yes-we-know.md)
-  - `san/`
-    - [kmemleak](./concurrent/san/kmemleak.md)
   - `volatile/`
     - [接受 volatile 和非 volatile 对象](./concurrent/volatile/ai.md)
   - [Linux 内核 Litmus Tests 介绍](./concurrent/1-litmus.md)
@@ -702,7 +754,7 @@
     - [hotplug 概述](./kernel/hp/hotplug.md)
     - [memory hotplug](./kernel/hp/memory.md)
     - [qemu 的热插内存居然可以是不同的后端类型的](./kernel/hp/qemu.md)
-    - [存储的热插拔](./kernel/hp/storage-hotplug.md)
+    - [存储的热插拔](./kernel/hp/storage.md)
   - `iouring/`
     - `async/`
       - [buffer io](./kernel/iouring/async/aio-buffer-io.md)
@@ -1395,30 +1447,11 @@
     - [qemu memory backend](./qemu/memory/memory.backend.md)
     - [MemoryListener](./qemu/memory/memory.listener.md)
     - [QEMU 的 memory model](./qemu/memory/memory.md)
-    - [RAMBlock ，从热迁移的角度分析](./qemu/memory/ram.md)
   - `migration/`
-    - [migration 基本测试](./qemu/migration/0-lab.md)
-    - [Level 1 : stop continue](./qemu/migration/1-stop-continue.md)
-    - [Level 2 : savevm loadvm](./qemu/migration/1.2-savevm-loadvm.md)
-    - [Level 3: local migration](./qemu/migration/2-cpr.md)
-    - [问题](./qemu/migration/balloon.md)
-    - [colo](./qemu/migration/colo.md)
-    - [dirty rate](./qemu/migration/dirty.rate.md)
-    - [先仔细阅读文档吧](./qemu/migration/doc.md)
-    - [how to migrate with latest QEMU](./qemu/migration/libvirt.md)
-    - [migration](./qemu/migration/migration.md)
-    - [multifd](./qemu/migration/multifd.md)
-    - [先把基本理念搞清楚吧](./qemu/migration/object.block.md)
-    - [内存拷贝相关](./qemu/migration/object.ram.md)
-    - [分析 rom 的热迁移行为](./qemu/migration/object.rom.md)
-    - [vfio migration](./qemu/migration/object.vfio.md)
-    - [virtio 有特殊的封装](./qemu/migration/object.virtio.md)
-    - [这个是经典例子了吧](./qemu/migration/object.vmstate.md)
-    - [post copy](./qemu/migration/postcopy.md)
-    - [vhost](./qemu/migration/vhost.md)
-    - [xbzrle](./qemu/migration/xbzrle.md)
-    - [qemu 中 yank 的含义](./qemu/migration/yank.md)
-    - [share memory auto touch](./qemu/migration/zero-page.md)
+    - `state/`
+      - [migration 为什么需要有优先级](./qemu/migration/state/priority.md)
+    - [migration 的通知机制就是为了](./qemu/migration/balloon.md)
+    - [基本讨论 : codex](./qemu/migration/hotplug.md)
   - `qom/`
     - [QEMU 的参数解析](./qemu/qom/options.md)
     - [qdev](./qemu/qom/qdev.md)
@@ -1493,6 +1526,7 @@
   - [收集一些和 rust 有关的项目](./rust/kernel.md)
   - [low-priority](./rust/low-priority.md)
   - [Rust os 实现](./rust/os.md)
+  - [codex 的调研结果](./rust/qemu.md)
   - [教程](./rust/rust.md)
   - [收集一些必须 rust 来解决的](./rust/rust.target.md)
   - [libuv 和两个 tokio](./rust/tokio.md)

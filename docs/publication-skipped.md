@@ -2,7 +2,7 @@
 
 由 `docs/pub/sync-blog.py` 生成。
 
-跳过文件数: 404
+跳过文件数: 394
 
 ## 发布策略跳过: draft 目录
 
@@ -35,21 +35,6 @@
 - `docs/chatter/provocation/year-2.md`
 - `docs/chatter/provocation/year-3.md`
 - `docs/chatter/provocation/year-4.md`
-- `docs/chores/books.md`
-- `docs/chores/car.md`
-- `docs/chores/dress-up.md`
-- `docs/chores/emergency-medical-care.md`
-- `docs/chores/financial.md`
-- `docs/chores/guitar.md`
-- `docs/chores/handicrafts.md`
-- `docs/chores/medical.md`
-- `docs/chores/misc.md`
-- `docs/chores/movies.md`
-- `docs/chores/music.md`
-- `docs/chores/photo-workflow.md`
-- `docs/chores/photo.md`
-- `docs/chores/sports.md`
-- `docs/chores/travel/why.md`
 - `docs/concurrent/kernel/qa/qa-1.md`
 - `docs/concurrent/kernel/qa/qa-10.md`
 - `docs/concurrent/kernel/qa/qa-11.md`
@@ -125,6 +110,7 @@
 ## 发布策略跳过: todo.md 或 wip*
 
 - `collei/todo.md`
+- `collei/todo.now.md`
 - `docs/acpi/todo.md`
 - `docs/ai-tools/todo.md`
 - `docs/blog/anki-todo.md`
@@ -202,7 +188,11 @@
 - `docs/qemu/aarch64-softmmu/todo.md`
 - `docs/qemu/block/todo.md`
 - `docs/qemu/memory/todo.md`
+- `docs/qemu/migration/todo.bug.md`
+- `docs/qemu/migration/todo.collei.md`
+- `docs/qemu/migration/todo.lab.md`
 - `docs/qemu/migration/todo.md`
+- `docs/qemu/migration/todo.misc.md`
 - `docs/qemu/qom/todo-2.md`
 - `docs/qemu/qom/todo.md`
 - `docs/qemu/tcg/todo.md`

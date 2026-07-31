@@ -70,6 +70,10 @@ channel 应该是 qemu 和外部世界打交道的，可以提供给 chardev ，
           - qio_channel_socket_writev
 
 
+- 对于这些东西的封装是不是因此获取了相同的 coroutine 的实力。
+    - io/channel.c 中，主要是在 `qio_channel_writev_full_all` 中的。
+- 还可以屏蔽操作系统的接口，让 QEMU 可以在 Windows 上使用。
+
 ## vu_message_read 来看 qemu io 的基本流程
 
 首先在一个 while 循环中调用 qio_channel_readv_full ，将 header 读取到。
@@ -162,6 +166,9 @@ static int tcp_chr_write(Chardev *chr, const uint8_t *buf, int len)
 ## 问题
 - io/channel-watch.c 是做什么的?
 - io/channel-command.c 是做什么的? 似乎就是对于 fd 操作
+
+- `qio_task` 主要被 socket websocket tls 使用的
+    - `qio_task_run_in_thread` 使用线程来封装，简单的使用两个。
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

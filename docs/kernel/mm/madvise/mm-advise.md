@@ -46,7 +46,8 @@ Git 的完整历史从 2.6.12-rc2 才开始，因此没有可信的原始 Git co
 版本依据来自对应的主线 commit、主线 release tag 和
 [`madvise(2)`](https://man7.org/linux/man-pages/man2/madvise.2.html)。
 
-## 回收类 advice 的区别
+## madvise: 回收类 advice 的区别
+<!-- 60db0fe3-c0da-4593-89f1-73e059e0d579 -->
 
 | 接口            |       是否立即行动 |         是否丢失内容 |
 |-----------------|-------------------:|---------------------:|
@@ -66,6 +67,41 @@ Git 的完整历史从 2.6.12-rc2 才开始，因此没有可信的原始 Git co
 相关讨论:
 https://news.ycombinator.com/item?id=23216590
 
+经典案例分析是 qemu 中的 ram_block_discard_shared_range 中展示:
+
+```c
+        /* The logic here is messy;
+         *    madvise DONTNEED fails for hugepages
+         *    fallocate works on hugepages and shmem
+         *    shared anonymous memory requires madvise REMOVE
+         */
+```
+
+ram_block_discard_guest_memfd_range（system/physmem.c:4229）操作的对象和 madvise 能操作的对象不是一回事：
+
+核心原因：madvise 作用于进程虚拟地址，而 guest_memfd 的内存通常根本没有映射进 QEMU 的用户态地址空间。
+
+具体来说：
+
+1. guest_memfd 是 CoCo（机密计算，SEV-SNP/TDX 之类）场景下 KVM 管理的 guest 私有内存 fd。设计上就要求 host 用户态不能访问这些页——要么干脆不
+   mmap 到 QEMU 的地址空间，要么映射但无法访问。madvise(MADV_DONTNEED) 需要一个可用的 VA 范围，对它根本无从谈起；而且对 private 类型的
+   guest_memfd，就算有映射也是不可访问的。
+
+2. 对比一下它旁边的 ram_block_discard_shared_range（physmem.c:4183-4185）：那里确实用了 QEMU_MADV_REMOVE / QEMU_MADV_DONTNEED，因为那是普通的
+   、已 mmap 进 QEMU 的 RAMBlock，host_startaddr 是真实可用的用户态 VA。注意 ram_block_discard_range（physmem.c:4213）是先 discard 常规映射部
+   分，再单独对 rb->guest_memfd 做 discard——两份内存池是分开处理的。
+
+3. fallocate(fd, FALLOC_FL_PUNCH_HOLE, offset, length) 直接作用在 fd 的文件偏移上，不需要任何 VA 映射，这正好是 guest_memfd 这种"以 fd/offset
+   为寻址方式"的内核内存池模型所支持的接口（注释里那句 "ignore fd_offset with guest_memfd" 也说明这一点——offset 就是 guest_memfd 内部的偏移）
+   。
+
+4. 语义上也有差别：madvise DONTNEED 只影响本进程映射下的页，punch hole 是在 inode 层面真正释放后备页。对 guest_memfd 来说，内核还要顺带处理
+   KVM 侧的事情（比如让 KVM 的映射失效），这条路径是内核 guest_memfd 的 fallocate 实现负责的，madvise 不会触发。
+
+
+2026-07-29 不过我这里有一个疑惑，既然如此，只有是 shared memory 可以用 punch hole ，为什么
+不去直接利用 fallocate 处理所有的情况不就好了?
+
 ## MADV_POPULATE_WRITE
 
 QEMU 中的代码，在做 MADV_POPULATE_WRITE 的时候需要持有 mmap_sem 的 read lock
@@ -82,6 +118,19 @@ QEMU 中的代码，在做 MADV_POPULATE_WRITE 的时候需要持有 mmap_sem �
     qemu_mutex_unlock(&page_mutex);
 ```
 
+## 测试
+
+参考 qemu 中的 : ram_block_discard_shared_range
+对 memfd (fd != -1) 的 shared RAMBlock，drop 的核心就是
+`fallocate(fd, FALLOC_FL_PUNCH_HOLE | FALLOC_FL_KEEP_SIZE, offset, len)`
+，4K 页时还会附带一次 MADV_DONTNEED 打在本进程映射上。
+
+性能测试见 punch-hole.c：10G memfd，alloc 和 free 同粒度，随机分配一半的块后 punch hole (i9-13900K, kernel 7.1.3):
+- 粒度 4K: 约 0.85 us/call，有效带宽约 4.5 GB/s
+- 粒度 64K: 约 4.4 us/call，有效带宽约 14 GB/s
+- 一次性 punch hole 整个 10G: 约 22 GB/s
+
+可见小块 discard 的开销主要在每次 fallocate 系统调用本身，range 越大越划算。
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

@@ -7,7 +7,13 @@ import sys
 from pathlib import Path
 from typing import Sequence
 
-from actions import ActionContext, VmRequirement, registry, validate_requirement
+from actions import (
+    ActionContext,
+    VmRequirement,
+    effective_requirement,
+    registry,
+    validate_requirement,
+)
 from commands import CommandRunner
 from errors import ColleiError
 from runtime import ColleiContext, VmRuntime
@@ -86,13 +92,14 @@ def main(argv: Sequence[str] | None = None) -> int:
             raise ColleiError(f"unsupported action: {action_name}")
 
         context = ColleiContext.load()
+        requirement = effective_requirement(action, remainder)
         if choose:
-            vm = _choose_vm(context, action.requirement)
+            vm = _choose_vm(context, requirement)
         else:
             vm = context.vm(vm_name)
             if action_name == "ssh" and not vm.active and vm_name is None:
                 vm = _choose_vm(context, VmRequirement.ACTIVE)
-        validate_requirement(action, vm)
+        validate_requirement(action, vm, remainder)
         if vm_name is not None or choose:
             context.set_default(vm)
         _show_vm(vm)

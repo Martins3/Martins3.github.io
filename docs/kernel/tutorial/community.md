@@ -440,6 +440,10 @@ https://github.com/neovim/neovim/blob/master/CONTRIBUTING.md#merging-to-master
 docs/devel/submitting-a-patch.rst
 docs/devel/submitting-a-pull-request.rst
 
+
+## ai 自动 review
+https://sashiko.dev/#/message/20260714063302.1153238-1-cui.tao%40linux.dev
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

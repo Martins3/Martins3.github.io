@@ -104,18 +104,15 @@ setup_overlays() {
 	mkdir -p /run/tmpfs
 	mount -t tmpfs -o mode=0755 tmpfs /run/tmpfs
 
-	# 首先为 /run 创建 overlay，因为 setup_system_files 需要在 /newroot/run/tmp 写入文件
-	log "overlay: /run"
-	mkdir -p /run/tmpfs/run_upper /run/tmpfs/run_work
-	mount -t overlay overlay \
-		-o "lowerdir=/newroot/run,upperdir=/run/tmpfs/run_upper,workdir=/run/tmpfs/run_work" \
-		/newroot/run 2>/dev/null || {
-		# 如果 overlay 失败，直接挂载 tmpfs
-		log "warning: failed to overlay /run, using tmpfs"
-		mount -t tmpfs -o mode=0755 tmpfs /newroot/run
-	}
+	# 与 virtme-ng 一致，/run 和 /tmp 使用 guest 独立的 tmpfs。
+	# virtiofsd --no-announce-submounts 会隐藏 host 的 tmpfs，只暴露底层
+	# 挂载点目录；如果继续使用 overlay，/tmp 会继承错误的 0755 权限。
+	log "tmpfs: /run"
+	mount -t tmpfs -o mode=0755,nosuid,nodev tmpfs /newroot/run
 	# 确保 /run/tmp 存在
 	mkdir -p /newroot/run/tmp
+	log "tmpfs: /tmp"
+	mount -t tmpfs -o mode=1777,nosuid,nodev tmpfs /newroot/tmp
 
 	idx=0
 	while true; do
@@ -214,12 +211,12 @@ setup_sudo() {
 
 mount_extra_fs() {
 	log "mounting extra filesystems..."
-	mount -t proc -o nosuid,noexec,nodev proc /newroot/proc 2>/dev/null || true
-	mount -t sysfs -o nosuid,noexec,nodev sys /newroot/sys 2>/dev/null || true
-	if [ -d /newroot/dev ]; then
-		mount -t devtmpfs -o mode=0755,nosuid devtmpfs /newroot/dev 2>/dev/null || {
-			mount --bind /dev /newroot/dev 2>/dev/null || true
-		}
+	mkdir -p /newroot/proc /newroot/sys /newroot/dev
+	mount -t proc -o nosuid,noexec,nodev proc /newroot/proc
+	mount -t sysfs -o nosuid,noexec,nodev sys /newroot/sys
+	if ! mount -t devtmpfs -o mode=0755,nosuid,noexec devtmpfs /newroot/dev; then
+		log "warning: failed to mount a second devtmpfs, moving initramfs /dev"
+		mount --move /dev /newroot/dev
 	fi
 	# devtmpfs 不会自动创建 pts/ 和 shm/ 目录；没有 /dev/pts 时
 	# sshd 无法分配 pty（报 PTY allocation request failed）

@@ -17,8 +17,9 @@ from pathlib import Path
 from typing import Callable, Sequence
 
 from commands import CommandRunner
-from errors import ColleiError
+from errors import ColleiError, ColleiHelp
 from host_setup import prepare_ovs_tap
+from launch_options import LaunchOptions
 from monitor import QmpClient, hmp_command, hmp_commands
 from network_templates import network_configurations, temporary_ip_commands
 from runtime import ColleiContext, VmRuntime
@@ -30,6 +31,7 @@ class VmRequirement(Enum):
     ANY = ""
     ACTIVE = "active"
     INACTIVE = "inactive"
+    LAUNCH = "launch"
     DEBUG_KERNEL = "debug_kernel"
 
 
@@ -70,8 +72,7 @@ def _ssh_argv(context: ActionContext, copy_id: bool = False) -> list[str]:
 def _ssh_vsock_argv(context: ActionContext) -> list[str]:
     if not context.vm.config.options.enabled("vsock"):
         raise ColleiError(
-            f"vsock not enabled for {context.vm.config.name}, "
-            "run: echo 1 > opt/vsock"
+            f"vsock not enabled for {context.vm.config.name}, run: echo 1 > opt/vsock"
         )
     # 与 virtme kernel_args 的用户选择保持一致: guest 共享 host rootfs，
     # virtiofsd 以普通用户运行，只有该用户的 home 里的 authorized_keys 可读。
@@ -966,27 +967,6 @@ def _choose_migrate_host(context: ActionContext) -> str:
     return host
 
 
-def action_cold_migrate(context: ActionContext, args: Sequence[str]) -> None:
-    del args
-    if not context.vm.config.options.enabled("nbd"):
-        raise ColleiError("not migratable")
-    host = _choose_migrate_host(context)
-    if host == "127.0.0.1":
-        raise ColleiError("冷迁移只是拷贝 config 而已")
-    context.runner.exec(
-        [
-            sys.executable,
-            context.collei.repo / "nbd" / "c.py",
-            "--operation",
-            "migrate",
-            "--host",
-            host,
-            "--dir",
-            context.vm.directory,
-        ]
-    )
-
-
 def action_migrate_cpr(context: ActionContext, args: Sequence[str]) -> None:
     del args
     if not _confirm(context, "rk -T"):
@@ -1108,58 +1088,114 @@ def action_debug_kernel(context: ActionContext, args: Sequence[str]) -> None:
     )
 
 
-def action_migrate(context: ActionContext, args: Sequence[str]) -> None:
-    del args
-    host = _choose_migrate_host(context)
-    if host != "127.0.0.1":
-        context.runner.exec(
-            [
-                sys.executable,
-                context.collei.repo / "nbd" / "c.py",
-                "--operation",
-                "migrate",
-                "--host",
-                host,
-                "--dir",
-                context.vm.directory,
-            ]
+def _wait_local_migration(
+    source_qmp: Path, target_qmp: Path, timeout: float = 300
+) -> None:
+    """等待本地热迁移完成，并同时校验 source 和 target 的状态。"""
+    deadline = time.monotonic() + timeout
+    snapshots: dict[str, tuple[dict[str, object], dict[str, object]]] = {}
+    while time.monotonic() < deadline:
+        snapshots.clear()
+        for side, qmp_path in (("source", source_qmp), ("target", target_qmp)):
+            with QmpClient(qmp_path) as qmp:
+                run_state = qmp.execute("query-status")
+                migration_state = qmp.execute("query-migrate")
+            if not isinstance(run_state, dict) or not isinstance(migration_state, dict):
+                raise ColleiError(
+                    f"{side} returned invalid migration state: "
+                    f"run={run_state!r}, migration={migration_state!r}"
+                )
+            snapshots[side] = (run_state, migration_state)
+
+        # 只等待 source 进入 postmigrate 会漏掉 target 加载设备状态失败；
+        # 因此任何一端报告 failed 都应立即返回真实错误，而不是一直等待。
+        for side, (_, migration) in snapshots.items():
+            if migration.get("status") == "failed":
+                error = migration.get("error-desc", "unknown migration error")
+                raise ColleiError(f"{side} migration failed: {error}")
+
+        source_status, _ = snapshots["source"]
+        target_status, _ = snapshots["target"]
+        source_done = source_status.get("status") == "postmigrate"
+        target_running = target_status.get("status") == "running"
+        if source_done and target_running:
+            break
+        time.sleep(1)
+    else:
+        raise ColleiError(
+            f"migration timed out after {timeout:g} seconds: "
+            f"source={snapshots.get('source')!r}, "
+            f"target={snapshots.get('target')!r}"
         )
-        return
-    if not _confirm(context, "rk -a"):
-        return
+
+
+def _run_local_migration(
+    context: ActionContext,
+    before_migrate: Sequence[str],
+    after_migrate: Sequence[str] = (),
+) -> None:
     vm_dir = context.vm.directory
     source = (vm_dir / "migrate_source").read_text().strip()
     target = (vm_dir / "migrate_target").read_text().strip()
-    target_socket = vm_dir / target / "hmp"
-    for command in (
-        "migrate_set_capability multifd on",
-        "migrate_set_parameter max-bandwidth 1",
-        "migrate_set_parameter multifd-channels 4",
-        "migrate_set_parameter multifd-compression zstd",
-        f"migrate_incoming unix:{vm_dir / 'migrate.sock'}",
-    ):
-        hmp_command(target_socket, command)
     source_socket = vm_dir / source / "hmp"
+
     for command in (
-        "migrate_set_capability multifd on",
-        "migrate_set_parameter multifd-channels 4",
-        "migrate_set_parameter multifd-compression zstd",
+        *before_migrate,
         "info migrate_capabilities",
         "info migrate_parameters",
         f"migrate -d unix:{vm_dir / 'migrate.sock'}",
+        *after_migrate,
     ):
-        hmp_command(source_socket, command)
-    while True:
-        with QmpClient(vm_dir / source / "qmp-no-pretty") as qmp:
-            status = qmp.execute("query-status")
-        if isinstance(status, dict) and status.get("status") == "postmigrate":
-            break
-        time.sleep(1)
-    print(f"socat -,echo=0,icanon=0 unix-connect:{target_socket}")
+        _migration_hmp_command(source_socket, command)
+
+    _wait_local_migration(
+        vm_dir / source / "qmp-no-pretty",
+        vm_dir / target / "qmp-no-pretty",
+    )
+
+    # 进入到 target 端的 qhm 环境中
+    print(f"socat -,echo=0,icanon=0 unix-connect:{source_socket}")
     # 当 ai 执行的时候，非交互环境执行会失败
     if not sys.stdin.isatty():
         return
     context.runner.exec(["socat", "-,echo=0,icanon=0", f"unix-connect:{source_socket}"])
+
+
+def _migration_hmp_command(socket: Path, command: str) -> None:
+    output = hmp_command(socket, command)
+    match = re.search(r"\bError:\s*([^\r\n]+)", output)
+    if match is not None:
+        raise ColleiError(f"{command}: {match.group(1)}")
+
+
+def action_migrate(context: ActionContext, args: Sequence[str]) -> None:
+    del args
+    if not _confirm(context, "rk -a"):
+        return
+    _run_local_migration(
+        context,
+        (
+            "migrate_set_capability multifd on",
+            "migrate_set_parameter multifd-channels 4",
+            "migrate_set_parameter multifd-compression zstd",
+        ),
+    )
+
+
+def action_migrate_postcopy(context: ActionContext, args: Sequence[str]) -> None:
+    del args
+    if not _confirm(context, "rk -a"):
+        return
+    _run_local_migration(
+        context,
+        (
+            # Postcopy is not yet compatible with multifd
+            # 默认 multifd 打开的，所以需要关闭一下
+            "migrate_set_capability multifd off",
+            "migrate_set_capability postcopy-ram on",
+        ),
+        ("migrate_start_postcopy",),
+    )
 
 
 def _choose_guest_level() -> int:
@@ -1208,6 +1244,7 @@ ACTIVE_ACTIONS = {
     "throttle",
     "top",
     "migrate",
+    "migrate_postcopy",
     "gdb",
     "ssh",
     "ssh_vsock",
@@ -1228,7 +1265,8 @@ ACTIVE_ACTIONS = {
     "setup_nmcli",
     "tty3",
 }
-INACTIVE_ACTIONS = {"rename", "run", "cold_migrate"}
+INACTIVE_ACTIONS = {"rename", "cold_migrate"}
+LAUNCH_ACTIONS = {"run"}
 DEBUG_ACTIONS = {"debug_kernel"}
 ANY_ACTIONS = {
     "unplug_vfio",
@@ -1266,8 +1304,6 @@ IMPLEMENTED: dict[str, ActionFunction] = {
     "cgroup": action_cgroup,
     "clone_vm_auto": action_clone_vm_auto,
     "clone_vm": action_clone_vm,
-    "cold_migrate": action_cold_migrate,
-    "cpr_exec": action_cpr_exec,
     "default": action_default,
     "debug_kernel": action_debug_kernel,
     "dump_and_crash": action_dump_and_crash,
@@ -1284,11 +1320,16 @@ IMPLEMENTED: dict[str, ActionFunction] = {
     "kill": action_kill,
     "kexec": action_kexec,
     "kvm_dmesg": action_kvm_dmesg,
-    "load_vm_cpr": action_load_vm_cpr,
     "log": action_log,
     "monitor": action_monitor,
+    # 热迁移相关
     "migrate": action_migrate,
+    "migrate_postcopy": action_migrate_postcopy,
     "migrate_cpr": action_migrate_cpr,
+    "save_vm_cpr": action_save_vm_cpr,
+    "load_vm_cpr": action_load_vm_cpr,
+    "cpr_exec": action_cpr_exec,
+    "save_vm_file": action_save_vm_file,
     "network": action_network,
     "path": action_path,
     "perf_qemu": action_perf_qemu,
@@ -1298,8 +1339,6 @@ IMPLEMENTED: dict[str, ActionFunction] = {
     "restore": action_restore,
     "rsync": action_rsync,
     "run": action_run,
-    "save_vm_cpr": action_save_vm_cpr,
-    "save_vm_file": action_save_vm_file,
     "ssh": action_ssh,
     "ssh_auto": action_ssh_auto,
     "ssh_vsock": action_ssh_vsock,
@@ -1327,6 +1366,7 @@ def registry() -> dict[str, Action]:
     for requirement, names in (
         (VmRequirement.ACTIVE, ACTIVE_ACTIONS),
         (VmRequirement.INACTIVE, INACTIVE_ACTIONS),
+        (VmRequirement.LAUNCH, LAUNCH_ACTIONS),
         (VmRequirement.DEBUG_KERNEL, DEBUG_ACTIONS),
         (VmRequirement.ANY, ANY_ACTIONS),
     ):
@@ -1335,8 +1375,29 @@ def registry() -> dict[str, Action]:
     return result
 
 
-def validate_requirement(action: Action, vm: VmRuntime) -> None:
-    if action.requirement is VmRequirement.ACTIVE and not vm.active:
+def effective_requirement(
+    action: Action, arguments: Sequence[str] = ()
+) -> VmRequirement:
+    """根据 run 的启动模式确定它对当前 VM 状态的要求。"""
+    if action.requirement is not VmRequirement.LAUNCH:
+        return action.requirement
+
+    try:
+        options = LaunchOptions.parse(arguments)
+    except ColleiHelp:
+        return VmRequirement.ANY
+    if options.migration in {"defer", "cpr-transfer"}:
+        return VmRequirement.ACTIVE
+    if options.dry_run and options.migration is None:
+        return VmRequirement.ANY
+    return VmRequirement.INACTIVE
+
+
+def validate_requirement(
+    action: Action, vm: VmRuntime, arguments: Sequence[str] = ()
+) -> None:
+    requirement = effective_requirement(action, arguments)
+    if requirement is VmRequirement.ACTIVE and not vm.active:
         raise ColleiError(f"{action.name} need vm is active")
-    if action.requirement is VmRequirement.INACTIVE and vm.active:
+    if requirement is VmRequirement.INACTIVE and vm.active:
         raise ColleiError(f"{action.name} need vm is inactive")

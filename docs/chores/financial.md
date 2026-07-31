@@ -1,7 +1,3 @@
-- https://news.ycombinator.com/item?id=32091288
-
-小岛经济学 = 经济学原理 经济学概论 国富论
-
 ## 反向开票
 
 【中国税务】尊敬的纳税人，根据系统监测，您2025年存在反向开票相关收入，需办理个人所得税经营所得汇算清缴，可通过个人所得税APP-办查-《其他经营所得B表》或自然人电子税务局WEB端搜索“其他经营所得（B表）”进行申报。对开票金额存疑的，请及时联系受票企业。【国家税务总局***税务局】
@@ -138,6 +134,14 @@
 <!-- ce0baa36-2cb1-41ff-b0e4-96f558914e4d -->
 
 https://plantree.me/category/%E8%B4%A2%E5%8A%A1/
+
+## AI
+https://github.com/HKUDS/Vibe-Trading
+
+- https://news.ycombinator.com/item?id=32091288
+
+小岛经济学 = 经济学原理 经济学概论 国富论
+
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

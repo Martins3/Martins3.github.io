@@ -1,3 +1,9 @@
+# 影视
+
+## 新世界
+
+我觉得作为一个《无间道》的忠实粉丝，里面的名场面全部都记得。不得不说，新世界这部片非常对我的胃口啊。然后很多片段也是致敬了致敬了从甚至是教父的最后的阶段。只可惜我被弹幕剧透了，我知道他会反水，从很早的时候就开始知道。但是他给我的震撼没有曾经看《无间道》来的那么强烈。其实《无间道》里面我最喜欢的不是无间道二最喜欢的反而是倪永孝的故事。所以所以我这里感觉就像是从看完了《黑客帝国》前三部，然后时隔十几年重新看。黑客帝国四一样
+
 ## 长安的荔枝
 
 不错的，内容连贯，对比鲜明。
@@ -25,9 +31,6 @@
 
 ## 马男波杰克
 
-## 这个列表
-https://www.zhihu.com/question/1979882986758432108
-
 ## 怪物物语
 
 ## 新世纪福音战(EVA)
@@ -49,9 +52,8 @@ https://www.zhihu.com/question/1979882986758432108
 ## 指环王
 
 ## 大佛普拉斯
-https://movie.douban.com/subject/27059130/
 
-## 洛丽塔(book)
+https://movie.douban.com/subject/27059130/
 
 ## [绿色星球](https://www.bilibili.com/bangumi/play/ep451882)
 
@@ -62,22 +64,20 @@ https://movie.douban.com/subject/27059130/
 ## 《2001：太空漫游》
 
 ## 《全球通史》
+
 https://book.douban.com/subject/10583099/
 
-## 有趣
-https://hurricane618.me/2023/10/03/my-recommendation-list-1/
-
 ## 奥本海默
+
 ## 怪奇物语
 
-## 素食者
+## 一战再战
+- https://www.bilibili.com/video/BV1rGApzWE31/
 
-太压抑了
+## TODO
 
-在微信读书中阅读，时不时看看各种批注，
-感觉大多数的评论的思考太简单，
-
-## 新世界
+- https://www.zhihu.com/question/1979882986758432108
+- https://hurricane618.me/2023/10/03/my-recommendation-list-1/
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

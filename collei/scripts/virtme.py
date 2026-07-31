@@ -5,7 +5,6 @@ from __future__ import annotations
 
 import base64
 import getpass
-import gzip
 import os
 import platform
 import shutil
@@ -17,9 +16,10 @@ from pathlib import Path
 
 from commands import CommandRunner
 from errors import ColleiError
-from kernel import kernel_release
 from runtime import ColleiContext, VmRuntime
 from tasks import add_background_task
+
+from kernel import kernel_release
 
 
 @dataclass(frozen=True)
@@ -75,7 +75,7 @@ class VirtmeSetup:
         overlays: list[str] = []
         if options.enabled("virtme_rw"):
             # 默认的可写目录
-            overlays.extend(("/etc", "/home", "/var", "/tmp"))
+            overlays.extend(("/etc", "/home", "/var"))
 
         # 额外的可写目录 (逗号分隔)
         extra = options.get("virtme_rw_overlay")
@@ -187,7 +187,7 @@ class VirtmeSetup:
 
     @property
     def initramfs(self) -> Path:
-        return self.vm.directory / self.vm.which_qemu / "virtme-initramfs.cpio.gz"
+        return self.vm.directory / self.vm.which_qemu / "virtme-initramfs.cpio.zst"
 
     # 设置 virtme rootfs 共享 (virtio-fs)
     def rootfs_arguments(self) -> tuple[str, ...]:
@@ -273,6 +273,37 @@ class VirtmeSetup:
         if not init_script.is_file():
             raise ColleiError(f"virtme-init.sh not found at {init_script}")
 
+        # 查找 busybox (优先静态链接版本)。提前到缓存检查之前，
+        # 因为 busybox 路径也是缓存输入之一。
+        busybox = next(
+            (
+                Path(binary)
+                for name in ("busybox-static", "busybox.static", "busybox")
+                if (binary := shutil.which(name)) is not None
+            ),
+            None,
+        )
+        if busybox is None:
+            raise ColleiError("busybox not found, please install busybox-static")
+
+        # 模块源文件路径 (单次目录遍历，见 _find_modules)
+        modules = (
+            self._find_modules(kernel_dir)
+            if kernel_dir is not None and kernel_dir.is_dir()
+            else {}
+        )
+
+        # 缓存: 输入 (init 脚本、busybox、模块、机器类型/vsock 选项) 没变化时
+        # 直接复用，避免每次启动都重新 cpio+zstd。
+        stamp = self._initramfs_stamp(init_script, busybox, modules)
+        stamp_path = self.initramfs.parent / f"{self.initramfs.name}.stamp"
+        if (
+            self.initramfs.is_file()
+            and stamp_path.is_file()
+            and stamp_path.read_text() == stamp
+        ):
+            return self.initramfs
+
         # 1. 创建目录结构
         with tempfile.TemporaryDirectory(prefix="collei-virtme-") as temporary:
             root = Path(temporary)
@@ -288,17 +319,7 @@ class VirtmeSetup:
             ):
                 (root / directory).mkdir(parents=True, exist_ok=True)
 
-            # 2. 查找 busybox (优先静态链接版本)
-            busybox = next(
-                (
-                    Path(binary)
-                    for name in ("busybox-static", "busybox.static", "busybox")
-                    if (binary := shutil.which(name)) is not None
-                ),
-                None,
-            )
-            if busybox is None:
-                raise ColleiError("busybox not found, please install busybox-static")
+            # 2. 复制 busybox
             shutil.copy2(busybox, root / "bin/busybox")
 
             # 创建常用命令链接
@@ -331,10 +352,11 @@ class VirtmeSetup:
             (root / "init").chmod(0o755)
 
             # 5. 复制必要内核模块 (如果内核目录可用)
-            if kernel_dir is not None and kernel_dir.is_dir():
-                self._copy_modules(root, kernel_dir)
+            self._copy_modules(root, modules)
 
-            # 6. 打包为 cpio.gz
+            # 6. 打包为 cpio.zst。走外部 zstd 而不是 Python gzip:
+            # 19.5MB 的 initramfs 用 gzip level 9 要 ~3.4s (level 1 也要 0.13s)，
+            # zstd -1 只需 ~30ms，内核 CONFIG_RD_ZSTD 直接支持。
             self.initramfs.parent.mkdir(parents=True, exist_ok=True)
             find = subprocess.Popen(
                 ["find", ".", "-print0"], cwd=root, stdout=subprocess.PIPE
@@ -351,16 +373,22 @@ class VirtmeSetup:
             find.stdout.close()
             if cpio.stdout is None:
                 raise ColleiError("cannot read cpio output")
-            with gzip.open(self.initramfs, "wb") as archive:
-                shutil.copyfileobj(cpio.stdout, archive)
+            with self.initramfs.open("wb") as archive:
+                zstd = subprocess.Popen(
+                    ["zstd", "-q", "-1", "-T0"],
+                    stdin=cpio.stdout,
+                    stdout=archive,
+                )
             cpio.stdout.close()
-            if cpio.wait() or find.wait():
+            if cpio.wait() or find.wait() or zstd.wait():
                 raise ColleiError("failed to create virtme initramfs")
+        stamp_path.write_text(stamp)
         return self.initramfs
 
-    def _copy_modules(self, root: Path, kernel_dir: Path) -> None:
-        # 注意: virtiofs 模块文件名是 virtiofs.ko，但加载时可能用 virtio_fs。
-        # 注意: virtiofs 依赖 fuse，需要先加载 fuse。
+    # 需要的 initramfs 模块列表: (输出名, 源模块名)。
+    # 注意: virtiofs 模块文件名是 virtiofs.ko，但加载时可能用 virtio_fs。
+    # 注意: virtiofs 依赖 fuse，需要先加载 fuse。
+    def _module_list(self) -> list[tuple[str, str]]:
         machine = self.vm.config.options.get("machine") or "pc"
         modules = [("fuse", "fuse"), ("virtio_fs", "virtiofs"), ("overlay", "overlay")]
         if machine != "microvm":
@@ -378,9 +406,35 @@ class VirtmeSetup:
                     "vmw_vsock_virtio_transport",
                 )
             )
+        return modules
+
+    def _initramfs_stamp(
+        self, init_script: Path, busybox: Path, modules: dict[str, Path]
+    ) -> str:
+        parts = [
+            f"{init_script}:{init_script.stat().st_mtime_ns}",
+            f"{busybox}:{busybox.stat().st_mtime_ns}",
+            f"machine={self.vm.config.options.get('machine') or 'pc'}",
+            f"vsock={self.vm.config.options.enabled('vsock')}",
+        ]
+        for name in sorted(modules):
+            path = modules[name]
+            parts.append(f"{name}:{path}:{path.stat().st_mtime_ns}")
+        return "\n".join(parts)
+
+    # 在内核构建树中定位需要的模块。逐模块 rglob 会对整棵树做 N 次全量
+    # 扫描 (~1.2s)，这里只做一次遍历，按文件名建立索引。
+    def _find_modules(self, kernel_dir: Path) -> dict[str, Path]:
+        wanted = {source for _, source in self._module_list()}
+        found: dict[str, list[Path]] = {}
+        for path in kernel_dir.rglob("*.ko*"):
+            base = path.name.split(".ko")[0]
+            if base in wanted:
+                found.setdefault(base, []).append(path)
         release = kernel_release(kernel_dir)
-        for output_name, source_name in modules:
-            matches = sorted(kernel_dir.rglob(f"{source_name}.ko*"))
+        result: dict[str, Path] = {}
+        for output_name, source_name in self._module_list():
+            matches = sorted(found.get(source_name, []))
             if not matches:
                 continue
             source = next(
@@ -403,6 +457,11 @@ class VirtmeSetup:
                     f"no {source_name}.ko matching kernel {release} "
                     f"(available: {', '.join(available) or 'unknown'})"
                 )
+            result[output_name] = source
+        return result
+
+    def _copy_modules(self, root: Path, modules: dict[str, Path]) -> None:
+        for output_name, source in modules.items():
             target = root / f"lib/modules/{output_name}.ko"
             if source.suffix == ".zst":
                 with target.open("wb") as output:

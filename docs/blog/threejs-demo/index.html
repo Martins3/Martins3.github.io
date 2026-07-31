@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MARTINS3 Blocks - Angry Birds Demo</title>
+  <style>
+    body { margin: 0; overflow: hidden; background: #ffffff; }
+    #info {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      color: #333;
+      font-family: monospace;
+      font-size: 14px;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="info">点击鼠标发射弹丸砸积木 | 拖动右键旋转视角 | 按 R 重置</div>
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/",
+        "cannon-es": "https://unpkg.com/cannon-es@0.20.0/dist/cannon-es.js"
+      }
+    }
+  </script>
+  <script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+    import * as CANNON from 'cannon-es';
+
+    // ---------- three.js 场景 ----------
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0xffffff);
+
+    const camera = new THREE.PerspectiveCamera(
+      60, window.innerWidth / window.innerHeight, 0.1, 200);
+    camera.position.set(0, 4, 24);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.shadowMap.enabled = true;
+    document.body.appendChild(renderer.domElement);
+
+    // 左键用于发射,所以旋转视角绑到右键
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.mouseButtons = {
+      LEFT: null,
+      MIDDLE: THREE.MOUSE.DOLLY,
+      RIGHT: THREE.MOUSE.ROTATE
+    };
+    controls.target.set(0, 2, 0);
+
+    scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+    const light = new THREE.DirectionalLight(0xffffff, 1.2);
+    light.position.set(10, 20, 15);
+    light.castShadow = true;
+    light.shadow.camera.left = -25;
+    light.shadow.camera.right = 25;
+    light.shadow.camera.top = 25;
+    light.shadow.camera.bottom = -25;
+    scene.add(light);
+
+    // ---------- cannon-es 物理世界 ----------
+    const world = new CANNON.World({ gravity: new CANNON.Vec3(0, -9.82, 0) });
+    world.broadphase = new CANNON.SAPBroadphase(world);
+    world.allowSleep = true;
+
+    const groundPhysMat = new CANNON.Material('ground');
+    const blockPhysMat = new CANNON.Material('block');
+    world.addContactMaterial(new CANNON.ContactMaterial(groundPhysMat, blockPhysMat, {
+      friction: 0.5,
+      restitution: 0.1
+    }));
+    world.addContactMaterial(new CANNON.ContactMaterial(blockPhysMat, blockPhysMat, {
+      friction: 0.4,
+      restitution: 0.05
+    }));
+
+    // 地面
+    const groundBody = new CANNON.Body({
+      type: CANNON.Body.STATIC,
+      shape: new CANNON.Plane(),
+      material: groundPhysMat
+    });
+    groundBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0);
+    world.addBody(groundBody);
+
+    const groundMesh = new THREE.Mesh(
+      new THREE.PlaneGeometry(200, 200),
+      new THREE.MeshStandardMaterial({ color: 0xf2f2f2 }));
+    groundMesh.rotation.x = -Math.PI / 2;
+    groundMesh.receiveShadow = true;
+    scene.add(groundMesh);
+
+    // ---------- 用积木搭出 "MARTINS3" ----------
+    // 5x7 点阵字体(加粗版), X 表示一块积木
+    const FONT = {
+      M: ['XX.XX', 'XXXXX', 'X.X.X', 'X...X', 'X...X', 'X...X', 'X...X'],
+      A: ['.XXX.', 'XX.XX', 'X...X', 'XXXXX', 'X...X', 'X...X', 'X...X'],
+      R: ['XXXX.', 'XX.XX', 'X...X', 'XXXX.', 'XXX..', 'XX.X.', 'X..XX'],
+      T: ['XXXXX', '.XXX.', '.XXX.', '.XXX.', '.XXX.', '.XXX.', '.XXX.'],
+      I: ['XXXXX', '.XXX.', '.XXX.', '.XXX.', '.XXX.', '.XXX.', 'XXXXX'],
+      N: ['X...X', 'XX..X', 'XXX.X', 'X.XXX', 'X..XX', 'X...X', 'X...X'],
+      S: ['.XXXX', 'XX...', 'XX...', '.XXX.', '...XX', '...XX', 'XXXX.'],
+      3: ['XXXX.', '...XX', '...XX', '.XXXX', '...XX', '...XX', 'XXXX.']
+    };
+    const TEXT = 'MARTINS3';
+
+    const BLOCK = 0.7;            // 积木边长
+    const LETTER_GAP = 1.5;       // 字母间距(以积木为单位)
+    const DEPTH = 2;              // 墙的厚度(积木层数)
+    const blocks = [];            // { mesh, body }
+
+    const blockGeo = new THREE.BoxGeometry(BLOCK, BLOCK, BLOCK);
+    const blockHalf = new CANNON.Vec3(BLOCK / 2, BLOCK / 2, BLOCK / 2);
+
+    // 统一绿色积木
+    const blockMat = new THREE.MeshStandardMaterial({ color: 0x34a853, roughness: 0.5 });
+
+    function buildWall() {
+      const letterWidth = 5;
+      const totalCols = TEXT.length * letterWidth + (TEXT.length - 1) * LETTER_GAP;
+      const x0 = -totalCols * BLOCK / 2;
+      const z0 = -(DEPTH - 1) * BLOCK / 2;
+
+      TEXT.split('').forEach((ch, li) => {
+        const rows = FONT[ch];
+        const letterX = x0 + li * (letterWidth + LETTER_GAP) * BLOCK;
+        rows.forEach((rowStr, r) => {
+          // r = 0 是最上面一行, 翻转成从地面向上堆
+          const y = (rows.length - 1 - r + 0.5) * BLOCK;
+          rowStr.split('').forEach((cell, c) => {
+            if (cell !== 'X') return;
+            const x = letterX + c * BLOCK;
+
+            for (let d = 0; d < DEPTH; d++) {
+              const z = z0 + d * BLOCK;
+
+              const mesh = new THREE.Mesh(blockGeo, blockMat);
+              mesh.castShadow = true;
+              mesh.position.set(x, y, z);
+              scene.add(mesh);
+
+              const body = new CANNON.Body({
+                mass: 0.5,
+                shape: new CANNON.Box(blockHalf),
+                material: blockPhysMat,
+                position: new CANNON.Vec3(x, y, z),
+                sleepSpeedLimit: 0.3,
+                sleepTimeLimit: 0.5
+              });
+              world.addBody(body);
+              // 初始睡眠: 悬空积木不会自行塌落, 被弹丸撞击后才会被唤醒
+              body.sleep();
+              blocks.push({ mesh, body, ix: x, iy: y });
+            }
+          });
+        });
+      });
+    }
+    buildWall();
+
+    // ---------- 弹丸 ----------
+    const balls = [];
+    const ballGeo = new THREE.SphereGeometry(0.7, 24, 16);
+    const ballMat = new THREE.MeshStandardMaterial({ color: 0xff3333, roughness: 0.3 });
+    const raycaster = new THREE.Raycaster();
+
+    function launchBall(dir) {
+      const start = camera.position.clone().addScaledVector(dir, 2);
+      const mesh = new THREE.Mesh(ballGeo, ballMat);
+      mesh.castShadow = true;
+      mesh.position.copy(start);
+      scene.add(mesh);
+
+      const body = new CANNON.Body({
+        mass: 12,
+        shape: new CANNON.Sphere(0.7),
+        material: blockPhysMat,
+        position: new CANNON.Vec3(start.x, start.y, start.z),
+        velocity: new CANNON.Vec3(dir.x * 55, dir.y * 55, dir.z * 55)
+      });
+      world.addBody(body);
+      balls.push({ mesh, body, born: performance.now() });
+
+      // 最多保留 20 颗弹丸, 超出移除最老的
+      if (balls.length > 20) {
+        const old = balls.shift();
+        scene.remove(old.mesh);
+        world.removeBody(old.body);
+      }
+    }
+
+    function shoot(clientX, clientY) {
+      const ndc = new THREE.Vector2(
+        (clientX / window.innerWidth) * 2 - 1,
+        -(clientY / window.innerHeight) * 2 + 1);
+      raycaster.setFromCamera(ndc, camera);
+      launchBall(raycaster.ray.direction.clone());
+    }
+
+    renderer.domElement.addEventListener('pointerdown', (e) => {
+      if (e.button === 0) shoot(e.clientX, e.clientY);
+    });
+
+    // 调试: ?autoshoot 自动朝字母墙发射一发, 用于无头浏览器测试
+    const debug = new URLSearchParams(location.search).has('autoshoot');
+    if (debug) {
+      setTimeout(() => {
+        // 瞄准第一个字母 M 的中心
+        const target = new THREE.Vector3(blocks[0].body.position.x, 2, 0);
+        launchBall(target.sub(camera.position).normalize());
+      }, 800);
+    }
+    const infoEl = document.getElementById('info');
+    let lastInfoUpdate = 0;
+
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'r' || e.key === 'R') location.reload();
+    });
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    // ---------- 主循环 ----------
+    const clock = new THREE.Clock();
+
+    function animate() {
+      requestAnimationFrame(animate);
+      world.step(1 / 60, clock.getDelta(), 3);
+
+      for (const b of blocks) {
+        b.mesh.position.copy(b.body.position);
+        b.mesh.quaternion.copy(b.body.quaternion);
+      }
+      const now = performance.now();
+      for (let i = balls.length - 1; i >= 0; i--) {
+        const b = balls[i];
+        b.mesh.position.copy(b.body.position);
+        b.mesh.quaternion.copy(b.body.quaternion);
+        // 飞远或超过 10 秒的弹丸回收
+        if (now - b.born > 10000 || b.body.position.length() > 150) {
+          if (debug) console.log('recycle: age=' + (now - b.born).toFixed(0) +
+            ' pos=' + b.body.position.toArray().map(v => v.toFixed(1)));
+          scene.remove(b.mesh);
+          world.removeBody(b.body);
+          balls.splice(i, 1);
+        }
+      }
+
+      controls.update();
+      renderer.render(scene, camera);
+
+      if (debug && now - lastInfoUpdate > 500) {
+        lastInfoUpdate = now;
+        const awake = blocks.filter(b => b.body.sleepState !== CANNON.Body.SLEEPING).length;
+        const moved = blocks.filter(b =>
+          Math.abs(b.body.position.x - b.ix) > 0.3 ||
+          Math.abs(b.body.position.y - b.iy) > 0.3).length;
+        const ballInfo = balls.length
+          ? balls.map(b => b.body.position.y.toFixed(1) + '/' + b.body.position.z.toFixed(1)).join(',')
+          : 'none';
+        infoEl.textContent = 'awake=' + awake + ' moved=' + moved +
+          ' balls=' + balls.length + ' [' + ballInfo + ']';
+      }
+    }
+    animate();
+  </script>
+</body>
+</html>

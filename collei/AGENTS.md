@@ -25,6 +25,10 @@ Python 迁移架构、兼容边界和检查命令见 `PYTHON.md`。
 - 先运行 `ruff check --select I --fix`，再运行 `ruff check --fix`，最后运行 `ruff format`。
 - 不使用 Black。
 - 使用 Pyright 做类型检查。
+- Neovim 的 Python LSP 使用 `ty`。Pyright 检查通过不代表 nvim 中没有类型诊断；
+  修改 Python 后还需要从 `collei/scripts` 目录运行 `ty check <files>`，并确保
+  nvim 中的 `ty` diagnostics 为 0。`ty.toml` 中的相对搜索路径以当前目录为
+  基准；从仓库根目录运行可能把本地 `kernel.py`、`virtme.py` 错认成其他模块。
 
 1. collei.py 定义如何启动已有虚拟机，包括 QEMU 参数、host 准备和迁移目标。
    Python 不会调用或回退到 `bash-archive/collei.sh`；归档 Shell 仅作为迁移参考。
@@ -64,6 +68,10 @@ cmd.sh 是自动生成的，大多数情况下，都是用于调试的。
 ## 注意虚拟机的内核是如何构建
 - ../build/AGENTS.md 构建内核，而 collei 使用 -kernel -initrd 这种替换 kernel 的方法来构建
 - agents/skills/kernel/build-tar/SKILL.md : 快速构建内核安装包，上传到虚拟机中安装测试
+- `force_reboot` 只是 guest 内部重启，QEMU 不会从磁盘重新读取 `-kernel` 指向的 bzImage。
+  换内核（例如重新编译后）必须 `kill` 再 `run`，否则会出现"旧内核 + 新模块"的错配，
+  典型症状是模块加载报 `Unknown symbol`(例如开关 KCSAN 后的 `__tsan_*` 符号缺失)，
+  virtio_net 等模块加载失败导致网络不通。
 
 ## 如何 SSH 到虚拟机中
 
@@ -81,6 +89,24 @@ cmd.sh 是自动生成的，大多数情况下，都是用于调试的。
 # ssh -p 51404 martins3@localhost
 # 也就是登录 yyds-fs 虚拟机，可以使用命令 ssh -p 51404 martins3@localhost
 ```
+
+### virtme 虚拟机走 vsock SSH
+
+virtme 模式的虚拟机（opt/virtme + opt/vsock）默认不配置 guest 网络，
+基于 TCP 端口转发的 `ssh_auto` 连不上；正确方式是 vsock SSH，
+它不依赖 guest 网络配置：
+
+```bash
+./collei/scripts/collei-action.py -a ssh -n virtme            # 直接登录(自动走 vsock)
+./collei/scripts/collei-action.py -a ssh_vsock_auto -n virtme # 仅输出命令
+# 输出类似:
+# ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
+#     -o 'ProxyCommand=socat - VSOCK-CONNECT:1096:22' martins3@virtme
+```
+
+自动化场景直接在 ssh 后面接命令即可执行 guest 内命令（登录用户是 host 同名
+用户，wheel 组，可用 sudo)。不要为了在 guest 里跑脚本而去加 opt/exec、
+opt/root_user 之类的临时配置。
 
 ## 如何获取虚拟机日志
 首先获取到 ssh 到虚拟机的方法，然后使用 ssh ，例如

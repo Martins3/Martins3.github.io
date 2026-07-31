@@ -1,0 +1,16 @@
+# kvm_set_user_memory
+# memory_region_ops_read
+# amdvi_ir_intctl
+# savevm_state_setup
+# kvm_dirty_ring_reaper
+# kvm_interrupt_exit_request
+# uffd_create_fd_nosys
+# uffd_create_fd_api_failed
+# uffd_create_fd_api_noioctl
+# uffd_detect_open_mode
+# qdev_update_parent_bus
+# qemu_coroutine_yield
+# kvm_irqchip_commit_routes
+
+# 监控 qemu 的状态变化
+runstate_set

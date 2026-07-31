@@ -1061,6 +1061,15 @@ D : 后续没有 dirty
 ---- ( protect again --- clear ) ---- send ---
 ```
 
+## 和 qemu 的交互
+获取一次 memory 的内容：
+- `ram_save_pending` ：每次进行一次 iteration 的时候处理一次，调用一次
+    -  `migration_bitmap_sync_precopy`
+        - `migration_bitmap_sync`
+            - `ramblock_sync_dirty_bitmap`
+                - `memory_global_dirty_log_sync` ：调用到 memory listener 中。
+                - `cpu_physical_memory_sync_dirty_bitmap`
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

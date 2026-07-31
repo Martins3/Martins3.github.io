@@ -77,6 +77,47 @@ Submitted together
 Same topic
 Merge conflicts
 
+## gerrit 对于多个 commit 提交的一般处理
+
+在 Gerrit 里，多个 commit 就是多个 change，它们之间形成依赖链（relation chain)，按顺序逐个合入。这正是 Gerrit 处理"一个 feature 拆成多个原子改动"的标准方式：
+
+基本做法
+
+正常在本地写一串 commit（每个 commit 的 message 里都会被 commit-msg hook 加上各自的 Change-Id)，然后一次推：
+
+```bash
+  git push gerrit HEAD:refs/for/stable-6.2.0
+```
+
+Gerrit 会为链上每个 commit 各建一个 change，页面上能看到它们之间的父子依赖关系。review 也是逐个进行的——每个 change 独立 review、独立 +2。
+
+合入顺序
+
+- 必须先合入前面的 change，后面的才能合入（除非配置了 "submit whole topic")。
+- 可以用 topic 把这一串 change 归成一组（push 时 HEAD:refs/for/stable-6.2.0%topic=my-feature，或推上去后在页面/命令行设置），方便整体查看；如果仓库开了
+  submit-whole-topic，点一次 submit 会把整个 topic 按序一起合入。
+
+修改链中间的 commit
+
+这是 stacked changes 最麻烦的地方。比如要改第 2 个 commit:
+
+```bash
+  git rebase -i <链的起点前一个 commit>
+  # 把要改的 commit 标记为 edit,停下来修改
+  git add ...
+  git commit --amend          # Change-Id 不变
+  git rebase --continue       # 后面的 commit 被 rebase 到新基上,Change-Id 各自不变
+  git push gerrit HEAD:refs/for/stable-6.2.0
+```
+
+因为每个 commit 的 Change-Id 都没变，push 后链上每个 change 各得到一个新 patch set，依赖关系自动重建。这正是 Change-Id 机制的价值：SHA 全变了，但逻辑身份不变。
+
+实践建议
+
+- 拆链的动机应该是"每个 commit 都可独立 review、独立通过测试"，而不是随意切。810 行插入的单个 change 其实已经在可接受范围内，别为了拆而拆。
+- 链越长，维护成本越高（改第一个要重推整条链）。一般超过 5-6 个就要想想是不是该分几次合入。
+- 如果后面的 commit 其实是修前面 commit 的问题，那就应该 amend 进前面的 commit，而不是叠在后面——回到上一条消息说的原则。
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

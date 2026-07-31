@@ -35,6 +35,23 @@ https://wiki.qemu.org/Features/BlockReplication
 
 奇怪的: qemu/block/replication.c , replication 自己本身成为一个 back 的 backend 。
 
+## colo
+- `migration_incoming_process`
+    - `process_incoming_migration_co`
+        - `colo_process_incoming_thread`
+
+- `migrate_start_colo_process`
+    - `colo_process_checkpoint`
+        - `vm_start`
+        - `A while loop`
+            - `qemu_event_wait` : `MigrationState::colo_checkpoint_event` -> `colo_checkpoint_notify`
+            - `colo_do_checkpoint_transaction`
+
+- [ ] 需要理解的概念
+    - failover
+    - checkpoint
+
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

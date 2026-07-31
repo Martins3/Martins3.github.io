@@ -544,6 +544,10 @@ FOLL_PIN，并打 MMF_HAS_PINNED。所以如果目标是“找真正的 pin”�
   最容易混淆的是 copy_from_user()：它访问的是用户地址，但执行位置在内核态，所以 user_mode(regs) 为假。内核会靠 uaccess 的 exception table 和
   fault handler 来区分“可恢复的用户内存访问失败”和“真正的内核访问错误”。
 
+### 既然 qemu 中在 backgroup-snapshot 和 postcopy 中使用了 userfaultfd
+
+那么为什么没有出现 vhost-net 的问题?
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="
