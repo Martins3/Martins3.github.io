@@ -281,7 +281,7 @@
 
 - [摄影摄像环境](./chores/photo-workflow.md)
 
-## AI : 作品集
+## AI 作品集
 
 - [Linux 语音输入解决方案](https://github.com/Martins3/VibeCast)
 - [nvim 翻译插件](https://github.com/Martins3/translator.nvim)
