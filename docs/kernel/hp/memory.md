@@ -117,9 +117,13 @@ memory0
 - /sys/module/memory_hotplug/parameters : 也存在一些控制项目
 
 
-下面的命令的确是可以的:
+如果没有自动探测的能力，那么可以执行如下脚本:
 ```sh
-echo 0 > /sys/devices/system/memory/memory<n>/online
+for d in /sys/devices/system/memory/*/online ; do
+		[ -L "${d%/}" ] && continue
+		echo "$d"
+		echo 1 | sudo tee "$d"
+done
 ```
 
 ## 来点 backtrace

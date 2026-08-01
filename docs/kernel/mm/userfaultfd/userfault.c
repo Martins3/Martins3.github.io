@@ -2,10 +2,12 @@
 
 #include <errno.h>
 #include <fcntl.h>
+#include <inttypes.h>
 #include <linux/memfd.h>
 #include <linux/userfaultfd.h>
 #include <poll.h>
 #include <pthread.h>
+#include <signal.h>
 #include <stdatomic.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -14,7 +16,9 @@
 #include <string.h>
 #include <sys/ioctl.h>
 #include <sys/mman.h>
+#include <sys/prctl.h>
 #include <sys/syscall.h>
+#include <sys/wait.h>
 #include <time.h>
 #include <unistd.h>
 
@@ -66,9 +70,9 @@ static void handler_error(struct handler_ctx *ctx, const char *operation)
 	atomic_store(&ctx->error, saved_errno ? saved_errno : EIO);
 }
 
-static int open_userfaultfd(void)
+static int open_userfaultfd(int userfaultfd_flags)
 {
-	int flags = O_CLOEXEC | O_NONBLOCK | UFFD_USER_MODE_ONLY;
+	int flags = O_CLOEXEC | O_NONBLOCK | userfaultfd_flags;
 	int syscall_errno;
 	int dev;
 	int uffd;
@@ -90,8 +94,9 @@ static int open_userfaultfd(void)
 	return uffd;
 }
 
-static int create_userfaultfd(uint64_t required_features,
-			      uint64_t *available_features)
+static int create_userfaultfd_with_flags(uint64_t required_features,
+					 uint64_t *available_features,
+					 int userfaultfd_flags)
 {
 	struct uffdio_api api = {
 		.api = UFFD_API,
@@ -99,8 +104,14 @@ static int create_userfaultfd(uint64_t required_features,
 	};
 	int uffd;
 
-	uffd = open_userfaultfd();
+	uffd = open_userfaultfd(userfaultfd_flags);
 	if (uffd < 0) {
+		if (!(userfaultfd_flags & UFFD_USER_MODE_ONLY) &&
+		    (errno == EPERM || errno == EACCES)) {
+			printf("SKIP: creating a userfaultfd that handles kernel "
+			       "faults requires permission\n");
+			return -TEST_SKIP;
+		}
 		fprintf(stderr, "open userfaultfd: %s\n", strerror(errno));
 		return -1;
 	}
@@ -129,6 +140,14 @@ static int create_userfaultfd(uint64_t required_features,
 
 	*available_features = api.features;
 	return uffd;
+}
+
+static int create_userfaultfd(uint64_t required_features,
+			      uint64_t *available_features)
+{
+	return create_userfaultfd_with_flags(required_features,
+					  available_features,
+					  UFFD_USER_MODE_ONLY);
 }
 
 static int register_range(int uffd, void *start, size_t len, uint64_t mode,
@@ -414,6 +433,48 @@ static int wait_for_counter(atomic_int *counter, int expected)
 	}
 
 	return -1;
+}
+
+static int write_exact(int fd, const void *buffer, size_t len)
+{
+	const char *bytes = buffer;
+
+	while (len) {
+		ssize_t written = write(fd, bytes, len);
+
+		if (written < 0) {
+			if (errno == EINTR)
+				continue;
+			return -1;
+		}
+		bytes += written;
+		len -= written;
+	}
+
+	return 0;
+}
+
+static int read_exact(int fd, void *buffer, size_t len)
+{
+	char *bytes = buffer;
+
+	while (len) {
+		ssize_t count = read(fd, bytes, len);
+
+		if (count < 0) {
+			if (errno == EINTR)
+				continue;
+			return -1;
+		}
+		if (count == 0) {
+			errno = EPIPE;
+			return -1;
+		}
+		bytes += count;
+		len -= count;
+	}
+
+	return 0;
 }
 
 static void init_ctx(struct handler_ctx *ctx, int uffd, enum resolver resolver,
@@ -736,6 +797,309 @@ out:
 	return ret;
 }
 
+struct gdb_target_ready {
+	uintptr_t address;
+	int status;
+};
+
+struct gdb_target_result {
+	short uffd_revents;
+	int error;
+};
+
+static void run_gdb_target(int ready_fd, int control_fd, size_t page_size,
+			   int userfaultfd_flags)
+{
+	struct gdb_target_ready ready = {
+		.status = 1,
+	};
+	struct gdb_target_result result = { 0 };
+	uint64_t features;
+	struct pollfd pfd;
+	void *region = MAP_FAILED;
+	char command;
+	int uffd = -1;
+	int status = 1;
+
+	uffd = create_userfaultfd_with_flags(0, &features, userfaultfd_flags);
+	if (uffd == -TEST_SKIP) {
+		ready.status = TEST_SKIP;
+		goto report_ready;
+	}
+	if (uffd < 0)
+		goto report_ready;
+
+	region = mmap(NULL, page_size, PROT_READ | PROT_WRITE,
+		      MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+	if (region == MAP_FAILED) {
+		fprintf(stderr, "gdb target mmap: %s\n", strerror(errno));
+		goto report_ready;
+	}
+	if (register_range(uffd, region, page_size,
+			   UFFDIO_REGISTER_MODE_MISSING,
+			   1ULL << _UFFDIO_COPY) < 0)
+		goto report_ready;
+
+	/* Allow the sibling GDB process through Yama ptrace_scope. */
+	if (prctl(PR_SET_PTRACER, PR_SET_PTRACER_ANY) < 0) {
+		fprintf(stderr, "prctl(PR_SET_PTRACER): %s\n", strerror(errno));
+		goto unregister;
+	}
+
+	ready.address = (uintptr_t)region;
+	ready.status = 0;
+report_ready:
+	if (write_exact(ready_fd, &ready, sizeof(ready)) < 0)
+		goto unregister;
+	if (ready.status)
+		goto out;
+
+	if (read_exact(control_fd, &command, sizeof(command)) < 0)
+		goto unregister;
+
+	pfd.fd = uffd;
+	pfd.events = POLLIN;
+	pfd.revents = 0;
+	if (poll(&pfd, 1, 0) < 0)
+		result.error = errno;
+	else
+		result.uffd_revents = pfd.revents;
+	if (write_exact(ready_fd, &result, sizeof(result)) < 0)
+		goto unregister;
+	status = 0;
+
+unregister:
+	if (region != MAP_FAILED && uffd >= 0 &&
+	    unregister_range(uffd, region, page_size) < 0)
+		status = 1;
+out:
+	if (region != MAP_FAILED)
+		munmap(region, page_size);
+	if (uffd >= 0)
+		close(uffd);
+	close(ready_fd);
+	close(control_fd);
+	(void)features;
+	_exit(ready.status ? ready.status : status);
+}
+
+static int wait_with_timeout(pid_t pid, int *status)
+{
+	struct timespec delay = {
+		.tv_nsec = 10 * 1000 * 1000,
+	};
+
+	for (int i = 0; i < 1000; i++) {
+		pid_t waited = waitpid(pid, status, WNOHANG);
+
+		if (waited == pid)
+			return 0;
+		if (waited < 0) {
+			if (errno == EINTR)
+				continue;
+			return -1;
+		}
+		nanosleep(&delay, NULL);
+	}
+
+	errno = ETIMEDOUT;
+	return -1;
+}
+
+static int run_gdb(pid_t target, uintptr_t address, char *output,
+		   size_t output_size)
+{
+	char pid_arg[32];
+	char examine_command[64];
+	int output_pipe[2];
+	int status;
+	pid_t gdb;
+	size_t used = 0;
+
+	if (pipe2(output_pipe, O_CLOEXEC) < 0) {
+		fprintf(stderr, "pipe2(gdb output): %s\n", strerror(errno));
+		return 1;
+	}
+
+	gdb = fork();
+	if (gdb < 0) {
+		fprintf(stderr, "fork(gdb): %s\n", strerror(errno));
+		close(output_pipe[0]);
+		close(output_pipe[1]);
+		return 1;
+	}
+	if (gdb == 0) {
+		close(output_pipe[0]);
+		if (dup2(output_pipe[1], STDOUT_FILENO) < 0 ||
+		    dup2(output_pipe[1], STDERR_FILENO) < 0)
+			_exit(126);
+		close(output_pipe[1]);
+		if (setenv("LC_ALL", "C", 1) < 0)
+			_exit(126);
+		snprintf(pid_arg, sizeof(pid_arg), "%jd", (intmax_t)target);
+		snprintf(examine_command, sizeof(examine_command),
+			 "x/1bx 0x%" PRIxPTR, address);
+		execlp("gdb", "gdb", "--quiet", "--nx", "--batch", "--pid",
+		       pid_arg, "--ex", examine_command, (char *)NULL);
+		_exit(errno == ENOENT ? 127 : 126);
+	}
+
+	close(output_pipe[1]);
+	if (wait_with_timeout(gdb, &status) < 0) {
+		fprintf(stderr, "gdb timed out: %s\n", strerror(errno));
+		kill(gdb, SIGKILL);
+		waitpid(gdb, &status, 0);
+		close(output_pipe[0]);
+		return 1;
+	}
+
+	while (used + 1 < output_size) {
+		ssize_t count = read(output_pipe[0], output + used,
+				     output_size - used - 1);
+
+		if (count < 0) {
+			if (errno == EINTR)
+				continue;
+			break;
+		}
+		if (count == 0)
+			break;
+		used += count;
+	}
+	output[used] = '\0';
+	close(output_pipe[0]);
+
+	if (WIFEXITED(status) && WEXITSTATUS(status) == 127)
+		return TEST_SKIP;
+	if (!WIFEXITED(status)) {
+		fprintf(stderr, "gdb terminated abnormally\n");
+		return 1;
+	}
+
+	return 0;
+}
+
+static int run_gdb_missing_with_flags(size_t page_size,
+				      int userfaultfd_flags)
+{
+	struct gdb_target_ready ready;
+	struct gdb_target_result result;
+	char output[8192] = { 0 };
+	int ready_pipe[2] = { -1, -1 };
+	int control_pipe[2] = { -1, -1 };
+	int target_status;
+	int gdb_result = 1;
+	int ret = 1;
+	pid_t target;
+	char command = 'q';
+
+	if (pipe2(ready_pipe, O_CLOEXEC) < 0) {
+		fprintf(stderr, "pipe2(gdb target): %s\n", strerror(errno));
+		return 1;
+	}
+	if (pipe2(control_pipe, O_CLOEXEC) < 0) {
+		fprintf(stderr, "pipe2(gdb control): %s\n", strerror(errno));
+		goto close_pipes;
+	}
+
+	target = fork();
+	if (target < 0) {
+		fprintf(stderr, "fork(gdb target): %s\n", strerror(errno));
+		goto close_pipes;
+	}
+	if (target == 0) {
+		close(ready_pipe[0]);
+		close(control_pipe[1]);
+		run_gdb_target(ready_pipe[1], control_pipe[0], page_size,
+			       userfaultfd_flags);
+	}
+
+	close(ready_pipe[1]);
+	ready_pipe[1] = -1;
+	close(control_pipe[0]);
+	control_pipe[0] = -1;
+	if (read_exact(ready_pipe[0], &ready, sizeof(ready)) < 0) {
+		fprintf(stderr, "read(gdb target ready): %s\n", strerror(errno));
+		goto stop_target;
+	}
+	if (ready.status) {
+		ret = ready.status;
+		goto stop_target;
+	}
+
+	gdb_result = run_gdb(target, ready.address, output, sizeof(output));
+	if (write_exact(control_pipe[1], &command, sizeof(command)) < 0) {
+		fprintf(stderr, "release(gdb target): %s\n", strerror(errno));
+		goto stop_target;
+	}
+	if (read_exact(ready_pipe[0], &result, sizeof(result)) < 0) {
+		fprintf(stderr, "read(gdb target result): %s\n", strerror(errno));
+		goto stop_target;
+	}
+	if (gdb_result == TEST_SKIP) {
+		printf("SKIP: gdb is not installed\n");
+		ret = TEST_SKIP;
+		goto stop_target;
+	}
+	if (gdb_result)
+		goto show_output;
+	if (!strstr(output, "Cannot access memory at address")) {
+		fprintf(stderr, "gdb did not report an inaccessible address\n");
+		goto show_output;
+	}
+	if (result.error) {
+		fprintf(stderr, "poll(userfaultfd): %s\n",
+			strerror(result.error));
+		goto stop_target;
+	}
+	if (result.uffd_revents) {
+		fprintf(stderr,
+			"unexpected userfaultfd event after GDB access: 0x%x\n",
+			(unsigned int)result.uffd_revents);
+		goto stop_target;
+	}
+	printf("GDB: Cannot access memory at address 0x%" PRIxPTR "\n",
+	       ready.address);
+	ret = 0;
+	goto stop_target;
+
+show_output:
+	fprintf(stderr, "gdb output:\n%s", output);
+stop_target:
+	close(control_pipe[1]);
+	control_pipe[1] = -1;
+	if (wait_with_timeout(target, &target_status) < 0) {
+		kill(target, SIGKILL);
+		waitpid(target, &target_status, 0);
+		ret = 1;
+	} else if (ret == 0 &&
+		   (!WIFEXITED(target_status) || WEXITSTATUS(target_status))) {
+		fprintf(stderr, "gdb target exited abnormally\n");
+		ret = 1;
+	}
+
+close_pipes:
+	if (ready_pipe[0] >= 0)
+		close(ready_pipe[0]);
+	if (ready_pipe[1] >= 0)
+		close(ready_pipe[1]);
+	if (control_pipe[0] >= 0)
+		close(control_pipe[0]);
+	if (control_pipe[1] >= 0)
+		close(control_pipe[1]);
+	return ret;
+}
+
+static int run_gdb_missing(size_t page_size)
+{
+	return run_gdb_missing_with_flags(page_size, UFFD_USER_MODE_ONLY);
+}
+
+static int run_gdb_missing_no_user_mode_only(size_t page_size)
+{
+	return run_gdb_missing_with_flags(page_size, 0);
+}
+
 struct test_case {
 	const char *name;
 	int (*run)(size_t page_size);
@@ -757,6 +1121,9 @@ static const struct test_case tests[] = {
 	{ "write-protect", run_write_protect },
 	{ "remove-shmem", run_remove_shmem },
 	{ "minor-shmem", run_minor_shmem },
+	{ "gdb-missing", run_gdb_missing },
+	{ "gdb-missing-no-user-mode-only",
+	  run_gdb_missing_no_user_mode_only },
 };
 
 static void usage(const char *program)

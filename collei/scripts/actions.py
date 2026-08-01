@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import getpass
+import json
 import os
 import platform
 import re
@@ -40,9 +41,8 @@ ActionFunction = Callable[["ActionContext", Sequence[str]], None]
 
 @dataclass(frozen=True)
 class Action:
-    name: str
-    requirement: VmRequirement
     function: ActionFunction | None = None
+    requirement: VmRequirement = VmRequirement.ANY
 
 
 @dataclass
@@ -189,7 +189,17 @@ def action_vnc(context: ActionContext, args: Sequence[str]) -> None:
 
 def action_hmp(context: ActionContext, args: Sequence[str]) -> None:
     del args
-    socket = context.vm.directory / context.vm.which_qemu / "hmp"
+    which_qemu = context.vm.which_qemu
+    # 类似这种资源在两个 QEMU 都运行时需要再次选择，但这种情况并不多。
+    if len(context.vm.live_pids) == 2:
+        source = (context.vm.directory / "migrate_source").read_text().strip()
+        if source not in {"s", "t"}:
+            raise ColleiError(f"invalid migration source: {source}")
+        target = "t" if source == "s" else "s"
+        selected = choose(("source", "target"), prompt="HMP QEMU")
+        which_qemu = source if selected == "source" else target
+
+    socket = context.vm.directory / which_qemu / "hmp"
     context.runner.exec(["socat", "-,echo=0,icanon=0", f"unix-connect:{socket}"])
 
 
@@ -855,15 +865,33 @@ def _wait_postmigrate(context: ActionContext) -> None:
         time.sleep(1)
 
 
-def action_save_vm_file(context: ActionContext, args: Sequence[str]) -> None:
+def action_migrate_to_file(context: ActionContext, args: Sequence[str]) -> None:
     del args
     if len(context.vm.live_pids) != 1:
         raise ColleiError("need exactly one qemu")
     image = context.vm.directory / "vmstate.img"
     _hmp_sequence(
+        # 基于 userfault 的虚拟机镜像功能
+        # <!-- 1a68c5b4-cab0-4c40-86a0-85ad53299d58 -->
+        #
+        # 立刻保存 vmstate ，然后对于内存进行 write protect
+        # 然后开启一个 background 来把内存全部都写入盘中。
+        # 如果一个 page 还没写回，遇到了 write page fault ，
+        # 那么就 stall 住，让这个页面立刻写回。写会之后，页面保护接触。
+        #
+        # 这个功能需要开启 userfault 来解决权限问题
+        # echo "vm.unprivileged_userfaultfd=1" | sudo tee /etc/sysctl.d/99-unprivileged-userfaultfd.conf
+        # sudo sysctl -p /etc/sysctl.d/99-unprivileged-userfaultfd.conf
+        #
+        # 1. mapped-ram 是仅仅能用于文件，否则存在如下报错
+        #   error: migrate_incoming unix:/home/martins3/data/hack/vm/virtme/migrate.sock: Migration requires seekable transport (e.g. file)
+        #   具体参考 transport_supports_seeking
+        # 2. background-snapshot 和 mapped-ram 完全都是正交的
         context,
         (
-            "migrate_set_capability background-snapshot on",
+            # "migrate_set_capability background-snapshot on",
+            "migrate_set_capability multifd on",
+            "migrate_set_capability mapped-ram on",
             "info migrate_capabilities",
             "info migrate_parameters",
             f"migrate -d file:{image}",
@@ -967,6 +995,8 @@ def _choose_migrate_host(context: ActionContext) -> str:
     return host
 
 
+# 这个到底什么用来着?
+# "migrate_set_capability x-ignore-shared on",
 def action_migrate_cpr(context: ActionContext, args: Sequence[str]) -> None:
     del args
     if not _confirm(context, "rk -T"):
@@ -1107,6 +1137,18 @@ def _wait_local_migration(
                 )
             snapshots[side] = (run_state, migration_state)
 
+        print(
+            "migration status:\n"
+            + json.dumps(
+                {
+                    side: {"run": run, "migration": migration}
+                    for side, (run, migration) in snapshots.items()
+                },
+                indent=2,
+            ),
+            flush=True,
+        )
+
         # 只等待 source 进入 postmigrate 会漏掉 target 加载设备状态失败；
         # 因此任何一端报告 failed 都应立即返回真实错误，而不是一直等待。
         for side, (_, migration) in snapshots.items():
@@ -1137,8 +1179,17 @@ def _run_local_migration(
     vm_dir = context.vm.directory
     source = (vm_dir / "migrate_source").read_text().strip()
     target = (vm_dir / "migrate_target").read_text().strip()
+    target_socket = vm_dir / target / "hmp"
     source_socket = vm_dir / source / "hmp"
 
+    # 给 target 注册命令
+    for command in (
+        *before_migrate,
+        f"migrate_incoming unix:{vm_dir / 'migrate.sock'}",
+    ):
+        _migration_hmp_command(target_socket, command)
+
+    # 给 source 注册命令
     for command in (
         *before_migrate,
         "info migrate_capabilities",
@@ -1163,6 +1214,7 @@ def _run_local_migration(
 
 def _migration_hmp_command(socket: Path, command: str) -> None:
     output = hmp_command(socket, command)
+    print(output, end="", flush=True)
     match = re.search(r"\bError:\s*([^\r\n]+)", output)
     if match is not None:
         raise ColleiError(f"{command}: {match.group(1)}")
@@ -1178,6 +1230,19 @@ def action_migrate(context: ActionContext, args: Sequence[str]) -> None:
             "migrate_set_capability multifd on",
             "migrate_set_parameter multifd-channels 4",
             "migrate_set_parameter multifd-compression zstd",
+
+            # 可以利用 max-bandwidth 来限速，其单位是 MB/s
+            # "migrate_set_parameter max-bandwidth 1 "
+
+
+            # 普通的热迁移也可以使用 background-snapshot
+            # 1. 存在兼容性问题 Error: Background-snapshot is not compatible with multifd
+            # 2. 本地热迁移会有 block lock 问题: Is another process using the image [/home/martins3/data/hack/vm/virtme/img/virtio-scsi_1]?
+            #
+            # 不过，热迁移加上 background-snapshot 就很奇怪，因为从时间 T0 开始
+            # 到 T1 完成热迁移到 target 端后，但是 target 端的虚拟机还是从 T0 的状态开始执行的
+            "migrate_set_capability multifd off",
+            "migrate_set_capability background-snapshot on",
         ),
     )
 
@@ -1221,158 +1286,75 @@ def action_auto(context: ActionContext, args: Sequence[str]) -> None:
     )
 
 
-ACTIVE_ACTIONS = {
-    "hotplug_cpu",
-    "hotplug_mem",
-    "hotplug_disk",
-    "hotplug_nic",
-    "hotplug_usb",
-    "unplug_disk",
-    "unplug_nic",
-    "unplug_sriov",
-    "dump_and_crash",
-    "pty",
-    "perf_qemu",
-    "perf_guest",
-    "kexec",
-    "vmlinux",
-    "trace",
-    "kvm_dmesg",
-    "kill",
-    "cgroup",
-    "hmp",
-    "throttle",
-    "top",
-    "migrate",
-    "migrate_postcopy",
-    "gdb",
-    "ssh",
-    "ssh_vsock",
-    "ssh_auto",
-    "ssh_vsock_auto",
-    "ssh_copy_id",
-    "auto_install",
-    "balloon",
-    "vnc",
-    "monitor",
-    "auto",
-    "save_vm_cpr",
-    "load_vm_cpr",
-    "save_vm_file",
-    "cpr_exec",
-    "force_reboot",
-    "migrate_cpr",
-    "setup_nmcli",
-    "tty3",
-}
-INACTIVE_ACTIONS = {"rename", "cold_migrate"}
-LAUNCH_ACTIONS = {"run"}
-DEBUG_ACTIONS = {"debug_kernel"}
-ANY_ACTIONS = {
-    "unplug_vfio",
-    "edit",
-    "tmp_ip",
-    "bash_prompt",
-    "path",
-    "clone_vm",
-    "backup",
-    "restore",
-    "rsync",
-    "vlan",
-    "add_iso",
-    "add_boot_disk",
-    "setup_vmware",
-    "network",
-    "default",
-    "addr",
-    "bg",
-    "follow_log",
-    "log",
-    "clone_vm_auto",
-}
-
-IMPLEMENTED: dict[str, ActionFunction] = {
-    "add_boot_disk": action_add_boot_disk,
-    "add_iso": action_add_iso,
-    "addr": action_addr,
-    "auto_install": action_auto_install,
-    "auto": action_auto,
-    "backup": action_backup,
-    "balloon": action_balloon,
-    "bash_prompt": action_bash_prompt,
-    "bg": action_bg,
-    "cgroup": action_cgroup,
-    "clone_vm_auto": action_clone_vm_auto,
-    "clone_vm": action_clone_vm,
-    "default": action_default,
-    "debug_kernel": action_debug_kernel,
-    "dump_and_crash": action_dump_and_crash,
-    "edit": action_edit,
-    "follow_log": action_follow_log,
-    "force_reboot": action_force_reboot,
-    "gdb": action_gdb,
-    "hmp": action_hmp,
-    "hotplug_cpu": action_hotplug_cpu,
-    "hotplug_disk": action_hotplug_disk,
-    "hotplug_mem": action_hotplug_mem,
-    "hotplug_nic": action_hotplug_nic,
-    "hotplug_usb": action_hotplug_usb,
-    "kill": action_kill,
-    "kexec": action_kexec,
-    "kvm_dmesg": action_kvm_dmesg,
-    "log": action_log,
-    "monitor": action_monitor,
+ACTIONS: dict[str, Action] = {
+    "add_boot_disk": Action(action_add_boot_disk),
+    "add_iso": Action(action_add_iso),
+    "addr": Action(action_addr),
+    "auto_install": Action(action_auto_install, VmRequirement.ACTIVE),
+    "auto": Action(action_auto, VmRequirement.ACTIVE),
+    "backup": Action(action_backup),
+    "balloon": Action(action_balloon, VmRequirement.ACTIVE),
+    "bash_prompt": Action(action_bash_prompt),
+    "bg": Action(action_bg),
+    "cgroup": Action(action_cgroup, VmRequirement.ACTIVE),
+    "clone_vm_auto": Action(action_clone_vm_auto),
+    "clone_vm": Action(action_clone_vm),
+    "cold_migrate": Action(None, VmRequirement.INACTIVE),
+    "default": Action(action_default),
+    "debug_kernel": Action(action_debug_kernel, VmRequirement.DEBUG_KERNEL),
+    "dump_and_crash": Action(action_dump_and_crash, VmRequirement.ACTIVE),
+    "edit": Action(action_edit),
+    "follow_log": Action(action_follow_log),
+    "force_reboot": Action(action_force_reboot, VmRequirement.ACTIVE),
+    "gdb": Action(action_gdb, VmRequirement.ACTIVE),
+    "hmp": Action(action_hmp, VmRequirement.ACTIVE),
+    "hotplug_cpu": Action(action_hotplug_cpu, VmRequirement.ACTIVE),
+    "hotplug_disk": Action(action_hotplug_disk, VmRequirement.ACTIVE),
+    "hotplug_mem": Action(action_hotplug_mem, VmRequirement.ACTIVE),
+    "hotplug_nic": Action(action_hotplug_nic, VmRequirement.ACTIVE),
+    "hotplug_usb": Action(action_hotplug_usb, VmRequirement.ACTIVE),
+    "kill": Action(action_kill, VmRequirement.ACTIVE),
+    "kexec": Action(action_kexec, VmRequirement.ACTIVE),
+    "kvm_dmesg": Action(action_kvm_dmesg, VmRequirement.ACTIVE),
+    "log": Action(action_log),
+    "monitor": Action(action_monitor, VmRequirement.ACTIVE),
     # 热迁移相关
-    "migrate": action_migrate,
-    "migrate_postcopy": action_migrate_postcopy,
-    "migrate_cpr": action_migrate_cpr,
-    "save_vm_cpr": action_save_vm_cpr,
-    "load_vm_cpr": action_load_vm_cpr,
-    "cpr_exec": action_cpr_exec,
-    "save_vm_file": action_save_vm_file,
-    "network": action_network,
-    "path": action_path,
-    "perf_qemu": action_perf_qemu,
-    "perf_guest": action_perf_guest,
-    "pty": action_pty,
-    "rename": action_rename,
-    "restore": action_restore,
-    "rsync": action_rsync,
-    "run": action_run,
-    "ssh": action_ssh,
-    "ssh_auto": action_ssh_auto,
-    "ssh_vsock": action_ssh_vsock,
-    "ssh_vsock_auto": action_ssh_vsock_auto,
-    "ssh_copy_id": action_ssh_copy_id,
-    "setup_vmware": action_setup_vmware,
-    "setup_nmcli": action_setup_nmcli,
-    "top": action_top,
-    "throttle": action_throttle,
-    "trace": action_trace,
-    "tty3": action_tty3,
-    "tmp_ip": action_tmp_ip,
-    "unplug_disk": action_unplug_disk,
-    "unplug_nic": action_unplug_nic,
-    "unplug_sriov": action_unplug_sriov,
-    "unplug_vfio": action_unplug_vfio,
-    "vlan": action_vlan,
-    "vmlinux": action_vmlinux,
-    "vnc": action_vnc,
+    "migrate": Action(action_migrate, VmRequirement.ACTIVE),
+    "migrate_postcopy": Action(action_migrate_postcopy, VmRequirement.ACTIVE),
+    "migrate_cpr": Action(action_migrate_cpr, VmRequirement.ACTIVE),
+    "save_vm_cpr": Action(action_save_vm_cpr, VmRequirement.ACTIVE),
+    "load_vm_cpr": Action(action_load_vm_cpr, VmRequirement.ACTIVE),
+    "cpr_exec": Action(action_cpr_exec, VmRequirement.ACTIVE),
+    "migrate_to_file": Action(action_migrate_to_file, VmRequirement.ACTIVE),
+    "network": Action(action_network),
+    "path": Action(action_path),
+    "perf_qemu": Action(action_perf_qemu, VmRequirement.ACTIVE),
+    "perf_guest": Action(action_perf_guest, VmRequirement.ACTIVE),
+    "pty": Action(action_pty, VmRequirement.ACTIVE),
+    "rename": Action(action_rename, VmRequirement.INACTIVE),
+    "restore": Action(action_restore),
+    "rsync": Action(action_rsync),
+    "run": Action(action_run, VmRequirement.LAUNCH),
+    "ssh": Action(action_ssh, VmRequirement.ACTIVE),
+    "ssh_auto": Action(action_ssh_auto, VmRequirement.ACTIVE),
+    "ssh_vsock": Action(action_ssh_vsock, VmRequirement.ACTIVE),
+    "ssh_vsock_auto": Action(action_ssh_vsock_auto, VmRequirement.ACTIVE),
+    "ssh_copy_id": Action(action_ssh_copy_id, VmRequirement.ACTIVE),
+    "setup_vmware": Action(action_setup_vmware),
+    "setup_nmcli": Action(action_setup_nmcli, VmRequirement.ACTIVE),
+    "top": Action(action_top, VmRequirement.ACTIVE),
+    "throttle": Action(action_throttle, VmRequirement.ACTIVE),
+    "trace": Action(action_trace, VmRequirement.ACTIVE),
+    "tty3": Action(action_tty3, VmRequirement.ACTIVE),
+    "tmp_ip": Action(action_tmp_ip),
+    "unplug_disk": Action(action_unplug_disk, VmRequirement.ACTIVE),
+    "unplug_nic": Action(action_unplug_nic, VmRequirement.ACTIVE),
+    "unplug_sriov": Action(action_unplug_sriov, VmRequirement.ACTIVE),
+    "unplug_vfio": Action(action_unplug_vfio),
+    "vlan": Action(action_vlan),
+    "vmlinux": Action(action_vmlinux, VmRequirement.ACTIVE),
+    "vnc": Action(action_vnc, VmRequirement.ACTIVE),
 }
-
-
-def registry() -> dict[str, Action]:
-    result: dict[str, Action] = {}
-    for requirement, names in (
-        (VmRequirement.ACTIVE, ACTIVE_ACTIONS),
-        (VmRequirement.INACTIVE, INACTIVE_ACTIONS),
-        (VmRequirement.LAUNCH, LAUNCH_ACTIONS),
-        (VmRequirement.DEBUG_KERNEL, DEBUG_ACTIONS),
-        (VmRequirement.ANY, ANY_ACTIONS),
-    ):
-        for name in names:
-            result[name] = Action(name, requirement, IMPLEMENTED.get(name))
-    return result
 
 
 def effective_requirement(
@@ -1394,10 +1376,13 @@ def effective_requirement(
 
 
 def validate_requirement(
-    action: Action, vm: VmRuntime, arguments: Sequence[str] = ()
+    action_name: str,
+    action: Action,
+    vm: VmRuntime,
+    arguments: Sequence[str] = (),
 ) -> None:
     requirement = effective_requirement(action, arguments)
     if requirement is VmRequirement.ACTIVE and not vm.active:
-        raise ColleiError(f"{action.name} need vm is active")
+        raise ColleiError(f"{action_name} need vm is active")
     if requirement is VmRequirement.INACTIVE and vm.active:
-        raise ColleiError(f"{action.name} need vm is inactive")
+        raise ColleiError(f"{action_name} need vm is inactive")

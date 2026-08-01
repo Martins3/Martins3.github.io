@@ -8,10 +8,10 @@ from pathlib import Path
 from typing import Sequence
 
 from actions import (
+    ACTIONS,
     ActionContext,
     VmRequirement,
     effective_requirement,
-    registry,
     validate_requirement,
 )
 from commands import CommandRunner
@@ -57,7 +57,7 @@ def _show_help() -> None:
     print("usage: collei-action.py [-a ACTION] [-n VM] [-s] [-y] [--dry-run]")
     print()
     print("actions:")
-    print("  " + "\n  ".join(sorted(registry())))
+    print("  " + "\n  ".join(sorted(ACTIONS)))
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -84,10 +84,9 @@ def main(argv: Sequence[str] | None = None) -> int:
                 _show_help()
                 return 0
 
-        actions = registry()
         if action_name == "none":
-            action_name = _choose(sorted(actions))
-        action = actions.get(action_name)
+            action_name = _choose(sorted(ACTIONS))
+        action = ACTIONS.get(action_name)
         if action is None or action.function is None:
             raise ColleiError(f"unsupported action: {action_name}")
 
@@ -99,7 +98,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             vm = context.vm(vm_name)
             if action_name == "ssh" and not vm.active and vm_name is None:
                 vm = _choose_vm(context, VmRequirement.ACTIVE)
-        validate_requirement(action, vm, remainder)
+        validate_requirement(action_name, action, vm, remainder)
         if vm_name is not None or choose:
             context.set_default(vm)
         _show_vm(vm)
