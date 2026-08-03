@@ -6,6 +6,7 @@ from typing import Sequence
 
 from errors import ColleiError, ColleiHelp
 
+
 # TODO 可能这个还是需要慢慢想一想
 # 现在让 actions 和 collei.py 都是可以用相同的参数
 # 似乎直接这么实现就可以的了，但是实际上这个问题我们是一直都没有仔细思考过
@@ -25,6 +26,7 @@ class LaunchOptions:
     efi_application: bool = False
     debug_kernel: bool = False
     foreground: bool = False
+    nbd_target: bool = False
 
     @classmethod
     def parse(cls, arguments: Sequence[str]) -> LaunchOptions:
@@ -32,7 +34,7 @@ class LaunchOptions:
             options, remaining = getopt.getopt(
                 list(arguments),
                 "alTLdEhixvstwV",
-                ["dry-run", "foreground", "help"],
+                ["dry-run", "foreground", "help", "nbd-target"],
             )
         except getopt.GetoptError as error:
             raise ColleiError(str(error)) from error
@@ -46,6 +48,7 @@ class LaunchOptions:
         efi_application = False
         debug_kernel = False
         foreground = False
+        nbd_target = False
         for option, _ in options:
             if option in {"-h", "--help"}:
                 raise ColleiHelp
@@ -72,6 +75,9 @@ class LaunchOptions:
                 debug_kernel = True
             elif option == "--foreground":
                 foreground = True
+            elif option == "--nbd-target":
+                migration_requests.add("defer")
+                nbd_target = True
             else:
                 # -t/-w 在原脚本中也没有实现，不能静默忽略。
                 raise ColleiError(f"unsupported option: {option}")
@@ -91,4 +97,5 @@ class LaunchOptions:
             efi_application=efi_application,
             debug_kernel=debug_kernel,
             foreground=foreground,
+            nbd_target=nbd_target,
         )

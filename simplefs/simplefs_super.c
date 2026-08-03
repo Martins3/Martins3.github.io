@@ -1091,8 +1091,8 @@ int simplefs_fill_super(struct super_block *sb, struct fs_context *fc)
 	mutex_init(&sbi->bitmap_lock);
 
 	/* journal 默认启用（s_journal_mode=0）；仅在显式传 nojournal 时
-	 * 禁用（fill_super 末尾的 ctx->nojournal 分支会置 1）。xfstests 的
-	 * 挂载脚本统一传 nojournal，常规测试仍走 nojournal 路径。
+	 * 禁用（fill_super 末尾的 ctx->nojournal 分支会置 1）。标准 xfstests
+	 * 回归使用默认 journal；nojournal 只用于显式测试无日志语义。
 	 */
 
 	/* Alloc and copy ifree_bitmap */

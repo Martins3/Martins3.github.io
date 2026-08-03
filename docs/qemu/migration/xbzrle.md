@@ -128,6 +128,10 @@ e9 07 0f 01 02 03 04 05 06 07 08 09 0a 0b 0c 0d 0e 0f 03 01 67 01 01 69
 
 - `cache_insert` : 如果成功插入，返回 0 否则返回 -1
 
+## TODO
+- [ ] 根据局部性原理，可能修改的代码总是那几个，所以发送内存应该存在顺序才对，即使是没有 xbzrle 的出现，也应该
+使用 cache 记录一下，谁总是在被修改，然后最后发送这些程序。
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

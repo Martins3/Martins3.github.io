@@ -25,6 +25,7 @@ from host_setup import (
     prepare_novnc,
     prepare_ovs_tap,
 )
+from kernel import kernel_image
 from launch_options import LaunchOptions
 from qemu import QemuCommand
 from runtime import ColleiContext, VmRuntime
@@ -32,8 +33,6 @@ from tasks import add_background_task, exec_task_follow
 from ui import print_banner
 from vfio import pci_bind_to_vfio
 from virtme import VirtmeSetup
-
-from kernel import kernel_image
 
 # collei.py 只负责启动虚拟机。
 #
@@ -56,6 +55,8 @@ class QemuProfile(Protocol):
 
 
 def validate_launch_options(vm: VmRuntime, options: LaunchOptions) -> None:
+    if options.nbd_target and options.migration != "defer":
+        raise ColleiError("--nbd-target requires deferred incoming migration")
     if options.migration != "defer":
         return
     passthrough_options = tuple(
@@ -79,8 +80,10 @@ def print_help() -> None:
   -a  启动普通热迁移目标
       使用 -incoming defer -only-migratable；必须已经有且只有一个 source QEMU。
       配置了 opt/vfio 或 opt/sriov 的直通 VM 会直接报错。
+      --nbd-target  内部选项：目标 QEMU 使用独立存储 slot，由 migrate_nbd 调用。
   -l  从当前 VM 目录的 vmstate.img 恢复
-      对应 save_vm_file，使用 -incoming file:... -only-migratable。
+      对应 save_vm_file，启用 mapped-ram 后使用
+      -incoming file:... -only-migratable。
   -L  启动 CPR reboot 恢复目标
       对应 save_vm_cpr/load_vm_cpr，使用 -incoming defer -only-migratable。
   -T  启动 CPR transfer 目标
@@ -169,7 +172,7 @@ class ColleiQemuBuilder:
 
     @property
     def image_dir(self) -> Path:
-        return self.vm.directory / "img"
+        return self.vm.image_directory
 
     @property
     def monitor_dir(self) -> Path:
@@ -542,7 +545,8 @@ class ColleiQemuBuilder:
             self._add_disk(argv, name, device, size=DEFAULT_BOOT_SIZE)
         configured = [name for name, _, _ in boot_disks]
         actual = sorted(path.name for path in self.image_dir.glob("boot[1-9]"))
-        if configured != actual:
+        expected_after_create = sorted(set(actual) | set(configured))
+        if sorted(configured) != expected_after_create:
             raise UnsupportedNativeConfiguration("boot disks and opt/disk do not match")
 
     def setup_mem_cpu(self, argv: list[str]) -> None:
@@ -671,7 +675,8 @@ class ColleiQemuBuilder:
         # 总是把用户态网络放到最后，这样在虚拟机中一眼就可以看到。
         argv.extend(["-device", "virtio-net,netdev=net1"])
         user_net = (
-            f"user,id=net1,hostfwd=tcp::{self.vm.tcp_port('ssh')}-:22,"
+            "user,id=net1,hostfwd="
+            f"tcp:127.0.0.1:{self.vm.tcp_port('ssh')}-:22,"
             f"hostname={self.vm.directory.name}"
         )
         if Path("/usr/sbin/smbd").is_file():
@@ -1239,7 +1244,6 @@ class ColleiQemuBuilder:
             argv.extend(["--trace", tp])
 
 
-
 @dataclass(frozen=True)
 class BuildrootQemuBuilder:
     context: ColleiContext
@@ -1274,7 +1278,8 @@ class BuildrootQemuBuilder:
 
         # Buildroot 没有 host bridge 配置，只保留 user network 便于快速启动。
         user_net = (
-            f"user,id=net1,hostfwd=tcp::{self.vm.tcp_port('ssh')}-:22,"
+            "user,id=net1,hostfwd="
+            f"tcp:127.0.0.1:{self.vm.tcp_port('ssh')}-:22,"
             f"hostname={self.vm.config.name}"
         )
         if Path("/usr/sbin/smbd").is_file():
@@ -1713,14 +1718,15 @@ def select_launch_runtime(vm: VmRuntime, options: LaunchOptions) -> VmRuntime:
         if not options.dry_run:
             (vm.directory / "migrate_source").write_text(f"{source}\n")
             (vm.directory / "migrate_target").write_text(f"{target}\n")
-        return VmRuntime(vm.config, target, vm.live_pids)
+        storage_slot = target if options.nbd_target else vm.storage_slot
+        return VmRuntime(vm.config, target, vm.live_pids, storage_slot)
     if options.migration in {"file", "cpr"}:
         if live:
             raise ColleiError("qemu is already running")
-        return VmRuntime(vm.config, "s", vm.live_pids)
+        return VmRuntime(vm.config, "s", vm.live_pids, vm.storage_slot)
     if live and not options.dry_run:
         raise ColleiError("qemu already launched")
-    return VmRuntime(vm.config, "s", vm.live_pids)
+    return vm
 
 
 def apply_launch_options(
@@ -1732,6 +1738,8 @@ def apply_launch_options(
     elif options.migration == "file":
         argv.extend(
             [
+                "-global",
+                "migration.mapped-ram=on",
                 "-incoming",
                 f"file:{vm.directory / 'vmstate.img'}",
                 "-only-migratable",

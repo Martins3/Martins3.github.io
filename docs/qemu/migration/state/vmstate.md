@@ -71,6 +71,26 @@ VMStateInfo
 ```
 非结构化的，就不用 vmsd 了，
 
+```c
+static SaveState savevm_state = {
+    .handlers = QTAILQ_HEAD_INITIALIZER(savevm_state.handlers),
+    .handler_pri_head = { [MIG_PRI_DEFAULT ... MIG_PRI_MAX] = NULL },
+    .global_section_id = 0,
+};
+```
+
+的这个上面挂
+```c
+SaveStateEntry
+```
+
+然后将 `savevm_ram_handlers` 和 `ram_state` 关联为其成员:
+```c
+register_savevm_live("ram", 0, 4, &savevm_ram_handlers, &ram_state);
+
+static RAMState *ram_state;
+```
+
 ## 1. 总体结构关系
 
 ```text

@@ -1,0 +1,121 @@
+#ifndef CONFIG_H_PB2UMYTB
+#define CONFIG_H_PB2UMYTB
+
+// #define CONFIG_TEST_SYSREG 1
+// #define CONFIG_TEST_AARCH64 1
+// #define CONFIG_TEST_WORKQUEUE 1
+// #define CONFIG_TEST_SCHED_DEBUG 1
+// #define CONFIG_TEST_RADIX_TREE 1
+// #define CONFIG_TEST_EPOLL 1
+// #define CONFIG_TEST_ANON_INODE 1
+// #define CONFIG_TEST_RADIX_TREE 1
+// #define CONFIG_TEST_MAPLE_TREE 1
+// #define CONFIG_TEST_LRU 1
+// #define CONFIG_TEST_SIGNAL 1
+// #define CONFIG_TEST_HLIST 1
+// #define CONFIG_TEST_NETLINK 1
+// #define CONFIG_TEST_PID 1
+// #define CONFIG_TEST_PRIVATE 1
+// #define CONFIG_TEST_SEQ 1
+// #define CONFIG_TEST_TIF 1
+// #define CONFIG_TEST_SOFTIRQ 1
+// #define CONFIG_TEST_TIMER 1
+// #define CONFIG_TEST_GUP 1
+// #define CONFIG_TEST_HRTIMER 1
+// #define CONFIG_TEST_PMMIR 1
+// #define CONFIG_TEST_TRACEPOINT 1
+// #define CONFIG_TEST_BITMAP_TEST 1
+// #define CONFIG_TEST_SBITMAP_TEST 1
+// #define CONFIG_TEST_EXCEPTION 1
+// #define CONFIG_TEST_MISC 1
+// #define CONFIG_TEST_TASK_WORK 1
+// #define CONFIG_TEST_FOLIO_QUEUE 1
+// #define CONFIG_TEST_SAN 1
+// #define CONFIG_TEST_STACK 1
+// #define CONFIG_TEST_PRINTK 1
+// #define CONFIG_TEST_SUBERROR 1
+// #define CONFIG_TEST_X86_MISC 1
+#define CONFIG_TEST_ACCESS_ONCE 1
+// #define CONFIG_TEST_GUARD 1
+// #define CONFIG_TEST_MODIFIER 1
+// #define CONFIG_TEST_REFCOUNT 1
+// #define CONFIG_TEST_RCUREF 1
+// #define CONFIG_TEST_PERCPU_REF 1
+// #define CONFIG_TEST_SPINLOCK 1
+// #define CONFIG_TEST_RT_MUTEX 1
+// #define CONFIG_TEST_SCHED 1
+// #define CONFIG_TEST_SRCU 1
+// #define CONFIG_TEST_MM_MISC 1
+// #define CONFIG_TEST_MEMORY_MODEL 1
+// #define CONFIG_TEST_ATOMIC 1
+// #define CONFIG_TEST_PERCPU_COUNTER 1
+// #define CONFIG_TEST_API_DIS 1
+// #define CONFIG_TEST_RCULIST 1
+// #define CONFIG_TEST_RCUPDATE 1
+// #define CONFIG_TEST_RCUSTALL 1
+// #define CONFIG_TEST_RCUWAIT 1
+// #define CONFIG_TEST_LOCKDEP 1
+// #define CONFIG_TEST_PROCESS_STATE 1
+// #define CONFIG_TEST_WAITBIT 1
+/* #define CONFIG_TEST_AIO 1 */
+/* #define CONFIG_TEST_APIC 1 */
+/* #define CONFIG_TEST_ASM 1 */
+/* #define CONFIG_TEST_BIO 1 */
+/* #define CONFIG_TEST_BITOPS 1 */
+/* #define CONFIG_TEST_BTREE 1 */
+/* #define CONFIG_TEST_CGROUP 1 */
+/* #define CONFIG_TEST_CLOCK 1 */
+/* #define CONFIG_TEST_COMPLETE 1 */
+/* #define CONFIG_TEST_DEBUGFS 1 */
+/* #define CONFIG_TEST_DEV 1 */
+/* #define CONFIG_TEST_EVENTFD 1 */
+/* #define CONFIG_TEST_EVENT_DELIVERY 1 */
+/* #define CONFIG_TEST_FOLIO 1 */
+/* #define CONFIG_TEST_FOLIO_LOCK 1 */
+/* #define CONFIG_TEST_GENETLINK 1 */
+/* #define CONFIG_TEST_IDR 1 */
+/* #define CONFIG_TEST_IOURING 1 */
+/* #define CONFIG_TEST_IO_WAIT 1 */
+/* #define CONFIG_TEST_IPI 1 */
+/* #define CONFIG_TEST_IRQWORK 1 */
+/* #define CONFIG_TEST_JIFFIES 1 */
+/* #define CONFIG_TEST_KOBJECT 1 */
+/* #define CONFIG_TEST_KTHREAD 1 */
+/* #define CONFIG_TEST_LRU_LOCK 1 */
+/* #define CONFIG_TEST_MAPPING 1 */
+/* #define CONFIG_TEST_MMAP_LOCK 1 */
+/* #define CONFIG_TEST_MMU_NOTIFIER 1 */
+/* #define CONFIG_TEST_MM_WALK 1 */
+/* #define CONFIG_TEST_MODULE 1 */
+/* #define CONFIG_TEST_MSR_MMIO 1 */
+/* #define CONFIG_TEST_MUTEX 1 */
+/* #define CONFIG_TEST_NIC 1 */
+/* #define CONFIG_TEST_NOTIFIER 1 */
+/* #define CONFIG_TEST_PAGEFLAG 1 */
+/* #define CONFIG_TEST_PCI 1 */
+/* #define CONFIG_TEST_PERCPU 1 */
+/* #define CONFIG_TEST_PERCPU_RWSEM 1 */
+/* #define CONFIG_TEST_PROC 1 */
+/* #define CONFIG_TEST_RBTREE 1 */
+/* #define CONFIG_TEST_RNG 1 */
+/* #define CONFIG_TEST_RWSEM 1 */
+/* #define CONFIG_TEST_SEQLOCK 1 */
+/* #define CONFIG_TEST_SG 1 */
+/* #define CONFIG_TEST_SHARE 1 */
+/* #define CONFIG_TEST_SLUB 1 */
+/* #define CONFIG_TEST_SMM 1 */
+/* #define CONFIG_TEST_SOCKET_CLIENT 1 */
+/* #define CONFIG_TEST_STATIC_KEY 1 */
+/* #define CONFIG_TEST_SWAIT 1 */
+/* #define CONFIG_TEST_SYSCTL 1 */
+/* #define CONFIG_TEST_TASKLET 1 */
+/* #define CONFIG_TEST_TSC 1 */
+/* #define CONFIG_TEST_TSX 1 */
+/* #define CONFIG_TEST_UACCESS 1 */
+/* #define CONFIG_TEST_VMALLOC 1 */
+/* #define CONFIG_TEST_WAIT 1 */
+/* #define CONFIG_TEST_X2APIC 1 */
+/* #define CONFIG_TEST_XARRAY 1 */
+/* #define CONFIG_TEST_ZSTD 1 */
+
+#endif

@@ -165,6 +165,66 @@ static const struct vfio_migration_ops mtty_migration_ops = {
 };
 ```
 
+## switchover
+```txt
+(qemu) info migrate
+globals:
+store-global-state: on
+only-migratable: off
+send-configuration: on
+send-section-footer: on
+send-switchover-start: on
+clear-bitmap-shift: 18
+```
+
+switchover-ack 依赖 return-path :
+```txt
+migrate_set_capability  return-path on
+migrate_set_capability  switchover-ack on
+```
+
+- __clone3
+  - start_thread
+    - qemu_thread_start
+      - migration_thread
+        - migration_iteration_run
+          - migration_completion
+            - migration_completion_precopy
+              - migration_switchover_start
+
+send-switchover-start 在 target 端是执行
+loadvm_postcopy_handle_switchover_start
+这是是一个最近刚刚加入的东西:
+
+
+```diff
+History:        #0
+Commit:         4e55cb3cdeb099cb65f75f5d3b061e3e1319cf3b
+Author:         Maciej S. Szmigiero <maciej.szmigiero@oracle.com>
+Committer:      Cédric Le Goater <clg@redhat.com>
+Author Date:    Wed 05 Mar 2025 06:03:32 AM CST
+Committer Date: Thu 06 Mar 2025 01:47:33 PM CST
+
+migration: Add MIG_CMD_SWITCHOVER_START and its load handler
+
+This QEMU_VM_COMMAND sub-command and its switchover_start SaveVMHandler is
+used to mark the switchover point in main migration stream.
+
+It can be used to inform the destination that all pre-switchover main
+migration stream data has been sent/received so it can start to process
+post-switchover data that it might have received via other migration
+channels like the multifd ones.
+
+Add also the relevant MigrationState bit stream compatibility property and
+its hw_compat entry.
+
+Reviewed-by: Fabiano Rosas <farosas@suse.de>
+Reviewed-by: Zhang Chen <zhangckid@gmail.com> # for the COLO part
+Signed-off-by: Maciej S. Szmigiero <maciej.szmigiero@oracle.com>
+Link: https://lore.kernel.org/qemu-devel/311be6da85fc7e49a7598684d80aa631778dcbce.1741124640.git.maciej.szmigiero@oracle.com
+Signed-off-by: Cédric Le Goater <clg@redhat.com>
+```
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

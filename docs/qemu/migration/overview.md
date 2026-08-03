@@ -38,6 +38,48 @@ snapshot_delete_blkdev_internal
 
 QEMU 的 migration/savevm 核心主要解决前四项；后三项分别由内部磁盘快照、共享存储/管理层、CPR FD 保留以及重新创建兼容命令行来补齐。
 
+其实也没有这么复杂:
+1. device state
+2. RAM
+3. disk state
+
+1. snapshot / savevm : 所有内容，暂停
+2. migration : 先 ram ，最后 device state
+3. migration + background : 立刻保存
+4. cpr : 仅仅传输 device state ，跳过 ram + disk
+
+### snapshot
+
+2. 只是不想保存“虚拟机数据盘”：可以使用专用 VMState 节点
+
+通过 QMP snapshot-save/snapshot-load，准备一个没有挂给 guest 的 qcow2 节点，例如 vmstate0，只对这个节点做快照：
+
+{
+  "execute": "snapshot-save",
+  "arguments": {
+    "job-id": "save-s1",
+    "tag": "s1",
+    "vmstate": "vmstate0",
+    "devices": ["vmstate0"]
+  }
+}
+
+恢复：
+
+{
+  "execute": "snapshot-load",
+  "arguments": {
+    "job-id": "load-s1",
+    "tag": "s1",
+    "vmstate": "vmstate0",
+    "devices": ["vmstate0"]
+  }
+}
+
+这样 guest 的系统盘和数据盘不会被创建或回滚快照。不过 devices 不能是空列表，源码明确要求至少一个节点：block/snapshot.c:483。
+
+磁盘和内存中内容需要一致的才可以。
+
 ## QEMU 的 RunState
 
 qapi/run-state.json 中
@@ -150,6 +192,33 @@ runstate_set current_run_state 1 (inmigrate) new_state 9 (running)
 runstate_set current_run_state 9 (running) new_state 11 (shutdown)
 ```
 
+### 是在什么 thread 下调用的?
+
+看上去什么 thread 都是可以调用的:
+
+- __clone3
+  - start_thread
+    - qemu_thread_start
+      - bg_migration_thread
+        - migration_stop_vm
+          - do_vm_stop
+            - runstate_set
+
+- main
+  - qemu_init
+    - qmp_x_exit_preconfig
+      - qmp_cont
+        - vm_start
+          - vm_prepare_start
+            - runstate_set
+
+
+### 经典案例
+
+```txt
+static void kvmclock_vm_state_change(void *opaque, bool running,
+                                     RunState state)
+```
 
 ## 热迁移的基本流程
 <!-- 9ee517c5-92a8-4b2e-88a7-dd74c8bc99da -->
@@ -328,6 +397,7 @@ void migration_bitmap_sync_precopy(bool last_stage)
     }
 }
 ```
+
 
 ## switchover 不是一个点，而是一个阶段
 Switchover 就是热迁移的"收尾/切换"阶段——从源端把执行权切到目的端的那一步。它不是迁移状态机里的一个正式状态，而是 QEMU 内部对这段流程的称呼
@@ -866,6 +936,176 @@ Migration status: postcopy-paused
 尚未传输页面的 vCPU/线程会阻塞，因此 guest 可能部分或完      全
 卡住。migrate_pause 不适合作为普通的迁移限速或长期暂停手
 段，它主要服务于 postcopy 故障恢复。
+
+## 记录 migration 相关的 trace
+大量的调用:
+```txt
+migration_transferred_bytes qemu_file 2727 multifd 53855087 RDMA 0
+multifd_recv_unfill channel 1 packet_num 31 flags 0x4 next packet size 524303
+multifd_send_fill channel 2 packet_num 6454 flags 0x4 next packet size 0
+multifd_send_ram_fill channel 0 normal pages 128 zero pages 0
+```
+
+然后就是
+```txt
+ram_load_complete exit_code 0 seq iteration 53
+```
+
+```txt
+vmstate_subsection_load HIDPointerEventQueue
+vmstate_load_state virtio_pci/modern_queue_state v1
+vmstate_load_state_field xhci-intr:erstba_low exists=1
+vmstate_field_exists xhci-intr:ev_buffer_put field_version 0 version 1 result 0
+vmstate_subsection_load_good virtio_pci/modern_queue_state
+vmstate_load_state_end virtio_pci/modern_queue_state end/0
+vmstate_n_elems erstba_high: 1
+```
+
+这似乎就是整个 ram 迭代的过程:
+```txt
+savevm_section_start ram, section_id 2
+savevm_section_end ram, section_id 2 -> 0
+migration_rate_limit_pre 94 ms
+migration_rate_limit_post urgent: 0
+migrate_transferred transferred 111570 time_spent 100 bandwidth 1115 switchover_bw 0 max_size 334710
+migrate_pending_estimate estimate pending size 8440582144 (pre = 8440582144 post=0)
+savevm_state_iterate
+```
+
+```txt
+migration_bitmap_clear_dirty rb mem0 start 0x0 size 0x40000000 page 0x0
+migration_bitmap_clear_dirty rb mem0 start 0x40000000 size 0x40000000 page 0x40000
+migration_bitmap_clear_dirty rb mem0 start 0x80000000 size 0x40000000 page 0x80000
+migration_bitmap_clear_dirty rb mem0 start 0xc0000000 size 0x40000000 page 0xc0000
+migration_bitmap_clear_dirty rb mem0 start 0x100000000 size 0x40000000 page 0x100000
+```
+
+```txt
+vmstate_save_state_loop xhci-intr/iman[1]
+vmstate_save_state_loop xhci-intr/imod[1]
+vmstate_save_state_loop xhci-intr/erstsz[1]
+vmstate_save_state_loop xhci-intr/erstba_low[1]
+vmstate_save_state_loop xhci-intr/erstba_high[1]
+vmstate_save_state_loop xhci-intr/erdp_low[1]
+vmstate_save_state_loop xhci-intr/erdp_high[1]
+vmstate_save_state_loop xhci-intr/msix_used[1]
+vmstate_save_state_loop xhci-intr/er_pcs[1]
+vmstate_save_state_loop xhci-intr/er_start[1]
+vmstate_save_state_loop xhci-intr/er_size[1]
+vmstate_save_state_loop xhci-intr/er_ep_idx[1]
+```
+
+这个东西:
+```txt
+vmstate_save_state_top virtio_pci/modern_queue_state
+vmstate_save_state_loop virtio_pci/modern_queue_state/num[1]
+vmstate_save_state_loop virtio_pci/modern_queue_state/unused[1]
+vmstate_save_state_loop virtio_pci/modern_queue_state/enabled[1]
+vmstate_save_state_loop virtio_pci/modern_queue_state/desc[2]
+vmstate_save_state_loop virtio_pci/modern_queue_state/avail[2]
+vmstate_save_state_loop virtio_pci/modern_queue_state/used[2]
+vmstate_subsection_save_top virtio_pci/modern_queue_state
+```
+
+## 热迁移的跳过策略
+
+跳过一页并保持 dirty：不调清位函数即可
+
+要跳过某页且保持 dirty，直接在扫描循环里跳过它，不调用 migration_bitmap_clear_dirty。效果是：
+
+- bmap 里的位保持置 1,migration_dirty_pages 不减，下一轮的统计（ram_save_pending）仍然包含这页；
+- KVM/listener 侧的 dirty 位也没被清，guest 后续再写这页会被正常捕获；
+- 扫描游标（pss_find_next_dirty + rs->last_seen_block/last_page,ram.c:2371）会越过去，绕一圈（complete_round）后 find_dirty_block 会再次找到它，可以在那时再决定是否发送。
+
+上游有一个现成先例：postcopy-preempt 的 ram_save_host_page_urgent(ram.c:2165）
+发现 precopy 通道正在发同一页时，直接 return 0 不清位，把页留给 precopy 通道发。
+
+两个必须注意的坑
+
+1. 收敛判定不看 bitmap 是否为空:find_dirty_block 的 PAGE_ALL_CLEAN 条件是"绕完整 RAM 一圈没发出去任何东西"(ram.c:1369)。如果你永久跳过某页，扫描会绕过去、整圈零发送，migration 照 样判定完成——这页就永远没去 dest，precopy 下就是数据缺失。所以跳过的页必须有个兜底：在 last stage(VM 停机后）强制发掉，或者像 postcopy 那样让 dest 缺页时再请求回来。
+2. last stage 语义:migration_bitmap_clear_dirty 的注释（ram.c:835-841）指出 last stage 之后不再重新 track——如果迁移在停机阶段失败，tracking 本来就放弃了。所以"保持 dirty 下次再发 "只在迭代阶段有意义。
+
+## memory_region 的生命周期规划
+
+热迁移会保留 memory region 的数量，而不是直接合并的
+
+## 热迁移的过程中不可以热迁移
+ram_mig_ram_block_resized 中的注释说:
+```c
+    if (!migration_is_idle()) {
+        /*
+         * Precopy code on the source cannot deal with the size of RAM blocks
+         * changing at random points in time - especially after sending the
+         * RAM block sizes in the migration stream, they must no longer change.
+         * Abort and indicate a proper reason.
+         */
+        error_setg(&err, "RAM block '%s' resized during precopy.", rb->idstr);
+        migration_cancel(err);
+        error_free(err);
+    }
+```
+
+那么自动可以有这个东西:
+
+- main
+  - qemu_init
+    - qmp_x_exit_preconfig
+      - qemu_create_cli_devices
+        - qemu_opts_foreach
+          - device_init_func
+            - qdev_device_add
+              - qdev_device_add_from_qdict
+                - migration_is_running
+
+## 调查 qemu_savevm_state_end 的调用者就可以了
+
+```txt
+qemu_savevm_state_end()
+│
+├─ qemu_savevm_state_complete_postcopy()
+│    └─ migration_completion_postcopy()
+│
+├─ qemu_savevm_state_end_precopy()
+│    ├─ qemu_savevm_state_complete_precopy()
+│    │    ├─ 普通 precopy 热迁移完成
+│    │    └─ savevm 内部快照
+│    └─ bg_migration_thread()
+│         └─ background-snapshot
+│
+├─ qemu_save_device_state()
+│    ├─ COLO checkpoint
+│    └─ Xen device-state 保存
+│
+└─ colo_do_checkpoint_transaction()
+     └─ COLO 的 iterable/live state
+```
+其实也就是 precopy postcopy 和 background-snapshot
+
+```c
+void qemu_savevm_state_end(QEMUFile *f)
+{
+    qemu_put_byte(f, QEMU_VM_EOF);
+}
+```
+
+## external link
+
+1. https://github.com/abbbi/qmpbackup
+1. 分析其他 Hypervisor 上是如何进行热迁移的
+	- https://github.com/cloud-hypervisor/cloud-hypervisor
+1. Linux 中支持 CONFIG_CHECKPOINT_RESTORE 来实现将 process 的状态保存，进而来实现容器的迁移
+
+3. firecracker/examples/cmd/remote-snapshotter/README.md
+
+## snapshot 嵌套虚拟化需要考虑吗
+<!-- 3ac2499c-e366-425e-9761-9635ed4576fc -->
+migration 是一定需要考虑嵌套，那么 snapshot 需要吗?
+
+## 其他的考虑
+3. 热迁移的时候，中断都是需要保持的 kvm_vcpu_ioctl_x86_get_vcpu_events
+	- kvm 中也需要保存 timer
+
+1. 热迁移的时候，如果 guest 当时在 perf，pmu 是需要维护的
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

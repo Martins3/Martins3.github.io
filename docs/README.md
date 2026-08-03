@@ -139,6 +139,10 @@
 
 - [vsock](./net/net-vsock.md)
 
+## 文件系统
+
+- [simplefs : 一个自我教学的文件系统](https://github.com/Martins3/Martins3.github.io/tree/master/simplefs)
+
 ## Dune
 
 [Loongson Dune : A Process Level Virtualization framework Base on KVM](https://github.com/Martins3/loongson-dune)
@@ -160,12 +164,23 @@
 - 中断
   - [QEMU KVM 中断注入](./kernel/irq/virt-int-inject.md)
 
-## AI 杂谈
+## AI
+
+### AI 杂谈
 
 - [AI Infra 到底在做什么](./ai/vs-kernel.md)
   - [slides](./ai/ai-infra-vskernel.html)
 - [Linux 内核如何随着 AI 来演进](./ai/with-ai.md)
 - [还没结束呢！和 AI 的故事，现在才开始！](./ai/ai-is-amazing.md)
+
+### AI 作品集
+
+- [Linux 语音输入解决方案](https://github.com/Martins3/VibeCast)
+- [nvim 翻译插件](https://github.com/Martins3/translator.nvim)
+- [nvim rsync 插件](https://github.com/Martins3/rsync.nvim)
+- threejs-demo
+	- [Martins3](./blog/threejs-demo/index.html)
+	- [刀刀](./blog/threejs-demo/daodao.html)
 
 ## 淦，打一把英雄联盟不可能这么难
 
@@ -280,14 +295,6 @@
 
 - [摄影摄像环境](./chores/photo-workflow.md)
 
-## AI 作品集
-
-- [Linux 语音输入解决方案](https://github.com/Martins3/VibeCast)
-- [nvim 翻译插件](https://github.com/Martins3/translator.nvim)
-- [nvim rsync 插件](https://github.com/Martins3/rsync.nvim)
-- threejs-demo
-	- [Martins3](./blog/threejs-demo/index.html)
-	- [刀刀](./blog/threejs-demo/daodao.html)
 
 
 ## sanitizer
@@ -317,15 +324,15 @@
 - [dirty rate](./qemu/migration/dirty.rate.md)
 - [how to migrate with latest QEMU](./qemu/migration/libvirt.md)
 - [io 后端](./qemu/migration/io.md)
+- [migration 为什么需要有优先级](./qemu/migration/state/priority.md)
 - [migration 基本测试](./qemu/migration/todo.lab.md)
-- [migration 的通知机制就是为了](./qemu/migration/todo.balloon.md)
-- [migration](./qemu/migration/migration.md)
+- [migration 的通知机制就是为了](./qemu/migration/balloon.md)
+- [migration](./qemu/migration/todo.misc.md)
 - [multifd](./qemu/migration/multifd.md)
 - [post copy](./qemu/migration/postcopy.md)
 - [qemu 中 yank 的含义](./qemu/migration/yank.md)
 - [qemu 存在哪些状态控制](./qemu/migration/overview.md)
 - [share memory auto touch](./qemu/migration/zero-page/zero-page.md) -
-- [stop / continue](./qemu/migration/stop-continue.md)
 - [stop / continue](./qemu/migration/stop-continue.md)
 - [vfio migration](./qemu/migration/state/vfio.md)
 - [vhost](./qemu/migration/vhost.md)
@@ -334,6 +341,7 @@
 - [为什么 QEMU 中不支持](./qemu/migration/state/nvme.md)
 - [内存拷贝相关](./qemu/migration/state/ram.md)
 - [分析 rom 的热迁移行为](./qemu/migration/state/rom.md)
+- [基本讨论 : codex](./qemu/migration/hotplug.md)
 - [文档细读](./qemu/migration/doc.md)
 - [核心结构体](./qemu/migration/state/vmstate.md)
 
@@ -565,8 +573,6 @@
     - [CONFIG_TASKS_RCU](./concurrent/rcu/tasks_rcu.md)
     - [用户态 rcu](./concurrent/rcu/userspace-rcu.md)
     - [rcu 杂记](./concurrent/rcu/yes-we-know.md)
-  - `volatile/`
-    - [接受 volatile 和非 volatile 对象](./concurrent/volatile/ai.md)
   - [Linux 内核 Litmus Tests 介绍](./concurrent/1-litmus.md)
   - [并发锁分析工具 lslocks](./concurrent/2-tools.md)
   - [并发编程中违反直觉的例子](./concurrent/counter-intuitive.md)
@@ -593,6 +599,56 @@
     - [BOOM 源码阅读](./cpu/boom/why-boom.md)
   - `rocket-chip/`
     - [总体来说，rocket-chip 中的人是无法实现](./cpu/rocket-chip/rocket-chip.md)
+  - `sys/`
+    - `MCCC/`
+      - [Memory Consistency Motivation and Sequential Consistency](./cpu/sys/MCCC/README.md)
+    - `PCA/`
+      - [1.1 Introduction](./cpu/sys/PCA/01-introduction.md)
+      - [02-parallel program](./cpu/sys/PCA/02-parallel program.md)
+      - [5.2 Cache Coherence](./cpu/sys/PCA/05_shared_memory_multiprocessor.md)
+      - [06_Snoop-based_Multiprocessor_Design](./cpu/sys/PCA/06_Snoop-based_Multiprocessor_Design.md)
+      - [11](./cpu/sys/PCA/11.md)
+    - `Quantitative/`
+      - `synthesis/`
+        - [Instruction-Level Parallelism and it's Exploitation](./cpu/sys/Quantitative/synthesis/3.md)
+        - [Pipelinng: Basic and Intermediate Conceptes](./cpu/sys/Quantitative/synthesis/C.md)
+        - [Storage System](./cpu/sys/Quantitative/synthesis/D.md)
+        - [Embedded Systems](./cpu/sys/Quantitative/synthesis/E.md)
+        - [Interconnection Networks](./cpu/sys/Quantitative/synthesis/F.md)
+      - [Instruction-Level Parallelism and it's Exploitation](./cpu/sys/Quantitative/3.md)
+      - [Data-Level Parallelism in Vector, SIMD, and GPU Architectures](./cpu/sys/Quantitative/4.md)
+      - [Models of Memory Consistency: An Introduction](./cpu/sys/Quantitative/5.md)
+      - [Warehouse-Scale Computers to Exploit Request-Level and Data-Level Parallelis](./cpu/sys/Quantitative/6.md)
+      - [Instruction Set Principles](./cpu/sys/Quantitative/A.md)
+      - [Review of Memory Hierarchy](./cpu/sys/Quantitative/B.md)
+      - [Pipelining: Basic and Intermediate Concepts](./cpu/sys/Quantitative/C.md)
+      - [Storage System](./cpu/sys/Quantitative/D.md)
+      - [Embedded Systems](./cpu/sys/Quantitative/E.md)
+      - [Interconnection Networks](./cpu/sys/Quantitative/F.md)
+      - [Survey of Instruction Set Architectures](./cpu/sys/Quantitative/K.md)
+      - [Historical Perspective and Reference](./cpu/sys/Quantitative/M.md)
+      - [Chapter 2](./cpu/sys/Quantitative/Quantitative.md)
+      - [plans](./cpu/sys/Quantitative/plans.md)
+    - `SLCA/`
+      - [入门](./cpu/sys/SLCA/1.md)
+      - [2 Cache](./cpu/sys/SLCA/2.md)
+      - [指令读取](./cpu/sys/SLCA/3.md)
+      - [解码](./cpu/sys/SLCA/4.md)
+      - [Allocation](./cpu/sys/SLCA/5.md)
+      - [第六章　发射](./cpu/sys/SLCA/6.md)
+      - [第7章 执行](./cpu/sys/SLCA/7.md)
+      - [第8章　提交](./cpu/sys/SLCA/8.md)
+      - [readme](./cpu/sys/SLCA/readme.md)
+    - `cs252/`
+      - [1 intruction](./cpu/sys/cs252/lecture.md)
+    - `fpga/`
+      - [hdlbits](./cpu/sys/fpga/setup.md)
+    - [dram](./cpu/sys/dram.md)
+    - [gem5](./cpu/sys/gem5.md)
+    - [问题](./cpu/sys/question.md)
+    - [计划就是，首先理解软件层的指令集的含义，然后再去处理怎么写](./cpu/sys/sys-route.md)
+    - [verilator](./cpu/sys/verilator.md)
+    - [超标量处理器设计 : 姚永斌](./cpu/sys/yao.md)
   - [chipyard 环境搭建](./cpu/chipyard.md)
   - [Chisel 学习资源汇总](./cpu/chisel.md)
   - [MIPS R10000 的设计](./cpu/mipsR10000.md)
@@ -1091,7 +1147,6 @@
     - [drivers/vfio/pci/virtio 是做什么的](./kernel/vfio/virtio.md)
   - `vhost/`
     - [vhost-user Inflight I/O Tracking 详解](./kernel/vhost/1-inflight-io.md)
-    - [vhost 热迁移](./kernel/vhost/2-migration.md)
     - [vhost gpu 的实现](./kernel/vhost/gpu.md)
     - [vhost iotlb](./kernel/vhost/iommu.md)
     - [vhost 协议的定义](./kernel/vhost/qemu.md)
@@ -1452,10 +1507,10 @@
     - [MemoryListener](./qemu/memory/memory.listener.md)
     - [QEMU 的 memory model](./qemu/memory/memory.md)
   - `migration/`
-    - `state/`
-      - [migration 为什么需要有优先级](./qemu/migration/state/priority.md)
-    - [migration 的通知机制就是为了](./qemu/migration/balloon.md)
-    - [基本讨论 : codex](./qemu/migration/hotplug.md)
+    - [qemu 热迁移 background-snapshot 的语义](./qemu/migration/backgroup-snapshot.md)
+    - [阅读笔记](./qemu/migration/mapped-ram.md)
+    - [snapshot-save 保存内存时复用了 migration/savevm 框架：](./qemu/migration/snapshot.md)
+    - [migration 中一共存在那些 thread](./qemu/migration/thread.md)
   - `qom/`
     - [QEMU 的参数解析](./qemu/qom/options.md)
     - [qdev](./qemu/qom/qdev.md)

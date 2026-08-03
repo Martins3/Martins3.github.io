@@ -1,13 +1,9 @@
 #include <assert.h> // assert
-#include <errno.h> // strerror
 #include <fcntl.h> // open
 #include <limits.h> // INT_MAX
-#include <math.h> // sqrt
 #include <pthread.h>
 #include <stdbool.h> // bool false true
 #include <stdio.h>
-#include <stdlib.h> // malloc sort
-#include <stdlib.h>
 #include <string.h> // strcmp
 #include <string.h>
 #include <unistd.h> // sleep

@@ -278,6 +278,13 @@ pr 引用这里数据: https://lore.kernel.org/all/1425575884-2574-1-git-send-em
 > time). A bigger improvement is expectable if measured on a larger host
 > with more CPUs.
 
+## vhost-user 如何支持 pagefault 机制
+
+https://www.qemu.org/docs/master/interop/vhost-user.html#migrating-backend-state
+
+从这个函数看起:
+vhost_user_postcopy_notifier
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

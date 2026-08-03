@@ -17,6 +17,12 @@ from enum import Enum
 from pathlib import Path
 from typing import Callable, Sequence
 
+from block_migration import (
+    BlockMirrorSession,
+    MigratableDisk,
+    discover_migratable_disks,
+    prepare_target_images,
+)
 from commands import CommandRunner
 from errors import ColleiError, ColleiHelp
 from host_setup import prepare_ovs_tap
@@ -212,7 +218,7 @@ def action_backup(context: ActionContext, args: Sequence[str]) -> None:
     del args
     if context.vm.active and not _confirm(context, "vm is alive, be carefull"):
         return
-    image_dir = context.vm.directory / "img"
+    image_dir = context.vm.image_directory
     if any(image_dir.glob("boot*.bak")) and not _confirm(
         context, "overwrite existing snapshot ?"
     ):
@@ -228,7 +234,7 @@ def action_backup(context: ActionContext, args: Sequence[str]) -> None:
 
 def action_restore(context: ActionContext, args: Sequence[str]) -> None:
     del args
-    for source in sorted((context.vm.directory / "img").glob("boot*.bak")):
+    for source in sorted(context.vm.image_directory.glob("boot*.bak")):
         target = source.with_name(source.name.removesuffix(".bak"))
         if not context.runner.dry_run:
             print(f"cp {source} {target}")
@@ -418,6 +424,113 @@ def action_trace(context: ActionContext, args: Sequence[str]) -> None:
 
 def _qmp(context: ActionContext) -> QmpClient:
     return QmpClient(context.vm.directory / context.vm.which_qemu / "qmp-no-pretty")
+
+
+SNAPSHOT_NODE = "boot1"
+SNAPSHOT_DEFAULT_TAG = "default"
+
+
+def _snapshot_tag(action: str, args: Sequence[str]) -> str:
+    if len(args) > 1:
+        raise ColleiError(f"usage: {action} [TAG]")
+    return args[0] if args else SNAPSHOT_DEFAULT_TAG
+
+
+def _snapshot_qmp_path(context: ActionContext) -> Path:
+    return context.vm.directory / context.vm.which_qemu / "qmp-no-pretty"
+
+
+def _validate_snapshot_vm(context: ActionContext) -> None:
+    if context.vm.config.options.get("nvme") is not None:
+        raise ColleiError(
+            "snapshot actions do not support opt/nvme: QEMU aborts while "
+            "restoring NVMe aer_reqs"
+        )
+
+
+def _ensure_snapshot_node(context: ActionContext) -> None:
+    with QmpClient(_snapshot_qmp_path(context), timeout=600) as qmp:
+        nodes = qmp.execute("query-named-block-nodes", {"flat": True})
+    if not isinstance(nodes, list):
+        raise ColleiError("query-named-block-nodes returned invalid data")
+    if not any(
+        isinstance(node, dict) and node.get("node-name") == SNAPSHOT_NODE
+        for node in nodes
+    ):
+        raise ColleiError(f"snapshot block node {SNAPSHOT_NODE!r} does not exist")
+
+
+def _run_snapshot_job(context: ActionContext, command: str, tag: str) -> None:
+    job_id = f"{command}-{uuid.uuid4().hex}"
+    arguments = {
+        "job-id": job_id,
+        "tag": tag,
+        "vmstate": SNAPSHOT_NODE,
+        "devices": [SNAPSHOT_NODE],
+    }
+    if context.runner.dry_run:
+        print(json.dumps({"execute": command, "arguments": arguments}))
+        return
+
+    deadline = time.monotonic() + 600
+    qmp_path = _snapshot_qmp_path(context)
+    with QmpClient(qmp_path, timeout=600) as qmp:
+        qmp.execute(command, arguments)
+
+    last_connection_error: OSError | ColleiError | None = None
+    while time.monotonic() < deadline:
+        try:
+            with QmpClient(qmp_path, timeout=600) as qmp:
+                jobs = qmp.execute("query-jobs")
+        except (OSError, ColleiError) as error:
+            # Loading VMState can temporarily make the monitor unavailable.
+            # Reconnect while QEMU is still alive, but report a crash promptly.
+            if not context.collei.vm(context.vm.config.name).active:
+                raise ColleiError(
+                    f"{command} failed because QEMU exited; check the VM log"
+                ) from error
+            last_connection_error = error
+            time.sleep(0.1)
+            continue
+        last_connection_error = None
+        if not isinstance(jobs, list):
+            raise ColleiError("query-jobs returned invalid data")
+        job = next(
+            (
+                item
+                for item in jobs
+                if isinstance(item, dict) and item.get("id") == job_id
+            ),
+            None,
+        )
+        if job is None:
+            raise ColleiError(f"snapshot job disappeared: {job_id}")
+        if job.get("status") == "concluded":
+            error = job.get("error")
+            with QmpClient(qmp_path) as qmp:
+                qmp.execute("job-dismiss", {"id": job_id})
+            if error is not None:
+                raise ColleiError(f"{command} failed: {error}")
+            result = "saved" if command == "snapshot-save" else "loaded"
+            print(f"snapshot {tag!r} {result}")
+            return
+        time.sleep(0.1)
+    detail = f": {last_connection_error}" if last_connection_error else ""
+    raise ColleiError(f"{command} timed out after 600 seconds{detail}")
+
+
+def action_snapshot_save(context: ActionContext, args: Sequence[str]) -> None:
+    tag = _snapshot_tag("snapshot-save", args)
+    _validate_snapshot_vm(context)
+    _ensure_snapshot_node(context)
+    _run_snapshot_job(context, "snapshot-save", tag)
+
+
+def action_snapshot_load(context: ActionContext, args: Sequence[str]) -> None:
+    tag = _snapshot_tag("snapshot-load", args)
+    _validate_snapshot_vm(context)
+    _ensure_snapshot_node(context)
+    _run_snapshot_job(context, "snapshot-load", tag)
 
 
 def action_hotplug_cpu(context: ActionContext, args: Sequence[str]) -> None:
@@ -682,7 +795,7 @@ def action_unplug_nic(context: ActionContext, args: Sequence[str]) -> None:
 
 def action_add_boot_disk(context: ActionContext, args: Sequence[str]) -> None:
     del args
-    image_dir = context.vm.directory / "img"
+    image_dir = context.vm.image_directory
     numbers = [
         int(path.name.removeprefix("boot"))
         for path in image_dir.glob("boot*[0-9]")
@@ -700,7 +813,7 @@ def action_hotplug_disk(context: ActionContext, args: Sequence[str]) -> None:
     counter_file = context.vm.directory / context.vm.which_qemu / "hp_disk_counter"
     counter = int(counter_file.read_text())
     counter_file.write_text(f"{counter + 1}\n")
-    image = context.vm.directory / "img" / f"hotplug{counter}"
+    image = context.vm.image_directory / f"hotplug{counter}"
     if not image.is_file():
         context.runner.run(["qemu-img", "create", "-f", "qcow2", image, "400G"])
     drive_id = f"hp_drive{counter}"
@@ -886,12 +999,11 @@ def action_migrate_to_file(context: ActionContext, args: Sequence[str]) -> None:
         # 1. mapped-ram 是仅仅能用于文件，否则存在如下报错
         #   error: migrate_incoming unix:/home/martins3/data/hack/vm/virtme/migrate.sock: Migration requires seekable transport (e.g. file)
         #   具体参考 transport_supports_seeking
-        # 2. background-snapshot 和 mapped-ram 完全都是正交的
         context,
         (
-            # "migrate_set_capability background-snapshot on",
-            "migrate_set_capability multifd on",
             "migrate_set_capability mapped-ram on",
+            # "migrate_set_capability background-snapshot on",
+            # "migrate_set_capability multifd on",
             "info migrate_capabilities",
             "info migrate_parameters",
             f"migrate -d file:{image}",
@@ -1171,10 +1283,36 @@ def _wait_local_migration(
         )
 
 
+def _wait_migration_status(
+    source_qmp: Path, expected: str, timeout: float = 300.0
+) -> None:
+    deadline = time.monotonic() + timeout
+    last: dict[str, object] | None = None
+    while time.monotonic() < deadline:
+        with QmpClient(source_qmp) as qmp:
+            migration = qmp.execute("query-migrate")
+        if not isinstance(migration, dict):
+            raise ColleiError(f"invalid migration state: {migration!r}")
+        last = migration
+        status = migration.get("status")
+        if status == expected:
+            return
+        if status in {"cancelled", "failed"}:
+            error = migration.get("error-desc", "unknown migration error")
+            raise ColleiError(f"migration failed before {expected}: {error}")
+        time.sleep(0.1)
+    raise ColleiError(
+        f"migration did not reach {expected!r} after {timeout:g} seconds: {last!r}"
+    )
+
+
 def _run_local_migration(
     context: ActionContext,
     before_migrate: Sequence[str],
     after_migrate: Sequence[str] = (),
+    *,
+    interactive: bool = True,
+    pre_switchover: Callable[[], None] | None = None,
 ) -> None:
     vm_dir = context.vm.directory
     source = (vm_dir / "migrate_source").read_text().strip()
@@ -1199,6 +1337,13 @@ def _run_local_migration(
     ):
         _migration_hmp_command(source_socket, command)
 
+    if pre_switchover is not None:
+        source_qmp = vm_dir / source / "qmp-no-pretty"
+        _wait_migration_status(source_qmp, "pre-switchover")
+        pre_switchover()
+        with QmpClient(source_qmp) as qmp:
+            qmp.execute("migrate-continue", {"state": "pre-switchover"})
+
     _wait_local_migration(
         vm_dir / source / "qmp-no-pretty",
         vm_dir / target / "qmp-no-pretty",
@@ -1207,7 +1352,7 @@ def _run_local_migration(
     # 进入到 target 端的 qhm 环境中
     print(f"socat -,echo=0,icanon=0 unix-connect:{source_socket}")
     # 当 ai 执行的时候，非交互环境执行会失败
-    if not sys.stdin.isatty():
+    if not interactive or not sys.stdin.isatty():
         return
     context.runner.exec(["socat", "-,echo=0,icanon=0", f"unix-connect:{source_socket}"])
 
@@ -1230,21 +1375,243 @@ def action_migrate(context: ActionContext, args: Sequence[str]) -> None:
             "migrate_set_capability multifd on",
             "migrate_set_parameter multifd-channels 4",
             "migrate_set_parameter multifd-compression zstd",
-
             # 可以利用 max-bandwidth 来限速，其单位是 MB/s
-            # "migrate_set_parameter max-bandwidth 1 "
-
-
+            # 默认 128M ，所以需要打开设置
+            "migrate_set_parameter max-bandwidth 0",
             # 普通的热迁移也可以使用 background-snapshot
             # 1. 存在兼容性问题 Error: Background-snapshot is not compatible with multifd
             # 2. 本地热迁移会有 block lock 问题: Is another process using the image [/home/martins3/data/hack/vm/virtme/img/virtio-scsi_1]?
             #
             # 不过，热迁移加上 background-snapshot 就很奇怪，因为从时间 T0 开始
             # 到 T1 完成热迁移到 target 端后，但是 target 端的虚拟机还是从 T0 的状态开始执行的
-            "migrate_set_capability multifd off",
-            "migrate_set_capability background-snapshot on",
+            # 这个也干扰了正常的热迁移:
+            # "migrate_set_capability multifd off",
+            # "migrate_set_capability background-snapshot on",
         ),
     )
+
+
+def _migration_image_directory(vm_dir: Path, slot: str) -> Path:
+    if slot == "s":
+        return vm_dir / "img"
+    if slot == "t":
+        return vm_dir / "img-t"
+    raise ColleiError(f"invalid migration slot: {slot!r}")
+
+
+def _validate_nbd_migration_vm(context: ActionContext) -> None:
+    unsupported = tuple(
+        name
+        for name in ("buildroot", "fire", "multipath", "qsd", "sriov", "vfio")
+        if context.vm.config.options.enabled(name)
+    )
+    if unsupported:
+        configured = ", ".join(f"opt/{name}" for name in unsupported)
+        raise ColleiError(f"migrate_nbd does not support {configured}")
+    if len(context.vm.live_pids) != 1:
+        raise ColleiError("migrate_nbd requires exactly one running source QEMU")
+
+
+def _wait_qmp_ready(qmp_path: Path, pid_file: Path, timeout: float = 30.0) -> None:
+    deadline = time.monotonic() + timeout
+    last_error: ColleiError | OSError | None = None
+    while time.monotonic() < deadline:
+        try:
+            pid = int(pid_file.read_text().strip())
+        except (FileNotFoundError, ValueError):
+            pid = 0
+        if pid and not Path(f"/proc/{pid}/status").is_file():
+            raise ColleiError(f"target QEMU exited before creating {qmp_path}")
+        try:
+            with QmpClient(qmp_path) as qmp:
+                status = qmp.execute("query-status")
+            if isinstance(status, dict):
+                return
+        except (ColleiError, OSError) as error:
+            last_error = error
+        time.sleep(0.1)
+    detail = f": {last_error}" if last_error is not None else ""
+    raise ColleiError(f"target QMP was not ready after {timeout:g} seconds{detail}")
+
+
+def _validate_target_disks(
+    source: Sequence[MigratableDisk], target: Sequence[MigratableDisk]
+) -> None:
+    source_by_name = {disk.node_name: disk for disk in source}
+    target_by_name = {disk.node_name: disk for disk in target}
+    if source_by_name.keys() != target_by_name.keys():
+        missing = sorted(source_by_name.keys() - target_by_name.keys())
+        extra = sorted(target_by_name.keys() - source_by_name.keys())
+        raise ColleiError(
+            f"source/target block topology differs: missing={missing}, extra={extra}"
+        )
+    for name, source_disk in source_by_name.items():
+        target_disk = target_by_name[name]
+        if (
+            source_disk.image_format != target_disk.image_format
+            or source_disk.virtual_size != target_disk.virtual_size
+        ):
+            raise ColleiError(
+                f"source/target block node {name} differs: "
+                f"source={source_disk.image_format}/{source_disk.virtual_size}, "
+                f"target={target_disk.image_format}/{target_disk.virtual_size}"
+            )
+
+
+def _stop_qemu_slot(vm_dir: Path, slot: str, timeout: float = 10.0) -> None:
+    pid_file = vm_dir / slot / "pid"
+    try:
+        pid = int(pid_file.read_text().strip())
+    except (FileNotFoundError, ValueError):
+        return
+    process = Path(f"/proc/{pid}/status")
+    if not process.is_file():
+        return
+    os.kill(pid, signal.SIGTERM)
+    deadline = time.monotonic() + timeout
+    while process.is_file() and time.monotonic() < deadline:
+        time.sleep(0.05)
+    if process.is_file():
+        raise ColleiError(f"QEMU slot {slot} process {pid} did not exit")
+
+
+def _resume_source_after_failed_migration(source_qmp: Path) -> None:
+    try:
+        with QmpClient(source_qmp) as qmp:
+            migration = qmp.execute("query-migrate")
+            if isinstance(migration, dict) and migration.get("status") in {
+                "active",
+                "device",
+                "pre-switchover",
+                "setup",
+            }:
+                qmp.execute("migrate_cancel")
+        deadline = time.monotonic() + 10.0
+        while time.monotonic() < deadline:
+            with QmpClient(source_qmp) as qmp:
+                migration = qmp.execute("query-migrate")
+            if not isinstance(migration, dict) or migration.get("status") not in {
+                "active",
+                "cancelling",
+                "device",
+                "pre-switchover",
+                "setup",
+            }:
+                break
+            time.sleep(0.1)
+        with QmpClient(source_qmp) as qmp:
+            status = qmp.execute("query-status")
+            if isinstance(status, dict) and status.get("running") is not True:
+                qmp.execute("cont")
+    except (ColleiError, OSError) as error:
+        print(f"warning: could not resume source QEMU: {error}")
+
+
+def action_migrate_nbd(context: ActionContext, args: Sequence[str]) -> None:
+    if args:
+        raise ColleiError("usage: migrate_nbd")
+    _validate_nbd_migration_vm(context)
+    if not _confirm(context, "migrate VM with blockdev-mirror + NBD?"):
+        return
+
+    vm_dir = context.vm.directory
+    source = context.vm.which_qemu
+    target = "t" if source == "s" else "s"
+    source_qmp = vm_dir / source / "qmp-no-pretty"
+    target_qmp = vm_dir / target / "qmp-no-pretty"
+    source_images = context.vm.image_directory
+    target_images = _migration_image_directory(vm_dir, target)
+    disks = discover_migratable_disks(source_qmp, source_images, target_images)
+    existing = [disk.target for disk in disks if disk.target.exists()]
+    if existing and not _confirm(
+        context,
+        f"overwrite {len(existing)} image(s) in inactive storage slot {target}?",
+    ):
+        return
+    prepare_target_images(context.collei, context.runner, disks)
+
+    target_command = [
+        context.collei.scripts / "collei.py",
+        "-a",
+        "--nbd-target",
+        "--foreground",
+    ]
+    target_runtime = VmRuntime(
+        context.vm.config,
+        target,
+        context.vm.live_pids,
+        target,
+    )
+    if context.runner.dry_run:
+        context.runner.run(target_command)
+        BlockMirrorSession(
+            source_qmp,
+            target_qmp,
+            vm_dir / target / "block-migration.nbd",
+            disks,
+        ).print_plan()
+        return
+
+    session = BlockMirrorSession(
+        source_qmp,
+        target_qmp,
+        vm_dir / target / "block-migration.nbd",
+        disks,
+    )
+    switched = False
+    try:
+        # 启动服务来利用 nbd 机制来同步热迁移
+        add_background_task(
+            context.collei,
+            context.runner,
+            target_command,
+            vm=target_runtime,
+            label="qemu-nbd-target",
+            record=True,
+        )
+        _wait_qmp_ready(target_qmp, vm_dir / target / "pid")
+        target_disks = discover_migratable_disks(
+            target_qmp, target_images, source_images
+        )
+        _validate_target_disks(disks, target_disks)
+        session.start()
+        session.wait_ready()
+
+        def finish_storage() -> None:
+            session.finish()
+            session.cleanup()
+
+        # 发起 qemu 的热迁移
+        _run_local_migration(
+            context,
+            (
+                "migrate_set_capability multifd on",
+                "migrate_set_capability pause-before-switchover on",
+                "migrate_set_parameter multifd-channels 4",
+                "migrate_set_parameter multifd-compression zstd",
+            ),
+            interactive=False,
+            pre_switchover=finish_storage,
+        )
+        switched = True
+        context.vm.persist_storage_slot(target)
+        _stop_qemu_slot(vm_dir, source)
+        print(f"migrate_nbd completed: active storage slot is {target}")
+    except BaseException:
+        session.cleanup(best_effort=True)
+        if switched:
+            context.vm.persist_storage_slot(target)
+            try:
+                _stop_qemu_slot(vm_dir, source)
+            except ColleiError as error:
+                print(f"warning: could not stop source QEMU: {error}")
+        else:
+            _resume_source_after_failed_migration(source_qmp)
+            try:
+                _stop_qemu_slot(vm_dir, target)
+            except ColleiError as error:
+                print(f"warning: could not stop target QEMU: {error}")
+        raise
 
 
 def action_migrate_postcopy(context: ActionContext, args: Sequence[str]) -> None:
@@ -1313,6 +1680,10 @@ ACTIONS: dict[str, Action] = {
     "hotplug_mem": Action(action_hotplug_mem, VmRequirement.ACTIVE),
     "hotplug_nic": Action(action_hotplug_nic, VmRequirement.ACTIVE),
     "hotplug_usb": Action(action_hotplug_usb, VmRequirement.ACTIVE),
+    "unplug_disk": Action(action_unplug_disk, VmRequirement.ACTIVE),
+    "unplug_nic": Action(action_unplug_nic, VmRequirement.ACTIVE),
+    "unplug_sriov": Action(action_unplug_sriov, VmRequirement.ACTIVE),
+    "unplug_vfio": Action(action_unplug_vfio),
     "kill": Action(action_kill, VmRequirement.ACTIVE),
     "kexec": Action(action_kexec, VmRequirement.ACTIVE),
     "kvm_dmesg": Action(action_kvm_dmesg, VmRequirement.ACTIVE),
@@ -1320,13 +1691,15 @@ ACTIONS: dict[str, Action] = {
     "monitor": Action(action_monitor, VmRequirement.ACTIVE),
     # 热迁移相关
     "migrate": Action(action_migrate, VmRequirement.ACTIVE),
+    "migrate_nbd": Action(action_migrate_nbd, VmRequirement.ACTIVE),
     "migrate_postcopy": Action(action_migrate_postcopy, VmRequirement.ACTIVE),
     "migrate_cpr": Action(action_migrate_cpr, VmRequirement.ACTIVE),
     "save_vm_cpr": Action(action_save_vm_cpr, VmRequirement.ACTIVE),
     "load_vm_cpr": Action(action_load_vm_cpr, VmRequirement.ACTIVE),
     "cpr_exec": Action(action_cpr_exec, VmRequirement.ACTIVE),
     "migrate_to_file": Action(action_migrate_to_file, VmRequirement.ACTIVE),
-    "network": Action(action_network),
+    "snapshot-load": Action(action_snapshot_load, VmRequirement.ACTIVE),
+    "snapshot-save": Action(action_snapshot_save, VmRequirement.ACTIVE),
     "path": Action(action_path),
     "perf_qemu": Action(action_perf_qemu, VmRequirement.ACTIVE),
     "perf_guest": Action(action_perf_guest, VmRequirement.ACTIVE),
@@ -1341,16 +1714,14 @@ ACTIONS: dict[str, Action] = {
     "ssh_vsock_auto": Action(action_ssh_vsock_auto, VmRequirement.ACTIVE),
     "ssh_copy_id": Action(action_ssh_copy_id, VmRequirement.ACTIVE),
     "setup_vmware": Action(action_setup_vmware),
-    "setup_nmcli": Action(action_setup_nmcli, VmRequirement.ACTIVE),
+    # 网络配置
+    "setup_net_nmcli_vnc": Action(action_setup_nmcli, VmRequirement.ACTIVE),
+    "setup_net_config": Action(action_network),
+    "setup_net_nmcli_commands": Action(action_tmp_ip),
     "top": Action(action_top, VmRequirement.ACTIVE),
     "throttle": Action(action_throttle, VmRequirement.ACTIVE),
     "trace": Action(action_trace, VmRequirement.ACTIVE),
     "tty3": Action(action_tty3, VmRequirement.ACTIVE),
-    "tmp_ip": Action(action_tmp_ip),
-    "unplug_disk": Action(action_unplug_disk, VmRequirement.ACTIVE),
-    "unplug_nic": Action(action_unplug_nic, VmRequirement.ACTIVE),
-    "unplug_sriov": Action(action_unplug_sriov, VmRequirement.ACTIVE),
-    "unplug_vfio": Action(action_unplug_vfio),
     "vlan": Action(action_vlan),
     "vmlinux": Action(action_vmlinux, VmRequirement.ACTIVE),
     "vnc": Action(action_vnc, VmRequirement.ACTIVE),

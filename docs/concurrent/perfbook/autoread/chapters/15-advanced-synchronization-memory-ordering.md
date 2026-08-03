@@ -32,30 +32,28 @@ r2 = x1;  // may read 0    r2 = x0;  // may read 0
 ### 2.2 Linux 内核内存排序速查表 (memory model api)
 <!-- 94f3dc41-062d-40fe-a69e-49adcb89e9f3 -->
 
-本章提供了一个极为重要的速查表 (Linux-Kernel Memory-Ordering Cheat Sheet)，总结了各类原语提供的排序保证。
-对日常编程最有价值的几行如下：
+原图的 15.3 ，这里做一个很强的简化:
 
 | 原语                  | 对之前操作排序 | 对之后操作排序 | 备注                             |
-|-----------------------|----------------|----------------|----------------------------------|
+| --------------------- | -------------- | -------------- | -------------------------------- |
 | `WRITE_ONCE()`        | -              | -              | 仅保证单变量顺序，防止编译器优化 |
 | `READ_ONCE()`         | -              | -              | 同上，防止 load 融合/发明        |
 | `smp_rmb()`           | Load           | Load           | 读内存屏障                       |
 | `smp_wmb()`           | Store          | Store          | 写内存屏障                       |
 | `smp_mb()`            | Load+Store     | Load+Store     | 全内存屏障                       |
-| `smp_store_release()` | Load+Store     | Store          | release 语义                     |
-| `smp_load_acquire()`  | Load           | Load+Store     | acquire 语义                     |
-| `void atomic RMW`     | -              | -              | 无返回值的原子 RMW 不保证排序    |
-| `non-void atomic RMW` | Load+Store     | Load+Store     | 有返回值/条件的 RMW 提供全序     |
+| `smp_store_release()` | Load+Store     |                | release 语义                     |
+| `smp_load_acquire()`  |                | Load+Store     | acquire 语义                     |
 
 我这里解释说明一下，其中 smp_store_release() 和 smp_load_acquire() 语义是最清晰的，
-也就是单向的，只有读或者写。
+也就是单向的，而且屏蔽读写，不管另外一个方向的。
 
-这张表是理解内核并发代码的基石。例如，为什么 `atomic_inc()` 不提供任何排序？因为它属于 void RMW。
-为什么 `atomic_add_return()` 提供全序？因为它有返回值，内核要求其成功时必须具备完整屏障语义。
+AI 这段话，存疑，atomic RMW 是否提供 memory model 顺序，为什么关键差别在于是否有返回值?
 
-2026-07-12 : 我这里有几个疑问，到时候可以为什么有这些疑惑:
-1. smp_store_release() 有参数吗? 按照 store release 的语义，为什么不是 sotre -> store 就可以，还需要排序前面的 load ?
-2. atomic RMW 是否提供 memory model 顺序，为什么关键差别在于是否有返回值?
+> | `void atomic RMW`     | -              | -              | 无返回值的原子 RMW 不保证排序    |
+> | `non-void atomic RMW` | Load+Store     | Load+Store     | 有返回值/条件的 RMW 提供全序     |
+> 这张表是理解内核并发代码的基石。例如，为什么 `atomic_inc()` 不提供任何排序？因为它属于 void RMW。
+> 为什么 `atomic_add_return()` 提供全序？因为它有返回值，内核要求其成功时必须具备完整屏障语义。
+> 2026-07-12 : 我这里有几个疑问，到时候可以为什么有这些疑惑:
 
 ### 2.3 经验法则 (Rules of Thumb)
 

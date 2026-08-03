@@ -13,6 +13,19 @@ VM_PORT_RANGE = 20
 PORT_ALLOCATE_START = 50000
 PORT_ALLOCATE_END = 60000
 VSOCK_CID_START = 1000
+STORAGE_SLOT_FILE = "storage_slot"
+STORAGE_SLOTS = frozenset({"s", "t"})
+
+
+def _storage_slot(config: VmConfig) -> str:
+    path = config.directory / STORAGE_SLOT_FILE
+    try:
+        slot = path.read_text().strip()
+    except FileNotFoundError:
+        return "s"
+    if slot not in STORAGE_SLOTS:
+        raise ColleiError(f"invalid storage slot in {path}: {slot!r}")
+    return slot
 
 
 def _is_firecracker_command(argv: tuple[str, ...], config_file: Path) -> bool:
@@ -49,6 +62,7 @@ class VmRuntime:
     config: VmConfig
     which_qemu: str
     live_pids: tuple[int, ...]
+    storage_slot: str = "s"
 
     @classmethod
     def inspect(cls, config: VmConfig) -> VmRuntime:
@@ -58,6 +72,7 @@ class VmRuntime:
                 config=config,
                 which_qemu="s",
                 live_pids=(pid,) if pid is not None else (),
+                storage_slot="s",
             )
         live: list[tuple[str, int]] = []
         for name, pid_file in (
@@ -71,9 +86,13 @@ class VmRuntime:
                 continue
             if Path(f"/proc/{pid}/status").is_file():
                 live.append((name, pid))
-        which = live[-1][0] if live else "s"
+        storage_slot = _storage_slot(config)
+        which = live[-1][0] if live else storage_slot
         return cls(
-            config=config, which_qemu=which, live_pids=tuple(pid for _, pid in live)
+            config=config,
+            which_qemu=which,
+            live_pids=tuple(pid for _, pid in live),
+            storage_slot=storage_slot,
         )
 
     @property
@@ -84,6 +103,16 @@ class VmRuntime:
     @property
     def active(self) -> bool:
         return bool(self.live_pids)
+
+    @property
+    def image_directory(self) -> Path:
+        name = "img" if self.storage_slot == "s" else "img-t"
+        return self.directory / name
+
+    def persist_storage_slot(self, slot: str) -> None:
+        if slot not in STORAGE_SLOTS:
+            raise ColleiError(f"invalid storage slot: {slot!r}")
+        (self.directory / STORAGE_SLOT_FILE).write_text(f"{slot}\n")
 
     @property
     def qemu_index(self) -> int:

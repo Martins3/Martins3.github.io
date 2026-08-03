@@ -81,5 +81,5 @@ SYMBOL_FLAGS(__SCT__tp_func_simplefs_error, 0x00);
 KSYMTAB_DATA(sfs_stats, "");
 SYMBOL_FLAGS(sfs_stats, 0x00);
 
-MODULE_INFO(depends, "");
+MODULE_INFO(depends, "jbd2");
 

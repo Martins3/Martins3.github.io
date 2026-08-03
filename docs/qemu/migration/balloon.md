@@ -128,6 +128,25 @@ notifier 建立的是语义上的同步边界。
 
 也就是如果检测到页面在 swap 中，那么就跳过
 
+## 热迁移的速度问题
+这个热迁移的速度明显不对，这里的时间是显示 Time 为 3053 ms ，但是 Throughput 为 1342.70
+问题是，这个虚拟机占用了 20G 的内存的
+```txt
+(qemu) info migrate
+Status: 		completed
+Time (ms): 		total=3053, setup=3, down=27
+RAM info:
+  Throughput (Mbps): 	1342.70
+  Sizes: 		pagesize=4 KiB, total=24 GiB
+  Transfers: 		transferred=488 MiB, remain=0 B
+    Channels: 		precopy=480 B, multifd=484 MiB, postcopy=0 B
+    Page Types: 	normal=643781, zero=4956544
+  Page Rates (pps): 	transfer=2166058
+  Others: 		dirty_syncs=3
+```
+
+我估计是使用了 migration hint 功能，所以大部分都跳过了
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

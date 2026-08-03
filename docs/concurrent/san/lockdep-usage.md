@@ -1,16 +1,62 @@
 # lockdep usage
 
-## 配套测试代码
+## 适用范围
 
-打开的方法 : CONFIG_PROVE_LOCKING
+它的主要用途包括：
 
-## /proc
+- 提前发现潜在死锁
+    - ABBA 锁顺序反转：某路径 A → B，另一条路径 B → A
+    - 多级环路：A → B → C → A
+    - 同一锁递归获取导致的自锁
+    - 不需要真的卡死；只要相关锁顺序分别被执行过，lockdep 就能组合依赖关系并报警。
 
-和 lockdep 相关的
+- 检查中断上下文中的锁使用
+    - 某个锁在进程上下文中开中断获取，同时又可能被硬中断获取
+    - hardirq-safe → hardirq-unsafe
+    - softirq-safe → softirq-unsafe
+    - 这类问题本质上也可能导致死锁，但普通 ABBA 检查很难直观看出来。
+
+- 验证函数的锁前置条件
+
+  lockdep_assert_held(&obj->lock);
+  lockdep_assert_held_write(&obj->rwsem);
+  lockdep_assert_not_held(&lock);
+
+  这相当于把“调用该函数时必须持有某锁”的注释变成运行时断言，特别适合检查数据保护关系。
+
+- 检查锁没有被意外释放
+  lockdep_pin_lock() 可以验证某段调用过程中，底层函数是否偷偷释放并重新获取了上层要求持续持有的锁。
+
+- 发现锁对象生命周期错误
+  配合 CONFIG_DEBUG_LOCK_ALLOC 可以发现：
+    - 仍被持有的锁所在对象被 kfree()
+    - 活锁被重新 spin_lock_init() / mutex_init()
+    - 任务退出时仍持有锁
+
+- 辅助 RCU 与锁保护关系检查
+  例如 rcu_dereference_protected()、lockdep_is_held() 可以验证：访问某个对象时，指定锁或 RCU 读侧临界区是否存在。
+
+- 辅助锁竞争分析
+  CONFIG_LOCK_STAT 使用相关锁追踪基础设施统计锁获取、等待和竞争情况。它偏性能分析，不是死锁检测本身。
+
+需要注意：解锁未持有的锁、重复解锁、mutex 所有者错误等，常由 DEBUG_MUTEXES、DEBUG_SPINLOCK、DEBUG_RWSEMS 等共同检查；CONFIG_PROVE_LOCKING 会把这些调试能力组合起来，
+日常看到的报警经常统称为 lockdep 报警。
+
+
+## 核心文档
+当前源码的详细设计见 Documentation/locking/lockdep-design.rst
+
+linux kernel 死锁问题分析（一） - 无人知晓的文章 - 知乎
+https://zhuanlan.zhihu.com/p/22437191650
+
+## 基本观察
+打开的测试方法:
+CONFIG_PROVE_LOCKING
+
+/proc 和 lockdep 相关的结果:
 - lockdep
 - lockdep_chains
 - lockdep_stats
-
 
 对应的实现的代码是 : kernel/locking/lockdep_proc.c
 
@@ -19,6 +65,7 @@ locks
 
 ## kernel hacking -> Lock Debugging (spinlocks, mutexes, etc...)
 
+相关配置见 lib/Kconfig.debug
 ```txt
 [ ] Lock debugging: prove locking correctness (CONFIG_PROVE_LOCKING 就是大名鼎鼎的 lockdep)
 [ ] Lock usage statistics

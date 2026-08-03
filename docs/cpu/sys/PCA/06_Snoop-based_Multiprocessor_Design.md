@@ -1,0 +1,53 @@
+原子总线?
+
+事物拆分?
+
+what is SGI challenge
+
+写操作串行化?
+
+写原子性?
+
+检测写操作完成的能力?
+
+> 为什么需要检查完成
+
+什么时候会产生死锁，为什么会产生活锁,两者之前的区别是什么，消除的方法是什么?　相同的问题也可以对于 hungry ?
+
+总线事物不可分是什么意思?
+
+什么叫做正确性的验证
+
+chapter 3.6, what the fuck
+
+为什么在 memory consistency 的时候需要分析原子指令的支持，那么为什么在 cache coherency 的时候，依旧需要使用分析原子操作使用
+
+多级 cache 为什么如此复杂，什么导致了问题，如何处理?
+
+查询一下 SGI challenge 设计
+
+为什么扑空的后果如此严重? 那么又是如何支持多级扑空?
+
+> 所以，什么是扑空
+
+串行化和顺序同一性, 例子 6.3
+
+虚拟地址作为索引也会引入如此之多的问题吗?
+
+强一致性是什么东西?
+
+<script src="https://giscus.app/client.js"
+        data-repo="martins3/martins3.github.io"
+        data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="
+        data-category="Show and tell"
+        data-category-id="MDE4OkRpc2N1c3Npb25DYXRlZ29yeTMyMDMzNjY4"
+        data-mapping="pathname"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-theme="light"
+        data-lang="zh-CN"
+        crossorigin="anonymous"
+        async>
+</script>
+
+本站所有文章转发 **CSDN** 将按侵权追究法律责任，其它情况随意。

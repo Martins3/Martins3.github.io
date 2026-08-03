@@ -1,48 +1,12 @@
 # block 热迁移
 
-- [ ] https://qemu-project.gitlab.io/qemu/interop/bitmaps.html
+- https://qemu-project.gitlab.io/qemu/interop/bitmaps.html
 - https://qemu-project.gitlab.io/qemu/interop/live-block-operations.html
 	- live snapshot 和 live snapshot merge 是什么意思哇
 
 https://wiki.qemu.org/Features/LiveBlockMigration
 
 忽然意识到，overlayfs 可以实现 snapshot
-## block.c
-
-```c
-static SaveVMHandlers savevm_block_handlers = {
-    .save_setup = block_save_setup,
-    .save_live_iterate = block_save_iterate,
-    .save_live_complete_precopy = block_save_complete,
-    .save_live_pending = block_save_pending,
-    .load_state = block_load,
-    .save_cleanup = block_migration_cleanup,
-    .is_active = block_is_active,
-};
-```
-
-- `block_load`
-    - [ ] `blk_pwrite` ：似乎这就是写入 block 设备的位置，但是好奇怪啊
-
-- `block_save_pending`
-
-## 所有的 hook
-
-- `block_save_pending` : 调用位置 `migration_iteration_run` => `qemu_savevm_state_pending`
-    - `get_remaining_dirty`
-        - 对于 `BlkMigState::bmds_list` 中的所有的成员遍历，调用 `bdrv_get_dirty_count`，从而统计 bitmap 的数量。
-
-
-下面两个的区别是什么:
-- `block_save_iterate` : 调用路径 `qemu_savevm_state_iterate` 核心路径上
-    - `blk_mig_save_dirty_block`
-        - `mig_save_device_dirty` : 参数是 async 的
-            - `blk_mig_save_dirty_block` ：异步的
-            - `blk_pread` + `blk_send`
-
-- `block_save_complete` : 用于完成 precopy
-    - `blk_mig_save_dirty_block` ：参数是 sync 的
-
 
 ## block/dirty-bitmap.c 和 migration/block-dirty-bitmap.c
 
@@ -126,17 +90,13 @@ static SaveVMHandlers savevm_block_handlers = {
 几个容易混淆的地方：
 
 - dirty-bitmaps capability 只迁移 dirty bitmap 元数据，不复制磁盘内容。
-- mapped-ram 迁移的是 RAM，只是采用固定文件偏移布局，不是磁盘迁移。
-- file: migration URI 保存的是 VM state/RAM stream，默认不包含 guest 磁盘内容。
-- zero-blocks 只服务于已删除的旧式 block migration，所以旧 block migration 删除后它就成了无效开关。
+
 
 所以更准确的说法是：
-
 QEMU 仍然支持在线复制和迁移存储，
 但存储复制已从 VM migration stream 中拆出，改由 blockdev-mirror、NBD。
 
 仓库中有完整的 QMP 示例：docs/interop/live-block-operations.rst。
-
 
 ### nbd + blockdev-mirror 的关键 QMP 操作
 
@@ -493,6 +453,306 @@ dirty-bitmaps capability    迁移增量备份所依赖的 bitmap 状态
 migrate                     迁移 RAM/CPU/device state
 
 三者互补，不是互相替代。
+
+
+## 先看看核心文档
+
+这份文档介绍了 QEMU 在虚拟机运行期间对磁盘镜像链执行的四类主要操作：stream、commit、mirror 和 backup。核心内容可以概括如下。
+
+### 镜像链模型
+
+文档使用下面的 QCOW2 backing chain 作为示例：
+
+[A] <-- [B] <-- [C] <-- [D]
+                              ↑
+                         运行中的 QEMU
+
+- [A] 是最底层 backing file。
+- [B]、[C] 是中间 overlay。
+- [D] 是 active layer，虚拟机的新写入落在这里。
+- 每个 overlay 保存的是相对于 backing file 的增量，而不是创建该文件时的完整磁盘状态。
+
+因此，快照时间点和文件名并不直接对应：
+
+- 创建 [B] 时的状态实际位于 [A]。
+- 创建 [C] 时的状态由 [A]+[B] 表示。
+- 当前状态由 [A]+[B]+[C]+[D] 共同表示。
+
+### 四类操作对比
+
+ 操作                              数据移动方向               主要目的                        是否切换运行磁盘
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  ━━━━━━━━━━━━━━━━━━━━━━━━━  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ block-stream                      backing → overlay          拉平或缩短 backing chain        否
+────────────────────────────────  ─────────────────────────  ──────────────────────────────  ────────────────────────────
+ block-commit                      overlay → backing          将增量提交回底层镜像            active commit 完成时会切换
+────────────────────────────────  ─────────────────────────  ──────────────────────────────  ────────────────────────────
+ drive-mirror / blockdev-mirror    当前磁盘链 → 新目标        磁盘复制、存储迁移、持续同步    可选
+────────────────────────────────  ─────────────────────────  ──────────────────────────────  ────────────────────────────
+ blockdev-backup                   当前磁盘状态 → 备份目标    创建时间点备份                  否
+
+#### 1. block-stream
+
+将 backing file 中当前镜像需要的数据复制到上层 overlay，是一种“向右合并”。
+
+例如：
+
+[A] <-- [B] <-- [C] <-- [D]
+
+可以变成：
+
+[D]                         # 全部拉平
+[A] <-- [D]                 # 把 B、C 拉入 D
+[A] <-- [C] <-- [D]         # 把 B 拉入 C
+
+典型命令：
+
+block-stream device=node-D job-id=job0
+block-stream device=node-D base-node=node-A job-id=job0
+
+特点：
+
+- 不指定 base-node 时默认拉平整个链。
+- 完成后发出 BLOCK_JOB_COMPLETED。
+- QEMU 会修正 backing 引用，但不会删除已经不在链中的文件。
+- 被 stream 掉的旧镜像仍然表示原来的时间点，通常仍然有效，可以继续作为其他 overlay 的 backing file。
+- 可通过 query-block-jobs 查看进度。
+
+#### 2. block-commit
+
+把 overlay 的数据写回 backing file，是 block-stream 的反方向。
+
+例如把 [B] 提交到 [A]：
+
+[A] <-- [B] <-- [C] <-- [D]
+              ↓
+[A] <-- [C] <-- [D]
+
+也可以把整个链提交回 [A]：
+
+[A] <-- [B] <-- [C] <-- [D]
+              ↓
+[A]
+
+普通 commit 完成后直接发出 BLOCK_JOB_COMPLETED。
+
+active commit（包括当前 [D]）是两阶段操作：
+
+1. 先把 [B]、[C]、[D] 同步到 [A]。
+2. 收到 BLOCK_JOB_READY 后执行：
+
+block-job-complete device=job0
+
+然后让运行中的 QEMU 切换到 [A]，最后收到 BLOCK_JOB_COMPLETED。
+
+重要区别：
+
+- commit 会修改已有的 backing image。
+- QEMU 不会自动删除已提交的 overlay。
+- 被 commit 掉的中间镜像不再代表一个一致的历史时间点，应视为无效，不能再用作新 overlay 的 backing file。
+
+#### 3. drive-mirror / blockdev-mirror
+
+把运行中的磁盘链持续同步到另一个镜像：
+
+[A] <-- [B] <-- [C] <-- [D]  ──mirror──>  [E]
+
+同步到最新状态后，任务进入 ready 状态并发出 BLOCK_JOB_READY。此时有两种收尾方式：
+
+- block-job-cancel：停止同步，保留目标镜像作为取消时刻的时间点副本；源 VM 继续使用原磁盘链。
+- block-job-complete：执行 pivot，让运行中的 QEMU 改为使用目标 [E]。
+
+因此 mirror 常用于：
+
+- 无共享存储的虚拟机迁移。
+- 在线复制磁盘。
+- 构造时间点副本。
+- 将长镜像链复制为单个新镜像。
+
+mirror 支持四种同步模式：
+
+- full：复制整个镜像链。
+- top：只复制最上层 active overlay，也称 shallow copy；目标端必须已经具备相同 backing 数据。
+- none：只同步命令执行后的新写入。
+- incremental：根据 dirty bitmap 复制增量数据。
+
+drive-mirror 与 blockdev-mirror 的主要差异是：
+
+- drive-mirror 可以通过文件名指定目标，并可创建目标文件。
+- blockdev-mirror 工作在 Block Driver State 节点层，需要先创建目标镜像，再用 blockdev-add 加入 QEMU，最后用 node-name 指定目标。
+
+文档还演示了 drive-mirror + NBD 的无共享存储迁移流程：
+
+1. 目标端准备 backing chain 和目标 overlay。
+2. 目标 QEMU 启动 NBD server。
+3. 通过 NBD 导出目标 block node。
+4. 源 QEMU 使用 drive-mirror sync=top mode=existing 同步 active layer。
+5. 收到 BLOCK_JOB_READY 后停止 mirror。
+6. 停止 NBD server，并在目标端恢复虚拟机。
+
+### 4. blockdev-backup
+
+blockdev-backup 创建的是命令启动时刻的时间点备份：
+
+[A] <-- [B]  ──backup──>  [E]
+
+即使备份过程中 guest 继续写磁盘，QEMU 也会通过 copy-before-write 等机制保证目标表示备份开始时的状态。
+
+基本流程：
+
+1. 使用 qemu-img create 创建目标镜像。
+2. 使用 blockdev-add 将其加入 QEMU。
+3. 执行：
+
+blockdev-backup device=node-B target=node-E sync=full job-id=job0
+
+4. 完成时收到 BLOCK_JOB_COMPLETED，不需要额外的 block-job-complete。
+
+drive-backup 是旧接口：
+
+- 从 QEMU 6.2 起已经废弃。
+- 它可以直接指定目标文件名并创建文件。
+- blockdev-backup 必须通过已有 block node 的 node-name 指定目标，因此没有 mode 和 format 参数。
+
+mirror 和 backup 的时间点语义不同：
+
+- backup：时间点是命令开始时。
+- mirror 后执行 cancel：时间点是结束同步时。
+
+### 操作时需要特别注意
+
+- QEMU 会重写 backing chain 的引用，但一般不会自动删除已脱链的镜像文件。
+- 删除镜像前必须确认它已经不再被任何节点引用。
+- active commit 和 mirror 收到 BLOCK_JOB_READY 后并没有真正结束，必须执行 block-job-complete 或适当执行 block-job-cancel。
+- query-block-jobs 用于监视任务进度和 ready 状态。
+- 使用 qemu-img compare 校验目标镜像前应关闭相关 QEMU，否则可能因写锁而失败。
+- 文档主体最初基于 QEMU 2.9 编写，具体参数和废弃情况应以当前源码中的 qapi/block-core.json 为准。
+
+原文位置：docs/interop/live-block-operations.rst:9。
+
+## 那么，这些功能就是这个文档中记录实现的吗?
+
+snapshot_blkdev
+snapshot_blkdev_internal
+snapshot_delete_blkdev_internal
+
+https://wiki.qemu.org/Features/SnapshottingImprovements#snapshot-create
+
+codex 给出的回答:
+
+不完全是。更准确地说：这三个是 HMP 命令的实现，底层调用 QMP/Block Layer API；live-block-operations.rst 只是介绍这些接口的使用方式，并不是它们的
+实现依据或规范。
+
+ HMP 命令                           底层 QMP 接口                             文档是否涉及                             类型
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  ━━━━━━━━━━━━━━
+ snapshot_blkdev                    blockdev-snapshot-sync                    是，作为构造 backing chain 的辅助操作    外部快照
+─────────────────────────────────  ────────────────────────────────────────  ───────────────────────────────────────  ──────────────
+ snapshot_blkdev_internal           blockdev-snapshot-internal-sync           否                                       内部快照
+─────────────────────────────────  ────────────────────────────────────────  ───────────────────────────────────────  ──────────────
+ snapshot_delete_blkdev_internal    blockdev-snapshot-delete-internal-sync    否                                       删除内部快照
+
+### snapshot_blkdev
+
+它与文档里的 blockdev-snapshot-sync 是直接对应的。
+
+调用链：
+
+HMP snapshot_blkdev
+  └─ hmp_snapshot_blkdev()
+       └─ qmp_blockdev_snapshot_sync()
+            └─ QMP transaction
+                 └─ external_snapshot_action()
+
+HMP 包装代码位于 block/monitor/block-hmp-cmds.c:344，直接调用：
+
+qmp_blockdev_snapshot_sync(device, NULL, filename, NULL, format,
+                           true, mode, &err);
+
+底层 QMP 实现在 blockdev.c:1074。
+
+其效果是创建外部 overlay：
+
+操作前：
+
+QEMU
+  |
+ [A]
+
+操作后：
+
+ [A] <-- [B]
+          |
+         QEMU
+
+底层 external_snapshot_action() 会：
+
+1. 找到原 block node。
+2. drain I/O 并 flush 原镜像。
+3. 创建或打开新 overlay。
+4. 将原镜像设置成新 overlay 的 backing node。
+5. 让设备改用新 overlay。
+
+具体处理见 blockdev.c:1367。
+
+文档正是用 blockdev-snapshot-sync 创建 [A] <-- [B] <-- [C] <-- [D] 示例链，见 docs/interop/live-block-operations.rst:171。
+
+但它不是文档重点介绍的四类 block job：
+
+block-stream
+block-commit
+drive/blockdev-mirror
+blockdev-backup
+
+snapshot_blkdev 是同步修改 block graph 的快照操作，不会启动一个可由 query-block-jobs 观察的后台 BlockJob。
+
+### 两个 internal 命令
+
+这两个和文档中的 backing chain 操作不是同一种机制。
+
+snapshot_blkdev_internal 的调用链是：
+
+HMP snapshot_blkdev_internal
+  └─ qmp_blockdev_snapshot_internal_sync()
+       └─ internal_snapshot_action()
+            └─ bdrv_snapshot_create()
+                 └─ 镜像格式驱动的 snapshot_create 回调
+
+相关代码：
+
+- HMP 包装：block/monitor/block-hmp-cmds.c:369
+- QMP 入口：blockdev.c:1110
+- 创建实现：blockdev.c:1207
+
+它不会创建新的 overlay 文件，而是在同一个镜像或存储对象内部记录快照：
+
+外部快照：
+
+[A] <-- [B]       两个 block node/镜像
+
+内部快照：
+
+[A]
+ ├─ internal snapshot 1
+ └─ 当前状态           同一个镜像/存储对象
+
+只有实现了内部快照回调的格式才能使用，例如：
+
+- QCOW2
+- RBD
+
+删除命令则直接：
+
+snapshot_delete_blkdev_internal
+  └─ qmp_blockdev_snapshot_delete_internal_sync()
+       └─ 查找快照
+            └─ bdrv_snapshot_delete()
+
+见 blockdev.c:1125。
+
+所以最终结论是：
+
+- snapshot_blkdev 和该文档有直接关联：它就是文档用来创建外部 overlay/backing chain 的 blockdev-snapshot-sync 的 HMP 封装。
+- 两个 *_internal 命令不属于该文档介绍的 backing-chain live block operations。
+- 三者真正的接口规范应看 qapi/block-core.json:1784；该文档本身也明确指出 QAPI schema 才是 canonical API 文档。
 
 
 <script src="https://giscus.app/client.js"

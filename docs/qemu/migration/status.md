@@ -321,6 +321,20 @@ migrate                 migrate_cancel          migrate_continue
 migrate_incoming        migrate_pause           migrate_recover
 migrate_set_capability  migrate_set_parameter   migrate_start_postcopy
 
+### 常规流程:
+
+- src 端:
+```txt
+[martins3:migrate_set_state:1865] none -> setup
+[martins3:migrate_set_state:1865] setup -> active
+[martins3:migrate_set_state:1865] active -> completed
+```
+- target 端
+```txt
+[martins3:migrate_set_state:1865] none -> active
+[martins3:migrate_set_state:1865] active -> completed
+```
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

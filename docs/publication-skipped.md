@@ -2,7 +2,7 @@
 
 由 `docs/pub/sync-blog.py` 生成。
 
-跳过文件数: 394
+跳过文件数: 412
 
 ## 发布策略跳过: draft 目录
 
@@ -23,7 +23,6 @@
 - `docs/ai-tools/tools/slides.md`
 - `docs/ai-tools/try.md`
 - `docs/ai-tools/workaround.md`
-- `docs/books/binary-survey.md`
 - `docs/books/fusion.md`
 - `docs/captive/GenC.md`
 - `docs/captive/archsim.md`
@@ -39,7 +38,23 @@
 - `docs/concurrent/kernel/qa/qa-10.md`
 - `docs/concurrent/kernel/qa/qa-11.md`
 - `docs/concurrent/kernel/qa/qa-12.md`
+- `docs/concurrent/kernel/qa/qa-13.md`
+- `docs/concurrent/kernel/qa/qa-14.md`
+- `docs/concurrent/kernel/qa/qa-15.md`
+- `docs/concurrent/kernel/qa/qa-16.md`
+- `docs/concurrent/kernel/qa/qa-17.md`
+- `docs/concurrent/kernel/qa/qa-18.md`
+- `docs/concurrent/kernel/qa/qa-19.md`
 - `docs/concurrent/kernel/qa/qa-2.md`
+- `docs/concurrent/kernel/qa/qa-20.md`
+- `docs/concurrent/kernel/qa/qa-21.md`
+- `docs/concurrent/kernel/qa/qa-22.md`
+- `docs/concurrent/kernel/qa/qa-23.md`
+- `docs/concurrent/kernel/qa/qa-24.md`
+- `docs/concurrent/kernel/qa/qa-25.md`
+- `docs/concurrent/kernel/qa/qa-26.md`
+- `docs/concurrent/kernel/qa/qa-27.md`
+- `docs/concurrent/kernel/qa/qa-28.md`
 - `docs/concurrent/kernel/qa/qa-3.md`
 - `docs/concurrent/kernel/qa/qa-4.md`
 - `docs/concurrent/kernel/qa/qa-5.md`
@@ -47,6 +62,7 @@
 - `docs/concurrent/kernel/qa/qa-7.md`
 - `docs/concurrent/kernel/qa/qa-8.md`
 - `docs/concurrent/kernel/qa/qa-9.md`
+- `docs/concurrent/kernel/qa/summary.md`
 - `docs/concurrent/lkmm/ai-overview.md`
 - `docs/concurrent/lkmm/ai-read.md`
 - `docs/concurrent/lkmm/human.md`
@@ -188,11 +204,7 @@
 - `docs/qemu/aarch64-softmmu/todo.md`
 - `docs/qemu/block/todo.md`
 - `docs/qemu/memory/todo.md`
-- `docs/qemu/migration/todo.bug.md`
-- `docs/qemu/migration/todo.collei.md`
-- `docs/qemu/migration/todo.lab.md`
 - `docs/qemu/migration/todo.md`
-- `docs/qemu/migration/todo.misc.md`
 - `docs/qemu/qom/todo-2.md`
 - `docs/qemu/qom/todo.md`
 - `docs/qemu/tcg/todo.md`
@@ -207,7 +219,7 @@
 - `docs/uefi/todo.md`
 - `docs/virtio/todo.md`
 - `docs/windows/todo.md`
-- `simplefs/docs/simplefs/todo.md`
+- `simplefs/record/archive/notes/todo.md`
 
 ## 发布策略跳过: 同目录存在 README.md
 
@@ -239,6 +251,12 @@
 - `docs/concurrent/lkmm/zh-cn/simple.summary.md`
 - `docs/concurrent/lkmm/zh-cn/simple.translation.md`
 - `docs/cool.md`
+- `docs/cpu/sys/MCCC/3.md`
+- `docs/cpu/sys/MCCC/4.md`
+- `docs/cpu/sys/MCCC/5.md`
+- `docs/cpu/sys/MCCC/6.md`
+- `docs/cpu/sys/MCCC/7.md`
+- `docs/cpu/sys/MCCC/8.md`
 - `docs/kernel/blk/ds/ceph.md`
 - `docs/kernel/fs/nfs/user-nfsd/usage.md`
 - `docs/kernel/module/README-kvm.md`
