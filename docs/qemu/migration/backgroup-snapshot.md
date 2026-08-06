@@ -1,8 +1,33 @@
-## qemu 热迁移 background-snapshot 的语义
+# background-snapshot
 <!-- 7293bd0e-75e3-4705-9e8d-ea707f54cda8 -->
 
 当时的 patch :
 https://lists.nongnu.org/archive/html/qemu-devel/2021-01/msg05482.html
+
+bg_migration_thread 中
+	- qemu_savevm_state_header
+	- migration_stop_vm
+	- qemu_savevm_state_do_setup ( state 保存)
+	- bg_migration_iteration_run ( 保存 ram)
+
+```c
+/*
+ * Return true if continue to the next iteration directly, false
+ * otherwise.
+ */
+static MigIterateState bg_migration_iteration_run(MigrationState *s)
+{
+    int res;
+
+    res = qemu_savevm_state_iterate(s->to_dst_file, false);
+    if (res > 0) {
+        bg_migration_completion(s);
+        return MIG_ITERATE_BREAK;
+    }
+
+    return MIG_ITERATE_RESUME;
+}
+```
 
 关键区别在于：background-snapshot 打开的已经不是“普通 live migration 完成交接”的语义，而是“生成一个开始时刻的一致性快照”的语义。
 先看能力定义，QEMU 自己就写得很直白：
@@ -139,15 +164,6 @@ migration/migration.c lines 3599-3605
     * zero-copy-send
     * （以及 CPR 模式如 cpr-reboot, cpr-transfer, cpr-exec）
 
-2026-08-03 20:50 : 这个检查机制到底在哪里?
-
-
-## 还发现了这个问题
-
-2. rk -l 需要恢复一份内存与设备状态一致的非 live 快照。
-   background-snapshot 会先保存设备状态，再在 guest 继续运行时
-   保存 RAM；实测会产生 kvm-tpr-opt=STANDBY 但 VAPIC ROM 页为零的
-   不可恢复镜像。mapped-ram 文件快照因此使用非 live 迁移。
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

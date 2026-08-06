@@ -1,84 +1,7 @@
 # multifd
-- `multifd_save_setup`
-    - `migrate_multifd_channels` : 这个数值是从 qmp 设置的
-    - `socket_send_channel_create(multifd_new_send_channel_async, p);` :
 
-主要进行一些统计更新的工作
+## MultiFDMethods 的数据传输主要是压缩
 
-采用 multifd 模式，并不是多个 thread 同时遍历 dirty bitmap ，还是 migration thread 遍历，
-但是会有多个 thread 来发送。
-
-## 结构体: `MultiFDPacket_t` 和 `MultiFDPages_t`
-
-## 基本的执行流程
-
-初始化的基本流程:
-
-- `multifd_channel_connect`
-    - `multifd_send_thread`
-        - `multifd_send_fill_packet` : 这个东西只是描述信息
-        - `qio_channel_writev_full_all` ：真正的发送，应该调查一下，ioc 是如何赋值的
-    - `multifd_tls_channel_connect` ：[ ] 想要看懂这个，需要将两个 channel-tls.c 中的看看
-        - `multifd_tls_handshake_thread`
-            - `qio_channel_tls_handshake`
-            - `multifd_tls_outgoing_handshake`
-                - `multifd_channel_connect` : 看到没有，有重新调回来了
-
-- `multifd_recv_new_channel`
-    - `multifd_recv_thread`
-        - `multifd_recv_unfill_packet` 将 package 的内容解开，但是需要进行很多判断
-
-### 发送流程
-
-发送有一个单独的 thread 在处理:
-
-- __clone3
-  - start_thread
-    - qemu_thread_start
-      - migration_thread
-        - migration_iteration_run
-          - qemu_savevm_state_iterate
-            - ram_save_iterate
-
-- `ram_save_iterate` / `ram_save_complete`
-    - `ram_find_and_save_block`
-        - `ram_save_host_page`
-            - `ram_save_target_page`
-                - `ram_save_multifd_page`
-                    - `multifd_queue_page` : 主要的线程将 dirty page 将找到的脏页内存地方存放到 `multifd_send_state` 全局变量
-                        - `multifd_send` 的主要工作是遍历所有 `multifd` 线程，查找空闲的线程，将要发送的内存页地址传递给空闲线程，然后唤醒它，使其开始发送 page
-
-### 接受流程
-
-接受流程比想象的简单:
-
-例如 multifd + zstd 的时候，其结果为
-
-- __clone3
-  - start_thread
-    - qemu_thread_start
-      - multifd_recv_thread
-        - multifd_zstd_recv
-
-在 multifd_zstd_recv 中:
-
-```c
-static int multifd_zstd_recv(MultiFDRecvParams *p, Error **errp)
-{
-
-    // ...
-    for (i = 0; i < p->normal_num; i++) {
-        // p->block 是 RAMBlock
-        // p->normal[i] 是内存地址，所以，这一段代码的作用就是让 zstd 解压的数据直接写入到 RAMBlock 中
-        ramblock_recv_bitmap_set_offset(p->block, p->normal[i]);
-        z->out.dst = p->host + p->normal[i];
-        z->out.size = page_size;
-        z->out.pos = 0;
-```
-
-## MultiFDMethods
-
-那么这么说，全部都是压缩相关了?
 ```sh
 rg "MultiFDMethods.*\{"
 ```
@@ -112,75 +35,102 @@ commit 0222111a22b2 ("migration: Remove non-multifd compression")
 
 multifd_send_setup 中配置压缩方法，其实这个是合理的，既然可以有多个 CPU 来发送，那么就让这些 CPU 先压缩。
 
-## 可以 multifd 和其他的观察到奇怪问题
+## 基本流程
 
-```txt
-(qemu) info migrate
-Status:                 completed
-Time (ms):              total=11179, setup=8, down=46
-RAM info:
-  Throughput (Mbps):    577.40
-  Sizes:                pagesize=4 KiB, total=8.13 GiB
-  Transfers:            transferred=769 MiB, remain=0 B
-    Channels:           precopy=738 MiB, multifd=0 B, postcopy=0 B
-    Page Types:         normal=191883, zero=2029683
-  Page Rates (pps):     transfer=35400
-  Others:               dirty_syncs=4, downtime_bytes=32312649
-```
-这里为什么 precopy=738 MiB, multifd=0 B, postcopy=0 B 三个并列的，
-也就是这三个东西可以是多个不为 0 ? 答案是
+初始化的基本流程:
 
-## 本地热迁移经典路线
-```txt
-@[
-        qio_channel_socket_writev+0
-        qio_channel_writev_full_all+205
-        qio_channel_writev_all+22
-        qemu_fflush.part.0+150
-        qemu_put_buffer.part.0+169
-        virtio_gpu_save+263
-        vmstate_save_state_v+1046
-        vmstate_save+226
-        qemu_savevm_state_complete_precopy_non_iterable+153
-        qemu_savevm_state_complete_precopy+39
-        migration_thread+3088
-        qemu_thread_start+161
-        start_thread+682
-        __clone3+44
-]: 125
-@[
-        qio_channel_socket_writev+0
-        qio_channel_writev_full_all+205
-        multifd_send_thread+574
-        qemu_thread_start+161
-        start_thread+682
-        __clone3+44
-]: 16415
-```
+- multifd_channel_connect
+    - multifd_send_thread
+        - multifd_send_fill_packet : 这个东西只是描述信息
+        - qio_channel_writev_full_all ：真正的发送，应该调查一下，ioc 是如何赋值的
+    - multifd_tls_channel_connect ：[ ] 想要看懂这个，需要将两个 channel-tls.c 中的看看
+        - multifd_tls_handshake_thread
+            - qio_channel_tls_handshake
+            - multifd_tls_outgoing_handshake
+                - multifd_channel_connect : 看到没有，有重新调回来了
 
-## [ ] multifd
-- [ ] zlib ?
-- [ ] zstd ?
+- multifd_recv_new_channel
+    - multifd_recv_thread
+        - multifd_recv_unfill_packet 将 package 的内容解开，但是需要进行很多判断
+
+- multifd_save_setup
+    - migrate_multifd_channels : 这个数值是从 qmp 设置的
+    - socket_send_channel_create(multifd_new_send_channel_async, p); :
+
+采用 multifd 模式，并不是多个 thread 同时遍历 dirty bitmap ，还是 migration thread 遍历，
+但是会有多个 thread 来发送。对接流程在
+
+## 关键结构体
+- MultiFDPacket_t
+- MultiFDPages_t
+
+### migration thread 发送流程
+
+dirty page iteration 还是在 migration thread 中进行的:
+
+- __clone3
+  - start_thread
+    - qemu_thread_start
+      - migration_thread
+        - migration_iteration_run
+          - qemu_savevm_state_iterate
+            - ram_save_iterate
+
+找到了 dirty page 之后，将其传递给 multifd 机制:
+- ram_save_iterate / ram_save_complete
+    - ram_find_and_save_block
+        - ram_save_host_page
+            - ram_save_target_page
+                - ram_save_multifd_page
+                    - multifd_queue_page : 主要的线程将 dirty page 将找到的脏页内存地方存放到 multifd_send_state 全局变量
+                        - multifd_send 的主要工作是遍历所有 multifd 线程，查找空闲的线程，将要发送的内存页地址传递给空闲线程，然后唤醒它，使其开始发送 page
+
+### source multifd thread
+
+- __clone3
+  - start_thread
+    - qemu_thread_start
+      - multifd_send_thread
+	- MultiFDMethods::send_prepare 对于数据进行压缩之类的
+
+### target multifd thread
+
+例如 multifd + zstd 的时候，其结果为
+
+- __clone3
+  - start_thread
+    - qemu_thread_start
+      - multifd_recv_thread
+        - multifd_zstd_recv
+
+在 multifd_zstd_recv 中:
 
 ```c
-typedef struct {
-    /* Setup for sending side */
-    int (*send_setup)(MultiFDSendParams *p, Error **errp);
-    /* Cleanup for sending side */
-    void (*send_cleanup)(MultiFDSendParams *p, Error **errp);
-    /* Prepare the send packet */
-    int (*send_prepare)(MultiFDSendParams *p, Error **errp);
-    /* Setup for receiving side */
-    int (*recv_setup)(MultiFDRecvParams *p, Error **errp);
-    /* Cleanup for receiving side */
-    void (*recv_cleanup)(MultiFDRecvParams *p);
-    /* Read all pages */
-    int (*recv_pages)(MultiFDRecvParams *p, Error **errp);
-} MultiFDMethods;
+static int multifd_zstd_recv(MultiFDRecvParams *p, Error **errp)
+{
+
+    // ...
+    for (i = 0; i < p->normal_num; i++) {
+        // p->block 是 RAMBlock
+        // p->normal[i] 是内存地址，所以，这一段代码的作用就是让 zstd 解压的数据直接写入到 RAMBlock 中
+        ramblock_recv_bitmap_set_offset(p->block, p->normal[i]);
+        z->out.dst = p->host + p->normal[i];
+        z->out.size = page_size;
+        z->out.pos = 0;
 ```
 
-- [ ] 只有 multifd 才会又压缩吗？
-- [ ] 为什么又和 tls 有关系?
+## 队列深度等价为  1
+
+每个 thread 是一个 depth 为 1 的队列。 每个 MultiFDSendParams 只有一个 pending_job 标志 + 一个 p->data 数据槽（multifd_send() 里直接
+swap 指针，migration/multifd.c:400-408）。主线程给一个 thread 派完任务后，必须等该 thread 写完网络并 qatomic_store_release(&p->pending_job,
+false) 之后才能再次使用该 channel。
+
+所以 channels_ready 这个 semaphore 的计数实际上就等于"当前空闲 channel 数"。N 个 channel 全忙时，semaphore 耗尽，主线程阻塞在那里，直到某个
+thread 完成一轮发送回到循环顶部 post 一次。
+
+但要补充一下：
+1. 卡住的是 multifd 这一层的派发者，而调用方（RAM 保存路径）本来就是攒满一批页（multifd_queue_page 按 channel 各自的 buffer 攒 batch）才调一次
+   multifd_send() 做一次指针 swap，派发本身是零拷贝的，所以"depth 1"的代价被 batching 摊薄了——每个 depth-1 slot 装的是一批页而不是一页。
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

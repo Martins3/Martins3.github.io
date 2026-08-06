@@ -1,8 +1,7 @@
-# Virtio Balloon
+# Virtio Balloon Kernel 实现
 
 调查下，这些函数的 backtrace:
 - [ ] balloon_ack
-
 
 ## stat: 如何实现周期性的发送统计信息
 - https://qemu.readthedocs.io/en/latest/interop/virtio-balloon-stats.html
@@ -893,6 +892,56 @@ Signed-off-by: Linus Torvalds <torvalds@linux-foundation.org>
 	}
 ```
 
+
+## 这个 commit 中的东西就是最好的
+如果我们可以观察到虚拟机分配的延迟，算是比较清楚的反映出来虚拟机的艰难程度了。
+
+```txt
+History:        #0
+Commit:         c5b70a26aac39f09a23fd72f44cfbb3d4d5a14d5
+Author:         zhenwei pi <pizhenwei@bytedance.com>
+Committer:      Michael S. Tsirkin <mst@redhat.com>
+Author Date:    Tue 23 Apr 2024 11:41:08 AM CST
+Committer Date: Tue 10 Sep 2024 02:51:47 PM CST
+
+virtio_balloon: introduce memory allocation stall counter
+
+Memory allocation stall counter represents the performance/latency of
+memory allocation, expose this counter to the host side by virtio
+balloon device via out-of-bound way.
+
+Acked-by: David Hildenbrand <david@redhat.com>
+Signed-off-by: zhenwei pi <pizhenwei@bytedance.com>
+Message-Id: <20240423034109.1552866-4-pizhenwei@bytedance.com>
+Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
+
+diff --git a/drivers/virtio/virtio_balloon.c b/drivers/virtio/virtio_balloon.c
+index b54392366142..6f108b2977de 100644
+--- a/drivers/virtio/virtio_balloon.c
++++ b/drivers/virtio/virtio_balloon.c
+@@ -355,6 +355,8 @@ static inline unsigned int update_balloon_vm_stats(struct virtio_balloon *vb)
+ {
+ 	unsigned long events[NR_VM_EVENT_ITEMS];
+ 	unsigned int idx = 0;
++	unsigned int zid;
++	unsigned long stall = 0;
+
+ 	all_vm_events(events);
+ 	update_stat(vb, idx++, VIRTIO_BALLOON_S_SWAP_IN,
+@@ -365,6 +367,12 @@ static inline unsigned int update_balloon_vm_stats(struct virtio_balloon *vb)
+ 	update_stat(vb, idx++, VIRTIO_BALLOON_S_MINFLT, events[PGFAULT]);
+ 	update_stat(vb, idx++, VIRTIO_BALLOON_S_OOM_KILL, events[OOM_KILL]);
+
++	/* sum all the stall events */
++	for (zid = 0; zid < MAX_NR_ZONES; zid++)
++		stall += events[ALLOCSTALL_NORMAL - ZONE_NORMAL + zid];
++
++	update_stat(vb, idx++, VIRTIO_BALLOON_S_ALLOC_STALL, stall);
++
+ #ifdef CONFIG_HUGETLB_PAGE
+ 	update_stat(vb, idx++, VIRTIO_BALLOON_S_HTLB_PGALLOC,
+ 		    events[HTLB_BUDDY_PGALLOC]);
+```
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

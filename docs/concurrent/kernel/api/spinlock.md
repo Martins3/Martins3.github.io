@@ -1,4 +1,4 @@
-# introduction to spinlock
+# spinlock
 
 1. 为了防止死锁，有什么编程规范吗 ?
 2. 如何防止锁导致的性能问题?

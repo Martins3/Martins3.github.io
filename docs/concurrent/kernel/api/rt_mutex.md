@@ -1,4 +1,4 @@
-# kernel/locking/rt_mutex.md
+# rt_mutex.md
 
 ## question
 

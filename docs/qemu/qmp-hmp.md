@@ -490,7 +490,6 @@ docs/qemu/qom.md:#19 qmp_x_exit_preconfig (errp=<optimized out>) at ../softmmu/v
 docs/qemu/seabios.md:#13 qmp_x_exit_preconfig (errp=<optimized out>) at ../softmmu/vl.c:2588
 ```
 
-
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

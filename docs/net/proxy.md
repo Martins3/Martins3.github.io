@@ -287,6 +287,9 @@ fake-ip 的问题
 198.18.0.18 -> google.com
 ```
 
+## 解决方案
+- https://github.com/wnlen/clash-for-linux
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

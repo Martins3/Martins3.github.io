@@ -2,7 +2,7 @@
 
 由 `docs/pub/sync-blog.py` 生成。
 
-跳过文件数: 412
+跳过文件数: 411
 
 ## 发布策略跳过: draft 目录
 
@@ -34,18 +34,23 @@
 - `docs/chatter/provocation/year-2.md`
 - `docs/chatter/provocation/year-3.md`
 - `docs/chatter/provocation/year-4.md`
-- `docs/concurrent/kernel/qa/qa-1.md`
+- `docs/concurrent/kernel/qa/qa-01.md`
+- `docs/concurrent/kernel/qa/qa-02.md`
+- `docs/concurrent/kernel/qa/qa-03.md`
+- `docs/concurrent/kernel/qa/qa-04.md`
+- `docs/concurrent/kernel/qa/qa-05.md`
+- `docs/concurrent/kernel/qa/qa-06.md`
+- `docs/concurrent/kernel/qa/qa-07.md`
+- `docs/concurrent/kernel/qa/qa-08.md`
+- `docs/concurrent/kernel/qa/qa-09.md`
 - `docs/concurrent/kernel/qa/qa-10.md`
-- `docs/concurrent/kernel/qa/qa-11.md`
 - `docs/concurrent/kernel/qa/qa-12.md`
-- `docs/concurrent/kernel/qa/qa-13.md`
 - `docs/concurrent/kernel/qa/qa-14.md`
 - `docs/concurrent/kernel/qa/qa-15.md`
 - `docs/concurrent/kernel/qa/qa-16.md`
 - `docs/concurrent/kernel/qa/qa-17.md`
 - `docs/concurrent/kernel/qa/qa-18.md`
 - `docs/concurrent/kernel/qa/qa-19.md`
-- `docs/concurrent/kernel/qa/qa-2.md`
 - `docs/concurrent/kernel/qa/qa-20.md`
 - `docs/concurrent/kernel/qa/qa-21.md`
 - `docs/concurrent/kernel/qa/qa-22.md`
@@ -55,13 +60,10 @@
 - `docs/concurrent/kernel/qa/qa-26.md`
 - `docs/concurrent/kernel/qa/qa-27.md`
 - `docs/concurrent/kernel/qa/qa-28.md`
-- `docs/concurrent/kernel/qa/qa-3.md`
-- `docs/concurrent/kernel/qa/qa-4.md`
-- `docs/concurrent/kernel/qa/qa-5.md`
-- `docs/concurrent/kernel/qa/qa-6.md`
-- `docs/concurrent/kernel/qa/qa-7.md`
-- `docs/concurrent/kernel/qa/qa-8.md`
-- `docs/concurrent/kernel/qa/qa-9.md`
+- `docs/concurrent/kernel/qa/qa-29.md`
+- `docs/concurrent/kernel/qa/qa-30.md`
+- `docs/concurrent/kernel/qa/qa-31.md`
+- `docs/concurrent/kernel/qa/qa-32.md`
 - `docs/concurrent/kernel/qa/summary.md`
 - `docs/concurrent/lkmm/ai-overview.md`
 - `docs/concurrent/lkmm/ai-read.md`
@@ -130,12 +132,11 @@
 - `docs/acpi/todo.md`
 - `docs/ai-tools/todo.md`
 - `docs/blog/anki-todo.md`
-- `docs/concurrent/kernel/todo-usage.md`
 - `docs/concurrent/kernel/todo.md`
 - `docs/concurrent/not-todo-now.md`
 - `docs/concurrent/perfbook/autoread/chapters/02-introduction/todo-linux-kernel.md`
 - `docs/concurrent/perfbook/autoread/chapters/02-introduction/todo-questions.md`
-- `docs/concurrent/rcu/todo-1.md`
+- `docs/concurrent/rcu/stall-2-todo.md`
 - `docs/concurrent/san/todo.md`
 - `docs/concurrent/todo.md`
 - `docs/hw/todo.md`
@@ -177,7 +178,6 @@
 - `docs/kernel/tty/todo.md`
 - `docs/kernel/tty/tty2-todo.md`
 - `docs/kernel/tty/tty3-todo.md`
-- `docs/kernel/tutorial/crash/pstore-todo.md`
 - `docs/kernel/tutorial/drgn/todo.sh`
 - `docs/kernel/tutorial/initramfs/todo.md`
 - `docs/kernel/vfio/int-todo.md`
@@ -203,7 +203,6 @@
 - `docs/net/rdma/todo.md`
 - `docs/qemu/aarch64-softmmu/todo.md`
 - `docs/qemu/block/todo.md`
-- `docs/qemu/memory/todo.md`
 - `docs/qemu/migration/todo.md`
 - `docs/qemu/qom/todo-2.md`
 - `docs/qemu/qom/todo.md`

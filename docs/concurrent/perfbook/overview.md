@@ -22,11 +22,6 @@ simple.
 - 形式化验证 kvm :  https://alastairreid.github.io/RelatedWork/papers/li:sandp:2021/
   - http://nieh.net/pubs/ieeesp2021_kvm.pdf
 
-## if so 我们的核心挑战是什么? (2023/10/16)
-
-rcu 和 memory barrier 的问题，都是两章，这是重点，其他的慢慢感悟吧。
-分别存在两章
-
 ## 工具上
 1. 反汇编
 2. 找到 cpp 的标准库
@@ -39,11 +34,8 @@ rcu 和 memory barrier 的问题，都是两章，这是重点，其他的慢慢
 
 ## 实际上 perfbook (2024/2/25) 真正不知道在搞什么的
 
-其实也就是花费了几天时间，感觉 rcu 和 memory barrier 也不是不可逾越的。
-
 - Partitioning and Synchronization Design
 - Data Ownership
-
 - Validation
 - Formal Verification
 

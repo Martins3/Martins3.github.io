@@ -1,4 +1,114 @@
-## api
+# RCU 基本使用
+## rcu stall 检测的位置
+<!-- 08e40a31-e217-4097-8e0d-aceae18402cc -->
+
+rcu_sched_clock_irq 在 timer interrupt 中被周期的调用
+
+- update_process_times
+  - rcu_sched_clock_irq
+
+实际上，这个问题比想象的还有复杂，我不相信 rcu stall 只是 timer interrupt 的简单的 kick 就可以了。
+
+## RCU 基本 API
+<!-- 4d83f9bb-eb63-4c3b-89b2-5f28843edbd5 -->
+
+具体看 Documentation/RCU/whatisRCU.rst 的 "8.  FULL LIST OF RCU APIs"
+
+- RCU list traversal
+- RCU pointer/list update
+- RCU
+- bh
+- sched
+- RCU: Initialization/cleanup/ordering
+- RCU: Quiescents states and control
+- RCU-sync primitive
+- RCU-Tasks
+- RCU-Tasks-Rude
+- RCU-Tasks-Trace
+- SRCU list traversal
+- SRCU
+- SRCU: Initialization/cleanup/ordering
+- All: lockdep-checked RCU utility APIs
+- All: Unchecked RCU-protected pointer access
+- All: Unchecked RCU-protected pointer access with dereferencing prohibited
+
+后面还有基本使用指南
+
+汗流浃背了没有!
+
+## 内核中在使用的 rcu 经典案例
+<!-- be38b6e5-0810-4ef6-91e1-3744ab553ee8 -->
+
+### task struct 的 rcu 保护
+
+访问都是需要的:
+- get_task_cred
+- get_mem_cgroup_from_mm
+- find_task_by_pid_ns
+
+
+```txt
+@[
+        put_task_struct_rcu_user+0
+        __schedule+720
+        schedule_idle+48
+        do_idle+196
+        cpu_startup_entry+64
+        secondary_start_kernel+224
+        __secondary_switched+192
+]: 81
+```
+
+然后释放的位置这里，很经典了:
+```txt
+__put_task_struct+5
+rcu_do_batch+486
+rcu_core+666
+__do_softirq+199
+__irq_exit_rcu+171
+sysvec_apic_timer_interrupt+118
+asm_sysvec_apic_timer_interrupt+26
+cpuidle_enter_state+204
+cpuidle_enter+45
+do_idle+452
+cpu_startup_entry+29
+start_secondary+277
+secondary_startup_64_no_verify+224
+```
+
+不过，可以看看
+cgroup_procs_write_start 通过 refcount 来
+也就是调用 get_task_struct
+
+### synchronize_rcu() 和 rcu_barrier() 的区别
+<!-- 8458ea8c-b957-49ab-8a24-7c9eb80d543b -->
+
+synchronize_rcu() 等“读者离开”
+rcu_barrier()     等“回调执行完”
+
+一次 call_rcu() 实际包含两个阶段：
+
+```txt
+call_rcu() 入队
+      │
+      ├── 等待 grace period
+      │
+      ▼
+callback 获得执行资格
+      │
+      ├── 等待调度/回调积压处理
+      │
+      ▼
+callback 真正执行完成
+```
+
+synchronize_rcu() 只对应前半段的 grace period；rcu_barrier() 关心最后的 callback 是否执行完成。
+
+区别的经典案例:
+
+```txt
+bf12691d846b sunrpc/auth_gss: Call rcu_barrier() on module unload.
+```
 
 ### rcu_read_lock
 
@@ -740,6 +850,176 @@ static inline void __list_add(struct list_head *new,
 	WRITE_ONCE(prev->next, new);
 }
 ```
+
+## rcu 基本使用
+## 一些边缘的操作方法
+
+一共三个模块，但是只是
+1. srcutree
+2. rcutree
+3. rcupdata
+
+```txt
+➜  /sys find . -name "*rcu*"
+# 所有的 slab 下面都有一个
+./kernel/slab/ext2_inode_cache/destroy_by_rcu
+
+/sys/kernel/debug/tracing/events/rcu
+/sys/kernel/debug/tracing/events/rcu/rcu_utilization
+/sys/kernel/debug/tracing/events/rcu/rcu_grace_period
+/sys/kernel/debug/tracing/events/rcu/rcu_future_grace_period
+/sys/kernel/debug/tracing/events/rcu/rcu_grace_period_init
+/sys/kernel/debug/tracing/events/rcu/rcu_exp_grace_period
+/sys/kernel/debug/tracing/events/rcu/rcu_exp_funnel_lock
+/sys/kernel/debug/tracing/events/rcu/rcu_nocb_wake
+/sys/kernel/debug/tracing/events/rcu/rcu_preempt_task
+/sys/kernel/debug/tracing/events/rcu/rcu_unlock_preempted_task
+/sys/kernel/debug/tracing/events/rcu/rcu_quiescent_state_report
+/sys/kernel/debug/tracing/events/rcu/rcu_fqs
+/sys/kernel/debug/tracing/events/rcu/rcu_stall_warning
+/sys/kernel/debug/tracing/events/rcu/rcu_dyntick
+/sys/kernel/debug/tracing/events/rcu/rcu_batch_start
+/sys/kernel/debug/tracing/events/rcu/rcu_segcb_stats
+/sys/kernel/debug/tracing/events/rcu/rcu_callback
+/sys/kernel/debug/tracing/events/rcu/rcu_kvfree_callback
+/sys/kernel/debug/tracing/events/rcu/rcu_invoke_callback
+/sys/kernel/debug/tracing/events/rcu/rcu_invoke_kvfree_callback
+/sys/kernel/debug/tracing/events/rcu/rcu_invoke_kfree_bulk_callback
+/sys/kernel/debug/tracing/events/rcu/rcu_batch_end
+/sys/kernel/debug/tracing/events/rcu/rcu_torture_read
+/sys/kernel/debug/tracing/events/rcu/rcu_barrier
+
+
+/sys/module/srcutree
+/sys/module/srcutree/parameters/srcu_max_nodelay
+/sys/module/srcutree/parameters/srcu_max_nodelay_phase
+/sys/module/srcutree/parameters/srcu_retry_check_delay
+
+/sys/module/rcupdate
+/sys/module/rcupdate/parameters/rcu_cpu_stall_cputime
+/sys/module/rcupdate/parameters/rcu_cpu_stall_ftrace_dump
+/sys/module/rcupdate/parameters/rcu_cpu_stall_suppress
+/sys/module/rcupdate/parameters/rcu_cpu_stall_suppress_at_boot
+/sys/module/rcupdate/parameters/rcu_cpu_stall_timeout
+/sys/module/rcupdate/parameters/rcu_exp_cpu_stall_timeout
+/sys/module/rcupdate/parameters/rcu_exp_stall_task_details
+/sys/module/rcupdate/parameters/rcu_expedited
+/sys/module/rcupdate/parameters/rcu_normal
+/sys/module/rcupdate/parameters/rcu_normal_after_boot
+/sys/module/rcupdate/parameters/rcu_task_collapse_lim
+/sys/module/rcupdate/parameters/rcu_task_contend_lim
+/sys/module/rcupdate/parameters/rcu_task_enqueue_lim
+/sys/module/rcupdate/parameters/rcu_task_ipi_delay
+/sys/module/rcupdate/parameters/rcu_task_stall_info
+/sys/module/rcupdate/parameters/rcu_task_stall_info_mult
+/sys/module/rcupdate/parameters/rcu_task_stall_timeout
+
+/sys/module/rcutree
+/sys/module/rcutree/parameters/rcu_min_cached_objs
+/sys/module/rcutree/parameters/rcu_divisor
+/sys/module/rcutree/parameters/rcu_kick_kthreads
+/sys/module/rcutree/parameters/rcu_resched_ns
+/sys/module/rcutree/parameters/rcu_delay_page_cache_fill_msec
+/sys/module/rcutree/parameters/rcu_fanout_leaf
+/sys/module/rcutree/parameters/sysrq_rcu
+/sys/module/rcutree/parameters/rcu_fanout_exact
+/sys/module/rcutree/parameters/rcu_nocb_gp_stride
+
+
+/sys/kernel/rcu_normal
+/sys/kernel/rcu_expedited
+/proc/sys/kernel/max_rcu_stall_to_panic
+/proc/sys/kernel/panic_on_rcu_stall
+```
+
+
+## hardirq 和 softirq 中可以使用 rcu 吗?
+<!-- c63fbd71-63f4-441f-9e0d-2667ae499900 -->
+基本规则
+
+- 可以调用 rcu_read_lock() / rcu_read_unlock()、rcu_dereference()。
+- 可以调用异步更新接口 call_rcu()。
+- 读侧临界区内不能睡眠或主动阻塞。
+- 不能在 IRQ 上下文调用 synchronize_rcu()、rcu_barrier() 等可能睡眠的同步等待接口。内核文档明确说明 synchronize_rcu()
+  不能用于任何 IRQ context：Documentation/RCU/checklist.rst:211。
+
+- call_rcu() 的回调通常在 softirq/BH-disabled 上下文执行，所以回调本身也不能睡眠：Documentation/RCU/checklist.rst:203。
+
+hardirq handler、softirq handler、NMI handler，以及关闭抢占/中断/BH 的代码段，
+本身也会被普通 RCU grace period 当作读侧临界区：kernel/rcu/tree.c 中 call_rcu 的注释。
+
+但代码中通常仍显式写出 rcu_read_lock()，这样：
+
+- 语义清晰；
+- lockdep 能检查 rcu_dereference()；
+- 被调用函数以后从其他上下文调用时仍然正确。
+
+Hardirq 实例
+
+s390 adapter interrupt 是非常直接的例子：
+
+drivers/s390/cio/airq.c:88
+
+```txt
+static irqreturn_t do_airq_interrupt(int irq, void *dummy)
+{
+        ...
+        rcu_read_lock();
+        hlist_for_each_entry_rcu(airq, head, list)
+                if (*airq->lsi_ptr != 0)
+                        airq->handler(airq, tpi_info);
+        rcu_read_unlock();
+
+        return IRQ_HANDLED;
+}
+```
+
+它通过 request_irq() 注册，确认是实际 IRQ handler：drivers/s390/cio/airq.c:106。
+
+更新侧用：
+
+hlist_del_rcu(&airq->list);
+synchronize_rcu();
+
+但 synchronize_rcu() 位于进程上下文的注销路径，不在 IRQ handler 中：drivers/s390/cio/airq.c:67。
+
+Softirq 实例
+
+Xen netfront 的 NAPI RX poll 在普通非 threaded NAPI 模式下由 NET_RX_SOFTIRQ 执行。它注册 xennet_poll() 为 NAPI poll 函
+数：drivers/net/xen-netfront.c:2241。
+
+调用路径：
+
+NET_RX_SOFTIRQ
+  -> net_rx_action()
+     -> napi_poll()
+        -> xennet_poll()
+           -> xennet_get_responses()
+
+xennet_get_responses() 中显式使用 RCU 读取 XDP program：
+
+drivers/net/xen-netfront.c
+
+```txt
+rcu_read_lock();
+xdp_prog = rcu_dereference(queue->xdp_prog);
+if (xdp_prog)
+        verdict = xennet_run_xdp(...);
+rcu_read_unlock();
+```
+
+xennet_poll() 调用它的位置在 drivers/net/xen-netfront.c:1263。
+
+rcu_read_lock_bh() 怎么选
+
+rcu_read_lock_bh() 等价于普通 rcu_read_lock() 加上 local_bh_disable()：include/linux/rcupdate.h:875。
+
+- 已经处于 softirq handler 中：通常直接使用 rcu_read_lock() 即可。
+- 进程上下文需要防止本 CPU softirq 打断，或者数据结构要求 RCU-BH 语义：使用 rcu_read_lock_bh()。
+- hardirq 中通常使用普通 rcu_read_lock()；历史代码可能使用 rcu_read_lock_sched()。从 v5.0 起这些都由统一的普通 RCU
+  grace period 覆盖。
+
+
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

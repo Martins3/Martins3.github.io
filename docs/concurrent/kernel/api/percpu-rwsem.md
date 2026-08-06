@@ -1,4 +1,6 @@
-# 为什么 percpu 还需要 rwsem 啊?
+# percpu rwsem
+
+既然都 percpu ，为什么还存在 rwsem ?
 
 Documentation/locking/percpu-rw-semaphore.rst
 

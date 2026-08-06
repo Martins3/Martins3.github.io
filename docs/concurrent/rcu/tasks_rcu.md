@@ -1,6 +1,6 @@
-## CONFIG_TASKS_RCU
+# task rcu
 
-function tracer 为什么会打开 CONFIG_TASKS_RUDE_RCU
+function tracer 会自动的打开  CONFIG_TASKS_RUDE_RCU
 
 ```txt
 config FUNCTION_TRACER
@@ -23,143 +23,13 @@ config FUNCTION_TRACER
 	  x86, but may have impact on other architectures).
 ```
 
-不能说是简单易懂，也算是真的牛逼
-
 https://docs.kernel.org/RCU/Design/Requirements/Requirements.html#tasks-rcu
 
-居然考虑到 trace 机制和 preemption 通知打开的时候，tracepoint 里面的 trampolines 的内存的释放。
+trace 机制和 preemption 通知打开的时候，tracepoint 里面的 trampolines 的内存的释放。
 
 所以，我们观察到，这一组函数的调用者都是 call_rcu_tasks() 之类的
 
-## task rcu 做什么的
-<!-- 9f7e1524-16f2-48ca-90f0-57f3bfd280b9 -->
-
-它也是一种 RCU，但它等待的不是普通 RCU 的 quiescent state，而是“task 级别”的执行点”。
-
-最常见的普通 RCU 里，你关心的是：
-
-- 某个 CPU 上是否还在 old reader 的 rcu_read_lock() 临界区里
-- 只要每个 CPU 都经历一次 quiescent state，比如用户态、idle、context switch，旧 reader 就算过去了
-
-但有些场景里，这个定义不够用。因为你想等的并不是“CPU 上的 RCU read-side critical section 结束”，而是：
-
-- 所有可能还在执行某段代码的 task
-- 都至少经过一次“我已经不在那段代码里了”的时刻
-
-也就是说，RCU Tasks 不太关心你有没有 rcu_read_lock()，而更关心：
-
-- 某个 task 现在是不是还可能卡在那段旧代码路径上
-- 只有等这个 task 发生一次合适的切换点，才能认为它已经“走过去了”
-
-所以它常用于这类需求：
-
-- 等待所有 task 都离开某段内核代码
-- trampoline / tracing / BPF / 静态调用 / 文本补丁这类，要确认没有 task 还在执行旧指令
-- 不能单靠普通 RCU reader 模型描述的场景
-
-为什么叫 Tasks
-
-因为 grace period 的完成条件，和 task 的状态转换强相关，而不是单纯 CPU 是否经历一次 quiescent state。
-
-普通 RCU 的 reader：
-
-- 常见是 rcu_read_lock() / rcu_read_unlock()
-- reader 很轻
-- grace period 主要按 CPU quiescent state 推进
-
-RCU Tasks：
-
-- 不依赖普通 rcu_read_lock()
-- 它默认把“task 正在内核里跑某些代码”本身当成可能的 reader
-- grace period 往往要等 task 发生 context switch、回到用户态、idle，或者别的能证明“它不在旧执行点了”的事件
-
-
-## codex 关于 rcu 变体的两个问题
-<!-- 54a59be0-2f28-4552-8733-faa6f23d1352 -->
-
-1. RCU Tasks、RCU Tasks Trace、RCU Tasks Rude 三者分别是什么
-2. 为什么 eBPF/tracing/text patching 更适合用它们而不是普通 RCU
-
-
-可以先按“读侧临界区是怎么定义的”来记：
-
-- RCU Tasks
-  读侧没有显式 rcu_read_lock()。
-  它把“一个 task 从当前执行点走到一次自愿调度、用户态、idle 等安全点之前”视为隐式读侧。代码注释在 kernel/rcu/tasks.h:1178 说得很直接：它假定读侧在 schedule()、
-  cond_resched_tasks_rcu_qs()、进 idle、回用户态时结束。
-- RCU Tasks Rude
-  也是无显式 reader 标记，但更强硬。它要覆盖“RCU 没在 watching 的地方”以及 preempt-disabled 区域，所以通过更粗暴的跨 CPU 同步推进 GP。文档在 Documentation/RCU/
-  Design/Requirements/Requirements.rst:2759 明说它会打扰实时负载和 idle CPU。
-- RCU Tasks Trace
-  这个有显式 reader：rcu_read_lock_trace() / rcu_read_unlock_trace()，见 kernel/rcu/tasks.h:2003。它是给 tracing 场景准备的，特点是 reader 可以睡眠，而且比 SRCU 更
-  想压低读侧开销。文档说明在 Documentation/RCU/Design/Requirements/Requirements.rst:2779。
-
-一句话压缩：
-
-- Tasks：等 task 走过一个“自然安全点”
-- Tasks Rude：强制逼所有 CPU/task 过安全点
-- Tasks Trace：给 tracing/sleepable reader 的显式 task-RCU
-
-为什么普通 RCU 不够
-
-普通 synchronize_rcu() 适合“数据结构 reader 在普通 RCU read-side critical section 里”的模型。
-但 eBPF、ftrace、text patching 这类问题常常不是“某个指针还被读着”，而是：
-
-- 可能还有 task 停在旧 trampoline / 旧指令流里
-- task 可能被 preempt 在 trampoline 中间
-- 有的路径发生在 RCU 不 watching 的时刻
-- 有的 reader 甚至允许睡眠
-
-这时你要等的是“没有 task 还在执行旧代码”，不是“没有 CPU 还在普通 RCU 读侧”。
-
-文档在 Documentation/RCU/Design/Requirements/Requirements.rst:2730 对 Tasks RCU 的动机讲得很准：trampoline 可能在真正执行很久之前就布置好了，普通 RCU 的 CPU 视角不
-够表达“task 还在那段旧代码里”。
-
-为什么 eBPF / tracing / text patching 分别会选它们
-
-- ftrace / function tracing / 某些文本 patching 会用 RCU Tasks 或 RCU Tasks Rude
-
-  原因是 task 可能被 preempt 在 ftrace trampoline 上。普通 RCU 看到一次 CPU quiescent state 也不能证明这个 task 已经离开 trampoline。ftrace 自己的注释在 kernel/
-  trace/ftrace.c:3210 已经把这两层都写出来了：
-    - synchronize_rcu_tasks_rude()：因为有些 tracer 运行点 “RCU is not watching”
-    - synchronize_rcu_tasks()：因为 preemptive kernel 下 task 可能卡在 trampoline 上，仅仅“某 CPU 调度过了”不够
-- BPF trampoline 会同时用 RCU Tasks Trace 和 RCU Tasks
-
-  kernel/bpf/trampoline.c:330 的注释很典型：
-    - sleepable BPF programs 用 rcu_read_lock_trace 保护，所以释放时先 call_rcu_tasks_trace()
-    - 普通 BPF programs 和 trampoline 剩余那几条 asm 指令，再用 call_rcu_tasks()
-
-  这说明 BPF 的需求是分层的：
-    - sleepable reader：普通 RCU 不行，得 Tasks Trace
-    - 非 sleepable 但可能停在 trampoline 指令里：得 Tasks
-- tracepoint / uprobe 这类 faultable tracing 点偏向 RCU Tasks Trace
-
-  include/linux/tracepoint.h:104 明确写了：
-    - 非 faultable tracepoint：call_rcu()
-    - faultable tracepoint：call_rcu_tasks_trace()
-
-  因为 faultable probe 可能睡眠，普通 RCU reader 模型不成立。
-  uprobes 也类似，释放路径里串了 call_rcu_tasks_trace()，见 kernel/events/uprobes.c:667。
-
-怎么选
-
-工程上可以这样判断：
-
-- 只是普通 RCU 指针发布/替换，reader 不睡眠，也不关心旧代码执行点：RCU
-- 要确认 task 已经离开旧 trampoline / 旧函数前导 / 旧 patch 点：RCU Tasks
-- 连 RCU-not-watching、preempt-disabled、idle 这些更“野”的执行点也要覆盖：RCU Tasks Rude
-- tracing reader 可能睡眠，或 faultable/sleepable probe 需要生命周期保护：RCU Tasks Trace
-
-一个容易记错的点
-
-RCU Tasks 和 RCU Tasks Rude 都没有显式 rcu_read_lock*() reader 标记。
-RCU Tasks Trace 则有，而且这是它和前两者最本质的 API 区别。这个对照表在 Documentation/RCU/whatisRCU.rst:1170 很清楚。
-
-如果你愿意，我下一条可以继续讲一个更细的问题：
-“为什么 Tasks Trace 不直接用 SRCU，而是单独搞一个 flavor？”
-
-## `ps -elf | grep rcu` 里这些线程都是什么
-<!-- 10957550-fe1a-45df-b9a5-5b853351edf4 -->
+## 为什么 task rcu 引入一堆的 thread 来支持
 
 这些线程可以粗分成四类:
 
@@ -192,9 +62,650 @@ RCU Tasks Trace 则有，而且这是它和前两者最本质的 API 区别。�
 - 带 `trace` 的，通常和 tracing/BPF 的 task-level reader 有关
 - `kworker/R-...` 通常不是某个子系统自己专门造的新主线程，而是某个 workqueue 的 rescuer
 
-一个容易混淆的点:
+## 详细的讲解一下 rcu tasks 如用于解决 trace 问题的
 
-`ps` 里看到“很多 rcu 线程”，并不意味着每个线程都在做同一件事。它们分别服务不同的 RCU flavor 和不同的推进策略。真正最常见、最基础的仍然是普通 Tree RCU 的 `rcu_preempt`；而 `rcu_exp_*`、`rcu_tasks_*` 更多是为了加急路径或特殊 reader 模型存在。
+可以把 **RCU Tasks** 理解成：
+
+> **普通 RCU 等“旧 reader 消失”；RCU Tasks 等“旧 task 不可能还停留在某段旧代码里”。**
+
+它主要不是为了保护普通数据结构，而是为了 **ftrace/BPF/kprobe 等动态修改代码、trampoline** 这种场景。
+Linux 文档也是从“如何安全释放旧 trampoline”这个问题引出 Tasks RCU 的。
+
+### 1. trampoline 引入了一个奇怪的问题
+
+考虑 ftrace/BPF 修改函数入口：
+
+```text
+foo:
+    ...
+    call trampoline_A
+    ...
+```
+
+现在我们想把 `trampoline_A` 替换成 `trampoline_B`：
+
+```text
+old:
+
+    code ---> trampoline_A
+
+new:
+
+    code ---> trampoline_B
+```
+
+修改入口本身可能很容易。
+
+真正麻烦的是：
+
+> **什么时候可以 free trampoline_A？**
+
+例如 CPU0：
+
+```text
+CPU0
+
+trampoline_A:
+    instruction 1
+    instruction 2
+    instruction 3
+         ^
+         |
+     此时被抢占
+```
+
+CPU0 上的 task `T` 被抢占了。
+
+注意它保存的 RIP 是：
+
+```text
+T->saved_rip = trampoline_A + offset
+```
+
+这时候 CPU1：
+
+```text
+CPU1:
+
+把入口修改成 trampoline_B
+
+free(trampoline_A);
+```
+
+那就炸了。
+
+等 CPU0 上的 `T` 再调度回来：
+
+```text
+resume T
+   |
+   v
+trampoline_A + offset
+```
+
+而这块代码已经被释放。
+
+### 3. 为什么 `synchronize_rcu()` 不够？
+
+你可能马上想到：
+
+```c
+patch_to_B();
+
+synchronize_rcu();
+
+free(trampoline_A);
+```
+
+问题是这里：
+
+```text
+trampoline_A
+```
+
+里面没有：
+
+```c
+rcu_read_lock();
+...
+rcu_read_unlock();
+```
+
+而且也不容易添加进去，因为无法保证 rcu_read_lock 和 rcu_read_unlock 是 trampoline 的第一条指令和最后一条指令
+
+所以普通 RCU 根本不知道：
+
+```text
+task T 正停在 trampoline_A 里面
+```
+
+### 4. Tasks RCU 的核心思路
+
+Tasks RCU 干脆换一个观察对象：
+
+```text
+普通 RCU：
+
+        看 RCU reader
+             ↓
+rcu_read_lock() ----- rcu_read_unlock()
+
+
+Tasks RCU：
+
+        看整个 task
+             ↓
+   一个 quiescent state
+             |
+             | 任意 kernel execution
+             |
+   下一个 quiescent state
+```
+
+也就是说，Tasks RCU 可以近似认为：
+
+> **一个 task 从上一个 Tasks-RCU quiescent state 到下一个 quiescent state 之间，都处于一个隐式的 read-side critical section。**
+
+因此它没有普通 Tasks RCU 的：
+
+```c
+rcu_read_lock_tasks();
+rcu_read_unlock_tasks();
+```
+
+这也是官方 API 表里面 RCU-Tasks 的 read-side critical section 写成 `N/A` 的原因。([Linux Kernel Archives][3])
+
+主要 API 就是：
+
+```c
+synchronize_rcu_tasks();
+
+call_rcu_tasks(...);
+
+rcu_barrier_tasks();
+```
+
+### 5. Tasks RCU 的 quiescent state 计算
+
+最重要的是 voluntary context switch
+
+也就是 task **主动走到 scheduler**：
+
+```text
+Task T
+
+kernel code
+    |
+    |
+    v
+schedule()
+    |
+    +-------- Tasks-RCU QS
+```
+
+另外，进入 userspace 也是一个很强的证据：
+
+```text
+kernel
+ |
+ | return to userspace
+ v
+userspace
+```
+
+因为如果 task 已经跑回 userspace：
+
+> 它显然已经不可能还停留在刚才那个 kernel trampoline 里面。
+
+Linux 因此将 voluntary scheduling、userspace execution 等作为 Tasks RCU 判断 task 已离开旧执行区间的重要依据。
+
+### 6. 但是被抢占不算
+
+这个非常重要。
+
+假设：
+
+```text
+Task A:
+
+        trampoline_old
+              |
+              | instruction
+              X  <---- preempt here
+```
+
+然后：
+
+```text
+CPU0:
+
+A
+|
+| preempt
+v
+B
+|
+C
+|
+D
+```
+
+虽然 CPU 已经 context switch 了很多次，但：
+
+```text
+A->RIP
+```
+
+仍然指向：
+
+```text
+trampoline_old
+```
+
+因此：
+
+> **involuntary context switch 不能证明这个 task 离开了旧代码。**
+
+Linux 文档对此明确强调：**involuntary context switch 不是 Tasks-RCU quiescent state**。原因正是 task 可能被抢占在 trampoline 中，恢复后还要继续执行它。
+
+这其实就是 Tasks RCU 最值得记住的一点。
+
+### 7. 所以 `synchronize_rcu_tasks()` 在等什么？
+
+可以先用一个高度简化的模型理解：
+
+调用：
+
+```c
+synchronize_rcu_tasks();
+```
+
+时，假设系统里有：
+
+```text
+T1
+T2
+T3
+T4
+```
+
+RCU Tasks 大致认为：
+
+```text
+              synchronize_rcu_tasks()
+                        |
+                        v
+
+T1 ------old execution------ QS
+T2 --old execution------------- QS
+T3 ------------ QS
+T4 ----old execution--------------------- QS
+                                           |
+                                           v
+                                      GP complete
+```
+
+必须确认调用开始时相关的 task 都到达了一个能够证明：
+
+```text
+我已经不可能还停留在之前那段 kernel code 中
+```
+
+的状态。
+
+然后：
+
+```c
+synchronize_rcu_tasks();
+```
+
+才能返回。
+
+### 8. 回到 trampoline 的例子
+
+现在整个事情就非常漂亮了：
+
+```c
+remove_trampoline(old);
+
+synchronize_rcu_tasks();
+
+free(old);
+```
+
+假设某个 task：
+
+```text
+                  remove old
+                      |
+                      v
+
+Task A:
+    trampoline_old
+         |
+         X preempt
+         .
+         .        synchronize_rcu_tasks()
+         .
+         v
+    resume
+         |
+         v
+    trampoline_old remaining code
+         |
+         v
+    normal kernel code
+         |
+         v
+      schedule()       <-- QS
+```
+
+Tasks RCU 不会因为：
+
+```text
+X preempt
+```
+
+就放过 A。
+
+它会一直等。
+
+直到 A 恢复：
+
+```text
+resume
+```
+
+把 old trampoline 跑完，随后最终到达安全点：
+
+```text
+schedule()
+```
+
+于是可以推导：
+
+```text
+A 不可能再执行 old trampoline
+```
+
+此时才能安全：
+
+```c
+free(old);
+```
+
+### 9. 为什么名字叫 **Tasks** RCU？
+
+因为 grace period 的 tracking 单位不同。
+
+普通 Tree RCU 很大程度是在追踪：
+
+```text
+CPU
++
+被抢占的显式 RCU reader
+```
+
+而 Tasks RCU 的思想是：
+
+```text
+for each relevant task:
+        你有没有证明自己已经越过旧执行状态？
+```
+
+所以可以粗略记：
+
+```text
+RCU
+    grace period over RCU readers
+
+Tasks RCU
+    grace period over tasks
+```
+
+这不是说：
+
+> “Tasks RCU 用来保护 `task_struct`。”
+
+这是非常容易产生的误解。
+
+**不是。**
+
+`task_struct` / task list 本身也大量使用普通 RCU：
+
+```c
+rcu_read_lock();
+for_each_process(p) {
+        ...
+}
+rcu_read_unlock();
+```
+
+这里的 `"Tasks"` 指的是 **grace-period 的观察对象是 task 的执行状态**。
+
+### 11. 再和普通 RCU 对照一下
+
+最推荐记住这个表：
+
+|                | 普通 RCU                   | Tasks RCU                   |
+| -------------- | ------------------------ | --------------------------- |
+| 主要保护对象         | data lifetime            | **code/execution lifetime** |
+| reader 边界      | `rcu_read_lock/unlock()` | **隐式**                      |
+| GP 等谁          | old RCU readers          | **old tasks execution**     |
+| preempt reader | 显式 reader 会被 RCU 跟踪      | **仅仅被 preempt 不代表 QS**      |
+| 典型用途           | 链表、hash、对象生命周期           | **ftrace/BPF/trampoline**   |
+| 等待 API         | `synchronize_rcu()`      | `synchronize_rcu_tasks()`   |
+
+当然，“data vs code”不是 API 的严格定义，但作为**心智模型非常准确**。
+
+### 12. 还有 Tasks Rude 和 Tasks Trace
+
+现在内核实际上有三兄弟：
+
+```text
+                    RCU Tasks
+                       |
+        +--------------+--------------+
+        |                             |
+   Tasks Rude                    Tasks Trace
+```
+
+##### RCU Tasks
+
+也经常称 classic Tasks RCU：
+
+```c
+synchronize_rcu_tasks();
+```
+
+特点：
+
+```text
+reader 没有显式标记
+依赖 task 到达安全执行状态
+```
+
+典型：
+
+```text
+trampoline/code lifetime
+```
+
+---
+
+##### RCU Tasks Rude
+
+```c
+synchronize_rcu_tasks_rude();
+```
+
+它解决更极端的问题：
+
+> 连普通 RCU 不观察的 CPU 状态，例如某些 preemption-disabled / idle 相关执行区域，我也想确认它过去了。
+
+它会比较“粗暴”地让各 CPU 执行工作，因此叫 **Rude**。
+
+官方文档描述它会迫使各 online CPU 调度 work，因此可能打扰 `nohz_full`/实时 workload。
+
+可以粗略理解：
+
+```text
+Tasks RCU:
+    “等 task 自己证明安全”
+
+Tasks Rude:
+    “我主动去各 CPU 敲门：
+     你们都给我证明一下现在安全”
+```
+
+##### RCU Tasks Trace
+
+API：
+
+```c
+rcu_read_lock_trace();
+
+...
+
+rcu_read_unlock_trace();
+
+synchronize_rcu_tasks_trace();
+```
+
+和 Classic Tasks RCU 不一样：
+
+```text
+Tasks Trace 有显式 reader
+```
+
+它是专门针对 tracing 场景设计的，能够覆盖更加复杂的 execution context。
+当前内核文档列出的 API 包括 `rcu_read_lock_trace()`、`rcu_read_unlock_trace()` 和 `synchronize_rcu_tasks_trace()`。
+
+### 13. 总结
+
+普通 RCU：
+
+```text
+我不知道 reader 在干什么。
+
+但只要：
+
+        rcu_read_lock()
+              |
+              |
+              v
+        rcu_read_unlock()
+
+全部过去，
+
+旧对象就没人用了。
+```
+
+Tasks RCU：
+
+```text
+我甚至无法给 reader 加 lock/unlock。
+
+所以我观察 task：
+
+        old code
+           |
+           |
+           v
+    voluntary schedule / userspace
+           |
+           v
+
+一旦所有旧 task 都跨过这种边界，
+
+它们就不可能还停在 old code 中。
+
+于是 old code 可以释放。
+```
+
+所以一句话概括：
+
+> **Tasks RCU 是一种用“task 的执行进展”来定义 grace period 的 RCU，核心目的是在没有显式 read-side marker 的情况下，确认所有旧执行流已经离开某段旧代码。**
+
+而它最关键的细节就是：
+
+```text
+task 被抢占
+    ≠
+Tasks-RCU quiescent state
+```
+
+因为被抢占的 task **完全可能保存着指向旧 trampoline 的 RIP**。这也是理解 Tasks RCU 的钥匙。([Linux Kernel Archives][4])
+
+## 补充说明
+
+### 如何区分是自动 schedule 还是 preempt 的?
+
+都会 context switch ，但是
+
+主动阻塞/主动调度
+```txt
+schedule()
+  -> __schedule_loop(SM_NONE)
+       -> __schedule(SM_NONE)
+```
+
+内核抢占
+```txt
+preempt_schedule()
+  -> preempt_schedule_common()
+       -> __schedule(SM_PREEMPT)
+```
+
+### 进入到用户态后，如何通知 QS
+
+场景 1：中断发生时任务本来就在用户态
+
+```
+  userspace ── 时间片到 / 被唤醒抢占
+      │ timer interrupt (interrupt lands in user mode)
+      v
+  irqentry_exit(): user_mode(regs) 为真
+      └─ irqentry_exit_to_user_mode()
+          └─ exit_to_user_mode_loop()      kernel/entry/common.c:40-47
+              └─ TIF_NEED_RESCHED → schedule()   ← 普通 schedule()，SM_NONE！
+```
+
+场景 2：中断发生时任务在内核态（比如 trampoline 里）
+
+```
+  kernel (trampoline 中间) ── 被抢占
+      │ timer interrupt (interrupt lands in kernel mode)
+      v
+  irqentry_exit(): user_mode(regs) 为假
+      └─ irqentry_exit_to_kernel_mode()
+          └─ raw_irqentry_exit_cond_resched()   kernel/entry/common.c:132-145
+              └─ preempt_schedule_irq()  →  __schedule(SM_PREEMPT)
+```
+
+可以继续切换，然后执行其他程序，加入 A 被打断了，最后切换到用户态，就可以通知 GP
+
+```
+  synchronize_rcu_tasks() 调用者
+     │ wait_for_completion(&rs->completion)        睡觉…
+     │
+     ├─ call_rcu_tasks(&rs->head, wakeme_after_rcu) ← 排进回调队列，唤醒 GP kthread
+     │
+     ▼
+  GP kthread: 建 holdout 列表（快照每个任务 nvcsw）
+     │
+     ▼
+  A 跑完内核代码，进入用户态
+     │ 路径1/2/3 之一 ──► current->rcu_tasks_holdout = false   （只写一个位）
+     ▼
+  GP kthread 睡醒，check_holdout_task() 看到标记 ──► 摘除 A
+     │
+     ▼ holdout 列表空
+  GP 完成 ──► rcu_tasks_invoke_cbs() ──► wakeme_after_rcu() ──► complete()
+     │
+     ▼
+  synchronize_rcu_tasks() 返回
+```
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

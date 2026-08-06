@@ -1,4 +1,4 @@
-## 阅读下 Documentation/atomic_t.txt
+# Documentation/atomic_t.txt
 
 atomic_fetch_add 和 atomic_add_return : 前者返回之前的数值，后者返回被更新的数值
 

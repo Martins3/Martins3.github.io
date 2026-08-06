@@ -220,6 +220,34 @@ qemu_file_get_error() 检查。
                 - save_buffer
                   - qemu_put_buffer
 
+## 经典调用路线
+```txt
+@[
+        qio_channel_socket_writev+0
+        qio_channel_writev_full_all+205
+        qio_channel_writev_all+22
+        qemu_fflush.part.0+150
+        qemu_put_buffer.part.0+169
+        virtio_gpu_save+263
+        vmstate_save_state_v+1046
+        vmstate_save+226
+        qemu_savevm_state_complete_precopy_non_iterable+153
+        qemu_savevm_state_complete_precopy+39
+        migration_thread+3088
+        qemu_thread_start+161
+        start_thread+682
+        __clone3+44
+]: 125
+@[
+        qio_channel_socket_writev+0
+        qio_channel_writev_full_all+205
+        multifd_send_thread+574
+        qemu_thread_start+161
+        start_thread+682
+        __clone3+44
+]: 16415
+```
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

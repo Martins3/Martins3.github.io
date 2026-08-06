@@ -1,4 +1,4 @@
-## rcu_read_lock_bh
+# rcu_read_lock_bh
 <!-- 9c0d67bf-550b-4688-b910-0641ef6858d5 -->
 
 参考 Documentation/RCU/whatisRCU.rst ，基本 API 为:
@@ -335,7 +335,6 @@ Design/Data-Structures/Data-Structures.rst
 [   24.164284]  #5: ffff800081558858 (rcu_read_lock_bh){....}-{1:3}, at: __dev_queue_xmit+0x6c/0x1340
 ```
 softirq 结束的时候 gp 才可以结束吗?
-
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

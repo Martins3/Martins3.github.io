@@ -1,7 +1,6 @@
 # Linux 内核 Litmus Tests 介绍
 Documentation/litmus-tests/
 
-
 ## 先把基本的理论搞清楚了
 - https://diy.inria.fr/doc/index.html
 

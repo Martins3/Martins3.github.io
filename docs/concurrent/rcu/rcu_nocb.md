@@ -1,3 +1,11 @@
+# rcu nocb
+
+本来以为只是调整一下 rcu callback 的执行位置，
+很遗憾，这东西比想象的要复杂的多
+
+```c
+#include "tree_nocb.h"   // rcu isolation
+```
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

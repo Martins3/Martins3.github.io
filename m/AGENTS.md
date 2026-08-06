@@ -1,63 +1,7 @@
 # AGENTS.md - Linux 内核模块开发项目
 
-本文档为参与本项目的 AI 编程助手提供必要的信息。
-
-## 项目结构
-
-```
-├── main.c              # 主模块入口和 sysfs 接口
-├── internal.h          # 核心宏和测试框架定义
-├── config.h            # 功能配置（启用/禁用测试）
-├── Makefile            # 内核模块构建设置
-├── config.sh           # 从 config.h 自动生成对象列表
-├── mod.sh              # 模块加载/测试辅助脚本
-│
-├── arch/               # 架构特定代码
-│   ├── x86_64/         # x86_64: APIC、MSR、TSX、SMM、异常处理
-│   └── aarch64/        # ARM64: sysreg、pmmir
-│
-├── mm/                 # 内存管理测试
-│   ├── folio.c         # Folio API
-│   ├── gup.c           # get_user_pages
-│   ├── vmalloc.c       # vmalloc API
-│   ├── slub.c          # SLUB 分配器
-│   └── ...
-│
-├── concurrent/         # 并发原语
-│   ├── rcupdate.c      # RCU 机制
-│   ├── wait.c          # 等待队列
-│   ├── mutex.c         # 互斥锁
-│   ├── spinlock.c      # 自旋锁
-│   ├── memory_model.c  # 内存屏障/模型
-│   └── ...
-│
-├── sched/              # 调度测试
-│   ├── preempt.c       # 抢占
-│   ├── pid.c           # PID 管理
-│   └── watchdog.c      # 看门狗定时器
-│
-├── simplefs/           # 自定义文件系统实现
-│   ├── simplefs_*.c    # 文件系统核心（inode、file、dir、super）
-│   └── user_mkfs.c     # 用户空间 mkfs 工具
-│
-├── virtio/             # VirtIO 设备驱动实验
-│
-├── gpu/                # GPU 驱动实验
-│
-├── peach/              # Intel vmx 实验
-│
-├── tracer/             # Ftrace/跟踪工具
-│
-├── user/               # 用户空间辅助库
-│   ├── lib.c           # 内存映射工具
-│   └── sysfs.c         # Sysfs 交互辅助
-│
-├── kernel-patch/       # 用于跟踪的内核补丁
-│
-└── scripts/            # 实用脚本（RAID、LVM）
-```
-
-## 构建系统 : 在物理机中执行
+严禁在物理机中 insmod ！
+## 在物理机中构建
 
 ### 内核源码配置
 
@@ -107,8 +51,10 @@ make rs
 2. 添加条目到 `internal.h`、`main.c` 和 `config.h`
 3. 可选创建用户空间测试程序
 
-## 模块加载和测试 : 在虚拟机中执行
+## 在虚拟机中测试
 如何启动虚拟机和使用虚拟机，检查本项目中的 collei/AGENTS.md
+
+可以使用 yyfs-fs 虚拟机测试:
 
 不要手动的加载，而是使用脚本
 ```bash
@@ -168,10 +114,7 @@ dmesg: martins3: version magic '6.19.0-...' should be '6.18.8-100.fc42.x86_64'
 
 原因：默认使用 ~/data/kernel/default（6.19.0）编译，但运行系统是 6.18.8
 
-修复：使用 NORMAL=1 使用系统内核头文件编译
-NORMAL=1 make
-
-如果运行在虚拟机，中
+vn/build 重新构建内核，kill 掉虚拟机，重新拉起虚拟机测试
 
 ### Sysfs 未出现
 

@@ -37,19 +37,6 @@ __must_hold(mas->tree->ma_lock)
   - https://mp.weixin.qq.com/s/xm6WIB69VlcZAiZRUdkljA
 - Documentation/filesystems/directory-locking.rst
 
-## destroy_rcu_head 做啥的
-
-scsi_end_request
-
-```txt
-	/*
-	 * Calling rcu_barrier() is not necessary here because the
-	 * SCSI error handler guarantees that the function called by
-	 * call_rcu() has been called before scsi_end_request() is
-	 * called.
-	 */
-	destroy_rcu_head(&cmd->rcu);
-```
 
 ## 是否存在一个 lock counter ，当 lock conflits 的增加一个计数器
 
@@ -69,9 +56,6 @@ onload_stackdump lots | egrep "(lock_)|(sleep)"
 
 ## rcu 的 api 用起来
 https://lwn.net/Articles/777036/
-
-## rcu 应该测试下 list 的使用
-
 
 ## hlist 和 rcuref 需要简单看看
 文件已经建立好了

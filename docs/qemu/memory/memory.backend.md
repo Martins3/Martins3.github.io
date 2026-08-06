@@ -1,7 +1,6 @@
 # qemu memory backend
 
-
-源码中 ./backends 
+源码中 ./backends
 
 -  hostmem-epc.c
 -  hostmem-file.c
@@ -36,15 +35,15 @@ memory backend: mem0
 执行流程:
 
 启动的时候:
-- main 
-  - qemu_init 
-    - qemu_create_late_backends 
-      - object_option_foreach_add 
-        - user_creatable_add_qapi 
-          - user_creatable_add_type 
-            - user_creatable_complete 
-              - host_memory_backend_memory_complete 
-                - memfd_backend_memory_alloc 
+- main
+  - qemu_init
+    - qemu_create_late_backends
+      - object_option_foreach_add
+        - user_creatable_add_qapi
+          - user_creatable_add_type
+            - user_creatable_complete
+              - host_memory_backend_memory_complete
+                - memfd_backend_memory_alloc
 
 只会调用一次，而且热插不会调用，看来是通过 maxmem 一次性就分配好了。
 

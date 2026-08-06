@@ -1,54 +1,11 @@
-# 内存拷贝相关
+# ram
+
+## iterable 的设备: SaveVMHandlers
+
+主要关联
 - migration/ram.c
 - migration/postcopy-ram.c
 - migration/block-dirty-bitmap.c
-
-- 和 memory region 的 hook memory listener 的关系
-
-- `migrate_send_rp_recv_bitmap`
-    - `migrate_send_rp_message` : 希望获取到一个 BITMAP
-    - `ramblock_recv_bitmap_send` :
-
-
-## [ ] zero page
-- 为什么会出现？
-    - xbzrle 和 postcopy 如何处理的
-
-## compress
-- `do_data_compress`
-
-- 使用一个额外的线程来进行的
-
-## [ ] softmmu/cpu-throttle.c
-降低 Guest 的执行速度，从而让 memory dirty 的速度下降。
-
-## `userfault_fd` 我们可以复用这个机制吗?
-
-`migration_clear_memory_region_dirty_bitmap_range`
-
-
-```c
-static RAMBlockNotifier ram_mig_ram_notifier = {
-    .ram_block_resized = ram_mig_ram_block_resized,
-};
-```
-
-## SaveVMHandlers
-<!-- 6d1dd292-6e3a-4a6b-9b02-8f5af734795e -->
-
-SaveVMHandlers 只有复杂项目才需要打开，
-对于 vmstate 之类的东西， 是不需要的，例如跟踪一下 vmstate_save_state_v :
-
-所谓的复杂项目，就是数据量很大，需要多次迭代。
-
-一共三个用户使用:
-hw/vfio/migration.c
-migration/ram.c
-migration/block-dirty-bitmap.c
-
-
-commit 7429aebe1cff ("vfio/migration: Remove VFIO migration protocol v1")
-中把 SaveVMHandlers 给删掉了。
 
 ```c
 static SaveVMHandlers savevm_slirp_state = {
@@ -123,243 +80,55 @@ static const SaveVMHandlers savevm_vfio_handlers = {
         - qemu_loadvm_section_start_full
           - net_slirp_state_load
 
-似乎通过 section 知道的:
-```c
-typedef struct SaveStateEntry {
-    QTAILQ_ENTRY(SaveStateEntry) entry;
-    char idstr[256];
-    uint32_t instance_id;
-    int alias_id;
-    int version_id;
-    /* version id read from the stream */
-    int load_version_id;
-    int section_id;
-    /* section id read from the stream */
-    int load_section_id;
-    const SaveVMHandlers *ops;
-    const VMStateDescription *vmsd;
-    void *opaque;
-    CompatEntry *compat;
-    int is_ram;
-} SaveStateEntry;
-```
-
-```c
-static const VMStateDescription vmstate_xhci_intr = {
-    .name = "xhci-intr",
-    .version_id = 1,
-    .fields = (const VMStateField[]) {
-        /* registers */
-        VMSTATE_UINT32(iman,          XHCIInterrupter),
-        VMSTATE_UINT32(imod,          XHCIInterrupter),
-        VMSTATE_UINT32(erstsz,        XHCIInterrupter),
-        VMSTATE_UINT32(erstba_low,    XHCIInterrupter),
-        VMSTATE_UINT32(erstba_high,   XHCIInterrupter),
-        VMSTATE_UINT32(erdp_low,      XHCIInterrupter),
-        VMSTATE_UINT32(erdp_high,     XHCIInterrupter),
-
-```
-```txt
-vmstate_save_state_loop xhci-intr/iman[1]
-vmstate_save_state_loop xhci-intr/imod[1]
-vmstate_save_state_loop xhci-intr/erstsz[1]
-vmstate_save_state_loop xhci-intr/erstba_low[1]
-vmstate_save_state_loop xhci-intr/erstba_high[1]
-vmstate_save_state_loop xhci-intr/erdp_low[1]
-vmstate_save_state_loop xhci-intr/erdp_high[1]
-vmstate_save_state_loop xhci-intr/msix_used[1]
-vmstate_save_state_loop xhci-intr/er_pcs[1]
-vmstate_save_state_loop xhci-intr/er_start[1]
-vmstate_save_state_loop xhci-intr/er_size[1]
-vmstate_save_state_loop xhci-intr/er_ep_idx[1]
-```
-
-真的是难以相信啊:
-```txt
-[martins3:configuration_pre_save:310] virt-10.1
-```
-
-```c
-static const VMStateDescription vmstate_configuration = {
-    .name = "configuration",
-    .version_id = 1,
-    .pre_load = configuration_pre_load,
-    .post_load = configuration_post_load,
-    .pre_save = configuration_pre_save,
-    .post_save = configuration_post_save,
-    .fields = (const VMStateField[]) {
-        VMSTATE_UINT32(len, SaveState),
-        VMSTATE_VBUFFER_ALLOC_UINT32(name, SaveState, 0, NULL, len),
-        VMSTATE_END_OF_LIST()
-    },
-    .subsections = (const VMStateDescription * const []) {
-        &vmstate_target_page_bits,
-        &vmstate_capabilites,
-        &vmstate_uuid,
-        NULL
-    }
-};
-```
-
-
-首先
-- __clone3
-  - start_thread
-    - qemu_thread_start
-      - migration_thread
-        - qemu_savevm_state_header
-          - vmstate_save_state
-            - vmstate_save_state_v
-
-- __clone3
-  - start_thread
-    - qemu_thread_start
-      - migration_thread
-        - migration_iteration_run
-          - qemu_savevm_state_iterate (那些注册了 SaveVMHandlers 的先完成这些 iterate 操作)
-            - ram_save_iterate
-	    - dirty_bitmap_save_iterate
-          - migration_completion
-            - migration_completion_precopy
-              - qemu_savevm_state_complete_precopy
-                - qemu_savevm_state_complete_precopy_non_iterable
-                  - vmstate_save
-                    - vmstate_save_state
-                      - vmstate_save_state_v
-                        - virtio_gpu_save (调用到具体 hook 中)
-
-在 qemu_savevm_state_complete_precopy_non_iterable 中
-```c
-    QTAILQ_FOREACH(se, &savevm_state.handlers, entry) {
-        if (se->vmsd && se->vmsd->early_setup) {
-            /* Already saved during qemu_savevm_state_setup(). */
-            continue;
-        }
-        printf(" %s\n",  se->idstr);
-```
-
-:sort u 之后，结果为:
-```txt
-0000:00:00.0/I440FX
-0000:00:01.0/PIIX3
-0000:00:01.1/ide
-0000:00:01.2/uhci
-0000:00:01.3/piix4_pm
-0000:00:02.0/0:1:0/scsi-disk
-0000:00:02.0/virtio-scsi
-0000:00:03.0/virtio-blk
-0000:00:04.0/virtio-blk
-0000:00:05.0/virtio-net
-0000:00:06.0/virtio-net
-0000:00:07.0/virtio-balloon
-0000:00:08.0/ipmi-interface-pci-kcs
-0000:00:0a.0/virtio-gpu
-0000:00:0b.0/virtio-console
-0000:00:0e.0/pcie-root-port
-0000:00:0f.0/virtio-input
-0000:00:10.0/2/usb-kbd
-0000:00:10.0/3/usb-ptr
-0000:00:10.0/xhci
-PCIBUS
-PCIHost
-acpi_build
-apic
-cpu
-cpu_common
-dirty-bitmap
-dma
-fdc
-fw_cfg
-globalstate
-i2c_bus
-i8254
-i8259
-ioapic
-ipmi-bmc-sim
-kvm-tpr-opt
-kvmclock
-mc146818rtc
-pckbd
-pcspk
-port92
-ps2kbd
-ps2mouse
-ram
-serial
-slirp
-smbus-eeprom
-timer
-vmmouse
-```
-可以看到这里是有 ram 的
-
-所有的东西都是保存这个全局变量中:
-```c
-static SaveState savevm_state = {
-    .handlers = QTAILQ_HEAD_INITIALIZER(savevm_state.handlers),
-    .handler_pri_head = { [0 ... MIG_PRI_MAX] = NULL },
-    .global_section_id = 0,
-};
-```
-
-例如这里的东西，
-
-- main
-  - qemu_init
-    - qmp_x_exit_preconfig
-      - qmp_x_exit_preconfig
-        - qemu_init_board
-          - machine_run_board_init
-            - pc_init1
-              - x86_cpus_init
-                - x86_cpu_new
-                  - qdev_realize
-                    - object_property_set_bool
-                      - object_property_set_qobject
-                        - object_property_set
-                          - property_set_bool
-                            - device_set_realized
-                              - x86_cpu_realizefn
-                                - cpu_exec_realizefn
-                                  - cpu_vmstate_register
-                                    - vmstate_register
-                                      - vmstate_register_with_alias_id
-                                        - savevm_state_handler_insert
-
-ram 的注册方法:
-```txt
-register_savevm_live("ram", 0, 4, &savevm_ram_handlers, &ram_state);
-```
-而一般在 vmstate_register_with_alias_id 可以看到，是没有注册 ops 的
-
-从这个的条件的理解，那么 SaveVMHandlers 如何被修改?
-
-不过，现在，我们知道这两个结构体是做什么的了:
-
-```c
-typedef struct SaveState {
-  // ...
-};
-
-
-struct SaveStateEntry {
-  // ...
-};
-```
-
-
-- __clone3
-  - start_thread
-    - qemu_thread_start
-      - migration_thread
-        - migration_iteration_run
-
-## [ ] RAMState 是如何创建的
+## RAMState : ram_state
 <!-- f59bf708-4be9-4985-acc9-dc068ed17494 -->
 
-(2026-04-12 感觉这里的代码可以优化一下，不过记住，RamState 是一个全局概念
-只有一个)
+### RAMState 的作用是什么?
 
+配合 source 的 migration thread 使用， 基本上所有的资源都是放到这里的
+
+### 观察诡异的中间状态
+
+在 migration/ram.c 中，虽然 ram_state 是全局静态变量（static RAMState *ram_state），但有不少函数把 RAMState *rs 作为参数传入，内部调用处再传
+ram_state。这样的函数有：
+
+迁移主流程相关：
+- save_xbzrle_page() — ram.c:627
+- migration_bitmap_clear_dirty() — ram.c:829
+- ramblock_sync_dirty_bitmap() — ram.c:1006
+- migration_update_rates() — ram.c:1043
+- migration_trigger_throttle() — ram.c:1106
+- migration_bitmap_sync() — ram.c:1134
+- save_zero_page() — ram.c:1213
+- ram_save_page() — ram.c:1303
+- find_dirty_block() — ram.c:1364
+- get_queued_page() — ram.c:1843
+- migration_page_queue_free() — ram.c:1907
+- ram_save_target_page() — ram.c:2045
+- ram_page_hint_update() — ram.c:2130
+- ram_save_host_page() — ram.c:2216
+- ram_page_hint_valid() — ram.c:2278
+- ram_page_hint_collect() — ram.c:2288
+- ram_find_and_save_block() — ram.c:2315
+
+postcopy / 故障页相关：
+- postcopy_has_request() — ram.c:445
+- unqueue_page() — ram.c:1418
+- poll_fault_page() — ram.c:1463（以及 ram.c:1794 的 stub 版本）
+- ram_save_release_protection() — ram.c:1495（以及 ram.c:1802 的 stub 版本）
+
+状态管理相关：
+- colo_bitmap_find_dirty() — ram.c:806
+- ram_state_reset() — ram.c:2488
+- migration_bitmap_clear_discarded_pages() — ram.c:2854
+- ram_init_bitmaps() — ram.c:2867
+- ram_state_resume_prepare() — ram.c:2918
+- ram_dirty_bitmap_sync_all() — ram.c:4518
+
+这些函数签名里都接收 RAMState *rs，调用处形如 RAMState *rs = ram_state;（如 ram.c:585、1707、1937、4561 等）再传下去。也就是说目前 ram_state
+全局变量和参数传递是混用的——函数内部用 rs，但在回调入口（如 ram_save_setup、ram_save_iterate）里从全局 ram_state 取值。
+
+#### 为什么没人推动这个变量彻底移除
 目前看几乎所有的位置实际上都是在引用 ram.c 中定义的这个变量:
 ```c
 static RAMState *ram_state;
@@ -375,7 +144,8 @@ void ram_mig_init(void)
 ```
 这个代码极其逆天，ram.c 中一会直接使用参数，一会直接引用 ram_state 。
 
-看上去，可以移除更多才可以:
+- QEMU 的惯例是 cleanup 搭功能改动的便车，像这个 commit 一样"改到哪儿顺手清到哪儿"，review 成本低、理由充分；独立的大规模 janitorial patch 反 而难推进。
+
 ```diff
 History:        #0
 Commit:         6a39ba7cab67da05b91e215142ce5781e77e5d9f
@@ -393,87 +163,9 @@ migration_bitmap_sync_precopy and remove "rs" parameter.
 The migration_bitmap_sync_precopy will be exported in the next commit.
 ```
 
+## pss
 
-## RAMState 中的 bitmap_mutex
-<!-- 5e8bf3c3-e187-41ea-85b2-2d5b15c8b83e -->
-
-1. struct RAMState 定义在 migration/ram.c 中，管理热迁移的状态
-2. 持有两个 PageSearchStatus 分别管理
-```c
-/* State of RAM for migration */
-struct RAMState {
-    /*
-     * PageSearchStatus structures for the channels when send pages.
-     * Protected by the bitmap_mutex.
-     */
-    PageSearchStatus pss[RAM_CHANNEL_MAX];
-
-    // ...
-
-    /* number of dirty bits in the bitmap */
-    uint64_t migration_dirty_pages;
-    /*
-     * Protects:
-     * - dirty/clear bitmap
-     * - migration_dirty_pages
-     * - pss structures
-     */
-    QemuMutex bitmap_mutex;
-
-    // ...
-```
-
-bitmap_mutex 一共使用的地方:
-- migration_bitmap_sync : 从 kvm 哪里同步，需要持有锁
-- ram_save_queue_pages : 又是 postcopy ，好烦
-- ram_save_host_page : 只有 postcopy 模式才需要
-- qemu_guest_free_page_hint
-- ram_save_iterate
-- ram_save_complete
-
-- thread_start
-  - start_thread
-    - qemu_thread_start
-      - migration_thread
-        - migration_iteration_run
-          - qemu_savevm_state_iterate
-            - ram_save_iterate
-
-这个分析结果和我想象的完全不一样，这相当于 dirty bitmap 的获取和使用也是 mutex 互斥的
-这里锁让我豁然开朗啊，原来是给
-```c
-static int ram_save_iterate(QEMUFile *f, void *opaque)
-{
-    // ...
-    /*
-     * We'll take this lock a little bit long, but it's okay for two reasons.
-     * Firstly, the only possible other thread to take it is who calls
-     * qemu_guest_free_page_hint(), which should be rare; secondly, see
-     * MAX_WAIT (if curious, further see commit 4508bd9ed8053ce) below, which
-     * guarantees that we'll at least released it in a regular basis.
-     */
-```
-qemu_guest_free_page_hint() 是 balloon 来优化掉那些不需要热迁移的 page 的。
-
-
-第二个问题，为什么需要 pss 来跟踪遍历到哪里了，以及为什么需要 bitmap_mutex 来保护?
-
-### migration_bitmap_sync 中的 rcu 是做什么的?
-```c
-    WITH_QEMU_LOCK_GUARD(&rs->bitmap_mutex) {
-        WITH_RCU_READ_LOCK_GUARD() {
-            RAMBLOCK_FOREACH_NOT_IGNORED(block) {
-                ramblock_sync_dirty_bitmap(rs, block);
-            }
-            stat64_set(&mig_stats.dirty_bytes_last_sync, ram_bytes_remaining());
-        }
-    }
-```
-
-## pss 细节问题
-如何理解 find_dirty_block 中的这一段代码?
-
-哇，绕了一个好大的圈子
+find_dirty_block 中这段代码的作用:
 ```c
     if (pss->complete_round && pss->block == rs->last_seen_block &&
         pss->page >= rs->last_page) {
@@ -484,8 +176,8 @@ qemu_guest_free_page_hint() 是 balloon 来优化掉那些不需要热迁移的 
         return PAGE_ALL_CLEAN;
     }
 ```
+就是为了看回绕，然后理解问题。
 
-## pss
 
 ```txt
 History:        #0
@@ -586,7 +278,35 @@ struct PageSearchStatus {
 test_and_clear_bit(page, rb->bmap)
 ```
 
-## kimi 的分析路线
+find_next_bit 本身很简单，复杂的是这个结构体其实是一个可重入的、跨多次调用存活的迭代游标，它同时承载了五六个不同功能的状态。逐个字段看就清楚了：
+
+1. 迁移是迭代式的，搜索不能一次扫完（block、page）
+
+ram_find_and_save_block()（migration/ram.c:2315）每被调用一次只找一个 host page 发出去就返回，外层 ram_save_iterate 循环要在每次调用之间检查带宽、pending 大小、是
+否该进入 stop-and-copy。所以"扫到哪了"这个游标必须跨调用持久化，不能是局部变量。
+
+2. 收敛判定需要知道"扫完一整轮"（complete_round，配合 rs->last_seen_block/last_page）
+
+find_dirty_block() 在所有 RAMBlock 上环形扫描，绕回链表头时置 complete_round（migration/ram.c:1392-1394），然后在 ram.c:1369 比较 pss->page >= rs->last_page 判断
+是否已回到本轮起点——这决定"内存全扫干净了、可以停机收尾"。ram.c:2327-2332 的注释还警告：last_seen_block 为 NULL 会让循环永转。这是迭代式迁移收敛逻辑的核心，省不掉
+。
+
+3. host 大页 vs guest 4K 页的粒度错配（host_page_sending/start/end）
+
+脏页位图按 TARGET_PAGE_SIZE（4K）记录，但 RAM 后端可能是 2M/1G 大页。只要一个 host 页内任一 4K 脏了，就整个 host 页一起发（减少 header 开销、保证目标端也能落到大
+页上）。发一个 host 页要跨多次 bitmap 查找，所以 pss_find_next_dirty() 里要把 find_next_bit 的上限钳到 host_page_end（ram.c:741-743）。这三个字段就是"正在批量发送
+一个 host 页"的中途状态。
+
+4. 线上协议压缩（last_sent_block）
+
+save_page_header()（ram.c:522-539）里，连续发送同一 RAMBlock 的页时用 RAM_SAVE_FLAG_CONTINUE 省略块名——纯粹的带宽优化。
+
+5. 多通道复用（pss_channel）
+
+RAMState 里有 pss[RAM_CHANNEL_MAX] 数组（ram.c:373）：precopy 主通道、postcopy 紧急页通道（ram.c:1980-1992，绑定 postcopy_qemufile_src）各自持有一份游标。同一条
+ram_save_host_page 代码路径靠 pss->pss_channel 写到正确的流上。另外 postcopy 的优先队列（get_queued_page，ram.c:1843）会直接改写 pss 游标跳到被请求的页。
+
+## ram_save_host_page 是关键的调度点
 
 整体调用链
 
@@ -598,7 +318,7 @@ test_and_clear_bit(page, rb->bmap)
                 └─ ram_find_and_save_block        ram.c:2315
                     ├─ get_queued_page            ram.c:1843  (postcopy 优先队列)
                     ├─ find_dirty_block           ram.c:1364  (正常扫位图)
-                    └─ ram_save_host_page         ram.c:2216  ← 你问的这里
+                    └─ ram_save_host_page         ram.c:2216
                         └─ ram_save_target_page   ram.c:2045
                             ├─ rdma_control_save_page
                             ├─ save_zero_page     ram.c:1213
@@ -675,6 +395,574 @@ ram_save_complete（ram.c:3365）做最后一轮 bitmap sync 并发送剩余所�
 ram_save_host_page_urgent 响应目的端的缺页请求。
 
 需要我再展开哪一段（比如 multifd 的页分发、postcopy 请求路径、或 bitmap sync 与 KVM dirty ring 的细节）可以说。
+
+## RAMBlock
+
+### 基本调用路径
+- RAMBlock::host : 一般来说 HVA，也就是 mmap 的返回值
+
+创建一个 RAM 的过程大致如此:
+1. 创建一个 MemoryRegion / RamBlock，并且关联起来
+2. mmap 出来一个 host virtual memory 当做 guest 的内存
+
+- memory_region_init_ram : 创建出来 RAM, 但是 memory_region_set_readonly 不就让这里没有作用了
+    - memory_region_init_ram_nomigrate
+      - memory_region_init_ram_flags_nomigrate
+        - qemu_ram_alloc
+          - ram_block_add
+            - dirty_memory_extend : 初始化 ram_list.dirty_memory , 使用的位置在 cpu_physical_memory_test_and_clear_dirty 和  cpu_physical_memory_snapshot_and_clear_dirty
+            - phys_mem_alloc (qemu_anon_ram_alloc)
+              - qemu_ram_mmap
+                - mmap : 可见 RAMBlock 在初始化的时候会在 host virtual address space 中 map 出来一个空间
+
+RAMBlock 结构体分析:
+1. RAMBlock::host : host 的虚拟地址空间，存储 mmap 的返回值
+2. RAMBlock::offset : 将所有的 RAMBlock 连续的放到一起，每一个 RAMBlock 的 offset，第一个加入的 offset 为 0
+    - 通过 RAMBlock::offset 可以放一个 RAM 内的 page 知道在 RAMList::dirty_memory 对应的 bit 位
+
+看一个在综合路径中的使用:
+- get_page_addr_code : 从 guest 虚拟地址的 pc 获取 guest 物理地址的 pc
+  - tlb_hit : 进行虚实转换获取 hva
+  - get_page_addr_code_hostp
+    - qemu_ram_addr_from_host_nofail : 通过 hva 获取 gpa
+      - qemu_ram_addr_from_host
+        - qemu_ram_block_from_host
+
+## RAMBlock 中和热迁移相关的 bitmap 的功能
+<!-- 5a5134f7-ff0e-4e52-bb1b-dcc20727d011 -->
+
+```c
+struct RAMBlock {
+    struct rcu_head rcu;
+    struct MemoryRegion *mr;
+    uint8_t *host;
+    uint8_t *colo_cache; /* For colo, VM's ram cache */
+    ram_addr_t offset;
+    ram_addr_t used_length;
+    ram_addr_t max_length;
+    void (*resized)(const char*, uint64_t length, void *host);
+    uint32_t flags;
+    /* Protected by the BQL.  */
+    char idstr[256];
+    /* RCU-enabled, writes protected by the ramlist lock */
+    QLIST_ENTRY(RAMBlock) next;
+    QLIST_HEAD(, RAMBlockNotifier) ramblock_notifiers;
+    Error *cpr_blocker;
+    int fd;
+    uint64_t fd_offset;
+    int guest_memfd;
+    RamBlockAttributes *attributes;
+    size_t page_size;
+    /* dirty bitmap used during migration */
+    unsigned long *bmap;
+
+    /*
+     * Below fields are only used by mapped-ram migration
+     */
+    /* bitmap of pages present in the migration file */
+    unsigned long *file_bmap;
+    /*
+     * offset in the file pages belonging to this ramblock are saved,
+     * used only during migration to a file.
+     */
+    off_t bitmap_offset;
+    uint64_t pages_offset;
+
+    /* Bitmap of already received pages.  Only used on destination side. */
+    unsigned long *receivedmap;
+
+    /*
+     * bitmap to track already cleared dirty bitmap.  When the bit is
+     * set, it means the corresponding memory chunk needs a log-clear.
+     * Set this up to non-NULL to enable the capability to postpone
+     * and split clearing of dirty bitmap on the remote node (e.g.,
+     * KVM).  The bitmap will be set only when doing global sync.
+     *
+     * It is only used during src side of ram migration, and it is
+     * protected by the global ram_state.bitmap_mutex.
+     *
+     * NOTE: this bitmap is different comparing to the other bitmaps
+     * in that one bit can represent multiple guest pages (which is
+     * decided by the `clear_bmap_shift' variable below).  On
+     * destination side, this should always be NULL, and the variable
+     * `clear_bmap_shift' is meaningless.
+     */
+    unsigned long *clear_bmap;
+    uint8_t clear_bmap_shift;
+
+    /*
+     * RAM block length that corresponds to the used_length on the migration
+     * source (after RAM block sizes were synchronized). Especially, after
+     * starting to run the guest, used_length and postcopy_length can differ.
+     * Used to register/unregister uffd handlers and as the size of the received
+     * bitmap. Receiving any page beyond this length will bail out, as it
+     * could not have been valid on the source.
+     */
+    ram_addr_t postcopy_length;
+};
+```
+
+| 字段                 | 端     | 迁移阶段        | 粒度  | 作用             |
+| -------------------- | ------ | --------------- | ----- | -------------    |
+| `bmap`               | source | pre-copy / sync | 页    | 当前 dirty 页    |
+| `clear_bmap`         | source | global sync     | chunk | 延迟清 dirty log |
+| `clear_bmap_shift`   | source | global sync     | N/A   | chunk 大小       |
+| `dirty_restore_bmap` | source | 多轮迁移        | 页    |                  |
+| `receivedmap`        | dest   | postcopy        | 页    | 已接收页         |
+| `postcopy_length`    | dest   | postcopy        | 区间  | 合法 RAM 上限    |
+
+- bmap 这是最核心的概念, 表示 当前 RAM block 中哪些 guest 页是 dirty 的
+- dirty_restore_bmap : 之前迁移轮次中被“跳过”的 dirty 页在 热度感知迁移（hot/cold page）和 内存换出（memory swap / ballooning）
+也就是 “这页之前 dirty 过，但我们故意没传” 后续轮次可参考该信息进行策略决策(参考 ds ，这是真的吗?)
+
+只有开启热迁移的时候，才会有 bmap 的创建:
+- thread_start
+  - start_thread
+    - qemu_thread_start
+      - migration_thread
+        - qemu_savevm_state_setup
+          - ram_save_setup
+            - ram_init_all
+              - ram_init_bitmaps
+                - ram_list_init_bitmaps
+
+### RamBlock::clear_bmap 的作用
+<!-- c4cad885-7a21-432a-80fa-131990c98f1e -->
+
+(这里没完全看懂，physmem 中的函数都有点难懂哦)
+
+virtio-balloon 不是借用的 clear_bmap 的，clear_bmap 的意义
+对应的位置需要告诉 kvm 等，dirty bitmap 位置需要清理掉。
+一些优化就是，拆分成多次来清理，clear_bmap 的一个 bit 记录一个 chunk 也不是一个 page 。
+
+clear_bmap 就是 QEMU 用来记录**“哪些内存块已经获取了脏页，但还没在内核中执行清除操作”**的账本。
+
+访问 clear_bmap 的经典的两个位置大致如此
+
+- __clone3
+  - start_thread
+    - qemu_thread_start
+      - migration_thread
+        - migration_iteration_run
+          - qemu_savevm_state_iterate
+            - ram_save_iterate
+              - ram_find_and_save_block
+                - ram_save_host_page
+                  - migration_bitmap_clear_dirty
+                    - migration_clear_memory_region_dirty_bitmap
+                      - clear_bmap_test_and_clear
+		      - memory_region_clear_dirty_bitmap
+			- kvm_log_clear : 告诉 kvm 来清理
+
+- __clone3
+  - start_thread
+    - qemu_thread_start
+      - migration_thread
+        - migration_iteration_run
+          - qemu_savevm_state_pending_exact
+            - ram_state_pending_exact
+              - migration_bitmap_sync_precopy
+                - migration_bitmap_sync
+                  - ramblock_sync_dirty_bitmap
+                    - physical_memory_sync_dirty_bitmap
+		      - memory_region_clear_dirty_bitmap (低速)
+                      - clear_bmap_set (默认操作，记录在 clear_bmap 中)
+
+## RAMList 和 ram_addr_t
+<!-- 05b8d166-0c6c-4a28-8ff1-c546e86f6fef -->
+
+简而言之，将所有的 RamBlock 连接到一起，构建 ram address space
+
+所有的 page 的 dirty 都是记录在 `RAMList::DirtyMemoryBlocks::blocks` 中
+给出一个 ram 中的一个 page，需要找到在 blocks 数组中的下标，于是发明了 ram addr
+```c
+typedef struct {
+    struct rcu_head rcu;
+    unsigned long *blocks[];
+} DirtyMemoryBlocks;
+
+typedef struct RAMList {
+    QemuMutex mutex;
+    RAMBlock *mru_block;
+    /* RCU-enabled, writes protected by the ramlist lock. */
+    QLIST_HEAD(, RAMBlock) blocks;
+    DirtyMemoryBlocks *dirty_memory[DIRTY_MEMORY_NUM];
+    uint32_t version;
+    QLIST_HEAD(, RAMBlockNotifier) ramblock_notifiers;
+} RAMList;
+```
+QEMU 使用 RAMBlock 来描述 ram，MemoryRegion 的类型是 ram，那么就会关联一个 RAMBlock
+
+将所有的 RAMBlock 连续的连到一起，形成 RAMList ，一个 RAMBlock 在其中偏移量记录在 `RAMBlock::offset`, 显然，第一个 offset 为 0
+
+find_ram_offset 中 RAM 的对齐至少为 0x40000
+```c
+        candidate = ROUND_UP(candidate, BITS_PER_LONG << TARGET_PAGE_BITS);
+```
+
+在 ram_list 中，RAMBlock 按照大小排序的。
+```txt
+pc.ram: offset=0 size=180000000
+pc.bios: offset=180000000 size=40000
+pc.rom: offset=180040000 size=20000
+vga.vram: offset=180080000 size=800000
+/rom@etc/acpi/tables: offset=180900000 size=200000
+virtio-vga.rom: offset=180880000 size=10000
+e1000.rom: offset=1808c0000 size=40000
+/rom@etc/table-loader: offset=180b00000 size=10000
+/rom@etc/acpi/rsdp: offset=180b40000 size=1000
+```
+任何一个 page 的 ram_addr = offset in RAM + `RAMBlock::offset`
+
+
+## migration 中 dirty tracking 的三个 bitmap
+<!-- 7af2190d-6c72-4a60-a3a3-b21b69273d01 -->
+
+由于层次划分问题，dirty bitmap 出现在三个地方，在热迁移的过程中会进行搬移
+
+一共有三个种类:
+1. KVMSlot::dirty_bmap : 显然这个是暂存的做用，也就是从 kvm 中获取到了 dirty bitmap
+之后存储在这里，之后
+```c
+typedef struct KVMSlot
+{
+    /* Dirty bitmap cache for the slot */
+    unsigned long *dirty_bmap;
+    unsigned long dirty_bmap_size;
+
+    /* Cache of the offset in ram address space */
+    ram_addr_t ram_start_offset;
+```
+
+2. `ram_list.dirty_memory[DIRTY_MEMORY_MIGRATION]`
+KVMSlot 会存放其 bitmap 在 ram address space 的偏移（ram_start_offset）；
+RAMBlock 存放的 bitmap，clear_bmap 都是基于 ram address space 的地址。
+
+```c
+typedef struct {
+    struct rcu_head rcu;
+    unsigned long *blocks[];
+} DirtyMemoryBlocks;
+
+typedef struct RAMList {
+    QemuMutex mutex;
+    RAMBlock *mru_block;
+    /* RCU-enabled, writes protected by the ramlist lock. */
+    QLIST_HEAD(, RAMBlock) blocks;
+    DirtyMemoryBlocks *dirty_memory[DIRTY_MEMORY_NUM];
+    unsigned int num_dirty_blocks;
+    uint32_t version;
+    QLIST_HEAD(, RAMBlockNotifier) ramblock_notifiers;
+} RAMList;
+```
+
+3. RAMBlock::bitmap 和 RAMBlock::clear_bmap :  RAMBlock->host + RAMBlock->offset 计算得到内存脏页的 HVA 的 bitmap 设置为 0。
+
+迁移过程:
+1. 从 KVMSlot 到 ram_list 的同步:
+- __clone3
+  - start_thread
+    - qemu_thread_start
+      - migration_thread
+        - migration_iteration_run
+          - qemu_savevm_state_pending_exact
+            - ram_state_pending_exact
+              - migration_bitmap_sync_precopy
+                - migration_bitmap_sync
+                  - memory_global_dirty_log_sync
+                    - memory_region_sync_dirty_bitmap
+                      - kvm_log_sync
+                        - kvm_physical_sync_dirty_bitmap
+                          - kvm_slot_sync_dirty_pages
+                            - physical_memory_set_dirty_lebitmap
+
+- coroutine_trampoline
+  - blk_aio_read_entry
+    - blk_aio_complete
+      - blk_aio_complete
+        - virtio_blk_rw_complete
+          - virtio_blk_req_complete
+            - virtqueue_push
+              - virtqueue_fill
+                - virtqueue_unmap_sg
+                  - dma_memory_unmap
+                    - address_space_unmap
+                      - invalidate_and_set_dirty
+                        - physical_memory_set_dirty_range
+
+- main
+  - qemu_default_main
+    - qemu_main_loop
+      - main_loop_wait
+        - os_host_main_loop_wait
+          - glib_pollfds_poll
+            - g_main_context_dispatch
+              - g_main_context_dispatch_unlocked
+                - aio_ctx_dispatch
+                  - aio_dispatch
+                    - aio_dispatch_ready_handlers
+                      - aio_dispatch_handler
+                        - virtio_queue_notify_vq
+                          - virtio_blk_handle_vq
+                            - virtio_queue_set_notification
+                              - virtio_queue_set_notification
+                                - virtio_queue_split_set_notification
+                                  - vring_set_avail_event
+                                    - vring_set_avail_event
+                                      - address_space_cache_invalidate
+                                        - invalidate_and_set_dirty
+                                          - physical_memory_set_dirty_range
+
+2. 从 ram_list 到 RamBlock:bmap 的同步
+
+- __clone3
+  - start_thread
+    - qemu_thread_start
+      - migration_thread
+        - migration_iteration_run
+          - qemu_savevm_state_pending_exact
+            - ram_state_pending_exact
+              - migration_bitmap_sync_precopy
+                - migration_bitmap_sync
+                  - ramblock_sync_dirty_bitmap
+                    - physical_memory_sync_dirty_bitmap
+
+其实合并起来调用，也就是这个结果:
+
+```c
+void migration_bitmap_sync_precopy(bool last_stage)
+{
+    Error *local_err = NULL;
+    assert(ram_state);
+
+    /*
+     * The current notifier usage is just an optimization to migration, so we
+     * don't stop the normal migration process in the error case.
+     */
+    if (precopy_notify(PRECOPY_NOTIFY_BEFORE_BITMAP_SYNC, &local_err)) { // 这里会有 virtio-balloon 的 hook
+        error_report_err(local_err);
+        local_err = NULL;
+    }
+
+    migration_bitmap_sync(ram_state, last_stage);
+
+    if (precopy_notify(PRECOPY_NOTIFY_AFTER_BITMAP_SYNC, &local_err)) {
+        error_report_err(local_err);
+    }
+}
+```
+
+- migration_bitmap_sync
+  - memory_global_dirty_log_sync
+    - memory_region_sync_dirty_bitmap (从各个后端中获取，kvm 只是后端之一，而且不要忘记了来自设备的 dirty)
+      - kvm_log_sync
+        - kvm_physical_sync_dirty_bitmap
+          - kvm_slot_sync_dirty_pages
+            - physical_memory_set_dirty_lebitmap
+  - ramblock_sync_dirty_bitmap (同步到 bmap 中)
+    - physical_memory_sync_dirty_bitmap
+
+这里可以看到一共存在两次同步，
+1. 从各个设备来源同步到 ram_list 中
+2. ram_list 同步到 RamBlock::bmap 中，为什么会使用 ram_list 作为过渡
+
+DirtyMemoryBlocks::blocks
+生命周期短
+语义是：
+“自上次同步以来，新产生的 dirty 页”
+同步后：
+通常会被清空 / 复位
+
+RAMBlock::bmap
+生命周期贯穿迁移
+语义是：
+“仍待处理的工作集合”
+只有在：
+页面成功发送 / 确认
+或策略决定丢弃
+才会清 bit
+
+(再问一次 codex ，结果如下:)
+
+ram_list.dirty_memory[DIRTY_MEMORY_MIGRATION] 这套 DirtyMemoryBlocks 是全局的、按 guest physical address 编址的“实时脏页日志”。CPU/
+KVM 把某页弄脏时，先记到这里；它按固定大小分块，主要是为了支持 RCU 下扩容和并发访问
+
+RAMBlock::bmap 则是 migration 层自己的、按单个 RAMBlock 内偏移编址的“待发送页面集合”。它只在 migration 期间用。
+迁移开始时它会先被置成全 1，表示首轮需要发送整个 RAMBlock，而不是只发“最近新脏”的页，见 migration/ram.c:2842。
+
+两者关系是“前者喂给后者”：
+
+- migration 做一次同步时，会把 dirty_memory[DIRTY_MEMORY_MIGRATION] 里的脏位搬到 rb->bmap
+- 同时把全局 dirty log 清掉
+- rb->bmap 保留这些页，直到真正发送后再清
+
+所以核心区别是：
+- DirtyMemoryBlocks：底层实时脏页来源，记录“自上次 clear 以来又脏了哪些页”
+- RAMBlock::bmap：迁移工作队列，记录“这个 RAMBlock 还有哪些页需要发/重发”
+
+因此 bmap 里可以有很多“并不是刚刚新脏”的页，比如首轮全量迁移时所有页都在 bmap 里；而 dirty_memory 更像增量日志。
+
+## RAMBlock::clear_bmap
+<!-- 03c98e59-18f9-4d53-8933-9310edcde8c7 -->
+
+> [!NOTE]
+> 参考神奇海螺的意见，有待验证
+
+- rb->bmap：QEMU 迁移层看到的“这些 guest page 需要发送”。
+- rb->clear_bmap：这些页对应的底层 dirty bitmap/KVM dirty log，“还需要在真正发送前清掉一次”。
+
+代码里的定义注释已经写得很直接：当 bit 被置位时，表示对应的内存 chunk 需要做一次 log-clear，而且这个 clear 被推迟执行。include/system/ramblock.h:67
+
+工作流程大致是：
+1. 做一次全局 dirty log sync 时，QEMU 把底层脏页同步进 rb->bmap。
+2. 这时如果启用了 clear_bmap，并不立刻调用 memory_region_clear_dirty_bitmap()，而是先在 clear_bmap 里做标记。migration/ram.c:982
+3. 等到后面真正要发送某个 page/chunk 前，才通过 migration_clear_memory_region_dirty_bitmap() 检查 clear_bmap，并把对应 chunk 的底层 dirty log 清掉。 migration/ram.c:749
+4. 清完以后，如果这块内存又被 guest 改写，下一轮 dirty sync 就能重新捕获到。
+
+这样设计的核心目的，是把“同步脏页”和“清底层 dirty log”解耦，避免清得太早或太粗。发送路径里的注释说得很关键：
+必须在发送这个 chunk 之前清，因为只有这样，后续对这块内存的新写入才能在下一次 sync 中被重新记录；太晚清就会漏脏页。migration/ram.c:842
+
+还有两个细节：
+
+- clear_bmap 的粒度比 bmap 粗，一个 bit 可以代表多个 guest page，这由 clear_bmap_shift 决定。include/system/ramblock.h:74
+- 它本质上是“待清除 chunk”的集合，所以 clear_bmap_test_and_clear() 是 test+clear，一次 chunk 只做一次真正的底层 clear。include/system/ramblock.h:215
+
+## 当发送完成之后，QEMU 会将这些内存释放掉
+
+- thread_start
+  - start_thread
+    - qemu_thread_start
+      - migration_thread
+        - qemu_savevm_state_setup
+          - ram_save_setup
+            - qemu_fflush
+              - qemu_fflush
+                - qemu_iovec_release_ram
+                  - find_next_bit
+
+
+
+## RamBlock 和 MemoryRegion 的关系
+两个核心结构各自管什么
+
+MemoryRegion — 逻辑视图，描述 guest 物理地址空间里"一段东西"，是 QOM 对象，组织成树（container/subregions/alias/priority)。include/system/memory.h:560:
+
+```c
+  struct MemoryRegion {
+      bool romd_mode;
+      bool ram;
+      bool readonly;   /* For RAM regions */
+      bool rom_device;
+      ...
+      RAMBlock *ram_block;
+      const MemoryRegionOps *ops;   /* IO 设备用 */
+      MemoryRegion *container;
+      MemoryRegion *alias;          /* alias 用 */
+      Int128 size;
+      hwaddr addr;
+      QTAILQ_HEAD(, MemoryRegion) subregions;
+      ...
+  };
+```
+
+RAMBlock — host 侧实际分配/映射的那块内存，以及迁移所需的全部元数据。include/system/ramblock.h:25:
+
+```c
+  struct RAMBlock {
+      struct MemoryRegion *mr;      /* 反向指回唯一的 MemoryRegion */
+      uint8_t *host;                /* host 虚拟地址 */
+      ram_addr_t offset;            /* 在全局 ram_addr_t 空间中的偏移(dirty bitmap 索引用) */
+      ram_addr_t used_length;
+      ram_addr_t max_length;
+      uint32_t flags;               /* RAM_SHARED/RAM_PMEM/RAM_READONLY/... */
+      int fd;                       /* memfd / 文件后端 */
+      ...
+      unsigned long *bmap;          /* 迁移 dirty bitmap */
+  };
+```
+
+一句话：MemoryRegion 回答"这段地址是什么、在地址空间哪里"，RAMBlock 回答"这段 RAM 的 host 内存在哪、迁移/dirty log 怎么跟"。
+
+MemoryRegion 与 RAMBlock 是不是一一对应
+
+从 RAMBlock 方向看：是。 每个 RAMBlock 分配时绑定唯一的 mr，见 qemu_ram_alloc_from_fd(system/physmem.c:2355）和 qemu_ram_alloc_internal(system/physmem.c:2528）里
+的 new_block->mr = mr;。
+
+从 MemoryRegion 方向看：只有带后备存储的 region 才有 ram_block。 绑定动作统一在 memory_region_set_ram_block(system/memory.c:1583):
+
+```c
+  mr->ram_block = rb;
+```
+
+各类 init 函数的行为（system/memory.c):
+
+┌─────────────────────────────┬─────┬─────────────────────────┬──────────────────┬────────────────────────────┐
+│ init 函数                   │ ram │ ops                     │ ram_block        │ 说明                       │
+├─────────────────────────────┼─────┼─────────────────────────┼──────────────────┼────────────────────────────┤
+│ init_io (:1574)             │ 否  │ 有                      │ 无               │ 纯 MMIO，没有 RAMBlock     │
+├─────────────────────────────┼─────┼─────────────────────────┼──────────────────┼────────────────────────────┤
+│ `init_ram*(:1596 等）       │ 是  │ 无                      │ 有               │ 普通 RAM                   │
+├─────────────────────────────┼─────┼─────────────────────────┼──────────────────┼────────────────────────────┤
+│ init_rom (:3670)            │ 是  │ 无                      │ 有               │ = init_ram + readonly=true │
+├─────────────────────────────┼─────┼─────────────────────────┼──────────────────┼────────────────────────────┤
+│ init_rom_device (:3683)     │ 是  │ 有                      │ 有               │ RAM + ops 混合（flash 用） │
+├─────────────────────────────┼─────┼─────────────────────────┼──────────────────┼────────────────────────────┤
+│ init_ram_device_ptr (:1691) │ 是  │ 有（ram_device_mem_ops) │ 有               │ 设备内存直接映射           │
+├─────────────────────────────┼─────┼─────────────────────────┼──────────────────┼────────────────────────────┤
+│ init_alias (:1701)          │ 否  │ 无                      │ 共享原 region 的 │ 只设 alias/alias_offset    │
+├─────────────────────────────┼─────┼─────────────────────────┼──────────────────┼────────────────────────────┤
+│ container（默认）           │ 否  │ 无                      │ 无               │ 只挂子 region              │
+└─────────────────────────────┴─────┴─────────────────────────┴──────────────────┴────────────────────────────┘
+
+所以准确说法是：RAMBlock → MemoryRegion 是多对一（严格说每个 RAMBlock 属于且只属于一个 region)；有后备存储的 MemoryRegion → RAMBlock 是一对一；而
+IO/alias/container 这类 region 根本没有自己的 RAMBlock。 alias 经由 mr->alias 链最终解析到原 region 的 ram_block（例如 memory_region_get_fd, memory.c:2332 里的
+while (mr->alias) mr = mr->alias;)。
+
+"ROM" 在 QEMU 里其实是三个东西
+
+1. 只读 RAM:memory_region_init_rom(memory.c:3670）就是普通 RAM region 置 readonly=true，底层照样有 RAMBlock，只是 guest 写入被忽略。
+   memory_region_set_readonly(:2294）还可以动态切换。
+2. ROM device(romd 模式）：用于 flash。memory_region_init_rom_device(:3683) = init_io + 额外分配一个 RAMBlock + rom_device=true。运行时通过
+   memory_region_rom_device_set_romd(:2314）切换：
+    • romd_mode=true：读直接走 RAMBlock（快路径，可当 RAM 用），写走 ops（擦写 flash);
+    • romd_mode=false：读写都走 ops。
+      判断函数是 memory_region_is_romd(memory.h:1475)= rom_device && romd_mode,memory access 热路径（如 physmem.c:3668）会把它当 RAM 处理。
+3. loader 的 struct Rom(hw/core/loader.c:968)：完全另一层——固件镜像（bios、option rom、-kernel/-initrd）的加载列表，负责把文件内容读进 guest 内存、reset 时重新拷
+   贝。和 MemoryRegion 没有直接对应关系，只是它加载的目标通常是上面第 1 类 rom region。
+
+FlatView / FlatRange / MemoryRegionSection：拍平之后的视角
+
+MemoryRegion 是树，但 KVM、TCG、DMA 需要的是"线性地址 → 哪段内存"，于是有拍平层：
+
+• render_memory_region(system/memory.c:596）递归遍历树，按 priority/遮挡关系展开成 FlatView——一个按地址排序的 FlatRange 数组（memory.c:222，注释原文："Range of
+  memory in the global map. Addresses are absolute."),FlatRange 里有 mr、offset_in_region、绝对地址 addr、romd_mode、readonly、dirty_log_mask。
+• MemoryRegionSection(include/system/memory.h:97）是 FlatRange 对外暴露的只读形式，字段是 mr + offset_within_region + offset_within_address_space + size。它是两个
+  关键路径的基本单位：
+    • MemoryListener 回调（region_add/region_del/log_start...)——KVM 的 KVMMemoryListener 就是按 section 建/删 memslot、注册 dirty log;
+    • address_space_translate / dispatch 热路径——返回的正是 section。
+
+注意：一个 MemoryRegion 可以对应多个 FlatRange/Section（被高优先级 region 挖洞、alias 截取、子 region 覆盖都会切分），所以 section 和 RAMBlock 也不是一一对应；只
+有整段可见的 RAM region 才会恰好产生一个覆盖整个 RAMBlock 的 section。
+
+整体关系图
+
+```
+  AddressSpace ──root──> MemoryRegion 树 (container/subregion/alias/priority)
+                              │ ram=true 的叶子
+                              │ mr->ram_block ══════> RAMBlock ──> host 内存 (+迁移元数据)
+                              │                       rb->mr ══════> 指回唯一 MR
+                              ▼ render_memory_region()
+                         FlatView = FlatRange[] (拍平、排序、按 priority 裁剪)
+                              │
+                              ▼ region_add/del (MemoryListener, 如 KVM)
+                         MemoryRegionSection → KVM memslot / TCG dispatch / DMA translate
+```
+
+• rom 三类含义：readonly RAM region / rom_device 的 romd_mode(flash) / loader.c 的 Rom（固件加载列表）。
+• 迁移只认 RAMBlock(dirty bitmap、idstr 注册都在 RAMBlock 层）;MMIO region 不参与迁移。
+• 想看运行时实际布局，QMP/HMP 的 info mtree -f（对应 mtree_info, memory.c:3623）打印的就是 FlatView，可以直接对照这些结构。
+
+
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

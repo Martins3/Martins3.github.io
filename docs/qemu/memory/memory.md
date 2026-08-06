@@ -696,6 +696,17 @@ cpu_address_space_init : 初始化 `CPUAddressSpace *CPUState::cpu_ases`, CPUAdd
 - https://terenceli.github.io/%E6%8A%80%E6%9C%AF/2018/08/11/dirty-pages-tracking-in-migration
 - [official doc](https://qemu.readthedocs.io/en/latest/devel/memory.html)
 
+## TODO
+
+似乎有好几个问题都是无法理解的
+1. qemu vIOMMU
+      VirtIODevice::dma_as 中的 dma_as 应该是会被改变的
+2. vfio 导致了什么改变
+3. virtio_init_region_cache
+  - 不理解 VRingMemoryRegionCaches 也不理解 MemoryRegionCache 的实现原理是什么
+5. address_space_cache_init
+
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

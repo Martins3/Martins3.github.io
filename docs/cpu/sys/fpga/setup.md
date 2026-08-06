@@ -181,6 +181,8 @@ https://pynq.readthedocs.io/en/latest/getting_started/pynq_z1_setup.html
 ## 这个很好的，很有精神
 https://www.zhihu.com/question/381684248/answer/3210970751
 
+https://github.com/enjoy-digital/litex
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

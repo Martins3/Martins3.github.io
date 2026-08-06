@@ -231,59 +231,6 @@ expected=40000 actual=10000 lost=30000
 
 测试输入 `1 10.0 10.1 10.2 50.0 100.0` 时，前 3 个值（假设 divisor=3）被认为是可信的，50.0 和 100.0 因为远超投影上限和趋势断裂阈值而被过滤，输出 `avg=10.1 min=10.0 max=10.2 good=3 total=5`。
 
-## 四、与 Linux 内核源码的结合
-
-本章提到的多个验证工具都有直接的 Linux 内核源码对应：
-
-| 书中概念 | 内核源码位置 | 说明 |
-|---------|------------|------|
-| WARN_ON_ONCE | `include/asm-generic/bug.h` | 带 BUGFLAG_ONCE 的运行时警告 |
-| lockdep_assert_held | `include/linux/lockdep.h` | 锁持有断言，需 CONFIG_LOCKDEP |
-| KCSAN / data_race | `include/linux/kcsan-checks.h` | 并发访问检测器 |
-| ASSERT_EXCLUSIVE_ACCESS | `include/linux/kcsan-checks.h` | 独占访问断言 |
-| trace events | `include/linux/tracepoint.h` | 低开销追踪机制 |
-| rcutorture | `kernel/rcu/rcutorture.c` | RCU 隔离压力测试 |
-| getrusage | `kernel/sys.c` (系统调用实现) | 资源使用统计 |
-
-在 `kernel/rcu/rcutorture.c`（4707 行）中，可以清晰看到近失（close call）的实现：`pipe_count > 1 || completed > 1` 时记录错误段序列，后续打印 "Failure/close-call rcutorture reader segments"。这正是本章 11.5.2.5 节 "Count Near Misses" 中描述的真实案例。
-
-`include/linux/lockdep.h` 中的 `lockdep_assert_held` 宏使用了 `lockdep_is_held()` 函数，它通过锁依赖映射（lockdep_map）来跟踪每个锁的持有状态。当启用 `CONFIG_LOCKDEP` 时，内核会构建锁的依赖图，检测死锁和锁顺序违规。
-
-## 五、用户疑问分析
-
-用户的并发编程笔记位于 `~/data/vn/docs/concurrent/todo.md`，其中记录了大量关于并行编程的疑问。本章（Validation）对这些疑问的覆盖情况分析如下：
-
-### 5.1 部分涉及的疑问
-
-1. **"access once / data_race ? 完全不懂"**：本章在 Assertions 一节明确提到了 KCSAN 使用 `READ_ONCE()` 和 `WRITE_ONCE()` 来判断哪些并发访问值得警告，并提到了 `data_race()` 构造用于原谅已知良性的数据竞争。这为用户理解 `READ_ONCE/WRITE_ONCE` 和 `data_race` 的关系提供了入门线索——它们是内核中标记" intentional 并发访问"的工具，但本章并未深入讲解内存序和编译器优化背后的原理。
-
-2. **"观察各个系统中的 spin lock 和 mutex 才是重点"**：本章提到的 `lockdep_assert_held()` 与锁密切相关，它帮助验证"函数是否在被期望的锁保护下调用"。这是观察和理解锁使用规范的重要工具。但本章并未深入讲解 spinlock 和 mutex 的实现细节。
-
-3. **"如何正确的使用 RCU"**：本章多次以 `rcutorture` 作为验证案例，提到了 RCU grace period stall 的检测、RCU 优先级提升 bug 的近失计数。这为用户理解"如何验证 RCU 使用是否正确"提供了视角，但并未讲解 RCU 的读侧/写侧 API 和原理。
-
-4. **"memory barrier 需要斟酌一下 / 总结一个如何使用 memory barrier 的基本方法"**：本章完全没有涉及 memory barrier 的使用方法。这是第 14/15 章（Formal Verification / Memory Ordering）的内容。
-
-### 5.2 未涉及的疑问
-
-以下疑问在本章中几乎没有得到解答：
-
-- cache coherence 和 memory model 的关系
-- DMA 的 cache 一致性是谁处理的
-- memory model 形成的原因，CPU 如何保证，对编程者的影响
-- seqlock vs rcu 的选择
-- wait-free / lock-free / obstruction-free 的区别和实现
-- hazard pointer 的实现
-- rseq 机制
-- slab 中的 `system_has_freelist_aba`
-- 各种原子操作的封装和底层指令映射
-- 无锁队列的实现
-
-### 5.3 结论
-
-本章的核心定位是"验证方法论"，而非"并发机制原理"。它教给你的是：当你写了一个并行程序后，如何通过各种手段（追踪、断言、静态分析、代码审查、统计测试、heisenbug 狩猎、性能评估）来确保它是正确的和高性能的。但它不教你：原子操作怎么工作、memory barrier 怎么放、RCU 的 API 怎么调用、无锁数据结构怎么设计。
-
-因此，对于用户笔记中的大部分底层机制疑问，本章没有直接回答。但这些验证方法（尤其是 rcutorture、lockdep、KCSAN）是理解内核并发代码时不可或缺的工具——你可以用它们来验证自己对 RCU、锁、memory barrier 的理解是否正确。
-
 ## 六、总结与思考
 
 本章给我的最大启示是：验证并行程序不是"写完代码后的最后一步"，而是贯穿整个项目生命线的持续活动。作者用达尔文的进化论来类比——代码修改是随机突变，验证套件是自然选择，只有足够激烈的验证才能筛选出适应力强的代码。

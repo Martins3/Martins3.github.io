@@ -1,10 +1,24 @@
-## stop / continue
+# stop
 
-关键的问题，
-1. stop 和 cont 哪些和热迁移的部分是重叠的?
-2. savevm 和 loadvm
-3. migration to file / socket
-4. cpr
+1. 将热迁移完成的虚拟机可以通过 cont 就可以继续恢复
+当然 double running 是控制面需要考虑的
+
+2. stop / cont 观察不到类似 virtio_gpu_save 调用的，那些都是函数调用的
+
+```txt
+stop
+hmp_stop()
+vm_stop(RUN_STATE_PAUSED)
+cpu_stop_current()
+qemu_clock_pause()
+
+cont
+
+hmp_cont()
+vm_start()
+qemu_clock_resume()
+cpu_resume()
+```
 
 ## 代码流程
 
@@ -26,20 +40,7 @@ savevm 中 `load_snapshot` 和 `save_snapshot` 可以和 migration 共用
         - `qemu_savevm_state` ：TODO 在 load 中，这个函数就是开始和 migration 开始共用，但是 save 是下一个函数才开始的
             - `qemu_savevm_state_iterate`
 
-## [ ]  为什么 savevm 和 postcopy 有关系哇
-似乎主要是 postcopy 的一些通信的操作
-
-## 细节分析
-
-### inflight block io 和网络 io 都是如何暂停的
-
-如果 io engine 在 QEMU 内部，例如普通的 virtio-blk ，需要等 host 的 io 返回吗?
-
-如果 io engine 在 QEMU 外部，例如 SPDK 的，如何处理的
-
-### 下发暂停命令之后，vCPU thread 如何结束的
-
-### 当重新启动虚拟机，那些 vCPU thread 是如何启动的?
+## vCPU 的暂停和恢复
 
 - __clone3
   - start_thread
@@ -122,33 +123,14 @@ void cpu_resume(CPUState *cpu)
         - kvmclock_vm_state_change
     - resume_all_vcpus
 
-## 通过 stop / cont 就可以观察到吧?
+## TODO
+1. inflight block io 和网络 io 都是如何暂停的
 
-观察不到 : virtio_gpu_save
+如果 io engine 在 QEMU 内部，例如普通的 virtio-blk ，需要等 host 的 io 返回吗?
+如果 io engine 在 QEMU 外部，例如 SPDK 的，如何处理的
 
-```txt
-stop
-hmp_stop()
-vm_stop(RUN_STATE_PAUSED)
-cpu_stop_current()
-qemu_clock_pause()
-
-cont
-
-hmp_cont()
-vm_start()
-qemu_clock_resume()
-cpu_resume()
-```
-
-才发现 stop/cont 不会去保存 cpu 的状态，只是用来 savevm 和 stopvm 而已。
-
-```txt
-stop/cont savevm migration
-```
-## 将热迁移完成的虚拟机可以通过 cont 就可以继续恢复
-
-当然 double running 是需要考虑的事情
+我猜测是 qemu 的 handler 可以继续处理 host 的模拟行为，但是当
+vCPU 暂停后，相当于自动的暂停了。
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

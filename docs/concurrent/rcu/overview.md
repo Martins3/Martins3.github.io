@@ -1,6 +1,15 @@
-# RCU
+# RCU 基本介绍
 
-rcu 无法处理 writer 多的问题。
+## rcu 基本代码基本分析
+
+tree.c 包含的三个文件，这就是全部的内容了:
+
+```c
+#include "tree_stall.h"  // 处理 stall detection 的
+#include "tree_exp.h"    // 处理 expedited 的情况 ，主要是为了给实时系统
+#include "tree_nocb.h"   // rcu isolation
+#include "tree_plugin.h" // 处理 preemption 的
+```
 
 ## 基本想法
 
@@ -10,7 +19,6 @@ appropriately, this does not make any difference) is first created and the chang
 all previous readers have finished their reading work on the old copy, the pointer can be replaced by a
 pointer to the new, modified copy. **Notice that this allows read access to happen concurrently with write
 updates!**
-
 
 - quiescent state : 当 reader 离开 critical region 的时候
 - grace period : 等待所有的引用被释放的时间
@@ -142,17 +150,6 @@ sudo perf ftrace -C0 -G synchronize_rcu -g 'smp_*'
                           - migrate_task_rq_fair
 ```
 
-## rcu 基本代码基本分析
-
-tree.c 包含的三个文件，这就是全部的内容了:
-
-```c
-#include "tree_stall.h"  // 处理 stall detection 的
-#include "tree_exp.h"    // 处理 expedited 的情况 ，主要是为了给实时系统
-#include "tree_nocb.h"   // rcu isolation
-#include "tree_plugin.h" // 处理 preemption 的
-```
-
 
 ## expedited
 
@@ -183,77 +180,6 @@ rcu_read_unlock 需要为 synchronize_rcu_expedited 提供的帮助 : 一旦结�
  */
 void synchronize_rcu_expedited(void)
 ```
-
-## kthread && softirq
-
-似乎总是存在 softirq 和 kthread 总是成对出现的:
-```c
-/*
- * Wake up this CPU's rcuc kthread to do RCU core processing.
- */
-static void invoke_rcu_core(void)
-{
-	if (!cpu_online(smp_processor_id()))
-		return;
-	if (use_softirq)
-		raise_softirq(RCU_SOFTIRQ);
-	else
-		invoke_rcu_core_kthread();
-}
-```
-
-```txt
-1 I root           4       2  0  60 -20 -     0 -      Jun15 ?        00:00:00 [kworker/R-rcu_g]
-1 I root          13       2  0  80   0 -     0 -      Jun15 ?        00:00:00 [rcu_tasks_kthread]
-1 I root          14       2  0  80   0 -     0 -      Jun15 ?        00:00:00 [rcu_tasks_rude_kthread]
-1 I root          15       2  0  80   0 -     0 -      Jun15 ?        00:00:00 [rcu_tasks_trace_kthread]
-1 I root          17       2  0  80   0 -     0 -      Jun15 ?        00:06:10 [rcu_preempt]
-1 S root          18       2  0  80   0 -     0 -      Jun15 ?        00:00:00 [rcu_exp_par_gp_kthread_worker/1]
-1 S root          19       2  0  80   0 -     0 -      Jun15 ?        00:00:00 [rcu_exp_gp_kthread_worker]
-1 S root          71       2  0  80   0 -     0 -      Jun15 ?        00:00:00 [rcu_exp_par_gp_kthread_worker/2]
-```
-
-
-```txt
-invoke_rcu_core+1
-rcu_sched_clock_irq+497
-update_process_times+147
-tick_sched_handle+34
-tick_sched_timer+109
-__hrtimer_run_queues+298
-hrtimer_interrupt+262
-__sysvec_apic_timer_interrupt+127
-sysvec_apic_timer_interrupt+157
-asm_sysvec_apic_timer_interrupt+18
-native_safe_halt+11
-default_idle+10
-default_idle_call+50
-do_idle+478
-cpu_startup_entry+25
-start_secondary+278
-secondary_startup_64_no_verify+213
-```
-
-```txt
-rcu_core_si+1
-__softirqentry_text_start+238
-__irq_exit_rcu+181
-sysvec_apic_timer_interrupt+162
-asm_sysvec_apic_timer_interrupt+18
-native_safe_halt+11
-default_idle+10
-default_idle_call+50
-do_idle+478
-cpu_startup_entry+25
-start_secondary+278
-secondary_startup_64_no_verify+213
-```
-
-## 问题
-
-- [ ] 思考一下，RCU 在用户态和内核态中实现的差异
-  - [ ] 为什么 kernel 的实现比 userspace 的复杂那么多
-
 
 ## 为什么 list rcu 需要多存在一个操作
 
@@ -479,6 +405,9 @@ void rcu_note_context_switch(bool preempt)
 	trace_rcu_utilization(TPS("Start context switch"));
 ```
 
+## TODO
+- rcu 为什么不用 ref count 实现?
+- irq 和 softirq 中可以使用 rcu 吗?
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

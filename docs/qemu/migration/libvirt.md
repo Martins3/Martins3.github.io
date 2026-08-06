@@ -1,4 +1,4 @@
-# how to migrate with latest QEMU
+# 通过 libvirt 热迁移
 
 ## 使用 libvirt
 https://libvirt.org/migration.html#native-migration-client-to-and-peer2peer-between-two-libvirtd-servers
@@ -53,6 +53,8 @@ virsh migrate --live b60d27f7-a198-45d4-8a7d-d2b816bc4bd6 qemu+ssh://martins3@12
 ```txt
 error: authentication unavailable: no polkit agent available to authenticate action 'org.libvirt.unix.manage'
 ```
+
+可以利用嵌套测试一下
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

@@ -1,4 +1,4 @@
-## 3. 当前 capability 总览
+## qemu capability
 
 | C 枚举                                         | QMP 名称                  | 主要作用                             | 最重要的依赖或冲突                            |
 | ---------------------------------------------- | ------------------------- | ------------------------------------ | --------------------------------------------- |
@@ -23,7 +23,25 @@
 | `MIGRATION_CAPABILITY_DIRTY_LIMIT`             | `dirty-limit`             | 按脏页速率配额限制各 vCPU            | 要求 KVM dirty ring；冲突 auto-converge       |
 | `MIGRATION_CAPABILITY_MAPPED_RAM`              | `mapped-ram`              | RAM 页写入 migration file 的固定偏移 | 要求可 seek channel；冲突 postcopy、压缩、TLS |
 
-## 4. 逐项分析
+常见组合可以按目标来选：
+
+| 目标                            | 建议组合                                | 说明                                  |
+| ------------------------------- | --------------------------------------- | ------------------------------------- |
+| 高带宽、多核 TCP live migration | `multifd`                               | 再按 CPU/带宽选择 multifd compression |
+| 降低发送端 CPU copy             | `multifd` + `zero-copy-send`            | Linux、无压缩、无 TLS                 |
+| 高脏页率、希望继续 precopy      | `auto-converge` 或 `dirty-limit`        | 二选一；前者控 CPU 时间，后者控脏页率 |
+| 高脏页率、接受 postcopy 风险    | `postcopy-ram`，可加 `postcopy-preempt` | 必须规划网络中断与 recovery           |
+| file snapshot/restore 吞吐      | `mapped-ram`，可加无压缩 `multifd`      | channel 必须可 seek                   |
+| 精确抓取开始时刻快照            | `background-snapshot`                   | 不是普通迁移加速项，兼容组合很少      |
+| 编排 switchover 检查点          | `pause-before-switchover`               | 管理端负责 continue/cancel            |
+| 降低 device load downtime       | `switchover-ack` + `return-path`        | 需要设备实现配合                      |
+
+最终仍应以 `migrate-set-capabilities` 的实时校验结果、两端 QEMU 版本、构建配置和
+transport 能力为准。
+
+1. auto-converge 和 dirty-limit 是什么关系，似乎都是做一个事情了
+
+## 附录
 
 ### 4.1 `MIGRATION_CAPABILITY_XBZRLE`
 
@@ -362,27 +380,6 @@ throttle 的 auto-converge 相比，它直接控制脏页生成目标，通常 �
 管理端漏发 continue 会使迁移一直停在该状态。它与 `background-snapshot` 不兼容。
 
 
-## 5. 组合选择建议
-
-常见组合可以按目标来选：
-
-| 目标                            | 建议组合                                | 说明                                  |
-| ------------------------------- | --------------------------------------- | ------------------------------------- |
-| 高带宽、多核 TCP live migration | `multifd`                               | 再按 CPU/带宽选择 multifd compression |
-| 降低发送端 CPU copy             | `multifd` + `zero-copy-send`            | Linux、无压缩、无 TLS                 |
-| 高脏页率、希望继续 precopy      | `auto-converge` 或 `dirty-limit`        | 二选一；前者控 CPU 时间，后者控脏页率 |
-| 高脏页率、接受 postcopy 风险    | `postcopy-ram`，可加 `postcopy-preempt` | 必须规划网络中断与 recovery           |
-| file snapshot/restore 吞吐      | `mapped-ram`，可加无压缩 `multifd`      | channel 必须可 seek                   |
-| 精确抓取开始时刻快照            | `background-snapshot`                   | 不是普通迁移加速项，兼容组合很少      |
-| 编排 switchover 检查点          | `pause-before-switchover`               | 管理端负责 continue/cancel            |
-| 降低 device load downtime       | `switchover-ack` + `return-path`        | 需要设备实现配合                      |
-
-最终仍应以 `migrate-set-capabilities` 的实时校验结果、两端 QEMU 版本、构建配置和
-transport 能力为准。
-
-## 问题
-
-1. auto-converge 和 dirty-limit 是什么关系，似乎都是做一个事情了
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

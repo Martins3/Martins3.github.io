@@ -1,5 +1,4 @@
-## 分析 rom 的热迁移行为
-(这里讲了这么多，只是为了说明一下 size，实在是过分了)
+# rom
 
 其实 ROM 没有什么特殊的地方，除了热迁移的时候其中的 rom size
 
@@ -482,24 +481,24 @@ $3 = 0x55555696b740 "/rom@etc/table-loader"
 不去修改这些 memory region 会出现什么问题吗?
 
 ```txt
-#0  acpi_ram_update (mr=0x555557a45ae0, data=0x555556905390) at ../hw/i386/acpi-build.c:2608
-#1  0x0000555555a9addd in acpi_build_update (build_opaque=0x555557a88d70) at ../hw/i386/acpi-build.c:2632
-#2  acpi_build_update (build_opaque=0x555557a88d70) at ../hw/i386/acpi-build.c:2617
-#3  0x000055555593cdcc in fw_cfg_select (s=s@entry=0x555556a1eb30, key=key@entry=42) at ../hw/nvram/fw_cfg.c:285
-#4  0x000055555593d1d5 in fw_cfg_dma_transfer (s=0x555556a1eb30) at ../hw/nvram/fw_cfg.c:359
-#5  0x0000555555b79dc0 in memory_region_write_accessor (mr=mr@entry=0x555556a1eec0, addr=4, value=value@entry=0x7ffde3bfe518, size=size@entry=4, shift=<optimized out>, mask=mask@entry=4294967295, attrs=...) at ../softmmu/memory.c:493
-#6  0x0000555555b77616 in access_with_adjusted_size (addr=addr@entry=4, value=value@entry=0x7ffde3bfe518, size=size@entry=4, access_size_min=<optimized out>, access_size_max=<optimized out>, access_fn=0x555555b79d40 <memory_region_write_accessor>, mr=0x555556a1eec0, attrs=...) at ../softmmu/memory.c:550
-#7  0x0000555555b7b86a in memory_region_dispatch_write (mr=mr@entry=0x555556a1eec0, addr=4, data=<optimized out>, op=<optimized out>, attrs=attrs@entry=...) at ../softmmu/memory.c:1522
-#8  0x0000555555b82ba0 in flatview_write_continue (fv=fv@entry=0x7ffdd46aca50, addr=addr@entry=1304, attrs=..., attrs@entry=..., ptr=ptr@entry=0x7ffff53f0000, len=len@entry=4, addr1=<optimized out>, l=<optimized out>, mr=0x555556a1eec0) at /home/martins3/core/qemu/include/qemu/host-utils.h:166
-#9  0x0000555555b82e60 in flatview_write (fv=0x7ffdd46aca50, addr=addr@entry=1304, attrs=attrs@entry=..., buf=buf@entry=0x7ffff53f0000, len=len@entry=4) at ../softmmu/physmem.c:2870
-#10 0x0000555555b865f9 in address_space_write (len=4, buf=0x7ffff53f0000, attrs=..., addr=1304, as=0x55555659cce0 <address_space_io>) at ../softmmu/physmem.c:2966
-#11 address_space_rw (as=0x55555659cce0 <address_space_io>, addr=addr@entry=1304, attrs=attrs@entry=..., buf=0x7ffff53f0000, len=len@entry=4, is_write=is_write@entry=true) at ../softmmu/physmem.c:2976
-#12 0x0000555555c08d3b in kvm_handle_io (count=1, size=4, direction=<optimized out>, data=<optimized out>, attrs=..., port=1304) at ../accel/kvm/kvm-all.c:2639
-#13 kvm_cpu_exec (cpu=cpu@entry=0x5555568ea120) at ../accel/kvm/kvm-all.c:2890
-#14 0x0000555555c0a1ad in kvm_vcpu_thread_fn (arg=arg@entry=0x5555568ea120) at ../accel/kvm/kvm-accel-ops.c:51
-#15 0x0000555555d790b9 in qemu_thread_start (args=<optimized out>) at ../util/qemu-thread-posix.c:505
-#16 0x00007ffff6a88e86 in start_thread () from /nix/store/4nlgxhb09sdr51nc9hdm8az5b08vzkgx-glibc-2.35-163/lib/libc.so.6
-#17 0x00007ffff6b0fc60 in clone3 () from /nix/store/4nlgxhb09sdr51nc9hdm8az5b08vzkgx-glibc-2.35-163/lib/libc.so.6
+- clone3
+  - start_thread
+    - qemu_thread_start
+      - kvm_vcpu_thread_fn
+        - kvm_cpu_exec
+          - kvm_handle_io
+            - address_space_rw
+              - address_space_write
+                - flatview_write
+                  - flatview_write_continue
+                    - memory_region_dispatch_write
+                      - access_with_adjusted_size
+                        - memory_region_write_accessor
+                          - fw_cfg_dma_transfer
+                            - fw_cfg_select
+                              - acpi_build_update
+                                - acpi_build_update
+                                  - acpi_ram_update
 ```
 
 <script src="https://giscus.app/client.js"

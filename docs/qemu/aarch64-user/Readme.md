@@ -1,4 +1,5 @@
-# 一些细节的说明
+# 用户态二进制翻译
+
 1. If there's no `qemu-arm-static` in the package list, install `qemu-user-static` instead
 
 - [ ] 静态版本中间，不知道 gcc 到底使用了什么神奇的技术。

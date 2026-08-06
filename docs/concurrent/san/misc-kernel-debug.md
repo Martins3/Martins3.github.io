@@ -32,17 +32,14 @@
 - Debug VM translations
 - Debug access to per_cpu maps
 
-#### page owner
+## page owner
 
 page owner is for the tracking about who allocated each page.
-
 
 # Kernel 调试
 
 ## 基本按照这个操作
 - https://sergioprado.blog/how-is-the-linux-kernel-tested/
-
-
 
 - [disassemble with code and line](https://stackoverflow.com/questions/9970636/view-both-assembly-and-c-code)
 - [如何增大 dmesg buffer 的大小](https://unix.stackexchange.com/questions/412182/how-to-increase-dmesg-buffer-size-in-centos-7-2)
@@ -84,6 +81,8 @@ objdump -dS --adjust-vma=0xffffffff85037434 vmlinux
 - https://github.com/memtest86plus/memtest86plus
 
 - journalctl -t kernel 展示所有的的内核日志。
+
+## 还有其他的，参考 : /Documentation/dev-tools/
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

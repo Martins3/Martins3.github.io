@@ -3008,16 +3008,6 @@ function setup_pidfile() {
 	arg_pdifile="-pidfile $vm_dir/$which_qemu/pid"
 }
 
-arg_pstore=""
-function setup_pstore() {
-	local pstore_bin=$vm_dir/pstore.bin
-	if [[ ! -f $pstore_bin ]]; then
-		dd if=/dev/zero of="$pstore_bin" bs=1M count=1
-	fi
-	# 这个是不行的
-	arg_pstore=" -drive if=pflash,format=raw,file=$pstore_bin,id=pstore-flash"
-	arg_pstore+=" -device mtd,drive=pstore-flash"
-}
 
 function setup_misc() {
 	# 参考 qemu-options.hx
@@ -3506,7 +3496,6 @@ secure_boot
 setup_firecracker
 setup_accel
 setup_pidfile
-# setup_pstore
 
 # 互相需要检查的参数
 arg_check
@@ -3525,7 +3514,7 @@ else
 		debug_kernel=" -chardev socket,path=$vm_dir/gdb.socket,server=on,wait=off,id=gdb "
 		debug_kernel+=" -S -gdb chardev:gdb  "
 	fi
-	cmd="${gdb_debug} ${qemu} ${arg_trace} ${debug_kernel} ${arg_storage} \
+	cmd="${gdb_debug} ${qemu} ${debug_kernel} ${arg_storage} \
 	${arg_mem_cpu} ${arg_boot_img}  ${arg_kernel} ${arg_kernel_args} \
 	${arg_network} ${arg_mdev} ${arg_machine} ${arg_monitor} ${arg_cxl} \
 	${arg_initrd} ${arg_mem_balloon} ${arg_hacking} ${arg_bios}  \
@@ -3534,7 +3523,7 @@ else
 	${arg_pdifile}  ${arg_cpu_model} ${arg_display} ${arg_vnc} ${arg_audio} \
 	${arg_serial} ${arg_virtio_dummy} ${arg_pcie_port} ${arg_rng} \
 	${arg_nixos} ${arg_vmtest} ${arg_pci_topo} ${arg_misc} \
-	${arg_uuid} ${arg_win11} ${arg_pstore} ${arg_input} ${arg_usb}"
+	${arg_uuid} ${arg_win11} ${arg_input} ${arg_usb}"
 fi
 
 dump_cmd "$vm_dir/cmd.sh" "$cmd"

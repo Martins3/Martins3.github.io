@@ -340,6 +340,7 @@ class ColleiQemuBuilder:
         self.setup_pcie_port(argv)
         self.setup_rng(argv)
         self.setup_misc(argv)
+        self.setup_pstore(argv)
         self.setup_uuid(argv)
         self.setup_input_and_usb(argv)
         self.setup_trace(argv)
@@ -1187,6 +1188,33 @@ class ColleiQemuBuilder:
         )
         if self.vm.config.options.enabled("no_reboot"):
             argv.append("-no-reboot")
+
+    def setup_pstore(self, argv: list[str]) -> None:
+        # opt/pstore 打开 pstore 的两个 host 侧后端:
+        # 1. ACPI ERST: 记录持久化到 vm_dir/pstore-erst.bin,
+        #    配合 guest cmdline pstore.backend=erst
+        #
+        # 2. 一块 16M 专用盘, 配合 pstore_blk.blkdev=/dev/vdX
+        #
+        # 3. ramoops 不需要 QEMU 配合, guest cmdline memmap + ramoops.* 预留内存即可。
+        if not self.vm.config.options.enabled("pstore"):
+            return
+        erst_backend = self.vm.directory / "pstore-erst.bin"
+        argv.extend(
+            [
+                "-object",
+                f"memory-backend-file,id=pstore-erst,mem-path={erst_backend},size=1M,share=on",
+                "-device",
+                "acpi-erst,memdev=pstore-erst",
+            ]
+        )
+        self._add_disk(
+            argv,
+            "pstore_blk_1",
+            "virtio-blk-pci,drive=pstore_blk_1,id=pstore_blk_1,serial=pstore",
+            size="16M",
+            fmt="raw",
+        )
 
     def setup_uuid(self, argv: list[str]) -> None:
         argv.extend(["-uuid", self.vm.config.options.require("uuid")])

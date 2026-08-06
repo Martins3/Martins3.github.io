@@ -1,6 +1,6 @@
 # vhost
 
-## 为什么需要 vhost 参与
+## 为什么需要 vhost 参与热迁移
 
 先来思考下，为什么需要 memory_region_set_dirty() 函数
 
@@ -149,11 +149,15 @@ vu_log_write(VuDev *dev, uint64_t address, uint64_t length)
 
 只有到最终 stop-and-copy / source 完成迁移那个阶段，设备/ring 才会被停住，此时才要求不再继续更新 log。
 
-## 几种 virtio 设备的区别
+## TODO
 
-1. vhost-net
-2. virtio-blk
-3. vhost user virtio-blk
+1. 几种 virtio 设备都是如何处理热迁移的:
+	1. vhost-net
+	2. virtio-blk
+	3. vhost user virtio-blk
+
+2. 看看 vhost 对于热迁移的优化
+	- https://patchew.org/QEMU/20250813164856.950363-1-vsementsov@yandex-team.ru/
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

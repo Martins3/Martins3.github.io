@@ -1,5 +1,6 @@
-# 实战材料
-记录各种不了了之的问题，有兴趣可以调试下。
+# 实战记录
+
+记录各种不了了之的问题，有兴趣可以调试下，估计随着时间，这些都被解决了:
 
 ## irqblance 在 kunpeng 上会触发 bug
 
@@ -8,8 +9,6 @@
 .rw-r--r--@  34M root 27 Aug 10:51   vmlinuz-6.16.3
 .rw-r--r--@  34M root  8 Sep 16:59   vmlinuz-6.16.4
 ```
-
-周末的 bonus 吧
 
 ```txt
 [46472.051367][ T6263] CPU: 13 UID: 0 PID: 6263 Comm: irqbalance Kdump: loaded Tainted: G            E       6.16.0 #7 NONE
@@ -111,7 +110,7 @@
 
 结合 yusur 网卡的问题，这个问题可能是具体的驱动问题了，但是我已经没有精力调试这个问题了。
 
-## 终于我的 ASUS 主板上 nvme 故障了
+## ASUS 主板上 nvme 故障了
 ```txt
 [3061045.152954] nvme nvme0: I/O tag 489 (d1e9) opcode 0x1 (I/O Cmd) QID 3 timeout, aborting req_op:WRITE(1) size:524288
 [3061045.282440] nvme nvme0: I/O tag 490 (01ea) opcode 0x1 (I/O Cmd) QID 3 timeout, aborting req_op:WRITE(1) size:524288
@@ -123,7 +122,7 @@
 [3061055.910139] nvme nvme0: Abort status: 0x0
 ```
 
-## 我的虚拟机开机就卡死了
+## 虚拟机开机就卡死
 
 ```txt
 [    3.006773][  T605] EXT4-fs (vda2): mounted filesystem with ordered data mode. Opts: (null)
@@ -268,7 +267,7 @@ stack backtrace:
 + set +x
 ```
 
-## 给 19.60 切换内核之后，然后就无法启动了
+## 给 kunpeng 切换内核之后，就无法启动了
 ```txt
 [   10.790250] iommu: Adding device 0000:bc:00.0 to group 19
 [   10.799018] iommu: Adding device 0000:b4:01.0 to group 20

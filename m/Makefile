@@ -21,7 +21,7 @@ GCOV_PROFILE := y
 
 ccflags-y += -I$(PWD)
 
-OBJECTS := concurrent/access_once.o
+OBJECTS := workqueue.o concurrent/access_once.o concurrent/spinlock.o concurrent/rt_mutex.o concurrent/mm_ll.o concurrent/percpu_rwsem.o concurrent/seqlock.o 
 martins3-m := main.o $(OBJECTS)
 # $(info $(martins3-m))
 

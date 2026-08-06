@@ -1,16 +1,34 @@
-## 阅读笔记
+# mapped-ram
 
-每个 RAMBlock 前面还有一个 bitmap：
+## 动机
 
-bit = 1：这个页面槽位里有有效的非零数据
-bit = 0：恢复时把这个页面当成零页
+如果本来就是保存到文件，显然直接写入对应的文件，而不是类似 socket 的顺序写入。
 
-非零页写入固定槽位并置位：migration/ram.c:1266。
+## file_bmap 的作用
 
-如果一个页后来变成零页，则不需要再写一整页，只要清除 bitmap 位：migration/ram.c:1230。
+file_bmap 是 "file bitmap"，每个 bit 对应 RAMBlock 里的一页，语义是：这页的数据有没有被写进迁移文件。
 
-最终 bitmap 在所有 RAM 写完后写入文件：migration/ram.c:3212。恢复端先读取 bitmap，只读取置位页面，其余按零页处理：migration/ram.c:4082。
+- bit = 1：页内容已通过 pwrite 写到文件的 pages_offset + 页偏移 处，目的端要从文件读出来；
+- bit = 0：文件里没有这页，目的端直接清零即可（全零页，或从没被发过的页）。
 
+非零页写入固定槽位并置位
+如果一个页后来变成零页，则不需要再写一整页，只要清除 bitmap 位
+
+最终 bitmap 在所有 RAM 写完后写入文件
+恢复端先读取 bitmap，只读取置位页面，其余按零页处理
+
+置位/清零的两个来源：
+
+- 单通道路径 save_normal_page()(migration/ram.c)：写完一页就 set_bit；
+- multifd 路径 multifd_set_file_bitmap()(migration/multifd-nocomp.c):normal_num 以内的正常页置位，零页显式清零——清 bit 不是
+  多余的，因为同一页可能上一轮以非零页发过（bit 已是 1)，这一轮变成了零页，必须把旧 bit 清掉，否则目的端会去读文件里那份过时的旧数据。
+
+bitmap 本身由 bitmap_new() 分配（migration/ram.c)，初始全 0，所以从未发送的页天然就是 0。
+
+目的端对应逻辑在 read_ramblock_mapped_ram()(migration/ram.c)：扫描这个位图，bit=1 的页从 pages_offset + 页偏移 处读文件
+，bit=0 的连续区间交给 handle_zero_mapped_ram() 直接 memset 清零。这样零页和未变页完全不用占迁移文件的带宽和空间（文件里就是稀疏空洞）。
+
+## 代码细节
 
 代码证据:
 ```c
@@ -83,27 +101,7 @@ save_zero_page 是只有 zero page 才会使用吗?
 - 支持 O_DIRECT
   RAM 区域按 1 MiB 对齐，因此可以绕过 page cache 做 direct I/O：migration/ram.c:3043。
 
-## file_bmap 的作用
-
-对，就是这个作用。file_bmap 是 "file bitmap"，每个 bit 对应 RAMBlock 里的一页，语义是：这页的数据有没有被写进迁移文件。
-
-- bit = 1：页内容已通过 pwrite 写到文件的 pages_offset + 页偏移 处，目的端要从文件读出来；
-- bit = 0：文件里没有这页，目的端直接清零即可（全零页，或从没被发过的页）。
-
-置位/清零的两个来源：
-
-- 单通道路径 save_normal_page()(migration/ram.c)：写完一页就 set_bit；
-- multifd 路径 multifd_set_file_bitmap()(migration/multifd-nocomp.c):normal_num 以内的正常页置位，零页显式清零——清 bit 不是
-  多余的，因为同一页可能上一轮以非零页发过（bit 已是 1)，这一轮变成了零页，必须把旧 bit 清掉，否则目的端会去读文件里那份过时的旧数据。
-
-bitmap 本身由 bitmap_new() 分配（migration/ram.c)，初始全 0，所以从未发送的页天然就是 0。
-
-目的端对应逻辑在 read_ramblock_mapped_ram()(migration/ram.c)：扫描这个位图，bit=1 的页从 pages_offset + 页偏移 处读文件
-，bit=0 的连续区间交给 handle_zero_mapped_ram() 直接 memset 清零。这样零页和未变页完全不用占迁移文件的带宽和空间（文件里就是稀疏空洞）。
-
-### 和 background-snapshot 是冲突的
-1. 但最终 bitmap 没有写入
-
+## 和 background-snapshot 是冲突的
 Mapped-ram 在发送页面时只更新内存中的 file_bmap：
 
 写页面固定槽位
@@ -135,6 +133,27 @@ file_bmap 只存在于内存
           ↓
 将页面误认为零页/不存在
 ```
+
+可以修改 check_caps_background_snapshot 来做修改:
+```c
+static const
+INITIALIZE_MIGRATE_CAPS_SET(check_caps_background_snapshot,
+    MIGRATION_CAPABILITY_POSTCOPY_RAM,
+    MIGRATION_CAPABILITY_DIRTY_BITMAPS,
+    MIGRATION_CAPABILITY_POSTCOPY_BLOCKTIME,
+    MIGRATION_CAPABILITY_LATE_BLOCK_ACTIVATE,
+    MIGRATION_CAPABILITY_RETURN_PATH,
+    MIGRATION_CAPABILITY_MULTIFD,
+    MIGRATION_CAPABILITY_PAUSE_BEFORE_SWITCHOVER,
+    MIGRATION_CAPABILITY_AUTO_CONVERGE,
+    MIGRATION_CAPABILITY_RELEASE_RAM,
+    MIGRATION_CAPABILITY_RDMA_PIN_ALL,
+    MIGRATION_CAPABILITY_XBZRLE,
+    MIGRATION_CAPABILITY_X_COLO,
+    MIGRATION_CAPABILITY_VALIDATE_UUID,
+    MIGRATION_CAPABILITY_ZERO_COPY_SEND);
+```
+
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

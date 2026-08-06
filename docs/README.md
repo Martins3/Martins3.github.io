@@ -129,6 +129,7 @@
 ## memory management
 
 - [madvise](./kernel/mm/madvise/mm-advise.md)
+- [fixmap](./kernel/mm/mm-fixmap.md)
 
 ## Linux 内核存储栈
 
@@ -212,15 +213,6 @@
 
 - 为什么不来玩 Dota 2?
 
-## 调试内核的几种方法
-
-- 从外部观察
-  - crash
-  - drgn
-  - kvm-dmesg
-  - gdb kernel
-  - perf kvm
-
 ## 生活技能
 
 - [应急救护 : 深圳市直机关党员应急能力培训](./chores/emergency-medical-care.md)
@@ -249,6 +241,19 @@
 
 - [谈谈 kernel 中使用的编译技术](./kernel/compiler.md)
 
+## 糟糕 糟糕 OH MY GOD 我的机器宕机了
+
+- [dmesg 的基本使用](./kernel/tutorial/dmesg.md)
+- [drgn](./kernel/tutorial/drgn/drgn.md)
+- crash utility
+  - [crash utility](./kernel/tutorial/crash/crash.md)
+  - [crash 内核实现](./kernel/tutorial/crash/internal.md)
+  - [kdump](./kernel/tutorial/crash/kdump.md)
+  - [kexec](./kernel/tutorial/crash/kexec.md)
+  - [panic 的参数配置](./kernel/tutorial/crash/options.md)
+  - [实战记录](./kernel/tutorial/crash/case.md)
+- [pstore](./kernel/tutorial/crash/pstore.md)
+
 ## Tips
 
 - [学习计算机经验之谈](./learn-cs.md)
@@ -271,6 +276,7 @@
 - [Quiescent consistency，Sequential consistency 和 Linearizability](./concurrent/linearizability.md)
 - [wait free，lockfree 和 obstruction free 区分](./concurrent/lock-free.md)
 
+
 ## Potpourri
 
 - [x86's acronyms](./x86-names.md)
@@ -290,6 +296,28 @@
 ## 固件
 
 - [efibootmgr 和 efivar](./uefi/efibootmgr.md)
+
+## rcu
+
+- [doc](./concurrent/rcu/doc.md)
+- [RCU 基本介绍](./concurrent/rcu/overview.md)
+- [RCU 基本使用](./concurrent/rcu/2-api.md)
+- [rcu_read_lock_bh](./concurrent/rcu/bh.md)
+- [rcu boost](./concurrent/rcu/boost.md)
+- [context_tracking](./concurrent/rcu/context_tracking.md)
+- [extended quiescent state](./concurrent/rcu/eqs.md)
+- [harzard pointer](./concurrent/rcu/hazard-pointer.md)
+- [preempt rcu](./concurrent/rcu/preempt_rcu.md)
+- [qs](./concurrent/rcu/qs.md)
+- [rcu nocb](./concurrent/rcu/rcu_nocb.md)
+- [rcu slab](./concurrent/rcu/slab.md)
+- [srcu](./concurrent/rcu/srcu.md)
+- [rcu stall](./concurrent/rcu/stall.md)
+- [task rcu](./concurrent/rcu/tasks_rcu.md)
+- [kthread && softirq](./concurrent/rcu/thread.md)
+- [wq](./concurrent/rcu/wq.md)
+- [QEMU rcu](./qemu/thread/rcu.md)
+- [Tree RCU](./concurrent/rcu/tree.md)
 
 ## 杂事
 
@@ -311,39 +339,48 @@
 
 - [sanitizer 实验代码](./concurrent/san/code/README.md)
 
-## migration
+### userfaultfd
 
-- [3. 当前 capability 总览](./qemu/migration/feature.md)
-- [3. 源端状态转换图](./qemu/migration/status.md)
+- [Userfaultfd](./kernel/mm/userfaultfd/basic.md)
+- [userfaultfd 高级话题探讨](./kernel/mm/userfaultfd/advance.md)
+- [userfaultfd UAPI history](./kernel/mm/userfaultfd/uapi-history.md)
+
+## QEMU migration
+
+- [QEMU 热迁移基础](./qemu/migration/overview.md)
+- [QEMU 热迁移文档](./qemu/migration/doc.md)
+- [qemu capability](./qemu/migration/feature.md)
+- [migration status 转换](./qemu/migration/status.md)
+- [background-snapshot](./qemu/migration/backgroup-snapshot.md)
+- [io 后端](./qemu/migration/io.md)
+
+- [postcopy](./qemu/migration/postcopy.md)
+- [stop](./qemu/migration/stop-continue.md)
+- [savevm](./qemu/migration/savevm.md)
 - [CPR](./qemu/migration/cpr.md)
-- [Level 2 : savevm loadvm](./qemu/migration/savevm-loadvm.md)
-- [PCIDevice::net_failover 与热迁移](./qemu/migration/net-failover.md)
-- [RAMBlock ，从热迁移的角度分析](./qemu/migration/state/ram.2.md)
-- [block 热迁移](./qemu/migration/state/block.md)
+- [multifd](./qemu/migration/multifd.md)
+- [xbzrle](./qemu/migration/xbzrle.md)
+- [mapped-ram](./qemu/migration/mapped-ram.md)
 - [colo](./qemu/migration/colo.md)
 - [dirty rate](./qemu/migration/dirty.rate.md)
-- [how to migrate with latest QEMU](./qemu/migration/libvirt.md)
-- [io 后端](./qemu/migration/io.md)
+
+不同类型的 device 分别处理:
+- [block](./qemu/migration/state/block.md)
+- [vmstate](./qemu/migration/state/vmstate.md)
+- [nvme](./qemu/migration/state/nvme.md)
+- [virtio](./qemu/migration/state/virtio.md)
+- [vfio](./qemu/migration/state/vfio.md)
+- [ram](./qemu/migration/state/ram.md)
+- [rom](./qemu/migration/state/rom.md)
+- [vhost](./qemu/migration/state/vhost.md)
 - [migration 为什么需要有优先级](./qemu/migration/state/priority.md)
-- [migration 基本测试](./qemu/migration/todo.lab.md)
-- [migration 的通知机制就是为了](./qemu/migration/balloon.md)
-- [migration](./qemu/migration/todo.misc.md)
-- [multifd](./qemu/migration/multifd.md)
-- [post copy](./qemu/migration/postcopy.md)
+
+- [migration 中一共存在那些 thread](./qemu/migration/thread.md)
 - [qemu 中 yank 的含义](./qemu/migration/yank.md)
-- [qemu 存在哪些状态控制](./qemu/migration/overview.md)
-- [share memory auto touch](./qemu/migration/zero-page/zero-page.md) -
-- [stop / continue](./qemu/migration/stop-continue.md)
-- [vfio migration](./qemu/migration/state/vfio.md)
-- [vhost](./qemu/migration/vhost.md)
-- [virtio 有特殊的封装](./qemu/migration/state/virtio.md)
-- [xbzrle](./qemu/migration/xbzrle.md)
-- [为什么 QEMU 中不支持](./qemu/migration/state/nvme.md)
-- [内存拷贝相关](./qemu/migration/state/ram.md)
-- [分析 rom 的热迁移行为](./qemu/migration/state/rom.md)
-- [基本讨论 : codex](./qemu/migration/hotplug.md)
-- [文档细读](./qemu/migration/doc.md)
-- [核心结构体](./qemu/migration/state/vmstate.md)
+- [热插拔后，如何热迁移](./qemu/migration/hotplug.md)
+- [通过 libvirt 热迁移](./qemu/migration/libvirt.md)
+- [热迁移中 share memory 会被自动 touch](./qemu/migration/zero-page/zero-page.md)
+- [PCIDevice::net_failover 与热迁移](./qemu/migration/net-failover.md)
 
 ## Kernel Contribution
 
@@ -367,11 +404,6 @@
 - [`nvme id-ns` 输出梳理](./kernel/blk/nvme/nvme-cli.md)
 - [《深入浅出 SSD》阅读笔记](./kernel/blk/nvme/nvme-hardware.md)
 - [nvmf](./kernel/blk/nvme/nvme-tcp.md)
-
-### [ ] memory model
-
-- [acquire and release](./concurrent/memory-model.md)
-- [编译器乱序](./concurrent/volatile/doc.md)
 
 ### [ ] Yet another libvirt
 
@@ -420,75 +452,23 @@
 
 - [intel 的 iommu debugfs](./kernel/iommu/debugfs/debugfs.md)
 
-### [ ] userfaultfd
-
-- [Userfaultfd](./kernel/mm/userfaultfd/basic.md)
-- [userfaultfd 高级话题探讨](./kernel/mm/userfaultfd/advance.md)
-- [userfaultfd UAPI history](./kernel/mm/userfaultfd/uapi-history.md)
-
 ### [ ] io_uring
 
 ### [ ] cgroup
 
 ### [ ] vmscan lru
 
-### [ ] rcu
 
-<!-- BEGIN AUTO DOCS INDEX -->
-## 自动文档索引
+### [ ] initramfs
+- [buildroot](./kernel/tutorial/initramfs/builtroot.md)
+- [dracut](./kernel/tutorial/initramfs/dracut.md)
+- [initfs](./kernel/tutorial/initramfs/initramfs.md)
+- [initramfs : iso](./kernel/tutorial/initramfs/iso.md)
+- [linuxfromscratch](./kernel/tutorial/initramfs/minimal.md)
+- [bootc](./kernel/tutorial/initramfs/yes.md)
 
-以下只包含当前 README 手工区还没有引用的 Markdown 文档。
+### [ ] 并发编程
 
-- `acpi/`
-  - [ACPI 概述](./acpi/acpi.md)
-  - [acpi_power_meter](./acpi/acpi_meter.md)
-  - [acpica](./acpi/acpica.md)
-  - [使用 acpidump 来观察](./acpi/lab.md)
-  - [pnp](./acpi/pnp.md)
-  - [poweroff 内核的触发过程](./acpi/poweroff.md)
-  - [hack with qemu](./acpi/qemu.md)
-  - [UACPI](./acpi/uacpi.md)
-- `asm/`
-  - `aarch64/`
-    - [https://mariokartwii.com/armv8/](./asm/aarch64/README.md)
-  - `x86_64/`
-    - [checksheet](./asm/x86_64/README.md)
-  - [Nasm](./asm/README.md)
-- `benchmark/`
-  - [性能基准测试工具](./benchmark/benchmarks.md)
-  - [个人性能测试记录](./benchmark/my-result.md)
-- `blog/`
-  - [basic](./blog/basic.md)
-- `bmbt/`
-  - [BMBT 常见问题解答](./bmbt/1-why.md)
-  - [裸金属二进制翻译器的架构](./bmbt/2-arch.md)
-  - [裸金属二进制翻译器的技术细节](./bmbt/3-tech.md)
-  - [淦，设计一个裸金属二进制翻译器不可能这么难](./bmbt/4-emotion.md)
-  - [BMBT newbie 必读](./bmbt/5-newbie.md)
-  - [二进制翻译介绍](./bmbt/bt-introduction.md)
-  - [QEMU 如何模拟 pcspker](./bmbt/pcspk.md)
-- `chatter/`
-  - [consumerism](./chatter/consumerism.md)
-  - [不要辜负这个伟大的时代](./chatter/great-era.md)
-  - [为什么你不应该考公务员](./chatter/gwy.md)
-  - [乱七八糟的想法](./chatter/life-dev.md)
-  - [龙芯公司](./chatter/loongson-v2.md)
-  - [关于读博的思考](./chatter/phd.md)
-  - [readings](./chatter/readings.md)
-  - [深圳](./chatter/shenzhen.md)
-  - [社交媒体](./chatter/social-media.md)
-  - [看似有关系，实际上没关系](./chatter/unrelated-but-similar.md)
-  - [远程工作体验](./chatter/wfh.md)
-- `chores/`
-  - [汽车](./chores/car.md)
-  - [打扮](./chores/dress-up.md)
-  - [反向开票](./chores/financial.md)
-  - [电吉他](./chores/guitar.md)
-  - [手工](./chores/handicrafts.md)
-  - [医疗](./chores/medical.md)
-  - [爱我还是他](./chores/music.md)
-  - [基本](./chores/photo.md)
-  - [运动](./chores/sports.md)
 - `concurrent/`
   - `arch/`
     - [简单看看 aarch64 的指令支持](./concurrent/arch/aarch64.md)
@@ -499,19 +479,19 @@
     - [store-buffer](./concurrent/code/README.md)
   - `kernel/`
     - `api/`
-      - [阅读下 Documentation/atomic_t.txt](./concurrent/kernel/api/atomic.md)
+      - [Documentation/atomic_t.txt](./concurrent/kernel/api/atomic.md)
       - [gcc atomic](./concurrent/kernel/api/gcc-atomic.md)
       - [mutex](./concurrent/kernel/api/mutex.md)
-      - [为什么 percpu 还需要 rwsem 啊?](./concurrent/kernel/api/percpu-rwsem.md)
+      - [percpu rwsem](./concurrent/kernel/api/percpu-rwsem.md)
       - [PER_CPU](./concurrent/kernel/api/percpu.md)
       - [rcuwait](./concurrent/kernel/api/rcuwait.md)
       - [refcount](./concurrent/kernel/api/refcount.md)
-      - [kernel/locking/rt_mutex.md](./concurrent/kernel/api/rt_mutex.md)
+      - [rt_mutex.md](./concurrent/kernel/api/rt_mutex.md)
       - [rwlock](./concurrent/kernel/api/rwlock.md)
       - [R/W semaphore](./concurrent/kernel/api/rwsem.md)
       - [Semaphores](./concurrent/kernel/api/semaphore.md)
       - [seqlock](./concurrent/kernel/api/seqlock.md)
-      - [introduction to spinlock](./concurrent/kernel/api/spinlock.md)
+      - [spinlock](./concurrent/kernel/api/spinlock.md)
       - [swait](./concurrent/kernel/api/swait.md)
       - [wait](./concurrent/kernel/api/wait.md)
       - [waitbit](./concurrent/kernel/api/waitbit.md)
@@ -555,24 +535,6 @@
     - [perfbook 阅读思考](./concurrent/perfbook/notes.md)
     - [perf book](./concurrent/perfbook/overview.md)
     - [perfbook 词汇表](./concurrent/perfbook/words.md)
-  - `rcu/`
-    - [rcu 基本使用](./concurrent/rcu/1-usage.md)
-    - [api](./concurrent/rcu/2-api.md)
-    - [总结下其中的 workqueue 中间的 rcu](./concurrent/rcu/3-usage.md)
-    - [rcu_read_lock_bh](./concurrent/rcu/bh.md)
-    - [rcu boost](./concurrent/rcu/boost.md)
-    - [context_tracking](./concurrent/rcu/context_tracking.md)
-    - [Paul 维护的 RCU 文档](./concurrent/rcu/doc.md)
-    - [如何理解什么 extended quiescent state](./concurrent/rcu/eqs.md)
-    - [RCU](./concurrent/rcu/overview.md)
-    - [一共存在那些种类的 RCU](./concurrent/rcu/qs.md)
-    - [rcu_nocbs](./concurrent/rcu/rcu_nocbs.md)
-    - [rcu by kimi](./concurrent/rcu/relearn-with-ai.md)
-    - [srcu](./concurrent/rcu/srcu.md)
-    - [文档](./concurrent/rcu/stall.md)
-    - [CONFIG_TASKS_RCU](./concurrent/rcu/tasks_rcu.md)
-    - [用户态 rcu](./concurrent/rcu/userspace-rcu.md)
-    - [rcu 杂记](./concurrent/rcu/yes-we-know.md)
   - [Linux 内核 Litmus Tests 介绍](./concurrent/1-litmus.md)
   - [并发锁分析工具 lslocks](./concurrent/2-tools.md)
   - [并发编程中违反直觉的例子](./concurrent/counter-intuitive.md)
@@ -586,6 +548,136 @@
   - [并行编程实践记录](./concurrent/usage.md)
   - [为什么并行编程如此困难](./concurrent/why-parallel-is-hard.md)
   - [kernel/sched/membarrier.c syscall](./concurrent/yes.md)
+
+### [ ] trace
+- `trace/`
+  - `bpftime/`
+    - [bpftime](./trace/bpftime/basic.md)
+  - `ebpf/`
+    - `bcc/`
+      - [如果使用 bpf 来调试，那么就是为这个目录](./trace/ebpf/bcc/readme.md)
+    - `cilium/`
+      - [做做这里的教程](./trace/ebpf/cilium/README.md)
+    - `ra/`
+      - [readme](./trace/ebpf/ra/readme.md)
+    - [基本使用方法](./trace/ebpf/README.md)
+  - `ebpf-doc/`
+    - [arena](./trace/ebpf-doc/arena.md)
+    - [写一个 bcc 和 bpftrace 使用对比](./trace/ebpf-doc/bcc-vs-bpftrace.md)
+    - [bcc 的打包](./trace/ebpf-doc/bcc.md)
+    - [bloom filter](./trace/ebpf-doc/bloom-filter.md)
+    - [基本使用](./trace/ebpf-doc/bpftool.md)
+    - [btf](./trace/ebpf-doc/btf.md)
+    - [CO:RE](./trace/ebpf-doc/core.md)
+    - [基本的代码分析](./trace/ebpf-doc/internal.md)
+    - [bpf iterators](./trace/ebpf-doc/iter.md)
+    - [这个居然意外的好懂](./trace/ebpf-doc/libbpf.md)
+    - [需要搞的事情](./trace/ebpf-doc/overview.md)
+    - [bysyscall](./trace/ebpf-doc/projects.md)
+    - [STRUCT_OPS](./trace/ebpf-doc/struct_ops.md)
+    - [bpf syscall 的基本观察](./trace/ebpf-doc/syscall.md)
+    - [有趣，看来 verifier 还是很厉害的](./trace/ebpf-doc/verifier.md)
+  - `ftrace/`
+    - [原来 trace_pipe 会自动的清理掉 trace 中内容](./trace/ftrace/basic.md)
+    - [eprobe - Event-based Probe Tracing](./trace/ftrace/eprobe.md)
+    - [fprobe 机制](./trace/ftrace/fprobe.md)
+    - [ftrace 实现](./trace/ftrace/ftrace-internals.md)
+    - [ftrace 输出的格式](./trace/ftrace/ftrace.md)
+    - [latency-collector](./trace/ftrace/latency-collector.md)
+    - [https://lwn.net/Articles/410200/](./trace/ftrace/trace-cmd.md)
+    - [hwlat](./trace/ftrace/tracer-hwlat.md)
+    - [osnoise](./trace/ftrace/tracer-osnoise.md)
+  - `perf/`
+    - [关于 perf 我知道的一切](./trace/perf/README.md)
+  - `tools/`
+    - `bpftrace/`
+      - [./ip-change.bt (qwen)](./trace/tools/bpftrace/readme.md)
+    - [计划和代办](./trace/tools/README.md)
+  - [Linux Trace 技术整理报告](./trace/TRACE_INVENTORY.md)
+  - [bpftrace](./trace/bpftrace.md)
+  - [trace 相关的文档](./trace/doc.md)
+  - [kallsyms_lookup_name](./trace/kallsyms.md)
+  - [kprobe](./trace/kprobe.md)
+  - [libtraceevent](./trace/libtraceevent.md)
+  - [mce 的工作原理](./trace/mce.md)
+  - [观测](./trace/monitor.md)
+  - [valgrind](./trace/others.md)
+  - [先不搞那些虚的东西，分析清楚下面这个问题](./trace/overview.md)
+  - [pcm](./trace/pcm.md)
+  - [strace 基本使用](./trace/strace.md)
+  - [systemtap](./trace/systemtap.md)
+  - [trace 传统工具](./trace/tools.md)
+  - [arm 环境的确容易出现 backtrace 没有的情况](./trace/tracepoint-aarch64.md)
+  - [tracepoint 的积累已经很多了](./trace/tracepoint.md)
+  - [用户态符号基础](./trace/user.md)
+  - [noinstr code](./trace/yes.md)
+
+<!-- BEGIN AUTO DOCS INDEX -->
+## 自动文档索引
+
+以下只包含当前 README 手工区还没有引用的 Markdown 文档。
+
+- `acpi/`
+  - [ACPI 概述](./acpi/acpi.md)
+  - [acpi_power_meter](./acpi/acpi_meter.md)
+  - [acpica](./acpi/acpica.md)
+  - [使用 acpidump 来观察](./acpi/lab.md)
+  - [pnp](./acpi/pnp.md)
+  - [poweroff 内核的触发过程](./acpi/poweroff.md)
+  - [hack with qemu](./acpi/qemu.md)
+  - [UACPI](./acpi/uacpi.md)
+- `ai/`
+  - [pi](./ai/pi.md)
+- `asm/`
+  - `aarch64/`
+    - [https://mariokartwii.com/armv8/](./asm/aarch64/README.md)
+  - `x86_64/`
+    - [checksheet](./asm/x86_64/README.md)
+  - [Nasm](./asm/README.md)
+- `benchmark/`
+  - [性能基准测试工具](./benchmark/benchmarks.md)
+  - [个人性能测试记录](./benchmark/my-result.md)
+- `blog/`
+  - [basic](./blog/basic.md)
+- `bmbt/`
+  - [BMBT 常见问题解答](./bmbt/1-why.md)
+  - [裸金属二进制翻译器的架构](./bmbt/2-arch.md)
+  - [裸金属二进制翻译器的技术细节](./bmbt/3-tech.md)
+  - [淦，设计一个裸金属二进制翻译器不可能这么难](./bmbt/4-emotion.md)
+  - [BMBT newbie 必读](./bmbt/5-newbie.md)
+  - [二进制翻译介绍](./bmbt/bt-introduction.md)
+  - [QEMU 如何模拟 pcspker](./bmbt/pcspk.md)
+- `chatter/`
+  - [不要辜负这个伟大的时代](./chatter/great-era.md)
+  - [为什么你不应该考公务员](./chatter/gwy.md)
+  - [Kimi k3 并不好](./chatter/k3.md)
+  - [乱七八糟的想法](./chatter/life-dev.md)
+  - [龙芯公司](./chatter/loongson-v2.md)
+  - [关于读博的思考](./chatter/phd.md)
+  - [readings](./chatter/readings.md)
+  - [深圳](./chatter/shenzhen.md)
+  - [社交媒体](./chatter/social-media.md)
+  - [看似有关系，实际上没关系](./chatter/unrelated-but-similar.md)
+  - [远程工作体验](./chatter/wfh.md)
+- `chores/`
+  - [汽车](./chores/car.md)
+  - [打扮](./chores/dress-up.md)
+  - [反向开票](./chores/financial.md)
+  - [电吉他](./chores/guitar.md)
+  - [手工](./chores/handicrafts.md)
+  - [医疗](./chores/medical.md)
+  - [爱我还是他](./chores/music.md)
+  - [基本](./chores/photo.md)
+  - [运动](./chores/sports.md)
+- `concurrent/`
+  - `memory-model/`
+    - `tests/`
+      - [memory model litmus 测试](./concurrent/memory-model/tests/README.md)
+    - [acquire and release](./concurrent/memory-model/doc.md)
+  - `san/`
+    - [使用 kernel 中调试工具](./concurrent/san/misc-kernel-debug.md)
+  - `volatile/`
+    - [编译器乱序](./concurrent/volatile/doc.md)
 - `container/`
   - [Podman Rootless 问题记录](./container/container.md)
   - [Docker 基本使用](./container/docker.md)
@@ -653,6 +745,7 @@
   - [Chisel 学习资源汇总](./cpu/chisel.md)
   - [MIPS R10000 的设计](./cpu/mipsR10000.md)
   - [芯片设计相关资料汇总](./cpu/overview.md)
+  - [Reorder Buffer (ROB)](./cpu/rob.md)
   - [Scala 基础语法学习](./cpu/scala.md)
   - [芯片设计中两个关键设备](./cpu/smart-dev.md)
   - [访存子系统](./cpu/xiangshan.md)
@@ -906,7 +999,6 @@
     - [Copy-On-Write](./kernel/mm/mm-cow.md)
     - [Memory Failure](./kernel/mm/mm-failure.md)
     - [Page Cache](./kernel/mm/mm-filemap.md)
-    - [Fixmap](./kernel/mm/mm-fixmap.md)
     - [Folio](./kernel/mm/mm-folio.md)
     - [GFP Flags](./kernel/mm/mm-gfp.md)
     - [Get User Pages](./kernel/mm/mm-gup.md)
@@ -968,8 +1060,8 @@
     - [numa balancing 工作原理](./kernel/mm/numa-balancing.md)
     - [NUMA](./kernel/mm/numa.md)
     - [Virtio Balloon Debug](./kernel/mm/virtio-balloon-debug.md)
-    - [Virtio Balloon](./kernel/mm/virtio-balloon-kernel.md)
-    - [Virtio Balloon (QEMU)](./kernel/mm/virtio-balloon-qemu.md)
+    - [Virtio Balloon Kernel 实现](./kernel/mm/virtio-balloon-kernel.md)
+    - [Virtio Balloon QEMU 实现](./kernel/mm/virtio-balloon-qemu.md)
     - [folio_clear_swapbacked 和 __folio_clear_swapbacked 区别是什么?](./kernel/mm/yes.md)
   - `module/`
     - [内核模块](./kernel/module/README.md)
@@ -1094,28 +1186,11 @@
     - [tty0](./kernel/tty/yes.md)
   - `tutorial/`
     - `crash/`
-      - [实战材料](./kernel/tutorial/crash/case.md)
-      - [crash utility](./kernel/tutorial/crash/crash.md)
-      - [crash 内核实现](./kernel/tutorial/crash/internal.md)
-      - [kdump](./kernel/tutorial/crash/kdump.md)
-      - [kexec](./kernel/tutorial/crash/kexec.md)
-      - [panic 的参数配置](./kernel/tutorial/crash/options.md)
-      - [pstore 如何使用](./kernel/tutorial/crash/pstore.md)
-    - `drgn/`
-      - [使用 drgn 来学习内核](./kernel/tutorial/drgn/drgn.md)
-    - `initramfs/`
-      - [buildroot](./kernel/tutorial/initramfs/builtroot.md)
-      - [dracut](./kernel/tutorial/initramfs/dracut.md)
-      - [initfs](./kernel/tutorial/initramfs/initramfs.md)
-      - [initramfs : iso](./kernel/tutorial/initramfs/iso.md)
-      - [linuxfromscratch](./kernel/tutorial/initramfs/minimal.md)
-      - [bootc](./kernel/tutorial/initramfs/yes.md)
+      - [基于 kcore 的几种内核调试办法](./kernel/tutorial/crash/kcore.md)
     - [和社区沟通](./kernel/tutorial/community.md)
-    - [使用 kernel 中调试工具](./kernel/tutorial/debug.md)
     - [DKMS](./kernel/tutorial/dkms.md)
-    - [dmesg 的基本使用](./kernel/tutorial/dmesg.md)
     - [阅读文档](./kernel/tutorial/doc.md)
-    - [先收集起来](./kernel/tutorial/format-verification.md)
+    - [形式化验证](./kernel/tutorial/format-verification.md)
     - [fuzz](./kernel/tutorial/fuzz.md)
     - [gdb kernel 的常用命令](./kernel/tutorial/gdb-kernel.md)
     - [git](./kernel/tutorial/git.md)
@@ -1483,7 +1558,7 @@
   - [dma](./pci/qemu.md)
 - `qemu/`
   - `aarch64-user/`
-    - [一些细节的说明](./qemu/aarch64-user/Readme.md)
+    - [用户态二进制翻译](./qemu/aarch64-user/Readme.md)
   - `bios/`
     - [QEMU 中的 seabios : 地址空间](./qemu/bios/bios-memory.md)
     - [如何调试 seabios](./qemu/bios/debug.md)
@@ -1497,20 +1572,15 @@
     - [https://www.linux-kvm.org/images/b/b5/2012-fourm-block-overview.pdf](./qemu/block/doc.md)
     - [libblkio](./qemu/block/libblkio.md)
     - [qemu-storage-daemon](./qemu/block/qsd.md)
-  - `dev/`
-    - [e1000 的工作原理](./qemu/dev/e1000-2.md)
-    - [观测 e1000 驱动在 qemu 如何被模拟的](./qemu/dev/e1000.md)
-    - [i8042 : 键盘](./qemu/dev/i8042.md)
-    - [None pci device](./qemu/dev/misc.md)
+  - `device/`
+    - [e1000 的工作原理](./qemu/device/e1000-2.md)
+    - [观测 e1000 驱动在 qemu 如何被模拟的](./qemu/device/e1000.md)
+    - [i8042 : 键盘](./qemu/device/i8042.md)
+    - [None pci device](./qemu/device/misc.md)
   - `memory/`
     - [qemu memory backend](./qemu/memory/memory.backend.md)
     - [MemoryListener](./qemu/memory/memory.listener.md)
     - [QEMU 的 memory model](./qemu/memory/memory.md)
-  - `migration/`
-    - [qemu 热迁移 background-snapshot 的语义](./qemu/migration/backgroup-snapshot.md)
-    - [阅读笔记](./qemu/migration/mapped-ram.md)
-    - [snapshot-save 保存内存时复用了 migration/savevm 框架：](./qemu/migration/snapshot.md)
-    - [migration 中一共存在那些 thread](./qemu/migration/thread.md)
   - `qom/`
     - [QEMU 的参数解析](./qemu/qom/options.md)
     - [qdev](./qemu/qom/qdev.md)
@@ -1541,7 +1611,6 @@
     - [QEMU 中的锁](./qemu/thread/lock.md)
     - [qemu lockcounters](./qemu/thread/lockcnt.md)
     - [QEMU Event Loop](./qemu/thread/main-loop.md)
-    - [qemu rcu](./qemu/thread/rcu.md)
     - [qemu 的 thread pool 的作用](./qemu/thread/thread-pool.md)
     - [qemu 到底有那些 thread](./qemu/thread/threads.md)
     - [QEMU AIO 事件循环架构分析](./qemu/thread/why-glib.md)
@@ -1554,6 +1623,7 @@
   - [qemu io/ 目录中的功能](./qemu/channel.md)
   - [QEMU 字符设备模拟](./qemu/char.md)
   - [如何正确的配置 qemu 的 memory 和 cpu](./qemu/cpu-topo.md)
+  - [Official Docs](./qemu/docs.md)
   - [经典例子](./qemu/error.md)
   - [QEMU 启动代码](./qemu/init-2.md)
   - [QEMU 初始化过程分析](./qemu/init.md)
@@ -1562,13 +1632,13 @@
   - [libkrun](./qemu/libkrun.md)
   - [microvm](./qemu/microvm.md)
   - [qemu 中关于 page size 问题的合集](./qemu/page-size.md)
-  - [Official Docs](./qemu/qemu-docs.md)
-  - [qemu 如何做测试的](./qemu/qemu-test.md)
+  - [qapi](./qemu/qapi.md)
   - [qht 移植](./qemu/qht.md)
   - [qmp 和 hmp](./qemu/qmp-hmp.md)
   - [multi-process qemu](./qemu/remote.md)
   - [CPUX86State reset](./qemu/reset.md)
   - [默认模式下，QEMU 是如何保证给一个分配的 10.0.2.15 的](./qemu/slirp.md)
+  - [qemu 如何做测试的](./qemu/test.md)
   - [QEMU 中的 trace 机制](./qemu/trace.md)
 - `rust/`
   - `code/`
@@ -1616,67 +1686,6 @@
   - [typst 工具](./tools/typst.md)
   - [how to debug neovim](./tools/vimrc.md)
   - [vscode 的调试环境](./tools/vscode.md)
-- `trace/`
-  - `bpftime/`
-    - [bpftime](./trace/bpftime/basic.md)
-  - `ebpf/`
-    - `bcc/`
-      - [如果使用 bpf 来调试，那么就是为这个目录](./trace/ebpf/bcc/readme.md)
-    - `cilium/`
-      - [做做这里的教程](./trace/ebpf/cilium/README.md)
-    - `ra/`
-      - [readme](./trace/ebpf/ra/readme.md)
-    - [基本使用方法](./trace/ebpf/README.md)
-  - `ebpf-doc/`
-    - [arena](./trace/ebpf-doc/arena.md)
-    - [写一个 bcc 和 bpftrace 使用对比](./trace/ebpf-doc/bcc-vs-bpftrace.md)
-    - [bcc 的打包](./trace/ebpf-doc/bcc.md)
-    - [bloom filter](./trace/ebpf-doc/bloom-filter.md)
-    - [基本使用](./trace/ebpf-doc/bpftool.md)
-    - [btf](./trace/ebpf-doc/btf.md)
-    - [CO:RE](./trace/ebpf-doc/core.md)
-    - [基本的代码分析](./trace/ebpf-doc/internal.md)
-    - [bpf iterators](./trace/ebpf-doc/iter.md)
-    - [这个居然意外的好懂](./trace/ebpf-doc/libbpf.md)
-    - [需要搞的事情](./trace/ebpf-doc/overview.md)
-    - [bysyscall](./trace/ebpf-doc/projects.md)
-    - [STRUCT_OPS](./trace/ebpf-doc/struct_ops.md)
-    - [bpf syscall 的基本观察](./trace/ebpf-doc/syscall.md)
-    - [有趣，看来 verifier 还是很厉害的](./trace/ebpf-doc/verifier.md)
-  - `ftrace/`
-    - [原来 trace_pipe 会自动的清理掉 trace 中内容](./trace/ftrace/basic.md)
-    - [eprobe - Event-based Probe Tracing](./trace/ftrace/eprobe.md)
-    - [fprobe 机制](./trace/ftrace/fprobe.md)
-    - [ftrace 实现](./trace/ftrace/ftrace-internals.md)
-    - [ftrace 输出的格式](./trace/ftrace/ftrace.md)
-    - [latency-collector](./trace/ftrace/latency-collector.md)
-    - [https://lwn.net/Articles/410200/](./trace/ftrace/trace-cmd.md)
-    - [hwlat](./trace/ftrace/tracer-hwlat.md)
-    - [osnoise](./trace/ftrace/tracer-osnoise.md)
-  - `perf/`
-    - [关于 perf 我知道的一切](./trace/perf/README.md)
-  - `tools/`
-    - `bpftrace/`
-      - [./ip-change.bt (qwen)](./trace/tools/bpftrace/readme.md)
-    - [计划和代办](./trace/tools/README.md)
-  - [Linux Trace 技术整理报告](./trace/TRACE_INVENTORY.md)
-  - [bpftrace](./trace/bpftrace.md)
-  - [trace 相关的文档](./trace/doc.md)
-  - [kallsyms_lookup_name](./trace/kallsyms.md)
-  - [kprobe](./trace/kprobe.md)
-  - [libtraceevent](./trace/libtraceevent.md)
-  - [mce 的工作原理](./trace/mce.md)
-  - [观测](./trace/monitor.md)
-  - [valgrind](./trace/others.md)
-  - [先不搞那些虚的东西，分析清楚下面这个问题](./trace/overview.md)
-  - [pcm](./trace/pcm.md)
-  - [strace 基本使用](./trace/strace.md)
-  - [systemtap](./trace/systemtap.md)
-  - [trace 传统工具](./trace/tools.md)
-  - [arm 环境的确容易出现 backtrace 没有的情况](./trace/tracepoint-aarch64.md)
-  - [tracepoint 的积累已经很多了](./trace/tracepoint.md)
-  - [用户态符号基础](./trace/user.md)
-  - [noinstr code](./trace/yes.md)
 - `uefi/`
   - `BootLoaderPkg/`
     - [第一个 UEFI 程序](./uefi/BootLoaderPkg/README.md)

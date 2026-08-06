@@ -1,4 +1,4 @@
-# block 热迁移
+# block
 
 - https://qemu-project.gitlab.io/qemu/interop/bitmaps.html
 - https://qemu-project.gitlab.io/qemu/interop/live-block-operations.html

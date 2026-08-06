@@ -481,6 +481,32 @@ data race。
 [3]: https://clang.llvm.org/docs/ThreadSanitizer.html "ThreadSanitizer — Clang 24.0.0git documentation"
 [4]: https://github.com/google/sanitizers/wiki/ThreadSanitizerFlags "ThreadSanitizerFlags · google/sanitizers Wiki · GitHub"
 
+## qemu 中的支持
+
+支持。QEMU 官方就有对 ThreadSanitizer (TSan) 的支持，包括专门为 TSan 做的协程（coroutine）支持。具体来说：
+
+配置选项
+- configure --enable-tsan（meson 选项 -Dtsan=true）即可开启
+- 限制：TSan 不能与其他 sanitizer 混用（error('TSAN is not supported with other sanitizers')）
+- 要求编译器提供 fiber 注解接口 __tsan_create_fiber（clang/gcc 较新版本都有）
+- 会自动加 -Wno-tsan 抑制 gcc ≥ 11 产生的警告
+
+协程支持（关键点）
+- util/coroutine-ucontext.c 里有 #ifdef CONFIG_TSAN 的专门代码
+- QEMU 的协程是基于 ucontext 的，而 TSan 不理解协程栈切换，所以 QEMU 用 __tsan_create_fiber / __tsan_switch_to_fiber / __tsan_release 这些 fiber API 告诉 TSan 什么
+  时候切换栈，避免误报
+
+文档与测试
+- docs/devel/testing/main.rst 有专门一节 "Building and Testing with TSan"，包括：
+    - make docker-test-tsan@ubuntu2404 用 docker 跑 TSan 测试，警告输出到 build/tsan/
+    - 建议编译一个 TSan 版本的 glib（否则 glib 内部会有很多误报）
+    - 运行时设置 TSAN_OPTIONS=suppressions=.../tests/tsan/suppressions.tsan
+- 有 tests/tsan/suppressions.tsan 文件，用于在运行时抑制已知的误报/已知问题
+
+注意点：TSan 本身不开 O0 的话误报可能较多，官方文档建议 --extra-cflags="-O0"。另外 TSan 与 qemu 的 fork/exec、某些插件路径可能不兼容，具体看文档那节更细的说明。
+
+2026-08-04 : 奇怪，为什么 O0 不打开会导致 tsan
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

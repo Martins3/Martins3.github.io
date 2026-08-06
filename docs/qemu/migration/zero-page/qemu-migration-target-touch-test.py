@@ -6,11 +6,14 @@ import subprocess
 import time
 from pathlib import Path
 
-# 用于验证 docs/qemu/migration/zero-page.md 问题
+# 用于验证同目录下 zero-page.md 中的问题
 # 这是 codex 写的，codex 比我想的还要 nb 啊
 
 SIZE_MB = int(os.environ.get("SIZE_MB", "5120"))
 TARGET_BACKEND = os.environ.get("TARGET_BACKEND", "memfd")  # ram or memfd
+MULTIFD = os.environ.get("MULTIFD", "off") == "on"
+MULTIFD_CHANNELS = int(os.environ.get("MULTIFD_CHANNELS", "8"))
+POSTCOPY = os.environ.get("POSTCOPY", "off") == "on"
 BASE = Path("/tmp/qemu-mig-touch")
 SRC_QMP = str(BASE / "src.qmp")
 DST_QMP = str(BASE / "dst.qmp")
@@ -106,7 +109,7 @@ def main():
         except FileNotFoundError:
             pass
 
-    print(f"Preparing source RAM file {SRC_RAM}: configured={SIZE_MB} MiB, target_backend={TARGET_BACKEND}")
+    print(f"Preparing source RAM file {SRC_RAM}: configured={SIZE_MB} MiB, target_backend={TARGET_BACKEND}, multifd={MULTIFD}, postcopy={POSTCOPY}")
     common = [
         QEMU, "-nodefaults", "-display", "none", "-nographic",
         "-serial", "none", "-monitor", "none", "-m", f"{SIZE_MB}M",
@@ -124,11 +127,14 @@ def main():
     else:
         raise ValueError("TARGET_BACKEND must be ram or memfd")
 
+    # multifd/postcopy 必须在 incoming 开始之前设置，所以这些实验用 defer,
+    # 等 set-capabilities 之后再 migrate-incoming
+    dst_incoming = "defer" if (MULTIFD or POSTCOPY) else f"tcp:127.0.0.1:{PORT}"
     dst_cmd = common + [
         "-object", target_object,
         "-machine", "q35,accel=tcg,memory-backend=mem",
         "-qmp", f"unix:{DST_QMP},server=on,wait=off",
-        "-incoming", f"tcp:127.0.0.1:{PORT}",
+        "-incoming", dst_incoming,
     ]
 
     procs = []
@@ -140,10 +146,35 @@ def main():
         procs.append(src)
         s1, fsrc = qmp_connect(SRC_QMP)
         s2, fdst = qmp_connect(DST_QMP)
+        if MULTIFD:
+            # 两端都要开 multifd,target 的 multifd_recv_zero_page_process()
+            # 对首次收到的 zero page 不 touch
+            for f in (fsrc, fdst):
+                qmp(f, "migrate-set-capabilities",
+                    {"capabilities": [{"capability": "multifd", "state": True}]})
+                qmp(f, "migrate-set-parameters",
+                    {"multifd-channels": MULTIFD_CHANNELS})
+        if POSTCOPY:
+            # multifd + postcopy 时 zero page 会被立即 memset,预期 RSS 上涨
+            for f in (fsrc, fdst):
+                qmp(f, "migrate-set-capabilities",
+                    {"capabilities": [{"capability": "postcopy-ram", "state": True}]})
+        if MULTIFD or POSTCOPY:
+            qmp(fdst, "migrate-incoming", {"uri": f"tcp:127.0.0.1:{PORT}"})
         print("Before migration:")
         measure(dst.pid, "target")
         before = get_stat(dst.pid)
+        if POSTCOPY:
+            # 限速保证发出 migrate-start-postcopy 时 precopy 还没跑完
+            qmp(fsrc, "migrate-set-parameters", {"max-bandwidth": 16 * 1024 * 1024})
         qmp(fsrc, "migrate", {"uri": f"tcp:127.0.0.1:{PORT}"})
+        if POSTCOPY:
+            time.sleep(0.3)
+            try:
+                qmp(fsrc, "migrate-start-postcopy")
+                print("switched to postcopy")
+            except Exception as e:
+                print(f"migrate-start-postcopy failed: {e}")
         while True:
             info = qmp(fsrc, "query-migrate")
             status = info.get("status")

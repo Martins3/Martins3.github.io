@@ -1,8 +1,10 @@
-## seqlock
+# seqlock
 <!-- 5a35e8c1-0181-4093-a29d-ef721fae46e9 -->
 
 https://www.kernel.org/doc/html/latest/locking/seqlock.html
+中介绍了多种模式，这里仅仅是其中很简单的部分了。
 
+## 基本实现
 基本想法很简单:
 1. writer 首先互斥
 2. reader 原理，如果在 read 的过程中发现了中间存在 writer 修改过内容，那么就重试。
@@ -29,15 +31,23 @@ static inline unsigned read_seqbegin(const seqlock_t *sl)
 细节的考虑，似乎不仅仅有 spinlock ，但是如果是 mutex 或者 rwlock 的话，
 那么岂不是，也可以有两个 lock 吗？
 
+- [ ] 为什么需要使用 memory barrier ?
 
-dcache.c:d_lookup 的锁
+## 使用场景
+既然都是考虑多读少写的场景，那么?
 
-- 为什么需要使用 memory barrier ?
-  - spin lock 可以保证只有一个 writer 存在。
-  - 如果不使用，write barrier ，可以相当于 writer 不写该字段了
-  ，对于 read barrier 类似。那么就可能让 reader 直接通过了。
+1. 为什么不去直接使用 rwlock ?
 
-### QEMU 的实现
+- https://stackoverflow.com/questions/55746320/why-rwlock-is-more-popular-than-seqlock-in-linux-kernel
+	- seqlock 中 reader 不会 lock writer
+	- 但是 seqlock 要求 reader 可以处理 data race 的数据
+
+2. 为什么不去使用 RCU ?
+
+rcu 用于保证这个资源不可释放，但是 seqlock 在 reader 中可以做多个操作，只要操作期间是没有 writer 的
+也这个比 RCU 使用范围更广，但是开销更大。
+
+## QEMU 的实现
 
 include/qemu/seqlock.h 中，更加简洁明了:
 
@@ -50,13 +60,15 @@ static inline void seqlock_write_lock_impl(QemuSeqLock *sl, QemuLockable *lock)
 }
 ```
 
-### rwlock 和 seqlock 的差别
-https://stackoverflow.com/questions/55746320/why-rwlock-is-more-popular-than-seqlock-in-linux-kernel
-
-### 其他
 - 其他的实现 https://github.com/rigtorp/Seqlock
 
-### raw_write_seqcount_latch 上写了好长的注释哦
+## 案例
+### dcache.c:d_lookup 的锁
+
+## TODO
+1. raw_write_seqcount_latch 上写了好长的注释哦
+
+
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

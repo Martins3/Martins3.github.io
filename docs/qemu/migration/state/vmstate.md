@@ -1,3 +1,4 @@
+# vmstate
 ## 核心结构体
 
 VMStateInfo
@@ -78,11 +79,7 @@ static SaveState savevm_state = {
     .global_section_id = 0,
 };
 ```
-
-的这个上面挂
-```c
-SaveStateEntry
-```
+的这个上面挂 SaveStateEntry
 
 然后将 `savevm_ram_handlers` 和 `ram_state` 关联为其成员:
 ```c
@@ -723,6 +720,191 @@ static int device_post_load(void *opaque, int version_id)
 另外，post_load() 只有在全部字段和 subsection 都成功加载之后才会执行；因此把能够延迟的分配放到 post_load()，确实还能减少迁移流中途损坏时的资源清理问题。
 
 **这个分析看，qemu 还有一些实现的问题**
+
+## 一些代码分析
+
+- __clone3
+  - start_thread
+    - qemu_thread_start
+      - migration_thread
+        - qemu_savevm_state_header
+          - qemu_savevm_send_configuration
+            - vmstate_save_vmsd_v
+
+```c
+static const VMStateDescription vmstate_configuration = {
+    .name = "configuration",
+    .version_id = 1,
+    .pre_load = configuration_pre_load,
+    .post_load = configuration_post_load,
+    .pre_save = configuration_pre_save,
+    .post_save = configuration_post_save,
+    .fields = (const VMStateField[]) {
+        VMSTATE_UINT32(len, SaveState),
+        VMSTATE_VBUFFER_ALLOC_UINT32(name, SaveState, 0, NULL, len),
+        VMSTATE_END_OF_LIST()
+    },
+    .subsections = (const VMStateDescription * const []) {
+        &vmstate_target_page_bits,
+        &vmstate_capabilites,
+        &vmstate_uuid,
+        NULL
+    }
+};
+```
+
+
+首先
+- __clone3
+  - start_thread
+    - qemu_thread_start
+      - migration_thread
+        - qemu_savevm_state_header
+          - vmstate_save_state
+            - vmstate_save_state_v
+
+- __clone3
+  - start_thread
+    - qemu_thread_start
+      - migration_thread
+        - migration_iteration_run
+          - qemu_savevm_state_iterate (那些注册了 SaveVMHandlers 的先完成这些 iterate 操作)
+            - ram_save_iterate
+	    - dirty_bitmap_save_iterate
+          - migration_completion
+            - migration_completion_precopy
+              - qemu_savevm_state_complete_precopy
+                - qemu_savevm_state_complete_precopy_non_iterable
+                  - vmstate_save
+                    - vmstate_save_state
+                      - vmstate_save_state_v
+                        - virtio_gpu_save (调用到具体 hook 中)
+
+在 qemu_savevm_state_complete_precopy_non_iterable 中
+```c
+    QTAILQ_FOREACH(se, &savevm_state.handlers, entry) {
+        if (se->vmsd && se->vmsd->early_setup) {
+            /* Already saved during qemu_savevm_state_setup(). */
+            continue;
+        }
+        printf(" %s\n",  se->idstr);
+```
+
+:sort u 之后，结果为:
+```txt
+0000:00:00.0/I440FX
+0000:00:01.0/PIIX3
+0000:00:01.1/ide
+0000:00:01.2/uhci
+0000:00:01.3/piix4_pm
+0000:00:02.0/0:1:0/scsi-disk
+0000:00:02.0/virtio-scsi
+0000:00:03.0/virtio-blk
+0000:00:04.0/virtio-blk
+0000:00:05.0/virtio-net
+0000:00:06.0/virtio-net
+0000:00:07.0/virtio-balloon
+0000:00:08.0/ipmi-interface-pci-kcs
+0000:00:0a.0/virtio-gpu
+0000:00:0b.0/virtio-console
+0000:00:0e.0/pcie-root-port
+0000:00:0f.0/virtio-input
+0000:00:10.0/2/usb-kbd
+0000:00:10.0/3/usb-ptr
+0000:00:10.0/xhci
+PCIBUS
+PCIHost
+acpi_build
+apic
+cpu
+cpu_common
+dirty-bitmap
+dma
+fdc
+fw_cfg
+globalstate
+i2c_bus
+i8254
+i8259
+ioapic
+ipmi-bmc-sim
+kvm-tpr-opt
+kvmclock
+mc146818rtc
+pckbd
+pcspk
+port92
+ps2kbd
+ps2mouse
+ram
+serial
+slirp
+smbus-eeprom
+timer
+vmmouse
+```
+可以看到这里是有 ram 的
+
+所有的东西都是保存这个全局变量中:
+```c
+static SaveState savevm_state = {
+    .handlers = QTAILQ_HEAD_INITIALIZER(savevm_state.handlers),
+    .handler_pri_head = { [0 ... MIG_PRI_MAX] = NULL },
+    .global_section_id = 0,
+};
+```
+
+例如这里的东西，
+
+- main
+  - qemu_init
+    - qmp_x_exit_preconfig
+      - qmp_x_exit_preconfig
+        - qemu_init_board
+          - machine_run_board_init
+            - pc_init1
+              - x86_cpus_init
+                - x86_cpu_new
+                  - qdev_realize
+                    - object_property_set_bool
+                      - object_property_set_qobject
+                        - object_property_set
+                          - property_set_bool
+                            - device_set_realized
+                              - x86_cpu_realizefn
+                                - cpu_exec_realizefn
+                                  - cpu_vmstate_register
+                                    - vmstate_register
+                                      - vmstate_register_with_alias_id
+                                        - savevm_state_handler_insert
+
+ram 的注册方法:
+```txt
+register_savevm_live("ram", 0, 4, &savevm_ram_handlers, &ram_state);
+```
+而一般在 vmstate_register_with_alias_id 可以看到，是没有注册 ops 的
+
+从这个的条件的理解，那么 SaveVMHandlers 如何被修改?
+
+不过，现在，我们知道这两个结构体是做什么的了:
+
+```c
+typedef struct SaveState {
+  // ...
+};
+
+
+struct SaveStateEntry {
+  // ...
+};
+```
+
+
+- __clone3
+  - start_thread
+    - qemu_thread_start
+      - migration_thread
+        - migration_iteration_run
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

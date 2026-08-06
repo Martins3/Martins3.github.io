@@ -108,6 +108,80 @@ static void test_rcu_workqueue(void)
 }
 
 /*
+ * flush_rcu_work 分析（kernel/workqueue.c:flush_rcu_work）
+ *
+ * 使用场景:
+ *   rcu_work 的回调是在一个完整的 RCU grace period 之后才被 queue 到
+ *   workqueue 上执行的（queue_rcu_work 内部是 call_rcu + rcu_work_rcufn）。
+ *   典型用于"必须先等所有 RCU reader 退出，再做释放/清理"的场景，
+ *   例如 mm/slab_common.c 中 kmem_cache 的销毁。模块卸载、对象销毁路径上
+ *   需要确保这种延后执行的 work 彻底完成时，就用 flush_rcu_work。
+ *
+ * 实现特点:
+ *   if (WORK_STRUCT_PENDING_BIT 仍然置位)
+ *		说明 work 还在等 RCU grace period，尚未真正入队，
+ *		此时先 rcu_barrier() 等 grace period 结束、回调把 work 挂入 wq，
+ *		然后再 flush_work()。
+ *   else
+ *		work 已经入队或执行中，直接 flush_work()。
+ *
+ * 和其他 flush 系 API 的区分:
+ *   1. flush_work : 只等 work 本身执行完，不管任何"前置等待"。
+ *      直接对 rcu_work 用 flush_work 是错的——如果 grace period 还没过，
+ *      work 根本还没入队，flush_work 会立刻返回，造成"以为清理完了"的假象。
+ *   2. flush_delayed_work : 会主动 timer_delete_sync() 把还没到点的
+ *      delayed work 提前入队执行，即"加速"。flush_rcu_work 没有对应的
+ *      加速手段（RCU grace period 无法取消），只能老老实实等。
+ *   3. cancel_work_sync / cancel_delayed_work_sync : 是"取消"语义，
+ *      pending 的 work 会被摘掉不执行；flush_rcu_work 是"等待完成"语义，
+ *      work 一定会被执行完。
+ *   4. flush_workqueue / drain_workqueue : 以整个 wq 为粒度，无法精确
+ *      只等某一个 rcu_work；而且同样解决不了 grace period 未过、work
+ *      尚未入队的问题。
+ *
+ * 返回值语义与 flush_work 一致:
+ *   true  表示本次调用真的等待了 work 执行完;
+ *   false 表示 work 本来就是 idle 的。
+ */
+static struct rcu_work flush_rwork;
+static ktime_t flush_rwork_queued_at;
+
+static void flush_rcu_work_fn(struct work_struct *work)
+{
+	/* 从 queue_rcu_work 到真正执行，中间隔了一个 RCU grace period */
+	pr_info("[flush_rcu_work] work 开始执行，距 queue_rcu_work 已过 %lld us\n",
+		ktime_us_delta(ktime_get(), flush_rwork_queued_at));
+}
+
+static void test_flush_rcu_work(void)
+{
+	ktime_t begin;
+	bool waited;
+
+	INIT_RCU_WORK(&flush_rwork, flush_rcu_work_fn);
+	flush_rwork_queued_at = ktime_get();
+	queue_rcu_work(wq, &flush_rwork);
+
+	/*
+	 * 立刻 flush：此时 grace period 大概率还没过，
+	 * flush_rcu_work 内部会先 rcu_barrier() 再等执行，
+	 * 耗时可以用来直观感受 grace period 的长度。
+	 */
+	begin = ktime_get();
+	waited = flush_rcu_work(&flush_rwork);
+	pr_info("[flush_rcu_work] flush 返回 %s，耗时 %lld us（含等待 RCU grace period）\n",
+		waited ? "true(真的等了)" : "false(本来空闲)",
+		ktime_us_delta(ktime_get(), begin));
+
+	/* work 已执行完，再次 flush 应立即返回 false */
+	begin = ktime_get();
+	waited = flush_rcu_work(&flush_rwork);
+	pr_info("[flush_rcu_work] 第二次 flush 返回 %s，耗时 %lld us\n",
+		waited ? "true" : "false(立即返回)",
+		ktime_us_delta(ktime_get(), begin));
+}
+
+/*
  * 测试 system_power_efficient_wq 的睡眠精度
  * 目标：在指定的 nsec (0.5s) 时间点精确唤醒
  */
@@ -309,6 +383,13 @@ int test_workqueue(long action)
 		 * 之后被 queue 上去，其余用起来都是一样的。
 		 */
 		test_rcu_workqueue();
+		break;
+	case 18:
+		/*
+		 * 测试 flush_rcu_work :
+		 * 观察 flush 的耗时，理解其内部 rcu_barrier + flush_work 的两段式等待
+		 */
+		test_flush_rcu_work();
 		break;
 	case 17:
 		/*

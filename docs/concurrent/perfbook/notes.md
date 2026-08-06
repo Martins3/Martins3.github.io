@@ -2,7 +2,7 @@
 
 ## 并发数据结构
 
-stack 有什么并发可言吗？
+stack : Treiber stack (hazard pointer lockess stack )
 
 queue : 如果是 single consumer / single producer 有 lockess 吗?
 
@@ -19,23 +19,17 @@ rb tree 的并发是什么?
 
 ### 容易的三个问题
 
-1. seqlock 的实现
-3. 什么时候应该使用 seqlock ，他的好处和限制是什么?
-	4.  __d_lookup 细节继续分析理解
+4.  __d_lookup 细节继续分析理解
 5. rcu linked list / hash table 和普通的 linked list 的区别是什么?
 
 7. chapters/14 中的高级同步技术的确是非常好用的，lock free 的几个基本概念
-8. read once 和 write once 到底有什么奇怪的，彻底整理一下吧，用 lwn 的东西
 10. 找到那个 cst 的例子
 11. 为什么内核需要定义 LKMM ，LKMM 的具体定义是什么?
-12. 继续看看 refcont_t 和 atomic_t 的使用说明
-13. 把 cpp 的 demo 都一个个看看吧
-14. hazard pointer 是做什么的?
+12. 继续看看 refcont_t 和 atomic_t 的使用说明是什么?
 
 ### 不容易的问题
 - 写一个 GPU 角度的对比
 	- GPU 存在 cache 一致性和 memory model 吗?
-
 
 ## chapter 5
 5.22 的扩展思考

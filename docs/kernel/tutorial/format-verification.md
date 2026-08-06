@@ -1,4 +1,4 @@
-## 先收集起来
+## 形式化验证
 https://www.moritz.systems/blog/an-introduction-to-formal-verification/
 
 https://dafny.org/

@@ -95,7 +95,6 @@ main loop 中上锁位置非常的早，在 `pc_init1 => qemu_init_subsystems` �
 
 - memory_region_transaction_commit : 这个可以保证不存在多个 thread 同时修改 memory mapping ，但是可以一个在修改，另一个还在访问, 这是因为 AddressSpace::current_map 的访问是通过 rcu 的。
 
-
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

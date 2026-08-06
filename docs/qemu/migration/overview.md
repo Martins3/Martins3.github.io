@@ -1,3 +1,5 @@
+# QEMU 热迁移基础
+
 ## qemu 存在哪些状态控制
 
 1. hmp : stop / cont

@@ -1,20 +1,18 @@
-## smp_load_acquire 和 smp_cond_load_acquire 的关系是什么?
+# 基于 kcore 的几种内核调试办法
 
-只是一个封装而已，主要是 spinlock 和 scheduler 在使用
-```c
-#define smp_cond_load_acquire(ptr, cond_expr)
-({
-	typeof(ptr) __PTR = (ptr);
-	__unqual_scalar_typeof(*ptr) VAL;
-	for (;;) {
-		VAL = smp_load_acquire(__PTR);
-		if (cond_expr)
-			break;
-		__cmpwait_relaxed(__PTR, VAL);
-	}
-	(typeof(*ptr))VAL;
-})
-```
+## 物理机
+
+1. crash
+2. drgn
+
+## 处理虚拟机
+- kvm-dmesg
+	- 获取 Guest 内存，然后直接
+	- 让 ai 实现了一个 aarch64 的支持: https://github.com/rayylee/kvm-dmesg/pull/6
+- qemu :
+	- gdb kernel
+	- dump 内核，然后使用 crash 分析
+- perf kvm
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

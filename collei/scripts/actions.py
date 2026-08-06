@@ -726,7 +726,7 @@ def action_vlan(context: ActionContext, args: Sequence[str]) -> None:
 def _hmp_sequence(context: ActionContext, commands: Sequence[str]) -> None:
     socket = context.vm.directory / context.vm.which_qemu / "hmp"
     for command in commands:
-        print(hmp_command(socket, command), end="")
+        _migration_hmp_command(socket, command)
 
 
 def action_cpr_exec(context: ActionContext, args: Sequence[str]) -> None:
@@ -969,13 +969,35 @@ def action_perf_guest(context: ActionContext, args: Sequence[str]) -> None:
     context.runner.exec([*common, "report"])
 
 
-def _wait_postmigrate(context: ActionContext) -> None:
-    while True:
-        with _qmp(context) as qmp:
-            status = qmp.execute("query-status")
-        if isinstance(status, dict) and status.get("status") == "postmigrate":
+def _wait_postmigrate(context: ActionContext, timeout: float = 300) -> None:
+    qmp_path = context.vm.directory / context.vm.which_qemu / "qmp-no-pretty"
+    deadline = time.monotonic() + timeout
+    last: dict[str, object] | None = None
+    while time.monotonic() < deadline:
+        with QmpClient(qmp_path) as qmp:
+            migration = qmp.execute("query-migrate")
+            run_state = qmp.execute("query-status")
+        if not isinstance(migration, dict) or not isinstance(run_state, dict):
+            raise ColleiError(
+                f"invalid migration state: migration={migration!r}, run={run_state!r}"
+            )
+        last = migration
+        # migrate 命令如果失败，runstate 会一直停在 running，
+        # 只看 postmigrate 会无限等待，必须同时检查 migration 状态。
+        status = migration.get("status")
+        if status == "failed":
+            error = migration.get("error-desc", "unknown migration error")
+            raise ColleiError(f"migration failed: {error}")
+        if status == "cancelled":
+            raise ColleiError("migration cancelled")
+        if status == "none":
+            raise ColleiError("migrate command did not start a migration")
+        if run_state.get("status") == "postmigrate":
             return
         time.sleep(1)
+    raise ColleiError(
+        f"migration did not reach postmigrate after {timeout:g} seconds: {last!r}"
+    )
 
 
 def action_migrate_to_file(context: ActionContext, args: Sequence[str]) -> None:
@@ -1010,6 +1032,26 @@ def action_migrate_to_file(context: ActionContext, args: Sequence[str]) -> None:
         ),
     )
     _wait_postmigrate(context)
+
+
+def action_savevm(context: ActionContext, args: Sequence[str]) -> None:
+    del args
+    action_migrate_to_file(context, ())
+    # vmstate 已经写入 vmstate.img，杀掉处于 postmigrate 状态的 QEMU，
+    # 之后用 loadvm 从 vmstate.img 恢复。
+    os.kill(context.vm.pid, signal.SIGTERM)
+    deadline = time.monotonic() + 5
+    while Path(f"/proc/{context.vm.pid}").exists() and time.monotonic() < deadline:
+        time.sleep(0.05)
+    print("Done")
+
+
+def action_loadvm(context: ActionContext, args: Sequence[str]) -> None:
+    del args
+    state = context.vm.directory / "vmstate.img"
+    if not state.is_file():
+        raise ColleiError(f"{state} not found, run savevm first")
+    context.runner.exec([context.collei.scripts / "collei.py", "-l"])
 
 
 def action_hotplug_nic(context: ActionContext, args: Sequence[str]) -> None:
@@ -1698,6 +1740,8 @@ ACTIONS: dict[str, Action] = {
     "load_vm_cpr": Action(action_load_vm_cpr, VmRequirement.ACTIVE),
     "cpr_exec": Action(action_cpr_exec, VmRequirement.ACTIVE),
     "migrate_to_file": Action(action_migrate_to_file, VmRequirement.ACTIVE),
+    "savevm": Action(action_savevm, VmRequirement.ACTIVE),
+    "loadvm": Action(action_loadvm, VmRequirement.INACTIVE),
     "snapshot-load": Action(action_snapshot_load, VmRequirement.ACTIVE),
     "snapshot-save": Action(action_snapshot_save, VmRequirement.ACTIVE),
     "path": Action(action_path),

@@ -56,7 +56,6 @@ impl List {
             }
         }
     }
-
 }
 
 impl Drop for List {

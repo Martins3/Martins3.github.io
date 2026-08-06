@@ -100,7 +100,7 @@ sudo dnf install ghostty
 
 7. pdf 阅读器
 
-直接到 wps 官网中去下载就可以了。
+flatpak install  flathub com.wps.Office
 
 8. wezterm
 ```sh
@@ -227,6 +227,30 @@ http://192.168.1.30/home/index.html
 
 ## 参考
 https://world.hey.com/dhh/linux-as-the-new-developer-default-at-37signals-ef0823b7
+
+## Asahi Linux (Fedora Asahi Remix 43, aarch64) 安装记录 2026-07-29
+
+只允许 dnf 和 flatpak 的前提下，本文档中各软件在 Asahi 上的可用性:
+
+已验证可用:
+- flameshot: `flatpak install -y flathub org.flameshot.Flameshot` 有 aarch64 包，装上即为 14.0.0，
+  `flatpak permission-set screenshot screenshot org.flameshot.Flameshot yes` 正常生效。
+  应用列表图标需要注销重新登录后才会出现（GNOME Shell 缓存）。
+- ghostty: copr `scottames/ghostty` 直接提供 aarch64 包，`sudo dnf install ghostty` 即可。
+- wezterm: flatpak `org.wezfurlong.wezterm` 有 aarch64 包（文档中的 copr 方式应该也可以，未验证）。
+- 字体 / appindicator / thunderbird: dnf 官方仓库均有 aarch64 包，已安装验证:
+  `sudo dnf install -y google-noto-sans-fonts google-noto-sans-cjk-fonts dejavu-sans-fonts gnome-shell-extension-appindicator thunderbird`。
+  appindicator 装完立即 `gnome-extensions enable` 同样会报 does not exist，注销重登后执行即可。
+
+不可用或需绕道的:
+- 腾讯会议: `com.tencent.wemeet` 虽有 aarch64 flatpak 包，但自带的闭源 `libImSDK.so` 按 4K 页链接，
+  在 Asahi 默认的 16K 页内核（kernel-16k）下无法加载:
+  `error while loading shared libraries: libImSDK.so: ELF load command address/offset not page-aligned`。
+  解法是 `sudo dnf install kernel`（Asahi 仓库提供 4K 页内核，与 kernel-16k 并存）并重启切换，代价是轻微性能损失。
+  不装 4K 内核则不可用，已卸载。
+- QQ 音乐: flatpak `com.qq.QQmusic` 只有 x86_64，aarch64 无法安装。
+- Edge / Slack / WPS: 官方均只提供 x86_64 的 rpm，aarch64 无包。
+- 打印机、内核管理（debuginfo、切换内核）: Asahi 使用自己的内核包，本节方法不适用。
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

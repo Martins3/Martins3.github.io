@@ -1,27 +1,4 @@
-## 总结下其中的 workqueue 中间的 rcu
-- flush_rcu_work
-
-## [ ] xarray
-
-```c
-/* Private */
-static inline void *xa_head(const struct xarray *xa)
-{
-	return rcu_dereference_check(xa->xa_head,
-						lockdep_is_held(&xa->xa_lock));
-}
-
-/* Private */
-static inline void *xa_head_locked(const struct xarray *xa)
-{
-	return rcu_dereference_protected(xa->xa_head,
-						lockdep_is_held(&xa->xa_lock));
-}
-```
-
-## [ ] md raid
-https://lore.kernel.org/all/20230523021017.3048783-6-yukuai1@huaweicloud.com/
-
+# pi
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

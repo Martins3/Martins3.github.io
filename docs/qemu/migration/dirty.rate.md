@@ -74,6 +74,9 @@ https://blog.csdn.net/huang987246510/article/details/133684028
 ## 这个东西我真的是没有想到的
 https://www.qemu.org/docs/master/devel/migration/dirty-limit.html
 
+## [ ] softmmu/cpu-throttle.c
+降低 Guest 的执行速度，从而让 memory dirty 的速度下降。
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="
