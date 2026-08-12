@@ -2,6 +2,19 @@
 
 尝试了几年，都失败了。
 
+## 在 Windows 上构建 QEMU
+
+Windows 原生构建 QEMU 并不容易，相关工具往往转而使用 MSYS2、WSL 或交叉编译环境：
+
+- <https://stackoverflow.com/questions/53084815/compile-qemu-under-windows-10-64-bit-for-windows-10-64-bit>
+
+## Hyper-V 虚拟机网络地址
+
+需要稳定地址时，先为虚拟网卡设置固定 MAC。Hyper-V Default Switch 的地址仍可能变化，
+可以考虑创建独立的虚拟交换机，并用 PowerShell 管理网络设置：
+
+- <https://superuser.com/questions/1526309/hyper-v-default-switch-static-ip>
+
 ## 记录下 windows 真正可用的还需要的东西
 1. 额外的一个显示器
 2. 尝试用这个解决 windows 的剪切板问题

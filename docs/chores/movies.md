@@ -79,6 +79,10 @@ https://book.douban.com/subject/10583099/
 - https://www.zhihu.com/question/1979882986758432108
 - https://hurricane618.me/2023/10/03/my-recommendation-list-1/
 
+## 痴迷
+
+强烈推荐，杂碎汽车玻璃，破窗而入，真的把我整个人都吓的跳起来了
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

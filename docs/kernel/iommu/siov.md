@@ -134,6 +134,25 @@ SIOV 也没有细节啊
 
 SVA = 设备与某个进程共享同一套虚拟地址空间
 
+## IOMMU page fault 具体代码在哪里?
+
+https://mysummary.readthedocs.io/zh/latest/%E8%BD%AF%E4%BB%B6%E6%9E%84%E6%9E%B6%E8%AE%BE%E8%AE%A1/%E5%9C%B0%E5%9D%80%E7%A9%BA%E9%97%B4%E7%9A%84%E6%95%85%E4%BA%8B.html#id7
+```txt
+config INTEL_IOMMU_SVM
+	bool "Support for Shared Virtual Memory with Intel IOMMU"
+	depends on X86_64
+	select MMU_NOTIFIER
+	select IOMMU_SVA
+	select IOMMU_IOPF
+	help
+	  Shared Virtual Memory (SVM) provides a facility for devices
+	  to access DMA resources through process address space by
+	  means of a Process Address Space ID (PASID).
+```
+
+## pasid 和 siov 是等价的吗?
+- https://lpc.events/event/11/contributions/1021/attachments/744/1700/lpc-2021-kernel-svm-jp.pdf
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

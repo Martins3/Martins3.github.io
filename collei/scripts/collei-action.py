@@ -9,6 +9,7 @@ from typing import Sequence
 
 from actions import (
     ACTIONS,
+    Action,
     ActionContext,
     VmRequirement,
     effective_requirement,
@@ -33,13 +34,19 @@ def _choose(items: Sequence[str]) -> str:
     return completed.stdout.strip().splitlines()[0]
 
 
-def _choose_vm(context: ColleiContext, requirement: VmRequirement) -> VmRuntime:
+def _choose_vm(
+    context: ColleiContext, action: Action, requirement: VmRequirement
+) -> VmRuntime:
     active = None
     if requirement is VmRequirement.ACTIVE:
         active = True
     elif requirement is VmRequirement.INACTIVE:
         active = False
     candidates = context.list_vms(active)
+    if action.selector_option is not None:
+        candidates = [
+            vm for vm in candidates if vm.config.options.enabled(action.selector_option)
+        ]
     if not candidates:
         raise ColleiError("no matching VM found")
     if len(candidates) == 1:
@@ -93,11 +100,11 @@ def main(argv: Sequence[str] | None = None) -> int:
         context = ColleiContext.load()
         requirement = effective_requirement(action, remainder)
         if choose:
-            vm = _choose_vm(context, requirement)
+            vm = _choose_vm(context, action, requirement)
         else:
             vm = context.vm(vm_name)
             if action_name == "ssh" and not vm.active and vm_name is None:
-                vm = _choose_vm(context, VmRequirement.ACTIVE)
+                vm = _choose_vm(context, action, VmRequirement.ACTIVE)
         validate_requirement(action_name, action, vm, remainder)
         if vm_name is not None or choose:
             context.set_default(vm)

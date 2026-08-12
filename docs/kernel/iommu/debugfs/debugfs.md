@@ -1,5 +1,6 @@
-## intel 的 iommu debugfs
+# iommu debugfs
 
+## intel
 /sys/kernel/debug/iommu/intel 下:
 ```txt
 drwxr-xr-x   2 root root 0 Jan 10 12:38 0000:ff:1e.2
@@ -33,7 +34,6 @@ debugfs 文件的结果在:
 ./debugfs-intel-invalidation_queue.txt
 ./debugfs-intel-iommu_regset.txt
 ./debugfs-intel-ir_translation_struct.txt : 是的，这就是 interrupt remaping 相关的东西
-
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

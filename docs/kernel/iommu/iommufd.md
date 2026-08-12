@@ -1,16 +1,102 @@
 # iommufd
 
-## 文档
+总体兴趣不大，简单记录下:
+
+## 基本文档
+drivers/iommu/iommufd/ 下，其实代码量不大
+
+内核文档
 - https://lpc.events/event/17/contributions/1418/attachments/1297/2607/LPC2023_iommufd.pdf
 - https://lpc.events/event/18/contributions/1789/
+- https://docs.kernel.org/userspace-api/iommufd.html
 
-## 为什么不是继续用 VFIO container，而是引入 iommufd?
+
+```c
+static struct miscdevice iommu_misc_dev = {
+	.minor = MISC_DYNAMIC_MINOR,
+	.name = "iommu",
+	.fops = &iommufd_fops,
+	.nodename = "iommu",
+	.mode = 0660,
+};
+
+
+static struct miscdevice vfio_misc_dev = {
+	.minor = VFIO_MINOR,
+	.name = "vfio",
+	.fops = &iommufd_fops,
+	.nodename = "vfio/vfio",
+	.mode = 0666,
+};
+```
+
+1. qemu 的文档: docs/devel/vfio-iommufd.rst
+
+主要是介绍 memory region 相关的
+
+为什么 vfio 需要注册 memory listerner ，似乎启动的时候，在不断的 map 和 remap iommu 的 table
+
+```txt
+/dev/vfio
+├── 13
+├── 14
+├── devices
+│   ├── vfio0
+│   └── vfio1
+└── vfio
+```
+
+### kvm forum : IOMMUFD Integration in QEMU
+https://www.youtube.com/watch?v=PlEzLywexHE
+
+操作 device 的接口:
+
+- VFIO_DEVICE_GET_REGION_INFO
+- VFIO_DEVICE_GET_INFO
+- VFIO_DEVICE_GET_IRQ_INFO
+- VFIO_DEVICE_SET_IRQS
+- VFIO_DEVICE_RESET
+
+操作 group 的接口:
+- VFIO_GROUP_SET_CONTAINER
+- VFIO_GROUP_GET_STATUS
+- VFIO_GROUP_GET_DEVICE_FD
+
+container 的接口:
+- VFIO_SET_IOMMU
+- VFIO_IOMMU_GET_INFO
+- VFIO_IOMMU_MAP_DMA
+- VFIO_CHECK_EXTENSION
+- VFIO_GET_API_VERSION
+
+相关会议可以看看:
+- LPC 17 : vSVM IOMMU extension Highlevel component break down and Tech challenge
+- vIOMMU implementation using hardware nested paging
+- PASID Management in KVM
+
+- IOMMU_IOAS_MAP
+- IOMMU_IOAS_COPY
+- IOMMU_IOAS_UNMAP
+- IOMMU_IOAS_ALLOC : 创建一个 ioas
+- IOMMU_IOAS_IOVA_RANGES
+- IOMMU_IOAS_ALLOW_IOVAS
+- IOMMU_IOAS_COPY : 让映射在不同的 ioas 中拷贝
+
+- vfio_iommufd_physical_attach_ioas
+  - iommufd_device_attach
+    - iommufd_device_auto_get_domain
+      - iommufd_hw_pagetable_alloc
+        - iopt_table_add_domain
+          - iopt_fill_domain
+
+## 问题
+1. iommufd 可以满足一个设备可以切分为多个 domain 使用吗?
+
+## codex : 为什么不是继续用 VFIO ，而是引入 iommufd
 
 先区分两件事:
 
-- VFIO 仍然是设备直通的核心框架。`VFIO_DEVICE_GET_REGION_INFO`、
-  `VFIO_DEVICE_SET_IRQS`、`VFIO_DEVICE_RESET` 这类“怎么访问设备”的接口还在 VFIO
-  里。
+- VFIO 仍然是设备直通的核心框架。`VFIO_DEVICE_GET_REGION_INFO`、 `VFIO_DEVICE_SET_IRQS`、`VFIO_DEVICE_RESET` 这类“怎么访问设备”的接口还在 VFIO 里。
 - iommufd 替换的是 VFIO 里负责 IOMMU/DMA 地址空间管理的那层，也就是 legacy
   `vfio_iommu_type1`、`/dev/vfio/vfio` container、group fd、`VFIO_IOMMU_MAP_DMA`
   这一套。
@@ -106,70 +192,7 @@ container，然后给这个 container 设置 type1 IOMMU，再 map/unmap DMA”�
 > 变成独立、设备中心、可复用、可表达 nested/PASID/PRI/vIOMMU 的通用 uAPI。VFIO 仍然管设备，
 > 但不再适合作为所有 userspace DMA/IOMMU 能力的承载层。
 
-## viommu 可以用起来吗?
-
-##  https://docs.kernel.org/userspace-api/iommufd.html
-
-## kvm forum : IOMMUFD Integration in QEMU
-https://www.youtube.com/watch?v=PlEzLywexHE
-
-操作 device 的接口:
-
-- VFIO_DEVICE_GET_REGION_INFO
-- VFIO_DEVICE_GET_INFO
-- VFIO_DEVICE_GET_IRQ_INFO
-- VFIO_DEVICE_SET_IRQS
-- VFIO_DEVICE_RESET
-
-操作 group 的接口:
-- VFIO_GROUP_SET_CONTAINER
-- VFIO_GROUP_GET_STATUS
-- VFIO_GROUP_GET_DEVICE_FD
-
-container 的接口:
-- VFIO_SET_IOMMU
-- VFIO_IOMMU_GET_INFO
-- VFIO_IOMMU_MAP_DMA
-- VFIO_CHECK_EXTENSION
-- VFIO_GET_API_VERSION
-
-相关会议可以看看:
-- LPC 17 : vSVM IOMMU extension Highlevel component break down and Tech challenge
-- vIOMMU implementation using hardware nested paging
-- PASID Management in KVM
-
-- IOMMU_IOAS_MAP
-- IOMMU_IOAS_COPY
-- IOMMU_IOAS_UNMAP
-- IOMMU_IOAS_ALLOC : 创建一个 ioas
-- IOMMU_IOAS_IOVA_RANGES
-- IOMMU_IOAS_ALLOW_IOVAS
-- IOMMU_IOAS_COPY : 让映射在不同的 ioas 中拷贝
-
-```c
-static const struct iommufd_ioctl_op iommufd_ioctl_ops[] = {
-	IOCTL_OP(IOMMU_DESTROY, iommufd_destroy, struct iommu_destroy, id),
-	IOCTL_OP(IOMMU_IOAS_ALLOC, iommufd_ioas_alloc_ioctl, struct iommu_ioas_alloc, out_ioas_id),
-	IOCTL_OP(IOMMU_IOAS_ALLOW_IOVAS, iommufd_ioas_allow_iovas, struct iommu_ioas_allow_iovas, allowed_iovas),
-	IOCTL_OP(IOMMU_IOAS_COPY, iommufd_ioas_copy, struct iommu_ioas_copy, src_iova),
-	IOCTL_OP(IOMMU_IOAS_IOVA_RANGES, iommufd_ioas_iova_ranges, struct iommu_ioas_iova_ranges, out_iova_alignment),
-	IOCTL_OP(IOMMU_IOAS_MAP, iommufd_ioas_map, struct iommu_ioas_map, iova),
-	IOCTL_OP(IOMMU_IOAS_UNMAP, iommufd_ioas_unmap, struct iommu_ioas_unmap, length),
-	IOCTL_OP(IOMMU_OPTION, iommufd_option, struct iommu_option, val64),
-	IOCTL_OP(IOMMU_VFIO_IOAS, iommufd_vfio_ioas, struct iommu_vfio_ioas, __reserved),
-};
-```
-
-## 简要的代码分析
-
-- vfio_iommufd_physical_attach_ioas
-  - iommufd_device_attach
-    - iommufd_device_auto_get_domain
-      - iommufd_hw_pagetable_alloc
-        - iopt_table_add_domain
-          - iopt_fill_domain
-
-## 用 drgn 观察 QEMU/VFIO/iommufd 的实际关系
+## codex : 用 drgn 观察 QEMU/VFIO/iommufd 的实际关系
 
 本地环境里没有 `yyfs-nv`，实际使用的是 `yyds-nv`。这个 VM 的配置中已经启用了
 `opt/iommufd`，QEMU 启动参数里可以看到:
@@ -298,7 +321,7 @@ QEMU fd(/dev/iommu)
 - `iommu_domain.cookie_type=IOMMUFD` 和 `domain->iommufd_hwpt` 说明这个 domain 已经不再是
   legacy VFIO type1 管出来的 domain，而是由 iommufd 的 HWPT 对象承载。
 
-## https://www.phoronix.com/news/IOMMUFD-Linux-6.2
+https://www.phoronix.com/news/IOMMUFD-Linux-6.2
 
 > Further, we have advanced PCI features like Process Address Space ID (PASID) and Page Request Interface (PRI)
 > that rely on the IOMMU HW to implement them.
@@ -306,103 +329,32 @@ QEMU fd(/dev/iommu)
 > where DMA from a device can be directly delivered to a process virtual memory address by having the IOMMU HW
 > directly walk the CPU's page table for the process, and trigger faults for DMA to non-present pages.
 
-## 代码的简单阅读
+## dsv4
 
-| Files          | Lines | Code | Comments | Blanks | 主要内容 |
-|----------------|-------|------|----------|--------|----------|
-| pages.c        | 1991  | 1435 | 321      | 235    |
-| io_pagetable.c | 1216  | 903  | 146      | 167    |
-| selftest.c     | 1006  | 810  | 58       | 138    |
-| device.c       | 721   | 445  | 188      | 88     |
-| vfio_compat.c  | 539   | 385  | 91       | 63     |
-| main.c         | 463   | 338  | 74       | 51     |
-| ioas.c         | 398   | 322  | 18       | 58     |
-| hw_pagetable.c | 105   | 64   | 23       | 18     |
+接口上的变化:
 
-## Documentation/userspace-api/iommufd.rst
+┌───────────────────────────────────┬────────────────────────────────────────────────────────────────────┬────────────────────────────────────────────┐
+│ 老 VFIO ioctl                     │ iommufd 等价物                                                     │ QEMU 实现位置                              │
+├───────────────────────────────────┼────────────────────────────────────────────────────────────────────┼────────────────────────────────────────────┤
+│ open("/dev/vfio/vfio")            │ open("/dev/iommu", O_RDWR)                                         │ iommufd_backend_connect()（懒打开；也可    │
+│ (container)                       │                                                                    │ -object iommufd,fd=N 从外部传 fd）         │
+├───────────────────────────────────┼────────────────────────────────────────────────────────────────────┼────────────────────────────────────────────┤
+│ open(group_addr) +                │ 不再需要 group。直接 open("/dev/vfio/devices/vfioX") 拿 device fd  │ iommufd_cdev_getfd()（通过 sysfs 的        │
+│ VFIO_GROUP_SET_CONTAINER          │                                                                    │ vfio-dev/vfioX/dev 找 cdev 路径）          │
+├───────────────────────────────────┼────────────────────────────────────────────────────────────────────┼────────────────────────────────────────────┤
+│ VFIO_GROUP_GET_DEVICE_FD          │ VFIO_DEVICE_BIND_IOMMUFD（把设备 fd 绑到 iommufd，返回             │ iommufd_cdev_connect_and_bind() /          │
+│                                   │ out_devid）+ VFIO_DEVICE_ATTACH_IOMMUFD_PT（把设备挂到 IOAS 或     │ iommufd_cdev_pasid_attach_ioas_hwpt()      │
+│                                   │ HWPT，替代隐含的 domain attach）                                   │                                            │
+├───────────────────────────────────┼────────────────────────────────────────────────────────────────────┼────────────────────────────────────────────┤
+│ VFIO_IOMMU_MAP_DMA                │ IOMMU_IOAS_ALLOC 先分配 IOAS（替代 container 里的 domain），再     │ iommufd_backend_alloc_ioas() /             │
+│                                   │ IOMMU_IOAS_MAP                                                     │ iommufd_backend_map_dma()                  │
+├───────────────────────────────────┼────────────────────────────────────────────────────────────────────┼────────────────────────────────────────────┤
+│ VFIO_DEVICE_GET_INFO /            │ 完全不变，还是在 device fd 上发                                    │ hw/vfio/device.c（两后端共用）             │
+│ GET_REGION_INFO / GET_IRQ_INFO    │                                                                    │                                            │
+├───────────────────────────────────┼────────────────────────────────────────────────────────────────────┼────────────────────────────────────────────┤
+│ mmap(region_fd) 映射 BAR          │ 不变，还是对 device fd mmap                                        │ hw/vfio/region.c vfio_region_mmap()        │
+└───────────────────────────────────┴────────────────────────────────────────────────────────────────────┴────────────────────────────────────────────┘
 
-```c
-static struct miscdevice iommu_misc_dev = {
-	.minor = MISC_DYNAMIC_MINOR,
-	.name = "iommu",
-	.fops = &iommufd_fops,
-	.nodename = "iommu",
-	.mode = 0660,
-};
-
-
-static struct miscdevice vfio_misc_dev = {
-	.minor = VFIO_MINOR,
-	.name = "vfio",
-	.fops = &iommufd_fops,
-	.nodename = "vfio/vfio",
-	.mode = 0666,
-};
-```
-
-字符设备的目录这个显示应该有点问题吧，都是 10,196 ?
-```txt
-🧀  ls -la /dev/vfio/vfio
-crw-rw-rw- 10,196 root 16 6月  22:55  /dev/vfio/vfio
-vn on  master [!+]
-🧀  ls -la /dev/vfio
-crw-rw-rw- 10,196 root 16 6月  22:55  vfio
-```
-
-## qemu 的文档: docs/devel/vfio-iommufd.rst
-
-主要是介绍 memory region 相关的
-
-为什么 vfio 需要注册 memory listerner ，似乎启动的时候，在不断的 map 和 remap iommu 的 table
-
-## 现在没有配置也是这样的吗?
-```txt
-/dev/vfio
-├── 13
-├── 14
-├── devices
-│   ├── vfio0
-│   └── vfio1
-└── vfio
-```
-
-不知道为什么，物理机中没有这个现象:
-
-```txt
-🧀  tree /dev/vfio
-/dev/vfio
-├── 16
-└── vfio
-
-1 directory, 2 files
-```
-
-进一步导致如下错误:
-```txt
-qemu-system-x86_64: -device vfio-pci,host=0000:01:00.0,iommufd=iommufd0: vfio 0000:01:00.0: vfio /sys/bus/pci/devices/0000:01:00.0/vfio-dev: failed to load "/sys/bus/pci/devices/0000:01:00.0/vfio-dev/vfio0/dev"
-```
-
-## 什么是 vfio-ap 和 vfio-ccw ？
-``vfio-ap`` and ``vfio-ccw`` devices don't have same issue as their backend
-devices are always mdev and RAM discarding is force enabled.
-
-
-## 先到虚拟机中测试下，使用 intel 的接口
-
-继续吧
-```txt
-@[
-    iopt_table_add_domain+5
-    iommufd_hwpt_paging_alloc+543
-    iommufd_hwpt_alloc+318
-    iommufd_fops_ioctl+399
-    __se_sys_ioctl+107
-    do_syscall_64+237
-    entry_SYSCALL_64_after_hwframe+119
-]: 1
-```
-
-## iommufd 可以满足一个设备可以切分为多个 domain 使用吗?
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

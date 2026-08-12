@@ -1,3 +1,6 @@
+# vfio 内核实现
+<!-- 7effcd92-9140-4989-b000-21a5850e63cc -->
+
 ## vfio 对外提供的三个 fops
 <!-- 8e0e6be3-38c6-4bb6-9f76-b800b0067688 -->
 
@@ -54,6 +57,24 @@ ioctl(dev->device_fd, VFIO_DEVICE_GET_REGION_INFO, reg);
 ioctl(dev->device_fd, VFIO_DEVICE_GET_IRQ_INFO, irq);
 
 region->mmaps[i].mmap = mmap(..., vfio_region_fd, ...); // mmap BAR 寄存器指向的 region
+```
+
+内核文档中所说的，当创建一个软链接的时候，
+
+> a new VFIO group will appear for the group as /dev/vfio/$GROUP, where $GROUP is the IOMMU group number of which the device is a member.
+
+```txt
+/sys/kernel/iommu_groups
+├── 16
+│   ├── devices
+│   │   └── 0000:03:00.0 -> ../../../../devices/pci0000:00/0000:00:1a.0/0000:03:00.0
+│   ├── reserved_regions
+│   └── type
+```
+
+```txt
+🧀  ls /dev/vfio
+ 16   vfio
 ```
 
 

@@ -1,3 +1,4 @@
+# rust
 ## 教程
 - [Asynchronous Programming in Rust](https://github.com/rust-lang/async-book)
 - [RustBook](https://github.com/QMHTMY/RustBook) : 中文的 rust 的书籍

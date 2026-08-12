@@ -1,4 +1,4 @@
-## rust 中的 macro
+# macro
 <!-- e91004e0-b336-4d47-98b8-357476de7e67 -->
 
 https://github.com/dtolnay/proc-macro-workshop

@@ -77,11 +77,6 @@ https://github.com/ingraind/redbpf : Rust 提供给 bpf 的接口，但是我没
 6. 我们可以在返回值中间包含mut keyword 吗 ?
 7. https://doc.rust-lang.org/rust-by-example/std/hash.html `literal string`为什么总是在添加&使用
 
-- [闭包](https://stevedonovan.github.io/rustifications/2018/08/18/rust-closures-are-hard.html)
-
-
-第十三章讲到如果可以在参数列表前使用 move 关键字强制闭包获取其使用的环境值的所有权.
-
 因此，Rust 类型系统和 *trait bound* 确保永远也不会意外的将不安全的 Rc<T> 在线程间发送
 
 8. 思考一个问题：
@@ -138,6 +133,8 @@ https://www.lpalmieri.com/posts/error-handling-rust/?utm_campaign=Book&utm_sourc
 https://cheats.rs/#generics-constraints
 
 这个的确是极好的
+
+https://github.com/rust-boom/rust-boom : 教程合集
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

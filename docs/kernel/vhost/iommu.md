@@ -170,6 +170,35 @@ MODULE_PARM_DESC(max_iotlb_entries,
 然后 fio 性能会特别差，每次数据传输的时候都是需要查询一下 iotlb ，
 那么 vhost-net 也会如此么?
 
+## 理解一下 vhost 中的 iommu 吧
+
+例如在
+```c
+static int vdpasim_dma_map(struct vdpa_device *vdpa, unsigned int asid,
+			   u64 iova, u64 size,
+			   u64 pa, u32 perm, void *opaque)
+{
+	struct vdpasim *vdpasim = vdpa_to_sim(vdpa);
+	int ret;
+
+	if (asid >= vdpasim->dev_attr.nas)
+		return -EINVAL;
+
+	spin_lock(&vdpasim->iommu_lock);
+	if (vdpasim->iommu_pt[asid]) {
+		vhost_iotlb_reset(&vdpasim->iommu[asid]);
+		vdpasim->iommu_pt[asid] = false;
+	}
+	ret = vhost_iotlb_add_range_ctx(&vdpasim->iommu[asid], iova,
+					iova + size - 1, pa, perm, opaque);
+	spin_unlock(&vdpasim->iommu_lock);
+
+	return ret;
+}
+```
+
+在例如 drivers/vhost/vringh.c 中无数的 iotlb 。
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

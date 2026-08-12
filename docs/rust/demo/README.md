@@ -1,5 +1,5 @@
 ## 基本执行操作
-进入到 ~/data/vn/code/src/rust/src/demo 中执行:
+进入到 `~/data/vn/docs/rust/demo` 中执行：
 ```sh
 cargo run -- 1
 cargo run -- 10
@@ -18,7 +18,12 @@ cargo test <test_name>
 ```
 
 或者:
-cargo test --manifest-path=/home/martins3/data/vn/code/src/rust/src/demo/Cargo.toml
+cargo test --manifest-path=/home/martins3/data/vn/docs/rust/demo/Cargo.toml
+
+在 Neovim 中，把光标放到带 `#[cfg_attr(test, test)]` 的 demo 函数内，按
+`<space>lr` 或 `,x` 可以直接运行该函数并显示输出；按 `<space>lR` 或 `,R`
+可以从所有可运行入口中选择。普通辅助函数不是 runnable，需要由一个 demo
+入口函数调用。
 
 基本的原则是，让 deck 和 src/main.rs 可以快速的联系到一起，
 如果回忆不起来，那么就立刻去测试
@@ -305,17 +310,17 @@ Rust 的 **“别名 XOR 可变”** 原则：要么多个不可变引用，要�
 - **FFI 或底层操作**：用 `*mut T` 或 `NonNull<T>`，但务必确保内存安全。
 
 
-## RefCell 的作用是什么
+## Rust : RefCell 的作用是什么
 <!-- 3d9290b3-b40b-43d1-a7d2-c0a7393389fd -->
 
 RefCell 把 Rust 的“借用检查”从编译期推迟到了运行期。
 
 最好是在编译期强制检查借用规则。但在一些场景中：
-- 数据结构是 自引用 / 图结构
+- 数据结构是自引用 / 图结构
 - 接口是 &self，但内部需要修改
 - 所有权关系在运行期才能确定
 
-编译器 无法静态证明安全性，于是你会被拒绝：
+编译器无法静态证明安全性，于是你会被拒绝：
 
 ```rust
 struct Node {
@@ -386,27 +391,27 @@ let b = Rc::clone(&data);
 - Rc：解决 多所有者
 - RefCell：解决 可变性
 
-## Cell 和 RefCell
+## Rust : Cell 和 RefCell
 <!-- 142a919b-66ca-4afb-ae30-bfa8d54ad85f -->
 
 `Cell` 和 `RefCell` 是 Rust 中用于实现 **内部可变性（Interior Mutability）** 的两种类型，即在 **不可变引用（`&T`）** 的情况下也能修改内部数据。
-这与 Rust 默认的借用规则（不可变引用不能修改数据）相悖，因此它们通过运行时检查（`RefCell`）或限制（`Cell` 只能用于 `Copy` 类型）来保证内存安全。
+这与 Rust 默认的借用规则（不可变引用不能修改数据）相悖，
+因此它们通过运行时检查（`RefCell`）或限制（`Cell` 只能用于 `Copy` 类型）来保证内存安全。
 
 下面分别解释并附示例。
 
-### 1. `Cell<T>`
-- 只适用于实现了 `Copy` trait 的类型（如 `i32`, `bool`, `f64` 等）。
-	- 注意：`Cell` 无法用于非 `Copy` 类型（如 `String`、`Vec`），因为 `get()` 需要复制数据。
-- 不可获取内部值的引用（即没有 `get_ref()`），只能通过 `get()` 拷贝值、`set()` 覆盖值。
-- **无运行时开销**（零成本抽象）。
+1. `Cell<T>`
+	- 只适用于实现了 `Copy` trait 的类型（如 `i32`, `bool`, `f64` 等）。
+		- 注意：`Cell` 无法用于非 `Copy` 类型（如 `String`、`Vec`），因为 `get()` 需要复制数据。
+	- 不可获取内部值的引用（即没有 `get_ref()`），只能通过 `get()` 拷贝值、`set()` 覆盖值。
+	- **无运行时开销**（零成本抽象）。
 
-### 2. `RefCell<T>`
-- 适用于任意类型（包括非 `Copy`）。
-- 允许通过 `borrow()` 获取不可变引用，`borrow_mut()` 获取可变引用。
-- **在运行时检查借用规则**：如果违反“同时只能有一个可变引用或多个不可变引用”的规则，会 panic。
-- 有轻微运行时开销（计数器检查）。
+2. `RefCell<T>`
+	- 适用于任意类型（包括非 `Copy`）。
+	- 允许通过 `borrow()` 获取不可变引用，`borrow_mut()` 获取可变引用。
+	- **在运行时检查借用规则**：如果违反“同时只能有一个可变引用或多个不可变引用”的规则，会 panic。
+	- 有轻微运行时开销（计数器检查）。
 
-### 何时使用？
 - 需要**在不可变上下文中修改数据**（比如在 `Rc<T>` 共享所有权时）。
 - `Cell`：用于 `Copy` 类型，性能优先。
 - `RefCell`：通用，支持任意类型，但运行时检查。
@@ -693,12 +698,12 @@ fn main() {
 ## rust trait
 <!-- 71a576a5-22d5-4ccb-913e-fe061a93f7b2 -->
 
-如果一个 trait 中所有的方法有如下属性时，则该 *trait 是对象安全*的：
+如果一个 trait 中所有的方法有如下属性时，那么 dyn-compatible 的：
     1. 返回值类型不为 Self
     2. 方法没有任何泛型类型参数
 
 并非所有 trait 都能变成 dyn Trait：
-对象安全（Object Safety）规则：
+dyn-compatible 规则：
 - 方法不能返回 Self
 - 方法不能使用泛型参数
 - Self: Sized 方法不能用于 trait object
@@ -737,7 +742,12 @@ trait Sync {}
 - 参与类型系统判断
 - 不提供行为，仅提供“属性”
 
-## as_ref
+### copy trait 如何理解?
+	- 添加一个例子测试下吧
+
+### dyn trait ?
+
+## rust as_ref
 <!-- 7360269a-090c-4a42-ac7b-a3552bbf9a2e -->
 
 as_ref 的作用是什么: as_ref 和 map 的文档可以看一下，很恐怖的
@@ -750,193 +760,13 @@ as_ref 的作用是什么: as_ref 和 map 的文档可以看一下，很恐怖�
 ```
 > 其中 as_ref 和 take() 的功能类似
 
-(我靠，太 nb 了，看看神奇海螺的意见)
+在 Rust 中，`as_ref` 的本质是：在不发生所有权转移的前提下，
+把一个“拥有者或容器”借用为其内部值的引用。它并不是一个关键字，
+而是 `AsRef` trait 的统一接口。
 
-在 Rust 中，`as_ref` 的本质是：**在不发生所有权转移的前提下，
-把一个“拥有者或容器”借用为其内部值的引用**。它并不是一个关键字，
-而是 **`AsRef` trait 的统一接口**。
+### as_ref` vs `borrow`
 
-要准确理解它，需要从 **语义、类型系统、常见实现模式、与解引用的区别** 四个层面来看。
-
-
-### 一、定义层面：`as_ref` 是什么
-
-`as_ref` 来自标准库 trait：
-
-```rust
-pub trait AsRef<T: ?Sized> {
-    fn as_ref(&self) -> &T;
-}
-```
-
-核心语义只有一句话：
-
-> **给我一个 `&Self`，我给你一个 `&T`**
-
-关键点：
-
-* **不转移所有权**
-* **只做借用**
-* **通常是“视图转换（view conversion）”**
-
-### 二、直观理解：把“外层”借成“内层”
-
-#### 1. 最常见例子：`Option<T>`
-
-```rust
-let opt: Option<String> = Some("hello".to_string());
-
-let r1: Option<&String> = opt.as_ref();
-```
-
-这里发生了什么？
-
-```text
-Option<String>   --as_ref-->   Option<&String>
-```
-
-含义是：
-
-* `opt` 仍然拥有 `String`
-* 你只是借用了里面的 `String`
-
-如果不用 `as_ref`：
-
-```rust
-let r2 = opt.map(|s| s); // ❌ 移动 String
-```
-
----
-
-#### 2. `Result<T, E>`
-
-```rust
-let r: Result<String, i32> = Ok("ok".to_string());
-
-let r_ref: Result<&String, &i32> = r.as_ref();
-```
-
-同样规则：
-
-* `Ok(T)` → `Ok(&T)`
-* `Err(E)` → `Err(&E)`
-
----
-
-### 三、`AsRef` 的设计目的
-
-#### 1. 用于“参数泛化”，而不是逻辑转换
-
-`AsRef` 的主要使用场景是 **函数参数抽象**：
-
-```rust
-fn open<P: AsRef<Path>>(path: P) {
-    let p: &Path = path.as_ref();
-}
-```
-
-这样调用者可以传：
-
-```rust
-open("foo.txt");        // &str
-open(String::from("a"));// String
-open(PathBuf::from("b"));
-```
-
-**设计思想：**
-
-* 函数内部只关心 `&Path`
-* 调用者自由决定传什么
-
----
-
-#### 2. 为什么不是 `Into<&T>`？
-
-因为 `Into` / `From` **通常涉及所有权语义**，而：
-
-> `AsRef` 明确保证：只返回引用，不发生移动
-
----
-
-### 四、`as_ref` vs 解引用（`&*`）
-
-这是一个关键区别点。
-
-#### 1. 解引用是“语法层的指针操作”
-
-```rust
-let s: String = "hi".to_string();
-let r: &str = &*s;
-```
-
-这是：
-
-* 先 `Deref<Target = str>`
-* 再取引用
-
-#### 2. `as_ref` 是“trait 层的语义转换”
-
-```rust
-let r: &str = s.as_ref();
-```
-
-差异总结：
-
-| 维度     | `as_ref` | `&*x`      |
-| ------ | -------- | ---------- |
-| 抽象层级   | trait    | 语法 / Deref |
-| 可泛化    | 是        | 否          |
-| 适合 API | 是        | 否          |
-| 可读性    | 高        | 低          |
-
-> **公共 API 中优先使用 `AsRef`，而不是依赖解引用细节。**
-
----
-
-### 五、`as_ref` 在泛型代码中的真实价值
-
-#### 1. 典型模式：避免 clone / move
-
-```rust
-fn process<S: AsRef<str>>(s: S) {
-    let s: &str = s.as_ref();
-    println!("{}", s);
-}
-```
-
-如果不用 `AsRef`，你通常会写：
-
-```rust
-fn process(s: &str) { }
-```
-
-这会导致调用端必须显式借用：
-
-```rust
-process(&string);
-```
-
-而 `AsRef` 让 API 更“宽松”。
-
----
-
-#### 2. Option / Result 中的链式调用
-
-```rust
-let name: Option<String> = get_name();
-
-let len = name
-    .as_ref()
-    .map(|s| s.len());
-```
-
-这里 `as_ref` 的作用是：
-
-> **把“消费 Option”变成“借用 Option”**
-
----
-
-### 六、`as_ref` vs `borrow`（Borrow trait）
+（Borrow trait）
 
 两者容易混淆，但目标不同：
 
@@ -956,31 +786,108 @@ map.get("key"); // &str
 
 * `String` 和 `&str` 的 `Hash` / `Eq` 行为一致
 
-而 `AsRef` **不保证等价性**。
 
-### 七、什么时候不该用 `as_ref`
-
-1. **你需要所有权**
-
+### 获取所有权
+**你需要所有权**
    * 用 `into()` / `to_owned()`
 
-2. **你依赖具体类型行为**
+### as_ref() 和 & 的区别
 
-   * 直接用具体类型
+### as_ref() 和 as_mut 的区别
 
-3. **trait 语义不清晰**
+### as_ref() 和 rc 的区别
 
-   * `AsRef<Foo>` 但 `Foo` 不明显是“视图目标”
+let borrowed = head.as_ref();
 
-### 八、一句话总结
+此时：
 
-> **`as_ref` 是 Rust 中“把拥有值或容器，安全地借用为其内部值引用”的标准接口，用于消除不必要的所有权、提升 API 泛化能力。**
+borrowed: Option<&Rc<Node<i32>>>
 
-如果你愿意，下一步我可以：
+结构是：
 
-* 对比 `as_ref / as_mut / into / to_owned`
-* 用 MIR 角度解释 `as_ref` 是否零成本
-* 总结“什么时候 API 参数该用 `AsRef`”的设计准则
+head ──拥有──> Rc ──拥有──> Node
+                ^
+                |
+borrowed ──借用─+
+
+borrowed 不拥有节点。只要还要使用 borrowed，原来的 head 就必须继续存在。
+
+例如：
+
+let rc = Rc::new(String::from("hello"));
+let borrowed = rc.as_ref(); // &String
+
+println!("{borrowed}");
+
+如果试图先释放所有者：
+
+let rc = Rc::new(String::from("hello"));
+let borrowed = rc.as_ref();
+
+drop(rc); // 编译错误：rc 仍被 borrowed 借用
+println!("{borrowed}");
+
+这是因为 borrowed 没有能力维持 String 的生命，它只能依赖 rc。
+
+### 对比
+&value
+
+借用整个值：
+
+```txt
+&Option<Rc<Node<T>>>
+
+option.as_ref()
+```
+
+把 Option<T> 借用成：
+
+```txt
+Option<&T>
+
+option.as_deref()
+```
+把 Option<P<T>> 借用并解引用成：
+
+```txt
+Option<&T>
+
+Borrow::borrow()
+```
+
+用于泛型的等价借用转换，例如：
+
+```txt
+String -> &str
+
+RefCell::borrow()
+```
+
+用于运行时检查的内部可变性借用。
+
+因此这里不是“不用 borrow”，而是：
+
+> as_ref() 和 as_deref() 本身就在创建借用，只是它们专门负责把借用放进 Option 内部，得到迭代器需要的类型结构。
+
+
+
+  可以这样记：
+
+  &value
+      语言层面的普通借用
+      直接产生引用
+
+  Borrow::borrow()
+      trait 定义的借用转换
+      最终通常返回某种引用
+
+  RefCell::borrow()
+      带运行时检查的借用
+      返回 Ref<T> 守卫
+
+
+## [ ] rust as_deref
+<!-- 4053c063-972d-4927-a2c7-9534dd90e8e1 -->
 
 ## 模式匹配
 1. 注意, 只使用 `_` 和使用以下划线开头的名称有些微妙的不同：比如 `_x` 仍会将值绑定到变量，而 `_` 则完全不会绑定。
@@ -1068,33 +975,21 @@ When a function requires a parameter by value, the compiler will check if the va
         for (_, &item) in bytes.iter().enumerate() {
 ```
 
-## rust copy trait
-<!-- 232dcdb3-0239-4043-8b3d-ccc188eaa8a4 -->
-
-添加一个例子测试下吧
-
-## unwrap
+## rust unwrap
 <!-- 83aba80a-eb79-4942-a020-11d4ee14ec57 -->
 
 https://blog.cloudflare.com/zh-cn/18-november-2025-outage/
-
-## closure
-<!-- b059b6dc-ec62-4fe0-b39b-f15c51ff9492 -->
-
-关联测试 test_closure
-
-还是感觉不得要领
 
 ## prelude
 <!-- f437f9b8-41a5-49ea-863b-2cc3f09038b3 -->
 https://rustwiki.org/zh-CN/std/prelude/index.html
 
-## coercions
+## rust coercions
 <!-- 29faa2ca-8e02-48d7-8f51-e17306d5d4a1 -->
 
 https://www.possiblerust.com/guide/what-can-coerce-and-where-in-rust
 
-## ownership 的理解
+## rust ownership 的理解
 <!-- 70a9d47b-52eb-457c-b0bc-024be92a659d -->
 
 ```txt

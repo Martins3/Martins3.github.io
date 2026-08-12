@@ -134,6 +134,8 @@ class VmRuntime:
             return base + self.qemu_index * 2
         if service == "ssh":
             return base + 4 + self.qemu_index
+        if service == "rdp":
+            return base + 18 + self.qemu_index
         if service == "nbd":
             port = base + 6 + disk
             if port > PORT_ALLOCATE_END:

@@ -49,6 +49,7 @@ ActionFunction = Callable[["ActionContext", Sequence[str]], None]
 class Action:
     function: ActionFunction | None = None
     requirement: VmRequirement = VmRequirement.ANY
+    selector_option: str | None = None
 
 
 @dataclass
@@ -190,6 +191,74 @@ def action_vnc(context: ActionContext, args: Sequence[str]) -> None:
     del args
     print(
         f"http://{context.collei.master_ip()}:{context.vm.tcp_port('vnc') + 1}/vnc.html"
+    )
+
+
+def _freerdp3_binary() -> str:
+    binary = next(
+        (path for name in ("xfreerdp3", "xfreerdp") if (path := shutil.which(name))),
+        None,
+    )
+    if binary is None:
+        raise ColleiError("FreeRDP 3 not found (expected xfreerdp3 or xfreerdp)")
+    completed = subprocess.run(
+        [binary, "/version"],
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    version = f"{completed.stdout}\n{completed.stderr}"
+    if completed.returncode or re.search(r"\bFreeRDP version 3\.", version) is None:
+        raise ColleiError(f"FreeRDP 3 is required: {version.strip() or binary}")
+    return binary
+
+
+def action_rdp(context: ActionContext, args: Sequence[str]) -> None:
+    if args:
+        raise ColleiError("rdp does not accept arguments; it opens the full desktop")
+    if not context.vm.config.options.enabled("win"):
+        raise ColleiError(f"{context.vm.config.name} is not a Windows VM")
+    if len(context.vm.live_pids) != 1:
+        raise ColleiError("rdp requires exactly one running QEMU")
+    user = context.vm.config.options.require("rdp_user")
+    if "\n" in user:
+        raise ColleiError("opt/rdp_user must contain exactly one Windows username")
+    password_path = context.vm.config.options.path / "rdp_password"
+    password = context.vm.config.options.require("rdp_password")
+    if "\n" in password:
+        raise ColleiError("opt/rdp_password must contain exactly one Windows password")
+    if password_path.stat().st_mode & 0o077:
+        raise ColleiError("opt/rdp_password must not be accessible by group or others")
+    local_connection_env = {
+        "ALL_PROXY": "",
+        "HTTP_PROXY": "",
+        "HTTPS_PROXY": "",
+        "NO_PROXY": "127.0.0.1,localhost",
+        "all_proxy": "",
+        "http_proxy": "",
+        "https_proxy": "",
+        "no_proxy": "127.0.0.1,localhost",
+    }
+    context.runner.run(
+        [
+            _freerdp3_binary(),
+            f"/u:{user}",
+            "/v:127.0.0.1",
+            f"/port:{context.vm.tcp_port('rdp')}",
+            "/cert:ignore",
+            "/from-stdin:force",
+            "+clipboard",
+            "/sound:sys:pulse",
+            "/microphone:sys:pulse",
+            "/floatbar",
+            "/compression",
+            "/scale-desktop:200",  # 放到两倍
+            "/sec:tls",
+            "/f",
+        ],
+        cwd=context.vm.directory,
+        env=local_connection_env,
+        input_text=f"{password}\n",
     )
 
 
@@ -1749,6 +1818,7 @@ ACTIONS: dict[str, Action] = {
     "perf_guest": Action(action_perf_guest, VmRequirement.ACTIVE),
     "pty": Action(action_pty, VmRequirement.ACTIVE),
     "rename": Action(action_rename, VmRequirement.INACTIVE),
+    "rdp": Action(action_rdp, VmRequirement.ACTIVE, selector_option="win"),
     "restore": Action(action_restore),
     "rsync": Action(action_rsync),
     "run": Action(action_run, VmRequirement.LAUNCH),

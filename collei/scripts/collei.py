@@ -33,6 +33,7 @@ from tasks import add_background_task, exec_task_follow
 from ui import print_banner
 from vfio import pci_bind_to_vfio
 from virtme import VirtmeSetup
+from windows import WindowsProfile
 
 # collei.py 只负责启动虚拟机。
 #
@@ -728,9 +729,6 @@ class ColleiQemuBuilder:
             )
 
     def setup_machine(self, argv: list[str]) -> None:
-        if self.vm.config.options.get("win") == "11":
-            argv.extend(["-machine", "q35,smm=on"])
-            return
         iommu = self.vm.config.options.get("iommu")
         machine = (
             "q35,hpet=off,smm=off"
@@ -882,13 +880,7 @@ class ColleiQemuBuilder:
         bios_root = self.context.repo.parent.parent / "bios"
         mode = self.vm.config.options.get("bios")
         if mode is None:
-            mode = (
-                "ovmf_binary_secure"
-                if self.vm.config.options.get("win") == "11"
-                else "ovmf_binary"
-                if self.vm.config.options.enabled("win")
-                else "seabios"
-            )
+            mode = "seabios"
         if mode == "seabios":
             argv.extend(["-bios", str(bios_root / "seabios/out/bios.bin")])
         elif mode == "ovmf_binary":
@@ -1082,13 +1074,7 @@ class ColleiQemuBuilder:
     def setup_cpu_model(self, argv: list[str]) -> None:
         if self.vm.config.options.get("accel") == "tcg":
             return
-        model = "host"
-        if self.vm.config.options.enabled("win"):
-            model = (
-                "host,hv_spinlocks=0x1fff,hv_vapic,hv_time,hv_reset,"
-                "hv_vpindex,hv_runtime,hv_relaxed"
-            )
-        argv.extend(["-cpu", model])
+        argv.extend(["-cpu", "host"])
 
     def setup_display_and_chardev(self, argv: list[str]) -> None:
         if self.profile is not None:
@@ -1098,15 +1084,12 @@ class ColleiQemuBuilder:
                 return
 
         display = self.vm.config.options.get("display")
-        if self.vm.config.options.enabled("win"):
-            argv.extend(["-vga", "std"])
-        else:
-            argv.extend(
-                [
-                    "-device",
-                    "virtio-gpu-pci" if display == "virtio-gpu" else "cirrus-vga",
-                ]
-            )
+        argv.extend(
+            [
+                "-device",
+                "virtio-gpu-pci" if display == "virtio-gpu" else "cirrus-vga",
+            ]
+        )
         main_chardev = (
             f"socket,path={self.monitor_dir / 'main.sock'},id=main_char,server=on,wait=off,mux=on"
             if self.vm.config.options.enabled("hide")
@@ -1236,20 +1219,6 @@ class ColleiQemuBuilder:
                 "usb-tablet,id=input1,bus=usb.0,port=3",
             ]
         )
-        if self.vm.config.options.get("win") == "11":
-            # Windows 11 需要 TPM 2.0 和 secure pflash。
-            argv.extend(
-                [
-                    "-chardev",
-                    f"socket,id=chrtpm,path={self.monitor_dir / 'swtpm-sock'}",
-                    "-tpmdev",
-                    "emulator,id=tpm0,chardev=chrtpm",
-                    "-device",
-                    "tpm-tis,tpmdev=tpm0",
-                    "-global",
-                    "driver=cfi.pflash01,property=secure,value=on",
-                ]
-            )
 
     def setup_trace(self, argv: list[str]) -> None:
         tracepoint = []
@@ -1329,57 +1298,6 @@ class BuildrootQemuBuilder:
         common.setup_input_and_usb(argv)
         common.setup_trace(argv)
         return QemuCommand(tuple(argv))
-
-
-@dataclass(frozen=True)
-class WindowsSetup:
-    context: ColleiContext
-    vm: VmRuntime
-
-    def prepare(self, runner: CommandRunner) -> None:
-        if self.vm.config.options.get("win") != "11":
-            return
-        bios_root = self.context.repo.parent.parent / "bios"
-        ovmf = bios_root / "ovmf_binary_secure/usr/share/edk2/ovmf"
-        code = ovmf / "OVMF_CODE.secboot.fd"
-        variables = ovmf / "OVMF_VARS.secboot.fd"
-        if not code.is_file() or not variables.is_file():
-            raise UnsupportedNativeConfiguration(
-                f"secure OVMF firmware is incomplete: {ovmf}"
-            )
-        local_variables = self.vm.directory / "OVMF_VARS.fd"
-        if not local_variables.exists():
-            shutil.copy2(variables, local_variables)
-
-        # 不知道为什么有时 swtpm 无法随着 QEMU 自动结束；每个 VM 使用独立 socket。
-        tpm = self.vm.directory / "tpm"
-        tpm.mkdir(exist_ok=True)
-        socket = self.vm.directory / self.vm.which_qemu / "swtpm-sock"
-        socket.unlink(missing_ok=True)
-        add_background_task(
-            self.context,
-            runner,
-            [
-                "swtpm",
-                "socket",
-                "--tpmstate",
-                f"dir={tpm}",
-                "--ctrl",
-                f"type=unixio,path={socket}",
-                "--log",
-                "level=20",
-                "--tpm2",
-            ],
-            vm=self.vm,
-            group="qemu",
-            label="swtpm",
-        )
-        if not runner.dry_run:
-            for _ in range(50):
-                if socket.exists():
-                    return
-                time.sleep(0.1)
-            raise ColleiError(f"swtpm socket was not created: {socket}")
 
 
 @dataclass(frozen=True)
@@ -1902,22 +1820,28 @@ def build_qemu_command(
         if sriov is not None
         else None
     )
-    command = ColleiQemuBuilder(
+    common = ColleiQemuBuilder(
         context,
         vm,
         profile,
         sriov_vf,
         efi_application=options.efi_application,
         dry_run=options.dry_run,
-    ).build()
+    )
+    windows = (
+        WindowsProfile(context, vm, common)
+        if vm.config.options.enabled("win")
+        else None
+    )
+    command = windows.build() if windows is not None else common.build()
     if (vm.directory / "result/bin/run-nixos-vm").is_file():
         command = QemuCommand(command.argv + NixosSetup(vm).arguments())
     if prepare_host:
         prepare_native_host(context, vm, CommandRunner())
         if "-vnc" in command.argv:
             prepare_novnc(context, vm, CommandRunner())
-        if vm.config.options.enabled("win"):
-            WindowsSetup(context, vm).prepare(CommandRunner())
+        if windows is not None:
+            windows.prepare(CommandRunner())
         if options.efi_application:
             prepare_efi_application(context, vm)
         if isinstance(profile, VirtmeSetup):

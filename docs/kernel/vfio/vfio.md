@@ -1,3 +1,4 @@
+# vfio
 ## vfio 基础
 <!-- cf9eaa4d-893e-450b-a3b3-db28db06ac53 -->
 
@@ -87,6 +88,12 @@ qemu-system-x86_64: -device vfio-pci,host=0000:01:00.0: warning: VFIO dma-buf no
 ```
 
 drivers/vfio/pci/vfio_pci_dmabuf.c 刚刚添加的问题，似乎是这个配置
+
+## 什么是 vfio-ap 和 vfio-ccw ？
+``vfio-ap`` and ``vfio-ccw`` devices don't have same issue as their backend
+devices are always mdev and RAM discarding is force enabled.
+
+
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

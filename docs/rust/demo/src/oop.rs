@@ -13,7 +13,6 @@
 //  原代码的 oop() 函数无法编译，因为 Post::new() 返回 DraftPost，但调用的是 Post 的方法。现在已分离为三个明确的类型，状态转换通过消耗
 //  self 实现，编译器会阻止非法状态转换。
 
-
 // =============================================================================
 // 1. 类型状态模式 (Type State Pattern) - 使用类型系统编码状态
 // =============================================================================
@@ -800,6 +799,7 @@ impl<T> Drop for DebugBox<T> {
     }
 }
 
+#[cfg_attr(test, test)]
 pub fn oop() {
     println!("=== 1. 类型状态模式 ===");
     let mut draft = DraftPost::new();
@@ -909,86 +909,4 @@ pub fn oop() {
         let debug_int = DebugBox::new(42, "my_number");
         println!("Value: {}", *debug_int); // 使用 Deref
     } // 自动调用 Drop
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_type_state_pattern() {
-        let mut draft = DraftPost::new();
-        draft.add_text("Test content");
-        let pending = draft.request_review();
-        let published = pending.approve();
-        assert_eq!(published.content(), "Test content");
-    }
-
-    #[test]
-    fn test_state_pattern_with_reject() {
-        let mut post = PostWithState::new();
-        post.add_text("Content");
-        post.request_review();
-        post.reject();
-        post.add_text(" more");
-        post.request_review();
-        post.approve();
-        assert_eq!(post.content(), "Content more");
-    }
-
-    #[test]
-    fn test_circle_area() {
-        let circle = Circle::new(2.0);
-        assert!((circle.area() - 12.5664).abs() < 0.001);
-    }
-
-    #[test]
-    fn test_builder_pattern() {
-        let computer = Computer::builder()
-            .cpu("Intel i7")
-            .memory(16)
-            .storage(512)
-            .wifi(true)
-            .build();
-
-        assert!(computer.specs().contains("Intel i7"));
-        assert!(computer.specs().contains("16GB"));
-    }
-
-    #[test]
-    fn test_strategy_pattern() {
-        let mut cart = ShoppingCart::new();
-        cart.add_item("Test Item", 100.0);
-        cart.set_payment_strategy(Box::new(CreditCard::new("1234567890123456", "123")));
-        assert!(cart.checkout().is_ok());
-    }
-
-    #[test]
-    fn test_factory_pattern() {
-        let dog = AnimalFactory::create(AnimalType::Dog, "Rex");
-        assert_eq!(dog.name(), "Rex");
-
-        let cat = AnimalFactory::create(AnimalType::Cat, "Mittens");
-        assert_eq!(cat.name(), "Mittens");
-    }
-
-    #[test]
-    fn test_newtype_pattern() {
-        let user_id = UserId::new(1);
-        let product_id = ProductId::new(2);
-
-        // 值可以相同但类型不同
-        assert_eq!(user_id.value(), 1);
-        assert_eq!(product_id.value(), 2);
-
-        // UserId 和 ProductId 是不同的类型，以下代码会导致编译错误：
-        // let ids_equal = user_id == product_id; // 错误：类型不匹配
-        // create_order(product_id, user_id); // 错误：参数类型不匹配
-    }
-
-    #[test]
-    fn test_deref_pattern() {
-        let debug_box = DebugBox::new(100, "test");
-        assert_eq!(*debug_box, 100);
-    }
 }

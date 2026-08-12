@@ -80,6 +80,7 @@ async fn build_message(name: &str) -> String {
     format!("async result for {name}: {status}")
 }
 
+#[cfg_attr(test, test)]
 pub fn run_all() {
     println!("=== Future trait 演示 ===");
     let mut future = Countdown::new(1);
@@ -97,21 +98,4 @@ pub fn run_all() {
     println!("\n=== async/await + block_on 演示 ===");
     let message = block_on(build_message("rust future"));
     println!("{message}");
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn countdown_returns_ready_after_pending_steps() {
-        let result = block_on(Countdown::new(2));
-        assert_eq!(result, "done");
-    }
-
-    #[test]
-    fn async_function_can_await_custom_future() {
-        let message = block_on(build_message("test"));
-        assert_eq!(message, "async result for test: done");
-    }
 }

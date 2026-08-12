@@ -1,4 +1,4 @@
-# codex 的调研结果
+# QEMU rust 支持现状
 
 当前这个源码树（v11.1.0-rc1-48-g05e27e70df42）里，QEMU 对 Rust 的定位可以概括为：
 

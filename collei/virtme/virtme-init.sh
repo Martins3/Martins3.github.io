@@ -422,7 +422,7 @@ echo
 if [ "\$USER" = root ]; then
 	setsid /bin/busybox cttyhack /bin/bash --login
 else
-	setsid /bin/busybox cttyhack su - "\$USER"
+	setsid /bin/busybox cttyhack su "\$USER"
 fi
 poweroff -f
 EOF

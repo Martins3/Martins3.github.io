@@ -1,4 +1,6 @@
-## dev->dma_ops
+# dev->dma_ops
+
+记录一个小问题，之前调查过 dev->dma_ops 是
 
 ## drgn 查看发现 dev->dma_ops 总是 NULL
 

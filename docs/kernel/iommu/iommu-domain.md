@@ -25,6 +25,9 @@ choice
 iommu.passthrough=1
 ```
 
+vfio group 就是最小单元，但是通过 vfio container 可以让多个 vfio group
+共享页表，例如一个 QEMU 持有多个设备。
+
 ## iommu domain type
 
 ```sh
@@ -373,7 +376,7 @@ struct iommu_domain {
 };
 ```
 
-## 哦，原来是还存在 iommu group 啊
+## iommu group 的作用
 
 结论：VFIO group 与 IOMMU group 基本一一对应，但与 IOMMU domain 不是一一对应。
 
@@ -458,7 +461,7 @@ group C ─┘
 > VFIO group 的确源自 IOMMU group 的隔离语义；但不是因为 iommu domain 将设备聚合，而是因为这些设备不能被安全拆分。Domain 是随后挂载到这个最小隔离单元上
 > 的地址空间。
 
-## 我想要观察 iommu 相关的结果
+## iommu domain 为什么在 sysfs 观察到
 
 可以观察 group，但通用 sysfs 只能看到 default_domain 的类型，看不到当前 iommu_domain 的 ID/指针。
 
@@ -717,71 +720,6 @@ VFIO_DEVICE_ATTACH_IOMMUFD_PT 的 pt_id 可以传 IOAS ID 或明确的 HWPT ID�
 处理：drivers/iommu/iommufd/device.c:650。
 
 
-## 原来 iommu pt 不等于不存在
-
-• 这是预期行为。iommu=pt 下，IOMMU 不参与每一次 dma_map_*()；它只在设备绑定 domain 时被配置为硬件 passthrough。
-
-  调用关系是：
-
-  启动/设备初始化：
-  iommu=pt
-    → IOMMU_DOMAIN_IDENTITY
-    → Intel VT-d context 设置为 PASS_THROUGH
-
-  每次 DMA 映射：
-  dma_map_single()
-    → CPU VA 转成 PA
-    → dma_map_phys()
-    → dma_direct_map_phys()
-    → 返回设备 DMA 地址（x86 上通常等于 PA）
-
-  关键原因在这里：
-
-  dev->dma_iommu = iommu_is_dma_domain(domain);
-
-  identity domain 不是 DMA translation domain，所以 dev->dma_iommu == false：drivers/iommu/dma-iommu.c:2113。
-
-  随后 dma_map_phys() 选择 direct 路径，而不会调用 iommu_dma_map_phys()：kernel/dma/mapping.c:155。
-
-  if (dma_map_direct(dev, ops))
-          addr = dma_direct_map_phys(...);
-  else if (use_dma_iommu(dev))
-          addr = iommu_dma_map_phys(...);
-
-  dma_direct_map_phys() 最终主要执行：
-
-  dma_addr = phys_to_dma(dev, phys);
-
-  在普通 x86 PCI 系统上通常就是：
-
-  DMA address == host physical address
-
-  但这不表示 VT-d 被关闭。设备挂载 identity domain 时，Intel 驱动已经把 VT-d context 设置为 passthrough：drivers/iommu/intel/iommu.c:3824。
-
-  设备真正发起 DMA 时：
-
-  Device emits DMA address P
-          ↓
-  VT-d 根据 Requester ID 找到 context
-          ↓
-  context translation type = PASS_THROUGH
-          ↓
-  不查 IOMMU 页表，输出地址仍为 P
-          ↓
-  内存控制器
-
-  因此：
-
-  - 软件映射阶段：不调用 IOMMU map/unmap。
-  - 硬件传输阶段：DMA 请求仍经过启用的 VT-d remapping 单元，但地址不转换。
-  - 性能上接近没有 IOMMU。
-  - 该设备没有按 buffer 建立的 DMA 隔离；dma_unmap_*() 也不会撤销页表权限。
-  - IOMMU 仍可服务其他 translation domain、VFIO 设备及 interrupt remapping。
-
-  另外，dma_addr_t 不是 CPU 虚拟地址。dma_map_single() 的输入才是 CPU VA，它先经 virt_to_page()、page_to_phys() 转为物理地址：include/linux/dma-
-  mapping.h:509。返回值是设备使用的总线地址，不能作为 CPU 指针解引用。少数平台还可能通过 dma-ranges 加偏移，或者因 DMA mask/SWIOTLB 返回 bounce buffer 地
-  址。
-
 ## NVMe 4 KiB randread 实测
 
 测试日期：2026-07-07。
@@ -888,12 +826,60 @@ kunpeng 上测试非 pt 结果，大致为:
                        0.52% _raw_spin_lock
 ```
 
-
 ## 最后的总结
-
 1. iommu group 和 iommu domain 的关系
-2. iommu pt 的意义是什么
-3. 为什么直通之后，就看不到了
+
+## 等待整理
+从这个路径，我们可以看到 iommu group 分配 iommu domain
+```txt
+- ret_from_fork_asm
+  - ret_from_fork
+    - kernel_init
+      - kernel_init_freeable
+        - do_basic_setup
+          - do_initcalls
+            - do_initcall_level
+              - do_one_initcall
+                - pci_iommu_init
+                  - intel_iommu_init
+                    - iommu_device_register
+                      - bus_iommu_probe
+                        - iommu_setup_default_domain
+                          - iommu_group_alloc_default_domain
+                            - __iommu_group_alloc_default_domain
+                              - __iommu_group_domain_alloc
+                                - __iommu_domain_alloc
+```
+
+### iommu domain 和 iommu group
+
+为什么需要创建出来 iommu domain 的概念？
+
+- vfio_iommu_type1_attach_group <------------ 看看这里，在这里我们找到看到 domain 是现场制作的
+  - iommu_attach_group
+    - `__iommu_attach_group`
+      - `__iommu_group_set_domain`
+        - `__iommu_group_set_domain_internal`
+```c
+	for_each_group_device(group, gdev) {
+		ret = __iommu_device_set_domain(group, gdev->dev, new_domain,
+						flags);
+            // ...
+	}
+	group->domain = new_domain;
+```
+
+目前看，iommu domain  和 vfio container 是有关系的
+iommu group 和 vfio group 是关联的
+
+- [ ] 但是，看上去 vfio domain 和 iommu domain 是相关
+- [ ] vfio_container vfio_domain vfio_iommu_group vfio_iommu 是啥关系
+
+观察 iommu_group_store_type 的实现，居然所谓的设置 iommu_group 的 type 是设置 defautl domain
+```txt
+	ret = iommu_setup_default_domain(group, req_type);
+```
+
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

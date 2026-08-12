@@ -16,10 +16,9 @@ from pathlib import Path
 
 from commands import CommandRunner
 from errors import ColleiError
+from kernel import kernel_release
 from runtime import ColleiContext, VmRuntime
 from tasks import add_background_task
-
-from kernel import kernel_release
 
 
 @dataclass(frozen=True)
@@ -42,6 +41,12 @@ class VirtmeSetup:
             raise ColleiError(f"unknown virtme_mode: {mode}")
         return mode
 
+    def init_implementation(self) -> str:
+        implementation = self.vm.config.options.get("virtme_init") or "rust"
+        if implementation not in {"rust", "bash"}:
+            raise ColleiError(f"unknown virtme_init: {implementation}")
+        return implementation
+
     # virtme 模式的 kernel cmdline 设置
     def kernel_args(self) -> str:
         options = self.vm.config.options
@@ -61,15 +66,15 @@ class VirtmeSetup:
         # 用户设置
         user = options.get("user") or os.environ.get("SUDO_USER") or getpass.getuser()
         args.append(f"virtme_user={user}")
+        args.append("virtme_empty_passwords=1")
 
         # root 用户标记 (如果以 root 运行)
         if os.getuid() == 0:
             args.append("virtme_root_user=1")
 
-        # 工作目录 (可选)
-        cwd = options.get("cwd")
-        if cwd is not None:
-            args.append(f"virtme_chdir={cwd}")
+        # 默认继承启动 collei 时的 host 当前目录；opt/cwd 可显式覆盖。
+        cwd = options.get("cwd") or os.getcwd()
+        args.append(f"virtme_chdir={cwd}")
 
         # overlay 可写目录配置
         overlays: list[str] = []
@@ -269,9 +274,14 @@ class VirtmeSetup:
     def generate_initramfs(self) -> Path:
         kernel_value = self.vm.config.options.get("kernel")
         kernel_dir = Path(kernel_value) if kernel_value is not None else None
-        init_script = self.context.repo / "virtme" / "virtme-init.sh"
+        implementation = self.init_implementation()
+        init_name = (
+            "virtme-init-loader.sh" if implementation == "rust" else "virtme-init.sh"
+        )
+        init_script = self.context.repo / "virtme" / init_name
         if not init_script.is_file():
-            raise ColleiError(f"virtme-init.sh not found at {init_script}")
+            raise ColleiError(f"virtme init not found at {init_script}")
+        rust_init = self._build_rust_init() if implementation == "rust" else None
 
         # 查找 busybox (优先静态链接版本)。提前到缓存检查之前，
         # 因为 busybox 路径也是缓存输入之一。
@@ -295,7 +305,7 @@ class VirtmeSetup:
 
         # 缓存: 输入 (init 脚本、busybox、模块、机器类型/vsock 选项) 没变化时
         # 直接复用，避免每次启动都重新 cpio+zstd。
-        stamp = self._initramfs_stamp(init_script, busybox, modules)
+        stamp = self._initramfs_stamp(init_script, rust_init, busybox, modules)
         stamp_path = self.initramfs.parent / f"{self.initramfs.name}.stamp"
         if (
             self.initramfs.is_file()
@@ -322,11 +332,15 @@ class VirtmeSetup:
             # 2. 复制 busybox
             shutil.copy2(busybox, root / "bin/busybox")
 
-            # 创建常用命令链接
-            for command in (
+            # 创建 init 所需的 BusyBox applet 链接。Bash init 还负责第二阶段
+            # 用户会话，因此需要 base64/setsid/cttyhack。
+            commands = (
                 "sh mount umount switch_root insmod modprobe mkdir mknod sleep "
-                "uname cp cat chmod echo ln printf base64 setsid cttyhack"
-            ).split():
+                "uname cp cat chmod echo ln printf"
+            ).split()
+            if implementation == "bash":
+                commands.extend(("base64", "setsid", "cttyhack"))
+            for command in commands:
                 (root / f"bin/{command}").symlink_to("busybox")
 
             # 3. 创建设备节点
@@ -350,6 +364,12 @@ class VirtmeSetup:
             # 4. 复制 init 脚本
             shutil.copy2(init_script, root / "init")
             (root / "init").chmod(0o755)
+
+            if rust_init is not None:
+                # 第一阶段 loader 在 ROOTFS 的私有 /tmp 中安装 Rust init，
+                # 并通过 switch_root 将其作为 PID 1 启动。
+                shutil.copy2(rust_init, root / "bin/virtme-ng-init.out")
+                (root / "bin/virtme-ng-init.out").chmod(0o755)
 
             # 5. 复制必要内核模块 (如果内核目录可用)
             self._copy_modules(root, modules)
@@ -385,6 +405,49 @@ class VirtmeSetup:
         stamp_path.write_text(stamp)
         return self.initramfs
 
+    def _build_rust_init(self) -> Path:
+        crate = self.context.repo / "virtme" / "virtme-ng-init"
+        manifest = crate / "Cargo.toml"
+        lockfile = crate / "Cargo.lock"
+        sources = [
+            manifest,
+            lockfile,
+            crate / "virtme-udhcpc-script",
+            *sorted((crate / "src").glob("*")),
+        ]
+        missing = [path for path in sources if not path.is_file()]
+        if missing:
+            raise ColleiError(f"missing Rust init source: {missing[0]}")
+
+        cargo_binary = crate / "target/release/virtme-ng-init"
+        binary = crate / "target/release/virtme-ng-init.out"
+        newest_source = max(path.stat().st_mtime_ns for path in sources)
+        if binary.is_file() and binary.stat().st_mtime_ns >= newest_source:
+            return binary
+
+        cargo = shutil.which("cargo")
+        if cargo is None:
+            raise ColleiError("cargo not found, cannot build the Rust virtme init")
+        completed = subprocess.run(
+            [
+                cargo,
+                "build",
+                "--release",
+                "--locked",
+                "--manifest-path",
+                str(manifest),
+            ],
+            check=False,
+        )
+        if completed.returncode != 0 or not cargo_binary.is_file():
+            raise ColleiError("failed to build the Rust virtme init")
+
+        shutil.copy2(cargo_binary, binary)
+        strip = shutil.which("strip")
+        if strip is not None:
+            subprocess.run([strip, str(binary)], check=True)
+        return binary
+
     # 需要的 initramfs 模块列表: (输出名, 源模块名)。
     # 注意: virtiofs 模块文件名是 virtiofs.ko，但加载时可能用 virtio_fs。
     # 注意: virtiofs 依赖 fuse，需要先加载 fuse。
@@ -409,14 +472,21 @@ class VirtmeSetup:
         return modules
 
     def _initramfs_stamp(
-        self, init_script: Path, busybox: Path, modules: dict[str, Path]
+        self,
+        init_script: Path,
+        rust_init: Path | None,
+        busybox: Path,
+        modules: dict[str, Path],
     ) -> str:
         parts = [
+            f"implementation={self.init_implementation()}",
             f"{init_script}:{init_script.stat().st_mtime_ns}",
             f"{busybox}:{busybox.stat().st_mtime_ns}",
             f"machine={self.vm.config.options.get('machine') or 'pc'}",
             f"vsock={self.vm.config.options.enabled('vsock')}",
         ]
+        if rust_init is not None:
+            parts.append(f"{rust_init}:{rust_init.stat().st_mtime_ns}")
         for name in sorted(modules):
             path = modules[name]
             parts.append(f"{name}:{path}:{path.stat().st_mtime_ns}")

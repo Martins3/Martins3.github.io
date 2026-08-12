@@ -1,7 +1,9 @@
 # Quiescent consistency，Sequential consistency 和 Linearizability
+<!-- b5be4753-99f7-4308-8c8f-16ef37be42ec -->
 
 其实，这个问题我之前一直没有深入的理解，因为我不搞分布式。
 但是，在学习 C++ memory model 的时候，我发现有一些东西开始看不懂了。
+
 1. 两个 CPU 写 cache ，那么其他的 CPU 是否需要看到相同的顺序?
 
 以下使用`QC` `SC` 和 `L` 代指三者。
@@ -105,6 +107,25 @@ visible to other method calls.
 
 https://lotabout.me/2019/QQA-What-is-Sequential-Consistency/
 - 介绍什么是顺序一致性
+
+## 分析一下这些
+3.4　一致性模型
+3.4.1　线性一致性
+3.4.2　实现线性一致性
+3.4.3　线性一致性的代价
+3.4.4  顺序一致性
+3.4.5　因果一致性
+3.4.6　最终一致性
+
+
+## 3. 顺序一致性
+Lamport 对顺序一致性的形式化定义是：任何执行的结果都等同于所有处理器的操作按某种顺序依次执行的结果，并且每个单独处理器的操作在此序列中按其程序顺序出现。
+
+顺序一致性包含两个核心方面：
+1. **程序顺序**：维护单个处理器操作之间的顺序。
+2. **原子性/全局串行化**：维护所有处理器操作之间的单一全局顺序，使每个操作看起来瞬时完成。
+
+图 4 用 Dekker 算法示例说明程序顺序的重要性，用多处理器共享变量示例说明原子性的重要性。
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

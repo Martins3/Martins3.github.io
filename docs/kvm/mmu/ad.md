@@ -442,10 +442,6 @@ struct KVMDirtyRingReaper {
 };
 ```
 
-## 消费者
-
-
-
 ## ram_save_target_page_legacy 通过才意识到，qemu 无法检测没有映射的 page
 
 这会导致一个问题，就是热迁移的时候，那些被 balloon 去掉的 page ，其实会被都上来的一次。

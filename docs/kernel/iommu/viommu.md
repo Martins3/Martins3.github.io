@@ -1,5 +1,8 @@
 # vIOMMU
 
+## 文档
+- https://wiki.qemu.org/Features/VT-d 分析了下为什么 guest 需要 vIOMMU
+
 ## vfio + viommu 的场景
 思考一个有趣的场景，提供 vIOMMU ，并且内核为 iommu=notpt ，
 然后直通一个设备给 QEMU ，大致的流程是怎么样子的?
@@ -980,6 +983,28 @@ function setup_balloon() {
 [    2.555223] pci 0000:00:03.0: Adding to iommu group 3
 [    2.555421] pci 0000:00:04.0: Adding to iommu group 4
 ```
+
+## virtio_iommu 居然是不支持 interrupt remapping 的，有点意思
+
+
+## hyperv-iommu 是啥？
+
+```txt
+ Symbol: HYPERV_IOMMU [=n]                                                                                                                                                                                                                             │
+ Type  : bool                                                                                                                                                                                                                                          │
+ Defined at drivers/iommu/Kconfig:462                                                                                                                                                                                                                  │
+   Prompt: Hyper-V IRQ Handling                                                                                                                                                                                                                        │
+   Depends on: IOMMU_SUPPORT [=y] && HYPERV [=n] && X86                                                                                                                                                                                                │
+   Location:                                                                                                                                                                                                                                           │
+     -> Device Drivers                                                                                                                                                                                                                                 │
+ (5)   -> IOMMU Hardware Support (IOMMU_SUPPORT [=y])                                                                                                                                                                                                  │
+         -> Hyper-V IRQ Handling (HYPERV_IOMMU [=n])                                                                                                                                                                                                   │
+ Selects: IOMMU_API [=y]
+```
+
+## 什么是 hyperv iommu 啊?
+CONFIG_HYPERV_IOMMU
+
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

@@ -68,6 +68,7 @@ pub fn display_demo() {
     println!("{}", bt);
 }
 
+#[cfg_attr(test, test)]
 pub fn run_all() {
     basic_backtrace();
     backtrace_status();

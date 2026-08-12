@@ -1,5 +1,3 @@
-use std::cell::Cell;
-use std::cell::RefCell;
 use std::collections::HashMap;
 use std::env;
 use std::io::{BufRead, BufReader};
@@ -9,8 +7,15 @@ use std::thread;
 
 mod backtrace_demo;
 mod future_demo;
+mod linked_list;
 mod oop;
+#[path = "rc-linked-list.rs"]
+mod rc_linked_list;
+mod rfcell;
+#[path = "rfcell-linked-list.rs"]
+mod rfcell_linked_list;
 mod unit_test;
+mod lifetime;
 
 fn handle_client(stream: UnixStream) {
     let stream = BufReader::new(stream);
@@ -36,6 +41,7 @@ fn uds_server() {
     }
 }
 
+#[cfg_attr(test, test)]
 fn unwrap() {
     let k = 10;
     assert_eq!(Some(4).unwrap_or_else(|| 2 * k), 4);
@@ -46,6 +52,7 @@ fn unwrap() {
     // 调用闭包：|| 2 * k
 }
 
+#[cfg_attr(test, test)]
 fn test_closure() {
     // 1. 只读捕获 x
     let x = 5;
@@ -103,83 +110,22 @@ macro_rules! repeat {
     };
 }
 
+#[cfg_attr(test, test)]
 fn test_macro() {
     say_hello!();
     repeat!("Hi"; 3);
 }
 
-fn test_cell() {
-    let x = Cell::new(5);
-    println!("x = {}", x.get()); // x = 5
-
-    // 即使 x 是不可变绑定，也可以修改内部
-    x.set(10);
-    println!("x = {}", x.get()); // x = 10
-
-    let z = &x;
-
-    let y = &x; // 不可变引用
-    y.set(20); // 依然可以修改！
-
-    println!("z = {}", z.get());
-    z.set(30);
-    println!("y = {}", y.get());
-}
-
-// 1. 通过这个例子，说明一下如果在运行时出现了两个 mut ，那么就会 pani
-fn test_refcell() {
-    let s = RefCell::new(String::from("hello"));
-    println!("s = {}", s.borrow());
-
-    // 修改内容
-    s.borrow_mut().push_str(" world");
-    println!("s = {}", s.borrow());
-
-    // 运行时借用冲突示例（会 panic）：
-    let r1 = s.borrow(); // 不可变借用
-    let r2 = s.borrow(); // 不可变借用
-    println!("{}, {}", r1, r2);
-
-    // let r3 = s.borrow_mut(); // 可变借用 —— 在运行时 panic！
-    // println!("{}", r3);
-}
-
-// 2. 但是如果运行时没有两个 mut ，那么就可以正常运行
-fn test_refcell2() {
-    let rc = RefCell::new(vec![1, 2, 3]);
-
-    {
-        let mut writer = rc.borrow_mut();
-        writer.push(4);
-    } // writer 被释放
-
-    {
-        let reader = rc.borrow();
-        println!("{:?}", *reader); // [1, 2, 3, 4]
-    }
-}
-
-// 3. 通过 RefCell，我们把“借用检查”从编译时推迟到了运行时。
-// 而 Rc 允许多个所有者共享同一个 RefCell
-// 于是我们实现了同时存在多个 mut 的情况
-fn test_refcell3() {
-    let shared = Rc::new(RefCell::new(0));
-    let a = shared.clone();
-    let b = shared.clone();
-
-    *a.borrow_mut() += 10;
-    *b.borrow_mut() += 5;
-
-    println!("shared = {}", shared.borrow()); // shared = 15
-}
-
 // Rust 的默认所有权模型是单一所有
+#[cfg_attr(test, test)]
 fn test_rc1() {
     let a = String::from("hello");
     let b = a; // 所有权移动
-               // println!("{}", a); // 编译错误
+    println!("{}", b);
+    // println!("{}", a); // 编译错误
 }
 
+#[allow(dead_code)]
 #[derive(Debug)]
 struct User {
     name: String,
@@ -191,6 +137,7 @@ struct Group {
     member: Rc<User>,
 }
 
+#[cfg_attr(test, test)]
 fn test_rc2() {
     let user = Rc::new(User {
         name: "Alice".to_string(),
@@ -208,11 +155,13 @@ fn test_rc2() {
 }
 
 // 这里是一个经典例子，如果两个 node 指向一个节点，那么就必须使用引用计数
+#[allow(dead_code)]
 #[derive(Debug)]
 struct Node {
     value: i32,
     next: Option<Rc<Node>>,
 }
+#[cfg_attr(test, test)]
 fn test_rc3() {
     use std::rc::Rc;
 
@@ -231,9 +180,11 @@ fn test_rc3() {
         next: Some(Rc::clone(&tail)),
     });
 
+    println!("n1 = {:?}, n2 = {:?}", n1, n2);
     println!("tail count = {}", Rc::strong_count(&tail));
 }
 
+#[cfg_attr(test, test)]
 fn test_while_let1() {
     // Make `optional` of type `Option<i32>`
     let mut optional = Some(0);
@@ -260,6 +211,7 @@ fn test_while_let1() {
     }
 }
 
+#[cfg_attr(test, test)]
 fn test_while_let2() {
     // Make `optional` of type `Option<i32>`
     let mut optional = Some(0);
@@ -283,12 +235,14 @@ fn test_while_let2() {
     // clauses. `while let` does not have these.
 }
 
+#[allow(dead_code)]
 #[derive(Debug)]
 struct Me {
     name: i32,
     age: i32,
 }
 
+#[cfg_attr(test, test)]
 fn test_container() {
     let mut contacts = HashMap::new();
     contacts.insert(1, Me { age: 1, name: 2 });
@@ -305,6 +259,7 @@ fn test_container() {
     // 2. 什么使用 &  &mut Copy 和 borrow ，是不是都可以实现 ?
 }
 
+#[cfg_attr(test, test)]
 fn test_unit_test_demo() {
     // 假装调用一下
     let result = unit_test::add(5, 3);
@@ -312,20 +267,6 @@ fn test_unit_test_demo() {
 
     let calc = unit_test::Calculator::new();
     println!("Created calculator with initial result: {}", calc.result);
-}
-
-struct Foo<'a> {
-    bar: String,
-    baz: &'a str,
-}
-
-fn test_lifetime() {
-    let s = String::from("hello");
-
-    let f = Foo {
-        bar: "x".to_string(),
-        baz: &s,
-    };
 }
 
 fn main() {
@@ -347,6 +288,9 @@ fn main() {
         println!("  11 - Lifetime example");
         println!("  12 - Backtrace demo (std::backtrace)");
         println!("  13 - Future demo (std::future::Future)");
+        println!("  14 - Linked list reverse demo");
+        println!("  15 - Rc persistent linked list demo");
+        println!("  16 - Rc<RefCell<_>> doubly linked list demo");
         return;
     }
 
@@ -364,10 +308,7 @@ fn main() {
             test_macro();
         }
         "5" => {
-            test_cell();
-            test_refcell();
-            test_refcell2();
-            test_refcell3();
+            rfcell::run_all();
         }
         "6" => {
             test_rc1();
@@ -390,7 +331,7 @@ fn main() {
             test_unit_test_demo();
         }
         "11" => {
-            test_lifetime();
+            lifetime::run_all();
         }
         "12" => {
             // 演示 std::backtrace 的使用
@@ -400,6 +341,18 @@ fn main() {
         "13" => {
             // 演示 std::future::Future、Poll、Waker 和 async/await 的关系
             future_demo::run_all();
+        }
+        "14" => {
+            // 经典面试题：翻转单链表（迭代 + 递归）
+            linked_list::run_all();
+        }
+        "15" => {
+            // Rc 实现的持久化单链表：多个链表可以共享同一段尾部
+            rc_linked_list::run_all();
+        }
+        "16" => {
+            // Rc<RefCell<_>> 实现的双向链表
+            rfcell_linked_list::run_all();
         }
         _ => {
             println!("Invalid option: {}", args[1]);

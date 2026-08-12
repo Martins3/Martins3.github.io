@@ -1,7 +1,7 @@
 CC ?= cc
 CFLAGS := -O2 -Wall -Wextra -pthread
 
-TESTS := sb mp lb ll wr ss
+TESTS := sb mp lb ll wr ss dekker xor
 BINS := $(foreach t,$(TESTS),$(t)-nofence.out $(t)-fence.out)
 
 all: $(BINS)

@@ -270,6 +270,30 @@ docs/kernel/vfio/int-posted-msi.md
 - nosid
 - no_x2apic_optout
 
+## 有待整理
+[VT-d Posted Interrupts](https://events.static.linuxfound.org/sites/events/files/slides/VT-d%20Posted%20Interrupts-final%20.pdf)
+1. Motivation
+  - Interrupt virtualization efficiency
+  - *Interrupt migration complexity*
+  - *Big requirement of host vector for different assigned devices*
+
+- [ ] migration ?
+- [ ] host **vector** for different assigned devices ?
+
+![](./img/vt-d-1.png)
+
+How to enable `IRQ_REMAP` in `make menuconfig`:
+Device Drivers ==> IOMMU Hareware Support ==> Support for Interrupt Remapping
+
+intel_setup_irq_remapping ==> iommu_set_irq_remapping, setup `Interrupt Remapping Table Address Register` which hold address **IRET** locate [^3] 163,164
+
+好家伙，才意识到 ITRE 其实存在两种格式，remapped interrupt 的格式下，其功能相当于 IO-APIC 的功能，作为设备和 CPU 之间的联系，而 Posted-interrupt 的格式下，就是我们熟悉的内容。
+在 Posted-interrupt 格式下，IRET 中间没有目标 CPU 等字段，而是 posted-interrupt descriptor 的地址
+
+Xen Implementation Details:
+- Update IRET according to guest’s modification to the interrupt configuration (MSI address, data)
+- Interrupt migration during VCPU scheduling
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

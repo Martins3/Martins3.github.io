@@ -1,18 +1,19 @@
 # [Learning Rust With Entirely Too Many Linked Lists](https://rust-unofficial.github.io/too-many-lists/)
 
 ## perface
-In doing so, you should learn:
+In this series I will teach you basic and advanced Rust programming
+entirely by having you implement 6 linked lists. In doing so, you should
+learn:
 
-- The following pointer types: &, &mut, Box, Rc, Arc, `*const`, `*mut`
+- The following pointer types: `&`, `&mut`, `Box`, `Rc`, `Arc`, `*const`, `*mut`, `NonNull`(?)
 - Ownership, borrowing, inherited mutability, interior mutability, Copy
 - All The Keywords: struct, enum, fn, pub, impl, use, ...
 - Pattern matching, generics, destructors
-- Testing
-- Basic Unsafe Rust
+- Testing, installing new toolchains, using `miri`
+- Unsafe Rust: raw pointers, aliasing, stacked borrows, UnsafeCell, variance
 
-
-- [ ] 作者论述了，我们不应该自己实现链表，而且链表的使用范围非常有限
-  - [ ] 可以好好看看，试着反驳
+这里谈到了是否应该使用 linked list 的情况:
+https://rust-unofficial.github.io/too-many-lists/index.html
 
 ## A bad stack
 Linked lists are something procedural programmers shouldn't touch with a 10-foot pole, and what functional programmers use for everything.
@@ -33,7 +34,7 @@ Some of you might be thinking "this is clearly tail recursive, and any decent la
 > 我感觉，除非有特殊的原因，list 的释放显然不可能是自动分配的，为什么要从这种角度论证
 
 ## An Ok Singly-Linked Stack
-- 测试 2 中间使用提出一个改进，使用 option 来代替 enum 
+- 测试 2 中间使用提出一个改进，使用 option 来代替 enum
 - 但是，如果仔细思考一下 push 的时候，怎么可以保证一个 List 被释放的时候，其中的所有的节点都可以释放
 
 - 实现内存关系的基本是，一个 object 从 stack 上消失的时候，自动让其持有的资源也消失
@@ -56,7 +57,7 @@ Some of you might be thinking "this is clearly tail recursive, and any decent la
 We need to add lifetimes only in function and type signatures:
 
 ## A Persistent Singly-Linked Stack
-In order to get thread safety, we have to use Arc. Arc is completely identical to Rc except for the fact that reference counts are modified atomically. 
+In order to get thread safety, we have to use Arc. Arc is completely identical to Rc except for the fact that reference counts are modified atomically.
 
 The reason this is the case is because Rust models thread-safety in a first-class way with two traits: `Send` and `Sync`.
 

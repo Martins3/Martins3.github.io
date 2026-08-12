@@ -127,6 +127,38 @@ sm_supported : 原来是 scale mode 啊
 
 ## [ ] struct device_domain_info 是做什么的?
 
+## 文档
+https://docs.kernel.org/arch/x86/iommu.html
+
+> Some ACPI Keywords:
+>
+> DMAR - Intel DMA Remapping table
+> DRHD - Intel DMA Remapping Hardware Unit Definition
+> RMRR - Intel Reserved Memory Region Reporting Structure
+> IVRS - AMD I/O Virtualization Reporting Structure
+> IVDB - AMD I/O Virtualization Definition Block
+> IVHD - AMD I/O Virtualization Hardware Definition
+
+为什么会和 ACPI 关联起来。
+
+## 为什么 amd iommu 就是一个 PCI 设备，而 intel iommu lspci 则是看不到的
+
+## intel dmar 有什么特殊之处吗?
+drivers/iommu/intel/dmar.c
+
+-  /sys/devices/virtual/iommu/dmar0/intel-iommu/ecap
+-  /sys/devices/virtual/iommu/dmar1/intel-iommu/ecap
+
+```txt
+[    0.181268] DMAR-IR: Queued invalidation will be enabled to support x2apic and Intr-remapping.
+[    0.182790] DMAR-IR: Enabled IRQ remapping in x2apic mode
+[    0.182791] x2apic enabled
+[    0.182814] Switched APIC routing to cluster x2apic.
+```
+
+
+## 到底什么是 dmar ?
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

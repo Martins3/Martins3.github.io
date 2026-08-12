@@ -266,15 +266,9 @@
 - [X86 上阅读 Loongarch 内核](./loongarch/hacking-ccls.md)
 - [使用 3A5000 作为我的主力机](./loongarch/neovim.md)
 - [Fedora 使用记录 2026](./linux/fedora.md)
-- [为什么我开始使用 Windows 作为开发机](./windows/why.md)
 - [tailscale 使用简单记录](./net/tailscale.md)
 - [如何给 nixpkgs 添加一个新的包](./tools/nix.md)
 - [clash meta 基础](./net/proxy.md)
-
-## 并行，并发，多核，一致性
-
-- [Quiescent consistency，Sequential consistency 和 Linearizability](./concurrent/linearizability.md)
-- [wait free，lockfree 和 obstruction free 区分](./concurrent/lock-free.md)
 
 
 ## Potpourri
@@ -297,11 +291,32 @@
 
 - [efibootmgr 和 efivar](./uefi/efibootmgr.md)
 
+## iommu
+
+- [IOMMU 杂谈](./kernel/iommu/overview.md)
+- [iommu domain 基本概念](./kernel/iommu/iommu-domain.md)
+- [blk-mq-dma](./kernel/iommu/blk-dma.md)
+- [swiotlb](./kernel/iommu/swiotlb/swiotlb.md)
+- [dev->dma_ops](./kernel/iommu/dma_ops.md)
+- [pasid](./kernel/iommu/pasid.md)
+- [dma coherence](./kernel/iommu/dma-coherence.md)
+- [iommu debugfs](./kernel/iommu/debugfs/debugfs.md)
+- 架构相关
+  - [aarch64](./kernel/iommu/arch/aarch64.md)
+  - [amd](./kernel/iommu/arch/amd.md)
+  - [intel](./kernel/iommu/arch/intel.md)
+- 高级话题:
+	- [iommufd](./kernel/iommu/iommufd.md)
+	- [SIOV](./kernel/iommu/siov.md)
+	- [auxd](./kernel/iommu/auxd.md)
+	- [vIOMMU](./kernel/iommu/viommu.md)
+
+
 ## rcu
 
 - [doc](./concurrent/rcu/doc.md)
 - [RCU 基本介绍](./concurrent/rcu/overview.md)
-- [RCU 基本使用](./concurrent/rcu/2-api.md)
+- [RCU 基本使用](./concurrent/rcu/usage.md)
 - [rcu_read_lock_bh](./concurrent/rcu/bh.md)
 - [rcu boost](./concurrent/rcu/boost.md)
 - [context_tracking](./concurrent/rcu/context_tracking.md)
@@ -315,7 +330,7 @@
 - [rcu stall](./concurrent/rcu/stall.md)
 - [task rcu](./concurrent/rcu/tasks_rcu.md)
 - [kthread && softirq](./concurrent/rcu/thread.md)
-- [wq](./concurrent/rcu/wq.md)
+- [RCU wq](./concurrent/rcu/wq.md)
 - [QEMU rcu](./qemu/thread/rcu.md)
 - [Tree RCU](./concurrent/rcu/tree.md)
 
@@ -323,7 +338,8 @@
 
 - [摄影摄像环境](./chores/photo-workflow.md)
 
-
+## volatile
+- [编译器乱序](./concurrent/volatile/doc.md)
 
 ## sanitizer
 
@@ -336,10 +352,11 @@
 - [ubsan](./concurrent/san/ubsan.md)
 - [lockdep 实现](./concurrent/san/lockdep-internal.md)
 - [lockdep usage](./concurrent/san/lockdep-usage.md)
+- [使用 kernel 中调试工具](./concurrent/san/misc-kernel-debug.md)
 
 - [sanitizer 实验代码](./concurrent/san/code/README.md)
 
-### userfaultfd
+## [ ] userfaultfd
 
 - [Userfaultfd](./kernel/mm/userfaultfd/basic.md)
 - [userfaultfd 高级话题探讨](./kernel/mm/userfaultfd/advance.md)
@@ -382,6 +399,91 @@
 - [热迁移中 share memory 会被自动 touch](./qemu/migration/zero-page/zero-page.md)
 - [PCIDevice::net_failover 与热迁移](./qemu/migration/net-failover.md)
 
+## 内核同步 API
+- [mutex](./concurrent/kernel/api/mutex.md)
+- [percpu rwsem](./concurrent/kernel/api/percpu-rwsem.md)
+- [PER_CPU](./concurrent/kernel/api/percpu.md)
+- [rcuwait](./concurrent/kernel/api/rcuwait.md)
+- [refcount](./concurrent/kernel/api/refcount.md)
+- [rt_mutex.md](./concurrent/kernel/api/rt_mutex.md)
+- [rwlock](./concurrent/kernel/api/rwlock.md)
+- [R/W semaphore](./concurrent/kernel/api/rwsem.md)
+- [Semaphores](./concurrent/kernel/api/semaphore.md)
+- [seqlock](./concurrent/kernel/api/seqlock.md)
+- [spinlock](./concurrent/kernel/api/spinlock.md)
+- [swait](./concurrent/kernel/api/swait.md)
+- [wait](./concurrent/kernel/api/wait.md)
+- [waitbit](./concurrent/kernel/api/waitbit.md)
+- [ww_mutex](./concurrent/kernel/api/ww_mutex.md)
+
+## [ ] memory model
+- [扉页](./concurrent/memory-model/memory-consistency-models-tutorial/mcm-chinese.md)
+- [Front Matter](./concurrent/memory-model/memory-consistency-models-tutorial/mcm-original.md)
+- [《Shared Memory Consistency Models: A Tutorial》中文总结](./concurrent/memory-model/memory-consistency-models-tutorial/mcm-summary.md)
+- [实验](./concurrent/code/README.md)
+- [memory model litmus 测试](./concurrent/memory-model/tests/README.md)
+- [高级话题](./concurrent/memory-model/advance.md)
+- [memory model](./concurrent/memory-model/doc.md)
+- [Linux 内核 Litmus Tests 介绍](./concurrent/1-litmus.md)
+
+## [ ] atomic
+- [简单看看 aarch64 的指令支持](./concurrent/atomic/aarch64.md)
+- [atomic 在 CPU 是如何实现的?](./concurrent/atomic/ai.md)
+- [反汇编常见指令](./concurrent/atomic/cpu-arch-atomic.md)
+- [记录下 x86.c 的内容](./kvm/x86.md)
+- [atomic](./concurrent/atomic/atomic.md)
+- [gcc atomic](./concurrent/atomic/gcc-atomic.md)
+- [对比 x86 arm 和 risc-v](./concurrent/atomic/diff.md)
+
+## [ ] 同步设计
+- [c++ 的同步设计](./concurrent/lan/cpp.md)
+- [glib 中也有很多](./concurrent/lan/glib.md)
+- [glibc](./concurrent/lan/glibc.md)
+- [golang 同步设计](./concurrent/lan/go.md)
+- [pthread](./concurrent/lan/pthread.md)
+- [cpython 中锁设计](./concurrent/lan/python.md)
+
+## [ ] 并行，并发，多核，一致性
+
+- [Quiescent consistency，Sequential consistency 和 Linearizability](./concurrent/linearizability.md)
+- [wait free，lockfree 和 obstruction free 区分](./concurrent/lock-free.md)
+
+
+## perfbook 阅读笔记
+- AI 自动总结:
+    - [Introduction](./concurrent/perfbook/autoread/chapters/02-introduction.md)
+    - [Hardware and its Habits](./concurrent/perfbook/autoread/chapters/03-hardware-and-its-habits.md)
+    - [Tools of the Trade](./concurrent/perfbook/autoread/chapters/04-tools-of-the-trade.md)
+    - [Counting](./concurrent/perfbook/autoread/chapters/05-counting.md)
+    - [Partitioning and Synchronization Design](./concurrent/perfbook/autoread/chapters/06-partitioning-and-synchronization-design.md)
+    - [Locking](./concurrent/perfbook/autoread/chapters/07-locking.md)
+    - [Data Ownership](./concurrent/perfbook/autoread/chapters/08-data-ownership.md)
+    - [Deferred Processing](./concurrent/perfbook/autoread/chapters/09-deferred-processing.md)
+    - [Data Structures](./concurrent/perfbook/autoread/chapters/10-data-structures.md)
+    - [Validation](./concurrent/perfbook/autoread/chapters/11-validation.md)
+    - [Formal Verification](./concurrent/perfbook/autoread/chapters/12-formal-verification.md)
+    - [Putting It All Together](./concurrent/perfbook/autoread/chapters/13-putting-it-all-together.md)
+    - [Advanced Synchronization](./concurrent/perfbook/autoread/chapters/14-advanced-synchronization.md)
+    - [Advanced Synchronization: Memory Ordering](./concurrent/perfbook/autoread/chapters/15-advanced-synchronization-memory-ordering.md)
+    - [Ease of Use](./concurrent/perfbook/autoread/chapters/16-ease-of-use.md)
+    - [Conflicting Visions of the Future](./concurrent/perfbook/autoread/chapters/17-conflicting-visions-of-the-future.md)
+    - [Looking Forward and Back](./concurrent/perfbook/autoread/chapters/18-looking-forward-and-back.md)
+    - [Appendix](./concurrent/perfbook/autoread/chapters/A-appendix.md)
+- [perfbook 阅读思考](./concurrent/perfbook/notes.md)
+- [perf book](./concurrent/perfbook/overview.md)
+- [perfbook 词汇表](./concurrent/perfbook/words.md)
+
+## Yet another libvirt
+
+- [为什么又写一个脚本来启动 QEMU](./collei/why.md)
+- [firecracker 集成](./collei/firecracker.md)
+- [NixOS 集成](./collei/nixos.md)
+- [使用 codex 重写 collei](./collei/rewrite.md)
+- [基本使用注意](./collei/usage.md)
+- [vmtest 集成](./collei/vmtest.md)
+- [Windows 支持](./collei/windows.md)
+
+
 ## Kernel Contribution
 
 - https://github.com/search?q=repo%3Atorvalds%2Flinux+Xueshi&type=commits
@@ -396,6 +498,7 @@
 - [xieby1](https://xieby1.github.io/)
 - [qaqcxh](https://qaqcxh.github.io/Blogs/)
 
+
 ## 整理中
 
 ### [ ] nvme
@@ -405,10 +508,6 @@
 - [《深入浅出 SSD》阅读笔记](./kernel/blk/nvme/nvme-hardware.md)
 - [nvmf](./kernel/blk/nvme/nvme-tcp.md)
 
-### [ ] Yet another libvirt
-
-- collei 设计文档
-- 利用 codex 重写
 
 ### [ ] mq
 
@@ -429,35 +528,11 @@
 - [选项 BLK_WBT](./kernel/blk/mq/wbt.md)
 - [mq 基础](./kernel/blk/mq/yes.md)
 
-### [ ] iommu
-
-- [iommu domain 基本概念](./kernel/iommu/iommu-domain.md)
-- [iommufd](./kernel/iommu/iommufd.md)
-- [blk-mq-dma](./kernel/iommu/blk-dma.md)
-- [vIOMMU](./kernel/iommu/viommu.md)
-- [dma coherence](./kernel/iommu/dma-coherence.md)
-- [swiotlb](./kernel/iommu/swiotlb/swiotlb.md)
-
-- [auxd](./kernel/iommu/auxd.md)
-- [dev->dma_ops](./kernel/iommu/dma_ops.md)
-- [IOMMU](./kernel/iommu/overview.md)
-- [iotlb 什么时候 flush](./kernel/iommu/pasid.md)
-- [SIOV](./kernel/iommu/siov.md)
-- [SWIOTLB 常见疑问整理（结合最新上游代码）](./kernel/iommu/swiotlb-analysis.md)
-
-- arch
-  - [aarch64](./kernel/iommu/arch/aarch64.md)
-  - [amd](./kernel/iommu/arch/amd.md)
-  - [intel](./kernel/iommu/arch/intel.md)
-
-- [intel 的 iommu debugfs](./kernel/iommu/debugfs/debugfs.md)
-
 ### [ ] io_uring
 
 ### [ ] cgroup
 
 ### [ ] vmscan lru
-
 
 ### [ ] initramfs
 - [buildroot](./kernel/tutorial/initramfs/builtroot.md)
@@ -467,87 +542,6 @@
 - [linuxfromscratch](./kernel/tutorial/initramfs/minimal.md)
 - [bootc](./kernel/tutorial/initramfs/yes.md)
 
-### [ ] 并发编程
-
-- `concurrent/`
-  - `arch/`
-    - [简单看看 aarch64 的指令支持](./concurrent/arch/aarch64.md)
-    - [核心结论](./concurrent/arch/ai.md)
-    - [反汇编常见指令](./concurrent/arch/cpu-arch-atomic.md)
-    - [x86](./concurrent/arch/x86.md)
-  - `code/`
-    - [store-buffer](./concurrent/code/README.md)
-  - `kernel/`
-    - `api/`
-      - [Documentation/atomic_t.txt](./concurrent/kernel/api/atomic.md)
-      - [gcc atomic](./concurrent/kernel/api/gcc-atomic.md)
-      - [mutex](./concurrent/kernel/api/mutex.md)
-      - [percpu rwsem](./concurrent/kernel/api/percpu-rwsem.md)
-      - [PER_CPU](./concurrent/kernel/api/percpu.md)
-      - [rcuwait](./concurrent/kernel/api/rcuwait.md)
-      - [refcount](./concurrent/kernel/api/refcount.md)
-      - [rt_mutex.md](./concurrent/kernel/api/rt_mutex.md)
-      - [rwlock](./concurrent/kernel/api/rwlock.md)
-      - [R/W semaphore](./concurrent/kernel/api/rwsem.md)
-      - [Semaphores](./concurrent/kernel/api/semaphore.md)
-      - [seqlock](./concurrent/kernel/api/seqlock.md)
-      - [spinlock](./concurrent/kernel/api/spinlock.md)
-      - [swait](./concurrent/kernel/api/swait.md)
-      - [wait](./concurrent/kernel/api/wait.md)
-      - [waitbit](./concurrent/kernel/api/waitbit.md)
-      - [ww_mutex](./concurrent/kernel/api/ww_mutex.md)
-    - [内核文档](./concurrent/kernel/kernel-doc.md)
-    - [kernel 各个模块的锁的设计](./concurrent/kernel/kernel-lock-design.md)
-  - `lan/`
-    - [c++ 的同步设计](./concurrent/lan/cpp.md)
-    - [glib 中也有很多](./concurrent/lan/glib.md)
-    - [glibc](./concurrent/lan/glibc.md)
-    - [golang 同步设计](./concurrent/lan/go.md)
-    - [pthread](./concurrent/lan/pthread.md)
-    - [cpython 中锁设计](./concurrent/lan/python.md)
-    - [rust async](./concurrent/lan/rust.md)
-  - `memory-consistency-models-tutorial/`
-    - [扉页](./concurrent/memory-consistency-models-tutorial/mcm-chinese.md)
-    - [Front Matter](./concurrent/memory-consistency-models-tutorial/mcm-original.md)
-    - [《Shared Memory Consistency Models: A Tutorial》中文总结](./concurrent/memory-consistency-models-tutorial/mcm-summary.md)
-    - [Shared Memory Consistency Models: A Tutorial](./concurrent/memory-consistency-models-tutorial/notes.md)
-  - `perfbook/`
-    - `autoread/`
-      - `chapters/`
-        - [Introduction](./concurrent/perfbook/autoread/chapters/02-introduction.md)
-        - [Hardware and its Habits](./concurrent/perfbook/autoread/chapters/03-hardware-and-its-habits.md)
-        - [Tools of the Trade](./concurrent/perfbook/autoread/chapters/04-tools-of-the-trade.md)
-        - [Counting](./concurrent/perfbook/autoread/chapters/05-counting.md)
-        - [Partitioning and Synchronization Design](./concurrent/perfbook/autoread/chapters/06-partitioning-and-synchronization-design.md)
-        - [Locking](./concurrent/perfbook/autoread/chapters/07-locking.md)
-        - [Data Ownership](./concurrent/perfbook/autoread/chapters/08-data-ownership.md)
-        - [Deferred Processing](./concurrent/perfbook/autoread/chapters/09-deferred-processing.md)
-        - [Data Structures](./concurrent/perfbook/autoread/chapters/10-data-structures.md)
-        - [Validation](./concurrent/perfbook/autoread/chapters/11-validation.md)
-        - [Formal Verification](./concurrent/perfbook/autoread/chapters/12-formal-verification.md)
-        - [Putting It All Together](./concurrent/perfbook/autoread/chapters/13-putting-it-all-together.md)
-        - [Advanced Synchronization](./concurrent/perfbook/autoread/chapters/14-advanced-synchronization.md)
-        - [Advanced Synchronization: Memory Ordering](./concurrent/perfbook/autoread/chapters/15-advanced-synchronization-memory-ordering.md)
-        - [Ease of Use](./concurrent/perfbook/autoread/chapters/16-ease-of-use.md)
-        - [Conflicting Visions of the Future](./concurrent/perfbook/autoread/chapters/17-conflicting-visions-of-the-future.md)
-        - [Looking Forward and Back](./concurrent/perfbook/autoread/chapters/18-looking-forward-and-back.md)
-        - [Appendix](./concurrent/perfbook/autoread/chapters/A-appendix.md)
-    - [perfbook 阅读思考](./concurrent/perfbook/notes.md)
-    - [perf book](./concurrent/perfbook/overview.md)
-    - [perfbook 词汇表](./concurrent/perfbook/words.md)
-  - [Linux 内核 Litmus Tests 介绍](./concurrent/1-litmus.md)
-  - [并发锁分析工具 lslocks](./concurrent/2-tools.md)
-  - [并发编程中违反直觉的例子](./concurrent/counter-intuitive.md)
-  - [并发数据结构 readerwriterqueue 分析](./concurrent/data-structure.md)
-  - [梳理一下多核的基本生存法则](./concurrent/engineerings-perspective.md)
-  - [memory model: IRIW](./concurrent/iriw.md)
-  - [Lockless 无锁设计收集](./concurrent/lockless.md)
-  - [Host 与 Guest 同步机制](./concurrent/misc.md)
-  - [并发编程中 lockless 是什么意思](./concurrent/solutions.md)
-  - [事务内存初识](./concurrent/transctiona-memory.md)
-  - [并行编程实践记录](./concurrent/usage.md)
-  - [为什么并行编程如此困难](./concurrent/why-parallel-is-hard.md)
-  - [kernel/sched/membarrier.c syscall](./concurrent/yes.md)
 
 ### [ ] trace
 - `trace/`
@@ -607,10 +601,43 @@
   - [strace 基本使用](./trace/strace.md)
   - [systemtap](./trace/systemtap.md)
   - [trace 传统工具](./trace/tools.md)
-  - [arm 环境的确容易出现 backtrace 没有的情况](./trace/tracepoint-aarch64.md)
+  - [arm 环境的确容易出现 backtrace 没有的情况?](./trace/tracepoint-aarch64.md)
   - [tracepoint 的积累已经很多了](./trace/tracepoint.md)
   - [用户态符号基础](./trace/user.md)
   - [noinstr code](./trace/yes.md)
+
+### [ ] Rust
+- [基本执行操作](./rust/demo/README.md)
+- [Rust Atomics and Locks](./rust/code/README.md)
+
+- [unsafe rust](./rust/unsafe.md)
+- [Learning Rust With Entirely Too Many Linked Lists](./rust/rust/linked-list.md)
+
+- [rust](./rust/rust.md)
+- [Resource](./rust/rust/rust-route.md)
+- [工具](./rust/tools.md)
+- [tokio](./rust/tokio.md)
+
+- [Linux 和 QEMU 中对于 Rust 的支持](./rust/kernel.md)
+- [Rust 实现 Hobby OS](./rust/os.md)
+- [QEMU rust 支持现状](./rust/qemu.md)
+
+- [macro](./rust/rust/macro.md)
+- [Ownership and lifetime](./rust/rust/ownership-lifetime.md)
+
+### [ ] 并发编程
+- [并发锁分析工具 lslocks](./concurrent/2-tools.md)
+- [并发编程中违反直觉的例子](./concurrent/counter-intuitive.md)
+- [并发数据结构 readerwriterqueue 分析](./concurrent/data-structure.md)
+- [梳理一下多核的基本生存法则](./concurrent/engineerings-perspective.md)
+- [memory model: IRIW](./concurrent/iriw.md)
+- [Lockless 无锁设计收集](./concurrent/lockless.md)
+- [Host 与 Guest 同步机制](./concurrent/misc.md)
+- [并发编程中 lockless 是什么意思](./concurrent/solutions.md)
+- [事务内存初识](./concurrent/transctiona-memory.md)
+- [并行编程实践记录](./concurrent/usage.md)
+- [为什么并行编程如此困难](./concurrent/why-parallel-is-hard.md)
+- [kernel/sched/membarrier.c syscall](./concurrent/yes.md)
 
 <!-- BEGIN AUTO DOCS INDEX -->
 ## 自动文档索引
@@ -666,18 +693,30 @@
   - [电吉他](./chores/guitar.md)
   - [手工](./chores/handicrafts.md)
   - [医疗](./chores/medical.md)
-  - [爱我还是他](./chores/music.md)
+  - [音乐](./chores/music.md)
   - [基本](./chores/photo.md)
   - [运动](./chores/sports.md)
 - `concurrent/`
+  - `atomic/`
+    - [x86](./concurrent/atomic/x86.md)
+  - `kernel/`
+    - [内核文档](./concurrent/kernel/kernel-doc.md)
+    - [kernel 各个模块的锁的设计](./concurrent/kernel/kernel-lock-design.md)
   - `memory-model/`
-    - `tests/`
-      - [memory model litmus 测试](./concurrent/memory-model/tests/README.md)
-    - [acquire and release](./concurrent/memory-model/doc.md)
-  - `san/`
-    - [使用 kernel 中调试工具](./concurrent/san/misc-kernel-debug.md)
-  - `volatile/`
-    - [编译器乱序](./concurrent/volatile/doc.md)
+    - `litmus/`
+      - [memory model : litmus 测试工具工作原理](./concurrent/memory-model/litmus/README.md)
+    - `lkmm/`
+      - `zh-cn/`
+        - [access-marking.txt 中文译解](./concurrent/memory-model/lkmm/zh-cn/access-marking.translation.md)
+        - [control-dependencies.txt 内容总结](./concurrent/memory-model/lkmm/zh-cn/control-dependencies.summary.md)
+        - [control-dependencies.txt 中文译解](./concurrent/memory-model/lkmm/zh-cn/control-dependencies.translation.md)
+        - [explanation.txt 中文译解](./concurrent/memory-model/lkmm/zh-cn/explanation.translation.md)
+        - [locking.txt 中文译解](./concurrent/memory-model/lkmm/zh-cn/locking.translation.md)
+      - [3. 内核源码中的 LKMM](./concurrent/memory-model/lkmm/ai-overview.md)
+      - [Linux Kernel Memory Model (LKMM) 完全指南](./concurrent/memory-model/lkmm/ai-read.md)
+      - [rcu 的邮件，每一个都需要阅读下](./concurrent/memory-model/lkmm/human.md)
+      - [4.2 CDSChecker](./concurrent/memory-model/lkmm/other-tools.md)
+      - [8. LKMM vs C/C++ Memory Model](./concurrent/memory-model/lkmm/vs-cpp.md)
 - `container/`
   - [Podman Rootless 问题记录](./container/container.md)
   - [Docker 基本使用](./container/docker.md)
@@ -748,6 +787,7 @@
   - [Reorder Buffer (ROB)](./cpu/rob.md)
   - [Scala 基础语法学习](./cpu/scala.md)
   - [芯片设计中两个关键设备](./cpu/smart-dev.md)
+  - [CPU ARCH : 进入到 store buffer 意味着已经 commit 了吗?](./cpu/store-buffer.md)
   - [访存子系统](./cpu/xiangshan.md)
 - `cxl/`
   - [CXL 技术资料](./cxl/readme.md)
@@ -906,6 +946,8 @@
     - [memory hotplug](./kernel/hp/memory.md)
     - [qemu 的热插内存居然可以是不同的后端类型的](./kernel/hp/qemu.md)
     - [存储的热插拔](./kernel/hp/storage.md)
+  - `iommu/`
+    - [iommu=pt 到底意味着什么?](./kernel/iommu/iommu-pt.md)
   - `iouring/`
     - `async/`
       - [buffer io](./kernel/iouring/async/aio-buffer-io.md)
@@ -977,6 +1019,8 @@
     - [2024](./kernel/lsfmmbpf/2024.md)
     - [lsfmmbpf 2026](./kernel/lsfmmbpf/2026.md)
   - `mm/`
+    - `code/`
+      - [测试内容记录](./kernel/mm/code/README.md)
     - `damon/`
       - [DAMO](./kernel/mm/damon/damo.md)
       - [DAMON](./kernel/mm/damon/damon.md)
@@ -1211,14 +1255,14 @@
     - [内核文档](./kernel/vfio/doc.md)
     - [看看这个 ACS override 是什么鬼?](./kernel/vfio/group.md)
     - [PWN : Posted MSI notification event](./kernel/vfio/int-posted-msi.md)
-    - [vfio 对外提供的三个 fops](./kernel/vfio/internal-kernel.md)
+    - [vfio 内核实现](./kernel/vfio/internal-kernel.md)
     - [qemu](./kernel/vfio/internal-qemu.md)
     - [mdev-no-iommu](./kernel/vfio/mdev-no-iommu.md)
     - [vfio misc](./kernel/vfio/misc.md)
     - [noiommu](./kernel/vfio/noiommu.md)
     - [uio](./kernel/vfio/uio.md)
     - [nvgrace-gpu](./kernel/vfio/vGPU.md)
-    - [vfio 基础](./kernel/vfio/vfio.md)
+    - [vfio](./kernel/vfio/vfio.md)
     - [drivers/vfio/pci/virtio 是做什么的](./kernel/vfio/virtio.md)
   - `vhost/`
     - [vhost-user Inflight I/O Tracking 详解](./kernel/vhost/1-inflight-io.md)
@@ -1359,7 +1403,6 @@
   - [kvm 如何支持 smm](./kvm/smm.md)
   - [记录几个相见恨晚的 tracepoint 点](./kvm/tracepoint.md)
   - [Intel VMCS 字段表](./kvm/vmcs-fields.md)
-  - [记录下 x86.c 的内容](./kvm/x86.md)
   - [SVM_EXIT_TASK_SWITCH 和 EXIT_REASON_TASK_SWITCH](./kvm/yes-we-know.md)
 - `linux/`
   - `tlpi/`
@@ -1625,6 +1668,7 @@
   - [如何正确的配置 qemu 的 memory 和 cpu](./qemu/cpu-topo.md)
   - [Official Docs](./qemu/docs.md)
   - [经典例子](./qemu/error.md)
+  - [Hyperlight](./qemu/hyperlink.md)
   - [QEMU 启动代码](./qemu/init-2.md)
   - [QEMU 初始化过程分析](./qemu/init.md)
   - [QEMU 概述](./qemu/introduction.md)
@@ -1641,26 +1685,19 @@
   - [qemu 如何做测试的](./qemu/test.md)
   - [QEMU 中的 trace 机制](./qemu/trace.md)
 - `rust/`
-  - `code/`
-    - [Rust Atomics and Locks](./rust/code/README.md)
-  - `demo/`
-    - [基本执行操作](./rust/demo/README.md)
   - `rust/`
-    - [Learning Rust With Entirely Too Many Linked Lists](./rust/rust/linked-list.md)
-    - [rust 中的 macro](./rust/rust/macro.md)
-    - [Ownership and lifetime](./rust/rust/ownership-lifetime.md)
-    - [Resource](./rust/rust/rust-route.md)
-    - [The Rust Book](./rust/rust/the-Rust-book.md)
-  - [rust async](./rust/async.md)
-  - [收集一些和 rust 有关的项目](./rust/kernel.md)
-  - [low-priority](./rust/low-priority.md)
-  - [Rust os 实现](./rust/os.md)
-  - [codex 的调研结果](./rust/qemu.md)
-  - [教程](./rust/rust.md)
-  - [收集一些必须 rust 来解决的](./rust/rust.target.md)
-  - [libuv 和两个 tokio](./rust/tokio.md)
-  - [写 rust 的工具](./rust/tools.md)
-  - [先搞清楚基本问题](./rust/unsafe.md)
+    - [rust 的 smart pointers](./rust/rust/pointers.md)
+  - `too-many-linked-lists/`
+    - `ai/`
+      - [Introduction（引言）](./rust/too-many-linked-lists/ai/00-introduction.md)
+      - [第一章 A Bad Stack（一个糟糕的单链表栈）](./rust/too-many-linked-lists/ai/01-first-bad-stack.md)
+      - [第二章 An Ok Stack（一个还行的单链表栈）](./rust/too-many-linked-lists/ai/02-second-ok-stack.md)
+      - [第三章 A Persistent Stack（持久化栈）](./rust/too-many-linked-lists/ai/03-third-persistent-stack.md)
+      - [第四章 A Bad but Safe Doubly-Linked Deque（糟糕但安全的双向双端队列）](./rust/too-many-linked-lists/ai/04-fourth-bad-safe-deque.md)
+      - [第五章 An Ok Unsafe Queue（还行的 unsafe 队列）](./rust/too-many-linked-lists/ai/05-fifth-ok-unsafe-queue.md)
+      - [第六章 A Production Unsafe Deque（生产级 unsafe 双端队列）](./rust/too-many-linked-lists/ai/06-sixth-production-unsafe-deque.md)
+      - [第七章 A Bunch of Silly Lists（一堆整活链表）](./rust/too-many-linked-lists/ai/07-infinity-silly-lists.md)
+  - [rust gdb 基本使用方法](./rust/debug.md)
 - `shell/`
   - [awk](./shell/awk.md)
   - [如何彻底征服 bash script](./shell/bash.md)
@@ -1729,17 +1766,16 @@
       - [Linux / Windows 系统编程对照](./windows/code/docs/linux_windows_mapping.md)
     - [Windows 系统编程 Demo](./windows/code/README.md)
   - `driver/`
+    - `code/`
+      - `kmdf-hello/`
+        - [KMDF Hello](./windows/driver/code/kmdf-hello/README.md)
     - [windows 驱动开发](./windows/driver/windows-driver.md)
   - [dotnet 简述](./windows/dotnet.md)
   - [mingw](./windows/mingw.md)
   - [windows 杂谈](./windows/misc.md)
   - [windows 网络](./windows/net.md)
-  - [windows powershell 基本命令](./windows/pwsh.md)
-  - [rdp](./windows/rdp.md)
-  - [windows 环境搭建](./windows/setup-env.md)
   - [windows 性能测试工具](./windows/tools.md)
   - [如何将 windows 放到虚拟机中](./windows/virt.md)
-  - [Virual Studio 简记](./windows/vs.md)
 - `xen/`
   - [xen](./xen/README.md)
 <!-- END AUTO DOCS INDEX -->

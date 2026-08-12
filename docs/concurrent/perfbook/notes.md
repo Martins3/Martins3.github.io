@@ -19,13 +19,23 @@ rb tree 的并发是什么?
 
 ### 容易的三个问题
 
-4.  __d_lookup 细节继续分析理解
 5. rcu linked list / hash table 和普通的 linked list 的区别是什么?
 
 7. chapters/14 中的高级同步技术的确是非常好用的，lock free 的几个基本概念
 10. 找到那个 cst 的例子
+	- 不就是需要
 11. 为什么内核需要定义 LKMM ，LKMM 的具体定义是什么?
 12. 继续看看 refcont_t 和 atomic_t 的使用说明是什么?
+
+1. 还是各种一致性没有理解的
+务必仔细理解其中的关于 cache 的 linearize 的含义
+https://stackoverflow.com/questions/69925465/how-does-the-x86-tso-memory-consistency-model-work-when-some-of-the-stores-being
+就是这个没有理解，导致假设一直有问题，是在是关键
+
+12. 继续这里的 /home/martins3/data/vn/docs/concurrent/kernel/api/atomic-todo.md
+13. litmus 问题
+
+14. 什么叫作顺序一致性?
 
 ### 不容易的问题
 - 写一个 GPU 角度的对比

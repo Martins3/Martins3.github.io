@@ -64,7 +64,7 @@ static inline unsigned long now_sec(void)
 }
 
 /* 运行 secs 秒后设置 should_stop, 等价于内核版本里的 msleep(8000) 线程 */
-static void *timer_thread(void *arg)
+__attribute__((unused)) static void *timer_thread(void *arg)
 {
 	unsigned long deadline = now_sec() + (unsigned long)arg;
 	while (!should_stop && now_sec() < deadline)
@@ -119,7 +119,7 @@ static inline void rv_wait_done(struct rendezvous *rv, int epoch)
 		cpu_relax();
 }
 
-static unsigned long parse_secs(int argc, char **argv)
+__attribute__((unused)) static unsigned long parse_secs(int argc, char **argv)
 {
 	if (argc > 1) {
 		long s = atol(argv[1]);

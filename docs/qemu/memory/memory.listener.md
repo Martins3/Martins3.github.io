@@ -1137,6 +1137,10 @@ Guest 启动之后，似乎发生了重新映射:
 ```
 简而言之，就是使用的所有的物理映射，全部都要搞上。
 
+## TODO
+跟踪下 intel 和 amd 对应于
+virtio_iommu_switch_address_space 的操作是什么含义?
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

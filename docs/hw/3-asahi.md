@@ -250,23 +250,101 @@ cat /sys/class/power_supply/macsmc-battery/capacity
 
 四舍五入和 96 core 的 kunpeng 机器都差不多了。
 
+
+## asahi linux 中启动后 feature 解析
+
+```txt
+Oct 13 08:00:00 fedora kernel: smp: Brought up 1 node, 8 CPUs
+Oct 13 08:00:00 fedora kernel: SMP: Total of 8 processors activated.
+Oct 13 08:00:00 fedora kernel: CPU: All CPU(s) started at EL2
+Oct 13 08:00:00 fedora kernel: CPU features: detected: Branch Target Identification
+Oct 13 08:00:00 fedora kernel: CPU features: detected: ARMv8.4 Translation Table Level
+Oct 13 08:00:00 fedora kernel: CPU features: detected: Data cache clean to the PoU not required for I/D coherence
+Oct 13 08:00:00 fedora kernel: CPU features: detected: Common not Private translations
+Oct 13 08:00:00 fedora kernel: CPU features: detected: CRC32 instructions
+Oct 13 08:00:00 fedora kernel: CPU features: detected: Data cache clean to Point of Deep Persistence
+Oct 13 08:00:00 fedora kernel: CPU features: detected: Data cache clean to Point of Persistence
+Oct 13 08:00:00 fedora kernel: CPU features: detected: Data independent timing control (DIT)
+Oct 13 08:00:00 fedora kernel: CPU features: detected: E0PD
+Oct 13 08:00:00 fedora kernel: CPU features: detected: Enhanced Counter Virtualization
+Oct 13 08:00:00 fedora kernel: CPU features: detected: Enhanced Virtualization Traps
+Oct 13 08:00:00 fedora kernel: CPU features: detected: Fine Grained Traps
+Oct 13 08:00:00 fedora kernel: CPU features: detected: Generic authentication (IMP DEF algorithm)
+Oct 13 08:00:00 fedora kernel: CPU features: detected: RCpc load-acquire (LDAPR)
+Oct 13 08:00:00 fedora kernel: CPU features: detected: LSE atomic instructions
+Oct 13 08:00:00 fedora kernel: CPU features: detected: Privileged Access Never
+Oct 13 08:00:00 fedora kernel: CPU features: detected: RAS Extension Support
+Oct 13 08:00:00 fedora kernel: CPU features: detected: Speculation barrier (SB)
+Oct 13 08:00:00 fedora kernel: CPU features: detected: Stage-2 Force Write-Back
+Oct 13 08:00:00 fedora kernel: CPU features: detected: TLB range maintenance instructions
+Oct 13 08:00:00 fedora kernel: CPU features: detected: Speculative Store Bypassing Safe (SSBS)
+Oct 13 08:00:00 fedora kernel: alternatives: applying system-wide alternatives
+Oct 13 08:00:00 fedora kernel: CPU features: detected: ACTLR virtualization (architectural?)
+Oct 13 08:00:00 fedora kernel: CPU features: detected: TSO memory model (Apple)
+Oct 13 08:00:00 fedora kernel: Memory: 15877984K/16296480K available (22400K kernel code, 6098K rwdata, 18896K rodata, 14464K init, 10371K bss, 334832K reserved, 65536K cma-reserved)
+```
+
+
+二、关键启动行
+
+smp: Brought up 1 node, 8 CPUs / Total of 8 processors activated
+SMP 子系统把 8 个核全部拉起来。注意 boot log 是按 CPU 逐个 online 的（每核一行 [CPU0] ... 之类，你没贴出来），这里是最终汇总：1 个 NUMA 节点。
+
+CPU: All CPU(s) started at EL2
+这句信息量最大。普通 ARM64 机器内核跑在 EL1，只有虚拟化层跑 EL2。这里所有核都在 EL2 启动 = 内核启用了 VHE（Virtualization Host Extensions），即
+内核自己就是 hypervisor，以 EL2 身份运行。
+这也是后面那一堆
+Enhanced Counter Virtualization / Enhanced Virtualization Traps / Fine Grained Traps
+/ Stage-2 Force Write-Back 特性的前提——这些全是给 KVM 用的。Asahi 的 KVM（muvm）就依赖这个。
+
+三、CPU features 分类解读
+
+alternatives: applying system-wide alternatives 这行表示：内核检测完特性后，开始运行时打补丁（把指令序列替换成利用新特性的版本，比如把 LDXR/STXR
+ 循环换成 LSE 单指令原子操作）。所以下面这堆 feature 是"检测结果"，之后会被 alternatives 机制用起来。
+
+1. 原子与内存模型
+- LSE atomic instructions — CAS/LDADD 等单指令原子操作，qspinlock、refcount 都靠它加速
+- RCpc load-acquire (LDAPR) — 弱化版的 acquire 语义，qspinlock 用它
+- TSO memory model (Apple) — Apple 核实现的是 x86 式全序存储模型，比 ARM 弱内存模型"强"，内核检测到后可以放松屏障（用更便宜的 barrier）。这是 Asahi 内核的本地补丁，主线里没有这行字符串。
+
+2. 安全加固（Spectre/Meltdown 类缓解）
+- Branch Target Identification (BTI) — 指令跳转目标校验，防 JOP
+- Privileged Access Never (PAN) — 内核默认禁止访问用户内存，内核态提权防护
+- E0PD — 阻止 EL0 的投机访问，缓解侧信道
+- Speculative Store Bypassing Safe (SSBS) — SSB 漏洞的硬件缓解开关
+- Speculation barrier (SB) — 投机屏障指令
+- Generic authentication (IMP DEF algorithm) — 指针认证（PAC），苹果实现版
+
+3. 缓存/内存管理
+- ARMv8.4 Translation Table Level — 用上了更高的页表级数（大地址空间支持）
+- Data cache clean to the PoU not required for I/D coherence — 硬件自动保证 I/D 缓存一致性，内核做指令 patch（alternatives/ftrace/kprobes）时不 用再手动刷 dcache
+- Data cache clean to Point of Persistence / Deep Persistence — 提供 DC CVAP/CVADP 指令
+- Common not Private translations (CNP) — 多核可共享页表，省 TLB 维护
+- TLB range maintenance instructions — TLBI 批量失效，比逐条刷快
+
+4. KVM 虚拟化专属
+- Enhanced Counter Virtualization — 虚拟化系统计数器偏移（CNTPOFF），虚拟机里时钟不抖
+- Enhanced Virtualization Traps / Fine Grained Traps — 细粒度指令陷出控制，KVM 少陷入、快退出
+- Stage-2 Force Write-Back — KVM 二级页表内存属性简化
+
+5. 杂项
+- CRC32 instructions — 硬件 CRC32C
+- DIT — 数据无关定时（加密常量时间操作）
+- RAS Extension Support — 硬件错误上报
+- ACTLR virtualization (architectural?) — Asahi 内核的本地检测项：Apple 的 ACTLR 辅助控制寄存器访问被虚拟化/陷出处理，"architectural?" 表示"这算不算架构规范行为还不确定"。
+
 ## 链接
 - https://daynix.github.io/2023/06/03/developing-qemu-on-asahi-linux-linux-port-for-apple-silicon.html
 - http://cdn.kernel.org/pub/linux/kernel/people/will/docs/qemu/qemu-arm64-howto.html
 - https://futurewei-cloud.github.io/ARM-Datacenter/qemu/how-to-launch-aarch64-vm/
 - https://asahilinux.org/2022/12/gpu-drivers-now-in-asahi-linux/
-
 - asahi linux built from source
 	- https://codentium.com/building-the-linux-asahi-kernel/
 - https://news.ycombinator.com/item?id=40585842 : Vulkan1.3 on the M1 in one month
-
 - https://www.reddit.com/r/AsahiLinux/comments/1dzwkn8/no_official_news_in_6_months/
-想不到 asahi linux 只有 5 个人
-
+	- 想不到 asahi linux 只有 5 个人
 - https://news.ycombinator.com/item?id=40350408 : 2024/5 还是没有我的心中的神机出现
-
 - https://github.com/AsahiLinux/linux 内核源码
-
 - https://news.ycombinator.com/item?id=41799068 : AAA Gaming on Asahi Linux
 
 <script src="https://giscus.app/client.js"

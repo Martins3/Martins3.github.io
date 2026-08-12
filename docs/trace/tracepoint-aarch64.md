@@ -1,4 +1,4 @@
-## arm 环境的确容易出现 backtrace 没有的情况
+## arm 环境的确容易出现 backtrace 没有的情况?
 
 为什么会出现这个情况，需要调查一下:
 
@@ -150,7 +150,6 @@ CONFIG_FTRACE_MCOUNT_USE_PATCHABLE_FUNCTION_ENTRY=y
 CONFIG_HAVE_SAMPLE_FTRACE_DIRECT=y
 CONFIG_HAVE_SAMPLE_FTRACE_DIRECT_MULTI=y
 ```
-
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

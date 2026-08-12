@@ -1,3 +1,5 @@
+# pasid
+
 ## iotlb 什么时候 flush
 
 从 qemu 看，有 pasid 和 iotlb 的关联很强
@@ -170,9 +172,6 @@ Default PASID of auxiliary domain :
 – Programmed to hardware by parent device driver
 
 https://events19.linuxfoundation.org/wp-content/uploads/2017/12/Hardware-Assisted-Mediated-Pass-Through-with-VFIO-Kevin-Tian-Intel.pdf
-
-## pasid 和 siov 是等价的吗?
-- https://lpc.events/event/11/contributions/1021/attachments/744/1700/lpc-2021-kernel-svm-jp.pdf
 
 ## 4.18 中 intel_iommu_dev_has_feat 里面所有的函数都确认下
 

@@ -11,6 +11,7 @@ https://mp.weixin.qq.com/s/Y9zMGG3Cz5JsxEt1KiCtgg
 5. 下蹲时吸气，上起时呼气，全程避免憋气用力，以免不必要地升高血压。节奏建议：下 2～3 秒，上 1～2 秒，慢下快上，动作流畅不卡顿。
 
 ## 轻装登山
+<!-- 376116cb-2d17-4780-a282-0acff9dab442 -->
 登山包:
 https://www.bilibili.com/video/BV1P14y1b7q4/
 

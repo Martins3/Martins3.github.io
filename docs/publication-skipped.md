@@ -2,7 +2,7 @@
 
 由 `docs/pub/sync-blog.py` 生成。
 
-跳过文件数: 411
+跳过文件数: 379
 
 ## 发布策略跳过: draft 目录
 
@@ -64,21 +64,9 @@
 - `docs/concurrent/kernel/qa/qa-30.md`
 - `docs/concurrent/kernel/qa/qa-31.md`
 - `docs/concurrent/kernel/qa/qa-32.md`
+- `docs/concurrent/kernel/qa/qa-33.md`
+- `docs/concurrent/kernel/qa/qa-34.md`
 - `docs/concurrent/kernel/qa/summary.md`
-- `docs/concurrent/lkmm/ai-overview.md`
-- `docs/concurrent/lkmm/ai-read.md`
-- `docs/concurrent/lkmm/human.md`
-- `docs/concurrent/lkmm/other-tools.md`
-- `docs/concurrent/lkmm/tests/README.md`
-- `docs/concurrent/lkmm/tests/results/iriw.txt`
-- `docs/concurrent/lkmm/tests/results/lb.txt`
-- `docs/concurrent/lkmm/tests/results/mp.txt`
-- `docs/concurrent/lkmm/tests/results/sb+mb.txt`
-- `docs/concurrent/lkmm/tests/results/sb.txt`
-- `docs/concurrent/lkmm/tests/results/wrc.txt`
-- `docs/concurrent/lkmm/tests/run.sh`
-- `docs/concurrent/lkmm/vs-cpp.md`
-- `docs/concurrent/lkmm/zh-cn/README.md`
 - `docs/concurrent/multiprocessor/1.md`
 - `docs/concurrent/multiprocessor/10.md`
 - `docs/concurrent/multiprocessor/11.md`
@@ -127,11 +115,13 @@
 
 ## 发布策略跳过: todo.md 或 wip*
 
-- `collei/todo.md`
-- `collei/todo.now.md`
 - `docs/acpi/todo.md`
 - `docs/ai-tools/todo.md`
 - `docs/blog/anki-todo.md`
+- `docs/collei/collei.todo.md`
+- `docs/collei/todo.md`
+- `docs/concurrent/atomic/atomic-todo.md`
+- `docs/concurrent/kernel/qa/qa-todo.md`
 - `docs/concurrent/kernel/todo.md`
 - `docs/concurrent/not-todo-now.md`
 - `docs/concurrent/perfbook/autoread/chapters/02-introduction/todo-linux-kernel.md`
@@ -156,6 +146,7 @@
 - `docs/kernel/fs/todo-later.md`
 - `docs/kernel/fs/todo.2.md`
 - `docs/kernel/fs/todo.md`
+- `docs/kernel/iommu/todo-2.md`
 - `docs/kernel/iommu/todo.md`
 - `docs/kernel/iouring/todo.md`
 - `docs/kernel/irq/not-todo.md`
@@ -223,32 +214,8 @@
 ## 发布策略跳过: 同目录存在 README.md
 
 - `docs/asm/assembly.md`
-- `docs/concurrent/lkmm/zh-cn/README.summary.md`
-- `docs/concurrent/lkmm/zh-cn/README.translation.md`
-- `docs/concurrent/lkmm/zh-cn/access-marking.summary.md`
-- `docs/concurrent/lkmm/zh-cn/access-marking.translation.md`
-- `docs/concurrent/lkmm/zh-cn/cheatsheet.summary.md`
-- `docs/concurrent/lkmm/zh-cn/cheatsheet.translation.md`
-- `docs/concurrent/lkmm/zh-cn/control-dependencies.summary.md`
-- `docs/concurrent/lkmm/zh-cn/control-dependencies.translation.md`
-- `docs/concurrent/lkmm/zh-cn/explanation.summary.md`
-- `docs/concurrent/lkmm/zh-cn/explanation.translation.md`
-- `docs/concurrent/lkmm/zh-cn/glossary.summary.md`
-- `docs/concurrent/lkmm/zh-cn/glossary.translation.md`
-- `docs/concurrent/lkmm/zh-cn/herd-representation.summary.md`
-- `docs/concurrent/lkmm/zh-cn/herd-representation.translation.md`
-- `docs/concurrent/lkmm/zh-cn/litmus-tests.summary.md`
-- `docs/concurrent/lkmm/zh-cn/litmus-tests.translation.md`
-- `docs/concurrent/lkmm/zh-cn/locking.summary.md`
-- `docs/concurrent/lkmm/zh-cn/locking.translation.md`
-- `docs/concurrent/lkmm/zh-cn/ordering.summary.md`
-- `docs/concurrent/lkmm/zh-cn/ordering.translation.md`
-- `docs/concurrent/lkmm/zh-cn/recipes.summary.md`
-- `docs/concurrent/lkmm/zh-cn/recipes.translation.md`
-- `docs/concurrent/lkmm/zh-cn/references.summary.md`
-- `docs/concurrent/lkmm/zh-cn/references.translation.md`
-- `docs/concurrent/lkmm/zh-cn/simple.summary.md`
-- `docs/concurrent/lkmm/zh-cn/simple.translation.md`
+- `docs/concurrent/memory-model/litmus/klitmus.md`
+- `docs/concurrent/memory-model/litmus/litmus.md`
 - `docs/cool.md`
 - `docs/cpu/sys/MCCC/3.md`
 - `docs/cpu/sys/MCCC/4.md`
@@ -279,6 +246,8 @@
 - `docs/kernel/release/6.18.md`
 - `docs/kernel/release/6.19.md`
 - `docs/kernel/release/7.0.md`
+- `docs/kernel/release/7.1.md`
+- `docs/kernel/release/7.2.md`
 - `docs/kvm/aarch64/2-tools.md`
 - `docs/kvm/aarch64/code-overview.md`
 - `docs/kvm/aarch64/mmu.md`
@@ -302,7 +271,6 @@
 - `docs/net/vxlan-demo/vxlan-fdb-deep-dive.md`
 - `docs/net/vxlan-demo/why-bridge.md`
 - `docs/readme.draft.md`
-- `docs/rust/demo/AGENTS.md`
 - `docs/rust/demo/ai.test.md`
 - `docs/sys-software-developer.md`
 - `docs/trace/ebpf/bootstrap.md`

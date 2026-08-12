@@ -1,8 +1,11 @@
-/// This module demonstrates how to write unit tests in Rust
-///
-/// Unit tests in Rust are functions with the #[test] attribute
-/// They should be placed in the same file as the code they test
-/// or in a separate module marked with #[cfg(test)]
+//! This module demonstrates how to write unit tests in Rust
+//!
+//! Unit tests in Rust are functions with the #[test] attribute
+//! They should be placed in the same file as the code they test
+//! or in a separate module marked with #[cfg(test)]
+
+// 这些函数只在 #[cfg(test)] 测试中使用，编译二进制时会被 dead code 分析误报
+#![allow(dead_code)]
 
 // Example functions to test
 pub fn add(a: i32, b: i32) -> i32 {
@@ -223,4 +226,3 @@ mod setup_teardown_demo {
 // cargo test test_add          # Run tests matching "test_add"
 // cargo test -- --ignored      # Run ignored tests
 // cargo test -- --nocapture    # Show output for tests
-

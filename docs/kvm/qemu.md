@@ -1,4 +1,4 @@
-## qemu 如何支持 kvm 的
+# qemu 如何支持 kvm 的
 
 4.2 中 cpus.c::qemu_init_vcpu 中间分析了多种 kvm 和 tcg 的引擎, 由于 tcg 和 kvm 被放到 accel 下，但是
 whpx, hvf[^1] 和 hax 的支持都是 intel 特有的，所以在 qemu/target/i386 下面, 说着是加速，
@@ -50,7 +50,6 @@ kvm_cpu_exec 调用的开始会现执行一下 kvm_arch_process_async_events
 
 
 ## 看看 kvm_put_msrs 的实现
-
 1. 如何实现一次性提交多个 msr 的。
 
 2. 这个是如何知道的 has_msr_tsc_aux 或者 has_msr_tsc_adjust ，需要取决于 guest 的 id 吗?

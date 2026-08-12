@@ -7,14 +7,6 @@ qemu-system-x86_64 --enable-kvm -cpu host --nographic -serial mon:stdio -boot d 
 
 # QEMU 的基本使用方法
 
-总体来说，QEMU 直接使用还是非常复杂的，如果只是想要使用虚拟化功能，可以使用如下两个软件，其将 QEMU 进行了封装:
-
-- https://github.com/quickemu-project/quickemu
-- https://mac.getutm.app/
-
-但是，如果想要学习 Linux 内核或者 QEMU 本身，熟悉 QEMU 的命令行使用还是必须的。
-
-这里大致介绍一下如何使用 QEMU 。
 
 ## 如何编译 QEMU
 
@@ -439,6 +431,8 @@ https://github.com/qemus/qemu-docker
 ## 对于 windows 的一个有趣的封装
 git clone https://github.com/dockur/windows
 
+真的非常有意思
+
 ## 看看
 https://github.com/hugelgupf/vmtest
 
@@ -455,6 +449,10 @@ https://github.com/hugelgupf/vmtest
 ## UTM
 https://rkiselenko.dev/blog/development-on-mac-with-utm/development-on-mac-with-lima/
 
+https://blog.getutm.app/2026/introducing-triton-directx-11-driver-for-qemu/
+
+utm 感觉还是有技术含量的
+
 ## 这个是极好的
 https://www.qemu.org/docs/master/specs/edu.html
 
@@ -462,6 +460,9 @@ https://www.qemu.org/docs/master/specs/edu.html
 ## 这个是终极解决方案吗？
 https://github.com/winapps-org/winapps
 https://github.com/TibixDev/winboat
+
+
+
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

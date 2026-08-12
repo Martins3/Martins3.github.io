@@ -305,7 +305,6 @@ int tcp_sendmsg(struct sock *sk, struct msghdr *msg, size_t size)
 ```
 真的有必要在 softirq 中嵌套这么多层的 rcu_read_lock 吗?
 
-
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="
