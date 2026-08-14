@@ -632,6 +632,12 @@ int *p = corrupted_pointer();
 
 ASan检查地址有效性，不理解这个指针“本应该”指向哪里。
 
+## 其他
+
+[valgrind](http://valgrind.org/)
+使用上很简单:
+https://stackoverflow.com/questions/5134891/how-do-i-use-valgrind-to-find-memory-leaks
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

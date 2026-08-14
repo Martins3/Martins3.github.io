@@ -72,7 +72,7 @@ class VirtmeSetup:
         if os.getuid() == 0:
             args.append("virtme_root_user=1")
 
-        # 默认继承启动 collei 时的 host 当前目录；opt/cwd 可显式覆盖。
+        # 默认继承启动 collei 时的 host 当前目录；config.ini cwd 可显式覆盖。
         cwd = options.get("cwd") or os.getcwd()
         args.append(f"virtme_chdir={cwd}")
 

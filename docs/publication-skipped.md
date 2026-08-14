@@ -2,7 +2,7 @@
 
 由 `docs/pub/sync-blog.py` 生成。
 
-跳过文件数: 379
+跳过文件数: 377
 
 ## 发布策略跳过: draft 目录
 
@@ -202,9 +202,9 @@
 - `docs/qemu/todo.md`
 - `docs/qemu/wolf-book-todo.md`
 - `docs/tools/todo.md`
-- `docs/trace/ebpf/todo.md`
 - `docs/trace/ebpf-doc/todo.md`
 - `docs/trace/not-todo.md`
+- `docs/trace/perf/perf-todo-answers.md`
 - `docs/trace/todo.md`
 - `docs/uefi/todo.md`
 - `docs/virtio/todo.md`
@@ -276,7 +276,6 @@
 - `docs/trace/ebpf/bootstrap.md`
 - `docs/trace/perf/bpf-kprobe-syscall-demo.md`
 - `docs/trace/perf/perf-amd.md`
-- `docs/trace/perf/perf-answers.md`
 - `docs/trace/perf/perf-intel-pt.md`
 - `docs/trace/perf/perf-internals.md`
 - `docs/trace/perf/perf-kprobe-demo.md`
@@ -289,7 +288,6 @@
 ## 未被 audit.py 审计
 
 - `docs/ai-tools/vendor.md`
-- `docs/chatter/job.md`
 - `docs/kernel/ipmi/ipmi.md`
 - `docs/kernel/power/aarch64.md`
 - `docs/kernel/power/acpi_pad.md`
@@ -395,5 +393,5 @@
 - `docs/pub/AGETNS.md`
 - `docs/pub/community-bug.md`
 - `docs/pub/community-feature.md`
-- `docs/trace/rasdaemon.md`
+- `docs/trace/hw/rasdaemon.md`
 - `docs/uefi/firmware/microcode.md`

@@ -1,5 +1,37 @@
 # 基本使用注意
 
+## INI 配置
+
+全局配置位于 `~/.config/collei/config.ini`：
+
+```ini
+[collei]
+vm = /home/martins3/data/hack/vm
+iso = /home/martins3/data/hack/iso
+default_vm = yyds-fs
+```
+
+每台 VM 使用 VM 根目录下的 `config.ini`：
+
+```ini
+[vm]
+id = 70
+ram = 18
+disk =
+    boot1 virtio-blk 1
+    boot2 virtio-blk
+```
+
+缺失或空值表示未启用。旧的一文件一个 option 配置可先预检再迁移：
+
+```bash
+./collei/scripts/migrate-config.py
+./collei/scripts/migrate-config.py --apply
+```
+
+迁移后，全局旧配置保存在 `~/.config/collei/legacy-options/`，每台 VM 的旧
+`opt/` 保存在 `opt.legacy/`。
+
 ## 几个启动模式的说明
 - vmtest : 调试细节 vmtest.md ，考虑的如何启动一个最简的 linux ，使用 qemu 启动
 	- vmtest 需要专用的内核，由于没有配置 initrd (为什么没有 initrd 来着?)
@@ -8,10 +40,11 @@
 
 ## systemd 后台任务检查
 
-启用 systemd backend：
+在 `~/.config/collei/config.ini` 中启用 systemd backend：
 
-```bash
-echo systemd > ~/.config/collei/task_backend
+```ini
+[collei]
+task_backend = systemd
 ```
 
 普通 VM 主进程使用 user unit 名 `collei-vm-<vm-name>.service`。例如

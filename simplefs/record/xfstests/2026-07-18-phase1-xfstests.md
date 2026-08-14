@@ -52,19 +52,3 @@ Phase 0（环境 + 3 个 FAIL 修复）+ Phase 1（fzero/finsert/chattr/FITRIM/�
   MOUNT_PROG wrapper 处理 MS_* 选项翻译。
 - `simplefs_free_sectors.py` 读 simplefs 空闲位图导出空闲段（generic/746 设计用，
   现因 loop-on-self 死锁未启用，留作格式文档）。
-
-<script src="https://giscus.app/client.js"
-        data-repo="martins3/martins3.github.io"
-        data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="
-        data-category="Show and tell"
-        data-category-id="MDE4OkRpc2N1c3Npb25DYXRlZ29yeTMyMDMzNjY4"
-        data-mapping="pathname"
-        data-reactions-enabled="1"
-        data-emit-metadata="0"
-        data-theme="light"
-        data-lang="zh-CN"
-        crossorigin="anonymous"
-        async>
-</script>
-
-本站所有文章转发 **CSDN** 将按侵权追究法律责任，其它情况随意。

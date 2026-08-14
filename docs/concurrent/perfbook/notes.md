@@ -25,6 +25,7 @@ rb tree 的并发是什么?
 10. 找到那个 cst 的例子
 	- 不就是需要
 11. 为什么内核需要定义 LKMM ，LKMM 的具体定义是什么?
+	- 基本上和 perf book 相等了
 12. 继续看看 refcont_t 和 atomic_t 的使用说明是什么?
 
 1. 还是各种一致性没有理解的
@@ -34,7 +35,6 @@ https://stackoverflow.com/questions/69925465/how-does-the-x86-tso-memory-consist
 
 12. 继续这里的 /home/martins3/data/vn/docs/concurrent/kernel/api/atomic-todo.md
 13. litmus 问题
-
 14. 什么叫作顺序一致性?
 
 ### 不容易的问题

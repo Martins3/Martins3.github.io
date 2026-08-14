@@ -12,7 +12,7 @@
 #include <unistd.h>
 #include <stdint.h>
 #include <time.h>
-#include "../lib.h"
+#include "lib.h"
 
 //  sudo cgexec --sticky -g memory:/ ./a.out
 int main(int argc, char *argv[])

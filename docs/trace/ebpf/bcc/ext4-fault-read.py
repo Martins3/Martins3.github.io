@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-from bpfcc import BPF
+from bcc import BPF
 from time import sleep, strftime, localtime
 import signal
 import sys
@@ -24,11 +24,9 @@ except Exception as e:
 current_offset = 0  # 当前写入位置
 
 
-# BPF 程序（不变）
+# BPF 程序
 bpf_text = """
 #include <uapi/linux/ptrace.h>
-#include <linux/fs.h>
-#include <linux/mm.h>
 
 struct fname_key {
     char name[32];
@@ -36,19 +34,40 @@ struct fname_key {
 
 BPF_HASH(file_count, struct fname_key, u64);
 
-int kprobe__ext4_filemap_fault(struct pt_regs *ctx, struct vm_fault *vmf) {
+// 新内核（>= 6.x）移除了 ext4_filemap_fault，ext4 走通用的 filemap_fault，
+// 所以这里统计所有文件系统的 page fault（按文件名）。
+// 不包含 <linux/fs.h>：bcc/clang 在 bpf target 下无法编译新版内核头文件
+// （struct filename 的匿名成员 static_assert 失败）。改用以下最小 struct，
+// 偏移来自内核 7.1 的 BTF：
+//   struct vm_fault.vma @0
+//   struct vm_area_struct.vm_file @88
+//   struct file.f_path @64
+//   struct path.dentry @8
+//   struct dentry.d_name @32
+//   struct qstr.name @8
+struct qstr_min { char pad[8]; const char *name; };
+struct path_min { void *mnt; struct dentry *dentry; };
+struct dentry_min { char pad[32]; struct qstr_min d_name; };
+struct file_min {
+    char pad[64];
+    struct path_min f_path;
+};
+struct vm_fault_min { struct vm_area_struct *vma; };
+struct vma_min { char pad[88]; struct file *vm_file; };
+
+int kprobe__filemap_fault(struct pt_regs *ctx, struct vm_fault_min *vmf) {
     struct file *file = NULL;
-    struct dentry *dentry;
-    struct qstr d_name;
+    struct dentry *dentry = NULL;
+    struct qstr_min d_name = {};
     struct fname_key key = {};
 
-    bpf_probe_read_kernel(&file, sizeof(file), &vmf->vma->vm_file);
+    bpf_probe_read_kernel(&file, sizeof(file), &((struct vma_min *)vmf->vma)->vm_file);
     if (!file) return 0;
 
-    bpf_probe_read_kernel(&dentry, sizeof(dentry), &file->f_path.dentry);
+    bpf_probe_read_kernel(&dentry, sizeof(dentry), &((struct file_min *)file)->f_path.dentry);
     if (!dentry) return 0;
 
-    bpf_probe_read_kernel(&d_name, sizeof(d_name), &dentry->d_name);
+    bpf_probe_read_kernel(&d_name, sizeof(d_name), &((struct dentry_min *)dentry)->d_name);
 
     bpf_probe_read_kernel_str(key.name, sizeof(key.name), d_name.name);
 

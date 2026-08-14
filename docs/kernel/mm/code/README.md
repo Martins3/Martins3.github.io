@@ -44,6 +44,25 @@ echo x > /tmp/f          # 放行 getchar -> munmap
 #   映射消失, RSS 释放到几 MB
 ```
 
+## qemu-memfd-thp
+
+模拟 QEMU `memory-backend-memfd` 的映射行为，验证为什么 guest RAM 拿不到 THP。
+
+```sh
+./qemu-memfd-thp.out 256    # 256M，默认 512M
+```
+
+两个 case 对比：
+1. `align=4K`（memfd 后端 `mr->align` 缺省 -> 4KB）: `THPeligible: 0`、`ShmemPmdMapped: 0`
+2. `align=2M`（匿名后端 `QEMU_VMALLOC_ALIGN`）: `THPeligible: 1`、`ShmemPmdMapped` 占满
+
+根因：shmem(memfd) 的 THP 受 `shmem_enabled` 控制，且默认只有 2MB 档继承全局配置；
+而 `thp_vma_suitable_order()` 要求 shmem VMA 起始地址对 2MB 对齐。4KB 对齐 -> 唯一
+可用的 2MB 档也过不了对齐检查 -> 无 THP。
+
+注意：`KernelPageSize` 只反映 hugetlbfs 的页大小，非 hugetlbfs 映射永远是 4 kB，
+判断 THP 要看 `AnonHugePages` / `ShmemPmdMapped` / `FilePmdMapped` / `THPeligible`。
+
 ## rmap
 ```sh
 make && rm -f us_xfr_v2_uds_lib && ./rmap.out

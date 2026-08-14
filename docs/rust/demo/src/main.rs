@@ -1,4 +1,3 @@
-use std::collections::HashMap;
 use std::env;
 use std::io::{BufRead, BufReader};
 use std::os::unix::net::{UnixListener, UnixStream};
@@ -16,6 +15,10 @@ mod rfcell;
 mod rfcell_linked_list;
 mod unit_test;
 mod lifetime;
+mod container_demo;
+mod deref_demo;
+#[path = "x/146.rs"]
+mod leet146;
 
 fn handle_client(stream: UnixStream) {
     let stream = BufReader::new(stream);
@@ -235,30 +238,6 @@ fn test_while_let2() {
     // clauses. `while let` does not have these.
 }
 
-#[allow(dead_code)]
-#[derive(Debug)]
-struct Me {
-    name: i32,
-    age: i32,
-}
-
-#[cfg_attr(test, test)]
-fn test_container() {
-    let mut contacts = HashMap::new();
-    contacts.insert(1, Me { age: 1, name: 2 });
-
-    // for (contact, &number) in contacts.iter() {
-    // number 后面添加 & 意味着 number 将会出现borrow，需要显示地 copy Trait
-    // move occurs because `number` has type `Me`, which does not implement the `Copy` trait
-    // }
-
-    for (contact, number) in contacts.iter() {
-        println!("{:?} ", contact);
-        println!("{:?} ", number);
-    }
-    // 2. 什么使用 &  &mut Copy 和 borrow ，是不是都可以实现 ?
-}
-
 #[cfg_attr(test, test)]
 fn test_unit_test_demo() {
     // 假装调用一下
@@ -291,6 +270,9 @@ fn main() {
         println!("  14 - Linked list reverse demo");
         println!("  15 - Rc persistent linked list demo");
         println!("  16 - Rc<RefCell<_>> doubly linked list demo");
+        println!("  17 - Cell demo (整体替换语义)");
+        println!("  18 - as_deref demo (Option/Ref)");
+        println!("  19 - LeetCode 146 LRU Cache (x/146.rs)");
         return;
     }
 
@@ -325,7 +307,7 @@ fn main() {
             test_while_let2();
         }
         "9" => {
-            test_container();
+            container_demo::run_all();
         }
         "10" => {
             test_unit_test_demo();
@@ -353,6 +335,17 @@ fn main() {
         "16" => {
             // Rc<RefCell<_>> 实现的双向链表
             rfcell_linked_list::run_all();
+        }
+        "17" => {
+            // Cell 的"整个换掉"语义
+            rfcell::test_cell2();
+        }
+        "18" => {
+            // as_deref 的正确/错误用法
+            deref_demo::run_all();
+        }
+        "19" => {
+            leet146::run();
         }
         _ => {
             println!("Invalid option: {}", args[1]);

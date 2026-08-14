@@ -81,19 +81,3 @@ timeout 124 是 TIMEOUT；其他返回是 FAIL。任意 FAIL/TIMEOUT 会使 runn
 `s_journal_start` 和所有物理块引用都是 32 位，4 KiB block 下卷上限小于 16 TiB；
 适配器必须在进入 mkfs 前按磁盘格式 NOTRUN，不能等 journal 尾区写入越界后再把
 EIO 记成文件系统错误。
-
-<script src="https://giscus.app/client.js"
-        data-repo="martins3/martins3.github.io"
-        data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="
-        data-category="Show and tell"
-        data-category-id="MDE4OkRpc2N1c3Npb25DYXRlZ29yeTMyMDMzNjY4"
-        data-mapping="pathname"
-        data-reactions-enabled="1"
-        data-emit-metadata="0"
-        data-theme="light"
-        data-lang="zh-CN"
-        crossorigin="anonymous"
-        async>
-</script>
-
-本站所有文章转发 **CSDN** 将按侵权追究法律责任，其它情况随意。

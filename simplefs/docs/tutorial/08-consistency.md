@@ -89,19 +89,3 @@ I/O error 不能被 `|| true` 式地吞掉。journal abort、writeback error 或
 - `fs/xfs/xfs_log*`：不同实现、相同事务/恢复问题；
 - [JBD2 迁移历史](../../record/xfstests/2026-07-20-phase2-jbd2-progress.md)：
   SimpleFS 从不可靠自建 journal 迁移时暴露的具体问题。
-
-<script src="https://giscus.app/client.js"
-        data-repo="martins3/martins3.github.io"
-        data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="
-        data-category="Show and tell"
-        data-category-id="MDE4OkRpc2N1c3Npb25DYXRlZ29yeTMyMDMzNjY4"
-        data-mapping="pathname"
-        data-reactions-enabled="1"
-        data-emit-metadata="0"
-        data-theme="light"
-        data-lang="zh-CN"
-        crossorigin="anonymous"
-        async>
-</script>
-
-本站所有文章转发 **CSDN** 将按侵权追究法律责任，其它情况随意。

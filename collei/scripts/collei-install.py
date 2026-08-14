@@ -65,7 +65,8 @@ def print_help() -> None:
     print(
         """usage: collei-install.py MODE
 
-创建 VM 目录并更新 ~/.config/collei/last；不会生成 cmd.sh，也不会启动 QEMU。
+创建 VM 目录并更新 ~/.config/collei/config.ini 中的 default_vm；
+不会生成 cmd.sh，也不会启动 QEMU。
 启动已有 VM 使用 collei.py。
 
 模式：

@@ -234,19 +234,3 @@ huge file(525)、固定 4 KiB 块大小限制的 6 个。
 - Phase 0+1 后（2026-07-18 全量复跑）：**PASS 345 / NOTRUN 442 / FAIL 0 / TIMEOUT 0**（+38，未引入 FAIL）
 - Phase 2 后（2026-07-26 全量复跑）：**PASS 432 / NOTRUN 355 / FAIL 0 /
   TIMEOUT 0**（相对 Phase 0+1 新增 87 PASS，相对基线新增 125 PASS）
-
-<script src="https://giscus.app/client.js"
-        data-repo="martins3/martins3.github.io"
-        data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="
-        data-category="Show and tell"
-        data-category-id="MDE4OkRpc2N1c3Npb25DYXRlZ29yeTMyMDMzNjY4"
-        data-mapping="pathname"
-        data-reactions-enabled="1"
-        data-emit-metadata="0"
-        data-theme="light"
-        data-lang="zh-CN"
-        crossorigin="anonymous"
-        async>
-</script>
-
-本站所有文章转发 **CSDN** 将按侵权追究法律责任，其它情况随意。

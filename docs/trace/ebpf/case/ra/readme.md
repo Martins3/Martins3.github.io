@@ -1,5 +1,3 @@
-
-
 同一个环境构建和运行，就有这个错误，这个是预期的吗?
 ```txt
 libbpf: loading object 'readahead_bpf' from buffer

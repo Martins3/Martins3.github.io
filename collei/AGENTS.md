@@ -34,11 +34,15 @@ Python 迁移架构、兼容边界和检查命令见 `PYTHON.md`。
    Python 不会调用或回退到 `bash-archive/collei.sh`；归档 Shell 仅作为迁移参考。
 
 collei-install.py 定义如何创建 VM 目录，包括 ISO、NixOS、vmtest 和 virtme 安装模式。
-安装过程只构建 vm_dir 并更新默认 VM symlink，不生成 cmd.sh，也不启动 QEMU。
+安装过程只构建 vm_dir 并更新全局 `config.ini` 中的 `default_vm`，不生成 cmd.sh，
+也不启动 QEMU。
 
-不同的虚拟机启动有不同的配置参数，他们的配置在 $vm_dir/opt 下
+全局配置位于 `~/.config/collei/config.ini` 的 `[collei]` 节。不同虚拟机的启动
+参数位于 `$vm_dir/config.ini` 的 `[vm]` 节；缺失或空值表示未启用，多行值使用
+缩进续行。
 
-rg check_option collei/scripts/bash-archive/collei.sh 可以知道旧 Bash 实现中一共存在那些配置
+`rg check_option collei/scripts/bash-archive/collei.sh` 可以查询旧 Bash 实现曾支持的配置键。
+`scripts/bash-archive/` 只作为历史参考，不兼容新的 INI 配置。
 
 永远都不可能直接修改 vm_dir 中的 cmd.sh ，例如
 ~/data/hack/vm/fake/cmd.sh
@@ -92,7 +96,7 @@ cmd.sh 是自动生成的，大多数情况下，都是用于调试的。
 
 ### virtme 虚拟机走 vsock SSH
 
-virtme 模式的虚拟机（opt/virtme + opt/vsock）默认不配置 guest 网络，
+virtme 模式的虚拟机（`virtme = 1` 和 `vsock = 1`）默认不配置 guest 网络，
 基于 TCP 端口转发的 `ssh_auto` 连不上；正确方式是 vsock SSH，
 它不依赖 guest 网络配置：
 
@@ -105,8 +109,8 @@ virtme 模式的虚拟机（opt/virtme + opt/vsock）默认不配置 guest 网�
 ```
 
 自动化场景直接在 ssh 后面接命令即可执行 guest 内命令（登录用户是 host 同名
-用户，wheel 组，可用 sudo)。不要为了在 guest 里跑脚本而去加 opt/exec、
-opt/root_user 之类的临时配置。
+用户，wheel 组，可用 sudo)。不要为了在 guest 里跑脚本而去加 `exec`、
+`root_user` 之类的临时配置。
 
 ## 如何获取虚拟机日志
 首先获取到 ssh 到虚拟机的方法，然后使用 ssh ，例如
@@ -140,19 +144,3 @@ ssh -p 51404 martins3@localhost "dmesg"
 2. 正常启动 Win11_24H2_Chinese_Simplified_x64
 3. qsr qds 等命令可用
 4. 修改了安装相关的代码后，需要安装一个新的虚拟机，完成登录测试，保留虚拟机
-
-<script src="https://giscus.app/client.js"
-        data-repo="martins3/martins3.github.io"
-        data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="
-        data-category="Show and tell"
-        data-category-id="MDE4OkRpc2N1c3Npb25DYXRlZ29yeTMyMDMzNjY4"
-        data-mapping="pathname"
-        data-reactions-enabled="1"
-        data-emit-metadata="0"
-        data-theme="light"
-        data-lang="zh-CN"
-        crossorigin="anonymous"
-        async>
-</script>
-
-本站所有文章转发 **CSDN** 将按侵权追究法律责任，其它情况随意。

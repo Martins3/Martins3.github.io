@@ -1,7 +1,7 @@
 # Linux Trace 技术整理报告
 
-**整理时间**: 2026-02-18  
-**目标目录**: `~/data/vn/docs/trace/` 和 `~/data/vn/code/src/ebpf/`  
+**整理时间**: 2026-02-18
+**目标目录**: `~/data/vn/docs/trace/` 和 `~/data/vn/code/src/ebpf/`
 **原则**: 不动原文件，只做梳理和补充
 
 ---
@@ -498,11 +498,6 @@ trace-ls --detail sched/sched_switch  # 详细信息
 | Tracepoint | ⭐⭐⭐ | ⭐⭐ | ⭐ |
 | BCC/bpftrace | ⭐⭐ | ⭐ | ⭐ |
 
-**整体评价**: 文档较全，但工具化和 demo 还有提升空间。
-
----
-
-*本文档仅做梳理，未修改原文件*
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

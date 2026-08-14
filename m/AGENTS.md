@@ -129,19 +129,3 @@ vn/build 重新构建内核，kill 掉虚拟机，重新拉起虚拟机测试
 iouring-user.c:13:10: fatal error: liburing.h: No such file or directory
 
 原因：系统没有安装 liburing 库，应该加载 ./default.nix 在 nix 环境中构建
-
-<script src="https://giscus.app/client.js"
-        data-repo="martins3/martins3.github.io"
-        data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="
-        data-category="Show and tell"
-        data-category-id="MDE4OkRpc2N1c3Npb25DYXRlZ29yeTMyMDMzNjY4"
-        data-mapping="pathname"
-        data-reactions-enabled="1"
-        data-emit-metadata="0"
-        data-theme="light"
-        data-lang="zh-CN"
-        crossorigin="anonymous"
-        async>
-</script>
-
-本站所有文章转发 **CSDN** 将按侵权追究法律责任，其它情况随意。

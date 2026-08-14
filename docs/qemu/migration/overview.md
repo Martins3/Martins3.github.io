@@ -1,35 +1,30 @@
 # QEMU 热迁移基础
 
-## qemu 存在哪些状态控制
+## 对于虚拟机状态的控制
 
-1. hmp : stop / cont
-2. snapshot
-
-snapshot_blkdev
-snapshot_blkdev_internal
-snapshot_delete_blkdev_internal
-
-3. savevm / loadvm
-
+1. 虚拟机的暂停恢复 : hmp stop / cont
+2. 虚拟机整个状态的 : hmp savevm / loadvm
 4. migration
-	- cpr 优化
-	- file / socket
+	- migration : 先 ram ，最后 device state
+	- migration + background : 立刻保存
+	- cpr : 仅仅传输 device state ，跳过 ram + disk
+5. 控制盘的状态:
+	- snapshot_blkdev
+	- snapshot_blkdev_internal
+	- snapshot_delete_blkdev_internal
 
-
-  严格来说，接近“操作可恢复整机状态”的还有：
-
-  - background-snapshot migration：生成某一时刻的 RAM/设备 migration stream，同时尽量让 VM 继续运行；不自动包含磁盘快照。
-  - COLO：周期性停止并发送 VM checkpoint，同时配合磁盘复制和网络输出比较；复用了 vm_stop_force_state() 和 savevm device state，migration/colo.c:407。
-  - Record/replay checkpoint：VM snapshot 加事件日志，用于回放和回退，适用范围较窄。
-  - Xen xen-save-devices-state：QEMU 只保存设备状态，RAM 由 Xen toolstack 保存，是拆分式整机状态管理。
+严格来说，接近“操作可恢复整机状态”的还有：
+- background-snapshot migration：生成某一时刻的 RAM/设备 migration stream，同时尽量让 VM 继续运行；不自动包含磁盘快照。
+- COLO：周期性停止并发送 VM checkpoint，同时配合磁盘复制和网络输出比较；复用了 vm_stop_force_state() 和 savevm device state，migration/colo.c:407。
+- Record/replay checkpoint：VM snapshot 加事件日志，用于回放和回退，适用范围较窄。
+- Xen xen-save-devices-state：QEMU 只保存设备状态，RAM 由 Xen toolstack 保存，是拆分式整机状态管理。
 
   下面这些看起来类似，但不是完整可恢复状态：
 
-  - dump-guest-memory：只有 RAM/崩溃分析信息。
-  - block snapshot/backup：只有磁盘。
-  - stop/cont、ACPI S3：只冻结/恢复，不序列化。
-  - guest S4/hibernate：状态由 guest OS 写入虚拟磁盘，不保存 QEMU 设备模型状态。
-  - system_reset：整体重置状态，不保留旧状态。
+- dump-guest-memory：只有 RAM/崩溃分析信息。
+- stop/cont、ACPI S3：只冻结/恢复，不序列化。
+- guest S4/hibernate：状态由 guest OS 写入虚拟磁盘，不保存 QEMU 设备模型状态。
+- system_reset：整体重置状态，不保留旧状态。
 
 
 最核心的判断标准是：
@@ -38,24 +33,13 @@ snapshot_delete_blkdev_internal
 + disk contents + external backend/kernel state
 + machine configuration
 
-QEMU 的 migration/savevm 核心主要解决前四项；后三项分别由内部磁盘快照、共享存储/管理层、CPR FD 保留以及重新创建兼容命令行来补齐。
+### savevm ，但是仅仅虚拟机数据
 
-其实也没有这么复杂:
-1. device state
-2. RAM
-3. disk state
-
-1. snapshot / savevm : 所有内容，暂停
-2. migration : 先 ram ，最后 device state
-3. migration + background : 立刻保存
-4. cpr : 仅仅传输 device state ，跳过 ram + disk
-
-### snapshot
-
-2. 只是不想保存“虚拟机数据盘”：可以使用专用 VMState 节点
+只是不想保存“虚拟机数据盘”：可以使用专用 VMState 节点
 
 通过 QMP snapshot-save/snapshot-load，准备一个没有挂给 guest 的 qcow2 节点，例如 vmstate0，只对这个节点做快照：
 
+```json
 {
   "execute": "snapshot-save",
   "arguments": {
@@ -65,9 +49,11 @@ QEMU 的 migration/savevm 核心主要解决前四项；后三项分别由内部
     "devices": ["vmstate0"]
   }
 }
+```
 
 恢复：
 
+```json
 {
   "execute": "snapshot-load",
   "arguments": {
@@ -77,6 +63,7 @@ QEMU 的 migration/savevm 核心主要解决前四项；后三项分别由内部
     "devices": ["vmstate0"]
   }
 }
+```
 
 这样 guest 的系统盘和数据盘不会被创建或回滚快照。不过 devices 不能是空列表，源码明确要求至少一个节点：block/snapshot.c:483。
 

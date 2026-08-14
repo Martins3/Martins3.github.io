@@ -3,9 +3,41 @@
 - https://unix.stackexchange.com/questions/451655/running-mcelog-on-an-amd-processor
 - https://www.cnblogs.com/dataart/p/10374028.html
 
-- f9781bb18ed828e7b83b7bac4a4ad7cd497ee7d7
+f9781bb18ed828e7b83b7bac4a4ad7cd497ee7d7
+```txt
+commit f9781bb18ed828e7b83b7bac4a4ad7cd497ee7d7
+Author: Jane Chu <jane.chu@oracle.com>
+Date:   Sat Aug 27 07:38:51 2022
+
+    x86/mce: Retrieve poison range from hardware
+
+    When memory poison consumption machine checks fire, MCE notifier
+    handlers like nfit_handle_mce() record the impacted physical address
+    range which is reported by the hardware in the MCi_MISC MSR. The error
+    information includes data about blast radius, i.e. how many cachelines
+    did the hardware determine are impacted. A recent change
+
+      7917f9cdb503 ("acpi/nfit: rely on mce->misc to determine poison granularity")
+
+    updated nfit_handle_mce() to stop hard coding the blast radius value of
+    1 cacheline, and instead rely on the blast radius reported in 'struct
+    mce' which can be up to 4K (64 cachelines).
+
+    It turns out that apei_mce_report_mem_error() had a similar problem in
+    that it hard coded a blast radius of 4K rather than reading the blast
+    radius from the error information. Fix apei_mce_report_mem_error() to
+    convey the proper poison granularity.
+
+    Signed-off-by: Jane Chu <jane.chu@oracle.com>
+    Signed-off-by: Borislav Petkov <bp@suse.de>
+    Reviewed-by: Dan Williams <dan.j.williams@intel.com>
+    Reviewed-by: Ingo Molnar <mingo@kernel.org>
+    Link: https://lore.kernel.org/r/7ed50fd8-521e-cade-77b1-738b8bfb8502@oracle.com
+    Link: https://lore.kernel.org/r/20220826233851.1319100-1-jane.chu@oracle.com
+```
 
 - [ ] 在老内核上可以正确运行吗 ?
+
 
 ## 文档
 - https://docs.kernel.org/driver-api/edac.html : edac 的文档

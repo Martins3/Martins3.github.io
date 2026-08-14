@@ -1,4 +1,4 @@
-# Tree RCU
+# tree rcu
 
 Fedora 44，kernel 7.1.3-201.fc44
 32 核，2 层 rcu_node 树（根 + 2 个叶子，每叶 16 CPU）。

@@ -64,6 +64,9 @@ impl<T> List<T> {
     }
 
     pub fn pop_back(&mut self) -> Option<T> {
+        // take() = mem::replace(&mut self.tail, None)：把 Some(...) 整个 move 出来，
+        // 原地留下 None。pop 需要拿到节点所有权（后面 Rc::try_unwrap 要用），
+        // 又不能从 &mut self 背后直接 move，所以用 take() 先"抢走"。
         self.tail.take().map(|old_tail| {
             match old_tail.borrow_mut().prev.take() {
                 Some(new_tail) => {
@@ -93,6 +96,13 @@ impl<T> List<T> {
         })
     }
 
+    // peek 只看不拿，所以不能像 pop 那样 take()：
+    //   as_ref()   : Option<Rc<...>> -> Option<&Rc<...>>，只借不拿
+    //   map        : None 原样返回，Some 才进闭包
+    //   Ref::map   : 把守卫的视线从整个 Node 收窄到 elem 字段，
+    //                Ref<Node<T>> -> Ref<T>，借的还是同一个 RefCell
+    // 类型变化：Option<Rc<RefCell<Node<T>>>>
+    //   -> Option<&Rc<RefCell<Node<T>>>> -> Option<Ref<'_, Node<T>>> -> Option<Ref<'_, T>>
     pub fn peek_front(&self) -> Option<Ref<'_, T>> {
         self.head
             .as_ref()
@@ -174,6 +184,7 @@ pub fn run_all() {
     list.push_back(3);
     println!("{:?}", list);
     println!("push 后 front: {:?}", list.peek_front().as_deref());
+    println!("push 后 front: {:?}", list.peek_front());
     println!("push 后 back:  {:?}", list.peek_back().as_deref());
 
     if let Some(mut front) = list.peek_front_mut() {

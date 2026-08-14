@@ -1,0 +1,63 @@
+/usr/local/bin/qemu-6/qemu-kvm
+-name guest=2298109c-f1e8-496b-afac-89f250cf29a2,debug-threads=on
+-uuid 9e02887b-a29c-4557-b6ec-ffd3ba695df0
+-m size=4194304k,slots=255,maxmem=4194304000k
+-object {"qom-type":"secret","id":"masterKey0","format":"raw","file":"/var/lib/libvirt/qemu/domain-37-2298109c-f1e8-496b-a/master-key.aes"}
+-object {"qom-type":"memory-backend-file","id":"ram-node0","prealloc":true,"mem-path":"/dev/hugepages/libvirt/qemu/37-2298109c-f1e8-496b-a","share":true,"size":4294967296,"host-nodes":[2],"policy":"interleave"}
+-numa node,nodeid=0,cpus=0-511,memdev=ram-node0
+-device pcie-root-port,port=0x8,chassis=1,id=pci.1,bus=pcie.0,multifunction=on,addr=0x1
+-device pcie-root-port,port=0x9,chassis=2,id=pci.2,bus=pcie.0,addr=0x1.0x1
+-device pcie-root-port,port=0xa,chassis=3,id=pci.3,bus=pcie.0,addr=0x1.0x2
+-device pcie-root-port,port=0xb,chassis=4,id=pci.4,bus=pcie.0,addr=0x1.0x3
+-device pcie-root-port,port=0xc,chassis=5,id=pci.5,bus=pcie.0,addr=0x1.0x4
+-device pcie-root-port,port=0xd,chassis=6,id=pci.6,bus=pcie.0,addr=0x1.0x5
+-device pcie-root-port,port=0xe,chassis=7,id=pci.7,bus=pcie.0,addr=0x1.0x6
+-device pcie-root-port,port=0xf,chassis=8,id=pci.8,bus=pcie.0,addr=0x1.0x7
+-device pcie-root-port,port=0x10,chassis=9,id=pci.9,bus=pcie.0,multifunction=on,addr=0x2
+-device pcie-root-port,port=0x11,chassis=10,id=pci.10,bus=pcie.0,addr=0x2.0x1
+-device pcie-root-port,port=0x12,chassis=11,id=pci.11,bus=pcie.0,addr=0x2.0x2
+-device pcie-root-port,port=0x13,chassis=12,id=pci.12,bus=pcie.0,addr=0x2.0x3
+-device pcie-root-port,port=0x14,chassis=13,id=pci.13,bus=pcie.0,addr=0x2.0x4
+-device pcie-root-port,port=0x15,chassis=14,id=pci.14,bus=pcie.0,addr=0x2.0x5
+-device pcie-root-port,port=0x16,chassis=15,id=pci.15,bus=pcie.0,addr=0x2.0x6
+-device qemu-xhci,p2=15,p3=15,id=usb,bus=pci.3,addr=0x0
+-device virtio-serial-pci,id=virtio-serial0,max_ports=31,bus=pci.2,addr=0x0
+-device usb-storage,bus=usb.0,port=1,drive=libvirt-2-format,id=usb-disk701,bootindex=1000,removable=off
+-device virtio-net-pci,mq=on,vectors=10,rx_queue_size=1024,netdev=hostnet0,id=net0,mac=52:54:00:69:f4:f9,bus=pci.1,addr=0x0
+-device virtserialport,bus=virtio-serial0.0,nr=1,chardev=charchannel0,id=channel0,name=org.qemu.guest_agent.0
+-device usb-kbd,id=input0,bus=usb.0,port=2
+-device usb-tablet,id=input1,bus=usb.0,port=3
+-device virtio-gpu-pci,id=video0,max_outputs=1,bus=pci.6,addr=0x0
+-device virtio-balloon-pci,id=balloon0,bus=pci.5,addr=0x0
+-device vhost-user-blk-pci,bus=pci.4,addr=0x0,chardev=libvirt-1-virtio-format,id=virtio-disk0,num-queues=2,bootindex=1
+-chardev socket,id=charmonitor,path=/var/run/procurator/monitor/monitor-2298109c-f1e8-496b-afac-89f250cf29a2.sock,server,nowait
+-chardev pty,id=charserial0
+-chardev file,id=charserial1,path=/dev/fdset/9,append=on
+-chardev socket,id=charchannel0,fd=152,server,nowait
+-chardev socket,id=libvirt-1-virtio-format,path=/var/run/procurator/vhost/vhost-blk.2298109c-f1e8-496b-afac-89f250cf29a2.1,reconnect-ms=200
+-blockdev {"driver":"file","filename":"/usr/share/edk2.git/aarch64/QEMU_EFI-pflash.raw","node-name":"libvirt-pflash0-storage","auto-read-only":true,"discard":"unmap"}
+-blockdev {"driver":"file","filename":"/var/lib/libvirt/qemu/nvram/2298109c-f1e8-496b-afac-89f250cf29a2_VARS.fd","node-name":"libvirt-pflash1-storage","auto-read-only":true,"discard":"unmap"}
+-blockdev {"driver":"file","filename":"/usr/share/smartx/elf/cloud-init/2298109c-f1e8-496b-afac-89f250cf29a2.iso","node-name":"libvirt-2-storage","auto-read-only":true,"discard":"unmap"}
+-blockdev {"node-name":"libvirt-pflash0-format","read-only":true,"driver":"raw","file":"libvirt-pflash0-storage"}
+-blockdev {"node-name":"libvirt-pflash1-format","read-only":false,"driver":"raw","file":"libvirt-pflash1-storage"}
+-blockdev {"node-name":"libvirt-2-format","read-only":true,"driver":"raw","file":"libvirt-2-storage"}
+-S
+-machine virt-6.2,usb=off,dump-guest-core=off,gic-version=3,pflash0=libvirt-pflash0-format,pflash1=libvirt-pflash1-format
+-accel kvm
+-cpu host
+-overcommit mem-lock=off
+-smp 2,maxcpus=512,sockets=512,dies=1,clusters=1,cores=1,threads=1
+-smbios type=1,manufacturer=SmartX,product=SMTX OS,version=1.0,serial=SmartX-9c109822e8f16b49-afac89f250cf29a2
+-no-user-config
+-nodefaults
+-mon chardev=charmonitor,id=monitor,mode=control
+-rtc base=utc
+-no-shutdown
+-boot menu=on,strict=on
+-netdev tap,fds=144:145:146:147,id=hostnet0,vhost=on,vhostfds=148:149:150:151
+-serial chardev:charserial0
+-add-fd set=9,fd=153
+-serial chardev:charserial1
+-vnc 127.0.0.1:33
+-sandbox off
+-msg timestamp=on

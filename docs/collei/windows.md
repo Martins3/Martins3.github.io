@@ -81,8 +81,9 @@ RDP 不能使用 Windows Hello PIN，需要账户的实际密码。如果本地�
 ssh -tt -p 51104 -l 97936 127.0.0.1 "net user 97936 *"
 ```
 
-`gr` 自动连接所使用的密码保存在 VM 的 `opt/rdp_password`，并且该文件必须
-设置为 `0600`；密码不会写入命令参数或环境变量。
+`gr` 自动连接所使用的密码保存在 VM 的 `.rdp-password`，并且该文件必须设置为
+`0600` 且由 `.gitignore` 排除。`config.ini` 只保存
+`rdp_password_file = .rdp-password`；密码不会写入 INI、命令参数或环境变量。
 ### FreeRDP 本地代理问题
 
 第一次使用 FreeRDP 探测时，日志显示它读取了宿主代理：

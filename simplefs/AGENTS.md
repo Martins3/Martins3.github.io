@@ -58,19 +58,3 @@ ssh -p 51404 root@localhost \
   inode、目录、extent、xattr、superblock 或普通文件 I/O；
 - 位图是块/inode 所有权的权威来源，计数是派生缓存；
 - 任何释放和复用都要同时审计持久指针、页缓存身份、I/O 完成和错误回滚。
-
-<script src="https://giscus.app/client.js"
-        data-repo="martins3/martins3.github.io"
-        data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="
-        data-category="Show and tell"
-        data-category-id="MDE4OkRpc2N1c3Npb25DYXRlZ29yeTMyMDMzNjY4"
-        data-mapping="pathname"
-        data-reactions-enabled="1"
-        data-emit-metadata="0"
-        data-theme="light"
-        data-lang="zh-CN"
-        crossorigin="anonymous"
-        async>
-</script>
-
-本站所有文章转发 **CSDN** 将按侵权追究法律责任，其它情况随意。

@@ -34,7 +34,7 @@
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#include "../lib.h"
+#include "lib.h"
 
 #define FILE_PATH "/tmp/mmap-close-fd"
 #define REUSE_PATH "/tmp/mmap-close-fd-reuse"

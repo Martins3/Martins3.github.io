@@ -70,19 +70,3 @@ int jbd2_journal_forget(handle_t *handle, struct buffer_head *bh)
 结论
 ext4 的 journal 机制完全建立在 buffer_head 之上，这是其设计的核心基础。这也是为什么 ext4 难以直接迁移到纯 folio/page-based 的 I/O
 模型，而 simplefs 这样的新文件系统在实现 journal 时需要仔细考虑如何与内核的页缓存机制集成。
-
-<script src="https://giscus.app/client.js"
-        data-repo="martins3/martins3.github.io"
-        data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="
-        data-category="Show and tell"
-        data-category-id="MDE4OkRpc2N1c3Npb25DYXRlZ29yeTMyMDMzNjY4"
-        data-mapping="pathname"
-        data-reactions-enabled="1"
-        data-emit-metadata="0"
-        data-theme="light"
-        data-lang="zh-CN"
-        crossorigin="anonymous"
-        async>
-</script>
-
-本站所有文章转发 **CSDN** 将按侵权追究法律责任，其它情况随意。

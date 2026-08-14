@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-from bpfcc import BPF
+from bcc import BPF
 from time import sleep
 import sys
 
@@ -10,12 +10,23 @@ bpf_text = """
 // 定义直方图（对数坐标，适合跨度大的数据）
 BPF_HISTOGRAM(lookahead_hist, u64);
 
-int kprobe__do_page_cache_readahead(struct pt_regs *ctx) {
-    // 第5个参数 lookahead_size，在 x86_64 中是 ctx->r8
-    u64 lookahead_size = PT_REGS_PARM5(ctx);
+// 新内核移除了 do_page_cache_readahead，page_cache_sync_readahead 又被内联无法 kprobe。
+// read_pages(struct readahead_control *rac) 是所有文件系统 readahead 提交的公共入口，
+// readahead_control._nr_pages 位于偏移 32（内核 7.1 BTF 确认），即本次预读请求的页数。
+struct ra_min {
+    void *file;
+    void *mapping;
+    void *ra;
+    unsigned long _index;
+    unsigned int _nr_pages;
+};
+
+int kprobe__read_pages(struct pt_regs *ctx, struct ra_min *rac) {
+    u32 nr = 0;
+    bpf_probe_read_kernel(&nr, sizeof(nr), &rac->_nr_pages);
 
     // 记录到直方图
-    lookahead_hist.increment(bpf_log2l(lookahead_size));
+    lookahead_hist.increment(bpf_log2l(nr));
 
     return 0;
 }
@@ -28,7 +39,7 @@ except Exception as e:
     print("⚠️  可能原因: 函数名不对、内核未导出该符号、或参数获取方式不兼容")
     sys.exit(1)
 
-print("Tracing __do_page_cache_readahead() lookahead_size... Hit Ctrl-C to end.")
+print("Tracing read_pages() req pages... Hit Ctrl-C to end.")
 
 # 打印直方图表头
 print("\n%-20s | %s" % ("lookahead_size (log2)", "COUNT"))

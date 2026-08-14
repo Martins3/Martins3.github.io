@@ -7,9 +7,9 @@ collei.py 支持 virtme-ng 风格的虚拟机，使用 virtio-fs 共享 host roo
 
 ```bash
 # 创建 virtme 类型的虚拟机
-./collei/scripts/collei.py -V
+./collei/scripts/collei-install.py -V
 
-# 创建后可修改 VM 的 opt/kernel 来指定内核目录
+# 创建后可修改 VM 的 config.ini 中的 kernel 来指定内核目录
 ```
 
 创建后，virtme 虚拟机会自动配置：
@@ -17,7 +17,7 @@ collei.py 支持 virtme-ng 风格的虚拟机，使用 virtio-fs 共享 host roo
 - 自动生成精简的 initramfs
 - 不需要磁盘镜像（类似 vmtest）
 
-可选配置（在 `vm/<name>/opt/` 目录下）：
+可选配置位于 `vm/<name>/config.ini` 的 `[vm]` 节：
 - `share_root`: 指定共享的根目录（默认是 `/`）
 - `rodir`: 额外的只读目录（格式: `guest_path=host_path`）
 - `rwdir`: 额外的可写目录（格式: `guest_path=host_path`）
@@ -28,20 +28,17 @@ collei.py 支持 virtme-ng 风格的虚拟机，使用 virtio-fs 共享 host roo
   virtme 额外在 guest 内启动 VSOCK SSH 服务）
 - `exec`: 启动时执行的命令或脚本
 
-注意：选项文件不能为空，`touch opt/vsock` 不会生效，
-需要写入内容（例如 `echo 1 > opt/vsock`）。
+注意：缺失或空值表示未启用；启用布尔选项时写入 `1`。
 
 示例：
 ```bash
-# 创建 virtme VM
-cd ~/.config/collei/vm
-cd virtme-test
+# 进入创建好的 virtme VM 目录
+cd ~/data/hack/vm/virtme-test
 
-# 添加额外共享目录
-echo "/tmp=/host_tmp" > opt/rwdir
-
-# 启用可写 overlay
-touch opt/virtme_rw
+# 编辑 config.ini
+# [vm]
+# rwdir = /tmp=/host_tmp
+# virtme_rw = 1
 
 # 运行
 ../../collei/scripts/collei.py
@@ -65,7 +62,7 @@ host 的 `/etc/ssh` 是 root-only，virtiofsd 读不到），并用内置 Rust p
 ```
 
 依赖：host 需要 `socat`；guest 复用 host rootfs 里的 `sshd`。
-登录用户与 `virtme_user` 一致（`opt/user` 或当前用户），使用该用户
+登录用户与 `virtme_user` 一致（`config.ini` 中的 `user` 或当前用户），使用该用户
 home 下的 `~/.ssh/authorized_keys` 做认证；root 登录不可用，因为
 `/root` 对 virtiofsd 不可读。
 
@@ -74,7 +71,7 @@ virtme VM 同时启用 `virtme` 和 `vsock` 后，普通的 `ssh` action
 
 ### initramfs 内核模块匹配
 
-`collei/scripts/virtme.py` 生成 initramfs 时会从 `opt/kernel` 指向的
+`collei/scripts/virtme.py` 生成 initramfs 时会从 `config.ini` 中 `kernel` 指向的
 构建树复制 virtio/vsock 模块。内核版本从实际启动的 bzImage/Image 提取
 （`collei/scripts/kernel.py`），而不是 `include/config/kernel.release`
 —— 后者可能被后续的 make 调用重新生成，与尚未重编的 bzImage/模块不一致。
@@ -158,7 +155,8 @@ guest 共享 host rootfs 时 sudo/su 有三层障碍（virtiofsd 以普通用户
 需要切回原来的 Bash init 时，在 VM 配置中写入：
 
 ```bash
-echo bash > opt/virtme_init
+[vm]
+virtme_init = bash
 ```
 
 删除该选项或写入 `rust` 会使用 Rust init。
@@ -170,19 +168,3 @@ coldplug 并等待 settle。initramfs 只硬编码“挂载 ROOTFS 前必须加�
 virtio-blk、virtio-scsi、virtio-net 等运行期设备由 udev 自动加载和命名。
 
 所以，现在 lsmod 可以观察 intel_kvm
-
-<script src="https://giscus.app/client.js"
-        data-repo="martins3/martins3.github.io"
-        data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="
-        data-category="Show and tell"
-        data-category-id="MDE4OkRpc2N1c3Npb25DYXRlZ29yeTMyMDMzNjY4"
-        data-mapping="pathname"
-        data-reactions-enabled="1"
-        data-emit-metadata="0"
-        data-theme="light"
-        data-lang="zh-CN"
-        crossorigin="anonymous"
-        async>
-</script>
-
-本站所有文章转发 **CSDN** 将按侵权追究法律责任，其它情况随意。

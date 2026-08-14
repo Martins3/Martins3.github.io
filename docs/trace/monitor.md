@@ -1,16 +1,14 @@
+# 可观测简单调研
 - https://github.com/pyroscope-io/pyroscope : 连续观测
 - https://github.com/parca-dev/parca : 连续观测
 - https://github.com/cloudflare/ebpf_exporter
 
-# 观测
+# prometheus
 - influxdb 有 v1 和 v2 之分
 - grafana 默认密码 admin/admin
 
-### [prometheus](https://prometheus.io)
-集群的管理
-
+- [prometheus](https://prometheus.io)
 - https://github.com/winsiderss/systeminformer
-
 
 ## grafana
 ```sh
@@ -79,7 +77,7 @@ curl -d 'measurement,tag1=value1,tag2=value2 field1=123,field2=1.23' -X POST 'ht
 ```
 
 ## Vector
-从这里开始阅读，简单清晰啊: https://vector.dev/docs/about/
+从这里开始阅读: https://vector.dev/docs/about/
 
 具体案例:
 https://github.com/vectordotdev/vector-demos/blob/main/aggregator/vector/agent/http/vector.toml

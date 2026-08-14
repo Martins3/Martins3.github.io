@@ -30,6 +30,7 @@ def create_missing_disk(
     if not path.is_file():
         create_disk_image(runner, path, size, fmt)
 
+
 # TODO 这里的逻辑还是非常奇怪的，将太多逻辑都放到这里了
 def create_standard_boot_disks(
     vm_dir: Path,
@@ -39,14 +40,16 @@ def create_standard_boot_disks(
     raw: bool = False,
     boot_size: str | None = None,
 ) -> None:
-    """创建标准 boot 盘；不负责写 opt/disk。"""
+    """创建标准 boot 盘；不负责写 config.ini 的 disk。"""
     if disk_count not in {1, 2, 3}:
         raise ColleiError("disk_count must be 1, 2 or 3")
     if raw and disk_count != 1:
         raise ColleiError("raw boot image requires exactly one disk")
     image_format = "raw" if raw else "qcow2"
-    size = boot_size if boot_size is not None else (
-        DEFAULT_RAW_BOOT_SIZE if raw else DEFAULT_BOOT_SIZE
+    size = (
+        boot_size
+        if boot_size is not None
+        else (DEFAULT_RAW_BOOT_SIZE if raw else DEFAULT_BOOT_SIZE)
     )
     for index in range(1, disk_count + 1):
         image = vm_dir / f"img/boot{index}"

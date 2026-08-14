@@ -86,6 +86,12 @@ bcc/ext4-fault-read.py 的观察结果:
 可以用这个方法来调试，如果无法加载到内核中:
 sudo bpftool prog load ./ext4_trace.bpf.o /sys/fs/bpf/test_prog
 
+## 在本机（Fedora 44 / kernel 7.1）运行
+
+- 模块名是 `bcc`（Fedora 的 python3-bcc），不是 `bpfcc`（那是 Debian/Ubuntu 的命名），
+  脚本统一用 `from bcc import BPF`，用 `/usr/bin/python3.14` 运行（默认 `python3`
+  是 nix 的 3.13，没有 bcc）。
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

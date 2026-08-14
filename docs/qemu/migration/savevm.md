@@ -1,4 +1,5 @@
 # savevm
+
 ## 使用方法
 
 hmp 命令:
@@ -94,12 +95,14 @@ ID      TAG               VM_SIZE                DATE        VM_CLOCK     ICOUNT
 
 qemu-img snapshot -a vm-20260112055339 disk.qcow2
 
+```txt
 qemu-img convert \
   -f qcow2 \
   -O qcow2 \
   -s vm-20260112055339 \
   disk.qcow2 \
   disk-from-snapshot.qcow2
+```
 
 savevm/loadvm 也会有这个问题:
 也会遇到这个问题

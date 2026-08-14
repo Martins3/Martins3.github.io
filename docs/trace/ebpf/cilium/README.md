@@ -1,4 +1,5 @@
-# 做做这里的教程
+# cilium 初步尝试
+
 https://ebpf-go.dev/guides/getting-started/#the-go-application
 
 所以，这个只是 go 的 bind 吗? 和 libbpf 啥关系 ?

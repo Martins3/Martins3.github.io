@@ -8,7 +8,7 @@
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "../lib.h"
+#include "lib.h"
 
 /*
  * 这种没有配置大小 memfd 的大小，如果去 mmap 可以成功，但是访问该区域，

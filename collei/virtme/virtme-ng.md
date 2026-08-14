@@ -217,25 +217,9 @@ guest 工具**不复制进 guest**：root=`/` 时 `init=` 直接指向共享根�
 `virtme.foo`（点号类从 /proc/cmdline grep）+ base64 的 `` virtme.exec= ``。
 另有 cmdline 超长保护（s390x 896 字节限制，落成临时脚本，run.py:2148-2161）。
 
-理念差异：virtme-ng 无持久 VM 定义，"命令行即配置"；collei 是具名持久 VM +
-opt/ 选项文件。
+理念差异：virtme-ng 无持久 VM 定义，"命令行即配置"；collei 是具名持久 VM，
+每台 VM 使用一个 `config.ini`。
 
 ./vng -r ~/data/kernel/linux-build --systemd
 - **udev coldplug**（virtme-init:251-277 / main.rs:650-668）：guest 内按需自动
   加载模块、生成 /dev/disk/by-id，替代 init 里硬编码 modprobe（virtme-init.sh:336-341）。
-
-<script src="https://giscus.app/client.js"
-        data-repo="martins3/martins3.github.io"
-        data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="
-        data-category="Show and tell"
-        data-category-id="MDE4OkRpc2N1c3Npb25DYXRlZ29yeTMyMDMzNjY4"
-        data-mapping="pathname"
-        data-reactions-enabled="1"
-        data-emit-metadata="0"
-        data-theme="light"
-        data-lang="zh-CN"
-        crossorigin="anonymous"
-        async>
-</script>
-
-本站所有文章转发 **CSDN** 将按侵权追究法律责任，其它情况随意。

@@ -12,6 +12,7 @@ from typing import Generic, Protocol, TypeVar
 from commands import CommandRunner
 from disks import create_missing_disk, create_standard_boot_disks
 from errors import ColleiError
+from options import IniConfig
 from runtime import ColleiContext, VmRuntime
 from ui import choose, confirm
 
@@ -118,7 +119,9 @@ poweroff
 
 
 class VmInstaller:
-    gitignore = "*.qcow2\n*.qcow2.bak\nimg/\ninstall/\ndump\n.bash_history\n"
+    gitignore = (
+        "*.qcow2\n*.qcow2.bak\nimg/\ninstall/\ndump\n.bash_history\n.rdp-password\n"
+    )
 
     def __init__(
         self,
@@ -151,16 +154,26 @@ class VmInstaller:
     def create_vm_layout(self, name: str) -> Path:
         vm_dir = self.validate_new_vm(name)
         print(f"install to {vm_dir}")
-        (vm_dir / "opt").mkdir(parents=True)
+        vm_dir.mkdir(parents=True)
         (vm_dir / "img").mkdir()
         (vm_dir / "s").mkdir()
         (vm_dir / "t").mkdir()
         # 在这里是一个好思路，不断的:
         # 默认新安装的是 ovmf
-        (vm_dir / "opt/bios").write_text("ovmf_binary\n")
-        (vm_dir / "opt/id").write_text(f"{self.next_guest_id()}\n")
-        (vm_dir / "opt/uuid").write_text(f"{uuid.uuid4()}\n")
+        IniConfig.create(
+            vm_dir / "config.ini",
+            "vm",
+            {
+                "bios": "ovmf_binary",
+                "id": str(self.next_guest_id()),
+                "uuid": str(uuid.uuid4()),
+            },
+        )
         return vm_dir
+
+    @staticmethod
+    def vm_options(vm_dir: Path) -> IniConfig:
+        return IniConfig(vm_dir / "config.ini", "vm")
 
     def create_standard_disks(
         self,
@@ -178,16 +191,10 @@ class VmInstaller:
             boot_size=boot_size,
         )
 
-        disk_lines = [
-            "# supporte type :",
-            "#\t\tnvme",
-            "# \tide",
-            "# \tvirtio-blk",
-            "# \tvirtio-scsi",
-        ]
+        disk_lines = []
         for index in range(1, disk_count + 1):
             disk_lines.append(f"boot{index} virtio-blk {index}")
-        (vm_dir / "opt/disk").write_text("\n".join(disk_lines) + "\n")
+        self.vm_options(vm_dir).set("disk", "\n".join(disk_lines))
 
         # setup_scsi_hba 默认提供两个调试盘，保持与原启动流程一致。
         image_dir = vm_dir / "img"
@@ -246,12 +253,11 @@ class VmInstaller:
         )
 
     def finish(self, vm_dir: Path) -> VmRuntime:
-        link = self.context.global_config.default_vm_link
-        link.unlink(missing_ok=True)
-        link.symlink_to(vm_dir)
+        vm = self.context.vm(name=vm_dir.name)
+        self.context.set_default(vm)
         if self.initialize_git:
             self.init_git(vm_dir)
-        return self.context.vm(name=vm_dir.name)
+        return vm
 
 
 class VirtmeInstaller(VmInstaller):
@@ -259,16 +265,20 @@ class VirtmeInstaller(VmInstaller):
 
     def install(self, name: str, *, disk_count: int = 1) -> VmRuntime:
         vm_dir = self.create_vm_layout(name)
-        options = vm_dir / "opt"
+        options = self.vm_options(vm_dir)
 
         # virtme-ng 使用 virtio-fs 共享 rootfs
         # 基础配置
-        (options / "virtme").write_text("1\n")
-        (options / "virtme_mode").write_text("manual\n")
         kernel = Path.home() / "data" / "kernel" / "linux-build"
-        (options / "kernel").write_text(f"{kernel.resolve()}\n")
-        # 启用可写 overlay ，不然很多命令执行都会报错
-        (options / "virtme_rw").write_text("1\n")
+        options.set_many(
+            {
+                "virtme": "1",
+                "virtme_mode": "manual",
+                "kernel": str(kernel.resolve()),
+                # 启用可写 overlay ，不然很多命令执行都会报错
+                "virtme_rw": "1",
+            }
+        )
 
         # 可选配置
         # virtme_exec: 启动时执行的脚本
@@ -293,11 +303,13 @@ class VmtestInstaller(VmInstaller):
             " init=/tmp/martins3/init.sh  loglevel=7 raid=noautodetect "
             " printk.devkmsg=on"
         )
-        (vm_dir / "opt/cmdline").write_text(f"{cmdline}\n")
-        (vm_dir / "opt/vmtest").write_text("1\n")
-        (vm_dir / "opt/install").write_text("1\n")
-        (vm_dir / "opt/kernel").write_text(
-            f"{Path.home() / 'data/kernel/linux-vmtest'}\n"
+        self.vm_options(vm_dir).set_many(
+            {
+                "cmdline": cmdline,
+                "vmtest": "1",
+                "install": "1",
+                "kernel": str(Path.home() / "data/kernel/linux-vmtest"),
+            }
         )
         self.create_standard_disks(vm_dir, disk_count=disk_count, raw=raw)
         return self.finish(vm_dir)
@@ -336,12 +348,11 @@ class IsoInstaller(VmInstaller):
     ) -> VmRuntime:
         iso = self.validate_iso(iso)
         vm_dir = self.create_vm_layout(name)
-        (vm_dir / "opt/iso").write_text(f"{iso.name} 0\n")
+        values = {"iso": f"{iso.name} 0"}
         lower_name = iso.name.lower()
         if "win" in lower_name:
-            (vm_dir / "opt/win").write_text(
-                "11\n" if "win11" in lower_name else "unknown\n"
-            )
+            values["win"] = "11" if "win11" in lower_name else "unknown"
+        self.vm_options(vm_dir).set_many(values)
         self.create_standard_disks(vm_dir, disk_count=disk_count, raw=raw)
         return self.finish(vm_dir)
 
@@ -428,26 +439,7 @@ class KickstartAutoInstaller(VmInstaller, Generic[ConfigT]):
         return install_dir
 
     def finish(self, vm_dir: Path) -> VmRuntime:
-        link = self.context.global_config.default_vm_link
-        link.unlink(missing_ok=True)
-        link.symlink_to(vm_dir)
-        if self.initialize_git:
-            self.init_git(
-                vm_dir,
-                [
-                    "git",
-                    "add",
-                    "-A",
-                    "--",
-                    ".",
-                    ":!opt/kernel",
-                    ":!opt/initrd",
-                    ":!opt/cmdline",
-                    ":!opt/install",
-                    ":!opt/iso",
-                ],
-            )
-        return self.context.vm(name=vm_dir.name)
+        return super().finish(vm_dir)
 
     def write_install_options(
         self,
@@ -459,17 +451,19 @@ class KickstartAutoInstaller(VmInstaller, Generic[ConfigT]):
         no_reboot: bool = False,
     ) -> None:
         (install_dir / "once").write_text("1\n")
-        opt = vm_dir / "opt"
-        (opt / "kernel").write_text(f"{install_dir / 'vmlinuz'}\n")
-        (opt / "initrd").write_text(f"{install_dir / 'initrd.img'}\n")
-        (opt / "iso").write_text(f"{iso.name}\n{install_dir / 'ks.iso'}\n")
-        (opt / "cmdline").write_text(f"{self.install_cmdline(source_label)}\n")
-        (opt / "user").write_text(f"{self.config.user}\n")
-        (opt / "bg").write_text("1\n")
-        (opt / "display").write_text("virtio-gpu\n")
-        (opt / "install").write_text("1\n")
+        values = {
+            "kernel": str(install_dir / "vmlinuz"),
+            "initrd": str(install_dir / "initrd.img"),
+            "iso": f"{iso.name}\n{install_dir / 'ks.iso'}",
+            "cmdline": self.install_cmdline(source_label),
+            "user": self.config.user,
+            "bg": "1",
+            "display": "virtio-gpu",
+            "install": "1",
+        }
         if no_reboot:
-            (opt / "no_reboot").write_text("1\n")
+            values["no_reboot"] = "1"
+        self.vm_options(vm_dir).set_many(values)
 
     def install(self) -> VmRuntime:
         iso = self.choose_iso()

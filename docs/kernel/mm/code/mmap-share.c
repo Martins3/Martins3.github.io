@@ -9,7 +9,7 @@
 #define _GNU_SOURCE
 #include <stdio.h>
 #include <unistd.h>
-#include "../lib.h"
+#include "lib.h"
 
 int main(int argc, char *argv[])
 {

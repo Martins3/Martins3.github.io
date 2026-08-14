@@ -38,19 +38,3 @@ dirty 到 durable 的路径，以及失败发生在更新一半时如何回滚�
 
 每章末尾的“对照源码”用于扩展视野：ext2 适合看最直接的 VFS 映射，ext4 适合看
 JBD2 和传统 buffer_head 数据路径，XFS 适合看成熟的 iomap、extent 与事务设计。
-
-<script src="https://giscus.app/client.js"
-        data-repo="martins3/martins3.github.io"
-        data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="
-        data-category="Show and tell"
-        data-category-id="MDE4OkRpc2N1c3Npb25DYXRlZ29yeTMyMDMzNjY4"
-        data-mapping="pathname"
-        data-reactions-enabled="1"
-        data-emit-metadata="0"
-        data-theme="light"
-        data-lang="zh-CN"
-        crossorigin="anonymous"
-        async>
-</script>
-
-本站所有文章转发 **CSDN** 将按侵权追究法律责任，其它情况随意。

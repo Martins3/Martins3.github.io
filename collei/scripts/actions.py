@@ -79,7 +79,7 @@ def _ssh_argv(context: ActionContext, copy_id: bool = False) -> list[str]:
 def _ssh_vsock_argv(context: ActionContext) -> list[str]:
     if not context.vm.config.options.enabled("vsock"):
         raise ColleiError(
-            f"vsock not enabled for {context.vm.config.name}, run: echo 1 > opt/vsock"
+            f"vsock not enabled for {context.vm.config.name}; set vsock = 1 in config.ini"
         )
     # 与 virtme kernel_args 的用户选择保持一致: guest 共享 host rootfs，
     # virtiofsd 以普通用户运行，只有该用户的 home 里的 authorized_keys 可读。
@@ -222,13 +222,19 @@ def action_rdp(context: ActionContext, args: Sequence[str]) -> None:
         raise ColleiError("rdp requires exactly one running QEMU")
     user = context.vm.config.options.require("rdp_user")
     if "\n" in user:
-        raise ColleiError("opt/rdp_user must contain exactly one Windows username")
-    password_path = context.vm.config.options.path / "rdp_password"
-    password = context.vm.config.options.require("rdp_password")
-    if "\n" in password:
-        raise ColleiError("opt/rdp_password must contain exactly one Windows password")
+        raise ColleiError("config.ini rdp_user must contain one Windows username")
+    configured_password = context.vm.config.options.require("rdp_password_file")
+    relative_password = Path(configured_password)
+    if relative_password.is_absolute():
+        raise ColleiError("rdp_password_file must be relative to the VM directory")
+    password_path = (context.vm.directory / relative_password).resolve()
+    if not password_path.is_relative_to(context.vm.directory.resolve()):
+        raise ColleiError("rdp_password_file must stay inside the VM directory")
+    password = password_path.read_text().rstrip("\r\n")
+    if not password or "\n" in password or "\r" in password:
+        raise ColleiError("RDP password file must contain one password")
     if password_path.stat().st_mode & 0o077:
-        raise ColleiError("opt/rdp_password must not be accessible by group or others")
+        raise ColleiError("RDP password file must not be accessible by group or others")
     local_connection_env = {
         "ALL_PROXY": "",
         "HTTP_PROXY": "",
@@ -349,7 +355,7 @@ def action_bg(context: ActionContext, args: Sequence[str]) -> None:
     del args
     original = context.vm.config.options.get("bg") or "1"
     now = "1" if original == "0" else "0"
-    (context.vm.config.options.path / "bg").write_text(f"{now}\n")
+    context.vm.config.options.set("bg", now)
     print(f"option is : {original} ==> {now}")
 
 
@@ -373,10 +379,8 @@ def action_cgroup(context: ActionContext, args: Sequence[str]) -> None:
 
 def action_setup_vmware(context: ActionContext, args: Sequence[str]) -> None:
     del args
-    options = context.vm.config.options.path
     values = {"bios": "ovmf_binary", "netdev": "vmxnet3", "boot": "ide", "sata": "1"}
-    for name, value in values.items():
-        (options / name).write_text(f"{value}\n")
+    context.vm.config.options.set_many(values)
 
 
 def action_tty3(context: ActionContext, args: Sequence[str]) -> None:
@@ -405,11 +409,11 @@ def action_clone_vm_auto(context: ActionContext, args: Sequence[str]) -> None:
         return
     print(f"cp -r {context.vm.directory} {target}")
     context.runner.run(["cp", "-r", context.vm.directory, target])
-    (target / "opt" / "ip").unlink(missing_ok=True)
+    target_options = context.collei.vm(target.name).config.options
+    target_options.remove("ip")
     ids = [vm.config.guest_id for vm in context.collei.list_vms()]
     new_id = max(ids, default=10) + 1
-    (target / "opt" / "id").write_text(f"{new_id}\n")
-    (target / "opt" / "uuid").write_text(f"{uuid.uuid4()}\n")
+    target_options.set_many({"id": str(new_id), "uuid": str(uuid.uuid4())})
     if source_active:
         for pid_file in target.glob("*/pid"):
             pid_file.unlink()
@@ -512,7 +516,7 @@ def _snapshot_qmp_path(context: ActionContext) -> Path:
 def _validate_snapshot_vm(context: ActionContext) -> None:
     if context.vm.config.options.get("nvme") is not None:
         raise ColleiError(
-            "snapshot actions do not support opt/nvme: QEMU aborts while "
+            "snapshot actions do not support config.ini nvme: QEMU aborts while "
             "restoring NVMe aer_reqs"
         )
 
@@ -703,8 +707,7 @@ def action_add_iso(context: ActionContext, args: Sequence[str]) -> None:
     choices = "\n".join(str(path) for path in sorted(iso_root.glob("*.iso"))) + "\n"
     selected = Path(_fzf(choices))
     print(selected)
-    with (context.vm.config.options.path / "iso").open("a") as option:
-        option.write(f"{selected.name}\n")
+    context.vm.config.options.append("iso", selected.name)
 
 
 def action_addr(context: ActionContext, args: Sequence[str]) -> None:
@@ -873,8 +876,7 @@ def action_add_boot_disk(context: ActionContext, args: Sequence[str]) -> None:
     number = max(numbers, default=0) + 1
     image = image_dir / f"boot{number}"
     context.runner.run(["qemu-img", "create", "-f", "qcow2", image, "350G"])
-    with (context.vm.config.options.path / "disk").open("a") as option:
-        option.write(f"boot{number} virtio-blk\n")
+    context.vm.config.options.append("disk", f"boot{number} virtio-blk")
 
 
 def action_hotplug_disk(context: ActionContext, args: Sequence[str]) -> None:
@@ -1195,8 +1197,8 @@ def action_auto_install(context: ActionContext, args: Sequence[str]) -> None:
     _sendkeys(context, "sudo shutdown now")
     time.sleep(1)
     hmp_command(socket, "sendkey ret")
-    (context.vm.config.options.path / "install").write_text("\n")
-    (context.vm.config.options.path / "user").write_text("martins3\n")
+    context.vm.config.options.remove("install")
+    context.vm.config.options.set("user", "martins3")
     print("finished")
 
 
@@ -1517,7 +1519,7 @@ def _validate_nbd_migration_vm(context: ActionContext) -> None:
         if context.vm.config.options.enabled(name)
     )
     if unsupported:
-        configured = ", ".join(f"opt/{name}" for name in unsupported)
+        configured = ", ".join(f"config.ini:{name}" for name in unsupported)
         raise ColleiError(f"migrate_nbd does not support {configured}")
     if len(context.vm.live_pids) != 1:
         raise ColleiError("migrate_nbd requires exactly one running source QEMU")

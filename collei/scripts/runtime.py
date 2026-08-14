@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import os
 import re
 import subprocess
 from dataclasses import dataclass
@@ -163,22 +162,16 @@ class ColleiContext:
         if name:
             directory = self.global_config.vm_root / name
         else:
-            link = self.global_config.default_vm_link
-            if not link.is_symlink() or not link.exists():
-                raise ColleiError(f"is {link} a valid vm dir ?")
-            directory = link.resolve()
+            directory = self.global_config.vm_root / self.global_config.default_vm_name
         return VmRuntime.inspect(VmConfig.load(directory))
 
     def set_default(self, vm: VmRuntime) -> None:
-        link = self.global_config.default_vm_link
-        link.parent.mkdir(parents=True, exist_ok=True)
-        link.unlink(missing_ok=True)
-        os.symlink(vm.directory, link)
+        self.global_config.directory.set("default_vm", vm.config.name)
 
     def list_vms(self, active: bool | None = None) -> list[VmRuntime]:
         result: list[VmRuntime] = []
         for directory in sorted(self.global_config.vm_root.iterdir()):
-            if not directory.is_dir() or not (directory / "opt").is_dir():
+            if not directory.is_dir() or not (directory / "config.ini").is_file():
                 continue
             runtime = VmRuntime.inspect(VmConfig.load(directory))
             if active is None or runtime.active == active:

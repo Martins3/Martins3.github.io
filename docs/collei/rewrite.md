@@ -18,19 +18,22 @@ python 的好处:
 bash 的问题
 - bash 是适合写大型项目，我感觉超过 100 行就不行了，但是我在重写的时候，项目已经到 5000 行作用了，其中的库依赖问题简直就是灾难。
 
-## how
+显然，作为一个调试项目，我是不愿意仔细手写这个项目的，用 AI 写，python 比 bash 好很多，
+虽然我已经算是勉强驾驭 bash ，但是 AI 总是可以写出来非常难懂的语法:
+- https://danluu.com/pl-tokens/
 
 ## 好处
 
 似乎有一些问题一直很难解决:
 
 vm_dir 的生命周期:
-  - vm_root 读取 ~/.config/collei/vm：collei/scripts/config.py
-  - 默认链接读取 ~/.config/collei/last：collei/scripts/config.py
-  - 指定 -n yyds 时使用 vm_root / "yyds"；未指定时解析默认链接：collei/scripts/runtime.py: context.vm()
-  - -n 或 -s 会同时更新默认 VM 链接：collei/scripts/collei-action.py
+  - vm_root 读取 `~/.config/collei/config.ini` 的 `vm`：collei/scripts/config.py
+  - 默认 VM 读取同一文件的 `default_vm`：collei/scripts/config.py
+  - 指定 `-n yyds` 时使用 `vm_root / "yyds"`；未指定时使用默认 VM：
+    collei/scripts/runtime.py 中 `ColleiContext.vm()`
+  - `-n` 或 `-s` 会更新 `default_vm`：collei/scripts/collei-action.py
         context = ColleiContext.load()
-  - collei.py 启动 VM 时直接使用默认链接：collei/scripts/collei.py  (main ->         vm = context.vm() )
+  - collei.py 启动 VM 时读取默认 VM：collei/scripts/collei.py 中 `main()`
 
 s / t : 虚拟机
 

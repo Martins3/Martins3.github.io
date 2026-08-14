@@ -11,7 +11,7 @@ from errors import UnsupportedNativeConfiguration
 
 
 def kernel_image(kernel_dir: Path) -> Path:
-    # Normal kernel debug boots point opt/kernel at a build tree.  Installer
+    # Normal kernel debug boots point config.ini kernel at a build tree. Installer
     # boots (Fedora Anaconda, etc.) point it directly at an extracted vmlinuz.
     if kernel_dir.is_file():
         return kernel_dir

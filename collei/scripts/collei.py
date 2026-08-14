@@ -32,8 +32,9 @@ from runtime import ColleiContext, VmRuntime
 from tasks import add_background_task, exec_task_follow
 from ui import print_banner
 from vfio import pci_bind_to_vfio
-from virtme import VirtmeSetup
 from windows import WindowsProfile
+
+from virtme import VirtmeSetup
 
 # collei.py 只负责启动虚拟机。
 #
@@ -65,7 +66,7 @@ def validate_launch_options(vm: VmRuntime, options: LaunchOptions) -> None:
     )
     if not passthrough_options:
         return
-    configured = ", ".join(f"opt/{name}" for name in passthrough_options)
+    configured = ", ".join(f"config.ini:{name}" for name in passthrough_options)
     raise ColleiError(
         f"rk -a does not support passthrough VM {vm.config.name}: {configured}"
     )
@@ -75,12 +76,13 @@ def print_help() -> None:
     print(
         """usage: collei.py [OPTIONS]
 
-启动当前默认 VM。默认 VM 由 ~/.config/collei/last 指向，VM 配置位于 opt/。
+启动当前默认 VM。默认 VM 和 VM 根目录由 ~/.config/collei/config.ini 指定，
+每台 VM 的配置位于其 config.ini 的 [vm] 节。
 
 迁移和恢复：
   -a  启动普通热迁移目标
       使用 -incoming defer -only-migratable；必须已经有且只有一个 source QEMU。
-      配置了 opt/vfio 或 opt/sriov 的直通 VM 会直接报错。
+      配置了 vfio 或 sriov 的直通 VM 会直接报错。
       --nbd-target  内部选项：目标 QEMU 使用独立存储 slot，由 migrate_nbd 调用。
   -l  从当前 VM 目录的 vmstate.img 恢复
       对应 save_vm_file，启用 mapped-ram 后使用
@@ -100,7 +102,7 @@ CPR 有三种模式：
   -s  启动后暂停 guest，通过 VM 目录下的 gdb.socket 调试 guest kernel
       --foreground  强制在前台运行，供需要直接管理 QEMU 生命周期的 action 使用
   -E  启动 EFI application 测试
-      要求 opt/bios=ovmf，并且不能配置 opt/kernel 直接启动内核。
+      要求 bios=ovmf，并且不能配置 kernel 直接启动内核。
 
 创建 VM：
       collei-install.py -i/-x/-v/-V  只构建 VM 目录并更新默认 VM，不启动 QEMU
@@ -144,7 +146,7 @@ def _boot_disks(vm: VmRuntime) -> list[tuple[str, str, str | None]]:
     value = vm.config.options.get("disk")
     if value is None:
         raise UnsupportedNativeConfiguration(
-            "Python setup_basic_storage requires opt/disk"
+            "Python setup_basic_storage requires config.ini disk"
         )
     result: list[tuple[str, str, str | None]] = []
     for line in value.splitlines():
@@ -257,7 +259,7 @@ class ColleiQemuBuilder:
                 count = int(disk_num)
             except ValueError as error:
                 raise UnsupportedNativeConfiguration(
-                    f"invalid opt/disk_num={disk_num}"
+                    f"invalid config.ini disk_num={disk_num}"
                 ) from error
             return [
                 (f"boot{index}", "virtio-blk", "1" if index == 1 else None)
@@ -274,7 +276,7 @@ class ColleiQemuBuilder:
                     for index, name in enumerate(disks, 1)
                 ]
         raise UnsupportedNativeConfiguration(
-            "Python setup_basic_storage requires opt/disk"
+            "Python setup_basic_storage requires config.ini disk"
         )
 
     def validate(self) -> None:
@@ -285,7 +287,7 @@ class ColleiQemuBuilder:
         if self.efi_application:
             if self.vm.config.options.get("bios") != "ovmf":
                 raise UnsupportedNativeConfiguration(
-                    "-E requires opt/bios=ovmf, matching collei.sh"
+                    "-E requires config.ini bios=ovmf, matching collei.sh"
                 )
             if self.vm.config.options.get("kernel") is not None:
                 raise UnsupportedNativeConfiguration(
@@ -526,7 +528,7 @@ class ColleiQemuBuilder:
             )
 
     def setup_basic_storage(self, argv: list[str]) -> None:
-        # 自动解析 opt/disk；默认不配置 bootindex。
+        # 自动解析 config.ini 的 disk；默认不配置 bootindex。
         boot_disks = self.boot_disks()
         for index, (name, drive, bootindex) in enumerate(boot_disks):
             if drive == "virtio-blk":
@@ -549,7 +551,9 @@ class ColleiQemuBuilder:
         actual = sorted(path.name for path in self.image_dir.glob("boot[1-9]"))
         expected_after_create = sorted(set(actual) | set(configured))
         if sorted(configured) != expected_after_create:
-            raise UnsupportedNativeConfiguration("boot disks and opt/disk do not match")
+            raise UnsupportedNativeConfiguration(
+                "boot disks and config.ini disk do not match"
+            )
 
     def setup_mem_cpu(self, argv: list[str]) -> None:
         if not self.dry_run and self.vm.config.options.enabled("hugetlb"):
@@ -641,7 +645,9 @@ class ColleiQemuBuilder:
         kernel_value = self.vm.config.options.get("kernel")
         if kernel_value is None:
             if self.vm.config.options.get("cmdline"):
-                raise UnsupportedNativeConfiguration("opt/cmdline requires opt/kernel")
+                raise UnsupportedNativeConfiguration(
+                    "config.ini cmdline requires kernel"
+                )
             return
         kernel_dir = Path(kernel_value)
         if self.profile is not None:
@@ -1025,7 +1031,9 @@ class ColleiQemuBuilder:
         for index, line in enumerate(value.splitlines(), 1):
             fields = line.split()
             if len(fields) not in {1, 2}:
-                raise UnsupportedNativeConfiguration(f"invalid opt/iso line: {line}")
+                raise UnsupportedNativeConfiguration(
+                    f"invalid config.ini iso line: {line}"
+                )
             iso = iso_root / fields[0]
             if not iso.is_file():
                 raise UnsupportedNativeConfiguration(f"ISO does not exist: {iso}")
@@ -1173,7 +1181,7 @@ class ColleiQemuBuilder:
             argv.append("-no-reboot")
 
     def setup_pstore(self, argv: list[str]) -> None:
-        # opt/pstore 打开 pstore 的两个 host 侧后端:
+        # config.ini 的 pstore 打开 pstore 的两个 host 侧后端:
         # 1. ACPI ERST: 记录持久化到 vm_dir/pstore-erst.bin,
         #    配合 guest cmdline pstore.backend=erst
         #
@@ -1249,7 +1257,7 @@ class BuildrootQemuBuilder:
     def build(self) -> QemuCommand:
         buildroot_value = self.vm.config.options.get("buildroot")
         if buildroot_value is None:
-            raise UnsupportedNativeConfiguration("opt/buildroot is missing")
+            raise UnsupportedNativeConfiguration("config.ini buildroot is missing")
         buildroot = Path(buildroot_value)
         kernel = buildroot / "output/images/bzImage"
         rootfs = buildroot / "output/images/rootfs.ext2"

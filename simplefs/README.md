@@ -62,19 +62,3 @@ runner 的结构和结果判定见 [xfstests 说明](docs/development/xfstests.m
 
 核心约束：普通文件和核心元数据路径保持 folio-native；`buffer_head` 只允许存在于
 `simplefs_journal.c` 的 JBD2 客户端适配层。
-
-<script src="https://giscus.app/client.js"
-        data-repo="martins3/martins3.github.io"
-        data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="
-        data-category="Show and tell"
-        data-category-id="MDE4OkRpc2N1c3Npb25DYXRlZ29yeTMyMDMzNjY4"
-        data-mapping="pathname"
-        data-reactions-enabled="1"
-        data-emit-metadata="0"
-        data-theme="light"
-        data-lang="zh-CN"
-        crossorigin="anonymous"
-        async>
-</script>
-
-本站所有文章转发 **CSDN** 将按侵权追究法律责任，其它情况随意。

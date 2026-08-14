@@ -1,7 +1,5 @@
-## qemu 中关于 page size 问题的合集
+# qemu 中关于 page size 问题合集
 <!-- 074a3276-94f9-48c9-83ee-2b05d6b05668 -->
-
-(2026-04-21 其实已经差不多了，现在有了 codex ，这个问题应该是很简单的)
 
 1. TARGET_PAGE_BITS 是如何确定的?
 2. 虚拟机和物理机的页大小不同 (虚拟机是 16k ，物理机是 4k 的页面)
@@ -14,11 +12,19 @@
 
 非当 tcg 模式下，还存在这个问题吗，也就是同构场景有没有这个问题、
 
+1. 似乎非常接近热迁移了，但是我来理解一下，为什么会有这种情况
+	- dirty bitmap 为什么需要是热迁移的情况
+2. 需要注意，在热迁移的时候，自动转换为 4k 页面的
+
+## 为什么 qemu 需要关系 page size
+
+1. migration 中
+
 ## 一共存在那些 page size
 
 ### RAMBlock::page_size
 
-如果启动 qemu 的时候，后端使用的是大页，可以发现其结果 PSize 就是 2MiB 的
+如果启动 qemu 的时候，后端使用的是 HugeTLB ，可以发现其结果 PSize 就是 2MiB 的
 ```txt
 (qemu) info ramblock
               Block Name    PSize              Offset               Used              Total                HVA  RO
@@ -33,47 +39,41 @@
       /rom@etc/acpi/rsdp    4 KiB  0x0000000301340000 0x0000000000001000 0x0000000000001000 0x00007fe9abe00000  ro
 ```
 
-那么 thp 如何办?
+- 文件/hugetlb 后端创建时，里赋值 block->page_size = qemu_fd_getpagesize(fd);
+- 匿名 RAM 则直接设成 qemu_real_host_page_size()
 
-总结的很好了:
+显然，
+
 ```txt
-• RAMBlock::page_size 可以理解成“这块 guest RAM 在 host 上的实际 backing granularity”。它记录的不是 guest CPU 的页大小，而是这块 RAMBlock 对应的
-  host 内存后端最小可操作页大小。
-
-  它的来源很直接：
-
-  - RAMBlock 定义里有 size_t page_size，见 include/system/ramblock.h:25
-  - 文件/hugetlb 后端创建时，QEMU 在 system/physmem.c:1724 里赋值 block->page_size = qemu_fd_getpagesize(fd);
-  - 匿名 RAM 则直接设成 qemu_real_host_page_size()，见 system/physmem.c:2541
   - qemu_fd_getpagesize() 对 hugetlbfs 返回 statfs.f_bsize，否则返回普通 host page size，见 util/mmap-alloc.c:60
-
-  为什么 QEMU 需要关心它，原因是 QEMU 不是只“模拟页表”，它还真的在 host 上管理这些内存映射。host 内核对 mmap / madvise / munmap / fallocate /
-  fault / discard 的约束，都是按 host backing page 来的，不按 guest page 来。
-
-  主要用途有这几类：
-
-  - 建立 RAMBlock 时做正确的对齐和大小检查。QEMU 要保证 align、offset、memory size 都是 page_size 的整数倍，否则映射本身就不合法，见 system/
-    physmem.c:1724
+  - 建立 RAMBlock 时做正确的对齐和大小检查。QEMU 要保证 align、offset、memory size 都是 page_size 的整数倍，否则映射本身就不合法，
   - 做 discard / balloon / poisoned-page recovery 时按正确粒度操作。比如 system/physmem.c:4094 强制要求地址和长度按 rb->page_size 对齐，而且会根据
     rb->page_size == qemu_real_host_page_size() 决定能不能走 madvise，hugetlb 场景更多要走 fallocate
   - 做单页 remap 时必须尊重 RAMBlock 的 backing page size。QEMU 在 system/physmem.c:2656 里先取 qemu_ram_pagesize(block)，再按这个粒度向下对齐和重
     建映射
   - virtio-balloon/virtio-mem 这类按页回收、热插拔的设备逻辑，需要知道 host 侧真实粒度。比如 balloon 遇到 rb_page_size > 4K 时，要先累计完整一个
-    host page 才能 discard，见 hw/virtio/virtio-balloon.c:92。virtio-mem 也要求 block size 不能小于 qemu_ram_pagesize(rb)，见 hw/virtio/virtio-
-    mem.c:966
-  - 某些机器/KVM 接口对 host backing page size 有约束，所以 QEMU 要统计最小/最大 RAM page size。见 system/physmem.c:1530，以及 s390/spapr 的检查
-    hw/s390x/s390-virtio-ccw.c:207 和 hw/ppc/spapr.c:3671
+    host page 才能 discard，见 hw/virtio/virtio-balloon.c:92。
+- virtio-mem 也要求 block size 不能小于 qemu_ram_pagesize(rb)，见 hw/virtio/virtio-
 
   一个关键区分是：
-
   - TARGET_PAGE_SIZE：guest/target 架构页大小，见 include/exec/target_page.h:42
-  - qemu_real_host_page_size()：宿主普通页大小
   - RAMBlock::page_size：某个具体 RAMBlock 的 backing page size，可能是 4K，也可能是 hugetlb 的 2M/1G
-
-  所以 RAMBlock::page_size 的本质用途不是“告诉 guest 页有多大”，而是告诉 QEMU：这块 host RAM 能以多大的最小粒度被映射、打洞、回收、重建和约束检查。
 ```
 
 ### qemu_real_host_page_size()
+
+- qemu_real_host_page_size()：宿主普通页大小
+
+和操作系统有关:
+```c
+/* Using intptr_t ensures that qemu_*_page_mask is sign-extended even
+ * when intptr_t is 32-bit and we are aligning a long long.
+ */
+static inline uintptr_t qemu_real_host_page_size(void)
+{
+    return getpagesize();
+}
+```
 
 ### TARGET_PAGE_SIZE
 
@@ -86,10 +86,6 @@ TARGET_PAGE_SIZE 不是总动态的。也就是基本上是静态的，我的天
 原来 TARGET_PAGE_SIZE 是写死的，既然如此，那么我就真的感觉到很奇怪了，
 那么岂不是可以无视 guest 内核的 page size ?
 
-## TODO
-1. 似乎非常接近热迁移了，但是我来理解一下，为什么会有这种情况
-	- dirty bitmap 为什么需要是热迁移的情况
-2. 需要注意，在热迁移的时候，自动转换为 4k 页面的
 
 ## 源码分析
 
@@ -363,6 +359,96 @@ QEMU bitmap： hpratio bits / host page
 
   > qemu_real_host_page_size() 是宿主资源和 KVM ABI 粒度；TARGET_PAGE_SIZE 是 QEMU 虚拟机模型的公共、可迁移粒度。KVM 层使
   > 用前者，进入 QEMU 公共内存层后转换成后者。
+
+## 再一次分析下
+
+vhost dirty log 的粒度固定为 4 KiB，它和 host PAGE_SIZE、guest 页表大小是相互独立
+的。兼容策略是：在合并到 QEMU dirty bitmap 时，按 QEMU 的页粒度向上合并，允许多标
+脏，但绝不能漏标。
+
+QEMU 中：
+
+#define VHOST_LOG_PAGE 0x1000
+
+见 include/hw/virtio/vhost.h:43。
+
+内核 vhost 写 dirty log 时，本质是：
+
+bit = guest_physical_address / 4096
+
+一个 bit 始终代表一段 4 KiB 的 GPA。
+
+QEMU 同步 vhost log 时，把每个置位 bit 转换为：
+
+page_addr = addr + bit * VHOST_LOG_PAGE;
+memory_region_set_dirty(mr, mr_offset, VHOST_LOG_PAGE);
+
+见 hw/virtio/vhost.c:115。
+
+假设 QEMU dirty bitmap 的粒度真是 64 KiB：
+
+一个 QEMU dirty bit
+┌────────────────────────── 64 KiB ──────────────────────────┐
+│ vhost bit0 │ bit1 │ bit2 │ ... │ bit15                    │
+│    4K      │  4K  │  4K  │     │  4K                     │
+└────────────────────────────────────────────────────────────┘
+
+只要这 16 个 vhost bit 中任意一个被置位，QEMU 就会把对应的整个 64 KiB 页标脏。实
+现依据是：
+
+end  = TARGET_PAGE_ALIGN(start + length) >> TARGET_PAGE_BITS;
+page = start >> TARGET_PAGE_BITS;
+
+见 system/physmem.c:1011。
+
+例如：
+
+vhost 报告 GPA 0x3000～0x3fff 被写
+TARGET_PAGE_SIZE = 64 KiB
+
+start page = 0x3000 >> 16 = 0
+end page   = ALIGN_UP(0x4000, 64K) >> 16 = 1
+
+结果：QEMU dirty bit 0 被置位
+代表整个 0x0000～0xffff 都需要重新迁移
+
+这是一种保守合并：
+
+- 不会漏掉 dirty 数据；
+- 可能把没有修改的其余 60 KiB 一起迁移；
+- 多个 4 KiB vhost bits 最终可能落到同一个 64 KiB QEMU bit。
+
+不过，“x86 使用 64 KiB 页面”需要区分具体指什么：
+
+- x86 QEMU 的 TARGET_PAGE_SIZE 固定为 4 KiB，见 target/i386/cpu-param.h:21。
+- x86 guest 使用 2 MiB/1 GiB huge page，不会改变 vhost dirty 粒度，也不会改变
+  QEMU migration bitmap 的 4 KiB 基础粒度。
+
+- 如果指 host/backing RAM 页比 4 KiB 大，普通 precopy 仍可保存 4 KiB dirty bits。
+- postcopy 因为需要按 host backing page 处理，会把同一个大 host page 内的 dirty
+  状态扩展为“全部 dirty”，相关逻辑在 migration/ram.c:2616。
+
+另一个容易混淆的反向情况是 64 KiB host 上的 KVM dirty log。KVM dirty log 的 bit
+粒度是 host page，即 64 KiB；QEMU 会通过：
+
+hpratio = host_page_size / TARGET_PAGE_SIZE;
+
+把一个 64 KiB KVM dirty bit 扩展为 16 个 4 KiB QEMU dirty bits，见 system/
+physmem.c:1211。
+
+所以可以概括为：
+
+vhost dirty：固定 4 KiB → 必要时合并到更大的 QEMU 页
+KVM dirty：host PAGE_SIZE → 必要时拆分成更小的 QEMU target 页
+
+两条路径都采取保守标脏，因此最多影响迁移效率，不影响正确性。
+
+## 等等
+
+
+  cat /sys/kernel/mm/transparent_hugepage/enabled
+  cat /sys/kernel/mm/transparent_hugepage/shmem_enabled
+
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

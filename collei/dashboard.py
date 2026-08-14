@@ -5,6 +5,11 @@ import sys
 import time
 from pathlib import Path
 
+SCRIPTS = Path(__file__).resolve().parent / "scripts"
+sys.path.insert(0, str(SCRIPTS))
+
+from config import GlobalConfig, VmConfig  # noqa: E402
+
 
 def get_qemu_pid(vm_dir: Path) -> str:
     """Check s/pid, t/pid, or pid file and verify process exists."""
@@ -41,9 +46,7 @@ def read_cpu_ticks(pid: str) -> tuple[int, float] | None:
         return None
 
 
-def format_cpu_percent(
-    first: tuple[int, float], second: tuple[int, float]
-) -> str:
+def format_cpu_percent(first: tuple[int, float], second: tuple[int, float]) -> str:
     """Compute top-style %CPU from two /proc/<pid>/stat samples.
 
     Like top's default Irix mode, the result can exceed 100% for multi-threaded
@@ -88,24 +91,6 @@ def humanize_kb(kb: int) -> str:
         return f"{kb}K"
 
 
-def read_option(path: Path) -> str:
-    """Read config file, skip comments and empty lines."""
-    if not path.exists():
-        return ""
-    try:
-        content = path.read_text()
-        lines = []
-        for line in content.splitlines():
-            line = line.strip()
-            if not line or line.startswith("#"):
-                continue
-            lines.append(line)
-        result = "\n".join(lines).strip()
-        return result
-    except OSError:
-        return ""
-
-
 def get_dir_size(vm_dir: Path) -> str:
     """Get human-readable directory size using du -sh."""
     try:
@@ -137,13 +122,14 @@ def format_snapshot_date(vm_dir: Path) -> str:
 
 def main() -> int:
     global_config_dir = Path.home() / ".config" / "collei"
-    vm_config = global_config_dir / "vm"
-    all_vm_dir_str = read_option(vm_config)
-    if not all_vm_dir_str:
+    try:
+        global_config = GlobalConfig.load(global_config_dir)
+    except (OSError, RuntimeError) as error:
         print("global config not setup or vm dir missing", file=sys.stderr)
+        print(f"error: {error}", file=sys.stderr)
         return 1
 
-    all_vm_dir = Path(all_vm_dir_str)
+    all_vm_dir = global_config.vm_root
     if not all_vm_dir.is_dir():
         print(f"invalid vm dir: {all_vm_dir}", file=sys.stderr)
         return 1
@@ -167,13 +153,11 @@ def main() -> int:
         pid = get_qemu_pid(d)
         mem = get_mem(pid)
 
-        id_path = d / "opt" / "id"
         vm_id = ""
-        if id_path.exists():
-            try:
-                vm_id = id_path.read_text().strip()
-            except OSError:
-                pass
+        try:
+            vm_id = str(VmConfig.load(d).guest_id)
+        except (OSError, RuntimeError):
+            pass
 
         snapshot = format_snapshot_date(d)
         size = get_dir_size(d)

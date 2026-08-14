@@ -1,29 +1,35 @@
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from pathlib import Path
 
 from errors import ColleiError
-from options import OptionDirectory
+from options import IniConfig
 
 
 @dataclass(frozen=True)
 class GlobalConfig:
-    directory: OptionDirectory
+    directory: IniConfig
 
     @classmethod
     def load(cls, path: Path) -> GlobalConfig:
         if not path.is_dir():
             raise ColleiError(f"global config not setup: {path}")
-        return cls(OptionDirectory(path))
+        config = IniConfig(path / "config.ini", "collei")
+        config.validate()
+        return cls(config)
 
     @property
     def vm_root(self) -> Path:
         return Path(self.directory.require("vm")).expanduser()
 
     @property
-    def default_vm_link(self) -> Path:
-        return self.directory.path / "last"
+    def default_vm_name(self) -> str:
+        name = self.directory.require("default_vm")
+        if re.fullmatch(r"[A-Za-z0-9_.-]+", name) is None:
+            raise ColleiError(f"invalid default_vm in {self.directory.path}: {name}")
+        return name
 
     @property
     def master_ip(self) -> str:
@@ -47,14 +53,16 @@ class GlobalConfig:
 @dataclass(frozen=True)
 class VmConfig:
     directory: Path
-    options: OptionDirectory
+    options: IniConfig
 
     @classmethod
     def load(cls, directory: Path) -> VmConfig:
         directory = directory.resolve()
         if not directory.is_dir():
             raise ColleiError(f"VM not found: {directory}")
-        return cls(directory, OptionDirectory(directory / "opt"))
+        options = IniConfig(directory / "config.ini", "vm")
+        options.validate()
+        return cls(directory, options)
 
     @property
     def name(self) -> str:

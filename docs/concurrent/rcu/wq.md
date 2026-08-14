@@ -1,4 +1,4 @@
-# RCU wq
+# rcu wq
 <!-- b6568ed4-e6eb-48d7-8ae3-cc9122b94589 -->
 配套代码 : ~/vn/m/workqueue.c 中的 testcase 18
 

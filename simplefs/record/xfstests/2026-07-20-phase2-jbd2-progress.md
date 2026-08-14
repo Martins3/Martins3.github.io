@@ -354,19 +354,3 @@ buffer_head。SimpleFS、mkfs 和精确配置的 DM 模块构建均通过，`git
 containerd、polkit、系统维护 timers 和 root user tmpfiles timer，并删除已卸载且
 loop 设备已分离的 `/var/tmp/simplefs-042-debug` 临时镜像目录。全量结果目录继续
 保留。
-
-<script src="https://giscus.app/client.js"
-        data-repo="martins3/martins3.github.io"
-        data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="
-        data-category="Show and tell"
-        data-category-id="MDE4OkRpc2N1c3Npb25DYXRlZ29yeTMyMDMzNjY4"
-        data-mapping="pathname"
-        data-reactions-enabled="1"
-        data-emit-metadata="0"
-        data-theme="light"
-        data-lang="zh-CN"
-        crossorigin="anonymous"
-        async>
-</script>
-
-本站所有文章转发 **CSDN** 将按侵权追究法律责任，其它情况随意。

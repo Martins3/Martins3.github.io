@@ -95,6 +95,10 @@
 
 6. **通信是永恒瓶颈**：光速和物质原子性限制了通信速度，工程学科已经演化出实用的应对策略。
 
+## perf book
+<!-- a6dc5ff3-758d-4d7e-93eb-0a9d3fc74234 -->
+继续看看这些总结，搞来搞去都是这些东西了
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

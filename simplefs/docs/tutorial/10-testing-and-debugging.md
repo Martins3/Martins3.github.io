@@ -87,19 +87,3 @@ runner 默认给每例 3600 秒，是因为 debug kernel 下 `generic/074` 等 C
 从强到弱：精确 workload 前后对照、对应用例多次 PASS、邻接并发回归、构建和静态
 检查、dmesg 健康扫描、最终全量。局部 PASS 不能证明未覆盖的功能，全量 PASS/NOTRUN
 统计也不能替代 dmesg 检查。
-
-<script src="https://giscus.app/client.js"
-        data-repo="martins3/martins3.github.io"
-        data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="
-        data-category="Show and tell"
-        data-category-id="MDE4OkRpc2N1c3Npb25DYXRlZ29yeTMyMDMzNjY4"
-        data-mapping="pathname"
-        data-reactions-enabled="1"
-        data-emit-metadata="0"
-        data-theme="light"
-        data-lang="zh-CN"
-        crossorigin="anonymous"
-        async>
-</script>
-
-本站所有文章转发 **CSDN** 将按侵权追究法律责任，其它情况随意。

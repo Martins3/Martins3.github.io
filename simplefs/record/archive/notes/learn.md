@@ -571,19 +571,3 @@ SimpleFS 不是从零开始的文件系统。选择它是因为文件系统集�
 仍值得继续学习的主题包括 fiemap、mmap 与 fallocate 的交互、journal、scsi_debug、dm-flakey，以及用户态存储、对象存储和 Rust 文件系统实现。动态扩缩容、加密和完整日志等高级功能也不属于当前已完成范围。
 
 历史上使用工具的成本和体验只是阶段性记录，不应替代代码和测试结果。当前结论以源码、固定 workload、xfstests 记录和内核日志为准。
-
-<script src="https://giscus.app/client.js"
-        data-repo="martins3/martins3.github.io"
-        data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="
-        data-category="Show and tell"
-        data-category-id="MDE4OkRpc2N1c3Npb25DYXRlZ29yeTMyMDMzNjY4"
-        data-mapping="pathname"
-        data-reactions-enabled="1"
-        data-emit-metadata="0"
-        data-theme="light"
-        data-lang="zh-CN"
-        crossorigin="anonymous"
-        async>
-</script>
-
-本站所有文章转发 **CSDN** 将按侵权追究法律责任，其它情况随意。

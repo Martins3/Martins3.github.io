@@ -1,7 +1,8 @@
-## tracepoint 的积累已经很多了
+# tracepoint
+
+## 文档
 Documentation/trace/tracepoint-analysis.rst
 Documentation/trace/tracepoints.rst
-
 核心实现文件: kernel/tracepoint.c
 
 ## 测试和读取
@@ -59,12 +60,14 @@ index 195d98bc8de8..c5bfeee8a0ca 100644
  	TP_PROTO(struct kvm_page_fault *fault),
 ```
 
-## 即便是不同的 trace point subsystem 不要用相同的名称，
+## 注意
+1. 即便是不同的 trace point subsystem 不要用相同的名称，
 他们不会有任何报错，没有任何警告， 容易搞混的
 
 
+## 记录
 
-## 原来在 tracepoint 中可以直接输出 dumpstack 的
+1. 在 tracepoint 中可以直接输出 dumpstack 的
 
 ```txt
   4372.916 kworker/u129:2/2493613 bcachefs:journal_entry_close(dev: 8388608, str: "entry size: 1.27 KiB
@@ -77,7 +80,7 @@ index 195d98bc8de8..c5bfeee8a0ca 100644
 ")
 ```
 
-## tracepoint 如果使用 const char * 直接 printf 将会触发这个警告
+2. tracepoint 如果使用 const char * 直接 printf 将会触发这个警告
 
 为什么不去把这个警告变为静态检查的?
 ```txt
@@ -137,7 +140,7 @@ index 195d98bc8de8..c5bfeee8a0ca 100644
 [ 5564.743768] simplefs: '/dev/loop0' mount success
 ```
 
-## enable 的写法
+3. enable 的写法
 ```c
 __visible void __irq_entry smp_reschedule_interrupt(struct pt_regs *regs)
 {
@@ -194,7 +197,7 @@ static __always_inline bool io_fill_cqe_req(struct io_ring_ctx *ctx,
 1. 之前发现头文件中无法定义 tracepoint ，现在看来，只是操作不得当
 2. 这里为什么需要首先判断 if (trace_io_uring_complete_enabled()) 然后去调用 trace_io_uring_complete(req->ctx, req, cqe);
 
-### active 写法
+4. active 写法
 ```c
 static inline void page_ref_dec(struct page *page)
 {
@@ -233,7 +236,6 @@ arch/x86/kvm/svm/svm.c
 2. include/trace/bpf_probe.h
 3. include/trace/bpf_perf.h
 4. include/trace/trace_events.h
-
 
 ## 如今可以使用 btf ，那么写这么复杂的 trace 代码真的有必要吗?
 
@@ -284,8 +286,7 @@ TRACE_EVENT(io_uring_queue_async_work,
 ```
 
 1. tracepoint 可以插入到任何位置
-2. tracepoint 性能更好
-
+2. tracepoint 性能更好?
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

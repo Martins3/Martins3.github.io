@@ -54,7 +54,6 @@ https://stackoverflow.com/questions/351161/removing-duplicate-rows-in-vi
 :g/^$/d
 ```
 
-
 ## yazi 的小技巧
 <!-- 29580537-c62b-47ff-8746-56b5da1ff356 -->
 

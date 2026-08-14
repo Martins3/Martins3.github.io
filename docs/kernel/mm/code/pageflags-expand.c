@@ -1,4 +1,3 @@
-
 /*
  * Macros to create function definitions for page flags
  */

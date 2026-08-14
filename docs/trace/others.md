@@ -1,16 +1,9 @@
-## [valgrind](http://valgrind.org/)
-使用上很简单:
-https://stackoverflow.com/questions/5134891/how-do-i-use-valgrind-to-find-memory-leaks
-
 ## [drmemory](https://github.com/DynamoRIO/drmemory)
 
 ## [Coz: Finding Code that Counts with Causal Profiling](https://github.com/plasma-umass/coz)
 
 ## [gperftools](https://github.com/gperftools/gperftools)
 主要侧重于内存的排查
-
-排查 kernel 内存问题
-- https://github.com/ryncsn/memstrack
 
 一些工具的封装:
 - https://github.com/aayasin/perf-tools

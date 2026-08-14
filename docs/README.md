@@ -330,9 +330,9 @@
 - [rcu stall](./concurrent/rcu/stall.md)
 - [task rcu](./concurrent/rcu/tasks_rcu.md)
 - [kthread && softirq](./concurrent/rcu/thread.md)
-- [RCU wq](./concurrent/rcu/wq.md)
-- [QEMU rcu](./qemu/thread/rcu.md)
-- [Tree RCU](./concurrent/rcu/tree.md)
+- [rcu wq](./concurrent/rcu/wq.md)
+- [qemu rcu](./qemu/thread/rcu.md)
+- [tree rcu](./concurrent/rcu/tree.md)
 
 ## 杂事
 
@@ -448,6 +448,8 @@
 - [Quiescent consistency，Sequential consistency 和 Linearizability](./concurrent/linearizability.md)
 - [wait free，lockfree 和 obstruction free 区分](./concurrent/lock-free.md)
 
+## QEMU 杂记
+- [qemu 中关于 page size 问题的合集](./qemu/page-size.md)
 
 ## perfbook 阅读笔记
 - AI 自动总结:
@@ -498,6 +500,69 @@
 - [xieby1](https://xieby1.github.io/)
 - [qaqcxh](https://qaqcxh.github.io/Blogs/)
 
+### [ ] trace
+- `trace/`
+  - `bpftime/`
+    - [bpftime](./trace/bpftime/basic.md)
+  - `ebpf/`
+    - `bcc/`
+      - [如果使用 bpf 来调试，那么就是为这个目录](./trace/ebpf/bcc/readme.md)
+    - `cilium/`
+      - [cilium 初步尝试](./trace/ebpf/cilium/README.md)
+    - `ra/`
+      - [readme](./trace/ebpf/ra/readme.md)
+    - [基本使用方法](./trace/ebpf/README.md)
+  - `ebpf-doc/`
+    - [arena](./trace/ebpf-doc/arena.md)
+    - [写一个 bcc 和 bpftrace 使用对比](./trace/ebpf-doc/bcc-vs-bpftrace.md)
+    - [bcc 的打包](./trace/ebpf-doc/bcc.md)
+    - [bloom filter](./trace/ebpf-doc/bloom-filter.md)
+    - [基本使用](./trace/ebpf-doc/bpftool.md)
+    - [btf](./trace/ebpf-doc/btf.md)
+    - [CO:RE](./trace/ebpf-doc/core.md)
+    - [基本的代码分析](./trace/ebpf-doc/internal.md)
+    - [bpf iterators](./trace/ebpf-doc/iter.md)
+    - [这个居然意外的好懂](./trace/ebpf-doc/libbpf.md)
+    - [需要搞的事情](./trace/ebpf-doc/overview.md)
+    - [bysyscall](./trace/ebpf-doc/projects.md)
+    - [STRUCT_OPS](./trace/ebpf-doc/struct_ops.md)
+    - [bpf syscall 的基本观察](./trace/ebpf-doc/syscall.md)
+    - [有趣，看来 verifier 还是很厉害的](./trace/ebpf-doc/verifier.md)
+  - `ftrace/`
+    - [原来 trace_pipe 会自动的清理掉 trace 中内容](./trace/ftrace/basic.md)
+    - [eprobe - Event-based Probe Tracing](./trace/ftrace/eprobe.md)
+    - [fprobe 机制](./trace/ftrace/fprobe.md)
+    - [ftrace 实现](./trace/ftrace/ftrace-internals.md)
+    - [ftrace 输出的格式](./trace/ftrace/ftrace.md)
+    - [latency-collector](./trace/ftrace/latency-collector.md)
+    - [https://lwn.net/Articles/410200/](./trace/ftrace/trace-cmd.md)
+    - [hwlat](./trace/ftrace/tracer-hwlat.md)
+    - [osnoise](./trace/ftrace/tracer-osnoise.md)
+  - `perf/`
+    - [关于 perf 我知道的一切](./trace/perf/README.md)
+  - `tools/`
+    - `bpftrace/`
+      - [计划和代办](./trace/tools/README.md)
+    - [计划和代办](./trace/tools/README.md)
+  - [Linux Trace 技术整理报告](./trace/TRACE_INVENTORY.md)
+  - [bpftrace](./trace/bpftrace/readme.md)
+  - [trace 相关的文档](./trace/doc.md)
+  - [kallsyms_lookup_name](./trace/kallsyms.md)
+  - [kprobe](./trace/kprobe.md)
+  - [libtraceevent](./trace/libtraceevent.md)
+  - [mce 的工作原理](./trace/hw/mce.md)
+  - [可观测简单调研](./trace/monitor.md)
+  - [drmemory](./trace/others.md)
+  - [先不搞那些虚的东西，分析清楚下面这个问题](./trace/overview.md)
+  - [pcm](./trace/pcm.md)
+  - [strace 基本使用](./trace/strace.md)
+  - [SystemTap](./trace/systemtap.md)
+  - [trace 传统工具](./trace/tools.md)
+  - [arm 环境的确容易出现 backtrace 没有的情况?](./trace/tracepoint-aarch64.md)
+  - [tracepoint](./trace/tracepoint.md)
+  - [用户态符号基础](./trace/user.md)
+  - [noinstr code](./trace/yes.md)
+
 
 ## 整理中
 
@@ -543,68 +608,6 @@
 - [bootc](./kernel/tutorial/initramfs/yes.md)
 
 
-### [ ] trace
-- `trace/`
-  - `bpftime/`
-    - [bpftime](./trace/bpftime/basic.md)
-  - `ebpf/`
-    - `bcc/`
-      - [如果使用 bpf 来调试，那么就是为这个目录](./trace/ebpf/bcc/readme.md)
-    - `cilium/`
-      - [做做这里的教程](./trace/ebpf/cilium/README.md)
-    - `ra/`
-      - [readme](./trace/ebpf/ra/readme.md)
-    - [基本使用方法](./trace/ebpf/README.md)
-  - `ebpf-doc/`
-    - [arena](./trace/ebpf-doc/arena.md)
-    - [写一个 bcc 和 bpftrace 使用对比](./trace/ebpf-doc/bcc-vs-bpftrace.md)
-    - [bcc 的打包](./trace/ebpf-doc/bcc.md)
-    - [bloom filter](./trace/ebpf-doc/bloom-filter.md)
-    - [基本使用](./trace/ebpf-doc/bpftool.md)
-    - [btf](./trace/ebpf-doc/btf.md)
-    - [CO:RE](./trace/ebpf-doc/core.md)
-    - [基本的代码分析](./trace/ebpf-doc/internal.md)
-    - [bpf iterators](./trace/ebpf-doc/iter.md)
-    - [这个居然意外的好懂](./trace/ebpf-doc/libbpf.md)
-    - [需要搞的事情](./trace/ebpf-doc/overview.md)
-    - [bysyscall](./trace/ebpf-doc/projects.md)
-    - [STRUCT_OPS](./trace/ebpf-doc/struct_ops.md)
-    - [bpf syscall 的基本观察](./trace/ebpf-doc/syscall.md)
-    - [有趣，看来 verifier 还是很厉害的](./trace/ebpf-doc/verifier.md)
-  - `ftrace/`
-    - [原来 trace_pipe 会自动的清理掉 trace 中内容](./trace/ftrace/basic.md)
-    - [eprobe - Event-based Probe Tracing](./trace/ftrace/eprobe.md)
-    - [fprobe 机制](./trace/ftrace/fprobe.md)
-    - [ftrace 实现](./trace/ftrace/ftrace-internals.md)
-    - [ftrace 输出的格式](./trace/ftrace/ftrace.md)
-    - [latency-collector](./trace/ftrace/latency-collector.md)
-    - [https://lwn.net/Articles/410200/](./trace/ftrace/trace-cmd.md)
-    - [hwlat](./trace/ftrace/tracer-hwlat.md)
-    - [osnoise](./trace/ftrace/tracer-osnoise.md)
-  - `perf/`
-    - [关于 perf 我知道的一切](./trace/perf/README.md)
-  - `tools/`
-    - `bpftrace/`
-      - [./ip-change.bt (qwen)](./trace/tools/bpftrace/readme.md)
-    - [计划和代办](./trace/tools/README.md)
-  - [Linux Trace 技术整理报告](./trace/TRACE_INVENTORY.md)
-  - [bpftrace](./trace/bpftrace.md)
-  - [trace 相关的文档](./trace/doc.md)
-  - [kallsyms_lookup_name](./trace/kallsyms.md)
-  - [kprobe](./trace/kprobe.md)
-  - [libtraceevent](./trace/libtraceevent.md)
-  - [mce 的工作原理](./trace/mce.md)
-  - [观测](./trace/monitor.md)
-  - [valgrind](./trace/others.md)
-  - [先不搞那些虚的东西，分析清楚下面这个问题](./trace/overview.md)
-  - [pcm](./trace/pcm.md)
-  - [strace 基本使用](./trace/strace.md)
-  - [systemtap](./trace/systemtap.md)
-  - [trace 传统工具](./trace/tools.md)
-  - [arm 环境的确容易出现 backtrace 没有的情况?](./trace/tracepoint-aarch64.md)
-  - [tracepoint 的积累已经很多了](./trace/tracepoint.md)
-  - [用户态符号基础](./trace/user.md)
-  - [noinstr code](./trace/yes.md)
 
 ### [ ] Rust
 - [基本执行操作](./rust/demo/README.md)
@@ -638,6 +641,28 @@
 - [并行编程实践记录](./concurrent/usage.md)
 - [为什么并行编程如此困难](./concurrent/why-parallel-is-hard.md)
 - [kernel/sched/membarrier.c syscall](./concurrent/yes.md)
+
+### [ ] QEMU 线程模型
+- [glib](./qemu/thread/glib/readme.md)
+- [AioContext](./qemu/thread/aiocontext.md)
+- [qemu 中的 atomic 使用](./qemu/thread/atomic.md)
+- [aio_bh_poll 的作用](./qemu/thread/bh.md)
+- [Big QEMU Lock](./qemu/thread/bql.md)
+- [从 setjmp 到 coroutine](./qemu/thread/coroutine-baisc.md)
+- [coroutine](./qemu/thread/coroutine-qemu.md)
+- [util/defer-call.c](./qemu/thread/defer.md)
+- [doc](./qemu/thread/doc.md)
+- [FDMonOps](./qemu/thread/fdmon.md)
+- [Event Loop in glib](./qemu/thread/glib.md)
+- [block/graph-lock.c](./qemu/thread/graph-lock.md)
+- [QEMU 中的锁](./qemu/thread/lock.md)
+- [qemu lockcounters](./qemu/thread/lockcnt.md)
+- [QEMU Event Loop](./qemu/thread/main-loop.md)
+- [qemu 的 thread pool 的作用](./qemu/thread/thread-pool.md)
+- [qemu 到底有那些 thread](./qemu/thread/threads.md)
+- [QEMU AIO 事件循环架构分析](./qemu/thread/why-glib.md)
+- [QEMU `AioContext` 与 GLib 连接机制](./qemu/thread/why-glib2.md)
+- [qemu 中的 aio 的工作机制](./qemu/thread/yes.md)
 
 <!-- BEGIN AUTO DOCS INDEX -->
 ## 自动文档索引
@@ -1106,7 +1131,6 @@
     - [Virtio Balloon Debug](./kernel/mm/virtio-balloon-debug.md)
     - [Virtio Balloon Kernel 实现](./kernel/mm/virtio-balloon-kernel.md)
     - [Virtio Balloon QEMU 实现](./kernel/mm/virtio-balloon-qemu.md)
-    - [folio_clear_swapbacked 和 __folio_clear_swapbacked 区别是什么?](./kernel/mm/yes.md)
   - `module/`
     - [内核模块](./kernel/module/README.md)
   - `ospm/`
@@ -1637,28 +1661,6 @@
     - [QEMU 的 softmmu 设计](./qemu/tcg/softmmu.md)
     - [TCGContext : 如何工作的，如何维护的，作用是什么](./qemu/tcg/tb.md)
     - [QEMU 二进制翻译基础](./qemu/tcg/tcg.md)
-  - `thread/`
-    - `glib/`
-      - [glib](./qemu/thread/glib/readme.md)
-    - [AioContext](./qemu/thread/aiocontext.md)
-    - [qemu 中的 atomic 使用](./qemu/thread/atomic.md)
-    - [aio_bh_poll 的作用](./qemu/thread/bh.md)
-    - [Big QEMU Lock](./qemu/thread/bql.md)
-    - [从 setjmp 到 coroutine](./qemu/thread/coroutine-baisc.md)
-    - [coroutine](./qemu/thread/coroutine-qemu.md)
-    - [util/defer-call.c](./qemu/thread/defer.md)
-    - [doc](./qemu/thread/doc.md)
-    - [FDMonOps](./qemu/thread/fdmon.md)
-    - [Event Loop in glib](./qemu/thread/glib.md)
-    - [block/graph-lock.c](./qemu/thread/graph-lock.md)
-    - [QEMU 中的锁](./qemu/thread/lock.md)
-    - [qemu lockcounters](./qemu/thread/lockcnt.md)
-    - [QEMU Event Loop](./qemu/thread/main-loop.md)
-    - [qemu 的 thread pool 的作用](./qemu/thread/thread-pool.md)
-    - [qemu 到底有那些 thread](./qemu/thread/threads.md)
-    - [QEMU AIO 事件循环架构分析](./qemu/thread/why-glib.md)
-    - [QEMU `AioContext` 与 GLib 连接机制](./qemu/thread/why-glib2.md)
-    - [qemu 中的 aio 的工作机制](./qemu/thread/yes.md)
   - [alpine iso 可以直接启动使用](./qemu/basic.md)
   - [如何给 qemu 配置 cdrom](./qemu/cdrom.md)
   - [QEMU 的挑战者](./qemu/challenger.md)
@@ -1675,7 +1677,6 @@
   - [设置环境变量方便编译示例](./qemu/libkrun-analysis.md)
   - [libkrun](./qemu/libkrun.md)
   - [microvm](./qemu/microvm.md)
-  - [qemu 中关于 page size 问题的合集](./qemu/page-size.md)
   - [qapi](./qemu/qapi.md)
   - [qht 移植](./qemu/qht.md)
   - [qmp 和 hmp](./qemu/qmp-hmp.md)
@@ -1723,6 +1724,12 @@
   - [typst 工具](./tools/typst.md)
   - [how to debug neovim](./tools/vimrc.md)
   - [vscode 的调试环境](./tools/vscode.md)
+- `trace/`
+  - `ebpf/`
+    - `case/`
+      - `ra/`
+        - [readme](./trace/ebpf/case/ra/readme.md)
+      - [案例分析](./trace/ebpf/case/README.md)
 - `uefi/`
   - `BootLoaderPkg/`
     - [第一个 UEFI 程序](./uefi/BootLoaderPkg/README.md)

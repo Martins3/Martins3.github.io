@@ -310,7 +310,9 @@ EXPORT_SYMBOL_GPL(vcpu_put);
 			       preemption will be forced. One preemption is when the
 			       task returns to user space.
 ```
-再次强调一次，CONFIG_PREEMPT_VOLUNTARY 多出来的地方就是 might_sleep()
+已经很清晰了，CONFIG_PREEMPT_VOLUNTARY 多出来的地方就是 might_sleep() 也可以睡眠
+
+显然，如果是为了性能，就不该在 might_sleep 的地方被 schedule 走，所以就存在这个选项了。
 
 `kernel/Kconfig.preempt`
 
@@ -422,7 +424,7 @@ cond_resched 等于空操作)
 ### 继续思考的东西
 - CONFIG_PREEMPT_COUNT : 看看
 - CONFIG_PREEMPT_NOTIFIERS : easy
-- CONFIG_PREEMPT_RCU : 直接放弃
+- CONFIG_PREEMPT_RCU : easy
 
 - commit c793a62823d1 ("sched/core: Drop spinlocks on contention iff kernel is preemptible")
     - https://lore.kernel.org/kvm/832697b9-3652-422d-a019-8c0574a188ac@proxmox.com/

@@ -1,4 +1,4 @@
-# QEMU rcu
+# qemu rcu
 <!-- 09eae8f9-105a-4702-b839-a5c7fdfa39cf -->
 
 - [QEMU RCU 文档](https://github.com/qemu/qemu/blob/master/docs/devel/rcu.txt)

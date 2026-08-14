@@ -138,19 +138,3 @@ JBD2 后端迁移已经启动，下一步应完成原生 buffer_head 元数据�
 只要目标尚未完成但本轮需要阶段性结束，就更新本文件对应日期的进展记录和
 `roadmap.md`，明确当前证据、剩余 FAIL/NOTRUN、未验证批次和下一步；不得只在
 对话中报告进度。
-
-<script src="https://giscus.app/client.js"
-        data-repo="martins3/martins3.github.io"
-        data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="
-        data-category="Show and tell"
-        data-category-id="MDE4OkRpc2N1c3Npb25DYXRlZ29yeTMyMDMzNjY4"
-        data-mapping="pathname"
-        data-reactions-enabled="1"
-        data-emit-metadata="0"
-        data-theme="light"
-        data-lang="zh-CN"
-        crossorigin="anonymous"
-        async>
-</script>
-
-本站所有文章转发 **CSDN** 将按侵权追究法律责任，其它情况随意。

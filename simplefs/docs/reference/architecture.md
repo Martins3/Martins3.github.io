@@ -93,19 +93,3 @@ SimpleFS 持久化 inode generation，并在句柄解码时同时校验 inode �
 DIO 在 invalidate 锁内也不能直接 pin 普通用户 iov，因为 GUP fallback 可能取得 `mmap_lock`。SimpleFS 先在锁外把用户页提取成有界 BVEC batch，锁内只提交 BVEC，强制同步完成后再 unpin。fallocate 和 truncate 在改变 extent 所有权前调用 `inode_dio_wait()`，避免迟到 bio 写入已经复用的块。
 
 这些规则比某个具体函数的实现更重要。修改代码时应逐项验证所有权、缓存身份、I/O 完成时序和错误回滚。
-
-<script src="https://giscus.app/client.js"
-        data-repo="martins3/martins3.github.io"
-        data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="
-        data-category="Show and tell"
-        data-category-id="MDE4OkRpc2N1c3Npb25DYXRlZ29yeTMyMDMzNjY4"
-        data-mapping="pathname"
-        data-reactions-enabled="1"
-        data-emit-metadata="0"
-        data-theme="light"
-        data-lang="zh-CN"
-        crossorigin="anonymous"
-        async>
-</script>
-
-本站所有文章转发 **CSDN** 将按侵权追究法律责任，其它情况随意。
