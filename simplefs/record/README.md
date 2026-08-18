@@ -18,3 +18,35 @@ warning/Oops/panic。完整环境和哈希见
 - TIMEOUT、外部中断、VM reset 不计为 PASS；
 - 内核 warning/Oops/panic 即使用例输出匹配也必须调查和重跑；
 - 历史 PASS 只覆盖当时的源码、内核、模块、mkfs 和 runner，当前变化要重新回归。
+
+## 环境信息
+```nix
+with import <nixpkgs> { };
+
+# 各种 C 环境合集都放这里了
+pkgs.llvmPackages.stdenv.mkDerivation {
+  name = "C test";
+  buildInputs = with pkgs; [
+    cmake
+    libpcap
+    liburing
+    libtraceevent
+    glib
+    pkg-config
+    fuse3
+    libaio
+    numactl
+    xfsprogs
+    util-linux
+    acl
+    attr
+    libcap
+    gdbm
+    e2fsprogs
+    btrfs-progs
+    # glibc.static # 可以静态编译
+    # 2025-05-09 发现添加上这个，编译运行，程序会直接 crash 的。
+  ];
+  LD_LIBRARY_PATH = "${lib.makeLibraryPath [ libaio ]}";
+}
+```

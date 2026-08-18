@@ -1,3 +1,4 @@
+# bcc
 观察代码:
 
 https://github.com/iovisor/bcc
@@ -456,6 +457,12 @@ sudo perf record -e kvm:kvm_update_master_clock  -g -a
 安装 kernel-devel 或者 ikheader 模块就可以了:
 
 然后直接 sudo execsnoop
+
+## bcc 和 bpftrace 使用对比
+<!-- c263d0d8-97d4-422e-bfcd-4ecca2d172fe -->
+bcc 没有现成的 stackcount + 过滤
+
+可以让 ai 做一下
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

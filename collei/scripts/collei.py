@@ -32,9 +32,8 @@ from runtime import ColleiContext, VmRuntime
 from tasks import add_background_task, exec_task_follow
 from ui import print_banner
 from vfio import pci_bind_to_vfio
-from windows import WindowsProfile
-
 from virtme import VirtmeSetup
+from windows import WindowsProfile
 
 # collei.py 只负责启动虚拟机。
 #
@@ -140,6 +139,42 @@ def _host_iommu_group(device: str) -> str | None:
         return group.resolve(strict=True).name
     except OSError:
         return None
+
+
+def _configured_vfio_devices(value: str | None) -> tuple[str, ...]:
+    return tuple(line.strip() for line in (value or "").splitlines() if line.strip())
+
+
+def _validate_virtio_iommu_vfio_groups(
+    iommu: str | None, devices: Sequence[str]
+) -> None:
+    if iommu != "virtio":
+        return
+
+    devices_by_group: dict[str, list[str]] = {}
+    for device in devices:
+        group = _host_iommu_group(device)
+        if group is not None:
+            devices_by_group.setdefault(group, []).append(device)
+    conflicts = {
+        group: members
+        for group, members in devices_by_group.items()
+        if len(members) > 1
+    }
+    if not conflicts:
+        return
+
+    details = "; ".join(
+        f"group {group}: {', '.join(members)}"
+        for group, members in sorted(conflicts.items())
+    )
+    raise UnsupportedNativeConfiguration(
+        "config.ini iommu=virtio is incompatible with multiple VFIO devices "
+        f"from the same host IOMMU group ({details}). virtio-iommu gives each "
+        "guest endpoint a separate address space, but VFIO requires devices in "
+        "one host group to share an address space. Remove config.ini "
+        "iommu=virtio or pass through only one device from each group; "
+    )
 
 
 def _boot_disks(vm: VmRuntime) -> list[tuple[str, str, str | None]]:
@@ -313,6 +348,10 @@ class ColleiQemuBuilder:
         display = self.vm.config.options.get("display")
         if display not in {None, "virtio-gpu"}:
             raise UnsupportedNativeConfiguration(f"unsupported display={display}")
+        _validate_virtio_iommu_vfio_groups(
+            self.vm.config.options.get("iommu"),
+            _configured_vfio_devices(self.vm.config.options.get("vfio")),
+        )
 
     def build(self) -> QemuCommand:
         self.validate()
@@ -949,7 +988,7 @@ class ColleiQemuBuilder:
 
         def add_vfio_device(device: str, device_extra: str = "") -> None:
             nonlocal iommufd_counter
-            value = f"vfio-pci,host={device}"
+            value = f"vfio-pci,host={device},rombar=0"
             combined_extra = ",".join(item for item in (extra, device_extra) if item)
             if combined_extra:
                 value += f",{combined_extra}"
@@ -964,7 +1003,7 @@ class ColleiQemuBuilder:
                 value += f",iommufd={iommufd}"
             argv.extend(["-device", value])
 
-        for device in (self.vm.config.options.get("vfio") or "").splitlines():
+        for device in _configured_vfio_devices(self.vm.config.options.get("vfio")):
             add_vfio_device(device)
         if self.vm.config.options.enabled("sriov"):
             if self.sriov_vf is None:

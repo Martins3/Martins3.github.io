@@ -21,7 +21,7 @@ GCOV_PROFILE := y
 
 ccflags-y += -I$(PWD)
 
-OBJECTS := workqueue.o concurrent/access_once.o concurrent/spinlock.o concurrent/rt_mutex.o concurrent/percpu_rwsem.o concurrent/seqlock.o 
+OBJECTS := workqueue.o concurrent/access_once.o concurrent/spinlock.o concurrent/rt_mutex.o concurrent/percpu_rwsem.o concurrent/seqlock.o
 martins3-m := main.o $(OBJECTS)
 # $(info $(martins3-m))
 
@@ -35,7 +35,7 @@ obj-m += martins3.o
 # 依赖 kernel 的 config，看看如何优雅的解决
 # obj-m += gpu/
 
-obj-m += rust_minimal.o
+obj-m += minimal.o
 
 # Otherwise we were called directly from the command line.
 # Invoke the kernel build system.

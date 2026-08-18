@@ -392,6 +392,7 @@
 - [vhost](./qemu/migration/state/vhost.md)
 - [migration 为什么需要有优先级](./qemu/migration/state/priority.md)
 
+其他话题:
 - [migration 中一共存在那些 thread](./qemu/migration/thread.md)
 - [qemu 中 yank 的含义](./qemu/migration/yank.md)
 - [热插拔后，如何热迁移](./qemu/migration/hotplug.md)
@@ -449,7 +450,8 @@
 - [wait free，lockfree 和 obstruction free 区分](./concurrent/lock-free.md)
 
 ## QEMU 杂记
-- [qemu 中关于 page size 问题的合集](./qemu/page-size.md)
+- [qemu 中关于 page size 问题总结](./qemu/page-size.md)
+- [qemu 如何做测试的](./qemu/test.md)
 
 ## perfbook 阅读笔记
 - AI 自动总结:
@@ -477,7 +479,7 @@
 
 ## Yet another libvirt
 
-- [为什么又写一个脚本来启动 QEMU](./collei/why.md)
+- [为什么写一个这么复杂的脚本来启动 QEMU](./collei/why.md)
 - [firecracker 集成](./collei/firecracker.md)
 - [NixOS 集成](./collei/nixos.md)
 - [使用 codex 重写 collei](./collei/rewrite.md)
@@ -500,68 +502,62 @@
 - [xieby1](https://xieby1.github.io/)
 - [qaqcxh](https://qaqcxh.github.io/Blogs/)
 
-### [ ] trace
-- `trace/`
-  - `bpftime/`
-    - [bpftime](./trace/bpftime/basic.md)
-  - `ebpf/`
-    - `bcc/`
-      - [如果使用 bpf 来调试，那么就是为这个目录](./trace/ebpf/bcc/readme.md)
-    - `cilium/`
-      - [cilium 初步尝试](./trace/ebpf/cilium/README.md)
-    - `ra/`
-      - [readme](./trace/ebpf/ra/readme.md)
-    - [基本使用方法](./trace/ebpf/README.md)
-  - `ebpf-doc/`
-    - [arena](./trace/ebpf-doc/arena.md)
-    - [写一个 bcc 和 bpftrace 使用对比](./trace/ebpf-doc/bcc-vs-bpftrace.md)
-    - [bcc 的打包](./trace/ebpf-doc/bcc.md)
-    - [bloom filter](./trace/ebpf-doc/bloom-filter.md)
-    - [基本使用](./trace/ebpf-doc/bpftool.md)
-    - [btf](./trace/ebpf-doc/btf.md)
-    - [CO:RE](./trace/ebpf-doc/core.md)
-    - [基本的代码分析](./trace/ebpf-doc/internal.md)
-    - [bpf iterators](./trace/ebpf-doc/iter.md)
-    - [这个居然意外的好懂](./trace/ebpf-doc/libbpf.md)
-    - [需要搞的事情](./trace/ebpf-doc/overview.md)
-    - [bysyscall](./trace/ebpf-doc/projects.md)
-    - [STRUCT_OPS](./trace/ebpf-doc/struct_ops.md)
-    - [bpf syscall 的基本观察](./trace/ebpf-doc/syscall.md)
-    - [有趣，看来 verifier 还是很厉害的](./trace/ebpf-doc/verifier.md)
-  - `ftrace/`
-    - [原来 trace_pipe 会自动的清理掉 trace 中内容](./trace/ftrace/basic.md)
-    - [eprobe - Event-based Probe Tracing](./trace/ftrace/eprobe.md)
-    - [fprobe 机制](./trace/ftrace/fprobe.md)
-    - [ftrace 实现](./trace/ftrace/ftrace-internals.md)
-    - [ftrace 输出的格式](./trace/ftrace/ftrace.md)
-    - [latency-collector](./trace/ftrace/latency-collector.md)
-    - [https://lwn.net/Articles/410200/](./trace/ftrace/trace-cmd.md)
-    - [hwlat](./trace/ftrace/tracer-hwlat.md)
-    - [osnoise](./trace/ftrace/tracer-osnoise.md)
-  - `perf/`
-    - [关于 perf 我知道的一切](./trace/perf/README.md)
-  - `tools/`
-    - `bpftrace/`
-      - [计划和代办](./trace/tools/README.md)
-    - [计划和代办](./trace/tools/README.md)
-  - [Linux Trace 技术整理报告](./trace/TRACE_INVENTORY.md)
-  - [bpftrace](./trace/bpftrace/readme.md)
-  - [trace 相关的文档](./trace/doc.md)
-  - [kallsyms_lookup_name](./trace/kallsyms.md)
-  - [kprobe](./trace/kprobe.md)
-  - [libtraceevent](./trace/libtraceevent.md)
-  - [mce 的工作原理](./trace/hw/mce.md)
-  - [可观测简单调研](./trace/monitor.md)
-  - [drmemory](./trace/others.md)
-  - [先不搞那些虚的东西，分析清楚下面这个问题](./trace/overview.md)
-  - [pcm](./trace/pcm.md)
-  - [strace 基本使用](./trace/strace.md)
-  - [SystemTap](./trace/systemtap.md)
-  - [trace 传统工具](./trace/tools.md)
-  - [arm 环境的确容易出现 backtrace 没有的情况?](./trace/tracepoint-aarch64.md)
-  - [tracepoint](./trace/tracepoint.md)
-  - [用户态符号基础](./trace/user.md)
-  - [noinstr code](./trace/yes.md)
+## trace
+
+### ebpf
+- [bpftime](./trace/bpftime/basic.md)
+- [bcc](./trace/ebpf/bcc/readme.md)
+- [cilium 初步尝试](./trace/ebpf/cilium/README.md)
+- [基本使用方法](./trace/ebpf/README.md)
+- [arena](./trace/ebpf-doc/arena.md)
+- [bcc](./trace/ebpf-doc/bcc.md)
+- [bloom filter](./trace/ebpf-doc/bloom-filter.md)
+- [基本使用](./trace/ebpf-doc/bpftool.md)
+- [btf](./trace/ebpf-doc/btf.md)
+- [CO:RE](./trace/ebpf-doc/core.md)
+- [ebpf 内部实现](./trace/ebpf-doc/internal.md)
+- [bpf iterators](./trace/ebpf-doc/iter.md)
+- [这个居然意外的好懂](./trace/ebpf-doc/libbpf.md)
+- [ebpf 基础](./trace/ebpf-doc/overview.md)
+- [bysyscall](./trace/ebpf-doc/projects.md)
+- [STRUCT_OPS](./trace/ebpf-doc/struct_ops.md)
+- [bpf syscall 的基本观察](./trace/ebpf-doc/syscall.md)
+- [有趣，看来 verifier 还是很厉害的](./trace/ebpf-doc/verifier.md)
+- [bpftrace](./trace/bpftrace/readme.md)
+
+### ftrace
+
+- [原来 trace_pipe 会自动的清理掉 trace 中内容](./trace/ftrace/basic.md)
+- [eprobe - Event-based Probe Tracing](./trace/ftrace/eprobe.md)
+- [fprobe 机制](./trace/ftrace/fprobe.md)
+- [ftrace 实现](./trace/ftrace/ftrace-internals.md)
+- [ftrace 输出的格式](./trace/ftrace/ftrace.md)
+- [latency-collector](./trace/ftrace/latency-collector.md)
+- [https://lwn.net/Articles/410200/](./trace/ftrace/trace-cmd.md)
+- [hwlat](./trace/ftrace/tracer-hwlat.md)
+- [osnoise](./trace/ftrace/tracer-osnoise.md)
+
+### perf
+
+- [关于 perf 我知道的一切](./trace/perf/README.md)
+
+### 杂项
+- [trace 相关的文档](./trace/doc.md)
+- [kallsyms_lookup_name](./trace/kallsyms.md)
+- [kprobe](./trace/kprobe.md)
+- [libtraceevent](./trace/libtraceevent.md)
+- [mce 的工作原理](./trace/hw/mce.md)
+- [可观测简单调研](./trace/monitor.md)
+- [drmemory](./trace/others.md)
+- [先不搞那些虚的东西，分析清楚下面这个问题](./trace/overview.md)
+- [pcm](./trace/pcm.md)
+- [strace 基本使用](./trace/strace.md)
+- [SystemTap](./trace/systemtap.md)
+- [trace 传统工具](./trace/tools.md)
+- [问题调查](./trace/tracepoint-aarch64.md)
+- [tracepoint](./trace/tracepoint.md)
+- [用户态符号基础](./trace/user.md)
+- [noinstr code](./trace/yes.md)
 
 
 ## 整理中
@@ -581,7 +577,7 @@
 - [bio request request_queue 三者的关系](./kernel/blk/mq/bio-request.md)
 - [drivers/md/dm-rq.c](./kernel/blk/mq/dm-rq.md)
 - [Multi-Queue Block IO Queueing Mechanism (blk-mq)](./kernel/blk/mq/doc.md)
-- [Block Layer IO 请求路径详解 - Bypass 机制全梳理](./kernel/blk/mq/io_paths_analysis.md)
+- [Block Layer IO 请求路径详解 - Bypass 机制全梳理](./kernel/blk/mq/ai-io_paths_analysis.md)
 - [Linux Device Driver : Block Drivers](./kernel/blk/mq/ldd-chapter-16.md)
 - [blk-mq-debugfs.c](./kernel/blk/mq/mq-debugfs.md)
 - [mq 核心结构体](./kernel/blk/mq/mq.md)
@@ -614,10 +610,9 @@
 - [Rust Atomics and Locks](./rust/code/README.md)
 
 - [unsafe rust](./rust/unsafe.md)
-- [Learning Rust With Entirely Too Many Linked Lists](./rust/rust/linked-list.md)
+- [Learning Rust With Entirely Too Many Linked Lists](./rust/linked-list.md)
 
-- [rust](./rust/rust.md)
-- [Resource](./rust/rust/rust-route.md)
+- [Resource](./rust//links.md)
 - [工具](./rust/tools.md)
 - [tokio](./rust/tokio.md)
 
@@ -625,8 +620,8 @@
 - [Rust 实现 Hobby OS](./rust/os.md)
 - [QEMU rust 支持现状](./rust/qemu.md)
 
-- [macro](./rust/rust/macro.md)
-- [Ownership and lifetime](./rust/rust/ownership-lifetime.md)
+- [macro](./rust/macro.md)
+- [Ownership and lifetime](./rust/ownership-lifetime.md)
 
 ### [ ] 并发编程
 - [并发锁分析工具 lslocks](./concurrent/2-tools.md)
@@ -646,12 +641,12 @@
 - [glib](./qemu/thread/glib/readme.md)
 - [AioContext](./qemu/thread/aiocontext.md)
 - [qemu 中的 atomic 使用](./qemu/thread/atomic.md)
-- [aio_bh_poll 的作用](./qemu/thread/bh.md)
+- [qemu bh](./qemu/thread/bh.md)
 - [Big QEMU Lock](./qemu/thread/bql.md)
 - [从 setjmp 到 coroutine](./qemu/thread/coroutine-baisc.md)
 - [coroutine](./qemu/thread/coroutine-qemu.md)
-- [util/defer-call.c](./qemu/thread/defer.md)
-- [doc](./qemu/thread/doc.md)
+- [qemu defer 机制](./qemu/thread/defer.md)
+- [doc](./concurrent/rcu/doc.md)
 - [FDMonOps](./qemu/thread/fdmon.md)
 - [Event Loop in glib](./qemu/thread/glib.md)
 - [block/graph-lock.c](./qemu/thread/graph-lock.md)
@@ -660,9 +655,9 @@
 - [QEMU Event Loop](./qemu/thread/main-loop.md)
 - [qemu 的 thread pool 的作用](./qemu/thread/thread-pool.md)
 - [qemu 到底有那些 thread](./qemu/thread/threads.md)
-- [QEMU AIO 事件循环架构分析](./qemu/thread/why-glib.md)
-- [QEMU `AioContext` 与 GLib 连接机制](./qemu/thread/why-glib2.md)
-- [qemu 中的 aio 的工作机制](./qemu/thread/yes.md)
+- [QEMU AIO 事件循环架构分析](./qemu/thread/todo-glib.md)
+- [QEMU `AioContext` 与 GLib 连接机制](./qemu/thread/todo-glib2.md)
+- [qemu thread io](./qemu/thread/overview.md)
 
 <!-- BEGIN AUTO DOCS INDEX -->
 ## 自动文档索引
@@ -704,9 +699,8 @@
   - [为什么你不应该考公务员](./chatter/gwy.md)
   - [Kimi k3 并不好](./chatter/k3.md)
   - [乱七八糟的想法](./chatter/life-dev.md)
-  - [龙芯公司](./chatter/loongson-v2.md)
   - [关于读博的思考](./chatter/phd.md)
-  - [readings](./chatter/readings.md)
+  - [blog 阅读](./chatter/readings.md)
   - [深圳](./chatter/shenzhen.md)
   - [社交媒体](./chatter/social-media.md)
   - [看似有关系，实际上没关系](./chatter/unrelated-but-similar.md)
@@ -742,6 +736,8 @@
       - [rcu 的邮件，每一个都需要阅读下](./concurrent/memory-model/lkmm/human.md)
       - [4.2 CDSChecker](./concurrent/memory-model/lkmm/other-tools.md)
       - [8. LKMM vs C/C++ Memory Model](./concurrent/memory-model/lkmm/vs-cpp.md)
+  - `san/`
+    - [nvidia compute sanitizer](./concurrent/san/nv-cs.md)
 - `container/`
   - [Podman Rootless 问题记录](./container/container.md)
   - [Docker 基本使用](./container/docker.md)
@@ -845,7 +841,7 @@
     - `fio/`
       - [HDD 已死](./kernel/blk/fio/fio-result.md)
     - `mq/`
-      - [bio-based、request-based 与 `request_queue` 的关系](./kernel/blk/mq/bio-based-vs-request-based.md)
+      - [bio-based、request-based 与 `request_queue` 的关系](./kernel/blk/mq/ai-bio-based-vs-request-based.md)
     - `raid/`
       - [资料](./kernel/blk/raid/general.md)
       - [同步模型](./kernel/blk/raid/lock.md)
@@ -1472,6 +1468,7 @@
   - [Makefile](./linux/Makefile.md)
   - [有趣的](./linux/android.md)
   - [ansible 记录](./linux/ansible.md)
+  - [cuda gdb](./linux/cuda-gdb.md)
   - [Debugger 的理念，原理和使用](./linux/gdb.md)
   - [阅读 musl 学到的一些东西](./linux/musl.md)
   - [omarchy](./linux/omarchy.md)
@@ -1484,8 +1481,6 @@
   - `geneve/`
     - [GENEVE 隧道实验](./net/geneve/README.md)
   - `kernel/`
-    - `core/`
-      - [overview](./net/kernel/core/overview.md)
     - `ipv4/`
       - [af_net.c](./net/kernel/ipv4/overview.md)
       - [IP Fragmentation and Reassembly](./net/kernel/ipv4/reassemb.md)
@@ -1521,6 +1516,8 @@
     - [rdma 常用工具](./net/rdma/tools.md)
   - `sfc/`
     - [sfc](./net/sfc/basic.md)
+  - `skbuff/`
+    - [skbuff](./net/skbuff/skbuff.md)
   - `vxlan-demo/`
     - [VXLAN](./net/vxlan-demo/README.md)
   - [9p](./net/9p.md)
@@ -1577,7 +1574,7 @@
   - [mac 会不断的产生这个日志](./net/promiscuous.md)
   - [qdisc](./net/qdisc.md)
   - [quic](./net/quic.md)
-  - [raw socket](./net/raw-socket.md)
+  - [net: raw socket](./net/raw-socket.md)
   - [rds](./net/rds.md)
   - [RxRPC](./net/rxrpc.md)
   - [unix domain 分析](./net/scm.md)
@@ -1683,11 +1680,8 @@
   - [multi-process qemu](./qemu/remote.md)
   - [CPUX86State reset](./qemu/reset.md)
   - [默认模式下，QEMU 是如何保证给一个分配的 10.0.2.15 的](./qemu/slirp.md)
-  - [qemu 如何做测试的](./qemu/test.md)
   - [QEMU 中的 trace 机制](./qemu/trace.md)
 - `rust/`
-  - `rust/`
-    - [rust 的 smart pointers](./rust/rust/pointers.md)
   - `too-many-linked-lists/`
     - `ai/`
       - [Introduction（引言）](./rust/too-many-linked-lists/ai/00-introduction.md)
@@ -1699,6 +1693,8 @@
       - [第六章 A Production Unsafe Deque（生产级 unsafe 双端队列）](./rust/too-many-linked-lists/ai/06-sixth-production-unsafe-deque.md)
       - [第七章 A Bunch of Silly Lists（一堆整活链表）](./rust/too-many-linked-lists/ai/07-infinity-silly-lists.md)
   - [rust gdb 基本使用方法](./rust/debug.md)
+  - [Rust 学习记录](./rust/overview.md)
+  - [rust 的 smart pointers](./rust/pointers.md)
 - `shell/`
   - [awk](./shell/awk.md)
   - [如何彻底征服 bash script](./shell/bash.md)
@@ -1729,7 +1725,14 @@
     - `case/`
       - `ra/`
         - [readme](./trace/ebpf/case/ra/readme.md)
-      - [案例分析](./trace/ebpf/case/README.md)
+      - [README](./trace/ebpf/case/README.md)
+  - `gpu/`
+    - [Nsight Systems / Nsight Compute 实验](./trace/gpu/README.md)
+  - `libtraceevent/`
+    - [libtraceevent](./trace/libtraceevent/libtraceevent.md)
+  - `tools/`
+    - [计划和代办](./trace/tools/README.md)
+  - [Linux Trace 技术整理报告](./trace/TRACE_INVENTORY.md)
 - `uefi/`
   - `BootLoaderPkg/`
     - [第一个 UEFI 程序](./uefi/BootLoaderPkg/README.md)

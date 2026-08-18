@@ -33,3 +33,6 @@ clean:
 
 run: all
 	sudo ./ext4_trace
+
+# 可以用这个方法
+# sudo bpftool prog load ./ext4_trace.bpf.o /sys/fs/bpf/test_prog

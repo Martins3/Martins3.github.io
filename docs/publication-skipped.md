@@ -2,7 +2,7 @@
 
 由 `docs/pub/sync-blog.py` 生成。
 
-跳过文件数: 377
+跳过文件数: 414
 
 ## 发布策略跳过: draft 目录
 
@@ -198,17 +198,29 @@
 - `docs/qemu/qom/todo-2.md`
 - `docs/qemu/qom/todo.md`
 - `docs/qemu/tcg/todo.md`
+- `docs/qemu/thread/todo-glib.md`
+- `docs/qemu/thread/todo-glib2.md`
 - `docs/qemu/thread/todo.md`
 - `docs/qemu/todo.md`
 - `docs/qemu/wolf-book-todo.md`
 - `docs/tools/todo.md`
 - `docs/trace/ebpf-doc/todo.md`
+- `docs/trace/gpu/todo.md`
 - `docs/trace/not-todo.md`
 - `docs/trace/perf/perf-todo-answers.md`
 - `docs/trace/todo.md`
 - `docs/uefi/todo.md`
 - `docs/virtio/todo.md`
 - `docs/windows/todo.md`
+- `gpu/compiler/todo.md`
+- `gpu/cuda/todo-later.md`
+- `gpu/cuda/tutorial/04.16-virtual-memory-management/wip.md`
+- `gpu/cuda/tutorial/05.7-cuda-cpp-memory-model/wip.md`
+- `gpu/cuda/tutorial/basic/wip.md`
+- `gpu/cuda/tutorial/todo.md`
+- `gpu/cuda/wip-2.md`
+- `gpu/cuda/wip.md`
+- `gpu/drm/todo.md`
 - `simplefs/record/archive/notes/todo.md`
 
 ## 发布策略跳过: 同目录存在 README.md
@@ -395,3 +407,28 @@
 - `docs/pub/community-feature.md`
 - `docs/trace/hw/rasdaemon.md`
 - `docs/uefi/firmware/microcode.md`
+- `gpu/compiler/.venv/lib/python3.13/site-packages/numpy/random/LICENSE.md`
+- `gpu/compiler/.venv/lib/python3.13/site-packages/numpy-2.4.4.dist-info/licenses/numpy/_core/src/npysort/x86-simd-sort/LICENSE.md`
+- `gpu/compiler/.venv/lib/python3.13/site-packages/numpy-2.4.4.dist-info/licenses/numpy/fft/pocketfft/LICENSE.md`
+- `gpu/compiler/.venv/lib/python3.13/site-packages/numpy-2.4.4.dist-info/licenses/numpy/random/LICENSE.md`
+- `gpu/compiler/.venv/lib/python3.13/site-packages/numpy-2.4.4.dist-info/licenses/numpy/random/src/distributions/LICENSE.md`
+- `gpu/compiler/.venv/lib/python3.13/site-packages/numpy-2.4.4.dist-info/licenses/numpy/random/src/mt19937/LICENSE.md`
+- `gpu/compiler/.venv/lib/python3.13/site-packages/numpy-2.4.4.dist-info/licenses/numpy/random/src/pcg64/LICENSE.md`
+- `gpu/compiler/.venv/lib/python3.13/site-packages/numpy-2.4.4.dist-info/licenses/numpy/random/src/philox/LICENSE.md`
+- `gpu/compiler/.venv/lib/python3.13/site-packages/numpy-2.4.4.dist-info/licenses/numpy/random/src/sfc64/LICENSE.md`
+- `gpu/compiler/.venv/lib/python3.13/site-packages/numpy-2.4.4.dist-info/licenses/numpy/random/src/splitmix64/LICENSE.md`
+- `gpu/compiler/.venv/lib/python3.13/site-packages/pip/_vendor/idna/LICENSE.md`
+- `gpu/compiler/.venv/lib/python3.13/site-packages/pip-26.0.1.dist-info/licenses/src/pip/_vendor/idna/LICENSE.md`
+- `gpu/compiler/.venv/lib/python3.13/site-packages/tilelang/3rdparty/composable_kernel/include/ck/README.md`
+- `gpu/compiler/.venv/lib/python3.13/site-packages/tilelang/3rdparty/composable_kernel/include/ck_tile/README.md`
+- `gpu/compiler/.venv/lib/python3.13/site-packages/tilelang/3rdparty/composable_kernel/include/ck_tile/core/README.md`
+- `gpu/compiler/.venv/lib/python3.13/site-packages/tilelang/3rdparty/composable_kernel/include/ck_tile/ops/common/README.md`
+- `gpu/compiler/.venv/lib/python3.13/site-packages/tilelang/3rdparty/composable_kernel/include/ck_tile/ops/flatmm/block/uk/README.md`
+- `gpu/compiler/.venv/lib/python3.13/site-packages/tilelang/3rdparty/composable_kernel/include/ck_tile/ref/README.md`
+- `gpu/compiler/.venv/lib/python3.13/site-packages/tilelang/3rdparty/tvm/src/runtime/hexagon/README.md`
+- `gpu/compiler/.venv/lib/python3.13/site-packages/tilelang/3rdparty/tvm/src/runtime/hexagon/profiler/README.md`
+- `gpu/compiler/.venv/lib/python3.13/site-packages/tilelang/3rdparty/tvm/src/runtime/opencl/opencl_wrapper/README.md`
+- `gpu/compiler/.venv/lib/python3.13/site-packages/tilelang/3rdparty/tvm/src/runtime/vulkan/README.md`
+- `gpu/compiler/.venv/lib/python3.13/site-packages/tilelang/carver/README.md`
+- `gpu/compiler/.venv/lib/python3.13/site-packages/torchgen/packaged/autograd/README.md`
+- `gpu/compiler/.venv/lib/python3.13/site-packages/tvm_ffi/3rdparty/libbacktrace/README.md`

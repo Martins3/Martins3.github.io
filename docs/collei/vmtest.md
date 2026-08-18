@@ -35,7 +35,7 @@
 [    0.307555] ACPI: Core revision 20240322
 ```
 
-## 启动参数
+## vmtest 启动参数
 ```sh
 #!/usr/bin/env bash
 set -E -e -u -o pipefail

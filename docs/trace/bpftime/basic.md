@@ -17,7 +17,7 @@
 
 局限：部分内核 helper/kfunc 不可用，不能访问 task_struct 等内核数据结构。
 
-继续观察吧
+总体来说，没玩明白，继续观察吧
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

@@ -108,7 +108,8 @@ make
 另外，文档第 123 行称两个设备“缺少 tracing”，但当前源码中 PL011 和 HPET 都已经调用生成的 tracepoint，因此这一条文档看起来已经落后于实现。总体上，这仍是一个发展较
 快、接口尚在继续完善的子系统。
 
-
+## TODO
+1. 理解 c 和 rust 是如何 binding 在一起的
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

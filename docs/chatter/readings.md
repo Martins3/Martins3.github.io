@@ -1,6 +1,6 @@
-https://susam.net/my-lobsters-interview.html#computing-for-fun
+# blog 阅读
 
-下面是这个采访／网页的主要内容和 “讲什么” —— 简要总结给你看 👇
+https://susam.net/my-lobsters-interview.html#computing-for-fun
 
 * 这是 Susam Pal 最近接受 Lobsters 社区（一种编程／技术社区）的一个访谈，由 Alex（@veqq）采访，讨论了“计算机、数学、编程习惯、兴趣”等多个话题。 ([susam.net][1])
 * 虽然访谈内容在原对话中是顺序进行，但发布时被整理重排，以更好地逻辑串联所以网页上有“目录（Table of Contents）”。 ([susam.net][1])

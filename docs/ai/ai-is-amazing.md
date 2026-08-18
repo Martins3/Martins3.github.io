@@ -52,6 +52,79 @@ gpt 的能力还不是那么强的时候?
 去做了一些事情，发现它已经比人做的要好得多了。这个时候。我之前所有的想法都变化了，
 不再自欺欺人，不再犹豫，彻底拥抱 AI 。
 
+### 2026.8
+
+我问 qemu 中为什么需要 bh 机制
+
+> [!NOTE]
+> 参考神奇海螺的意见，有待验证
+
+这是 2026.4 的回答，还是没有抓住重点，但是到了 2026-08-15 的时候，
+我看了回答，立刻就可以知道在说什么。
+```txt
+1. 事件循环架构的要求
+
+QEMU 是事件驱动架构，所有工作必须在事件循环（AioContext）的上下文中执行：
+
+/* Called concurrently from any thread */
+static void aio_bh_enqueue(QEMUBH *bh, unsigned new_flags)
+{
+    QSLIST_INSERT_HEAD_ATOMIC(&ctx->bh_list, bh, next);
+    aio_notify(ctx);  // 唤醒事件循环，而不是立即执行
+}
+
+关键设计：qemu_bh_schedule() 只是将 BH 加入队列，然后通过 aio_notify() 通知事件循环，实际的回
+调执行被推迟到事件循环的下一次迭代。
+
+2. 线程安全（从任意线程调度）
+
+源码明确说明 aio_bh_enqueue() 可以从任意线程并发调用：
+
+/* Called concurrently from any thread */
+static void aio_bh_enqueue(QEMUBH *bh, unsigned new_flags)
+
+但 aio_bh_poll() 有约束：
+
+/* Multiple occurrences of aio_bh_poll cannot be called concurrently. */
+int aio_bh_poll(AioContext *ctx)
+
+延迟回调的原因：Worker 线程不能直接执行回调（可能涉及线程不安全操作），必须通过 aio_notify()
+→ 主事件循环 → aio_bh_poll() 的路径。
+
+3. 防止同一次 poll 中的递归（Slice 机制）
+
+int aio_bh_poll(AioContext *ctx)
+{
+    /* 1. 原子地将当前队列移动到本地 slice */
+    QSLIST_MOVE_ATOMIC(&slice.bh_list, &ctx->bh_list);
+
+    /* 2. 只处理 slice 中的 BH */
+    while ((bh = aio_bh_dequeue(&slice->bh_list, &flags))) {
+        aio_bh_call(bh);  // 如果回调中调用 qemu_bh_schedule()，
+                          // 新 BH 会进入 ctx->bh_list，而不是 slice
+    }
+}
+
+效果：当前 aio_bh_poll() 中调度的 BH 不会在本次执行，必须等待下一次 poll。这防止了：
+
+• 单个 BH 无限递归导致的栈溢出
+• 回调打断当前 poll 的执行流程
+
+4. 支持嵌套 poll（bh_slice_list）
+
+struct BHListSlice {
+    BHList bh_list;
+    QSIMPLEQ_ENTRY(BHListSlice) next;
+};
+
+当回调中调用 aio_poll()（嵌套事件循环）时，新的 slice 会被追加到 bh_slice_list 队列，确保嵌套
+调用也能处理所有待执行的 BH。
+
+─────────────────────────────────────────────────────────────────────────────────────────────
+总结：延迟回调是 QEMU 事件循环架构的核心设计，提供线程安全（任意线程可调度）、上下文隔离（在
+主循环中执行）、防止递归（slice 机制）和支持嵌套 poll 的能力。
+```
+
 ## 我的习惯已经改变了
 1. 投机执行
 	- 我做所有的事情都是投机执行的，也就是说我会尝试先让 AI 去做一下，如果不行的话。我自己再来处理，在处理的过程中又继续分解成让 AI 能做

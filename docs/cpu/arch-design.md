@@ -201,6 +201,7 @@ https://www.zhihu.com/question/26655435/answer/1825719171
 
 ## TODO
 - 测试 RISC-V 的用户态中断，硬件线程
+- https://news.ycombinator.com/item?id=49298035
 
 ## 其他的思考
 - intel 可以设置每一个核使用的 cache 多少
@@ -213,6 +214,8 @@ https://www.zhihu.com/question/26655435/answer/1825719171
 [^3]: [One-instruction set computer](https://en.wikipedia.org/wiki/One-instruction_set_computer)
 [^4]: https://en.wikipedia.org/wiki/No_instruction_set_computing
 [^5]: A reconfigurable heterogeneous multicore with a homogeneous ISA
+
+
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

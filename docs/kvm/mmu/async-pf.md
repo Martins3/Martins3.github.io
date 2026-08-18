@@ -203,7 +203,7 @@ bogon login: [    8.974820] mount.nfs (3059) used greatest stack depth: 10416 by
 并不是，L1 用文件，L2 用普通的 memory ，还是有问题
 
 
-测试 mmoc 的时候，似乎启动嵌套，其中 l2 使用的是普通内存，也会有这个问题:
+测试一些程序的时候，似乎启动嵌套，其中 l2 使用的是普通内存，也会有这个问题:
 也就是相当于 L1 是文件，或者是 memfd 就会有问题
 ```txt
 [  245.347107][ T2261] Kernel panic - not syncing: Host injected async #PF in kernel mode

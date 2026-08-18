@@ -1,7 +1,8 @@
 #!/usr/bin/python3
-from bcc import BPF
-from time import sleep
 import sys
+from time import sleep
+
+from bcc import BPF
 
 # BPF 程序
 bpf_text = """
@@ -34,9 +35,7 @@ int kprobe__read_pages(struct pt_regs *ctx, struct ra_min *rac) {
 
 try:
     b = BPF(text=bpf_text)
-except Exception as e:
-    print(f"❌ 编译失败: {e}")
-    print("⚠️  可能原因: 函数名不对、内核未导出该符号、或参数获取方式不兼容")
+except Exception:
     sys.exit(1)
 
 print("Tracing read_pages() req pages... Hit Ctrl-C to end.")
@@ -48,10 +47,6 @@ print("%-20s | %s" % ("--------------------", "-----"))
 try:
     while True:
         sleep(5)  # 每5秒刷新一次
-
-        # 清屏并重绘（可选）
-        # print("\033[2J\033[H")  # 清屏（取消注释启用）
-
         # 打印当前累计直方图
         b["lookahead_hist"].print_log2_hist("lookahead_size")
 
@@ -59,6 +54,5 @@ try:
 
 except KeyboardInterrupt:
     print("\nExiting...")
-    # 打印最终直方图
     print("\nFinal distribution:")
     b["lookahead_hist"].print_log2_hist("lookahead_size")

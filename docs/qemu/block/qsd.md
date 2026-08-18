@@ -1,4 +1,4 @@
-## qemu-storage-daemon
+# qemu-storage-daemon
 https://www.qemu.org/docs/master/tools/qemu-storage-daemon.html
 
 Export a qcow2 image file disk.qcow2 as a vhost-user-blk device over UNIX domain socket vhost-user-blk.sock:
@@ -54,10 +54,64 @@ lrwx------     - martins3 11 Jun 09:35   14 -> anon_inode:[eventfd]
 lrwx------     - martins3 11 Jun 09:40   34 -> '/memfd:memory-backend-memfd (deleted)'
 ```
 
-## qsd 的 fuse 功能如何理解
+## qsd 的 fuse 功能
 <!-- acb9907c-5901-4054-8645-a751a0fba381 -->
 
-测试失败，不过，我认为这就是切入 qsd 的最佳入口:
+这个非常能体现 qsd 的功能，如果外部想要打开一个 qcow2 ，如何复用 qemu 内部的代码，
+可以通过 fuse 来暴露。
+
+这个不是用来暴露一个文件系统的
+
+
+核心场景是：需要让只认识“普通 raw 文件”的程序，访问 QEMU block layer 管理的镜像。
+
+1. 让普通工具访问 qcow2
+
+很多程序只会对普通文件做 pread/pwrite，不认识 qcow2、VMDK、加密层或 backing chain。
+FUSE export 可以把这些 block node 呈现成 raw 文件：
+
+qcow2 / backing chain / encryption
+              ↓ QEMU block layer
+         FUSE 普通文件
+              ↓
+       dd、文件系统工具、自研程序
+
+例如：
+
+dd if=disk.raw of=header.bin bs=1M count=1
+file disk.raw
+fsck.ext4 disk.raw
+
+如果镜像本身就是无分区的 ext4 文件系统，还可以直接让文件系统工具操作。
+
+4. 利用完整的 QEMU block graph
+
+它导出的不一定只是简单 qcow2，也可以是由 QEMU block layer 组合出来的节点，例如：
+
+- backing chain
+- copy-on-write overlay
+- 加密层
+- filter node
+- snapshot
+- 远端存储协议
+- 限速或调试节点
+
+上层程序看到的仍然只是一个连续的 raw 文件。
+
+5. 临时把 qcow2“伪装”为 raw
+
+QEMU 官方示例直接把 FUSE 挂载到 qcow2 文件自身：
+
+启动前：disk.qcow2 路径看到 qcow2 格式
+启动后：disk.qcow2 路径看到虚拟磁盘的 raw 内容
+退出后：disk.qcow2 路径恢复为原 qcow2 文件
+
+这适合无法修改文件路径、但期望输入为 raw 的已有程序。
+
+类似功能，可以利用 qemu-nbd 来导出
+
+qemu-nbd --connect=/dev/nbd0 disk.qcow2
+
 ```sh
 /home/martins3/data/qemu/build/storage-daemon/qemu-storage-daemon \
   --blockdev driver=file,node-name=file0,filename=img/boot1 \
@@ -70,83 +124,7 @@ qemu-storage-daemon: --export type=fuse,id=fuse0,node-name=qcow0,mountpoint=/tmp
 
 ```
 
-> [!NOTE]
-> 参考神奇海螺的意见，有待验证
 
-```
-+------------------+
-| qemu-storage-    |
-| daemon / QEMU    |
-|                  |
-|  block backend   |  (raw / qcow2 / rbd / nbd / etc)
-|        │
-|        ▼
-|   FUSE export
-+--------│---------+
-         │ /dev/fuse
-         ▼
-+------------------+
-| 用户态程序 /     |
-| QEMU / vhost-    |
-| user-blk client  |
-+------------------+
-```
-
-```bash
-qemu-storage-daemon \
-  --blockdev driver=file,node-name=file0,filename=boot1 \
-  --blockdev driver=qcow2,node-name=qcow0,file=file0 \
-  --export type=fuse,id=fuse0,node-name=qcow0,mountpoint=/tmp/fuseblk
-```
-
-```bash
-ls -l /tmp/fuseblk
-```
-
-如果 QEMU 支持 `fuse-lseek`：
-
-```bash
-filefrag -v /tmp/fuseblk
-```
-```bash
-python3 - << 'EOF'
-import os
-fd = os.open("/tmp/fuseblk", os.O_RDONLY)
-print(os.lseek(fd, 0, os.SEEK_HOLE))
-EOF
-```
-
-真的吗?
-```bash
-qemu-system-x86_64 \
-  -drive file=/tmp/fuseblk,if=virtio,format=raw
-```
-
-```bash
--device vhost-user-blk-pci,chardev=char0 \
--chardev socket,id=char0,path=/tmp/vhost-blk.sock
-```
-
-FUSE 后端通常作为 **vhost-user-blk 的存储提供者**。
-
-### FUSE ≠ 高性能默认方案
-
-* 每个 I/O 都有用户态切换
-* 不适合高 IOPS 场景，除非：
-  * 大块 I/O
-  * vhost-user + 多队列
-
-### `fuse-lseek` 的意义
-
-支持：
-
-* 稀疏文件识别
-* discard / trim 优化
-* qcow2 / thin-provisioning backend
-
-如果没有该能力：
-
-* guest 的 discard 可能退化为全 0 写
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

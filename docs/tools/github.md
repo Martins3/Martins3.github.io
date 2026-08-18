@@ -92,13 +92,13 @@ gh auth login --hostname github.loongson.com
 
 基本使用:
 ```txt
-  gh pr list --repo kernel/mmoc-server
+  gh pr list --repo kernel/server
 
   # 查看某个 PR
-  gh pr view 42 --repo kernel/mmoc-server
+  gh pr view 42 --repo kernel/server
 
   # 发评论
-  gh pr comment 42 --repo kernel/mmoc-server --body "测试评论"
+  gh pr comment 42 --repo kernel/server --body "测试评论"
 ```
 
 ## CICD 的思考

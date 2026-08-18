@@ -43,8 +43,11 @@ function get_original_info_from_cache() {
 
 	# 在缓存文件中查找 UUID 对应的信息
 	if ! grep "^${uuid}"$'\t' "$CACHE_FILE" &>/dev/null; then
-		"$ANKI_BIN" --delete "$uuid"
-		echo "delete $uuid"
+		if ! "$ANKI_BIN" --delete "$uuid"; then
+			echo "Failed to delete UUID $uuid" >&2
+			return 2
+		fi
+		return 1
 	fi
 	line=$(grep "^${uuid}"$'\t' "$CACHE_FILE" | head -n 1)
 	if [[ -n $line ]]; then
@@ -70,11 +73,15 @@ function play2() {
 	readarray -t items < <("$ANKI_BIN" --due)
 	for uuid in "${items[@]}"; do
 		# 从缓存获取原始文件和行号
-		info=$(get_original_info_from_cache "$uuid")
-		if [[ -z $info ]]; then
-			echo "UUID $uuid not found in cache, skip"
-			# $anki --delete "$uuid"
-			continue
+		if info=$(get_original_info_from_cache "$uuid"); then
+			:
+		else
+			status=$?
+			if ((status == 1)); then
+				echo "Notice: UUID $uuid not found in cache, skip"
+				continue
+			fi
+			return "$status"
 		fi
 
 		original_file=$(echo "$info" | cut -f1)

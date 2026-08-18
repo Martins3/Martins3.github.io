@@ -1,7 +1,7 @@
-## raw socket
+# net: raw socket
+<!-- 6a739aa1-953e-43b3-a579-625179bf1160 -->
 
-先看看如何使用: https://stackoverflow.com/questions/12588727/simple-raw-socket-server-in-c-c-on-linux
-
+看看如何使用: https://stackoverflow.com/questions/12588727/simple-raw-socket-server-in-c-c-on-linux
 
 ```c
 struct proto raw_prot = {

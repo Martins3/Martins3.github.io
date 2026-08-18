@@ -81,8 +81,19 @@ def _clear_ovs_config(runner: CommandRunner) -> None:
     ).stdout.splitlines()
     for port in ports:
         print(port)
-        show = runner.run(["sudo", "ovs-vsctl", "show"], capture=True).stdout
-        if port in show and "No such device" in show:
+        error = runner.run(
+            [
+                "sudo",
+                "ovs-vsctl",
+                "--if-exists",
+                "get",
+                "Interface",
+                port,
+                "error",
+            ],
+            capture=True,
+        ).stdout
+        if "No such device" in error:
             runner.run(["sudo", "ovs-vsctl", "del-port", port])
 
 

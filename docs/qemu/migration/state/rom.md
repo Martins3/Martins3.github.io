@@ -147,20 +147,20 @@ qemu_ram_alloc_internal
 
 就是这个位置:
 ```txt
-#1  qemu_ram_alloc_internal (size=16384, size@entry=36, max_size=16384, max_size@entry=4096, resized=resized@entry=0xaaaaaaef6070 <fw_cfg_resized>, host=host@entry=0x0, ram_flags=ram_flags@entry=4, mr=mr@entry=0xaaaaacaa6770, errp=errp@entry=0xffffffffd2d0) at ../system/physmem.c:2110
-#2  0x0000aaaaab542094 in qemu_ram_alloc_resizeable (size=size@entry=36, maxsz=maxsz@entry=4096, resized=resized@entry=0xaaaaaaef6070 <fw_cfg_resized>, mr=mr@entry=0xaaaaacaa6770, errp=errp@entry=0xffffffffd2d0) at ../system/physmem.c:2146
-#3  0x0000aaaaab535070 in memory_region_init_resizeable_ram (mr=0xaaaaacaa6770, owner=owner@entry=0xaaaaada47c20, name=name@entry=0xffffffffd380 "/rom@etc/acpi/rsdp", size=36, max_size=4096, resized=resized@entry=0xaaaaaaef6070 <fw_cfg_resized>, errp=0xaaaaac9e1ed8 <error_fatal>) at ../system/memory.c:1596
-#4  0x0000aaaaaaef6014 in rom_set_mr (rom=rom@entry=0xaaaab1f95ee0, owner=0xaaaaada47c20, name=name@entry=0xffffffffd380 "/rom@etc/acpi/rsdp", ro=ro@entry=true) at ../hw/core/loader.c:1046
-#5  0x0000aaaaaaef74bc in rom_add_blob (name=name@entry=0xaaaaab7ea220 "etc/acpi/rsdp", blob=blob@entry=0xaaaaad012c40, len=36, max_len=max_len@entry=4096, addr=addr@entry=18446744073709551615, fw_file_name=fw_file_name@entry=0xaaaaab7ea220 "etc/acpi/rsdp", fw_callback=fw_callback@entry=0xaaaaab274be0 <virt_acpi_build_update>, callback_opaque=callback_opaque@entry=0xaaaaad1f97a0, as=<optimized out>, as@entry=0x0, read_only=<optimized out>, read_only@entry=true) at ../hw/core/loader.c:1169
-#6  0x0000aaaaaaebaa18 in acpi_add_rom_blob (update=update@entry=0xaaaaab274be0 <virt_acpi_build_update>, opaque=opaque@entry=0xaaaaad1f97a0, blob=0xaaaaad1f33d0, name=name@entry=0xaaaaab7ea220 "etc/acpi/rsdp") at ../hw/acpi/utils.c:47
-#7  0x0000aaaaab274e40 in virt_acpi_setup (vms=vms@entry=0xaaaaace0cdb0) at ../hw/arm/virt-acpi-build.c:1119
-#8  0x0000aaaaab26c6bc in virt_machine_done (notifier=0xaaaaace0cf08, data=<optimized out>) at ../hw/arm/virt.c:1750
-#9  0x0000aaaaab7a25dc in notifier_list_notify (list=list@entry=0xaaaaac9bfdc0 <machine_init_done_notifiers>, data=data@entry=0x0) at ../util/notify.c:39
-#10 0x0000aaaaaaf002fc in qdev_machine_creation_done () at ../hw/core/machine.c:1640
-#11 0x0000aaaaab1af17c in qemu_machine_creation_done (errp=0xaaaaac9e1ed8 <error_fatal>) at ../system/vl.c:2692
-#12 qmp_x_exit_preconfig (errp=0xaaaaac9e1ed8 <error_fatal>) at ../system/vl.c:2722
-#13 0x0000aaaaab1b2af0 in qemu_init (argc=<optimized out>, argv=<optimized out>) at ../system/vl.c:3766
-#14 0x0000aaaaaae6afac in main (argc=<optimized out>, argv=<optimized out>) at ../system/main.c:47
+- main
+  - qemu_init
+    - qmp_x_exit_preconfig
+      - qemu_machine_creation_done
+        - qdev_machine_creation_done
+          - notifier_list_notify
+            - virt_machine_done
+              - virt_acpi_setup
+                - acpi_add_rom_blob
+                  - rom_add_blob
+                    - rom_set_mr
+                      - memory_region_init_resizeable_ram
+                        - qemu_ram_alloc_resizeable
+                          - qemu_ram_alloc_internal
 ```
 
 变化发生在 qemu_ram_alloc_internal

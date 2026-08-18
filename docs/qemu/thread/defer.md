@@ -1,95 +1,59 @@
 # qemu defer 机制
 
-## util/defer-call.c
-- defer_call_begin
-- defer_call
-- defer_call_end
+这个机制和 Linux kernel 的 block plug 机制非常类似
 
-
-## QEMUBH
-
-- aio_bh_call
-- qemu_bh_schedule
-
-
-- 提交任务 : `qemu_bh_schedule(ctx->co_schedule_bh)`
-- 执行任务 : 当 aio_poll 的时候，会执行 `ctx->co_schedule_bh` 上的 hook, 也即是
-  co_schedule_bh_cb, 在其中调用 qemu_aio_coroutine_enter 来执行。
-
-将一个函数挂到队列上，之后从队列上取出函数(也许是另一个 thread) 来执行。
-```c
-struct QEMUBH {
-    AioContext *ctx;
-    const char *name;
-    QEMUBHFunc *cb;
-    void *opaque;
-    QSLIST_ENTRY(QEMUBH) next;
-    unsigned flags;
-};
-```
-QEMU 默认使用 eventfd 来进行通知(参考 : event_notifier_init)，
-
-而且 aio_set_event_notifier 之后会调用的 g_source_add_poll 的,
-将 AioContext::notifier 作为一个普通的 fd 来监控。
-
-aio_context_new 中:
-```c
-aio_set_event_notifier(ctx, &ctx->notifier, false,
-                       aio_context_notifier_cb,
-                       aio_context_notifier_poll);
-```
-
-- 提交任务 : `qemu_bh_schedule`
-  - 通知认为已经提交了: `aio_notify` => `event_notifier_set(&ctx->notifier)` => 一个简单的 write 操作
-- 轮询: `aio_poll` => `aio_bh_poll` => `aio_bh_call`
-
-
-```c
-void qemu_bh_schedule(QEMUBH *bh)
-{
-    aio_bh_enqueue(bh, BH_SCHEDULED);
-}
-```
-
-## defer-call 经典案例
-
-
-
-那么  linux-aio 中使用，和 virtio blk 中使用是不是有什么区别?
+util/defer-call.c 开头的位置就说的非常清楚了:
 ```txt
-block/linux-aio.c
-237:    defer_call_end();
+defer_call_begin();
 
-block/io_uring.c
-226:    defer_call_end();
+defer_call(fn, obj);
+defer_call(fn, obj);
+defer_call(fn, obj);
 
-include/qemu/defer-call.h
-13:void defer_call_end(void);
-
+defer_call_end();   /* 在这里、当前线程中调用一次 fn(obj) */
 ```
 
-调用 defer_call 的调用地方都是存储后端，
-也就是 aio io_uring 和 nvme 直通，以及 virtio 的 irqfd
+## virtio-blk 为什么使用 defer-call
 
-1. virtio_notify_irqfd 中容易理解，无需多次注入中断
-2. 在 block/linux-aio.c
+  你记录的 virtio-blk/Linux AIO 例子选得很好，只是应该这样理解：
 
-### scsi
+  virtio_blk_handle_vq()
+      defer_call_begin()
 
-```txt
-- virtio_scsi_handle_cmd_req_submit
-  - scsi_do_read
-    - dma_blk_io
-      - dma_blk_cb
-        - blk_aio_preadv
-          - blk_aio_prwv
-  - defer_call_end
-    - ioq_submit
-      - io_submit
-```
+      处理 request 1
+          加入 Linux AIO pending queue
+          defer_call(laio_deferred_fn, s)
 
+      处理 request 2
+          加入同一个 pending queue
+          defer_call(laio_deferred_fn, s)
 
-### virtio blk
+      处理 request 3
+          加入同一个 pending queue
+          defer_call(laio_deferred_fn, s)
+
+      defer_call_end()
+          laio_deferred_fn(s) 只执行一次
+              ioq_submit()
+                  一次 io_submit() 提交多个 iocb
+
+  外层位置在 hw/block/virtio-blk.c:1017，Linux AIO 调用在 block/linux-aio.c:479。
+
+  这不是把 I/O 交给另一个线程，而是避免：
+
+  每取出一个 virtqueue request
+      就调用一次昂贵的 io_submit()
+
+  换成：
+
+  一次取出一批 request
+      最后统一 io_submit()
+
+  virtio irqfd 里的 defer_call 同理：一批请求可能完成很多次，但相同 notifier 最后只需要通知一次。
+
+## 例子
+
+例如 virtio blk 中，
 
 - main
   - qemu_default_main
@@ -112,116 +76,7 @@ include/qemu/defer-call.h
                                     - qemu_laio_process_completions
                                       - qemu_bh_schedule
 
-简单分析 virtio_scsi_handle_cmd_req_submit 的流程
-
-- 由于接受到 eventfd 的消息，所以会调用到 virtio_scsi_handle_cmd_vq 中
-
-- virtio_scsi_pop_req : 取出来需要执行的任务
-- virtio_scsi_handle_cmd_req_prepare
-  - defer_call_begin
-- defer_call_end
-
-- virtio_scsi_handle_cmd_req_submit
-  - scsi_req_enqueue : 这里可能根据解析的内容，需要提交很多次 io
-  - defer_call_end : 在这里最后完成 aio 的提交
-
-## qemu bh 的经典案例
-
-### qmp
-例如执行:
-```json
-{ "execute": "qom-get",
-             "arguments": { "path": "/machine/peripheral/balloon0",
-             "property": "guest-stats" } }
-```
-
-- _start
-  - __libc_start_main_impl
-    - __libc_start_call_main
-      - qemu_default_main
-        - qemu_main_loop
-          - main_loop_wait
-            - os_host_main_loop_wait
-              - glib_pollfds_poll
-                - g_main_context_dispatch
-                  - aio_ctx_dispatch
-                    - aio_dispatch
-                      - aio_bh_poll
-                        - aio_bh_call
-                          - do_qmp_dispatch_bh
-                            - qmp_marshal_qom_get
-                              - qmp_qom_get
-                                - object_property_get_qobject
-                                  - object_property_get
-                                    - property_get_alias
-                                      - object_property_get
-                                        - balloon_stats_get_all
-
-### nvme
-在 nvme 上随意触发一个 io ，就可以得到这样的结果:
-
-- _start
-  - __libc_start_main_impl
-    - __libc_start_call_main
-      - qemu_default_main
-        - qemu_main_loop
-          - main_loop_wait
-            - os_host_main_loop_wait
-              - glib_pollfds_poll
-                - g_main_context_dispatch
-                  - aio_ctx_dispatch
-                    - aio_dispatch
-                      - aio_bh_poll
-                        - aio_bh_call
-                          - nvme_process_sq
-                            - nvme_update_sq_tail
-                              - ldl_le_pci_dma
-                                - ldl_le_dma
-                                  - dma_memory_read
-                                    - dma_memory_rw
-                                      - dma_memory_rw_relaxed
-                                        - address_space_rw
-                                          - address_space_read_full
-                                            - flatview_read
-                                              - flatview_translate
-                                                - flatview_do_translate
-                                                  - address_space_translate_iommu
-                                                    - amdvi_translate
-
-### [ ] timer
-- main
-  - qemu_default_main
-    - qemu_main_loop
-      - main_loop_wait
-        - qemu_clock_run_all_timers
-          - qemu_clock_run_timers
-            - timerlist_run_timers
-              - timerlist_run_timers
-                - qemu_bh_schedule
-
-### scsi
-
-- main
-  - qemu_default_main
-    - qemu_main_loop
-      - main_loop_wait
-        - os_host_main_loop_wait
-          - glib_pollfds_poll
-            - g_main_context_dispatch
-              - g_main_context_dispatch_unlocked
-                - aio_ctx_dispatch
-                  - aio_dispatch
-                    - aio_dispatch_handlers
-                      - aio_dispatch_handler
-                        - virtio_queue_notify_vq
-                          - virtio_scsi_handle_cmd
-                            - virtio_scsi_handle_cmd_vq
-                              - virtio_scsi_handle_cmd_req_submit
-                                - defer_call_end
-                                  - ioq_submit (这个在 linux 中的 block/linux-aio.c)
-                                    - qemu_laio_process_completions
-                                      - qemu_bh_schedule
-
+# TODO
 ## 为什么会出现 aio 的嵌套?
 
 ```c
@@ -492,7 +347,6 @@ qoc.ret == -EINPROGRESS 会导致 hmp 卡住吗?
 
 ## 执行 aio_poll 就是为了死等
 
-
 ## 我 tm 的受不了了，居然还有 record replay 的问题
 
 ```c
@@ -537,7 +391,6 @@ static void virtio_net_handle_tx_bh(VirtIODevice *vdev, VirtQueue *vq)
                       - aio_bh_call
                         - virtio_net_tx_bh
 
-
 ## 全村最后的希望
 
 ```c
@@ -566,7 +419,6 @@ static inline BlockAIOCB *null_aio_common(BlockDriverState *bs,
 忽然想到，这个 callback 的执行时机是非常特殊的，是 eventfd 的 callback 执行
 完成之后，
 
-
 - null_bh_cb 中执行的 cb 居然是 bdrv_co_io_em_complete
 
 ```c
@@ -578,7 +430,6 @@ static void bdrv_co_io_em_complete(void *opaque, int ret)
     aio_co_wake(co->coroutine);
 }
 ```
-
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

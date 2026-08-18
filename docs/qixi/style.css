@@ -1,0 +1,866 @@
+:root {
+  --ink: #243047;
+  --night: #111c30;
+  --night-soft: #25344f;
+  --paper: #f3ead7;
+  --paper-light: #faf5e9;
+  --red: #9d3e3b;
+  --red-dark: #702f34;
+  --gold: #bf9b63;
+  --muted: #756b60;
+  --book-width: min(650px, 88vw);
+  --book-height: min(760px, 76vh);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  color-scheme: dark;
+  min-height: 100%;
+}
+
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  min-height: 100svh;
+  margin: 0;
+  overflow-x: hidden;
+  color: var(--paper-light);
+  background:
+    radial-gradient(circle at 18% 15%, rgb(189 155 99 / 12%), transparent 24rem),
+    radial-gradient(circle at 84% 76%, rgb(157 62 59 / 12%), transparent 28rem),
+    linear-gradient(145deg, #0c1525, #17243a 52%, #10192b);
+  font-family: "Noto Serif SC", "Songti SC", SimSun, serif;
+}
+
+body::before {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  content: "";
+  opacity: .12;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.72' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.48'/%3E%3C/svg%3E");
+}
+
+button {
+  font: inherit;
+}
+
+.night {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.star {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #e9d6aa;
+  box-shadow: 0 0 18px 3px rgb(233 214 170 / 35%);
+  animation: shimmer 4s ease-in-out infinite;
+}
+
+.star::after {
+  position: absolute;
+  inset: -7px;
+  content: "";
+  background: linear-gradient(90deg, transparent 46%, rgb(233 214 170 / 45%) 48% 52%, transparent 54%),
+    linear-gradient(transparent 46%, rgb(233 214 170 / 45%) 48% 52%, transparent 54%);
+}
+
+.star-one { top: 16%; left: 9%; }
+.star-two { top: 25%; right: 10%; animation-delay: -1.3s; }
+.star-three { right: 17%; bottom: 14%; animation-delay: -2.7s; }
+
+.thread {
+  position: absolute;
+  width: 38vw;
+  height: 18vw;
+  border: 1px solid rgb(191 155 99 / 16%);
+  border-color: rgb(191 155 99 / 16%) transparent transparent;
+  border-radius: 50%;
+}
+
+.thread-one { top: 8%; left: -10%; transform: rotate(18deg); }
+.thread-two { right: -8%; bottom: 4%; transform: rotate(202deg); }
+
+.experience {
+  display: flex;
+  min-height: 100vh;
+  min-height: 100svh;
+  padding: 26px 18px 22px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.eyebrow {
+  margin: 0 0 12px;
+  color: rgb(243 234 215 / 62%);
+  font-family: Georgia, serif;
+  font-size: 10px;
+  letter-spacing: .36em;
+}
+
+.book-wrap {
+  position: relative;
+  width: var(--book-width);
+  height: var(--book-height);
+  min-height: 520px;
+  perspective: 1800px;
+}
+
+.book-wrap::before,
+.book-wrap::after {
+  position: absolute;
+  content: "";
+  border-radius: 5px 11px 11px 5px;
+  background: #d4c6aa;
+  box-shadow: 0 24px 60px rgb(0 0 0 / 38%);
+}
+
+.book-wrap::before {
+  inset: 10px -8px -8px 7px;
+  transform: rotate(1.2deg);
+}
+
+.book-wrap::after {
+  inset: 5px -4px -4px 3px;
+  background: #e5d8c0;
+  transform: rotate(-.5deg);
+}
+
+.book {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+}
+
+.bookmark {
+  position: absolute;
+  z-index: 8;
+  top: 74px;
+  right: -35px;
+  width: 52px;
+  padding: 12px 10px 14px;
+  color: #f2ddc5;
+  background: var(--red-dark);
+  box-shadow: 5px 8px 16px rgb(0 0 0 / 25%);
+  font-size: 13px;
+  letter-spacing: .28em;
+  text-align: right;
+  writing-mode: vertical-rl;
+}
+
+.bookmark::after {
+  position: absolute;
+  right: 0;
+  bottom: -18px;
+  content: "";
+  border-width: 18px 26px 0;
+  border-style: solid;
+  border-color: var(--red-dark) transparent transparent;
+}
+
+/* 藏在纸页间的小猫 */
+.peek-cat {
+  position: absolute;
+  z-index: 6;
+  display: block;
+  height: auto;
+  pointer-events: none;
+  filter: drop-shadow(0 5px 5px rgb(35 24 17 / 18%));
+  user-select: none;
+}
+
+.cat-behind {
+  z-index: 1;
+  top: -90px;
+  left: 44px;
+  width: 155px;
+  transform: rotate(-4deg);
+  animation: cat-peek 5.8s ease-in-out infinite;
+}
+
+.cat-tabby {
+  right: 12px;
+  bottom: -2px;
+  width: 142px;
+  transform: rotate(2deg);
+  animation: cat-rise 5.2s ease-in-out infinite;
+}
+
+.cat-finale {
+  top: 37%;
+  right: -55px;
+  width: 118px;
+  transform: rotate(-4deg);
+  transition: right .7s cubic-bezier(.34, 1.56, .64, 1);
+}
+
+.page-finale.is-active .cat-finale {
+  right: -13px;
+}
+
+.page {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  visibility: hidden;
+  border: 1px solid rgb(87 66 45 / 15%);
+  border-radius: 5px 10px 10px 5px;
+  opacity: 0;
+  color: var(--ink);
+  background-color: var(--paper);
+  background-image:
+    linear-gradient(90deg, rgb(116 84 55 / 8%) 0, transparent 12%, transparent 92%, rgb(116 84 55 / 5%)),
+    url("data:image/svg+xml,%3Csvg viewBox='0 0 160 160' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='p'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.5' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23p)' opacity='.17'/%3E%3C/svg%3E");
+  box-shadow: 0 22px 55px rgb(0 0 0 / 34%), inset 12px 0 22px rgb(79 48 28 / 8%);
+  transform: rotateY(7deg) translateX(3%) translateZ(-30px);
+  transform-origin: left center;
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+}
+
+body.is-ready .page {
+  transition: transform .82s cubic-bezier(.66, .03, .25, 1), opacity .45s ease, visibility .82s;
+}
+
+.page::after {
+  position: absolute;
+  inset: 0 0 0 auto;
+  width: 7px;
+  content: "";
+  opacity: .45;
+  background: repeating-linear-gradient(90deg, #d7c6a4 0 1px, #f8efd9 1px 2px);
+}
+
+.page.is-active {
+  z-index: 5;
+  visibility: visible;
+  opacity: 1;
+  transform: rotateY(0) translateX(0) translateZ(0);
+}
+
+.page.is-before {
+  z-index: 7;
+  visibility: hidden;
+  opacity: 0;
+  transform: rotateY(-112deg) translateX(-5%) translateZ(15px);
+}
+
+.page.is-after {
+  z-index: 1;
+  visibility: hidden;
+}
+
+.page-inner {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+  padding: clamp(46px, 7vh, 70px) clamp(38px, 8vw, 78px);
+}
+
+.chapter {
+  margin: 0 0 28px;
+  color: var(--red);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .3em;
+}
+
+.page h2 {
+  margin: 0;
+  font-family: "Ma Shan Zheng", "STKaiti", KaiTi, cursive;
+  font-size: clamp(34px, 5.5vw, 54px);
+  font-weight: 400;
+  line-height: 1.35;
+}
+
+.chapter.light {
+  color: rgb(245 234 209 / 68%);
+}
+
+/* 封面 */
+.page-cover {
+  color: var(--paper-light);
+  background: var(--night);
+}
+
+.cover-art,
+.cover-shade {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.cover-art {
+  object-fit: cover;
+}
+
+.cover-shade {
+  background: linear-gradient(180deg, rgb(6 13 24 / 6%), rgb(6 13 24 / 15%) 50%, rgb(6 13 24 / 48%));
+}
+
+.cover-copy {
+  position: absolute;
+  z-index: 2;
+  top: 24%;
+  left: 12%;
+  width: 70%;
+}
+
+.cover-kicker {
+  margin: 0 0 16px;
+  padding-left: 4px;
+  color: #d7bd87;
+  font-size: 10px;
+  letter-spacing: .26em;
+}
+
+.cover-copy h1 {
+  margin: 0;
+  font-size: clamp(48px, 9vw, 84px);
+  font-weight: 400;
+  line-height: .92;
+  letter-spacing: .06em;
+  text-shadow: 0 4px 28px rgb(0 0 0 / 22%);
+}
+
+.cover-copy h1 span {
+  display: inline-block;
+  margin-top: 13px;
+  color: #ead4a7;
+  font-family: Georgia, serif;
+  font-size: 1.08em;
+  font-style: italic;
+  letter-spacing: .03em;
+}
+
+.cover-subtitle {
+  display: inline-block;
+  margin: 26px 0 0 4px;
+  padding: 8px 13px;
+  border: 1px solid rgb(229 211 173 / 42%);
+  color: rgb(250 245 233 / 86%);
+  background: rgb(12 21 37 / 24%);
+  font-size: 13px;
+  letter-spacing: .18em;
+  backdrop-filter: blur(4px);
+}
+
+.cover-seal {
+  position: absolute;
+  z-index: 3;
+  right: 11%;
+  bottom: 15%;
+  display: grid;
+  width: 52px;
+  height: 62px;
+  border: 2px solid #b1554e;
+  color: #d77a6b;
+  place-items: center;
+  font-family: "Ma Shan Zheng", cursive;
+  font-size: 19px;
+  line-height: 1.08;
+  transform: rotate(5deg);
+}
+
+.open-hint {
+  position: absolute;
+  z-index: 3;
+  right: 26px;
+  bottom: 25px;
+  margin: 0;
+  color: rgb(248 238 216 / 63%);
+  font-size: 11px;
+  letter-spacing: .22em;
+  animation: breathe 2.8s ease-in-out infinite;
+}
+
+/* 信纸页 */
+.letter-layout h2 {
+  margin-bottom: 28px;
+  color: var(--red-dark);
+}
+
+.letter-lines {
+  position: relative;
+  max-width: 465px;
+  padding: 4px 0;
+  background: repeating-linear-gradient(transparent 0 35px, rgb(79 74 67 / 14%) 35px 36px);
+  font-size: clamp(14px, 2.2vw, 17px);
+  line-height: 36px;
+}
+
+.letter-lines p {
+  margin: 0 0 18px;
+}
+
+.hand-note {
+  margin: 22px 0 0 24%;
+  color: var(--red);
+  font-family: "Ma Shan Zheng", cursive;
+  font-size: clamp(20px, 4vw, 29px);
+  transform: rotate(-3deg);
+}
+
+.date-stamp {
+  position: absolute;
+  z-index: 3;
+  top: 38px;
+  right: 34px;
+  width: 72px;
+  height: 72px;
+  padding-top: 14px;
+  border: 1px solid rgb(157 62 59 / 52%);
+  border-radius: 50%;
+  color: rgb(157 62 59 / 65%);
+  font: 10px Georgia, serif;
+  letter-spacing: .14em;
+  text-align: center;
+  transform: rotate(10deg);
+}
+
+.date-stamp span {
+  display: block;
+  margin-top: 5px;
+  font-family: "Noto Serif SC", serif;
+  font-size: 13px;
+}
+
+.paper-corner {
+  position: absolute;
+  top: -35px;
+  left: -45px;
+  width: 180px;
+  height: 110px;
+  opacity: .5;
+  background: #b9ad91;
+  clip-path: polygon(0 0, 100% 0, 76% 62%, 43% 78%, 0 100%);
+  transform: rotate(-7deg);
+}
+
+.pressed-sprig {
+  position: absolute;
+  right: 48px;
+  bottom: 12px;
+  width: 95px;
+  height: 190px;
+  border-left: 2px solid rgb(111 83 51 / 55%);
+  transform: rotate(22deg);
+  transform-origin: bottom;
+}
+
+.pressed-sprig i {
+  position: absolute;
+  left: -2px;
+  width: 46px;
+  height: 22px;
+  border-radius: 100% 0 100% 0;
+  opacity: .58;
+  background: #78805d;
+  transform-origin: left center;
+}
+
+.pressed-sprig i:nth-child(1) { top: 16px; transform: rotate(-30deg) scale(.7); }
+.pressed-sprig i:nth-child(2) { top: 50px; transform: rotate(205deg); }
+.pressed-sprig i:nth-child(3) { top: 88px; transform: rotate(-28deg) scale(.82); }
+.pressed-sprig i:nth-child(4) { top: 122px; transform: rotate(200deg) scale(.7); }
+.pressed-sprig i:nth-child(5) { top: 150px; transform: rotate(-25deg) scale(.62); }
+
+/* 便签页 */
+.page-list h2 {
+  margin-bottom: 28px;
+}
+
+.scraps {
+  display: grid;
+  margin: 0 -5px;
+  gap: 14px;
+}
+
+.scrap {
+  position: relative;
+  min-height: 92px;
+  padding: 21px 22px 18px 70px;
+  box-shadow: 2px 5px 10px rgb(59 43 29 / 11%);
+  font-size: clamp(13px, 2vw, 16px);
+  line-height: 1.8;
+}
+
+.scrap span {
+  position: absolute;
+  top: 20px;
+  left: 22px;
+  color: var(--red);
+  font: italic 19px Georgia, serif;
+}
+
+.scrap p { margin: 0; }
+.scrap-one { background: #e5d7bd; transform: rotate(-1.2deg); }
+.scrap-two { margin-left: 9%; background: #d8d5c2; transform: rotate(1.4deg); }
+.scrap-three { margin-right: 6%; background: #eadacb; transform: rotate(-.6deg); }
+
+.margin-note {
+  margin: 27px 0 0 auto;
+  color: var(--red-dark);
+  font-family: "Ma Shan Zheng", cursive;
+  font-size: 21px;
+  line-height: 1.45;
+  text-align: right;
+  transform: rotate(-2deg);
+}
+
+.tape {
+  position: absolute;
+  z-index: 4;
+  width: 95px;
+  height: 26px;
+  opacity: .56;
+  background: #d3b99c;
+  box-shadow: inset 0 0 12px rgb(255 255 255 / 25%);
+}
+
+.tape-top { top: 110px; right: -18px; transform: rotate(38deg); }
+.tape-side { bottom: 122px; left: -24px; transform: rotate(84deg); }
+
+/* 夜色诗页 */
+.page-poem {
+  color: #f4ead7;
+  background-color: var(--night);
+  background-image:
+    radial-gradient(circle at 77% 17%, #e6d4a8 0 7%, rgb(230 212 168 / 18%) 7.4%, transparent 17%),
+    radial-gradient(circle at 78% 18%, rgb(230 212 168 / 15%), transparent 33%),
+    url("data:image/svg+xml,%3Csvg viewBox='0 0 160 160' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='p'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.55' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23p)' opacity='.16'/%3E%3C/svg%3E");
+}
+
+.moon-label {
+  position: absolute;
+  top: 31%;
+  right: 6%;
+  margin: 0;
+  color: rgb(245 231 200 / 54%);
+  font-size: 9px;
+  letter-spacing: .25em;
+  writing-mode: vertical-rl;
+}
+
+.poem-layout blockquote {
+  margin: 15% 0 0;
+  font-family: "Ma Shan Zheng", cursive;
+  font-size: clamp(28px, 5vw, 44px);
+  line-height: 1.55;
+}
+
+.poem-layout blockquote p { margin: 0 0 24px; }
+
+.poem-ending {
+  position: absolute;
+  right: 11%;
+  bottom: 10%;
+  margin: 0;
+  color: #cdb788;
+  font-size: clamp(12px, 2vw, 15px);
+  line-height: 2;
+  letter-spacing: .15em;
+  text-align: right;
+}
+
+.constellation {
+  position: absolute;
+  top: 33%;
+  right: 17%;
+  width: 100px;
+  height: 150px;
+  opacity: .5;
+}
+
+.constellation::before,
+.constellation::after {
+  position: absolute;
+  content: "";
+  height: 1px;
+  background: #cdb788;
+  transform-origin: left;
+}
+
+.constellation::before { top: 28px; left: 17px; width: 72px; transform: rotate(67deg); }
+.constellation::after { top: 96px; left: 5px; width: 79px; transform: rotate(-31deg); }
+
+.constellation i {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #ecd7a5;
+  box-shadow: 0 0 8px #ecd7a5;
+}
+
+.constellation i:nth-child(1) { top: 23px; left: 15px; }
+.constellation i:nth-child(2) { top: 62px; left: 50px; }
+.constellation i:nth-child(3) { top: 103px; left: 84px; }
+.constellation i:nth-child(4) { top: 93px; left: 5px; }
+.constellation i:nth-child(5) { top: 61px; left: 47px; }
+
+/* 愿望页 */
+.page-wishes h2 {
+  margin-bottom: 30px;
+  font-size: clamp(31px, 5vw, 48px);
+}
+
+.wish-list {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  gap: 13px;
+  list-style: none;
+}
+
+.wish-list li {
+  display: grid;
+  padding-bottom: 11px;
+  border-bottom: 1px dashed rgb(69 61 50 / 26%);
+  grid-template-columns: 27px 1fr;
+  gap: 11px;
+  font-size: clamp(12px, 1.9vw, 15px);
+  line-height: 1.65;
+}
+
+.wish-list p { margin: 0; }
+
+.check {
+  width: 18px;
+  height: 18px;
+  margin-top: 3px;
+  border: 1px solid rgb(157 62 59 / 66%);
+  transform: rotate(-3deg);
+}
+
+.ticket {
+  position: absolute;
+  right: 10%;
+  bottom: 7.5%;
+  width: 235px;
+  padding: 15px 20px 16px;
+  border: 1px solid rgb(112 47 52 / 55%);
+  color: var(--red-dark);
+  background: rgb(233 212 182 / 62%);
+  text-align: center;
+  transform: rotate(-3deg);
+}
+
+.ticket::before,
+.ticket::after {
+  position: absolute;
+  top: 50%;
+  width: 13px;
+  height: 26px;
+  content: "";
+  border-radius: 50%;
+  background: var(--paper);
+  transform: translateY(-50%);
+}
+
+.ticket::before { left: -7px; }
+.ticket::after { right: -7px; }
+.ticket span { display: block; font: 8px Georgia, serif; letter-spacing: .35em; }
+.ticket strong { display: block; margin: 5px 0 3px; font-size: 21px; letter-spacing: .2em; }
+.ticket small { color: rgb(112 47 52 / 72%); font-size: 10px; letter-spacing: .08em; }
+
+/* 末页 */
+.finale-layout {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.finale-layout .chapter {
+  align-self: flex-start;
+}
+
+.finale-flower {
+  position: relative;
+  width: 86px;
+  height: 86px;
+  margin: 3% 0 20px;
+}
+
+.finale-flower i {
+  position: absolute;
+  top: 27px;
+  left: 32px;
+  width: 25px;
+  height: 43px;
+  border-radius: 65% 35% 70% 30%;
+  background: var(--red);
+  box-shadow: inset 4px 3px 9px rgb(255 221 202 / 18%);
+  transform-origin: 11px 15px;
+}
+
+.finale-flower i:nth-child(2) { transform: rotate(60deg); }
+.finale-flower i:nth-child(3) { transform: rotate(120deg); }
+.finale-flower i:nth-child(4) { transform: rotate(180deg); }
+.finale-flower i:nth-child(5) { transform: rotate(240deg); }
+.finale-flower i:nth-child(6) { transform: rotate(300deg); }
+
+.to-cindy {
+  margin: 0 0 7px;
+  color: var(--gold);
+  font: 11px Georgia, serif;
+  letter-spacing: .38em;
+}
+
+.finale-layout h2 {
+  color: var(--red-dark);
+  font-size: clamp(50px, 9vw, 78px);
+}
+
+.finale-copy {
+  margin: 27px 0 0;
+  font-size: clamp(14px, 2.3vw, 17px);
+  line-height: 2;
+  letter-spacing: .08em;
+}
+
+.signature {
+  display: flex;
+  width: min(340px, 90%);
+  margin-top: auto;
+  padding-top: 18px;
+  border-top: 1px solid rgb(46 50 62 / 18%);
+  flex-direction: column;
+  align-items: flex-end;
+  color: var(--red-dark);
+  transform: rotate(-2deg);
+}
+
+.signature span { font-size: 11px; letter-spacing: .2em; }
+.signature strong { margin-top: 4px; font-family: "Ma Shan Zheng", cursive; font-size: 24px; font-weight: 400; }
+
+.again {
+  margin-top: 22px;
+  padding: 9px 18px;
+  border: 1px solid rgb(112 47 52 / 40%);
+  color: var(--red-dark);
+  background: transparent;
+  cursor: pointer;
+  font-size: 11px;
+  letter-spacing: .17em;
+  transition: color .2s, background .2s;
+}
+
+.again:hover,
+.again:focus-visible {
+  color: var(--paper-light);
+  background: var(--red-dark);
+}
+
+noscript {
+  position: fixed;
+  right: 10px;
+  bottom: 10px;
+  padding: 10px;
+  color: var(--night);
+  background: var(--paper);
+}
+
+@keyframes shimmer {
+  0%, 100% { opacity: .35; transform: scale(.8); }
+  50% { opacity: 1; transform: scale(1.2); }
+}
+
+@keyframes breathe {
+  0%, 100% { opacity: .4; transform: translateX(0); }
+  50% { opacity: .9; transform: translateX(4px); }
+}
+
+@keyframes cat-peek {
+  0%, 42%, 100% { transform: translateY(2px) rotate(-4deg); }
+  48%, 86% { transform: translateY(-3px) rotate(-2deg); }
+}
+
+@keyframes cat-rise {
+  0%, 38%, 100% { transform: translateY(13px) rotate(2deg); }
+  46%, 88% { transform: translateY(2px) rotate(1deg); }
+}
+
+@media (max-width: 640px) {
+  :root {
+    --book-width: min(91vw, 520px);
+    --book-height: min(76svh, 690px);
+  }
+
+  .experience { padding: 18px 11px 16px; }
+  .eyebrow { visibility: hidden; margin-bottom: 9px; font-size: 8px; }
+  .book-wrap { min-height: 500px; transform: translateY(28px); }
+  .bookmark { right: -15px; width: 39px; padding-inline: 7px; }
+  .cat-behind { top: -77px; left: 20px; width: 132px; }
+  .cat-tabby { right: 4px; width: 116px; }
+  .cat-finale { top: 38%; width: 98px; }
+  .page-inner { padding: 39px 30px 48px; }
+  .chapter { margin-bottom: 18px; }
+  .letter-layout h2 { margin-bottom: 16px; }
+  .letter-lines { line-height: 30px; background-size: 100% 30px; }
+  .letter-lines p { margin-bottom: 9px; }
+  .hand-note { margin-top: 10px; }
+  .pressed-sprig { right: 17px; opacity: .55; }
+  .page-list h2 { margin-bottom: 18px; }
+  .scraps { gap: 10px; }
+  .scrap { min-height: 75px; padding: 13px 13px 12px 52px; line-height: 1.6; }
+  .scrap span { top: 14px; left: 15px; }
+  .margin-note { margin-top: 16px; font-size: 18px; }
+  .poem-layout blockquote { margin-top: 18%; }
+  .poem-ending { right: 11%; bottom: 9%; }
+  .wish-list { gap: 8px; }
+  .wish-list li { padding-bottom: 7px; line-height: 1.45; }
+  .ticket { right: 9%; bottom: 6%; width: 215px; padding-block: 11px; }
+  .finale-flower { margin: 0 0 10px; transform: scale(.8); }
+  .finale-copy { margin-top: 18px; }
+  .again { margin-top: 14px; }
+}
+
+@media (max-width: 390px), (max-height: 700px) {
+  :root { --book-height: min(74svh, 610px); }
+  .experience { justify-content: flex-start; }
+  .book-wrap { min-height: 470px; }
+  .page-inner { padding: 29px 25px 40px; }
+  .chapter { margin-bottom: 12px; }
+  .page h2 { font-size: 31px; }
+  .cover-copy { top: 20%; }
+  .cover-copy h1 { font-size: 49px; }
+  .cover-subtitle { margin-top: 19px; font-size: 10px; }
+  .letter-lines { font-size: 12px; line-height: 25px; background-size: 100% 25px; }
+  .hand-note { font-size: 18px; }
+  .scrap { font-size: 11px; }
+  .margin-note { font-size: 16px; }
+  .poem-layout blockquote { margin-top: 9%; font-size: 28px; line-height: 1.38; }
+  .poem-layout blockquote p { margin-bottom: 14px; }
+  .wish-list li { font-size: 11px; }
+  .ticket { bottom: 4.5%; }
+  .finale-flower { margin: -8px 0 1px; transform: scale(.65); }
+  .finale-layout h2 { font-size: 48px; }
+  .finale-copy { font-size: 12px; line-height: 1.75; }
+  .signature { padding-top: 10px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+}

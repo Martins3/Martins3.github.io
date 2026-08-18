@@ -1,0 +1,2 @@
+nvidia-debugdump
+nvidia-persistenced

@@ -1,0 +1,51 @@
+body {
+  margin: 0;
+  overflow: hidden;
+  background: #fff;
+}
+
+#info {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 1;
+  color: #333;
+  font-family: monospace;
+  font-size: 14px;
+  pointer-events: none;
+}
+
+#reset {
+  position: absolute;
+  top: max(10px, env(safe-area-inset-top));
+  right: max(10px, env(safe-area-inset-right));
+  z-index: 2;
+  min-width: 64px;
+  min-height: 40px;
+  border: 1px solid #bbb;
+  border-radius: 8px;
+  background: rgb(255 255 255 / 90%);
+  color: #333;
+  font-size: 15px;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+#reset:active {
+  background: #e8e8e8;
+}
+
+@media (pointer: coarse) {
+  #info {
+    top: max(12px, env(safe-area-inset-top));
+    left: max(12px, env(safe-area-inset-left));
+    max-width: calc(100vw - 110px - env(safe-area-inset-left));
+    font-size: 12px;
+    line-height: 1.5;
+  }
+
+  #reset {
+    min-width: 72px;
+    min-height: 44px;
+  }
+}

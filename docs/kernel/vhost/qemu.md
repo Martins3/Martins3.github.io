@@ -523,6 +523,57 @@ Reviewed-by: Michael S. Tsirkin <mst@redhat.com>
 Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
 ```
 
+## qemu vhost thread 重连的时候，如果 vhost backend 宕机，会有 bug
+<!-- 000b3743-1e5c-4d44-965b-95351c0f0b59 -->
+
+老版本 qemu 存在这个时序问题
+
+```txt
+迁移线程                              主线程
+--------                              ------
+recvmsg(... SCM_RIGHTS ...)
+s->read_msgfds = msgfds
+                                      收到 G_IO_HUP
+                                      tcp_chr_free_connection()
+                                      close(s->read_msgfds[0])
+qemu_set_block(s->read_msgfds[0])
+  -> fcntl(F_GETFL) = -1, EBADF
+  -> assert
+  -> QEMU abort
+```
+
+一个典型的 vhost-user  :：
+
+1. live migration 期间，QEMU 向 vhost-user backend 发送 VHOST_USER_GET_INFLIGHT_FD。
+2. backend 通过 Unix socket 返回应答，并用 SCM_RIGHTS 携带 inflight shared-memory FD。
+3. backend 在发送应答后立即退出、重启或关闭控制连接。
+4. QEMU 迁移线程在 vhost_user_read() 中接收应答和 FD
+5. QEMU 主线程同时处理 socket HUP，并关闭 read_msgfds。
+6. 接收线程继续初始化该 FD 时访问到已经关闭的描述符，可能触发同一个 qemu_set_block() 断言，使一次正常的 backend disconnect 升级为整个 QEMU 进程 abort。
+
+因此，可以把问题概括为：
+
+对于通过 chardev Unix socket 接收 SCM_RIGHTS FD 的场景，如果 peer 在发送“消息 + FD”后立即断开，QEMU 的接收线程与 HUP 清理线程可能并发操作同一个
+read_msgfds。HUP 路径可能在接收线程完成 FD 初始化或取得所有权之前关闭该 FD，最终导致 EBADF 和 QEMU abort。
+
+### 主线版本也有问题
+
+
+上游主线已经不会沿你描述的路径触发 fcntl(F_GETFL) -> EBADF -> assert，
+但 read_msgfds 的跨线程同步问题并没有被完整修复。
+
+- chardev/char-socket.c:tcp_chr_recv 收到 FD 并保存到 read_msgfds 后，不再遍历 FD 调用 qemu_socket_set_block()。
+- blocking/CLOEXEC 处理已下移到 io/channel-socket.c:qio_channel_handle_fds，发生在 FD 发布给 SocketChardev 之前。
+
+  不过仍有残留风险：
+
+- chardev/char-socket.c:tcp_chr_get_msgfds 无锁读取、复制、释放 read_msgfds。
+- chardev/char-socket.c:tcp_chr_free_connection 也无锁关闭、释放同一数据。
+- qemu_chr_fe_get_msgfds() 没有声明为 thread-safe。
+
+所以由 vhost 线程执行同步 read/get-msgfds，同时主线程处理 HUP，
+理论上仍可能出现 FD 被提前关闭、返回不到 FD，甚至数组释放竞态；
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

@@ -125,6 +125,9 @@ Lamport 对顺序一致性的形式化定义是：任何执行的结果都等同
 
 图 4 用 Dekker 算法示例说明程序顺序的重要性，用多处理器共享变量示例说明原子性的重要性。
 
+## TODO
+https://www.codedump.info/dist-system-cn/time/
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

@@ -1,0 +1,1190 @@
+[327755.367639] BUG: kernel NULL pointer dereference, address: 0000000000000000
+[327755.367644] #PF: supervisor read access in kernel mode
+[327755.367646] #PF: error_code(0x0000) - not-present page
+[327755.367647] PGD 0 P4D 0
+[327755.367649] Oops: Oops: 0000 [#1] SMP NOPTI
+[327755.367652] CPU: 24 UID: 0 PID: 64560 Comm: vidmem lazy fre Kdump: loaded Tainted: G           OE       7.0.8-200.fc44.x86_64 #1 PREEMPT(lazy)
+[327755.367655] Tainted: [O]=OOT_MODULE, [E]=UNSIGNED_MODULE
+[327755.367656] Hardware name: ASUS System Product Name/TUF GAMING B660-PLUS WIFI D4, BIOS 1620 08/12/2022
+[327755.367657] RIP: 0010:free_chunk+0x4d/0xc0 [nvidia_uvm]
+[327755.367732] Code: 0f b6 6e 09 44 0f b6 76 08 41 d0 ed e8 1c 6c ab be 48 8b 43 28 80 63 08 f7 41 83 e5 1f 41 83 e6 03 48 85 c0 74 09 48 8b 40 30 <83> 38 01 74 28 4c 89 e7 48 89 de e8 b3 fc ff ff 4c 89 ff e8 fb 6c
+[327755.367733] RSP: 0018:ffffc90042b0fdd8 EFLAGS: 00010286
+[327755.367735] RAX: 0000000000000000 RBX: ffff889b8a5c6268 RCX: ffff88816e06fa58
+[327755.367736] RDX: 0000000000000001 RSI: ffff889b8a5c6268 RDI: ffff88816e06fae0
+[327755.367737] RBP: ffffc90042b0fe00 R08: 0000000000000000 R09: 0000000000000001
+[327755.367738] R10: 0000000000000018 R11: ffff88867275aac0 R12: ffff88816e06f9f8
+[327755.367738] R13: 000000000000000c R14: 0000000000000000 R15: ffff88816e06fae0
+[327755.367739] FS:  0000000000000000(0000) GS:ffff88a07aa9c000(0000) knlGS:0000000000000000
+[327755.367740] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[327755.367741] CR2: 0000000000000000 CR3: 000000000842e006 CR4: 0000000000f72ef0
+[327755.367742] PKRU: 55555554
+[327755.367743] Call Trace:
+[327755.367745]  <TASK>
+[327755.367747]  process_lazy_free+0x70/0xa0 [nvidia_uvm]
+[327755.367794]  process_lazy_free_entry+0xa3/0xe0 [nvidia_uvm]
+[327755.367840]  _main_loop+0x90/0x150 [nvidia_uvm]
+[327755.367878]  ? __pfx__main_loop+0x10/0x10 [nvidia_uvm]
+[327755.367916]  kthread+0xe1/0x120
+[327755.367920]  ? __pfx_kthread+0x10/0x10
+[327755.367921]  ret_from_fork+0x1a1/0x270
+[327755.367924]  ? __pfx_kthread+0x10/0x10
+[327755.367925]  ret_from_fork_asm+0x1a/0x30
+[327755.367928]  </TASK>
+[327755.367928] Modules linked in: vhost_net vhost vhost_iotlb tap tls uinput xt_connmark xt_mark rfcomm snd_seq_dummy snd_hrtimer nvidia_uvm(OE) nf_conntrack_netlink xt_nat veth xt_conntrack xt_MASQUERADE bridge stp llc xt_set ip_set nft_chain_nat xt_addrtype nft_compat rpcrdma rdma_cm iw_cm ib_cm ib_core binfmt_misc tun overlay nf_tables nfnetlink_cttimeout openvswitch nsh nf_conncount nf_nat nf_conntrack nf_defrag_ipv6 nf_defrag_ipv4 psample qrtr bnep vfat fat snd_sof_pci_intel_tgl snd_sof_pci_intel_cnl snd_sof_intel_hda_generic soundwire_intel snd_sof_intel_hda_sdw_bpt snd_sof_intel_hda_common snd_soc_hdac_hda snd_sof_intel_hda_mlink snd_sof_intel_hda soundwire_cadence intel_rapl_msr snd_sof_pci intel_rapl_common snd_sof_xtensa_dsp snd_sof intel_uncore_frequency intel_uncore_frequency_common snd_hda_codec_intelhdmi intel_tcc_cooling iwlmvm snd_sof_utils x86_pkg_temp_thermal snd_soc_acpi_intel_match intel_powerclamp snd_soc_acpi_intel_sdca_quirks soundwire_generic_allocation snd_soc_sdw_utils coretemp snd_soc_acpi crc8
+[327755.367961]  soundwire_bus snd_hda_codec_alc662 snd_soc_sdca snd_hda_codec_realtek_lib mac80211 kvm_intel snd_hda_codec_generic snd_soc_avs snd_hda_codec_nvhdmi snd_hda_codec_hdmi snd_soc_hda_codec libarc4 snd_hda_intel snd_hda_ext_core kvm nvidia_drm(OE) snd_hda_codec snd_soc_core nvidia_modeset(OE) snd_hda_core asus_armoury snd_compress snd_intel_dspcfg iwlwifi ac97_bus btusb snd_intel_sdw_acpi snd_pcm_dmaengine snd_hwdep btmtk snd_seq btrtl spi_nor irqbypass snd_seq_device btbcm rapl eeepc_wmi iTCO_wdt firmware_attributes_class asus_wmi btintel intel_cstate mtd snd_pcm ee1004 intel_pmc_bxt sparse_keymap mei_hdcp mei_pxp r8169 snd_timer nvidia(OE) i2c_i801 spi_intel_pci cfg80211 bluetooth intel_uncore igc platform_profile wmi_bmof realtek i2c_smbus spi_intel snd idma64 intel_pmc_core soundcore mei_me joydev apple_mfi_fastcharge pmt_telemetry mei pmt_discovery pmt_class rfkill intel_pmc_ssram_telemetry acpi_tad acpi_pad nfsd auth_rpcgss nfs_acl lockd grace nfs_localio sunrpc fuse dm_multipath nfnetlink zram
+[327755.367999]  lz4hc_compress lz4_compress xfs xe drm_ttm_helper drm_suballoc_helper gpu_sched drm_gpuvm drm_exec drm_gpusvm_helper hid_apple i915 i2c_algo_bit drm_buddy ttm nvme drm_display_helper nvme_core nvme_keyring cec nvme_auth ghash_clmulni_intel video hkdf intel_vsec intel_oc_wdt wmi pinctrl_alderlake i2c_dev scsi_dh_rdac scsi_dh_alua scsi_dh_emc
+[327755.368013] CR2: 0000000000000000
+[327755.368015] ---[ end trace 0000000000000000 ]---
+[327755.368017] RIP: 0010:free_chunk+0x4d/0xc0 [nvidia_uvm]
+[327755.368062] Code: 0f b6 6e 09 44 0f b6 76 08 41 d0 ed e8 1c 6c ab be 48 8b 43 28 80 63 08 f7 41 83 e5 1f 41 83 e6 03 48 85 c0 74 09 48 8b 40 30 <83> 38 01 74 28 4c 89 e7 48 89 de e8 b3 fc ff ff 4c 89 ff e8 fb 6c
+[327755.368063] RSP: 0018:ffffc90042b0fdd8 EFLAGS: 00010286
+[327755.368064] RAX: 0000000000000000 RBX: ffff889b8a5c6268 RCX: ffff88816e06fa58
+[327755.368065] RDX: 0000000000000001 RSI: ffff889b8a5c6268 RDI: ffff88816e06fae0
+[327755.368066] RBP: ffffc90042b0fe00 R08: 0000000000000000 R09: 0000000000000001
+[327755.368067] R10: 0000000000000018 R11: ffff88867275aac0 R12: ffff88816e06f9f8
+[327755.368067] R13: 000000000000000c R14: 0000000000000000 R15: ffff88816e06fae0
+[327755.368068] FS:  0000000000000000(0000) GS:ffff88a07aa9c000(0000) knlGS:0000000000000000
+[327755.368069] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[327755.368070] CR2: 0000000000000000 CR3: 000000000842e006 CR4: 0000000000f72ef0
+[327755.368071] PKRU: 55555554
+[327755.368072] note: vidmem lazy fre[64560] exited with irqs disabled
+[327755.368073] note: vidmem lazy fre[64560] exited with preempt_count 1
+[327765.603353] NVRM: Xid (PCI:0000:01:00): 109, pid=4143120, name=chapter_demo.ou, channel 0x00000012, errorString CTX SWITCH TIMEOUT, Info 0xc008
+[327765.609300] NVRM: Xid (PCI:0000:01:00): 31, pid=4143120, name=chapter_demo.ou, channel 0x00000012, intr 00000000. MMU Fault: ENGINE GRAPHICS GPC2 GPCCLIENT_T1_4 faulted @ 0x7f22_db923000. Fault is of type FAULT_PTE ACCESS_TYPE_VIRT_WRITE
+[327779.686894] watchdog: BUG: soft lockup - CPU#9 stuck for 26s! [UVM GPU1 BH:64561]
+[327779.686897] CPU#9 Utilization every 4000ms during lockup:
+[327779.686898] 	#1: 100% system,	  0% softirq,	  0% hardirq,	  0% idle
+[327779.686899] 	#2: 100% system,	  0% softirq,	  0% hardirq,	  0% idle
+[327779.686899] 	#3: 100% system,	  0% softirq,	  0% hardirq,	  0% idle
+[327779.686899] 	#4: 100% system,	  0% softirq,	  0% hardirq,	  0% idle
+[327779.686900] 	#5: 100% system,	  0% softirq,	  1% hardirq,	  0% idle
+[327779.686900] Modules linked in: vhost_net vhost vhost_iotlb tap tls uinput xt_connmark xt_mark rfcomm snd_seq_dummy snd_hrtimer nvidia_uvm(OE) nf_conntrack_netlink xt_nat veth xt_conntrack xt_MASQUERADE bridge stp llc xt_set ip_set nft_chain_nat xt_addrtype nft_compat rpcrdma rdma_cm iw_cm ib_cm ib_core binfmt_misc tun overlay nf_tables nfnetlink_cttimeout openvswitch nsh nf_conncount nf_nat nf_conntrack nf_defrag_ipv6 nf_defrag_ipv4 psample qrtr bnep vfat fat snd_sof_pci_intel_tgl snd_sof_pci_intel_cnl snd_sof_intel_hda_generic soundwire_intel snd_sof_intel_hda_sdw_bpt snd_sof_intel_hda_common snd_soc_hdac_hda snd_sof_intel_hda_mlink snd_sof_intel_hda soundwire_cadence intel_rapl_msr snd_sof_pci intel_rapl_common snd_sof_xtensa_dsp snd_sof intel_uncore_frequency intel_uncore_frequency_common snd_hda_codec_intelhdmi intel_tcc_cooling iwlmvm snd_sof_utils x86_pkg_temp_thermal snd_soc_acpi_intel_match intel_powerclamp snd_soc_acpi_intel_sdca_quirks soundwire_generic_allocation snd_soc_sdw_utils coretemp snd_soc_acpi crc8
+[327779.686920]  soundwire_bus snd_hda_codec_alc662 snd_soc_sdca snd_hda_codec_realtek_lib mac80211 kvm_intel snd_hda_codec_generic snd_soc_avs snd_hda_codec_nvhdmi snd_hda_codec_hdmi snd_soc_hda_codec libarc4 snd_hda_intel snd_hda_ext_core kvm nvidia_drm(OE) snd_hda_codec snd_soc_core nvidia_modeset(OE) snd_hda_core asus_armoury snd_compress snd_intel_dspcfg iwlwifi ac97_bus btusb snd_intel_sdw_acpi snd_pcm_dmaengine snd_hwdep btmtk snd_seq btrtl spi_nor irqbypass snd_seq_device btbcm rapl eeepc_wmi iTCO_wdt firmware_attributes_class asus_wmi btintel intel_cstate mtd snd_pcm ee1004 intel_pmc_bxt sparse_keymap mei_hdcp mei_pxp r8169 snd_timer nvidia(OE) i2c_i801 spi_intel_pci cfg80211 bluetooth intel_uncore igc platform_profile wmi_bmof realtek i2c_smbus spi_intel snd idma64 intel_pmc_core soundcore mei_me joydev apple_mfi_fastcharge pmt_telemetry mei pmt_discovery pmt_class rfkill intel_pmc_ssram_telemetry acpi_tad acpi_pad nfsd auth_rpcgss nfs_acl lockd grace nfs_localio sunrpc fuse dm_multipath nfnetlink zram
+[327779.686942]  lz4hc_compress lz4_compress xfs xe drm_ttm_helper drm_suballoc_helper gpu_sched drm_gpuvm drm_exec drm_gpusvm_helper hid_apple i915 i2c_algo_bit drm_buddy ttm nvme drm_display_helper nvme_core nvme_keyring cec nvme_auth ghash_clmulni_intel video hkdf intel_vsec intel_oc_wdt wmi pinctrl_alderlake i2c_dev scsi_dh_rdac scsi_dh_alua scsi_dh_emc
+[327779.686950] CPU: 9 UID: 0 PID: 64561 Comm: UVM GPU1 BH Kdump: loaded Tainted: G      D    OE       7.0.8-200.fc44.x86_64 #1 PREEMPT(lazy)
+[327779.686951] Tainted: [D]=DIE, [O]=OOT_MODULE, [E]=UNSIGNED_MODULE
+[327779.686952] Hardware name: ASUS System Product Name/TUF GAMING B660-PLUS WIFI D4, BIOS 1620 08/12/2022
+[327779.686952] RIP: 0010:native_queued_spin_lock_slowpath+0x6a/0x330
+[327779.686957] Code: 08 0f 92 c2 8b 01 0f b6 d2 c1 e2 08 30 e4 09 d0 3d ff 00 00 00 77 51 85 c0 75 0f bf 01 00 00 00 66 89 39 c3 cc cc cc cc f3 90 <80> 39 00 75 f9 bf 01 00 00 00 66 89 39 c3 cc cc cc cc 8b 37 b8 00
+[327779.686957] RSP: 0018:ffffc9000d51b788 EFLAGS: 00000202
+[327779.686958] RAX: 0000000000000001 RBX: ffff88816e06f9f8 RCX: ffff88816e06fae0
+[327779.686959] RDX: 0000000000000000 RSI: 0000000000000001 RDI: ffff88816e06fae0
+[327779.686959] RBP: ffffc9000d51b7c0 R08: 0000000000000000 R09: ffffc9000d51b8e0
+[327779.686960] R10: 0000000000000000 R11: ffff8892a8ce03c0 R12: ffff88816e06fae0
+[327779.686960] R13: ffff88816e06f9f8 R14: 0000000000000000 R15: 0000000000001000
+[327779.686961] FS:  0000000000000000(0000) GS:ffff88a07a31c000(0000) knlGS:0000000000000000
+[327779.686961] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[327779.686962] CR2: 00005583067854d0 CR3: 000000000842e003 CR4: 0000000000f72ef0
+[327779.686962] PKRU: 55555554
+[327779.686963] Call Trace:
+[327779.686963]  <TASK>
+[327779.686964]  _raw_spin_lock+0x29/0x30
+[327779.686967]  claim_free_chunk+0x2a/0xe0 [nvidia_uvm]
+[327779.687015]  pmm_gpu_alloc+0x15a/0x390 [nvidia_uvm]
+[327779.687048]  ? block_zero_new_gpu_chunk+0x22e/0x380 [nvidia_uvm]
+[327779.687083]  uvm_pmm_gpu_alloc_user+0x1c/0x30 [nvidia_uvm]
+[327779.687117]  block_populate_gpu_chunk+0x357/0x460 [nvidia_uvm]
+[327779.687152]  uvm_va_block_populate_pages_gpu+0x15e/0x200 [nvidia_uvm]
+[327779.687188]  uvm_hmm_va_block_service_locked+0x137/0x630 [nvidia_uvm]
+[327779.687218]  ? uvm_perf_prefetch_prenotify_fault_migrations+0x16e/0x2f0 [nvidia_uvm]
+[327779.687247]  uvm_va_block_service_locked+0x7b/0xd0 [nvidia_uvm]
+[327779.687283]  service_fault_batch_block_locked+0x452/0xad0 [nvidia_uvm]
+[327779.687319]  ? service_fault_batch_dispatch.isra.0+0x321/0x3e0 [nvidia_uvm]
+[327779.687354]  service_fault_batch_dispatch.isra.0+0x321/0x3e0 [nvidia_uvm]
+[327779.687389]  service_fault_batch.constprop.0+0xa3/0x360 [nvidia_uvm]
+[327779.687424]  uvm_parent_gpu_service_replayable_faults+0x11c/0x6b0 [nvidia_uvm]
+[327779.687459]  ? ___down_common+0xd1/0x180
+[327779.687460]  replayable_faults_isr_bottom_half+0x49/0x70 [nvidia_uvm]
+[327779.687487]  replayable_faults_isr_bottom_half_entry+0xa3/0xe0 [nvidia_uvm]
+[327779.687515]  _main_loop+0x90/0x150 [nvidia_uvm]
+[327779.687537]  ? __pfx__main_loop+0x10/0x10 [nvidia_uvm]
+[327779.687560]  kthread+0xe1/0x120
+[327779.687562]  ? __pfx_kthread+0x10/0x10
+[327779.687563]  ret_from_fork+0x1a1/0x270
+[327779.687564]  ? __pfx_kthread+0x10/0x10
+[327779.687565]  ret_from_fork_asm+0x1a/0x30
+[327779.687568]  </TASK>
+[327783.679884] watchdog: BUG: soft lockup - CPU#12 stuck for 23s! [chapter_demo.ou:4143425]
+[327783.679887] CPU#12 Utilization every 4000ms during lockup:
+[327783.679887] 	#1: 100% system,	  0% softirq,	  1% hardirq,	  0% idle
+[327783.679888] 	#2: 100% system,	  0% softirq,	  0% hardirq,	  0% idle
+[327783.679889] 	#3: 100% system,	  0% softirq,	  0% hardirq,	  0% idle
+[327783.679889] 	#4: 100% system,	  0% softirq,	  0% hardirq,	  0% idle
+[327783.679889] 	#5: 100% system,	  0% softirq,	  1% hardirq,	  0% idle
+[327783.679890] Modules linked in: vhost_net vhost vhost_iotlb tap tls uinput xt_connmark xt_mark rfcomm snd_seq_dummy snd_hrtimer nvidia_uvm(OE) nf_conntrack_netlink xt_nat veth xt_conntrack xt_MASQUERADE bridge stp llc xt_set ip_set nft_chain_nat xt_addrtype nft_compat rpcrdma rdma_cm iw_cm ib_cm ib_core binfmt_misc tun overlay nf_tables nfnetlink_cttimeout openvswitch nsh nf_conncount nf_nat nf_conntrack nf_defrag_ipv6 nf_defrag_ipv4 psample qrtr bnep vfat fat snd_sof_pci_intel_tgl snd_sof_pci_intel_cnl snd_sof_intel_hda_generic soundwire_intel snd_sof_intel_hda_sdw_bpt snd_sof_intel_hda_common snd_soc_hdac_hda snd_sof_intel_hda_mlink snd_sof_intel_hda soundwire_cadence intel_rapl_msr snd_sof_pci intel_rapl_common snd_sof_xtensa_dsp snd_sof intel_uncore_frequency intel_uncore_frequency_common snd_hda_codec_intelhdmi intel_tcc_cooling iwlmvm snd_sof_utils x86_pkg_temp_thermal snd_soc_acpi_intel_match intel_powerclamp snd_soc_acpi_intel_sdca_quirks soundwire_generic_allocation snd_soc_sdw_utils coretemp snd_soc_acpi crc8
+[327783.679910]  soundwire_bus snd_hda_codec_alc662 snd_soc_sdca snd_hda_codec_realtek_lib mac80211 kvm_intel snd_hda_codec_generic snd_soc_avs snd_hda_codec_nvhdmi snd_hda_codec_hdmi snd_soc_hda_codec libarc4 snd_hda_intel snd_hda_ext_core kvm nvidia_drm(OE) snd_hda_codec snd_soc_core nvidia_modeset(OE) snd_hda_core asus_armoury snd_compress snd_intel_dspcfg iwlwifi ac97_bus btusb snd_intel_sdw_acpi snd_pcm_dmaengine snd_hwdep btmtk snd_seq btrtl spi_nor irqbypass snd_seq_device btbcm rapl eeepc_wmi iTCO_wdt firmware_attributes_class asus_wmi btintel intel_cstate mtd snd_pcm ee1004 intel_pmc_bxt sparse_keymap mei_hdcp mei_pxp r8169 snd_timer nvidia(OE) i2c_i801 spi_intel_pci cfg80211 bluetooth intel_uncore igc platform_profile wmi_bmof realtek i2c_smbus spi_intel snd idma64 intel_pmc_core soundcore mei_me joydev apple_mfi_fastcharge pmt_telemetry mei pmt_discovery pmt_class rfkill intel_pmc_ssram_telemetry acpi_tad acpi_pad nfsd auth_rpcgss nfs_acl lockd grace nfs_localio sunrpc fuse dm_multipath nfnetlink zram
+[327783.679931]  lz4hc_compress lz4_compress xfs xe drm_ttm_helper drm_suballoc_helper gpu_sched drm_gpuvm drm_exec drm_gpusvm_helper hid_apple i915 i2c_algo_bit drm_buddy ttm nvme drm_display_helper nvme_core nvme_keyring cec nvme_auth ghash_clmulni_intel video hkdf intel_vsec intel_oc_wdt wmi pinctrl_alderlake i2c_dev scsi_dh_rdac scsi_dh_alua scsi_dh_emc
+[327783.679940] CPU: 12 UID: 1000 PID: 4143425 Comm: chapter_demo.ou Kdump: loaded Tainted: G      D    OEL      7.0.8-200.fc44.x86_64 #1 PREEMPT(lazy)
+[327783.679942] Tainted: [D]=DIE, [O]=OOT_MODULE, [E]=UNSIGNED_MODULE, [L]=SOFTLOCKUP
+[327783.679942] Hardware name: ASUS System Product Name/TUF GAMING B660-PLUS WIFI D4, BIOS 1620 08/12/2022
+[327783.679943] RIP: 0010:native_queued_spin_lock_slowpath+0x293/0x330
+[327783.679947] Code: 48 03 04 f5 e0 70 1c 83 48 89 10 8b 72 08 85 f6 75 09 f3 90 8b 42 08 85 c0 74 f7 48 8b 32 48 85 f6 74 07 0f 0d 0e eb 02 f3 90 <8b> 01 66 85 c0 75 f7 44 39 c0 74 3a c6 01 01 48 85 f6 74 0e c7 46
+[327783.679948] RSP: 0018:ffffc90002f474b0 EFLAGS: 00000202
+[327783.679949] RAX: 0000000000340101 RBX: ffff88816e06f9f8 RCX: ffff88816e06fae0
+[327783.679949] RDX: ffff889ffee34200 RSI: 0000000000000000 RDI: 0000000000000000
+[327783.679950] RBP: ffffc90002f47510 R08: 0000000000340000 R09: ffff88a07a49c000
+[327783.679950] R10: 0000000000340000 R11: ffff888100044700 R12: ffff88816e06fae0
+[327783.679951] R13: ffff88816e06f9f8 R14: 0000000000000001 R15: 0000000000001000
+[327783.679951] FS:  00007f5ac9955000(0000) GS:ffff88a07a49c000(0000) knlGS:0000000000000000
+[327783.679952] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[327783.679952] CR2: 00007f54b7ffbff0 CR3: 0000001851079001 CR4: 0000000000f72ef0
+[327783.679953] PKRU: 55555554
+[327783.679953] Call Trace:
+[327783.679954]  <TASK>
+[327783.679955]  _raw_spin_lock+0x29/0x30
+[327783.679958]  claim_free_chunk+0x2a/0xe0 [nvidia_uvm]
+[327783.680006]  pmm_gpu_alloc+0x15a/0x390 [nvidia_uvm]
+[327783.680038]  uvm_pmm_gpu_alloc_kernel+0x35/0xd0 [nvidia_uvm]
+[327783.680072]  phys_mem_allocate+0x97/0x170 [nvidia_uvm]
+[327783.680108]  allocate_directory+0xb5/0x120 [nvidia_uvm]
+[327783.680144]  uvm_page_tree_init+0xfa/0x2b0 [nvidia_uvm]
+[327783.680180]  create_gpu_va_space+0x121/0x2b0 [nvidia_uvm]
+[327783.680208]  uvm_va_space_register_gpu_va_space+0xc5/0x5d0 [nvidia_uvm]
+[327783.680236]  uvm_api_register_gpu_va_space+0x4b/0x70 [nvidia_uvm]
+[327783.680262]  uvm_ioctl+0x1467/0x1bc0 [nvidia_uvm]
+[327783.680286]  ? rmapiControlWithSecInfoTls+0x8c/0xe0 [nvidia]
+[327783.680434]  ? _nv04ControlWithSecInfo+0x8d/0xa0 [nvidia]
+[327783.680540]  ? thread_context_non_interrupt_add+0x133/0x220 [nvidia_uvm]
+[327783.680577]  uvm_unlocked_ioctl_entry.part.0+0x78/0xe0 [nvidia_uvm]
+[327783.680601]  ? sched_balance_find_dst_group+0x215/0x8f0
+[327783.680603]  ? os_get_monotonic_time_ns+0x3d/0xa0 [nvidia]
+[327783.680658]  __x64_sys_ioctl+0xb9/0x100
+[327783.680661]  do_syscall_64+0x109/0x6e0
+[327783.680664]  ? __virt_addr_valid+0x83/0x110
+[327783.680665]  ? check_heap_object+0x38/0x180
+[327783.680666]  ? __check_object_size+0x6f/0xd0
+[327783.680667]  ? nvidia_ioctl.isra.0+0x1e2/0x9e0 [nvidia]
+[327783.680717]  ? nvidia_unlocked_ioctl+0x22/0x30 [nvidia]
+[327783.680766]  ? __x64_sys_ioctl+0xd4/0x100
+[327783.680767]  ? do_syscall_64+0x144/0x6e0
+[327783.680768]  ? __do_sys_clone3+0x124/0x160
+[327783.680770]  ? do_syscall_64+0x144/0x6e0
+[327783.680771]  ? do_user_addr_fault+0x2cd/0x830
+[327783.680773]  ? irqentry_exit+0x7b/0x560
+[327783.680774]  ? exc_page_fault+0x90/0x1f0
+[327783.680775]  ? __irq_exit_rcu+0x4c/0xf0
+[327783.680776]  entry_SYSCALL_64_after_hwframe+0x76/0x7e
+[327783.680778] RIP: 0033:0x7f5ac93e15fd
+[327783.680797] Code: 04 25 28 00 00 00 48 89 45 c8 31 c0 48 8d 45 10 c7 45 b0 10 00 00 00 48 89 45 b8 48 8d 45 d0 48 89 45 c0 b8 10 00 00 00 0f 05 <89> c2 3d 00 f0 ff ff 77 1a 48 8b 45 c8 64 48 2b 04 25 28 00 00 00
+[327783.680798] RSP: 002b:00007ffc75e01eb0 EFLAGS: 00000246 ORIG_RAX: 0000000000000010
+[327783.680799] RAX: ffffffffffffffda RBX: 00007ffc75e01f10 RCX: 00007f5ac93e15fd
+[327783.680800] RDX: 00007ffc75e01f10 RSI: 0000000000000019 RDI: 0000000000000009
+[327783.680800] RBP: 00007ffc75e01f00 R08: 0000556a508ccef0 R09: 00007ffc75e00e4c
+[327783.680800] R10: 00007ffc75e00e30 R11: 0000000000000246 R12: 0000000000000009
+[327783.680801] R13: 0000556a508f0c16 R14: 0000556a508af960 R15: 0000000000000000
+[327783.680802]  </TASK>
+[327807.686821] watchdog: BUG: soft lockup - CPU#9 stuck for 52s! [UVM GPU1 BH:64561]
+[327807.686824] CPU#9 Utilization every 4000ms during lockup:
+[327807.686824] 	#1: 100% system,	  0% softirq,	  0% hardirq,	  0% idle
+[327807.686825] 	#2: 100% system,	  0% softirq,	  0% hardirq,	  0% idle
+[327807.686826] 	#3: 100% system,	  0% softirq,	  1% hardirq,	  0% idle
+[327807.686826] 	#4: 100% system,	  0% softirq,	  0% hardirq,	  0% idle
+[327807.686826] 	#5: 100% system,	  0% softirq,	  0% hardirq,	  0% idle
+[327807.686827] Modules linked in: vhost_net vhost vhost_iotlb tap tls uinput xt_connmark xt_mark rfcomm snd_seq_dummy snd_hrtimer nvidia_uvm(OE) nf_conntrack_netlink xt_nat veth xt_conntrack xt_MASQUERADE bridge stp llc xt_set ip_set nft_chain_nat xt_addrtype nft_compat rpcrdma rdma_cm iw_cm ib_cm ib_core binfmt_misc tun overlay nf_tables nfnetlink_cttimeout openvswitch nsh nf_conncount nf_nat nf_conntrack nf_defrag_ipv6 nf_defrag_ipv4 psample qrtr bnep vfat fat snd_sof_pci_intel_tgl snd_sof_pci_intel_cnl snd_sof_intel_hda_generic soundwire_intel snd_sof_intel_hda_sdw_bpt snd_sof_intel_hda_common snd_soc_hdac_hda snd_sof_intel_hda_mlink snd_sof_intel_hda soundwire_cadence intel_rapl_msr snd_sof_pci intel_rapl_common snd_sof_xtensa_dsp snd_sof intel_uncore_frequency intel_uncore_frequency_common snd_hda_codec_intelhdmi intel_tcc_cooling iwlmvm snd_sof_utils x86_pkg_temp_thermal snd_soc_acpi_intel_match intel_powerclamp snd_soc_acpi_intel_sdca_quirks soundwire_generic_allocation snd_soc_sdw_utils coretemp snd_soc_acpi crc8
+[327807.686846]  soundwire_bus snd_hda_codec_alc662 snd_soc_sdca snd_hda_codec_realtek_lib mac80211 kvm_intel snd_hda_codec_generic snd_soc_avs snd_hda_codec_nvhdmi snd_hda_codec_hdmi snd_soc_hda_codec libarc4 snd_hda_intel snd_hda_ext_core kvm nvidia_drm(OE) snd_hda_codec snd_soc_core nvidia_modeset(OE) snd_hda_core asus_armoury snd_compress snd_intel_dspcfg iwlwifi ac97_bus btusb snd_intel_sdw_acpi snd_pcm_dmaengine snd_hwdep btmtk snd_seq btrtl spi_nor irqbypass snd_seq_device btbcm rapl eeepc_wmi iTCO_wdt firmware_attributes_class asus_wmi btintel intel_cstate mtd snd_pcm ee1004 intel_pmc_bxt sparse_keymap mei_hdcp mei_pxp r8169 snd_timer nvidia(OE) i2c_i801 spi_intel_pci cfg80211 bluetooth intel_uncore igc platform_profile wmi_bmof realtek i2c_smbus spi_intel snd idma64 intel_pmc_core soundcore mei_me joydev apple_mfi_fastcharge pmt_telemetry mei pmt_discovery pmt_class rfkill intel_pmc_ssram_telemetry acpi_tad acpi_pad nfsd auth_rpcgss nfs_acl lockd grace nfs_localio sunrpc fuse dm_multipath nfnetlink zram
+[327807.686870]  lz4hc_compress lz4_compress xfs xe drm_ttm_helper drm_suballoc_helper gpu_sched drm_gpuvm drm_exec drm_gpusvm_helper hid_apple i915 i2c_algo_bit drm_buddy ttm nvme drm_display_helper nvme_core nvme_keyring cec nvme_auth ghash_clmulni_intel video hkdf intel_vsec intel_oc_wdt wmi pinctrl_alderlake i2c_dev scsi_dh_rdac scsi_dh_alua scsi_dh_emc
+[327807.686879] CPU: 9 UID: 0 PID: 64561 Comm: UVM GPU1 BH Kdump: loaded Tainted: G      D    OEL      7.0.8-200.fc44.x86_64 #1 PREEMPT(lazy)
+[327807.686880] Tainted: [D]=DIE, [O]=OOT_MODULE, [E]=UNSIGNED_MODULE, [L]=SOFTLOCKUP
+[327807.686881] Hardware name: ASUS System Product Name/TUF GAMING B660-PLUS WIFI D4, BIOS 1620 08/12/2022
+[327807.686882] RIP: 0010:native_queued_spin_lock_slowpath+0x6a/0x330
+[327807.686886] Code: 08 0f 92 c2 8b 01 0f b6 d2 c1 e2 08 30 e4 09 d0 3d ff 00 00 00 77 51 85 c0 75 0f bf 01 00 00 00 66 89 39 c3 cc cc cc cc f3 90 <80> 39 00 75 f9 bf 01 00 00 00 66 89 39 c3 cc cc cc cc 8b 37 b8 00
+[327807.686887] RSP: 0018:ffffc9000d51b788 EFLAGS: 00000202
+[327807.686888] RAX: 0000000000000001 RBX: ffff88816e06f9f8 RCX: ffff88816e06fae0
+[327807.686888] RDX: 0000000000000000 RSI: 0000000000000001 RDI: ffff88816e06fae0
+[327807.686889] RBP: ffffc9000d51b7c0 R08: 0000000000000000 R09: ffffc9000d51b8e0
+[327807.686889] R10: 0000000000000000 R11: ffff8892a8ce03c0 R12: ffff88816e06fae0
+[327807.686890] R13: ffff88816e06f9f8 R14: 0000000000000000 R15: 0000000000001000
+[327807.686890] FS:  0000000000000000(0000) GS:ffff88a07a31c000(0000) knlGS:0000000000000000
+[327807.686891] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[327807.686891] CR2: 00005583067854d0 CR3: 000000000842e003 CR4: 0000000000f72ef0
+[327807.686892] PKRU: 55555554
+[327807.686892] Call Trace:
+[327807.686893]  <TASK>
+[327807.686893]  _raw_spin_lock+0x29/0x30
+[327807.686896]  claim_free_chunk+0x2a/0xe0 [nvidia_uvm]
+[327807.686945]  pmm_gpu_alloc+0x15a/0x390 [nvidia_uvm]
+[327807.686977]  ? block_zero_new_gpu_chunk+0x22e/0x380 [nvidia_uvm]
+[327807.687013]  uvm_pmm_gpu_alloc_user+0x1c/0x30 [nvidia_uvm]
+[327807.687047]  block_populate_gpu_chunk+0x357/0x460 [nvidia_uvm]
+[327807.687083]  uvm_va_block_populate_pages_gpu+0x15e/0x200 [nvidia_uvm]
+[327807.687118]  uvm_hmm_va_block_service_locked+0x137/0x630 [nvidia_uvm]
+[327807.687152]  ? uvm_perf_prefetch_prenotify_fault_migrations+0x16e/0x2f0 [nvidia_uvm]
+[327807.687182]  uvm_va_block_service_locked+0x7b/0xd0 [nvidia_uvm]
+[327807.687217]  service_fault_batch_block_locked+0x452/0xad0 [nvidia_uvm]
+[327807.687254]  ? service_fault_batch_dispatch.isra.0+0x321/0x3e0 [nvidia_uvm]
+[327807.687290]  service_fault_batch_dispatch.isra.0+0x321/0x3e0 [nvidia_uvm]
+[327807.687325]  service_fault_batch.constprop.0+0xa3/0x360 [nvidia_uvm]
+[327807.687362]  uvm_parent_gpu_service_replayable_faults+0x11c/0x6b0 [nvidia_uvm]
+[327807.687396]  ? ___down_common+0xd1/0x180
+[327807.687397]  replayable_faults_isr_bottom_half+0x49/0x70 [nvidia_uvm]
+[327807.687424]  replayable_faults_isr_bottom_half_entry+0xa3/0xe0 [nvidia_uvm]
+[327807.687450]  _main_loop+0x90/0x150 [nvidia_uvm]
+[327807.687473]  ? __pfx__main_loop+0x10/0x10 [nvidia_uvm]
+[327807.687495]  kthread+0xe1/0x120
+[327807.687497]  ? __pfx_kthread+0x10/0x10
+[327807.687498]  ret_from_fork+0x1a1/0x270
+[327807.687500]  ? __pfx_kthread+0x10/0x10
+[327807.687501]  ret_from_fork_asm+0x1a/0x30
+[327807.687503]  </TASK>
+[327811.679810] watchdog: BUG: soft lockup - CPU#12 stuck for 49s! [chapter_demo.ou:4143425]
+[327811.679812] CPU#12 Utilization every 4000ms during lockup:
+[327811.679813] 	#1: 100% system,	  0% softirq,	  0% hardirq,	  0% idle
+[327811.679814] 	#2: 100% system,	  0% softirq,	  1% hardirq,	  0% idle
+[327811.679814] 	#3: 100% system,	  0% softirq,	  0% hardirq,	  0% idle
+[327811.679815] 	#4: 100% system,	  0% softirq,	  0% hardirq,	  0% idle
+[327811.679815] 	#5: 100% system,	  0% softirq,	  0% hardirq,	  0% idle
+[327811.679816] Modules linked in: vhost_net vhost vhost_iotlb tap tls uinput xt_connmark xt_mark rfcomm snd_seq_dummy snd_hrtimer nvidia_uvm(OE) nf_conntrack_netlink xt_nat veth xt_conntrack xt_MASQUERADE bridge stp llc xt_set ip_set nft_chain_nat xt_addrtype nft_compat rpcrdma rdma_cm iw_cm ib_cm ib_core binfmt_misc tun overlay nf_tables nfnetlink_cttimeout openvswitch nsh nf_conncount nf_nat nf_conntrack nf_defrag_ipv6 nf_defrag_ipv4 psample qrtr bnep vfat fat snd_sof_pci_intel_tgl snd_sof_pci_intel_cnl snd_sof_intel_hda_generic soundwire_intel snd_sof_intel_hda_sdw_bpt snd_sof_intel_hda_common snd_soc_hdac_hda snd_sof_intel_hda_mlink snd_sof_intel_hda soundwire_cadence intel_rapl_msr snd_sof_pci intel_rapl_common snd_sof_xtensa_dsp snd_sof intel_uncore_frequency intel_uncore_frequency_common snd_hda_codec_intelhdmi intel_tcc_cooling iwlmvm snd_sof_utils x86_pkg_temp_thermal snd_soc_acpi_intel_match intel_powerclamp snd_soc_acpi_intel_sdca_quirks soundwire_generic_allocation snd_soc_sdw_utils coretemp snd_soc_acpi crc8
+[327811.679835]  soundwire_bus snd_hda_codec_alc662 snd_soc_sdca snd_hda_codec_realtek_lib mac80211 kvm_intel snd_hda_codec_generic snd_soc_avs snd_hda_codec_nvhdmi snd_hda_codec_hdmi snd_soc_hda_codec libarc4 snd_hda_intel snd_hda_ext_core kvm nvidia_drm(OE) snd_hda_codec snd_soc_core nvidia_modeset(OE) snd_hda_core asus_armoury snd_compress snd_intel_dspcfg iwlwifi ac97_bus btusb snd_intel_sdw_acpi snd_pcm_dmaengine snd_hwdep btmtk snd_seq btrtl spi_nor irqbypass snd_seq_device btbcm rapl eeepc_wmi iTCO_wdt firmware_attributes_class asus_wmi btintel intel_cstate mtd snd_pcm ee1004 intel_pmc_bxt sparse_keymap mei_hdcp mei_pxp r8169 snd_timer nvidia(OE) i2c_i801 spi_intel_pci cfg80211 bluetooth intel_uncore igc platform_profile wmi_bmof realtek i2c_smbus spi_intel snd idma64 intel_pmc_core soundcore mei_me joydev apple_mfi_fastcharge pmt_telemetry mei pmt_discovery pmt_class rfkill intel_pmc_ssram_telemetry acpi_tad acpi_pad nfsd auth_rpcgss nfs_acl lockd grace nfs_localio sunrpc fuse dm_multipath nfnetlink zram
+[327811.679856]  lz4hc_compress lz4_compress xfs xe drm_ttm_helper drm_suballoc_helper gpu_sched drm_gpuvm drm_exec drm_gpusvm_helper hid_apple i915 i2c_algo_bit drm_buddy ttm nvme drm_display_helper nvme_core nvme_keyring cec nvme_auth ghash_clmulni_intel video hkdf intel_vsec intel_oc_wdt wmi pinctrl_alderlake i2c_dev scsi_dh_rdac scsi_dh_alua scsi_dh_emc
+[327811.679864] CPU: 12 UID: 1000 PID: 4143425 Comm: chapter_demo.ou Kdump: loaded Tainted: G      D    OEL      7.0.8-200.fc44.x86_64 #1 PREEMPT(lazy)
+[327811.679866] Tainted: [D]=DIE, [O]=OOT_MODULE, [E]=UNSIGNED_MODULE, [L]=SOFTLOCKUP
+[327811.679867] Hardware name: ASUS System Product Name/TUF GAMING B660-PLUS WIFI D4, BIOS 1620 08/12/2022
+[327811.679867] RIP: 0010:native_queued_spin_lock_slowpath+0x295/0x330
+[327811.679871] Code: 04 f5 e0 70 1c 83 48 89 10 8b 72 08 85 f6 75 09 f3 90 8b 42 08 85 c0 74 f7 48 8b 32 48 85 f6 74 07 0f 0d 0e eb 02 f3 90 8b 01 <66> 85 c0 75 f7 44 39 c0 74 3a c6 01 01 48 85 f6 74 0e c7 46 08 01
+[327811.679871] RSP: 0018:ffffc90002f474b0 EFLAGS: 00000202
+[327811.679872] RAX: 0000000000340101 RBX: ffff88816e06f9f8 RCX: ffff88816e06fae0
+[327811.679873] RDX: ffff889ffee34200 RSI: 0000000000000000 RDI: 0000000000000000
+[327811.679873] RBP: ffffc90002f47510 R08: 0000000000340000 R09: ffff88a07a49c000
+[327811.679874] R10: 0000000000340000 R11: ffff888100044700 R12: ffff88816e06fae0
+[327811.679874] R13: ffff88816e06f9f8 R14: 0000000000000001 R15: 0000000000001000
+[327811.679875] FS:  00007f5ac9955000(0000) GS:ffff88a07a49c000(0000) knlGS:0000000000000000
+[327811.679875] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[327811.679876] CR2: 00007f54b7ffbff0 CR3: 0000001851079001 CR4: 0000000000f72ef0
+[327811.679876] PKRU: 55555554
+[327811.679877] Call Trace:
+[327811.679877]  <TASK>
+[327811.679878]  _raw_spin_lock+0x29/0x30
+[327811.679880]  claim_free_chunk+0x2a/0xe0 [nvidia_uvm]
+[327811.679924]  pmm_gpu_alloc+0x15a/0x390 [nvidia_uvm]
+[327811.679958]  uvm_pmm_gpu_alloc_kernel+0x35/0xd0 [nvidia_uvm]
+[327811.679991]  phys_mem_allocate+0x97/0x170 [nvidia_uvm]
+[327811.680028]  allocate_directory+0xb5/0x120 [nvidia_uvm]
+[327811.680064]  uvm_page_tree_init+0xfa/0x2b0 [nvidia_uvm]
+[327811.680100]  create_gpu_va_space+0x121/0x2b0 [nvidia_uvm]
+[327811.680128]  uvm_va_space_register_gpu_va_space+0xc5/0x5d0 [nvidia_uvm]
+[327811.680157]  uvm_api_register_gpu_va_space+0x4b/0x70 [nvidia_uvm]
+[327811.680183]  uvm_ioctl+0x1467/0x1bc0 [nvidia_uvm]
+[327811.680206]  ? rmapiControlWithSecInfoTls+0x8c/0xe0 [nvidia]
+[327811.680336]  ? _nv04ControlWithSecInfo+0x8d/0xa0 [nvidia]
+[327811.680439]  ? thread_context_non_interrupt_add+0x133/0x220 [nvidia_uvm]
+[327811.680476]  uvm_unlocked_ioctl_entry.part.0+0x78/0xe0 [nvidia_uvm]
+[327811.680499]  ? sched_balance_find_dst_group+0x215/0x8f0
+[327811.680502]  ? os_get_monotonic_time_ns+0x3d/0xa0 [nvidia]
+[327811.680556]  __x64_sys_ioctl+0xb9/0x100
+[327811.680559]  do_syscall_64+0x109/0x6e0
+[327811.680561]  ? __virt_addr_valid+0x83/0x110
+[327811.680563]  ? check_heap_object+0x38/0x180
+[327811.680564]  ? __check_object_size+0x6f/0xd0
+[327811.680565]  ? nvidia_ioctl.isra.0+0x1e2/0x9e0 [nvidia]
+[327811.680614]  ? nvidia_unlocked_ioctl+0x22/0x30 [nvidia]
+[327811.680663]  ? __x64_sys_ioctl+0xd4/0x100
+[327811.680665]  ? do_syscall_64+0x144/0x6e0
+[327811.680666]  ? __do_sys_clone3+0x124/0x160
+[327811.680668]  ? do_syscall_64+0x144/0x6e0
+[327811.680669]  ? do_user_addr_fault+0x2cd/0x830
+[327811.680670]  ? irqentry_exit+0x7b/0x560
+[327811.680672]  ? exc_page_fault+0x90/0x1f0
+[327811.680673]  ? __irq_exit_rcu+0x4c/0xf0
+[327811.680674]  entry_SYSCALL_64_after_hwframe+0x76/0x7e
+[327811.680676] RIP: 0033:0x7f5ac93e15fd
+[327811.680693] Code: 04 25 28 00 00 00 48 89 45 c8 31 c0 48 8d 45 10 c7 45 b0 10 00 00 00 48 89 45 b8 48 8d 45 d0 48 89 45 c0 b8 10 00 00 00 0f 05 <89> c2 3d 00 f0 ff ff 77 1a 48 8b 45 c8 64 48 2b 04 25 28 00 00 00
+[327811.680694] RSP: 002b:00007ffc75e01eb0 EFLAGS: 00000246 ORIG_RAX: 0000000000000010
+[327811.680695] RAX: ffffffffffffffda RBX: 00007ffc75e01f10 RCX: 00007f5ac93e15fd
+[327811.680695] RDX: 00007ffc75e01f10 RSI: 0000000000000019 RDI: 0000000000000009
+[327811.680695] RBP: 00007ffc75e01f00 R08: 0000556a508ccef0 R09: 00007ffc75e00e4c
+[327811.680696] R10: 00007ffc75e00e30 R11: 0000000000000246 R12: 0000000000000009
+[327811.680696] R13: 0000556a508f0c16 R14: 0000556a508af960 R15: 0000000000000000
+[327811.680697]  </TASK>
+[327815.368406] rcu: INFO: rcu_preempt self-detected stall on CPU
+[327815.368411] rcu: 	9-....: (59999 ticks this GP) idle=0df4/1/0x4000000000000000 softirq=5440557/5440557 fqs=26781
+[327815.368414] rcu: 	(t=60000 jiffies g=76581245 q=227498 ncpus=32)
+[327815.368416] CPU: 9 UID: 0 PID: 64561 Comm: UVM GPU1 BH Kdump: loaded Tainted: G      D    OEL      7.0.8-200.fc44.x86_64 #1 PREEMPT(lazy)
+[327815.368418] Tainted: [D]=DIE, [O]=OOT_MODULE, [E]=UNSIGNED_MODULE, [L]=SOFTLOCKUP
+[327815.368419] Hardware name: ASUS System Product Name/TUF GAMING B660-PLUS WIFI D4, BIOS 1620 08/12/2022
+[327815.368420] RIP: 0010:native_queued_spin_lock_slowpath+0x6d/0x330
+[327815.368424] Code: c2 8b 01 0f b6 d2 c1 e2 08 30 e4 09 d0 3d ff 00 00 00 77 51 85 c0 75 0f bf 01 00 00 00 66 89 39 c3 cc cc cc cc f3 90 80 39 00 <75> f9 bf 01 00 00 00 66 89 39 c3 cc cc cc cc 8b 37 b8 00 02 00 00
+[327815.368424] RSP: 0018:ffffc9000d51b788 EFLAGS: 00000202
+[327815.368426] RAX: 0000000000000001 RBX: ffff88816e06f9f8 RCX: ffff88816e06fae0
+[327815.368426] RDX: 0000000000000000 RSI: 0000000000000001 RDI: ffff88816e06fae0
+[327815.368427] RBP: ffffc9000d51b7c0 R08: 0000000000000000 R09: ffffc9000d51b8e0
+[327815.368427] R10: 0000000000000000 R11: ffff8892a8ce03c0 R12: ffff88816e06fae0
+[327815.368427] R13: ffff88816e06f9f8 R14: 0000000000000000 R15: 0000000000001000
+[327815.368428] FS:  0000000000000000(0000) GS:ffff88a07a31c000(0000) knlGS:0000000000000000
+[327815.368429] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[327815.368429] CR2: 00005583067854d0 CR3: 000000000842e003 CR4: 0000000000f72ef0
+[327815.368430] PKRU: 55555554
+[327815.368430] Call Trace:
+[327815.368431]  <TASK>
+[327815.368431]  _raw_spin_lock+0x29/0x30
+[327815.368434]  claim_free_chunk+0x2a/0xe0 [nvidia_uvm]
+[327815.368478]  pmm_gpu_alloc+0x15a/0x390 [nvidia_uvm]
+[327815.368510]  ? block_zero_new_gpu_chunk+0x22e/0x380 [nvidia_uvm]
+[327815.368545]  uvm_pmm_gpu_alloc_user+0x1c/0x30 [nvidia_uvm]
+[327815.368578]  block_populate_gpu_chunk+0x357/0x460 [nvidia_uvm]
+[327815.368614]  uvm_va_block_populate_pages_gpu+0x15e/0x200 [nvidia_uvm]
+[327815.368649]  uvm_hmm_va_block_service_locked+0x137/0x630 [nvidia_uvm]
+[327815.368679]  ? uvm_perf_prefetch_prenotify_fault_migrations+0x16e/0x2f0 [nvidia_uvm]
+[327815.368708]  uvm_va_block_service_locked+0x7b/0xd0 [nvidia_uvm]
+[327815.368743]  service_fault_batch_block_locked+0x452/0xad0 [nvidia_uvm]
+[327815.368780]  ? service_fault_batch_dispatch.isra.0+0x321/0x3e0 [nvidia_uvm]
+[327815.368814]  service_fault_batch_dispatch.isra.0+0x321/0x3e0 [nvidia_uvm]
+[327815.368849]  service_fault_batch.constprop.0+0xa3/0x360 [nvidia_uvm]
+[327815.368884]  uvm_parent_gpu_service_replayable_faults+0x11c/0x6b0 [nvidia_uvm]
+[327815.368918]  ? ___down_common+0xd1/0x180
+[327815.368919]  replayable_faults_isr_bottom_half+0x49/0x70 [nvidia_uvm]
+[327815.368946]  replayable_faults_isr_bottom_half_entry+0xa3/0xe0 [nvidia_uvm]
+[327815.368972]  _main_loop+0x90/0x150 [nvidia_uvm]
+[327815.368995]  ? __pfx__main_loop+0x10/0x10 [nvidia_uvm]
+[327815.369017]  kthread+0xe1/0x120
+[327815.369019]  ? __pfx_kthread+0x10/0x10
+[327815.369020]  ret_from_fork+0x1a1/0x270
+[327815.369022]  ? __pfx_kthread+0x10/0x10
+[327815.369023]  ret_from_fork_asm+0x1a/0x30
+[327815.369025]  </TASK>
+[327839.679737] watchdog: BUG: soft lockup - CPU#12 stuck for 75s! [chapter_demo.ou:4143425]
+[327839.679740] CPU#12 Utilization every 4000ms during lockup:
+[327839.679741] 	#1: 100% system,	  0% softirq,	  0% hardirq,	  0% idle
+[327839.679742] 	#2: 100% system,	  0% softirq,	  0% hardirq,	  0% idle
+[327839.679742] 	#3: 100% system,	  0% softirq,	  1% hardirq,	  0% idle
+[327839.679742] 	#4: 100% system,	  0% softirq,	  0% hardirq,	  0% idle
+[327839.679743] 	#5: 100% system,	  0% softirq,	  0% hardirq,	  0% idle
+[327839.679743] Modules linked in: vhost_net vhost vhost_iotlb tap tls uinput xt_connmark xt_mark rfcomm snd_seq_dummy snd_hrtimer nvidia_uvm(OE) nf_conntrack_netlink xt_nat veth xt_conntrack xt_MASQUERADE bridge stp llc xt_set ip_set nft_chain_nat xt_addrtype nft_compat rpcrdma rdma_cm iw_cm ib_cm ib_core binfmt_misc tun overlay nf_tables nfnetlink_cttimeout openvswitch nsh nf_conncount nf_nat nf_conntrack nf_defrag_ipv6 nf_defrag_ipv4 psample qrtr bnep vfat fat snd_sof_pci_intel_tgl snd_sof_pci_intel_cnl snd_sof_intel_hda_generic soundwire_intel snd_sof_intel_hda_sdw_bpt snd_sof_intel_hda_common snd_soc_hdac_hda snd_sof_intel_hda_mlink snd_sof_intel_hda soundwire_cadence intel_rapl_msr snd_sof_pci intel_rapl_common snd_sof_xtensa_dsp snd_sof intel_uncore_frequency intel_uncore_frequency_common snd_hda_codec_intelhdmi intel_tcc_cooling iwlmvm snd_sof_utils x86_pkg_temp_thermal snd_soc_acpi_intel_match intel_powerclamp snd_soc_acpi_intel_sdca_quirks soundwire_generic_allocation snd_soc_sdw_utils coretemp snd_soc_acpi crc8
+[327839.679764]  soundwire_bus snd_hda_codec_alc662 snd_soc_sdca snd_hda_codec_realtek_lib mac80211 kvm_intel snd_hda_codec_generic snd_soc_avs snd_hda_codec_nvhdmi snd_hda_codec_hdmi snd_soc_hda_codec libarc4 snd_hda_intel snd_hda_ext_core kvm nvidia_drm(OE) snd_hda_codec snd_soc_core nvidia_modeset(OE) snd_hda_core asus_armoury snd_compress snd_intel_dspcfg iwlwifi ac97_bus btusb snd_intel_sdw_acpi snd_pcm_dmaengine snd_hwdep btmtk snd_seq btrtl spi_nor irqbypass snd_seq_device btbcm rapl eeepc_wmi iTCO_wdt firmware_attributes_class asus_wmi btintel intel_cstate mtd snd_pcm ee1004 intel_pmc_bxt sparse_keymap mei_hdcp mei_pxp r8169 snd_timer nvidia(OE) i2c_i801 spi_intel_pci cfg80211 bluetooth intel_uncore igc platform_profile wmi_bmof realtek i2c_smbus spi_intel snd idma64 intel_pmc_core soundcore mei_me joydev apple_mfi_fastcharge pmt_telemetry mei pmt_discovery pmt_class rfkill intel_pmc_ssram_telemetry acpi_tad acpi_pad nfsd auth_rpcgss nfs_acl lockd grace nfs_localio sunrpc fuse dm_multipath nfnetlink zram
+[327839.679786]  lz4hc_compress lz4_compress xfs xe drm_ttm_helper drm_suballoc_helper gpu_sched drm_gpuvm drm_exec drm_gpusvm_helper hid_apple i915 i2c_algo_bit drm_buddy ttm nvme drm_display_helper nvme_core nvme_keyring cec nvme_auth ghash_clmulni_intel video hkdf intel_vsec intel_oc_wdt wmi pinctrl_alderlake i2c_dev scsi_dh_rdac scsi_dh_alua scsi_dh_emc
+[327839.679794] CPU: 12 UID: 1000 PID: 4143425 Comm: chapter_demo.ou Kdump: loaded Tainted: G      D    OEL      7.0.8-200.fc44.x86_64 #1 PREEMPT(lazy)
+[327839.679796] Tainted: [D]=DIE, [O]=OOT_MODULE, [E]=UNSIGNED_MODULE, [L]=SOFTLOCKUP
+[327839.679796] Hardware name: ASUS System Product Name/TUF GAMING B660-PLUS WIFI D4, BIOS 1620 08/12/2022
+[327839.679797] RIP: 0010:native_queued_spin_lock_slowpath+0x293/0x330
+[327839.679801] Code: 48 03 04 f5 e0 70 1c 83 48 89 10 8b 72 08 85 f6 75 09 f3 90 8b 42 08 85 c0 74 f7 48 8b 32 48 85 f6 74 07 0f 0d 0e eb 02 f3 90 <8b> 01 66 85 c0 75 f7 44 39 c0 74 3a c6 01 01 48 85 f6 74 0e c7 46
+[327839.679802] RSP: 0018:ffffc90002f474b0 EFLAGS: 00000202
+[327839.679803] RAX: 0000000000340101 RBX: ffff88816e06f9f8 RCX: ffff88816e06fae0
+[327839.679804] RDX: ffff889ffee34200 RSI: 0000000000000000 RDI: 0000000000000000
+[327839.679804] RBP: ffffc90002f47510 R08: 0000000000340000 R09: ffff88a07a49c000
+[327839.679805] R10: 0000000000340000 R11: ffff888100044700 R12: ffff88816e06fae0
+[327839.679805] R13: ffff88816e06f9f8 R14: 0000000000000001 R15: 0000000000001000
+[327839.679806] FS:  00007f5ac9955000(0000) GS:ffff88a07a49c000(0000) knlGS:0000000000000000
+[327839.679807] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[327839.679807] CR2: 00007f54b7ffbff0 CR3: 0000001851079001 CR4: 0000000000f72ef0
+[327839.679808] PKRU: 55555554
+[327839.679808] Call Trace:
+[327839.679808]  <TASK>
+[327839.679809]  _raw_spin_lock+0x29/0x30
+[327839.679812]  claim_free_chunk+0x2a/0xe0 [nvidia_uvm]
+[327839.679861]  pmm_gpu_alloc+0x15a/0x390 [nvidia_uvm]
+[327839.679896]  uvm_pmm_gpu_alloc_kernel+0x35/0xd0 [nvidia_uvm]
+[327839.679929]  phys_mem_allocate+0x97/0x170 [nvidia_uvm]
+[327839.679965]  allocate_directory+0xb5/0x120 [nvidia_uvm]
+[327839.680001]  uvm_page_tree_init+0xfa/0x2b0 [nvidia_uvm]
+[327839.680038]  create_gpu_va_space+0x121/0x2b0 [nvidia_uvm]
+[327839.680066]  uvm_va_space_register_gpu_va_space+0xc5/0x5d0 [nvidia_uvm]
+[327839.680095]  uvm_api_register_gpu_va_space+0x4b/0x70 [nvidia_uvm]
+[327839.680121]  uvm_ioctl+0x1467/0x1bc0 [nvidia_uvm]
+[327839.680145]  ? rmapiControlWithSecInfoTls+0x8c/0xe0 [nvidia]
+[327839.680285]  ? _nv04ControlWithSecInfo+0x8d/0xa0 [nvidia]
+[327839.680385]  ? thread_context_non_interrupt_add+0x133/0x220 [nvidia_uvm]
+[327839.680423]  uvm_unlocked_ioctl_entry.part.0+0x78/0xe0 [nvidia_uvm]
+[327839.680446]  ? sched_balance_find_dst_group+0x215/0x8f0
+[327839.680448]  ? os_get_monotonic_time_ns+0x3d/0xa0 [nvidia]
+[327839.680503]  __x64_sys_ioctl+0xb9/0x100
+[327839.680506]  do_syscall_64+0x109/0x6e0
+[327839.680508]  ? __virt_addr_valid+0x83/0x110
+[327839.680509]  ? check_heap_object+0x38/0x180
+[327839.680511]  ? __check_object_size+0x6f/0xd0
+[327839.680512]  ? nvidia_ioctl.isra.0+0x1e2/0x9e0 [nvidia]
+[327839.680562]  ? nvidia_unlocked_ioctl+0x22/0x30 [nvidia]
+[327839.680611]  ? __x64_sys_ioctl+0xd4/0x100
+[327839.680612]  ? do_syscall_64+0x144/0x6e0
+[327839.680613]  ? __do_sys_clone3+0x124/0x160
+[327839.680615]  ? do_syscall_64+0x144/0x6e0
+[327839.680616]  ? do_user_addr_fault+0x2cd/0x830
+[327839.680618]  ? irqentry_exit+0x7b/0x560
+[327839.680619]  ? exc_page_fault+0x90/0x1f0
+[327839.680620]  ? __irq_exit_rcu+0x4c/0xf0
+[327839.680621]  entry_SYSCALL_64_after_hwframe+0x76/0x7e
+[327839.680622] RIP: 0033:0x7f5ac93e15fd
+[327839.680644] Code: 04 25 28 00 00 00 48 89 45 c8 31 c0 48 8d 45 10 c7 45 b0 10 00 00 00 48 89 45 b8 48 8d 45 d0 48 89 45 c0 b8 10 00 00 00 0f 05 <89> c2 3d 00 f0 ff ff 77 1a 48 8b 45 c8 64 48 2b 04 25 28 00 00 00
+[327839.680645] RSP: 002b:00007ffc75e01eb0 EFLAGS: 00000246 ORIG_RAX: 0000000000000010
+[327839.680646] RAX: ffffffffffffffda RBX: 00007ffc75e01f10 RCX: 00007f5ac93e15fd
+[327839.680646] RDX: 00007ffc75e01f10 RSI: 0000000000000019 RDI: 0000000000000009
+[327839.680647] RBP: 00007ffc75e01f00 R08: 0000556a508ccef0 R09: 00007ffc75e00e4c
+[327839.680647] R10: 00007ffc75e00e30 R11: 0000000000000246 R12: 0000000000000009
+[327839.680647] R13: 0000556a508f0c16 R14: 0000556a508af960 R15: 0000000000000000
+[327839.680648]  </TASK>
+[327839.686737] watchdog: BUG: soft lockup - CPU#9 stuck for 82s! [UVM GPU1 BH:64561]
+[327839.686739] CPU#9 Utilization every 4000ms during lockup:
+[327839.686739] 	#1: 100% system,	  0% softirq,	  1% hardirq,	  0% idle
+[327839.686740] 	#2: 100% system,	  0% softirq,	  0% hardirq,	  0% idle
+[327839.686741] 	#3: 100% system,	  0% softirq,	  0% hardirq,	  0% idle
+[327839.686741] 	#4: 100% system,	  0% softirq,	  0% hardirq,	  0% idle
+[327839.686741] 	#5: 100% system,	  0% softirq,	  0% hardirq,	  0% idle
+[327839.686742] Modules linked in: vhost_net vhost vhost_iotlb tap tls uinput xt_connmark xt_mark rfcomm snd_seq_dummy snd_hrtimer nvidia_uvm(OE) nf_conntrack_netlink xt_nat veth xt_conntrack xt_MASQUERADE bridge stp llc xt_set ip_set nft_chain_nat xt_addrtype nft_compat rpcrdma rdma_cm iw_cm ib_cm ib_core binfmt_misc tun overlay nf_tables nfnetlink_cttimeout openvswitch nsh nf_conncount nf_nat nf_conntrack nf_defrag_ipv6 nf_defrag_ipv4 psample qrtr bnep vfat fat snd_sof_pci_intel_tgl snd_sof_pci_intel_cnl snd_sof_intel_hda_generic soundwire_intel snd_sof_intel_hda_sdw_bpt snd_sof_intel_hda_common snd_soc_hdac_hda snd_sof_intel_hda_mlink snd_sof_intel_hda soundwire_cadence intel_rapl_msr snd_sof_pci intel_rapl_common snd_sof_xtensa_dsp snd_sof intel_uncore_frequency intel_uncore_frequency_common snd_hda_codec_intelhdmi intel_tcc_cooling iwlmvm snd_sof_utils x86_pkg_temp_thermal snd_soc_acpi_intel_match intel_powerclamp snd_soc_acpi_intel_sdca_quirks soundwire_generic_allocation snd_soc_sdw_utils coretemp snd_soc_acpi crc8
+[327839.686760]  soundwire_bus snd_hda_codec_alc662 snd_soc_sdca snd_hda_codec_realtek_lib mac80211 kvm_intel snd_hda_codec_generic snd_soc_avs snd_hda_codec_nvhdmi snd_hda_codec_hdmi snd_soc_hda_codec libarc4 snd_hda_intel snd_hda_ext_core kvm nvidia_drm(OE) snd_hda_codec snd_soc_core nvidia_modeset(OE) snd_hda_core asus_armoury snd_compress snd_intel_dspcfg iwlwifi ac97_bus btusb snd_intel_sdw_acpi snd_pcm_dmaengine snd_hwdep btmtk snd_seq btrtl spi_nor irqbypass snd_seq_device btbcm rapl eeepc_wmi iTCO_wdt firmware_attributes_class asus_wmi btintel intel_cstate mtd snd_pcm ee1004 intel_pmc_bxt sparse_keymap mei_hdcp mei_pxp r8169 snd_timer nvidia(OE) i2c_i801 spi_intel_pci cfg80211 bluetooth intel_uncore igc platform_profile wmi_bmof realtek i2c_smbus spi_intel snd idma64 intel_pmc_core soundcore mei_me joydev apple_mfi_fastcharge pmt_telemetry mei pmt_discovery pmt_class rfkill intel_pmc_ssram_telemetry acpi_tad acpi_pad nfsd auth_rpcgss nfs_acl lockd grace nfs_localio sunrpc fuse dm_multipath nfnetlink zram
+[327839.686779]  lz4hc_compress lz4_compress xfs xe drm_ttm_helper drm_suballoc_helper gpu_sched drm_gpuvm drm_exec drm_gpusvm_helper hid_apple i915 i2c_algo_bit drm_buddy ttm nvme drm_display_helper nvme_core nvme_keyring cec nvme_auth ghash_clmulni_intel video hkdf intel_vsec intel_oc_wdt wmi pinctrl_alderlake i2c_dev scsi_dh_rdac scsi_dh_alua scsi_dh_emc
+[327839.686787] CPU: 9 UID: 0 PID: 64561 Comm: UVM GPU1 BH Kdump: loaded Tainted: G      D    OEL      7.0.8-200.fc44.x86_64 #1 PREEMPT(lazy)
+[327839.686788] Tainted: [D]=DIE, [O]=OOT_MODULE, [E]=UNSIGNED_MODULE, [L]=SOFTLOCKUP
+[327839.686789] Hardware name: ASUS System Product Name/TUF GAMING B660-PLUS WIFI D4, BIOS 1620 08/12/2022
+[327839.686789] RIP: 0010:native_queued_spin_lock_slowpath+0x6a/0x330
+[327839.686792] Code: 08 0f 92 c2 8b 01 0f b6 d2 c1 e2 08 30 e4 09 d0 3d ff 00 00 00 77 51 85 c0 75 0f bf 01 00 00 00 66 89 39 c3 cc cc cc cc f3 90 <80> 39 00 75 f9 bf 01 00 00 00 66 89 39 c3 cc cc cc cc 8b 37 b8 00
+[327839.686792] RSP: 0018:ffffc9000d51b788 EFLAGS: 00000202
+[327839.686793] RAX: 0000000000000001 RBX: ffff88816e06f9f8 RCX: ffff88816e06fae0
+[327839.686794] RDX: 0000000000000000 RSI: 0000000000000001 RDI: ffff88816e06fae0
+[327839.686794] RBP: ffffc9000d51b7c0 R08: 0000000000000000 R09: ffffc9000d51b8e0
+[327839.686795] R10: 0000000000000000 R11: ffff8892a8ce03c0 R12: ffff88816e06fae0
+[327839.686795] R13: ffff88816e06f9f8 R14: 0000000000000000 R15: 0000000000001000
+[327839.686795] FS:  0000000000000000(0000) GS:ffff88a07a31c000(0000) knlGS:0000000000000000
+[327839.686796] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[327839.686797] CR2: 00005583067854d0 CR3: 000000000842e003 CR4: 0000000000f72ef0
+[327839.686797] PKRU: 55555554
+[327839.686797] Call Trace:
+[327839.686798]  <TASK>
+[327839.686798]  _raw_spin_lock+0x29/0x30
+[327839.686800]  claim_free_chunk+0x2a/0xe0 [nvidia_uvm]
+[327839.686839]  pmm_gpu_alloc+0x15a/0x390 [nvidia_uvm]
+[327839.686872]  ? block_zero_new_gpu_chunk+0x22e/0x380 [nvidia_uvm]
+[327839.686907]  uvm_pmm_gpu_alloc_user+0x1c/0x30 [nvidia_uvm]
+[327839.686939]  block_populate_gpu_chunk+0x357/0x460 [nvidia_uvm]
+[327839.686974]  uvm_va_block_populate_pages_gpu+0x15e/0x200 [nvidia_uvm]
+[327839.687009]  uvm_hmm_va_block_service_locked+0x137/0x630 [nvidia_uvm]
+[327839.687040]  ? uvm_perf_prefetch_prenotify_fault_migrations+0x16e/0x2f0 [nvidia_uvm]
+[327839.687074]  uvm_va_block_service_locked+0x7b/0xd0 [nvidia_uvm]
+[327839.687108]  service_fault_batch_block_locked+0x452/0xad0 [nvidia_uvm]
+[327839.687145]  ? service_fault_batch_dispatch.isra.0+0x321/0x3e0 [nvidia_uvm]
+[327839.687180]  service_fault_batch_dispatch.isra.0+0x321/0x3e0 [nvidia_uvm]
+[327839.687215]  service_fault_batch.constprop.0+0xa3/0x360 [nvidia_uvm]
+[327839.687250]  uvm_parent_gpu_service_replayable_faults+0x11c/0x6b0 [nvidia_uvm]
+[327839.687284]  ? ___down_common+0xd1/0x180
+[327839.687285]  replayable_faults_isr_bottom_half+0x49/0x70 [nvidia_uvm]
+[327839.687311]  replayable_faults_isr_bottom_half_entry+0xa3/0xe0 [nvidia_uvm]
+[327839.687338]  _main_loop+0x90/0x150 [nvidia_uvm]
+[327839.687361]  ? __pfx__main_loop+0x10/0x10 [nvidia_uvm]
+[327839.687384]  kthread+0xe1/0x120
+[327839.687385]  ? __pfx_kthread+0x10/0x10
+[327839.687386]  ret_from_fork+0x1a1/0x270
+[327839.687388]  ? __pfx_kthread+0x10/0x10
+[327839.687389]  ret_from_fork_asm+0x1a/0x30
+[327839.687391]  </TASK>
+[327867.679664] watchdog: BUG: soft lockup - CPU#12 stuck for 101s! [chapter_demo.ou:4143425]
+[327867.679666] CPU#12 Utilization every 4000ms during lockup:
+[327867.679667] 	#1: 100% system,	  0% softirq,	  0% hardirq,	  0% idle
+[327867.679667] 	#2: 100% system,	  0% softirq,	  0% hardirq,	  0% idle
+[327867.679668] 	#3: 100% system,	  0% softirq,	  0% hardirq,	  0% idle
+[327867.679668] 	#4: 100% system,	  0% softirq,	  1% hardirq,	  0% idle
+[327867.679669] 	#5: 100% system,	  0% softirq,	  0% hardirq,	  0% idle
+[327867.679669] Modules linked in: vhost_net vhost vhost_iotlb tap tls uinput xt_connmark xt_mark rfcomm snd_seq_dummy snd_hrtimer nvidia_uvm(OE) nf_conntrack_netlink xt_nat veth xt_conntrack xt_MASQUERADE bridge stp llc xt_set ip_set nft_chain_nat xt_addrtype nft_compat rpcrdma rdma_cm iw_cm ib_cm ib_core binfmt_misc tun overlay nf_tables nfnetlink_cttimeout openvswitch nsh nf_conncount nf_nat nf_conntrack nf_defrag_ipv6 nf_defrag_ipv4 psample qrtr bnep vfat fat snd_sof_pci_intel_tgl snd_sof_pci_intel_cnl snd_sof_intel_hda_generic soundwire_intel snd_sof_intel_hda_sdw_bpt snd_sof_intel_hda_common snd_soc_hdac_hda snd_sof_intel_hda_mlink snd_sof_intel_hda soundwire_cadence intel_rapl_msr snd_sof_pci intel_rapl_common snd_sof_xtensa_dsp snd_sof intel_uncore_frequency intel_uncore_frequency_common snd_hda_codec_intelhdmi intel_tcc_cooling iwlmvm snd_sof_utils x86_pkg_temp_thermal snd_soc_acpi_intel_match intel_powerclamp snd_soc_acpi_intel_sdca_quirks soundwire_generic_allocation snd_soc_sdw_utils coretemp snd_soc_acpi crc8
+[327867.679687]  soundwire_bus snd_hda_codec_alc662 snd_soc_sdca snd_hda_codec_realtek_lib mac80211 kvm_intel snd_hda_codec_generic snd_soc_avs snd_hda_codec_nvhdmi snd_hda_codec_hdmi snd_soc_hda_codec libarc4 snd_hda_intel snd_hda_ext_core kvm nvidia_drm(OE) snd_hda_codec snd_soc_core nvidia_modeset(OE) snd_hda_core asus_armoury snd_compress snd_intel_dspcfg iwlwifi ac97_bus btusb snd_intel_sdw_acpi snd_pcm_dmaengine snd_hwdep btmtk snd_seq btrtl spi_nor irqbypass snd_seq_device btbcm rapl eeepc_wmi iTCO_wdt firmware_attributes_class asus_wmi btintel intel_cstate mtd snd_pcm ee1004 intel_pmc_bxt sparse_keymap mei_hdcp mei_pxp r8169 snd_timer nvidia(OE) i2c_i801 spi_intel_pci cfg80211 bluetooth intel_uncore igc platform_profile wmi_bmof realtek i2c_smbus spi_intel snd idma64 intel_pmc_core soundcore mei_me joydev apple_mfi_fastcharge pmt_telemetry mei pmt_discovery pmt_class rfkill intel_pmc_ssram_telemetry acpi_tad acpi_pad nfsd auth_rpcgss nfs_acl lockd grace nfs_localio sunrpc fuse dm_multipath nfnetlink zram
+[327867.679709]  lz4hc_compress lz4_compress xfs xe drm_ttm_helper drm_suballoc_helper gpu_sched drm_gpuvm drm_exec drm_gpusvm_helper hid_apple i915 i2c_algo_bit drm_buddy ttm nvme drm_display_helper nvme_core nvme_keyring cec nvme_auth ghash_clmulni_intel video hkdf intel_vsec intel_oc_wdt wmi pinctrl_alderlake i2c_dev scsi_dh_rdac scsi_dh_alua scsi_dh_emc
+[327867.679717] CPU: 12 UID: 1000 PID: 4143425 Comm: chapter_demo.ou Kdump: loaded Tainted: G      D    OEL      7.0.8-200.fc44.x86_64 #1 PREEMPT(lazy)
+[327867.679719] Tainted: [D]=DIE, [O]=OOT_MODULE, [E]=UNSIGNED_MODULE, [L]=SOFTLOCKUP
+[327867.679719] Hardware name: ASUS System Product Name/TUF GAMING B660-PLUS WIFI D4, BIOS 1620 08/12/2022
+[327867.679720] RIP: 0010:native_queued_spin_lock_slowpath+0x293/0x330
+[327867.679723] Code: 48 03 04 f5 e0 70 1c 83 48 89 10 8b 72 08 85 f6 75 09 f3 90 8b 42 08 85 c0 74 f7 48 8b 32 48 85 f6 74 07 0f 0d 0e eb 02 f3 90 <8b> 01 66 85 c0 75 f7 44 39 c0 74 3a c6 01 01 48 85 f6 74 0e c7 46
+[327867.679724] RSP: 0018:ffffc90002f474b0 EFLAGS: 00000202
+[327867.679725] RAX: 0000000000340101 RBX: ffff88816e06f9f8 RCX: ffff88816e06fae0
+[327867.679725] RDX: ffff889ffee34200 RSI: 0000000000000000 RDI: 0000000000000000
+[327867.679726] RBP: ffffc90002f47510 R08: 0000000000340000 R09: ffff88a07a49c000
+[327867.679726] R10: 0000000000340000 R11: ffff888100044700 R12: ffff88816e06fae0
+[327867.679726] R13: ffff88816e06f9f8 R14: 0000000000000001 R15: 0000000000001000
+[327867.679727] FS:  00007f5ac9955000(0000) GS:ffff88a07a49c000(0000) knlGS:0000000000000000
+[327867.679728] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[327867.679728] CR2: 00007f54b7ffbff0 CR3: 0000001851079001 CR4: 0000000000f72ef0
+[327867.679729] PKRU: 55555554
+[327867.679729] Call Trace:
+[327867.679730]  <TASK>
+[327867.679731]  _raw_spin_lock+0x29/0x30
+[327867.679733]  claim_free_chunk+0x2a/0xe0 [nvidia_uvm]
+[327867.679780]  pmm_gpu_alloc+0x15a/0x390 [nvidia_uvm]
+[327867.679814]  uvm_pmm_gpu_alloc_kernel+0x35/0xd0 [nvidia_uvm]
+[327867.679846]  phys_mem_allocate+0x97/0x170 [nvidia_uvm]
+[327867.679883]  allocate_directory+0xb5/0x120 [nvidia_uvm]
+[327867.679920]  uvm_page_tree_init+0xfa/0x2b0 [nvidia_uvm]
+[327867.679956]  create_gpu_va_space+0x121/0x2b0 [nvidia_uvm]
+[327867.679984]  uvm_va_space_register_gpu_va_space+0xc5/0x5d0 [nvidia_uvm]
+[327867.680011]  uvm_api_register_gpu_va_space+0x4b/0x70 [nvidia_uvm]
+[327867.680037]  uvm_ioctl+0x1467/0x1bc0 [nvidia_uvm]
+[327867.680060]  ? rmapiControlWithSecInfoTls+0x8c/0xe0 [nvidia]
+[327867.680195]  ? _nv04ControlWithSecInfo+0x8d/0xa0 [nvidia]
+[327867.680292]  ? thread_context_non_interrupt_add+0x133/0x220 [nvidia_uvm]
+[327867.680333]  uvm_unlocked_ioctl_entry.part.0+0x78/0xe0 [nvidia_uvm]
+[327867.680356]  ? sched_balance_find_dst_group+0x215/0x8f0
+[327867.680359]  ? os_get_monotonic_time_ns+0x3d/0xa0 [nvidia]
+[327867.680414]  __x64_sys_ioctl+0xb9/0x100
+[327867.680416]  do_syscall_64+0x109/0x6e0
+[327867.680419]  ? __virt_addr_valid+0x83/0x110
+[327867.680420]  ? check_heap_object+0x38/0x180
+[327867.680422]  ? __check_object_size+0x6f/0xd0
+[327867.680423]  ? nvidia_ioctl.isra.0+0x1e2/0x9e0 [nvidia]
+[327867.680472]  ? nvidia_unlocked_ioctl+0x22/0x30 [nvidia]
+[327867.680521]  ? __x64_sys_ioctl+0xd4/0x100
+[327867.680522]  ? do_syscall_64+0x144/0x6e0
+[327867.680523]  ? __do_sys_clone3+0x124/0x160
+[327867.680526]  ? do_syscall_64+0x144/0x6e0
+[327867.680527]  ? do_user_addr_fault+0x2cd/0x830
+[327867.680528]  ? irqentry_exit+0x7b/0x560
+[327867.680529]  ? exc_page_fault+0x90/0x1f0
+[327867.680530]  ? __irq_exit_rcu+0x4c/0xf0
+[327867.680531]  entry_SYSCALL_64_after_hwframe+0x76/0x7e
+[327867.680533] RIP: 0033:0x7f5ac93e15fd
+[327867.680550] Code: 04 25 28 00 00 00 48 89 45 c8 31 c0 48 8d 45 10 c7 45 b0 10 00 00 00 48 89 45 b8 48 8d 45 d0 48 89 45 c0 b8 10 00 00 00 0f 05 <89> c2 3d 00 f0 ff ff 77 1a 48 8b 45 c8 64 48 2b 04 25 28 00 00 00
+[327867.680551] RSP: 002b:00007ffc75e01eb0 EFLAGS: 00000246 ORIG_RAX: 0000000000000010
+[327867.680552] RAX: ffffffffffffffda RBX: 00007ffc75e01f10 RCX: 00007f5ac93e15fd
+[327867.680553] RDX: 00007ffc75e01f10 RSI: 0000000000000019 RDI: 0000000000000009
+[327867.680553] RBP: 00007ffc75e01f00 R08: 0000556a508ccef0 R09: 00007ffc75e00e4c
+[327867.680553] R10: 00007ffc75e00e30 R11: 0000000000000246 R12: 0000000000000009
+[327867.680554] R13: 0000556a508f0c16 R14: 0000556a508af960 R15: 0000000000000000
+[327867.680555]  </TASK>
+[327867.686664] watchdog: BUG: soft lockup - CPU#9 stuck for 108s! [UVM GPU1 BH:64561]
+[327867.686665] CPU#9 Utilization every 4000ms during lockup:
+[327867.686666] 	#1: 100% system,	  0% softirq,	  0% hardirq,	  0% idle
+[327867.686667] 	#2: 100% system,	  0% softirq,	  0% hardirq,	  0% idle
+[327867.686667] 	#3: 100% system,	  0% softirq,	  0% hardirq,	  0% idle
+[327867.686668] 	#4: 100% system,	  0% softirq,	  1% hardirq,	  0% idle
+[327867.686668] 	#5: 100% system,	  0% softirq,	  0% hardirq,	  0% idle
+[327867.686668] Modules linked in: vhost_net vhost vhost_iotlb tap tls uinput xt_connmark xt_mark rfcomm snd_seq_dummy snd_hrtimer nvidia_uvm(OE) nf_conntrack_netlink xt_nat veth xt_conntrack xt_MASQUERADE bridge stp llc xt_set ip_set nft_chain_nat xt_addrtype nft_compat rpcrdma rdma_cm iw_cm ib_cm ib_core binfmt_misc tun overlay nf_tables nfnetlink_cttimeout openvswitch nsh nf_conncount nf_nat nf_conntrack nf_defrag_ipv6 nf_defrag_ipv4 psample qrtr bnep vfat fat snd_sof_pci_intel_tgl snd_sof_pci_intel_cnl snd_sof_intel_hda_generic soundwire_intel snd_sof_intel_hda_sdw_bpt snd_sof_intel_hda_common snd_soc_hdac_hda snd_sof_intel_hda_mlink snd_sof_intel_hda soundwire_cadence intel_rapl_msr snd_sof_pci intel_rapl_common snd_sof_xtensa_dsp snd_sof intel_uncore_frequency intel_uncore_frequency_common snd_hda_codec_intelhdmi intel_tcc_cooling iwlmvm snd_sof_utils x86_pkg_temp_thermal snd_soc_acpi_intel_match intel_powerclamp snd_soc_acpi_intel_sdca_quirks soundwire_generic_allocation snd_soc_sdw_utils coretemp snd_soc_acpi crc8
+[327867.686687]  soundwire_bus snd_hda_codec_alc662 snd_soc_sdca snd_hda_codec_realtek_lib mac80211 kvm_intel snd_hda_codec_generic snd_soc_avs snd_hda_codec_nvhdmi snd_hda_codec_hdmi snd_soc_hda_codec libarc4 snd_hda_intel snd_hda_ext_core kvm nvidia_drm(OE) snd_hda_codec snd_soc_core nvidia_modeset(OE) snd_hda_core asus_armoury snd_compress snd_intel_dspcfg iwlwifi ac97_bus btusb snd_intel_sdw_acpi snd_pcm_dmaengine snd_hwdep btmtk snd_seq btrtl spi_nor irqbypass snd_seq_device btbcm rapl eeepc_wmi iTCO_wdt firmware_attributes_class asus_wmi btintel intel_cstate mtd snd_pcm ee1004 intel_pmc_bxt sparse_keymap mei_hdcp mei_pxp r8169 snd_timer nvidia(OE) i2c_i801 spi_intel_pci cfg80211 bluetooth intel_uncore igc platform_profile wmi_bmof realtek i2c_smbus spi_intel snd idma64 intel_pmc_core soundcore mei_me joydev apple_mfi_fastcharge pmt_telemetry mei pmt_discovery pmt_class rfkill intel_pmc_ssram_telemetry acpi_tad acpi_pad nfsd auth_rpcgss nfs_acl lockd grace nfs_localio sunrpc fuse dm_multipath nfnetlink zram
+[327867.686707]  lz4hc_compress lz4_compress xfs xe drm_ttm_helper drm_suballoc_helper gpu_sched drm_gpuvm drm_exec drm_gpusvm_helper hid_apple i915 i2c_algo_bit drm_buddy ttm nvme drm_display_helper nvme_core nvme_keyring cec nvme_auth ghash_clmulni_intel video hkdf intel_vsec intel_oc_wdt wmi pinctrl_alderlake i2c_dev scsi_dh_rdac scsi_dh_alua scsi_dh_emc
+[327867.686714] CPU: 9 UID: 0 PID: 64561 Comm: UVM GPU1 BH Kdump: loaded Tainted: G      D    OEL      7.0.8-200.fc44.x86_64 #1 PREEMPT(lazy)
+[327867.686716] Tainted: [D]=DIE, [O]=OOT_MODULE, [E]=UNSIGNED_MODULE, [L]=SOFTLOCKUP
+[327867.686716] Hardware name: ASUS System Product Name/TUF GAMING B660-PLUS WIFI D4, BIOS 1620 08/12/2022
+[327867.686716] RIP: 0010:native_queued_spin_lock_slowpath+0x6a/0x330
+[327867.686719] Code: 08 0f 92 c2 8b 01 0f b6 d2 c1 e2 08 30 e4 09 d0 3d ff 00 00 00 77 51 85 c0 75 0f bf 01 00 00 00 66 89 39 c3 cc cc cc cc f3 90 <80> 39 00 75 f9 bf 01 00 00 00 66 89 39 c3 cc cc cc cc 8b 37 b8 00
+[327867.686720] RSP: 0018:ffffc9000d51b788 EFLAGS: 00000202
+[327867.686721] RAX: 0000000000000001 RBX: ffff88816e06f9f8 RCX: ffff88816e06fae0
+[327867.686721] RDX: 0000000000000000 RSI: 0000000000000001 RDI: ffff88816e06fae0
+[327867.686721] RBP: ffffc9000d51b7c0 R08: 0000000000000000 R09: ffffc9000d51b8e0
+[327867.686722] R10: 0000000000000000 R11: ffff8892a8ce03c0 R12: ffff88816e06fae0
+[327867.686722] R13: ffff88816e06f9f8 R14: 0000000000000000 R15: 0000000000001000
+[327867.686723] FS:  0000000000000000(0000) GS:ffff88a07a31c000(0000) knlGS:0000000000000000
+[327867.686723] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[327867.686724] CR2: 00005583067854d0 CR3: 000000000842e003 CR4: 0000000000f72ef0
+[327867.686724] PKRU: 55555554
+[327867.686725] Call Trace:
+[327867.686725]  <TASK>
+[327867.686725]  _raw_spin_lock+0x29/0x30
+[327867.686727]  claim_free_chunk+0x2a/0xe0 [nvidia_uvm]
+[327867.686765]  pmm_gpu_alloc+0x15a/0x390 [nvidia_uvm]
+[327867.686799]  ? block_zero_new_gpu_chunk+0x22e/0x380 [nvidia_uvm]
+[327867.686835]  uvm_pmm_gpu_alloc_user+0x1c/0x30 [nvidia_uvm]
+[327867.686867]  block_populate_gpu_chunk+0x357/0x460 [nvidia_uvm]
+[327867.686903]  uvm_va_block_populate_pages_gpu+0x15e/0x200 [nvidia_uvm]
+[327867.686939]  uvm_hmm_va_block_service_locked+0x137/0x630 [nvidia_uvm]
+[327867.686971]  ? uvm_perf_prefetch_prenotify_fault_migrations+0x16e/0x2f0 [nvidia_uvm]
+[327867.687002]  uvm_va_block_service_locked+0x7b/0xd0 [nvidia_uvm]
+[327867.687037]  service_fault_batch_block_locked+0x452/0xad0 [nvidia_uvm]
+[327867.687074]  ? service_fault_batch_dispatch.isra.0+0x321/0x3e0 [nvidia_uvm]
+[327867.687109]  service_fault_batch_dispatch.isra.0+0x321/0x3e0 [nvidia_uvm]
+[327867.687144]  service_fault_batch.constprop.0+0xa3/0x360 [nvidia_uvm]
+[327867.687179]  uvm_parent_gpu_service_replayable_faults+0x11c/0x6b0 [nvidia_uvm]
+[327867.687214]  ? ___down_common+0xd1/0x180
+[327867.687215]  replayable_faults_isr_bottom_half+0x49/0x70 [nvidia_uvm]
+[327867.687242]  replayable_faults_isr_bottom_half_entry+0xa3/0xe0 [nvidia_uvm]
+[327867.687268]  _main_loop+0x90/0x150 [nvidia_uvm]
+[327867.687292]  ? __pfx__main_loop+0x10/0x10 [nvidia_uvm]
+[327867.687314]  kthread+0xe1/0x120
+[327867.687316]  ? __pfx_kthread+0x10/0x10
+[327867.687317]  ret_from_fork+0x1a1/0x270
+[327867.687319]  ? __pfx_kthread+0x10/0x10
+[327867.687320]  ret_from_fork_asm+0x1a/0x30
+[327867.687322]  </TASK>
+[327895.679591] watchdog: BUG: soft lockup - CPU#12 stuck for 127s! [chapter_demo.ou:4143425]
+[327895.679595] CPU#12 Utilization every 4000ms during lockup:
+[327895.679596] 	#1: 100% system,	  0% softirq,	  0% hardirq,	  0% idle
+[327895.679597] 	#2: 100% system,	  0% softirq,	  0% hardirq,	  0% idle
+[327895.679597] 	#3: 100% system,	  0% softirq,	  0% hardirq,	  0% idle
+[327895.679598] 	#4: 100% system,	  0% softirq,	  1% hardirq,	  0% idle
+[327895.679598] 	#5: 100% system,	  0% softirq,	  0% hardirq,	  0% idle
+[327895.679599] Modules linked in: vhost_net vhost vhost_iotlb tap tls uinput xt_connmark xt_mark rfcomm snd_seq_dummy snd_hrtimer nvidia_uvm(OE) nf_conntrack_netlink xt_nat veth xt_conntrack xt_MASQUERADE bridge stp llc xt_set ip_set nft_chain_nat xt_addrtype nft_compat rpcrdma rdma_cm iw_cm ib_cm ib_core binfmt_misc tun overlay nf_tables nfnetlink_cttimeout openvswitch nsh nf_conncount nf_nat nf_conntrack nf_defrag_ipv6 nf_defrag_ipv4 psample qrtr bnep vfat fat snd_sof_pci_intel_tgl snd_sof_pci_intel_cnl snd_sof_intel_hda_generic soundwire_intel snd_sof_intel_hda_sdw_bpt snd_sof_intel_hda_common snd_soc_hdac_hda snd_sof_intel_hda_mlink snd_sof_intel_hda soundwire_cadence intel_rapl_msr snd_sof_pci intel_rapl_common snd_sof_xtensa_dsp snd_sof intel_uncore_frequency intel_uncore_frequency_common snd_hda_codec_intelhdmi intel_tcc_cooling iwlmvm snd_sof_utils x86_pkg_temp_thermal snd_soc_acpi_intel_match intel_powerclamp snd_soc_acpi_intel_sdca_quirks soundwire_generic_allocation snd_soc_sdw_utils coretemp snd_soc_acpi crc8
+[327895.679619]  soundwire_bus snd_hda_codec_alc662 snd_soc_sdca snd_hda_codec_realtek_lib mac80211 kvm_intel snd_hda_codec_generic snd_soc_avs snd_hda_codec_nvhdmi snd_hda_codec_hdmi snd_soc_hda_codec libarc4 snd_hda_intel snd_hda_ext_core kvm nvidia_drm(OE) snd_hda_codec snd_soc_core nvidia_modeset(OE) snd_hda_core asus_armoury snd_compress snd_intel_dspcfg iwlwifi ac97_bus btusb snd_intel_sdw_acpi snd_pcm_dmaengine snd_hwdep btmtk snd_seq btrtl spi_nor irqbypass snd_seq_device btbcm rapl eeepc_wmi iTCO_wdt firmware_attributes_class asus_wmi btintel intel_cstate mtd snd_pcm ee1004 intel_pmc_bxt sparse_keymap mei_hdcp mei_pxp r8169 snd_timer nvidia(OE) i2c_i801 spi_intel_pci cfg80211 bluetooth intel_uncore igc platform_profile wmi_bmof realtek i2c_smbus spi_intel snd idma64 intel_pmc_core soundcore mei_me joydev apple_mfi_fastcharge pmt_telemetry mei pmt_discovery pmt_class rfkill intel_pmc_ssram_telemetry acpi_tad acpi_pad nfsd auth_rpcgss nfs_acl lockd grace nfs_localio sunrpc fuse dm_multipath nfnetlink zram
+[327895.679640]  lz4hc_compress lz4_compress xfs xe drm_ttm_helper drm_suballoc_helper gpu_sched drm_gpuvm drm_exec drm_gpusvm_helper hid_apple i915 i2c_algo_bit drm_buddy ttm nvme drm_display_helper nvme_core nvme_keyring cec nvme_auth ghash_clmulni_intel video hkdf intel_vsec intel_oc_wdt wmi pinctrl_alderlake i2c_dev scsi_dh_rdac scsi_dh_alua scsi_dh_emc
+[327895.679650] CPU: 12 UID: 1000 PID: 4143425 Comm: chapter_demo.ou Kdump: loaded Tainted: G      D    OEL      7.0.8-200.fc44.x86_64 #1 PREEMPT(lazy)
+[327895.679652] Tainted: [D]=DIE, [O]=OOT_MODULE, [E]=UNSIGNED_MODULE, [L]=SOFTLOCKUP
+[327895.679652] Hardware name: ASUS System Product Name/TUF GAMING B660-PLUS WIFI D4, BIOS 1620 08/12/2022
+[327895.679653] RIP: 0010:native_queued_spin_lock_slowpath+0x293/0x330
+[327895.679656] Code: 48 03 04 f5 e0 70 1c 83 48 89 10 8b 72 08 85 f6 75 09 f3 90 8b 42 08 85 c0 74 f7 48 8b 32 48 85 f6 74 07 0f 0d 0e eb 02 f3 90 <8b> 01 66 85 c0 75 f7 44 39 c0 74 3a c6 01 01 48 85 f6 74 0e c7 46
+[327895.679657] RSP: 0018:ffffc90002f474b0 EFLAGS: 00000202
+[327895.679658] RAX: 0000000000340101 RBX: ffff88816e06f9f8 RCX: ffff88816e06fae0
+[327895.679658] RDX: ffff889ffee34200 RSI: 0000000000000000 RDI: 0000000000000000
+[327895.679659] RBP: ffffc90002f47510 R08: 0000000000340000 R09: ffff88a07a49c000
+[327895.679659] R10: 0000000000340000 R11: ffff888100044700 R12: ffff88816e06fae0
+[327895.679660] R13: ffff88816e06f9f8 R14: 0000000000000001 R15: 0000000000001000
+[327895.679660] FS:  00007f5ac9955000(0000) GS:ffff88a07a49c000(0000) knlGS:0000000000000000
+[327895.679661] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[327895.679661] CR2: 00007f54b7ffbff0 CR3: 0000001851079001 CR4: 0000000000f72ef0
+[327895.679662] PKRU: 55555554
+[327895.679662] Call Trace:
+[327895.679663]  <TASK>
+[327895.679665]  _raw_spin_lock+0x29/0x30
+[327895.679667]  claim_free_chunk+0x2a/0xe0 [nvidia_uvm]
+[327895.679712]  pmm_gpu_alloc+0x15a/0x390 [nvidia_uvm]
+[327895.679744]  uvm_pmm_gpu_alloc_kernel+0x35/0xd0 [nvidia_uvm]
+[327895.679776]  phys_mem_allocate+0x97/0x170 [nvidia_uvm]
+[327895.679813]  allocate_directory+0xb5/0x120 [nvidia_uvm]
+[327895.679848]  uvm_page_tree_init+0xfa/0x2b0 [nvidia_uvm]
+[327895.679884]  create_gpu_va_space+0x121/0x2b0 [nvidia_uvm]
+[327895.679911]  uvm_va_space_register_gpu_va_space+0xc5/0x5d0 [nvidia_uvm]
+[327895.679938]  uvm_api_register_gpu_va_space+0x4b/0x70 [nvidia_uvm]
+[327895.679964]  uvm_ioctl+0x1467/0x1bc0 [nvidia_uvm]
+[327895.679987]  ? rmapiControlWithSecInfoTls+0x8c/0xe0 [nvidia]
+[327895.680123]  ? _nv04ControlWithSecInfo+0x8d/0xa0 [nvidia]
+[327895.680221]  ? thread_context_non_interrupt_add+0x133/0x220 [nvidia_uvm]
+[327895.680259]  uvm_unlocked_ioctl_entry.part.0+0x78/0xe0 [nvidia_uvm]
+[327895.680282]  ? sched_balance_find_dst_group+0x215/0x8f0
+[327895.680284]  ? os_get_monotonic_time_ns+0x3d/0xa0 [nvidia]
+[327895.680339]  __x64_sys_ioctl+0xb9/0x100
+[327895.680342]  do_syscall_64+0x109/0x6e0
+[327895.680344]  ? __virt_addr_valid+0x83/0x110
+[327895.680346]  ? check_heap_object+0x38/0x180
+[327895.680348]  ? __check_object_size+0x6f/0xd0
+[327895.680349]  ? nvidia_ioctl.isra.0+0x1e2/0x9e0 [nvidia]
+[327895.680398]  ? nvidia_unlocked_ioctl+0x22/0x30 [nvidia]
+[327895.680447]  ? __x64_sys_ioctl+0xd4/0x100
+[327895.680448]  ? do_syscall_64+0x144/0x6e0
+[327895.680449]  ? __do_sys_clone3+0x124/0x160
+[327895.680451]  ? do_syscall_64+0x144/0x6e0
+[327895.680452]  ? do_user_addr_fault+0x2cd/0x830
+[327895.680454]  ? irqentry_exit+0x7b/0x560
+[327895.680455]  ? exc_page_fault+0x90/0x1f0
+[327895.680456]  ? __irq_exit_rcu+0x4c/0xf0
+[327895.680458]  entry_SYSCALL_64_after_hwframe+0x76/0x7e
+[327895.680459] RIP: 0033:0x7f5ac93e15fd
+[327895.680479] Code: 04 25 28 00 00 00 48 89 45 c8 31 c0 48 8d 45 10 c7 45 b0 10 00 00 00 48 89 45 b8 48 8d 45 d0 48 89 45 c0 b8 10 00 00 00 0f 05 <89> c2 3d 00 f0 ff ff 77 1a 48 8b 45 c8 64 48 2b 04 25 28 00 00 00
+[327895.680480] RSP: 002b:00007ffc75e01eb0 EFLAGS: 00000246 ORIG_RAX: 0000000000000010
+[327895.680481] RAX: ffffffffffffffda RBX: 00007ffc75e01f10 RCX: 00007f5ac93e15fd
+[327895.680481] RDX: 00007ffc75e01f10 RSI: 0000000000000019 RDI: 0000000000000009
+[327895.680482] RBP: 00007ffc75e01f00 R08: 0000556a508ccef0 R09: 00007ffc75e00e4c
+[327895.680482] R10: 00007ffc75e00e30 R11: 0000000000000246 R12: 0000000000000009
+[327895.680483] R13: 0000556a508f0c16 R14: 0000556a508af960 R15: 0000000000000000
+[327895.680484]  </TASK>
+[327895.686590] watchdog: BUG: soft lockup - CPU#9 stuck for 134s! [UVM GPU1 BH:64561]
+[327895.686592] CPU#9 Utilization every 4000ms during lockup:
+[327895.686593] 	#1: 100% system,	  0% softirq,	  0% hardirq,	  0% idle
+[327895.686594] 	#2: 100% system,	  0% softirq,	  1% hardirq,	  0% idle
+[327895.686594] 	#3: 100% system,	  0% softirq,	  0% hardirq,	  0% idle
+[327895.686595] 	#4: 100% system,	  0% softirq,	  0% hardirq,	  0% idle
+[327895.686595] 	#5: 100% system,	  0% softirq,	  0% hardirq,	  0% idle
+[327895.686596] Modules linked in: vhost_net vhost vhost_iotlb tap tls uinput xt_connmark xt_mark rfcomm snd_seq_dummy snd_hrtimer nvidia_uvm(OE) nf_conntrack_netlink xt_nat veth xt_conntrack xt_MASQUERADE bridge stp llc xt_set ip_set nft_chain_nat xt_addrtype nft_compat rpcrdma rdma_cm iw_cm ib_cm ib_core binfmt_misc tun overlay nf_tables nfnetlink_cttimeout openvswitch nsh nf_conncount nf_nat nf_conntrack nf_defrag_ipv6 nf_defrag_ipv4 psample qrtr bnep vfat fat snd_sof_pci_intel_tgl snd_sof_pci_intel_cnl snd_sof_intel_hda_generic soundwire_intel snd_sof_intel_hda_sdw_bpt snd_sof_intel_hda_common snd_soc_hdac_hda snd_sof_intel_hda_mlink snd_sof_intel_hda soundwire_cadence intel_rapl_msr snd_sof_pci intel_rapl_common snd_sof_xtensa_dsp snd_sof intel_uncore_frequency intel_uncore_frequency_common snd_hda_codec_intelhdmi intel_tcc_cooling iwlmvm snd_sof_utils x86_pkg_temp_thermal snd_soc_acpi_intel_match intel_powerclamp snd_soc_acpi_intel_sdca_quirks soundwire_generic_allocation snd_soc_sdw_utils coretemp snd_soc_acpi crc8
+[327895.686614]  soundwire_bus snd_hda_codec_alc662 snd_soc_sdca snd_hda_codec_realtek_lib mac80211 kvm_intel snd_hda_codec_generic snd_soc_avs snd_hda_codec_nvhdmi snd_hda_codec_hdmi snd_soc_hda_codec libarc4 snd_hda_intel snd_hda_ext_core kvm nvidia_drm(OE) snd_hda_codec snd_soc_core nvidia_modeset(OE) snd_hda_core asus_armoury snd_compress snd_intel_dspcfg iwlwifi ac97_bus btusb snd_intel_sdw_acpi snd_pcm_dmaengine snd_hwdep btmtk snd_seq btrtl spi_nor irqbypass snd_seq_device btbcm rapl eeepc_wmi iTCO_wdt firmware_attributes_class asus_wmi btintel intel_cstate mtd snd_pcm ee1004 intel_pmc_bxt sparse_keymap mei_hdcp mei_pxp r8169 snd_timer nvidia(OE) i2c_i801 spi_intel_pci cfg80211 bluetooth intel_uncore igc platform_profile wmi_bmof realtek i2c_smbus spi_intel snd idma64 intel_pmc_core soundcore mei_me joydev apple_mfi_fastcharge pmt_telemetry mei pmt_discovery pmt_class rfkill intel_pmc_ssram_telemetry acpi_tad acpi_pad nfsd auth_rpcgss nfs_acl lockd grace nfs_localio sunrpc fuse dm_multipath nfnetlink zram
+[327895.686635]  lz4hc_compress lz4_compress xfs xe drm_ttm_helper drm_suballoc_helper gpu_sched drm_gpuvm drm_exec drm_gpusvm_helper hid_apple i915 i2c_algo_bit drm_buddy ttm nvme drm_display_helper nvme_core nvme_keyring cec nvme_auth ghash_clmulni_intel video hkdf intel_vsec intel_oc_wdt wmi pinctrl_alderlake i2c_dev scsi_dh_rdac scsi_dh_alua scsi_dh_emc
+[327895.686643] CPU: 9 UID: 0 PID: 64561 Comm: UVM GPU1 BH Kdump: loaded Tainted: G      D    OEL      7.0.8-200.fc44.x86_64 #1 PREEMPT(lazy)
+[327895.686645] Tainted: [D]=DIE, [O]=OOT_MODULE, [E]=UNSIGNED_MODULE, [L]=SOFTLOCKUP
+[327895.686646] Hardware name: ASUS System Product Name/TUF GAMING B660-PLUS WIFI D4, BIOS 1620 08/12/2022
+[327895.686646] RIP: 0010:native_queued_spin_lock_slowpath+0x6a/0x330
+[327895.686649] Code: 08 0f 92 c2 8b 01 0f b6 d2 c1 e2 08 30 e4 09 d0 3d ff 00 00 00 77 51 85 c0 75 0f bf 01 00 00 00 66 89 39 c3 cc cc cc cc f3 90 <80> 39 00 75 f9 bf 01 00 00 00 66 89 39 c3 cc cc cc cc 8b 37 b8 00
+[327895.686649] RSP: 0018:ffffc9000d51b788 EFLAGS: 00000202
+[327895.686650] RAX: 0000000000000001 RBX: ffff88816e06f9f8 RCX: ffff88816e06fae0
+[327895.686651] RDX: 0000000000000000 RSI: 0000000000000001 RDI: ffff88816e06fae0
+[327895.686651] RBP: ffffc9000d51b7c0 R08: 0000000000000000 R09: ffffc9000d51b8e0
+[327895.686651] R10: 0000000000000000 R11: ffff8892a8ce03c0 R12: ffff88816e06fae0
+[327895.686652] R13: ffff88816e06f9f8 R14: 0000000000000000 R15: 0000000000001000
+[327895.686652] FS:  0000000000000000(0000) GS:ffff88a07a31c000(0000) knlGS:0000000000000000
+[327895.686653] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[327895.686653] CR2: 00005583067854d0 CR3: 000000000842e003 CR4: 0000000000f72ef0
+[327895.686654] PKRU: 55555554
+[327895.686654] Call Trace:
+[327895.686655]  <TASK>
+[327895.686655]  _raw_spin_lock+0x29/0x30
+[327895.686657]  claim_free_chunk+0x2a/0xe0 [nvidia_uvm]
+[327895.686694]  pmm_gpu_alloc+0x15a/0x390 [nvidia_uvm]
+[327895.686726]  ? block_zero_new_gpu_chunk+0x22e/0x380 [nvidia_uvm]
+[327895.686762]  uvm_pmm_gpu_alloc_user+0x1c/0x30 [nvidia_uvm]
+[327895.686795]  block_populate_gpu_chunk+0x357/0x460 [nvidia_uvm]
+[327895.686831]  uvm_va_block_populate_pages_gpu+0x15e/0x200 [nvidia_uvm]
+[327895.686866]  uvm_hmm_va_block_service_locked+0x137/0x630 [nvidia_uvm]
+[327895.686898]  ? uvm_perf_prefetch_prenotify_fault_migrations+0x16e/0x2f0 [nvidia_uvm]
+[327895.686929]  uvm_va_block_service_locked+0x7b/0xd0 [nvidia_uvm]
+[327895.686963]  service_fault_batch_block_locked+0x452/0xad0 [nvidia_uvm]
+[327895.687000]  ? service_fault_batch_dispatch.isra.0+0x321/0x3e0 [nvidia_uvm]
+[327895.687035]  service_fault_batch_dispatch.isra.0+0x321/0x3e0 [nvidia_uvm]
+[327895.687070]  service_fault_batch.constprop.0+0xa3/0x360 [nvidia_uvm]
+[327895.687105]  uvm_parent_gpu_service_replayable_faults+0x11c/0x6b0 [nvidia_uvm]
+[327895.687140]  ? ___down_common+0xd1/0x180
+[327895.687140]  replayable_faults_isr_bottom_half+0x49/0x70 [nvidia_uvm]
+[327895.687168]  replayable_faults_isr_bottom_half_entry+0xa3/0xe0 [nvidia_uvm]
+[327895.687194]  _main_loop+0x90/0x150 [nvidia_uvm]
+[327895.687218]  ? __pfx__main_loop+0x10/0x10 [nvidia_uvm]
+[327895.687240]  kthread+0xe1/0x120
+[327895.687242]  ? __pfx_kthread+0x10/0x10
+[327895.687243]  ret_from_fork+0x1a1/0x270
+[327895.687245]  ? __pfx_kthread+0x10/0x10
+[327895.687245]  ret_from_fork_asm+0x1a/0x30
+[327895.687247]  </TASK>
+[327923.679518] watchdog: BUG: soft lockup - CPU#12 stuck for 153s! [chapter_demo.ou:4143425]
+[327923.679521] CPU#12 Utilization every 4000ms during lockup:
+[327923.679522] 	#1: 100% system,	  0% softirq,	  0% hardirq,	  0% idle
+[327923.679523] 	#2: 100% system,	  0% softirq,	  0% hardirq,	  0% idle
+[327923.679523] 	#3: 100% system,	  0% softirq,	  1% hardirq,	  0% idle
+[327923.679524] 	#4: 100% system,	  0% softirq,	  0% hardirq,	  0% idle
+[327923.679524] 	#5: 100% system,	  0% softirq,	  0% hardirq,	  0% idle
+[327923.679525] Modules linked in: vhost_net vhost vhost_iotlb tap tls uinput xt_connmark xt_mark rfcomm snd_seq_dummy snd_hrtimer nvidia_uvm(OE) nf_conntrack_netlink xt_nat veth xt_conntrack xt_MASQUERADE bridge stp llc xt_set ip_set nft_chain_nat xt_addrtype nft_compat rpcrdma rdma_cm iw_cm ib_cm ib_core binfmt_misc tun overlay nf_tables nfnetlink_cttimeout openvswitch nsh nf_conncount nf_nat nf_conntrack nf_defrag_ipv6 nf_defrag_ipv4 psample qrtr bnep vfat fat snd_sof_pci_intel_tgl snd_sof_pci_intel_cnl snd_sof_intel_hda_generic soundwire_intel snd_sof_intel_hda_sdw_bpt snd_sof_intel_hda_common snd_soc_hdac_hda snd_sof_intel_hda_mlink snd_sof_intel_hda soundwire_cadence intel_rapl_msr snd_sof_pci intel_rapl_common snd_sof_xtensa_dsp snd_sof intel_uncore_frequency intel_uncore_frequency_common snd_hda_codec_intelhdmi intel_tcc_cooling iwlmvm snd_sof_utils x86_pkg_temp_thermal snd_soc_acpi_intel_match intel_powerclamp snd_soc_acpi_intel_sdca_quirks soundwire_generic_allocation snd_soc_sdw_utils coretemp snd_soc_acpi crc8
+[327923.679545]  soundwire_bus snd_hda_codec_alc662 snd_soc_sdca snd_hda_codec_realtek_lib mac80211 kvm_intel snd_hda_codec_generic snd_soc_avs snd_hda_codec_nvhdmi snd_hda_codec_hdmi snd_soc_hda_codec libarc4 snd_hda_intel snd_hda_ext_core kvm nvidia_drm(OE) snd_hda_codec snd_soc_core nvidia_modeset(OE) snd_hda_core asus_armoury snd_compress snd_intel_dspcfg iwlwifi ac97_bus btusb snd_intel_sdw_acpi snd_pcm_dmaengine snd_hwdep btmtk snd_seq btrtl spi_nor irqbypass snd_seq_device btbcm rapl eeepc_wmi iTCO_wdt firmware_attributes_class asus_wmi btintel intel_cstate mtd snd_pcm ee1004 intel_pmc_bxt sparse_keymap mei_hdcp mei_pxp r8169 snd_timer nvidia(OE) i2c_i801 spi_intel_pci cfg80211 bluetooth intel_uncore igc platform_profile wmi_bmof realtek i2c_smbus spi_intel snd idma64 intel_pmc_core soundcore mei_me joydev apple_mfi_fastcharge pmt_telemetry mei pmt_discovery pmt_class rfkill intel_pmc_ssram_telemetry acpi_tad acpi_pad nfsd auth_rpcgss nfs_acl lockd grace nfs_localio sunrpc fuse dm_multipath nfnetlink zram
+[327923.679566]  lz4hc_compress lz4_compress xfs xe drm_ttm_helper drm_suballoc_helper gpu_sched drm_gpuvm drm_exec drm_gpusvm_helper hid_apple i915 i2c_algo_bit drm_buddy ttm nvme drm_display_helper nvme_core nvme_keyring cec nvme_auth ghash_clmulni_intel video hkdf intel_vsec intel_oc_wdt wmi pinctrl_alderlake i2c_dev scsi_dh_rdac scsi_dh_alua scsi_dh_emc
+[327923.679574] CPU: 12 UID: 1000 PID: 4143425 Comm: chapter_demo.ou Kdump: loaded Tainted: G      D    OEL      7.0.8-200.fc44.x86_64 #1 PREEMPT(lazy)
+[327923.679576] Tainted: [D]=DIE, [O]=OOT_MODULE, [E]=UNSIGNED_MODULE, [L]=SOFTLOCKUP
+[327923.679577] Hardware name: ASUS System Product Name/TUF GAMING B660-PLUS WIFI D4, BIOS 1620 08/12/2022
+[327923.679577] RIP: 0010:native_queued_spin_lock_slowpath+0x293/0x330
+[327923.679581] Code: 48 03 04 f5 e0 70 1c 83 48 89 10 8b 72 08 85 f6 75 09 f3 90 8b 42 08 85 c0 74 f7 48 8b 32 48 85 f6 74 07 0f 0d 0e eb 02 f3 90 <8b> 01 66 85 c0 75 f7 44 39 c0 74 3a c6 01 01 48 85 f6 74 0e c7 46
+[327923.679581] RSP: 0018:ffffc90002f474b0 EFLAGS: 00000202
+[327923.679582] RAX: 0000000000340101 RBX: ffff88816e06f9f8 RCX: ffff88816e06fae0
+[327923.679583] RDX: ffff889ffee34200 RSI: 0000000000000000 RDI: 0000000000000000
+[327923.679583] RBP: ffffc90002f47510 R08: 0000000000340000 R09: ffff88a07a49c000
+[327923.679584] R10: 0000000000340000 R11: ffff888100044700 R12: ffff88816e06fae0
+[327923.679584] R13: ffff88816e06f9f8 R14: 0000000000000001 R15: 0000000000001000
+[327923.679585] FS:  00007f5ac9955000(0000) GS:ffff88a07a49c000(0000) knlGS:0000000000000000
+[327923.679585] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[327923.679586] CR2: 00007f54b7ffbff0 CR3: 0000001851079001 CR4: 0000000000f72ef0
+[327923.679587] PKRU: 55555554
+[327923.679587] Call Trace:
+[327923.679588]  <TASK>
+[327923.679589]  _raw_spin_lock+0x29/0x30
+[327923.679591]  claim_free_chunk+0x2a/0xe0 [nvidia_uvm]
+[327923.679635]  pmm_gpu_alloc+0x15a/0x390 [nvidia_uvm]
+[327923.679668]  uvm_pmm_gpu_alloc_kernel+0x35/0xd0 [nvidia_uvm]
+[327923.679699]  phys_mem_allocate+0x97/0x170 [nvidia_uvm]
+[327923.679735]  allocate_directory+0xb5/0x120 [nvidia_uvm]
+[327923.679772]  uvm_page_tree_init+0xfa/0x2b0 [nvidia_uvm]
+[327923.679807]  create_gpu_va_space+0x121/0x2b0 [nvidia_uvm]
+[327923.679835]  uvm_va_space_register_gpu_va_space+0xc5/0x5d0 [nvidia_uvm]
+[327923.679863]  uvm_api_register_gpu_va_space+0x4b/0x70 [nvidia_uvm]
+[327923.679889]  uvm_ioctl+0x1467/0x1bc0 [nvidia_uvm]
+[327923.679913]  ? rmapiControlWithSecInfoTls+0x8c/0xe0 [nvidia]
+[327923.680045]  ? _nv04ControlWithSecInfo+0x8d/0xa0 [nvidia]
+[327923.680147]  ? thread_context_non_interrupt_add+0x133/0x220 [nvidia_uvm]
+[327923.680185]  uvm_unlocked_ioctl_entry.part.0+0x78/0xe0 [nvidia_uvm]
+[327923.680209]  ? sched_balance_find_dst_group+0x215/0x8f0
+[327923.680211]  ? os_get_monotonic_time_ns+0x3d/0xa0 [nvidia]
+[327923.680266]  __x64_sys_ioctl+0xb9/0x100
+[327923.680269]  do_syscall_64+0x109/0x6e0
+[327923.680271]  ? __virt_addr_valid+0x83/0x110
+[327923.680273]  ? check_heap_object+0x38/0x180
+[327923.680274]  ? __check_object_size+0x6f/0xd0
+[327923.680275]  ? nvidia_ioctl.isra.0+0x1e2/0x9e0 [nvidia]
+[327923.680325]  ? nvidia_unlocked_ioctl+0x22/0x30 [nvidia]
+[327923.680374]  ? __x64_sys_ioctl+0xd4/0x100
+[327923.680375]  ? do_syscall_64+0x144/0x6e0
+[327923.680376]  ? __do_sys_clone3+0x124/0x160
+[327923.680378]  ? do_syscall_64+0x144/0x6e0
+[327923.680379]  ? do_user_addr_fault+0x2cd/0x830
+[327923.680380]  ? irqentry_exit+0x7b/0x560
+[327923.680382]  ? exc_page_fault+0x90/0x1f0
+[327923.680383]  ? __irq_exit_rcu+0x4c/0xf0
+[327923.680384]  entry_SYSCALL_64_after_hwframe+0x76/0x7e
+[327923.680385] RIP: 0033:0x7f5ac93e15fd
+[327923.680405] Code: 04 25 28 00 00 00 48 89 45 c8 31 c0 48 8d 45 10 c7 45 b0 10 00 00 00 48 89 45 b8 48 8d 45 d0 48 89 45 c0 b8 10 00 00 00 0f 05 <89> c2 3d 00 f0 ff ff 77 1a 48 8b 45 c8 64 48 2b 04 25 28 00 00 00
+[327923.680406] RSP: 002b:00007ffc75e01eb0 EFLAGS: 00000246 ORIG_RAX: 0000000000000010
+[327923.680407] RAX: ffffffffffffffda RBX: 00007ffc75e01f10 RCX: 00007f5ac93e15fd
+[327923.680407] RDX: 00007ffc75e01f10 RSI: 0000000000000019 RDI: 0000000000000009
+[327923.680407] RBP: 00007ffc75e01f00 R08: 0000556a508ccef0 R09: 00007ffc75e00e4c
+[327923.680408] R10: 00007ffc75e00e30 R11: 0000000000000246 R12: 0000000000000009
+[327923.680408] R13: 0000556a508f0c16 R14: 0000556a508af960 R15: 0000000000000000
+[327923.680409]  </TASK>
+[327923.686517] watchdog: BUG: soft lockup - CPU#9 stuck for 160s! [UVM GPU1 BH:64561]
+[327923.686519] CPU#9 Utilization every 4000ms during lockup:
+[327923.686520] 	#1: 100% system,	  0% softirq,	  1% hardirq,	  0% idle
+[327923.686521] 	#2: 100% system,	  0% softirq,	  0% hardirq,	  0% idle
+[327923.686521] 	#3: 100% system,	  0% softirq,	  0% hardirq,	  0% idle
+[327923.686522] 	#4: 100% system,	  0% softirq,	  0% hardirq,	  0% idle
+[327923.686522] 	#5: 100% system,	  0% softirq,	  0% hardirq,	  0% idle
+[327923.686522] Modules linked in: vhost_net vhost vhost_iotlb tap tls uinput xt_connmark xt_mark rfcomm snd_seq_dummy snd_hrtimer nvidia_uvm(OE) nf_conntrack_netlink xt_nat veth xt_conntrack xt_MASQUERADE bridge stp llc xt_set ip_set nft_chain_nat xt_addrtype nft_compat rpcrdma rdma_cm iw_cm ib_cm ib_core binfmt_misc tun overlay nf_tables nfnetlink_cttimeout openvswitch nsh nf_conncount nf_nat nf_conntrack nf_defrag_ipv6 nf_defrag_ipv4 psample qrtr bnep vfat fat snd_sof_pci_intel_tgl snd_sof_pci_intel_cnl snd_sof_intel_hda_generic soundwire_intel snd_sof_intel_hda_sdw_bpt snd_sof_intel_hda_common snd_soc_hdac_hda snd_sof_intel_hda_mlink snd_sof_intel_hda soundwire_cadence intel_rapl_msr snd_sof_pci intel_rapl_common snd_sof_xtensa_dsp snd_sof intel_uncore_frequency intel_uncore_frequency_common snd_hda_codec_intelhdmi intel_tcc_cooling iwlmvm snd_sof_utils x86_pkg_temp_thermal snd_soc_acpi_intel_match intel_powerclamp snd_soc_acpi_intel_sdca_quirks soundwire_generic_allocation snd_soc_sdw_utils coretemp snd_soc_acpi crc8
+[327923.686542]  soundwire_bus snd_hda_codec_alc662 snd_soc_sdca snd_hda_codec_realtek_lib mac80211 kvm_intel snd_hda_codec_generic snd_soc_avs snd_hda_codec_nvhdmi snd_hda_codec_hdmi snd_soc_hda_codec libarc4 snd_hda_intel snd_hda_ext_core kvm nvidia_drm(OE) snd_hda_codec snd_soc_core nvidia_modeset(OE) snd_hda_core asus_armoury snd_compress snd_intel_dspcfg iwlwifi ac97_bus btusb snd_intel_sdw_acpi snd_pcm_dmaengine snd_hwdep btmtk snd_seq btrtl spi_nor irqbypass snd_seq_device btbcm rapl eeepc_wmi iTCO_wdt firmware_attributes_class asus_wmi btintel intel_cstate mtd snd_pcm ee1004 intel_pmc_bxt sparse_keymap mei_hdcp mei_pxp r8169 snd_timer nvidia(OE) i2c_i801 spi_intel_pci cfg80211 bluetooth intel_uncore igc platform_profile wmi_bmof realtek i2c_smbus spi_intel snd idma64 intel_pmc_core soundcore mei_me joydev apple_mfi_fastcharge pmt_telemetry mei pmt_discovery pmt_class rfkill intel_pmc_ssram_telemetry acpi_tad acpi_pad nfsd auth_rpcgss nfs_acl lockd grace nfs_localio sunrpc fuse dm_multipath nfnetlink zram
+[327923.686566]  lz4hc_compress lz4_compress xfs xe drm_ttm_helper drm_suballoc_helper gpu_sched drm_gpuvm drm_exec drm_gpusvm_helper hid_apple i915 i2c_algo_bit drm_buddy ttm nvme drm_display_helper nvme_core nvme_keyring cec nvme_auth ghash_clmulni_intel video hkdf intel_vsec intel_oc_wdt wmi pinctrl_alderlake i2c_dev scsi_dh_rdac scsi_dh_alua scsi_dh_emc
+[327923.686575] CPU: 9 UID: 0 PID: 64561 Comm: UVM GPU1 BH Kdump: loaded Tainted: G      D    OEL      7.0.8-200.fc44.x86_64 #1 PREEMPT(lazy)
+[327923.686577] Tainted: [D]=DIE, [O]=OOT_MODULE, [E]=UNSIGNED_MODULE, [L]=SOFTLOCKUP
+[327923.686577] Hardware name: ASUS System Product Name/TUF GAMING B660-PLUS WIFI D4, BIOS 1620 08/12/2022
+[327923.686578] RIP: 0010:native_queued_spin_lock_slowpath+0x6a/0x330
+[327923.686581] Code: 08 0f 92 c2 8b 01 0f b6 d2 c1 e2 08 30 e4 09 d0 3d ff 00 00 00 77 51 85 c0 75 0f bf 01 00 00 00 66 89 39 c3 cc cc cc cc f3 90 <80> 39 00 75 f9 bf 01 00 00 00 66 89 39 c3 cc cc cc cc 8b 37 b8 00
+[327923.686581] RSP: 0018:ffffc9000d51b788 EFLAGS: 00000202
+[327923.686582] RAX: 0000000000000001 RBX: ffff88816e06f9f8 RCX: ffff88816e06fae0
+[327923.686583] RDX: 0000000000000000 RSI: 0000000000000001 RDI: ffff88816e06fae0
+[327923.686583] RBP: ffffc9000d51b7c0 R08: 0000000000000000 R09: ffffc9000d51b8e0
+[327923.686583] R10: 0000000000000000 R11: ffff8892a8ce03c0 R12: ffff88816e06fae0
+[327923.686584] R13: ffff88816e06f9f8 R14: 0000000000000000 R15: 0000000000001000
+[327923.686584] FS:  0000000000000000(0000) GS:ffff88a07a31c000(0000) knlGS:0000000000000000
+[327923.686585] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[327923.686585] CR2: 00005583067854d0 CR3: 000000000842e003 CR4: 0000000000f72ef0
+[327923.686586] PKRU: 55555554
+[327923.686586] Call Trace:
+[327923.686587]  <TASK>
+[327923.686587]  _raw_spin_lock+0x29/0x30
+[327923.686589]  claim_free_chunk+0x2a/0xe0 [nvidia_uvm]
+[327923.686628]  pmm_gpu_alloc+0x15a/0x390 [nvidia_uvm]
+[327923.686660]  ? block_zero_new_gpu_chunk+0x22e/0x380 [nvidia_uvm]
+[327923.686696]  uvm_pmm_gpu_alloc_user+0x1c/0x30 [nvidia_uvm]
+[327923.686727]  block_populate_gpu_chunk+0x357/0x460 [nvidia_uvm]
+[327923.686762]  uvm_va_block_populate_pages_gpu+0x15e/0x200 [nvidia_uvm]
+[327923.686797]  uvm_hmm_va_block_service_locked+0x137/0x630 [nvidia_uvm]
+[327923.686829]  ? uvm_perf_prefetch_prenotify_fault_migrations+0x16e/0x2f0 [nvidia_uvm]
+[327923.686862]  uvm_va_block_service_locked+0x7b/0xd0 [nvidia_uvm]
+[327923.686898]  service_fault_batch_block_locked+0x452/0xad0 [nvidia_uvm]
+[327923.686934]  ? service_fault_batch_dispatch.isra.0+0x321/0x3e0 [nvidia_uvm]
+[327923.686969]  service_fault_batch_dispatch.isra.0+0x321/0x3e0 [nvidia_uvm]
+[327923.687005]  service_fault_batch.constprop.0+0xa3/0x360 [nvidia_uvm]
+[327923.687039]  uvm_parent_gpu_service_replayable_faults+0x11c/0x6b0 [nvidia_uvm]
+[327923.687074]  ? ___down_common+0xd1/0x180
+[327923.687075]  replayable_faults_isr_bottom_half+0x49/0x70 [nvidia_uvm]
+[327923.687102]  replayable_faults_isr_bottom_half_entry+0xa3/0xe0 [nvidia_uvm]
+[327923.687130]  _main_loop+0x90/0x150 [nvidia_uvm]
+[327923.687152]  ? __pfx__main_loop+0x10/0x10 [nvidia_uvm]
+[327923.687175]  kthread+0xe1/0x120
+[327923.687176]  ? __pfx_kthread+0x10/0x10
+[327923.687177]  ret_from_fork+0x1a1/0x270
+[327923.687179]  ? __pfx_kthread+0x10/0x10
+[327923.687180]  ret_from_fork_asm+0x1a/0x30
+[327923.687182]  </TASK>
+[327951.679445] watchdog: BUG: soft lockup - CPU#12 stuck for 179s! [chapter_demo.ou:4143425]
+[327951.679448] CPU#12 Utilization every 4000ms during lockup:
+[327951.679448] 	#1: 100% system,	  0% softirq,	  0% hardirq,	  0% idle
+[327951.679449] 	#2: 100% system,	  0% softirq,	  0% hardirq,	  0% idle
+[327951.679450] 	#3: 100% system,	  0% softirq,	  1% hardirq,	  0% idle
+[327951.679450] 	#4: 100% system,	  0% softirq,	  0% hardirq,	  0% idle
+[327951.679450] 	#5: 100% system,	  0% softirq,	  0% hardirq,	  0% idle
+[327951.679451] Modules linked in: vhost_net vhost vhost_iotlb tap tls uinput xt_connmark xt_mark rfcomm snd_seq_dummy snd_hrtimer nvidia_uvm(OE) nf_conntrack_netlink xt_nat veth xt_conntrack xt_MASQUERADE bridge stp llc xt_set ip_set nft_chain_nat xt_addrtype nft_compat rpcrdma rdma_cm iw_cm ib_cm ib_core binfmt_misc tun overlay nf_tables nfnetlink_cttimeout openvswitch nsh nf_conncount nf_nat nf_conntrack nf_defrag_ipv6 nf_defrag_ipv4 psample qrtr bnep vfat fat snd_sof_pci_intel_tgl snd_sof_pci_intel_cnl snd_sof_intel_hda_generic soundwire_intel snd_sof_intel_hda_sdw_bpt snd_sof_intel_hda_common snd_soc_hdac_hda snd_sof_intel_hda_mlink snd_sof_intel_hda soundwire_cadence intel_rapl_msr snd_sof_pci intel_rapl_common snd_sof_xtensa_dsp snd_sof intel_uncore_frequency intel_uncore_frequency_common snd_hda_codec_intelhdmi intel_tcc_cooling iwlmvm snd_sof_utils x86_pkg_temp_thermal snd_soc_acpi_intel_match intel_powerclamp snd_soc_acpi_intel_sdca_quirks soundwire_generic_allocation snd_soc_sdw_utils coretemp snd_soc_acpi crc8
+[327951.679471]  soundwire_bus snd_hda_codec_alc662 snd_soc_sdca snd_hda_codec_realtek_lib mac80211 kvm_intel snd_hda_codec_generic snd_soc_avs snd_hda_codec_nvhdmi snd_hda_codec_hdmi snd_soc_hda_codec libarc4 snd_hda_intel snd_hda_ext_core kvm nvidia_drm(OE) snd_hda_codec snd_soc_core nvidia_modeset(OE) snd_hda_core asus_armoury snd_compress snd_intel_dspcfg iwlwifi ac97_bus btusb snd_intel_sdw_acpi snd_pcm_dmaengine snd_hwdep btmtk snd_seq btrtl spi_nor irqbypass snd_seq_device btbcm rapl eeepc_wmi iTCO_wdt firmware_attributes_class asus_wmi btintel intel_cstate mtd snd_pcm ee1004 intel_pmc_bxt sparse_keymap mei_hdcp mei_pxp r8169 snd_timer nvidia(OE) i2c_i801 spi_intel_pci cfg80211 bluetooth intel_uncore igc platform_profile wmi_bmof realtek i2c_smbus spi_intel snd idma64 intel_pmc_core soundcore mei_me joydev apple_mfi_fastcharge pmt_telemetry mei pmt_discovery pmt_class rfkill intel_pmc_ssram_telemetry acpi_tad acpi_pad nfsd auth_rpcgss nfs_acl lockd grace nfs_localio sunrpc fuse dm_multipath nfnetlink zram
+[327951.679493]  lz4hc_compress lz4_compress xfs xe drm_ttm_helper drm_suballoc_helper gpu_sched drm_gpuvm drm_exec drm_gpusvm_helper hid_apple i915 i2c_algo_bit drm_buddy ttm nvme drm_display_helper nvme_core nvme_keyring cec nvme_auth ghash_clmulni_intel video hkdf intel_vsec intel_oc_wdt wmi pinctrl_alderlake i2c_dev scsi_dh_rdac scsi_dh_alua scsi_dh_emc
+[327951.679502] CPU: 12 UID: 1000 PID: 4143425 Comm: chapter_demo.ou Kdump: loaded Tainted: G      D    OEL      7.0.8-200.fc44.x86_64 #1 PREEMPT(lazy)
+[327951.679504] Tainted: [D]=DIE, [O]=OOT_MODULE, [E]=UNSIGNED_MODULE, [L]=SOFTLOCKUP
+[327951.679505] Hardware name: ASUS System Product Name/TUF GAMING B660-PLUS WIFI D4, BIOS 1620 08/12/2022
+[327951.679505] RIP: 0010:native_queued_spin_lock_slowpath+0x293/0x330
+[327951.679509] Code: 48 03 04 f5 e0 70 1c 83 48 89 10 8b 72 08 85 f6 75 09 f3 90 8b 42 08 85 c0 74 f7 48 8b 32 48 85 f6 74 07 0f 0d 0e eb 02 f3 90 <8b> 01 66 85 c0 75 f7 44 39 c0 74 3a c6 01 01 48 85 f6 74 0e c7 46
+[327951.679511] RSP: 0018:ffffc90002f474b0 EFLAGS: 00000202
+[327951.679512] RAX: 0000000000340101 RBX: ffff88816e06f9f8 RCX: ffff88816e06fae0
+[327951.679512] RDX: ffff889ffee34200 RSI: 0000000000000000 RDI: 0000000000000000
+[327951.679513] RBP: ffffc90002f47510 R08: 0000000000340000 R09: ffff88a07a49c000
+[327951.679513] R10: 0000000000340000 R11: ffff888100044700 R12: ffff88816e06fae0
+[327951.679513] R13: ffff88816e06f9f8 R14: 0000000000000001 R15: 0000000000001000
+[327951.679514] FS:  00007f5ac9955000(0000) GS:ffff88a07a49c000(0000) knlGS:0000000000000000
+[327951.679514] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[327951.679515] CR2: 00007f54b7ffbff0 CR3: 0000001851079001 CR4: 0000000000f72ef0
+[327951.679515] PKRU: 55555554
+[327951.679516] Call Trace:
+[327951.679517]  <TASK>
+[327951.679517]  _raw_spin_lock+0x29/0x30
+[327951.679520]  claim_free_chunk+0x2a/0xe0 [nvidia_uvm]
+[327951.679566]  pmm_gpu_alloc+0x15a/0x390 [nvidia_uvm]
+[327951.679599]  uvm_pmm_gpu_alloc_kernel+0x35/0xd0 [nvidia_uvm]
+[327951.679632]  phys_mem_allocate+0x97/0x170 [nvidia_uvm]
+[327951.679669]  allocate_directory+0xb5/0x120 [nvidia_uvm]
+[327951.679705]  uvm_page_tree_init+0xfa/0x2b0 [nvidia_uvm]
+[327951.679741]  create_gpu_va_space+0x121/0x2b0 [nvidia_uvm]
+[327951.679769]  uvm_va_space_register_gpu_va_space+0xc5/0x5d0 [nvidia_uvm]
+[327951.679798]  uvm_api_register_gpu_va_space+0x4b/0x70 [nvidia_uvm]
+[327951.679825]  uvm_ioctl+0x1467/0x1bc0 [nvidia_uvm]
+[327951.679848]  ? rmapiControlWithSecInfoTls+0x8c/0xe0 [nvidia]
+[327951.680004]  ? _nv04ControlWithSecInfo+0x8d/0xa0 [nvidia]
+[327951.680116]  ? thread_context_non_interrupt_add+0x133/0x220 [nvidia_uvm]
+[327951.680154]  uvm_unlocked_ioctl_entry.part.0+0x78/0xe0 [nvidia_uvm]
+[327951.680178]  ? sched_balance_find_dst_group+0x215/0x8f0
+[327951.680180]  ? os_get_monotonic_time_ns+0x3d/0xa0 [nvidia]
+[327951.680235]  __x64_sys_ioctl+0xb9/0x100
+[327951.680238]  do_syscall_64+0x109/0x6e0
+[327951.680240]  ? __virt_addr_valid+0x83/0x110
+[327951.680242]  ? check_heap_object+0x38/0x180
+[327951.680243]  ? __check_object_size+0x6f/0xd0
+[327951.680244]  ? nvidia_ioctl.isra.0+0x1e2/0x9e0 [nvidia]
+[327951.680294]  ? nvidia_unlocked_ioctl+0x22/0x30 [nvidia]
+[327951.680342]  ? __x64_sys_ioctl+0xd4/0x100
+[327951.680344]  ? do_syscall_64+0x144/0x6e0
+[327951.680345]  ? __do_sys_clone3+0x124/0x160
+[327951.680347]  ? do_syscall_64+0x144/0x6e0
+[327951.680348]  ? do_user_addr_fault+0x2cd/0x830
+[327951.680349]  ? irqentry_exit+0x7b/0x560
+[327951.680351]  ? exc_page_fault+0x90/0x1f0
+[327951.680352]  ? __irq_exit_rcu+0x4c/0xf0
+[327951.680353]  entry_SYSCALL_64_after_hwframe+0x76/0x7e
+[327951.680354] RIP: 0033:0x7f5ac93e15fd
+[327951.680374] Code: 04 25 28 00 00 00 48 89 45 c8 31 c0 48 8d 45 10 c7 45 b0 10 00 00 00 48 89 45 b8 48 8d 45 d0 48 89 45 c0 b8 10 00 00 00 0f 05 <89> c2 3d 00 f0 ff ff 77 1a 48 8b 45 c8 64 48 2b 04 25 28 00 00 00
+[327951.680374] RSP: 002b:00007ffc75e01eb0 EFLAGS: 00000246 ORIG_RAX: 0000000000000010
+[327951.680375] RAX: ffffffffffffffda RBX: 00007ffc75e01f10 RCX: 00007f5ac93e15fd
+[327951.680376] RDX: 00007ffc75e01f10 RSI: 0000000000000019 RDI: 0000000000000009
+[327951.680376] RBP: 00007ffc75e01f00 R08: 0000556a508ccef0 R09: 00007ffc75e00e4c
+[327951.680376] R10: 00007ffc75e00e30 R11: 0000000000000246 R12: 0000000000000009
+[327951.680377] R13: 0000556a508f0c16 R14: 0000556a508af960 R15: 0000000000000000
+[327951.680378]  </TASK>
+[327951.686444] watchdog: BUG: soft lockup - CPU#9 stuck for 186s! [UVM GPU1 BH:64561]
+[327951.686446] CPU#9 Utilization every 4000ms during lockup:
+[327951.686447] 	#1: 100% system,	  0% softirq,	  0% hardirq,	  0% idle
+[327951.686447] 	#2: 100% system,	  0% softirq,	  0% hardirq,	  0% idle
+[327951.686448] 	#3: 100% system,	  0% softirq,	  0% hardirq,	  0% idle
+[327951.686448] 	#4: 100% system,	  0% softirq,	  0% hardirq,	  0% idle
+[327951.686449] 	#5: 100% system,	  0% softirq,	  1% hardirq,	  0% idle
+[327951.686449] Modules linked in: vhost_net vhost vhost_iotlb tap tls uinput xt_connmark xt_mark rfcomm snd_seq_dummy snd_hrtimer nvidia_uvm(OE) nf_conntrack_netlink xt_nat veth xt_conntrack xt_MASQUERADE bridge stp llc xt_set ip_set nft_chain_nat xt_addrtype nft_compat rpcrdma rdma_cm iw_cm ib_cm ib_core binfmt_misc tun overlay nf_tables nfnetlink_cttimeout openvswitch nsh nf_conncount nf_nat nf_conntrack nf_defrag_ipv6 nf_defrag_ipv4 psample qrtr bnep vfat fat snd_sof_pci_intel_tgl snd_sof_pci_intel_cnl snd_sof_intel_hda_generic soundwire_intel snd_sof_intel_hda_sdw_bpt snd_sof_intel_hda_common snd_soc_hdac_hda snd_sof_intel_hda_mlink snd_sof_intel_hda soundwire_cadence intel_rapl_msr snd_sof_pci intel_rapl_common snd_sof_xtensa_dsp snd_sof intel_uncore_frequency intel_uncore_frequency_common snd_hda_codec_intelhdmi intel_tcc_cooling iwlmvm snd_sof_utils x86_pkg_temp_thermal snd_soc_acpi_intel_match intel_powerclamp snd_soc_acpi_intel_sdca_quirks soundwire_generic_allocation snd_soc_sdw_utils coretemp snd_soc_acpi crc8
+[327951.686467]  soundwire_bus snd_hda_codec_alc662 snd_soc_sdca snd_hda_codec_realtek_lib mac80211 kvm_intel snd_hda_codec_generic snd_soc_avs snd_hda_codec_nvhdmi snd_hda_codec_hdmi snd_soc_hda_codec libarc4 snd_hda_intel snd_hda_ext_core kvm nvidia_drm(OE) snd_hda_codec snd_soc_core nvidia_modeset(OE) snd_hda_core asus_armoury snd_compress snd_intel_dspcfg iwlwifi ac97_bus btusb snd_intel_sdw_acpi snd_pcm_dmaengine snd_hwdep btmtk snd_seq btrtl spi_nor irqbypass snd_seq_device btbcm rapl eeepc_wmi iTCO_wdt firmware_attributes_class asus_wmi btintel intel_cstate mtd snd_pcm ee1004 intel_pmc_bxt sparse_keymap mei_hdcp mei_pxp r8169 snd_timer nvidia(OE) i2c_i801 spi_intel_pci cfg80211 bluetooth intel_uncore igc platform_profile wmi_bmof realtek i2c_smbus spi_intel snd idma64 intel_pmc_core soundcore mei_me joydev apple_mfi_fastcharge pmt_telemetry mei pmt_discovery pmt_class rfkill intel_pmc_ssram_telemetry acpi_tad acpi_pad nfsd auth_rpcgss nfs_acl lockd grace nfs_localio sunrpc fuse dm_multipath nfnetlink zram
+[327951.686485]  lz4hc_compress lz4_compress xfs xe drm_ttm_helper drm_suballoc_helper gpu_sched drm_gpuvm drm_exec drm_gpusvm_helper hid_apple i915 i2c_algo_bit drm_buddy ttm nvme drm_display_helper nvme_core nvme_keyring cec nvme_auth ghash_clmulni_intel video hkdf intel_vsec intel_oc_wdt wmi pinctrl_alderlake i2c_dev scsi_dh_rdac scsi_dh_alua scsi_dh_emc
+[327951.686493] CPU: 9 UID: 0 PID: 64561 Comm: UVM GPU1 BH Kdump: loaded Tainted: G      D    OEL      7.0.8-200.fc44.x86_64 #1 PREEMPT(lazy)
+[327951.686495] Tainted: [D]=DIE, [O]=OOT_MODULE, [E]=UNSIGNED_MODULE, [L]=SOFTLOCKUP
+[327951.686496] Hardware name: ASUS System Product Name/TUF GAMING B660-PLUS WIFI D4, BIOS 1620 08/12/2022
+[327951.686496] RIP: 0010:native_queued_spin_lock_slowpath+0x6a/0x330
+[327951.686499] Code: 08 0f 92 c2 8b 01 0f b6 d2 c1 e2 08 30 e4 09 d0 3d ff 00 00 00 77 51 85 c0 75 0f bf 01 00 00 00 66 89 39 c3 cc cc cc cc f3 90 <80> 39 00 75 f9 bf 01 00 00 00 66 89 39 c3 cc cc cc cc 8b 37 b8 00
+[327951.686499] RSP: 0018:ffffc9000d51b788 EFLAGS: 00000202
+[327951.686500] RAX: 0000000000000001 RBX: ffff88816e06f9f8 RCX: ffff88816e06fae0
+[327951.686501] RDX: 0000000000000000 RSI: 0000000000000001 RDI: ffff88816e06fae0
+[327951.686501] RBP: ffffc9000d51b7c0 R08: 0000000000000000 R09: ffffc9000d51b8e0
+[327951.686502] R10: 0000000000000000 R11: ffff8892a8ce03c0 R12: ffff88816e06fae0
+[327951.686502] R13: ffff88816e06f9f8 R14: 0000000000000000 R15: 0000000000001000
+[327951.686503] FS:  0000000000000000(0000) GS:ffff88a07a31c000(0000) knlGS:0000000000000000
+[327951.686503] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[327951.686504] CR2: 00005583067854d0 CR3: 000000000842e003 CR4: 0000000000f72ef0
+[327951.686504] PKRU: 55555554
+[327951.686505] Call Trace:
+[327951.686505]  <TASK>
+[327951.686506]  _raw_spin_lock+0x29/0x30
+[327951.686508]  claim_free_chunk+0x2a/0xe0 [nvidia_uvm]
+[327951.686546]  pmm_gpu_alloc+0x15a/0x390 [nvidia_uvm]
+[327951.686579]  ? block_zero_new_gpu_chunk+0x22e/0x380 [nvidia_uvm]
+[327951.686616]  uvm_pmm_gpu_alloc_user+0x1c/0x30 [nvidia_uvm]
+[327951.686648]  block_populate_gpu_chunk+0x357/0x460 [nvidia_uvm]
+[327951.686684]  uvm_va_block_populate_pages_gpu+0x15e/0x200 [nvidia_uvm]
+[327951.686718]  uvm_hmm_va_block_service_locked+0x137/0x630 [nvidia_uvm]
+[327951.686750]  ? uvm_perf_prefetch_prenotify_fault_migrations+0x16e/0x2f0 [nvidia_uvm]
+[327951.686783]  uvm_va_block_service_locked+0x7b/0xd0 [nvidia_uvm]
+[327951.686818]  service_fault_batch_block_locked+0x452/0xad0 [nvidia_uvm]
+[327951.686854]  ? service_fault_batch_dispatch.isra.0+0x321/0x3e0 [nvidia_uvm]
+[327951.686888]  service_fault_batch_dispatch.isra.0+0x321/0x3e0 [nvidia_uvm]
+[327951.686924]  service_fault_batch.constprop.0+0xa3/0x360 [nvidia_uvm]
+[327951.686959]  uvm_parent_gpu_service_replayable_faults+0x11c/0x6b0 [nvidia_uvm]
+[327951.686994]  ? ___down_common+0xd1/0x180
+[327951.686994]  replayable_faults_isr_bottom_half+0x49/0x70 [nvidia_uvm]
+[327951.687022]  replayable_faults_isr_bottom_half_entry+0xa3/0xe0 [nvidia_uvm]
+[327951.687049]  _main_loop+0x90/0x150 [nvidia_uvm]
+[327951.687073]  ? __pfx__main_loop+0x10/0x10 [nvidia_uvm]
+[327951.687095]  kthread+0xe1/0x120
+[327951.687097]  ? __pfx_kthread+0x10/0x10
+[327951.687098]  ret_from_fork+0x1a1/0x270
+[327951.687100]  ? __pfx_kthread+0x10/0x10
+[327951.687101]  ret_from_fork_asm+0x1a/0x30
+[327951.687103]  </TASK>
+[327979.679371] watchdog: BUG: soft lockup - CPU#12 stuck for 205s! [chapter_demo.ou:4143425]
+[327979.679374] CPU#12 Utilization every 4000ms during lockup:
+[327979.679374] 	#1: 100% system,	  0% softirq,	  0% hardirq,	  0% idle
+[327979.679375] 	#2: 100% system,	  0% softirq,	  0% hardirq,	  0% idle
+[327979.679376] 	#3: 100% system,	  0% softirq,	  1% hardirq,	  0% idle
+[327979.679376] 	#4: 100% system,	  0% softirq,	  0% hardirq,	  0% idle
+[327979.679376] 	#5: 100% system,	  0% softirq,	  0% hardirq,	  0% idle
+[327979.679377] Modules linked in: vhost_net vhost vhost_iotlb tap tls uinput xt_connmark xt_mark rfcomm snd_seq_dummy snd_hrtimer nvidia_uvm(OE) nf_conntrack_netlink xt_nat veth xt_conntrack xt_MASQUERADE bridge stp llc xt_set ip_set nft_chain_nat xt_addrtype nft_compat rpcrdma rdma_cm iw_cm ib_cm ib_core binfmt_misc tun overlay nf_tables nfnetlink_cttimeout openvswitch nsh nf_conncount nf_nat nf_conntrack nf_defrag_ipv6 nf_defrag_ipv4 psample qrtr bnep vfat fat snd_sof_pci_intel_tgl snd_sof_pci_intel_cnl snd_sof_intel_hda_generic soundwire_intel snd_sof_intel_hda_sdw_bpt snd_sof_intel_hda_common snd_soc_hdac_hda snd_sof_intel_hda_mlink snd_sof_intel_hda soundwire_cadence intel_rapl_msr snd_sof_pci intel_rapl_common snd_sof_xtensa_dsp snd_sof intel_uncore_frequency intel_uncore_frequency_common snd_hda_codec_intelhdmi intel_tcc_cooling iwlmvm snd_sof_utils x86_pkg_temp_thermal snd_soc_acpi_intel_match intel_powerclamp snd_soc_acpi_intel_sdca_quirks soundwire_generic_allocation snd_soc_sdw_utils coretemp snd_soc_acpi crc8
+[327979.679396]  soundwire_bus snd_hda_codec_alc662 snd_soc_sdca snd_hda_codec_realtek_lib mac80211 kvm_intel snd_hda_codec_generic snd_soc_avs snd_hda_codec_nvhdmi snd_hda_codec_hdmi snd_soc_hda_codec libarc4 snd_hda_intel snd_hda_ext_core kvm nvidia_drm(OE) snd_hda_codec snd_soc_core nvidia_modeset(OE) snd_hda_core asus_armoury snd_compress snd_intel_dspcfg iwlwifi ac97_bus btusb snd_intel_sdw_acpi snd_pcm_dmaengine snd_hwdep btmtk snd_seq btrtl spi_nor irqbypass snd_seq_device btbcm rapl eeepc_wmi iTCO_wdt firmware_attributes_class asus_wmi btintel intel_cstate mtd snd_pcm ee1004 intel_pmc_bxt sparse_keymap mei_hdcp mei_pxp r8169 snd_timer nvidia(OE) i2c_i801 spi_intel_pci cfg80211 bluetooth intel_uncore igc platform_profile wmi_bmof realtek i2c_smbus spi_intel snd idma64 intel_pmc_core soundcore mei_me joydev apple_mfi_fastcharge pmt_telemetry mei pmt_discovery pmt_class rfkill intel_pmc_ssram_telemetry acpi_tad acpi_pad nfsd auth_rpcgss nfs_acl lockd grace nfs_localio sunrpc fuse dm_multipath nfnetlink zram
+[327979.679417]  lz4hc_compress lz4_compress xfs xe drm_ttm_helper drm_suballoc_helper gpu_sched drm_gpuvm drm_exec drm_gpusvm_helper hid_apple i915 i2c_algo_bit drm_buddy ttm nvme drm_display_helper nvme_core nvme_keyring cec nvme_auth ghash_clmulni_intel video hkdf intel_vsec intel_oc_wdt wmi pinctrl_alderlake i2c_dev scsi_dh_rdac scsi_dh_alua scsi_dh_emc
+[327979.679425] CPU: 12 UID: 1000 PID: 4143425 Comm: chapter_demo.ou Kdump: loaded Tainted: G      D    OEL      7.0.8-200.fc44.x86_64 #1 PREEMPT(lazy)
+[327979.679426] Tainted: [D]=DIE, [O]=OOT_MODULE, [E]=UNSIGNED_MODULE, [L]=SOFTLOCKUP
+[327979.679427] Hardware name: ASUS System Product Name/TUF GAMING B660-PLUS WIFI D4, BIOS 1620 08/12/2022
+[327979.679427] RIP: 0010:native_queued_spin_lock_slowpath+0x293/0x330
+[327979.679431] Code: 48 03 04 f5 e0 70 1c 83 48 89 10 8b 72 08 85 f6 75 09 f3 90 8b 42 08 85 c0 74 f7 48 8b 32 48 85 f6 74 07 0f 0d 0e eb 02 f3 90 <8b> 01 66 85 c0 75 f7 44 39 c0 74 3a c6 01 01 48 85 f6 74 0e c7 46
+[327979.679432] RSP: 0018:ffffc90002f474b0 EFLAGS: 00000202
+[327979.679432] RAX: 0000000000340101 RBX: ffff88816e06f9f8 RCX: ffff88816e06fae0
+[327979.679433] RDX: ffff889ffee34200 RSI: 0000000000000000 RDI: 0000000000000000
+[327979.679433] RBP: ffffc90002f47510 R08: 0000000000340000 R09: ffff88a07a49c000
+[327979.679434] R10: 0000000000340000 R11: ffff888100044700 R12: ffff88816e06fae0
+[327979.679434] R13: ffff88816e06f9f8 R14: 0000000000000001 R15: 0000000000001000
+[327979.679435] FS:  00007f5ac9955000(0000) GS:ffff88a07a49c000(0000) knlGS:0000000000000000
+[327979.679435] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[327979.679436] CR2: 00007f54b7ffbff0 CR3: 0000001851079001 CR4: 0000000000f72ef0
+[327979.679436] PKRU: 55555554
+[327979.679437] Call Trace:
+[327979.679438]  <TASK>
+[327979.679439]  _raw_spin_lock+0x29/0x30
+[327979.679441]  claim_free_chunk+0x2a/0xe0 [nvidia_uvm]
+[327979.679488]  pmm_gpu_alloc+0x15a/0x390 [nvidia_uvm]
+[327979.679521]  uvm_pmm_gpu_alloc_kernel+0x35/0xd0 [nvidia_uvm]
+[327979.679551]  phys_mem_allocate+0x97/0x170 [nvidia_uvm]
+[327979.679587]  allocate_directory+0xb5/0x120 [nvidia_uvm]
+[327979.679622]  uvm_page_tree_init+0xfa/0x2b0 [nvidia_uvm]
+[327979.679657]  create_gpu_va_space+0x121/0x2b0 [nvidia_uvm]
+[327979.679686]  uvm_va_space_register_gpu_va_space+0xc5/0x5d0 [nvidia_uvm]
+[327979.679714]  uvm_api_register_gpu_va_space+0x4b/0x70 [nvidia_uvm]
+[327979.679740]  uvm_ioctl+0x1467/0x1bc0 [nvidia_uvm]
+[327979.679763]  ? rmapiControlWithSecInfoTls+0x8c/0xe0 [nvidia]
+[327979.679896]  ? _nv04ControlWithSecInfo+0x8d/0xa0 [nvidia]
+[327979.679994]  ? thread_context_non_interrupt_add+0x133/0x220 [nvidia_uvm]
+[327979.680032]  uvm_unlocked_ioctl_entry.part.0+0x78/0xe0 [nvidia_uvm]
+[327979.680055]  ? sched_balance_find_dst_group+0x215/0x8f0
+[327979.680058]  ? os_get_monotonic_time_ns+0x3d/0xa0 [nvidia]
+[327979.680112]  __x64_sys_ioctl+0xb9/0x100
+[327979.680115]  do_syscall_64+0x109/0x6e0
+[327979.680118]  ? __virt_addr_valid+0x83/0x110
+[327979.680119]  ? check_heap_object+0x38/0x180
+[327979.680121]  ? __check_object_size+0x6f/0xd0
+[327979.680122]  ? nvidia_ioctl.isra.0+0x1e2/0x9e0 [nvidia]
+[327979.680171]  ? nvidia_unlocked_ioctl+0x22/0x30 [nvidia]
+[327979.680220]  ? __x64_sys_ioctl+0xd4/0x100
+[327979.680221]  ? do_syscall_64+0x144/0x6e0
+[327979.680222]  ? __do_sys_clone3+0x124/0x160
+[327979.680225]  ? do_syscall_64+0x144/0x6e0
+[327979.680226]  ? do_user_addr_fault+0x2cd/0x830
+[327979.680227]  ? irqentry_exit+0x7b/0x560
+[327979.680228]  ? exc_page_fault+0x90/0x1f0
+[327979.680229]  ? __irq_exit_rcu+0x4c/0xf0
+[327979.680231]  entry_SYSCALL_64_after_hwframe+0x76/0x7e
+[327979.680232] RIP: 0033:0x7f5ac93e15fd
+[327979.680250] Code: 04 25 28 00 00 00 48 89 45 c8 31 c0 48 8d 45 10 c7 45 b0 10 00 00 00 48 89 45 b8 48 8d 45 d0 48 89 45 c0 b8 10 00 00 00 0f 05 <89> c2 3d 00 f0 ff ff 77 1a 48 8b 45 c8 64 48 2b 04 25 28 00 00 00
+[327979.680250] RSP: 002b:00007ffc75e01eb0 EFLAGS: 00000246 ORIG_RAX: 0000000000000010
+[327979.680251] RAX: ffffffffffffffda RBX: 00007ffc75e01f10 RCX: 00007f5ac93e15fd
+[327979.680252] RDX: 00007ffc75e01f10 RSI: 0000000000000019 RDI: 0000000000000009
+[327979.680252] RBP: 00007ffc75e01f00 R08: 0000556a508ccef0 R09: 00007ffc75e00e4c
+[327979.680252] R10: 00007ffc75e00e30 R11: 0000000000000246 R12: 0000000000000009
+[327979.680253] R13: 0000556a508f0c16 R14: 0000556a508af960 R15: 0000000000000000
+[327979.680254]  </TASK>
+[327979.686371] watchdog: BUG: soft lockup - CPU#9 stuck for 212s! [UVM GPU1 BH:64561]
+[327979.686373] CPU#9 Utilization every 4000ms during lockup:
+[327979.686374] 	#1: 100% system,	  0% softirq,	  0% hardirq,	  0% idle
+[327979.686375] 	#2: 100% system,	  0% softirq,	  0% hardirq,	  0% idle
+[327979.686375] 	#3: 100% system,	  0% softirq,	  1% hardirq,	  0% idle
+[327979.686375] 	#4: 100% system,	  0% softirq,	  0% hardirq,	  0% idle
+[327979.686376] 	#5: 100% system,	  0% softirq,	  0% hardirq,	  0% idle
+[327979.686376] Modules linked in: vhost_net vhost vhost_iotlb tap tls uinput xt_connmark xt_mark rfcomm snd_seq_dummy snd_hrtimer nvidia_uvm(OE) nf_conntrack_netlink xt_nat veth xt_conntrack xt_MASQUERADE bridge stp llc xt_set ip_set nft_chain_nat xt_addrtype nft_compat rpcrdma rdma_cm iw_cm ib_cm ib_core binfmt_misc tun overlay nf_tables nfnetlink_cttimeout openvswitch nsh nf_conncount nf_nat nf_conntrack nf_defrag_ipv6 nf_defrag_ipv4 psample qrtr bnep vfat fat snd_sof_pci_intel_tgl snd_sof_pci_intel_cnl snd_sof_intel_hda_generic soundwire_intel snd_sof_intel_hda_sdw_bpt snd_sof_intel_hda_common snd_soc_hdac_hda snd_sof_intel_hda_mlink snd_sof_intel_hda soundwire_cadence intel_rapl_msr snd_sof_pci intel_rapl_common snd_sof_xtensa_dsp snd_sof intel_uncore_frequency intel_uncore_frequency_common snd_hda_codec_intelhdmi intel_tcc_cooling iwlmvm snd_sof_utils x86_pkg_temp_thermal snd_soc_acpi_intel_match intel_powerclamp snd_soc_acpi_intel_sdca_quirks soundwire_generic_allocation snd_soc_sdw_utils coretemp snd_soc_acpi crc8
+[327979.686397]  soundwire_bus snd_hda_codec_alc662 snd_soc_sdca snd_hda_codec_realtek_lib mac80211 kvm_intel snd_hda_codec_generic snd_soc_avs snd_hda_codec_nvhdmi snd_hda_codec_hdmi snd_soc_hda_codec libarc4 snd_hda_intel snd_hda_ext_core kvm nvidia_drm(OE) snd_hda_codec snd_soc_core nvidia_modeset(OE) snd_hda_core asus_armoury snd_compress snd_intel_dspcfg iwlwifi ac97_bus btusb snd_intel_sdw_acpi snd_pcm_dmaengine snd_hwdep btmtk snd_seq btrtl spi_nor irqbypass snd_seq_device btbcm rapl eeepc_wmi iTCO_wdt firmware_attributes_class asus_wmi btintel intel_cstate mtd snd_pcm ee1004 intel_pmc_bxt sparse_keymap mei_hdcp mei_pxp r8169 snd_timer nvidia(OE) i2c_i801 spi_intel_pci cfg80211 bluetooth intel_uncore igc platform_profile wmi_bmof realtek i2c_smbus spi_intel snd idma64 intel_pmc_core soundcore mei_me joydev apple_mfi_fastcharge pmt_telemetry mei pmt_discovery pmt_class rfkill intel_pmc_ssram_telemetry acpi_tad acpi_pad nfsd auth_rpcgss nfs_acl lockd grace nfs_localio sunrpc fuse dm_multipath nfnetlink zram
+[327979.686418]  lz4hc_compress lz4_compress xfs xe drm_ttm_helper drm_suballoc_helper gpu_sched drm_gpuvm drm_exec drm_gpusvm_helper hid_apple i915 i2c_algo_bit drm_buddy ttm nvme drm_display_helper nvme_core nvme_keyring cec nvme_auth ghash_clmulni_intel video hkdf intel_vsec intel_oc_wdt wmi pinctrl_alderlake i2c_dev scsi_dh_rdac scsi_dh_alua scsi_dh_emc
+[327979.686426] CPU: 9 UID: 0 PID: 64561 Comm: UVM GPU1 BH Kdump: loaded Tainted: G      D    OEL      7.0.8-200.fc44.x86_64 #1 PREEMPT(lazy)
+[327979.686428] Tainted: [D]=DIE, [O]=OOT_MODULE, [E]=UNSIGNED_MODULE, [L]=SOFTLOCKUP
+[327979.686428] Hardware name: ASUS System Product Name/TUF GAMING B660-PLUS WIFI D4, BIOS 1620 08/12/2022
+[327979.686429] RIP: 0010:native_queued_spin_lock_slowpath+0x6a/0x330
+[327979.686432] Code: 08 0f 92 c2 8b 01 0f b6 d2 c1 e2 08 30 e4 09 d0 3d ff 00 00 00 77 51 85 c0 75 0f bf 01 00 00 00 66 89 39 c3 cc cc cc cc f3 90 <80> 39 00 75 f9 bf 01 00 00 00 66 89 39 c3 cc cc cc cc 8b 37 b8 00
+[327979.686433] RSP: 0018:ffffc9000d51b788 EFLAGS: 00000202
+[327979.686433] RAX: 0000000000000001 RBX: ffff88816e06f9f8 RCX: ffff88816e06fae0
+[327979.686434] RDX: 0000000000000000 RSI: 0000000000000001 RDI: ffff88816e06fae0
+[327979.686434] RBP: ffffc9000d51b7c0 R08: 0000000000000000 R09: ffffc9000d51b8e0
+[327979.686435] R10: 0000000000000000 R11: ffff8892a8ce03c0 R12: ffff88816e06fae0
+[327979.686435] R13: ffff88816e06f9f8 R14: 0000000000000000 R15: 0000000000001000
+[327979.686435] FS:  0000000000000000(0000) GS:ffff88a07a31c000(0000) knlGS:0000000000000000
+[327979.686436] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[327979.686436] CR2: 00005583067854d0 CR3: 000000000842e003 CR4: 0000000000f72ef0
+[327979.686437] PKRU: 55555554
+[327979.686437] Call Trace:
+[327979.686438]  <TASK>
+[327979.686438]  _raw_spin_lock+0x29/0x30
+[327979.686440]  claim_free_chunk+0x2a/0xe0 [nvidia_uvm]
+[327979.686479]  pmm_gpu_alloc+0x15a/0x390 [nvidia_uvm]
+[327979.686511]  ? block_zero_new_gpu_chunk+0x22e/0x380 [nvidia_uvm]
+[327979.686548]  uvm_pmm_gpu_alloc_user+0x1c/0x30 [nvidia_uvm]
+[327979.686581]  block_populate_gpu_chunk+0x357/0x460 [nvidia_uvm]
+[327979.686616]  uvm_va_block_populate_pages_gpu+0x15e/0x200 [nvidia_uvm]
+[327979.686651]  uvm_hmm_va_block_service_locked+0x137/0x630 [nvidia_uvm]
+[327979.686682]  ? uvm_perf_prefetch_prenotify_fault_migrations+0x16e/0x2f0 [nvidia_uvm]
+[327979.686712]  uvm_va_block_service_locked+0x7b/0xd0 [nvidia_uvm]
+[327979.686747]  service_fault_batch_block_locked+0x452/0xad0 [nvidia_uvm]
+[327979.686784]  ? service_fault_batch_dispatch.isra.0+0x321/0x3e0 [nvidia_uvm]
+[327979.686818]  service_fault_batch_dispatch.isra.0+0x321/0x3e0 [nvidia_uvm]
+[327979.686853]  service_fault_batch.constprop.0+0xa3/0x360 [nvidia_uvm]
+[327979.686888]  uvm_parent_gpu_service_replayable_faults+0x11c/0x6b0 [nvidia_uvm]
+[327979.686923]  ? ___down_common+0xd1/0x180
+[327979.686924]  replayable_faults_isr_bottom_half+0x49/0x70 [nvidia_uvm]
+[327979.686951]  replayable_faults_isr_bottom_half_entry+0xa3/0xe0 [nvidia_uvm]
+[327979.686978]  _main_loop+0x90/0x150 [nvidia_uvm]
+[327979.687001]  ? __pfx__main_loop+0x10/0x10 [nvidia_uvm]
+[327979.687024]  kthread+0xe1/0x120
+[327979.687025]  ? __pfx_kthread+0x10/0x10
+[327979.687026]  ret_from_fork+0x1a1/0x270
+[327979.687028]  ? __pfx_kthread+0x10/0x10
+[327979.687029]  ret_from_fork_asm+0x1a/0x30
+[327979.687031]  </TASK>
+[327995.370936] rcu: INFO: rcu_preempt self-detected stall on CPU
+[327995.370942] rcu: 	9-....: (240002 ticks this GP) idle=0df4/1/0x4000000000000000 softirq=5440557/5440557 fqs=116763
+[327995.370945] rcu: 	(t=240003 jiffies g=76581245 q=727064 ncpus=32)
+[327995.370948] CPU: 9 UID: 0 PID: 64561 Comm: UVM GPU1 BH Kdump: loaded Tainted: G      D    OEL      7.0.8-200.fc44.x86_64 #1 PREEMPT(lazy)
+[327995.370950] Tainted: [D]=DIE, [O]=OOT_MODULE, [E]=UNSIGNED_MODULE, [L]=SOFTLOCKUP
+[327995.370951] Hardware name: ASUS System Product Name/TUF GAMING B660-PLUS WIFI D4, BIOS 1620 08/12/2022
+[327995.370951] RIP: 0010:native_queued_spin_lock_slowpath+0x6a/0x330
+[327995.370955] Code: 08 0f 92 c2 8b 01 0f b6 d2 c1 e2 08 30 e4 09 d0 3d ff 00 00 00 77 51 85 c0 75 0f bf 01 00 00 00 66 89 39 c3 cc cc cc cc f3 90 <80> 39 00 75 f9 bf 01 00 00 00 66 89 39 c3 cc cc cc cc 8b 37 b8 00
+[327995.370956] RSP: 0018:ffffc9000d51b788 EFLAGS: 00000202
+[327995.370957] RAX: 0000000000000001 RBX: ffff88816e06f9f8 RCX: ffff88816e06fae0
+[327995.370958] RDX: 0000000000000000 RSI: 0000000000000001 RDI: ffff88816e06fae0
+[327995.370958] RBP: ffffc9000d51b7c0 R08: 0000000000000000 R09: ffffc9000d51b8e0
+[327995.370958] R10: 0000000000000000 R11: ffff8892a8ce03c0 R12: ffff88816e06fae0
+[327995.370959] R13: ffff88816e06f9f8 R14: 0000000000000000 R15: 0000000000001000
+[327995.370959] FS:  0000000000000000(0000) GS:ffff88a07a31c000(0000) knlGS:0000000000000000
+[327995.370960] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[327995.370960] CR2: 00005583067854d0 CR3: 000000000842e003 CR4: 0000000000f72ef0
+[327995.370961] PKRU: 55555554
+[327995.370962] Call Trace:
+[327995.370963]  <TASK>
+[327995.370963]  _raw_spin_lock+0x29/0x30
+[327995.370966]  claim_free_chunk+0x2a/0xe0 [nvidia_uvm]
+[327995.371014]  pmm_gpu_alloc+0x15a/0x390 [nvidia_uvm]
+[327995.371049]  ? block_zero_new_gpu_chunk+0x22e/0x380 [nvidia_uvm]
+[327995.371085]  uvm_pmm_gpu_alloc_user+0x1c/0x30 [nvidia_uvm]
+[327995.371120]  block_populate_gpu_chunk+0x357/0x460 [nvidia_uvm]
+[327995.371156]  uvm_va_block_populate_pages_gpu+0x15e/0x200 [nvidia_uvm]
+[327995.371191]  uvm_hmm_va_block_service_locked+0x137/0x630 [nvidia_uvm]
+[327995.371222]  ? uvm_perf_prefetch_prenotify_fault_migrations+0x16e/0x2f0 [nvidia_uvm]
+[327995.371252]  uvm_va_block_service_locked+0x7b/0xd0 [nvidia_uvm]
+[327995.371286]  service_fault_batch_block_locked+0x452/0xad0 [nvidia_uvm]
+[327995.371323]  ? service_fault_batch_dispatch.isra.0+0x321/0x3e0 [nvidia_uvm]
+[327995.371358]  service_fault_batch_dispatch.isra.0+0x321/0x3e0 [nvidia_uvm]
+[327995.371393]  service_fault_batch.constprop.0+0xa3/0x360 [nvidia_uvm]
+[327995.371428]  uvm_parent_gpu_service_replayable_faults+0x11c/0x6b0 [nvidia_uvm]
+[327995.371462]  ? ___down_common+0xd1/0x180
+[327995.371463]  replayable_faults_isr_bottom_half+0x49/0x70 [nvidia_uvm]
+[327995.371490]  replayable_faults_isr_bottom_half_entry+0xa3/0xe0 [nvidia_uvm]
+[327995.371516]  _main_loop+0x90/0x150 [nvidia_uvm]
+[327995.371538]  ? __pfx__main_loop+0x10/0x10 [nvidia_uvm]
+[327995.371561]  kthread+0xe1/0x120
+[327995.371563]  ? __pfx_kthread+0x10/0x10
+[327995.371564]  ret_from_fork+0x1a1/0x270
+[327995.371566]  ? __pfx_kthread+0x10/0x10
+[327995.371566]  ret_from_fork_asm+0x1a/0x30
+[327995.371568]  </TASK>
+[328007.679298] watchdog: BUG: soft lockup - CPU#12 stuck for 231s! [chapter_demo.ou:4143425]
+[328007.679301] CPU#12 Utilization every 4000ms during lockup:
+[328007.679302] 	#1: 100% system,	  0% softirq,	  0% hardirq,	  0% idle
+[328007.679302] 	#2: 100% system,	  0% softirq,	  0% hardirq,	  0% idle
+[328007.679303] 	#3: 100% system,	  0% softirq,	  1% hardirq,	  0% idle
+[328007.679303] 	#4: 100% system,	  0% softirq,	  0% hardirq,	  0% idle
+[328007.679304] 	#5: 100% system,	  0% softirq,	  0% hardirq,	  0% idle
+[328007.679304] Modules linked in: vhost_net vhost vhost_iotlb tap tls uinput xt_connmark xt_mark rfcomm snd_seq_dummy snd_hrtimer nvidia_uvm(OE) nf_conntrack_netlink xt_nat veth xt_conntrack xt_MASQUERADE bridge stp llc xt_set ip_set nft_chain_nat xt_addrtype nft_compat rpcrdma rdma_cm iw_cm ib_cm ib_core binfmt_misc tun overlay nf_tables nfnetlink_cttimeout openvswitch nsh nf_conncount nf_nat nf_conntrack nf_defrag_ipv6 nf_defrag_ipv4 psample qrtr bnep vfat fat snd_sof_pci_intel_tgl snd_sof_pci_intel_cnl snd_sof_intel_hda_generic soundwire_intel snd_sof_intel_hda_sdw_bpt snd_sof_intel_hda_common snd_soc_hdac_hda snd_sof_intel_hda_mlink snd_sof_intel_hda soundwire_cadence intel_rapl_msr snd_sof_pci intel_rapl_common snd_sof_xtensa_dsp snd_sof intel_uncore_frequency intel_uncore_frequency_common snd_hda_codec_intelhdmi intel_tcc_cooling iwlmvm snd_sof_utils x86_pkg_temp_thermal snd_soc_acpi_intel_match intel_powerclamp snd_soc_acpi_intel_sdca_quirks soundwire_generic_allocation snd_soc_sdw_utils coretemp snd_soc_acpi crc8
+[328007.679324]  soundwire_bus snd_hda_codec_alc662 snd_soc_sdca snd_hda_codec_realtek_lib mac80211 kvm_intel snd_hda_codec_generic snd_soc_avs snd_hda_codec_nvhdmi snd_hda_codec_hdmi snd_soc_hda_codec libarc4 snd_hda_intel snd_hda_ext_core kvm nvidia_drm(OE) snd_hda_codec snd_soc_core nvidia_modeset(OE) snd_hda_core asus_armoury snd_compress snd_intel_dspcfg iwlwifi ac97_bus btusb snd_intel_sdw_acpi snd_pcm_dmaengine snd_hwdep btmtk snd_seq btrtl spi_nor irqbypass snd_seq_device btbcm rapl eeepc_wmi iTCO_wdt firmware_attributes_class asus_wmi btintel intel_cstate mtd snd_pcm ee1004 intel_pmc_bxt sparse_keymap mei_hdcp mei_pxp r8169 snd_timer nvidia(OE) i2c_i801 spi_intel_pci cfg80211 bluetooth intel_uncore igc platform_profile wmi_bmof realtek i2c_smbus spi_intel snd idma64 intel_pmc_core soundcore mei_me joydev apple_mfi_fastcharge pmt_telemetry mei pmt_discovery pmt_class rfkill intel_pmc_ssram_telemetry acpi_tad acpi_pad nfsd auth_rpcgss nfs_acl lockd grace nfs_localio sunrpc fuse dm_multipath nfnetlink zram
+[328007.679345]  lz4hc_compress lz4_compress xfs xe drm_ttm_helper drm_suballoc_helper gpu_sched drm_gpuvm drm_exec drm_gpusvm_helper hid_apple i915 i2c_algo_bit drm_buddy ttm nvme drm_display_helper nvme_core nvme_keyring cec nvme_auth ghash_clmulni_intel video hkdf intel_vsec intel_oc_wdt wmi pinctrl_alderlake i2c_dev scsi_dh_rdac scsi_dh_alua scsi_dh_emc
+[328007.679353] CPU: 12 UID: 1000 PID: 4143425 Comm: chapter_demo.ou Kdump: loaded Tainted: G      D    OEL      7.0.8-200.fc44.x86_64 #1 PREEMPT(lazy)
+[328007.679355] Tainted: [D]=DIE, [O]=OOT_MODULE, [E]=UNSIGNED_MODULE, [L]=SOFTLOCKUP
+[328007.679355] Hardware name: ASUS System Product Name/TUF GAMING B660-PLUS WIFI D4, BIOS 1620 08/12/2022
+[328007.679356] RIP: 0010:native_queued_spin_lock_slowpath+0x295/0x330
+[328007.679359] Code: 04 f5 e0 70 1c 83 48 89 10 8b 72 08 85 f6 75 09 f3 90 8b 42 08 85 c0 74 f7 48 8b 32 48 85 f6 74 07 0f 0d 0e eb 02 f3 90 8b 01 <66> 85 c0 75 f7 44 39 c0 74 3a c6 01 01 48 85 f6 74 0e c7 46 08 01
+[328007.679360] RSP: 0018:ffffc90002f474b0 EFLAGS: 00000202
+[328007.679361] RAX: 0000000000340101 RBX: ffff88816e06f9f8 RCX: ffff88816e06fae0
+[328007.679361] RDX: ffff889ffee34200 RSI: 0000000000000000 RDI: 0000000000000000
+[328007.679362] RBP: ffffc90002f47510 R08: 0000000000340000 R09: ffff88a07a49c000
+[328007.679362] R10: 0000000000340000 R11: ffff888100044700 R12: ffff88816e06fae0
+[328007.679363] R13: ffff88816e06f9f8 R14: 0000000000000001 R15: 0000000000001000
+[328007.679363] FS:  00007f5ac9955000(0000) GS:ffff88a07a49c000(0000) knlGS:0000000000000000
+[328007.679364] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[328007.679364] CR2: 00007f54b7ffbff0 CR3: 0000001851079001 CR4: 0000000000f72ef0
+[328007.679365] PKRU: 55555554
+[328007.679365] Call Trace:
+[328007.679366]  <TASK>
+[328007.679366]  _raw_spin_lock+0x29/0x30
+[328007.679368]  claim_free_chunk+0x2a/0xe0 [nvidia_uvm]
+[328007.679417]  pmm_gpu_alloc+0x15a/0x390 [nvidia_uvm]
+[328007.679451]  uvm_pmm_gpu_alloc_kernel+0x35/0xd0 [nvidia_uvm]
+[328007.679482]  phys_mem_allocate+0x97/0x170 [nvidia_uvm]
+[328007.679518]  allocate_directory+0xb5/0x120 [nvidia_uvm]
+[328007.679554]  uvm_page_tree_init+0xfa/0x2b0 [nvidia_uvm]
+[328007.679590]  create_gpu_va_space+0x121/0x2b0 [nvidia_uvm]
+[328007.679618]  uvm_va_space_register_gpu_va_space+0xc5/0x5d0 [nvidia_uvm]
+[328007.679646]  uvm_api_register_gpu_va_space+0x4b/0x70 [nvidia_uvm]
+[328007.679672]  uvm_ioctl+0x1467/0x1bc0 [nvidia_uvm]
+[328007.679695]  ? rmapiControlWithSecInfoTls+0x8c/0xe0 [nvidia]
+[328007.679831]  ? _nv04ControlWithSecInfo+0x8d/0xa0 [nvidia]
+[328007.679930]  ? thread_context_non_interrupt_add+0x133/0x220 [nvidia_uvm]
+[328007.679969]  uvm_unlocked_ioctl_entry.part.0+0x78/0xe0 [nvidia_uvm]
+[328007.679992]  ? sched_balance_find_dst_group+0x215/0x8f0
+[328007.679994]  ? os_get_monotonic_time_ns+0x3d/0xa0 [nvidia]
+[328007.680049]  __x64_sys_ioctl+0xb9/0x100
+[328007.680052]  do_syscall_64+0x109/0x6e0
+[328007.680055]  ? __virt_addr_valid+0x83/0x110
+[328007.680056]  ? check_heap_object+0x38/0x180
+[328007.680057]  ? __check_object_size+0x6f/0xd0
+[328007.680059]  ? nvidia_ioctl.isra.0+0x1e2/0x9e0 [nvidia]
+[328007.680108]  ? nvidia_unlocked_ioctl+0x22/0x30 [nvidia]
+[328007.680157]  ? __x64_sys_ioctl+0xd4/0x100
+[328007.680158]  ? do_syscall_64+0x144/0x6e0
+[328007.680159]  ? __do_sys_clone3+0x124/0x160
+[328007.680161]  ? do_syscall_64+0x144/0x6e0
+[328007.680162]  ? do_user_addr_fault+0x2cd/0x830
+[328007.680164]  ? irqentry_exit+0x7b/0x560
+[328007.680165]  ? exc_page_fault+0x90/0x1f0
+[328007.680166]  ? __irq_exit_rcu+0x4c/0xf0
+[328007.680167]  entry_SYSCALL_64_after_hwframe+0x76/0x7e
+[328007.680169] RIP: 0033:0x7f5ac93e15fd
+[328007.680184] Code: 04 25 28 00 00 00 48 89 45 c8 31 c0 48 8d 45 10 c7 45 b0 10 00 00 00 48 89 45 b8 48 8d 45 d0 48 89 45 c0 b8 10 00 00 00 0f 05 <89> c2 3d 00 f0 ff ff 77 1a 48 8b 45 c8 64 48 2b 04 25 28 00 00 00
+[328007.680185] RSP: 002b:00007ffc75e01eb0 EFLAGS: 00000246 ORIG_RAX: 0000000000000010
+[328007.680186] RAX: ffffffffffffffda RBX: 00007ffc75e01f10 RCX: 00007f5ac93e15fd
+[328007.680186] RDX: 00007ffc75e01f10 RSI: 0000000000000019 RDI: 0000000000000009
+[328007.680186] RBP: 00007ffc75e01f00 R08: 0000556a508ccef0 R09: 00007ffc75e00e4c
+[328007.680187] R10: 00007ffc75e00e30 R11: 0000000000000246 R12: 0000000000000009
+[328007.680187] R13: 0000556a508f0c16 R14: 0000556a508af960 R15: 0000000000000000
+[328007.680188]  </TASK>

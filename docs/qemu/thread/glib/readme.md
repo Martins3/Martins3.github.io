@@ -2,6 +2,8 @@
 
 类似的: https://github.com/tboox/tbox
 
+https://github.com/chiehmin/gdbus_test
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

@@ -1,0 +1,96 @@
+root@localhost:/home/martins3/data/vn/gpu/drm/code/virtio-gpu-dma# cat /sys/kernel/debug/dma_buf/bufinfo
+
+Dma-buf Objects:
+size            flags           mode            count           exp_name        ino             name
+00303104        00000002        02080007        00000003        drm     00005490        <none>
+        write fence:179397:51276   signalled
+        Attached Devices:
+Total 0 devices attached
+
+00303104        00000002        02080007        00000003        drm     00005486        <none>
+        Attached Devices:
+Total 0 devices attached
+
+00024576        00000002        02080007        00000003        drm     00005474        <none>
+        write fence:2823:527   signalled
+        Attached Devices:
+Total 0 devices attached
+
+06291456        00000002        02080007        00000003        drm     00005471        <none>
+        Attached Devices:
+Total 0 devices attached
+
+33554432        00000002        02080007        00000008        drm     00004860        <none>
+        write fence:2412:313713   signalled
+        Attached Devices:
+Total 0 devices attached
+
+33554432        00000002        02080007        00000008        drm     00004858        <none>
+        write fence:198293:160831   signalled
+        Attached Devices:
+Total 0 devices attached
+
+33554432        00000002        02080007        00000011        drm     00004828        <none>
+        Attached Devices:
+Total 0 devices attached
+
+33554432        00000002        02080007        00000011        drm     00004826        <none>
+        Attached Devices:
+Total 0 devices attached
+
+33554432        00000002        02080007        00000011        drm     00004824        <none>
+        Attached Devices:
+Total 0 devices attached
+
+20041728        00000002        02080007        00000008        drm     00004802        <none>
+        Attached Devices:
+Total 0 devices attached
+
+20041728        00000002        02080007        00000008        drm     00004801        <none>
+        Attached Devices:
+Total 0 devices attached
+
+20041728        00000002        02080007        00000008        drm     00004800        <none>
+        Attached Devices:
+Total 0 devices attached
+
+20041728        00000002        02080007        00000008        drm     00004799        <none>
+        Attached Devices:
+Total 0 devices attached
+
+33554432        00000002        02080007        00000003        drm     00004732        <none>
+        write fence:2412:313967   signalled
+        Attached Devices:
+Total 0 devices attached
+
+33554432        00000002        02080007        00000003        drm     00004729        <none>
+        Attached Devices:
+Total 0 devices attached
+
+33554432        00000002        02080007        00000003        drm     00004727        <none>
+        Attached Devices:
+Total 0 devices attached
+
+00352256        00000002        02080007        00000008        drm     00004536        <none>
+        Attached Devices:
+Total 0 devices attached
+
+00352256        00000002        02080007        00000008        drm     00004535        <none>
+        Attached Devices:
+Total 0 devices attached
+
+00352256        00000002        02080007        00000008        drm     00004534        <none>
+        Attached Devices:
+Total 0 devices attached
+
+00352256        00000002        02080007        00000008        drm     00004533        <none>
+        Attached Devices:
+Total 0 devices attached
+
+00004096        00000002        02080007        00000001        udmabuf 00000043        <none>
+        Attached Devices:
+Total 0 devices attached
+
+00024576        00000002        02080007        00000003        drm     00000020        <none>
+        Attached Devices:
+Total 0 devices attached

@@ -1,4 +1,6 @@
-## Event Loop in glib
+## qemu 中的 glib event loop
+
+<!-- a776caca-53b4-4b72-b4b1-c9ea723321e7 -->
 大致结构如下:
 <p align="center">
   <img src="../../img/glib.svg"/>
@@ -69,8 +71,456 @@ gmain 和 gdbus 类似，只是从 `early_gtk_display_init` 开始，然后经�
                         - create_thread
                           - clone
 
-### 辅助
-https://github.com/chiehmin/gdbus_test
+## 为什么 AioContext 和 Glib 看上去像是重叠的
+表面看，QEMU 同时存在：
+
+  GLib GMainContext/GSource
+  QEMU AioContext/aio_poll
+
+  两者都能监听 fd、计算 timeout、执行 callback，确实高度重叠。
+
+  但关键是：
+
+  > QEMU 不是维护了两份异步事件；同一个 AioContext 可以被两种方式驱动：直接
+  > aio_poll()，或者作为一个 GSource 被 GLib 驱动。
+
+### AioContext 本身就是 GSource
+
+结构体第一个字段就是：
+
+```txt
+struct AioContext {
+    GSource source;
+
+    AioHandlerList aio_handlers;
+    BHList bh_list;
+    EventNotifier notifier;
+    TimerListGroup tlg;
+    ...
+};
+```
+
+QEMU 给这个 GSource 实现了标准 GLib 接口：
+
+```c
+static GSourceFuncs aio_source_funcs = {
+    .prepare  = aio_ctx_prepare,
+    .check    = aio_ctx_check,
+    .dispatch = aio_ctx_dispatch,
+    .finalize = aio_ctx_finalize,
+};
+```
+
+所以 GLib 能把整个 AioContext 当作一个普通 GSource。
+
+### 两条驱动路径，共享同一份状态
+
+假设：
+
+aio_set_fd_handler(ctx, fd, read_cb, ...);
+qemu_bh_schedule(bh);
+
+这些事件只保存在一份数据结构中：
+
+ctx->aio_handlers
+ctx->bh_list
+ctx->tlg
+
+然后可以选择两种方式处理。
+
+#### 路径一：直接驱动
+
+IOThread
+    |
+aio_poll(ctx, true)
+    |
+fdmon_ops->wait()
+    |
+aio_bh_poll()
+    |
+aio_dispatch_ready_handlers()
+
+这是 QEMU 自己控制的一次完整事件循环。
+
+#### 路径二：由 GLib 驱动
+
+GMainContext
+    |
+aio_ctx_prepare()
+    |
+GLib/QEMU poll
+    |
+aio_ctx_check()
+    |
+aio_ctx_dispatch()
+    |
+aio_dispatch(ctx)
+    |
+aio_bh_poll()
+aio_dispatch_ready_handlers()
+
+aio_ctx_dispatch() 最后也是调用 QEMU 的 aio_dispatch()：
+
+```c
+static gboolean aio_ctx_dispatch(GSource *source, ...)
+{
+    AioContext *ctx = (AioContext *)source;
+
+    aio_dispatch(ctx);
+    return true;
+}
+```
+
+所以：
+
+```txt
+                    同一个 AioContext
+                           |
+             +-------------+-------------+
+             |                           |
+      aio_poll(ctx)              GMainContext dispatch
+             |                           |
+             +-------------+-------------+
+                           |
+               同一份 fd/BH/timer callback
+```
+
+这不是两个独立 async 系统互相传递事件，更像是同一个发动机有两个入口。
+
+### GLib 在主线程中做什么
+
+QEMU 主线程除了 block/device AIO，还可能要处理很多使用 GLib API 的组件：
+
+- GIO；
+- chardev；
+- DBus；
+- GTK/UI；
+- 各种第三方库创建的 GSource；
+- GLib idle/timeout source；
+- QEMU自己的 AioContext。
+
+因此默认 GMainContext 像一个“事件源聚合器”：
+
+default GMainContext
+    ├── qemu_aio_context.source
+    ├── iohandler_ctx.source
+    ├── GIO sources
+    ├── DBus sources
+    ├── GTK sources
+    └── 其他 GLib sources
+
+QEMU 初始化时，把主 AioContext 挂到默认 GMainContext：
+
+```c
+src = aio_get_g_source(qemu_aio_context);
+g_source_attach(src, NULL);
+
+src = iohandler_get_g_source();
+g_source_attach(src, NULL);
+```
+
+也就是:
+```c
+int qemu_init_main_loop(Error **errp)
+{
+    int ret;
+    GSource *src;
+
+    qemu_init_clocks(qemu_timer_notify_cb);
+
+    ret = qemu_signal_init(errp);
+    if (ret) {
+        return ret;
+    }
+
+    qemu_aio_context = aio_context_new(errp);
+    if (!qemu_aio_context) {
+        return -EMFILE;
+    }
+    qemu_set_current_aio_context(qemu_aio_context);
+    qemu_notify_bh = qemu_bh_new(notify_event_cb, NULL);
+    gpollfds = g_array_new(FALSE, FALSE, sizeof(GPollFD));
+    // 这里来进行挂载
+    src = aio_get_g_source(qemu_aio_context);
+    g_source_set_name(src, "aio-context");
+    g_source_attach(src, NULL);
+    g_source_unref(src);
+    // 在这里来挂载第二个 qemu 的结果
+    src = iohandler_get_g_source();
+    g_source_set_name(src, "io-handler");
+    g_source_attach(src, NULL);
+    g_source_unref(src);
+    return 0;
+}
+```
+
+见 util/main-loop.c:160。
+
+所以 GLib 的主要价值是：
+
+> 让 QEMU AioContext 和所有 GLib 生态的事件源出现在同一个 poll 集合中。
+
+### 主线程其实没有直接 g_main_loop_run()
+
+这是你笔记里需要修正的一处。
+
+在 POSIX 主线程中，QEMU没有简单地：
+
+g_main_loop_run(default_context);
+
+而是手动执行 GLib main-loop 的几个阶段：
+
+g_main_context_prepare()
+g_main_context_query()
+        |
+        | 得到 GLib 希望监听的 GPollFD[]
+        v
+QEMU qemu_poll_ns()
+        |
+g_main_context_check()
+g_main_context_dispatch()
+
+对应 util/main-loop.c:257。
+
+完整过程大概是：
+
+g_main_context_acquire(context);
+
+glib_pollfds_fill(&timeout);
+
+bql_unlock();
+replay_mutex_unlock();
+
+qemu_poll_ns(gpollfds, timeout);
+
+replay_mutex_lock();
+bql_lock();
+
+glib_pollfds_poll();
+
+g_main_context_release(context);
+
+QEMU没有把主循环完全交给 GLib，是因为它还要控制：
+
+- 在阻塞 poll 前释放 BQL；
+- poll 返回后重新获取 BQL；
+- record/replay 锁；
+- QEMU timers；
+- icount；
+- QEMU自己的 timeout 合并；
+- 主循环 poll notifier。
+
+因此主线程中的职责关系是：
+
+GLib：
+    告诉 QEMU“这些 source 要监听哪些 fd、timeout 是多少”
+    poll 后执行 source dispatch
+
+QEMU：
+    统一合并所有 fd 和 timeout
+    控制真正的 ppoll
+    控制 BQL/replay/timer 边界
+
+GLib在这里不是最高层总管，QEMU才是。
+
+### 为什么 IOThread 默认不用 GLib
+
+对于纯 block data plane 的 IOThread，它通常只有：
+
+- virtqueue ioeventfd；
+- Linux AIO/io_uring completion fd；
+- BH；
+- timer；
+- coroutine resume。
+
+这些全部是 AioContext 原生支持的，不需要额外的 GLib source。
+
+所以 IOThread 默认走最快路径：
+
+while (iothread->running) {
+    aio_poll(iothread->ctx, true);
+}
+
+当前源码也明确说明：
+
+/*
+ * g_main_loop_run() can cover aio_poll() events,
+ * but explicit aio_poll() is faster for pure block layer IOThreads.
+ */
+
+见 iothread.c:28。
+
+直接 aio_poll() 的好处包括：
+
+- 少一层 GLib prepare/query/check/dispatch；
+- 支持 QEMU自适应 busy polling；
+- 更直接地使用 epoll/io_uring backend；
+- timeout 和 ready list 都由 QEMU控制；
+- 适合高频 block I/O。
+
+所以默认：
+
+iothread->run_gcontext = 0;
+
+### IOThread 什么时候又需要 GLib
+
+有些代码要放到 IOThread 中运行，但它使用的是 GLib API，需要一个
+GMainContext。
+
+QEMU 因此给每个 IOThread 也创建了一个：
+
+```c
+iothread->worker_context = g_main_context_new();
+
+source = aio_get_g_source(iothread->ctx);
+g_source_attach(source, iothread->worker_context);
+
+iothread->main_loop =
+    g_main_loop_new(iothread->worker_context, TRUE);
+
+```
+见 iothread.c:134。
+
+当某个子系统调用：
+
+```c
+iothread_get_g_main_context(iothread);
+```
+
+QEMU会：
+
+```c
+iothread->run_gcontext = 1;
+aio_notify(iothread->ctx);
+```
+
+IOThread随后切换到：
+
+g_main_loop_run(iothread->main_loop);
+
+由于 AioContext 本身已经作为 GSource 挂进这个 worker_context，GLib loop 可
+以同时处理：
+
+IOThread worker_context
+    ├── iothread->ctx，作为 GSource
+    │      ├── AioHandler
+    │      ├── BH
+    │      └── timer
+    └── 其他 GLib GSource
+
+也就是说：
+
+纯 block IOThread：
+    aio_poll(ctx)                  性能更好
+
+需要 GLib 功能的 IOThread：
+    g_main_loop_run(worker_ctx)    功能更多
+        └── AioContext GSource
+
+两者功能上有包含关系：
+
+GMainContext mode
+    = AioContext 功能
+    + 其他 GLib GSource
+    + 一些额外调度开销
+
+### 为什么主线程还有两个 AioContext
+
+你还观察到了：
+
+qemu_aio_context
+iohandler_ctx
+
+这又容易让人感觉多出一套机制。
+
+实际上两者都是 AioContext，也都作为 GSource 挂在默认 GMainContext。区别是
+是否允许被嵌套 aio_poll() 驱动。
+
+#### qemu_aio_context
+
+可以显式调用：
+
+aio_poll(qemu_aio_context, ...);
+
+例如 AIO_WAIT_WHILE() 内部的嵌套事件循环。
+
+#### iohandler_ctx
+
+只应该由最外层 main loop 驱动，不能因为某个 block 请求调用了嵌套
+aio_poll(qemu_aio_context)，就顺便执行全局 iohandler。
+
+源码注释写得很直接：
+
+```txt
+/*
+ * This context runs on top of main loop.
+ * We can't reuse qemu_aio_context because iohandlers
+ * mustn't be polled by aio_poll(qemu_aio_context).
+ */
+```
+
+见 util/main-loop.c:617。
+
+它是在隔离重入范围：
+
+顶层 main loop
+    ├── qemu_aio_context
+    └── iohandler_ctx
+
+嵌套 aio_poll(qemu_aio_context)
+    ├── qemu_aio_context
+    └── 不执行 iohandler_ctx
+
+你用 qemu handlers 看到两个 context 中都有
+virtio_queue_host_notifier_read，并不代表它们相同。callback 名字只能说明做
+什么，context 归属决定它允许在哪种事件循环层级执行。
+
+### gmain、gdbus 线程又是什么
+
+你在 /home/martins3/data/vn/docs/qemu/thread/glib.md:1 中看到的：
+
+gmain
+gdbus
+threaded-ml
+
+通常是 GTK、GDBus、PulseAudio等库内部创建的线程。
+
+它们：
+
+- 不是 QEMU IOThread；
+- 不驱动 QEMU block AioContext；
+- 不是 QEMU特意设计出来的第二套 I/O 线程；
+- 只是外部库自己的工作线程/event loop。
+
+它们与“QEMU在主线程中集成 GMainContext”是两个不同问题。即使 headless QEMU
+没有 GTK，这套 AioContext/GSource 集成仍然存在。
+
+### 最准确的分层方式
+
+不要把 poll、GLib、AioContext、coroutine 都叫 async。可以按四层理解：
+
+第一层：内核等待机制
+    poll / ppoll / epoll / io_uring / eventfd
+
+第二层：QEMU执行域
+    AioContext
+    决定 fd、BH、timer、callback 属于哪个线程
+
+第三层：事件源聚合
+    GMainContext
+    将 AioContext和其他 GLib GSource 合并到一次等待中
+
+第四层：异步控制流
+    coroutine
+    让异步 I/O 可以写成顺序调用
+
+所以对于“为什么 QEMU 搞两个 async 机制”，我的答案是：
+
+> 因为 QEMU既需要一个可独立运行、适合高性能 block I/O 的事件循环
+> AioContext，又必须与使用 GLib 的组件共享线程和 poll。于是 QEMU让
+> AioContext本身实现成 GSource：纯数据面直接 aio_poll()，需要生态集成时交
+> 给 GMainContext。重叠是真实存在的，但事件队列和 callback 并没有复制两
+> 份。
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

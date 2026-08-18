@@ -4,11 +4,16 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/mman.h>
+#include <sys/statfs.h>
+#include <linux/magic.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include "lib.h"
 
 /*
+ * shmem 要求 vma 2M 对齐才可以
+ * <!-- 04e60c17-3d0f-4b5d-b3f0-1fa108b00bf5 -->*
+ *
  * 模拟 QEMU memory-backend-memfd 的映射行为，复现/验证 guest RAM 拿不到 THP
  * 的根因：shmem(memfd) 的 THP 要求 VMA 起始地址对 2MB 对齐，而 QEMU 的
  * memfd 后端只按 4KB 对齐映射。
@@ -24,10 +29,36 @@
  * - mm/shmem.c:shmem_allowable_huge_orders()          只有 2MB 档继承全局配置
  *
  * 结论: 4KB 对齐 -> THPeligible=0 / KernelPageSize=4kB；2MB 对齐 -> THP 生效。
+ *
+ * 输出结果可以对比两个:
+ *
+ * THPeligible:           1
+ * ShmemPmdMapped:   518144 kB
  */
 
 #define PMD_SIZE (2UL * 1024 * 1024)
 #define ALIGN_UP(x, a) (((x) + (a) - 1) & ~((a) - 1))
+
+/*
+ * THP 不会影响 qemu 对于 page size 的影响，这是非常合理的
+ * 既然已经说了是透明的，那么就应该是无感知的
+ */
+static size_t qemu_fd_getpagesize(int fd)
+{
+	struct statfs fs;
+	int ret;
+
+	// 判断文件系统的类型，如果说是 hugetlbfs ，那么就返回 hugetlbfs 的结果
+	do {
+		ret = fstatfs(fd, &fs);
+	} while (ret != 0 && errno == EINTR);
+
+	if (ret == 0 && fs.f_type == HUGETLBFS_MAGIC) {
+		return fs.f_bsize;
+	}
+	// 否则总是返回普通页面
+	return getpagesize();
+}
 
 /* 直译 QEMU util/mmap-alloc.c:qemu_ram_mmap() */
 static void *qemu_ram_mmap(int fd, size_t size, size_t align)
@@ -38,7 +69,8 @@ static void *qemu_ram_mmap(int fd, size_t size, size_t align)
 	if (guardptr == MAP_FAILED)
 		error("mmap reserve");
 
-	size_t offset = ALIGN_UP((uintptr_t)guardptr, align) - (uintptr_t)guardptr;
+	size_t offset =
+		ALIGN_UP((uintptr_t)guardptr, align) - (uintptr_t)guardptr;
 	void *ptr = mmap((char *)guardptr + offset, size,
 			 PROT_READ | PROT_WRITE, MAP_FIXED | MAP_SHARED, fd, 0);
 	if (ptr == MAP_FAILED)
@@ -58,7 +90,8 @@ static int qemu_memfd_create(size_t size)
 		error("ftruncate");
 
 	/* QEMU 默认 seal = true */
-	if (fcntl(fd, F_ADD_SEALS, F_SEAL_GROW | F_SEAL_SHRINK | F_SEAL_SEAL) == -1)
+	if (fcntl(fd, F_ADD_SEALS, F_SEAL_GROW | F_SEAL_SHRINK | F_SEAL_SEAL) ==
+	    -1)
 		error("F_ADD_SEALS");
 
 	return fd;
@@ -105,6 +138,7 @@ static void run(size_t size, size_t align, const char *label)
 	int fd = qemu_memfd_create(size);
 	void *ptr = qemu_ram_mmap(fd, size, align);
 
+
 	/* QEMU system/physmem.c:ram_block_add() */
 	if (madvise(ptr, size, MADV_HUGEPAGE) == -1)
 		error("madvise");
@@ -113,8 +147,8 @@ static void run(size_t size, size_t align, const char *label)
 	touch((char *)ptr, get_page_size(), size, true);
 
 	printf("==== %s ====\n", label);
-	printf("ptr=%p 2MB-aligned=%s\n", ptr,
-	       (((uintptr_t)ptr & (PMD_SIZE - 1)) == 0) ? "yes" : "no");
+	printf("ptr=%p 2MB-aligned=%s Rmablock:pagesize=%ld\n", ptr,
+	       (((uintptr_t)ptr & (PMD_SIZE - 1)) == 0) ? "yes" : "no", qemu_fd_getpagesize(fd));
 	dump_smaps(ptr);
 	printf("\n");
 
@@ -131,8 +165,9 @@ int main(int argc, char *argv[])
 	show_sysfs("/sys/kernel/mm/transparent_hugepage/enabled", "enabled");
 	show_sysfs("/sys/kernel/mm/transparent_hugepage/shmem_enabled",
 		   "shmem_enabled");
-	show_sysfs("/sys/kernel/mm/transparent_hugepage/hugepages-2048kB/shmem_enabled",
-		   "2048kB/shmem");
+	show_sysfs(
+		"/sys/kernel/mm/transparent_hugepage/hugepages-2048kB/shmem_enabled",
+		"2048kB/shmem");
 	printf("\n");
 
 	/* memory-backend-memfd: mr->align 缺省 -> 4KB，复现问题 */

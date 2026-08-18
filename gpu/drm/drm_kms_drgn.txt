@@ -1,0 +1,407 @@
+=== DRM/KMS Relationships ===
+
+关系主线:
+  connector -> encoder -> crtc
+  plane -> crtc -> framebuffer
+
+[Device] minor=0 driver=xe bus=0000:00:02.0
+  drm_device: 0xffff88810f478000 registered=yes
+  counts: planes=24 crtcs=4 encoders=6 connectors=3 framebuffers=3
+  live graph
+    HDMI-A-2
+      -> encoder[id=520] DDI TC2/PHY C type=TMDS 0xffff888124f84000
+      -> crtc[id=148] pipe A index=0 0xffff88811a141000
+         -> plane 1A -> fb[id=524] fb-524 3840x2160 fmt=XR30 0xffff888103bdcc00
+         -> cursor A -> fb[id=529] fb-529 64x64 fmt=AR24 0xffff88811b66dc00
+  connectors
+    connector[id=502] DP-1 status=disconnected 0xffff888124f88000
+      possible_encoders: DDI TC1/PHY B
+      current_encoder: (none)
+      current_crtc: (none)
+    connector[id=515] HDMI-A-1 status=disconnected 0xffff888110529000
+      possible_encoders: DDI TC1/PHY B
+      current_encoder: (none)
+      current_crtc: (none)
+    connector[id=521] HDMI-A-2 status=connected 0xffff88811052a000
+      possible_encoders: DDI TC2/PHY C
+      current_encoder: DDI TC2/PHY C
+      current_crtc: pipe A
+  encoders
+    encoder[id=501] DDI TC1/PHY B type=TMDS 0xffff888124f82000
+      possible_crtcs: pipe A, pipe B, pipe C, pipe D
+      current_crtc: (none)
+      attached_connectors: (none)
+    encoder[id=503] DP-MST A type=DPMST 0xffff88811979e800
+      possible_crtcs: pipe A, pipe B, pipe C, pipe D
+      current_crtc: (none)
+      attached_connectors: (none)
+    encoder[id=504] DP-MST B type=DPMST 0xffff88811979fa00
+      possible_crtcs: pipe A, pipe B, pipe C, pipe D
+      current_crtc: (none)
+      attached_connectors: (none)
+    encoder[id=505] DP-MST C type=DPMST 0xffff88811979e000
+      possible_crtcs: pipe A, pipe B, pipe C, pipe D
+      current_crtc: (none)
+      attached_connectors: (none)
+    encoder[id=506] DP-MST D type=DPMST 0xffff88811979c800
+      possible_crtcs: pipe A, pipe B, pipe C, pipe D
+      current_crtc: (none)
+      attached_connectors: (none)
+    encoder[id=520] DDI TC2/PHY C type=TMDS 0xffff888124f84000
+      possible_crtcs: pipe A, pipe B, pipe C, pipe D
+      current_crtc: pipe A
+      attached_connectors: HDMI-A-2
+  crtcs
+    crtc[id=148] pipe A index=0 0xffff88811a141000
+      primary_plane: plane 1A
+      cursor_plane: cursor A
+      connectors: HDMI-A-2
+      encoders: DDI TC2/PHY C
+      active_planes: plane 1A, cursor A
+    crtc[id=265] pipe B index=1 0xffff88811a146000
+      primary_plane: plane 1B
+      cursor_plane: cursor B
+      connectors: (none)
+      encoders: (none)
+      active_planes: (none)
+    crtc[id=382] pipe C index=2 0xffff88811a140000
+      primary_plane: plane 1C
+      cursor_plane: cursor C
+      connectors: (none)
+      encoders: (none)
+      active_planes: (none)
+    crtc[id=499] pipe D index=3 0xffff88811a144000
+      primary_plane: plane 1D
+      cursor_plane: cursor D
+      connectors: (none)
+      encoders: (none)
+      active_planes: (none)
+  planes
+    plane[id=33] plane 1A type=PRIMARY 0xffff88811a14c800
+      possible_crtcs: pipe A
+      current_crtc: pipe A
+      current_fb: fb[id=524] fb-524 3840x2160 fmt=XR30 0xffff888103bdcc00
+      state: crtc_xy=(0, 0) crtc_wh=(3840x2160) zpos=0
+    plane[id=63] plane 2A type=OVERLAY 0xffff88811a14b800
+      possible_crtcs: pipe A
+      current_crtc: (none)
+      current_fb: (none)
+      state: crtc_xy=(0, 0) crtc_wh=(0x0) zpos=1
+    plane[id=93] plane 3A type=OVERLAY 0xffff88811a14c000
+      possible_crtcs: pipe A
+      current_crtc: (none)
+      current_fb: (none)
+      state: crtc_xy=(0, 0) crtc_wh=(0x0) zpos=2
+    plane[id=123] plane 4A type=OVERLAY 0xffff88811a14a800
+      possible_crtcs: pipe A
+      current_crtc: (none)
+      current_fb: (none)
+      state: crtc_xy=(0, 0) crtc_wh=(0x0) zpos=3
+    plane[id=133] plane 5A type=OVERLAY 0xffff88811a14e000
+      possible_crtcs: pipe A
+      current_crtc: (none)
+      current_fb: (none)
+      state: crtc_xy=(0, 0) crtc_wh=(0x0) zpos=4
+    plane[id=143] cursor A type=CURSOR 0xffff8881030ab800
+      possible_crtcs: pipe A
+      current_crtc: pipe A
+      current_fb: fb[id=529] fb-529 64x64 fmt=AR24 0xffff88811b66dc00
+      state: crtc_xy=(1759, 1441) crtc_wh=(64x64) zpos=5
+    plane[id=150] plane 1B type=PRIMARY 0xffff88811a14f800
+      possible_crtcs: pipe B
+      current_crtc: (none)
+      current_fb: (none)
+      state: crtc_xy=(0, 0) crtc_wh=(0x0) zpos=0
+    plane[id=180] plane 2B type=OVERLAY 0xffff88811a14b000
+      possible_crtcs: pipe B
+      current_crtc: (none)
+      current_fb: (none)
+      state: crtc_xy=(0, 0) crtc_wh=(0x0) zpos=1
+    plane[id=210] plane 3B type=OVERLAY 0xffff88811a14a000
+      possible_crtcs: pipe B
+      current_crtc: (none)
+      current_fb: (none)
+      state: crtc_xy=(0, 0) crtc_wh=(0x0) zpos=2
+    plane[id=240] plane 4B type=OVERLAY 0xffff88811a14d000
+      possible_crtcs: pipe B
+      current_crtc: (none)
+      current_fb: (none)
+      state: crtc_xy=(0, 0) crtc_wh=(0x0) zpos=3
+    plane[id=250] plane 5B type=OVERLAY 0xffff88811a14f000
+      possible_crtcs: pipe B
+      current_crtc: (none)
+      current_fb: (none)
+      state: crtc_xy=(0, 0) crtc_wh=(0x0) zpos=4
+    plane[id=260] cursor B type=CURSOR 0xffff8881030ad800
+      possible_crtcs: pipe B
+      current_crtc: (none)
+      current_fb: (none)
+      state: crtc_xy=(0, 0) crtc_wh=(0x0) zpos=5
+    plane[id=267] plane 1C type=PRIMARY 0xffff888124f71000
+      possible_crtcs: pipe C
+      current_crtc: (none)
+      current_fb: (none)
+      state: crtc_xy=(0, 0) crtc_wh=(0x0) zpos=0
+    plane[id=297] plane 2C type=OVERLAY 0xffff888124f77000
+      possible_crtcs: pipe C
+      current_crtc: (none)
+      current_fb: (none)
+      state: crtc_xy=(0, 0) crtc_wh=(0x0) zpos=1
+    plane[id=327] plane 3C type=OVERLAY 0xffff888124f70800
+      possible_crtcs: pipe C
+      current_crtc: (none)
+      current_fb: (none)
+      state: crtc_xy=(0, 0) crtc_wh=(0x0) zpos=2
+    plane[id=357] plane 4C type=OVERLAY 0xffff888124f70000
+      possible_crtcs: pipe C
+      current_crtc: (none)
+      current_fb: (none)
+      state: crtc_xy=(0, 0) crtc_wh=(0x0) zpos=3
+    plane[id=367] plane 5C type=OVERLAY 0xffff888124f74000
+      possible_crtcs: pipe C
+      current_crtc: (none)
+      current_fb: (none)
+      state: crtc_xy=(0, 0) crtc_wh=(0x0) zpos=4
+    plane[id=377] cursor C type=CURSOR 0xffff8881030ae000
+      possible_crtcs: pipe C
+      current_crtc: (none)
+      current_fb: (none)
+      state: crtc_xy=(0, 0) crtc_wh=(0x0) zpos=5
+    plane[id=384] plane 1D type=PRIMARY 0xffff888124f71800
+      possible_crtcs: pipe D
+      current_crtc: (none)
+      current_fb: (none)
+      state: crtc_xy=(0, 0) crtc_wh=(0x0) zpos=0
+    plane[id=414] plane 2D type=OVERLAY 0xffff888124f76000
+      possible_crtcs: pipe D
+      current_crtc: (none)
+      current_fb: (none)
+      state: crtc_xy=(0, 0) crtc_wh=(0x0) zpos=1
+    plane[id=444] plane 3D type=OVERLAY 0xffff888124f75800
+      possible_crtcs: pipe D
+      current_crtc: (none)
+      current_fb: (none)
+      state: crtc_xy=(0, 0) crtc_wh=(0x0) zpos=2
+    plane[id=474] plane 4D type=OVERLAY 0xffff888124f76800
+      possible_crtcs: pipe D
+      current_crtc: (none)
+      current_fb: (none)
+      state: crtc_xy=(0, 0) crtc_wh=(0x0) zpos=3
+    plane[id=484] plane 5D type=OVERLAY 0xffff888124f72000
+      possible_crtcs: pipe D
+      current_crtc: (none)
+      current_fb: (none)
+      state: crtc_xy=(0, 0) crtc_wh=(0x0) zpos=4
+    plane[id=494] cursor D type=CURSOR 0xffff8881030ab000
+      possible_crtcs: pipe D
+      current_crtc: (none)
+      current_fb: (none)
+      state: crtc_xy=(0, 0) crtc_wh=(0x0) zpos=5
+  framebuffers
+    fb[id=524] fb-524 3840x2160 fmt=XR30 0xffff888103bdcc00
+      modifier: 0x100000000000002
+      pitches: 15360, 0, 0, 0
+      users: plane 1A
+    fb[id=527] fb-527 3840x2160 fmt=XR24 0xffff888111761000
+      modifier: 0x0
+      pitches: 16384, 0, 0, 0
+      users: (none)
+    fb[id=529] fb-529 64x64 fmt=AR24 0xffff88811b66dc00
+      modifier: 0x0
+      pitches: 256, 0, 0, 0
+      users: cursor A
+
+[Device] minor=1 driver=nvidia-drm bus=0000:01:00.0
+  drm_device: 0xffff888124f4a800 registered=yes
+  counts: planes=12 crtcs=4 encoders=8 connectors=5 framebuffers=0
+  live graph
+    (no active connector/encoder/crtc routing found)
+  connectors
+    connector[id=92] DVI-D-1 status=disconnected 0xffff888110061078
+      possible_encoders: TMDS-91
+      current_encoder: (none)
+      current_crtc: (none)
+    connector[id=94] HDMI-A-3 status=disconnected 0xffff888110067078
+      possible_encoders: TMDS-93
+      current_encoder: (none)
+      current_crtc: (none)
+    connector[id=97] DP-2 status=disconnected 0xffff888110064078
+      possible_encoders: TMDS-96, TMDS-99
+      current_encoder: (none)
+      current_crtc: (none)
+    connector[id=101] DP-3 status=disconnected 0xffff888110062078
+      possible_encoders: TMDS-100, TMDS-103
+      current_encoder: (none)
+      current_crtc: (none)
+    connector[id=105] DP-4 status=disconnected 0xffff888110065078
+      possible_encoders: TMDS-104, TMDS-107
+      current_encoder: (none)
+      current_crtc: (none)
+  encoders
+    encoder[id=91] TMDS-91 type=TMDS 0xffff888110a992d0
+      possible_crtcs: crtc-0, crtc-1, crtc-2, crtc-3
+      current_crtc: (none)
+      attached_connectors: (none)
+    encoder[id=93] TMDS-93 type=TMDS 0xffff888110a99bd0
+      possible_crtcs: crtc-0, crtc-1, crtc-2, crtc-3
+      current_crtc: (none)
+      attached_connectors: (none)
+    encoder[id=96] TMDS-96 type=TMDS 0xffff888110a98a90
+      possible_crtcs: crtc-0, crtc-1, crtc-2, crtc-3
+      current_crtc: (none)
+      attached_connectors: (none)
+    encoder[id=99] TMDS-99 type=TMDS 0xffff888110a99510
+      possible_crtcs: crtc-0, crtc-1, crtc-2, crtc-3
+      current_crtc: (none)
+      attached_connectors: (none)
+    encoder[id=100] TMDS-100 type=TMDS 0xffff888110a99690
+      possible_crtcs: crtc-0, crtc-1, crtc-2, crtc-3
+      current_crtc: (none)
+      attached_connectors: (none)
+    encoder[id=103] TMDS-103 type=TMDS 0xffff888110a98b50
+      possible_crtcs: crtc-0, crtc-1, crtc-2, crtc-3
+      current_crtc: (none)
+      attached_connectors: (none)
+    encoder[id=104] TMDS-104 type=TMDS 0xffff888110a98cd0
+      possible_crtcs: crtc-0, crtc-1, crtc-2, crtc-3
+      current_crtc: (none)
+      attached_connectors: (none)
+    encoder[id=107] TMDS-107 type=TMDS 0xffff888110a98610
+      possible_crtcs: crtc-0, crtc-1, crtc-2, crtc-3
+      current_crtc: (none)
+      attached_connectors: (none)
+  crtcs
+    crtc[id=57] crtc-0 index=0 0xffff88818202b840
+      primary_plane: plane-0
+      cursor_plane: plane-1
+      connectors: (none)
+      encoders: (none)
+      active_planes: (none)
+    crtc[id=67] crtc-1 index=1 0xffff88818202e040
+      primary_plane: plane-3
+      cursor_plane: plane-4
+      connectors: (none)
+      encoders: (none)
+      active_planes: (none)
+    crtc[id=77] crtc-2 index=2 0xffff88818202e840
+      primary_plane: plane-6
+      cursor_plane: plane-7
+      connectors: (none)
+      encoders: (none)
+      active_planes: (none)
+    crtc[id=87] crtc-3 index=3 0xffff888182028840
+      primary_plane: plane-9
+      cursor_plane: plane-10
+      connectors: (none)
+      encoders: (none)
+      active_planes: (none)
+  planes
+    plane[id=51] plane-0 type=PRIMARY 0xffff888122255800
+      possible_crtcs: crtc-0
+      current_crtc: (none)
+      current_fb: (none)
+      state: crtc_xy=(0, 0) crtc_wh=(0x0) zpos=0
+    plane[id=54] plane-1 type=CURSOR 0xffff888122257800
+      possible_crtcs: crtc-0
+      current_crtc: (none)
+      current_fb: (none)
+      state: crtc_xy=(0, 0) crtc_wh=(0x0) zpos=0
+    plane[id=58] plane-2 type=OVERLAY 0xffff888122254000
+      possible_crtcs: crtc-0
+      current_crtc: (none)
+      current_fb: (none)
+      state: crtc_xy=(0, 0) crtc_wh=(0x0) zpos=0
+    plane[id=61] plane-3 type=PRIMARY 0xffff888122254800
+      possible_crtcs: crtc-1
+      current_crtc: (none)
+      current_fb: (none)
+      state: crtc_xy=(0, 0) crtc_wh=(0x0) zpos=0
+    plane[id=64] plane-4 type=CURSOR 0xffff888122252000
+      possible_crtcs: crtc-1
+      current_crtc: (none)
+      current_fb: (none)
+      state: crtc_xy=(0, 0) crtc_wh=(0x0) zpos=0
+    plane[id=68] plane-5 type=OVERLAY 0xffff888122253000
+      possible_crtcs: crtc-1
+      current_crtc: (none)
+      current_fb: (none)
+      state: crtc_xy=(0, 0) crtc_wh=(0x0) zpos=0
+    plane[id=71] plane-6 type=PRIMARY 0xffff888122256000
+      possible_crtcs: crtc-2
+      current_crtc: (none)
+      current_fb: (none)
+      state: crtc_xy=(0, 0) crtc_wh=(0x0) zpos=0
+    plane[id=74] plane-7 type=CURSOR 0xffff888122256800
+      possible_crtcs: crtc-2
+      current_crtc: (none)
+      current_fb: (none)
+      state: crtc_xy=(0, 0) crtc_wh=(0x0) zpos=0
+    plane[id=78] plane-8 type=OVERLAY 0xffff888122255000
+      possible_crtcs: crtc-2
+      current_crtc: (none)
+      current_fb: (none)
+      state: crtc_xy=(0, 0) crtc_wh=(0x0) zpos=0
+    plane[id=81] plane-9 type=PRIMARY 0xffff888122250000
+      possible_crtcs: crtc-3
+      current_crtc: (none)
+      current_fb: (none)
+      state: crtc_xy=(0, 0) crtc_wh=(0x0) zpos=0
+    plane[id=84] plane-10 type=CURSOR 0xffff888122252800
+      possible_crtcs: crtc-3
+      current_crtc: (none)
+      current_fb: (none)
+      state: crtc_xy=(0, 0) crtc_wh=(0x0) zpos=0
+    plane[id=88] plane-11 type=OVERLAY 0xffff888182033000
+      possible_crtcs: crtc-3
+      current_crtc: (none)
+      current_fb: (none)
+      state: crtc_xy=(0, 0) crtc_wh=(0x0) zpos=0
+  framebuffers
+    (none)
+
+[Device] minor=2 driver=vkms bus=vkms
+  drm_device: 0xffff888109f36800 registered=yes
+  counts: planes=2 crtcs=1 encoders=2 connectors=2 framebuffers=1
+  live graph
+    (no active connector/encoder/crtc routing found)
+  connectors
+    connector[id=45] Writeback-1 status=unknown 0xffff88814303e6a0
+      possible_encoders: Virtual-44
+      current_encoder: (none)
+      current_crtc: (none)
+    connector[id=51] Virtual-1 status=connected 0xffff888e5f619028
+      possible_encoders: Virtual-50
+      current_encoder: (none)
+      current_crtc: (none)
+  encoders
+    encoder[id=44] Virtual-44 type=VIRTUAL 0xffff88814303f058
+      possible_crtcs: crtc-0
+      current_crtc: (none)
+      attached_connectors: (none)
+    encoder[id=50] Virtual-50 type=VIRTUAL 0xffff888101de10a8
+      possible_crtcs: crtc-0
+      current_crtc: (none)
+      attached_connectors: (none)
+  crtcs
+    crtc[id=43] crtc-0 index=0 0xffff88814303e028
+      primary_plane: plane-0
+      cursor_plane: plane-1
+      connectors: (none)
+      encoders: (none)
+      active_planes: (none)
+  planes
+    plane[id=33] plane-0 type=PRIMARY 0xffff88816abf3028
+      possible_crtcs: crtc-0
+      current_crtc: (none)
+      current_fb: (none)
+      state: crtc_xy=(0, 0) crtc_wh=(0x0) zpos=0
+    plane[id=38] plane-1 type=CURSOR 0xffff88816abf0028
+      possible_crtcs: crtc-0
+      current_crtc: (none)
+      current_fb: (none)
+      state: crtc_xy=(0, 0) crtc_wh=(0x0) zpos=0
+  framebuffers
+    fb[id=52] fb-52 1024x768 fmt=XR24 0xffff888119c88e40
+      modifier: 0x0
+      pitches: 4096, 0, 0, 0
+      users: (none)

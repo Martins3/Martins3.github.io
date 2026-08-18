@@ -1,9 +1,10 @@
 #!/usr/bin/python3
-from bcc import BPF
-from time import sleep, strftime, localtime
+import os
 import signal
 import sys
-import os
+from time import localtime, sleep, strftime
+
+from bcc import BPF
 
 # ========== 配置 ==========
 DEBUG = False  # True: 同时输出到终端；False: 静默，只写 shm
@@ -18,7 +19,7 @@ try:
     if DEBUG:
         print(f"[DEBUG] Pre-allocated {BUFFER_SIZE} bytes at {SHM_FILE}")
 except Exception as e:
-    print(f"❌ Failed to initialize shm file: {e}", file=sys.stderr)
+    print(f"Failed to initialize shm file: {e}", file=sys.stderr)
     sys.exit(1)
 
 current_offset = 0  # 当前写入位置
@@ -93,14 +94,12 @@ def safe_write_line(line):
     line_len = len(line_bytes)
 
     if current_offset + line_len > BUFFER_SIZE:
-        print("❌ Buffer full! Exiting to avoid data corruption.", file=sys.stderr)
         sys.exit(1)
 
     try:
         os.pwrite(fd, line_bytes, current_offset)
         current_offset += line_len
-    except Exception as e:
-        print(f"❌ Write error: {e}", file=sys.stderr)
+    except Exception:
         sys.exit(1)
 
     if DEBUG:
@@ -114,7 +113,6 @@ def signal_handler(sig, frame):
         )
     else:
         print(f"Data written to {SHM_FILE} ({current_offset} bytes). Exiting.")
-    # ✅ 不删除 shm 文件！不复制！你后续自行读取！
     os.close(fd)  # 只关闭 fd，文件保留
     sys.exit(0)
 

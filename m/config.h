@@ -3,7 +3,7 @@
 
 // #define CONFIG_TEST_SYSREG 1
 // #define CONFIG_TEST_AARCH64 1
-#define CONFIG_TEST_WORKQUEUE 1
+// #define CONFIG_TEST_WORKQUEUE 1
 // #define CONFIG_TEST_SCHED_DEBUG 1
 // #define CONFIG_TEST_RADIX_TREE 1
 // #define CONFIG_TEST_EPOLL 1
@@ -94,12 +94,12 @@
 /* #define CONFIG_TEST_PAGEFLAG 1 */
 /* #define CONFIG_TEST_PCI 1 */
 /* #define CONFIG_TEST_PERCPU 1 */
-#define CONFIG_TEST_PERCPU_RWSEM 1
+// #define CONFIG_TEST_PERCPU_RWSEM 1
 /* #define CONFIG_TEST_PROC 1 */
 /* #define CONFIG_TEST_RBTREE 1 */
 /* #define CONFIG_TEST_RNG 1 */
 /* #define CONFIG_TEST_RWSEM 1 */
-#define CONFIG_TEST_SEQLOCK 1
+// #define CONFIG_TEST_SEQLOCK 1
 /* #define CONFIG_TEST_SG 1 */
 /* #define CONFIG_TEST_SHARE 1 */
 /* #define CONFIG_TEST_SLUB 1 */

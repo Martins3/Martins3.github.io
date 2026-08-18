@@ -281,7 +281,7 @@ CPU: 2 UID: 0 PID: 1479 Comm: tee Not tainted 6.13.2-00001-g934999804fb6-dirty #
 ## 网卡支持 virtio 吗？
 
 ## docs/formal-verification.md
-所以，这个 mmoc lock 的问题，是不是也可以使用这种方法来记录
+可以参考
 
 ## 这个 config 是在有趣的
 ```json

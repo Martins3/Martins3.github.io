@@ -74,6 +74,15 @@ impl Serialize for LogEntry {
 
 type LogEntries = Vec<LogEntry>;
 
+const STATS_HTML_PATH: &str = "/tmp/anki-stats.html";
+
+#[derive(Debug, PartialEq)]
+struct DailyStats {
+    date: String,
+    reviews: usize,
+    unique_items: usize,
+}
+
 #[derive(Debug, Clone, Deserialize, Serialize)]
 struct Database {
     #[serde(flatten)]
@@ -167,6 +176,130 @@ struct Args {
     recent_decks: bool,
 }
 
+fn collect_daily_stats(db: &Database) -> Result<Vec<DailyStats>, Box<dyn std::error::Error>> {
+    let mut daily_reviews = BTreeMap::new();
+    let mut daily_unique_items = BTreeMap::new();
+
+    for (uuid, log_entries) in &db.items {
+        for log in log_entries {
+            let log_time = parse_datetime(&log.time)?;
+            let date = log_time.format("%Y-%m-%d").to_string();
+
+            *daily_reviews.entry(date.clone()).or_insert(0) += 1;
+            daily_unique_items
+                .entry(date)
+                .or_insert_with(std::collections::HashSet::new)
+                .insert(uuid);
+        }
+    }
+
+    Ok(daily_reviews
+        .into_iter()
+        .map(|(date, reviews)| DailyStats {
+            unique_items: daily_unique_items.get(&date).unwrap().len(),
+            date,
+            reviews,
+        })
+        .collect())
+}
+
+fn render_stats_html(daily_stats: &[DailyStats], total_cards: usize) -> String {
+    let total_reviews: usize = daily_stats.iter().map(|day| day.reviews).sum();
+    let active_days = daily_stats.len();
+    let max_value = daily_stats
+        .iter()
+        .map(|day| day.reviews.max(day.unique_items))
+        .max()
+        .unwrap_or(1);
+    let generated_at = Utc::now().format("%Y-%m-%d %H:%M UTC");
+
+    let mut html = String::from(
+        r#"<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Anki review statistics</title>
+<style>
+:root { color-scheme: light dark; font-family: Inter, ui-sans-serif, system-ui, sans-serif; }
+* { box-sizing: border-box; }
+body { margin: 0; background: #0f172a; color: #e2e8f0; }
+main { width: min(1000px, calc(100% - 32px)); margin: 48px auto; }
+h1 { margin: 0; font-size: clamp(28px, 5vw, 44px); letter-spacing: -0.04em; }
+.subtitle { margin: 10px 0 28px; color: #94a3b8; }
+.summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px; }
+.card, .chart { border: 1px solid #334155; border-radius: 16px; background: #111c31; box-shadow: 0 18px 45px #02061755; }
+.card { padding: 20px; }
+.card span { display: block; color: #94a3b8; font-size: 13px; text-transform: uppercase; letter-spacing: .08em; }
+.card strong { display: block; margin-top: 8px; color: #f8fafc; font-size: 32px; }
+.chart { margin-top: 20px; padding: 24px; overflow: hidden; }
+.chart-header { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; margin-bottom: 22px; }
+.chart-header h2 { margin: 0; font-size: 20px; }
+.legend { display: flex; gap: 16px; color: #94a3b8; font-size: 13px; }
+.legend span::before { content: ""; display: inline-block; width: 9px; height: 9px; margin-right: 6px; border-radius: 3px; }
+.legend .reviews::before { background: #38bdf8; }
+.legend .cards::before { background: #a78bfa; }
+.rows { display: grid; gap: 16px; }
+.day { display: grid; grid-template-columns: 92px 1fr; align-items: center; gap: 14px; }
+.date { color: #cbd5e1; font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; }
+.bars { display: grid; gap: 5px; }
+.track { height: 22px; border-radius: 7px; background: #1e293b; overflow: hidden; }
+.bar { display: flex; align-items: center; height: 100%; min-width: 42px; padding: 0 8px; border-radius: 7px; color: #07111f; font-size: 12px; font-weight: 700; white-space: nowrap; }
+.bar.reviews { background: linear-gradient(90deg, #0284c7, #38bdf8); }
+.bar.cards { background: linear-gradient(90deg, #7c3aed, #a78bfa); }
+.empty { padding: 44px 0; color: #94a3b8; text-align: center; }
+footer { margin: 18px 4px 0; color: #64748b; font-size: 12px; }
+@media (max-width: 560px) { main { margin: 24px auto; } .chart { padding: 18px; } .chart-header { align-items: flex-start; flex-direction: column; } .day { grid-template-columns: 1fr; gap: 6px; } }
+</style>
+</head>
+<body>
+<main>
+<h1>Anki review statistics</h1>
+"#,
+    );
+
+    html.push_str(&format!(
+        "<p class=\"subtitle\">Generated from the local review database on {generated_at}</p>\n\
+         <section class=\"summary\">\n\
+         <div class=\"card\"><span>Total reviews</span><strong>{total_reviews}</strong></div>\n\
+         <div class=\"card\"><span>Total cards</span><strong>{total_cards}</strong></div>\n\
+         <div class=\"card\"><span>Active days</span><strong>{active_days}</strong></div>\n\
+         </section>\n\
+         <section class=\"chart\">\n\
+         <div class=\"chart-header\"><h2>Daily activity</h2><div class=\"legend\"><span class=\"reviews\">Reviews</span><span class=\"cards\">Unique cards</span></div></div>\n"
+    ));
+
+    if daily_stats.is_empty() {
+        html.push_str("<div class=\"empty\">No review history yet.</div>\n");
+    } else {
+        html.push_str("<div class=\"rows\">\n");
+        for day in daily_stats.iter().rev() {
+            let review_width = (day.reviews * 100 / max_value).max(2);
+            let card_width = (day.unique_items * 100 / max_value).max(2);
+            html.push_str(&format!(
+                "<div class=\"day\"><div class=\"date\">{}</div><div class=\"bars\">\
+                 <div class=\"track\"><div class=\"bar reviews\" style=\"width: {}%\">{} reviews</div></div>\
+                 <div class=\"track\"><div class=\"bar cards\" style=\"width: {}%\">{} cards</div></div>\
+                 </div></div>\n",
+                day.date, review_width, day.reviews, card_width, day.unique_items
+            ));
+        }
+        html.push_str("</div>\n");
+    }
+
+    html.push_str("</section><footer>Generated by anki-fsrs</footer></main></body></html>\n");
+    html
+}
+
+fn write_stats_html(
+    path: &Path,
+    daily_stats: &[DailyStats],
+    total_cards: usize,
+) -> Result<(), Box<dyn std::error::Error>> {
+    fs::write(path, render_stats_html(daily_stats, total_cards))?;
+    Ok(())
+}
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = Args::parse();
     let current_dir = std::env::current_dir()?;
@@ -175,33 +308,19 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut db = Database::load(&database_path)?;
 
     if args.stats {
-        // Statistics: count number of reviews and unique items per day
-        let mut daily_reviews = BTreeMap::new();
-        let mut daily_unique_items = BTreeMap::new();
-
-        for (uuid, log_entries) in &db.items {
-            for log in log_entries {
-                let log_time = parse_datetime(&log.time)?;
-                let date_str = log_time.format("%Y-%m-%d").to_string();
-
-                // Count total reviews per day
-                *daily_reviews.entry(date_str.clone()).or_insert(0) += 1;
-
-                // Count unique items per day
-                daily_unique_items
-                    .entry(date_str)
-                    .or_insert_with(std::collections::HashSet::new)
-                    .insert(uuid);
-            }
-        }
+        let daily_stats = collect_daily_stats(&db)?;
 
         // Print the statistics
         println!("Daily review statistics:");
         println!("------------------------");
-        for (date, count) in daily_reviews {
-            let unique_items = daily_unique_items.get(&date).unwrap().len();
-            println!("{}: {} reviews, {} unique items", date, count, unique_items);
+        for day in &daily_stats {
+            println!(
+                "{}: {} reviews, {} unique items",
+                day.date, day.reviews, day.unique_items
+            );
         }
+        write_stats_html(Path::new(STATS_HTML_PATH), &daily_stats, db.items.len())?;
+        println!("HTML report: {}", STATS_HTML_PATH);
     } else if args.due {
         // Use FSRS to determine which items are due for review
         let fsrs = FSRS::new(Some(&DEFAULT_PARAMETERS))?;
@@ -305,8 +424,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             println!("Successfully deleted card with UUID: {}", uuid);
             db.save(&database_path)?;
         } else {
-            eprintln!("Card with UUID {} not found in database", uuid);
-            std::process::exit(1);
+            eprintln!(
+                "Notice: card with UUID {} not found in database; nothing to delete",
+                uuid
+            );
         }
     } else if let Some(uuid) = args.inspect {
         inspect_review_history(&db, &uuid)?;
@@ -436,8 +557,11 @@ fn parse_datetime(time_str: &str) -> Result<DateTime<Utc>, Box<dyn std::error::E
 fn query_review_time(db: &mut Database, uuid: &str) -> Result<(), Box<dyn std::error::Error>> {
     // Check if the card exists
     if !db.check_uuid_exists(uuid) {
-        eprintln!("Card with UUID {} not found in database", uuid);
-        std::process::exit(1);
+        eprintln!(
+            "Notice: card with UUID {} not found in database; skipping query",
+            uuid
+        );
+        return Ok(());
     }
 
     // Get the log entries for this card
@@ -513,8 +637,11 @@ fn query_review_time(db: &mut Database, uuid: &str) -> Result<(), Box<dyn std::e
 fn inspect_review_history(db: &Database, uuid: &str) -> Result<(), Box<dyn std::error::Error>> {
     // Check if the card exists
     if !db.check_uuid_exists(uuid) {
-        eprintln!("Card with UUID {} not found in database", uuid);
-        std::process::exit(1);
+        eprintln!(
+            "Notice: card with UUID {} not found in database; skipping inspection",
+            uuid
+        );
+        return Ok(());
     }
 
     // Get the log entries for this card
@@ -567,4 +694,63 @@ fn inspect_review_history(db: &Database, uuid: &str) -> Result<(), Box<dyn std::
     }
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn daily_stats_count_reviews_and_unique_cards() {
+        let mut db = Database::new();
+        db.items.insert(
+            "card-one".to_string(),
+            vec![
+                LogEntry {
+                    time: "2026-08-17T10:00:00Z".to_string(),
+                    rating: 3,
+                },
+                LogEntry {
+                    time: "2026-08-17T09:00:00Z".to_string(),
+                    rating: 4,
+                },
+            ],
+        );
+        db.items.insert(
+            "card-two".to_string(),
+            vec![LogEntry {
+                time: "2026-08-17T11:00:00Z".to_string(),
+                rating: 2,
+            }],
+        );
+
+        let stats = collect_daily_stats(&db).unwrap();
+
+        assert_eq!(
+            stats,
+            vec![DailyStats {
+                date: "2026-08-17".to_string(),
+                reviews: 3,
+                unique_items: 2,
+            }]
+        );
+    }
+
+    #[test]
+    fn html_report_contains_summary_and_chart_data() {
+        let html = render_stats_html(
+            &[DailyStats {
+                date: "2026-08-17".to_string(),
+                reviews: 3,
+                unique_items: 2,
+            }],
+            7,
+        );
+
+        assert!(html.contains("<strong>3</strong>"));
+        assert!(html.contains("<strong>7</strong>"));
+        assert!(html.contains("2026-08-17"));
+        assert!(html.contains("3 reviews"));
+        assert!(html.contains("2 cards"));
+    }
 }
