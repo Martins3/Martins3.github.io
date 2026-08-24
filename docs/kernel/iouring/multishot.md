@@ -1,12 +1,11 @@
-## iouring multishot
+## io uring multishot
 <!-- 4a9d4de4-f7b1-4d84-9173-69a8dd034bd6 -->
-
 
 普通 io_uring 请求：
 1. 一次 SQE → 一次 CQE → 请求结束
+
 multishot 请求：
 2. 一次 SQE → 多次 CQE → 直到内核主动结束或用户取消
-
 
 内核在请求仍然“有效”时，会在每次事件发生时向 CQ ring 投递一个新的 CQE。
 
@@ -46,6 +45,22 @@ https://www.phoronix.com/news/io-uring-multishot-provided-buf
 ##  很好的
 https://www.reddit.com/r/programming/comments/1mqfp7c/from_epoll_to_io_urings_multishot_receives_why/
 https://codemia.io/blog/path/From-epoll-to-iourings-Multishot-Receives--Why-2025-Is-the-Year-We-Finally-Kill-the-Event-Loop
+
+
+
+## qemu 使用了 io_uring，但没有使用 multishot。
+
+util/fdmon-io_uring.c 用普通的 io_uring_prep_poll_add() 监控 fd；它明确把
+  POLL_ADD 当作 one-shot，收到 CQE 后手动重新 arm，而非
+  IORING_POLL_ADD_MULTI。见 util/fdmon-io_uring.c:199 和 util/fdmon-
+  io_uring.c:270。
+
+  块设备 aio=io_uring 则提交常规的 read/write/fsync SQE，block/
+  io_uring.c:39，也没有 recv/accept/poll 的 multishot 调用。
+
+  所以结论是：QEMU 的 io_uring 后端在用，但当前实现仍是 one-shot poll +
+  userspace rearm。
+
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

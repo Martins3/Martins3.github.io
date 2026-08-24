@@ -6,8 +6,10 @@ https://lists.nongnu.org/archive/html/qemu-devel/2021-01/msg05482.html
 
 bg_migration_thread 中
 	- qemu_savevm_state_header
+	- qemu_savevm_state_do_setup
 	- migration_stop_vm
-	- qemu_savevm_state_do_setup ( state 保存)
+	- qemu_savevm_state_non_iterable（device state 写到临时 buffer）
+	- ram_write_tracking_start（启用 UFFD-WP）
 	- bg_migration_iteration_run ( 保存 ram)
 
 ```c
@@ -163,7 +165,6 @@ migration/migration.c lines 3599-3605
     * validate-uuid
     * zero-copy-send
     * （以及 CPR 模式如 cpr-reboot, cpr-transfer, cpr-exec）
-
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

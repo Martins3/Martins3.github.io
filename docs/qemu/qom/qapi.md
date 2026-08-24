@@ -1,4 +1,5 @@
 # qapi
+<!-- 7d531f3b-f33d-48ed-b998-de853e6afec2 -->
 
 ## 基本结构
 QAPI（QEMU API）是 QEMU 对外接口的单一事实来源：用一份 JSON 格式的 schema 定义所有 QMP 命令、事件、数据类型，构建时用 Python 生成器自动产出对应的 C 代码、文档和

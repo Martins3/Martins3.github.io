@@ -117,6 +117,10 @@ cpr_save_fd hp_mem0, id 0, fd 327
 ```
 3. backends/hostmem-memfd.c 中的 cpr_save_fd(name, 0, fd); 是做什么的?
 
+## 当时的 patch
+https://lore.kernel.org/qemu-devel/917a64ea-c161-b612-4266-343368d6b3f9@oracle.com/
+
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

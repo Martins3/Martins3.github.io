@@ -198,9 +198,6 @@ https://www.quora.com/How-do-I-understand-the-tmux-design-architecture-and-inter
 
 [^1]: 为了让 Hello World 程序更加明显，最好是循环输出多次，例如 100000 。
 
-
-
-
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

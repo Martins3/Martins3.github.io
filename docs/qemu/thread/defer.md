@@ -335,14 +335,6 @@ qoc.ret == -EINPROGRESS 会导致 hmp 卡住吗?
 
 认为这里的是由于 aio_poll 监听的 fd 不能包含
 
-## 为什么内部的 aio_poll 不能监听外部的事件的情况
-
-通过 blk_drain 继续调试一下，按道理，这里的 while 是不影响整个 callback 的工作的
-```txt
-    AIO_WAIT_WHILE(blk_get_aio_context(blk),
-                   qatomic_read(&blk->in_flight) > 0);
-```
-
 ## aio_wait_kick 的作用是什么?
 
 ## 执行 aio_poll 就是为了死等

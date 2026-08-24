@@ -1,30 +1,19 @@
 # FDMonOps
 
-## qemu 有那些多路复用技术
-<!-- 9635c129-3222-429d-8c4f-e89a74ef1b20 -->
-
-基本流程:
+关联的文件:
+- util/fdmon-epoll.c
+- util/fdmon-io_uring.c
+- util/fdmon-poll.c
 
 - __clone3
   - start_thread
     - qemu_thread_start
       - iothread_run
         - aio_poll
-          - fdmon_poll_wait
-            - qemu_poll_ns
-              - ppoll
-                - ppoll
+          - fdmon_io_uring_wait
+            - io_uring_submit_and_wait
+              - io_uring_submit_and_wait
 
-关联的文件:
-- util/fdmon-epoll.c
-- util/fdmon-io_uring.c
-- util/fdmon-poll.c
-
-
-### FDMonOps::wait
-- fdmon_epoll_wait : 使用 AioContext::epollfd
-- fdmon_poll_wait : 使用全局变量 pollfds, 这个东西是在 fdmon_poll_wait 从 AioContext::aio_handlers 初始化得到的
-- fdmon_io_uring_wait : 调用 liburing 提供的 io_uring_submit_and_wait 然后来监听 AioContext::fdmon_io_uring
 
 ### 添加新的需要监听的 fd
 
@@ -35,166 +24,42 @@
 
 在操作的时候，需要 QemuLockCnt list_lock; 来保护，防止
 
-## qemu 中 glib 的监听机制的地方
-<!-- b79d423e-f613-40ef-8032-0c67601170e5 -->
+## main loop 下的两个模式
 
-其实就是使用 g_source_new 的地方:
-
-1. qio channel 的所有后端都需要定义
+main loop thread 中总是用的 qemu_poll_ns 来监听:
 
 ```c
-static void
-qio_channel_null_class_init(ObjectClass *klass,
-                            const void *class_data G_GNUC_UNUSED)
-{
-    QIOChannelClass *ioc_klass = QIO_CHANNEL_CLASS(klass);
-
-    ioc_klass->io_writev = qio_channel_null_writev;
-    ioc_klass->io_readv = qio_channel_null_readv;
-    ioc_klass->io_set_blocking = qio_channel_null_set_blocking;
-    ioc_klass->io_seek = qio_channel_null_seek;
-    ioc_klass->io_close = qio_channel_null_close;
-    ioc_klass->io_create_watch = qio_channel_null_create_watch; // 这里必须获取到一个 channel 的
-    ioc_klass->io_set_aio_fd_handler = qio_channel_null_set_aio_fd_handler;
-}
+ctx->epollfd_tag = g_source_add_unix_fd(&ctx->source,
+                         ctx->epollfd,
+                         G_IO_IN);
 ```
 
-2. chardev/char-fd.c 和 chardev/char-io.c : 暂时不看了
-
-3. aio_context_new 中
-
-在 aio_set_fd_handler 中会去调用 g_source_add_poll 的
-但是需要知道，aio context 未必一定回去使用 glib 的
-
-(或者说，qemu 中哪些地方可以完全不用 g_source_new 的
-所以，他们需要注册 AioContext 吗?
-)
-
-## qemu 中有三个 thread 在调用 ppoll
-<!-- f6cd118b-8c5e-4cea-a1af-97461adb9917 -->
-
-### 为什么是调用 poll
-
-```c
-void aio_context_setup(AioContext *ctx)
-{
-    ctx->fdmon_ops = &fdmon_poll_ops;
-    ctx->epollfd = -1;
-
-    /* Use the fastest fd monitoring implementation if available */
-    if (fdmon_io_uring_setup(ctx)) {
-        return;
-    }
-
-    fdmon_epoll_setup(ctx);
-}
+poll 模式，poll 中直接监听所有的 fd:
+```txt
+qemu_aio_context source
+├── fd1
+├── fd2
+├── fd3
+└── ...
 ```
 
-测试来看， fdmon_io_uring_setup 会成功，所以就是用 iouring 了，
-但是我监控到的全是 ppoll 啊
-
-一通调试，发现在这个函数中重新选择使用 ppoll:
-```c
-void aio_context_use_g_source(AioContext *ctx)
-{
-    /*
-     * Disable io_uring when the glib main loop is used because it doesn't
-     * support mixed glib/aio_poll() usage. It relies on aio_poll() being
-     * called regularly so that changes to the monitored file descriptors are
-     * submitted, otherwise a list of pending fd handlers builds up.
-     */
-    fdmon_io_uring_destroy(ctx);
-    aio_free_deleted_handlers(ctx);
-}
+epoll 或者 io_uring 模式，poll 来监听一个 epollfd / io_uring_fd ，所有的 fd 都被 epollfd / io_uring_fd 来监听
+```txt
+qemu_aio_context source
+└── epollfd
+    ├── fd1
+    ├── fd2
+    ├── fd3
+    └── ...
 ```
 
-这个函数基本上，必然被调用
+### iothread 不存在这个需求
 
-### 为什么有三个 thread
+FDMonOps::wait 注册的三个 hook ，这是只有 iothread 才会调用的
+- fdmon_epoll_wait : 使用 AioContext::epollfd + epoll_wait
+- fdmon_poll_wait : 使用全局变量 pollfds, pollfds 是 fdmon_poll_wait 从 AioContext::aio_handlers 初始化得到的，和 main loop 非常类似了
+- fdmon_io_uring_wait : 调用 liburing 提供的 io_uring_submit_and_wait 然后来监听 AioContext::fdmon_io_uring
 
-#### monitor 专用的 iothread
-
-- thread_start
-  - start_thread
-    - qemu_thread_start
-      - iothread_run
-        - g_main_loop_run
-          - g_main_context_iterate_unlocked.isra
-            - ppoll
-
-- thread_start
-  - start_thread
-    - qemu_thread_start
-      - iothread_run
-        - g_main_loop_run
-          - g_main_context_iterate_unlocked.isra
-            - g_main_context_prepare_unlocked
-              - io_watch_poll_prepare
-                - tcp_chr_read_poll
-                  - monitor_can_read : monitor/qmp.c
-
-居然 qmp 在这个 iothread 中做的
-
-```c
-static void monitor_iothread_init(void)
-{
-    mon_iothread = iothread_create("mon_iothread", &error_abort);
-}
-```
-
-#### virtio blk iothread
-- thread_start
-  - start_thread
-    - qemu_thread_start
-      - iothread_run
-        - aio_poll
-          - fdmon_poll_wait
-            - qemu_poll_ns
-              - ppoll
-                - ppoll
-
-这种的 iothread 是通过 qom 构建的:
-- main
-  - qemu_init
-    - qemu_create_early_backends
-      - object_option_foreach_add
-        - user_creatable_add_qapi
-          - user_creatable_add_type
-            - object_new_with_type
-              - object_initialize_with_type
-                - object_init_with_type
-                  - iothread_instance_init
-
-#### main loop
-基本上监听任何东西:
-
-- main
-  - qemu_default_main
-    - qemu_main_loop
-      - main_loop_wait
-        - os_host_main_loop_wait
-          - qemu_poll_ns
-            - ppoll
-              - ppoll
-
-#### 总结，从这里我们发现，iothread_run 有两个向下调用的路线
-- __clone3
-  - start_thread
-    - qemu_thread_start
-      - iothread_run
-        - aio_poll
-          - fdmon_poll_wait
-            - qemu_poll_ns
-              - ppoll
-                - ppoll
-
-- __clone3
-  - start_thread
-    - qemu_thread_start
-      - iothread_run
-        - g_main_loop_run
-          - g_main_context_iterate_unlocked.isra
-            - ppoll
 
 ## 实现细节
 ```c
@@ -221,12 +86,6 @@ static void fdmon_poll_update(AioContext *ctx,
 {
     /* Do nothing, AioHandler already contains the state we'll need */
 }
-```
-
-## 2026-03-25 发现默认的 fdmon 已经修改 iouring 了
-```txt
-$ p ctx->fdmon_ops
-$1 = (const FDMonOps *) 0x556ac1192308 <fdmon_io_uring_ops>
 ```
 
 ## qemu 中如何处理 epoll 返回 EINTR 的
@@ -258,6 +117,34 @@ aio_poll() 调用 ctx->fdmon_ops->wait(...) 后不看返回值，只继续 dispa
 
 其他情况，QEMU 有通用宏 include/qemu/osdep.h
 RETRY_ON_EINTR(expr)
+
+## iouring 的改动
+
+  2025 年修改已经不只是为了 fd 监控性能，而是为了让每个 AioContext 都提供通用的：
+
+  aio_add_sqe()
+
+  这样块层、FUSE 等模块可以复用 AioContext 自带的 io_uring，而不必各自创建 ring。补丁系列说明 (https://lists.gnu.org/archive/html/qemu-block/2025-03/msg00432.html)
+
+  随后：
+
+  047dabef97bd
+  block/io_uring: use aio_add_sqe()
+
+  把磁盘 aio=io_uring 和 fdmon io_uring 合并到同一个 ring，收益是：
+
+  - 少创建一个 io_uring；
+  - 不再需要 fdmon 去监控另一个 disk-I/O ring fd；
+  - SQE 可以在 event-loop iteration 末尾批量提交；
+  - 减少 io_uring_enter()；
+  - 删除重复的 completion/submission 管理代码。
+
+这个其实改动其实有意思:
+1. 如果是两个 iouring 队列
+	- iouring 监听 ----> 磁盘文件 iouring 的 fd
+2. 如果一个 iouring 队列
+	- iouring 监听所有的 fd 以及提交的所有的 io
+		- 这个只能是 io uring 给io handler 做，因为只有
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

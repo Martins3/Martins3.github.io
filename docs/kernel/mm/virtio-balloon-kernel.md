@@ -157,7 +157,6 @@ qemu-system-x86_64: queue_enable is only suppported in devices of virtio 1.0 or 
   - virtio_balloon_to_target
     - dev->num_pages = (vm_ram_size - target) >> VIRTIO_BALLOON_PFN_SHIFT;
     - virtio_notify_config
-- [ ] 但是存在 5 个 qeueu 啊
 
 ```c
 struct VirtIOBalloon {

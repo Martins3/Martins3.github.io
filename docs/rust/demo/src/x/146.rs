@@ -18,7 +18,7 @@ struct List {
     tail: Link,
 }
 
-// 双向链表 + HashMap 实现 LRU（待完成）
+// 双向链表 + HashMap 实现 LRU
 struct LRUCache {
     capacity: i32,
     map: HashMap<i32, Link>,
@@ -70,7 +70,6 @@ impl LRUCache {
                     } else {
                         // 不是第一个，插到头部：
                         // 旧头的 prev 指向 m，m 的 next 指向旧头，head 更新为 m
-                        // FIXME 继续在这里吧，似乎有点理解了这个问题了
                         let old_head = self.list.head.take().unwrap();
                         old_head.borrow_mut().prev = m.clone();
                         if let Some(node) = &m {

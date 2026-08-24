@@ -1,4 +1,4 @@
-## qemu 到底有那些 thread
+# qemu 到底有那些 thread
 <!-- 841889be-f42d-453d-8160-a499075e2305 -->
 
 ```txt
@@ -113,6 +113,66 @@ info threads
         - qio_channel_readv_full_all_eof
           - qio_channel_socket_readv
             - recvmsg
+
+## qemu 中有三个 thread 在调用 ppoll
+<!-- f6cd118b-8c5e-4cea-a1af-97461adb9917 -->
+
+### virtio blk iothread
+- thread_start
+  - start_thread
+    - qemu_thread_start
+      - iothread_run
+        - aio_poll
+          - fdmon_poll_wait
+            - qemu_poll_ns
+              - ppoll
+                - ppoll
+
+这种的 iothread 是通过 qom 构建的:
+- main
+  - qemu_init
+    - qemu_create_early_backends
+      - object_option_foreach_add
+        - user_creatable_add_qapi
+          - user_creatable_add_type
+            - object_new_with_type
+              - object_initialize_with_type
+                - object_init_with_type
+                  - iothread_instance_init
+
+### main loop
+基本上监听任何东西:
+
+- main
+  - qemu_default_main
+    - qemu_main_loop
+      - main_loop_wait
+        - os_host_main_loop_wait
+          - qemu_poll_ns
+            - ppoll
+              - ppoll
+
+### 发现
+
+iothread_run 总是有两个不同的调用方向:
+
+- __clone3
+  - start_thread
+    - qemu_thread_start
+      - iothread_run
+        - aio_poll
+          - fdmon_poll_wait
+            - qemu_poll_ns
+              - ppoll
+                - ppoll
+
+- __clone3
+  - start_thread
+    - qemu_thread_start
+      - iothread_run
+        - g_main_loop_run
+          - g_main_context_iterate_unlocked.isra
+            - ppoll
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

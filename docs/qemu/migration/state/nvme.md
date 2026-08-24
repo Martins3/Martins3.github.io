@@ -169,6 +169,9 @@ QEMU emulator version 11.0.91 (v11.1.0-rc1-48-g05e27e70df42-dirty)
 
 是支持的 nvme 热迁移的，和我再次调查这个问题也就是几周时间。
 
+## 其他资源
+- https://github.com/manishrma/nvme-qemu
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

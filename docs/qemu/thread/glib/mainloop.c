@@ -58,7 +58,7 @@ void one_loop()
 }
 
 /**
- * if context is not specified, defautl context will be used
+ * 类似 qemu ，没有添加任何额外的 context
  */
 void defautl_context()
 {

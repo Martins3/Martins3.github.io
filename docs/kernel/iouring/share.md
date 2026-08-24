@@ -137,7 +137,7 @@ struct aio_ring {
 
 ### iocb 是 aio 特有的数据结构吧
 
-### 所以，为什么 aio 不支持 buffer ？
+### 所以，为什么 aio 不支持 buffer io ？
 <!-- 38a83db8-585e-4805-bcfd-63cecd32cc0c -->
 
 感觉这个问题到今天，还是一下子无法想起来

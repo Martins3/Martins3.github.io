@@ -10,16 +10,19 @@ CC      := /usr/bin/gcc
 STD     := c++17
 ARCH    := sm_120
 OPT     := -O2 -g
-HOST_CXX ?= g++
+# nvcc 必须使用与系统 CUDA Toolkit 匹配的系统工具链，避免 Nix g++ 注入
+# Nix glibc 头文件后与 CUDA 头文件产生声明冲突。命令行仍可覆盖此变量。
+HOST_CXX := /usr/bin/g++
+HOST_BINUTILS_DIR := /usr/bin
 HOST_CXX_PATH := $(shell command -v $(HOST_CXX) 2>/dev/null || echo $(HOST_CXX))
 HOST_CXX_REAL := $(shell readlink -f $(HOST_CXX_PATH) 2>/dev/null || echo $(HOST_CXX_PATH))
 NVCC_LINK_FLAGS ?= $(if $(findstring /nix/,$(HOST_CXX_REAL)),-Xlinker --dynamic-linker=/lib64/ld-linux-x86-64.so.2 -Xlinker -rpath=/usr/lib64:$(CUDA_HOME)/lib64,)
 
-BASE_FLAGS    := -std=$(STD) $(OPT) $(CPPFLAGS) -ccbin $(HOST_CXX)
+BASE_FLAGS    := -std=$(STD) $(OPT) $(CPPFLAGS) -ccbin $(HOST_CXX) -Xcompiler -B$(HOST_BINUTILS_DIR)
 DEFAULT_FLAGS := $(BASE_FLAGS) -arch=$(ARCH)
 DEFAULT_LINK_FLAGS := $(DEFAULT_FLAGS) $(LDFLAGS) $(NVCC_LINK_FLAGS)
-# CFLAGS        := -O2 -Wall -Wextra $(CPPFLAGS) -I$(CUDA_HOME)/include
-CFLAGS        := -O0 -g -G -Wextra $(CPPFLAGS) -I$(CUDA_HOME)/include
+# `-G` 是 nvcc 的设备调试选项，不能传给纯 C 目标使用的 GCC。
+CFLAGS        := -O0 -g -Wall -Wextra -B$(HOST_BINUTILS_DIR) $(CPPFLAGS) -I$(CUDA_HOME)/include
 DRIVER_LIBS   := $(LDFLAGS) -L/usr/lib64 -lcuda -ldl
 
 # Auto-discover all .cu files (exclude cache and preserved duplicate summaries)

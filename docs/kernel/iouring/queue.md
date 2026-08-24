@@ -1,3 +1,4 @@
+# 环形队列设计
 ## iouring 的 queue 同步
 <!-- 982ea542-54ce-442a-a778-e28f91ab83db -->
 
@@ -12,8 +13,6 @@
 #define write_barrier()	__sync_synchronize()
 #endif
 ```
-
-为什么需要 barrier 来着?
 
 ### 类似的问题
 

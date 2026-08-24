@@ -1,146 +1,102 @@
-# qmp 和 hmp
-
-## 基本使用
-- https://www.qemu.org/docs/master/devel/writing-monitor-commands.html
-- https://wiki.qemu.org/Documentation/QMP
-- https://www.qemu.org/docs/master/devel/writing-monitor-commands.html#writing-a-debugging-aid-returning-unstructured-text
-
-- https://gist.github.com/rgl/dc38c6875a53469fdebb2e9c0a220c6c
-
-## qmp shell
-- https://wiki.qemu.org/Documentation/QMP
-
-qmp shell 常见命令:
-1. query-cpu-definitions
-
-
-## qom-get
-
-```json
-{ "execute": "qom-get",
-             "arguments": { "path": "/machine/peripheral/balloon0",
-             "property": "guest-stats" } }
-```
-
-- _start
-  - __libc_start_main_impl
-    - __libc_start_call_main
-      - qemu_default_main
-        - qemu_main_loop
-          - main_loop_wait
-            - os_host_main_loop_wait
-              - glib_pollfds_poll
-                - g_main_context_dispatch
-                  - aio_ctx_dispatch
-                    - aio_dispatch
-                      - aio_bh_poll
-                        - aio_bh_call
-                          - do_qmp_dispatch_bh
-                            - qmp_marshal_qom_get
-                              - qmp_qom_get
-                                - object_property_get_qobject
-                                  - object_property_get
-                                    - property_get_alias
-                                      - object_property_get
-                                        - balloon_stats_get_all
-
 # hmp
-
-- [ ] 可以阅读的文档:
-这里描述在 graphic 和 non-graphic 的模式下访问 HMI 的方法，并且说明了从 HMI 中间如何获取各种信息
-https://web.archive.org/web/20180104171638/http://nairobi-embedded.org/qemu_monitor_console.html
-
-
-## 源码分析
-- hmp_info_balloon
-
-- _start
-  - __libc_start_main_impl
-    - __libc_start_call_main
-      - qemu_default_main
-        - qemu_main_loop
-          - main_loop_wait
-            - os_host_main_loop_wait
-              - glib_pollfds_poll
-                - g_main_context_dispatch
-                  - tcp_chr_read
-                    - monitor_read
-                      - readline_handle_byte
-                        - monitor_command_cb
-                          - handle_hmp_command
-                            - handle_hmp_command_exec
-                              - handle_hmp_command_exec
-                                - hmp_info_balloon
-
-```c
-void hmp_info_balloon(Monitor *mon, const QDict *qdict)
-{
-    BalloonInfo *info;
-    Error *err = NULL;
-
-    info = qmp_query_balloon(&err);
-    if (hmp_handle_error(mon, err)) {
-        return;
-    }
-
-    monitor_printf(mon, "balloon: actual=%" PRId64 "\n", info->actual >> 20);
-
-    qapi_free_BalloonInfo(info);
-}
-```
-
-- [ ] /home/martins3/core/qemu/build/hmp-commands-info.h 是如何生成的
-- [ ] /home/martins3/core/qemu/build/qapi/qapi-commands-machine.h 中包含了 qmp_query_balloon
-
-## 总结一些和 qobject 纠缠在一起的功能
-
-- object_register_sugar_prop
-
-```c
-static void qemu_process_sugar_options(void)
-{
-    if (mem_prealloc) {
-        QObject *smp = qdict_get(machine_opts_dict, "smp");
-        if (smp && qobject_type(smp) == QTYPE_QDICT) {
-            QObject *cpus = qdict_get(qobject_to(QDict, smp), "cpus");
-            if (cpus && qobject_type(cpus) == QTYPE_QSTRING) {
-                const char *val = qstring_get_str(qobject_to(QString, cpus));
-                object_register_sugar_prop("memory-backend", "prealloc-threads",
-                                           val, false);
-            }
-        }
-        object_register_sugar_prop("memory-backend", "prealloc", "on", false);
-    }
-}
-```
-
-## 如何快速定位到代码
-hmp 中提供了一个 mce 命令，如何找到对应的实现:
-
-hmp_mce 直接搜索 hmp_mce 即可
-
-## 分析下
-https://qemu.readthedocs.io/en/v8.1.5/interop/qemu-qmp-ref.html
-
-## hmp 中的 sendkey 是如何实现的
-
-此外，相关配置:
-https://vncdotool.readthedocs.io/en/latest/usage.html
-
-arm 上面没办法用，难道是这个问题?
-https://lists.gnu.org/archive/html/qemu-devel/2018-02/msg06218.html
-
-## qmp shell 中的命令可以看下
+## hmp info 来看看那些可以观测的内容
+<!-- 6150a420-6cd4-4720-80fb-ee982d8ba1d2 -->
 
 ```txt
-x-query-irq                        x-query-ramblock                   x-query-virtio-queue-element
-x-query-jit                        x-query-roms                       x-query-virtio-queue-status
-x-query-numa                       x-query-usb                        x-query-virtio-status
-x-query-opcount                    x-query-virtio                     x-query-virtio-vhost-queue-status
-(QEMU) x-query-irq
-{"return": {"human-readable-text": "IRQ statistics for kvm-ioapic:\n 0: 13\n 1: 11\n 3: 2\n 4: 2\n 6: 3\n 8: 1\n10: 156\n12: 15\nIRQ statistics for kvm-i8259:\n 0: 13\n 1: 11\n 3: 2\n 4: 2\n 6: 3\n 8: 1\n10: 156\n12: 15\n"}}
-(QEMU) x-query-jit
-{"error": {"class": "GenericError", "desc": "JIT information is only available with accel=tcg"}}
+info accel  -- show accelerator info
+info balloon  -- show balloon information
+info block [-n] [-v] [device] -- show info of one block device or all block devices (-n: show named nodes; -v: show details)
+info block-jobs  -- show progress of ongoing block device operations
+info blockstats  -- show block device statistics
+info capture  -- show capture information
+info chardev  -- show the character devices
+info cpus  -- show infos for each CPU
+info cryptodev  -- show the crypto devices
+info dirty_rate  -- show dirty rate information
+info dump  -- Display the latest dump status
+info history  -- show the command line history
+info hotpluggable-cpus  -- Show information about hotpluggable CPUs
+info iothreads  -- show iothreads
+info irq  -- show the interrupts statistics (if available)
+info jit  -- show dynamic compiler info
+info kvm  -- show KVM information
+info lapic [apic-id] -- show local apic state (apic-id: local apic to read, default is which of current CPU)
+info mem  -- show the active virtual memory mappings
+info memdev  -- show memory backends
+info memory-devices  -- show memory devices
+info memory_size_summary  -- show the amount of initially allocated and present hotpluggable (if enabled) memory in bytes.
+info mice  -- show which guest mouse is receiving events
+info migrate [-a] -- show migration status (-a: all, dump all status)
+info migrate_capabilities  -- show current migration capabilities
+info migrate_parameters  -- show current migration parameters
+info mtree [-f][-d][-o][-D] -- show memory tree (-f: dump flat view for address spaces;-d: dump dispatch tree, valid with -f only);-o: dump region owners/parents;-D: dump disabled regions
+info name  -- show the current VM name
+info network  -- show the network state
+info numa  -- show NUMA information
+info pci  -- show PCI info
+info pic  -- show PIC state
+info qdm  -- show qdev device model list
+info qom-tree [path] -- show QOM composition tree
+info qtree [-b] -- show device tree (-b: brief, omit properties)
+info ramblock  -- Display system ramblock information
+info registers [-a|vcpu] -- show the cpu registers (-a: show register info for all cpus; vcpu: specific vCPU to query; show the current CPU's registers if no argument is specified)
+info replay  -- show record/replay information
+info rocker name -- Show rocker switch
+info rocker-of-dpa-flows name [tbl_id] -- Show rocker OF-DPA flow tables
+info rocker-of-dpa-groups name [type] -- Show rocker OF-DPA groups
+info rocker-ports name -- Show rocker ports
+info roms  -- show roms
+info sev  -- show SEV information
+info sgx  -- show intel SGX information
+info snapshots  -- show the currently saved VM snapshots
+info stats target [names] [provider] -- show statistics for the given target (vm or vcpu); optionally filter byname (comma-separated list, or * for all) and provider
+info status  -- show the current VM status (running|paused)
+info sync-profile [-m] [-n] [max] -- show synchronization profiling info, up to max entries (default: 10), sorted by total wait time. (-m: sort by mean wait time; -n: do not coalesce objects with the same call site)
+info tlb  -- show virtual to physical memory mappings
+info tpm  -- show the TPM device
+info trace-events [name] [vcpu] -- show available trace-events & their state (name: event name pattern; vcpu: vCPU to query, default is any)
+info usb  -- show guest USB devices
+info usbhost  -- show host USB devices
+info usernet  -- show user network stack connection states
+info uuid  -- show the current VM UUID
+info vcpu_dirty_limit  -- show dirty page limit information of all vCPU
+info version  -- show the version of QEMU
+info virtio  -- List all available virtio devices
+info virtio-queue-element path queue [index] -- Display element of a given virtio queue
+info virtio-queue-status path queue -- Display status of a given virtio queue
+info virtio-status path -- Display status of a given virtio device
+info virtio-vhost-queue-status path queue -- Display status of a given vhost queue
+info vm-generation-id  -- Show Virtual Machine Generation ID
+info vnc  -- show the vnc server status
+```
+
+这几个有什么区别?
+```txt
+info mem  -- show the active virtual memory mappings
+info memdev  -- show memory backends
+info memory-devices  -- show memory devices
+info memory_size_summary  -- show the amount of initially allocated and present hotpluggable (if enabled) memory in bytes.
+```
+
+看看这些都是如何使用的:
+```txt
+info virtio  -- List all available virtio devices
+info virtio-queue-element path queue [index] -- Display element of a given virtio queue
+info virtio-queue-status path queue -- Display status of a given virtio queue
+info virtio-status path -- Display status of a given virtio device
+info virtio-vhost-queue-status path queue -- Display status of a given vhost queue
+```
+
+其他的有趣的东西:
+```txt
+info usernet
+info vnc # vnc server 总是在 enable 的
+```
+
+常看常新的东西:
+```txt
+info qom-tree [path] -- show QOM composition tree
+info qtree [-b] -- show device tree (-b: brief, omit properties)
 ```
 
 ## hmp 一共支持那些命令
@@ -355,140 +311,6 @@ drive_add     drive_backup  drive_del     drive_mirror
 - screendump
 - logfile
 
-## 也许有用
-给Qemu虚拟机“打信号”：自定义QMP注入SCI中断 - MyStackTrace的文章 - 知乎
-https://zhuanlan.zhihu.com/p/1943785816179607321
-
-## hmp info 来看看那些可以观测的内容
-<!-- 6150a420-6cd4-4720-80fb-ee982d8ba1d2 -->
-
-```txt
-info accel  -- show accelerator info
-info balloon  -- show balloon information
-info block [-n] [-v] [device] -- show info of one block device or all block devices (-n: show named nodes; -v: show details)
-info block-jobs  -- show progress of ongoing block device operations
-info blockstats  -- show block device statistics
-info capture  -- show capture information
-info chardev  -- show the character devices
-info cpus  -- show infos for each CPU
-info cryptodev  -- show the crypto devices
-info dirty_rate  -- show dirty rate information
-info dump  -- Display the latest dump status
-info history  -- show the command line history
-info hotpluggable-cpus  -- Show information about hotpluggable CPUs
-info iothreads  -- show iothreads
-info irq  -- show the interrupts statistics (if available)
-info jit  -- show dynamic compiler info
-info kvm  -- show KVM information
-info lapic [apic-id] -- show local apic state (apic-id: local apic to read, default is which of current CPU)
-info mem  -- show the active virtual memory mappings
-info memdev  -- show memory backends
-info memory-devices  -- show memory devices
-info memory_size_summary  -- show the amount of initially allocated and present hotpluggable (if enabled) memory in bytes.
-info mice  -- show which guest mouse is receiving events
-info migrate [-a] -- show migration status (-a: all, dump all status)
-info migrate_capabilities  -- show current migration capabilities
-info migrate_parameters  -- show current migration parameters
-info mtree [-f][-d][-o][-D] -- show memory tree (-f: dump flat view for address spaces;-d: dump dispatch tree, valid with -f only);-o: dump region owners/parents;-D: dump disabled regions
-info name  -- show the current VM name
-info network  -- show the network state
-info numa  -- show NUMA information
-info pci  -- show PCI info
-info pic  -- show PIC state
-info qdm  -- show qdev device model list
-info qom-tree [path] -- show QOM composition tree
-info qtree [-b] -- show device tree (-b: brief, omit properties)
-info ramblock  -- Display system ramblock information
-info registers [-a|vcpu] -- show the cpu registers (-a: show register info for all cpus; vcpu: specific vCPU to query; show the current CPU's registers if no argument is specified)
-info replay  -- show record/replay information
-info rocker name -- Show rocker switch
-info rocker-of-dpa-flows name [tbl_id] -- Show rocker OF-DPA flow tables
-info rocker-of-dpa-groups name [type] -- Show rocker OF-DPA groups
-info rocker-ports name -- Show rocker ports
-info roms  -- show roms
-info sev  -- show SEV information
-info sgx  -- show intel SGX information
-info snapshots  -- show the currently saved VM snapshots
-info stats target [names] [provider] -- show statistics for the given target (vm or vcpu); optionally filter byname (comma-separated list, or * for all) and provider
-info status  -- show the current VM status (running|paused)
-info sync-profile [-m] [-n] [max] -- show synchronization profiling info, up to max entries (default: 10), sorted by total wait time. (-m: sort by mean wait time; -n: do not coalesce objects with the same call site)
-info tlb  -- show virtual to physical memory mappings
-info tpm  -- show the TPM device
-info trace-events [name] [vcpu] -- show available trace-events & their state (name: event name pattern; vcpu: vCPU to query, default is any)
-info usb  -- show guest USB devices
-info usbhost  -- show host USB devices
-info usernet  -- show user network stack connection states
-info uuid  -- show the current VM UUID
-info vcpu_dirty_limit  -- show dirty page limit information of all vCPU
-info version  -- show the version of QEMU
-info virtio  -- List all available virtio devices
-info virtio-queue-element path queue [index] -- Display element of a given virtio queue
-info virtio-queue-status path queue -- Display status of a given virtio queue
-info virtio-status path -- Display status of a given virtio device
-info virtio-vhost-queue-status path queue -- Display status of a given vhost queue
-info vm-generation-id  -- Show Virtual Machine Generation ID
-info vnc  -- show the vnc server status
-```
-
-这几个有什么区别?
-```txt
-info mem  -- show the active virtual memory mappings
-info memdev  -- show memory backends
-info memory-devices  -- show memory devices
-info memory_size_summary  -- show the amount of initially allocated and present hotpluggable (if enabled) memory in bytes.
-```
-
-看看这些都是如何使用的:
-```txt
-info virtio  -- List all available virtio devices
-info virtio-queue-element path queue [index] -- Display element of a given virtio queue
-info virtio-queue-status path queue -- Display status of a given virtio queue
-info virtio-status path -- Display status of a given virtio device
-info virtio-vhost-queue-status path queue -- Display status of a given vhost queue
-```
-
-其他的有趣的东西:
-```txt
-info usernet
-info vnc # vnc server 总是在 enable 的
-```
-
-常看常新的东西:
-```txt
-info qom-tree [path] -- show QOM composition tree
-info qtree [-b] -- show device tree (-b: brief, omit properties)
-```
-
-## TODO
-```txt
-hack/qemu/internals/e1000-2.md:#18 qmp_x_exit_preconfig (errp=<optimized out>) at ../softmmu/vl.c:2588
-hack/qemu/internals/e1000.md:#16 qmp_x_exit_preconfig (errp=<optimized out>) at ../softmmu/vl.c:2588
-hack/acpi/hack-with-qemu.md:#10 qmp_x_exit_preconfig (errp=<optimized out>) at ../softmmu/vl.c:2590
-docs/kernel/mm-virtio-balloon.md:- qmp 对外仅仅提供两个功能
-docs/qemu/block.md:2. 后面的就是各种 qmp 操作的
-docs/qemu/block.md:在 `qmp_transaction` 中的，根据命令来调用这些内容:
-docs/qemu/block.md:## qmp ：没办法，不搞的话，dirty bitmap 是没有办法维持生活的
-docs/qemu/block.md:- [ ] grep 一下目前对于 qmp 的所有问题，尝试将 qmp 和 qemu option 融合一下
-docs/qemu/reset.md:  - `qmp_x_exit_preconfig`
-docs/qemu/reset.md:#6  0x0000555555c22788 in qmp_x_exit_preconfig (errp=0x5555567aa610 <error_fatal>) at ../softmmu/vl.c:2602
-docs/qemu/migration/yank.md:instances can be called by the 'yank' out-of-band qmp command.
-docs/qemu/migration/yank.md:# A yank instance can be yanked with the @yank qmp command to recover from a
-docs/qemu/migration/multifd.md:    - `migrate_multifd_channels` : 这个数值是从 qmp 设置的
-docs/qemu/migration/migration.md:- `qmp_migrate_incoming` / `qmp_migrate_recover`
-docs/qemu/migration/migration.md:- `qmp_migrate`
-docs/qemu/migration/migration.md:- `qmp_query_migrate_parameters`
-docs/qemu/options.md:-qmp unix:/home/maritns3/core/vn/hack/qemu/x64-e1000/test.socket,server,nowait \
-docs/qemu/options.md:[qmp] : [unix:/home/maritns3/core/vn/hack/qemu/x64-e1000/test.socket,server,nowait]
-docs/qemu/sh/alpine.sh:  ${arg_qmp} ${arg_vfio} ${arg_smbios} ${arg_scsi}"
-docs/qemu/todo-1.md:- [ ] docs/devel/qapi-code-gen.txt 和 qmp 如何工作的，是如何生成的。
-docs/qemu/todo-1.md:## qmp
-docs/qemu/todo-1.md:- [ ] `qmp_block_commit` 的唯一调用者是如何被生成的。
-docs/qemu/todo-1.md:qmp 让 virsh 可以和 qemu 交互
-docs/qemu/qom.md:#13 0x0000555555cdaf85 in qmp_x_exit_preconfig (errp=0x5555567a94b0 <error_fatal>) at ../softmmu/vl.c:2600
-docs/qemu/qom.md:#18 qmp_x_exit_preconfig (errp=<optimized out>) at ../softmmu/vl.c:2689
-docs/qemu/qom.md:#19 qmp_x_exit_preconfig (errp=<optimized out>) at ../softmmu/vl.c:2682
-docs/qemu/seabios.md:#13 qmp_x_exit_preconfig (errp=<optimized out>) at ../softmmu/vl.c:2588
-```
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

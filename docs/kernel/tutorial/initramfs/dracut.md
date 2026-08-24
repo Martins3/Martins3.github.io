@@ -49,6 +49,33 @@ mkinitrd 被删掉了 https://github.com/dracutdevs/dracut/commit/43df4ee274e713
 
 如果制作 dracut 看看 build.tar.sh 吧
 
+## rescue 内核做什么的
+由 dracut-config-rescue 组件在安装内核时生成。
+
+具体流程：
+
+- vmlinuz-0-rescue-<machine-id>：并非重新编译的特殊内核，而是当时普通 / boot/vmlinuz-<版本> 的副本。
+- initramfs-0-rescue-<machine-id>.img：由 dracut --no-hostonly -a rescue 生成，包含更通用的驱动和救援工具。
+
+- 生成脚本是：
+```txt
+    - /etc/kernel/postinst.d/51-dracut-rescue-postinst.sh
+    - /usr/lib/kernel/install.d/51-dracut-rescue.install
+```
+
+对应 RPM：dracut-config-rescue-059-6.oe2403.x86_64
+
+用途是在普通内核或 initramfs 无法启动时，从 GRUB 选择 Rescue Image，
+进入救援环境，用来修复文件系统、initramfs、GRUB、fstab、密码或其他启动问题。
+
+文件名最后的：
+
+c5bec1de6ac948de897bcbb6eb6ef32f
+
+是生成时的 /etc/machine-id，不是内核版本。
+如果它与当前 /etc/machine-id 不一致，通常说明系统曾被克隆、重装或修改过 machine-id，
+文件可能是旧系统遗留的。
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

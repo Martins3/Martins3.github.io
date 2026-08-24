@@ -427,13 +427,13 @@ ObjectProperty *object_property_find(Object *obj, const char *name)
 
 特定类型的封装:
 - object_property_add_str
-	- object_property_add
-		- object_property_try_add
-			- 初始化 ObjectProperty
-			- g_hash_table_insert(obj->properties, prop->name, prop); 然后插入到 Object::properties
+  - object_property_add
+    - object_property_try_add
+      - 初始化 ObjectProperty
+      - g_hash_table_insert(obj->properties, prop->name, prop); 然后插入到
+        Object::properties
 
-直接调用 object_class_property_add
-例如 kvm_accel_class_init 中
+直接调用 object_class_property_add 例如 kvm_accel_class_init 中
 
 ```txt
     object_class_property_add(oc, "kernel-irqchip", "on|off|split",
@@ -564,14 +564,17 @@ static Property pci_props[] = {
 1. 实现默认赋值
 
 - pci_device_class_init
-	- device_class_set_props(dc, ioapic_properties)
-		- qdev_class_add_property
-			- object_class_property_add
-			- prop->info->set_default_value : 也即是 qdev_prop_uint8
-				- object_property_set_default_uint
-					- object_property_set_default
-						- prop->defval = defval; // 注意，此时此刻，只是将数值保存到了 ObjectProperty 中间了
-						- prop->init = object_property_init_defval; // 同时注册 hook
+  - device_class_set_props(dc, ioapic_properties)
+    - qdev_class_add_property
+      - object_class_property_add
+      - prop->info->set_default_value : 也即是 qdev_prop_uint8
+        - object_property_set_default_uint
+          - object_property_set_default
+            - prop->defval = defval; // 注意，此时此刻，只是将数值保存到了 ObjectProperty 中间了
+            - prop->init = object_property_init_defval; // 同时注册 hook
+
+结合下面的 backtrace 可以分析出来，即使 property 是 class 的，但是依旧可以设置到
+object 的属性上。
 
 结合下面的 backtrace 可以分析出来，即使 property 是 class 的，但是依旧可以设置到 object 的属性上。
 ```txt
@@ -634,43 +637,31 @@ hw/isa/piix.c 中有这个
 ```
 
 ```txt
-#0  pc_init1 (machine=0x55555733c750, pci_type=0x555555f52461 "i440FX") at ../hw/i386/pc_piix.c:105
-#1  0x0000555555953311 in machine_run_board_init (machine=0x55555733c750, mem_path=<optimized out>, errp=<optimized out>,
-    errp@entry=0x555556fe36f8 <error_fatal>) at ../hw/core/machine.c:1682
-#2  0x0000555555b20758 in qemu_init_board () at ../system/vl.c:2711
-#3  qmp_x_exit_preconfig (errp=0x555556fe36f8 <error_fatal>) at ../system/vl.c:2807
-#4  0x0000555555b24035 in qemu_init (argc=<optimized out>, argv=<optimized out>) at ../system/vl.c:3843
-#5  0x0000555555890449 in main (argc=<optimized out>, argv=<optimized out>) at ../system/main.c:68
+- main
+  - qemu_init
+    - qmp_x_exit_preconfig
+      - qemu_init_board
+        - machine_run_board_init
+          - pc_init1
 ```
 
 ```txt
-#0  pci_piix_realize (dev=0x5555578bd2e0, uhci_type=0x555555f4d8b6 "piix3-usb-uhci", errp=0x7ffffffefc20)
-    at ../hw/isa/piix.c:300
-#1  0x0000555555a35fd8 in pci_qdev_realize (qdev=<optimized out>, errp=<optimized out>) at ../hw/pci/pci.c:2263
-#2  0x0000555555d34b7b in device_set_realized (obj=<optimized out>, value=<optimized out>, errp=0x7ffffffefd40)
-    at ../hw/core/qdev.c:494
-#3  0x0000555555d37dad in property_set_bool (obj=0x5555578bd2e0, v=<optimized out>, name=<optimized out>,
-    opaque=0x5555570dc6c0, errp=0x7ffffffefd40) at ../qom/object.c:2374
-#4  0x0000555555d3adeb in object_property_set (obj=obj@entry=0x5555578bd2e0, name=name@entry=0x555555f5adb4 "realized",
-    v=v@entry=0x5555578c6440, errp=0x7ffffffefd40, errp@entry=0x555556fe36f8 <error_fatal>) at ../qom/object.c:1449
-#5  0x0000555555d3eadf in object_property_set_qobject (obj=obj@entry=0x5555578bd2e0,
-    name=name@entry=0x555555f5adb4 "realized", value=value@entry=0x5555570346d0, errp=errp@entry=0x555556fe36f8 <error_fatal>)
-    at ../qom/qom-qobject.c:28
-#6  0x0000555555d3b444 in object_property_set_bool (obj=obj@entry=0x5555578bd2e0, name=name@entry=0x555555f5adb4 "realized",
-    value=value@entry=true, errp=errp@entry=0x555556fe36f8 <error_fatal>) at ../qom/object.c:1519
-#7  0x0000555555d3432c in qdev_realize (dev=dev@entry=0x5555578bd2e0, bus=<optimized out>,
-    errp=errp@entry=0x555556fe36f8 <error_fatal>) at ../hw/core/qdev.c:276
-#8  0x0000555555d343ce in qdev_realize_and_unref (dev=dev@entry=0x5555578bd2e0, bus=<optimized out>,
-    errp=errp@entry=0x555556fe36f8 <error_fatal>) at ../hw/core/qdev.c:283
-#9  0x0000555555a344a5 in pci_realize_and_unref (dev=dev@entry=0x5555578bd2e0, bus=<optimized out>,
-    errp=errp@entry=0x555556fe36f8 <error_fatal>) at ../hw/pci/pci.c:2356
-#10 0x0000555555bff5b8 in pc_init1 (machine=0x55555733c750, pci_type=<optimized out>) at ../hw/i386/pc_piix.c:263
-#11 0x0000555555953311 in machine_run_board_init (machine=0x55555733c750, mem_path=<optimized out>, errp=<optimized out>,
-    errp@entry=0x555556fe36f8 <error_fatal>) at ../hw/core/machine.c:1682
-#12 0x0000555555b20758 in qemu_init_board () at ../system/vl.c:2711
-#13 qmp_x_exit_preconfig (errp=0x555556fe36f8 <error_fatal>) at ../system/vl.c:2807
-#14 0x0000555555b24035 in qemu_init (argc=<optimized out>, argv=<optimized out>) at ../system/vl.c:3843
-#15 0x0000555555890449 in main (argc=<optimized out>, argv=<optimized out>) at ../system/main.c:68
+- main
+  - qemu_init
+    - qmp_x_exit_preconfig
+      - qemu_init_board
+        - machine_run_board_init
+          - pc_init1
+            - pci_realize_and_unref
+              - qdev_realize_and_unref
+                - qdev_realize
+                  - object_property_set_bool
+                    - object_property_set_qobject
+                      - object_property_set
+                        - property_set_bool
+                          - device_set_realized
+                            - pci_qdev_realize
+                              - pci_piix_realize
 ```
 
 发现 pci_piix_realize 的调用来自于这里:
@@ -762,14 +753,14 @@ object_class_property_add_bool(class, "realized", device_get_realized, device_se
 			- DeviceClass::realized : 调用注册的 hook 函数，将两个函数
 
 ```txt
-#8  0x0000555555be2653 in x86_cpu_realizefn (dev=0x555556b08d50, errp=0x7fffffffcd20) at ../target/i386/cpu.c:6299
-#9  0x0000555555d3e027 in device_set_realized (obj=<optimized out>, value=true, errp=0x7fffffffcda0) at ../hw/core/qdev.c:761
-#10 0x0000555555d22caa in property_set_bool (obj=0x555556b08d50, v=<optimized out>, name=<optimized out>, opaque=0x55555670c430, errp=0x7fffffffcda0) at ../qom/object.c:2285
-#11 0x0000555555d251dc in object_property_set (obj=obj@entry=0x555556b08d50, name=name@entry=0x555555fe20d6 "realized", v=v@entry=0x555556aeabf0, errp=errp@entry=0x555556618678 <error_fatal>) at ../qom/object.c:1410
-#12 0x0000555555d21824 in object_property_set_qobject (obj=obj@entry=0x555556b08d50, name=name@entry=0x555555fe20d6 "realized", value=value@entry=0x5555569f30a0, errp=errp@entry=0x555556618678 <error_fatal>) at ../qom/qom-qobject.c:28
-#13 0x0000555555d25449 in object_property_set_bool (obj=0x555556b08d50, name=name@entry=0x555555fe20d6 "realized", value=value@entry=true, errp=errp@entry=0x555556618678 <error_fatal>) at ../qom/object.c:1480
-#14 0x0000555555d3ce52 in qdev_realize (dev=<optimized out>, bus=bus@entry=0x0, errp=errp@entry=0x555556618678 <error_fatal>) at ../hw/core/qdev.c:389
-#15 0x0000555555badf75 in x86_cpu_new (x86ms=x86ms@entry=0x55555677cde0, apic_id=0, errp=errp@entry=0x555556618678 <error_fatal>) at /home/maritns3/core/kvmqemu/include/hw/qdev-core.h:17
+- x86_cpu_new
+  - qdev_realize
+    - object_property_set_bool
+      - object_property_set_qobject
+        - object_property_set
+          - property_set_bool
+            - device_set_realized
+              - x86_cpu_realizefn
 ```
 
 因为 `device_type_info` 实际上也是 qdev, 其初始化的时候自然也会调用**逐级** class_init 和 instance_init 的。
@@ -987,24 +978,20 @@ const PropertyInfo qdev_prop_pci_host_devaddr = {
 };
 ```
 ```txt
-#0  set_pci_host_devaddr (obj=0x555557bd0ce0, v=0x555557bd2b80, name=0x5555567c08f0 "host", opaque=0x5555566408c0 <vfio_pci_dev_properties>, errp=0x7ffffffef440)
-    at ../hw/core/qdev-properties-system.c:853
-#1  0x0000555555c7bc47 in object_property_set (obj=obj@entry=0x555557bd0ce0, name=0x5555567c08f0 "host", v=v@entry=0x555557bd2b80, errp=errp@entry=0x7ffffffef440)
-    at ../qom/object.c:1420
-#2  0x0000555555c7e204 in object_set_properties_from_qdict (obj=0x555557bd0ce0, qdict=0x555557bd1b30, v=0x555557bd2b80, errp=0x7ffffffef440) at ../qom/object_interfaces.c:55
-#3  0x0000555555c7e398 in object_set_properties_from_qdict (errp=0x7ffffffef440, v=0x555557bd2b80, qdict=0x555557bd1b30, obj=0x555557bd0ce0) at ../qom/object_interfaces.c:51
-#4  object_set_properties_from_keyval (obj=0x555557bd0ce0, qdict=0x555557bd1b30, from_json=<optimized out>, errp=0x7ffffffef440) at ../qom/object_interfaces.c:73
-#5  0x0000555555a68539 in qdev_device_add_from_qdict (opts=opts@entry=0x555557869cf0, from_json=from_json@entry=false, errp=0x7ffffffef440,
-    errp@entry=0x555556737338 <error_fatal>) at ../softmmu/qdev-monitor.c:708
-#6  0x0000555555a689b1 in qdev_device_add (opts=0x5555567c14b0, errp=errp@entry=0x555556737338 <error_fatal>) at ../softmmu/qdev-monitor.c:733
-#7  0x0000555555a6d50f in device_init_func (opaque=<optimized out>, opts=<optimized out>, errp=0x555556737338 <error_fatal>) at ../softmmu/vl.c:1152
-#8  0x0000555555df8121 in qemu_opts_foreach (list=<optimized out>, func=func@entry=0x555555a6d500 <device_init_func>, opaque=opaque@entry=0x0,
-    errp=errp@entry=0x555556737338 <error_fatal>) at ../util/qemu-option.c:1135
-#9  0x0000555555a6fc7a in qemu_create_cli_devices () at ../softmmu/vl.c:2573
-#10 qmp_x_exit_preconfig (errp=<optimized out>) at ../softmmu/vl.c:2641
-#11 0x0000555555a7369e in qmp_x_exit_preconfig (errp=<optimized out>) at ../softmmu/vl.c:2635
-#12 qemu_init (argc=<optimized out>, argv=<optimized out>) at ../softmmu/vl.c:3648
-#13 0x000055555586ad79 in main (argc=<optimized out>, argv=<optimized out>) at ../softmmu/main.c:47
+- main
+  - qemu_init
+    - qmp_x_exit_preconfig
+      - qmp_x_exit_preconfig
+        - qemu_create_cli_devices
+          - qemu_opts_foreach
+            - device_init_func
+              - qdev_device_add
+                - qdev_device_add_from_qdict
+                  - object_set_properties_from_keyval
+                    - object_set_properties_from_qdict
+                      - object_set_properties_from_qdict
+                        - object_property_set
+                          - set_pci_host_devaddr
 ```
 如何保证这个 property 的初始化一定早于 vfio_realize
 
@@ -1187,7 +1174,6 @@ sugar property 是什么东西?
                                    "on", false);
 
 ```
-
 
 [^1]: https://www.linux-kvm.org/images/9/90/Kvmforum14-qom.pdf
 [^2]: https://wiki.qemu.org/Features/QAPI

@@ -28,6 +28,12 @@ from errors import ColleiError, ColleiHelp
 from host_setup import prepare_ovs_tap
 from launch_options import LaunchOptions
 from monitor import QmpClient, hmp_command, hmp_commands
+from nbd_benchmark import (
+    NbdBenchmarkExport,
+    nbd_benchmark_status,
+    start_nbd_benchmark,
+    stop_nbd_benchmark,
+)
 from network_templates import network_configurations, temporary_ip_commands
 from runtime import ColleiContext, VmRuntime
 from tasks import add_background_task, exec_task_log
@@ -436,10 +442,10 @@ def action_monitor(context: ActionContext, args: Sequence[str]) -> None:
     resource = _fzf("qmp\nshell\nqga\nmain\n")
     monitor_dir = context.vm.directory / context.vm.which_qemu
     if resource == "shell":
-        qmp_shell = (
-            context.collei.repo.parent.parent / "qemu" / "scripts" / "qmp" / "qmp-shell"
+        qemu_build = context.collei.repo.parent.parent / "qemu" / "build"
+        context.runner.exec(
+            [qemu_build / "run", "qmp-shell", monitor_dir / "qmp-shell"]
         )
-        context.runner.exec([qmp_shell, monitor_dir / "qmp-shell"])
         return
     sockets = {"qmp": "qmp", "qga": "qga.sock", "main": "main.sock"}
     socket_name = sockets.get(resource)
@@ -1220,8 +1226,6 @@ def _choose_migrate_host(context: ActionContext) -> str:
     return host
 
 
-# 这个到底什么用来着?
-# "migrate_set_capability x-ignore-shared on",
 def action_migrate_cpr(context: ActionContext, args: Sequence[str]) -> None:
     del args
     if not _confirm(context, "rk -T"):
@@ -1727,6 +1731,96 @@ def action_migrate_nbd(context: ActionContext, args: Sequence[str]) -> None:
         raise
 
 
+def _nbd_fio_commands(export: NbdBenchmarkExport) -> tuple[list[str], list[str]]:
+    fio = shutil.which("fio") or "fio"
+    common = [
+        fio,
+        "--name=qemu-nbd-read",
+        "--ioengine=nbd",
+        f"--uri={export.uri}",
+        "--runtime=10",
+        "--time_based",
+        "--iodepth=1",
+        "--numjobs=1",
+        "--readonly",
+        "--group_reporting",
+        "--eta=never",
+    ]
+    return (
+        [*common, "--rw=read", "--bs=1M"],
+        [*common, "--rw=randread", "--bs=4k"],
+    )
+
+
+def _write_nbd_fio_script(context: ActionContext, export: NbdBenchmarkExport) -> Path:
+    sequential, random = _nbd_fio_commands(export)
+    script = context.vm.directory / context.vm.which_qemu / "fio.sh"
+    script.write_text(
+        "#!/usr/bin/env bash\n"
+        "set -E -e -u -o pipefail\n\n"
+        f"{shlex.join(sequential)}\n"
+        f"{shlex.join(random)}\n"
+    )
+    script.chmod(0o755)
+    return script
+
+
+def _action_nbd_server_start(context: ActionContext, parameters: Sequence[str]) -> None:
+    if len(parameters) > 1:
+        raise ColleiError("usage: nbd_server start [node-name]")
+    export = start_nbd_benchmark(context.vm, parameters[0] if parameters else None)
+    script = _write_nbd_fio_script(context, export)
+    print(f"QEMU read-only NBD export ready: {export.node_name}")
+    print(f"NBD URI: {export.uri}")
+    print(f"fio commands: {script}")
+
+
+def _action_nbd_server_status(
+    context: ActionContext, parameters: Sequence[str]
+) -> None:
+    if parameters:
+        raise ColleiError("usage: nbd_server status")
+    export, listening = nbd_benchmark_status(context.vm)
+    if export is None:
+        socket_path = context.vm.directory / context.vm.which_qemu / "fio.nbd"
+        print(
+            "QEMU read-only NBD export: inactive, "
+            f"socket={socket_path}, listening={str(listening).lower()}"
+        )
+        return
+    script = _write_nbd_fio_script(context, export)
+    print(
+        f"QEMU read-only NBD export: node={export.node_name}, "
+        f"socket={export.socket}, listening={str(listening).lower()}"
+    )
+    print(f"fio commands: {script}")
+
+
+def _action_nbd_server_stop(context: ActionContext, parameters: Sequence[str]) -> None:
+    if parameters:
+        raise ColleiError("usage: nbd_server stop")
+    export = stop_nbd_benchmark(context.vm)
+    if export is None:
+        print("QEMU read-only NBD export was not running; stale socket cleaned")
+    else:
+        print(f"QEMU read-only NBD export stopped: {export.node_name}")
+
+
+def action_nbd_server(context: ActionContext, args: Sequence[str]) -> None:
+    if not args:
+        raise ColleiError("usage: nbd_server start [node-name] | status | stop")
+    handlers: dict[str, Callable[[ActionContext, Sequence[str]], None]] = {
+        "start": _action_nbd_server_start,
+        "status": _action_nbd_server_status,
+        "stop": _action_nbd_server_stop,
+    }
+    operation = args[0]
+    handler = handlers.get(operation)
+    if handler is None:
+        raise ColleiError("usage: nbd_server start [node-name] | status | stop")
+    handler(context, args[1:])
+
+
 def action_migrate_postcopy(context: ActionContext, args: Sequence[str]) -> None:
     del args
     if not _confirm(context, "rk -a"):
@@ -1805,6 +1899,7 @@ ACTIONS: dict[str, Action] = {
     # 热迁移相关
     "migrate": Action(action_migrate, VmRequirement.ACTIVE),
     "migrate_nbd": Action(action_migrate_nbd, VmRequirement.ACTIVE),
+    "nbd_server": Action(action_nbd_server, VmRequirement.ACTIVE),
     "migrate_postcopy": Action(action_migrate_postcopy, VmRequirement.ACTIVE),
     "migrate_cpr": Action(action_migrate_cpr, VmRequirement.ACTIVE),
     "save_vm_cpr": Action(action_save_vm_cpr, VmRequirement.ACTIVE),

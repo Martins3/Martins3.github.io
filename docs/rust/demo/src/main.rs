@@ -19,6 +19,7 @@ mod container_demo;
 mod deref_demo;
 #[path = "x/146.rs"]
 mod leet146;
+mod unwrap_demo;
 
 fn handle_client(stream: UnixStream) {
     let stream = BufReader::new(stream);
@@ -346,6 +347,9 @@ fn main() {
         }
         "19" => {
             leet146::run();
+        }
+        "20" => {
+            unwrap_demo::test_unwrap();
         }
         _ => {
             println!("Invalid option: {}", args[1]);

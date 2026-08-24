@@ -87,6 +87,58 @@ static bool aio_context_notifier_poll(void *opaque)
 1. 一个循环中，如何保证不会出现互相的阻塞
 2. 都是分别监听那些 fd 的，可以列出来吗?
 
+## 现在依赖的 gtk 中，一定存在这个，所以现在就是需要这个
+
+类似的 backtrace 很多，就不去罗列了:
+```tx
+#0  0x00007ffff7911629 in g_source_attach () at /nix/store/jlyahda14aya375lv7k9fsin2zk90nxz-glib-2.88.1/lib/libglib-2.0.so.0
+#1  0x00007ffff76cb130 in g_task_get_type_once () at /nix/store/jlyahda14aya375lv7k9fsin2zk90nxz-glib-2.88.1/lib/libgio-2.0.so.0
+#2  0x00007ffff76cb54d in g_task_get_type () at /nix/store/jlyahda14aya375lv7k9fsin2zk90nxz-glib-2.88.1/lib/libgio-2.0.so.0
+#3  0x00007ffff77440c6 in _g_dbus_initialize.part.0 () at /nix/store/jlyahda14aya375lv7k9fsin2zk90nxz-glib-2.88.1/lib/libgio-2.0.so.0
+#4  0x00007ffff77428e0 in g_dbus_proxy_new_for_bus () at /nix/store/jlyahda14aya375lv7k9fsin2zk90nxz-glib-2.88.1/lib/libgio-2.0.so.0
+#5  0x00007ffff71e8baa in _gdk_wayland_screen_new () at /nix/store/v7fvwaf6j1hwvb9dmwfa97nzmrlshqai-gtk+3-3.24.52/lib/libgdk-3.so.0
+#6  0x00007ffff71e0c43 in _gdk_wayland_display_open () at /nix/store/v7fvwaf6j1hwvb9dmwfa97nzmrlshqai-gtk+3-3.24.52/lib/libgdk-3.so.0
+#7  0x00007ffff71a7607 in gdk_display_manager_open_display () at /nix/store/v7fvwaf6j1hwvb9dmwfa97nzmrlshqai-gtk+3-3.24.52/lib/libgdk-3.so.0
+#8  0x00007ffff6c2875a in gtk_init_check () at /nix/store/v7fvwaf6j1hwvb9dmwfa97nzmrlshqai-gtk+3-3.24.52/lib/libgtk-3.so.0
+#9  0x0000555555ca7088 in early_gtk_display_init (opts=0x555557273ee8 <dpy>) at ../ui/gtk.c:2844
+#10 0x0000555555de6dfa in qemu_display_early_init (opts=0x5555575a9a40, opts@entry=0x555557273ee8 <dpy>) at ../ui/console.c:1444
+#11 0x0000555555c73807 in qemu_setup_display () at ../system/vl.c:1392
+#12 qemu_init (argc=<optimized out>, argv=0x7ffffffe7358) at ../system/vl.c:3792
+#13 0x0000555555eeceda in main (argc=1465555520, argv=0x5555575aca40) at ../system/main.c:71
+```
+
+```txt
+#0  0x00007ffff7911629 in g_source_attach () at /nix/store/jlyahda14aya375lv7k9fsin2zk90nxz-glib-2.88.1/lib/libglib-2.0.so.0
+#1  0x00007ffff7776777 in _ik_startup () at /nix/store/jlyahda14aya375lv7k9fsin2zk90nxz-glib-2.88.1/lib/libgio-2.0.so.0
+#2  0x00007ffff77756c4 in _ip_startup () at /nix/store/jlyahda14aya375lv7k9fsin2zk90nxz-glib-2.88.1/lib/libgio-2.0.so.0
+#3  0x00007ffff7774df9 in _ih_startup () at /nix/store/jlyahda14aya375lv7k9fsin2zk90nxz-glib-2.88.1/lib/libgio-2.0.so.0
+#4  0x00007ffff769449f in _g_io_module_get_default_type () at /nix/store/jlyahda14aya375lv7k9fsin2zk90nxz-glib-2.88.1/lib/libgio-2.0.so.0
+#5  0x00007ffff776636a in g_local_file_monitor_new () at /nix/store/jlyahda14aya375lv7k9fsin2zk90nxz-glib-2.88.1/lib/libgio-2.0.so.0
+#6  0x00007ffff77674a9 in g_local_file_monitor_new_for_path () at /nix/store/jlyahda14aya375lv7k9fsin2zk90nxz-glib-2.88.1/lib/libgio-2.0.so.0
+#7  0x00007ffff767a791 in g_file_monitor_file () at /nix/store/jlyahda14aya375lv7k9fsin2zk90nxz-glib-2.88.1/lib/libgio-2.0.so.0
+#8  0x00007ffff77135db in g_keyfile_settings_backend_constructed () at /nix/store/jlyahda14aya375lv7k9fsin2zk90nxz-glib-2.88.1/lib/libgio-2.0.so.0
+#9  0x00007ffff7e3c10a in g_object_new_internal.part () at /nix/store/jlyahda14aya375lv7k9fsin2zk90nxz-glib-2.88.1/lib/libgobject-2.0.so.0
+#10 0x00007ffff7e3d67c in g_object_new_with_properties () at /nix/store/jlyahda14aya375lv7k9fsin2zk90nxz-glib-2.88.1/lib/libgobject-2.0.so.0
+#11 0x00007ffff7e3e699 in g_object_new () at /nix/store/jlyahda14aya375lv7k9fsin2zk90nxz-glib-2.88.1/lib/libgobject-2.0.so.0
+#12 0x00007ffff76940fc in try_implementation () at /nix/store/jlyahda14aya375lv7k9fsin2zk90nxz-glib-2.88.1/lib/libgio-2.0.so.0
+#13 0x00007ffff7694746 in _g_io_module_get_default () at /nix/store/jlyahda14aya375lv7k9fsin2zk90nxz-glib-2.88.1/lib/libgio-2.0.so.0
+#14 0x00007ffff7715392 in g_settings_backend_get_default () at /nix/store/jlyahda14aya375lv7k9fsin2zk90nxz-glib-2.88.1/lib/libgio-2.0.so.0
+#15 0x00007ffff7719edd in g_settings_constructed () at /nix/store/jlyahda14aya375lv7k9fsin2zk90nxz-glib-2.88.1/lib/libgio-2.0.so.0
+#16 0x00007ffff7e3c10a in g_object_new_internal.part () at /nix/store/jlyahda14aya375lv7k9fsin2zk90nxz-glib-2.88.1/lib/libgobject-2.0.so.0
+#17 0x00007ffff7e3e2bb in g_object_new_valist () at /nix/store/jlyahda14aya375lv7k9fsin2zk90nxz-glib-2.88.1/lib/libgobject-2.0.so.0
+#18 0x00007ffff7e3e66b in g_object_new () at /nix/store/jlyahda14aya375lv7k9fsin2zk90nxz-glib-2.88.1/lib/libgobject-2.0.so.0
+#19 0x00007ffff771b8f8 in g_settings_new_full () at /nix/store/jlyahda14aya375lv7k9fsin2zk90nxz-glib-2.88.1/lib/libgio-2.0.so.0
+#20 0x00007ffff71e8c53 in _gdk_wayland_screen_new () at /nix/store/v7fvwaf6j1hwvb9dmwfa97nzmrlshqai-gtk+3-3.24.52/lib/libgdk-3.so.0
+#21 0x00007ffff71e0c43 in _gdk_wayland_display_open () at /nix/store/v7fvwaf6j1hwvb9dmwfa97nzmrlshqai-gtk+3-3.24.52/lib/libgdk-3.so.0
+#22 0x00007ffff71a7607 in gdk_display_manager_open_display () at /nix/store/v7fvwaf6j1hwvb9dmwfa97nzmrlshqai-gtk+3-3.24.52/lib/libgdk-3.so.0
+#23 0x00007ffff6c2875a in gtk_init_check () at /nix/store/v7fvwaf6j1hwvb9dmwfa97nzmrlshqai-gtk+3-3.24.52/lib/libgtk-3.so.0
+#24 0x0000555555ca7088 in early_gtk_display_init (opts=0x555557273ee8 <dpy>) at ../ui/gtk.c:2844
+#25 0x0000555555de6dfa in qemu_display_early_init (opts=0x5555575c02e0, opts@entry=0x555557273ee8 <dpy>) at ../ui/console.c:1444
+#26 0x0000555555c73807 in qemu_setup_display () at ../system/vl.c:1392
+#27 qemu_init (argc=<optimized out>, argv=0x7ffffffe7358) at ../system/vl.c:3792
+#28 0x0000555555eeceda in main (argc=1465647840, argv=0x5555575aca40) at ../system/main.c:71
+```
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

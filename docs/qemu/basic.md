@@ -433,8 +433,19 @@ git clone https://github.com/dockur/windows
 
 真的非常有意思
 
-## 看看
-https://github.com/hugelgupf/vmtest
+## Links
+- https://github.com/hugelgupf/vmtest : 已经不更新了
+- https://github.com/leaningtech/webvm
+- https://news.ycombinator.com/item?id=19736309
+- https://developer.apple.com/documentation/virtualization
+- https://mp.weixin.qq.com/s/CWTgMg3v5-AX2CcVdskf8w
+- https://lore.kernel.org/all/87pllyezmh.fsf@suse.de/
+
+- https://github.com/changeofpace/VivienneVMM
+- https://chromium.googlesource.com/chromiumos/docs/+/deee88d6c4abac0e871a542a1f2a595ab7c131cc/cros_vm.md
+- https://github.com/bao-project/bao-hypervisor
+- https://people.redhat.com/~cohuck/2022/01/05/qemu-machine-types.html
+- https://people.redhat.com/~cohuck/2022/01/21/qemu-machine-types-part2.html
 
 ## 通过 qemu 中的 info mtree 逐个看看都是里面都是有什么
 用于理解 aarch64 是极好的

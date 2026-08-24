@@ -20,6 +20,7 @@ Error: os error at /home/martins3/.cargo/registry/src/index.crates.io-1949cf8c6b
 ```
 
 - https://github.com/TibixDev/winboat
+	- https://github.com/winapps-org/winapps
 - https://github.com/miroslavpejic85/p2p
 - https://rustdesk.com/zh/
 - https://github.com/screego/server

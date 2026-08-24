@@ -2,7 +2,7 @@
 
 由 `docs/pub/sync-blog.py` 生成。
 
-跳过文件数: 414
+跳过文件数: 417
 
 ## 发布策略跳过: draft 目录
 
@@ -198,6 +198,9 @@
 - `docs/qemu/qom/todo-2.md`
 - `docs/qemu/qom/todo.md`
 - `docs/qemu/tcg/todo.md`
+- `docs/qemu/thread/todo-2.md`
+- `docs/qemu/thread/todo-3.md`
+- `docs/qemu/thread/todo-4.md`
 - `docs/qemu/thread/todo-glib.md`
 - `docs/qemu/thread/todo-glib2.md`
 - `docs/qemu/thread/todo.md`

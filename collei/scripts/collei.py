@@ -25,7 +25,6 @@ from host_setup import (
     prepare_novnc,
     prepare_ovs_tap,
 )
-from kernel import kernel_image
 from launch_options import LaunchOptions
 from qemu import QemuCommand
 from runtime import ColleiContext, VmRuntime
@@ -34,6 +33,8 @@ from ui import print_banner
 from vfio import pci_bind_to_vfio
 from virtme import VirtmeSetup
 from windows import WindowsProfile
+
+from kernel import kernel_image
 
 # collei.py 只负责启动虚拟机。
 #
@@ -50,7 +51,7 @@ class QemuProfile(Protocol):
 
     def rootfs_arguments(self) -> tuple[str, ...]: ...
 
-    def manual_console_arguments(self) -> tuple[str, ...]: ...
+    def manual_console_arguments(self, display_backend: str) -> tuple[str, ...]: ...
 
     def mode(self) -> str: ...
 
@@ -314,10 +315,18 @@ class ColleiQemuBuilder:
             "Python setup_basic_storage requires config.ini disk"
         )
 
+    @property
+    def host_arch(self) -> str:
+        return platform.machine()
+
+    @property
+    def is_aarch64(self) -> bool:
+        return self.host_arch == "aarch64"
+
     def validate(self) -> None:
-        if platform.machine() != "x86_64":
+        if self.host_arch not in {"x86_64", "aarch64"}:
             raise UnsupportedNativeConfiguration(
-                "Python setup_* currently supports x86_64"
+                f"Python setup_* currently supports x86_64 and aarch64, not {self.host_arch}"
             )
         if self.efi_application:
             if self.vm.config.options.get("bios") != "ovmf":
@@ -334,13 +343,16 @@ class ColleiQemuBuilder:
                 f"Python setup_network does not support bridge={bridge}"
             )
         bios = self.vm.config.options.get("bios")
-        if bios not in {
+        supported_bios = {
             None,
             "seabios",
             "ovmf",
             "ovmf_binary",
             "ovmf_binary_secure",
-        }:
+        }
+        if self.is_aarch64:
+            supported_bios = {"ovmf_binary", "ovmf"}
+        if bios not in supported_bios:
             raise UnsupportedNativeConfiguration(f"unsupported bios={bios}")
         virtio_blk = self.vm.config.options.get("virtio_blk")
         if virtio_blk not in {None, "1"}:
@@ -348,6 +360,11 @@ class ColleiQemuBuilder:
         display = self.vm.config.options.get("display")
         if display not in {None, "virtio-gpu"}:
             raise UnsupportedNativeConfiguration(f"unsupported display={display}")
+        display_backend = self.vm.config.options.get("display_backend")
+        if display_backend not in {None, "none", "gtk"}:
+            raise UnsupportedNativeConfiguration(
+                f"unsupported display_backend={display_backend}"
+            )
         _validate_virtio_iommu_vfio_groups(
             self.vm.config.options.get("iommu"),
             _configured_vfio_devices(self.vm.config.options.get("vfio")),
@@ -355,7 +372,8 @@ class ColleiQemuBuilder:
 
     def build(self) -> QemuCommand:
         self.validate()
-        qemu = self.context.repo.parent.parent / "qemu" / "build" / "qemu-system-x86_64"
+        qemu_name = "qemu-system-aarch64" if self.is_aarch64 else "qemu-system-x86_64"
+        qemu = self.context.repo.parent.parent / "qemu" / "build" / qemu_name
         argv = [str(qemu)]
         self.setup_storage(argv)
         self.setup_mem_cpu(argv)
@@ -775,27 +793,36 @@ class ColleiQemuBuilder:
 
     def setup_machine(self, argv: list[str]) -> None:
         iommu = self.vm.config.options.get("iommu")
-        machine = (
-            "q35,hpet=off,smm=off"
-            if iommu in {"intel", "amd"}
-            else "pc,hpet=off,smm=off"
-        )
-        # cpr 需要 aux-ram-share，它和上面的机器类型没有耦合。
-        argv.extend(["-machine", machine, "-machine", "aux-ram-share=on"])
-        # IOMMU 是模拟设备；Intel host 也可以测试 AMD IOMMU，反之亦然。
-        if iommu == "intel":
-            argv.extend(
-                [
-                    "-device",
-                    "intel-iommu,device-iotlb=on,intremap=on,caching-mode=on,x-pasid-mode=on,x-scalable-mode=on",
-                ]
+        if self.is_aarch64:
+            machine = "virt"
+            argv.extend(["-machine", machine, "-machine", "aux-ram-share=on"])
+            # aarch64 host 目前不支持模拟 IOMMU。
+            if iommu is not None:
+                raise UnsupportedNativeConfiguration(
+                    f"aarch64 does not support config.ini iommu={iommu}"
+                )
+        else:
+            machine = (
+                "q35,hpet=off,smm=off"
+                if iommu in {"intel", "amd"}
+                else "pc,hpet=off,smm=off,usb=off"
             )
-        elif iommu == "amd":
-            argv.extend(["-device", "amd-iommu,intremap=on"])
-        elif iommu == "virtio":
-            argv.extend(["-device", "virtio-iommu-pci"])
-        elif iommu is not None:
-            raise UnsupportedNativeConfiguration(f"unsupported iommu={iommu}")
+            # cpr 需要 aux-ram-share，它和上面的机器类型没有耦合。
+            argv.extend(["-machine", machine, "-machine", "aux-ram-share=on"])
+            # IOMMU 是模拟设备；Intel host 也可以测试 AMD IOMMU，反之亦然。
+            if iommu == "intel":
+                argv.extend(
+                    [
+                        "-device",
+                        "intel-iommu,device-iotlb=on,intremap=on,caching-mode=on,x-pasid-mode=on,x-scalable-mode=on",
+                    ]
+                )
+            elif iommu == "amd":
+                argv.extend(["-device", "amd-iommu,intremap=on"])
+            elif iommu == "virtio":
+                argv.extend(["-device", "virtio-iommu-pci"])
+            elif iommu is not None:
+                raise UnsupportedNativeConfiguration(f"unsupported iommu={iommu}")
         self.setup_pci_topology(argv, machine)
         if self.profile is not None:
             argv.extend(self.profile.rootfs_arguments())
@@ -925,8 +952,19 @@ class ColleiQemuBuilder:
         bios_root = self.context.repo.parent.parent / "bios"
         mode = self.vm.config.options.get("bios")
         if mode is None:
-            mode = "seabios"
-        if mode == "seabios":
+            mode = "seabios" if not self.is_aarch64 else "ovmf_binary"
+        if self.is_aarch64:
+            if mode == "ovmf_binary":
+                ovmf = bios_root / "ovmf_binary/usr/share/edk2/aarch64/QEMU_EFI.fd"
+            elif mode == "ovmf":
+                ovmf = (
+                    bios_root
+                    / "edk2/Build/ArmVirtQemu-AARCH64/DEBUG_GCC/FV/QEMU_EFI.fd"
+                )
+            else:
+                raise UnsupportedNativeConfiguration(f"unsupported aarch64 bios={mode}")
+            argv.extend(["--bios", str(ovmf)])
+        elif mode == "seabios":
             argv.extend(["-bios", str(bios_root / "seabios/out/bios.bin")])
         elif mode == "ovmf_binary":
             ovmf = bios_root / "ovmf_binary/usr/share/edk2/ovmf"
@@ -962,14 +1000,15 @@ class ColleiQemuBuilder:
         else:
             raise UnsupportedNativeConfiguration(f"unsupported bios={mode}")
         # x86 单独使用 debugcon，ARM 复用 ttyAMA0。
-        argv.extend(
-            [
-                "-chardev",
-                f"file,path={self.monitor_dir / 'debugcon.log'},id=seabios",
-                "-device",
-                "isa-debugcon,iobase=0x402,chardev=seabios",
-            ]
-        )
+        if not self.is_aarch64:
+            argv.extend(
+                [
+                    "-chardev",
+                    f"file,path={self.monitor_dir / 'debugcon.log'},id=seabios",
+                    "-device",
+                    "isa-debugcon,iobase=0x402,chardev=seabios",
+                ]
+            )
         if self.efi_application:
             virtual_drive = self.context.repo / "VirtualDrive"
             argv.extend(
@@ -1124,19 +1163,20 @@ class ColleiQemuBuilder:
         argv.extend(["-cpu", "host"])
 
     def setup_display_and_chardev(self, argv: list[str]) -> None:
+        display_backend = self.vm.config.options.get("display_backend") or "none"
         if self.profile is not None:
-            manual_console = self.profile.manual_console_arguments()
+            manual_console = self.profile.manual_console_arguments(display_backend)
             if manual_console:
                 argv.extend(manual_console)
                 return
 
         display = self.vm.config.options.get("display")
-        argv.extend(
-            [
-                "-device",
-                "virtio-gpu-pci" if display == "virtio-gpu" else "cirrus-vga",
-            ]
-        )
+        if self.is_aarch64 or display == "virtio-gpu":
+            argv.extend(["-device", "virtio-gpu-pci"])
+        else:
+            argv.extend(["-device", "cirrus-vga"])
+        if display_backend != "none":
+            argv.extend(["-display", display_backend])
         main_chardev = (
             f"socket,path={self.monitor_dir / 'main.sock'},id=main_char,server=on,wait=off,mux=on"
             if self.vm.config.options.enabled("hide")
@@ -1515,11 +1555,15 @@ class VmtestSetup:
             "-no-reboot",
         )
 
-    def manual_console_arguments(self) -> tuple[str, ...]:
+    def manual_console_arguments(self, display_backend: str) -> tuple[str, ...]:
         monitor = self.vm.directory / self.vm.which_qemu
+        display_device = (
+            ("-device", "virtio-gpu-pci") if display_backend == "gtk" else ()
+        )
         return (
             "-display",
-            "none",
+            display_backend,
+            *display_device,
             "-device",
             "virtio-serial",
             "-chardev",

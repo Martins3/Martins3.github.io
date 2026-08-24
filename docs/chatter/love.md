@@ -1,8 +1,6 @@
-# glib
+# 恋爱
 
-类似的: https://github.com/tboox/tbox
-
-https://github.com/chiehmin/gdbus_test
+- https://www.noahpinion.blog/p/dating-advice-for-men
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

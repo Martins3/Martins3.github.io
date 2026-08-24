@@ -16,9 +16,10 @@ from pathlib import Path
 
 from commands import CommandRunner
 from errors import ColleiError
-from kernel import kernel_release
 from runtime import ColleiContext, VmRuntime
 from tasks import add_background_task
+
+from kernel import kernel_release
 
 
 @dataclass(frozen=True)
@@ -204,13 +205,17 @@ class VirtmeSetup:
             "vhost-user-fs-pci,chardev=virtme_root,tag=ROOTFS",
         )
 
-    def manual_console_arguments(self) -> tuple[str, ...]:
+    def manual_console_arguments(self, display_backend: str) -> tuple[str, ...]:
         if self.mode() != "manual":
             return ()
         monitor = self.vm.directory / self.vm.which_qemu
+        display_device = (
+            ("-device", "virtio-gpu-pci") if display_backend == "gtk" else ()
+        )
         return (
             "-display",
-            "none",
+            display_backend,
+            *display_device,
             "-device",
             "virtio-serial",
             "-chardev",

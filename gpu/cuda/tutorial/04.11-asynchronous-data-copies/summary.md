@@ -1,6 +1,8 @@
-## 章节概述
+## cuda async copy
+<!-- f60a2774-6157-4451-a6ca-c2c998c6784d -->
 
 原文链接：<https://docs.nvidia.com/cuda/cuda-programming-guide/04-special-topics/async-copies.html>
+
 
 应该先阅读下:
 https://docs.nvidia.com/cuda/cuda-programming-guide/03-advanced/advanced-kernel-programming.html#asynchronous-data-copies
@@ -9,15 +11,16 @@ https://docs.nvidia.com/cuda/cuda-programming-guide/03-advanced/advanced-kernel-
 https://liujunming.top/2025/12/07/Notes-about-NVIDIA-TMA-Tensor-Memory-Access/
 
 "Asynchronous Data Copies" 系统性地介绍了从 Compute Capability 8.0（Ampere）到 9.0（Hopper）引入的多种**设备端异步数据搬运机制** 也就是
-**Kernel 内部**、**线程级或线程块级**的异步内存操作，核心目标是在 Global Memory 与 Shared Memory（以及 Cluster 内的分布式 Shared Memory）之间高效搬运数据，并通过与计算重叠来隐藏延迟、降低寄存器压力。
+**Kernel 内部**、**线程级或线程块级**的异步内存操作，核心目标是在 Global Memory 与 Shared Memory（以及 Cluster 内的分布式 Shared Memory）之间高效搬运数据，
+并通过与计算重叠来隐藏延迟、降低寄存器压力。
 
 章节按硬件能力递进组织：
 1. 首先介绍 **LDGSTS**（Load Global Store Shared，sm_80+），用于细粒度的元素级异步拷贝；
 2. 随后展开 **TMA**（Tensor Memory Accelerator，`sm_90+`），面向大批量一维或多维张量传输，并引入 Tensor Map 以 offload 复杂的多维地址计算;
 3. 最后介绍 **STAS**（sm_90+），支持寄存器到分布式共享内存的异步写入，用于 Thread Block Cluster 内部的高效通信。
 
-
-全章通过 stencil、数据预取、生产者-消费者、矩阵转置等具体示例，展示了不同抽象层级 API 的用法、同步语义及性能权衡。
+全章通过 stencil、数据预取、生产者-消费者、矩阵转置等具体示例，
+展示了不同抽象层级 API 的用法、同步语义及性能权衡。
 
 ## 背景与要解决的问题
 
@@ -28,7 +31,9 @@ https://liujunming.top/2025/12/07/Notes-about-NVIDIA-TMA-Tensor-Memory-Access/
 3. **条件分支下的指令序列化**：当拷贝代码存在条件分支（如 stencil 中不同线程负责加载 center/halo）时，编译器可能生成非最优的 LDG/STS 交错序列，而非批量加载，无法充分利用全局内存带宽。
 4. **多维数组地址计算复杂**：对于高维张量，子块（tile）搬运需要繁琐的步长、偏移计算，易出错且重复。
 
-异步拷贝机制通过硬件层面的 `cp.async` 类指令（如 LDGSTS、TMA、STAS），允许线程发起传输后立即返回执行其他计算或发起更多传输，由专用硬件单元完成实际数据搬运。这不仅减少了寄存器中介，还显著提升了内存级并行度（MLP），使得"预取未来数据"与"计算当前数据"能够真正并行。
+异步拷贝机制通过硬件层面的 `cp.async` 类指令（如 LDGSTS、TMA、STAS），
+允许线程发起传输后立即返回执行其他计算或发起更多传输，由专用硬件单元完成实际数据搬运。这不仅减少了寄存器中介，
+还显著提升了，使得"预取未来数据"与"计算当前数据"能够真正并行。
 
 ## 核心概念与术语
 

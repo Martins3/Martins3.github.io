@@ -1,5 +1,3 @@
-这个目录是关于 GPU 学习的，官方教程的 pdf 本地保存在 ~/data/cuda-programming-guide.pdf
-
 编译 cuda 相关的东西，参考 ~/data/vn/gpu/cuda/tutorial/Makefile
 
 https://docs.nvidia.com/cuda/cuda-programming-guide/index.html

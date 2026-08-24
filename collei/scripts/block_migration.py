@@ -15,6 +15,20 @@ from runtime import ColleiContext
 MIRROR_TIMEOUT = 3600.0
 CLEANUP_TIMEOUT = 60.0
 
+# 整体流程
+# - discover_migratable_disks()：通过源 QEMU 的 query-block 找出可迁移的可写磁盘。
+# - prepare_target_images()：在目标 slot 创建同格式、同 virtual size 的空镜像。
+# - BlockMirrorSession.start()：在目标 QEMU 上启动 NBD server，并把目标磁盘 export 出来。
+# - BlockMirrorSession.start()：在源 QEMU 上添加 NBD client 节点，指向目标磁盘 export。
+# - blockdev-mirror：源 QEMU 把源磁盘完整同步到目标磁盘，期间 guest 新写入也会同步。
+# - wait_ready()：轮询 query-block-jobs，等所有 mirror job 达到 ready 和 actively-synced。
+# - finish() / cleanup()：停止 mirror job、删除临时 NBD client/export/server。
+#
+# 核心结构体:
+# - `MigratableDisk`：描述一块要迁移的磁盘，包括源路径、目标路径、格式、大小、QEMU block node 名。
+# - `MirrorResource`：给每块磁盘生成 QMP 资源名：NBD export id、源端 NBD client node、mirror job id。
+# - `BlockMirrorSession`：真正管理一次磁盘同步会话的状态机。
+
 
 @dataclass(frozen=True)
 class MigratableDisk:
@@ -39,6 +53,22 @@ def _qmp_list(value: object, command: str) -> list[dict[str, Any]]:
     return value
 
 
+def qmp_request(command: str, arguments: dict[str, object] | None = None) -> str:
+    request: dict[str, object] = {"execute": command}
+    if arguments:
+        request["arguments"] = arguments
+    return json.dumps(request, separators=(",", ":"))
+
+
+def qmp_execute(
+    qmp: QmpClient,
+    command: str,
+    arguments: dict[str, object] | None = None,
+) -> Any:
+    print(f"QMP {qmp.path} <= {qmp_request(command, arguments)}", flush=True)
+    return qmp.execute(command, arguments)
+
+
 def _relative_image(filename: str, image_directory: Path) -> Path:
     source = Path(filename).resolve()
     try:
@@ -59,13 +89,21 @@ def discover_migratable_disks(
     target_directory: Path,
 ) -> tuple[MigratableDisk, ...]:
     with QmpClient(qmp_path) as qmp:
-        blocks = _qmp_list(qmp.execute("query-block"), "query-block")
+        blocks = _qmp_list(qmp_execute(qmp, "query-block"), "query-block")
 
     disks: list[MigratableDisk] = []
     seen: set[str] = set()
     for block in blocks:
         inserted = block.get("inserted")
         if not isinstance(inserted, dict):
+            continue
+        device = block.get("device")
+        if (
+            isinstance(device, str)
+            and device.startswith("pflash")
+            and device.removeprefix("pflash").isdigit()
+        ):
+            # OVMF pflash is shared by both local QEMU slots, not an image-slot disk.
             continue
         qdev = block.get("qdev")
         if not isinstance(qdev, str) or not qdev:
@@ -182,16 +220,9 @@ class BlockMirrorSession:
         self.clients: list[MirrorResource] = []
         self.jobs: list[MirrorResource] = []
 
-    @staticmethod
-    def _request(command: str, arguments: dict[str, object] | None = None) -> str:
-        request: dict[str, object] = {"execute": command}
-        if arguments:
-            request["arguments"] = arguments
-        return json.dumps(request, separators=(",", ":"))
-
     def print_plan(self) -> None:
         print(
-            self._request(
+            qmp_request(
                 "nbd-server-start",
                 {
                     "addr": {
@@ -204,7 +235,7 @@ class BlockMirrorSession:
         )
         for resource in self.resources:
             print(
-                self._request(
+                qmp_request(
                     "block-export-add",
                     {
                         "type": "nbd",
@@ -216,7 +247,7 @@ class BlockMirrorSession:
                 )
             )
             print(
-                self._request(
+                qmp_request(
                     "blockdev-add",
                     {
                         "driver": "nbd",
@@ -226,7 +257,7 @@ class BlockMirrorSession:
                     },
                 )
             )
-            print(self._request("blockdev-mirror", self._mirror_arguments(resource)))
+            print(qmp_request("blockdev-mirror", self._mirror_arguments(resource)))
 
     @staticmethod
     def _mirror_arguments(resource: MirrorResource) -> dict[str, object]:
@@ -244,7 +275,8 @@ class BlockMirrorSession:
     def start(self) -> None:
         self.nbd_socket.unlink(missing_ok=True)
         with QmpClient(self.target_qmp) as qmp:
-            qmp.execute(
+            qmp_execute(
+                qmp,
                 "nbd-server-start",
                 {
                     "addr": {
@@ -256,7 +288,8 @@ class BlockMirrorSession:
             )
             self.server_started = True
             for resource in self.resources:
-                qmp.execute(
+                qmp_execute(
+                    qmp,
                     "block-export-add",
                     {
                         "type": "nbd",
@@ -270,7 +303,8 @@ class BlockMirrorSession:
 
         with QmpClient(self.source_qmp) as qmp:
             for resource in self.resources:
-                qmp.execute(
+                qmp_execute(
+                    qmp,
                     "blockdev-add",
                     {
                         "driver": "nbd",
@@ -280,12 +314,12 @@ class BlockMirrorSession:
                     },
                 )
                 self.clients.append(resource)
-                qmp.execute("blockdev-mirror", self._mirror_arguments(resource))
+                qmp_execute(qmp, "blockdev-mirror", self._mirror_arguments(resource))
                 self.jobs.append(resource)
 
     def _query_jobs(self) -> dict[str, dict[str, Any]]:
         with QmpClient(self.source_qmp) as qmp:
-            jobs = _qmp_list(qmp.execute("query-block-jobs"), "query-block-jobs")
+            jobs = _qmp_list(qmp_execute(qmp, "query-block-jobs"), "query-block-jobs")
         return {
             str(job["device"]): job
             for job in jobs
@@ -333,7 +367,7 @@ class BlockMirrorSession:
             for resource in self.jobs:
                 job = jobs.get(resource.job_id)
                 if job is not None and job.get("status") != "concluded":
-                    qmp.execute("block-job-cancel", {"device": resource.job_id})
+                    qmp_execute(qmp, "block-job-cancel", {"device": resource.job_id})
         self._wait_jobs_concluded(timeout)
 
     def _wait_jobs_concluded(self, timeout: float) -> None:
@@ -351,7 +385,7 @@ class BlockMirrorSession:
                     if job.get("status") != "concluded":
                         continue
                     error = job.get("error")
-                    qmp.execute("job-dismiss", {"id": job_id})
+                    qmp_execute(qmp, "job-dismiss", {"id": job_id})
                     pending.remove(job_id)
                     if error is not None:
                         job_errors.append(f"{job_id}: {error}")
@@ -373,7 +407,8 @@ class BlockMirrorSession:
                     for resource in self.jobs:
                         job = jobs.get(resource.job_id)
                         if job is not None and job.get("status") != "concluded":
-                            qmp.execute(
+                            qmp_execute(
+                                qmp,
                                 "block-job-cancel",
                                 {"device": resource.job_id, "force": True},
                             )
@@ -385,7 +420,11 @@ class BlockMirrorSession:
             try:
                 with QmpClient(self.source_qmp) as qmp:
                     for resource in reversed(self.clients):
-                        qmp.execute("blockdev-del", {"node-name": resource.client_node})
+                        qmp_execute(
+                            qmp,
+                            "blockdev-del",
+                            {"node-name": resource.client_node},
+                        )
                 self.clients.clear()
             except (ColleiError, OSError) as error:
                 errors.append(str(error))
@@ -394,7 +433,8 @@ class BlockMirrorSession:
             try:
                 with QmpClient(self.target_qmp) as qmp:
                     for resource in reversed(self.exports):
-                        qmp.execute(
+                        qmp_execute(
+                            qmp,
                             "block-export-del",
                             {"id": resource.export_id, "mode": "safe"},
                         )
@@ -406,7 +446,7 @@ class BlockMirrorSession:
         if self.server_started:
             try:
                 with QmpClient(self.target_qmp) as qmp:
-                    qmp.execute("nbd-server-stop")
+                    qmp_execute(qmp, "nbd-server-stop")
                 self.server_started = False
             except (ColleiError, OSError) as error:
                 errors.append(str(error))
@@ -426,7 +466,8 @@ class BlockMirrorSession:
         while time.monotonic() < deadline:
             with QmpClient(self.target_qmp) as qmp:
                 exports = _qmp_list(
-                    qmp.execute("query-block-exports"), "query-block-exports"
+                    qmp_execute(qmp, "query-block-exports"),
+                    "query-block-exports",
                 )
             present = {
                 str(export["id"])

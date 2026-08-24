@@ -209,7 +209,8 @@ static __always_inline void raw_write_seqcount_latch(seqcount_latch_t *s)
 
 ### 4.2 Correlated Data Elements
 
-当需要一致地查看多个相关数据元素时（例如哈希表中的婚姻状态），可以使用 seqlock 保护更新，RCU 保护删除。但 seqlock 不能替代 RCU：seqlock 防止并发修改，RCU 防止并发删除。
+当需要一致地查看多个相关数据元素时（例如哈希表中的婚姻状态），
+可以使用 seqlock 保护更新，RCU 保护删除。但 seqlock 不能替代 RCU：seqlock 防止并发修改，RCU 防止并发删除。
 
 对于大量数据元素，可以引入 per-element seqlock 或 per-species seqlock 来减少竞争。
 

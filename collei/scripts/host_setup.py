@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import platform
 import shutil
 import socket
 import time
@@ -70,22 +71,31 @@ def prepare_native_host(
     context: ColleiContext, vm: VmRuntime, runner: CommandRunner
 ) -> None:
     if vm.config.options.get("bios") == "ovmf_binary":
-        ovmf = (
+        bios_root = (
             context.repo.parent.parent
             / "bios"
             / "ovmf_binary"
             / "usr"
             / "share"
             / "edk2"
-            / "ovmf"
         )
-        code = ovmf / "OVMF_CODE.fd"
-        variables = ovmf / "OVMF_VARS.fd"
-        if not code.is_file() or not variables.is_file():
-            raise UnsupportedNativeConfiguration(f"OVMF firmware is incomplete: {ovmf}")
-        local_variables = vm.directory / "OVMF_VARS.fd"
-        if not local_variables.exists():
-            shutil.copy2(variables, local_variables)
+        if platform.machine() == "aarch64":
+            code = bios_root / "aarch64" / "QEMU_EFI.fd"
+            if not code.is_file():
+                raise UnsupportedNativeConfiguration(
+                    f"AArch64 OVMF firmware is missing: {code}"
+                )
+        else:
+            ovmf = bios_root / "ovmf"
+            code = ovmf / "OVMF_CODE.fd"
+            variables = ovmf / "OVMF_VARS.fd"
+            if not code.is_file() or not variables.is_file():
+                raise UnsupportedNativeConfiguration(
+                    f"OVMF firmware is incomplete: {ovmf}"
+                )
+            local_variables = vm.directory / "OVMF_VARS.fd"
+            if not local_variables.exists():
+                shutil.copy2(variables, local_variables)
 
     for device in (vm.config.options.get("vfio") or "").splitlines():
         pci_bind_to_vfio(device, runner)

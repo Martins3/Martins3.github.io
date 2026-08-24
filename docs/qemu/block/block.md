@@ -76,8 +76,6 @@ static const BlkActionOps actions[] = {
 };
 ```
 
-在 `qmp_transaction` 中的，根据命令来调用这些内容:
-
 ## block.c
 
 - 几乎所有的函数都是 `bdrv` 开头的
@@ -147,19 +145,6 @@ typedef enum BlockdevAioOptions {
   - block/mirror.c
   - block/stream.c
 
-## block dirty bitmap
-
-## qmp ：没办法，不搞的话，dirty bitmap 是没有办法维持生活的
-- [ ] grep 一下目前对于 qmp 的所有问题，尝试将 qmp 和 qemu option 融合一下
-- [ ] https://gist.github.com/rgl/dc38c6875a53469fdebb2e9c0a220c6c
-- [ ] https://wiki.qemu.org/Documentation/QMP
-
-## 看看 coroutine_fn 的实现和效果
-```c
-static coroutine_fn int ssh_read(BDRVSSHState *s, BlockDriverState *bs,
-                                 int64_t offset, size_t size,
-                                 QEMUIOVector *qiov)
-```
 ## nfs 也可以直接做后端，不理解啊
 
 ## block/nvme.c 是通过 iommu 的，

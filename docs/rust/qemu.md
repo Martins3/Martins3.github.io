@@ -111,6 +111,44 @@ make
 ## TODO
 1. 理解 c 和 rust 是如何 binding 在一起的
 
+## backtrace 都可以连续到一起
+- main
+  - qemu_init
+    - qmp_x_exit_preconfig
+      - qemu_machine_creation_done
+        - qdev_machine_creation_done
+          - qemu_system_reset
+            - pc_machine_reset
+              - resettable_reset
+                - resettable_assert_reset
+                  - resettable_phase_hold
+                    - resettable_child_foreach
+                      - resettable_container_child_foreach
+                        - resettable_phase_hold
+                          - resettable_child_foreach
+                            - bus_reset_child_foreach
+                              - resettable_phase_hold
+                                - hwcore::qdev::rust_resettable_hold_fn<hpet::device::HPETState>
+                                  - hpet::device::HPETState::reset_hold
+                                    - hwcore::irq::InterruptSource<bool>::set<bool>
+                                      - qemu_set_irq
+                                        - pit_irq_control
+                                          - pit_irq_timer_update
+                                            - qemu_set_irq
+                                              - hwcore::qdev::DeviceMethods::init_gpio_in::rust_irq_handler<hpet::device::HPETState, fn
+                                                - }::call<fn
+                                                  - common::callbacks::{impl
+                                                    - core::ops::function::Fn::call<fn
+                                                      - hpet::device::HPETState::handle_legacy_irq
+                                                        - hwcore::irq::InterruptSource<bool>::set<bool>
+                                                          - qemu_set_irq
+                                                            - gsi_handler
+                                                              - qemu_set_irq
+                                                                - ioapic_service
+                                                                  - address_space_stm_internal
+                                                                    - memory_region_dispatch_write
+                                                                      - memory_region_dispatch_write_eventfds
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

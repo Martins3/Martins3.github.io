@@ -1,3 +1,12 @@
+# AI 时代的英语解决方案
+
+## 阅读
+
+调研过:
+- https://immersivetranslate.com/zh-Hans/
+- https://www.readfrog.app/zh
+
+我最后使用 readfrog
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

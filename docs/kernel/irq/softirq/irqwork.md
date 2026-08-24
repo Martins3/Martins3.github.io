@@ -1,4 +1,8 @@
 # irq work
+
+> [!NOTE]
+> 参考神奇海螺的意见，有待验证
+
 ## 原来 irq work 的调用来自于这里
 
  当 isolcpus=$pcpu_list rcu_nocbs=$pcpu_list nohz_full=$pcpu_list 的时候似乎会导致这个:

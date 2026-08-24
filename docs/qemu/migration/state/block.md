@@ -755,6 +755,145 @@ snapshot_delete_blkdev_internal
 - 三者真正的接口规范应看 qapi/block-core.json:1784；该文档本身也明确指出 QAPI schema 才是 canonical API 文档。
 
 
+## 结合 collei 的实验
+
+迁移开始之前:
+```txt
+QMP {"execute":"query-block"}
+QMP {"execute":"nbd-server-start","arguments":{"addr":{"type":"unix","data":{"path":"/home/martins3/data/hack/vm/virtme/t/block-migration.nbd"}},"max-connections":3}}
+QMP {"execute":"block-export-add","arguments":{"type":"nbd","id":"exp-boot1-21dae65f","node-name":"boot1","name":"boot1","writable":true}}
+QMP {"execute":"block-export-add","arguments":{"type":"nbd","id":"exp-virtio-scsi-1-943d2536","node-name":"virtio-scsi_1","name":"virtio-scsi_1","writable":true}}
+QMP {"execute":"block-export-add","arguments":{"type":"nbd","id":"exp-virtio-scsi-2-b61dd2e8","node-name":"virtio-scsi_2","name":"virtio-scsi_2","writable":true}}
+QMP {"execute":"blockdev-add","arguments":{"driver":"nbd","node-name":"mig-boot1-21dae65f","server":{"type":"unix","path":"/home/martins3/data/hack/vm/virtme/t/block-migration.nbd"},"export":"boot1"}}
+QMP {"execute":"blockdev-mirror","arguments":{"job-id":"mirror-boot1-21dae65f","device":"boot1","target":"mig-boot1-21dae65f","sync":"full","copy-mode":"write-blocking","on-source-error":"report","on-target-error":"report","auto-dismiss":false}}
+QMP {"execute":"blockdev-add","arguments":{"driver":"nbd","node-name":"mig-virtio-scsi-1-943d2536","server":{"type":"unix","path":"/home/martins3/data/hack/vm/virtme/t/block-migration.nbd"},"export":"virtio-scsi_1"}}
+QMP {"execute":"blockdev-mirror","arguments":{"job-id":"mirror-virtio-scsi-1-943d2536","device":"virtio-scsi_1","target":"mig-virtio-scsi-1-943d2536","sync":"full","copy-mode":"write-blocking","on-source-error":"report","on-target-error":"report","auto-dismiss":false}}
+QMP {"execute":"blockdev-add","arguments":{"driver":"nbd","node-name":"mig-virtio-scsi-2-b61dd2e8","server":{"type":"unix","path":"/home/martins3/data/hack/vm/virtme/t/block-migration.nbd"},"export":"virtio-scsi_2"}}
+QMP {"execute":"blockdev-mirror","arguments":{"job-id":"mirror-virtio-scsi-2-b61dd2e8","device":"virtio-scsi_2","target":"mig-virtio-scsi-2-b61dd2e8","sync":"full","copy-mode":"write-blocking","on-source-error":"report","on-target-error":"report","auto-dismiss":false}}
+QMP {"execute":"query-block-jobs"}
+mirror status: boot1=100.0%/ready, virtio-scsi_1=100.0%/ready, virtio-scsi_2=100.0%/ready
+```
+
+完成迁移后
+```txt
+QMP {"execute":"query-block-jobs"}
+QMP {"execute":"block-job-cancel","arguments":{"device":"mirror-boot1-21dae65f"}}
+QMP {"execute":"block-job-cancel","arguments":{"device":"mirror-virtio-scsi-1-943d2536"}}
+QMP {"execute":"block-job-cancel","arguments":{"device":"mirror-virtio-scsi-2-b61dd2e8"}}
+QMP {"execute":"query-block-jobs"}
+QMP {"execute":"job-dismiss","arguments":{"id":"mirror-virtio-scsi-1-943d2536"}}
+QMP {"execute":"job-dismiss","arguments":{"id":"mirror-boot1-21dae65f"}}
+QMP {"execute":"job-dismiss","arguments":{"id":"mirror-virtio-scsi-2-b61dd2e8"}}
+QMP {"execute":"blockdev-del","arguments":{"node-name":"mig-virtio-scsi-2-b61dd2e8"}}
+QMP {"execute":"blockdev-del","arguments":{"node-name":"mig-virtio-scsi-1-943d2536"}}
+QMP {"execute":"blockdev-del","arguments":{"node-name":"mig-boot1-21dae65f"}}
+QMP {"execute":"block-export-del","arguments":{"id":"exp-virtio-scsi-2-b61dd2e8","mode":"safe"}}
+QMP {"execute":"block-export-del","arguments":{"id":"exp-virtio-scsi-1-943d2536","mode":"safe"}}
+QMP {"execute":"block-export-del","arguments":{"id":"exp-boot1-21dae65f","mode":"safe"}}
+QMP {"execute":"query-block-exports"}
+QMP {"execute":"nbd-server-stop"}
+```
+
+### 性能测试
+
+基本操作方法，没有配置 fzf 的方法
+```txt
+# 默认导出 boot1，也可指定其他 block node
+./collei/scripts/collei-action.py -a nbd_server -n virtme start boot1
+
+# 查看状态
+./collei/scripts/collei-action.py -a nbd_server -n virtme status
+
+# 1 MiB 顺序读，默认运行 10 秒
+./collei/scripts/nbd-fio.py -n virtme
+
+# 4 KiB 随机读
+./collei/scripts/nbd-fio.py -n virtme -t 10 -r randread -b 4k
+
+# 清理 export 和 NBD server
+./collei/scripts/collei-action.py -a nbd_server -n virtme stop
+```
+
+问题 1 : 为什么从 main loop 就是用的 io uring 啊
+```txt
+- qemu_default_main
+   - 62.92% qemu_main_loop
+      - main_loop_should_exit (inlined)
+         - 62.42% qemu_debug_requested (inlined)
+            - 61.95% main_loop_wait
+               - 56.77% os_host_main_loop_wait (inlined)
+                  - 23.31% glib_pollfds_fill (inlined)
+                     - 21.78% g_main_context_prepare
+                        - 19.50% g_main_context_prepare_unlocked
+                           - 6.79% aio_ctx_prepare
+                              - 6.00% aio_prepare
+                                 - 5.36% io_uring_submit
+                                    - 5.00% entry_SYSCALL_64_after_hwframe
+                                       - do_syscall_64
+                                          - 3.89% do_syscall_x64 (inlined)
+                                             - 3.83% __do_sys_io_uring_enter
+                                                - 3.09% io_submit_sqes
+                                                   - 2.47% io_submit_sqe
+                                                      - 2.25% io_queue_sqe (inlined)
+                                                         - io_issue_sqe
+                                                            - 1.86% __io_issue_sqe
+                                                               - 1.42% io_poll_add
+                                                                  - __io_arm_poll_handler
+                                                                     - 1.05% vfs_poll (inlined)
+                                                                        - 0.84% sock_poll
+                                                                           - 0.79% unix_poll
+                                                                              - 0.52% sock_poll_wait (inlined)
+                                                                                   poll_wait (inlined)
+```
+
+问题 2 : 如何理解这个 coroutine 的结果?
+
+```txt
+-   34.08%     0.33%  qemu-system-x86  qemu-system-x86_64  [.] nbd_trip
+   - 33.76% nbd_trip
+      - 14.79% nbd_co_receive_request
+         - 13.45% nbd_receive_request
+            - 13.36% nbd_read_eof
+               - 9.10% qio_channel_readv
+                  - 8.94% qio_channel_socket_readv
+                     - 8.85% __libc_recvmsg
+                        - 8.84% __syscall_cancel
+                           - 8.55% __syscall_cancel_arch_end
+                              - 8.30% entry_SYSCALL_64_after_hwframe
+                                 - do_syscall_64
+                                    - 8.02% do_syscall_x64 (inlined)
+                                       + 7.94% __sys_recvmsg
+               - 3.79% qemu_lockable_auto_lock (inlined)
+                    qemu_lockable_lock (inlined)
+                  - qemu_lockable_mutex_lock (inlined)
+                     - 3.13% qio_channel_yield
+                        - 2.81% qio_channel_socket_set_aio_fd_handler
+                           - 2.76% qio_channel_util_set_aio_fd_handler
+                              - 2.14% event_notifier_set
+                                 - 2.13% __GI___libc_write
+                                    + 2.12% __syscall_cancel
+         + 0.96% qemu_try_memalign
+      - 12.11% nbd_co_send_sparse_read
+         - 10.73% nbd_co_send_iov (inlined)
+            - 10.26% qio_channel_writev_all
+               - 10.15% qio_channel_writev_full_all
+                  - 9.68% qio_channel_socket_writev
+                     - 9.57% __libc_sendmsg
+                        - 9.56% __syscall_cancel
+                           - 9.43% __syscall_cancel_arch_end
+                              - 9.37% entry_SYSCALL_64_after_hwframe
+                                 - do_syscall_64
+                                    - 9.16% do_syscall_x64 (inlined)
+                                       - 9.11% __sys_sendmsg
+                                          - 8.82% ___sys_sendmsg
+                                             + 8.19% ____sys_sendmsg
+                                               0.51% copy_msghdr_from_user
+         - 1.25% blk_co_block_status_above
+            - 0.97% bdrv_co_block_status_above
+               - 0.96% bdrv_co_common_block_status_above
+                    0.83% bdrv_co_do_block_status
+```
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

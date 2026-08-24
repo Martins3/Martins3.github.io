@@ -272,6 +272,33 @@ nvme0n1         259:0    0 953.9G  0 disk
 
 还好，总体来说，QEMU 中大多数内容都是对称的，核心机制掌握后，总体来说，难度可控。
 
+## qemu 的演化
+
+- device drive 模式到 blockdev
+```txt
+   Block device options
+       The  QEMU  block device handling options have a long history and have gone through several iterations as the feature
+       set and complexity of the block layer have grown. Many online guides to QEMU often reference  older  and  deprecated
+       options, which can lead to confusion.
+
+       The  most  explicit  way  to  describe  disks  is to use a combination of -device to specify the hardware device and
+       -blockdev to describe the backend. The device defines what the guest sees and the backend describes how QEMU handles
+       the data. It is the only guaranteed stable interface for describing block devices and as  such  is  recommended  for
+       management tools and scripting.
+
+       The  -drive option combines the device and backend into a single command line option which is a more human friendly.
+       There is however no interface stability guarantee although some older board models still need updating to work  with
+       the modern blockdev forms.
+
+       Older  options  like  -hda are essentially macros which expand into -drive options for various drive interfaces. The
+       original forms bake in a lot of assumptions from the days when QEMU was emulating a legacy PC, they are  not  recom‐
+       mended for modern configurations.
+```
+
+-nic netdev 的切换
+
+https://www.qemu.org/2018/05/31/nic-parameter/
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

@@ -209,7 +209,7 @@ default GMainContext
     ├── GTK sources
     └── 其他 GLib sources
 
-QEMU 初始化时，把主 AioContext 挂到默认 GMainContext：
+QEMU 初始化时，会自动的将
 
 ```c
 src = aio_get_g_source(qemu_aio_context);
@@ -240,12 +240,12 @@ int qemu_init_main_loop(Error **errp)
     qemu_set_current_aio_context(qemu_aio_context);
     qemu_notify_bh = qemu_bh_new(notify_event_cb, NULL);
     gpollfds = g_array_new(FALSE, FALSE, sizeof(GPollFD));
-    // 这里来进行挂载
+    // 添加第一个 source
     src = aio_get_g_source(qemu_aio_context);
     g_source_set_name(src, "aio-context");
     g_source_attach(src, NULL);
     g_source_unref(src);
-    // 在这里来挂载第二个 qemu 的结果
+    // 添加第二个 source
     src = iohandler_get_g_source();
     g_source_set_name(src, "io-handler");
     g_source_attach(src, NULL);
@@ -284,6 +284,7 @@ g_main_context_dispatch()
 
 完整过程大概是：
 
+```txt
 g_main_context_acquire(context);
 
 glib_pollfds_fill(&timeout);
@@ -291,7 +292,7 @@ glib_pollfds_fill(&timeout);
 bql_unlock();
 replay_mutex_unlock();
 
-qemu_poll_ns(gpollfds, timeout);
+qemu_poll_ns(gpollfds, timeout); // 这个就是一个普通的 poll
 
 replay_mutex_lock();
 bql_lock();
@@ -299,6 +300,7 @@ bql_lock();
 glib_pollfds_poll();
 
 g_main_context_release(context);
+```
 
 QEMU没有把主循环完全交给 GLib，是因为它还要控制：
 
@@ -322,6 +324,25 @@ QEMU：
     控制 BQL/replay/timer 边界
 
 GLib在这里不是最高层总管，QEMU才是。
+
+这是 qemu 的调用的的结果，这个的意思不是用
+用 io epoll 机制:
+
+- main
+  - qemu_default_main
+    - qemu_main_loop
+      - main_loop_wait
+        - os_host_main_loop_wait
+          - glib_pollfds_poll
+            - g_main_context_dispatch
+
+普通的 io 的过程:
+- main
+  - non_default_g_source
+    - g_main_loop_run
+      - g_main_context_iterate_unlocked.isra
+        - g_main_context_dispatch_unlocked
+          - aio_ctx_dispatch
 
 ### 为什么 IOThread 默认不用 GLib
 
@@ -424,60 +445,8 @@ GMainContext mode
     + 其他 GLib GSource
     + 一些额外调度开销
 
-### 为什么主线程还有两个 AioContext
-
-你还观察到了：
-
-qemu_aio_context
-iohandler_ctx
-
-这又容易让人感觉多出一套机制。
-
-实际上两者都是 AioContext，也都作为 GSource 挂在默认 GMainContext。区别是
-是否允许被嵌套 aio_poll() 驱动。
-
-#### qemu_aio_context
-
-可以显式调用：
-
-aio_poll(qemu_aio_context, ...);
-
-例如 AIO_WAIT_WHILE() 内部的嵌套事件循环。
-
-#### iohandler_ctx
-
-只应该由最外层 main loop 驱动，不能因为某个 block 请求调用了嵌套
-aio_poll(qemu_aio_context)，就顺便执行全局 iohandler。
-
-源码注释写得很直接：
-
-```txt
-/*
- * This context runs on top of main loop.
- * We can't reuse qemu_aio_context because iohandlers
- * mustn't be polled by aio_poll(qemu_aio_context).
- */
-```
-
-见 util/main-loop.c:617。
-
-它是在隔离重入范围：
-
-顶层 main loop
-    ├── qemu_aio_context
-    └── iohandler_ctx
-
-嵌套 aio_poll(qemu_aio_context)
-    ├── qemu_aio_context
-    └── 不执行 iohandler_ctx
-
-你用 qemu handlers 看到两个 context 中都有
-virtio_queue_host_notifier_read，并不代表它们相同。callback 名字只能说明做
-什么，context 归属决定它允许在哪种事件循环层级执行。
 
 ### gmain、gdbus 线程又是什么
-
-你在 /home/martins3/data/vn/docs/qemu/thread/glib.md:1 中看到的：
 
 gmain
 gdbus
@@ -521,6 +490,39 @@ threaded-ml
 > AioContext本身实现成 GSource：纯数据面直接 aio_poll()，需要生态集成时交
 > 给 GMainContext。重叠是真实存在的，但事件队列和 callback 并没有复制两
 > 份。
+
+## 还需要理解的问题
+1. glib 用什么 poll 吗?
+2. 是如何添加 fd 来开始监听的?
+4. 一个 context 被 glib 监听是用的
+
+4. 很难理解啊
+
+util/fdmon-poll.c 中，但是如果这个
+
+只有这里才调用 poll ，但是如果这个用的不是，会如何?
+```c
+static void fdmon_poll_update(AioContext *ctx,
+                              AioHandler *old_node,
+                              AioHandler *new_node)
+{
+    if (old_node) {
+        /*
+         * If the GSource is in the process of being destroyed then
+         * g_source_remove_poll() causes an assertion failure.  Skip removal in
+         * that case, because glib cleans up its state during destruction
+         * anyway.
+         */
+        if (!g_source_is_destroyed(&ctx->source)) {
+            g_source_remove_poll(&ctx->source, &old_node->pfd);
+        }
+    }
+
+    if (new_node) {
+        g_source_add_poll(&ctx->source, &new_node->pfd);
+    }
+}
+```
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

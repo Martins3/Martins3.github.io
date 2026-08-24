@@ -14,8 +14,13 @@
 前面很简单，后面没看懂
 
 
+## 中国社会分层
+https://book.douban.com/subject/30424945/
+
 ## 资源合集
 - https://github.com/jbiaojerry/ebook-treasure-chest
+
+
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

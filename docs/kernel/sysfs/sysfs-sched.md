@@ -301,6 +301,39 @@ https://docs.kernel.org/admin-guide/sysctl/kernel.html
 - sched_util_clamp_min
 - sched_util_clamp_min_rt_default
 
+| 项目 | 作用 | 默认值 / 范围 | 注意点 |
+| --- | --- | --- | --- |
+| `threads-max` | 全系统可由 `fork()` 创建的 task 上限；进程和每个线程均计数。 | 启动时按内存估算，使线程结构最多约占可用页的 1/8；可写范围 `1`～`0x3fffffff`。 | 不是每用户限制；还受 `RLIMIT_NPROC`、cgroup `pids.max` 等约束。 |
+| `pid_max` | PID 分配的回绕上界；下一个 PID 到该值时从较小 PID 重新查找。`pid_max` 本身及更大值不会分配。 | 64 位通常最大 `4194304`；最小值随 CPU 数动态提高。 | 它限制 PID/TID 编号空间，不等同于当前可创建线程数。 |
+| `sched_cfs_bandwidth_slice_us` | CFS cgroup 带宽配额从全局池分给每 CPU 本地运行队列时，每次分配的批量大小。 | `5000` µs；至少 `1` µs；需 `CONFIG_CFS_BANDWIDTH`。 | 不是普通 CFS 任务的调度时间片。增大可降低全局配额锁竞争；减小可让配额消费更细粒度。仅在 cgroup 设置 CPU 配额时有实际影响。 |
+| `sched_deadline_period_min_us` | `SCHED_DEADLINE` 任务的 `sched_period` 允许的最小值。 | 默认 `100` µs；与 max 保持 `min ≤ max`。 | 过小会提高定时器和调度开销；`runtime`、`deadline`、`period` 仍须满足 `runtime ≤ deadline ≤ period`。 |
+| `sched_deadline_period_max_us` | `SCHED_DEADLINE` 任务的 `sched_period` 允许的最大值。 | 默认 `4194304` µs，约 4.19 秒。 | 是任务准入参数的边界，不是全局 DL 带宽本身。 |
+| `sched_energy_aware` | 开关 EAS（Energy Aware Scheduling）：在满足性能需求的候选 CPU 中，结合能耗模型选择更省电的放置位置。 | EAS 可用时为 `0/1`，通常默认启用。 | 需要非对称 CPU 容量拓扑、Energy Model 和相关 cpufreq 支持。非 EAS 平台读为空，写入失败；它不是直接的 CPU 频率上限。 |
+| `sched_rr_timeslice_ms` | `SCHED_RR` 同优先级任务轮转的 quantum。 | 默认 `100` ms；写入 `0` 或负数会复位到默认值。 | 仅影响 `SCHED_RR`，不影响 `SCHED_FIFO` 或 CFS；实际精度受 `HZ` 的 jiffy 粒度限制。 |
+| `sched_rt_period_us` | RT 带宽控制的统计周期。每个周期内，FIFO/RR 任务最多使用 `sched_rt_runtime_us` 的 CPU 时间。 | 默认 `1000000` µs（1 秒），范围 `1`～`INT_MAX`。 | 也用于 `SCHED_DEADLINE` 的全局准入带宽比例。 |
+| `sched_rt_runtime_us` | 每个 RT 周期允许 FIFO/RR 使用的总运行预算；耗尽时 RT 任务被 throttled 到下一周期。 | 默认 `950000` µs；范围 `-1`～`sched_rt_period_us`。 | 默认预留约 5% CPU 给非 RT 任务。`-1` 表示不限制，失控 RT 任务可能令机器无法交互。 |
+| `sched_schedstats` | 启用调度器统计，例如 `/proc/schedstat` 及相关调度统计。 | `0/1`，默认 `0`；需 `CONFIG_SCHEDSTATS`。 | 打开有调度热路径开销，适合调试或性能分析；写入需 `CAP_SYS_ADMIN`。 |
+| `sched_autogroup_enabled` | 按 session 自动把普通任务归入 CFS task group，使终端或桌面工作负载不易被另一 session 的大量 CPU 任务压制。 | `0/1`；上游通常默认 `1`，`noautogroup` 启动参数会关闭；需 `CONFIG_SCHED_AUTOGROUP`。 | 主要面向桌面交互性；服务器或已有精细 cgroup CPU 分组时通常不需要它。 |
+| `sched_util_clamp_min` | 系统允许的最大 `UCLAMP_MIN` 请求值，即全局“性能下限/boost”上限。 | `0`～`1024`，默认 `1024`。 | 设为 `512` 后，任务请求更高的最低性能点不会生效到 `512` 以上。`1024` 是容量刻度，不是百分比 CPU 时间。 |
+| `sched_util_clamp_max` | 系统允许的最大 `UCLAMP_MAX` 值，即全局性能上限。 | `0`～`1024`，默认 `1024`，且不得小于 `sched_util_clamp_min`。 | 例如设为 `512` 会将整个系统的有效性能点限制在约 50% 容量刻度，常用于省电或温控策略。 |
+| `sched_util_clamp_min_rt_default` | 未通过 `sched_setattr()` 显式指定 uclamp 的 RT 任务，其默认 `UCLAMP_MIN`。 | `0`～`1024`，默认 `1024`；有效值受 `sched_util_clamp_min` 约束。 | 默认让 RT 任务倾向最高性能点和高容量 CPU；移动或电池设备可下调以换取续航。 |
+
+几个容易混淆的点：
+
+- `threads-max` 限制 task 数，`pid_max` 限制 PID/TID 编号回绕空间，两者不是同一个限制。
+- `sched_cfs_bandwidth_slice_us` 是 cgroup 配额的“补给批量”，不是 CFS 的时间片。
+- `sched_rt_*` 管的是 RT 带宽预算；`sched_rr_timeslice_ms` 管的是 RR 任务间轮转。
+- uclamp 是调度放置和 `schedutil` 频率选择的性能提示或约束，并不等同于 cgroup CPU quota。
+
+参考：
+
+- [Documentation for /proc/sys/kernel/](https://docs.kernel.org/admin-guide/sysctl/kernel.html)
+- [CFS Bandwidth Control](https://docs.kernel.org/scheduler/sched-bwc.html)
+- [Real-Time group scheduling](https://docs.kernel.org/scheduler/sched-rt-group.html)
+- [Deadline Task Scheduling](https://docs.kernel.org/scheduler/sched-deadline.html)
+- [Utilization Clamping](https://docs.kernel.org/scheduler/sched-util-clamp.html)
+- [`sched(7)`](https://man7.org/linux/man-pages/man7/sched.7.html)
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

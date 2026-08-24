@@ -400,6 +400,14 @@
 - [热迁移中 share memory 会被自动 touch](./qemu/migration/zero-page/zero-page.md)
 - [PCIDevice::net_failover 与热迁移](./qemu/migration/net-failover.md)
 
+## QEMU qom
+
+- [QEMU 中的面向对象 : QOM](./qemu/qom/qom.md)
+- [QEMU 的参数解析](./qemu/qom/options.md)
+- [qapi](./qemu/qom/qapi.md)
+- [qdev](./qemu/qom/qdev.md)
+- [qmp 和 hmp](./qemu/qom/qmp-hmp.md)
+
 ## 内核同步 API
 - [mutex](./concurrent/kernel/api/mutex.md)
 - [percpu rwsem](./concurrent/kernel/api/percpu-rwsem.md)
@@ -589,8 +597,6 @@
 - [选项 BLK_WBT](./kernel/blk/mq/wbt.md)
 - [mq 基础](./kernel/blk/mq/yes.md)
 
-### [ ] io_uring
-
 ### [ ] cgroup
 
 ### [ ] vmscan lru
@@ -602,8 +608,6 @@
 - [initramfs : iso](./kernel/tutorial/initramfs/iso.md)
 - [linuxfromscratch](./kernel/tutorial/initramfs/minimal.md)
 - [bootc](./kernel/tutorial/initramfs/yes.md)
-
-
 
 ### [ ] Rust
 - [基本执行操作](./rust/demo/README.md)
@@ -659,6 +663,35 @@
 - [QEMU `AioContext` 与 GLib 连接机制](./qemu/thread/todo-glib2.md)
 - [qemu thread io](./qemu/thread/overview.md)
 
+
+### [ ] iouring
+- [aio](./kernel/iouring/aio.md)
+- [bpf](./kernel/iouring/bpf.md)
+- [iouring 的 cancel 设计](./kernel/iouring/cancel.md)
+- [文档](./kernel/iouring/doc.md)
+- [iouring 的生态](./kernel/iouring/ecosystem.md)
+- [iouring 实现分析](./kernel/iouring/internal.md)
+- [iopoll](./kernel/iouring/iopoll.md)
+- [lock](./kernel/iouring/lock.md)
+- [iouring msg ring](./kernel/iouring/msg-ring.md)
+- [iouring multishot](./kernel/iouring/multishot.md)
+- [net](./kernel/iouring/net.md)
+- [iouring 的 queue 同步](./kernel/iouring/queue.md)
+- [iouring register buffers](./kernel/iouring/register-buf.md)
+- [iouring register fds](./kernel/iouring/register-fd.md)
+- [安全](./kernel/iouring/security.md)
+- [iouring 内核和用户态如何共享内存](./kernel/iouring/share.md)
+- [iouring 对于 signal 的改造](./kernel/iouring/signal.md)
+- [基本的使用](./kernel/iouring/ublk.md)
+- [io uring 版本迭代](./kernel/iouring/version.md)
+- [workqueue](./kernel/iouring/wq.md)
+- [iouring 杂记](./kernel/iouring/yes.md)
+- async
+	- [buffer io](./kernel/iouring/async/aio-buffer-io.md)
+	- [基础](./kernel/iouring/async/basic.md)
+	- [buffered write](./kernel/iouring/async/buffer-write.md)
+	- [epoll](./kernel/iouring/async/epoll.md)
+
 <!-- BEGIN AUTO DOCS INDEX -->
 ## 自动文档索引
 
@@ -674,6 +707,7 @@
   - [hack with qemu](./acpi/qemu.md)
   - [UACPI](./acpi/uacpi.md)
 - `ai/`
+  - [AI 时代的英语解决方案](./ai/english.md)
   - [pi](./ai/pi.md)
 - `asm/`
   - `aarch64/`
@@ -684,8 +718,6 @@
 - `benchmark/`
   - [性能基准测试工具](./benchmark/benchmarks.md)
   - [个人性能测试记录](./benchmark/my-result.md)
-- `blog/`
-  - [basic](./blog/basic.md)
 - `bmbt/`
   - [BMBT 常见问题解答](./bmbt/1-why.md)
   - [裸金属二进制翻译器的架构](./bmbt/2-arch.md)
@@ -697,8 +729,9 @@
 - `chatter/`
   - [不要辜负这个伟大的时代](./chatter/great-era.md)
   - [为什么你不应该考公务员](./chatter/gwy.md)
-  - [Kimi k3 并不好](./chatter/k3.md)
+  - [Kimi k3 并不好用](./chatter/k3.md)
   - [乱七八糟的想法](./chatter/life-dev.md)
+  - [恋爱](./chatter/love.md)
   - [关于读博的思考](./chatter/phd.md)
   - [blog 阅读](./chatter/readings.md)
   - [深圳](./chatter/shenzhen.md)
@@ -969,33 +1002,6 @@
     - [存储的热插拔](./kernel/hp/storage.md)
   - `iommu/`
     - [iommu=pt 到底意味着什么?](./kernel/iommu/iommu-pt.md)
-  - `iouring/`
-    - `async/`
-      - [buffer io](./kernel/iouring/async/aio-buffer-io.md)
-      - [基础](./kernel/iouring/async/basic.md)
-      - [buffered write](./kernel/iouring/async/buffer-write.md)
-      - [epoll](./kernel/iouring/async/epoll.md)
-    - [aio](./kernel/iouring/aio.md)
-    - [bpf](./kernel/iouring/bpf.md)
-    - [iouring 的 cancel 设计](./kernel/iouring/cancel.md)
-    - [文档](./kernel/iouring/doc.md)
-    - [iouring 的生态](./kernel/iouring/ecosystem.md)
-    - [iouring 实现分析](./kernel/iouring/internal.md)
-    - [iopoll](./kernel/iouring/iopoll.md)
-    - [lock](./kernel/iouring/lock.md)
-    - [iouring msg ring](./kernel/iouring/msg-ring.md)
-    - [iouring multishot](./kernel/iouring/multishot.md)
-    - [net](./kernel/iouring/net.md)
-    - [iouring 的 queue 同步](./kernel/iouring/queue.md)
-    - [iouring register buffers](./kernel/iouring/register-buf.md)
-    - [iouring register fds](./kernel/iouring/register-fd.md)
-    - [安全](./kernel/iouring/security.md)
-    - [iouring 内核和用户态如何共享内存](./kernel/iouring/share.md)
-    - [iouring 对于 signal 的改造](./kernel/iouring/signal.md)
-    - [基本的使用](./kernel/iouring/ublk.md)
-    - [io uring 版本迭代](./kernel/iouring/version.md)
-    - [workqueue](./kernel/iouring/wq.md)
-    - [iouring 杂记](./kernel/iouring/yes.md)
   - `ipmi/`
     - [pikvm](./kernel/ipmi/pikvm.md)
   - `irq/`
@@ -1348,6 +1354,7 @@
     - [代码](./kvm/features/vcpu-stall.md)
   - `fun/`
     - [记录调试 kvm 的一个有趣问题](./kvm/fun/host-freq.md)
+    - [QEMU 中 null_blk fio 性能与 HugeTLB 对比](./kvm/fun/qemu-nullblk-performance.md)
   - `hyperv/`
     - [Hyperv Enlightment](./kvm/hyperv/hyperv-pv.md)
     - [HyperV](./kvm/hyperv/hyperv.md)
@@ -1645,10 +1652,14 @@
     - [qemu memory backend](./qemu/memory/memory.backend.md)
     - [MemoryListener](./qemu/memory/memory.listener.md)
     - [QEMU 的 memory model](./qemu/memory/memory.md)
+  - `migration/`
+    - [capability 的实现：auto-converge、background-snapshot 与新增功能模板](./qemu/migration/capability-implementation.md)
+    - [qemu migration capability](./qemu/migration/capbility.md)
+    - [QEMU migration parameter](./qemu/migration/parameter.md)
   - `qom/`
-    - [QEMU 的参数解析](./qemu/qom/options.md)
-    - [qdev](./qemu/qom/qdev.md)
-    - [QEMU 中的面向对象 : QOM](./qemu/qom/qom.md)
+    - `example/`
+      - [hmp](./qemu/qom/example/hmp.md)
+      - [qemu 的 help](./qemu/qom/example/options.md)
   - `tcg/`
     - [TCG](./qemu/tcg/core-loop.md)
     - [QEMU 中的 map 和 set](./qemu/tcg/map.md)
@@ -1658,6 +1669,10 @@
     - [QEMU 的 softmmu 设计](./qemu/tcg/softmmu.md)
     - [TCGContext : 如何工作的，如何维护的，作用是什么](./qemu/tcg/tb.md)
     - [QEMU 二进制翻译基础](./qemu/tcg/tcg.md)
+  - `thread/`
+    - `glib/`
+      - [glib](./qemu/thread/glib/README.md)
+    - [qemu nested aio_poll](./qemu/thread/nested-aio-poll.md)
   - [alpine iso 可以直接启动使用](./qemu/basic.md)
   - [如何给 qemu 配置 cdrom](./qemu/cdrom.md)
   - [QEMU 的挑战者](./qemu/challenger.md)
@@ -1674,9 +1689,8 @@
   - [设置环境变量方便编译示例](./qemu/libkrun-analysis.md)
   - [libkrun](./qemu/libkrun.md)
   - [microvm](./qemu/microvm.md)
-  - [qapi](./qemu/qapi.md)
   - [qht 移植](./qemu/qht.md)
-  - [qmp 和 hmp](./qemu/qmp-hmp.md)
+  - [qtest](./qemu/qtest.md)
   - [multi-process qemu](./qemu/remote.md)
   - [CPUX86State reset](./qemu/reset.md)
   - [默认模式下，QEMU 是如何保证给一个分配的 10.0.2.15 的](./qemu/slirp.md)
@@ -1692,6 +1706,7 @@
       - [第五章 An Ok Unsafe Queue（还行的 unsafe 队列）](./rust/too-many-linked-lists/ai/05-fifth-ok-unsafe-queue.md)
       - [第六章 A Production Unsafe Deque（生产级 unsafe 双端队列）](./rust/too-many-linked-lists/ai/06-sixth-production-unsafe-deque.md)
       - [第七章 A Bunch of Silly Lists（一堆整活链表）](./rust/too-many-linked-lists/ai/07-infinity-silly-lists.md)
+  - [Rust 中 Move、Copy、Clone 和 Drop 的关系](./rust/clone-copy-drop.md)
   - [rust gdb 基本使用方法](./rust/debug.md)
   - [Rust 学习记录](./rust/overview.md)
   - [rust 的 smart pointers](./rust/pointers.md)

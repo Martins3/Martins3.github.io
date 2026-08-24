@@ -428,7 +428,7 @@ RAMBlock 结构体分析:
       - qemu_ram_addr_from_host
         - qemu_ram_block_from_host
 
-## RAMBlock 中和热迁移相关的 bitmap 的功能
+## 热迁移相关的 bitmap 功能总结
 <!-- 5a5134f7-ff0e-4e52-bb1b-dcc20727d011 -->
 
 ```c
@@ -507,7 +507,6 @@ struct RAMBlock {
 | `bmap`               | source | pre-copy / sync | 页    | 当前 dirty 页    |
 | `clear_bmap`         | source | global sync     | chunk | 延迟清 dirty log |
 | `clear_bmap_shift`   | source | global sync     | N/A   | chunk 大小       |
-| `dirty_restore_bmap` | source | 多轮迁移        | 页    |                  |
 | `receivedmap`        | dest   | postcopy        | 页    | 已接收页         |
 | `postcopy_length`    | dest   | postcopy        | 区间  | 合法 RAM 上限    |
 
@@ -526,96 +525,7 @@ struct RAMBlock {
               - ram_init_bitmaps
                 - ram_list_init_bitmaps
 
-### RamBlock::clear_bmap 的作用
-<!-- c4cad885-7a21-432a-80fa-131990c98f1e -->
-
-(这里没完全看懂，physmem 中的函数都有点难懂哦)
-
-virtio-balloon 不是借用的 clear_bmap 的，clear_bmap 的意义
-对应的位置需要告诉 kvm 等，dirty bitmap 位置需要清理掉。
-一些优化就是，拆分成多次来清理，clear_bmap 的一个 bit 记录一个 chunk 也不是一个 page 。
-
-clear_bmap 就是 QEMU 用来记录**“哪些内存块已经获取了脏页，但还没在内核中执行清除操作”**的账本。
-
-访问 clear_bmap 的经典的两个位置大致如此
-
-- __clone3
-  - start_thread
-    - qemu_thread_start
-      - migration_thread
-        - migration_iteration_run
-          - qemu_savevm_state_iterate
-            - ram_save_iterate
-              - ram_find_and_save_block
-                - ram_save_host_page
-                  - migration_bitmap_clear_dirty
-                    - migration_clear_memory_region_dirty_bitmap
-                      - clear_bmap_test_and_clear
-		      - memory_region_clear_dirty_bitmap
-			- kvm_log_clear : 告诉 kvm 来清理
-
-- __clone3
-  - start_thread
-    - qemu_thread_start
-      - migration_thread
-        - migration_iteration_run
-          - qemu_savevm_state_pending_exact
-            - ram_state_pending_exact
-              - migration_bitmap_sync_precopy
-                - migration_bitmap_sync
-                  - ramblock_sync_dirty_bitmap
-                    - physical_memory_sync_dirty_bitmap
-		      - memory_region_clear_dirty_bitmap (低速)
-                      - clear_bmap_set (默认操作，记录在 clear_bmap 中)
-
-## RAMList 和 ram_addr_t
-<!-- 05b8d166-0c6c-4a28-8ff1-c546e86f6fef -->
-
-简而言之，将所有的 RamBlock 连接到一起，构建 ram address space
-
-所有的 page 的 dirty 都是记录在 `RAMList::DirtyMemoryBlocks::blocks` 中
-给出一个 ram 中的一个 page，需要找到在 blocks 数组中的下标，于是发明了 ram addr
-```c
-typedef struct {
-    struct rcu_head rcu;
-    unsigned long *blocks[];
-} DirtyMemoryBlocks;
-
-typedef struct RAMList {
-    QemuMutex mutex;
-    RAMBlock *mru_block;
-    /* RCU-enabled, writes protected by the ramlist lock. */
-    QLIST_HEAD(, RAMBlock) blocks;
-    DirtyMemoryBlocks *dirty_memory[DIRTY_MEMORY_NUM];
-    uint32_t version;
-    QLIST_HEAD(, RAMBlockNotifier) ramblock_notifiers;
-} RAMList;
-```
-QEMU 使用 RAMBlock 来描述 ram，MemoryRegion 的类型是 ram，那么就会关联一个 RAMBlock
-
-将所有的 RAMBlock 连续的连到一起，形成 RAMList ，一个 RAMBlock 在其中偏移量记录在 `RAMBlock::offset`, 显然，第一个 offset 为 0
-
-find_ram_offset 中 RAM 的对齐至少为 0x40000
-```c
-        candidate = ROUND_UP(candidate, BITS_PER_LONG << TARGET_PAGE_BITS);
-```
-
-在 ram_list 中，RAMBlock 按照大小排序的。
-```txt
-pc.ram: offset=0 size=180000000
-pc.bios: offset=180000000 size=40000
-pc.rom: offset=180040000 size=20000
-vga.vram: offset=180080000 size=800000
-/rom@etc/acpi/tables: offset=180900000 size=200000
-virtio-vga.rom: offset=180880000 size=10000
-e1000.rom: offset=1808c0000 size=40000
-/rom@etc/table-loader: offset=180b00000 size=10000
-/rom@etc/acpi/rsdp: offset=180b40000 size=1000
-```
-任何一个 page 的 ram_addr = offset in RAM + `RAMBlock::offset`
-
-
-## migration 中 dirty tracking 的三个 bitmap
+### dirty tracking 的三个 bitmap
 <!-- 7af2190d-6c72-4a60-a3a3-b21b69273d01 -->
 
 由于层次划分问题，dirty bitmap 出现在三个地方，在热迁移的过程中会进行搬移
@@ -802,11 +712,48 @@ RAMBlock::bmap 则是 migration 层自己的、按单个 RAMBlock 内偏移编�
 
 因此 bmap 里可以有很多“并不是刚刚新脏”的页，比如首轮全量迁移时所有页都在 bmap 里；而 dirty_memory 更像增量日志。
 
-## RAMBlock::clear_bmap
-<!-- 03c98e59-18f9-4d53-8933-9310edcde8c7 -->
+### RamBlock::clear_bmap 的作用
+<!-- c4cad885-7a21-432a-80fa-131990c98f1e -->
 
-> [!NOTE]
-> 参考神奇海螺的意见，有待验证
+(这里没完全看懂，physmem 中的函数都有点难懂哦)
+
+virtio-balloon 不是借用的 clear_bmap 的，clear_bmap 的意义
+对应的位置需要告诉 kvm 等，dirty bitmap 位置需要清理掉。
+一些优化就是，拆分成多次来清理，clear_bmap 的一个 bit 记录一个 chunk 也不是一个 page 。
+
+clear_bmap 就是 QEMU 用来记录**“哪些内存块已经获取了脏页，但还没在内核中执行清除操作”**的账本。
+
+访问 clear_bmap 的经典的两个位置大致如此
+
+- __clone3
+  - start_thread
+    - qemu_thread_start
+      - migration_thread
+        - migration_iteration_run
+          - qemu_savevm_state_iterate
+            - ram_save_iterate
+              - ram_find_and_save_block
+                - ram_save_host_page
+                  - migration_bitmap_clear_dirty
+                    - migration_clear_memory_region_dirty_bitmap
+                      - clear_bmap_test_and_clear
+		      - memory_region_clear_dirty_bitmap
+			- kvm_log_clear : 告诉 kvm 来清理
+
+- __clone3
+  - start_thread
+    - qemu_thread_start
+      - migration_thread
+        - migration_iteration_run
+          - qemu_savevm_state_pending_exact
+            - ram_state_pending_exact
+              - migration_bitmap_sync_precopy
+                - migration_bitmap_sync
+                  - ramblock_sync_dirty_bitmap
+                    - physical_memory_sync_dirty_bitmap
+		      - memory_region_clear_dirty_bitmap (低速)
+                      - clear_bmap_set (默认操作，记录在 clear_bmap 中)
+
 
 - rb->bmap：QEMU 迁移层看到的“这些 guest page 需要发送”。
 - rb->clear_bmap：这些页对应的底层 dirty bitmap/KVM dirty log，“还需要在真正发送前清掉一次”。
@@ -826,6 +773,53 @@ RAMBlock::bmap 则是 migration 层自己的、按单个 RAMBlock 内偏移编�
 
 - clear_bmap 的粒度比 bmap 粗，一个 bit 可以代表多个 guest page，这由 clear_bmap_shift 决定。include/system/ramblock.h:74
 - 它本质上是“待清除 chunk”的集合，所以 clear_bmap_test_and_clear() 是 test+clear，一次 chunk 只做一次真正的底层 clear。include/system/ramblock.h:215
+
+## RAMList 和 ram_addr_t
+<!-- 05b8d166-0c6c-4a28-8ff1-c546e86f6fef -->
+
+简而言之，将所有的 RamBlock 连接到一起，构建 ram address space
+
+所有的 page 的 dirty 都是记录在 `RAMList::DirtyMemoryBlocks::blocks` 中
+给出一个 ram 中的一个 page，需要找到在 blocks 数组中的下标，于是发明了 ram addr
+```c
+typedef struct {
+    struct rcu_head rcu;
+    unsigned long *blocks[];
+} DirtyMemoryBlocks;
+
+typedef struct RAMList {
+    QemuMutex mutex;
+    RAMBlock *mru_block;
+    /* RCU-enabled, writes protected by the ramlist lock. */
+    QLIST_HEAD(, RAMBlock) blocks;
+    DirtyMemoryBlocks *dirty_memory[DIRTY_MEMORY_NUM];
+    uint32_t version;
+    QLIST_HEAD(, RAMBlockNotifier) ramblock_notifiers;
+} RAMList;
+```
+QEMU 使用 RAMBlock 来描述 ram，MemoryRegion 的类型是 ram，那么就会关联一个 RAMBlock
+
+将所有的 RAMBlock 连续的连到一起，形成 RAMList ，一个 RAMBlock 在其中偏移量记录在 `RAMBlock::offset`, 显然，第一个 offset 为 0
+
+find_ram_offset 中 RAM 的对齐至少为 0x40000
+```c
+        candidate = ROUND_UP(candidate, BITS_PER_LONG << TARGET_PAGE_BITS);
+```
+
+在 ram_list 中，RAMBlock 按照大小排序的。
+```txt
+pc.ram: offset=0 size=180000000
+pc.bios: offset=180000000 size=40000
+pc.rom: offset=180040000 size=20000
+vga.vram: offset=180080000 size=800000
+/rom@etc/acpi/tables: offset=180900000 size=200000
+virtio-vga.rom: offset=180880000 size=10000
+e1000.rom: offset=1808c0000 size=40000
+/rom@etc/table-loader: offset=180b00000 size=10000
+/rom@etc/acpi/rsdp: offset=180b40000 size=1000
+```
+任何一个 page 的 ram_addr = offset in RAM + `RAMBlock::offset`
+
 
 ## 当发送完成之后，QEMU 会将这些内存释放掉
 
