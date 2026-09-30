@@ -1,7 +1,7 @@
-## bus
+# sysfs bus
 
 ```txt
-	echo 1 | sudo tee /sys/bus/pci/rescan
+echo 1 | sudo tee /sys/bus/pci/rescan
 ```
 
 ```txt
