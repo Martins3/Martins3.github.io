@@ -94,6 +94,7 @@ class NormalQemuProfile:
         return ()
 
     def prepare(self, runner: CommandRunner) -> None:
+        del runner
         return None
 
     def fallback_boot_disks(self) -> list[tuple[str, str, str | None]] | None:
@@ -674,6 +675,7 @@ class ColleiQemuBuilder:
             )
 
     def setup_mem_cpu(self, argv: list[str]) -> None:
+        guest_memfd_options = self.guest_memfd_options()
         if not self.dry_run and self.vm.config.options.enabled("hugetlb"):
             ram = self.vm.config.options.integer("ram", 8)
             target_pages = ram * 512
@@ -698,11 +700,24 @@ class ColleiQemuBuilder:
                 "-m",
                 f"{ram}G,slots=8,maxmem=256G",
                 "-object",
-                f"memory-backend-memfd,id=mem0,size={ram}G,prealloc=off,share=on,hugetlb={hugetlb}",
+                f"memory-backend-memfd,id=mem0,size={ram}G,prealloc=off,share=on,hugetlb={hugetlb}{guest_memfd_options}",
                 "-numa",
                 "node,nodeid=0,memdev=mem0",
             ]
         )
+
+    def guest_memfd_options(self) -> str:
+        direct = self.vm.config.options.enabled("guest_memfd_direct")
+        if not direct and not self.vm.config.options.enabled("guest_memfd"):
+            return ""
+        if self.vm.config.options.enabled("hugetlb"):
+            raise UnsupportedNativeConfiguration(
+                "guest_memfd cannot be used with hugetlb"
+            )
+        options = ",guest-memfd=on,seal=off"
+        if direct:
+            options += ",x-guest-memfd-direct=on"
+        return options
 
     def setup_memory_explicit(self, argv: list[str]) -> None:
         # 这个不仅复杂，而且颠覆对于计算机的理解，具体讨论见 docs/qemu/cpu-topo.md。
@@ -720,6 +735,7 @@ class ColleiQemuBuilder:
                 f"ram={ram}G cannot be divided into numa_num={numa_num}"
             )
         node_ram = ram // numa_num
+        guest_memfd_options = self.guest_memfd_options()
         argv.extend(
             [
                 "-smp",
@@ -732,7 +748,7 @@ class ColleiQemuBuilder:
             argv.extend(
                 [
                     "-object",
-                    f"memory-backend-memfd,id=mem{node},size={node_ram}G,prealloc=off,share=on",
+                    f"memory-backend-memfd,id=mem{node},size={node_ram}G,prealloc=off,share=on{guest_memfd_options}",
                     "-numa",
                     f"node,nodeid={node},memdev=mem{node}",
                 ]

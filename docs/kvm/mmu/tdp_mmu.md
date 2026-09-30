@@ -1,5 +1,7 @@
 # tdp_mmu
 
+
+
 - https://lwn.net/Articles/832835/
 - https://static.sched.com/hosted_files/kvmforum2019/25/MMU%20improvements%20KVM%20Forum%20Presentation%20-%20short.pdf
 
@@ -241,8 +243,8 @@ Exploring an architecture-neutral MMU
 ## tdp_enabled 和 tdp_mmu_enabled 的区别
 <!-- b6faa70c-e250-48d2-9dcc-9a18263d1a0e -->
 
-tdp_enabled 是硬件机制
-tdp_mmu_enabled 是 lock 机制改进
+`tdp_enabled` 表示启用硬件两阶段地址翻译。
+`tdp_mmu_enabled` 表示使用专用 TDP MMU 软件实现，其中读锁、原子 SPTE 更新和 RCU 是重要的并发改进。
 
 打开关闭的方法分别是:
 ```sh
@@ -252,7 +254,7 @@ sudo modprobe kvm tdp_mmu=N
 sudo modprobe kvm_intel ept=N
 ```
 
-这个地方的命名最后都是统一的，也就是 tdp_mmu 就是锁机制了。
+因此 `tdp_mmu` 不是硬件 EPT/NPT 的另一个名字，也不只是一个锁选项。
 
 ```c
 /*
@@ -592,26 +594,26 @@ kvm_mmu_load()
     - RMAP（反向映射）开销大
     - 维护困难
 
-问题 3：可扩展性差
-    - 无法利用现代硬件特性
-    - 难以支持大页优化
+问题 3：软件管理与并发扩展成本
+    - 传统框架的写锁和反向映射增加并发维护成本
+    - 旧路径同样使用 EPT/NPT，也支持大页，不能把它说成没有硬件分页能力
 ```
 
 ### 6.2 新 TDP MMU 的优势
 
 ```
-优势 1：并发性能好 ✅
+优势 1：改善 fault 并发
     - 使用 read_lock(&kvm->mmu_lock)
     - RCU 保护允许多读者
     - 原子操作更新 SPTE
-    - 多核性能显著提升
+    - 减少多个 vCPU 的慢 fault 因写锁而串行化，实际收益取决于负载
 
-优势 2：代码简洁 ✅
+优势 2：独立的页表管理
     - 独立实现（tdp_mmu.c）
-    - 不需要 RMAP（部分场景）
+    - TDP 页表本身不使用传统 memslot RMAP；同一 VM 的 nested shadow 页表仍可需要它
     - 专门为 TDP 优化
 
-优势 3：易于优化 ✅
+优势 3：便于专门优化
     - 支持大页恢复
     - 支持 eager page split
     - 易于添加新特性

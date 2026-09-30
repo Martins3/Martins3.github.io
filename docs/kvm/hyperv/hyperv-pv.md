@@ -3,7 +3,6 @@ https://libvirt.org/formatdomain.html
 
 ![](./img/hyperv.png)
 
-
 |-----------------|------------------------------------------------------------------------|-----------------------------------------------|------------------------------------------------|
 | relaxed         | Relax constraints on timers                                            | on, off                                       | 1.0.0 (QEMU 2.0)                               |
 | vapic           | Enable virtual APIC                                                    | on, off                                       | 1.1.0 (QEMU 2.0)

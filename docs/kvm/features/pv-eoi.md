@@ -1,4 +1,7 @@
 # pv eoi
+
+
+
 ## 如何初始化
 
 ```c
@@ -116,7 +119,7 @@ static notrace __maybe_unused void kvm_guest_apic_eoi_write(void)
 
 
 ## 和 apicv 的关系
-如果 enable_apicv = 1 ，那么这些东西都不会触发，因为 kvm_check_request 不会通过
+不能由 `enable_apicv=1` 推出 PV EOI 函数不再调用，更不能推出 `KVM_REQ_EVENT` 不再出现。当前 `arch/x86/kvm/lapic.c` 的 `apic_sync_pv_eoi_to_guest()` 根据 PV EOI 配置、IRR/ISR 和 IOAPIC 是否需要 EOI 等状态判断；`arch/x86/kvm/vmx/vmx.c` 的 `handle_apic_eoi_induced()` 仍处理指定向量的硬件 EOI 退出。
 
 ## 如果真正的启用 eoi : kvm enable_apicv=0
 

@@ -31,7 +31,7 @@ https://www.qemu.org/docs/master/system/i386/hyperv.html
 
 ## 启动 windows 的时候会调用到这里: kvm_get_hv_cpuid
 
-# hyperv 到底是如何影响的?
+## hyperv 到底是如何影响的?
 
 ## kvm_hv_set_msr_common
 

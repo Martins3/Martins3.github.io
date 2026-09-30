@@ -101,6 +101,9 @@ https://github.com/gammasoft71/Examples_Win32/blob/master/Win32.System/Console/C
 windows 也是有 pty 的
 https://learn.microsoft.com/en-us/windows/console/creating-a-pseudoconsole-session
 
+可运行的 [Windows Console 与 ConPTY 小实验](windows-conpty-demo/README.md) 使用
+MSVC 构建，比较普通管道与 ConPTY 的标准句柄、Console API、颜色、输入和尺寸变化。
+
 虽然 tmux 没有， wezterm 又是可以在 windows 下有的。
 
 https://www.reddit.com/r/tmux/comments/l580mi/is_there_a_tmuxlike_equivalent_for_windows/

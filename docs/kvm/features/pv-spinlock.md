@@ -1,4 +1,5 @@
-### 虚拟化下的 spin lock
+# pv spinlock
+
 首先，大致看看代码吧!
 ```c
 /*
@@ -275,16 +276,16 @@ is used in the hypercall for future use.
 为什么现在的配置(2024-08-12)中，虚拟机会走到这里，是我没有配置 guest 的 pv 模式吗?
 
 ```txt
-#0  __raw_spin_unlock_irqrestore (lock=0xffff888236f608c0, flags=130) at ./include/linux/spinlock_api_smp.h:150
-#1  _raw_spin_unlock_irqrestore (lock=0xffff888236f608c0, flags=130) at kernel/locking/spinlock.c:194
-#2  0xffffffff81272d7d in __run_hrtimer (cpu_base=0xffff888236f608c0, base=0xffff888236f60900, timer=0xffff888236f60e08, now=<optimized out>, flags=130) at kernel/time/hrtimer.c:1685
-#3  __hrtimer_run_queues (cpu_base=0xffff888236f608c0, now=115683581114, flags=130, active_mask=15) at kernel/time/hrtimer.c:1753
-#4  0xffffffff812729e4 in hrtimer_interrupt (dev=<optimized out>) at kernel/time/hrtimer.c:1815
-#5  0xffffffff81139a5f in local_apic_timer_interrupt () at arch/x86/kernel/apic/apic.c:1032
-#6  __sysvec_apic_timer_interrupt (regs=0xffffc900211e3f58) at arch/x86/kernel/apic/apic.c:1049
-#7  0xffffffff828ccc2a in instr_sysvec_apic_timer_interrupt (regs=0xffffc900211e3f58) at arch/x86/kernel/apic/apic.c:1043
-#8  sysvec_apic_timer_interrupt (regs=0xffffc900211e3f58) at arch/x86/kernel/apic/apic.c:1043
-#9  0xffffffff82a014ca in asm_sysvec_apic_timer_interrupt () at ./arch/x86/include/asm/idtentry.h:702
+- asm_sysvec_apic_timer_interrupt
+  - sysvec_apic_timer_interrupt
+    - instr_sysvec_apic_timer_interrupt
+      - __sysvec_apic_timer_interrupt
+        - local_apic_timer_interrupt
+          - hrtimer_interrupt
+            - __hrtimer_run_queues
+              - __run_hrtimer
+                - _raw_spin_unlock_irqrestore
+                  - __raw_spin_unlock_irqrestore
 ```
 
 <script src="https://giscus.app/client.js"

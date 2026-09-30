@@ -1,5 +1,18 @@
-## 代码
-drivers/misc/vcpu_stall_detector.c
+# kvm forum
+
+## ??
+- https://static.sched.com/hosted_files/kvmforum2019/f6/Advanced%20VMI%20on%20KVM%3A%20A%20progress%20Report.pdf
+- https://github.com/KVM-VMI/kvm-vmi
+- https://github.com/intel/kernel-fuzzer-for-xen-project
+
+## KVM Forum
+- youtube : https://www.youtube.com/channel/UCRCSQmAOh7yzgheq-emy1xA
+
+这是正确的资源入口吗?
+- https://events.linuxfoundation.org/archive/2020/kvm-forum/
+
+可以将这种分散的合并起来吗?
+- https://people.redhat.com/~aarcange/slides/2019-KVM-monolithic.pdf
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

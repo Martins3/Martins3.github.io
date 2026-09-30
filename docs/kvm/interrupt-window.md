@@ -1,6 +1,8 @@
 # interrupt window
 <!-- 2fa61a03-4527-4aca-a499-227a158af4d5 -->
 
+
+
 guest 屏蔽中断的时候无法注入中断，所以给设置一个标志，如果
 让 guest 一旦打开中断，那么立刻开始注入。
 
@@ -11,13 +13,13 @@ guest 屏蔽中断的时候无法注入中断，所以给设置一个标志，�
 │                                                                 │
 │  场景 1: APICv OFF（传统模式）                                    │
 │  ───────────────────────────                                    │
-│  所有中断 → 软件检查 injectable → 阻塞则 enable_irq_window        │
+│  可屏蔽 IRQ → 软件检查 injectable → 必要时 enable_irq_window    │
 │              ↓                                                  │
 │         窗口打开 → VM-Exit → handle_interrupt_window → inject    │
 │                                                                 │
-│  场景 2: APICv ON（加速模式）                                     │
+│  场景 2: APICv active，普通非 nested LAPIC IRQ                   │
 │  ──────────────────────────                                     │
-│  LAPIC 中断 → Posted Interrupt → 硬件自动注入                    │
+│  pending LAPIC IRQ → VID 硬件交付；PI 可优化新 IRQ 通知          │
 │                     ↓                                           │
 │         不需要 Interrupt Window！                                 │
 │                                                                 │
@@ -86,7 +88,7 @@ static int handle_interrupt_window(struct kvm_vcpu *vcpu)
 
 ## 其实我们是没有完全搞清楚的
 - irq windows 和 vapic 如何配合工作
-- [ ] interrupt window 这个东西应该不用了吧
+- [x] interrupt window 没有废弃；普通 LAPIC IRQ 在实际启用 VID 时可以绕过，其他路径仍需它。
 
 ### 资料
 sdm table C-1 中的描述:
@@ -107,7 +109,7 @@ claude 给出的回答:
 
 ### 中断阻塞的三种情况
 
-`arch/x86/kvm/vmx/vmx.c:5033-5037`：
+`arch/x86/kvm/vmx/vmx.c` 中的 `__vmx_interrupt_blocked()`：
 ```c
 bool __vmx_interrupt_blocked(struct kvm_vcpu *vcpu)
 {
@@ -153,7 +155,7 @@ Host: 有一个中断要注入给 Guest
 
 ### Interrupt Window Exiting 机制
 
-`arch/x86/kvm/vmx/vmx.c:4899-4902`：
+`arch/x86/kvm/vmx/vmx.c` 中的 `vmx_enable_irq_window()`：
 ```c
 void vmx_enable_irq_window(struct kvm_vcpu *vcpu)
 {
@@ -172,7 +174,7 @@ void vmx_enable_irq_window(struct kvm_vcpu *vcpu)
 
 ### 1. 尝试注入中断失败
 
-`arch/x86/kvm/x86.c:10768-10783`：
+`arch/x86/kvm/x86.c` 中的 `kvm_check_and_inject_events()`：
 ```c
 if (kvm_cpu_has_injectable_intr(vcpu)) {
     r = can_inject ? kvm_x86_call(interrupt_allowed)(vcpu, true) :
@@ -215,7 +217,7 @@ nop          ; 此指令期间仍在 STI shadow
 
 ### 6. 处理 Interrupt Window Exit
 
-`arch/x86/kvm/vmx/vmx.c:5622-5630`：
+`arch/x86/kvm/vmx/vmx.c` 中的 `handle_interrupt_window()`：
 ```c
 static int handle_interrupt_window(struct kvm_vcpu *vcpu)
 {
@@ -317,7 +319,7 @@ hlt                    ; 等待中断
 
 ## 关键代码：APICv 激活时的行为
 
-`arch/x86/kvm/irq.c:90-105`：
+`arch/x86/kvm/irq.c` 中的 `kvm_cpu_has_injectable_intr()`：
 ```c
 /*
  * check if there is injectable interrupt:
@@ -345,7 +347,7 @@ int kvm_cpu_has_injectable_intr(struct kvm_vcpu *v)
 
 **原因**：Virtual Interrupt Delivery 硬件自动处理
 
-`arch/x86/kvm/x86.c:10768-10783`：
+`arch/x86/kvm/x86.c` 中的 `kvm_check_and_inject_events()`：
 ```c
 if (kvm_cpu_has_injectable_intr(vcpu)) {  // APICv 激活时对 LAPIC 返回 0
     r = can_inject ? kvm_x86_call(interrupt_allowed)(vcpu, true) :
@@ -373,7 +375,7 @@ if (kvm_cpu_has_injectable_intr(vcpu)) {  // APICv 激活时对 LAPIC 返回 0
 
 #### (1) ExtInt 中断（外部中断控制器）
 
-`arch/x86/kvm/irq.c:59-88`：
+`arch/x86/kvm/irq.c` 中的 `kvm_cpu_has_extint()`：
 ```c
 int kvm_cpu_has_extint(struct kvm_vcpu *v)
 {
@@ -407,7 +409,7 @@ if (kvm_cpu_has_extint(v))
 
 #### (2) 用户空间请求 Interrupt Window
 
-`arch/x86/kvm/x86.c:10487-10491`：
+`arch/x86/kvm/x86.c` 中的 `dm_request_for_irq_injection()`：
 ```c
 static int dm_request_for_irq_injection(struct kvm_vcpu *vcpu)
 {
@@ -416,7 +418,7 @@ static int dm_request_for_irq_injection(struct kvm_vcpu *vcpu)
 }
 ```
 
-`arch/x86/kvm/x86.c:11048-11050, 11234-11235`：
+`arch/x86/kvm/x86.c` 中的 `vcpu_enter_guest()`：
 ```c
 bool req_int_win =
     dm_request_for_irq_injection(vcpu) &&
@@ -428,14 +430,14 @@ if (req_int_win)
     kvm_x86_call(enable_irq_window)(vcpu);
 ```
 
-**场景**：用户空间 LAPIC 模拟（split irqchip 模式）
-- QEMU 模拟 LAPIC
-- 通过 `KVM_RUN.request_interrupt_window` 请求窗口
-- 即使 APICv 可用，用户空间仍需要知道何时注入
+**场景**：用户态请求外部中断注入时机，例如用户态 irqchip，或 split 模式中的用户态 ExtInt。
+- 用户态通过 `struct kvm_run.request_interrupt_window` 请求窗口。
+- split irqchip 的 LAPIC 在内核，PIC/IOAPIC 在用户态；不能把它当成用户态 LAPIC。
+- 是否走窗口要看具体路由，MSI/LAPIC IRQ 仍可以使用 APICv。
 
 #### (3) 嵌套虚拟化场景
 
-`arch/x86/kvm/vmx/vmx.c:5042-5046`：
+`arch/x86/kvm/vmx/vmx.c` 中的 `vmx_interrupt_blocked()`：
 ```c
 bool vmx_interrupt_blocked(struct kvm_vcpu *vcpu)
 {
@@ -453,7 +455,7 @@ L2 运行时：
 
 #### (4) APICv 动态抑制
 
-`arch/x86/kvm/x86.c:10522-10523`：
+`arch/x86/kvm/lapic.c` 中的 `kvm_lapic_update_cr8_intercept()`：
 ```c
 if (vcpu->arch.apic->apicv_active)
     return;  // APICv 激活时跳过
@@ -468,19 +470,19 @@ APICv 可能被临时禁用：
 
 ## 完整对比表
 
-| 中断类型 | APICv 状态 | Virtual Interrupt Delivery | 需要软件注入 | 需要 Interrupt Window |
-|---------|-----------|---------------------------|------------|---------------------|
-| **LAPIC 中断** | ON | ✅ 硬件自动 | ❌ | ❌ |
-| **LAPIC 中断** | OFF | ❌ | ✅ | ✅ |
-| **ExtInt (PIC)** | ON/OFF | ❌ 不支持 | ✅ | ✅ |
-| **用户空间 LAPIC** | - | ❌ | ✅ | ✅ |
-| **嵌套 L2** | ON | 部分 | 部分 | ✅ |
+| 中断类型 | 当前是否使用 VID | 软件注入 | Interrupt Window |
+| --- | --- | --- | --- |
+| 普通非 nested LAPIC IRQ，APICv active | 是 | 该普通路径可绕过 | 不需要为该 IRQ 请求 |
+| LAPIC IRQ，加速未启用 | 否 | 需要 | 必要时请求 |
+| ExtInt，包括 PIC 输出 | 不沿普通 LAPIC VID 路径 | 需要 | 必要时请求 |
+| 用户态 LAPIC | 否 | 需要 | 必要时请求 |
+| nested | 依 L1 配置和事件目标而定 | 依事件而定 | 仍有使用场景 |
 
 ## 工作流程图
 
 ### APICv OFF（传统模式）
 ```
-所有中断
+待处理的可屏蔽 IRQ
   ↓
 kvm_cpu_has_injectable_intr() 返回 1
   ↓
@@ -509,7 +511,7 @@ Guest 收到中断                   窗口打开 → inject_irq()
 
 ## 关键优化
 
-`arch/x86/kvm/x86.c:10522-10523`（update_cr8_intercept）：
+`arch/x86/kvm/lapic.c` 中的 `kvm_lapic_update_cr8_intercept()`：
 ```c
 if (vcpu->arch.apic->apicv_active)
     return;  // APICv 激活时跳过 CR8 拦截优化
@@ -537,9 +539,9 @@ APICv 开启时，很多传统优化（如 CR8 拦截）都被跳过，因为硬
    ```
 
 3. **硬件处理**：
-   - 如果 vcpu->mode == IN_GUEST_MODE：硬件自动 PIR → vIRR
-   - Virtual Interrupt Delivery 自动注入
-   - **完全绕过 kvm_cpu_has_injectable_intr()**
+   - 普通非 nested 目标正在运行且实际使用 APICv 时，可由 CPU 消费 PIR 并在满足条件时交付 IRQ。
+   - 未运行、nested 或加速被抑制等情况，仍可能需要软件同步和唤醒。
+   - `kvm_cpu_has_injectable_intr()` 仍可被调用，只是为普通加速 LAPIC IRQ 返回 0，不要求软件注入。
 
 ### ExtInt 中断路径（无论 APICv 状态）
 
@@ -612,31 +614,21 @@ IDE 中断 → PIC
 ### 场景 3：Split IRQChip 模式
 
 **配置**：
-- QEMU 用户空间模拟 LAPIC
-- 内核模拟 IOAPIC/PIC
+- 内核模拟每个 vCPU 的 LAPIC。
+- QEMU 模拟 PIC/IOAPIC，内核仍提供中断路由。
 
-**中断流程**：
-```
-QEMU 模拟 LAPIC 决定注入中断
-  → 设置 KVM_RUN.request_interrupt_window
-  → vcpu_enter_guest() 检测到请求
-  → enable_irq_window()
-  → Guest IF 打开
-  → VM-Exit (INTERRUPT_WINDOW)
-  → 返回 QEMU
-  → QEMU 注入中断
-```
+MSI/LAPIC IRQ 在 APICv 实际启用时可由硬件交付；用户态 ExtInt 和窗口请求则仍走软件路径。是否需要 interrupt window 由中断来源和可注入状态决定。
 
-**必须使用 Interrupt Window**！
+源码定义见 `Documentation/virt/kvm/api.rst` 的 `KVM_CAP_SPLIT_IRQCHIP` 章节。
 
 ## 性能对比
 
-| 指标 | 传统模式 (无 APICv) | APICv + Interrupt Window |
-|------|-------------------|------------------------|
-| **LAPIC 中断延迟** | 2-3 VM-Exit | 0 VM-Exit |
-| **ExtInt 中断延迟** | 2-3 VM-Exit | 2-3 VM-Exit（无变化） |
-| **CPU 开销** | 高 | LAPIC 低，ExtInt 不变 |
-| **吞吐量** | 中 | LAPIC 高，ExtInt 不变 |
+| 中断路径 | 软件路径的工作 | APICv 可减少的工作 |
+| --- | --- | --- |
+| 普通 LAPIC IRQ | 检查注入条件，必要时等待窗口，再设置 VM-entry injection | VID 接管交付；PI 可减少对运行中目标的通知退出 |
+| ExtInt | 按软件注入规则处理，阻塞时仍可能需要窗口 | 不能直接沿普通 LAPIC IRQ 的 VID 路径交付 |
+
+退出次数取决于目标是否运行、guest 是否屏蔽中断、nested 和配置等条件，不能给出普遍成立的固定次数。
 
 ## 总结
 
@@ -649,17 +641,16 @@ QEMU 模拟 LAPIC 决定注入中断
    - **覆盖大部分现代设备中断（MSI/MSI-X）**
 
 2. **Interrupt Window 仍然重要**
-   - ExtInt 中断（PIC）永远需要
-   - 用户空间模拟场景（split irqchip）
+   - ExtInt 中断不能直接套用普通 LAPIC VID 路径，阻塞时可能需要窗口。
+   - 用户态窗口请求，包括用户态 irqchip 或 split 中的 ExtInt。
    - 嵌套虚拟化复杂性
    - APICv 动态禁用时的回退机制
    - **覆盖传统设备和特殊场景**
 
 3. **现代系统中两者共存**
-   - LAPIC 中断走 APICv 快速路径（>90% 的中断）
-   - ExtInt 等特殊中断走传统 Interrupt Window 路径（<10% 的中断）
-   - 系统根据中断源自动选择最优路径
-   - **提供最大兼容性和最优性能**
+   - 普通 LAPIC IRQ 在实际启用 APICv 时可以走硬件交付路径。
+   - ExtInt 等保留软件注入和窗口路径。
+   - 路径比例取决于设备、中断路由和工作负载，这里没有可推广的比例数据。
 
 ### 关键洞察
 
@@ -672,13 +663,10 @@ QEMU 模拟 LAPIC 决定注入中断
 
 ## 参考代码位置
 
-- `arch/x86/kvm/irq.c:96-105` - kvm_cpu_has_injectable_intr()
-- `arch/x86/kvm/irq.c:59-88` - kvm_cpu_has_extint()
-- `arch/x86/kvm/x86.c:10768-10783` - 中断注入主逻辑
-- `arch/x86/kvm/x86.c:10487-10491` - dm_request_for_irq_injection()
-- `arch/x86/kvm/vmx/vmx.c:4899-4902` - vmx_enable_irq_window()
-- `arch/x86/kvm/vmx/vmx.c:5622-5630` - handle_interrupt_window()
-- `arch/x86/kvm/vmx/vmx.c:5040-5046` - vmx_interrupt_blocked()
+- `arch/x86/kvm/irq.c` 中的 `kvm_cpu_has_injectable_intr()`、`kvm_cpu_has_extint()`。
+- `arch/x86/kvm/x86.c` 中的 `kvm_check_and_inject_events()`、`dm_request_for_irq_injection()`、`vcpu_enter_guest()`。
+- `arch/x86/kvm/vmx/vmx.c` 中的 `vmx_enable_irq_window()`、`handle_interrupt_window()`、`vmx_interrupt_blocked()`。
+- `arch/x86/kvm/lapic.c` 中的 `kvm_lapic_update_cr8_intercept()`。
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

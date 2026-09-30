@@ -1,3 +1,7 @@
+当前实现状态见 [机制状态核查](../mechanism-evolution.md)：Shadow MMU 仍保留，
+但 x86 KVM MMU shrinker 已由 `fe140e611d34` 删除。下面的历史调用栈与当前的
+zap/free 路径需要分开看；页表管理结构里的 shadow 命名也不等于普通 Shadow Paging。
+
 ## for_each_shadow_entry
 <!-- f340ce70-c8aa-4a77-97a8-af04d480e5ab -->
 
@@ -319,10 +323,11 @@ shadow page table 的释放是不感知的:
        mmu_page_zap_pte(sp->kvm, sp->parent, parent_pte);
    }
 
-5. 最终释放（三种可能）：
-   a) Host 内存压力 → shrinker 释放
-   b) Shadow page cache 满 → LRU 替换
-   c) VM 关闭 → 释放所有 shadow pages
+5. 当前释放路径举例：
+   a) 映射或 root 失效 → 相应 zap/free 路径
+   b) 传统 MMU 页数不足 → make_mmu_pages_available() 回收旧页表
+   c) VM 关闭 → 清理页表
+   历史上的 Host 内存压力 → x86 KVM MMU shrinker 路径已经删除。
 ```
 
 ### guest 特殊指令的监控
@@ -541,7 +546,8 @@ if (tdp_enabled && invalid_list &&
 - 子页面（PMD/PTE 级别）只是断开与当前 root 的链接
 - 但子页面仍然保留在 hash 表中（通过 `hash_link`）
 - 如果其他 shadow page table 引用了相同的 guest page，这些子页面可以被复用
-- 如果没有任何引用了，后续通过 shrinker 或重新分配时回收
+- 断开链接不等于立刻释放；后续通过传统 MMU 的页数控制、失效或 teardown 等路径处理。
+  当前没有 x86 KVM MMU shrinker，不能再把它列为这份源码的回收途径。
 
 ### 7.4 缓存机制的价值
 

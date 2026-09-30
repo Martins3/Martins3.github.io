@@ -1,5 +1,7 @@
 # vhe 和 non-vhe
 
+
+
 ## 当前环境主要使用 vhe 模式
 
 [To EL2, and Beyond! Optimizing the Design and Implementation of KVM/ARM](http://events17.linuxfoundation.org/sites/events/files/slides/To%20EL2%20and%20Beyond_0.pdf)
@@ -20,8 +22,7 @@ ARMv8 定义了 4 个特权级（EL0 ~ EL3），与虚拟化相关的主要是�
 
 在 Non vhe 模式:
 
-1. 每次陷入 Hypervisor（例如虚拟机发起系统调用或触发异常）时，CPU 需要从 Guest EL1/EL0 → Host EL1 → EL2。
-返回时需反向切换 EL2 → Host EL1 → Guest EL1/EL0。
+1. 普通 guest 应用的系统调用从 guest EL0 进入 guest EL1，不需要进入 host。真正 trap 到 hypervisor 的事件直接进入 EL2；nVHE 的额外工作是 host EL1 与 EL2 hyp 之间的交互和上下文切换，并非 guest 先进入 host EL1 再 trap 到 EL2。
 2. 内存虚拟化需要两阶段地址翻译（Stage-1 由 Guest OS 管理，Stage-2 由 Hypervisor 管理），
 而宿主内核的页表在 EL1 和 EL2 之间切换时需额外处理。
 

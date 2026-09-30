@@ -1,27 +1,20 @@
-# ARM KVM 的大致代码流程
+# ARM KVM 简述
 
 
 - [天高气爽阅码疾：一日看尽虚拟化](https://mp.weixin.qq.com/s/CWqUagksabj4kDFQhTlgUA)
 - [天高气爽阅码疾：一日看尽虚拟化](https://mp.weixin.qq.com/s/1gA4vRntnWrJjADsMEa7tA)
-讲的很细节，作为大致的参考吧
-
-## 很难的哇
+	- 讲的很细节，作为大致的参考吧
 - https://systems.cs.columbia.edu/projects/kvm-arm/
 - https://www.cnblogs.com/LoyenWang/tag/%E8%99%9A%E6%8B%9F%E5%8C%96/ : LoyenWang 讲解的虚拟化是基于 ARM 的
 - https://lists.cs.columbia.edu/pipermail/kvmarm/2020-July/041733.html ：对于 ARM 最好的总结
-
-## 资源
 - [ ] https://www.usenix.org/system/files/conference/atc17/atc17-dall.pdf
 - [ ] https://calinyara.github.io/technology/2019/11/03/armv8-virtualization.html
 - [ ] https://openeuler.org/zh/blog/yorifang/2020-10-24-arm-virtualization-overview.html
-
-
-## [内存虚拟化](https://www.cnblogs.com/LoyenWang/p/13943005.html)
-
-## [中断虚拟化](https://www.cnblogs.com/LoyenWang/p/14017052.html)
-整个 kvm 只有 17000 行，其中 kvm/vgic 下有 7000 行
-
-- [ ] 分析的相当不错，但是只能理解其中部分内容
+- [内存虚拟化](https://www.cnblogs.com/LoyenWang/p/13943005.html)
+- [中断虚拟化](https://www.cnblogs.com/LoyenWang/p/14017052.html)
+	- 整个 kvm 只有 17000 行，其中 kvm/vgic 下有 7000 行
+	- [ ] 分析的相当不错，但是只能理解其中部分内容
+- https://www.cnblogs.com/LoyenWang/p/13584020.html
 
 ## 简单跟踪一下其中的源码
 
@@ -161,9 +154,6 @@ arch/arm64/kvm/vgic/vgic-irqfd.c
 
 2. 看看 arm 对于变长指令的支持的情况
 
-
-## arm 这个必须看看
-https://www.cnblogs.com/LoyenWang/p/13584020.html
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

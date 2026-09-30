@@ -1,6 +1,31 @@
-# hyperv 中运行 Linux
+# hyper-v 基本使用
 
-## linux 运行在 hyperv 的时候，会加载的驱动
+## 没想到，真的没想到，windows 的 powershell 中可以直接创建出来虚拟机
+https://learn.microsoft.com/en-us/windows-server/virtualization/hyper-v/get-started/create-a-virtual-machine-in-hyper-v?tabs=powershell
+https://servermall.com/blog/microsoft-hyper-v-hypervisor-overview/?srsltid=AfmBOoqA-S-qHpDxuNh6zcEoAASh35Hi6Ms4UUOyAkWI5b7kkECKHa4Z
+
+遇到了点问题，不知道为什么，windows 11 中用 hyper-v manger
+不能按照 windows 11 虚拟机，真的奇怪啊
+
+记住有两个错误:
+1. SCSI DVD (0,0)The boot loader failed : 这个记得在屏幕前 press key ，可以安装，但是有问题
+2. ... : 到时候在研究下，也是关闭安全启动吗？但是这样的话，windows 检查就无法通过了
+
+
+如果安装 fedora 遇到
+The signed image hash is not allow  : 关闭安全启动
+
+
+既然 wsl 开源了，那么 hyper-v manger 的实现估计可以猜到吧
+
+## 运行 windows 虚拟机
+快速创建的 windows 虚拟机
+远程连接上去，发现图形性能基本上无法区分了
+可以进一步测试一下，
+
+## 运行 Linux
+
+### linux 运行在 hyperv 的时候，会加载的驱动
 ```txt
 hv_netvsc             135168  0
 hv_utils               57344  0
@@ -12,7 +37,7 @@ scsi_transport_fc     126976  1 hv_storvsc
 hv_vmbus              196608  8 hv_balloon,hv_utils,hv_netvsc,hid_hyperv,hv_storvsc,hyperv_keyboard,hyperv_drm,hv_sock
 ```
 
-## 也是如此，不使用任何 pci 相关的东西
+### 也是如此，不使用任何 pci 相关的东西
 ```txt
 🧀  ls -la /sys/block
 lrwxrwxrwx@ - root 22 Sep 02:11 dm-0 -> ../devices/virtual/block/dm-0
@@ -28,7 +53,7 @@ LNXSYSTM:00/LNXSYBUS:00/ACPI0004:00
 
 用这个看看一个 scsi 控制器，有多个盘的操作吧。
 
-## 网络
+### 网络
 
 
 ```txt
@@ -65,11 +90,11 @@ round-trip min/avg/max/stddev = 0.314/0.400/0.485/0.086 ms
 
 也就是这个网络配置介于内核
 
-## hyper-v manager 默认 page cache 为总内存使用量的 20%
+### hyper-v manager 默认 page cache 为总内存使用量的 20%
 
 这个配置太保守了，导致了几个问题
 
-### 如果长期不用， 总内存太小了
+#### 如果长期不用， 总内存太小了
 ```txt
 [ 4070.558779] hv_balloon: Balloon request will be partially fulfilled. Balloon floor reached.
 [ 4370.564748] hv_balloon: Balloon request will be partially fulfilled. Balloon floor reached.
@@ -95,7 +120,7 @@ round-trip min/avg/max/stddev = 0.314/0.400/0.485/0.086 ms
 [ 9353.520343] TCP: eth0: Driver has suspect GRO implementation, TCP performance may be compromised.
 ```
 
-### page cache 有时候是非常重要的
+#### page cache 有时候是非常重要的
 当时只是 git pull 一下，然后 git 分配内存直接被干掉了
 可能是 git 直接 mmap 了一个几百兆的内存，这个虚拟机分配的是 16G ，但是好长时间
 没用，结果当时内存总量就只有 600M 了，300M 被使用，300M 是 page cache 。
@@ -143,13 +168,13 @@ Attaching 2 probes...
 @[git]: 7398
 ```
 
-## 打开嵌套虚拟化
+### 打开嵌套虚拟化
 
 Set-VMProcessor -VMName <VMName> -ExposeVirtualizationExtensions $true
 
 这个名称居然就是 hyper v manager 上的名称，例如 fedora-2
 
-## 测试一下存储性能
+### 测试一下存储性能
 
 ```txt
 fio docs/kernel/blk/fio/4k-read.ini
@@ -165,7 +190,7 @@ randwrite iouring 2 jobs ，对于 ext4 上的 10G 文件来 io
 
 还行吧
 
-## 网络测试
+### 网络测试
 哪里网络配置的有点不对
 
 windows 物理机使用 10.0.0.8 ，使用 windows 版本的 iperf3

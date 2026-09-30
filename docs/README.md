@@ -1,5 +1,4 @@
 <p align="center">
-<p align="center">
 	<picture>
 		<img alt="Star History Chart"
 			src="https://star-history.dera.page/svg?repos=Martins3/Martins3.github.io" />
@@ -62,7 +61,6 @@
 ## 技术细节
 
 - [x86 nmi](./kernel/irq/nmi.md)
-- [kvm 如何处理 exception](./kvm/exception.md)
 - [Linux Capabilities 简述](./kernel/security/kernel-capbility.md)
 
 ### signal
@@ -168,9 +166,6 @@
 - 中断
   - [QEMU KVM 中断注入](./kernel/irq/virt-int-inject.md)
 
-## kvm
-
-
 
 ## AI
 
@@ -248,6 +243,7 @@
 - [微分几何知识大纲](./math/basic/differential-geometry.pdf)
 - [线性代数学习笔记](./math/basic/linear-algebra.pdf)
 - [概率论知识大纲](./math/basic/probability-theory.pdf)
+- [复变函数](./math/basic/complex/complex-analysis.pdf)
 
 ### 有趣的问题
 - [2026 AI 数学突破实录](./math/problems/ai-mathematics-breakthroughs-2026.pdf)
@@ -381,7 +377,7 @@
 
 ## [ ] userfaultfd
 
-- [Userfaultfd](./kernel/mm/userfaultfd/basic.md)
+- [Userfaultfd 基础](./kernel/mm/userfaultfd/basic.md)
 - [userfaultfd 高级话题探讨](./kernel/mm/userfaultfd/advance.md)
 - [userfaultfd UAPI history](./kernel/mm/userfaultfd/uapi-history.md)
 
@@ -779,7 +775,7 @@
   - [pl011](./kernel/tty/hw/pl011.md)
   - [serio](./kernel/tty/hw/serio-2.md)
   - [tty driver](./kernel/tty/hw/serio.md)
-  - [这个是做什么的?](./kernel/tty/hw/uart.md)
+  - [uart](./kernel/tty/hw/uart.md)
   - [asahi linux 如何调试](./kernel/tty/hw/usb-m1n1.md)
   - [usb serial](./kernel/tty/hw/usb.md)
   - [vcs](./kernel/tty/hw/vcs.md)
@@ -807,12 +803,12 @@
   - [同时所有的程序都可以接受消息 ?](./kernel/tty/fun/broadcast.md)
   - [ttyprintk](./kernel/tty/fun/ttyprintk.md)
   - [virsh console 和 virsh consoletty 什么关系](./kernel/tty/fun/virsh.md)
-  - [可以最后思考一下这个东西是如何实现的](./kernel/tty/fun/web.md)
+  - [tty in web](./kernel/tty/fun/web.md)
 - [bmc](./kernel/tty/bmc.md)
 - [console](./kernel/tty/console.md)
 - [doc](./kernel/tty/doc.md)
 - [wsl 的 magic](./kernel/tty/fun.md)
-- [安装虚拟机的时候，ovmf stdio 也有安装界面](./kernel/tty/lab.md)
+- [实验](./kernel/tty/lab.md)
 - [Linux Device Driver : TTY Drivers](./kernel/tty/ldd-chapter-18.md)
 - [2. 架构原理 - TTY 核心设计](./kernel/tty/linux-tty-analysis.md)
 - [getty](./kernel/tty/login-getty.md)
@@ -829,6 +825,93 @@
 - [tty 到底是什么](./kernel/tty/tty.md)
 - [为什么在 systemd 中，需要将日志设置为这个东西](./kernel/tty/win.md)
 - [tty0](./kernel/tty/yes.md)
+
+## kvm
+
+- [记录调试 kvm 的一个有趣问题](./kvm/fun/host-freq.md)
+- [QEMU 中 null_blk fio 性能与 HugeTLB 对比](./kvm/fun/qemu-nullblk-performance.md)
+
+### aarch64
+- [ARM KVM 简述](./kvm/aarch64/aarch64.md)
+- [debugfs](./kvm/aarch64/2-tools.md)
+- [大致分析下](./kvm/aarch64/code-overview.md)
+- [基本流程](./kvm/aarch64/mmu.md)
+- [aarch64](./kvm/aarch64/nested.md)
+- [arm timer 模拟](./kvm/aarch64/timer.md)
+- [aarch64 kvm_stat 观测](./kvm/aarch64/tracepoint.md)
+- [VGIC : Interrupt Translation Service](./kvm/aarch64/vgic-its.md)
+- [简单的代码分析](./kvm/aarch64/vgic.md)
+- [vhe 和 non-vhe](./kvm/aarch64/vhe.md)
+- [arm kvm 虚拟机的 exit reason](./kvm/aarch64/yes.md)
+
+### kvm features
+  - [kvm feautres](./kvm/features/kvm-features.md)
+  - [pv eoi](./kvm/features/pv-eoi.md)
+  - [pv sched yield](./kvm/features/pv-sched-yield.md)
+  - [pv spinlock](./kvm/features/pv-spinlock.md)
+  - [pv tlb flush](./kvm/features/pv-tlb-flush.md)
+  - [steal time](./kvm/features/steal-time.md)
+
+### mmu
+  - [L1 中观测到 kvm_set_pfn_dirty](./kvm/mmu/ad.md)
+  - [async pf](./kvm/mmu/async-pf.md)
+  - [EXIT_REASON_EPT_VIOLATION vs EXIT_REASON_EPT_MISCONFIG](./kvm/mmu/basic.md)
+  - [ept 格式的定义在哪里呢?](./kvm/mmu/ept.md)
+  - [分析这个](./kvm/mmu/guest-memfd.md)
+  - [为什么 kvm 需要特殊处理 hugepage](./kvm/mmu/hugepage.md)
+  - [kvm mmu](./kvm/mmu/mmu.md)
+  - [Documentation/virt/kvm/x86/mmu.rst](./kvm/mmu/mmu.rst.md)
+  - [kvm_vcpu_arch 中的 5 个 MMU 的含义](./kvm/mmu/nested.md)
+  - [kvm mmu notifier](./kvm/mmu/notifier.md)
+  - [kvm track mode](./kvm/mmu/page-track.md)
+  - [为什么需要 arch/x86/kvm/mmu/paging_tmpl.h 来处理各种情况](./kvm/mmu/paging_tmpl.md)
+  - [PDPTR 是什么？](./kvm/mmu/pdptr.md)
+  - [kvm rmap](./kvm/mmu/rmap.md)
+  - [for_each_shadow_entry](./kvm/mmu/shadow-page.md)
+  - [tdp_mmu](./kvm/mmu/tdp_mmu.md)
+  - [KVM TLB Flush 机制分析](./kvm/mmu/tlb-flush-draft.md)
+  - [tlb flush](./kvm/mmu/tlb-flush-virt.md)
+  - [tlb flush 的基本原理](./kvm/mmu/tlb-flush.md)
+
+### 嵌套虚拟化
+  - [aarch64](./kvm/nested/aarch64.md)
+  - [如何实现无穷级嵌套](./kvm/nested/nested-l3.md)
+  - [kvm 嵌套虚拟化](./kvm/nested/nested.md)
+  - [svm](./kvm/nested/svm.md)
+  - [vmx](./kvm/nested/vmx.md)
+
+### svm
+  - [其中部分内容分析到](./kvm/svm/avic.md)
+  - [sev](./kvm/svm/sev.md)
+  - [简单浏览下 svm.c 的代码](./kvm/svm/svm.md)
+
+- [kvm 如何处理 exception](./kvm/exception.md)
+
+- [lab](./kvm/pit.md)
+- [cache regs](./kvm/cache-regs.md)
+- [cr0](./kvm/cr.md)
+- [debugfs](./kvm/debugfs.md)
+- [x86 emulate](./kvm/emulate/emulate.md)
+- [SGX](./kvm/enclave.md)
+- [event injection](./kvm/event-delivery.md)
+- [exit reason](./kvm/exit-reason.md)
+- [FRED](./kvm/fred.md)
+- [interrupt window](./kvm/interrupt-window.md)
+- [KVM](./kvm/kvm.md)
+- [kvm_device_ops](./kvm/kvm_device_ops.md)
+- [kvm lock 机制](./kvm/lock.md)
+- [使用 tracepoint 来跟踪 kvm_check_request](./kvm/make_request.md)
+- [mmio](./kvm/mmio.md)
+- [msr](./kvm/msr.md)
+- [mtrr](./kvm/mtrr.md)
+- [ple window](./kvm/ple.md)
+- [qemu 如何支持 kvm 的](./kvm/qemu.md)
+- [secure](./kvm/secure.md)
+- [kvm selftests](./kvm/selftests.md)
+- [smm](./kvm/smm.md)
+- [tracepoint](./kvm/tracepoint.md)
+- [Intel VMCS 字段表](./kvm/vmcs-fields.md)
+- [kvm](./kvm/yes-we-know.md)
 
 
 ## 整理中
@@ -902,97 +985,6 @@
 - [事务内存初识](./concurrent/transctiona-memory.md)
 - [为什么并行编程如此困难](./concurrent/why-parallel-is-hard.md)
 - [kernel/sched/membarrier.c syscall](./concurrent/yes.md)
-
-### [ ] kvm
-
-- [ARM KVM 的大致代码流程](./kvm/aarch64/README.md)
-- [记录调试 kvm 的一个有趣问题](./kvm/fun/host-freq.md)
-- [QEMU 中 null_blk fio 性能与 HugeTLB 对比](./kvm/fun/qemu-nullblk-performance.md)
-
-#### kvm features
-  - [kvm feautres](./kvm/features/kvm-features.md)
-  - [pv eoi](./kvm/features/pv-eoi.md)
-  - [PV_SCHED_YIELD](./kvm/features/pv-sched-yield.md)
-  - [虚拟化下的 spin lock](./kvm/features/pv-spinlock.md)
-  - [PV_TLB_FLUSH](./kvm/features/pv-tlb-flush.md)
-  - [kvm_emulate_hypercall -> __kvm_emulate_hypercall](./kvm/features/readme.md)
-  - [KVM_FEATURE_STEAL_TIME](./kvm/features/steal-time.md)
-  - [代码](./kvm/features/vcpu-stall.md)
-
-#### hyperv
-  - [Hyperv Enlightment](./kvm/hyperv/hyperv-pv.md)
-  - [HyperV](./kvm/hyperv/hyperv.md)
-  - [hyperv 中运行 Linux](./kvm/hyperv/in-hyperv-manager.md)
-  - [hypev 基本使用](./kvm/hyperv/usage.md)
-
-#### kvm-forum
-  - [2016](./kvm/kvm-forum/2016.md)
-  - [2017](./kvm/kvm-forum/2017.md)
-  - [2018](./kvm/kvm-forum/2018.md)
-  - [2020](./kvm/kvm-forum/2020.md)
-  - [2021](./kvm/kvm-forum/2021.md)
-  - [2022](./kvm/kvm-forum/2022.md)
-  - [2023](./kvm/kvm-forum/2023.md)
-  - [2024](./kvm/kvm-forum/2024.md)
-  - [2025](./kvm/kvm-forum/2025.md)
-  - [misc](./kvm/kvm-forum/misc.md)
-#### mmu
-  - [L1 中观测到 kvm_set_pfn_dirty](./kvm/mmu/ad.md)
-  - [async pf](./kvm/mmu/async-pf.md)
-  - [EXIT_REASON_EPT_VIOLATION vs EXIT_REASON_EPT_MISCONFIG](./kvm/mmu/basic.md)
-  - [ept 格式的定义在哪里呢?](./kvm/mmu/ept.md)
-  - [分析这个](./kvm/mmu/guest-memfd.md)
-  - [为什么 kvm 需要特殊处理 hugepage](./kvm/mmu/hugepage.md)
-  - [kvm mmu](./kvm/mmu/mmu.md)
-  - [Documentation/virt/kvm/x86/mmu.rst](./kvm/mmu/mmu.rst.md)
-  - [kvm_vcpu_arch 中的 5 个 MMU 的含义](./kvm/mmu/nested.md)
-  - [kvm mmu notifier](./kvm/mmu/notifier.md)
-  - [kvm track mode](./kvm/mmu/page-track.md)
-  - [为什么需要 arch/x86/kvm/mmu/paging_tmpl.h 来处理各种情况](./kvm/mmu/paging_tmpl.md)
-  - [PDPTR 是什么？](./kvm/mmu/pdptr.md)
-  - [kvm rmap](./kvm/mmu/rmap.md)
-  - [for_each_shadow_entry](./kvm/mmu/shadow-page.md)
-  - [tdp_mmu](./kvm/mmu/tdp_mmu.md)
-  - [KVM TLB Flush 机制分析](./kvm/mmu/tlb-flush-draft.md)
-  - [tlb flush](./kvm/mmu/tlb-flush-virt.md)
-  - [tlb flush 的基本原理](./kvm/mmu/tlb-flush.md)
-#### 嵌套虚拟化
-  - [aarch64](./kvm/nested/aarch64.md)
-  - [如何实现无穷级嵌套](./kvm/nested/nested-l3.md)
-  - [kvm 嵌套虚拟化](./kvm/nested/nested.md)
-  - [svm](./kvm/nested/svm.md)
-  - [vmx](./kvm/nested/vmx.md)
-#### svm
-  - [其中部分内容分析到](./kvm/svm/avic.md)
-  - [sev](./kvm/svm/sev.md)
-  - [简单浏览下 svm.c 的代码](./kvm/svm/svm.md)
-
-- [lab](./kvm/8254.md)
-- [cache regs](./kvm/cache-regs.md)
-- [cr0](./kvm/cr.md)
-- [debugfs](./kvm/debugfs.md)
-- [x86 emulate](./kvm/emulate.md)
-- [SGX](./kvm/enclave.md)
-- [event injection](./kvm/event-delivery.md)
-- [exit reason](./kvm/exit-reason.md)
-- [FRED](./kvm/fred.md)
-- [interrupt window](./kvm/interrupt-window.md)
-- [KVM](./kvm/kvm.md)
-- [kvm_device_ops](./kvm/kvm_device_ops.md)
-- [kvm lock 机制](./kvm/lock.md)
-- [使用 tracepoint 来跟踪 kvm_check_request](./kvm/make_request.md)
-- [pfncache.c 以及其他的辅助函数](./kvm/todo-map-cache.md)
-- [mmio](./kvm/mmio.md)
-- [msr](./kvm/msr.md)
-- [mtrr](./kvm/mtrr.md)
-- [ple window](./kvm/ple.md)
-- [qemu 如何支持 kvm 的](./kvm/qemu.md)
-- [secure](./kvm/secure.md)
-- [kvm selftests](./kvm/selftests.md)
-- [smm](./kvm/smm.md)
-- [tracepoint](./kvm/tracepoint.md)
-- [Intel VMCS 字段表](./kvm/vmcs-fields.md)
-- [kvm](./kvm/yes-we-know.md)
 
 <!-- BEGIN AUTO DOCS INDEX -->
 ## 自动文档索引
@@ -1760,10 +1752,20 @@
   - [2024](./kr/2024.md)
   - [kernel-recipes 2025](./kr/2025.md)
 - `kvm/`
-  - `hypervisor/`
-    - [stratovirt](./kvm/hypervisor/stratovirt.md)
+  - `emulate/`
+    - [opcode_table 的使用位置](./kvm/emulate/details.md)
+    - [x86 KVM 为什么需要指令模拟](./kvm/emulate/emulate-2.md)
+    - [到底是什么在触发](./kvm/emulate/type.md)
+  - `hyperv/`
+    - [Hyperv Enlightment](./kvm/hyperv/hyperv-pv.md)
+    - [HyperV](./kvm/hyperv/hyperv.md)
+    - [hyper-v 基本使用](./kvm/hyperv/in-hyperv-manager.md)
+  - `kvm-forum/`
+    - [kvm forum](./kvm/kvm-forum/README.md)
   - `mini-kvm/`
     - [Rust VMM + C guest](./kvm/mini-kvm/README.md)
+  - [KVM 机制演进与源码阅读索引](./kvm/mechanism-evolution.md)
+  - [pfncache.c](./kvm/pfncache.md)
 - `language/`
   - `c/`
     - [TODO](./language/c/c.md)
@@ -1837,7 +1839,6 @@
     - [自动化控制理论](./math/applied/auto.md)
   - `basic/`
     - `complex/`
-      - [复变函数](./math/basic/complex/complex-analysis.pdf)
       - [首次使用](./math/basic/complex/env.md)
 - `net/`
   - `dccp/`

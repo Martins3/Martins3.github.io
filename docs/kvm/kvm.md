@@ -1,5 +1,7 @@
 # KVM
 
+
+
 ## shadow page table 严重的干扰了视线，有必要使用 kcov 来覆盖一下
 - 用 ftrace 即可
 
@@ -225,15 +227,15 @@ ept : 应该是 GPA 到 HPA
 
 - init_kvm_tdp_mmu
 - kvm_mmu_alloc_page  : 申请 kvm_mmu_page 空间，该结构表示 EPT 页表项
-- vmx_load_mmu_pgd : 传入的 root_hpa 也就直接当 Guest CR3 用，其实就是影子页表的基址。
+- `vmx_load_mmu_pgd()`：启用 EPT 时，`root_hpa` 用来构造 `EPT_POINTER`；没有 EPT 时才用来构造 shadow 的 `GUEST_CR3`。guest 自己的 CR3 与 EPT root 是两回事。
 
 - 当 CPU 访问 EPT 页表查找 HPA 时，发现相应的页表项不存在，则会发生 EPT Violation 异常，导致 VM-Exit
 
 **GPA 到 HPA 的映射关系由 EPT 页表来维护**
 
 ## ept 和 shadow page table 中间的内容
-- ept 和 shadow page table 的格式相同，让硬件访问可以格式相同
-- 维护 ept 是使用软件的方法维护的，那么 ept 都是物理地址
+- EPT 和普通 x86 页表都采用多级结构，但权限位和条目编码不同，不能说格式相同。
+- KVM 通过软件建立 EPT，硬件 page walk 使用物理地址；`struct kvm_mmu_page` 是管理页表页的共用结构，不代表这里正在做传统 Shadow Paging。
 
 pgd : page global directory
 
@@ -356,7 +358,15 @@ static inline bool is_guest_mode(struct kvm_vcpu *vcpu)
 1. 如果 L0 提供大页给 L1
 2. 如果 L1 提供大页给 L2
 
-## [ ] register_shrinker : 这个到底是可以用来收缩谁的，ept page table 可以吗？
+## MMU shrinker 的历史状态
+
+当前 `linux-drm` 已经没有 x86 KVM MMU shrinker。删除提交是
+`fe140e611d34`，标题为 `KVM: x86/mmu: Remove KVM's MMU shrinker`；它删除了
+`mmu_shrink_scan()`、`mmu_shrink_count()` 和注册逻辑。旧 shrinker 原本也没有
+TDP MMU 支持，不能用旧路径解释当前 EPT 页表回收。
+
+映射失效、root 失效、传统 MMU 页数限制以及 VM 销毁仍有各自的 zap/free 路径。
+具体删除与保留分支见 [机制状态核查](mechanism-evolution.md)。
 
 ## [ ] 可以分析一下 vCPU 的调度问题
 - sched_in 和 sched_out 的 hook

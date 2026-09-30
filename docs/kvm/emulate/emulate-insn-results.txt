@@ -1,0 +1,729 @@
+KVM x86 指令模拟实测：新启动 VM
+生成时间：2026-09-30T13:18:35.929524+08:00
+VM：emulate-insn-20260930；QEMU PID：1229840；2 vCPU，2 GiB，OVMF，KVM 加速
+宿主内核：7.2.7-200.fc44.x86_64
+Guest 内核：7.2.0-00001-geb5a10dc0e00；源码 ~/data/kernel/linux-drm
+QEMU：11.1.50 / v11.1.0-1870-g81ce3a87737a-dirty
+宿主 KVM 配置：EPT=Y，unrestricted_guest=Y，enable_apicv=Y
+采集工具：bpftrace 0.25.1；反汇编：NDISASM 3.01
+探针有效窗口：60.406303 秒。VM 初始为 -S/prelaunch，READY 后才通过 QMP cont 开始执行。
+首个模拟距 READY：34.290196 秒；首个到最后一个入口：2.668633 秒。
+该窗口覆盖 OVMF 和 Linux 启动，已通过 VSOCK SSH 确认 guest 正常运行。
+历史原始记录：emulate-insn.raw.tsv（当前已移除，以下汇总保留）
+历史地址映射快照：emulate-insn.mtree.txt（当前已移除，设备匹配结果保留）
+当前采集程序：/home/martins3/data/vn/docs/kvm/emulate/emulate-insn.bt
+版本说明：当前程序已简化，移除了时间戳和 CALL 窗口过滤；本报告来自简化前的采集。
+
+统计口径
+CALL 是 x86_emulate_instruction() 入口；INSN 是 kvm_emulate_insn 解码记录。
+NO_DECODE 是之前解码指令的 I/O 续接，不能算成新的解码。
+INSN start 表示模拟尝试，不表示该指令已退休；REP 一条指令也可能多次进入。
+MMIO/PIO 只记录该入口执行期间发生的事件，不是整个 VM 的全部 I/O。
+MMIO unsatisfied-read 与完成后的 read 是不同阶段，不能简单相加作为独立设备访问次数。
+续接的设备事件关联到同一 vCPU 最近的解码记录；续接没有新的硬件 VM exit。
+设备名根据启动完成后的 QMP info mtree -f 匹配；启动时已改变的 BAR 地址不一定能匹配。
+
+采集完整性
+CALL=36654，RETURN=36654，INSN=35144
+不同模式/指令字节组合=39，不同 CS/RIP/字节/触发类型组合=75
+模拟失败记录=0
+日志无丢失/警告，所有 CALL 均匹配 RETURN，所有指令长度均与字节数一致。
+所有指令均按记录的 prot64 模式解码；ndisasm 输出长度已逐项与完整字节校验。
+
+入口标志分布
+   35089  0x040  EMULTYPE_PF
+    1510  0x001  EMULTYPE_NO_DECODE
+      55  0x000  0（无特殊标志，并不存在 EMULTYPE_0 宏）
+
+首次解码的硬件触发原因（排除 NO_DECODE）
+   34560   49  EPT_MISCONFIG
+     529   48  EPT_VIOLATION
+      48   30  IO_INSTRUCTION
+       7   44  APIC_ACCESS
+
+所有解码指令：次数、字节、反汇编（按次数排序）
+   30699  prot64   44 88 65 00                     mov [rbp+0x0],r12b
+     933  prot64   66 89 3e                        mov [rsi],di
+     694  prot64   89 3e                           mov [rsi],edi
+     482  prot64   66 8b 07                        mov ax,[rdi]
+     421  prot64   44 8b 0b                        mov r9d,[rbx]
+     381  prot64   8a 07                           mov al,[rdi]
+     201  prot64   89 30                           mov [rax],esi
+     201  prot64   8b 40 10                        mov eax,[rax+0x10]
+     151  prot64   44 89 0b                        mov [rbx],r9d
+     143  prot64   89 10                           mov [rax],edx
+     133  prot64   40 88 3e                        mov [rsi],dil
+      90  prot64   89 50 04                        mov [rax+0x4],edx
+      90  prot64   89 50 08                        mov [rax+0x8],edx
+      90  prot64   8b 40 08                        mov eax,[rax+0x8]
+      73  prot64   8b 07                           mov eax,[rdi]
+      64  prot64   44 89 40 10                     mov [rax+0x10],r8d
+      50  prot64   89 08                           mov [rax],ecx
+      48  prot64   f3 6c                           rep insb
+      39  prot64   44 89 08                        mov [rax],r9d
+      39  prot64   89 50 10                        mov [rax+0x10],edx
+      35  prot64   89 70 10                        mov [rax+0x10],esi
+      30  prot64   8b 40 0c                        mov eax,[rax+0xc]
+      30  prot64   89 0e                           mov [rsi],ecx
+       7  prot64   8b 03                           mov eax,[rbx]
+       3  prot64   44 89 00                        mov [rax],r8d
+       2  prot64   41 8b 04 06                     mov eax,[r14+rax]
+       2  prot64   89 78 10                        mov [rax+0x10],edi
+       2  prot64   8b 42 10                        mov eax,[rdx+0x10]
+       1  prot64   c6 03 50                        mov byte [rbx],0x50
+       1  prot64   c6 03 70                        mov byte [rbx],0x70
+       1  prot64   8a 13                           mov dl,[rbx]
+       1  prot64   c6 03 ff                        mov byte [rbx],0xff
+       1  prot64   44 8a 0b                        mov r9b,[rbx]
+       1  prot64   8b 50 10                        mov edx,[rax+0x10]
+       1  prot64   41 8b 06                        mov eax,[r14]
+       1  prot64   8b 40 04                        mov eax,[rax+0x4]
+       1  prot64   41 8b 07                        mov eax,[r15]
+       1  prot64   41 89 07                        mov [r15],eax
+       1  prot64   41 8b 47 04                     mov eax,[r15+0x4]
+
+按 guest 指令位置分组；每组同时给出触发原因和关联 I/O
+次数=30225  CS.base=0x0 RIP=0x7f6eb54d  prot64  44 88 65 00  mov [rbp+0x0],r12b
+  emulation_type=0x40 (PF)；首次 exit=EPT_MISCONFIG；续接=0
+  MMIO region=system.flash1 KVM；事件=30225
+    示例：write GPA=0xffc00065 len=1 value=0x10
+    示例：write GPA=0xffc00065 len=1 value=0x55
+    示例：write GPA=0xffc00066 len=1 value=0x10
+
+次数=924  CS.base=0x0 RIP=0xffffffff81925ced  prot64  66 89 3e  mov [rsi],di
+  emulation_type=0x40 (PF)；首次 exit=EPT_MISCONFIG；续接=0
+  MMIO region=virtio-pci-common-virtio-serial；事件=639
+  MMIO region=virtio-pci-common-virtio-input；事件=63
+  MMIO region=virtio-pci-common-virtio-net；事件=58
+  MMIO region=virtio-pci-common-virtio-balloon；事件=49
+  MMIO region=virtio-pci-common-virtio-scsi；事件=41
+  MMIO region=virtio-pci-common-vhost-vsock；事件=31
+  MMIO region=virtio-pci-common-virtio-user-fs；事件=21
+  MMIO region=virtio-pci-common-virtio-blk；事件=21
+  MMIO region=virtio-pci-notify-vhost-vsock；事件=1
+    示例：write GPA=0x4800014010 len=2 value=0x0
+    示例：write GPA=0x4800014016 len=2 value=0x0
+    示例：write GPA=0x4800014016 len=2 value=0x0
+
+次数=694  CS.base=0x0 RIP=0xffffffff81925d5d  prot64  89 3e  mov [rsi],edi
+  emulation_type=0x40 (PF)；首次 exit=EPT_MISCONFIG；续接=0
+  MMIO region=virtio-pci-common-virtio-serial；事件=396
+  MMIO region=virtio-pci-common-virtio-input；事件=72
+  MMIO region=virtio-pci-common-virtio-net；事件=60
+  MMIO region=virtio-pci-common-virtio-balloon；事件=50
+  MMIO region=virtio-pci-common-virtio-scsi；事件=36
+  MMIO region=virtio-pci-common-vhost-vsock；事件=30
+  MMIO region=virtio-pci-common-virtio-user-fs；事件=24
+  MMIO region=virtio-pci-common-virtio-blk；事件=24
+  MMIO region=virtio-pci-device-virtio-scsi；事件=2
+    示例：write GPA=0x4800014000 len=4 value=0x0
+    示例：write GPA=0x4800014000 len=4 value=0x1
+    示例：write GPA=0x4800014000 len=4 value=0x2
+
+次数=481  CS.base=0x0 RIP=0xffffffff819257b6  prot64  66 8b 07  mov ax,[rdi]
+  emulation_type=0x40 (PF)；首次 exit=EPT_MISCONFIG；续接=481
+  MMIO region=virtio-pci-common-virtio-serial；事件=640
+  MMIO region=virtio-pci-common-virtio-input；事件=66
+  MMIO region=virtio-pci-common-virtio-net；事件=60
+  MMIO region=virtio-pci-common-virtio-balloon；事件=50
+  MMIO region=virtio-pci-common-virtio-scsi；事件=42
+  MMIO region=virtio-pci-common-vhost-vsock；事件=32
+  MMIO region=virtio-pci-device-virtio-input；事件=24
+  MMIO region=virtio-pci-common-virtio-user-fs；事件=22
+  MMIO region=virtio-pci-common-virtio-blk；事件=22
+  MMIO region=virtio-pci-device-virtio-scsi；事件=2
+  MMIO region=virtio-pci-device-virtio-blk；事件=2
+    示例：unsatisfied-read GPA=0x4800014010 len=2 value=0x0
+    示例：read GPA=0x4800014010 len=2 value=0x0
+    示例：unsatisfied-read GPA=0x4800014012 len=2 value=0x0
+
+次数=474  CS.base=0x0 RIP=0x7f6eb54d  prot64  44 88 65 00  mov [rbp+0x0],r12b
+  emulation_type=0x40 (PF)；首次 exit=EPT_VIOLATION；续接=0
+  MMIO region=system.flash1 KVM；事件=474
+    示例：write GPA=0xffc00064 len=1 value=0x10
+    示例：write GPA=0xffc00064 len=1 value=0xaa
+    示例：write GPA=0xffc00066 len=1 value=0x10
+
+次数=416  CS.base=0x0 RIP=0x7f16a392  prot64  44 8b 0b  mov r9d,[rbx]
+  emulation_type=0x40 (PF)；首次 exit=EPT_MISCONFIG；续接=416
+  MMIO region=operational；事件=370
+  MMIO region=runtime；事件=292
+  MMIO region=usb2 port #5；事件=20
+  MMIO region=usb2 port #6；事件=20
+  MMIO region=capabilities；事件=18
+  MMIO region=usb3 port #1；事件=8
+  MMIO region=usb3 port #2；事件=8
+  MMIO region=usb3 port #3；事件=8
+  MMIO region=usb3 port #4；事件=8
+  MMIO region=usb3 port #5；事件=8
+  MMIO region=usb3 port #6；事件=8
+  MMIO region=usb3 port #7；事件=8
+  MMIO region=usb3 port #8；事件=8
+  MMIO region=usb2 port #1；事件=8
+  MMIO region=usb2 port #2；事件=8
+  MMIO region=usb2 port #3；事件=8
+  MMIO region=usb2 port #4；事件=8
+  MMIO region=usb2 port #7；事件=8
+  MMIO region=usb2 port #8；事件=8
+    示例：unsatisfied-read GPA=0x4800030004 len=4 value=0x0
+    示例：read GPA=0x4800030004 len=4 value=0x10001040
+    示例：unsatisfied-read GPA=0x4800030008 len=4 value=0x0
+
+次数=378  CS.base=0x0 RIP=0xffffffff81925735  prot64  8a 07  mov al,[rdi]
+  emulation_type=0x40 (PF)；首次 exit=EPT_MISCONFIG；续接=378
+  MMIO region=virtio-pci-device-virtio-input；事件=434
+  MMIO region=virtio-pci-common-virtio-input；事件=94
+  MMIO region=virtio-pci-device-virtio-user-fs；事件=70
+  MMIO region=virtio-pci-common-virtio-net；事件=36
+  MMIO region=virtio-pci-device-virtio-net；事件=20
+  MMIO region=virtio-pci-common-virtio-blk；事件=18
+  MMIO region=virtio-pci-common-virtio-user-fs；事件=18
+  MMIO region=virtio-pci-common-virtio-scsi；事件=14
+  MMIO region=virtio-pci-common-vhost-vsock；事件=14
+  MMIO region=virtio-pci-common-virtio-balloon；事件=14
+  MMIO region=virtio-pci-common-virtio-serial；事件=14
+  MMIO region=virtio-pci-device-virtio-blk；事件=6
+  MMIO region=virtio-pci-common-virtio-rng；事件=4
+    示例：unsatisfied-read GPA=0x4800000014 len=1 value=0x0
+    示例：read GPA=0x4800000014 len=1 value=0x0
+    示例：unsatisfied-read GPA=0x4800000014 len=1 value=0x0
+
+次数=201  CS.base=0x0 RIP=0xffffffff812b7e97  prot64  8b 40 10  mov eax,[rax+0x10]
+  emulation_type=0x40 (PF)；首次 exit=EPT_MISCONFIG；续接=0
+  MMIO region=kvm-ioapic；事件=201
+    示例：read GPA=0xfec00010 len=4 value=0x0
+    示例：read GPA=0xfec00010 len=4 value=0x170011
+    示例：read GPA=0xfec00010 len=4 value=0x0
+
+次数=200  CS.base=0x0 RIP=0xffffffff812b7e95  prot64  89 30  mov [rax],esi
+  emulation_type=0x40 (PF)；首次 exit=EPT_MISCONFIG；续接=0
+  MMIO region=kvm-ioapic；事件=200
+    示例：write GPA=0xfec00000 len=4 value=0x1
+    示例：write GPA=0xfec00000 len=4 value=0x2
+    示例：write GPA=0xfec00000 len=4 value=0x1
+
+次数=150  CS.base=0x0 RIP=0x7f16a428  prot64  44 89 0b  mov [rbx],r9d
+  emulation_type=0x40 (PF)；首次 exit=EPT_MISCONFIG；续接=0
+  MMIO region=runtime；事件=94
+  MMIO region=doorbell；事件=27
+  MMIO region=operational；事件=9
+  MMIO region=usb2 port #5；事件=3
+  MMIO region=usb2 port #6；事件=3
+  MMIO region=usb3 port #1；事件=1
+  MMIO region=usb3 port #2；事件=1
+  MMIO region=usb3 port #3；事件=1
+  MMIO region=usb3 port #4；事件=1
+  MMIO region=usb3 port #5；事件=1
+  MMIO region=usb3 port #6；事件=1
+  MMIO region=usb3 port #7；事件=1
+  MMIO region=usb3 port #8；事件=1
+  MMIO region=usb2 port #1；事件=1
+  MMIO region=usb2 port #2；事件=1
+  MMIO region=usb2 port #3；事件=1
+  MMIO region=usb2 port #4；事件=1
+  MMIO region=usb2 port #7；事件=1
+  MMIO region=usb2 port #8；事件=1
+    示例：write GPA=0x4800030040 len=4 value=0x2
+    示例：write GPA=0x4800030078 len=4 value=0x40
+    示例：write GPA=0x4800030070 len=4 value=0x7d3fa000
+
+次数=118  CS.base=0x0 RIP=0xffffffff81925c7d  prot64  40 88 3e  mov [rsi],dil
+  emulation_type=0x40 (PF)；首次 exit=EPT_MISCONFIG；续接=0
+  MMIO region=virtio-pci-device-virtio-input；事件=73
+  MMIO region=virtio-pci-common-virtio-input；事件=12
+  MMIO region=virtio-pci-common-virtio-net；事件=8
+  MMIO region=virtio-pci-common-virtio-scsi；事件=4
+  MMIO region=virtio-pci-common-virtio-blk；事件=4
+  MMIO region=virtio-pci-common-vhost-vsock；事件=4
+  MMIO region=virtio-pci-common-virtio-user-fs；事件=4
+  MMIO region=virtio-pci-common-virtio-balloon；事件=4
+  MMIO region=virtio-pci-common-virtio-serial；事件=4
+  MMIO region=virtio-pci-common-virtio-rng；事件=1
+    示例：write GPA=0x4800000014 len=1 value=0x1
+    示例：write GPA=0x4800004014 len=1 value=0x1
+    示例：write GPA=0x4800008014 len=1 value=0x1
+
+次数=90  CS.base=0x0 RIP=0xffffffff81985b38  prot64  89 10  mov [rax],edx
+  emulation_type=0x40 (PF)；首次 exit=EPT_MISCONFIG；续接=0
+  MMIO region=msix-table；事件=90
+    示例：write GPA=0x80344000 len=4 value=0xfee00000
+    示例：write GPA=0x80344000 len=4 value=0xfee01000
+    示例：write GPA=0x80344000 len=4 value=0xfee01000
+
+次数=90  CS.base=0x0 RIP=0xffffffff81985b3f  prot64  89 50 04  mov [rax+0x4],edx
+  emulation_type=0x40 (PF)；首次 exit=EPT_MISCONFIG；续接=0
+  MMIO region=msix-table；事件=90
+    示例：write GPA=0x80344004 len=4 value=0x0
+    示例：write GPA=0x80344004 len=4 value=0x0
+    示例：write GPA=0x80344004 len=4 value=0x0
+
+次数=90  CS.base=0x0 RIP=0xffffffff81985b47  prot64  89 50 08  mov [rax+0x8],edx
+  emulation_type=0x40 (PF)；首次 exit=EPT_MISCONFIG；续接=0
+  MMIO region=msix-table；事件=90
+    示例：write GPA=0x80344008 len=4 value=0xef
+    示例：write GPA=0x80344008 len=4 value=0x20
+    示例：write GPA=0x80344008 len=4 value=0x20
+
+次数=90  CS.base=0x0 RIP=0xffffffff81985b5a  prot64  8b 40 08  mov eax,[rax+0x8]
+  emulation_type=0x40 (PF)；首次 exit=EPT_MISCONFIG；续接=90
+  MMIO region=msix-table；事件=180
+    示例：unsatisfied-read GPA=0x80344008 len=4 value=0x0
+    示例：read GPA=0x80344008 len=4 value=0xef
+    示例：unsatisfied-read GPA=0x80344008 len=4 value=0x0
+
+次数=69  CS.base=0x0 RIP=0xffffffff81925842  prot64  8b 07  mov eax,[rdi]
+  emulation_type=0x40 (PF)；首次 exit=EPT_MISCONFIG；续接=69
+  MMIO region=virtio-pci-common-virtio-input；事件=24
+  MMIO region=virtio-pci-device-virtio-input；事件=20
+  MMIO region=virtio-pci-device-virtio-blk；事件=18
+  MMIO region=virtio-pci-common-virtio-net；事件=16
+  MMIO region=virtio-pci-common-virtio-user-fs；事件=8
+  MMIO region=virtio-pci-common-vhost-vsock；事件=8
+  MMIO region=virtio-pci-common-virtio-scsi；事件=8
+  MMIO region=virtio-pci-device-virtio-scsi；事件=8
+  MMIO region=virtio-pci-common-virtio-blk；事件=8
+  MMIO region=virtio-pci-common-virtio-serial；事件=8
+  MMIO region=virtio-pci-common-virtio-balloon；事件=8
+  MMIO region=virtio-pci-device-virtio-user-fs；事件=2
+  MMIO region=virtio-pci-device-vhost-vsock；事件=2
+    示例：unsatisfied-read GPA=0x4800014004 len=4 value=0x0
+    示例：read GPA=0x4800014004 len=4 value=0x30000000
+    示例：unsatisfied-read GPA=0x4800014004 len=4 value=0x0
+
+次数=30  CS.base=0x0 RIP=0xffffffff81987437  prot64  89 0e  mov [rsi],ecx
+  emulation_type=0x40 (PF)；首次 exit=EPT_MISCONFIG；续接=0
+  MMIO region=msix-table；事件=30
+    示例：write GPA=0x8034400c len=4 value=0x0
+    示例：write GPA=0x8034700c len=4 value=0x0
+    示例：write GPA=0x8034701c len=4 value=0x0
+
+次数=25  CS.base=0x0 RIP=0xffffffff812b60ff  prot64  89 08  mov [rax],ecx
+  emulation_type=0x40 (PF)；首次 exit=EPT_MISCONFIG；续接=0
+  MMIO region=kvm-ioapic；事件=25
+    示例：write GPA=0xfec00000 len=4 value=0x10
+    示例：write GPA=0xfec00000 len=4 value=0x12
+    示例：write GPA=0xfec00000 len=4 value=0x14
+
+次数=25  CS.base=0x0 RIP=0xffffffff812b6107  prot64  44 89 40 10  mov [rax+0x10],r8d
+  emulation_type=0x40 (PF)；首次 exit=EPT_MISCONFIG；续接=0
+  MMIO region=kvm-ioapic；事件=25
+    示例：write GPA=0xfec00010 len=4 value=0x10000
+    示例：write GPA=0xfec00010 len=4 value=0x10000
+    示例：write GPA=0xfec00010 len=4 value=0x10000
+
+次数=25  CS.base=0x0 RIP=0xffffffff812b611f  prot64  89 08  mov [rax],ecx
+  emulation_type=0x40 (PF)；首次 exit=EPT_MISCONFIG；续接=0
+  MMIO region=kvm-ioapic；事件=25
+    示例：write GPA=0xfec00000 len=4 value=0x11
+    示例：write GPA=0xfec00000 len=4 value=0x13
+    示例：write GPA=0xfec00000 len=4 value=0x15
+
+次数=25  CS.base=0x0 RIP=0xffffffff812b6123  prot64  89 50 10  mov [rax+0x10],edx
+  emulation_type=0x40 (PF)；首次 exit=EPT_MISCONFIG；续接=0
+  MMIO region=kvm-ioapic；事件=25
+    示例：write GPA=0xfec00010 len=4 value=0x0
+    示例：write GPA=0xfec00010 len=4 value=0x0
+    示例：write GPA=0xfec00010 len=4 value=0x0
+
+次数=24  CS.base=0x0 RIP=0xffffffff812b6078  prot64  44 89 08  mov [rax],r9d
+  emulation_type=0x40 (PF)；首次 exit=EPT_MISCONFIG；续接=0
+  MMIO region=kvm-ioapic；事件=24
+    示例：write GPA=0xfec00000 len=4 value=0x11
+    示例：write GPA=0xfec00000 len=4 value=0x13
+    示例：write GPA=0xfec00000 len=4 value=0x15
+
+次数=24  CS.base=0x0 RIP=0xffffffff812b607b  prot64  44 89 40 10  mov [rax+0x10],r8d
+  emulation_type=0x40 (PF)；首次 exit=EPT_MISCONFIG；续接=0
+  MMIO region=kvm-ioapic；事件=24
+    示例：write GPA=0xfec00010 len=4 value=0x0
+    示例：write GPA=0xfec00010 len=4 value=0x0
+    示例：write GPA=0xfec00010 len=4 value=0x0
+
+次数=24  CS.base=0x0 RIP=0xffffffff812b6093  prot64  89 10  mov [rax],edx
+  emulation_type=0x40 (PF)；首次 exit=EPT_MISCONFIG；续接=0
+  MMIO region=kvm-ioapic；事件=24
+    示例：write GPA=0xfec00000 len=4 value=0x10
+    示例：write GPA=0xfec00000 len=4 value=0x12
+    示例：write GPA=0xfec00000 len=4 value=0x14
+
+次数=24  CS.base=0x0 RIP=0xffffffff812b6095  prot64  89 70 10  mov [rax+0x10],esi
+  emulation_type=0x40 (PF)；首次 exit=EPT_MISCONFIG；续接=0
+  MMIO region=kvm-ioapic；事件=24
+    示例：write GPA=0xfec00010 len=4 value=0x10000
+    示例：write GPA=0xfec00010 len=4 value=0x10000
+    示例：write GPA=0xfec00010 len=4 value=0x10000
+
+次数=18  CS.base=0x0 RIP=0xffffffff81986731  prot64  8b 40 0c  mov eax,[rax+0xc]
+  emulation_type=0x40 (PF)；首次 exit=EPT_MISCONFIG；续接=18
+  MMIO region=msix-table；事件=36
+    示例：unsatisfied-read GPA=0x8034701c len=4 value=0x0
+    示例：read GPA=0x8034701c len=4 value=0x1
+    示例：unsatisfied-read GPA=0x8034702c len=4 value=0x0
+
+次数=15  CS.base=0x0 RIP=0xffffffff81925c7d  prot64  40 88 3e  mov [rsi],dil
+  emulation_type=0x40 (PF)；首次 exit=EPT_VIOLATION；续接=0
+  MMIO region=virtio-pci-common-virtio-input；事件=3
+  MMIO region=virtio-pci-device-virtio-input；事件=3
+  MMIO region=virtio-pci-common-virtio-net；事件=2
+  MMIO region=virtio-pci-common-virtio-scsi；事件=1
+  MMIO region=virtio-pci-common-virtio-blk；事件=1
+  MMIO region=virtio-pci-common-vhost-vsock；事件=1
+  MMIO region=virtio-pci-common-virtio-user-fs；事件=1
+  MMIO region=virtio-pci-common-virtio-balloon；事件=1
+  MMIO region=virtio-pci-common-virtio-serial；事件=1
+  MMIO region=virtio-pci-common-virtio-rng；事件=1
+    示例：write GPA=0x4800000014 len=1 value=0x0
+    示例：write GPA=0x4800004014 len=1 value=0x0
+    示例：write GPA=0x4800008014 len=1 value=0x0
+
+次数=14  CS.base=0x0 RIP=0xffffffff81986da6  prot64  89 10  mov [rax],edx
+  emulation_type=0x40 (PF)；首次 exit=EPT_MISCONFIG；续接=0
+  MMIO region=msix-table；事件=14
+    示例：write GPA=0x8034701c len=4 value=0x1
+    示例：write GPA=0x8034801c len=4 value=0x1
+    示例：write GPA=0x8034c01c len=4 value=0x1
+
+次数=14  CS.base=0x0 RIP=0xffffffff81986da8  prot64  89 50 10  mov [rax+0x10],edx
+  emulation_type=0x40 (PF)；首次 exit=EPT_MISCONFIG；续接=0
+  MMIO region=msix-table；事件=14
+    示例：write GPA=0x8034702c len=4 value=0x1
+    示例：write GPA=0x8034802c len=4 value=0x1
+    示例：write GPA=0x8034c02c len=4 value=0x1
+
+次数=12  CS.base=0x0 RIP=0xffffffff81986731  prot64  8b 40 0c  mov eax,[rax+0xc]
+  emulation_type=0x40 (PF)；首次 exit=EPT_VIOLATION；续接=12
+  MMIO region=msix-table；事件=24
+    示例：unsatisfied-read GPA=0x8034400c len=4 value=0x0
+    示例：read GPA=0x8034400c len=4 value=0x1
+    示例：unsatisfied-read GPA=0x8034700c len=4 value=0x0
+
+次数=10  CS.base=0x0 RIP=0xffffffff812b703a  prot64  44 89 08  mov [rax],r9d
+  emulation_type=0x40 (PF)；首次 exit=EPT_MISCONFIG；续接=0
+  MMIO region=kvm-ioapic；事件=10
+    示例：write GPA=0xfec00000 len=4 value=0x23
+    示例：write GPA=0xfec00000 len=4 value=0x23
+    示例：write GPA=0xfec00000 len=4 value=0x29
+
+次数=10  CS.base=0x0 RIP=0xffffffff812b703d  prot64  44 89 40 10  mov [rax+0x10],r8d
+  emulation_type=0x40 (PF)；首次 exit=EPT_MISCONFIG；续接=0
+  MMIO region=kvm-ioapic；事件=10
+    示例：write GPA=0xfec00010 len=4 value=0x0
+    示例：write GPA=0xfec00010 len=4 value=0x0
+    示例：write GPA=0xfec00010 len=4 value=0x0
+
+次数=10  CS.base=0x0 RIP=0xffffffff812b7056  prot64  89 10  mov [rax],edx
+  emulation_type=0x40 (PF)；首次 exit=EPT_MISCONFIG；续接=0
+  MMIO region=kvm-ioapic；事件=10
+    示例：write GPA=0xfec00000 len=4 value=0x22
+    示例：write GPA=0xfec00000 len=4 value=0x22
+    示例：write GPA=0xfec00000 len=4 value=0x28
+
+次数=10  CS.base=0x0 RIP=0xffffffff812b7058  prot64  89 70 10  mov [rax+0x10],esi
+  emulation_type=0x40 (PF)；首次 exit=EPT_MISCONFIG；续接=0
+  MMIO region=kvm-ioapic；事件=10
+    示例：write GPA=0xfec00010 len=4 value=0x18020
+    示例：write GPA=0xfec00010 len=4 value=0x18020
+    示例：write GPA=0xfec00010 len=4 value=0x21
+
+次数=9  CS.base=0x0 RIP=0xffffffff81925ced  prot64  66 89 3e  mov [rsi],di
+  emulation_type=0x40 (PF)；首次 exit=EPT_VIOLATION；续接=0
+  MMIO region=virtio-pci-notify-virtio-input；事件=3
+  MMIO region=virtio-pci-notify-vhost-vsock；事件=1
+  MMIO region=virtio-pci-notify-virtio-user-fs；事件=1
+  MMIO region=virtio-pci-notify-virtio-scsi；事件=1
+  MMIO region=virtio-pci-notify-virtio-blk；事件=1
+  MMIO region=virtio-pci-notify-virtio-serial；事件=1
+  MMIO region=virtio-pci-notify-virtio-balloon；事件=1
+    示例：write GPA=0x4800013000 len=2 value=0x0
+    示例：write GPA=0x4800017004 len=2 value=0x1
+    示例：write GPA=0x4800003004 len=2 value=0x1
+
+次数=5  CS.base=0x0 RIP=0x7f16a392  prot64  44 8b 0b  mov r9d,[rbx]
+  emulation_type=0x40 (PF)；首次 exit=EPT_VIOLATION；续接=5
+  MMIO region=runtime；事件=6
+  MMIO region=operational；事件=4
+    示例：unsatisfied-read GPA=0x4800031020 len=4 value=0x0
+    示例：read GPA=0x4800031020 len=4 value=0x0
+    示例：unsatisfied-read GPA=0x4800030044 len=4 value=0x0
+
+次数=5  CS.base=0x0 RIP=0xffffffff812b6391  prot64  44 89 08  mov [rax],r9d
+  emulation_type=0x40 (PF)；首次 exit=EPT_MISCONFIG；续接=0
+  MMIO region=kvm-ioapic；事件=5
+    示例：write GPA=0xfec00000 len=4 value=0x22
+    示例：write GPA=0xfec00000 len=4 value=0x28
+    示例：write GPA=0xfec00000 len=4 value=0x28
+
+次数=5  CS.base=0x0 RIP=0xffffffff812b6394  prot64  44 89 40 10  mov [rax+0x10],r8d
+  emulation_type=0x40 (PF)；首次 exit=EPT_MISCONFIG；续接=0
+  MMIO region=kvm-ioapic；事件=5
+    示例：write GPA=0xfec00010 len=4 value=0x8020
+    示例：write GPA=0xfec00010 len=4 value=0x21
+    示例：write GPA=0xfec00010 len=4 value=0x21
+
+次数=5  CS.base=0x0 RIP=0xffffffff81986d9b  prot64  89 10  mov [rax],edx
+  emulation_type=0x40 (PF)；首次 exit=EPT_MISCONFIG；续接=0
+  MMIO region=msix-table；事件=5
+    示例：write GPA=0x8034400c len=4 value=0x1
+    示例：write GPA=0x8034700c len=4 value=0x1
+    示例：write GPA=0x8034800c len=4 value=0x1
+
+次数=4  CS.base=0x0 RIP=0x82d010  prot64  f3 6c  rep insb
+  emulation_type=0x0 (0)；首次 exit=IO_INSTRUCTION；续接=2
+  PIO port=0x511 (fwcfg)；事件=2
+
+次数=4  CS.base=0x0 RIP=0x7fde898e  prot64  8b 03  mov eax,[rbx]
+  emulation_type=0x0 (0)；首次 exit=APIC_ACCESS；续接=0
+  MMIO region=kvm-apic-msi；事件=4
+    示例：read GPA=0xfee00390 len=4 value=0xfdfe8758
+    示例：read GPA=0xfee00390 len=4 value=0xfdb04b79
+    示例：read GPA=0xfee00390 len=4 value=0xfd61edfb
+
+次数=4  CS.base=0x0 RIP=0x7f103c20  prot64  f3 6c  rep insb
+  emulation_type=0x0 (0)；首次 exit=IO_INSTRUCTION；续接=2
+  PIO port=0x511 (fwcfg)；事件=2
+
+次数=4  CS.base=0x0 RIP=0x7f11ca40  prot64  f3 6c  rep insb
+  emulation_type=0x0 (0)；首次 exit=IO_INSTRUCTION；续接=2
+  PIO port=0x511 (fwcfg)；事件=2
+
+次数=4  CS.base=0x0 RIP=0x7ec07b60  prot64  f3 6c  rep insb
+  emulation_type=0x0 (0)；首次 exit=IO_INSTRUCTION；续接=2
+  PIO port=0x511 (fwcfg)；事件=2
+
+次数=4  CS.base=0x0 RIP=0x7e9feb60  prot64  f3 6c  rep insb
+  emulation_type=0x0 (0)；首次 exit=IO_INSTRUCTION；续接=2
+  PIO port=0x511 (fwcfg)；事件=2
+
+次数=4  CS.base=0x0 RIP=0x7e9c7690  prot64  f3 6c  rep insb
+  emulation_type=0x0 (0)；首次 exit=IO_INSTRUCTION；续接=2
+  PIO port=0x511 (fwcfg)；事件=2
+
+次数=4  CS.base=0x0 RIP=0x7e9a0630  prot64  f3 6c  rep insb
+  emulation_type=0x0 (0)；首次 exit=IO_INSTRUCTION；续接=2
+  PIO port=0x511 (fwcfg)；事件=2
+
+次数=4  CS.base=0x0 RIP=0x7e9a5a70  prot64  f3 6c  rep insb
+  emulation_type=0x0 (0)；首次 exit=IO_INSTRUCTION；续接=2
+  PIO port=0x511 (fwcfg)；事件=2
+
+次数=4  CS.base=0x0 RIP=0x7e9703d0  prot64  f3 6c  rep insb
+  emulation_type=0x0 (0)；首次 exit=IO_INSTRUCTION；续接=2
+  PIO port=0x511 (fwcfg)；事件=2
+
+次数=4  CS.base=0x0 RIP=0x7e8eafd0  prot64  f3 6c  rep insb
+  emulation_type=0x0 (0)；首次 exit=IO_INSTRUCTION；续接=2
+  PIO port=0x511 (fwcfg)；事件=2
+
+次数=4  CS.base=0x0 RIP=0x7d63f880  prot64  f3 6c  rep insb
+  emulation_type=0x0 (0)；首次 exit=IO_INSTRUCTION；续接=2
+  PIO port=0x511 (fwcfg)；事件=2
+
+次数=4  CS.base=0x0 RIP=0x7f7593d0  prot64  f3 6c  rep insb
+  emulation_type=0x0 (0)；首次 exit=IO_INSTRUCTION；续接=2
+  PIO port=0x511 (fwcfg)；事件=2
+
+次数=4  CS.base=0x0 RIP=0xffffffff81925842  prot64  8b 07  mov eax,[rdi]
+  emulation_type=0x40 (PF)；首次 exit=EPT_VIOLATION；续接=4
+  MMIO region=virtio-pci-device-vhost-vsock；事件=2
+  MMIO region=virtio-pci-device-virtio-scsi；事件=2
+  MMIO region=virtio-pci-device-virtio-serial；事件=2
+  MMIO region=virtio-pci-device-virtio-balloon；事件=2
+    示例：unsatisfied-read GPA=0x4800012000 len=4 value=0x0
+    示例：read GPA=0x4800012000 len=4 value=0x46e
+    示例：unsatisfied-read GPA=0x4800002000 len=4 value=0x0
+
+次数=3  CS.base=0x0 RIP=0x7f14e38d  prot64  8b 03  mov eax,[rbx]
+  emulation_type=0x0 (0)；首次 exit=APIC_ACCESS；续接=0
+  MMIO region=kvm-apic-msi；事件=3
+    示例：read GPA=0xfee00390 len=4 value=0xfc52f32a
+    示例：read GPA=0xfee00390 len=4 value=0xfbf94577
+    示例：read GPA=0xfee00390 len=4 value=0xdd95dbf4
+
+次数=3  CS.base=0x0 RIP=0xffffffff81925735  prot64  8a 07  mov al,[rdi]
+  emulation_type=0x40 (PF)；首次 exit=EPT_VIOLATION；续接=3
+  MMIO region=virtio-pci-device-virtio-net；事件=4
+  MMIO region=virtio-pci-device-virtio-user-fs；事件=2
+    示例：unsatisfied-read GPA=0x4800016000 len=1 value=0x0
+    示例：read GPA=0x4800016000 len=1 value=0x52
+    示例：unsatisfied-read GPA=0x480000a000 len=1 value=0x0
+
+次数=2  CS.base=0x0 RIP=0xffffffff81b691d3  prot64  41 8b 04 06  mov eax,[r14+rax]
+  emulation_type=0x40 (PF)；首次 exit=EPT_MISCONFIG；续接=2
+  MMIO region=capabilities；事件=4
+    示例：unsatisfied-read GPA=0x4800030020 len=4 value=0x0
+    示例：read GPA=0x4800030020 len=4 value=0x2000402
+    示例：unsatisfied-read GPA=0x4800030030 len=4 value=0x0
+
+次数=2  CS.base=0x0 RIP=0xffffffff812b6d24  prot64  44 89 00  mov [rax],r8d
+  emulation_type=0x40 (PF)；首次 exit=EPT_MISCONFIG；续接=0
+  MMIO region=kvm-ioapic；事件=2
+    示例：write GPA=0xfec00000 len=4 value=0x28
+    示例：write GPA=0xfec00000 len=4 value=0x18
+
+次数=2  CS.base=0x0 RIP=0xffffffff812b6d27  prot64  89 78 10  mov [rax+0x10],edi
+  emulation_type=0x40 (PF)；首次 exit=EPT_MISCONFIG；续接=0
+  MMIO region=kvm-ioapic；事件=2
+    示例：write GPA=0xfec00010 len=4 value=0x10021
+    示例：write GPA=0xfec00010 len=4 value=0x10022
+
+次数=2  CS.base=0x0 RIP=0xffffffff812b6d56  prot64  8b 42 10  mov eax,[rdx+0x10]
+  emulation_type=0x40 (PF)；首次 exit=EPT_MISCONFIG；续接=0
+  MMIO region=kvm-ioapic；事件=2
+    示例：read GPA=0xfec00010 len=4 value=0x10021
+    示例：read GPA=0xfec00010 len=4 value=0x10022
+
+次数=1  CS.base=0x0 RIP=0x7f6eba05  prot64  c6 03 50  mov byte [rbx],0x50
+  emulation_type=0x40 (PF)；首次 exit=EPT_VIOLATION；续接=0
+  MMIO region=system.flash1 KVM；事件=1
+    示例：write GPA=0xffc00010 len=1 value=0x50
+
+次数=1  CS.base=0x0 RIP=0x7f6eba0e  prot64  c6 03 70  mov byte [rbx],0x70
+  emulation_type=0x40 (PF)；首次 exit=EPT_VIOLATION；续接=0
+  MMIO region=system.flash1 KVM；事件=1
+    示例：write GPA=0xffc00010 len=1 value=0x70
+
+次数=1  CS.base=0x0 RIP=0x7f6eba11  prot64  8a 13  mov dl,[rbx]
+  emulation_type=0x40 (PF)；首次 exit=EPT_VIOLATION；续接=1
+  MMIO region=system.flash1 KVM；事件=2
+    示例：unsatisfied-read GPA=0xffc00010 len=1 value=0x0
+    示例：read GPA=0xffc00010 len=1 value=0x0
+
+次数=1  CS.base=0x0 RIP=0x7f6eba45  prot64  c6 03 ff  mov byte [rbx],0xff
+  emulation_type=0x40 (PF)；首次 exit=EPT_MISCONFIG；续接=0
+  MMIO region=system.flash1 KVM；事件=1
+    示例：write GPA=0xffc00010 len=1 value=0xff
+
+次数=1  CS.base=0x0 RIP=0x7f16a374  prot64  44 8a 0b  mov r9b,[rbx]
+  emulation_type=0x40 (PF)；首次 exit=EPT_VIOLATION；续接=1
+  MMIO region=capabilities；事件=2
+    示例：unsatisfied-read GPA=0x4800030000 len=1 value=0x0
+    示例：read GPA=0x4800030000 len=1 value=0x40
+
+次数=1  CS.base=0x0 RIP=0x7f16a428  prot64  44 89 0b  mov [rbx],r9d
+  emulation_type=0x40 (PF)；首次 exit=EPT_VIOLATION；续接=0
+  MMIO region=doorbell；事件=1
+    示例：write GPA=0x4800032000 len=4 value=0x0
+
+次数=1  CS.base=0x0 RIP=0xffffffff812b7e95  prot64  89 30  mov [rax],esi
+  emulation_type=0x40 (PF)；首次 exit=EPT_VIOLATION；续接=0
+  MMIO region=kvm-ioapic；事件=1
+    示例：write GPA=0xfec00000 len=4 value=0x0
+
+次数=1  CS.base=0x0 RIP=0xffffffff81b691a9  prot64  8b 50 10  mov edx,[rax+0x10]
+  emulation_type=0x40 (PF)；首次 exit=EPT_MISCONFIG；续接=1
+  MMIO region=capabilities；事件=2
+    示例：unsatisfied-read GPA=0x4800030010 len=4 value=0x0
+    示例：read GPA=0x4800030010 len=4 value=0x87001
+
+次数=1  CS.base=0x0 RIP=0xffffffff81b691ea  prot64  41 8b 06  mov eax,[r14]
+  emulation_type=0x40 (PF)；首次 exit=EPT_MISCONFIG；续接=1
+  MMIO region=capabilities；事件=2
+    示例：unsatisfied-read GPA=0x4800030000 len=4 value=0x0
+    示例：read GPA=0x4800030000 len=4 value=0x1000040
+
+次数=1  CS.base=0x0 RIP=0xffffffff81b691fa  prot64  8b 40 04  mov eax,[rax+0x4]
+  emulation_type=0x40 (PF)；首次 exit=EPT_MISCONFIG；续接=1
+  MMIO region=operational；事件=2
+    示例：unsatisfied-read GPA=0x4800030044 len=4 value=0x0
+    示例：read GPA=0x4800030044 len=4 value=0x9
+
+次数=1  CS.base=0x0 RIP=0xffffffff81b69239  prot64  41 8b 07  mov eax,[r15]
+  emulation_type=0x40 (PF)；首次 exit=EPT_MISCONFIG；续接=1
+  MMIO region=operational；事件=2
+    示例：unsatisfied-read GPA=0x4800030040 len=4 value=0x0
+    示例：read GPA=0x4800030040 len=4 value=0x0
+
+次数=1  CS.base=0x0 RIP=0xffffffff81b69241  prot64  41 89 07  mov [r15],eax
+  emulation_type=0x40 (PF)；首次 exit=EPT_MISCONFIG；续接=0
+  MMIO region=operational；事件=1
+    示例：write GPA=0x4800030040 len=4 value=0x0
+
+次数=1  CS.base=0x0 RIP=0xffffffff81b69244  prot64  41 8b 47 04  mov eax,[r15+0x4]
+  emulation_type=0x40 (PF)；首次 exit=EPT_MISCONFIG；续接=1
+  MMIO region=operational；事件=2
+    示例：unsatisfied-read GPA=0x4800030044 len=4 value=0x0
+    示例：read GPA=0x4800030044 len=4 value=0x9
+
+次数=1  CS.base=0x0 RIP=0xffffffff812b6df4  prot64  44 89 00  mov [rax],r8d
+  emulation_type=0x40 (PF)；首次 exit=EPT_MISCONFIG；续接=0
+  MMIO region=kvm-ioapic；事件=1
+    示例：write GPA=0xfec00000 len=4 value=0x18
+
+次数=1  CS.base=0x0 RIP=0xffffffff812b6df7  prot64  89 70 10  mov [rax+0x10],esi
+  emulation_type=0x40 (PF)；首次 exit=EPT_MISCONFIG；续接=0
+  MMIO region=kvm-ioapic；事件=1
+    示例：write GPA=0xfec00010 len=4 value=0x22
+
+次数=1  CS.base=0x0 RIP=0xffffffff819257b6  prot64  66 8b 07  mov ax,[rdi]
+  emulation_type=0x40 (PF)；首次 exit=EPT_VIOLATION；续接=1
+  MMIO region=virtio-pci-device-virtio-blk；事件=2
+    示例：unsatisfied-read GPA=0x4800006022 len=2 value=0x0
+    示例：read GPA=0x4800006022 len=2 value=0x2
+
+MMIO 事件汇总（含续接）
+   33400  write
+    1696  read
+    1486  unsatisfied-read
+   30704  system.flash1 KVM
+    1702  virtio-pci-common-virtio-serial
+     656  kvm-ioapic
+     573  msix-table
+     554  virtio-pci-device-virtio-input
+     392  runtime
+     390  operational
+     334  virtio-pci-common-virtio-input
+     240  virtio-pci-common-virtio-net
+     176  virtio-pci-common-virtio-balloon
+     146  virtio-pci-common-virtio-scsi
+     120  virtio-pci-common-vhost-vsock
+      98  virtio-pci-common-virtio-blk
+      98  virtio-pci-common-virtio-user-fs
+      74  virtio-pci-device-virtio-user-fs
+      28  capabilities
+      28  doorbell
+      28  virtio-pci-device-virtio-blk
+      24  virtio-pci-device-virtio-net
+      23  usb2 port #5
+      23  usb2 port #6
+      14  virtio-pci-device-virtio-scsi
+       9  usb3 port #1
+       9  usb3 port #2
+       9  usb3 port #3
+       9  usb3 port #4
+       9  usb3 port #5
+       9  usb3 port #6
+       9  usb3 port #7
+       9  usb3 port #8
+       9  usb2 port #1
+       9  usb2 port #2
+       9  usb2 port #3
+       9  usb2 port #4
+       9  usb2 port #7
+       9  usb2 port #8
+       7  kvm-apic-msi
+       6  virtio-pci-common-virtio-rng
+       4  virtio-pci-device-vhost-vsock
+       3  virtio-pci-notify-virtio-input
+       2  virtio-pci-notify-vhost-vsock
+       2  virtio-pci-device-virtio-serial
+       2  virtio-pci-device-virtio-balloon
+       1  virtio-pci-notify-virtio-user-fs
+       1  virtio-pci-notify-virtio-scsi
+       1  virtio-pci-notify-virtio-blk
+       1  virtio-pci-notify-virtio-serial
+       1  virtio-pci-notify-virtio-balloon
+
+PIO 事件汇总（完整模拟器内，含续接）
+      24  port=0x511  read size=1  fwcfg
+
+本次采样的具体发现
+最常见字节 44 88 65 00：mov [rbp+0x0],r12b，出现 30699 次，guest RIP=0x7f6eb54d。
+对应 GPA 位于 0xffc00000 起的 system.flash1（OVMF_VARS.fd）；这是实际的 flash MMIO 写。
+该条指令不是 IN/OUT，也不是因为 CPU 不支持 MOV；它访问了 QEMU 模拟的 flash。
+同时可见 virtio PCI 配置访问、xHCI 寄存器、IOAPIC 和 APIC 访问。
+f3 6c：rep insb，关联 PIO 0x511（QEMU fw_cfg），体现字符串 I/O 的完整模拟。
+入口标志没有 TRAP_UD、SKIP 或 invalid-guest-state 样本；不能推断其他工作负载也没有这些路径。
+OVMF 首次启动的 flash 写占了很大比例，这份统计描述这台新 VM 的启动窗口。
+
+测试结束：QEMU 已停止；VM 定义、磁盘与启动日志保留在 /home/martins3/data/hack/vm/emulate-insn-20260930。
+默认 VM 已恢复为 virtme。

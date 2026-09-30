@@ -1,4 +1,4 @@
-# PV_SCHED_YIELD
+# pv sched yield
 
 guset: 想要发送 ipi 给
 

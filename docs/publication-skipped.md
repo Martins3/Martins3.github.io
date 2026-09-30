@@ -2,7 +2,7 @@
 
 由 `docs/pub/sync-blog.py` 生成。
 
-跳过文件数: 292
+跳过文件数: 290
 
 ## 发布策略跳过: draft 目录
 
@@ -95,7 +95,6 @@
 - `docs/kernel/fs/legacy/libfs.md`
 - `docs/kernel/fs/legacy/super.md`
 - `docs/kernel/perf/io.md`
-- `docs/kernel/perf/kvm.md`
 - `docs/kernel/perf/net.md`
 - `docs/kernel/perf/qemu.md`
 - `docs/kernel/sched/ai/test-answers.md`
@@ -178,16 +177,15 @@
 - `docs/kernel/release/7.1.md`
 - `docs/kernel/release/7.2.md`
 - `docs/kernel/release/7.3.md`
-- `docs/kvm/aarch64/2-tools.md`
-- `docs/kvm/aarch64/code-overview.md`
-- `docs/kvm/aarch64/mmu.md`
-- `docs/kvm/aarch64/nested.md`
-- `docs/kvm/aarch64/timer.md`
-- `docs/kvm/aarch64/tracepoint.md`
-- `docs/kvm/aarch64/vgic-its.md`
-- `docs/kvm/aarch64/vgic.md`
-- `docs/kvm/aarch64/vhe.md`
-- `docs/kvm/aarch64/yes.md`
+- `docs/kvm/kvm-forum/2016.md`
+- `docs/kvm/kvm-forum/2017.md`
+- `docs/kvm/kvm-forum/2018.md`
+- `docs/kvm/kvm-forum/2020.md`
+- `docs/kvm/kvm-forum/2021.md`
+- `docs/kvm/kvm-forum/2022.md`
+- `docs/kvm/kvm-forum/2023.md`
+- `docs/kvm/kvm-forum/2024.md`
+- `docs/kvm/kvm-forum/2025.md`
 - `docs/lwn.md`
 - `docs/move-fast.md`
 - `docs/net/rdma/rdma-demo/NOTIFY_SYSCALL.md`

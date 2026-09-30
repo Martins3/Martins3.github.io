@@ -1,5 +1,10 @@
 # async pf
 
+当前协议状态见 [机制状态核查](../mechanism-evolution.md)：APF 机制仍在，
+page-not-present 仍可使用 synthetic `#PF`；旧的 page-ready `#PF` 通知已被
+`2635b5c4a0e4` 替换为 LAPIC 中断，当前没有旧 ready 通知方式的回退分支。
+因此旧文章里的两类 APF 都使用 `#PF` 的描述不能直接套用当前源码。
+
 ## 关键设计
 
 因为 vCPU 发生 page fault 了，被切换走，然后 Host 从磁盘中请求内容，然后 host
