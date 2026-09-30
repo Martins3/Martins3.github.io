@@ -1,4 +1,4 @@
-# find 命令
+# find
 <!-- c291f0fa-bff2-4e1d-891d-58bdc17cd129 -->
 
 ## 基本操作

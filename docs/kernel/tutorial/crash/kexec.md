@@ -76,14 +76,10 @@ manual 的说法:
 sudo kdumpctl restart 的动作类似:
 
 1. 停掉已加载的 kdump 内核
-
-* 卸载之前已经通过 `kexec -p` 加载的 crash kernel
-* 确保旧的 dump capture kernel 不再驻留内存
-
+	- 卸载之前已经通过 `kexec -p` 加载的 crash kernel
+	- 确保旧的 dump capture kernel 不再驻留内存
 2. 重新解析 `/etc/kdump.conf`
-
 读取配置项：
-
 * dump 路径（path）
 * core_collector
 * ssh/nfs/local dump target
@@ -146,6 +142,34 @@ make install
 到他的这个 kernel ，然后他作为 bootloader 来加载系统中存在的 kernel 。
 
 ## /etc/sysconfig/kdump 和 /etc/kdump.conf 的作用
+<!-- 66158e80-feec-465d-8d84-1c826acfaf29 -->
+
+kdump 捕获内核的启动参数配置在 /etc/sysconfig/kdump：
+
+```txt
+KDUMP_COMMANDLINE=""
+KDUMP_COMMANDLINE_REMOVE="hugepages hugepagesz slub_debug quiet"
+KDUMP_COMMANDLINE_APPEND="irqpoll nr_cpus=1 reset_devices ..."
+
+```
+其中：
+
+- KDUMP_COMMANDLINE：基础命令行；为空时继承当前 /proc/cmdline
+- KDUMP_COMMANDLINE_REMOVE：从基础命令行删除的参数
+- KDUMP_COMMANDLINE_APPEND：追加给 kdump kernel 的参数
+
+修改后重新加载：
+
+sudo kdumpctl restart
+
+另外两个相关配置：
+
+- /etc/default/grub 的 GRUB_CMDLINE_LINUX：配置第一内核的 crashkernel= 内存预留，需要更新 GRUB 并重启才生效。
+- /etc/kdump.conf：配置 vmcore 保存位置、压缩方式和失败动作，不是内核启动参数。
+
+注意当前运行内核使用的是动态 crashkernel=512M-12G:128M,...，但 /etc/default/grub 配置为 crashkernel=1024M,high，说明磁盘上的 GRUB
+配置与本次实际启动参数并不一致。
+
 
 ## kexec -l 和 kexec -p 的区别
 <!-- f1a37096-5aa4-45b0-80b0-05175722f450 -->
@@ -175,8 +199,8 @@ struct kimage *kexec_crash_image;
     Drop-In: /usr/lib/systemd/system/service.d
              └─10-timeout-abort.conf
      Active: inactive (dead)
-vn on  master 🗔
-🤒  sudo systemctl status kdump.service
+
+sudo systemctl status kdump.service
 ```
 
 工具的依赖关系:

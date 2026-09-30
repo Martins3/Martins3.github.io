@@ -327,6 +327,8 @@ QEMU RCU 最精巧的两点：
 ## 问题
 
 ### RCU 在用户态和内核态中实现的差异
+1. 可以对比一下 QEMU 的 rcu 和 kernel 的 rcu 的差别
+   - https://www.kernel.org/doc/html/latest/RCU/Design/Requirements/Requirements.html#linux-kernel-complications
 
 ### 为什么 kernel 的实现比 userspace 的复杂那么多
 

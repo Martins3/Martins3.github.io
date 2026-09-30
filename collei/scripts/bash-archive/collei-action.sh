@@ -617,34 +617,6 @@ function cmd_auto() {
 
 }
 
-function cmd_monitor() {
-	items=(
-		"qmp" "shell" "qga" "main"
-	)
-	resource=$(printf "%s\n" "${items[@]}" | fzf)
-	case "$resource" in
-		qmp)
-			socat -,echo=0,icanon=0 unix-connect:"$vm_dir/$which_qemu"/qmp
-			;;
-		shell)
-			qmp_shell=${QEMU_DIR}/scripts/qmp/qmp-shell
-			$qmp_shell "$vm_dir/$which_qemu"/qmp-shell
-			;;
-		qga)
-			# 原来 qga 可以执行这么多命令啊
-			# https://qemu-project.gitlab.io/qemu/interop/qemu-ga-ref.html
-			socat -,echo=0,icanon=0 unix-connect:"$vm_dir/$which_qemu"/qga.sock
-			;;
-		main)
-			# 当 gdb 调试的时候，使用 socket 来连接
-			socat -,echo=0,icanon=0 unix-connect:"$vm_dir/$which_qemu"/main.sock
-			;;
-		*)
-			printf "%s\n" "${items[@]}"
-			;;
-	esac
-
-}
 
 function cmd_perf_qemu() {
 	get_qemu_pid "$vm_dir"
@@ -676,17 +648,6 @@ function cmd_perf_guest() {
 			error "guest kallsyms not found"
 		fi
 	fi
-}
-
-function cmd_rename() {
-	local new_vm_dir
-	get_vm_name "$(basename "$vm_dir")"
-	new_vm_dir="$all_vm_dir/$new_vm_name"
-	mv "$vm_dir" "$new_vm_dir"
-
-	rm "$vm_dir_symbol"
-	ln -sf "$new_vm_dir" "$vm_dir_symbol"
-	exit 0
 }
 
 function cmd_throttle() {
@@ -729,20 +690,6 @@ function metrics() {
 		-d '{
        "action_type": "FlushMetrics"
      }'
-}
-
-function cmd_kill() {
-	# 不知道为什么，通过 hmp 的方式失效了
-	# gum confirm "Kill $vm ?" && echo "quit" | socat - unix-connect:"$vm/hmp"
-	get_qemu_pid "$vm_dir"
-
-	# 暂时就这么写，也许抽象出来
-	if [[ $auto_yes == false ]]; then
-		gum confirm "Kill $vm_dir ?" && kill -9 "$qemu_pid"
-	else
-		kill -9 "$qemu_pid"
-	fi
-	info "Done"
 }
 
 function cmd_debug_kernel() {

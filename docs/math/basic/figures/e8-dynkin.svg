@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="430" viewBox="0 0 900 430">
+  <rect width="900" height="430" fill="#f7f9fc"/>
+  <text x="40" y="48" font-family="sans-serif" font-size="27" font-weight="700" fill="#15283d">E8: a finite root system behind a large symmetry</text>
+  <text x="40" y="78" font-family="sans-serif" font-size="17" fill="#526477">The left panel is the Dynkin diagram; the right panel is a symmetric 2D projection of its roots.</text>
+  <g transform="translate(55,145)" font-family="sans-serif">
+    <text x="0" y="-35" font-size="22" font-weight="700" fill="#245b91">Dynkin diagram</text>
+    <path d="M35 90 L95 90 L155 90 L215 90 L275 90 L335 90 L395 90" stroke="#245b91" stroke-width="5"/>
+    <path d="M215 90 L215 25" stroke="#245b91" stroke-width="5"/>
+    <g fill="#ffffff" stroke="#245b91" stroke-width="4">
+      <circle cx="35" cy="90" r="14"/><circle cx="95" cy="90" r="14"/><circle cx="155" cy="90" r="14"/><circle cx="215" cy="90" r="14"/><circle cx="275" cy="90" r="14"/><circle cx="335" cy="90" r="14"/><circle cx="395" cy="90" r="14"/><circle cx="215" cy="25" r="14"/>
+    </g>
+    <text x="115" y="170" font-size="18" fill="#526477">8 simple roots</text>
+  </g>
+  <g transform="translate(535,218)" font-family="sans-serif">
+    <circle cx="0" cy="0" r="132" fill="#eef4fb" stroke="#95abc0" stroke-width="2"/>
+    <g fill="#245b91" opacity=".78">
+      <circle cx="0" cy="-122" r="3"/><circle cx="24" cy="-120" r="3"/><circle cx="47" cy="-113" r="3"/><circle cx="68" cy="-101" r="3"/><circle cx="88" cy="-88" r="3"/><circle cx="104" cy="-70" r="3"/><circle cx="116" cy="-48" r="3"/><circle cx="122" cy="-24" r="3"/><circle cx="122" cy="0" r="3"/><circle cx="122" cy="24" r="3"/><circle cx="116" cy="48" r="3"/><circle cx="104" cy="70" r="3"/><circle cx="88" cy="88" r="3"/><circle cx="68" cy="101" r="3"/><circle cx="47" cy="113" r="3"/><circle cx="24" cy="120" r="3"/><circle cx="0" cy="122" r="3"/><circle cx="-24" cy="120" r="3"/><circle cx="-47" cy="113" r="3"/><circle cx="-68" cy="101" r="3"/><circle cx="-88" cy="88" r="3"/><circle cx="-104" cy="70" r="3"/><circle cx="-116" cy="48" r="3"/><circle cx="-122" cy="24" r="3"/><circle cx="-122" cy="0" r="3"/><circle cx="-122" cy="-24" r="3"/><circle cx="-116" cy="-48" r="3"/><circle cx="-104" cy="-70" r="3"/><circle cx="-88" cy="-88" r="3"/><circle cx="-68" cy="-101" r="3"/><circle cx="-47" cy="-113" r="3"/><circle cx="-24" cy="-120" r="3"/>
+    </g>
+    <g fill="#d18b22" opacity=".75">
+      <circle cx="0" cy="-77" r="3"/><circle cx="30" cy="-71" r="3"/><circle cx="54" cy="-54" r="3"/><circle cx="71" cy="-30" r="3"/><circle cx="77" cy="0" r="3"/><circle cx="71" cy="30" r="3"/><circle cx="54" cy="54" r="3"/><circle cx="30" cy="71" r="3"/><circle cx="0" cy="77" r="3"/><circle cx="-30" cy="71" r="3"/><circle cx="-54" cy="54" r="3"/><circle cx="-71" cy="30" r="3"/><circle cx="-77" cy="0" r="3"/><circle cx="-71" cy="-30" r="3"/><circle cx="-54" cy="-54" r="3"/><circle cx="-30" cy="-71" r="3"/>
+    </g>
+    <g stroke="#6d8195" stroke-width="2"><path d="M-145 0 L145 0 M0 -145 L0 145"/></g>
+    <text x="-69" y="177" font-size="18" fill="#526477">2D projection (schematic)</text>
+    <text x="-53" y="14" font-size="22" font-weight="700" fill="#245b91">240 roots</text>
+  </g>
+  <text x="55" y="365" font-family="sans-serif" font-size="18" fill="#526477">The projection preserves symmetry cues, not the full 8-dimensional geometry.</text>
+</svg>

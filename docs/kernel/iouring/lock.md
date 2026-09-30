@@ -1,4 +1,4 @@
-# lock
+# 同步设计
 ## 仔细 review 其中的同步机制
 
 refcount 之类的

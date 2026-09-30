@@ -9,8 +9,7 @@ Linux 内核，也许对于项目是有推动的。
 刚开始学习 Linux 内核的时候，完全无从入手。
 
 - 打开一个文件，里面的每一个函数都不认识，每一个结构体都不认识。
-- 打开一个文件夹，里面有一大堆文件夹，随便打开一个文件夹，我靠，结果里面又是一堆文件夹。
-
+- 打开一个文件夹，里面有一大堆文件夹，随便打开一个文件夹，结果里面又是一堆文件夹。
 - 从那个文件开始看起?
 - 那些文件是重点，那些不是重点？
 
@@ -64,7 +63,6 @@ Linux kernel 实现了大量各类协议:
 scsi /  acpi / nvme / tcp / ip / RDMA / fc / nfs
 这里随便拿出来一个，其 spec 或者 rfc 就是上千页。
 
-
 > There are so many features in the Linux kernel it sometimes blows my mind. eventfd, signalfd, timerfd, memfd, pidfd. The whole fricking tc/qdisc featureset (OMG). netlink. io_uring. criu. SO_REUSEPORT. Teaming. Namespaces. veths. vsocks. Dpdk/netmap/af_packet. XDP ! Seccomp.
 > I mean look at that https://developers.redhat.com/blog/2018/10/22/introduction-t...
 >
@@ -74,6 +72,7 @@ scsi /  acpi / nvme / tcp / ip / RDMA / fc / nfs
 
 即便是从事相关工作很久了， 还是时不时可以发现一个目录我从来没见过，
 每当这个时候，我就说到， "你还有多少惊喜是朕不知道的。"
+
 ## 对于性能的不断的提升
 
 - io 接口从 read readv preadv aio io_uring 的演化
@@ -84,6 +83,7 @@ scsi /  acpi / nvme / tcp / ip / RDMA / fc / nfs
 - 总线: ide pcie bus cxl
 - GPU / DRM : 暂不展开
 - 音频: 暂不展开
+
 
 1. 从简单的 spinlock/mutex 到各种面向特定场景优化的
 2. smp / numa / socket 居然让时钟的同步也变的很复杂了
@@ -116,7 +116,6 @@ scsi /  acpi / nvme / tcp / ip / RDMA / fc / nfs
 ## 内核的调试和开发都是新的一套规则
 1. 普通的程序的 double free 之类的会导致踩内存。
 内核中，很多踩内存是由于 QEMU KVM 或者固件的 BUG 。
-
 2. 很多场景，机器一旦开机，往往不可以重启，所以内核社区总是在捣鼓 live patch 功能。
 
 
@@ -141,16 +140,6 @@ scsi /  acpi / nvme / tcp / ip / RDMA / fc / nfs
 内核不是教程，而是终于知道原来内核中使用 task_struct 描述进程
 但是打开 task_struct 一看，发现里面存在几百个字段。
 
-## accidental complexity
-
-- incomplete transitions
-  - cgroup 中同时存在 v1 和 v2 机制
-  - x86 kvm : 如果 CPU 不支持这个功能，就用低效一点的方法，如果 CPU 支持，那么就用硬件。最经典的就是影子页表。
-  - x86 各种模式的兼容
-- 重复逻辑以及缺乏抽象: raid 模块已经大量的驱动，这都是 Linus 认为可以用 Rust 的部分。
-
-## 意想不到的复杂
-
 ### 向上向下，都需要熟悉
 
 只是掌握内核是解决不了问题的，
@@ -167,26 +156,32 @@ scsi /  acpi / nvme / tcp / ip / RDMA / fc / nfs
 如果固件有 bug ，如何判断是驱动的问题还是固件的问题?
 
 
+## accidental complexity
+
+- incomplete transitions
+  - cgroup 中同时存在 v1 和 v2 机制
+  - x86 kvm : 如果 CPU 不支持这个功能，就用低效一点的方法，如果 CPU 支持，那么就用硬件。最经典的就是影子页表。
+  - x86 各种模式的兼容
+- 重复逻辑以及缺乏抽象: raid 模块已经大量的驱动，这都是 Linus 认为可以用 Rust 的部分。
+
 ## 解决办法
+
+没有 AI ，当时想到了这些方案:
 1. proc sysfs 导出信息
-2. fuse , qemu + kvm , tun tap 等，尽量让业务在用户态
-3. 尽量模块化
-4. 反复的重构，例如 Christoph Hellwig
+2. fuse , qemu + kvm , tun tap 等，尽量让逻辑尽量在用户态中运行
+3. 软件工程
+	- 尽量模块化
+	- 反复的重构，例如 Christoph Hellwig 在每一个周期中都会做大量的重构
 1. kdump / kexec : 对于内核宕机不再束手无策
 2. perf ftrace : 解决性能问题
+5. 由于内核中驱动成千上万，导致内核需要一个通用框架，所以首先去掌握这些公共的内容，而不是从细节触发:
+	1. 中断的 irq domain
+	2. sysfs 对于驱动
+	3. 驱动的 bind 支持
+	4. lock 需要兼容各种不同架构 memory model 的定义和 atomic 指令的实现
 
-由于内核中驱动成千上万，导致内核需要一个通用框架:
-1. 中断的 irqdomain
-2. sysfs 对于驱动
-3. 驱动的 bind 支持
-4. lock 需要兼容各种 memory model 和同步原语
+有了 AI ，从工程上，还是需要注意一些软件工程，但是理解内核的设计意图这一步，难度下降了 100 倍!
 
-## 下一步
-1. https://github.com/vvaltchev/tilck : 和其他各种建议操作系统的对比
-1. 可以对比一下 QEMU 的 rcu 和 kernel 的 rcu 的差别
-   - https://www.kernel.org/doc/html/latest/RCU/Design/Requirements/Requirements.html#linux-kernel-complications
-2. 开发用户态驱动和内核驱动
-   - 直接写内核的文件系统和 fuse ?
 
 ## 参考
 - https://www.zhihu.com/question/35484429/answer/62964898

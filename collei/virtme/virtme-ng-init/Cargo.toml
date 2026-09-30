@@ -19,4 +19,3 @@ unused_qualifications = "warn"
 
 [dependencies]
 nix = { version = "0.29", features = ["feature", "fs", "hostname", "mount", "reboot", "user", "process"] }
-base64 = "0.22"

@@ -128,18 +128,6 @@ https://vncdotool.readthedocs.io/en/latest/usage.html
 arm 上面没办法用，难道是这个问题?
 https://lists.gnu.org/archive/html/qemu-devel/2018-02/msg06218.html
 
-## qmp shell 中的命令可以看下
-
-```txt
-x-query-irq                        x-query-ramblock                   x-query-virtio-queue-element
-x-query-jit                        x-query-roms                       x-query-virtio-queue-status
-x-query-numa                       x-query-usb                        x-query-virtio-status
-x-query-opcount                    x-query-virtio                     x-query-virtio-vhost-queue-status
-(QEMU) x-query-irq
-{"return": {"human-readable-text": "IRQ statistics for kvm-ioapic:\n 0: 13\n 1: 11\n 3: 2\n 4: 2\n 6: 3\n 8: 1\n10: 156\n12: 15\nIRQ statistics for kvm-i8259:\n 0: 13\n 1: 11\n 3: 2\n 4: 2\n 6: 3\n 8: 1\n10: 156\n12: 15\n"}}
-(QEMU) x-query-jit
-{"error": {"class": "GenericError", "desc": "JIT information is only available with accel=tcg"}}
-```
 
 ## 也许有用
 给Qemu虚拟机“打信号”：自定义QMP注入SCI中断 - MyStackTrace的文章 - 知乎

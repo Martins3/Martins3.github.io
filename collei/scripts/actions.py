@@ -8,10 +8,15 @@ import re
 import shlex
 import shutil
 import signal
+import socket
 import subprocess
 import sys
+import termios
 import time
+import tty
 import uuid
+from collections.abc import Iterator
+from contextlib import contextmanager
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
@@ -36,7 +41,11 @@ from nbd_benchmark import (
 )
 from network_templates import network_configurations, temporary_ip_commands
 from runtime import ColleiContext, VmRuntime
-from tasks import add_background_task, exec_task_log
+from serial import (
+    SerialLayout,
+    build_serial_layout_for_options,
+)
+from tasks import add_background_task, exec_task_log, read_recorded_task
 from ui import choose, confirm
 
 
@@ -58,23 +67,16 @@ class Action:
     selector_option: str | None = None
 
 
-@dataclass
+@dataclass(frozen=True, slots=True)
 class ActionContext:
     collei: ColleiContext
     vm: VmRuntime
     runner: CommandRunner
     auto_yes: bool = False
 
-    def ssh_info(self) -> tuple[str, str, int | None]:
-        user = self.vm.config.options.get("user") or "root"
-        ip = self.vm.config.options.get("ip")
-        if ip is not None:
-            return user, ip, None
-        return user, "localhost", self.vm.tcp_port("ssh")
-
 
 def _ssh_argv(context: ActionContext, copy_id: bool = False) -> list[str]:
-    user, ip, port = context.ssh_info()
+    user, ip, port = context.vm.ssh_info()
     argv = ["ssh-copy-id" if copy_id else "ssh"]
     if port is not None:
         argv.extend(["-p", str(port)])
@@ -83,30 +85,46 @@ def _ssh_argv(context: ActionContext, copy_id: bool = False) -> list[str]:
 
 
 def _ssh_vsock_argv(context: ActionContext) -> list[str]:
-    if not context.vm.config.options.enabled("vsock"):
+    options = context.vm.config.options
+    firecracker = options.enabled("fire")
+    if not options.enabled("vsock"):
         raise ColleiError(
             f"vsock not enabled for {context.vm.config.name}; set vsock = 1 in config.ini"
         )
-    # 与 virtme kernel_args 的用户选择保持一致: guest 共享 host rootfs，
-    # virtiofsd 以普通用户运行，只有该用户的 home 里的 authorized_keys 可读。
-    user = (
-        context.vm.config.options.get("user")
-        or os.environ.get("SUDO_USER")
-        or getpass.getuser()
-    )
-    cid = context.vm.vsock_cid
-    socat = shutil.which("socat")
-    if socat is None:
-        raise ColleiError("socat not found, required for vsock ssh")
+    transport_options: list[str] = []
+    if firecracker:
+        ssh_proxy = Path("/usr/lib/systemd/systemd-ssh-proxy")
+        if not os.access(ssh_proxy, os.X_OK):
+            raise ColleiError("systemd-ssh-proxy is required for Firecracker vsock SSH")
+        user, _, _ = context.vm.ssh_info()
+        host = context.vm.config.name
+        proxy = shlex.join(
+            [
+                str(ssh_proxy),
+                f"vsock-mux{context.vm.directory / 'vsock.socket'}",
+                "22",
+            ]
+        )
+        transport_options = ["-o", "ProxyUseFdpass=yes"]
+    else:
+        socat = shutil.which("socat")
+        if socat is None:
+            raise ColleiError("socat not found, required for vsock ssh")
+        # 与 virtme kernel_args 的用户选择保持一致: guest 共享 host rootfs，
+        # virtiofsd 以普通用户运行，只有该用户的 home 里的 authorized_keys 可读。
+        user = options.get("user") or os.environ.get("SUDO_USER") or getpass.getuser()
+        host = "virtme"
+        proxy = shlex.join([socat, "-", f"VSOCK-CONNECT:{context.vm.vsock_cid}:22"])
     return [
         "ssh",
         "-o",
         "StrictHostKeyChecking=no",
         "-o",
         "UserKnownHostsFile=/dev/null",
+        *transport_options,
         "-o",
-        f"ProxyCommand={socat} - VSOCK-CONNECT:{cid}:22",
-        f"{user}@virtme",
+        f"ProxyCommand={proxy}",
+        f"{user}@{host}",
     ]
 
 
@@ -118,7 +136,7 @@ def _confirm(context: ActionContext, message: str) -> bool:
 
 def action_ssh_auto(context: ActionContext, args: Sequence[str]) -> None:
     del args
-    print(" ".join(_ssh_argv(context)))
+    print(shlex.join(_ssh_default_argv(context)))
 
 
 def action_ssh_vsock_auto(context: ActionContext, args: Sequence[str]) -> None:
@@ -127,20 +145,63 @@ def action_ssh_vsock_auto(context: ActionContext, args: Sequence[str]) -> None:
 
 
 def _ssh_default_argv(context: ActionContext) -> list[str]:
-    # virtme VM 启用 vsock 后默认走 vsock SSH: 它不依赖 guest 网络配置。
+    # virtme 和 Firecracker 启用 vsock 后默认通过它连接 SSH。
     options = context.vm.config.options
-    if options.enabled("virtme") and options.enabled("vsock"):
+    if options.enabled("vsock") and (
+        options.enabled("virtme") or options.enabled("fire")
+    ):
         return _ssh_vsock_argv(context)
     return _ssh_argv(context)
 
 
+def _ssh_known_host(context: ActionContext) -> str:
+    _, host, port = context.vm.ssh_info()
+    return f"[{host}]:{port}" if port is not None else host
+
+
+def _run_ssh(context: ActionContext, argv: Sequence[str]) -> None:
+    if context.runner.dry_run:
+        context.runner.run(argv, cwd=context.vm.directory)
+        return
+
+    # 这里耦合了一个我的个人 tmux 机器，当前目录会自动的修改 tmux pane 的名称
+    # 所以在这里要切换一下做目录切换
+    # tmux 的 pane_current_path 读前台进程组长(本进程)的
+    # cwd，只给 Popen 传 cwd 不够，必须自己 chdir，登录期间 pane 才定位到 vm 目录。
+    os.chdir(context.vm.directory)
+    process_env = os.environ.copy()
+    process_env["TERM"] = "xterm-256color"
+    error_log = context.vm.directory / ".tmp_ssh_log"
+    errors: list[str] = []
+    with error_log.open("w") as log:
+        process = subprocess.Popen(
+            argv,
+            cwd=context.vm.directory,
+            env=process_env,
+            text=True,
+            stderr=subprocess.PIPE,
+        )
+        if process.stderr is None:
+            raise ColleiError("failed to capture ssh stderr")
+        for line in process.stderr:
+            sys.stderr.write(line)
+            sys.stderr.flush()
+            log.write(line)
+            errors.append(line)
+        returncode = process.wait()
+
+    if returncode == 0:
+        return
+    if "has changed and you have requested strict checking" in "".join(errors):
+        known_host = _ssh_known_host(context)
+        context.runner.run(["ssh-keygen", "-R", known_host])
+        raise ColleiError(f"removed stale SSH host key for {known_host}; try again")
+    raise ColleiError("ssh failed")
+
+
 def action_ssh(context: ActionContext, args: Sequence[str]) -> None:
     del args
-    context.runner.exec(
-        _ssh_default_argv(context),
-        cwd=context.vm.directory,
-        env={"TERM": "xterm-256color"},
-    )
+    _run_ssh(context, _ssh_default_argv(context))
 
 
 def action_ssh_vsock(context: ActionContext, args: Sequence[str]) -> None:
@@ -154,7 +215,7 @@ def action_ssh_vsock(context: ActionContext, args: Sequence[str]) -> None:
 
 def action_ssh_copy_id(context: ActionContext, args: Sequence[str]) -> None:
     del args
-    context.runner.exec(_ssh_argv(context, copy_id=True), cwd=context.vm.directory)
+    _run_ssh(context, _ssh_argv(context, copy_id=True))
 
 
 def action_default(context: ActionContext, args: Sequence[str]) -> None:
@@ -179,7 +240,7 @@ def action_kill(context: ActionContext, args: Sequence[str]) -> None:
 
 def action_force_reboot(context: ActionContext, args: Sequence[str]) -> None:
     del args
-    socket = context.vm.directory / context.vm.which_qemu / "hmp"
+    socket = context.vm.qemu_directory / "hmp"
     hmp_command(socket, "system_reset")
 
 
@@ -219,9 +280,16 @@ def _freerdp3_binary() -> str:
     return binary
 
 
+def _rdp_runs_in_background(args: Sequence[str]) -> bool:
+    if not args or list(args) == ["--foreground"]:
+        return False
+    if list(args) == ["--background"]:
+        return True
+    raise ColleiError("usage: rdp [--foreground | --background]")
+
+
 def action_rdp(context: ActionContext, args: Sequence[str]) -> None:
-    if args:
-        raise ColleiError("rdp does not accept arguments; it opens the full desktop")
+    background = _rdp_runs_in_background(args)
     if not context.vm.config.options.enabled("win"):
         raise ColleiError(f"{context.vm.config.name} is not a Windows VM")
     if len(context.vm.live_pids) != 1:
@@ -251,27 +319,42 @@ def action_rdp(context: ActionContext, args: Sequence[str]) -> None:
         "https_proxy": "",
         "no_proxy": "127.0.0.1,localhost",
     }
-    context.runner.run(
-        [
-            _freerdp3_binary(),
-            f"/u:{user}",
-            "/v:127.0.0.1",
-            f"/port:{context.vm.tcp_port('rdp')}",
-            "/cert:ignore",
-            "/from-stdin:force",
-            "+clipboard",
-            "/sound:sys:pulse",
-            "/microphone:sys:pulse",
-            "/floatbar",
-            "/compression",
-            "/scale-desktop:200",  # 放到两倍
-            "/sec:tls",
-            "/f",
-        ],
-        cwd=context.vm.directory,
-        env=local_connection_env,
-        input_text=f"{password}\n",
-    )
+    command = [
+        _freerdp3_binary(),
+        f"/u:{user}",
+        "/v:127.0.0.1",
+        f"/port:{context.vm.tcp_port('rdp')}",
+        "/cert:ignore",
+        "/from-stdin:force",
+        "+clipboard",
+        "/sound:sys:pulse",
+        "/microphone:sys:pulse",
+        "/floatbar",
+        "/compression",
+        "/scale-desktop:200",  # 放到两倍
+        "/sec:tls",
+        "/f",
+    ]
+    if not background:
+        context.runner.run(
+            command,
+            cwd=context.vm.directory,
+            env=local_connection_env,
+            input_text=f"{password}\n",
+        )
+        return
+
+    log = context.vm.directory / "rdp.log"
+    with password_path.open() as password_input:
+        pid = context.runner.start_detached(
+            command,
+            cwd=context.vm.directory,
+            env=local_connection_env,
+            stdin=password_input,
+            log=log,
+        )
+    if pid is not None:
+        print(f"RDP started in background: pid={pid}, log={log}")
 
 
 def action_hmp(context: ActionContext, args: Sequence[str]) -> None:
@@ -337,7 +420,7 @@ def action_path(context: ActionContext, args: Sequence[str]) -> None:
 
 def action_rsync(context: ActionContext, args: Sequence[str]) -> None:
     del args
-    user, ip, port = context.ssh_info()
+    user, ip, port = context.vm.ssh_info()
     location = "/root" if user == "root" else f"/home/{user}"
     deployment = Path.cwd() / ".nvim" / "deployment.lua"
     deployment.parent.mkdir(parents=True, exist_ok=True)
@@ -362,7 +445,7 @@ def action_bg(context: ActionContext, args: Sequence[str]) -> None:
     original = context.vm.config.options.get("bg") or "1"
     now = "1" if original == "0" else "0"
     context.vm.config.options.set("bg", now)
-    print(f"option is : {original} ==> {now}")
+    print("切换为后台运行" if now == "1" else "切换为前台运行")
 
 
 def action_top(context: ActionContext, args: Sequence[str]) -> None:
@@ -392,15 +475,15 @@ def action_setup_vmware(context: ActionContext, args: Sequence[str]) -> None:
 def action_tty3(context: ActionContext, args: Sequence[str]) -> None:
     del args
     print(f"Sending Ctrl+Alt+F3 to {context.vm.config.name} ...")
-    socket = context.vm.directory / context.vm.which_qemu / "hmp"
+    socket = context.vm.qemu_directory / "hmp"
     hmp_command(socket, "sendkey ctrl-alt-f3")
 
 
 def action_unplug_disk(context: ActionContext, args: Sequence[str]) -> None:
     del args
-    socket = context.vm.directory / context.vm.which_qemu / "hmp"
+    socket = context.vm.qemu_directory / "hmp"
     hmp_command(socket, "device_del hp_disk0")
-    counter = context.vm.directory / context.vm.which_qemu / "hp_disk_counter"
+    counter = context.vm.qemu_directory / "hp_disk_counter"
     counter.write_text("0\n")
 
 
@@ -417,8 +500,7 @@ def action_clone_vm_auto(context: ActionContext, args: Sequence[str]) -> None:
     context.runner.run(["cp", "-r", context.vm.directory, target])
     target_options = context.collei.vm(target.name).config.options
     target_options.remove("ip")
-    ids = [vm.config.guest_id for vm in context.collei.list_vms()]
-    new_id = max(ids, default=10) + 1
+    new_id = context.collei.allocate_guest_id()
     target_options.set_many({"id": str(new_id), "uuid": str(uuid.uuid4())})
     if source_active:
         for pid_file in target.glob("*/pid"):
@@ -437,23 +519,128 @@ def _fzf(items: str) -> str:
     return selected.stdout.strip().splitlines()[0]
 
 
-def action_monitor(context: ActionContext, args: Sequence[str]) -> None:
-    del args
-    resource = _fzf("qmp\nshell\nqga\nmain\n")
-    monitor_dir = context.vm.directory / context.vm.which_qemu
-    if resource == "shell":
-        qemu_build = context.collei.repo.parent.parent / "qemu" / "build"
-        context.runner.exec(
-            [qemu_build / "run", "qmp-shell", monitor_dir / "qmp-shell"]
-        )
-        return
-    sockets = {"qmp": "qmp", "qga": "qga.sock", "main": "main.sock"}
-    socket_name = sockets.get(resource)
-    if socket_name is None:
-        raise ColleiError(f"unsupported monitor: {resource}")
-    context.runner.exec(
-        ["socat", "-,echo=0,icanon=0", f"unix-connect:{monitor_dir / socket_name}"]
+def action_qmp(context: ActionContext, args: Sequence[str]) -> None:
+    if args:
+        raise ColleiError("usage: qmp")
+    endpoint = context.vm.qemu_directory / "qmp"
+    context.runner.exec(["socat", "-,echo=0,icanon=0", f"unix-connect:{endpoint}"])
+
+
+def action_qga(context: ActionContext, args: Sequence[str]) -> None:
+    if args:
+        raise ColleiError("usage: qga")
+    qga = _serial_layout(context).first("virtserialport")
+    if qga is None:
+        raise ColleiError("QGA requires a virtserialport channel in config.ini tty")
+    with _qmp(context) as qmp:
+        _, filename = _serial_backend(context, qmp, qga.name)
+    endpoint = _unix_socket_path(filename)
+    if endpoint is None:
+        raise ColleiError(f"QGA channel {qga.name} is not a Unix socket: {filename!r}")
+    _qmp_shell(context, Path(endpoint), skip_negotiation=True)
+
+
+def _serial_layout(context: ActionContext) -> SerialLayout:
+    return build_serial_layout_for_options(
+        context.vm.qemu_directory,
+        context.vm.config.options,
     )
+
+
+def _serial_backend(
+    context: ActionContext, qmp: QmpClient, channel: str
+) -> tuple[str, str]:
+    layout = _serial_layout(context)
+    configured = layout.channel(channel)
+    devices = {
+        device["label"]: device["filename"] for device in qmp.execute("query-chardev")
+    }
+    # GDB converts stdio to independent sockets without changing the config.
+    for label in (configured.chardev_id, layout.backend_id(configured)):
+        if label in devices:
+            return label, devices[label]
+    raise ColleiError(f"serial channel backend does not exist: {channel}")
+
+
+def _unix_socket_path(filename: str) -> str | None:
+    filename = filename.removeprefix("disconnected:")
+    if filename.startswith("unix:"):
+        return filename.removeprefix("unix:").removesuffix(",server=on")
+    return None
+
+
+def _connect_console(context: ActionContext, channel: str) -> None:
+    with _qmp(context) as qmp:
+        _, filename = _serial_backend(context, qmp, channel)
+    path = _unix_socket_path(filename)
+    if path is not None:
+        connect = f"unix-connect:{path}"
+    elif filename.startswith("pty:"):
+        connect = f"{filename.removeprefix('pty:')},raw,echo=0"
+    else:
+        raise ColleiError(
+            f"cannot connect to {channel} ({filename!r}); "
+            "use the running terminal for stdio, or configure a socket/PTY"
+        )
+    context.runner.exec(
+        ["socat", "-,echo=0,icanon=0", connect], cwd=context.vm.directory
+    )
+
+
+def _serial_log(context: ActionContext, channel: str) -> Path:
+    layout = _serial_layout(context)
+    with _qmp(context) as qmp:
+        label, _ = _serial_backend(context, qmp, channel)
+    path = (
+        layout.monitor_dir / "stdio.log"
+        if label == "stdio"
+        else layout.channel(channel).logfile
+    )
+    if not path.is_file():
+        raise ColleiError(f"serial log does not exist: {path}")
+    return path
+
+
+def action_console(context: ActionContext, args: Sequence[str]) -> None:
+    if args:
+        raise ColleiError("usage: console")
+    _connect_console(context, "serial_console")
+
+
+def action_hvc(context: ActionContext, args: Sequence[str]) -> None:
+    if args:
+        raise ColleiError("usage: hvc")
+    _connect_console(context, "virtio_console")
+
+
+def action_serial_log(context: ActionContext, args: Sequence[str]) -> None:
+    if args:
+        raise ColleiError("usage: serial_log")
+    context.runner.exec(["cat", _serial_log(context, "serial_console")])
+
+
+def action_hvc_log(context: ActionContext, args: Sequence[str]) -> None:
+    if args:
+        raise ColleiError("usage: hvc_log")
+    context.runner.exec(["cat", _serial_log(context, "virtio_console")])
+
+
+def action_qmp_shell(context: ActionContext, args: Sequence[str]) -> None:
+    if args:
+        raise ColleiError("usage: qmp_shell")
+    _qmp_shell(context, context.vm.qemu_directory / "qmp-shell")
+
+
+def _qmp_shell(
+    context: ActionContext, endpoint: Path, *, skip_negotiation: bool = False
+) -> None:
+    qemu_build = context.collei.repo.parent.parent / "qemu" / "build"
+    argv = [qemu_build / "run", "qmp-shell"]
+    # qga 需要跳过 capability 的 negotiation
+    if skip_negotiation:
+        argv.append("-N")
+    argv.append(endpoint)
+    context.runner.exec(argv)
 
 
 def action_perf_qemu(context: ActionContext, args: Sequence[str]) -> None:
@@ -495,14 +682,159 @@ def action_trace(context: ActionContext, args: Sequence[str]) -> None:
         ["qemu-system-x86_64", "-trace", "help"], capture=True
     ).stdout
     event = _fzf(events)
-    socket = context.vm.directory / context.vm.which_qemu / "hmp"
+    socket = context.vm.qemu_directory / "hmp"
     print(hmp_command(socket, f"info trace-events {event}"), end="")
     hmp_command(socket, f"trace-event {event} on")
     print(hmp_command(socket, f"info trace-events {event}"), end="")
 
 
 def _qmp(context: ActionContext) -> QmpClient:
-    return QmpClient(context.vm.directory / context.vm.which_qemu / "qmp-no-pretty")
+    return QmpClient(context.vm.qemu_directory / "qmp-no-pretty")
+
+
+def _require_unmuxed(qmp: QmpClient, label: str) -> None:
+    for device in qmp.execute("qom-list", {"path": "/chardevs"}):
+        if device["name"] == label and device["type"] == "child<chardev-mux>":
+            raise ColleiError(
+                f"serial backend {label} is shared by a mux; "
+                "use sysrq_keyboard for an unambiguous input route"
+            )
+
+
+@contextmanager
+def _pty_writer(path: str) -> Iterator[Callable[[bytes], object]]:
+    fd = os.open(path, os.O_RDWR | os.O_NOCTTY | os.O_NONBLOCK)
+    try:
+        settings = termios.tcgetattr(fd)
+        try:
+            tty.setraw(fd, termios.TCSANOW)
+            # QEMU notices a reopened PTY asynchronously.
+            time.sleep(1.1)
+            yield lambda data: os.write(fd, data)
+        finally:
+            termios.tcsetattr(fd, termios.TCSANOW, settings)
+    finally:
+        os.close(fd)
+
+
+@contextmanager
+def _channel_writer(
+    context: ActionContext, filename: str
+) -> Iterator[Callable[[bytes], object]]:
+    if filename == "stdio":
+        task = read_recorded_task(context.collei, context.vm.directory)
+        if task.backend != "pueue" or len(context.vm.live_pids) != 1:
+            raise ColleiError("stdio SysRq requires one QEMU managed by pueue")
+        state = json.loads(
+            context.runner.run(["pueue", "status", "--json"], capture=True).stdout
+        )
+        entry = state["tasks"].get(task.identifier, {})
+        if "Running" not in entry.get("status", {}) or str(
+            context.vm.directory / "cmd.sh"
+        ) not in shlex.split(entry.get("command", "")):
+            raise ColleiError("recorded pueue task is not this VM's running launcher")
+        yield lambda data: context.runner.run(
+            ["pueue", "send", task.identifier, data.decode("ascii")]
+        )
+        return
+    if filename.startswith("pty:"):
+        with _pty_writer(filename.removeprefix("pty:")) as write:
+            yield write
+        return
+    path = _unix_socket_path(filename)
+    if path is not None:
+        with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as client:
+            client.settimeout(2)
+            client.connect(path)
+            yield client.sendall
+        return
+    raise ColleiError(
+        f"cannot inject SysRq through {filename!r}; expected stdio, PTY or a Unix socket"
+    )
+
+
+def _send_channel_sysrq(context: ActionContext, qmp: QmpClient, channel: str) -> None:
+    label, filename = _serial_backend(context, qmp, channel)
+    _require_unmuxed(qmp, label)
+    with _channel_writer(context, filename) as write:
+        if channel == "serial_console":
+            qmp.execute("chardev-send-break", {"id": label})
+            time.sleep(0.1)
+            write(b"w")
+        else:
+            write(b"\x0fw")
+        time.sleep(0.1)
+
+
+# 类似的
+# ./collei/scripts/collei-action.py -a send_key -n yyds-fs alt_r scroll_lock
+def send_key_sequence(qmp: QmpClient, keys: Sequence[str]) -> None:
+    """Inject a QMP qcode sequence through QEMU's virtual keyboard."""
+    qmp.execute(
+        "send-key",
+        {
+            "keys": [{"type": "qcode", "data": key} for key in keys],
+            "hold-time": 100,
+        },
+    )
+
+
+def send_keyboard(qmp: QmpClient) -> None:
+    """Inject Alt+SysRq+w through QEMU's virtual keyboard."""
+    send_key_sequence(qmp, ("alt", "sysrq", "w"))
+
+
+def action_send_key(context: ActionContext, args: Sequence[str]) -> None:
+    keys = tuple(args) or ("ctrl", "alt", "delete")
+    if any(not key or key.startswith("-") for key in keys):
+        raise ColleiError("usage: send_key [QMP_QCODE ...]")
+    if context.runner.dry_run:
+        print(f"Would send QMP key sequence: {' '.join(keys)}")
+        return
+    with _qmp(context) as qmp:
+        send_key_sequence(qmp, keys)
+    print(f"Sent QMP key sequence: {' '.join(keys)}")
+
+
+def _sysrq(
+    context: ActionContext,
+    args: Sequence[str],
+    route: str,
+    send: Callable[[QmpClient], None],
+) -> None:
+    if args:
+        raise ColleiError(f"usage: sysrq_{route} (always sends SysRq-w)")
+    if context.runner.dry_run:
+        print(f"Would send SysRq-w via {route}; kernel.sysrq remains unchanged")
+        return
+    with _qmp(context) as qmp:
+        send(qmp)
+    print(
+        f"Sent SysRq-w via {route}; check guest kernel/console logs for the result "
+        "(kernel.sysrq remains unchanged)"
+    )
+
+
+def action_sysrq_keyboard(context: ActionContext, args: Sequence[str]) -> None:
+    _sysrq(context, args, "keyboard", send_keyboard)
+
+
+def action_sysrq_serial(context: ActionContext, args: Sequence[str]) -> None:
+    _sysrq(
+        context,
+        args,
+        "serial",
+        lambda qmp: _send_channel_sysrq(context, qmp, "serial_console"),
+    )
+
+
+def action_sysrq_hvc(context: ActionContext, args: Sequence[str]) -> None:
+    _sysrq(
+        context,
+        args,
+        "hvc",
+        lambda qmp: _send_channel_sysrq(context, qmp, "virtio_console"),
+    )
 
 
 SNAPSHOT_NODE = "boot1"
@@ -516,7 +848,7 @@ def _snapshot_tag(action: str, args: Sequence[str]) -> str:
 
 
 def _snapshot_qmp_path(context: ActionContext) -> Path:
-    return context.vm.directory / context.vm.which_qemu / "qmp-no-pretty"
+    return context.vm.qemu_directory / "qmp-no-pretty"
 
 
 def _validate_snapshot_vm(context: ActionContext) -> None:
@@ -643,10 +975,10 @@ def action_hotplug_cpu(context: ActionContext, args: Sequence[str]) -> None:
 
 def action_hotplug_mem(context: ActionContext, args: Sequence[str]) -> None:
     del args
-    counter_file = context.vm.directory / context.vm.which_qemu / "hp_mm_counter"
+    counter_file = context.vm.qemu_directory / "hp_mm_counter"
     counter = int(counter_file.read_text())
     counter_file.write_text(f"{counter + 1}\n")
-    socket = context.vm.directory / context.vm.which_qemu / "hmp"
+    socket = context.vm.qemu_directory / "hmp"
     hmp_command(socket, f"object_add memory-backend-memfd,id=hp_mem{counter},size=10G")
     time.sleep(1)
     hmp_command(
@@ -672,9 +1004,7 @@ def action_throttle(context: ActionContext, args: Sequence[str]) -> None:
 
 
 def _balloon_actual(context: ActionContext) -> int:
-    output = hmp_command(
-        context.vm.directory / context.vm.which_qemu / "hmp", "info balloon"
-    )
+    output = hmp_command(context.vm.qemu_directory / "hmp", "info balloon")
     match = re.search(r"actual=([0-9]+)", output)
     if not match:
         raise ColleiError("cannot parse balloon actual size")
@@ -682,7 +1012,7 @@ def _balloon_actual(context: ActionContext) -> int:
 
 
 def _balloon_set(context: ActionContext, size: int) -> None:
-    hmp_command(context.vm.directory / context.vm.which_qemu / "hmp", f"balloon {size}")
+    hmp_command(context.vm.qemu_directory / "hmp", f"balloon {size}")
 
 
 def action_balloon(context: ActionContext, args: Sequence[str]) -> None:
@@ -709,7 +1039,7 @@ def action_balloon(context: ActionContext, args: Sequence[str]) -> None:
 
 def action_add_iso(context: ActionContext, args: Sequence[str]) -> None:
     del args
-    iso_root = Path(context.collei.global_config.directory.require("iso"))
+    iso_root = Path(context.collei.global_config.options.require("iso"))
     choices = "\n".join(str(path) for path in sorted(iso_root.glob("*.iso"))) + "\n"
     selected = Path(_fzf(choices))
     print(selected)
@@ -730,7 +1060,7 @@ def action_addr(context: ActionContext, args: Sequence[str]) -> None:
 
 
 def _scp_to_guest(context: ActionContext, source: Path) -> None:
-    user, ip, port = context.ssh_info()
+    user, ip, port = context.vm.ssh_info()
     argv = ["scp"]
     if port is not None:
         argv.extend(["-P", str(port)])
@@ -747,7 +1077,7 @@ def action_bash_prompt(context: ActionContext, args: Sequence[str]) -> None:
     )
     command = f"echo '{prompt}' >> ~/.bashrc"
     print(command)
-    user, ip, port = context.ssh_info()
+    user, ip, port = context.vm.ssh_info()
     argv = ["ssh"]
     if port is not None:
         argv.extend(["-p", str(port)])
@@ -780,9 +1110,7 @@ def action_vmlinux(context: ActionContext, args: Sequence[str]) -> None:
 
 def action_pty(context: ActionContext, args: Sequence[str]) -> None:
     del args
-    output = hmp_command(
-        context.vm.directory / context.vm.which_qemu / "hmp", "info chardev"
-    )
+    output = hmp_command(context.vm.qemu_directory / "hmp", "info chardev")
     matches = re.findall(r"/dev/pts/[0-9]+", output)
     if not matches:
         raise ColleiError("no QEMU PTY found")
@@ -802,7 +1130,7 @@ def action_vlan(context: ActionContext, args: Sequence[str]) -> None:
 
 
 def _hmp_sequence(context: ActionContext, commands: Sequence[str]) -> None:
-    socket = context.vm.directory / context.vm.which_qemu / "hmp"
+    socket = context.vm.qemu_directory / "hmp"
     for command in commands:
         _migration_hmp_command(socket, command)
 
@@ -887,7 +1215,7 @@ def action_add_boot_disk(context: ActionContext, args: Sequence[str]) -> None:
 
 def action_hotplug_disk(context: ActionContext, args: Sequence[str]) -> None:
     del args
-    counter_file = context.vm.directory / context.vm.which_qemu / "hp_disk_counter"
+    counter_file = context.vm.qemu_directory / "hp_disk_counter"
     counter = int(counter_file.read_text())
     counter_file.write_text(f"{counter + 1}\n")
     image = context.vm.image_directory / f"hotplug{counter}"
@@ -895,7 +1223,7 @@ def action_hotplug_disk(context: ActionContext, args: Sequence[str]) -> None:
         context.runner.run(["qemu-img", "create", "-f", "qcow2", image, "400G"])
     drive_id = f"hp_drive{counter}"
     disk_id = f"hp_disk{counter}"
-    socket = context.vm.directory / context.vm.which_qemu / "hmp"
+    socket = context.vm.qemu_directory / "hmp"
     hmp_command(socket, f"drive_add 0 if=none,file={image},format=qcow2,id={drive_id}")
     time.sleep(1)
     hmp_command(
@@ -993,7 +1321,7 @@ def _guest_vmlinux(context: ActionContext) -> Path | None:
 
 def action_dump_and_crash(context: ActionContext, args: Sequence[str]) -> None:
     del args
-    dump = context.vm.directory / context.vm.which_qemu / "dump"
+    dump = context.vm.qemu_directory / "dump"
     vmlinux = _guest_vmlinux(context)
     if vmlinux is None:
         raise ColleiError("guest vmlinux not found")
@@ -1047,7 +1375,7 @@ def action_perf_guest(context: ActionContext, args: Sequence[str]) -> None:
 
 
 def _wait_postmigrate(context: ActionContext, timeout: float = 300) -> None:
-    qmp_path = context.vm.directory / context.vm.which_qemu / "qmp-no-pretty"
+    qmp_path = context.vm.qemu_directory / "qmp-no-pretty"
     deadline = time.monotonic() + timeout
     last: dict[str, object] | None = None
     while time.monotonic() < deadline:
@@ -1134,7 +1462,7 @@ def action_loadvm(context: ActionContext, args: Sequence[str]) -> None:
 def action_hotplug_nic(context: ActionContext, args: Sequence[str]) -> None:
     del args
     tap, mac = prepare_ovs_tap(context.collei, context.vm, context.runner)
-    socket = context.vm.directory / context.vm.which_qemu / "hmp"
+    socket = context.vm.qemu_directory / "hmp"
     hmp_command(
         socket, f"netdev_add tap,ifname={tap},id={tap},script=no,downscript=no,vhost=on"
     )
@@ -1142,7 +1470,7 @@ def action_hotplug_nic(context: ActionContext, args: Sequence[str]) -> None:
 
 
 def _sendkeys(context: ActionContext, command: str) -> None:
-    socket = context.vm.directory / context.vm.which_qemu / "hmp"
+    socket = context.vm.qemu_directory / "hmp"
     try:
         translated = subprocess.Popen(
             ["awk", "-f", context.collei.repo / "sendkeys.awk"],
@@ -1176,7 +1504,7 @@ def _sendkeys(context: ActionContext, command: str) -> None:
 
 def action_setup_nmcli(context: ActionContext, args: Sequence[str]) -> None:
     del args
-    level = context.collei.global_config.directory.integer("level", 0)
+    level = context.collei.global_config.options.integer("level", 0)
     guest = context.vm.config.guest_id
     mac = f"52:54:00:{level:02x}:{guest:02x}:00"
     print(
@@ -1186,7 +1514,7 @@ def action_setup_nmcli(context: ActionContext, args: Sequence[str]) -> None:
         context,
         f'sudo nmcli connection add type ethernet con-name vhost ifname "*" mac {mac} ip4 10.0.{guest}.0/16',
     )
-    hmp_command(context.vm.directory / context.vm.which_qemu / "hmp", "sendkey ret")
+    hmp_command(context.vm.qemu_directory / "hmp", "sendkey ret")
 
 
 def action_auto_install(context: ActionContext, args: Sequence[str]) -> None:
@@ -1198,7 +1526,7 @@ def action_auto_install(context: ActionContext, args: Sequence[str]) -> None:
         "sudo coreos-installer install /dev/sda --ignition-file /sys/firmware/qemu_fw_cfg/by_key/46/raw",
     )
     time.sleep(30)
-    socket = context.vm.directory / context.vm.which_qemu / "hmp"
+    socket = context.vm.qemu_directory / "hmp"
     hmp_command(socket, "sendkey ret")
     _sendkeys(context, "sudo shutdown now")
     time.sleep(1)
@@ -1277,9 +1605,38 @@ def action_kvm_dmesg(context: ActionContext, args: Sequence[str]) -> None:
     context.runner.exec(
         [
             source / "kvm-dmesg",
-            context.vm.directory / context.vm.which_qemu / "qmp-no-pretty",
+            context.vm.qemu_directory / "qmp-no-pretty",
             system_map,
         ]
+    )
+
+
+def action_kgdb(context: ActionContext, args: Sequence[str]) -> None:
+    if len(args) > 1 or (args and args[0] not in {"serial", "hvc"}):
+        raise ColleiError("usage: kgdb [serial|hvc]")
+    frontend = args[0] if args else "serial"
+    channel = next(
+        (
+            channel
+            for channel in _serial_layout(context).channels
+            if channel.frontend == frontend and channel.endpoint is not None
+        ),
+        None,
+    )
+    if channel is None or channel.endpoint is None:
+        raise ColleiError(f"configure '{frontend} socket' in config.ini tty")
+    kernel = Path(context.vm.config.options.require("kernel")).resolve()
+
+    context.runner.exec(
+        [
+            "gdb",
+            "-iex",
+            f"add-auto-load-safe-path {kernel}",
+            kernel / "vmlinux",
+            "-ex",
+            f"target remote {channel.endpoint}",
+        ],
+        cwd=kernel,
     )
 
 
@@ -1754,7 +2111,7 @@ def _nbd_fio_commands(export: NbdBenchmarkExport) -> tuple[list[str], list[str]]
 
 def _write_nbd_fio_script(context: ActionContext, export: NbdBenchmarkExport) -> Path:
     sequential, random = _nbd_fio_commands(export)
-    script = context.vm.directory / context.vm.which_qemu / "fio.sh"
+    script = context.vm.qemu_directory / "fio.sh"
     script.write_text(
         "#!/usr/bin/env bash\n"
         "set -E -e -u -o pipefail\n\n"
@@ -1782,7 +2139,7 @@ def _action_nbd_server_status(
         raise ColleiError("usage: nbd_server status")
     export, listening = nbd_benchmark_status(context.vm)
     if export is None:
-        socket_path = context.vm.directory / context.vm.which_qemu / "fio.nbd"
+        socket_path = context.vm.qemu_directory / "fio.nbd"
         print(
             "QEMU read-only NBD export: inactive, "
             f"socket={socket_path}, listening={str(listening).lower()}"
@@ -1855,7 +2212,7 @@ def action_network(context: ActionContext, args: Sequence[str]) -> None:
 def action_auto(context: ActionContext, args: Sequence[str]) -> None:
     del args
     hmp_command(
-        context.vm.directory / context.vm.which_qemu / "hmp",
+        context.vm.qemu_directory / "hmp",
         "device_del boot1",
     )
 
@@ -1893,9 +2250,12 @@ ACTIONS: dict[str, Action] = {
     "unplug_vfio": Action(action_unplug_vfio),
     "kill": Action(action_kill, VmRequirement.ACTIVE),
     "kexec": Action(action_kexec, VmRequirement.ACTIVE),
+    "kgdb": Action(action_kgdb, VmRequirement.ACTIVE),
     "kvm_dmesg": Action(action_kvm_dmesg, VmRequirement.ACTIVE),
     "log": Action(action_log),
-    "monitor": Action(action_monitor, VmRequirement.ACTIVE),
+    "qmp": Action(action_qmp, VmRequirement.ACTIVE),
+    "qmp_shell": Action(action_qmp_shell, VmRequirement.ACTIVE),
+    "qga": Action(action_qga, VmRequirement.ACTIVE),
     # 热迁移相关
     "migrate": Action(action_migrate, VmRequirement.ACTIVE),
     "migrate_nbd": Action(action_migrate_nbd, VmRequirement.ACTIVE),
@@ -1924,6 +2284,10 @@ ACTIONS: dict[str, Action] = {
     "ssh_vsock": Action(action_ssh_vsock, VmRequirement.ACTIVE),
     "ssh_vsock_auto": Action(action_ssh_vsock_auto, VmRequirement.ACTIVE),
     "ssh_copy_id": Action(action_ssh_copy_id, VmRequirement.ACTIVE),
+    "sysrq_keyboard": Action(action_sysrq_keyboard, VmRequirement.ACTIVE),
+    "sysrq_serial": Action(action_sysrq_serial, VmRequirement.ACTIVE),
+    "sysrq_hvc": Action(action_sysrq_hvc, VmRequirement.ACTIVE),
+    "send_key": Action(action_send_key, VmRequirement.ACTIVE),
     "setup_vmware": Action(action_setup_vmware),
     # 网络配置
     "setup_net_nmcli_vnc": Action(action_setup_nmcli, VmRequirement.ACTIVE),
@@ -1936,6 +2300,10 @@ ACTIONS: dict[str, Action] = {
     "vlan": Action(action_vlan),
     "vmlinux": Action(action_vmlinux, VmRequirement.ACTIVE),
     "vnc": Action(action_vnc, VmRequirement.ACTIVE),
+    "console": Action(action_console, VmRequirement.ACTIVE),
+    "hvc": Action(action_hvc, VmRequirement.ACTIVE),
+    "serial_log": Action(action_serial_log, VmRequirement.ACTIVE),
+    "hvc_log": Action(action_hvc_log, VmRequirement.ACTIVE),
 }
 
 

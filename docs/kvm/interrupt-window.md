@@ -1,4 +1,4 @@
-## kvm interrupt window 到底在说什么
+# interrupt window
 <!-- 2fa61a03-4527-4aca-a499-227a158af4d5 -->
 
 guest 屏蔽中断的时候无法注入中断，所以给设置一个标志，如果

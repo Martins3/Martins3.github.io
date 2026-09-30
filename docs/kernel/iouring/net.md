@@ -178,6 +178,10 @@ io_uring/napi.c 是 Linux 内核 io_uring 子系统的网络轮询（NAPI）集�
 ## 网络真的开始发力了
 https://blog.tohojo.dk/2026/02/the-inner-workings-of-tcp-zero-copy.html
 
+[Why you should use io_uring for network I/O](https://developers.redhat.com/articles/2023/04/12/why-you-should-use-iouring-network-io)
+
+- https://lwn.net/Articles/879724/ ：终于，两年之后，开始处理网络的问题了
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

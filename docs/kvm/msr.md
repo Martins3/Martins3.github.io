@@ -1,3 +1,4 @@
+# msr
 ## 如何理解 msr exit 的优化?
 
 如果都不去打开 apicv ，如果是 linux 虚拟机

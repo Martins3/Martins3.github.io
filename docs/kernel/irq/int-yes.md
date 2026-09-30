@@ -76,7 +76,7 @@ System: 39: 0-19,21,50,128,236,240-244,246-255
 没有触发中断的时候，
 
 ```txt
-[root@hygon-tencentos-18-42 15:11:15 irqs]$cat 133
+$ cat 133
 handler:  handle_edge_irq
 device:   0000:32:00.0
 status:   0x00000000

@@ -292,6 +292,19 @@ https://stackoverflow.com/questions/60574054/why-do-we-need-dma-pool
 ]: 2
 ```
 
+## TODO
+https://lwn.net/Articles/69402/
+
+Some very obscure driver bugs have been traced down to cache coherency problems with structure fields adjacent to small DMA areas. [^17]
+> DMA 为什么会导致附近的内存的 cache coherency 的问题 ?
+
+- [ ] dma_pool_create() - Creates a pool of consistent memory blocks, for dma.
+
+- [ ] https://www.kernel.org/doc/html/latest/driver-api/dmaengine/index.html#dmaengine-documentation
+- [ ] https://www.kernel.org/doc/html/latest/core-api/index.html#memory-management
+- [ ] https://www.kernel.org/doc/Documentation/DMA-API-HOWTO.txt
+
+
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

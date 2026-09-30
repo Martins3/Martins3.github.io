@@ -1,9 +1,3 @@
-## stratovirt
-- https://gitee.com/openeuler/stratovirt
-  - https://gitee.com/openeuler/stratovirt/wikis ：还挺有意思的
-  - 大约 6 万行，和 CloudHppervisor 差不多
-
-我看基本上已经被放弃了，一年才几十个提交
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

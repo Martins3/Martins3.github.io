@@ -1,11 +1,13 @@
 # REDMI K90PRO 2025
 
 - bose 音响
+	- 聊胜于无，即便是 JBL Go 4 都比这个好太多
 - 系统，还可以，没有那么多bug
 - 广告，很容易就关闭了
-- 可以玩原神了， oh ye
+- 可以玩原神了， oh ye !!!!
 - 续航时间的确是极大的提升
 - 1T 存储
+	- 2026-08-29 现在看，在 2026.12.30 购买的 1T 存储版本，的确是赚到了
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

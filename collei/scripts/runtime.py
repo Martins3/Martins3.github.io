@@ -14,6 +14,12 @@ PORT_ALLOCATE_END = 60000
 VSOCK_CID_START = 1000
 STORAGE_SLOT_FILE = "storage_slot"
 STORAGE_SLOTS = frozenset({"s", "t"})
+# 为什么不是 0 而是 10, 参考 setup_vsock。
+GUEST_ID_MIN = 11
+# guest_id 被当成 MAC 的单个八位组 (collei.py, host_setup.py, virtme.py,
+# network_templates.py) 和 10.0.<guest_id>.<level> 的网络地址段使用，
+# 大于 255 会生成非法的 MAC / IP。
+GUEST_ID_MAX = 255
 
 
 def _storage_slot(config: VmConfig) -> str:
@@ -100,6 +106,11 @@ class VmRuntime:
         return self.config.directory
 
     @property
+    def qemu_directory(self) -> Path:
+        """Directory containing artifacts for the selected QEMU instance."""
+        return self.directory / self.which_qemu
+
+    @property
     def active(self) -> bool:
         return bool(self.live_pids)
 
@@ -121,6 +132,13 @@ class VmRuntime:
     def vsock_cid(self) -> int:
         return self.config.guest_id + VSOCK_CID_START + self.qemu_index
 
+    def ssh_info(self) -> tuple[str, str, int | None]:
+        user = self.config.options.get("user") or "root"
+        ip = self.config.options.get("ip")
+        if ip is not None:
+            return user, ip, None
+        return user, "localhost", self.tcp_port("ssh")
+
     @property
     def pid(self) -> int:
         if not self.live_pids:
@@ -135,6 +153,8 @@ class VmRuntime:
             return base + 4 + self.qemu_index
         if service == "rdp":
             return base + 18 + self.qemu_index
+        if service == "vhost_user":
+            return base + 14 + self.qemu_index * 2
         if service == "nbd":
             port = base + 6 + disk
             if port > PORT_ALLOCATE_END:
@@ -166,7 +186,7 @@ class ColleiContext:
         return VmRuntime.inspect(VmConfig.load(directory))
 
     def set_default(self, vm: VmRuntime) -> None:
-        self.global_config.directory.set("default_vm", vm.config.name)
+        self.global_config.options.set("default_vm", vm.config.name)
 
     def list_vms(self, active: bool | None = None) -> list[VmRuntime]:
         result: list[VmRuntime] = []
@@ -178,8 +198,27 @@ class ColleiContext:
                 result.append(runtime)
         return result
 
+    def allocate_guest_id(self) -> int:
+        """返回 GUEST_ID_MIN..GUEST_ID_MAX 内最小的空闲 guest_id。
+
+        clone_vm_auto 曾使用 max(id) + 1，连续克隆超过 255 之后会生成非法的
+        MAC 和 guest IP，所以这里改为复用空闲 id。
+        """
+        used = {
+            vm.config.guest_id
+            for vm in self.list_vms()
+            if vm.config.options.get("id") is not None
+        }
+        for guest_id in range(GUEST_ID_MIN, GUEST_ID_MAX + 1):
+            if guest_id not in used:
+                return guest_id
+        raise ColleiError(
+            f"no free guest id in {GUEST_ID_MIN}..{GUEST_ID_MAX}; "
+            "remove unused VMs before cloning"
+        )
+
     def master_ip(self) -> str:
-        configured = self.global_config.directory.get("vnc")
+        configured = self.global_config.options.get("vnc")
         if configured is not None:
             return configured
         bridge = "br-in" if Path("/sys/class/net/br-in").exists() else "br9527"

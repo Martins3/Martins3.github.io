@@ -375,6 +375,9 @@ static void io_init_poll_iocb(struct io_poll *poll, __poll_t events)
 }
 ```
 
+## 到时候看看这个东西吧
+https://www.reddit.com/r/neovim/comments/1wa4xbo/neovim_013s_new_vimasync_api_explained/
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

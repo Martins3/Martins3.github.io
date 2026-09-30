@@ -1,0 +1,15 @@
+[package]
+name = "mini-kvm"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+publish = false
+
+[dependencies]
+kvm-bindings = "=0.14.1"
+kvm-ioctls = "=0.25.0"
+libc = "0.2"
+
+[[bin]]
+name = "mini-kvm"
+path = "src/main.rs"

@@ -54,3 +54,36 @@ https://docs.nvidia.com/cutlass/latest/media/docs/cpp/efficient_gemm.html
 https://docs.nvidia.com/cutlass/latest/media/docs/cpp/pipeline.html
 https://docs.nvidia.com/cutlass/latest/media/docs/cpp/dependent_kernel_launch.html : 比较容易
 https://docs.nvidia.com/cutlass/latest/media/docs/cpp/grouped_scheduler.html
+
+
+## 为什么叫这个名字
+**CUTLASS 是一个拼接式缩写：**
+
+```text
+CU  = CUDA
+T   = Templates
+LA  = Linear Algebra
+SS  = Subroutines and Solvers
+```
+
+完整名称是：
+
+> **CUDA Templates for Linear Algebra Subroutines and Solvers**
+
+所以组合起来就是：
+
+```text
+CU + T + LA + SS = CUTLASS
+```
+
+这个名字直接反映了最初定位：使用 **CUDA C++ 模板**构建高性能线性代数算子，例如：
+
+- GEMM
+- Convolution
+- Reduction
+- Tensor Core MMA
+- 数据搬运与 epilogue fusion
+
+`cutlass` 本身在英语里也指一种短弯刀，因此名字很容易记。不过 NVIDIA 官方资料主要将它解释为上述技术缩写，没有明确说弯刀含义是正式命名原因。
+
+早期资料中也常写成 **CUDA Templates for Linear Algebra Subroutines**；目前 [CUTLASS 官方仓库](https://github.com/NVIDIA/cutlass) 的目录说明使用的是包含 “and Solvers” 的完整版本。

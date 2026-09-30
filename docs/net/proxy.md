@@ -287,6 +287,27 @@ fake-ip 的问题
 198.18.0.18 -> google.com
 ```
 
+## 修改代理规则
+
+例如让 z.ai 走直连:
+```
+  host: z.ai | 链: ['DIRECT'] | 规则: DomainSuffix z.ai   ← 已走直连
+  HTTP 307（正常重定向响应）
+```
+
+```
+  ~/.local/share/io.github.clash-verge-rev.clash-verge-rev/profiles/Merge.yaml
+```
+
+添加了：
+
+```yaml
+  prepend-rules:
+    - 'DOMAIN-SUFFIX,z.ai,DIRECT'
+```
+
+这是 Clash Verge 的全局 Merge 配置，每次**重新激活**/**更新订阅**时都会注入该规则
+
 ## 解决方案
 - https://github.com/wnlen/clash-for-linux
 

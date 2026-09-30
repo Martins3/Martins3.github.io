@@ -61,7 +61,10 @@ def _show_vm(vm: VmRuntime) -> None:
 
 
 def _show_help() -> None:
-    print("usage: collei-action.py [-a ACTION] [-n VM] [-s] [-y] [--dry-run]")
+    print(
+        "usage: collei-action.py [-a ACTION] [-n VM] [-s] [-y] [--dry-run] "
+        "[--foreground | --background]"
+    )
     print()
     print("actions:")
     print("  " + "\n  ".join(sorted(ACTIONS)))
@@ -70,12 +73,15 @@ def _show_help() -> None:
 def main(argv: Sequence[str] | None = None) -> int:
     raw = list(sys.argv[1:] if argv is None else argv)
     try:
-        options, remainder = getopt.getopt(raw, "a:n:syh", ["dry-run"])
+        options, remainder = getopt.getopt(
+            raw, "a:n:syh", ["dry-run", "foreground", "background"]
+        )
         action_name = "none"
         vm_name: str | None = None
         choose = False
         auto_yes = False
         dry_run = False
+        action_options: list[str] = []
         for option, value in options:
             if option == "-a":
                 action_name = value
@@ -87,6 +93,8 @@ def main(argv: Sequence[str] | None = None) -> int:
                 auto_yes = True
             elif option == "--dry-run":
                 dry_run = True
+            elif option in {"--foreground", "--background"}:
+                action_options.append(option)
             elif option == "-h":
                 _show_help()
                 return 0
@@ -96,21 +104,24 @@ def main(argv: Sequence[str] | None = None) -> int:
         action = ACTIONS.get(action_name)
         if action is None or action.function is None:
             raise ColleiError(f"unsupported action: {action_name}")
+        if action_options and action_name != "rdp":
+            raise ColleiError(
+                "--foreground and --background are only supported by the rdp action"
+            )
+        action_arguments = [*action_options, *remainder]
 
         context = ColleiContext.load()
-        requirement = effective_requirement(action, remainder)
+        requirement = effective_requirement(action, action_arguments)
         if choose:
             vm = _choose_vm(context, action, requirement)
         else:
             vm = context.vm(vm_name)
-            if action_name == "ssh" and not vm.active and vm_name is None:
-                vm = _choose_vm(context, action, VmRequirement.ACTIVE)
-        validate_requirement(action_name, action, vm, remainder)
+        validate_requirement(action_name, action, vm, action_arguments)
         if vm_name is not None or choose:
             context.set_default(vm)
         _show_vm(vm)
         action_context = ActionContext(context, vm, CommandRunner(dry_run), auto_yes)
-        action.function(action_context, remainder)
+        action.function(action_context, action_arguments)
         return 0
     except (ColleiError, getopt.GetoptError, OSError) as error:
         print(f"error: {error}", file=sys.stderr)

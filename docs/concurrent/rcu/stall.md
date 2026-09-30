@@ -1,11 +1,15 @@
 # rcu stall
+
 ## 文档
-https://www.kernel.org/doc/html/latest//RCU/stallwarn.html
+https://www.kernel.org/doc/html/latest/RCU/stallwarn.html
 
-## rcu statll 基本实现原理
+[rcu qs](./qs.md) 中提到了 rcu qs 主要在那些地方来报告，
+但是如果一个 CPU 长时间没有报告 quiescent state  那么就会触警告。
+
+rcu stall 往往伴随这个 soft lockup / hard lockup
+
+## rcu stall 基本实现原理
 <!-- e95fdea2-699c-4737-86b5-1d5b8d98cb8e -->
-
-(还是非常粗略的)
 
 - update_process_times
   - rcu_sched_clock_irq
@@ -194,7 +198,6 @@ static void invoke_rcu_core(void)
 
 最后就是为了执行 rcu_core ，在 rcu_core ，会去执行各种
 之前挂载的 callback
-
 
 
 ## 具体配套测试在 concurrent/rcustall.c 中

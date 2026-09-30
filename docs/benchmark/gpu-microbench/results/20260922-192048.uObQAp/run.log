@@ -1,0 +1,42 @@
+device: NVIDIA GeForce RTX 5060 Ti, SM 12.0
+device: theoretical 448.0 GB/s DRAM, 23704 Gflop/s FP32
+device: clock ramp for 30 s at 288 blocks x 256 threads
+device: 1567 telemetry samples
+compute: self-checks
+compute: self-checks passed
+compute: peak throughput, 288 blocks x 256 threads x 200000 iters
+compute: dependent chain latency
+compute: warp MMA
+memory: bandwidth sweep, 288 blocks x 256 threads
+memory: pointer chase
+memory: chase ws=32KiB+ld_default
+memory: chase ws=2MiB+ld_default
+memory: chase ws=32MiB+ld_default
+memory: chase ws=256MiB+ld_default
+memory: chase ws=32MiB+ldg
+memory: chase ws=32MiB+ldca
+memory: chase ws=32MiB+ldcs
+memory: chase ws=32MiB+ldlu
+memory: shared memory bank conflicts
+memory: tile copies into shared (ld/st, cp.async, TMA)
+memory: atomics
+exec: occupancy sweep over threads per block
+exec: occupancy sweep over shared memory
+exec: barriers
+exec: cooperative grid barrier, 72 blocks
+exec: warp divergence
+exec: warp primitives
+launch: CPU-side submit cost
+launch: clock sync offset -1790076050813199360 ns, window 4864 ns
+launch: 20000 round trips for the tail distribution
+launch: cudaEvent costs
+launch: allocation
+launch: stream create/destroy
+launch: CUDA graphs
+pcie: bandwidth sweep
+pcie: small synchronous transfers
+pcie: concurrent streams
+pcie: compute and transfer overlap
+pcie: host registration
+pcie: unified memory migration
+pcie: zero-copy chase over host memory

@@ -49,6 +49,12 @@ static void vduse_vq_irq_inject(struct work_struct *work)
 
 应该是没有的，将 pages 拷贝到 vduse_dev_reg_umem 这里
 
+## Introducing VDUSE: a software-defined datapath for virtio
+<https://www.redhat.com/en/blog/introducing-vduse-software-defined-datapath-virtio>
+
+vDPA was originally developed to help implement virtio (an open standard control and dataplane) in dedicated hardware (such as smartNICs).
+
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

@@ -78,15 +78,6 @@ pub fn do_mkdir(path: &str) {
     nix::unistd::mkdir(path, dmask).ok();
 }
 
-pub fn do_unlink(path: &str) {
-    match std::fs::remove_file(path) {
-        Ok(()) => (),
-        Err(err) => {
-            log!("failed to unlink file {}: {}", path, err);
-        }
-    }
-}
-
 fn do_touch(path: &str, mode: u32) {
     fn _do_touch(path: &str, mode: u32) -> io::Result<()> {
         let file = File::create(path)?;

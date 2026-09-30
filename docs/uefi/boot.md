@@ -44,6 +44,10 @@ Unable to boot from any virtio-blk device
 qemu-system-x86_64: terminating on signal 2
 ```
 
+## 补充 qemu 启动
+https://news.ycombinator.com/item?id=37460614
+https://futurewei-cloud.github.io/ARM-Datacenter/posts/
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

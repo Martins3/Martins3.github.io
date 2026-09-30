@@ -1,6 +1,6 @@
 # QEMU 中的 seabios : fw_cfg
 <!-- 6f32a2dc-10f9-4200-be56-aff6f557d393 -->
-(的确是可以重写一下了，之前调查过 qemu options 的结果)
+<!-- 的确是可以重写一下了，之前调查过 qemu options 的结果 -->
 
 ## fw_cfg 的作用
 seabios 可以在裸机上，也可以在 QEMU 中运行，在 QEMU 中运行时，通过 fw_cfg 从 host 获取 guest 的各种配置或者 rom 会相当的方便。

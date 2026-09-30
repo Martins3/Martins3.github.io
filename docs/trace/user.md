@@ -1,3 +1,5 @@
+# 用户态程序的 trace
+
 ## 用户态符号基础
 
 两个差不多
@@ -75,14 +77,6 @@ Attaching 1 probe...
 ]: 36
 ```
 
-
-## 使用 perf 来跟踪程序
-
-
-## 从这个 ticket 来看，必须支持 framepointer 才可以发
-- https://github.com/bpftrace/bpftrace/issues/1744
-  - https://dxuuu.xyz/stack-symbolize.html : 不容易啊
-
 ## ftrace user
 [Documentation/trace/user_events.rst](https://www.kernel.org/doc/html/latest/trace/user_events.html)
 
@@ -101,9 +95,6 @@ kernel/trace/trace_events_user.c
 
 ## 有趣的
 https://www.usenix.org/system/files/srecon23apac_slides-liang_zhichuan.pdf
-
-## qemu 自己的 trace 机制整理
-主要是其中的 dtrace 了
 
 ## 用 perf 来 trace 用户态程序看这里
 /home/martins3/data/vn/code/src/c/elf/README.md
@@ -155,6 +146,11 @@ memory_region_write_accessor+130 对应的地方为:
 ```c
     mr->ops->write(mr->opaque, addr, tmp, size);
 ```
+
+## 从这个 ticket 来看，必须支持 framepointer 才可以
+- https://github.com/bpftrace/bpftrace/issues/1744
+  - https://dxuuu.xyz/stack-symbolize.html : 不容易啊
+
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

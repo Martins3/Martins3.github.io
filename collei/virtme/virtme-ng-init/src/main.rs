@@ -11,9 +11,6 @@
 //!
 //! Author: Andrea Righi <andrea.righi@canonical.com>
 
-use base64::engine::general_purpose::STANDARD as BASE64;
-use base64::engine::Engine as _;
-
 use nix::fcntl::{open, OFlag};
 use nix::libc;
 use nix::sys::reboot;
@@ -200,7 +197,6 @@ const SYSTEM_MOUNTS: &[MountInfo] = &[
     },
 ];
 
-const USER_SCRIPT: &str = "/run/tmp/.virtme-script";
 const GUEST_TOOLS_DIR: &str = "/run/tmp/virtme-guest-tools";
 const UDHCPC_SCRIPT: &str = include_str!("../virtme-udhcpc-script");
 
@@ -714,7 +710,39 @@ fn install_guest_tools() {
     }
 }
 
-fn _get_network_devices_from_entries(entries: std::fs::ReadDir) -> Vec<Option<String>> {
+#[derive(Debug)]
+struct NetworkDevice {
+    name: String,
+    mac: String,
+}
+
+#[derive(Debug, Eq, PartialEq)]
+enum NetworkConfiguration {
+    Static(String),
+    Dhcp,
+}
+
+fn parse_static_network(value: &str) -> Option<(&str, &str)> {
+    let (mac, address) = value.split_once(',')?;
+    (!mac.is_empty() && !address.is_empty()).then_some((mac, address))
+}
+
+fn network_configuration(
+    mac: &str,
+    static_network: Option<(&str, &str)>,
+    dhcp_mac: Option<&str>,
+) -> Option<NetworkConfiguration> {
+    if let Some((static_mac, address)) = static_network {
+        if mac.eq_ignore_ascii_case(static_mac) {
+            return Some(NetworkConfiguration::Static(address.to_string()));
+        }
+    }
+    dhcp_mac
+        .is_some_and(|expected| mac.eq_ignore_ascii_case(expected))
+        .then_some(NetworkConfiguration::Dhcp)
+}
+
+fn _get_network_devices_from_entries(entries: std::fs::ReadDir) -> Vec<NetworkDevice> {
     let mut vec = Vec::new();
 
     // .flatten() ignores lines with reading errors
@@ -726,8 +754,15 @@ fn _get_network_devices_from_entries(entries: std::fs::ReadDir) -> Vec<Option<St
         if let Ok(net_entries) = std::fs::read_dir(path.join("net")) {
             // .flatten() ignores lines with reading errors
             if let Some(entry) = net_entries.flatten().next() {
-                if let Some(fname) = entry.path().file_name() {
-                    vec.push(Some(fname.to_string_lossy().to_string()));
+                let interface = entry.path();
+                if let (Some(fname), Ok(mac)) = (
+                    interface.file_name(),
+                    std::fs::read_to_string(interface.join("address")),
+                ) {
+                    vec.push(NetworkDevice {
+                        name: fname.to_string_lossy().to_string(),
+                        mac: mac.trim().to_string(),
+                    });
                 }
             }
         }
@@ -735,35 +770,42 @@ fn _get_network_devices_from_entries(entries: std::fs::ReadDir) -> Vec<Option<St
     vec
 }
 
-fn get_network_devices() -> Vec<Option<String>> {
+fn get_network_devices(expected_macs: &[&str]) -> Vec<NetworkDevice> {
     let virtio_net_dir = "/sys/bus/virtio/drivers/virtio_net";
-    loop {
-        match std::fs::read_dir(virtio_net_dir) {
-            Ok(entries) => {
-                return _get_network_devices_from_entries(entries);
-            }
-            Err(_) => {
-                // Wait a bit to make sure virtio-net is properly registered in the system.
-                thread::sleep(Duration::from_secs_f32(0.25));
+    let mut latest = Vec::new();
+    for _ in 0..40 {
+        if let Ok(entries) = std::fs::read_dir(virtio_net_dir) {
+            latest = _get_network_devices_from_entries(entries);
+            if !latest.is_empty()
+                && expected_macs.iter().all(|expected| {
+                    latest
+                        .iter()
+                        .any(|device| device.mac.eq_ignore_ascii_case(expected))
+                })
+            {
+                return latest;
             }
         }
+        // Wait a bit to make sure virtio-net is properly registered in the system.
+        thread::sleep(Duration::from_millis(125));
     }
+    log!("not all expected virtio-net devices appeared within 5 seconds");
+    latest
 }
 
-fn get_network_handle(
-    network_dev: Option<String>,
-    guest_tools_dir: Option<String>,
+fn get_dhcp_network_handle(
+    network_dev: String,
+    guest_tools_dir: String,
     busybox: String,
 ) -> Option<thread::JoinHandle<()>> {
-    let network_dev_str = network_dev.unwrap();
-    log!("setting up network device {}", network_dev_str);
+    log!("configuring DHCP network device {}", network_dev);
     Some(thread::spawn(move || {
-        utils::run_cmd("ip", &["link", "set", "dev", &network_dev_str, "up"]);
-        let script = format!("{}/virtme-udhcpc-script", guest_tools_dir.unwrap());
+        utils::run_cmd("ip", &["link", "set", "dev", &network_dev, "up"]);
+        let script = format!("{guest_tools_dir}/virtme-udhcpc-script");
         let mut args = vec![
             "udhcpc",
             "-i",
-            &network_dev_str,
+            &network_dev,
             "-n",
             "-q",
             "-f",
@@ -779,6 +821,21 @@ fn get_network_handle(
     }))
 }
 
+fn get_static_network_handle(
+    network_dev: String,
+    address: String,
+) -> Option<thread::JoinHandle<()>> {
+    log!(
+        "configuring static network device {} as {}",
+        network_dev,
+        address
+    );
+    Some(thread::spawn(move || {
+        utils::run_cmd("ip", &["link", "set", "dev", &network_dev, "up"]);
+        utils::run_cmd("ip", &["addr", "replace", &address, "dev", &network_dev]);
+    }))
+}
+
 fn setup_network_lo() -> Option<thread::JoinHandle<()>> {
     Some(thread::spawn(move || {
         utils::run_cmd("ip", &["link", "set", "dev", "lo", "up"]);
@@ -789,7 +846,20 @@ fn setup_network() -> Vec<Option<thread::JoinHandle<()>>> {
     let mut vec = vec![setup_network_lo()];
 
     let cmdline = std::fs::read_to_string("/proc/cmdline").unwrap();
-    if cmdline.contains("virtme.dhcp") {
+    let legacy_dhcp = cmdline
+        .split_ascii_whitespace()
+        .any(|argument| argument == "virtme.dhcp");
+    let static_value = env::var("virtme_net_static").ok();
+    let static_network = static_value.as_deref().and_then(parse_static_network);
+    if static_value.is_some() && static_network.is_none() {
+        log!("invalid virtme_net_static; expected MAC,ADDRESS/CIDR");
+    }
+    let dhcp_mac = env::var("virtme_net_dhcp").ok();
+    if !legacy_dhcp && static_network.is_none() && dhcp_mac.is_none() {
+        return vec;
+    }
+
+    if legacy_dhcp || dhcp_mac.is_some() {
         // Make sure all GIDs are allowed to create raw ICMP sockets (this allows to run ping as
         // regular user).
         if let Ok(mut file) = OpenOptions::new()
@@ -798,190 +868,54 @@ fn setup_network() -> Vec<Option<thread::JoinHandle<()>>> {
         {
             let _ = file.write_all("0 2147483647".as_bytes());
         }
-
-        let busybox = match find_busybox() {
-            Some(path) => path,
-            None => {
-                log!("virtme-init: cannot find busybox (needed for udhcpc)");
-                return vec;
-            }
-        };
-
-        if let Some(guest_tools_dir) = get_guest_tools_dir() {
-            for network_dev in get_network_devices() {
-                vec.push(get_network_handle(
-                    network_dev,
-                    Some(guest_tools_dir.clone()),
-                    busybox.clone(),
-                ));
-            }
-        }
     }
-    vec
-}
 
-fn extract_user_script(virtme_script: &str) -> Option<String> {
-    let start_marker = "virtme.exec=`";
-    let end_marker = '`';
-
-    let (_before, remaining) = virtme_script.split_once(start_marker)?;
-    let (encoded_cmd, _after) = remaining.split_once(end_marker)?;
-    String::from_utf8(BASE64.decode(encoded_cmd).ok()?).ok()
-}
-
-/// Returns true if the script was run (and will poweroff), false if script I/O ports are missing.
-// wait_for_child is used to wait for the script process.
-#[allow(clippy::zombie_processes)]
-fn run_user_script(uid: u32) -> bool {
-    if !Path::new("/dev/virtio-ports/virtme.stdin").exists()
-        || !Path::new("/dev/virtio-ports/virtme.stdout").exists()
-        || !Path::new("/dev/virtio-ports/virtme.stderr").exists()
-        || !Path::new("/dev/virtio-ports/virtme.dev_stdout").exists()
-        || !Path::new("/dev/virtio-ports/virtme.dev_stderr").exists()
-    {
-        log!("virtme-init: cannot find script I/O ports; make sure virtio-serial is available",);
-        return false;
+    let busybox = find_busybox();
+    let guest_tools_dir = get_guest_tools_dir();
+    let mut found_static = false;
+    let mut found_dhcp = false;
+    let mut expected_macs = Vec::new();
+    if let Some((mac, _)) = static_network {
+        expected_macs.push(mac);
     }
-    {
-        // Re-create stdout/stderr to connect to the virtio-serial ports.
-        let io_files = [
-            ("/dev/virtio-ports/virtme.ret", "/dev/virtme.ret"),
-            ("/dev/virtio-ports/virtme.dev_stdin", "/dev/stdin"),
-            ("/dev/virtio-ports/virtme.dev_stdout", "/dev/stdout"),
-            ("/dev/virtio-ports/virtme.dev_stderr", "/dev/stderr"),
-        ];
-        for (src, dst) in &io_files {
-            if !Path::new(src).exists() {
-                continue;
-            }
-            if Path::new(dst).exists() {
-                utils::do_unlink(dst);
-            }
-            utils::do_chown(src, uid, None).ok();
-            utils::do_symlink(src, dst);
-        }
-
-        // Detach the process from the controlling terminal
-        let open_tty =
-            |path| open(path, OFlag::O_RDWR, Mode::empty()).expect("failed to open console.");
-        let tty_in = open_tty("/dev/virtio-ports/virtme.stdin");
-        let tty_out = open_tty("/dev/virtio-ports/virtme.stdout");
-        let tty_err = open_tty("/dev/virtio-ports/virtme.stderr");
-
-        // Determine if we need to switch to a different user, or if we can run the script as root.
-        let user = env::var("virtme_user").unwrap_or_else(|_| String::new());
-        let (cmd, args) = if user.is_empty() {
-            ("/bin/sh", vec![USER_SCRIPT])
+    if let Some(mac) = dhcp_mac.as_deref() {
+        expected_macs.push(mac);
+    }
+    for device in get_network_devices(&expected_macs) {
+        let configuration = if legacy_dhcp && static_network.is_none() && dhcp_mac.is_none() {
+            Some(NetworkConfiguration::Dhcp)
         } else {
-            ("su", vec!["-c", USER_SCRIPT, "--", user.as_str()])
+            network_configuration(&device.mac, static_network, dhcp_mac.as_deref())
         };
-        clear_virtme_envs();
-        log!("starting script");
-        unsafe {
-            let child = Command::new(cmd)
-                .args(&args)
-                .pre_exec(move || {
-                    libc::setsid();
-                    libc::close(libc::STDIN_FILENO);
-                    libc::close(libc::STDOUT_FILENO);
-                    libc::close(libc::STDERR_FILENO);
-                    // Make stdin a controlling tty.
-                    let stdin_fd = libc::dup2(tty_in, libc::STDIN_FILENO);
-                    libc::ioctl(stdin_fd, libc::TIOCSCTTY, 1);
-                    libc::dup2(tty_out, libc::STDOUT_FILENO);
-                    libc::dup2(tty_err, libc::STDERR_FILENO);
-                    Ok(())
-                })
-                .spawn()
-                .expect("Failed to start user script process");
-
-            let ret = wait_for_child(child.id() as i32);
-
-            // Channel the return code to the host via /dev/virtme.ret
-            if let Ok(mut file) = OpenOptions::new().write(true).open("/dev/virtme.ret") {
-                // Write the value of output.status.code() to the file
-                if let Some(code) = ret {
-                    file.write_all(code.to_string().as_bytes())
-                        .expect("Failed to write to file");
+        match configuration {
+            Some(NetworkConfiguration::Static(address)) => {
+                found_static = true;
+                vec.push(get_static_network_handle(device.name, address));
+            }
+            Some(NetworkConfiguration::Dhcp) => {
+                found_dhcp = true;
+                if let (Some(busybox), Some(guest_tools_dir)) =
+                    (busybox.as_ref(), guest_tools_dir.as_ref())
+                {
+                    vec.push(get_dhcp_network_handle(
+                        device.name,
+                        guest_tools_dir.clone(),
+                        busybox.clone(),
+                    ));
                 } else {
-                    // Handle the case where the return code is None
-                    file.write_all(b"-1").expect("Failed to write to file");
+                    log!("cannot configure DHCP: busybox or DHCP helper is missing");
                 }
             }
-        }
-        poweroff();
-    }
-    true
-}
-
-fn create_user_script(cmd: &str) {
-    utils::create_file(USER_SCRIPT, 0o0755, cmd).expect("Failed to create virtme-script file");
-}
-
-/// Run the user script with stdin/stdout/stderr on the serial console.
-/// Used when virtme.exec is set but script I/O virtio ports are not available (e.g. no PTS on host).
-fn run_user_script_on_console(consdev: &str, uid: u32) {
-    let flags = OFlag::O_RDWR;
-    let mode = Mode::empty();
-    let tty_fd = open(consdev, flags, mode).expect("failed to open console for script");
-
-    utils::do_chown(consdev, uid, None).ok();
-    clear_virtme_envs();
-
-    let user = env::var("virtme_user").unwrap_or_else(|_| String::new());
-    let (cmd, args) = if user.is_empty() {
-        ("/bin/sh", vec![USER_SCRIPT])
-    } else {
-        ("su", vec!["-c", USER_SCRIPT, "--", user.as_str()])
-    };
-
-    log!("starting script (console fallback)");
-    unsafe {
-        let ret = Command::new(cmd)
-            .args(&args)
-            .pre_exec(move || {
-                libc::setsid();
-                libc::close(libc::STDIN_FILENO);
-                libc::close(libc::STDOUT_FILENO);
-                libc::close(libc::STDERR_FILENO);
-                libc::dup2(tty_fd, libc::STDIN_FILENO);
-                libc::ioctl(libc::STDIN_FILENO, libc::TIOCSCTTY, 1);
-                libc::dup2(tty_fd, libc::STDOUT_FILENO);
-                libc::dup2(tty_fd, libc::STDERR_FILENO);
-                Ok(())
-            })
-            .output()
-            .expect("Failed to execute script on console");
-        if let Some(code) = ret.status.code() {
-            log!("script exited with code {}", code);
-            if let Ok(mut file) = OpenOptions::new()
-                .write(true)
-                .open("/dev/virtio-ports/virtme.ret")
-            {
-                let _ = file.write_all(code.to_string().as_bytes());
-            }
-        } else if let Ok(mut file) = OpenOptions::new()
-            .write(true)
-            .open("/dev/virtio-ports/virtme.ret")
-        {
-            let _ = file.write_all(b"-1");
+            None => (),
         }
     }
-    poweroff();
-}
-
-/// Returns true if we are in script mode but could not run the script (script I/O ports missing).
-/// Caller should then run the script on the console and poweroff.
-fn setup_user_script(uid: u32) -> bool {
-    if let Ok(cmdline) = std::fs::read_to_string("/proc/cmdline") {
-        if let Some(cmd) = extract_user_script(&cmdline) {
-            create_user_script(&cmd);
-            if env::var("virtme_graphics").is_err() && !run_user_script(uid) {
-                return true; // script mode but ports missing
-            }
-        }
+    if static_network.is_some() && !found_static {
+        log!("static virtme network MAC was not found");
     }
-    false
+    if dhcp_mac.is_some() && !found_dhcp {
+        log!("DHCP virtme network MAC was not found");
+    }
+    vec
 }
 
 fn setup_root_home() {
@@ -992,15 +926,6 @@ fn setup_root_home() {
         env::set_var("HOME", "/run/tmp/roothome");
     } else {
         env::set_var("HOME", "/root");
-    }
-}
-
-fn clear_virtme_envs() {
-    // Parameters that start with virtme_* shouldn't pollute the environment.
-    for (key, _) in env::vars() {
-        if key.starts_with("virtme_") {
-            env::remove_var(key);
-        }
     }
 }
 
@@ -1080,48 +1005,6 @@ fn run_shell(tty_fd: libc::c_int, cmd: &str, args: &[&str]) {
     }
 }
 
-fn run_user_gui(tty_fd: libc::c_int) {
-    // Generate a bare minimum xinitrc
-    let xinitrc = "/run/tmp/.xinitrc";
-
-    // Check if we need to start the sound system.
-    let mut pre_exec_cmd: String = String::new();
-    if let Ok(cmdline) = std::fs::read_to_string("/proc/cmdline") {
-        if cmdline.contains("virtme.sound") {
-            if let Some(guest_tools_dir) = get_guest_tools_dir() {
-                pre_exec_cmd = format!("{guest_tools_dir}/virtme-sound-script");
-            }
-        }
-    }
-    if let Err(err) = utils::create_file(
-        xinitrc,
-        0o0644,
-        &format!("{pre_exec_cmd}\n/bin/bash {USER_SCRIPT}"),
-    ) {
-        log!("failed to generate {}: {}", xinitrc, err);
-        return;
-    }
-
-    // Run graphical app using xinit directly
-    let mut args = vec!["-l", "-c"];
-    let storage;
-    if let Ok(user) = env::var("virtme_user") {
-        // Try to fix permissions on the virtual consoles, we are starting X
-        // directly here so we may need extra permissions on the tty devices.
-        utils::run_cmd("/bin/sh", &["-c", &format!("chown {user} /dev/char/*")]);
-
-        // Clean up any previous X11 state.
-        utils::run_cmd("/bin/sh", &["-c", "rm -f /tmp/.X11*/* /tmp/.X11-lock"]);
-
-        // Start xinit directly.
-        storage = format!("su -c 'xinit /run/tmp/.xinitrc' -- {user}");
-        args.push(&storage);
-    } else {
-        args.push("xinit /run/tmp/.xinitrc");
-    }
-    run_shell(tty_fd, "/bin/sh", &args);
-}
-
 fn init_xdg_runtime_dir(uid: u32) {
     // $XDG_RUNTIME_DIR defines the base directory relative to which user-specific non-essential
     // runtime files and other file objects (such as sockets, named pipes, ...) should be stored.
@@ -1154,11 +1037,7 @@ fn run_user_session(consdev: &str) {
     let mode = Mode::empty();
     let tty_fd = open(consdev, flags, mode).expect("failed to open console");
 
-    if env::var("virtme_graphics").is_ok() {
-        run_user_gui(tty_fd);
-    } else {
-        run_user_shell(tty_fd);
-    }
+    run_user_shell(tty_fd);
 }
 
 fn setup_user_session() {
@@ -1177,6 +1056,8 @@ fn setup_user_session() {
     init_xdg_runtime_dir(uid);
     setup_root_home();
 
+    start_qemu_guest_agent();
+
     let consdev = if let Some(console) = get_active_console() {
         console
     } else {
@@ -1186,16 +1067,36 @@ fn setup_user_session() {
         return;
     };
 
-    if setup_user_script(uid) {
-        // Script mode but script I/O ports were missing; run script on console and exit.
-        run_user_script_on_console(consdev.as_str(), uid);
-    }
-
     configure_terminal(consdev.as_str(), uid);
 
     log!("initialization done");
 
     run_user_session(consdev.as_str());
+}
+
+fn start_qemu_guest_agent() {
+    if env::var_os("virtme_qga").is_none() {
+        return;
+    }
+
+    let path = "/dev/virtio-ports/org.qemu.vport.0";
+    let binary = env::var("virtme_qga_bin").unwrap_or_else(|_| "qemu-ga".to_string());
+    match Command::new(&binary)
+        .args([
+            "--method=virtio-serial",
+            "--path",
+            path,
+            "--logfile",
+            "/dev/kmsg",
+            "--daemonize",
+            "--retry-path",
+        ])
+        .status()
+    {
+        Ok(status) if status.success() => log!("started qemu-ga ({}) on {}", binary, path),
+        Ok(status) => log!("qemu-ga ({}) exited with status {}", binary, status),
+        Err(error) => log!("failed to start qemu-ga ({}): {}", binary, error),
+    }
 }
 
 fn proxy_vsock_connection(mut client: File) {
@@ -1261,9 +1162,7 @@ fn start_vsock_ssh_proxy() -> io::Result<()> {
 
 fn run_vsock_sshd() {
     let cmdline = std::fs::read_to_string("/proc/cmdline").unwrap_or_default();
-    if !cmdline.contains("virtme.vsock_cid=") {
-        return;
-    }
+    let use_vsock = cmdline.contains("virtme.vsock_cid=");
     if !Path::new("/usr/sbin/sshd").is_file() {
         log!("vsock SSH disabled: /usr/sbin/sshd is missing");
         return;
@@ -1280,9 +1179,10 @@ fn run_vsock_sshd() {
             &["-q", "-t", "ed25519", "-N", "", "-f", host_key],
         );
     }
+    let listen_address = if use_vsock { "127.0.0.1" } else { "0.0.0.0" };
     let content = format!(
         "Port 22\n\
-         ListenAddress 127.0.0.1\n\
+         ListenAddress {listen_address}\n\
          HostKey {host_key}\n\
          AuthorizedKeysFile %h/.ssh/authorized_keys\n\
          PermitRootLogin yes\n\
@@ -1302,6 +1202,9 @@ fn run_vsock_sshd() {
 
     utils::run_cmd("ip", &["link", "set", "dev", "lo", "up"]);
     utils::run_cmd("/usr/sbin/sshd", &["-f", config]);
+    if !use_vsock {
+        return;
+    }
     match start_vsock_ssh_proxy() {
         Ok(()) => log!("vsock SSH listening on port 22"),
         Err(err) => log!("vsock SSH disabled: failed to start proxy: {}", err),

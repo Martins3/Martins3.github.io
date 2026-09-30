@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="430" viewBox="0 0 900 430">
+  <defs>
+    <marker id="arrow" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto">
+      <path d="M0,0 L9,4.5 L0,9 z" fill="#245b91"/>
+    </marker>
+  </defs>
+  <rect width="900" height="430" fill="#f7f9fc"/>
+  <text x="40" y="48" font-family="sans-serif" font-size="27" font-weight="700" fill="#15283d">Quaternion conjugation rotates vectors</text>
+  <text x="40" y="78" font-family="sans-serif" font-size="17" fill="#526477">A unit quaternion q acts by v -> q v q^-1; q and -q give the same rotation.</text>
+  <g transform="translate(270,245)">
+    <ellipse cx="0" cy="0" rx="170" ry="58" fill="#e9f1f8" stroke="#95abc0" stroke-width="2"/>
+    <ellipse cx="0" cy="0" rx="58" ry="170" fill="none" stroke="#95abc0" stroke-width="2"/>
+    <path d="M-184 0 L184 0 M0 -184 L0 184" stroke="#6d8195" stroke-width="2" marker-end="url(#arrow)"/>
+    <path d="M0 0 L112 -98" stroke="#245b91" stroke-width="8" marker-end="url(#arrow)"/>
+    <text x="122" y="-106" font-family="sans-serif" font-size="23" fill="#245b91" font-weight="700">v</text>
+    <path d="M0 0 L155 12" stroke="#bc343f" stroke-width="8" marker-end="url(#arrow)"/>
+    <text x="165" y="22" font-family="sans-serif" font-size="23" fill="#bc343f" font-weight="700">v'</text>
+    <path d="M75 -65 A100 100 0 0 1 105 8" fill="none" stroke="#e2a22a" stroke-width="5" marker-end="url(#arrow)"/>
+    <text x="74" y="-80" font-family="sans-serif" font-size="21" fill="#a36c08">rotation</text>
+    <text x="-28" y="205" font-family="sans-serif" font-size="17" fill="#526477">unit sphere (schematic)</text>
+  </g>
+  <g transform="translate(510,130)" font-family="sans-serif">
+    <rect x="0" y="0" width="340" height="245" rx="12" fill="#ffffff" stroke="#c6d2df" stroke-width="2"/>
+    <text x="24" y="39" font-size="22" font-weight="700" fill="#15283d">Algebra behind the picture</text>
+    <text x="24" y="84" font-size="24" fill="#15283d">q qbar = N(q) = 1</text>
+    <text x="24" y="127" font-size="24" fill="#15283d">v' = q v q^-1</text>
+    <path d="M24 150 L316 150" stroke="#d6e0ea" stroke-width="2"/>
+    <text x="24" y="191" font-size="19" fill="#245b91">noncommutative multiplication</text>
+    <text x="24" y="220" font-size="16" fill="#526477">makes composition order explicit.</text>
+  </g>
+</svg>

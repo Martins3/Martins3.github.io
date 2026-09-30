@@ -85,6 +85,17 @@ ssh -tt -p 51104 -l 97936 127.0.0.1 "net user 97936 *"
 `gr` 自动连接所使用的密码保存在 VM 的 `.rdp-password`，并且该文件必须设置为
 `0600` 且由 `.gitignore` 排除。`config.ini` 只保存
 `rdp_password_file = .rdp-password`；密码不会写入 INI、命令参数或环境变量。
+
+`gr` 默认在前台运行，终端会一直等待 FreeRDP 退出。也可以显式选择运行方式：
+
+```bash
+gr --foreground
+gr --background
+```
+
+后台模式会立即返回，并将 FreeRDP 输出写入 VM 目录下的 `rdp.log`。两种模式都
+通过标准输入传递密码，不会把密码放入命令行或环境变量。
+
 ### FreeRDP 本地代理问题
 
 第一次使用 FreeRDP 探测时，日志显示它读取了宿主代理：

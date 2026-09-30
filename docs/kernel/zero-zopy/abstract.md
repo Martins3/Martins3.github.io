@@ -80,6 +80,10 @@ https://stackoverflow.com/questions/18343365/zero-copy-networking-vs-kernel-bypa
 存储也是有的，但是存储的一个关键原因在可以 by pass
 这是两个不同性质的事情
 
+## Links
+- [Linux I/O 原理和 Zero-copy 技术全面揭秘](https://zhuanlan.zhihu.com/p/308054212)
+	- 不推荐
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

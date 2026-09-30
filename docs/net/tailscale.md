@@ -1,4 +1,5 @@
 # tailscale 使用简单记录
+<!-- dc382475-5a63-48e7-8d9e-e91c1d3ec666 -->
 
 ## 客户端部署
 ```sh
@@ -196,6 +197,18 @@ direct connection not established
 ```
 
 原来所谓的打洞，就是 tailscale 可以直接跳过中继，让两个机器直连
+
+## 如何登录
+
+```sh
+sudo tailscale up
+sudo tailscale status
+```
+
+如果执行没有反应，可能原因是:
+
+问题是当前终端有代理 10.0.0.2:7890，但 tailscaled 由 systemd 启动，
+没有继承这个代理，所以连接 Tailscale 控制服务器超时。
 
 ## 记录
 

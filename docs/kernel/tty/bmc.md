@@ -1,4 +1,5 @@
 # bmc
+
 ## 尝试分析一下 bmc 中使用键盘鼠标的整个 io 路径
 i8042 在硬中断里面:
 
@@ -207,6 +208,39 @@ https://jia.je/system/2023/08/11/openbmc-qemu/#ast2600
 [    2.755492][  T792] ipmi_si 0000:00:0a.0: Using irq 10
 [    2.766942][  T792] ipmi_si 0000:00:0a.0: IPMI message handler: Found new BMC (man_id: 0x000000, prod_id: 0x0000, dev_id: 0x20)
 [    2.771969][  T792] ipmi_si 0000:00:0a.0: IPMI kcs interface initialized
+```
+
+## 其实也是这种结果
+```txt
+@[
+        kbd_event+5
+        input_handle_events_default+88
+        input_pass_values+338
+        input_event_dispose+391
+        input_handle_event+65
+        input_event+89
+        hidinput_report_event+55
+        hid_report_raw_event+227
+        __hid_input_report+376
+        hid_safe_input_report+20
+        hid_irq_in+426
+        __usb_hcd_giveback_urb+160
+        usb_giveback_urb_bh+179
+        process_one_work+414
+        bh_worker+459
+        tasklet_hi_action+19
+        handle_softirqs+238
+        __irq_exit_rcu+176
+        common_interrupt+133
+        asm_common_interrupt+38
+        cpuidle_enter_state+205
+        cpuidle_enter+49
+        cpuidle_idle_call+271
+        do_idle+156
+        cpu_startup_entry+41
+        start_secondary+294
+        common_startup_64+318
+]: 93
 ```
 
 <script src="https://giscus.app/client.js"

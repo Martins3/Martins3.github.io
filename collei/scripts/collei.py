@@ -19,22 +19,33 @@ from disks import (
     DEFAULT_BOOT_SIZE,
     create_missing_disk,
 )
+from display import DisplaySettings
 from errors import ColleiError, ColleiHelp, UnsupportedNativeConfiguration
 from host_setup import (
     prepare_native_host,
     prepare_novnc,
     prepare_ovs_tap,
+    prepare_passt_network,
 )
+from init_run import InitRunSetup
+from kernel import kernel_image
 from launch_options import LaunchOptions
+from network import (
+    PortForward,
+    network_backend,
+    user_mode_network_arguments,
+)
 from qemu import QemuCommand
 from runtime import ColleiContext, VmRuntime
+from serial import (
+    SerialLayout,
+    build_serial_layout_for_options,
+)
 from tasks import add_background_task, exec_task_follow
 from ui import print_banner
 from vfio import pci_bind_to_vfio
 from virtme import VirtmeSetup
 from windows import WindowsProfile
-
-from kernel import kernel_image
 
 # collei.py 只负责启动虚拟机。
 #
@@ -46,14 +57,54 @@ from kernel import kernel_image
 class QemuProfile(Protocol):
     def kernel_args(self) -> str: ...
 
-    @property
-    def initramfs(self) -> Path | None: ...
+    def initramfs(self, kernel_dir: Path, configured: Path | None) -> Path | None: ...
 
     def rootfs_arguments(self) -> tuple[str, ...]: ...
 
-    def manual_console_arguments(self, display_backend: str) -> tuple[str, ...]: ...
+    def prepare(self, runner: CommandRunner) -> None: ...
 
-    def mode(self) -> str: ...
+    def fallback_boot_disks(self) -> list[tuple[str, str, str | None]] | None: ...
+
+    def share_directory(self) -> str | None: ...
+
+    @property
+    def force_foreground(self) -> bool: ...
+
+
+@dataclass(frozen=True)
+class NormalQemuProfile:
+    """Default direct-kernel QEMU startup profile."""
+
+    context: ColleiContext
+    vm: VmRuntime
+
+    def kernel_args(self) -> str:
+        cmdline = self.vm.config.options.get("cmdline") or ""
+        return (
+            "  oops=panic panic=0 nokaslr apparmor=0 selinux=0 preempt=full "
+            "systemd.unified_cgroup_hierarchy=1  mitigations=off  "
+            "rcutree.sysrq_rcu=1  crashkernel=512M  loglevel=8 "
+            f"zswap.enabled=0  {cmdline} "
+        )
+
+    def initramfs(self, kernel_dir: Path, configured: Path | None) -> Path | None:
+        return configured if configured is not None else _initramfs(kernel_dir)
+
+    def rootfs_arguments(self) -> tuple[str, ...]:
+        return ()
+
+    def prepare(self, runner: CommandRunner) -> None:
+        return None
+
+    def fallback_boot_disks(self) -> list[tuple[str, str, str | None]] | None:
+        return None
+
+    def share_directory(self) -> str | None:
+        return self.vm.config.options.get("share_dir")
+
+    @property
+    def force_foreground(self) -> bool:
+        return False
 
 
 def validate_launch_options(vm: VmRuntime, options: LaunchOptions) -> None:
@@ -103,6 +154,11 @@ CPR 有三种模式：
       --foreground  强制在前台运行，供需要直接管理 QEMU 生命周期的 action 使用
   -E  启动 EFI application 测试
       要求 bios=ovmf，并且不能配置 kernel 直接启动内核。
+
+VM 网络：
+      config.ini 中 net_backend=user|passt 选择用户态网络后端；缺省为 user。
+      passt 独立启动后通过 QEMU 通用 vhost-user 后端连接，并要求 PATH 中存在 passt。
+      passt 不提供 SLIRP SMB；未配置 passt-repair，迁移时已有 TCP 连接可能中断。
 
 创建 VM：
       collei-install.py -i/-x/-v/-V  只构建 VM 目录并更新默认 VM，不启动 QEMU
@@ -204,10 +260,12 @@ class ColleiQemuBuilder:
 
     context: ColleiContext
     vm: VmRuntime
-    profile: QemuProfile | None = None
+    profile: QemuProfile
     sriov_vf: str | None = None
     efi_application: bool = False
     dry_run: bool = False
+    foreground: bool = False
+    force_serial_socket: bool = False
 
     @property
     def image_dir(self) -> Path:
@@ -215,7 +273,15 @@ class ColleiQemuBuilder:
 
     @property
     def monitor_dir(self) -> Path:
-        return self.vm.directory / self.vm.which_qemu
+        return self.vm.qemu_directory
+
+    @property
+    def serial_layout(self) -> SerialLayout:
+        return build_serial_layout_for_options(
+            self.monitor_dir,
+            self.vm.config.options,
+            force_socket_stdio=self.force_serial_socket,
+        )
 
     def _ensure_disk(self, path: Path, size: str = "10G", fmt: str = "qcow2") -> None:
         """非 dry-run 时幂等创建缺失的磁盘镜像。"""
@@ -304,13 +370,10 @@ class ColleiQemuBuilder:
         # 只验证安装介质启动时可以没有目标盘；后续可通过 action 添加磁盘。
         if self.vm.config.options.get("iso") is not None:
             return []
-        if self.profile is not None and self.profile.mode() == "vmtest":
-            disks = sorted(path.name for path in self.image_dir.glob("boot[1-9]"))
-            if disks:
-                return [
-                    (name, "virtio-blk", str(index))
-                    for index, name in enumerate(disks, 1)
-                ]
+
+        fallback = self.profile.fallback_boot_disks()
+        if fallback is not None:
+            return fallback
         raise UnsupportedNativeConfiguration(
             "Python setup_basic_storage requires config.ini disk"
         )
@@ -324,6 +387,7 @@ class ColleiQemuBuilder:
         return self.host_arch == "aarch64"
 
     def validate(self) -> None:
+        network_backend(self.vm)
         if self.host_arch not in {"x86_64", "aarch64"}:
             raise UnsupportedNativeConfiguration(
                 f"Python setup_* currently supports x86_64 and aarch64, not {self.host_arch}"
@@ -337,7 +401,7 @@ class ColleiQemuBuilder:
                 raise UnsupportedNativeConfiguration(
                     "-E cannot be combined with direct kernel boot"
                 )
-        bridge = self.context.global_config.directory.get("bridge") or "ovs"
+        bridge = self.context.global_config.options.get("bridge") or "ovs"
         if bridge not in {"ovs", "no"}:
             raise UnsupportedNativeConfiguration(
                 f"Python setup_network does not support bridge={bridge}"
@@ -357,14 +421,7 @@ class ColleiQemuBuilder:
         virtio_blk = self.vm.config.options.get("virtio_blk")
         if virtio_blk not in {None, "1"}:
             raise UnsupportedNativeConfiguration(f"unsupported virtio_blk={virtio_blk}")
-        display = self.vm.config.options.get("display")
-        if display not in {None, "virtio-gpu"}:
-            raise UnsupportedNativeConfiguration(f"unsupported display={display}")
-        display_backend = self.vm.config.options.get("display_backend")
-        if display_backend not in {None, "none", "gtk"}:
-            raise UnsupportedNativeConfiguration(
-                f"unsupported display_backend={display_backend}"
-            )
+        DisplaySettings.from_vm(self.vm, self.host_arch)
         _validate_virtio_iommu_vfio_groups(
             self.vm.config.options.get("iommu"),
             _configured_vfio_devices(self.vm.config.options.get("vfio")),
@@ -380,6 +437,7 @@ class ColleiQemuBuilder:
         self.setup_basic_storage(argv)
         self.setup_kernel(argv)
         self.setup_network(argv)
+        self.setup_vhost_user_net(argv)
         self.setup_vsock(argv)
         self.setup_hct(argv)
         self.setup_machine(argv)
@@ -395,14 +453,17 @@ class ColleiQemuBuilder:
         self.setup_edu(argv)
         self.setup_pidfile(argv)
         self.setup_cpu_model(argv)
-        self.setup_display_and_chardev(argv)
+        self.setup_display(argv)
+        self.setup_chardev(argv)
+        self.setup_serial_frontend(argv)
         self.setup_audio(argv)
         self.setup_pcie_port(argv)
         self.setup_rng(argv)
         self.setup_misc(argv)
         self.setup_pstore(argv)
         self.setup_uuid(argv)
-        self.setup_input_and_usb(argv)
+        self.setup_usb(argv)
+        self.setup_input(argv)
         self.setup_trace(argv)
         return QemuCommand(tuple(argv))
 
@@ -556,7 +617,7 @@ class ColleiQemuBuilder:
                     "--export",
                     f"type=vhost-user-blk,id=export,node-name=file,addr.type=unix,addr.path={socket},num-queues=1,writable=on",
                     "--pidfile",
-                    self.vm.directory / self.vm.which_qemu / "qsd.pid",
+                    self.vm.qemu_directory / "qsd.pid",
                 ],
                 vm=self.vm,
                 group="qemu",
@@ -707,15 +768,10 @@ class ColleiQemuBuilder:
                 )
             return
         kernel_dir = Path(kernel_value)
-        if self.profile is not None:
-            kernel_args = self.profile.kernel_args()
-        else:
-            cmdline = self.vm.config.options.get("cmdline") or ""
+        kernel_args = self.profile.kernel_args()
+        if not any(token.startswith("console=") for token in kernel_args.split()):
             kernel_args = (
-                "  oops=panic panic=0 nokaslr apparmor=0 selinux=0 preempt=full "
-                "systemd.unified_cgroup_hierarchy=1  mitigations=off  "
-                "rcutree.sysrq_rcu=1  crashkernel=512M  loglevel=8 "
-                f"zswap.enabled=0  {cmdline} "
+                f"{' '.join(self.serial_layout.kernel_console_args())} {kernel_args}"
             )
         argv.extend(["-kernel", str(kernel_image(kernel_dir)), "-append", kernel_args])
 
@@ -726,9 +782,9 @@ class ColleiQemuBuilder:
             return
         guest_id = self.vm.config.guest_id
         tap = f"vif_{self.vm.which_qemu}_{guest_id}_0"
-        level = self.context.global_config.directory.integer("level", 0)
+        level = self.context.global_config.options.integer("level", 0)
         mac = f"52:54:00:{level:02x}:{guest_id:02x}:00"
-        if self.context.global_config.directory.get("bridge") != "no":
+        if self.context.global_config.options.get("bridge") != "no":
             argv.extend(
                 [
                     "-device",
@@ -739,14 +795,34 @@ class ColleiQemuBuilder:
             )
         # 总是把用户态网络放到最后，这样在虚拟机中一眼就可以看到。
         argv.extend(["-device", "virtio-net,netdev=net1"])
-        user_net = (
-            "user,id=net1,hostfwd="
-            f"tcp:127.0.0.1:{self.vm.tcp_port('ssh')}-:22,"
-            f"hostname={self.vm.directory.name}"
+        smb = f"{Path.home()}/" if Path("/usr/sbin/smbd").is_file() else None
+        argv.extend(
+            user_mode_network_arguments(
+                self.vm,
+                [PortForward("tcp", self.vm.tcp_port("ssh"), 22)],
+                smb=smb,
+            )
         )
-        if Path("/usr/sbin/smbd").is_file():
-            user_net += f",smb={Path.home()}/"
-        argv.extend(["-netdev", user_net])
+
+    def setup_vhost_user_net(self, argv: list[str]) -> None:
+        if not self.vm.config.options.enabled("vhost_user_net"):
+            return
+        reconnect_ms = self.vm.config.options.integer("vhost_user_reconnect_ms", 1000)
+        if reconnect_ms <= 0:
+            raise UnsupportedNativeConfiguration(
+                "vhost_user_reconnect_ms must be greater than zero"
+            )
+        socket_path = self.monitor_dir / "vhost-user-net.sock"
+        argv.extend(
+            [
+                "-chardev",
+                f"socket,id=vhost_user_net_chr,path={socket_path},reconnect-ms={reconnect_ms}",
+                "-netdev",
+                "vhost-user,id=vhost_user_net,chardev=vhost_user_net_chr,vhostforce=on",
+                "-device",
+                "virtio-net-pci,id=vhost_user_net_dev,netdev=vhost_user_net",
+            ]
+        )
 
     def setup_vsock(self, argv: list[str]) -> None:
         if not self.vm.config.options.enabled("vsock"):
@@ -824,8 +900,7 @@ class ColleiQemuBuilder:
             elif iommu is not None:
                 raise UnsupportedNativeConfiguration(f"unsupported iommu={iommu}")
         self.setup_pci_topology(argv, machine)
-        if self.profile is not None:
-            argv.extend(self.profile.rootfs_arguments())
+        argv.extend(self.profile.rootfs_arguments())
 
     def setup_pci_topology(self, argv: list[str], machine: str) -> None:
         mode = self.vm.config.options.get("pci")
@@ -915,12 +990,8 @@ class ColleiQemuBuilder:
         if kernel_value is None:
             return
         configured = self.vm.config.options.get("initrd")
-        initramfs: Path | None = (
-            Path(configured)
-            if configured is not None
-            else self.profile.initramfs
-            if self.profile is not None
-            else _initramfs(Path(kernel_value))
+        initramfs = self.profile.initramfs(
+            Path(kernel_value), Path(configured) if configured is not None else None
         )
         if initramfs is not None:
             argv.extend(["-initrd", str(initramfs)])
@@ -1052,9 +1123,7 @@ class ColleiQemuBuilder:
             add_vfio_device(self.sriov_vf, "rombar=0")
 
     def setup_fs_share(self, argv: list[str]) -> None:
-        if self.profile is not None:
-            return
-        share_dir = self.vm.config.options.get("share_dir")
+        share_dir = self.profile.share_directory()
         if share_dir is None:
             return
         directory = Path(share_dir)
@@ -1105,7 +1174,7 @@ class ColleiQemuBuilder:
         value = self.vm.config.options.get("iso")
         if value is None:
             return
-        iso_root = Path(self.context.global_config.directory.require("iso"))
+        iso_root = Path(self.context.global_config.options.require("iso"))
         for index, line in enumerate(value.splitlines(), 1):
             fields = line.split()
             if len(fields) not in {1, 2}:
@@ -1162,60 +1231,16 @@ class ColleiQemuBuilder:
             return
         argv.extend(["-cpu", "host"])
 
-    def setup_display_and_chardev(self, argv: list[str]) -> None:
-        display_backend = self.vm.config.options.get("display_backend") or "none"
-        if self.profile is not None:
-            manual_console = self.profile.manual_console_arguments(display_backend)
-            if manual_console:
-                argv.extend(manual_console)
-                return
+    def setup_display(self, argv: list[str]) -> None:
+        settings = DisplaySettings.from_vm(self.vm, self.host_arch)
+        argv.extend(settings.qemu_arguments(self.vm))
 
-        display = self.vm.config.options.get("display")
-        if self.is_aarch64 or display == "virtio-gpu":
-            argv.extend(["-device", "virtio-gpu-pci"])
-        else:
-            argv.extend(["-device", "cirrus-vga"])
-        if display_backend != "none":
-            argv.extend(["-display", display_backend])
-        main_chardev = (
-            f"socket,path={self.monitor_dir / 'main.sock'},id=main_char,server=on,wait=off,mux=on"
-            if self.vm.config.options.enabled("hide")
-            else "stdio,id=main_char,server=on,wait=off,id=main_char,mux=on"
-        )
-        argv.extend(
-            [
-                "-vnc",
-                f":{self.vm.tcp_port('vnc') - 5900},password=off",
-                "-device",
-                "virtio-serial",
-                # 这个配置必须放到最前面，让这个串口是 ttyS0。
-                "-chardev",
-                main_chardev,
-                "-serial",
-                "chardev:main_char",
-                "-device",
-                "virtconsole,chardev=main_char",
-                "-object",
-                "monitor-hmp,id=mon_main,chardev=main_char,readline=on",
-                # 配合 action 中 connect_to_pty 使用。
-                "-chardev",
-                "pty,mux=on,id=char_pty",
-                "-device",
-                "virtconsole,chardev=char_pty",
-                "-serial",
-                "chardev:char_pty",
-                # vmtest 必须有一个 qga，不然 init.sh 中的 qga 报错。
-                "-chardev",
-                f"socket,path={self.monitor_dir / 'qga.sock'},server=on,wait=off,id=qga0",
-                "-device",
-                "virtserialport,chardev=qga0,name=org.qemu.guest_agent.0",
-                # /dev/vport6p3 不能作为 console，保留为独立 vport。
-                "-chardev",
-                f"socket,path={self.monitor_dir / 'vport.sock'},server=on,wait=off,id=vport",
-                "-device",
-                "virtserialport,chardev=vport,name=org.qemu.vport.0",
-            ]
-        )
+    def setup_chardev(self, argv: list[str]) -> None:
+        layout = self.serial_layout
+        argv.extend(layout.chardev_argv())
+
+    def setup_serial_frontend(self, argv: list[str]) -> None:
+        argv.extend(self.serial_layout.frontend_argv())
 
     def setup_audio(self, argv: list[str]) -> None:
         if not self.vm.config.options.enabled("audio"):
@@ -1289,21 +1314,30 @@ class ColleiQemuBuilder:
     def setup_uuid(self, argv: list[str]) -> None:
         argv.extend(["-uuid", self.vm.config.options.require("uuid")])
 
-    def setup_input_and_usb(self, argv: list[str]) -> None:
-        if self.profile is not None and self.profile.mode() == "manual":
-            return
+    def setup_usb(self, argv: list[str]) -> None:
         # qemu-xhci 下同时保留 USB 键盘和 tablet；virtme manual 不需要图形输入。
+        # qemu-xhci 提供 8 个 usb 2.0 和 usb 3.0 的接口
         argv.extend(
             [
-                "-device",
-                "virtio-keyboard",
                 "-usb",
                 "-device",
                 "qemu-xhci,p2=8,p3=8,id=usb",
                 "-device",
-                "usb-kbd,id=input0,bus=usb.0,port=2",
+                "usb-kbd,id=input0,bus=usb.0,port=5",
                 "-device",
-                "usb-tablet,id=input1,bus=usb.0,port=3",
+                "usb-tablet,id=input1,bus=usb.0,port=6",
+            ]
+        )
+
+    def setup_input(self, argv: list[str]) -> None:
+        argv.extend(
+            [
+                "-device",
+                "virtio-keyboard",
+                "-device",
+                "virtio-mouse",
+                "-device",
+                "virtio-tablet-pci",
             ]
         )
 
@@ -1346,7 +1380,9 @@ class BuildrootQemuBuilder:
             )
 
         qemu = self.context.repo.parent.parent / "qemu/build/qemu-system-x86_64"
-        common = ColleiQemuBuilder(self.context, self.vm)
+        common = ColleiQemuBuilder(
+            self.context, self.vm, NormalQemuProfile(self.context, self.vm)
+        )
         argv = [str(qemu)]
         common.setup_mem_cpu(argv)
         argv.extend(
@@ -1360,15 +1396,16 @@ class BuildrootQemuBuilder:
             ]
         )
 
-        # Buildroot 没有 host bridge 配置，只保留 user network 便于快速启动。
-        user_net = (
-            "user,id=net1,hostfwd="
-            f"tcp:127.0.0.1:{self.vm.tcp_port('ssh')}-:22,"
-            f"hostname={self.vm.config.name}"
+        # Buildroot 没有 host bridge 配置，只保留用户态网络便于快速启动。
+        smb = f"{Path.home()}/" if Path("/usr/sbin/smbd").is_file() else None
+        argv.extend(["-device", "virtio-net-pci,netdev=net1"])
+        argv.extend(
+            user_mode_network_arguments(
+                self.vm,
+                [PortForward("tcp", self.vm.tcp_port("ssh"), 22)],
+                smb=smb,
+            )
         )
-        if Path("/usr/sbin/smbd").is_file():
-            user_net += f",smb={Path.home()}/"
-        argv.extend(["-device", "virtio-net-pci,netdev=net1", "-netdev", user_net])
         common.setup_machine(argv)
         common.setup_monitor(argv)
         common.setup_balloon(argv)
@@ -1377,12 +1414,15 @@ class BuildrootQemuBuilder:
         common.setup_edu(argv)
         common.setup_pidfile(argv)
         common.setup_cpu_model(argv)
-        common.setup_display_and_chardev(argv)
+        common.setup_display(argv)
+        common.setup_chardev(argv)
+        common.setup_serial_frontend(argv)
         common.setup_pcie_port(argv)
         common.setup_rng(argv)
         common.setup_misc(argv)
         common.setup_uuid(argv)
-        common.setup_input_and_usb(argv)
+        common.setup_usb(argv)
+        common.setup_input(argv)
         common.setup_trace(argv)
         return QemuCommand(tuple(argv))
 
@@ -1441,11 +1481,11 @@ class FirecrackerSetup:
         config["drives"][0]["path_on_host"] = str(boot)
         config["drives"][1]["socket"] = str(self.disk_socket)
 
-        if self.context.global_config.directory.get("bridge") == "no":
+        if self.context.global_config.options.get("bridge") == "no":
             config["network-interfaces"] = []
         else:
             guest_id = self.vm.config.guest_id
-            level = self.context.global_config.directory.integer("level", 0)
+            level = self.context.global_config.options.integer("level", 0)
             config["network-interfaces"][0]["host_dev_name"] = (
                 f"vif_{self.vm.which_qemu}_{guest_id}_0"
             )
@@ -1453,7 +1493,10 @@ class FirecrackerSetup:
                 f"52:54:00:{level:02x}:{guest_id:02x}:00"
             )
 
-        config["vsock"]["uds_path"] = str(self.vm.directory / "vsock.socket")
+        if self.vm.config.options.enabled("vsock"):
+            config["vsock"]["uds_path"] = str(self.vm.directory / "vsock.socket")
+        else:
+            config["vsock"] = None
         config["logger"]["log_path"] = str(self.vm.directory / "logs")
         config["metrics"]["metrics_path"] = str(self.vm.directory / "metrics")
         config["machine-config"]["vcpu_count"] = self.vm.config.options.integer(
@@ -1488,10 +1531,10 @@ class FirecrackerSetup:
         (self.vm.directory / "logs").touch()
         (self.vm.directory / "metrics").touch()
 
-        monitor = self.vm.directory / self.vm.which_qemu
+        monitor = self.vm.qemu_directory
         monitor.mkdir(parents=True, exist_ok=True)
         (monitor / "vif_counter").write_text("0\n")
-        if self.context.global_config.directory.get("bridge") != "no":
+        if self.context.global_config.options.get("bridge") != "no":
             prepare_ovs_tap(self.context, self.vm, runner)
 
         # 测试 Firecracker 的 vhost-user-blk。
@@ -1531,57 +1574,25 @@ class VmtestSetup:
     context: ColleiContext
     vm: VmRuntime
 
-    def mode(self) -> str:
-        return "vmtest"
-
     def kernel_args(self) -> str:
         cmdline = self.vm.config.options.get("cmdline") or ""
         return (
             "  oops=panic panic=0 nokaslr apparmor=0 selinux=0 preempt=full "
             "systemd.unified_cgroup_hierarchy=1  mitigations=off  "
             "rcutree.sysrq_rcu=1  crashkernel=512M  loglevel=8 "
-            f"zswap.enabled=0 console=ttyS0,115200  {cmdline} "
+            f"zswap.enabled=0 {cmdline} "
         )
 
-    @property
-    def initramfs(self) -> None:
+    def initramfs(self, kernel_dir: Path, configured: Path | None) -> Path | None:
+        del kernel_dir
         # vmtest mode don't need initramfs now。
-        return None
+        return configured
 
     def rootfs_arguments(self) -> tuple[str, ...]:
         return (
             "-virtfs",
             "local,id=root,path=/,mount_tag=/dev/root,security_model=none,multidevs=remap",
             "-no-reboot",
-        )
-
-    def manual_console_arguments(self, display_backend: str) -> tuple[str, ...]:
-        monitor = self.vm.directory / self.vm.which_qemu
-        display_device = (
-            ("-device", "virtio-gpu-pci") if display_backend == "gtk" else ()
-        )
-        return (
-            "-display",
-            display_backend,
-            *display_device,
-            "-device",
-            "virtio-serial",
-            "-chardev",
-            "stdio,id=main_char,signal=off",
-            "-serial",
-            "chardev:main_char",
-            "-chardev",
-            "pty,id=char_pty",
-            "-device",
-            "virtconsole,chardev=char_pty",
-            "-chardev",
-            f"socket,path={monitor / 'qga.sock'},server=on,wait=off,id=qga0",
-            "-device",
-            "virtserialport,chardev=qga0,name=org.qemu.guest_agent.0",
-            "-chardev",
-            f"socket,path={monitor / 'vport.sock'},server=on,wait=off,id=vport",
-            "-device",
-            "virtserialport,chardev=vport,name=org.qemu.vport.0",
         )
 
     def prepare_init(self, destination: Path = Path("/tmp/martins3/init.sh")) -> Path:
@@ -1600,6 +1611,23 @@ class VmtestSetup:
         destination.write_text(content)
         destination.chmod(0o755)
         return destination
+
+    def prepare(self, runner: CommandRunner) -> None:
+        del runner
+        self.prepare_init()
+
+    def fallback_boot_disks(self) -> list[tuple[str, str, str | None]] | None:
+        disks = sorted(path.name for path in self.vm.image_directory.glob("boot[1-9]"))
+        if not disks:
+            return None
+        return [(name, "virtio-blk", str(index)) for index, name in enumerate(disks, 1)]
+
+    def share_directory(self) -> str | None:
+        return None
+
+    @property
+    def force_foreground(self) -> bool:
+        return True
 
 
 @dataclass(frozen=True)
@@ -1867,6 +1895,36 @@ def run_in_background(context: ColleiContext, vm: VmRuntime) -> None:
     exec_task_follow(handle)
 
 
+def launch_foreground(
+    vm: VmRuntime, options: LaunchOptions, profile: QemuProfile
+) -> bool:
+    """Resolve whether QEMU itself runs attached to the current terminal."""
+    forced = options.foreground or options.gdb or profile.force_foreground
+    if forced:
+        return True
+    bg = vm.config.options.get("bg")
+    if bg is None:
+        return False
+    if bg not in {"0", "1"}:
+        raise ColleiError("bg")
+    return bg == "0"
+
+
+def create_qemu_profile(context: ColleiContext, vm: VmRuntime) -> QemuProfile:
+    """Create the profile that owns mode-specific QEMU behavior."""
+    if vm.config.options.enabled("init_run"):
+        if vm.config.options.get("kernel") is None:
+            raise UnsupportedNativeConfiguration(
+                "config.ini init_run requires kernel (直接 -kernel 启动)"
+            )
+        return InitRunSetup(context, vm)
+    if vm.config.options.enabled("virtme"):
+        return VirtmeSetup(context, vm)
+    if vm.config.options.enabled("vmtest"):
+        return VmtestSetup(context, vm)
+    return NormalQemuProfile(context, vm)
+
+
 def build_qemu_command(
     context: ColleiContext,
     vm: VmRuntime,
@@ -1876,6 +1934,17 @@ def build_qemu_command(
 ) -> QemuCommand:
     """使用 Python setup_* 构造命令；不再隐式回退到 Shell。"""
     if vm.config.options.enabled("fire"):
+        if any(
+            vm.config.options.get(name) is not None
+            for name in ("display", "gpu", "display_backend")
+        ):
+            raise UnsupportedNativeConfiguration(
+                "Firecracker does not support display or gpu settings"
+            )
+        if network_backend(vm) == "passt":
+            raise UnsupportedNativeConfiguration(
+                "net_backend=passt is only supported by QEMU"
+            )
         firecracker = FirecrackerSetup(context, vm)
         command = firecracker.build(write_config=not options.dry_run)
         if prepare_host:
@@ -1887,22 +1956,18 @@ def build_qemu_command(
     if vm.config.options.enabled("buildroot"):
         command = BuildrootQemuBuilder(context, vm).build()
         if prepare_host:
-            monitor = vm.directory / vm.which_qemu
+            monitor = vm.qemu_directory
             monitor.mkdir(parents=True, exist_ok=True)
             for counter in ("hp_mm_counter", "hp_disk_counter", "vif_counter"):
                 (monitor / counter).write_text("0\n")
+            prepare_passt_network(context, vm, CommandRunner())
             if "-vnc" in command.argv:
                 prepare_novnc(context, vm, CommandRunner())
         command = apply_launch_options(command, vm, options)
         if not options.dry_run:
             command.write_script(vm.directory / "cmd.sh")
         return command
-    if vm.config.options.enabled("virtme"):
-        profile: QemuProfile | None = VirtmeSetup(context, vm)
-    elif vm.config.options.enabled("vmtest"):
-        profile = VmtestSetup(context, vm)
-    else:
-        profile = None
+    profile = create_qemu_profile(context, vm)
     sriov = vm.config.options.get("sriov")
     sriov_vf = (
         prepare_sriov(sriov, CommandRunner())
@@ -1918,6 +1983,8 @@ def build_qemu_command(
         sriov_vf,
         efi_application=options.efi_application,
         dry_run=options.dry_run,
+        foreground=launch_foreground(vm, options, profile),
+        force_serial_socket=options.gdb and launch_foreground(vm, options, profile),
     )
     windows = (
         WindowsProfile(context, vm, common)
@@ -1935,13 +2002,7 @@ def build_qemu_command(
             windows.prepare(CommandRunner())
         if options.efi_application:
             prepare_efi_application(context, vm)
-        if isinstance(profile, VirtmeSetup):
-            profile.generate_initramfs()
-            profile.prepare_sudo(CommandRunner())
-            profile.prepare_debuginfo()
-            profile.prepare_rootfs(CommandRunner())
-        elif isinstance(profile, VmtestSetup):
-            profile.prepare_init()
+        profile.prepare(CommandRunner())
     command = apply_launch_options(command, vm, options)
     if not options.dry_run:
         command.write_script(vm.directory / "cmd.sh")
@@ -1970,15 +2031,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             return 0
 
         # vmtest 没有网络，必须前台来交互。
-        forced_foreground = (
-            options.foreground or options.gdb or vm.config.options.enabled("vmtest")
-        )
-        foreground = forced_foreground
-        bg = vm.config.options.get("bg")
-        if bg is not None and not forced_foreground:
-            if bg not in {"0", "1"}:
-                raise ColleiError("bg")
-            foreground = bg == "0"
+        foreground = launch_foreground(vm, options, create_qemu_profile(context, vm))
         if foreground:
             CommandRunner().exec(command.argv)
         else:

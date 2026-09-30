@@ -818,9 +818,6 @@ arch/s390/kvm/pci.c
 include/linux/mm.h
 drivers/xen/privcmd.c
 drivers/xen/gntdev.c
-drivers/virt/acrn/mm.c
-drivers/virt/acrn/ioreq.c
-drivers/virt/acrn/hsm.c
 drivers/video/fbdev/pvr2fb.c
 drivers/iommu/iommufd/iova_bitmap.c
 drivers/iommu/iommufd/pages.c

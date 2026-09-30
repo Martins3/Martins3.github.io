@@ -54,13 +54,10 @@ gpt 的能力还不是那么强的时候?
 
 ### 2026.8
 
-我问 qemu 中为什么需要 bh 机制
+我问: "qemu 中为什么需要 bh 机制"
 
-> [!NOTE]
-> 参考神奇海螺的意见，有待验证
-
-这是 2026.4 的回答，还是没有抓住重点，但是到了 2026-08-15 的时候，
-我看了回答，立刻就可以知道在说什么。
+羡慕这是 2026.4 codex 的回答，没有抓住重点，绕来绕去的，但是到了 2026-08-15 的时候，
+我看了回答，立刻就可以知道在说什么，所谓 bh 就是将一个工作挂载到对应的 context 中去执行。
 ```txt
 1. 事件循环架构的要求
 
@@ -126,21 +123,21 @@ struct BHListSlice {
 ```
 
 ## 我的习惯已经改变了
-1. 投机执行
-	- 我做所有的事情都是投机执行的，也就是说我会尝试先让 AI 去做一下，如果不行的话。我自己再来处理，在处理的过程中又继续分解成让 AI 能做
-	- openclaw
+1. 投机执行: 我做所有的事情都是投机执行的，也就是说我会尝试先让 AI 去做一下，如果不行的话，我自己再来处理。在处理的过程中又继续分解成让 AI 能做
+这一点极大的改善了我的工作体验，我在思考一个问题的时候，很多时候会有人找到我处理其他的问题，现在我只是需要让 AI 来尝试下，大部分时候都可以正确处理。
 2. 语音输入
-3. 网页翻译
-	- deepseek
-4. AI 写 code 没有**任何**低级错误，而这，是我之前编码的时候非常厌烦的点。
+3. 阅读英文 : deepseek + readfrog
+4. AI 写 code 没有**任何**低级错误，而这，是我之前编码的时候非常厌烦的点，总是要写很多单元测试来规避这些问题。
 
 ## 终于从 kernel 和 qemu 的泥潭中抽身了
 现在有了 ai ，内核的难度迅速从 Dota2 退化为俄罗斯方块
 
-利用 codex ，终于解决了两个长期困扰我的问题
-- perfbool
-- kvm 嵌套虚拟化
+为了解决 kernel ，我付出了极大的代价:
+1. 我一直在积极，维护一个快速验证内核问题的环境
 
+利用 codex ，终于解决了几个长期困扰我的问题
+- RCU maintainer 写的 perf book
+- kvm 嵌套虚拟化
 
 此外，我顺手做一些
 - vim 好几插件
@@ -153,19 +150,19 @@ struct BHListSlice {
 - 学习数学
 - 我不会再对 fedora 中，我不会再默默忍受 neovim 或者 tmux crash 的 crash ，而是打开 codex 来分析:
 ```txt
-• 定位到了：不是 OOM，也不是插件脚本崩溃。dmesg 和 systemd-coredump 显示 tmux 3.2 在 17:45:13 SIGSEGV，栈是：
+定位到了：不是 OOM，也不是插件脚本崩溃。dmesg 和 systemd-coredump 显示 tmux 3.2 在 17:45:13 SIGSEGV，栈是：
 
-  cmd_resize_pane_mouse_update -> layout_resize_layout -> window_pane_resize -> grid_reflow_join
+cmd_resize_pane_mouse_update -> layout_resize_layout -> window_pane_resize -> grid_reflow_join
 
-  也就是鼠标拖拽调整 pane 大小时，旧版 tmux server 崩了。
+也就是鼠标拖拽调整 pane 大小时，旧版 tmux server 崩了。
 
-  我已处理：
+我已处理：
 
-  - 修改 /home/martins3/.dotfiles/nixpkgs/home/tools.nix:80，去掉固定到旧 nixpkgs 的 old_tmux，改回当前 nixpkgs 的 tmux。
-  - 执行了 home-manager switch。
-  - 验证当前默认 tmux 已是 tmux 3.6a，~/.nix-profile/bin/tmux 指向新版。
-  - 用现有 tmux.conf 启动独立 server 测试通过。
-  - 当前还在运行的 server 仍是旧 3.2，我临时执行了 tmux set -g mouse off，避免你重启 tmux 前再次拖拽 pane 触发同一路径。
+- 修改 /home/martins3/.dotfiles/nixpkgs/home/tools.nix:80，去掉固定到旧 nixpkgs 的 old_tmux，改回当前 nixpkgs 的 tmux。
+- 执行了 home-manager switch。
+- 验证当前默认 tmux 已是 tmux 3.6a，~/.nix-profile/bin/tmux 指向新版。
+- 用现有 tmux.conf 启动独立 server 测试通过。
+- 当前还在运行的 server 仍是旧 3.2，我临时执行了 tmux set -g mouse off，避免你重启 tmux 前再次拖拽 pane 触发同一路径。
 ```
 很多人担心 AI 会抢走工作，至少在我这里完全不是这样的，
 我有放多事情想要去做，但是由于分析能力，时间有限，导致我最后没
@@ -179,7 +176,6 @@ AI 真的太酷了。
 3. 计算机行业真的是能人辈出啊，每几年就搞出新的花样来。
 	- 我劝大家，也是提醒我自己。不要工作得太努力啊，就是因为你今年可能拿到这个钱觉得还不错，明年可能很多东西都变化了，所以把搞好身体，苟到最后，后面还有很多可以搞的事情的
 	- 接纳快速转向的事实，即便是 Linux kernel ，编译器，CPU 设计这种已经稳定发展很久的东西，也不是高枕无忧的。
-
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

@@ -3,7 +3,7 @@ from __future__ import annotations
 import time
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 from urllib.parse import quote
 
 from block_migration import discover_migratable_disks, qmp_execute
@@ -30,7 +30,7 @@ class NbdBenchmarkExport:
 
 
 def _monitor_directory(vm: VmRuntime) -> Path:
-    return vm.directory / vm.which_qemu
+    return vm.qemu_directory
 
 
 def _socket_path(vm: VmRuntime) -> Path:
@@ -44,7 +44,7 @@ def _qmp_path(vm: VmRuntime) -> Path:
 def _qmp_records(value: object, command: str) -> list[dict[str, Any]]:
     if not isinstance(value, list) or not all(isinstance(item, dict) for item in value):
         raise ColleiError(f"{command} returned invalid data: {value!r}")
-    return value
+    return cast(list[dict[str, Any]], value)
 
 
 def _query_exports(qmp_path: Path) -> list[dict[str, Any]]:

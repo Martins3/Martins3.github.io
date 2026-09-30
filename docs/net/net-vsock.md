@@ -239,6 +239,43 @@ guest-cid=1100 可以，不能用的是 0/1/2 这些保留 CID。
 
 这里的 guest-cid 是给“这个 guest 自己”的 CID，不能占用这些 well-known CID。实际 guest CID 应该从 3 开始，并且同一 host 上运行的 guest 之间要唯一。
 
+## collei 的具体实现
+
+> [!NOTE]
+> 参考神奇海螺的意见，有待验证
+
+### Firecracker 虚拟机走 vsock SSH
+
+同时启用 `fire = 1` 和 `vsock = 1` 时，使用 Firecracker 的 `vsock.socket`。
+未启用 `vsock` 时不创建 vsock 设备，SSH 使用普通网络连接。`ssh` 与 `ssh_auto` 自动选择同一连接方式；`ssh_vsock` 和
+`ssh_vsock_auto` 也支持 Firecracker。登录用户使用配置中的 `user`，默认为 root。
+host 需要提供 `/usr/lib/systemd/systemd-ssh-proxy`，并支持 `vsock-mux`。
+`ssh` 与 `ssh_auto` 自动使用这个 systemd 自带代理，无需手动发送 `CONNECT 22`，
+也不需要额外的 Python 代理或 socat。`CONNECT` 是 Firecracker 每条新连接的
+协议要求，无法通过 `fire.json` 关闭，由 systemd 代理完成握手并交接连接给 SSH。
+
+```bash
+./collei/scripts/collei-action.py -a ssh -n fedora-firecracker
+./collei/scripts/collei-action.py -a ssh_auto -n fedora-firecracker
+```
+
+### virtme 虚拟机走 vsock SSH
+
+virtme 模式的虚拟机默认自动配置 tap/vhost 静态地址和 slirp DHCP；同时启用
+`virtme = 1` 和 `vsock = 1` 时，`ssh_auto` 仍优先使用 vsock SSH，避免依赖
+guest 网络状态：
+
+```bash
+./collei/scripts/collei-action.py -a ssh -n virtme            # 直接登录(自动走 vsock)
+./collei/scripts/collei-action.py -a ssh_vsock_auto -n virtme # 仅输出命令
+# 输出类似:
+# ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
+#     -o 'ProxyCommand=socat - VSOCK-CONNECT:1096:22' martins3@virtme
+```
+
+自动化场景直接在 ssh 后面接命令即可执行 guest 内命令（登录用户是 host 同名
+用户，wheel 组，可用 sudo)。不要为了在 guest 里跑脚本而去加 `exec`、
+`root_user` 之类的临时配置。
 
 
 <script src="https://giscus.app/client.js"

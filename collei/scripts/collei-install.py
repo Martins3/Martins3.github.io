@@ -26,18 +26,24 @@ class InstallHelp(Exception):
 @dataclass(frozen=True)
 class InstallOptions:
     mode: str
+    iso_name: str | None = None
+    vm_name: str | None = None
 
     @classmethod
     def parse(cls, arguments: Sequence[str]) -> InstallOptions:
         try:
-            options, remaining = getopt.getopt(list(arguments), "hfioxvVS", ["help"])
+            options, remaining = getopt.getopt(
+                list(arguments), "hfioxvVS", ["help", "iso=", "name="]
+            )
         except getopt.GetoptError as error:
             raise ColleiError(str(error)) from error
         if remaining:
             raise ColleiError(f"unexpected arguments: {' '.join(remaining)}")
 
         modes: list[str] = []
-        for option, _ in options:
+        iso_name: str | None = None
+        vm_name: str | None = None
+        for option, value in options:
             if option in {"-h", "--help"}:
                 raise InstallHelp
             if option == "-f":
@@ -54,11 +60,20 @@ class InstallOptions:
                 modes.append("virtme")
             elif option == "-S":
                 modes.append("kitty")
+            elif option == "--iso":
+                iso_name = value
+            elif option == "--name":
+                vm_name = value
         if not modes:
             raise InstallHelp
         if len(modes) != 1:
             raise ColleiError("choose exactly one install mode")
-        return cls(mode=modes[0])
+        mode = modes[0]
+        if (iso_name is None) != (vm_name is None):
+            raise ColleiError("--iso and --name must be used together")
+        if iso_name is not None and mode != "kitty":
+            raise ColleiError("--iso and --name are supported only with -S")
+        return cls(mode=mode, iso_name=iso_name, vm_name=vm_name)
 
 
 def print_help() -> None:
@@ -74,6 +89,7 @@ def print_help() -> None:
   -f  从 Fedora Server ISO 创建无人值守安装 VM
   -o  从 openEuler ISO 创建无人值守安装 VM
   -S  从 kitty ISO 创建无人值守安装 VM（默认双盘 RAID1）
+      可用 --iso <文件名> --name <VM名> 显式选择 ISO 和 VM 名称
   -x  创建 NixOS VM
   -v  创建 vmtest VM，使用 host / 作为 9p rootfs
   -V  创建 virtme VM，使用 virtio-fs 共享 host rootfs
@@ -118,9 +134,19 @@ def install_selected(options: InstallOptions) -> None:
     elif options.mode == "openeuler":
         install_vm(context, "openeuler", runner)
     elif options.mode == "kitty":
+        from kitty import SmtxosAutoInstallConfig
         from kitty import install as kitty_install
 
-        kitty_install(context, runner)
+        config = SmtxosAutoInstallConfig(
+            iso_name=options.iso_name or "",
+            vm_name=options.vm_name or "",
+        )
+        kitty_install(
+            context,
+            runner,
+            config=config,
+            initialize_git=options.iso_name is None,
+        )
     elif options.mode == "nixos":
         name = choose_vm_name(context, runner, "nixos")
         install_vm(context, "nixos", runner, name=name)

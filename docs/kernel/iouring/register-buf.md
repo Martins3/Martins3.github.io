@@ -1,6 +1,7 @@
 # iouring register buffers
 <!-- df72ab12-3cb0-46ae-832d-6d1524058d66 -->
 
+## 基本使用
 https://unixism.net/loti/ref-iouring/io_uring_register.html
 
 主要关联的源码: rsrc.c
@@ -69,8 +70,11 @@ void io_uring_prep_read_fixed(struct io_uring_sqe *sqe,
 * **`buf_index`**：告诉内核你使用的是哪一个注册过的“大内存块”。
 * **`buf`**：告诉内核数据**具体要写到这个内存块的哪个位置**。
 
+## register buffer 的核心动机
+
 ## 一点简单的测试
-对应测试代码在: vn/code/src/c/iouring/ubuf.c
+测试代码
+docs/kernel/iouring/verification/advance-register-ubuf.c
 
 首先注册这些 buffer
 

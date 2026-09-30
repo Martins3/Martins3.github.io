@@ -38,8 +38,12 @@ collei-install.py 定义如何创建 VM 目录，包括 ISO、NixOS、vmtest 和
 也不启动 QEMU。
 
 全局配置位于 `~/.config/collei/config.ini` 的 `[collei]` 节。不同虚拟机的启动
-参数位于 `$vm_dir/config.ini` 的 `[vm]` 节；缺失或空值表示未启用，多行值使用
-缩进续行。
+参数位于 `$vm_dir/config.ini` 的 `[vm]` 节；一般选项缺失或空值表示未启用，
+多行值使用缩进续行。`display` 和 `gpu` 使用下述默认值。
+
+QEMU 显示配置只有 `display`（vnc/gtk/none）和 `gpu`
+（virtio-gpu/std/cirrus/none）两个选项；两者缺省为 vnc 和 virtio-gpu。
+Firecracker 不使用这两个选项。详见 `../docs/collei/display.md`。
 
 `rg check_option collei/scripts/bash-archive/collei.sh` 可以查询旧 Bash 实现曾支持的配置键。
 `scripts/bash-archive/` 只作为历史参考，不兼容新的 INI 配置。
@@ -65,9 +69,8 @@ cmd.sh 是自动生成的，大多数情况下，都是用于调试的。
 ./collei/scripts/collei-action.py -a kill -n yyds         # 杀死 yyds
 ./collei/scripts/collei-action.py -a force_reboot -n yyds         # 快速重启虚拟机，
 ./collei/scripts/collei-action.py -a run -n test-vm       # 启动 test-vm
-./collei/scripts/collei-action.py -a monitor -n yyds-fs      # 连接 yyds 的 monitor
+./collei/scripts/collei-action.py -a qmp -n yyds-fs      # 连接 QMP
 ```
-
 
 ## 注意虚拟机的内核是如何构建
 - ../build/AGENTS.md 构建内核，而 collei 使用 -kernel -initrd 这种替换 kernel 的方法来构建
@@ -79,9 +82,7 @@ cmd.sh 是自动生成的，大多数情况下，都是用于调试的。
 
 ## 如何 SSH 到虚拟机中
 
-**场景**：AI 助手或自动化脚本需要获取 SSH 连接信息，而不是直接执行 SSH 命令。
-
-**解决方案**：使用 `ssh_auto` action，仅输出 SSH 命令而不执行：
+使用 `ssh_auto` action，仅输出 SSH 命令而不执行：
 
 例如
 ```bash
@@ -93,24 +94,6 @@ cmd.sh 是自动生成的，大多数情况下，都是用于调试的。
 # ssh -p 51404 martins3@localhost
 # 也就是登录 yyds-fs 虚拟机，可以使用命令 ssh -p 51404 martins3@localhost
 ```
-
-### virtme 虚拟机走 vsock SSH
-
-virtme 模式的虚拟机（`virtme = 1` 和 `vsock = 1`）默认不配置 guest 网络，
-基于 TCP 端口转发的 `ssh_auto` 连不上；正确方式是 vsock SSH，
-它不依赖 guest 网络配置：
-
-```bash
-./collei/scripts/collei-action.py -a ssh -n virtme            # 直接登录(自动走 vsock)
-./collei/scripts/collei-action.py -a ssh_vsock_auto -n virtme # 仅输出命令
-# 输出类似:
-# ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
-#     -o 'ProxyCommand=socat - VSOCK-CONNECT:1096:22' martins3@virtme
-```
-
-自动化场景直接在 ssh 后面接命令即可执行 guest 内命令（登录用户是 host 同名
-用户，wheel 组，可用 sudo)。不要为了在 guest 里跑脚本而去加 `exec`、
-`root_user` 之类的临时配置。
 
 ## 如何获取虚拟机日志
 首先获取到 ssh 到虚拟机的方法，然后使用 ssh ，例如

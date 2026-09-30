@@ -15,9 +15,7 @@ static const struct blk_mq_ops nbd_mq_ops = {
 ## 市场现状
 - https://github.com/NetworkBlockDevice/nbd
 - https://github.com/NetworkBlockDevice/nbd/blob/master/doc/proto.md
-
 - https://www.qemu.org/2021/08/22/fuse-blkexport/
-
 - https://manpages.ubuntu.com/manpages/bionic/man8/nbd-client.8.html
 - https://manpages.debian.org/testing/qemu-utils/qemu-nbd.8.en.html
 
@@ -134,7 +132,10 @@ lrwxrwxrwx - root  6 Mar 15:40  nbd15 -> ../../devices/virtual/block/nbd15
 ## 如何自动化?
 https://gist.github.com/derekp7/9978986 : 似乎这个已经很简单了
 
-## 原来 libndb 有了 ublk/ 的支持啊
+
+## libndb
+
+1. libnbd 有 ublk/ 的支持
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

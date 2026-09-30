@@ -1,37 +1,5 @@
 # CPR
 
-## CPR: CheckPoint and Restart
-
-核心代码位置：
-- migration/cpr.c:24：CPR 核心状态管理，保存/恢复需要跨 QEMU 保留的 FD；主要入口是 cpr_state_save()、cpr_state_load()。
-- migration/cpr-transfer.c:24：cpr-transfer 实现，通过 Unix socket 和 SCM_RIGHTS 传递 FD。
-- migration/cpr-exec.c
-
-  主流程入口：
-
-  - migration/migration.c:2105：qmp_migrate() 调用 cpr_state_save()，然后启动主迁移。
-  - migration/migration.c:1669：migrate_mode_is_cpr() 判断三种 CPR 模式。
-  - migration/migration.c:2031：CPR 与 postcopy、background snapshot、COLO 等功能的冲突检查。
-  - system/vl.c:3784：目标 QEMU 在创建设备前调用 cpr_state_load()，因为设备初始化可能需要恢复的 FD。
-  - migration/channel.c:336：解析并检查 CPR migration channel。
-
-VFIO CPR 支持主要在：
-- hw/vfio/cpr.c:18：VFIO PCI 状态、IRQ/MSI FD 的保存恢复。
-- hw/vfio/cpr-legacy.c:30：legacy VFIO container 和 DMA remap。
-- hw/vfio/cpr-iommufd.c:20：IOMMUFD 的 IOAS/HWPT 状态。
-- include/hw/vfio/vfio-cpr.h:20：VFIO CPR 接口和数据结构。
-
-  文档和测试：
-
-  QMP migrate
-    → qmp_migrate()
-    → cpr_state_save()
-    → cpr-transfer socket / cpr-exec memfd
-    → 普通 migration 保存 VM 与 RAM 状态
-    → 新 QEMU 启动
-    → cpr_state_load()（创建设备之前）
-    → 普通 incoming migration 恢复 VM
-
 
 ## qemu cpr 基本理解
 <!-- 12077840-e151-46d5-bafb-41c249f7fd30 -->
@@ -88,24 +56,43 @@ CPR 是 QEMU 中一组特殊迁移模式的总称，其核心特点是将虚拟�
 - Memory backend objects must have the share=on attribute. The VM must be started with the -machine aux-ram-share=on option.
 	- 那么也就是 share=on 还可以
 
-## 一共三个模式来保存
-1. cpr reboot
-3. migrate -d file:/tmp/vm.img
-3. savevm / loadvm
+## 具体实现
+其实核心实现基本上已经可以猜到了，就是跳过内存
 
-## 三个东西
-这里我们主要思考三个问题:
-1. snapshot vm (userfault fd ？)
-2. 虚拟机暂停恢复
-3. QEMU 热升级
-4. snapshot 可以用于哪里?
-	- migration
+QMP migrate
+  → qmp_migrate()
+  → cpr_state_save()
+  → cpr-transfer socket / cpr-exec memfd
+  → 普通 migration 保存 VM 与 RAM 状态
+  → 新 QEMU 启动
+  → cpr_state_load()（创建设备之前）
+  → 普通 incoming migration 恢复 VM
 
-- [ ] 思考一个问题，既然可以让 snapshot 和 migration 两个功能类似的功能放到一起，
-那么是不是 upgrade 的功能可以类似的放到一起的。
+核心代码位置：
+- migration/cpr.c:24：CPR 核心状态管理，保存/恢复需要跨 QEMU 保留的 FD；主要入口是 cpr_state_save()、cpr_state_load()。
+- migration/cpr-transfer.c:24：cpr-transfer 实现，通过 Unix socket 和 SCM_RIGHTS 传递 FD。
+- migration/cpr-exec.c
 
-似乎都是在  migration/savevm.c 中处理的?
+主流程入口：
+- migration/migration.c:2105：qmp_migrate() 调用 cpr_state_save()，然后启动主迁移。
+- migration/migration.c:1669：migrate_mode_is_cpr() 判断三种 CPR 模式。
+- migration/migration.c:2031：CPR 与 postcopy、background snapshot、COLO 等功能的冲突检查。
+- system/vl.c:3784：目标 QEMU 在创建设备前调用 cpr_state_load()，因为设备初始化可能需要恢复的 FD。
+- migration/channel.c:336：解析并检查 CPR migration channel。
 
+VFIO CPR 支持主要在：
+- hw/vfio/cpr.c:18：VFIO PCI 状态、IRQ/MSI FD 的保存恢复。
+- hw/vfio/cpr-legacy.c:30：legacy VFIO container 和 DMA remap。
+- hw/vfio/cpr-iommufd.c:20：IOMMUFD 的 IOAS/HWPT 状态。
+- include/hw/vfio/vfio-cpr.h:20：VFIO CPR 接口和数据结构。
+
+
+## 相关的 patch
+- https://lore.kernel.org/qemu-devel/917a64ea-c161-b612-4266-343368d6b3f9@oracle.com/
+- 看看 vhost 对于 cpr 的优化
+	- https://patchew.org/QEMU/20250813164856.950363-1-vsementsov@yandex-team.ru/
+
+## TODO
 1. 类似的场景需求
 https://github.com/cloudflare/shellflip
 
@@ -116,10 +103,6 @@ cpr_find_fd hp_mem0, id 0 returns -1
 cpr_save_fd hp_mem0, id 0, fd 327
 ```
 3. backends/hostmem-memfd.c 中的 cpr_save_fd(name, 0, fd); 是做什么的?
-
-## 当时的 patch
-https://lore.kernel.org/qemu-devel/917a64ea-c161-b612-4266-343368d6b3f9@oracle.com/
-
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

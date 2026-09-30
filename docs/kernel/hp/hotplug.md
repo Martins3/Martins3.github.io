@@ -151,6 +151,10 @@ blockdev-del hp_drive0
 源码依据：hmp-commands.hx:207、block/monitor/block-hmp-cmds.c:139、qapi/qdev.json:87。
 
 
+## TODO
+在物理机上 hotplug usb 大致的流程
+	- backtrace 是什么样子的
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

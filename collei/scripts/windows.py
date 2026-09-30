@@ -8,11 +8,14 @@ from typing import Protocol
 
 from commands import CommandRunner
 from errors import ColleiError, UnsupportedNativeConfiguration
+from network import PortForward, user_mode_netdev
 from qemu import QemuCommand
 from runtime import ColleiContext, VmRuntime
+from serial import SerialLayout
 from tasks import add_background_task
 
 
+# FIXME 这个语法我没有搞懂做什么的
 class WindowsQemuBuilder(Protocol):
     @property
     def efi_application(self) -> bool: ...
@@ -68,7 +71,19 @@ class WindowsQemuBuilder(Protocol):
 
     def setup_uuid(self, argv: list[str]) -> None: ...
 
+    def setup_input(self, argv: list[str]) -> None: ...
+
+    def setup_display(self, argv: list[str]) -> None: ...
+
+    def setup_usb(self, argv: list[str]) -> None: ...
+
     def setup_trace(self, argv: list[str]) -> None: ...
+
+    @property
+    def foreground(self) -> bool: ...
+
+    @property
+    def serial_layout(self) -> SerialLayout: ...
 
 
 @dataclass(frozen=True)
@@ -104,24 +119,27 @@ class WindowsProfile:
         self.common.setup_edu(argv)
         self.common.setup_pidfile(argv)
         self._setup_cpu_model(argv)
-        self._setup_display_and_chardev(argv)
+        self.common.setup_display(argv)
+        self._setup_chardev(argv)
+        self._setup_serial_frontend(argv)
         self.common.setup_audio(argv)
         self.common.setup_pcie_port(argv)
         self.common.setup_rng(argv)
         self.common.setup_misc(argv)
         self.common.setup_pstore(argv)
         self.common.setup_uuid(argv)
-        self._setup_input_and_usb(argv)
+        self.common.setup_input(argv)
+        self._setup_tpm(argv)
         self.common.setup_trace(argv)
         return QemuCommand(tuple(argv))
 
-    # FIXME 明显这个可以简化一下，其实这里只是用了添加几个新的 hostfwd 吧
+    # FIXME 这里很多东西都是重复的
     def _setup_network(self, argv: list[str]) -> None:
         guest_id = self.vm.config.guest_id
         tap = f"vif_{self.vm.which_qemu}_{guest_id}_0"
-        level = self.context.global_config.directory.integer("level", 0)
+        level = self.context.global_config.options.integer("level", 0)
         mac = f"52:54:00:{level:02x}:{guest_id:02x}:00"
-        if self.context.global_config.directory.get("bridge") != "no":
+        if self.context.global_config.options.get("bridge") != "no":
             argv.extend(
                 [
                     "-device",
@@ -133,14 +151,19 @@ class WindowsProfile:
         argv.extend(["-device", "virtio-net,netdev=net1"])
         ssh_port = self.vm.tcp_port("ssh")
         rdp_port = self.vm.tcp_port("rdp")
-        user_net = (
-            "user,id=net1,"
-            f"hostfwd=tcp:127.0.0.1:{ssh_port}-:22,"
-            f"hostfwd=tcp:127.0.0.1:{rdp_port}-:3389,"
-            f"hostfwd=udp:127.0.0.1:{rdp_port}-:3389,"
-            f"hostname={self.vm.config.name}"
+        argv.extend(
+            [
+                "-netdev",
+                user_mode_netdev(
+                    self.vm,
+                    [
+                        PortForward("tcp", ssh_port, 22),
+                        PortForward("tcp", rdp_port, 3389),
+                        PortForward("udp", rdp_port, 3389),
+                    ],
+                ),
+            ]
         )
-        argv.extend(["-netdev", user_net])
 
     def _setup_machine(self, argv: list[str]) -> None:
         if self.vm.config.options.get("win") == "11":
@@ -224,58 +247,13 @@ class WindowsProfile:
             ]
         )
 
-    def _setup_display_and_chardev(self, argv: list[str]) -> None:
-        argv.extend(["-vga", "std"])
-        main_chardev = (
-            f"socket,path={self.common.monitor_dir / 'main.sock'},id=main_char,server=on,wait=off,mux=on"
-            if self.vm.config.options.enabled("hide")
-            else "stdio,id=main_char,server=on,wait=off,id=main_char,mux=on"
-        )
-        argv.extend(
-            [
-                "-vnc",
-                f"127.0.0.1:{self.vm.tcp_port('vnc') - 5900},password=off",
-                "-device",
-                "virtio-serial",
-                "-chardev",
-                main_chardev,
-                "-serial",
-                "chardev:main_char",
-                "-device",
-                "virtconsole,chardev=main_char",
-                "-object",
-                "monitor-hmp,id=mon_main,chardev=main_char,readline=on",
-                "-chardev",
-                "pty,mux=on,id=char_pty",
-                "-device",
-                "virtconsole,chardev=char_pty",
-                "-serial",
-                "chardev:char_pty",
-                "-chardev",
-                f"socket,path={self.common.monitor_dir / 'qga.sock'},server=on,wait=off,id=qga0",
-                "-device",
-                "virtserialport,chardev=qga0,name=org.qemu.guest_agent.0",
-                "-chardev",
-                f"socket,path={self.common.monitor_dir / 'vport.sock'},server=on,wait=off,id=vport",
-                "-device",
-                "virtserialport,chardev=vport,name=org.qemu.vport.0",
-            ]
-        )
+    def _setup_chardev(self, argv: list[str]) -> None:
+        argv.extend(self.common.serial_layout.chardev_argv())
 
-    def _setup_input_and_usb(self, argv: list[str]) -> None:
-        argv.extend(
-            [
-                "-device",
-                "virtio-keyboard",
-                "-usb",
-                "-device",
-                "qemu-xhci,p2=8,p3=8,id=usb",
-                "-device",
-                "usb-kbd,id=input0,bus=usb.0,port=2",
-                "-device",
-                "usb-tablet,id=input1,bus=usb.0,port=3",
-            ]
-        )
+    def _setup_serial_frontend(self, argv: list[str]) -> None:
+        argv.extend(self.common.serial_layout.frontend_argv())
+
+    def _setup_tpm(self, argv: list[str]) -> None:
         if self.vm.config.options.get("win") != "11":
             return
         argv.extend(
@@ -310,7 +288,7 @@ class WindowsProfile:
 
         tpm = self.vm.directory / "tpm"
         tpm.mkdir(exist_ok=True)
-        socket = self.vm.directory / self.vm.which_qemu / "swtpm-sock"
+        socket = self.vm.qemu_directory / "swtpm-sock"
         socket.unlink(missing_ok=True)
         add_background_task(
             self.context,

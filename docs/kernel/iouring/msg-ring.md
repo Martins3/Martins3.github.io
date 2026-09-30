@@ -20,11 +20,9 @@ commit e6130eba8a84 ("io_uring: add support for passing fixed file descriptors")
 
 > Two common use cases for this are:
 >
-> 1) Server needs to be shutdown or restarted, pass file descriptors to
->    another one
+> 1) Server needs to be shutdown or restarted, pass file descriptors to another one
 >
-> 2) Backend is split, and one accepts connections, while others then get
->   the fd passed and handle the actual connection.
+> 2) Backend is split, and one accepts connections, while others then get the fd passed and handle the actual connection.
 
 
 哦，提供了

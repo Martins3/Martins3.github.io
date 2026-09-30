@@ -13,7 +13,7 @@ sudo systemctl start NetworkManager
 sudo nmcli connection add type ethernet ifname ens1f0np0 ipv4.method manual ipv4.addresses 172.22.129.26/17
 
 sudo nmcli connection add type ethernet con-name vhost ifname "*" mac {mac0} ip4 10.0.{guest}.{level}/16
-sudo nmcli connection add type ethernet con-name user ifname "*" mac 52:54:00:12:34:56 ip4 10.0.2.2/16
+sudo nmcli connection add type ethernet con-name user ifname "*" mac 52:54:00:12:34:56 ipv4.method auto
 sudo nmcli c up vhost
 sudo nmcli c up user
 

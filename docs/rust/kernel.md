@@ -88,6 +88,8 @@ mali GPU 驱动
 ## lwn
 https://mp.weixin.qq.com/s/DH_bSrQ-Upfpckl9w1Muwg
 
+https://lwn.net/Articles/1025232/
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

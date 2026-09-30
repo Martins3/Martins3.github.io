@@ -651,6 +651,13 @@ git worktree remove -f ../vn-worktrees/anki-rcu
 ## 观察当前分支相当于 master 添加的内容
 git log --oneline master..HEAD
 
+
+## 不小心 git reset --soft HEAD~35 之后如何办?
+```txt
+git reflog                     # 找到误操作前的 HEAD，记为 <sha>
+git reset --soft <sha>         # --soft 误操作 → 用 --soft 回退
+```
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

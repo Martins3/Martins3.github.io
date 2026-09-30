@@ -1,7 +1,5 @@
 # memory hotplug
 
-## 先用起来
-
 ## [ ] 问题
 - [ ] 为什么说是要处理 DIMMs 啊?
 

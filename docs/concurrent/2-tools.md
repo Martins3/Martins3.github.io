@@ -1,8 +1,10 @@
-## 并发锁分析工具 lslocks
+# 工具
+
+## lslocks
 
 util-locks 提供的
 
-## bcc 也有工具
+## bcc 也有工具锁工具
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

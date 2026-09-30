@@ -536,17 +536,33 @@ initrd=\efi\nixos\zkf5v40bsl6lzvgbi9a4mnf5wm55aqh6-initrd-linux-6.3.5-initrd.efi
  transparent_hugepage=always intel_iommu=on iommu=pt fsck.mode=force fsck.repair=yes loglevel=4
 ```
 
+## 关于 swiotlb 参数
+
+noforce 这里的语义其实非常奇怪
+
+```txt
+	swiotlb=	[ARM,PPC,MIPS,X86,S390,EARLY]
+			Format: { <int> [,<int>] | force | noforce }
+			<int> -- Number of I/O TLB slabs
+			<int> -- Second integer after comma. Number of swiotlb
+				 areas with their own lock. Will be rounded up
+				 to a power of 2.
+			force -- force using of bounce buffers even if they
+			         wouldn't be automatically used by the kernel
+			noforce -- Never use bounce buffers (for debugging)
+```
+
+1. force = 1 的情况，即便是 iommu.passthrough=1 ， 所有的 DMA 都是走 swiotlb
+    - 但是如果 swiotlb=force iommu.passthrough=0 还是会走 iommu 的
+2. noforce 并不是“不要强制使用，但需要时仍可自动使用”，而是“永远不要使用”。当前内核文档也明确标为：
+
+
 ## 优化
 
 从 6.6 左右开始，上游引入了 `CONFIG_SWIOTLB_DYNAMIC`，目标是解决“64MB 固定池在嵌入式系统太大、在全量 bounce 场景又太小”的问题。
 
 https://lwn.net/Articles/940973/
 
-## 其他
-关于 swiotlb 参数:
-
-- swiotlb=force iommu.passthrough=1 如果打开，所有的 DMA 都是走
-	如果 swiotlb=force iommu.passthrough=0 还是会走 iommu 的
 
 ## 参考文档
 - http://xillybus.com/tutorials/iommu-swiotlb-linux

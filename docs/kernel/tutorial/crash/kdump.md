@@ -1,4 +1,5 @@
-## kdump
+# kdump
+
 使用 kdump 机制
 - centos 8 : https://unixcop.com/install-and-configure-kernel-crash-dump-on-centos-8/
 - debian : https://www.cyberciti.biz/faq/how-to-on-enable-kernel-crash-dump-on-debian-linux/
@@ -10,7 +11,9 @@ sudo dnf install kdumpctl
 sudo systemctl enable kdump.service
 ```
 
-## 调试无法生成的 vmcore 的一般方法
+但是实际情况，vmcore 无法生成，生成了 crash 无法解析的情况很多。
+
+## vmcore 无法生成
 <!-- ca51101e-7c37-4e03-8434-8b5dbcb0bd21 -->
 
 一共就这两个配置文件:
@@ -23,9 +26,9 @@ cat /sys/kernel/kexec_crash_loaded 来检查
 
 还有就需要看看 kdump kernel 启动之后的内核日志。
 
-## 调试为什么 kunpeng 机器没有 kdump
+### 案例分析 : 调试为什么 kunpeng 机器没 kdump
 
-### nvme 的额外参数
+1. nvme 的额外参数导致无法生成
 ```txt
 [    8.555004][    T1] systemd[1]: Finished Create List of Static Device Nodes.
 [    8.570730][  T149] device-mapper: ioctl: 4.50.0-ioctl (2025-04-28) initialised: dm-devel@lists.linux.dev
@@ -56,7 +59,15 @@ cat /sys/kernel/kexec_crash_loaded 来检查
 
 但是这只是干扰因素，真实的原因是 nvme 配置的参数 : nvme.poll_queues=4
 
-### 完全不能正常生成
+也许可以用 kexec 来调试没有生成的情况
+```txt
+kexec -p [/boot/vmlinuz-linux-kdump] --initrd=[/boot/initramfs-linux-kdump.img]
+    --append="root=[root-device] single irqpoll maxcpus=1 reset_devices"
+```
+也就是配置上完全相同的参数，然后用 kexec 内核启动，如果无法启动，那么说明就是 crash linux 的参数配置有问题。
+
+
+2. 不能正常生成，原因未知
 ```txt
 [  556.195087][ T3839] Call Trace:
 [  556.198622][ T3839]  <TASK>
@@ -86,19 +97,6 @@ cat /sys/kernel/kexec_crash_loaded 来检查
 [  556.369810][ T3839] pstore: backend (erst) writing error (-28)
 ```
 
-## 为什么生成 vmcore-dmesg-incomplete.txt
-
-这里看到 vmcore-dmesg-incomplete.txt 的容量是空的
-
-但是并不影响，可以继续使用 vmcore ，在其中可以获取到 dmesg 信息:
-```txt
-'127.0.0.1-2025-12-01-16:03:20':
-total 1898944
-drwxr-xr-x   2 root root       4096 Dec  1 16:03 .
-drwxr-xr-x. 14 root root       4096 Dec  1 16:03 ..
--rw-------   1 root root 1944502512 Dec  1 16:03 vmcore
--rw-r--r--   1 root root          0 Dec  1 16:03 vmcore-dmesg-incomplete.txt
-```
 
 ## crash 无法使用
 
@@ -143,17 +141,47 @@ crash: cannot determine thread return address
 crash: invalid kernel virtual address: 0  type: "memory section root table"
 ```
 
-也就是，如果发现 memory offset 之类的错误，那么就没办法分析了。
+也就是，如果发现 memory offset 之类的错误，需要先确认 `vmlinux` 是否匹配、
+crash 是否支持当前内核的数据结构。若 crash 上游也没有适配，才可能暂时无法分析。
 
-哦，原来这个问题是我回答的 : https://unix.stackexchange.com/questions/671800/unable-to-get-kernel-crash-dump-on-kernel-panic
+### Linux 7.2 上的 `kmem_cache_s_num` 错误
 
-## 也许可以用 kexec 来调试没有生成的情况
-kexec -p [/boot/vmlinuz-linux-kdump] --initrd=[/boot/initramfs-linux-kdump.img] --append="root=[root-device] single irqpoll maxcpus=1 reset_devices"
-sudo kexec -p /run/current-system/kernel \
-        --initrd=/run/current-system/initrd \
-        --append="init=$(readlink -f /run/current-system/init) irqpoll maxcpus=1 reset_devices"
+crash 9.0.1 可能报错：
 
-也就是配置上完全相同的参数，然后用 kexec 内核启动。
+```txt
+warning: Section .debug_names in vmlinux length 135272 does not match
+section length 281584, ignoring .debug_names.
+
+crash: invalid structure member offset: kmem_cache_s_num
+       FILE: memory.c  LINE: 9988  FUNCTION: kmem_cache_init()
+```
+
+crash 9.0.1 在 `memory.c` 的 `vm_init()` 中通过 `kmem_cache.cpu_slab` 判断
+SLUB。Linux 7.2 删除该成员并改用 `cpu_sheaves` 后，crash 会将新 SLUB
+错误识别成旧 SLAB。之后 `kmem_cache_init()` 尝试取得并不存在的
+`kmem_cache.num`，其内部偏移名称就是 `kmem_cache_s_num`，最终导致启动失败。
+
+crash 上游提交
+[`fe017d7cb95a`：识别 `kmem_cache.cpu_sheaves`](https://github.com/crash-utility/crash/commit/fe017d7cb95ac4703ce59e4c72fd73a5fad3bcea)
+修复了这个问题。该提交说明中给出的报错与本案例完全相同。Linux 当前的数据结构
+可查看 [`mm/slab.h` 中的 `struct kmem_cache`](https://github.com/torvalds/linux/blob/master/mm/slab.h)。
+
+
+https://unix.stackexchange.com/questions/671800/unable-to-get-kernel-crash-dump-on-kernel-panic
+
+## 为什么生成 vmcore-dmesg-incomplete.txt
+
+vmcore-dmesg-incomplete.txt 的容量是空的
+
+但是并不影响，可以继续使用 vmcore ，在其中可以获取到 dmesg 信息:
+```txt
+'127.0.0.1-2025-12-01-16:03:20':
+total 1898944
+drwxr-xr-x   2 root root       4096 Dec  1 16:03 .
+drwxr-xr-x. 14 root root       4096 Dec  1 16:03 ..
+-rw-------   1 root root 1944502512 Dec  1 16:03 vmcore
+-rw-r--r--   1 root root          0 Dec  1 16:03 vmcore-dmesg-incomplete.txt
+```
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

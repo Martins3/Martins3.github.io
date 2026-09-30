@@ -173,12 +173,6 @@ share dir 用的是 9p 吗？
   - https://utcc.utoronto.ca/~cks/space/blog/linux/LinuxIpFwmarkMasks
   - https://unix.stackexchange.com/questions/436799/how-the-fwmark-works-together-with-mask-in-ip-rule-command
 
-- dccp
-  - https://www.reddit.com/r/programming/comments/5i3anm/dccp_the_socket_type_you_probably_never_heard_of/
-  - https://www.anmolsarma.in/post/dccp/
-  - https://wiki.wireshark.org/DCCP
-  - dccp 似乎是一个是 TCP UDP 的例子
-
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

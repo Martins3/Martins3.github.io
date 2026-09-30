@@ -1,12 +1,57 @@
 # sysrq
-## 首先执行 ctrl alt F1 进入到 vt 中
-qemu 可以进入到这种 vt 吗?
 
-## 为什么 qemu 不在支持 sysrq 了
-检查这个函数 ui/input.c:qemu_input_event_send
-
-## sysrq 问题，默认是不打开的
+默认是不打开的，防止误触:
 echo 1 | sudo tee /proc/sys/kernel/sysrq
+
+## 如何触发 sysrq
+
+ 路径                   如何触发                                               条件和特点
+━━━━━━━━━━━━━━━━━━━━━  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ /proc/sysrq-trigger    以 root 权限向文件写入命令字符，如 t                   适合本地程序、SSH、脚本；需要用户态还能运行；不受
+                                                                               kernel.sysrq 开关限制
+─────────────────────  ─────────────────────────────────────────────────────  ─────────────────────────────────────────────────────
+ 键盘                   x86 上按 Alt + SysRq/PrintScreen + 命令键              经过内核 input 子系统；受 kernel.sysrq 控制
+─────────────────────  ─────────────────────────────────────────────────────  ─────────────────────────────────────────────────────
+ 串口控制台             发送 BREAK，再在 5 秒内发送命令字符                    当前源码需要 CONFIG_MAGIC_SYSRQ_SERIAL，串口驱动支
+                                                                               持，且该端口是内核 console
+─────────────────────  ─────────────────────────────────────────────────────  ─────────────────────────────────────────────────────
+ HVC 虚拟控制台         对采用通用 HVC 接收路径的控制台，按 Ctrl+O，再输入     仅作用于选中的 HVC console；具体取决于控制台实现
+                        命令字符
+─────────────────────  ─────────────────────────────────────────────────────  ─────────────────────────────────────────────────────
+ Xen 管理通道           向目标 guest 的 Xenstore control/sysrq 写命令字符      guest 中的 Xen 驱动监听后调用 handle_sysrq()
+─────────────────────  ─────────────────────────────────────────────────────  ─────────────────────────────────────────────────────
+ UML 管理控制台         mconsole 的 sysrq <字符> 命令                          仅适用于 User Mode Linux
+─────────────────────  ─────────────────────────────────────────────────────  ─────────────────────────────────────────────────────
+ KDB 调试器             在 KDB 中执行 sr t 等命令                              已进入 KDB 时可用
+
+
+  前三种标准入口见 Linux 官方 SysRq 文档 (https://docs.kernel.org/admin-guide/sysrq.html)。
+
+  两个容易混淆的地方：
+
+  - /proc/sys/kernel/sysrq 是开关和功能掩码，/proc/sysrq-trigger 才是触发入口。前者为 0 时，管理员仍能通过后者触发。虽然文档把开关描
+    述为影响键盘，但源码里的串口、HVC、Xen 等经 handle_sysrq() 的路径也会检查它。
+
+  - SysRq 不保证在所有死锁下都有效。proc 路径依赖进程得到调度；键盘、串口路径依赖对应输入处理仍能执行，因此用户态卡住时可能有效，但相
+    关 CPU 关中断死循环时未必有效。
+
+  常用排障命令字符：w 查看不可中断睡眠任务，t 查看所有任务，l 查看所有活跃 CPU 的栈，m 查看内存信息。c 会主动触发崩溃，b 会立即重启。
+
+  源码入口可看：
+
+  - SysRq 分发与开关检查 (drivers/tty/sysrq.c:583)
+  - proc 写入入口 (drivers/tty/sysrq.c:1206)
+  - 串口 BREAK 处理 (include/linux/serial_core.h:1312)
+  - HVC 的 Ctrl+O 处理 (drivers/tty/hvc/hvc_console.c:704)
+
+### Alt + SysRq/PrintScreen + 命令键 ，我理解只有 vt 才有这个机制吧
+
+和键盘完全去掉耦合的，其实关系不大
+
+## 首先执行 ctrl alt F1 进入到 vt 中
+qemu 可以进入到这种 vt 吗? 是可以的
+
+但是，到底什么是
 
 ## 测试 sysrq 也是有相同的问题
 dmesg 中可以看到的:
@@ -52,9 +97,8 @@ dmesg 中可以看到的:
 但是在 console 中仅仅可以看到
 sysrq: Show Regs
 
-
 ## 在 vt 中真的可以执行
-fgconsole
+fgconsole ，继续调查下
 
 ## 当使用 vt 的时候，触发的 backtrace 为这个效果的
 ```txt
@@ -185,6 +229,146 @@ curl --unix-socket $API_SOCKET -i \
 		"action_type": "SendCtrlAltDel"
 		}' || pkill firecracker
 ```
+
+## 当前的 sysrq 的结果
+
+```txt
+bash-5.3# stackcount __handle_sysrq
+Tracing 1 functions for "__handle_sysrq"... Hit Ctrl-C to end.
+^C
+  # qmp 发送的 keyboard
+  __handle_sysrq
+  sysrq_filter
+  input_handle_events_filter
+  input_pass_values
+  input_handle_event
+  input_event
+  virtinput_recv_events
+  vring_interrupt
+  vp_vring_interrupt
+  __handle_irq_event_percpu
+  handle_irq_event
+  handle_edge_irq
+  __common_interrupt
+  common_interrupt
+  asm_common_interrupt
+  pv_native_safe_halt
+  default_idle
+  default_idle_call
+  do_idle
+  cpu_startup_entry
+  __pfx_kernel_init
+  start_kernel
+  x86_64_start_reservations
+  x86_64_start_kernel
+  common_startup_64
+    1
+
+	# serial
+  __handle_sysrq
+  serial8250_handle_irq.part.0
+  serial8250_default_handle_irq
+  serial8250_interrupt
+  __handle_irq_event_percpu
+  handle_irq_event
+  handle_edge_irq
+  __common_interrupt
+  common_interrupt
+  asm_common_interrupt
+  pv_native_safe_halt
+  default_idle
+  default_idle_call
+  do_idle
+  cpu_startup_entry
+  __pfx_kernel_init
+  start_kernel
+  x86_64_start_reservations
+  x86_64_start_kernel
+  common_startup_64
+    1
+```
+
+在物理机中测试的结果，的确非常有趣，不过注意，不是所有的键盘都有这个 prtsc 键:
+```
+@[
+        __handle_sysrq+5
+        sysrq_handle_keypress+519
+        input_handle_events_filter+96
+        input_pass_values+338
+        input_event_dispose+391
+        input_handle_event+65
+        input_event+89
+        hidinput_report_event+55
+        hid_report_raw_event+227
+        __hid_input_report+376
+        hid_safe_input_report+20
+        hid_irq_in+426
+        __usb_hcd_giveback_urb+160
+        usb_giveback_urb_bh+179
+        process_one_work+414
+        bh_worker+459
+        tasklet_hi_action+19
+        handle_softirqs+238
+        __irq_exit_rcu+176
+        common_interrupt+133
+        asm_common_interrupt+38
+        cpuidle_enter_state+205
+        cpuidle_enter+49
+        cpuidle_idle_call+271
+        do_idle+156
+        cpu_startup_entry+41
+        start_secondary+294
+        common_startup_64+318
+]: 4
+```
+
+### 原来 console 的作用体会出现了
+
+• 原因找到了：virtme-03 的 hvc0 没有被配置为内核 console，所以 Ctrl+O,w 被
+  当作普通输入。
+
+  我实际检查到：
+
+  - kernel.sysrq=1，开关已打开。
+  - /proc/cmdline 只有 console=ttyS0,115200n8。
+  - /proc/consoles 只有 ttyS0，没有 hvc0。
+
+  随后在 guest 中读取 /dev/hvc0，再执行 sysrq_hvc，读到了：
+
+  NEW_BYTES=0f77
+
+  这正是 Ctrl+O,w，但内核日志没有新增 SysRq 输出。说明字符确实送到了，内核
+  没有把它识别成 SysRq。
+
+  内核 /home/martins3/data/kernel/linux-drm/drivers/tty/hvc/hvc_console.c
+  的 __hvc_poll() 只有满足下面条件才解析组合键：
+
+  if (hp->index == hvc_console.index)
+
+  之前实验 VM 特意加了 console=hvc0，virtme-03 没有。要启用，在它的 /home/
+  martins3/data/hack/vm/virtme-03/config.ini 的 [vm] 中添加：
+
+  cmdline = console=hvc0
+
+  然后停止并重新启动 QEMU，使新启动参数生效；仅 guest 内重启不会更新 QEMU
+  的 -append。
+
+  我写的 action 目前只确认字符已发送，没有校验 guest 的 console 配置，因此
+  这里的 Sent 容易让人误以为已经触发。
+
+
+
+
+
+## 看看键盘中，是如何路由的，为什么有时候是 vt 接手，有时候就可以到 wayland 上了?
+实际上没有路由，在任何环境中都是可以继续用的。
+
+
+
+## 参考
+- https://docs.kernel.org/admin-guide/sysrq.html
+- https://docs.kernel.org/admin-guide/sysrq.html
+- https://superuser.com/questions/786545/how-to-send-a-break-on-a-serial-port-from-command-line-in-raspbian-linux
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

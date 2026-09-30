@@ -18,7 +18,7 @@ lrwxrwxrwx     - martins3 28 Feb 17:22  󰡯 /home/martins3/.cargo/bin/rust-anal
 ```
 
 ## nvim 插件
-先搞这个 "mrcjkb/rustaceanvim",
+"mrcjkb/rustaceanvim",
 
 ## 用 rust 写的工具
 - https://github.com/feschber/lan-mouse : 局域网共享键鼠
@@ -27,6 +27,10 @@ lrwxrwxrwx     - martins3 28 Feb 17:22  󰡯 /home/martins3/.cargo/bin/rust-anal
 - https://github.com/sharkdp/hexyl : 显示文件的二进制，其实，我只是奇怪，为什么这么简单的程序会有 5k star
 - https://github.com/uutils/coreutils
 
+## 安装 rust
+sudo dnf install rustup
+
+但是 rustup 其实天然和 nix 是冲突的
 
 ## 其实 nix 环境中，升级 rust 也是很简单的
 

@@ -1,3 +1,4 @@
+# mmio
 似乎关注下 KVM_FAST_MMIO_BUS
 ```c
 enum kvm_bus {
@@ -47,30 +48,30 @@ to I/O ports.
 
 检查下 qemu 的使用:
 
-- main 
-  - qemu_init 
-    - qmp_x_exit_preconfig 
-      - qemu_init_board 
-        - machine_run_board_init 
-          - pc_init1 
-            - pc_vga_init 
-              - pci_create_simple 
-                - pci_realize_and_unref 
-                  - qdev_realize_and_unref 
-                    - qdev_realize 
-                      - object_property_set_bool 
-                        - object_property_set_qobject 
-                          - object_property_set 
-                            - property_set_bool 
-                              - device_set_realized 
-                                - pci_qdev_realize 
-                                  - pci_std_vga_realize 
-                                    - vga_init 
-                                      - memory_region_set_coalescing 
-                                        - memory_region_add_coalescing 
-                                          - memory_region_update_coalesced_range 
-                                            - flat_range_coalesced_io_notify 
-                                              - kvm_coalesce_mmio_region 
+- main
+  - qemu_init
+    - qmp_x_exit_preconfig
+      - qemu_init_board
+        - machine_run_board_init
+          - pc_init1
+            - pc_vga_init
+              - pci_create_simple
+                - pci_realize_and_unref
+                  - qdev_realize_and_unref
+                    - qdev_realize
+                      - object_property_set_bool
+                        - object_property_set_qobject
+                          - object_property_set
+                            - property_set_bool
+                              - device_set_realized
+                                - pci_qdev_realize
+                                  - pci_std_vga_realize
+                                    - vga_init
+                                      - memory_region_set_coalescing
+                                        - memory_region_add_coalescing
+                                          - memory_region_update_coalesced_range
+                                            - flat_range_coalesced_io_notify
+                                              - kvm_coalesce_mmio_region
 
 看了他的使用场景，就更加清晰了，原来是给 vga 用的。
 

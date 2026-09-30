@@ -4,6 +4,10 @@
 
 https://gcc.gnu.org/onlinedocs/gcc/Using-Assembly-Language-with-C.html
 
+2026-09-14 这个的教程写的有点多，但是我关心的几个核心的点其实就是那么多:
+1. 为什么 `__volatile__` 做什么的
+2. clobber ，将寄存器写入到内存中，为什么感觉这个和 volatile 有关系
+
 
 ## 分析一下
 [loongson-community/musl](https://github.com/loongson-community/musl/blob/b8191f5561f351da90e120cab4a739872808b8de/arch/loongarch64/syscall_arch.h#L17)

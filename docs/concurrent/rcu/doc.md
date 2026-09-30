@@ -70,7 +70,9 @@ RCU 是在 Linux 内核这个复杂的环境中生存的，必须处理：
 ## Documentation/RCU/rcubarrier.rst
 <!-- 5a3bf88a-a86a-4c15-b3d4-2c948d5957b3 -->
 
-Documentation/RCU/rcubarrier.rst 文档专门介绍了 rcu_barrier() 原语，主要解决的是不可卸载模块（Unloadable Modules）在使用异步
+Documentation/RCU/rcubarrier.rst 文档专门介绍了 rcu_barrier() 原语，
+主要解决的是不可卸载模块（Unloadable Modules）在使用异步
+
   RCU 回调时遇到的问题。
 
   以下是该文档的核心分析：

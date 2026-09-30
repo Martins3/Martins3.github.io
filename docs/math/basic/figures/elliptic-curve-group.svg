@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="430" viewBox="0 0 900 430">
+  <defs>
+    <marker id="arrow" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto">
+      <path d="M0,0 L9,4.5 L0,9 z" fill="#245b91"/>
+    </marker>
+  </defs>
+  <rect width="900" height="430" fill="#f7f9fc"/>
+  <text x="40" y="48" font-family="sans-serif" font-size="27" font-weight="700" fill="#15283d">Elliptic curve group law</text>
+  <text x="40" y="78" font-family="sans-serif" font-size="17" fill="#526477">Line through P and Q meets the curve again at R; reflect R to obtain P + Q.</text>
+  <g transform="translate(95,95)">
+    <path d="M0 210 L385 210 M190 15 L190 350" stroke="#6d8195" stroke-width="2" marker-end="url(#arrow)"/>
+    <path d="M28 115 C75 45 112 60 146 147 C176 225 208 278 247 245 C283 214 298 142 332 112 C365 83 389 114 410 145" fill="none" stroke="#245b91" stroke-width="6"/>
+    <path d="M42 97 L340 282" fill="none" stroke="#bc343f" stroke-width="4"/>
+    <path d="M340 282 L340 138" fill="none" stroke="#e2a22a" stroke-width="4" stroke-dasharray="9 7"/>
+    <circle cx="80" cy="120" r="8" fill="#245b91"/>
+    <circle cx="300" cy="258" r="8" fill="#245b91"/>
+    <circle cx="340" cy="282" r="8" fill="#bc343f"/>
+    <circle cx="340" cy="138" r="8" fill="#e2a22a"/>
+    <text x="64" y="104" font-family="sans-serif" font-size="22" fill="#15283d" font-weight="700">P</text>
+    <text x="308" y="286" font-family="sans-serif" font-size="22" fill="#15283d" font-weight="700">Q</text>
+    <text x="350" y="301" font-family="sans-serif" font-size="22" fill="#bc343f" font-weight="700">R</text>
+    <text x="350" y="132" font-family="sans-serif" font-size="22" fill="#a36c08" font-weight="700">P+Q</text>
+    <text x="164" y="374" font-family="sans-serif" font-size="16" fill="#526477">reflection in x-axis</text>
+  </g>
+  <g transform="translate(535,125)" font-family="sans-serif">
+    <rect x="0" y="0" width="320" height="250" rx="12" fill="#ffffff" stroke="#c6d2df" stroke-width="2"/>
+    <text x="24" y="41" font-size="22" font-weight="700" fill="#15283d">Group structure</text>
+    <text x="24" y="87" font-size="24" fill="#15283d">P + Q = -(third point)</text>
+    <text x="24" y="130" font-size="24" fill="#15283d">O = identity</text>
+    <path d="M24 153 L296 153" stroke="#d6e0ea" stroke-width="2"/>
+    <text x="24" y="193" font-size="19" fill="#245b91">over a finite field:</text>
+    <text x="24" y="222" font-size="19" fill="#245b91">E(F_p) is a finite Abelian group.</text>
+  </g>
+</svg>

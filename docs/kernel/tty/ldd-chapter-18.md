@@ -1,53 +1,4 @@
 # Linux Device Driver : TTY Drivers
-A tty device gets its name from the very old abbreviation of teletypewriter and was
-originally associated only with the physical or virtual terminal connection to a Unix
-machine.
-> 历史
-
-Over time, the name also came to mean any serial port style device, as terminal connections could also be created over such a connection.
-> 实际上的演化
-
-The Linux tty driver core lives right below the standard character driver level and
-provides a range of features focused on providing an interface for *terminal style*
-devices to use.
-
-The **core** is responsible for controlling both the flow of data across a
-tty device and the format of the data.
-
-As Figure 18-1 shows, the tty core takes data from a user that is to be sent to a tty
-device. It then passes it to a tty line discipline driver, which then passes it to the tty
-driver.
-The tty driver converts the data into a format that can be sent to the hardware.
-> 这个描述和 blog 中间的有点不同啊. 多出来了一个tty core 的内容
-
-
-The tty driver never sees the tty line discipline. The driver cannot communicate
-directly with the line discipline, nor does it realize it is even present. The driver’s job
-is to format data that is sent to it in a manner that the hardware can understand, and
-receive data from the hardware.
-> tty driver 和 hardware 打交道
-
-There are three different types of tty drivers: console, serial port, and pty.
-> 三种tty 驱动!
-
-The console and pty drivers have already been written and probably are the only ones needed
-of these types of tty drivers. This leaves any new drivers using the tty core to interact
-with the user and the system as serial port drivers.
-
-To determine what kind of tty drivers are currently loaded in the kernel and what tty
-devices are currently present, look at the /proc/tty/drivers file. This file consists of a
-list of the different tty drivers currently present, showing the name of the driver, the
-default node name, the major number for the driver, the range of minors used by the
-driver, and the type of the tty driver.
-
-```
-```
-The default serial driver creates a file in this directory that shows a lot of serial-port-specific information about the hardware.
-*Information on how to create a file in this directory is described later.*
-> /proc/tty/driver 下面还有很多内容
-
-All of the tty devices currently registered and present in the kernel have their own
-subdirectory under /sys/class/tty.
 
 ## 18.1 A Small TTY Driver
 `struct tty_driver` it used to register and unregister a tty driver with the tty core.
@@ -100,7 +51,6 @@ field to `tts/` if devfs is enabled and ttyS if it is not. This string is also d
 `/proc/tty/drivers` file.
 > 我去，这个例子可不简单啊!
 
-> skip
 ## 18.2 `tty_driver` Function Pointers
 Finally, the `tiny_tty` driver declares four function pointers.
 
@@ -285,112 +235,6 @@ void (*break_ctl)(struct tty_struct *tty, int state);
 ```
 The line break control function.
 > 似乎tlpi 中间有提到过
-
-
-## 18.8 The `tty_struct` Structure in Detail
-The `tty_struct` variable is used by the tty core to keep the current state of a specific
-tty port. Almost all of its fields are to be used only by the tty core, with a few exceptions.
-> 1. 再一次，什么是tty port
-> 2. `tty_struct` 和 `tty_driver` 的不同的位置
-
-
-
-
-## What's the fucking tty ?
-Early user terminals connected to computers were electromechanical teleprinters or teletypewriters
-(TeleTYpewriter, TTY), and since then TTY has continued to be used as the name for the text-only console although
-now this text-only console is a virtual console not a physical console.
-
-In essence, tty is short for teletype, but it's more popularly **known as terminal**.
-It's basically a device (implemented in software nowadays) that allows you to interact with the system by passing on the data (you input) to the system,
-and displaying the output produced by the system.
-
-ttys can be of different types.
-For example, graphical consoles that you can access with the Ctrl+Alt+Fn key combination,
-or terminal *emulators* like Gnome terminal that run inside an X session. To learn more about tty
-> 为什么称之为 emulator 而不是 就是terminal
-
-#### [The TTY demystified](http://www.linusakesson.net/programming/tty/index.php)
-In present time, we find ourselves in a world where physical teletypes and video terminals are practically extinct. Unless you visit a museum or a hardware enthusiast, all the TTYs you're likely to see will be emulated video terminals — software simulations of the real thing.
-
-But as we shall see, the legacy from the old cast-iron beasts is still lurking beneath the surface.
-> 优秀的比喻句
-
-Incidentally, the kernel provides several different line disciplines.
-Only one of them is attached to a given serial device at a time. The default discipline, which provides line editing, is called N_TTY (drivers/char/n_tty.c, if you're feeling adventurous). Other disciplines are used for other purposes, such as managing packet switched data (ppp, IrDA, serial mice), but that is outside the scope of this article.
-> 多种line编辑模式, 默认支持line editing
-
-Session management. The user probably wants to run several programs simultaneously, and interact with them one at a time. If a program goes into an endless loop, the user may want to kill it or suspend it. Programs that are started in the background should be able to execute until they try to write to the terminal, at which point they should be suspended. Likewise, user input should be directed to the foreground program only. The operating system implements these features in the TTY driver (drivers/char/tty_io.c).
-> 又一份源代码可以阅读
-
-The TTY driver is not alive; in object oriented terminology, the TTY driver is a passive object. It has some data fields and some methods, but the only way it can actually do something is when one of its methods gets called from the context of a process or a kernel interrupt handler. The line discipline is likewise a passive entity.
-
-Together, a particular triplet of UART driver, line discipline instance and TTY driver may be referred to as a TTY device, or sometimes just TTY. A user process can affect the behaviour of any TTY device by manipulating the corresponding device file under /dev.
-
-从原来的tty 演化到如今的结果:
-![](http://www.linusakesson.net/programming/tty/case1.png)
-![](http://www.linusakesson.net/programming/tty/case2.png)
-![](http://www.linusakesson.net/programming/tty/case3.png)
-
-
-To facilitate moving the terminal emulation into userland, while still keeping the TTY subsystem (session management and line discipline) intact, the pseudo terminal or pty was invented.
-
-If you look inside the kernel source code,
-you will find that any kernel code which is *waiting for an event* must check if a *signal is pending* after *schedule()* returns,
-and abort the syscall in that case.
-> excuse me ?
-
-Internal shell commands like jobs, fg and bg can be used to manipulate the existing jobs within a session. Each session is managed by a session leader, the shell, which is cooperating tightly with the kernel using a complex protocol of signals and system calls.
-> 所以job session process 之间是什么关系啊?
-
-> 后面还有关于signal 的内容，但是一个测试
-
-
-#### [](https://www.ibm.com/support/knowledgecenter/en/ssw_aix_71/com.ibm.aix.networkcomm/asynch_tty_hungport.htm)
-Determine whether the tty is currently handling any processes by typing the following
-```sh
-ps -lt tty0
-```
-
-
-Determine if any process is attempting to use the tty by typing the following:
-```sh
-ps -ef | grep tty0
-```
-
-#### [](https://www.tldp.org/HOWTO/Serial-HOWTO-10.html)
-
-#### [](https://itstillworks.com/tty-port-6887781.html)
-Over the years, the meaning of the term "TTY port" has evolved from describing a *physical connection* on a computer to describing a *virtual connection*.
-*Along the way, the term has always referred to the communication between a computer and a remote user*
-
-The connections to the remote users from a computer were provided by teletypewriters and the term TTY originally evolved as an acronym of sorts to refer to these devices.
-> 开始的时候用于远程连接，现在泛指这一类设备
-
-TTY devices were originally connected by serial ports to the main computer
-
-#### [](https://stackoverflow.com/questions/2530096/how-to-find-all-serial-devices-ttys-ttyusb-on-linux-without-opening-them)
-
-#### [](http://www.tldp.org/HOWTO/Text-Terminal-HOWTO-7.html)
-/dev/tty stands for the controlling terminal (if any) for the current process.
-To find out which tty's are attached to which processes use the "ps -a" command at the shell prompt (command line).
-
-
-`/dev/tty` is something like a link to the actually terminal device name with some additional features for C-programmers: see the manual page tty(4).
-#### [](https://www.tldp.org/HOWTO/Serial-HOWTO-10.html)
-
-#### [](https://en.wikipedia.org/wiki/Baud)
-
-#### [](https://en.wikipedia.org/wiki/Pseudoterminal)
-
-
-## 问题
-1. tty 和 键盘驱动含有什么关系啊 ? 上面的图已经说明的非常的清楚了。
-2. 如何实现一个自己的最基本的终端 ?
-3. 难道普通的驱动开发者真的需要了解tty 编程吗 ? 难道哪一个东西 只有一份吗 ?
-
-这这么看，https://github.com/freemed/tty0tty 就是一个最好的项目，到现在(6.18)还可以编译，
-太棒了
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

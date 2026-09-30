@@ -213,6 +213,9 @@ EXPORT_SYMBOL(vmap);
 https://www.kernel.org/doc/html/v5.8/x86/x86_64/mm.html
 可以看到 vmalloc_base
 
+## Links
+- https://www.cnblogs.com/LoyenWang/p/11965787.html
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

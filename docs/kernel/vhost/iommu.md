@@ -1,6 +1,15 @@
 # vhost iotlb
 <!-- c9c6f8da-4df0-4977-af3e-16ba391bf09a -->
 
+## 文档
+vhost IOMMU support <https://www.qemu.org/docs/master/interop/vhost-user.html#iommu-support>
+
+- http://events17.linuxfoundation.org/sites/events/files/slides/vhost-user_iommu_prague.pdf
+
+都是软件实现的，感觉也就是 DPDK 这种使用大页的情况可以勉强使用，不然 tlb miss 导致的开销让人难以接受。
+
+## 动机
+
 思考 vhost iommu 之前，让我们来思考一个简单问题，
 当普通的 virtio 要支持 iommu 的时候，QEMU 是如何模拟的?
 1. dev 来操作内存的时候，需要读 iommu 的 tlb ，最后才可以知道真的要写什么地方
@@ -22,7 +31,7 @@ vhost IOMMU 解决了什么问题？
 * **非连续内存的连续访问：**
 类似于 CPU 的 MMU 将虚拟内存映射到物理内存，IOMMU 允许设备看到一个连续的“虚拟 I/O 地址空间”（IOVA），而底层对应的物理页可以是离散的。
 
-## 2. vhost IOMMU 的核心原理
+## 核心原理
 
 当开启 vhost IOMMU 支持后，其工作流程如下：
 
@@ -73,39 +82,89 @@ ovs-vsctl set Open_vSwitch . other_config:vhost-iommu-support=true
 | **内存开销** | **增加**。需要额外的物理内存来存储页表和缓存。                                          |
 | **复杂度**   | 配置链路较长，排查 I/O 错误（如 DMA-API error）的难度增加。                             |
 
-**总结建议：** 除非你需要**在虚拟机内运行 VFIO/DPDK**，或者对**多租户安全隔离**有极高要求，否则在普通虚拟化场景下，默认不建议开启此功能以保持最高性能。
+
+## vdpa
+
+### vdpa sim
+
+2026-09-29 搭建一个环境，然后获取一个调用到 vdpasim_dma_map 的 backtrace 也许是很好的
 
 ```c
-bool vhost_dev_has_iommu(struct vhost_dev *dev)
+static int vdpasim_dma_map(struct vdpa_device *vdpa, unsigned int asid,
+			   u64 iova, u64 size,
+			   u64 pa, u32 perm, void *opaque)
 {
-    VirtIODevice *vdev = dev->vdev;
+	struct vdpasim *vdpasim = vdpa_to_sim(vdpa);
+	int ret;
 
-    /*
-     * For vhost, VIRTIO_F_IOMMU_PLATFORM means the backend support
-     * incremental memory mapping API via IOTLB API. For platform that
-     * does not have IOMMU, there's no need to enable this feature
-     * which may cause unnecessary IOTLB miss/update transactions.
-     */
-    if (vdev) {
-        return virtio_bus_device_iommu_enabled(vdev) &&
-            virtio_host_has_feature(vdev, VIRTIO_F_IOMMU_PLATFORM);
-    } else {
-        return false;
-    }
+	if (asid >= vdpasim->dev_attr.nas)
+		return -EINVAL;
+
+	spin_lock(&vdpasim->iommu_lock);
+	if (vdpasim->iommu_pt[asid]) {
+		vhost_iotlb_reset(&vdpasim->iommu[asid]);
+		vdpasim->iommu_pt[asid] = false;
+	}
+	ret = vhost_iotlb_add_range_ctx(&vdpasim->iommu[asid], iova,
+					iova + size - 1, pa, perm, opaque);
+	spin_unlock(&vdpasim->iommu_lock);
+
+	return ret;
 }
 ```
 
-- http://events17.linuxfoundation.org/sites/events/files/slides/vhost-user_iommu_prague.pdf
-- https://www.redhat.com/en/blog/journey-vhost-users-realm
+容易混淆的是：通用 vhost 软件后端有这套能力，但 vhost_vdpa 没有自动继承它。
 
-都是软件实现的，感觉也就是 DPDK 这种使用大页的情况可以勉强使用，
-不然 tlb miss 导致的开销让人难以接受。
+当前 drivers/vhost/vhost.c:1825 中确实存在：
 
-## TODO
+vhost_iotlb_miss()
+  → 将 MISS 放入 read_list
+  → 用户态通过 read() 取走消息
+  → 用户态写回 UPDATE
+  → vhost_iotlb_notify_vq()
+  → 重新调度等待的 virtqueue
 
-那么内核中 drivers/vhost/iotlb.c 又是咋用的，当 qemu 使用 viommu 的时候，vhost-net 自动需要使用这个?
+例如 vhost_net 接入了这些读写接口。但 vhost_vdpa 使用自己的 IOTLB 消息处理函数，数据面交给底层设备；vdpasim 又是通过 vringh 访问内存，因此没有走上面这
+套 miss 处理流程。
 
-这两个做啥用的?
+所以，qemu 处理的比较简单，利用上 memory listener
+对应 QEMU 中的 vhost_vdpa_listener_region_add() 和
+vhost_vdpa_iommu_map_notify()。所以“主动下发”不一定意味着启动时一次性映射所有地址，也可以随映射变化动态维护。见 QEMU vhost-vDPA 源码
+(https://github.com/qemu/qemu/blob/master/hw/virtio/vhost-vdpa.c)。
+
+### mlnx 等物理硬件
+
+2026-09-29 : 看上去的确是这么回事了。
+
+当前上游 QEMU 的 vhost_vdpa_iommu_region_add() 注册：
+
+iommu_notifier_init(...,
+                    vhost_vdpa_iommu_map_notify,
+                    IOMMU_NOTIFIER_IOTLB_EVENTS,
+                    ...);
+
+并通过 memory_region_iommu_replay() 同步已经存在的映射。后续 vhost_vdpa_iommu_map_notify() 把映射变化转换成 UPDATE/INVALIDATE。QEMU vhost-vDPA 源码
+(https://github.com/qemu/qemu/blob/master/hw/virtio/vhost-vdpa.c)
+
+在你当前内核中，接下来进入：
+
+vhost_vdpa 更新映射
+  → mlx5_vdpa_set_map()
+  → set_map_data()
+  → mlx5_vdpa_create_mr()
+  → 更新硬件 MKey/MTT
+
+见 mlx5_vdpa_set_map() (drivers/vdpa/mlx5/net/mlx5_vnet.c:3382)。
+
+mlx5 硬件最终拿到的是 guest IOVA 到宿主机 DMA 地址的映射。如果宿主机还有物理 IOMMU，后面再由它转换到 HPA。mlx5 在这条路径中不直接遍历 guest 的 vIOMMU
+页表。
+
+
+## vhost-net
+
+在内核中，我们观察到
+vhost-net 模块是依赖的  vhost_iotlb 的
+
 ```c
 const VhostOps kernel_ops = {
   // ...
@@ -114,9 +173,84 @@ const VhostOps kernel_ops = {
 
 ```
 
-## 为什么 vhost-net 需要依赖 vhost_iotlb 啊
+### 基本流程
 
-## 如果 qemu 打开了 iommu ，那么 vhost-net 的设备自动是打开了 iommu 吗?
+#### QEMU
+1. 在 vhost fd 上注册读回调
+
+vhost_dev_start() 启用 IOTLB 回调，最终进入 vhost_kernel_set_iotlb_callback() (/home/martins3/data/qemu/hw/virtio/vhost-kernel.c:349)：
+
+qemu_set_fd_handler(vhost_fd, vhost_kernel_iotlb_read, NULL, dev);
+
+内核产生 miss 后，fd 可读，QEMU 的事件循环调用 vhost_kernel_iotlb_read()。它通过 read() 读取 vhost_msg 或 vhost_msg_v2，然后交给：
+
+vhost_kernel_iotlb_read()
+  → vhost_handle_iotlb_msg()
+    → vhost_device_iotlb_miss(dev, iova, write)
+
+其中 write 来自 miss 的访问权限，用来告诉 vIOMMU：这次请求是设备读还是设备写。
+
+2. 核心翻译入口是 vhost_device_iotlb_miss()
+
+这个函数 (/home/martins3/data/qemu/hw/virtio/vhost.c:1368) 的主要逻辑可以简化为：
+
+/* IOVA → GPA */
+iotlb = address_space_get_iotlb_entry(dev->vdev->dma_as,
+                                     iova, write,
+                                     MEMTXATTRS_UNSPECIFIED);
+
+/* GPA → QEMU 用户态地址 */
+vhost_memory_region_lookup(dev, iotlb.translated_addr,
+                           &uaddr, &len);
+
+/* 映射长度受 IOMMU 页大小和 RAM region 边界限制 */
+len = MIN(iotlb.addr_mask + 1, len);
+iova &= ~iotlb.addr_mask;
+
+/* 将翻译结果发给内核 */
+vhost_update_device_iotlb(dev, iova, iotlb.translated_addr,
+                         uaddr, len, iotlb.perm);
+
+#### kernel
+
+
+  vhost worker                         QEMU
+       │                                 │
+       ├─ translate_desc(IOVA)            │
+       ├─ 缓存不存在                     │
+       ├─ 生成 VHOST_IOTLB_MISS ─────────►│ read(vhost_fd)
+       ├─ 返回 -EAGAIN，退出本次处理       │
+       │                                 ├─ 查询设备地址空间 / vIOMMU
+       │                                 ├─ IOVA → GPA → HVA
+       │◄──────── VHOST_IOTLB_UPDATE ─────┤ write(vhost_fd)
+       ├─ 插入 IOVA → HVA 映射            │
+       ├─ 重新调度对应 virtqueue          │
+       └─ 重试 descriptor，继续收发       │
+
+
+
+
+### 替换算法
+drivers/vhost/vhost.c
+```c
+static ushort max_mem_regions = 64;
+module_param(max_mem_regions, ushort, 0444);
+MODULE_PARM_DESC(max_mem_regions,
+	"Maximum number of memory regions in memory map. (default: 64)");
+static int max_iotlb_entries = 2048;
+module_param(max_iotlb_entries, int, 0444);
+MODULE_PARM_DESC(max_iotlb_entries,
+	"Maximum number of iotlb entries. (default: 2048)");
+```
+
+
+## TODO
+
+### 之前记得如果 fio nvme + iommu
+
+然后 fio 性能会特别差，每次数据传输的时候都是需要查询一下 iotlb ，
+那么 vhost-net 也会如此么?
+### 如果 qemu 打开了 iommu ，那么 vhost-net 的设备自动是打开了 iommu 吗?
 
 不去添加这个可以么?
 ```txt
@@ -152,52 +286,75 @@ iommu_platform=on,disable-legacy=on
 ]: 11
 ```
 
-## 似乎还需要有自己的替换算法?
-drivers/vhost/vhost.c
-```c
-static ushort max_mem_regions = 64;
-module_param(max_mem_regions, ushort, 0444);
-MODULE_PARM_DESC(max_mem_regions,
-	"Maximum number of memory regions in memory map. (default: 64)");
-static int max_iotlb_entries = 2048;
-module_param(max_iotlb_entries, int, 0444);
-MODULE_PARM_DESC(max_iotlb_entries,
-	"Maximum number of iotlb entries. (default: 2048)");
-```
 
-## 之前记得如果 fio nvme + iommu
 
-然后 fio 性能会特别差，每次数据传输的时候都是需要查询一下 iotlb ，
-那么 vhost-net 也会如此么?
 
-## 理解一下 vhost 中的 iommu 吧
+## A journey to the vhost-users realm
+<https://www.redhat.com/en/blog/journey-vhost-users-realm>
 
-例如在
-```c
-static int vdpasim_dma_map(struct vdpa_device *vdpa, unsigned int asid,
-			   u64 iova, u64 size,
-			   u64 pa, u32 perm, void *opaque)
-{
-	struct vdpasim *vdpasim = vdpa_to_sim(vdpa);
-	int ret;
+When a device that is being emulated in QEMU attempts to DMA to the guest’s virtio I/O space it will use the vIOMMU TLB to look up the page mapping and perform a secured DMA access.
+Question is what happens if the actual DMA was being offloaded to an external process such as a DPDK application using vhost-user library?
 
-	if (asid >= vdpasim->dev_attr.nas)
-		return -EINVAL;
+### VHOST_USER_PROTOCOL_F_SLAVE_REQ
 
-	spin_lock(&vdpasim->iommu_lock);
-	if (vdpasim->iommu_pt[asid]) {
-		vhost_iotlb_reset(&vdpasim->iommu[asid]);
-		vdpasim->iommu_pt[asid] = false;
-	}
-	ret = vhost_iotlb_add_range_ctx(&vdpasim->iommu[asid], iova,
-					iova + size - 1, pa, perm, opaque);
-	spin_unlock(&vdpasim->iommu_lock);
+这里聊到了一个经典的特性: VHOST_USER_PROTOCOL_F_SLAVE_REQ
 
-	return ret;
-}
-```
+主 socket 的协议交互由 QEMU 发起，例如配置共享内存、virtqueue，后端接收并按需回复。
 
-在例如 drivers/vhost/vringh.c 中无数的 iotlb 。
+但启用 guest vIOMMU 后，后端处理 descriptor 时可能遇到一个 IOVA，却不知道它对应哪块内存。
+这时需要后端主动问 QEMU：“这个 IOVA 怎么翻译？” 这是 SPDK 给 QEMU 发消息，所以就需要第二个通道。
+
+#### 无须额外的
+2026-09-29 : socketpair 还需要确认
+
+QEMU 在 hw/virtio/vhost-user.c 的 vhost_setup_slave_channel() 中，逻辑如下：
+
+QEMU 调用 socketpair()
+          │
+          └── 得到已经互相连接的两个端点：sv[0] 和 sv[1]
+
+QEMU 保留 sv[0]
+QEMU 通过主 socket 发送 VHOST_USER_SET_SLAVE_REQ_FD
+     并用 SCM_RIGHTS 把 sv[1] 传给后端
+
+最终：
+QEMU 持有的端点  <────────────>  后端持有的端点
+
+因此，无需另设 socket 路径、listen()、accept()。传 fd 也不是单纯发送一个整数，而是让接收进程获得引用同一 socket 端点的本地
+fd；两边的 fd 数值可以不同。发送成功后，QEMU 关闭自己手中的 sv[1] 副本。QEMU v4.1.0：vhost_setup_slave_channel()
+(https://github.com/qemu/qemu/blob/v4.1.0/hw/virtio/vhost-user.c)
+
+#### IOTLB synchronization 同步细节
+
+后端维护一份软件地址翻译缓存，即 IOTLB。例如，后端需要访问 IOVA = 0x1000，但缓存没有对应映射：
+
+          ┌───────────────┐                               ┌───────────────┐
+          │ OVS/DPDK 后端 │                               │ QEMU / vIOMMU │
+          └───────────────┘                               └───────────────┘
+                  ┌──────────────────────────────────────────┐    │
+                  │ Note: 需要访问 IOVA 0x1000，IOTLB 未命中 │    │
+                  └──────────────────────────────────────────┘    │
+                  │ 第二条通道：IOTLB MISS                        │
+                  ├───────────────────────────────────────────────▶
+                  │                                               │
+                  │                                               ┌──────────────────────────────────┐
+                  │                                               │ Note: 查询 IOVA → GPA → QEMU HVA │
+                  │                                               └──────────────────────────────────┘
+                  │ 主通道：IOTLB UPDATE，提供映射和权限          │
+                  ◀───────────────────────────────────────────────┤
+                  │                                               │
+                  ┌──────────────────────────────────────────────┐│
+                  │ Note: 缓存映射，换算为自身 HVA，访问共享内存 ││
+                  └──────────────────────────────────────────────┘│
+                  │ 主通道：IOTLB INVALIDATE（映射撤销时）        │
+                  ◀───────────────────────────────────────────────┤
+                  │                                               │
+                  ┌──────────────────────────┐                    │
+                  │ Note: 删除失效的缓存映射 │                    │
+                  └──────────────────────────┘                    │
+
+并非所有 IOTLB 消息都走第二条通道：后端发出的 MISS 走第二条通道，QEMU 发出的 UPDATE、INVALIDATE
+走主通道。缓存命中时，后端直接访问共享内存，无需每次询问 QEMU。
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

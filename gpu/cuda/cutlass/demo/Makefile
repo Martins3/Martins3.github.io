@@ -1,8 +1,11 @@
-CUDA_HOME ?= /usr/local/cuda-12.8
+CUDA_HOME ?= /usr/local/cuda-13.1
 CUDA_DRIVER_LIBDIR ?= /usr/lib64
 NVCC ?= $(CUDA_HOME)/bin/nvcc
+CC      := /usr/bin/gcc
+HOST_CXX := /usr/bin/g++
+HOST_BINUTILS_DIR := /usr/bin
 
-MODE ?= local
+MODE ?= source
 SM ?= 120
 
 LOCAL_CUTLASS_ROOT ?= $(HOME)/data/cutlass
@@ -20,7 +23,8 @@ DEMOS := $(basename $(SOURCES))
 OUTPUTS := $(addprefix $(BUILD_DIR)/,$(addsuffix .out,$(DEMOS)))
 RUN_ARGS ?= 128 128 128
 
-NVCCFLAGS ?= -std=c++17 -O2 -arch=sm_$(SM) --expt-relaxed-constexpr
+# 固定使用系统工具链，避免 Nix glibc 头文件与 CUDA 头文件混用。
+NVCCFLAGS ?= -std=c++17 -O2 -arch=sm_$(SM) --expt-relaxed-constexpr -ccbin $(HOST_CXX) -Xcompiler -B$(HOST_BINUTILS_DIR)
 LDFLAGS ?=
 LDLIBS ?= -lcudart
 CUDA_DRIVER_LINK ?=
@@ -67,6 +71,8 @@ print-config:
 	@printf 'OUTPUTS=%s\n' '$(OUTPUTS)'
 	@printf 'RUN_ARGS=%s\n' '$(RUN_ARGS)'
 	@printf 'NVCC=%s\n' '$(NVCC)'
+	@printf 'HOST_CXX=%s\n' '$(HOST_CXX)'
+	@printf 'HOST_BINUTILS_DIR=%s\n' '$(HOST_BINUTILS_DIR)'
 	@printf 'CUDA_HOME=%s\n' '$(CUDA_HOME)'
 	@printf 'CUDA_DRIVER_LIBDIR=%s\n' '$(CUDA_DRIVER_LIBDIR)'
 	@printf 'SM=%s\n' '$(SM)'

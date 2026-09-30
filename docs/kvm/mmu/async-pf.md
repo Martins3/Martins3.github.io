@@ -1,168 +1,259 @@
-## `async_pf`
-Asynchronous page fault is a way to try and use guest vcpu more efficiently
-by allowing it to execute other tasks while page is brought back into memory[1].
+# async pf
 
-## 为什么需要这种设计
-因为 vCPU 发生 page fault 了，被切换走，然后 Host 从磁盘中请求内容，然后 host 就很尴尬:
+## 关键设计
+
+因为 vCPU 发生 page fault 了，被切换走，然后 Host 从磁盘中请求内容，然后 host
+就很尴尬:
+
 - 不能继续执行 vCPU 线程了，因为如果开始执行，就需要保证该页已经准备好。
 - host 侧没有什么任务需要执行。
 
 基本的设计:
+
 - host 需要告诉 Guest ，正在进行 apf ，可以干其他事情。
 - Guest 的 thread 中执行 page fault 的 thread 暂停
 
+## 参考资料
 
-## host 流程
-- kvm_tdp_mmu_page_fault
-  - kvm_faultin_pfn : 获取到 folio
-    - `__kvm_faultin_pfn`
-      - `__gfn_to_pfn_memslot` : **参数** async 实际上表示这个 page 是否已经进获取到了
-  - kvm_tdp_mmu_map : 填充获取到
+MSR 位定义及 page-not-present / page-ready 协议见
+[Linux KVM MSR 文档](https://www.kernel.org/doc/html/latest/virt/kvm/x86/msr.html)。
+- https://terenceli.github.io/%E6%8A%80%E6%9C%AF/2019/03/24/kvm-async-page-fault
+- https://lwn.net/Articles/817239/
+- [https://lwn.net/Articles/845473/](aarch64: Support Asynchronous Page Fault)
+  - 这个 patch 描述的比较清楚了
 
-在 `__kvm_faultin_pfn` 中，进行两个操作
-  - kvm_find_async_pf_gfn : 已经在等待改 page 了
-  - kvm_arch_setup_async_pf :
-    - `kvm_setup_async_pf`
-    - kvm_arch_async_page_present : 给虚拟机注入一个中断
+## async pf 的几个基本问题
+<!-- 94f5a5a0-07af-4d2a-a9e6-5db6db14d99a -->
 
-## 关联结构体
+### arm 支持吗
+不支持
 
-> [!NOTE]
-> 参考神奇海螺的意见，有待验证
+### 最多支持多少个 guest thread 的 page fault 被 stall
 
-(结构体写的不对，但是无所谓)
-
-2.1.1 `struct kvm_async_pf` - 异步页错误描述符
+答案一个 CPU 是 64 个
 
 ```c
-// arch/x86/include/asm/kvm_host.h
-struct kvm_async_pf {
-    struct work_struct work;           // 工作队列项
-    struct list_head link;             // 链接到 vcpu->async_pf.done 链表
-    struct kvm_vcpu *vcpu;             // 关联的 vCPU
-    gpa_t gpa;                         // Guest 物理地址（触发缺页的地址）
-    u32 cr3;                           // 发生缺页时的 CR3
-    bool inflight;                     // 是否正在处理中
-    bool pageready_pending;            // 是否有待处理的 page ready 事件
-
-    // APF 标识符，用于 Guest 区分不同的异步页错误请求
-    u64 apf_id;                        // 唯一标识符
-};
+#define ASYNC_PF_PER_VCPU 64
 ```
 
-2.1.2 `async_pf_work` - 工作队列执行体
-
 ```c
-// virt/kvm/async_pf.c
-static void async_pf_execute(struct work_struct *work)
-{
-    struct kvm_async_pf *apf = container_of(work, struct kvm_async_pf, work);
-    struct kvm_vcpu *vcpu = apf->vcpu;
+bool kvm_setup_async_pf(struct kvm_vcpu *vcpu, ...)
+ {
+     if (vcpu->async_pf.queued >= ASYNC_PF_PER_VCPU)
+         return false;  // 超过限制，转为同步处理
+     ...
+ }
+```
 
-    // 1. 获取页面（可能阻塞，因为可能需要 I/O）
-    // 2. 页面准备好后，通知 Guest
-    kvm_arch_async_page_present(vcpu, apf);
+### 需要 Guest 和 Host 的参与
+1. 为什么需要 Guest 感知到
+	- guest 需要在触发 async page fault 的时候，将当前执行的 thread 挂起，
+1. 为什么 host 需要 worker 来参与
+	- 总是需要一个等待者，要么当前的 vCPU thread ，显然 vCPU thread 需要做其他的事情，所以就让 worker 来等待
+
+## 实现细节
+
+### 触发
+
+```text
+EPT/NPT violation（不一定意味着 backing page 不驻留）
+  → kvm_mmu_page_fault()
+  → kvm_mmu_do_page_fault()
+  → kvm_tdp_page_fault() → kvm_tdp_mmu_page_fault() [启用 TDP MMU 时]
+  → kvm_mmu_faultin_pfn() → __kvm_mmu_faultin_pfn()
+      → __kvm_faultin_pfn(..., FOLL_NOWAIT, ...)
+      → kvm_follow_pfn() → hva_to_pfn()
+          ├─ 有效 PFN：外层继续 kvm_tdp_mmu_map()
+          ├─ 其他错误编码：外层错误处理
+          └─ KVM_PFN_ERR_NEEDS_IO
+              ├─ prefetch / !kvm_can_do_async_pf()：同步取页
+              ├─ kvm_find_async_pf_gfn() 找到已有任务
+              │    → KVM_REQ_APF_HALT，返回 RET_PF_RETRY
+              └─ kvm_arch_setup_async_pf() → kvm_setup_async_pf()
+                   ├─ 失败：同步取页
+                   └─ 成功建立任务
+                        → kvm_arch_async_page_not_present()
+                            ├─ 可以通知：注入 synthetic #PF
+                            └─ 不能通知：KVM_REQ_APF_HALT
+                        → schedule_work(async_pf_execute)
+                        → 返回 RET_PF_RETRY
+
+同步取页：__kvm_faultin_pfn(..., 清除 FOLL_NOWAIT，添加 FOLL_INTERRUPTIBLE, ...)
+```
+
+非常清晰，注入中断就是 #PF
+```c
+void kvm_inject_page_fault(struct kvm_vcpu *vcpu, struct x86_exception *fault,
+			   bool from_hardware)
+{
+	++vcpu->stat.pf_guest;
+
+	/*
+	 * Async #PF in L2 is always forwarded to L1 as a VM-Exit regardless of
+	 * whether or not L1 wants to intercept "regular" #PF.
+	 */
+	if (is_guest_mode(vcpu) && fault->async_page_fault)
+		kvm_queue_exception_vmexit(vcpu, PF_VECTOR,
+					   true, fault->error_code,
+					   true, fault->address);
+	else
+		kvm_queue_exception_e_p(vcpu, PF_VECTOR, fault->error_code,
+					fault->address);
 }
 ```
 
-## guest 流程
+KVM_PFN_ERR_NEEDS_IO 的原因，一定经典案例如下，其实就是 GUP 的时候没有
+```text
+get_user_pages_unlocked()
+  → ... → __get_user_pages()
+      → follow_page_mask()：当前还不能取得页面
+      → faultin_page()
+          → handle_mm_fault()
+              → ... → do_swap_page()
+                  → folio_lock_or_retry()
+                      → folio_trylock() 失败
+                      → __folio_lock_or_retry()
+                          → 看到 RETRY_NOWAIT，返回 VM_FAULT_RETRY
+          → 把 VM_FAULT_RETRY 转为 -EBUSY
+      → 本次请求 1 页，却没有获得任何页，返回 0
+  → hva_to_pfn_slow() 返回 0
+  → hva_to_pfn()：普通 VMA 有效 + FOLL_NOWAIT
+      → KVM_PFN_ERR_NEEDS_IO
+```
+
+`__kvm_mmu_faultin_pfn()` 三种情况来处理 io
+
+- *同步重试* : prefetch、不满足 `kvm_can_do_async_pf()` 或建立任务失败时，
+  清除 `FOLL_NOWAIT`、添加 `FOLL_INTERRUPTIBLE`，再次调用 `__kvm_faultin_pfn()`。
+  需要等待时由当前 host vCPU 线程等；不是每次都必然睡眠，也不保证重试必然成功。
+- *复用已有任务* : `kvm_find_async_pf_gfn()` 发现本 vCPU 已有这个 GFN 的任务，
+  不重复创建 work，而是请求 `KVM_REQ_APF_HALT`，返回 `RET_PF_RETRY`。
+- *创建新任务* : `kvm_arch_setup_async_pf()` 保存 token、GFN、原始 fault 信息，
+  再调用 `virt/kvm/async_pf.c` 的 `kvm_setup_async_pf()`。
+  后者检查队列限额、HVA、`GFP_NOWAIT` 分配等，失败则回到同步重试。
+
+`RET_PF_RETRY` 是 KVM MMU 内部的处理结果，与 NEEDS_IO 不同:
+它表示当前这次 fault 暂时没有建立最终映射，后续需要重试/重新处理；不会作为 errno 直接发给 guest。
+
+### Worker 代理执行
+
+本次 x86 配置走非 `CONFIG_KVM_ASYNC_PF_SYNC` 分支，实际时序是：
+
+```text
+host kworker：async_pf_execute()
+  → get_user_pages_remote(kvm->mm, hva, 1, FOLL_WRITE, ...)
+      [不带 FOLL_NOWAIT，允许等待]
+  → work 加入 vcpu->async_pf.done
+  → kvm_arch_async_page_present_queued()
+      → KVM_REQ_APF_READY，必要时 kick vCPU
+  → __kvm_vcpu_wake_up()
+
+host vCPU：kvm_check_async_pf_completion()
+  → kvm_arch_async_page_ready()
+      → kvm_mmu_do_page_fault(..., prefetch=true, ...)
+        [上下文仍匹配时，尝试预先建立映射]
+  → kvm_arch_async_page_present()
+      ├─ 先前确实注入过 not-present，且 guest APF 仍启用
+      │   → apf_put_user_ready() 写 token
+      │   → kvm_apic_set_irq() 投递 page-ready 中断
+      └─ 清除 apf.halted，恢复 RUNNABLE
+
+guest：sysvec_kvm_asyncpf_interrupt()
+  → kvm_async_pf_task_wake(token)
+  → 清除共享 token，写 MSR_KVM_ASYNC_PF_ACK
+  → 原 task 可以再次获得调度并重试原指令
+```
+
+`kvm_arch_async_page_ready()`（MMU 预取）和 `kvm_arch_async_page_present()`
+（guest 通知/解除 halt）是两个不同函数，不能因名字接近而混用。
+Worker 不向 vCPU 直接移交一个最终 PFN；vCPU 的 MMU 路径会再次检查映射。
+而且 worker 取页失败也会通知完成，避免 vCPU 永远等待，后续 fault 再处理错误。
+因此“completed/ready”也不能当作“这次底层 GUP 一定成功”的绝对证明。
+
+```c
+void kvm_arch_async_page_present(struct kvm_vcpu *vcpu,
+				 struct kvm_async_pf *work)
+{
+	struct kvm_lapic_irq irq = {
+		.delivery_mode = APIC_DM_FIXED,
+		// 这个就是 guest os 通过 wrmsrq(MSR_KVM_ASYNC_PF_INT, HYPERVISOR_CALLBACK_VECTOR); 来配置的
+		.vector = vcpu->arch.apf.vec
+	};
+
+	if (work->wakeup_all)
+		work->arch.token = ~0; /* broadcast wakeup */
+	else
+		kvm_del_async_pf_gfn(vcpu, work->arch.gfn);
+	trace_kvm_async_pf_ready(work->arch.token, work->cr2_or_gpa);
+
+	if ((work->wakeup_all || work->notpresent_injected) &&
+	    kvm_pv_async_pf_enabled(vcpu) &&
+	    !apf_put_user_ready(vcpu, work->arch.token)) {
+		WRITE_ONCE(vcpu->arch.apf.pageready_pending, true);
+		kvm_apic_set_irq(vcpu, &irq, NULL);
+	}
+
+	vcpu->arch.apf.halted = false;
+	kvm_set_mp_state(vcpu, KVM_MP_STATE_RUNNABLE);
+}
+```
+
+## 的角度
+
+
+本来的 kvm 日志为:
+
+arch/x86/include/asm/trapnr.h
+```c
+#define X86_TRAP_PF		14	/* Page Fault */
+```
+
+- KVM_FEATURE_ASYNC_PF（CPUID 0x40000001.EAX bit 4）：异步缺页（APF）的基础能力。
+- KVM_FEATURE_ASYNC_PF_INT（bit 14，5.8 引入）：新增中断方式投递 page ready 事件，配套两个新 MSR：
+	- MSR_KVM_ASYNC_PF_INT（配置 APIC  vector）
+	- MSR_KVM_ASYNC_PF_ACK（确认 + 重新扫描队列
+
+现在我们仅仅考虑 KVM_FEATURE_ASYNC_PF_INT
 
 ### 触发 page fault
+
 在 arch/x86/mm/fault.c 中标准 page fault 的入口:
-```txt
+
+```c
 DEFINE_IDTENTRY_RAW_ERRORCODE(exc_page_fault)
 ```
+
 - kvm_handle_async_pf
   - `__kvm_handle_async_pf`
     - kvm_async_pf_task_wait_schedule : 被 swapout 的 page，所以睡眠
 
 - asm_sysvec_kvm_asyncpf_interrupt 就是 guest 接受到 host 的信息说可以了。
 
-### 接受信息
-```txt
+
+注意，这个还是复用了 #PF 的入口。
+
+### 接受消息
+
+host 处理完成之后，挂到:
+```c
+/* Vector on which hypervisor callbacks will be delivered */
+#define HYPERVISOR_CALLBACK_VECTOR	0xf3
+
 DEFINE_IDTENTRY_SYSVEC(sysvec_kvm_asyncpf_interrupt)
 ```
-
-arch/x86/kernel/kvm.c
-
-
-## 附录
-
-- kvm_arch_async_page_present : 通知 guest 事情搞定了
-
-一般路径
-```txt
-kvm_tdp_mmu_map+615
-kvm_tdp_page_fault+191
-kvm_mmu_do_page_fault+486
-kvm_mmu_page_fault+130
-vmx_handle_exit+300
-kvm_arch_vcpu_ioctl_run+1765
-kvm_vcpu_ioctl+558
-__x64_sys_ioctl+148
-do_syscall_64+193
-entry_SYSCALL_64_after_hwframe+119
-```
-
-
-## 问题
-
-- `KVM_FEATURE_ASYNC_PF_INT` : guest 是通过 cpuid 获取的
-- 和 KVM_FEATURE_ASYNC_PF 的关系是什么？ KVM_FEATURE_ASYNC_PF 似乎根本没用啊
 
 - sysvec_kvm_asyncpf_interrupt
   - kvm_async_pf_task_wake
   - wrmsrl(MSR_KVM_ASYNC_PF_ACK, 1);
 
-```diff
-History:        #0
-Commit:         2635b5c4a0e407b84f68e188c719f28ba0e9ae1b
-Author:         Vitaly Kuznetsov <vkuznets@redhat.com>
-Committer:      Paolo Bonzini <pbonzini@redhat.com>
-Author Date:    2020年05月25日 星期一 22时41分20秒
-Committer Date: 2020年06月01日 星期一 16时26分07秒
-
-KVM: x86: interrupt based APF 'page ready' event delivery
-
-Concerns were expressed around APF delivery via synthetic #PF exception as
-in some cases such delivery may collide with real page fault. For 'page
-ready' notifications we can easily switch to using an interrupt instead.
-Introduce new MSR_KVM_ASYNC_PF_INT mechanism and deprecate the legacy one.
-
-One notable difference between the two mechanisms is that interrupt may not
-get handled immediately so whenever we would like to deliver next event
-(regardless of its type) we must be sure the guest had read and cleared
-previous event in the slot.
-
-While on it, get rid on 'type 1/type 2' names for APF events in the
-documentation as they are causing confusion. Use 'page not present'
-and 'page ready' everywhere instead.
-
-Signed-off-by: Vitaly Kuznetsov <vkuznets@redhat.com>
-Message-Id: <20200525144125.143875-6-vkuznets@redhat.com>
-Signed-off-by: Paolo Bonzini <pbonzini@redhat.com>
-```
-看上去为来方式 exception ，所以专门做了一个新的入口。
-
-看看
 ```txt
-  kvm:kvm_try_async_get_page                         [Tracepoint event]
-  kvm:kvm_async_pf_completed                         [Tracepoint event]
-  kvm:kvm_async_pf_not_present                       [Tracepoint event]
-  kvm:kvm_async_pf_ready                             [Tracepoint event]
-  kvm:kvm_async_pf_repeated_fault                    [Tracepoint event]
+$ cat /proc/interrupts
+ HYP:          1          1          1  Hypervisor callback interrupts
 ```
 
-### 等待阅读的资料
-- [ ] https://terenceli.github.io/%E6%8A%80%E6%9C%AF/2019/03/24/kvm-async-page-fault
-1. 需要修改内核 kvm 外面的代码 ? 不然怎么来识别从 host inject 的
-2. 内核如何调度 host 的另一个 task 过来运行的
-- [ ] https://lwn.net/Articles/817239/
-- [https://lwn.net/Articles/845473/](aarch64: Support Asynchronous Page Fault)
-  - 这个 patch 描述的比较清楚了
+## 嵌套的 async pf 存在 bug
 
-
-### 调试一个 bug
+2026-09-15 不确定当前是否还存在
 
 ```txt
 bogon login: [    8.974820] mount.nfs (3059) used greatest stack depth: 10416 bytes left
@@ -194,6 +285,7 @@ bogon login: [    8.974820] mount.nfs (3059) used greatest stack depth: 10416 by
 [  340.185227] Kernel Offset: disabled
 [  340.185493] ---[ end Kernel panic - not syncing: Host injected async #PF in kernel mode ]---
 ```
+
 启动嵌套的时候有这个错误。
 
 1. 思考下，为什么 host 中不可以使用 async pf 啊
@@ -202,9 +294,9 @@ bogon login: [    8.974820] mount.nfs (3059) used greatest stack depth: 10416 by
 
 并不是，L1 用文件，L2 用普通的 memory ，还是有问题
 
-
 测试一些程序的时候，似乎启动嵌套，其中 l2 使用的是普通内存，也会有这个问题:
 也就是相当于 L1 是文件，或者是 memfd 就会有问题
+
 ```txt
 [  245.347107][ T2261] Kernel panic - not syncing: Host injected async #PF in kernel mode
 [  245.426245][ T2261] CPU: 33 PID: 2261 Comm: dockerd Not tainted 6.6.0-28.0.0.34.oe2403.x86_64 #1
@@ -248,31 +340,6 @@ bogon login: [    8.974820] mount.nfs (3059) used greatest stack depth: 10416 by
 [  245.886099][ T2261] ---[ end Kernel panic - not syncing: Host injected async #PF in kernel mode ]---
 ```
 
-## async pf 的几个基本问题
-<!-- 94f5a5a0-07af-4d2a-a9e6-5db6db14d99a -->
-
-1. arm 支持吗? 不支持
-2. 最多支持多少个 guest thread 的 page fault 被 stall ，答案一个 CPU 是 64 个
-```c
- bool kvm_setup_async_pf(struct kvm_vcpu *vcpu, ...)
-  {
-      if (vcpu->async_pf.queued >= ASYNC_PF_PER_VCPU)
-          return false;  // 超过限制，转为同步处理
-      ...
-  }
-```
-
-3. 使用 async_pf 的调试的前提是什么?
-
-似乎关键的判断就是在:
-```txt
-	if (!fault->prefetch && kvm_can_do_async_pf(vcpu)) {
-		trace_kvm_try_async_get_page(fault->addr, fault->gfn);
-```
-1. !fault->prefetch : 如果不是提前建立映射
-2. kvm_can_do_async_pf 容易理解，就是可以注入中断。
-
-(没完全搞懂，但是一步之遥)
 
 ## 基本执行流程
 
@@ -367,66 +434,16 @@ bogon login: [    8.974820] mount.nfs (3059) used greatest stack depth: 10416 by
 └──────────────────────────────────────────────────────────────────────────────┘
 ```
 
-## apf 的确存在两个注入方法
-<!-- 185bcdd2-51eb-454c-b934-e41bea81d630 -->
-
-第一种接受方法:
-```c
-DEFINE_IDTENTRY_SYSVEC(sysvec_kvm_asyncpf_interrupt)
-{
-	struct pt_regs *old_regs = set_irq_regs(regs);
-	u32 token;
-
-	apic_eoi();
-
-	inc_irq_stat(irq_hv_callback_count);
-
-	if (__this_cpu_read(async_pf_enabled)) {
-		token = __this_cpu_read(apf_reason.token);
-		kvm_async_pf_task_wake(token);
-		__this_cpu_write(apf_reason.token, 0);
-		wrmsrq(MSR_KVM_ASYNC_PF_ACK, 1);
-	}
-
-	set_irq_regs(old_regs);
-}
+```txt
+kvm:kvm_try_async_get_page                         [Tracepoint event]
+kvm:kvm_async_pf_completed                         [Tracepoint event]
+kvm:kvm_async_pf_not_present                       [Tracepoint event]
+kvm:kvm_async_pf_ready                             [Tracepoint event]
+kvm:kvm_async_pf_repeated_fault                    [Tracepoint event]
 ```
 
-第二种还是这个:
-```c
-DEFINE_IDTENTRY_RAW_ERRORCODE(exc_page_fault)
-{
-	irqentry_state_t state;
-	unsigned long address;
-
-	address = cpu_feature_enabled(X86_FEATURE_FRED) ? fred_event_data(regs) : read_cr2();
-
-	/*
-	 * KVM uses #PF vector to deliver 'page not present' events to guests
-	 * (asynchronous page fault mechanism). The event happens when a
-	 * userspace task is trying to access some valid (from guest's point of
-	 * view) memory which is not currently mapped by the host (e.g. the
-	 * memory is swapped out). Note, the corresponding "page ready" event
-	 * which is injected when the memory becomes available, is delivered via
-	 * an interrupt mechanism and not a #PF exception
-	 * (see arch/x86/kernel/kvm.c: sysvec_kvm_asyncpf_interrupt()).
-	 *
-	 * We are relying on the interrupted context being sane (valid RSP,
-	 * relevant locks not held, etc.), which is fine as long as the
-	 * interrupted context had IF=1.  We are also relying on the KVM
-	 * async pf type field and CR2 being read consistently instead of
-	 * getting values from real and async page faults mixed up.
-	 *
-	 * Fingers crossed.
-	 *
-	 * The async #PF handling code takes care of idtentry handling
-	 * itself.
-	 */
-	if (kvm_handle_async_pf(regs, (u32)address))
-		return;
-```
-
-这个东西，再次让疑惑，execption 和中断的区别到底是什么?
+1. 需要修改内核 kvm 外面的代码 ? 不然怎么来识别从 host inject 的
+2. 内核如何调度 host 的另一个 task 过来运行的
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

@@ -32,3 +32,35 @@ sudo modprobe nvidia nvidia-uvm nvidia-modeset nvidia-drm
 [  493.888187] ACPI Error: Aborting method \_SB.PC00.PEG1.PEGP._DSM due to previous error (AE_ALREADY_EXISTS) (20250807/psparse-529)
 ```
 
+
+## 为什么 clangd 对于 tensor_core 报错
+
+fragment<accumulator, WMMA_M, WMMA_N, WMMA_K, float> accumulators[WMMA_TILES_PER_WARP_N];
+```txt
+原因确认了：这是 clangd 的误报，不是这行 WMMA 代码有问题。
+
+  Neovim 实际诊断为：
+
+  Implicit instantiation of undefined template
+  'nvcuda::wmma::fragment<nvcuda::wmma::accumulator, 16, 16, 16, float>'
+
+  当前组合是：
+
+  - CUDA Toolkit 13.1
+  - clangd 21.1.8
+  - clangd 最高只部分支持 CUDA 12.8
+  - clangd 解析 CUDA 13.1 头文件时还出现了 texture_fetch_functions.h 缺失，只是该诊断被内部
+    丢弃了
+
+  因此 clangd 没有正确识别 CUDA 13.1 的 crt/mma.h 中 fragment<accumulator, 16, 16, 16,
+  float> 特化，错误地认为它只有声明、没有定义。
+
+  我用项目 Makefile 对应的参数执行了 nvcc 编译：
+
+  nvcc -std=c++17 -arch=sm_120 basic/tensor_core.cu
+
+  编译成功，所以 basic/tensor_core.cu 中 matmul_tensor_core_wmma() 的这行写法是正确的。
+
+  目前没有修改文件。最直接的处理方式是在项目 .clangd 里抑制
+  template_instantiate_undefined，等 clangd 完整支持 CUDA 13.1 后再移除。
+```

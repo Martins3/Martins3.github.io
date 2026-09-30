@@ -1,3 +1,4 @@
+# cache regs
 vmcs 的很多字段大多数时候不用刷新，所以
 
 arch/x86/kvm/kvm_cache_regs.h

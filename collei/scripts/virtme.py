@@ -3,11 +3,10 @@
 # ============================================
 from __future__ import annotations
 
-import base64
 import getpass
 import os
-import platform
 import shutil
+import stat
 import subprocess
 import tempfile
 import time
@@ -16,10 +15,11 @@ from pathlib import Path
 
 from commands import CommandRunner
 from errors import ColleiError
-from runtime import ColleiContext, VmRuntime
-from tasks import add_background_task
-
+from initramfs import create_device_nodes, is_statically_linked, pack_cpio_zst
 from kernel import kernel_release
+from runtime import ColleiContext, VmRuntime
+from serial import build_serial_layout_for_options
+from tasks import add_background_task
 
 
 @dataclass(frozen=True)
@@ -32,37 +32,48 @@ class VirtmeSetup:
     def enabled(self) -> bool:
         return self.vm.config.options.enabled("virtme")
 
-    def mode(self) -> str:
+    def __post_init__(self) -> None:
         if not self.enabled:
             raise ColleiError("virtme is not enabled")
-        mode = self.vm.config.options.get("virtme_mode")
-        if mode is None:
-            mode = "exec" if self.vm.config.options.enabled("exec") else "manual"
-        if mode not in {"manual", "exec"}:
-            raise ColleiError(f"unknown virtme_mode: {mode}")
-        return mode
 
-    def init_implementation(self) -> str:
-        implementation = self.vm.config.options.get("virtme_init") or "rust"
-        if implementation not in {"rust", "bash"}:
-            raise ColleiError(f"unknown virtme_init: {implementation}")
-        return implementation
+    def network_enabled(self) -> bool:
+        value = self.vm.config.options.get("network")
+        if value is None or value.strip().lower() in {"1", "auto"}:
+            return True
+        if value.strip().lower() in {"0", "off"}:
+            return False
+        raise ColleiError("virtme network must be auto, off, 1, or 0")
 
     # virtme 模式的 kernel cmdline 设置
     def kernel_args(self) -> str:
         options = self.vm.config.options
 
         # 基础参数
-        args = ["rootfstype=virtiofs", "root=ROOTFS"]
+        args = ["rootfstype=virtiofs", "root=ROOTFS", "console=tty0"]
 
         # 主机名
         args.append(f"virtme_hostname={self.vm.config.name}")
 
         # 控制台
-        if platform.machine() == "x86_64":
-            args.extend(("virtme_console=ttyS0", "console=ttyS0,115200n8"))
-        else:
-            args.extend(("virtme_console=ttyAMA0", "console=ttyAMA0,115200n8"))
+        layout = build_serial_layout_for_options(self.vm.qemu_directory, options)
+        # virtme 的交互 shell 必须接到实际可交互的 stdio 通道。配置同时
+        # 声明 serial stdio 和 hvc socket 时，优先使用 serial；否则 shell
+        # 会被放到 hvc0.socket，启动终端只能看到内核日志。
+        stdio_console = next(
+            (
+                channel.console_name
+                for channel in layout.channels
+                if channel.interactive and channel.backend == "stdio"
+            ),
+            None,
+        )
+        args.append(f"virtme_console={stdio_console or layout.primary_console}")
+        if layout.first("virtserialport") is not None:
+            args.append("virtme_qga=1")
+            qemu_ga = shutil.which("qemu-ga")
+            if qemu_ga is None:
+                raise ColleiError("qemu-ga is required for virtme QGA")
+            args.append(f"virtme_qga_bin={qemu_ga}")
 
         # 用户设置
         user = options.get("user") or os.environ.get("SUDO_USER") or getpass.getuser()
@@ -110,18 +121,17 @@ class VirtmeSetup:
         # 其他常用参数
         args.extend(("nokaslr", "mitigations=off", "loglevel=8"))
 
-        # 网络配置 (如果启用)
-        if options.enabled("network"):
-            args.extend(("virtme.dhcp", "net.ifnames=0", "biosdevname=0"))
-
-        # 脚本执行 (如果配置了 exec)
-        exec_script = options.get("exec")
-        if exec_script is not None:
-            exec_path = Path(exec_script)
-            if exec_path.is_file():
-                exec_script = exec_path.read_text()
-            encoded = base64.b64encode(exec_script.encode()).decode()
-            args.append(f"virtme.exec=`{encoded}`")
+        # 按 MAC 区分两张默认网卡，不依赖 ens4/ens5 等随 PCI 拓扑变化的名称。
+        # 用户态后端负责 DHCP、默认路由和 DNS；tap/vhost 只配置 /16 connected route。
+        if self.network_enabled():
+            # setup_network() 中用户态后端是第一个未显式指定 MAC 的 NIC，因此使用
+            # QEMU qemu_macaddr_default_if_unset() 分配的首地址。
+            args.append("virtme_net_dhcp=52:54:00:12:34:56")
+            if self.context.global_config.options.get("bridge") != "no":
+                level = self.context.global_config.options.integer("level", 0)
+                guest = self.vm.config.guest_id
+                vhost_mac = f"52:54:00:{level:02x}:{guest:02x}:00"
+                args.append(f"virtme_net_static={vhost_mac},10.0.{guest}.{level}/16")
 
         # 用户自定义参数
         cmdline = options.get("cmdline")
@@ -141,18 +151,25 @@ class VirtmeSetup:
 
     @property
     def _sudo_copy(self) -> Path:
-        return self.vm.directory / self.vm.which_qemu / "sudo.bin"
+        return self.vm.qemu_directory / "sudo.bin"
 
     # 在 host 侧准备一份可读的 sudo 副本 (需要 sudo 权限安装为 root:root 4755)。
     # 放在 VM 目录下，guest 通过 virtiofs 共享可以读到。
-    # 仅当副本不存在或 host 的 sudo 更新时才重新安装，避免每次启动都要输密码。
+    # 克隆 VM 会丢失 root 所有权和 setuid 位，不能只按修改时间复用副本。
     def prepare_sudo(self, runner: CommandRunner) -> None:
         source = Path("/usr/bin/sudo")
         if not source.is_file():
             return
         target = self._sudo_copy
-        if target.is_file() and target.stat().st_mtime >= source.stat().st_mtime:
-            return
+        if target.is_file():
+            target_stat = target.stat()
+            if (
+                target_stat.st_mtime >= source.stat().st_mtime
+                and target_stat.st_uid == 0
+                and target_stat.st_gid == 0
+                and stat.S_IMODE(target_stat.st_mode) == 0o4755
+            ):
+                return
         self._sudo_copy.parent.mkdir(parents=True, exist_ok=True)
         runner.run(
             [
@@ -192,12 +209,16 @@ class VirtmeSetup:
             build.symlink_to(kernel_dir)
 
     @property
-    def initramfs(self) -> Path:
-        return self.vm.directory / self.vm.which_qemu / "virtme-initramfs.cpio.zst"
+    def _initramfs_path(self) -> Path:
+        return self.vm.qemu_directory / "virtme-initramfs.cpio.zst"
+
+    def initramfs(self, kernel_dir: Path, configured: Path | None) -> Path:
+        del kernel_dir
+        return configured if configured is not None else self._initramfs_path
 
     # 设置 virtme rootfs 共享 (virtio-fs)
     def rootfs_arguments(self) -> tuple[str, ...]:
-        socket = self.vm.directory / self.vm.which_qemu / "virtme.sock"
+        socket = self.vm.qemu_directory / "virtme.sock"
         return (
             "-chardev",
             f"socket,id=virtme_root,path={socket}",
@@ -205,43 +226,12 @@ class VirtmeSetup:
             "vhost-user-fs-pci,chardev=virtme_root,tag=ROOTFS",
         )
 
-    def manual_console_arguments(self, display_backend: str) -> tuple[str, ...]:
-        if self.mode() != "manual":
-            return ()
-        monitor = self.vm.directory / self.vm.which_qemu
-        display_device = (
-            ("-device", "virtio-gpu-pci") if display_backend == "gtk" else ()
-        )
-        return (
-            "-display",
-            display_backend,
-            *display_device,
-            "-device",
-            "virtio-serial",
-            "-chardev",
-            "stdio,id=main_char,signal=off",
-            "-serial",
-            "chardev:main_char",
-            "-chardev",
-            "pty,id=char_pty",
-            "-device",
-            "virtconsole,chardev=char_pty",
-            "-chardev",
-            f"socket,path={monitor / 'qga.sock'},server=on,wait=off,id=qga0",
-            "-device",
-            "virtserialport,chardev=qga0,name=org.qemu.guest_agent.0",
-            "-chardev",
-            f"socket,path={monitor / 'vport.sock'},server=on,wait=off,id=vport",
-            "-device",
-            "virtserialport,chardev=vport,name=org.qemu.vport.0",
-        )
-
     def prepare_rootfs(self, runner: CommandRunner) -> None:
         # 1. 确定共享目录 (默认是 /)
         share_root = self.vm.config.options.get("share_root") or "/"
 
         # 2. 启动 virtiofsd (rootfs)
-        socket = self.vm.directory / self.vm.which_qemu / "virtme.sock"
+        socket = self.vm.qemu_directory / "virtme.sock"
         virtiofsd = shutil.which("virtiofsd")
         if virtiofsd is None and Path("/usr/libexec/virtiofsd").is_file():
             virtiofsd = "/usr/libexec/virtiofsd"
@@ -275,18 +265,30 @@ class VirtmeSetup:
 
         # 3. QEMU 参数由 rootfs_arguments() 设置。
 
+    def prepare(self, runner: CommandRunner) -> None:
+        self.generate_initramfs()
+        self.prepare_sudo(runner)
+        self.prepare_debuginfo()
+        self.prepare_rootfs(runner)
+
+    def fallback_boot_disks(self) -> list[tuple[str, str, str | None]] | None:
+        return None
+
+    def share_directory(self) -> str | None:
+        return None
+
+    @property
+    def force_foreground(self) -> bool:
+        return False
+
     # 生成 virtme initramfs
     def generate_initramfs(self) -> Path:
         kernel_value = self.vm.config.options.get("kernel")
         kernel_dir = Path(kernel_value) if kernel_value is not None else None
-        implementation = self.init_implementation()
-        init_name = (
-            "virtme-init-loader.sh" if implementation == "rust" else "virtme-init.sh"
-        )
-        init_script = self.context.repo / "virtme" / init_name
+        init_script = self.context.repo / "virtme" / "virtme-init-loader.sh"
         if not init_script.is_file():
             raise ColleiError(f"virtme init not found at {init_script}")
-        rust_init = self._build_rust_init() if implementation == "rust" else None
+        rust_init = self._build_rust_init()
 
         # 查找 busybox (优先静态链接版本)。提前到缓存检查之前，
         # 因为 busybox 路径也是缓存输入之一。
@@ -299,7 +301,14 @@ class VirtmeSetup:
             None,
         )
         if busybox is None:
-            raise ColleiError("busybox not found, please install busybox-static")
+            raise ColleiError(
+                "busybox not found; please install a static BusyBox package"
+            )
+        if not is_statically_linked(busybox):
+            raise ColleiError(
+                f"busybox at {busybox} is not statically linked; "
+                "please install a static BusyBox"
+            )
 
         # 模块源文件路径 (单次目录遍历，见 _find_modules)
         modules = (
@@ -311,13 +320,13 @@ class VirtmeSetup:
         # 缓存: 输入 (init 脚本、busybox、模块、机器类型/vsock 选项) 没变化时
         # 直接复用，避免每次启动都重新 cpio+zstd。
         stamp = self._initramfs_stamp(init_script, rust_init, busybox, modules)
-        stamp_path = self.initramfs.parent / f"{self.initramfs.name}.stamp"
+        stamp_path = self._initramfs_path.parent / f"{self._initramfs_path.name}.stamp"
         if (
-            self.initramfs.is_file()
+            self._initramfs_path.is_file()
             and stamp_path.is_file()
             and stamp_path.read_text() == stamp
         ):
-            return self.initramfs
+            return self._initramfs_path
 
         # 1. 创建目录结构
         with tempfile.TemporaryDirectory(prefix="collei-virtme-") as temporary:
@@ -337,78 +346,33 @@ class VirtmeSetup:
             # 2. 复制 busybox
             shutil.copy2(busybox, root / "bin/busybox")
 
-            # 创建 init 所需的 BusyBox applet 链接。Bash init 还负责第二阶段
-            # 用户会话，因此需要 base64/setsid/cttyhack。
+            # 创建第一阶段 loader 所需的 BusyBox applet 链接。
             commands = (
                 "sh mount umount switch_root insmod modprobe mkdir mknod sleep "
                 "uname cp cat chmod echo ln printf"
             ).split()
-            if implementation == "bash":
-                commands.extend(("base64", "setsid", "cttyhack"))
             for command in commands:
                 (root / f"bin/{command}").symlink_to("busybox")
 
             # 3. 创建设备节点
-            # 如果 devtmpfs 不可用，需要这些基本设备。普通用户无法 mknod 时，
-            # initramfs 启动后仍可由 devtmpfs 提供，所以保持原脚本的容错行为。
-            for name, mode, major, minor in (
-                ("null", 0o666, 1, 3),
-                ("zero", 0o666, 1, 5),
-                ("random", 0o666, 1, 8),
-                ("urandom", 0o666, 1, 9),
-                ("console", 0o622, 5, 1),
-                ("kmsg", 0o660, 1, 11),
-            ):
-                try:
-                    os.mknod(
-                        root / f"dev/{name}", 0o20000 | mode, os.makedev(major, minor)
-                    )
-                except PermissionError:
-                    pass
+            create_device_nodes(root)
 
             # 4. 复制 init 脚本
             shutil.copy2(init_script, root / "init")
             (root / "init").chmod(0o755)
 
-            if rust_init is not None:
-                # 第一阶段 loader 在 ROOTFS 的私有 /tmp 中安装 Rust init，
-                # 并通过 switch_root 将其作为 PID 1 启动。
-                shutil.copy2(rust_init, root / "bin/virtme-ng-init.out")
-                (root / "bin/virtme-ng-init.out").chmod(0o755)
+            # 第一阶段 loader 在 ROOTFS 的私有 /tmp 中安装 Rust init，
+            # 并通过 switch_root 将其作为 PID 1 启动。
+            shutil.copy2(rust_init, root / "bin/virtme-ng-init.out")
+            (root / "bin/virtme-ng-init.out").chmod(0o755)
 
             # 5. 复制必要内核模块 (如果内核目录可用)
             self._copy_modules(root, modules)
 
-            # 6. 打包为 cpio.zst。走外部 zstd 而不是 Python gzip:
-            # 19.5MB 的 initramfs 用 gzip level 9 要 ~3.4s (level 1 也要 0.13s)，
-            # zstd -1 只需 ~30ms，内核 CONFIG_RD_ZSTD 直接支持。
-            self.initramfs.parent.mkdir(parents=True, exist_ok=True)
-            find = subprocess.Popen(
-                ["find", ".", "-print0"], cwd=root, stdout=subprocess.PIPE
-            )
-            if find.stdout is None:
-                raise ColleiError("cannot read find output")
-            cpio = subprocess.Popen(
-                ["cpio", "--null", "-o", "--format=newc"],
-                cwd=root,
-                stdin=find.stdout,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.DEVNULL,
-            )
-            find.stdout.close()
-            if cpio.stdout is None:
-                raise ColleiError("cannot read cpio output")
-            with self.initramfs.open("wb") as archive:
-                zstd = subprocess.Popen(
-                    ["zstd", "-q", "-1", "-T0"],
-                    stdin=cpio.stdout,
-                    stdout=archive,
-                )
-            cpio.stdout.close()
-            if cpio.wait() or find.wait() or zstd.wait():
-                raise ColleiError("failed to create virtme initramfs")
+            # 6. 打包为 cpio.zst
+            pack_cpio_zst(root, self._initramfs_path)
         stamp_path.write_text(stamp)
-        return self.initramfs
+        return self._initramfs_path
 
     def _build_rust_init(self) -> Path:
         crate = self.context.repo / "virtme" / "virtme-ng-init"
@@ -479,19 +443,17 @@ class VirtmeSetup:
     def _initramfs_stamp(
         self,
         init_script: Path,
-        rust_init: Path | None,
+        rust_init: Path,
         busybox: Path,
         modules: dict[str, Path],
     ) -> str:
         parts = [
-            f"implementation={self.init_implementation()}",
             f"{init_script}:{init_script.stat().st_mtime_ns}",
             f"{busybox}:{busybox.stat().st_mtime_ns}",
             f"machine={self.vm.config.options.get('machine') or 'pc'}",
             f"vsock={self.vm.config.options.enabled('vsock')}",
+            f"{rust_init}:{rust_init.stat().st_mtime_ns}",
         ]
-        if rust_init is not None:
-            parts.append(f"{rust_init}:{rust_init.stat().st_mtime_ns}")
         for name in sorted(modules):
             path = modules[name]
             parts.append(f"{name}:{path}:{path.stat().st_mtime_ns}")
@@ -561,15 +523,43 @@ class VirtmeSetup:
 
     @staticmethod
     def _module_vermagic(module: Path) -> str | None:
-        completed = subprocess.run(
-            ["modinfo", "-F", "vermagic", module],
-            text=True,
-            capture_output=True,
-            check=False,
-        )
+        try:
+            completed = subprocess.run(
+                ["modinfo", "-F", "vermagic", module],
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+        except OSError:
+            pass
+        else:
+            fields = completed.stdout.split()
+            if completed.returncode == 0 and fields:
+                return fields[0]
+        # openEuler kmod 29 may return success with an empty value for valid modules.
+        return VirtmeSetup._elf_modinfo_value(module, "vermagic")
+
+    @staticmethod
+    def _elf_modinfo_value(module: Path, field: str) -> str | None:
+        print("fallback to objcopy to get vermagic")
+        try:
+            completed = subprocess.run(
+                ["objcopy", "--dump-section", ".modinfo=/dev/stdout", module],
+                capture_output=True,
+                check=False,
+            )
+        except OSError:
+            return None
         if completed.returncode != 0:
             return None
-        return completed.stdout.split()[0] if completed.stdout.split() else None
+        prefix = field.encode() + b"="
+        for entry in completed.stdout.split(b"\0"):
+            if entry.startswith(prefix):
+                values = entry[len(prefix) :].split(maxsplit=1)
+                if values:
+                    return values[0].decode("ascii", errors="replace")
+                return None
+        return None
 
     @classmethod
     def _module_matches_kernel(cls, module: Path, release: str) -> bool:

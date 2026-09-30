@@ -6,22 +6,6 @@ https://superuser.com/questions/1373226/how-to-redirect-qemu-serial-output-to-bo
 
 也就是一个设备写入到两个设备中:
 
-## 到底谁在用
-/dev/hvc0 和 /dev/vport6p0 会使用
-```txt
-  lspci -s 00:08.0 -v
-00:08.0 Communication controller: Red Hat, Inc. Virtio console
-        Subsystem: Red Hat, Inc. Device 0003
-        Flags: bus master, fast devsel, latency 0, IRQ 20
-        I/O ports at c080 [size=64]
-        Memory at fe0c6000 (32-bit, non-prefetchable) [size=4K]
-        Memory at 38000001c000 (64-bit, prefetchable) [size=16K]
-        Capabilities: <access denied>
-        Kernel driver in use: virtio-pci
-        Kernel modules: virtio_pci
-
-```
-
 ## qemu 关于 monitor 的命令行参数
 <!-- 8f2f4e27-34d8-40c9-bea5-565f229d5817 -->
 其实很容易
@@ -427,8 +411,6 @@ virtio-ports/vport6p0/device🔒 🦇
 如果你想禁用默认 monitor，可以用 -monitor none。
 ```
 
-
-
 ### -serial 的展开
 ```txt
 -chardev <backend> ,id=serial0
@@ -540,15 +522,23 @@ static const struct hv_ops hv_ops = {
 ```
 #### 关于 hvc0 的最后一个问题，为什么 console=/dev/hvc0 但是 console=/dev/vport6p0 就不行
 
-🧀  echo 1 | sudo tee /dev/vport6p3
-
-是可以观察到输出的
-
-## 通过 pty driver 来理解 qemu
-
-qemu 也需要打开一个 master ，然后一端从虚拟机哪里接受，另外一端从
-
-## socat 原来就是一个 pty client 啊
+## qemu 的 info chardev 也是一个好工具
+```txt
+(qemu) info chardev
+serial2: filename=pipe
+serial0-base: filename=stdio
+serial1: filename=pipe
+seabios: filename=file
+mon1: filename=disconnected:unix:/home/martins3/hack/vm/2403-nix/s/qmp,server=on
+serial3: filename=file
+mon2: filename=unix:/home/martins3/hack/vm/2403-nix/s/hmp,server=on
+compat_monitor0: filename=disconnected:unix:/home/martins3/hack/vm/2403-nix/qmp.sock,server=on
+mon3: filename=disconnected:unix:/home/martins3/hack/vm/2403-nix/s/qmp-shell,server=on
+cmdout: filename=disconnected:unix:/home/martins3/hack/vm/2403-nix/s/cmdout.sock,server=on
+qga0: filename=disconnected:unix:/home/martins3/hack/vm/2403-nix/s/qga.sock,server=on
+virtiocon0: filename=pty:/dev/pts/5
+serial0: filename=mux
+```
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

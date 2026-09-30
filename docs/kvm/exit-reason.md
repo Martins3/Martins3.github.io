@@ -1,3 +1,4 @@
+# exit reason
 ## 将所有的 exit reason 都整理下
 
 EXIT_REASON_NOTIFY

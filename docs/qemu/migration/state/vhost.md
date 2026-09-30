@@ -84,19 +84,18 @@ used ring is logged at this offset from log start.
 
 如果你想，我可以继续把这个流程和 QEMU 迁移里的 memory_global_dirty_log / used ring 一起对照讲一遍。
 
-### 热迁移的访问的时候，需要 qemu 和 vhost 停下来吗?
+## 热迁移的访问 dirty bitmap 的时候，需要 qemu 和 vhost 停下来吗?
 <!-- e0c76777-e182-4f46-b65d-06352d835b2c -->
 
-一般来说，不需要后端感知，也不需要后端停下来。
-这里的设计本来就是为并发访问准备的：
-• 后端一边继续处理 I/O，一边用原子操作把 bitmap 对应 bit 置 1
-• QEMU 另一边周期性地去扫这块 shared memory，把已经置位的 bit 读出来并清掉
-• 两边默认就是可以同时操作这块 bitmap 的
+不需要:
+- 后端一边继续处理 I/O，一边用原子操作把 bitmap 对应 bit 置 1
+- QEMU 另一边周期性地去扫这块 shared memory，把已经置位的 bit 原子性读出来并清掉
+- 两边默认就是可以同时操作这块 bitmap 的
 
 协议文档其实明确提示了这一点：log 可能被并发修改，所以后端置位时要用 atomic 操作。
 QEMU 这边实现也是按这个思路做的，它不是简单读，而是原子地把一整个 log chunk 取出来并清零：
 
-hw/virtio/vhost.c lines 86-106
+hw/virtio/vhost.c
 ```c
   static void vhost_dev_sync_region(struct vhost_dev *dev,
                                     MemoryRegionSection *section,
@@ -122,7 +121,7 @@ hw/virtio/vhost.c lines 86-106
 ```
 后端置位也是原子的：
 
-subprojects/libvhost-user/libvhost-user.c lines 721-737
+subprojects/libvhost-user/libvhost-user.c
 ```c
 static void
 vu_log_page(uint8_t *log_table, uint64_t page)
@@ -141,23 +140,16 @@ vu_log_write(VuDev *dev, uint64_t address, uint64_t length)
 }
 ```
 
-所以关键点是：
-- pre-copy 期间：后端通常不停，QEMU 随时可以直接读这块 shared bitmap
-- 不需要专门通知后端“我要读了”
-- 不会因为并发访问就天然丢脏页，前提是双方按协议做原子更新
-- 如果某页在 QEMU 清零之后又被后端写了，后端会再次把 bit 置 1，QEMU 下一轮还能看到
-
 只有到最终 stop-and-copy / source 完成迁移那个阶段，设备/ring 才会被停住，此时才要求不再继续更新 log。
 
-## TODO
 
-1. 几种 virtio 设备都是如何处理热迁移的:
-	1. vhost-net
-	2. virtio-blk
-	3. vhost user virtio-blk
+## 热迁移过程中，vhost 后端断开重连
 
-2. 看看 vhost 对于热迁移的优化
-	- https://patchew.org/QEMU/20250813164856.950363-1-vsementsov@yandex-team.ru/
+简单发分析了下，
+1. vhost net
+2. vhost user blk
+
+都不会让热迁移失败了，我感觉这个需要一些工作量了。
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

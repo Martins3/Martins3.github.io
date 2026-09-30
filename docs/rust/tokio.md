@@ -11,6 +11,9 @@ https://github.com/libuv/libuv
 有趣的问题:
 https://www.reddit.com/r/rust/comments/b6p47t/pingpong_async_implementations_benchmark_libuv_vs/
 
+- https://kobzol.github.io/rust/2025/02/23/tokio-plus-prctl-equals-nasty-bug.html
+	- https://news.ycombinator.com/item?id=43153901
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

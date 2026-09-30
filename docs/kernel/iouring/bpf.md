@@ -1,6 +1,9 @@
+# bpf
 - https://lpc.events/event/11/contributions/901/attachments/786/1661/io_uring-BPF.pdf
 
 添加一个 IORING_OP_BPF ，做一些 wq 的操控，21 的想法，到今天(2025-09-30) 还没合并
+
+[io uring and eBPF](https://thenewstack.io/how-io_uring-and-ebpf-will-revolutionize-programming-in-linux/)
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

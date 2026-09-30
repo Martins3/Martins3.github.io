@@ -1,3 +1,5 @@
+# trace
+
 ## 先不搞那些虚的东西，分析清楚下面这个问题
 - Documentation/trace/
   - Documentation/trace/events.rst : /sys/kernel/debug/tracing/events 中的使用，包括 filter 和 trigger
@@ -15,13 +17,9 @@
   - profile
 
 ## 更加好用的前端分析工具
-
 - [hotspot](https://github.com/KDAB/hotspot) :star:
-
 - https://github.com/cyring/CoreFreq
-
 - [sysdig](https://github.com/draios/sysdig)
-
 - [kernelshark 使用介绍](https://elinux.org/images/6/64/Elc2011_rostedt.pdf)
 - [kernelshark](https://www.cnblogs.com/arnoldlu/p/9014365.html)
 
@@ -49,69 +47,22 @@ csysdig -l
 - https://graphviz.org/pdf/gvpr.1.pdf
 - https://www.gnu.org/software/cflow/manual/cflow.html : 可以绘制整个图形的
 
-## rtla
-- https://lwn.net/Articles/869563/
-- https://bristot.me/and-now-linux-has-a-real-time-linux-analysis-rtla-tool/
-
-Linux调度延迟调试分析利器：深度解析rtla工具 - 超龄码农的文章 - 知乎
-https://zhuanlan.zhihu.com/p/1931440485681049801
-
-原来 rtla 是做这个东西
-
-## 针对于特定语言的
-- python : https://github.com/benfred/py-spy
-- [memray](https://github.com/bloomberg/memray) : python 的内存使用
-
-- https://github.com/tikv/pprof-rs : 给 rs 来实现 perf 的 ?
-
-- https://github.com/felixge/fgprof : pprof-rs 对应的 go 的实现的版本
-
-只有 python 需要针对的分析工具吗?
-
-- [pprof](https://github.com/google/pprof)
-  - 和这个东西是什么关系? https://github.com/gperftools/gperftools
-  - [ ] 如果 pprof 似乎是可以 C 语言工作的，但是 gperf 据说已经很好用了
-  - [ ] https://github.com/jrfonseca/gprof2dot
-    - 这个工具是被我们使用上了，但是本身是一个将各种 perf 结果生成新的结果的工具，可以看看原来的结果的位置
 
 - https://github.com/javamelody/javamelody : JavaMelody : monitoring of JavaEE applications
-
-
-## 看看邹大哥的文章
-https://lawrencezx.github.io/blogs/2022-3-Linux-Dynamic-Tracing.html
-
-
-## 写一个更新版本的
-[Linux tracing systems & how they fit together](https://jvns.ca/blog/2017/07/05/linux-tracing-systems/)
-
-基本没有问题
-
-## 其他项目
+- [邹大哥的文章](https://lawrencezx.github.io/blogs/2022-3-Linux-Dynamic-Tracing.html)
+- [Linux tracing systems & how they fit together](https://jvns.ca/blog/2017/07/05/linux-tracing-systems/)
 - https://github.com/koute/bytehound
-
 - https://gitee.com/anolis/sysak : 里面有大量的脚本， 也许可以参考下
   - [surftrace](https://gitee.com/anolis/surftrace) : ftrace 封装以及两个编译器，但是我不知道相对于 bpftrace 有啥优势
 - [linux tracing workshop](https://github.com/goldshtn/linux-tracing-workshop) : 教程，但是没有维护了
-
-## 常看长新的
 - [Linux Performance](http://www.brendangregg.com/linuxperf.html)
 
 ## 应该已经没有人用了
-
 3. https://oprofile.sourceforge.io/about/
-4. dtrace
-
 
 ## 想法
 - 实际上，通过 function trace 可以制作函数级别的 code coverage
 - 借鉴 kernel_visualization 中的案例，实际上可以利用 function graph trace 制作一个函数调用图出来
-
-## trace 的实现
-
-1. 解析 stack 绝对是一个复杂的事情
--  https://news.ycombinator.com/item?id=35592446
-2. CONFIG_TASKS_RCU 中看，ftrace 居然是和 rcu 有关的
-- https://docs.kernel.org/RCU/Design/Requirements/Requirements.html#tasks-rcu
 
 ## TODO
 
@@ -124,11 +75,8 @@ sudo bpftrace -e "tracepoint:irq:softirq_raise { @[kstack] = count(); }"
 
 4. 整理一个观察，bpftrace 的 kfunc 是无法在 trace_softirq_raise 上设置的
 
-
 5. https://lists.gnu.org/archive/html/qemu-devel/2013-04/msg00505.html
   - qemu 为什么会存在 ftrace 的后端?
-
-6. bcc 似乎还可以直接操作用户态
 
 ## TODO 最近又增加了一些 trace 技术
 https://lore.kernel.org/all/170952359657.229804.14867636035660590574.stgit@devnote2/
@@ -136,7 +84,6 @@ https://lore.kernel.org/all/170952359657.229804.14867636035660590574.stgit@devno
 ## TODO user stack 的 trace 也需要分析
 https://lwn.net/Articles/889607/
 
-## 对比 tracepoint 在 gcc 和 llvm 的实现差别
 
 ## uprobe 使用
 objdump -T /usr/libexec/qemu-kvm | grep -w x86_cpu_dump_state
@@ -189,8 +136,6 @@ echo 1 > /sys/kernel/debug/tracing/events/kprobes/myprobe3/enable
 就算是使用重新构建，tracepoint 也要比 printk 好很多。
 
 
-## QEMU 的这个 trace 文档还是需要看看的
-docs/devel/tracing.rst
 
 ## 看看这个项目
 https://github.com/kernel-cyrus/tracecat?tab=readme-ov-file
@@ -199,19 +144,18 @@ https://github.com/kernel-cyrus/tracecat?tab=readme-ov-file
 ## trace 的内容放到 userspace
 - https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=53683e408013
 
-## 在 terminal 中检查 flamegraph
-https://github.com/jonhoo/inferno
-https://github.com/YS-L/flamelens
-https://github.com/davidmarkclements/0x
+1. 在 terminal 中检查 flamegraph
+- https://github.com/jonhoo/inferno
+- https://github.com/YS-L/flamelens
+- https://github.com/davidmarkclements/0x
 
 ## 这个应该如何归类?
 https://github.com/plasma-umass/coz
 
 https://github.com/Linaro/OpenCSD
 
-## 尝试下这个工具
-https://0x.tools/ : 等 nixos 上有打包之后再说吧
-
+## 工具
+https://0x.tools/
 https://github.com/plasma-umass/scalene
 
 ## trace
@@ -223,10 +167,7 @@ https://github.com/plasma-umass/scalene
   - 如何处理中断
   - 分析了 off cpu 的跟踪场景
 
-## 计划一下
 https://www.brendangregg.com/FlameGraphs/cpuflamegraphs.html
-
-
 
 ## A Top-Down Method for Performance Analysis and Counters Architecture
 <!-- 39478226-34df-4f6f-8415-03750ba2314b -->
@@ -240,6 +181,22 @@ https://rcs.uwaterloo.ca/~ali/cs854-f23/papers/topdown.pdf
 - Backend Bound（后端卡住）
 
 https://cloud.tencent.com/developer/article/1844992
+
+## 针对于特定语言的
+- python : https://github.com/benfred/py-spy
+- [memray](https://github.com/bloomberg/memray) : python 的内存使用
+
+- https://github.com/tikv/pprof-rs : 给 rs 来实现 perf 的 ?
+
+- https://github.com/felixge/fgprof : pprof-rs 对应的 go 的实现的版本
+
+只有 python 需要针对的分析工具吗?
+
+- [pprof](https://github.com/google/pprof)
+  - 和这个东西是什么关系? https://github.com/gperftools/gperftools
+  - [ ] 如果 pprof 似乎是可以 C 语言工作的，但是 gperf 据说已经很好用了
+  - [ ] https://github.com/jrfonseca/gprof2dot
+    - 这个工具是被我们使用上了，但是本身是一个将各种 perf 结果生成新的结果的工具，可以看看原来的结果的位置
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

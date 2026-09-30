@@ -1,5 +1,10 @@
 # firecracker 集成
 
+
+## 构建方法
+cargo build --features gdb
+
+
 ## 设计文档
 - https://assets.amazon.science/96/c6/302e527240a3b1f86c86c3e8fc3d/firecracker-lightweight-virtualization-for-serverless-applications.pdf
 - https://www.usenix.org/system/files/nsdi20-paper-agache.pdf : 2020 的

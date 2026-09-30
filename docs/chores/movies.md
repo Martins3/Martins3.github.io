@@ -74,6 +74,17 @@ https://book.douban.com/subject/10583099/
 ## 一战再战
 - https://www.bilibili.com/video/BV1rGApzWE31/
 
+- Perfidia : 女主
+- Lockjaw  : 小白
+
+我其实有很多疑惑:
+1. 为什么印第安人要去救女孩
+2. 小白最后加入的组织是什么?
+3. 为什么小白这么想要加入到 3K 党？
+
+与众不同的感觉:
+1. 背景音乐
+
 ## TODO
 
 - https://www.zhihu.com/question/1979882986758432108
@@ -82,6 +93,10 @@ https://book.douban.com/subject/10583099/
 ## 痴迷
 
 强烈推荐，杂碎汽车玻璃，破窗而入，真的把我整个人都吓的跳起来了
+
+## 兰若寺
+
+## 特工
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

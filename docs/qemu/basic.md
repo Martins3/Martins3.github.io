@@ -1,3 +1,4 @@
+# qemu 基础
 ## alpine iso 可以直接启动使用
 https://alpinelinux.org/downloads/
 
@@ -230,9 +231,6 @@ https://wiki.qemu.org/Documentation/Debugging
 ## 参考资料
 [主板 INTEL 440FX PCISET](https://wiki.qemu.org/images/b/bb/29054901.pdf)
 
-## 补充 qemu 启动
-https://news.ycombinator.com/item?id=37460614
-https://futurewei-cloud.github.io/ARM-Datacenter/posts/
 
 ## virt-manager
 
@@ -418,18 +416,9 @@ https://futurewei-cloud.github.io/ARM-Datacenter/posts/
 ## 哈哈，这也算是一种启动 qemu 的方式吧
 - https://github.com/google/syzkaller/blob/master/vm/qemu/qemu.go
 
-## 这个是做啥的?
-https://github.com/qemus/qemu-docker
-
-使用 k8s 或者容器 封装 qemu ，非常好!
-
-有一堆这种项目，https://github.com/qemus
-
 ## https://github.com/kholia/OSX-KVM
 
 
-## 对于 windows 的一个有趣的封装
-git clone https://github.com/dockur/windows
 
 真的非常有意思
 
@@ -450,30 +439,31 @@ git clone https://github.com/dockur/windows
 ## 通过 qemu 中的 info mtree 逐个看看都是里面都是有什么
 用于理解 aarch64 是极好的
 
-## 你必须精通 QEMU
+## 你需要精通 QEMU
 我认为任何操作系统工程师必须深入理解硬件，
 所以必须精通 qemu 。
 
 搞操作系统不懂 qemu ，如同搞芯片不懂 gem5
 搞网络不懂 wireshare
 
-## UTM
-https://rkiselenko.dev/blog/development-on-mac-with-utm/development-on-mac-with-lima/
 
-https://blog.getutm.app/2026/introducing-triton-directx-11-driver-for-qemu/
+## 分析 QEMU 的每一个模块和演化过程
 
-utm 感觉还是有技术含量的
+### 7.2
+- https://wiki.qemu.org/ChangeLog/7.2#Multi-process_QEMU
+
+这个有趣的
+https://news.ycombinator.com/item?id=44413185
 
 ## 这个是极好的
 https://www.qemu.org/docs/master/specs/edu.html
 
+## 参考
+https://unix.stackexchange.com/questions/779763/which-linux-kernel-config-options-are-required-to-get-qemu-virtio-to-work
 
-## 这个是终极解决方案吗？
-https://github.com/winapps-org/winapps
-https://github.com/TibixDev/winboat
+整理一下 microvm 主要靠什么东西快速启动的?
 
-
-
+https://github.com/earendil-works/gondolin
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

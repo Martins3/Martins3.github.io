@@ -1,5 +1,12 @@
 # 性能基准测试工具
 
+## 本仓库的测试
+- [microbench/](microbench/README.md) : 本机 C++ CPU 微基准
+- [gpu-microbench/](gpu-microbench/README.md) : GPU 微基准，与上面同方法同 CSV 约定
+- [my-result.md](my-result.md) : 两者的测试记录
+- [peak-flops.md](peak-flops.md) : 峰值算力怎么算，FLOP 怎么数，利用率怎么读
+
+## 别人的
 - https://github.com/martinus/nanobench
   - https://nanobench.ankerl.com/comparison.html#runtime : 还对比了其他的一堆 benchmark
 - https://github.com/kdlucas/byte-unixbench

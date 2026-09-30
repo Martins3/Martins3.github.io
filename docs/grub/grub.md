@@ -102,6 +102,7 @@ https://github.com/rhboot/grub2
 grub 连 xfs 都识别，感觉也是挺闲的:
 https://github.com/rhboot/grub2/blob/fedora-44/grub-core/fs/xfs.c
 
+https://github.com/Jacksaur/Gorgeous-GRUB
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

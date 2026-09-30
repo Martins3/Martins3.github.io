@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import mmap
 import platform
 import re
 import subprocess
+from functools import cache
 from pathlib import Path
 
 from errors import UnsupportedNativeConfiguration
@@ -24,6 +26,7 @@ def kernel_image(kernel_dir: Path) -> Path:
     )
 
 
+@cache
 def kernel_release(kernel_dir: Path) -> str:
     """返回实际启动的内核版本。
 
@@ -50,7 +53,22 @@ def _release_from_image(image: Path, kernel_dir: Path) -> str:
     match = re.search(r"version ([\w.+-]+)", completed.stdout)
     if match:
         return match.group(1)
-    # 回退: 解压 vmlinux 后搜索 "Linux version" 字符串。
+
+    # ARM64 Image 是未压缩的内核映像，直接读取其中的 linux_banner。
+    try:
+        with image.open("rb") as stream:
+            with mmap.mmap(stream.fileno(), 0, access=mmap.ACCESS_READ) as content:
+                prefix = b"Linux version "
+                start = content.find(prefix)
+                start = start + len(prefix) if start >= 0 else -1
+                end = content.find(b" ", start) if start >= 0 else -1
+                release = bytes(content[start:end]) if end > start else b""
+    except (OSError, ValueError):
+        release = b""
+    if re.fullmatch(rb"[\w.+-]+", release):
+        return release.decode()
+
+    # 解压 vmlinux 后搜索 "Linux version" 字符串。
     extractor = kernel_dir / "scripts" / "extract-vmlinux"
     if extractor.is_file():
         extracted = subprocess.run(

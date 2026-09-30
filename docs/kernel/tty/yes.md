@@ -24,6 +24,26 @@ done
 ```
 
 这些内容被内核直接渲染到了帧缓冲区（framebuffer）上。
+## 果然，还有这个层次
+```txt
+static struct tty_ldisc_ops n_tty_ops = {
+	.owner		 = THIS_MODULE,
+	.num		 = N_TTY,
+	.name            = "n_tty",
+	.open            = n_tty_open,
+	.close           = n_tty_close,
+	.flush_buffer    = n_tty_flush_buffer,
+	.read            = n_tty_read,
+	.write           = n_tty_write,
+	.ioctl           = n_tty_ioctl,
+	.set_termios     = n_tty_set_termios,
+	.poll            = n_tty_poll,
+	.receive_buf     = n_tty_receive_buf,
+	.write_wakeup    = n_tty_write_wakeup,
+	.receive_buf2	 = n_tty_receive_buf2,
+	.lookahead_buf	 = n_tty_lookahead_flow_ctrl,
+};
+```
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

@@ -70,6 +70,7 @@
 磁盘和内存中内容需要一致的才可以。
 
 ## QEMU 的 RunState
+<!-- 19c40037-6a01-4216-8bd4-46ffdb598268 -->
 
 qapi/run-state.json 中
 
@@ -149,7 +150,7 @@ restore-vm        暂停 Guest，恢复 VM state/snapshot
 colo              COLO checkpoint 保存或恢复状态
 
 
-  QEMU 显式维护允许的迁移矩阵，见 system/runstate.c:82。
+QEMU 显式维护允许的迁移矩阵，见 system/runstate.c:82。
 
   例如：
 
@@ -165,7 +166,6 @@ colo              COLO checkpoint 保存或恢复状态
 soruce 端:
 ```txt
 runstate_set current_run_state 6 (prelaunch) new_state 9 (running)
-
 runstate_set current_run_state 9 (running) new_state 7 (finish-migrate)
 runstate_set current_run_state 7 (finish-migrate) new_state 5 (postmigrate)
 
@@ -181,9 +181,7 @@ runstate_set current_run_state 1 (inmigrate) new_state 9 (running)
 runstate_set current_run_state 9 (running) new_state 11 (shutdown)
 ```
 
-### 是在什么 thread 下调用的?
-
-看上去什么 thread 都是可以调用的:
+### 调用 runstate_set 的上下文
 
 - __clone3
   - start_thread
@@ -211,7 +209,6 @@ static void kvmclock_vm_state_change(void *opaque, bool running,
 
 ## 热迁移的基本流程
 <!-- 9ee517c5-92a8-4b2e-88a7-dd74c8bc99da -->
-
 
 ### 基本流程
 进行 iteration 只有一个 thread 的，也就是

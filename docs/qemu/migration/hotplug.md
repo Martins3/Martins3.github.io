@@ -1,81 +1,135 @@
-# 热插拔后，如何热迁移
+# qemu 热插拔和热迁移
+<!-- 74ba90da-89de-47fb-a27b-eac52b14d31e -->
 
+## 热迁移前进行了热插
 1. 迁移前已经热插入的设备
 
-设备在 realize 时会把自己的 VMStateDescription 注册进迁移框架，因此启动时创建和后
-来热插入的设备，在迁移层面没有本质区别：
-
+设备在 realize 时会把自己的 VMStateDescription 注册进迁移框架，因此启动时创建和后来热插入的设备，在迁移层面没有本质区别：
 - 设备 realize
 - 注册 VMState section
 - 如果包含 RAM，再注册对应 RAMBlock
 - 开始迁移时自动进入迁移流
 
-## 热插拔的工作是 libvirt 的工作
+### 热插拔主要逻辑在 libvirt 中
 
-两份源码都看完了。结论：目标端 QEMU 的命令行在"设备层面"会包含热插的设备（比如
-热插的内存会以 -object memory-backend-* + -device pc-dimm 出现），但并不是和源
-端逐字节一模一样。两边分工如下：
-
-QEMU 侧：一致性不靠 QEMU 保证，靠管理层；不一致就拒绝迁移
-
-目标端是一个全新进程，先按命令行把整台机器建好（qemu_init_board 完成后才进入
-incoming，system/vl.c:2821-2848），收到迁移流后只做字符串匹配，不会从流里重建
+目标端是一个全新进程，先按命令行把整台机器建好，收到迁移流后只做字符串匹配，不会从流里重建
 任何设备：
 
-- 每个设备的 VMState section 带 idstr（设备 qom 路径）+ instance_id，目标端 find_se() 匹配不上直接报错（migration/savevm.c)
+每个设备的 VMState section 带 idstr（设备 qom 路径）+ instance_id，目标端 find_se() 匹配不上直接报错（migration/savevm.c)
 ```txt
 Unknown section or instance ... Make sure that your current VM setup
 matches your saved VM setup, **including any hotplugged devices**
-  ```
-- pc-dimm 本身没有 VMState（hw/mem/pc-dimm.c 的 class init 没设 dc->vmsd，历史
-  上只迁 addr 的 vmstate_pcdimm 已从上游移除）。也就是说 dimm 的
-  addr/slot/node/size/memdev 全靠目标端命令行重建，迁移流里只有两样相关的东西
-    - RAMBlock（idstr = 设备 qom 路径 + MR 名），目标端找不到就报 Unknown
-      ramblock ... cannot accept migration（migration/ram.c:4281-4288）；
-    - ACPI 热插状态寄存器
-      （vmstate_memory_hotplug，hw/acpi/memory_hotplug.c:308）。
-- 前提还得有 -M maxmem=，否则目标端连 device-memory 区域都没有。
-
-所以：如果目标端命令行漏了热插的内存，迁移不是"静默丢状态"，而是直接失败（落在
-ramblock 匹配上）。
-
-libvirt 侧：目标端命令行由源端 live XML 重建，自动包含热插设备
-
-- 热插成功后设备立即插入 live def（内存走
-  virDomainMemoryInsert，src/qemu/qemu_hotplug.c:2398），DIMM 的 slot/base 地
-  址在热插时由 qemuDomainAssignMemoryDeviceSlot 分配并记录，之后还会从 QEMU 查
-  实际地址回写。
-- 迁移 Begin 阶段，源端把 live def 序列化为 migratable
-  XML（qemuMigrationSrcBeginXML，qemu_migration.c:2678）传给目标端；目标端
-  qemuMigrationDstPrepareFresh 用这份 XML 建 domain 对象，再
-  qemuBuildCommandLine 生成 argv（qemu_process.c:8094）。热插的内存在
-  qemuBuildMemoryDeviceCommandLine（qemu_command.c:7904）里变成完整的 -object
-  memory-backend-* + -device pc-dimm，slot/alias/PCI 地址与源端一致。
-- 迁移 cookie 不传设备配置，只有 persistent XML、CPU、QEMU caps 等，外加
-  MEMORY_HOTPLUG/CPU_HOTPLUG 强制特性标志（防止旧 libvirt 不认识热插配置时静默
-  出错）。
-
-和源端命令行的刻意差异
-
-虽然由同一份 XML 构建，但目标端会：
-
-• 多一个 -incoming defer；
-• monitor socket、pidfile、chardev/logfile 等运行时路径按目标端主机重新生成；
-• 内存后端文件路径按目标端 qemu.conf（hugetlbfs 挂载点、memory_backing_dir）重
-  算；
-• TLS creds、NBD server 等迁移相关对象不走命令行，启动后经 QMP 添加。
-
-一句话总结：设备构成（含热插的 dimm）一致，但参数不是一模一样——QEMU 要求的是"
-配置可匹配"（idstr/RAMBlock/地址对得上），逐字节相同从来不是要求，也不可能（两
-端路径本就不同）。
-
-## 测试效果
+```
 
 8G 热插 4G ，然后对 target 端启动的结果:
 ```txt
 	-m size=8388608k,slots=255,maxmem=4194304000k
 	-object memory-backend-ram,id=memdimm0,size=4294967296
 	-device pc-dimm,node=0,memdev=memdimm0,id=dimm0,slot=0,addr=9663676416
+```
+
+## 热迁移和热插的同步问题
+
+1. 热插和热迁移是顺序的，而热插是一个同步的操作
+
+2. qmp_migrate() 调用 migrate_prepare()，最终由 migrate_init() 把状态从 NONE 改成 SETUP：
+```txt
+
+migrate_set_state(&s->state,
+                  MIGRATION_STATUS_NONE,
+                  MIGRATION_STATUS_SETUP);
+```
+
+见 migration/migration.c:1709。
+
+```c
+if (migration_is_running()) {
+    error_setg(errp, "device_add not allowed while migrating");
+    return NULL;
+}
+```
+
+所以，就不用考虑这个情况了。
+
+## 热迁移和热拔的同步问题
+
+基本上可以按照 qdev_unplug 中，来做划分:
+```c
+    /* If device supports async unplug just request it to be done,
+     * otherwise just remove it synchronously */
+    hdc = HOTPLUG_HANDLER_GET_CLASS(hotplug_ctrl);
+    if (hdc->unplug_request) {
+        hotplug_handler_unplug_request(hotplug_ctrl, dev, &local_err);
+    } else {
+        hotplug_handler_unplug(hotplug_ctrl, dev, &local_err);
+        if (!local_err) {
+            object_unparent(OBJECT(dev));
+        }
+    }
+```
+
+2026-08-25 : 不过，我大致知道了，unplug 机制还是有点复杂的，会出现 async 的情况，先就这样了。
+
+### 特殊设备
+典型特例是 virtio-net failover :
+迁移会进入 WAIT_UNPLUG，通过 qemu_savevm_wait_unplug() 等待主 VFIO 网卡完全拔除
+
+### virtio-scsi
+
+hotplug_handler_unplug(...);
+object_unparent(...);
+
+virtio_scsi_hotunplug() 内部立即调用 qdev_simple_device_unplug_cb()，见 hw/scsi/virtio-scsi.c:1182。
+
+### virtio-blk-pci
+
+这里要分两个阶段理解。
+
+第一阶段，qdev_unplug() 走 if：
+
+```txt
+if (hdc->unplug_request) {
+    hotplug_handler_unplug_request(...);
+}
+```
+
+因为 img 是 PCI 设备，挂在 i440fx/PIIX4 的 PCI root bus 上，hotplug handler 是 PIIX4 ACPI 控制器。PIIX4 同时注册了：
+
+```txt
+hc->unplug_request = piix4_device_unplug_request_cb;
+hc->unplug = piix4_device_unplug_cb;
+```
+
+请求路径：
+
+qdev_unplug
+  → hotplug_handler_unplug_request
+  → piix4_device_unplug_request_cb
+  → acpi_pcihp_device_unplug_request_cb
+      → pending_deleted_event = true
+      → 设置 ACPI down bit
+      → 向 Guest 发 ACPI event
+
+第二阶段，Guest ACPI 驱动响应 eject 请求，QEMU 再走：
+
+acpi_pcihp_eject_slot
+  → hotplug_handler_unplug
+  → piix4_device_unplug_cb
+  → qdev_unrealize
+  → object_unparent
+
+所以 GDB 随后又看到了：
+
+TRACE ELSE/completion hotplug_handler_unplug id=img
+
+但这不是重新进入 qdev_unplug() 的 else，而是 Guest 确认后的异步完成路径直接调用 hotplug_handler_unplug()，
+见 hw/acpi/pcihp.c:178。
+
+Guest 日志也确认了 PCI 异步 eject：
+
+```txt
+ACPI: \_SB_.PCI0.S20_: Eject request in hotplug_event()
+virtio-pci 0000:00:04.0: device released
 ```
 
 <script src="https://giscus.app/client.js"

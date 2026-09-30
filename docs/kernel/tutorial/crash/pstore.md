@@ -85,19 +85,16 @@ pstore on /sys/fs/pstore type pstore (rw,nosuid,nodev,noexec,relatime)
 [  556.369810][ T3839] pstore: backend (erst) writing error (-28)
 ```
 
-## 前端
+## 前端 : 消息来源
 
 pstore 主要有 4 个前端：
 
- 前端       Kconfig                  作用                                           重启后常见文件
-━━━━━━━━━  ━━━━━━━━━━━━━━━━━━━━━━━  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  ━━━━━━━━━━━━━━━━━━━━━
- dmesg      CONFIG_PSTORE            保存 Oops/Panic 的内核日志                     dmesg-<backend>-*
-─────────  ───────────────────────  ─────────────────────────────────────────────  ─────────────────────
- console    CONFIG_PSTORE_CONSOLE    持续保存 console/printk 输出                   console-<backend>-*
-─────────  ───────────────────────  ─────────────────────────────────────────────  ─────────────────────
- ftrace     CONFIG_PSTORE_FTRACE     持久化函数调用轨迹                             ftrace-<backend>-*
-─────────  ───────────────────────  ─────────────────────────────────────────────  ─────────────────────
- pmsg       CONFIG_PSTORE_PMSG       提供 /dev/pmsg0，允许用户空间主动写持久日志    pmsg-<backend>-*
+| 前端 | Kconfig | 作用 | 重启后常见文件 |
+| --- | --- | --- | --- |
+| dmesg | `CONFIG_PSTORE` | 保存 Oops/Panic 的内核日志 | `dmesg-<backend>-*` |
+| console | `CONFIG_PSTORE_CONSOLE` | 持续保存 console/printk 输出 | `console-<backend>-*` |
+| ftrace | `CONFIG_PSTORE_FTRACE` | 持久化函数调用轨迹 | `ftrace-<backend>-*` |
+| pmsg | `CONFIG_PSTORE_PMSG` | 提供 /dev/pmsg0，允许用户空间主动写持久日志 | `pmsg-<backend>-*` |
 
 
 1. ftrace 通过来制作
@@ -118,12 +115,12 @@ cat /sys/fs/pstore/pmsg-ramoops-0 2>/dev/null
 ```
 
 
-## 后端
+## 后端 : 存储位置
 ### zone
 ### mtd
 
-尝试过，但是失败了
-```txt
+尝试过利用 qemu 配置，但是失败了
+```sh
 arg_pstore=""
 function setup_pstore() {
 	local pstore_bin=$vm_dir/pstore.bin
@@ -138,11 +135,11 @@ function setup_pstore() {
 
 ### erst 后端
 
-   数据通路是这样的：
+数据通路是这样的：
 
-   ```
-     kernel panic → pstore → erst 驱动 → ACPI ERST 方法（固件执行）→ 主板 NVRAM flash
-   ```
+```
+kernel panic → pstore → erst 驱动 → ACPI ERST 方法（固件执行）→ 主板 NVRAM flash
+```
 
 同时可以观察到:
 /sys/firmware/acpi/tables/ERST
@@ -298,8 +295,19 @@ Rebooting in 10 seconds..
 
 参考 https://man7.org/linux/man-pages/man8/systemd-pstore.service.8.html
 
-## 如果想要记录日志
+systemctl status systemd-pstore.service 来检查服务:
+```txt
+● systemd-pstore.service - Platform Persistent Storage Archival
+   Loaded: loaded (/usr/lib/systemd/system/systemd-pstore.service; enabled; vendor preset: disabled)
+   Active: inactive (dead)
+Condition: start condition failed at Fri 2026-09-04 11:07:38 CST; 1s ago
+           └─ ConditionDirectoryNotEmpty=/sys/fs/pstore was not met
+     Docs: man:systemd-pstore(8)
 
+Sep 04 11:07:38 systemd[1]: Condition check resulted in Platform Persistent Storage Archival being skipped.
+```
+
+## 如果想要记录日志
 - 触发 panic
 - pmsg
 	- echo xxx | sudo tee /dev/pmsg0 (ramoops/pstore_blk 支持，erst 不支持）
@@ -308,10 +316,9 @@ Rebooting in 10 seconds..
 - 内核中触发 oops/WARN
 	- 内核 WARN 会写一条 dmesg 记录（不致命）
 
-这个不会立刻回显出来，然后在 /var/lib/systemd/pstore/ 中
-
+这个不会立刻回显出来，可以到 /var/lib/systemd/pstore/ 中观察下
 ```txt
-sudo cat pmsg-ramoops-0
+cat pmsg-ramoops-0
 ```
 就可以看到 xxx
 

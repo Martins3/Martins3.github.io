@@ -1,4 +1,4 @@
-# CPUX86State reset
+# reset
 https://www.qemu.org/docs/master/devel/reset.html
 
 使用 x86_cpu_reset 进行初始化

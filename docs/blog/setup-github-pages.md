@@ -37,17 +37,13 @@ theme: jekyll-theme-cayman
 </script>
 ```
 
-## 增加语法检查
-使用 [lint-md](https://github.com/lint-md/lint-md) 和 [pre-commit](https://pre-commit.com/) 来构建语法检查，在这个仓库中，有三个文件和这个功能相关:
-- .pre-commit-config.yaml : git commit 指向执行检查
-- language/bash/hook/lint-md.sh : 其中一项检查是执行这个脚本
-- .lintmdrc.json : lint-md 的执行参数
-- 最后，执行 pre-commit install 来启用
+## 有待完善
+### 增加语法检查
+- [lint-md](https://github.com/lint-md/lint-md)
+- [pre-commit](https://pre-commit.com/)
+- https://github.com/DavidAnson/markdownlint
 
-
-https://github.com/DavidAnson/markdownlint 也是不错的
-
-## 订阅
+### 订阅
 虽然本 blog 使用的 jellky 的主题，但是因为极简的配置，无法集成 [jekyll-feed](https://github.com/jekyll/jekyll-feed)
 
 所以 Newsletter 来实现订阅:

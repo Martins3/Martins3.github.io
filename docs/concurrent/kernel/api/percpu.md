@@ -1,4 +1,5 @@
-## PER_CPU
+## percpu
+<!-- 7629d0d8-b09a-4c2a-9c31-bce62d83b41c -->
 
 ```c
 static void __lru_cache_add(struct page *page)
@@ -82,15 +83,13 @@ __this_cpu_write(*p, x);
 The allocated structures are stored in a per-CPU variable, meaning that the calling function must perform the insertion before it can schedule or be moved to a different processor.
 > percup 有趣的限制，同时，我们是如何保证的这一个要求的
 
-# mm/percpu.c : 从内存管理的角度来理解下 percpu 的实现
+## mm/percpu.c : 从内存管理的角度来理解下 percpu 的实现
 - [ ] 想一想，cpu 是可以 hotplug 的，那么 percpu 的设计就和 tls 的难度差不多了
-
 
 ## Principal
 
 1. 当然，还有一点要注意，那就是在访问 Per-CPU 变量的时候，不能调度，当然更准确的说法是该 task 不能调度到其他 CPU 上去。
 目前的内核的做法是在访问 Per-CPU 变量的时候 disable preemptive，虽然没有能够完全避免使用锁的机制（disable preemptive 也是一种锁的机制），但毫无疑问，这是一种代价比较小的锁。
-
 
 ```c
 /*
@@ -328,7 +327,8 @@ arch/x86/kernel/process_64.c:__show_regs
 
 ```
 
-## crash 真的太强大了
+## crash
+crash 完全兼容 percpu
 ```txt
 crash> p cpufreq_update_util_data
 PER-CPU DATA TYPE:
@@ -367,6 +367,55 @@ PER-CPU ADDRESSES:
   [30]: ffff889fff71cf48
   [31]: ffff889fff79cf48
 ```
+
+## percpu 动态分配
+
+demo : docs/trace/ebpf/code/syscall/pcpu-populate-demo.c
+函数附近的核心流程是：
+
+```txt
+用户态 bpf(BPF_MAP_CREATE)
+        |
+        v
+BPF_MAP_TYPE_PERCPU_ARRAY
+        |
+        v
+bpf_array_alloc_percpu()
+        |
+        v
+bpf_map_alloc_percpu()
+        |
+        v
+__alloc_percpu_gfp()
+        |
+        v
+pcpu_alloc_noprof()
+        |
+        +-- 当前 chunk 有空间：直接分配
+        |
+        +-- 没空间：创建新 chunk
+                         |
+                         v
+                 pcpu_populate_chunk()
+```
+
+可以观察到:
+```txt
+@[
+        vmap_pages_range_noflush+5
+        pcpu_map_pages+197
+        pcpu_populate_chunk+68
+        pcpu_alloc_noprof+1034
+        bpf_map_alloc_percpu+72
+        array_map_alloc+495
+        map_create+629
+        __sys_bpf+2514
+        __x64_sys_bpf+33
+        do_syscall_64+226
+        entry_SYSCALL_64_after_hwframe+118
+]: 32
+```
+
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

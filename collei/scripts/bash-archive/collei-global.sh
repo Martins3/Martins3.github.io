@@ -18,11 +18,6 @@ function qemu_top() {
 	top "${pids[@]/#/-p }"
 }
 
-function config_edit() {
-	cd "$HOME"/.config/collei
-	open_nvim
-}
-
 function config_show() {
 	if [[ ! -d $global_config_dir ]]; then
 		error "global config not setup"

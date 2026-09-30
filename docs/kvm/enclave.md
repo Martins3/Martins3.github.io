@@ -1,4 +1,4 @@
-## SGX
+# SGX
 - https://lingering.github.io/2020/06/18/SGX-%E5%9F%BA%E6%9C%AC%E5%8E%9F%E7%90%86/
 
 - [Google’s Fully Homomorphic Encryption Compiler — A Primer](https://news.ycombinator.com/item?id=34783447)

@@ -1,9 +1,9 @@
+# selinux
+
+## Links
 - https://news.ycombinator.com/item?id=41946453
-
-https://github.com/SELinuxProject/selinux-notebook/releases
-
-github 写的 blog ，很好:
-https://github.blog/developer-skills/programming-languages-and-frameworks/introduction-to-selinux/
+- https://github.com/SELinuxProject/selinux-notebook/releases
+- https://github.blog/developer-skills/programming-languages-and-frameworks/introduction-to-selinux/
 
 
 ## 偶尔发现自己构建的内核在 qemu 中启动存在如下报错
@@ -69,6 +69,186 @@ getenforce
 - Enforcing：SELinux 已开启，并且在强制模式
 - Permissive：SELinux 已开启，但只记录不拦截
 - Disabled：SELinux 已关闭
+
+## 基础实验：Unix 权限允许，SELinux 仍然拒绝
+<!-- 8f9408fa-3178-49b3-8e67-616a9f665415 -->
+
+2026-08-28 : emmmmm codex 快速搞了一个出来了，但是需要先看看 gihtub 的教程，获取一个大致的概念才可以
+
+实验只关注三个基本概念：
+
+- process domain：进程的 type，实验中是 `httpd_t`。
+- object type：文件的 type，错误值是 `tmpfs_t`，Web 内容的正确值是 `httpd_sys_content_t`。
+- allow rule：是否允许某个 domain 对某个 object type 执行某种操作。
+
+### 准备实验
+
+复制 `stat` 和 `cat`，并给它们 `httpd_exec_t` entrypoint 标签，便于用
+`runcon` 进入 `httpd_t` domain：
+
+```bash
+sudo install -m 0755 /usr/bin/stat /usr/local/libexec/selinux-stat-demo.out
+sudo install -m 0755 /usr/bin/cat /usr/local/libexec/selinux-cat-demo.out
+sudo chcon -t httpd_exec_t /usr/local/libexec/selinux-stat-demo.out
+sudo chcon -t httpd_exec_t /usr/local/libexec/selinux-cat-demo.out
+```
+
+创建测试文件，将 Unix mode 放宽到 `0777`，再故意设置错误的 SELinux type：
+
+```bash
+sudo mkdir -p /var/www/html
+echo "SELinux basic demo" | sudo tee /var/www/html/selinux-demo.txt
+sudo restorecon -Rv /var/www
+sudo chmod 0777 /var/www/html/selinux-demo.txt
+sudo chcon -t tmpfs_t /var/www/html/selinux-demo.txt
+ls -lZ /var/www/html/selinux-demo.txt
+```
+
+此时能看到 Unix mode 是 `rwxrwxrwx`，但 type 是 `tmpfs_t`。
+
+### 观察 SELinux 拒绝
+
+```bash
+sudo runcon system_u:system_r:httpd_t:s0 \
+  /usr/local/libexec/selinux-stat-demo.out \
+  /var/www/html/selinux-demo.txt
+```
+
+执行结果：
+
+```txt
+selinux-stat-demo.out: cannot statx '/var/www/html/selinux-demo.txt': Permission denied
+```
+
+查看 AVC：
+
+```bash
+sudo ausearch -m AVC -ts recent -i
+```
+
+```txt
+denied { getattr } ...
+scontext=system_u:system_r:httpd_t:s0
+tcontext=unconfined_u:object_r:tmpfs_t:s0
+tclass=file permissive=0
+```
+
+这证明 `chmod 0777` 只改变 DAC，不会绕过 SELinux MAC。
+
+### 推荐修复：恢复正确标签
+
+`/var/www` 已有标准 file-context 规则，因此通常应修正文件标签：
+
+```bash
+sudo restorecon -v /var/www/html/selinux-demo.txt
+ls -lZ /var/www/html/selinux-demo.txt
+sudo runcon system_u:system_r:httpd_t:s0 \
+  /usr/local/libexec/selinux-stat-demo.out \
+  /var/www/html/selinux-demo.txt
+sudo runcon system_u:system_r:httpd_t:s0 \
+  /usr/local/libexec/selinux-cat-demo.out \
+  /var/www/html/selinux-demo.txt
+```
+
+`restorecon` 会将 type 改回 `httpd_sys_content_t`，然后 `stat` 和 `cat` 都成功。
+
+## `.te` 策略文件怎么使用
+
+`code/selinux-fd-share-getattr.te` 中的核心规则是：
+
+```text
+allow httpd_t tmpfs_t:file getattr;
+```
+
+其含义是：允许源 domain `httpd_t` 对目标 type `tmpfs_t` 的 `file`
+执行 `getattr`。
+
+`.te` 是策略源码，需要先编译为 `.pp` 策略包。源文件名需要与
+`policy_module(selinux_fd_share_getattr, 1.0)` 中的模块名一致，所以复制时改用
+underscore 文件名：
+
+```bash
+mkdir -p /tmp/selinux-getattr-policy
+cp docs/kernel/security/code/selinux-fd-share-getattr.te \
+  /tmp/selinux-getattr-policy/selinux_fd_share_getattr.te
+make -C /tmp/selinux-getattr-policy \
+  -f /usr/share/selinux/devel/Makefile \
+  selinux_fd_share_getattr.pp
+```
+
+如果代码仓库不在 VM 内，可以先在 host 上传：
+
+```bash
+scp -P 52004 docs/kernel/security/code/selinux-fd-share-getattr.te \
+  martins3@localhost:/tmp/selinux-fd-share-getattr.te
+```
+
+随后在 VM 内把上面的 `cp` 命令改为：
+
+```bash
+cp /tmp/selinux-fd-share-getattr.te \
+  /tmp/selinux-getattr-policy/selinux_fd_share_getattr.te
+```
+
+安装并查看模块：
+
+```bash
+sudo semodule -i /tmp/selinux-getattr-policy/selinux_fd_share_getattr.pp
+sudo semodule -l | grep '^selinux_fd_share_getattr'
+```
+
+把测试文件重新标成 `tmpfs_t`，先运行 `stat`：
+
+```bash
+sudo chcon -t tmpfs_t /var/www/html/selinux-demo.txt
+sudo runcon system_u:system_r:httpd_t:s0 \
+  /usr/local/libexec/selinux-stat-demo.out \
+  /var/www/html/selinux-demo.txt
+```
+
+这次 `stat` 成功，可以看到文件大小、mode、UID/GID 和时间戳等元数据。
+这就是 `getattr` 的作用。
+
+然后用同一个 `httpd_t` domain 读取文件内容：
+
+```bash
+sudo runcon system_u:system_r:httpd_t:s0 \
+  /usr/local/libexec/selinux-cat-demo.out \
+  /var/www/html/selinux-demo.txt
+```
+
+`cat` 仍然失败：
+
+```txt
+selinux-cat-demo.out: /var/www/html/selinux-demo.txt: Permission denied
+```
+
+对应 AVC 从 `{ getattr }` 变成了 `{ read }`：
+
+```txt
+denied { read } ...
+scontext=system_u:system_r:httpd_t:s0
+tcontext=unconfined_u:object_r:tmpfs_t:s0
+tclass=file permissive=0
+```
+
+因此 `getattr` 和 `read` 是两个独立权限：
+
+| 实验状态 | `stat` 读元数据 | `cat` 读文件内容 |
+|---|---|---|
+| 没有自定义规则 | 被 `{ getattr }` 拒绝 | 被 `{ read }` 拒绝 |
+| 只允许 `getattr` | 成功 | 仍被 `{ read }` 拒绝 |
+| 用 `restorecon` 恢复正确 type | 成功 | 成功 |
+
+卸载模块：
+
+```bash
+sudo semodule -r selinux_fd_share_getattr
+```
+
+这条 allow 会放行 `httpd_t` 对所有 `tmpfs_t` 文件的 `getattr`，范围比修正单个
+文件标签更大。因此它适合学习 policy module 的编译和安装；在真实环境中，
+如果 AVC 是由错误文件标签引起的，应优先使用 `restorecon`。
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

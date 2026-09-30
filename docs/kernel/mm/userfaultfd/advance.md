@@ -285,6 +285,38 @@ https://www.qemu.org/docs/master/interop/vhost-user.html#migrating-backend-state
 从这个函数看起:
 vhost_user_postcopy_notifier
 
+## async pf 导致的问题
+
+因为 async pf 使用的是 workqueue 来处理任务的，
+如果 userfault 没有处理 workqueue ，那么就无法取消
+
+可以看到 vCPU thread 其实就是一个普通的用户态 thread ，
+其调用 ioctl 结束，但是内核会一直卡住。
+
+```txt
+CPU 0/KVM
+```
+
+cat /proc/1581262/stack
+
+```txt
+[<0>] __flush_work+0x17d/0x310
+[<0>] __cancel_work_timer+0x106/0x1a0
+[<0>] kvm_clear_async_pf_completion_queue+0x97/0x1b0 [kvm]
+[<0>] kvm_set_msr_common+0x8f1/0x10d0 [kvm]
+[<0>] vmx_set_msr+0x4bc/0x1080 [kvm_intel]
+[<0>] __kvm_set_msr+0x8f/0x1d0 [kvm]
+[<0>] kvm_set_msr_ignored_check+0x1b/0x150 [kvm]
+[<0>] kvm_arch_vcpu_ioctl+0xa37/0x1530 [kvm]
+[<0>] kvm_vcpu_ioctl+0x491/0x740 [kvm]
+[<0>] __do_sys_ioctl+0x290/0x320
+[<0>] do_syscall_64+0x47/0x110
+[<0>] entry_SYSCALL_64_after_hwframe+0x78/0xe2
+```
+
+## 7.3 RWP
+https://docs.kernel.org/admin-guide/mm/userfaultfd.html#read-write-protection
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

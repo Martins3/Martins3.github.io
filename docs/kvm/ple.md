@@ -1,4 +1,4 @@
-# ple windo
+# ple window
 <!-- 5368fe04-727f-4f1c-9f09-4baaa0ae3231 -->
 
 /sys/module/kvm_intel/parameters 下有好几个关联的参数:

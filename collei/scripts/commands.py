@@ -81,3 +81,36 @@ class CommandRunner:
         if env:
             process_env.update(env)
         os.execvpe(command[0], command, process_env)
+
+    def start_detached(
+        self,
+        argv: Sequence[str | Path],
+        *,
+        cwd: Path | None = None,
+        env: Mapping[str, str] | None = None,
+        stdin: IO[str] | int | None = None,
+        log: Path | None = None,
+    ) -> int | None:
+        command = [str(item) for item in argv]
+        if self.dry_run:
+            print(shlex.join(command))
+            return None
+        process_env = os.environ.copy()
+        if env:
+            process_env.update(env)
+        output = log.open("a") if log is not None else None
+        try:
+            process = subprocess.Popen(
+                command,
+                cwd=cwd,
+                env=process_env,
+                stdin=stdin if stdin is not None else subprocess.DEVNULL,
+                stdout=output if output is not None else subprocess.DEVNULL,
+                stderr=subprocess.STDOUT,
+                text=True,
+                start_new_session=True,
+            )
+        finally:
+            if output is not None:
+                output.close()
+        return process.pid

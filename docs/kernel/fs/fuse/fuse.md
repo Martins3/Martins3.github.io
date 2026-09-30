@@ -222,6 +222,9 @@ https://mp.weixin.qq.com/s/2oRLzVTlQpyQeAvI0ZwDbA : ali 营销
 https://mp.weixin.qq.com/s/9GSwOAmkG0mCbcr-PFp6RA :
 Hierarchical storage management, fanotify, FUSE, and more
 
+## TODO
+- 直接写内核的文件系统和 fuse 来做对比
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

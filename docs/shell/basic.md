@@ -115,12 +115,15 @@ fd 使用的是 regex
 fd ".*\.md" | wc -l
 ```
 
-## qemu-img 转换
-qemu-img  convert image_name disk.raw
-
-## 如何将 tmux 的 pane 变成一个新的 windows
+## tmux
 <!-- 52b7f245-5ad5-47b7-a110-9c68e0858c90 -->
+
+1. 如何将 tmux 的 pane 变成一个新的 windows
 Ctrl-h !
+
+2. rename tmux pane 名称
+
+Ctrl-h ,
 
 ## manual 中 [] 和 <> 的含义是什么?
 <!-- 605525ca-8a36-4fe8-afb1-7f836475be1b -->

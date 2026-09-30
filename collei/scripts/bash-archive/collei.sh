@@ -851,125 +851,6 @@ function setup_virtme_rootfs() {
 	log "virtme rootfs configured: $share_root -> ROOTFS"
 }
 
-# 生成 virtme initramfs
-function generate_virtme_initramfs() {
-	local out_file="$vm_dir/$which_qemu/virtme-initramfs.cpio.gz"
-	local tmpdir
-	tmpdir=$(mktemp -d)
-
-	log "generating virtme initramfs..."
-
-	# 1. 创建目录结构
-	mkdir -p "$tmpdir"/{bin,dev,proc,sys,newroot,run,lib/modules,tmp}
-
-	# 2. 查找 busybox (优先静态链接版本)
-	local busybox_bin=""
-	for bb in busybox-static busybox.static busybox; do
-		if command -v "$bb" &>/dev/null; then
-			busybox_bin=$(command -v "$bb")
-			break
-		fi
-	done
-
-	if [[ -z $busybox_bin ]]; then
-		rm -rf "$tmpdir"
-		error "busybox not found, please install busybox-static"
-	fi
-
-	# 检查是否静态链接
-	if ! file "$busybox_bin" | grep -q "statically linked\|static-pie"; then
-		log "warning: busybox may not be statically linked"
-	fi
-
-	cp "$busybox_bin" "$tmpdir/bin/busybox"
-	chmod +x "$tmpdir/bin/busybox"
-
-	# 创建常用命令链接
-	for cmd in sh mount umount switch_root insmod modprobe mkdir mknod sleep uname cp cat chmod echo ln printf base64 setsid cttyhack; do
-		ln -sf busybox "$tmpdir/bin/$cmd"
-	done
-
-	# 3. 创建设备节点
-	# 如果 devtmpfs 不可用，需要这些基本设备
-	[[ -e "$tmpdir/dev/null" ]] || mknod -m 666 "$tmpdir/dev/null" c 1 3 2>/dev/null || true
-	[[ -e "$tmpdir/dev/zero" ]] || mknod -m 666 "$tmpdir/dev/zero" c 1 5 2>/dev/null || true
-	[[ -e "$tmpdir/dev/random" ]] || mknod -m 666 "$tmpdir/dev/random" c 1 8 2>/dev/null || true
-	[[ -e "$tmpdir/dev/urandom" ]] || mknod -m 666 "$tmpdir/dev/urandom" c 1 9 2>/dev/null || true
-	[[ -e "$tmpdir/dev/console" ]] || mknod -m 622 "$tmpdir/dev/console" c 5 1 2>/dev/null || true
-	[[ -e "$tmpdir/dev/kmsg" ]] || mknod -m 660 "$tmpdir/dev/kmsg" c 1 11 2>/dev/null || true
-
-	# 4. 复制 init 脚本
-	local init_script="$PROGDIR/virtme/virtme-init.sh"
-	if [[ ! -f $init_script ]]; then
-		rm -rf "$tmpdir"
-		error "virtme-init.sh not found at $init_script"
-	fi
-
-	cp "$init_script" "$tmpdir/init"
-	chmod +x "$tmpdir/init"
-
-	# 5. 复制必要内核模块 (如果内核目录可用)
-	if [[ -n ${kernel_dir:-} && -d $kernel_dir ]]; then
-		log "collecting kernel modules..."
-
-		# 查找并复制必要模块
-		# 注意: virtiofs 模块文件名是 virtiofs.ko，但加载时可能用 virtio_fs
-		# 注意: virtiofs 依赖 fuse，需要先加载 fuse
-		local mod_mappings=()
-
-		# 检查机器类型：microvm 使用 virtio-mmio，其他使用 virtio-pci
-		local machine_type="pc"
-		# 使用 vm_dir_symbol 获取机器类型（因为 vm_dir 此时可能还未设置）
-		local vm_dir_for_machine="${vm_dir:-$(realpath "$vm_dir_symbol" 2>/dev/null)}"
-		if [[ -f "$vm_dir_for_machine/opt/machine" ]]; then
-			machine_type=$(cat "$vm_dir_for_machine/opt/machine")
-		fi
-
-		if [[ $machine_type == "microvm" ]]; then
-			# microvm 使用 virtio-mmio 设备
-			# 注意: virtio_mmio 通常是内建的 (CONFIG_VIRTIO_MMIO=y)，不需要加载模块
-			log "machine type: microvm, using virtio-mmio (usually built-in)"
-			mod_mappings=("fuse:fuse" "virtio_fs:virtiofs" "overlay:overlay")
-		else
-			# pc/q35 使用 virtio-pci 设备
-			log "machine type: $machine_type, using virtio-pci modules"
-			mod_mappings=("virtio_pci_modern_dev:virtio_pci_modern_dev" "virtio_pci_legacy_dev:virtio_pci_legacy_dev" "virtio_pci:virtio_pci" "fuse:fuse" "virtio_fs:virtiofs" "overlay:overlay")
-		fi
-
-		for mapping in "${mod_mappings[@]}"; do
-			local modname="${mapping%%:*}"
-			local modfile_name="${mapping##*:}"
-			local modfile
-			modfile=$(find "$kernel_dir" -name "${modfile_name}.ko*" -type f 2>/dev/null | head -1)
-			if [[ -n $modfile ]]; then
-				local ext="${modfile##*.}"
-				if [[ $ext == "zst" ]]; then
-					# 解压 zstd 压缩的模块
-					zstd -d -c "$modfile" >"$tmpdir/lib/modules/${modname}.ko" 2>/dev/null || true
-				elif [[ $ext == "ko" ]]; then
-					# 复制并重命名为 init 脚本期望的名称
-					cp "$modfile" "$tmpdir/lib/modules/${modname}.ko"
-				fi
-			fi
-		done
-	fi
-
-	# 6. 打包为 cpio.gz
-	(
-		cd "$tmpdir"
-		find . -print0 | cpio --null -o --format=newc 2>/dev/null | gzip >"$out_file"
-	)
-
-	local initramfs_size
-	initramfs_size=$(stat -c%s "$out_file" 2>/dev/null || echo "0")
-	log "virtme initramfs created: $out_file (${initramfs_size} bytes)"
-
-	# 清理
-	rm -rf "$tmpdir"
-
-	virtme_initramfs="$out_file"
-}
-
 # TODO 这几个依赖有点奇怪，iommu 和 pci 的设置其实都是依赖
 # 到底是 q35 还是 pc ，所以 setup_iommu 中继续使用 arg_machine
 # 所以，这里的依赖反过来了，如果发现了 iommu 或者 pci topo ，
@@ -2229,9 +2110,6 @@ function setup_chardev() {
 		main_char_dev=" socket,path=$vm_dir/$which_qemu/main.sock"
 	fi
 
-	# virtio-serial 是 virtconsole 和 virtserialport 的基础设备:
-	# qemu-system-x86_64: -device virtconsole,chardev=virtiocon0: No 'virtio-serial-bus' bus found for device 'virtconsole'
-	# qemu-system-x86_64: -device virtserialport,chardev=qga0,name=org.qemu.guest_agent.0: No 'virtio-serial-bus' bus found for device ' virtserialport'
 	arg_serial+=" -device virtio-serial"
 
 	if is_virtme_manual_mode; then

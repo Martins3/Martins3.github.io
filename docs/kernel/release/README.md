@@ -5,6 +5,8 @@
 ## linux 2024 内核十大技术革新功能 - happyking的文章 - 知乎
 https://zhuanlan.zhihu.com/p/30950194971
 
+# [6.3](https://kernelnewbies.org/LinuxChanges)
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

@@ -32,3 +32,8 @@ https://github.com/vortexgpgpu/vortex_tutorials : RISC-V 的 GPGPU MICRO 文章
 https://github.com/hughperkins/VeriGPU
 
 https://www.furygpu.com/about : ，开源了也没时间看
+
+https://news.ycombinator.com/item?id=43900463 : Analyzing Modern Nvidia GPU Cores 值得看看这个东西
+
+
+https://ywgrit.work/nvidia-gpu-instruction-issue/

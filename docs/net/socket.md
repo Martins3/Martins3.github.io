@@ -141,9 +141,6 @@ unix domain socket 使用的
 ## 勉强读一读
 - https://macoy.me/blog/programming/Sockets
 
-## 用这个做对比
-vn/code/src/c/dccp/README.md
-
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

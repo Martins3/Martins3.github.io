@@ -1,12 +1,12 @@
-# 存储的热插拔
+# 设备热插拔
+
+主要是 usb hba pci 了
+
+## 文档
 https://pve.proxmox.com/wiki/Hotplug_(qemu_disk,nic,cpu,memory)
-
 https://serverfault.com/questions/1017754/hot-swapping-physical-disks-passed-through-to-a-qemu-vm
-
 https://gist.github.com/devimc/e9fd533e52b08387f1df65df8b19e038
-
 https://forum.proxmox.com/threads/how-to-remove-add-a-disk-on-a-running-kvm-virtual-machine.9273/
-
 https://wiki.ubuntu.com/QemuDiskHotplug
 
 ## 看看 megaraid 的 hotplug 机制

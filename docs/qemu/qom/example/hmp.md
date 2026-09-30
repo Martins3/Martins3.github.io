@@ -1,4 +1,5 @@
 # hmp
+
 ## hmp info 来看看那些可以观测的内容
 <!-- 6150a420-6cd4-4720-80fb-ee982d8ba1d2 -->
 
@@ -311,6 +312,25 @@ drive_add     drive_backup  drive_del     drive_mirror
 - screendump
 - logfile
 
+
+## qmp shell 中的命令
+<!-- 75154523-dd73-48dd-9a57-2b1ac5290468 -->
+
+```txt
+x-query-irq                        x-query-ramblock                   x-query-virtio-queue-element
+x-query-jit                        x-query-roms                       x-query-virtio-queue-status
+x-query-numa                       x-query-usb                        x-query-virtio-status
+x-query-opcount                    x-query-virtio                     x-query-virtio-vhost-queue-status
+(QEMU) x-query-irq
+{"return": {"human-readable-text": "IRQ statistics for kvm-ioapic:\n 0: 13\n 1: 11\n 3: 2\n 4: 2\n 6: 3\n 8: 1\n10: 156\n12: 15\nIRQ statistics for kvm-i8259:\n 0: 13\n 1: 11\n 3: 2\n 4: 2\n 6: 3\n 8: 1\n10: 156\n12: 15\n"}}
+(QEMU) x-query-jit
+{"error": {"class": "GenericError", "desc": "JIT information is only available with accel=tcg"}}
+```
+
+这个就是对应了 hmp 的代码的
+```txt
+(qemu) info irq
+```
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

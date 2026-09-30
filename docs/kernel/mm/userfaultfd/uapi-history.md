@@ -58,6 +58,28 @@
 - `UFFDIO_POISON` 的结构和 ioctl 首次出现在 `fc71884a5f59`，但加入 `UFFD_API_FEATURES` 和 range ioctl 广告是在 `f442ab50f5fb`。
 - `UFFDIO_MOVE` 是页表 remap 语义，不是从任意 userspace buffer memcpy 到 fault 地址；当前约束主要面向 non-shared anonymous pages。
 
+## API 兼容性
+
+UFFDIO_API 是一次初始化与协商的基本流程为:
+
+```c
+  struct uffdio_api api = {
+      .api = UFFD_API,
+      .features = UFFD_FEATURE_EXACT_ADDRESS,
+  };
+
+  if (ioctl(uffd, UFFDIO_API, &api) == -1) {
+      /* 处理错误：API 不匹配或请求不支持的 feature 会导致 EINVAL。 */
+  }
+
+  /* 成功返回：
+   * api.features = 内核支持的所有 feature
+   * api.ioctls   = 可用的通用 ioctl 位图
+   */
+```
+
+没有什么特别的，内核提供能力就可以了。
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

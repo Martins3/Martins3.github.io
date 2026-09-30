@@ -167,6 +167,14 @@ class VmInstaller:
                 "bios": "ovmf_binary",
                 "id": str(self.next_guest_id()),
                 "uuid": str(uuid.uuid4()),
+                "tty": "\n".join(
+                    (
+                        "serial socket",
+                        "hvc socket",
+                        "virtserialport socket",
+                        "virtserialport socket",
+                    )
+                ),
             },
         )
         return vm_dir
@@ -273,15 +281,11 @@ class VirtmeInstaller(VmInstaller):
         options.set_many(
             {
                 "virtme": "1",
-                "virtme_mode": "manual",
                 "kernel": str(kernel.resolve()),
                 # 启用可写 overlay ，不然很多命令执行都会报错
                 "virtme_rw": "1",
             }
         )
-
-        # 可选配置
-        # virtme_exec: 启动时执行的脚本
 
         self.create_standard_disks(vm_dir, disk_count=disk_count)
         return self.finish(vm_dir)
@@ -319,7 +323,7 @@ class IsoInstaller(VmInstaller):
     """对应 choose_vm_dir_for_iso + install_vm_dir。"""
 
     def choose_iso(self) -> Path:
-        iso_root = Path(self.context.global_config.directory.require("iso"))
+        iso_root = Path(self.context.global_config.options.require("iso"))
         images = sorted(iso_root.glob("*.iso"))
         if not images:
             raise ColleiError(f"[{iso_root}] is empty")
@@ -332,7 +336,7 @@ class IsoInstaller(VmInstaller):
         return iso
 
     def validate_iso(self, iso: Path) -> Path:
-        iso_root = Path(self.context.global_config.directory.require("iso")).resolve()
+        iso_root = Path(self.context.global_config.options.require("iso")).resolve()
         iso = iso.resolve()
         if not iso.is_file() or iso.parent != iso_root:
             raise ColleiError(f"invalid ISO: {iso}")
@@ -386,12 +390,15 @@ class KickstartAutoInstaller(VmInstaller, Generic[ConfigT]):
         raise NotImplementedError
 
     def default_vm_name(self, iso: Path) -> str:
+        del iso
         raise NotImplementedError
 
     def install_cmdline(self, source_label: str) -> str:
+        del source_label
         raise NotImplementedError
 
     def render_kickstart(self, *, iso: Path, hostname: str) -> str:
+        del iso, hostname
         raise NotImplementedError
 
     @staticmethod
@@ -407,7 +414,7 @@ class KickstartAutoInstaller(VmInstaller, Generic[ConfigT]):
         )
 
     def validate_iso(self, iso: Path) -> Path:
-        iso_root = Path(self.context.global_config.directory.require("iso")).resolve()
+        iso_root = Path(self.context.global_config.options.require("iso")).resolve()
         iso = iso.resolve()
         if not iso.is_file() or iso.parent != iso_root:
             raise ColleiError(f"invalid {self.install_name} ISO: {iso}")
@@ -458,7 +465,6 @@ class KickstartAutoInstaller(VmInstaller, Generic[ConfigT]):
             "cmdline": self.install_cmdline(source_label),
             "user": self.config.user,
             "bg": "1",
-            "display": "virtio-gpu",
             "install": "1",
         }
         if no_reboot:
@@ -539,7 +545,7 @@ class FedoraAutoInstaller(KickstartAutoInstaller[FedoraAutoInstallConfig]):
         return int(match.group(1))
 
     def choose_iso(self) -> Path:
-        iso_root = Path(self.context.global_config.directory.require("iso"))
+        iso_root = Path(self.context.global_config.options.require("iso"))
         images = sorted(
             iso_root.glob("Fedora-Server*.iso"),
             key=lambda image: (self.fedora_version(image), image.name),
@@ -619,7 +625,7 @@ class OpeneulerAutoInstaller(KickstartAutoInstaller[OpeneulerAutoInstallConfig])
         return f"{version}{sp.lower().replace('-', '')}"
 
     def choose_iso(self) -> Path:
-        iso_root = Path(self.context.global_config.directory.require("iso"))
+        iso_root = Path(self.context.global_config.options.require("iso"))
         images = sorted(
             iso_root.glob("openEuler-*.iso"),
             key=lambda image: (self.openeuler_version(image), image.name),

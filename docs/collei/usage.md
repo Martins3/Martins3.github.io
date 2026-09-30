@@ -1,4 +1,4 @@
-# 基本使用注意
+# 基本注意
 
 ## INI 配置
 
@@ -37,6 +37,13 @@ disk =
 	- vmtest 需要专用的内核，由于没有配置 initrd (为什么没有 initrd 来着?)
 - firecrasher : 用 firecrasher 启动
 - nixos :
+- init_run : 自定义 init，见下文
+
+## init_run：自定义 init
+
+`[vm]` 配置 `init_run = 1` 后，**整个 init 内容被替换**：`collei/init/init.c` 静态
+编译进一个极小的 initramfs，直接作为 PID 1（QEMU `-kernel`/`-initrd` 自定义
+init）。只要 VM 配置了 `kernel`（直接 `-kernel` 启动）即可使用
 
 ## systemd 后台任务检查
 

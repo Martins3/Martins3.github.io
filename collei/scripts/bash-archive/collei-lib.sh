@@ -29,18 +29,6 @@ function get_master_ip() {
 	echo "$ip_addr"
 }
 
-function is_hypersivor() {
-	if grep hypervisor /proc/cpuinfo &>/dev/null; then
-		return 1
-	fi
-}
-
-function is_container() {
-	if env | grep container &>/dev/null; then
-		return 0
-	fi
-	return 1
-}
 
 function setup_pueue() {
 	# 如果无法使用 systemd 来启动 pueue
@@ -55,79 +43,6 @@ function setup_pueue() {
 function check_dep() {
 	setup_pueue
 	gum -h >/dev/null
-}
-
-global_config_dir=$HOME/.config/collei
-function setup_global_config() {
-	if [[ ! -d $global_config_dir ]]; then
-		mkdir -p "$global_config_dir"
-		cd "$HOME"/.config/collei
-		echo "$VM_DIR"/iso >iso
-		echo "$VM_DIR"/vm >vm
-		echo "$WORKSTATION"/martins3 >last
-		echo 10.0.0.2 >ip
-		echo 10.0.0.2 >nbd
-		echo 10.0.0.2 >vnc
-
-		local level
-		echo "VM level, level 0 means physical machine"
-		level=$(gum choose 0 1 2 3)
-		echo "$level" >level
-
-		gum confirm "use default configuration?" && exit 0
-		nvim
-		exit 0
-	fi
-	check_global_option level
-	host_level=$option_result
-	check_global_option ip
-	ovs_br_ip=$option_result
-	check_global_option iso
-	iso_repo=$option_result
-	check_global_option vm
-	all_vm_dir=$option_result
-	check_global_option last
-	vm_dir_symbol=$option_result
-	if check_global_option nbd; then
-		nbd_ip=$option_result
-		log "$nbd_ip"
-	fi
-	if check_global_option bridge; then
-		network_switch=$option_result
-	else
-		if which ovs-vsctl 2>/dev/null; then
-			network_switch="ovs"
-		else
-			network_switch="bridge"
-		fi
-		# 一共三个选择
-		{
-			echo "# ovs"
-			echo "# bridge"
-			echo "# no"
-			echo "$network_switch"
-		} >"$global_config_dir"/bridge
-	fi
-
-	mkdir -p "$iso_repo"
-	mkdir -p "$all_vm_dir"
-	log "$ovs_br_ip"
-	log "$host_level"
-	log "$network_switch"
-}
-
-function show_help() {
-	show_msg "$(awk "/\shelp begin/,/help end/" "$0")"
-	exit 0
-}
-
-function show_msg() {
-	gum style --foreground 212 \
-		--border-foreground 212 \
-		--border double \
-		--margin "1 2" \
-		--padding "2 4" \
-		"$1"
 }
 
 qemu_pid=0
@@ -182,42 +97,6 @@ function check_option_internal() {
 function check_option() {
 	local option_file="$vm_dir/opt/$1"
 	check_option_internal "$option_file"
-}
-
-function check_global_option() {
-	local option_file="$global_config_dir/$1"
-	if ! check_option_internal "$option_file"; then
-		echo "$option_file is missing or invalid"
-		return 1
-	fi
-}
-
-replace_kernel=false
-function setup_kernel() {
-	local kernel
-	if ! check_option kernel; then
-		return
-	fi
-	kernel=$option_result
-	if [[ $kernel != /* ]]; then
-		error "use absolute path in 'kernel' : $kernel"
-	fi
-	kernel_dir=$kernel
-	replace_kernel=true
-	echo "$kernel_dir"
-}
-
-function setup_qemu() {
-	qemu="qemu-system-$ARCH"
-	qemu=${QEMU_DIR}/build/qemu-system-$ARCH
-	# qemu=/usr/libexec/qemu-kvm
-}
-
-function supress_warning() {
-	# 如果不去引用这几个变量，会警告的
-	echo "qemu=$qemu"
-	echo "replace_kernel=$replace_kernel"
-	echo "kernel_dir=$kernel_dir"
 }
 
 function open_nvim() {

@@ -248,10 +248,6 @@ cat /sys/kernel/debug/tracing/trace
 7. **Socket hook 的触发时机**
    - `SEC("socket")` 什么时候调用？
 
-8. **BCC vs libbpf-tools 的选择**
-   - 各自适用场景？
-   - 为什么 NixOS 上 BCC 有困难？
-
 ### 工具对比问题
 
 1. **bpftrace/bcc/ftrace 实现 tracepoint 的差别**

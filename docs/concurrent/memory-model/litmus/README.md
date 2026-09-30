@@ -75,7 +75,7 @@ Makefile 细节：
 
 `C-MP+o-mb-o+o-mb-o.litmus` 的首行是 `C`，测试体使用 Linux
 内核风格原语，可用于 LKMM 模型分析，也可在提供具体原语实现后
-编译成用户态 binary。`SB.litmus` 的首行是
+编译成用户态 binary。`x86-sb.litmus` 的首行是
 `X86`，测试体直接描述 x86 指令，用于 x86 模型或真机测试。
 它们表达的层次不同，因此格式本来就不应相同。
 
@@ -104,7 +104,7 @@ HERD_LIBDIR=/path/to/share/herdtools7/herd
 
 herd7 -set-libdir "${HERD_LIBDIR}" \
 	-model x86tso.cat \
-	SB.litmus
+	x86-sb.litmus
 ```
 
 ## 测试结果说明
@@ -126,7 +126,7 @@ herd7 -set-libdir "${HERD_LIBDIR}" \
 | `sb+mb.litmus` | Store Buffering | LKMM | `smp_mb()` | Never |
 | `sb.litmus` | Store Buffering | LKMM | 无屏障 | Sometimes |
 | `wrc.litmus` | Write-Read Causality | LKMM | 无屏障 | Sometimes |
-| `SB.litmus` | Store Buffering | x86 TSO | 无屏障 | Sometimes |
+| `x86-sb.litmus` | Store Buffering | x86 TSO | 无屏障 | Sometimes |
 
 
 ## 附录：快速参考

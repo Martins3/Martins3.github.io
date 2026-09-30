@@ -1,0 +1,27 @@
+[collei]
+config = "~/.config/collei/config.ini"
+
+[daemon]
+scan_interval_seconds = 10
+stats_poll_interval_seconds = 5
+stats_stale_after_seconds = 20
+invalid_samples_before_restore = 3
+qmp_timeout_seconds = 2
+command_timeout_seconds = 60
+
+[defaults]
+enabled = true
+reserve_mib = 2048
+reserve_percent = 20
+min_logical_mib = 2048
+min_logical_percent = 25
+hysteresis_mib = 512
+reclaim_step_mib = 512
+confirm_samples = 3
+
+# [vms."Win11_24H2_Chinese_Simplified_x64"]
+# enabled = false
+
+# [vms."latency-sensitive-vm"]
+# reserve_mib = 4096
+# reserve_percent = 30

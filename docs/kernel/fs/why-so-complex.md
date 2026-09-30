@@ -190,6 +190,9 @@ F2FS : F2FS 为适应 flash，采用 log-structured allocation，更新后的 bl
 ## 经典
 https://www.reddit.com/r/bcachefs/comments/1ux3mmv/benchmarking_what_modern_filesystems_promise/
 
+- https://news.ycombinator.com/item?id=49768833
+	- 现代文件系统中的 benchmark 机制
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

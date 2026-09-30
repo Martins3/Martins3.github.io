@@ -1,6 +1,5 @@
 # QEMU 的参数解析
 
-
 ## 解释如何被解析的
 这是 main 函数中的巨大的 for 循环，使用 lookup_opt 从左向右对于
 参数扫描，每次匹配到一个完整的参数之后，就会返回 QEMUOption 和 optarg
@@ -325,10 +324,46 @@ qemu-system-$(uname -m): -blockdev help: Help is not available for this option
 ```
 这里的类似 max_ioqpairs=14 有办法全部都查询出来吗?
 
+## 一些烦人的机制
+
+QEMU 可以创建多个 virtio-serial controller，但需要显式指定 controller ID 和 port 所属 bus；
+否则 QEMU 会把所有 virtconsole/virtserialport 自动接到默认的第一个 virtio-serial bus。
+
+概念上是：
+
+virtio-serial controller A
+    ├── hvc0
+    └── vport0
+
+virtio-serial controller B
+    └── vport1
+
+QEMU 参数可以写成：
+
+-device virtio-serial,id=serial0 \
+-device virtio-serial,id=serial1 \
+-device virtconsole,bus=serial0.0,chardev=hvc \
+-device virtserialport,bus=serial0.0,nr=1,chardev=vport0,name=org.qemu.vport.0 \
+-device virtserialport,bus=serial1.0,nr=1,chardev=vport1,name=org.qemu.vport.1
+
+但通常没有必要为每个 port 创建一个 controller。一个 virtio-serial controller 可以承载多个 virtconsole/
+virtserialport，只要为 port 分配不同的 nr 即可：
+
+-device virtio-serial,id=serial0 \
+-device virtconsole,bus=serial0.0,chardev=hvc \
+-device virtserialport,bus=serial0.0,nr=1,chardev=vport0,name=org.qemu.vport.0 \
+-device virtserialport,bus=serial0.0,nr=2,chardev=vport1,name=org.qemu.vport.1
+
+当前参数没有显式 bus/nr，所以由 QEMU 自动选择第一个 controller 和下一个可用 port 编号。
+
+
+类似还有 virtio-scsi 机制，QEMU 可以实现自动的挂 controller 的
+
 ## 扩展内容
 - QemuOptsList::merge_lists : `-smp 2,maxcpus=3` 也可以写为 `-smp 2 -smp maxcpus=3`
 - 参数之间存在引用，例如 blockdev 和 drive 直接，具体没有看，但是应该容易的
 - [ ] libvirt 如何生成 qemu 的参数的
+- https://techpiezo.com/linux/enable-audio-in-qemu-virtual-machine/ : 音频配置
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

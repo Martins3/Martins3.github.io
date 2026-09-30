@@ -12,7 +12,7 @@ from commands import CommandRunner
 from errors import ColleiError
 from runtime import ColleiContext
 from tasks import clean_task_backend
-from ui import confirm, print_table
+from ui import confirm
 
 GlobalAction = Callable[[ColleiContext, CommandRunner], None]
 
@@ -30,17 +30,12 @@ def qemu_top(context: ColleiContext, runner: CommandRunner) -> None:
 
 
 def config_edit(context: ColleiContext, runner: CommandRunner) -> None:
-    runner.exec(["nvim"], cwd=context.global_config.directory.path)
+    runner.exec(["nvim", context.global_config.options.path])
 
 
 def config_show(context: ColleiContext, runner: CommandRunner) -> None:
     del runner
-    rows: list[tuple[str, str]] = []
-    for path in sorted(context.global_config.directory.path.iterdir()):
-        if path.is_file():
-            content = " ".join(path.read_text().splitlines())[:50]
-            rows.append((path.name, content))
-    print_table(("Option", "Content"), rows)
+    print(context.global_config.options.path.read_text(), end="")
 
 
 def dashboard(context: ColleiContext, runner: CommandRunner) -> None:
@@ -48,6 +43,7 @@ def dashboard(context: ColleiContext, runner: CommandRunner) -> None:
 
 
 def kill_all_qemu(context: ColleiContext, runner: CommandRunner) -> None:
+    del runner
     live = context.list_vms(active=True)
     if not live:
         print("no qemu process found")

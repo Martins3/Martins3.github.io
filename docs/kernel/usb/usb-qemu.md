@@ -68,6 +68,21 @@ https://mp.weixin.qq.com/s?__biz=MzkzMTk4OTIwNg==&mid=2247484156&idx=1&sn=eb5468
 ## 装机好工具
 ventor
 
+-usb、-device qemu-xhci、-device usb-kbd
+-device usb-tablet
+（输入有 PS/2 键鼠 + virtio-keyboard 兜底；
+要绝对坐标鼠标可加 -device virtio-tablet-pci
+
+```txt
+-device qemu-xhci,p2=8,p3=8,id=usb
+-device usb-kbd,id=input0,bus=usb.0,port=2
+-device usb-tablet,id=input1,bus=usb.0,port=3
+```
+
+```txt
+qemu-system-x86_64 -nodefaults -cpu host,kvm=on,l3-cache=on,+hypervisor,migratable=no,-vmx,+invtsc,hv_passthrough -smp 4,sockets=1,dies=1,cores=4,threads=1 -m 16G -machine type=q35,smm=off,graphics=off,vmport=off,dump-guest-core=off,hpet=off,accel=kvm -enable-kvm -global kvm-pit.lost_tick_policy=discard -smbios type=1,serial=SystemSerialNumber -display vnc=:0,websocket=5700 -vga virtio -monitor telnet:localhost:7100,server,nowait,nodelay -daemonize -D /run/shm/qemu.log -pidfile /run/shm/qemu.pid -name windows,process=windows,debug-threads=on -serial pty -device qemu-xhci,id=xhci,p2=7,p3=7 -device usb-tablet -netdev tap,id=hostnet0,ifname=qemu,vhost=on,vhostfd=40,script=no,downscript=no -device virtio-net-pci,id=net0,netdev=hostnet0,romfile=,mac=02:7C:B2:E1:47:FE -drive file=/storage/data.img,id=data3,format=raw,cache=none,aio=native,discard=on,detect-zeroes=on,if=none -device virtio-scsi-pci,id=data3b,bus=pcie.0,addr=0xa,iothread=io2 -device scsi-hd,drive=data3,bus=data3b.0,channel=0,scsi-id=0,lun=0,rotation_rate=1,bootindex=3 -object iothread,id=io2 -rtc base=localtime -global ICH9-LPC.disable_s3=1 -global ICH9-LPC.disable_s4=1 -drive file=/storage/windows.rom,if=pflash,unit=0,format=raw,readonly=on -drive file=/storage/windows.vars,if=pflash,unit=1,format=raw -object rng-random,id=objrng0,filename=/dev/urandom -device virtio-rng-pci,rng=objrng0,id=rng0,bus=pcie.0 -qmp tcp:0.0.0.0:7149,server,wait=off
+```
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

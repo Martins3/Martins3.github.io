@@ -1,0 +1,13 @@
+mini-vim: a terminal protocol experiment
+
+Press i to insert text. Press Escape to return to NORMAL.
+Move with h j k l or arrow keys. Try 0, $, gg and G.
+Use x to delete a character, dd to delete a line, o to open a line.
+Type :w /tmp/mini-vim-example.txt to save a copy; :q to quit.
+
+Resize the window: the status bar shows rows x columns and winch count.
+Press Ctrl-C: ISIG is off, so the editor reads byte 0x03 itself.
+The cyan ~, inverted status bar and cursor are terminal escape sequences.
+
+中文也可以输入和删除。字符宽度通过 wcwidth() 计算。
+Try a tab:	column after tab

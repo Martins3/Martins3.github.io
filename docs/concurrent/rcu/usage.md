@@ -36,7 +36,7 @@ rcu_sched_clock_irq 在 timer interrupt 中被周期的调用
 
 汗流浃背了没有!
 
-## 内核中在使用的 rcu 经典案例
+## rcu 经典案例
 <!-- be38b6e5-0810-4ef6-91e1-3744ab553ee8 -->
 
 ### task struct 的 rcu 保护

@@ -1,3 +1,5 @@
+# trace-cmd
+
 ## https://lwn.net/Articles/410200/
 
 1. ftrace-cmd 的 record 原理: 为每一个 cpu 创建出来一个 process，读取 /sys/kernel/debug/tracing/per_cpu/cpu0，最后主函数将所有的 concatenate 起来

@@ -1,4 +1,12 @@
-# workqueue
+# io wq
+<!-- 922aedca-8285-4f99-939c-bef58a02fcf7 -->
+
+1. 为什么需要使用 io wq?
+	- 任务需要等待
+2. 直接创建内核 thread 来规避问题
+3. 从来都没有 workqueue 吗?
+4. 即便如此，为什么这么复杂？
+
 ## 分析下，但是也许我们自己也可以写 : io_uring/io-wq.c
 
 - io_queue_iowq
@@ -348,6 +356,71 @@ io_wq_create_worker : 然后看情况创建 io-wq 来处理
         entry_SYSCALL_64_after_hwframe+118
 ]: 7
 ```
+
+
+## 分析下这个报告
+
+https://archives.kernel-recipes.org/wp-content/uploads/2025/01/axboe-kr2022.pdf
+
+> Requests passing in data structs need to ensure
+> validity only until submit is done, not until
+> completion.
+
+话虽如此，我们知道 request 已经被提交了
+
+> Originally io-wq used kernel threads that assumed the identity of the original task when needed. This was risky.
+>
+> Available in 5.12, io-wq is based on io-threads. These are normal task threads, except they never leave the kernel and they don’t take signals.
+
+什么意思，assumed the identity of original task ?
+
+> Native io-threads eliminate security concerns with io-wq offload, for the requests that need that.
+>
+> It also makes offload a bit more efficient, as no
+> identify switching is needed (files_struct, mm, creds,
+> etc).
+>
+> It also fixes cases that didn’t previously work, like
+> /proc/self, reading from signalfd, etc.
+>
+> Enables IORING_SETUP_SQPOLL to work with any file
+> type, or any request in general, and without
+> privilege requirements.
+
+1. 啊，native worker 可以做到这么多功能!
+
+> io-wq used to just block when offloaded.
+
+> Normal flow of request is attempt to issue, arm poll if data / space not available.
+>
+> IORING_RECVSEND_POLL_FIRST Don’t attempt issue first, go straight to poll.
+>
+> IORING_CQE_F_SOCK_NONEMPTY Previous eg recv() returns if there was more data available.
+
+
+## arm poll
+```txt
+  > 将 io_uring 请求注册到目标文件的 wait queue 上，使 fd 以后变为可读或可写时，内核能够唤醒并继续执行该请求。
+
+  典型流程：
+
+  IORING_OP_RECV
+        │
+        ├─ 非阻塞 recv 成功 ──────────────→ 产生 CQE
+        │
+        └─ 返回 -EAGAIN
+               │
+               └─ arm poll：监听 EPOLLIN
+                      │
+                      └─ socket 收到数据
+                             │
+                             └─ poll wakeup
+                                    │
+                                    └─ 重试 recv → CQE
+
+```
+
+[LWN : Redesigned workqueues for io_uring](https://lwn.net/Articles/803070/)
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

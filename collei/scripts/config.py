@@ -10,7 +10,7 @@ from options import IniConfig
 
 @dataclass(frozen=True)
 class GlobalConfig:
-    directory: IniConfig
+    options: IniConfig
 
     @classmethod
     def load(cls, path: Path) -> GlobalConfig:
@@ -22,22 +22,22 @@ class GlobalConfig:
 
     @property
     def vm_root(self) -> Path:
-        return Path(self.directory.require("vm")).expanduser()
+        return Path(self.options.require("vm")).expanduser()
 
     @property
     def default_vm_name(self) -> str:
-        name = self.directory.require("default_vm")
+        name = self.options.require("default_vm")
         if re.fullmatch(r"[A-Za-z0-9_.-]+", name) is None:
-            raise ColleiError(f"invalid default_vm in {self.directory.path}: {name}")
+            raise ColleiError(f"invalid default_vm in {self.options.path}: {name}")
         return name
 
     @property
     def master_ip(self) -> str:
-        return self.directory.require("ip")
+        return self.options.require("ip")
 
     @property
     def task_backend(self) -> str:
-        backend = self.directory.get("task_backend") or "pueue"
+        backend = self.options.get("task_backend") or "pueue"
         aliases = {
             "pueue": "pueue",
             "systemd": "systemd",
@@ -46,7 +46,7 @@ class GlobalConfig:
             return aliases[backend.strip().lower()]
         except KeyError as error:
             raise ColleiError(
-                f"{self.directory.path / 'task_backend'} must be pueue or systemd"
+                f"{self.options.path} [collei] task_backend must be pueue or systemd"
             ) from error
 
 

@@ -313,6 +313,8 @@ https://github.com/lucab/caps-rs
 
 ## TODO
 
+### 非预期场景
+
 忽然发现 root 不是最强的
 
 例如这个问题，编译之后，先用 martins3 执行一次，然后用 root 执行就会有 permission 错误了
@@ -324,6 +326,31 @@ https://github.com/lucab/caps-rs
     exit(1);
   }
 ```
+
+
+### directory 的 x 权限
+这里的 x 不是“执行目录里的程序”，而是目录的“进入/搜索（traverse/search）”权限。
+
+访问：
+
+/var/run/a/b/foo
+
+内核需要对每一级目录执行路径搜索：
+
+- /var/run：需要 x
+- /var/run/a：需要 x
+- /var/run/a/b：需要 x
+- foo：文件本身再检查 r/w
+
+目录权限含义是：
+
+- r：可以列出目录中的文件名
+- w：可以创建、删除、重命名目录项
+- x：可以进入目录，并访问已知名称的文件
+
+所以 0600 的目也就是说，0700 并不是允许执行目录，而是允许目录所有者读取内容、修改目录项，并进入/搜索目录。
+
+2026-08-28 这个说法需要确认下。
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

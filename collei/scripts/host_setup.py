@@ -9,6 +9,7 @@ from pathlib import Path
 
 from commands import CommandRunner
 from errors import ColleiError, UnsupportedNativeConfiguration
+from network import PortForward, network_backend, passt_daemon_arguments, passt_socket
 from runtime import ColleiContext, VmRuntime
 from tasks import add_background_task
 from vfio import pci_bind_to_vfio
@@ -100,24 +101,88 @@ def prepare_native_host(
     for device in (vm.config.options.get("vfio") or "").splitlines():
         pci_bind_to_vfio(device, runner)
 
-    monitor = vm.directory / vm.which_qemu
+    monitor = vm.qemu_directory
     monitor.mkdir(parents=True, exist_ok=True)
     for counter in ("hp_mm_counter", "hp_disk_counter", "vif_counter"):
         (monitor / counter).write_text("0\n")
-    if context.global_config.directory.get("bridge") != "no":
+    prepare_passt_network(context, vm, runner)
+    prepare_vhost_user_net(context, vm, runner)
+    if context.global_config.options.get("bridge") != "no":
         prepare_ovs_tap(context, vm, runner)
+
+
+def prepare_passt_network(
+    context: ColleiContext, vm: VmRuntime, runner: CommandRunner
+) -> None:
+    if network_backend(vm) != "passt":
+        return
+    socket_path = passt_socket(vm)
+    socket_path.unlink(missing_ok=True)
+    repair_socket = Path(f"{socket_path}.repair")
+    repair_socket.unlink(missing_ok=True)
+    add_background_task(
+        context,
+        runner,
+        passt_daemon_arguments(vm, [PortForward("tcp", vm.tcp_port("ssh"), 22)]),
+        vm=vm,
+        group="qemu",
+        label="passt",
+    )
+    for _ in range(50):
+        if socket_path.exists():
+            return
+        time.sleep(0.1)
+    raise ColleiError(f"passt socket was not created: {socket_path}")
+
+
+# 2026-08-25 总体来说，这个东西没玩太明白，不过此时此刻，我在调查 vhost 重连的问题
+def prepare_vhost_user_net(
+    context: ColleiContext, vm: VmRuntime, runner: CommandRunner
+) -> None:
+    if not vm.config.options.enabled("vhost_user_net"):
+        return
+    binary = (
+        context.repo.parent.parent
+        / "qemu/build/contrib/vhost-user-bridge/vhost-user-bridge"
+    )
+    if not binary.is_file() or not os.access(binary, os.X_OK):
+        raise ColleiError(f"vhost-user-bridge is not built: {binary}")
+    socket_path = vm.qemu_directory / "vhost-user-net.sock"
+    socket_path.unlink(missing_ok=True)
+    local_port = vm.tcp_port("vhost_user")
+    add_background_task(
+        context,
+        runner,
+        [
+            binary,
+            "-u",
+            socket_path,
+            "-l",
+            f"127.0.0.1:{local_port}",
+            "-r",
+            f"127.0.0.1:{local_port + 1}",
+        ],
+        vm=vm,
+        group="qemu",
+        label="vhost-user-net",
+    )
+    for _ in range(50):
+        if socket_path.exists():
+            return
+        time.sleep(0.1)
+    raise ColleiError(f"vhost-user-bridge socket was not created: {socket_path}")
 
 
 def prepare_ovs_tap(
     context: ColleiContext, vm: VmRuntime, runner: CommandRunner
 ) -> tuple[str, str]:
-    counter_file = vm.directory / vm.which_qemu / "vif_counter"
+    counter_file = vm.qemu_directory / "vif_counter"
     counter = int(counter_file.read_text())
     if counter >= 10:
         raise ColleiError("too many nic")
     counter_file.write_text(f"{counter + 1}\n")
     tap = f"vif_{vm.which_qemu}_{vm.config.guest_id}_{counter}"
-    level = context.global_config.directory.integer("level", 0)
+    level = context.global_config.options.integer("level", 0)
     mac = f"52:54:00:{level:02x}:{vm.config.guest_id:02x}:{counter:02x}"
 
     if runner.run(

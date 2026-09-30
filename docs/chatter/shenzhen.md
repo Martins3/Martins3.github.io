@@ -31,13 +31,23 @@
 ## 有趣的
 https://www.douban.com/podcast_episode/406417
 https://www.douban.com/podcast_episode/409850
-douban.com
 
 ## 餐厅
 - 客语
 - 辣可可
+- 农耕记
 
 ## 深圳 10 峰
+
+## 图书馆
+
+1. 电脑充电器
+2. 羽毛球
+3. kindle
+4. 耳机
+5. 牙膏
+6. 纸 + 笔
+7. 水杯
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

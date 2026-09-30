@@ -146,6 +146,9 @@ RETRY_ON_EINTR(expr)
 	- iouring 监听所有的 fd 以及提交的所有的 io
 		- 这个只能是 io uring 给io handler 做，因为只有
 
+## 参考
+- https://vmsplice.net/~stefan/stefanha-fosdem-2021.pdf
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

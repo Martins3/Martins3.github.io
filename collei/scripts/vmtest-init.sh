@@ -82,16 +82,17 @@ log "Symlink /dev/fd to /proc/self/fd"
 
 log "Init done"
 
-# Locate our QGA virtio port
+# Locate the first configured virtserialport.  Collei exposes all
+# virtserialport channels as org.qemu.vport.N; vmtest uses vport.0 for QGA.
 vport=
 for dir in /sys/class/virtio-ports/*; do
-	if [[ "$(cat "$dir/name")" == "org.qemu.guest_agent.0" ]]; then
+	if [[ "$(cat "$dir/name")" == "org.qemu.vport.0" ]]; then
 		vport_name=$(basename "$dir")
 		vport="/dev/${vport_name}"
 	fi
 done
 if [[ -z $vport ]]; then
-	log "Failed to locate qemu-guest-agent virtio-port"
+	log "Failed to locate org.qemu.vport.0 for qemu-guest-agent"
 	exit 1
 fi
 log "Located qemu-guest-agent virtio port: ${vport}"

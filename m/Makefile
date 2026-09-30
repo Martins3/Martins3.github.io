@@ -21,13 +21,13 @@ GCOV_PROFILE := y
 
 ccflags-y += -I$(PWD)
 
-OBJECTS := workqueue.o concurrent/access_once.o concurrent/spinlock.o concurrent/rt_mutex.o concurrent/percpu_rwsem.o concurrent/seqlock.o
+OBJECTS := concurrent/access_once.o concurrent/spinlock.o concurrent/rt_mutex.o 
 martins3-m := main.o $(OBJECTS)
 # $(info $(martins3-m))
 
 obj-m += martins3.o
 # obj-m += virtio/
-# obj-m += tty0tty/
+obj-m += tty0tty/
 # obj-m += mini/
 # 让这个只能在 Intel 上构建
 # obj-m += peach/

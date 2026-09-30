@@ -3,10 +3,11 @@
 这个目录放 CUTLASS demo，用 Makefile 验证不同接入方式。Makefile 会自动发现
 当前目录下的 `*.cu` 文件，并把每个 demo 编译成 `build/<name>.out`。
 
-- `MODE=local`：默认模式，使用 `~/data/cutlass` 源码和本机已构建的
+- `MODE=source`：默认模式，只使用 `~/data/cutlass` 源码树的头文件；当前
+  demo 都是头文件模板实例化，不需要链接 `libcutlass.so`
+- `MODE=local`：使用 `~/data/cutlass` 源码和本机已构建的
   `build-cmake-sm120-cuda12.8-tools/tools/library/libcutlass.so`
 - `MODE=system`：使用系统安装路径里的 CUTLASS 头文件和 `libcutlass.so`
-- `MODE=source`：只使用下载好的 CUTLASS 源码树头文件，不链接 `libcutlass.so`
 
 默认构建并运行：
 
@@ -33,13 +34,16 @@ make run DEMO=sgemm_demo
 make run DEMO=sgemm_demo RUN_ARGS="256 256 256"
 ```
 
-等价显式写法：
+使用本地构建的 CUTLASS library：
 
 ```bash
 make MODE=local \
   LOCAL_CUTLASS_ROOT=~/data/cutlass \
   LOCAL_CUTLASS_BUILD=~/data/cutlass/build-cmake-sm120-cuda12.8-tools
 ```
+
+`MODE=local` 下的 CUTLASS library 必须与当前 CUDA Toolkit 主版本一致；例如
+CUDA 12 构建的 `libcutlass.so` 不能直接与 CUDA 13 的 `libcudart` 链接。
 
 系统安装版示例：
 

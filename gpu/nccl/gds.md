@@ -223,3 +223,140 @@ nv-p2p.h 只是这套接口的声明入口，gds-nvidia-fs 通过它调用 nvidi
 
   调用位置在 src/nvfs-core.c:1316 和 src/nvfs-core.c:1334。
 
+
+## cufile
+
+> [!NOTE]
+> 参考神奇海螺的意见，有待验证
+
+2026-09-24 : 简单看了下，似乎也是容易理解的，将数据面放到 p2pdma 中去，将控制面放到普通的文件系统的控制中去。
+
+按你当前这份 Linux 7.2 代码树来讲，场景取 XFS/ext4 + 本地 NVMe + GDS 原生 P2PDMA。先看对齐、普通文件、没有加密等特殊处理的
+路径。
+
+关键是：GDS 复用文件系统的 Direct I/O；主要变化是 bio 里描述的内存从主机 RAM 变成了 GPU 设备内存。CPU 仍负责文件系统和 I/O
+提交。
+
+普通 I/O 与 GDS 的数据路径
+
+ 方式               read 数据流                    write 数据流
+━━━━━━━━━━━━━━━━━  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ Buffered I/O       SSD → page cache → 用户 RAM    用户 RAM → page cache → 写回 SSD
+─────────────────  ─────────────────────────────  ──────────────────────────────────
+ 普通 Direct I/O    SSD → 用户 RAM                 用户 RAM → SSD
+─────────────────  ─────────────────────────────  ──────────────────────────────────
+ GDS P2PDMA         SSD → GPU 显存                 GPU 显存 → SSD
+─────────────────  ─────────────────────────────  ──────────────────────────────────
+ cuFile 兼容模式    SSD → 主机缓冲区 → GPU         GPU → 主机缓冲区 → SSD
+
+Buffered read 命中缓存时不用访问 SSD；buffered write 通常在写脏 page cache 后就能返回。兼容模式的主机侧 I/O 则可以是
+direct 或 buffered，取决于条件。
+
+1. GDS read 的常规路径
+
+以 cuFileRead() 读取已写入的文件区域为例，提交路径可概括为：
+
+cuFileRead(file, GPU buffer, offset, size)
+    │ cuFile / GPU 驱动准备可用于 P2PDMA 的内存映射
+    ▼
+VFS read_iter
+    ├─ XFS:  xfs_file_dio_read()
+    └─ ext4: ext4_dio_read_iter()
+    ▼
+iomap_dio_rw()
+    ▼
+文件系统 iomap_begin：文件偏移 → extent → 磁盘位置
+    ▼
+iomap 构建 bio：磁盘扇区 + 目标内存页
+    ▼
+block / blk-mq
+    ▼
+nvme_queue_rq() → nvme_prep_rq() → nvme_map_data()
+    ▼
+设置 NVMe PRP/SGL，提交读命令
+
+其中有几个关键动作：
+
+- 处理缓存一致性。 DIO read 会先等待相关脏缓存写回，确保读磁盘得到最新内容；绕过 page cache 并不意味着完全不检查它。
+- 获取 GPU 对应的设备内存页。 bio_iov_iter_get_pages() (block/bio.c:1245) 检查队列是否支持 P2PDMA，设置
+  ITER_ALLOW_P2PDMA；随后转成 FOLL_PCI_P2PDMA 交给 GUP。这里需要 GPU 驱动准备好的映射，不能把任意 CUDA 指针直接交给普通
+  read()。
+
+- 建立设备可访问的 DMA 地址。 nvme_map_data() (drivers/nvme/host/pci.c:1245) 使用通用 DMA iterator 处理 P2PDMA 映射，将地
+  址填进 PRP/SGL。
+
+实际搬运数据时，NVMe 控制器把文件数据 DMA 到 GPU 显存。完成后，NVMe/块层结束请求，iomap 释放本次 I/O 持有的页引用或 pin，
+再完成同步等待或异步通知。
+
+2. GDS write 的常规路径
+
+写路径大部分共用同一套代码，区别在方向和文件系统更新：
+
+cuFileWrite()
+    → XFS/ext4 的 DIO write
+    → iomap_dio_rw()
+    → 建立 REQ_OP_WRITE bio
+    → NVMe 从 GPU 显存 DMA 读取数据
+    → SSD 写入
+    → 文件系统完成元数据更新
+
+具体分两类：
+
+- 覆盖已有 extent： 查出磁盘位置，处理相关 page cache 的写回和失效，然后提交 DMA，路径较短。
+- 扩展文件、填洞或写 unwritten extent： 文件系统可能先分配块；I/O 完成后转换 unwritten extent、更新文件大小等。XFS 的对齐
+  CoW 写也可以继续走 DIO。
+
+**分配块、更新日志不等于必须回退。**这些操作主要处理元数据，可以和数据直传并存。写完成时的处理见 iomap_dio_complete() (fs/
+iomap/direct-io.c:109)。
+
+此外，DIO 完成不自动等于掉电持久化；O_DSYNC、O_SYNC 或 fsync() 才会要求相应的持久化处理。
+
+3. 回退分几个层次，不能混在一起
+
+ 层次                             触发例子                                     实际结果
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ 文件系统内部重试                 XFS 非文件系统块对齐写，需要分配块或补零     从共享锁改为独占锁重试，仍然是 DIO
+───────────────────────────────  ───────────────────────────────────────────  ────────────────────────────────────────────
+ DIO → buffered                   ext4 文件不支持 DIO；XFS 某些非对齐 CoW      转到 page cache 路径
+                                  写
+───────────────────────────────  ───────────────────────────────────────────  ────────────────────────────────────────────
+ DIO 使用内核 bounce buffer       当前 XFS 的 mapping_stable_writes() 条件     使用主机临时页，没有经过 page cache 也可能
+                                  成立                                         发生复制
+───────────────────────────────  ───────────────────────────────────────────  ────────────────────────────────────────────
+ cuFile 使用 GPU bounce buffer    某些非对齐读、应用 buffer 不适合直接映射     SSD → GPU 临时 buffer → 应用 GPU buffer
+───────────────────────────────  ───────────────────────────────────────────  ────────────────────────────────────────────
+ cuFile compatibility mode        不具备直传条件，且库允许相应回退             使用主机缓冲区及普通文件 I/O
+───────────────────────────────  ───────────────────────────────────────────  ────────────────────────────────────────────
+ 直接返回错误                     非法对齐、P2P 映射失败、真实存储错误等       不保证回退
+
+文件系统这一层，当前代码的行为比较明确：
+
+- ext4： ext4_should_use_dio() 不通过时，可直接转 buffered。写入过程中还会处理 -ENOTBLK 或剩余未完成部分，使用 buffered
+  write 补齐；这一补齐分支随后写回并尝试失效缓存。见 ext4_dio_write_iter() (fs/ext4/file.c:517)。
+
+- XFS： DIO write 返回 -ENOTBLK 时，外层转 buffered；其他错误通常直接返回。典型来源是非文件系统块对齐的 CoW 写。iomap 写前
+  无法失效缓存，也可能产生这个回退信号。见 xfs_file_write_iter 路径 (fs/xfs/xfs_file.c:1193)。
+
+- 非对齐并不统一回退： 比如 XFS 写连设备逻辑扇区都没对齐，会返回 -EINVAL；满足扇区对齐但不满足文件系统块对齐，才可能走加
+  锁、补零或 CoW 回退处理。
+
+**文件系统转 buffered，并不代表它会自动替你完成 GPU↔RAM 复制。**它只是改用了 CPU 访问 buffer 的路径。GPU 映射是否能承受这
+种访问、是否会失败，是另一回事；可靠的主机缓冲区兼容路径由 cuFile 管理。
+
+cuFile 还可能提前选择替代路径，而不是等内核报错。例如某些非对齐读使用 GPU bounce buffer；非对齐写可能使用 POSIX
+read-modify-write。allow_compat_mode 允许相应的主机内存回退，但不能理解成“任何 I/O 错误都会自动重试成功”。NVIDIA 非对齐
+I/O 说明 (https://docs.nvidia.com/gpudirect-storage/best-practices-guide/index.html#io-pattern-4)、兼容模式配置
+(https://docs.nvidia.com/gpudirect-storage/configuration-guide/)
+
+4. 空洞读取是一个特殊例子
+
+读取文件中的 hole 或 unwritten extent，语义是返回零，通常根本没有 NVMe 读请求。当前 iomap_dio_hole_iter() (fs/iomap/
+direct-io.c:589) 调用 iov_iter_zero() 填充目标 buffer。
+
+因此，稀疏文件不能完全套用“SSD DMA 到 GPU”的常规路径。新版本 cuFile 也针对 XFS/ext4
+的稀疏文件读取增加了路径选择优化；具体是否中转，要结合库版本和配置判断。NVIDIA 稀疏文件优化说明
+(https://docs.nvidia.com/gpudirect-storage/release-notes/index.html#new-features-and-changes)
+
+判断是否真正直传，要看最终 NVMe DMA 映射指向 GPU 设备内存还是主机 RAM；仅看到 O_DIRECT、进入 iomap，或 cuFile 调用成功，都
+不够。
+

@@ -496,6 +496,9 @@ info virtio-vhost-queue-status path queue -- Display status of a given vhost que
 ## 看看
 https://github.com/weltling/virtio-villain
 
+## 虚拟机中观察设备的 features 是否打开的原理
+/sys/bus/virtio/devices/*/features
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

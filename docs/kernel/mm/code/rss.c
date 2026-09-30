@@ -80,14 +80,13 @@ static void test_regular_private(void) {
     munmap(map, TEST_SIZE);
     close(fd);
     unlink("/var/tmp/test_regular.bin");
-    print_status("After cleanup");
 }
 
 static void test_tmpfs_private(void) {
     printf("\n");
     printf("╔════════════════════════════════════════════════════════════╗\n");
     printf("║  TEST 2: tmpfs File + MAP_PRIVATE + Write                  ║\n");
-    printf("║  (/tmp is typically tmpfs)                                ║\n");
+    printf("║  (/tmp is typically tmpfs)                                 ║\n");
     printf("╚════════════════════════════════════════════════════════════╝\n");
 
     int fd = create_test_file("/tmp/test_tmpfs.bin");
@@ -113,7 +112,6 @@ static void test_tmpfs_private(void) {
     munmap(map, TEST_SIZE);
     close(fd);
     unlink("/tmp/test_tmpfs.bin");
-    print_status("After cleanup");
 }
 
 static void test_regular_shared(void) {
@@ -146,7 +144,6 @@ static void test_regular_shared(void) {
     munmap(map, TEST_SIZE);
     close(fd);
     unlink("/var/tmp/test_shared.bin");
-    print_status("After cleanup");
 }
 
 static void test_tmpfs_shared(void) {
@@ -179,7 +176,6 @@ static void test_tmpfs_shared(void) {
     munmap(map, TEST_SIZE);
     close(fd);
     unlink("/tmp/test_tmpfs_shared.bin");
-    print_status("After cleanup");
 }
 
 static void test_anon_shared(void) {
@@ -205,7 +201,6 @@ static void test_anon_shared(void) {
     print_status("After write (RssShmem - shared anonymous)");
 
     munmap(map, TEST_SIZE);
-    print_status("After cleanup");
 }
 
 int main(void) {

@@ -942,6 +942,52 @@ index b54392366142..6f108b2977de 100644
  		    events[HTLB_BUDDY_PGALLOC]);
 ```
 
+## page reporting 在 S3 resume 之后炸在 detach_buf_split
+
+oe2403 (QEMU + openEuler 24.03, 6.6.0-28.0.0.34.oe2403) 上，`rtcwake -m mem -s 5`
+resume 之后几秒内 kworker 挂掉，vmcore 在 /var/crash 下:
+
+```txt
+[1055760.248200] ACPI: PM: Waking up from system sleep state S3
+[1055760.943338] PM: suspend exit
+[1055764.011235] kernel BUG at drivers/virtio/virtio_ring.c:801!
+[1055764.011740] Workqueue: events page_reporting_process
+[1055764.011963] RIP: 0010:detach_buf_split+0x169/0x170
+[1055764.012375] RSP: 0018:ffffc90004f03d60 ... RAX: ffff88812106d800 R14: ffff88812082e000
+[1055764.012945] R13: ffff888120998400 R15: ffff888103473640
+[1055764.015152]  virtqueue_get_buf_ctx+0x6f/0x110
+[1055764.015275]  virtballoon_free_page_report+0xc1/0xe0 [virtio_balloon]
+[1055764.015501]  page_reporting_process_zone+0xd3/0x130
+[1055764.015615]  page_reporting_process+0x74/0xc0
+```
+
+### 根因
+
+- page reporting 的工作项排在 `system_wq` 上: `queue_delayed_work(system_wq, &prdev->work, 0)`
+  (mm/page_reporting.c 的 __page_reporting_notify)，它不是 WQ_FREEZABLE，PM freezer 不冻结它
+- `virtballoon_freeze()` 只调 `remove_common()`，里面是 `virtio_reset_device()` + `del_vqs()`；
+  不像 `virtballoon_remove()` 会先 `page_reporting_unregister()`
+  (virtballoon_freeze 上面那句 "The workqueue is already frozen by the PM core" 对 page
+  reporting 并不成立)
+- 于是 vq 被拆掉/重建的同时，reporting 的工作还在跑(或者 resume 之后接着跑)
+
+ftrace 直接能看到它跑在哪个 workqueue 上:
+
+```txt
+workqueue_queue_work: function=page_reporting_process workqueue=events req_cpu=8192 cpu=30
+```
+`events` 就是 system_wq 的名字(system_freezable_wq 的名字是 `events_freezable`)。
+
+- 引入: `Fixes: 36e66c554b5c ("mm: introduce Reported pages")`
+- 修复: `0b45f6927a14 mm/page_reporting: use system_freezable_wq to fix UAF during suspend`
+- 后续一组(v7.3, Denis V. Lunev): `virtio_balloon: factor out virtballoon_quiesce()`、
+  `virtio_balloon: quiesce balloon work before device shutdown`、
+  `virtio_balloon: disable indirect descriptors`
+
+## 是在是抱歉了，这两个文档都没有看
+- https://www.vmware.com/docs/perf-vsphere-memory_management
+- https://www.nutanix.com/tech-center/blog/ahv-internals-memory-overcommit
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

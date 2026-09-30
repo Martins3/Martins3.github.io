@@ -460,6 +460,12 @@ https://news.ycombinator.com/item?id=34789247
 
 - https://harshanu.space/en/tech/ccc-vs-gcc/
 
+## 如何加速内核的编译
+LWN : Accelerating the kernel's build process
+https://mp.weixin.qq.com/s/LEuYmTvLhiVGNw-Ic4KjAA
+
+这个工作相当不错，快速构建一直都是非常重要的。
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

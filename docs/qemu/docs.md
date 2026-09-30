@@ -1,8 +1,6 @@
-# [Official Docs](https://qemu.readthedocs.io/en/latest/index.html)
+# qemu 文档
 
-## TODO
-- -net user 和 TAP 设备模拟网络区别 ?
-- failover 机制
+[Official Docs](https://qemu.readthedocs.io/en/latest/index.html)
 
 ## System Emulation
 内容快速检查:
@@ -48,6 +46,7 @@
 - Removed features
 - Supported build platforms
 - License
+
 ## User Mode Emulation
 三件事应该是非常复杂的:
 1. syscall 模拟
@@ -88,6 +87,7 @@
 - Vhost-user-gpu Protocol
 - Vhost-vdpa Protocol
 ## System Emulation Guest Hardware Specifications
+
 ## Developer Information
 - Code of Conduct
 - Conflict Resolution Policy
@@ -123,6 +123,9 @@
   - 绝对的重点
 - block-coroutine-wrapper
 - Multi-process QEMU
+
+## TODO
+- failover 机制
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

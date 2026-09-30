@@ -70,6 +70,8 @@ class LaunchOptions:
                 raise ColleiError(
                     "VM installation moved to collei-install.py; "
                     f"use collei-install.py {option}"
+                    "ri -i # iso"
+                    "ri -V # virtme"
                 )
             elif option == "-s":
                 debug_kernel = True

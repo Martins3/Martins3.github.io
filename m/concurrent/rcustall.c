@@ -52,11 +52,11 @@
  *
  * 为什么 tsc 和 kvmclock 作为时钟的都可以避开，
  * 因为似乎是因为内核在 rcustall 的检测中，有检测 kvm_check_and_clear_guest_paused
- * 而 kvmclock 打开之后，并不会由于 clocksource 是 tsc 还是 kvmclock 
+ * 而 kvmclock 打开之后，并不会由于 clocksource 是 tsc 还是 kvmclock
  * 虚拟机暂停恢复，总是回去调用 kvm_make_request(KVM_REQ_CLOCK_UPDATE, vcpu);
  * 然其跳过。
  *
- * tsc 作为时钟源有时候会导致这个，但是还是不会导致 rcu stall 出现:
+ * tsc 作为时钟源有时候会导致如下的警告，但是还是不会导致 rcu stall 出现:
  *
  * [   45.843801] systemd[1]: systemd-logind.service: Watchdog timeout (limit 3min)!
  * [   45.844475] systemd[1]: systemd-logind.service: Killing process 663 (systemd-logind) with signal SIGABRT.

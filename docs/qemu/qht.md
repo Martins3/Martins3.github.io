@@ -1,6 +1,5 @@
 # qht 移植
-> 等阅读了 perf book 之后，从一个更高的角度来分析吧
-> 不看懂这个，perf book 完全看不懂的啊
+<!-- c4674874-f9e3-4afb-a174-c24837550f3e -->
 
 - [ ] 分析一下这个文章，介绍如何实现多核的操作的: Cross-ISA machine emulation for multicores
 

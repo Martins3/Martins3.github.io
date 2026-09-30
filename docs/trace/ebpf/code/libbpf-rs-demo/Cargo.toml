@@ -1,0 +1,15 @@
+[package]
+name = "libbpf-rs-demo"
+version = "0.1.0"
+edition = "2021"
+license = "LGPL-2.1-only OR BSD-2-Clause"
+description = "A minimal libbpf-rs tracepoint example"
+
+[build-dependencies]
+libbpf-cargo = "0.27"
+
+[dependencies]
+anyhow = "1"
+clap = { version = "4", features = ["derive"] }
+libbpf-rs = "0.27"
+plain = "0.2"

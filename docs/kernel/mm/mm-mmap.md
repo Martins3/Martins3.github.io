@@ -169,12 +169,6 @@ https://stackoverflow.com/questions/8708463/difference-between-kernel-virtual-ad
 // 不同进程地址空间直接拷贝
 
 ## virtual memory
-1. 实现地址空间的隔离是虚拟内存的目的，但是，关键位置在于如何实现在隔离的基础上共享和通信。
-  1. 实现隔离的方法: page walk
-  2. 实现共享 : cow + mmap(找到一下使用 mmap 的)
-2. 不同虚拟内存的属性不同。vma
-
-// ---------- 等待处理的事情 ---------------
 1. 为什么 mm_struct 中间存在这个，难道这个的实现不是标准操作吗 ?
 ```c
     unsigned long (*get_unmapped_area) (struct file *filp,
@@ -190,14 +184,6 @@ static inline bool vma_is_anonymous(struct vm_area_struct *vma)
   return !vma->vm_ops;
 }
 ```
-3. 虚拟地址空间的结构是什么 ? amd64 的架构上，内核空间如此大，内核空间的线性地址的映射是如何完成的 ?
-
-5. 当使用四级的 page walk 的时候，为什么可以实现 48bit 的寻址过程，中间的空洞是如何体现出来的。
-
-6. 分析一下经典的函数 : `__pa` `__va` 和 kmap 以及 kunmap 的关系是什么 ? 似乎回到 highmem 的内容
-
-7. 还是分不清 Kernel Logical Address 和 Kernel Virtual Address 的区别是什么? 这是凭空创建出来混淆人的注意力
-// ---------- 等待处理的事情 end ---------------
 
 This hardware feature allows operating systems to map
 the kernel into the address space of every process and
@@ -209,14 +195,6 @@ to the kernel, e.g., for interrupt handling.
   - fork 会很难实现 : fork 出来的 child 需要从内核态返回，至少在返回到用户层的时候需要使用内核地址空间
   - context switch 的过程 : 进入内核态，各种切换(包括切换地址空间)，离开内核态。如果用户不包含内核态的地址空间，就需要考虑切换地址空间和进入内核空间，先后 ?，同时 ?
   > emmmmm fork 和 context switch 的内容需要重新分析
-
-x86_64 规定了虚拟地址空间的 layout[^5]
-1. 4-level 和 5-level 在 layout 的区分只是 start address 和 length 的区别
-2. 处于安全问题，这些地址都是加入了随机偏移
-3. page_offset_base vmalloc_base vmemmap_base 含义清晰
-4. 其他暂时不管
-5. *只是 ioremap 的开始位置为什么和 vmalloc_base 使用的位置相同*
-6. cpu_entry_area : https://unix.stackexchange.com/questions/476768/what-is-cpu-entry-area
 
 #### fork
 1. fork 的那些 flags 如何控制

@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="430" viewBox="0 0 900 430">
+  <defs>
+    <marker id="arrow" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto">
+      <path d="M0,0 L9,4.5 L0,9 z" fill="#245b91"/>
+    </marker>
+    <linearGradient id="top" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fff8b0"/><stop offset="1" stop-color="#e5c84b"/>
+    </linearGradient>
+    <linearGradient id="left" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#57c9b4"/><stop offset="1" stop-color="#168f83"/>
+    </linearGradient>
+    <linearGradient id="right" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f06b68"/><stop offset="1" stop-color="#bc343f"/>
+    </linearGradient>
+  </defs>
+  <rect width="900" height="430" fill="#f7f9fc"/>
+  <text x="40" y="48" font-family="sans-serif" font-size="27" font-weight="700" fill="#15283d">Rubik's cube as a group</text>
+  <text x="40" y="78" font-family="sans-serif" font-size="17" fill="#526477">Generators are moves; states are vertices in a Cayley graph.</text>
+  <g transform="translate(95,120)" stroke="#21364c" stroke-width="3" stroke-linejoin="round">
+    <path d="M150 0 L300 76 L150 152 L0 76 Z" fill="url(#top)"/>
+    <path d="M0 76 L150 152 L150 332 L0 256 Z" fill="url(#left)"/>
+    <path d="M150 152 L300 76 L300 256 L150 332 Z" fill="url(#right)"/>
+    <g stroke="#ffffff" stroke-width="2" opacity=".9">
+      <path d="M100 25 L250 101 M50 50 L200 126 M50 102 L200 178 M50 162 L200 238 M50 222 L200 298"/>
+      <path d="M50 50 L50 230 M100 25 L100 256 M200 50 L200 306 M250 101 L250 281"/>
+      <path d="M50 50 L200 126 L200 306 L50 230 Z" fill="none"/>
+      <path d="M200 126 L250 101 L250 281 L200 306 Z" fill="none"/>
+      <path d="M100 146 L250 222 M50 200 L200 276"/>
+    </g>
+    <path d="M205 20 C255 8 300 33 315 75" fill="none" stroke="#245b91" stroke-width="8" marker-end="url(#arrow)"/>
+    <text x="284" y="25" font-family="sans-serif" font-size="24" font-weight="700" fill="#245b91" stroke="none">U</text>
+    <path d="M276 117 C325 153 330 218 294 256" fill="none" stroke="#245b91" stroke-width="8" marker-end="url(#arrow)"/>
+    <text x="316" y="199" font-family="sans-serif" font-size="24" font-weight="700" fill="#245b91" stroke="none">R</text>
+  </g>
+  <g transform="translate(485,132)" font-family="sans-serif">
+    <rect x="0" y="0" width="355" height="245" rx="12" fill="#ffffff" stroke="#c6d2df" stroke-width="2"/>
+    <text x="24" y="40" font-size="22" font-weight="700" fill="#15283d">Composition order</text>
+    <text x="24" y="84" font-size="24" fill="#15283d">R then U  =  U o R</text>
+    <text x="24" y="124" font-size="24" fill="#15283d">U then R  =  R o U</text>
+    <path d="M35 150 L319 150" stroke="#d6e0ea" stroke-width="2"/>
+    <text x="24" y="190" font-size="21" fill="#245b91">Usually: U o R != R o U</text>
+    <text x="24" y="222" font-size="16" fill="#526477">The group remembers the order.</text>
+  </g>
+</svg>

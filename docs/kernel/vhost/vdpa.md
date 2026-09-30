@@ -33,55 +33,6 @@ drivers/vhost/vdpa.c
 
 如何理解 CONFIG_VHOST_RING=y 被谁使用的?
 
-## 现在，理解一下 vDPA vhost 的关系
-
-drivers/vhost/vdpa.c 为什么这里会有这个
-
-https://www.redhat.com/en/blog/hands-vdpa-what-do-you-do-when-you-aint-got-hardware-part-1
-按照这个继续操作吧
-
-
-```txt
-sudo modprobe vdpa
-sudo modprobe vhost_vdpa
-sudo modprobe vdpa_sim
-sudo modprobe vdpa_sim_net
-```
-
-1. vdpa mgmtdev show
-
-```txt
-vdpasim_net:
-  supported_classes net
-  max_supported_vqs 3
-  dev_features MTU MAC STATUS CTRL_VQ CTRL_MAC_ADDR ANY_LAYOUT VERSION_1 ACCESS_PLATFORM
-vdpasim_blk:
-  supported_classes block
-  max_supported_vqs 0
-  dev_features
-vduse:
-  supported_classes net block
-  max_supported_vqs 0
-  dev_features
-```
-
-sudo vdpa dev add name vdpa0 mgmtdev vdpasim_net mac 00:e8:ca:33:ba:05
-sudo vdpa dev show -jp
-
-```txt
-sudo qemu-kvm \
- -drive file=/home/test/L1.qcow2,media=disk,if=virtio \
- -net nic,model=virtio \
- -net user,hostfwd=tcp::2226-:22 \
- -netdev type=vhost-vdpa,vhostdev=/dev/vhost-vdpa-0,id=vhost-vdpa0 \
- -device virtio-net-pci,netdev=vhost-vdpa0,bus=pcie.0,addr=0x7 \
- disable-modern=off,page-per-vq=on \
- -nographic \
- -m 4G \
- -smp 4 \
- -cpu host \
-```
-
 ## 似乎先需要看看 drivers/vhost/vringh.c
 
 
@@ -368,6 +319,25 @@ https://www.qemu.org/docs/master/interop/vhost-vdpa.html
 阅读一下 `driver/vdpa/vdpa_sim` 中的内容，应该可以便于理解一点吧！
 
 - [ ] vdpa-blk : https://www.youtube.com/watch?v=zyDSUU0TLB4
+
+## Links
+
+### Introduction to vDPA kernel framework
+<https://www.redhat.com/en/blog/introduction-vdpa-kernel-framework>
+
+A "vDPA device" means a type of device whose datapath complies with the virtio specification, but whose control path is vendor specific.
+
+### vDPA kernel framework part 1: vDPA bus for abstracting hardware
+<https://www.redhat.com/en/blog/vdpa-kernel-framework-part-1-vdpa-bus-abstracting-hardware>
+
+### vDPA kernel framework part 2: vDPA bus drivers for kernel subsystem interactions
+<https://www.redhat.com/en/blog/vdpa-kernel-framework-part-2-vdpa-bus-drivers-kernel-subsystem-interactions>
+
+![](https://www.redhat.com/cms/managed-files/2019-10-02-vdpa-figure5.jpg)
+
+### Achieving network wirespeed in an open standard manner: introducing vDPA
+<https://www.redhat.com/en/blog/achieving-network-wirespeed-open-standard-manner-introducing-vdpa>
+
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

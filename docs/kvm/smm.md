@@ -1,4 +1,4 @@
-# kvm 如何支持 smm
+# smm
 
 ## 分析 qemu 一共会调用多少次 KVM_SET_USER_MEMORY_REGION
 
