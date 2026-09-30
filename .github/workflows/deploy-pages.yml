@@ -40,7 +40,7 @@ jobs:
         shell: bash
         run: |
           set -E -e -u -o pipefail
-          find docs/math -maxdepth 1 -type f -name '*.typ' -print0 \
+          find docs/math -type f -name '*.typ' -print0 \
           	| while IFS= read -r -d '' typ_file; do
           		typst compile --root . "$typ_file"
           	done

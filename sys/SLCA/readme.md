@@ -1,1 +1,0 @@
-- [ ] https://news.ycombinator.com/item?id=25257932 makes me want to understand how CPU works again
