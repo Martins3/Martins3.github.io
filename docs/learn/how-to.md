@@ -243,6 +243,9 @@ AI 的确可以重塑学习方法，如果看一个文档，会非常的痛苦�
 	- 可以不去看，但是不能不去直接就下意识忽视掉了，
 2. 例如分析 bank conflict 的过程，到底读写是不是一样的。
 
+### 既然 codex 做网页的能力这么强，那么显然可以利用 codex 做各种网页
+来辅助理解。
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

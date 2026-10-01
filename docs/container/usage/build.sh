@@ -10,4 +10,4 @@ image_name=$(basename "${dockerfile%.*}")
 
 set -x
 podman build --network=host -t "martins3:$image_name" -f "$dockerfile" .
-echo "docker run -it martins3:$image_name"
+echo "docker run -it -rm martins3:$image_name"

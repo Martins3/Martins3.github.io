@@ -1066,6 +1066,47 @@ D : 后续没有 dirty
                 - `memory_global_dirty_log_sync` ：调用到 memory listener 中。
                 - `cpu_physical_memory_sync_dirty_bitmap`
 
+## [ ] kvm ring
+https://kvmforum2020.sched.com/event/eE4R/kvm-dirty-ring-a-new-approach-to-logging-peter-xu-red-hat
+
+顺便理解一下:
+```c
+static const struct vm_operations_struct kvm_vcpu_vm_ops = {
+	.fault = kvm_vcpu_fault,
+};
+```
+
+## 对于 qemu 注册的内存为 userfaultfd ，如果 userfaultfd
+msg.arg.pagefault.flags 显示为  write ，那么 kvm 已经可以记录的到这个 dirty
+
+```txt
+[<0>] handle_userfault+0x447/0x8f0
+[<0>] shmem_get_folio_gfp+0x3b3/0x610
+[<0>] shmem_fault+0x86/0x300
+[<0>] __do_fault+0x30/0x180
+[<0>] do_fault+0xbe/0x4d0
+[<0>] __handle_mm_fault+0x7d1/0xfe0
+[<0>] handle_mm_fault+0x17f/0x2e0
+[<0>] __get_user_pages+0x23d/0x1410
+[<0>] get_user_pages_unlocked+0xe6/0x390
+[<0>] hva_to_pfn+0x2bd/0x400 [kvm]
+[<0>] __kvm_faultin_pfn+0x62/0xa0 [kvm]
+[<0>] kvm_mmu_faultin_pfn+0x27b/0x6b0 [kvm]
+[<0>] kvm_tdp_page_fault+0x97/0xf0 [kvm]
+[<0>] kvm_mmu_do_page_fault+0x1ec/0x240 [kvm]
+[<0>] kvm_mmu_page_fault+0x82/0x6f0 [kvm]
+[<0>] vmx_handle_exit+0x21a/0x880 [kvm_intel]
+[<0>] vcpu_enter_guest.constprop.0+0x64d/0x1270 [kvm]
+[<0>] kvm_arch_vcpu_ioctl_run+0x357/0x6d0 [kvm]
+[<0>] kvm_vcpu_ioctl+0x122/0xa20 [kvm]
+[<0>] __x64_sys_ioctl+0xa0/0xe0
+[<0>] do_syscall_64+0xc1/0x220
+[<0>] entry_SYSCALL_64_after_hwframe+0x77/0x7f
+```
+
+## 忽然意识到，嵌套虚拟化中，这个 A/D bit 也是会被硬件自动设置的吗
+https://patchwork.kernel.org/project/kvm/patch/1490867732-16743-5-git-send-email-pbonzini@redhat.com/
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

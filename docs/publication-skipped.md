@@ -2,7 +2,7 @@
 
 由 `docs/pub/sync-blog.py` 生成。
 
-跳过文件数: 290
+跳过文件数: 299
 
 ## 发布策略跳过: draft 目录
 
@@ -104,6 +104,11 @@
 
 ## 发布策略跳过: math 目录仅发布 Markdown/Typst
 
+- `docs/math/atlas/app.js`
+- `docs/math/atlas/curriculum.js`
+- `docs/math/atlas/data.js`
+- `docs/math/atlas/index.html`
+- `docs/math/atlas/style.css`
 - `docs/math/basic/complex/figures/results.json`
 - `docs/math/basic/complex/python/experiments.py`
 
@@ -186,6 +191,9 @@
 - `docs/kvm/kvm-forum/2023.md`
 - `docs/kvm/kvm-forum/2024.md`
 - `docs/kvm/kvm-forum/2025.md`
+- `docs/kvm/mini-kvm/selftests.md`
+- `docs/kvm/vmcs/events.md`
+- `docs/kvm/vmcs/fields.md`
 - `docs/lwn.md`
 - `docs/move-fast.md`
 - `docs/net/rdma/rdma-demo/NOTIFY_SYSCALL.md`
@@ -261,6 +269,7 @@
 - `docs/kvm/vmx/apicv4.md`
 - `docs/kvm/vmx/apicv5.md`
 - `docs/kvm/vmx/apicv6.md`
+- `docs/kvm/vmx/exit-reason.md`
 - `docs/kvm/vmx/legacy.md`
 - `docs/kvm/vmx/qemu-vapic.md`
 - `docs/kvm/vmx/vmx.md`

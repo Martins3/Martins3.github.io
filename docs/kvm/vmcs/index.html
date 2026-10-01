@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="zh-CN">
+	<head>
+		<meta charset="utf-8" />
+		<meta
+			name="viewport"
+			content="width=device-width, initial-scale=1"
+		/>
+		<meta
+			name="description"
+			content="从功能到字段，交互式理解 Intel VMCS 与 AMD VMCB。基于 Intel SDM、AMD APM 和 Linux KVM 源码。"
+		/>
+		<title>VMCS / VMCB · 虚拟化字段地图</title>
+		<link rel="stylesheet" href="style.css" />
+		<script defer src="data/model.js"></script>
+		<script defer src="data/vmcs.js"></script>
+		<script defer src="data/vmcb.js"></script>
+		<script defer src="app.js"></script>
+	</head>
+	<body>
+		<a class="skip" href="#map">跳到字段地图</a>
+		<header class="topbar">
+			<a class="brand" href="./"
+				><span class="brand-mark" aria-hidden="true"
+					>V</span
+				>
+				Virtualization Atlas
+				<span class="edition">/ 01</span></a
+			>
+		</header>
+		<main>
+			<div class="toolbar">
+				<div
+					class="segmented"
+					role="group"
+					aria-label="架构"
+				>
+					<button
+						data-arch="vmcs"
+						aria-pressed="true"
+					>
+						Intel
+						<strong>VMCS</strong></button
+					><button
+						data-arch="vmcb"
+						aria-pressed="false"
+					>
+						AMD
+						<strong>VMCB</strong></button
+					><button
+						data-arch="both"
+						aria-pressed="false"
+					>
+						双架构对照
+					</button>
+				</div>
+				<label class="search"
+					><svg
+						aria-hidden="true"
+						width="16"
+						height="16"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="1.5"
+					>
+						<circle
+							cx="10.5"
+							cy="10.5"
+							r="6.5"
+						/>
+						<path d="m16 16 5 5" /></svg
+					><input
+						id="search"
+						type="search"
+						placeholder="搜索字段、功能、编码…"
+						autocomplete="off"
+						aria-label="搜索字段、功能、编码"
+					/><kbd>/</kbd></label
+				>
+			</div>
+			<div class="workspace">
+				<aside class="sidebar">
+					<p class="eyebrow">按功能探索</p>
+					<nav
+						id="groups"
+						aria-label="功能分组"
+					></nav>
+					<div class="sidebar-foot">
+						<button id="reset">
+							重置视图
+						</button>
+					</div>
+				</aside>
+				<section
+					class="map-column"
+					id="map"
+					tabindex="-1"
+				>
+					<div class="map-heading">
+						<div>
+							<p
+								class="eyebrow"
+								id="map-eyebrow"
+							>
+								THE BIG PICTURE
+							</p>
+							<h2 id="map-title">
+								功能全景
+							</h2>
+						</div>
+						<span
+							id="count"
+							class="counter"
+						></span>
+					</div>
+					<p
+						id="architecture-note"
+						class="architecture-note"
+					></p>
+					<div class="filters">
+						<span id="area-label"
+							>硬件区域</span
+						>
+						<div
+							class="area-filters"
+							role="group"
+							aria-labelledby="area-label"
+						>
+							<button
+								data-area="all"
+								aria-pressed="true"
+							>
+								全部区域
+							</button>
+							<button
+								data-area="control"
+								aria-pressed="false"
+							>
+								控制字段
+							</button>
+							<button
+								data-area="guest"
+								aria-pressed="false"
+							>
+								Guest 状态
+							</button>
+							<button
+								data-area="host"
+								aria-pressed="false"
+							>
+								Host 状态
+							</button>
+							<button
+								data-area="exit"
+								aria-pressed="false"
+							>
+								退出信息
+							</button>
+						</div>
+					</div>
+					<div id="field-map"></div>
+				</section>
+				<aside
+					class="inspector"
+					id="inspector"
+					aria-label="字段详情"
+				>
+					<div id="detail"></div>
+				</aside>
+			</div>
+		</main>
+		<div
+			id="status"
+			class="toast"
+			role="status"
+			aria-live="polite"
+		></div>
+		<noscript
+			>请启用 JavaScript
+			来使用字段地图。字段说明也可以直接阅读 data/vmcs.js 和
+			data/vmcb.js。</noscript
+		>
+	</body>
+</html>

@@ -984,6 +984,9 @@ https://lore.kernel.org/all/20230928071528.26258-1-yi.l.liu@intel.com/
 ## 有趣的工作
 https://news.ycombinator.com/item?id=46997133
 
+## 回答这个问题
+https://stackoverflow.com/questions/35698919/how-to-view-nested-page-table-entries-in-qemu
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

@@ -775,6 +775,16 @@ protected 模式；pKVM 用独立 hyp 隔离 host，并不追求把 host 与 hyp
 `emulate.c`、`make_request`、MMU notifier、memslot、nested
 状态机仍是当前核心机制，不能因为某条热点路径有硬件加速，就整体归为历史包袱。
 
+## 做一个总结
+记录那些虚拟化的内容已经被硬件实现了:
+
+- kvm-clock : MSR TSC AUX 的
+- 中断虚拟化 : APICv
+
+其实可以去检查初始化的 feature 的判断，大致可以知道有那些硬件 offload
+
+带着这个视角来分析代码，理解起来会更加容易一些
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

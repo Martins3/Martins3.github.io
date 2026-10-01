@@ -849,6 +849,102 @@ x86_emulate_insn()。
 #define EMULTYPE_PF		    (1 << 6)
 ```
 
+### 为什么我们捕获到其他的类型
+
+MMIO/PIO 是设备访问事件；EMULTYPE_* 是模拟器的执行标志，两者没有一一对应关系。
+
+脚本只挂了 kvm_mmio、kvm_pio 两种设备访问 tracepoint，所以设备事件只显示这两类；但 CALL 中的 emulation_type 会记录所有标志。
+
+已保存的启动样本实际出现了：
+
+- PF：35,089 次，本次对应 MMIO。
+- NO_DECODE：1,510 次，继续完成此前解码的指令。
+- 0：55 次，其中 48 次 string PIO、7 次 APIC access。
+
+其他标志需要特定条件：
+
+ 标志              为什么本次没有看到
+━━━━━━━━━━━━━━━━  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ TRAP_UD           没有捕获到触发该入口的 #UD
+────────────────  ───────────────────────────────────────────────────────
+ SKIP              普通 VMX exit 已提供指令长度，通常直接更新 RIP
+────────────────  ───────────────────────────────────────────────────────
+ ALLOW_RETRY_PF    主要用于 shadow 写保护故障；MMIO 无法通过拆表重试解决
+────────────────  ───────────────────────────────────────────────────────
+ TRAP_UD_FORCED    需要启用强制模拟前缀；当前宿主配置为 0
+────────────────  ───────────────────────────────────────────────────────
+ VMWARE_GP         需要 VMware backdoor 兼容访问；当前宿主配置为 N
+
+其他路径可能只有 CALL → INSN → RETURN，没有任何 MMIO/PIO，例如只修改寄存器的兼容模拟。
+
+这些标志还能组合：PF | ALLOW_RETRY_PF = 72，统计时需要按位判断。
+
+## NO_DECODE 的含义
+
+/home/martins3/data/vn/docs/kvm/emulate/emulate-insn.bt 中注释的
+// For NO_DECODE, exit_reason remains the previous hardware exit reason.
+的含义:
+
+
+• NO_DECODE 的意思是：这条指令已经解码过了，复用解码结果，再执行模拟阶段。 用户态 I/O 续接是它最常见的用途。
+
+  这里的 exit_reason 指脚本保存的 @exit_reason[tid]，它只在 硬件 VM exit 时更新。
+
+  假设 guest 执行：
+
+  mov eax, dword ptr [rbx]    ; 从 QEMU 模拟的设备读取数据
+
+  整个过程如下：
+
+  ① guest 执行 MOV，访问 MMIO
+     → 硬件产生 EPT_MISCONFIG VM exit
+     → 探针保存 @exit_reason[tid] = 49
+
+  ② x86_emulate_instruction(PF)
+     → 解码：知道这是 MOV，读 4 字节，结果写入 EAX
+     → 执行模拟：发现需要 QEMU 提供设备数据
+     → 保存模拟上下文
+     → KVM_RUN 返回到 QEMU
+
+  ③ QEMU 读取设备，填写 mmio.data
+     → 再次调用 KVM_RUN
+
+  ④ complete_emulated_mmio()
+     → x86_emulate_instruction(NO_DECODE)
+     → 复用之前的解码结果
+     → 使用已经返回的设备数据完成 MOV
+     → 写回 EAX，推进 RIP
+     → 恢复 guest 执行
+
+  ③ 到 ④ 期间，guest 没有执行，也就没有发生新的硬件 VM exit。 所以探针的 @exit_reason[tid] 仍然是第①步保存的 49。
+
+  你因此会看到类似记录：
+
+  CALL  ... emulation_type=64  exit_reason=49   # 首次模拟，PF
+  INSN  ... mov eax,[rbx]
+  RETURN ... 0                                # 需要用户态 I/O
+
+  CALL  ... emulation_type=1   exit_reason=49   # 续接，NO_DECODE
+  MMIO  ... read ...
+  RETURN ... 1                                # 已完成
+
+  这里有两次模拟器调用，却只有一次对应的硬件 VM exit。
+
+  在 /home/martins3/data/kernel/linux-drm/arch/x86/kvm/x86.c 的 x86_emulate_instruction() 中，可以把逻辑理解成：
+
+  if (!(emulation_type & EMULTYPE_NO_DECODE))
+      x86_decode_emulated_instruction(...);
+
+  x86_emulate_insn(...);
+
+  所以 NO_DECODE 仍然会执行模拟。它复用指令、操作数和读缓存，完成剩余效果，避免重新取指解码、重复读取已经返回的数据。它也不是恢复之前暂停的 C 调用栈，而
+  是再次调用模拟执行函数。
+
+  INSN tracepoint 在解码阶段发出，因此这次续接通常有 CALL/RETURN，却没有新的 INSN 记录。
+
+2026-10-01 不过，还是有东西对不上，记录的 backtrace 的数量，这个 completes 机制
+此外，complate 机制本身也是需要继续思考下的。
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

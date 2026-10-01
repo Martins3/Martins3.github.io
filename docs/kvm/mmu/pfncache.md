@@ -437,6 +437,38 @@ Attaching 1 probe...
 
 kvm_vcpu_map 和 kvm_vcpu_unmap 就是为了解决 vmcs page 的
 
+
+## codex
+virt/kvm/pfncache.c 解决的是：让 KVM 高效、可在原子上下文中访问 guest 的共享内存页，同时保证宿主页变化后不会继续使用失效映射。
+
+它缓存的是这条地址转换链：
+
+guest GPA → memslot → QEMU 用户态地址 HVA → 宿主 PFN → 内核地址 KHVA
+
+这样 KVM 可以通过 gpc->khva 直接访问共享数据。例如：
+
+• Xen 事件通知 (arch/x86/kvm/xen.c:1795)：直接用 test_and_set_bit() 修改 guest 的事件位图，快路径可以在不能睡眠的上下文中执行。
+• pvclock 更新 (arch/x86/kvm/x86.c:3242)：直接写 guest 的时钟结构。
+
+只缓存 HVA 的 gfn_to_hva_cache 仍然通过 copy_to_user() 等访问，可能触发缺页；PFN cache 则提前解析并建立内核映射。
+
+难点在于：GPA 和 HVA 没变，背后的物理页也可能变。 比如宿主把页面从 PFN A 迁移到 PFN B，如果 KVM 继续通过旧 KHVA 写 A，guest 就收不到更新，甚至可能破坏
+已经被重新利用的页面。
+
+这个文件用三层机制保证正确性：
+
+1. 检查 memslot 是否变化。 kvm_gpc_check() (virt/kvm/pfncache.c:73) 比较 generation，发现 guest 地址到用户态地址的关系需要重新解析。
+2. 在宿主页变化前使缓存失效。 MMU notifier 回调 (virt/kvm/pfncache.c:25) 将对应缓存的 valid 清掉。使用者从检查到访问结束都持有 gpc->lock 读锁；失效路径
+   获取写锁，因此会等待正在进行的访问完成。
+
+3. 防止刷新时装入一个已经失效的 PFN。 hva_to_pfn_retry() (virt/kvm/pfncache.c:155) 在解析、映射完成后检查失效序列号和正在进行的失效操作；遇到竞争就重
+   试。因为解析和映射可能睡眠，这部分必须在释放自旋锁后执行。
+
+还有一个核心设计：缓存建立后会释放取页时获得的引用，不会为了保持映射而长期 pin 住页面。
+页面仍可迁移、换出，由上述失效机制保证访问安全。这也是维护者明确说明的设计目的。相关补丁说明
+(https://lkml.iu.edu/hypermail/linux/kernel/2204.3/09156.html)
+
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

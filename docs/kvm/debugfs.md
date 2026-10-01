@@ -306,8 +306,6 @@ snprintf(dir_name, sizeof(dir_name), "%d-%s", task_pid_nr(current), fdname);
   cat /sys/kernel/debug/kvm/mmu_pte_write
 ```
 
-
-
 ### kvm tlb flush 相关的指标
 <!-- e46f710d-4389-44f5-9e16-0d2a6ad832c0 -->
 
@@ -370,7 +368,7 @@ static inline void kvm_vcpu_flush_tlb_current(struct kvm_vcpu *vcpu)
 }
 ```
 
-## debugfs 中 directed_yield_attempted 和 directed_yield_successful
+## directed_yield_attempted 和 directed_yield_successful
 <!-- 7a73d6eb-d660-4f71-8813-934abb700a82 -->
 
 **场景 1: Call Function IPI**
@@ -457,6 +455,19 @@ __visible bool __kvm_vcpu_is_preempted(long cpu)
 - **`directed_yield_attempted` 远大于 `directed_yield_successful`**：说明客户机的 yield 请求经常失败，可能存在不必要的 yield 调用
 - **成功率高**：说明该机制正在有效工作，帮助被抢占的 vCPU 更快获得运行机会
 - **指标为 0**：说明客户机未启用 PV sched yield 特性，或没有触发相关场景
+
+## KVM_GET_STATS_FD
+
+在 qemu 中:
+
+```c
+    if (kvm_check_extension(kvm_state, KVM_CAP_BINARY_STATS_FD)) {
+        add_stats_callbacks(STATS_PROVIDER_KVM, query_stats_cb,
+                            query_stats_schemas_cb);
+    }
+```
+
+其实和 debugfs 的功能非常类似了
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

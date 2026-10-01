@@ -121,7 +121,22 @@ kvm_sched_yield 是看
 ```
 
 ## vcpu stall detector
-drivers/misc/vcpu_stall_detector.c
+内核中存在 : drivers/misc/vcpu_stall_detector.c
+
+对应的公开实现在 crosvm：devices/src/vmwdt.rs
+(https://chromium.googlesource.com/crosvm/crosvm/+/refs/heads/main/devices/src/vmwdt.rs)。
+
+- impl BusDevice for Vmwdt → write()：接收 guest 的 MMIO 写操作，处理启停、频率配置和喂狗。寄存器偏移
+  0x00/0x04/0x08/0x0c、每个 vCPU 占 0x10 字节，都与 Linux 驱动一致。
+
+- vmwdt_worker_thread()：等待各 vCPU 的定时器，判断是否超时；首次超时触发 guest 中断，后续仍未恢复则发送
+  WatchdogReset。
+
+- get_guest_time_ms()：读取 /proc/<pid>/task/<tid>/stat 的 guest_time，获取 vCPU 实际执行 guest 的时间。
+
+设备创建和 MMIO/IRQ 注册在 aarch64/src/lib.rs
+(https://android.googlesource.com/platform/external/crosvm/+/refs/heads/master/aarch64/src/lib.rs) 的
+add_arch_devs()，搜索 Vmwdt::new 即可。
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

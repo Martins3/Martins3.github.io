@@ -154,6 +154,8 @@ arch/arm64/kvm/vgic/vgic-irqfd.c
 
 2. 看看 arm 对于变长指令的支持的情况
 
+## CPU idle 的处理
+1. kvm_handle_wfx 和 x86 对比如何?
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

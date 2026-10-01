@@ -126,6 +126,17 @@ config KVM_SW_PROTECTED_VM
 	  If unsure, say "N".
 ```
 
+CONFIG_KVM_PRIVATE_MEM
+
+virt/kvm/guest_memfd.c 中:
+```txt
+static struct file_operations kvm_gmem_fops = {
+	.open		= generic_file_open,
+	.release	= kvm_gmem_release,
+	.fallocate	= kvm_gmem_fallocate,
+};
+```
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

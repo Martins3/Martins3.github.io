@@ -206,7 +206,7 @@
 - [vfio 如何管理中断](./kernel/vfio/int-vfio.md)
 - [remapped interrupt](./kernel/vfio/int-remapping.md)
 - [posted interrupt](./kernel/vfio/int-posted.md)
-- [为什么我的 GPU 直通失败了](./kernel/vfio/debug-gpu.md)
+- [GPU 直通的两个问题](./kernel/vfio/debug-gpu.md)
 
 ### Wine
 
@@ -220,6 +220,7 @@
 - [应急救护 : 深圳市直机关党员应急能力培训](./chores/emergency-medical-care.md)
 
 ## 数学
+- [数学全景图：概念、领域与它们的联系](./math/atlas/)
 - [为什么我决定重新学习数学了](./math/notes/math.md)
 
 ### ai
@@ -859,7 +860,7 @@
   - [async pf](./kvm/mmu/async-pf.md)
   - [EXIT_REASON_EPT_VIOLATION vs EXIT_REASON_EPT_MISCONFIG](./kvm/mmu/basic.md)
   - [ept 格式的定义在哪里呢?](./kvm/mmu/ept.md)
-  - [分析这个](./kvm/mmu/guest-memfd.md)
+  - [guest memfd](./kvm/mmu/guest-memfd.md)
   - [为什么 kvm 需要特殊处理 hugepage](./kvm/mmu/hugepage.md)
   - [kvm mmu](./kvm/mmu/mmu.md)
   - [Documentation/virt/kvm/x86/mmu.rst](./kvm/mmu/mmu.rst.md)
@@ -895,24 +896,24 @@
 - [debugfs](./kvm/debugfs.md)
 - [x86 emulate](./kvm/emulate/emulate.md)
 - [SGX](./kvm/enclave.md)
-- [event injection](./kvm/event-delivery.md)
-- [exit reason](./kvm/exit-reason.md)
-- [FRED](./kvm/fred.md)
-- [interrupt window](./kvm/interrupt-window.md)
+- [event injection](./kvm/int/event-delivery.md)
+- [exit reason](./kvm/vmx/exit-reason.md)
+- [fred](./kvm/fred.md)
+- [interrupt window](./kvm/int/interrupt-window.md)
 - [KVM](./kvm/kvm.md)
 - [kvm_device_ops](./kvm/kvm_device_ops.md)
 - [kvm lock 机制](./kvm/lock.md)
 - [使用 tracepoint 来跟踪 kvm_check_request](./kvm/make_request.md)
-- [mmio](./kvm/mmio.md)
+- [mmio](./kvm/emulate/mmio.md)
 - [msr](./kvm/msr.md)
 - [mtrr](./kvm/mtrr.md)
 - [ple window](./kvm/ple.md)
 - [qemu 如何支持 kvm 的](./kvm/qemu.md)
 - [secure](./kvm/secure.md)
-- [kvm selftests](./kvm/selftests.md)
+- [kvm selftests](./kvm/mini-kvm/selftests.md)
 - [smm](./kvm/smm.md)
 - [tracepoint](./kvm/tracepoint.md)
-- [Intel VMCS 字段表](./kvm/vmcs-fields.md)
+- [Intel VMCS 字段表](./kvm/vmcs/fields.md)
 - [kvm](./kvm/yes-we-know.md)
 
 
@@ -1021,7 +1022,6 @@
   - [slub](./kernel/mm/slub/overview.md)
   - [Slub TID](./kernel/mm/slub/tid.md)
   - [Slub Tools](./kernel/mm/slub/tools.md)
-- `userfaultfd/`
 - [Idle Page Tracking](./kernel/mm/idle-page-tracking.md)
 - [kaslr](./kernel/mm/kaslr.md)
 - [Backing Device](./kernel/mm/mm-backing-dev.md)
@@ -1756,19 +1756,37 @@
   - [kernel-recipes 2025](./kr/2025.md)
 - `kvm/`
   - `emulate/`
+    - [分析 x86_emulate_instruction 大致路径](./kvm/emulate/3.md)
+    - [cr0](./kvm/emulate/cr.md)
     - [opcode_table 的使用位置](./kvm/emulate/details.md)
     - [x86 KVM 为什么需要指令模拟](./kvm/emulate/emulate-2.md)
+    - [msr](./kvm/emulate/msr.md)
     - [到底是什么在触发](./kvm/emulate/type.md)
+  - `hypercall/`
+    - [KVM hypercall](./kvm/hypercall/hypercall.md)
   - `hyperv/`
     - [Hyperv Enlightment](./kvm/hyperv/hyperv-pv.md)
     - [HyperV](./kvm/hyperv/hyperv.md)
     - [hyper-v 基本使用](./kvm/hyperv/in-hyperv-manager.md)
+  - `int/`
+    - [dm 是什么意思 ?](./kvm/int/1.md)
   - `kvm-forum/`
     - [kvm forum](./kvm/kvm-forum/README.md)
   - `mini-kvm/`
     - [Rust VMM + C guest](./kvm/mini-kvm/README.md)
+  - `minor/`
+    - [regs](./kvm/minor/basic.md)
+    - [fred](./kvm/minor/fred.md)
+    - [kvm 支持 gdb 的方法](./kvm/minor/gdb.md)
+    - [x86 如何支持 32bit mode](./kvm/minor/ug.md)
+  - `mmu/`
+    - [pfncache.c](./kvm/mmu/pfncache.md)
+    - [spp](./kvm/mmu/spp.md)
+  - `vmcs/`
+    - [VMCS / VMCB 字段地图](./kvm/vmcs/README.md)
+  - [高级话题](./kvm/advance.md)
+  - [先搞搞最基本的问题吧](./kvm/idle.md)
   - [KVM 机制演进与源码阅读索引](./kvm/mechanism-evolution.md)
-  - [pfncache.c](./kvm/pfncache.md)
 - `language/`
   - `c/`
     - [TODO](./language/c/c.md)
@@ -1840,6 +1858,8 @@
 - `math/`
   - `applied/`
     - [自动化控制理论](./math/applied/auto.md)
+  - `atlas/`
+    - [本科数学全景图](./math/atlas/README.md)
   - `basic/`
     - `complex/`
       - [首次使用](./math/basic/complex/env.md)

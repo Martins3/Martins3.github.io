@@ -165,6 +165,39 @@ out:
 ]: 290
 ```
 
+## 这个错误的原因是什么
+
+```txt
+[ 5480.384943] kvm: vcpu 13: requested 11962 ns lapic timer period limited to 200000 ns
+```
+
+• 这是一条 KVM 的 INFO 提示：guest 设置的 LAPIC 周期定时器间隔太短，被宿主机强制增大了，本身不表示虚拟机故障。
+
+  根据你当前代码的 limit_periodic_timer_frequency() (arch/x86/kvm/lapic.c:1866)，触发条件是：
+
+  • LAPIC timer 处于 periodic（周期）模式。
+  • 请求的周期非零，且小于 min_timer_period_us × 1000 纳秒。
+  • KVM 打印日志，然后把模拟定时器周期改成 min_period。
+
+  当前源码中的默认值是 200 μs (arch/x86/kvm/x86.c:162)。例如：
+
+  vcpu 0: requested 10000 ns lapic timer period limited to 200000 ns
+
+  意思是：虚拟机的 vCPU 0 请求每 10 μs 触发一次，KVM 将周期增大到 200 μs，对应频率从 100 kHz 降到 5 kHz。这里的 vCPU 编号不是宿主机物
+  理 CPU 编号。
+
+  这样限制是为了保护宿主机 CPU：过密的周期定时器会产生大量处理开销，而承载它的宿主机 hrtimer
+  不受普通进程调度限流约束。这也是该参数的设计目的。内核补丁说明 (https://lists.openwall.net/linux-kernel/2016/10/12/79)
+
+  需要注意：
+
+  • 这段限制只针对周期模式，不针对 one-shot 或 TSC-deadline 模式。
+  • pr_info_once() 只让这个打印点输出一次；后续触发仍会限制周期，并非只限制一次。
+  • 单凭这条日志不能认定它导致了 guest 卡死或性能异常；直接影响是该周期定时器无法按原先请求的高频率运行。
+
+  实际阈值以出日志的宿主机 /sys/module/kvm/parameters/min_timer_period_us 为准，单位为微秒。
+
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

@@ -1,4 +1,62 @@
-# 为什么我的 GPU 直通失败了
+# GPU 直通的两个问题
+
+## 直通的虚拟机自动的触发错误
+
+2026-10-01 我发现 GPU 直通的虚拟机启动会失败:
+
+```txt
+[256138.011263] pcieport 0000:00:01.0: AER: Multiple Uncorrectable (Non-Fatal) error message received from 0000:01:00.0
+[256138.011275] vfio-pci 0000:01:00.0: PCIe Bus Error: severity=Uncorrectable (Non-Fatal), type=Transaction Layer, (Receiver ID)
+[256138.011276] vfio-pci 0000:01:00.0:   device [10de:2d04] error status/mask=00100000/00400000
+[256138.011277] vfio-pci 0000:01:00.0:    [20] UnsupReq               (First)
+[256138.011279] vfio-pci 0000:01:00.0: AER:   TLP Header: 0x40000001 0x0000000c 0x8808000c 0x00000000
+[256138.011341] pcieport 0000:00:01.0: AER: device recovery successful
+```
+
+```txt
+qemu-system-x86_64: vfio_err_notifier_handler(0000:01:00.0) Unrecoverable error detected. Please collect any data possible and then kill the guest
+runstate_set current_run_state 9 (running) new_state 2 (internal-error)
+qemu-system-x86_64: vfio_err_notifier_handler(0000:01:00.1) Unrecoverable error detected. Please collect any data possible and then kill the guest
+```
+
+今天 08:01:19、08:02:12 两次启动都出现：
+
+vfio-pci 0000:01:00.0: PCIe Bus Error: severity=Uncorrectable (Non-Fatal)
+[20] UnsupReq (First)
+TLP Header: 0x40000001 0x0000000c 0x8808000c 0x00000000
+
+设备是 RTX 5060 Ti。还有一个具体线索：报错地址 0x8808000c 落在它的 HDMI 音频
+功能 01:00.1 的 BAR0 内，偏移 0xc，音频功能本身也保留着 UnsupReq 状态。因此要
+重点查显卡及音频功能的初始化、复位和电源状态。
+
+QEMU 随后报：
+
+vfio_err_notifier_handler(...) Unrecoverable error detected
+running → internal-error
+
+我核对了 QEMU 源码 (/home/martins3/data/qemu/hw/vfio/pci.c) 的
+vfio_err_notifier_handler()：收到通知就暂停 VM。因此宿主机即使打印 device
+recovery successful，VM 也不会自动恢复。Non-Fatal
+也不代表事务成功，内核文档说明它仍表示该事务不可靠。AER 文档
+(https://www.kernel.org/doc/html/latest/PCI/pcieaer-howto.html)
+
+关于你怀疑的升级，时间线是：
+
+• 9 月 25 日：安装宿主机内核 7.2.7-200.fc44。
+• 9 月 28 日 08:53：宿主机重启，开始运行这个内核。
+• 9 月 30 日 14:09：同一显卡已经出现 D3cold → D0 失败、device inaccessible，
+  继而出现 Fatal MalfTLP，等待约 32 秒后才恢复并重置链路。
+
+• 9 月 30 日 15:33：当前 QEMU 二进制重新构建。
+• 今天：启动 VM 稳定触发上述错误。
+
+新内核值得怀疑，但目前还不能认定是内核回归；昨天显卡从低功耗状态恢复失败，是
+更直接的异常线索。 下一步适合用保留的 7.1.10 内核做同配置对照，并检查显卡电源
+状态恢复。此次只做了读取检查，没有重启或修改配置。
+
+
+
+## 为什么我的 GPU 直通失败了
 
 启动 qemu 有警告，而且启动失败了:
 ```text
@@ -44,7 +102,7 @@
 ]: 1435096
 ```
 
-## 为什么开启卡住了
+### 问题 1 : 为什么开启卡住了
 
 观察 seabios 日志 ，可以发现，这是在执行 nvidia 的 option rom ，也就是 VBIOS 的代码，
 这个，显然我们没有什么操作空间了:
@@ -61,13 +119,14 @@ Running option rom at c000:0003
 ```txt
 -device vfio-pci,host=0000:01:00.0,rombar=0
 ```
-## 为什么 QEMU 会抛出警告
+
+### 问题 2 : 为什么 QEMU 会抛出警告
 ```text
   qemu-system-x86_64: warning: vfio_container_dma_map(..., 0xe0200000000, 0x10000000, ...) = -22 (Invalid argument)
   0000:01:00.0: PCI peer-to-peer transactions on BARs are not supported.
 ```
 
-### 为什么会报错
+#### 为什么会报错
 vfio_container_dma_map(..., IOVA, size, HVA) 是把 guest 物理地址（IOVA）映射到 QEMU 进程地址（HVA），再交给 host IOMMU 做 DMA 翻译。
 
 -22 是 EINVAL。IOVA 0xe0200000000 约等于 14.5 TB，已经远超 host IOMMU 能翻译的范围。
@@ -90,7 +149,7 @@ Intel IOMMU 只支持 39-bit = 512GB。所以 guest 里任何 PCI BAR 放到 0x8
 
 SeaBIOS 直接开了个 64-bit prefetchable 窗口在 0xe0000000000，GPU 的 256MB BAR 落到了 0xe0200000000。
 
-### 为什么报错没有影响
+#### 为什么报错没有影响
 
 回想一下 vfio 的工作流程 ./internal-kernel.md
 
@@ -140,7 +199,8 @@ vfio_container_dma_map(
 
 ## 附录
 
-### 尝试直接动态解绑
+### 如何正确的绑定
+#### 尝试直接动态解绑
 
 运行脚本，直接失败:
 ```txt
@@ -169,7 +229,7 @@ vfio_container_dma_map(
 nvidia-cap1  nvidia-cap2
 ```
 
-### 直通配置方法
+#### 直通配置方法
 自己修改了一次，但是失败了，让 codex 直接修改，结果如下:
 1. /etc/modules-load.d/vfio.conf
 ```txt

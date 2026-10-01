@@ -152,6 +152,18 @@ static void emulator_get_idt(struct x86_emulate_ctxt *ctxt, struct desc_ptr *dt)
     - arm 只能用特殊指令处理 mmio
 2. 总是从 kvm_mmu_page_fault() 开始的吗?
 
+3. 难道，之后写 mmio 通知 virtio ，都是需要走一个这么慢的流程吗?
+
+## svm_check_emulate_instruction
+
+看看是不是真的有
+
+```txt
+* Detect and workaround Errata 1096 Fam_17h_00_0Fh.
+```
+
+复现方法，在 qemu 中，virtio-blk 给 dpdk 使用
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

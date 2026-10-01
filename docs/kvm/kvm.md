@@ -1,5 +1,9 @@
 # KVM
 
+https://www.kernel.org/doc/html/latest/virt/kvm/index.html
+https://www.kernel.org/doc/html/latest/virt/index.html
+https://docs.kernel.org/virt/index.html
+
 
 
 ## shadow page table 严重的干扰了视线，有必要使用 kcov 来覆盖一下
@@ -10,18 +14,6 @@
 
 从这个 patch 开始，将内核从 memory slot 从 array 修改为 rbtree 组织形式
 
-## 过一下官方文档
-https://www.kernel.org/doc/html/latest/virt/kvm/index.html
-
-## [ ] kvm ring
-https://kvmforum2020.sched.com/event/eE4R/kvm-dirty-ring-a-new-approach-to-logging-peter-xu-red-hat
-
-顺便理解一下:
-```c
-static const struct vm_operations_struct kvm_vcpu_vm_ops = {
-	.fault = kvm_vcpu_fault,
-};
-```
 
 ## TODO
 - kvm_vcpu_unmap : 调用的好多位置在 nested, 是做啥的
@@ -41,8 +33,6 @@ static const struct vm_operations_struct kvm_vcpu_vm_ops = {
 ### 整理关键的数据结构
 - Each virtual CPU has an associated struct `kvm_run` data structure,
 used to communicate information about the CPU between the kernel and user space.
-
-## 整理一下路径
 
 ## TODO
 1. VMPTRST 和 VMPTRLD
@@ -92,11 +82,9 @@ emulate.c : 各种指令的模拟
 
 ## 关键的数据结构
 ```c
-struct x86_emulate_ops // 定义的函数都是给 emulate.c 使用
-
 struct vcpu_vmx {
     struct kvm_vcpu       vcpu;
-  ...
+  // ...
 }
 
 /*
@@ -104,7 +92,7 @@ struct vcpu_vmx {
  * and 2-level 32-bit).  The kvm_mmu structure abstracts the details of the
  * current mmu mode.
  */
-struct kvm_mmu {
+struct kvm_mmu {}
 ```
 
 
@@ -177,17 +165,6 @@ int kvm_arch_vcpu_create(struct kvm_vcpu *vcpu)
 - `struct x86_kvm_ops` : `vmx_x86_ops` 也是其中一种
 - `x86_kvm_ops` : 一个经常访问的变量
 
-## hyperv.c
-模拟 HyperV 的内容, 但是为什么需要模拟 HyperV ?
-
-- kvm_hv_hypercall
-- stimer
-
-实在是有点看不懂:
-https://docs.microsoft.com/en-us/virtualization/hyper-v-on-windows/reference/hyper-v-architecture
-
-## trace mmu
-
 ## mmu_spte_update
 TODO : 为什么会存在一个 writable spte 和 read-only spte 的区分 ?
 
@@ -199,9 +176,7 @@ TODO : 为什么会存在一个 writable spte 和 read-only spte 的区分 ?
  * should flush remote TLBs. Otherwise rmap_write_protect
  * will find a read-only spte, even though the writable spte
  * might be cached on a CPU's TLB, the return value indicates this
- * case.
- *
- * Returns true if the TLB needs to be flushed
+ * case. Returns true if the TLB needs to be flushed
  */
 static bool mmu_spte_update(u64 *sptep, u64 new_spte)
 ```
@@ -470,8 +445,8 @@ req 的分布
 
 这都是 hex 的输出:
 ```txt
-  49.70%  hi : 10 # #define KVM_REQ_STEAL_UPDATE		KVM_ARCH_REQ(8)
-  38.84%  hi : 2 #  KVM_REQ_UNBLOCK
+  49.70%  hi : 10  # #define KVM_REQ_STEAL_UPDATE		KVM_ARCH_REQ(8)
+  38.84%  hi : 2   #  KVM_REQ_UNBLOCK
    5.73%  hi : 300 # KVM_REQ_TLB_FLUSH
    5.73%  hi : 8 # #define KVM_REQ_MIGRATE_TIMER		KVM_ARCH_REQ(0) # 因为切换 CPU
 ```
