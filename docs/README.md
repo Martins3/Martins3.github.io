@@ -220,7 +220,7 @@
 - [应急救护 : 深圳市直机关党员应急能力培训](./chores/emergency-medical-care.md)
 
 ## 数学
-- [数学全景图：概念、领域与它们的联系](./math/atlas/)
+- [数学全景图：概念、领域与它们的联系](./math/atlas/index.html)
 - [为什么我决定重新学习数学了](./math/notes/math.md)
 
 ### ai

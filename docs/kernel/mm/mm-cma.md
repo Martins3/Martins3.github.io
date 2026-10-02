@@ -1,4 +1,4 @@
-# CMA
+# cma
 
 CMA 划定一个区域，该区域只能分配 MOVABLE 的内存，如果 device 或者 hugetlb 不用，那么就给 buddy，如果用，那么就要 move 走。
 

@@ -1,4 +1,4 @@
-# Buddy System
+# buddy system
 
 从这个角度介绍是很好的:
 https://richardweiyang-2.gitbook.io/kernel-exploring/00-memory_a_bottom_up_view/13-physical-layer-partition

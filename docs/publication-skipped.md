@@ -2,7 +2,7 @@
 
 由 `docs/pub/sync-blog.py` 生成。
 
-跳过文件数: 299
+跳过文件数: 293
 
 ## 发布策略跳过: draft 目录
 
@@ -102,14 +102,8 @@
 - `docs/kernel/sched/ai/test_results.md`
 - `docs/kernel/sched/ai/test_results_yyds.md`
 
-## 发布策略跳过: math 目录仅发布 Markdown/Typst
+## 发布策略跳过: math 目录仅发布 Markdown/Typst 和 HTML/CSS/JS/JSON
 
-- `docs/math/atlas/app.js`
-- `docs/math/atlas/curriculum.js`
-- `docs/math/atlas/data.js`
-- `docs/math/atlas/index.html`
-- `docs/math/atlas/style.css`
-- `docs/math/basic/complex/figures/results.json`
 - `docs/math/basic/complex/python/experiments.py`
 
 ## 发布策略跳过: wip*

@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="description" content="面向本科知识回顾的数学全景图。探索数学领域、核心概念与它们之间的联系。">
+	<title>数学全景 · Mathematics Atlas</title>
+	<link rel="stylesheet" href="style.css">
+	<script defer src="data.js"></script>
+	<script defer src="curriculum.js"></script>
+	<script defer src="app.js"></script>
+</head>
+<body>
+	<a class="skip" href="#curriculum">跳到知识地图</a>
+	<header class="topbar">
+		<a class="brand" href="./"><span class="brand-symbol" aria-hidden="true">∑</span> MATHEMATICS <span>ATLAS</span></a>
+		<a class="back-link" href="../../">返回笔记 <span aria-hidden="true">↗</span></a>
+	</header>
+	<main>
+		<section class="intro">
+			<div><p class="eyebrow">从大一的极限，到高年级的空间与结构</p><h1>把本科数学，<span>连成一张图。</span></h1><p class="lead">课程 → 章节 → 概念。知识完整铺开，联系逐步显现。<br class="mobile-break">悬停回忆，点击深入。</p></div>
+			<div class="intro-note"><span class="note-number">02 / 本科课程知识地图</span><p>结构 · 变化 · 空间 · 不确定性</p><span id="coverage"></span></div>
+		</section>
+		<div class="atlas-toolbar"><div class="view-title"><span class="status-dot"></span><h2>数学全景</h2><span id="counts"></span></div><button id="reset" class="reset">回到全景 <span aria-hidden="true">↺</span></button></div>
+		<div class="workspace">
+			<section class="map-column" aria-label="数学知识地图">
+				<details id="overview-graph"><summary>领域之间如何联系 <span>展开关系概览图</span></summary>
+				<div class="map-help"><span class="desktop-help">悬停预览 · 点击阅读 · 沿连线探索</span><span class="mobile-help">左右滑动地图 · 点击概念查看下方详情</span><span class="map-index">THE BIG PICTURE</span></div>
+				<div class="map-scroll" id="atlas" tabindex="0" aria-label="知识地图，可横向滚动"><div id="map" class="map"><svg id="connections" viewBox="0 0 1080 800" aria-hidden="true"></svg><div class="map-center" aria-hidden="true"><span class="orbit orbit-one"></span><span class="orbit orbit-two"></span><span class="center-symbol">∞</span><strong>数学是一张网</strong><span>从一个想法，走向另一个想法</span></div></div></div>
+				<div class="legend"><span><i class="line-sample"></i>思想与工具的联系</span><span><i class="line-sample dashed"></i>学习前置 → 后续概念</span><span class="legend-note">选中概念后，高亮它的直接联系</span></div>
+				</details>
+				<div class="catalog-heading"><div><p class="eyebrow">THE UNDERGRADUATE LANDSCAPE</p><h2>本科课程知识地图</h2></div><span id="visible-count"></span></div>
+				<nav id="domain-filters" class="domain-filters" aria-label="按领域查看课程"></nav>
+				<p class="catalog-hint">以下课程与章节默认全部展开。每个词条均可阅读；选中后，同章节与跨课程联系会分别显示。</p>
+				<div id="curriculum" tabindex="-1"></div>
+			</section>
+			<div id="detail-host"><aside id="detail" class="detail" aria-label="概念详情"></aside></div>
+		</div>
+		<section class="journeys"><div class="journey-heading"><p class="eyebrow">FOLLOW A THREAD</p><h2>沿着一条线，理解一片数学</h2><p>每条路线，都是跨越领域的一种看法。</p></div><div id="journey-list"></div></section>
+		<section class="scope-note"><h2>覆盖范围与课程参照</h2><p>覆盖数学专业常见本科核心课程，并纳入纯数学、统计、计算与应用方向的主要选修。课程名称、必修范围与教学顺序因学校而异；这是跨培养方案的知识索引，不是某校的逐条考纲。“专业选修”“方向选修”与核心课程分别标注。每个词条是回顾入口，定理的完整证明与更精细假设需继续阅读教材。</p><div id="curriculum-sources"></div></section>
+		<footer><span>MATHEMATICS ATLAS <span class="footer-divider">/</span> 数学全景</span><span>概念有位置，知识有来路，领域之间有联系。</span></footer>
+	</main>
+	<div id="tooltip" class="tooltip" role="tooltip" hidden></div>
+	<dialog id="detail-dialog" aria-label="概念详情"><button id="close-detail" aria-label="关闭详情">关闭详情 ×</button></dialog>
+	<noscript><p class="noscript">请启用 JavaScript 以浏览数学地图。概念内容保存在本站 data.js 中。</p></noscript>
+</body>
+</html>

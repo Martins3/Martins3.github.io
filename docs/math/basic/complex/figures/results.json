@@ -1,0 +1,33 @@
+{
+  "numpy_version": "2.5.3",
+  "matplotlib_version": "3.11.2",
+  "rotation_identity_error": 0.0,
+  "z_squared_derivative_max_error": 1.0001221274434576e-06,
+  "cauchy_near_boundary_error": 5.3705425095741715e-15,
+  "circle_windings": [
+    1.0,
+    1.0,
+    -1.3877787807814457e-17
+  ],
+  "zero_residue_integral_error": 1.743934249004316e-16,
+  "taylor_error_x_half_N20": 1.8185453143360064e-13,
+  "rouche_phase_counts": [
+    1.0,
+    5.0
+  ],
+  "rouche_integral_counts": [
+    1.0,
+    5.0
+  ],
+  "rouche_root_solver_counts": [
+    1,
+    5
+  ],
+  "poisson_max_error": 9.103828801926284e-15,
+  "inverse_mode_20_noise": 1.048576,
+  "catalan_ratio_n200": 0.9944031800223346,
+  "complex_step_error_h1e_20": 0.0,
+  "complex_step_abs_failure": 0.0,
+  "filter_recursion_max_error": 1.6653345369377348e-16,
+  "all_checks_passed": true
+}

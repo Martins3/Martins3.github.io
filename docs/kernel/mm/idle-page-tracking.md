@@ -1,4 +1,4 @@
-# Idle Page Tracking
+# idle page tracking
 
 - [Idle Page Tracking](https://www.kernel.org/doc/html/latest/admin-guide/mm/idle_page_tracking.html)
 
