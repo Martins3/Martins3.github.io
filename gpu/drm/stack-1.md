@@ -3,8 +3,6 @@
 - GBM 是什么?
 - EGL 是什么东西
 
-
-
 sudo yum install glx-utils vulkan-tools
 ```txt
 # 查看OpenGL信息
@@ -28,8 +26,9 @@ Linux 图形栈中一次完整的“绘制并显示”交互，可分为两大�
 ## 阶段一：渲染阶段（生成画面）
 目标：让 GPU 执行绘图指令，生成一帧新画面。
 
-1. **初始化**
-    应用程序启动，通过 EGL API 连接到合成器（Compositor）。Compositor 通过 GBM 为应用创建可渲染的共享缓冲区（gbm_bo）。Mesa 的 EGL 实现内部通过 DRM 的 ioctl 调用在显存中分配该缓冲区，并将 dma-buf fd 句柄返回给 Compositor。
+1. **初始化** 应用程序启动，通过 EGL API 连接到合成器（Compositor）。Compositor
+   通过 GBM 为应用创建可渲染的共享缓冲区（gbm_bo）。Mesa 的 EGL 实现内部通过 DRM
+   的 ioctl 调用在显存中分配该缓冲区，并将 dma-buf fd 句柄返回给 Compositor。
 
 2. **命令构建**
     应用或合成器调用 OpenGL/Vulkan API（如 `glDrawArrays()`）进行场景绘制。Mesa 3D 接收调用，对应 GPU 驱动（如 Iris）将 API 调用翻译为 GPU 硬件指令，写入命令缓冲区（Command Buffer）。

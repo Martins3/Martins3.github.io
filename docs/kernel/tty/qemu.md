@@ -158,10 +158,7 @@ virtio-ports/vport6p0/device🔒 🦇
 	#
 	# 这里参考 man qemu(1) -chardev 中介绍如何将 chardev 复用
 
-
-
 ### 引用的结果
-
 
 ### manual
 ```txt

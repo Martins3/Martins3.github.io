@@ -2,22 +2,35 @@
 
 ## 一些让我疑惑的事情
 
-### "最小"的内核配置为什么需要 tty 模块
+1. "最小"的内核配置为什么需要 tty 模块
 [Building a tiny Linux kernel](https://weeraman.com/building-a-tiny-linux-kernel-8c07579ae79d) 中描述构建最小内核镜像的方法，
 通过 make tinyconfig 可以将几乎所有的内核选项关掉，但是为了能够使用终端，需要打开 tty 模块。
 
-### 运行一个 Hello World 为什么大多数时间都不是在执行 Hello World
-运行一个简单[^1]的 Hello World ，可以使用 [火焰图](https://example.com) 简单的看一下 CPU 的大多数时间在干什么。
+2. 运行一个 Hello World 为什么大多数时间都不是在执行 Hello World
+运行一个简单[^1]的 Hello World ，可以使用 perf 简单的看一下 CPU 的大多数时间在干什么。
 
 <p align="center">
-  <img src="./img/printf.svg" alt="drawing" height="800" align="center"/>
+  <img src="./printf.svg" alt="drawing" height="800" align="center"/>
 </p>
 <p align="center">
   在一个新的 tab 中查看大图
 </p>
 
-可以发现，除了 Hello World 程序 (a.out) 之外，还发现 [alacritty](https://github.com/alacritty/alacritty) 和 [tmux](https://github.com/tmux/tmux) 占用来不少时间，这是因为我首先启动一个 alacritty，然后在其中运行 tmux ，在 tmux
-中运行的 Hello World 。
+可以发现，除了 Hello World 程序 (a.out) 之外，还发现
+[alacritty](https://github.com/alacritty/alacritty) 和
+[tmux](https://github.com/tmux/tmux) 占用来不少时间，这是因为我首先启动一个
+alacritty，然后在其中运行 tmux ，在 tmux 中运行的 Hello World 。
+
+3. 我总是听说了一堆很相似的词汇，他们分别是什么东西
+	- **tty** **pty**
+	- **shell**
+	- **terminal emulator**
+	- **console**
+	- **vt**
+
+4. tmux 和 screen 的实现原理是什么?
+
+5. docker 中的 -t 参数是什么意思?
 
 ## 上古时代如何使用 tty
 在上古时期，计算机非常昂贵，还没有显示器，软件工程师在 console 上操作，通过 serial 将命令发送给在空调房子里面的庞然大物。

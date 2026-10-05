@@ -17,9 +17,6 @@
 ## 中国社会分层
 https://book.douban.com/subject/30424945/
 
-## 资源合集
-- https://github.com/jbiaojerry/ebook-treasure-chest
-
 ## 从一到无穷大
 
 一直没看懂，现在有 GPT 老师，是时候重新看看了
@@ -59,6 +56,8 @@ https://github.com/HarborLibrary/Psychology
 https://github.com/eternity4719/HowToLiveBetter
 
 foliate 阅读器就非常好，用于各种东西
+
+
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

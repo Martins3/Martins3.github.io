@@ -342,6 +342,7 @@ https://cumtchw.blog.csdn.net/article/details/133343779?spm=1001.2014.3001.5502
 ./arch/mips/ralink/early_printk.c
 ./arch/s390/kernel/early_printk.c
 ```
+## 那么 8250 和 16550 是什么关系？
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

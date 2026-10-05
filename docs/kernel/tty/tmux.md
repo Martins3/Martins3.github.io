@@ -1,4 +1,5 @@
-# 如何停止另外的 tmux
+# tmux
+## 如何停止另外的 tmux client
 
 调试方法
 ```txt

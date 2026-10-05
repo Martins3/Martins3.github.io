@@ -6,9 +6,6 @@ https://docs.kernel.org/virt/index.html
 
 
 
-## shadow page table 严重的干扰了视线，有必要使用 kcov 来覆盖一下
-- 用 ftrace 即可
-
 ## 有趣的 patch
 - a54d806688fe1e482350ce759a8a0fc9ebf814b0
 
@@ -319,6 +316,16 @@ static int create_vcpu_fd(struct kvm_vcpu *vcpu)
 
 ## [ ] 哪里还是存在好多个 cache 的，只是统计 mmu 中的内存是没用的
 
+## MMU shrinker 的历史状态
+
+当前 `linux-drm` 已经没有 x86 KVM MMU shrinker。删除提交是
+`fe140e611d34`，标题为 `KVM: x86/mmu: Remove KVM's MMU shrinker`；它删除了
+`mmu_shrink_scan()`、`mmu_shrink_count()` 和注册逻辑。旧 shrinker 原本也没有
+TDP MMU 支持，不能用旧路径解释当前 EPT 页表回收。
+
+映射失效、root 失效、传统 MMU 页数限制以及 VM 销毁仍有各自的 zap/free 路径。
+具体删除与保留分支见 [机制状态核查](mechanism-evolution.md)。
+
 
 ## [x] 用这个来判断当前执行的 vcpu 是如何控制的
 ```c
@@ -333,15 +340,6 @@ static inline bool is_guest_mode(struct kvm_vcpu *vcpu)
 1. 如果 L0 提供大页给 L1
 2. 如果 L1 提供大页给 L2
 
-## MMU shrinker 的历史状态
-
-当前 `linux-drm` 已经没有 x86 KVM MMU shrinker。删除提交是
-`fe140e611d34`，标题为 `KVM: x86/mmu: Remove KVM's MMU shrinker`；它删除了
-`mmu_shrink_scan()`、`mmu_shrink_count()` 和注册逻辑。旧 shrinker 原本也没有
-TDP MMU 支持，不能用旧路径解释当前 EPT 页表回收。
-
-映射失效、root 失效、传统 MMU 页数限制以及 VM 销毁仍有各自的 zap/free 路径。
-具体删除与保留分支见 [机制状态核查](mechanism-evolution.md)。
 
 ## [ ] 可以分析一下 vCPU 的调度问题
 - sched_in 和 sched_out 的 hook
@@ -353,121 +351,6 @@ TDP MMU 支持，不能用旧路径解释当前 EPT 页表回收。
 ## kvm 如何发现自己在虚拟机中
 
 ## 似乎处理 hyperv 也是在处理 cpuid 相关的
-
-## kvm_x86_ops
-
-1. 两个架构是处理 msr 不同吗?
-
-### [ ] cache_reg
-
-为什么这几个必须走特殊通道 ?
-```c
-struct kvm_vcpu_arch {
-	/*
-	 * rip and regs accesses must go through
-	 * kvm_{register,rip}_{read,write} functions.
-	 */
-	unsigned long regs[NR_VCPU_REGS];
-	u32 regs_avail;
-	u32 regs_dirty;
-```
-
-- handle_invpcid
-  - kvm_register_read_raw
-    - kvm_register_is_available
-    - 如果 available，直接返回 `vcpu->arch.regs[reg]`
-
-## 使用 tracepoint 来跟踪 kvm_check_request
-```diff
-diff --git a/include/linux/kvm_host.h b/include/linux/kvm_host.h
-index 401439bb21e3..5480fed9a495 100644
---- a/include/linux/kvm_host.h
-+++ b/include/linux/kvm_host.h
-@@ -2221,8 +2221,10 @@ static inline void __kvm_make_request(int req, struct kvm_vcpu *vcpu)
- 	set_bit(req & KVM_REQUEST_MASK, (void *)&vcpu->requests);
- }
-
-+void martins3(u64 req);
- static __always_inline void kvm_make_request(int req, struct kvm_vcpu *vcpu)
- {
-+	martins3(req);
- 	/*
- 	 * Request that don't require vCPU action should never be logged in
- 	 * vcpu->requests.  The vCPU won't clear the request, so it will stay
-diff --git a/include/trace/events/kvm.h b/include/trace/events/kvm.h
-index fc7d0f8ff078..8b904c00c157 100644
---- a/include/trace/events/kvm.h
-+++ b/include/trace/events/kvm.h
-@@ -473,6 +473,18 @@ TRACE_EVENT(kvm_dirty_ring_exit,
- 	TP_printk("vcpu %d", __entry->vcpu_id)
- );
-
-+	TRACE_EVENT(hi,
-+
-+		    TP_PROTO(u64 count),
-+
-+		    TP_ARGS(count),
-+
-+		    TP_STRUCT__entry(__field(u64, count)),
-+
-+		    TP_fast_assign(__entry->count = count;),
-+
-+		    TP_printk("hi : %llx ", __entry->count));
-+
- TRACE_EVENT(kvm_unmap_hva_range,
- 	TP_PROTO(unsigned long start, unsigned long end),
- 	TP_ARGS(start, end),
-diff --git a/virt/kvm/kvm_main.c b/virt/kvm/kvm_main.c
-index de2c11dae231..5f2c7a105122 100644
---- a/virt/kvm/kvm_main.c
-+++ b/virt/kvm/kvm_main.c
-@@ -703,6 +703,12 @@ bool kvm_mmu_unmap_gfn_range(struct kvm *kvm, struct kvm_gfn_range *range)
- 	return kvm_unmap_gfn_range(kvm, range);
- }
-
-+
-+void martins3(u64 req){
-+	trace_hi(req);
-+}
-+EXPORT_SYMBOL_GPL(martins3);
-+
- static int kvm_mmu_notifier_invalidate_range_start(struct mmu_notifier *mn,
- 					const struct mmu_notifier_range *range)
- {
-```
-修改 kvm 之后，运行 kvm 1 即可。
-
-sudo bpftrace -e 'kfunc:martins3 { @ = hist(arg->req) }'
-
-虚拟机放这不动
-
-req 的分布
-
-这都是 hex 的输出:
-```txt
-  49.70%  hi : 10  # #define KVM_REQ_STEAL_UPDATE		KVM_ARCH_REQ(8)
-  38.84%  hi : 2   #  KVM_REQ_UNBLOCK
-   5.73%  hi : 300 # KVM_REQ_TLB_FLUSH
-   5.73%  hi : 8 # #define KVM_REQ_MIGRATE_TIMER		KVM_ARCH_REQ(0) # 因为切换 CPU
-```
-
-```c
-#define KVM_REQUEST_MASK           GENMASK(7,0)
-#define KVM_REQUEST_NO_WAKEUP      BIT(8)
-#define KVM_REQUEST_WAIT           BIT(9)
-#define KVM_REQUEST_NO_ACTION      BIT(10)
-/*
- * Architecture-independent vcpu->requests bit members
- * Bits 3-7 are reserved for more arch-independent bits.
- */
-#define KVM_REQ_TLB_FLUSH		(0 | KVM_REQUEST_WAIT | KVM_REQUEST_NO_WAKEUP)
-#define KVM_REQ_VM_DEAD			(1 | KVM_REQUEST_WAIT | KVM_REQUEST_NO_WAKEUP)
-#define KVM_REQ_UNBLOCK			2
-#define KVM_REQ_DIRTY_RING_SOFT_FULL	3
-#define KVM_REQUEST_ARCH_BASE		8
-```
-
-KVM_REQ_LOAD_EOI_EXITMAP
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

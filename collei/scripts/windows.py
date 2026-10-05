@@ -145,7 +145,7 @@ class WindowsProfile:
                     "-device",
                     f"virtio-net,netdev={tap},mac={mac},iommu_platform=on,disable-legacy=on",
                     "-netdev",
-                    f"tap,ifname={tap},id={tap},script=no,downscript=no,vhost=on",
+                    f"tap,ifname={tap},id={tap},script=,downscript=,vhost=on",
                 ]
             )
         argv.extend(["-device", "virtio-net,netdev=net1"])

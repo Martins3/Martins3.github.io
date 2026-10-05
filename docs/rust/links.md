@@ -36,8 +36,6 @@ https://nick.groenen.me/posts/rust-error-handling/ : 一个人阅读 the rust bo
 https://github.com/ferrous-systems/elements-of-rust#combating-rightward-pressure : 一些常用写法 和 建议
 https://github.com/fishinabarrel/linux-kernel-module-rust : 使用 Rust 来写 kernel module
 
-[neovide](https://github.com/Kethku/neovide) neovim 客户端，只有 7000 行
-
 #### What is the relation with str and String
 https://mgattozzi.github.io/2016/05/26/how-do-i-str-string.html
 
@@ -192,11 +190,6 @@ https://www.shuttle.rs/blog/2024/04/18/using-traits-generics-rust
 
 https://news.ycombinator.com/item?id=40385536
 
-## 这个分析方法了解下
-
-> cargo run --profile profiling --features profiling -- --no-vsync --no-multigrid
-
-https://github.com/neovide/neovide/issues/2602
 
 ## 先看这个吧
 https://github.com/pretzelhammer/rust-blog/blob/master/posts/learning-rust-in-2024.md

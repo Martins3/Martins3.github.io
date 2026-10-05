@@ -122,6 +122,8 @@ HVC 模式下 `tty` 返回 `/dev/hvc0`，`test -t 0` 成功；guest 不会创建
 HVC 路径没有 vport 的 close 帧，先在 shell 中执行 `exit` 再退出 host relay；
 VM 重启后 host-side PTY 编号可能改变，需要重新查询 `char_pty`。
 
+## 需要说明的，其实 wayland 的实现就是 client 和 server 就是 unix domain socket 来沟通的
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

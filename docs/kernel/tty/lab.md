@@ -191,6 +191,19 @@ mvebu_serial         /dev/ttyMV    253 0-1 serial
 stty -a
 ```
 
+```txt
+speed 38400 baud; rows 22; columns 96; line = 0;
+intr = ^C; quit = ^\; erase = ^?; kill = ^U; eof = ^D; eol = <undef>;
+eol2 = <undef>; swtch = <undef>; start = ^Q; stop = ^S; susp = ^Z; rprnt = ^R;
+werase = ^W; lnext = ^V; discard = <undef>; min = 1; time = 0;
+-parenb -parodd -cmspar cs8 -hupcl -cstopb cread -clocal -crtscts
+-ignbrk -brkint -ignpar -parmrk -inpck -istrip -inlcr -igncr icrnl ixon -ixoff
+-iuclc -ixany -imaxbel iutf8
+opost -olcuc -ocrnl onlcr -onocr -onlret -ofill -ofdel nl0 cr0 tab0 bs0 vt0 ff0
+isig icanon iexten echo echoe echok -echonl -noflsh -xcase -tostop -echoprt
+echoctl echoke -flusho -extproc
+```
+
 ## top : 按 f ，展示 TTY
 
 ```txt
@@ -203,6 +216,115 @@ l-wx------ - martins3 27 Sep 14:58 2 -> /home/martins3/.local/share/pueue/task_l
 ## /sys/class/vcs
 
 ## /proc/sys/kernel/pty
+
+
+## /proc/sys/dev/tty
+
+```txt
+ ls -la
+.rw-r--r-- 0 root  2 Oct 09:54 ldisc_autoload
+.rw-r--r-- 0 root  2 Oct 09:54 legacy_tiocsti
+```
+
+```c
+static const struct ctl_table tty_table[] = {
+	{
+		.procname	= "legacy_tiocsti",
+		.data		= &tty_legacy_tiocsti,
+		.maxlen		= sizeof(tty_legacy_tiocsti),
+		.mode		= 0644,
+		.proc_handler	= proc_dobool,
+	},
+	{
+		.procname	= "ldisc_autoload",
+		.data		= &tty_ldisc_autoload,
+		.maxlen		= sizeof(tty_ldisc_autoload),
+		.mode		= 0644,
+		.proc_handler	= proc_dointvec_minmax,
+		.extra1		= SYSCTL_ZERO,
+		.extra2		= SYSCTL_ONE,
+	},
+};
+```
+
+## session 相关的实现
+
+fg
+bg
+jobs 都是如何如何实现的?
+
+nohup 如何实现的?
+
+## tty0
+
+在 alpine 虚拟机中做实验:
+
+ssh 登录到虚拟机中，执行:
+```txt
+for file in /dev/tty*; do
+        printf '%s\n' "$file"
+        echo "$file" | sudo tee "$file"
+done
+```
+发现 vnc 屏幕上会有两个结果，也就是 tty0 和 tty1
+
+原因:
+
+- /dev/tty0 不是某个固定的终端，而是当前活动的虚拟控制台（active virtual console）。你向它写入的内容，内核会直接显示在当前的 VT  上。
+- /dev/tty1 是第一个虚拟控制台。很多 Linux 发行版的图形界面（X/Wayland）就运行在这个 tty 上，或者可以通过 Ctrl+Alt+F1 切换到它。
+
+所以你的循环执行到这两步时：
+
+```bash
+  echo "/dev/tty0" | sudo tee /dev/tty0   # 写入当前活动控制台
+  echo "/dev/tty1" | sudo tee /dev/tty1   # 写入 tty1
+```
+
+这些内容被内核直接渲染到了帧缓冲区（framebuffer）上。
+
+
+## TODO
+```bash
+# 查看 TTY 设备
+$ ls /sys/class/tty/
+console  ptmx  tty  tty0  tty1  tty2  ...  ttyS0  ttyS1  ...
+
+# 查看串口信息
+$ cat /proc/tty/driver/serial
+serinfo:1.0 driver revision:
+0: uart:16550A port:000003F8 irq:4 tx:12345 rx:67890 CTS|DSR
+1: uart:16550A port:000002F8 irq:3 tx:0 rx:0
+
+# 查看 VT 控制台
+$ cat /sys/class/vtconsole/vtcon*/name
+(S) dummy device
+(M) frame buffer device
+
+# PTY 限制
+$ cat /proc/sys/kernel/pty/max
+4096
+$ cat /proc/sys/kernel/pty/nr
+10
+```
+
+
+```bash
+# 查看激活的控制台
+$ cat /sys/class/tty/console/active
+tty0 ttyS0
+
+# 查看所有注册的 console
+$ cat /proc/consoles
+tty0                 -WU (EC p  )    4:1
+ttyS0                -W- (E  p a)    4:64
+
+# 说明：
+# -W : 可写
+# U  : 正在使用 (used)
+# E  : 启用
+# p  : 可以作为 printk 目标
+# a  : 可以作为 boot console
+```
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

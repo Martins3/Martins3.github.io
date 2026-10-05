@@ -2,7 +2,7 @@
 
 由 `docs/pub/sync-blog.py` 生成。
 
-跳过文件数: 293
+跳过文件数: 259
 
 ## 发布策略跳过: draft 目录
 
@@ -176,6 +176,7 @@
 - `docs/kernel/release/7.1.md`
 - `docs/kernel/release/7.2.md`
 - `docs/kernel/release/7.3.md`
+- `docs/kernel/tty/session-demo/session.md`
 - `docs/kvm/kvm-forum/2016.md`
 - `docs/kvm/kvm-forum/2017.md`
 - `docs/kvm/kvm-forum/2018.md`
@@ -224,6 +225,9 @@
 - `docs/kernel/power/cstate/cstate-check.md`
 - `docs/kernel/power/cstate/cstate.md`
 - `docs/kernel/power/cstate/disable.md`
+- `docs/kernel/power/cstate/suspend/1.md`
+- `docs/kernel/power/cstate/suspend/2.md`
+- `docs/kernel/power/cstate/suspend/3.md`
 - `docs/kernel/power/doc.md`
 - `docs/kernel/power/firmware.md`
 - `docs/kernel/power/haltpoll.md`
@@ -241,7 +245,6 @@
 - `docs/kernel/power/pstate/tmp4.md`
 - `docs/kernel/power/schedutil.md`
 - `docs/kernel/power/sysfs.md`
-- `docs/kernel/power/system-sleep-states.md`
 - `docs/kernel/power/thermal-throttle.md`
 - `docs/kernel/power/tools.md`
 - `docs/kernel/power/virt.md`
@@ -267,47 +270,10 @@
 - `docs/kvm/vmx/legacy.md`
 - `docs/kvm/vmx/qemu-vapic.md`
 - `docs/kvm/vmx/vmx.md`
-- `docs/math/basic/complex/.venv/lib/python3.13/site-packages/numpy/random/LICENSE.md`
-- `docs/math/basic/complex/.venv/lib/python3.13/site-packages/numpy-2.5.3.dist-info/licenses/numpy/_core/src/npysort/x86-simd-sort/LICENSE.md`
-- `docs/math/basic/complex/.venv/lib/python3.13/site-packages/numpy-2.5.3.dist-info/licenses/numpy/fft/pocketfft/LICENSE.md`
-- `docs/math/basic/complex/.venv/lib/python3.13/site-packages/numpy-2.5.3.dist-info/licenses/numpy/random/LICENSE.md`
-- `docs/math/basic/complex/.venv/lib/python3.13/site-packages/numpy-2.5.3.dist-info/licenses/numpy/random/src/distributions/LICENSE.md`
-- `docs/math/basic/complex/.venv/lib/python3.13/site-packages/numpy-2.5.3.dist-info/licenses/numpy/random/src/mt19937/LICENSE.md`
-- `docs/math/basic/complex/.venv/lib/python3.13/site-packages/numpy-2.5.3.dist-info/licenses/numpy/random/src/pcg64/LICENSE.md`
-- `docs/math/basic/complex/.venv/lib/python3.13/site-packages/numpy-2.5.3.dist-info/licenses/numpy/random/src/philox/LICENSE.md`
-- `docs/math/basic/complex/.venv/lib/python3.13/site-packages/numpy-2.5.3.dist-info/licenses/numpy/random/src/sfc64/LICENSE.md`
-- `docs/math/basic/complex/.venv/lib/python3.13/site-packages/numpy-2.5.3.dist-info/licenses/numpy/random/src/splitmix64/LICENSE.md`
-- `docs/math/basic/complex/.venv/lib/python3.13/site-packages/pyparsing/ai/best_practices.md`
 - `docs/net/rnp.md`
 - `docs/net/sfc/onload.md`
 - `docs/pub/AGETNS.md`
 - `docs/pub/community-bug.md`
 - `docs/pub/community-feature.md`
-- `docs/rust/demo/target/debug/build/rust_decimal-d41474e7c3ebffee/out/README-lib.md`
 - `docs/trace/hw/rasdaemon.md`
 - `docs/uefi/firmware/microcode.md`
-- `gpu/compiler/.venv/lib/python3.13/site-packages/numpy/random/LICENSE.md`
-- `gpu/compiler/.venv/lib/python3.13/site-packages/numpy-2.4.4.dist-info/licenses/numpy/_core/src/npysort/x86-simd-sort/LICENSE.md`
-- `gpu/compiler/.venv/lib/python3.13/site-packages/numpy-2.4.4.dist-info/licenses/numpy/fft/pocketfft/LICENSE.md`
-- `gpu/compiler/.venv/lib/python3.13/site-packages/numpy-2.4.4.dist-info/licenses/numpy/random/LICENSE.md`
-- `gpu/compiler/.venv/lib/python3.13/site-packages/numpy-2.4.4.dist-info/licenses/numpy/random/src/distributions/LICENSE.md`
-- `gpu/compiler/.venv/lib/python3.13/site-packages/numpy-2.4.4.dist-info/licenses/numpy/random/src/mt19937/LICENSE.md`
-- `gpu/compiler/.venv/lib/python3.13/site-packages/numpy-2.4.4.dist-info/licenses/numpy/random/src/pcg64/LICENSE.md`
-- `gpu/compiler/.venv/lib/python3.13/site-packages/numpy-2.4.4.dist-info/licenses/numpy/random/src/philox/LICENSE.md`
-- `gpu/compiler/.venv/lib/python3.13/site-packages/numpy-2.4.4.dist-info/licenses/numpy/random/src/sfc64/LICENSE.md`
-- `gpu/compiler/.venv/lib/python3.13/site-packages/numpy-2.4.4.dist-info/licenses/numpy/random/src/splitmix64/LICENSE.md`
-- `gpu/compiler/.venv/lib/python3.13/site-packages/pip/_vendor/idna/LICENSE.md`
-- `gpu/compiler/.venv/lib/python3.13/site-packages/pip-26.0.1.dist-info/licenses/src/pip/_vendor/idna/LICENSE.md`
-- `gpu/compiler/.venv/lib/python3.13/site-packages/tilelang/3rdparty/composable_kernel/include/ck/README.md`
-- `gpu/compiler/.venv/lib/python3.13/site-packages/tilelang/3rdparty/composable_kernel/include/ck_tile/README.md`
-- `gpu/compiler/.venv/lib/python3.13/site-packages/tilelang/3rdparty/composable_kernel/include/ck_tile/core/README.md`
-- `gpu/compiler/.venv/lib/python3.13/site-packages/tilelang/3rdparty/composable_kernel/include/ck_tile/ops/common/README.md`
-- `gpu/compiler/.venv/lib/python3.13/site-packages/tilelang/3rdparty/composable_kernel/include/ck_tile/ops/flatmm/block/uk/README.md`
-- `gpu/compiler/.venv/lib/python3.13/site-packages/tilelang/3rdparty/composable_kernel/include/ck_tile/ref/README.md`
-- `gpu/compiler/.venv/lib/python3.13/site-packages/tilelang/3rdparty/tvm/src/runtime/hexagon/README.md`
-- `gpu/compiler/.venv/lib/python3.13/site-packages/tilelang/3rdparty/tvm/src/runtime/hexagon/profiler/README.md`
-- `gpu/compiler/.venv/lib/python3.13/site-packages/tilelang/3rdparty/tvm/src/runtime/opencl/opencl_wrapper/README.md`
-- `gpu/compiler/.venv/lib/python3.13/site-packages/tilelang/3rdparty/tvm/src/runtime/vulkan/README.md`
-- `gpu/compiler/.venv/lib/python3.13/site-packages/tilelang/carver/README.md`
-- `gpu/compiler/.venv/lib/python3.13/site-packages/torchgen/packaged/autograd/README.md`
-- `gpu/compiler/.venv/lib/python3.13/site-packages/tvm_ffi/3rdparty/libbacktrace/README.md`

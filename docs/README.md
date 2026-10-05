@@ -769,66 +769,6 @@
   - [vhost-scsi 以及 vhost-user-scsi](./kernel/vhost/backend/scsi.md)
   - [SPDK 杂记](./kernel/vhost/backend/spdk.md)
 
-## tty
-- `color/`
-  - [终端颜色是如何显示出来的](./kernel/tty/color/color.md)
-- `hw/`
-  - [hvc](./kernel/tty/hw/hvc.md)
-  - [keyboard](./kernel/tty/hw/keyboard.md)
-  - [pl011](./kernel/tty/hw/pl011.md)
-  - [serio](./kernel/tty/hw/serio-2.md)
-  - [tty driver](./kernel/tty/hw/serio.md)
-  - [uart](./kernel/tty/hw/uart.md)
-  - [asahi linux 如何调试](./kernel/tty/hw/usb-m1n1.md)
-  - [usb serial](./kernel/tty/hw/usb.md)
-  - [vcs](./kernel/tty/hw/vcs.md)
-  - [vt](./kernel/tty/hw/vt.md)
-- `pty/`
-  - [uefi 是可以把 grub 显示到 stdio 的](./kernel/tty/fun/1.md)
-  - [n_tty](./kernel/tty/pty/n_tty.md)
-  - [alacritty 的 PTY 之路:pts 的 master 到底在谁手里](./kernel/tty/pty/pty-alacritty.md)
-  - [pty driver](./kernel/tty/pty/pty-driver.md)
-  - [pty](./kernel/tty/pty/pty.md)
-- `readline/`
-  - [GNU Readline 交互式 demo](./kernel/tty/readline/readme.md)
-- `vim/`
-  - [zellij 居然还支持 web 模式啊](./kernel/tty/vim/fun.md)
-  - [什么东西](./kernel/tty/vim/libghostty.md)
-  - [mini-vim：三个终端绘制后端](./kernel/tty/vim/mini-vimm.md)
-  - [nvim 为什么必须借助 tmux 才可以拷贝，](./kernel/tty/vim/osc52.md)
-  - [为什么内部的 ssh 有时候需要添加上这个](./kernel/tty/vim/terminfo.md)
-  - [TODO 那么为什么我发现在 vim 使用的 terminal 和普通的有点不同的?](./kernel/tty/vim/vim.md)
-- `virtio-port-demo/`
-  - [普通 virtserialport：字节通信与 Bash shell demo](./kernel/tty/virtio-port-demo/README.md)
-- `fun/`
-  - [uefi 是可以把 grub 显示到 stdio 的](./kernel/tty/fun/1.md)
-  - [我发现内核中存在日志](./kernel/tty/fun/3.md)
-  - [同时所有的程序都可以接受消息 ?](./kernel/tty/fun/broadcast.md)
-  - [ttyprintk](./kernel/tty/fun/ttyprintk.md)
-  - [virsh console 和 virsh consoletty 什么关系](./kernel/tty/fun/virsh.md)
-  - [tty in web](./kernel/tty/fun/web.md)
-- [bmc](./kernel/tty/bmc.md)
-- [console](./kernel/tty/console.md)
-- [doc](./kernel/tty/doc.md)
-- [wsl 的 magic](./kernel/tty/fun.md)
-- [实验](./kernel/tty/lab.md)
-- [Linux Device Driver : TTY Drivers](./kernel/tty/ldd-chapter-18.md)
-- [2. 架构原理 - TTY 核心设计](./kernel/tty/linux-tty-analysis.md)
-- [getty](./kernel/tty/login-getty.md)
-- [netconsole](./kernel/tty/netconsole.md)
-- [tty](./kernel/tty/overview.md)
-- [putty](./kernel/tty/putty.md)
-- [qemu](./kernel/tty/qemu.md)
-- [uptime 展示的 user 数量](./kernel/tty/session.md)
-- [ssh 的操作会过 tty 机制吗?](./kernel/tty/ssh.md)
-- [sysrq](./kernel/tty/sysrq.md)
-- [termios](./kernel/tty/termios.md)
-- [如何停止另外的 tmux](./kernel/tty/tmux.md)
-- [Linux TTY 子系统架构概览](./kernel/tty/tty-architecture-overview.md)
-- [tty 到底是什么](./kernel/tty/tty.md)
-- [为什么在 systemd 中，需要将日志设置为这个东西](./kernel/tty/win.md)
-- [tty0](./kernel/tty/yes.md)
-
 ## kvm
 
 - [记录调试 kvm 的一个有趣问题](./kvm/fun/host-freq.md)
@@ -892,24 +832,21 @@
 
 - [lab](./kvm/pit.md)
 - [cache regs](./kvm/cache-regs.md)
-- [cr0](./kvm/cr.md)
+- [cr0](./kvm/emulate/cr.md)
 - [debugfs](./kvm/debugfs.md)
 - [x86 emulate](./kvm/emulate/emulate.md)
-- [SGX](./kvm/enclave.md)
 - [event injection](./kvm/int/event-delivery.md)
 - [exit reason](./kvm/vmx/exit-reason.md)
-- [fred](./kvm/fred.md)
+- [fred](./kvm/minor/fred.md)
 - [interrupt window](./kvm/int/interrupt-window.md)
 - [KVM](./kvm/kvm.md)
 - [kvm_device_ops](./kvm/kvm_device_ops.md)
 - [kvm lock 机制](./kvm/lock.md)
 - [使用 tracepoint 来跟踪 kvm_check_request](./kvm/make_request.md)
 - [mmio](./kvm/emulate/mmio.md)
-- [msr](./kvm/msr.md)
 - [mtrr](./kvm/mtrr.md)
 - [ple window](./kvm/ple.md)
 - [qemu 如何支持 kvm 的](./kvm/qemu.md)
-- [secure](./kvm/secure.md)
 - [kvm selftests](./kvm/mini-kvm/selftests.md)
 - [smm](./kvm/smm.md)
 - [tracepoint](./kvm/tracepoint.md)
@@ -934,6 +871,64 @@
 - [proc fs](./kernel/sysfs/sysfs-proc.md)
 - [sysfs sched](./kernel/sysfs/sysfs-sched.md)
 - [sysfs scsi](./kernel/sysfs/sysfs-scsi.md)
+
+## tty
+
+- [tty 到底是什么](./kernel/tty/tty.md)
+- [tty](./kernel/tty/overview.md)
+- [bmc](./kernel/tty/bmc.md)
+- [console](./kernel/tty/console.md)
+- [doc](./kernel/tty/doc.md)
+- [wsl 的 magic](./kernel/tty/fun.md)
+- [实验](./kernel/tty/lab.md)
+- [login 和 getty](./kernel/tty/login-getty.md)
+- [qemu](./kernel/tty/qemu.md)
+- [ssh](./kernel/tty/ssh.md)
+- [sysrq](./kernel/tty/sysrq.md)
+- [tmux](./kernel/tty/tmux.md)
+- [非典型使用](./kernel/tty/win.md)
+
+
+### 有趣
+- [uefi 是可以把 grub 显示到 stdio 的](./kernel/tty/fun/1.md)
+- [我发现内核中存在日志](./kernel/tty/fun/3.md)
+- [同时所有的程序都可以接受消息 ?](./kernel/tty/fun/broadcast.md)
+- [ttyprintk](./kernel/tty/fun/ttyprintk.md)
+- [virsh console 和 virsh consoletty 什么关系](./kernel/tty/fun/virsh.md)
+- [tty in web](./kernel/tty/fun/web.md)
+
+### 硬件层
+- [hvc](./kernel/tty/hw/hvc.md)
+- [keyboard](./kernel/tty/hw/keyboard.md)
+- [pl011](./kernel/tty/hw/pl011.md)
+- [serial Terminal](./kernel/tty/hw/serial-terminal.md)
+- [serio](./kernel/tty/hw/serio-2.md)
+- [tty driver](./kernel/tty/hw/serio.md)
+- [uart](./kernel/tty/hw/uart.md)
+- [asahi linux 如何调试](./kernel/tty/hw/usb-m1n1.md)
+- [usb serial](./kernel/tty/hw/usb.md)
+- [vcs](./kernel/tty/hw/vcs.md)
+- [tty2 如何关联上 gnome 的](./kernel/tty/hw/vt-tty2.md)
+- [vt](./kernel/tty/hw/vt.md)
+### pts
+- [n_tty](./kernel/tty/pty/n_tty.md)
+- [alacritty 的 PTY 之路:pts 的 master 到底在谁手里](./kernel/tty/pty/pty-alacritty.md)
+- [pty driver](./kernel/tty/pty/pty-driver.md)
+- [pty](./kernel/tty/pty/pty.md)
+### session
+- [在本机观察 session、进程组和控制终端](./kernel/tty/session-demo/README.md)
+
+### ANSI
+
+- [termios](./kernel/tty/termios.md)
+- `color/`
+  - [实现颜色](./kernel/tty/vim/color/color.md)
+- [什么东西](./kernel/tty/vim/alacritty.md)
+- [zellij 居然还支持 web 模式啊](./kernel/tty/vim/fun.md)
+- [mini-vim：三个终端绘制后端](./kernel/tty/vim/mini-vimm.md)
+- [nvim 为什么必须借助 tmux 才可以拷贝，](./kernel/tty/vim/osc52.md)
+- [为什么内部的 ssh 有时候需要添加上这个](./kernel/tty/vim/terminfo.md)
+- [TODO 那么为什么我发现在 vim 使用的 terminal 和普通的有点不同的?](./kernel/tty/vim/vim.md)
 
 ## 整理中
 
@@ -1022,13 +1017,13 @@
   - [slub](./kernel/mm/slub/overview.md)
   - [Slub TID](./kernel/mm/slub/tid.md)
   - [Slub Tools](./kernel/mm/slub/tools.md)
-- [Idle Page Tracking](./kernel/mm/idle-page-tracking.md)
+- [idle page tracking](./kernel/mm/idle-page-tracking.md)
 - [kaslr](./kernel/mm/kaslr.md)
-- [Backing Device](./kernel/mm/mm-backing-dev.md)
-- [Buddy System](./kernel/mm/mm-buddy.md)
-- [CMA](./kernel/mm/mm-cma.md)
-- [Memory Compaction](./kernel/mm/mm-compaction.md)
-- [Copy-On-Write](./kernel/mm/mm-cow.md)
+- [backing device](./kernel/mm/mm-backing-dev.md)
+- [buddy system](./kernel/mm/mm-buddy.md)
+- [cma](./kernel/mm/mm-cma.md)
+- [memory compaction](./kernel/mm/mm-compaction.md)
+- [copy on write](./kernel/mm/mm-cow.md)
 - [Memory Failure](./kernel/mm/mm-failure.md)
 - [Page Cache](./kernel/mm/mm-filemap.md)
 - [Folio](./kernel/mm/mm-folio.md)
@@ -1530,6 +1525,23 @@
     - [2023](./kernel/lsfmmbpf/2023.md)
     - [2024](./kernel/lsfmmbpf/2024.md)
     - [lsfmmbpf 2026](./kernel/lsfmmbpf/2026.md)
+  - `mm/`
+    - `swap/`
+      - [4](./kernel/mm/swap/fj.md)
+      - [简单分析一下 folio 在 lru 中移动](./kernel/mm/swap/folio_add_lru.md)
+      - [Q : Linux 现在支持大页 swap out 吗?](./kernel/mm/swap/hugepage.md)
+      - [kvm](./kernel/mm/swap/kvm.md)
+      - [备忘](./kernel/mm/swap/lruvec.md)
+      - [page-io.c](./kernel/mm/swap/page-io.md)
+      - [RDMA Swap](./kernel/mm/swap/rdma-swap.md)
+      - [iouring swap](./kernel/mm/swap/rswap.md)
+      - [swap 模块基本分析](./kernel/mm/swap/swap-overview.md)
+      - [swap.c 分析](./kernel/mm/swap/swap.md)
+      - [理解下这个变化](./kernel/mm/swap/swapcache.md)
+      - [swapfile.c](./kernel/mm/swap/swapfile.md)
+      - [分析](./kernel/mm/swap/user.md)
+      - [zram 基本使用](./kernel/mm/swap/zram.md)
+      - [zswap](./kernel/mm/swap/zswap.md)
   - `module/`
     - [内核模块](./kernel/module/README.md)
   - `ospm/`
@@ -1595,22 +1607,6 @@
     - [切分测试](./kernel/sriov/sriov.lab.md)
     - [https://learn.microsoft.com/en-us/windows-hardware/drivers/network/overview-of-single-root-i-o-virtualization--sr-iov-](./kernel/sriov/sriov.md)
     - [支持 SR-IOV 的 NVMe 设备概述（2025 年 11 月数据）](./kernel/sriov/sriov.nvme.md)
-  - `swap/`
-    - [4](./kernel/swap/fj.md)
-    - [简单分析一下 folio 在 lru 中移动](./kernel/swap/folio_add_lru.md)
-    - [Q : Linux 现在支持大页 swap out 吗?](./kernel/swap/hugepage.md)
-    - [kvm](./kernel/swap/kvm.md)
-    - [备忘](./kernel/swap/lruvec.md)
-    - [page-io.c](./kernel/swap/page-io.md)
-    - [RDMA Swap](./kernel/swap/rdma-swap.md)
-    - [iouring swap](./kernel/swap/rswap.md)
-    - [swap 模块基本分析](./kernel/swap/swap-overview.md)
-    - [swap.c 分析](./kernel/swap/swap.md)
-    - [理解下这个变化](./kernel/swap/swapcache.md)
-    - [swapfile.c](./kernel/swap/swapfile.md)
-    - [分析](./kernel/swap/user.md)
-    - [zram 基本使用](./kernel/swap/zram.md)
-    - [zswap](./kernel/swap/zswap.md)
   - `time/`
     - `code/`
       - [timer 相关测试](./kernel/time/code/README.md)
@@ -1679,6 +1675,13 @@
     - [tk_read_base](./kernel/time/timer.timekeeping.md)
     - [soft lockup](./kernel/time/watchdog.md)
     - [CLOCK_MONOTONIC 和 CLOCK_MONOTONIC_RAW 的区别在于](./kernel/time/yes-we-know.md)
+  - `tty/`
+    - `readline/`
+      - [GNU Readline 交互式 demo](./kernel/tty/readline/readme.md)
+    - `vim/`
+      - [termios](./kernel/tty/vim/termios.md)
+    - `virtio-port-demo/`
+      - [普通 virtserialport：字节通信与 Bash shell demo](./kernel/tty/virtio-port-demo/README.md)
   - `tutorial/`
     - `crash/`
       - [基于 kcore 的几种内核调试办法](./kernel/tutorial/crash/kcore.md)
@@ -1757,7 +1760,6 @@
 - `kvm/`
   - `emulate/`
     - [分析 x86_emulate_instruction 大致路径](./kvm/emulate/3.md)
-    - [cr0](./kvm/emulate/cr.md)
     - [opcode_table 的使用位置](./kvm/emulate/details.md)
     - [x86 KVM 为什么需要指令模拟](./kvm/emulate/emulate-2.md)
     - [msr](./kvm/emulate/msr.md)
@@ -1776,7 +1778,6 @@
     - [Rust VMM + C guest](./kvm/mini-kvm/README.md)
   - `minor/`
     - [regs](./kvm/minor/basic.md)
-    - [fred](./kvm/minor/fred.md)
     - [kvm 支持 gdb 的方法](./kvm/minor/gdb.md)
     - [x86 如何支持 32bit mode](./kvm/minor/ug.md)
   - `mmu/`
@@ -1787,6 +1788,7 @@
   - [高级话题](./kvm/advance.md)
   - [先搞搞最基本的问题吧](./kvm/idle.md)
   - [KVM 机制演进与源码阅读索引](./kvm/mechanism-evolution.md)
+  - [对比下，到底 AMD 和 intel 上的设计区别是什么](./kvm/vmx-vs-svm.md)
 - `language/`
   - `c/`
     - [TODO](./language/c/c.md)

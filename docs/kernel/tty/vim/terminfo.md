@@ -224,6 +224,58 @@ cmd="TERM=xterm-256color ssh $ssh_port $ssh_user@$ssh_ip"
 在Linux中，按上下左右键为什么变成^[[A^[[B^[[C^[[D？ - 海念着梦与夜的回答 - 知乎
 https://www.zhihu.com/question/31429658/answer/3601508760
 
+
+## XTERM=xterm 和 XTERM=xterm-ghostty 的区别是什么?
+主要区别是：它们让程序读取不同的“终端能力说明
+书”（terminfo），从而决定使用什么颜色、控制序列和按键处
+理方式。
+
+TERM 是告诉 Vim、less、top 等程序“当前终端是什么类型”。
+把 Ghostty 的 TERM 改成 xterm 后，运行的依然是
+Ghostty，但程序会按 xterm 的能力来使用它。
+
+我对比了你本机的 terminfo：
+
+ 能力声明       调色板颜色数
+ xterm          8 色
+ xterm-ghostty  256 色
+───────────────────────────────────────────────────────
+ 能力声明       RGB 真彩色
+ xterm          没有显式声明
+ xterm-ghostty  有 Tc 和 RGB 控制序列
+───────────────────────────────────────────────────────
+ 能力声明       下划线
+ xterm          普通下划线
+ xterm-ghostty  额外支持样式、颜色
+───────────────────────────────────────────────────────
+ 能力声明       同步刷新
+ xterm          没有声明
+ xterm-ghostty  有，供程序减少刷新闪烁
+───────────────────────────────────────────────────────
+ 能力声明       按键及屏幕控制序列
+ xterm          xterm 的定义
+ xterm-ghostty  匹配 Ghostty 的定义
+
+这里描述的是 terminfo 声明的能力；程序也可能通过主动探
+测或自己的配置启用更多功能。所以设成 xterm 并不意味着
+Ghostty 本身只能显示 8 色。
+
+实际最容易遇到的区别是 SSH 兼容性：远端如果没有
+xterm-ghostty 的 terminfo，运行 top、less 等可能报
+unknown terminal
+type。可以安装对应条目，或回退到更普及的
+xterm-256color。Ghostty 官方说明
+(https://ghostty.org/docs/help/terminfo)
+
+在 Ghostty 中通常保留默认的 xterm-ghostty；远端不认识它
+时，优先用 xterm-256color 兼容。 裸 xterm 声明的颜色能
+力比较保守。
+
+另外，xterm-ghostty 名字中的 xterm-
+是为了兼容一些直接检查 TERM 是否含有 xterm
+的程序。命名原因
+(https://ghostty.org/docs/help/terminfo)
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

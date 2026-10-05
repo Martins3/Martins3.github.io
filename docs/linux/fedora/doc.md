@@ -163,6 +163,47 @@ Flameshot 13.3.0 时代，本节的方案是 wl-copy wrapper + systemd path unit
 14.0.0 修复剪贴板之后，整套机制（`~/.local/bin/flameshot-copy*`、`flameshot-copy-latest.path/.service`、自定义 .desktop override、autostart daemon）
 都已验证不再需要并删除。
 
+## Fedora 42 升级到 44（2026-10-05）
+
+先更新 Fedora 42：
+
+```sh
+sudo /usr/bin/dnf upgrade --refresh -y
+```
+
+```sh
+sudo /usr/bin/dnf \
+  --setopt=fedora.metalink= \
+  --setopt=fedora.baseurl=https://mirrors.aliyun.com/fedora/releases/42/Everything/x86_64/os/ \
+  --setopt=updates.metalink= \
+  --setopt=updates.baseurl=https://mirrors.aliyun.com/fedora/updates/42/Everything/x86_64/ \
+  --setopt=max_parallel_downloads=10 \
+  upgrade --refresh -y
+```
+
+Fedora 42 更新成功。dracut 提示 `zstd` 不可执行并回退到默认压缩方式，
+新内核的 initramfs 已生成，DNF 返回成功。
+
+下载 Fedora 44 的离线升级包，使用中科大镜像：
+
+```sh
+sudo /usr/bin/dnf \
+  --setopt=fedora.metalink= \
+  --setopt=fedora.baseurl=https://mirrors.ustc.edu.cn/fedora/releases/44/Everything/x86_64/os/ \
+  --setopt=updates.metalink= \
+  --setopt=updates.baseurl=https://mirrors.ustc.edu.cn/fedora/updates/44/Everything/x86_64/ \
+  --setopt=max_parallel_downloads=10 \
+  system-upgrade download --releasever=44 -y
+```
+
+```sh
+sudo systemctl reboot
+# 重新登录后：
+cat /etc/os-release
+uname -r
+systemctl --failed
+```
+
 ## 内核管理
 1. 清理不需要的 kernel 的方法，似乎没有特别好的办法:
 ```sh
@@ -272,7 +313,6 @@ https://world.hey.com/dhh/linux-as-the-new-developer-default-at-37signals-ef0823
 但目前不能认定更新就是原因。
 
 建议先降低 pueued 日志级别、修复 Hermes 的重试刷屏，避免再次丢失证据；
-
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

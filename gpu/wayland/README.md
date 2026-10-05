@@ -298,3 +298,31 @@ independent implementation of the protocol”。也就是说：
   - gnome-shell 是主 Wayland compositor
   - Xwayland 是给 X11 应用兼容用的子进程
   - mutter-x11-frames 也是 GNOME/Xwayland 相关辅助进程
+
+## 为什么在 ssh 到 server 上启动 qemu ，qemu 可以知道这个 gtk initialization failed
+```txt
+/home/martins3/hack/vm/2403-nix/cmd.sh
+gtk initialization failed
+```
+
+区别应该是在:
+
+```txt
+env | rg '^(WAYLAND_DISPLAY|XDG_RUNTIME_DIR|DISPLAY|XDG_SESSION_TYPE|  XDG_CURRENT_DESKTOP|SSH_CONNECTION|SSH_TTY)='
+```
+
+如果在 ssh 中执行:
+```txt
+XDG_SESSION_TYPE=tty
+XDG_RUNTIME_DIR=/run/user/1000
+SSH_CONNECTION=10.0.128.0 48516 10.0.0.2 22
+SSH_TTY=/dev/pts/15
+```
+
+如果在图形界面中的 Alacritty 中执行:
+```txt
+WAYLAND_DISPLAY=wayland-0
+XDG_RUNTIME_DIR=/run/user/1000
+XDG_SESSION_TYPE=wayland
+DISPLAY=:0
+```

@@ -6,7 +6,7 @@
 ## 初始化流程
 - proc_root_init
 
-## /proc/$pid
+## /proc/pid
 
 ```txt
  attr
@@ -90,24 +90,24 @@
 
 看一个经典的路径吧:
 ```txt
-#0  proc_pid_lookup (dentry=dentry@entry=0xffff88810577f680, flags=flags@entry=17) at fs/proc/base.c:3436
-#1  0xffffffff814c44b1 in proc_root_lookup (dir=0xffff88810caa0048, dentry=0xffff88810577f680, flags=17) at fs/proc/root.c:324
-#2  0xffffffff81439e81 in __lookup_slow (name=name@entry=0xffffc90001df3dd0, dir=dir@entry=0xffff88810c9315c0, flags=flags@entry=17) at fs/namei.c:1686
-#3  0xffffffff8143e165 in lookup_slow (flags=17, dir=0xffff88810c9315c0, name=0xffffc90001df3dd0) at fs/namei.c:1703
-#4  walk_component (nd=0xffffc90001df3dc0, flags=0) at fs/namei.c:1994
-#5  0xffffffff8143e3da in link_path_walk (name=0xffff88810b8d002b "oom_score_adj", name@entry=0xffff88810b8d0020 "/proc/self/oom_score_adj", nd=nd@entry=0xffffc90001df3dc0) atfs/namei.c:2318
-#6  0xffffffff8143ec13 in link_path_walk (nd=0xffffc90001df3dc0, name=0xffff88810b8d0020 "/proc/self/oom_score_adj") at ./include/linux/err.h:36
-#7  path_openat (nd=nd@entry=0xffffc90001df3dc0, op=op@entry=0xffffc90001df3edc, flags=flags@entry=65) at fs/namei.c:3711
-#8  0xffffffff81440d06 in do_filp_open (dfd=dfd@entry=-100, pathname=pathname@entry=0xffff88810b8d0000, op=op@entry=0xffffc90001df3edc) at fs/namei.c:3742
-#9  0xffffffff81427aea in do_sys_openat2 (dfd=-100, filename=<optimized out>, how=how@entry=0xffffc90001df3f18) at fs/open.c:1356
-#10 0xffffffff81427fe7 in do_sys_open (mode=<optimized out>, flags=<optimized out>, filename=<optimized out>, dfd=<optimized out>) at fs/open.c:1372
-#11 __do_sys_openat (mode=<optimized out>, flags=<optimized out>, filename=<optimized out>, dfd=<optimized out>) at fs/open.c:1388
-#12 __se_sys_openat (mode=<optimized out>, flags=<optimized out>, filename=<optimized out>, dfd=<optimized out>) at fs/open.c:1383
-#13 __x64_sys_openat (regs=<optimized out>) at fs/open.c:1383
-#14 0xffffffff822a0f0c in do_syscall_x64 (nr=<optimized out>, regs=0xffffc90001df3f58) at arch/x86/entry/common.c:50
-#15 do_syscall_64 (regs=0xffffc90001df3f58, nr=<optimized out>) at arch/x86/entry/common.c:80
-#16 0xffffffff824000ae in entry_SYSCALL_64 () at arch/x86/entry/entry_64.S:120
-#17 0x0000000000000000 in ?? ()
+- ??
+  - entry_SYSCALL_64
+    - do_syscall_64
+      - do_syscall_x64
+        - __x64_sys_openat
+          - __se_sys_openat
+            - __do_sys_openat
+              - do_sys_open
+                - do_sys_openat2
+                  - do_filp_open
+                    - path_openat
+                      - link_path_walk
+                        - link_path_walk
+                          - walk_component
+                            - lookup_slow
+                              - __lookup_slow
+                                - proc_root_lookup
+                                  - proc_pid_lookup
 ```
 
 ## /proc/sys

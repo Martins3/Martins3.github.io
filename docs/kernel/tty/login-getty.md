@@ -1,4 +1,4 @@
-# getty
+# login 和 getty
 
 ## 基本流程是什么?
 getty 是 Linux 中管理终端登录入口的程序。你看到这样的提示时，通常就是它在等待用户名：
@@ -348,6 +348,11 @@ RemainAfterExit=yes
 
 如果是 serial-getty@ttyS0.service，它同样运行 agetty，但串口终端的字体和键盘通常由另一端负责，因此不依赖这里的虚拟控制台字体、键盘配置。
 
+## 当使用 fedora 的图形界面的时候，进行 logout 之后，原来这个时候，
+
+所有的图形程序都会被 kill 掉的，但是 tmux 和 qemu 之类的东西却不会被 kill 掉，这个时候，重新登录之后，tmux 和 qemu 之类的东西继续在
+
+所以，这么想，logout 之后，相当于当前的 session 中的程序就是那些图形程序?
 
 
 <script src="https://giscus.app/client.js"

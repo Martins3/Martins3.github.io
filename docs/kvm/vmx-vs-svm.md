@@ -1,17 +1,7 @@
-## 什么东西
-https://github.com/ghostty-org/ghostty
+# 对比下，到底 AMD 和 intel 上的设计区别是什么
 
-这是非常有趣的东西了，作者提到真的有趣的 libghostty 这个工具:
-https://news.ycombinator.com/item?id=47206009
-
-## vte 改进
-https://bxt.rs/blog/just-how-much-faster-are-the-gnome-46-terminals/
-
-vte 是有趣的工作，这个性能测试也是有趣的工作
-
-## Neovim 使用 libvterm
-
-那么 libvterm 在那个层次?
+## kvm_x86_ops
+1. 两个架构是处理 msr 不同吗?
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

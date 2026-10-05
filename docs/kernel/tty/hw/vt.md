@@ -557,6 +557,18 @@ emulator，终端模拟器。例如 xterm 就明确模拟 DEC 的 VT 系列终�
 回到 pstree -G：它选择的是按 VT100 的画线规则输出数据。原来的硬件终端可以解释这些数据，支持该规则的软件终端也可以。一个硬件产品的名称，就这样延续成了软
 件兼容性的名称。
 
+### VT100 某种意义上是 ANSI 协议的一种
+一个现代终端，例如 kitty，大致可能支持：
+
+```txt
+ECMA-48         很多
+VT100           基本全部常用部分
+VT220           很多
+DEC private     大量常用模式
+xterm extension 大量
+kitty extension 自己额外一套
+```
+
 ## vt 由于在内核中实现，导致 console font 都需要实现在内核中
 
 这里的 console font 指 Linux 本地文字控制台的字体，比如按 Ctrl+Alt+F3 后看到的登录界面，以及屏幕上的内核启动日志。
@@ -639,6 +651,121 @@ framebuffer → 屏幕
                     cfb_imageblit
 ```
 
+## 显然，vt 就是需要支持
+
+### 到达 vt 阶段
+对，Linux 的 VT（例如 /dev/tty1）确实由内核解析 ANSI/VT 风格的转义序列，清屏、移动光标、设置文字颜色等都在内核中
+实现；支持的是一组终端控制序列，并非所有终端扩展。
+
+当前内核树中的核心代码在 drivers/tty/vt/vt.c，写入后的主要路径是：
+
+用户程序向 /dev/tty1 写入字节
+  → con_write()
+  → do_con_write()
+  → do_con_trol()：解析转义序列的状态机
+  → 对应操作：清屏、移动光标、修改属性等
+  → 显示后端更新屏幕
+
+以 ESC [ 2 J（通常写作 \x1b[2J）为例：
+
+1. do_con_trol() (drivers/tty/vt/vt.c:2689) 配合 handle_esc() 识别 ESC [，收集参数 2。
+2. 遇到 J，调用 csi_J() (drivers/tty/vt/vt.c:1535)。
+3. csi_J() 将屏幕字符缓冲区填成擦除字符，再通过显示后端更新可见内容。
+
+几个典型操作：
+
+ 序列          效果                              实现
+━━━━━━━━━━━━  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  ━━━━━━━━━━━
+ ESC [ 2 J     清除整个可见屏幕，光标位置不变    csi_J()
+────────────  ────────────────────────────────  ───────────
+ ESC [ H       光标移到左上角                    gotoxay()
+────────────  ────────────────────────────────  ───────────
+ ESC [ K       清除光标到行末                    csi_K()
+────────────  ────────────────────────────────  ───────────
+ ESC [ 31 m    设置红色前景                      csi_m()
+
+所以“清屏并回到左上角”通常是连续发送 \x1b[2J\x1b[H。
+
+这里要区分 VT 和一般的 TTY：桌面终端中的 /dev/pts/N 也经过内核 TTY 层，
+但这些转义序列通常由用户态终端模拟器解析；
+Linux VT 的解析器则就在上述内核代码里。
+
+### 到达 vt drm 驱动
+
+做了 4 组实验，已恢复到桌面 tty2。本机控制台 framebuffer 是 i915drmfb，3840×2160、32 bpp。
+
+ 实验                                       实测结果
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ 后台 tty8，发送 ESC[2J                     到 csi_J()，未进入绘制路径
+─────────────────────────────────────────  ────────────────────────────
+ 图形模式 tty2，发送 ESC[2J                 到 csi_J()，未进入绘制路径
+─────────────────────────────────────────  ────────────────────────────
+ 切到前台文本 tty8，发送 ESC[2J             完整进入 fbcon → i915
+─────────────────────────────────────────  ────────────────────────────
+ 前台 tty8，发送 ESC[10X，擦除 10 个字符    进入矩形填充路径
+
+清屏实际分成同步绘制和异步刷新两段。 以下由多个探针及源码拼接，编译器尾调用会让单份 backtrace 缺少部分层级：
+
+写入 ESC[2J]
+  → tty_write / n_tty_write
+  → con_write → do_con_write
+  → do_con_trol → csi_J
+  → do_update_region
+  → fbcon_putcs
+  → bit_putcs
+  → intel_fbdev_defio_imageblit       ← 已进入 i915
+      ├─ cfb_imageblit               ← CPU 向 framebuffer 写像素
+      └─ drm_fb_helper_damage_area   ← 记录更新区域，排队 work
+
+这里清屏是把空格字形重新画满屏幕。本次控制台有 135 行，fbcon_putcs、intel_fbdev_defio_imageblit 和 cfb_imageblit 各命中 135 次。
+
+接下来在 kworker/10:2 中抓到：
+
+drm_fb_helper_damage_work
+  → drm_fb_helper_fb_dirty
+  → intelfb_dirty
+  → intel_user_framebuffer_dirty
+  → __intel_frontbuffer_flush
+
+所以只按写入进程的 PID 过滤会漏掉后半段。我用同一个 drm_fb_helper 对象关联了异步调用。这里的像素绘制由 CPU 完成，显示硬件再扫描 framebuffer 输出
+画面。
+
+另一个有意思的区别：擦除字符 ESC[10X 才走矩形填充：
+
+do_con_trol → csi_ECMA / csi_X
+  → fbcon_clear → bit_clear
+  → intel_fbdev_defio_fillrect
+  → cfb_fillrect
+
+```txt
+SYNC comm=vt-erase-chars kprobe:i915:intel_fbdev_defio_fillrect
+
+        intel_fbdev_defio_fillrect+5
+        bit_clear+110
+        __fbcon_clear+568
+        csi_ECMA.constprop.0+818
+        do_con_write+913
+        con_write+22
+        process_output_block+149
+        n_tty_write+431
+        iterate_tty_write+290
+        file_tty_write.isra.0+141
+        vfs_write+641
+        ksys_write+123
+        do_syscall_64+226
+        entry_SYSCALL_64_after_hwframe+118
+```
+
+## vt 中如何支持颜色?
+
+显然也是支持的:
+```txt
+     csi_m() (drivers/tty/vt/vt.c:1750) 对 30～37 的处理是：
+
+     vc->vc_par[i] -= CSI_m_FG_COLOR_BEG;  /* 33 - 30 = 3 */
+     vc->state.color = color_table[vc->vc_par[i]] |
+                       (vc->state.color & 0xf0);
+```
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

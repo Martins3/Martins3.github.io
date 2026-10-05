@@ -806,7 +806,7 @@ class ColleiQemuBuilder:
                     "-device",
                     f"virtio-net,netdev={tap},mac={mac},iommu_platform=on,disable-legacy=on",
                     "-netdev",
-                    f"tap,ifname={tap},id={tap},script=no,downscript=no,vhost=on",
+                    f"tap,ifname={tap},id={tap},script=,downscript=,vhost=on",
                 ]
             )
         # 总是把用户态网络放到最后，这样在虚拟机中一眼就可以看到。

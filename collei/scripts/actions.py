@@ -1464,7 +1464,7 @@ def action_hotplug_nic(context: ActionContext, args: Sequence[str]) -> None:
     tap, mac = prepare_ovs_tap(context.collei, context.vm, context.runner)
     socket = context.vm.qemu_directory / "hmp"
     hmp_command(
-        socket, f"netdev_add tap,ifname={tap},id={tap},script=no,downscript=no,vhost=on"
+        socket, f"netdev_add tap,ifname={tap},id={tap},script=,downscript=,vhost=on"
     )
     hmp_command(socket, f"device_add virtio-net,netdev={tap},mac={mac},bus=root_port_1")
 
