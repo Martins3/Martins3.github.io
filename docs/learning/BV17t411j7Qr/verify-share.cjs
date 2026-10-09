@@ -2,9 +2,9 @@ const fs = require('node:fs');
 const path = require('node:path');
 const assert = require('node:assert/strict');
 async function main() {
-  const original = fs.readFileSync(path.join(__dirname, '教程.md'));
+  const original = fs.readFileSync(path.join(__dirname, 'README.md'));
   process.argv.push('--share');require('./build.cjs');
-  assert.deepEqual(fs.readFileSync(path.join(__dirname, '教程.md')), original);
+  assert.deepEqual(fs.readFileSync(path.join(__dirname, 'README.md')), original);
   const files = fs.readdirSync(path.join(__dirname, 'share'), {recursive:true});
   assert.ok(!files.some(name => name.endsWith('.mp4')));
   const port = Number(process.argv[2] || 9226);

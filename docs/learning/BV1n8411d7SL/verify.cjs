@@ -5,7 +5,7 @@ const os = require('node:os');
 const crypto = require('node:crypto');
 const assert = require('node:assert/strict');
 async function main() {
- const source = path.join(__dirname, '教程.md');
+ const source = path.join(__dirname, 'README.md');
  const hash = () => crypto.createHash('sha256').update(fs.readFileSync(source)).digest('hex');
  const before = hash(); require('./build.cjs');
  assert.equal(hash(), before, 'Build must not modify Markdown');

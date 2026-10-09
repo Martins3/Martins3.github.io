@@ -3,7 +3,7 @@ const path = require('node:path');
 const vm = require('node:vm');
 const base = __dirname;
 function build() {
-  let markdown = fs.readFileSync(path.join(base, '教程.md'), 'utf8');
+  let markdown = fs.readFileSync(path.join(base, 'README.md'), 'utf8');
   const publish = process.argv.includes('--publish');
   const share = publish || process.argv.includes('--share');
   const output = share && !publish ? path.join(base, 'share') : base;
@@ -12,7 +12,7 @@ function build() {
     // The export is one directory deeper; keep local mode usable on this machine.
     if (!publish) markdown = markdown.replace(/\]\((\.\.\/[^)]+\.mp4#t=[^)]+)\)/g, (_, url) => `](../${url})`);
     // This is an exported copy; the editable Markdown remains untouched.
-    fs.writeFileSync(path.join(output, '教程.md'), markdown.replace(/\]\([^)]*\/(BV\w+)\/p(\d+)\/video\.mp4#t=(\d+(?:\.\d+)?),[^)]+\)/g,
+    fs.writeFileSync(path.join(output, 'README.md'), markdown.replace(/\]\([^)]*\/(BV\w+)\/p(\d+)\/video\.mp4#t=(\d+(?:\.\d+)?),[^)]+\)/g,
       (_, bvid, part, time) => `](https://www.bilibili.com/video/${bvid}/?p=${Number(part)}&t=${time})`));
   }
   const template = fs.readFileSync(path.join(base, 'template.html'), 'utf8');
@@ -27,7 +27,7 @@ function build() {
 build();
 if (process.argv.includes('--watch')) {
   let timer;
-  for (const name of ['教程.md', 'template.html']) fs.watch(path.join(base, name), () => {
+  for (const name of ['README.md', 'template.html']) fs.watch(path.join(base, name), () => {
     clearTimeout(timer);
     timer = setTimeout(() => { try { build(); } catch (error) { console.error(error.message); } }, 120);
   });

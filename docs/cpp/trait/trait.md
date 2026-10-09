@@ -4,11 +4,9 @@ cpp 的这种 trait ，值
 
 https://www.reddit.com/r/cpp_questions/comments/bwevbh/why_do_we_need_stdallocator_traitst/
 
-1. allocator 也完全理解清楚，和 allocator_trais 啥关系
+allocator 也完全理解清楚，和 allocator_trais 啥关系
 
-1. char_traits
-https://en.cppreference.com/w/cpp/string/char_traits
-    - https://stackoverflow.com/questions/5319770/what-is-the-point-of-stl-character-traits
+ cppman --source=cplusplus.com --cache-all
 
 
 ## 从零理解 traits：给类型配一份说明书

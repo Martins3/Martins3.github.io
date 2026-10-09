@@ -2,7 +2,7 @@
 
 由 `docs/pub/sync-blog.py` 生成。
 
-跳过文件数: 262
+跳过文件数: 280
 
 ## 发布策略跳过: draft 目录
 
@@ -23,9 +23,9 @@
 - `docs/ai-tools/tools/slides.md`
 - `docs/ai-tools/try.md`
 - `docs/ai-tools/workaround.md`
-- `docs/captive/GenC.md`
 - `docs/captive/archsim.md`
 - `docs/captive/captive.md`
+- `docs/captive/GenC.md`
 - `docs/captive/generator.md`
 - `docs/captive/gensim.md`
 - `docs/chatter/provocation/beijing.md`
@@ -127,7 +127,6 @@
 
 ## 发布策略跳过: 同目录存在 README.md
 
-- `docs/README.draft.md`
 - `docs/aarch64/sdm/B2.md`
 - `docs/asm/assembly.md`
 - `docs/concurrent/memory-model/litmus/klitmus.md`
@@ -145,14 +144,29 @@
 - `docs/cpu/sys/MCCC/6.md`
 - `docs/cpu/sys/MCCC/7.md`
 - `docs/cpu/sys/MCCC/8.md`
+- `docs/cpu/sys/SLCA/1.md`
+- `docs/cpu/sys/SLCA/2.md`
+- `docs/cpu/sys/SLCA/3.md`
+- `docs/cpu/sys/SLCA/4.md`
+- `docs/cpu/sys/SLCA/5.md`
+- `docs/cpu/sys/SLCA/6.md`
+- `docs/cpu/sys/SLCA/7.md`
+- `docs/cpu/sys/SLCA/8.md`
+- `docs/cpu/sys/SLCA/readme.md`
+- `docs/cxl/readme.md`
 - `docs/fusion.md`
 - `docs/kernel/api/compat.md`
 - `docs/kernel/api/fd-api-enumeration.md`
 - `docs/kernel/api/kernel-api-summary.md`
 - `docs/kernel/blk/ds/ceph.md`
+- `docs/kernel/cgroup/sched.code/readme.md`
 - `docs/kernel/fs/nfs/user-nfsd/usage.md`
-- `docs/kernel/module/README-kvm.md`
-- `docs/kernel/module/README-localmodconfig.md`
+- `docs/kernel/lpc/2021.md`
+- `docs/kernel/lpc/2022.md`
+- `docs/kernel/lpc/2023.md`
+- `docs/kernel/lpc/2024.md`
+- `docs/kernel/lpc/2025.md`
+- `docs/kernel/lpc/Readme.md`
 - `docs/kernel/module/conf.md`
 - `docs/kernel/module/config.md`
 - `docs/kernel/module/doc.md`
@@ -164,6 +178,8 @@
 - `docs/kernel/module/module-load.md`
 - `docs/kernel/module/module-usage.md`
 - `docs/kernel/module/module.md`
+- `docs/kernel/module/README-kvm.md`
+- `docs/kernel/module/README-localmodconfig.md`
 - `docs/kernel/release/6.12.md`
 - `docs/kernel/release/6.13.md`
 - `docs/kernel/release/6.14.md`
@@ -176,6 +192,7 @@
 - `docs/kernel/release/7.1.md`
 - `docs/kernel/release/7.2.md`
 - `docs/kernel/release/7.3.md`
+- `docs/kernel/tty/readline/readme.md`
 - `docs/kernel/tty/session-demo/session.md`
 - `docs/kvm/kvm-forum/2016.md`
 - `docs/kvm/kvm-forum/2017.md`
@@ -190,8 +207,6 @@
 - `docs/kvm/vmcs/events.md`
 - `docs/kvm/vmcs/fields.md`
 - `docs/learning/AGENTS.md`
-- `docs/learning/BV17t411j7Qr/教程.md`
-- `docs/learning/BV1n8411d7SL/教程.md`
 - `docs/lwn.md`
 - `docs/move-fast.md`
 - `docs/net/rdma/rdma-demo/NOTIFY_SYSCALL.md`
@@ -201,7 +216,10 @@
 - `docs/net/vxlan-demo/bridge-forwarding.md`
 - `docs/net/vxlan-demo/vxlan-fdb-deep-dive.md`
 - `docs/net/vxlan-demo/why-bridge.md`
+- `docs/qemu/aarch64-user/Readme.md`
+- `docs/README.draft.md`
 - `docs/rust/demo/ai.test.md`
+- `docs/trace/bpftrace/readme.md`
 - `docs/trace/ebpf/code/libbpf/bootstrap.md`
 - `docs/trace/ebpf/code/libbpf/readahead.md`
 - `docs/trace/perf/bpf-kprobe-syscall-demo.md`

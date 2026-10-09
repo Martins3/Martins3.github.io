@@ -1313,16 +1313,6 @@
       - [Historical Perspective and Reference](./cpu/sys/Quantitative/M.md)
       - [Chapter 2](./cpu/sys/Quantitative/Quantitative.md)
       - [plans](./cpu/sys/Quantitative/plans.md)
-    - `SLCA/`
-      - [入门](./cpu/sys/SLCA/1.md)
-      - [2 Cache](./cpu/sys/SLCA/2.md)
-      - [指令读取](./cpu/sys/SLCA/3.md)
-      - [解码](./cpu/sys/SLCA/4.md)
-      - [Allocation](./cpu/sys/SLCA/5.md)
-      - [第六章　发射](./cpu/sys/SLCA/6.md)
-      - [第7章 执行](./cpu/sys/SLCA/7.md)
-      - [第8章　提交](./cpu/sys/SLCA/8.md)
-      - [readme](./cpu/sys/SLCA/readme.md)
     - `cs252/`
       - [1 intruction](./cpu/sys/cs252/lecture.md)
     - `fpga/`
@@ -1343,8 +1333,6 @@
   - [芯片设计中两个关键设备](./cpu/smart-dev.md)
   - [CPU ARCH : 进入到 store buffer 意味着已经 commit 了吗?](./cpu/store-buffer.md)
   - [访存子系统](./cpu/xiangshan.md)
-- `cxl/`
-  - [CXL 技术资料](./cxl/readme.md)
 - `games/`
   - [在 Linux kernel 上如何玩游戏](./games/kernel.md)
   - [SteamOS](./games/steam.md)
@@ -1402,8 +1390,6 @@
     - [sata](./kernel/blk/sata.md)
     - [Zoned block devices](./kernel/blk/zone-device.md)
   - `cgroup/`
-    - `sched.code/`
-      - [cgroup sched 在多核上的分布](./kernel/cgroup/sched.code/readme.md)
     - [cgroup](./kernel/cgroup/cgroup-blk.md)
     - [cpuset](./kernel/cgroup/cgroup-cpuset.md)
     - [cgroup ebpf](./kernel/cgroup/cgroup-ebpf.md)
@@ -1526,13 +1512,6 @@
     - [ipi](./kernel/irq/ipi.md)
     - [trigger](./kernel/irq/trigger.md)
     - [x86 的 arch/x86/kernel/apic/vector.c](./kernel/irq/vector.md)
-  - `lpc/`
-    - [ftrace with args](./kernel/lpc/2021.md)
-    - [LoongArch: What we will do next](./kernel/lpc/2022.md)
-    - [Speeding up Kernel Testing and Debugging with virtme-ng](./kernel/lpc/2023.md)
-    - [2024](./kernel/lpc/2024.md)
-    - [2025](./kernel/lpc/2025.md)
-    - [LPC](./kernel/lpc/Readme.md)
   - `lsfmmbpf/`
     - [2023](./kernel/lsfmmbpf/2023.md)
     - [2024](./kernel/lsfmmbpf/2024.md)
@@ -1688,8 +1667,6 @@
     - [soft lockup](./kernel/time/watchdog.md)
     - [CLOCK_MONOTONIC 和 CLOCK_MONOTONIC_RAW 的区别在于](./kernel/time/yes-we-know.md)
   - `tty/`
-    - `readline/`
-      - [GNU Readline 交互式 demo](./kernel/tty/readline/readme.md)
     - `vim/`
       - [termios](./kernel/tty/vim/termios.md)
     - `virtio-port-demo/`
@@ -1820,9 +1797,9 @@
   - [内核学习经验 : 进阶版](./learn/learn-kernel-v2.md)
 - `learning/`
   - `BV17t411j7Qr/`
-    - [羽毛球基础精要：15 P 学习笔记](./learning/BV17t411j7Qr/README.md)
+    - [羽毛球基础精要](./learning/BV17t411j7Qr/README.md)
   - `BV1n8411d7SL/`
-    - [饥荒开局笔记](./learning/BV1n8411d7SL/README.md)
+    - [饥荒开局：采集 → 科技 → 装备](./learning/BV1n8411d7SL/README.md)
   - [视频学习教程](./learning/README.md)
 - `linux/`
   - `fedora/`
@@ -1951,7 +1928,7 @@
   - [ipvlan](./net/ipvlan.md)
   - [ipvs](./net/ipvs.md)
   - [网络杂谈](./net/kernel-hacking.md)
-  - [ipvs](./net/lb.md)
+  - [lb](./net/lb.md)
   - [lldp](./net/lldp.md)
   - [LWT（Light Weight Tunnel）是什么?](./net/lwt.md)
   - [macvlan](./net/macvlan.md)
@@ -1989,7 +1966,7 @@
   - [net: raw socket](./net/raw-socket.md)
   - [rds](./net/rds.md)
   - [RxRPC](./net/rxrpc.md)
-  - [unix domain 分析](./net/scm.md)
+  - [scm](./net/scm.md)
   - [sctp](./net/sctp.md)
   - [smart-nic](./net/smart-nic.md)
   - [snmp](./net/snmp.md)
@@ -1998,7 +1975,7 @@
   - [sockmap](./net/sockmap.md)
   - [ssh](./net/ssh.md)
   - [stp](./net/stp.md)
-  - [rpc](./net/sunrpc.md)
+  - [sunrpc](./net/sunrpc.md)
   - [switch](./net/switch.md)
   - [tc 和 tcp congestion control](./net/tc.md)
   - [tcp ip syn](./net/tcp-ip-syn.md)
