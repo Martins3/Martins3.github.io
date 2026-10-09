@@ -20,6 +20,19 @@
 
 template 和继承的关系
 
+
+## Rust 的 trait 在 cpp 中的实现
+
+   目的                            C++ 中常用的机制
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  ━━━━━━━━━━━━━━━━━━
+   查询类型属性、提取关联类型      traits
+  ──────────────────────────────  ──────────────────
+   约束泛型参数必须支持哪些操作    C++20 concepts
+  ──────────────────────────────  ──────────────────
+   通过统一接口实现运行时多态      虚函数与抽象基类
+
+- [ ] 这个表格大概是这个意思，但是是没有完全理解清楚的
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

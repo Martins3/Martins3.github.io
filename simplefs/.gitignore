@@ -1,0 +1,42 @@
+# SimpleFS .gitignore
+
+# 内核模块构建产物
+*.ko
+*.o
+*.mod
+*.mod.c
+*.cmd
+.*.cmd
+*.order
+*.symvers
+.cache.mk
+Module.symvers
+modules.order
+
+# 构建目录
+tests/build/
+build/
+
+# 生成的可执行文件
+*.out
+*.exe
+mkfs.simple.out
+user_test.out
+
+# 镜像文件
+*.img
+
+# 临时文件
+*.swp
+*.swo
+*~
+.DS_Store
+
+# 编辑器
+.vscode/
+.idea/
+
+# 测试输出
+*.xml
+test_results/
+.compare

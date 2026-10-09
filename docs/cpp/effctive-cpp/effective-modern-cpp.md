@@ -1,8 +1,7 @@
 # 《Effective Modern C++》规则速览
 
 > Scott Meyers 的《Effective Modern C++》总结了有效使用 C++11 和 C++14 的 42
-> 个具体做法。书中的 “universal reference”
-> 在后来的标准术语中通常称为“转发引用（forwarding reference）”。
+> 个具体做法。本文统一使用标准术语“转发引用（forwarding reference）”。
 
 ## 一、类型推导
 
@@ -102,9 +101,9 @@ void f(Widget && a);
 
 - 如果看到 `T &&`, 但是没有涉及该类型的类型推导，那么就是右值引用。
 
-- 万能引用的常见场景是在 auto 和 template 上, 是不是万能引用的关键在于 类型推导
+- forwarding reference 的常见场景是在 auto 和 template 上, 是不是 forwarding reference 的关键在于 类型推导
 
-- 使用右值来初始化万能引用，将会得到右值引用，采用左值来初始化万能引用，将会得到一个左值引用
+- 使用右值来初始化 forwarding reference，将会得到右值引用，采用左值来初始化 forwarding reference，将会得到一个左值引用
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

@@ -11,51 +11,6 @@
 // - 左值：代表一个仍有稳定身份、通常还会继续使用的对象。
 // - 右值：临时值，或者明确表示即将被放弃的对象。
 //
-// 现代 C++ 更准确的分类是：
-//
-//           expression
-//          /          \
-//     glvalue          rvalue
-//     /      \         /     \
-// lvalue      \       /     prvalue
-//              \     /
-//               xvalue
-//
-//
-// 注意这不是一棵树：xvalue 有两个父节点，既是 glvalue 又是 rvalue。
-// 本体是一张二维表：
-//
-//                 有身份        无身份
-//   不可移动      lvalue        （不存在）
-//   可移动        xvalue        prvalue
-//
-// glvalue = “有身份”一列 = lvalue + xvalue
-// rvalue  = “可移动”一行 = xvalue + prvalue
-// xvalue  = 行列交点，唯一同时属于两边的类别
-//
-// 这里：
-//
-// - lvalue：普通的、有身份的对象表达式。
-// - prvalue：用于产生一个值，例如 std::string("hello")。
-// - xvalue：有身份，但资源允许被复用，例如 std::move(s)。
-// - glvalue：lvalue 和 xvalue 的合称。
-// - rvalue：prvalue 和 xvalue 的合称。
-//
-// 重要的是，同一个对象可以通过不同类别的表达式访问：
-//
-// std::string s = "hello";
-//
-// s;            // 访问同一个对象，表达式是左值
-// std::move(s); // 仍是同一个对象，但表达式是右值
-//
-// std::move(s) 没有创建新对象，也没有立即修改 s。
-//
-// 为什么可以这样分类：把“有身份 identity”和“可被移动 movable”
-// 看成两个正交的属性，2 x 2 = 4 种组合里，“无身份且不可移动”这
-// 一格不存在——一个连身份都没有的值，没有任何表达式能再次访问
-// 它指向的对象，它马上就要销毁，因此资源总是可以安全地搬走。
-// 于是叶子类别恰好是三个：lvalue / xvalue / prvalue。
-//
 // 本文件用 decltype((expr)) 在编译期把值类别探测出来：
 //   表达式是 lvalue  -> decltype((expr)) 是 T&
 //   表达式是 xvalue  -> decltype((expr)) 是 T&&
@@ -89,20 +44,27 @@ template <typename T> struct Category<T &&> {
 	static constexpr bool movable = true;
 };
 
-#define SHOW(expr)                                                           \
-	printf("%-38s => %-8s identity=%d movable=%d\n", #expr,                 \
-	       Category<decltype((expr))>::name,                                \
-	       Category<decltype((expr))>::identity,                            \
-	       Category<decltype((expr))>::movable)
+#define SHOW(expr) \
+	printf("%-38s => %-8s \n", #expr, Category<decltype((expr))>::name)
 
 // 按值返回：调用表达式是 prvalue
 std::string make();
 // 按右值引用返回：调用表达式是 xvalue
 int &&expiring();
 
-void bind(std::string &) { puts("bind(std::string&)"); }
-void bind(std::string &&) { puts("bind(std::string&&)"); }
-void bind(const std::string &) { puts("bind(const std::string&)"); }
+void bind(std::string &)
+{
+	puts("bind(std::string&)");
+}
+void bind(std::string &&)
+{
+	puts("bind(std::string&&)");
+}
+
+void bind(const std::string &)
+{
+	puts("bind(const std::string&)");
+}
 
 void take(std::string &&s)
 {
@@ -117,20 +79,23 @@ int main()
 	int i = 0;
 	int *p = &i;
 	std::string s = "hello";
-	const std::string cs = "const";
 
-	printf("== leaf categories ==\n");
+	// lvalue
 	SHOW(i); // 变量名
 	SHOW(*p); // 解引用
 	SHOW(++i); // 前置自增返回引用
 	SHOW(s);
 	SHOW(s[0]); // operator[] 返回 char&
 	SHOW("hello"); // 字符串字面量是 lvalue，能取地址
+
+	// prvalue
 	SHOW(i++); // 后置自增返回临时值
 	SHOW(i + 1);
 	SHOW(42);
 	SHOW(std::string("temporary"));
 	SHOW(make());
+
+	// xvalue
 	SHOW(std::move(s));
 	SHOW(static_cast<std::string &&>(s));
 	SHOW(expiring());
@@ -158,13 +123,20 @@ int main()
 
 	printf("\n== overload resolution ==\n");
 	std::string t;
+	const std::string cs = "const";
 	bind(t); // lvalue        -> std::string&
 	bind(std::move(t)); // xvalue        -> std::string&&
 	bind(std::string("tmp")); // prvalue       -> std::string&&
 	bind(cs); // const lvalue  -> const std::string&
-	bind(std::move(cs));   // const xvalue  -> const std::string&
+	bind(std::move(cs)); // const xvalue  -> const std::string&
 	// std::move(cs) 的类型是 const std::string&&，不是 std::string&&，
 	// 右值引用重载不可行，最终落到 const 左值引用上。
-
+	//
+	// 如果定义出来了，那么 bind(std::move(cs)) 就会使用这个结果
+	//
+	// void bind(const std::string &&)
+	// {
+	// 	puts("bind(const std::string&&)");
+	// }
 	return 0;
 }

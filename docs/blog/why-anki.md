@@ -118,6 +118,15 @@ Rust / C++ 如果没有使用的项目，日常状态很难学会
 
 另外，提供了一个单独的工具来搜索 deck [anki-fzf](https://github.com/Martins3/Martins3.github.io/blob/master/docs/blog/anki-fzf.sh)
 
+## 经验总结
+
+1. 我发现大多数东西，还是需要利用回忆和思考，而不是反复看，反复提，
+不在于次数，而是每一次都是做深度思考的。所以，我在下一步计划，将
+
+/home/martins3/data/vn/docs/README.md 中小标题为栏目，将 ticket 按照组合并起来。
+
+首先回忆一共有多少个条目，然后再去回忆具体的内容，然后开始梳理
+
 ## 附录
 
 调研过的项目:

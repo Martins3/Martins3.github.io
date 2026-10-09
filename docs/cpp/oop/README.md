@@ -12,7 +12,7 @@ https://github.com/andreasfertig/cppinsights : cppinsights
 
 ## 注意项目
 
-###  所以最好不要在 virtual function 中间使用 default parameter
+### 所以最好不要在 virtual function 中间使用 default parameter
 	- https://stackoverflow.com/questions/3533589/can-virtual-functions-have-default-parameters
 
 参考 demo 为: docs/cpp/oop/virtual-default-parameter.cpp
@@ -53,6 +53,9 @@ inline
 default
 
 各种元素的耦合都是什么关系
+
+## 总体来说，面向对象和多线程是没有关系的
+不过我忘记了，什么时候我们是需要考虑的
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

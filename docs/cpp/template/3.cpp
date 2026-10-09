@@ -6,7 +6,7 @@ template <typename T> struct Y {
 		typename X<T>::MemberType; // 这里的typename是做什么的？
 };
 
-int main (int argc, char *argv[]) {
-
+int main(int argc, char *argv[])
+{
 	return 0;
 }

@@ -1,6 +1,89 @@
-# version
-核心参考: https://www.zhihu.com/question/644556732/answer/3399033383
+# cpp version
+核心参考:
+- https://www.zhihu.com/question/644556732/answer/3399033383
+- [modern cpp check list](https://github.com/AnthonyCalandra/modern-cpp-features)
 
+## check
+C++20 includes the following new language features:
+- coroutines
+- concepts
+- three-way comparison
+- designated initializers
+- template syntax for lambdas
+- range-based for loop with initializer
+- `[[likely]]` and `[[unlikely]` attributes
+- deprecate implicit capture of this
+- class types in non-type template parameters
+- constexpr virtual functions
+- explicit
+- immediate functions
+- using enum
+- lambda capture of parameter pack
+- char8_t
+- constinit
+- `__VA_OPT__`
+
+C++20 includes the following new library features:
+- text formatting
+- concepts library
+- synchronized buffered outputstream
+- std::span
+- bit operations
+- math constants
+- std::is_constant_evaluated
+- std::make_shared supports arrays
+- starts_with and ends_with on strings
+- check if associative container has element
+- std::bit_cast
+- std::midpoint
+- std::to_array
+- std::bind_front
+- uniform container erasure
+- three-way comparison helpers
+- std::lexicographical_compare_three_way
+- std::jthread
+- safe integral comparisons
+
+C++17 includes the following new language features:
+- template argument deduction for class templates
+- declaring non-type template parameters with auto
+- folding expressions
+- new rules for auto deduction from braced-init-list
+- constexpr lambda
+- lambda capture this by value
+- inline variables
+- nested namespaces
+- structured bindings
+- selection statements with initializer
+- constexpr if
+- utf-8 character literals
+- direct-list-initialization of enums
+- \[\[fallthrough\]\], \[\[nodiscard\]\], \[\[maybe_unused\]\] attributes
+- \_\_has\_include
+- class template argument deduction
+
+C++17 includes the following new library features:
+- std::variant
+- std::optional
+- std::any
+- std::string_view
+- std::invoke
+- std::apply
+- std::filesystem
+- std::byte
+- splicing for maps and sets
+- parallel algorithms
+- std::sample
+- std::clamp
+- std::reduce
+- prefix sum algorithms
+- gcd and lcm
+- std::not_fn
+- string conversion to/from numbers
+- rounding functions for chrono durations and timepoints
+
+
+2026-10-07 : 其实一个个的看，差别不大
 ## C++11
 
 引入的移动语义和 RAII 库的标准化完胜 C++98/03。自 C++11
@@ -38,8 +121,6 @@ std::integer_sequence 解决了这个问题。
 
  - if (int x = ...)（在条件里直接声明变量，作为条件判断）——这是 C++98 就有的老特性。
  - if (init; condition)（用分号分隔，初始化语句 + 条件）——这才是 C++17 新增的"变量声明强化"。
-
-
 
 ## C++20
 提出新特性替代了可读性差到极致的将

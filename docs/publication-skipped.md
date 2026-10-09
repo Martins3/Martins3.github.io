@@ -2,7 +2,7 @@
 
 由 `docs/pub/sync-blog.py` 生成。
 
-跳过文件数: 259
+跳过文件数: 262
 
 ## 发布策略跳过: draft 目录
 
@@ -189,6 +189,9 @@
 - `docs/kvm/mini-kvm/selftests.md`
 - `docs/kvm/vmcs/events.md`
 - `docs/kvm/vmcs/fields.md`
+- `docs/learning/AGENTS.md`
+- `docs/learning/BV17t411j7Qr/教程.md`
+- `docs/learning/BV1n8411d7SL/教程.md`
 - `docs/lwn.md`
 - `docs/move-fast.md`
 - `docs/net/rdma/rdma-demo/NOTIFY_SYSCALL.md`

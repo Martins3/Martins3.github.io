@@ -2,14 +2,7 @@
  * Rule of Zero:用 std::vector 表达"拥有所有权"，编译器默认生成的
  * 析构/拷贝/移动就都是正确的，一个特殊成员函数都不用写。
  *
- * 反面教材见 docs/cpp/move/3-5-rules.cpp:裸指针成员导致浅拷贝 -> double free。
- *
- * 编译运行:
- *   g++ -std=c++17 -Wall -Wextra -Wpedantic rule-of-zero.cpp -o rule-of-zero.out
- *   ./rule-of-zero.out
- * 想验证没有内存错误可以再加 ASan:
- *   g++ -std=c++17 -fsanitize=address,undefined -g rule-of-zero.cpp \
- *       -o rule-of-zero-asan.out && ./rule-of-zero-asan.out
+ * 反面教材见 ./3-5-rules.cpp:裸指针成员导致浅拷贝 -> double free。
  */
 #include <cstddef>
 #include <cstring>
@@ -17,9 +10,6 @@
 #include <string>
 #include <utility>
 #include <vector>
-
-
-/* ------------------------------------------------------------------ */
 
 /*
  * 正解:用 std::vector<char> 作为成员。

@@ -7,7 +7,7 @@ using namespace std;
 
 int main()
 {
-	tuple<int, string> a(10, "fuck");
+	tuple<int, string> a(10, "hi");
 	size_t len = tuple_size<tuple<int, string> >::value;
 	printf("%ld\n", len);
 	return 0;

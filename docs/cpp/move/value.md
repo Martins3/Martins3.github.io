@@ -1,22 +1,4 @@
-## 1. 直观理解（C 时代的粗糙定义）
-
-最早的说法是：能放在赋值号左边的是 lvalue，只能放在右边的是 rvalue。
-
-```c
-int a = 42;   // a 是 lvalue（有名字、有地址），42 是 rvalue（临时值）
-a = a + 1;    // a+1 的结果存在寄存器里，没有地址，是 rvalue
-```
-
-这个定义在 C 里够用，但在 C++ 里会失效：
-
-```cpp
-const int x = 10;   // x 不能放在赋值号左边，但它显然是 lvalue（能取地址 &x）
-std::string s = f(); // 函数返回的临时对象会被构造进 s，它“马上要消失”，资源可以被偷走
-```
-
-所以 C++11 引入了更精确的分类。
-
-## 2. C++11 的精确分类：不是树，是二维表
+## 分类
 
 每个表达式（注意：值类别是**表达式**的属性，不是对象的属性，也不是类型的属性）恰好属于三个基本类别之一：lvalue、xvalue、prvalue。glvalue 和 rvalue 不是并列的第四、五个类别，而是两个总称，而且这两个总称**相交**——xvalue 同时属于两边。所以分类图画不成一棵树，xvalue 有两个父节点：
 
@@ -33,7 +15,6 @@ std::string s = f(); // 函数返回的临时对象会被构造进 s，它“马
 两个维度定义：
 
 - **有身份（has identity）**：能判断两个表达式指的是不是同一个对象，通俗近似是“有名字”。
-注意：内置取地址符 `&` 的操作数要求是 lvalue，xvalue 虽有身份也不能直接取地址（demo 里有验证）。
 - **可被移动（can be moved from）**：它的资源（堆内存、文件句柄等）可以被“偷走”，因为该对象马上就要销毁或没人再用了。
 
 |          | 有身份                                                 | 无身份                                                           |
@@ -46,7 +27,8 @@ std::string s = f(); // 函数返回的临时对象会被构造进 s，它“马
 - xvalue = 行列交点，唯一同时属于两边的类别（glvalue ∩ rvalue）
 - lvalue = glvalue − rvalue，prvalue = rvalue − glvalue
 
-“无身份且不可移动”一格不存在——连身份都没有，意味着再没有任何表达式能访问它指向的对象，它马上就要销毁，资源天然可以安全搬走。所以叶子类别恰好是三个，不是两个也不是四个。
+“无身份且不可移动”一格不存在——连身份都没有，意味着再没有任何表达式能访问它指向的对象，
+它马上就要销毁，资源天然可以安全搬走。所以叶子类别恰好是三个，不是两个也不是四个。
 
 名字的来历（全是历史包袱，一层层叠出来的）：
 
@@ -61,98 +43,22 @@ std::string s = f(); // 函数返回的临时对象会被构造进 s，它“马
 所以 lvalue 和 xvalue 的关系：两者都是 glvalue，都指着一个真实的对象（下面 demo 里 `std::move(s)` 和 `s` 的 `.data()` 指针相同），
 区别只在资源允不允许被搬走。`std::move(x)` 不创建新对象，它和 x 指的是同一个对象，只是把访问这个对象的表达式从 lvalue 换成了 xvalue。xvalue 是唯一同时落在两组里的类别（既是 glvalue 又是 rvalue）。
 
-## 3. 用代码逐个确认
+## 内置 `&` 的操作数必须是 lvalue
+
+内置取地址符 `&` 的操作数要求是 lvalue，xvalue 虽有身份也不能直接取地址。
+
+此外，引用也必须要求是 lvalue
 
 ```cpp
-#include <string>
-#include <utility>
-
-std::string make();
-
-void demo() {
-    std::string a = "hello";
-    std::string b = a;              // a 是 lvalue：拷贝构造
-    std::string c = make();         // make() 是 prvalue：C++17 起直接在 c 里构造，零拷贝
-    std::string d = std::move(b);   // std::move(b) 是 xvalue：移动构造，b 的内容被偷走
-
-    int&& r = 42;                   // 关键陷阱，见下文
+void ordinary_reference(int &s)
+{
 }
+
+// 这个结果不可以
+// ordinary_reference(12);
 ```
 
-取地址的验证——内置 `&` 的操作数必须是 lvalue（g++ 和 clang++ 都实测过）：
-
-```cpp
-&a;                    // OK：a 是 lvalue
-&make();               // 编译错误：prvalue 没有地址
-&std::move(b);         // 编译错误：xvalue 也不是 lvalue，一样不行
-```
-
-那 xvalue 的“有身份”怎么观察？用成员访问：`std::move(b).data()` 和 `b.data()` 返回同一个指针——move 之后访问的还是原来那个对象，`std::move` 没有创建任何新东西。
-
-### demo：把值类别交给编译器判定
-
-[lvalue-rvalue.cpp](lvalue-rvalue.cpp) 的原理：`decltype((expr))`（双括号，把括号里的东西当表达式求值类别）按值类别把表达式编码成三种类型——lvalue 编码为 `T&`，xvalue 编码为 `T&&`，prvalue 编码为 `T`——再用模板偏特化把名字和两个维度打印出来：
-
-```text
-== leaf categories ==
-i                                      => lvalue   identity=1 movable=0
-*p                                     => lvalue   identity=1 movable=0
-++i                                    => lvalue   identity=1 movable=0
-s                                      => lvalue   identity=1 movable=0
-s[0]                                   => lvalue   identity=1 movable=0
-"hello"                                => lvalue   identity=1 movable=0
-i++                                    => prvalue  identity=0 movable=1
-i + 1                                  => prvalue  identity=0 movable=1
-42                                     => prvalue  identity=0 movable=1
-std::string("temporary")               => prvalue  identity=0 movable=1
-make()                                 => prvalue  identity=0 movable=1
-std::move(s)                           => xvalue   identity=1 movable=1
-static_cast<std::string &&>(s)         => xvalue   identity=1 movable=1
-expiring()                             => xvalue   identity=1 movable=1
-
-== xvalue denotes the same object as the lvalue ==
-s.data()             = 0x7fffbd11d2a0
-std::move(s).data()  = 0x7fffbd11d2a0
-
-== a named rvalue reference is an lvalue ==
-r                                      => lvalue   identity=1 movable=0
-r = 42
-s                                      => lvalue   identity=1 movable=0
-bind(std::string&)
-bind(std::string&&)
-
-== overload resolution ==
-bind(std::string&)
-bind(std::string&&)
-bind(std::string&&)
-bind(const std::string&)
-bind(const std::string&)
-```
-
-（地址每次运行不同，关键在于同一节内两个地址相同。）
-
-值得盯住的几行：
-
-- `"hello"` 是 lvalue：字符串字面量是仅有的“字面量却是 lvalue”的特例（能取地址）；其他字面量如 `42` 是 prvalue。
-- `++i` 是 lvalue 而 `i++` 是 prvalue：前置自增返回引用，后置自增返回临时值。
-- `std::move(s)` 是 xvalue，且 `std::move(s).data() == s.data()`：move 只是换了表达式类别，对象还是那个对象。
-- 第三节的 `r`（声明类型 `int&&`）和 `take()` 内部的形参 `s`（声明类型 `std::string&&`）作为表达式都是 lvalue：`bind(s)` 落到左值引用重载，`bind(std::move(s))` 才落到右值引用重载。
-- 最后一组 `bind(std::move(cs))`：`const std::string` 的 xvalue 类型是 `const std::string&&`，右值引用重载要求非 const 而不可行，最终落到 `const std::string&`——值类别和 const 是两个独立的维度。
-
-## 4. 最重要的一个坑：具名的右值引用是 lvalue
-
-这是理解移动语义的钥匙：
-
-```cpp
-void f(std::string&& s) {   // s 的类型是 std::string&&（右值引用）
-    std::string t = s;      // 但 s 这个表达式是 lvalue！这里是拷贝
-    std::string u = std::move(s); // 想移动必须再 move 一次
-}
-```
-
-规则：**有名字的表达式就是 lvalue，跟它的类型是 `T&` 还是 `T&&` 无关**。类型（`int&&`）描述的是“它能绑定到谁”，值类别（lvalue/rvalue）描述的是“这个表达式本身是什么”。右值引用类型的具名变量，作为表达式是 lvalue——因为它有名字，后面还可能被人继续用，编译器不敢偷它的资源。
-
-## 5. std::move 其实什么都不移动
+## std::move 其实什么都不移动
 
 它只是一个类型转换，运行时是零开销的：
 
@@ -164,68 +70,87 @@ constexpr std::remove_reference_t<T>&& my_move(T&& t) noexcept {
 }
 ```
 
-`std::move(x)` 的全部作用是：把表达式 x 从 lvalue 转换成 xvalue，从而“有资格”调用移动构造/移动赋值。真正的移动发生在移动构造函数里（把源对象的指针拿过来，源置空）。所以：
+这是程序员来告诉编译器，这里需要做一个移动了。
 
-- 对没有移动构造的类型（如 `int`）`std::move` 毫无效果，就是一次拷贝。
-- `std::move` 之后源对象处于“有效但未指定”状态——能析构、能赋新值，但不能假设内容还在。
+## `std::move` 之后源对象处于“有效但未指定”状态——能析构、能赋新值，但不能假设内容还在。
 
-## 6. 引用的绑定规则
+`std::move(x)` 的全部作用是：把表达式 x 从 lvalue 转换成
+xvalue，从而“有资格”调用移动构造/移动赋值。
+真正的移动发生在移动构造函数里（把源对象的指针拿过来，源置空）
 
-```cpp
-void g(std::string& a);         // 左值引用：只绑定 lvalue
-void h(std::string&& b);        // 右值引用：只绑定 rvalue（prvalue 和 xvalue）
-void k(const std::string& c);   // const 左值引用：通吃，lvalue 和 rvalue 都能绑
+对象的资源被移动走之后，源对象仍然是一个正常的对象，但它的具体内容通常没有保证。
 
-std::string s;
-g(s);      // OK
-g(make()); // 错误
-h(s);      // 错误
-h(make()); // OK
-h(std::move(s)); // OK：move 后变 xvalue
-k(s); k(make()); // 都 OK
-```
+先纠正一个容易混淆的点：std::move 本身不会移动任何东西，它只是让表达式可以被当作右值，从而可能调用移动构造或移动赋值。
 
-历史上 `const T&` 就是为了让临时对象能传参而设计的（并会把临时对象的生命周期延长到引用的作用域结束）。C++11 的右值引用解决了它的局限：const 引用绑定的临时对象你没法改，而右值引用可以放心地掏空它。
+std::string a = "hello";
+std::string b = std::move(a);  // 这里的构造操作才真正执行移动
 
-## 7. 转发引用与引用折叠
+此时：
 
-下面这个 `T&&` 看起来是右值引用，其实不是：
+• b 的内容是 "hello"。
+• a 仍然存活，可以析构，也可以重新赋值。
+• 不能依赖 a 的内容仍是 "hello"，也不能通用地假设它一定为空。
 
-```cpp
-template <typename T>
-void f(T&& x);        // 转发引用（forwarding reference，旧称 universal reference）
+“有效”意味着对象仍满足自身的基本约束，可以执行不要求额外前提的操作。例如：
 
-template <typename T>
-void g(std::vector<T>&& x);  // 这才是普通右值引用：不是裸的 T&&
-```
+a.empty();       // 可以检查是否为空
+a.size();        // 可以查询当前长度
+a = "world";    // 可以重新赋值
 
-区分标准：`T&&` 中的 `T` **处于被推导的位置**（裸模板参数、`auto&&`）才是转发引用。传 lvalue 时 `T` 被推导为 `std::string&`，经过引用折叠：
+“未指定”意味着标准没有保证它具体是什么内容。它不是“内存损坏”，也不是“访问它就会产生未定义行为”。
 
-```
-&  &   -> &
-&  &&  -> &
-&& &   -> &
-&& &&  -> &&
-```
+但某些操作有前提，仍然必须先检查：
 
-于是 `f(x)` 传 lvalue 时 `T&&` 折叠成 `std::string&`，传 rvalue 时就是 `std::string&&`——同一个模板两种类型都能收。
+// a.front();   // 如果 a 为空，调用就违反前提
 
-配套的 `std::forward` 负责把值类别还原回去（有条件的 move）：
-
-```cpp
-template <typename T, typename... Args>
-std::unique_ptr<T> make(Args&&... args) {
-    return std::make_unique<T>(std::forward<Args>(args)...);
-    // 调用方传的是 lvalue 就继续按 lvalue 转发（拷贝），传的是 rvalue 就按 rvalue 转发（移动）
+if (!a.empty()) {
+    char c = a.front();  // 检查后可以调用
 }
+
+所以，更准确的理解是：移动后源对象还能用，但要把它当成“当前内容未知”的对象；重新赋值或检查状态之后，再做依赖内容的操作。
+
+另外，这个保证主要适用于标准库类型，且具体类型可能提供更强的保证。例如，std::unique_ptr 移动构造后，源指针保证为空。自己
+写的类则取决于移动操作如何实现。
+
+## 什么时候回产生 rvalue
+
+https://en.cppreference.com/cpp/language/value_category 中的 xvalue 提到了:
+
+归纳成三类本质
+
+类别 A：显式说"这个值可以搬走"
+
+```cpp
+  std::move(x)               // 函数返回 T&&
+  static_cast<int&&>(x)      // cast 成右值引用
+  (int&&)x                   // C 风格 cast 同理
+  g()                        // g 的返回类型是 int&&
 ```
 
-如果这里写成 `std::move(args)...`，所有参数都会被掏空，调用方原来还想用的对象就遭殃了；如果不 cast 直接传 `args...`，又会全部退化为拷贝。
+std::move 就是这类里的一个具体函数，别把它当成单独一种。
 
-更完整的判定规则、推导表、`auto&&` 和常见陷阱见 [forwarding-reference.md](forwarding-reference.md)。
-行为演示见同目录的两个文件：[forward.cpp](forward.cpp) 展示模板推导以及直接传参、`std::move`、`std::forward` 的区别；
-[move-rvalue.cpp](move-rvalue.cpp) 的 `forwarding_reference_demo` 展示转发引用的推导过程
-（传 lvalue 时 `T` 被推导为引用类型），它的 `named_rvalue_reference_demo` 和 `copy_and_move_demo` 则演示第 4、5 节的内容。
+类别 B：从一个右值里"抠"子对象
+
+一个整体都不要了，它的成员/元素自然也"要弃"，所以子对象也是 xvalue：
+
+```cpp
+  std::move(s).m        // 成员访问：对象是右值 → 成员是 xvalue
+  S{}.m                 // prvalue 取成员（先 materialize 再取）
+  std::move(arr)[0]     // 下标：数组是右值 → 元素是 xvalue
+  std::move(s).*p       // 成员指针访问
+```
+
+这条最容易被忽略，但很实用：std::move(s).m 可以把结构体的单个成员搬走，而不动其他成员。
+
+类别 C：组合传播
+
+```cpp
+  true ? std::move(x) : std::move(y)   // 结果跟着操作数走
+```
+
+条件表达式会继承操作数的值类别（粗略说：同为 glvalue 且有一个是 xvalue，结果就是 xvalue）。
+
+
 
 ## 8. 实战建议
 

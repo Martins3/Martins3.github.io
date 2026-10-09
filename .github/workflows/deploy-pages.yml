@@ -48,6 +48,10 @@ jobs:
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
 
+      - name: Build learning tutorials
+        shell: bash
+        run: node docs/learning/build.cjs --publish
+
       - name: Build the Jekyll site
         uses: actions/jekyll-build-pages@v1
         with:

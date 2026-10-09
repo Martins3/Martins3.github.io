@@ -1,4 +1,86 @@
-# C++20 为什么允许用圆括号初始化聚合体
+# aggregate 的初始化
+## 哪些类型是 aggregate
+
+**aggregate（聚合类型）主要有两类：数组，以及符合特定条件的类。** `struct` 和 `class` 都可能是聚合类型，关键在于定义，而不是用哪个关键字。
+
+```cpp
+// 1. 数组
+int arr[] = {1, 2, 3};
+
+// 2. 简单的 struct
+struct Point {
+    int x;
+    int y;
+};
+Point p{1, 2};
+
+// 3. 成员公开的 class：c.cpp 中的 A
+class A {
+public:
+    int a;
+    int b;
+};
+A a{1, 2};
+
+// 4. union 也可能是聚合类型
+union Value {
+    int i;
+    double d;
+};
+Value v{42}; // 初始化第一个成员 i
+```
+
+以 **C++20** 为准，一个类要成为聚合类型，需满足：
+
+- 没有用户声明的构造函数，也没有继承构造函数。
+- 没有 `private` 或 `protected` 的直接非静态数据成员。
+- 没有虚函数。
+- 没有虚基类，也没有 `private` 或 `protected` 基类。
+
+例如，下面这些都不是聚合类型：
+
+```cpp
+struct B {
+    B() = default; // C++20：用户声明了构造函数
+    int x;
+};
+
+class C {
+    int x; // 默认是 private
+};
+
+struct D {
+    virtual void f(); // 有虚函数
+    int x;
+};
+```
+
+而**成员函数、静态成员、成员默认值，并不会自动让类型失去聚合资格**：
+
+```cpp
+struct Point {
+    int x = 0;
+    int y = 0;
+
+    void reset() { x = y = 0; }
+    static constexpr int dimensions = 2;
+};
+
+Point p{1}; // x = 1，y 使用默认值 0
+```
+
+C++17 起可以用 `std::is_aggregate_v<T>` 判断：
+
+```cpp
+#include <type_traits>
+
+static_assert(std::is_aggregate_v<A>);
+static_assert(std::is_aggregate_v<int[3]>);
+```
+
+注意，**能写 `T{...}` 不代表 `T` 是聚合类型**：花括号也可以调用构造函数，例如 `std::string{"hello"}`。聚合初始化只是花括号初始化的一种情况。
+
+## C++20 为什么允许用圆括号初始化聚合体
 
 C++20 不是第一次引入 `()` 初始化。
 类对象早就可以通过圆括号选择构造函数：
@@ -19,7 +101,7 @@ Point a{1, 2}; // C++20 之前就可以
 Point b(1, 2); // C++20 开始可以
 ```
 
-## 1. 要解决的核心问题
+### 1. 要解决的核心问题
 
 直接写 `Point{1, 2}` 已经很方便，
 这个改动为了让聚合体能够通过泛型构造接口原地构造。
@@ -58,7 +140,7 @@ points.emplace_back(3, 4);
 
 这正是 [P0960R3](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p0960r3.html) 的主要设计动机。
 
-## 2. C++17 的绕过办法有什么问题
+### 2. C++17 的绕过办法有什么问题
 
 一种办法是先构造临时聚合体：
 
@@ -86,7 +168,7 @@ struct Point {
 存在用户声明的构造函数会使 `Point` 不再是聚合体。
 为了配合泛型库而被迫放弃聚合体性质，并不合理。
 
-## 3. 为什么不让泛型库统一使用花括号
+### 3. 为什么不让泛型库统一使用花括号
 
 看起来也可以把泛型库改成：
 
@@ -107,11 +189,11 @@ std::vector<int> b{3, 9}; // 两个元素：3, 9
 
 所以正确的兼容方向不是修改所有泛型库，而是让聚合体也接受这些接口一直使用的 `T(args...)` 形式。早期提案 [P0960R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0960r0.html) 对这个问题给出了详细说明。
 
-## 4. 圆括号和花括号并不完全等价
+### 4. 圆括号和花括号并不完全等价
 
 C++20 没有规定把圆括号机械替换成花括号。二者刻意保留了一些不同语义。
 
-### 4.1 窄化转换
+#### 4.1 窄化转换
 
 花括号禁止窄化转换，圆括号允许：
 
@@ -126,7 +208,7 @@ Value b(3.14); // 可以，number 得到 3
 
 因此直接初始化聚合体时，`{}` 通常更安全。
 
-### 4.2 指定成员初始化
+#### 4.2 指定成员初始化
 
 C++20 designated initializer（指定初始化器）只能使用花括号：
 
@@ -136,7 +218,7 @@ Point point{.x = 1, .y = 2};
 
 不存在对应的 `Point(.x = 1, .y = 2)` 写法。
 
-### 4.3 引用成员与临时对象生命周期
+#### 4.3 引用成员与临时对象生命周期
 
 对于聚合体的引用成员，花括号和圆括号的临时对象生命周期不同：
 
@@ -151,7 +233,7 @@ Reference dangling(42); // 临时 int 在本条语句结束时销毁
 
 第二个对象中的引用随后会悬空，因此引用成员尤其应该优先使用花括号。
 
-### 4.4 数组
+#### 4.4 数组
 
 数组也是聚合体，所以 C++20 也允许：
 
@@ -165,7 +247,7 @@ int values[](1, 2, 3);
 int values[]{1, 2, 3};
 ```
 
-## 5. 不会改变原有的拷贝构造含义
+### 5. 不会改变原有的拷贝构造含义
 
 C++20 的设计原则之一是尽量不改变已有 `A(value)` 代码的意义。
 
@@ -187,7 +269,7 @@ A result(source);
 A result(10);
 ```
 
-## 6. 应该选择哪一种
+### 6. 应该选择哪一种
 
 自己直接创建聚合体时，通常优先使用花括号：
 
@@ -213,7 +295,7 @@ auto point = std::make_unique<Point>(1, 2);
 
 > 不是为了替代聚合体的 `{}`，而是为了消除聚合体与泛型原地构造接口之间的不兼容。
 
-## 参考资料
+### 参考资料
 
 - [P0960R3: Allow initializing aggregates from a parenthesized list of values](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p0960r3.html)
 - [P0960R0: 初始提案与库接口动机](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0960r0.html)

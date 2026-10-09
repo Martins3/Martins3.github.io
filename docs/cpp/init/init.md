@@ -256,6 +256,17 @@ auto c = {1, 2, 3}; // std::initializer_list<int>
 - [Default initialization](https://en.cppreference.com/w/cpp/language/default_initialization)
 - [Value initialization](https://en.cppreference.com/w/cpp/language/value_initialization)
 
+## 比想象的还复杂
+
+1. std::initializer_list
+2. {} 和 ()
+3. 不要忘记了，当多出来了 new 关键字之后，这些初始化方法都是如何做的?
+
+4. 有时候真的有点无语:
+
+D() 可能是初始化，也可能
+	C d(A());
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

@@ -1,0 +1,5 @@
+*.o
+*.out
+*.log
+/tmp/
+/trace_output/

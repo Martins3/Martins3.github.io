@@ -2,7 +2,8 @@
 
 void test1()
 {
-	// Since c++11 mutable can be used on a lambda to denote that things captured by value are modifiable (they aren't by default):
+	// Since c++11 mutable can be used on a lambda to denote that
+	// things captured by value are modifiable (they aren't by default):
 	int x = 0;
 	auto f1 = [=]() mutable { x = 42; }; // OK
 	// auto f2 = [=]() { x = 42; }; 错误

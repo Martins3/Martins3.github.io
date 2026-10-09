@@ -1,5 +1,8 @@
 #include <cstring>
 #include <cassert>
+#include <stdio.h>
+#include <stdlib.h>
+
 
 using namespace std;
 
@@ -44,7 +47,7 @@ void A()
 void B()
 {
 	// int * throw = new int[10000000000000];
-	int *no_throw = new (nothrow) int[10000000000000];
+	int *no_throw = new (no_throw) int[10000000000000];
 	if (no_throw == NULL) {
 		printf("%s\n", "malloc failed, but no throw");
 	}

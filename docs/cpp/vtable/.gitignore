@@ -1,0 +1,2 @@
+# g++ -fdump-lang-class 生成的类层次 dump
+*.class

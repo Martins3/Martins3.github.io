@@ -2,7 +2,6 @@
 
 ## 教程与书籍
 - [快速浏览](https://github.com/changkun/modern-cpp-tutorial/blob/master/book/zh-cn/03-runtime.md) : 现代 C++ 中文教程
-- [modern cpp check list](https://github.com/AnthonyCalandra/modern-cpp-features) : 现代 C++ 语言特性清单
 - [Cpp Templates : Complete Guide](https://www.amazon.com/C-Templates-Complete-Guide-2nd/dp/0321714121)
 - https://github.com/parallel101/cppguidebook : 小彭老师领衔编写，现代 C++ 的中文百科全书
 - https://learnmoderncpp.com/

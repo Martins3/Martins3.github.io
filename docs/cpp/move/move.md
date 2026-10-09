@@ -78,6 +78,12 @@ assert(a.empty()); // 不应这样假设
 - 调用不依赖旧内容的操作；
 - 如果类的文档明确规定移动后状态，则按文档使用。
 
+## 我觉得我还是没有办法理解，为什么发明出 xvalue 就可以用来解决 move 语义呢？
+
+## 经典使用就是 
+
+1. thread 中 std::move 到 thread 中去
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

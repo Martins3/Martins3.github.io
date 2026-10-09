@@ -1,6 +1,3 @@
-// https://en.cppreference.com/w/cpp/string/char_traits
-//
-// https://stackoverflow.com/questions/5319770/what-is-the-point-of-stl-character-traits
 #include <cctype>
 #include <iostream>
 #include <string>
@@ -50,6 +47,8 @@ int main()
 
 	// char_traits.cpp:64:45: error: no match for ‘operator==’ (operand types are ‘std::basic_string_view<char8_t, ci_char_traits>’
 	// and ‘std::basic_string_view<wchar_t, ci_char_traits>'
+	//
+	// TODO 这个东西不是有三个参数吗?
 	if (traits_cast<ci_char_traits>(s1) == traits_cast<ci_char_traits>(s2))
 		std::cout << "equal" << std::endl;
 }

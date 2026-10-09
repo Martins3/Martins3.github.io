@@ -2208,7 +2208,8 @@ $x^2-5$ 由 Eisenstein 判别法（取素数 5）在 $QQ$ 上不可约，因此 
 == TODO
 
 bilibili 上还有很多东西可以看看的:
-https://www.bilibili.com/list/ml85366172
+
+五次方程（五）伽罗瓦理论的精髓！正二十面体群不可解
 https://www.bilibili.com/video/BV1sb411b7T6
 
 
@@ -2216,3 +2217,13 @@ https://www.bilibili.com/video/BV1sb411b7T6
 【已吓哭 opus5.5真神降临 群论之美宣传片】 https://www.bilibili.com/video/BV12Zhm6oE6m/?share_source=copy_web&vd_source=42e22c6b2f211ee75c7e2c895faf3c2a
 
 https://news.ycombinator.com/item?id=41255456
+
+== 魔方
+
+https://web.mit.edu/sp.268/www/rubik.pdf
+
+https://www.bilibili.com/video/BV1hJ411p7k6/
+
+https://www.bilibili.com/video/BV1Xs411Q7ob/
+
+https://www.bilibili.com/video/BV1eET3zsEqu/

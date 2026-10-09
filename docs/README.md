@@ -1092,6 +1092,61 @@
 - [Virtio Balloon Kernel 实现](./kernel/mm/virtio-balloon-kernel.md)
 - [Virtio Balloon QEMU 实现](./kernel/mm/virtio-balloon-qemu.md)
 
+## cpp
+- `coroutine/`
+  - [coroutines](./cpp/coroutine/coroutine.md)
+- `cpp-primer/`
+  - [动态内存](./cpp/cpp-primer/12.md)
+  - [19](./cpp/cpp-primer/19.md)
+  - [类](./cpp/cpp-primer/7.md)
+- `effctive-cpp/`
+  - [C++ Core Guidelines 完整规则标题索引](./cpp/effctive-cpp/core-guidelines-index.md)
+  - [C++ Core Guidelines 中文整理](./cpp/effctive-cpp/core-guidelines.md)
+  - [《Effective Modern C++》规则速览](./cpp/effctive-cpp/effective-modern-cpp.md)
+  - [《Effective C++》规则速览](./cpp/effctive-cpp/effective.md)
+  - [cpp rules](./cpp/effctive-cpp/rules.md)
+- `exception/`
+  - [cpp exception 机制](./cpp/exception/except.md)
+- `init/`
+  - [C++20 为什么允许用圆括号初始化聚合体](./cpp/init/aggregate.md)
+  - [emplace_back](./cpp/init/emplace-back.md)
+  - [C++ 初始化梳理](./cpp/init/init.md)
+- `lambda/`
+  - [lambda](./cpp/lambda/lambda.md)
+- `misc/`
+  - [杂记](./cpp/misc/misc.md)
+- `module/`
+  - [C++20 Modules](./cpp/module/module.md)
+- `move/`
+  - [cpp 三/五法则](./cpp/move/3-5-rules.md)
+  - [forwarding reference（转发引用）](./cpp/move/forwarding-reference.md)
+  - [7. 一个反直觉规则：有名字的右值引用是左值](./cpp/move/move-2.md)
+  - [stackoverflow top question](./cpp/move/move.md)
+  - [rvo](./cpp/move/rvo.md)
+  - [1. 直观理解（C 时代的粗糙定义）](./cpp/move/value.md)
+- `oop/`
+  - [方便的工具](./cpp/oop/README.md)
+- `operator/`
+  - [cpp operator](./cpp/operator/README.md)
+- `template/`
+  - [cpp template SFINAE](./cpp/template/SFINAE.md)
+  - [cpp template : using 与 typedef](./cpp/template/alias.md)
+  - [cpp template : concept](./cpp/template/concepts.md)
+  - [cpp template : fold](./cpp/template/fold-expression.md)
+  - [CppTemplateTutorial' Notes](./cpp/template/template.md)
+  - [cpp template :  typename class](./cpp/template/typename-class.md)
+- `trait/`
+  - [trait](./cpp/trait/trait.md)
+- `types-cast/`
+  - [RTTI](./cpp/types-cast/cast.md)
+  - [C++ 类型转换总结](./cpp/types-cast/casts.md)
+- `vtable/`
+  - [C++ vtable 与 RTTI 布局](./cpp/vtable/vtable.md)
+- [用 Clang 和 GCC 观察 C++ 的隐式行为与实现](./cpp/compiler-inspection.md)
+- [cpp RAII](./cpp/raii.md)
+- [C++ 资源](./cpp/resource.md)
+- [version](./cpp/version.md)
+
 <!-- BEGIN AUTO DOCS INDEX -->
 ## 自动文档索引
 
@@ -1211,59 +1266,16 @@
   - [Podman 使用指南](./container/podman.md)
   - [docker 代理的方法](./container/proxy.md)
 - `cpp/`
-  - `coroutine/`
-    - [coroutines](./cpp/coroutine/coroutine.md)
-  - `cpp-primer/`
-    - [动态内存](./cpp/cpp-primer/12.md)
-    - [19](./cpp/cpp-primer/19.md)
-    - [类](./cpp/cpp-primer/7.md)
-  - `effctive-cpp/`
-    - [C++ Core Guidelines 完整规则标题索引](./cpp/effctive-cpp/core-guidelines-index.md)
-    - [C++ Core Guidelines 中文整理](./cpp/effctive-cpp/core-guidelines.md)
-    - [《Effective Modern C++》规则速览](./cpp/effctive-cpp/effective-modern-cpp.md)
-    - [《Effective C++》规则速览](./cpp/effctive-cpp/effective.md)
-    - [cpp rules](./cpp/effctive-cpp/rules.md)
-  - `exception/`
-    - [cpp exception 机制](./cpp/exception/except.md)
   - `init/`
-    - [C++20 为什么允许用圆括号初始化聚合体](./cpp/init/aggregate.md)
-    - [emplace_back](./cpp/init/emplace-back.md)
-    - [C++ 初始化梳理](./cpp/init/init.md)
-  - `lambda/`
-    - [lambda](./cpp/lambda/lambda.md)
-  - `misc/`
-    - [杂记](./cpp/misc/misc.md)
-  - `module/`
-    - [C++20 Modules](./cpp/module/module.md)
+    - [cpp std::initializer_list](./cpp/init/list.md)
   - `move/`
-    - [cpp 三/五法则](./cpp/move/3-5-rules.md)
-    - [万能引用（转发引用）](./cpp/move/forwarding-reference.md)
-    - [7. 一个反直觉规则：有名字的右值引用是左值](./cpp/move/move-2.md)
-    - [stackoverflow top question](./cpp/move/move.md)
-    - [rvo](./cpp/move/rvo.md)
-    - [1. 直观理解（C 时代的粗糙定义）](./cpp/move/value.md)
-  - `oop/`
-    - [方便的工具](./cpp/oop/README.md)
-  - `operator/`
-    - [cpp operator](./cpp/operator/README.md)
-  - `template/`
-    - [cpp template SFINAE](./cpp/template/SFINAE.md)
-    - [cpp template : using 与 typedef](./cpp/template/alias.md)
-    - [cpp template : concept](./cpp/template/concepts.md)
-    - [cpp template : fold](./cpp/template/fold-expression.md)
-    - [CppTemplateTutorial' Notes](./cpp/template/template.md)
-    - [cpp template :  typename class](./cpp/template/typename-class.md)
-  - `trait/`
-    - [trait](./cpp/trait/trait.md)
-  - `types-cast/`
-    - [RTTI](./cpp/types-cast/cast.md)
-    - [C++ 类型转换总结](./cpp/types-cast/casts.md)
-  - `vtable/`
-    - [C++ vtable 与 RTTI 布局](./cpp/vtable/vtable.md)
-  - [用 Clang 和 GCC 观察 C++ 的隐式行为与实现](./cpp/compiler-inspection.md)
-  - [cpp RAII](./cpp/raii.md)
-  - [C++ 资源](./cpp/resource.md)
-  - [version](./cpp/version.md)
+    - [绑定](./cpp/move/binding.md)
+  - `namespace/`
+    - [C++ namespace](./cpp/namespace/README.md)
+  - `smart-pointer/`
+    - [智能指针：从“谁来 delete”到链表的所有权](./cpp/smart-pointer/README.md)
+  - [cppman](./cpp/tools.md)
+  - [为什么我在 2026 年依旧学习 c++](./cpp/why.md)
 - `cpu/`
   - `boom/`
     - [BOOM 微架构学习(1)——取指单元与分支预测](./cpu/boom/doc.md)
@@ -1736,7 +1748,6 @@
   - [hid](./kernel/hid.md)
   - [基本启动流程](./kernel/init.md)
   - [总结常用的 kernel cmdline](./kernel/kernel-parameters.md)
-  - [内核学习经验 : 进阶版](./kernel/learn-linux-kernel-v2.md)
   - [livepatch](./kernel/livepatch.md)
   - [dracut 这个警告有意思](./kernel/microcode.md)
   - [杂记](./kernel/misc.md)
@@ -1805,6 +1816,14 @@
   - [资源](./language/lua.md)
   - [Nim](./language/nim.md)
   - [教程](./language/tex.md)
+- `learn/`
+  - [内核学习经验 : 进阶版](./learn/learn-kernel-v2.md)
+- `learning/`
+  - `BV17t411j7Qr/`
+    - [羽毛球基础精要：15 P 学习笔记](./learning/BV17t411j7Qr/README.md)
+  - `BV1n8411d7SL/`
+    - [饥荒开局笔记](./learning/BV1n8411d7SL/README.md)
+  - [视频学习教程](./learning/README.md)
 - `linux/`
   - `fedora/`
     - `wecom-notify-bridge/`

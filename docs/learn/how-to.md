@@ -246,6 +246,13 @@ AI 的确可以重塑学习方法，如果看一个文档，会非常的痛苦�
 ### 既然 codex 做网页的能力这么强，那么显然可以利用 codex 做各种网页
 来辅助理解。
 
+## 的确，目前看，回忆就是最高效的
+
+我看数学也就是记住所有的可能，在思考的时候，直复用之前的结果，
+无需推理就可以了。
+
+回忆加上草稿纸也是非常方便的。
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

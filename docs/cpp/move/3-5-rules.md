@@ -16,12 +16,24 @@ As long as you stay away from raw pointer members, the rule of three is unlikely
 
 ## 继续
 
-为了 explicit 或者 implict 的控制一个类的对象的拷贝，移动，赋值，销毁，定义了五个特殊成员函数:
-1. copy constructor
-2. copy assignment constructor
-3. move constructor
-4. move assignment constructor
-5. destrutor
+为了控制类对象的拷贝、移动、赋值和销毁，五法则关注以下五种特殊成员函数：
+
+1. copy constructor：拷贝构造函数，`A(const A &other)`。
+2. copy assignment operator：拷贝赋值运算符，`A &operator=(const A &other)`。
+3. move constructor：移动构造函数，`A(A &&other)`。
+4. move assignment operator：移动赋值运算符，`A &operator=(A &&other)`。
+5. destructor：析构函数，`~A()`。
+
+这里只有拷贝构造函数和移动构造函数是构造函数：它们创建新对象；赋值运算符修改已经存在的对象。
+
+```cpp
+A b = a;             // 拷贝构造：创建 b
+b = a;               // 拷贝赋值：b 已经存在
+A c = std::move(a);   // 移动构造：创建 c
+c = std::move(b);     // 移动赋值：c 已经存在
+```
+
+C++ 的特殊成员函数还包括默认构造函数（例如 `A()`），共六类。五法则关注其中与资源管理相关的上述五类，不包含默认构造函数。
 
 - 直接初始化 和 拷贝初始化，拷贝赋值
   - 拷贝赋值最容易区分，区别在于这个对象是否已经存在, 而不是在于是否使用等于号 [^1]
@@ -54,8 +66,6 @@ or const volatile T&‍, and either there are no other parameters, or the rest o
 > 在赋值运算符中使用 swap 的方法是更加好的，但是实现的前提是正确的实现了拷贝构造函数。因为其中自动发生了一次拷贝构造。
 
 除了性能因素，使用移动的另一个原因是 IO 和 unique_ptr 这种类不能共享资源。
-
-- [ ] move 相关的先找资料，然后到时候重看一次
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

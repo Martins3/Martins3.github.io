@@ -43,26 +43,6 @@ append 速度远大于压缩速度，信息债越积越多，我发现在笔记�
 
 如何直接制作想法出来?
 
-## 耕地机计划
-
-### 2. 基本经典的书籍
-
-1. perfbook
-2. eac
-3. CPU 设计的一系列的小册子
-5. 各种数学书之类的东西
-
-### 3. 经典的论文合集
-
-就是这个东西了:
-- https://papers.cool/ 就是这个东西了
-	- https://github.com/bojone/papers.cool
-
-https://github.com/AmberLJC/LLMSys-PaperList
-
-### 利用的工具
-
-
 ## 现在不用关心
 https://github.com/Lum1104/Understand-Anything/blob/main/READMEs/README.zh-CN.md
 受 [7days-golang](https://github.com/geektutu/7days-golang) 启发。

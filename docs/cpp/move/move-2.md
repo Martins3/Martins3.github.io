@@ -36,7 +36,7 @@ void f(std::string&& value);
 
 这里类型已经确定为 std::string，只接受右值。
 
-下面这种特殊形式叫 forwarding reference，过去常称 universal reference：
+下面这种特殊形式叫 forwarding reference（转发引用）：
 
 template<class T>
 void wrapper(T&& value);
