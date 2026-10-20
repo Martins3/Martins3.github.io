@@ -312,6 +312,16 @@ VHOST_USER_PROTOCOL_F_INFLIGHT_SHMFD = 12
     虽然也是 bit 12，但在另一张位图里，与 BLK_F_MQ 完全不同
 ```
 
+## 特殊 feautre 逐个分析
+
+### back-end-communication
+https://www.qemu.org/docs/master/interop/vhost-user.html#back-end-communication
+
+支持后端主动向 QEMU 发请求，对应
+1. VHOST_USER_PROTOCOL_F_BACKEND_REQ（bit 5）。QEMU
+在这种交互中负责处理请求。
+2. BACKEND_SEND_FD（bit 10 : 允许后端在反向请求中附带 FD。
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

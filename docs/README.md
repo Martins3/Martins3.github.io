@@ -220,6 +220,7 @@
 - [应急救护 : 深圳市直机关党员应急能力培训](./chores/emergency-medical-care.md)
 
 ## 数学
+- [三阶魔方入门：从原理到七步复原](./math/cube/index.html)
 - [数学全景图：概念、领域与它们的联系](./math/atlas/index.html)
 - [为什么我决定重新学习数学了](./math/notes/math.md)
 
@@ -474,13 +475,13 @@
 
 ### bios
 
+- [smbios](./qemu/bios/smbios.md)
 - [QEMU 中的 seabios : 地址空间](./qemu/bios/bios-memory.md)
 - [如何调试 seabios](./qemu/bios/debug.md)
 - [QEMU 中的 seabios : fw_cfg](./qemu/bios/fw_cfg.md)
 - [QEMU 如何加载 Linux kernel image](./qemu/bios/load-kernel-image.md)
 - [qboot](./qemu/bios/qboot.md)
 - [seabios](./qemu/bios/seabios.md)
-- [smbios](./qemu/bios/smbios.md)
 
 ### block
 
@@ -888,8 +889,8 @@
 - [tmux](./kernel/tty/tmux.md)
 - [非典型使用](./kernel/tty/win.md)
 
-
 ### 有趣
+
 - [uefi 是可以把 grub 显示到 stdio 的](./kernel/tty/fun/1.md)
 - [我发现内核中存在日志](./kernel/tty/fun/3.md)
 - [同时所有的程序都可以接受消息 ?](./kernel/tty/fun/broadcast.md)
@@ -910,11 +911,13 @@
 - [vcs](./kernel/tty/hw/vcs.md)
 - [tty2 如何关联上 gnome 的](./kernel/tty/hw/vt-tty2.md)
 - [vt](./kernel/tty/hw/vt.md)
+
 ### pts
 - [n_tty](./kernel/tty/pty/n_tty.md)
 - [alacritty 的 PTY 之路:pts 的 master 到底在谁手里](./kernel/tty/pty/pty-alacritty.md)
 - [pty driver](./kernel/tty/pty/pty-driver.md)
 - [pty](./kernel/tty/pty/pty.md)
+
 ### session
 - [在本机观察 session、进程组和控制终端](./kernel/tty/session-demo/README.md)
 
@@ -929,6 +932,30 @@
 - [nvim 为什么必须借助 tmux 才可以拷贝，](./kernel/tty/vim/osc52.md)
 - [为什么内部的 ssh 有时候需要添加上这个](./kernel/tty/vim/terminfo.md)
 - [TODO 那么为什么我发现在 vim 使用的 terminal 和普通的有点不同的?](./kernel/tty/vim/vim.md)
+
+## cstate && pstate
+
+- [cstate](./kernel/power/cstate/cstate.md)
+- [pstate](./kernel/power/pstate/basic.md)
+- [cstate pstate 相关的工具](./kernel/power/tools.md)
+- [linux suspend 机制](./kernel/power/cstate/suspend/1.md)
+- [firmware 对于 cstate 的影响](./kernel/power/cstate/firmware.md)
+- [如何获取到 CPU 频率](./kernel/power/pstate/freq.md)
+- [intel pstate 有无 hwp 的差别](./kernel/power/pstate/intel-pstate-on-i9-13900k.md)
+- [acpi pad](./kernel/power/acpi_pad.md)
+- [doc](./kernel/power/doc.md)
+- [cstate 和 pstate 基础](./kernel/power/overview.md)
+- [pm_qos](./kernel/power/pm_qos.md)
+- [schedutil](./kernel/power/schedutil.md)
+- [thermal-throttle](./kernel/power/thermal-throttle.md)
+- [haltpoll](./kernel/power/kvm-haltpoll.md)
+- [kvm mwait](./kernel/power/kvm-mwait.md)
+
+- 高级话题
+  - [epb](./kernel/power/advance/intel-epb.md)
+  - [intel-sst](./kernel/power/advance/intel-sst.md)
+  - [uncore](./kernel/power/advance/intel-uncore.md)
+
 
 ## 整理中
 
@@ -1227,6 +1254,8 @@
   - [反向开票](./chores/financial.md)
   - [电吉他](./chores/guitar.md)
   - [手工](./chores/handicrafts.md)
+  - [社会生存小知识](./chores/live.md)
+  - [如何协作](./chores/manage.md)
   - [医疗](./chores/medical.md)
   - [音乐](./chores/music.md)
   - [基本](./chores/photo.md)
@@ -1267,15 +1296,29 @@
   - [docker 代理的方法](./container/proxy.md)
 - `cpp/`
   - `init/`
+    - `dynamic/`
+      - [这里的东西](./cpp/init/dynamic/dynamic.md)
+    - [比想象的还复杂](./cpp/init/init-2.md)
     - [cpp std::initializer_list](./cpp/init/list.md)
+    - [value initialization 和 default initialization](./cpp/init/value-2.md)
+    - [值初始化为什么存在，以及它和默认初始化的关系](./cpp/init/value-vs-default.md)
   - `move/`
     - [绑定](./cpp/move/binding.md)
   - `namespace/`
     - [C++ namespace](./cpp/namespace/README.md)
   - `smart-pointer/`
     - [智能指针：从“谁来 delete”到链表的所有权](./cpp/smart-pointer/README.md)
+  - `template/`
+    - `trait/`
+      - [trait](./cpp/template/trait/trait.md)
+    - `two-phase/`
+      - [Two-phase name lookup](./cpp/template/two-phase/two-phase.md)
+    - [还是用这个作为一个阅读的入口吧](./cpp/template/README.md)
+  - [C++ 关键字全览与组合关系：类、函数、继承及类外用法](./cpp/keyword-interactions.md)
+  - [各种定义的嵌套关系](./cpp/nested-relation.md)
+  - [就这个了](./cpp/stl.md)
   - [cppman](./cpp/tools.md)
-  - [为什么我在 2026 年依旧学习 c++](./cpp/why.md)
+  - [为什么我在 2026 年学习 c++](./cpp/why.md)
 - `cpu/`
   - `boom/`
     - [BOOM 微架构学习(1)——取指单元与分支预测](./cpu/boom/doc.md)
@@ -1313,11 +1356,47 @@
       - [Historical Perspective and Reference](./cpu/sys/Quantitative/M.md)
       - [Chapter 2](./cpu/sys/Quantitative/Quantitative.md)
       - [plans](./cpu/sys/Quantitative/plans.md)
+    - `SLCA/`
+      - [入门](./cpu/sys/SLCA/1.md)
+      - [2 Cache](./cpu/sys/SLCA/2.md)
+      - [指令读取](./cpu/sys/SLCA/3.md)
+      - [解码](./cpu/sys/SLCA/4.md)
+      - [Allocation](./cpu/sys/SLCA/5.md)
+      - [第六章　发射](./cpu/sys/SLCA/6.md)
+      - [第7章 执行](./cpu/sys/SLCA/7.md)
+      - [第8章　提交](./cpu/sys/SLCA/8.md)
+      - [readme](./cpu/sys/SLCA/readme.md)
     - `cs252/`
       - [1 intruction](./cpu/sys/cs252/lecture.md)
     - `fpga/`
       - [hdlbits](./cpu/sys/fpga/setup.md)
-    - [dram](./cpu/sys/dram.md)
+    - `yao/`
+      - `Ch01/`
+        - [第 1 章 超标量处理器概览](./cpu/sys/yao/Ch01/Ch01.md)
+      - `Ch02/`
+        - [第 2 章 Cache](./cpu/sys/yao/Ch02/Ch02.md)
+      - `Ch03/`
+        - [第 3 章 虚拟存储器](./cpu/sys/yao/Ch03/Ch03.md)
+      - `Ch04/`
+        - [第 4 章 分支预测](./cpu/sys/yao/Ch04/Ch04.md)
+      - `Ch05/`
+        - [第 5 章 指令集体系](./cpu/sys/yao/Ch05/Ch05.md)
+      - `Ch06/`
+        - [第 6 章 指令解码](./cpu/sys/yao/Ch06/Ch06.md)
+      - `Ch07/`
+        - [第 7 章 寄存器重命名](./cpu/sys/yao/Ch07/Ch07.md)
+      - `Ch08/`
+        - [第 8 章 发射](./cpu/sys/yao/Ch08/Ch08.md)
+      - `Ch09/`
+        - [第 9 章 执行](./cpu/sys/yao/Ch09/Ch09.md)
+      - `Ch10/`
+        - [第 10 章 提交](./cpu/sys/yao/Ch10/Ch10.md)
+      - `Ch11/`
+        - [第 11 章 真实世界的例子：Alpha 21264 处理器](./cpu/sys/yao/Ch11/Ch11.md)
+      - `study/`
+        - [学习辅助](./cpu/sys/yao/study/README.md)
+      - [超标量处理器设计](./cpu/sys/yao/README.md)
+    - [LPDDR5X 也是推理的显存速度](./cpu/sys/dram.md)
     - [gem5](./cpu/sys/gem5.md)
     - [问题](./cpu/sys/question.md)
     - [计划就是，首先理解软件层的指令集的含义，然后再去处理怎么写](./cpu/sys/sys-route.md)
@@ -1329,10 +1408,13 @@
   - [MIPS R10000 的设计](./cpu/mipsR10000.md)
   - [芯片设计相关资料汇总](./cpu/overview.md)
   - [Reorder Buffer (ROB)](./cpu/rob.md)
+  - [rsicv](./cpu/rsicv.md)
   - [Scala 基础语法学习](./cpu/scala.md)
   - [芯片设计中两个关键设备](./cpu/smart-dev.md)
   - [CPU ARCH : 进入到 store buffer 意味着已经 commit 了吗?](./cpu/store-buffer.md)
   - [访存子系统](./cpu/xiangshan.md)
+- `cxl/`
+  - [CXL 技术资料](./cxl/readme.md)
 - `games/`
   - [在 Linux kernel 上如何玩游戏](./games/kernel.md)
   - [SteamOS](./games/steam.md)
@@ -1390,6 +1472,8 @@
     - [sata](./kernel/blk/sata.md)
     - [Zoned block devices](./kernel/blk/zone-device.md)
   - `cgroup/`
+    - `sched.code/`
+      - [cgroup sched 在多核上的分布](./kernel/cgroup/sched.code/readme.md)
     - [cgroup](./kernel/cgroup/cgroup-blk.md)
     - [cpuset](./kernel/cgroup/cgroup-cpuset.md)
     - [cgroup ebpf](./kernel/cgroup/cgroup-ebpf.md)
@@ -1433,6 +1517,8 @@
   - `fs/`
     - `code/`
       - [unlink() 和 remove()](./kernel/fs/code/unlink-remove.md)
+    - `journal/`
+      - [XFS 与 ext4 的 journal 设计对比](./kernel/fs/journal/compare.md)
     - `nfs/`
       - `sunrpc/`
         - [README](./kernel/fs/nfs/sunrpc/README.md)
@@ -1512,6 +1598,13 @@
     - [ipi](./kernel/irq/ipi.md)
     - [trigger](./kernel/irq/trigger.md)
     - [x86 的 arch/x86/kernel/apic/vector.c](./kernel/irq/vector.md)
+  - `lpc/`
+    - [ftrace with args](./kernel/lpc/2021.md)
+    - [LoongArch: What we will do next](./kernel/lpc/2022.md)
+    - [Speeding up Kernel Testing and Debugging with virtme-ng](./kernel/lpc/2023.md)
+    - [2024](./kernel/lpc/2024.md)
+    - [2025](./kernel/lpc/2025.md)
+    - [LPC](./kernel/lpc/Readme.md)
   - `lsfmmbpf/`
     - [2023](./kernel/lsfmmbpf/2023.md)
     - [2024](./kernel/lsfmmbpf/2024.md)
@@ -1537,6 +1630,8 @@
     - [内核模块](./kernel/module/README.md)
   - `ospm/`
     - [2025](./kernel/ospm/2025.md)
+  - `power/`
+    - [sysfs cpu](./kernel/power/sysfs.md)
   - `release/`
     - [kernel release](./kernel/release/README.md)
   - `sched/`
@@ -1667,6 +1762,8 @@
     - [soft lockup](./kernel/time/watchdog.md)
     - [CLOCK_MONOTONIC 和 CLOCK_MONOTONIC_RAW 的区别在于](./kernel/time/yes-we-know.md)
   - `tty/`
+    - `readline/`
+      - [GNU Readline 交互式 demo](./kernel/tty/readline/readme.md)
     - `vim/`
       - [termios](./kernel/tty/vim/termios.md)
     - `virtio-port-demo/`
@@ -1747,17 +1844,19 @@
   - [kernel-recipes 2025](./kr/2025.md)
 - `kvm/`
   - `emulate/`
-    - [分析 x86_emulate_instruction 大致路径](./kvm/emulate/3.md)
     - [opcode_table 的使用位置](./kvm/emulate/details.md)
-    - [x86 KVM 为什么需要指令模拟](./kvm/emulate/emulate-2.md)
+    - [4. 除了 MMIO，还有哪些场景](./kvm/emulate/emulate-2.md)
+    - [svm_check_emulate_instruction](./kvm/emulate/emulate-advance.md)
     - [msr](./kvm/emulate/msr.md)
-    - [到底是什么在触发](./kvm/emulate/type.md)
   - `hypercall/`
     - [KVM hypercall](./kvm/hypercall/hypercall.md)
   - `hyperv/`
+    - [为什么我的 windows 每隔几个小时就会卡死?](./kvm/hyperv/debug.md)
+    - [GPUf](./kvm/hyperv/gpu.md)
     - [Hyperv Enlightment](./kvm/hyperv/hyperv-pv.md)
     - [HyperV](./kvm/hyperv/hyperv.md)
     - [hyper-v 基本使用](./kvm/hyperv/in-hyperv-manager.md)
+    - [wsl](./kvm/hyperv/wsl.md)
   - `int/`
     - [dm 是什么意思 ?](./kvm/int/1.md)
   - `kvm-forum/`
@@ -1771,6 +1870,8 @@
   - `mmu/`
     - [pfncache.c](./kvm/mmu/pfncache.md)
     - [spp](./kvm/mmu/spp.md)
+  - `request-tracing-2026-10-04/`
+    - [KVM request 机制与动态跟踪调查](./kvm/request-tracing-2026-10-04/README.md)
   - `vmcs/`
     - [VMCS / VMCB 字段地图](./kvm/vmcs/README.md)
   - [高级话题](./kvm/advance.md)
@@ -1799,7 +1900,7 @@
   - `BV17t411j7Qr/`
     - [羽毛球基础精要](./learning/BV17t411j7Qr/README.md)
   - `BV1n8411d7SL/`
-    - [饥荒开局：采集 → 科技 → 装备](./learning/BV1n8411d7SL/README.md)
+    - [饥荒新手指南：从开荒到季节、战斗与经营](./learning/BV1n8411d7SL/README.md)
   - [视频学习教程](./learning/README.md)
 - `linux/`
   - `fedora/`
@@ -1861,6 +1962,8 @@
   - `basic/`
     - `complex/`
       - [首次使用](./math/basic/complex/env.md)
+  - `cube/`
+    - [三阶魔方入门](./math/cube/README.md)
 - `net/`
   - `dccp/`
     - `dccp/`
@@ -1928,7 +2031,7 @@
   - [ipvlan](./net/ipvlan.md)
   - [ipvs](./net/ipvs.md)
   - [网络杂谈](./net/kernel-hacking.md)
-  - [lb](./net/lb.md)
+  - [ipvs](./net/lb.md)
   - [lldp](./net/lldp.md)
   - [LWT（Light Weight Tunnel）是什么?](./net/lwt.md)
   - [macvlan](./net/macvlan.md)
@@ -1966,7 +2069,7 @@
   - [net: raw socket](./net/raw-socket.md)
   - [rds](./net/rds.md)
   - [RxRPC](./net/rxrpc.md)
-  - [scm](./net/scm.md)
+  - [unix domain 分析](./net/scm.md)
   - [sctp](./net/sctp.md)
   - [smart-nic](./net/smart-nic.md)
   - [snmp](./net/snmp.md)
@@ -1975,7 +2078,7 @@
   - [sockmap](./net/sockmap.md)
   - [ssh](./net/ssh.md)
   - [stp](./net/stp.md)
-  - [sunrpc](./net/sunrpc.md)
+  - [rpc](./net/sunrpc.md)
   - [switch](./net/switch.md)
   - [tc 和 tcp congestion control](./net/tc.md)
   - [tcp ip syn](./net/tcp-ip-syn.md)
@@ -2003,6 +2106,7 @@
   - [虚拟机中为什么会有 rescan 的操作](./pci/debug.md)
   - [内核中关于 dma 的几个目录做什么的](./pci/dma.md)
   - [pci](./pci/doc.md)
+  - [pcie 硬件基础](./pci/hw.md)
   - [Linux Kernel 如何管理 PCIe 设备](./pci/kernel.md)
   - [问题](./pci/lab-2.md)
   - [question](./pci/lab-3.md)
@@ -2057,6 +2161,8 @@
         - [libbpf-rs demo](./trace/ebpf/code/libbpf-rs-demo/README.md)
     - [libbpf-tools](./trace/ebpf/libbpf-tools.md)
   - `gpu/`
+    - `intel/`
+      - [Intel 核显的 syscall 抓取](./trace/gpu/intel/README.md)
     - [Nsight Systems / Nsight Compute 实验](./trace/gpu/README.md)
   - `tools/`
     - [计划和代办](./trace/tools/README.md)
@@ -2077,7 +2183,6 @@
     - [其他](./uefi/firmware/version.md)
   - [rust-hypervisor-firmware](./uefi/boot.md)
   - [core n100 ，启动!](./uefi/coreboot.md)
-  - [dmi](./uefi/dmi.md)
   - [为什么内核中存在这么多 efi 相关的东西](./uefi/kernel.md)
   - [使用 qemu 来理解 boot 机器](./uefi/qemu-boot.md)
   - [uboot](./uefi/uboot.md)
@@ -2093,7 +2198,6 @@
   - [gvisor](./virt/gvisor.md)
   - [jailhouse](./virt/jailhouse.md)
   - [misc](./virt/misc.md)
-  - [应该测试一下 wsl 的东西](./virt/wsl.md)
 - `virtio/`
   - [virtio packed ring](./virtio/packed-ring.md)
   - [virtio-iommu](./virtio/virtio-iommu.md)

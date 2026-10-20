@@ -85,7 +85,7 @@ function prepare_devices() {
 
 	cleanup_devices
 
-	mkdir -p "$WORK_ROOT" "$TMP_ROOT"
+	mkdir -p "$WORK_ROOT" "$TMP_ROOT" "$TEST_DIR" "$SCRATCH_MNT"
 	rm -f "$TEST_IMAGE" "$SCRATCH_IMAGE" "$LOGWRITES_IMAGE"
 	truncate -s "$test_image_size" "$TEST_IMAGE"
 	truncate -s "$scratch_image_size" "$SCRATCH_IMAGE"

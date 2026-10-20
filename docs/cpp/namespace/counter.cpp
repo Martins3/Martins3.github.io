@@ -1,10 +1,18 @@
 #include "counter.hpp"
 
-namespace {
+namespace
+{
 int count = 0;
-int increment() { return ++count; }
+int increment()
+{
+	return ++count;
+}
 }
 
-namespace tutorial {
-int next() { return increment(); }
+namespace tutorial
+{
+int next()
+{
+	return increment();
+}
 }

@@ -308,25 +308,6 @@ def patch_generic_492(path: Path) -> None:
     path.write_text(text)
 
 
-def patch_generic_558(path: Path) -> None:
-    text = path.read_text()
-    needle = """for ((i = 0; i < nr_cpus; i++)); do
-\tcreate_file $SCRATCH_MNT/testdir $files_per_dir $i >>$seqres.full 2>&1 &
-done
-"""
-    replacement = """for ((i = 0; i < nr_cpus; i++)); do
-\t# Keep each worker below SimpleFS' on-disk per-directory limit while
-\t# preserving this test's purpose: exhaust every inode concurrently.
-\tmkdir -p "$SCRATCH_MNT/testdir/$i"
-\tcreate_file "$SCRATCH_MNT/testdir/$i" $files_per_dir $i >>$seqres.full 2>&1 &
-done
-"""
-    text = replace_once(
-        text, needle, replacement, "generic/558 per-directory capacity"
-    )
-    path.write_text(text)
-
-
 def patch_generic_620(path: Path) -> None:
     text = path.read_text()
     needle = "_require_scratch_16T_support\n"
@@ -350,7 +331,6 @@ def main() -> None:
     patch_generic_735(root / "tests/generic/735")
     patch_generic_746(root / "tests/generic/746")
     patch_generic_492(root / "tests/generic/492")
-    patch_generic_558(root / "tests/generic/558")
     patch_generic_620(root / "tests/generic/620")
 
 

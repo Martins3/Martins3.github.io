@@ -167,7 +167,7 @@ class WindowsProfile:
 
     def _setup_machine(self, argv: list[str]) -> None:
         if self.vm.config.options.get("win") == "11":
-            argv.extend(["-machine", "q35,smm=on"])
+            argv.extend(["-machine", "q35,smm=on,hpet=off"])
             return
         self.common.setup_machine(argv)
 
@@ -243,7 +243,7 @@ class WindowsProfile:
             [
                 "-cpu",
                 "host,hv_spinlocks=0x1fff,hv_vapic,hv_time,hv_reset,"
-                "hv_vpindex,hv_runtime,hv_relaxed",
+                "hv_vpindex,hv_runtime,hv_relaxed,hv_synic=on,hv_stimer=on",
             ]
         )
 

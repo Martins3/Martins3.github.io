@@ -24,8 +24,7 @@ xfstests patch，格式 capability 变化也不需要碰设备清理代码。
 - `s_needs_recovery` log-state probe；
 - legacy mount wrapper；
 - 492、620、735、746 的真实 capability guard；
-- 558 在多个子目录中并发耗尽 inode，避免单个 worker 目录超过磁盘格式的
-  40,920 项上限。
+- generic/558 保持上游单目录并发耗尽 inode 的工作负载，新的目录索引不再需要分目录适配。
 
 `patch.py` 可以连续执行，第二次不应继续改变文件。上游 needle 消失时它应失败并
 要求人工检查，而不是静默跳过，这能及时发现 xfstests 升级导致的适配失效。
@@ -71,11 +70,6 @@ timeout 124 是 TIMEOUT；其他返回是 FAIL。任意 FAIL/TIMEOUT 会使 runn
 3. 所有 patch 幂等，needle 不匹配时 fail closed；
 4. 先在临时原始文件副本上执行两次并比较哈希；
 5. 通过 shellcheck、shfmt、Python syntax，再在 guest 跑至少一个真实 case。
-
-`generic/558` 仍然创建到 inode 耗尽，并没有降低操作数量。适配器只把各 worker 的
-文件放进独立子目录：上游测试的目标是验证全局 inode ENOSPC，而不是要求单目录
-容纳超过文件系统格式上限的条目。若把它直接 NOTRUN，就会丢失真正有价值的 inode
-位图、计数和并发分配覆盖。
 
 `generic/620` 要求在 17 TiB dm-huge-disk 上 mkfs。SimpleFS 的 `nr_blocks`、
 `s_journal_start` 和所有物理块引用都是 32 位，4 KiB block 下卷上限小于 16 TiB；

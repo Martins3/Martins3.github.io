@@ -549,6 +549,10 @@ config MSHV_ROOT
 实在是有点看不懂:
 https://docs.microsoft.com/en-us/virtualization/hyper-v-on-windows/reference/hyper-v-architecture
 
+## doc
+https://github.com/MicrosoftDocs/Virtualization-Documentation
+https://learn.microsoft.com/en-us/virtualization/hyper-v-on-windows/tlfs/tlfs
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

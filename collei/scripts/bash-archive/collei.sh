@@ -2247,11 +2247,6 @@ function setup_display() {
 		arg_display=" -device virtio-gpu-pci "
 		return
 	fi
-
-	# 这两个可以同时配置的
-	# -vga none \
-	# -device virtio-vga-gl,xres=2048,yres=1152 \
-	# -display sdl,gl=on \
 }
 
 arg_virtio_dummy=""
@@ -2887,22 +2882,6 @@ function setup_pidfile() {
 }
 
 
-function setup_misc() {
-	# 参考 qemu-options.hx
-	# -no-user-config 的含义，看 qemu_read_default_config_file ，就可以通过一个文件来加载
-	# -nodefaults : 不要添加一些默认的设备
-	arg_misc="-no-user-config"
-	arg_misc+=" -nodefaults"
-	# debug-threads=on 在 gdb 中就可以看到每一个 thread 的名称了，不然全部都是 qemu
-	arg_misc+=" -name guest=martins3,debug-threads=on"
-	# arg_misc+=" -overcommit cpu-pm=on"
-	# arg_misc+=" -object event-loop-base"
-	# arg_misc+=" -object throttle-group,id=group1"
-	# 如果添加这个参数，shutdown 之后，qemu 进程不会消失
-	# arg_misc+=" -no-shutdown"
-	# arg_misc+=" -no-hpet"
-}
-
 # 也许这是最佳的办法了
 # 1. 让 virtio-scsi 作为 scsi 的 scsi1.0
 # 2. 让所有的channel=0 ，然后 lun 按照顺序分配
@@ -3377,7 +3356,6 @@ setup_pidfile
 
 # 互相需要检查的参数
 arg_check
-setup_misc
 
 # Rocky 安装必须指定 -cpu host ，默认的 cpu model 会让 kernel crash
 # 参考 : https://community.nethserver.org/t/installation-of-rocky-9-x-display-kernel-panic/21722/2

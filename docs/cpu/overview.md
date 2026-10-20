@@ -52,6 +52,18 @@ https://github.com/shinezyy/micro-arch-training : 要求还是蛮高的
 https://news.ycombinator.com/item?id=42793597
 
 
+https://github.com/yanfeizhang/coder-kung-fu?tab=readme-ov-file
+这本书写的一般，但是可以作为一个以后的看的入口
+
+## AI 设计
+https://github.com/ucb-bar/chia
+
+
+https://github.com/shinezyy/micro-arch-training
+
+
+https://github.com/arch-simulator-sig/advanced-computer-architecture
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

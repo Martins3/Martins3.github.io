@@ -101,6 +101,7 @@ int simplefs_journal_dirty_current(struct super_block *sb,
 				   uint32_t block_nr, void *data);
 int simplefs_journal_prepare_current(struct super_block *sb,
 				     uint32_t block_nr);
+int simplefs_journal_zero_current(struct super_block *sb, uint32_t block_nr);
 int simplefs_journal_prepare_new_blocks(struct super_block *sb,
 					 uint32_t block_nr, uint32_t len);
 int simplefs_journal_dirty_folio(struct super_block *sb, uint32_t block_nr,
@@ -112,6 +113,7 @@ bool simplefs_journal_has_current_handle(struct super_block *sb);
 int simplefs_journal_checkpoint(struct simplefs_journal *journal);
 int simplefs_journal_force_commit(struct simplefs_journal *journal);
 void simplefs_journal_shutdown(struct simplefs_journal *journal);
+void simplefs_journal_fail(struct super_block *sb, int err);
 void simplefs_journal_dump(struct simplefs_journal *journal);
 
 static inline int simplefs_journal_block(struct super_block *sb,

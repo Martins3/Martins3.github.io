@@ -95,7 +95,7 @@ Guest 访问了一个物理地址，该位置上是物理内存还是 memory map
 | gdbstub    | 和 gdb 配合使用，可以调试 guest 内核                                                                                                                                             |
 | ndb        | 利用 Linux 内核的 ndb 功能，QEMU 可以用远程的 blockdev 来模拟 guest 的 blockdev                                                                                                  |
 | disas      | 反汇编器，在进行二进制翻译的时候，其实最开始的行为是将二进制代码反汇编成为 Guest 指令，然后才是让翻译器将 Guest 指令翻译为 tcg IR，QEMU 也可以使用 Capstone 来替换内置的反汇编器 |
-| ui         | QEMU 可以在终端中运行，也可以让 Guest 显示在 GUI 中，也甚至在 vnc 中。QEMU 使用的底层的图形库可以为 gtk 和 sdl2                                                                  |
+| ui         | QEMU 可以在终端中运行，也可以让 Guest 显示在 GUI 中，也甚至在 vnc 中。QEMU 使用的底层的图形库可以为 gtk 和 sdl                                                                  |
 | block      | block 设备不仅仅是模拟，而且还有很多快照等功能，总体来说，很复杂                                                                                                                 |
 | slirp      | 用户态网络栈                                                                                                                                                                     |
 

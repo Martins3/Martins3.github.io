@@ -85,6 +85,8 @@ to I/O ports.
 
 ## 关注这个 tracepoint 中的内容 kvm::kvm_mmio
 
+## 普通 IN/OUT、CPUID、常见 CR/MSR 操作通常走专用 handler，不需要完整模拟器。
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

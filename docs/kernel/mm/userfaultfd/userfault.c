@@ -1,3 +1,7 @@
+/*
+ * RESOLVE_POISON 触发是可以在 dmesg 中观察到
+ * MCE: Killing userfault.out:440562 due to hardware memory corruption fault at 7f16aeb9a000
+ */
 #define _GNU_SOURCE
 
 #include <errno.h>
@@ -7,6 +11,7 @@
 #include <linux/userfaultfd.h>
 #include <poll.h>
 #include <pthread.h>
+#include <setjmp.h>
 #include <signal.h>
 #include <stdatomic.h>
 #include <stdbool.h>
@@ -29,6 +34,7 @@ enum resolver {
 	RESOLVE_MOVE,
 	RESOLVE_WP,
 	RESOLVE_CONTINUE,
+	RESOLVE_POISON,
 };
 
 struct handler_ctx {
@@ -57,6 +63,8 @@ static const char *resolver_name(enum resolver resolver)
 		return "UFFDIO_WRITEPROTECT";
 	case RESOLVE_CONTINUE:
 		return "UFFDIO_CONTINUE";
+	case RESOLVE_POISON:
+		return "UFFDIO_POISON";
 	}
 
 	return "unknown";
@@ -277,6 +285,28 @@ static int resolve_continue(struct handler_ctx *ctx, uintptr_t address)
 	return 0;
 }
 
+static int resolve_poison(struct handler_ctx *ctx, uintptr_t address)
+{
+	struct uffdio_poison poison = {
+		.range = {
+			.start = address,
+			.len = ctx->page_size,
+		},
+		/* Install a poison PTE marker and wake the faulting thread. */
+		.mode = 0,
+	};
+
+	if (ioctl(ctx->uffd, UFFDIO_POISON, &poison) < 0)
+		return -1;
+	if (poison.updated != (long long)ctx->page_size) {
+		errno = EIO;
+		return -1;
+	}
+
+	printf("UFFDIO_POISON updated=%lld bytes\n", (long long)poison.updated);
+	return 0;
+}
+
 static int handle_pagefault(struct handler_ctx *ctx, const struct uffd_msg *msg)
 {
 	uint64_t flags = msg->arg.pagefault.flags;
@@ -314,6 +344,9 @@ static int handle_pagefault(struct handler_ctx *ctx, const struct uffd_msg *msg)
 		break;
 	case RESOLVE_CONTINUE:
 		ret = resolve_continue(ctx, address);
+		break;
+	case RESOLVE_POISON:
+		ret = resolve_poison(ctx, address);
 		break;
 	default:
 		errno = EINVAL;
@@ -562,6 +595,125 @@ out:
 		munmap(region, len);
 	close(uffd);
 	(void)features;
+	return ret;
+}
+
+/* Only the thread deliberately accessing the poisoned page may jump back. */
+static _Thread_local sigjmp_buf poison_jump;
+static _Thread_local volatile sig_atomic_t poison_armed;
+static _Thread_local volatile sig_atomic_t poison_code;
+static _Thread_local void *volatile poison_address;
+
+static void poison_sigbus(int signal, siginfo_t *info, void *context)
+{
+	(void)context;
+	if (!poison_armed || info->si_code <= 0)
+		_exit(128 + signal);
+	poison_code = info->si_code;
+	poison_address = info->si_addr;
+	poison_armed = 0;
+	siglongjmp(poison_jump, 1);
+}
+
+static int expect_poison_sigbus(void *address, bool write_access)
+{
+	volatile char *byte = address;
+
+	/* Jump only over the deliberate load/store, never over a libc call.
+	 * Returning from the signal handler would retry the faulting instruction.
+	 * Save/restore the signal mask so repeated accesses can deliver SIGBUS. */
+	if (sigsetjmp(poison_jump, 1) == 0) {
+		poison_armed = 1;
+		if (write_access)
+			*byte = 'X';
+		else
+			(void)*byte;
+		poison_armed = 0;
+		fprintf(stderr, "poisoned access unexpectedly succeeded\n");
+		return -1;
+	}
+
+	printf("%s: SIGBUS si_code=%d%s si_addr=%p\n",
+	       write_access ? "WRITE" : "READ", (int)poison_code,
+	       poison_code == BUS_MCEERR_AR ? " (BUS_MCEERR_AR)" : "",
+	       poison_address);
+	if (poison_address != address || poison_code != BUS_MCEERR_AR) {
+		fprintf(stderr, "unexpected SIGBUS address or code\n");
+		return -1;
+	}
+	return 0;
+}
+
+static int run_missing_poison(size_t page_size)
+{
+	struct sigaction action = {
+		.sa_sigaction = poison_sigbus,
+		.sa_flags = SA_SIGINFO,
+	};
+	struct sigaction old_action;
+	uint64_t features;
+	struct handler_ctx ctx;
+	pthread_t thread;
+	void *region;
+	int uffd;
+	int ret = 1;
+	bool started = false;
+	bool signal_installed = false;
+
+	uffd = create_userfaultfd(UFFD_FEATURE_POISON, &features);
+	if (uffd == -TEST_SKIP)
+		return TEST_SKIP;
+	if (uffd < 0)
+		return 1;
+	region = mmap(NULL, page_size, PROT_READ | PROT_WRITE,
+		      MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+	if (region == MAP_FAILED) {
+		fprintf(stderr, "mmap anonymous: %s\n", strerror(errno));
+		goto out;
+	}
+	if (register_range(uffd, region, page_size,
+			   UFFDIO_REGISTER_MODE_MISSING,
+			   1ULL << _UFFDIO_POISON) < 0)
+		goto out;
+
+	sigemptyset(&action.sa_mask);
+	if (sigaction(SIGBUS, &action, &old_action) < 0) {
+		fprintf(stderr, "sigaction(SIGBUS): %s\n", strerror(errno));
+		goto unregister;
+	}
+	signal_installed = true;
+	init_ctx(&ctx, uffd, RESOLVE_POISON, region, page_size, page_size);
+	if (start_handler(&ctx, &thread) < 0)
+		goto unregister;
+	started = true;
+
+	printf("First read: missing fault -> UFFDIO_POISON -> SIGBUS\n");
+	if (expect_poison_sigbus(region, false) < 0)
+		goto unregister;
+	printf("Read again, then write: the poison marker remains\n");
+	if (expect_poison_sigbus(region, false) < 0 ||
+	    expect_poison_sigbus(region, true) < 0)
+		goto unregister;
+	if (atomic_load(&ctx.missing_faults) != 1) {
+		fprintf(stderr, "expected exactly one missing fault\n");
+		goto unregister;
+	}
+	printf("3 SIGBUS signals, 1 userfaultfd missing event\n");
+	ret = 0;
+
+unregister:
+	if (started && stop_handler(&ctx, thread) < 0)
+		ret = 1;
+	if (signal_installed && sigaction(SIGBUS, &old_action, NULL) < 0) {
+		fprintf(stderr, "restore SIGBUS handler: %s\n", strerror(errno));
+		ret = 1;
+	}
+	if (unregister_range(uffd, region, page_size) < 0)
+		ret = 1;
+out:
+	if (region != MAP_FAILED)
+		munmap(region, page_size);
+	close(uffd);
 	return ret;
 }
 
@@ -1118,6 +1270,7 @@ static int run_missing_move(size_t page_size)
 static const struct test_case tests[] = {
 	{ "missing-copy", run_missing_copy },
 	{ "missing-move", run_missing_move },
+	{ "missing-poison", run_missing_poison },
 	{ "write-protect", run_write_protect },
 	{ "remove-shmem", run_remove_shmem },
 	{ "minor-shmem", run_minor_shmem },

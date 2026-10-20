@@ -137,6 +137,10 @@ TODO :
 2. 原理
 3. 相纸价格
 
+## ps 工具
+
+https://github.com/storytold/photocraft
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

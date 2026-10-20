@@ -109,6 +109,37 @@ enum memory_order
 
 ## cpp 标准库中是没有实现 spinlock 的
 
+## lambda 在并发示例中的两种用法
+
+这里的几个启动方法也是需要学习下的:
+
+这些示例里的 lambda 并不都是"用来创建线程"的，可以分成两类。
+
+1. 作为线程执行体（大多数）, lambda 被交给 thread / jthread / async，在另一个线程里执行：
+    - `std::thread t([&] {...})`、`std::jthread worker([] {...})`：直接作为线程入口
+      - `cpp-std/locks/mutex/1-lock_tag.cpp`
+      - `cpp-std/threading/async-results/promise.cpp`
+      - `cpp-std/threading/cancellation/stop_callback.cpp`
+    - `threads.emplace_back([&counter]() {...})`：放进 `std::vector<std::thread>` 的也是线程
+      - `cpp-std/atomic/basics/atomic_ref.cpp`
+    - `std::async(..., [] {...})`：底层同样启动异步任务
+      - `cpp-std/atomic/wait-notify/1-wait.cpp`
+      - `cpp-std/threading/async-results/1-future.cpp`
+      - `cpp-std/threading/overview/1-thread.cpp`
+1. 不是线程，只是回调 / 谓词 / 普通函数对象（少数），这里 lambda 本身不创建线程，而是被别的机制调用：
+    - `std::call_once` 的回调：只在首次执行，不新开线程
+      - `cpp-std/locks/coordination/1-once.cpp`
+    - 先存成普通变量，之后才被多个 `std::thread` 传进去执行：
+      - `cpp-std/locks/mutex/1-lock_tag.cpp` 的 `auto increment = [...](...) {...}`
+      - `cpp-std/locks/rw/rwlock.cpp` 的 `auto increment_and_print = [&counter]() {...}`
+    - `std::packaged_task` 的任务体：lambda 是"被打包的任务"，线程稍后才来取
+      - `cpp-std/threading/async-results/1-future.cpp`
+      - `cpp-std/threading/async-results/1-thread-2.cpp`
+    - 条件变量的 wait 谓词：用来判断"条件是否成立"
+      - `cpp-std/threading/cancellation/stop_callback.cpp` 的 `wait(lock, stoken, [&stoken] {...})`
+    - `std::stop_callback` 的钩子：由 `request_stop()` 触发，不是线程执行体
+      - `cpp-std/threading/cancellation/stop_callback.cpp`
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

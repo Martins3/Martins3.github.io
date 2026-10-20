@@ -41,6 +41,9 @@ root@localhost:/boot/efi/EFI# tree
     └── shimx64.efi
 ```
 
+[shim](https://github.com/rhboot/shim) 是第一阶段 UEFI 引导程序，在 Secure Boot 场景下负责验证并加载下一阶段引导程序。
+常见启动链为：`UEFI 固件 → shim → GRUB → Linux 内核`。
+
 ## 从盘的结构看启动过程
 
 ```txt

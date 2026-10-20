@@ -6,10 +6,12 @@ SimpleFS 是一个用于学习 Linux 文件系统的可运行实现。它有固�
 可以追踪。
 
 当前代码已经覆盖普通文件、目录、软硬链接、mmap、Direct I/O、fallocate、
-xattr、ACL、exportfs 和元数据日志等主线。2026-07-26 的统一环境全量结果是 generic
-001--787 中 PASS 432 / NOTRUN 355 / FAIL 0 / TIMEOUT 0。NOTRUN 表示
-格式或功能明确不支持，不等于 PASS；完整证据在
-[record/README.md](record/README.md)。
+xattr、ACL、exportfs 和元数据日志等主线。格式 2 在 2026-10-15 完成 generic
+001--787 覆盖：PASS 440 / NOTRUN 347 / FAIL 0 / TIMEOUT 0，由两个有效启动
+区段合并。NOTRUN 表示测试前提不满足，不等于 PASS。完整工作树拷贝耗时中位数为
+ext4 的 1.295 倍；改动、环境修正及验证证据见
+[修复记录](record/investigations/2026-10-14-format2-fixes.md)，更早的结果见
+[历史记录](record/README.md)。
 
 ## 从哪里开始
 
@@ -51,8 +53,9 @@ ssh -p 51404 root@localhost \
 | `simplefs_super.c`                   | superblock、挂载、inode 生命周期、statfs、exportfs |
 | `simplefs_inode.c`                   | pathname 回调和目录修改操作                        |
 | `simplefs_dir.c`                     | readdir 与目录 fsync                               |
+| `simplefs_dir_index.c`               | 可重建的目录名称/空槽索引和 extent 映射             |
 | `simplefs_file.c`                    | iomap、页缓存、DIO、mmap、fallocate 和 ioctl       |
-| `simplefs_extent.c`                  | 普通文件两级 extent tree                           |
+| `simplefs_extent.c`                  | 普通文件和目录共用的直接根/两级 extent tree                           |
 | `simplefs_metabuf.c`                 | folio-native 元数据块访问与退役                    |
 | `simplefs_journal.c`                 | folio 到 JBD2 的隔离适配层                         |
 | `simplefs_xattr.c`, `simplefs_acl.c` | 扩展属性和 POSIX ACL                               |

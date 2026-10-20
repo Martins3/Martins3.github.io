@@ -13,7 +13,8 @@ PROGDIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 cd "$PROGDIR"
 
 /usr/bin/gcc -B/usr/bin -o mkfs.simplefs.out user_mkfs.c mkfs_common.c -Wall
-make -C /home/martins3/data/kernel/linux-drm M="$(pwd)" modules
+KDIR=${KDIR:-/home/martins3/data/kernel/linux-drm}
+make -C "$KDIR" M="$(pwd)" modules
 
 # 测试记录：
 # 一共有从 0 到 787 个测试

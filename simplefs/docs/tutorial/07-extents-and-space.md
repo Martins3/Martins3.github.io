@@ -44,13 +44,11 @@ ZERO_RANGE 常把范围保留为 unwritten；预分配要占空间但可能不�
 如果先 free 旧数据，再因 ENOSPC 无法分配新 leaf，旧磁盘 root 仍引用已被其他 inode
 复用的块，形成双重所有权。错误时安全泄漏比一块同时属于两个文件更可接受。
 
-## 第一次写入为何先分配 leaf
+## 小文件直接在根块保存 extent
 
-空文件第一次写连续数据时，extent tree 还没有 leaf。如果先分配第一个数据 block，
-再分配 leaf，再分配剩余数据，用户可见的连续写会变成 `1 + N` 两段。当前实现一次
-预留 `[leaf][data...]`，首块归元数据，其后连续块归用户数据。
-
-这说明内部元数据分配顺序会影响 fiemap/filefrag 的用户可见布局。
+depth 0 的根块直接保存最多 340 个 extent，第一次写入只需分配数据块。超过容量
+后才分配 leaf，发布两级根；truncate 等操作让映射减少后，可以退回直接根并释放
+leaf。两种方向都必须校验数据内容、稀疏洞、块计数和卸载重挂后的结果。
 
 ## Bitmap、计数与 reservation
 
@@ -60,6 +58,12 @@ block bitmap 是最终所有者记录，`nr_free_blocks` 是缓存计数。分�
 写路径还可能维护内存 preallocation reservation。reservation 是“这个 inode 暂时
 保留但尚未都使用的空间”，close/fsync/DIO 边界要决定保留或丢弃；它不能在 statfs
 或崩溃恢复中变成无主块。
+
+reservation 也有成本。`simplefs_write_iomap_begin()` 在逻辑块 0 按本次请求大小
+分配，写到后续块时才将分配窗口扩大到至少 64 块。这样一次写完的小文件不必先
+分配、检查并清零 256 KiB，再在 close 时同步数据并 truncate 掉多余空间；持续
+写入的小块流仍然可以使用预分配。这个判断只改变新空间的分配大小，不改变已有
+extent 的 written/unwritten 状态、显式 fallocate 或 DIO 语义。
 
 ## 释放数据块与退役元数据块
 

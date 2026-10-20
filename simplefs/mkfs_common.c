@@ -14,7 +14,7 @@
 
 /* ========== 纯计算函数 ========== */
 
-int mkfs_calculate_layout(size_t image_size, struct mkfs_layout *layout)
+int mkfs_calculate_layout(size_t image_size, uint32_t bytes_per_inode, struct mkfs_layout *layout)
 {
     if (!layout)
         return -EINVAL;
@@ -24,14 +24,24 @@ int mkfs_calculate_layout(size_t image_size, struct mkfs_layout *layout)
     
     memset(layout, 0, sizeof(*layout));
     
+    if (bytes_per_inode < SIMPLEFS_BLOCK_SIZE ||
+        bytes_per_inode % SIMPLEFS_BLOCK_SIZE ||
+        image_size / SIMPLEFS_BLOCK_SIZE > UINT32_MAX)
+        return -EINVAL;
+
     // 总块数
     layout->nr_blocks = image_size / SIMPLEFS_BLOCK_SIZE;
     
-    // inode 数（与块数相同，但需对齐）
-    layout->nr_inodes = layout->nr_blocks;
+    // inode 密度独立于数据块数量，保留按 inode table 块对齐。
+    layout->nr_inodes = image_size / bytes_per_inode;
+    if (layout->nr_inodes < 2)
+        layout->nr_inodes = 2;
     uint32_t mod = layout->nr_inodes % SIMPLEFS_INODES_PER_BLOCK;
-    if (mod)
+    if (mod) {
+        if (layout->nr_inodes > UINT32_MAX - (SIMPLEFS_INODES_PER_BLOCK - mod))
+            return -EFBIG;
         layout->nr_inodes += SIMPLEFS_INODES_PER_BLOCK - mod;
+    }
     
     // 各区域块数
     layout->nr_istore_blocks = idiv_ceil(layout->nr_inodes, SIMPLEFS_INODES_PER_BLOCK);
@@ -109,13 +119,13 @@ void mkfs_init_superblock(struct simplefs_superblock *sb,
     
     memset(sb, 0, sizeof(*sb));
     
-    sb->info.magic = htole32(SIMPLEFS_MAGIC);
+    sb->info.magic = htole32(SIMPLEFS_DISK_MAGIC);
     sb->info.nr_blocks = htole32(layout->nr_blocks);
     sb->info.nr_inodes = htole32(layout->nr_inodes);
     sb->info.nr_istore_blocks = htole32(layout->nr_istore_blocks);
     sb->info.nr_ifree_blocks = htole32(layout->nr_ifree_blocks);
     sb->info.nr_bfree_blocks = htole32(layout->nr_bfree_blocks);
-    sb->info.nr_free_inodes = htole32(layout->nr_inodes - 1);  // 根inode已用
+    sb->info.nr_free_inodes = htole32(layout->nr_inodes - 2);  // inode 0 保留，根 inode 1 已用
     sb->info.nr_free_blocks = htole32(layout->nr_data_blocks - 1);  // 第一个数据块已用
     
     // 标记 journal 是否存在
@@ -136,7 +146,7 @@ void mkfs_init_root_inode(struct simplefs_inode *inode,
                             S_IWUSR | S_IWGRP | S_IXUSR | S_IXGRP | S_IXOTH);
     inode->i_uid = 0;
     inode->i_gid = 0;
-    inode->i_size = htole32(SIMPLEFS_BLOCK_SIZE);
+    inode->i_size = htole32(0);
     inode->i_ctime = htole32(0);
     inode->i_atime = htole32(0);
     inode->i_mtime = htole32(0);
@@ -333,6 +343,8 @@ static int mkfs_init_root_index_block(int fd, const struct mkfs_layout *layout)
         return -EINVAL;
 
     memset(block, 0, sizeof(block));
+    uint32_t root_magic = htole32(SIMPLEFS_EXTENT_ROOT_MAGIC);
+    memcpy(block, &root_magic, sizeof(root_magic));
     offset = (off_t)layout->first_data_block * SIMPLEFS_BLOCK_SIZE;
     if (lseek(fd, offset, SEEK_SET) < 0)
         return -errno;
@@ -360,12 +372,11 @@ int mkfs_write_ifree_bitmap(int fd, const struct mkfs_layout *layout)
     }
     
     for (uint32_t i = 0; i < layout->nr_ifree_blocks; i++) {
-        uint64_t val = mkfs_calc_ifree_value(i);
-        
-        // 填充整个块
+        // 只有第一个 word 保留 inode 0/1，其余 inode 都可分配。
         uint64_t *block_vals = (uint64_t *)block;
         for (size_t j = 0; j < SIMPLEFS_BLOCK_SIZE / sizeof(uint64_t); j++) {
-            block_vals[j] = val;
+            block_vals[j] = (i == 0 && j == 0) ?
+                htole64(mkfs_calc_ifree_value(0)) : UINT64_MAX;
         }
         
         ssize_t written = write(fd, block, SIMPLEFS_BLOCK_SIZE);
@@ -428,7 +439,7 @@ int mkfs_write_bfree_bitmap(int fd, const struct mkfs_layout *layout)
 
 /* ========== 完整创建流程 ========== */
 
-int mkfs_create_fs(int fd, size_t image_size, struct mkfs_result *result)
+int mkfs_create_fs(int fd, size_t image_size, uint32_t bytes_per_inode, struct mkfs_result *result)
 {
     if (!result)
         return -EINVAL;
@@ -437,7 +448,7 @@ int mkfs_create_fs(int fd, size_t image_size, struct mkfs_result *result)
     
     // 步骤 1: 计算布局
     struct mkfs_layout layout;
-    int ret = mkfs_calculate_layout(image_size, &layout);
+    int ret = mkfs_calculate_layout(image_size, bytes_per_inode, &layout);
     if (ret < 0) {
         result->error_code = ret;
         snprintf(result->error_msg, sizeof(result->error_msg),
@@ -534,7 +545,7 @@ int mkfs_verify_superblock(int fd, const struct mkfs_layout *expected)
         return (n < 0) ? -errno : -EIO;
     
     // 验证 magic
-    if (le32toh(sb.info.magic) != SIMPLEFS_MAGIC)
+    if (le32toh(sb.info.magic) != SIMPLEFS_DISK_MAGIC)
         return -EINVAL;
     
     // 如果提供了期望的布局，验证各个字段

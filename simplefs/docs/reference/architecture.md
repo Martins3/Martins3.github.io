@@ -23,7 +23,9 @@
 
 extent 数量超过根块容量时会使用 leaf 块。重建 extent 集合的操作必须转移或释放旧 leaf 的所有权；只复制 extent 内容而遗失 leaf 列表会造成块位图泄漏。
 
-空文件第一次分配数据时已经需要一个 extent leaf。为了避免 leaf 插入第一个数据 run 中间，分配器把 leaf 和数据作为一个连续请求预留，布局为 `[leaf][data...]`。leaf 只有在 extent 同步成功后才算提交；失败回滚必须按元数据和数据各自的退役规则处理。这使第一个用户可见数据 run 保持物理连续。
+extent root 的 depth 为 0 时直接保存最多 340 个 extent；只有超过根容量才分配
+leaf，并把根转为 depth 1。收缩回根容量时先发布直接映射，再退役旧 leaf。小文件
+因此只需要一个 extent root，不再为第一次写入额外预留 leaf。
 
 ## Buffered write 与 unwritten 转换
 
@@ -49,6 +51,17 @@ Direct I/O 同样只在成功完成且带有 unwritten 标志时转换。转换�
 
 ## 元数据块退役
 
+整块替换元数据时可用 `simplefs_get_zeroed_folio()`，避免先读盘再丢弃旧内容。
+它只适用于调用后立即完整初始化该块的路径；inode table 等局部更新继续使用
+`simplefs_get_folio()`。JBD2 适配层必须在清零前取得 write access，保护尚未完成
+事务的旧镜像；没有 journal 时仍使用普通 folio 读取和脏页写回。不能在其他可能
+失败的步骤之前提前清零仍被引用的元数据根。
+
+分配器检查旧 journal 生命周期时，只需查询已有 buffer；不存在缓存就不可能
+存在被 JBD2 持有的旧 buffer。查询必须能等待 buffer migration，不能把暂时的
+查询缺失当作可复用。随后仍检查 revoke、当前/下一事务归属，并保持原来的位图
+及事务串行化约束。
+
 元数据块不能直接清位图后立即复用。`simplefs_retire_metadata_blocks()` 执行：
 
 1. 等待块设备 mapping 对应范围写回；
@@ -69,7 +82,22 @@ extent tree 的发布还要遵守指针依赖顺序：先写回所有新 leaf，
 
 磁盘 inode 的 `i_blocks` 字段以 4 KiB SimpleFS 块计数，VFS `inode->i_blocks` 则按固定的 512 字节扇区计数。inode 读写边界负责双向转换；运行时每次分配或释放数据块、extent leaf、目录块、长 symlink 或 xattr 块，也都必须转换后再更新 VFS 计数。
 
-目录的每个 extent 固定为 8 块，它与普通文件单 extent 的最大数据 run 是不同概念。目录条目上限由磁盘目录项大小、每块条目数、每个目录 extent 的块数和最大 extent 数共同推导；到达格式上限后直接返回 `EMLINK`。
+目录与普通文件共用 extent 映射。目录数据按需逐块分配，条目保持固定逻辑槽号，
+删除不会移动其他条目。目录名称哈希、空闲槽位图与文件数是可重建的内存缓存，
+以 VFS 目录锁保护；首次构建由 `dir_cache_lock` 串行化，读取失败不能当作空目录。
+空目录删除前分批收回数据块，每批先更新持久映射，再释放块，避免大目录的 revoke
+数量超过最后一个 rmdir 事务的预算。
+
+默认每 16 KiB 容量配置一个 inode，mkfs 的 `-i bytes-per-inode` 可以调整密度。
+磁盘格式 magic 为 `0xDEADCE02`，旧格式需要重新格式化。
+
+## 同步与事务边界
+
+journal 模式下，分配/释放事务记录实际改变的位图块和计数，`sync_fs` 等待 inode
+写回并提交 journal，不再把整个卷的位图塞入一个事务。位图持久化失败会中止日志
+并置 shutdown，避免后续分配或 sync 错误地报告成功。nojournal 仍显式写回位图。
+只读元数据访问使用 `simplefs_read_metadata()`；修改前使用 `simplefs_get_folio()`
+取得 JBD2 write access，不能先改数据再补申请权限。
 
 ## Inode 创建与复用
 

@@ -1,0 +1,82 @@
+{
+  "total": 1926891,
+  "rows": [
+    {
+      "req": 16,
+      "hex": "0x10",
+      "name": "KVM_REQ_STEAL_UPDATE",
+      "submitted": 953803,
+      "percent": 49.49958248805978,
+      "per_second": 15896.716666666667,
+      "direct": 953803,
+      "bulk_per_target_vcpu": 0,
+      "successful_check": 953197
+    },
+    {
+      "req": 791,
+      "hex": "0x317",
+      "name": "KVM_REQ_SCAN_IOAPIC",
+      "submitted": 435274,
+      "percent": 22.5894459001573,
+      "per_second": 7254.566666666667,
+      "direct": 108823,
+      "bulk_per_target_vcpu": 326451,
+      "successful_check": 326569
+    },
+    {
+      "req": 31,
+      "hex": "0x1f",
+      "name": "KVM_REQ_LOAD_EOI_EXITMAP",
+      "submitted": 326569,
+      "percent": 16.94797474273324,
+      "per_second": 5442.816666666667,
+      "direct": 326569,
+      "bulk_per_target_vcpu": 0,
+      "successful_check": 326569
+    },
+    {
+      "req": 14,
+      "hex": "0xe",
+      "name": "KVM_REQ_EVENT",
+      "submitted": 132346,
+      "percent": 6.868369824759158,
+      "per_second": 2205.766666666667,
+      "direct": 132346,
+      "bulk_per_target_vcpu": 0,
+      "successful_check": 132346
+    },
+    {
+      "req": 2,
+      "hex": "0x2",
+      "name": "KVM_REQ_UNBLOCK",
+      "submitted": 52623,
+      "percent": 2.7309795935525156,
+      "per_second": 877.05,
+      "direct": 52623,
+      "bulk_per_target_vcpu": 0,
+      "successful_check": 1
+    },
+    {
+      "req": 768,
+      "hex": "0x300",
+      "name": "KVM_REQ_TLB_FLUSH",
+      "submitted": 14258,
+      "percent": 0.7399484454491717,
+      "per_second": 237.63333333333333,
+      "direct": 12018,
+      "bulk_per_target_vcpu": 2240,
+      "successful_check": 12109
+    },
+    {
+      "req": 8,
+      "hex": "0x8",
+      "name": "KVM_REQ_MIGRATE_TIMER",
+      "submitted": 12018,
+      "percent": 0.6236990052888306,
+      "per_second": 200.3,
+      "direct": 12018,
+      "bulk_per_target_vcpu": 0,
+      "successful_check": 11864
+    }
+  ]
+}

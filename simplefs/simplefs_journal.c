@@ -13,6 +13,7 @@
 #include <linux/fs.h>
 #include <linux/pagemap.h>
 #include <linux/slab.h>
+#include <linux/version.h>
 
 #include "simplefs.h"
 #include "simplefs_journal.h"
@@ -25,6 +26,18 @@ static void simplefs_journal_mark_shutdown(struct simplefs_journal *journal)
 {
 	if (journal && journal->j_sb)
 		((struct simplefs_sb_info *)SIMPLEFS_SB(journal->j_sb))->s_shutdown = 1;
+}
+
+/* A partial allocation-metadata update cannot be rolled back by stopping a
+ * handle.  Latch the error, prevent reuse and prevent a successful sync. */
+void simplefs_journal_fail(struct super_block *sb, int err)
+{
+	struct simplefs_sb_info *sbi = SIMPLEFS_SB(sb);
+
+	WRITE_ONCE(sbi->s_shutdown, 1);
+	mapping_set_error(sb->s_bdev->bd_mapping, err);
+	if (sbi->s_journal && sbi->s_journal->j_jbd2)
+		jbd2_journal_abort(sbi->s_journal->j_jbd2, err);
 }
 
 static int simplefs_journal_bmap(journal_t *journal, sector_t *block)
@@ -188,10 +201,10 @@ simplefs_journal_start_internal(struct super_block *sb,
 	handle_t *jbd2_handle;
 	int credits = max(blocks, 64);
 
-	if (!journal || !journal->j_jbd2)
-		return NULL;
 	if (simplefs_is_shutdown(sb))
 		return ERR_PTR(-EIO);
+	if (!journal || !journal->j_jbd2)
+		return NULL;
 	/* Nested bitmap/metadata helpers join the outer serialized handle. */
 	if (READ_ONCE(journal->j_handle_owner) == current)
 		return NULL;
@@ -241,6 +254,9 @@ struct simplefs_handle *simplefs_journal_start_sb(struct super_block *sb,
 						  int blocks)
 {
 	struct simplefs_sb_info *sbi = SIMPLEFS_SB(sb);
+
+	if (simplefs_is_shutdown(sb))
+		return ERR_PTR(-EIO);
 
 	if (!sbi->s_journal || !sbi->s_journal->j_jbd2 ||
 	    simplefs_current_jbd2_handle(sbi->s_journal))
@@ -406,6 +422,38 @@ int simplefs_journal_prepare_current(struct super_block *sb,
 	return ret;
 }
 
+/* Prepare a complete metadata replacement without reading its old disk image.
+ * An active transaction pins its old buffer, so get_write_access() can still
+ * freeze that image before we touch it.  Never bypass this access for a reused
+ * block.  The caller must finish the replacement and journal it in this handle.
+ */
+int simplefs_journal_zero_current(struct super_block *sb, uint32_t block_nr)
+{
+	struct simplefs_sb_info *sbi = SIMPLEFS_SB(sb);
+	handle_t *handle = simplefs_current_jbd2_handle(sbi->s_journal);
+	struct buffer_head *bh;
+	void *data;
+	int ret;
+
+	if (!handle)
+		return 0;
+	bh = sb_getblk(sb, block_nr);
+	if (!bh)
+		return -ENOMEM;
+	ret = jbd2_journal_get_write_access(handle, bh);
+	if (!ret) {
+		/* Wait out old buffer I/O before overwriting the home image. */
+		lock_buffer(bh);
+		data = kmap_local_folio(bh->b_folio, bh_offset(bh));
+		memset(data, 0, sb->s_blocksize);
+		kunmap_local(data);
+		set_buffer_uptodate(bh);
+		unlock_buffer(bh);
+	}
+	brelse(bh);
+	return ret;
+}
+
 int simplefs_journal_prepare_new_blocks(struct super_block *sb,
 					 uint32_t block_nr, uint32_t len)
 {
@@ -424,9 +472,20 @@ int simplefs_journal_prepare_new_blocks(struct super_block *sb,
 		struct journal_head *jh;
 		bool transaction_owned = false;
 
+		/* Only an existing buffer can carry an old journal lifetime.  Do
+		 * not create bdev folios for every new file-data block just to test
+		 * this.  The sleeping lookup waits out buffer migration: the atomic
+		 * lookup can return a transient miss while BH_Migrate is set.
+		 */
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 16, 0)
+		bh = sb_find_get_block_nonatomic(sb, block_nr + i);
+		if (!bh)
+			continue;
+#else
 		bh = sb_getblk(sb, block_nr + i);
 		if (!bh)
 			return -ENOMEM;
+#endif
 
 		/*
 		 * Do not reuse a block whose previous journal lifetime is still
@@ -481,7 +540,7 @@ int simplefs_journal_dirty_current(struct super_block *sb,
 	handle_t *handle = simplefs_current_jbd2_handle(journal);
 
 	if (!handle)
-		return 0;
+		return journal && journal->j_jbd2 ? -EUCLEAN : 0;
 	return simplefs_jbd2_dirty(handle, sb, block_nr, data, NULL);
 }
 

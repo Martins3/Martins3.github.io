@@ -2,9 +2,9 @@
 <!-- 401cc0e1-547a-46f0-b199-7ad9c68b650a -->
 
 handle_exception_nmi 是 VMCS Exception Bitmap 中所有被拦截的异常的统一入口。
-理论上，只要 KVM 在 VMCS 的 Exception Bitmap 中设置了对应 bit，任何 x86 异常发生 VM-Exit 后都会进入
+理论上，只要 KVM 在 VMCS 的 Exception Bitmap 中设置了对应 bit，
+任何 x86 异常发生 VM-Exit 后都会进入
 `handle_exception_nmi`
-
 
 1. mce 和 nmi 特殊处理
 ```c

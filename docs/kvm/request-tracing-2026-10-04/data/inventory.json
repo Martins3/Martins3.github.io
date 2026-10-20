@@ -1,0 +1,5238 @@
+[
+  {
+    "module": "kvm",
+    "parent": "kvm_vcpu_check_block",
+    "die": "0x38ee5",
+    "ranges": [
+      [
+        26479,
+        26484
+      ]
+    ],
+    "path": "check",
+    "req": 2,
+    "expressions": [
+      [
+        "constant",
+        2
+      ]
+    ],
+    "call_line": 3629,
+    "symbol": "kvm_vcpu_check_block",
+    "section": ".text",
+    "address": 26479,
+    "offset": 127,
+    "instruction": "lock andb $0xfb,0x38(%rbx)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "kvm_make_vcpu_request",
+    "die": "0x4ee22",
+    "ranges": [
+      [
+        30535,
+        30545
+      ]
+    ],
+    "path": "bulk",
+    "req": null,
+    "expressions": [
+      [
+        "other",
+        "[DWARFExprOp(op=84, op_name='DW_OP_reg4', args=[], offset=0)]"
+      ]
+    ],
+    "call_line": 222,
+    "symbol": "kvm_make_vcpu_request",
+    "section": ".text",
+    "address": 30539,
+    "offset": 27,
+    "instruction": "lock bts %rax,0x38(%rdi)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "kvm_dirty_ring_check_request",
+    "die": "0x13a40e",
+    "ranges": [
+      [
+        87387,
+        87392
+      ]
+    ],
+    "path": "check",
+    "req": 3,
+    "expressions": [
+      [
+        "constant",
+        3
+      ]
+    ],
+    "call_line": 252,
+    "symbol": "kvm_dirty_ring_check_request",
+    "section": ".text",
+    "address": 87387,
+    "offset": 27,
+    "instruction": "lock andb $0xf7,0x38(%rdi)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "kvm_dirty_ring_check_request",
+    "die": "0x13a629",
+    "ranges": [
+      [
+        87419,
+        87424
+      ]
+    ],
+    "path": "direct",
+    "req": 3,
+    "expressions": [
+      [
+        "constant",
+        3
+      ]
+    ],
+    "call_line": 254,
+    "symbol": "kvm_dirty_ring_check_request",
+    "section": ".text",
+    "address": 87419,
+    "offset": 59,
+    "instruction": "lock orb $0x8,0x38(%rdi)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "kvm_dirty_ring_push",
+    "die": "0x13b24d",
+    "ranges": [
+      [
+        87232,
+        87238
+      ]
+    ],
+    "path": "direct",
+    "req": 3,
+    "expressions": [
+      [
+        "constant",
+        3
+      ]
+    ],
+    "call_line": 241,
+    "symbol": "kvm_dirty_ring_push",
+    "section": ".text",
+    "address": 87232,
+    "offset": 112,
+    "instruction": "lock orb $0x8,0x38(%r8)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "kvm_handle_invpcid",
+    "die": "0x1c47a2",
+    "ranges": [
+      [
+        221318,
+        221323
+      ]
+    ],
+    "path": "direct",
+    "req": 803,
+    "expressions": [
+      [
+        "constant",
+        803
+      ]
+    ],
+    "call_line": 13443,
+    "symbol": "kvm_handle_invpcid",
+    "section": ".text",
+    "address": 221318,
+    "offset": 310,
+    "instruction": "lock orb $0x8,0x3c(%rbx)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "kvm_arch_async_page_present_queued",
+    "die": "0x1c60f1",
+    "ranges": [
+      [
+        269161,
+        269166
+      ]
+    ],
+    "path": "direct",
+    "req": 36,
+    "expressions": [
+      [
+        "constant",
+        36
+      ]
+    ],
+    "call_line": 13209,
+    "symbol": "kvm_arch_async_page_present_queued",
+    "section": ".text",
+    "address": 269161,
+    "offset": 9,
+    "instruction": "lock orb $0x10,0x3c(%rdi)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "kvm_arch_async_page_not_present",
+    "die": "0x1c72fa",
+    "ranges": [
+      [
+        267890,
+        267895
+      ]
+    ],
+    "path": "direct",
+    "req": 15,
+    "expressions": [
+      [
+        "constant",
+        15
+      ]
+    ],
+    "call_line": 13177,
+    "symbol": "kvm_arch_async_page_not_present",
+    "section": ".text",
+    "address": 267890,
+    "offset": 178,
+    "instruction": "lock orb $0x80,0x39(%rbx)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "kvm_arch_enable_virtualization_cpu",
+    "die": "0x1caca8",
+    "ranges": [
+      [
+        262853,
+        262858
+      ]
+    ],
+    "path": "direct",
+    "req": 21,
+    "expressions": [
+      [
+        "constant",
+        21
+      ]
+    ],
+    "call_line": 12387,
+    "symbol": "kvm_arch_enable_virtualization_cpu",
+    "section": ".text",
+    "address": 262853,
+    "offset": 741,
+    "instruction": "lock orb $0x20,0x3a(%rax)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "kvm_arch_enable_virtualization_cpu",
+    "die": "0x1cb4a7",
+    "ranges": [
+      [
+        262649,
+        262656
+      ]
+    ],
+    "path": "direct",
+    "req": 12,
+    "expressions": [
+      [
+        "constant",
+        12
+      ]
+    ],
+    "call_line": 12333,
+    "symbol": "kvm_arch_enable_virtualization_cpu",
+    "section": ".text",
+    "address": 262649,
+    "offset": 537,
+    "instruction": "lock orb $0x10,0x39(%rax)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "kvm_vcpu_reset",
+    "die": "0x1cc410",
+    "ranges": [
+      [
+        215802,
+        215807
+      ]
+    ],
+    "path": "direct",
+    "req": 14,
+    "expressions": [
+      [
+        "constant",
+        14
+      ]
+    ],
+    "call_line": 12195,
+    "symbol": "kvm_vcpu_reset",
+    "section": ".text",
+    "address": 215802,
+    "offset": 330,
+    "instruction": "lock orb $0x40,0x39(%rbx)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "kvm_vcpu_reset",
+    "die": "0x1ccc35",
+    "ranges": [
+      [
+        216422,
+        216427
+      ],
+      [
+        216550,
+        216555
+      ]
+    ],
+    "path": "direct",
+    "req": 803,
+    "expressions": [
+      [
+        "constant",
+        803
+      ],
+      [
+        "constant",
+        803
+      ]
+    ],
+    "call_line": 12268,
+    "symbol": "kvm_vcpu_reset",
+    "section": ".text",
+    "address": 216422,
+    "offset": 950,
+    "instruction": "lock orb $0x8,0x3c(%rbx)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "kvm_vcpu_reset",
+    "die": "0x1ccc35",
+    "ranges": [
+      [
+        216422,
+        216427
+      ],
+      [
+        216550,
+        216555
+      ]
+    ],
+    "path": "direct",
+    "req": 803,
+    "expressions": [
+      [
+        "constant",
+        803
+      ],
+      [
+        "constant",
+        803
+      ]
+    ],
+    "call_line": 12268,
+    "symbol": "kvm_vcpu_reset",
+    "section": ".text",
+    "address": 216550,
+    "offset": 1078,
+    "instruction": "lock orb $0x8,0x3c(%rbx)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "kvm_vcpu_reset",
+    "die": "0x1ccd89",
+    "ranges": [
+      [
+        216435,
+        216440
+      ]
+    ],
+    "path": "direct",
+    "req": 803,
+    "expressions": [
+      [
+        "constant",
+        803
+      ]
+    ],
+    "call_line": 12282,
+    "symbol": "kvm_vcpu_reset",
+    "section": ".text",
+    "address": 216435,
+    "offset": 963,
+    "instruction": "lock orb $0x8,0x3c(%rbx)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "kvm_arch_vcpu_ioctl_set_mpstate",
+    "die": "0x1cf8db",
+    "ranges": [
+      [
+        258362,
+        258367
+      ]
+    ],
+    "path": "direct",
+    "req": 14,
+    "expressions": [
+      [
+        "constant",
+        14
+      ]
+    ],
+    "call_line": 11681,
+    "symbol": "kvm_arch_vcpu_ioctl_set_mpstate",
+    "section": ".text",
+    "address": 258362,
+    "offset": 58,
+    "instruction": "lock orb $0x40,0x39(%rdi)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "vcpu_scan_ioapic",
+    "die": "0x1d3848",
+    "ranges": [
+      [
+        205129,
+        205134
+      ]
+    ],
+    "path": "direct",
+    "req": 31,
+    "expressions": [
+      [
+        "constant",
+        31
+      ]
+    ],
+    "call_line": 10612,
+    "symbol": "vcpu_scan_ioapic",
+    "section": ".text",
+    "address": 205129,
+    "offset": 153,
+    "instruction": "lock orb $0x80,0x3b(%rbx)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "__kvm_vcpu_update_apicv",
+    "die": "0x1d4587",
+    "ranges": [
+      [
+        198928,
+        198935
+      ]
+    ],
+    "path": "direct",
+    "req": 14,
+    "expressions": [
+      [
+        "constant",
+        14
+      ]
+    ],
+    "call_line": 10465,
+    "symbol": "__kvm_vcpu_update_apicv",
+    "section": ".text",
+    "address": 198928,
+    "offset": 208,
+    "instruction": "lock orb $0x40,0x39(%rbx)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "process_nmi",
+    "die": "0x1d4afe",
+    "ranges": [
+      [
+        174529,
+        174534
+      ]
+    ],
+    "path": "direct",
+    "req": 14,
+    "expressions": [
+      [
+        "constant",
+        14
+      ]
+    ],
+    "call_line": 10415,
+    "symbol": "process_nmi",
+    "section": ".text",
+    "address": 174529,
+    "offset": 113,
+    "instruction": "lock orb $0x40,0x39(%rbx)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "pvclock_gtod_update_fn",
+    "die": "0x1de5bd",
+    "ranges": [
+      [
+        175696,
+        175701
+      ]
+    ],
+    "path": "direct",
+    "req": 21,
+    "expressions": [
+      [
+        "constant",
+        21
+      ]
+    ],
+    "call_line": 9478,
+    "symbol": "pvclock_gtod_update_fn",
+    "section": ".text",
+    "address": 175696,
+    "offset": 192,
+    "instruction": "lock orb $0x20,0x3a(%rax)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "kvmclock_cpufreq_notifier",
+    "die": "0x1def15",
+    "ranges": [
+      [
+        176155,
+        176160
+      ]
+    ],
+    "path": "direct",
+    "req": 12,
+    "expressions": [
+      [
+        "constant",
+        12
+      ]
+    ],
+    "call_line": 9391,
+    "symbol": "kvmclock_cpufreq_notifier",
+    "section": ".text",
+    "address": 176155,
+    "offset": 331,
+    "instruction": "lock orb $0x10,0x39(%rax)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "x86_emulate_instruction",
+    "die": "0x1e0c6d",
+    "ranges": [
+      [
+        241167,
+        241172
+      ]
+    ],
+    "path": "direct",
+    "req": 14,
+    "expressions": [
+      [
+        "constant",
+        14
+      ]
+    ],
+    "call_line": 8508,
+    "symbol": "x86_emulate_instruction",
+    "section": ".text",
+    "address": 241167,
+    "offset": 415,
+    "instruction": "lock orb $0x40,0x39(%rbx)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "x86_emulate_instruction",
+    "die": "0x1e0e4c",
+    "ranges": [
+      [
+        241232,
+        241242
+      ]
+    ],
+    "path": "direct",
+    "req": 14,
+    "expressions": [
+      [
+        "constant",
+        14
+      ]
+    ],
+    "call_line": 9170,
+    "symbol": "x86_emulate_instruction",
+    "section": ".text",
+    "address": 241232,
+    "offset": 480,
+    "instruction": "lock orb $0x40,0x39(%rbx)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "kvm_inject_realmode_interrupt",
+    "die": "0x1e3318",
+    "ranges": [
+      [
+        194923,
+        194928
+      ]
+    ],
+    "path": "direct",
+    "req": 10,
+    "expressions": [
+      [
+        "constant",
+        10
+      ]
+    ],
+    "call_line": 8601,
+    "symbol": "kvm_inject_realmode_interrupt",
+    "section": ".text",
+    "address": 194923,
+    "offset": 75,
+    "instruction": "lock orb $0x4,0x39(%rbx)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "emulator_triple_fault",
+    "die": "0x1e4525",
+    "ranges": [
+      [
+        174588,
+        174593
+      ]
+    ],
+    "path": "direct",
+    "req": 10,
+    "expressions": [
+      [
+        "constant",
+        10
+      ]
+    ],
+    "call_line": 8396,
+    "symbol": "emulator_triple_fault",
+    "section": ".text",
+    "address": 174588,
+    "offset": 12,
+    "instruction": "lock orb $0x4,0x39(%rax)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "kvm_arch_pm_notifier",
+    "die": "0x1f42e0",
+    "ranges": [
+      [
+        240450,
+        240455
+      ]
+    ],
+    "path": "direct",
+    "req": 12,
+    "expressions": [
+      [
+        "constant",
+        12
+      ]
+    ],
+    "call_line": 5439,
+    "symbol": "kvm_arch_pm_notifier",
+    "section": ".text",
+    "address": 240450,
+    "offset": 162,
+    "instruction": "lock orb $0x10,0x39(%rax)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "kvm_arch_vcpu_ioctl",
+    "die": "0x1f5fe4",
+    "ranges": [
+      [
+        236029,
+        236036
+      ]
+    ],
+    "path": "direct",
+    "req": 14,
+    "expressions": [
+      [
+        "constant",
+        14
+      ]
+    ],
+    "call_line": 4968,
+    "symbol": "kvm_arch_vcpu_ioctl",
+    "section": ".text",
+    "address": 236029,
+    "offset": 2381,
+    "instruction": "lock orb $0x40,0x39(%r12)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "kvm_arch_vcpu_ioctl",
+    "die": "0x1f61d3",
+    "ranges": [
+      [
+        239130,
+        239137
+      ]
+    ],
+    "path": "direct",
+    "req": 14,
+    "expressions": [
+      [
+        "constant",
+        14
+      ]
+    ],
+    "call_line": 4953,
+    "symbol": "kvm_arch_vcpu_ioctl",
+    "section": ".text",
+    "address": 239130,
+    "offset": 5482,
+    "instruction": "lock orb $0x40,0x39(%r12)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "kvm_arch_vcpu_ioctl",
+    "die": "0x1f9540",
+    "ranges": [
+      [
+        235380,
+        235389
+      ]
+    ],
+    "path": "direct",
+    "req": 17,
+    "expressions": [
+      [
+        "constant",
+        17
+      ]
+    ],
+    "call_line": 997,
+    "symbol": "kvm_arch_vcpu_ioctl",
+    "section": ".text",
+    "address": 235380,
+    "offset": 1732,
+    "instruction": "lock orb $0x2,0x3a(%r12)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "kvm_arch_vcpu_ioctl",
+    "die": "0x1f9b68",
+    "ranges": [
+      [
+        237234,
+        237243
+      ]
+    ],
+    "path": "direct",
+    "req": 12,
+    "expressions": [
+      [
+        "constant",
+        12
+      ]
+    ],
+    "call_line": 5439,
+    "symbol": "kvm_arch_vcpu_ioctl",
+    "section": ".text",
+    "address": 237234,
+    "offset": 3586,
+    "instruction": "lock orb $0x10,0x39(%r12)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "kvm_arch_vcpu_ioctl",
+    "die": "0x1f9d99",
+    "ranges": [
+      [
+        237708,
+        237717
+      ]
+    ],
+    "path": "direct",
+    "req": 20,
+    "expressions": [
+      [
+        "constant",
+        20
+      ]
+    ],
+    "call_line": 148,
+    "symbol": "kvm_arch_vcpu_ioctl",
+    "section": ".text",
+    "address": 237708,
+    "offset": 4060,
+    "instruction": "lock orb $0x10,0x3a(%r12)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "kvm_vcpu_ioctl_x86_set_vcpu_events",
+    "die": "0x1fc11e",
+    "ranges": [
+      [
+        213580,
+        213584
+      ],
+      [
+        213590,
+        213595
+      ],
+      [
+        213649,
+        213655
+      ]
+    ],
+    "path": "direct",
+    "req": 10,
+    "expressions": [
+      [
+        "constant",
+        10
+      ]
+    ],
+    "call_line": 5318,
+    "symbol": "kvm_vcpu_ioctl_x86_set_vcpu_events",
+    "section": ".text",
+    "address": 213590,
+    "offset": 454,
+    "instruction": "lock orb $0x4,0x39(%rbp)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "kvm_vcpu_ioctl_x86_set_vcpu_events",
+    "die": "0x1fc2a3",
+    "ranges": [
+      [
+        213595,
+        213599
+      ]
+    ],
+    "path": "direct",
+    "req": 14,
+    "expressions": [
+      [
+        "constant",
+        14
+      ]
+    ],
+    "call_line": 5323,
+    "symbol": "kvm_vcpu_ioctl_x86_set_vcpu_events",
+    "section": ".text",
+    "address": 213595,
+    "offset": 459,
+    "instruction": "lock orb $0x40,(%rax)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "kvm_vcpu_ioctl_x86_set_vcpu_events",
+    "die": "0x1fc6e2",
+    "ranges": [
+      [
+        213742,
+        213752
+      ]
+    ],
+    "path": "direct",
+    "req": 17,
+    "expressions": [
+      [
+        "constant",
+        17
+      ]
+    ],
+    "call_line": 5276,
+    "symbol": "kvm_vcpu_ioctl_x86_set_vcpu_events",
+    "section": ".text",
+    "address": 213742,
+    "offset": 606,
+    "instruction": "lock orb $0x2,0x3a(%rbp)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "kvm_vcpu_ioctl_x86_get_vcpu_events",
+    "die": "0x1fcb55",
+    "ranges": [
+      [
+        233572,
+        233577
+      ]
+    ],
+    "path": "check",
+    "req": 20,
+    "expressions": [
+      [
+        "constant",
+        20
+      ]
+    ],
+    "call_line": 5154,
+    "symbol": "kvm_vcpu_ioctl_x86_get_vcpu_events",
+    "section": ".text",
+    "address": 233572,
+    "offset": 484,
+    "instruction": "lock andb $0xef,0x3a(%rbp)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "kvm_vcpu_ioctl_x86_set_mce",
+    "die": "0x1fd59b",
+    "ranges": [
+      [
+        217396,
+        217401
+      ]
+    ],
+    "path": "direct",
+    "req": 10,
+    "expressions": [
+      [
+        "constant",
+        10
+      ]
+    ],
+    "call_line": 5085,
+    "symbol": "kvm_vcpu_ioctl_x86_set_mce",
+    "section": ".text",
+    "address": 217396,
+    "offset": 404,
+    "instruction": "lock orb $0x4,0x39(%rdi)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "kvm_arch_vcpu_load",
+    "die": "0x1fe5bd",
+    "ranges": [
+      [
+        232067,
+        232072
+      ]
+    ],
+    "path": "direct",
+    "req": 8,
+    "expressions": [
+      [
+        "constant",
+        8
+      ]
+    ],
+    "call_line": 4805,
+    "symbol": "kvm_arch_vcpu_load",
+    "section": ".text",
+    "address": 232067,
+    "offset": 371,
+    "instruction": "lock orb $0x1,0x39(%rbx)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "kvm_arch_vcpu_load",
+    "die": "0x1fe74c",
+    "ranges": [
+      [
+        232134,
+        232139
+      ]
+    ],
+    "path": "direct",
+    "req": 24,
+    "expressions": [
+      [
+        "constant",
+        24
+      ]
+    ],
+    "call_line": 4799,
+    "symbol": "kvm_arch_vcpu_load",
+    "section": ".text",
+    "address": 232134,
+    "offset": 438,
+    "instruction": "lock orb $0x1,0x3b(%rbx)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "kvm_arch_vcpu_load",
+    "die": "0x1fe8db",
+    "ranges": [
+      [
+        232204,
+        232209
+      ]
+    ],
+    "path": "direct",
+    "req": 12,
+    "expressions": [
+      [
+        "constant",
+        12
+      ]
+    ],
+    "call_line": 4801,
+    "symbol": "kvm_arch_vcpu_load",
+    "section": ".text",
+    "address": 232204,
+    "offset": 508,
+    "instruction": "lock orb $0x10,0x39(%rbx)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "kvm_arch_vcpu_load",
+    "die": "0x1fedab",
+    "ranges": [
+      [
+        231925,
+        231930
+      ]
+    ],
+    "path": "direct",
+    "req": 16,
+    "expressions": [
+      [
+        "constant",
+        16
+      ]
+    ],
+    "call_line": 4809,
+    "symbol": "kvm_arch_vcpu_load",
+    "section": ".text",
+    "address": 231925,
+    "offset": 229,
+    "instruction": "lock orb $0x1,0x3a(%rbx)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "kvm_arch_vcpu_load",
+    "die": "0x1fef3a",
+    "ranges": [
+      [
+        232101,
+        232111
+      ]
+    ],
+    "path": "direct",
+    "req": 18,
+    "expressions": [
+      [
+        "constant",
+        18
+      ]
+    ],
+    "call_line": 4740,
+    "symbol": "kvm_arch_vcpu_load",
+    "section": ".text",
+    "address": 232101,
+    "offset": 405,
+    "instruction": "lock orb $0x4,0x3a(%rdi)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "kvm_arch_vcpu_load",
+    "die": "0x1ff3ea",
+    "ranges": [
+      [
+        232398,
+        232408
+      ]
+    ],
+    "path": "direct",
+    "req": 12,
+    "expressions": [
+      [
+        "constant",
+        12
+      ]
+    ],
+    "call_line": 4773,
+    "symbol": "kvm_arch_vcpu_load",
+    "section": ".text",
+    "address": 232398,
+    "offset": 702,
+    "instruction": "lock orb $0x10,0x39(%rbx)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "kvm_set_msr_common",
+    "die": "0x205b36",
+    "ranges": [
+      [
+        227736,
+        227742
+      ]
+    ],
+    "path": "direct",
+    "req": 12,
+    "expressions": [
+      [
+        "constant",
+        12
+      ]
+    ],
+    "call_line": 3618,
+    "symbol": "kvm_set_msr_common",
+    "section": ".text",
+    "address": 227736,
+    "offset": 3560,
+    "instruction": "lock orb $0x10,0x39(%r8)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "kvm_set_msr_common",
+    "die": "0x20693d",
+    "ranges": [
+      [
+        225583,
+        225593
+      ]
+    ],
+    "path": "direct",
+    "req": 37,
+    "expressions": [
+      [
+        "constant",
+        37
+      ]
+    ],
+    "call_line": 3520,
+    "symbol": "kvm_set_msr_common",
+    "section": ".text",
+    "address": 225587,
+    "offset": 1411,
+    "instruction": "lock orb $0x20,0x3c(%r8)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "kvm_set_msr_common",
+    "die": "0x2072e6",
+    "ranges": [
+      [
+        226758,
+        226764
+      ]
+    ],
+    "path": "direct",
+    "req": 16,
+    "expressions": [
+      [
+        "constant",
+        16
+      ]
+    ],
+    "call_line": 3748,
+    "symbol": "kvm_set_msr_common",
+    "section": ".text",
+    "address": 226758,
+    "offset": 2582,
+    "instruction": "lock orb $0x1,0x3a(%r8)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "kvm_service_local_tlb_flush_requests",
+    "die": "0x20a712",
+    "ranges": [
+      [
+        182406,
+        182411
+      ]
+    ],
+    "path": "check",
+    "req": 34,
+    "expressions": [
+      [
+        "constant",
+        34
+      ]
+    ],
+    "call_line": 3301,
+    "symbol": "kvm_service_local_tlb_flush_requests",
+    "section": ".text",
+    "address": 182406,
+    "offset": 38,
+    "instruction": "lock andb $0xfb,0x3c(%rdi)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "kvm_service_local_tlb_flush_requests",
+    "die": "0x20a9b3",
+    "ranges": [
+      [
+        182440,
+        182445
+      ]
+    ],
+    "path": "check",
+    "req": 803,
+    "expressions": [
+      [
+        "constant",
+        803
+      ]
+    ],
+    "call_line": 3304,
+    "symbol": "kvm_service_local_tlb_flush_requests",
+    "section": ".text",
+    "address": 182440,
+    "offset": 72,
+    "instruction": "lock andb $0xf7,0x3c(%rdi)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "kvm_vcpu_flush_tlb_guest",
+    "die": "0x20adf8",
+    "ranges": [
+      [
+        182282,
+        182287
+      ]
+    ],
+    "path": "check",
+    "req": 808,
+    "expressions": [
+      [
+        "constant",
+        808
+      ]
+    ],
+    "call_line": 211,
+    "symbol": "kvm_vcpu_flush_tlb_guest",
+    "section": ".text",
+    "address": 182282,
+    "offset": 58,
+    "instruction": "lock andb $0xfe,0x3d(%rbx)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "kvm_guest_time_update",
+    "die": "0x20c1a4",
+    "ranges": [
+      [
+        223142,
+        223147
+      ]
+    ],
+    "path": "direct",
+    "req": 12,
+    "expressions": [
+      [
+        "constant",
+        12
+      ]
+    ],
+    "call_line": 2911,
+    "symbol": "kvm_guest_time_update",
+    "section": ".text",
+    "address": 223142,
+    "offset": 918,
+    "instruction": "lock orb $0x10,0x39(%rbx)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "kvm_end_pvclock_update",
+    "die": "0x20d838",
+    "ranges": [
+      [
+        174903,
+        174908
+      ]
+    ],
+    "path": "direct",
+    "req": 12,
+    "expressions": [
+      [
+        "constant",
+        12
+      ]
+    ],
+    "call_line": 2745,
+    "symbol": "kvm_end_pvclock_update",
+    "section": ".text",
+    "address": 174903,
+    "offset": 167,
+    "instruction": "lock orb $0x10,0x39(%rax)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "__kvm_synchronize_tsc",
+    "die": "0x20fd7c",
+    "ranges": [
+      [
+        186382,
+        186387
+      ]
+    ],
+    "path": "direct",
+    "req": 21,
+    "expressions": [
+      [
+        "constant",
+        21
+      ]
+    ],
+    "call_line": 2201,
+    "symbol": "__kvm_synchronize_tsc",
+    "section": ".text",
+    "address": 186382,
+    "offset": 398,
+    "instruction": "lock orb $0x20,0x3a(%rax)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "kvm_write_system_time",
+    "die": "0x210b1f",
+    "ranges": [
+      [
+        174647,
+        174652
+      ]
+    ],
+    "path": "direct",
+    "req": 24,
+    "expressions": [
+      [
+        "constant",
+        24
+      ]
+    ],
+    "call_line": 2030,
+    "symbol": "kvm_write_system_time",
+    "section": ".text",
+    "address": 174647,
+    "offset": 23,
+    "instruction": "lock orb $0x1,0x3b(%rdi)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "kvm_write_system_time",
+    "die": "0x210cae",
+    "ranges": [
+      [
+        174703,
+        174708
+      ]
+    ],
+    "path": "direct",
+    "req": 21,
+    "expressions": [
+      [
+        "constant",
+        21
+      ]
+    ],
+    "call_line": 2024,
+    "symbol": "kvm_write_system_time",
+    "section": ".text",
+    "address": 174703,
+    "offset": 79,
+    "instruction": "lock orb $0x20,0x3a(%rdi)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "kvm_invalidate_pcid",
+    "die": "0x216deb",
+    "ranges": [
+      [
+        220946,
+        220951
+      ]
+    ],
+    "path": "direct",
+    "req": 11,
+    "expressions": [
+      [
+        "constant",
+        11
+      ]
+    ],
+    "call_line": 1149,
+    "symbol": "kvm_invalidate_pcid",
+    "section": ".text",
+    "address": 220946,
+    "offset": 226,
+    "instruction": "lock orb $0x8,0x39(%rdi)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "kvm_invalidate_pcid",
+    "die": "0x216f7a",
+    "ranges": [
+      [
+        220951,
+        220956
+      ]
+    ],
+    "path": "direct",
+    "req": 34,
+    "expressions": [
+      [
+        "constant",
+        34
+      ]
+    ],
+    "call_line": 1150,
+    "symbol": "kvm_invalidate_pcid",
+    "section": ".text",
+    "address": 220951,
+    "offset": 231,
+    "instruction": "lock orb $0x4,0x3c(%rdi)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "kvm_invalidate_pcid",
+    "die": "0x2171a6",
+    "ranges": [
+      [
+        220971,
+        220981
+      ]
+    ],
+    "path": "direct",
+    "req": 803,
+    "expressions": [
+      [
+        "constant",
+        803
+      ]
+    ],
+    "call_line": 1139,
+    "symbol": "kvm_invalidate_pcid",
+    "section": ".text",
+    "address": 220971,
+    "offset": 251,
+    "instruction": "lock orb $0x8,0x3c(%rdi)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "kvm_requeue_exception",
+    "die": "0x21810e",
+    "ranges": [
+      [
+        187700,
+        187705
+      ]
+    ],
+    "path": "direct",
+    "req": 14,
+    "expressions": [
+      [
+        "constant",
+        14
+      ]
+    ],
+    "call_line": 920,
+    "symbol": "kvm_requeue_exception",
+    "section": ".text",
+    "address": 187700,
+    "offset": 20,
+    "instruction": "lock orb $0x40,0x39(%rdi)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "kvm_multiple_exception",
+    "die": "0x21845f",
+    "ranges": [
+      [
+        180448,
+        180453
+      ]
+    ],
+    "path": "direct",
+    "req": 14,
+    "expressions": [
+      [
+        "constant",
+        14
+      ]
+    ],
+    "call_line": 829,
+    "symbol": "kvm_multiple_exception",
+    "section": ".text",
+    "address": 180448,
+    "offset": 32,
+    "instruction": "lock orb $0x40,0x39(%rbx)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "kvm_multiple_exception",
+    "die": "0x218725",
+    "ranges": [
+      [
+        180729,
+        180734
+      ]
+    ],
+    "path": "direct",
+    "req": 10,
+    "expressions": [
+      [
+        "constant",
+        10
+      ]
+    ],
+    "call_line": 859,
+    "symbol": "kvm_multiple_exception",
+    "section": ".text",
+    "address": 180729,
+    "offset": 313,
+    "instruction": "lock orb $0x4,0x39(%rbx)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "kvm_inject_nmi",
+    "die": "0x269161",
+    "ranges": [
+      [
+        220688,
+        220693
+      ]
+    ],
+    "path": "direct",
+    "req": 17,
+    "expressions": [
+      [
+        "constant",
+        17
+      ]
+    ],
+    "call_line": 997,
+    "symbol": "kvm_inject_nmi",
+    "section": ".text",
+    "address": 220688,
+    "offset": 16,
+    "instruction": "lock orb $0x2,0x3a(%rdi)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "vcpu_enter_guest",
+    "die": "0x269f17",
+    "ranges": [
+      [
+        246103,
+        246108
+      ]
+    ],
+    "path": "check",
+    "req": 769,
+    "expressions": [
+      [
+        "constant",
+        769
+      ]
+    ],
+    "call_line": 10666,
+    "symbol": "vcpu_enter_guest.constprop.0",
+    "section": ".text",
+    "address": 246103,
+    "offset": 823,
+    "instruction": "lock andb $0xfd,0x38(%rbx)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "vcpu_enter_guest",
+    "die": "0x26a214",
+    "ranges": [
+      [
+        246140,
+        246145
+      ]
+    ],
+    "path": "check",
+    "req": 32,
+    "expressions": [
+      [
+        "constant",
+        32
+      ]
+    ],
+    "call_line": 10676,
+    "symbol": "vcpu_enter_guest.constprop.0",
+    "section": ".text",
+    "address": 246140,
+    "offset": 860,
+    "instruction": "lock andb $0xfe,0x3c(%rbx)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "vcpu_enter_guest",
+    "die": "0x26a482",
+    "ranges": [
+      [
+        246364,
+        246369
+      ]
+    ],
+    "path": "check",
+    "req": 807,
+    "expressions": [
+      [
+        "constant",
+        807
+      ]
+    ],
+    "call_line": 10682,
+    "symbol": "vcpu_enter_guest.constprop.0",
+    "section": ".text",
+    "address": 246364,
+    "offset": 1084,
+    "instruction": "lock andb $0x7f,0x3c(%rbx)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "vcpu_enter_guest",
+    "die": "0x26a75e",
+    "ranges": [
+      [
+        246452,
+        246457
+      ]
+    ],
+    "path": "check",
+    "req": 8,
+    "expressions": [
+      [
+        "constant",
+        8
+      ]
+    ],
+    "call_line": 10684,
+    "symbol": "vcpu_enter_guest.constprop.0",
+    "section": ".text",
+    "address": 246452,
+    "offset": 1172,
+    "instruction": "lock andb $0xfe,0x39(%rbx)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "vcpu_enter_guest",
+    "die": "0x26aa3a",
+    "ranges": [
+      [
+        246382,
+        246387
+      ]
+    ],
+    "path": "check",
+    "req": 21,
+    "expressions": [
+      [
+        "constant",
+        21
+      ]
+    ],
+    "call_line": 10686,
+    "symbol": "vcpu_enter_guest.constprop.0",
+    "section": ".text",
+    "address": 246382,
+    "offset": 1102,
+    "instruction": "lock andb $0xdf,0x3a(%rbx)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "vcpu_enter_guest",
+    "die": "0x26ad16",
+    "ranges": [
+      [
+        246225,
+        246230
+      ]
+    ],
+    "path": "check",
+    "req": 24,
+    "expressions": [
+      [
+        "constant",
+        24
+      ]
+    ],
+    "call_line": 10688,
+    "symbol": "vcpu_enter_guest.constprop.0",
+    "section": ".text",
+    "address": 246225,
+    "offset": 945,
+    "instruction": "lock andb $0xfe,0x3b(%rbx)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "vcpu_enter_guest",
+    "die": "0x26afcb",
+    "ranges": [
+      [
+        246185,
+        246190
+      ]
+    ],
+    "path": "check",
+    "req": 12,
+    "expressions": [
+      [
+        "constant",
+        12
+      ]
+    ],
+    "call_line": 10690,
+    "symbol": "vcpu_enter_guest.constprop.0",
+    "section": ".text",
+    "address": 246185,
+    "offset": 905,
+    "instruction": "lock andb $0xef,0x39(%rbx)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "vcpu_enter_guest",
+    "die": "0x26b239",
+    "ranges": [
+      [
+        246516,
+        246521
+      ]
+    ],
+    "path": "check",
+    "req": 11,
+    "expressions": [
+      [
+        "constant",
+        11
+      ]
+    ],
+    "call_line": 10695,
+    "symbol": "vcpu_enter_guest.constprop.0",
+    "section": ".text",
+    "address": 246516,
+    "offset": 1236,
+    "instruction": "lock andb $0xf7,0x39(%rbx)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "vcpu_enter_guest",
+    "die": "0x26b515",
+    "ranges": [
+      [
+        246470,
+        246475
+      ]
+    ],
+    "path": "check",
+    "req": 13,
+    "expressions": [
+      [
+        "constant",
+        13
+      ]
+    ],
+    "call_line": 10697,
+    "symbol": "vcpu_enter_guest.constprop.0",
+    "section": ".text",
+    "address": 246470,
+    "offset": 1190,
+    "instruction": "lock andb $0xdf,0x39(%rbx)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "vcpu_enter_guest",
+    "die": "0x26b7f0",
+    "ranges": [
+      [
+        246534,
+        246539
+      ]
+    ],
+    "path": "check",
+    "req": 768,
+    "expressions": [
+      [
+        "constant",
+        768
+      ]
+    ],
+    "call_line": 10705,
+    "symbol": "vcpu_enter_guest.constprop.0",
+    "section": ".text",
+    "address": 246534,
+    "offset": 1254,
+    "instruction": "lock andb $0xfe,0x38(%rbx)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "vcpu_enter_guest",
+    "die": "0x26bad5",
+    "ranges": [
+      [
+        247550,
+        247555
+      ]
+    ],
+    "path": "check",
+    "req": 808,
+    "expressions": [
+      [
+        "constant",
+        808
+      ]
+    ],
+    "call_line": 10717,
+    "symbol": "vcpu_enter_guest.constprop.0",
+    "section": ".text",
+    "address": 247550,
+    "offset": 2270,
+    "instruction": "lock andb $0xfe,0x3d(%rbx)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "vcpu_enter_guest",
+    "die": "0x26bdb1",
+    "ranges": [
+      [
+        246039,
+        246044
+      ]
+    ],
+    "path": "check",
+    "req": 9,
+    "expressions": [
+      [
+        "constant",
+        9
+      ]
+    ],
+    "call_line": 10722,
+    "symbol": "vcpu_enter_guest.constprop.0",
+    "section": ".text",
+    "address": 246039,
+    "offset": 759,
+    "instruction": "lock andb $0xfd,0x39(%rbx)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "vcpu_enter_guest",
+    "die": "0x26c273",
+    "ranges": [
+      [
+        247802,
+        247807
+      ]
+    ],
+    "path": "check",
+    "req": 10,
+    "expressions": [
+      [
+        "constant",
+        10
+      ]
+    ],
+    "call_line": 10731,
+    "symbol": "vcpu_enter_guest.constprop.0",
+    "section": ".text",
+    "address": 247802,
+    "offset": 2522,
+    "instruction": "lock andb $0xfb,0x39(%rbx)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "vcpu_enter_guest",
+    "die": "0x26c528",
+    "ranges": [
+      [
+        246573,
+        246578
+      ]
+    ],
+    "path": "check",
+    "req": 15,
+    "expressions": [
+      [
+        "constant",
+        15
+      ]
+    ],
+    "call_line": 10738,
+    "symbol": "vcpu_enter_guest.constprop.0",
+    "section": ".text",
+    "address": 246573,
+    "offset": 1293,
+    "instruction": "lock andb $0x7f,0x39(%rbx)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "vcpu_enter_guest",
+    "die": "0x26c825",
+    "ranges": [
+      [
+        247833,
+        247838
+      ]
+    ],
+    "path": "check",
+    "req": 16,
+    "expressions": [
+      [
+        "constant",
+        16
+      ]
+    ],
+    "call_line": 10744,
+    "symbol": "vcpu_enter_guest.constprop.0",
+    "section": ".text",
+    "address": 247833,
+    "offset": 2553,
+    "instruction": "lock andb $0xfe,0x3a(%rbx)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "vcpu_enter_guest",
+    "die": "0x26cb01",
+    "ranges": [
+      [
+        248176,
+        248181
+      ]
+    ],
+    "path": "check",
+    "req": 18,
+    "expressions": [
+      [
+        "constant",
+        18
+      ]
+    ],
+    "call_line": 10746,
+    "symbol": "vcpu_enter_guest.constprop.0",
+    "section": ".text",
+    "address": 248176,
+    "offset": 2896,
+    "instruction": "lock andb $0xfb,0x3a(%rbx)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "vcpu_enter_guest",
+    "die": "0x26cddd",
+    "ranges": [
+      [
+        248158,
+        248163
+      ]
+    ],
+    "path": "check",
+    "req": 19,
+    "expressions": [
+      [
+        "constant",
+        19
+      ]
+    ],
+    "call_line": 10748,
+    "symbol": "vcpu_enter_guest.constprop.0",
+    "section": ".text",
+    "address": 248158,
+    "offset": 2878,
+    "instruction": "lock andb $0xf7,0x3a(%rbx)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "vcpu_enter_guest",
+    "die": "0x26d0b9",
+    "ranges": [
+      [
+        248140,
+        248145
+      ]
+    ],
+    "path": "check",
+    "req": 20,
+    "expressions": [
+      [
+        "constant",
+        20
+      ]
+    ],
+    "call_line": 10751,
+    "symbol": "vcpu_enter_guest.constprop.0",
+    "section": ".text",
+    "address": 248140,
+    "offset": 2860,
+    "instruction": "lock andb $0xef,0x3a(%rbx)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "vcpu_enter_guest",
+    "die": "0x26d395",
+    "ranges": [
+      [
+        248122,
+        248127
+      ]
+    ],
+    "path": "check",
+    "req": 17,
+    "expressions": [
+      [
+        "constant",
+        17
+      ]
+    ],
+    "call_line": 10754,
+    "symbol": "vcpu_enter_guest.constprop.0",
+    "section": ".text",
+    "address": 248122,
+    "offset": 2842,
+    "instruction": "lock andb $0xfd,0x3a(%rbx)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "vcpu_enter_guest",
+    "die": "0x26d671",
+    "ranges": [
+      [
+        247967,
+        247972
+      ]
+    ],
+    "path": "check",
+    "req": 27,
+    "expressions": [
+      [
+        "constant",
+        27
+      ]
+    ],
+    "call_line": 10756,
+    "symbol": "vcpu_enter_guest.constprop.0",
+    "section": ".text",
+    "address": 247967,
+    "offset": 2687,
+    "instruction": "lock andb $0xf7,0x3b(%rbx)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "vcpu_enter_guest",
+    "die": "0x26d926",
+    "ranges": [
+      [
+        248683,
+        248688
+      ]
+    ],
+    "path": "check",
+    "req": 791,
+    "expressions": [
+      [
+        "constant",
+        791
+      ]
+    ],
+    "call_line": 10767,
+    "symbol": "vcpu_enter_guest.constprop.0",
+    "section": ".text",
+    "address": 248683,
+    "offset": 3403,
+    "instruction": "lock andb $0x7f,0x3a(%rbx)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "vcpu_enter_guest",
+    "die": "0x26dc02",
+    "ranges": [
+      [
+        248574,
+        248579
+      ]
+    ],
+    "path": "check",
+    "req": 31,
+    "expressions": [
+      [
+        "constant",
+        31
+      ]
+    ],
+    "call_line": 10769,
+    "symbol": "vcpu_enter_guest.constprop.0",
+    "section": ".text",
+    "address": 248574,
+    "offset": 3294,
+    "instruction": "lock andb $0x7f,0x3b(%rbx)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "vcpu_enter_guest",
+    "die": "0x26dede",
+    "ranges": [
+      [
+        248551,
+        248556
+      ]
+    ],
+    "path": "check",
+    "req": 793,
+    "expressions": [
+      [
+        "constant",
+        793
+      ]
+    ],
+    "call_line": 10771,
+    "symbol": "vcpu_enter_guest.constprop.0",
+    "section": ".text",
+    "address": 248551,
+    "offset": 3271,
+    "instruction": "lock andb $0xfd,0x3b(%rbx)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "vcpu_enter_guest",
+    "die": "0x26e1ba",
+    "ranges": [
+      [
+        248079,
+        248084
+      ]
+    ],
+    "path": "check",
+    "req": 26,
+    "expressions": [
+      [
+        "constant",
+        26
+      ]
+    ],
+    "call_line": 10774,
+    "symbol": "vcpu_enter_guest.constprop.0",
+    "section": ".text",
+    "address": 248079,
+    "offset": 2799,
+    "instruction": "lock andb $0xfb,0x3b(%rbx)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "vcpu_enter_guest",
+    "die": "0x26e4b7",
+    "ranges": [
+      [
+        248701,
+        248706
+      ]
+    ],
+    "path": "check",
+    "req": 28,
+    "expressions": [
+      [
+        "constant",
+        28
+      ]
+    ],
+    "call_line": 10781,
+    "symbol": "vcpu_enter_guest.constprop.0",
+    "section": ".text",
+    "address": 248701,
+    "offset": 3421,
+    "instruction": "lock andb $0xef,0x3b(%rbx)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "vcpu_enter_guest",
+    "die": "0x26e7b4",
+    "ranges": [
+      [
+        248871,
+        248876
+      ]
+    ],
+    "path": "check",
+    "req": 29,
+    "expressions": [
+      [
+        "constant",
+        29
+      ]
+    ],
+    "call_line": 10788,
+    "symbol": "vcpu_enter_guest.constprop.0",
+    "section": ".text",
+    "address": 248871,
+    "offset": 3591,
+    "instruction": "lock andb $0xdf,0x3b(%rbx)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "vcpu_enter_guest",
+    "die": "0x26eab1",
+    "ranges": [
+      [
+        249120,
+        249125
+      ]
+    ],
+    "path": "check",
+    "req": 30,
+    "expressions": [
+      [
+        "constant",
+        30
+      ]
+    ],
+    "call_line": 10802,
+    "symbol": "vcpu_enter_guest.constprop.0",
+    "section": ".text",
+    "address": 249120,
+    "offset": 3840,
+    "instruction": "lock andb $0xbf,0x3b(%rbx)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "vcpu_enter_guest",
+    "die": "0x26ed8d",
+    "ranges": [
+      [
+        249192,
+        249197
+      ]
+    ],
+    "path": "check",
+    "req": 801,
+    "expressions": [
+      [
+        "constant",
+        801
+      ]
+    ],
+    "call_line": 10805,
+    "symbol": "vcpu_enter_guest.constprop.0",
+    "section": ".text",
+    "address": 249192,
+    "offset": 3912,
+    "instruction": "lock andb $0xfd,0x3c(%rbx)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "vcpu_enter_guest",
+    "die": "0x26f069",
+    "ranges": [
+      [
+        249174,
+        249179
+      ]
+    ],
+    "path": "check",
+    "req": 36,
+    "expressions": [
+      [
+        "constant",
+        36
+      ]
+    ],
+    "call_line": 10807,
+    "symbol": "vcpu_enter_guest.constprop.0",
+    "section": ".text",
+    "address": 249174,
+    "offset": 3894,
+    "instruction": "lock andb $0xef,0x3c(%rbx)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "vcpu_enter_guest",
+    "die": "0x26f345",
+    "ranges": [
+      [
+        249156,
+        249161
+      ]
+    ],
+    "path": "check",
+    "req": 37,
+    "expressions": [
+      [
+        "constant",
+        37
+      ]
+    ],
+    "call_line": 10810,
+    "symbol": "vcpu_enter_guest.constprop.0",
+    "section": ".text",
+    "address": 249156,
+    "offset": 3876,
+    "instruction": "lock andb $0xdf,0x3c(%rbx)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "vcpu_enter_guest",
+    "die": "0x26f621",
+    "ranges": [
+      [
+        249138,
+        249143
+      ]
+    ],
+    "path": "check",
+    "req": 806,
+    "expressions": [
+      [
+        "constant",
+        806
+      ]
+    ],
+    "call_line": 10813,
+    "symbol": "vcpu_enter_guest.constprop.0",
+    "section": ".text",
+    "address": 249138,
+    "offset": 3858,
+    "instruction": "lock andb $0xbf,0x3c(%rbx)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "vcpu_enter_guest",
+    "die": "0x26f8fd",
+    "ranges": [
+      [
+        249038,
+        249043
+      ]
+    ],
+    "path": "check",
+    "req": 554,
+    "expressions": [
+      [
+        "constant",
+        554
+      ]
+    ],
+    "call_line": 10816,
+    "symbol": "vcpu_enter_guest.constprop.0",
+    "section": ".text",
+    "address": 249038,
+    "offset": 3758,
+    "instruction": "lock andb $0xfb,0x3d(%rbx)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "vcpu_enter_guest",
+    "die": "0x26fbbd",
+    "ranges": [
+      [
+        245901,
+        245906
+      ]
+    ],
+    "path": "check",
+    "req": 809,
+    "expressions": [
+      [
+        "constant",
+        809
+      ]
+    ],
+    "call_line": 10823,
+    "symbol": "vcpu_enter_guest.constprop.0",
+    "section": ".text",
+    "address": 245901,
+    "offset": 621,
+    "instruction": "lock andb $0xfd,0x3d(%rbx)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "vcpu_enter_guest",
+    "die": "0x26feba",
+    "ranges": [
+      [
+        246093,
+        246103
+      ]
+    ],
+    "path": "check",
+    "req": 14,
+    "expressions": [
+      [
+        "constant",
+        14
+      ]
+    ],
+    "call_line": 10827,
+    "symbol": "vcpu_enter_guest.constprop.0",
+    "section": ".text",
+    "address": 246093,
+    "offset": 813,
+    "instruction": "lock andb $0xbf,0x39(%rbx)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "vcpu_enter_guest",
+    "die": "0x2703ff",
+    "ranges": [
+      [
+        247584,
+        247589
+      ]
+    ],
+    "path": "check",
+    "req": 807,
+    "expressions": [
+      [
+        "constant",
+        807
+      ]
+    ],
+    "call_line": 120,
+    "symbol": "vcpu_enter_guest.constprop.0",
+    "section": ".text",
+    "address": 247584,
+    "offset": 2304,
+    "instruction": "lock andb $0x7f,0x3c(%rbx)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "vcpu_enter_guest",
+    "die": "0x27084f",
+    "ranges": [
+      [
+        246308,
+        246313
+      ]
+    ],
+    "path": "direct",
+    "req": 12,
+    "expressions": [
+      [
+        "constant",
+        12
+      ]
+    ],
+    "call_line": 3097,
+    "symbol": "vcpu_enter_guest.constprop.0",
+    "section": ".text",
+    "address": 246308,
+    "offset": 1028,
+    "instruction": "lock orb $0x10,0x39(%rdi)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "vcpu_enter_guest",
+    "die": "0x2723b0",
+    "ranges": [
+      [
+        247877,
+        247882
+      ]
+    ],
+    "path": "direct",
+    "req": 14,
+    "expressions": [
+      [
+        "constant",
+        14
+      ]
+    ],
+    "call_line": 10912,
+    "symbol": "vcpu_enter_guest.constprop.0",
+    "section": ".text",
+    "address": 247877,
+    "offset": 2597,
+    "instruction": "lock orb $0x40,0x39(%rbx)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "vcpu_enter_guest",
+    "die": "0x2726b0",
+    "ranges": [
+      [
+        247957,
+        247967
+      ]
+    ],
+    "path": "direct",
+    "req": 14,
+    "expressions": [
+      [
+        "constant",
+        14
+      ]
+    ],
+    "call_line": 11099,
+    "symbol": "vcpu_enter_guest.constprop.0",
+    "section": ".text",
+    "address": 247957,
+    "offset": 2677,
+    "instruction": "lock orb $0x40,0x39(%rbx)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "vcpu_enter_guest",
+    "die": "0x273229",
+    "ranges": [
+      [
+        248452,
+        248462
+      ]
+    ],
+    "path": "direct",
+    "req": 12,
+    "expressions": [
+      [
+        "constant",
+        12
+      ]
+    ],
+    "call_line": 11089,
+    "symbol": "vcpu_enter_guest.constprop.0",
+    "section": ".text",
+    "address": 248452,
+    "offset": 3172,
+    "instruction": "lock orb $0x10,0x39(%rbx)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "kvm_apic_set_state",
+    "die": "0x2f775a",
+    "ranges": [
+      [
+        369145,
+        369150
+      ]
+    ],
+    "path": "direct",
+    "req": 36,
+    "expressions": [
+      [
+        "constant",
+        36
+      ]
+    ],
+    "call_line": 535,
+    "symbol": "kvm_apic_set_state",
+    "section": ".text",
+    "address": 369145,
+    "offset": 633,
+    "instruction": "lock orb $0x10,0x3c(%rax)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "kvm_apic_set_state",
+    "die": "0x2f83b3",
+    "ranges": [
+      [
+        369043,
+        369048
+      ]
+    ],
+    "path": "direct",
+    "req": 14,
+    "expressions": [
+      [
+        "constant",
+        14
+      ]
+    ],
+    "call_line": 3338,
+    "symbol": "kvm_apic_set_state",
+    "section": ".text",
+    "address": 369043,
+    "offset": 531,
+    "instruction": "lock orb $0x40,0x39(%rbp)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "kvm_create_lapic",
+    "die": "0x2f9d3e",
+    "ranges": [
+      [
+        367891,
+        367907
+      ]
+    ],
+    "path": "direct",
+    "req": 801,
+    "expressions": [
+      [
+        "constant",
+        801
+      ]
+    ],
+    "call_line": 3155,
+    "symbol": "kvm_create_lapic",
+    "section": ".text",
+    "address": 367891,
+    "offset": 275,
+    "instruction": "lock orb $0x2,0x3c(%rbp)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "__kvm_apic_set_base",
+    "die": "0x2fc828",
+    "ranges": [
+      [
+        344518,
+        344522
+      ],
+      [
+        344689,
+        344693
+      ],
+      [
+        344779,
+        344788
+      ]
+    ],
+    "path": "direct",
+    "req": 36,
+    "expressions": [
+      [
+        "constant",
+        36
+      ]
+    ],
+    "call_line": 2811,
+    "symbol": "__kvm_apic_set_base",
+    "section": ".text",
+    "address": 344783,
+    "offset": 335,
+    "instruction": "lock orb $0x10,0x3c(%rcx)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "__kvm_apic_set_base",
+    "die": "0x2fcb7a",
+    "ranges": [
+      [
+        344580,
+        344585
+      ]
+    ],
+    "path": "direct",
+    "req": 801,
+    "expressions": [
+      [
+        "constant",
+        801
+      ]
+    ],
+    "call_line": 2826,
+    "symbol": "__kvm_apic_set_base",
+    "section": ".text",
+    "address": 344580,
+    "offset": 132,
+    "instruction": "lock orb $0x2,(%r9)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "kvm_lapic_reg_write",
+    "die": "0x2ff05e",
+    "ranges": [
+      [
+        365308,
+        365313
+      ]
+    ],
+    "path": "direct",
+    "req": 36,
+    "expressions": [
+      [
+        "constant",
+        36
+      ]
+    ],
+    "call_line": 535,
+    "symbol": "kvm_lapic_reg_write",
+    "section": ".text",
+    "address": 365308,
+    "offset": 1148,
+    "instruction": "lock orb $0x10,0x3c(%rax)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "apic_timer_expired",
+    "die": "0x303d8e",
+    "ranges": [
+      [
+        362164,
+        362171
+      ]
+    ],
+    "path": "direct",
+    "req": 2,
+    "expressions": [
+      [
+        "constant",
+        2
+      ]
+    ],
+    "call_line": 2077,
+    "symbol": "apic_timer_expired",
+    "section": ".text",
+    "address": 362164,
+    "offset": 116,
+    "instruction": "lock orb $0x4,0x38(%r12)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "kvm_apic_set_eoi_accelerated",
+    "die": "0x306c42",
+    "ranges": [
+      [
+        353645,
+        353650
+      ]
+    ],
+    "path": "direct",
+    "req": 14,
+    "expressions": [
+      [
+        "constant",
+        14
+      ]
+    ],
+    "call_line": 1623,
+    "symbol": "kvm_apic_set_eoi_accelerated",
+    "section": ".text",
+    "address": 353645,
+    "offset": 61,
+    "instruction": "lock orb $0x40,0x39(%rax)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "apic_set_eoi",
+    "die": "0x307807",
+    "ranges": [
+      [
+        358016,
+        358021
+      ]
+    ],
+    "path": "direct",
+    "req": 14,
+    "expressions": [
+      [
+        "constant",
+        14
+      ]
+    ],
+    "call_line": 1608,
+    "symbol": "apic_set_eoi",
+    "section": ".text",
+    "address": 358016,
+    "offset": 224,
+    "instruction": "lock orb $0x40,0x39(%rax)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "__apic_accept_irq",
+    "die": "0x308f50",
+    "ranges": [
+      [
+        350201,
+        350211
+      ]
+    ],
+    "path": "direct",
+    "req": 20,
+    "expressions": [
+      [
+        "constant",
+        20
+      ]
+    ],
+    "call_line": 148,
+    "symbol": "__apic_accept_irq",
+    "section": ".text",
+    "address": 350205,
+    "offset": 557,
+    "instruction": "lock orb $0x10,0x3a(%r11)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "__apic_accept_irq",
+    "die": "0x3092d7",
+    "ranges": [
+      [
+        350242,
+        350248
+      ]
+    ],
+    "path": "direct",
+    "req": 14,
+    "expressions": [
+      [
+        "constant",
+        14
+      ]
+    ],
+    "call_line": 1444,
+    "symbol": "__apic_accept_irq",
+    "section": ".text",
+    "address": 350242,
+    "offset": 594,
+    "instruction": "lock orb $0x40,0x39(%r11)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "__report_tpr_access",
+    "die": "0x312a7e",
+    "ranges": [
+      [
+        345033,
+        345033
+      ],
+      [
+        345037,
+        345042
+      ]
+    ],
+    "path": "direct",
+    "req": 9,
+    "expressions": [
+      [
+        "constant",
+        9
+      ]
+    ],
+    "call_line": 1683,
+    "symbol": "__report_tpr_access.isra.0",
+    "section": ".text",
+    "address": 345037,
+    "offset": 13,
+    "instruction": "lock orb $0x2,0x39(%rdi)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "kvm_ioapic_send_eoi",
+    "die": "0x313e5c",
+    "ranges": [
+      [
+        353474,
+        353479
+      ]
+    ],
+    "path": "direct",
+    "req": 791,
+    "expressions": [
+      [
+        "constant",
+        791
+      ]
+    ],
+    "call_line": 1560,
+    "symbol": "kvm_ioapic_send_eoi.part.0",
+    "section": ".text",
+    "address": 353474,
+    "offset": 82,
+    "instruction": "lock orb $0x80,0x3a(%rax)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "kvm_ioapic_send_eoi",
+    "die": "0x313ffa",
+    "ranges": [
+      [
+        353554,
+        353561
+      ]
+    ],
+    "path": "direct",
+    "req": 27,
+    "expressions": [
+      [
+        "constant",
+        27
+      ]
+    ],
+    "call_line": 1574,
+    "symbol": "kvm_ioapic_send_eoi.part.0",
+    "section": ".text",
+    "address": 353554,
+    "offset": 162,
+    "instruction": "lock orb $0x8,0x3b(%rax)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "apic_update_ppr",
+    "die": "0x31526b",
+    "ranges": [
+      [
+        357616,
+        357621
+      ]
+    ],
+    "path": "direct",
+    "req": 14,
+    "expressions": [
+      [
+        "constant",
+        14
+      ]
+    ],
+    "call_line": 982,
+    "symbol": "apic_update_ppr",
+    "section": ".text",
+    "address": 357616,
+    "offset": 96,
+    "instruction": "lock orb $0x40,0x39(%rax)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "kvm_cpuid",
+    "die": "0x33bf73",
+    "ranges": [
+      [
+        380465,
+        380470
+      ]
+    ],
+    "path": "check",
+    "req": 12,
+    "expressions": [
+      [
+        "constant",
+        12
+      ]
+    ],
+    "call_line": 2127,
+    "symbol": "kvm_cpuid",
+    "section": ".text",
+    "address": 380465,
+    "offset": 1233,
+    "instruction": "lock andb $0xef,0x39(%rbx)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "kvm_vcpu_after_set_cpuid",
+    "die": "0x37967c",
+    "ranges": [
+      [
+        385368,
+        385374
+      ]
+    ],
+    "path": "direct",
+    "req": 37,
+    "expressions": [
+      [
+        "constant",
+        37
+      ]
+    ],
+    "call_line": 468,
+    "symbol": "kvm_vcpu_after_set_cpuid",
+    "section": ".text",
+    "address": 385368,
+    "offset": 1640,
+    "instruction": "lock orb $0x20,0x3c(%r14)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "kvm_pmu_set_msr",
+    "die": "0x3a5389",
+    "ranges": [
+      [
+        398417,
+        398422
+      ]
+    ],
+    "path": "direct",
+    "req": 18,
+    "expressions": [
+      [
+        "constant",
+        18
+      ]
+    ],
+    "call_line": 238,
+    "symbol": "kvm_pmu_set_msr",
+    "section": ".text",
+    "address": 398417,
+    "offset": 177,
+    "instruction": "lock orb $0x4,0x3a(%rdi)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "reprogram_counter",
+    "die": "0x3a7a72",
+    "ranges": [
+      [
+        395461,
+        395471
+      ]
+    ],
+    "path": "direct",
+    "req": 19,
+    "expressions": [
+      [
+        "constant",
+        19
+      ]
+    ],
+    "call_line": 212,
+    "symbol": "reprogram_counter",
+    "section": ".text",
+    "address": 395461,
+    "offset": 1237,
+    "instruction": "lock orb $0x8,0x3a(%rax)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "kvm_perf_overflow",
+    "die": "0x3a8f17",
+    "ranges": [
+      [
+        390397,
+        390404
+      ]
+    ],
+    "path": "direct",
+    "req": 19,
+    "expressions": [
+      [
+        "constant",
+        19
+      ]
+    ],
+    "call_line": 212,
+    "symbol": "kvm_perf_overflow",
+    "section": ".text",
+    "address": 390397,
+    "offset": 125,
+    "instruction": "lock orb $0x8,0x3a(%rdx)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "kvm_perf_overflow",
+    "die": "0x3a9091",
+    "ranges": [
+      [
+        390369,
+        390374
+      ]
+    ],
+    "path": "direct",
+    "req": 18,
+    "expressions": [
+      [
+        "constant",
+        18
+      ]
+    ],
+    "call_line": 231,
+    "symbol": "kvm_perf_overflow",
+    "section": ".text",
+    "address": 390369,
+    "offset": 97,
+    "instruction": "lock orb $0x4,0x3a(%rax)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "kvm_handle_guest_mediated_pmi",
+    "die": "0x3a9322",
+    "ranges": [
+      [
+        397109,
+        397119
+      ]
+    ],
+    "path": "direct",
+    "req": 19,
+    "expressions": [
+      [
+        "constant",
+        19
+      ]
+    ],
+    "call_line": 185,
+    "symbol": "kvm_handle_guest_mediated_pmi",
+    "section": ".text",
+    "address": 397109,
+    "offset": 37,
+    "instruction": "lock orb $0x8,0x3a(%rax)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "kvm_pmu_trigger_event",
+    "die": "0x3ac0ad",
+    "ranges": [
+      [
+        393641,
+        393646
+      ]
+    ],
+    "path": "direct",
+    "req": 19,
+    "expressions": [
+      [
+        "constant",
+        19
+      ]
+    ],
+    "call_line": 1088,
+    "symbol": "kvm_pmu_trigger_event.isra.0",
+    "section": ".text",
+    "address": 393641,
+    "offset": 457,
+    "instruction": "lock orb $0x8,0x3a(%rax)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "kvm_pmu_trigger_event",
+    "die": "0x3ac374",
+    "ranges": [
+      [
+        393795,
+        393820
+      ]
+    ],
+    "path": "direct",
+    "req": 18,
+    "expressions": [
+      [
+        "constant",
+        18
+      ]
+    ],
+    "call_line": 226,
+    "symbol": "kvm_pmu_trigger_event.isra.0",
+    "section": ".text",
+    "address": 393795,
+    "offset": 611,
+    "instruction": "lock orb $0x4,0x3a(%rax)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "kvm_vcpu_ioctl_x86_set_sregs2",
+    "die": "0x3d0811",
+    "ranges": [
+      [
+        410593,
+        410598
+      ]
+    ],
+    "path": "direct",
+    "req": 803,
+    "expressions": [
+      [
+        "constant",
+        803
+      ]
+    ],
+    "call_line": 708,
+    "symbol": "kvm_vcpu_ioctl_x86_set_sregs2",
+    "section": ".text",
+    "address": 410593,
+    "offset": 145,
+    "instruction": "lock orb $0x8,0x3c(%rbx)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "kvm_post_set_cr4",
+    "die": "0x3d2882",
+    "ranges": [
+      [
+        403039,
+        403044
+      ]
+    ],
+    "path": "direct",
+    "req": 34,
+    "expressions": [
+      [
+        "constant",
+        34
+      ]
+    ],
+    "call_line": 403,
+    "symbol": "kvm_post_set_cr4",
+    "section": ".text",
+    "address": 403039,
+    "offset": 79,
+    "instruction": "lock orb $0x4,0x3c(%rdi)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "kvm_post_set_cr4",
+    "die": "0x3d2a11",
+    "ranges": [
+      [
+        403065,
+        403070
+      ]
+    ],
+    "path": "direct",
+    "req": 803,
+    "expressions": [
+      [
+        "constant",
+        803
+      ]
+    ],
+    "call_line": 393,
+    "symbol": "kvm_post_set_cr4",
+    "section": ".text",
+    "address": 403065,
+    "offset": 105,
+    "instruction": "lock orb $0x8,0x3c(%rdi)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "kvm_post_set_cr0",
+    "die": "0x3d4797",
+    "ranges": [
+      [
+        402923,
+        402928
+      ]
+    ],
+    "path": "direct",
+    "req": 803,
+    "expressions": [
+      [
+        "constant",
+        803
+      ]
+    ],
+    "call_line": 245,
+    "symbol": "kvm_post_set_cr0",
+    "section": ".text",
+    "address": 402923,
+    "offset": 91,
+    "instruction": "lock orb $0x8,0x3c(%rdi)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "kvm_post_set_cr0",
+    "die": "0x3d4925",
+    "ranges": [
+      [
+        402933,
+        402938
+      ]
+    ],
+    "path": "direct",
+    "req": 36,
+    "expressions": [
+      [
+        "constant",
+        36
+      ]
+    ],
+    "call_line": 253,
+    "symbol": "kvm_post_set_cr0",
+    "section": ".text",
+    "address": 402933,
+    "offset": 101,
+    "instruction": "lock orb $0x10,0x3c(%rdi)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "load_pdptrs",
+    "die": "0x3d4ff7",
+    "ranges": [
+      [
+        404031,
+        404036
+      ]
+    ],
+    "path": "direct",
+    "req": 13,
+    "expressions": [
+      [
+        "constant",
+        13
+      ]
+    ],
+    "call_line": 196,
+    "symbol": "load_pdptrs",
+    "section": ".text",
+    "address": 404031,
+    "offset": 287,
+    "instruction": "lock orb $0x20,0x39(%rbx)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "__set_regs",
+    "die": "0x3d5b11",
+    "ranges": [
+      [
+        405032,
+        405037
+      ]
+    ],
+    "path": "direct",
+    "req": 14,
+    "expressions": [
+      [
+        "constant",
+        14
+      ]
+    ],
+    "call_line": 50,
+    "symbol": "__set_regs",
+    "section": ".text",
+    "address": 405032,
+    "offset": 280,
+    "instruction": "lock orb $0x40,0x39(%rbx)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "__set_regs",
+    "die": "0x3d5c9c",
+    "ranges": [
+      [
+        405051,
+        405056
+      ]
+    ],
+    "path": "direct",
+    "req": 14,
+    "expressions": [
+      [
+        "constant",
+        14
+      ]
+    ],
+    "call_line": 132,
+    "symbol": "__set_regs",
+    "section": ".text",
+    "address": 405051,
+    "offset": 299,
+    "instruction": "lock orb $0x40,0x39(%rbx)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "kvm_set_rflags",
+    "die": "0x3d813a",
+    "ranges": [
+      [
+        404659,
+        404664
+      ]
+    ],
+    "path": "direct",
+    "req": 14,
+    "expressions": [
+      [
+        "constant",
+        14
+      ]
+    ],
+    "call_line": 50,
+    "symbol": "kvm_set_rflags",
+    "section": ".text",
+    "address": 404659,
+    "offset": 35,
+    "instruction": "lock orb $0x40,0x39(%rbx)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "__set_sregs",
+    "die": "0x3d9c7c",
+    "ranges": [
+      [
+        408995,
+        409002
+      ]
+    ],
+    "path": "direct",
+    "req": 14,
+    "expressions": [
+      [
+        "constant",
+        14
+      ]
+    ],
+    "call_line": 658,
+    "symbol": "__set_sregs",
+    "section": ".text",
+    "address": 408995,
+    "offset": 147,
+    "instruction": "lock orb $0x40,0x39(%rbp)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "__set_sregs",
+    "die": "0x3d9e21",
+    "ranges": [
+      [
+        409010,
+        409017
+      ]
+    ],
+    "path": "direct",
+    "req": 803,
+    "expressions": [
+      [
+        "constant",
+        803
+      ]
+    ],
+    "call_line": 648,
+    "symbol": "__set_sregs",
+    "section": ".text",
+    "address": 409010,
+    "offset": 162,
+    "instruction": "lock orb $0x8,0x3c(%rbp)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "paging32_fetch",
+    "die": "0x458afd",
+    "ranges": [
+      [
+        494076,
+        494086
+      ]
+    ],
+    "path": "direct",
+    "req": 807,
+    "expressions": [
+      [
+        "constant",
+        807
+      ]
+    ],
+    "call_line": 685,
+    "symbol": "paging32_fetch",
+    "section": ".text",
+    "address": 494076,
+    "offset": 1724,
+    "instruction": "lock orb $0x80,0x3c(%rbp)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "paging64_fetch",
+    "die": "0x45d03c",
+    "ranges": [
+      [
+        492187,
+        492197
+      ]
+    ],
+    "path": "direct",
+    "req": 807,
+    "expressions": [
+      [
+        "constant",
+        807
+      ]
+    ],
+    "call_line": 685,
+    "symbol": "paging64_fetch",
+    "section": ".text",
+    "address": 492187,
+    "offset": 1787,
+    "instruction": "lock orb $0x80,0x3c(%rbp)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "ept_fetch",
+    "die": "0x461973",
+    "ranges": [
+      [
+        495974,
+        495984
+      ]
+    ],
+    "path": "direct",
+    "req": 807,
+    "expressions": [
+      [
+        "constant",
+        807
+      ]
+    ],
+    "call_line": 685,
+    "symbol": "ept_fetch",
+    "section": ".text",
+    "address": 495974,
+    "offset": 1734,
+    "instruction": "lock orb $0x80,0x3c(%rbp)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "kvm_mmu_new_pgd",
+    "die": "0x464be1",
+    "ranges": [
+      [
+        462404,
+        462410
+      ]
+    ],
+    "path": "direct",
+    "req": 13,
+    "expressions": [
+      [
+        "constant",
+        13
+      ]
+    ],
+    "call_line": 5293,
+    "symbol": "kvm_mmu_new_pgd",
+    "section": ".text",
+    "address": 462404,
+    "offset": 420,
+    "instruction": "lock orb $0x20,0x39(%r8)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "kvm_mmu_new_pgd",
+    "die": "0x464db2",
+    "ranges": [
+      [
+        462730,
+        462736
+      ]
+    ],
+    "path": "direct",
+    "req": 11,
+    "expressions": [
+      [
+        "constant",
+        11
+      ]
+    ],
+    "call_line": 5296,
+    "symbol": "kvm_mmu_new_pgd",
+    "section": ".text",
+    "address": 462730,
+    "offset": 746,
+    "instruction": "lock orb $0x8,0x39(%r8)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "kvm_mmu_new_pgd",
+    "die": "0x464f3d",
+    "ranges": [
+      [
+        462736,
+        462747
+      ]
+    ],
+    "path": "direct",
+    "req": 34,
+    "expressions": [
+      [
+        "constant",
+        34
+      ]
+    ],
+    "call_line": 5297,
+    "symbol": "kvm_mmu_new_pgd",
+    "section": ".text",
+    "address": 462736,
+    "offset": 752,
+    "instruction": "lock orb $0x4,0x3c(%r8)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "kvm_tdp_mmu_map_private_pfn",
+    "die": "0x465bc5",
+    "ranges": [
+      [
+        509047,
+        509052
+      ]
+    ],
+    "path": "check",
+    "req": 807,
+    "expressions": [
+      [
+        "constant",
+        807
+      ]
+    ],
+    "call_line": 120,
+    "symbol": "kvm_tdp_mmu_map_private_pfn",
+    "section": ".text",
+    "address": 509047,
+    "offset": 503,
+    "instruction": "lock andb $0x7f,0x3c(%rbx)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "kvm_arch_vcpu_pre_fault_memory",
+    "die": "0x466172",
+    "ranges": [
+      [
+        508425,
+        508432
+      ]
+    ],
+    "path": "check",
+    "req": 807,
+    "expressions": [
+      [
+        "constant",
+        807
+      ]
+    ],
+    "call_line": 120,
+    "symbol": "kvm_arch_vcpu_pre_fault_memory",
+    "section": ".text",
+    "address": 508425,
+    "offset": 361,
+    "instruction": "lock andb $0x7f,0x3c(%r12)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "__kvm_mmu_faultin_pfn",
+    "die": "0x468d61",
+    "ranges": [
+      [
+        453008,
+        453015
+      ]
+    ],
+    "path": "direct",
+    "req": 15,
+    "expressions": [
+      [
+        "constant",
+        15
+      ]
+    ],
+    "call_line": 4689,
+    "symbol": "__kvm_mmu_faultin_pfn",
+    "section": ".text",
+    "address": 453008,
+    "offset": 784,
+    "instruction": "lock orb $0x80,0x39(%rbp)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "kvm_arch_async_page_ready",
+    "die": "0x469216",
+    "ranges": [
+      [
+        507856,
+        507861
+      ]
+    ],
+    "path": "check",
+    "req": 807,
+    "expressions": [
+      [
+        "constant",
+        807
+      ]
+    ],
+    "call_line": 120,
+    "symbol": "kvm_arch_async_page_ready",
+    "section": ".text",
+    "address": 507856,
+    "offset": 224,
+    "instruction": "lock andb $0x7f,0x3c(%rdi)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "mmu_sync_children",
+    "die": "0x478c9f",
+    "ranges": [
+      [
+        476586,
+        476591
+      ]
+    ],
+    "path": "direct",
+    "req": 11,
+    "expressions": [
+      [
+        "constant",
+        11
+      ]
+    ],
+    "call_line": 2247,
+    "symbol": "mmu_sync_children",
+    "section": ".text",
+    "address": 476586,
+    "offset": 1818,
+    "instruction": "lock orb $0x8,0x39(%rbx)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "kvm_tdp_page_prefault",
+    "die": "0x49bc65",
+    "ranges": [
+      [
+        490233,
+        490238
+      ]
+    ],
+    "path": "check",
+    "req": 769,
+    "expressions": [
+      [
+        "constant",
+        769
+      ]
+    ],
+    "call_line": 5017,
+    "symbol": "kvm_tdp_page_prefault.constprop.0",
+    "section": ".text",
+    "address": 490233,
+    "offset": 121,
+    "instruction": "lock andb $0xfd,0x38(%rbx)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "pic_unlock",
+    "die": "0x53d231",
+    "ranges": [
+      [
+        542490,
+        542495
+      ]
+    ],
+    "path": "direct",
+    "req": 14,
+    "expressions": [
+      [
+        "constant",
+        14
+      ]
+    ],
+    "call_line": 66,
+    "symbol": "pic_unlock",
+    "section": ".text",
+    "address": 542490,
+    "offset": 202,
+    "instruction": "lock orb $0x40,0x39(%rbx)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "kvm_hv_set_msr",
+    "die": "0x5bb8a0",
+    "ranges": [
+      [
+        575847,
+        575852
+      ]
+    ],
+    "path": "direct",
+    "req": 30,
+    "expressions": [
+      [
+        "constant",
+        30
+      ]
+    ],
+    "call_line": 598,
+    "symbol": "kvm_hv_set_msr",
+    "section": ".text",
+    "address": 575847,
+    "offset": 1447,
+    "instruction": "lock orb $0x40,0x3b(%rax)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "kvm_hv_set_msr_pw",
+    "die": "0x5bc3db",
+    "ranges": [
+      [
+        573019,
+        573025
+      ]
+    ],
+    "path": "direct",
+    "req": 21,
+    "expressions": [
+      [
+        "constant",
+        21
+      ]
+    ],
+    "call_line": 1451,
+    "symbol": "kvm_hv_set_msr_pw",
+    "section": ".text",
+    "address": 573019,
+    "offset": 459,
+    "instruction": "lock orb $0x20,0x3a(%r11)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "kvm_hv_set_msr_pw",
+    "die": "0x5bc616",
+    "ranges": [
+      [
+        573234,
+        573240
+      ]
+    ],
+    "path": "direct",
+    "req": 28,
+    "expressions": [
+      [
+        "constant",
+        28
+      ]
+    ],
+    "call_line": 1479,
+    "symbol": "kvm_hv_set_msr_pw",
+    "section": ".text",
+    "address": 573234,
+    "offset": 674,
+    "instruction": "lock orb $0x10,0x3b(%r11)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "kvm_hv_set_msr_pw",
+    "die": "0x5bcd9f",
+    "ranges": [
+      [
+        574189,
+        574195
+      ]
+    ],
+    "path": "direct",
+    "req": 29,
+    "expressions": [
+      [
+        "constant",
+        29
+      ]
+    ],
+    "call_line": 360,
+    "symbol": "kvm_hv_set_msr_pw",
+    "section": ".text",
+    "address": 574189,
+    "offset": 1629,
+    "instruction": "lock orb $0x20,0x3b(%r11)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "kvm_hv_set_msr_pw",
+    "die": "0x5bcfd6",
+    "ranges": [
+      [
+        573539,
+        573545
+      ]
+    ],
+    "path": "direct",
+    "req": 26,
+    "expressions": [
+      [
+        "constant",
+        26
+      ]
+    ],
+    "call_line": 1473,
+    "symbol": "kvm_hv_set_msr_pw",
+    "section": ".text",
+    "address": 573539,
+    "offset": 979,
+    "instruction": "lock orb $0x4,0x3b(%r11)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "stimer_set_config",
+    "die": "0x5bfbfe",
+    "ranges": [
+      [
+        570618,
+        570628
+      ]
+    ],
+    "path": "direct",
+    "req": 30,
+    "expressions": [
+      [
+        "constant",
+        30
+      ]
+    ],
+    "call_line": 598,
+    "symbol": "stimer_set_config",
+    "section": ".text",
+    "address": 570618,
+    "offset": 282,
+    "instruction": "lock orb $0x40,0x3b(%rax)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "synic_set_msr",
+    "die": "0x5c2aff",
+    "ranges": [
+      [
+        572097,
+        572107
+      ]
+    ],
+    "path": "direct",
+    "req": 791,
+    "expressions": [
+      [
+        "constant",
+        791
+      ]
+    ],
+    "call_line": 186,
+    "symbol": "synic_set_msr",
+    "section": ".text",
+    "address": 572097,
+    "offset": 433,
+    "instruction": "lock orb $0x80,0x3a(%rax)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "synic_set_msr",
+    "die": "0x5c2db5",
+    "ranges": [
+      [
+        572371,
+        572381
+      ]
+    ],
+    "path": "direct",
+    "req": 29,
+    "expressions": [
+      [
+        "constant",
+        29
+      ]
+    ],
+    "call_line": 256,
+    "symbol": "synic_set_msr",
+    "section": ".text",
+    "address": 572371,
+    "offset": 707,
+    "instruction": "lock orb $0x20,0x3b(%rdx)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "kvm_hv_notify_acked_sint",
+    "die": "0x5c3405",
+    "ranges": [
+      [
+        571563,
+        571573
+      ]
+    ],
+    "path": "direct",
+    "req": 30,
+    "expressions": [
+      [
+        "constant",
+        30
+      ]
+    ],
+    "call_line": 598,
+    "symbol": "kvm_hv_notify_acked_sint",
+    "section": ".text",
+    "address": 571563,
+    "offset": 315,
+    "instruction": "lock orb $0x40,0x3b(%rcx)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "stimer_mark_pending",
+    "die": "0x5c9668",
+    "ranges": [
+      [
+        565738,
+        565743
+      ]
+    ],
+    "path": "direct",
+    "req": 30,
+    "expressions": [
+      [
+        "constant",
+        30
+      ]
+    ],
+    "call_line": 598,
+    "symbol": "stimer_mark_pending",
+    "section": ".text",
+    "address": 565738,
+    "offset": 42,
+    "instruction": "lock orb $0x40,0x3b(%rdi)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "stimer_start",
+    "die": "0x5ca391",
+    "ranges": [
+      [
+        570937,
+        570942
+      ]
+    ],
+    "path": "direct",
+    "req": 30,
+    "expressions": [
+      [
+        "constant",
+        30
+      ]
+    ],
+    "call_line": 598,
+    "symbol": "stimer_start.isra.0",
+    "section": ".text",
+    "address": 570937,
+    "offset": 185,
+    "instruction": "lock orb $0x40,0x3b(%rdx)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "kvm_xen_set_evtchn_fast",
+    "die": "0x5f1b18",
+    "ranges": [
+      [
+        593629,
+        593635
+      ]
+    ],
+    "path": "direct",
+    "req": 2,
+    "expressions": [
+      [
+        "constant",
+        2
+      ]
+    ],
+    "call_line": 1780,
+    "symbol": "kvm_xen_set_evtchn_fast",
+    "section": ".text",
+    "address": 593629,
+    "offset": 1021,
+    "instruction": "lock orb $0x4,0x38(%r15)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "kvm_xen_set_evtchn_fast",
+    "die": "0x5f1de8",
+    "ranges": [
+      [
+        593533,
+        593539
+      ]
+    ],
+    "path": "direct",
+    "req": 2,
+    "expressions": [
+      [
+        "constant",
+        2
+      ]
+    ],
+    "call_line": 1894,
+    "symbol": "kvm_xen_set_evtchn_fast",
+    "section": ".text",
+    "address": 593533,
+    "offset": 925,
+    "instruction": "lock orb $0x4,0x38(%r15)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "cancel_evtchn_poll",
+    "die": "0x5f33f9",
+    "ranges": [
+      [
+        586233,
+        586241
+      ]
+    ],
+    "path": "direct",
+    "req": 2,
+    "expressions": [
+      [
+        "constant",
+        2
+      ]
+    ],
+    "call_line": 1576,
+    "symbol": "cancel_evtchn_poll",
+    "section": ".text",
+    "address": 586233,
+    "offset": 9,
+    "instruction": "lock orb $0x4,-0x1240(%rdi)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "kvm_xen_vcpu_set_attr",
+    "die": "0x5f4647",
+    "ranges": [
+      [
+        595714,
+        595724
+      ]
+    ],
+    "path": "direct",
+    "req": 12,
+    "expressions": [
+      [
+        "constant",
+        12
+      ]
+    ],
+    "call_line": 958,
+    "symbol": "kvm_xen_vcpu_set_attr",
+    "section": ".text",
+    "address": 595714,
+    "offset": 482,
+    "instruction": "lock orb $0x10,0x39(%rbx)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "xen_timer_callback",
+    "die": "0x5f6d75",
+    "ranges": [
+      [
+        594186,
+        594194
+      ]
+    ],
+    "path": "direct",
+    "req": 2,
+    "expressions": [
+      [
+        "constant",
+        2
+      ]
+    ],
+    "call_line": 147,
+    "symbol": "xen_timer_callback",
+    "section": ".text",
+    "address": 594186,
+    "offset": 170,
+    "instruction": "lock orb $0x4,-0x11e8(%rdx)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "enter_smm_save_state_64",
+    "die": "0x6201b1",
+    "ranges": [
+      [
+        604665,
+        604670
+      ]
+    ],
+    "path": "direct",
+    "req": 10,
+    "expressions": [
+      [
+        "constant",
+        10
+      ]
+    ],
+    "call_line": 275,
+    "symbol": "enter_smm_save_state_64",
+    "section": ".text",
+    "address": 604665,
+    "offset": 697,
+    "instruction": "lock orb $0x4,0x39(%rbp)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "process_smi",
+    "die": "0x621362",
+    "ranges": [
+      [
+        604880,
+        604885
+      ]
+    ],
+    "path": "direct",
+    "req": 14,
+    "expressions": [
+      [
+        "constant",
+        14
+      ]
+    ],
+    "call_line": 139,
+    "symbol": "process_smi",
+    "section": ".text",
+    "address": 604880,
+    "offset": 16,
+    "instruction": "lock orb $0x40,0x39(%rdi)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm",
+    "parent": "kvm_smm_changed",
+    "die": "0x6219fd",
+    "ranges": [
+      [
+        601112,
+        601118
+      ]
+    ],
+    "path": "direct",
+    "req": 14,
+    "expressions": [
+      [
+        "constant",
+        14
+      ]
+    ],
+    "call_line": 122,
+    "symbol": "kvm_smm_changed",
+    "section": ".text",
+    "address": 601112,
+    "offset": 184,
+    "instruction": "lock orb $0x40,0x39(%r8)",
+    "build_id": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5"
+  },
+  {
+    "module": "kvm_intel",
+    "parent": "vmx_handle_intel_pt_intr",
+    "die": "0x2b23c",
+    "ranges": [
+      [
+        5107,
+        5112
+      ]
+    ],
+    "path": "direct",
+    "req": 19,
+    "expressions": [
+      [
+        "constant",
+        19
+      ]
+    ],
+    "call_line": 8533,
+    "symbol": "vmx_handle_intel_pt_intr",
+    "section": ".text",
+    "address": 5107,
+    "offset": 35,
+    "instruction": "lock orb $0x8,0x3a(%rax)",
+    "build_id": "f33294539be3205c9bf026e29e643700e94ba5c4"
+  },
+  {
+    "module": "kvm_intel",
+    "parent": "__vmx_complete_interrupts",
+    "die": "0x3bbed",
+    "ranges": [
+      [
+        27755,
+        27760
+      ]
+    ],
+    "path": "direct",
+    "req": 14,
+    "expressions": [
+      [
+        "constant",
+        14
+      ]
+    ],
+    "call_line": 7288,
+    "symbol": "__vmx_complete_interrupts",
+    "section": ".text",
+    "address": 27755,
+    "offset": 59,
+    "instruction": "lock orb $0x40,0x39(%rdi)",
+    "build_id": "f33294539be3205c9bf026e29e643700e94ba5c4"
+  },
+  {
+    "module": "kvm_intel",
+    "parent": "vmx_sync_pir_to_irr",
+    "die": "0x3f0f6",
+    "ranges": [
+      [
+        103993,
+        103998
+      ]
+    ],
+    "path": "direct",
+    "req": 14,
+    "expressions": [
+      [
+        "constant",
+        14
+      ]
+    ],
+    "call_line": 7120,
+    "symbol": "vmx_sync_pir_to_irr",
+    "section": ".text",
+    "address": 103993,
+    "offset": 153,
+    "instruction": "lock orb $0x40,0x39(%rbx)",
+    "build_id": "f33294539be3205c9bf026e29e643700e94ba5c4"
+  },
+  {
+    "module": "kvm_intel",
+    "parent": "vmx_set_apic_access_page_addr",
+    "die": "0x40870",
+    "ranges": [
+      [
+        103059,
+        103064
+      ]
+    ],
+    "path": "direct",
+    "req": 793,
+    "expressions": [
+      [
+        "constant",
+        793
+      ]
+    ],
+    "call_line": 6994,
+    "symbol": "vmx_set_apic_access_page_addr",
+    "section": ".text",
+    "address": 103059,
+    "offset": 371,
+    "instruction": "lock orb $0x2,0x3b(%rbx)",
+    "build_id": "f33294539be3205c9bf026e29e643700e94ba5c4"
+  },
+  {
+    "module": "kvm_intel",
+    "parent": "vmx_set_virtual_apic_mode",
+    "die": "0x418c9",
+    "ranges": [
+      [
+        102294,
+        102299
+      ]
+    ],
+    "path": "direct",
+    "req": 793,
+    "expressions": [
+      [
+        "constant",
+        793
+      ]
+    ],
+    "call_line": 6915,
+    "symbol": "vmx_set_virtual_apic_mode",
+    "section": ".text",
+    "address": 102294,
+    "offset": 454,
+    "instruction": "lock orb $0x2,0x3b(%rbx)",
+    "build_id": "f33294539be3205c9bf026e29e643700e94ba5c4"
+  },
+  {
+    "module": "kvm_intel",
+    "parent": "vmx_set_virtual_apic_mode",
+    "die": "0x41c8b",
+    "ranges": [
+      [
+        102501,
+        102506
+      ]
+    ],
+    "path": "direct",
+    "req": 34,
+    "expressions": [
+      [
+        "constant",
+        34
+      ]
+    ],
+    "call_line": 6928,
+    "symbol": "vmx_set_virtual_apic_mode",
+    "section": ".text",
+    "address": 102501,
+    "offset": 661,
+    "instruction": "lock orb $0x4,0x3c(%rbx)",
+    "build_id": "f33294539be3205c9bf026e29e643700e94ba5c4"
+  },
+  {
+    "module": "kvm_intel",
+    "parent": "handle_nmi_window",
+    "die": "0x4b945",
+    "ranges": [
+      [
+        29033,
+        29038
+      ]
+    ],
+    "path": "direct",
+    "req": 14,
+    "expressions": [
+      [
+        "constant",
+        14
+      ]
+    ],
+    "call_line": 6011,
+    "symbol": "handle_nmi_window",
+    "section": ".text",
+    "address": 29033,
+    "offset": 121,
+    "instruction": "lock orb $0x40,0x39(%rax)",
+    "build_id": "f33294539be3205c9bf026e29e643700e94ba5c4"
+  },
+  {
+    "module": "kvm_intel",
+    "parent": "handle_interrupt_window",
+    "die": "0x4ede6",
+    "ranges": [
+      [
+        28660,
+        28665
+      ]
+    ],
+    "path": "direct",
+    "req": 14,
+    "expressions": [
+      [
+        "constant",
+        14
+      ]
+    ],
+    "call_line": 5830,
+    "symbol": "handle_interrupt_window",
+    "section": ".text",
+    "address": 28660,
+    "offset": 68,
+    "instruction": "lock orb $0x40,0x39(%rax)",
+    "build_id": "f33294539be3205c9bf026e29e643700e94ba5c4"
+  },
+  {
+    "module": "kvm_intel",
+    "parent": "vmx_vcpu_reset",
+    "die": "0x5e3ae",
+    "ranges": [
+      [
+        88242,
+        88247
+      ]
+    ],
+    "path": "direct",
+    "req": 793,
+    "expressions": [
+      [
+        "constant",
+        793
+      ]
+    ],
+    "call_line": 5083,
+    "symbol": "vmx_vcpu_reset",
+    "section": ".text",
+    "address": 88242,
+    "offset": 690,
+    "instruction": "lock orb $0x2,0x3b(%rbx)",
+    "build_id": "f33294539be3205c9bf026e29e643700e94ba5c4"
+  },
+  {
+    "module": "kvm_intel",
+    "parent": "vmx_deliver_interrupt",
+    "die": "0x71168",
+    "ranges": [
+      [
+        74397,
+        74402
+      ]
+    ],
+    "path": "direct",
+    "req": 14,
+    "expressions": [
+      [
+        "constant",
+        14
+      ]
+    ],
+    "call_line": 4370,
+    "symbol": "vmx_deliver_interrupt",
+    "section": ".text",
+    "address": 74397,
+    "offset": 61,
+    "instruction": "lock orb $0x40,0x39(%rbx)",
+    "build_id": "f33294539be3205c9bf026e29e643700e94ba5c4"
+  },
+  {
+    "module": "kvm_intel",
+    "parent": "vmx_deliver_interrupt",
+    "die": "0x71e23",
+    "ranges": [
+      [
+        74591,
+        74596
+      ]
+    ],
+    "path": "direct",
+    "req": 14,
+    "expressions": [
+      [
+        "constant",
+        14
+      ]
+    ],
+    "call_line": 4421,
+    "symbol": "vmx_deliver_interrupt",
+    "section": ".text",
+    "address": 74591,
+    "offset": 255,
+    "instruction": "lock orb $0x40,0x39(%rbx)",
+    "build_id": "f33294539be3205c9bf026e29e643700e94ba5c4"
+  },
+  {
+    "module": "kvm_intel",
+    "parent": "vmx_skip_emulated_instruction",
+    "die": "0x96228",
+    "ranges": [
+      [
+        43792,
+        43797
+      ]
+    ],
+    "path": "direct",
+    "req": 14,
+    "expressions": [
+      [
+        "constant",
+        14
+      ]
+    ],
+    "call_line": 1884,
+    "symbol": "vmx_skip_emulated_instruction",
+    "section": ".text",
+    "address": 43792,
+    "offset": 80,
+    "instruction": "lock orb $0x40,0x39(%rdi)",
+    "build_id": "f33294539be3205c9bf026e29e643700e94ba5c4"
+  },
+  {
+    "module": "kvm_intel",
+    "parent": "vmx_vcpu_load_vmcs",
+    "die": "0x994e8",
+    "ranges": [
+      [
+        39808,
+        39813
+      ]
+    ],
+    "path": "direct",
+    "req": 768,
+    "expressions": [
+      [
+        "constant",
+        768
+      ]
+    ],
+    "call_line": 1533,
+    "symbol": "vmx_vcpu_load_vmcs",
+    "section": ".text",
+    "address": 39808,
+    "offset": 304,
+    "instruction": "lock orb $0x1,0x38(%rbp)",
+    "build_id": "f33294539be3205c9bf026e29e643700e94ba5c4"
+  },
+  {
+    "module": "kvm_intel",
+    "parent": "vmx_update_emulated_instruction",
+    "die": "0xc2ead",
+    "ranges": [
+      [
+        43652,
+        43662
+      ]
+    ],
+    "path": "direct",
+    "req": 14,
+    "expressions": [
+      [
+        "constant",
+        14
+      ]
+    ],
+    "call_line": 1884,
+    "symbol": "vmx_update_emulated_instruction",
+    "section": ".text",
+    "address": 43652,
+    "offset": 68,
+    "instruction": "lock orb $0x40,0x39(%rdi)",
+    "build_id": "f33294539be3205c9bf026e29e643700e94ba5c4"
+  },
+  {
+    "module": "kvm_intel",
+    "parent": "intel_pmu_set_msr",
+    "die": "0xeecd1",
+    "ranges": [
+      [
+        119511,
+        119516
+      ]
+    ],
+    "path": "direct",
+    "req": 18,
+    "expressions": [
+      [
+        "constant",
+        18
+      ]
+    ],
+    "call_line": 238,
+    "symbol": "intel_pmu_set_msr",
+    "section": ".text",
+    "address": 119511,
+    "offset": 103,
+    "instruction": "lock orb $0x4,0x3a(%rdi)",
+    "build_id": "f33294539be3205c9bf026e29e643700e94ba5c4"
+  },
+  {
+    "module": "kvm_intel",
+    "parent": "intel_pmu_set_msr",
+    "die": "0xef55b",
+    "ranges": [
+      [
+        119789,
+        119809
+      ]
+    ],
+    "path": "direct",
+    "req": 18,
+    "expressions": [
+      [
+        "constant",
+        18
+      ]
+    ],
+    "call_line": 226,
+    "symbol": "intel_pmu_set_msr",
+    "section": ".text",
+    "address": 119789,
+    "offset": 381,
+    "instruction": "lock orb $0x4,0x3a(%rdx)",
+    "build_id": "f33294539be3205c9bf026e29e643700e94ba5c4"
+  },
+  {
+    "module": "kvm_intel",
+    "parent": "intel_pmu_set_msr",
+    "die": "0xefd30",
+    "ranges": [
+      [
+        120427,
+        120432
+      ]
+    ],
+    "path": "direct",
+    "req": 18,
+    "expressions": [
+      [
+        "constant",
+        18
+      ]
+    ],
+    "call_line": 226,
+    "symbol": "intel_pmu_set_msr",
+    "section": ".text",
+    "address": 120427,
+    "offset": 1019,
+    "instruction": "lock orb $0x4,0x3a(%rax)",
+    "build_id": "f33294539be3205c9bf026e29e643700e94ba5c4"
+  },
+  {
+    "module": "kvm_intel",
+    "parent": "vmx_set_nested_state",
+    "die": "0x13ffb6",
+    "ranges": [
+      [
+        217725,
+        217730
+      ]
+    ],
+    "path": "direct",
+    "req": 14,
+    "expressions": [
+      [
+        "constant",
+        14
+      ]
+    ],
+    "call_line": 7082,
+    "symbol": "vmx_set_nested_state",
+    "section": ".text",
+    "address": 217725,
+    "offset": 621,
+    "instruction": "lock orb $0x40,0x39(%rbp)",
+    "build_id": "f33294539be3205c9bf026e29e643700e94ba5c4"
+  },
+  {
+    "module": "kvm_intel",
+    "parent": "vmx_set_nested_state",
+    "die": "0x140145",
+    "ranges": [
+      [
+        217843,
+        217853
+      ]
+    ],
+    "path": "direct",
+    "req": 32,
+    "expressions": [
+      [
+        "constant",
+        32
+      ]
+    ],
+    "call_line": 7015,
+    "symbol": "vmx_set_nested_state",
+    "section": ".text",
+    "address": 217843,
+    "offset": 739,
+    "instruction": "lock orb $0x1,0x3c(%rbp)",
+    "build_id": "f33294539be3205c9bf026e29e643700e94ba5c4"
+  },
+  {
+    "module": "kvm_intel",
+    "parent": "handle_vmfunc",
+    "die": "0x144b5f",
+    "ranges": [
+      [
+        200415,
+        200421
+      ]
+    ],
+    "path": "direct",
+    "req": 803,
+    "expressions": [
+      [
+        "constant",
+        803
+      ]
+    ],
+    "call_line": 6188,
+    "symbol": "handle_vmfunc",
+    "section": ".text",
+    "address": 200415,
+    "offset": 767,
+    "instruction": "lock orb $0x8,0x3c(%r9)",
+    "build_id": "f33294539be3205c9bf026e29e643700e94ba5c4"
+  },
+  {
+    "module": "kvm_intel",
+    "parent": "__nested_vmx_vmexit",
+    "die": "0x14ee11",
+    "ranges": [
+      [
+        196794,
+        196799
+      ]
+    ],
+    "path": "check",
+    "req": 32,
+    "expressions": [
+      [
+        "constant",
+        32
+      ]
+    ],
+    "call_line": 5088,
+    "symbol": "__nested_vmx_vmexit",
+    "section": ".text",
+    "address": 196794,
+    "offset": 1418,
+    "instruction": "lock andb $0xfe,0x3c(%rbx)",
+    "build_id": "f33294539be3205c9bf026e29e643700e94ba5c4"
+  },
+  {
+    "module": "kvm_intel",
+    "parent": "__nested_vmx_vmexit",
+    "die": "0x14efd9",
+    "ranges": [
+      [
+        196732,
+        196742
+      ]
+    ],
+    "path": "direct",
+    "req": 31,
+    "expressions": [
+      [
+        "constant",
+        31
+      ]
+    ],
+    "call_line": 420,
+    "symbol": "__nested_vmx_vmexit",
+    "section": ".text",
+    "address": 196732,
+    "offset": 1356,
+    "instruction": "lock orb $0x80,0x3b(%rbx)",
+    "build_id": "f33294539be3205c9bf026e29e643700e94ba5c4"
+  },
+  {
+    "module": "kvm_intel",
+    "parent": "__nested_vmx_vmexit",
+    "die": "0x150e78",
+    "ranges": [
+      [
+        195945,
+        195950
+      ]
+    ],
+    "path": "direct",
+    "req": 14,
+    "expressions": [
+      [
+        "constant",
+        14
+      ]
+    ],
+    "call_line": 5209,
+    "symbol": "__nested_vmx_vmexit",
+    "section": ".text",
+    "address": 195945,
+    "offset": 569,
+    "instruction": "lock orb $0x40,0x39(%rbx)",
+    "build_id": "f33294539be3205c9bf026e29e643700e94ba5c4"
+  },
+  {
+    "module": "kvm_intel",
+    "parent": "nested_vmx_enter_non_root_mode",
+    "die": "0x165f0e",
+    "ranges": [
+      [
+        193841,
+        193846
+      ]
+    ],
+    "path": "direct",
+    "req": 14,
+    "expressions": [
+      [
+        "constant",
+        14
+      ]
+    ],
+    "call_line": 2295,
+    "symbol": "nested_vmx_enter_non_root_mode",
+    "section": ".text",
+    "address": 193841,
+    "offset": 1585,
+    "instruction": "lock orb $0x40,0x39(%rbx)",
+    "build_id": "f33294539be3205c9bf026e29e643700e94ba5c4"
+  },
+  {
+    "module": "kvm_intel",
+    "parent": "nested_vmx_enter_non_root_mode",
+    "die": "0x166d91",
+    "ranges": [
+      [
+        192835,
+        192840
+      ]
+    ],
+    "path": "direct",
+    "req": 14,
+    "expressions": [
+      [
+        "constant",
+        14
+      ]
+    ],
+    "call_line": 3737,
+    "symbol": "nested_vmx_enter_non_root_mode",
+    "section": ".text",
+    "address": 192835,
+    "offset": 579,
+    "instruction": "lock orb $0x40,0x39(%rbx)",
+    "build_id": "f33294539be3205c9bf026e29e643700e94ba5c4"
+  },
+  {
+    "module": "kvm_intel",
+    "parent": "nested_vmx_enter_non_root_mode",
+    "die": "0x166f55",
+    "ranges": [
+      [
+        193030,
+        193040
+      ]
+    ],
+    "path": "direct",
+    "req": 32,
+    "expressions": [
+      [
+        "constant",
+        32
+      ]
+    ],
+    "call_line": 3723,
+    "symbol": "nested_vmx_enter_non_root_mode",
+    "section": ".text",
+    "address": 193030,
+    "offset": 774,
+    "instruction": "lock orb $0x1,0x3c(%rbx)",
+    "build_id": "f33294539be3205c9bf026e29e643700e94ba5c4"
+  },
+  {
+    "module": "kvm_intel",
+    "parent": "nested_vmx_enter_non_root_mode",
+    "die": "0x16711d",
+    "ranges": [
+      [
+        193716,
+        193726
+      ]
+    ],
+    "path": "direct",
+    "req": 31,
+    "expressions": [
+      [
+        "constant",
+        31
+      ]
+    ],
+    "call_line": 420,
+    "symbol": "nested_vmx_enter_non_root_mode",
+    "section": ".text",
+    "address": 193716,
+    "offset": 1460,
+    "instruction": "lock orb $0x80,0x3b(%rbx)",
+    "build_id": "f33294539be3205c9bf026e29e643700e94ba5c4"
+  },
+  {
+    "module": "kvm_intel",
+    "parent": "nested_vmx_transition_tlb_flush",
+    "die": "0x1afb50",
+    "ranges": [
+      [
+        138556,
+        138561
+      ]
+    ],
+    "path": "direct",
+    "req": 808,
+    "expressions": [
+      [
+        "constant",
+        808
+      ]
+    ],
+    "call_line": 265,
+    "symbol": "nested_vmx_transition_tlb_flush",
+    "section": ".text",
+    "address": 138556,
+    "offset": 44,
+    "instruction": "lock orb $0x1,0x3d(%rdi)",
+    "build_id": "f33294539be3205c9bf026e29e643700e94ba5c4"
+  },
+  {
+    "module": "kvm_intel",
+    "parent": "nested_vmx_transition_tlb_flush",
+    "die": "0x1afd4f",
+    "ranges": [
+      [
+        138546,
+        138551
+      ]
+    ],
+    "path": "direct",
+    "req": 803,
+    "expressions": [
+      [
+        "constant",
+        803
+      ]
+    ],
+    "call_line": 1316,
+    "symbol": "nested_vmx_transition_tlb_flush",
+    "section": ".text",
+    "address": 138546,
+    "offset": 34,
+    "instruction": "lock orb $0x8,0x3c(%rdi)",
+    "build_id": "f33294539be3205c9bf026e29e643700e94ba5c4"
+  },
+  {
+    "module": "kvm_intel",
+    "parent": "nested_vmx_transition_tlb_flush",
+    "die": "0x1b0021",
+    "ranges": [
+      [
+        138619,
+        138629
+      ]
+    ],
+    "path": "direct",
+    "req": 34,
+    "expressions": [
+      [
+        "constant",
+        34
+      ]
+    ],
+    "call_line": 1346,
+    "symbol": "nested_vmx_transition_tlb_flush",
+    "section": ".text",
+    "address": 138619,
+    "offset": 107,
+    "instruction": "lock orb $0x4,0x3c(%rdi)",
+    "build_id": "f33294539be3205c9bf026e29e643700e94ba5c4"
+  },
+  {
+    "module": "kvm_intel",
+    "parent": "nested_vmx_transition_tlb_flush",
+    "die": "0x1b01c1",
+    "ranges": [
+      [
+        138652,
+        138662
+      ]
+    ],
+    "path": "direct",
+    "req": 803,
+    "expressions": [
+      [
+        "constant",
+        803
+      ]
+    ],
+    "call_line": 1335,
+    "symbol": "nested_vmx_transition_tlb_flush",
+    "section": ".text",
+    "address": 138652,
+    "offset": 140,
+    "instruction": "lock orb $0x8,0x3c(%rdi)",
+    "build_id": "f33294539be3205c9bf026e29e643700e94ba5c4"
+  },
+  {
+    "module": "kvm_intel",
+    "parent": "vmx_preemption_timer_fn",
+    "die": "0x1b039c",
+    "ranges": [
+      [
+        138733,
+        138741
+      ]
+    ],
+    "path": "direct",
+    "req": 14,
+    "expressions": [
+      [
+        "constant",
+        14
+      ]
+    ],
+    "call_line": 2295,
+    "symbol": "vmx_preemption_timer_fn",
+    "section": ".text",
+    "address": 138733,
+    "offset": 13,
+    "instruction": "lock orb $0x40,-0x211f(%rdi)",
+    "build_id": "f33294539be3205c9bf026e29e643700e94ba5c4"
+  },
+  {
+    "module": "kvm_intel",
+    "parent": "nested_vmx_abort",
+    "die": "0x1b05b9",
+    "ranges": [
+      [
+        138789,
+        138794
+      ]
+    ],
+    "path": "direct",
+    "req": 10,
+    "expressions": [
+      [
+        "constant",
+        10
+      ]
+    ],
+    "call_line": 212,
+    "symbol": "nested_vmx_abort",
+    "section": ".text",
+    "address": 138789,
+    "offset": 5,
+    "instruction": "lock orb $0x4,0x39(%rdi)",
+    "build_id": "f33294539be3205c9bf026e29e643700e94ba5c4"
+  },
+  {
+    "module": "kvm_intel",
+    "parent": "handle_vmxoff",
+    "die": "0x1b2060",
+    "ranges": [
+      [
+        148170,
+        148177
+      ]
+    ],
+    "path": "direct",
+    "req": 14,
+    "expressions": [
+      [
+        "constant",
+        14
+      ]
+    ],
+    "call_line": 5605,
+    "symbol": "handle_vmxoff",
+    "section": ".text",
+    "address": 148170,
+    "offset": 58,
+    "instruction": "lock orb $0x40,0x39(%rbx)",
+    "build_id": "f33294539be3205c9bf026e29e643700e94ba5c4"
+  },
+  {
+    "module": "kvm_intel",
+    "parent": "tdx_handle_ept_violation",
+    "die": "0x2ba5be",
+    "ranges": [
+      [
+        245554,
+        245565
+      ]
+    ],
+    "path": "check",
+    "req": 769,
+    "expressions": [
+      [
+        "constant",
+        769
+      ]
+    ],
+    "call_line": 2001,
+    "symbol": "tdx_handle_ept_violation",
+    "section": ".text",
+    "address": 245554,
+    "offset": 466,
+    "instruction": "lock andb $0xfd,0x38(%r15)",
+    "build_id": "f33294539be3205c9bf026e29e643700e94ba5c4"
+  }
+]

@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="从认识中心块到七步复原三阶魔方，配有逐步公式演示和完成检查。">
+  <title>把魔方还原 · 三阶魔方入门</title>
+  <link rel="stylesheet" href="style.css">
+  <script defer src="cube.js"></script>
+  <script defer src="visuals.js"></script>
+  <script defer src="app.js"></script>
+  <script defer src="principles.js"></script>
+</head>
+<body>
+  <a class="skip" href="#lesson">跳到复原教程</a>
+  <header><a class="brand" href="./">CUBE LAB <span>三阶魔方入门</span></a><a href="../atlas/">数学全景</a></header>
+  <main>
+    <section class="hero">
+      <div><p class="eyebrow">从原理到手上的第一遍复原</p><h1>一块一块，<br>把魔方<span>还原。</span></h1><p class="lead">拿一个普通的 3 × 3 魔方。先认一块，再练一个小动作。<br>看清它的效果，再用它把魔方还原。</p><a class="primary" href="#principle">先理解复原的原理</a><a class="text-link" href="#lesson">进入七步实践</a></div>
+      <div class="hero-art" aria-label="复原魔方示意图"><div class="iso-cube"><div class="iso-face top"></div><div class="iso-face front"></div><div class="iso-face right"></div></div><p>目标不是拼出一面。<br><strong>是让每一块回到自己的位置。</strong></p><span class="art-label">01 / YOUR FIRST SOLVE</span></div>
+    </section>
+    <section id="principle" class="principle">
+      <p class="eyebrow">先拿复原魔方，做三个小实验</p><h2>先看清一块怎么走，再谈怎么还原。</h2>
+      <p class="principle-lead">先不用把手里的魔方打乱。跟着图，只盯住标着 A 的那一块。每次转动之后，回答两个问题：它去了哪里？它身上的颜色变了吗？</p>
+      <nav class="reason-nav" aria-label="学习顺序"><a href="#addresses">1. 认一块</a><a href="#reason-lab">2. 看动作</a><a href="#layer-reason">3. 用动作</a><a href="#theory-more">4. 深入理解</a></nav>
+      <article id="addresses" class="reason-chapter">
+        <div class="reason-heading"><span class="number">01</span><h3>找的是整块，不是单独一张贴纸。</h3></div>
+        <div class="reason-columns"><div><p>找出白、绿、红三色角块。它身上的三色始终绑在一起。白色转到顶面，绿色和红色也会跟着这同一块走，不能单独搬走其中一色。</p><p>再找白、绿、红三个中心。它们交汇的角落就是这块的目标位置。<strong>中心决定地址，三色决定身份。</strong>这就是为什么“只看白色拼一面”可能拼错：同样带白色的角，有四块，但每块的地址不同。</p><p>图中 A 的三个标记属于同一个角，不是三个角。它现在在前右下角。以后不管它走到哪里，都继续认它的白绿红组合。</p><div class="check"><strong>在你手里试一下：</strong>找到这一个角，转一次右面，重新找到它。别急着判断整面整齐不整齐。</div></div><figure class="piece-figure"><div id="identity-cube"></div><div class="color-triple"><span class="W">白</span><span class="G">绿</span><span class="R">红</span></div><figcaption>白绿红角的地址：白、绿、红中心交汇处。图中 F 是前面，R 是右面，U 是上面。</figcaption></figure></div>
+        <div class="piece-types"><article><b>中心：1 色</b><p>6 个中心给六个面命名，相对位置固定。</p></article><article><b>棱：2 色</b><p>12 个棱住在两面之间，不能变成角。</p></article><article><b>角：3 色</b><p>8 个角住在三面交汇处，三色始终在一起。</p></article></div>
+      </article>
+      <article id="reason-lab" class="reason-chapter">
+        <div class="reason-heading"><span class="number">02</span><h3>一次只研究一个动作，看清它的完整效果。</h3></div>
+        <p>按顺序做下面三个实验。图中持续标记同一块 A；灰淡的色块先不看。立体图看拿法，六面展开图用来查背后和底下。每次先猜 A 会去哪里，再点“下一手”。</p>
+        <div class="move-dictionary"><span><b>R</b> 只转右层</span><span><b>U</b> 只转顶层</span><span><b>F</b> 只转前层</span><span><b>′</b> 反向转</span></div><p class="small">没有 ′：正对要转的那一面看，顺时针 90°。有 ′：逆时针 90°。R 的顺逆时针要从右侧看。<a href="#notation">完整记号说明</a></p>
+        <div id="reason-tabs" class="reason-tabs" aria-label="选择动作实验"></div>
+        <div class="reason-experiment"><div class="reason-explanation"><p id="reason-goal" class="eyebrow"></p><h4 id="reason-title"></h4><p id="reason-description"></p><div id="reason-formula" class="formula"></div><div class="controls"><button id="reason-prev">上一手</button><button id="reason-next" class="primary">下一手</button><button id="reason-reset">回到开始</button></div><div id="reason-timeline" class="reason-timeline" aria-label="选择观察时间点"></div><p id="reason-observation" class="check" role="status" aria-live="polite"></p><p id="reason-question" class="reason-question"></p></div><figure class="reason-cube"><div id="reason-solid"></div><div id="reason-view" class="controls"><button data-yaw="0" aria-pressed="true">看前面</button><button data-yaw="2" aria-pressed="false">看背面</button></div><p class="small">切换的是观察视角，拿法和公式不变。</p><details><summary>查看六面展开图</summary><div id="reason-net" class="net" aria-label="实验六面展开图"></div><p class="small">W 白 / Y 黄 / G 绿 / R 红 / O 橙 / B 蓝。</p></details></figure></div>
+        <div class="takeaway"><strong>三个实验要记住的事</strong><p>单层转动会搬动一圈块；四手可以合成一个可重复的小动作；在小动作前后加准备与撤销，可以把它的作用范围搬到你想处理的位置。</p></div>
+      </article>
+      <article id="layer-reason" class="reason-chapter">
+        <div class="reason-heading"><span class="number">03</span><h3>有了小动作，复原就变成“认块、摆位、执行”。</h3></div>
+        <div class="solve-loop"><div><b>认块</b><span>由两色或三色找出它的家</span></div><span aria-hidden="true">→</span><div><b>摆位</b><span>把目标送到动作能处理的位置</span></div><span aria-hidden="true">→</span><div><b>执行、检查</b><span>完整做完，检查目标和保留部分</span></div></div>
+        <p>以白角为例：做完白十字后，让白面一直朝下。找到顶层的白绿红角，转 U，把它放到绿、红中心之间的上方；再做刚刚练过的 <code>R U R′ U′</code>，每做完一组检查。它会在右前的上下角之间轮换，并改变朝向。轮到它进入底层、白色朝下时，它就装好了。</p>
+        <p><strong>这时不是碰巧白色朝下：</strong>你提前按另外两色选好了地址，所以它进去之后，绿色和红色也会对上中心。同一个动作可以处理四个白角，区别只是先把哪个目标槽位放到右前方。</p>
+        <div class="bridge-cards"><article><span>第一层</span><h4>先给每块找对地址</h4><p>白十字确定四条边，再装四个白角。完成的是一层：白面整齐，侧面第一排也整齐。</p></article><article><span>第二层</span><h4>借未完成的顶层工作</h4><p>只有四个中层棱要处理。目标先到前上方，再用左插或右插动作送入槽位；动作结束时恢复底层。</p></article><article><span>最后一层</span><h4>拆开位置与朝向</h4><p>先解决棱朝哪儿、棱在哪儿，再解决角在哪儿、角朝哪儿。每个动作承担一个明确任务。</p></article></div>
+        <p>为什么能走到最后？因为每个阶段都规定了<strong>改变什么、保留什么</strong>。后一步使用的是保留前一步成果的完整动作，不是重新随便转。只剩顶层时，就把“位置”和“朝向”分别处理；20 个棱角的位置与朝向都正确，六面自然复原。</p>
+        <div class="callout">进入实践后，每一步都先看“目标”和“保留部分”，再看拿法与动作。最后翻角要把所有角处理完才检查下层，这是一个完整的收尾动作；详细原因放在下面的进阶说明。</div>
+        <a class="primary" href="#lesson">带着这三个实验，开始复原</a>
+      </article>
+      <details id="theory-more" class="theory-more"><summary>想再深一层：动作、循环和群论是什么关系？</summary>
+        <div class="theory-body"><h3>动作的名字，不等于动作的效果</h3><p>“R R”和“R2”写法不同，效果完全相同。讨论魔方的群时，把效果相同的动作串当成同一个元素；不能只把无限多种字母串当成无限多种魔方变化。北师大视频的第一讲特别区分了这两件事。</p><h3>为什么重复短动作会回到原状态？</h3><p>状态数量有限，而每个动作都可逆。重复同一动作时不能进入一个只进不出的循环；一旦状态重复，倒推就能知道起点也在循环上。第二个实验的四手动作做六组，就把位置与朝向全部带回起点。</p><p>这只保证<strong>回到做这个动作以前</strong>，不保证从任意打乱状态复原。复原时要先选对目标与工作位置，再利用这个循环中的某个阶段完成修正。</p><h3>先准备，再撤销：为什么能保护已经做好的层？</h3><p>第三个实验中，四手动作会牵动两个下层块。F 先把这两个工作位置换成顶层块，再做四手，最后 F′ 撤销准备。原来下层的块沿准备路线回来；需要改变的顶层块则留下变化。这就是共轭的具体用途。先理解“换工作对象”，再把它写成 S A S⁻¹。</p><h3>为什么不能只交换两个角？</h3><p>单层转动同时循环四个棱和四个角，两类位置交换的奇偶性一直匹配。所以，其他棱角都固定时，不能只交换一对角。最后处理角的位置时，常用三角循环：一个去第二个的位置，第二个去第三个的位置，第三个去第一个的位置。</p><h3>最后翻角为什么能补回下层？</h3><p>把两组 R′ D′ R D 记作 T。T 只改变顶层右前上角的朝向，并在下层留下固定影响。T 做三次，整个魔方回到起点。只转 U 换角时，下层不动，承受的还是同一个 T 的影响。</p><p>合法状态里，角的扭转量总和为 0（模 3）。当全部顶层角翻正，T 的累计次数就是 3 的倍数，下层的影响也抵消；再用 U 对齐顶层。漏掉一手、换整个魔方拿法，就改变了这个补偿过程。</p><p class="small">数学参照：<a href="https://web.mit.edu/sp.268/www/rubik.pdf">MIT《The Mathematics of the Rubik’s Cube》中的 Inverses、Macros、Conjugation 章节</a>；<a href="https://www.jaapsch.net/puzzles/theory.htm">Jaap 的朝向与奇偶性说明</a>。</p></div>
+      </details>
+    </section>
+    <section id="notation" class="notation"><div><p class="eyebrow">手上的方向，要先统一</p><h2>一个字母，就是转一层。</h2><p>面朝你的是 F，右侧是 R，上面是 U，左侧是 L，下面是 D，背面是 B。字母跟着<strong>当前拿法</strong>走，不固定代表某种颜色。</p><p><strong>顺时针：想象你正对着要转的那一面。</strong>R 要从右侧看，D 要从底部看；不是站在正面看所有转动。</p></div><div class="notation-cards"><article><b>R</b><span>右面顺时针 90°</span></article><article><b>R′</b><span>右面逆时针 90°</span></article><article><b>U2</b><span>上面转 180°</span></article><p>公式从左到右读。′ 和英文单引号 ' 含义相同。换拿法是转整个魔方；做 U 是只转顶层。</p></div></section>
+    <section id="lesson" class="learning"><div class="section-title"><div><p class="eyebrow">跟着做 / LAYER BY LAYER</p><h2>七步，走到六面复原。</h2></div><span id="progress">当前步骤 1 / 7</span></div><nav id="steps" aria-label="选择复原步骤"></nav><div class="learning-grid"><article id="instruction" tabindex="-1"></article><aside class="demo"><div class="demo-header"><h3>动作实验台</h3><span>立体演示 · 逐手跟做</span></div><p id="demo-intro"></p><div id="lesson-solid"></div><details><summary>查看六面展开图</summary><div id="net" class="net" aria-label="魔方六面展开图"></div><p class="small">每一面都按正对该面的视角显示。字：白 W / 黄 Y / 绿 G / 蓝 B / 红 R / 橙 O。</p></details><label for="example">选择演示</label><select id="example"></select><div id="formula" class="formula" aria-label="当前公式"></div><div class="controls"><button id="previous">上一步</button><button id="next" class="primary">下一动作</button><button id="play">自动播放</button><button id="reset">重来</button></div><p id="move-status" role="status" aria-live="polite"></p><details><summary>自由练习：试试单次转动</summary><p>自由转动会暂停公式演示。按“重来”回到示例。</p><div id="free-moves" class="controls"></div><button id="solved">换成复原魔方</button></details></aside></div><div class="lesson-footer"><button id="back-lesson">上一学习步骤</button><button id="forward-lesson" class="primary">看下一步</button></div></section>
+    <section class="trouble"><p class="eyebrow">停下来，检查这里</p><h2>卡住了，先别重新打乱。</h2><details><summary>白色面好了，侧面却没有整齐的一排？</summary><p>只拼出了颜色，没有让块归位。用中心确定目标位置，退回白十字与白角步骤；每一块的其他颜色也必须和侧面中心一致。</p></details><details><summary>公式做完后，第一层或第二层坏了？</summary><p>检查是否拿反白黄、有没有把 R′ 当成 R、把 D 的顺逆时针看反，或漏掉最后一步。第二层之后一般白底黄顶；只有最后一步允许下两层暂时混乱。若明确只错了最后一手，反向转回那一手。</p></details><details><summary>黄色十字图案怎么和教程不一样？</summary><p>只数四个黄色棱块，不数角块。正常状态是 0、2 或 4 个黄色棱朝上。如果出现 1 或 3 个，先检查前两层与识别；若魔方拆装过，可能有单棱翻转，普通转动无法修复。</p></details><details><summary>最后只剩一个角翻不过来？</summary><p>合法打乱不可能只留下一个角扭转。如果整个流程无误，魔方可能曾被手动扭角或错误装配。不要继续无限重复公式；先确认拿法、完整四步与其他角的状态。</p></details></section>
+    <section class="cheat"><p class="eyebrow">第二遍，带着这张卡片练</p><h2>复原速查</h2><div id="cheat-list"></div></section>
+    <footer><details><summary>对照你提供的资料</summary><div class="source-links"><a href="https://web.mit.edu/sp.268/www/rubik.pdf">MIT 讲义：短动作的效果，以及准备与撤销</a><a href="https://www.bilibili.com/video/BV1hJ411p7k6/">震我一下魔方宅：从认识整块到逐层处理</a><a href="https://www.bilibili.com/video/BV1Xs411Q7ob/">2017 入门教程：短动作与分层示范</a><a href="https://www.bilibili.com/video/BV1eET3zsEqu/?p=1">北师大第一讲：动作串与魔方效果的区别</a></div><p>下面的七步采用统一拿法与一套层先流程；各资料最后一层的步骤顺序有所不同，跟做时请沿本站同一流程继续。</p></details></footer>
+  </main><noscript><p>请启用 JavaScript 查看七步教程与动作演示。</p></noscript>
+</body></html>

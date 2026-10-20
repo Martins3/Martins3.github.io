@@ -53,7 +53,7 @@ struct mkfs_layout {
  */
 static inline uint32_t idiv_ceil(uint32_t a, uint32_t b)
 {
-    return (a + b - 1) / b;
+    return a / b + (a % b != 0);
 }
 
 /**
@@ -62,7 +62,7 @@ static inline uint32_t idiv_ceil(uint32_t a, uint32_t b)
  * @param layout: 输出布局结构
  * @return: 0 成功，-1 失败（镜像太小）
  */
-int mkfs_calculate_layout(size_t image_size, struct mkfs_layout *layout);
+int mkfs_calculate_layout(size_t image_size, uint32_t bytes_per_inode, struct mkfs_layout *layout);
 
 /**
  * 验证布局是否合理
@@ -141,7 +141,7 @@ int mkfs_write_bfree_bitmap(int fd, const struct mkfs_layout *layout);
  * 完整创建文件系统
  * 这是主要的入口函数
  */
-int mkfs_create_fs(int fd, size_t image_size, struct mkfs_result *result);
+int mkfs_create_fs(int fd, size_t image_size, uint32_t bytes_per_inode, struct mkfs_result *result);
 
 /* ========== 验证函数（用于测试） ========== */
 

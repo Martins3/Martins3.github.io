@@ -1,0 +1,13 @@
+{
+  "scan_check_equals_eoi_submit_equals_eoi_check": true,
+  "migration_flush_equals_timer_migration": true,
+  "submit_maps_balance": true,
+  "sampled_bpf_recursion_misses_zero": true,
+  "no_new_dynamic_events": true,
+  "max_observed_missed_during_attachment": {
+    "kvm:__kvm_vcpu_kick+0": 52,
+    "kvm:apic_timer_expired+116": 56
+  },
+  "missed_scope": "Cumulative snapshots during probe attachment, including time outside the gated measurement window; do not add these numbers to window counts.",
+  "limitations": "UNBLOCK and kick counters are observed hits, not guaranteed lossless counts. Instrumentation perturbs timing. Other sampled link missed counters were zero."
+}

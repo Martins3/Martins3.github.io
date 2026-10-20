@@ -4,6 +4,7 @@ http://ckernel.org/
 ## clk 2025
 <!-- a93e7435-e136-4d37-a5a4-4560e1bf1daf -->
 https://mp.weixin.qq.com/s/KWrNZW_4Gw8_sUqr1SkbZA
+https://github.com/ChinaLinuxKernel/CLK2025
 
 ### 主论坛
 "AI Agent 时代 Linux 内核的现状和发展"

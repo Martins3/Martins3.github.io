@@ -241,6 +241,42 @@ memory-backend='id'
 TODO 如何理解这里的 -machine memory-backend=mem0 ，奇怪的参数含义，-machine 是这么使用的吗?
 arg_mem_cpu+=" -machine memory-backend=mem0 "
 
+## 为什么 libvirt 要这么配置，vmware 也这么配置?
+-smp 1,maxcpus=240,sockets=240,dies=1,clusters=1,cores=1,threads=1
+
+是由于 CPU 热插拔，会导致性能问题吗?
+
+## 先看看物理的 CPU topo 结果是什么样子的
+
+```txt
+一颗 CPU → 多个计算 Die → 多个 CCX → 多个 Core → 硬件线程
+
+每个 Socket 安装一颗 CPU，下面按单颗 CPU计算：
+
+ 数量关系                            海光三代 7 系    海光四代 7490
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  ━━━━━━━━━━━━━━━  ━━━━━━━━━━━━━━━
+ 每颗 CPU 的计算 Die 数                          4                4
+──────────────────────────────────  ───────────────  ───────────────
+ 每个计算 Die 的 CCX 数                          2                4
+──────────────────────────────────  ───────────────  ───────────────
+ 每个 CCX 的物理核心数                           4                4
+──────────────────────────────────  ───────────────  ───────────────
+ 每个计算 Die 的物理核心数                       8               16
+──────────────────────────────────  ───────────────  ───────────────
+ 每颗 CPU 的 CCX 总数                            8               16
+──────────────────────────────────  ───────────────  ───────────────
+ 每颗 CPU 的物理核心总数                        32               64
+──────────────────────────────────  ───────────────  ───────────────
+ 开启双线程 SMT 后的逻辑 CPU 总数               64              128
+```
+
+一个 socket 4 个 die ，一个 die 两个 ccx ，ccx 内部共享 L3 cache
+一个 ccx 中个 4 core ，每一个 core 都是一个用自己的 L1 L2 cache
+
+此外，一个 socket 中有一个 io die
+
+一个 die 两个 memory channel
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

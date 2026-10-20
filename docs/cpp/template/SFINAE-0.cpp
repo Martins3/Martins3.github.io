@@ -1,17 +1,17 @@
 #include <iostream>
 
-template <class T> void zoo(T x)
+template <class T> void zoo(T)
 {
 	std::cout << "zoo template\n";
 }
 
 // bar
-template <class T> void bar(T x)
+template <class T> void bar(T)
 {
 	std::cout << "bar template\n";
 }
 
-void bar(int x)
+void bar(int)
 {
 	std::cout << "bar int overload\n";
 }
@@ -22,12 +22,12 @@ struct A {
 };
 
 // 注意第二个参数有默认值，因此只传一个实参也能考虑该模板；但编译器仍然必须检查第二个参数的类型。
-template <class T> void foo(T x, typename T::value_type * = nullptr)
+template <class T> void foo(T, typename T::value_type * = nullptr)
 {
 	std::cout << "foo: template : value_type\n";
 }
 
-template <class T> void foo(T x)
+template <class T> void foo(T)
 {
 	std::cout << "foo : template\n";
 }
@@ -52,18 +52,13 @@ int main()
 	// 所以就不用写成 foo<int>(124) 了
 	foo(124);
 
-	// 当然，如果定义了 foo 的非 template 版本，而且可以匹配上，优先使用非 template 的版本
-	// 有点类似 partial specialization 会优先匹配
-	bar(12);
-	bar<int>(12);
-	bar(12.0);
+	// 先比较实参转换；在这里匹配同样好时，非模板函数优先。
+	bar(12); // 两者都是精确匹配，选择非模板 bar(int)。
+	bar<int>(12); // 显式指定模板实参，只考虑函数模板。
+	bar(12.0); // 模板精确匹配 double，胜过需要 double -> int 转换的非模板。
 
-	// 终于到达来讲到 SFINAE 的例子了，这里
-	// 这里 foo 42
-	A a;
-	// foo<A>(a); // 这个会触发错误，因为对于两个 foo 的定义，A 都是可以匹配上的
-	// 但是 foo<int>(12) 没问题，因为 template <class T> void foo(T x, typename T::value_type * = nullptr) 而言
-	// 根本就不存在
+	// foo<A>(A{}); // 两个候选都可行且无法选出更好的一个，产生歧义。
+	// int 没有 value_type，带第二个参数的候选替换失败，只留下 foo(T)。
 	foo<int>(12);
 
 	// 这个不会出现 ambiguous 的错误

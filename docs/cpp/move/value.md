@@ -1,4 +1,4 @@
-## 分类
+##分类
 
 每个表达式（注意：值类别是**表达式**的属性，不是对象的属性，也不是类型的属性）恰好属于三个基本类别之一：lvalue、xvalue、prvalue。glvalue 和 rvalue 不是并列的第四、五个类别，而是两个总称，而且这两个总称**相交**——xvalue 同时属于两边。所以分类图画不成一棵树，xvalue 有两个父节点：
 
@@ -160,6 +160,7 @@ std::move 就是这类里的一个具体函数，别把它当成单独一种。
 4. 判断一个表达式是什么类别，最快的办法就是问两个问题：**有身份吗（identity）？允许掏空吗（movable）？**——两个都“是”就是 xvalue，只前者是 lvalue，只后者是 prvalue。（identity 不等于“能取地址”：内置 `&` 要求操作数是 lvalue，xvalue 取不了地址。）
 
 一句话收尾：类型系统的 `&`/`&&` 管“能绑定谁”，值类别管“这个表达式是什么”；`std::move` 是从 lvalue 到 xvalue 的桥，`std::forward` 是在转发时恢复调用方的原始值类别。动手验证就用 [lvalue-rvalue.cpp](lvalue-rvalue.cpp)。
+
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

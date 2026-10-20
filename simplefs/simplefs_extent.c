@@ -80,7 +80,7 @@ void simplefs_file_init_extent_root(void *block)
 
 	memset(root, 0, sizeof(*root));
 	root->header.eh_magic = SIMPLEFS_EXTENT_ROOT_MAGIC;
-	root->header.eh_max = SIMPLEFS_FILE_INDEX_SLOTS;
+	root->header.eh_depth = 0;
 }
 
 static int simplefs_file_load_leaf(struct super_block *sb, uint32_t leaf_block,
@@ -91,7 +91,7 @@ static int simplefs_file_load_leaf(struct super_block *sb, uint32_t leaf_block,
 	uint32_t i;
 	int ret;
 
-	leaf = simplefs_get_folio(sb, leaf_block, &folio);
+	leaf = simplefs_read_metadata(sb, leaf_block, &folio);
 	if (IS_ERR(leaf))
 		return PTR_ERR(leaf);
 
@@ -138,14 +138,14 @@ int simplefs_file_load_extents(struct super_block *sb, uint32_t root_block,
 
 	memset(buf, 0, sizeof(*buf));
 
-	root = simplefs_get_folio(sb, root_block, &folio);
+	root = simplefs_read_metadata(sb, root_block, &folio);
 	if (IS_ERR(root))
 		return PTR_ERR(root);
 
 	if (root->header.eh_magic != SIMPLEFS_EXTENT_ROOT_MAGIC) {
 		pr_warn("load-extents bad root sb=%s root=%u magic=0x%x entries=%u max=%u first_index=[%u,%u,%u,%u]\n",
 			sb->s_id, root_block, root->header.eh_magic,
-			root->header.eh_entries, root->header.eh_max,
+			root->header.eh_entries, root->header.eh_depth,
 			root->indexes[0].ei_block, root->indexes[0].leaf_block,
 			root->indexes[0].nr_extents, root->indexes[0].last_block);
 		/* 普通文件的 extent root 在创建时必然写入 magic，读回全零
@@ -164,10 +164,24 @@ int simplefs_file_load_extents(struct super_block *sb, uint32_t root_block,
 	nr_entries = READ_ONCE(root->header.eh_entries);
 	smp_rmb();
 
-	if (nr_entries > SIMPLEFS_FILE_INDEX_SLOTS) {
+	if (!root->header.eh_depth) {
+		if (nr_entries > SIMPLEFS_FILE_EXTENTS_PER_LEAF) {
+			ret = -EFSCORRUPTED;
+			goto out;
+		}
+		ret = simplefs_file_grow_extent_buffer(buf, nr_entries);
+		if (ret)
+			goto out;
+		if (nr_entries)
+			memcpy(buf->extents, root->extents,
+			       nr_entries * sizeof(*buf->extents));
+		buf->nr_extents = nr_entries;
+		goto out;
+	}
+	if (root->header.eh_depth != 1 || nr_entries > SIMPLEFS_FILE_INDEX_SLOTS) {
 		pr_warn("load-extents bad root entries sb=%s root=%u entries=%u max=%u first_index=[%u,%u,%u,%u]\n",
 			sb->s_id, root_block, nr_entries,
-			root->header.eh_max, root->indexes[0].ei_block,
+			root->header.eh_depth, root->indexes[0].ei_block,
 			root->indexes[0].leaf_block, root->indexes[0].nr_extents,
 			root->indexes[0].last_block);
 		ret = -EINVAL;
@@ -313,6 +327,7 @@ int simplefs_file_sync_extents(struct inode *inode,
 	uint32_t new_leaf_count;
 	uint32_t *leaf_blocks = NULL;
 	bool root_updated = false;
+	bool metadata_changed = false;
 	uint32_t i;
 	int ret = 0, stop_ret;
 
@@ -320,9 +335,10 @@ int simplefs_file_sync_extents(struct inode *inode,
 	if (buf->nr_extents > SIMPLEFS_MAX_FILE_EXTENTS)
 		return -EFBIG;
 
-	new_leaf_count = DIV_ROUND_UP(buf->nr_extents, SIMPLEFS_FILE_EXTENTS_PER_LEAF);
+	new_leaf_count = buf->nr_extents <= SIMPLEFS_FILE_EXTENTS_PER_LEAF ? 0 :
+		DIV_ROUND_UP(buf->nr_extents, SIMPLEFS_FILE_EXTENTS_PER_LEAF);
 	if (new_leaf_count) {
-		leaf_blocks = kvmalloc_array(new_leaf_count, sizeof(*leaf_blocks),
+		leaf_blocks = kvcalloc(new_leaf_count, sizeof(*leaf_blocks),
 					     GFP_KERNEL);
 		if (!leaf_blocks)
 			return -ENOMEM;
@@ -392,7 +408,27 @@ int simplefs_file_sync_extents(struct inode *inode,
 				    buf->nr_extents - start,
 				    SIMPLEFS_FILE_EXTENTS_PER_LEAF);
 
-		leaf = simplefs_get_folio(sb, leaf_blocks[i], &leaf_folio);
+		/* Appending a directory block usually changes only its last leaf.
+		 * Read-only comparison avoids journalling every unchanged leaf. */
+		if (i < old_leaf_count) {
+			bool same;
+
+			leaf = simplefs_read_metadata(sb, leaf_blocks[i], &leaf_folio);
+			if (IS_ERR(leaf)) {
+				ret = PTR_ERR(leaf);
+				folio_release_kmap(root_folio, root);
+				goto out;
+			}
+			same = leaf->header.eh_magic == SIMPLEFS_EXTENT_LEAF_MAGIC &&
+				leaf->header.eh_entries == nr &&
+				!memcmp(leaf->extents, &buf->extents[start],
+					nr * sizeof(*buf->extents));
+			folio_release_kmap(leaf_folio, leaf);
+			if (same)
+				continue;
+		}
+		metadata_changed = true;
+		leaf = simplefs_get_zeroed_folio(sb, leaf_blocks[i], &leaf_folio);
 		if (IS_ERR(leaf)) {
 			ret = PTR_ERR(leaf);
 			folio_release_kmap(root_folio, root);
@@ -422,6 +458,18 @@ int simplefs_file_sync_extents(struct inode *inode,
 		folio_release_kmap(leaf_folio, leaf);
 	}
 
+	/* Without a journal, make children durable before even dirtying their
+	 * parent; background writeback may run as soon as the parent is dirty. */
+	if (!simplefs_journal_has_current_handle(sb)) {
+		for (i = 0; i < new_leaf_count; i++) {
+			ret = simplefs_writeback_metadata_block(sb, leaf_blocks[i]);
+			if (ret) {
+				folio_release_kmap(root_folio, root);
+				goto out;
+			}
+		}
+	}
+	metadata_changed = true;
 	simplefs_file_init_extent_root(root);
 	for (i = 0; i < new_leaf_count; i++) {
 		uint32_t start = i * SIMPLEFS_FILE_EXTENTS_PER_LEAF;
@@ -441,8 +489,13 @@ int simplefs_file_sync_extents(struct inode *inode,
 			 root->indexes[i].last_block, root->indexes[i].leaf_block,
 			 root->indexes[i].nr_extents);
 	}
+	if (!new_leaf_count && buf->nr_extents)
+		memcpy(root->extents, buf->extents,
+		       buf->nr_extents * sizeof(*buf->extents));
+	root->header.eh_depth = new_leaf_count ? 1 : 0;
 	smp_wmb();
-	WRITE_ONCE(root->header.eh_entries, new_leaf_count);
+	WRITE_ONCE(root->header.eh_entries,
+		   new_leaf_count ? new_leaf_count : buf->nr_extents);
 	ret = simplefs_journal_dirty_folio(sb, ci->ei_block, root,
 					   root_folio);
 	folio_release_kmap(root_folio, root);
@@ -457,11 +510,6 @@ int simplefs_file_sync_extents(struct inode *inode,
 	 * references it.
 	 */
 	if (!simplefs_journal_has_current_handle(sb)) {
-		for (i = 0; i < new_leaf_count; i++) {
-			ret = simplefs_writeback_metadata_block(sb, leaf_blocks[i]);
-			if (ret)
-				goto out;
-		}
 		ret = simplefs_writeback_metadata_block(sb, ci->ei_block);
 		if (ret)
 			goto out;
@@ -472,10 +520,10 @@ int simplefs_file_sync_extents(struct inode *inode,
 
 		retire_ret = simplefs_retire_metadata_blocks(
 			sb, buf->leaf_blocks[i], 1);
-		if (retire_ret)
-			pr_warn("failed to retire extent leaf ino=%llu block=%u ret=%d\n",
-				(unsigned long long)inode->i_ino,
-				buf->leaf_blocks[i], retire_ret);
+		if (retire_ret) {
+			ret = retire_ret;
+			goto out;
+		}
 	}
 
 	if (new_leaf_count >= old_leaf_count)
@@ -491,7 +539,9 @@ int simplefs_file_sync_extents(struct inode *inode,
 	mark_inode_dirty(inode);
 
 out:
-	if (ret && !root_updated) {
+	if (ret && metadata_changed)
+		simplefs_journal_fail(sb, ret);
+	if (ret && !metadata_changed && !root_updated) {
 		for (i = old_leaf_count; i < new_leaf_count; i++) {
 			if (leaf_blocks && leaf_blocks[i])
 				simplefs_retire_metadata_blocks(
@@ -525,31 +575,4 @@ int simplefs_file_free_extent_tree(struct super_block *sb, uint32_t root_block)
 		first_error = ret;
 	simplefs_file_destroy_extents(&buf);
 	return first_error;
-}
-
-/* Search for the extent containing the target block in a directory index.
- * Returns the matching extent index if found.
- * Returns the first unused file index if not found (for allocation).
- * Returns -1 if no free slots and no match.
- */
-uint32_t simplefs_ext_search(struct simplefs_file_ei_block *index,
-			     uint32_t iblock)
-{
-	uint32_t i;
-	uint32_t first_free = (uint32_t)-1;
-
-	for (i = 0; i < SIMPLEFS_MAX_EXTENTS; i++) {
-		if (index->extents[i].ee_start == 0) {
-			if (first_free == (uint32_t)-1)
-				first_free = i;
-			continue;
-		}
-
-		if (iblock >= index->extents[i].ee_block &&
-		    iblock < index->extents[i].ee_block +
-				 simplefs_ext_len(&index->extents[i]))
-			return i;
-	}
-
-	return first_free;
 }

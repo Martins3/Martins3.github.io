@@ -1,12 +1,15 @@
-# aggregate 的初始化
-## 哪些类型是 aggregate
+# aggregate initialization
 
-**aggregate（聚合类型）主要有两类：数组，以及符合特定条件的类。** `struct` 和 `class` 都可能是聚合类型，关键在于定义，而不是用哪个关键字。
+## 哪些类型是 aggregate 类型
+
+**aggregate 两类：数组，以及符合特定条件的类。**
+`struct` 和 `class` 都可能是聚合类型，关键在于定义，而不是用哪个关键字。
 
 ```cpp
 // 1. 数组
 int arr[] = {1, 2, 3};
 
+// TODO 什么叫做简单的 struct ?
 // 2. 简单的 struct
 struct Point {
     int x;
@@ -14,7 +17,7 @@ struct Point {
 };
 Point p{1, 2};
 
-// 3. 成员公开的 class：c.cpp 中的 A
+// 3. 成员公开的 class
 class A {
 public:
     int a;
@@ -22,6 +25,7 @@ public:
 };
 A a{1, 2};
 
+// TODO 刚刚不是说只有两类吗?
 // 4. union 也可能是聚合类型
 union Value {
     int i;
@@ -79,6 +83,8 @@ static_assert(std::is_aggregate_v<int[3]>);
 ```
 
 注意，**能写 `T{...}` 不代表 `T` 是聚合类型**：花括号也可以调用构造函数，例如 `std::string{"hello"}`。聚合初始化只是花括号初始化的一种情况。
+
+## TODO 需要补充下，如果是 aggregate ，那么可以做什么特别的事情?
 
 ## C++20 为什么允许用圆括号初始化聚合体
 
@@ -183,11 +189,15 @@ std::vector<int> a(3, 9); // 三个元素：9, 9, 9
 std::vector<int> b{3, 9}; // 两个元素：3, 9
 ```
 
-花括号会优先考虑 `std::initializer_list` 构造函数。若 `make_shared`、`emplace` 等现有接口从 `T(args...)` 改成 `T{args...}`，一些原有程序会悄悄改变行为。
+花括号会优先考虑 `std::initializer_list` 构造函数。若 `make_shared`、`emplace`
+等现有接口从 `T(args...)` 改成 `T{args...}`，一些原有程序会悄悄改变行为。
 
-而且 `{1, 2}` 这种 braced-init-list（花括号初始化器列表）本身不是普通表达式，没有可供函数模板直接推导和完美转发的类型。
+而且 `{1, 2}` 这种 braced-init-list（花括号初始化器列表）本身不是普通表达式，
+没有可供函数模板直接推导和完美转发的类型。
 
-所以正确的兼容方向不是修改所有泛型库，而是让聚合体也接受这些接口一直使用的 `T(args...)` 形式。早期提案 [P0960R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0960r0.html) 对这个问题给出了详细说明。
+所以正确的兼容方向不是修改所有泛型库，
+而是让聚合体也接受这些接口一直使用的 `T(args...)` 形式。
+早期提案 [P0960R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0960r0.html) 对这个问题给出了详细说明。
 
 ### 4. 圆括号和花括号并不完全等价
 
@@ -217,6 +227,8 @@ Point point{.x = 1, .y = 2};
 ```
 
 不存在对应的 `Point(.x = 1, .y = 2)` 写法。
+
+TODO  designated initializer 这是 c++ 20 才有的吗?
 
 #### 4.3 引用成员与临时对象生命周期
 
@@ -251,6 +263,7 @@ int values[]{1, 2, 3};
 
 C++20 的设计原则之一是尽量不改变已有 `A(value)` 代码的意义。
 
+// TODO 在这里，问题开始变的很奇怪了
 ```cpp
 struct A {
     int value;
@@ -300,6 +313,12 @@ auto point = std::make_unique<Point>(1, 2);
 - [P0960R3: Allow initializing aggregates from a parenthesized list of values](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p0960r3.html)
 - [P0960R0: 初始提案与库接口动机](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0960r0.html)
 - [P1975R0: Fixing the wording of parenthesized aggregate-initialization](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1975r0.html)
+
+
+## TODO
+- [ ] 关于 aggregate class 书上只是说明了其定义，初始化方法 和 三个明显的缺点，但是为什么我们需要 aggregate class
+  - https://stackoverflow.com/questions/31232288/what-are-aggregate-classes-for
+  - https://stackoverflow.com/questions/4178175/what-are-aggregates-and-pods-and-how-why-are-they-special
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

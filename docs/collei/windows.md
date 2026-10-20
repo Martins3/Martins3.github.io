@@ -150,6 +150,11 @@ Parsed proxy configuration: http://127.0.0.1:7890
 6. 注入 $OEM$，在安装末尾执行 install.bat。
 7. 重建可启动 ISO。dockur/windows 5.16 安装实现 (https://raw.githubusercontent.com/dockur/windows/c768ba894d100996bf58d050c41065dac3370e02/src/install.sh)。
 
+## TODO
+https://github.com/gnif/LookingGlass
+
+这个解决方案研究下
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

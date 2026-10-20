@@ -17,8 +17,8 @@
  * TODO 没有 folio_release_kmap 会导致内存无法被回收，但是 folio_release_kmap
  * 不会导致内存立刻被释放 对吧
  */
-void *simplefs_get_folio(struct super_block *sb, unsigned long n,
-			    struct folio **foliop)
+void *simplefs_read_metadata(struct super_block *sb, unsigned long n,
+			       struct folio **foliop)
 {
 	struct address_space *mapping = sb->s_bdev->bd_mapping;
 	struct folio *folio;
@@ -31,13 +31,41 @@ void *simplefs_get_folio(struct super_block *sb, unsigned long n,
 
 	/* 映射folio到内核空间，处理 large folio 中的偏移 */
 	kaddr = kmap_local_folio(folio, offset_in_folio(folio, n * PAGE_SIZE));
-	if (simplefs_journal_prepare_current(sb, n)) {
-		kunmap_local(kaddr);
-		folio_put(folio);
-		return ERR_PTR(-EIO);
-	}
 	*foliop = folio;
 	return kaddr;
+}
+
+void *simplefs_get_folio(struct super_block *sb, unsigned long n,
+			struct folio **foliop)
+{
+	void *data = simplefs_read_metadata(sb, n, foliop);
+
+	if (!IS_ERR(data) && simplefs_journal_prepare_current(sb, n)) {
+		folio_release_kmap(*foliop, data);
+		return ERR_PTR(-EIO);
+	}
+	return data;
+}
+
+/* Only for callers which immediately replace the entire metadata block.
+ * The journal adapter prepares the old image before zeroing the buffer.  Its
+ * uptodate bit lets read_mapping_folio() complete without issuing a disk read.
+ * Without a journal, retain the regular read/dirty-folio writeback path.
+ */
+void *simplefs_get_zeroed_folio(struct super_block *sb, unsigned long n,
+			      struct folio **foliop)
+{
+	void *data;
+	int ret;
+
+	ret = simplefs_journal_zero_current(sb, n);
+	if (ret)
+		return ERR_PTR(ret);
+	/* zero_current() already obtained write access for this transaction. */
+	data = simplefs_read_metadata(sb, n, foliop);
+	if (!IS_ERR(data))
+		memset(data, 0, sb->s_blocksize);
+	return data;
 }
 
 /*

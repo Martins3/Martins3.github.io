@@ -286,6 +286,12 @@ cl /std:c++20 /TP main.cpp math.obj /reference math=math.ifc
 - [C++ modules with GCC 11 - Feabhas](https://blog.feabhas.com/2021/08/c20-modules-with-gcc11/)
 - [Overview of modules in C++ - Microsoft Learn](https://learn.microsoft.com/en-us/cpp/cpp/modules-cpp)
 
+## 这个仓库有意思的
+https://arewemodulesyet.org/
+
+为什么 C++ Modules 需要 BMI，而传统的 C++ 头文件不需要？
+它和 PCH 究竟有什么本质区别？ 这个问题比 export、import 语法本身更有技术含量。
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

@@ -1,0 +1,7 @@
+{
+  "uuid": "bongocat-core@local",
+  "name": "BongoCat Core",
+  "description": "Place the Rust BongoCat window above ordinary windows in the primary monitor's bottom right corner.",
+  "shell-version": ["50"],
+  "version": 1
+}

@@ -1,0 +1,44 @@
+[
+  {
+    "module": "kvm",
+    "parent": "__apic_accept_irq",
+    "die": "0x309241",
+    "ranges": [
+      [
+        350242,
+        350242
+      ]
+    ],
+    "path": "direct",
+    "req": 14,
+    "expressions": [
+      [
+        "constant",
+        14
+      ]
+    ],
+    "call_line": 1477,
+    "covered_by": "kvm:__apic_accept_irq+594"
+  },
+  {
+    "module": "kvm",
+    "parent": "__apic_accept_irq",
+    "die": "0x3094ae",
+    "ranges": [
+      [
+        350357,
+        350369
+      ]
+    ],
+    "path": "direct",
+    "req": 14,
+    "expressions": [
+      [
+        "constant",
+        14
+      ]
+    ],
+    "call_line": 1466,
+    "covered_by": "kvm:__apic_accept_irq+594"
+  }
+]

@@ -2,11 +2,12 @@
 
 由 `docs/pub/sync-blog.py` 生成。
 
-跳过文件数: 280
+跳过文件数: 301
 
 ## 发布策略跳过: draft 目录
 
 - `docs/ai-tools/acp.md`
+- `docs/ai-tools/bilibili.md`
 - `docs/ai-tools/chrome-devtools-mcp-setup.md`
 - `docs/ai-tools/claude.md`
 - `docs/ai-tools/humanize.md`
@@ -23,9 +24,9 @@
 - `docs/ai-tools/tools/slides.md`
 - `docs/ai-tools/try.md`
 - `docs/ai-tools/workaround.md`
+- `docs/captive/GenC.md`
 - `docs/captive/archsim.md`
 - `docs/captive/captive.md`
-- `docs/captive/GenC.md`
 - `docs/captive/generator.md`
 - `docs/captive/gensim.md`
 - `docs/chatter/provocation/beijing.md`
@@ -105,6 +106,8 @@
 ## 发布策略跳过: math 目录仅发布 Markdown/Typst 和 HTML/CSS/JS/JSON
 
 - `docs/math/basic/complex/python/experiments.py`
+- `docs/math/cube/tests/browser.cjs`
+- `docs/math/cube/tests/verify.cjs`
 
 ## 发布策略跳过: wip*
 
@@ -127,46 +130,66 @@
 
 ## 发布策略跳过: 同目录存在 README.md
 
+- `docs/README.draft.md`
 - `docs/aarch64/sdm/B2.md`
 - `docs/asm/assembly.md`
 - `docs/concurrent/memory-model/litmus/klitmus.md`
 - `docs/concurrent/memory-model/litmus/litmus.md`
 - `docs/cool.md`
+- `docs/cpp/namespace/adl-2.md`
+- `docs/cpp/namespace/adl.md`
+- `docs/cpp/namespace/scoope.md`
+- `docs/cpp/oop/default.md`
+- `docs/cpp/oop/delegating-constructor.md`
 - `docs/cpp/oop/explicit.md`
 - `docs/cpp/oop/friend.md`
 - `docs/cpp/oop/is-a-has-a.md`
-- `docs/cpp/oop/keyword-interactions.md`
+- `docs/cpp/oop/member-initialization-list.md`
 - `docs/cpp/oop/protected.md`
 - `docs/cpp/operator/with-friend.md`
+- `docs/cpp/smart-pointer/12.md`
+- `docs/cpp/template/SFINAE.md`
+- `docs/cpp/template/alias.md`
+- `docs/cpp/template/concepts.md`
+- `docs/cpp/template/ctad.md`
+- `docs/cpp/template/fold-expression.md`
+- `docs/cpp/template/if-constexpr-sfinae.md`
+- `docs/cpp/template/std-function-copyable.md`
+- `docs/cpp/template/template.md`
+- `docs/cpp/template/tuple-traversal.md`
+- `docs/cpp/template/typename-class.md`
 - `docs/cpu/sys/MCCC/3.md`
 - `docs/cpu/sys/MCCC/4.md`
 - `docs/cpu/sys/MCCC/5.md`
 - `docs/cpu/sys/MCCC/6.md`
 - `docs/cpu/sys/MCCC/7.md`
 - `docs/cpu/sys/MCCC/8.md`
-- `docs/cpu/sys/SLCA/1.md`
-- `docs/cpu/sys/SLCA/2.md`
-- `docs/cpu/sys/SLCA/3.md`
-- `docs/cpu/sys/SLCA/4.md`
-- `docs/cpu/sys/SLCA/5.md`
-- `docs/cpu/sys/SLCA/6.md`
-- `docs/cpu/sys/SLCA/7.md`
-- `docs/cpu/sys/SLCA/8.md`
-- `docs/cpu/sys/SLCA/readme.md`
-- `docs/cxl/readme.md`
+- `docs/cpu/sys/yao/Backcover.md`
+- `docs/cpu/sys/yao/Frontmatter.md`
+- `docs/cpu/sys/yao/Notes.md`
+- `docs/cpu/sys/yao/Preface.md`
+- `docs/cpu/sys/yao/References.md`
+- `docs/cpu/sys/yao/SUMMARY.md`
+- `docs/cpu/sys/yao/study/Ch01.md`
+- `docs/cpu/sys/yao/study/Ch02.md`
+- `docs/cpu/sys/yao/study/Ch03.md`
+- `docs/cpu/sys/yao/study/Ch04.md`
+- `docs/cpu/sys/yao/study/Ch05.md`
+- `docs/cpu/sys/yao/study/Ch06.md`
+- `docs/cpu/sys/yao/study/Ch07.md`
+- `docs/cpu/sys/yao/study/Ch08.md`
+- `docs/cpu/sys/yao/study/Ch09.md`
+- `docs/cpu/sys/yao/study/Ch10.md`
+- `docs/cpu/sys/yao/study/Ch11.md`
+- `docs/cpu/sys/yao/study/Glossary.md`
 - `docs/fusion.md`
 - `docs/kernel/api/compat.md`
 - `docs/kernel/api/fd-api-enumeration.md`
 - `docs/kernel/api/kernel-api-summary.md`
 - `docs/kernel/blk/ds/ceph.md`
-- `docs/kernel/cgroup/sched.code/readme.md`
 - `docs/kernel/fs/nfs/user-nfsd/usage.md`
-- `docs/kernel/lpc/2021.md`
-- `docs/kernel/lpc/2022.md`
-- `docs/kernel/lpc/2023.md`
-- `docs/kernel/lpc/2024.md`
-- `docs/kernel/lpc/2025.md`
-- `docs/kernel/lpc/Readme.md`
+- `docs/kernel/module/README-kvm.md`
+- `docs/kernel/module/README-localmodconfig.md`
 - `docs/kernel/module/conf.md`
 - `docs/kernel/module/config.md`
 - `docs/kernel/module/doc.md`
@@ -178,8 +201,6 @@
 - `docs/kernel/module/module-load.md`
 - `docs/kernel/module/module-usage.md`
 - `docs/kernel/module/module.md`
-- `docs/kernel/module/README-kvm.md`
-- `docs/kernel/module/README-localmodconfig.md`
 - `docs/kernel/release/6.12.md`
 - `docs/kernel/release/6.13.md`
 - `docs/kernel/release/6.14.md`
@@ -192,7 +213,6 @@
 - `docs/kernel/release/7.1.md`
 - `docs/kernel/release/7.2.md`
 - `docs/kernel/release/7.3.md`
-- `docs/kernel/tty/readline/readme.md`
 - `docs/kernel/tty/session-demo/session.md`
 - `docs/kvm/kvm-forum/2016.md`
 - `docs/kvm/kvm-forum/2017.md`
@@ -216,10 +236,7 @@
 - `docs/net/vxlan-demo/bridge-forwarding.md`
 - `docs/net/vxlan-demo/vxlan-fdb-deep-dive.md`
 - `docs/net/vxlan-demo/why-bridge.md`
-- `docs/qemu/aarch64-user/Readme.md`
-- `docs/README.draft.md`
 - `docs/rust/demo/ai.test.md`
-- `docs/trace/bpftrace/readme.md`
 - `docs/trace/ebpf/code/libbpf/bootstrap.md`
 - `docs/trace/ebpf/code/libbpf/readahead.md`
 - `docs/trace/perf/bpf-kprobe-syscall-demo.md`
@@ -237,39 +254,6 @@
 
 - `docs/ai-tools/vendor.md`
 - `docs/kernel/ipmi/ipmi.md`
-- `docs/kernel/power/aarch64.md`
-- `docs/kernel/power/acpi_pad.md`
-- `docs/kernel/power/advance/intel-epb.md`
-- `docs/kernel/power/advance/intel-sst.md`
-- `docs/kernel/power/advance/intel-uncore.md`
-- `docs/kernel/power/cstate/6788.md`
-- `docs/kernel/power/cstate/cstate-check.md`
-- `docs/kernel/power/cstate/cstate.md`
-- `docs/kernel/power/cstate/disable.md`
-- `docs/kernel/power/cstate/suspend/1.md`
-- `docs/kernel/power/cstate/suspend/2.md`
-- `docs/kernel/power/cstate/suspend/3.md`
-- `docs/kernel/power/doc.md`
-- `docs/kernel/power/firmware.md`
-- `docs/kernel/power/haltpoll.md`
-- `docs/kernel/power/key-question.md`
-- `docs/kernel/power/pm_qos.md`
-- `docs/kernel/power/pstate/a.md`
-- `docs/kernel/power/pstate/basic.md`
-- `docs/kernel/power/pstate/governor.md`
-- `docs/kernel/power/pstate/intel-pstate-doc.md`
-- `docs/kernel/power/pstate/intel-pstate-on-i9-13900k.md`
-- `docs/kernel/power/pstate/tmp.md`
-- `docs/kernel/power/pstate/tmp1.md`
-- `docs/kernel/power/pstate/tmp2.md`
-- `docs/kernel/power/pstate/tmp3.md`
-- `docs/kernel/power/pstate/tmp4.md`
-- `docs/kernel/power/schedutil.md`
-- `docs/kernel/power/sysfs.md`
-- `docs/kernel/power/thermal-throttle.md`
-- `docs/kernel/power/tools.md`
-- `docs/kernel/power/virt.md`
-- `docs/kernel/power/yes.md`
 - `docs/kernel/security/fips/fips.md`
 - `docs/kernel/vfio/mdev.md`
 - `docs/kernel/vfio/shutdown/general.md`
@@ -291,10 +275,47 @@
 - `docs/kvm/vmx/legacy.md`
 - `docs/kvm/vmx/qemu-vapic.md`
 - `docs/kvm/vmx/vmx.md`
+- `docs/math/basic/complex/.venv/lib/python3.13/site-packages/numpy/random/LICENSE.md`
+- `docs/math/basic/complex/.venv/lib/python3.13/site-packages/numpy-2.5.3.dist-info/licenses/numpy/_core/src/npysort/x86-simd-sort/LICENSE.md`
+- `docs/math/basic/complex/.venv/lib/python3.13/site-packages/numpy-2.5.3.dist-info/licenses/numpy/fft/pocketfft/LICENSE.md`
+- `docs/math/basic/complex/.venv/lib/python3.13/site-packages/numpy-2.5.3.dist-info/licenses/numpy/random/LICENSE.md`
+- `docs/math/basic/complex/.venv/lib/python3.13/site-packages/numpy-2.5.3.dist-info/licenses/numpy/random/src/distributions/LICENSE.md`
+- `docs/math/basic/complex/.venv/lib/python3.13/site-packages/numpy-2.5.3.dist-info/licenses/numpy/random/src/mt19937/LICENSE.md`
+- `docs/math/basic/complex/.venv/lib/python3.13/site-packages/numpy-2.5.3.dist-info/licenses/numpy/random/src/pcg64/LICENSE.md`
+- `docs/math/basic/complex/.venv/lib/python3.13/site-packages/numpy-2.5.3.dist-info/licenses/numpy/random/src/philox/LICENSE.md`
+- `docs/math/basic/complex/.venv/lib/python3.13/site-packages/numpy-2.5.3.dist-info/licenses/numpy/random/src/sfc64/LICENSE.md`
+- `docs/math/basic/complex/.venv/lib/python3.13/site-packages/numpy-2.5.3.dist-info/licenses/numpy/random/src/splitmix64/LICENSE.md`
+- `docs/math/basic/complex/.venv/lib/python3.13/site-packages/pyparsing/ai/best_practices.md`
 - `docs/net/rnp.md`
 - `docs/net/sfc/onload.md`
 - `docs/pub/AGETNS.md`
 - `docs/pub/community-bug.md`
 - `docs/pub/community-feature.md`
+- `docs/rust/demo/target/debug/build/rust_decimal-d41474e7c3ebffee/out/README-lib.md`
 - `docs/trace/hw/rasdaemon.md`
 - `docs/uefi/firmware/microcode.md`
+- `gpu/compiler/.venv/lib/python3.13/site-packages/numpy/random/LICENSE.md`
+- `gpu/compiler/.venv/lib/python3.13/site-packages/numpy-2.4.4.dist-info/licenses/numpy/_core/src/npysort/x86-simd-sort/LICENSE.md`
+- `gpu/compiler/.venv/lib/python3.13/site-packages/numpy-2.4.4.dist-info/licenses/numpy/fft/pocketfft/LICENSE.md`
+- `gpu/compiler/.venv/lib/python3.13/site-packages/numpy-2.4.4.dist-info/licenses/numpy/random/LICENSE.md`
+- `gpu/compiler/.venv/lib/python3.13/site-packages/numpy-2.4.4.dist-info/licenses/numpy/random/src/distributions/LICENSE.md`
+- `gpu/compiler/.venv/lib/python3.13/site-packages/numpy-2.4.4.dist-info/licenses/numpy/random/src/mt19937/LICENSE.md`
+- `gpu/compiler/.venv/lib/python3.13/site-packages/numpy-2.4.4.dist-info/licenses/numpy/random/src/pcg64/LICENSE.md`
+- `gpu/compiler/.venv/lib/python3.13/site-packages/numpy-2.4.4.dist-info/licenses/numpy/random/src/philox/LICENSE.md`
+- `gpu/compiler/.venv/lib/python3.13/site-packages/numpy-2.4.4.dist-info/licenses/numpy/random/src/sfc64/LICENSE.md`
+- `gpu/compiler/.venv/lib/python3.13/site-packages/numpy-2.4.4.dist-info/licenses/numpy/random/src/splitmix64/LICENSE.md`
+- `gpu/compiler/.venv/lib/python3.13/site-packages/pip/_vendor/idna/LICENSE.md`
+- `gpu/compiler/.venv/lib/python3.13/site-packages/pip-26.0.1.dist-info/licenses/src/pip/_vendor/idna/LICENSE.md`
+- `gpu/compiler/.venv/lib/python3.13/site-packages/tilelang/3rdparty/composable_kernel/include/ck/README.md`
+- `gpu/compiler/.venv/lib/python3.13/site-packages/tilelang/3rdparty/composable_kernel/include/ck_tile/README.md`
+- `gpu/compiler/.venv/lib/python3.13/site-packages/tilelang/3rdparty/composable_kernel/include/ck_tile/core/README.md`
+- `gpu/compiler/.venv/lib/python3.13/site-packages/tilelang/3rdparty/composable_kernel/include/ck_tile/ops/common/README.md`
+- `gpu/compiler/.venv/lib/python3.13/site-packages/tilelang/3rdparty/composable_kernel/include/ck_tile/ops/flatmm/block/uk/README.md`
+- `gpu/compiler/.venv/lib/python3.13/site-packages/tilelang/3rdparty/composable_kernel/include/ck_tile/ref/README.md`
+- `gpu/compiler/.venv/lib/python3.13/site-packages/tilelang/3rdparty/tvm/src/runtime/hexagon/README.md`
+- `gpu/compiler/.venv/lib/python3.13/site-packages/tilelang/3rdparty/tvm/src/runtime/hexagon/profiler/README.md`
+- `gpu/compiler/.venv/lib/python3.13/site-packages/tilelang/3rdparty/tvm/src/runtime/opencl/opencl_wrapper/README.md`
+- `gpu/compiler/.venv/lib/python3.13/site-packages/tilelang/3rdparty/tvm/src/runtime/vulkan/README.md`
+- `gpu/compiler/.venv/lib/python3.13/site-packages/tilelang/carver/README.md`
+- `gpu/compiler/.venv/lib/python3.13/site-packages/torchgen/packaged/autograd/README.md`
+- `gpu/compiler/.venv/lib/python3.13/site-packages/tvm_ffi/3rdparty/libbacktrace/README.md`

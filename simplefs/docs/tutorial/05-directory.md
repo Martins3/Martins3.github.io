@@ -1,29 +1,23 @@
 # 5. 目录：名字到 inode 号的映射
 
-目录在 VFS 中是 inode，在磁盘上是特殊格式的文件。它不保存子文件内容，只保存
-名字和 inode number。SimpleFS 故意使用线性目录格式，便于观察 lookup、readdir
-和修改操作的完整语义。
+目录在 VFS 中是 inode，在磁盘上保存名字和 inode number。定长目录项让存储格式
+容易理解；可扩展 extent 映射和可重建的内存索引则消除大目录反复线性查找的成本。
 
-## 两级目录存储
+## 存储与缓存
 
-目录 inode 的 `ei_block` 指向 `simplefs_file_ei_block`。这个索引块保存
-`nr_files` 和目录 extent；每个 extent 固定覆盖 8 个目录 data block。data block
-中的 `simplefs_file` 只有 inode number 和 255 字节名字。
+目录 inode 的 `ei_block` 指向普通 extent root，depth 0 直接存 extent，容量不足
+后使用 leaf。data block 中的 `simplefs_file` 保存 inode number 和 255 字节名字。
+目录每次只增加一个数据块，删除条目清零原槽位，不移动其他条目。
 
-```text
-directory inode
-  -> directory extent index
-       -> extent 0 -> 8 directory blocks -> fixed-size dirents
-       -> extent 1 -> 8 directory blocks -> fixed-size dirents
-```
-
-删除条目时把 inode number 清零形成 hole，创建会优先复用 hole。格式没有 hash 或
-B-tree，因此 lookup 是 O(n)。这对教学很直观，但大目录性能不是设计目标。
+`simplefs_dir_get()` 在首次访问时读取实际目录项，构建名称哈希、逻辑块映射、
+空闲槽位图和有效项计数。缓存构建失败返回错误，不得把未完成索引当成空目录。
+VFS 的目录锁保护读写，额外 mutex 只串行化并发 lookup 的初次构建。缓存随 inode
+驱逐释放，重挂载后从磁盘重建。
 
 ## readdir 与 ctx->pos
 
 `getdents64()` 最终调用 `simplefs_dir_ops.iterate_shared`。`simplefs_iterate()` 先用
-`dir_emit_dots()` 产生 `.`、`..`，再把 `ctx->pos - 2` 换算成 extent/block/slot，
+`dir_emit_dots()` 产生 `.`、`..`，再把 `ctx->pos - 2` 作为逻辑 slot，
 从该位置继续扫描。
 
 `ctx->pos` 是可恢复游标，不只是本次循环下标。用户缓冲区满时 `dir_emit()` 返回
@@ -32,7 +26,7 @@ pos，因为 position 对应磁盘 slot，而不是“第几个有效文件”�
 
 ## create 与 mkdir
 
-创建首先扫描已有 data block 的空 slot；没有空位时一次分配 8-block 目录 extent。
+创建通过空闲槽位图直接定位；没有空位时分配一个目录数据块并扩展 extent 映射。
 然后写 `{inode, name}`，增加 `nr_files`，更新父目录时间戳和 inode。mkdir 还要：
 
 - 初始化新目录自己的索引块；
@@ -45,8 +39,9 @@ pos，因为 position 对应磁盘 slot，而不是“第几个有效文件”�
 ## unlink 与 rmdir
 
 unlink 清目录项、减少文件 nlink，并更新目录元数据。rmdir 在此基础上先确认目标
-目录没有有效子项，再处理父/子目录的 nlink。不能用 `nr_files == 0` 作为唯一证据
-而跳过格式校验；损坏的计数与真实 dirent 不一致时，应返回错误而非错误删除。
+目录没有有效子项，再处理父/子目录的 nlink。`nr_files` 来自完整且校验成功的目录项扫描，不能信任
+未经校验的磁盘计数。删除空目录前分批移除 extent 并退役数据块，每批保持目录仍
+可达，避免把大目录的全部 revoke 塞入一个事务。
 
 打开后 unlink 的文件仍可通过 fd 访问，说明 VFS 对象生命周期与目录名字生命周期
 分离。目录项消失只阻止新的 pathname lookup。

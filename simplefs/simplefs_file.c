@@ -617,10 +617,8 @@ static int simplefs_get_block(struct inode *inode, sector_t iblock,
 	int ret = 0, bno = 0;
 	uint32_t extent_idx = 0, insert_idx = 0;
 	uint32_t allocated_len = 0;
-	uint32_t reserved_leaf = 0;
 	bool allocated = false;
 	bool mapped_unwritten = false;
-	bool reserved_leaf_committed = false;
 	int found;
 
 	if (new)
@@ -724,40 +722,10 @@ static int simplefs_get_block(struct inode *inode, sector_t iblock,
 			}
 		}
 
-		if (!buf.nr_leaf_blocks) {
-			/*
-			 * Reserve the first extent leaf immediately before the first
-			 * data run.  Allocating data first would place the new leaf
-			 * between the first page and the rest of a sequential write,
-			 * needlessly fragmenting that write into two physical extents.
-			 */
-			reserved_leaf = get_free_blocks(sbi, alloc_len + 1);
-			while (!reserved_leaf && alloc_len > 1) {
-				alloc_len /= 2;
-				reserved_leaf = get_free_blocks(sbi, alloc_len + 1);
-			}
-			if (reserved_leaf) {
-				buf.leaf_blocks = kvmalloc_array(1,
-							 sizeof(*buf.leaf_blocks),
-							 GFP_NOFS);
-				if (!buf.leaf_blocks) {
-					put_blocks(sbi, reserved_leaf, alloc_len + 1);
-					reserved_leaf = 0;
-					ret = -ENOMEM;
-					goto out;
-				}
-				buf.leaf_blocks[0] = reserved_leaf;
-				buf.nr_leaf_blocks = 1;
-				inode->i_blocks += simplefs_blocks_to_sectors(1);
-				bno = reserved_leaf + 1;
-			}
-		} else {
+		bno = get_free_blocks(sbi, alloc_len);
+		while (!bno && alloc_len > 1) {
+			alloc_len /= 2;
 			bno = get_free_blocks(sbi, alloc_len);
-			while (!bno && alloc_len > 1) {
-				/* Halve allocation size until we find space */
-				alloc_len /= 2;
-				bno = get_free_blocks(sbi, alloc_len);
-			}
 		}
 		if (!bno) {
 			ret = -ENOSPC;
@@ -795,7 +763,6 @@ static int simplefs_get_block(struct inode *inode, sector_t iblock,
 			put_blocks(sbi, bno, alloc_len);
 			goto out;
 		}
-		reserved_leaf_committed = true;
 	} else {
 		struct simplefs_extent *mapped = &buf.extents[extent_idx];
 		uint32_t ext_len = simplefs_ext_len(mapped);
@@ -829,10 +796,6 @@ static int simplefs_get_block(struct inode *inode, sector_t iblock,
 	if (unwritten)
 		*unwritten = mapped_unwritten;
 out:
-	if (reserved_leaf && !reserved_leaf_committed) {
-		simplefs_retire_metadata_blocks(sb, reserved_leaf, 1);
-		inode->i_blocks -= simplefs_blocks_to_sectors(1);
-	}
 	if (ret < 0)
 		simplefs_dump_extents("get-block-fail", &buf);
 	simplefs_file_destroy_extents(&buf);
@@ -1025,8 +988,15 @@ static int simplefs_write_iomap_begin(struct inode *inode, loff_t offset,
 	 * every speculative hole instead of relying on the single in-memory
 	 * preallocation record.  DIO keeps request-sized unwritten allocation
 	 * because its completion and fallback rules are different.
+	 *
+	 * Do not speculate at logical block zero.  Most files in a source-tree
+	 * copy are written once: reserving 64 blocks for each of them zeroes and
+	 * checks far more blocks than they need, then close() has to truncate the
+	 * unused tail (including waiting for data writeback).  Allocate only the
+	 * requested range first; writes reaching later blocks still get the
+	 * bounded reservation above, including streams of sub-block writes.
 	 */
-	if (create && !(flags & IOMAP_DIRECT) &&
+	if (create && !(flags & IOMAP_DIRECT) && first_block &&
 	    first_block < max_file_blocks)
 		max_blocks = min_t(unsigned long,
 				   max_t(unsigned long, max_blocks,
@@ -2776,6 +2746,16 @@ static loff_t simplefs_llseek(struct file *file, loff_t offset, int whence)
 	}
 }
 
+/* sendfile/splice can read cached folios without entering read_iter. */
+static ssize_t simplefs_file_splice_read(struct file *file, loff_t *ppos,
+					struct pipe_inode_info *pipe,
+					size_t len, unsigned int flags)
+{
+	if (simplefs_is_shutdown(file_inode(file)->i_sb))
+		return -EIO;
+	return filemap_splice_read(file, ppos, pipe, len, flags);
+}
+
 const struct file_operations simple_fs_iomap_fops = {
 	.open = simplefs_file_open,
 	.release = simplefs_file_release,
@@ -2785,7 +2765,7 @@ const struct file_operations simple_fs_iomap_fops = {
 	.write_iter = simplefs_file_write_iter,
 	.mmap_prepare = simplefs_file_mmap_prepare,
 	.get_unmapped_area = thp_get_unmapped_area,
-	.splice_read = filemap_splice_read,
+	.splice_read = simplefs_file_splice_read,
 	.splice_write = iter_file_splice_write,
 	.fsync = simplefs_file_fsync,
 	.fallocate = simplefs_fallocate,

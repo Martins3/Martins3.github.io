@@ -53,7 +53,7 @@ static int detect_existing_filesystem(int fd, const char *path, char *type_buf,
     type_buf[0] = '\0';
 
     if (pread(fd, &sb, sizeof(sb), 0) == sizeof(sb) &&
-        le32toh(sb.info.magic) == SIMPLEFS_MAGIC) {
+        le32toh(sb.info.magic) == SIMPLEFS_DISK_MAGIC) {
         strncpy(type_buf, "simplefs", type_buf_len - 1);
         type_buf[type_buf_len - 1] = '\0';
         return 1;
@@ -147,6 +147,7 @@ int main(int argc, char **argv)
 {
     int verbose = 0;
     int force = 0;
+    uint32_t bytes_per_inode = 16384;
     const char *path = NULL;
 
     for (int i = 1; i < argc; i++) {
@@ -155,6 +156,20 @@ int main(int argc, char **argv)
         } else if (strcmp(argv[i], "-f") == 0 ||
                    strcmp(argv[i], "--force") == 0) {
             force = 1;
+        } else if (strcmp(argv[i], "-i") == 0) {
+            char *end;
+            unsigned long value;
+
+            if (++i >= argc)
+                return EXIT_FAILURE;
+            errno = 0;
+            value = strtoul(argv[i], &end, 10);
+            if (errno || !argv[i][0] || *end || value > UINT32_MAX ||
+                value < SIMPLEFS_BLOCK_SIZE || value % SIMPLEFS_BLOCK_SIZE) {
+                fprintf(stderr, "Invalid bytes-per-inode: %s\n", argv[i]);
+                return EXIT_FAILURE;
+            }
+            bytes_per_inode = value;
         } else if (strcmp(argv[i], "-l") == 0) {
             if (++i >= argc || strcmp(argv[i], "defaults") != 0) {
                 fprintf(stderr,
@@ -165,7 +180,7 @@ int main(int argc, char **argv)
             path = argv[i];
         } else {
             fprintf(stderr,
-                    "Usage: %s [-f|--force] [-v] [-l defaults] <disk_image>\n",
+                    "Usage: %s [-f|--force] [-v] [-l defaults] [-i bytes-per-inode] <disk_image>\n",
                     argv[0]);
             return EXIT_FAILURE;
         }
@@ -174,7 +189,7 @@ int main(int argc, char **argv)
     // 参数检查
     if (!path) {
         fprintf(stderr,
-                "Usage: %s [-f|--force] [-v] [-l defaults] <disk_image>\n",
+                "Usage: %s [-f|--force] [-v] [-l defaults] [-i bytes-per-inode] <disk_image>\n",
                 argv[0]);
         fprintf(stderr, "\nExample:\n");
         fprintf(stderr, "  %s /dev/loop0        # Format block device\n", argv[0]);
@@ -245,7 +260,7 @@ int main(int argc, char **argv)
 
     // 创建文件系统
     struct mkfs_result result;
-    ret = mkfs_create_fs(fd, image_size, &result);
+    ret = mkfs_create_fs(fd, image_size, bytes_per_inode, &result);
     
     if (ret < 0) {
         fprintf(stderr, "Error: %s\n", result.error_msg);
@@ -259,7 +274,7 @@ int main(int argc, char **argv)
         
         // 重新计算 layout 用于显示
         struct mkfs_layout layout;
-        mkfs_calculate_layout(image_size, &layout);
+        mkfs_calculate_layout(image_size, bytes_per_inode, &layout);
         print_layout_info(&layout);
         
         printf("\nFormat successful!\n");

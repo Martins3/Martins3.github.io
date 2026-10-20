@@ -1287,12 +1287,24 @@ class ColleiQemuBuilder:
         )
 
     def setup_misc(self, argv: list[str]) -> None:
+
+        # 参考 qemu-options.hx
+        # arg_misc+=" -overcommit cpu-pm=on"
+        # arg_misc+=" -object event-loop-base"
+        # arg_misc+=" -object throttle-group,id=group1"
+        # 如果添加这个参数，shutdown 之后，qemu 进程不会消失
+        # arg_misc+=" -no-shutdown"
+        # arg_misc+=" -no-hpet"
+
         # -no-user-config 不加载默认配置文件；-nodefaults 不添加默认设备。
         # debug-threads=on 让 gdb 中显示 QEMU thread 名称。
         argv.extend(
             [
+                # # -no-user-config 的含义，看 qemu_read_default_config_file ，就可以通过一个文件来加载配置
                 "-no-user-config",
+                # # -nodefaults : 不要添加一些默认的设备
                 "-nodefaults",
+                # debug-threads=on 在 gdb 中就可以看到每一个 thread 的名称了，不然全部都是 qemu
                 "-name",
                 "guest=martins3,debug-threads=on",
             ]

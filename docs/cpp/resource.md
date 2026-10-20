@@ -37,6 +37,7 @@
 - https://github.com/fogleman/Craft : 只有 5000 行，但是实现了 minecraft
 - https://github.com/k-vernooy/tetris : 俄罗斯方块
 - https://github.com/ianlancetaylor/libbacktrace : backtrace 的实现，可读源码
+- https://github.com/LadybirdBrowser/ladybird : 独立浏览器，包含 Web 渲染、JavaScript 引擎和多进程架构，适合研究大型项目的设计。
 
 ## 算法与设计模式
 - https://github.com/xtaci/algorithms : 各种算法的实现

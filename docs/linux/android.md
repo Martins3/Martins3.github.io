@@ -52,6 +52,7 @@ pkg install nodejs-lts
 ## nix
 https://github.com/nix-community/nix-on-droid
 
+https://waydro.id/
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

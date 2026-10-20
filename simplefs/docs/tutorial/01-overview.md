@@ -79,7 +79,7 @@ openat(..., O_CREAT)
 ## SimpleFS 简单在哪里，又不简单在哪里
 
 它简单在：固定 4 KiB block、固定 inode table、线性位图、目录项格式直接、普通
-文件 extent tree 只有两级、没有 reflink/quota/encryption/compression。
+文件和目录 extent tree 最多两级、没有 reflink/quota/encryption/compression。
 
 它并不玩具化：支持 page cache、mmap、DIO、unwritten extent、fallocate、xattr、
 ACL、NFS file handle、freeze、discard 和 JBD2。只要允许并发、缓存和崩溃，

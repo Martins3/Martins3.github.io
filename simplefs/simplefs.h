@@ -9,14 +9,13 @@
  */
 
 /* source: https://en.wikipedia.org/wiki/Hexspeak */
-#define SIMPLEFS_MAGIC 0xDEADCELL
+#define SIMPLEFS_MAGIC 0xDEADCELL /* statfs ABI, recognized by userspace */
+#define SIMPLEFS_DISK_MAGIC 0xDEADCE02U /* format 2; reformat old images */
 
 #define SIMPLEFS_SB_BLOCK_NR 0
+#define SIMPLEFS_EXTENT_ROOT_MAGIC 0xF5007E01
 
 #define SIMPLEFS_BLOCK_SIZE (1 << 12) /* 4 KiB */
-#define SIMPLEFS_MAX_EXTENTS                        \
-	((SIMPLEFS_BLOCK_SIZE - sizeof(uint32_t)) / \
-	 sizeof(struct simplefs_extent))
 #define SIMPLEFS_FILE_EXTENTS_PER_LEAF                                \
 	((SIMPLEFS_BLOCK_SIZE - sizeof(struct simplefs_extent_leaf_header)) / \
 	 sizeof(struct simplefs_extent))
@@ -39,11 +38,6 @@
 
 #define SIMPLEFS_FILES_PER_BLOCK \
 	(SIMPLEFS_BLOCK_SIZE / sizeof(struct simplefs_file))
-#define SIMPLEFS_DIR_BLOCKS_PER_EXTENT 8
-#define SIMPLEFS_FILES_PER_EXT \
-	(SIMPLEFS_FILES_PER_BLOCK * SIMPLEFS_DIR_BLOCKS_PER_EXTENT)
-
-#define SIMPLEFS_MAX_SUBFILES (SIMPLEFS_FILES_PER_EXT * SIMPLEFS_MAX_EXTENTS)
 
 #include <linux/types.h>
 #include <linux/fs.h>
@@ -136,8 +130,7 @@ struct simplefs_sb_info {
 	char s_volume_name[64];
 
 	/* Set for the lifetime of a writable mount and cleared only after a
-	 * successful journal recovery or clean unmount.  Appending it here keeps
-	 * old images compatible because their superblock padding is zeroed. */
+	 * successful journal recovery or clean unmount. */
 	uint32_t s_needs_recovery;
 
 #ifdef __KERNEL__
@@ -159,6 +152,9 @@ struct simplefs_sb_info {
 #ifdef __KERNEL__
 
 #include <linux/wait.h>
+#include <linux/rhashtable.h>
+
+struct simplefs_dir_index;
 
 /* Forward declaration for journal */
 struct simplefs_journal;
@@ -171,6 +167,8 @@ struct simplefs_inode_info {
 	char i_data[32];
 	uint32_t prealloc_block; /* KEEP_SIZE 预分配起始逻辑块 */
 	uint32_t prealloc_len; /* KEEP_SIZE 预分配块数 */
+	struct simplefs_dir_index *dir_index;
+	struct mutex dir_cache_lock;
 	struct mutex extent_lock; /* 串行化 extent tree 读写，避免读到半更新 root */
 	atomic_t writeback_ioends; /* 等待异步 unwritten extent 转换 */
 	wait_queue_head_t writeback_wait;
@@ -188,7 +186,7 @@ struct simplefs_extent {
 struct simplefs_extent_root_header {
 	uint32_t eh_magic;
 	uint16_t eh_entries;
-	uint16_t eh_max;
+	uint16_t eh_depth; /* 0: extents in root, 1: leaf indexes */
 };
 
 struct simplefs_extent_index {
@@ -204,12 +202,14 @@ struct simplefs_extent_leaf_header {
 	uint16_t eh_max;
 };
 
-#define SIMPLEFS_EXTENT_ROOT_MAGIC 0xF5007E01
 #define SIMPLEFS_EXTENT_LEAF_MAGIC 0xF5007E02
 
 struct simplefs_extent_root {
 	struct simplefs_extent_root_header header;
-	struct simplefs_extent_index indexes[SIMPLEFS_FILE_INDEX_SLOTS];
+	union {
+		struct simplefs_extent_index indexes[SIMPLEFS_FILE_INDEX_SLOTS];
+		struct simplefs_extent extents[SIMPLEFS_FILE_EXTENTS_PER_LEAF];
+	};
 };
 
 struct simplefs_extent_leaf {
@@ -217,10 +217,6 @@ struct simplefs_extent_leaf {
 	struct simplefs_extent extents[SIMPLEFS_FILE_EXTENTS_PER_LEAF];
 };
 
-struct simplefs_file_ei_block {
-	uint32_t nr_files; /* Number of files in directory */
-	struct simplefs_extent extents[SIMPLEFS_MAX_EXTENTS];
-};
 
 /* extent state is encoded in ee_len to preserve on-disk layout */
 #define SIMPLEFS_EXTENT_UNWRITTEN (1U << 31)
@@ -310,14 +306,16 @@ int simplefs_fiemap(struct inode *inode, struct fiemap_extent_info *fieinfo,
 		    u64 start, u64 len);
 int simplefs_zero_partial_gap(struct inode *inode, loff_t start, loff_t len);
 
+void *simplefs_read_metadata(struct super_block *sb, unsigned long n,
+			  struct folio **foliop);
 void *simplefs_get_folio(struct super_block *sb, unsigned long n,
 			 struct folio **foliop);
+void *simplefs_get_zeroed_folio(struct super_block *sb, unsigned long n,
+			      struct folio **foliop);
 int simplefs_retire_metadata_blocks(struct super_block *sb, uint32_t bno,
 				    uint32_t len);
 
 /* extent functions */
-extern uint32_t simplefs_ext_search(struct simplefs_file_ei_block *index,
-				    uint32_t iblock);
 
 #ifdef __KERNEL__
 struct simplefs_extent_buffer {
@@ -327,6 +325,32 @@ struct simplefs_extent_buffer {
 	uint32_t *leaf_blocks;
 	uint32_t nr_leaf_blocks;
 };
+
+/* On-disk directory records retain their logical slots across deletion. */
+#define SIMPLEFS_MAX_DIR_BLOCKS (U32_MAX / SIMPLEFS_BLOCK_SIZE)
+struct simplefs_dir_name;
+struct simplefs_dir_index {
+	struct inode *dir;
+	struct simplefs_extent_buffer mapping;
+	struct rhashtable names;
+	struct simplefs_dir_name **entries;
+	unsigned long *used;
+	u32 *blocks;
+	u32 nr_files, nr_blocks, capacity, next_free;
+	bool valid;
+};
+
+struct simplefs_dir_index *simplefs_dir_get(struct inode *dir);
+void simplefs_dir_destroy(struct inode *dir);
+int simplefs_dir_trim(struct inode *dir);
+int simplefs_dir_find(struct simplefs_dir_index *index, const struct qstr *name,
+		      u32 ino, u32 *slot, u32 *found_ino);
+int simplefs_dir_free_slot(struct simplefs_dir_index *index, u32 *slot);
+int simplefs_dir_set(struct simplefs_dir_index *index, u32 slot, u32 ino,
+		     const struct qstr *name);
+int simplefs_dir_add(struct inode *dir, const struct qstr *name, u32 ino);
+int simplefs_dir_emit(struct file *file, struct dir_context *ctx);
+int simplefs_dir_get_name(struct inode *dir, char *name, u32 ino);
 
 void simplefs_extent_clear(struct simplefs_extent *ext);
 void simplefs_file_init_extent_root(void *block);
@@ -368,7 +392,7 @@ int simplefs_issue_pending_discards(struct super_block *sb);
 
 static inline int simplefs_is_shutdown(struct super_block *sb)
 {
-	return ((struct simplefs_sb_info *)sb->s_fs_info)->s_shutdown;
+	return READ_ONCE(((struct simplefs_sb_info *)sb->s_fs_info)->s_shutdown);
 }
 
 /* ioctl support */

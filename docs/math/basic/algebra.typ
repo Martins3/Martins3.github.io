@@ -2218,12 +2218,3 @@ https://www.bilibili.com/video/BV1sb411b7T6
 
 https://news.ycombinator.com/item?id=41255456
 
-== 魔方
-
-https://web.mit.edu/sp.268/www/rubik.pdf
-
-https://www.bilibili.com/video/BV1hJ411p7k6/
-
-https://www.bilibili.com/video/BV1Xs411Q7ob/
-
-https://www.bilibili.com/video/BV1eET3zsEqu/

@@ -40,11 +40,16 @@ block 0
 必须小于 2^32 blocks，也就是小于 16 TiB；17 TiB dm-huge-disk 测试属于当前磁盘
 格式明确不支持的能力，不能让 mkfs 继续计算并截断块号。
 
+当前格式的 magic 是 `0xDEADCE02`，不提供旧格式兼容或迁移。
+
 ## Inode table
 
 当前 `struct simplefs_inode` 是 104 字节，因此一个 4 KiB inode-table block 可容纳
 39 个 inode。它保存 mode、uid/gid、32 位 size、三组时间戳、btime、块计数、
 nlink、generation、flags、xattr block、`ei_block` 和 32 字节内联数据。
+
+mkfs 默认按每 16 KiB 一个 inode 配置表大小，可用 `-i` 调整；只保留 inode 0 和
+根 inode 1，不得把首字的保留位掩码重复应用到整个位图块。
 
 几个容易错的单位：
 
@@ -55,11 +60,12 @@ nlink、generation、flags、xattr block、`ei_block` 和 32 字节内联数据�
   格式演进上的不对称，阅读大文件行为时必须同时检查，不能只看一个常量。
 
 `ei_block` 的解释由文件类型决定：普通文件指向 extent root；目录指向目录 extent
-索引块；长 symlink 指向数据块；短 symlink 保存在 `i_data[32]`。
+树；长 symlink 指向数据块；短 symlink 保存在 `i_data[32]`。
 
 ## 普通文件 extent tree
 
-普通文件使用固定两级树：
+普通文件和目录共用可由一级扩展为两级的树。depth 0 的根直接保存最多 340 个
+extent，小文件不分配叶块；超过根容量后转成下面的 depth 1 结构：
 
 ```text
 inode.ei_block
@@ -80,13 +86,10 @@ extent block、最大约 10 MiB”的设计；旧笔记不能用于解释当前�
 
 ## 目录格式
 
-目录的 `ei_block` 指向 `simplefs_file_ei_block`，其中保存文件数和最多 341 个目录
-extent。每个目录 extent 固定 8 个 block。目录数据 block 是定长
-`{ inode, filename[255] }` 数组，每块 15 项，因此上限是：
-
-```text
-15 entries/block * 8 blocks/extent * 341 extents = 40,920 entries
-```
+目录的 `ei_block` 指向与普通文件相同的 extent root。目录数据 block 是定长
+`{ inode, filename[255] }` 数组，每块 15 项，按需分配一个块，不再受单个目录
+索引块的 40,920 项限制。目录逻辑数据范围受 32 位 inode size 约束；映射树容量、
+卷可用块和 inode 数仍是实际资源边界。名字哈希和空闲槽索引只存在内存中。
 
 255 字节名字可以填满整个字段，没有结尾 NUL。内核必须按 `qstr.len` 写入，并用
 有界 `strnlen` 读出，不能把磁盘字段当普通 C 字符串。

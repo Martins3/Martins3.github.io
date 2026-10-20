@@ -1,0 +1,22 @@
+[package]
+name = "bongocat"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+license = "AGPL-3.0-only"
+description = "A small, event-driven cat for GNOME Wayland"
+
+[dependencies]
+smithay-client-toolkit = { version = "0.20", default-features = false, features = ["calloop"] }
+wayland-client = "0.31"
+calloop = { version = "0.14", features = ["signals"] }
+evdev = "0.13"
+inotify = { version = "0.11", default-features = false }
+png = "0.18"
+rustix = { version = "1", features = ["event", "fs"] }
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
+strip = true
+panic = "abort"

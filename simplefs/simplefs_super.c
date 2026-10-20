@@ -159,43 +159,13 @@ out:
 	return ret;
 }
 
+/* Directories use the same extent topology; their data are metadata folios. */
 static int simplefs_rebuild_scan_dir(struct super_block *sb,
 				     unsigned long *used_map, u32 *owner_ino,
-				     u8 *owner_kind,
-				     uint32_t ino, uint32_t dir_block)
+				     u8 *owner_kind, uint32_t ino, uint32_t root)
 {
-	struct simplefs_sb_info *sbi = SIMPLEFS_SB(sb);
-	struct folio *folio;
-	struct simplefs_file_ei_block *eblock;
-	uint32_t i;
-	int ret = 0;
-
-	ret = simplefs_rebuild_mark_block(used_map, owner_ino, owner_kind,
-					  sbi->nr_blocks, dir_block,
-					  SIMPLEFS_OWNER_DIR_INDEX, ino);
-	if (ret)
-		return ret;
-
-	eblock = simplefs_get_folio(sb, dir_block, &folio);
-	if (IS_ERR(eblock))
-		return PTR_ERR(eblock);
-
-	for (i = 0; i < SIMPLEFS_MAX_EXTENTS; i++) {
-		struct simplefs_extent *ext = &eblock->extents[i];
-
-		if (simplefs_extent_is_empty(ext))
-			continue;
-		ret = simplefs_rebuild_mark_range(used_map, owner_ino,
-						  owner_kind, sbi->nr_blocks,
-						  ext->ee_start,
-						  simplefs_ext_len(ext),
-						  SIMPLEFS_OWNER_DIR_DATA, ino);
-		if (ret)
-			break;
-	}
-
-	folio_release_kmap(folio, eblock);
-	return ret;
+	return simplefs_rebuild_scan_file(sb, used_map, owner_ino, owner_kind,
+					  ino, root);
 }
 
 int simplefs_rebuild_block_bitmap(struct super_block *sb)
@@ -365,6 +335,8 @@ static struct inode *simplefs_alloc_inode(struct super_block *sb)
 
 	inode_init_once(&ci->vfs_inode);
 	mutex_init(&ci->extent_lock);
+	mutex_init(&ci->dir_cache_lock);
+	ci->dir_index = NULL;
 	atomic_set(&ci->writeback_ioends, 0);
 	init_waitqueue_head(&ci->writeback_wait);
 	return &ci->vfs_inode;
@@ -385,6 +357,7 @@ static void simplefs_evict_inode(struct inode *inode)
 
 	trace_simplefs_evict_inode(inode, inode->i_ino);
 
+	simplefs_dir_destroy(inode);
 	truncate_inode_pages_final(&inode->i_data);
 
 	/* Only free blocks and inode number when the file was actually deleted
@@ -407,61 +380,29 @@ static void simplefs_evict_inode(struct inode *inode)
 
 		/* Free data blocks if this is a regular file or directory */
 		if ((S_ISREG(inode->i_mode) || S_ISDIR(inode->i_mode)) && ci->ei_block) {
-			struct folio *folio;
-			struct simplefs_file_ei_block *eblock;
-			int i;
+			struct simplefs_extent_buffer buf;
+			u32 i;
 
-			if (S_ISREG(inode->i_mode)) {
-				struct simplefs_extent_buffer buf;
-
-				if (!simplefs_file_load_extents(inode->i_sb,
-								ci->ei_block,
-								&buf)) {
-					for (i = 0; i < buf.nr_extents; i++) {
-						trace_simplefs_free_blocks(
-							inode->i_sb,
-							buf.extents[i].ee_start,
-							simplefs_ext_len(&buf.extents[i]));
-						put_blocks(
-							sbi, buf.extents[i].ee_start,
-							simplefs_ext_len(&buf.extents[i]));
-					}
-					for (i = 0; i < buf.nr_leaf_blocks; i++) {
-						trace_simplefs_free_blocks(
-							inode->i_sb,
-							buf.leaf_blocks[i], 1);
-						simplefs_retire_metadata_blocks(
-							inode->i_sb,
-							buf.leaf_blocks[i], 1);
-					}
-					simplefs_file_destroy_extents(&buf);
-				}
-				trace_simplefs_free_blocks(inode->i_sb,
-							   ci->ei_block, 1);
-				simplefs_retire_metadata_blocks(inode->i_sb,
-							ci->ei_block, 1);
-			} else {
-				eblock = (struct simplefs_file_ei_block *)simplefs_get_folio(
-					inode->i_sb, ci->ei_block, &folio);
-				if (!IS_ERR(eblock)) {
-					for (i = 0; i < SIMPLEFS_MAX_EXTENTS; i++) {
-						if (eblock->extents[i].ee_start) {
-							trace_simplefs_free_blocks(inode->i_sb,
-								eblock->extents[i].ee_start,
-								simplefs_ext_len(&eblock->extents[i]));
-							simplefs_retire_metadata_blocks(
-								inode->i_sb,
-								eblock->extents[i].ee_start,
-								simplefs_ext_len(&eblock->extents[i]));
-						}
-					}
-					folio_release_kmap(folio, eblock);
-				}
-
-				trace_simplefs_free_blocks(inode->i_sb, ci->ei_block, 1);
-				simplefs_retire_metadata_blocks(inode->i_sb,
-							ci->ei_block, 1);
+			retire_ret = simplefs_file_load_extents(inode->i_sb,
+							 ci->ei_block, &buf);
+			if (retire_ret) {
+				simplefs_journal_fail(inode->i_sb, retire_ret);
+				goto out_clear;
 			}
+			for (i = 0; i < buf.nr_extents; i++) {
+				if (S_ISDIR(inode->i_mode))
+					simplefs_retire_metadata_blocks(inode->i_sb,
+						buf.extents[i].ee_start,
+						simplefs_ext_len(&buf.extents[i]));
+				else
+					put_blocks(sbi, buf.extents[i].ee_start,
+						   simplefs_ext_len(&buf.extents[i]));
+			}
+			for (i = 0; i < buf.nr_leaf_blocks; i++)
+				simplefs_retire_metadata_blocks(inode->i_sb,
+							buf.leaf_blocks[i], 1);
+			simplefs_file_destroy_extents(&buf);
+			simplefs_retire_metadata_blocks(inode->i_sb, ci->ei_block, 1);
 		}
 
 		/* Long symlink targets use a single external block. */
@@ -663,16 +604,28 @@ static void simplefs_put_super(struct super_block *sb)
 static int simplefs_sync_fs(struct super_block *sb, int wait)
 {
 	struct simplefs_sb_info *sbi = SIMPLEFS_SB(sb);
-	struct simplefs_handle *handle;
 	struct simplefs_sb_info *disk_sb;
 	struct folio *folio;
-	int credits = 1 + sbi->nr_ifree_blocks + sbi->nr_bfree_blocks;
 	int i, ret = 0;
 
 	pr_debug("[simplefs] sync_fs called (wait=%d)\n", wait);
-	handle = simplefs_journal_start_sb(sb, credits);
-	if (IS_ERR(handle))
-		return PTR_ERR(handle);
+	if (simplefs_is_shutdown(sb))
+		return -EIO;
+	if (sb_rdonly(sb))
+		return 0;
+	/* Allocators journal the changed bitmap blocks and counters in the
+	 * transaction that publishes/removes their pointers.  Re-journalling a
+	 * whole-volume snapshot here is redundant and exceeds JBD2's bounded
+	 * transaction budget on large devices. */
+	if (sbi->s_journal && sbi->s_journal->j_jbd2) {
+		if (!wait)
+			return 0;
+		sync_inodes_sb(sb);
+		return simplefs_journal_force_commit(sbi->s_journal);
+	}
+	/* Writeback may change allocation state; snapshot afterwards. */
+	if (wait)
+		sync_inodes_sb(sb);
 
 	/* Keep counters and both bitmap arrays in one coherent snapshot. */
 	mutex_lock(&sbi->bitmap_lock);
@@ -692,14 +645,8 @@ static int simplefs_sync_fs(struct super_block *sb, int wait)
 	disk_sb->nr_free_inodes = sbi->nr_free_inodes;
 	disk_sb->nr_free_blocks = sbi->nr_free_blocks;
 
-	if (handle)
-		ret = simplefs_journal_dirty_metadata(handle, sb, 0, disk_sb,
-						      folio);
-	else
-		folio_mark_dirty(folio);
+	folio_mark_dirty(folio);
 	folio_release_kmap(folio, disk_sb);
-	if (ret)
-		goto out_unlock_bitmap;
 
 	pr_debug("[simplefs] sync_fs: nr_free_inodes=%u, nr_free_blocks=%u\n",
 		sbi->nr_free_inodes, sbi->nr_free_blocks);
@@ -719,14 +666,8 @@ static int simplefs_sync_fs(struct super_block *sb, int wait)
 		       (void *)sbi->ifree_bitmap + i * SIMPLEFS_BLOCK_SIZE,
 		       SIMPLEFS_BLOCK_SIZE);
 
-		if (handle)
-			ret = simplefs_journal_dirty_metadata(handle, sb, idx,
-							      data, folio);
-		else
-			folio_mark_dirty(folio);
+		folio_mark_dirty(folio);
 		folio_release_kmap(folio, data);
-		if (ret)
-			goto out_unlock_bitmap;
 	}
 
 	/* Flush free blocks bitmask */
@@ -744,34 +685,13 @@ static int simplefs_sync_fs(struct super_block *sb, int wait)
 		       (void *)sbi->bfree_bitmap + i * SIMPLEFS_BLOCK_SIZE,
 		       SIMPLEFS_BLOCK_SIZE);
 
-		if (handle)
-			ret = simplefs_journal_dirty_metadata(handle, sb, idx,
-							      data, folio);
-		else
-			folio_mark_dirty(folio);
+		folio_mark_dirty(folio);
 		folio_release_kmap(folio, data);
-		if (ret)
-			goto out_unlock_bitmap;
 	}
 	mutex_unlock(&sbi->bitmap_lock);
 
-	if (handle) {
-		ret = simplefs_journal_stop(handle);
-		handle = NULL;
-		if (ret)
-			return ret;
-	}
-
 	/* If synchronous write is requested, actually perform writeback */
 	if (wait) {
-		/* Flush all dirty inodes */
-		sync_inodes_sb(sb);
-
-		/* With JBD2, durability is the commit record.  Do not write the
-		 * metadata bdev mapping directly ahead of that record. */
-		if (sbi->s_journal && sbi->s_journal->j_jbd2)
-			return simplefs_journal_force_commit(sbi->s_journal);
-
 		/* Sync block device */
 		ret = sync_blockdev(sb->s_bdev);
 		if (ret)
@@ -787,10 +707,6 @@ static int simplefs_sync_fs(struct super_block *sb, int wait)
 
 out_unlock_bitmap:
 	mutex_unlock(&sbi->bitmap_lock);
-	if (handle) {
-		simplefs_journal_abort(handle, ret);
-		simplefs_journal_stop(handle);
-	}
 	return ret;
 }
 
@@ -885,6 +801,17 @@ static int simplefs_unfreeze(struct super_block *sb)
 	return 0;
 }
 
+static void simplefs_shutdown_sb(struct super_block *sb)
+{
+	struct simplefs_sb_info *sbi = SIMPLEFS_SB(sb);
+
+	/* Device removal must invalidate cached reads too, even if no data
+	 * writeback has failed yet.  The VFS calls this before removal returns.
+	 */
+	WRITE_ONCE(sbi->s_shutdown, 1);
+	simplefs_journal_shutdown(sbi->s_journal);
+}
+
 static const struct super_operations simplefs_super_ops = {
 	.put_super = simplefs_put_super,
 	.alloc_inode = simplefs_alloc_inode,
@@ -895,6 +822,7 @@ static const struct super_operations simplefs_super_ops = {
 	.statfs = simplefs_statfs,
 	.freeze_fs = simplefs_freeze,
 	.unfreeze_fs = simplefs_unfreeze,
+	.shutdown = simplefs_shutdown_sb,
 };
 
 /* NFS export support */
@@ -974,55 +902,11 @@ static int simplefs_export_get_name(struct dentry *parent, char *name,
 				    struct dentry *child)
 {
 	struct inode *dir = d_inode(parent);
-	struct inode *inode = d_inode(child);
-	struct simplefs_inode_info *ci = SIMPLEFS_INODE(dir);
-	struct simplefs_file_ei_block *eblock;
-	struct folio *efolio;
-	int ei, bi, fi;
-	int ret = -ENOENT;
+	int ret;
 
-	if (!S_ISDIR(dir->i_mode))
-		return -ENOTDIR;
-
-	eblock = simplefs_get_folio(dir->i_sb, ci->ei_block, &efolio);
-	if (IS_ERR(eblock))
-		return PTR_ERR(eblock);
-
-	for (ei = 0; ei < SIMPLEFS_MAX_EXTENTS; ei++) {
-		if (!eblock->extents[ei].ee_start)
-			break;
-		for (bi = 0; bi < simplefs_ext_len(&eblock->extents[ei]); bi++) {
-			struct simplefs_dir_block *dblock;
-			struct folio *dfolio;
-
-			dblock = simplefs_get_folio(
-				dir->i_sb, eblock->extents[ei].ee_start + bi,
-				&dfolio);
-			if (IS_ERR(dblock)) {
-				ret = PTR_ERR(dblock);
-				goto out;
-			}
-
-			for (fi = 0; fi < SIMPLEFS_FILES_PER_BLOCK; fi++) {
-				size_t len;
-
-				if (dblock->files[fi].inode != inode->i_ino)
-					continue;
-				len = strnlen(dblock->files[fi].filename,
-					      SIMPLEFS_FILENAME_LEN);
-				memcpy(name, dblock->files[fi].filename, len);
-				name[len] = '\0';
-				ret = 0;
-				break;
-			}
-			folio_release_kmap(dfolio, dblock);
-			if (!ret)
-				goto out;
-		}
-	}
-
-out:
-	folio_release_kmap(efolio, eblock);
+	inode_lock_shared(dir);
+	ret = simplefs_dir_get_name(dir, name, d_inode(child)->i_ino);
+	inode_unlock_shared(dir);
 	return ret;
 }
 
@@ -1072,7 +956,7 @@ int simplefs_fill_super(struct super_block *sb, struct fs_context *fc)
 		return -EIO;
 
 	/* Check magic number */
-	if (csb->magic != sb->s_magic) {
+	if (csb->magic != SIMPLEFS_DISK_MAGIC) {
 		pr_err("Wrong magic number\n");
 		ret = -EINVAL;
 		goto release;

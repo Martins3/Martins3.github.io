@@ -1,3 +1,8 @@
+# terminfo
+- https://terminfo.dev/
+
+所有的内容汇总。
+
 ## 为什么内部的 ssh 有时候需要添加上这个
 
 TERM=xterm-256color  ssh

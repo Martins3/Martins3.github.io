@@ -24,8 +24,9 @@
 - https://github.com/krallin/tini : A tiny but valid init for containers
 
 ## 原理上的疑惑
-- [ ] D-bus 的工作原理
+### [ ] D-bus 的工作原理
 	- https://news.ycombinator.com/item?id=46278857
+
 - [ ] 如何和 cgroup 交互
 - [ ] /var 下的 journal 到底是谁生成的，是 systemd 管理的吗?
 

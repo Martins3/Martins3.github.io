@@ -323,3 +323,6 @@ https://www.zhihu.com/question/598730156/answer/3574596878
 
 ## 两个 3060 ，所以是如何互联的?
 https://www.reddit.com/r/LocalLLaMA/comments/1tokpoc/400_qwen_3627b_setup_dual_rtx_3060_3050_ts/
+
+## 看看这个东西
+https://github.com/uccl-project/mKernel

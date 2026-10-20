@@ -53,6 +53,9 @@ https://github.com/ChipsandCheese/MemoryLatencyTest
 ## lmbench
 https://github.com/intel/lmbench
 
+
+https://github.com/phoronix-test-suite/phoronix-test-suite
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

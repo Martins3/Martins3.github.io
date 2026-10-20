@@ -98,7 +98,6 @@ static struct file_system_type simplefs_file_system_type = {
 	.init_fs_context = simplefs_init_fs_context,
 	.kill_sb = simplefs_kill_sb,
 	.fs_flags = FS_REQUIRES_DEV,
-	.next = NULL,
 };
 
 static int __init simplefs_init(void)

@@ -1,0 +1,193 @@
+## 记录下内核 suspend 的时候日志
+
+```txt
+[ 4676.538450] Freezing user space processes ... (elapsed 0.001 seconds) done.
+[ 4676.539462] OOM killer disabled.
+[ 4676.539463] Freezing remaining freezable tasks ... (elapsed 0.000 seconds) done.
+[ 4676.540447] printk: Suspending console(s) (use no_console_suspend to debug)
+[ 4676.541780] serial 00:01: disabled
+[ 4676.550388] sd 7:0:0:0: [sda] Synchronizing SCSI cache
+[ 4676.550509] sd 7:0:0:0: [sda] Stopping disk
+[ 4677.180945] ACPI: PM: Preparing to enter system sleep state S3
+[ 4677.383949] ACPI: PM: Saving platform NVS memory
+[ 4677.384114] Disabling non-boot CPUs ...
+[ 4677.386049] smpboot: CPU 1 is now offline
+[ 4677.390134] smpboot: CPU 2 is now offline
+[ 4677.394149] smpboot: CPU 3 is now offline
+[ 4677.395947] smpboot: CPU 4 is now offline
+[ 4677.399695] smpboot: CPU 5 is now offline
+[ 4677.401469] smpboot: CPU 6 is now offline
+[ 4677.405137] smpboot: CPU 7 is now offline
+[ 4677.406854] smpboot: CPU 8 is now offline
+[ 4677.410387] smpboot: CPU 9 is now offline
+[ 4677.412106] smpboot: CPU 10 is now offline
+[ 4677.415545] smpboot: CPU 11 is now offline
+[ 4677.417199] smpboot: CPU 12 is now offline
+[ 4677.420588] smpboot: CPU 13 is now offline
+[ 4677.422594] smpboot: CPU 14 is now offline
+[ 4677.425617] smpboot: CPU 15 is now offline
+[ 4677.427257] smpboot: CPU 16 is now offline
+[ 4677.429094] smpboot: CPU 17 is now offline
+[ 4677.430911] smpboot: CPU 18 is now offline
+[ 4677.432704] smpboot: CPU 19 is now offline
+[ 4677.434607] smpboot: CPU 20 is now offline
+[ 4677.436346] smpboot: CPU 21 is now offline
+[ 4677.437986] smpboot: CPU 22 is now offline
+[ 4677.439768] smpboot: CPU 23 is now offline
+[ 4677.441433] smpboot: CPU 24 is now offline
+[ 4677.443037] smpboot: CPU 25 is now offline
+[ 4677.444674] smpboot: CPU 26 is now offline
+[ 4677.446255] smpboot: CPU 27 is now offline
+[ 4677.447957] smpboot: CPU 28 is now offline
+[ 4677.449621] smpboot: CPU 29 is now offline
+[ 4677.451307] smpboot: CPU 30 is now offline
+[ 4677.452866] smpboot: CPU 31 is now offline
+[ 4677.458966] ACPI: PM: Low-level resume complete
+[ 4677.459045] ACPI: PM: Restoring platform NVS memory
+[ 4677.459941] Enabling non-boot CPUs ...
+[ 4677.459973] x86: Booting SMP configuration:
+[ 4677.459974] smpboot: Booting Node 0 Processor 1 APIC 0x1
+[ 4677.462700] CPU1 is up
+[ 4677.462717] smpboot: Booting Node 0 Processor 2 APIC 0x8
+[ 4677.469558] CPU2 is up
+[ 4677.469573] smpboot: Booting Node 0 Processor 3 APIC 0x9
+[ 4677.472228] CPU3 is up
+[ 4677.472242] smpboot: Booting Node 0 Processor 4 APIC 0x10
+[ 4677.478896] CPU4 is up
+[ 4677.478920] smpboot: Booting Node 0 Processor 5 APIC 0x11
+[ 4677.481522] CPU5 is up
+[ 4677.481539] smpboot: Booting Node 0 Processor 6 APIC 0x18
+[ 4677.488191] CPU6 is up
+[ 4677.488208] smpboot: Booting Node 0 Processor 7 APIC 0x19
+[ 4677.490826] CPU7 is up
+[ 4677.490842] smpboot: Booting Node 0 Processor 8 APIC 0x20
+[ 4677.497352] CPU8 is up
+[ 4677.497369] smpboot: Booting Node 0 Processor 9 APIC 0x21
+[ 4677.499978] CPU9 is up
+[ 4677.499992] smpboot: Booting Node 0 Processor 10 APIC 0x28
+[ 4677.506515] CPU10 is up
+[ 4677.506531] smpboot: Booting Node 0 Processor 11 APIC 0x29
+[ 4677.509159] CPU11 is up
+[ 4677.509176] smpboot: Booting Node 0 Processor 12 APIC 0x30
+[ 4677.515730] CPU12 is up
+[ 4677.515746] smpboot: Booting Node 0 Processor 13 APIC 0x31
+[ 4677.518419] CPU13 is up
+[ 4677.518435] smpboot: Booting Node 0 Processor 14 APIC 0x38
+[ 4677.525045] CPU14 is up
+[ 4677.525061] smpboot: Booting Node 0 Processor 15 APIC 0x39
+[ 4677.527801] CPU15 is up
+[ 4677.527816] smpboot: Booting Node 0 Processor 16 APIC 0x40
+[ 4677.533130] core: cpu_atom PMU driver: PEBS-via-PT
+[ 4677.533133] ... version:                5
+[ 4677.533134] ... bit width:              48
+[ 4677.533134] ... generic registers:      6
+[ 4677.533135] ... value mask:             0000ffffffffffff
+[ 4677.533135] ... max period:             00007fffffffffff
+[ 4677.533136] ... fixed-purpose events:   3
+[ 4677.533136] ... event mask:             000000070000003f
+[ 4677.533996] CPU16 is up
+[ 4677.534014] smpboot: Booting Node 0 Processor 17 APIC 0x42
+[ 4677.537254] CPU17 is up
+[ 4677.537271] smpboot: Booting Node 0 Processor 18 APIC 0x44
+[ 4677.540537] CPU18 is up
+[ 4677.540554] smpboot: Booting Node 0 Processor 19 APIC 0x46
+[ 4677.543842] CPU19 is up
+[ 4677.543861] smpboot: Booting Node 0 Processor 20 APIC 0x48
+[ 4677.550142] CPU20 is up
+[ 4677.550160] smpboot: Booting Node 0 Processor 21 APIC 0x4a
+[ 4677.553499] CPU21 is up
+[ 4677.553522] smpboot: Booting Node 0 Processor 22 APIC 0x4c
+[ 4677.556881] CPU22 is up
+[ 4677.556897] smpboot: Booting Node 0 Processor 23 APIC 0x4e
+[ 4677.560278] CPU23 is up
+[ 4677.560296] smpboot: Booting Node 0 Processor 24 APIC 0x50
+[ 4677.566716] CPU24 is up
+[ 4677.566733] smpboot: Booting Node 0 Processor 25 APIC 0x52
+[ 4677.570206] CPU25 is up
+[ 4677.570226] smpboot: Booting Node 0 Processor 26 APIC 0x54
+[ 4677.573726] CPU26 is up
+[ 4677.573744] smpboot: Booting Node 0 Processor 27 APIC 0x56
+[ 4677.577275] CPU27 is up
+[ 4677.577293] smpboot: Booting Node 0 Processor 28 APIC 0x58
+[ 4677.583801] CPU28 is up
+[ 4677.583819] smpboot: Booting Node 0 Processor 29 APIC 0x5a
+[ 4677.587408] CPU29 is up
+[ 4677.587425] smpboot: Booting Node 0 Processor 30 APIC 0x5c
+[ 4677.591024] CPU30 is up
+[ 4677.591041] smpboot: Booting Node 0 Processor 31 APIC 0x5e
+[ 4677.594654] CPU31 is up
+[ 4677.599280] ACPI: PM: Waking up from system sleep state S3
+[ 4677.616406] serial 00:01: activated
+[ 4677.620357] nvme nvme0: 32/0/0 default/read/poll queues
+[ 4677.625557] sd 7:0:0:0: [sda] Starting disk
+[ 4677.625717] nvme nvme1: 8/0/0 default/read/poll queues
+[ 4677.939926] ata5: SATA link down (SStatus 4 SControl 300)
+[ 4677.940355] ata6: SATA link down (SStatus 4 SControl 300)
+[ 4677.940371] ata7: SATA link down (SStatus 4 SControl 300)
+[ 4680.540286] ata8: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
+[ 4680.558782] ata8.00: configured for UDMA/133
+[ 4680.572655] OOM killer enabled.
+[ 4680.572656] Restarting tasks ...
+[ 4680.572716] usb 1-10: USB disconnect, device number 4
+[ 4680.574360] done.
+[ 4680.574366] random: crng reseeded on system resumption
+```
+
+n100 上测试，似乎没有什么不同:
+```txt
+[  660.674793] wlo1: deauthenticating from 20:ab:48:6c:8b:d0 by local choice (Reason: 3=DEAUTH_LEAVING)
+[  661.076506] PM: suspend entry (deep)
+[  661.081714] Filesystems sync: 0.005 seconds
+[  661.085467] Freezing user space processes
+[  661.086795] Freezing user space processes completed (elapsed 0.001 seconds)
+[  661.086803] OOM killer disabled.
+[  661.086804] Freezing remaining freezable tasks
+[  661.087892] Freezing remaining freezable tasks completed (elapsed 0.001 seconds)
+[  661.087988] printk: Suspending console(s) (use no_console_suspend to debug)
+[  661.245031] PM: suspend devices took 0.157 seconds
+[  661.288684] ACPI: PM: Preparing to enter system sleep state S3
+[  661.290206] ACPI: PM: Saving platform NVS memory
+[  661.290290] Disabling non-boot CPUs ...
+[  661.292377] smpboot: CPU 3 is now offline
+[  661.297222] smpboot: CPU 2 is now offline
+[  661.301902] smpboot: CPU 1 is now offline
+[  661.310304] ACPI: PM: Low-level resume complete
+[  661.310375] ACPI: PM: Restoring platform NVS memory
+[  661.311411] Enabling non-boot CPUs ...
+[  661.311599] smpboot: Booting Node 0 Processor 1 APIC 0x2
+[  661.312237] CPU0: Thermal monitoring enabled (TM1)
+[  661.312242] x86/cpu: User Mode Instruction Prevention (UMIP) activated
+[  661.313014] CPU1 is up
+[  661.313161] smpboot: Booting Node 0 Processor 2 APIC 0x4
+[  661.314385] CPU2 is up
+[  661.314542] smpboot: Booting Node 0 Processor 3 APIC 0x6
+[  661.315809] CPU3 is up
+[  661.316196] ACPI: PM: Waking up from system sleep state S3
+[  661.329579] i915 0000:00:02.0: [drm] GT0: GuC firmware i915/tgl_guc_70.bin version 70.36.0
+[  661.329585] i915 0000:00:02.0: [drm] GT0: HuC firmware i915/tgl_huc.bin version 7.9.3
+[  661.332736] nvme nvme0: 4/0/0 default/read/poll queues
+[  661.333290] nvme nvme0: Ignoring bogus Namespace Identifiers
+[  661.333917] i915 0000:00:02.0: [drm] GT0: HuC: authenticated for all workloads
+[  661.334431] i915 0000:00:02.0: [drm] GT0: GUC: submission enabled
+[  661.334432] i915 0000:00:02.0: [drm] GT0: GUC: SLPC enabled
+[  661.334746] i915 0000:00:02.0: [drm] GT0: GUC: RC enabled
+[  661.474626] PM: resume devices took 0.148 seconds
+[  661.475255] mei_hdcp 0000:00:16.0-b638ab7e-94e2-4ea2-a552-d1c54b627f04: bound 0000:00:02.0 (ops i915_hdcp_ops [i915])
+[  661.476176] OOM killer enabled.
+[  661.476192] Restarting tasks ...
+[  661.476953] mei_pxp 0000:00:16.0-fbf6fcf1-96cf-4e2e-a6a6-1bab8cbe36b1: bound 0000:00:02.0 (ops i915_pxp_tee_component_ops [i915])
+[  661.478714] done.
+[  661.478748] random: crng reseeded on system resumption
+[  661.481468] PM: suspend exit
+[  661.636358] ata1: SATA link down (SStatus 4 SControl 300)
+[  662.083391] ish-hid {33AECD58-B679-4E54-9BD9-A04D34F0C226}: [hid-ish]: enum_devices_done OK, num_hid_devices=6
+[  662.994137] wlo1: authenticate with 20:ab:48:6c:8b:d0 (local address=56:54:21:16:f1:96)
+[  662.995204] wlo1: send auth to 20:ab:48:6c:8b:d0 (try 1/3)
+[  663.021631] wlo1: authenticated
+[  663.022459] wlo1: associate with 20:ab:48:6c:8b:d0 (try 1/3)
+[  663.027389] wlo1: RX AssocResp from 20:ab:48:6c:8b:d0 (capab=0x1511 status=0 aid=8)
+[  663.035250] wlo1: associated
+[  663.035361] wlo1: Limiting TX power to 20 (23 - 3) dBm as advertised by 20:ab:48:6c:8b:d0
+[  665.000877] igc 0000:01:00.0 enp1s0: NIC Link is Up 2500 Mbps Full Duplex, Flow Control: RX/TX
+[  665.069973] igc 0000:03:00.0 enp3s0: NIC Link is Up 2500 Mbps Full Duplex, Flow Control: RX/TX
+```

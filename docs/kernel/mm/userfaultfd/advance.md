@@ -314,8 +314,38 @@ cat /proc/1581262/stack
 [<0>] entry_SYSCALL_64_after_hwframe+0x78/0xe2
 ```
 
-## 7.3 RWP
+## RWP
 https://docs.kernel.org/admin-guide/mm/userfaultfd.html#read-write-protection
+
+7.3 内核中加入的
+
+
+## UFFDIO_POISON
+UFFDIO_POISON 加入的核心动机是：在 VM 热迁移时保留内存页的 poisoned 状态，尤其是 postcopy 场景。
+
+原始提交是 fc71884a5f59 — mm: userfaultfd: add new UFFDIO_POISON ioctl
+(https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=fc71884a5f599a603fcc3c2b28b3872c09d19c18)，描述的场景是：
+
+1. VM 在源宿主机遇到硬件内存错误，某些 guest 内存页被标记为 poisoned。
+2. 随后将 VM 热迁移到另一台宿主机。虽然目标机器的物理内存正常，但 guest 对应地址的错误状态仍应保留，不能因为迁移就凭空恢复成有效数据。
+3. postcopy 会在内存尚未全部传完、甚至尚未确定哪些页 poisoned 时启动目标 VM，因此需要在按需处理缺页时表达“这一页已经损坏”。
+
+目标端的处理流程因此是：
+
+guest 访问尚未建立映射的页
+  → userfaultfd 上报 missing / minor fault
+  → 用户态向源端查询该页
+      ├─ 正常页：UFFDIO_COPY / UFFDIO_CONTINUE
+      └─ poisoned 页：UFFDIO_POISON
+
+这里补上的能力是：让用户态可以用“该地址发生内存错误”来完成 fault 处理。
+填零或复制普通数据无法保留错误语义；一直不处理则会让访问线程阻塞。官方文档说明，poison 后的访问会走 SIGBUS 路径，在相应的 KVM
+虚拟化错误处理路径中，可以让 guest 收到模拟硬件内存错误的 MCE。内核文档
+(https://github.com/torvalds/linux/blob/master/Documentation/admin-guide/mm/userfaultfd.rst#memory-poisioning-emulation)
+
+实现上，它向页表写入 PTE_MARKER_POISONED，并不需要真的损坏或毒化目标端物理页。后续访问由缺页处理直接返回 VM_FAULT_HWPOISON，无需反复交给 userfaultfd 用
+户态处理。可以对应看当前树的 mfill_atomic_pte_poison() (mm/userfaultfd.c:734) 和 marker 的 fault 处理 (mm/memory.c:4598)。
+
 
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"

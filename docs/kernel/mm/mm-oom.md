@@ -396,6 +396,8 @@ try_charge_memcg 前面已经分配到页面了，然后去对于这个页面进
 2. 总的内存一次
 
 
+## 为什么 oom 这么慢，这么难以恢复，而且即便是在 cgroup 下都可能长期无法恢复?
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

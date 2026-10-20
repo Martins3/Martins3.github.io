@@ -216,6 +216,18 @@ iperf3: interrupt - the client has terminated by signal Interrupt(2)
 不知道咋配置的，感觉像是 windows 的 iperf3
 如果配置交换机和物理网卡绑定，和 mac 做测试，发现可以很容易达到 交换机的 上限的。
 
+## 我为什么要切换为 wsl
+
+1. 我发现我的 tmux 有时候，让 codex 调试了一下，发现可以添加这个 workaround
+```txt
+set -s escape-time 100
+```
+2. 无法使用 GPU ，需要额外的配置
+
+3. 需要一个非常复杂的脚本来获取到虚拟机的 ip ，然后 ssh 进去
+
+4. codex 网页认证也不需要使用任何的技巧了，可以直接触发网络
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

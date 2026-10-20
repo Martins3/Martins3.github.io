@@ -2,6 +2,7 @@
 核心参考:
 - https://www.zhihu.com/question/644556732/answer/3399033383
 - [modern cpp check list](https://github.com/AnthonyCalandra/modern-cpp-features)
+- https://www.cppstories.com/p/start-here/
 
 ## check
 C++20 includes the following new language features:

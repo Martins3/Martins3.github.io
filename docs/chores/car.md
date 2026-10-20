@@ -39,6 +39,8 @@ https://plantree.me/blog/2024/why-buy-tesla/
 ## 科目一
 https://www.bilibili.com/video/BV1hVGPzVEV9
 
+https://zhuanlan.zhihu.com/p/556065386 : 这个很好了
+
 ## 科目四
 
 ## 考试内容

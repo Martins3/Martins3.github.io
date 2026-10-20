@@ -12,18 +12,19 @@
 /*
  * 把包含指定位的位图块并入当前 journal 事务（若存在）。
  * 位图约定：bfree/ifree 的位图块紧跟 inode store 之后（ifree 在前）。
- * 没有运行中的事务时（writeback/无 handle 路径）自动跳过。
+ * journal 模式必须属于当前事务，写入失败会中止 journal，禁止继续复用。
  */
-static inline void simplefs_journal_bitmap(struct simplefs_sb_info *sbi,
+static inline int simplefs_journal_bitmap(struct simplefs_sb_info *sbi,
 					   bool inode_map, uint32_t bit,
 					   uint32_t len)
 {
 	struct simplefs_journal *journal = sbi->s_journal;
 	uint32_t index, last, block;
 	char *base;
+	int ret;
 
 	if (!journal || !len)
-		return;
+		return 0;
 
 	index = bit / (SIMPLEFS_BLOCK_SIZE * 8);
 	last = (bit + len - 1) / (SIMPLEFS_BLOCK_SIZE * 8);
@@ -36,9 +37,12 @@ static inline void simplefs_journal_bitmap(struct simplefs_sb_info *sbi,
 				sbi->nr_ifree_blocks + index;
 			base = (char *)sbi->bfree_bitmap;
 		}
-		simplefs_journal_block(journal->j_sb, block,
+		ret = simplefs_journal_block(journal->j_sb, block,
 				       base + index * SIMPLEFS_BLOCK_SIZE);
+		if (ret)
+			return ret;
 	}
+	return 0;
 }
 
 static inline int simplefs_journal_free_counts(struct simplefs_sb_info *sbi)
@@ -58,6 +62,19 @@ static inline int simplefs_journal_free_counts(struct simplefs_sb_info *sbi)
 	ret = simplefs_journal_dirty_folio(sbi->sb, SIMPLEFS_SB_BLOCK_NR,
 					   disk_sb, folio);
 	folio_release_kmap(folio, disk_sb);
+	return ret;
+}
+/* Called with bitmap_lock and an allocation transaction held. */
+static inline int simplefs_persist_bitmap(struct simplefs_sb_info *sbi,
+                                         bool inode_map, uint32_t bit,
+                                         uint32_t len)
+{
+	int ret = simplefs_journal_bitmap(sbi, inode_map, bit, len);
+
+	if (!ret)
+		ret = simplefs_journal_free_counts(sbi);
+	if (ret)
+		simplefs_journal_fail(sbi->sb, ret);
 	return ret;
 }
 #endif /* __KERNEL__ */
@@ -110,8 +127,7 @@ static inline uint32_t get_free_inode(struct simplefs_sb_info *sbi)
 	if (ret) {
 		sbi->nr_free_inodes--;
 		sfs_stat_inc(inode_alloc_count);
-		simplefs_journal_bitmap(sbi, true, ret, 1);
-		if (simplefs_journal_free_counts(sbi))
+		if (simplefs_persist_bitmap(sbi, true, ret, 1))
 			ret = 0;
 	}
 	mutex_unlock(&sbi->bitmap_lock);
@@ -168,8 +184,7 @@ static inline uint32_t __simplefs_get_free_blocks(struct simplefs_sb_info *sbi,
 		if (sbi->discard_pending)
 			bitmap_clear(sbi->discard_pending, ret, len);
 		sfs_stat_inc(block_alloc_count);
-		simplefs_journal_bitmap(sbi, false, ret, len);
-		if (simplefs_journal_free_counts(sbi))
+		if (simplefs_persist_bitmap(sbi, false, ret, len))
 			ret = 0;
 		pr_debug("bitmap alloc caller=%s start=%u len=%u still_free=%d nr_free=%u\n",
 			caller, ret, len, still_free, sbi->nr_free_blocks);
@@ -241,8 +256,7 @@ static inline bool simplefs_take_exact_blocks(struct simplefs_sb_info *sbi,
 		bitmap_clear(sbi->discard_pending, bno, len);
 	sbi->nr_free_blocks -= len;
 	sfs_stat_inc(block_alloc_count);
-	simplefs_journal_bitmap(sbi, false, bno, len);
-	if (simplefs_journal_free_counts(sbi))
+	if (simplefs_persist_bitmap(sbi, false, bno, len))
 		goto out_false;
 	mutex_unlock(&sbi->bitmap_lock);
 	if (simplefs_journal_stop(handle))
@@ -293,8 +307,7 @@ static inline void put_inode(struct simplefs_sb_info *sbi, uint32_t ino)
 
 	sbi->nr_free_inodes++;
 	sfs_stat_inc(inode_free_count);
-	simplefs_journal_bitmap(sbi, true, ino, 1);
-	if (simplefs_journal_free_counts(sbi))
+	if (simplefs_persist_bitmap(sbi, true, ino, 1))
 		pr_err("failed to journal free counts for inode %u\n", ino);
 
 out:
@@ -346,8 +359,7 @@ static inline void __simplefs_put_blocks(struct simplefs_sb_info *sbi,
 	sfs_stat_inc(block_free_count);
 	if (sbi->s_discard)
 		bitmap_set(sbi->discard_pending, bno, len);
-	simplefs_journal_bitmap(sbi, false, bno, len);
-	if (simplefs_journal_free_counts(sbi))
+	if (simplefs_persist_bitmap(sbi, false, bno, len))
 		pr_err("failed to journal free counts for blocks %u+%u\n",
 		       bno, len);
 	pr_debug("bitmap free caller=%s start=%u len=%u nr_free=%u\n",

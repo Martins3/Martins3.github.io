@@ -192,6 +192,113 @@ thread_siblings_list
 
 怎么还有 node 的这个路径啊
 
+## cpupower frequency-info current policy 中的频率输出来自于哪里
+<!-- 798cfb8a-1e72-45cc-9524-0f60f9ae30e0 -->
+
+```txt
+  current policy: frequency should be within 4.00 GHz and 4.00 GHz.
+                  The governor "performance" may decide which speed to use
+                  within this range.
+```
+
+这个 4G ~ 4G 的原因是这个导致的:
+```txt
+🧀  grep . *
+affected_cpus:0
+cpuinfo_avg_freq:3997731
+cpuinfo_max_freq:4000000
+cpuinfo_min_freq:800000
+cpuinfo_transition_latency:20000
+related_cpus:0
+scaling_available_governors:conservative ondemand userspace powersave performance schedutil
+scaling_cur_freq:3997731
+scaling_driver:intel_cpufreq
+scaling_governor:powersave
+scaling_max_freq:4000000
+scaling_min_freq:4000000
+scaling_setspeed:<unsupported>
+```
+
+类似的:
+```txt
+cpu/cpufreq/policy0🔒 🦆
+🧀  sudo cpupower frequency-info
+[sudo] password for martins3:
+analyzing CPU 0:
+  driver: intel_cpufreq
+  CPUs which run at the same hardware frequency: 0
+  CPUs which need to have their frequency coordinated by software: 0
+  maximum transition latency: 20.0 us
+  hardware limits: 800 MHz - 4.00 GHz
+  available cpufreq governors: conservative ondemand userspace powersave performance schedutil
+  current policy: frequency should be within 4.00 GHz and 4.00 GHz.
+                  The governor "performance" may decide which speed to use
+                  within this range.
+  current CPU frequency: Unable to call hardware
+  current CPU frequency: 3.59 GHz (asserted by call to kernel)
+  boost state support:
+    Supported: yes
+    Active: yes
+```
+
+从这里发现可以频率就是从 800M 到 4G :
+```txt
+🧀  grep . *
+affected_cpus:0
+cpuinfo_avg_freq:3996068
+cpuinfo_max_freq:4000000
+cpuinfo_min_freq:800000
+cpuinfo_transition_latency:20000
+related_cpus:0
+scaling_available_governors:conservative ondemand userspace powersave performance schedutil
+scaling_cur_freq:3996068
+scaling_driver:intel_cpufreq
+scaling_governor:performance
+scaling_max_freq:4000000
+scaling_min_freq:4000000
+scaling_setspeed:<unsupported>
+```
+
+这里就没有进一步追究这个sysfs 下面的实现了
+感觉都很随意的，对实际没有什么参考价值。
+
+## cpupower frequency-info 输出 Unable to call hardware 的含义
+
+```txt
+🧀  sudo cpupower frequency-info
+[sudo] password for martins3:
+analyzing CPU 0:
+  driver: intel_cpufreq
+  CPUs which run at the same hardware frequency: 0
+  CPUs which need to have their frequency coordinated by software: 0
+  maximum transition latency: 20.0 us
+  hardware limits: 800 MHz - 4.00 GHz
+  available cpufreq governors: conservative ondemand userspace powersave performance schedutil
+  current policy: frequency should be within 4.00 GHz and 4.00 GHz.
+                  The governor "performance" may decide which speed to use
+                  within this range.
+  current CPU frequency: Unable to call hardware
+  current CPU frequency: 3.52 GHz (asserted by call to kernel)
+  boost state support:
+    Supported: yes
+    Active: yes
+```
+
+是看是否存在这个 sysfs 接口
+```txt
+/sys/devices/system/cpu/cpufreq/policy53/cpuinfo_cur_freq
+/sys/devices/system/cpu/cpufreq/policy81/cpuinfo_cur_freq
+```
+
+而 sysfs 下是否会提供这个接口， 具体实现在 cpufreq_add_dev_interface 中:
+```txt
+	if (cpufreq_driver->get) {
+		ret = sysfs_create_file(&policy->kobj, &cpuinfo_cur_freq.attr);
+		if (ret)
+			return ret;
+	}
+```
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

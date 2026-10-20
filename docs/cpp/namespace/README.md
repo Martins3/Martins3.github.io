@@ -26,26 +26,6 @@ void print() {
 如果引入的是函数名，会引入声明处可见的同名重载，而不是只选一个函数。
 类型别名的更多用法见 [template/alias.md](../template/alias.md)。
 
-`using namespace` 不会把成员搬到当前命名空间；原来的限定名仍然可以使用。
-不同命名空间中有相同名字时，非限定查找可能产生歧义：
-
-```cpp
-namespace left  { int value = 1; }
-namespace right { int value = 2; }
-
-void ambiguous() {
-    using namespace left;
-    using namespace right;
-    // int n = value;          // 编译错误：无法决定用哪个 value
-    int n = left::value;       // 明确指定即可
-    (void)n;
-}
-```
-
-头文件的全局作用域应避免 `using namespace std;`，因为每个包含它的文件都会
-受到影响，后续增加 include 也可能让原来正常的非限定名字产生歧义。
-一般优先写限定名，或者在较小作用域内用 `using std::某个名字`。
-
 ## 4. namespace 和头文件、链接的关系
 
 [counter.hpp](counter.hpp) 在 `namespace tutorial` 中声明 `next()`；
@@ -115,45 +95,6 @@ namespace library {
 它还对 ADL 和模板特化有专门规则，并不完全等同于手写 `using namespace v2`。
 详见标准草案 [Namespace definition](https://eel.is/c++draft/namespace.def)。
 选择一个默认版本本身不能保证任意两个库版本的 ABI 兼容。
-
-## 7. ADL：没有 using，为什么也能调用？
-
-```cpp
-namespace geometry {
-    struct Point { int x; int y; };
-    int sum(Point p) { return p.x + p.y; }
-}
-
-// 放在函数内：
-geometry::Point p{3, 4};
-int result = sum(p);  // ADL 找到 geometry::sum，结果为 7
-```
-
-ADL 是 Argument-Dependent Lookup，实参相关查找。对于符合条件的非限定函数
-调用，除了普通名字查找，还会根据实参类型到关联的命名空间等位置找函数。
-这里 p 的类型是 geometry::Point，所以 geometry 中的 sum 也成为候选。
-详见标准草案 [Argument-dependent name lookup](https://eel.is/c++draft/basic.lookup.argdep)。
-
-几个边界值得记住：
-
-- `geometry::sum(p)` 是限定调用，不触发 ADL。
-- `int` 这样的基本类型没有关联命名空间，不能靠 `sum(1)` 找到 geometry 的函数。
-- `using P = geometry::Point` 不创建新类型，别名所在命名空间不会因此成为关联命名空间。
-- 普通查找若找到同名非函数、类成员或块作用域函数声明，会阻止 ADL。
-- 类内定义的 hidden friend 是非成员函数；没有额外命名空间声明时，普通查找
-  找不到它，ADL 仍可以找到。见 [adl.cpp](adl.cpp) 中 Point 内的 `operator==()`
-  友元定义，以及 [operator/README.md](../operator/README.md) 的相关说明。
-
-通用代码经常利用 ADL 做定制：
-
-```cpp
-using std::swap;
-swap(a, b);
-```
-
-这样 std::swap 提供默认候选，实参类型对应命名空间的自定义 swap 也可以参与
-重载选择；直接写 `std::swap(a, b)` 则不会通过 ADL 找自定义版本。
-[adl.cpp](adl.cpp) 中的 `exchange()` 演示了这一区别。
 
 ## 8. 实际组织代码时怎么选
 

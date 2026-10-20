@@ -142,6 +142,11 @@ https://github.com/HKUDS/Vibe-Trading
 
 小岛经济学 = 经济学原理 经济学概论 国富论
 
+
+https://github.com/zgwl/chinese-buy-us-stock-guide
+
+https://github.com/xbtlin/ai-berkshire
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

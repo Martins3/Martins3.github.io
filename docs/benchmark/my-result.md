@@ -1,5 +1,17 @@
 # microbench 简单的测试
 
+## 2026-10-19：双通道内存 interleaving 粒度
+
+当前 13900K + 四条 DDR4-2400 的最小交错粒度实测为 **512B**。
+扩大到 256 MiB 内存池、1,776 个采样物理页后，bit 6–36 每位 32 对有效物理
+XOR 配对仍支持该结论；bit 9、10、13、19 表现为换通道，其他已测位不换。
+这是跨页稀疏采样的结果，不代表穷举全部内存或已恢复完整 hash 公式。
+
+[interleave.cpp](microbench/interleave.cpp) 已扩展为从大内存池寻找物理地址 XOR
+配对，覆盖跨页地址位。运行 `make interleave` 后执行 `sudo ./interleave.out`，
+或用 `--mib 1024 --pairs 64` 扩大采样；只打印汇总，不保存详细结果。
+[运行说明](microbench/README.md)。
+
 ## 2026-09-21：本机 C++ microbench
 
 代码和运行说明：[microbench/README.md](microbench/README.md)，实现：[microbench.cpp](microbench/microbench.cpp)。在该目录执行

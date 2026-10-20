@@ -127,6 +127,9 @@ https://labuladong.gitee.io/algo/3/24/65/ 给出来的解释，这个转换非�
 ## 别人的总结
 - https://github.com/ninechapter-algorithm/linghu-algorithm-templete/blob/master/%E7%AE%97%E6%B3%95%E4%B8%8E%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E5%8A%A8%E6%80%81%E8%A7%84%E5%88%92%E5%8D%81%E9%97%AE%E5%8D%81%E7%AD%94.md
 
+## 文摘
+https://code.visualstudio.com/blogs/2021/09/29/bracket-pair-colorization
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

@@ -123,6 +123,93 @@ make stream
 [HugeTLB 文档](https://docs.kernel.org/admin-guide/mm/hugetlbpage.html)；
 计数口径依据：[STREAM FAQ](https://www.cs.virginia.edu/stream/ref.html)。
 
+## 双通道 interleaving：跨页物理地址测试
+
+`interleave.cpp` 用两个 IMC 的硬件计数器测地址的通道归属。默认分配 **256 MiB**
+普通页内存池，从中随机选择物理地址 `A` 和 `A XOR (1 << bit)`，每个地址位最多
+32 对，逐位观察是否换通道。bit 12 及以上使用真实的跨物理页配对，不把虚拟地址
+连续当作物理地址连续，也不再仅拟合单页内的规律。
+
+```text
+make interleave
+./interleave.out --self-test
+sudo ./interleave.out
+sudo ./interleave.out --mib 1024 --pairs 64
+sudo ./interleave.out --access write --cpu 2
+```
+
+默认读取测试，每地址 5 个样本，每样本 20,000 次
+`CLFLUSH → MFENCE → load → LFENCE`；写模式使用整行 NT store + MFENCE，供交叉验证。
+程序只在终端输出汇总，不生成 CSV、日志或结果目录。默认运行通常需要几分钟；
+增加 `--pairs` 会延长采样时间，增加 `--mib` 主要扩大寻找物理配对的内存池。
+也支持 `--cpu`、`--samples` 和 `--iterations`。
+
+每次负载前后测背景流量，用两个 IMC 的背景扣除后差分判定归属；弱信号和明显
+波动被拒绝。每地址至少 2/3 样本同意且没有有效反例才接受。每位至少 4 对、至少
+2/3 配对有效，且换通道效果一致，才判定该位的效果。找不到物理配对时显示
+`not covered`，结果矛盾或样本不足显示 `inconclusive`，不会当作“不参与 hash”。
+
+输出包含分配的内存池大小、实际采样页数、物理地址范围及各位换通道统计。
+范围是稀疏采样的首尾，不代表穷举其间全部内存；逐位结果也不是完整 hash 公式。
+最低换通道位只有在所有更低位已确认不换通道时才报告。
+
+需要 Linux x86-64、Intel Alder/Raptor Lake 裸机、两个
+`uncore_imc_free_running` PMU，以及系统级 perf、pagemap PFN 和 mlock 权限，通常用 sudo。
+分配采用 `MADV_NOHUGEPAGE`，预触摸并 mlock，测量前后核实 PFN。该测试识别 IMC，
+本机每个 IMC 对应一个 DDR4 通道；不能直接用于区分 DDR5 子通道或 rank/bank。
+计数语义见 Intel 的
+[ADL/RPL PMU 事件定义](https://github.com/intel/perfmon/blob/main/ADL/events/alderlake_uncore.json)。
+
+### 为什么编码规则需要有 xor hash ?
+下面把 0–127 当作 512B 块编号：第 n 块对应物理地址 [n×512, (n+1)×512−1]。假设 C=0；若 C=1，把所有 0、1 对调。
+
+按我们假设的公式：
+
+channel = PA[9] ⊕ PA[10] ⊕ PA[13] ⊕ PA[19]
+
+这 128 块共 64KiB，PA[19] 始终为 0，换成块编号就是：
+
+channel(n) = n[0] ⊕ n[1] ⊕ n[4]
+
+ 块编号     对应通道，从左到右
+━━━━━━━━━  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ 0–15       0 1 1 0  0 1 1 0  0 1 1 0  0 1 1 0
+─────────  ────────────────────────────────────
+ 16–31      1 0 0 1  1 0 0 1  1 0 0 1  1 0 0 1
+─────────  ────────────────────────────────────
+ 32–47      0 1 1 0  0 1 1 0  0 1 1 0  0 1 1 0
+─────────  ────────────────────────────────────
+ 48–63      1 0 0 1  1 0 0 1  1 0 0 1  1 0 0 1
+─────────  ────────────────────────────────────
+ 64–79      0 1 1 0  0 1 1 0  0 1 1 0  0 1 1 0
+─────────  ────────────────────────────────────
+ 80–95      1 0 0 1  1 0 0 1  1 0 0 1  1 0 0 1
+─────────  ────────────────────────────────────
+ 96–111     0 1 1 0  0 1 1 0  0 1 1 0  0 1 1 0
+─────────  ────────────────────────────────────
+ 112–127    1 0 0 1  1 0 0 1  1 0 0 1  1 0 0 1
+
+每 16 块，即每 8KiB，PA[13] 翻转，因此下一组的通道分布整体反相。
+
+这么设计的主要目的，是让不同访问步长也能利用两个通道。 Intel 对 Channel Hashing
+的说明也是：结合多个地址位，使内存访问更均匀地分布到各通道。Intel Hot Chips 演讲中的 “Uncore IPC Features”
+(https://old.hotchips.org/wp-content/uploads/hc_archives/hc24/HotChips24.Proceedings-revised-12-09-07.pdf)
+
+举一个按该公式推导的例子，程序每隔 8KiB 读一个位置：
+
+物理地址：     0    8KiB   16KiB   24KiB   32KiB   40KiB
+只用 PA[9]：  0      0       0       0       0       0
+使用 XOR：    0      1       0       1       0       1
+
+只用 bit 9 时，这些地址全部挤在通道 0，通道 1 的带宽用不上。加入 bit 13 后，这种步长就能分散到两个通道。加入其他位，则可
+以改善其他尺度的访问模式。
+
+XOR 的硬件实现也很简单：四个位的异或可以用三个二输入 XOR 门组合完成，不需要 CPU 执行计算。
+
+不过，它不能保证所有步长都均匀。例如按这个模型，以 1MiB 步长访问各块起点，这四个位都不变，仍会落在同一通道。它改善的是多
+种常见访问模式；至于本机为何恰好选择这四个位和 512B 粒度，不能仅凭这次测量确定。
+
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

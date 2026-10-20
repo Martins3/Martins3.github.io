@@ -18,7 +18,11 @@ stat -c '%y %n' mkfs.simplefs.out simplefs.ko
 modinfo -F vermagic simplefs.ko
 ```
 
-vermagic 必须匹配 guest `uname -r`。旧 mkfs 可能写出当前模块无法恢复的 journal，
+vermagic 必须匹配 guest `uname -r`，但版本字符串相同仍不保证 ABI 相同。构建树
+必须与启动镜像来自同一源码、配置和生成头；配置或旧产物混用时，应重新生成整套
+内核和模块。可通过 `KDIR=/path/to/matching/kernel ./build.sh` 选择匹配构建树。
+
+旧 mkfs 可能写出当前模块无法恢复的 journal，
 所以只重建 ko 不足以建立可信环境。
 
 ## yyds-fs 中执行
@@ -50,6 +54,10 @@ ssh -p 51404 root@localhost \
 `dm-flakey`、`dm-thin-pool`、`dm-log-writes`、`scsi_debug` 等模块，以及 xfstests
 用户、组和工具。模块缺失会使相关用例 NOTRUN；模块与运行内核配置不一致甚至可能
 制造与 SimpleFS 无关的 warning。
+
+从宿主同步的 xfstests 若包含已有 ELF，也必须验证其解释器/库路径能在 VM 使用。
+使用临时 Nix 环境重建时包含 GDBM 等可选依赖：未启用的可选目标可能不在
+`make clean` 清单中，旧 `dbtest` 留在目录里会把环境问题变成测试 FAIL。
 
 全量验收前必须确认这些模块能 `modprobe`，并记录 `uname -r`、模块 vermagic、
 SimpleFS/mkfs 哈希。历史统一环境的完整证据见

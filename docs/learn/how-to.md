@@ -253,6 +253,12 @@ AI 的确可以重塑学习方法，如果看一个文档，会非常的痛苦�
 
 回忆加上草稿纸也是非常方便的。
 
+## 顺着问题看，还是看一个整体?
+
+学 c++ 就是顺这问题看，结果一个 init 看了两天
+倾向于看问题的整体吧。
+相比这就是看一本书，和不停的看 blog 的差别
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

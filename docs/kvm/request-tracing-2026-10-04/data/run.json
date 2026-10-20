@@ -1,0 +1,65 @@
+{
+  "kernel": "7.2.7-200.fc44.x86_64",
+  "build_ids": {
+    "kvm": "bd7517a3f50e7f88ad10d00890c65ca6abf9a3d5",
+    "kvm_intel": "f33294539be3205c9bf026e29e643700e94ba5c4"
+  },
+  "vms": [
+    {
+      "pid": 1063533,
+      "name": "guest=martins3,debug-threads=on",
+      "smp": "2,maxcpus=32",
+      "m": "2G,slots=8,maxmem=256G",
+      "cpu": "host"
+    },
+    {
+      "pid": 1494236,
+      "name": "guest=martins3,debug-threads=on",
+      "smp": "2,maxcpus=32",
+      "m": "8G,slots=8,maxmem=256G",
+      "cpu": "host"
+    },
+    {
+      "pid": 1519765,
+      "name": "guest=martins3,debug-threads=on",
+      "smp": "16,maxcpus=32",
+      "m": "8G,slots=8,maxmem=256G",
+      "cpu": "host,hv_spinlocks=0x1fff,hv_vapic,hv_time,hv_reset,hv_vpindex,hv_runtime,hv_relaxed"
+    },
+    {
+      "pid": 1573203,
+      "name": "guest=martins3,debug-threads=on",
+      "smp": "2,maxcpus=32",
+      "m": "2G,slots=8,maxmem=256G",
+      "cpu": "host"
+    },
+    {
+      "pid": 2433175,
+      "name": "guest=martins3,debug-threads=on",
+      "smp": "2,maxcpus=32",
+      "m": "8G,slots=8,maxmem=256G",
+      "cpu": "host"
+    },
+    {
+      "pid": 2566272,
+      "name": "guest=martins3,debug-threads=on",
+      "smp": "32,maxcpus=32",
+      "m": "8G,slots=8,maxmem=256G",
+      "cpu": "host"
+    },
+    {
+      "pid": 2761125,
+      "name": "guest=martins3,debug-threads=on",
+      "smp": "32,maxcpus=32",
+      "m": "48G,slots=8,maxmem=256G",
+      "cpu": "host"
+    }
+  ],
+  "probes": {
+    "check": 48,
+    "bulk": 1,
+    "direct": 151
+  },
+  "duration_seconds": 60,
+  "start_time": "2026-10-04 15:01:37 +0800"
+}

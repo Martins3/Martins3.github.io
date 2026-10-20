@@ -6,6 +6,7 @@ simplefs-m := simplefs_fs.o \
 	simplefs_inode.o \
 	simplefs_file.o \
 	simplefs_dir.o \
+	simplefs_dir_index.o \
 	simplefs_extent.o \
 	simplefs_trace.o \
 	simplefs_metabuf.o \

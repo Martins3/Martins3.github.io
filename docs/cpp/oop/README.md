@@ -1,3 +1,7 @@
+## 构造函数
+
+- [委托构造函数](delegating-constructor.md)
+
 ## 方便的工具
 https://github.com/andreasfertig/cppinsights : cppinsights
 

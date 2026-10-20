@@ -60,41 +60,7 @@ int result = (calculator.*operation)(1, 2);
 
 事件系统、GUI、定时器和一些旧式 C++ 框架也可能要求传入成员函数指针作为回调。
 
-### 现代 C++ 中的替代方案
-
-成员函数指针不是 C++ 日常代码中的必需品。很多情况下，lambda 更直观：
-
-```cpp
-Calculator calculator;
-
-auto operation = [&calculator](int a, int b) {
-    return calculator.add(a, b);
-};
-
-int result = operation(1, 2);
-```
-
-如果需要统一保存普通函数、成员函数、lambda 和函数对象，可以使用 `std::function`：
-
-```cpp
-#include <functional>
-
-Calculator calculator;
-std::function<int(int, int)> operation =
-    [&calculator](int a, int b) {
-        return calculator.add(a, b);
-    };
-```
-
-可以按下面的原则选择：
-
-- 需要运行时多态：通常使用虚函数。
-- 只是传递一个操作：通常优先使用 lambda。
-- 需要统一保存各种可调用对象：使用 `std::function`。
-- 需要明确表达“某个类的成员函数”，或接口本身要求这种类型：使用成员函数指针。
-
-因此，成员函数指针不是“C++ 为了炫技提供的功能”，而是处理“把某个类的方法保存下来并在指定对象上调用”这一需求的底层机制。现代代码中未必经常手写，但理解它有助于读懂回调接口、标准库工具和旧式框架代码。
-
+一般不建议使用这个，只是说，c++ 支持这个能力而已罢了。
 
 ## enum class
   - 新的enum的作用域可以不在是全局的 : 限定和非限定两种

@@ -29,51 +29,9 @@ static int simplefs_fileattr_set(struct mnt_idmap *idmap,
 /* Helper: Check if a directory is empty */
 static int simplefs_dir_is_empty(struct inode *inode)
 {
-	struct simplefs_inode_info *ci = SIMPLEFS_INODE(inode);
-	struct super_block *sb = inode->i_sb;
-	struct simplefs_file_ei_block *eblock;
-	struct folio *dfolio;
-	int ei, bi, fi;
+	struct simplefs_dir_index *index = simplefs_dir_get(inode);
 
-	eblock = (struct simplefs_file_ei_block *)simplefs_get_folio(sb, ci->ei_block, &dfolio);
-	if (IS_ERR(eblock))
-		return PTR_ERR(eblock);
-
-	/*
-	 * nr_files is only a cached count. Under rename/unlink stress it is safer
-	 * to scan the actual directory entries before allowing rmdir().
-	 */
-	for (ei = 0; ei < SIMPLEFS_MAX_EXTENTS; ei++) {
-		if (!eblock->extents[ei].ee_start)
-			break;
-
-		for (bi = 0; bi < simplefs_ext_len(&eblock->extents[ei]); bi++) {
-			struct folio *dblock_folio;
-			struct simplefs_dir_block *dblock;
-
-			dblock = (struct simplefs_dir_block *)simplefs_get_folio(
-				sb, eblock->extents[ei].ee_start + bi, &dblock_folio);
-			if (IS_ERR(dblock)) {
-				int ret = PTR_ERR(dblock);
-				folio_release_kmap(dfolio, eblock);
-				return ret;
-			}
-
-			for (fi = 0; fi < SIMPLEFS_FILES_PER_BLOCK; fi++) {
-				if (dblock->files[fi].inode != 0) {
-					folio_release_kmap(dblock_folio, dblock);
-					folio_release_kmap(dfolio, eblock);
-					return 0;
-				}
-			}
-
-			folio_release_kmap(dblock_folio, dblock);
-			cond_resched();
-		}
-	}
-
-	folio_release_kmap(dfolio, eblock);
-	return 1;
+	return IS_ERR(index) ? PTR_ERR(index) : !index->nr_files;
 }
 
 /* Remove a file from parent directory */
@@ -108,105 +66,8 @@ static int simplefs_unlink(struct inode *dir, struct dentry *dentry)
 	return simplefs_journal_stop(handle);
 }
 
-/* Helper: Mark folio dirty with journal support (pure iomap version)
- * 
- * 使用新的 journal API，直接传递 block_nr 和 data 指针
- */
-static int simplefs_mark_folio_dirty(struct simplefs_handle *handle,
-				      struct super_block *sb,
-				      unsigned long block_nr,
-				      void *folio_data_ptr,
-				      struct folio *folio)
-{
-	int ret;
-
-	/* JBD2 must be the only owner of home-metadata writeback. */
-	if (!handle) {
-		folio_mark_dirty(folio);
-		return 0;
-	}
-	if (folio->index != block_nr) {
-		pr_err("metadata block mismatch requested=%lu folio=%lu\n",
-		       block_nr, folio->index);
-		return -EFSCORRUPTED;
-	}
-
-	/* Mark metadata dirty in journal */
-	ret = simplefs_journal_dirty_metadata(handle, sb, block_nr,
-					      folio_data_ptr, folio);
-	if (ret)
-		pr_err("Failed to mark block %lu in journal: %d\n", block_nr, ret);
-
-	return ret;
-}
-
-static int simplefs_alloc_dir_extent(struct inode *dir,
-				     unsigned long index_block_nr,
-				     struct simplefs_file_ei_block *eblock,
-				     struct folio *dfolio, int ei,
-				     struct simplefs_handle *handle)
-{
-	struct super_block *sb = dir->i_sb;
-	int b;
-	int bno;
-	int ret;
-
-	if (ei >= SIMPLEFS_MAX_EXTENTS)
-		return -ENOSPC;
-
-	bno = get_free_blocks(SIMPLEFS_SB(sb), SIMPLEFS_DIR_BLOCKS_PER_EXTENT);
-	if (!bno)
-		return -ENOSPC;
-
-	simplefs_ext_init(&eblock->extents[ei],
-			  ei ? eblock->extents[ei - 1].ee_block +
-				       simplefs_ext_len(&eblock->extents[ei - 1])
-			     : 0,
-			  SIMPLEFS_DIR_BLOCKS_PER_EXTENT, bno, false);
-
-	for (b = 0; b < SIMPLEFS_DIR_BLOCKS_PER_EXTENT; b++) {
-		struct folio *zfolio;
-		char *zblock;
-
-		zblock = (char *)simplefs_get_folio(sb, bno + b, &zfolio);
-		if (IS_ERR(zblock)) {
-			ret = PTR_ERR(zblock);
-			goto err_clear_extent;
-		}
-
-		memset(zblock, 0, SIMPLEFS_BLOCK_SIZE);
-		ret = simplefs_mark_folio_dirty(handle, sb, bno + b, zblock,
-						zfolio);
-		if (ret) {
-			folio_release_kmap(zfolio, zblock);
-			goto err_clear_extent;
-		}
-		folio_release_kmap(zfolio, zblock);
-	}
-
-	ret = simplefs_mark_folio_dirty(handle, sb, index_block_nr, eblock,
-					dfolio);
-	if (ret)
-		goto err_clear_extent;
-
-	trace_simplefs_alloc_blocks(sb, bno, SIMPLEFS_DIR_BLOCKS_PER_EXTENT,
-				    "simplefs_alloc_dir_extent");
-	dir->i_blocks += simplefs_blocks_to_sectors(
-		SIMPLEFS_DIR_BLOCKS_PER_EXTENT);
-	mark_inode_dirty(dir);
-	return 0;
-
-err_clear_extent:
-	simplefs_retire_metadata_blocks(sb, bno,
-				 SIMPLEFS_DIR_BLOCKS_PER_EXTENT);
-	memset(&eblock->extents[ei], 0, sizeof(eblock->extents[ei]));
-	return ret;
-}
-
 struct simplefs_dir_entry_pos {
-	int ei;
-	int bi;
-	int fi;
+	u32 slot;
 };
 
 static int simplefs_initxattrs(struct inode *inode,
@@ -252,165 +113,47 @@ static void simplefs_set_parent_ino(struct inode *inode, struct inode *dir)
 	*((uint32_t *)SIMPLEFS_INODE(inode)->i_data) = dir->i_ino;
 }
 
-static uint32_t simplefs_dir_pos_block_nr(struct simplefs_file_ei_block *eblock,
-					  const struct simplefs_dir_entry_pos *pos)
-{
-	return eblock->extents[pos->ei].ee_start + pos->bi;
-}
+
 
 static int simplefs_find_dir_entry(struct super_block *sb,
-				   struct simplefs_file_ei_block *eblock,
+				   struct simplefs_dir_index *index,
 				   const struct qstr *name, uint32_t ino,
 				   struct simplefs_dir_entry_pos *pos)
 {
-	int ei, bi, fi;
-
-	for (ei = 0; ei < SIMPLEFS_MAX_EXTENTS; ei++) {
-		if (!eblock->extents[ei].ee_start)
-			break;
-
-		for (bi = 0; bi < simplefs_ext_len(&eblock->extents[ei]); bi++) {
-			struct folio *dblock_folio;
-			struct simplefs_dir_block *dblock;
-
-			dblock = (struct simplefs_dir_block *)simplefs_get_folio(
-				sb, eblock->extents[ei].ee_start + bi,
-				&dblock_folio);
-			if (IS_ERR(dblock))
-				return PTR_ERR(dblock);
-
-			for (fi = 0; fi < SIMPLEFS_FILES_PER_BLOCK; fi++) {
-				struct simplefs_file *file = &dblock->files[fi];
-
-				if (!file->inode)
-					continue;
-				if (ino && file->inode != ino)
-					continue;
-				if (strnlen(file->filename,
-					    SIMPLEFS_FILENAME_LEN) != name->len)
-					continue;
-				if (!strncmp(file->filename, name->name, name->len)) {
-					pos->ei = ei;
-					pos->bi = bi;
-					pos->fi = fi;
-					folio_release_kmap(dblock_folio, dblock);
-					return 0;
-				}
-			}
-
-			folio_release_kmap(dblock_folio, dblock);
-			cond_resched();
-		}
-	}
-
-	return -ENOENT;
+	return simplefs_dir_find(index, name, ino, &pos->slot, NULL);
 }
 
 static int simplefs_find_free_dir_entry(struct inode *dir,
-					struct simplefs_file_ei_block *eblock,
-					struct folio *dfolio,
+					struct simplefs_dir_index *index,
 					struct simplefs_dir_entry_pos *pos,
 					struct simplefs_handle *handle)
 {
-	struct super_block *sb = dir->i_sb;
-	struct simplefs_inode_info *ci_dir = SIMPLEFS_INODE(dir);
-	int ei, bi, fi;
-
-	if (eblock->nr_files >= SIMPLEFS_MAX_SUBFILES)
-		return -EMLINK;
-
-	for (ei = 0; ei < SIMPLEFS_MAX_EXTENTS; ei++) {
-		if (!eblock->extents[ei].ee_start)
-			break;
-
-		for (bi = 0; bi < simplefs_ext_len(&eblock->extents[ei]); bi++) {
-			struct folio *dblock_folio;
-			struct simplefs_dir_block *dblock;
-
-			dblock = (struct simplefs_dir_block *)simplefs_get_folio(
-				sb, eblock->extents[ei].ee_start + bi,
-				&dblock_folio);
-			if (IS_ERR(dblock))
-				return PTR_ERR(dblock);
-
-			for (fi = 0; fi < SIMPLEFS_FILES_PER_BLOCK; fi++) {
-				if (!dblock->files[fi].inode) {
-					pos->ei = ei;
-					pos->bi = bi;
-					pos->fi = fi;
-					folio_release_kmap(dblock_folio, dblock);
-					return 0;
-				}
-			}
-
-			folio_release_kmap(dblock_folio, dblock);
-			cond_resched();
-		}
-	}
-
-	if (ei >= SIMPLEFS_MAX_EXTENTS)
-		return -ENOSPC;
-
-	if (!eblock->extents[ei].ee_start) {
-		int ret = simplefs_alloc_dir_extent(dir, ci_dir->ei_block, eblock,
-						    dfolio, ei, handle);
-		if (ret)
-			return ret;
-	}
-
-	pos->ei = ei;
-	pos->bi = 0;
-	pos->fi = 0;
-	return 0;
+	return simplefs_dir_free_slot(index, &pos->slot);
 }
 
 static int simplefs_update_dir_entry(struct super_block *sb,
-				     struct simplefs_file_ei_block *eblock,
+				     struct simplefs_dir_index *index,
 				     const struct simplefs_dir_entry_pos *pos,
 				     struct simplefs_handle *handle,
 				     uint32_t ino, const struct qstr *name,
 				     bool clear)
 {
-	struct folio *dblock_folio;
-	struct simplefs_dir_block *dblock;
-	uint32_t block_nr;
-	int ret;
-
-	if (!clear && name && name->len > SIMPLEFS_FILENAME_LEN)
-		return -ENAMETOOLONG;
-
-	block_nr = simplefs_dir_pos_block_nr(eblock, pos);
-	dblock = (struct simplefs_dir_block *)simplefs_get_folio(sb, block_nr,
-						&dblock_folio);
-	if (IS_ERR(dblock))
-		return PTR_ERR(dblock);
-
-	if (clear) {
-		memset(&dblock->files[pos->fi], 0, sizeof(struct simplefs_file));
-	} else {
-		dblock->files[pos->fi].inode = ino;
-		if (name) {
-			memset(dblock->files[pos->fi].filename, 0,
-			       SIMPLEFS_FILENAME_LEN);
-			memcpy(dblock->files[pos->fi].filename, name->name,
-			       name->len);
-		}
-	}
-
-	ret = simplefs_mark_folio_dirty(handle, sb, block_nr, dblock,
-					dblock_folio);
-	folio_release_kmap(dblock_folio, dblock);
-	return ret;
+	return simplefs_dir_set(index, pos->slot, clear ? 0 : ino, name);
 }
 
 static int simplefs_mark_dir_index_dirty(struct inode *dir,
-					 struct simplefs_file_ei_block *eblock,
-					 struct folio *dfolio,
+					 struct simplefs_dir_index *index,
 					 struct simplefs_handle *handle)
 {
-	return simplefs_mark_folio_dirty(handle, dir->i_sb,
-					 SIMPLEFS_INODE(dir)->ei_block,
-					 eblock, dfolio);
+	int ret;
+
+	mark_inode_dirty(dir);
+	ret = simplefs_persist_inode(dir);
+	if (ret) {
+		index->valid = false;
+		simplefs_journal_fail(dir->i_sb, ret);
+	}
+	return ret;
 }
 
 static int simplefs_rename_check_subdir(struct inode *old_inode,
@@ -482,109 +225,31 @@ static int simplefs_unlink_internal(struct inode *dir, struct dentry *dentry,
 				    struct simplefs_handle *handle)
 {
 	struct inode *inode = d_inode(dentry);
-	struct super_block *sb = dir->i_sb;
-	struct simplefs_inode_info *ci_dir = SIMPLEFS_INODE(dir);
-	struct simplefs_file_ei_block *eblock;
-	struct folio *dfolio;
-	int ei = 0, bi = 0, fi = 0;
-	int found = 0;
-	int ret = 0;
+	struct simplefs_dir_index *index = simplefs_dir_get(dir);
+	u32 slot;
+	int ret;
 
-	pr_debug("unlink_internal: looking for %pd (ino=%llu) in dir ino=%llu\n",
-		dentry, (unsigned long long)inode->i_ino,
-		(unsigned long long)dir->i_ino);
-
-	/* Read parent directory index */
-	eblock = (struct simplefs_file_ei_block *)simplefs_get_folio(sb, ci_dir->ei_block, &dfolio);
-	if (IS_ERR(eblock))
-		return PTR_ERR(eblock);
-
-	/* Find the file in directory */
-	for (ei = 0; ei < SIMPLEFS_MAX_EXTENTS && !found; ei++) {
-		if (!eblock->extents[ei].ee_start)
-			break;
-
-		for (bi = 0; bi < simplefs_ext_len(&eblock->extents[ei]) && !found; bi++) {
-			struct folio *dblock_folio;
-			struct simplefs_dir_block *dblock;
-			uint32_t block_nr = eblock->extents[ei].ee_start + bi;
-
-			dblock = (struct simplefs_dir_block *)simplefs_get_folio(sb, block_nr, &dblock_folio);
-			if (IS_ERR(dblock)) {
-				ret = PTR_ERR(dblock);
-				goto out;
-			}
-
-			for (fi = 0; fi < SIMPLEFS_FILES_PER_BLOCK; fi++) {
-				if (dblock->files[fi].inode != 0) {
-					pr_debug("  [%d][%d][%d]: ino=%u name='%.*s'\n",
-						ei, bi, fi, dblock->files[fi].inode,
-						(int)strnlen(dblock->files[fi].filename,
-							     SIMPLEFS_FILENAME_LEN),
-						dblock->files[fi].filename);
-				}
-				if (dblock->files[fi].inode == inode->i_ino &&
-				    strncmp(dblock->files[fi].filename, dentry->d_name.name,
-					    dentry->d_name.len) == 0 &&
-				    strnlen(dblock->files[fi].filename,
-					    SIMPLEFS_FILENAME_LEN) ==
-					    dentry->d_name.len) {
-					found = 1;
-					break;
-				}
-			}
-
-			if (found) {
-				/* Remove entry by zeroing it out (no shifting) */
-				memset(&dblock->files[fi], 0, sizeof(struct simplefs_file));
-
-				/* Mark parent directory data block dirty with journal */
-				ret = simplefs_mark_folio_dirty(handle, sb, block_nr,
-								dblock, dblock_folio);
-				folio_release_kmap(dblock_folio, dblock);
-				if (ret)
-					goto out;
-
-				eblock->nr_files--;
-
-				/* Mark parent directory index block dirty with journal */
-				ret = simplefs_mark_folio_dirty(handle, sb,
-								ci_dir->ei_block,
-								eblock, dfolio);
-				if (ret)
-					goto out;
-			} else {
-				folio_release_kmap(dblock_folio, dblock);
-			}
-			cond_resched();
-		}
-	}
-
-	if (!found) {
-		ret = -ENOENT;
-		goto out;
-	}
-
-	/* Update directory times */
+	if (IS_ERR(index))
+		return PTR_ERR(index);
+	ret = simplefs_dir_find(index, &dentry->d_name, inode->i_ino, &slot, NULL);
+	if (ret)
+		return ret;
+	ret = simplefs_dir_set(index, slot, 0, NULL);
+	if (ret)
+		return ret;
+	index->nr_files--;
 	inode_set_mtime_to_ts(dir, inode_set_ctime_current(dir));
-	mark_inode_dirty(dir);
-
-	/* Update inode nlink - actual block/inode freeing happens in evict_inode
-	 * when all VFS references are dropped (like ext2).
-	 * Do NOT call put_inode/truncate_blocks here - the inode is still
-	 * in the VFS cache and its number could be prematurely reused.
-	 */
-	if (S_ISDIR(inode->i_mode)) {
+	if (S_ISDIR(inode->i_mode))
 		clear_nlink(inode);
-	} else {
-		if (inode->i_nlink > 0)
-			drop_nlink(inode);
-	}
-	inode_set_mtime_to_ts(inode, inode_set_ctime_current(inode));
+	else if (inode->i_nlink)
+		drop_nlink(inode);
+	inode_set_ctime_current(inode);
 	mark_inode_dirty(inode);
-
-out:
-	folio_release_kmap(dfolio, eblock);
+	ret = simplefs_persist_inode(inode);
+	if (!ret)
+		ret = simplefs_mark_dir_index_dirty(dir, index, handle);
+	if (ret)
+		simplefs_journal_fail(dir->i_sb, ret);
 	return ret;
 }
 
@@ -608,6 +273,10 @@ static int simplefs_rmdir(struct inode *dir, struct dentry *dentry)
 	if (!ret)
 		return -ENOTEMPTY;
 
+	ret = simplefs_dir_trim(inode);
+	if (ret)
+		return ret;
+
 	/* Start transaction for rmdir
 	 * Credits: similar to unlink but may need extra for parent link update
 	 */
@@ -624,6 +293,9 @@ static int simplefs_rmdir(struct inode *dir, struct dentry *dentry)
 	if (dir->i_nlink > 0)
 		drop_nlink(dir);
 	mark_inode_dirty(dir);
+	ret = simplefs_persist_inode(dir);
+	if (ret)
+		goto out_abort;
 
 	ret = simplefs_journal_stop(handle);
 	return ret;
@@ -806,72 +478,21 @@ failed:
 static struct dentry *simplefs_lookup(struct inode *dir, struct dentry *dentry,
 				      unsigned int flags)
 {
-	struct super_block *sb = dir->i_sb;
-	struct simplefs_inode_info *ci_dir = SIMPLEFS_INODE(dir);
+	struct simplefs_dir_index *index = simplefs_dir_get(dir);
 	struct inode *inode = NULL;
-	struct folio *dfolio, *dfolio2;
-	struct simplefs_file_ei_block *eblock = NULL;
-	struct simplefs_dir_block *dblock = NULL;
-	struct simplefs_file *f = NULL;
-	int ei, bi, fi;
+	u32 ino;
+	int ret;
 
-	pr_debug("[martins3:%s:%d] dentry name: %pd\n", __func__, __LINE__,
-		dentry);
-
-	/* Check filename length */
-	if (dentry->d_name.len > SIMPLEFS_FILENAME_LEN)
-		return ERR_PTR(-ENAMETOOLONG);
-
-	/* Read the directory block on disk */
-	eblock = (struct simplefs_file_ei_block *)simplefs_get_folio(
-		sb, ci_dir->ei_block, &dfolio);
-	if (IS_ERR(eblock))
-		return ERR_CAST(eblock);
-
-	/* Search for the file in directory */
-	for (ei = 0; ei < SIMPLEFS_MAX_EXTENTS; ei++) {
-		if (!eblock->extents[ei].ee_start)
-			break;
-
-		/* Iterate blocks in extent */
-		for (bi = 0; bi < simplefs_ext_len(&eblock->extents[ei]); bi++) {
-			dblock =
-				(struct simplefs_dir_block *)simplefs_get_folio(
-					sb, eblock->extents[ei].ee_start + bi,
-					&dfolio2);
-			if (IS_ERR(dblock)) {
-				folio_release_kmap(dfolio, eblock);
-				return ERR_CAST(dblock);
-			}
-
-			/* Search file in ei_block (skip holes from deleted entries) */
-			for (fi = 0; fi < SIMPLEFS_FILES_PER_BLOCK; fi++) {
-				f = &dblock->files[fi];
-				if (!f->inode)
-					continue;
-				trace_simplefs_lookup(dir, dentry->d_name.name, inode);
-				if (strnlen(f->filename, SIMPLEFS_FILENAME_LEN) ==
-					    dentry->d_name.len &&
-				    !strncmp(f->filename, dentry->d_name.name,
-					     dentry->d_name.len)) {
-					inode = simplefs_iget(sb, f->inode);
-					folio_release_kmap(dfolio2, dblock);
-					if (IS_ERR(inode)) {
-						folio_release_kmap(dfolio, eblock);
-						return ERR_CAST(inode);
-					}
-					goto search_end;
-				}
-			}
-			folio_release_kmap(dfolio2, dblock);
-			cond_resched();
-		}
+	if (IS_ERR(index))
+		return ERR_CAST(index);
+	ret = simplefs_dir_find(index, &dentry->d_name, 0, NULL, &ino);
+	if (!ret) {
+		inode = simplefs_iget(dir->i_sb, ino);
+		if (IS_ERR(inode))
+			return ERR_CAST(inode);
+	} else if (ret != -ENOENT) {
+		return ERR_PTR(ret);
 	}
-
-search_end:
-	folio_release_kmap(dfolio, eblock);
-
-	/* Reconnect an existing disconnected directory alias for exportfs. */
 	return d_splice_alias(inode, dentry);
 }
 
@@ -999,13 +620,13 @@ static struct inode *simplefs_new_inode(struct mnt_idmap *idmap,
 	 * simplefs_get_folio() 可能继续命中上一任 inode 留下的旧 extent
 	 * root。O_TMPFILE 或创建失败后的 evict 随后会按旧树重复释放块。
 	 */
-	metadata = simplefs_get_folio(sb, bno, &metadata_folio);
+	metadata = simplefs_get_zeroed_folio(sb, bno, &metadata_folio);
 	if (IS_ERR(metadata)) {
 		ret = PTR_ERR(metadata);
 		put_blocks(sbi, bno, 1);
 		goto discard_inode;
 	}
-	if (S_ISREG(mode))
+	if (S_ISREG(mode) || S_ISDIR(mode))
 		simplefs_file_init_extent_root(metadata);
 	else
 		memset(metadata, 0, SIMPLEFS_BLOCK_SIZE);
@@ -1023,7 +644,7 @@ static struct inode *simplefs_new_inode(struct mnt_idmap *idmap,
 	inode->i_blocks = simplefs_blocks_to_sectors(1);
 	if (S_ISDIR(mode)) {
 		ci->ei_block = bno;
-		inode->i_size = SIMPLEFS_BLOCK_SIZE;
+		inode->i_size = 0;
 		inode->i_fop = &simplefs_dir_ops;
 		set_nlink(inode, 2); /* . and .. */
 	} else if (S_ISREG(mode)) {
@@ -1074,192 +695,38 @@ static struct dentry *simplefs_create_internal(struct mnt_idmap *id,
 					       umode_t mode, bool excl,
 					       struct simplefs_handle *handle)
 {
-	struct super_block *sb;
 	struct inode *inode;
-	struct simplefs_inode_info *ci_dir;
-	struct simplefs_file_ei_block *eblock;
-	struct simplefs_dir_block *dblock;
-	char *fblock;
-	struct folio *dfolio, *dfolio2, *dblock_folio;
-	struct timespec64 cur_time;
-	uint32_t dir_block_nr = 0;
+	int ret;
 
-	int ret = 0, alloc = false;
-	int ei = 0, bi = 0, fi = 0;
-
-	/* Check filename length */
-	if (dentry->d_name.len > SIMPLEFS_FILENAME_LEN) {
-		ret = -ENAMETOOLONG;
-		goto out;
-	}
-
-	/* Read parent directory index */
-	ci_dir = SIMPLEFS_INODE(dir);
-	sb = dir->i_sb;
-	eblock = (struct simplefs_file_ei_block *)simplefs_get_folio(
-		sb, ci_dir->ei_block, &dfolio);
-	if (IS_ERR(eblock)) {
-		ret = PTR_ERR(eblock);
-		goto out;
-	}
-	/* Check if parent directory is full */
-	if (eblock->nr_files >= SIMPLEFS_MAX_SUBFILES) {
-		folio_release_kmap(dfolio, eblock);
-		ret = -EMLINK;
-		goto out;
-	}
-
-	/* Get a new free inode */
+	if (dentry->d_name.len > SIMPLEFS_FILENAME_LEN)
+		return ERR_PTR(-ENAMETOOLONG);
 	inode = simplefs_new_inode(id, dir, mode);
-	if (IS_ERR(inode)) {
-		ret = PTR_ERR(inode);
-		goto end;
-	}
-
-	/* TODO: Mark inode block in journal if handle provided */
-	
-	/* 新分配的 metadata block 需要按 inode 类型初始化。
-	 * 目录仍然使用旧的单块目录索引；regular file 改成 extent tree root。
-	 */
-	fblock = (char *)simplefs_get_folio(sb, SIMPLEFS_INODE(inode)->ei_block,
-					    &dfolio2);
-	if (IS_ERR(fblock)) {
-		ret = PTR_ERR(fblock);
-		goto iput;
-	}
-	if (S_ISREG(inode->i_mode))
-		simplefs_file_init_extent_root(fblock);
-	else
-		memset(fblock, 0, SIMPLEFS_BLOCK_SIZE);
-	
-	/* Mark new inode's ei_block dirty with journal */
-	ret = simplefs_mark_folio_dirty(handle, sb, SIMPLEFS_INODE(inode)->ei_block, fblock, dfolio2);
-	if (ret) {
-		folio_release_kmap(dfolio2, fblock);
-		goto iput;
-	}
-	
-	folio_release_kmap(dfolio2, fblock);
-
+	if (IS_ERR(inode))
+		return ERR_CAST(inode);
 	ret = simplefs_init_security(inode, dir, &dentry->d_name);
 	if (ret)
-		goto iput;
-
-	/* Find first free slot by scanning all existing blocks for holes */
-	{
-		int slot_found = 0;
-
-		for (ei = 0; ei < SIMPLEFS_MAX_EXTENTS && !slot_found; ei++) {
-			if (!eblock->extents[ei].ee_start)
-				break;
-			for (bi = 0; bi < simplefs_ext_len(&eblock->extents[ei]) && !slot_found; bi++) {
-				dir_block_nr = eblock->extents[ei].ee_start + bi;
-				dblock = (struct simplefs_dir_block *)simplefs_get_folio(
-					sb, dir_block_nr, &dblock_folio);
-				if (IS_ERR(dblock)) {
-					ret = PTR_ERR(dblock);
-					goto iput;
-				}
-				for (fi = 0; fi < SIMPLEFS_FILES_PER_BLOCK; fi++) {
-					if (dblock->files[fi].inode == 0) {
-						slot_found = 1;
-						break;
-					}
-				}
-				if (!slot_found)
-					folio_release_kmap(dblock_folio, dblock);
-			}
-		}
-
-		if (!slot_found) {
-			/* All existing blocks are full, allocate new extent.
-			 * ei already points to the first free extent slot
-			 * from the scanning loop above.
-			 */
-			bi = 0;
-			fi = 0;
-
-			if (!eblock->extents[ei].ee_start) {
-				ret = simplefs_alloc_dir_extent(dir, ci_dir->ei_block,
-								eblock, dfolio, ei,
-								handle);
-				if (ret)
-					goto iput;
-				alloc = true;
-			}
-			dir_block_nr = eblock->extents[ei].ee_start + bi;
-			dblock = (struct simplefs_dir_block *)simplefs_get_folio(
-				sb, dir_block_nr, &dblock_folio);
-			if (IS_ERR(dblock)) {
-				ret = PTR_ERR(dblock);
-				goto put_block;
-			}
-		}
-	}
-
-	dblock->files[fi].inode = inode->i_ino;
-	memset(dblock->files[fi].filename, 0, SIMPLEFS_FILENAME_LEN);
-	memcpy(dblock->files[fi].filename, dentry->d_name.name,
-	       dentry->d_name.len);
-
-	/* Mark parent directory data block dirty with journal */
-	ret = simplefs_mark_folio_dirty(handle, sb, dir_block_nr, dblock,
-					dblock_folio);
-	folio_release_kmap(dblock_folio, dblock);
-	if (ret) {
-		goto put_block;
-	}
-
-	eblock->nr_files++;
-
-	/* Mark parent directory index block (eblock) dirty with journal */
-	ret = simplefs_mark_folio_dirty(handle, sb, ci_dir->ei_block, eblock, dfolio);
-	if (ret)
-		goto put_block;
-
-	// dfolio is released at the function's end
-
-	if (S_ISDIR(mode)) {
-		/* Store parent inode number for NFS export get_parent */
-		struct simplefs_inode_info *ci_new = SIMPLEFS_INODE(inode);
-		*((uint32_t *)ci_new->i_data) = dir->i_ino;
-		inc_nlink(dir);
-	}
-
-	/* Persist i_data only after a new directory's parent is recorded. */
+		goto fail;
+	simplefs_set_parent_ino(inode, dir);
 	mark_inode_dirty(inode);
-	simplefs_persist_inode(inode);
-
-	cur_time = current_time(dir);
-	dir->i_mtime_sec = cur_time.tv_sec;
-	dir->i_mtime_nsec = cur_time.tv_nsec;
-	inode_set_ctime_to_ts(dir, cur_time);
-
+	ret = simplefs_persist_inode(inode);
+	if (ret)
+		goto fail;
+	ret = simplefs_dir_add(dir, &dentry->d_name, inode->i_ino);
+	if (ret)
+		goto fail;
+	if (S_ISDIR(mode))
+		inc_nlink(dir);
+	inode_set_mtime_to_ts(dir, inode_set_ctime_current(dir));
 	mark_inode_dirty(dir);
-	simplefs_persist_inode(dir);
-
-	d_instantiate(dentry, inode);
-
-	/* Release parent directory index block before returning */
-	folio_release_kmap(dfolio, eblock);
-	/* Return NULL on success for mkdir/create operations */
-	return NULL;
-
-put_block:
-	if (alloc && eblock->extents[ei].ee_start) {
-		simplefs_retire_metadata_blocks(
-			sb, eblock->extents[ei].ee_start,
-			simplefs_ext_len(&eblock->extents[ei]));
-		memset(&eblock->extents[ei], 0, sizeof(struct simplefs_extent));
-		dir->i_blocks -= simplefs_blocks_to_sectors(
-			SIMPLEFS_DIR_BLOCKS_PER_EXTENT);
+	ret = simplefs_persist_inode(dir);
+	if (ret) {
+		simplefs_journal_fail(dir->i_sb, ret);
+		goto fail;
 	}
-iput:
+	d_instantiate(dentry, inode);
+	return NULL;
+fail:
 	simplefs_release_new_inode(inode);
-end:
-	if (!IS_ERR(eblock))
-		folio_release_kmap(dfolio, eblock);
-out:
 	return ERR_PTR(ret);
 }
 
@@ -1360,16 +827,14 @@ static int simplefs_rename_normal(struct inode *old_dir,
 	struct super_block *sb = old_dir->i_sb;
 	struct inode *old_inode = d_inode(old_dentry);
 	struct inode *new_inode = d_inode(new_dentry);
-	struct simplefs_file_ei_block *old_eblock, *new_eblock;
-	struct folio *old_dfolio, *new_dfolio;
+	struct simplefs_dir_index *old_eblock, *new_eblock;
 	struct simplefs_dir_entry_pos old_pos, new_pos;
 	int ret;
 
 	if ((flags & RENAME_NOREPLACE) && new_inode)
 		return -EEXIST;
 
-	old_eblock = (struct simplefs_file_ei_block *)simplefs_get_folio(
-		sb, SIMPLEFS_INODE(old_dir)->ei_block, &old_dfolio);
+	old_eblock = simplefs_dir_get(old_dir);
 	if (IS_ERR(old_eblock))
 		return PTR_ERR(old_eblock);
 
@@ -1409,17 +874,15 @@ static int simplefs_rename_normal(struct inode *old_dir,
 
 	if (old_dir == new_dir) {
 		new_eblock = old_eblock;
-		new_dfolio = old_dfolio;
 	} else {
-		new_eblock = (struct simplefs_file_ei_block *)simplefs_get_folio(
-			sb, SIMPLEFS_INODE(new_dir)->ei_block, &new_dfolio);
+		new_eblock = simplefs_dir_get(new_dir);
 		if (IS_ERR(new_eblock)) {
 			ret = PTR_ERR(new_eblock);
 			goto out_old;
 		}
 	}
 
-	ret = simplefs_find_free_dir_entry(new_dir, new_eblock, new_dfolio,
+	ret = simplefs_find_free_dir_entry(new_dir, new_eblock,
 					   &new_pos, handle);
 	if (ret)
 		goto out_new;
@@ -1431,7 +894,7 @@ static int simplefs_rename_normal(struct inode *old_dir,
 		goto out_new;
 
 	new_eblock->nr_files++;
-	ret = simplefs_mark_dir_index_dirty(new_dir, new_eblock, new_dfolio,
+	ret = simplefs_mark_dir_index_dirty(new_dir, new_eblock,
 					    handle);
 	if (ret)
 		goto out_new;
@@ -1442,7 +905,7 @@ static int simplefs_rename_normal(struct inode *old_dir,
 		goto out_new;
 
 	old_eblock->nr_files--;
-	ret = simplefs_mark_dir_index_dirty(old_dir, old_eblock, old_dfolio,
+	ret = simplefs_mark_dir_index_dirty(old_dir, old_eblock,
 					    handle);
 	if (ret)
 		goto out_new;
@@ -1459,10 +922,8 @@ static int simplefs_rename_normal(struct inode *old_dir,
 	simplefs_touch_rename_dirs(old_dir, new_dir);
 
 out_new:
-	if (old_dir != new_dir)
-		folio_release_kmap(new_dfolio, new_eblock);
+
 out_old:
-	folio_release_kmap(old_dfolio, old_eblock);
 	return ret;
 }
 
@@ -1475,17 +936,14 @@ static int simplefs_rename_exchange(struct inode *old_dir,
 	struct super_block *sb = old_dir->i_sb;
 	struct inode *old_inode = d_inode(old_dentry);
 	struct inode *new_inode = d_inode(new_dentry);
-	struct simplefs_file_ei_block *old_eblock, *new_eblock;
-	struct folio *old_dfolio, *new_dfolio;
+	struct simplefs_dir_index *old_eblock, *new_eblock;
 	struct simplefs_dir_entry_pos old_pos, new_pos;
-	uint32_t old_block_nr, new_block_nr;
 	int ret;
 
 	if (!new_inode)
 		return -ENOENT;
 
-	old_eblock = (struct simplefs_file_ei_block *)simplefs_get_folio(
-		sb, SIMPLEFS_INODE(old_dir)->ei_block, &old_dfolio);
+	old_eblock = simplefs_dir_get(old_dir);
 	if (IS_ERR(old_eblock))
 		return PTR_ERR(old_eblock);
 
@@ -1496,10 +954,8 @@ static int simplefs_rename_exchange(struct inode *old_dir,
 
 	if (old_dir == new_dir) {
 		new_eblock = old_eblock;
-		new_dfolio = old_dfolio;
 	} else {
-		new_eblock = (struct simplefs_file_ei_block *)simplefs_get_folio(
-			sb, SIMPLEFS_INODE(new_dir)->ei_block, &new_dfolio);
+		new_eblock = simplefs_dir_get(new_dir);
 		if (IS_ERR(new_eblock)) {
 			ret = PTR_ERR(new_eblock);
 			goto out_old;
@@ -1511,36 +967,16 @@ static int simplefs_rename_exchange(struct inode *old_dir,
 	if (ret)
 		goto out_new;
 
-	old_block_nr = simplefs_dir_pos_block_nr(old_eblock, &old_pos);
-	new_block_nr = simplefs_dir_pos_block_nr(new_eblock, &new_pos);
-	if (old_dir == new_dir && old_block_nr == new_block_nr) {
-		struct folio *dblock_folio;
-		struct simplefs_dir_block *dblock;
-
-		dblock = (struct simplefs_dir_block *)simplefs_get_folio(
-			sb, old_block_nr, &dblock_folio);
-		if (IS_ERR(dblock)) {
-			ret = PTR_ERR(dblock);
-			goto out_new;
-		}
-
-		dblock->files[old_pos.fi].inode = new_inode->i_ino;
-		dblock->files[new_pos.fi].inode = old_inode->i_ino;
-		ret = simplefs_mark_folio_dirty(handle, sb, old_block_nr, dblock,
-						dblock_folio);
-		folio_release_kmap(dblock_folio, dblock);
-		if (ret)
-			goto out_new;
-	} else {
-		ret = simplefs_update_dir_entry(sb, old_eblock, &old_pos, handle,
-						new_inode->i_ino, NULL, false);
-		if (ret)
-			goto out_new;
-
-		ret = simplefs_update_dir_entry(sb, new_eblock, &new_pos, handle,
-						old_inode->i_ino, NULL, false);
-		if (ret)
-			goto out_new;
+	ret = simplefs_update_dir_entry(sb, old_eblock, &old_pos, handle,
+					new_inode->i_ino, NULL, false);
+	if (ret)
+		goto out_new;
+	ret = simplefs_update_dir_entry(sb, new_eblock, &new_pos, handle,
+					old_inode->i_ino, NULL, false);
+	if (ret) {
+		simplefs_update_dir_entry(sb, old_eblock, &old_pos, handle,
+					  old_inode->i_ino, NULL, false);
+		goto out_new;
 	}
 
 	if (old_dir != new_dir && S_ISDIR(old_inode->i_mode) != S_ISDIR(new_inode->i_mode)) {
@@ -1567,16 +1003,13 @@ static int simplefs_rename_exchange(struct inode *old_dir,
 	simplefs_touch_rename_dirs(old_dir, new_dir);
 
 out_new:
-	if (old_dir != new_dir)
-		folio_release_kmap(new_dfolio, new_eblock);
+
 out_old:
-	folio_release_kmap(old_dfolio, old_eblock);
 	return ret;
 }
 
 static void simplefs_rollback_whiteout_target(struct inode *new_dir,
-					      struct simplefs_file_ei_block *new_eblock,
-					      struct folio *new_dfolio,
+					      struct simplefs_dir_index *new_eblock,
 					      const struct simplefs_dir_entry_pos *new_pos,
 					      bool replaced_target,
 					      uint32_t replaced_ino,
@@ -1592,7 +1025,7 @@ static void simplefs_rollback_whiteout_target(struct inode *new_dir,
 				  NULL, true);
 	if (new_eblock->nr_files > 0) {
 		new_eblock->nr_files--;
-		simplefs_mark_dir_index_dirty(new_dir, new_eblock, new_dfolio,
+		simplefs_mark_dir_index_dirty(new_dir, new_eblock,
 					      handle);
 	}
 }
@@ -1633,8 +1066,7 @@ static int simplefs_rename_whiteout(struct mnt_idmap *id,
 	struct inode *old_inode = d_inode(old_dentry);
 	struct inode *new_inode = d_inode(new_dentry);
 	struct inode *whiteout = NULL;
-	struct simplefs_file_ei_block *old_eblock, *new_eblock;
-	struct folio *old_dfolio, *new_dfolio;
+	struct simplefs_dir_index *old_eblock, *new_eblock;
 	struct simplefs_dir_entry_pos old_pos, new_pos;
 	bool replaced_target = false;
 	uint32_t replaced_ino = 0;
@@ -1644,8 +1076,7 @@ static int simplefs_rename_whiteout(struct mnt_idmap *id,
 	if (IS_ERR(whiteout))
 		return PTR_ERR(whiteout);
 
-	old_eblock = (struct simplefs_file_ei_block *)simplefs_get_folio(
-		sb, SIMPLEFS_INODE(old_dir)->ei_block, &old_dfolio);
+	old_eblock = simplefs_dir_get(old_dir);
 	if (IS_ERR(old_eblock)) {
 		ret = PTR_ERR(old_eblock);
 		goto out_whiteout;
@@ -1666,10 +1097,8 @@ static int simplefs_rename_whiteout(struct mnt_idmap *id,
 
 	if (old_dir == new_dir) {
 		new_eblock = old_eblock;
-		new_dfolio = old_dfolio;
 	} else {
-		new_eblock = (struct simplefs_file_ei_block *)simplefs_get_folio(
-			sb, SIMPLEFS_INODE(new_dir)->ei_block, &new_dfolio);
+		new_eblock = simplefs_dir_get(new_dir);
 		if (IS_ERR(new_eblock)) {
 			ret = PTR_ERR(new_eblock);
 			goto out_old;
@@ -1688,7 +1117,7 @@ static int simplefs_rename_whiteout(struct mnt_idmap *id,
 		if (ret)
 			goto out_new;
 	} else {
-		ret = simplefs_find_free_dir_entry(new_dir, new_eblock, new_dfolio,
+		ret = simplefs_find_free_dir_entry(new_dir, new_eblock,
 						   &new_pos, handle);
 		if (ret)
 			goto out_new;
@@ -1698,8 +1127,7 @@ static int simplefs_rename_whiteout(struct mnt_idmap *id,
 		if (ret)
 			goto out_new;
 		new_eblock->nr_files++;
-		ret = simplefs_mark_dir_index_dirty(new_dir, new_eblock,
-						    new_dfolio, handle);
+		ret = simplefs_mark_dir_index_dirty(new_dir, new_eblock, handle);
 		if (ret) {
 			new_eblock->nr_files--;
 			simplefs_update_dir_entry(sb, new_eblock, &new_pos,
@@ -1711,13 +1139,18 @@ static int simplefs_rename_whiteout(struct mnt_idmap *id,
 	ret = simplefs_update_dir_entry(sb, old_eblock, &old_pos, handle,
 					whiteout->i_ino, NULL, false);
 	if (ret) {
-		simplefs_rollback_whiteout_target(new_dir, new_eblock, new_dfolio,
+		simplefs_rollback_whiteout_target(new_dir, new_eblock,
 						  &new_pos, replaced_target,
 						  replaced_ino, handle);
 		goto out_new;
 	}
 
 	mark_inode_dirty(whiteout);
+	ret = simplefs_persist_inode(whiteout);
+	if (ret) {
+		simplefs_journal_fail(sb, ret);
+		goto out_new;
+	}
 	inode_set_ctime_current(old_inode);
 	mark_inode_dirty(old_inode);
 
@@ -1741,10 +1174,8 @@ static int simplefs_rename_whiteout(struct mnt_idmap *id,
 	simplefs_touch_rename_dirs(old_dir, new_dir);
 
 out_new:
-	if (old_dir != new_dir)
-		folio_release_kmap(new_dfolio, new_eblock);
+
 out_old:
-	folio_release_kmap(old_dfolio, old_eblock);
 out_whiteout:
 	if (ret)
 		simplefs_release_new_inode(whiteout);
@@ -1784,6 +1215,15 @@ static int simplefs_rename(struct mnt_idmap *id,
 	int credits;
 	int ret;
 	
+	/* Empty overwritten directories can retain many stable slots. Trim
+	 * them before opening the atomic rename transaction. */
+	if (!(flags & RENAME_EXCHANGE) && d_inode(new_dentry) &&
+	    S_ISDIR(d_inode(new_dentry)->i_mode)) {
+		ret = simplefs_dir_trim(d_inode(new_dentry));
+		if (ret)
+			return ret;
+	}
+
 	/*
 	 * renameat2 的 exchange/whiteout 会同时触碰两个目录项、多个 inode，
 	 * whiteout 还会新建一个特殊 inode，这里保守多留一些 credit。
@@ -1810,7 +1250,20 @@ static int simplefs_rename(struct mnt_idmap *id,
 		return ret;
 	}
 	
-	return simplefs_journal_stop(handle);
+	ret = simplefs_persist_inode(d_inode(old_dentry));
+	if (!ret && d_inode(new_dentry))
+		ret = simplefs_persist_inode(d_inode(new_dentry));
+	if (!ret)
+		ret = simplefs_persist_inode(old_dir);
+	if (!ret && old_dir != new_dir)
+		ret = simplefs_persist_inode(new_dir);
+	if (ret)
+		simplefs_journal_fail(old_dir->i_sb, ret);
+	{
+		int stop_ret = simplefs_journal_stop(handle);
+
+		return ret ? ret : stop_ret;
+	}
 }
 
 /* Forward declaration */
@@ -1821,137 +1274,7 @@ static int simplefs_add_to_dir(struct inode *dir, struct dentry *dentry,
 static int simplefs_add_to_dir(struct inode *dir, struct dentry *dentry,
 			       struct inode *inode)
 {
-	struct super_block *sb = dir->i_sb;
-	struct simplefs_inode_info *ci_dir = SIMPLEFS_INODE(dir);
-	struct simplefs_file_ei_block *eblock;
-	struct simplefs_dir_block *dblock;
-	struct folio *dfolio, *dblock_folio;
-	uint32_t dir_block_nr = 0;
-	int ei, bi, fi;
-	int bno = 0;
-	int ret = 0;
-
-	if (dentry->d_name.len > SIMPLEFS_FILENAME_LEN)
-		return -ENAMETOOLONG;
-
-	/* Read parent directory index */
-	eblock = (struct simplefs_file_ei_block *)simplefs_get_folio(
-		sb, ci_dir->ei_block, &dfolio);
-	if (IS_ERR(eblock))
-		return PTR_ERR(eblock);
-
-	/* Check if parent directory is full */
-	if (eblock->nr_files >= SIMPLEFS_MAX_SUBFILES) {
-		folio_release_kmap(dfolio, eblock);
-		return -EMLINK;
-	}
-
-	/* Find first free slot by scanning for holes */
-	{
-		int slot_found = 0;
-
-		for (ei = 0; ei < SIMPLEFS_MAX_EXTENTS && !slot_found; ei++) {
-			if (!eblock->extents[ei].ee_start)
-				break;
-			for (bi = 0; bi < simplefs_ext_len(&eblock->extents[ei]) && !slot_found; bi++) {
-				dir_block_nr = eblock->extents[ei].ee_start + bi;
-				dblock = (struct simplefs_dir_block *)simplefs_get_folio(
-					sb, dir_block_nr, &dblock_folio);
-				if (IS_ERR(dblock)) {
-					ret = PTR_ERR(dblock);
-					goto out;
-				}
-				for (fi = 0; fi < SIMPLEFS_FILES_PER_BLOCK; fi++) {
-					if (dblock->files[fi].inode == 0) {
-						slot_found = 1;
-						break;
-					}
-				}
-				if (!slot_found)
-					folio_release_kmap(dblock_folio, dblock);
-			}
-		}
-
-		if (!slot_found) {
-			/* All existing blocks full, allocate new extent.
-			 * ei already points to the first free extent slot
-			 * from the scanning loop above.
-			 */
-			bi = 0;
-			fi = 0;
-
-			if (!eblock->extents[ei].ee_start) {
-				int b;
-
-				bno = get_free_blocks(SIMPLEFS_SB(sb),
-						      SIMPLEFS_DIR_BLOCKS_PER_EXTENT);
-				if (!bno) {
-					folio_release_kmap(dfolio, eblock);
-					return -ENOSPC;
-				}
-				simplefs_ext_init(
-					&eblock->extents[ei],
-					ei ? eblock->extents[ei - 1].ee_block +
-						     simplefs_ext_len(&eblock->extents[ei - 1])
-					     : 0,
-					SIMPLEFS_DIR_BLOCKS_PER_EXTENT, bno, false);
-
-				/* Zero out all newly allocated dir blocks */
-				for (b = 0; b < SIMPLEFS_DIR_BLOCKS_PER_EXTENT;
-				     b++) {
-					struct folio *zfolio;
-					char *zblock;
-
-					zblock = (char *)simplefs_get_folio(
-						sb, bno + b, &zfolio);
-					if (IS_ERR(zblock)) {
-						ret = PTR_ERR(zblock);
-						goto out;
-					}
-					memset(zblock, 0, SIMPLEFS_BLOCK_SIZE);
-					ret = simplefs_journal_dirty_folio(
-						sb, bno + b, zblock, zfolio);
-					folio_release_kmap(zfolio, zblock);
-					if (ret)
-						goto out;
-				}
-			}
-			dir_block_nr = eblock->extents[ei].ee_start + bi;
-			dblock = (struct simplefs_dir_block *)simplefs_get_folio(
-				sb, dir_block_nr, &dblock_folio);
-			if (IS_ERR(dblock)) {
-				ret = PTR_ERR(dblock);
-				goto out;
-			}
-		}
-	}
-
-	dblock->files[fi].inode = inode->i_ino;
-	memset(dblock->files[fi].filename, 0, SIMPLEFS_FILENAME_LEN);
-	memcpy(dblock->files[fi].filename, dentry->d_name.name,
-	       dentry->d_name.len);
-
-	ret = simplefs_journal_dirty_folio(sb, dir_block_nr, dblock,
-					   dblock_folio);
-	folio_release_kmap(dblock_folio, dblock);
-	if (ret)
-		goto out;
-
-	eblock->nr_files++;
-	ret = simplefs_journal_dirty_folio(sb, ci_dir->ei_block, eblock,
-					   dfolio);
-	if (ret)
-		goto out;
-
-	if (bno) {
-		dir->i_blocks += simplefs_blocks_to_sectors(
-			SIMPLEFS_DIR_BLOCKS_PER_EXTENT);
-		mark_inode_dirty(dir);
-	}
-
-out:
-	folio_release_kmap(dfolio, eblock);
-	return ret;
+	return simplefs_dir_add(dir, &dentry->d_name, inode->i_ino);
 }
 
 

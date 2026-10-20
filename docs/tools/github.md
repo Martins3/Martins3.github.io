@@ -104,6 +104,13 @@ gh auth login --hostname github.loongson.com
 ## CICD 的思考
 https://www.hawkingrei.com/2022/06/26/cicd.html
 
+## 取消 star
+
+gh api --hostname github.com --method DELETE user/starred/lazyparser/minimalist-team-leader
+
+## github 之间的同步
+https://github.com/Yikun/hub-mirror-action
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="

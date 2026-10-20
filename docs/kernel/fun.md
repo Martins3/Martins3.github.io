@@ -228,6 +228,9 @@ pkill wget ，所有的问题都解决了。
 ## 有意思的东西
 https://scottjg.com/posts/2026-05-05-egpu-mac-gaming/
 
+
+https://github.com/xr843/insect-world
+
 <script src="https://giscus.app/client.js"
         data-repo="martins3/martins3.github.io"
         data-repo-id="MDEwOlJlcG9zaXRvcnkyOTc4MjA0MDg="
